@@ -38,11 +38,12 @@
 package org.mozilla.gecko;
 
 import java.io.*;
+import java.lang.reflect.*;
+import java.nio.*;
+import java.nio.channels.*;
+import java.text.*;
 import java.util.*;
 import java.util.zip.*;
-import java.nio.*;
-import java.lang.reflect.*;
-import java.text.*;
 
 import android.os.*;
 import android.app.*;
@@ -117,15 +118,113 @@ class GeckoAppShell
         return sFreeSpace;
     }
 
+    static boolean moveFile(File inFile, File outFile)
+    {
+        Log.i("GeckoAppShell", "moving " + inFile + " to " + outFile);
+        if (outFile.isDirectory())
+            outFile = new File(outFile, inFile.getName());
+        try {
+            if (inFile.renameTo(outFile))
+                return true;
+        } catch (SecurityException se) {
+            Log.w("GeckoAppShell", "error trying to rename file", se);
+        }
+        try {
+            long lastModified = inFile.lastModified();
+            outFile.createNewFile();
+            // so copy it instead
+            FileChannel inChannel = new FileInputStream(inFile).getChannel();
+            FileChannel outChannel = new FileOutputStream(outFile).getChannel();
+            long size = inChannel.size();
+            long transferred = inChannel.transferTo(0, size, outChannel);
+            inChannel.close();
+            outChannel.close();
+            outFile.setLastModified(lastModified);
+            
+            if (transferred == size)
+                inFile.delete();
+            else
+                return false;
+        } catch (Exception e) {
+            Log.e("GeckoAppShell", "exception while moving file: ", e);
+            try {
+                outFile.delete();
+            } catch (SecurityException se) {
+                Log.w("GeckoAppShell", "error trying to delete file", se);
+            }
+            return false;
+        }
+        return true;
+    }
+
+    static boolean moveDir(File from, File to) {
+        try {
+            to.mkdirs();
+            if (from.renameTo(to))
+                return true;
+        } catch (SecurityException se) {
+            Log.w("GeckoAppShell", "error trying to rename file", se);
+        }
+        File[] files = from.listFiles();
+        boolean retVal = true;
+        if (files == null)
+            return false;
+        try {
+            Iterator fileIterator = Arrays.asList(files).iterator();
+            while (fileIterator.hasNext()) {
+                File file = (File)fileIterator.next();
+                File dest = new File(to, file.getName());
+                if (file.isDirectory())
+                    retVal = moveDir(file, dest) ? retVal : false;
+                else
+                retVal = moveFile(file, dest) ? retVal : false;
+            }
+            from.delete();
+        } catch(Exception e) {
+            Log.e("GeckoAppShell", "error trying to move file", e);
+        }
+        return retVal;
+    }
+
     // java-side stuff
     public static void loadGeckoLibs(String apkName) {
         // The package data lib directory isn't placed in ld.so's
         // search path, so we have to manually load libraries that
         // libxul will depend on.  Not ideal.
         System.loadLibrary("mozutils");
+        GeckoApp geckoApp = GeckoApp.mAppContext;
+        String homeDir;
+        if (geckoApp.getApplication().getPackageResourcePath().startsWith("/data")) {
+            File home = geckoApp.getFilesDir();
+            homeDir = home.getPath();
+            // handle the application being moved to phone from sdcard
+            File profileDir = new File(homeDir, "mozilla");
+            File oldHome = new File("/data/data/" + 
+                        GeckoApp.mAppContext.getPackageName() + "/mozilla");
+            if (oldHome.exists())
+                moveDir(oldHome, profileDir);
 
-                
-        Intent i = GeckoApp.mAppContext.getIntent();
+            File extHome =  geckoApp.getExternalFilesDir(null);
+            File extProf = new File (extHome, "mozilla");
+            if (extHome.exists())
+                moveDir(extProf, profileDir);
+        } else {
+            File home = geckoApp.getExternalFilesDir(null);
+            homeDir = home.getPath();
+            // handle the application being moved to phone from sdcard
+            File profileDir = new File(homeDir, "mozilla");
+            File oldHome = new File("/data/data/" + 
+                        GeckoApp.mAppContext.getPackageName() + "/mozilla");
+            if (oldHome.exists())
+                moveDir(oldHome, profileDir);
+
+            File intHome =  geckoApp.getFilesDir();
+            File intProf = new File(intHome, "mozilla");
+            if (intHome.exists())
+                moveDir(intProf, profileDir);
+        }
+        GeckoAppShell.putenv("HOME=" + homeDir);
+        Intent i = geckoApp.getIntent();
         String env = i.getStringExtra("env0");
         Log.i("GeckoApp", "env0: "+ env);
         for (int c = 1; env != null; c++) {
@@ -134,8 +233,9 @@ class GeckoAppShell
             Log.i("GeckoApp", "env"+ c +": "+ env);
         }
 
-        File f = new File("/data/data/" + 
-                          GeckoApp.mAppContext.getPackageName() + "/tmp");
+        File f = geckoApp.getDir("tmp", Context.MODE_WORLD_READABLE |
+                                 Context.MODE_WORLD_WRITEABLE );
+
         if (!f.exists())
             f.mkdirs();
 
