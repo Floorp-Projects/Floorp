@@ -6343,10 +6343,28 @@ dnl = * enabled by default (shipping build); requires explicit --disable to disa
 dnl ========================================================
 MOZ_ANGLE=
 MOZ_DIRECTX_SDK_PATH=
+MOZ_DIRECTX_SDK_CPU_SUFFIX=
+MOZ_D3DX9_VERSION=
+MOZ_D3DX9_CAB=
+MOZ_D3DCOMPILER_CAB=
+MOZ_D3DX9_DLL=
+MOZ_D3DCOMPILER_DLL=
 case "$target_os" in
     *msvc*|*mks*|*cygwin*|*mingw*)
         MOZ_ANGLE=1
         ;;
+esac
+
+# The DirectX SDK libraries are split into x86 and x64 sub-directories
+case "${target_cpu}" in
+i*86)
+  MOZ_DIRECTX_SDK_CPU_SUFFIX=x86
+  ;;
+x86_64)
+  MOZ_DIRECTX_SDK_CPU_SUFFIX=x64
+  # currently we disable ANGLE in 64bit builds
+  MOZ_ANGLE=
+  ;;
 esac
 
 if test -n "$MOZ_ANGLE"; then
@@ -6367,8 +6385,8 @@ if test -n "$MOZ_ANGLE"; then
   MOZ_ANGLE=
 
   if test -n "$MOZ_DIRECTX_SDK_PATH" ; then
-    if test -f "$MOZ_DIRECTX_SDK_PATH"/include/d3dx9.h && test -f "$MOZ_DIRECTX_SDK_PATH"/lib/x86/dxguid.lib ; then
-      AC_MSG_RESULT([Found DirectX SDK via DXSDK_DIR, using $MOZ_DIRECTX_SDK_PATH])
+    if test -f "$MOZ_DIRECTX_SDK_PATH"/include/d3dx9.h && test -f "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/dxguid.lib ; then
+      AC_MSG_RESULT([Found DirectX SDK via registry, using $MOZ_DIRECTX_SDK_PATH])
       MOZ_ANGLE=1
     fi
   fi
@@ -6377,6 +6395,21 @@ if test -n "$MOZ_ANGLE"; then
     AC_MSG_WARN([Couldn't find the DirectX SDK, needed for ANGLE. Please install it (February 2010 or newer). To explicitly build without ANGLE, reconfigure with --disable-angle.])
     AC_MSG_WARN([This will become an error in the future.])
   fi
+
+  # Get the SDK numeric version (e.g. 42 or 43) by looking at the dependencies of d3dx9.lib
+  MOZ_D3DX9_VERSION=`dumpbin //headers "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/d3dx9.lib | egrep d3dx9_[[0-9]][[0-9]]\.dll | head -n1 | sed 's/.*\([[0-9]][[0-9]]\).*/\\1/g'`
+
+  if test -z "$MOZ_D3DX9_VERSION" ; then
+    MOZ_ANGLE=
+    AC_MSG_WARN([Couldn't determine the D3DX9 version! Disabling ANGLE.])
+    AC_MSG_ERROR([This will become an error in the future.])
+  fi
+
+  MOZ_D3DX9_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *d3dx9_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
+  MOZ_D3DCOMPILER_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *D3DCompiler_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
+
+  MOZ_D3DX9_DLL=d3dx9_$MOZ_D3DX9_VERSION.dll
+  MOZ_D3DCOMPILER_DLL=D3DCompiler_$MOZ_D3DX9_VERSION.dll
 fi
 fi
 
@@ -9060,6 +9093,12 @@ AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_UPDATER)
 AC_SUBST(MOZ_ANGLE)
 AC_SUBST(MOZ_DIRECTX_SDK_PATH)
+AC_SUBST(MOZ_DIRECTX_SDK_CPU_SUFFIX)
+AC_SUBST(MOZ_D3DX9_VERSION)
+AC_SUBST(MOZ_D3DX9_CAB)
+AC_SUBST(MOZ_D3DCOMPILER_CAB)
+AC_SUBST(MOZ_D3DX9_DLL)
+AC_SUBST(MOZ_D3DCOMPILER_DLL)
 
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
