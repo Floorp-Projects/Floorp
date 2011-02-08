@@ -264,7 +264,6 @@ html[dir=rtl] .appTabTrayContainer {
 .appTabTray {
   display: inline-block;
   -moz-column-width: 16px;
-  -moz-column-count: 0;
   -moz-column-gap: 5px;
 }
 
