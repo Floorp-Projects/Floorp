@@ -6794,20 +6794,30 @@ js_DumpId(jsid id)
 }
 
 static void
-DumpShape(const Shape &shape)
+DumpProperty(JSObject *obj, const Shape &shape)
 {
     jsid id = shape.id;
     uint8 attrs = shape.attributes();
 
-    fprintf(stderr, "    ");
+    fprintf(stderr, "    ((Shape *) %p) ", (void *) &shape);
     if (attrs & JSPROP_ENUMERATE) fprintf(stderr, "enumerate ");
     if (attrs & JSPROP_READONLY) fprintf(stderr, "readonly ");
     if (attrs & JSPROP_PERMANENT) fprintf(stderr, "permanent ");
-    if (attrs & JSPROP_GETTER) fprintf(stderr, "getter ");
-    if (attrs & JSPROP_SETTER) fprintf(stderr, "setter ");
     if (attrs & JSPROP_SHARED) fprintf(stderr, "shared ");
     if (shape.isAlias()) fprintf(stderr, "alias ");
-    if (shape.isMethod()) fprintf(stderr, "method(%p) ", (void *) &shape.methodObject());
+    if (shape.isMethod()) fprintf(stderr, "method=%p ", (void *) &shape.methodObject());
+
+    if (shape.hasGetterValue())
+        fprintf(stderr, "getterValue=%p ", (void *) shape.getterObject());
+    else if (!shape.hasDefaultGetter())
+        fprintf(stderr, "getterOp=%p ", (void *) shape.getterOp());
+
+    if (shape.hasSetterValue())
+        fprintf(stderr, "setterValue=%p ", (void *) shape.setterObject());
+    else if (shape.setterOp() == js_watch_set)
+        fprintf(stderr, "setterOp=js_watch_set ");
+    else if (!shape.hasDefaultSetter())
+        fprintf(stderr, "setterOp=%p ", (void *) shape.setterOp());
 
     if (JSID_IS_ATOM(id))
         dumpString(JSID_TO_STRING(id));
@@ -6816,6 +6826,12 @@ DumpShape(const Shape &shape)
     else
         fprintf(stderr, "unknown jsid %p", (void *) JSID_BITS(id));
     fprintf(stderr, ": slot %d", shape.slot);
+    if (obj->containsSlot(shape.slot)) {
+        fprintf(stderr, " = ");
+        dumpValue(obj->getSlot(shape.slot));
+    } else if (shape.slot != SHAPE_INVALID_SLOT) {
+        fprintf(stderr, " (INVALID!)");
+    }
     fprintf(stderr, "\n");
 }
 
@@ -6830,7 +6846,7 @@ js_DumpObject(JSObject *obj)
     uint32 flags = obj->flags;
     if (flags & JSObject::DELEGATE) fprintf(stderr, " delegate");
     if (flags & JSObject::SYSTEM) fprintf(stderr, " system");
-    if (flags & JSObject::NOT_EXTENSIBLE) fprintf(stderr, " not extensible");
+    if (flags & JSObject::NOT_EXTENSIBLE) fprintf(stderr, " not_extensible");
     if (flags & JSObject::BRANDED) fprintf(stderr, " branded");
     if (flags & JSObject::GENERIC) fprintf(stderr, " generic");
     if (flags & JSObject::METHOD_BARRIER) fprintf(stderr, " method_barrier");
@@ -6865,15 +6881,6 @@ js_DumpObject(JSObject *obj)
         return;
     }
 
-    if (obj->isNative()) {
-        fprintf(stderr, "properties:\n");
-        for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront())
-            DumpShape(r.front());
-    } else {
-        if (!obj->isNative())
-            fprintf(stderr, "not native\n");
-    }
-
     fprintf(stderr, "proto ");
     dumpValue(ObjectOrNullValue(obj->getProto()));
     fputc('\n', stderr);
@@ -6885,16 +6892,30 @@ js_DumpObject(JSObject *obj)
     if (clasp->flags & JSCLASS_HAS_PRIVATE)
         fprintf(stderr, "private %p\n", obj->getPrivate());
 
-    fprintf(stderr, "slots:\n");
+    if (!obj->isNative())
+        fprintf(stderr, "not native\n");
+
     unsigned reservedEnd = JSCLASS_RESERVED_SLOTS(clasp);
     unsigned slots = obj->slotSpan();
-    for (unsigned i = 0; i < slots; i++) {
+    unsigned stop = obj->isNative() ? reservedEnd : slots;
+    if (stop > 0)
+        fprintf(stderr, obj->isNative() ? "reserved slots:\n" : "slots:\n");
+    for (unsigned i = 0; i < stop; i++) {
         fprintf(stderr, " %3d ", i);
         if (i < reservedEnd)
             fprintf(stderr, "(reserved) ");
         fprintf(stderr, "= ");
         dumpValue(obj->getSlot(i));
         fputc('\n', stderr);
+    }
+
+    if (obj->isNative()) {
+        fprintf(stderr, "properties:\n");
+        Vector<const Shape *, 8, SystemAllocPolicy> props;
+        for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront())
+            props.append(&r.front());
+        for (size_t i = props.length(); i-- != 0;)
+            DumpProperty(obj, *props[i]);
     }
     fputc('\n', stderr);
 }
