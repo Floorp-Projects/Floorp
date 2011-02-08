@@ -201,7 +201,9 @@ var AutoCompleteUtils = {
 
     try {
       let self = this;
-      NetUtil.asyncFetch(this.cacheFile, function(aInputStream, aResultCode) {
+      let channel = NetUtil.newChannel(this.cacheFile);
+      channel.setContentType("application/json");
+      NetUtil.asyncFetch(channel, function(aInputStream, aResultCode) {
         if (Components.isSuccessCode(aResultCode)) {
           let cache = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON).
                       decodeFromStream(aInputStream, aInputStream.available());
