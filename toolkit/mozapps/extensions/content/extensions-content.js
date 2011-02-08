@@ -192,11 +192,11 @@ function createInstallTrigger(window) {
     "(function (x) {\
        var bind = Function.bind;\
        return {\
-         enabled: bind.call(x.enabled, x);\
-         updateEnabled: bind.call(x.updateEnabled, x);\
-         install: bind.call(x.install, x);\
-         installChrome: bind.call(x.installChrome, x);\
-         startSoftwareUpdate: bind.call(x.startSoftwareUpdate, x);\
+         enabled: bind.call(x.enabled, x),\
+         updateEnabled: bind.call(x.updateEnabled, x),\
+         install: bind.call(x.install, x),\
+         installChrome: bind.call(x.installChrome, x),\
+         startSoftwareUpdate: bind.call(x.startSoftwareUpdate, x)\
        };\
      })", sandbox)(chromeObject);
 
