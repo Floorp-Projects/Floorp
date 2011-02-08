@@ -1655,6 +1655,14 @@
   </binding>
 
   <binding id="search-textbox" extends="chrome://global/content/bindings/textbox.xml#search-textbox">
+    <implementation>
+      <field name="_searchClear">
+        <![CDATA[
+          document.getAnonymousElementByAttribute(this, "class", "textbox-search-clear");
+        ]]>
+      </field>
+    </implementation>
+
     <handlers>
       <handler event="TapLong" phase="capturing">
         <![CDATA[
@@ -1662,6 +1670,26 @@
           box.showContextMenu(this, false);
         ]]>
       </handler>
+
+      <handler event="text" phase="bubbling"><![CDATA[
+        // Listen for composition update, some VKB that does suggestions does not
+        // update directly the content of the field but in this case we want to
+        // search as soon as something is entered in the field
+        let evt = document.createEvent("Event");
+        evt.initEvent("input", true, false);
+        this.dispatchEvent(evt);
+      ]]></handler>
+
+      <handler event="click" phase="bubbling"><![CDATA[
+        // bug 629661. To reset the autosuggestions mechanism of Android, the
+        // textfield need to reset the the IME
+        if (event.originalTarget == this._searchClear) {
+          setTimeout(function(self) {
+            self.inputField.readOnly = true;
+            self.inputField.readOnly = false;
+          }, 0, this);
+        }
+      ]]></handler>
     </handlers>
   </binding>
 
