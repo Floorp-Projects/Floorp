@@ -427,95 +427,95 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     let rect = new Rect(inRect.left, inRect.top, 
       validSize.x, validSize.y);
 
-      var css = {};
+    var css = {};
 
-      if (rect.left != this.bounds.left || options.force)
-        css.left = rect.left;
+    if (rect.left != this.bounds.left || options.force)
+      css.left = rect.left;
 
-      if (rect.top != this.bounds.top || options.force)
-        css.top = rect.top;
+    if (rect.top != this.bounds.top || options.force)
+      css.top = rect.top;
 
-      if (rect.width != this.bounds.width || options.force) {
-        css.width = rect.width - this.sizeExtra.x;
-        css.fontSize = this._getFontSizeFromWidth(rect.width);
-        css.fontSize += 'px';
-      }
+    if (rect.width != this.bounds.width || options.force) {
+      css.width = rect.width - this.sizeExtra.x;
+      css.fontSize = this._getFontSizeFromWidth(rect.width);
+      css.fontSize += 'px';
+    }
 
-      if (rect.height != this.bounds.height || options.force) {
-        if (!this.isStacked)
-          css.height = rect.height - this.sizeExtra.y - TabItems.fontSizeRange.max;
-        else
-          css.height = rect.height - this.sizeExtra.y;
-      }
+    if (rect.height != this.bounds.height || options.force) {
+      if (!this.isStacked)
+        css.height = rect.height - this.sizeExtra.y - TabItems.fontSizeRange.max;
+      else
+        css.height = rect.height - this.sizeExtra.y;
+    }
 
-      if (Utils.isEmptyObject(css))
-        return;
+    if (Utils.isEmptyObject(css))
+      return;
 
-      this.bounds.copy(rect);
+    this.bounds.copy(rect);
 
-      // If this is a brand new tab don't animate it in from
-      // a random location (i.e., from [0,0]). Instead, just
-      // have it appear where it should be.
-      if (immediately || (!this._hasBeenDrawn)) {
-        this.$container.css(css);
-      } else {
-        TabItems.pausePainting();
-        this.$container.animate(css, {
-            duration: 200,
-          easing: "tabviewBounce",
-          complete: function() {
-            TabItems.resumePainting();
-          }
-        });
-      }
-
-      if (css.fontSize && !this.isStacked) {
-        if (css.fontSize < TabItems.fontSizeRange.min)
-          immediately ? this.$tabTitle.hide() : this.$tabTitle.fadeOut();
-        else
-          immediately ? this.$tabTitle.show() : this.$tabTitle.fadeIn();
-      }
-
-      if (css.width) {
-        TabItems.update(this.tab);
-
-        let widthRange, proportion;
-
-        if (this.isStacked) {
-          if (UI.rtl) {
-            this.$fav.css({top:0, right:0});
-          } else {
-            this.$fav.css({top:0, left:0});
-          }
-          widthRange = new Range(70, 90);
-          proportion = widthRange.proportion(css.width); // between 0 and 1
-        } else {
-          if (UI.rtl) {
-            this.$fav.css({top:4, right:2});
-          } else {
-            this.$fav.css({top:4, left:4});
-          }
-          widthRange = new Range(40, 45);
-          proportion = widthRange.proportion(css.width); // between 0 and 1
+    // If this is a brand new tab don't animate it in from
+    // a random location (i.e., from [0,0]). Instead, just
+    // have it appear where it should be.
+    if (immediately || (!this._hasBeenDrawn)) {
+      this.$container.css(css);
+    } else {
+      TabItems.pausePainting();
+      this.$container.animate(css, {
+          duration: 200,
+        easing: "tabviewBounce",
+        complete: function() {
+          TabItems.resumePainting();
         }
+      });
+    }
 
-        if (proportion <= .1)
-          this.$close.hide();
-        else
-          this.$close.show().css({opacity:proportion});
+    if (css.fontSize && !this.isStacked) {
+      if (css.fontSize < TabItems.fontSizeRange.min)
+        immediately ? this.$tabTitle.hide() : this.$tabTitle.fadeOut();
+      else
+        immediately ? this.$tabTitle.show() : this.$tabTitle.fadeIn();
+    }
 
-        var pad = 1 + 5 * proportion;
-        var alphaRange = new Range(0.1,0.2);
-        this.$fav.css({
-         "-moz-padding-start": pad + "px",
-         "-moz-padding-end": pad + 2 + "px",
-         "padding-top": pad + "px",
-         "padding-bottom": pad + "px",
-         "border-color": "rgba(0,0,0,"+ alphaRange.scale(proportion) +")",
-        });
+    if (css.width) {
+      TabItems.update(this.tab);
+
+      let widthRange, proportion;
+
+      if (this.isStacked) {
+        if (UI.rtl) {
+          this.$fav.css({top:0, right:0});
+        } else {
+          this.$fav.css({top:0, left:0});
+        }
+        widthRange = new Range(70, 90);
+        proportion = widthRange.proportion(css.width); // between 0 and 1
+      } else {
+        if (UI.rtl) {
+          this.$fav.css({top:4, right:2});
+        } else {
+          this.$fav.css({top:4, left:4});
+        }
+        widthRange = new Range(40, 45);
+        proportion = widthRange.proportion(css.width); // between 0 and 1
       }
 
-      this._hasBeenDrawn = true;
+      if (proportion <= .1)
+        this.$close.hide();
+      else
+        this.$close.show().css({opacity:proportion});
+
+      var pad = 1 + 5 * proportion;
+      var alphaRange = new Range(0.1,0.2);
+      this.$fav.css({
+       "-moz-padding-start": pad + "px",
+       "-moz-padding-end": pad + 2 + "px",
+       "padding-top": pad + "px",
+       "padding-bottom": pad + "px",
+       "border-color": "rgba(0,0,0,"+ alphaRange.scale(proportion) +")",
+      });
+    }
+
+    this._hasBeenDrawn = true;
 
     UI.clearShouldResizeItems();
 
