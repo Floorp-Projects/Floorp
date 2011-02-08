@@ -111,7 +111,10 @@ interface mozIStorageValueArray : nsISupports {
 
   inline PRInt32 AsInt32(PRUint32 idx) {
     PRInt32 v = 0;
-    nsresult rv = GetInt32(idx, &v);
+#ifdef DEBUG
+    nsresult rv =
+#endif
+      GetInt32(idx, &v);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
                       "Getting value failed, wrong column index?");
     return v;
@@ -119,7 +122,10 @@ interface mozIStorageValueArray : nsISupports {
 
   inline PRInt64 AsInt64(PRUint32 idx) {
     PRInt64 v = 0;
-    nsresult rv = GetInt64(idx, &v);
+#ifdef DEBUG
+    nsresult rv =
+#endif
+      GetInt64(idx, &v);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
                       "Getting value failed, wrong column index?");
     return v;
@@ -127,7 +133,10 @@ interface mozIStorageValueArray : nsISupports {
 
   inline double AsDouble(PRUint32 idx) {
     double v = 0.0;
-    nsresult rv = GetDouble(idx, &v);
+#ifdef DEBUG
+    nsresult rv =
+#endif
+      GetDouble(idx, &v);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
                       "Getting value failed, wrong column index?");
     return v;
@@ -136,7 +145,10 @@ interface mozIStorageValueArray : nsISupports {
   inline const char* AsSharedUTF8String(PRUint32 idx, PRUint32 *len) {
     const char *str = nsnull;
     *len = 0;
-    nsresult rv = GetSharedUTF8String(idx, len, &str);
+#ifdef DEBUG
+    nsresult rv =
+#endif
+      GetSharedUTF8String(idx, len, &str);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
                       "Getting value failed, wrong column index?");
     return str;
@@ -145,7 +157,10 @@ interface mozIStorageValueArray : nsISupports {
   inline const PRUnichar* AsSharedWString(PRUint32 idx, PRUint32 *len) {
     const PRUnichar *str = nsnull;
     *len = 0;
-    nsresult rv = GetSharedString(idx, len, &str);
+#ifdef DEBUG
+    nsresult rv =
+#endif
+      GetSharedString(idx, len, &str);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
                       "Getting value failed, wrong column index?");
     return str;
@@ -154,7 +169,10 @@ interface mozIStorageValueArray : nsISupports {
   inline const PRUint8* AsSharedBlob(PRUint32 idx, PRUint32 *len) {
     const PRUint8 *blob = nsnull;
     *len = 0;
-    nsresult rv = GetSharedBlob(idx, len, &blob);
+#ifdef DEBUG
+    nsresult rv =
+#endif
+      GetSharedBlob(idx, len, &blob);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
                       "Getting value failed, wrong column index?");
     return blob;
@@ -162,7 +180,10 @@ interface mozIStorageValueArray : nsISupports {
 
   inline PRBool IsNull(PRUint32 idx) {
     PRBool b = PR_FALSE;
-    nsresult rv = GetIsNull(idx, &b);
+#ifdef DEBUG
+    nsresult rv =
+#endif
+      GetIsNull(idx, &b);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv),
                       "Getting value failed, wrong column index?");
     return b;
