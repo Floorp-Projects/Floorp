@@ -523,8 +523,8 @@ BrowserGlue.prototype = {
     var brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
 
     var appName = brandBundle.GetStringFromName("brandShortName");
-    var quitDialogTitle = quitBundle.formatStringFromName(aQuitType + "DialogTitle",
-                                                          [appName], 1);
+    var quitTitleString = (aQuitType == "restart" ? "restart" : "quit") + "DialogTitle";
+    var quitDialogTitle = quitBundle.formatStringFromName(quitTitleString, [appName], 1);
 
     var message;
     if (aQuitType == "restart")
