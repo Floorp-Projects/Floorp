@@ -1,5 +1,5 @@
 body {
-  font-family: Tahoma, sans-serif !important;
+  font: message-box;
   color: rgba(0, 0, 0, 0.6);
   font-size: 13px;
   line-height: 16px;
