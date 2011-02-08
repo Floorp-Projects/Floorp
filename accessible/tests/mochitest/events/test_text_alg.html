@@ -1,0 +1,205 @@
+<html>
+
+<head>
+  <title>Accessible text update algorithm testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    const kRemoval = 0;
+    const kInsertion = 1;
+
+    function changeText(aContainerID, aValue, aEventList)
+    {
+      this.containerNode = getNode(aContainerID);
+      this.textNode = this.containerNode.firstChild;
+      this.textData = this.textNode.data;
+
+      this.eventSeq = [ ];
+      for (var i = 0; i < aEventList.length; i++) {
+        var isInserted = aEventList[i][0];
+        var str = aEventList[i][1];
+        var offset = aEventList[i][2];
+        var checker = new textChangeChecker(this.containerNode, offset,
+                                            offset + str.length, str,
+                                            isInserted);
+        this.eventSeq.push(checker);
+      }
+
+      this.invoke = function changeText_invoke()
+      {
+        this.textNode.data = aValue;
+      }
+
+      this.getID = function changeText_getID()
+      {
+        return "change text '" + this.textData + "' -> " + this.textNode.data +
+          "for " + prettyName(this.containerNode);
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      //////////////////////////////////////////////////////////////////////////
+      // wqrema -> tqb: substitution coalesced with removal
+
+      var events = [
+        [ kRemoval, "w", 0 ], // wqrema -> qrema
+        [ kInsertion, "t", 0], // qrema -> tqrema
+        [ kRemoval, "rema", 2 ], // tqrema -> tq
+        [ kInsertion, "b", 2] // tq -> tqb
+      ];
+      gQueue.push(new changeText("p1", "tqb", events));
+
+      //////////////////////////////////////////////////////////////////////////
+      // b -> insa: substitution coalesced with insertion (complex substitution)
+
+      events = [
+        [ kRemoval, "b", 0 ], // b ->
+        [ kInsertion, "insa", 0] //  -> insa
+      ];
+      gQueue.push(new changeText("p2", "insa", events));
+
+      //////////////////////////////////////////////////////////////////////////
+      // abc -> def: coalesced substitutions
+
+      events = [
+        [ kRemoval, "abc", 0 ], // abc ->
+        [ kInsertion, "def", 0] //  -> def
+      ];
+      gQueue.push(new changeText("p3", "def", events));
+
+      //////////////////////////////////////////////////////////////////////////
+      // abcabc -> abcDEFabc: coalesced insertions
+
+      events = [
+        [ kInsertion, "DEF", 3] // abcabc -> abcDEFabc
+      ];
+      gQueue.push(new changeText("p4", "abcDEFabc", events));
+
+      //////////////////////////////////////////////////////////////////////////
+      // abc -> defabc: insertion into begin
+
+      events = [
+        [ kInsertion, "def", 0] // abc -> defabc
+      ];
+      gQueue.push(new changeText("p5", "defabc", events));
+
+      //////////////////////////////////////////////////////////////////////////
+      // abc -> abcdef: insertion into end
+
+      events = [
+        [ kInsertion, "def", 3] // abc -> abcdef
+      ];
+      gQueue.push(new changeText("p6", "abcdef", events));
+
+      //////////////////////////////////////////////////////////////////////////
+      // defabc -> abc: removal from begin
+
+      events = [
+        [ kRemoval, "def", 0] // defabc -> abc
+      ];
+      gQueue.push(new changeText("p7", "abc", events));
+
+      //////////////////////////////////////////////////////////////////////////
+      // abcdef -> abc: removal from the end
+
+      events = [
+        [ kRemoval, "def", 3] // abcdef -> abc
+      ];
+      gQueue.push(new changeText("p8", "abc", events));
+
+      //////////////////////////////////////////////////////////////////////////
+      // abcDEFabc -> abcabc: coalesced removals
+
+      events = [
+        [ kRemoval, "DEF", 3] // abcDEFabc -> abcabc
+      ];
+      gQueue.push(new changeText("p9", "abcabc", events));
+
+      //////////////////////////////////////////////////////////////////////////
+      // !abcdef@ -> @axbcef!: insertion, deletion and substitutions
+
+      events = [
+        [ kRemoval, "!", 0 ], // !abcdef@ -> abcdef@
+        [ kInsertion, "@", 0], // abcdef@ -> @abcdef@
+        [ kInsertion, "x", 2 ], // @abcdef@ -> @axbcdef@
+        [ kRemoval, "d", 5], // @axbcdef@ -> @axbcef@
+        [ kRemoval, "@", 7 ], // @axbcef@ -> @axbcef
+        [ kInsertion, "!", 7 ], // @axbcef -> @axbcef!
+      ];
+      gQueue.push(new changeText("p10", "@axbcef!", events));
+
+      //////////////////////////////////////////////////////////////////////////
+      // meilenstein -> levenshtein: insertion, complex and simple substitutions
+
+      events = [
+        [ kRemoval, "m", 0 ], // meilenstein -> eilenstein
+        [ kInsertion, "l", 0], // eilenstein -> leilenstein
+        [ kRemoval, "il", 2 ], // leilenstein -> leenstein
+        [ kInsertion, "v", 2], // leenstein -> levenstein
+        [ kInsertion, "h", 6 ], // levenstein -> levenshtein
+      ];
+      gQueue.push(new changeText("p11", "levenshtein", events));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=626660"
+     title="Cache rendered text on a11y side">
+    Mozilla Bug 626660
+  </a>
+  <br>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="eventdump"></div>
+
+  <p id="p1">wqrema</p>
+  <p id="p2">b</p>
+  <p id="p3">abc</p>
+  <p id="p4">abcabc</p>
+  <p id="p5">abc</p>
+  <p id="p6">abc</p>
+  <p id="p7">defabc</p>
+  <p id="p8">abcdef</p>
+  <p id="p9">abcDEFabc</p>
+  <p id="p10">!abcdef@</p>
+  <p id="p11">meilenstein</p>
+</body>
+</html>
