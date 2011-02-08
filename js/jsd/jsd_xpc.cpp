@@ -2524,6 +2524,7 @@ jsdService::DeactivateDebugger ()
     jsdScript::InvalidateAll();
     jsdValue::InvalidateAll();
     jsdProperty::InvalidateAll();
+    jsdStackFrame::InvalidateAll();
     ClearAllBreakpoints();
 
     JSD_SetErrorReporter (mCx, NULL, NULL);
