@@ -378,7 +378,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           // create array even if len == 0.
           aObjectsArray = JS_NewArrayObject(ctx, 0, NULL);
           if (!aObjectsArray) {
-            return false;
+            return NS_ERROR_OUT_OF_MEMORY;
           }
         }
 
@@ -414,7 +414,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         JSAutoEnterCompartment ac;
 
         if (!ac.enter(ctx, object))
-          return PR_FALSE;
+          return NS_ERROR_FAILURE;
 
         jsval funval = JSVAL_VOID;
         if (JS_ObjectIsFunction(ctx, object)) {
