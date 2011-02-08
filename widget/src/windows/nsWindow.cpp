@@ -6227,11 +6227,9 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, PRBool& result)
     ::GetWindowPlacement(mWnd, &pl);
 
     if (pl.showCmd == SW_SHOWMAXIMIZED)
-      event.mSizeMode = nsSizeMode_Maximized;
+      event.mSizeMode = (mFullscreenMode ? nsSizeMode_Fullscreen : nsSizeMode_Maximized);
     else if (pl.showCmd == SW_SHOWMINIMIZED)
       event.mSizeMode = nsSizeMode_Minimized;
-    else if (mFullscreenMode)
-      event.mSizeMode = nsSizeMode_Fullscreen;
     else
       event.mSizeMode = nsSizeMode_Normal;
 
@@ -6397,11 +6395,9 @@ void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info)
     ::GetWindowPlacement(mWnd, &pl);
     PRInt32 sizeMode;
     if (pl.showCmd == SW_SHOWMAXIMIZED)
-      sizeMode = nsSizeMode_Maximized;
+      sizeMode = (mFullscreenMode ? nsSizeMode_Fullscreen : nsSizeMode_Maximized);
     else if (pl.showCmd == SW_SHOWMINIMIZED)
       sizeMode = nsSizeMode_Minimized;
-    else if (mFullscreenMode)
-      sizeMode = nsSizeMode_Fullscreen;
     else
       sizeMode = nsSizeMode_Normal;
 
