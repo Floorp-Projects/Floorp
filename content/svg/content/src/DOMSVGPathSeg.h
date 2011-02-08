@@ -53,6 +53,8 @@ class nsSVGElement;
 #define MOZILLA_DOMSVGPATHSEG_IID \
   { 0x494A7566, 0xDC26, 0x40C8, { 0x91, 0x22, 0x52, 0xAB, 0xD7, 0x68, 0x70, 0xC4 } }
 
+#define MOZ_SVG_LIST_INDEX_BIT_COUNT 31
+
 namespace mozilla {
 
 /**
@@ -120,6 +122,10 @@ public:
   void InsertingIntoList(DOMSVGPathSegList *aList,
                          PRUint32 aListIndex,
                          PRBool aIsAnimValItem);
+
+  static PRUint32 MaxListIndex() {
+    return (1U << MOZ_SVG_LIST_INDEX_BIT_COUNT) - 1;
+  }
 
   /// This method is called to notify this object that its list index changed.
   void UpdateListIndex(PRUint32 aListIndex) {
@@ -198,7 +204,7 @@ protected:
   // Bounds for the following are checked in the ctor, so be sure to update
   // that if you change the capacity of any of the following.
 
-  PRUint32 mListIndex:31;
+  PRUint32 mListIndex:MOZ_SVG_LIST_INDEX_BIT_COUNT;
   PRUint32 mIsAnimValItem:1; // PRUint32 because MSVC won't pack otherwise
 };
 
@@ -274,5 +280,7 @@ NS_NewSVGPathSegCurvetoQuadraticSmoothAbs(float x, float y);
 
 nsIDOMSVGPathSeg*
 NS_NewSVGPathSegCurvetoQuadraticSmoothRel(float x, float y);
+
+#undef MOZ_SVG_LIST_INDEX_BIT_COUNT
 
 #endif // MOZILLA_DOMSVGPATHSEG_H__
