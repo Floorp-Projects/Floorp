@@ -5657,7 +5657,6 @@ xml_elements(JSContext *cx, uintN argc, jsval *vp)
     nameqn = ToXMLName(cx, name, &funid);
     if (!nameqn)
         return JS_FALSE;
-    vp[2] = OBJECT_TO_JSVAL(nameqn);
 
     if (!JSID_IS_VOID(funid))
         return xml_list_helper(cx, xml, vp) != NULL;
