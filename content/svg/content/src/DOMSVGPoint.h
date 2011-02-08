@@ -176,7 +176,7 @@ public:
                          PRBool aIsAnimValItem);
 
   /// This method is called to notify this object that its list index changed.
-  void UpdateListIndex(PRUint8 aListIndex) {
+  void UpdateListIndex(PRUint32 aListIndex) {
     mListIndex = aListIndex;
   }
 
