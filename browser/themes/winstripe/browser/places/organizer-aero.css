@@ -30,11 +30,10 @@
   border: 0;
   -moz-border-end: 1px solid #A9B7C9;
   min-width: 0;
-  width: 3px !important;
+  width: 3px;
   background-color: transparent;
   -moz-margin-start: -3px;
   position: relative;
-  z-index: 10;
 }
 
 #searchModifiers:-moz-system-metric(windows-default-theme) {
