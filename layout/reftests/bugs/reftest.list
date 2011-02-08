@@ -1558,6 +1558,7 @@ asserts(0-1) == 582146-1.html about:blank
 == 584699-1.html 584699-1-ref.html
 == 585598-2.xhtml 585598-2-ref.xhtml
 == 586400-1.html 586400-1-ref.html
+== 586683-1.html 586683-1-ref.html
 == 589615-1a.xhtml 589615-1-ref.html
 == 589615-1b.html 589615-1-ref.html
 == 589672-1.html 589672-1-ref.html
