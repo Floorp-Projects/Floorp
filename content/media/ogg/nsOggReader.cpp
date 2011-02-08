@@ -1618,11 +1618,11 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
       }
 
       PRUint32 serial = ogg_page_serialno(&page);
-      if (serial == mVorbisSerial) {
+      if (mVorbisState && serial == mVorbisSerial) {
         startTime = nsVorbisState::Time(&mVorbisInfo, granulepos) - aStartTime;
         NS_ASSERTION(startTime > 0, "Must have positive start time");
       }
-      else if (serial == mTheoraSerial) {
+      else if (mTheoraState && serial == mTheoraSerial) {
         startTime = nsTheoraState::Time(&mTheoraInfo, granulepos) - aStartTime;
         NS_ASSERTION(startTime > 0, "Must have positive start time");
       }
