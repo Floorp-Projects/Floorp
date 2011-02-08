@@ -36,6 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
+
 ################################################################################
 # Helper defines and macros for toolkit applications
 
@@ -118,6 +119,7 @@
 !include overrides.nsh
 
 !define SHORTCUTS_LOG "shortcuts_log.ini"
+
 
 ################################################################################
 # Macros for debugging
@@ -643,113 +645,6 @@
     !define _MOZFUNC_UN
     !verbose pop
   !endif
-!macroend
-
-/**
- * Posts WM_QUIT to the application's message window which is found using the
- * message window's class. This macro uses the nsProcess plugin available
- * from http://nsis.sourceforge.net/NsProcess_plugin
- *
- * @param   _MSG
- *          The message text to display in the message box.
- * @param   _PROMPT
- *          If false don't prompt the user and automatically exit the
- *          application if it is running.
- *
- * $R6 = return value for nsProcess::_FindProcess and nsProcess::_KillProcess
- * $R7 = return value from FindWindow
- * $R8 = _PROMPT
- * $R9 = _MSG
- */
-!macro CloseApp
-
-  !ifndef ${_MOZFUNC_UN}CloseApp
-    !verbose push
-    !verbose ${_MOZFUNC_VERBOSE}
-    !define ${_MOZFUNC_UN}CloseApp "!insertmacro ${_MOZFUNC_UN}CloseAppCall"
-
-    Function ${_MOZFUNC_UN}CloseApp
-      Exch $R9
-      Exch 1
-      Exch $R8
-      Push $R7
-      Push $R6
-
-      loop:
-      Push $R6
-      nsProcess::_FindProcess /NOUNLOAD "${FileMainEXE}"
-      Pop $R6
-      StrCmp $R6 0 +1 end
-
-      StrCmp $R8 "false" +2 +1
-      MessageBox MB_OKCANCEL|MB_ICONQUESTION "$R9" IDCANCEL exit 0
-
-      FindWindow $R7 "${WindowClass}"
-      IntCmp $R7 0 +4 +1 +1
-      System::Call 'user32::PostMessage(i R7, i ${WM_QUIT}, i 0, i 0)'
-      ; The amount of time to wait for the app to shutdown before prompting again
-      Sleep 5000
-
-      Push $R6
-      nsProcess::_FindProcess /NOUNLOAD "${FileMainEXE}"
-      Pop $R6
-      StrCmp $R6 0 +1 end
-      Push $R6
-      nsProcess::_KillProcess /NOUNLOAD "${FileMainEXE}"
-      Pop $R6
-      Sleep 2000
-
-      Goto loop
-
-      exit:
-      nsProcess::_Unload
-      Quit
-
-      end:
-      nsProcess::_Unload
-
-      Pop $R6
-      Pop $R7
-      Exch $R8
-      Exch 1
-      Exch $R9
-    FunctionEnd
-
-    !verbose pop
-  !endif
-!macroend
-
-!macro CloseAppCall _MSG _PROMPT
-  !verbose push
-  !verbose ${_MOZFUNC_VERBOSE}
-  Push "${_MSG}"
-  Push "${_PROMPT}"
-  Call CloseApp
-  !verbose pop
-!macroend
-
-!macro un.CloseApp
-  !ifndef un.CloseApp
-    !verbose push
-    !verbose ${_MOZFUNC_VERBOSE}
-    !undef _MOZFUNC_UN
-    !define _MOZFUNC_UN "un."
-
-    !insertmacro CloseApp
-
-    !undef _MOZFUNC_UN
-    !define _MOZFUNC_UN
-    !verbose pop
-  !endif
-!macroend
-
-!macro un.CloseAppCall _MSG _PROMPT
-  !verbose push
-  !verbose ${_MOZFUNC_VERBOSE}
-  Push "${_MSG}"
-  Push "${_PROMPT}"
-  Call un.CloseApp
-  !verbose pop
 !macroend
 
 
@@ -1515,9 +1410,9 @@
   !endif
 !macroend
 
+
 ################################################################################
 # Macros for handling DLL registration
-
 
 !macro RegisterDLL DLL
 
@@ -1551,6 +1446,7 @@
 
 !define RegisterDLL `!insertmacro RegisterDLL`
 !define UnregisterDLL `!insertmacro UnregisterDLL`
+
 
 ################################################################################
 # Macros for retrieving existing install paths
@@ -6023,6 +5919,7 @@
   ${DeleteFile} "$INSTDIR\uninstall\${SHORTCUTS_LOG}"
 !macroend
 !define DeleteShortcutsLogFile "!insertmacro DeleteShortcutsLogFile"
+
 
 ################################################################################
 # Macros for managing specific Windows version features
