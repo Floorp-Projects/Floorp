@@ -151,6 +151,10 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
     JS_ASSERT(nativeContains(shape));
     JS_ASSERT(shape.isMethod());
     JS_ASSERT(&shape.methodObject() == &vp->toObject());
+    JS_ASSERT(shape.writable());
+    JS_ASSERT(shape.slot != SHAPE_INVALID_SLOT);
+    JS_ASSERT(shape.hasDefaultSetter() || shape.setterOp() == js_watch_set);
+    JS_ASSERT(!isGlobal());  /* i.e. we are not changing the global shape */
 
     JSObject *funobj = &vp->toObject();
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
@@ -161,9 +165,19 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
         return false;
     funobj->setMethodObj(*this);
 
+    /*
+     * Replace the method property with an ordinary data property. This is
+     * equivalent to this->setProperty(cx, shape.id, vp) except that any
+     * watchpoint on the property is not triggered.
+     */
+    uint32 slot = shape.slot;
+    const js::Shape *newshape = methodShapeChange(cx, shape);
+    if (!newshape)
+        return NULL;
+    JS_ASSERT(!newshape->isMethod());
+    JS_ASSERT(newshape->slot == slot);
     vp->setObject(*funobj);
-    if (!js_SetPropertyHelper(cx, this, shape.id, 0, vp, false))
-        return false;
+    nativeSetSlot(slot, *vp);
 
 #ifdef DEBUG
     if (cx->runtime->functionMeterFilename) {
