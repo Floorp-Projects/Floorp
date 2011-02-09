@@ -71,6 +71,7 @@
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 #include "nsDOMEventTargetWrapperCache.h"
+#include "xpcpublic.h"
 
 // General helper includes
 #include "nsGlobalWindow.h"
@@ -4237,6 +4238,31 @@ nsDOMClassInfo::GetArrayIndexFromId(JSContext *cx, jsid id, PRBool *aIsNumber)
   }
 
   return i;
+}
+
+// static
+nsresult
+nsDOMClassInfo::WrapNative(JSContext *cx, JSObject *scope,
+                           nsISupports *native, nsWrapperCache *cache,
+                           const nsIID* aIID, jsval *vp,
+                           nsIXPConnectJSObjectHolder** aHolder,
+                           PRBool aAllowWrapping)
+{
+  if (!native) {
+    NS_ASSERTION(!aHolder || !*aHolder, "*aHolder should be null!");
+
+    *vp = JSVAL_NULL;
+
+    return NS_OK;
+  }
+
+  JSObject *wrapper = xpc_GetCachedSlimWrapper(cache, scope, vp);
+  if (wrapper) {
+    return NS_OK;
+  }
+
+  return sXPConnect->WrapNativeToJSVal(cx, scope, native, cache, aIID,
+                                       aAllowWrapping, vp, aHolder);
 }
 
 NS_IMETHODIMP

@@ -60,7 +60,6 @@
 #include "jsdbgapi.h"
 #include "jsgc.h"
 #include "jscompartment.h"
-#include "xpcpublic.h"
 #include "nscore.h"
 #include "nsXPCOM.h"
 #include "nsAutoPtr.h"
@@ -487,9 +486,6 @@ private:
 *
 ****************************************************************************
 ***************************************************************************/
-
-static const uint32 XPC_GC_COLOR_BLACK = 0;
-static const uint32 XPC_GC_COLOR_GRAY = 1;
 
 // We have a general rule internally that getters that return addref'd interface
 // pointer generally do so using an 'out' parm. When interface pointers are
@@ -2529,14 +2525,26 @@ public:
     nsISupports*
     GetIdentityObject() const {return mIdentity;}
 
+    /**
+     * This getter clears the gray bit before handing out the JSObject which
+     * means that the object is guaranteed to be kept alive past the next CC.
+     */
     JSObject*
-    GetFlatJSObjectAndMark() const
+    GetFlatJSObject() const
         {if(mFlatJSObject && mFlatJSObject != INVALID_OBJECT)
-             mFlatJSObject->markIfUnmarked();
+             mFlatJSObject->unmark(XPC_GC_COLOR_GRAY);
          return mFlatJSObject;}
 
+    /**
+     * This getter does not change the color of the JSObject meaning that the
+     * object returned is not guaranteed to be kept alive past the next CC.
+     *
+     * This should only be called if you are certain that the return value won't
+     * be passed into a JS API function and that it won't be stored without
+     * being rooted (or otherwise signaling the stored value to the CC).
+     */
     JSObject*
-    GetFlatJSObjectNoMark() const {return mFlatJSObject;}
+    GetFlatJSObjectPreserveColor() const {return mFlatJSObject;}
 
     XPCLock*
     GetLock() const {return IsValid() && HasProto() ?
@@ -2984,7 +2992,24 @@ public:
                  nsXPCWrappedJS** wrapper);
 
     nsISomeInterface* GetXPTCStub() { return mXPTCStub; }
-    JSObject* GetJSObject() const {return mJSObj;}
+
+    /**
+     * This getter clears the gray bit before handing out the JSObject which
+     * means that the object is guaranteed to be kept alive past the next CC.
+     */
+    JSObject* GetJSObject() const {if(mJSObj) mJSObj->unmark(XPC_GC_COLOR_GRAY);
+                                   return mJSObj;}
+
+    /**
+     * This getter does not change the color of the JSObject meaning that the
+     * object returned is not guaranteed to be kept alive past the next CC.
+     *
+     * This should only be called if you are certain that the return value won't
+     * be passed into a JS API function and that it won't be stored without
+     * being rooted (or otherwise signaling the stored value to the CC).
+     */
+    JSObject* GetJSObjectPreserveColor() const {return mJSObj;}
+
     nsXPCWrappedJSClass*  GetClass() const {return mClass;}
     REFNSIID GetIID() const {return GetClass()->GetIID();}
     nsXPCWrappedJS* GetRootWrapper() const {return mRoot;}
@@ -4306,10 +4331,25 @@ public:
     static XPCVariant* newVariant(XPCCallContext& ccx, jsval aJSVal);
 
     /**
-     * nsIVariant exposes a GetAsJSVal() method, which also returns mJSVal.
-     * But if you can, you should call this one, since it can be inlined.
+     * This getter clears the gray bit before handing out the jsval if the jsval
+     * represents a JSObject. That means that the object is guaranteed to be
+     * kept alive past the next CC.
      */
-    jsval GetJSVal() const {return mJSVal;}
+    jsval GetJSVal() const
+        {if(JSVAL_IS_OBJECT(mJSVal))
+             JSVAL_TO_OBJECT(mJSVal)->unmark(XPC_GC_COLOR_GRAY);
+         return mJSVal;}
+
+    /**
+     * This getter does not change the color of the jsval (if it represents a
+     * JSObject) meaning that the value returned is not guaranteed to be kept
+     * alive past the next CC.
+     *
+     * This should only be called if you are certain that the return value won't
+     * be passed into a JS API function and that it won't be stored without
+     * being rooted (or otherwise signaling the stored value to the CC).
+     */
+    jsval GetJSValPreserveColor() const {return mJSVal;}
 
     XPCVariant(XPCCallContext& ccx, jsval aJSVal);
 
