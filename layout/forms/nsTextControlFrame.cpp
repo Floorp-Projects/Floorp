@@ -188,7 +188,6 @@ nsTextControlFrame::nsTextControlFrame(nsIPresShell* aShell, nsStyleContext* aCo
   , mIsProcessing(PR_FALSE)
   , mNotifyOnInput(PR_TRUE)
   , mFireChangeEventState(PR_FALSE)
-  , mInSecureKeyboardInputMode(PR_FALSE)
 #ifdef DEBUG
   , mInEditorInitialization(PR_FALSE)
 #endif
@@ -202,10 +201,6 @@ nsTextControlFrame::~nsTextControlFrame()
 void
 nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  if (mInSecureKeyboardInputMode) {
-    MaybeEndSecureKeyboardInput();
-  }
-
   mScrollEvent.Revoke();
 
   // Unbind the text editor state object from the frame.  The editor will live
@@ -223,29 +218,6 @@ nsIAtom*
 nsTextControlFrame::GetType() const 
 { 
   return nsGkAtoms::textInputFrame;
-} 
-
-nsresult nsTextControlFrame::MaybeBeginSecureKeyboardInput()
-{
-  nsresult rv = NS_OK;
-  if (IsPasswordTextControl() && !mInSecureKeyboardInputMode) {
-    nsIWidget* window = GetNearestWidget();
-    NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-    rv = window->BeginSecureKeyboardInput();
-    mInSecureKeyboardInputMode = NS_SUCCEEDED(rv);
-  }
-  return rv;
-}
-
-void nsTextControlFrame::MaybeEndSecureKeyboardInput()
-{
-  if (mInSecureKeyboardInputMode) {
-    nsIWidget* window = GetNearestWidget();
-    if (!window)
-      return;
-    window->EndSecureKeyboardInput();
-    mInSecureKeyboardInputMode = PR_FALSE;
-  }
 }
 
 nsresult
@@ -687,7 +659,6 @@ void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
       }
     }
 
-    MaybeEndSecureKeyboardInput();
     return;
   }
 
@@ -705,8 +676,7 @@ void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
     }
   }
 
-  if (NS_SUCCEEDED(InitFocusedValue()))
-    MaybeBeginSecureKeyboardInput();
+  InitFocusedValue();
 
   nsCOMPtr<nsISelection> ourSel;
   selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, 
