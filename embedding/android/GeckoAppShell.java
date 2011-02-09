@@ -254,11 +254,15 @@ class GeckoAppShell
         long freeSpace = getFreeSpace();
         try {
             File downloadDir = null;
-            if (Build.VERSION.SDK_INT >= 8)
-                downloadDir = GeckoApp.mAppContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
-            else
-                downloadDir = new File(Environment.getExternalStorageDirectory().getPath(), "download");
+            File updatesDir  = null;
+            if (Build.VERSION.SDK_INT >= 8) {
+                downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                updatesDir  = GeckoApp.mAppContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+            } else {
+                updatesDir = downloadDir = new File(Environment.getExternalStorageDirectory().getPath(), "download");
+            }
             GeckoAppShell.putenv("DOWNLOADS_DIRECTORY=" + downloadDir.getPath());
+            GeckoAppShell.putenv("UPDATES_DIRECTORY="   + updatesDir.getPath());
         }
         catch (Exception e) {
             Log.i("GeckoApp", "No download directory has been found: " + e);
