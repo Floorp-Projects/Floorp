@@ -90,8 +90,11 @@ SurfaceToTexture(ID3D10Device *aDevice,
   nsRefPtr<ID3D10Texture2D> texture;
   HRESULT hr = aDevice->CreateTexture2D(&desc, &data, getter_AddRefs(texture));
 
-  LayerManagerD3D10::ReportFailure(NS_LITERAL_CSTRING("Failed to create texture for image surface"),
-                                   hr);
+  if (FAILED(hr)) {
+    LayerManagerD3D10::ReportFailure(NS_LITERAL_CSTRING("Failed to create texture for image surface"),
+                                     hr);
+  }
+
   return texture.forget();
 }
 
