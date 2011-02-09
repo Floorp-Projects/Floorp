@@ -3441,6 +3441,12 @@ nsDocShell::SetUseGlobalHistory(PRBool aUseGlobalHistory)
         return NS_OK;
     }
 
+    // No need to initialize mGlobalHistory if IHistory is available.
+    nsCOMPtr<IHistory> history = services::GetHistoryService();
+    if (history) {
+        return NS_OK;
+    }
+
     if (mGlobalHistory) {
         return NS_OK;
     }
