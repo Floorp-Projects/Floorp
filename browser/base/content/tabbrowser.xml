@@ -3741,16 +3741,17 @@
 
     <implementation>
       <property name="label">
-        <setter>
-          if (!this.label) {
+        <setter><![CDATA[
+          if (!this.label)
             this.removeAttribute("mirror");
-            this.style.minWidth = "";
-          } else {
-            this.style.minWidth = getComputedStyle(this).width;
-          }
+
+          this.style.minWidth = this.getAttribute("type") == "status" &&
+                                this.getAttribute("previoustype") == "status"
+                                  ? getComputedStyle(this).width : "";
+
           this.setAttribute("label", val);
           return val;
-        </setter>
+        ]]></setter>
         <getter>
           return this.getAttribute("label");
         </getter>
