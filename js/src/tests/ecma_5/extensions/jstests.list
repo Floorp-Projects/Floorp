@@ -22,6 +22,7 @@ script strict-function-statements.js
 script strict-option-redeclared-parameter.js
 script string-literal-getter-setter-decompilation.js
 script uneval-strict-functions.js
+script watch-array-length.js
 script watch-inherited-property.js
 script watch-replaced-setter.js
 script watch-setter-become-setter.js
