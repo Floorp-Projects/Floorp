@@ -48,6 +48,9 @@
 #include "nsIPrincipal.h"
 #include "nsWrapperCache.h"
 
+static const uint32 XPC_GC_COLOR_BLACK = 0;
+static const uint32 XPC_GC_COLOR_GRAY = 1;
+
 class nsIPrincipal;
 
 nsresult
@@ -108,6 +111,16 @@ xpc_GetGlobalForObject(JSObject *obj)
     while(JSObject *parent = obj->getParent())
         obj = parent;
     return obj;
+}
+
+inline JSObject*
+nsWrapperCache::GetWrapper() const
+{
+  JSObject* object = GetWrapperPreserveColor();
+  if (object) {
+    object->unmark(XPC_GC_COLOR_GRAY);
+  }
+  return object;
 }
 
 inline JSObject*
