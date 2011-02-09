@@ -118,7 +118,7 @@ static const char *CodeToken[] = {
 #undef OPDEF
 };
 
-#if defined(DEBUG) || defined(JS_JIT_SPEW)
+#if defined(DEBUG) || defined(JS_JIT_SPEW) || defined(JS_METHODJIT_SPEW)
 /*
  * Array of JS bytecode names used by DEBUG-only js_Disassemble and by
  * JIT debug spew.
