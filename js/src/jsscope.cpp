@@ -186,12 +186,12 @@ PropertyTable::init(JSRuntime *rt, Shape *lastProp)
 bool
 Shape::hashify(JSRuntime *rt)
 {
-    JS_ASSERT(!table);
+    JS_ASSERT(!hasTable());
     void* mem = rt->malloc(sizeof(PropertyTable));
     if (!mem)
         return false;
-    table = new(mem) PropertyTable(entryCount());
-    return table->init(rt, this);
+    setTable(new(mem) PropertyTable(entryCount()));
+    return getTable()->init(rt, this);
 }
 
 #ifdef DEBUG
@@ -459,7 +459,7 @@ Shape::getChild(JSContext *cx, const js::Shape &child, Shape **listp)
 
     if (inDictionary()) {
         Shape *oldShape = *listp;
-        PropertyTable *table = oldShape ? oldShape->table : NULL;
+        PropertyTable *table = (oldShape && oldShape->hasTable()) ? oldShape->getTable() : NULL;
 
         /*
          * Attempt to grow table if needed before extending *listp, rather than
@@ -493,7 +493,7 @@ Shape::getChild(JSContext *cx, const js::Shape &child, Shape **listp)
                 oldShape->setTable(NULL);
                 newShape->setTable(table);
             } else {
-                if (!newShape->table)
+                if (!newShape->hasTable())
                     newShape->hashify(cx->runtime);
             }
             return newShape;
@@ -596,23 +596,6 @@ Shape::newDictionaryShape(JSContext *cx, const Shape &child, Shape **listp)
 }
 
 Shape *
-Shape::newDictionaryShapeForAddProperty(JSContext *cx, jsid id,
-                                        PropertyOp getter, StrictPropertyOp setter,
-                                        uint32 slot, uintN attrs, uintN flags, intN shortid)
-{
-    Shape *shape = JS_PROPERTY_TREE(cx).newShape(cx);
-    if (!shape)
-        return NULL;
-
-    new (shape) Shape(id, getter, setter, slot, attrs, (flags & ~FROZEN) | IN_DICTIONARY, shortid);
-    shape->parent = NULL;
-    shape->listp = NULL;
-
-    JS_COMPARTMENT_METER(cx->compartment->liveDictModeNodes++);
-    return shape;
-}
-
-Shape *
 Shape::newDictionaryList(JSContext *cx, Shape **listp)
 {
     Shape *shape = *listp;
@@ -631,7 +614,7 @@ Shape::newDictionaryList(JSContext *cx, Shape **listp)
             return NULL;
         }
 
-        JS_ASSERT(!dprop->table);
+        JS_ASSERT(!dprop->hasTable());
         childp = &dprop->parent;
         shape = shape->parent;
     }
@@ -708,14 +691,15 @@ JSObject::checkShapeConsistency()
     Shape *prev = NULL;
 
     if (inDictionaryMode()) {
-        if (PropertyTable *table = shape->table) {
+        if (shape->hasTable()) {
+            PropertyTable *table = shape->getTable();
             for (uint32 fslot = table->freelist; fslot != SHAPE_INVALID_SLOT;
                  fslot = getSlotRef(fslot).toPrivateUint32()) {
                 JS_ASSERT(fslot < shape->slotSpan);
             }
 
             for (int n = throttle; --n >= 0 && shape->parent; shape = shape->parent) {
-                JS_ASSERT_IF(shape != lastProp, !shape->table);
+                JS_ASSERT_IF(shape != lastProp, !shape->hasTable());
 
                 Shape **spp = table->search(shape->id, false);
                 JS_ASSERT(SHAPE_FETCH(spp) == shape);
@@ -723,7 +707,7 @@ JSObject::checkShapeConsistency()
         } else {
             shape = shape->parent;
             for (int n = throttle; --n >= 0 && shape; shape = shape->parent)
-                JS_ASSERT(!shape->table);
+                JS_ASSERT(!shape->hasTable());
         }
 
         shape = lastProp;
@@ -740,7 +724,8 @@ JSObject::checkShapeConsistency()
         }
     } else {
         for (int n = throttle; --n >= 0 && shape->parent; shape = shape->parent) {
-            if (PropertyTable *table = shape->table) {
+            if (shape->hasTable()) {
+                PropertyTable *table = shape->getTable();
                 JS_ASSERT(shape->parent);
                 for (Shape::Range r(shape); !r.empty(); r.popFront()) {
                     Shape **spp = table->search(r.front().id, false);
@@ -806,9 +791,10 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
             if (!toDictionaryMode(cx))
                 return NULL;
             spp = nativeSearch(id, true);
-            table = lastProp->table;
+            table = lastProp->getTable();
         }
-    } else if ((table = lastProp->table) != NULL) {
+    } else if (lastProp->hasTable()) {
+        table = lastProp->getTable();
         if (table->needsToGrow()) {
             if (!table->grow(cx))
                 return NULL;
@@ -836,7 +822,7 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
             ++table->entryCount;
 
             /* Pass the table along to the new lastProp, namely shape. */
-            JS_ASSERT(shape->parent->table == table);
+            JS_ASSERT(shape->parent->getTable() == table);
             shape->parent->setTable(NULL);
             shape->setTable(table);
         }
@@ -1136,7 +1122,7 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
 #ifdef DEBUG
         if (newShape) {
             JS_ASSERT(newShape == lastProp);
-            if (newShape->table) {
+            if (newShape->hasTable()) {
                 Shape **spp = nativeSearch(shape->id);
                 JS_ASSERT(SHAPE_FETCH(spp) == newShape);
             }
@@ -1201,7 +1187,7 @@ JSObject::removeProperty(JSContext *cx, jsid id)
      * the list and hash in place.
      */
     if (inDictionaryMode()) {
-        PropertyTable *table = lastProp->table;
+        PropertyTable *table = lastProp->hasTable() ? lastProp->getTable() : NULL;
 
         if (SHAPE_HAD_COLLISION(*spp)) {
             JS_ASSERT(table);
@@ -1241,7 +1227,7 @@ JSObject::removeProperty(JSContext *cx, jsid id)
         shape->removeFromDictionary(this);
         if (table) {
             if (shape == oldLastProp) {
-                JS_ASSERT(shape->table == table);
+                JS_ASSERT(shape->getTable() == table);
                 JS_ASSERT(shape->parent == lastProp);
                 JS_ASSERT(shape->slotSpan >= lastProp->slotSpan);
                 JS_ASSERT_IF(hadSlot, shape->slot + 1 <= shape->slotSpan);
@@ -1291,7 +1277,8 @@ JSObject::removeProperty(JSContext *cx, jsid id)
     updateShape(cx);
 
     /* On the way out, consider shrinking table if its load factor is <= .25. */
-    if (PropertyTable *table = lastProp->table) {
+    if (lastProp->hasTable()) {
+        PropertyTable *table = lastProp->getTable();
         uint32 size = table->capacity();
         if (size > PropertyTable::MIN_SIZE && table->entryCount <= size >> 2) {
             METER(shrinks);

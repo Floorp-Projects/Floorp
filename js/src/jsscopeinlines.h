@@ -53,9 +53,9 @@
 inline void
 js::Shape::freeTable(JSContext *cx)
 {
-    if (table) {
-        cx->destroy(table);
-        table = NULL;
+    if (hasTable()) {
+        cx->destroy(getTable());
+        setTable(NULL);
     }
 }
 
@@ -170,7 +170,7 @@ inline
 Shape::Shape(jsid id, js::PropertyOp getter, js::StrictPropertyOp setter, uint32 slot, uintN attrs,
              uintN flags, intN shortid, uint32 shape, uint32 slotSpan)
   : JSObjectMap(shape, slotSpan),
-    numSearches(0), table(NULL), id(id), rawGetter(getter), rawSetter(setter), slot(slot),
+    numLinearSearches(0), id(id), rawGetter(getter), rawSetter(setter), slot(slot),
     attrs(uint8(attrs)), flags(uint8(flags)), shortid(int16(shortid)), parent(NULL)
 {
     JS_ASSERT_IF(slotSpan != SHAPE_INVALID_SLOT, slotSpan < JSObject::NSLOTS_LIMIT);
@@ -182,8 +182,7 @@ Shape::Shape(jsid id, js::PropertyOp getter, js::StrictPropertyOp setter, uint32
 inline
 Shape::Shape(JSCompartment *comp, Class *aclasp)
   : JSObjectMap(js_GenerateShape(comp->rt), JSSLOT_FREE(aclasp)),
-    numSearches(0),
-    table(NULL),
+    numLinearSearches(0),
     id(JSID_EMPTY),
     clasp(aclasp),
     rawSetter(NULL),
