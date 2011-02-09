@@ -244,12 +244,12 @@ html[dir=rtl] .groupItem {
 
 .groupItem.activeGroupItem {
   box-shadow:
-    rgba(0,0,0,0.6) 1px 1px 5.5px;
+    rgba(0,0,0,0.8) 2px 2px 8px;
 }
 
 html[dir=rtl] .groupItem.activeGroupItem {
   box-shadow:
-    rgba(0,0,0,0.6) -1px 1px 5.5px;
+    rgba(0,0,0,0.8) -2px 2px 8px;
 }
 
 .dragRegion {
