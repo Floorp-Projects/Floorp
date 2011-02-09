@@ -58,5 +58,7 @@ public class GeckoConnectivityReceiver
 
         if (GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning))
             GeckoAppShell.onChangeNetworkLinkStatus(status);
+        else
+            GeckoApp.mStartedEarly = true;
     }
 }
