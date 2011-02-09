@@ -94,10 +94,8 @@ WrappedJSDyingJSObjectFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
     {
         if(wrapper->IsSubjectToFinalization())
         {
-            js::SwitchToCompartment sc(data->cx,
-                                       wrapper->GetJSObjectPreserveColor());
-            if(JS_IsAboutToBeFinalized(data->cx,
-                                       wrapper->GetJSObjectPreserveColor()))
+            js::SwitchToCompartment sc(data->cx, wrapper->GetJSObject());
+            if(JS_IsAboutToBeFinalized(data->cx, wrapper->GetJSObject()))
                 data->array->AppendElement(wrapper);
         }
         wrapper = wrapper->GetNextWrapper();
@@ -505,9 +503,12 @@ XPCJSRuntime::SuspectWrappedNative(JSContext *cx, XPCWrappedNative *wrapper,
 
     // Only suspect wrappedJSObjects that are in a compartment that
     // participates in cycle collection.
-    JSObject* obj = wrapper->GetFlatJSObjectPreserveColor();
+    JSObject* obj = wrapper->GetFlatJSObjectAndMark();
     if(!xpc::ParticipatesInCycleCollection(cx, obj))
         return;
+
+    NS_ASSERTION(!JS_IsAboutToBeFinalized(cx, obj),
+                 "SuspectWrappedNative attempting to touch dead object");
 
     // Only record objects that might be part of a cycle as roots, unless
     // the callback wants all traces (a debug feature).
@@ -571,7 +572,7 @@ XPCJSRuntime::AddXPConnectRoots(JSContext* cx,
     for(XPCRootSetElem *e = mWrappedJSRoots; e ; e = e->GetNextRoot())
     {
         nsXPCWrappedJS *wrappedJS = static_cast<nsXPCWrappedJS*>(e);
-        JSObject *obj = wrappedJS->GetJSObjectPreserveColor();
+        JSObject *obj = wrappedJS->GetJSObject();
 
         // Only suspect wrappedJSObjects that are in a compartment that
         // participates in cycle collection.
@@ -639,7 +640,7 @@ static PLDHashOperator
 SweepExpandos(XPCWrappedNative *wn, JSObject *&expando, void *arg)
 {
     JSContext *cx = (JSContext *)arg;
-    return IsAboutToBeFinalized(cx, wn->GetFlatJSObjectPreserveColor())
+    return IsAboutToBeFinalized(cx, wn->GetFlatJSObjectNoMark())
            ? PL_DHASH_REMOVE
            : PL_DHASH_NEXT;
 }
