@@ -160,3 +160,99 @@ gfxAlphaRecovery::RecoverAlphaSSE2(gfxImageSurface* blackSurf,
 
     return PR_TRUE;
 }
+
+static PRInt32
+ByteAlignment(PRInt32 aAlignToLog2, PRInt32 aX, PRInt32 aY=0, PRInt32 aStride=1)
+{
+    return (aX + aStride * aY) & ((1 << aAlignToLog2) - 1);
+}
+
+/*static*/ nsIntRect
+gfxAlphaRecovery::AlignRectForSubimageRecovery(const nsIntRect& aRect,
+                                               gfxImageSurface* aSurface)
+{
+    NS_ASSERTION(gfxASurface::ImageFormatARGB32 == aSurface->Format(),
+                 "Thebes grew support for non-ARGB32 COLOR_ALPHA?");
+    static const PRInt32 kByteAlignLog2 = GoodAlignmentLog2();
+    static const PRInt32 bpp = 4;
+    static const PRInt32 pixPerAlign = (1 << kByteAlignLog2) / bpp;
+    //
+    // We're going to create a subimage of the surface with size
+    // <sw,sh> for alpha recovery, and want a SIMD fast-path.  The
+    // rect <x,y, w,h> /needs/ to be redrawn, but it might not be
+    // properly aligned for SIMD.  So we want to find a rect <x',y',
+    // w',h'> that's a superset of what needs to be redrawn but is
+    // properly aligned.  Proper alignment is
+    //
+    //   BPP * (x' + y' * sw) \cong 0         (mod ALIGN)
+    //   BPP * w'             \cong BPP * sw  (mod ALIGN)
+    //
+    // (We assume the pixel at surface <0,0> is already ALIGN'd.)
+    // That rect (obviously) has to fit within the surface bounds, and
+    // we should also minimize the extra pixels redrawn only for
+    // alignment's sake.  So we also want
+    //
+    //  minimize <x',y', w',h'>
+    //   0 <= x' <= x
+    //   0 <= y' <= y
+    //   w <= w' <= sw
+    //   h <= h' <= sh
+    //
+    // This is a messy integer non-linear programming problem, except
+    // ... we can assume that ALIGN/BPP is a very small constant.  So,
+    // brute force is viable.  The algorithm below will find a
+    // solution if one exists, but isn't guaranteed to find the
+    // minimum solution.  (For SSE2, ALIGN/BPP = 4, so it'll do at
+    // most 64 iterations below).  In what's likely the common case,
+    // an already-aligned rectangle, it only needs 1 iteration.
+    //
+    // Is this alignment worth doing?  Recovering alpha will take work
+    // proportional to w*h (assuming alpha recovery computation isn't
+    // memory bound).  This analysis can lead to O(w+h) extra work
+    // (with small constants).  In exchange, we expect to shave off a
+    // ALIGN/BPP constant by using SIMD-ized alpha recovery.  So as
+    // w*h diverges from w+h, the win factor approaches ALIGN/BPP.  We
+    // only really care about the w*h >> w+h case anyway; others
+    // should be fast enough even with the overhead.  (Unless the cost
+    // of repainting the expanded rect is high, but in that case
+    // SIMD-ized alpha recovery won't make a difference so this code
+    // shouldn't be called.)
+    //
+    gfxIntSize surfaceSize = aSurface->GetSize();
+    const PRInt32 stride = bpp * surfaceSize.width;
+    if (stride != aSurface->Stride()) {
+        NS_WARNING("Unexpected stride, falling back on slow alpha recovery");
+        return aRect;
+    }
+
+    const PRInt32 x = aRect.x, y = aRect.y, w = aRect.width, h = aRect.height;
+    const PRInt32 sw = surfaceSize.width, sh = surfaceSize.height;
+    const PRInt32 strideAlign = ByteAlignment(kByteAlignLog2, stride);
+
+    PRInt32 dx, dy, dw;
+    // The outer two loops search for an aligned top-left pixel
+    for (dy = 0; (dy < pixPerAlign) && (y - dy >= 0) && (h + dy <= sh); ++dy) {
+        for (dx = 0; (dx < pixPerAlign) && (x - dx >= 0); ++dx) {
+            if (0 != ByteAlignment(kByteAlignLog2,
+                                   bpp * (x - dx), y - dy, stride)) {
+                continue;
+            }
+            // The inner searches for an aligned stride
+            for (dw = 0; (dw < pixPerAlign) && (w + dw + dx <= sw); ++dw) {
+                if (strideAlign == ByteAlignment(kByteAlignLog2,
+                                                 bpp * (w + dw + dx))) {
+                    goto FOUND_SOLUTION;
+                }
+            }
+        }
+    }
+
+    // Didn't find a solution.
+    return aRect;
+
+FOUND_SOLUTION:
+    nsIntRect solution = nsIntRect(x - dx, y - dy, w + dw + dx, h + dy);
+    NS_ABORT_IF_FALSE(nsIntRect(0,0, sw,sh).Contains(solution),
+                      "'Solution' extends outside surface bounds!");
+    return solution;
+}
