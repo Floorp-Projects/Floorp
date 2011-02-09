@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "SharedDIBWin.h"
+#include "gfxAlphaRecovery.h"
 #include "nsMathUtils.h"
 #include "nsDebug.h"
 
@@ -44,6 +45,9 @@ namespace mozilla {
 namespace gfx {
 
 static const PRUint32 kBytesPerPixel = 4;
+static const PRUint32 kByteAlign = 1 << gfxAlphaRecovery::GoodAlignmentLog2();
+static const PRUint32 kHeaderBytes =
+  (sizeof(BITMAPV4HEADER) + kByteAlign - 1) & ~(kByteAlign - 1);
 
 SharedDIBWin::SharedDIBWin() :
     mSharedHdc(nsnull)
@@ -140,7 +144,7 @@ SharedDIBWin::SetupBitmapHeader(PRUint32 aWidth, PRUint32 aHeight,
   if (aTransparent)
     aHeader->bV4AlphaMask     = 0xFF000000;
 
-  return (sizeof(BITMAPV4HEADER) + (-aHeader->bV4Height * aHeader->bV4Width * kBytesPerPixel));
+  return (kHeaderBytes + (-aHeader->bV4Height * aHeader->bV4Width * kBytesPerPixel));
 }
 
 nsresult
@@ -156,7 +160,7 @@ SharedDIBWin::SetupSurface(HDC aHdc, BITMAPV4HEADER *aHdr)
                                   DIB_RGB_COLORS,
                                   &mBitmapBits,
                                   mShMem->handle(),
-                                  (unsigned long)sizeof(BITMAPV4HEADER));
+                                  kHeaderBytes);
   if (!mSharedBmp)
     return NS_ERROR_FAILURE;
 
