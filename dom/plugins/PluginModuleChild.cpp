@@ -137,9 +137,14 @@ PluginModuleChild::~PluginModuleChild()
     if (mLibrary) {
         PR_UnloadLibrary(mLibrary);
     }
-
-    DeinitGraphics();
-
+#ifdef MOZ_WIDGET_QT
+    nsQAppInstance::Release();
+    if (sGtkLib) {
+        PR_UnloadLibrary(sGtkLib);
+        sGtkLib = nsnull;
+        s_gtk_init = nsnull;
+    }
+#endif
     gInstance = nsnull;
 }
 
@@ -552,26 +557,6 @@ PluginModuleChild::InitGraphics()
 #endif
 
     return true;
-}
-
-void
-PluginModuleChild::DeinitGraphics()
-{
-#ifdef MOZ_WIDGET_QT
-    nsQAppInstance::Release();
-    if (sGtkLib) {
-        PR_UnloadLibrary(sGtkLib);
-        sGtkLib = nsnull;
-        s_gtk_init = nsnull;
-    }
-#endif
-
-#if defined(MOZ_X11) && defined(NS_FREE_PERMANENT_DATA)
-    // We free some data off of XDisplay close hooks, ensure they're
-    // run.  Closing the display is pretty scary, so we only do it to
-    // silence leak checkers.
-    XCloseDisplay(DefaultXDisplay());
-#endif
 }
 
 bool
@@ -1876,6 +1861,7 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
         mQuirks |= QUIRK_FLASH_THROTTLE_WMUSER_EVENTS; 
         mQuirks |= QUIRK_FLASH_HOOK_SETLONGPTR;
         mQuirks |= QUIRK_FLASH_HOOK_GETWINDOWINFO;
+        mQuirks |= QUIRK_FLASH_MASK_CLEARTYPE_SETTINGS;
     }
 #endif
 }
