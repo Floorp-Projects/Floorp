@@ -42,6 +42,7 @@ const EXPORTED_SYMBOLS = ['PasswordEngine', 'LoginRec'];
 const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cr = Components.results;
 
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/constants.js");
@@ -68,6 +69,7 @@ PasswordEngine.prototype = {
   _storeObj: PasswordStore,
   _trackerObj: PasswordTracker,
   _recordObj: LoginRec,
+  applyIncomingBatchSize: PASSWORDS_STORE_BATCH_SIZE,
 
   _syncFinish: function _syncFinish() {
     SyncEngine.prototype._syncFinish.call(this);
@@ -109,6 +111,16 @@ function PasswordStore(name) {
   Store.call(this, name);
   this._nsLoginInfo = new Components.Constructor(
     "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
+
+  Utils.lazy2(this, "DBConnection", function() {
+    try {
+      return Svc.Login.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.mozIStorageConnection);
+    } catch (ex if (ex.result == Cr.NS_ERROR_NO_INTERFACE)) {
+      // Gecko <2.0 *sadface*
+      return null;
+    }
+  });
 }
 PasswordStore.prototype = {
   __proto__: Store.prototype,
@@ -150,6 +162,16 @@ PasswordStore.prototype = {
       this._log.trace("No items matching " + id + " found. Ignoring");
     }
     return false;
+  },
+
+  applyIncomingBatch: function applyIncomingBatch(records) {
+    if (!this.DBConnection) {
+      return Store.prototype.applyIncomingBatch.call(this, records);
+    }
+
+    return Utils.runInTransaction(this.DBConnection, function() {
+      return Store.prototype.applyIncomingBatch.call(this, records);
+    }, this);
   },
 
   getAllIDs: function PasswordStore__getAllIDs() {
