@@ -588,13 +588,6 @@
       <spacer flex="1000"/>
     </vbox>
 
-    <hbox id="menulist-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">
-      <vbox id="menulist-popup" class="dialog-dark">
-        <label id="menulist-title" crop="center" flex="1"/>
-        <richlistbox id="menulist-commands" class="prompt-buttons" onclick="if (event.target != this) MenuListHelperUI.selectByIndex(this.selectedIndex);" flex="1"/>
-      </vbox>
-    </hbox>
-
     <hbox id="context-container" class="window-width window-height context-block" top="0" left="0" hidden="true">
       <vbox id="context-popup" class="dialog-dark">
         <hbox id="context-header">
@@ -655,6 +648,13 @@
           </richlistitem>
 #endif
         </richlistbox>
+      </vbox>
+    </hbox>
+
+    <hbox id="menulist-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">
+      <vbox id="menulist-popup" class="dialog-dark">
+        <label id="menulist-title" crop="center" flex="1"/>
+        <richlistbox id="menulist-commands" class="prompt-buttons" onclick="if (event.target != this) MenuListHelperUI.selectByIndex(this.selectedIndex);" flex="1"/>
       </vbox>
     </hbox>
 
