@@ -2761,6 +2761,9 @@ PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
 
     // We always use a temporary "white image"
     whiteImage = new gfxImageSurface(targetSize, gfxASurface::ImageFormatRGB24);
+    if (whiteImage->CairoStatus()) {
+        return;
+    }
 
 #ifdef XP_WIN
     // On windows, we need an HDC and so can't paint directly to
