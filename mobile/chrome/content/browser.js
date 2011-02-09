@@ -354,10 +354,10 @@ var Browser = {
       if (addons.length > 0) {
         let disabledStrings = Strings.browser.GetStringFromName("alertAddonsDisabled");
         let label = PluralForm.get(addons.length, disabledStrings).replace("#1", addons.length);
+        let image = "chrome://browser/skin/images/alert-addons-30.png";
 
         let alerts = Cc["@mozilla.org/toaster-alerts-service;1"].getService(Ci.nsIAlertsService);
-        alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, Strings.browser.GetStringFromName("alertAddons"),
-                                     label, false, "", null);
+        alerts.showAlertNotification(image, Strings.browser.GetStringFromName("alertAddons"), label, false, "", null);
       }
       Services.prefs.clearUserPref("extensions.disabledAddons");
     }
