@@ -42,7 +42,6 @@
 #include "nsCycleCollectionParticipant.h"
 
 struct JSObject;
-class nsContentUtils;
 
 typedef PRUptrdiff PtrBits;
 
@@ -59,8 +58,6 @@ typedef PRUptrdiff PtrBits;
  */
 class nsWrapperCache
 {
-  friend class nsContentUtils;
-
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_WRAPPERCACHE_IID)
 
@@ -73,25 +70,7 @@ public:
                  "Destroying cache with a preserved wrapper!");
   }
 
-  /**
-   * This getter clears the gray bit before handing out the JSObject which means
-   * that the object is guaranteed to be kept alive past the next CC.
-   *
-   * Implemented in xpcpublic.h because we have to include some JS headers that
-   * don't play nicely with the rest of the codebase. Include xpcpublic.h if you
-   * need to call this method.
-   */
-  inline JSObject* GetWrapper() const;
-
-  /**
-   * This getter does not change the color of the JSObject meaning that the
-   * object returned is not guaranteed to be kept alive past the next CC.
-   *
-   * This should only be called if you are certain that the return value won't
-   * be passed into a JS API function and that it won't be stored without being
-   * rooted (or otherwise signaling the stored value to the CC).
-   */
-  JSObject* GetWrapperPreserveColor() const
+  JSObject* GetWrapper() const
   {
     return reinterpret_cast<JSObject*>(mWrapperPtrBits & ~kWrapperBitMask);
   }
@@ -109,23 +88,6 @@ public:
     mWrapperPtrBits = 0;
   }
 
-  PRBool PreservingWrapper()
-  {
-    return (mWrapperPtrBits & WRAPPER_BIT_PRESERVED) != 0;
-  }
-
-  void SetIsProxy()
-  {
-    mWrapperPtrBits |= WRAPPER_IS_PROXY;
-  }
-
-  PRBool IsProxy()
-  {
-    return (mWrapperPtrBits & WRAPPER_IS_PROXY) != 0;
-  }
-
-private:
-  // Only meant to be called by nsContentUtils.
   void SetPreservingWrapper(PRBool aPreserve)
   {
     if(aPreserve) {
@@ -136,6 +98,22 @@ private:
     }
   }
 
+  PRBool PreservingWrapper()
+  {
+    return (mWrapperPtrBits & WRAPPER_BIT_PRESERVED) != 0;
+  }
+
+  void SetIsProxy()
+  {
+      mWrapperPtrBits |= WRAPPER_IS_PROXY;
+  }
+
+  PRBool IsProxy()
+  {
+      return (mWrapperPtrBits & WRAPPER_IS_PROXY) != 0;
+  }
+
+private:
   enum { WRAPPER_BIT_PRESERVED = 1 << 0 };
   enum { WRAPPER_IS_PROXY = 1 << 1 };
   enum { kWrapperBitMask = (WRAPPER_BIT_PRESERVED | WRAPPER_IS_PROXY) };
