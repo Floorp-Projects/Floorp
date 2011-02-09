@@ -75,6 +75,20 @@ random-if(d2d) == img-width-meet-2.html   img-width-meet-2-ref.html
 random-if(d2d) == img-width-slice-1.html  img-width-slice-1-ref.html
 random-if(d2d) == img-width-slice-2.html  img-width-slice-2-ref.html
 
+# Alternate version of "width & height both non-%-valued" tests, but now
+# with no explicit viewBox, to trigger "synthesize-viewBox" behavior
+fails-if(d2d) == img-novb-widthAndHeight-meet-1-em.html  img-novb-widthAndHeight-all-1-ref.html
+fails-if(d2d) == img-novb-widthAndHeight-meet-1-px.html  img-novb-widthAndHeight-all-1-ref.html
+fails-if(d2d) == img-novb-widthAndHeight-slice-1-em.html img-novb-widthAndHeight-all-1-ref.html
+fails-if(d2d) == img-novb-widthAndHeight-slice-1-px.html img-novb-widthAndHeight-all-1-ref.html
+
+# Alternate versions of "only one dimension is non-%-valued" tests, but now
+# with no explicit viewBox, to trigger "synthesize-viewBox" behavior
+== img-novb-height-meet-1.html    img-novb-height-all-1-ref.html
+== img-novb-height-slice-1.html   img-novb-height-all-1-ref.html
+fails-if(d2d) == img-novb-width-meet-1.html     img-novb-width-all-1-ref.html
+fails-if(d2d) == img-novb-width-slice-1.html    img-novb-width-all-1-ref.html
+
 == list-simple-1.html list-simple-1-ref.html
 
 == svg-image-simple-1.svg lime100x100.svg
