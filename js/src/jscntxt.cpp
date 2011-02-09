@@ -231,6 +231,8 @@ StackSpace::mark(JSTracer *trc)
             /* This may be the only pointer to the initialVarObj. */
             if (seg->hasInitialVarObj())
                 MarkObject(trc, seg->getInitialVarObj(), "varobj");
+            if (seg->hasLastNativeCalleeScope())
+                MarkObject(trc, *seg->lastNativeCalleeScope(), "lastNativeCalleeScope");
 
             /* Mark slots/args trailing off of the last stack frame. */
             JSStackFrame *fp = seg->getCurrentFrame();
@@ -1992,6 +1994,12 @@ JSContext::JSContext(JSRuntime *rt)
 {}
 
 void
+JSContext::reportInactive()
+{
+    JS_ReportErrorNumber(this, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
+}
+
+void
 JSContext::resetCompartment()
 {
     JSObject *scopeobj;
@@ -2084,7 +2092,9 @@ void
 JSContext::saveActiveSegment()
 {
     JS_ASSERT(hasActiveSegment());
-    currentSegment->save(regs);
+    currentSegment->save(regs, lastNativeCalleeScope, lastNativeCalleeScopePtr);
+    lastNativeCalleeScope = NULL;
+    lastNativeCalleeScopePtr = NULL;
     setCurrentRegs(NULL);
     resetCompartment();
 }
@@ -2092,9 +2102,11 @@ JSContext::saveActiveSegment()
 void
 JSContext::restoreSegment()
 {
-    js::StackSegment *ccs = currentSegment;
-    setCurrentRegs(ccs->getSuspendedRegs());
-    ccs->restore();
+    js::StackSegment *cs = currentSegment;
+    setCurrentRegs(cs->getSuspendedRegs());
+    lastNativeCalleeScopePtr = cs->lastNativeCalleeScopePtr();
+    lastNativeCalleeScope = cs->lastNativeCalleeScope();
+    cs->restore();
     resetCompartment();
 }
 

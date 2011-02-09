@@ -1099,13 +1099,38 @@ JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
                   JSObject **objp);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_GetScopeChain(JSContext *cx);
-
-extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
 
+/*
+ * Returns the global for the currently executing method or of the object
+ * currently being accessed if a property access (get or set) is in progress.
+ * If no action is currently in progress, the context's global object is
+ * returned. If the context has no global, this method will report an error and
+ * return null.
+ *
+ * To illustrate: suppose a global G with a method defined by a JSNative
+ * corresponding to the property G.method. When JS_GetGlobalForScopeChain is
+ * invoked during execution of G.method, the object returned will be G. This is
+ * so if a script in G calls method, and it is also so if script in a different
+ * global G2 calls |G1.method()|, or extracts |G.method| and calls it, and so
+ * on. This behavior also applies for property accesses to an |obj.prop| if
+ * that property is represented by a |JSPropertyOp| and |JSStrictPropertyOp|
+ * pair: the global object will be that corresponding to |obj|.
+ */
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForScopeChain(JSContext *cx);
+
+/*
+ * Returns the global of the most recent interpreted code if there is any.
+ *
+ * NB: This method ignores the current scope chain, any sense of privilege
+ *     separation encapsulated in intervening stack frames, and so on.  If you
+ *     are attempting to determine the global object to expose it to script,
+ *     this is almost certainly not the method you want! You *probably* want
+ *     JS_GetGlobalForScopeChain instead.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_GetGlobalForCallingScript(JSContext *cx, JSObject **objp);
 
 #ifdef JS_HAS_CTYPES
 /*
