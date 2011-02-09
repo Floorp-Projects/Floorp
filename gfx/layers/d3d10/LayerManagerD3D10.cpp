@@ -39,6 +39,7 @@
 #include "LayerManagerD3D10Effect.h"
 #include "gfxWindowsPlatform.h"
 #include "gfxD2DSurface.h"
+#include "gfxFailure.h"
 #include "cairo-win32.h"
 #include "dxgi.h"
 
@@ -582,6 +583,8 @@ LayerManagerD3D10::ReportFailure(const nsACString &aMsg, HRESULT aCode)
   msg.AppendLiteral(" Error code: ");
   msg.AppendInt(PRUint32(aCode));
   NS_WARNING(msg.BeginReading());
+
+  gfx::LogFailure(msg);
 }
 
 LayerD3D10::LayerD3D10(LayerManagerD3D10 *aManager)
