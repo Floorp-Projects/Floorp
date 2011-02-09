@@ -71,7 +71,6 @@ struct Cell {
 
     JS_ALWAYS_INLINE bool isMarked(uint32 color) const;
     JS_ALWAYS_INLINE bool markIfUnmarked(uint32 color) const;
-    JS_ALWAYS_INLINE void unmark(uint32 color) const;
 
     inline JSCompartment *compartment() const;
 

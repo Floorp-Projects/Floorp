@@ -55,8 +55,7 @@
 #include "jspubtd.h"
 #include "xptinfo.h"
 #include "nsAXPCNativeCallContext.h"
-
-class nsWrapperCache;
+#include "nsWrapperCache.h"
 %}
 
 /***************************************************************************/
