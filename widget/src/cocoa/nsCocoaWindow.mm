@@ -171,10 +171,6 @@ nsCocoaWindow::~nsCocoaWindow()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (mFullScreen) {
-    nsCocoaUtils::HideOSChromeOnScreen(PR_FALSE, [mWindow screen]);
-  }
-
   // Notify the children that we're gone.  Popup windows (e.g. tooltips) can
   // have nsChildView children.  'kid' is an nsChildView object if and only if
   // its 'type' is 'eWindowType_child' or 'eWindowType_plugin'.
@@ -488,6 +484,10 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
 
   nsBaseWidget::Destroy();
   nsBaseWidget::OnDestroy();
+
+  if (mFullScreen) {
+    nsCocoaUtils::HideOSChromeOnScreen(PR_FALSE, [mWindow screen]);
+  }
 
   return NS_OK;
 }
