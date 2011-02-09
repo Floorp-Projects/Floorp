@@ -277,27 +277,8 @@ public:
 
     nsresult AsyncSetWindow(NPWindow* window);
     nsresult GetSurface(gfxASurface** aSurface);
-    nsresult SetBackgroundUnknown();
-    nsresult BeginUpdateBackground(const nsIntRect& aRect,
-                                   gfxContext** aCtx);
-    nsresult EndUpdateBackground(gfxContext* aCtx,
-                                 const nsIntRect& aRect);
 
 private:
-    // Create an appropriate platform surface for a background of size
-    // |aSize|.  Return true if successful.
-    bool CreateBackground(const nsIntSize& aSize);
-    void DestroyBackground();
-    SurfaceDescriptor BackgroundDescriptor() /*const*/;
-
-    NS_OVERRIDE
-    virtual PPluginBackgroundDestroyerParent*
-    AllocPPluginBackgroundDestroyer();
-
-    NS_OVERRIDE
-    virtual bool
-    DeallocPPluginBackgroundDestroyer(PPluginBackgroundDestroyerParent* aActor);
-
     // Quirks mode support for various plugin mime types
     enum PluginQuirks {
         // OSX: Don't use the refresh timer for plug-ins
@@ -354,19 +335,6 @@ private:
 
     // ObjectFrame layer wrapper
     nsRefPtr<gfxASurface>    mFrontSurface;
-    // For windowless+transparent instances, this surface contains a
-    // "pretty recent" copy of the pixels under its <object> frame.
-    // On the plugin side, we use this surface to avoid doing alpha
-    // recovery when possible.  This surface is created and owned by
-    // the browser, but a "read-only" reference is sent to the plugin.
-    //
-    // We have explicitly chosen not to provide any guarantees about
-    // the consistency of the pixels in |mBackground|.  A plugin may
-    // be able to observe partial updates to the background.
-    nsRefPtr<gfxASurface>    mBackground;
-    // True when we just created a background and it needs to be
-    // shared to the plugin subprocess.
-    bool                     mNewBackground;
 };
 
 

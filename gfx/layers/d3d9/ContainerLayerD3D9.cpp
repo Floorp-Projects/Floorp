@@ -38,8 +38,6 @@
 #include "ContainerLayerD3D9.h"
 #include "gfxUtils.h"
 #include "nsRect.h"
-#include "ThebesLayerD3D9.h"
-#include "ReadbackProcessor.h"
 
 namespace mozilla {
 namespace layers {
@@ -73,7 +71,6 @@ ContainerLayerD3D9::InsertAfter(Layer* aChild, Layer* aAfter)
       mLastChild = aChild;
     }
     NS_ADDREF(aChild);
-    DidInsertChild(aChild);
     return;
   }
   for (Layer *child = GetFirstChild();
@@ -89,7 +86,6 @@ ContainerLayerD3D9::InsertAfter(Layer* aChild, Layer* aAfter)
       }
       aChild->SetPrevSibling(child);
       NS_ADDREF(aChild);
-      DidInsertChild(aChild);
       return;
     }
   }
@@ -109,7 +105,6 @@ ContainerLayerD3D9::RemoveChild(Layer *aChild)
     aChild->SetNextSibling(nsnull);
     aChild->SetPrevSibling(nsnull);
     aChild->SetParent(nsnull);
-    DidRemoveChild(aChild);
     NS_RELEASE(aChild);
     return;
   }
@@ -127,7 +122,6 @@ ContainerLayerD3D9::RemoveChild(Layer *aChild)
       child->SetNextSibling(nsnull);
       child->SetPrevSibling(nsnull);
       child->SetParent(nsnull);
-      DidRemoveChild(aChild);
       NS_RELEASE(aChild);
       return;
     }
@@ -180,9 +174,6 @@ ContainerLayerD3D9::RenderLayer()
   float oldViewMatrix[4][4];
 
   device()->GetScissorRect(&containerClipRect);
-
-  ReadbackProcessor readback;
-  readback.BuildUpdates(this);
 
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
   PRBool useIntermediate = UseIntermediateSurface();
@@ -324,11 +315,7 @@ ContainerLayerD3D9::RenderLayer()
       device()->SetScissorRect(&r);
     }
 
-    if (layerToRender->GetLayer()->GetType() == TYPE_THEBES) {
-      static_cast<ThebesLayerD3D9*>(layerToRender)->RenderThebesLayer(&readback);
-    } else {
-      layerToRender->RenderLayer();
-    }
+    layerToRender->RenderLayer();
 
     if (clipRect && !useIntermediate) {
       // In this situation we've set a new scissor rect and we will continue

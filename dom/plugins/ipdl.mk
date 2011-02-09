@@ -35,7 +35,6 @@
 # ***** END LICENSE BLOCK *****
 
 IPDLSRCS = \
-  PPluginBackgroundDestroyer.ipdl \
   PPluginModule.ipdl \
   PPluginIdentifier.ipdl \
   PPluginInstance.ipdl \

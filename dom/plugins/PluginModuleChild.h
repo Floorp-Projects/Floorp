@@ -246,6 +246,9 @@ public:
         // results so mouse input works when flash is displaying it's settings
         // window.
         QUIRK_FLASH_HOOK_GETWINDOWINFO                  = 1 << 5,
+        // Win: Flash trashes the alpha channel in our buffers when cleartype
+        // is enabled. Mask this setting so they don't know it's enabled.
+        QUIRK_FLASH_MASK_CLEARTYPE_SETTINGS             = 1 << 6,
     };
 
     int GetQuirks() { return mQuirks; }
@@ -258,7 +261,6 @@ public:
 private:
     void InitQuirksModes(const nsCString& aMimeType);
     bool InitGraphics();
-    void DeinitGraphics();
 #if defined(MOZ_WIDGET_GTK2)
     static gboolean DetectNestedEventLoop(gpointer data);
     static gboolean ProcessBrowserEvents(gpointer data);

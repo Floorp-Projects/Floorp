@@ -682,40 +682,6 @@ PluginModuleParent::GetSurface(NPP instance, gfxASurface** aSurface)
     return i->GetSurface(aSurface);
 }
 
-nsresult
-PluginModuleParent::SetBackgroundUnknown(NPP instance)
-{
-    PluginInstanceParent* i = InstCast(instance);
-    if (!i)
-        return NS_ERROR_FAILURE;
-
-    return i->SetBackgroundUnknown();
-}
-
-nsresult
-PluginModuleParent::BeginUpdateBackground(NPP instance,
-                                          const nsIntRect& aRect,
-                                          gfxContext** aCtx)
-{
-    PluginInstanceParent* i = InstCast(instance);
-    if (!i)
-        return NS_ERROR_FAILURE;
-
-    return i->BeginUpdateBackground(aRect, aCtx);
-}
-
-nsresult
-PluginModuleParent::EndUpdateBackground(NPP instance,
-                                        gfxContext* aCtx,
-                                        const nsIntRect& aRect)
-{
-    PluginInstanceParent* i = InstCast(instance);
-    if (!i)
-        return NS_ERROR_FAILURE;
-
-    return i->EndUpdateBackground(aCtx, aRect);
-}
-
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
 nsresult
 PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error)
