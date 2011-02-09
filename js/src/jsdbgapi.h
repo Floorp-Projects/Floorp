@@ -157,7 +157,7 @@ js_SweepWatchPoints(JSContext *cx);
 #ifdef __cplusplus
 
 extern JSBool
-js_watch_set(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
+js_watch_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, js::Value *vp);
 
 namespace js {
 

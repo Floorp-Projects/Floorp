@@ -216,7 +216,7 @@ class RegExpMatchBuilder
     }
 
     bool append(jsid id, Value val) {
-        return !!js_DefineProperty(cx, array, id, &val, js::PropertyStub, js::PropertyStub,
+        return !!js_DefineProperty(cx, array, id, &val, js::PropertyStub, js::StrictPropertyStub,
                                    JSPROP_ENUMERATE);
     }
 

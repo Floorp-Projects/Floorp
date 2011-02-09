@@ -367,6 +367,16 @@ JSCompartment::wrap(JSContext *cx, PropertyOp *propp)
 }
 
 bool
+JSCompartment::wrap(JSContext *cx, StrictPropertyOp *propp)
+{
+    Value v = CastAsObjectJsval(*propp);
+    if (!wrap(cx, &v))
+        return false;
+    *propp = CastAsStrictPropertyOp(v.toObjectOrNull());
+    return true;
+}
+
+bool
 JSCompartment::wrap(JSContext *cx, PropertyDescriptor *desc)
 {
     return wrap(cx, &desc->obj) &&

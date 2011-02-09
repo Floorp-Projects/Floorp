@@ -1898,7 +1898,7 @@ struct JSClass {
     JSPropertyOp        addProperty;
     JSPropertyOp        delProperty;
     JSPropertyOp        getProperty;
-    JSPropertyOp        setProperty;
+    JSStrictPropertyOp  setProperty;
     JSEnumerateOp       enumerate;
     JSResolveOp         resolve;
     JSConvertOp         convert;
@@ -2023,6 +2023,9 @@ extern JS_PUBLIC_API(JSBool)
 JS_PropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
+JS_StrictPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
+
+extern JS_PUBLIC_API(JSBool)
 JS_EnumerateStub(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
@@ -2047,11 +2050,11 @@ struct JSConstDoubleSpec {
  * JSPROP_INDEX bit in flags.
  */
 struct JSPropertySpec {
-    const char      *name;
-    int8            tinyid;
-    uint8           flags;
-    JSPropertyOp    getter;
-    JSPropertyOp    setter;
+    const char            *name;
+    int8                  tinyid;
+    uint8                 flags;
+    JSPropertyOp          getter;
+    JSStrictPropertyOp    setter;
 };
 
 struct JSFunctionSpec {
@@ -2192,11 +2195,11 @@ JS_DefineProperties(JSContext *cx, JSObject *obj, JSPropertySpec *ps);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineProperty(JSContext *cx, JSObject *obj, const char *name, jsval value,
-                  JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
+                  JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
-                      JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
+                      JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, jsval descriptor, JSBool *bp);
@@ -2221,14 +2224,14 @@ JS_GetPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj,
                                    const char *name,
                                    uintN *attrsp, JSBool *foundp,
                                    JSPropertyOp *getterp,
-                                   JSPropertyOp *setterp);
+                                   JSStrictPropertyOp *setterp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_GetPropertyAttrsGetterAndSetterById(JSContext *cx, JSObject *obj,
                                        jsid id,
                                        uintN *attrsp, JSBool *foundp,
                                        JSPropertyOp *getterp,
-                                       JSPropertyOp *setterp);
+                                       JSStrictPropertyOp *setterp);
 
 /*
  * Set the attributes of a property on a given object.
@@ -2243,7 +2246,7 @@ JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
 extern JS_PUBLIC_API(JSBool)
 JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name,
                             int8 tinyid, jsval value,
-                            JSPropertyOp getter, JSPropertyOp setter,
+                            JSPropertyOp getter, JSStrictPropertyOp setter,
                             uintN attrs);
 
 extern JS_PUBLIC_API(JSBool)
@@ -2279,12 +2282,12 @@ JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj, jsid id,
                                uintN flags, JSObject **objp, jsval *vp);
 
 struct JSPropertyDescriptor {
-    JSObject     *obj;
-    uintN        attrs;
-    JSPropertyOp getter;
-    JSPropertyOp setter;
-    jsval        value;
-    uintN        shortid;
+    JSObject           *obj;
+    uintN              attrs;
+    JSPropertyOp       getter;
+    JSStrictPropertyOp setter;
+    jsval              value;
+    uintN              shortid;
 };
 
 /*
@@ -2341,7 +2344,7 @@ JS_DeletePropertyById2(JSContext *cx, JSObject *obj, jsid id, jsval *rval);
 extern JS_PUBLIC_API(JSBool)
 JS_DefineUCProperty(JSContext *cx, JSObject *obj,
                     const jschar *name, size_t namelen, jsval value,
-                    JSPropertyOp getter, JSPropertyOp setter,
+                    JSPropertyOp getter, JSStrictPropertyOp setter,
                     uintN attrs);
 
 /*
@@ -2365,7 +2368,7 @@ JS_GetUCPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj,
                                      const jschar *name, size_t namelen,
                                      uintN *attrsp, JSBool *foundp,
                                      JSPropertyOp *getterp,
-                                     JSPropertyOp *setterp);
+                                     JSStrictPropertyOp *setterp);
 
 /*
  * Set the attributes of a property on a given object.
@@ -2383,7 +2386,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
                               const jschar *name, size_t namelen,
                               int8 tinyid, jsval value,
-                              JSPropertyOp getter, JSPropertyOp setter,
+                              JSPropertyOp getter, JSStrictPropertyOp setter,
                               uintN attrs);
 
 extern JS_PUBLIC_API(JSBool)
@@ -2432,7 +2435,7 @@ JS_HasArrayLength(JSContext *cx, JSObject *obj, jsuint *lengthp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineElement(JSContext *cx, JSObject *obj, jsint index, jsval value,
-                 JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
+                 JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs);
 
 extern JS_PUBLIC_API(JSBool)
 JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias);

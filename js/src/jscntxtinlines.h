@@ -745,15 +745,16 @@ CallJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::V
 }
 
 JS_ALWAYS_INLINE bool
-CallJSPropertyOpSetter(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
+CallJSPropertyOpSetter(JSContext *cx, js::StrictPropertyOp op, JSObject *obj, jsid id,
+                       JSBool strict, js::Value *vp)
 {
     assertSameCompartment(cx, obj, id, *vp);
-    return op(cx, obj, id, vp);
+    return op(cx, obj, id, strict, vp);
 }
 
 inline bool
-CallSetter(JSContext *cx, JSObject *obj, jsid id, PropertyOp op, uintN attrs, uintN shortid,
-           js::Value *vp)
+CallSetter(JSContext *cx, JSObject *obj, jsid id, js::StrictPropertyOp op, uintN attrs,
+           uintN shortid, JSBool strict, js::Value *vp)
 {
     if (attrs & JSPROP_SETTER)
         return ExternalGetOrSet(cx, obj, id, CastAsObjectJsval(op), JSACC_WRITE, 1, vp, vp);
@@ -763,7 +764,7 @@ CallSetter(JSContext *cx, JSObject *obj, jsid id, PropertyOp op, uintN attrs, ui
 
     if (attrs & JSPROP_SHORTID)
         id = INT_TO_JSID(shortid);
-    return CallJSPropertyOpSetter(cx, op, obj, id, vp);
+    return CallJSPropertyOpSetter(cx, op, obj, id, strict, vp);
 }
 
 #ifdef JS_TRACER

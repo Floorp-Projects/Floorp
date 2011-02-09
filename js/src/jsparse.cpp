@@ -1188,9 +1188,8 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
 
         JSProperty *prop;
 
-        if (!js_DefineNativeProperty(cx, globalObj, id, rval, PropertyStub,
-                                     PropertyStub, JSPROP_ENUMERATE | JSPROP_PERMANENT,
-                                     0, 0, &prop)) {
+        if (!js_DefineNativeProperty(cx, globalObj, id, rval, PropertyStub, StrictPropertyStub,
+                                     JSPROP_ENUMERATE | JSPROP_PERMANENT, 0, 0, &prop)) {
             return false;
         }
 

@@ -80,10 +80,22 @@ CastAsPropertyOp(JSObject *object)
     return JS_DATA_TO_FUNC_PTR(PropertyOp, object);
 }
 
+static inline StrictPropertyOp
+CastAsStrictPropertyOp(JSObject *object)
+{
+    return JS_DATA_TO_FUNC_PTR(StrictPropertyOp, object);
+}
+
 static inline JSPropertyOp
 CastAsJSPropertyOp(JSObject *object)
 {
     return JS_DATA_TO_FUNC_PTR(JSPropertyOp, object);
+}
+
+static inline JSStrictPropertyOp
+CastAsJSStrictPropertyOp(JSObject *object)
+{
+    return JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, object);
 }
 
 inline JSObject *
@@ -92,8 +104,20 @@ CastAsObject(PropertyOp op)
     return JS_FUNC_TO_DATA_PTR(JSObject *, op);
 }
 
+inline JSObject *
+CastAsObject(StrictPropertyOp op)
+{
+    return JS_FUNC_TO_DATA_PTR(JSObject *, op);
+}
+
 inline Value
 CastAsObjectJsval(PropertyOp op)
+{
+    return ObjectOrNullValue(CastAsObject(op));
+}
+
+inline Value
+CastAsObjectJsval(StrictPropertyOp op)
 {
     return ObjectOrNullValue(CastAsObject(op));
 }
@@ -157,8 +181,8 @@ struct PropDesc {
     js::PropertyOp getter() const {
         return js::CastAsPropertyOp(getterObject());
     }
-    js::PropertyOp setter() const {
-        return js::CastAsPropertyOp(setterObject());
+    js::StrictPropertyOp setter() const {
+        return js::CastAsStrictPropertyOp(setterObject());
     }
 
     js::Value pd;
@@ -214,7 +238,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 
 extern JSBool
 js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const js::Value *value,
-                  js::PropertyOp getter, js::PropertyOp setter, uintN attrs);
+                  js::PropertyOp getter, js::StrictPropertyOp setter, uintN attrs);
 
 extern JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, js::Value *vp);
@@ -1144,7 +1168,7 @@ struct JSObject : js::gc::Cell {
      * 2. !isExtensible() checking must be done by callers.
      */
     const js::Shape *addPropertyInternal(JSContext *cx, jsid id,
-                                         js::PropertyOp getter, js::PropertyOp setter,
+                                         js::PropertyOp getter, js::StrictPropertyOp setter,
                                          uint32 slot, uintN attrs,
                                          uintN flags, intN shortid,
                                          js::Shape **spp);
@@ -1154,7 +1178,7 @@ struct JSObject : js::gc::Cell {
   public:
     /* Add a property whose id is not yet in this scope. */
     const js::Shape *addProperty(JSContext *cx, jsid id,
-                                 js::PropertyOp getter, js::PropertyOp setter,
+                                 js::PropertyOp getter, js::StrictPropertyOp setter,
                                  uint32 slot, uintN attrs,
                                  uintN flags, intN shortid);
 
@@ -1166,13 +1190,13 @@ struct JSObject : js::gc::Cell {
 
     /* Add or overwrite a property for id in this scope. */
     const js::Shape *putProperty(JSContext *cx, jsid id,
-                                 js::PropertyOp getter, js::PropertyOp setter,
+                                 js::PropertyOp getter, js::StrictPropertyOp setter,
                                  uint32 slot, uintN attrs,
                                  uintN flags, intN shortid);
 
     /* Change the given property into a sibling with the same id in this scope. */
     const js::Shape *changeProperty(JSContext *cx, const js::Shape *shape, uintN attrs, uintN mask,
-                                    js::PropertyOp getter, js::PropertyOp setter);
+                                    js::PropertyOp getter, js::StrictPropertyOp setter);
 
     /* Remove the property named by id from this object. */
     bool removeProperty(JSContext *cx, jsid id);
@@ -1187,7 +1211,7 @@ struct JSObject : js::gc::Cell {
 
     JSBool defineProperty(JSContext *cx, jsid id, const js::Value &value,
                           js::PropertyOp getter = js::PropertyStub,
-                          js::PropertyOp setter = js::PropertyStub,
+                          js::StrictPropertyOp setter = js::StrictPropertyStub,
                           uintN attrs = JSPROP_ENUMERATE) {
         js::DefinePropOp op = getOps()->defineProperty;
         return (op ? op : js_DefineProperty)(cx, this, id, &value, getter, setter, attrs);
@@ -1586,7 +1610,7 @@ js_PurgeScopeChain(JSContext *cx, JSObject *obj, jsid id)
  */
 extern const js::Shape *
 js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
-                     js::PropertyOp getter, js::PropertyOp setter, uint32 slot,
+                     js::PropertyOp getter, js::StrictPropertyOp setter, uint32 slot,
                      uintN attrs, uintN flags, intN shortid);
 
 /*
@@ -1597,7 +1621,7 @@ js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
 extern const js::Shape *
 js_ChangeNativePropertyAttrs(JSContext *cx, JSObject *obj,
                              const js::Shape *shape, uintN attrs, uintN mask,
-                             js::PropertyOp getter, js::PropertyOp setter);
+                             js::PropertyOp getter, js::StrictPropertyOp setter);
 
 extern JSBool
 js_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id,
@@ -1622,7 +1646,7 @@ const uintN JSDNP_UNQUALIFIED  = 8; /* Unqualified property set.  Only used in
  */
 extern JSBool
 js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const js::Value &value,
-                        js::PropertyOp getter, js::PropertyOp setter, uintN attrs,
+                        js::PropertyOp getter, js::StrictPropertyOp setter, uintN attrs,
                         uintN flags, intN shortid, JSProperty **propp,
                         uintN defineHow = 0);
 
@@ -1707,7 +1731,7 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj, const js::Shape *shap
 
 extern JSBool
 js_NativeSet(JSContext *cx, JSObject *obj, const js::Shape *shape, bool added,
-             js::Value *vp);
+             bool strict, js::Value *vp);
 
 extern JSBool
 js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, js::Value *vp);
@@ -1868,7 +1892,7 @@ extern JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx);
 
 extern JS_FRIEND_API(JSBool)
-js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
 
 #ifdef DEBUG
 JS_FRIEND_API(void) js_DumpChars(const jschar *s, size_t n);

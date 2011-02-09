@@ -665,7 +665,7 @@ str_enumerate(JSContext *cx, JSObject *obj)
         if (!str1)
             return JS_FALSE;
         if (!obj->defineProperty(cx, INT_TO_JSID(i), StringValue(str1),
-                                 PropertyStub, PropertyStub,
+                                 PropertyStub, StrictPropertyStub,
                                  STRING_ELEMENT_ATTRS)) {
             return JS_FALSE;
         }
@@ -703,10 +703,10 @@ Class js_StringClass = {
     js_String_str,
     JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_String),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
+    PropertyStub,         /* addProperty */
+    PropertyStub,         /* delProperty */
     str_getProperty,
-    PropertyStub,   /* setProperty */
+    StrictPropertyStub,   /* setProperty */
     str_enumerate,
     (JSResolveOp)str_resolve,
     ConvertStub

@@ -70,7 +70,7 @@ ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
         js_ReportIsNotDefined(cx, printable.ptr());
 }
 
-#define NATIVE_SET(cx,obj,shape,entry,vp)                                     \
+#define NATIVE_SET(cx,obj,shape,entry,strict,vp)                              \
     JS_BEGIN_MACRO                                                            \
         if (shape->hasDefaultSetter() &&                                      \
             (shape)->slot != SHAPE_INVALID_SLOT &&                            \
@@ -78,7 +78,7 @@ ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
             /* Fast path for, e.g., plain Object instance properties. */      \
             (obj)->nativeSetSlot((shape)->slot, *vp);                         \
         } else {                                                              \
-            if (!js_NativeSet(cx, obj, shape, false, vp))                     \
+            if (!js_NativeSet(cx, obj, shape, false, strict, vp))             \
                 THROW();                                                      \
         }                                                                     \
     JS_END_MACRO

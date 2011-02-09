@@ -167,7 +167,7 @@ JSObject::trace(JSTracer *trc)
 namespace js {
 
 inline
-Shape::Shape(jsid id, js::PropertyOp getter, js::PropertyOp setter, uint32 slot, uintN attrs,
+Shape::Shape(jsid id, js::PropertyOp getter, js::StrictPropertyOp setter, uint32 slot, uintN attrs,
              uintN flags, intN shortid, uint32 shape, uint32 slotSpan)
   : JSObjectMap(shape, slotSpan),
     numSearches(0), table(NULL), id(id), rawGetter(getter), rawSetter(setter), slot(slot),
@@ -226,7 +226,7 @@ Shape::matches(const js::Shape *other) const
 }
 
 inline bool
-Shape::matchesParamsAfterId(js::PropertyOp agetter, js::PropertyOp asetter, uint32 aslot,
+Shape::matchesParamsAfterId(js::PropertyOp agetter, js::StrictPropertyOp asetter, uint32 aslot,
                             uintN aattrs, uintN aflags, intN ashortid) const
 {
     JS_ASSERT(!JSID_IS_VOID(id));
@@ -265,7 +265,7 @@ Shape::get(JSContext* cx, JSObject *receiver, JSObject* obj, JSObject *pobj, js:
 }
 
 inline bool
-Shape::set(JSContext* cx, JSObject* obj, js::Value* vp) const
+Shape::set(JSContext* cx, JSObject* obj, bool strict, js::Value* vp) const
 {
     JS_ASSERT_IF(hasDefaultSetter(), hasGetterValue());
 
@@ -280,7 +280,7 @@ Shape::set(JSContext* cx, JSObject* obj, js::Value* vp) const
     /* See the comment in js::Shape::get as to why we check for With. */
     if (obj->getClass() == &js_WithClass)
         obj = js_UnwrapWithObject(cx, obj);
-    return js::CallJSPropertyOpSetter(cx, setterOp(), obj, SHAPE_USERID(this), vp);
+    return js::CallJSPropertyOpSetter(cx, setterOp(), obj, SHAPE_USERID(this), strict, vp);
 }
 
 inline

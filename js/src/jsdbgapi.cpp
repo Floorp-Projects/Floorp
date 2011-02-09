@@ -567,7 +567,7 @@ struct JSWatchPoint {
     JSCList             links;
     JSObject            *object;        /* weak link, see js_FinalizeObject */
     const Shape         *shape;
-    PropertyOp          setter;
+    StrictPropertyOp    setter;
     JSWatchPointHandler handler;
     JSObject            *closure;
     uintN               flags;
@@ -703,7 +703,7 @@ FindWatchPoint(JSRuntime *rt, JSObject *obj, jsid id)
 }
 
 JSBool
-js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+js_watch_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
     JSRuntime *rt = cx->runtime;
     DBG_LOCK(rt);
@@ -742,7 +742,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                          ? ExternalInvoke(cx, ObjectValue(*obj),
                                           ObjectValue(*CastAsObject(wp->setter)),
                                           1, vp, vp)
-                         : CallJSPropertyOpSetter(cx, wp->setter, obj, userid, vp));
+                         : CallJSPropertyOpSetter(cx, wp->setter, obj, userid, strict, vp));
 
             DBG_LOCK(rt);
             return DropWatchPointAndUnlock(cx, wp, JSWP_HELD) && ok;
@@ -764,7 +764,11 @@ js_watch_set_wrapper(JSContext *cx, uintN argc, Value *vp)
     jsid userid = ATOM_TO_JSID(wrapper->atom);
 
     JS_SET_RVAL(cx, vp, argc ? JS_ARGV(cx, vp)[0] : UndefinedValue());
-    return js_watch_set(cx, obj, userid, vp);
+    /*
+     * The strictness we pass here doesn't matter, since we know that it's
+     * a JS setter, which can't depend on the assigning code's strictness.
+     */
+    return js_watch_set(cx, obj, userid, false, vp);
 }
 
 namespace js {
@@ -790,13 +794,13 @@ IsWatchedProperty(JSContext *cx, const Shape *shape)
  * with attributes |attrs|, to implement a watchpoint on the property named
  * |id|.
  */
-static PropertyOp
-WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, PropertyOp setter)
+static StrictPropertyOp
+WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, StrictPropertyOp setter)
 {
     JSAtom *atom;
     JSFunction *wrapper;
 
-    /* Wrap a JSPropertyOp setter simply by returning our own JSPropertyOp. */
+    /* Wrap a C++ setter simply by returning our own C++ setter. */
     if (!(attrs & JSPROP_SETTER))
         return &js_watch_set;   /* & to silence schoolmarmish MSVC */
 
@@ -818,7 +822,7 @@ WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, PropertyOp setter)
                              setter ? CastAsObject(setter)->getParent() : NULL, atom);
     if (!wrapper)
         return NULL;
-    return CastAsPropertyOp(FUN_OBJECT(wrapper));
+    return CastAsStrictPropertyOp(FUN_OBJECT(wrapper));
 }
 
 static bool
@@ -828,8 +832,8 @@ UpdateWatchpointShape(JSContext *cx, JSWatchPoint *wp, const js::Shape *newShape
     JS_ASSERT(!IsWatchedProperty(cx, newShape));
 
     /* Create a watching setter we can substitute for the new shape's setter. */
-    js::PropertyOp watchingSetter = WrapWatchedSetter(cx, newShape->id, newShape->attributes(),
-                                                      newShape->setter());
+    js::StrictPropertyOp watchingSetter = 
+        WrapWatchedSetter(cx, newShape->id, newShape->attributes(), newShape->setter());
     if (!watchingSetter)
         return false;
 
@@ -837,7 +841,7 @@ UpdateWatchpointShape(JSContext *cx, JSWatchPoint *wp, const js::Shape *newShape
      * Save the shape's setter; we don't know whether js_ChangeNativePropertyAttrs will
      * return a new shape, or mutate this one.
      */
-    js::PropertyOp originalSetter = newShape->setter();
+    js::StrictPropertyOp originalSetter = newShape->setter();
 
     /*
      * Drop the watching setter into the object, in place of newShape. Note that a single
@@ -884,7 +888,7 @@ js_SlowPathUpdateWatchpointsForShape(JSContext *cx, JSObject *obj, const js::Sha
  * watchpoint-wrapped shape may correspond to more than one non-watchpoint shape; see the
  * comments in UpdateWatchpointShape.
  */
-static PropertyOp
+static StrictPropertyOp
 UnwrapSetter(JSContext *cx, JSObject *obj, const Shape *shape)
 {
     /* If it's not a watched property, its setter is not wrapped. */
@@ -960,7 +964,8 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
     } else if (pobj != obj) {
         /* Clone the prototype property so we can watch the right object. */
         AutoValueRooter valroot(cx);
-        PropertyOp getter, setter;
+        PropertyOp getter;
+        StrictPropertyOp setter;
         uintN attrs, flags;
         intN shortid;
 
@@ -978,7 +983,8 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
                 !pobj->getAttributes(cx, propid, &attrs)) {
                 return JS_FALSE;
             }
-            getter = setter = NULL;
+            getter = NULL;
+            setter = NULL;
             flags = 0;
             shortid = 0;
         }

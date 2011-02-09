@@ -326,7 +326,7 @@ struct Shape : public JSObjectMap
     };
 
     union {
-        js::PropertyOp  rawSetter;      /* getter is JSObject* and setter is 0
+        js::StrictPropertyOp  rawSetter;/* getter is JSObject* and setter is 0
                                            if shape->isMethod() */
         JSObject        *setterObj;     /* user-defined callable "set" object or
                                            null if shape->hasSetterValue() */
@@ -356,7 +356,7 @@ struct Shape : public JSObjectMap
     static js::Shape *newDictionaryShape(JSContext *cx, const js::Shape &child, js::Shape **listp);
     static js::Shape *newDictionaryList(JSContext *cx, js::Shape **listp);
     static js::Shape *newDictionaryShapeForAddProperty(JSContext *cx, jsid id,
-                                                       PropertyOp getter, PropertyOp setter,
+                                                       PropertyOp getter, StrictPropertyOp setter,
                                                        uint32 slot, uintN attrs,
                                                        uintN flags, intN shortid);
 
@@ -500,7 +500,7 @@ struct Shape : public JSObjectMap
         FROZEN          = 0x10
     };
 
-    Shape(jsid id, js::PropertyOp getter, js::PropertyOp setter, uint32 slot, uintN attrs,
+    Shape(jsid id, js::PropertyOp getter, js::StrictPropertyOp setter, uint32 slot, uintN attrs,
           uintN flags, intN shortid, uint32 shape = INVALID_SHAPE, uint32 slotSpan = 0);
 
     /* Used by EmptyShape (see jsscopeinlines.h). */
@@ -551,9 +551,9 @@ struct Shape : public JSObjectMap
         return hasGetterValue() && getterObj ? js::ObjectValue(*getterObj) : js::UndefinedValue();
     }
 
-    js::PropertyOp setter() const { return rawSetter; }
+    js::StrictPropertyOp setter() const { return rawSetter; }
     bool hasDefaultSetter() const  { return !rawSetter; }
-    js::PropertyOp setterOp() const { JS_ASSERT(!hasSetterValue()); return rawSetter; }
+    js::StrictPropertyOp setterOp() const { JS_ASSERT(!hasSetterValue()); return rawSetter; }
     JSObject *setterObject() const { JS_ASSERT(hasSetterValue()); return setterObj; }
 
     // Per ES5, decode null setterObj as the undefined value, which encodes as null.
@@ -568,12 +568,12 @@ struct Shape : public JSObjectMap
 
     inline JSDHashNumber hash() const;
     inline bool matches(const js::Shape *p) const;
-    inline bool matchesParamsAfterId(js::PropertyOp agetter, js::PropertyOp asetter,
+    inline bool matchesParamsAfterId(js::PropertyOp agetter, js::StrictPropertyOp asetter,
                                      uint32 aslot, uintN aattrs, uintN aflags,
                                      intN ashortid) const;
 
     bool get(JSContext* cx, JSObject *receiver, JSObject *obj, JSObject *pobj, js::Value* vp) const;
-    bool set(JSContext* cx, JSObject *obj, js::Value* vp) const;
+    bool set(JSContext* cx, JSObject *obj, bool strict, js::Value* vp) const;
 
     inline bool isSharedPermanent() const;
 

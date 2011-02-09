@@ -835,7 +835,8 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
     AutoPropertyDescriptorRooter(JSContext *cx) : AutoGCRooter(cx, DESCRIPTOR) {
         obj = NULL;
         attrs = 0;
-        getter = setter = (PropertyOp) NULL;
+        getter = (PropertyOp) NULL;
+        setter = (StrictPropertyOp) NULL;
         value.setUndefined();
     }
 
