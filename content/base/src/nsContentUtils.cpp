@@ -5799,9 +5799,13 @@ CloneSimpleValues(JSContext* cx,
 
   // RegExp objects.
   if (js_ObjectIsRegExp(obj)) {
+    JSObject* global = JS_GetGlobalForScopeChain(cx);
+    if (!global) {
+      return NS_ERROR_FAILURE;
+    }
+
     JSObject* proto;
-    if (!js_GetClassPrototype(cx, JS_GetScopeChain(cx), JSProto_RegExp,
-                              &proto)) {
+    if (!js_GetClassPrototype(cx, global, JSProto_RegExp, &proto)) {
       return NS_ERROR_FAILURE;
     }
     JSObject* newRegExp = js_CloneRegExpObject(cx, obj, proto);

@@ -634,7 +634,7 @@ nsDOMWorkerFunctions::GetInstanceCommon(JSContext* aCx,
     }
   }
 
-  JSObject* global = JS_GetGlobalForObject(aCx, JS_GetScopeChain(aCx));
+  JSObject* global = JS_GetGlobalForScopeChain(aCx);
   if (!global) {
     NS_ASSERTION(JS_IsExceptionPending(aCx), "Need to set an exception!");
     return JS_FALSE;
@@ -2533,8 +2533,7 @@ nsDOMWorker::ReadStructuredClone(JSContext* aCx,
     if (JS_ReadBytes(aReader, &wrappedNative, sizeof(wrappedNative))) {
       NS_ASSERTION(wrappedNative, "Null pointer?!");
 
-      JSObject* global = JS_GetGlobalForObject(aCx, JS_GetScopeChain(aCx));
-      if (global) {
+      if (JSObject* global = JS_GetGlobalForScopeChain(aCx)) {
         jsval val;
         nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
         if (NS_SUCCEEDED(nsContentUtils::WrapNative(aCx, global, wrappedNative,
