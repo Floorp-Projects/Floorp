@@ -3203,7 +3203,7 @@ nsJSContext::ClearScope(void *aGlobalObj, PRBool aClearFromProtoChain)
 
     if (window != JSVAL_VOID) {
       if (!JS_DefineProperty(mContext, obj, "window", window,
-                             JS_PropertyStub, JS_PropertyStub,
+                             JS_PropertyStub, JS_StrictPropertyStub,
                              JSPROP_ENUMERATE | JSPROP_READONLY |
                              JSPROP_PERMANENT)) {
         JS_ClearPendingException(mContext);

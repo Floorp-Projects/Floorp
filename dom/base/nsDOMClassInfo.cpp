@@ -1976,7 +1976,7 @@ NS_INTERFACE_MAP_END
 
 static JSClass sDOMConstructorProtoClass = {
   "DOM Constructor.prototype", 0,
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, nsnull
 };
 
@@ -4997,8 +4997,8 @@ nsWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 static JSClass sGlobalScopePolluterClass = {
   "Global Scope Polluter",
   JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_NEW_RESOLVE,
-  nsWindowSH::SecurityCheckOnSetProp,
-  nsWindowSH::SecurityCheckOnSetProp,
+  nsWindowSH::SecurityCheckOnAddDelProp,
+  nsWindowSH::SecurityCheckOnAddDelProp,
   nsWindowSH::GlobalScopePolluterGetProperty,
   nsWindowSH::SecurityCheckOnSetProp,
   JS_EnumerateStub,
@@ -5037,8 +5037,8 @@ nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JSObject *obj,
 
 // static
 JSBool
-nsWindowSH::SecurityCheckOnSetProp(JSContext *cx, JSObject *obj, jsid id,
-                                   jsval *vp)
+nsWindowSH::SecurityCheckOnAddDelProp(JSContext *cx, JSObject *obj, jsid id,
+                                      jsval *vp)
 {
   // Someone is accessing a element by referencing its name/id in the
   // global scope, do a security check to make sure that's ok.
@@ -5051,6 +5051,14 @@ nsWindowSH::SecurityCheckOnSetProp(JSContext *cx, JSObject *obj, jsid id,
   // If !NS_SUCCEEDED(rv) the security check failed. The security
   // manager set a JS exception for us.
   return NS_SUCCEEDED(rv);
+}
+
+// static
+JSBool
+nsWindowSH::SecurityCheckOnSetProp(JSContext *cx, JSObject *obj, jsid id, JSBool strict,
+                                   jsval *vp)
+{
+  return SecurityCheckOnAddDelProp(cx, obj, id, vp);
 }
 
 static nsHTMLDocument*
@@ -6905,7 +6913,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       JSAutoRequest ar(cx);
 
       if (!::JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, JS_PropertyStub,
-                                   JS_PropertyStub, JSPROP_ENUMERATE)) {
+                                   JS_StrictPropertyStub, JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }
       *objp = obj;
@@ -7067,7 +7075,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       if ((!(flags & JSRESOLVE_QUALIFIED) &&
            !js_CheckUndeclaredVarAssignment(cx, str)) ||
           !::JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, JS_PropertyStub,
-                                   JS_PropertyStub, JSPROP_ENUMERATE)) {
+                                   JS_StrictPropertyStub, JSPROP_ENUMERATE)) {
         *_retval = JS_FALSE;
 
         return NS_OK;
@@ -8531,7 +8539,7 @@ nsDocumentSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                                reinterpret_cast<const jschar *>
                                                (doc_str.get()),
                                doc_str.Length(), OBJECT_TO_JSVAL(obj),
-                               JS_PropertyStub, JS_PropertyStub,
+                               JS_PropertyStub, JS_StrictPropertyStub,
                                JSPROP_READONLY | JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
@@ -8646,7 +8654,7 @@ static JSClass sHTMLDocumentAllClass = {
   JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_NEW_RESOLVE |
   JSCLASS_HAS_RESERVED_SLOTS(1),
   JS_PropertyStub, JS_PropertyStub, nsHTMLDocumentSH::DocumentAllGetProperty,
-  JS_PropertyStub, JS_EnumerateStub,
+  JS_StrictPropertyStub, JS_EnumerateStub,
   (JSResolveOp)nsHTMLDocumentSH::DocumentAllNewResolve, JS_ConvertStub,
   nsHTMLDocumentSH::ReleaseDocument, nsnull, nsnull,
   nsHTMLDocumentSH::CallToGetPropMapper
@@ -8657,7 +8665,7 @@ static JSClass sHTMLDocumentAllHelperClass = {
   "HTML document.all helper class", JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
   JS_PropertyStub, JS_PropertyStub,
   nsHTMLDocumentSH::DocumentAllHelperGetProperty,
-  JS_PropertyStub, JS_EnumerateStub,
+  JS_StrictPropertyStub, JS_EnumerateStub,
   (JSResolveOp)nsHTMLDocumentSH::DocumentAllHelperNewResolve, JS_ConvertStub,
   nsnull
 };
@@ -8666,7 +8674,7 @@ static JSClass sHTMLDocumentAllHelperClass = {
 static JSClass sHTMLDocumentAllTagsClass = {
   "HTML document.all.tags class",
   JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, (JSResolveOp)nsHTMLDocumentSH::DocumentAllTagsNewResolve,
   JS_ConvertStub, nsHTMLDocumentSH::ReleaseDocument, nsnull, nsnull,
   nsHTMLDocumentSH::CallToGetPropMapper

@@ -195,7 +195,7 @@ nsXBLProtoImplProperty::InstallMember(nsIScriptContext* aContext,
                                reinterpret_cast<const jschar*>(mName),
                                name.Length(), JSVAL_VOID,
                                JS_DATA_TO_FUNC_PTR(JSPropertyOp, getter),
-                               JS_DATA_TO_FUNC_PTR(JSPropertyOp, setter),
+                               JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, setter),
                                mJSAttributes))
       return NS_ERROR_OUT_OF_MEMORY;
   }

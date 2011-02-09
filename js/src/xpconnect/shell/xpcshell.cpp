@@ -884,12 +884,12 @@ static JSFunctionSpec glob_functions[] = {
 
 JSClass global_class = {
     "global", 0,
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   nsnull
 };
 
 static JSBool
-env_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+env_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
 #if !defined XP_BEOS && !defined XP_OS2 && !defined SOLARIS

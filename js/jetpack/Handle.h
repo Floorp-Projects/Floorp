@@ -249,7 +249,7 @@ private:
   }
 
   static JSBool
-  SetIsRooted(JSContext* cx, JSObject* obj, jsid, jsval* vp) {
+  SetIsRooted(JSContext* cx, JSObject* obj, jsid, JSBool strict, jsval* vp) {
     Handle* self = Unwrap(cx, obj);
     JSBool v;
     if (!JS_ValueToBoolean(cx, *vp, &v))
@@ -330,7 +330,7 @@ const JSClass
 Handle<BaseType>::sHandle_JSClass = {
   "IPDL Handle", JSCLASS_HAS_PRIVATE,
   JS_PropertyStub, JS_PropertyStub,
-  JS_PropertyStub, JS_PropertyStub,
+  JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub,
   JS_ConvertStub, Handle::Finalize,
   JSCLASS_NO_OPTIONAL_MEMBERS

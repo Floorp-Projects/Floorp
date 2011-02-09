@@ -151,7 +151,7 @@ static JSBool
 NPObjWrapper_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
 
 static JSBool
 NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
@@ -215,7 +215,7 @@ static JSClass sNPObjectMemberClass =
   {
     "NPObject Ambiguous Member class", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub, JS_PropertyStub,
-    JS_PropertyStub, JS_PropertyStub, JS_EnumerateStub,
+    JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
     JS_ResolveStub, NPObjectMember_Convert,
     NPObjectMember_Finalize, nsnull, nsnull, NPObjectMember_Call,
     nsnull, nsnull, nsnull, NPObjectMember_Mark, nsnull
@@ -1248,7 +1248,7 @@ NPObjWrapper_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static JSBool
-NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
   NPObject *npobj = GetNPObject(cx, obj);
 

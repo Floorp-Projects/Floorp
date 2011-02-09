@@ -107,7 +107,7 @@ namespace PointerType {
     jsval* vp);
   static JSBool ContentsGetter(JSContext* cx, JSObject* obj, jsid idval,
     jsval* vp);
-  static JSBool ContentsSetter(JSContext* cx, JSObject* obj, jsid idval,
+  static JSBool ContentsSetter(JSContext* cx, JSObject* obj, jsid idval, JSBool strict,
     jsval* vp);
   static JSBool IsNull(JSContext* cx, uintN argc, jsval* vp);
 }
@@ -121,7 +121,7 @@ namespace ArrayType {
   static JSBool LengthGetter(JSContext* cx, JSObject* obj, jsid idval,
     jsval* vp);
   static JSBool Getter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp);
-  static JSBool Setter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp);
+  static JSBool Setter(JSContext* cx, JSObject* obj, jsid idval, JSBool strict, jsval* vp);
   static JSBool AddressOfElement(JSContext* cx, uintN argc, jsval* vp);
 }
 
@@ -133,8 +133,8 @@ namespace StructType {
     jsval* vp);
   static JSBool FieldGetter(JSContext* cx, JSObject* obj, jsid idval,
     jsval* vp);
-  static JSBool FieldSetter(JSContext* cx, JSObject* obj, jsid idval,
-    jsval* vp);
+  static JSBool FieldSetter(JSContext* cx, JSObject* obj, jsid idval, JSBool strict,
+                            jsval* vp);
   static JSBool AddressOfField(JSContext* cx, uintN argc, jsval* vp);
   static JSBool Define(JSContext* cx, uintN argc, jsval* vp);
 }
@@ -168,9 +168,9 @@ namespace CData {
   static void Finalize(JSContext* cx, JSObject* obj);
 
   static JSBool ValueGetter(JSContext* cx, JSObject* obj, jsid idval,
-    jsval* vp);
+                            jsval* vp);
   static JSBool ValueSetter(JSContext* cx, JSObject* obj, jsid idval,
-    jsval* vp);
+                            JSBool strict, jsval* vp);
   static JSBool Address(JSContext* cx, uintN argc, jsval* vp);
   static JSBool ReadString(JSContext* cx, uintN argc, jsval* vp);
   static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
@@ -225,7 +225,7 @@ namespace UInt64 {
 static JSClass sCTypesGlobalClass = {
   "ctypes",
   JSCLASS_HAS_RESERVED_SLOTS(CTYPESGLOBAL_SLOTS),
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
   JSCLASS_NO_OPTIONAL_MEMBERS
 };
@@ -233,7 +233,7 @@ static JSClass sCTypesGlobalClass = {
 static JSClass sCABIClass = {
   "CABI",
   JSCLASS_HAS_RESERVED_SLOTS(CABI_SLOTS),
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
   JSCLASS_NO_OPTIONAL_MEMBERS
 };
@@ -244,7 +244,7 @@ static JSClass sCABIClass = {
 static JSClass sCTypeProtoClass = {
   "CType",
   JSCLASS_HAS_RESERVED_SLOTS(CTYPEPROTO_SLOTS),
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CType::FinalizeProtoClass,
   NULL, NULL, ConstructAbstract, ConstructAbstract, NULL, NULL, NULL, NULL
 };
@@ -254,7 +254,7 @@ static JSClass sCTypeProtoClass = {
 static JSClass sCDataProtoClass = {
   "CData",
   0,
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
   JSCLASS_NO_OPTIONAL_MEMBERS
 };
@@ -262,7 +262,7 @@ static JSClass sCDataProtoClass = {
 static JSClass sCTypeClass = {
   "CType",
   JSCLASS_HAS_RESERVED_SLOTS(CTYPE_SLOTS) | JSCLASS_MARK_IS_TRACE,
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CType::Finalize,
   NULL, NULL, CType::ConstructData, CType::ConstructData, NULL,
   CType::HasInstance, JS_CLASS_TRACE(CType::Trace), NULL
@@ -279,7 +279,7 @@ static JSClass sCDataClass = {
 static JSClass sCClosureClass = {
   "CClosure",
   JSCLASS_HAS_RESERVED_SLOTS(CCLOSURE_SLOTS) | JSCLASS_MARK_IS_TRACE,
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CClosure::Finalize,
   NULL, NULL, NULL, NULL, NULL, NULL, JS_CLASS_TRACE(CClosure::Trace), NULL
 };
@@ -396,7 +396,7 @@ static JSPropertySpec sFunctionProps[] = {
 static JSClass sInt64ProtoClass = {
   "Int64",
   0,
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
   JSCLASS_NO_OPTIONAL_MEMBERS
 };
@@ -404,7 +404,7 @@ static JSClass sInt64ProtoClass = {
 static JSClass sUInt64ProtoClass = {
   "UInt64",
   0,
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
   JSCLASS_NO_OPTIONAL_MEMBERS
 };
@@ -412,7 +412,7 @@ static JSClass sUInt64ProtoClass = {
 static JSClass sInt64Class = {
   "Int64",
   JSCLASS_HAS_RESERVED_SLOTS(INT64_SLOTS),
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Int64Base::Finalize,
   JSCLASS_NO_OPTIONAL_MEMBERS
 };
@@ -420,7 +420,7 @@ static JSClass sInt64Class = {
 static JSClass sUInt64Class = {
   "UInt64",
   JSCLASS_HAS_RESERVED_SLOTS(INT64_SLOTS),
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Int64Base::Finalize,
   JSCLASS_NO_OPTIONAL_MEMBERS
 };
@@ -944,7 +944,7 @@ JS_InitCTypesClass(JSContext* cx, JSObject* global)
     return false;
 
   if (!JS_DefineProperty(cx, global, "ctypes", OBJECT_TO_JSVAL(ctypes),
-         JS_PropertyStub, JS_PropertyStub, JSPROP_READONLY | JSPROP_PERMANENT)) {
+         JS_PropertyStub, JS_StrictPropertyStub, JSPROP_READONLY | JSPROP_PERMANENT)) {
     return false;
   }
 
@@ -3401,6 +3401,7 @@ JSBool
 PointerType::ContentsSetter(JSContext* cx,
                             JSObject* obj,
                             jsid idval,
+                            JSBool strict,
                             jsval* vp)
 {
   if (!CData::IsCData(cx, obj)) {
@@ -3789,7 +3790,7 @@ ArrayType::Getter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp)
 }
 
 JSBool
-ArrayType::Setter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp)
+ArrayType::Setter(JSContext* cx, JSObject* obj, jsid idval, JSBool strict, jsval* vp)
 {
   // This should never happen, but we'll check to be safe.
   if (!CData::IsCData(cx, obj)) {
@@ -4431,7 +4432,7 @@ StructType::FieldGetter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp)
 }
 
 JSBool
-StructType::FieldSetter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp)
+StructType::FieldSetter(JSContext* cx, JSObject* obj, jsid idval, JSBool strict, jsval* vp)
 {
   if (!CData::IsCData(cx, obj)) {
     JS_ReportError(cx, "not a CData");
@@ -5592,7 +5593,7 @@ CData::ValueGetter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp)
 }
 
 JSBool
-CData::ValueSetter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp)
+CData::ValueSetter(JSContext* cx, JSObject* obj, jsid idval, JSBool strict, jsval* vp)
 {
   if (!IsCData(cx, obj)) {
     JS_ReportError(cx, "not a CData");

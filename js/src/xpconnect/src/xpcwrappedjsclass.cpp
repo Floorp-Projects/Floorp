@@ -1484,7 +1484,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         uintN attrs;
         JSBool found;
         JSPropertyOp getter;
-        JSPropertyOp setter;
+        JSStrictPropertyOp setter;
         if(!JS_GetPropertyAttrsGetterAndSetter(cx, obj, name,
                                                &attrs, &found,
                                                &getter, &setter))
