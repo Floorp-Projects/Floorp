@@ -373,9 +373,9 @@ JSStackFrame::computeThis(JSContext *cx)
         JS_ASSERT(!isEvalFrame());
     }
     if (!js::BoxThisForVp(cx, &thisv - 1))
-        return NULL;
+        return false;
     JS_ASSERT(IsSaneThisObject(thisv.toObject()));
-    return &thisv.toObject();
+    return true;
 }
 
 inline JSObject &
