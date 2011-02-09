@@ -1224,6 +1224,8 @@ NS_METHOD nsWindow::Show(PRBool bState)
   }
 #endif
 
+  PRBool syncInvalidate = PR_FALSE;
+
   PRBool wasVisible = mIsVisible;
   // Set the status now so that anyone asking during ShowWindow or
   // SetWindowPos would get the correct answer.
@@ -1236,6 +1238,9 @@ NS_METHOD nsWindow::Show(PRBool bState)
   if (mWnd) {
     if (bState) {
       if (!wasVisible && mWindowType == eWindowType_toplevel) {
+        // speed up the initial paint after show for
+        // top level windows:
+        syncInvalidate = PR_TRUE;
         switch (mSizeMode) {
 #ifdef WINCE
           case nsSizeMode_Fullscreen:
@@ -1320,7 +1325,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
   
 #ifdef MOZ_XUL
   if (!wasVisible && bState)
-    Invalidate(PR_FALSE);
+    Invalidate(syncInvalidate);
 #endif
 
   return NS_OK;
