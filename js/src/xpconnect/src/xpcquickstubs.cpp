@@ -796,8 +796,7 @@ getNativeFromWrapper(JSContext *cx,
                      jsval *vp)
 {
     return getNative(wrapper->GetIdentityObject(), wrapper->GetOffsets(),
-                     wrapper->GetFlatJSObjectAndMark(), iid, ppThis, pThisRef,
-                     vp);
+                     wrapper->GetFlatJSObject(), iid, ppThis, pThisRef, vp);
 }
 
 
