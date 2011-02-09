@@ -245,6 +245,12 @@ private:
   void ClearImageOverridePreserveAspectRatio();
   const SVGPreserveAspectRatio* GetImageOverridePreserveAspectRatio();
 
+  // Returns PR_TRUE if we should synthesize a viewBox for ourselves (that is,
+  // if we're the outermost <svg> in an image document, and we're not currently
+  // being painted by an <svg:image> element). This method also assumes that we
+  // lack a valid viewBox attribute.
+  PRBool ShouldSynthesizeViewBox();
+
 protected:
   // nsSVGElement overrides
   PRBool IsEventName(nsIAtom* aName);
@@ -341,6 +347,7 @@ protected:
   PRPackedBool                      mStartAnimationOnBindToTree;
 #endif // MOZ_SMIL
   PRPackedBool                      mImageNeedsTransformInvalidation;
+  PRPackedBool                      mIsPaintingSVGImageElement;
 };
 
 #endif

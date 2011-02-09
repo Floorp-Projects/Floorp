@@ -214,6 +214,7 @@ nsSVGSVGElement::nsSVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   , mStartAnimationOnBindToTree(!aFromParser)
 #endif // MOZ_SMIL
   , mImageNeedsTransformInvalidation(PR_FALSE)
+  , mIsPaintingSVGImageElement(PR_FALSE)
 {
 }
 
@@ -962,12 +963,38 @@ nsSVGSVGElement::IsEventName(nsIAtom* aName)
          (EventNameType_SVGGraphic | EventNameType_SVGSVG));
 }
 
+// Helper for GetViewBoxTransform on root <svg> node
+// * aLength: internal value for our <svg> width or height attribute.
+// * aViewportLength: length of the corresponding dimension of the viewport.
+// * aSelf: the outermost <svg> node itself.
+// NOTE: aSelf is not an ancestor viewport element, so it can't be used to
+// resolve percentage lengths. (It can only be used to resolve
+// 'em'/'ex'-valued units).
+inline float
+ComputeSynthesizedViewBoxDimension(nsSVGLength2& aLength,
+                                   float aViewportLength,
+                                   nsSVGSVGElement* aSelf)
+{
+  if (aLength.IsPercentage()) {
+    return aViewportLength * aLength.GetAnimValInSpecifiedUnits() / 100.0f;
+  }
+
+  return aLength.GetAnimValue(aSelf);
+}
+
 //----------------------------------------------------------------------
 // public helpers:
 
 gfxMatrix
 nsSVGSVGElement::GetViewBoxTransform()
 {
+  // Do we have an override preserveAspectRatio value?
+  const SVGPreserveAspectRatio* overridePARPtr =
+    GetImageOverridePreserveAspectRatio();
+
+  // May assign this to overridePARPtr if we have no viewBox but are faking one:
+  SVGPreserveAspectRatio tmpPAR;
+
   float viewportWidth, viewportHeight;
   if (nsSVGUtils::IsInnerSVG(this)) {
     nsSVGSVGElement *ctx = GetCtx();
@@ -983,17 +1010,38 @@ nsSVGSVGElement::GetViewBoxTransform()
     viewBox = mViewBox.GetAnimValue();
   } else {
     viewBox.x = viewBox.y = 0.0f;
-    viewBox.width  = viewportWidth;
-    viewBox.height = viewportHeight;
+    if (ShouldSynthesizeViewBox()) {
+      // Special case -- fake a viewBox, using height & width attrs.
+      // (Use |this| as context, since if we get here, we're outermost <svg>.)
+      viewBox.width =
+        ComputeSynthesizedViewBoxDimension(mLengthAttributes[WIDTH],
+                                           mViewportWidth, this);
+      viewBox.height =
+        ComputeSynthesizedViewBoxDimension(mLengthAttributes[HEIGHT],
+                                           mViewportHeight, this);
+      NS_ABORT_IF_FALSE(!overridePARPtr,
+                        "shouldn't have overridePAR if we're "
+                        "synthesizing a viewBox");
+
+      // If we're synthesizing a viewBox, use preserveAspectRatio="none";
+      tmpPAR.SetAlign(nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE);
+
+      // (set the other pAR attributes too, just so they're initialized):
+      tmpPAR.SetDefer(PR_FALSE);
+      tmpPAR.SetMeetOrSlice(nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE);
+
+      overridePARPtr = &tmpPAR;
+    } else {
+      // No viewBox attribute, so we shouldn't auto-scale. This is equivalent
+      // to having a viewBox that exactly matches our viewport size.
+      viewBox.width  = viewportWidth;
+      viewBox.height = viewportHeight;
+    }
   }
 
   if (viewBox.width <= 0.0f || viewBox.height <= 0.0f) {
     return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
   }
-
-  // Do we have an override preserveAspectRatio value?
-  const SVGPreserveAspectRatio* overridePARPtr =
-    GetImageOverridePreserveAspectRatio();
 
   return nsSVGUtils::GetViewBoxTransform(this,
                                          viewportWidth, viewportHeight,
@@ -1121,15 +1169,18 @@ nsSVGSVGElement::GetLength(PRUint8 aCtxType)
     const nsSVGViewBoxRect& viewbox = mViewBox.GetAnimValue();
     w = viewbox.width;
     h = viewbox.height;
+  } else if (nsSVGUtils::IsInnerSVG(this)) {
+    nsSVGSVGElement *ctx = GetCtx();
+    w = mLengthAttributes[WIDTH].GetAnimValue(ctx);
+    h = mLengthAttributes[HEIGHT].GetAnimValue(ctx);
+  } else if (ShouldSynthesizeViewBox()) {
+    w = ComputeSynthesizedViewBoxDimension(mLengthAttributes[WIDTH],
+                                           mViewportWidth, this);
+    h = ComputeSynthesizedViewBoxDimension(mLengthAttributes[HEIGHT],
+                                           mViewportHeight, this);
   } else {
-    if (nsSVGUtils::IsInnerSVG(this)) {
-      nsSVGSVGElement *ctx = GetCtx();
-      w = mLengthAttributes[WIDTH].GetAnimValue(ctx);
-      h = mLengthAttributes[HEIGHT].GetAnimValue(ctx);
-    } else {
-      w = mViewportWidth;
-      h = mViewportHeight;
-    }
+    w = mViewportWidth;
+    h = mViewportHeight;
   }
 
   w = NS_MAX(w, 0.0f);
@@ -1252,6 +1303,20 @@ nsSVGSVGElement::RemoveAllRenderingObservers()
 }
 #endif // !MOZ_LIBXUL
 
+PRBool
+nsSVGSVGElement::ShouldSynthesizeViewBox()
+{
+  NS_ABORT_IF_FALSE(!HasValidViewbox(),
+                    "Should only be called if we lack a viewBox");
+
+  nsIDocument* doc = GetCurrentDoc();
+  return doc &&
+    doc->IsBeingUsedAsImage() &&
+    !mIsPaintingSVGImageElement &&
+    !GetParent();
+}
+
+
 // Callback function, for freeing PRUint64 values stored in property table
 static void
 ReleasePreserveAspectRatioPropertyValue(void*    aObject,       /* unused */
@@ -1272,6 +1337,14 @@ nsSVGSVGElement::
   NS_ABORT_IF_FALSE(GetCurrentDoc()->IsBeingUsedAsImage(),
                     "should only override preserveAspectRatio in images");
 #endif
+
+  if (!HasValidViewbox() && ShouldSynthesizeViewBox()) {
+    // My non-<svg:image> clients will have been painting me with a synthesized
+    // viewBox, but my <svg:image> client that's about to paint me now does NOT
+    // want that.  Need to tell ourselves to flush our transform.
+    mImageNeedsTransformInvalidation = PR_TRUE;
+  }
+  mIsPaintingSVGImageElement = PR_TRUE;
 
   if (!mViewBox.IsValid()) {
     return; // preserveAspectRatio irrelevant (only matters if we have viewBox)
@@ -1303,6 +1376,14 @@ nsSVGSVGElement::ClearImageOverridePreserveAspectRatio()
   NS_ABORT_IF_FALSE(GetCurrentDoc()->IsBeingUsedAsImage(),
                     "should only override preserveAspectRatio in images");
 #endif
+
+  mIsPaintingSVGImageElement = PR_FALSE;
+  if (!HasValidViewbox() && ShouldSynthesizeViewBox()) {
+    // My non-<svg:image> clients will want to paint me with a synthesized
+    // viewBox, but my <svg:image> client that just painted me did NOT
+    // use that.  Need to tell ourselves to flush our transform.
+    mImageNeedsTransformInvalidation = PR_TRUE;
+  }
 
   void* valPtr = UnsetProperty(nsGkAtoms::overridePreserveAspectRatio);
   if (valPtr) {
