@@ -167,7 +167,7 @@ SVGDocumentWrapper::UpdateViewportBounds(const nsIntSize& aViewportSize)
 }
 
 void
-SVGDocumentWrapper::FlushPreserveAspectRatioOverride()
+SVGDocumentWrapper::FlushImageTransformInvalidation()
 {
   NS_ABORT_IF_FALSE(!mIgnoreInvalidation, "shouldn't be reentrant");
 
@@ -176,7 +176,7 @@ SVGDocumentWrapper::FlushPreserveAspectRatioOverride()
     return;
 
   mIgnoreInvalidation = PR_TRUE;
-  svgElem->FlushPreserveAspectRatioOverride();
+  svgElem->FlushImageTransformInvalidation();
   FlushLayout();
   mIgnoreInvalidation = PR_FALSE;
 }
