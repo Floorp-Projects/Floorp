@@ -2066,9 +2066,6 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   // Set a transform on the layer to draw the plugin in the right place
   gfxMatrix transform;
-  // Center plugin if layer size != frame rect
-  r.pos.x += (r.Width() - size.width) / 2;
-  r.pos.y += (r.Height() - size.height) / 2;
   transform.Translate(r.pos);
 
   layer->SetTransform(gfx3DMatrix::From2D(transform));
