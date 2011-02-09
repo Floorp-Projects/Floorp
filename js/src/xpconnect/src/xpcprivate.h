@@ -4336,7 +4336,7 @@ public:
      * kept alive past the next CC.
      */
     jsval GetJSVal() const
-        {if(JSVAL_IS_OBJECT(mJSVal))
+        {if(!JSVAL_IS_PRIMITIVE(mJSVal))
              JSVAL_TO_OBJECT(mJSVal)->unmark(XPC_GC_COLOR_GRAY);
          return mJSVal;}
 
