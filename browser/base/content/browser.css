@@ -473,6 +473,10 @@ statuspanel[type=status] {
   min-width: 25%;
 }
 
+statuspanel[type=overLink] {
+  direction: ltr;
+}
+
 statuspanel[label=""] {
   -moz-transition: none;
   opacity: 0;
