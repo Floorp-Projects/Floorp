@@ -67,7 +67,7 @@ public:
   void (*callback)(NPP npp, uint32_t timerID);
 };
 
-class nsNPAPIPluginInstance : public nsIPluginInstance
+class nsNPAPIPluginInstance : public nsIPluginInstance_MOZILLA_2_0_BRANCH
 {
 private:
   typedef mozilla::PluginLibrary PluginLibrary;
@@ -75,6 +75,7 @@ private:
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGININSTANCE
+  NS_DECL_NSIPLUGININSTANCE_MOZILLA_2_0_BRANCH
 
   nsNPAPIPlugin* GetPlugin();
 

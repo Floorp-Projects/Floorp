@@ -60,6 +60,7 @@ class ShadowContainerLayer;
 class ShadowImageLayer;
 class ShadowCanvasLayer;
 class ShadowColorLayer;
+class ReadbackProcessor;
 
 /**
  * This is a cairo/Thebes-only, main-thread-only implementation of layers.
@@ -152,16 +153,17 @@ public:
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
   virtual already_AddRefed<ColorLayer> CreateColorLayer();
+  virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer();
   virtual already_AddRefed<ShadowThebesLayer> CreateShadowThebesLayer()
-  { return NULL; }
+  { return nsnull; }
   virtual already_AddRefed<ShadowContainerLayer> CreateShadowContainerLayer()
-  { return NULL; }
+  { return nsnull; }
   virtual already_AddRefed<ShadowImageLayer> CreateShadowImageLayer()
-  { return NULL; }
+  { return nsnull; }
   virtual already_AddRefed<ShadowColorLayer> CreateShadowColorLayer()
-  { return NULL; }
+  { return nsnull; }
   virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer()
-  { return NULL; }
+  { return nsnull; }
 
   virtual LayersBackend GetBackendType() { return LAYERS_BASIC; }
   virtual void GetBackendName(nsAString& name) { name.AssignLiteral("Basic"); }
@@ -197,7 +199,8 @@ protected:
   // Paints aLayer to mTarget.
   void PaintLayer(Layer* aLayer,
                   DrawThebesLayerCallback aCallback,
-                  void* aCallbackData);
+                  void* aCallbackData,
+                  ReadbackProcessor* aReadback);
 
   // Clear the contents of a layer
   void ClearLayer(Layer* aLayer);

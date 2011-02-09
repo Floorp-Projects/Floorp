@@ -46,6 +46,11 @@
 
 #include <gdk/gdk.h>
 
+// Compatibility macro for <libnotify-0.7
+#ifndef NOTIFY_CHECK_VERSION
+#define NOTIFY_CHECK_VERSION(x,y,z) 0
+#endif
+
 static PRBool gHasActions = PR_FALSE;
 
 static void notify_action_cb(NotifyNotification *notification,
@@ -218,7 +223,13 @@ nsAlertsIconListener::ShowAlert(GdkPixbuf* aPixbuf)
 {
   mNotification = notify_notification_new(mAlertTitle.get(),
                                           mAlertText.get(),
-                                          NULL, NULL);
+                                          NULL
+// >=libnotify-0.7.0 has no support for attaching to widgets
+#if !NOTIFY_CHECK_VERSION(0,7,0)
+                                          , NULL
+#endif
+                                          );
+
   if (!mNotification)
     return NS_ERROR_OUT_OF_MEMORY;
 

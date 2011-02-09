@@ -243,6 +243,10 @@ struct THEBES_API gfxRGBA {
     {
         return r == other.r && g == other.g && b == other.b && a == other.a;
     }
+    bool operator!=(const gfxRGBA& other) const
+    {
+        return !(*this == other);
+    }
 
     /**
      * Returns this color value as a packed 32-bit integer. This reconstructs
