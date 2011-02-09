@@ -1976,22 +1976,21 @@ case "$target" in
         DSO_CFLAGS='-qflag=w:w'
         DSO_PIC_CFLAGS=
         LDFLAGS="$LDFLAGS -Wl,-brtl -blibpath:/usr/lib:/lib"
-        AC_MSG_WARN([Clearing MOZ_FIX_LINK_PATHS till we can fix bug 332075.])
         MOZ_FIX_LINK_PATHS=
         MKSHLIB='$(CXX) $(DSO_LDOPTS) -o $@'
         MKCSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
         if test "$COMPILE_ENVIRONMENT"; then
             AC_LANG_SAVE
             AC_LANG_CPLUSPLUS
-            AC_MSG_CHECKING([for VisualAge C++ compiler version >= 6.0.0.3])
+            AC_MSG_CHECKING([for IBM XLC/C++ compiler version >= 9.0.0.7])
             AC_TRY_COMPILE([],
-                [#if (__IBMCPP__ < 600)
+                [#if (__IBMCPP__ < 900)
                  #error "Bad compiler"
                  #endif],
                 _BAD_COMPILER=,_BAD_COMPILER=1)
             if test -n "$_BAD_COMPILER"; then
                 AC_MSG_RESULT([no])    
-                AC_MSG_ERROR([VisualAge C++ version 6.0.0.3 or higher is required to build.])
+                AC_MSG_ERROR([IBM XLC/C++ 9.0.0.7 or higher is required to build.])
             else
                 AC_MSG_RESULT([yes])    
             fi
