@@ -62,21 +62,21 @@
 #endif
 
 extern "C" {
-  void StoreSpline(double ax, double ay, double bx, double by, double cx, double cy, double dx, double dy);
-  void CrashSpline();
+  void StoreSpline(int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy);
+  void CrashSpline(double tolerance, int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy);
 }
 
-static double crash_ax;
-static double crash_ay;
-static double crash_bx;
-static double crash_by;
-static double crash_cx;
-static double crash_cy;
-static double crash_dx;
-static double crash_dy;
+static int crash_ax;
+static int crash_ay;
+static int crash_bx;
+static int crash_by;
+static int crash_cx;
+static int crash_cy;
+static int crash_dx;
+static int crash_dy;
 
 void
-StoreSpline(double ax, double ay, double bx, double by, double cx, double cy, double dx, double dy) {
+StoreSpline(int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy) {
     crash_ax = ax;
     crash_ay = ay;
     crash_bx = bx;
@@ -88,7 +88,7 @@ StoreSpline(double ax, double ay, double bx, double by, double cx, double cy, do
 }
 
 void
-CrashSpline() {
+CrashSpline(double tolerance, int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy) {
 #if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
   static bool annotated;
 
@@ -96,22 +96,23 @@ CrashSpline() {
     nsCAutoString note;
 
     note.AppendPrintf("curve ");
-    note.AppendPrintf("%llx ", crash_ax);
-    note.AppendPrintf("%llx, ", crash_ay);
-    note.AppendPrintf("%llx ", crash_bx);
-    note.AppendPrintf("%llx, ", crash_by);
-    note.AppendPrintf("%llx ", crash_cx);
-    note.AppendPrintf("%llx, ", crash_cy);
-    note.AppendPrintf("%llx ", crash_dx);
-    note.AppendPrintf("%llx\n", crash_dy);
-    note.AppendPrintf("crv-f: %f ", crash_ax);
-    note.AppendPrintf("%f, ", crash_ay);
-    note.AppendPrintf("%f ", crash_bx);
-    note.AppendPrintf("%f, ", crash_by);
-    note.AppendPrintf("%f ", crash_cx);
-    note.AppendPrintf("%f, ", crash_cy);
-    note.AppendPrintf("%f ", crash_dx);
-    note.AppendPrintf("%f\n", crash_dy);
+    note.AppendPrintf("%x ", crash_ax);
+    note.AppendPrintf("%x, ", crash_ay);
+    note.AppendPrintf("%x ", crash_bx);
+    note.AppendPrintf("%x, ", crash_by);
+    note.AppendPrintf("%x ", crash_cx);
+    note.AppendPrintf("%x, ", crash_cy);
+    note.AppendPrintf("%x ", crash_dx);
+    note.AppendPrintf("%x\n", crash_dy);
+    note.AppendPrintf("crv-crash(%f): ", tolerance);
+    note.AppendPrintf("%x ", ax);
+    note.AppendPrintf("%x, ", ay);
+    note.AppendPrintf("%x ", bx);
+    note.AppendPrintf("%x, ", by);
+    note.AppendPrintf("%x ", cx);
+    note.AppendPrintf("%x, ", cy);
+    note.AppendPrintf("%x ", dx);
+    note.AppendPrintf("%x\n", dy);
 
     CrashReporter::AppendAppNotesToCrashReport(note);
     annotated = true;

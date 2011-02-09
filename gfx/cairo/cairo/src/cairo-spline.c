@@ -183,8 +183,8 @@ _cairo_spline_error_squared (const cairo_spline_knots_t *knots)
 	return cerr;
 }
 
-void StoreSpline(double ax, double ay, double bx, double by, double cx, double cy, double dx, double dy);
-void CrashSpline();
+void StoreSpline(int ax, int ay, int bx, int by, int cx, double cy, int dx, int dy);
+void CrashSpline(double tolerance, int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy);
 
 static cairo_status_t
 _cairo_spline_decompose_into (cairo_spline_knots_t *s1, double tolerance_squared, cairo_spline_t *result)
@@ -196,7 +196,10 @@ _cairo_spline_decompose_into (cairo_spline_knots_t *s1, double tolerance_squared
     depth++;
 #ifdef MOZ_ENABLE_LIBXUL
     if (depth == 200) {
-        CrashSpline();
+        CrashSpline(tolerance_squared, s1->a.x, s1->a.y,
+                s1->b.x, s1->b.y,
+                s1->c.x, s1->c.y,
+                s1->d.x, s1->d.y);
     }
 #endif
 
