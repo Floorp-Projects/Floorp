@@ -150,7 +150,9 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
      */
     assertSameCompartment(cx, obj, clone);
 
-    RegExpStatics *res = cx->regExpStatics();
+    RegExpStatics *res = cx->getRegExpStatics();
+    if (!res)
+        return NULL;
     RegExp *re = RegExp::extractFrom(obj);
     {
         uint32 origFlags = re->getFlags();
@@ -401,7 +403,9 @@ regexp_resolve(JSContext *cx, JSObject *obj, jsid id, uint32 flags, JSObject **o
     static JSBool                                                               \
     name(JSContext *cx, JSObject *obj, jsid id, jsval *vp)                      \
     {                                                                           \
-        RegExpStatics *res = cx->regExpStatics();                               \
+        RegExpStatics *res = cx->getRegExpStatics();                            \
+        if (!res)                                                               \
+            return false;                                                       \
         code;                                                                   \
     }
 
@@ -427,7 +431,9 @@ DEFINE_STATIC_GETTER(static_paren9_getter,       return res->createParen(cx, 9, 
     static JSBool                                                               \
     name(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)       \
     {                                                                           \
-        RegExpStatics *res = cx->regExpStatics();                               \
+        RegExpStatics *res = cx->getRegExpStatics();                            \
+        if (!res)                                                               \
+            return false;                                                       \
         code;                                                                   \
         return true;                                                            \
     }
@@ -672,7 +678,10 @@ EscapeNakedForwardSlashes(JSContext *cx, JSString *unescaped)
 static bool
 SwapRegExpInternals(JSContext *cx, JSObject *obj, Value *rval, JSString *str, uint32 flags = 0)
 {
-    flags |= cx->regExpStatics()->getFlags();
+    RegExpStatics *res = cx->getRegExpStatics();
+    if (!res)
+        return false;
+    flags |= res->getFlags();
     AlreadyIncRefed<RegExp> re = RegExp::create(cx, str, flags);
     if (!re)
         return false;
@@ -713,7 +722,9 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool te
         lastIndex = 0;
     }
 
-    RegExpStatics *res = cx->regExpStatics();
+    RegExpStatics *res = cx->getRegExpStatics();
+    if (!res)
+        return false;
 
     JSString *input;
     if (argc) {

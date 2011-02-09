@@ -54,6 +54,7 @@ CPPSRCS = \
   testCloneScript.cpp \
   testConservativeGC.cpp \
   testContexts.cpp \
+  testCrossGlobal.cpp \
   testDebugger.cpp \
   testDeepFreeze.cpp \
   testDefineGetterSetterNonEnumerable.cpp \
