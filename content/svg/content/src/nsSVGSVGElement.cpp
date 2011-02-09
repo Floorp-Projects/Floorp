@@ -213,7 +213,7 @@ nsSVGSVGElement::nsSVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 #ifdef MOZ_SMIL
   , mStartAnimationOnBindToTree(!aFromParser)
 #endif // MOZ_SMIL
-  , mNeedsPreserveAspectRatioFlush(PR_FALSE)
+  , mImageNeedsTransformInvalidation(PR_FALSE)
 {
 }
 
@@ -1289,7 +1289,7 @@ nsSVGSVGElement::
                     "Setting override value when it's already set...?"); 
 
   if (NS_LIKELY(NS_SUCCEEDED(rv))) {
-    mNeedsPreserveAspectRatioFlush = PR_TRUE;
+    mImageNeedsTransformInvalidation = PR_TRUE;
   } else {
     // property-insertion failed (e.g. OOM in property-table code)
     delete pAROverridePtr;
@@ -1306,7 +1306,7 @@ nsSVGSVGElement::ClearImageOverridePreserveAspectRatio()
 
   void* valPtr = UnsetProperty(nsGkAtoms::overridePreserveAspectRatio);
   if (valPtr) {
-    mNeedsPreserveAspectRatioFlush = PR_TRUE;
+    mImageNeedsTransformInvalidation = PR_TRUE;
     delete static_cast<SVGPreserveAspectRatio*>(valPtr);
   }
 }
@@ -1326,10 +1326,14 @@ nsSVGSVGElement::GetImageOverridePreserveAspectRatio()
 }
 
 void
-nsSVGSVGElement::FlushPreserveAspectRatioOverride()
+nsSVGSVGElement::FlushImageTransformInvalidation()
 {
-  if (mNeedsPreserveAspectRatioFlush) {
+  NS_ABORT_IF_FALSE(!GetParent(), "Should only be called on root node");
+  NS_ABORT_IF_FALSE(GetCurrentDoc()->IsBeingUsedAsImage(),
+                    "Should only be called on image documents");
+
+  if (mImageNeedsTransformInvalidation) {
     InvalidateTransformNotifyFrame();
-    mNeedsPreserveAspectRatioFlush = PR_FALSE;
+    mImageNeedsTransformInvalidation = PR_FALSE;
   }
 }

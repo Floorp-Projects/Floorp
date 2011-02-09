@@ -536,7 +536,7 @@ VectorImage::Draw(gfxContext* aContext,
     mSVGDocumentWrapper->UpdateViewportBounds(aViewportSize);
     mLastRenderedSize = aViewportSize;
   }
-  mSVGDocumentWrapper->FlushPreserveAspectRatioOverride();
+  mSVGDocumentWrapper->FlushImageTransformInvalidation();
 
   nsIntSize imageSize = mHaveRestrictedRegion ?
     mRestrictedRegion.Size() : aViewportSize;
