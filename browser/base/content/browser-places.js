@@ -346,8 +346,6 @@ var PlacesCommandHook = {
     if (aBrowser.contentWindow == window.content) {
       var starIcon = aBrowser.ownerDocument.getElementById("star-button");
       if (starIcon && isElementVisible(starIcon)) {
-        // Make sure the bookmark properties dialog hangs toward the middle of
-        // the location bar in RTL builds
         if (aShowEditUI)
           StarUI.showEditBookmarkPopup(itemId, starIcon, "bottomcenter topright");
         return;
