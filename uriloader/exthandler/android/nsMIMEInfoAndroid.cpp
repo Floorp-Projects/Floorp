@@ -57,9 +57,12 @@ nsMIMEInfoAndroid::LoadUriInternal(nsIURI * aURI)
   nsCString uriSpec;
   aURI->GetSpec(uriSpec);
 
+  nsCString uriScheme;
+  aURI->GetScheme(uriScheme);
+
   if (mozilla::AndroidBridge::Bridge())
     return mozilla::AndroidBridge::Bridge()->
-      OpenUriExternal(uriSpec, EmptyCString()) ? NS_OK : NS_ERROR_FAILURE;
+      OpenUriExternal(uriSpec, mType.Equals(uriScheme) ? EmptyCString() : mType) ? NS_OK : NS_ERROR_FAILURE;
 
   return NS_ERROR_FAILURE;
 }
