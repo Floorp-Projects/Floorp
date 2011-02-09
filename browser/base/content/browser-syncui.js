@@ -273,17 +273,8 @@ let gSyncUI = {
   },
 
   // Commands
-  doLogin: function SUI_doLogin() {
-    Weave.Service.login();
-  },
-
-  doLogout: function SUI_doLogout() {
-    Weave.Service.logout();
-  },
-
   doSync: function SUI_doSync() {
-    if (Weave.Service.isLoggedIn || Weave.Service.login())
-      setTimeout(function() Weave.Service.sync(), 0);
+    setTimeout(function() Weave.Service.sync(), 0);
   },
 
   handleToolbarButton: function SUI_handleStatusbarButton() {
