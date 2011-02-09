@@ -72,6 +72,12 @@ nsContentPermissionRequestProxy::Init(const nsACString & type,
   return NS_OK;
 }
 
+void
+nsContentPermissionRequestProxy::OnParentDestroyed()
+{
+  mParent = nsnull;
+}
+
 NS_IMPL_ISUPPORTS1(nsContentPermissionRequestProxy, nsIContentPermissionRequest);
 
 NS_IMETHODIMP
@@ -113,7 +119,6 @@ nsContentPermissionRequestProxy::GetElement(nsIDOMElement * *aRequestingElement)
 NS_IMETHODIMP
 nsContentPermissionRequestProxy::Cancel()
 {
-  NS_ASSERTION(mParent, "No parent for request");
   if (mParent == nsnull)
     return NS_ERROR_FAILURE;
   unused << mozilla::dom::ContentPermissionRequestParent::Send__delete__(mParent, false);
@@ -124,7 +129,6 @@ nsContentPermissionRequestProxy::Cancel()
 NS_IMETHODIMP
 nsContentPermissionRequestProxy::Allow()
 {
-  NS_ASSERTION(mParent, "No parent for request");
   if (mParent == nsnull)
     return NS_ERROR_FAILURE;
   unused << mozilla::dom::ContentPermissionRequestParent::Send__delete__(mParent, true);
@@ -159,6 +163,12 @@ ContentPermissionRequestParent::Recvprompt()
   if (NS_FAILED(mProxy->Init(mType, this)))
     mProxy->Cancel();
   return true;
+}
+
+void
+ContentPermissionRequestParent::ActorDestroy(ActorDestroyReason why)
+{
+  mProxy->OnParentDestroyed();
 }
 
 } // namespace dom
