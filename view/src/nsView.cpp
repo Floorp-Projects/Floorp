@@ -854,7 +854,8 @@ nsresult nsIView::AttachToTopLevelWidget(nsIWidget* aWidget)
 
   // Note, the previous device context will be released. Detaching
   // will not restore the old one.
-  nsresult rv = aWidget->AttachViewToTopLevel(::AttachedHandleEvent, dx);
+  nsresult rv = aWidget->AttachViewToTopLevel(
+    nsIWidget::UsePuppetWidgets() ? ::HandleEvent : ::AttachedHandleEvent, dx);
   if (NS_FAILED(rv))
     return rv;
 
