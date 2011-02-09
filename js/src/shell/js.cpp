@@ -1668,10 +1668,10 @@ finalize_counter_finalize(JSContext *cx, JSObject *obj)
 
 static JSClass FinalizeCounterClass = {
     "FinalizeCounter", JSCLASS_IS_ANONYMOUS,
-    JS_PropertyStub,   /* addProperty */
-    JS_PropertyStub,   /* delProperty */
-    JS_PropertyStub,   /* getProperty */
-    JS_PropertyStub,   /* setProperty */
+    JS_PropertyStub,       /* addProperty */
+    JS_PropertyStub,       /* delProperty */
+    JS_PropertyStub,       /* getProperty */
+    JS_StrictPropertyStub, /* setProperty */
     JS_EnumerateStub,
     JS_ResolveStub,
     JS_ConvertStub,
@@ -3001,7 +3001,7 @@ split_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static JSBool
-split_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+split_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
     ComplexObject *cpx;
 
@@ -3373,7 +3373,7 @@ static JSClass sandbox_class = {
     "sandbox",
     JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,   JS_PropertyStub,
-    JS_PropertyStub,   JS_PropertyStub,
+    JS_PropertyStub,   JS_StrictPropertyStub,
     sandbox_enumerate, (JSResolveOp)sandbox_resolve,
     JS_ConvertStub,    NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
@@ -4712,7 +4712,7 @@ its_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static JSBool
-its_setter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+its_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
   jsval *val = (jsval *) JS_GetPrivate(cx, obj);
   if (val) {
@@ -4877,7 +4877,7 @@ its_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static JSBool
-its_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+its_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
     IdToString idString(cx, id);
     if (its_noisy) {
@@ -5233,14 +5233,14 @@ global_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 JSClass global_class = {
     "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS | JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,
-    JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  JS_StrictPropertyStub,
     global_enumerate, (JSResolveOp) global_resolve,
     JS_ConvertStub,   its_finalize,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 static JSBool
-env_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+env_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
 #if !defined XP_BEOS && !defined XP_OS2 && !defined SOLARIS

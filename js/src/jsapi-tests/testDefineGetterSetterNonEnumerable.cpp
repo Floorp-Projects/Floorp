@@ -35,13 +35,13 @@ BEGIN_TEST(testDefineGetterSetterNonEnumerable)
     CHECK(JS_DefineProperty(cx, JSVAL_TO_OBJECT(vobj), PROPERTY_NAME,
                             JSVAL_VOID,
                             JS_DATA_TO_FUNC_PTR(JSPropertyOp, funGetObj),
-                            JS_DATA_TO_FUNC_PTR(JSPropertyOp, funSetObj),
+                            JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, funSetObj),
                             JSPROP_GETTER | JSPROP_SETTER | JSPROP_ENUMERATE));
 
     CHECK(JS_DefineProperty(cx, JSVAL_TO_OBJECT(vobj), PROPERTY_NAME,
                             JSVAL_VOID,
                             JS_DATA_TO_FUNC_PTR(JSPropertyOp, funGetObj),
-                            JS_DATA_TO_FUNC_PTR(JSPropertyOp, funSetObj),
+                            JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, funSetObj),
                             JSPROP_GETTER | JSPROP_SETTER | JSPROP_PERMANENT));
 
     JSBool found = JS_FALSE;
