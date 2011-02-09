@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="svg-image-util.css" />
+  <script src="svg-image-util.js"></script>
+</head>
+<body style="height: 600px"><!-- height for pct vals to resolve against -->
+  <script>
+      var svgParams = {
+        viewBox:  null,
+        width  :  "20px",
+        height :  "20%",
+        meetOrSlice: "slice"
+      };
+
+      appendSVGArrayWithParams(svgParams, "img");
+  </script>
+  <!-- Body gets populated by script -->
+</body>
+</html>
