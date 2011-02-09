@@ -213,13 +213,6 @@ struct ArenaBitmap {
         return true;
     }
 
-    JS_ALWAYS_INLINE void unmark(size_t bit, uint32 color) {
-        bit += color;
-        JS_ASSERT(bit < BitCount);
-        uintptr_t *word = &bitmap[bit / JS_BITS_PER_WORD];
-        *word &= ~(uintptr_t(1) << (bit % JS_BITS_PER_WORD));
-    }
-
 #ifdef DEBUG
     bool noBitsSet() {
         for (unsigned i = 0; i < BitWords; i++) {
@@ -466,14 +459,6 @@ Cell::markIfUnmarked(uint32 color = BLACK) const
 {
     AssertValidColor(this, color);
     return bitmap()->markIfUnmarked(cellIndex(), color);
-}
-
-void
-Cell::unmark(uint32 color) const
-{
-    JS_ASSERT(color != BLACK);
-    AssertValidColor(this, color);
-    bitmap()->unmark(cellIndex(), color);
 }
 
 JSCompartment *
