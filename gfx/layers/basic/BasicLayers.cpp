@@ -58,6 +58,7 @@
 #include "gfxUtils.h"
 #include "ThebesLayerBuffer.h"
 #include "nsIWidget.h"
+#include "ReadbackProcessor.h"
 
 #include "GLContext.h"
 
@@ -106,9 +107,16 @@ public:
    * set up to account for all the properties of the layer (transform,
    * opacity, etc).
    */
-  virtual void Paint(gfxContext* aContext,
-                     LayerManager::DrawThebesLayerCallback aCallback,
-                     void* aCallbackData) {}
+  virtual void Paint(gfxContext* aContext) {}
+
+  /**
+   * Like Paint() but called for ThebesLayers with the additional parameters
+   * they need.
+   */
+  virtual void PaintThebes(gfxContext* aContext,
+                           LayerManager::DrawThebesLayerCallback aCallback,
+                           void* aCallbackData,
+                           ReadbackProcessor* aReadback) {}
 
   virtual ShadowableLayer* AsShadowableLayer() { return nsnull; }
 
@@ -380,9 +388,10 @@ public:
     mValidRegion.Sub(mValidRegion, aRegion);
   }
 
-  virtual void Paint(gfxContext* aContext,
-                     LayerManager::DrawThebesLayerCallback aCallback,
-                     void* aCallbackData);
+  virtual void PaintThebes(gfxContext* aContext,
+                           LayerManager::DrawThebesLayerCallback aCallback,
+                           void* aCallbackData,
+                           ReadbackProcessor* aReadback);
 
   virtual void ClearCachedResources() { mBuffer.Clear(); mValidRegion.SetEmpty(); }
   
@@ -507,13 +516,19 @@ PushGroupForLayer(gfxContext* aContext, Layer* aLayer, const nsIntRegion& aRegio
 }
 
 void
-BasicThebesLayer::Paint(gfxContext* aContext,
-                        LayerManager::DrawThebesLayerCallback aCallback,
-                        void* aCallbackData)
+BasicThebesLayer::PaintThebes(gfxContext* aContext,
+                              LayerManager::DrawThebesLayerCallback aCallback,
+                              void* aCallbackData,
+                              ReadbackProcessor* aReadback)
 {
   NS_ASSERTION(BasicManager()->InDrawing(),
                "Can only draw in drawing phase");
   nsRefPtr<gfxASurface> targetSurface = aContext->CurrentSurface();
+
+  nsTArray<ReadbackProcessor::Update> readbackUpdates;
+  if (aReadback && UsedForReadback()) {
+    aReadback->GetThebesLayerUpdates(this, &readbackUpdates);
+  }
 
   PRBool canUseOpaqueSurface = CanUseOpaqueSurface();
   Buffer::ContentType contentType =
@@ -525,6 +540,8 @@ BasicThebesLayer::Paint(gfxContext* aContext,
       (!canUseOpaqueSurface &&
        (mContentFlags & CONTENT_COMPONENT_ALPHA) &&
        !MustRetainContent())) {
+    NS_ASSERTION(readbackUpdates.IsEmpty(), "Can't do readback for non-retained layer");
+
     mValidRegion.SetEmpty();
     mBuffer.Clear();
 
@@ -587,6 +604,20 @@ BasicThebesLayer::Paint(gfxContext* aContext,
   }
 
   mBuffer.DrawTo(this, aContext, opacity);
+
+  for (PRUint32 i = 0; i < readbackUpdates.Length(); ++i) {
+    ReadbackProcessor::Update& update = readbackUpdates[i];
+    nsIntPoint offset = update.mLayer->GetBackgroundLayerOffset();
+    nsRefPtr<gfxContext> ctx =
+      update.mLayer->GetSink()->BeginUpdate(update.mUpdateRect + offset,
+                                            update.mSequenceCounter);
+    if (ctx) {
+      NS_ASSERTION(opacity == 1.0, "Should only read back opaque layers");
+      ctx->Translate(gfxPoint(offset.x, offset.y));
+      mBuffer.DrawTo(this, ctx, 1.0);
+      update.mLayer->GetSink()->EndUpdate(ctx, update.mUpdateRect + offset);
+    }
+  }
 }
 
 static PRBool
@@ -667,9 +698,7 @@ public:
     ImageLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void Paint(gfxContext* aContext,
-                     LayerManager::DrawThebesLayerCallback aCallback,
-                     void* aCallbackData);
+  virtual void Paint(gfxContext* aContext);
 
   static void PaintContext(gfxPattern* aPattern,
                            const nsIntRegion& aVisible,
@@ -691,9 +720,7 @@ protected:
 };
 
 void
-BasicImageLayer::Paint(gfxContext* aContext,
-                       LayerManager::DrawThebesLayerCallback aCallback,
-                       void* aCallbackData)
+BasicImageLayer::Paint(gfxContext* aContext)
 {
   nsRefPtr<gfxPattern> dontcare =
       GetAndPaintCurrentImage(aContext, GetEffectiveOpacity());
@@ -799,9 +826,7 @@ public:
     ColorLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void Paint(gfxContext* aContext,
-                     LayerManager::DrawThebesLayerCallback aCallback,
-                     void* aCallbackData)
+  virtual void Paint(gfxContext* aContext)
   {
     PaintColorTo(mColor, GetEffectiveOpacity(), aContext);
   }
@@ -847,9 +872,7 @@ public:
 
   virtual void Initialize(const Data& aData);
   virtual void Updated(const nsIntRect& aRect);
-  virtual void Paint(gfxContext* aContext,
-                     LayerManager::DrawThebesLayerCallback aCallback,
-                     void* aCallbackData);
+  virtual void Paint(gfxContext* aContext);
 
   virtual void PaintWithOpacity(gfxContext* aContext,
                                 float aOpacity);
@@ -959,9 +982,7 @@ BasicCanvasLayer::Updated(const nsIntRect& aRect)
 }
 
 void
-BasicCanvasLayer::Paint(gfxContext* aContext,
-                        LayerManager::DrawThebesLayerCallback aCallback,
-                        void* aCallbackData)
+BasicCanvasLayer::Paint(gfxContext* aContext)
 {
   PaintWithOpacity(aContext, GetEffectiveOpacity());
 }
@@ -997,6 +1018,34 @@ BasicCanvasLayer::PaintWithOpacity(gfxContext* aContext,
 
   mUpdatedRect.Empty();
 }
+
+class BasicReadbackLayer : public ReadbackLayer,
+                           BasicImplData
+{
+public:
+  BasicReadbackLayer(BasicLayerManager* aLayerManager) :
+    ReadbackLayer(aLayerManager, static_cast<BasicImplData*>(this))
+  {
+    MOZ_COUNT_CTOR(BasicReadbackLayer);
+  }
+  virtual ~BasicReadbackLayer()
+  {
+    MOZ_COUNT_DTOR(BasicReadbackLayer);
+  }
+
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion)
+  {
+    NS_ASSERTION(BasicManager()->InConstruction(),
+                 "Can only set properties in construction phase");
+    ReadbackLayer::SetVisibleRegion(aRegion);
+  }
+
+protected:
+  BasicLayerManager* BasicManager()
+  {
+    return static_cast<BasicLayerManager*>(mManager);
+  }
+};
 
 static nsIntRect
 ToOutsideIntRect(const gfxRect &aRect)
@@ -1300,7 +1349,7 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
     MarkLeafLayersCoveredByOpaque(mRoot,
                                   mRoot->GetEffectiveVisibleRegion().GetBounds(),
                                   region);
-    PaintLayer(mRoot, aCallback, aCallbackData);
+    PaintLayer(mRoot, aCallback, aCallbackData, nsnull);
 
     // If we're doing manual double-buffering, we need to avoid drawing
     // the results of an incomplete transaction to the destination surface.
@@ -1371,7 +1420,8 @@ BasicLayerManager::SetRoot(Layer* aLayer)
 void
 BasicLayerManager::PaintLayer(Layer* aLayer,
                               DrawThebesLayerCallback aCallback,
-                              void* aCallbackData)
+                              void* aCallbackData,
+                              ReadbackProcessor* aReadback)
 {
   const nsIntRect* clipRect = aLayer->GetEffectiveClipRect();
   const gfx3DMatrix& effectiveTransform = aLayer->GetEffectiveTransform();
@@ -1433,11 +1483,21 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
                    (void*)aLayer, data->IsCoveredByOpaque()));
 #endif
     if (!data->IsCoveredByOpaque()) {
-      data->Paint(mTarget, aCallback, aCallbackData);
+      if (aLayer->GetType() == Layer::TYPE_THEBES) {
+        data->PaintThebes(mTarget, aCallback, aCallbackData, aReadback);
+      } else {
+        data->Paint(mTarget);
+      }
     }
   } else {
+    ReadbackProcessor readback;
+    if (IsRetained()) {
+      ContainerLayer* container = static_cast<ContainerLayer*>(aLayer);
+      readback.BuildUpdates(container);
+    }
+
     for (; child; child = child->GetNextSibling()) {
-      PaintLayer(child, aCallback, aCallbackData);
+      PaintLayer(child, aCallback, aCallbackData, &readback);
       if (mTransactionIncomplete)
         break;
     }
@@ -1521,6 +1581,13 @@ BasicLayerManager::CreateCanvasLayer()
   return layer.forget();
 }
 
+already_AddRefed<ReadbackLayer>
+BasicLayerManager::CreateReadbackLayer()
+{
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  nsRefPtr<ReadbackLayer> layer = new BasicReadbackLayer(this);
+  return layer.forget();
+}
 
 #ifdef MOZ_IPC
 
@@ -1577,6 +1644,19 @@ ToShadowable(Layer* aLayer)
   return ToData(aLayer)->AsShadowableLayer();
 }
 
+// Some layers, like ReadbackLayers, can't be shadowed and shadowing
+// them doesn't make sense anyway
+static bool
+ShouldShadow(Layer* aLayer)
+{
+  if (!ToShadowable(aLayer)) {
+    NS_ABORT_IF_FALSE(aLayer->GetType() == Layer::TYPE_READBACK,
+                      "Only expect not to shadow ReadbackLayers");
+    return false;
+  }
+  return true;
+}
+
 template<class OpT>
 static BasicShadowableLayer*
 GetBasicShadowable(const OpT& op)
@@ -1624,7 +1704,10 @@ private:
 void
 BasicShadowableContainerLayer::InsertAfter(Layer* aChild, Layer* aAfter)
 {
-  if (HasShadow()) {
+  if (HasShadow() && ShouldShadow(aChild)) {
+    while (aAfter && !ShouldShadow(aAfter)) {
+      aAfter = aAfter->GetPrevSibling();
+    }
     ShadowManager()->InsertAfter(ShadowManager()->Hold(this),
                                  ShadowManager()->Hold(aChild),
                                  aAfter ? ShadowManager()->Hold(aAfter) : nsnull);
@@ -1635,7 +1718,7 @@ BasicShadowableContainerLayer::InsertAfter(Layer* aChild, Layer* aAfter)
 void
 BasicShadowableContainerLayer::RemoveChild(Layer* aChild)
 {
-  if (HasShadow()) {
+  if (HasShadow() && ShouldShadow(aChild)) {
     ShadowManager()->RemoveChild(ShadowManager()->Hold(this),
                                  ShadowManager()->Hold(aChild));
   }
@@ -1859,9 +1942,7 @@ public:
     MOZ_COUNT_DTOR(BasicShadowableImageLayer);
   }
 
-  virtual void Paint(gfxContext* aContext,
-                     LayerManager::DrawThebesLayerCallback aCallback,
-                     void* aCallbackData);
+  virtual void Paint(gfxContext* aContext);
 
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
   {
@@ -1892,9 +1973,7 @@ private:
 };
  
 void
-BasicShadowableImageLayer::Paint(gfxContext* aContext,
-                                 LayerManager::DrawThebesLayerCallback aCallback,
-                                 void* aCallbackData)
+BasicShadowableImageLayer::Paint(gfxContext* aContext)
 {
   gfxIntSize oldSize = mSize;
   nsRefPtr<gfxPattern> pat = GetAndPaintCurrentImage(aContext, GetEffectiveOpacity());
@@ -1979,9 +2058,7 @@ public:
   }
 
   virtual void Initialize(const Data& aData);
-  virtual void Paint(gfxContext* aContext,
-                     LayerManager::DrawThebesLayerCallback aCallback,
-                     void* aCallbackData);
+  virtual void Paint(gfxContext* aContext);
 
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
   {
@@ -2042,11 +2119,9 @@ BasicShadowableCanvasLayer::Initialize(const Data& aData)
 }
 
 void
-BasicShadowableCanvasLayer::Paint(gfxContext* aContext,
-                                  LayerManager::DrawThebesLayerCallback aCallback,
-                                  void* aCallbackData)
+BasicShadowableCanvasLayer::Paint(gfxContext* aContext)
 {
-  BasicCanvasLayer::Paint(aContext, aCallback, aCallbackData);
+  BasicCanvasLayer::Paint(aContext);
   if (!HasShadow())
     return;
 
@@ -2169,9 +2244,10 @@ public:
     }
   }
 
-  virtual void Paint(gfxContext* aContext,
-                     LayerManager::DrawThebesLayerCallback aCallback,
-                     void* aCallbackData);
+  virtual void PaintThebes(gfxContext* aContext,
+                           LayerManager::DrawThebesLayerCallback aCallback,
+                           void* aCallbackData,
+                           ReadbackProcessor* aReadback);
 
 private:
   BasicShadowLayerManager* BasicManager()
@@ -2263,9 +2339,10 @@ BasicShadowThebesLayer::Swap(const ThebesBuffer& aNewFront,
 }
 
 void
-BasicShadowThebesLayer::Paint(gfxContext* aContext,
-                              LayerManager::DrawThebesLayerCallback aCallback,
-                              void* aCallbackData)
+BasicShadowThebesLayer::PaintThebes(gfxContext* aContext,
+                                    LayerManager::DrawThebesLayerCallback aCallback,
+                                    void* aCallbackData,
+                                    ReadbackProcessor* aReadback)
 {
   NS_ASSERTION(BasicManager()->InDrawing(),
                "Can only draw in drawing phase");
@@ -2359,9 +2436,7 @@ public:
     mFrontSurface = nsnull;
   }
 
-  virtual void Paint(gfxContext* aContext,
-                     LayerManager::DrawThebesLayerCallback aCallback,
-                     void* aCallbackData);
+  virtual void Paint(gfxContext* aContext);
 
 protected:
   BasicShadowLayerManager* BasicManager()
@@ -2392,9 +2467,7 @@ BasicShadowImageLayer::Swap(gfxSharedImageSurface* newFront)
 }
 
 void
-BasicShadowImageLayer::Paint(gfxContext* aContext,
-                             LayerManager::DrawThebesLayerCallback aCallback,
-                             void* aCallbackData)
+BasicShadowImageLayer::Paint(gfxContext* aContext)
 {
   if (!mFrontSurface) {
     return;
@@ -2420,9 +2493,7 @@ public:
     MOZ_COUNT_DTOR(BasicShadowColorLayer);
   }
 
-  virtual void Paint(gfxContext* aContext,
-                     LayerManager::DrawThebesLayerCallback aCallback,
-                     void* aCallbackData)
+  virtual void Paint(gfxContext* aContext)
   {
     BasicColorLayer::PaintColorTo(mColor, GetEffectiveOpacity(), aContext);
   }
@@ -2464,9 +2535,7 @@ public:
     mFrontSurface = nsnull;
   }
 
-  virtual void Paint(gfxContext* aContext,
-                     LayerManager::DrawThebesLayerCallback aCallback,
-                     void* aCallbackData);
+  virtual void Paint(gfxContext* aContext);
 
 private:
   BasicShadowLayerManager* BasicManager()
@@ -2498,9 +2567,7 @@ BasicShadowCanvasLayer::Swap(gfxSharedImageSurface* newFront)
 }
 
 void
-BasicShadowCanvasLayer::Paint(gfxContext* aContext,
-                              LayerManager::DrawThebesLayerCallback aCallback,
-                              void* aCallbackData)
+BasicShadowCanvasLayer::Paint(gfxContext* aContext)
 {
   NS_ASSERTION(BasicManager()->InDrawing(),
                "Can only draw in drawing phase");
@@ -2671,7 +2738,7 @@ BasicShadowLayerManager::Mutated(Layer* aLayer)
   BasicLayerManager::Mutated(aLayer);
 
   NS_ASSERTION(InConstruction() || InDrawing(), "wrong phase");
-  if (HasShadowManager()) {
+  if (HasShadowManager() && ShouldShadow(aLayer)) {
     ShadowLayerForwarder::Mutated(Hold(aLayer));
   }
 }
