@@ -236,8 +236,6 @@ ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer)
                 aAfter->GetParent() == aContainer),
                "aAfter is not our child");
 
-  NS_ADDREF(aChild);
-
   aChild->SetParent(aContainer);
   if (aAfter == aContainer->mLastChild) {
     aContainer->mLastChild = aChild;
@@ -248,6 +246,8 @@ ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer)
       aContainer->mFirstChild->SetPrevSibling(aChild);
     }
     aContainer->mFirstChild = aChild;
+    NS_ADDREF(aChild);
+    aContainer->DidInsertChild(aChild);
     return;
   }
 
@@ -258,6 +258,8 @@ ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer)
     next->SetPrevSibling(aChild);
   }
   aAfter->SetNextSibling(aChild);
+  NS_ADDREF(aChild);
+  aContainer->DidInsertChild(aChild);
 }
 
 template<class Container>
@@ -286,6 +288,7 @@ ContainerRemoveChild(Layer* aChild, Container* aContainer)
   aChild->SetPrevSibling(nsnull);
   aChild->SetParent(nsnull);
 
+  aContainer->DidRemoveChild(aChild);
   NS_RELEASE(aChild);
 }
 
