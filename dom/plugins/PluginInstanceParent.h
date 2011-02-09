@@ -277,6 +277,11 @@ public:
 
     nsresult AsyncSetWindow(NPWindow* window);
     nsresult GetSurface(gfxASurface** aSurface);
+    nsresult SetBackgroundUnknown() { return NS_OK; }
+    nsresult BeginUpdateBackground(const nsIntRect& aRect,
+                                   gfxContext** aCtx) { return NS_OK; }
+    nsresult EndUpdateBackground(gfxContext* aCtx,
+                                 const nsIntRect& aRect) { return NS_OK; }
 
 private:
     // Quirks mode support for various plugin mime types
