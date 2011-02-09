@@ -51,6 +51,7 @@
 #include "nsIDocument.h"
 #include "nsIXPConnect.h"
 #include "nsIDOMDocument.h"
+#include "xpcpublic.h"
 
 nsresult
 NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
