@@ -13,7 +13,7 @@ include xul/reftest.list
 == passwd-1.html passwd-ref.html
 != passwd-2.html passwd-ref.html
 == passwd-3.html passwd-ref.html
-needs-focus asserts(1) == passwd-4.html passwd-ref.html # bug 596901
+needs-focus == passwd-4.html passwd-ref.html
 == emptypasswd-1.html emptypasswd-ref.html
 == emptypasswd-2.html emptypasswd-ref.html
 == caret_on_positioned.html caret_on_positioned-ref.html
