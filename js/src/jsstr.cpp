@@ -1876,8 +1876,8 @@ str_match(JSContext *cx, uintN argc, Value *vp)
 
     AutoObjectRooter array(cx);
     MatchArgType arg = array.addr();
-    RegExpStatics *res = cx->regExpStatics();
-    if (!DoMatch(cx, res, vp, str, *rep, MatchCallback, arg, MATCH_ARGS))
+    RegExpStatics *res = cx->getRegExpStatics();
+    if (!res || !DoMatch(cx, res, vp, str, *rep, MatchCallback, arg, MATCH_ARGS))
         return false;
 
     /* When not global, DoMatch will leave |RegExp.exec()| in *vp. */
@@ -1906,7 +1906,9 @@ str_search(JSContext *cx, uintN argc, Value *vp)
     if (!rep)
         return false;
 
-    RegExpStatics *res = cx->regExpStatics();
+    RegExpStatics *res = cx->getRegExpStatics();
+    if (!res)
+        return false;
     size_t i = 0;
     if (!rep->re().execute(cx, res, str, &i, true, vp))
         return false;
@@ -2357,7 +2359,9 @@ str_replace_regexp(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata)
     rdata.leftIndex = 0;
     rdata.calledBack = false;
 
-    RegExpStatics *res = cx->regExpStatics();
+    RegExpStatics *res = cx->getRegExpStatics();
+    if (!res)
+        return false;
     if (!DoMatch(cx, res, vp, rdata.str, *rep, ReplaceRegExpCallback, &rdata, REPLACE_ARGS))
         return false;
 
@@ -2697,7 +2701,9 @@ str_split(JSContext *cx, uintN argc, Value *vp)
 
     AutoValueVector splits(cx);
 
-    RegExpStatics *res = cx->regExpStatics();
+    RegExpStatics *res = cx->getRegExpStatics();
+    if (!res)
+        return false;
     jsint i, j;
     uint32 len = i = 0;
     while ((j = find_split(cx, res, str, re, &i, sep)) >= 0) {

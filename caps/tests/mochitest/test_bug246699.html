@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=246699
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=246699">Mozilla Bug 246699</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-<iframe id="load-frame"></iframe>  
+<iframe id="load-frame" src="http://example.com/"></iframe>
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -49,11 +49,13 @@ function tryComponentsClasses()
     return Components.classes["@mozilla.org/dummy;1"];
 }
 
-
-is(inciteCaps(tryChromeLoad), "denied-stack",
-   "should get stack for content-loading-chrome rejection");
-is(inciteCaps(tryComponentsClasses), "denied-stack",
-   "should get stack for Components.classes rejection");
+window.addEventListener("load", function()
+{
+  is(inciteCaps(tryChromeLoad), "denied-stack",
+     "should get stack for content-loading-chrome rejection");
+  is(inciteCaps(tryComponentsClasses), "denied-stack",
+     "should get stack for Components.classes rejection");
+}, false);
 </script>
 </pre>
 </body>
