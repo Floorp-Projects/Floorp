@@ -1454,7 +1454,7 @@ Class ArrayBuffer::jsclass = {
 JSPropertySpec ArrayBuffer::jsprops[] = {
     { "byteLength",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(ArrayBuffer::prop_getByteLength), Jsvalify(ArrayBuffer::prop_getByteLength) },
+      Jsvalify(ArrayBuffer::prop_getByteLength), JS_PropertyStub },
     {0,0,0,0,0}
 };
 
@@ -1465,16 +1465,16 @@ JSPropertySpec ArrayBuffer::jsprops[] = {
 JSPropertySpec TypedArray::jsprops[] = {
     { js_length_str,
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getLength), Jsvalify(TypedArray::prop_getLength) },
+      Jsvalify(TypedArray::prop_getLength), JS_PropertyStub },
     { "byteLength",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getByteLength), Jsvalify(TypedArray::prop_getByteLength) },
+      Jsvalify(TypedArray::prop_getByteLength), JS_PropertyStub },
     { "byteOffset",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getByteOffset), Jsvalify(TypedArray::prop_getByteOffset) },
+      Jsvalify(TypedArray::prop_getByteOffset), JS_PropertyStub },
     { "buffer",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getBuffer), Jsvalify(TypedArray::prop_getBuffer) },
+      Jsvalify(TypedArray::prop_getBuffer), JS_PropertyStub },
     {0,0,0,0,0}
 };
 
