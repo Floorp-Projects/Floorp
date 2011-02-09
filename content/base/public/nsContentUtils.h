@@ -1280,8 +1280,7 @@ public:
                            void *aClosure)
   {
     if (aCache->PreservingWrapper()) {
-      aCallback(nsIProgrammingLanguage::JAVASCRIPT,
-                aCache->GetWrapperPreserveColor(),
+      aCallback(nsIProgrammingLanguage::JAVASCRIPT, aCache->GetWrapper(),
                 aClosure);
     }
   }

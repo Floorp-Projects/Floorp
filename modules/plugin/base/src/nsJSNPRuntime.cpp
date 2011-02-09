@@ -56,7 +56,6 @@
 #include "nsIDOMElement.h"
 #include "prmem.h"
 #include "nsIContent.h"
-#include "xpcpublic.h"
 
 using namespace mozilla::plugins::parent;
 

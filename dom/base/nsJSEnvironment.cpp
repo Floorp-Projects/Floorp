@@ -85,7 +85,6 @@
 #include "nsIXULRuntime.h"
 
 #include "nsDOMClassInfo.h"
-#include "xpcpublic.h"
 
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
 #include "jsxdrapi.h"

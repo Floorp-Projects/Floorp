@@ -48,6 +48,7 @@
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 #include "nsIScriptGlobalObject.h"
 #include "nsContentUtils.h"
+#include "xpcpublic.h"
 
 class nsIDOMWindow;
 class nsIDOMNSHTMLOptionCollection;
@@ -252,7 +253,24 @@ protected:
                              nsISupports *native, nsWrapperCache *cache,
                              const nsIID* aIID, jsval *vp,
                              nsIXPConnectJSObjectHolder** aHolder,
-                             PRBool aAllowWrapping);
+                             PRBool aAllowWrapping)
+  {
+    if (!native) {
+      NS_ASSERTION(!aHolder || !*aHolder, "*aHolder should be null!");
+
+      *vp = JSVAL_NULL;
+
+      return NS_OK;
+    }
+
+    JSObject *wrapper = xpc_GetCachedSlimWrapper(cache, scope, vp);
+    if (wrapper) {
+      return NS_OK;
+    }
+
+    return sXPConnect->WrapNativeToJSVal(cx, scope, native, cache, aIID,
+                                         aAllowWrapping, vp, aHolder);
+  }
 
   static nsIXPConnect *sXPConnect;
   static nsIScriptSecurityManager *sSecMan;

@@ -363,7 +363,7 @@ WrappedNativeJSGCThingTracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
     if(wrapper->HasExternalReference() && !wrapper->IsWrapperExpired())
     {
         JSTracer* trc = (JSTracer *)arg;
-        JS_CALL_OBJECT_TRACER(trc, wrapper->GetFlatJSObjectPreserveColor(),
+        JS_CALL_OBJECT_TRACER(trc, wrapper->GetFlatJSObjectNoMark(),
                               "XPCWrappedNative::mFlatJSObject");
     }
 
