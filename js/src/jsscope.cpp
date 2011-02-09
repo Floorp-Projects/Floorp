@@ -597,7 +597,7 @@ Shape::newDictionaryShape(JSContext *cx, const Shape &child, Shape **listp)
 
 Shape *
 Shape::newDictionaryShapeForAddProperty(JSContext *cx, jsid id,
-                                        PropertyOp getter, PropertyOp setter,
+                                        PropertyOp getter, StrictPropertyOp setter,
                                         uint32 slot, uintN attrs, uintN flags, intN shortid)
 {
     Shape *shape = JS_PROPERTY_TREE(cx).newShape(cx);
@@ -661,9 +661,9 @@ static inline bool
 NormalizeGetterAndSetter(JSContext *cx, JSObject *obj,
                          jsid id, uintN attrs, uintN flags,
                          PropertyOp &getter,
-                         PropertyOp &setter)
+                         StrictPropertyOp &setter)
 {
-    if (setter == PropertyStub) {
+    if (setter == StrictPropertyStub) {
         JS_ASSERT(!(attrs & JSPROP_SETTER));
         setter = NULL;
     }
@@ -761,7 +761,7 @@ JSObject::checkShapeConsistency()
 
 const Shape *
 JSObject::addProperty(JSContext *cx, jsid id,
-                      PropertyOp getter, PropertyOp setter,
+                      PropertyOp getter, StrictPropertyOp setter,
                       uint32 slot, uintN attrs,
                       uintN flags, intN shortid)
 {
@@ -793,7 +793,7 @@ JSObject::addProperty(JSContext *cx, jsid id,
 
 const Shape *
 JSObject::addPropertyInternal(JSContext *cx, jsid id,
-                              PropertyOp getter, PropertyOp setter,
+                              PropertyOp getter, StrictPropertyOp setter,
                               uint32 slot, uintN attrs,
                               uintN flags, intN shortid,
                               Shape **spp)
@@ -879,7 +879,7 @@ CheckCanChangeAttrs(JSContext *cx, JSObject *obj, const Shape *shape, uintN *att
 
 const Shape *
 JSObject::putProperty(JSContext *cx, jsid id,
-                      PropertyOp getter, PropertyOp setter,
+                      PropertyOp getter, StrictPropertyOp setter,
                       uint32 slot, uintN attrs,
                       uintN flags, intN shortid)
 {
@@ -1062,7 +1062,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
 
 const Shape *
 JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN mask,
-                         PropertyOp getter, PropertyOp setter)
+                         PropertyOp getter, StrictPropertyOp setter)
 {
     JS_ASSERT_IF(inDictionaryMode(), !lastProp->frozen());
     JS_ASSERT(!JSID_IS_VOID(shape->id));
@@ -1079,7 +1079,7 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
 
     if (getter == PropertyStub)
         getter = NULL;
-    if (setter == PropertyStub)
+    if (setter == StrictPropertyStub)
         setter = NULL;
 
     if (!CheckCanChangeAttrs(cx, this, shape, &attrs))

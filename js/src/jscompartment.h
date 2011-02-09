@@ -460,6 +460,7 @@ struct JS_FRIEND_API(JSCompartment) {
     bool wrap(JSContext *cx, JSObject **objp);
     bool wrapId(JSContext *cx, jsid *idp);
     bool wrap(JSContext *cx, js::PropertyOp *op);
+    bool wrap(JSContext *cx, js::StrictPropertyOp *op);
     bool wrap(JSContext *cx, js::PropertyDescriptor *desc);
     bool wrap(JSContext *cx, js::AutoIdVector &props);
 

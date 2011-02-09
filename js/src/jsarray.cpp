@@ -589,7 +589,7 @@ array_length_getter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 static JSBool
-array_length_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+array_length_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
     jsuint newlen, oldlen, gap, index;
     Value junk;
@@ -797,7 +797,7 @@ array_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool stric
     uint32 i;
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
-        return array_length_setter(cx, obj, id, vp);
+        return array_length_setter(cx, obj, id, strict, vp);
 
     if (!obj->isDenseArray())
         return js_SetProperty(cx, obj, id, vp, strict);
@@ -851,7 +851,7 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
 
 static JSBool
 array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
-                     PropertyOp getter, PropertyOp setter, uintN attrs)
+                     PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
         return JS_TRUE;
@@ -955,10 +955,10 @@ Class js_ArrayClass = {
     Class::NON_NATIVE |
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
+    PropertyStub,         /* addProperty */
+    PropertyStub,         /* delProperty */
+    PropertyStub,         /* getProperty */
+    StrictPropertyStub,   /* setProperty */
     EnumerateStub,
     ResolveStub,
     js_TryValueOf,
@@ -993,9 +993,9 @@ Class js_SlowArrayClass = {
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
     slowarray_addProperty,
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
+    PropertyStub,         /* delProperty */
+    PropertyStub,         /* getProperty */
+    StrictPropertyStub,   /* setProperty */
     EnumerateStub,
     ResolveStub,
     js_TryValueOf

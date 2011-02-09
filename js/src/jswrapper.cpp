@@ -217,7 +217,8 @@ JSWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, Va
 }
 
 bool
-JSWrapper::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, Value *vp)
+JSWrapper::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, bool strict,
+               Value *vp)
 {
     // FIXME (bug 596351): Need deal with strict mode.
     SET(wrappedObject(wrapper)->setProperty(cx, id, vp, false));
@@ -519,12 +520,15 @@ JSCrossCompartmentWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *recei
 }
 
 bool
-JSCrossCompartmentWrapper::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, Value *vp)
+JSCrossCompartmentWrapper::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
+                               bool strict, Value *vp)
 {
     AutoValueRooter tvr(cx, *vp);
     PIERCE(cx, wrapper, SET,
-           call.destination->wrap(cx, &receiver) && call.destination->wrapId(cx, &id) && call.destination->wrap(cx, tvr.addr()),
-           JSWrapper::set(cx, wrapper, receiver, id, tvr.addr()),
+           call.destination->wrap(cx, &receiver) &&
+           call.destination->wrapId(cx, &id) &&
+           call.destination->wrap(cx, tvr.addr()),
+           JSWrapper::set(cx, wrapper, receiver, id, strict, tvr.addr()),
            NOTHING);
 }
 

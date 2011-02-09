@@ -539,7 +539,7 @@ JSClass jitstats_class = {
     "jitstats",
     0,
     JS_PropertyStub,       JS_PropertyStub,
-    jitstats_getProperty,  JS_PropertyStub,
+    jitstats_getProperty,  JS_StrictPropertyStub,
     JS_EnumerateStub,      JS_ResolveStub,
     JS_ConvertStub,        NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
@@ -11181,15 +11181,28 @@ TraceRecorder::emitNativePropertyOp(const Shape* shape, LIns* obj_ins,
     w.stStateField(w.immi(1), nativeVpLen);
 
     CallInfo* ci = new (traceAlloc()) CallInfo();
-    ci->_address = uintptr_t(setflag ? shape->setterOp() : shape->getterOp());
-    ci->_typesig = CallInfo::typeSig4(ARGTYPE_I, ARGTYPE_P, ARGTYPE_P, ARGTYPE_P, ARGTYPE_P);
+    /* Setters and getters have their initial arguments in common. */
+    LIns* possibleArgs[] = { NULL, NULL, w.immpIdGC(SHAPE_USERID(shape)), obj_ins, cx_ins };
+    LIns** args;
+    if (setflag) {
+        ci->_address = uintptr_t(shape->setterOp());
+        ci->_typesig = CallInfo::typeSig5(ARGTYPE_I, ARGTYPE_P, ARGTYPE_P, ARGTYPE_P, ARGTYPE_B,
+                                          ARGTYPE_P);
+        possibleArgs[0] = addr_boxed_val_ins;
+        possibleArgs[1] = strictModeCode_ins;
+        args = possibleArgs;
+    } else {
+        ci->_address = uintptr_t(shape->getterOp());
+        ci->_typesig = CallInfo::typeSig4(ARGTYPE_I, ARGTYPE_P, ARGTYPE_P, ARGTYPE_P, ARGTYPE_P);
+        possibleArgs[1] = addr_boxed_val_ins;
+        args = possibleArgs + 1;
+    }
     ci->_isPure = 0;
     ci->_storeAccSet = ACCSET_STORE_ANY;
     ci->_abi = ABI_CDECL;
 #ifdef DEBUG
     ci->_name = "JSPropertyOp";
 #endif
-    LIns* args[] = { addr_boxed_val_ins, w.immpIdGC(SHAPE_USERID(shape)), obj_ins, cx_ins };
     LIns* ok_ins = w.call(ci, args);
 
     // Cleanup. Immediately clear nativeVp before we might deep bail.
@@ -12222,7 +12235,7 @@ TraceRecorder::addDataProperty(JSObject* obj)
 
     // See comment in TR::nativeSet about why we do not support setting a
     // property that has both a setter and a slot.
-    if (clasp->setProperty != Valueify(JS_PropertyStub))
+    if (clasp->setProperty != Valueify(JS_StrictPropertyStub))
         RETURN_STOP("set new property with setter and slot");
 
 #ifdef DEBUG

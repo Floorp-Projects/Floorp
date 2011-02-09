@@ -116,7 +116,7 @@ static JSClass dummy_class = {
     "jdummy",
     JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,  JS_PropertyStub,
-    JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub,
     JS_ConvertStub,   NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
@@ -1482,7 +1482,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
     /* Define a top-level property 'undefined' with the undefined value. */
     JSAtom *atom = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
     if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), UndefinedValue(),
-                             PropertyStub, PropertyStub,
+                             PropertyStub, StrictPropertyStub,
                              JSPROP_PERMANENT | JSPROP_READONLY)) {
         return JS_FALSE;
     }
@@ -1688,7 +1688,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
     if (idstr == ATOM_TO_STRING(atom)) {
         *resolved = JS_TRUE;
         return obj->defineProperty(cx, ATOM_TO_JSID(atom), UndefinedValue(),
-                                   PropertyStub, PropertyStub,
+                                   PropertyStub, StrictPropertyStub,
                                    JSPROP_PERMANENT | JSPROP_READONLY);
     }
 
@@ -1770,7 +1770,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
     if (!obj->nativeContains(ATOM_TO_JSID(atom)) &&
         !obj->defineProperty(cx, ATOM_TO_JSID(atom), UndefinedValue(),
-                             PropertyStub, PropertyStub,
+                             PropertyStub, StrictPropertyStub,
                              JSPROP_PERMANENT | JSPROP_READONLY)) {
         return JS_FALSE;
     }
@@ -2788,6 +2788,12 @@ JS_PropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 JS_PUBLIC_API(JSBool)
+JS_StrictPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
+{
+    return JS_TRUE;
+}
+
+JS_PUBLIC_API(JSBool)
 JS_EnumerateStub(JSContext *cx, JSObject *obj)
 {
     return JS_TRUE;
@@ -3282,7 +3288,7 @@ JS_AlreadyHasOwnUCProperty(JSContext *cx, JSObject *obj, const jschar *name, siz
 
 static JSBool
 DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, const Value &value,
-                   PropertyOp getter, PropertyOp setter, uintN attrs,
+                   PropertyOp getter, StrictPropertyOp setter, uintN attrs,
                    uintN flags, intN tinyid)
 {
     CHECK_REQUEST(cx);
@@ -3304,7 +3310,7 @@ DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, const Value &value,
 
 JS_PUBLIC_API(JSBool)
 JS_DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
-                      JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
+                      JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs)
 {
     return DefinePropertyById(cx, obj, id, Valueify(value), Valueify(getter),
                               Valueify(setter), attrs, 0, 0);
@@ -3312,7 +3318,7 @@ JS_DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
 
 JS_PUBLIC_API(JSBool)
 JS_DefineElement(JSContext *cx, JSObject *obj, jsint index, jsval value,
-                 JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
+                 JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs)
 {
     return DefinePropertyById(cx, obj, INT_TO_JSID(index), Valueify(value),
                               Valueify(getter), Valueify(setter), attrs, 0, 0);
@@ -3320,7 +3326,7 @@ JS_DefineElement(JSContext *cx, JSObject *obj, jsint index, jsval value,
 
 static JSBool
 DefineProperty(JSContext *cx, JSObject *obj, const char *name, const Value &value,
-               PropertyOp getter, PropertyOp setter, uintN attrs,
+               PropertyOp getter, StrictPropertyOp setter, uintN attrs,
                uintN flags, intN tinyid)
 {
     jsid id;
@@ -3341,7 +3347,7 @@ DefineProperty(JSContext *cx, JSObject *obj, const char *name, const Value &valu
 
 JS_PUBLIC_API(JSBool)
 JS_DefineProperty(JSContext *cx, JSObject *obj, const char *name, jsval value,
-                  JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
+                  JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs)
 {
     return DefineProperty(cx, obj, name, Valueify(value), Valueify(getter),
                           Valueify(setter), attrs, 0, 0);
@@ -3349,7 +3355,7 @@ JS_DefineProperty(JSContext *cx, JSObject *obj, const char *name, jsval value,
 
 JS_PUBLIC_API(JSBool)
 JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name, int8 tinyid,
-                            jsval value, JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
+                            jsval value, JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs)
 {
     return DefineProperty(cx, obj, name, Valueify(value), Valueify(getter),
                           Valueify(setter), attrs, Shape::HAS_SHORTID, tinyid);
@@ -3357,7 +3363,7 @@ JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name, int8
 
 static JSBool
 DefineUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen,
-                 const Value &value, PropertyOp getter, PropertyOp setter, uintN attrs,
+                 const Value &value, PropertyOp getter, StrictPropertyOp setter, uintN attrs,
                  uintN flags, intN tinyid)
 {
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
@@ -3367,7 +3373,7 @@ DefineUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namele
 
 JS_PUBLIC_API(JSBool)
 JS_DefineUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen,
-                    jsval value, JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
+                    jsval value, JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs)
 {
     return DefineUCProperty(cx, obj, name, namelen, Valueify(value),
                             Valueify(getter), Valueify(setter), attrs, 0, 0);
@@ -3375,8 +3381,8 @@ JS_DefineUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t nam
 
 JS_PUBLIC_API(JSBool)
 JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen,
-                              int8 tinyid, jsval value, JSPropertyOp getter, JSPropertyOp setter,
-                              uintN attrs)
+                              int8 tinyid, jsval value,
+                              JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs)
 {
     return DefineUCProperty(cx, obj, name, namelen, Valueify(value), Valueify(getter),
                             Valueify(setter), attrs, Shape::HAS_SHORTID, tinyid);
@@ -3545,7 +3551,8 @@ GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         desc->attrs = shape->attributes();
 
         if (shape->isMethod()) {
-            desc->getter = desc->setter = PropertyStub;
+            desc->getter = PropertyStub;
+            desc->setter = StrictPropertyStub;
             desc->value.setObject(shape->methodObject());
         } else {
             desc->getter = shape->getter();
@@ -3581,7 +3588,7 @@ JS_GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 JS_PUBLIC_API(JSBool)
 JS_GetPropertyAttrsGetterAndSetterById(JSContext *cx, JSObject *obj, jsid id,
                                        uintN *attrsp, JSBool *foundp,
-                                       JSPropertyOp *getterp, JSPropertyOp *setterp)
+                                       JSPropertyOp *getterp, JSStrictPropertyOp *setterp)
 {
     PropertyDescriptor desc;
     if (!GetPropertyDescriptorById(cx, obj, id, JSRESOLVE_QUALIFIED, JS_FALSE, &desc))
@@ -3617,7 +3624,7 @@ JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj, const jschar *name, siz
 JS_PUBLIC_API(JSBool)
 JS_GetPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj, const char *name,
                                    uintN *attrsp, JSBool *foundp,
-                                   JSPropertyOp *getterp, JSPropertyOp *setterp)
+                                   JSPropertyOp *getterp, JSStrictPropertyOp *setterp)
 {
     JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
     return atom && JS_GetPropertyAttrsGetterAndSetterById(cx, obj, ATOM_TO_JSID(atom),
@@ -3628,7 +3635,7 @@ JS_PUBLIC_API(JSBool)
 JS_GetUCPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj,
                                      const jschar *name, size_t namelen,
                                      uintN *attrsp, JSBool *foundp,
-                                     JSPropertyOp *getterp, JSPropertyOp *setterp)
+                                     JSPropertyOp *getterp, JSStrictPropertyOp *setterp)
 {
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
     return atom && JS_GetPropertyAttrsGetterAndSetterById(cx, obj, ATOM_TO_JSID(atom),
@@ -3902,10 +3909,10 @@ static Class prop_iter_class = {
     "PropertyIterator",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) |
     JSCLASS_MARK_IS_TRACE,
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
+    PropertyStub,         /* addProperty */
+    PropertyStub,         /* delProperty */
+    PropertyStub,         /* getProperty */
+    StrictPropertyStub,   /* setProperty */
     EnumerateStub,
     ResolveStub,
     ConvertStub,

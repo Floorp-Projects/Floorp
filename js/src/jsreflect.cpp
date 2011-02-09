@@ -3178,7 +3178,7 @@ Class js_ReflectClass = {
     PropertyStub,
     PropertyStub,
     PropertyStub,
-    PropertyStub,
+    StrictPropertyStub,
     EnumerateStub,
     ResolveStub,
     ConvertStub
@@ -3315,7 +3315,7 @@ js_InitReflectClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     if (!JS_DefineProperty(cx, obj, js_Reflect_str, OBJECT_TO_JSVAL(Reflect),
-                           JS_PropertyStub, JS_PropertyStub, 0)) {
+                           JS_PropertyStub, JS_StrictPropertyStub, 0)) {
         return NULL;
     }
 

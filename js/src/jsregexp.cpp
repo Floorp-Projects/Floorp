@@ -95,20 +95,20 @@ resc_trace(JSTracer *trc, JSObject *obj)
 Class js::regexp_statics_class = {
     "RegExpStatics", 
     JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE,
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
+    PropertyStub,         /* addProperty */
+    PropertyStub,         /* delProperty */
+    PropertyStub,         /* getProperty */
+    StrictPropertyStub,   /* setProperty */
     EnumerateStub,
     ResolveStub,
     ConvertStub,
     resc_finalize,
-    NULL,           /* reserved0   */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* xdrObject   */
-    NULL,           /* hasInstance */
+    NULL,                 /* reserved0   */
+    NULL,                 /* checkAccess */
+    NULL,                 /* call        */
+    NULL,                 /* construct   */
+    NULL,                 /* xdrObject   */
+    NULL,                 /* hasInstance */
     JS_CLASS_TRACE(resc_trace)
 };
 
@@ -322,7 +322,7 @@ DEFINE_GETTER(multiline_getter,  *vp = BooleanValue(re->multiline()))
 DEFINE_GETTER(sticky_getter,     *vp = BooleanValue(re->sticky()))
 
 static JSBool
-lastIndex_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+lastIndex_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
     while (obj->getClass() != &js_RegExpClass) {
         obj = obj->getProto();
@@ -423,7 +423,7 @@ DEFINE_STATIC_GETTER(static_paren9_getter,       return res->createParen(cx, 9, 
 
 #define DEFINE_STATIC_SETTER(name, code)                                        \
     static JSBool                                                               \
-    name(JSContext *cx, JSObject *obj, jsid id, jsval *vp)                      \
+    name(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)       \
     {                                                                           \
         RegExpStatics *res = cx->regExpStatics();                               \
         code;                                                                   \
@@ -555,20 +555,20 @@ js::Class js_RegExpClass = {
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::REGEXP_CLASS_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
+    PropertyStub,         /* addProperty */
+    PropertyStub,         /* delProperty */
+    PropertyStub,         /* getProperty */
+    StrictPropertyStub,   /* setProperty */
     regexp_enumerate,
     reinterpret_cast<JSResolveOp>(regexp_resolve),
     ConvertStub,
     regexp_finalize,
-    NULL,           /* reserved0 */
-    NULL,           /* checkAccess */
+    NULL,                 /* reserved0 */
+    NULL,                 /* checkAccess */
     regexp_call,
-    NULL,           /* construct */
+    NULL,                 /* construct */
     js_XDRRegExpObject,
-    NULL,           /* hasInstance */
+    NULL,                 /* hasInstance */
     JS_CLASS_TRACE(regexp_trace)
 };
 

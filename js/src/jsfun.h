@@ -532,13 +532,13 @@ extern JSBool
 GetCallUpvar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-SetCallArg(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
+SetCallArg(JSContext *cx, JSObject *obj, jsid id, JSBool strict, js::Value *vp);
 
 extern JSBool
-SetCallVar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
+SetCallVar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, js::Value *vp);
 
 extern JSBool
-SetCallUpvar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
+SetCallUpvar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, js::Value *vp);
 
 } // namespace js
 

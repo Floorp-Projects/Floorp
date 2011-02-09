@@ -642,7 +642,7 @@ class TypedArrayTemplate
 
     static JSBool
     obj_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
-                       PropertyOp getter, PropertyOp setter, uintN attrs)
+                       PropertyOp getter, StrictPropertyOp setter, uintN attrs)
     {
         if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
             return true;
@@ -1441,10 +1441,10 @@ TypedArrayTemplate<double>::copyIndexToValue(JSContext *cx, uint32 index, Value 
 Class ArrayBuffer::jsclass = {
     "ArrayBuffer",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
+    PropertyStub,         /* addProperty */
+    PropertyStub,         /* delProperty */
+    PropertyStub,         /* getProperty */
+    StrictPropertyStub,   /* setProperty */
     EnumerateStub,
     ResolveStub,
     ConvertStub,
@@ -1454,7 +1454,7 @@ Class ArrayBuffer::jsclass = {
 JSPropertySpec ArrayBuffer::jsprops[] = {
     { "byteLength",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(ArrayBuffer::prop_getByteLength), JS_PropertyStub },
+      Jsvalify(ArrayBuffer::prop_getByteLength), JS_StrictPropertyStub },
     {0,0,0,0,0}
 };
 
@@ -1465,16 +1465,16 @@ JSPropertySpec ArrayBuffer::jsprops[] = {
 JSPropertySpec TypedArray::jsprops[] = {
     { js_length_str,
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getLength), JS_PropertyStub },
+      Jsvalify(TypedArray::prop_getLength), JS_StrictPropertyStub },
     { "byteLength",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getByteLength), JS_PropertyStub },
+      Jsvalify(TypedArray::prop_getByteLength), JS_StrictPropertyStub },
     { "byteOffset",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getByteOffset), JS_PropertyStub },
+      Jsvalify(TypedArray::prop_getByteOffset), JS_StrictPropertyStub },
     { "buffer",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getBuffer), JS_PropertyStub },
+      Jsvalify(TypedArray::prop_getBuffer), JS_StrictPropertyStub },
     {0,0,0,0,0}
 };
 
@@ -1493,10 +1493,10 @@ template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
 {                                                                              \
     #_typedArray,                                                              \
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_##_typedArray),     \
-    PropertyStub,   /* addProperty */                                          \
-    PropertyStub,   /* delProperty */                                          \
-    PropertyStub,   /* getProperty */                                          \
-    PropertyStub,   /* setProperty */                                          \
+    PropertyStub,         /* addProperty */                                    \
+    PropertyStub,         /* delProperty */                                    \
+    PropertyStub,         /* getProperty */                                    \
+    StrictPropertyStub,   /* setProperty */                                    \
     EnumerateStub,                                                             \
     ResolveStub,                                                               \
     ConvertStub,                                                               \
@@ -1507,10 +1507,10 @@ template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
 {                                                                              \
     #_typedArray,                                                              \
     Class::NON_NATIVE | JSCLASS_HAS_PRIVATE,                                   \
-    PropertyStub,   /* addProperty */                                          \
-    PropertyStub,   /* delProperty */                                          \
-    PropertyStub,   /* getProperty */                                          \
-    PropertyStub,   /* setProperty */                                          \
+    PropertyStub,         /* addProperty */                                    \
+    PropertyStub,         /* delProperty */                                    \
+    PropertyStub,         /* getProperty */                                    \
+    StrictPropertyStub,   /* setProperty */                                    \
     EnumerateStub,                                                             \
     ResolveStub,                                                               \
     ConvertStub,                                                               \
@@ -1553,11 +1553,11 @@ do {                                                                           \
     if (!ctor ||                                                               \
         !JS_DefineProperty(cx, ctor, "BYTES_PER_ELEMENT",                      \
                            INT_TO_JSVAL(sizeof(_typedArray::ThisType)),        \
-                           JS_PropertyStub, JS_PropertyStub,                   \
+                           JS_PropertyStub, JS_StrictPropertyStub,             \
                            JSPROP_PERMANENT | JSPROP_READONLY) ||              \
         !JS_DefineProperty(cx, proto, "BYTES_PER_ELEMENT",                     \
                            INT_TO_JSVAL(sizeof(_typedArray::ThisType)),        \
-                           JS_PropertyStub, JS_PropertyStub,                   \
+                           JS_PropertyStub, JS_StrictPropertyStub,             \
                            JSPROP_PERMANENT | JSPROP_READONLY))                \
     {                                                                          \
         return NULL;                                                           \

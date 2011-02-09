@@ -110,7 +110,8 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
     uintN attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_SHARED;
 
     uint16 *indexp;
-    PropertyOp getter, setter;
+    PropertyOp getter;
+    StrictPropertyOp setter;
     uint32 slot = JSObject::CALL_RESERVED_SLOTS;
 
     if (kind == ARGUMENT) {
@@ -775,20 +776,20 @@ Class js_ScriptClass = {
     "Script",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
+    PropertyStub,         /* addProperty */
+    PropertyStub,         /* delProperty */
+    PropertyStub,         /* getProperty */
+    StrictPropertyStub,   /* setProperty */
     EnumerateStub,
     ResolveStub,
     ConvertStub,
     script_finalize,
-    NULL,           /* reserved0   */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* xdrObject   */
-    NULL,           /* hasInstance */
+    NULL,                 /* reserved0   */
+    NULL,                 /* checkAccess */
+    NULL,                 /* call        */
+    NULL,                 /* construct   */
+    NULL,                 /* xdrObject   */
+    NULL,                 /* hasInstance */
     JS_CLASS_TRACE(script_trace)
 };
 

@@ -1237,7 +1237,7 @@ Event::trace(JSTracer *trc)
 
 JSClass ThreadPool::jsClass = {
     "ThreadPool", JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE,
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, jsFinalize,
     NULL, NULL, NULL, NULL,
     NULL, NULL, JS_CLASS_TRACE(jsTraceThreadPool), NULL
@@ -1245,7 +1245,7 @@ JSClass ThreadPool::jsClass = {
 
 JSClass Worker::jsWorkerClass = {
     "Worker", JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE,
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, jsFinalize,
     NULL, NULL, NULL, NULL,
     NULL, NULL, JS_CLASS_TRACE(jsTraceWorker), NULL

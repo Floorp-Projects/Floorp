@@ -188,7 +188,7 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
 
                     PCMETER(cache->pchits++);
                     PCMETER(cache->setpchits++);
-                    NATIVE_SET(cx, obj, shape, entry, &rval);
+                    NATIVE_SET(cx, obj, shape, entry, strict, &rval);
                     break;
                 }
             } else {
@@ -772,7 +772,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
     do {
         /* Steps 5d, 5f. */
         if (!prop || pobj != parent) {
-            if (!parent->defineProperty(cx, id, rval, PropertyStub, PropertyStub, attrs))
+            if (!parent->defineProperty(cx, id, rval, PropertyStub, StrictPropertyStub, attrs))
                 THROW();
             break;
         }
@@ -782,7 +782,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
         Shape *shape = reinterpret_cast<Shape *>(prop);
         if (parent->isGlobal()) {
             if (shape->configurable()) {
-                if (!parent->defineProperty(cx, id, rval, PropertyStub, PropertyStub, attrs))
+                if (!parent->defineProperty(cx, id, rval, PropertyStub, StrictPropertyStub, attrs))
                     THROW();
                 break;
             }
@@ -2611,8 +2611,8 @@ stubs::DefVarOrConst(VMFrame &f, JSAtom *atom)
 
     /* Bind a variable only if it's not yet defined. */
     if (!prop) {
-        if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(), PropertyStub, PropertyStub,
-                                     attrs, 0, 0, &prop)) {
+        if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(),
+                                     PropertyStub, StrictPropertyStub, attrs, 0, 0, &prop)) {
             THROW();
         }
         JS_ASSERT(prop);
@@ -2629,7 +2629,7 @@ stubs::SetConst(VMFrame &f, JSAtom *atom)
     JSObject *obj = &fp->varobj(cx);
     const Value &ref = f.regs.sp[-1];
     if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), ref,
-                             PropertyStub, PropertyStub,
+                             PropertyStub, StrictPropertyStub,
                              JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
         THROW();
     }

@@ -519,10 +519,10 @@ const uint32 JSSLOT_SAVED_ID        = 1;
 Class js_NoSuchMethodClass = {
     "NoSuchMethod",
     JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
+    PropertyStub,         /* addProperty */
+    PropertyStub,         /* delProperty */
+    PropertyStub,         /* getProperty */
+    StrictPropertyStub,   /* setProperty */
     EnumerateStub,
     ResolveStub,
     ConvertStub,
@@ -3239,7 +3239,7 @@ END_CASE(JSOP_PICK)
         }                                                                     \
     JS_END_MACRO
 
-#define NATIVE_SET(cx,obj,shape,entry,vp)                                     \
+#define NATIVE_SET(cx,obj,shape,entry,strict,vp)                              \
     JS_BEGIN_MACRO                                                            \
         if (shape->hasDefaultSetter() &&                                      \
             (shape)->slot != SHAPE_INVALID_SLOT &&                            \
@@ -3247,7 +3247,7 @@ END_CASE(JSOP_PICK)
             /* Fast path for, e.g., plain Object instance properties. */      \
             (obj)->nativeSetSlot((shape)->slot, *vp);                         \
         } else {                                                              \
-            if (!js_NativeSet(cx, obj, shape, false, vp))                     \
+            if (!js_NativeSet(cx, obj, shape, false, strict, vp))             \
                 goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
@@ -3291,7 +3291,7 @@ BEGIN_CASE(JSOP_SETCONST)
     JSObject &obj = regs.fp->varobj(cx);
     const Value &ref = regs.sp[-1];
     if (!obj.defineProperty(cx, ATOM_TO_JSID(atom), ref,
-                            PropertyStub, PropertyStub,
+                            PropertyStub, StrictPropertyStub,
                             JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
         goto error;
     }
@@ -3307,7 +3307,7 @@ BEGIN_CASE(JSOP_ENUMCONSTELEM)
     jsid id;
     FETCH_ELEMENT_ID(obj, -1, id);
     if (!obj->defineProperty(cx, id, ref,
-                             PropertyStub, PropertyStub,
+                             PropertyStub, StrictPropertyStub,
                              JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
         goto error;
     }
@@ -4382,7 +4382,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
 
                     PCMETER(cache->pchits++);
                     PCMETER(cache->setpchits++);
-                    NATIVE_SET(cx, obj, shape, entry, &rval);
+                    NATIVE_SET(cx, obj, shape, entry, script->strictModeCode, &rval);
                     break;
                 }
             } else {
@@ -5345,8 +5345,8 @@ BEGIN_CASE(JSOP_DEFVAR)
 
     /* Bind a variable only if it's not yet defined. */
     if (!prop) {
-        if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(), PropertyStub, PropertyStub,
-                                     attrs, 0, 0, &prop)) {
+        if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(),
+                                     PropertyStub, StrictPropertyStub, attrs, 0, 0, &prop)) {
             goto error;
         }
         JS_ASSERT(prop);
@@ -5426,7 +5426,7 @@ BEGIN_CASE(JSOP_DEFFUN)
     do {
         /* Steps 5d, 5f. */
         if (!prop || pobj != parent) {
-            if (!parent->defineProperty(cx, id, rval, PropertyStub, PropertyStub, attrs))
+            if (!parent->defineProperty(cx, id, rval, PropertyStub, StrictPropertyStub, attrs))
                 goto error;
             break;
         }
@@ -5436,7 +5436,7 @@ BEGIN_CASE(JSOP_DEFFUN)
         Shape *shape = reinterpret_cast<Shape *>(prop);
         if (parent->isGlobal()) {
             if (shape->configurable()) {
-                if (!parent->defineProperty(cx, id, rval, PropertyStub, PropertyStub, attrs))
+                if (!parent->defineProperty(cx, id, rval, PropertyStub, StrictPropertyStub, attrs))
                     goto error;
                 break;
             }
@@ -5491,7 +5491,7 @@ BEGIN_CASE(JSOP_DEFFUN_DBGFC)
 
     if ((attrs == JSPROP_ENUMERATE)
         ? !parent.setProperty(cx, id, &rval, script->strictModeCode)
-        : !parent.defineProperty(cx, id, rval, PropertyStub, PropertyStub, attrs)) {
+        : !parent.defineProperty(cx, id, rval, PropertyStub, StrictPropertyStub, attrs)) {
         goto error;
     }
 }
@@ -5812,14 +5812,15 @@ BEGIN_CASE(JSOP_SETTER)
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &rtmp, &attrs))
         goto error;
 
-    PropertyOp getter, setter;
+    PropertyOp getter;
+    StrictPropertyOp setter;
     if (op == JSOP_GETTER) {
         getter = CastAsPropertyOp(&rval.toObject());
-        setter = PropertyStub;
+        setter = StrictPropertyStub;
         attrs = JSPROP_GETTER;
     } else {
         getter = PropertyStub;
-        setter = CastAsPropertyOp(&rval.toObject());
+        setter = CastAsStrictPropertyOp(&rval.toObject());
         attrs = JSPROP_SETTER;
     }
     attrs |= JSPROP_ENUMERATE | JSPROP_SHARED;
