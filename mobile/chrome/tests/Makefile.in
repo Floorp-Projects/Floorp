@@ -67,6 +67,7 @@ _BROWSER_FILES = \
   browser_forms.js \
   browser_formsZoom.html \
   browser_formsZoom.js \
+  browser_history.js \
   browser_mainui.js \
   browser_navigation.js \
   browser_preferences_text.js \
