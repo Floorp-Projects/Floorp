@@ -778,7 +778,10 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
     signature = "static JSBool\n"
     if isAttr:
         # JSPropertyOp signature.
-        signature += "%s(JSContext *cx, JSObject *obj, jsid id,%s jsval *vp)\n"
+        if isSetter:
+            signature += "%s(JSContext *cx, JSObject *obj, jsid id, JSBool strict,%s jsval *vp)\n"
+        else:
+            signature += "%s(JSContext *cx, JSObject *obj, jsid id,%s jsval *vp)\n"
     else:
         # JSFastNative.
         signature += "%s(JSContext *cx, uintN argc,%s jsval *vp)\n"
@@ -815,8 +818,8 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
             argumentValues = (customMethodCall['additionalArgumentValues']
                               % nativeName)
             if isAttr:
-                callTemplate += ("    return %s(cx, obj, id, %s, vp);\n"
-                                 % (templateName, argumentValues))
+                callTemplate += ("    return %s(cx, obj, id%s, %s, vp);\n"
+                                 % (templateName, ", strict" if isSetter else "", argumentValues))
             else:
                 callTemplate += ("    return %s(cx, argc, %s, vp);\n"
                                  % (templateName, argumentValues))

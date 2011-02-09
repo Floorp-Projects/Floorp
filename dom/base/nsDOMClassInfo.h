@@ -576,8 +576,10 @@ public:
                                               JSObject **objp);
   static JSBool GlobalScopePolluterGetProperty(JSContext *cx, JSObject *obj,
                                                jsid id, jsval *vp);
+  static JSBool SecurityCheckOnAddDelProp(JSContext *cx, JSObject *obj, jsid id,
+                                          jsval *vp);
   static JSBool SecurityCheckOnSetProp(JSContext *cx, JSObject *obj, jsid id,
-                                       jsval *vp);
+                                       JSBool strict, jsval *vp);
   static void InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj);
   static nsresult InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
                                              nsIHTMLDocument *doc);

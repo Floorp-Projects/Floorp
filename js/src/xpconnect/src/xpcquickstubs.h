@@ -51,7 +51,7 @@ class XPCCallContext;
 struct xpc_qsPropertySpec {
     const char *name;
     JSPropertyOp getter;
-    JSPropertyOp setter;
+    JSStrictPropertyOp setter;
 };
 
 struct xpc_qsFunctionSpec {
@@ -229,7 +229,7 @@ xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
 
 
 JSBool
-xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
 
 /* Functions for converting values between COM and JS. */
 

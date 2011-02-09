@@ -2100,7 +2100,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     } else {
       if (!JS_DefineProperty(cx, newInnerWindow->mJSObject, "window",
                              OBJECT_TO_JSVAL(mJSObject),
-                             JS_PropertyStub, JS_PropertyStub,
+                             JS_PropertyStub, JS_StrictPropertyStub,
                              JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)) {
         NS_ERROR("can't create the 'window' property");
         return NS_ERROR_FAILURE;

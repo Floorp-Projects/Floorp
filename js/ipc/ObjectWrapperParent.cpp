@@ -177,7 +177,7 @@ const js::Class ObjectWrapperParent::sCPOW_JSClass = {
       JS_VALUEIFY(js::PropertyOp, ObjectWrapperParent::CPOW_AddProperty),
       JS_VALUEIFY(js::PropertyOp, ObjectWrapperParent::CPOW_DelProperty),
       JS_VALUEIFY(js::PropertyOp, ObjectWrapperParent::CPOW_GetProperty),
-      JS_VALUEIFY(js::PropertyOp, ObjectWrapperParent::CPOW_SetProperty),
+      JS_VALUEIFY(js::StrictPropertyOp, ObjectWrapperParent::CPOW_SetProperty),
       (JSEnumerateOp) ObjectWrapperParent::CPOW_NewEnumerate,
       (JSResolveOp) ObjectWrapperParent::CPOW_NewResolve,
       JS_VALUEIFY(js::ConvertOp, ObjectWrapperParent::CPOW_Convert),
@@ -450,8 +450,8 @@ ObjectWrapperParent::CPOW_GetProperty(JSContext *cx, JSObject *obj, jsid id,
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_SetProperty(JSContext *cx, JSObject *obj, jsid id,
-                                      jsval *vp)
+ObjectWrapperParent::CPOW_SetProperty(JSContext *cx, JSObject *obj, jsid id, 
+                                      JSBool strict, jsval *vp)
 {
     CPOW_LOG(("Calling CPOW_SetProperty (%s)...",
               JSVAL_TO_CSTR(cx, id)));
