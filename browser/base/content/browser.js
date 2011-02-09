@@ -4157,16 +4157,22 @@ var XULBrowserWindow = {
   },
 
   updateStatusField: function () {
-    var text = this.overLink;
-    if (!text && this._busyUI)
-      text = this.status;
-    if (!text)
-      text = this.jsStatus || this.jsDefaultStatus || this.defaultStatus;
+    var text, type, types = ["overLink"];
+    if (this._busyUI)
+      types.push("status");
+    types.push("jsStatus", "jsDefaultStatus", "defaultStatus");
+    for (let i = 0; !text && i < types.length; i++) {
+      type = types[i];
+      text = this[type];
+    }
 
     // check the current value so we don't trigger an attribute change
     // and cause needless (slow!) UI updates
     if (this.statusText != text) {
-      this.statusTextField.label = text;
+      let field = this.statusTextField;
+      field.setAttribute("previoustype", field.getAttribute("type"));
+      field.setAttribute("type", type);
+      field.label = text;
       this.statusText = text;
     }
   },
