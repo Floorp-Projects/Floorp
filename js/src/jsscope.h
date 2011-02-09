@@ -204,7 +204,7 @@
  * scope->table isn't worth it.  So instead of always allocating scope->table,
  * we leave it null while initializing all the other scope members as if it
  * were non-null and minimal-length.  Until a scope is searched
- * HASH_MIN_SEARCHES times, we use linear search from obj->lastProp to find a
+ * MAX_LINEAR_SEARCHES times, we use linear search from obj->lastProp to find a
  * given id, and save on the time and space overhead of creating a hash table.
  */
 
@@ -215,13 +215,13 @@ namespace js {
 /*
  * Shapes use multiplicative hashing, _a la_ jsdhash.[ch], but specialized to
  * minimize footprint.  But if a Shape lineage has been searched fewer than
- * HASH_MIN_SEARCHES times, we use linear search and avoid allocating
+ * MAX_LINEAR_SEARCHES times, we use linear search and avoid allocating
  * scope->table.
  */
 struct PropertyTable {
-    static const uint32 HASH_MIN_SEARCHES = 7;
-    static const uint32 MIN_SIZE_LOG2     = 4;
-    static const uint32 MIN_SIZE          = JS_BIT(MIN_SIZE_LOG2);
+    static const uint32 MAX_LINEAR_SEARCHES = 7;
+    static const uint32 MIN_SIZE_LOG2       = 4;
+    static const uint32 MIN_SIZE            = JS_BIT(MIN_SIZE_LOG2);
 
     int             hashShift;          /* multiplicative hash shift */
 
@@ -299,9 +299,18 @@ struct Shape : public JSObjectMap
     friend bool IsShapeAboutToBeFinalized(JSContext *cx, const js::Shape *shape);
     friend JS_FRIEND_API(void) ::js_UnbrandAndClearSlots(JSContext *cx, JSObject *obj);
 
-  protected:
-    mutable uint32 numSearches;     /* Only updated until it reaches HASH_MIN_SEARCHES. */
-    mutable js::PropertyTable *table;
+    /* 
+     * numLinearSearches starts at zero and is incremented initially on each
+     * search() call.  Once numLinearSearches reaches MAX_LINEAR_SEARCHES
+     * (which is a small integer), the table is created on the next search()
+     * call, and the table pointer will be easily distinguishable from a small
+     * integer.  The table can also be created when hashifying for dictionary
+     * mode.
+     */
+    union {
+        mutable size_t numLinearSearches;
+        mutable js::PropertyTable *table;
+    };
 
   public:
     inline void freeTable(JSContext *cx);
@@ -355,10 +364,6 @@ struct Shape : public JSObjectMap
                                      bool adding = false);
     static js::Shape *newDictionaryShape(JSContext *cx, const js::Shape &child, js::Shape **listp);
     static js::Shape *newDictionaryList(JSContext *cx, js::Shape **listp);
-    static js::Shape *newDictionaryShapeForAddProperty(JSContext *cx, jsid id,
-                                                       PropertyOp getter, StrictPropertyOp setter,
-                                                       uint32 slot, uintN attrs,
-                                                       uintN flags, intN shortid);
 
     inline void removeFromDictionary(JSObject *obj) const;
     inline void insertIntoDictionary(js::Shape **dictp);
@@ -366,6 +371,16 @@ struct Shape : public JSObjectMap
     js::Shape *getChild(JSContext *cx, const js::Shape &child, js::Shape **listp);
 
     bool hashify(JSRuntime *rt);
+
+    bool hasTable() const {
+        /* A valid pointer should be much bigger than MAX_LINEAR_SEARCHES. */
+        return numLinearSearches > PropertyTable::MAX_LINEAR_SEARCHES;
+    }
+
+    js::PropertyTable *getTable() const {
+        JS_ASSERT(hasTable());
+        return table;
+    }
 
     void setTable(js::PropertyTable *t) const {
         JS_ASSERT_IF(t && t->freelist != SHAPE_INVALID_SLOT, t->freelist < slotSpan);
@@ -614,8 +629,8 @@ struct Shape : public JSObjectMap
     }
 
     uint32 entryCount() const {
-        if (table)
-            return table->entryCount;
+        if (hasTable())
+            return getTable()->entryCount;
 
         const js::Shape *shape = this;
         uint32 count = 0;
@@ -726,7 +741,7 @@ JSObject::propertyCount() const
 inline bool
 JSObject::hasPropertyTable() const
 {
-    return !!lastProperty()->table;
+    return lastProperty()->hasTable();
 }
 
 /*
@@ -859,10 +874,18 @@ Shape::search(JSRuntime *rt, js::Shape **startp, jsid id, bool adding)
 {
     js::Shape *start = *startp;
     METER(searches);
-    if (start->table ||
-        (start->numSearches >= PropertyTable::HASH_MIN_SEARCHES && start->hashify(rt)))
-    {
-        return start->table->search(id, adding);
+
+    if (start->hasTable())
+        return start->getTable()->search(id, adding);
+
+    if (start->numLinearSearches == PropertyTable::MAX_LINEAR_SEARCHES) {
+        if (start->hashify(rt))
+            return start->getTable()->search(id, adding);
+        /* OOM!  Don't increment numLinearSearches, to keep hasTable() false. */
+        JS_ASSERT(!start->hasTable());
+    } else {
+        JS_ASSERT(start->numLinearSearches < PropertyTable::MAX_LINEAR_SEARCHES);
+        start->numLinearSearches++;
     }
 
     /*
@@ -873,9 +896,6 @@ Shape::search(JSRuntime *rt, js::Shape **startp, jsid id, bool adding)
      * at the end), to avoid an extra load per iteration just to save a
      * load and id test at the end (when missing).
      */
-    JS_ASSERT(!start->table);
-    start->numSearches++;
-
     js::Shape **spp;
     for (spp = startp; js::Shape *shape = *spp; spp = &shape->parent) {
         if (shape->id == id) {
