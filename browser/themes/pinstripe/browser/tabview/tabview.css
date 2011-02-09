@@ -206,7 +206,7 @@ html[dir=rtl] .stack-trayed .tab-title {
 
 .groupItem {
   cursor: move;
-  background-color: #EBEBEB;
+  background-color: rgb(240,240,240);
   border-radius: 0.4em;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -214,12 +214,12 @@ html[dir=rtl] .stack-trayed .tab-title {
 
 .groupItem.activeGroupItem {
   box-shadow:
-    rgba(0,0,0,0.6) 1px 1px 5.5px;
+    rgba(0,0,0,0.8) 2px 2px 8px;
 }
 
 html[dir=rtl] .groupItem.activeGroupItem {
   box-shadow:
-    rgba(0,0,0,0.6) -1px 1px 5.5px;
+    rgba(0,0,0,0.8) -2px 2px 8px;
 }
 
 .phantom {
