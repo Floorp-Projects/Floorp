@@ -142,14 +142,6 @@ public:
     virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);
     virtual nsresult GetSurface(NPP instance, gfxASurface** aSurface);
     NS_OVERRIDE virtual bool UseAsyncPainting() { return false; }
-    NS_OVERRIDE
-    virtual nsresult SetBackgroundUnknown(NPP instance);
-    NS_OVERRIDE
-    virtual nsresult BeginUpdateBackground(NPP instance,
-                                           const nsIntRect&, gfxContext** aCtx);
-    NS_OVERRIDE
-    virtual nsresult EndUpdateBackground(NPP instance,
-                                         gfxContext* aCtx, const nsIntRect&);
 
 private:
     NP_InitializeFunc mNP_Initialize;

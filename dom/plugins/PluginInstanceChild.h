@@ -236,22 +236,6 @@ private:
     InternalGetNPObjectForValue(NPNVariable aValue,
                                 NPObject** aObject);
 
-    NS_OVERRIDE
-    virtual bool RecvUpdateBackground(const SurfaceDescriptor& aBackground,
-                                      const nsIntRect& aRect);
-
-    NS_OVERRIDE
-    virtual PPluginBackgroundDestroyerChild*
-    AllocPPluginBackgroundDestroyer();
-
-    NS_OVERRIDE
-    virtual bool
-    RecvPPluginBackgroundDestroyerConstructor(PPluginBackgroundDestroyerChild* aActor);
-
-    NS_OVERRIDE
-    virtual bool
-    DeallocPPluginBackgroundDestroyer(PPluginBackgroundDestroyerChild* aActor);
-
 #if defined(OS_WIN)
     static bool RegisterWindowClass();
     bool CreatePluginWindow();
@@ -306,6 +290,7 @@ private:
                                           int nIndex,
                                           LONG newLong);
 #endif
+    void HookSystemParametersInfo();
 
     class FlashThrottleAsyncMsg : public ChildAsyncCall
     {
@@ -422,8 +407,6 @@ private:
     const NPCocoaEvent   *mCurrentEvent;
 #endif
 
-    bool CanPaintOnBackground();
-
     bool IsVisible() {
         return mWindow.clipRect.top != 0 ||
             mWindow.clipRect.left != 0 ||
@@ -504,13 +487,6 @@ private:
     // Back surface, just keeping reference to
     // surface which is on ParentProcess side
     nsRefPtr<gfxASurface> mBackSurface;
-
-    // (Not to be confused with mBackSurface).  This is a recent copy
-    // of the opaque pixels under our object frame, if
-    // |mIsTransparent|.  We ask the plugin render directly onto a
-    // copy of the background pixels if available, and fall back on
-    // alpha recovery otherwise.
-    nsRefPtr<gfxASurface> mBackground;
 
 #ifdef XP_WIN
     // These actors mirror mCurrentSurface/mBackSurface

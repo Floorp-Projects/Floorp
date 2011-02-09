@@ -42,7 +42,6 @@
 #include "ImageLayerD3D9.h"
 #include "ColorLayerD3D9.h"
 #include "CanvasLayerD3D9.h"
-#include "ReadbackLayerD3D9.h"
 #include "gfxWindowsPlatform.h"
 #include "nsIGfxInfo.h"
 #include "nsServiceManagerUtils.h"
@@ -226,13 +225,6 @@ already_AddRefed<CanvasLayer>
 LayerManagerD3D9::CreateCanvasLayer()
 {
   nsRefPtr<CanvasLayer> layer = new CanvasLayerD3D9(this);
-  return layer.forget();
-}
-
-already_AddRefed<ReadbackLayer>
-LayerManagerD3D9::CreateReadbackLayer()
-{
-  nsRefPtr<ReadbackLayer> layer = new ReadbackLayerD3D9(this);
   return layer.forget();
 }
 
