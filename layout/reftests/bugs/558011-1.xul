@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<hbox flex="1" style="direction: rtl;">
+<richlistbox style="width: 100px; direction: rtl;">
+<item>this is a really really really really long test sentence</item>
+</richlistbox>
+<splitter/>
+<browser flex="1" src="" type="content-primary"/>
+</hbox>
+
+</window>
