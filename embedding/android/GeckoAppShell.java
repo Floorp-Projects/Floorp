@@ -194,7 +194,8 @@ class GeckoAppShell
         System.loadLibrary("mozutils");
         GeckoApp geckoApp = GeckoApp.mAppContext;
         String homeDir;
-        if (geckoApp.getApplication().getPackageResourcePath().startsWith("/data")) {
+        if (Build.VERSION.SDK_INT < 8 ||
+            geckoApp.getApplication().getPackageResourcePath().startsWith("/data")) {
             File home = geckoApp.getFilesDir();
             homeDir = home.getPath();
             // handle the application being moved to phone from sdcard
@@ -203,11 +204,12 @@ class GeckoAppShell
                         GeckoApp.mAppContext.getPackageName() + "/mozilla");
             if (oldHome.exists())
                 moveDir(oldHome, profileDir);
-
-            File extHome =  geckoApp.getExternalFilesDir(null);
-            File extProf = new File (extHome, "mozilla");
-            if (extHome.exists())
-                moveDir(extProf, profileDir);
+            if (Build.VERSION.SDK_INT >= 8) {
+                File extHome =  geckoApp.getExternalFilesDir(null);
+                File extProf = new File (extHome, "mozilla");
+                if (extHome.exists())
+                    moveDir(extProf, profileDir);
+            }
         } else {
             File home = geckoApp.getExternalFilesDir(null);
             homeDir = home.getPath();
