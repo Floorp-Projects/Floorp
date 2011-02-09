@@ -1712,6 +1712,12 @@ var gDiscoverView = {
   },
 
   _loadURL: function(aURL, aCallback) {
+    if (this._browser.currentURI.spec == aURL) {
+      if (aCallback)
+        aCallback();
+      return;
+    }
+
     if (aCallback)
       this._loadListeners.push(aCallback);
 
