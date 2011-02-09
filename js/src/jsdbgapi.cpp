@@ -2176,7 +2176,7 @@ ethogram_finalize(JSContext *cx, JSObject *obj);
 static JSClass ethogram_class = {
     "Ethogram",
     JSCLASS_HAS_PRIVATE,
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, ethogram_finalize,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };

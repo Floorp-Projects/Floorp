@@ -118,6 +118,26 @@ LookupInterfaceOrAncestor(PRUint32 tableSize, const xpc_qsHashEntry *table,
     return entry;
 }
 
+// Apply |op| to |obj|, |id|, and |vp|. If |op| is a setter, treat the assignment as lenient.
+template<typename Op>
+static inline JSBool ApplyPropertyOp(JSContext *cx, Op op, JSObject *obj, jsid id, jsval *vp);
+
+template<>
+inline JSBool
+ApplyPropertyOp<JSPropertyOp>(JSContext *cx, JSPropertyOp op, JSObject *obj, jsid id, jsval *vp)
+{
+    return op(cx, obj, id, vp);
+}
+
+template<>
+inline JSBool
+ApplyPropertyOp<JSStrictPropertyOp>(JSContext *cx, JSStrictPropertyOp op, JSObject *obj,
+                                    jsid id, jsval *vp)
+{
+    return op(cx, obj, id, true, vp);
+}
+
+template<typename Op>
 static JSBool
 PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -133,7 +153,7 @@ PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
     if(!JS_GetReservedSlot(cx, callee, 0, &v))
         return JS_FALSE;
     JSObject *ptrobj = JSVAL_TO_OBJECT(v);
-    JSPropertyOp *popp = static_cast<JSPropertyOp *>(JS_GetPrivate(cx, ptrobj));
+    Op *popp = static_cast<Op *>(JS_GetPrivate(cx, ptrobj));
 
     if(!JS_GetReservedSlot(cx, callee, 1, &v))
         return JS_FALSE;
@@ -143,7 +163,7 @@ PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
     if (!JS_ValueToId(cx, argval, &id))
         return JS_FALSE;
     JS_SET_RVAL(cx, vp, argval);
-    return (*popp)(cx, obj, id, vp);
+    return ApplyPropertyOp<Op>(cx, *popp, obj, id, vp);
 }
 
 static void
@@ -156,20 +176,19 @@ PointerFinalize(JSContext *cx, JSObject *obj)
 static JSClass
 PointerHolderClass = {
     "Pointer", JSCLASS_HAS_PRIVATE,
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, PointerFinalize,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
+template<typename Op>
 static JSObject *
-GeneratePropertyOp(JSContext *cx, JSObject *obj, jsid id, uintN argc,
-                   JSPropertyOp pop)
+GeneratePropertyOp(JSContext *cx, JSObject *obj, jsid id, uintN argc, Op pop)
 {
     // The JS engine provides two reserved slots on function objects for
     // XPConnect to use. Use them to stick the necessary info here.
     JSFunction *fun =
-        JS_NewFunctionById(cx, reinterpret_cast<JSNative>(PropertyOpForwarder),
-                           argc, 0, obj, id);
+        JS_NewFunctionById(cx, PropertyOpForwarder<Op>, argc, 0, obj, id);
     if(!fun)
         return JS_FALSE;
 
@@ -177,12 +196,12 @@ GeneratePropertyOp(JSContext *cx, JSObject *obj, jsid id, uintN argc,
 
     js::AutoObjectRooter tvr(cx, funobj);
 
-    // Unfortunately, we cannot guarantee that JSPropertyOp is aligned. Use a
+    // Unfortunately, we cannot guarantee that Op is aligned. Use a
     // second object to work around this.
     JSObject *ptrobj = JS_NewObject(cx, &PointerHolderClass, nsnull, funobj);
     if(!ptrobj)
         return JS_FALSE;
-    JSPropertyOp *popp = new JSPropertyOp;
+    Op *popp = new Op;
     if(!popp)
         return JS_FALSE;
     *popp = pop;
@@ -195,7 +214,7 @@ GeneratePropertyOp(JSContext *cx, JSObject *obj, jsid id, uintN argc,
 
 static JSBool
 ReifyPropertyOps(JSContext *cx, JSObject *obj, jsid id,
-                 JSPropertyOp getter, JSPropertyOp setter,
+                 JSPropertyOp getter, JSStrictPropertyOp setter,
                  JSObject **getterobjp, JSObject **setterobjp)
 {
     // Generate both getter and setter and stash them in the prototype.
@@ -233,7 +252,7 @@ ReifyPropertyOps(JSContext *cx, JSObject *obj, jsid id,
         *setterobjp = setterobj;
     return JS_DefinePropertyById(cx, obj, id, JSVAL_VOID,
                                  JS_DATA_TO_FUNC_PTR(JSPropertyOp, getterobj),
-                                 JS_DATA_TO_FUNC_PTR(JSPropertyOp, setterobj),
+                                 JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, setterobj),
                                  attrs);
 }
 
@@ -328,7 +347,8 @@ DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
 {
     uintN attrs;
     JSBool found;
-    JSPropertyOp getter, setter;
+    JSPropertyOp getter;
+    JSStrictPropertyOp setter;
     JSObject *obj2;
     jsval v;
     jsid id;
@@ -681,7 +701,7 @@ xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv,
 }
 
 JSBool
-xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
     return JS_ReportErrorFlagsAndNumber(cx,
                                         JSREPORT_WARNING | JSREPORT_STRICT |

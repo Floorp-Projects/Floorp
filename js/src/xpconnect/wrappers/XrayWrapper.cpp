@@ -99,7 +99,7 @@ static JSBool
 holder_get(JSContext *cx, JSObject *holder, jsid id, jsval *vp);
 
 static JSBool
-holder_set(JSContext *cx, JSObject *holder, jsid id, jsval *vp);
+holder_set(JSContext *cx, JSObject *holder, jsid id, JSBool strict, jsval *vp);
 
 namespace XrayUtils {
 
@@ -202,7 +202,7 @@ holder_get(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
 }
 
 static JSBool
-holder_set(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
+holder_set(JSContext *cx, JSObject *wrapper, jsid id, JSBool strict, jsval *vp)
 {
     NS_ASSERTION(wrapper->isProxy(), "bad this object in set");
     JSObject *holder = GetHolder(wrapper);
@@ -296,7 +296,8 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid i
         // don't have one, we have to avoid calling the scriptable helper's
         // GetProperty method for this property, so stub out the getter and
         // setter here explicitly.
-        desc->getter = desc->setter = JS_PropertyStub;
+        desc->getter = JS_PropertyStub;
+        desc->setter = JS_StrictPropertyStub;
     }
 
     if (!JS_WrapValue(cx, &desc->value) || !JS_WrapValue(cx, &fval))
@@ -305,7 +306,7 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid i
     if (desc->attrs & JSPROP_GETTER)
         desc->getter = CastAsJSPropertyOp(JSVAL_TO_OBJECT(fval));
     if (desc->attrs & JSPROP_SETTER)
-        desc->setter = desc->getter;
+        desc->setter = CastAsJSStrictPropertyOp(JSVAL_TO_OBJECT(fval));
 
     // Define the property.
     return JS_DefinePropertyById(cx, holder, id, desc->value,
@@ -768,12 +769,12 @@ XrayWrapper<Base>::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsi
 template <typename Base>
 bool
 XrayWrapper<Base>::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
-                       js::Value *vp)
+                       bool strict, js::Value *vp)
 {
     // Skip our Base if it isn't already JSProxyHandler.
     // NB: None of the functions we call are prepared for the receiver not
     // being the wrapper, so ignore the receiver here.
-    return JSProxyHandler::set(cx, wrapper, wrapper, id, vp);
+    return JSProxyHandler::set(cx, wrapper, wrapper, id, strict, vp);
 }
 
 template <typename Base>

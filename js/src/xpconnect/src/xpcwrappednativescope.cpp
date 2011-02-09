@@ -209,7 +209,7 @@ js::Class XPC_WN_NoHelper_Proto_JSClass = {
     js::PropertyStub,               // addProperty;
     js::PropertyStub,               // delProperty;
     js::PropertyStub,               // getProperty;
-    js::PropertyStub,               // setProperty;
+    js::StrictPropertyStub,         // setProperty;
     js::EnumerateStub,              // enumerate;
     JS_ResolveStub,                 // resolve;
     js::ConvertStub,                // convert;
