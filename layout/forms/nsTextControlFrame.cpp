@@ -1415,7 +1415,7 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
       nsPresState fakePresState;
       fakePresState.SetScrollState(*contentScrollPos);
       statefulFrame->RestoreState(&fakePresState);
-      Properties().RemoveProperty(ContentScrollPos());
+      Properties().Remove(ContentScrollPos());
       delete contentScrollPos;
     }
   }
