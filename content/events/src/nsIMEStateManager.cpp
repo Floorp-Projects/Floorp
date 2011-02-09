@@ -76,6 +76,7 @@
 nsIContent*    nsIMEStateManager::sContent      = nsnull;
 nsPresContext* nsIMEStateManager::sPresContext  = nsnull;
 PRBool         nsIMEStateManager::sInstalledMenuKeyboardListener = PR_FALSE;
+PRBool         nsIMEStateManager::sInSecureInputMode = PR_FALSE;
 
 nsTextStateManager* nsIMEStateManager::sTextStateObserver = nsnull;
 
@@ -131,6 +132,29 @@ nsIMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
   nsCOMPtr<nsIWidget> widget = GetWidget(aPresContext);
   if (!widget) {
     return NS_OK;
+  }
+
+  // Handle secure input mode for password field input.
+  PRBool contentIsPassword = PR_FALSE;
+  if (aContent && aContent->GetNameSpaceID() == kNameSpaceID_XHTML) {
+    if (aContent->Tag() == nsGkAtoms::input) {
+      nsAutoString type;
+      aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
+      contentIsPassword = type.LowerCaseEqualsLiteral("password");
+    }
+  }
+  if (sInSecureInputMode) {
+    if (!contentIsPassword) {
+      if (NS_SUCCEEDED(widget->EndSecureKeyboardInput())) {
+        sInSecureInputMode = PR_FALSE;
+      }
+    }
+  } else {
+    if (contentIsPassword) {
+      if (NS_SUCCEEDED(widget->BeginSecureKeyboardInput())) {
+        sInSecureInputMode = PR_TRUE;
+      }
+    }
   }
 
   PRUint32 newState = GetNewIMEState(aPresContext, aContent);

@@ -396,7 +396,6 @@ private:
   // Calls to SetValue will be treated as user values (i.e. trigger onChange
   // eventually) when mFireChangeEventState==true, this is used by nsFileControlFrame.
   PRPackedBool mFireChangeEventState;
-  PRPackedBool mInSecureKeyboardInputMode;
   // Keep track if we have asked a placeholder node creation.
   PRPackedBool mUsePlaceholder;
 
