@@ -261,9 +261,7 @@ let Content = {
     addEventListener("pagehide", this, false);
     addEventListener("keypress", this, false, false);
 
-    try{
-      docShell.QueryInterface(Ci.nsIDocShellHistory).useGlobalHistory = true;
-    } catch(e) { }
+    docShell.QueryInterface(Ci.nsIDocShellHistory).useGlobalHistory = true;
   },
 
   handleEvent: function handleEvent(aEvent) {
