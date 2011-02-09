@@ -1330,7 +1330,6 @@ class nsIWidget : public nsISupports {
                                               PRBool aIsHorizontal,
                                               PRInt32 &aOverriddenDelta) = 0;
 
-#ifdef MOZ_IPC
     /**
      * Return true if this process shouldn't use platform widgets, and
      * so should use PuppetWidgets instead.  If this returns true, the
@@ -1339,8 +1338,15 @@ class nsIWidget : public nsISupports {
      */
     static bool
     UsePuppetWidgets()
-    { return XRE_GetProcessType() == GeckoProcessType_Content; }
+    {
+#ifdef MOZ_IPC
+      return XRE_GetProcessType() == GeckoProcessType_Content;
+#else
+      return PR_FALSE;
+#endif
+    }
 
+#ifdef MOZ_IPC
     /**
      * Allocate and return a "puppet widget" that doesn't directly
      * correlate to a platform widget; platform events and data must
