@@ -1681,13 +1681,13 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   padding-bottom: 0;
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-up[disabled="true"],
-.tabbrowser-arrowscrollbox > .scrollbutton-down[disabled="true"] {
+.tabbrowser-arrowscrollbox > .scrollbutton-up[disabled],
+.tabbrowser-arrowscrollbox > .scrollbutton-down[disabled] {
   opacity: .4;
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover:active,
-.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled="true"]):hover:active {
+.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):hover:active,
+.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):hover:active {
   -moz-image-region: rect(0, 30px, 17px, 15px);
 }
 
@@ -1703,6 +1703,34 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 .tabbrowser-arrowscrollbox > .scrollbutton-down[notifybgtab] {
   background-color: Highlight;
   -moz-transition: none;
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):not(:hover):-moz-locale-dir(ltr),
+.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):not(:hover):-moz-locale-dir(rtl) {
+  -moz-appearance: none;
+  -moz-border-image: url("chrome://browser/skin/tabbrowser/tab-overflow-border.png") 0 2 0 2 / 0 2px 0 0;
+  padding-right: 1px;
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):not(:hover):-moz-locale-dir(ltr),
+.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):not(:hover):-moz-locale-dir(rtl) {
+  -moz-appearance: none;
+  -moz-border-image: url("chrome://browser/skin/tabbrowser/tab-overflow-border.png") 0 2 0 2 / 0 0 0 2px;
+  padding-left: 1px;
+}
+
+@media all and (-moz-windows-classic) {
+  .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):not(:hover):-moz-locale-dir(ltr),
+  .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):not(:hover):-moz-locale-dir(rtl) {
+    padding-left: 4px;
+    padding-right: 2px;
+  }
+
+  .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):not(:hover):-moz-locale-dir(ltr),
+  .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):not(:hover):-moz-locale-dir(rtl) {
+    padding-left: 2px;
+    padding-right: 4px;
+  }
 }
 
 .tabs-newtab-button > .toolbarbutton-icon {
