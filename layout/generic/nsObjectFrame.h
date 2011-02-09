@@ -62,8 +62,11 @@ class nsIPluginInstance;
 class nsPresContext;
 class nsDisplayPlugin;
 class nsIDOMElement;
+class PluginBackgroundSink;
 
 #define nsObjectFrameSuper nsFrame
+
+#define NS_OBJECT_NEEDS_SET_IMAGE NS_FRAME_STATE_BIT(31)
 
 class nsObjectFrame : public nsObjectFrameSuper,
                       public nsIObjectFrame,
@@ -176,12 +179,15 @@ public:
   virtual PRBool ReflowFinished();
   virtual void ReflowCallbackCanceled();
 
+  /**
+   * Builds either an ImageLayer or a ReadbackLayer, depending on the type
+   * of aItem (TYPE_PLUGIN or TYPE_PLUGIN_READBACK respectively).
+   */
   already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                      LayerManager* aManager,
                                      nsDisplayItem* aItem);
 
-  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager);
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder);
 
   ImageContainer* GetImageContainer(LayerManager* aManager = nsnull);
 
@@ -272,6 +278,7 @@ protected:
 
   friend class nsPluginInstanceOwner;
   friend class nsDisplayPlugin;
+  friend class PluginBackgroundSink;
 
 private:
   
@@ -289,6 +296,11 @@ private:
   nsIView*                        mInnerView;
   nsCOMPtr<nsIWidget>             mWidget;
   nsIntRect                       mWindowlessRect;
+  /**
+   * This is owned by the ReadbackLayer for this nsObjectFrame. It is
+   * automatically cleared if the PluginBackgroundSink is destroyed.
+   */
+  PluginBackgroundSink*           mBackgroundSink;
 
   // For assertions that make it easier to determine if a crash is due
   // to the underlying problem described in bug 136927, and to prevent
@@ -322,6 +334,7 @@ public:
                      nsIRenderingContext* aCtx);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
+                                   const nsRect& aAllowVisibleRegionExpansion,
                                    PRBool& aContainsRootContentDocBG);
 
   NS_DISPLAY_DECL_NAME("Plugin", TYPE_PLUGIN)
@@ -345,7 +358,7 @@ public:
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager)
   {
-    return static_cast<nsObjectFrame*>(mFrame)->GetLayerState(aBuilder, aManager);
+    return static_cast<nsObjectFrame*>(mFrame)->GetLayerState(aBuilder);
   }
 
 private:

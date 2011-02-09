@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_CANVASLAYEROGL_H
-#define GFX_CANVASLAYEROGL_H
+#ifndef GFX_CANVASLAYERD3D10_H
+#define GFX_CANVASLAYERD3D10_H
 
 #include "LayerManagerD3D10.h"
 #include "GLContext.h"

@@ -45,6 +45,8 @@
 
 #include "gfxTeeSurface.h"
 #include "gfxUtils.h"
+#include "ReadbackLayer.h"
+#include "ReadbackProcessor.h"
 
 namespace mozilla {
 namespace layers {
@@ -168,7 +170,7 @@ ThebesLayerD3D10::RenderLayer()
 }
 
 void
-ThebesLayerD3D10::Validate()
+ThebesLayerD3D10::Validate(ReadbackProcessor *aReadback)
 {
   if (mVisibleRegion.IsEmpty()) {
     return;
@@ -189,6 +191,12 @@ ThebesLayerD3D10::Validate()
   if (ResolutionChanged(xres, yres)) {
       mTexture = nsnull;
       mTextureOnWhite = nsnull;
+  }
+
+  nsTArray<ReadbackProcessor::Update> readbackUpdates;
+  nsIntRegion readbackRegion;
+  if (aReadback && UsedForReadback()) {
+    aReadback->GetThebesLayerUpdates(this, &readbackUpdates, &readbackRegion);
   }
 
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
@@ -263,6 +271,23 @@ ThebesLayerD3D10::Validate()
     region.Sub(mVisibleRegion, mValidRegion);
 
     DrawRegion(region, mode);
+
+    if (readbackUpdates.Length() > 0) {
+      CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM,
+                                 visibleRect.width, visibleRect.height,
+                                 1, 1, 0, D3D10_USAGE_STAGING,
+                                 D3D10_CPU_ACCESS_READ);
+
+      nsRefPtr<ID3D10Texture2D> readbackTexture;
+      device()->CreateTexture2D(&desc, NULL, getter_AddRefs(readbackTexture));
+      device()->CopyResource(readbackTexture, mTexture);
+
+      for (int i = 0; i < readbackUpdates.Length(); i++) {
+        mD3DManager->readbackManager()->PostTask(readbackTexture,
+                                                 &readbackUpdates[i],
+                                                 gfxPoint(visibleRect.x, visibleRect.y));
+      }
+    }
 
     mValidRegion = mVisibleRegion;
   }

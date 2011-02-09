@@ -53,7 +53,6 @@ SDK_XPIDLSRCS = \
     nsIASN1Sequence.idl \
     nsICertificateDialogs.idl \
     nsICRLInfo.idl \
-    nsIX509Cert.idl \
     nsIX509CertDB.idl \
     nsIX509CertValidity.idl \
     $(NULL)
@@ -80,7 +79,6 @@ XPIDLSRCS = \
     nsIGenKeypairInfoDlg.idl \
     nsITokenDialogs.idl \
     nsITokenPasswordDialogs.idl \
-    nsISSLStatus.idl \
     nsIKeygenThread.idl \
     nsICMSSecureMessage.idl \
     nsIUserCertPicker.idl \

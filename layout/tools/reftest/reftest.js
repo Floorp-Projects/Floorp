@@ -571,6 +571,7 @@ function ReadManifest(aURL)
                 cond = true;
             } else if (item == "needs-focus") {
                 needs_focus = true;
+                cond = false;
             } else if ((m = item.match(/^asserts\((\d+)(-\d+)?\)$/))) {
                 cond = false;
                 minAsserts = Number(m[1]);
