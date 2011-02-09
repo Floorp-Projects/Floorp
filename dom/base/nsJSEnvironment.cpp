@@ -670,9 +670,25 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
 
   // Check the amount of time this script has been running, or if the
   // dialog is disabled.
-  JSObject* global = ::JS_GetGlobalForScopeChain(cx);
+  JSObject* global;
+  if (!::JS_GetGlobalForCallingScript(cx, &global)) {
+    return JS_FALSE;
+  }
+  if (!global) {
+    global = JS_GetGlobalObject(cx);
+    if (!global) {
+      return NS_ERROR_FAILURE;
+    }
+    OBJ_TO_INNER_OBJECT(cx, global);
+    if (!global) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  NS_ABORT_IF_FALSE(global != NULL, "operation callback without script?");
+
   PRBool isTrackingChromeCodeTime =
-    global && xpc::AccessCheck::isChrome(global->getCompartment());
+    xpc::AccessCheck::isChrome(global->getCompartment());
   if (duration < (isTrackingChromeCodeTime ?
                   sMaxChromeScriptRunTime : sMaxScriptRunTime)) {
     return JS_TRUE;
