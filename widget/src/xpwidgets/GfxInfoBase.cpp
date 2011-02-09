@@ -675,7 +675,13 @@ GfxInfoBase::LogFailure(const nsACString &failure)
   /* We only keep the first 9 failures */
   if (mFailureCount < NS_ARRAY_LENGTH(mFailures)) {
     mFailures[mFailureCount++] = failure;
+
+    /* record it in the crash notes too */
+#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
+    CrashReporter::AppendAppNotesToCrashReport(failure);
+#endif
   }
+
 }
 
 /* void getFailures ([optional] out unsigned long failureCount, [array, size_is (failureCount), retval] out string failures); */
