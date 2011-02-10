@@ -2433,12 +2433,17 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent)
 
   nsRect scrolledRect = GetScrolledRect();
 
-  nscoord x = GetCoordAttribute(mHScrollbarBox, nsGkAtoms::curpos,
-                                -scrolledRect.x) +
-              scrolledRect.x;
-  nscoord y = GetCoordAttribute(mVScrollbarBox, nsGkAtoms::curpos,
-                                -scrolledRect.y) +
-              scrolledRect.y;
+  nsPoint dest;
+  dest.x = GetCoordAttribute(mHScrollbarBox, nsGkAtoms::curpos,
+                             -scrolledRect.x) +
+           scrolledRect.x;
+  dest.y = GetCoordAttribute(mVScrollbarBox, nsGkAtoms::curpos,
+                             -scrolledRect.y) +
+           scrolledRect.y;
+
+  if (dest == GetScrollPosition()) {
+    return;
+  }
 
   PRBool isSmooth = aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::smooth);
   if (isSmooth) {
@@ -2448,7 +2453,7 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent)
     // was.
     UpdateScrollbarPosition();
   }
-  ScrollTo(nsPoint(x, y),
+  ScrollTo(dest,
            isSmooth ? nsIScrollableFrame::SMOOTH : nsIScrollableFrame::INSTANT);
 }
 
