@@ -808,10 +808,7 @@ var ExtensionsView = {
     }
   },
 
-  showAlert: function ev_showAlert(aMessage) {
-    if (this.visible)
-      return;
-
+  showAlert: function ev_showAlert(aMessage, aForceDisplay) {
     let strings = Strings.browser;
 
     let observer = {
@@ -821,16 +818,30 @@ var ExtensionsView = {
       }
     };
 
-    let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
-    alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.GetStringFromName("alertAddons"),
-                                 aMessage, true, "", observer, ADDONS_NOTIFICATION_NAME);
+    if (aForceDisplay) {
+      // Show a toaster alert for restartless add-ons all the time
+      let toaster = Cc["@mozilla.org/toaster-alerts-service;1"].getService(Ci.nsIAlertsService);
+      if (this.visible)
+        toaster.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.GetStringFromName("alertAddons"),
+                                      aMessage, false, "", null);
+      else
+        toaster.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.GetStringFromName("alertAddons"),
+                                      aMessage, true, "", observer);
+    } else {
+      // Only show an alert for a normal add-on if the manager is not visible
+      if (!this.visible) {
+        let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+        alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.GetStringFromName("alertAddons"),
+                                     aMessage, true, "", observer, ADDONS_NOTIFICATION_NAME);
+      }
+    }
   },
 
   hideAlerts: function ev_hideAlerts() {
 #ifdef ANDROID
     let alertsService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     let progressListener = alertsService.QueryInterface(Ci.nsIAlertsProgressListener);
-    progressListener.onCancel("addons");
+    progressListener.onCancel(ADDONS_NOTIFICATION_NAME);
 #endif
   },
 };
@@ -981,7 +992,7 @@ AddonInstallListener.prototype = {
 #ifdef ANDROID
     let alertsService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     let progressListener = alertsService.QueryInterface(Ci.nsIAlertsProgressListener);
-    progressListener.onProgress("addons", aInstall.progress, aInstall.maxProgress);
+    progressListener.onProgress(ADDONS_NOTIFICATION_NAME, aInstall.progress, aInstall.maxProgress);
 #endif
     if (!element)
       return;
@@ -1036,6 +1047,7 @@ AddonInstallListener.prototype = {
       if (!aNeedsRestart)
         stringName += "NoRestart";
     }
-    ExtensionsView.showAlert(strings.GetStringFromName(stringName));
+
+    ExtensionsView.showAlert(strings.GetStringFromName(stringName), !aNeedsRestart);
   },
 };
