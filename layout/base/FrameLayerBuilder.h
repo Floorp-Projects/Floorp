@@ -278,6 +278,26 @@ public:
     aFrame->Properties().Delete(DisplayItemDataProperty());
   }
 
+  LayerManager* GetRetainingLayerManager() { return mRetainingManager; }
+
+  /**
+   * Returns true if the given item (which we assume here is
+   * background-attachment:fixed) needs to be repainted as we scroll in its
+   * document.
+   * Returns false if it doesn't need to be repainted because the layer system
+   * is ensuring its fixed-ness for us.
+   */
+  static PRBool NeedToInvalidateFixedDisplayItem(nsDisplayListBuilder* aBuilder,
+                                                 nsDisplayItem* aItem);
+
+  /**
+   * Returns true if the given display item was rendered directly
+   * into a retained layer.
+   * Returns false if it was rendered into a temporary layer manager and then
+   * into a retained layer.
+   */
+  static PRBool HasRetainedLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey);
+
   /**
    * Clip represents the intersection of an optional rectangle with a
    * list of rounded rectangles.
