@@ -53,4 +53,6 @@ needs-focus == caret_after_reframe.html caret_after_reframe-ref.html
 == spellcheck-period-valid.html spellcheck-period-valid-ref.html
 == spellcheck-space-valid.html spellcheck-space-valid-ref.html
 == spellcheck-comma-valid.html spellcheck-comma-valid-ref.html
+== spellcheck-hyphen-multiple-valid.html spellcheck-hyphen-multiple-valid-ref.html
+!= spellcheck-hyphen-multiple-invalid.html spellcheck-hyphen-multiple-invalid-ref.html
 == unneeded_scroll.html unneeded_scroll-ref.html
