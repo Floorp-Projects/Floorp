@@ -99,7 +99,6 @@ public:
   FrameLayerBuilder() :
     mRetainingManager(nsnull),
     mDetectedDOMModification(PR_FALSE),
-    mInvalidateAllThebesContent(PR_FALSE),
     mInvalidateAllLayers(PR_FALSE)
   {
     mNewDisplayItemData.Init();
@@ -180,12 +179,6 @@ public:
    * being moved and we need to invalidate everything in aFrame's subtree.
    */
   static void InvalidateThebesLayersInSubtree(nsIFrame* aFrame);
-
-  /**
-   * Call this to force *all* retained layer contents to be discarded at
-   * the next paint.
-   */
-  static void InvalidateAllThebesLayerContents(LayerManager* aManager);
 
   /**
    * Call this to force all retained layers to be discarded and recreated at
@@ -494,11 +487,6 @@ protected:
    * the current paint.
    */
   PRPackedBool                        mDetectedDOMModification;
-  /**
-   * Indicates that the contents of all ThebesLayers should be rerendered
-   * during this paint.
-   */
-  PRPackedBool                        mInvalidateAllThebesContent;
   /**
    * Indicates that the entire layer tree should be rerendered
    * during this paint.
