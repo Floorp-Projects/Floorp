@@ -621,6 +621,27 @@ FrameLayerBuilder::StoreNewDisplayItemData(DisplayItemDataEntry* aEntry,
   return PL_DHASH_REMOVE;
 }
 
+PRBool
+FrameLayerBuilder::HasRetainedLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey)
+{
+  void* propValue = aFrame->Properties().Get(DisplayItemDataProperty());
+  if (!propValue)
+    return PR_FALSE;
+
+  nsTArray<DisplayItemData>* array =
+    (reinterpret_cast<nsTArray<DisplayItemData>*>(&propValue));
+  for (PRUint32 i = 0; i < array->Length(); ++i) {
+    if (array->ElementAt(i).mDisplayItemKey == aDisplayItemKey) {
+      Layer* layer = array->ElementAt(i).mLayer;
+      if (layer->Manager()->GetUserData(&gLayerManagerUserData)) {
+        // All layer managers with our user data are retained layer managers
+        return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
 Layer*
 FrameLayerBuilder::GetOldLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey)
 {
@@ -1356,6 +1377,14 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer)
         nsIFrame::INVALIDATE_NO_THEBES_LAYERS |
         nsIFrame::INVALIDATE_EXCLUDE_CURRENT_PAINT);
   }
+}
+
+PRBool
+FrameLayerBuilder::NeedToInvalidateFixedDisplayItem(nsDisplayListBuilder* aBuilder,
+                                                    nsDisplayItem* aItem)
+{
+  return !aItem->IsFixedAndCoveringViewport(aBuilder) ||
+      !HasRetainedLayerFor(aItem->GetUnderlyingFrame(), aItem->GetPerFrameKey());
 }
 
 void
