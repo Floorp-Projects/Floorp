@@ -238,8 +238,7 @@ public:
                             nsDisplayItem* aItem,
                             const Clip& aClip,
                             nsIFrame* aContainerLayerFrame,
-                            LayerState aLayerState,
-                            LayerManager* aTempManager);
+                            LayerState aLayerState);
 
   /**
    * Given a frame and a display item key that uniquely identifies a
@@ -430,8 +429,8 @@ protected:
     }
 
     nsDisplayItem* mItem;
-    nsRefPtr<LayerManager> mTempLayerManager;
     Clip mClip;
+    PRPackedBool mInactiveLayer;
   };
 
   /**
