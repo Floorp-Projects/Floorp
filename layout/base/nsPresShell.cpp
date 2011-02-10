@@ -8178,6 +8178,7 @@ PresShell::Observe(nsISupports* aSubject,
 #ifdef ACCESSIBILITY
   if (!nsCRT::strcmp(aTopic, "a11y-init-or-shutdown")) {
     gIsAccessibilityActive = aData && *aData == '1';
+    return NS_OK;
   }
 #endif
   NS_WARNING("unrecognized topic in PresShell::Observe");
