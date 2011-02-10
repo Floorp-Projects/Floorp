@@ -137,8 +137,8 @@ var TestPilotUIBuilder = {
 
     /* Overlay Feedback XUL if we're in the beta update channel, Test Pilot XUL otherwise.
      * Once the overlay is complete, call buildFeedbackInterface() or buildTestPilotInterface(). */
+    let self = this;
     if (this.isBetaChannel()) {
-      let self = this;
       window.document.loadOverlay("chrome://testpilot/content/feedback-browser.xul",
                                   {observe: function(subject, topic, data) {
                                      if (topic == "xul-overlay-merged") {
