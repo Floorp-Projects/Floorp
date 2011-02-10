@@ -25,12 +25,17 @@ function sync_httpd_setup() {
   let upd = collectionsHelper.with_updated_collection;
   let collections = collectionsHelper.collections;
 
+  let catapultEngine = Engines.get("catapult");
+  let engines        = {catapult: {version: catapultEngine.version,
+                                   syncID:  catapultEngine.syncID}}
+
   // Track these using the collections helper, which keeps modified times
   // up-to-date.
-  let keysWBO     = new ServerWBO("keys");
   let clientsColl = new ServerCollection({}, true);
+  let keysWBO     = new ServerWBO("keys");
   let globalWBO   = new ServerWBO("global", {storageVersion: STORAGE_VERSION,
-                                             syncID: Utils.makeGUID()});
+                                             syncID: Utils.makeGUID(),
+                                             engines: engines});
 
   let handlers = {
     "/1.0/johndoe/info/collections":    collectionsHelper.handler,
@@ -61,7 +66,6 @@ function test_backoff500(next) {
   let server = sync_httpd_setup();
   setUp();
 
-  Engines.register(CatapultEngine);
   let engine = Engines.get("catapult");
   engine.enabled = true;
   engine.exception = {status: 500};
@@ -76,7 +80,6 @@ function test_backoff500(next) {
     Service.sync();
     do_check_true(Status.enforceBackoff);
   } finally {
-    Engines.unregister("catapult");
     Status.resetBackoff();
     Service.startOver();
   }
@@ -89,7 +92,6 @@ function test_backoff503(next) {
   setUp();
 
   const BACKOFF = 42;
-  Engines.register(CatapultEngine);
   let engine = Engines.get("catapult");
   engine.enabled = true;
   engine.exception = {status: 503,
@@ -111,7 +113,6 @@ function test_backoff503(next) {
     do_check_true(Status.enforceBackoff);
     do_check_eq(backoffInterval, BACKOFF);
   } finally {
-    Engines.unregister("catapult");
     Status.resetBackoff();
     Service.startOver();
   }
@@ -123,7 +124,6 @@ function test_overQuota(next) {
   let server = sync_httpd_setup();
   setUp();
 
-  Engines.register(CatapultEngine);
   let engine = Engines.get("catapult");
   engine.enabled = true;
   engine.exception = {status: 400,
@@ -139,7 +139,6 @@ function test_overQuota(next) {
 
     do_check_eq(Status.sync, OVER_QUOTA);
   } finally {
-    Engines.unregister("catapult");
     Status.resetSync();
     Service.startOver();
   }
@@ -196,6 +195,10 @@ function test_service_reset_ignorableErrorCount(next) {
   setUp();
   Service._ignorableErrorCount = 10;
 
+  // Disable the engine so that sync completes.
+  let engine = Engines.get("catapult");
+  engine.enabled = false;
+
   try {
     do_check_eq(Status.sync, SYNC_SUCCEEDED);
 
@@ -219,7 +222,6 @@ function test_engine_networkError(next) {
   setUp();
   Service._ignorableErrorCount = 0;
 
-  Engines.register(CatapultEngine);
   let engine = Engines.get("catapult");
   engine.enabled = true;
   engine.exception = Components.Exception("NS_ERROR_UNKNOWN_HOST",
@@ -236,7 +238,6 @@ function test_engine_networkError(next) {
     do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
     do_check_eq(Service._ignorableErrorCount, 1);
   } finally {
-    Engines.unregister("catapult");
     Status.resetSync();
     Service.startOver();
   }
@@ -249,9 +250,9 @@ function test_engine_applyFailed(next) {
   let server = sync_httpd_setup();
   setUp();
 
-  Engines.register(CatapultEngine);
   let engine = Engines.get("catapult");
   engine.enabled = true;
+  delete engine.exception;
   engine.sync = function sync() {
     Svc.Obs.notify("weave:engine:sync:apply-failed", {}, "steam");
   };
@@ -266,7 +267,6 @@ function test_engine_applyFailed(next) {
 
     do_check_eq(Status.engines["steam"], ENGINE_APPLY_FAIL);
   } finally {
-    Engines.unregister("catapult");
     Status.resetSync();
     Service.startOver();
   }
@@ -278,6 +278,9 @@ function run_test() {
     return;
 
   do_test_pending();
+
+  // Register engine once.
+  Engines.register(CatapultEngine);
   asyncChainTests(test_backoff500,
                   test_backoff503,
                   test_overQuota,
