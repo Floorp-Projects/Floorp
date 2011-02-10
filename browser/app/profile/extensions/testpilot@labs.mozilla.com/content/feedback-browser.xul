@@ -51,12 +51,22 @@
               class="menuitem-iconic"
               image="chrome://testpilot-os/skin/feedback-smile-16x16.png"
               label = "&testpilot.happy.label;"
-              oncommand="TestPilotWindowUtils.openFeedbackPage(true);"/>
+              oncommand="TestPilotWindowUtils.openFeedbackPage('happy');"/>
     <menuitem id="feedback-menu-sad-button"
               class="menuitem-iconic"
               image="chrome://testpilot-os/skin/feedback-frown-16x16.png"
               label = "&testpilot.sad.label;"
-              oncommand="TestPilotWindowUtils.openFeedbackPage(false);"/>
+              oncommand="TestPilotWindowUtils.openFeedbackPage('sad');"/>
+    <menuitem id="feedback-menu-broken-button"
+              class="menuitem-iconic"
+              image="chrome://testpilot-os/skin/feedback-broken-website.png"
+              label = "&testpilot.broken.label;"
+              oncommand="TestPilotWindowUtils.openFeedbackPage('broken');"/>
+    <menuitem id="feedback-menu-idea-button"
+              class="menuitem-iconic"
+              image="chrome://testpilot-os/skin/feedback-idea.png"
+              label = "&testpilot.idea.label;"
+              oncommand="TestPilotWindowUtils.openFeedbackPage('idea');"/>
     <menuseparator/>
     <menuitem id="feedback-menu-show-studies"
               label="&testpilot.allYourStudies.label;"
