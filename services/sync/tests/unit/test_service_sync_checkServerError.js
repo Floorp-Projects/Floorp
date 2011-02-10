@@ -21,19 +21,23 @@ CatapultEngine.prototype = {
 };
 
 function sync_httpd_setup() {
-  let handlers = {};
-  handlers["/1.0/johndoe/info/collections"]
-      = (new ServerWBO("collections", {})).handler(),
-  handlers["/1.0/johndoe/storage/clients"]
-      = (new ServerCollection()).handler();
-  handlers["/1.0/johndoe/storage/crypto"]
-      = (new ServerCollection()).handler();
-  handlers["/1.0/johndoe/storage/crypto/keys"]
-      = (new ServerWBO("keys", {})).handler();
-  handlers["/1.0/johndoe/storage/crypto/clients"]
-      = (new ServerWBO("clients", {})).handler();
-  handlers["/1.0/johndoe/storage/meta/global"]
-      = (new ServerWBO("global", {})).handler();
+  let collectionsHelper = track_collections_helper();
+  let upd = collectionsHelper.with_updated_collection;
+  let collections = collectionsHelper.collections;
+
+  // Track these using the collections helper, which keeps modified times
+  // up-to-date.
+  let keysWBO     = new ServerWBO("keys");
+  let clientsColl = new ServerCollection({}, true);
+  let globalWBO   = new ServerWBO("global", {storageVersion: STORAGE_VERSION,
+                                             syncID: Utils.makeGUID()});
+
+  let handlers = {
+    "/1.0/johndoe/info/collections":    collectionsHelper.handler,
+    "/1.0/johndoe/storage/meta/global": upd("meta",    globalWBO.handler()),
+    "/1.0/johndoe/storage/clients":     upd("clients", clientsColl.handler()),
+    "/1.0/johndoe/storage/crypto/keys": upd("crypto",  keysWBO.handler())
+  }
   return httpd_setup(handlers);
 }
 
@@ -43,6 +47,13 @@ function setUp() {
   Service.passphrase = "aabcdeabcdeabcdeabcdeabcde";
   Service.clusterURL = "http://localhost:8080/";
   new FakeCryptoService();
+}
+
+function generateAndUploadKeys() {
+  CollectionKeys.generateNewKeys();
+  let serverKeys = CollectionKeys.asWBO("crypto", "keys");
+  serverKeys.encrypt(Weave.Service.syncKeyBundle);
+  return serverKeys.upload("http://localhost:8080/1.0/johndoe/storage/crypto/keys").success;
 }
 
 function test_backoff500(next) {
@@ -57,11 +68,10 @@ function test_backoff500(next) {
 
   try {
     do_check_false(Status.enforceBackoff);
-    
+
     // Forcibly create and upload keys here -- otherwise we don't get to the 500!
-    CollectionKeys.generateNewKeys();
-    do_check_true(CollectionKeys.asWBO().upload("http://localhost:8080/1.0/johndoe/storage/crypto/keys").success);
-    
+    do_check_true(generateAndUploadKeys());
+
     Service.login();
     Service.sync();
     do_check_true(Status.enforceBackoff);
@@ -93,6 +103,8 @@ function test_backoff503(next) {
   try {
     do_check_false(Status.enforceBackoff);
 
+    do_check_true(generateAndUploadKeys());
+
     Service.login();
     Service.sync();
 
@@ -119,6 +131,8 @@ function test_overQuota(next) {
 
   try {
     do_check_eq(Status.sync, SYNC_SUCCEEDED);
+
+    do_check_true(generateAndUploadKeys());
 
     Service.login();
     Service.sync();
@@ -185,6 +199,8 @@ function test_service_reset_ignorableErrorCount(next) {
   try {
     do_check_eq(Status.sync, SYNC_SUCCEEDED);
 
+    do_check_true(generateAndUploadKeys());
+
     Service.login();
     Service.sync();
 
@@ -211,6 +227,8 @@ function test_engine_networkError(next) {
 
   try {
     do_check_eq(Status.sync, SYNC_SUCCEEDED);
+
+    do_check_true(generateAndUploadKeys());
 
     Service.login();
     Service.sync();
@@ -240,6 +258,8 @@ function test_engine_applyFailed(next) {
 
   try {
     do_check_eq(Status.engines["steam"], undefined);
+
+    do_check_true(generateAndUploadKeys());
 
     Service.login();
     Service.sync();
