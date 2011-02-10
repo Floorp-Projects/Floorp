@@ -1176,21 +1176,19 @@ ContainerState::FindThebesLayerFor(nsDisplayItem* aItem,
   return layer.forget();
 }
 
-static already_AddRefed<BasicLayerManager>
-BuildTempManagerForInactiveLayer(nsDisplayListBuilder* aBuilder,
-                                 nsDisplayItem* aItem)
+static void
+PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
+                   nsDisplayItem* aItem,
+                   gfxContext* aContext)
 {
-  // This item has an inactive layer. We will render it to a ThebesLayer
-  // using a temporary BasicLayerManager. Set up the layer
-  // manager now so that if we need to modify the retained layer
-  // tree during this process, those modifications will happen
-  // during the construction phase for the retained layer tree.
+  // This item has an inactive layer. Render it to a ThebesLayer
+  // using a temporary BasicLayerManager.
   nsRefPtr<BasicLayerManager> tempManager = new BasicLayerManager();
-  tempManager->BeginTransaction();
+  tempManager->BeginTransactionWithTarget(aContext);
   nsRefPtr<Layer> layer = aItem->BuildLayer(aBuilder, tempManager);
   if (!layer) {
     tempManager->EndTransaction(nsnull, nsnull);
-    return nsnull;
+    return;
   }
   PRInt32 appUnitsPerDevPixel = AppUnitsPerDevPixel(aItem);
   nsIntRect itemVisibleRect =
@@ -1198,9 +1196,7 @@ BuildTempManagerForInactiveLayer(nsDisplayListBuilder* aBuilder,
   SetVisibleRectForLayer(layer, itemVisibleRect);
 
   tempManager->SetRoot(layer);
-  // No painting should occur yet, since there is no target context.
-  tempManager->EndTransaction(nsnull, nsnull);
-  return tempManager.forget();
+  tempManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, aBuilder);
 }
 
 /*
@@ -1301,13 +1297,6 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       mNewChildLayers.AppendElement(ownLayer);
       mBuilder->LayerBuilder()->AddLayerDisplayItem(ownLayer, item);
     } else {
-      nsRefPtr<BasicLayerManager> tempLayerManager;
-      if (layerState != LAYER_NONE) {
-        tempLayerManager = BuildTempManagerForInactiveLayer(mBuilder, item);
-        if (!tempLayerManager)
-          continue;
-      }
-
       nsIFrame* f = item->GetUnderlyingFrame();
       nsIFrame* activeScrolledRoot =
         nsLayoutUtils::GetActiveScrolledRootFor(f, mBuilder->ReferenceFrame());
@@ -1331,7 +1320,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
 
       mBuilder->LayerBuilder()->
         AddThebesDisplayItem(thebesLayer, item, aClip, mContainerFrame,
-                             layerState, tempLayerManager);
+                             layerState);
     }
   }
 }
@@ -1392,8 +1381,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
                                         nsDisplayItem* aItem,
                                         const Clip& aClip,
                                         nsIFrame* aContainerLayerFrame,
-                                        LayerState aLayerState,
-                                        LayerManager* aTempManager)
+                                        LayerState aLayerState)
 {
   AddLayerDisplayItem(aLayer, aItem);
 
@@ -1403,7 +1391,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
     NS_ASSERTION(aItem->GetUnderlyingFrame(), "Must have frame");
     ClippedDisplayItem* cdi =
       entry->mItems.AppendElement(ClippedDisplayItem(aItem, aClip));
-    cdi->mTempLayerManager = aTempManager;
+    cdi->mInactiveLayer = aLayerState != LAYER_NONE;
   }
 }
 
@@ -1878,11 +1866,8 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
       }
     }
 
-    if (cdi->mTempLayerManager) {
-      // This item has an inactive layer. Render it to the ThebesLayer
-      // using the temporary BasicLayerManager.
-      cdi->mTempLayerManager->BeginTransactionWithTarget(aContext);
-      cdi->mTempLayerManager->EndTransaction(DrawThebesLayer, builder);
+    if (cdi->mInactiveLayer) {
+      PaintInactiveLayer(builder, cdi->mItem, aContext);
     } else {
       cdi->mItem->Paint(builder, rc);
     }
