@@ -16,7 +16,8 @@ function onScoreUpdated(callback) {
 
 function run_test() {
   Engines.register(HistoryEngine);
-  let tracker = Engines.get("history")._tracker;
+  let engine = Engines.get("history");
+  let tracker = engine._tracker;
 
   _("Verify we've got an empty tracker to work with.");
   do_check_eq([id for (id in tracker.changedIDs)].length, 0);
@@ -57,6 +58,20 @@ function run_test() {
     });
     Svc.Obs.notify("weave:engine:start-tracking");
     addVisit();
+
+  }, function (next) {
+
+    _("Deletions are tracked.");
+    let uri = Utils.makeURI("http://getfirefox.com/0");
+    let guid = engine._store.GUIDForUri(uri);
+    do_check_false(guid in tracker.changedIDs);
+
+    onScoreUpdated(function() {
+      do_check_true(guid in tracker.changedIDs);
+      do_check_eq([id for (id in tracker.changedIDs)].length, 3);
+      next();
+    });
+    Svc.History.removePage(uri);
 
   }, function (next) {
 
