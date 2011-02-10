@@ -61,22 +61,82 @@ var FeedbackManager = {
     return this._sadUrl;
   },
 
+  _brokenUrl: null,
+  get brokenUrl() {
+    if (!this._brokenUrl) {
+      this._brokenUrl = Application.prefs.getValue("extensions.input.brokenURL", "");
+    }
+    return this._brokenUrl;
+  },
+
+  _ideaUrl: null,
+  get ideaUrl() {
+    if (!this._ideaUrl) {
+      this._ideaUrl = Application.prefs.getValue("extensions.input.ideaURL", "");
+    }
+    return this._ideaUrl;
+  },
+
+  getFeedbackUrl: function FeedbackManager_getFeedbackUrl(menuItemChosen) {
+    switch(menuItemChosen) {
+    case "happy":
+      return this.happyUrl;
+      break;
+    case "sad":
+      return this.sadUrl;
+      break;
+    case "broken":
+      return this.brokenUrl;
+      break;
+    case "idea":
+      return this.ideaUrl;
+      break;
+    default:
+      return null;
+      break;
+    }
+  },
+
+  isInputUrl: function FeedbackManager_isInputUrl(url) {
+    /* Return true if the URL belongs to one of the pages of the Input website.  We can
+     * identify these by looking for a domain of input.mozilla.com and a page name ending
+     * in 'feedback', 'happy', or 'sad'.
+     */
+    let ioService = Cc["@mozilla.org/network/io-service;1"]
+      .getService(Ci.nsIIOService);
+    let uri = ioService.newURI(url, null, null);
+    let path = uri.path;
+    if (uri.host == "input.mozilla.com") {
+      if (path.indexOf("feedback" > -1) || path.indexOf("happy" > -1) || path.indexOf("sad" > -1)) {
+        return true;
+      }
+    }
+    return false;
+  },
+
   setCurrUrl: function FeedbackManager_setCurrUrl(url) {
     this._lastVisitedUrl = url;
   },
 
   fillInFeedbackPage: function FeedbackManager_fifp(url, window) {
     /* If the user activated the happy or sad feedback feature, a page
-     * gets loaded containing an input field id = id_url
-     * Fill this field in with the referring URL.
+     * gets loaded containing input fields - either a single one containing id = "id_url",
+     * or (potentially multiple) with class = "url".  Prefill all matching fields in with
+     * the referring URL.
      */
-    if (url == this.happyUrl || url == this.sadUrl) {
-      let tabbrowser = window.getBrowser();
-      let currentBrowser = tabbrowser.selectedBrowser;
-      let document = currentBrowser.contentDocument;
-      let field = document.getElementById("id_url");
-      if (field && this._lastVisitedUrl) {
-        field.value = this._lastVisitedUrl;
+    if (this.isInputUrl(url)) {
+      if (this._lastVisitedUrl) {
+        let tabbrowser = window.getBrowser();
+        let currentBrowser = tabbrowser.selectedBrowser;
+        let document = currentBrowser.contentDocument;
+        let fields = document.getElementsByClassName("url");
+        for (let i = 0; i < fields.length; i++) {
+          fields[i].value = this._lastVisitedUrl;
+        }
+        let field = document.getElementById("id_url");
+        if (field) {
+           field.value = this._lastVisitedUrl;
+        }
       }
     }
   }

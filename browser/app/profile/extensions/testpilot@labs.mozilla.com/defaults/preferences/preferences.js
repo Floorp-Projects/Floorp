@@ -21,3 +21,5 @@ pref("extensions.testpilot.homepageURL", "https://testpilot.mozillalabs.com/");
 
 pref("extensions.input.happyURL", "http://input.mozilla.com/happy");
 pref("extensions.input.sadURL", "http://input.mozilla.com/sad");
+pref("extensions.input.brokenURL", "http://input.mozilla.com/feedback#broken");
+pref("extensions.input.ideaURL", "http://input.mozilla.com/feedback#idea");
