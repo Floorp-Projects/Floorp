@@ -702,6 +702,8 @@ CallJSNative(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
     return ok;
 }
 
+extern JSBool CallOrConstructBoundFunction(JSContext *, uintN, js::Value *);
+
 STATIC_PRECONDITION(ubound(vp) >= argc + 2)
 JS_ALWAYS_INLINE bool
 CallJSNativeConstructor(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
@@ -724,10 +726,13 @@ CallJSNativeConstructor(JSContext *cx, js::Native native, uintN argc, js::Value 
      * Proxies are exceptions to both rules: they can return primitives and
      * they allow content to return the callee.
      *
+     * CallOrConstructBoundFunction is an exception as well because we
+     * might have used bind on a proxy function.
+     *
      * (new Object(Object)) returns the callee.
      */
     extern JSBool proxy_Construct(JSContext *, uintN, Value *);
-    JS_ASSERT_IF(native != proxy_Construct &&
+    JS_ASSERT_IF(native != proxy_Construct && native != js::CallOrConstructBoundFunction &&
                  (!callee->isFunction() || callee->getFunctionPrivate()->u.n.clasp != &js_ObjectClass),
                  !vp->isPrimitive() && callee != &vp[0].toObject());
 

@@ -2198,8 +2198,12 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-static JSBool
+namespace js {
+
+JSBool
 CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp);
+
+}
 
 inline bool
 JSObject::initBoundFunction(JSContext *cx, const Value &thisArg,
@@ -2259,8 +2263,10 @@ JSObject::getBoundFunctionArguments(uintN &argslen) const
     return getSlots() + FUN_CLASS_RESERVED_SLOTS;
 }
 
+namespace js {
+
 /* ES5 15.3.4.5.1 and 15.3.4.5.2. */
-static JSBool
+JSBool
 CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj = &vp[0].toObject();
@@ -2305,6 +2311,8 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
 
     *vp = args.rval();
     return true;
+}
+
 }
 
 /* ES5 15.3.4.5. */
