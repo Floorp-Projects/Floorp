@@ -7307,12 +7307,29 @@ nsDocShell::RestoreFromHistory()
         }
     }
 
+    // The FinishRestore call below can kill these, null them out so we don't
+    // have invalid pointer lying around.
+    newRootView = rootViewSibling = rootViewParent = nsnull;
+    newVM = nsnull;
+
     // Simulate the completion of the load.
     nsDocShell::FinishRestore();
 
     // Restart plugins, and paint the content.
-    if (shell)
+    if (shell) {
         shell->Thaw();
+
+        newVM = shell->GetViewManager();
+        if (newVM) {
+            // When we insert the root view above the resulting invalidate is
+            // dropped because painting is suppressed in the presshell until we
+            // call Thaw. So we issue the invalidate here.
+            newVM->GetRootView(newRootView);
+            if (newRootView) {
+                newVM->UpdateView(newRootView, NS_VMREFRESH_NO_SYNC);
+            }
+        }
+    }
 
     return privWin->FireDelayedDOMEvents();
 }
