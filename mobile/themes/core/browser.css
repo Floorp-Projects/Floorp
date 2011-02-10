@@ -877,7 +877,11 @@ autocompleteresult.noresults > .autocomplete-item-container {
   -moz-box-align: start;
 }
 
-#tabs > .tabs-list {
+#tabs > scrollbox {
+  max-width: 350px;
+}
+
+#tabs .tabs-list {
   display: block;
   -moz-column-width: 121px;
   -moz-column-gap: 0;
@@ -895,10 +899,6 @@ autocompleteresult.noresults > .autocomplete-item-container {
 }
 
 documenttab {
-  /* display:block allow us to change the line-height, it won't work otherwise */
-  display: block;
-  line-height: 0;
-
   -moz-margin-start: @margin_xnormal@;
   margin-bottom: @documenttab_margin_bottom@;
   width: 121px;
@@ -909,6 +909,7 @@ documenttab {
   background-clip: padding-box;
   border: @border_width_tiny@ solid rgba(0,0,0,0.1);
   border-bottom-width: @border_width_small@;
+  line-height: 0;
 }
 
 documenttab[selected="true"] {
