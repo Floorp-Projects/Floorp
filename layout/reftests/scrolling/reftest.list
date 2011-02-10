@@ -1,4 +1,5 @@
 HTTP == fixed-1.html fixed-1.html?ref
+HTTP == fixed-opacity-1.html fixed-opacity-1.html?ref
 HTTP == fixed-text-1.html fixed-text-1.html?ref
 HTTP == opacity-mixed-scrolling-1.html opacity-mixed-scrolling-1.html?ref
 random-if(cocoaWidget) HTTP == opacity-mixed-scrolling-2.html opacity-mixed-scrolling-2.html?ref # see bug 625357
