@@ -4911,6 +4911,16 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
       if (rootPresContext) {
         rootPresContext->UpdatePluginGeometry();
       }
+#ifdef DEBUG
+      if (!mIsDestroying) {
+        nsIView* rootView;
+        if (NS_SUCCEEDED(mViewManager->GetRootView(rootView)) && rootView) {
+          nsRect bounds = rootView->GetBounds();
+          NS_ASSERTION(bounds.Size() == mPresContext->GetVisibleArea().Size(),
+                       "root view / pres context visible size mismatch");
+        }
+      }
+#endif
     }
 
     PRUint32 updateFlags = NS_VMREFRESH_NO_SYNC;
