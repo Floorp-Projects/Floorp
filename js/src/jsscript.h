@@ -649,7 +649,7 @@ js_SweepScriptFilenames(JSRuntime *rt);
 extern JS_FRIEND_API(void)
 js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun);
 
-extern JS_FRIEND_API(void)
+extern void
 js_CallDestroyScriptHook(JSContext *cx, JSScript *script);
 
 /*
