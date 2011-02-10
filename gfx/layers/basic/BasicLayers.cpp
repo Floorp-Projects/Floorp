@@ -1271,9 +1271,7 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
 
   mTransactionIncomplete = false;
 
-  if (mTarget) {
-    NS_ASSERTION(mRoot, "Root not set");
-
+  if (mTarget && mRoot) {
     nsRefPtr<gfxContext> finalTarget = mTarget;
     gfxPoint cachedSurfaceOffset;
 
