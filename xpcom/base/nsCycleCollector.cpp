@@ -2881,6 +2881,12 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
 
         mScanInProgress = PR_FALSE;
 
+        for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
+            if (mRuntimes[i]) {
+                mRuntimes[i]->FinishTraverse();
+            }
+        }
+
         PRBool describeExtraRefcounts = PR_FALSE;
         PRBool findCycleRoots = PR_FALSE;
         {
