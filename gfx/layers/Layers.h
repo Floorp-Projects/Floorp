@@ -348,7 +348,8 @@ public:
 
   /**
    * CONSTRUCTION PHASE ONLY
-   * Set the root layer.
+   * Set the root layer. The root layer is initially null. If there is
+   * no root layer, EndTransaction won't draw anything.
    */
   virtual void SetRoot(Layer* aLayer) = 0;
   /**

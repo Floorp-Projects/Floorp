@@ -286,16 +286,19 @@ void
 LayerManagerD3D10::EndTransaction(DrawThebesLayerCallback aCallback,
                                   void* aCallbackData)
 {
-  mCurrentCallbackInfo.Callback = aCallback;
-  mCurrentCallbackInfo.CallbackData = aCallbackData;
+  if (mRoot) {
+    mCurrentCallbackInfo.Callback = aCallback;
+    mCurrentCallbackInfo.CallbackData = aCallbackData;
 
-  // The results of our drawing always go directly into a pixel buffer,
-  // so we don't need to pass any global transform here.
-  mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
+    // The results of our drawing always go directly into a pixel buffer,
+    // so we don't need to pass any global transform here.
+    mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
 
-  Render();
-  mCurrentCallbackInfo.Callback = nsnull;
-  mCurrentCallbackInfo.CallbackData = nsnull;
+    Render();
+    mCurrentCallbackInfo.Callback = nsnull;
+    mCurrentCallbackInfo.CallbackData = nsnull;
+  }
+
   mTarget = nsnull;
 }
 
@@ -499,9 +502,7 @@ LayerManagerD3D10::VerifyBufferSize()
 void
 LayerManagerD3D10::Render()
 {
-  if (mRoot) {
-    static_cast<LayerD3D10*>(mRoot->ImplData())->Validate();
-  }
+  static_cast<LayerD3D10*>(mRoot->ImplData())->Validate();
 
   SetupPipeline();
 
@@ -511,23 +512,21 @@ LayerManagerD3D10::Render()
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
 
-  if (mRoot) {
-    const nsIntRect *clipRect = mRoot->GetClipRect();
-    D3D10_RECT r;
-    if (clipRect) {
-      r.left = (LONG)clipRect->x;
-      r.top = (LONG)clipRect->y;
-      r.right = (LONG)(clipRect->x + clipRect->width);
-      r.bottom = (LONG)(clipRect->y + clipRect->height);
-    } else {
-      r.left = r.top = 0;
-      r.right = rect.width;
-      r.bottom = rect.height;
-    }
-    device()->RSSetScissorRects(1, &r);
-
-    static_cast<LayerD3D10*>(mRoot->ImplData())->RenderLayer();
+  const nsIntRect *clipRect = mRoot->GetClipRect();
+  D3D10_RECT r;
+  if (clipRect) {
+    r.left = (LONG)clipRect->x;
+    r.top = (LONG)clipRect->y;
+    r.right = (LONG)(clipRect->x + clipRect->width);
+    r.bottom = (LONG)(clipRect->y + clipRect->height);
+  } else {
+    r.left = r.top = 0;
+    r.right = rect.width;
+    r.bottom = rect.height;
   }
+  device()->RSSetScissorRects(1, &r);
+
+  static_cast<LayerD3D10*>(mRoot->ImplData())->RenderLayer();
 
   if (mTarget) {
     PaintToTarget();
