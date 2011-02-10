@@ -669,8 +669,12 @@ HistoryTracker.prototype = {
     if (this.ignoreAll)
       return;
     this._log.trace("onVisit: " + uri.spec);
-    if (this.addChangedID(this._GUIDForUri(uri, true)))
-      this._upScore();
+    let self = this;
+    Utils.delay(function() {
+      if (self.addChangedID(self._GUIDForUri(uri, true))) {
+        self._upScore();
+      }
+    }, 0);
   },
   onDeleteVisits: function onDeleteVisits() {
   },
@@ -680,8 +684,12 @@ HistoryTracker.prototype = {
     if (this.ignoreAll)
       return;
     this._log.trace("onBeforeDeleteURI: " + uri.spec);
-    if (this.addChangedID(this._GUIDForUri(uri, true)))
-      this._upScore();
+    let self = this;
+    Utils.delay(function() {
+      if (self.addChangedID(self._GUIDForUri(uri, true))) {
+        self._upScore();
+      }
+    }, 0);
   },
   onDeleteURI: function HT_onDeleteURI(uri) {
   },
