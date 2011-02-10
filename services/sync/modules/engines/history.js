@@ -685,11 +685,9 @@ HistoryTracker.prototype = {
       return;
     this._log.trace("onBeforeDeleteURI: " + uri.spec);
     let self = this;
-    Utils.delay(function() {
-      if (self.addChangedID(self._GUIDForUri(uri, true))) {
-        self._upScore();
-      }
-    }, 0);
+    if (this.addChangedID(this._GUIDForUri(uri, true))) {
+      this._upScore();
+    }
   },
   onDeleteURI: function HT_onDeleteURI(uri) {
   },
