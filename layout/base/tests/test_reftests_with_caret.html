@@ -51,7 +51,7 @@ function remotePageLoaded() {
   setTimeout(function(){doSnapShot(iframe);}, 0)
 };
 
-const MAX_ITERATIONS = 10;
+const MAX_ITERATIONS = 1000;
 
 function createIframe(url,next) {
   var iframe = document.createElement("iframe");
@@ -118,7 +118,9 @@ var tests = [
     [ 'bug613433-1.html' , 'bug613433-ref.html' ] ,
     [ 'bug613433-2.html' , 'bug613433-ref.html' ] ,
     [ 'bug613433-3.html' , 'bug613433-ref.html' ] ,
-    [ 'bug613807-1.html' , 'bug613807-1-ref.html' ]
+    [ 'bug613807-1.html' , 'bug613807-1-ref.html' ] ,
+    [ 'bug632215-1.html' , 'bug632215-ref.html'   ] ,
+    [ 'bug632215-2.html' , 'bug632215-ref.html'   ]
 ];
 var testIndex = 0;
 
