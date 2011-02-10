@@ -1902,17 +1902,17 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                        scrollParts, createLayersForScrollbars);
   }
 
-  // Place the resizer in the display list in our Content() list above
-  // scrolled content in the Content() list.
-  // This ensures that the resizer appears above the content and the mouse can
-  // still target the resizer even when scrollbars are hidden.
-  if (HasResizer() && mResizerBox) {
+  if (HasResizer()) {
     rv = mOuter->BuildDisplayListForChild(aBuilder, mResizerBox, aDirtyRect, scrollParts,
                                           nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
     NS_ENSURE_SUCCESS(rv, rv);
     // DISPLAY_CHILD_FORCE_STACKING_CONTEXT puts everything into the
     // PositionedDescendants list.
-    ::AppendToTop(aBuilder, aLists.Content(),
+    // The resizer is positioned and has maximum z-index; we put it in
+    // PositionedDescendants() for the root frame to ensure that it appears
+    // above all content, bug 631337.
+    ::AppendToTop(aBuilder,
+                  mIsRoot ? aLists.PositionedDescendants() : aLists.Content(),
                   scrollParts.PositionedDescendants(), mResizerBox,
                   createLayersForScrollbars);
   }
