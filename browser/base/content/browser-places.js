@@ -477,6 +477,11 @@ var PlacesCommandHook = {
 
 // View for the history menu.
 function HistoryMenu(aPopupShowingEvent) {
+  // Workaround for Bug 610187.  The sidebar does not include all the Places
+  // views definitions, and we don't need them there.
+  // Defining the prototype inheritance in the prototype itself would cause
+  // browser.js to halt on "PlacesMenu is not defined" error.
+  this.__proto__.__proto__ = PlacesMenu.prototype;
   XPCOMUtils.defineLazyServiceGetter(this, "_ss",
                                      "@mozilla.org/browser/sessionstore;1",
                                      "nsISessionStore");
@@ -485,8 +490,6 @@ function HistoryMenu(aPopupShowingEvent) {
 }
 
 HistoryMenu.prototype = {
-  __proto__: PlacesMenu.prototype,
-
   toggleRecentlyClosedTabs: function HM_toggleRecentlyClosedTabs() {
     // enable/disable the Recently Closed Tabs sub menu
     var undoMenu = this._rootElt.getElementsByClassName("recentlyClosedTabsMenu")[0];
