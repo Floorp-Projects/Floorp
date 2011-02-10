@@ -8571,9 +8571,13 @@ let AddonsMgrListener = {
     this.lastAddonBarCount = this.getAddonBarItemCount();
   },
   onUninstalled: function(aAddon) {
-    if (this.lastAddonBarCount > 0 && this.getAddonBarItemCount() == 0)
+    if (this.getAddonBarItemCount() == 0)
       setToolbarVisibility(this.addonBar, false);
-  }
+  },
+  onEnabling: function(aAddon) this.onInstalling(),
+  onEnabled: function(aAddon) this.onInstalled(),
+  onDisabling: function(aAddon) this.onUninstalling(),
+  onDisabled: function(aAddon) this.onUninstalled(),
 };
 
 function toggleAddonBar() {

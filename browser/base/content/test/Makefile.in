@@ -242,6 +242,7 @@ _BROWSER_FILES = \
                  browser_contentAreaClick.js \
                  browser_addon_bar_close_button.js \
                  browser_addon_bar_shortcut.js \
+                 browser_addon_bar_aomlistener.js \
                  $(NULL)
 
 # compartment-disabled
