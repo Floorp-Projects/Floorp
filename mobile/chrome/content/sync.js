@@ -67,7 +67,7 @@ let WeaveGlue = {
           this._elements.device.value = Services.prefs.getCharPref("services.sync.client.name");
         } catch(e) {}
       }
-    } else {
+    } else if (Weave.Status.login != Weave.LOGIN_FAILED_NO_USERNAME) {
       this.loadSetupData();
     }
   },
