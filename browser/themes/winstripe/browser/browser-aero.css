@@ -126,6 +126,8 @@
     background-color: transparent !important;
     color: black;
     text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
+    border-left-style: none !important;
+    border-right-style: none !important;
   }
   #toolbar-menubar:not(:-moz-lwtheme),
   #navigator-toolbox[tabsontop=false] > #nav-bar:not(:-moz-lwtheme) {
@@ -133,19 +135,23 @@
   }
 
   /* Vertical toolbar border */
-  #main-window[sizemode="normal"] #navigator-toolbox:not([inFullscreen="true"])::after,
-  #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not([inFullscreen="true"]):not(:-moz-lwtheme) {
+  #main-window[sizemode=normal] #navigator-toolbox:not([inFullscreen])::after,
+  #main-window[sizemode=normal] #navigator-toolbox[tabsontop=true] > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not([inFullscreen]),
+  #main-window[sizemode=normal] #navigator-toolbox[tabsontop=false] > toolbar:not(#toolbar-menubar):not(#nav-bar):not([inFullScreen]) {
     border-left: 1px solid @toolbarShadowColor@;
     border-right: 1px solid @toolbarShadowColor@;
     background-clip: padding-box;
   }
-  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #browser-border-start,
-  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #browser-border-end {
+  #main-window[sizemode=normal] #navigator-toolbox > toolbar:-moz-lwtheme {
+    border-color: transparent !important;
+  }
+  #main-window[sizemode=normal]:not([inFullscreen]) #browser-border-start,
+  #main-window[sizemode=normal]:not([inFullscreen]) #browser-border-end {
     display: -moz-box;
     background-color: @toolbarShadowColor@;
     width: 1px;
   }
-  #main-window[sizemode="normal"] #browser-bottombox {
+  #main-window[sizemode=normal] #browser-bottombox {
     border: 1px solid @toolbarShadowColor@;
     border-top-style: none;
   }
@@ -179,9 +185,13 @@
     background-image: none !important;
   }
 
-  #navigator-toolbox:not([tabsontop="true"]) > #PersonalToolbar {
+  #navigator-toolbox[tabsontop=false] > #PersonalToolbar {
     padding-top: 0 !important;
-    margin-top: 3px;
+    margin-top: 2px;
+    border-top: 1px solid @toolbarShadowColor@;
+  }
+  #navigator-toolbox[tabsontop=false] > #PersonalToolbar:not(:-moz-lwtheme) {
+    background-image: -moz-linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
   }
 
   #main-window[sizemode="normal"] #TabsToolbar[tabsontop="true"]:not([inFullscreen="true"]):not(:-moz-lwtheme) {
