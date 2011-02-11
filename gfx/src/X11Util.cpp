@@ -46,10 +46,12 @@ ScopedXErrorHandler::ErrorEvent* ScopedXErrorHandler::sXErrorPtr;
 int
 ScopedXErrorHandler::ErrorHandler(Display *, XErrorEvent *ev)
 {
-    sXErrorPtr->mError = *ev;
+    // only record the error if no error was previously recorded.
+    // this means that in case of multiple errors, it's the first error that we report.
+    if (!sXErrorPtr->mError.error_code)
+      sXErrorPtr->mError = *ev;
     return 0;
 }
-
 
 ScopedXErrorHandler::ScopedXErrorHandler()
 {
