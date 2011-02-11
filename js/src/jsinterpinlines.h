@@ -585,8 +585,8 @@ InvokeSessionGuard::invoke(JSContext *cx) const
     formals_[-2] = savedCallee_;
     formals_[-1] = savedThis_;
 
-    void *code;
 #ifdef JS_METHODJIT
+    void *code;
     if (!optimized() || !(code = script_->getJIT(false /* !constructing */)->invokeEntry))
 #else
     if (!optimized())
