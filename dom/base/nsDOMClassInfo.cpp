@@ -1466,6 +1466,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBCursor, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(IDBCursorWithValue, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBKeyRange, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBIndex, nsDOMGenericSH,
@@ -4123,6 +4125,11 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(IDBCursor, nsIIDBCursor)
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBCursor)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(IDBCursorWithValue, nsIIDBCursorWithValue)
+    DOM_CLASSINFO_MAP_ENTRY(nsIIDBCursor)
+    DOM_CLASSINFO_MAP_ENTRY(nsIIDBCursorWithValue)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(IDBKeyRange, nsIIDBKeyRange)
