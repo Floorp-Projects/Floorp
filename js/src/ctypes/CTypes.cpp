@@ -3284,7 +3284,7 @@ PointerType::ConstructData(JSContext* cx,
     JSObject* baseObj = PointerType::GetBaseType(cx, obj);
     if (CType::GetTypeCode(cx, baseObj) == TYPE_function &&
         JSVAL_IS_OBJECT(argv[0]) &&
-        JS_ObjectIsCallable(cx, JSVAL_TO_OBJECT(argv[0]))) {
+        JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(argv[0]))) {
       // Construct a FunctionType.ptr from a JS function, and allow an
       // optional 'this' argument.
       JSObject* thisObj = NULL;
