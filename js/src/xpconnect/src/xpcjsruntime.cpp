@@ -1467,8 +1467,9 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
 
     JS_SetNativeStackQuota(cx, 128 * sizeof(size_t) * 1024);
     PRInt64 totalMemory = PR_GetPhysicalMemorySize();
-    JS_SetScriptStackQuota(cx, PR_MAX(25 * sizeof(size_t) * 1024 * 1024,
-                                      totalMemory / 4));
+    size_t quota = PR_MIN(PR_UINT32_MAX, PR_MAX(25 * sizeof(size_t) * 1024 * 1024,
+                                                totalMemory / 4));
+    JS_SetScriptStackQuota(cx, quota);
 
     // we want to mark the global object ourselves since we use a different color
     JS_ToggleOptions(cx, JSOPTION_UNROOTED_GLOBAL);
