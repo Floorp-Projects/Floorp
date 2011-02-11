@@ -144,6 +144,9 @@ _TEST_FILES =	\
 		test_flush_on_paint.html \
 		test_mozPaintCount.html \
 		test_scroll_selection_into_view.html \
+		test_bug583889.html \
+		bug583889_inner1.html \
+		bug583889_inner2.html \
 		test_bug582771.html \
 		test_bug603550.html \
 		test_bug629838.html \
