@@ -4349,10 +4349,3 @@ int mozilla::GetWebGLTexelFormat(GLenum format, GLenum type)
         }
     }
 }
-
-NS_IMETHODIMP
-WebGLContext::GetExtension(const nsAString& aName, nsISupports **retval)
-{
-    *retval = nsnull;
-    return NS_OK;
-}
