@@ -4224,10 +4224,10 @@ mjit::Compiler::iterEnd()
     Address flagAddr(T1, offsetof(NativeIterator, flags));
     masm.loadPtr(flagAddr, T2);
 
-    /* Test for (flags == ENUMERATE | ACTIVE). */
-    Jump notEnumerate = masm.branch32(Assembler::NotEqual, T2,
-                                      Imm32(JSITER_ENUMERATE | JSITER_ACTIVE));
-    stubcc.linkExit(notEnumerate, Uses(1));
+    /* Test for (flags & REUSABLE). */
+    Jump notReusable = masm.branchTest32(Assembler::Zero, T2,
+                                         Imm32(JSITER_REUSABLE));
+    stubcc.linkExit(notReusable, Uses(1));
 
     /* Clear active bit. */
     masm.and32(Imm32(~JSITER_ACTIVE), T2);

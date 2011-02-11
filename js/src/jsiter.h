@@ -64,6 +64,7 @@
  * Not serialized by XDR.
  */
 #define JSITER_ACTIVE     0x1000
+#define JSITER_REUSABLE   0x2000
 
 namespace js {
 
