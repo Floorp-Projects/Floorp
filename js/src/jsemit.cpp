@@ -6984,10 +6984,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
                 if (obj) {
                     JS_ASSERT(!obj->inDictionaryMode());
-                    JSProperty *prop = NULL;
-                    if (!js_DefineNativeProperty(cx, obj,
-                                                 ATOM_TO_JSID(pn3->pn_atom), UndefinedValue(), NULL, NULL,
-                                                 JSPROP_ENUMERATE, 0, 0, &prop, 0)) {
+                    if (!js_DefineNativeProperty(cx, obj, ATOM_TO_JSID(pn3->pn_atom),
+                                                 UndefinedValue(), NULL, NULL,
+                                                 JSPROP_ENUMERATE, 0, 0, NULL)) {
                         return JS_FALSE;
                     }
                     if (obj->inDictionaryMode())
