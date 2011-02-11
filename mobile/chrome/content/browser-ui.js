@@ -510,6 +510,7 @@ var BrowserUI = {
 #endif
 
       Services.obs.addObserver(BrowserSearch, "browser-search-engine-modified", false);
+      messageManager.addMessageListener("Browser:MozApplicationManifest", OfflineApps);
 
       // Init helpers
       BadgeHandlers.register(BrowserUI._edit.popup);
@@ -539,6 +540,7 @@ var BrowserUI = {
 
   uninit: function() {
     Services.obs.removeObserver(BrowserSearch, "browser-search-engine-modified");
+    messageManager.removeMessageListener("Browser:MozApplicationManifest", OfflineApps);
     ExtensionsView.uninit();
     ConsoleView.uninit();
   },
