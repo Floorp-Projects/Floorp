@@ -523,7 +523,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         to.loadStoreOffset = offset;
         JS_ASSERT(to.loadStoreOffset == offset);
 
-        to.extraShapeGuard = 0;
+        to.hasExtraStub = 0;
         to.objConst = from.objConst;
         to.shapeReg = from.shapeReg;
         to.objReg = from.objReg;

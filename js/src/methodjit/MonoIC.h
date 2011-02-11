@@ -130,6 +130,7 @@ struct SetGlobalNameIC : public GlobalNameIC
     bool objConst : 1;          /* True if the object is constant. */
     RegisterID objReg   : 5;    /* Register for object, if objConst is false. */
     RegisterID shapeReg : 5;    /* Register for shape; volatile. */
+    bool hasExtraStub : 1;      /* Extra stub is preset. */
 
     int fastRejoinOffset : 16;  /* Offset from fastPathStart to rejoin. */
     int extraStoreOffset : 16;  /* Offset into store code. */
