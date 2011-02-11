@@ -72,12 +72,17 @@ bool
 ScopedXErrorHandler::SyncAndGetError(Display *dpy, XErrorEvent *ev)
 {
     XSync(dpy, False);
+    return GetError(ev);
+}
+
+bool
+ScopedXErrorHandler::GetError(XErrorEvent *ev)
+{
     bool retval = mXError.mError.error_code != 0;
     if (ev)
         *ev = mXError.mError;
     mXError = ErrorEvent(); // reset
     return retval;
 }
-
 
 } // namespace mozilla
