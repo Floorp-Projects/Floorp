@@ -169,7 +169,7 @@
     background-clip: padding-box;
   }
   #main-window[sizemode=normal]:not([inFullscreen=true])[disablechrome] #navigator-toolbox::after {
-    display: -moz-box;
+    visibility: visible;
     background-color: @toolbarShadowColor@;
   }
   #main-window[sizemode=normal]:not([inFullscreen=true]) #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme),

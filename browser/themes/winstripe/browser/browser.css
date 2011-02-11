@@ -81,7 +81,7 @@
 }
 #navigator-toolbox[tabsontop=false]::after,
 #main-window[disablechrome] #navigator-toolbox::after {
-  display: none;
+  visibility: collapse;
 }
 
 #navigator-toolbox > toolbar:not(:-moz-lwtheme) {
