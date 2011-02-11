@@ -283,23 +283,17 @@ TRY_AGAIN_NO_SHARING:
             error = true;
         }
 
-        if (shareContext) {
-            if (error || xErrorHandler.SyncAndGetError(display)) {
+        error |= xErrorHandler.SyncAndGetError(display);
+
+        if (error) {
+            if (shareContext) {
                 shareContext = nsnull;
                 goto TRY_AGAIN_NO_SHARING;
             }
-        }
 
-        // at this point, if shareContext != null, we know there's no error.
-        // it's important to minimize the number of XSyncs for startup performance.
-        if (!shareContext) {
-            if (error || // earlier recorded error
-                xErrorHandler.SyncAndGetError(display))
-            {
-                NS_WARNING("Failed to create GLXContext!");
-                glContext = nsnull; // note: this must be done while the graceful X error handler is set,
-                                    // because glxMakeCurrent can give a GLXBadDrawable error
-            }
+            NS_WARNING("Failed to create GLXContext!");
+            glContext = nsnull; // note: this must be done while the graceful X error handler is set,
+                                // because glxMakeCurrent can give a GLXBadDrawable error
         }
 
         return glContext.forget();
