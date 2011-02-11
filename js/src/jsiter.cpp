@@ -590,7 +590,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
             JSObject *proto = obj->getProto();
             if (last) {
                 NativeIterator *lastni = last->getNativeIterator();
-                if (!(lastni->flags & JSITER_ACTIVE) &&
+                if (!(lastni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
                     obj->isNative() && 
                     obj->shape() == lastni->shapes_array[0] &&
                     proto && proto->isNative() && 
@@ -627,7 +627,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
             JSObject *iterobj = cx->compartment->nativeIterCache.get(key);
             if (iterobj) {
                 NativeIterator *ni = iterobj->getNativeIterator();
-                if (!(ni->flags & JSITER_ACTIVE) &&
+                if (!(ni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
                     ni->shapes_key == key &&
                     ni->shapes_length == shapes.length() &&
                     Compare(ni->shapes_array, shapes.begin(), ni->shapes_length)) {
@@ -882,6 +882,10 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, IdPredicate predicat
                         memmove(idp, idp + 1, (props_end - (idp + 1)) * sizeof(jsid));
                         ni->props_end = ni->end() - 1;
                     }
+
+                    /* Don't reuse modified native iterators. */
+                    ni->flags |= JSITER_UNREUSABLE;
+
                     if (predicate.matchesAtMostOne())
                         break;
                 }
