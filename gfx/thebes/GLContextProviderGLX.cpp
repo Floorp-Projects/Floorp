@@ -254,11 +254,13 @@ public:
 
         GLXContext context;
         nsRefPtr<GLContextGLX> glContext;
-        bool error = false;
+        bool error;
 
         ScopedXErrorHandler xErrorHandler;
 
 TRY_AGAIN_NO_SHARING:
+
+        error = false;
 
         context = sGLXLibrary.xCreateNewContext(display,
                                                 cfg,
