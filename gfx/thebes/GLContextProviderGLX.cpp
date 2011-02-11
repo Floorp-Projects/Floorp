@@ -238,8 +238,8 @@ public:
         if (strcmp(glxVendorString, "NVIDIA Corporation") &&
             !PR_GetEnv("MOZ_GLX_IGNORE_BLACKLIST"))
         {
-          printf("[GLX] currently only allowing the NVIDIA proprietary driver, as other drivers are giving too many crashes. "
-                 "To bypass this, define the MOZ_GLX_IGNORE_BLACKLIST environment variable.\n");
+          printf("[GLX] your GL driver is currently blocked. If you would like to bypass this, "
+                 "define the MOZ_GLX_IGNORE_BLACKLIST environment variable.\n");
           return nsnull;
         }
 
