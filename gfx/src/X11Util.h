@@ -165,8 +165,14 @@ public:
      *           the first one will be returned.
      */
     bool SyncAndGetError(Display *dpy, XErrorEvent *ev = nsnull);
-};
 
+    /** Like SyncAndGetError, but does not sync. Faster, but only reliably catches errors in synchronous calls.
+     *
+     * \param ev this optional parameter, if set, will be filled with the XErrorEvent object. If multiple errors occurred,
+     *           the first one will be returned.
+     */
+    bool GetError(XErrorEvent *ev = nsnull);
+};
 
 } // namespace mozilla
 
