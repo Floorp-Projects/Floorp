@@ -381,9 +381,22 @@ ContentParent::Observe(nsISupports* aSubject,
         nsCOMPtr<nsIPrefServiceInternal> prefService =
           do_GetService("@mozilla.org/preferences-service;1");
 
-        PRBool prefHasValue;
-        prefService->PrefHasUserValue(strData, &prefHasValue);
-        if (prefHasValue) {
+        PRBool prefNeedUpdate;
+        prefService->PrefHasUserValue(strData, &prefNeedUpdate);
+
+        // If the pref does not have a user value, check if it exist on the
+        // default branch or not
+        if (!prefNeedUpdate) {
+          nsCOMPtr<nsIPrefBranch> defaultBranch;
+          nsCOMPtr<nsIPrefService> prefsService = do_QueryInterface(prefService);
+          prefsService->GetDefaultBranch(nsnull, getter_AddRefs(defaultBranch));
+
+          PRInt32 prefType = nsIPrefBranch::PREF_INVALID;
+          defaultBranch->GetPrefType(strData.get(), &prefType);
+          prefNeedUpdate = (prefType != nsIPrefBranch::PREF_INVALID);
+        }
+
+        if (prefNeedUpdate) {
             // Pref was created, or previously existed and its value
             // changed.
             PrefTuple pref;
