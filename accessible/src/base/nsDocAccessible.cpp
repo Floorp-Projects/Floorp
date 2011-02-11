@@ -1383,9 +1383,6 @@ nsDocAccessible::UnbindFromDocument(nsAccessible* aAccessible)
       mNodeToAccessibleMap.Get(aAccessible->GetNode()) == aAccessible)
     mNodeToAccessibleMap.Remove(aAccessible->GetNode());
 
-  if (!aAccessible->IsDefunct())
-    RemoveDependentIDsFor(aAccessible);
-
   void* uniqueID = aAccessible->UniqueID();
 
   NS_ASSERTION(!aAccessible->IsDefunct(), "Shutdown the shutdown accessible!");
@@ -1939,6 +1936,9 @@ nsDocAccessible::CacheChildrenInSubtree(nsAccessible* aRoot)
 void
 nsDocAccessible::UncacheChildrenInSubtree(nsAccessible* aRoot)
 {
+  if (aRoot->IsElement())
+    RemoveDependentIDsFor(aRoot);
+
   PRUint32 count = aRoot->GetCachedChildCount();
   for (PRUint32 idx = 0; idx < count; idx++)
     UncacheChildrenInSubtree(aRoot->GetCachedChildAt(idx));
