@@ -78,6 +78,8 @@ CanvasLayerD3D10::Initialize(const Data& aData)
       mTexture = static_cast<ID3D10Texture2D*>(data);
       mIsD2DTexture = PR_TRUE;
       device()->CreateShaderResourceView(mTexture, NULL, getter_AddRefs(mSRView));
+      mHasAlpha =
+        mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
       return;
     }
   }
@@ -93,8 +95,6 @@ CanvasLayerD3D10::Initialize(const Data& aData)
       // XXX for ANGLE, it's already the right-way up.  If we start using NV GL-D3D interop
       // however, we'll need to do the right thing.
       mNeedsYFlip = PR_FALSE;
-      mHasAlpha =
-        mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
     }
   }
 
