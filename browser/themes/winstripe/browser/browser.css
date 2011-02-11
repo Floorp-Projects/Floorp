@@ -1105,6 +1105,10 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
   -moz-box-align: stretch;
 }
 
+.urlbar-textbox-container {
+  -moz-box-align: stretch;
+}
+
 #urlbar-icons {
   height: 18px;
   -moz-box-align: center;

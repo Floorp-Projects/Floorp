@@ -908,6 +908,7 @@ toolbar[iconsize="small"] #feed-button {
 
 .urlbar-textbox-container {
   -moz-appearance: none;
+  -moz-box-align: stretch;
 }
 
 .urlbar-history-dropmarker {

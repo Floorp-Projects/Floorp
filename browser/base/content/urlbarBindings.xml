@@ -52,12 +52,12 @@
   <binding id="urlbar" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
 
     <content sizetopopup="pref">
-      <children includes="image|deck|stack|box">
-        <xul:image class="autocomplete-icon" allowevents="true"/>
-      </children>
       <xul:hbox anonid="textbox-container"
                 class="autocomplete-textbox-container urlbar-textbox-container"
                 flex="1" xbl:inherits="focused">
+        <children includes="image|deck|stack|box">
+          <xul:image class="autocomplete-icon" allowevents="true"/>
+        </children>
         <xul:hbox anonid="textbox-input-box"
                   class="textbox-input-box urlbar-input-box"
                   flex="1" xbl:inherits="tooltiptext=inputtooltiptext">
