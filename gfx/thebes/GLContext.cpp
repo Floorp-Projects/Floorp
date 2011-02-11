@@ -323,31 +323,16 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
 
     mInitialized = LoadSymbols(&symbols[0], trygl, prefix);
 
+    const char *glVendorString;
+
     if (mInitialized) {
-        InitExtensions();
-
-        NS_ASSERTION(!IsExtensionSupported(GLContext::ARB_pixel_buffer_object) ||
-                     (mSymbols.fMapBuffer && mSymbols.fUnmapBuffer),
-                     "ARB_pixel_buffer_object supported without glMapBuffer/UnmapBuffer being available!");
-
-        GLint v[4];
-
-        fGetIntegerv(LOCAL_GL_SCISSOR_BOX, v);
-        mScissorStack.AppendElement(nsIntRect(v[0], v[1], v[2], v[3]));
-
-        fGetIntegerv(LOCAL_GL_VIEWPORT, v);
-        mViewportStack.AppendElement(nsIntRect(v[0], v[1], v[2], v[3]));
-
-        const char *glVendorString = (const char *)fGetString(LOCAL_GL_VENDOR);
+        glVendorString = (const char *)fGetString(LOCAL_GL_VENDOR);
         const char *vendorMatchStrings[VendorOther] = {
                 "Intel",
                 "NVIDIA",
                 "ATI",
                 "Qualcomm"
         };
-
-        fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &mMaxTextureSize);
-
         mVendor = VendorOther;
         for (int i = 0; i < VendorOther; ++i) {
             if (DoesVendorStringMatch(glVendorString, vendorMatchStrings[i])) {
@@ -356,6 +341,20 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
             }
         }
 
+#ifdef MOZ_X11
+        // bug 629265: block NVIDIA 260.19 on X11
+        if (mVendor == VendorNVIDIA &&
+            strstr((const char *)fGetString(LOCAL_GL_VERSION), "260.19") &&
+            !PR_GetEnv("MOZ_GLX_IGNORE_BLACKLIST"))
+        {
+            printf_stderr("[GLX] NVIDIA driver version 260.19 is blacklisted because of many crash reports (see bug 629265), "
+                          "define the MOZ_GLX_IGNORE_BLACKLIST environment variable to bypass this.\n");
+            mInitialized = PR_FALSE;
+        }
+#endif
+    }
+
+    if (mInitialized) {
 #ifdef DEBUG
         static bool once = false;
         if (!once) {
@@ -375,6 +374,22 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
             }
         }
 #endif
+
+        InitExtensions();
+
+        NS_ASSERTION(!IsExtensionSupported(GLContext::ARB_pixel_buffer_object) ||
+                     (mSymbols.fMapBuffer && mSymbols.fUnmapBuffer),
+                     "ARB_pixel_buffer_object supported without glMapBuffer/UnmapBuffer being available!");
+
+        GLint v[4];
+
+        fGetIntegerv(LOCAL_GL_SCISSOR_BOX, v);
+        mScissorStack.AppendElement(nsIntRect(v[0], v[1], v[2], v[3]));
+
+        fGetIntegerv(LOCAL_GL_VIEWPORT, v);
+        mViewportStack.AppendElement(nsIntRect(v[0], v[1], v[2], v[3]));
+
+        fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &mMaxTextureSize);
 
         UpdateActualFormat();
     }
