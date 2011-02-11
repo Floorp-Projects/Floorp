@@ -764,7 +764,8 @@ nsHtml5TreeOpExecutor::Start()
 }
 
 void
-nsHtml5TreeOpExecutor::NeedsCharsetSwitchTo(const char* aEncoding)
+nsHtml5TreeOpExecutor::NeedsCharsetSwitchTo(const char* aEncoding,
+                                            PRInt32 aSource)
 {
   EndDocUpdate();
 
@@ -780,7 +781,7 @@ nsHtml5TreeOpExecutor::NeedsCharsetSwitchTo(const char* aEncoding)
 
   // ask the webshellservice to load the URL
   if (NS_SUCCEEDED(wss->StopDocumentLoad())) {
-    wss->ReloadDocument(aEncoding, kCharsetFromMetaTag);
+    wss->ReloadDocument(aEncoding, aSource);
   }
   // if the charset switch was accepted, wss has called Terminate() on the
   // parser by now
