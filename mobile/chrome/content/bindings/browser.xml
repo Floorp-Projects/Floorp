@@ -907,14 +907,15 @@
             let displayport = new Rect(cacheX, cacheY, cacheSize.width, cacheSize.height);
             displayport.translateInside(bounds);
 
+            let rootScale = self.scale;
             self.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
-              scrollX: contentView.scrollX / this._scale,
-              scrollY: contentView.scrollY / this._scale,
-              x: displayport.x / this._scale,
-              y: displayport.y / this._scale,
-              w: displayport.width / this._scale,
-              h: displayport.height / this._scale,
-              scale: this._scale,
+              scrollX: contentView.scrollX / rootScale,
+              scrollY: contentView.scrollY / rootScale,
+              x: displayport.x / rootScale,
+              y: displayport.y / rootScale,
+              w: displayport.width / rootScale,
+              h: displayport.height / rootScale,
+              scale: rootScale,
               id: contentView.id
             });
 
