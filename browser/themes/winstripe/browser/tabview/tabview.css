@@ -270,7 +270,7 @@ html[dir=rtl] .overlay {
   right: 1px;
   -moz-border-start: 1px solid #E1E1E1;
   padding: 0 5px;
-  overflow-x: hidden;
+  overflow: -moz-hidden-unscrollable;
   text-align: start;
   line-height: 0;
 }
