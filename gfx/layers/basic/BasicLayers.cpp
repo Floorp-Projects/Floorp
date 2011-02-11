@@ -555,8 +555,8 @@ BasicThebesLayer::Paint(gfxContext* aContext,
 
   {
     gfxSize scale = aContext->CurrentMatrix().ScaleFactors(PR_TRUE);
-    float paintXRes = gfxUtils::ClampToScaleFactor(BasicManager()->XResolution() * scale.width);
-    float paintYRes = gfxUtils::ClampToScaleFactor(BasicManager()->YResolution() * scale.height);
+    float paintXRes = BasicManager()->XResolution() * gfxUtils::ClampToScaleFactor(scale.width);
+    float paintYRes = BasicManager()->YResolution() * gfxUtils::ClampToScaleFactor(scale.height);
     Buffer::PaintState state =
       mBuffer.BeginPaint(this, contentType, paintXRes, paintYRes);
     mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
