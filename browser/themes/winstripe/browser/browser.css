@@ -434,7 +434,11 @@
 }
 
 .titlebar-placeholder[type="caption-buttons"] {
+%ifdef WINSTRIPE_AERO
+  margin-left: 22px; /* additional space for Aero Snap */
+%else
   margin-left: 10px;
+%endif
 }
 
 /* titlebar command buttons */
