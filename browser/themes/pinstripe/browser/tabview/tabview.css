@@ -84,11 +84,14 @@ html[dir=rtl] .favicon {
   right: 6px;
   width: 16px;
   height: 16px;
-  background: url(chrome://global/skin/icons/closetab.png) no-repeat;
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 0.5s;
-  -moz-transition-timing-function: ease-out;
-  opacity: 0.2;
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/close.png), 0, 16, 16, 0);
+  background-repeat: no-repeat;
+}
+.close:hover {
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/close.png), 0, 32, 16, 16);
+}
+.close:active {
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/close.png), 0, 48, 16, 32);
 }
 
 html[dir=rtl] .close {
@@ -114,7 +117,6 @@ html[dir=rtl] .expander {
   -moz-transform: scaleX(-1);
 }
 
-.close:hover,
 .expander:hover,
 .appTabIcon:hover {
   -moz-transition-property: opacity;
@@ -124,7 +126,6 @@ html[dir=rtl] .expander {
 }
 
 .favicon img:hover, 
-.close img:hover, 
 .expander img:hover {
   opacity: 1;
   border: none;

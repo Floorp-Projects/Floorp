@@ -1779,21 +1779,22 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .tab-close-button {
-  list-style-image: url("chrome://global/skin/icons/closetab.png");
+  list-style-image: url("chrome://global/skin/icons/close.png");
   -moz-appearance: none;
   border: none !important;
   padding: 0;
   margin: 0;
   background: none;
   cursor: default;
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 .tab-close-button:hover {
-  list-style-image: url("chrome://global/skin/icons/closetab-hover.png");
+  -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
 .tab-close-button:hover:active {
-  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
@@ -1951,12 +1952,21 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 /* Tabstrip close button */
 .tabs-closebutton {
   -moz-padding-end: 4px;
-  list-style-image: url("chrome://global/skin/icons/closetab.png");
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
   border: none;
 }
 
+#sidebar-header > .tabs-closebutton {
+  list-style-image: url("chrome://global/skin/icons/close-sidebar.png");
+}
+
+.tabs-closebutton:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
 .tabs-closebutton:hover:active {
-  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 /* Bookmarks toolbar */
@@ -2362,16 +2372,17 @@ panel[dimmed="true"] {
 #addonbar-closebutton {
   padding: 0;
   margin: 0 4px;
-  list-style-image: url("chrome://global/skin/icons/closetab.png");
+  list-style-image: url("chrome://global/skin/icons/close.png");
   border: none;
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 #addonbar-closebutton:hover {
-  list-style-image: url("chrome://global/skin/icons/closetab-hover.png");
+  -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
 #addonbar-closebutton:hover:active {
-  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 /* Status panel */
