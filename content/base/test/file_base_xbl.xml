@@ -1,0 +1,9 @@
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xhtml="http://www.w3.org/1999/xhtml"
+          xmlns:svg="http://www.w3.org/2000/svg">
+<binding id="test">
+  <content>
+    <svg:g><svg:circle><xhtml:div xml:base="#shesellsseashellsbytheseashore"/></svg:circle><children/></svg:g>
+  </content>
+ </binding>
+</bindings>

@@ -76,6 +76,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsContentList.h"
 #include "nsDOMTokenList.h"
+#include "nsXBLPrototypeBinding.h"
 #include "nsDOMError.h"
 #include "nsDOMString.h"
 #include "nsIScriptSecurityManager.h"
@@ -914,6 +915,77 @@ nsIContent::LookupNamespaceURI(const nsAString& aNamespacePrefix,
       return NS_OK;
   } while ((content = content->GetParent()));
   return NS_ERROR_FAILURE;
+}
+
+already_AddRefed<nsIURI>
+nsIContent::GetBaseURI() const
+{
+  nsIDocument* doc = GetOwnerDoc();
+  if (!doc) {
+    // We won't be able to do security checks, etc.  So don't go any
+    // further.  That said, this really shouldn't happen...
+    NS_ERROR("Element without owner document");
+    return nsnull;
+  }
+
+  // Start with document base
+  nsCOMPtr<nsIURI> base = doc->GetDocBaseURI();
+
+  // Collect array of xml:base attribute values up the parent chain. This
+  // is slightly slower for the case when there are xml:base attributes, but
+  // faster for the far more common case of there not being any such
+  // attributes.
+  // Also check for SVG elements which require special handling
+  nsAutoTArray<nsString, 5> baseAttrs;
+  nsString attr;
+  const nsIContent *elem = this;
+  do {
+    // First check for SVG specialness (why is this SVG specific?)
+    if (elem->IsSVG()) {
+      nsIContent* bindingParent = elem->GetBindingParent();
+      if (bindingParent) {
+        nsIDocument* bindingDoc = bindingParent->GetOwnerDoc();
+        if (bindingDoc) {
+          nsXBLBinding* binding =
+            bindingDoc->BindingManager()->GetBinding(bindingParent);
+          if (binding) {
+            // XXX sXBL/XBL2 issue
+            // If this is an anonymous XBL element use the binding
+            // document for the base URI. 
+            // XXX Will fail with xml:base
+            base = binding->PrototypeBinding()->DocURI();
+            break;
+          }
+        }
+      }
+    }
+    
+    // Otherwise check for xml:base attribute
+    elem->GetAttr(kNameSpaceID_XML, nsGkAtoms::base, attr);
+    if (!attr.IsEmpty()) {
+      baseAttrs.AppendElement(attr);
+    }
+    elem = elem->GetParent();
+  } while(elem);
+  
+  // Now resolve against all xml:base attrs
+  for (PRUint32 i = baseAttrs.Length() - 1; i != PRUint32(-1); --i) {
+    nsCOMPtr<nsIURI> newBase;
+    nsresult rv = NS_NewURI(getter_AddRefs(newBase), baseAttrs[i],
+                            doc->GetDocumentCharacterSet().get(), base);
+    // Do a security check, almost the same as nsDocument::SetBaseURL()
+    // Only need to do this on the final uri
+    if (NS_SUCCEEDED(rv) && i == 0) {
+      rv = nsContentUtils::GetSecurityManager()->
+        CheckLoadURIWithPrincipal(NodePrincipal(), newBase,
+                                  nsIScriptSecurityManager::STANDARD);
+    }
+    if (NS_SUCCEEDED(rv)) {
+      base.swap(newBase);
+    }
+  }
+
+  return base.forget();
 }
 
 //----------------------------------------------------------------------
@@ -3394,51 +3466,6 @@ nsGenericElement::GetExistingAttrNameFromQName(const nsAString& aStr) const
   }
 
   return nodeInfo;
-}
-
-already_AddRefed<nsIURI>
-nsGenericElement::GetBaseURI() const
-{
-  nsIDocument* doc = GetOwnerDoc();
-  if (!doc) {
-    // We won't be able to do security checks, etc.  So don't go any
-    // further.  That said, this really shouldn't happen...
-    NS_ERROR("Element without owner document");
-    return nsnull;
-  }
-
-  // Our base URL depends on whether we have an xml:base attribute, as
-  // well as on whether any of our ancestors do.
-  nsCOMPtr<nsIURI> parentBase;
-
-  nsIContent *parent = GetParent();
-  if (parent) {
-    parentBase = parent->GetBaseURI();
-  } else {
-    // No parent, so just use the document (we must be the root or not in the
-    // tree).
-    parentBase = doc->GetBaseURI();
-  }
-  
-  // Now check for an xml:base attr 
-  nsAutoString value;
-  GetAttr(kNameSpaceID_XML, nsGkAtoms::base, value);
-  if (value.IsEmpty()) {
-    // No xml:base, so we just use the parent's base URL
-    return parentBase.forget();
-  }
-
-  nsCOMPtr<nsIURI> ourBase;
-  nsresult rv = NS_NewURI(getter_AddRefs(ourBase), value,
-                          doc->GetDocumentCharacterSet().get(), parentBase);
-  if (NS_SUCCEEDED(rv)) {
-    // do a security check, almost the same as nsDocument::SetBaseURL()
-    rv = nsContentUtils::GetSecurityManager()->
-      CheckLoadURIWithPrincipal(NodePrincipal(), ourBase,
-                                nsIScriptSecurityManager::STANDARD);
-  }
-
-  return NS_SUCCEEDED(rv) ? ourBase.forget() : parentBase.forget();
 }
 
 PRBool
