@@ -486,6 +486,9 @@ WebGLContext::BufferSubData_buf(GLenum target, WebGLsizei byteOffset, js::ArrayB
         return ErrorInvalidEnumInfo("bufferSubData: target", target);
     }
 
+    if (byteOffset < 0)
+        return ErrorInvalidValue("bufferSubData: negative offset");
+
     if (!boundBuffer)
         return ErrorInvalidOperation("BufferData: no buffer bound!");
 
@@ -519,6 +522,9 @@ WebGLContext::BufferSubData_array(WebGLenum target, WebGLsizei byteOffset, js::T
     } else {
         return ErrorInvalidEnumInfo("bufferSubData: target", target);
     }
+
+    if (byteOffset < 0)
+        return ErrorInvalidValue("bufferSubData: negative offset");
 
     if (!boundBuffer)
         return ErrorInvalidOperation("BufferData: no buffer bound!");
