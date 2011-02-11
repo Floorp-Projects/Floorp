@@ -1533,7 +1533,12 @@ const ContentTouchHandler = {
             this.tapOver(aEvent.clientX, aEvent.clientY);
             break;
           case "TapUp":
-            this.tapUp(aEvent.clientX, aEvent.clientY);
+            if (aEvent.isClick && !Browser.selectedTab.allowZoom) {
+              this.tapSingle(aEvent.clientX, aEvent.clientY, aEvent.modifiers);
+              aEvent.preventDefault();
+            } else {
+              this.tapUp(aEvent.clientX, aEvent.clientY);
+            }
             break;
           case "TapSingle":
             this.tapSingle(aEvent.clientX, aEvent.clientY, aEvent.modifiers);
