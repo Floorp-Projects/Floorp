@@ -1340,13 +1340,6 @@ stubs::InitElem(VMFrame &f, uint32 last)
         THROW();
 
     /*
-     * Check for property redeclaration strict warning (we may be in an object
-     * initialiser, not an array initialiser).
-     */
-    if (!CheckRedeclaration(cx, obj, id, JSPROP_INITIALIZER, NULL, NULL))
-        THROW();
-
-    /*
      * If rref is a hole, do not call JSObject::defineProperty. In this case,
      * obj must be an array, so if the current op is the last element
      * initialiser, set the array length to one greater than id.
@@ -2128,8 +2121,6 @@ InitPropOrMethod(VMFrame &f, JSAtom *atom, JSOp op)
         /* Get the immediate property name into id. */
         jsid id = ATOM_TO_JSID(atom);
 
-        /* No need to check for duplicate property; the compiler already did. */
-
         uintN defineHow = (op == JSOP_INITMETHOD)
                           ? JSDNP_CACHE_RESULT | JSDNP_SET_METHOD
                           : JSDNP_CACHE_RESULT;
@@ -2589,34 +2580,38 @@ stubs::DefVarOrConst(VMFrame &f, JSAtom *atom)
     uintN attrs = JSPROP_ENUMERATE;
     if (!fp->isEvalFrame())
         attrs |= JSPROP_PERMANENT;
-    if (JSOp(*f.regs.pc) == JSOP_DEFCONST)
-        attrs |= JSPROP_READONLY;
 
     /* Lookup id in order to check for redeclaration problems. */
     jsid id = ATOM_TO_JSID(atom);
-    JSProperty *prop = NULL;
-    JSObject *obj2;
-
+    bool shouldDefine;
     if (JSOp(*f.regs.pc) == JSOP_DEFVAR) {
         /*
          * Redundant declaration of a |var|, even one for a non-writable
          * property like |undefined| in ES5, does nothing.
          */
+        JSProperty *prop;
+        JSObject *obj2;
         if (!obj->lookupProperty(cx, id, &obj2, &prop))
             THROW();
+        shouldDefine = (!prop || obj2 != obj);
     } else {
-        if (!CheckRedeclaration(cx, obj, id, attrs, &obj2, &prop))
+        JS_ASSERT(JSOp(*f.regs.pc) == JSOP_DEFCONST);
+        attrs |= JSPROP_READONLY;
+        if (!CheckRedeclaration(cx, obj, id, attrs))
             THROW();
+
+        /*
+         * As attrs includes readonly, CheckRedeclaration can succeed only
+         * if prop does not exist.
+         */
+        shouldDefine = true;
     }
 
     /* Bind a variable only if it's not yet defined. */
-    if (!prop) {
-        if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(),
-                                     PropertyStub, StrictPropertyStub, attrs, 0, 0, &prop)) {
-            THROW();
-        }
-        JS_ASSERT(prop);
-        obj2 = obj;
+    if (shouldDefine && 
+        !js_DefineNativeProperty(cx, obj, id, UndefinedValue(), PropertyStub, StrictPropertyStub,
+                                     attrs, 0, 0, NULL)) {
+        THROW();
     }
 }
 

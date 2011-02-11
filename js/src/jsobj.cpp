@@ -1601,7 +1601,7 @@ js_obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
     jsid id;
     if (!ValueToId(cx, vp[2], &id))
         return JS_FALSE;
-    if (!CheckRedeclaration(cx, obj, id, JSPROP_GETTER, NULL, NULL))
+    if (!CheckRedeclaration(cx, obj, id, JSPROP_GETTER))
         return JS_FALSE;
     /*
      * Getters and setters are just like watchpoints from an access
@@ -1634,7 +1634,7 @@ js_obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
     jsid id;
     if (!ValueToId(cx, vp[2], &id))
         return JS_FALSE;
-    if (!CheckRedeclaration(cx, obj, id, JSPROP_SETTER, NULL, NULL))
+    if (!CheckRedeclaration(cx, obj, id, JSPROP_SETTER))
         return JS_FALSE;
     /*
      * Getters and setters are just like watchpoints from an access
