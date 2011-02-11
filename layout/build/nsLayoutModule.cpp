@@ -384,7 +384,7 @@ nsresult
 Initialize()
 {
   if (gInitialized) {
-    NS_ERROR("Recursive layout module initialization");
+    NS_RUNTIMEABORT("Recursive layout module initialization");
     return NS_ERROR_FAILURE;
   }
 
