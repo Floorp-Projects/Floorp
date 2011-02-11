@@ -457,6 +457,8 @@ _TEST_FILES2 = \
 		test_bug614058.html \
 		test_bug590771.html \
 		test_bug622117.html \
+		test_base.xhtml \
+		file_base_xbl.xml \
 		test_bug622246.html \
 		test_bug484396.html \
 		test_bug466080.html \
