@@ -30,16 +30,17 @@ label.findbar-find-fast:-moz-lwtheme,
 .findbar-closebutton {
   padding: 0;
   margin: 0 4px;
-  list-style-image: url("chrome://global/skin/icons/closetab.png");
+  list-style-image: url("chrome://global/skin/icons/close.png");
   border: none;
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 .findbar-closebutton:hover {
-  list-style-image: url("chrome://global/skin/icons/closetab-hover.png") !important;
+  -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
 .findbar-closebutton:hover:active {
-  list-style-image: url("chrome://global/skin/icons/closetab-active.png") !important;
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 .findbar-find-next,

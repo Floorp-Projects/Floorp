@@ -81,3 +81,7 @@ include urlprefixtests.list
 
 # Check that tests that need focus are skipped when it's not available
 needs-focus load needs-focus.html
+
+# Bug 632636
+fails == data:text/plain,HELLO about:blank
+needs-focus == data:text/plain, about:blank

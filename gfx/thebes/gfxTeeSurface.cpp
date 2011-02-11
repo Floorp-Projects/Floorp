@@ -37,7 +37,14 @@
 
 #include "gfxTeeSurface.h"
 
+/* Once cairo in tree is update ensure we remove the ifdef
+    and just include cairo-tee.h
+*/
+#ifdef MOZ_TREE_CAIRO
 #include "cairo.h"
+#else
+#include "cairo-tee.h"
+#endif
 
 gfxTeeSurface::gfxTeeSurface(cairo_surface_t *csurf)
 {

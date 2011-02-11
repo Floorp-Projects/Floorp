@@ -96,7 +96,7 @@ table {
  * Make table borders gray for compatibility with what other browsers do
  * in all modes, rather than using the foreground color.
  */
-table, td, th {
+table, td, th, tr, thead, tbody, tfoot, colgroup, col {
   border-color: gray;
 }
 

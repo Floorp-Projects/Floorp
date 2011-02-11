@@ -83,7 +83,7 @@ a:hover {
   min-height: 90px;
 }
 
-#searchContainer:before {
+#searchContainer::before {
   content: " ";
   display: block;
   height: 23%;
@@ -191,18 +191,6 @@ body[dir=rtl] #searchSubmit:active {
   box-shadow: -1px 1px 0 #e7e7e7;
 }
 
-#searchEngineLinks {
-  display: inline-block;
-  -moz-margin-start: 1.5%;
-  vertical-align: middle;
-  font-size: .7em;
-}
-
-#searchEngineLinks > a:not([hidden="true"]) {
-  display: block;
-  white-space: nowrap;
-}
-
 #contentContainer {
   height: 30%;
   background-image: -moz-radial-gradient(center top, ellipse farthest-side, rgba(16,83,130,.5), rgba(16,83,130,0) 75%),
@@ -224,7 +212,7 @@ body[dir=rtl] #searchSubmit:active {
   text-align: center;
 }
 
-#defaultSnippets {
+#snippets {
   display: inline-block;
   padding: 14px;
   width: 30%;
@@ -243,14 +231,14 @@ body[dir=rtl] #searchSubmit:active {
 }
 
 @media all and (max-width: 470px) {
-  #defaultSnippets { width: 65% }
+  #snippets { width: 65% }
 }
 
 @media all and (min-width: 470px) and (max-width: 850px) {
-  #defaultSnippets { width: 45% }
+  #snippets { width: 45% }
 }
 
-#defaultSnippets:hover {
+#snippets:hover {
   background-color: rgb(255,255,255);
   box-shadow: 0 1px 0 rgba(255,255,255,.8) inset,
               0 -2px 0 rgba(0,0,0,.1) inset,
@@ -260,7 +248,7 @@ body[dir=rtl] #searchSubmit:active {
               0 2px 4px rgba(0,0,0,.2);
 }
 
-#defaultSnippets:hover:active {
+#snippets:hover:active {
   background-color: rgb(210,210,210);
   box-shadow: 0 2px 3px rgba(0,0,0,.3) inset,
               0 1px 0 rgba(255,255,255,.5);

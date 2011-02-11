@@ -3,7 +3,6 @@
 %undef WINSTRIPE_AERO
 
 %define customToolbarColor hsl(214,44%,87%)
-%define glassToolbarBorderColor rgba(10%,10%,10%,.4)
 %define glassActiveBorderColor rgb(37, 44, 51)
 %define glassInactiveBorderColor rgb(102, 102, 102)
 
@@ -42,16 +41,24 @@
 
   .tabbrowser-tab:not(:-moz-lwtheme),
   .tabs-newtab-button:not(:-moz-lwtheme) {
-    background-image: @genericBgTabTexture@, -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
+    background-image: @toolbarShadowOnTab@, @bgTabTexture@,
+                      -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
   }
 
   .tabbrowser-tab:not(:-moz-lwtheme):hover,
   .tabs-newtab-button:not(:-moz-lwtheme):hover {
-    background-image: @genericBgTabTextureHover@, -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
+    background-image: @toolbarShadowOnTab@, @bgTabTextureHover@,
+                      -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
   }
 
   .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
-    background-image: -moz-linear-gradient(white, @toolbarHighlight@ 30%),
+    background-image: -moz-linear-gradient(white, @toolbarHighlight@ 50%),
+                      -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
+  }
+
+  #main-window[tabsontop=false]:not([disablechrome]) .tabbrowser-tab[selected=true]:not(:-moz-lwtheme) {
+    background-image: @toolbarShadowOnTab@,
+                      -moz-linear-gradient(white, @toolbarHighlight@ 50%),
                       -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
   }
 
@@ -63,7 +70,6 @@
     background-color: transparent;
     -moz-margin-start: -3px;
     position: relative;
-    z-index: 10;
   }
 }
 
@@ -114,53 +120,63 @@
   }
 
   #toolbar-menubar:not(:-moz-lwtheme),
-  #TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme),
-  #navigator-toolbox[tabsontop="false"] > #nav-bar:not(:-moz-lwtheme),
-  #nav-bar + #customToolbars + #PersonalToolbar[collapsed="true"] + #TabsToolbar[tabsontop="false"]:last-child:not(:-moz-lwtheme) {
-    background: transparent !important;
+  #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme),
+  #navigator-toolbox[tabsontop=false] > #nav-bar:not(:-moz-lwtheme),
+  #nav-bar + #customToolbars + #PersonalToolbar[collapsed=true] + #TabsToolbar[tabsontop=false]:last-child:not(:-moz-lwtheme) {
+    background-color: transparent !important;
     color: black;
     text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
   }
+  #toolbar-menubar:not(:-moz-lwtheme),
+  #navigator-toolbox[tabsontop=false] > #nav-bar:not(:-moz-lwtheme) {
+    background-image: none !important;
+  }
 
+  /* Vertical toolbar border */
   #main-window[sizemode="normal"] #navigator-toolbox:not([inFullscreen="true"])::after,
   #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not([inFullscreen="true"]):not(:-moz-lwtheme) {
-    border-left: 1px solid @glassToolbarBorderColor@;
-    border-right: 1px solid @glassToolbarBorderColor@;
+    border-left: 1px solid @toolbarShadowColor@;
+    border-right: 1px solid @toolbarShadowColor@;
     background-clip: padding-box;
-  }
-  #navigator-toolbox > toolbar {
-    border-color: @glassToolbarBorderColor@ !important;
-    background-clip: padding-box;
-  }
-  #navigator-toolbox[tabsontop="false"]::after,
-  #main-window[disablechrome] #navigator-toolbox[tabsontop="true"]::after {
-    background-color: @glassToolbarBorderColor@;
   }
   #main-window[sizemode="normal"]:not([inFullscreen="true"]) #browser-border-start,
   #main-window[sizemode="normal"]:not([inFullscreen="true"]) #browser-border-end {
     display: -moz-box;
-    background-color: @glassToolbarBorderColor@;
+    background-color: @toolbarShadowColor@;
     width: 1px;
   }
   #main-window[sizemode="normal"] #browser-bottombox {
-    border: 1px solid @glassToolbarBorderColor@;
+    border: 1px solid @toolbarShadowColor@;
     border-top-style: none;
   }
 
-  #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"] > #nav-bar:not([inFullscreen="true"]):not(:-moz-lwtheme),
-  #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar:not([inFullscreen="true"]):not(:-moz-lwtheme),
-  #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme),
-  #main-window[sizemode="normal"] #navigator-toolbox:not([tabsontop="true"]) > #PersonalToolbar:not(:-moz-lwtheme) {
+  #main-window[sizemode=normal][tabsontop=false] #PersonalToolbar:not(:-moz-lwtheme) {
     border-top-left-radius: 3.5px;
     border-top-right-radius: 3.5px;
   }
 
-  #tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme),
-  #navigator-toolbox[tabsontop="true"] > #nav-bar:not(:-moz-lwtheme),
-  #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar:not(:-moz-lwtheme),
-  #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme) {
+  /* Toolbar shadow behind tabs */
+  /* This code is only needed for restored windows (i.e. sizemode=normal)
+     because of the border radius on the toolbar below the tab bar.
+     :not([inFullscreen=true]) is added to ease the transition to and from
+     fullscreen mode, as the sidemode attribute isn't updated immediately. */
+  #main-window[sizemode=normal]:not([inFullscreen=true])[tabsontop=true] #nav-bar:not(:-moz-lwtheme),
+  #main-window[sizemode=normal][tabsontop=true] > #nav-bar[collapsed=true]:not([customizing]) + toolbar:not(:-moz-lwtheme),
+  #main-window[sizemode=normal][tabsontop=true] > #nav-bar[collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme) {
+    border-top: 1px solid @toolbarShadowColor@;
+    border-top-left-radius: 3.5px;
+    border-top-right-radius: 3.5px;
+    background-clip: padding-box;
+  }
+  #main-window[sizemode=normal]:not([inFullscreen=true])[disablechrome] #navigator-toolbox::after {
+    visibility: visible;
+    background-color: @toolbarShadowColor@;
+  }
+  #main-window[sizemode=normal]:not([inFullscreen=true]) #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme),
+  #main-window[sizemode=normal]:not([inFullscreen=true])[disablechrome] #TabsToolbar {
+    margin-bottom: -1px;
     position: relative;
-    z-index: 1;
+    background-image: none !important;
   }
 
   #navigator-toolbox:not([tabsontop="true"]) > #PersonalToolbar {
@@ -232,6 +248,12 @@
 
   .tabbrowser-tab:not(:-moz-lwtheme) {
     text-shadow: none;
+  }
+
+  #main-window[sizemode=normal]:not([inFullscreen=true]) .statuspanel-inner {
+    /* align with the browser's side borders */
+    padding-left: 1px;
+    padding-right: 1px;
   }
 
   #allTabs-panel,

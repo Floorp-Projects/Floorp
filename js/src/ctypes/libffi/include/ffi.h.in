@@ -77,6 +77,9 @@ extern "C" {
 /* LONG_LONG_MAX is not always defined (not if STRICT_ANSI, for example).
    But we can find it either under the correct ANSI name, or under GNU
    C's internal name.  */
+
+#define FFI_64_BIT_MAX 9223372036854775807
+
 #ifdef LONG_LONG_MAX
 # define FFI_LONG_LONG_MAX LONG_LONG_MAX
 #else
@@ -85,6 +88,15 @@ extern "C" {
 # else
 #  ifdef __GNUC__
 #   define FFI_LONG_LONG_MAX __LONG_LONG_MAX__
+#  endif
+#  ifdef _AIX
+#   ifndef __PPC64__
+#    if defined (__IBMC__) || defined (__IBMCPP__)
+#     define FFI_LONG_LONG_MAX LONGLONG_MAX
+#    endif
+#   endif /* __PPC64__ */
+#   undef  FFI_64_BIT_MAX
+#   define FFI_64_BIT_MAX 9223372036854775807LL
 #  endif
 # endif
 #endif
@@ -132,17 +144,17 @@ typedef struct _ffi_type
 #endif
 
 #if LONG_MAX == 2147483647
-# if FFI_LONG_LONG_MAX != 9223372036854775807
+# if FFI_LONG_LONG_MAX != FFI_64_BIT_MAX
  #error "no 64-bit data type supported"
 # endif
-#elif LONG_MAX != 9223372036854775807
+#elif LONG_MAX != FFI_64_BIT_MAX
  #error "long size not supported"
 #endif
 
 #if LONG_MAX == 2147483647
 # define ffi_type_ulong        ffi_type_uint32
 # define ffi_type_slong        ffi_type_sint32
-#elif LONG_MAX == 9223372036854775807
+#elif LONG_MAX == FFI_64_BIT_MAX
 # define ffi_type_ulong        ffi_type_uint64
 # define ffi_type_slong        ffi_type_sint64
 #else
@@ -195,7 +207,7 @@ typedef struct {
 #ifndef FFI_SIZEOF_ARG
 # if LONG_MAX == 2147483647
 #  define FFI_SIZEOF_ARG        4
-# elif LONG_MAX == 9223372036854775807
+# elif LONG_MAX == FFI_64_BIT_MAX
 #  define FFI_SIZEOF_ARG        8
 # endif
 #endif

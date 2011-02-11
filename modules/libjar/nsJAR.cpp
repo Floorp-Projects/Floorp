@@ -1195,8 +1195,6 @@ nsZipReaderCache::GetInnerZip(nsIFile* zipFile, const char *entry,
   }
   else {
     zip = new nsJAR();
-    if (zip == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(zip);
     zip->SetZipReaderCache(this);
 
@@ -1205,8 +1203,10 @@ nsZipReaderCache::GetInnerZip(nsIFile* zipFile, const char *entry,
       NS_RELEASE(zip);
       return rv;
     }
-
-    PRBool collision = mZips.Put(&key, static_cast<nsIZipReader*>(zip)); // AddRefs to 2
+#ifdef DEBUG
+    PRBool collision =
+#endif
+    mZips.Put(&key, static_cast<nsIZipReader*>(zip)); // AddRefs to 2
     NS_ASSERTION(!collision, "horked");
   }
   *result = zip;

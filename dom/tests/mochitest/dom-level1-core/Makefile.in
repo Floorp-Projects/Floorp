@@ -49,6 +49,7 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES_A	= \
 		DOMTestCase.js \
+		activity-home.css \
 		exclusions.js \
 		test_attrcreatedocumentfragment.html \
 		test_attrcreatetextnode.html \

@@ -289,3 +289,58 @@ interface nsIPluginHost : nsISupports
   virtual void RemoveIdleTimeTarget(nsIPluginInstanceOwner* objectFrame) = 0;
 %}
 };
+
+/*
+ * Methods for clearing plugin private data. These should be moved onto
+ * nsIPluginHost proper post-Gecko 2.0.
+ */
+[scriptable, uuid(0b0a2fb8-dc2b-4df2-b721-4b7a4008df6c)]
+interface nsIPluginHost_MOZILLA_2_0_BRANCH : nsISupports
+{
+  /*
+   * Flags for use with clearSiteData.
+   *
+   * FLAG_CLEAR_ALL: clear all data associated with a site.
+   * FLAG_CLEAR_CACHE: clear cached data that can be retrieved again without
+   *                   loss of functionality. To be used out of concern for
+   *                   space and not necessarily privacy.
+   */
+  const PRUint32 FLAG_CLEAR_ALL = 0;
+  const PRUint32 FLAG_CLEAR_CACHE = 1;
+
+  /*
+   * Clear site data for a given plugin.
+   *
+   * @param plugin: the plugin to clear data for, such as one returned by
+   *                nsIPluginHost.getPluginTags.
+   * @param domain: the domain to clear data for. If this argument is null,
+   *                clear data for all domains. Otherwise, it must be a domain
+   *                only (not a complete URI or IRI). The base domain for the
+   *                given site will be determined; any data for the base domain
+   *                or its subdomains will be cleared.
+   * @param flags: a flag value defined above.
+   * @param maxAge: the maximum age in seconds of data to clear, inclusive. If
+   *                maxAge is 0, no data is cleared; if it is -1, all data is
+   *                cleared.
+   *
+   * @throws NS_ERROR_INVALID_ARG if the domain argument is malformed.
+   * @throws NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED if maxAge is a value other
+   *         than -1 and the plugin does not support clearing by timerange in
+   *         general or for that particular site and/or flag combination.
+   */
+  void clearSiteData(in nsIPluginTag plugin, in AUTF8String domain,
+                     in PRUint64 flags, in PRInt64 maxAge);
+
+  /*
+   * Determine if a plugin has stored data for a given site.
+   *
+   * @param plugin: the plugin to query, such as one returned by
+   *                nsIPluginHost.getPluginTags.
+   * @param domain: the domain to test. If this argument is null, test if data
+   *                is stored for any site. The base domain for the given domain
+   *                will be determined; if any data for the base domain or its
+   *                subdomains is found, return true.
+   */
+  boolean siteHasData(in nsIPluginTag plugin, in AUTF8String domain);
+};
+

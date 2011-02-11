@@ -156,16 +156,16 @@ Rect.prototype = {
 
   // ----------
   // Function: contains
-  // Returns a boolean denoting if the <Rect> is contained inside
-  // of the bounding rect.
+  // Returns a boolean denoting if the given <Rect> is contained within
+  // the this rectangle.
   //
   // Paramaters
   //  - A <Rect>
   contains: function Rect_contains(rect) {
-    return (rect.left > this.left &&
-            rect.right < this.right &&
-            rect.top > this.top &&
-            rect.bottom < this.bottom);
+    return (rect.left >= this.left &&
+            rect.right <= this.right &&
+            rect.top >= this.top &&
+            rect.bottom <= this.bottom);
   },
 
   // ----------

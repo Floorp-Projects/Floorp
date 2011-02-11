@@ -618,10 +618,26 @@ int main(int argc, char** argv)
 }
 
 #if defined(XP_WIN) && !defined(__GNUC__)
+#include <windows.h>
+
 // We need WinMain in order to not be a console app.  This function is unused
 // if we are a console application.
 int WINAPI wWinMain( HINSTANCE, HINSTANCE, LPWSTR args, int )
 {
+  // Remove everything except close window from the context menu
+  {
+    HKEY hkApp;
+    if (RegCreateKeyExW(HKEY_CURRENT_USER,
+                        L"Software\\Classes\\Applications\\crashreporter.exe",
+                        0, NULL, REG_OPTION_VOLATILE, KEY_SET_VALUE, NULL,
+                        &hkApp, NULL) == ERROR_SUCCESS) {
+      RegSetValueExW(hkApp, L"IsHostApp", 0, REG_NONE, 0, 0);
+      RegSetValueExW(hkApp, L"NoOpenWith", 0, REG_NONE, 0, 0);
+      RegSetValueExW(hkApp, L"NoStartPage", 0, REG_NONE, 0, 0);
+      RegCloseKey(hkApp);
+    }
+  }
+
   char** argv = static_cast<char**>(malloc(__argc * sizeof(char*)));
   for (int i = 0; i < __argc; i++) {
     argv[i] = strdup(WideToUTF8(__wargv[i]).c_str());

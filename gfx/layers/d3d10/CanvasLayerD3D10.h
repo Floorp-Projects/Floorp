@@ -51,10 +51,11 @@ class THEBES_API CanvasLayerD3D10 : public CanvasLayer,
 {
 public:
   CanvasLayerD3D10(LayerManagerD3D10 *aManager)
-    : CanvasLayer(aManager, NULL),
-      LayerD3D10(aManager),
-      mDataIsPremultiplied(PR_FALSE),
-      mNeedsYFlip(PR_FALSE)
+    : CanvasLayer(aManager, NULL)
+    , LayerD3D10(aManager)
+    , mDataIsPremultiplied(PR_FALSE)
+    , mNeedsYFlip(PR_FALSE)
+    , mHasAlpha(PR_TRUE)
   {
       mImplData = static_cast<LayerD3D10*>(this);
   }
@@ -83,6 +84,7 @@ private:
   PRPackedBool mNeedsYFlip;
   PRPackedBool mIsD2DTexture;
   PRPackedBool mUsingSharedTexture;
+  PRPackedBool mHasAlpha;
 };
 
 } /* layers */

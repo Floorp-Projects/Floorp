@@ -147,6 +147,34 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 180085-2.html 180085-2-ref.html
 == 185388-1.html 185388-1-ref.html
 == 192902-1.html 192902-ref.html
+== 192767-01.xul 192767-11.xul
+== 192767-02.xul 192767-12.xul
+== 192767-03.xul 192767-13.xul
+== 192767-04.xul 192767-14.xul
+== 192767-05.xul 192767-15.xul
+== 192767-06.xul 192767-16.xul
+== 192767-07.xul 192767-17.xul
+== 192767-21.xul 192767-31.xul
+== 192767-22.xul 192767-32.xul
+== 192767-23.xul 192767-33.xul
+== 192767-24.xul 192767-34.xul
+== 192767-25.xul 192767-35.xul
+== 192767-26.xul 192767-36.xul
+== 192767-27.xul 192767-37.xul
+!= 192767-01.xul 192767-21.xul
+!= 192767-02.xul 192767-22.xul
+!= 192767-03.xul 192767-23.xul
+!= 192767-04.xul 192767-24.xul
+!= 192767-05.xul 192767-25.xul
+!= 192767-06.xul 192767-26.xul
+!= 192767-07.xul 192767-27.xul
+!= 192767-11.xul 192767-31.xul
+!= 192767-12.xul 192767-32.xul
+!= 192767-13.xul 192767-33.xul
+!= 192767-14.xul 192767-34.xul
+!= 192767-15.xul 192767-35.xul
+!= 192767-16.xul 192767-36.xul
+!= 192767-17.xul 192767-37.xul
 != 200774-1.html about:blank
 == 201215-1.html 201215-1-ref.html
 == 201293-1a.html 201293-1-ref.html
@@ -1367,6 +1395,8 @@ needs-focus fails == 503531-1.html 503531-1-ref.html
 == 507762-2.html 507762-2-ref.html
 == 507762-3.html 507762-1-ref.html
 == 507762-4.html 507762-2-ref.html
+random-if(cocoaWidget) == 508816-1.xul 508816-1-ref.xul # Bug 631982
+== 508816-2.html 508816-2-ref.html
 == 508908-1.xul 508908-1-ref.xul
 == 508919-1.xhtml 508919-1-ref.xhtml
 == 509155-1.xhtml 509155-1-ref.xhtml
@@ -1430,7 +1460,7 @@ asserts(5) == 528038-2.html 528038-2-ref.html # bug 512749
 == 541382-1.html 541382-1-ref.html
 random-if(!haveTestPlugin) == 541406-1.html 541406-1-ref.html
 needs-focus != 542116-1.html 542116-1-ref.html
-needs-focus asserts(1) != 542116-2.html 542116-2-ref.html # bug 596901
+needs-focus != 542116-2.html 542116-2-ref.html
 needs-focus != 542116-3.html 542116-3-ref.html
 == 542317-1.html 542317-1-ref.html
 == 542605-hidden-unscrollable.xul 542605-hidden-unscrollable-ref.xul
@@ -1451,6 +1481,7 @@ random-if(d2d) == 555388-1.html 555388-1-ref.html
 == 557087-1.html 557087-ref.html
 == 557087-2.html 557087-ref.html
 == 557736-1.html 557736-1-ref.html
+!= 558011-1.xul 558011-1-ref.xul
 == 559284-1.html 559284-1-ref.html
 == 560455-1.xul 560455-1-ref.xul
 == 561981-1.html 561981-1-ref.html
@@ -1528,6 +1559,7 @@ asserts(0-1) == 582146-1.html about:blank
 == 584699-1.html 584699-1-ref.html
 == 585598-2.xhtml 585598-2-ref.xhtml
 == 586400-1.html 586400-1-ref.html
+fails-if(cocoaWidget) == 586683-1.html 586683-1-ref.html
 == 589615-1a.xhtml 589615-1-ref.html
 == 589615-1b.html 589615-1-ref.html
 == 589672-1.html 589672-1-ref.html
@@ -1578,3 +1610,4 @@ random-if(winWidget) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positi
 random-if(winWidget) HTTP(..) == 621918-2.svg 621918-2-ref.svg # same 1px issue as above, and HTTP(..) for filters.svg, used to mask antialiasing issues where glyphs touch
 == 625409-1.html 625409-1-ref.html
 == 627393-1.html about:blank
+== 631352-1.html 631352-1-ref.html

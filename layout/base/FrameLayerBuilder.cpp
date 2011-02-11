@@ -64,7 +64,6 @@ namespace {
 class LayerManagerData : public LayerUserData {
 public:
   LayerManagerData(LayerManager *aManager) :
-    mInvalidateAllThebesContent(PR_FALSE),
     mInvalidateAllLayers(PR_FALSE),
     mLayerManager(aManager)
   {
@@ -83,7 +82,6 @@ public:
    * Tracks which frames have layers associated with them.
    */
   nsTHashtable<nsPtrHashKey<nsIFrame> > mFramesWithLayers;
-  PRPackedBool mInvalidateAllThebesContent;
   PRPackedBool mInvalidateAllLayers;
   /** Layer manager we belong to, we hold a reference to this object. */
   nsRefPtr<LayerManager> mLayerManager;
@@ -468,7 +466,6 @@ FrameLayerBuilder::DidBeginRetainedLayerTransaction(LayerManager* aManager)
   LayerManagerData* data = static_cast<LayerManagerData*>
     (aManager->GetUserData(&gLayerManagerUserData));
   if (data) {
-    mInvalidateAllThebesContent = data->mInvalidateAllThebesContent;
     mInvalidateAllLayers = data->mInvalidateAllLayers;
   }
 }
@@ -527,7 +524,6 @@ FrameLayerBuilder::WillEndTransaction(LayerManager* aManager)
   // display items before, and record those retained display items.
   // This also empties mNewDisplayItemData.
   mNewDisplayItemData.EnumerateEntries(StoreNewDisplayItemData, data);
-  data->mInvalidateAllThebesContent = PR_FALSE;
   data->mInvalidateAllLayers = PR_FALSE;
 
   NS_ASSERTION(data->mFramesWithLayers.Count() > 0,
@@ -619,6 +615,27 @@ FrameLayerBuilder::StoreNewDisplayItemData(DisplayItemDataEntry* aEntry,
     props.Set(ThebesLayerInvalidRegionProperty(), new nsRegion());
   }
   return PL_DHASH_REMOVE;
+}
+
+PRBool
+FrameLayerBuilder::HasRetainedLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey)
+{
+  void* propValue = aFrame->Properties().Get(DisplayItemDataProperty());
+  if (!propValue)
+    return PR_FALSE;
+
+  nsTArray<DisplayItemData>* array =
+    (reinterpret_cast<nsTArray<DisplayItemData>*>(&propValue));
+  for (PRUint32 i = 0; i < array->Length(); ++i) {
+    if (array->ElementAt(i).mDisplayItemKey == aDisplayItemKey) {
+      Layer* layer = array->ElementAt(i).mLayer;
+      if (layer->Manager()->GetUserData(&gLayerManagerUserData)) {
+        // All layer managers with our user data are retained layer managers
+        return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
 }
 
 Layer*
@@ -742,8 +759,7 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
       InvalidatePostTransformRegion(layer, mInvalidThebesContent);
     }
     // We do not need to Invalidate these areas in the widget because we
-    // assume the caller of InvalidateThebesLayerContents or
-    // InvalidateAllThebesLayerContents has ensured
+    // assume the caller of InvalidateThebesLayerContents has ensured
     // the area is invalidated in the widget.
   } else {
     // Create a new thebes layer
@@ -1155,21 +1171,19 @@ ContainerState::FindThebesLayerFor(nsDisplayItem* aItem,
   return layer.forget();
 }
 
-static already_AddRefed<BasicLayerManager>
-BuildTempManagerForInactiveLayer(nsDisplayListBuilder* aBuilder,
-                                 nsDisplayItem* aItem)
+static void
+PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
+                   nsDisplayItem* aItem,
+                   gfxContext* aContext)
 {
-  // This item has an inactive layer. We will render it to a ThebesLayer
-  // using a temporary BasicLayerManager. Set up the layer
-  // manager now so that if we need to modify the retained layer
-  // tree during this process, those modifications will happen
-  // during the construction phase for the retained layer tree.
+  // This item has an inactive layer. Render it to a ThebesLayer
+  // using a temporary BasicLayerManager.
   nsRefPtr<BasicLayerManager> tempManager = new BasicLayerManager();
-  tempManager->BeginTransaction();
+  tempManager->BeginTransactionWithTarget(aContext);
   nsRefPtr<Layer> layer = aItem->BuildLayer(aBuilder, tempManager);
   if (!layer) {
     tempManager->EndTransaction(nsnull, nsnull);
-    return nsnull;
+    return;
   }
   PRInt32 appUnitsPerDevPixel = AppUnitsPerDevPixel(aItem);
   nsIntRect itemVisibleRect =
@@ -1177,9 +1191,7 @@ BuildTempManagerForInactiveLayer(nsDisplayListBuilder* aBuilder,
   SetVisibleRectForLayer(layer, itemVisibleRect);
 
   tempManager->SetRoot(layer);
-  // No painting should occur yet, since there is no target context.
-  tempManager->EndTransaction(nsnull, nsnull);
-  return tempManager.forget();
+  tempManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, aBuilder);
 }
 
 /*
@@ -1280,13 +1292,6 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       mNewChildLayers.AppendElement(ownLayer);
       mBuilder->LayerBuilder()->AddLayerDisplayItem(ownLayer, item);
     } else {
-      nsRefPtr<BasicLayerManager> tempLayerManager;
-      if (layerState != LAYER_NONE) {
-        tempLayerManager = BuildTempManagerForInactiveLayer(mBuilder, item);
-        if (!tempLayerManager)
-          continue;
-      }
-
       nsIFrame* f = item->GetUnderlyingFrame();
       nsIFrame* activeScrolledRoot =
         nsLayoutUtils::GetActiveScrolledRootFor(f, mBuilder->ReferenceFrame());
@@ -1310,7 +1315,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
 
       mBuilder->LayerBuilder()->
         AddThebesDisplayItem(thebesLayer, item, aClip, mContainerFrame,
-                             layerState, tempLayerManager);
+                             layerState);
     }
   }
 }
@@ -1358,13 +1363,20 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer)
   }
 }
 
+PRBool
+FrameLayerBuilder::NeedToInvalidateFixedDisplayItem(nsDisplayListBuilder* aBuilder,
+                                                    nsDisplayItem* aItem)
+{
+  return !aItem->IsFixedAndCoveringViewport(aBuilder) ||
+      !HasRetainedLayerFor(aItem->GetUnderlyingFrame(), aItem->GetPerFrameKey());
+}
+
 void
 FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
                                         nsDisplayItem* aItem,
                                         const Clip& aClip,
                                         nsIFrame* aContainerLayerFrame,
-                                        LayerState aLayerState,
-                                        LayerManager* aTempManager)
+                                        LayerState aLayerState)
 {
   AddLayerDisplayItem(aLayer, aItem);
 
@@ -1374,7 +1386,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
     NS_ASSERTION(aItem->GetUnderlyingFrame(), "Must have frame");
     ClippedDisplayItem* cdi =
       entry->mItems.AppendElement(ClippedDisplayItem(aItem, aClip));
-    cdi->mTempLayerManager = aTempManager;
+    cdi->mInactiveLayer = aLayerState != LAYER_NONE;
   }
 }
 
@@ -1540,10 +1552,6 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
           DisplayItemData(containerLayer, containerDisplayItemKey));
     }
 
-    if (mInvalidateAllThebesContent) {
-      state.SetInvalidateAllThebesContent();
-    }
-
     nsRegion* invalidThebesContent(static_cast<nsRegion*>
       (props.Get(ThebesLayerInvalidRegionProperty())));
     if (invalidThebesContent) {
@@ -1665,16 +1673,6 @@ InternalInvalidateThebesLayersInSubtree(nsIFrame* aFrame)
 FrameLayerBuilder::InvalidateThebesLayersInSubtree(nsIFrame* aFrame)
 {
   InternalInvalidateThebesLayersInSubtree(aFrame);
-}
-
-/* static */ void
-FrameLayerBuilder::InvalidateAllThebesLayerContents(LayerManager* aManager)
-{
-  LayerManagerData* data = static_cast<LayerManagerData*>
-    (aManager->GetUserData(&gLayerManagerUserData));
-  if (data) {
-    data->mInvalidateAllThebesContent = PR_TRUE;
-  }
 }
 
 /* static */ void
@@ -1849,11 +1847,8 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
       }
     }
 
-    if (cdi->mTempLayerManager) {
-      // This item has an inactive layer. Render it to the ThebesLayer
-      // using the temporary BasicLayerManager.
-      cdi->mTempLayerManager->BeginTransactionWithTarget(aContext);
-      cdi->mTempLayerManager->EndTransaction(DrawThebesLayer, builder);
+    if (cdi->mInactiveLayer) {
+      PaintInactiveLayer(builder, cdi->mItem, aContext);
     } else {
       cdi->mItem->Paint(builder, rc);
     }

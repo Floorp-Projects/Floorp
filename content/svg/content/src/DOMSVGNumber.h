@@ -53,6 +53,8 @@ class nsSVGElement;
   { 0x2CA92412, 0x2E1F, 0x4DDB, \
     { 0xA1, 0x6C, 0x52, 0xB3, 0xB5, 0x82, 0x27, 0x0D } }
 
+#define MOZ_SVG_LIST_INDEX_BIT_COUNT 27 // supports > 134 million list items
+
 namespace mozilla {
 
 /**
@@ -80,8 +82,8 @@ public:
    * Generic ctor for DOMSVGNumber objects that are created for an attribute.
    */
   DOMSVGNumber(DOMSVGNumberList *aList,
-               PRUint32 aAttrEnum,
-               PRUint8 aListIndex,
+               PRUint8 aAttrEnum,
+               PRUint32 aListIndex,
                PRUint8 aIsAnimValItem);
 
   /**
@@ -130,12 +132,16 @@ public:
    * the necessary notifications) is located elsewhere (in DOMSVGNumberList).)
    */
   void InsertingIntoList(DOMSVGNumberList *aList,
-                         PRUint32 aAttrEnum,
-                         PRUint8 aListIndex,
+                         PRUint8 aAttrEnum,
+                         PRUint32 aListIndex,
                          PRUint8 aIsAnimValItem);
 
+  static PRUint32 MaxListIndex() {
+    return (1U << MOZ_SVG_LIST_INDEX_BIT_COUNT) - 1;
+  }
+
   /// This method is called to notify this object that its list index changed.
-  void UpdateListIndex(PRUint8 aListIndex) {
+  void UpdateListIndex(PRUint32 aListIndex) {
     mListIndex = aListIndex;
   }
 
@@ -179,7 +185,7 @@ private:
   // Bounds for the following are checked in the ctor, so be sure to update
   // that if you change the capacity of any of the following.
 
-  PRUint32 mListIndex:27; // supports > 134 million list items
+  PRUint32 mListIndex:MOZ_SVG_LIST_INDEX_BIT_COUNT;
   PRUint32 mAttrEnum:4; // supports up to 16 attributes
   PRUint32 mIsAnimValItem:1;
 
@@ -190,5 +196,7 @@ private:
 NS_DEFINE_STATIC_IID_ACCESSOR(DOMSVGNumber, MOZILLA_DOMSVGNUMBER_IID)
 
 } // namespace mozilla
+
+#undef MOZ_SVG_LIST_INDEX_BIT_COUNT
 
 #endif // MOZILLA_DOMSVGNUMBER_H__

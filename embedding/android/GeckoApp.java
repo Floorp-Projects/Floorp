@@ -69,6 +69,8 @@ abstract public class GeckoApp
     public static GeckoSurfaceView surfaceView;
     public static GeckoApp mAppContext;
     public static boolean mFullscreen = false;
+    public static boolean mStartedEarly = false;
+    public static File sGREDir = null;
     static Thread mLibLoadThread = null;
 
     enum LaunchState {PreLaunch, Launching, WaitButton,
@@ -104,7 +106,7 @@ abstract public class GeckoApp
         new AlertDialog.Builder(this)
             .setMessage(message)
             .setCancelable(false)
-            .setPositiveButton("Exit",
+            .setPositiveButton(getResources().getString(R.string.exit_label),
                                new DialogInterface.OnClickListener() {
                                    public void onClick(DialogInterface dialog,
                                                        int id)
@@ -125,6 +127,7 @@ abstract public class GeckoApp
         final Intent i = intent;
         new Thread() { 
             public void run() {
+                long startup_time = System.currentTimeMillis();
                 try {
                     if (mLibLoadThread != null)
                         mLibLoadThread.join();
@@ -155,6 +158,9 @@ abstract public class GeckoApp
         
                 // and then fire us up
                 String env = i.getStringExtra("env0");
+                if (GeckoApp.mStartedEarly) {
+                    GeckoAppShell.putenv("MOZ_APP_RESTART=" + startup_time);
+                }
                 GeckoAppShell.runGecko(getApplication().getPackageResourcePath(),
                                        i.getStringExtra("args"),
                                        i.getDataString());
@@ -169,6 +175,9 @@ abstract public class GeckoApp
     {
         Log.i("GeckoApp", "create");
         super.onCreate(savedInstanceState);
+
+        if (sGREDir == null)
+            sGREDir = new File(this.getApplicationInfo().dataDir);
 
         mAppContext = this;
 
@@ -361,8 +370,7 @@ abstract public class GeckoApp
         ZipFile zip;
         InputStream listStream;
 
-        File componentsDir = new File("/data/data/" + getPackageName() +
-                                      "/components");
+        File componentsDir = new File(sGREDir, "components");
         componentsDir.mkdir();
         zip = new ZipFile(getApplication().getPackageResourcePath());
 
@@ -394,8 +402,7 @@ abstract public class GeckoApp
             throw new FileNotFoundException("Can't find " + name + " in " +
                                             zip.getName());
 
-        File outFile = new File("/data/data/" + getPackageName() +
-                                "/" + name);
+        File outFile = new File(sGREDir, name);
         if (outFile.exists() &&
             outFile.lastModified() == fileEntry.getTime() &&
             outFile.length() == fileEntry.getSize())
@@ -459,13 +466,13 @@ abstract public class GeckoApp
         Log.i("GeckoAppJava", "Checking for an update");
 
         int statusCode = 8; // UNEXPECTED_ERROR
-        File downloadDir = null;
+        File baseUpdateDir = null;
         if (Build.VERSION.SDK_INT >= 8)
-            downloadDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+            baseUpdateDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
         else
-            downloadDir = new File(Environment.getExternalStorageDirectory().getPath(), "download");
+            baseUpdateDir = new File(Environment.getExternalStorageDirectory().getPath(), "download");
 
-        File updateDir = new File(new File(downloadDir, "updates"),"0");
+        File updateDir = new File(new File(baseUpdateDir, "updates"),"0");
 
         File updateFile = new File(updateDir, "update.apk");
         File statusFile = new File(updateDir, "update.status");
@@ -560,9 +567,7 @@ abstract public class GeckoApp
                 File file = 
                     File.createTempFile("tmp_" + 
                                         (int)Math.floor(1000 * Math.random()), 
-                                        fileExt, 
-                                        new File("/data/data/" +
-                                                 getPackageName()));
+                                        fileExt, sGREDir);
                 
                 FileOutputStream fos = new FileOutputStream(file);
                 InputStream is = cr.openInputStream(uri);

@@ -93,6 +93,8 @@ CanvasLayerD3D10::Initialize(const Data& aData)
       // XXX for ANGLE, it's already the right-way up.  If we start using NV GL-D3D interop
       // however, we'll need to do the right thing.
       mNeedsYFlip = PR_FALSE;
+      mHasAlpha =
+        mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
     }
   }
 
@@ -239,7 +241,7 @@ CanvasLayerD3D10::RenderLayer()
   ID3D10EffectTechnique *technique;
 
   if (mDataIsPremultiplied) {
-    if (mSurface && mSurface->GetContentType() == gfxASurface::CONTENT_COLOR) {
+    if (!mHasAlpha) {
       if (mFilter == gfxPattern::FILTER_NEAREST) {
         technique = effect()->GetTechniqueByName("RenderRGBLayerPremulPoint");
       } else {

@@ -1224,6 +1224,8 @@ NS_METHOD nsWindow::Show(PRBool bState)
   }
 #endif
 
+  PRBool syncInvalidate = PR_FALSE;
+
   PRBool wasVisible = mIsVisible;
   // Set the status now so that anyone asking during ShowWindow or
   // SetWindowPos would get the correct answer.
@@ -1236,6 +1238,9 @@ NS_METHOD nsWindow::Show(PRBool bState)
   if (mWnd) {
     if (bState) {
       if (!wasVisible && mWindowType == eWindowType_toplevel) {
+        // speed up the initial paint after show for
+        // top level windows:
+        syncInvalidate = PR_TRUE;
         switch (mSizeMode) {
 #ifdef WINCE
           case nsSizeMode_Fullscreen:
@@ -1320,7 +1325,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
   
 #ifdef MOZ_XUL
   if (!wasVisible && bState)
-    Invalidate(PR_FALSE);
+    Invalidate(syncInvalidate);
 #endif
 
   return NS_OK;
@@ -6227,11 +6232,9 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, PRBool& result)
     ::GetWindowPlacement(mWnd, &pl);
 
     if (pl.showCmd == SW_SHOWMAXIMIZED)
-      event.mSizeMode = nsSizeMode_Maximized;
+      event.mSizeMode = (mFullscreenMode ? nsSizeMode_Fullscreen : nsSizeMode_Maximized);
     else if (pl.showCmd == SW_SHOWMINIMIZED)
       event.mSizeMode = nsSizeMode_Minimized;
-    else if (mFullscreenMode)
-      event.mSizeMode = nsSizeMode_Fullscreen;
     else
       event.mSizeMode = nsSizeMode_Normal;
 
@@ -6397,11 +6400,9 @@ void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info)
     ::GetWindowPlacement(mWnd, &pl);
     PRInt32 sizeMode;
     if (pl.showCmd == SW_SHOWMAXIMIZED)
-      sizeMode = nsSizeMode_Maximized;
+      sizeMode = (mFullscreenMode ? nsSizeMode_Fullscreen : nsSizeMode_Maximized);
     else if (pl.showCmd == SW_SHOWMINIMIZED)
       sizeMode = nsSizeMode_Minimized;
-    else if (mFullscreenMode)
-      sizeMode = nsSizeMode_Fullscreen;
     else
       sizeMode = nsSizeMode_Normal;
 

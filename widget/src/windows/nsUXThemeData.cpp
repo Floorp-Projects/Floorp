@@ -359,7 +359,6 @@ struct THEMELIST {
   int type;
 };
 
-// When adding themes, update sIsDefaultWindowsTheme settings below.
 const THEMELIST knownThemes[] = {
   { L"aero.msstyles", WINTHEME_AERO },
   { L"luna.msstyles", WINTHEME_LUNA },
@@ -432,10 +431,7 @@ nsUXThemeData::UpdateNativeThemeInfo()
   if (theme == WINTHEME_UNRECOGNIZED)
     return;
 
-  if (theme == WINTHEME_AERO ||
-      theme == WINTHEME_LUNA ||
-      theme == WINTHEME_ZUNE ||
-      theme == WINTHEME_ROYALE)
+  if (theme == WINTHEME_AERO || theme == WINTHEME_LUNA)
     sIsDefaultWindowsTheme = PR_TRUE;
   
   if (theme != WINTHEME_LUNA) {

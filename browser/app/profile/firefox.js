@@ -247,10 +247,15 @@ pref("browser.aboutHomeSnippets.updateUrl", "https://snippets.mozilla.com/%START
 pref("browser.enable_automatic_image_resizing", true);
 pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", true);
-pref("browser.warnOnQuit", false);
+// browser.warnOnQuit == false will override all other possible prompts when quitting or restarting
+pref("browser.warnOnQuit", true);
 pref("browser.warnOnRestart", false);
+// browser.showQuitWarning specifically controls the quit warning dialog. We
+// might still show the window closing dialog with showQuitWarning == false.
+pref("browser.showQuitWarning", false);
 pref("browser.fullscreen.autohide", true);
 pref("browser.fullscreen.animateUp", 1);
+pref("browser.overlink-delay", 70);
 
 #ifdef UNIX_BUT_NOT_MAC
 pref("browser.urlbar.clickSelectsAll", false);
