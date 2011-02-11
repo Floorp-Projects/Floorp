@@ -2,7 +2,6 @@ body {
   font: -moz-window;
   color: WindowText;
   font-size: 12px;
-  line-height: 16px;
 }
 
 #bg {
@@ -429,7 +428,6 @@ html[dir=rtl] .acceptsDrop {
 
 .titlebar {
   font-size: 12px;
-  line-height: 18px;
   height: 18px;
 }
 
