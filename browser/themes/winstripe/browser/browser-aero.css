@@ -74,7 +74,7 @@
 }
 
 @media all and (-moz-windows-compositor) {
-  /* these should be hidden w/glass enabled. windows draws it's own buttons. */
+  /* These should be hidden w/ glass enabled. Windows draws its own buttons. */
   .titlebar-button {
     display: none;
   }
@@ -159,7 +159,7 @@
   /* This code is only needed for restored windows (i.e. sizemode=normal)
      because of the border radius on the toolbar below the tab bar.
      :not([inFullscreen=true]) is added to ease the transition to and from
-     fullscreen mode, as the sidemode attribute isn't updated immediately. */
+     fullscreen mode, as the sizemode attribute isn't updated immediately. */
   #main-window[sizemode=normal]:not([inFullscreen=true])[tabsontop=true] #nav-bar:not(:-moz-lwtheme),
   #main-window[sizemode=normal][tabsontop=true] > #nav-bar[collapsed=true]:not([customizing]) + toolbar:not(:-moz-lwtheme),
   #main-window[sizemode=normal][tabsontop=true] > #nav-bar[collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme) {
