@@ -52,6 +52,11 @@ XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
   return PlacesUtils;
 });
 
+/* window.Rect is used by http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-Rect
+ * so it is not possible to set a lazy getter for Geometry.jsm
+ */
+Cu.import("resource://gre/modules/Geometry.jsm");
+
 /**
  * Delay load some objects from a common script. We only load the script once,
  * into a namespace, then access each object from the namespace.
@@ -81,22 +86,23 @@ XPCOMUtils.defineLazyGetter(this, "CommonUI", function() {
  * Delay load some browser scripts
  */
 [
-  ["AwesomePanel", "chrome://browser/content/AwesomePanel.js"],
   ["AlertsHelper", "chrome://browser/content/AlertsHelper.js"],
+  ["AnimatedZoom", "chrome://browser/content/AnimatedZoom.js"],
   ["AppMenu", "chrome://browser/content/AppMenu.js"],
+  ["AwesomePanel", "chrome://browser/content/AwesomePanel.js"],
   ["BookmarkHelper", "chrome://browser/content/BookmarkHelper.js"],
   ["BookmarkPopup", "chrome://browser/content/BookmarkPopup.js"],
+  ["CommandUpdater", "chrome://browser/content/commandUtil.js"],
   ["ContextCommands", "chrome://browser/content/ContextCommands.js"],
+  ["ConsoleView", "chrome://browser/content/console.js"],
+  ["DownloadsView", "chrome://browser/content/downloads.js"],
+  ["ExtensionsView", "chrome://browser/content/extensions.js"],
   ["MenuListHelperUI", "chrome://browser/content/MenuListHelperUI.js"],
+  ["OfflineApps", "chrome://browser/content/OfflineApps.js"],
+  ["PreferencesView", "chrome://browser/content/preferences.js"],
+  ["Sanitizer", "chrome://browser/content/sanitize.js"],
   ["SelectHelperUI", "chrome://browser/content/SelectHelperUI.js"],
   ["SharingUI", "chrome://browser/content/SharingUI.js"],
-  ["Sanitizer", "chrome://browser/content/sanitize.js"],
-  ["ExtensionsView", "chrome://browser/content/extensions.js"],
-  ["DownloadsView", "chrome://browser/content/downloads.js"],
-  ["PreferencesView", "chrome://browser/content/preferences.js"],
-  ["ConsoleView", "chrome://browser/content/console.js"],
-  ["AnimatedZoom", "chrome://browser/content/AnimatedZoom.js"],
-  ["CommandUpdater", "chrome://browser/content/commandUtil.js"],
 #ifdef MOZ_SERVICES_SYNC
   ["WeaveGlue", "chrome://browser/content/sync.js"],
 #endif

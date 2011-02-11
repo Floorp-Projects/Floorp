@@ -6,8 +6,22 @@ let Ci = Components.interfaces;
 let Cu = Components.utils;
 let Cr = Components.results;
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "Services", function() {
+  Cu.import("resource://gre/modules/Services.jsm");
+  return Services;
+});
+
+XPCOMUtils.defineLazyGetter(this, "Rect", function() {
+  Cu.import("resource://gre/modules/Geometry.jsm");
+  return Rect;
+});
+
+XPCOMUtils.defineLazyGetter(this, "Point", function() {
+  Cu.import("resource://gre/modules/Geometry.jsm");
+  return Point;
+});
 
 XPCOMUtils.defineLazyServiceGetter(this, "gFocusManager",
   "@mozilla.org/focus-manager;1", "nsIFocusManager");

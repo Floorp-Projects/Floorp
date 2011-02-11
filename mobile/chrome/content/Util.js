@@ -43,8 +43,6 @@
 // General util/convenience tools
 //
 
-Cu.import("resource://gre/modules/Geometry.jsm");
-
 let Util = {
   /** printf-like dump function */
   dumpf: function dumpf(str) {

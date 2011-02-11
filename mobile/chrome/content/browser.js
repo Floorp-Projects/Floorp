@@ -367,7 +367,6 @@ var Browser = {
     messageManager.addMessageListener("Browser:KeyPress", this);
     messageManager.addMessageListener("Browser:ZoomToPoint:Return", this);
     messageManager.addMessageListener("scroll", this);
-    messageManager.addMessageListener("Browser:MozApplicationManifest", OfflineApps);
     messageManager.addMessageListener("Browser:CertException", this);
 
     // broadcast a UIReady message so add-ons know we are finished with startup
@@ -445,7 +444,6 @@ var Browser = {
     messageManager.removeMessageListener("Browser:KeyPress", this);
     messageManager.removeMessageListener("Browser:ZoomToPoint:Return", this);
     messageManager.removeMessageListener("scroll", this);
-    messageManager.removeMessageListener("Browser:MozApplicationManifest", OfflineApps);
     messageManager.removeMessageListener("Browser:CertException", this);
 
     var os = Services.obs;
@@ -1382,9 +1380,9 @@ Browser.WebProgress.prototype = {
   },
 
   _documentStop: function _documentStop(aTab) {
-      // Make sure the URLbar is in view. If this were the selected tab,
-      // onLocationChange would scroll to top.
-      aTab.pageScrollOffset = new Point(0, 0);
+    // Make sure the URLbar is in view. If this were the selected tab,
+    // onLocationChange would scroll to top.
+    aTab.pageScrollOffset = { x: 0, y: 0 };
   }
 };
 
@@ -2312,85 +2310,6 @@ function showDownloadManager(aWindowContext, aID, aReason) {
   BrowserUI.showPanel("downloads-container");
   // TODO: select the download with aID
 }
-
-
-var OfflineApps = {
-  offlineAppRequested: function(aRequest, aTarget) {
-    if (!Services.prefs.getBoolPref("browser.offline-apps.notify"))
-      return;
-
-    let currentURI = Services.io.newURI(aRequest.location, aRequest.charset, null);
-
-    // don't bother showing UI if the user has already made a decision
-    if (Services.perms.testExactPermission(currentURI, "offline-app") != Ci.nsIPermissionManager.UNKNOWN_ACTION)
-      return;
-
-    try {
-      if (Services.prefs.getBoolPref("offline-apps.allow_by_default")) {
-        // all pages can use offline capabilities, no need to ask the user
-        return;
-      }
-    } catch(e) {
-      // this pref isn't set by default, ignore failures
-    }
-
-    let host = currentURI.asciiHost;
-    let notificationID = "offline-app-requested-" + host;
-    let notificationBox = Browser.getNotificationBox();
-
-    let notification = notificationBox.getNotificationWithValue(notificationID);
-    let strings = Strings.browser;
-    if (notification) {
-      notification.documents.push(aRequest);
-    } else {
-      let buttons = [{
-        label: strings.GetStringFromName("offlineApps.allow"),
-        accessKey: null,
-        callback: function() {
-          for (let i = 0; i < notification.documents.length; i++)
-            OfflineApps.allowSite(notification.documents[i], aTarget);
-        }
-      },{
-        label: strings.GetStringFromName("offlineApps.never"),
-        accessKey: null,
-        callback: function() {
-          for (let i = 0; i < notification.documents.length; i++)
-            OfflineApps.disallowSite(notification.documents[i]);
-        }
-      },{
-        label: strings.GetStringFromName("offlineApps.notNow"),
-        accessKey: null,
-        callback: function() { /* noop */ }
-      }];
-
-      const priority = notificationBox.PRIORITY_INFO_LOW;
-      let message = strings.formatStringFromName("offlineApps.available", [host], 1);
-      notification = notificationBox.appendNotification(message, notificationID, "", priority, buttons);
-      notification.documents = [aRequest];
-    }
-  },
-
-  allowSite: function(aRequest, aTarget) {
-    let currentURI = Services.io.newURI(aRequest.location, aRequest.charset, null);
-    Services.perms.add(currentURI, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
-
-    // When a site is enabled while loading, manifest resources will start
-    // fetching immediately.  This one time we need to do it ourselves.
-    // The update must be started on the content process.
-    aTarget.messageManager.sendAsyncMessage("Browser:MozApplicationCache:Fetch", aRequest);
-  },
-
-  disallowSite: function(aRequest) {
-    let currentURI = Services.io.newURI(aRequest.location, aRequest.charset, null);
-    Services.perms.add(currentURI, "offline-app", Ci.nsIPermissionManager.DENY_ACTION);
-  },
-
-  receiveMessage: function receiveMessage(aMessage) {
-    if (aMessage.name == "Browser:MozApplicationManifest") {
-      this.offlineAppRequested(aMessage.json, aMessage.target);
-    }
-  }
-};
 
 function Tab(aURI, aParams) {
   this._id = null;
