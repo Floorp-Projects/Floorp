@@ -52,6 +52,10 @@
 
 #include "jsgcinlines.h"
 
+#if ENABLE_YARR_JIT
+#include "assembler/jit/ExecutableAllocator.h"
+#endif
+
 using namespace js;
 using namespace js::gc;
 
