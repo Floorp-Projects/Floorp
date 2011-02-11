@@ -43,7 +43,7 @@
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 #include "mozilla/dom/indexedDB/IDBObjectStore.h"
 
-#include "nsIIDBCursor.h"
+#include "nsIIDBCursorWithValue.h"
 
 #include "nsCycleCollectionParticipant.h"
 
@@ -62,7 +62,7 @@ class ContinueObjectStoreHelper;
 class ContinueIndexHelper;
 class ContinueIndexObjectHelper;
 
-class IDBCursor : public nsIIDBCursor
+class IDBCursor : public nsIIDBCursorWithValue
 {
   friend class ContinueHelper;
   friend class ContinueObjectStoreHelper;
@@ -72,6 +72,7 @@ class IDBCursor : public nsIIDBCursor
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIIDBCURSOR
+  NS_DECL_NSIIDBCURSORWITHVALUE
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBCursor)
 
@@ -88,7 +89,7 @@ public:
          const Key& aKey,
          JSAutoStructuredCloneBuffer& aCloneBuffer);
 
-  // For INDEX cursors.
+  // For INDEXKEY cursors.
   static
   already_AddRefed<IDBCursor>
   Create(IDBRequest* aRequest,
@@ -149,16 +150,16 @@ protected:
   nsCOMPtr<nsIScriptContext> mScriptContext;
   nsCOMPtr<nsPIDOMWindow> mOwner;
 
-  // Not cycle-collected, these are guaranteed to be primitives!
+  // Not cycle-collected, this is guaranteed to be primitive!
   nsCOMPtr<nsIVariant> mCachedKey;
-  nsCOMPtr<nsIVariant> mCachedObjectKey;
 
   Type mType;
   PRUint16 mDirection;
   nsCString mContinueQuery;
   nsCString mContinueToQuery;
 
-  // This one is cycle-collected!
+  // These are cycle-collected!
+  jsval mCachedPrimaryKey;
   jsval mCachedValue;
 
   Key mRangeKey;
@@ -168,8 +169,9 @@ protected:
   JSAutoStructuredCloneBuffer mCloneBuffer;
   Key mContinueToKey;
 
+  bool mHaveCachedPrimaryKey;
   bool mHaveCachedValue;
-  bool mValueRooted;
+  bool mRooted;
   bool mContinueCalled;
   bool mHaveValue;
 };

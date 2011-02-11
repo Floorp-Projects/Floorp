@@ -17,11 +17,11 @@
  *
  * The Initial Developer of the Original Code is
  * The Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ben Turner <bent.mozilla@gmail.com>
+ *   Jonas Sicking <jonas@sicking.cc>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,10 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-
-interface nsIIDBRequest;
-interface nsIVariant;
+#include "nsIIDBCursor.idl"
 
 %{C++
 #include "jsapi.h"
@@ -51,32 +48,9 @@ interface nsIVariant;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBCursor for more
  * information.
  */
-[scriptable, uuid(adee4085-68cd-4568-9d74-e3d32b6dc5c5)]
-interface nsIIDBCursor : nsISupports
+[scriptable, uuid(b6b7e08a-4379-4441-a176-447c5c96df69)]
+interface nsIIDBCursorWithValue : nsIIDBCursor
 {
-  const unsigned short NEXT = 0;
-  const unsigned short NEXT_NO_DUPLICATE = 1;
-  const unsigned short PREV = 2;
-  const unsigned short PREV_NO_DUPLICATE = 3;
-  readonly attribute unsigned short direction;
-
-  readonly attribute nsISupports source;
-
-  readonly attribute nsIVariant key;
-
   [implicit_jscontext]
-  readonly attribute jsval primaryKey;
-
-  // Calling continue means that the same onsuccess function will be called
-  // again with the new key/value (or null if no more matches).
-  [implicit_jscontext]
-  void continue([optional /* undefined */] in jsval key);
-
-  // Success fires IDBTransactionEvent, result == key
-  [implicit_jscontext]
-  nsIIDBRequest update(in jsval value);
-
-  // Success fires IDBTransactionEvent, result == null
-  [implicit_jscontext]
-  nsIIDBRequest delete();
+  readonly attribute jsval value;
 };
