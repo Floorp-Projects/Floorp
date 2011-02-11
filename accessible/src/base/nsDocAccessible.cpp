@@ -1942,9 +1942,6 @@ nsDocAccessible::UncacheChildrenInSubtree(nsAccessible* aRoot)
   for (PRUint32 idx = 0; idx < count; idx++)
     UncacheChildrenInSubtree(aRoot->GetCachedChildAt(idx));
 
-  if (aRoot->IsTextLeaf())
-    mNotificationController->CancelTextUpdate(aRoot->GetContent());
-
   if (aRoot->IsPrimaryForNode() &&
       mNodeToAccessibleMap.Get(aRoot->GetNode()) == aRoot)
     mNodeToAccessibleMap.Remove(aRoot->GetNode());
