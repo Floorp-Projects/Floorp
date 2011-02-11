@@ -13,3 +13,6 @@
 <!ENTITY  crash_restart_label "Restart &brandShortName;">
 <!ENTITY  sending_crash_report "Sending crash report\u2026">
 <!ENTITY  exit_label "Exit">
+<!ENTITY  incompatable_device "&brandShortName; does not support this device and you may experience
+problems.">
+<!ENTITY  continue_label "Continue">

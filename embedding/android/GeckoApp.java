@@ -106,12 +106,13 @@ abstract public class GeckoApp
         new AlertDialog.Builder(this)
             .setMessage(message)
             .setCancelable(false)
-            .setPositiveButton(getResources().getString(R.string.exit_label),
+            .setPositiveButton(R.string.exit_label,
                                new DialogInterface.OnClickListener() {
                                    public void onClick(DialogInterface dialog,
                                                        int id)
                                    {
                                        GeckoApp.this.finish();
+                                       System.exit(0);
                                    }
                                }).show();
     }
@@ -222,6 +223,25 @@ abstract public class GeckoApp
             surfaceView.mSplashStatusMsg =
                 getResources().getString(R.string.splash_screen_label);
         mLibLoadThread.start();
+
+        // We don't currently support devices with less than 256Mb of RAM, warn on first run
+        if (Runtime.getRuntime().totalMemory() <= 262144L && !new File(sGREDir, "application.ini").exists()) {
+            new AlertDialog.Builder(this)
+            .setMessage(R.string.incompatable_device)
+            .setCancelable(false)
+            .setPositiveButton(R.string.continue_label, null)
+            .setNegativeButton(R.string.exit_label,
+                               new DialogInterface.OnClickListener() {
+                                   public void onClick(DialogInterface dialog,
+                                                       int id)
+                                   {
+                                       GeckoApp.this.finish();
+                                       System.exit(0);
+                                   }
+                               })
+             .show();
+        }
+        
     }
 
     @Override
