@@ -23,7 +23,7 @@ function closeWindow(aClose, aPromptFunction)
   }
 
   // If we're down to the last window and someone tries to shut down, check to make sure we can!
-  if (windowCount == 1 && !canQuitApplication())
+  if (windowCount == 1 && !canQuitApplication("lastwindow"))
     return false;
   else if (windowCount != 1 || inPrivateBrowsing)
 #endif
@@ -36,7 +36,7 @@ function closeWindow(aClose, aPromptFunction)
   return true;
 }
 
-function canQuitApplication()
+function canQuitApplication(aData)
 {
   var os = Components.classes["@mozilla.org/observer-service;1"]
                      .getService(Components.interfaces.nsIObserverService);
@@ -45,7 +45,7 @@ function canQuitApplication()
   try {
     var cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
                               .createInstance(Components.interfaces.nsISupportsPRBool);
-    os.notifyObservers(cancelQuit, "quit-application-requested", null);
+    os.notifyObservers(cancelQuit, "quit-application-requested", aData || null);
     
     // Something aborted the quit process. 
     if (cancelQuit.data)

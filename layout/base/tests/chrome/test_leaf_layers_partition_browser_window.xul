@@ -16,25 +16,35 @@
   <script type="application/javascript">
   <![CDATA[
     SimpleTest.waitForExplicitFinish();
+
     // Run the test in a separate window so we get a clean browser window.
-    window.open("data:text/html,<html style='overflow:scroll'><script>opener.doTest(window)</script>",
+    window.open("data:text/html,<html style='overflow:scroll'><script>opener.doTest(window);</script>",
                 "", "scrollbars=yes,toolbar,menubar,width=500,height=500");
+
     function doTest(win) {
-      var currentCount = win.mozPaintCount;
+      var initialCount = win.mozPaintCount;
+
       function nextStep() {
-        if (win.mozPaintCount == currentCount) {
-          setTimeout(nextStep, 0, win);
+        if (win.mozPaintCount == initialCount) {
+          is(win.mozPaintCount, initialCount, "Waiting for mozPaintCount to increase.");
+          // Do not use SimpleTest.executeSoon() here: give a little more time.
+          setTimeout(nextStep, 25);
           return;
         }
-        var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-            getInterface(Components.interfaces.nsIDOMWindowUtils).
-            QueryInterface(Components.interfaces.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
+
+        isnot(win.mozPaintCount, initialCount, "mozPaintCount has increased");
+
+        var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                       .getInterface(Components.interfaces.nsIDOMWindowUtils)
+                       .QueryInterface(Components.interfaces.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
         ok(utils.leafLayersPartitionWindow(),
            "Leaf layers should form a non-overlapping partition of the browser window");
+
         win.close();
         SimpleTest.finish();
       }
-      setTimeout(nextStep, 0);
+
+      SimpleTest.executeSoon(nextStep);
     }
   ]]>
   </script>

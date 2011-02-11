@@ -227,6 +227,12 @@ nsPermissionManager::Init()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  mObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    mObserverService->AddObserver(this, "profile-before-change", PR_TRUE);
+    mObserverService->AddObserver(this, "profile-do-change", PR_TRUE);
+  }
+
 #ifdef MOZ_IPC
   if (IsChildProcess()) {
     // Get the permissions from the parent process
@@ -248,12 +254,6 @@ nsPermissionManager::Init()
   // persistent storage - e.g. if there's no profile).
   // XXX should we tell the user about this?
   InitDB(PR_FALSE);
-
-  mObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
-    mObserverService->AddObserver(this, "profile-before-change", PR_TRUE);
-    mObserverService->AddObserver(this, "profile-do-change", PR_TRUE);
-  }
 
   return NS_OK;
 }

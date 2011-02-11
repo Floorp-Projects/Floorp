@@ -61,8 +61,9 @@ notification[type="critical"] .messageImage {
   -moz-appearance: none;
   padding: 0;
   margin: 0 2px;
-  list-style-image: url("chrome://global/skin/icons/closetab.png");
+  list-style-image: url("chrome://global/skin/notification/close.png");
   border: none;
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 .messageCloseButton > .toolbarbutton-text {
@@ -70,11 +71,11 @@ notification[type="critical"] .messageImage {
 }
 
 .messageCloseButton:hover {
-  list-style-image: url("chrome://global/skin/icons/closetab-hover.png");
+  -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
 .messageCloseButton:hover:active {
-  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 .messageCloseButton:-moz-focusring > .toolbarbutton-icon {

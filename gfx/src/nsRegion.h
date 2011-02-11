@@ -184,7 +184,10 @@ public:
   // the region.
   nsRegion ConvertAppUnitsRoundOut (PRInt32 aFromAPP, PRInt32 aToAPP) const;
   nsRegion ConvertAppUnitsRoundIn (PRInt32 aFromAPP, PRInt32 aToAPP) const;
+  nsRegion& ScaleRoundOut(float aXScale, float aYScale);
   nsIntRegion ToOutsidePixels (nscoord aAppUnitsPerPixel) const;
+  nsRegion& ExtendForScaling (float aXMult, float aYMult);
+
   /**
    * Gets the largest rectangle contained in the region.
    * @param aContainingRect if non-empty, we choose a rectangle that
@@ -435,6 +438,18 @@ public:
   nsIntRect GetLargestRectangle (const nsIntRect& aContainingRect = nsIntRect()) const
   {
     return FromRect (mImpl.GetLargestRectangle( ToRect(aContainingRect) ));
+  }
+
+  nsIntRegion& ScaleRoundOut (float aXScale, float aYScale)
+  {
+    mImpl.ScaleRoundOut(aXScale, aYScale);
+    return *this;
+  }
+
+  nsIntRegion& ExtendForScaling (float aXMult, float aYMult)
+  {
+    mImpl.ExtendForScaling(aXMult, aYMult);
+    return *this;
   }
 
   /**

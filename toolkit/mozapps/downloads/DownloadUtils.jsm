@@ -404,7 +404,8 @@ let DownloadUtils = {
 
     // Get rid of insignificant bits by truncating to 1 or 0 decimal points
     // 0 -> 0; 1.2 -> 1.2; 12.3 -> 12.3; 123.4 -> 123; 234.5 -> 235
-    aBytes = aBytes.toFixed((aBytes > 0) && (aBytes < 100) ? 1 : 0);
+    // added in bug 462064: (unitIndex != 0) makes sure that no decimal digit for bytes appears when aBytes < 100 
+    aBytes = aBytes.toFixed((aBytes > 0) && (aBytes < 100) && (unitIndex != 0) ? 1 : 0);
 
     if (gDecimalSymbol != ".")
       aBytes = aBytes.replace(".", gDecimalSymbol);

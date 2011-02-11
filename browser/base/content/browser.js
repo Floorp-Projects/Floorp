@@ -4157,16 +4157,22 @@ var XULBrowserWindow = {
   },
 
   updateStatusField: function () {
-    var text = this.overLink;
-    if (!text && this._busyUI)
-      text = this.status;
-    if (!text)
-      text = this.jsStatus || this.jsDefaultStatus || this.defaultStatus;
+    var text, type, types = ["overLink"];
+    if (this._busyUI)
+      types.push("status");
+    types.push("jsStatus", "jsDefaultStatus", "defaultStatus");
+    for (let i = 0; !text && i < types.length; i++) {
+      type = types[i];
+      text = this[type];
+    }
 
     // check the current value so we don't trigger an attribute change
     // and cause needless (slow!) UI updates
     if (this.statusText != text) {
-      this.statusTextField.label = text;
+      let field = this.statusTextField;
+      field.setAttribute("previoustype", field.getAttribute("type"));
+      field.setAttribute("type", type);
+      field.label = text;
       this.statusText = text;
     }
   },
@@ -4598,7 +4604,11 @@ var XULBrowserWindow = {
 };
 
 var LinkTargetDisplay = {
-  DELAY_SHOW: 70,
+  get DELAY_SHOW() {
+     delete this.DELAY_SHOW;
+     return this.DELAY_SHOW = Services.prefs.getIntPref("browser.overlink-delay");
+  },
+
   DELAY_HIDE: 150,
   _timer: 0,
 
@@ -8561,9 +8571,13 @@ let AddonsMgrListener = {
     this.lastAddonBarCount = this.getAddonBarItemCount();
   },
   onUninstalled: function(aAddon) {
-    if (this.lastAddonBarCount > 0 && this.getAddonBarItemCount() == 0)
+    if (this.getAddonBarItemCount() == 0)
       setToolbarVisibility(this.addonBar, false);
-  }
+  },
+  onEnabling: function(aAddon) this.onInstalling(),
+  onEnabled: function(aAddon) this.onInstalled(),
+  onDisabling: function(aAddon) this.onUninstalling(),
+  onDisabled: function(aAddon) this.onUninstalled(),
 };
 
 function toggleAddonBar() {

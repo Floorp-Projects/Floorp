@@ -554,8 +554,9 @@ BasicThebesLayer::Paint(gfxContext* aContext,
   }
 
   {
-    float paintXRes = BasicManager()->XResolution();
-    float paintYRes = BasicManager()->YResolution();
+    gfxSize scale = aContext->CurrentMatrix().ScaleFactors(PR_TRUE);
+    float paintXRes = BasicManager()->XResolution() * gfxUtils::ClampToScaleFactor(scale.width);
+    float paintYRes = BasicManager()->YResolution() * gfxUtils::ClampToScaleFactor(scale.height);
     Buffer::PaintState state =
       mBuffer.BeginPaint(this, contentType, paintXRes, paintYRes);
     mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
@@ -566,6 +567,7 @@ BasicThebesLayer::Paint(gfxContext* aContext,
       // from RGB to RGBA, because we might need to repaint with
       // subpixel AA)
       state.mRegionToInvalidate.And(state.mRegionToInvalidate, mVisibleRegion);
+      state.mRegionToDraw.ExtendForScaling(paintXRes, paintYRes);
       mXResolution = paintXRes;
       mYResolution = paintYRes;
       SetAntialiasingFlags(this, state.mContext);
@@ -1269,9 +1271,7 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
 
   mTransactionIncomplete = false;
 
-  if (mTarget) {
-    NS_ASSERTION(mRoot, "Root not set");
-
+  if (mTarget && mRoot) {
     nsRefPtr<gfxContext> finalTarget = mTarget;
     gfxPoint cachedSurfaceOffset;
 

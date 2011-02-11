@@ -5,6 +5,15 @@ var Ci = Components.interfaces;
 var testsRun = 0;
 var testsPassed = 0;
 
+function base64decode(data) {
+  // base64 encode/decode is built into window object, but we're in a module so we
+  // need to fetch a window reference first:
+  let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+    getService(Ci.nsIWindowMediator);
+  let window = wm.getMostRecentWindow("navigator:browser");
+  return window.atob(data);
+}
+
 function cheapAssertEqual(a, b, errorMsg) {
   testsRun += 1;
   if (a == b) {
@@ -249,7 +258,7 @@ function testRemoteLoader() {
     }
   };
 
-  let remoteLoader = new remoteLoaderModule.RemoteExperimentLoader(getFileFunc);
+  let remoteLoader = new remoteLoaderModule.RemoteExperimentLoader(stubLogger, getFileFunc);
 
   remoteLoader.checkForUpdates(function(success) {
     if (success) {
@@ -291,6 +300,14 @@ function testRemotelyLoadTabsExperiment() {
   // (~/testpilot/website/testcases/tab-open-close/tabs_experiment.js)
 }
 
+let stubLogger = {
+  getLogger: function() { return {trace: function(str) {dump("Trace: " + str +"\n");},
+                                  warn: function(str) {dump("Warn: " + str +"\n");},
+                                  info: function(str) {dump("Info: " + str +"\n");},
+                                  debug: function(str) {dump("Debug: " + str +"\n");}};}
+};
+
+
 function testRemoteLoaderIndexCache() {
   var Cuddlefish = {};
   Cu.import("resource://testpilot/modules/lib/cuddlefish.js",
@@ -303,17 +320,17 @@ function testRemoteLoaderIndexCache() {
     callback(null);
   };
 
-  let stubLogger = {
-    getLogger: function() { return {trace: function() {},
-                                    warn: function() {},
-                                    info: function() {},
-                                    debug: function() {}};}
-  };
-
   let remoteLoader = new remoteLoaderModule.RemoteExperimentLoader(stubLogger, getFileFunc);
   let data = "Foo bar baz quux";
   remoteLoader._cacheIndexFile(data);
   cheapAssertEqual(remoteLoader._loadCachedIndexFile(), data);
+
+  // Clean up by killing the file so we don't break Test Pilot so bad
+  dump("Killing the mungled index file.\n");
+  let indexFile = remoteLoader.cachedIndexNsiFile;
+  if (indexFile.exists()) {
+    indexFile.remove(false);
+  }
 }
 
 
@@ -532,13 +549,17 @@ function testRecurringStudyStateChange() {
 
 
 function runAllTests() {
-  testTheDataStore();
-  testFirefoxVersionCheck();
-  testStringSanitizer();
+  testsRun = 0;
+  testsPassed = 0;
+
+  //testTheDataStore();
+  //testFirefoxVersionCheck();
+  //testStringSanitizer();
   //testTheCuddlefishPreferencesFilesystem();
   //testRemoteLoader();
-  testRemoteLoaderIndexCache();
-  testRecurringStudyStateChange();
+  //testRemoteLoaderIndexCache();
+  //testRecurringStudyStateChange();
+  testKillSwitch();
   dump("TESTING COMPLETE.  " + testsPassed + " out of " + testsRun +
        " tests passed.");
 }
@@ -552,3 +573,122 @@ function runAllTests() {
 // Test that every observer that is installed gets uninstalled.
 
 // Test that the observer is writing to the data store correctly.
+
+function testKillSwitch() {
+  var Cuddlefish = {};
+  Cu.import("resource://testpilot/modules/lib/cuddlefish.js",
+                          Cuddlefish);
+  let cfl = new Cuddlefish.Loader({rootPaths: ["resource://testpilot/modules/",
+                                               "resource://testpilot/modules/lib/"]});
+  let remoteLoaderModule = cfl.require("remote-experiment-loader");
+
+  var indexJson1 = '{"new_experiments": [{"default": {"name": "Foo Study", '
+                    + '"jarfile": "foo.jar", "studyfile": "foo.js",'
+                    + '"hash": "19f32c805f93697e1b180a782bc7a8c7575f32138008d2617e9843a9bde14b38"}}]}';
+
+  var indexJson2 = '{"new_experiments": [], "maintain_experiments": ["foo.js"]}';
+  var indexJson3 = '{"new_experiments": []}';
+
+  var indexJson = indexJson1;
+
+  var theRemoteFile = "exports.foo = function(x, y) { return x * y; }";
+
+  let getFileFunc = function(url, callback) {
+    if (url.indexOf("index.json") > -1 || url.indexOf("index-dev.json") > -1) {
+      if (indexJson != "") {
+        callback(indexJson);
+      } else {
+        callback(null);
+      }
+    } else if (url.indexOf("foo.jar") > -1) {
+      // Binary file (got this by base64encoding foo.jar):
+      callback(base64decode(
+        'UEsDBBQACAAIAFd2Pj4AAAAAAAAAAAAAAAAJAAQATUVUQS1JTkYv/soAAAMAUEsHCAAAAAACAAAAAAAA' +
+	'AFBLAwQUAAgACABXdj4+AAAAAAAAAAAAAAAAFAAAAE1FVEEtSU5GL01BTklGRVNULk1G803My0xLLS7R' +
+	'DUstKs7Mz7NSMNQz4OVyLkpNLElN0XWqBAmY6RnEGxkpaDgWFOSkKnjmJetp8nLxcgEAUEsHCPlAfs88' +
+	'AAAAPAAAAFBLAwQUAAgACAA1dj4+AAAAAAAAAAAAAAAABgAAAGZvby5qc0utKMgvKinWS8vPV7BVSCvN' +
+	'Sy7JzM/TqNBRqNRUqFYoSi0pLcpTqFDQUqi0Vqi1BgBQSwcIGwhXqzEAAAAvAAAAUEsBAhQAFAAIAAgA' +
+	'V3Y+PgAAAAACAAAAAAAAAAkABAAAAAAAAAAAAAAAAAAAAE1FVEEtSU5GL/7KAABQSwECFAAUAAgACABX' +
+	'dj4++UB+zzwAAAA8AAAAFAAAAAAAAAAAAAAAAAA9AAAATUVUQS1JTkYvTUFOSUZFU1QuTUZQSwECFAAU' +
+	'AAgACAA1dj4+GwhXqzEAAAAvAAAABgAAAAAAAAAAAAAAAAC7AAAAZm9vLmpzUEsFBgAAAAADAAMAsQAA' +
+	'ACABAAAAAA=='));
+    } else {
+      callback(null);
+    }
+  };
+
+  let remoteLoader = new remoteLoaderModule.RemoteExperimentLoader(stubLogger, getFileFunc);
+
+  function clearIndexFileCache() {
+    // TODO this needs to go in a teardown
+    dump("Killing the mungled index file.\n");
+    let indexFile = remoteLoader.cachedIndexNsiFile;
+    if (indexFile.exists()) {
+      indexFile.remove(false);
+    }
+  }
+
+  dump("Preparing To Test Kill Switch!!!\n");
+  remoteLoader.checkForUpdates(function(hasChanges) {
+    if (hasChanges) {
+      dump("Testing that foo study is loaded.\n");
+      let exp = remoteLoader.getExperiments();
+      let count = 0;
+      for (let i in exp) {
+        count += 1;
+      }
+      cheapAssertEqual(count, 1, "Supposed to find one file.");
+      let fooModule = exp["foo.js"];
+      cheapAssertEqual(fooModule.foo(3, 4), 12, "Supposed to load the foo module.\n");
+    } else {
+      cheapAssertFail("checkForUpdates is supposed to find changes.");
+    }
+
+    /* Now we change the index file and call checkForUpdates again... test that:
+     * a. with indexJson2, the Foo Study continues to run.
+     * b. with indexJson3, the Foo Study stops immediately.
+     * */
+    clearIndexFileCache();
+    indexJson = indexJson2;
+    dump("Preparing to check for updates 2nd time.\n");
+    remoteLoader.checkForUpdates( function(hasChanges) {
+      dump("in the callback for check for updates 2nd time.\n");
+      if (hasChanges) {
+        dump("checkforUpdates 2nd time - has changes.\n");
+      } else {
+        dump("checkforUpdates 2nd time - does not have changes.\n");
+      }
+
+      dump("Testing that foo study is loaded. (2nd time)\n");
+      let exp = remoteLoader.getExperiments();
+      let count = 0;
+      for (let i in exp) {
+        count += 1;
+      }
+      cheapAssertEqual(count, 1, "Supposed to find one file (2nd time).");
+      let fooModule = exp["foo.js"];
+      cheapAssertEqual(fooModule.foo(3, 4), 12, "Supposed to load the foo module (2).\n");
+
+
+      clearIndexFileCache();
+      indexJson = indexJson3;
+      remoteLoader.checkForUpdates( function(hasChanges) {
+        if (hasChanges) {
+          dump("checkForUpdates 3rd time - has changes.\n");
+        } else {
+          dump("checkForUpdates 3rd time - has no changes.\n");
+        }
+
+        dump("Testing that foo study is NOT loaded. (3rd time)\n");
+        let exp = remoteLoader.getExperiments();
+        let count = 0;
+        for (let i in exp) {
+          count += 1;
+        }
+        cheapAssertEqual(count, 0, "File should be killed!\n");
+
+        clearIndexFileCache();
+      });
+    });
+  });
+}

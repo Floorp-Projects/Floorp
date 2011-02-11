@@ -44,11 +44,11 @@ fails == canvas-drawImage-slice-1b.html lime100x100-ref.html # XXX all edges fuz
 # Simple <img> tests
 == img-simple-1.html  lime100x100-ref.html
 == img-simple-2.html  lime100x100-ref.html
-== img-simple-3.html  lime100x100-ref.html
+fails-if(d2d) == img-simple-3.html  img-simple-3-ref.html # bug 633072
 == img-simple-4.html  lime100x100-ref.html
-== img-simple-5.html  lime100x100-ref.html
+fails-if(d2d) == img-simple-5.html  img-simple-5-ref.html # bug 633072
 == img-simple-6.html  lime100x100-ref.html
-== img-simple-7.html  lime100x100-ref.html
+fails-if(d2d) == img-simple-7.html  img-simple-7-ref.html # bug 633072
 
 # Test with mix of <html:img> and <svg:image> referring to the same images,
 # with a variety of preserveAspectRatio values in play.
@@ -60,20 +60,34 @@ random-if(gtk2Widget) == img-anim-1.html  lime100x100-ref.html # bug 612214
 == img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html
 random == img-dyn-1.html img-dyn-1-ref.html # Bug 596478
 
-random-if(d2d) == img-widthAndHeight-meet-1.html  img-widthAndHeight-meet-1-ref.html
-random-if(d2d) == img-widthAndHeight-meet-2.html  img-widthAndHeight-meet-2-ref.html
-random-if(d2d) == img-widthAndHeight-slice-1.html img-widthAndHeight-slice-1-ref.html
-random-if(d2d) == img-widthAndHeight-slice-2.html img-widthAndHeight-slice-2-ref.html
+fails-if(d2d) == img-widthAndHeight-meet-1.html  img-widthAndHeight-meet-1-ref.html # bug 633072
+== img-widthAndHeight-meet-2.html  img-widthAndHeight-meet-2-ref.html
+fails-if(d2d) == img-widthAndHeight-slice-1.html img-widthAndHeight-slice-1-ref.html # bug 633072
+fails-if(d2d) == img-widthAndHeight-slice-2.html img-widthAndHeight-slice-2-ref.html # bug 633072
 
-random-if(d2d) == img-height-meet-1.html   img-height-meet-1-ref.html
-random-if(d2d) == img-height-meet-2.html   img-height-meet-2-ref.html
-random-if(d2d) == img-height-slice-1.html  img-height-slice-1-ref.html
-random-if(d2d) == img-height-slice-2.html  img-height-slice-2-ref.html
+fails-if(d2d) == img-height-meet-1.html   img-height-meet-1-ref.html # bug 633072
+== img-height-meet-2.html   img-height-meet-2-ref.html
+fails-if(d2d) == img-height-slice-1.html  img-height-slice-1-ref.html # bug 633072
+== img-height-slice-2.html  img-height-slice-2-ref.html
 
-random-if(d2d) == img-width-meet-1.html   img-width-meet-1-ref.html
-random-if(d2d) == img-width-meet-2.html   img-width-meet-2-ref.html
-random-if(d2d) == img-width-slice-1.html  img-width-slice-1-ref.html
-random-if(d2d) == img-width-slice-2.html  img-width-slice-2-ref.html
+fails-if(d2d) == img-width-meet-1.html   img-width-meet-1-ref.html # bug 633072
+== img-width-meet-2.html   img-width-meet-2-ref.html
+fails-if(d2d) == img-width-slice-1.html  img-width-slice-1-ref.html # bug 633072
+== img-width-slice-2.html  img-width-slice-2-ref.html
+
+# Alternate version of "width & height both non-%-valued" tests, but now
+# with no explicit viewBox, to trigger "synthesize-viewBox" behavior
+fails-if(d2d) == img-novb-widthAndHeight-meet-1-em.html  img-novb-widthAndHeight-all-1-ref.html # bug 633072
+fails-if(d2d) == img-novb-widthAndHeight-meet-1-px.html  img-novb-widthAndHeight-all-1-ref.html # bug 633072
+fails-if(d2d) == img-novb-widthAndHeight-slice-1-em.html img-novb-widthAndHeight-all-1-ref.html # bug 633072
+fails-if(d2d) == img-novb-widthAndHeight-slice-1-px.html img-novb-widthAndHeight-all-1-ref.html # bug 633072
+
+# Alternate versions of "only one dimension is non-%-valued" tests, but now
+# with no explicit viewBox, to trigger "synthesize-viewBox" behavior
+== img-novb-height-meet-1.html    img-novb-height-all-1-ref.html
+== img-novb-height-slice-1.html   img-novb-height-all-1-ref.html
+fails-if(d2d) == img-novb-width-meet-1.html     img-novb-width-all-1-ref.html # bug 633072
+fails-if(d2d) == img-novb-width-slice-1.html    img-novb-width-all-1-ref.html # bug 633072
 
 == list-simple-1.html list-simple-1-ref.html
 

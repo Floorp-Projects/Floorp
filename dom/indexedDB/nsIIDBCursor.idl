@@ -51,7 +51,7 @@ interface nsIVariant;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBCursor for more
  * information.
  */
-[scriptable, uuid(585d4d50-11a8-4d65-951e-805787f59d89)]
+[scriptable, uuid(adee4085-68cd-4568-9d74-e3d32b6dc5c5)]
 interface nsIIDBCursor : nsISupports
 {
   const unsigned short NEXT = 0;
@@ -65,7 +65,7 @@ interface nsIIDBCursor : nsISupports
   readonly attribute nsIVariant key;
 
   [implicit_jscontext]
-  readonly attribute jsval value;
+  readonly attribute jsval primaryKey;
 
   // Calling continue means that the same onsuccess function will be called
   // again with the new key/value (or null if no more matches).

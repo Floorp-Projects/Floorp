@@ -111,12 +111,12 @@
               src="chrome://browser/content/preferences/privacy.xul"/>
     <prefpane id="paneSecurity" label="&paneSecurity.title;"
               src="chrome://browser/content/preferences/security.xul"/>
-    <prefpane id="paneAdvanced" label="&paneAdvanced.title;"
-              src="chrome://browser/content/preferences/advanced.xul"/>
 #ifdef MOZ_SERVICES_SYNC
     <prefpane id="paneSync" label="&paneSync.title;"
               src="chrome://browser/content/preferences/sync.xul"/>
 #endif
+    <prefpane id="paneAdvanced" label="&paneAdvanced.title;"
+              src="chrome://browser/content/preferences/advanced.xul"/>
 
 #ifdef XP_MACOSX
 #include ../../base/content/browserMountPoints.inc

@@ -279,6 +279,17 @@ NS_IMETHODIMP nsSyncJPAKE::Round2(const nsACString & aPeerID,
   rp.A.pGX   = gxABuf; rp.A  .ulGXLen = sizeof gxABuf;
   rp.A.pGV   = gvABuf; rp.A  .ulGVLen = sizeof gxABuf;
   rp.A.pR    = rABuf;  rp.A  .ulRLen  = sizeof gxABuf;
+
+  // Bug 629090: NSS 3.12.9 J-PAKE fails to check that gx^4 != 1, so check here.
+  PRBool gx4Good = PR_FALSE;
+  for (unsigned i = 0; i < rp.gx4.ulGXLen; ++i) {
+    if (rp.gx4.pGX[i] > 1 || (rp.gx4.pGX[i] != 0 && i < rp.gx4.ulGXLen - 1)) {
+      gx4Good = PR_TRUE;
+      break;
+    }
+  }
+  NS_ENSURE_ARG(gx4Good);
+
   SECItem paramsItem;
   paramsItem.data = (unsigned char *) &rp;
   paramsItem.len = sizeof rp;

@@ -3441,6 +3441,12 @@ nsDocShell::SetUseGlobalHistory(PRBool aUseGlobalHistory)
         return NS_OK;
     }
 
+    // No need to initialize mGlobalHistory if IHistory is available.
+    nsCOMPtr<IHistory> history = services::GetHistoryService();
+    if (history) {
+        return NS_OK;
+    }
+
     if (mGlobalHistory) {
         return NS_OK;
     }
@@ -7301,12 +7307,29 @@ nsDocShell::RestoreFromHistory()
         }
     }
 
+    // The FinishRestore call below can kill these, null them out so we don't
+    // have invalid pointer lying around.
+    newRootView = rootViewSibling = rootViewParent = nsnull;
+    newVM = nsnull;
+
     // Simulate the completion of the load.
     nsDocShell::FinishRestore();
 
     // Restart plugins, and paint the content.
-    if (shell)
+    if (shell) {
         shell->Thaw();
+
+        newVM = shell->GetViewManager();
+        if (newVM) {
+            // When we insert the root view above the resulting invalidate is
+            // dropped because painting is suppressed in the presshell until we
+            // call Thaw. So we issue the invalidate here.
+            newVM->GetRootView(newRootView);
+            if (newRootView) {
+                newVM->UpdateView(newRootView, NS_VMREFRESH_NO_SYNC);
+            }
+        }
+    }
 
     return privWin->FireDelayedDOMEvents();
 }
@@ -9570,8 +9593,6 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     nsCOMPtr<nsIDocument> document = do_GetInterface(GetAsSupports(this));
     NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
-    mLoadType = LOAD_PUSHSTATE;
-
     // Step 1: Clone aData by getting its JSON representation
     nsString dataStr;
     rv = StringifyJSValVariant(aData, dataStr);
@@ -9688,6 +9709,8 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     // keep a reference here.
     NS_ENSURE_TRUE(mOSHE, NS_ERROR_FAILURE);
     nsCOMPtr<nsISHEntry> oldOSHE = mOSHE;
+
+    mLoadType = LOAD_PUSHSTATE;
 
     nsCOMPtr<nsISHEntry> newSHEntry;
     if (!aReplace) {
@@ -9921,7 +9944,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
     if (root == static_cast<nsIDocShellTreeItem *>(this) && mSessionHistory) {
         // Bug 629559: Detect if this is an anchor navigation and clone the
         // session history in that case too
-        if (mLoadType == LOAD_PUSHSTATE) {
+        if (mLoadType == LOAD_PUSHSTATE && mOSHE) {
             PRUint32 cloneID;
             mOSHE->GetID(&cloneID);
             nsCOMPtr<nsISHEntry> newEntry;

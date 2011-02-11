@@ -602,6 +602,9 @@ public:
    *                  direction even if overflow:hidden is specified in that
    *                  direction; otherwise we will not scroll in that direction
    *                  when overflow:hidden is set for that direction.
+   *                  If SCROLL_NO_PARENT_FRAMES is set then we only scroll
+   *                  nodes in this document, not in any parent documents which
+   *                  contain this document in a iframe or the like.
    */
   virtual NS_HIDDEN_(nsresult) ScrollContentIntoView(nsIContent* aContent,
                                                      PRIntn      aVPercent,
@@ -610,7 +613,8 @@ public:
 
   enum {
     SCROLL_FIRST_ANCESTOR_ONLY = 0x01,
-    SCROLL_OVERFLOW_HIDDEN = 0x02
+    SCROLL_OVERFLOW_HIDDEN = 0x02,
+    SCROLL_NO_PARENT_FRAMES = 0x04
   };
   /**
    * Scrolls the view of the document so that the given area of a frame
@@ -626,6 +630,9 @@ public:
    * even if overflow:hidden is specified in that direction; otherwise
    * we will not scroll in that direction when overflow:hidden is
    * set for that direction
+   * If SCROLL_NO_PARENT_FRAMES is set then we only scroll
+   * nodes in this document, not in any parent documents which
+   * contain this document in a iframe or the like.
    * @return true if any scrolling happened, false if no scrolling happened
    */
   virtual PRBool ScrollFrameRectIntoView(nsIFrame*     aFrame,

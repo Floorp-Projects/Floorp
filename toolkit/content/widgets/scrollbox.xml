@@ -482,7 +482,7 @@
           let isVertical = event.axis == event.VERTICAL_AXIS;
 
           if (this._prevMouseScrolls.every(function(prev) prev == isVertical))
-            this.scrollByIndex(event.detail);
+            this.scrollByIndex(this._isRTLScrollbox ? -event.detail : event.detail);
 
           if (this._prevMouseScrolls.length > 1)
             this._prevMouseScrolls.shift();

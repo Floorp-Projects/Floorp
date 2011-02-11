@@ -145,7 +145,7 @@ public:
    * (First, though, it sets the mIgnoreInvalidation flag so that we won't
    * notify the image's observers and trigger unwanted repaint-requests.)
    */
-  void FlushPreserveAspectRatioOverride();
+  void FlushImageTransformInvalidation();
 
   /**
    * Returns a PRBool indicating whether the document has any SMIL animations.

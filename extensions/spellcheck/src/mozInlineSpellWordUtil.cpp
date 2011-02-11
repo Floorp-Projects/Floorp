@@ -899,12 +899,36 @@ WordSplitState::ClassifyCharacter(PRInt32 aIndex, PRBool aRecurse) const
     return CHAR_CLASS_WORD;
   }
 
+  // The dot character, if appearing at the end of a word, should
+  // be considered part of that word.  Example: "etc.", or
+  // abbreviations
+  if (aIndex > 0 &&
+      mDOMWordText[aIndex] == '.' &&
+      mDOMWordText[aIndex - 1] != '.' &&
+      ClassifyCharacter(aIndex - 1, false) != CHAR_CLASS_WORD) {
+    return CHAR_CLASS_WORD;
+  }
+
   // all other punctuation
   if (charCategory == nsIUGenCategory::kSeparator ||
       charCategory == nsIUGenCategory::kOther ||
       charCategory == nsIUGenCategory::kPunctuation ||
-      charCategory == nsIUGenCategory::kSymbol)
+      charCategory == nsIUGenCategory::kSymbol) {
+    // Don't break on hyphens, as hunspell handles them on its own.
+    if (aIndex > 0 &&
+        mDOMWordText[aIndex] == '-' &&
+        mDOMWordText[aIndex - 1] != '-' &&
+        ClassifyCharacter(aIndex - 1, false) == CHAR_CLASS_WORD) {
+      // A hyphen is only meaningful as a separator inside a word
+      // if the previous and next characters are a word character.
+      if (aIndex == PRInt32(mDOMWordText.Length()) - 1)
+        return CHAR_CLASS_SEPARATOR;
+      if (mDOMWordText[aIndex + 1] != '.' &&
+          ClassifyCharacter(aIndex + 1, false) == CHAR_CLASS_WORD)
+        return CHAR_CLASS_WORD;
+    }
     return CHAR_CLASS_SEPARATOR;
+  }
 
   // any other character counts as a word
   return CHAR_CLASS_WORD;

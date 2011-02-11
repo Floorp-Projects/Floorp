@@ -71,6 +71,7 @@ _TEST_FILES =\
 		test_scroll.xul \
 		test_selection.html \
 		test_statechange.html \
+		test_text_alg.html \
 		test_text.html \
 		test_textattrchange.html \
 		test_tree.xul \

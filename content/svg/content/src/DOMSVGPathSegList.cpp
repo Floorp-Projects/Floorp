@@ -175,6 +175,12 @@ DOMSVGPathSegList::InternalListWillChangeTo(const SVGPathData& aNewValue)
 
     // Sync mItems:
     while (dataIndex < dataLength) {
+      if (mItems.Length() &&
+          mItems.Length() - 1 > DOMSVGPathSeg::MaxListIndex()) {
+        // It's safe to get out of sync with our internal list as long as we
+        // have FEWER items than it does.
+        return;
+      }
       if (!mItems.AppendElement(ItemProxy(nsnull, dataIndex))) {
         // OOM
         Clear();
@@ -314,13 +320,6 @@ DOMSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *aNewItem,
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  nsCOMPtr<DOMSVGPathSeg> domItem = do_QueryInterface(aNewItem);
-  if (!domItem) {
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-  }
-  if (domItem->HasOwner()) {
-    domItem = domItem->Clone(); // must do this before changing anything!
-  }
   PRUint32 internalIndex;
   if (aIndex < Length()) {
     internalIndex = mItems[aIndex].mInternalDataIndex;
@@ -328,6 +327,18 @@ DOMSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *aNewItem,
     aIndex = Length();
     internalIndex = InternalList().mData.Length();
   }
+  if (aIndex >= DOMSVGPathSeg::MaxListIndex()) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  nsCOMPtr<DOMSVGPathSeg> domItem = do_QueryInterface(aNewItem);
+  if (!domItem) {
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  }
+  if (domItem->HasOwner()) {
+    domItem = domItem->Clone(); // must do this before changing anything!
+  }
+
   PRUint32 argCount = SVGPathSegUtils::ArgCountForType(domItem->Type());
 
   // Ensure we have enough memory so we can avoid complex error handling below:
