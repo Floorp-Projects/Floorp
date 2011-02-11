@@ -88,6 +88,44 @@
       }
     }
 
+    /**
+     * Relative accessible recreation shouldn't break accessible relations.
+     * Note: modify this case if the invoke function doesn't change accessible
+     * tree due to changes in layout module. It can be changed on any case
+     * when accessibles are recreated.
+     */
+    function recreateRelatives(aContainerID, aLabelID, aElmID)
+    {
+      this.containerNode = getNode(aContainerID);
+      this.container = getNode(this.containerNode);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, this.container),
+        new invokerChecker(EVENT_SHOW, this.containerNode)
+      ];
+
+      this.invoke = function recreateRelatives_invoke()
+      {
+        testRelation(aLabelID, RELATION_LABEL_FOR, aElmID);
+        testRelation(aElmID, RELATION_LABELLED_BY, aLabelID);
+
+        this.containerNode.style.overflow = "visible";
+      }
+
+      this.finalCheck = function recreateRelatives_finalCheck()
+      {
+        testRelation(aLabelID, RELATION_LABEL_FOR, aElmID);
+        testRelation(aElmID, RELATION_LABELLED_BY, aLabelID);
+      }
+
+      this.getID = function recreateRelatives_getID()
+      {
+        return "recreate relatives ";
+      }
+    }
+
+    //gA11yEventDumpToConsole = true; // debug
+
     var gQueue = null;
 
     function doTest()
@@ -132,6 +170,9 @@
       gQueue.push(new insertRelated("aria-flowto", "dependent12", false,
                                     RELATION_FLOWS_TO, RELATION_FLOWS_FROM));
 
+      // Update relations when accessibles are recreated
+      gQueue.push(new recreateRelatives("container", "label", "input"));
+
       gQueue.invoke(); // will call SimpleTest.finish()
 
     }
@@ -149,6 +190,12 @@
      title="Cache relations defined by ARIA attributes">
     Mozilla Bug 573469
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=631068"
+     title="Accessible recreation breaks relations">
+    Mozilla Bug 631068
+  </a>
+  <br>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -158,5 +205,9 @@
   <div id="dependent2">label2</div>
   <div role="checkbox" id="host"></div>
 
+  <form id="container" style="overflow: hidden;">
+    <label for="input" id="label">label</label>
+    <input id="input">
+  </form>
 </body>
 </html>
