@@ -615,9 +615,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/chrome/chrome.manifest
 @BINPATH@/components/AboutRedirector.js
 @BINPATH@/components/AddonUpdateService.js
-#ifndef ANDROID
 @BINPATH@/components/AlertsService.js
-#endif
 @BINPATH@/components/AutoCompleteCache.js
 @BINPATH@/components/BlocklistPrompt.js
 @BINPATH@/components/BrowserCLH.js
