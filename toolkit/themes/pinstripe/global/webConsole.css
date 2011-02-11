@@ -280,21 +280,22 @@
 }
 
 .webconsole-close-button {
-  list-style-image: url("chrome://global/skin/icons/closetab.png");
+  list-style-image: url("chrome://global/skin/icons/close.png");
   margin-top: 0;
   margin-bottom: 0;
   -moz-margin-start: 3px;
   -moz-margin-end: -14px;
   min-width: 0;
   -moz-appearance: none;
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 .webconsole-close-button:hover {
-  list-style-image: url("chrome://global/skin/icons/closetab-hover.png");
+  -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
 .webconsole-close-button:hover:active {
-  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 /* JSTerm Styles */
