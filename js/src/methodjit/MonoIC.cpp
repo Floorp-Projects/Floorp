@@ -151,7 +151,7 @@ PatchSetFallback(VMFrame &f, ic::SetGlobalNameIC *ic)
 void
 SetGlobalNameIC::patchExtraShapeGuard(Repatcher &repatcher, int32 shape)
 {
-    JS_ASSERT(extraShapeGuard);
+    JS_ASSERT(hasExtraStub);
 
     JSC::CodeLocationLabel label(JSC::MacroAssemblerCodePtr(extraStub.start()));
     repatcher.repatch(label.dataLabel32AtOffset(extraShapeGuard), shape);
@@ -250,12 +250,13 @@ AttachSetGlobalNameStub(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, cons
     int offset = linker.locationOf(shapeLabel) - linker.locationOf(start);
     ic->extraShapeGuard = offset;
     JS_ASSERT(ic->extraShapeGuard == offset);
-    JS_ASSERT(offset);
 
     ic->extraStub = JSC::JITCode(cs.executableAddress(), linker.size());
     offset = linker.locationOf(store) - linker.locationOf(start);
     ic->extraStoreOffset = offset;
     JS_ASSERT(ic->extraStoreOffset == offset);
+
+    ic->hasExtraStub = true;
 
     return Lookup_Cacheable;
 }
@@ -296,7 +297,7 @@ UpdateSetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, const Sh
             return Lookup_Uncacheable;
         }
 
-        if (ic->extraShapeGuard)
+        if (ic->hasExtraStub)
             return UpdateSetGlobalNameStub(f, ic, obj, shape);
 
         return AttachSetGlobalNameStub(f, ic, obj, shape);
@@ -1191,7 +1192,7 @@ JITScript::purgeMICs()
         ic::SetGlobalNameIC &ic = setGlobalNames_[i];
         ic.patchInlineShapeGuard(repatch, int32(JSObjectMap::INVALID_SHAPE));
 
-        if (ic.extraShapeGuard) {
+        if (ic.hasExtraStub) {
             Repatcher repatcher(ic.extraStub);
             ic.patchExtraShapeGuard(repatcher, int32(JSObjectMap::INVALID_SHAPE));
         }
@@ -1300,10 +1301,10 @@ JITScript::sweepCallICs(JSContext *cx, bool purgeAll)
         ic::SetGlobalNameIC *setGlobalNames_ = setGlobalNames();
         for (uint32 i = 0; i < nSetGlobalNames; i ++) {
             ic::SetGlobalNameIC &ic = setGlobalNames_[i];
-            if (!ic.extraShapeGuard)
+            if (!ic.hasExtraStub)
                 continue;
             repatcher.relink(ic.fastPathStart.jumpAtOffset(ic.inlineShapeJump), ic.slowPathStart);
-            ic.extraShapeGuard = 0;
+            ic.hasExtraStub = false;
             released++;
         }
 
