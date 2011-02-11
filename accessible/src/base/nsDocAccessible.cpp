@@ -1462,11 +1462,12 @@ nsDocAccessible::NotifyOfCachingEnd(nsAccessible* aAccessible)
     // invalidation list.
     for (PRUint32 idx = 0; idx < mInvalidationList.Length(); idx++) {
       nsIContent* content = mInvalidationList[idx];
-      nsAccessible* container = GetContainerAccessible(content);
-
-      // Make sure we keep children updated. While we're inside of caching loop
-      // then we must exist it with cached children.
-      container->UpdateChildren();
+      if (!HasAccessible(content)) {
+        // Make sure we keep children updated. While we're inside of caching
+        // loop then we must exist it with cached children.
+        nsAccessible* container = GetContainerAccessible(content);
+        container->UpdateChildren();
+      }
     }
     mInvalidationList.Clear();
 
