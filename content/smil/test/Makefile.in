@@ -54,7 +54,6 @@ _TEST_FILES = \
 	  smilAnimateMotionValueLists.js \
 	  smilTestUtils.js \
 	  smilXHR_helper.svg \
-	  smilExtDoc_helper.svg \
 	  test_smilAccessKey.xhtml \
 	  test_smilAnimateMotion.xhtml \
 	  test_smilAnimateMotionInvalidValues.xhtml \
@@ -74,7 +73,6 @@ _TEST_FILES = \
 	  test_smilMappedAttrPaced.xhtml \
 	  test_smilReset.xhtml \
 	  test_smilRestart.xhtml \
-	  test_smilExtDoc.xhtml \
 	  test_smilFillMode.xhtml \
 	  test_smilGetStartTime.xhtml \
 	  test_smilGetSimpleDuration.xhtml \
