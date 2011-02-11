@@ -1858,15 +1858,17 @@ function run_FunctionType_tests() {
   do_check_eq(f.toSource(),
     'ctypes.FunctionType(ctypes.default_abi, g_t).ptr(ctypes.UInt64("0x0"))');
 
-  // Test ImplicitConvert from a function pointer of different type.
+  // Test ExplicitConvert from a function pointer of different type.
   let f2_t = ctypes.FunctionType(ctypes.default_abi, g_t, [ ctypes.int32_t ]);
   let f2 = f2_t.ptr();
+  do_check_throws(function() { fp_t(f2); }, Error);
   do_check_throws(function() { f.value = f2; }, Error);
   do_check_throws(function() { f2.value = f; }, Error);
 
-  // Test that converting to a voidptr_t works.
+  // Test that converting to a voidptr_t works, but not the other way.
   let v = ctypes.voidptr_t(f2);
   do_check_eq(v.toSource(), 'ctypes.voidptr_t(ctypes.UInt64("0x0"))');
+  do_check_throws(function() { f2_t.ptr(v); }, TypeError);
 
   // Test some more complex names.
   do_check_eq(fp_t.array().name, "g_t(*[])()");
@@ -1899,19 +1901,6 @@ function run_FunctionType_tests() {
 
   let t4_t = f4_t.ptr.ptr.array(8).array();
   do_check_eq(t4_t.name, "char*(*(**[][8])(int32_t, g_t(*)()))[]");
-
-  var sp = Components.classes["@mozilla.org/systemprincipal;1"].
-             createInstance(Components.interfaces.nsIPrincipal);
-  var s = new Components.utils.Sandbox(sp);
-  s.ctypes = ctypes;
-  s.do_check_eq = do_check_eq;
-  s.do_check_true = do_check_true;
-  Components.utils.evalInSandbox("var f5_t = ctypes.FunctionType(ctypes.default_abi, ctypes.int, [ctypes.int]);", s);
-  Components.utils.evalInSandbox("do_check_eq(f5_t.toSource(), 'ctypes.FunctionType(ctypes.default_abi, ctypes.int, [ctypes.int])');", s);
-  Components.utils.evalInSandbox("do_check_eq(f5_t.name, 'int()(int)');", s);
-  Components.utils.evalInSandbox("function f5(aArg) { return 5; };", s);
-  Components.utils.evalInSandbox("var f = f5_t.ptr(f5);", s);
-  Components.utils.evalInSandbox("do_check_true(f(6) == 5);", s);
 }
 
 function run_ArrayType_tests() {
