@@ -588,11 +588,17 @@ var BrowserUI = {
   },
 
   /* Set the location to the current content */
-  updateURI: function() {
-    let browser = Browser.selectedBrowser;
+  updateURI: function(aOptions) {
+    aOptions = aOptions || {};
 
-    // FIXME: deckbrowser should not fire TabSelect on the initial tab (bug 454028)
-    if (!browser.currentURI)
+    let browser = Browser.selectedBrowser;
+    let urlString = this.getDisplayURI(browser);
+    if (Util.isURLEmpty(urlString))
+      urlString = "";
+
+    this._setURL(urlString);
+
+    if ("captionOnly" in aOptions && aOptions.captionOnly)
       return;
 
     // Update the navigation buttons
@@ -600,12 +606,6 @@ var BrowserUI = {
 
     // Check for a bookmarked page
     this.updateStar();
-
-    let urlString = this.getDisplayURI(browser);
-    if (Util.isURLEmpty(urlString))
-      urlString = "";
-
-    this._setURL(urlString);
   },
 
   goToURI: function(aURI) {
@@ -680,7 +680,13 @@ var BrowserUI = {
   },
 
   updateStar: function() {
-    PlacesUtils.asyncGetBookmarkIds(getBrowser().currentURI, function (aItemIds) {
+    let uri = getBrowser().currentURI;
+    if (uri.spec == "about:blank") {
+      this.starButton.removeAttribute("starred");
+      return;
+    }
+
+    PlacesUtils.asyncGetBookmarkIds(uri, function (aItemIds) {
       if (aItemIds.length)
         this.starButton.setAttribute("starred", "true");
       else

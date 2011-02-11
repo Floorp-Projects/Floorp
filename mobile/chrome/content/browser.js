@@ -1309,7 +1309,7 @@ Browser.WebProgress.prototype = {
         let location = spec.split("#")[0]; // Ignore fragment identifier changes.
 
         if (tab == Browser.selectedTab)
-          BrowserUI.updateURI();
+          BrowserUI.updateURI({ captionOnly: true }); // Do less for more speed
 
         let locationHasChanged = (location != tab.browser.lastLocation);
         if (locationHasChanged) {
@@ -1364,15 +1364,18 @@ Browser.WebProgress.prototype = {
       // We should at least show something in the URLBar until
       // the load has progressed further along
       if (aTab.browser.currentURI.spec == "about:blank")
-        BrowserUI.updateURI();
+        BrowserUI.updateURI({ captionOnly: true });
     }
   },
 
   _networkStop: function _networkStop(aTab) {
     aTab.endLoading();
 
-    if (aTab == Browser.selectedTab)
+    if (aTab == Browser.selectedTab) {
+      // Now that pageload is finished, do the more expensive updates
+      BrowserUI.updateURI();
       BrowserUI.update(TOOLBARSTATE_LOADED);
+    }
 
     if (aTab.browser.currentURI.spec != "about:blank")
       aTab.updateThumbnail();
