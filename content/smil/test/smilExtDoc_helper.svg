@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg">
-  <filter id="filter">
-    <feFlood flood-color="red">
-      <set attributeName="flood-color" to="lime" begin="0.001"/>
-    </feFlood>
-  </filter>
-</svg>
