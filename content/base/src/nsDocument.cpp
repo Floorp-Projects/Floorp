@@ -883,6 +883,17 @@ TransferZoomLevels(nsIDocument* aFromDoc,
   toCtxt->SetTextZoom(fromCtxt->TextZoom());
 }
 
+void
+TransferShowingState(nsIDocument* aFromDoc, nsIDocument* aToDoc)
+{
+  NS_ABORT_IF_FALSE(aFromDoc && aToDoc,
+                    "transferring showing state from/to null doc");
+
+  if (aFromDoc->IsShowing()) {
+    aToDoc->OnPageShow(PR_TRUE, nsnull);
+  }
+}
+
 nsresult
 nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
                                            nsIDocumentViewer* aViewer,
@@ -942,6 +953,7 @@ nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
     newResource->mLoadGroup = aLoadGroup;
     if (doc) {
       TransferZoomLevels(aDisplayDocument, doc);
+      TransferShowingState(aDisplayDocument, doc);
     }
   }
 
