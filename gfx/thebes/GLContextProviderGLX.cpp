@@ -164,20 +164,42 @@ GLXLibrary::EnsureInitialized()
 
     Display *display = DefaultXDisplay();
     int screen = DefaultScreen(display);
-    if (!xQueryVersion(display, &gGLXMajorVersion, &gGLXMinorVersion)) {
-        gGLXMajorVersion = 0;
-        gGLXMinorVersion = 0;
-        return PR_FALSE;
+    const char *vendor;
+    const char *serverVersionStr;
+    const char *extensionsStr;
+
+    // this scope is covered by a ScopedXErrorHandler to catch X errors in GLX calls,
+    // see bug 632867 comment 3: Mesa versions up to 7.10 cause a BadLength error during the first GLX call
+    // when the server GLX version < 1.3.
+    {
+        ScopedXErrorHandler xErrorHandler;
+
+        if (!xQueryVersion(display, &gGLXMajorVersion, &gGLXMinorVersion)) {
+            gGLXMajorVersion = 0;
+            gGLXMinorVersion = 0;
+            return PR_FALSE;
+        }
+
+        vendor = xQueryServerString(display, screen, GLX_VENDOR);
+        serverVersionStr = xQueryServerString(display, screen, GLX_VERSION);
+
+        if (strcmp(vendor, "NVIDIA Corporation") &&
+            !PR_GetEnv("MOZ_GLX_IGNORE_BLACKLIST"))
+        {
+          printf("[GLX] your GL driver is currently blocked. If you would like to bypass this, "
+                  "define the MOZ_GLX_IGNORE_BLACKLIST environment variable.\n");
+          return nsnull;
+        }
+
+        if (!GLXVersionCheck(1, 1))
+            // Not possible to query for extensions.
+            return PR_FALSE;
+
+        extensionsStr = xQueryExtensionsString(display, screen);
+
+        if (xErrorHandler.GetError())
+          return PR_FALSE;
     }
-
-    const char *vendor = xQueryServerString(display, screen, GLX_VENDOR);
-    const char *serverVersionStr = xQueryServerString(display, screen, GLX_VERSION);
-
-    if (!GLXVersionCheck(1, 1))
-        // Not possible to query for extensions.
-        return PR_FALSE;
-
-    const char *extensionsStr = xQueryExtensionsString(display, screen);
 
     LibrarySymbolLoader::SymLoadStruct *sym13;
     if (!GLXVersionCheck(1, 3)) {
@@ -234,15 +256,6 @@ public:
                     PRBool deleteDrawable,
                     gfxXlibSurface *pixmap = nsnull)
     {
-        const char *glxVendorString = sGLXLibrary.xQueryServerString(display, DefaultScreen(display), GLX_VENDOR);
-        if (strcmp(glxVendorString, "NVIDIA Corporation") &&
-            !PR_GetEnv("MOZ_GLX_IGNORE_BLACKLIST"))
-        {
-          printf("[GLX] your GL driver is currently blocked. If you would like to bypass this, "
-                 "define the MOZ_GLX_IGNORE_BLACKLIST environment variable.\n");
-          return nsnull;
-        }
-
         int db = 0, err;
         err = sGLXLibrary.xGetFBConfigAttrib(display, cfg,
                                              GLX_DOUBLEBUFFER, &db);
