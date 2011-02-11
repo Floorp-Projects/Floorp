@@ -2,7 +2,6 @@ conformance/canvas-test.html
 conformance/canvas-test.html
 conformance/context-attributes.html
 conformance/gl-enum-tests.html
-conformance/gl-get-calls.html
 conformance/gl-object-get-calls.html
 conformance/gl-vertexattribpointer.html
 conformance/texture-npot.html
