@@ -257,6 +257,16 @@ function populateGraphicsSection() {
     ]));
 
     appendChildren(graphics_tbody, trGraphics);
+   
+    // display any failures that have occurred
+    let graphics_failures_tbody = document.getElementById("graphics-failures-tbody");
+    let trGraphicsFailures = gfxInfo.getFailures().map(function (value)
+        createParentElement("tr", [
+            createElement("td", value)
+        ])
+    );
+    appendChildren(graphics_failures_tbody, trGraphicsFailures);
+
   } // end if (gfxInfo)
 
   let windows = Services.ww.getWindowEnumerator();

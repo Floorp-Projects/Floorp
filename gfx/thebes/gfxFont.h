@@ -1905,9 +1905,6 @@ public:
         if (mCharacterGlyphs) {
             mCharacterGlyphs[aCharIndex] = aGlyph;
         }
-        if (mDetailedGlyphs) {
-            mDetailedGlyphs[aCharIndex] = nsnull;
-        }
     }
     void SetGlyphs(PRUint32 aCharIndex, CompressedGlyph aGlyph,
                    const DetailedGlyph *aGlyphs);
@@ -1929,10 +1926,13 @@ public:
     // API for access to the raw glyph data, needed by gfxFont::Draw
     // and gfxFont::GetBoundingBox
     const CompressedGlyph *GetCharacterGlyphs() { return mCharacterGlyphs; }
-    const DetailedGlyph *GetDetailedGlyphs(PRUint32 aCharIndex) {
-        return mDetailedGlyphs ? mDetailedGlyphs[aCharIndex].get() : nsnull;
+    DetailedGlyph *GetDetailedGlyphs(PRUint32 aCharIndex) {
+        if (!mDetailedGlyphs) {
+            return nsnull;
+        }
+        return mDetailedGlyphs->Get(aCharIndex);
     }
-    PRBool HasDetailedGlyphs() { return mDetailedGlyphs.get() != nsnull; }
+    PRBool HasDetailedGlyphs() { return mDetailedGlyphs != nsnull; }
     PRUint32 CountMissingGlyphs();
     const GlyphRun *GetGlyphRuns(PRUint32 *aNumGlyphRuns) {
         *aNumGlyphRuns = mGlyphRuns.Length();
@@ -1942,12 +1942,9 @@ public:
     // Returns mGlyphRuns.Length() when aOffset is mCharacterCount.
     PRUint32 FindFirstGlyphRunContaining(PRUint32 aOffset);
     // Copy glyph data for a range of characters from aSource to this
-    // textrun. If aStealData is true then we actually steal the glyph data,
-    // setting the data in aSource to "missing". aDest should be in the last
-    // glyphrun.
+    // textrun.
     virtual void CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
-                                   PRUint32 aLength, PRUint32 aDest,
-                                   PRBool aStealData);
+                                   PRUint32 aLength, PRUint32 aDest);
 
     nsExpirationState *GetExpirationState() { return &mExpirationState; }
 
@@ -2009,6 +2006,9 @@ private:
     // Allocate aCount DetailedGlyphs for the given index
     DetailedGlyph *AllocateDetailedGlyphs(PRUint32 aCharIndex, PRUint32 aCount);
 
+    // Get the total advance for a range of glyphs.
+    PRInt32 GetAdvanceForGlyphs(PRUint32 aStart, PRUint32 aEnd);
+
     // Spacing for characters outside the range aSpacingStart/aSpacingEnd
     // is assumed to be zero; such characters are not passed to aProvider.
     // This is useful to protect aProvider from being passed character indices
@@ -2062,7 +2062,118 @@ private:
     // however, ownership passes to the textrun during construction and so
     // it must be deleted in the destructor.
     CompressedGlyph*                               mCharacterGlyphs;
-    nsAutoArrayPtr<nsAutoArrayPtr<DetailedGlyph> > mDetailedGlyphs; // only non-null if needed
+
+    // For characters whose glyph data does not fit the "simple" glyph criteria
+    // in CompressedGlyph, we use a sorted array to store the association
+    // between the source character offset and an index into an array 
+    // DetailedGlyphs. The CompressedGlyph record includes a count of
+    // the number of DetailedGlyph records that belong to the character,
+    // starting at the given index.
+    class DetailedGlyphStore {
+    public:
+        DetailedGlyphStore()
+            : mLastUsed(0)
+        { }
+
+        // This is optimized for the most common calling patterns:
+        // we rarely need random access to the records, access is most commonly
+        // sequential through the textRun, so we record the last-used index
+        // and check whether the caller wants the same record again, or the
+        // next; if not, it's most likely we're starting over from the start
+        // of the run, so we check the first entry before resorting to binary
+        // search as a last resort.
+        DetailedGlyph* Get(PRUint32 aOffset) {
+            NS_ASSERTION(mOffsetToIndex.Length() > 0,
+                         "no detailed glyph records!");
+            DetailedGlyph* details = mDetails.Elements();
+            // check common cases (fwd iteration, initial entry, etc) first
+            if (mLastUsed < mOffsetToIndex.Length() - 1 &&
+                aOffset == mOffsetToIndex[mLastUsed + 1].mOffset) {
+                ++mLastUsed;
+            } else if (aOffset == mOffsetToIndex[0].mOffset) {
+                mLastUsed = 0;
+            } else if (aOffset == mOffsetToIndex[mLastUsed].mOffset) {
+                // do nothing
+            } else if (mLastUsed > 0 &&
+                       aOffset == mOffsetToIndex[mLastUsed - 1].mOffset) {
+                --mLastUsed;
+            } else {
+                mLastUsed =
+                    mOffsetToIndex.BinaryIndexOf(aOffset, CompareToOffset());
+            }
+            NS_ASSERTION(mLastUsed != nsTArray<DGRec>::NoIndex,
+                         "detailed glyph record missing!");
+            return details + mOffsetToIndex[mLastUsed].mIndex;
+        }
+
+        DetailedGlyph* Allocate(PRUint32 aOffset, PRUint32 aCount) {
+            PRUint32 detailIndex = mDetails.Length();
+            DetailedGlyph *details = mDetails.AppendElements(aCount);
+            if (!details) {
+                return nsnull;
+            }
+            // We normally set up glyph records sequentially, so the common case
+            // here is to append new records to the mOffsetToIndex array;
+            // test for that before falling back to the InsertElementSorted
+            // method.
+            if (mOffsetToIndex.Length() == 0 ||
+                aOffset > mOffsetToIndex[mLastUsed].mOffset) {
+                if (!mOffsetToIndex.AppendElement(DGRec(aOffset, detailIndex))) {
+                    return nsnull;
+                }
+            } else {
+                if (!mOffsetToIndex.InsertElementSorted(DGRec(aOffset, detailIndex),
+                                                        CompareRecordOffsets())) {
+                    return nsnull;
+                }
+            }
+            return details;
+        }
+
+    private:
+        struct DGRec {
+            DGRec(const PRUint32& aOffset, const PRUint32& aIndex)
+                : mOffset(aOffset), mIndex(aIndex) { }
+            PRUint32 mOffset; // source character offset in the textrun
+            PRUint32 mIndex;  // index where this char's DetailedGlyphs begin
+        };
+
+        struct CompareToOffset {
+            PRBool Equals(const DGRec& a, const PRUint32& b) const {
+                return a.mOffset == b;
+            }
+            PRBool LessThan(const DGRec& a, const PRUint32& b) const {
+                return a.mOffset < b;
+            }
+        };
+
+        struct CompareRecordOffsets {
+            PRBool Equals(const DGRec& a, const DGRec& b) const {
+                return a.mOffset == b.mOffset;
+            }
+            PRBool LessThan(const DGRec& a, const DGRec& b) const {
+                return a.mOffset < b.mOffset;
+            }
+        };
+
+        // Concatenated array of all the DetailedGlyph records needed for the
+        // textRun; individual character offsets are associated with indexes
+        // into this array via the mOffsetToIndex table.
+        nsTArray<DetailedGlyph>     mDetails;
+
+        // For each character offset that needs DetailedGlyphs, we record the
+        // index in mDetails where the list of glyphs begins. This array is
+        // sorted by mOffset.
+        nsTArray<DGRec>             mOffsetToIndex;
+
+        // Records the most recently used index into mOffsetToIndex, so that
+        // we can support sequential access more quickly than just doing
+        // a binary search each time.
+        nsTArray<DGRec>::index_type mLastUsed;
+    };
+
+    nsAutoPtr<DetailedGlyphStore>   mDetailedGlyphs;
+
     // XXX this should be changed to a GlyphRun plus a maybe-null GlyphRun*,
     // for smaller size especially in the super-common one-glyphrun case
     nsAutoTArray<GlyphRun,1>                       mGlyphRuns;
@@ -2084,6 +2195,10 @@ private:
     PRUint32          mCharacterCount;
     PRUint32          mHashCode;
     PRUint64          mUserFontSetGeneration; // user font set generation when text run created
+
+    PRBool            mSkipDrawing; // true if the font group we used had a user font
+                                    // download that's in progress, so we should hide text
+                                    // until the download completes (or timeout fires)
 };
 
 class THEBES_API gfxFontGroup : public gfxTextRunFactory {
@@ -2211,6 +2326,10 @@ public:
     // caches need updating.
     virtual void UpdateFontList();
 
+    PRBool ShouldSkipDrawing() const {
+        return mSkipDrawing;
+    }
+
 protected:
     nsString mFamilies;
     gfxFontStyle mStyle;
@@ -2224,8 +2343,12 @@ protected:
     nsRefPtr<gfxFontFamily> mLastPrefFamily;
     nsRefPtr<gfxFont>       mLastPrefFont;
     eFontPrefLang           mLastPrefLang;       // lang group for last pref font
-    PRBool                  mLastPrefFirstFont;  // is this the first font in the list of pref fonts for this lang group?
     eFontPrefLang           mPageLang;
+    PRPackedBool            mLastPrefFirstFont;  // is this the first font in the list of pref fonts for this lang group?
+
+    PRPackedBool            mSkipDrawing; // hide text while waiting for a font
+                                          // download to complete (or fallback
+                                          // timer to fire)
 
     // Used for construction/destruction.  Not intended to change the font set
     // as invalidation of font lists and caches is not considered.

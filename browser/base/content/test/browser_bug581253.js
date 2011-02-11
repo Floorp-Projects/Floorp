@@ -5,10 +5,14 @@
 let testURL = "data:text/plain,nothing but plain text";
 let testTag = "581253_tag";
 let starButton = document.getElementById("star-button");
+let timerID = -1;
 
 function test() {
   registerCleanupFunction(function() {
     PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
+    if (timerID > 0) {
+      clearTimeout(timerID);
+    }
   });
   waitForExplicitFinish();
 
@@ -31,12 +35,12 @@ function test() {
 }
 
 function waitForStarChange(aValue, aCallback) {
-  let starButton = document.getElementById("star-button");
-  if (starButton.hidden || starButton.hasAttribute("starred") != aValue) {
+  if (PlacesStarButton._ignoreClicks || starButton.hasAttribute("starred") != aValue) {
     info("Waiting for star button change.");
-    setTimeout(arguments.callee, 50, aValue, aCallback);
+    timerID = setTimeout(arguments.callee, 50, aValue, aCallback);
     return;
   }
+  timerID = -1;
   aCallback();
 }
 

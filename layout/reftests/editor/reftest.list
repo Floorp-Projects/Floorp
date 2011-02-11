@@ -13,7 +13,7 @@ include xul/reftest.list
 == passwd-1.html passwd-ref.html
 != passwd-2.html passwd-ref.html
 == passwd-3.html passwd-ref.html
-needs-focus asserts(1) == passwd-4.html passwd-ref.html # bug 596901
+needs-focus == passwd-4.html passwd-ref.html
 == emptypasswd-1.html emptypasswd-ref.html
 == emptypasswd-2.html emptypasswd-ref.html
 == caret_on_positioned.html caret_on_positioned-ref.html
@@ -47,3 +47,12 @@ needs-focus == input-text-notheme-onfocus-reframe.html input-text-notheme-onfocu
 needs-focus == caret_after_reframe.html caret_after_reframe-ref.html
 == nobogusnode-1.html nobogusnode-ref.html
 == nobogusnode-2.html nobogusnode-ref.html
+== spellcheck-hyphen-valid.html spellcheck-hyphen-valid-ref.html
+!= spellcheck-hyphen-invalid.html spellcheck-hyphen-invalid-ref.html
+== spellcheck-slash-valid.html spellcheck-slash-valid-ref.html
+== spellcheck-period-valid.html spellcheck-period-valid-ref.html
+== spellcheck-space-valid.html spellcheck-space-valid-ref.html
+== spellcheck-comma-valid.html spellcheck-comma-valid-ref.html
+== spellcheck-hyphen-multiple-valid.html spellcheck-hyphen-multiple-valid-ref.html
+!= spellcheck-hyphen-multiple-invalid.html spellcheck-hyphen-multiple-invalid-ref.html
+== unneeded_scroll.html unneeded_scroll-ref.html

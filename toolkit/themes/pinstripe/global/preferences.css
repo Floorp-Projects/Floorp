@@ -75,6 +75,15 @@ radio[pane]:active:hover {
   text-shadow: none;
 }
 
+radio[pane] > .paneButtonIcon {
+  /* preload external filter file */
+  background-image: url("chrome://global/skin/filters.svg");
+}
+
+radio[pane]:active:hover > .paneButtonIcon {
+  filter: url("chrome://global/skin/filters.svg#iconPressed");
+}
+
 radio[pane][selected="true"] {
   -moz-border-image: url("chrome://global/skin/icons/panebutton-active.png") 0 2 repeat stretch;
 }

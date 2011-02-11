@@ -1112,7 +1112,10 @@ let Utils = {
       return;
     }
 
-    NetUtil.asyncFetch(file, function (is, result) {
+    let channel = NetUtil.newChannel(file);
+    channel.contentType = "application/json";
+
+    NetUtil.asyncFetch(channel, function (is, result) {
       if (!Components.isSuccessCode(result)) {
         callback.call(that);
         return;

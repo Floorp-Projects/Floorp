@@ -249,6 +249,10 @@ private:
                              uint16_t mode, int16_t argc, char* argn[],
                              char* argv[], NPSavedData* saved,
                              NPError* error);
+    virtual nsresult NPP_ClearSiteData(const char* site, uint64_t flags,
+                                       uint64_t maxAge);
+    virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& result);
+
 private:
     void WritePluginExtraDataForMinidump(const nsAString& id);
     void WriteExtraDataForHang();
@@ -261,6 +265,8 @@ private:
     // the plugin thread in mSubprocess
     NativeThreadId mPluginThread;
     bool mShutdown;
+    bool mClearSiteDataSupported;
+    bool mGetSitesWithDataSupported;
     const NPNetscapeFuncs* mNPNIface;
     nsDataHashtable<nsVoidPtrHashKey, PluginIdentifierParent*> mIdentifiers;
     nsNPAPIPlugin* mPlugin;

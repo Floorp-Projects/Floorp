@@ -422,6 +422,9 @@ _TEST_FILES2 = \
 		file_x-frame-options_main.html \
 		file_x-frame-options_page.sjs \
 		test_createHTMLDocument.html \
+		test_bug622088.html \
+		file_bug622088_inner.html \
+		file_bug622088.sjs \
 		test_bug564047.html \
 		test_bug567350.html \
 		test_bug574596.html \
@@ -454,6 +457,8 @@ _TEST_FILES2 = \
 		test_bug614058.html \
 		test_bug590771.html \
 		test_bug622117.html \
+		test_base.xhtml \
+		file_base_xbl.xml \
 		test_bug622246.html \
 		test_bug484396.html \
 		test_bug466080.html \

@@ -18,4 +18,5 @@
   <string name="crash_close_label">&crash_close_label;</string>
   <string name="crash_restart_label">&crash_restart_label;</string>
   <string name="sending_crash_report">&sending_crash_report;</string>
+  <string name="exit_label">&exit_label;</string>
 </resources>

@@ -182,7 +182,7 @@ popup > menuitem {
   padding-bottom: 2px;
 }
 
-menu[_moz-menuactive="true"],
+menu[_moz-menuactive="true"][open="true"],
 menuitem[_moz-menuactive="true"] {
   background: -moz-MenuHover;
   color: -moz-MenuHoverText;

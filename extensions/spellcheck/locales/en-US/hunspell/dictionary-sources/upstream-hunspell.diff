@@ -9463,101 +9463,103 @@
 < schrod's
 ---
 > schrod/SM
-42883,42885c48694
+41998a42010
+> scot-free
+42883,42885c48695
 < shit's
 < shit/S!
 < shite/S!
 ---
 > shit/MS!
-42887,42888c48696,48697
+42887,42888c48697,48698
 < shithead/S!
 < shitload/!
 ---
 > shithead/MS!
 > shitload/MS!
-42891c48700
+42891c48701
 < shitty/RT!
 ---
 > shitty/TR!
-42976a48786
+42976a48787
 > should've
-43008c48818
+43008c48819
 < showtime
 ---
 > showtime/MS
-43724,43726c49534
+43724,43726c49535
 < smoulder's
 < smouldered
 < smoulders
 ---
 > smoulder/GSMD
-44062c49870
+44062c49871
 < sonofabitch
 ---
 > sonofabitch/!
-44371a50180
+44371a50181
 > spick/S!
-44383c50192
+44383c50193
 < spik/S
 ---
 > spik/S!
-46106a51916
+46106a51917
 > syllabi
-46160c51970
+46160c51971
 < synch/GMD
 ---
 > synch/GMDS
-46167d51976
+46167d51977
 < synchs
-46203,46204c52012,52013
+46203,46204c52013,52014
 < sysadmin/S
 < sysop/S
 ---
 > sysadmin/MS
 > sysop/MS
-46752a52562
+46752a52563
 > terabit/MS
-46753a52564,52565
+46753a52565,52566
 > terahertz/M
 > terapixel/MS
-46817a52630
+46817a52631
 > testcase/MS
-46831a52645
+46831a52646
 > testsuite/MS
-46925a52740
+46925a52741
 > theremin/MS
-47755a53571
+47755a53572
 > transfect/DSMG
-47774a53591,53592
+47774a53592,53593
 > transgenderism
 > transgene/MS
-47951c53769
+47951c53770
 < triage/M
 ---
 > triage/MG
-48869a54688
+48869a54689
 > unlikeable
-49211c55030
+49211c55031
 < vagina/M
 ---
 > vagina/MS
-49368,49369c55187
+49368,49369c55188
 < velour's
 < velours's
 ---
 > velour/MS
-49478a55297
+49478a55298
 > vertices
-50148a55968
+50148a55969
 > weaponize/DSG
-50260,50261d56079
+50260,50261d56080
 < werwolf/M
 < werwolves
-50728c56546
+50728c56547
 < women
 ---
 > women/M
-50794c56612
+50794c56613
 < wop/S!
 ---
 > wop/MS!

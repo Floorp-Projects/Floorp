@@ -393,6 +393,160 @@ function test_non_addable_uri_errors()
   });
 }
 
+function test_invalid_referrerURI_ignored()
+{
+  let place = {
+    uri: NetUtil.newURI(TEST_DOMAIN +
+                        "test_invalid_referrerURI_ignored"),
+    visits: [
+      new VisitInfo(),
+    ],
+  };
+  place.visits[0].referrerURI = NetUtil.newURI(place.uri.spec + "_unvisistedURI");
+  do_check_false(gGlobalHistory.isVisited(place.uri));
+  do_check_false(gGlobalHistory.isVisited(place.visits[0].referrerURI));
+
+  gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
+    do_check_true(Components.isSuccessCode(aResultCode));
+    let uri = aPlaceInfo.uri;
+    do_check_true(gGlobalHistory.isVisited(uri));
+
+    // Check to make sure we do not visit the invalid referrer.
+    let visit = aPlaceInfo.visits[0];
+    do_check_false(gGlobalHistory.isVisited(visit.referrerURI));
+
+    // Check to make sure from_visit is zero in database.
+    let stmt = DBConn().createStatement(
+      "SELECT from_visit " +
+      "FROM moz_historyvisits " +
+      "WHERE id = :visit_id"
+    );
+    stmt.params.visit_id = aPlaceInfo.visits[0].visitId;
+    do_check_true(stmt.executeStep());
+    do_check_eq(stmt.row.from_visit, 0);
+    stmt.finalize();
+
+    run_next_test();
+  });
+}
+
+function test_nonnsIURI_referrerURI_ignored()
+{
+  let place = {
+    uri: NetUtil.newURI(TEST_DOMAIN +
+                        "test_nonnsIURI_referrerURI_ignored"),
+    visits: [
+      new VisitInfo(),
+    ],
+  };
+  place.visits[0].referrerURI = place.uri.spec + "_nonnsIURI";
+  do_check_false(gGlobalHistory.isVisited(place.uri));
+
+  gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
+    do_check_true(Components.isSuccessCode(aResultCode));
+    let uri = aPlaceInfo.uri;
+    do_check_true(gGlobalHistory.isVisited(uri));
+
+    // Check to make sure from_visit is zero in database.
+    let stmt = DBConn().createStatement(
+      "SELECT from_visit " +
+      "FROM moz_historyvisits " +
+      "WHERE id = :visit_id"
+    );
+    stmt.params.visit_id = aPlaceInfo.visits[0].visitId;
+    do_check_true(stmt.executeStep());
+    do_check_eq(stmt.row.from_visit, 0);
+    stmt.finalize();
+
+    run_next_test();
+  });
+}
+
+function test_invalid_sessionId_ignored()
+{
+  let place = {
+    uri: NetUtil.newURI(TEST_DOMAIN +
+                        "test_invalid_sessionId_ignored"),
+    visits: [
+      new VisitInfo(),
+    ],
+  };
+  place.visits[0].sessionId = -1;
+  do_check_false(gGlobalHistory.isVisited(place.uri));
+
+  gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
+    do_check_true(Components.isSuccessCode(aResultCode));
+    let uri = aPlaceInfo.uri;
+    do_check_true(gGlobalHistory.isVisited(uri));
+
+    // Check to make sure we do not persist bogus sessionId with the visit.
+    let visit = aPlaceInfo.visits[0];
+    do_check_neq(visit.sessionId, place.visits[0].sessionId);
+
+    // Check to make sure we do not persist bogus sessionId in database.
+    let stmt = DBConn().createStatement(
+      "SELECT session " +
+      "FROM moz_historyvisits " +
+      "WHERE id = :visit_id"
+    );
+    stmt.params.visit_id = visit.visitId;
+    do_check_true(stmt.executeStep());
+    do_check_neq(stmt.row.session, place.visits[0].sessionId);
+    stmt.finalize();
+
+    run_next_test();
+  });
+}
+
+function test_unstored_sessionId_ignored()
+{
+  let place = {
+    uri: NetUtil.newURI(TEST_DOMAIN +
+                        "test_unstored_sessionId_ignored"),
+    visits: [
+      new VisitInfo(),
+    ],
+  };
+
+  // Find max session id in database.
+  let stmt = DBConn().createStatement(
+    "SELECT MAX(session) as max_session " +
+    "FROM moz_historyvisits"
+  );
+  do_check_true(stmt.executeStep());
+  let maxSessionId = stmt.row.max_session;
+  stmt.finalize();
+
+  // Create bogus sessionId that is not in database.
+  place.visits[0].sessionId = maxSessionId + 10;
+  do_check_false(gGlobalHistory.isVisited(place.uri));
+
+  gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
+    do_check_true(Components.isSuccessCode(aResultCode));
+    let uri = aPlaceInfo.uri;
+    do_check_true(gGlobalHistory.isVisited(uri));
+
+    // Check to make sure we do not persist bogus sessionId with the visit.
+    let visit = aPlaceInfo.visits[0];
+    do_check_neq(visit.sessionId, place.visits[0].sessionId);
+
+    // Check to make sure we do not persist bogus sessionId in the database.
+    let stmt = DBConn().createStatement(
+      "SELECT MAX(session) as max_session " +
+      "FROM moz_historyvisits"
+    );
+    do_check_true(stmt.executeStep());
+
+    // Max sessionId should increase by 1 because we will generate a new
+    // non-bogus sessionId.
+    let newMaxSessionId = stmt.row.max_session;
+    do_check_eq(maxSessionId + 1, newMaxSessionId);
+    stmt.finalize();
+
+    run_next_test();
+  });
+}
+
 function test_observer_topic_dispatched_when_complete()
 {
   // We test a normal visit, and embeded visit, and a uri that would fail
@@ -864,6 +1018,10 @@ let gTests = [
   test_add_visit_no_transitionType_throws,
   test_add_visit_invalid_transitionType_throws,
   test_non_addable_uri_errors,
+  test_invalid_referrerURI_ignored,
+  test_nonnsIURI_referrerURI_ignored,
+  test_invalid_sessionId_ignored,
+  test_unstored_sessionId_ignored,
   test_observer_topic_dispatched_when_complete,
   test_add_visit,
   test_properties_saved,

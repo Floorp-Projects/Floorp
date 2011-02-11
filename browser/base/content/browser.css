@@ -166,7 +166,9 @@ splitmenu {
 }
 
 .splitmenu-menu > .menu-text,
-:-moz-any(.splitmenu-menu, .splitmenu-menuitem) > .menu-accel-container {
+:-moz-any(.splitmenu-menu, .splitmenu-menuitem) > .menu-accel-container,
+#appmenu-editmenu > .menu-text,
+#appmenu-editmenu > .menu-accel-container {
   display: none;
 }
 
@@ -460,7 +462,6 @@ statuspanel {
   margin-top: -3em;
   left: 0;
   max-width: 50%;
-  min-width: 25%;
   -moz-transition: opacity 100ms ease-out;
 }
 
@@ -468,6 +469,14 @@ statuspanel:-moz-locale-dir(ltr)[mirror],
 statuspanel:-moz-locale-dir(rtl):not([mirror]) {
   left: auto;
   right: 0;
+}
+
+statuspanel[type=status] {
+  min-width: 25%;
+}
+
+statuspanel[type=overLink] {
+  direction: ltr;
 }
 
 statuspanel[label=""] {

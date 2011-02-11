@@ -835,28 +835,6 @@ nsSVGElement::IsNodeOfType(PRUint32 aFlags) const
   return !(aFlags & ~(eCONTENT | eSVG));
 }
 
-already_AddRefed<nsIURI>
-nsSVGElement::GetBaseURI() const
-{
-  nsCOMPtr<nsIURI> baseURI = nsSVGElementBase::GetBaseURI();
-
-  nsIContent* bindingParent = GetBindingParent();
-  if (bindingParent) {
-    nsIDocument* doc = bindingParent->GetOwnerDoc();
-    if (doc) {
-      nsXBLBinding* binding = doc->BindingManager()->GetBinding(bindingParent);
-      if (binding) {
-        // XXX sXBL/XBL2 issue
-        // If this is an anonymous XBL element use the binding
-        // document for the base URI. 
-        // XXX Will fail with xml:base
-        baseURI = binding->PrototypeBinding()->DocURI();
-      }
-    }
-  }
-  return baseURI.forget();
-}
-
 NS_IMETHODIMP
 nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {

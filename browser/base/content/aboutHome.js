@@ -101,10 +101,6 @@ const SEARCH_ENGINES = {
            "7K/7IvC/CRhZ6Ep6evGGyXJS3kAsp3SGcgLKc7uSktBhrW7ZFq32r/HHCVbb0P9fBSYOTpIoJ5SE" +
            "7GUnpHbrbG8EzsfWfwgwAEfC/ToQIhkhAAAAAElFTkSuQmCC"
   , params: "source=hp&channel=np"
-  , links: {
-      advanced: "http://www.google.com/advanced_search"
-    , preferences: "http://www.google.com/preferences"
-    }
   }
 
 , "Яндекс":
@@ -146,7 +142,7 @@ const SEARCH_ENGINES = {
 // The <a/> part of the snippet will be linked to the corresponding url.
 const DEFAULT_SNIPPETS_URLS = [
   "http://www.mozilla.com/firefox/4.0/features"
-, "https://addons.mozilla.org/firefox/?browse=featured"
+, "https://addons.mozilla.org/firefox/?src=snippet"
 ];
 
 const SNIPPETS_UPDATE_INTERVAL_MS = 86400000; // 1 Day.
@@ -202,19 +198,6 @@ function setupSearchEngine()
     logoElt.alt = gSearchEngine.name;
   }
 
-  if (gSearchEngine.links) {
-    // Add search engine links.
-    if (gSearchEngine.links.advanced) {
-      let advancedLink = document.getElementById("searchEngineAdvancedLink");
-      advancedLink.setAttribute("href", gSearchEngine.links.advanced);
-      advancedLink.hidden = false;
-    }
-    if (gSearchEngine.links.preferences) {
-      let prefsLink = document.getElementById("searchEngineAdvancedPreferences");
-      prefsLink.setAttribute("href", gSearchEngine.links.preferences);
-      prefsLink.hidden = false;
-    }
-  }
 }
 
 function loadSnippets()
@@ -249,10 +232,10 @@ function loadSnippets()
 
 function showSnippets()
 {
+  let snippetsElt = document.getElementById("snippets");
   let snippets = localStorage["snippets"];
   // If there are remotely fetched snippets, try to to show them.
   if (snippets) {
-    let snippetsElt = document.getElementById("snippets");
     // Injecting snippets can throw if they're invalid XML.
     try {
       snippetsElt.innerHTML = snippets;
@@ -264,7 +247,6 @@ function showSnippets()
         relocatedScript.text = elt.text;
         elt.parentNode.replaceChild(relocatedScript, elt);
       });
-      snippetsElt.hidden = false;
       return;
     } catch (ex) {
       // Bad content, continue to show default snippets.
@@ -280,13 +262,31 @@ function showSnippets()
   // Inject url in the eventual link.
   if (DEFAULT_SNIPPETS_URLS[randIndex]) {
     let links = entry.getElementsByTagName("a");
-    if (links.length != 1)
-      return; // Something is messed up in this entry, we support just 1 link.
-    links[0].href = DEFAULT_SNIPPETS_URLS[randIndex];
-    defaultSnippetsElt.addEventListener("click", function(aEvent) {
+    // Default snippets can have only one link, otherwise something is messed
+    // up in the translation.
+    if (links.length == 1) {
+      links[0].href = DEFAULT_SNIPPETS_URLS[randIndex];
+      activateSnippetsButtonClick(entry);
+    }
+  }
+  // Move the default snippet to the snippets element.
+  snippetsElt.appendChild(entry);
+}
+
+/**
+ * Searches a single link element in aElt and binds its href to the click
+ * action of the snippets button.
+ *
+ * @param aElt
+ *        Element to search the link into.
+ */
+function activateSnippetsButtonClick(aElt) {
+  let links = aElt.getElementsByTagName("a");
+  if (links.length == 1) {
+    document.getElementById("snippets")
+            .addEventListener("click", function(aEvent) {
       if (aEvent.target.nodeName != "a")
         window.location = links[0].href;
     }, false);
   }
-  entry.hidden = false;
 }

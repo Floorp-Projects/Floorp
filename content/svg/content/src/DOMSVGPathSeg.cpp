@@ -83,7 +83,7 @@ DOMSVGPathSeg::DOMSVGPathSeg(DOMSVGPathSegList *aList,
 {
   // These shifts are in sync with the members in the header.
   NS_ABORT_IF_FALSE(aList &&
-                    aListIndex < (1U << 31), "bad arg");
+                    aListIndex <= MaxListIndex(), "bad arg");
 
   NS_ABORT_IF_FALSE(IndexIsValid(), "Bad index for DOMSVGPathSeg!");
 }

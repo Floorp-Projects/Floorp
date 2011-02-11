@@ -1,5 +1,5 @@
 body {
-  font-family: Tahoma, sans-serif !important;
+  font: message-box;
   color: rgba(0, 0, 0, 0.6);
   font-size: 13px;
   line-height: 16px;
@@ -87,11 +87,15 @@ html[dir=rtl] .favicon {
   right: 6px;
   width: 16px;
   height: 16px;
-  background: url(chrome://global/skin/icons/Close.gif) no-repeat;
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 0.5s;
-  -moz-transition-timing-function: ease-out;
-  opacity: 0.2;
+  background-image: -moz-image-rect(url("chrome://browser/skin/tabview/close.png"), 0, 16, 16, 0);
+}
+
+.close:hover {
+  background-image: -moz-image-rect(url("chrome://browser/skin/tabview/close.png"), 0, 32, 16, 16);
+}
+
+.close:hover:active {
+  background-image: -moz-image-rect(url("chrome://browser/skin/tabview/close.png"), 0, 48, 16, 32);
 }
 
 html[dir=rtl] .close {
@@ -117,7 +121,6 @@ html[dir=rtl] .expander {
   -moz-transform: scaleX(-1);
 }
 
-.close:hover,
 .expander:hover,
 .appTabIcon:hover {
   -moz-transition-property: opacity;
@@ -241,12 +244,12 @@ html[dir=rtl] .groupItem {
 
 .groupItem.activeGroupItem {
   box-shadow:
-    rgba(0,0,0,0.6) 1px 1px 5.5px;
+    rgba(0,0,0,0.8) 2px 2px 8px;
 }
 
 html[dir=rtl] .groupItem.activeGroupItem {
   box-shadow:
-    rgba(0,0,0,0.6) -1px 1px 5.5px;
+    rgba(0,0,0,0.8) -2px 2px 8px;
 }
 
 .dragRegion {

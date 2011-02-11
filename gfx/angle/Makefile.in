@@ -132,15 +132,10 @@ include $(topsrcdir)/config/rules.mk
 CXXFLAGS := $(filter-out -pedantic,$(CXXFLAGS))
 CFLAGS := $(filter-out -pedantic,$(CFLAGS))
 
-ifdef MOZ_ANGLE
 # ANGLE only on Win32 for now, the solution isn't set up
-# for 64-bit yet.
-ifndef HAVE_64BIT_OS
-BUILD_ANGLE = 1
-endif
-endif
-
-ifdef BUILD_ANGLE
+# for 64-bit yet. This is handled by MOZ_ANGLE which the configure script
+# leaves undefined in the 64-bit case.
+ifdef MOZ_ANGLE
 ifdef MOZ_DEBUG
 ANGLE_DIR = Debug
 else
@@ -148,8 +143,9 @@ ANGLE_DIR = Release
 endif
 
 ifdef MOZ_DIRECTX_SDK_PATH
+# export is needed for INCLUDE and LIB because devenv //useenv will read these env vars
 export INCLUDE := $(INCLUDE);$(MOZ_DIRECTX_SDK_PATH)\include
-export LIB := $(LIB);$(MOZ_DIRECTX_SDK_PATH)\lib\x86
+export LIB := $(LIB);$(MOZ_DIRECTX_SDK_PATH)\lib\$(MOZ_DIRECTX_SDK_CPU_SUFFIX)
 endif
 
 ANGLE_DEP_PATTERNS = \
@@ -163,7 +159,7 @@ ANGLE_DEP_PATTERNS = \
 ANGLE_DEPS = $(filter-out Gen_glslang.cpp Gen_glslang_tab.cpp glslang_tab.h,$(wildcard $(ANGLE_DEP_PATTERNS)))
 
 libs:: libGLESv2.dll libEGL.dll
-	$(INSTALL) $(IFLAGS2) libGLESv2.dll libEGL.dll $(DIST)/bin
+	$(INSTALL) $(IFLAGS2) libGLESv2.dll libEGL.dll $(MOZ_D3DX9_DLL) $(MOZ_D3DCOMPILER_DLL) $(DIST)/bin
 
 # we don't want this to attempt to parallel-build these dlls;
 # building one will build both.
@@ -177,8 +173,15 @@ libEGL.dll: $(GLOBAL_DEPS) $(ANGLE_DEPS)
 	&& echo "Upgrading solution..." \
 	&& devenv angle.sln //upgrade \
 	&& echo "Building solution, target $(ANGLE_DIR)|Win32..." \
-	&& devenv angle.sln //useenv //build "$(ANGLE_DIR)|Win32" \
+	&& ( devenv angle.sln //useenv //build "$(ANGLE_DIR)|Win32" //out ../../angle-build-log.txt \
+	       || (cat ../../angle-build-log.txt && exit 1) \
+	   ) \
 	&& echo "Copying dlls..." \
-	&& cp $(ANGLE_DIR)/*.dll ../..)
+	&& cp $(ANGLE_DIR)/*.dll ../.. \
+	&& cd ../.. \
+	&& echo "Extracting dlls from cab file..." \
+	&& expand "$(MOZ_D3DX9_CAB)" . -F:$(MOZ_D3DX9_DLL) \
+	&& expand "$(MOZ_D3DCOMPILER_CAB)" . -F:$(MOZ_D3DCOMPILER_DLL) \
+	)
 
 endif

@@ -212,9 +212,10 @@ public:
   gfxMatrix GetViewBoxTransform();
   PRBool    HasValidViewbox() const { return mViewBox.IsValid(); }
 
-  // This flushes any pending notifications for a preserveAspectRatio override
-  // in this document.  (Only applicable in SVG-as-an-image documents.)
-  virtual void FlushPreserveAspectRatioOverride();
+  // This services any pending notifications for the transform on on this root
+  // <svg> node needing to be recalculated.  (Only applicable in
+  // SVG-as-an-image documents.)
+  virtual void FlushImageTransformInvalidation();
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
@@ -243,6 +244,12 @@ private:
   void SetImageOverridePreserveAspectRatio(const SVGPreserveAspectRatio& aPAR);
   void ClearImageOverridePreserveAspectRatio();
   const SVGPreserveAspectRatio* GetImageOverridePreserveAspectRatio();
+
+  // Returns PR_TRUE if we should synthesize a viewBox for ourselves (that is,
+  // if we're the outermost <svg> in an image document, and we're not currently
+  // being painted by an <svg:image> element). This method also assumes that we
+  // lack a valid viewBox attribute.
+  PRBool ShouldSynthesizeViewBox();
 
 protected:
   // nsSVGElement overrides
@@ -339,7 +346,8 @@ protected:
   // to manually kick off animation when they are bound to the tree.
   PRPackedBool                      mStartAnimationOnBindToTree;
 #endif // MOZ_SMIL
-  PRPackedBool                      mNeedsPreserveAspectRatioFlush;
+  PRPackedBool                      mImageNeedsTransformInvalidation;
+  PRPackedBool                      mIsPaintingSVGImageElement;
 };
 
 #endif

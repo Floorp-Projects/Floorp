@@ -316,8 +316,10 @@ nsSVGOuterSVGFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
                                 nsSize aMargin, nsSize aBorder, nsSize aPadding,
                                 PRBool aShrinkWrap)
 {
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox) &&
-      (EmbeddedByReference() || IsRootOfImage())) {
+  nsSVGSVGElement* content = static_cast<nsSVGSVGElement*>(mContent);
+
+  if ((content->HasValidViewbox() || content->ShouldSynthesizeViewBox()) &&
+      (IsRootOfImage() || IsRootOfReplacedElementSubDoc())) {
     // The embedding element has done the replaced element sizing, using our
     // intrinsic dimensions as necessary. We just need to fill the viewport.
     return aCBSize;
@@ -502,8 +504,7 @@ nsSVGOuterSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
       !(GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
       (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height)) {
     nsIFrame* embeddingFrame;
-    EmbeddedByReference(&embeddingFrame);
-    if (embeddingFrame) {
+    if (IsRootOfReplacedElementSubDoc(&embeddingFrame) && embeddingFrame) {
       if (DependsOnIntrinsicSize(embeddingFrame)) {
         // Tell embeddingFrame's presShell it needs to be reflowed (which takes
         // care of reflowing us too).
@@ -808,7 +809,7 @@ nsSVGOuterSVGFrame::UnregisterForeignObject(nsSVGForeignObjectFrame* aFrame)
 }
 
 PRBool
-nsSVGOuterSVGFrame::EmbeddedByReference(nsIFrame **aEmbeddingFrame)
+nsSVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(nsIFrame **aEmbeddingFrame)
 {
   if (!mContent->GetParent()) {
     // Our content is the document element

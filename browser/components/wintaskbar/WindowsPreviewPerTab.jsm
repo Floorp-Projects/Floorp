@@ -564,6 +564,8 @@ TabWindow.prototype = {
         this.enabled = false;
         break;
       case "tabviewhidden":
+        if (!AeroPeek._prefenabled)
+          return;
         this.enabled = true;
         break;
     }

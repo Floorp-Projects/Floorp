@@ -6,10 +6,61 @@
  * Tests that history navigation works for the add-ons manager.
  */
 
+const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
+const MAIN_URL = "https://example.com/" + RELATIVE_DIR + "discovery.html";
+const SECOND_URL = "https://example.com/" + RELATIVE_DIR + "releaseNotes.xhtml";
+
+var gLoadCompleteCallback = null;
+
+var gProgressListener = {
+  onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+    // Only care about the network stop status events
+    if (!(aStateFlags & (Ci.nsIWebProgressListener.STATE_IS_NETWORK)) ||
+        !(aStateFlags & (Ci.nsIWebProgressListener.STATE_STOP)))
+      return;
+
+    if (gLoadCompleteCallback)
+      executeSoon(gLoadCompleteCallback);
+    gLoadCompleteCallback = null;
+  },
+
+  onLocationChange: function() { },
+  onSecurityChange: function() { },
+  onProgressChange: function() { },
+  onStatusChange: function() { },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                         Ci.nsISupportsWeakReference]),
+};
+
+function waitForLoad(aManager, aCallback) {
+  var browser = aManager.document.getElementById("discover-browser");
+  browser.addProgressListener(gProgressListener);
+
+  gLoadCompleteCallback = function() {
+    browser.removeProgressListener(gProgressListener);
+    aCallback();
+  };
+}
+
+function clickLink(aManager, aId, aCallback) {
+  waitForLoad(aManager, aCallback);
+
+  var browser = aManager.document.getElementById("discover-browser");
+
+  var link = browser.contentDocument.getElementById(aId);
+  EventUtils.sendMouseEvent({type: "click"}, link);
+}
+
 function test() {
   requestLongerTimeout(2);
 
   waitForExplicitFinish();
+
+  Services.prefs.setCharPref(PREF_DISCOVERURL, MAIN_URL);
+  registerCleanupFunction(function() {
+    Services.prefs.clearUserPref(PREF_DISCOVERURL);
+  });
 
   var gProvider = new MockProvider();
   gProvider.createAddons([{
@@ -92,6 +143,22 @@ function is_in_detail(aManager, view, canGoBack, canGoForward) {
 
   is(doc.getElementById("categories").selectedItem.value, view, "Should be on the right category");
   is(doc.getElementById("view-port").selectedPanel.id, "detail-view", "Should be on the right view");
+
+  check_state(aManager, canGoBack, canGoForward);
+}
+
+function is_in_discovery(aManager, url, canGoBack, canGoForward) {
+  var browser = aManager.document.getElementById("discover-browser");
+
+  is(aManager.document.getElementById("discover-view").selectedPanel, browser,
+     "Browser should be visible");
+
+  var spec = browser.currentURI.spec;
+  var pos = spec.indexOf("#");
+  if (pos != -1)
+    spec = spec.substring(0, pos);
+
+  is(spec, url, "Should have loaded the right url");
 
   check_state(aManager, canGoBack, canGoForward);
 }
@@ -620,10 +687,123 @@ add_test(function() {
 
     close_manager(aManager, function() {
       open_manager(null, function(aManager) {
-        info("Part 1");
+        info("Part 2");
         is_in_list(aManager, "addons://list/plugin", false, false);
 
         close_manager(aManager, run_next_test);
+      });
+    });
+  });
+});
+
+// Tests that navigating the discovery page works when that was the first view
+add_test(function() {
+  open_manager("addons://discover/", function(aManager) {
+    info("1");
+    is_in_discovery(aManager, MAIN_URL, false, false);
+
+    clickLink(aManager, "link-good", function() {
+      info("2");
+      is_in_discovery(aManager, SECOND_URL, true, false);
+
+      waitForLoad(aManager, function() {
+        info("3");
+        is_in_discovery(aManager, MAIN_URL, false, true);
+
+        waitForLoad(aManager, function() {
+          is_in_discovery(aManager, SECOND_URL, true, false);
+
+          EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugins"), { }, aManager);
+
+          wait_for_view_load(aManager, function(aManager) {
+            is_in_list(aManager, "addons://list/plugin", true, false);
+
+            go_back(aManager);
+
+            wait_for_view_load(aManager, function(aManager) {
+              is_in_discovery(aManager, SECOND_URL, true, true);
+
+              go_back(aManager);
+
+              waitForLoad(aManager, function() {
+                is_in_discovery(aManager, MAIN_URL, false, true);
+
+                close_manager(aManager, run_next_test);
+              });
+            });
+          });
+        });
+
+        go_forward(aManager);
+      });
+
+      go_back(aManager);
+    });
+  });
+});
+
+// Tests that navigating the discovery page works when that was the second view
+add_test(function() {
+  open_manager("addons://list/plugin", function(aManager) {
+    is_in_list(aManager, "addons://list/plugin", false, false);
+
+    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-discover"), { }, aManager);
+
+    wait_for_view_load(aManager, function(aManager) {
+      is_in_discovery(aManager, MAIN_URL, true, false);
+
+      clickLink(aManager, "link-good", function() {
+        is_in_discovery(aManager, SECOND_URL, true, false);
+
+        waitForLoad(aManager, function() {
+          is_in_discovery(aManager, MAIN_URL, true, true);
+
+          waitForLoad(aManager, function() {
+            is_in_discovery(aManager, SECOND_URL, true, false);
+
+            EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugins"), { }, aManager);
+
+            wait_for_view_load(aManager, function(aManager) {
+              is_in_list(aManager, "addons://list/plugin", true, false);
+
+              go_back(aManager);
+
+              wait_for_view_load(aManager, function(aManager) {
+                is_in_discovery(aManager, SECOND_URL, true, true);
+
+                go_back(aManager);
+
+                waitForLoad(aManager, function() {
+                  is_in_discovery(aManager, MAIN_URL, true, true);
+
+                  go_back(aManager);
+
+                  wait_for_view_load(aManager, function(aManager) {
+                    is_in_list(aManager, "addons://list/plugin", false, true);
+
+                    go_forward(aManager);
+
+                    wait_for_view_load(aManager, function(aManager) {
+                      is_in_discovery(aManager, MAIN_URL, true, true);
+
+                      waitForLoad(aManager, function() {
+                        is_in_discovery(aManager, SECOND_URL, true, true);
+
+                        close_manager(aManager, run_next_test);
+                      });
+
+                      go_forward(aManager);
+                    });
+                  });
+                });
+              });
+            });
+          });
+
+          go_forward(aManager);
+        });
+
+        go_back(aManager);
       });
     });
   });

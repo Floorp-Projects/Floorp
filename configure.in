@@ -297,8 +297,8 @@ if test "$target" = "arm-android-eabi" ; then
     STRIP="$android_toolchain"/bin/arm-eabi-strip
 
     CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
-    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions $CFLAGS"
-    CXXFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions $CXXFLAGS"
+    CFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CFLAGS"
+    CXXFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CXXFLAGS"
 
     dnl Add -llog by default, since we use it all over the place.
     dnl Add --allow-shlib-undefined, because libGLESv2 links to an
@@ -1942,7 +1942,11 @@ dnl Get mozilla version from central milestone file
 MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
 
 dnl Get version of various core apps from the version files.
-FIREFOX_VERSION=`cat $topsrcdir/browser/config/version.txt`
+FIREFOX_VERSION=`cat $_topsrcdir/browser/config/version.txt`
+
+if test -z "$FIREFOX_VERSION"; then
+    AC_MSG_ERROR([FIREFOX_VERSION is unexpectedly blank.])
+fi
 
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
@@ -1972,22 +1976,21 @@ case "$target" in
         DSO_CFLAGS='-qflag=w:w'
         DSO_PIC_CFLAGS=
         LDFLAGS="$LDFLAGS -Wl,-brtl -blibpath:/usr/lib:/lib"
-        AC_MSG_WARN([Clearing MOZ_FIX_LINK_PATHS till we can fix bug 332075.])
         MOZ_FIX_LINK_PATHS=
         MKSHLIB='$(CXX) $(DSO_LDOPTS) -o $@'
         MKCSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
         if test "$COMPILE_ENVIRONMENT"; then
             AC_LANG_SAVE
             AC_LANG_CPLUSPLUS
-            AC_MSG_CHECKING([for VisualAge C++ compiler version >= 6.0.0.3])
+            AC_MSG_CHECKING([for IBM XLC/C++ compiler version >= 9.0.0.7])
             AC_TRY_COMPILE([],
-                [#if (__IBMCPP__ < 600)
+                [#if (__IBMCPP__ < 900)
                  #error "Bad compiler"
                  #endif],
                 _BAD_COMPILER=,_BAD_COMPILER=1)
             if test -n "$_BAD_COMPILER"; then
                 AC_MSG_RESULT([no])    
-                AC_MSG_ERROR([VisualAge C++ version 6.0.0.3 or higher is required to build.])
+                AC_MSG_ERROR([IBM XLC/C++ 9.0.0.7 or higher is required to build.])
             else
                 AC_MSG_RESULT([yes])    
             fi
@@ -2861,10 +2864,12 @@ alpha*-*-osf*)
     MOZ_GFX_OPTIMIZE_MOBILE=1
     # If we're building with --enable-profiling, we need a frame pointer.
     if test -z "$MOZ_PROFILING"; then
-        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fomit-frame-pointer"
+        MOZ_OPTIMIZE_FLAGS="-O2 -freorder-blocks -fno-reorder-functions -fomit-frame-pointer"
     else
-        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fno-omit-frame-pointer"
+        MOZ_OPTIMIZE_FLAGS="-O2 -freorder-blocks -fno-reorder-functions -fno-omit-frame-pointer"
     fi
+    # The Maemo builders don't know about this flag
+    MOZ_ARM_VFP_FLAGS="-mfpu=vfp"
     ;;
 
 esac
@@ -6339,10 +6344,28 @@ dnl = * enabled by default (shipping build); requires explicit --disable to disa
 dnl ========================================================
 MOZ_ANGLE=
 MOZ_DIRECTX_SDK_PATH=
+MOZ_DIRECTX_SDK_CPU_SUFFIX=
+MOZ_D3DX9_VERSION=
+MOZ_D3DX9_CAB=
+MOZ_D3DCOMPILER_CAB=
+MOZ_D3DX9_DLL=
+MOZ_D3DCOMPILER_DLL=
 case "$target_os" in
     *msvc*|*mks*|*cygwin*|*mingw*)
         MOZ_ANGLE=1
         ;;
+esac
+
+# The DirectX SDK libraries are split into x86 and x64 sub-directories
+case "${target_cpu}" in
+i*86)
+  MOZ_DIRECTX_SDK_CPU_SUFFIX=x86
+  ;;
+x86_64)
+  MOZ_DIRECTX_SDK_CPU_SUFFIX=x64
+  # currently we disable ANGLE in 64bit builds
+  MOZ_ANGLE=
+  ;;
 esac
 
 if test -n "$MOZ_ANGLE"; then
@@ -6363,8 +6386,8 @@ if test -n "$MOZ_ANGLE"; then
   MOZ_ANGLE=
 
   if test -n "$MOZ_DIRECTX_SDK_PATH" ; then
-    if test -f "$MOZ_DIRECTX_SDK_PATH"/include/d3dx9.h && test -f "$MOZ_DIRECTX_SDK_PATH"/lib/x86/dxguid.lib ; then
-      AC_MSG_RESULT([Found DirectX SDK via DXSDK_DIR, using $MOZ_DIRECTX_SDK_PATH])
+    if test -f "$MOZ_DIRECTX_SDK_PATH"/include/d3dx9.h && test -f "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/dxguid.lib ; then
+      AC_MSG_RESULT([Found DirectX SDK via registry, using $MOZ_DIRECTX_SDK_PATH])
       MOZ_ANGLE=1
     fi
   fi
@@ -6372,6 +6395,25 @@ if test -n "$MOZ_ANGLE"; then
   if test -z "$MOZ_ANGLE" ; then
     AC_MSG_WARN([Couldn't find the DirectX SDK, needed for ANGLE. Please install it (February 2010 or newer). To explicitly build without ANGLE, reconfigure with --disable-angle.])
     AC_MSG_WARN([This will become an error in the future.])
+  fi
+
+  if test -n "$MOZ_ANGLE" ; then
+    # Get the SDK numeric version (e.g. 42 or 43) by looking at the dependencies of d3dx9.lib
+    MOZ_D3DX9_VERSION=`dumpbin //headers "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/d3dx9.lib | egrep d3dx9_[[0-9]][[0-9]]\.dll | head -n1 | sed 's/.*\([[0-9]][[0-9]]\).*/\\1/g'`
+
+    if test -z "$MOZ_D3DX9_VERSION" ; then
+      MOZ_ANGLE=
+      AC_MSG_WARN([Couldn't determine the D3DX9 version! Disabling ANGLE.])
+      AC_MSG_WARN([This will become an error in the future.])
+    fi
+
+    if test -n "$MOZ_ANGLE" ; then
+      MOZ_D3DX9_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *d3dx9_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
+      MOZ_D3DCOMPILER_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *D3DCompiler_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
+
+      MOZ_D3DX9_DLL=d3dx9_$MOZ_D3DX9_VERSION.dll
+      MOZ_D3DCOMPILER_DLL=D3DCompiler_$MOZ_D3DX9_VERSION.dll
+    fi
   fi
 fi
 fi
@@ -7179,9 +7221,9 @@ if test -n "$MOZ_THUMB2"; then
       if test "$GNU_CC"; then
         AC_DEFINE(MOZ_THUMB2)
         AC_DEFINE(MOZ_ARM_ARCH)
-        CFLAGS="$CFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
-        CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
-        ASFLAGS="$ASFLAGS -march=armv7-a -mthumb"
+        CFLAGS="$CFLAGS -march=armv7-a -mthumb -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
+        CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
+        ASFLAGS="$ASFLAGS -march=armv7-a -mthumb -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
       else
         AC_MSG_ERROR([--enable-thumb2 is not supported for non-GNU toolchains])
       fi
@@ -7195,9 +7237,9 @@ elif test "$MOZ_ARM_ARCH" = "armv7"; then
     arm*)
       if test "$GNU_CC"; then
         AC_DEFINE(MOZ_ARM_ARCH)
-        CFLAGS="$CFLAGS -march=armv7-a -marm -Wa, -march=armv7-a -Wa, -marm"
-        CXXFLAGS="$CXXFLAGS -march=armv7-a -marm -Wa, -march=armv7-a -Wa, -marm"
-        ASFLAGS="$ASFLAGS -march=armv7-a -marm"
+        CFLAGS="$CFLAGS -march=armv7-a -marm -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
+        CXXFLAGS="$CXXFLAGS -march=armv7-a -marm -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
+        ASFLAGS="$ASFLAGS -march=armv7-a -marm -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
       else
         AC_MSG_ERROR([--with-cpu-arch=armv7 is not supported for non-GNU toolchains])
       fi
@@ -7210,9 +7252,9 @@ else
   case "$target_cpu" in
     arm*)
       if test "$GNU_CC"; then
-        CFLAGS="$CFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
-        CXXFLAGS="$CXXFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
-        ASFLAGS="$ASFLAGS -march=armv5te -mthumb-interwork"
+        CFLAGS="$CFLAGS -march=armv5te -mthumb-interwork -msoft-float"
+        CXXFLAGS="$CXXFLAGS -march=armv5te -mthumb-interwork -msoft-float"
+        ASFLAGS="$ASFLAGS -march=armv5te -mthumb-interwork -msoft-float"
       fi
       ;;
   esac
@@ -8750,6 +8792,7 @@ else
    PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION pixman-1 freetype2 fontconfig)
    MOZ_CAIRO_CFLAGS=$CAIRO_CFLAGS
    MOZ_CAIRO_LIBS=$CAIRO_LIBS
+   PKG_CHECK_MODULES(CAIRO_TEE, cairo-tee >= $CAIRO_VERSION)
    if test "$MOZ_X11"; then
         PKG_CHECK_MODULES(CAIRO_XRENDER, cairo-xlib-xrender >= $CAIRO_VERSION)
         MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS $CAIRO_XRENDER_LIBS"
@@ -9055,6 +9098,12 @@ AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_UPDATER)
 AC_SUBST(MOZ_ANGLE)
 AC_SUBST(MOZ_DIRECTX_SDK_PATH)
+AC_SUBST(MOZ_DIRECTX_SDK_CPU_SUFFIX)
+AC_SUBST(MOZ_D3DX9_VERSION)
+AC_SUBST(MOZ_D3DX9_CAB)
+AC_SUBST(MOZ_D3DCOMPILER_CAB)
+AC_SUBST(MOZ_D3DX9_DLL)
+AC_SUBST(MOZ_D3DCOMPILER_DLL)
 
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)

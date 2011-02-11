@@ -55,8 +55,10 @@ ifeq ($(OS_ARCH),SunOS)
 MODULE_OPTIMIZE_FLAGS = -xO5
 endif
 ifeq ($(OS_ARCH),WINNT)
+ifneq ($(OS_TEST),x86_64)
 # FIXME: bug 413019
 OS_COMPILE_CFLAGS += -GL-
+endif
 MODULE_OPTIMIZE_FLAGS = -O2
 endif
 endif

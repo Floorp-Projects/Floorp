@@ -2365,6 +2365,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     return NS_OK;
   }
 
+  // Make sure to start any background image loads for the root element now.
+  styleContext->StartBackgroundImageLoads();
+
   nsFrameConstructorSaveState absoluteSaveState;
   if (mHasRootAbsPosContainingBlock) {
     // Push the absolute containing block now so we can absolutely position
@@ -5460,11 +5463,9 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
                               aFrameItems);
   }
 
-  // Start background loads during frame construction. This is just
-  // a hint; the paint code will do the right thing in any case.
-  {
-    styleContext->GetStyleBackground();
-  }
+  // Start background loads during frame construction so that we're
+  // guaranteed that they will be started before onload fires.
+  styleContext->StartBackgroundImageLoads();
 
   nsFrameState savedStateBits = aState.mAdditionalStateBits;
   if (item.mIsGeneratedContent) {

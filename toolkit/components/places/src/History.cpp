@@ -733,11 +733,23 @@ private:
     for (nsTArray<VisitData>::size_type i = 0; i < mPlaces.Length(); i++) {
       mReferrers[i].spec = mPlaces[i].referrerSpec;
 
+      // If we are inserting a place into an empty mPlaces array, we need to
+      // check to make sure we do not store a bogus session id that is higher
+      // than the current maximum session id.
+      if (i == 0) {
+        PRInt64 newSessionId = navHistory->GetNewSessionID();
+        if (mPlaces[0].sessionId > newSessionId) {
+          mPlaces[0].sessionId = newSessionId;
+        }
+      }
+
       // Speculatively get a new session id for our visit if the current session
-      // id is non-valid.  While it is true that we will use the session id from
-      // the referrer if the visit was "recent" enough, we cannot call this
-      // method off of the main thread, so we have to consume an id now.
-      if (mPlaces[i].sessionId <= 0) {
+      // id is non-valid or if it is larger than the current largest session id.
+      // While it is true that we will use the session id from the referrer if
+      // the visit was "recent" enough, we cannot call this method off of the
+      // main thread, so we have to consume an id now.
+      if (mPlaces[i].sessionId <= 0 ||
+          (i > 0 && mPlaces[i].sessionId >= mPlaces[0].sessionId)) {
         mPlaces[i].sessionId = navHistory->GetNewSessionID();
       }
 

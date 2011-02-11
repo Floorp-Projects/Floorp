@@ -150,6 +150,7 @@ _BROWSER_FILES = \
                  browser_bug575561.js \
                  browser_bug577121.js \
                  browser_bug579872.js \
+                 browser_bug580638.js \
                  browser_bug580956.js \
                  browser_bug581242.js \
                  browser_bug581253.js \
@@ -198,6 +199,9 @@ _BROWSER_FILES = \
                  browser_sanitize-passwordDisabledHosts.js \
                  browser_sanitize-sitepermissions.js \
                  browser_sanitize-timespans.js \
+                 browser_clearplugindata.js \
+                 browser_clearplugindata.html \
+                 browser_clearplugindata_noage.html \
                  browser_sanitizeDialog.js \
                  browser_scope.js \
                  browser_selectTabAtIndex.js \
@@ -238,6 +242,7 @@ _BROWSER_FILES = \
                  browser_contentAreaClick.js \
                  browser_addon_bar_close_button.js \
                  browser_addon_bar_shortcut.js \
+                 browser_addon_bar_aomlistener.js \
                  $(NULL)
 
 # compartment-disabled

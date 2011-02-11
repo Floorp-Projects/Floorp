@@ -46,6 +46,7 @@
 #include "nsIPrefService.h"
 
 #include "mozilla/Services.h"
+#include "mozilla/unused.h"
 #include "prenv.h"
 
 #include "AndroidBridge.h"
@@ -296,12 +297,12 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         if (!uri)
             break;
 
-        char* argv[3] = {
+        const char *argv[3] = {
             "dummyappname",
             "-remote",
             uri
         };
-        nsresult rv = cmdline->Init(3, argv, nsnull, nsICommandLine::STATE_REMOTE_AUTO);
+        nsresult rv = cmdline->Init(3, const_cast<char **>(argv), nsnull, nsICommandLine::STATE_REMOTE_AUTO);
         if (NS_SUCCEEDED(rv))
             cmdline->Run();
         nsMemory::Free(uri);
@@ -431,6 +432,7 @@ nsAppShell::CallObserver(const nsAString &aObserverKey, const nsAString &aTopic,
         nsCOMPtr<nsIRunnable> observerCaller = new ObserverCaller(observer, sTopic.get(), sData.get());
         nsresult rv = NS_DispatchToMainThread(observerCaller);
         ALOG("NS_DispatchToMainThread result: %d", rv);
+        unused << rv;
     }
 }
 
