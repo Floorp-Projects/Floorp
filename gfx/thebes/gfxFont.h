@@ -2128,7 +2128,7 @@ private:
             // test for that before falling back to the InsertElementSorted
             // method.
             if (mOffsetToIndex.Length() == 0 ||
-                aOffset > mOffsetToIndex[mLastUsed].mOffset) {
+                aOffset > mOffsetToIndex[mOffsetToIndex.Length() - 1].mOffset) {
                 if (!mOffsetToIndex.AppendElement(DGRec(aOffset, detailIndex))) {
                     return nsnull;
                 }
