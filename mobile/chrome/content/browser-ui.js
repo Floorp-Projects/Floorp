@@ -382,14 +382,22 @@ var BrowserUI = {
   },
 
   switchPane: function switchPane(aPanelId) {
-    let button = document.getElementsByAttribute("linkedpanel", aPanelId)[0];
-    if (button)
-      button.checked = true;
-
     this.blurFocusedElement();
 
-    let pane = document.getElementById(aPanelId);
-    document.getElementById("panel-items").selectedPanel = pane;
+    let panels = document.getElementById("panel-items")
+    let panel = aPanelId ? document.getElementById(aPanelId) : panels.selectedPanel;
+
+    if (panels.selectedPanel == panel) {
+      // Fire a "select" event anyway so listeners know when the panel is opened.
+      let event = document.createEvent("Events");
+      event.initEvent("select", true, true);
+      panels.dispatchEvent(event);
+    } else {
+      panels.selectedPanel = panel;
+      let button = document.getElementsByAttribute("linkedpanel", aPanelId)[0];
+      if (button)
+        button.checked = true;
+    }
   },
 
   get toolbarH() {
@@ -752,22 +760,15 @@ var BrowserUI = {
     return (leftvis > 0.002);
   },
 
-  showPanel: function showPanel(aPage) {
+  showPanel: function showPanel(aPanelId) {
     if (this.activePanel)
-      this.activePanel = null;
+      this.activePanel = null; // Hide the awesomescreen.
 
     Elements.panelUI.left = 0;
     Elements.panelUI.hidden = false;
     Elements.contentShowing.setAttribute("disabled", "true");
 
-    if (aPage) {
-      this.switchPane(aPage);
-    } else {
-      // Fire a "select" event anyway so listeners know when the panel is opened.
-      let event = document.createEvent("Events");
-      event.initEvent("select", true, true);
-      document.getElementById("panel-items").dispatchEvent(event);
-    }
+    this.switchPane(aPanelId);
   },
 
   hidePanel: function hidePanel() {
