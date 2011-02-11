@@ -433,6 +433,7 @@ static const char *sExtensionNames[] = {
     "GL_APPLE_client_storage",
     "GL_ARB_texture_non_power_of_two",
     "GL_ARB_pixel_buffer_object",
+    "GL_ARB_ES2_compatibility",
     NULL
 };
 
