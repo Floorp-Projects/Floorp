@@ -1089,8 +1089,13 @@ var Browser = {
 
       case "scroll":
         if (browser == this.selectedBrowser) {
-          this.hideTitlebar();
-          this.hideSidebars();
+          let view = browser.getRootView();
+          let position = view.getPosition();
+          if (position.x != 0)
+            this.hideSidebars();
+
+          if (position.y != 0)
+            this.hideTitlebar();
         }
         break;
       case "Browser:CertException":
