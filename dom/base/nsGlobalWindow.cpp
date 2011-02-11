@@ -4438,6 +4438,8 @@ nsGlobalWindow::Dump(const nsAString& aStr)
 void
 nsGlobalWindow::EnsureReflowFlushAndPaint()
 {
+  NS_ASSERTION(IsOuterWindow(), "EnsureReflowFlushAndPaint() must be called on"
+               "the outer window");
   NS_ASSERTION(mDocShell, "EnsureReflowFlushAndPaint() called with no "
                "docshell!");
 
@@ -4717,6 +4719,9 @@ NS_IMETHODIMP
 nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
                        nsAString& aReturn)
 {
+  FORWARD_TO_OUTER(Prompt, (aMessage, aInitial, aReturn),
+                   NS_ERROR_NOT_INITIALIZED);
+
   SetDOMStringToNull(aReturn);
 
   if (AreDialogsBlocked())
@@ -6755,6 +6760,9 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
                                 const nsAString& aOptions,
                                 nsIVariant **aRetVal)
 {
+  FORWARD_TO_OUTER(ShowModalDialog, (aURI, aArgs, aOptions, aRetVal),
+                   NS_ERROR_NOT_INITIALIZED);
+
   *aRetVal = nsnull;
 
   // Before bringing up the window/dialog, unsuppress painting and flush
