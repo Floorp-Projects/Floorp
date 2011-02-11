@@ -61,14 +61,12 @@ function TabItem(tab, options) {
     options = {};
 
   // ___ set up div
-  var $div = iQ('<div>')
-    .addClass('tab')
-    .html("<div class='thumb'>" +
-          "<img class='cached-thumb' style='display:none'/><canvas moz-opaque/></div>" +
-          "<div class='favicon'><img/></div>" +
-          "<span class='tab-title'>&nbsp;</span>"
-    )
-    .appendTo('body');
+  document.body.appendChild(TabItems.fragment().cloneNode(true));
+  
+  // The document fragment contains just one Node
+  // As per DOM3 appendChild: it will then be the last child
+  let div = document.body.lastChild;
+  let $div = iQ(div);
 
   this._cachedImageData = null;
   this.shouldHideCachedData = false;
@@ -79,22 +77,13 @@ function TabItem(tab, options) {
   this.$canvas = iQ('.thumb canvas', $div);
   this.$cachedThumb = iQ('img.cached-thumb', $div);
   this.$favImage = iQ('.favicon>img', $div);
-
-  iQ("<div>")
-    .addClass('close')
-    .appendTo($div);
   this.$close = iQ('.close', $div);
-
-  iQ("<div>")
-    .addClass('expander')
-    .appendTo($div);
 
   this.tabCanvas = new TabCanvas(this.tab, this.$canvas[0]);
 
   this.defaultSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
   this._hidden = false;
   this.isATabItem = true;
-  this.sizeExtra = new Point();
   this.keepProportional = true;
   this._hasBeenDrawn = false;
   this._reconnected = false;
@@ -104,18 +93,22 @@ function TabItem(tab, options) {
 
   this.isDragging = false;
 
-  this.sizeExtra.x = parseInt($div.css('padding-left'))
-      + parseInt($div.css('padding-right'));
-
-  this.sizeExtra.y = parseInt($div.css('padding-top'))
-      + parseInt($div.css('padding-bottom'));
-
-  this.bounds = $div.bounds();
+  // Read off the total vertical and horizontal padding on the tab container
+  // and cache this value, as it must be the same for every TabItem.
+  if (Utils.isEmptyObject(TabItems.tabItemPadding)) {
+    TabItems.tabItemPadding.x = parseInt($div.css('padding-left'))
+        + parseInt($div.css('padding-right'));
+  
+    TabItems.tabItemPadding.y = parseInt($div.css('padding-top'))
+        + parseInt($div.css('padding-bottom'));
+  }
+  
+  this.bounds = new Rect(0,0,1,1);
 
   this._lastTabUpdateTime = Date.now();
 
   // ___ superclass setup
-  this._init($div[0]);
+  this._init(div);
 
   // ___ drag/drop
   // override dropOptions with custom tabitem methods
@@ -235,7 +228,8 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Private method that returns the fontsize to use given the tab's width
   _getFontSizeFromWidth: function TabItem__getFontSizeFromWidth(width) {
     let widthRange = new Range(0,TabItems.tabWidth);
-    let proportion = widthRange.proportion(width-this.sizeExtra.x, true); // in [0,1]
+    let proportion = widthRange.proportion(width-TabItems.tabItemPadding.x, true);
+    // proportion is in [0,1]
     return TabItems.fontSizeRange.scale(proportion);
   },
 
@@ -436,16 +430,17 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       css.top = rect.top;
 
     if (rect.width != this.bounds.width || options.force) {
-      css.width = rect.width - this.sizeExtra.x;
+      css.width = rect.width - TabItems.tabItemPadding.x;
       css.fontSize = this._getFontSizeFromWidth(rect.width);
       css.fontSize += 'px';
     }
 
     if (rect.height != this.bounds.height || options.force) {
       if (!this.isStacked)
-        css.height = rect.height - this.sizeExtra.y - TabItems.fontSizeRange.max;
+          css.height = rect.height - TabItems.tabItemPadding.y -
+                       TabItems.fontSizeRange.max;
       else
-        css.height = rect.height - this.sizeExtra.y;
+        css.height = rect.height - TabItems.tabItemPadding.y;
     }
 
     if (Utils.isEmptyObject(css))
@@ -777,6 +772,7 @@ let TabItems = {
   invTabAspect: 0, // set in init  
   fontSize: 9,
   fontSizeRange: new Range(8,15),
+  _fragment: null,
   items: [],
   paintingPaused: 0,
   cachedDataCounter: 0,  // total number of cached data being displayed.
@@ -790,6 +786,7 @@ let TabItems = {
   creatingNewOrphanTab: false,
   tempCanvas: null,
   _reconnectingPaused: false,
+  tabItemPadding: {},
 
   // ----------
   // Function: init
@@ -880,6 +877,29 @@ let TabItems = {
     this._eventListeners = null;
     this._lastUpdateTime = null;
     this._tabsWaitingForUpdate = null;
+  },
+
+  // ----------
+  // Function: fragment
+  // Return a DocumentFragment which has a single <div> child. This child node
+  // will act as a template for all TabItem containers.
+  // The first call of this function caches the DocumentFragment in _fragment.
+  fragment: function TabItems_fragment() {
+    if (this._fragment)
+      return this._fragment;
+
+    let div = document.createElement("div");
+    div.classList.add("tab");
+    div.innerHTML = "<div class='thumb'>" +
+            "<img class='cached-thumb' style='display:none'/><canvas moz-opaque/></div>" +
+            "<div class='favicon'><img/></div>" +
+            "<span class='tab-title'>&nbsp;</span>" +
+            "<div class='close'/>" +
+            "<div class='expander'/>";
+    this._fragment = document.createDocumentFragment();
+    this._fragment.appendChild(div);
+
+    return this._fragment;
   },
 
   // ----------
@@ -1259,23 +1279,11 @@ let TabItems = {
 // Takes care of the actual canvas for the tab thumbnail
 // Does not need to be accessed from outside of tabitems.js
 function TabCanvas(tab, canvas) {
-  this.init(tab, canvas);
+  this.tab = tab;
+  this.canvas = canvas;
 };
 
 TabCanvas.prototype = {
-  // ----------
-  // Function: init
-  init: function TabCanvas_init(tab, canvas) {
-    this.tab = tab;
-    this.canvas = canvas;
-
-    var $canvas = iQ(canvas);
-    var w = $canvas.width();
-    var h = $canvas.height();
-    canvas.width = w;
-    canvas.height = h;
-  },
-
   // ----------
   // Function: paint
   paint: function TabCanvas_paint(evt) {

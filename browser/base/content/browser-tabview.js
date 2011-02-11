@@ -134,7 +134,7 @@ let TabView = {
       iframe.flex = 1;
 
       if (typeof callback == "function")
-        iframe.addEventListener("DOMContentLoaded", callback, false);
+        window.addEventListener("tabviewframeinitialized", callback, false);
 
       iframe.setAttribute("src", "chrome://browser/content/tabview.html");
       this._deck.appendChild(iframe);
