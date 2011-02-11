@@ -3,7 +3,6 @@ body {
   font: message-box;
   color: rgba(0, 0, 0, 0.6);
   font-size: 12px;
-  line-height: 16px;
 }
 
 #bg {
@@ -422,7 +421,6 @@ html[dir=rtl] .acceptsDrop {
 
 .titlebar {
   font-size: 12px;
-  line-height: 18px;
   height: 18px;
 }
 
