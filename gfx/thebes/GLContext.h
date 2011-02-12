@@ -517,7 +517,12 @@ public:
      * Returns PR_TRUE if either this is the GLES2 API, or had the GL_ARB_ES2_compatibility extension
      */
     PRBool HasES2Compatibility() const {
+        // temporary workaround: it seems as if ARB_ES2_compatibility is broken on Mac. FIXME needs to be investigated.
+#ifdef XP_MACOSX
+        return mIsGLES2;
+#else
         return mIsGLES2 || IsExtensionSupported(ARB_ES2_compatibility);
+#endif
     }
 
     enum {
