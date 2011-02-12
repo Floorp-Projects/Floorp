@@ -154,10 +154,12 @@ JSCompartment::init()
         return false;
 #endif
 
-#ifdef JS_METHODJIT
-    if (!(jaegerCompartment = js_new<mjit::JaegerCompartment>())) {
+    if (!backEdgeTable.init())
         return false;
-    }
+
+#ifdef JS_METHODJIT
+    if (!(jaegerCompartment = js_new<mjit::JaegerCompartment>()))
+        return false;
     return jaegerCompartment->Initialize();
 #else
     return true;
@@ -573,3 +575,25 @@ JSCompartment::allocMathCache(JSContext *cx)
         js_ReportOutOfMemory(cx);
     return mathCache;
 }
+
+size_t
+JSCompartment::backEdgeCount(jsbytecode *pc) const
+{
+    if (BackEdgeMap::Ptr p = backEdgeTable.lookup(pc))
+        return p->value;
+
+    return 0;
+}
+
+size_t
+JSCompartment::incBackEdgeCount(jsbytecode *pc)
+{
+    if (BackEdgeMap::AddPtr p = backEdgeTable.lookupForAdd(pc)) {
+        p->value++;
+        return p->value;
+    } else {
+        backEdgeTable.add(p, pc, 1);
+        return 1;
+    }
+}
+

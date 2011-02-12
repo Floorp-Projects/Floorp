@@ -645,7 +645,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 #ifdef JS_TRACER
         jitTraceICs[i].loopCounterStart = GetHotloop(cx);
 #endif
-        jitTraceICs[i].loopCounter = jitTraceICs[i].loopCounterStart;
+        jitTraceICs[i].loopCounter = jitTraceICs[i].loopCounterStart
+            - cx->compartment->backEdgeCount(traceICs[i].jumpTarget);
         
         stubCode.patch(traceICs[i].addrLabel, &jitTraceICs[i]);
     }

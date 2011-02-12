@@ -950,7 +950,8 @@ class CallCompiler : public BaseCompiler
         // If the function cannot be jitted (generally unjittable or empty script),
         // patch this site to go to a slow path always.
         if (!ucr.codeAddr) {
-            disable(jit);
+            if (ucr.unjittable)
+                disable(jit);
             return NULL;
         }
             
