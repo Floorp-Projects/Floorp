@@ -1006,6 +1006,13 @@ JS_WrapValue(JSContext *cx, jsval *vp);
 extern JS_PUBLIC_API(JSObject *)
 JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target);
 
+extern JS_FRIEND_API(JSObject *)
+js_TransplantObjectWithWrapper(JSContext *cx,
+                               JSObject *origobj,
+                               JSObject *origwrapper,
+                               JSObject *targetobj,
+                               JSObject *targetwrapper);
+
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
