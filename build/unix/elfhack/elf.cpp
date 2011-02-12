@@ -515,10 +515,16 @@ unsigned int ElfSection::getOffset()
         else
             offset = (offset & ~4095) + (getAddr() & 4095);
     }
-    // TODO: carefully handle this, as this isn't always safe, cf. when
-    // resizing .dynamic.
     if ((getType() != SHT_NOBITS) && (offset & (getAddrAlign() - 1)))
         offset = (offset | (getAddrAlign() - 1)) + 1;
+
+    // Two subsequent sections can't be mapped in the same page in memory
+    // if they aren't in the same 4K block on disk.
+    if ((getType() != SHT_NOBITS) && getAddr()) {
+        if (((offset >> 12) != (previous->getOffset() >> 12)) &&
+            ((getAddr() >> 12) == (previous->getAddr() >> 12)))
+            throw std::runtime_error("Moving section would require overlapping segments");
+    }
 
     return (shdr.sh_offset = offset);
 }
@@ -655,10 +661,6 @@ void ElfDynamic_Section::setValueForType(unsigned int tag, ElfValue *val)
     if (i < shdr.sh_size / shdr.sh_entsize)
         return;
 
-    // Growing the .dynamic section needs it to be moved depending where it
-    // was originally. Growing it blindly is dangerous. Safer to just fail
-    // for now
-    throw std::runtime_error("Growing .dynamic section is unsupported");
     Elf_DynValue value;
     value.tag = DT_NULL;
     value.value = NULL;
