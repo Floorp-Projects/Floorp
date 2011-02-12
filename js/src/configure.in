@@ -2843,9 +2843,9 @@ alpha*-*-osf*)
     MOZ_GFX_OPTIMIZE_MOBILE=1
     # If we're building with --enable-profiling, we need a frame pointer.
     if test -z "$MOZ_PROFILING"; then
-        MOZ_OPTIMIZE_FLAGS="-O2 -freorder-blocks -fno-reorder-functions -fomit-frame-pointer"
+        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fomit-frame-pointer"
     else
-        MOZ_OPTIMIZE_FLAGS="-O2 -freorder-blocks -fno-reorder-functions -fno-omit-frame-pointer"
+        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fno-omit-frame-pointer"
     fi
     # The Maemo builders don't know about this flag
     MOZ_ARM_VFP_FLAGS="-mfpu=vfp"
