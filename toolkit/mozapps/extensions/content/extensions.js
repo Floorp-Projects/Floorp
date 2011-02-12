@@ -109,6 +109,8 @@ function initialize() {
   gHeader.initialize();
   gViewController.initialize();
   gEventManager.initialize();
+  Services.obs.addObserver(sendEMPong, "EM-ping", false);
+  Services.obs.notifyObservers(window, "EM-loaded", "");
 }
 
 function notifyInitialized() {
@@ -128,6 +130,11 @@ function shutdown() {
   gSearchView.shutdown();
   gEventManager.shutdown();
   gViewController.shutdown();
+  Services.obs.removeObserver(sendEMPong, "EM-ping");
+}
+
+function sendEMPong(aSubject, aTopic, aData) {
+  Services.obs.notifyObservers(window, "EM-pong", "");
 }
 
 // Used by external callers to load a specific view into the manager
