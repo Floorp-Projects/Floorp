@@ -5285,7 +5285,6 @@ JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
     if (!fp)
         return;
     cx->restoreSegment();
-    cx->resetCompartment();
 }
 
 /************************************************************************/
