@@ -45,9 +45,17 @@ interface nsIOutputStream;
 #include "npapi.h"
 #include "nsStringGlue.h"
 #include "gfxASurface.h"
+#include "ImageLayers.h"
 struct JSContext;
 struct JSObject;
 class gfxASurface;
+
+namespace mozilla {
+namespace layers {
+class Image;
+class ImageContainer;
+}
+}
 
 #define NPRUNTIME_JSCLASS_NAME "NPObject JS wrapper class"
 %}
@@ -55,6 +63,8 @@ class gfxASurface;
 [ptr] native JSContextPtr(JSContext);
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native gfxASurfacePtr(gfxASurface);
+[ptr] native ImagePtr(mozilla::layers::Image);
+[ptr] native ImageContainerPtr(mozilla::layers::ImageContainer);
 
 [uuid(84994340-E120-4051-824F-D4EE8AEF1A3E)]
 interface nsIPluginInstance : nsISupports
@@ -249,8 +259,9 @@ interface nsIPluginInstance : nsISupports
 };
 
 // XXX kill me after branching
-[noscript, uuid(c4251cb8-dd2f-4885-a008-2d1b4d21fd33)]
+[noscript, uuid(2b012762-9a55-458b-929e-7ea094812567)]
 interface nsIPluginInstance_MOZILLA_2_0_BRANCH : nsIPluginInstance
 {
     PRBool isRemoteDrawingCoreAnimation();
+    void getImage(in ImageContainerPtr aContainer, out ImagePtr aImage);
 };

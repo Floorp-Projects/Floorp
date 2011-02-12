@@ -53,6 +53,7 @@
 #include "nsHashKeys.h"
 #include "nsRect.h"
 #include "gfxASurface.h"
+#include "ImageLayers.h"
 #ifdef MOZ_X11
 class gfxXlibSurface;
 #endif
@@ -277,6 +278,7 @@ public:
 
     nsresult AsyncSetWindow(NPWindow* window);
     nsresult GetSurface(gfxASurface** aSurface);
+    nsresult GetImage(mozilla::layers::ImageContainer* aContainer, mozilla::layers::Image** aImage);
 #ifdef XP_MACOSX
     nsresult IsRemoteDrawingCoreAnimation(PRBool *aDrawing);
 #endif

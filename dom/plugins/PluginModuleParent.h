@@ -231,6 +231,7 @@ private:
     virtual bool HasRequiredFunctions();
     virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);
     virtual nsresult GetSurface(NPP instance, gfxASurface** aSurface);
+    virtual nsresult GetImage(NPP instance, mozilla::layers::ImageContainer* aContainer, mozilla::layers::Image** aImage);
     NS_OVERRIDE virtual bool UseAsyncPainting() { return true; }
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
