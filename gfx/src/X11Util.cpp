@@ -46,12 +46,10 @@ ScopedXErrorHandler::ErrorEvent* ScopedXErrorHandler::sXErrorPtr;
 int
 ScopedXErrorHandler::ErrorHandler(Display *, XErrorEvent *ev)
 {
-    // only record the error if no error was previously recorded.
-    // this means that in case of multiple errors, it's the first error that we report.
-    if (!sXErrorPtr->mError.error_code)
-      sXErrorPtr->mError = *ev;
+    sXErrorPtr->mError = *ev;
     return 0;
 }
+
 
 ScopedXErrorHandler::ScopedXErrorHandler()
 {
@@ -72,17 +70,12 @@ bool
 ScopedXErrorHandler::SyncAndGetError(Display *dpy, XErrorEvent *ev)
 {
     XSync(dpy, False);
-    return GetError(ev);
-}
-
-bool
-ScopedXErrorHandler::GetError(XErrorEvent *ev)
-{
     bool retval = mXError.mError.error_code != 0;
     if (ev)
         *ev = mXError.mError;
     mXError = ErrorEvent(); // reset
     return retval;
 }
+
 
 } // namespace mozilla
