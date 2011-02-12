@@ -524,7 +524,8 @@ Clear(JSContext *cx,
 {
     jsval *argv = JS_ARGV(cx, vp);
     if (argc > 0 && !JSVAL_IS_PRIMITIVE(argv[0])) {
-        JS_ClearScope(cx, JSVAL_TO_OBJECT(argv[0]));
+        if (!JS_ClearScope(cx, JSVAL_TO_OBJECT(argv[0])))
+	    return JS_FALSE;
     } else {
         JS_ReportError(cx, "'clear' requires an object");
         return JS_FALSE;
