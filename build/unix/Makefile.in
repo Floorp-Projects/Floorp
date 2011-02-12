@@ -46,7 +46,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE       = build
 
 ifeq ($(USE_ELF_HACK)$(HOST_OS_ARCH)$(OS_ARCH),1LinuxLinux)
+ifneq (,$(filter %86 x86_64 arm,$(OS_TEST)))
 DIRS = elfhack
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
