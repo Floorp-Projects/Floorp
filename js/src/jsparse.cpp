@@ -4786,8 +4786,13 @@ Parser::returnOrYield(bool useAssignExpr)
         return NULL;
 
 #if JS_HAS_GENERATORS
-    if (tt == TOK_YIELD)
+    if (tt == TOK_YIELD) {
+        if (!tc->inFunction()) {
+            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_RETURN_OR_YIELD, js_yield_str);
+            return NULL;
+        }
         tc->flags |= TCF_FUN_IS_GENERATOR;
+    }
 #endif
 
     /* This is ugly, but we don't want to require a semicolon. */
