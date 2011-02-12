@@ -333,7 +333,6 @@ public:
                 (getType() == SHT_STRTAB) ||
                 (getType() == SHT_RELA) ||
                 (getType() == SHT_HASH) ||
-                (getType() == SHT_DYNAMIC) ||
                 (getType() == SHT_NOTE) ||
                 (getType() == SHT_REL) ||
                 (getType() == SHT_DYNSYM) ||
