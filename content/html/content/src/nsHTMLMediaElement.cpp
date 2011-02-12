@@ -2397,6 +2397,8 @@ void nsHTMLMediaElement::DoRemoveSelfReference()
 nsresult nsHTMLMediaElement::Observe(nsISupports* aSubject,
                                      const char* aTopic, const PRUnichar* aData)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+  
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     mShuttingDown = PR_TRUE;
     AddRemoveSelfReference();
