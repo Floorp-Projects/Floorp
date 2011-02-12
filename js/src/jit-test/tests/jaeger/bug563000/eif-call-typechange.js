@@ -1,3 +1,4 @@
+// |jit-test| mjitalways
 setDebug(true);
 
 function callee() {

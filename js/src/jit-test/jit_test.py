@@ -93,6 +93,8 @@ class Test:
                         test.allow_oom = True
                     elif name == 'valgrind':
                         test.valgrind = options.valgrind
+                    elif name == 'mjitalways':
+                        test.jitflags.append('-a')
                     else:
                         print('warning: unrecognized |jit-test| attribute %s'%part)
 
@@ -426,7 +428,7 @@ def main(argv):
     for test in test_list:
         for jitflags in jitflags_list:
             new_test = test.copy()
-            new_test.jitflags = jitflags
+            new_test.jitflags.extend(jitflags)
             job_list.append(new_test)
     
 

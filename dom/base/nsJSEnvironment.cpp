@@ -1015,10 +1015,11 @@ static const char js_zeal_option_str[]   = JS_OPTIONS_DOT_STR "gczeal";
 #endif
 static const char js_tracejit_content_str[]   = JS_OPTIONS_DOT_STR "tracejit.content";
 static const char js_tracejit_chrome_str[]    = JS_OPTIONS_DOT_STR "tracejit.chrome";
-static const char js_methodjit_content_str[]   = JS_OPTIONS_DOT_STR "methodjit.content";
-static const char js_methodjit_chrome_str[]    = JS_OPTIONS_DOT_STR "methodjit.chrome";
-static const char js_profiling_content_str[]   = JS_OPTIONS_DOT_STR "jitprofiling.content";
-static const char js_profiling_chrome_str[]    = JS_OPTIONS_DOT_STR "jitprofiling.chrome";
+static const char js_methodjit_content_str[]  = JS_OPTIONS_DOT_STR "methodjit.content";
+static const char js_methodjit_chrome_str[]   = JS_OPTIONS_DOT_STR "methodjit.chrome";
+static const char js_profiling_content_str[]  = JS_OPTIONS_DOT_STR "jitprofiling.content";
+static const char js_profiling_chrome_str[]   = JS_OPTIONS_DOT_STR "jitprofiling.chrome";
+static const char js_methodjit_always_str[]   = JS_OPTIONS_DOT_STR "methodjit_always";
 
 int
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
@@ -1047,6 +1048,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   PRBool useProfiling = nsContentUtils::GetBoolPref(chromeWindow ?
                                                     js_profiling_chrome_str :
                                                     js_profiling_content_str);
+  PRBool useMethodJITAlways = nsContentUtils::GetBoolPref(js_methodjit_always_str);
   nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (xr) {
     PRBool safeMode = PR_FALSE;
@@ -1055,6 +1057,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
       useTraceJIT = PR_FALSE;
       useMethodJIT = PR_FALSE;
       useProfiling = PR_FALSE;
+      useMethodJITAlways = PR_TRUE;
     }
   }    
 
@@ -1072,6 +1075,11 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions |= JSOPTION_PROFILING;
   else
     newDefaultJSOptions &= ~JSOPTION_PROFILING;
+
+  if (useMethodJITAlways)
+    newDefaultJSOptions |= JSOPTION_METHODJIT_ALWAYS;
+  else
+    newDefaultJSOptions &= ~JSOPTION_METHODJIT_ALWAYS;
 
 #ifdef DEBUG
   // In debug builds, warnings are enabled in chrome context if

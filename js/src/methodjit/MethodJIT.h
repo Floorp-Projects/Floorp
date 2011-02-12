@@ -394,7 +394,8 @@ enum CompileStatus
 {
     Compile_Okay,
     Compile_Abort,
-    Compile_Error
+    Compile_Error,
+    Compile_Skipped
 };
 
 void JS_FASTCALL
@@ -405,19 +406,6 @@ TryCompile(JSContext *cx, JSStackFrame *fp);
 
 void
 ReleaseScriptCode(JSContext *cx, JSScript *script);
-
-static inline CompileStatus
-CanMethodJIT(JSContext *cx, JSScript *script, JSStackFrame *fp)
-{
-    if (!cx->methodJitEnabled)
-        return Compile_Abort;
-    JITScriptStatus status = script->getJITStatus(fp->isConstructing());
-    if (status == JITScript_Invalid)
-        return Compile_Abort;
-    if (status == JITScript_None)
-        return TryCompile(cx, fp);
-    return Compile_Okay;
-}
 
 struct CallSite
 {
