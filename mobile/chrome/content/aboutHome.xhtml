@@ -86,6 +86,8 @@
     <div id="footer-wrapper">
       <span id="feedback" style="width: &aboutHome.footerWidth;" class="section-row" pref="app.feedbackURL" onclick="openLink(this);" role="button">&aboutHome.giveFeedback;</span><span id="support" style="width: &aboutHome.footerWidth;" class="section-row" pref="app.support.baseURL" onclick="openLink(this);" role="button">&aboutHome.getHelp;</span>
     </div>
+
+    <div id="promo"><img src="chrome://branding/content/spark.png"/><span>&aboutHome.promoSpark;</span></div>
   </div>
 
   <!-- l10n hack -->
@@ -124,6 +126,7 @@
     function init() {
       initTabs();
       initAddons();
+      initPromo();
     }
 
     function uninit() {
@@ -350,12 +353,18 @@
     }
 
     function initAddons() {
-       getChromeWin().Services.obs.addObserver(updateAddons, "recommended-addons-cache-updated", false);
-       updateAddons();
+      getChromeWin().Services.obs.addObserver(updateAddons, "recommended-addons-cache-updated", false);
+      updateAddons();
     }
 
     function uninitAddons() {
-       getChromeWin().Services.obs.removeObserver(updateAddons, "recommended-addons-cache-updated");
+      getChromeWin().Services.obs.removeObserver(updateAddons, "recommended-addons-cache-updated");
+    }
+
+    function initPromo() {
+      let endDate = new Date(getChromeWin().Services.prefs.getCharPref("app.promo.spark.endDate"));
+      if (endDate > Date.now())
+        document.getElementById("promo").style.display = "block";
     }
   ]]></script>
 </body>

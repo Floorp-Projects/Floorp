@@ -8,3 +8,6 @@
 <!ENTITY aboutHome.openAllTabs                  "Open all in tabs">
 <!ENTITY aboutHome.noTabs                       "No tabs from last time">
 <!ENTITY aboutHome.noAddons                     "No recommended add-ons">
+
+<!-- LOCALIZATION NOTE: 'Firefox Spark' is the official name of the promotion and should not be translated -->
+<!ENTITY aboutHome.promoSpark                   "Play Firefox Spark">
