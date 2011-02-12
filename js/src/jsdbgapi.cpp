@@ -112,58 +112,58 @@ JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug)
     rt->debugMode = debug;
 }
 
-JS_FRIEND_API(JSBool)
-JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
+#ifdef DEBUG
+static bool
+CompartmentHasLiveScripts(JSCompartment *comp)
 {
-    JSRuntime *rt = cx->runtime;
-
-    // We can only recompile scripts that are not currently live (executing in
-    // some context). This function is only called from the main thread, and
-    // will only consider contexts in that same thread and scripts inside
-    // compartments associated with that same thread. (Scripts in other threads
-    // are allowed to migrate from thread to thread, but scripts do not migrate
-    // between the main thread and other threads.)
-    //
-    // Discard all of this thread's inactive JITScripts and set their
-    // debugMode. The remaining scripts will be left as-is.
-
-    // Find all live scripts
-
-    JSContext *iter = NULL;
-#ifdef JS_THREADSAFE
+#ifdef JS_METHODJIT
+# ifdef JS_THREADSAFE
     jsword currentThreadId = reinterpret_cast<jsword>(js_CurrentThreadId());
+# endif
 #endif
-    typedef HashSet<JSScript *, DefaultHasher<JSScript*>, ContextAllocPolicy> ScriptMap;
-    ScriptMap liveScripts(cx);
-    if (!liveScripts.init())
-        return JS_FALSE;
 
+    // Unsynchronized context iteration is technically a race; but this is only
+    // for debug asserts where such a race would be rare
+    JSContext *iter = NULL;
     JSContext *icx;
-    while ((icx = JS_ContextIterator(rt, &iter))) {
+    while ((icx = JS_ContextIterator(comp->rt, &iter))) {
 #ifdef JS_THREADSAFE
         if (JS_GetContextThread(icx) != currentThreadId)
             continue;
 #endif
-
         for (AllFramesIter i(icx); !i.done(); ++i) {
             JSScript *script = i.fp()->maybeScript();
-            if (script)
-                liveScripts.put(script);
+            if (script && script->compartment == comp)
+                return JS_TRUE;
         }
     }
 
+    return JS_FALSE;
+}
+#endif
+
+JS_FRIEND_API(JSBool)
+JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
+{
+    // This should only be called when no scripts are live. It would even be
+    // incorrect to discard just the non-live scripts' JITScripts because they
+    // might share ICs with live scripts (bug 632343).
+    JS_ASSERT(!CompartmentHasLiveScripts(comp));
+
+    // All scripts compiled from this point on should be in the requested debugMode.
     comp->debugMode = debug;
 
-    JSAutoEnterCompartment ac;
+    // Discard JIT code for any scripts that change debugMode. This function
+    // assumes that 'comp' is in the same thread as 'cx'.
 
 #ifdef JS_METHODJIT
+    JSAutoEnterCompartment ac;
+
     for (JSScript *script = (JSScript *)comp->scripts.next;
          &script->links != &comp->scripts;
          script = (JSScript *)script->links.next)
     {
         if (!script->debugMode == !debug)
-            continue;
-        if (liveScripts.has(script))
             continue;
 
         /*
