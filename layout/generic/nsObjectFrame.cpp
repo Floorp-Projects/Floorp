@@ -362,6 +362,7 @@ public:
 
 #ifdef XP_MACOSX
   NPDrawingModel GetDrawingModel();
+  PRBool IsRemoteDrawingCoreAnimation();
   NPEventModel GetEventModel();
   static void CARefresh(nsITimer *aTimer, void *aClosure);
   static void AddToCARefreshTimer(nsPluginInstanceOwner *aPluginInstance);
@@ -3935,6 +3936,19 @@ NPDrawingModel nsPluginInstanceOwner::GetDrawingModel()
 
   mInstance->GetDrawingModel((PRInt32*)&drawingModel);
   return drawingModel;
+}
+
+PRBool nsPluginInstanceOwner::IsRemoteDrawingCoreAnimation()
+{
+  nsCOMPtr<nsIPluginInstance_MOZILLA_2_0_BRANCH> inst = do_QueryInterface(mInstance);
+  if (!inst)
+    return PR_FALSE;
+
+  PRBool coreAnimation;
+  if (!NS_SUCCEEDED(inst->IsRemoteDrawingCoreAnimation(&coreAnimation)))
+    return PR_FALSE;
+
+  return coreAnimation;
 }
 
 NPEventModel nsPluginInstanceOwner::GetEventModel()
