@@ -2733,10 +2733,11 @@ Clear(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
     if (argc != 0 && !JS_ValueToObject(cx, JS_ARGV(cx, vp)[0], &obj))
-        return JS_FALSE;
-    JS_ClearScope(cx, obj);
+        return false;
+    if (!JS_ClearScope(cx, obj))
+        return false;
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -4684,7 +4685,8 @@ split_setup(JSContext *cx, JSBool evalcx)
         }
     }
 
-    JS_ClearScope(cx, outer);
+    if (!JS_ClearScope(cx, outer))
+        return NULL;
 
 #ifndef LAZY_STANDARD_CLASSES
     if (!JS_InitStandardClasses(cx, inner))

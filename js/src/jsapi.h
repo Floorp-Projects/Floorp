@@ -2469,7 +2469,7 @@ JS_DeleteElement(JSContext *cx, JSObject *obj, jsint index);
 extern JS_PUBLIC_API(JSBool)
 JS_DeleteElement2(JSContext *cx, JSObject *obj, jsint index, jsval *rval);
 
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API(JSBool)
 JS_ClearScope(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSIdArray *)

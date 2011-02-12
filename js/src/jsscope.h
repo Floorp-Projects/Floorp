@@ -297,7 +297,6 @@ struct Shape : public JSObjectMap
     friend class js::PropertyTree;
     friend class js::Bindings;
     friend bool IsShapeAboutToBeFinalized(JSContext *cx, const js::Shape *shape);
-    friend JS_FRIEND_API(void) ::js_UnbrandAndClearSlots(JSContext *cx, JSObject *obj);
 
     /* 
      * numLinearSearches starts at zero and is incremented initially on each

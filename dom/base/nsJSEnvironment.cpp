@@ -3178,20 +3178,12 @@ nsJSContext::ClearScope(void *aGlobalObj, PRBool aClearFromProtoChain)
       JS_ClearPendingException(mContext);
     }
 
-    // Hack fix for bug 611653. Originally, this always called JS_ClearScope,
-    // which was required to avoid leaks. But for native objects, the JS
-    // engine has an optimization that requires that permanent properties of
-    // the global object are never deleted. So instead, we call a new special
-    // API that clears the values of the global, thus avoiding leaks without
-    // deleting any properties.
-    if (obj->isNative()) {
-      js_UnbrandAndClearSlots(mContext, obj);
-    } else {
-      JS_ClearScope(mContext, obj);
-    }
+    if (!JS_ClearScope(mContext, obj))
+      JS_ClearPendingException(mContext);
 
     if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
-      JS_ClearScope(mContext, &obj->getProxyExtra().toObject());
+      if (!JS_ClearScope(mContext, &obj->getProxyExtra().toObject()))
+        JS_ClearPendingException(mContext);
     }
 
     if (window != JSVAL_VOID) {
@@ -3229,7 +3221,8 @@ nsJSContext::ClearScope(void *aGlobalObj, PRBool aClearFromProtoChain)
       // Clear up obj's prototype chain, but not Object.prototype.
       for (JSObject *o = ::JS_GetPrototype(mContext, obj), *next;
            o && (next = ::JS_GetPrototype(mContext, o)); o = next)
-        ::JS_ClearScope(mContext, o);
+        if (!::JS_ClearScope(mContext, o))
+          JS_ClearPendingException(mContext);
     }
   }
 
