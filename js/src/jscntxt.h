@@ -601,8 +601,7 @@ class StackSpace
 
     bool getSegmentAndFrame(JSContext *cx, uintN vplen, uintN nfixed,
                             FrameGuard *fg) const;
-    void pushSegmentAndFrame(JSContext *cx, JSObject *initialVarObj,
-                             JSFrameRegs *regs, FrameGuard *fg);
+    void pushSegmentAndFrame(JSContext *cx, JSFrameRegs *regs, FrameGuard *fg);
     void popSegmentAndFrame(JSContext *cx);
 
     struct EnsureSpaceCheck {
@@ -1692,12 +1691,10 @@ struct JSContext
     void resetCompartment();
     void wrapPendingException();
 
-    /* 'regs' must only be changed by calling this function. */
+    /* For grep-ability, changes to 'regs' should call this function. */
     void setCurrentRegs(JSFrameRegs *regs) {
         JS_ASSERT_IF(regs, regs->fp);
         this->regs = regs;
-        if (!regs)
-            resetCompartment();
     }
 
     /* Temporary arena pool used while compiling and decompiling. */
