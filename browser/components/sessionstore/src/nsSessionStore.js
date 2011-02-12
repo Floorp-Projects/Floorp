@@ -2585,16 +2585,20 @@ SessionStoreService.prototype = {
       return;
     }
 
-    if (aTabs.length > 1) {
+    let unhiddenTabs = aTabData.filter(function (aData) !aData.hidden).length;
+
+    // if all tabs to be restored are hidden, make the first one visible
+    if (unhiddenTabs == 0) {
+      aTabData[0].hidden = false;
+    } else if (aTabs.length > 1) {
       // Load hidden tabs last, by pushing them to the end of the list
-      let unhiddenTabs = aTabs.length;
-      for (let t = 0; t < unhiddenTabs; ) {
+      for (let t = 0, tabsToReorder = aTabs.length - unhiddenTabs; tabsToReorder > 0; ) {
         if (aTabData[t].hidden) {
           aTabs = aTabs.concat(aTabs.splice(t, 1));
           aTabData = aTabData.concat(aTabData.splice(t, 1));
           if (aSelectTab > t)
             --aSelectTab;
-          --unhiddenTabs;
+          --tabsToReorder;
           continue;
         }
         ++t;

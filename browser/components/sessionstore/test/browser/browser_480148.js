@@ -87,7 +87,7 @@ function test() {
   }
 
   // the number of tests we're running
-  let numTests = 6;
+  let numTests = 7;
   let completedTests = 0;
 
   let tabMinWidth = parseInt(getComputedStyle(gBrowser.selectedTab, null).minWidth);
@@ -169,6 +169,7 @@ function test() {
   runTest(4, 13, 11, 6, [],         [10, 7, 8, 9, 11, 12, 0, 1, 2, 3, 4, 5, 6]);
   runTest(5, 13, 13, 6, [0, 4, 9],  [12, 6, 7, 8, 10, 11, 1, 2, 3, 5, 0, 4, 9]);
   runTest(6, 13, 4,  6, [1, 7, 12], [3, 4, 5, 6, 8, 9, 0, 2, 10, 11, 1, 7, 12]);
+  runTest(7, 13, 4,  6, [0, 1, 2],  [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2]);
 
   // finish() is run by the last test to finish, so no cleanup down here
 }
