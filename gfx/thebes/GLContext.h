@@ -509,15 +509,8 @@ public:
      * This means that various GLES2 restrictions might be in effect (modulo
      * extensions).
      */
-    PRBool IsGLES2() const {
+    PRBool IsGLES2() {
         return mIsGLES2;
-    }
-    
-    /**
-     * Returns PR_TRUE if either this is the GLES2 API, or had the GL_ARB_ES2_compatibility extension
-     */
-    PRBool HasES2Compatibility() const {
-        return mIsGLES2 || IsExtensionSupported(ARB_ES2_compatibility);
     }
 
     enum {
@@ -852,11 +845,10 @@ public:
         APPLE_client_storage,
         ARB_texture_non_power_of_two,
         ARB_pixel_buffer_object,
-        ARB_ES2_compatibility,
         Extensions_Max
     };
 
-    PRBool IsExtensionSupported(GLExtensions aKnownExtension) const {
+    PRBool IsExtensionSupported(GLExtensions aKnownExtension) {
         return mAvailableExtensions[aKnownExtension];
     }
 
@@ -928,10 +920,6 @@ protected:
         bool& operator[](size_t index) {
             NS_ASSERTION(index < setlen, "out of range");
             return values[index];
-        }
-
-        const bool& operator[](size_t index) const {
-            return const_cast<ExtensionBitset*>(this)->operator[](index);
         }
 
         bool values[setlen];
