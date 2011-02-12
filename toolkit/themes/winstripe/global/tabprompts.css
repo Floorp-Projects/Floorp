@@ -1,21 +1,24 @@
 /* Tab Modal Prompt boxes */
 tabmodalprompt {
-  background-image: url(chrome://global/skin/icons/tabprompts-bgtexture.png),
-                    -moz-radial-gradient(center 40%, circle farthest-side, hsla(0,0%,10%,.1), hsla(0,0%,0%,.5));
+  background-image: url(chrome://global/skin/icons/tabprompts-bgtexture.png);
+  background-color: hsla(0,0%,10%,.5);
+  font-family: sans-serif; /* use content font not system UI font */
 }
 
 .mainContainer {
-  padding: 20px;
   color: black;
-  background-image: -moz-linear-gradient(hsla(0,0%,89%,.97), hsla(0,0%,96%,.97));
-  border-radius: 6px;
-  box-shadow: 0 0 1px 1px hsla(0,0%,0%,.6) inset,
-              0 1px 1px hsla(0,0%,0%,.2) inset,
-              0 2px 5px hsla(0,0%,0%,.2) inset,
-              0 0 0 1px hsla(0,0%,100%,.3),
-              0 1px 0 hsla(0,0%,100%,.1);
+  background-color: white;
+  background-clip: padding-box;
+  border-radius: 2px;
+  border: 1px solid hsla(0,0%,0%,.5);
+}
+
+.topContainer {
+  padding: 20px;
 }
 
 .buttonContainer {
-  margin-top: 10px;
+  padding: 12px 20px 15px;
+  background-color: hsla(0,0%,0%,.05);
+  border-top: 1px solid hsla(0,0%,0%,.05);
 }
