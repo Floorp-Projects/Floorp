@@ -682,6 +682,15 @@ PluginModuleParent::GetSurface(NPP instance, gfxASurface** aSurface)
     return i->GetSurface(aSurface);
 }
 
+nsresult
+PluginModuleParent::GetImage(NPP instance,
+                             mozilla::layers::ImageContainer* aContainer,
+                             mozilla::layers::Image** aImage)
+{
+    PluginInstanceParent* i = InstCast(instance);
+    return !i ? NS_ERROR_FAILURE : i->GetImage(aContainer, aImage);
+}
+
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
 nsresult
 PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error)
