@@ -6437,10 +6437,45 @@ var MailIntegration = {
 };
 
 function BrowserOpenAddonsMgr(aView) {
-  switchToTabHavingURI("about:addons", true, function(browser) {
-    if (aView)
-      browser.contentWindow.wrappedJSObject.loadView(aView);
-  });
+  if (aView) {
+    let emWindow;
+    let browserWindow;
+
+    function receivePong(aSubject, aTopic, aData) {
+      let browserWin = aSubject.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebNavigation)
+                               .QueryInterface(Ci.nsIDocShellTreeItem)
+                               .rootTreeItem
+                               .QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIDOMWindow);
+      if (!emWindow || browserWin == window /* favor the current window */) {
+        emWindow = aSubject;
+        browserWindow = browserWin;
+      }
+    }
+    Services.obs.addObserver(receivePong, "EM-pong", false);
+    Services.obs.notifyObservers(null, "EM-ping", "");
+    Services.obs.removeObserver(receivePong, "EM-pong");
+
+    if (emWindow) {
+      emWindow.loadView(aView);
+      browserWindow.gBrowser.selectedTab =
+        browserWindow.gBrowser._getTabForContentWindow(emWindow);
+      emWindow.focus();
+      return;
+    }
+  }
+
+  var newLoad = !switchToTabHavingURI("about:addons", true);
+
+  if (aView) {
+    // This must be a new load, else the ping/pong would have
+    // found the window above.
+    Services.obs.addObserver(function (aSubject, aTopic, aData) {
+      Services.obs.removeObserver(arguments.callee, aTopic);
+      aSubject.loadView(aView);
+    }, "EM-loaded", false);
+  }
 }
 
 function AddKeywordForSearchField() {
@@ -8360,11 +8395,9 @@ var LightWeightThemeWebInstaller = {
  *        URI to search for
  * @param aOpenNew
  *        True to open a new tab and switch to it, if no existing tab is found
- * @param A callback to call when the tab is open, the tab's browser will be
- *        passed as an argument
- * @return True if a tab was switched to (or opened), false otherwise
+ * @return True if an existing tab was found, false otherwise
  */
-function switchToTabHavingURI(aURI, aOpenNew, aCallback) {
+function switchToTabHavingURI(aURI, aOpenNew) {
   function switchIfURIInWindow(aWindow) {
     if (!("gBrowser" in aWindow))
       return false;
@@ -8375,8 +8408,6 @@ function switchToTabHavingURI(aURI, aOpenNew, aCallback) {
         // Focus the matching window & tab
         aWindow.focus();
         aWindow.gBrowser.tabContainer.selectedIndex = i;
-        if (aCallback)
-          aCallback(browser);
         return true;
       }
     }
@@ -8407,17 +8438,7 @@ function switchToTabHavingURI(aURI, aOpenNew, aCallback) {
     if (isTabEmpty(gBrowser.selectedTab))
       gBrowser.selectedBrowser.loadURI(aURI.spec);
     else
-      gBrowser.selectedTab = gBrowser.addTab(aURI.spec);
-    if (aCallback) {
-      let browser = gBrowser.selectedBrowser;
-      browser.addEventListener("pageshow", function(event) {
-        if (event.target.location.href != aURI.spec)
-          return;
-        browser.removeEventListener("pageshow", arguments.callee, true);
-        aCallback(browser);
-      }, true);
-    }
-    return true;
+      openUILinkIn(aURI.spec, "tab");
   }
 
   return false;
