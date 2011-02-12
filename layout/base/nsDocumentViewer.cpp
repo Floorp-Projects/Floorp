@@ -1597,14 +1597,20 @@ DocumentViewerImpl::Destroy()
 
     // Reverse ownership. Do this *after* calling sanitize so that sanitize
     // doesn't cause mutations that make the SHEntry drop the presentation
-    if (savePresentation) {
-      mSHEntry->SetContentViewer(this);
-    }
-    else {
-      mSHEntry->SyncPresentationState();
-    }
+
+    // Grab a reference to mSHEntry before calling into things like
+    // SyncPresentationState that might mess with our members.
     nsCOMPtr<nsISHEntry> shEntry = mSHEntry; // we'll need this below
     mSHEntry = nsnull;
+
+    if (savePresentation) {
+      shEntry->SetContentViewer(this);
+    }
+
+    // Always sync the presentation state.  That way even if someone screws up
+    // and shEntry has no window state at this point we'll be ok; we just won't
+    // cache ourselves.
+    shEntry->SyncPresentationState();
 
     // Break the link from the document/presentation to the docshell, so that
     // link traversals cannot affect the currently-loaded document.
