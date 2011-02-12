@@ -62,6 +62,7 @@ class nsIPluginInstance;
 class nsPresContext;
 class nsDisplayPlugin;
 class nsIDOMElement;
+class nsIOSurface;
 
 #define nsObjectFrameSuper nsFrame
 
@@ -339,7 +340,9 @@ public:
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager)
   {
-    return static_cast<nsObjectFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this);
+    return static_cast<nsObjectFrame*>(mFrame)->BuildLayer(aBuilder,
+                                                           aManager, 
+                                                           this);
   }
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
