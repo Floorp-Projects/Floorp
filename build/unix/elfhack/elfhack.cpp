@@ -377,6 +377,7 @@ int do_relocation_section(Elf *elf, unsigned int rel_type)
     relhackcode->insertAfter(section);
     relhack->insertAfter(relhackcode);
 
+    unsigned int old_end = section->getOffset() + section->getSize();
     section->rels.assign(new_rels.begin(), new_rels.end());
     section->shrink(new_rels.size() * section->getEntSize());
     ElfLocation *init = new ElfLocation(relhackcode, relhackcode->getEntryPoint());
@@ -384,6 +385,11 @@ int do_relocation_section(Elf *elf, unsigned int rel_type)
     // TODO: adjust the value according to the remaining number of relative relocations
     if (dyn->getValueForType(Rel_Type::d_tag_count))
         dyn->setValueForType(Rel_Type::d_tag_count, new ElfPlainValue(0));
+
+    if (relhack->getOffset() + relhack->getSize() >= old_end) {
+        fprintf(stderr, "No gain. Aborting\n");
+        return -1;
+    }
     return 0;
 }
 
@@ -413,10 +419,10 @@ void do_file(const char *name, bool backup = false)
         exit = do_relocation_section<Elf_Rel>(elf, R_ARM_RELATIVE);
         break;
     }
-    if (elf->getSize() >= size)
-        fprintf(stderr, "No gain. Aborting\n");
-    else if (exit == 0) {
-        if (backup && backup_file(name) != 0) {
+    if (exit == 0) {
+        if (elf->getSize() >= size) {
+            fprintf(stderr, "No gain. Aborting\n");
+        } else if (backup && backup_file(name) != 0) {
             fprintf(stderr, "Couln't create backup file\n");
         } else {
             std::ofstream ofile(name, std::ios::out|std::ios::binary|std::ios::trunc);
