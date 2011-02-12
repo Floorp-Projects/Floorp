@@ -552,10 +552,14 @@ Elf_Shdr &ElfSection::getShdr()
 
 ElfSegment::ElfSegment(Elf_Phdr *phdr)
 : type(phdr->p_type), v_p_diff(phdr->p_paddr - phdr->p_vaddr),
-  flags(phdr->p_flags), align(phdr->p_align) {}
+  flags(phdr->p_flags), align(phdr->p_align), vaddr(phdr->p_vaddr),
+  filesz(phdr->p_filesz), memsz(phdr->p_memsz) {}
 
 void ElfSegment::addSection(ElfSection *section)
 {
+    // Make sure all sections in PT_GNU_RELRO won't be moved by elfhack
+    assert(!((type == PT_GNU_RELRO) && (section->isRelocatable())));
+
     //TODO: Check overlapping sections
     std::list<ElfSection *>::iterator i;
     for (i = sections.begin(); i != sections.end(); ++i)
@@ -566,6 +570,9 @@ void ElfSegment::addSection(ElfSection *section)
 
 unsigned int ElfSegment::getFileSize()
 {
+    if (type == PT_GNU_RELRO)
+        return filesz;
+
     if (sections.empty())
         return 0;
     // Search the last section that is not SHT_NOBITS
@@ -577,34 +584,37 @@ unsigned int ElfSegment::getFileSize()
 
     unsigned int end = (*i)->getAddr() + (*i)->getSize();
 
-    // GNU_RELRO segment end is page aligned.
-    if (type == PT_GNU_RELRO)
-        end = (end + 4095) & ~4095;
-
     return end - sections.front()->getAddr();
 }
 
 unsigned int ElfSegment::getMemSize()
 {
+    if (type == PT_GNU_RELRO)
+        return memsz;
+
     if (sections.empty())
         return 0;
 
     unsigned int end = sections.back()->getAddr() + sections.back()->getSize();
-
-    // GNU_RELRO segment end is page aligned.
-    if (type == PT_GNU_RELRO)
-        end = (end + 4095) & ~4095;
 
     return end - sections.front()->getAddr();
 }
 
 unsigned int ElfSegment::getOffset()
 {
+    if ((type == PT_GNU_RELRO) && !sections.empty() &&
+        (sections.front()->getAddr() != vaddr))
+        throw std::runtime_error("PT_GNU_RELRO segment doesn't start on a section start");
+
     return sections.empty() ? 0 : sections.front()->getOffset();
 }
 
 unsigned int ElfSegment::getAddr()
 {
+    if ((type == PT_GNU_RELRO) && !sections.empty() &&
+        (sections.front()->getAddr() != vaddr))
+        throw std::runtime_error("PT_GNU_RELRO segment doesn't start on a section start");
+
     return sections.empty() ? 0 : sections.front()->getAddr();
 }
 
@@ -622,6 +632,8 @@ ElfSegment *ElfSegment::splitBefore(ElfSection *section)
     phdr.p_paddr = phdr.p_vaddr + v_p_diff;
     phdr.p_flags = flags;
     phdr.p_align = 0x1000;
+    phdr.p_filesz = (unsigned int)-1;
+    phdr.p_memsz = (unsigned int)-1;
     ElfSegment *segment = new ElfSegment(&phdr);
 
     for (rm = i; i != sections.end(); ++i)

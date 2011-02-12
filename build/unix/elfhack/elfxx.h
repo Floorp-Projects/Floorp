@@ -417,6 +417,10 @@ private:
     unsigned int flags;
     unsigned int align;
     std::list<ElfSection *> sections;
+    // The following are only really used for PT_GNU_RELRO until something
+    // better is found.
+    unsigned int vaddr;
+    unsigned int filesz, memsz;
 };
 
 class Elf_Ehdr: public serializable<Elf_Ehdr_Traits>, public ElfSection {
