@@ -78,6 +78,10 @@ using namespace mozilla::plugins;
 
 #include "nsWindowsDllInterceptor.h"
 
+#ifdef _MSC_VER
+#include "nsCrashOnException.h"
+#endif
+
 typedef BOOL (WINAPI *User32TrackPopupMenu)(HMENU hMenu,
                                             UINT uFlags,
                                             int x,
@@ -1140,6 +1144,20 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
                                       UINT message,
                                       WPARAM wParam,
                                       LPARAM lParam)
+{
+#ifdef _MSC_VER
+  return mozilla::CallWindowProcCrashProtected(PluginWindowProcInternal, hWnd, message, wParam, lParam);
+#else
+  return PluginWindowProcInternal(hWnd, message, wParam, lParam);
+#endif
+}
+
+// static
+LRESULT CALLBACK
+PluginInstanceChild::PluginWindowProcInternal(HWND hWnd,
+                                              UINT message,
+                                              WPARAM wParam,
+                                              LPARAM lParam)
 {
     NS_ASSERTION(!mozilla::ipc::SyncChannel::IsPumpingMessages(),
                  "Failed to prevent a nonqueued message from running!");
