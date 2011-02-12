@@ -856,7 +856,8 @@ int main()
 
         {
             JSAutoRequest ar(jscontext);
-            JS_ClearScope(jscontext, glob);
+            if (!JS_ClearScope(jscontext, glob))
+                DIE("FAILED to clear scope");
             JS_GC(jscontext);
             JS_GC(jscontext);
         }

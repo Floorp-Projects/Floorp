@@ -3922,11 +3922,13 @@ JS_DeleteProperty(JSContext *cx, JSObject *obj, const char *name)
     return JS_DeleteProperty2(cx, obj, name, &junk);
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API(JSBool)
 JS_ClearScope(JSContext *cx, JSObject *obj)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
+
+    uint32 span = obj->slotSpan();
 
     JSFinalizeOp clearOp = obj->getOps()->clear;
     if (clearOp)
@@ -3935,16 +3937,36 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
     if (obj->isNative())
         js_ClearNative(cx, obj);
 
+    js_InitRandom(cx);
+
     /* Clear cached class objects on the global object. */
     if (obj->isGlobal()) {
+        if (!obj->unbrand(cx))
+            return false;
+
         for (int key = JSProto_Null; key < JSProto_LIMIT * 3; key++)
             JS_SetReservedSlot(cx, obj, key, JSVAL_VOID);
 
+        /* Clear regexp statics. */
+        RegExpStatics::extractFrom(obj)->clear();
+
         /* Clear the CSP eval-is-allowed cache. */
         JS_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_EVAL_ALLOWED, JSVAL_VOID);
+
+        /*
+         * Compile-and-go scripts might rely on these slots to be present,
+         * so set a bunch of dummy properties to make sure compiled code
+         * doesn't reach into empty space.
+         */
+        uint32 n = 0;
+        while (obj->slotSpan() < span) {
+            if (!JS_DefinePropertyById(cx, obj, INT_TO_JSID(n), JSVAL_VOID, NULL, NULL, 0))
+                return false;
+            ++n;
+        }
     }
 
-    js_InitRandom(cx);
+    return true;
 }
 
 JS_PUBLIC_API(JSIdArray *)
