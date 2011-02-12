@@ -65,7 +65,7 @@ using mozilla::TimeStamp;
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 
-NS_IMPL_ISUPPORTS1(nsNPAPIPluginInstance, nsIPluginInstance)
+NS_IMPL_ISUPPORTS2(nsNPAPIPluginInstance, nsIPluginInstance, nsIPluginInstance_MOZILLA_2_0_BRANCH)
 
 nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
   :
@@ -711,6 +711,22 @@ NS_IMETHODIMP nsNPAPIPluginInstance::GetDrawingModel(PRInt32* aModel)
 #ifdef XP_MACOSX
   *aModel = (PRInt32)mDrawingModel;
   return NS_OK;
+#else
+  return NS_ERROR_FAILURE;
+#endif
+}
+
+NS_IMETHODIMP nsNPAPIPluginInstance::IsRemoteDrawingCoreAnimation(PRBool* aDrawing)
+{
+#ifdef XP_MACOSX
+  if (!mPlugin)
+      return NS_ERROR_FAILURE;
+
+  PluginLibrary* library = mPlugin->GetLibrary();
+  if (!library)
+      return NS_ERROR_FAILURE;
+  
+  return library->IsRemoteDrawingCoreAnimation(&mNPP, aDrawing);
 #else
   return NS_ERROR_FAILURE;
 #endif

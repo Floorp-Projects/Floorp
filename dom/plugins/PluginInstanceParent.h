@@ -277,6 +277,9 @@ public:
 
     nsresult AsyncSetWindow(NPWindow* window);
     nsresult GetSurface(gfxASurface** aSurface);
+#ifdef XP_MACOSX
+    nsresult IsRemoteDrawingCoreAnimation(PRBool *aDrawing);
+#endif
 
 private:
     // Quirks mode support for various plugin mime types
