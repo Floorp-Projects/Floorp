@@ -52,7 +52,6 @@ XPIDLSRCS = \
         $(NULL)
 
 EXTRA_PP_COMPONENTS = \
-        MobileComponents.manifest \
         AboutRedirector.js \
         BrowserCLH.js \
         DirectoryProvider.js\
@@ -62,7 +61,7 @@ EXTRA_PP_COMPONENTS = \
         $(NULL)
 
 EXTRA_COMPONENTS = \
-        AlertsService.js \
+        MobileComponents.manifest \
         BrowserStartup.js \
         ContentPermissionPrompt.js \
         XPIDialogService.js \
@@ -80,6 +79,8 @@ EXTRA_COMPONENTS = \
 ifdef MOZ_UPDATER
 EXTRA_COMPONENTS += UpdatePrompt.js
 endif
+
+EXTRA_COMPONENTS += AlertsService.js
 
 ifneq (Android,$(OS_TARGET))
 DIRS =  phone \
