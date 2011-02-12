@@ -558,9 +558,8 @@ nsIDOMHTMLDocument_Write_customMethodCallCode = """
 
 nsIDOMStorage_Clear_customMethodCallCode = """
     rv = self->Clear();
-    if (NS_SUCCEEDED(rv)) {
-        rv = JS_ClearScope(cx, obj) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-    }
+    if (NS_SUCCEEDED(rv))
+        JS_ClearScope(cx, obj);
 """
 
 CUSTOM_QS = {
