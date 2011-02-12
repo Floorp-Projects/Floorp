@@ -330,6 +330,7 @@ public:
 #elif defined(XP_MACOSX)
   void Paint(const gfxRect& aDirtyRect, CGContextRef cgContext);  
   void RenderCoreAnimation(CGContextRef aCGContext, int aWidth, int aHeight);
+  void DoCocoaEventDrawRect(const gfxRect& aDrawRect, CGContextRef cgContext);
 #elif defined(MOZ_X11)
   void Paint(gfxContext* aContext,
              const gfxRect& aFrameRect,
@@ -465,7 +466,7 @@ public:
   // Return true if we set image with valid surface
   PRBool SetCurrentImage(ImageContainer* aContainer);
 
-  PRBool UseLayers()
+  PRBool UseAsyncRendering()
   {
     PRBool useAsyncRendering;
     return (mInstance &&
@@ -1157,7 +1158,7 @@ nsObjectFrame::CallSetWindow(PRBool aCheckIsHidden)
 
   // this will call pi->SetWindow and take care of window subclassing
   // if needed, see bug 132759.
-  if (mInstanceOwner->UseLayers()) {
+  if (mInstanceOwner->UseAsyncRendering()) {
     rv = pi->AsyncSetWindow(window);
   }
   else {
@@ -1280,6 +1281,7 @@ nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder)
     return r;
   }
 
+#ifndef XP_MACOSX
   nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
   if (mozilla::LAYER_ACTIVE == f->GetLayerState(aBuilder, nsnull)) {
     ImageContainer* c = f->GetImageContainer();
@@ -1292,6 +1294,7 @@ nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder)
       r.SizeTo(sizeAppUnits);
     }
   }
+#endif
   return r;
 }
 
@@ -1496,7 +1499,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsDisplayList replacedContent;
 
-  if (aBuilder->IsForPainting() && mInstanceOwner && mInstanceOwner->UseLayers()) {
+  if (aBuilder->IsForPainting() && mInstanceOwner && mInstanceOwner->UseAsyncRendering()) {
     NPWindow* window = nsnull;
     mInstanceOwner->GetWindow(window);
     PRBool isVisible = window && window->width > 0 && window->height > 0;
@@ -1817,7 +1820,20 @@ mozilla::LayerState
 nsObjectFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager)
 {
-  if (!mInstanceOwner || !mInstanceOwner->UseLayers())
+  if (!mInstanceOwner)
+    return mozilla::LAYER_NONE;
+
+#ifdef XP_MACOSX
+  if (aManager->GetBackendType() == LayerManager::LAYERS_OPENGL &&
+      mInstanceOwner->GetEventModel() == NPEventModelCocoa &&
+      mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics &&
+      mInstanceOwner->IsRemoteDrawingCoreAnimation())
+  {
+    return mozilla::LAYER_ACTIVE;
+  }
+#endif
+
+  if (!mInstanceOwner->UseAsyncRendering())
     return mozilla::LAYER_NONE;
 
   return mozilla::LAYER_ACTIVE;
@@ -1847,13 +1863,21 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     (aBuilder->LayerBuilder()->GetLeafLayerFor(aBuilder, aManager, aItem));
 
   if (!layer) {
-    mInstanceOwner->NotifyPaintWaiter(aBuilder);
+    if (mInstanceOwner->UseAsyncRendering()) {
+      mInstanceOwner->NotifyPaintWaiter(aBuilder);
+    }
+
     // Initialize ImageLayer
     layer = aManager->CreateImageLayer();
   }
 
   if (!layer)
     return nsnull;
+
+#ifdef XP_MACOSX
+  // Until we get async plugins on mac we need to manually trigger the DrawRect event
+  mInstanceOwner->DoCocoaEventDrawRect(r, nsnull);
+#endif
 
   NS_ASSERTION(layer->GetType() == Layer::TYPE_IMAGE, "ObjectFrame works only with ImageLayer");
   // Create image
@@ -4087,7 +4111,7 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
   nsresult rt = mCARenderer.Render(aWidth, aHeight, &caImage);
   if (rt == NS_OK && mIOSurface) {
     nsCARenderer::DrawSurfaceToCGContext(aCGContext, mIOSurface, CreateSystemColorSpace(),
-                                         0, 0, aWidth, aHeight); 
+                                         0, 0, aWidth, aHeight);
   } else if (rt == NS_OK && caImage != NULL) {
     // Significant speed up by resetting the scaling
     ::CGContextSetInterpolationQuality(aCGContext, kCGInterpolationNone );
@@ -5526,20 +5550,25 @@ void nsPluginInstanceOwner::Paint(const gfxRect& aDirtyRect, CGContextRef cgCont
     } else if (GetEventModel() == NPEventModelCocoa)
 #endif
     {
-      // The context given here is only valid during the HandleEvent call.
-      NPCocoaEvent updateEvent;
-      InitializeNPCocoaEvent(&updateEvent);
-      updateEvent.type = NPCocoaEventDrawRect;
-      updateEvent.data.draw.context = cgContext;
-      updateEvent.data.draw.x = aDirtyRect.X();
-      updateEvent.data.draw.y = aDirtyRect.Y();
-      updateEvent.data.draw.width = aDirtyRect.Width();
-      updateEvent.data.draw.height = aDirtyRect.Height();
-
-      mInstance->HandleEvent(&updateEvent, nsnull);
+      DoCocoaEventDrawRect(aDirtyRect, cgContext);
     }
     pluginWidget->EndDrawPlugin();
   }
+}
+
+void nsPluginInstanceOwner::DoCocoaEventDrawRect(const gfxRect& aDrawRect, CGContextRef cgContext)
+{
+  // The context given here is only valid during the HandleEvent call.
+  NPCocoaEvent updateEvent;
+  InitializeNPCocoaEvent(&updateEvent);
+  updateEvent.type = NPCocoaEventDrawRect;
+  updateEvent.data.draw.context = cgContext;
+  updateEvent.data.draw.x = aDrawRect.X();
+  updateEvent.data.draw.y = aDrawRect.Y();
+  updateEvent.data.draw.width = aDrawRect.Width();
+  updateEvent.data.draw.height = aDrawRect.Height();
+
+  mInstance->HandleEvent(&updateEvent, nsnull);
 }
 #endif
 
@@ -6551,7 +6580,7 @@ void nsPluginInstanceOwner::UpdateWindowPositionAndClipRect(PRBool aSetWindow)
   // For windowless plugins a non-empty clip rectangle will be
   // passed to the plugin during paint, an additional update
   // of the the clip rectangle here is not required
-  if (aSetWindow && !mWidget && mPluginWindowVisible && !UseLayers())
+  if (aSetWindow && !mWidget && mPluginWindowVisible && !UseAsyncRendering())
     return;
 
   const NPWindow oldWindow = *mPluginWindow;
@@ -6592,7 +6621,7 @@ nsPluginInstanceOwner::CallSetWindow()
   if (!mInstance)
     return;
 
-  if (UseLayers()) {
+  if (UseAsyncRendering()) {
     mInstance->AsyncSetWindow(mPluginWindow);
   } else {
     mInstance->SetWindow(mPluginWindow);
