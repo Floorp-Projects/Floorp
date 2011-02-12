@@ -44,6 +44,7 @@
 #include "gfxImageSurface.h"
 #include "yuv_convert.h"
 #include "GLContextProvider.h"
+#include "MacIOSurfaceImageOGL.h"
 
 using namespace mozilla::gl;
 
@@ -218,6 +219,12 @@ ImageContainerOGL::CreateImage(const Image::Format *aFormats,
   } else if (aFormats[0] == Image::CAIRO_SURFACE) {
     img = new CairoImageOGL(static_cast<LayerManagerOGL*>(mManager));
   }
+#ifdef XP_MACOSX
+  else if (aFormats[0] == Image::MAC_IO_SURFACE) {
+    img = new MacIOSurfaceImageOGL(static_cast<LayerManagerOGL*>(mManager));
+  }
+#endif
+
   return img.forget();
 }
 
@@ -319,7 +326,6 @@ ImageContainerOGL::GetCurrentSize()
       return gfxIntSize(0,0);
     }
     return yuvImage->mSize;
-
   }
 
   if (mActiveImage->GetFormat() == Image::CAIRO_SURFACE) {
@@ -327,6 +333,14 @@ ImageContainerOGL::GetCurrentSize()
       static_cast<CairoImageOGL*>(mActiveImage.get());
     return cairoImage->mSize;
   }
+
+#ifdef XP_MACOSX
+  if (mActiveImage->GetFormat() == Image::MAC_IO_SURFACE) {
+    MacIOSurfaceImageOGL *ioImage =
+      static_cast<MacIOSurfaceImageOGL*>(mActiveImage.get());
+      return ioImage->mSize;
+  }
+#endif
 
   return gfxIntSize(0,0);
 }
@@ -447,6 +461,37 @@ ImageLayerOGL::RenderLayer(int,
     program->SetTextureUnit(0);
 
     mOGLManager->BindAndDrawQuad(program);
+#ifdef XP_MACOSX
+  } else if (image->GetFormat() == Image::MAC_IO_SURFACE) {
+     MacIOSurfaceImageOGL *ioImage =
+       static_cast<MacIOSurfaceImageOGL*>(image.get());
+
+     gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, ioImage->mTexture.GetTextureID());
+
+     ColorTextureLayerProgram *program = 
+       mOGLManager->GetRGBARectLayerProgram();
+     
+     program->Activate();
+     if (program->GetTexCoordMultiplierUniformLocation() != -1) {
+       // 2DRect case, get the multiplier right for a sampler2DRect
+       float f[] = { float(ioImage->mSize.width), float(ioImage->mSize.height) };
+       program->SetUniform(program->GetTexCoordMultiplierUniformLocation(),
+                           2, f);
+     } else {
+       NS_ASSERTION(0, "no rects?");
+     }
+     
+     program->SetLayerQuadRect(nsIntRect(0, 0, 
+                                         ioImage->mSize.width, 
+                                         ioImage->mSize.height));
+     program->SetLayerTransform(GetEffectiveTransform());
+     program->SetLayerOpacity(GetEffectiveOpacity());
+     program->SetRenderOffset(aOffset);
+     program->SetTextureUnit(0);
+    
+     mOGLManager->BindAndDrawQuad(program);
+     gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
+#endif
   }
 
   DEBUG_GL_ERROR_CHECK(gl());
@@ -702,7 +747,6 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
                                nsIntRect(0,0, mSize.width, mSize.height),
                                tex);
 }
-
 
 #ifdef MOZ_IPC
 
