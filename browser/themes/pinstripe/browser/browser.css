@@ -2086,6 +2086,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .geolocation-text-link {
   color: #fff;
+  -moz-margin-start: 0; /* override default label margin to match description margin */
 }
 
 #addons-notification-icon {

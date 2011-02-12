@@ -819,7 +819,8 @@
         <xul:description class="popup-notification-description"
                          xbl:inherits="xbl:text=label"/>
         <xul:spacer flex="1"/>
-        <xul:hbox pack="end">
+        <xul:hbox class="popup-notification-button-container"
+                  pack="end" align="center">
           <xul:label anonid="learnmore" class="text-link geolocation-text-link"/>
           <xul:spacer flex="1"/>
           <xul:button anonid="button"
@@ -867,7 +868,8 @@
           <xul:button anonid="cancel" class="popup-progress-cancel" oncommand="document.getBindingParent(this).cancel()"/>
         </xul:hbox>
         <xul:label anonid="progresstext" class="popup-progress-label"/>
-        <xul:hbox pack="end">
+        <xul:hbox class="popup-notification-button-container"
+                  pack="end" align="center">
           <xul:button anonid="button"
                       class="popup-notification-menubutton"
                       type="menu-button"
