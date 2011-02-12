@@ -419,13 +419,8 @@ void Elf::write(std::ofstream &file)
                 Elf_Phdr phdr;
                 phdr.p_type = (*seg)->getType();
                 phdr.p_flags = (*seg)->getFlags();
-                if ((*seg)->getFirstSection()) {
-                    phdr.p_offset = (*seg)->getFirstSection()->getOffset();
-                    phdr.p_vaddr = (*seg)->getFirstSection()->getAddr();
-                } else {
-                    phdr.p_offset = 0;
-                    phdr.p_vaddr = 0;
-                }
+                phdr.p_offset = (*seg)->getOffset();
+                phdr.p_vaddr = (*seg)->getAddr();
                 phdr.p_paddr = phdr.p_vaddr + (*seg)->getVPDiff();
                 phdr.p_filesz = (*seg)->getFileSize();
                 phdr.p_memsz = (*seg)->getMemSize();
@@ -601,6 +596,16 @@ unsigned int ElfSegment::getMemSize()
         end = (end + 4095) & ~4095;
 
     return end - sections.front()->getAddr();
+}
+
+unsigned int ElfSegment::getOffset()
+{
+    return sections.empty() ? 0 : sections.front()->getOffset();
+}
+
+unsigned int ElfSegment::getAddr()
+{
+    return sections.empty() ? 0 : sections.front()->getAddr();
 }
 
 ElfSegment *ElfSegment::splitBefore(ElfSection *section)

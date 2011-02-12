@@ -353,8 +353,8 @@ int do_relocation_section(Elf *elf, unsigned int rel_type)
         // Our injected code is likely not to be allowed to write there.
         ElfSection *section = elf->getSectionAt(i->r_offset);
         if (!(section->getFlags() & SHF_WRITE) || (ELF32_R_TYPE(i->r_info) != rel_type) ||
-            (relro && (i->r_offset >= relro->getFirstSection()->getAddr()) &&
-                      (i->r_offset < relro->getFirstSection()->getAddr() + relro->getMemSize())))
+            (relro && (i->r_offset >= relro->getAddr()) &&
+                      (i->r_offset < relro->getAddr() + relro->getMemSize())))
             new_rels.push_back(*i);
         else {
             // TODO: check that i->r_addend == *i->r_offset
