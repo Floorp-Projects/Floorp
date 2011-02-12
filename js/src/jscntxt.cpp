@@ -316,20 +316,20 @@ StackSpace::getSegmentAndFrame(JSContext *cx, uintN vplen, uintN nfixed,
 }
 
 void
-StackSpace::pushSegmentAndFrame(JSContext *cx, JSObject *initialVarObj,
-                                JSFrameRegs *regs, FrameGuard *fg)
+StackSpace::pushSegmentAndFrame(JSContext *cx, JSFrameRegs *regs, FrameGuard *fg)
 {
     /* Caller should have already initialized regs. */
     JS_ASSERT(regs->fp == fg->fp());
-
-    /* Push segment. */
     StackSegment *seg = fg->segment();
+
+    /* Register new segment/frame with the context. */
+    cx->pushSegmentAndFrame(seg, *regs);
+
+    /* Officially push the segment/frame on the stack. */
     seg->setPreviousInMemory(currentSegment);
     currentSegment = seg;
 
-    /* Push frame. */
-    cx->pushSegmentAndFrame(seg, *regs);
-    seg->setInitialVarObj(initialVarObj);
+    /* Mark as 'pushed' in the guard. */
     fg->cx_ = cx;
 }
 
@@ -338,8 +338,17 @@ StackSpace::popSegmentAndFrame(JSContext *cx)
 {
     JS_ASSERT(isCurrentAndActive(cx));
     JS_ASSERT(cx->hasActiveSegment());
-    cx->popSegmentAndFrame();
+
+    /* Officially pop the segment/frame from the stack. */
     currentSegment = currentSegment->getPreviousInMemory();
+
+    /* Unregister pushed segment/frame from the context. */
+    cx->popSegmentAndFrame();
+
+    /*
+     * N.B. This StackSpace should be GC-able without any operations after
+     * cx->popSegmentAndFrame executes since it can trigger GC.
+     */
 }
 
 FrameGuard::~FrameGuard()
@@ -365,7 +374,8 @@ StackSpace::pushExecuteFrame(JSContext *cx, JSObject *initialVarObj, ExecuteFram
     fg->regs_.pc = script->code;
     fg->regs_.fp = fp;
     fg->regs_.sp = fp->base();
-    pushSegmentAndFrame(cx, initialVarObj, &fg->regs_, fg);
+    pushSegmentAndFrame(cx, &fg->regs_, fg);
+    fg->seg_->setInitialVarObj(initialVarObj);
 }
 
 bool
@@ -377,7 +387,7 @@ StackSpace::pushDummyFrame(JSContext *cx, JSObject &scopeChain, DummyFrameGuard 
     fg->regs_.fp = fg->fp();
     fg->regs_.pc = NULL;
     fg->regs_.sp = fg->fp()->slots();
-    pushSegmentAndFrame(cx, NULL /*varobj*/, &fg->regs_, fg);
+    pushSegmentAndFrame(cx, &fg->regs_, fg);
     return true;
 }
 
@@ -392,7 +402,7 @@ StackSpace::pushGeneratorFrame(JSContext *cx, JSFrameRegs *regs, GeneratorFrameG
 {
     JS_ASSERT(regs->fp == fg->fp());
     JS_ASSERT(regs->fp->prev() == cx->maybefp());
-    pushSegmentAndFrame(cx, NULL /*varobj*/, regs, fg);
+    pushSegmentAndFrame(cx, regs, fg);
 }
 
 bool
@@ -2045,6 +2055,11 @@ JSContext::pushSegmentAndFrame(js::StackSegment *newseg, JSFrameRegs &newregs)
 void
 JSContext::popSegmentAndFrame()
 {
+    /*
+     * NB: This function calls resetCompartment, which may GC, so the stack needs
+     * to be in a GC-able state by that point.
+     */
+
     JS_ASSERT(currentSegment->maybeContext() == this);
     JS_ASSERT(currentSegment->getInitialFrame() == regs->fp);
     currentSegment->leaveContext();
@@ -2052,6 +2067,7 @@ JSContext::popSegmentAndFrame()
     if (currentSegment) {
         if (currentSegment->isSaved()) {
             setCurrentRegs(NULL);
+            resetCompartment();
         } else {
             setCurrentRegs(currentSegment->getSuspendedRegs());
             currentSegment->resume();
@@ -2059,6 +2075,7 @@ JSContext::popSegmentAndFrame()
     } else {
         JS_ASSERT(regs->fp->prev() == NULL);
         setCurrentRegs(NULL);
+        resetCompartment();
     }
     maybeMigrateVersionOverride();
 }
@@ -2069,6 +2086,7 @@ JSContext::saveActiveSegment()
     JS_ASSERT(hasActiveSegment());
     currentSegment->save(regs);
     setCurrentRegs(NULL);
+    resetCompartment();
 }
 
 void
@@ -2077,6 +2095,7 @@ JSContext::restoreSegment()
     js::StackSegment *ccs = currentSegment;
     setCurrentRegs(ccs->getSuspendedRegs());
     ccs->restore();
+    resetCompartment();
 }
 
 JSGenerator *
