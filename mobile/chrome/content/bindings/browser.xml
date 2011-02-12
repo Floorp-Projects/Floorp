@@ -337,8 +337,6 @@
             // (as opposed to one of its iframes).
             if (this.feeds && aMessage.target == this)
               this.feeds = null;
-
-            this.scale = 1;
          ]]>
         </body>
       </method>
