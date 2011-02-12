@@ -90,9 +90,12 @@ notification[type="critical"] .messageImage {
   max-width: 248px;
 }
 
+.popup-notification-button-container {
+  margin-top: 17px;
+}
+
 .popup-notification-menubutton {
   -moz-appearance: none;
-  margin-top: 17px;
 }
 
 .popup-notification-menubutton:-moz-focusring > .button-menubutton-dropmarker,
