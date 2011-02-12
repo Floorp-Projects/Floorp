@@ -83,6 +83,12 @@ CPPSRCS = \
         ThebesLayerOGL.cpp \
         $(NULL)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+CMMSRCS = \
+        MacIOSurfaceImageOGL.mm \
+        $(NULL)
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifdef MOZ_ENABLE_D3D9_LAYER
 EXPORTS += \

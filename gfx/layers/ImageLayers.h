@@ -42,6 +42,7 @@
 
 #include "gfxPattern.h"
 #include "nsThreadUtils.h"
+#include "nsCoreAnimationSupport.h"
 
 namespace mozilla {
 namespace layers {
@@ -95,7 +96,15 @@ public:
      * manipulated on the main thread, since the underlying cairo surface
      * is main-thread-only.
      */
-    CAIRO_SURFACE
+    CAIRO_SURFACE,
+
+    /**
+     * The MAC_IO_SURFACE format creates a MacIOSurfaceImage. This
+     * is only supported on Mac with OpenGL layers.
+     *
+     * It wraps an IOSurface object and binds it directly to a GL texture.
+     */
+    MAC_IO_SURFACE
   };
 
   Format GetFormat() { return mFormat; }
@@ -337,6 +346,25 @@ public:
 protected:
   CairoImage(void* aImplData) : Image(aImplData, CAIRO_SURFACE) {}
 };
+
+#ifdef XP_MACOSX
+class THEBES_API MacIOSurfaceImage : public Image {
+public:
+  struct Data {
+    nsIOSurface* mIOSurface;
+  };
+
+ /**
+  * This can only be called on the main thread. It may add a reference
+  * to the surface (which will eventually be released on the main thread).
+  * The surface must not be modified after this call!!!
+  */
+  virtual void SetData(const Data& aData) = 0;
+
+protected:
+  MacIOSurfaceImage(void* aImplData) : Image(aImplData, MAC_IO_SURFACE) {}
+};
+#endif
 
 }
 }
