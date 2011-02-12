@@ -123,6 +123,7 @@ _BROWSER_TEST_FILES = \
 	browser_581937.js \
 	browser_586147.js \
 	browser_586068-cascaded_restore.js \
+	browser_588426.js \
 	browser_589246.js \
 	browser_590268.js \
 	browser_590563.js \
