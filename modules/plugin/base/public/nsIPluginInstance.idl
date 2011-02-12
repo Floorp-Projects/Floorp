@@ -247,3 +247,10 @@ interface nsIPluginInstance : nsISupports
      */
     PRBool useAsyncPainting();
 };
+
+// XXX kill me after branching
+[noscript, uuid(c4251cb8-dd2f-4885-a008-2d1b4d21fd33)]
+interface nsIPluginInstance_MOZILLA_2_0_BRANCH : nsIPluginInstance
+{
+    PRBool isRemoteDrawingCoreAnimation();
+};

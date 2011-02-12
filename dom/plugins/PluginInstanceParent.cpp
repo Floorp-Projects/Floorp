@@ -572,6 +572,16 @@ PluginInstanceParent::GetSurface(gfxASurface** aSurface)
     return NS_ERROR_NOT_AVAILABLE;
 }
 
+#ifdef XP_MACOSX
+nsresult
+PluginInstanceParent::IsRemoteDrawingCoreAnimation(PRBool *aDrawing)
+{
+    *aDrawing = (NPDrawingModelCoreAnimation == (NPDrawingModel)mDrawingModel ||
+                 NPDrawingModelInvalidatingCoreAnimation == (NPDrawingModel)mDrawingModel);
+    return NS_OK;
+}
+#endif
+
 NPError
 PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
 {
