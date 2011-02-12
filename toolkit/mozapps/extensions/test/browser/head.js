@@ -242,9 +242,13 @@ function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
 
   if (gUseInContentUI) {
     gBrowser.selectedTab = gBrowser.addTab();
-    switchToTabHavingURI(MANAGER_URI, true, function(aBrowser) {
-      setup_manager(aBrowser.contentWindow.wrappedJSObject);
-    });
+    switchToTabHavingURI(MANAGER_URI, true);
+    gBrowser.selectedBrowser.addEventListener("pageshow", function (event) {
+      if (event.target.location.href != MANAGER_URI)
+        return;
+      gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, true);
+      setup_manager(gBrowser.contentWindow.wrappedJSObject);
+    }, true);
     return;
   }
 
