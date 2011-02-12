@@ -178,8 +178,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
                 JSAutoEnterCompartment ac;
                 ac.enterAndIgnoreErrors(sSelf->mContext, global);
 
-                if (!JS_ClearScope(sSelf->mContext, global))
-                    JS_ClearPendingException(sSelf->mContext);
+                JS_ClearScope(sSelf->mContext, global);
                 JS_RemoveObjectRoot(sSelf->mContext, &global);
             }
 
