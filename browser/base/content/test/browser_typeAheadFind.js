@@ -37,7 +37,6 @@
 
 function test() {
   waitForExplicitFinish();
-  ok(!gFindBarInitialized, "find bar is not yet initialized");
 
   let tab = gBrowser.addTab();
   gBrowser.selectedTab = tab;

@@ -1152,6 +1152,9 @@
         -->
       <method name="close">
         <body><![CDATA[
+          if (this.hidden)
+            return;
+
           var fm =
             Components.classes["@mozilla.org/focus-manager;1"]
                       .getService(Components.interfaces.nsIFocusManager);
