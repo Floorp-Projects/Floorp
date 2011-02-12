@@ -1016,6 +1016,13 @@ js_TransplantObjectWithWrapper(JSContext *cx,
                                JSObject *targetobj,
                                JSObject *targetwrapper);
 
+extern JS_FRIEND_API(JSObject *)
+js_TransplantObjectWithWrapper(JSContext *cx,
+                               JSObject *origobj,
+                               JSObject *origwrapper,
+                               JSObject *targetobj,
+                               JSObject *targetwrapper);
+
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
