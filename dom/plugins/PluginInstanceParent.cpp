@@ -575,16 +575,36 @@ PluginInstanceParent::GetSurface(gfxASurface** aSurface)
 nsresult
 PluginInstanceParent::GetImage(ImageContainer* aContainer, Image** aImage)
 {
+#ifdef XP_MACOSX
+    if (!mFrontSurface && !mIOSurface)
+#else
     if (!mFrontSurface)
+#endif
         return NS_ERROR_NOT_AVAILABLE;
 
     Image::Format format = Image::CAIRO_SURFACE;
+#ifdef XP_MACOSX
+    if (mIOSurface)
+        format = Image::MAC_IO_SURFACE;
+#endif
 
     nsRefPtr<Image> image;
     image = aContainer->CreateImage(&format, 1);
     if (!image) {
         return NS_ERROR_FAILURE;
     }
+
+#ifdef XP_MACOSX
+    if (mIOSurface) {
+        NS_ASSERTION(image->GetFormat() == Image::MAC_IO_SURFACE, "Wrong format?");
+        MacIOSurfaceImage* ioImage = static_cast<MacIOSurfaceImage*>(image.get());
+        MacIOSurfaceImage::Data ioData;
+        ioData.mIOSurface = mIOSurface;
+        ioImage->SetData(ioData);
+        *aImage = image.forget().get();
+        return NS_OK;
+    }
+#endif
 
     NS_ASSERTION(image->GetFormat() == Image::CAIRO_SURFACE, "Wrong format?");
     CairoImage* pluginImage = static_cast<CairoImage*>(image.get());
@@ -897,13 +917,15 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
             if (!mShColorSpace) {
                 PLUGIN_LOG_DEBUG(("Could not allocate ColorSpace."));
                 return false;
-            } 
-            nsCARenderer::DrawSurfaceToCGContext(cgContext, mIOSurface, 
-                                                 mShColorSpace,
-                                                 npevent->data.draw.x,
-                                                 npevent->data.draw.y,
-                                                 npevent->data.draw.width,
-                                                 npevent->data.draw.height);
+            }
+            if (cgContext) {
+                nsCARenderer::DrawSurfaceToCGContext(cgContext, mIOSurface, 
+                                                     mShColorSpace,
+                                                     npevent->data.draw.x,
+                                                     npevent->data.draw.y,
+                                                     npevent->data.draw.width,
+                                                     npevent->data.draw.height);
+            }
             return false;
         } else {
             if (mShWidth == 0 && mShHeight == 0) {
