@@ -2553,6 +2553,24 @@ function PageProxyClickHandler(aEvent)
     middleMousePaste(aEvent);
 }
 
+function BrowserImport()
+{
+#ifdef XP_MACOSX
+  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                     .getService(Components.interfaces.nsIWindowMediator);
+  var win = wm.getMostRecentWindow("Browser:MigrationWizard");
+  if (win)
+    win.focus();
+  else {
+    window.openDialog("chrome://browser/content/migration/migration.xul",
+                      "migration", "centerscreen,chrome,resizable=no");
+  }
+#else
+  window.openDialog("chrome://browser/content/migration/migration.xul",
+                    "migration", "modal,centerscreen,chrome,resizable=no");
+#endif
+}
+
 /**
  *  Handle load of some pages (about:*) so that we can make modifications
  *  to the DOM for unprivileged pages.
@@ -8055,6 +8073,8 @@ let gPrivateBrowsingUI = {
 
     this._setPBMenuTitle("stop");
 
+    document.getElementById("menu_import").setAttribute("disabled", "true");
+
     // Disable the Clear Recent History... menu item when in PB mode
     // temporary fix until bug 463607 is fixed
     document.getElementById("Tools:Sanitize").setAttribute("disabled", "true");
@@ -8101,6 +8121,8 @@ let gPrivateBrowsingUI = {
     if (gURLBar) {
       gURLBar.editor.transactionManager.clear();
     }
+
+    document.getElementById("menu_import").removeAttribute("disabled");
 
     // Re-enable the Clear Recent History... menu item on exit of PB mode
     // temporary fix until bug 463607 is fixed
