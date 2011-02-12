@@ -572,6 +572,31 @@ PluginInstanceParent::GetSurface(gfxASurface** aSurface)
     return NS_ERROR_NOT_AVAILABLE;
 }
 
+nsresult
+PluginInstanceParent::GetImage(ImageContainer* aContainer, Image** aImage)
+{
+    if (!mFrontSurface)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    Image::Format format = Image::CAIRO_SURFACE;
+
+    nsRefPtr<Image> image;
+    image = aContainer->CreateImage(&format, 1);
+    if (!image) {
+        return NS_ERROR_FAILURE;
+    }
+
+    NS_ASSERTION(image->GetFormat() == Image::CAIRO_SURFACE, "Wrong format?");
+    CairoImage* pluginImage = static_cast<CairoImage*>(image.get());
+    CairoImage::Data cairoData;
+    cairoData.mSurface = mFrontSurface;
+    cairoData.mSize = mFrontSurface->GetSize();
+    pluginImage->SetData(cairoData);
+
+    *aImage = image.forget().get();
+    return NS_OK;
+}
+
 #ifdef XP_MACOSX
 nsresult
 PluginInstanceParent::IsRemoteDrawingCoreAnimation(PRBool *aDrawing)

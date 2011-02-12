@@ -476,13 +476,29 @@ public:
   }
 
 private:
+
   // return FALSE if LayerSurface dirty (newly created and don't have valid plugin content yet)
   PRBool IsUpToDate()
   {
-    nsRefPtr<gfxASurface> readyToUse;
-    return NS_SUCCEEDED(mInstance->GetSurface(getter_AddRefs(readyToUse))) &&
-           readyToUse && readyToUse->GetSize() == gfxIntSize(mPluginWindow->width,
-                                                             mPluginWindow->height);
+    nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
+    if (!container) {
+      return PR_FALSE;
+    }
+
+    nsCOMPtr<nsIPluginInstance_MOZILLA_2_0_BRANCH> inst = do_QueryInterface(mInstance);
+    if (!inst) {
+      return PR_FALSE;
+    }
+
+    nsRefPtr<Image> image;
+    if (!NS_SUCCEEDED(inst->GetImage(container, getter_AddRefs(image))) || !image)
+      return PR_FALSE;
+
+    container->SetCurrentImage(image);
+
+    if (container->GetCurrentSize() != gfxIntSize(mPluginWindow->width, mPluginWindow->height))
+      return PR_FALSE;
+    return PR_TRUE;
   }
 
   void FixUpURLS(const nsString &name, nsAString &value);
@@ -603,7 +619,6 @@ private:
 
 #endif
 
-  nsRefPtr<gfxASurface> mLayerSurface;
   PRPackedBool          mWaitingForPaint;
 };
 
@@ -1785,27 +1800,17 @@ nsPluginInstanceOwner::NotifyPaintWaiter(nsDisplayListBuilder* aBuilder)
 PRBool
 nsPluginInstanceOwner::SetCurrentImage(ImageContainer* aContainer)
 {
-  mInstance->GetSurface(getter_AddRefs(mLayerSurface));
-  if (!mLayerSurface) {
-    aContainer->SetCurrentImage(nsnull);
-    return PR_FALSE;
+  nsCOMPtr<nsIPluginInstance_MOZILLA_2_0_BRANCH> inst = do_QueryInterface(mInstance);
+  if (inst) {
+    nsRefPtr<Image> image;
+    inst->GetImage(aContainer, getter_AddRefs(image));
+    if (image) {
+      aContainer->SetCurrentImage(image);
+      return PR_TRUE;
+    }
   }
-
-  Image::Format format = Image::CAIRO_SURFACE;
-  nsRefPtr<Image> image;
-  image = aContainer->CreateImage(&format, 1);
-  if (!image)
-    return PR_FALSE;
-
-  NS_ASSERTION(image->GetFormat() == Image::CAIRO_SURFACE, "Wrong format?");
-  CairoImage* pluginImage = static_cast<CairoImage*>(image.get());
-  CairoImage::Data cairoData;
-  cairoData.mSurface = mLayerSurface.get();
-  cairoData.mSize = mLayerSurface->GetSize();
-  pluginImage->SetData(cairoData);
-  aContainer->SetCurrentImage(image);
-
-  return PR_TRUE;
+  aContainer->SetCurrentImage(nsnull);
+  return PR_FALSE;
 }
 
 mozilla::LayerState
@@ -5465,12 +5470,9 @@ void
 nsPluginInstanceOwner::PrepareToStop(PRBool aDelayedStop)
 {
   // Drop image reference because the child may destroy the surface after we return.
-  if (mLayerSurface) {
-     nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
-     if (container) {
-       container->SetCurrentImage(nsnull);
-     }
-     mLayerSurface = nsnull;
+  nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
+  if (container) {
+    container->SetCurrentImage(nsnull);
   }
 
 #if defined(XP_WIN) || defined(MOZ_X11)

@@ -141,6 +141,7 @@ public:
 
     virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);
     virtual nsresult GetSurface(NPP instance, gfxASurface** aSurface);
+    virtual nsresult GetImage(NPP instance, ImageContainer* aContainer, Image** aImage);
     NS_OVERRIDE virtual bool UseAsyncPainting() { return false; }
 #if defined(XP_MACOSX)
     virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, PRBool *aDrawing);

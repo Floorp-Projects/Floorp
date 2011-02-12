@@ -255,6 +255,15 @@ PluginPRLibrary::GetSurface(NPP instance, gfxASurface** aSurface)
   return NS_OK;
 }
 
+nsresult
+PluginPRLibrary::GetImage(NPP instance, ImageContainer* aContainer, Image** aImage)
+{
+  nsNPAPIPluginInstance* inst = (nsNPAPIPluginInstance*)instance->ndata;
+  NS_ENSURE_TRUE(inst, NS_ERROR_NULL_POINTER);
+  *aImage = nsnull;
+  return NS_OK;
+}
+
 #if defined(XP_MACOSX)
 nsresult
 PluginPRLibrary::IsRemoteDrawingCoreAnimation(NPP instance, PRBool *aDrawing)

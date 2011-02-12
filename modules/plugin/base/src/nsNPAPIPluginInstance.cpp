@@ -59,8 +59,8 @@
 #include "nsJSNPRuntime.h"
 #include "nsPluginStreamListenerPeer.h"
 
+using namespace mozilla;
 using namespace mozilla::plugins::parent;
-using mozilla::TimeStamp;
 
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
@@ -825,6 +825,25 @@ nsNPAPIPluginInstance::IsWindowless(PRBool* isWindowless)
   return NS_OK;
 }
 
+class NS_STACK_CLASS AutoPluginLibraryCall
+{
+public:
+  AutoPluginLibraryCall(nsNPAPIPluginInstance* aThis)
+    : mThis(aThis), mGuard(aThis), mLibrary(nsnull)
+  {
+    nsNPAPIPlugin* plugin = mThis->GetPlugin();
+    if (plugin)
+      mLibrary = plugin->GetLibrary();
+  }
+  operator bool() { return !!mLibrary; }
+  PluginLibrary* operator->() { return mLibrary; }
+
+private:
+  nsNPAPIPluginInstance* mThis;
+  PluginDestructionGuard mGuard;
+  PluginLibrary* mLibrary;
+};
+
 NS_IMETHODIMP
 nsNPAPIPluginInstance::AsyncSetWindow(NPWindow* window)
 {
@@ -861,6 +880,15 @@ nsNPAPIPluginInstance::GetSurface(gfxASurface** aSurface)
   return library->GetSurface(&mNPP, aSurface);
 }
 
+NS_IMETHODIMP
+nsNPAPIPluginInstance::GetImage(ImageContainer* aContainer, Image** aImage)
+{
+  if (RUNNING != mRunning)
+    return NS_OK;
+
+  AutoPluginLibraryCall library(this);
+  return !library ? NS_ERROR_FAILURE : library->GetImage(&mNPP, aContainer, aImage);
+}
 
 NS_IMETHODIMP
 nsNPAPIPluginInstance::NotifyPainted(void)
