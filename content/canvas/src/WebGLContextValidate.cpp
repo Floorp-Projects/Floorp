@@ -440,7 +440,7 @@ WebGLContext::InitAndValidateGL()
     gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS, (GLint*) &mGLMaxTextureImageUnits);
     gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, (GLint*) &mGLMaxVertexTextureImageUnits);
 
-    if (gl->HasES2Compatibility()) {
+    if (gl->IsGLES2()) {
         gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS, (GLint*) &mGLMaxFragmentUniformVectors);
         gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS, (GLint*) &mGLMaxVertexUniformVectors);
         gl->fGetIntegerv(LOCAL_GL_MAX_VARYING_VECTORS, (GLint*) &mGLMaxVaryingVectors);
@@ -449,13 +449,8 @@ WebGLContext::InitAndValidateGL()
         mGLMaxFragmentUniformVectors /= 4;
         gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_COMPONENTS, (GLint*) &mGLMaxVertexUniformVectors);
         mGLMaxVertexUniformVectors /= 4;
-
-        // The formula below comes from the public_webgl list, "problematic GetParameter pnames" thread
-        GLint maxVertexOutputComponents = 0,
-              maxFragmentInputComponents = 0;
-        gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS, &maxVertexOutputComponents);
-        gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS, &maxFragmentInputComponents);
-        mGLMaxVaryingVectors = PR_MIN(maxVertexOutputComponents, maxFragmentInputComponents) / 4;
+        gl->fGetIntegerv(LOCAL_GL_MAX_VARYING_FLOATS, (GLint*) &mGLMaxVaryingVectors);
+        mGLMaxVaryingVectors /= 4;
     }
 
 #if 0
