@@ -531,6 +531,7 @@ protected:
   nsPopupType           mPopupType;
   nsSizeMode            mOldSizeMode;
   WindowHook            mWindowHook;
+  DWORD                 mAssumeWheelIsZoomUntil;
   static PRUint32       sInstanceCount;
   static TriStateBool   sCanQuit;
   static nsWindow*      sCurrentWindow;

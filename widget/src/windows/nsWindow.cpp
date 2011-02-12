@@ -433,6 +433,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mOldExStyle           = 0;
   mPainting             = 0;
   mLastKeyboardLayout   = 0;
+  mAssumeWheelIsZoomUntil = 0;
   mBlurSuppressLevel    = 0;
   mIMEContext.mStatus   = nsIWidget::IME_STATUS_ENABLED;
 #ifdef MOZ_XUL
@@ -4640,6 +4641,24 @@ nsWindow::ProcessMessageForPlugin(const MSG &aMsg,
 PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
                                 LRESULT *aRetValue)
 {
+  // For the Elantech Touchpad Zoom Gesture Hack, we should check that the
+  // system time (32-bit milliseconds) hasn't wrapped around.  Otherwise we
+  // might get into the situation where wheel events for the next 50 days of
+  // system uptime are assumed to be Ctrl+Wheel events.  (It is unlikely that
+  // we would get into that state, because the system would already need to be
+  // up for 50 days and the Control key message would need to be processed just
+  // before the system time overflow and the wheel message just after.)
+  //
+  // We also take the chance to reset mAssumeWheelIsZoomUntil if we simply have
+  // passed that time.
+  if (mAssumeWheelIsZoomUntil) {
+    LONG msgTime = ::GetMessageTime();
+    if ((mAssumeWheelIsZoomUntil >= 0x3fffffffu && DWORD(msgTime) < 0x40000000u) ||
+        (mAssumeWheelIsZoomUntil < DWORD(msgTime))) {
+      mAssumeWheelIsZoomUntil = 0;
+    }
+  }
+
   // (Large blocks of code should be broken out into OnEvent handlers.)
   if (mWindowHook.Notify(mWnd, msg, wParam, lParam, aRetValue))
     return PR_TRUE;
@@ -5014,6 +5033,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_KEYUP:
     {
       MSG nativeMsg = InitMSG(msg, wParam, lParam);
+      nativeMsg.time = ::GetMessageTime();
       result = ProcessKeyUpMessage(nativeMsg, nsnull);
       DispatchPendingEvents();
     }
@@ -6693,8 +6713,19 @@ PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& ge
   ::ReplyMessage(isVertical ? 0 : TRUE);
 #endif
 
+  // Assume the Control key is down if the Elantech touchpad has sent the
+  // mis-ordered WM_KEYDOWN/WM_MOUSEWHEEL messages.  (See the comment in
+  // OnKeyUp.)
+  PRBool isControl;
+  if (mAssumeWheelIsZoomUntil &&
+      static_cast<DWORD>(::GetMessageTime()) < mAssumeWheelIsZoomUntil) {
+    isControl = PR_TRUE;
+  } else {
+    isControl = IS_VK_DOWN(NS_VK_CONTROL);
+  }
+
   scrollEvent.isShift   = IS_VK_DOWN(NS_VK_SHIFT);
-  scrollEvent.isControl = IS_VK_DOWN(NS_VK_CONTROL);
+  scrollEvent.isControl = isControl;
   scrollEvent.isMeta    = PR_FALSE;
   scrollEvent.isAlt     = IS_VK_DOWN(NS_VK_ALT);
   InitEvent(scrollEvent);
@@ -7149,6 +7180,28 @@ LRESULT nsWindow::OnKeyUp(const MSG &aMsg,
 
   if (sUseElantechGestureHacks) {
     PerformElantechSwipeGestureHack(virtualKeyCode, aModKeyState);
+
+    // Version 8 of the Elantech touchpad driver sends these messages for
+    // zoom gestures:
+    //
+    //   WM_KEYDOWN    virtual_key = 0xCC        time = 10
+    //   WM_KEYDOWN    virtual_key = VK_CONTROL  time = 10
+    //   WM_MOUSEWHEEL                           time = ::GetTickCount()
+    //   WM_KEYUP      virtual_key = VK_CONTROL  time = 10
+    //   WM_KEYUP      virtual_key = 0xCC        time = 10
+    //
+    // The result of this is that we process all of the WM_KEYDOWN/WM_KEYUP
+    // messages first because their timestamps make them appear to have
+    // been sent before the WM_MOUSEWHEEL message.  To work around this,
+    // we store the current time when we process the WM_KEYUP message and
+    // assume that any WM_MOUSEWHEEL message with a timestamp before that
+    // time is one that should be processed as if the Control key was down.
+    if (virtualKeyCode == VK_CONTROL && aMsg.time == 10) {
+      // We look only at the bottom 31 bits of the system tick count since
+      // GetMessageTime returns a LONG, which is signed, so we want values
+      // that are more easily comparable.
+      mAssumeWheelIsZoomUntil = ::GetTickCount() & 0x7FFFFFFF;
+    }
   }
 
   PR_LOG(gWindowsLog, PR_LOG_ALWAYS,
