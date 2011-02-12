@@ -679,8 +679,7 @@ static JSBool
 Clear(JSContext *cx, uintN argc, jsval *vp)
 {
     if (argc > 0 && !JSVAL_IS_PRIMITIVE(JS_ARGV(cx, vp)[0])) {
-        if (!JS_ClearScope(cx, JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0])))
-            return JS_FALSE;
+        JS_ClearScope(cx, JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0]));
     } else {
         JS_ReportError(cx, "'clear' requires an object");
         return JS_FALSE;
@@ -2020,8 +2019,7 @@ main(int argc, char **argv)
                         (void**) getter_AddRefs(bogus));
 #endif
             JSPRINCIPALS_DROP(cx, gJSPrincipals);
-            if (!JS_ClearScope(cx, glob))
-                NS_ERROR("clearing scope failed");
+            JS_ClearScope(cx, glob);
             JS_GC(cx);
             JSContext *oldcx;
             cxstack->Pop(&oldcx);
