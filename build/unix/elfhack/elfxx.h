@@ -402,6 +402,8 @@ public:
     int getVPDiff() { return v_p_diff; }
     unsigned int getFileSize();
     unsigned int getMemSize();
+    unsigned int getOffset();
+    unsigned int getAddr();
 
     void addSection(ElfSection *section);
 
