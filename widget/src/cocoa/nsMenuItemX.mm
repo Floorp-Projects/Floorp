@@ -143,25 +143,7 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
 
     SetChecked(mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::checked,
                                      nsWidgetAtoms::_true, eCaseMatters));
-
-    // Set key shortcut and modifiers
-    if (doc) {
-      nsAutoString keyValue;
-      mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyValue);
-      if (!keyValue.IsEmpty()) {
-        nsIContent *keyContent = doc->GetElementById(keyValue);
-        if (keyContent) {
-          nsAutoString keyChar(NS_LITERAL_STRING(" "));
-          keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
-
-          nsAutoString modifiersStr;
-          keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::modifiers, modifiersStr);
-          PRUint8 modifiers = nsMenuUtilsX::GeckoModifiersForNodeAttribute(modifiersStr);
-
-          SetKeyEquiv(modifiers, keyChar);
-        }
-      }
-    }
+    SetKeyEquiv();
   }
 
   mIcon = new nsMenuItemIconX(this, mContent, mNativeMenuItem);
@@ -287,19 +269,39 @@ void nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent)
   }
 }
 
-void nsMenuItemX::SetKeyEquiv(PRUint8 aModifiers, const nsString &aText)
+void nsMenuItemX::SetKeyEquiv()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  unsigned int macModifiers = nsMenuUtilsX::MacModifiersForGeckoModifiers(aModifiers);
-  [mNativeMenuItem setKeyEquivalentModifierMask:macModifiers];
+  // Set key shortcut and modifiers
+  nsAutoString keyValue;
+  mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyValue);
+  if (!keyValue.IsEmpty() && mContent->GetCurrentDoc()) {
+    nsIContent *keyContent = mContent->GetCurrentDoc()->GetElementById(keyValue);
+    if (keyContent) {
+      nsAutoString keyChar(NS_LITERAL_STRING(" "));
+      keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
 
-  NSString *keyEquivalent = [[NSString stringWithCharacters:(unichar*)aText.get()
-                                                     length:aText.Length()] lowercaseString];
-  if ([keyEquivalent isEqualToString:@" "])
-    [mNativeMenuItem setKeyEquivalent:@""];
-  else
-    [mNativeMenuItem setKeyEquivalent:keyEquivalent];
+      nsAutoString modifiersStr;
+      keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::modifiers, modifiersStr);
+      PRUint8 modifiers = nsMenuUtilsX::GeckoModifiersForNodeAttribute(modifiersStr);
+
+      unsigned int macModifiers = nsMenuUtilsX::MacModifiersForGeckoModifiers(modifiers);
+      [mNativeMenuItem setKeyEquivalentModifierMask:macModifiers];
+
+      NSString *keyEquivalent = [[NSString stringWithCharacters:(unichar*)keyChar.get()
+                                                         length:keyChar.Length()] lowercaseString];
+      if ([keyEquivalent isEqualToString:@" "])
+        [mNativeMenuItem setKeyEquivalent:@""];
+      else
+        [mNativeMenuItem setKeyEquivalent:keyEquivalent];
+
+      return;
+    }
+  }
+
+  // if the key was removed, clear the key
+  [mNativeMenuItem setKeyEquivalent:@""];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -331,6 +333,9 @@ nsMenuItemX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConten
              aAttribute == nsWidgetAtoms::collapsed ||
              aAttribute == nsWidgetAtoms::label) {
       mMenuParent->SetRebuild(PR_TRUE);
+    }
+    else if (aAttribute == nsWidgetAtoms::key) {
+      SetKeyEquiv();
     }
     else if (aAttribute == nsWidgetAtoms::image) {
       SetupIcon();

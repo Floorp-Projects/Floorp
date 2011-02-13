@@ -273,6 +273,9 @@ include ../../content/test/reftest/xml-stylesheet/reftest.list
 # xul-document-load/
 include xul-document-load/reftest.list
 
+# xul/
+include xul/reftest.list
+
 # xul grid
 include ../xul/base/src/grid/reftests/reftest.list
 

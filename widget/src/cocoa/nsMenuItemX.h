@@ -92,7 +92,7 @@ public:
 
 protected:
   void UncheckRadioSiblings(nsIContent* inCheckedElement);
-  void SetKeyEquiv(PRUint8 aModifiers, const nsString &aText);
+  void SetKeyEquiv();
 
   EMenuItemType             mType;
   // nsMenuItemX objects should always have a valid native menu item.
