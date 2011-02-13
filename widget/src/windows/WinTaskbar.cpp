@@ -359,11 +359,6 @@ WinTaskbar::CreateTaskbarTabPreview(nsIDocShell *shell, nsITaskbarPreviewControl
   if (!toplevelHWND)
     return NS_ERROR_INVALID_ARG;
 
-  nsWindow *window = nsWindow::GetNSWindowPtr(toplevelHWND);
-
-  if (!window)
-    return NS_ERROR_INVALID_ARG;
-
   nsRefPtr<TaskbarTabPreview> preview(new TaskbarTabPreview(mTaskbar, controller, toplevelHWND, shell));
   if (!preview)
     return NS_ERROR_OUT_OF_MEMORY;
