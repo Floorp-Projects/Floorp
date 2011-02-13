@@ -62,6 +62,50 @@ function runTest()
   document.documentElement.appendChild(keyset);
   iterateKeys(true, "appended");
 
+  var accelText = function(menuitem) menuitem.getAttribute("acceltext").toLowerCase();
+
+  $("menubutton").open = true;
+
+  // now check if a menu updates its accelerator text when a key attribute is changed
+  var menuitem1 = $("menuitem1");
+  ok(accelText(menuitem1).indexOf("d") >= 0, "menuitem1 accelText before");
+  if (navigator.platform.indexOf("Win") != -1) {
+    ok(accelText(menuitem1).indexOf("alt") >= 0, "menuitem1 accelText modifier before");
+  }
+
+  menuitem1.setAttribute("key", "k-s-c");
+  ok(accelText(menuitem1).indexOf("s") >= 0, "menuitem1 accelText after");
+  if (navigator.platform.indexOf("Win") != -1) {
+    ok(accelText(menuitem1).indexOf("ctrl") >= 0, "menuitem1 accelText modifier after");
+  }
+
+  menuitem1.setAttribute("acceltext", "custom");
+  is(accelText(menuitem1), "custom", "menuitem1 accelText set custom");
+  menuitem1.removeAttribute("acceltext");
+  ok(accelText(menuitem1).indexOf("s") >= 0, "menuitem1 accelText remove");
+  if (navigator.platform.indexOf("Win") != -1) {
+    ok(accelText(menuitem1).indexOf("ctrl") >= 0, "menuitem1 accelText modifier remove");
+  }
+
+  var menuitem2 = $("menuitem2");
+  is(accelText(menuitem2), "", "menuitem2 accelText before");
+  menuitem2.setAttribute("key", "k-s-c");
+  ok(accelText(menuitem2).indexOf("s") >= 0, "menuitem2 accelText before");
+  if (navigator.platform.indexOf("Win") != -1) {
+    ok(accelText(menuitem2).indexOf("ctrl") >= 0, "menuitem2 accelText modifier before");
+  }
+
+  menuitem2.setAttribute("key", "k-h-l");
+  ok(accelText(menuitem2).indexOf("h") >= 0, "menuitem2 accelText after");
+  if (navigator.platform.indexOf("Win") != -1) {
+    ok(accelText(menuitem2).indexOf("ctrl") >= 0, "menuitem2 accelText modifier after");
+  }
+
+  menuitem2.removeAttribute("key");
+  is(accelText(menuitem2), "", "menuitem2 accelText after remove");
+
+  $("menubutton").open = false;
+
   window.close();
   window.opener.wrappedJSObject.SimpleTest.finish();
 }
@@ -116,7 +160,15 @@ SimpleTest.waitForFocus(runTest);
 
 <keyset id="keyset2">
   <key id="k-d-a" key="d" modifiers="alt" oncommand="checkKey(event)"/>
+  <key id="k-s-c" key="s" modifiers="control" oncommand="checkKey(event)"/>
 </keyset>
+
+<button id="menubutton" label="Menu" type="menu">
+  <menupopup>
+    <menuitem id="menuitem1" label="Item 1" key="k-d-a"/>
+    <menuitem id="menuitem2" label="Item 2"/>
+  </menupopup>
+</button>
 
 <body xmlns="http://www.w3.org/1999/xhtml">
 <p id="display">

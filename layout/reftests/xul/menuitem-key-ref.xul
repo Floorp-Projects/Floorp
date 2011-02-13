@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<menuitem id="m1" label="Menu1" key="keytwo"/>
+<menuitem id="m2" label="Menu2"/>
+<menuitem id="m3" label="Menu3" key="keythree"/>
+<menuitem id="m4" label="Menu4" acceltext="Text"/>
+<menuitem id="m5" label="Menu5" acceltext="Text"/>
+<menuitem id="m6" label="Menu6" acceltext="Text"/>
+<menuitem id="m7" label="Menu7" key="keythree"/>
+<menuitem id="m8" label="Menu8"/>
+<menuitem id="m9" label="Menu9"/>
+
+<keyset>
+  <key id="keytwo" key="Y" modifiers="control"/>
+  <key id="keythree" key="X" modifiers="accel"/>
+</keyset>
+
+</window>

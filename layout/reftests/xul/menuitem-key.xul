@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<window class="reftest-wait" onload="changeKeys()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<menuitem id="m1" label="Menu1" key="keyone"/>
+<menuitem id="m2" label="Menu2" key="keytwo"/>
+<menuitem id="m3" label="Menu3"/>
+<menuitem id="m4" label="Menu4"/>
+<menuitem id="m5" label="Menu5"/>
+<menuitem id="m6" label="Menu6" key="keythree" acceltext="Text"/>
+<menuitem id="m7" label="Menu7" key="keythree" acceltext="Text"/>
+<menuitem id="m8" label="Menu8" key="keythree" acceltext="Text"/>
+<menuitem id="m9" label="Menu9" key="keytwo"/>
+
+<script>
+function changeKeys()
+{
+  document.getElementById("m1").setAttribute("key", "keytwo");
+  document.getElementById("m2").removeAttribute("key");
+  document.getElementById("m3").setAttribute("key", "keythree");
+
+  document.getElementById("m4").setAttribute("key", "keyone");
+  document.getElementById("m4").setAttribute("acceltext", "Text");
+
+  document.getElementById("m5").setAttribute("acceltext", "Text");
+  document.getElementById("m5").setAttribute("key", "keytwo");
+
+  document.getElementById("m6").removeAttribute("key");
+  document.getElementById("m7").removeAttribute("acceltext");
+
+  document.getElementById("m8").removeAttribute("key");
+  document.getElementById("m8").removeAttribute("acceltext");
+
+  document.getElementById("m9").removeAttribute("key");
+
+  document.documentElement.className='';
+}
+</script>
+
+<keyset>
+  <key id="keyone" key="Z" modifiers="control"/>
+  <key id="keytwo" key="Y" modifiers="control"/>
+  <key id="keythree" key="X" modifiers="accel"/>
+</keyset>
+
+</window>
