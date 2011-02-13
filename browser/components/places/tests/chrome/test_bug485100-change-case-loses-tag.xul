@@ -85,7 +85,7 @@
         return ios.newURI(spec, null, null);
       }
 
-      var testURI = uri("http://www.mozilla.org/");
+      var testURI = uri("http://www.example.com/");
       var testTag = "foo";
       var testTagUpper = "Foo";
 
