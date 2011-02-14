@@ -328,6 +328,23 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   },
 
   // ----------
+  // Function: isStacked
+  // Returns true if this item is in a stacked groupItem.
+  isStacked: function GroupItem_isStacked() {
+    return this._isStacked;
+  },
+
+  // ----------
+  // Function: isTopOfStack
+  // Returns true if the item is showing on top of this group's stack,
+  // determined by whether the tab is this group's topChild, or
+  // if it doesn't have one, its first child.
+  isTopOfStack: function GroupItem_isTopOfStack(item) {
+    return this.isStacked() && ((this.topChild == item) ||
+      (!this.topChild && this.getChild(0) == item));
+  },
+
+  // ----------
   // Function: save
   // Saves this groupItem to persistent storage.
   save: function GroupItem_save() {
