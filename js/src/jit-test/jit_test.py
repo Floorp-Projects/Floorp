@@ -54,7 +54,7 @@ class Test:
 
     def copy(self):
         t = Test(self.path)
-        t.jitflags = self.jitflags
+        t.jitflags = self.jitflags[:]
         t.slow = self.slow
         t.allow_oom = self.allow_oom
         t.valgrind = self.valgrind
