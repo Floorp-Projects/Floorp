@@ -11764,6 +11764,17 @@ nsCSSFrameConstructor::GenerateChildFrames(nsIFrame* aFrame)
     EndUpdate();
   }
 
+#ifdef ACCESSIBILITY
+  nsAccessibilityService* accService = nsIPresShell::AccService();
+  if (accService) {
+    nsIContent* container = aFrame->GetContent();
+    nsIContent* child = container->GetFirstChild();
+    if (child) {
+      accService->ContentRangeInserted(mPresShell, container, child, nsnull);
+    }
+  }
+#endif
+
   // call XBL constructors after the frames are created
   mPresShell->GetDocument()->BindingManager()->ProcessAttachedQueue();
 
