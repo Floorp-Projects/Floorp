@@ -230,35 +230,34 @@ nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes,
     nsresult rv;
     nsCOMPtr<nsIGIOService> giovfs =
       do_GetService(NS_GIOSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIStringBundleService> bundleService =
-        do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIStringBundleService> bundleService =
+      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      nsCOMPtr<nsIStringBundle> brandBundle;
-      rv = bundleService->CreateBundle(BRAND_PROPERTIES, getter_AddRefs(brandBundle));
-      NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIStringBundle> brandBundle;
+    rv = bundleService->CreateBundle(BRAND_PROPERTIES, getter_AddRefs(brandBundle));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      nsString brandShortName, brandFullName;
-      brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
-                                     getter_Copies(brandShortName));
-      brandBundle->GetStringFromName(NS_LITERAL_STRING("brandFullName").get(),
-                                     getter_Copies(brandFullName));
+    nsString brandShortName, brandFullName;
+    brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+                                   getter_Copies(brandShortName));
+    brandBundle->GetStringFromName(NS_LITERAL_STRING("brandFullName").get(),
+                                   getter_Copies(brandFullName));
 
-      // use brandShortName as the application id.
-      NS_ConvertUTF16toUTF8 id(brandShortName);
-      nsCOMPtr<nsIGIOMimeApp> appInfo;
-      rv = giovfs->CreateAppFromCommand(mAppPath,
-                                        id,
-                                        getter_AddRefs(appInfo));
-      NS_ENSURE_SUCCESS(rv, rv);
+    // use brandShortName as the application id.
+    NS_ConvertUTF16toUTF8 id(brandShortName);
+    nsCOMPtr<nsIGIOMimeApp> appInfo;
+    rv = giovfs->CreateAppFromCommand(mAppPath,
+                                      id,
+                                      getter_AddRefs(appInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      // Add mime types for html, xhtml extension and set app to just created appinfo.
-      for (unsigned int i = 0; i < NS_ARRAY_LENGTH(appTypes); ++i) {
-        appInfo->SetAsDefaultForMimeType(nsDependentCString(appTypes[i].mimeType));
-        appInfo->SetAsDefaultForFileExtensions(nsDependentCString(appTypes[i].extensions));
-      }
+    // Add mime types for html, xhtml extension and set app to just created appinfo.
+    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(appTypes); ++i) {
+      appInfo->SetAsDefaultForMimeType(nsDependentCString(appTypes[i].mimeType));
+      appInfo->SetAsDefaultForFileExtensions(nsDependentCString(appTypes[i].extensions));
     }
   }
 
