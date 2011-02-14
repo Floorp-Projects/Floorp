@@ -61,11 +61,11 @@
         ]]>
       </constructor>
 
-      <desctructor>
+      <destructor>
         <![CDATA[
           window.removeEventListener("resize", this._eventHandler, false);
         ]]>
-      </desctructor>
+      </destructor>
 
       <property name="scrollBoxObject" readonly="true">
         <getter><![CDATA[

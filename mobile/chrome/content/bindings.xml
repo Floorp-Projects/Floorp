@@ -20,13 +20,13 @@
           window.addEventListener("PanBegin", this, true);
         ]]>
       </constructor>
-      <desctructor>
+      <destructor>
         <![CDATA[
           window.removeEventListener("keydown", this, true);
           window.removeEventListener("PopupChanged", this, true);
           window.removeEventListener("PanBegin", this, true);
         ]]>
-      </desctructor>
+      </destructor>
       <property name="mIgnoreClick" onget="return true;" onset="val;"/>
       <property name="readOnly" onget="return this.inputField.readOnly;">
         <setter><![CDATA[
