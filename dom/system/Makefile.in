@@ -62,19 +62,23 @@ DIRS = android
 endif
 
 CPPSRCS     = \
-    nsAccelerometer.cpp \
-    $(NULL)
+  nsAccelerometer.cpp \
+  $(NULL)
 
+# On Systems that have built-in geolocation providers,
+# we really do not need these.
+ifneq (Android,$(OS_TARGET))
 EXTRA_COMPONENTS = \
-                 NetworkGeolocationProvider.js \
-                 NetworkGeolocationProvider.manifest \
-                 GPSDGeolocationProvider.js \
-                 GPSDGeolocationProvider.manifest \
-                 $(NULL)
+  NetworkGeolocationProvider.js \
+  NetworkGeolocationProvider.manifest \
+  GPSDGeolocationProvider.js \
+  GPSDGeolocationProvider.manifest \
+  $(NULL)
+endif
 
 EXPORTS     = \
-    nsAccelerometer.h \
-    $(NULL)
+  nsAccelerometer.h \
+  $(NULL)
 
 include $(topsrcdir)/config/config.mk
 
