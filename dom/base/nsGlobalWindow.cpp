@@ -119,6 +119,7 @@
 #include "nsIDOMMessageEvent.h"
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMPopStateEvent.h"
+#include "nsIDOMPopStateEvent_MOZILLA_2_BRANCH.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDOMGeoGeolocation.h"
 #include "nsIDOMDesktopNotification.h"
@@ -7698,9 +7699,9 @@ nsGlobalWindow::FireHashchange()
 }
 
 nsresult
-nsGlobalWindow::DispatchSyncPopState()
+nsGlobalWindow::DispatchSyncPopState(PRBool aIsInitial)
 {
-  FORWARD_TO_INNER(DispatchSyncPopState, (), NS_OK);
+  FORWARD_TO_INNER(DispatchSyncPopState, (aIsInitial), NS_OK);
 
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
                "Must be safe to run script here.");
@@ -7789,10 +7790,12 @@ nsGlobalWindow::DispatchSyncPopState()
   NS_ENSURE_TRUE(privateEvent, NS_ERROR_FAILURE);
 
   // Initialize the popstate event, which does bubble but isn't cancellable.
-  nsCOMPtr<nsIDOMPopStateEvent> popstateEvent = do_QueryInterface(domEvent);
+  nsCOMPtr<nsIDOMPopStateEvent_MOZILLA_2_BRANCH> popstateEvent =
+    do_QueryInterface(domEvent);
   rv = popstateEvent->InitPopStateEvent(NS_LITERAL_STRING("popstate"),
                                         PR_TRUE, PR_FALSE,
-                                        stateObj);
+                                        stateObj,
+                                        aIsInitial);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = privateEvent->SetTrusted(PR_TRUE);
@@ -7806,7 +7809,7 @@ nsGlobalWindow::DispatchSyncPopState()
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool dummy; // default action
-  return DispatchEvent(popstateEvent, &dummy);
+  return DispatchEvent(domEvent, &dummy);
 }
 
 // Find an nsICanvasFrame under aFrame.  Only search the principal

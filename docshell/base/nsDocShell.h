@@ -823,6 +823,9 @@ protected:
 
     // @see nsIDocShellHistory::createdDynamically
     PRPackedBool               mDynamicallyCreated;
+
+    // If this is true, we won't fire a popstate event.
+    PRPackedBool               mSuppressPopstate;
 #ifdef DEBUG
     PRPackedBool               mInEnsureScriptEnv;
 #endif

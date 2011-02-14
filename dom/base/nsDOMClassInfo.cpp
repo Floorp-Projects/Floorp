@@ -88,6 +88,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMPopStateEvent.h"
+#include "nsIDOMPopStateEvent_MOZILLA_2_BRANCH.h"
 #include "nsContentUtils.h"
 #include "nsDOMWindowUtils.h"
 #include "nsIDOMGlobalPropertyInitializer.h"
@@ -2495,8 +2496,9 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(PopStateEvent, nsIDOMPopStateEvent)
+  DOM_CLASSINFO_MAP_BEGIN(PopStateEvent, nsIDOMPopStateEvent_MOZILLA_2_BRANCH)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMPopStateEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPopStateEvent_MOZILLA_2_BRANCH)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 

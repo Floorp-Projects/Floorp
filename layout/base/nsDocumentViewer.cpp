@@ -1018,7 +1018,6 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
     shell->FlushPendingNotifications(Flush_Layout);
   }
 
-  nsresult rv = NS_OK;
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
 
   // First, get the window from the document...
@@ -1114,11 +1113,7 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   }
 #endif
 
-  if (!mStopped && window) {
-    window->DispatchSyncPopState();
-  }
-
-  return rv;
+  return mStopped ? NS_SUCCESS_LOAD_STOPPED : NS_OK;
 }
 
 NS_IMETHODIMP
