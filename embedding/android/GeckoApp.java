@@ -223,25 +223,52 @@ abstract public class GeckoApp
             surfaceView.mSplashStatusMsg =
                 getResources().getString(R.string.splash_screen_label);
         mLibLoadThread.start();
-
-        // We don't currently support devices with less than 256Mb of RAM, warn on first run
-        if (Runtime.getRuntime().totalMemory() <= 262144L && !new File(sGREDir, "application.ini").exists()) {
+        if (IsNewInstall() && IsUnsupportedDevice()) {
             new AlertDialog.Builder(this)
-            .setMessage(R.string.incompatable_device)
-            .setCancelable(false)
-            .setPositiveButton(R.string.continue_label, null)
-            .setNegativeButton(R.string.exit_label,
-                               new DialogInterface.OnClickListener() {
-                                   public void onClick(DialogInterface dialog,
-                                                       int id)
-                                   {
-                                       GeckoApp.this.finish();
-                                       System.exit(0);
-                                   }
-                               })
-             .show();
+                .setMessage(R.string.incompatable_device)
+                .setCancelable(false)
+                .setPositiveButton(R.string.continue_label, null)
+                .setNegativeButton(R.string.exit_label,
+                                   new DialogInterface.OnClickListener() {
+                                       public void onClick(DialogInterface dialog,
+                                                           int id)
+                                       {
+                                           GeckoApp.this.finish();
+                                           System.exit(0);
+                                       }
+                                   })
+                .show();
+        }        
+    }
+
+    boolean IsNewInstall() {
+        File appIni = new File(sGREDir, "application.ini");
+        return !appIni.exists();
+    }
+
+    boolean IsUnsupportedDevice() {
+        // We don't currently support devices with less than 256Mb of RAM, warn on first run
+        File meminfo = new File("/proc/meminfo");
+        try { 
+            BufferedReader br = new BufferedReader(new FileReader(meminfo));
+            String totalMem = "";
+            while(!totalMem.contains("MemTotal:") && totalMem != null)
+                totalMem = br.readLine();
+            StringTokenizer st = new StringTokenizer(totalMem, " ");
+            st.nextToken(); // "MemInfo:"
+            totalMem = st.nextToken();
+                
+            Log.i("GeckoMemory", "MemTotal: " + Integer.parseInt(totalMem));
+            return Integer.parseInt(totalMem) <= 262144L;
+        } catch (Exception ex) {
+            // Will catch  NullPointerException if totalMem isn't found,
+            // a NumberFormatException if the token isn't parsible 
+            // IOException from the file reading or NoSuchElementException
+            // if totalMem doesn't have 2 tokens. None of these are fatal,
+            // so log it and move on.
+            Log.w("GeckoMemTest", "Exception when finding total memory", ex);
         }
-        
+        return false;
     }
 
     @Override
