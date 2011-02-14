@@ -862,8 +862,8 @@ PathifyURI(nsIURI *in, nsACString &out)
    NS_ENSURE_SUCCESS(rv, rv);
    out.Append(scheme);
    nsCAutoString host;
-   rv = in->GetHost(host);
-   NS_ENSURE_SUCCESS(rv, rv);
+   // OK for GetHost to fail since it's not implemented sometimes
+   in->GetHost(host);
 #ifdef MOZ_OMNIJAR
    if (scheme.Equals("resource") && host.Length() == 0){
        host = "gre";
