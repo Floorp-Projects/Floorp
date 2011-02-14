@@ -554,10 +554,7 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     // sure any updates also get written back to the trace native stack.
     // For simplicity, we just leave trace, since this is presumably not
     // a common operation.
-    if (JS_ON_TRACE(cx)) {
-        DeepBail(cx);
-        return false;
-    }
+    LeaveTrace(cx);
 #endif
 
     if (!InstanceOf(cx, obj, &js_ArgumentsClass, NULL))
