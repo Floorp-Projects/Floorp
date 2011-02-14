@@ -1829,7 +1829,8 @@ nsObjectFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
       mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics &&
       mInstanceOwner->IsRemoteDrawingCoreAnimation())
   {
-    return mozilla::LAYER_ACTIVE;
+    // Disabled on Mac OS X for now.
+    return mozilla::LAYER_NONE;
   }
 #endif
 
