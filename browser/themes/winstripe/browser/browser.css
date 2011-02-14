@@ -721,26 +721,36 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1,
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-%ifdef WINSTRIPE_AERO
-  margin: -2px 0 -1px;
-  padding-top: 1px;
-%else
-  margin: 0;
-  padding-top: 0;
-%endif
-  padding-bottom: 0;
-  padding-left: 3px;
-  padding-right: 3px;
+.tabbrowser-arrowscrollbox > .scrollbutton-up,
+.tabbrowser-arrowscrollbox > .scrollbutton-down {
+  -moz-appearance: none;
+  border-style: none;
+  padding: 0 3px;
 }
 
-%ifdef WINSTRIPE_AERO
-/* resetting the margin from the above rule */
-.toolbarbutton-1 > .toolbarbutton-menubutton-button,
-.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  margin: 0 !important;
+#TabsToolbar .toolbarbutton-1:not([disabled]):hover,
+#TabsToolbar .toolbarbutton-1[open],
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):hover,
+.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):hover,
+.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):hover {
+  background-image: -moz-linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.5)),
+                    -moz-linear-gradient(transparent, rgba(0,0,0,.25) 30%),
+                    -moz-linear-gradient(transparent, rgba(0,0,0,.25) 30%);
+  background-position: 1px -1px, 0 -1px, 100% -1px;
+  background-size: -moz-calc(100% - 2px) 100%, 1px 100%, 1px 100%;
+  background-repeat: no-repeat;
 }
-%endif
+
+#addon-bar .toolbarbutton-1:not([disabled]):hover,
+#addon-bar .toolbarbutton-1[open],
+#addon-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):hover {
+  background-image: -moz-linear-gradient(bottom, transparent, rgba(0,0,0,.15)),
+                    -moz-linear-gradient(bottom, transparent, rgba(0,0,0,.15) 30%),
+                    -moz-linear-gradient(bottom, transparent, rgba(0,0,0,.15) 30%);
+  background-position: left, left, right;
+  background-size: auto, 1px 100%, 1px 100%;
+  background-repeat: no-repeat;
+}
 
 /* unified back/forward button */
 
@@ -1681,14 +1691,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
   -moz-image-region: rect(0, 15px, 17px, 0);
-%ifdef WINSTRIPE_AERO
-  margin: -2px 0 -1px;
-  padding-top: 1px;
-%else
   margin: 0;
-  padding-top: 0;
-%endif
-  padding-bottom: 0;
+  padding-right: 2px;
+  border-right: 2px solid transparent;
+  background-origin: border-box;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up[disabled],
@@ -1701,8 +1707,8 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(0, 30px, 17px, 15px);
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl) > .toolbarbutton-icon,
-.tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr) > .toolbarbutton-icon {
+.tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl),
+.tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr) {
   -moz-transform: scaleX(-1);
 }
 
@@ -1715,32 +1721,9 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-transition: none;
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):not(:hover):-moz-locale-dir(ltr),
-.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):not(:hover):-moz-locale-dir(rtl) {
-  -moz-appearance: none;
+.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]),
+.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]) {
   -moz-border-image: url("chrome://browser/skin/tabbrowser/tab-overflow-border.png") 0 2 0 2 / 0 2px 0 0;
-  padding-right: 1px;
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):not(:hover):-moz-locale-dir(ltr),
-.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):not(:hover):-moz-locale-dir(rtl) {
-  -moz-appearance: none;
-  -moz-border-image: url("chrome://browser/skin/tabbrowser/tab-overflow-border.png") 0 2 0 2 / 0 0 0 2px;
-  padding-left: 1px;
-}
-
-@media all and (-moz-windows-classic) {
-  .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):not(:hover):-moz-locale-dir(ltr),
-  .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):not(:hover):-moz-locale-dir(rtl) {
-    padding-left: 4px;
-    padding-right: 2px;
-  }
-
-  .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):not(:hover):-moz-locale-dir(ltr),
-  .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):not(:hover):-moz-locale-dir(rtl) {
-    padding-left: 2px;
-    padding-right: 4px;
-  }
 }
 
 .tabs-newtab-button > .toolbarbutton-icon {
