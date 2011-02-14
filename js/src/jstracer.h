@@ -1479,15 +1479,17 @@ class TraceRecorder
                                              VMSideExit* exit);
     JS_REQUIRES_STACK RecordingStatus guardPrototypeHasNoIndexedProperties(JSObject* obj,
                                                                            nanojit::LIns* obj_ins,
-                                                                           VMSideExit *exit);
+                                                                           VMSideExit* exit);
     JS_REQUIRES_STACK RecordingStatus guardNativeConversion(Value& v);
     JS_REQUIRES_STACK void clearReturningFrameFromNativeTracker();
     JS_REQUIRES_STACK void putActivationObjects();
+    JS_REQUIRES_STACK RecordingStatus createThis(JSObject& ctor, nanojit::LIns* ctor_ins,
+                                                 nanojit::LIns** thisobj_insp);
     JS_REQUIRES_STACK RecordingStatus guardCallee(Value& callee);
     JS_REQUIRES_STACK JSStackFrame      *guardArguments(JSObject *obj, nanojit::LIns* obj_ins,
                                                         unsigned *depthp);
     JS_REQUIRES_STACK nanojit::LIns* guardArgsLengthNotAssigned(nanojit::LIns* argsobj_ins);
-    JS_REQUIRES_STACK void guardNotHole(nanojit::LIns *argsobj_ins, nanojit::LIns *ids_ins);
+    JS_REQUIRES_STACK void guardNotHole(nanojit::LIns* argsobj_ins, nanojit::LIns* ids_ins);
     JS_REQUIRES_STACK RecordingStatus getClassPrototype(JSObject* ctor,
                                                           nanojit::LIns*& proto_ins);
     JS_REQUIRES_STACK RecordingStatus getClassPrototype(JSProtoKey key,
