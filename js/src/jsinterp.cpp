@@ -619,6 +619,15 @@ RunScript(JSContext *cx, JSScript *script, JSStackFrame *fp)
 {
     JS_ASSERT(script);
 
+    /* FIXME: Once bug 470510 is fixed, make this an assert. */
+    if (script->compileAndGo) {
+        int32 flags = fp->scopeChain().getGlobal()->getReservedSlot(JSRESERVED_GLOBAL_FLAGS).toInt32();
+        if (flags & JSGLOBAL_FLAGS_CLEARED) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CLEARED_SCOPE);
+            return false;
+        }
+    }
+
 #ifdef JS_METHODJIT_SPEW
     JMCheckLogging();
 #endif
