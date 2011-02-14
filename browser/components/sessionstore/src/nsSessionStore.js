@@ -1404,38 +1404,18 @@ SessionStoreService.prototype = {
     this._restoreCount = lastSessionState.windows.length;
     this._browserSetState = true;
 
-    // We want to re-use the last opened window instead of opening a new one in
-    // the case where it's "empty" and not associated with a window in the session.
-    // We will do more processing via _prepWindowToRestoreInto if we need to use
-    // the lastWindow.
-    let lastWindow = this._getMostRecentBrowserWindow();
-    let canUseLastWindow = lastWindow &&
-                           !lastWindow.__SS_lastSessionWindowID;
-
     // Restore into windows or open new ones as needed.
     for (let i = 0; i < lastSessionState.windows.length; i++) {
       let winState = lastSessionState.windows[i];
       let lastSessionWindowID = winState.__lastSessionWindowID;
       // delete lastSessionWindowID so we don't add that to the window again
       delete winState.__lastSessionWindowID;
-
-      // See if we can use an open window. First try one that is associated with
-      // the state we're trying to restore and then fallback to the last selected
-      // window.
-      let windowToUse = windows[lastSessionWindowID];
-      if (!windowToUse && canUseLastWindow) {
-        windowToUse = lastWindow;
-        canUseLastWindow = false;
-      }
-
-      let [canUseWindow, canOverwriteTabs] = this._prepWindowToRestoreInto(windowToUse);
-
-      // If there's a window already open that we can restore into, use that
-      if (canUseWindow) {
+      // Look to see if this window is already open...
+      if (windows[lastSessionWindowID]) {
         // Since we're not overwriting existing tabs, we want to merge _closedTabs,
         // putting existing ones first. Then make sure we're respecting the max pref.
         if (winState._closedTabs && winState._closedTabs.length) {
-          let curWinState = this._windows[windowToUse.__SSi];
+          let curWinState = this._windows[windows[lastSessionWindowID].__SSi];
           curWinState._closedTabs = curWinState._closedTabs.concat(winState._closedTabs);
           curWinState._closedTabs.splice(this._prefBranch.getIntPref("sessionstore.max_tabs_undo"));
         }
@@ -1443,11 +1423,11 @@ SessionStoreService.prototype = {
         // Restore into that window - pretend it's a followup since we'll already
         // have a focused window.
         //XXXzpao This is going to merge extData together (taking what was in
-        //        winState over what is in the window already. The hack we have
-        //        in _preWindowToRestoreInto will prevent most (all?) Panorama
-        //        weirdness but we will still merge other extData.
+        //        winState over what is in the window already), so this is going
+        //        to have an effect on Tab Candy.
         //        Bug 588217 should make this go away by merging the group data.
-        this.restoreWindow(windowToUse, { windows: [winState] }, canOverwriteTabs, true);
+        this.restoreWindow(windows[lastSessionWindowID], { windows: [winState] },
+                           false, true);
       }
       else {
         this._openWindowWithState({ windows: [winState] });
@@ -1464,80 +1444,6 @@ SessionStoreService.prototype = {
                           lastSessionState.session.recentCrashes || 0;
 
     this._lastSessionState = null;
-  },
-
-
-  /**
-   * See if aWindow is usable for use when restoring a previous session via
-   * restoreLastSession. If usable, prepare it for use.
-   *
-   * @param aWindow
-   *        the window to inspect & prepare
-   * @returns [canUseWindow, canOverwriteTabs]
-   *          canUseWindow: can the window be used to restore into
-   *          canOverwriteTabs: all of the current tabs are home pages and we
-   *                            can overwrite them
-   */
-  _prepWindowToRestoreInto: function sss__prepWindowToRestoreInto(aWindow) {
-    if (!aWindow)
-      return [false, false];
-
-    // We might be able to overwrite the existing tabs instead of just adding
-    // the previous session's tabs to the end. This will be set if possible.
-    let canOverwriteTabs = false;
-
-    // Step 1 of processing:
-    // Inspect extData for Panorama identifiers. If found, then we want to
-    // inspect further. If there is a single group, then we can use this
-    // window. If there are multiple groups then we won't use this window.
-    let data = this.getWindowValue(aWindow, "tabview-group");
-    if (data) {
-      data = JSON.parse(data);
-
-      // Multiple keys means multiple groups, which means we don't want to use this window.
-      if (Object.keys(data).length > 1) {
-        return [false, false];
-      }
-      else {
-        // If there is only one group, then we want to ensure that its group id
-        // is 0. This is how Panorama forces group merging when new tabs are opened.
-        //XXXzpao This is a hack and the proper fix really belongs in Panorama.
-        let groupKey = Object.keys(data)[0];
-        if (groupKey !== "0") {
-          data["0"] = data[groupKey];
-          delete data[groupKey];
-          this.setWindowValue(aWindow, "tabview-groups", JSON.stringify(data));
-        }
-      }
-    }
-
-    // Step 2 of processing:
-    // If we're still here, then the window is usable. Look at the open tabs in
-    // comparison to home pages. If all the tabs are home pages then we'll end
-    // up overwriting all of them. Otherwise we'll just close the tabs that
-    // match home pages.
-    let homePages = aWindow.gHomeButton.getHomePage().split("|");
-    let removableTabs = [];
-    let tabbrowser = aWindow.gBrowser;
-    let normalTabsLen = tabbrowser.tabs.length - tabbrowser._numPinnedTabs;
-    for (let i = tabbrowser._numPinnedTabs; i < tabbrowser.tabs.length; i++) {
-      let tab = tabbrowser.tabs[i];
-      if (homePages.indexOf(tab.linkedBrowser.currentURI.spec) != -1) {
-        removableTabs.push(tab);
-      }
-    }
-
-    if (tabbrowser.tabs.length == removableTabs.length) {
-      canOverwriteTabs = true;
-    }
-    else {
-      // If we're not overwriting all of the tabs, then close the home tabs.
-      for (let i = removableTabs.length - 1; i >= 0; i--) {
-        tabbrowser.removeTab(removableTabs.pop(), { animate: false });
-      }
-    }
-
-    return [true, canOverwriteTabs];
   },
 
 /* ........ Saving Functionality .............. */
@@ -2521,11 +2427,6 @@ SessionStoreService.prototype = {
     
     this.restoreHistoryPrecursor(aWindow, tabs, winData.tabs,
       (aOverwriteTabs ? (parseInt(winData.selected) || 1) : 0), 0, 0);
-
-    // This will force the keypress listener that Panorama has to attach if it
-    // isn't already. This will be the case if tab view wasn't entered or there
-    // were only visible tabs when TabView.init was first called.
-    aWindow.TabView.init();
 
     // set smoothScroll back to the original value
     tabstrip.smoothScroll = smoothScroll;
