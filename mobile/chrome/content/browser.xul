@@ -668,7 +668,7 @@
       </vbox>
     </hbox>
 
-    <hbox id="appmenu" bottom="0" collapsed="true" align="stretch" oncommand="AppMenu.hide();">
+    <hbox id="appmenu" bottom="0" hidden="true" align="stretch" oncommand="AppMenu.hide();">
       <toolbarbutton class="appmenu-button"
         label="&appMenu.siteOptions;"
         image="chrome://browser/skin/images/appmenu-site-hdpi.png"
