@@ -318,6 +318,12 @@ inline int NS_SUCCEEDED(nsresult _nsresult) {
  */
 #define NS_ERROR_ILLEGAL_DURING_SHUTDOWN        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCOM, 30)
 
+/**
+ * Returned by DocumentViewerImpl::LoadComplete when the function completes
+ * successfully but mStopped is true at the end.
+ */
+#define NS_SUCCESS_LOAD_STOPPED                 NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 1)
+
  /*
   * This will return the nsresult corresponding to the most recent NSPR failure
   * returned by PR_GetError.
