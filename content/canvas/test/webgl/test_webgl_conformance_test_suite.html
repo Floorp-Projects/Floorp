@@ -271,7 +271,7 @@ function start() {
         var iframe = document.getElementById("testframe");
         var testHarness = new WebGLTestHarnessModule.TestHarness(
             iframe,
-            '00_testFIXME_list.txt',
+            '00_test_list.txt',
             function(type, msg, success) {
                 return reporter.reportFunc(type, msg, success);
             });
