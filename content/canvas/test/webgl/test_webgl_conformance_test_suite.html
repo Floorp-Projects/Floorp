@@ -39,41 +39,6 @@ Mochitest version of the WebGL Conformance Test Suite
 
 function start() {
 
-  function prefSvc() {
-    var svc = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefService).getBranch("");
-    return svc;
-  }
-
-  function setForceEnabled(value) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    prefSvc().setBoolPref("webgl.force-enabled", value);
-  }
-
-  function getForceEnabled() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    return prefSvc().getBoolPref("webgl.force-enabled");
-  }
-
-  function setPreferGL(value) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    prefSvc().setBoolPref("webgl.prefer-native-gl", value);
-  }
-
-  function getPreferGL() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var retval = false;
-    try {
-      retval = prefSvc().getBoolPref("webgl.prefer-native-gl");
-    } catch (ex) { }
-    return retval;
-  }
-
-  function restoreOldPrefs() {
-    setForceEnabled(saved_force_enabled);
-    setPreferGL(saved_prefer_gl);
-  }
-
   function getEnv(env) {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var envsvc = Components.classes["@mozilla.org/process/environment;1"].getService(Components.interfaces.nsIEnvironment);
@@ -268,7 +233,6 @@ function start() {
       for (var i = 0; i < testsExpectedToFail.length; ++i)
         if (testsSuccessful.indexOf(testsExpectedToFail[i]) != -1)
           ok(false, 'Test expected to fail, but passed: ' + testsExpectedToFail[i]);
-      restoreOldPrefs();
       statusTextNode.textContent = 'Finished';
       SimpleTest.finish();
   }
@@ -294,14 +258,6 @@ function start() {
 
   function runTestSuite() {
     var reporter = new Reporter();
-
-    // set WebGL-related preferences needed to run WebGL tests
-    setForceEnabled(true);
-
-    // XXX temporary hack. Until the DirectX runtime is deployed on test slaves, we just use OpenGL,
-    // so that rel-eng can safely deploy DirectX runtime without getting sudden mochitest failures
-    // (e.g. if there's a ANGLE bug).
-    setPreferGL(true);
 
     // try to create a dummy WebGL context, just to catch context creation failures once here,
     // rather than having them result in 100's of failures (one in each test page)
@@ -385,9 +341,6 @@ function start() {
       return;
     }
   }
-
-  var saved_force_enabled = getForceEnabled();
-  var saved_prefer_gl = getPreferGL();
 
   var statusElem = document.getElementById("status");
   var statusTextNode = document.createTextNode('');
