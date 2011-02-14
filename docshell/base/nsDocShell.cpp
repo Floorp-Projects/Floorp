@@ -7054,11 +7054,6 @@ nsDocShell::RestoreFromHistory()
         mContentViewer->Close(mSavingOldViewer ? mOSHE.get() : nsnull);
         viewer->SetPreviousViewer(mContentViewer);
     }
-    if (mOSHE && (!mContentViewer || !mSavingOldViewer)) {
-        // We don't plan to save a viewer in mOSHE; tell it to drop
-        // any other state it's holding.
-        mOSHE->SyncPresentationState();
-    }
 
     // Order the mContentViewer setup just like Embed does.
     mContentViewer = nsnull;
@@ -7676,14 +7671,9 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
 
         mContentViewer->Close(mSavingOldViewer ? mOSHE.get() : nsnull);
         aNewViewer->SetPreviousViewer(mContentViewer);
-    }
-    if (mOSHE && (!mContentViewer || !mSavingOldViewer)) {
-        // We don't plan to save a viewer in mOSHE; tell it to drop
-        // any other state it's holding.
-        mOSHE->SyncPresentationState();
-    }
 
-    mContentViewer = nsnull;
+        mContentViewer = nsnull;
+    }
 
     // Now that we're about to switch documents, forget all of our children.
     // Note that we cached them as needed up in CaptureState above.

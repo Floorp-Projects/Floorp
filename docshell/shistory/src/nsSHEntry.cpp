@@ -763,7 +763,6 @@ nsSHEntry::DropPresentationState()
   mViewerBounds.SetRect(0, 0, 0, 0);
   mChildShells.Clear();
   mRefreshURIList = nsnull;
-  mEditorData = nsnull;
 }
 
 void
