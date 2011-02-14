@@ -3452,8 +3452,10 @@ EvalInContext(JSContext *cx, uintN argc, jsval *vp)
     JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
     {
         JSAutoEnterCompartment ac;
-        if (JSCrossCompartmentWrapper::isCrossCompartmentWrapper(sobj)) {
-            sobj = sobj->unwrap();
+        uintN flags;
+        JSObject *unwrapped = sobj->unwrap(&flags);
+        if (flags & JSWrapper::CROSS_COMPARTMENT) {
+            sobj = unwrapped;
             if (!ac.enter(cx, sobj))
                 return false;
         }

@@ -151,8 +151,6 @@ class JS_FRIEND_API(JSCrossCompartmentWrapper) : public JSWrapper {
     virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper);
     virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, uintN indent);
 
-    static bool isCrossCompartmentWrapper(JSObject *obj);
-
     static JSCrossCompartmentWrapper singleton;
 };
 
