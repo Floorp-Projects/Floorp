@@ -417,12 +417,6 @@ JSCrossCompartmentWrapper::~JSCrossCompartmentWrapper()
 {
 }
 
-bool
-JSCrossCompartmentWrapper::isCrossCompartmentWrapper(JSObject *obj)
-{
-    return obj->isProxy() && obj->getProxyHandler() == &JSCrossCompartmentWrapper::singleton;
-}
-
 #define PIERCE(cx, wrapper, mode, pre, op, post)            \
     JS_BEGIN_MACRO                                          \
         AutoCompartment call(cx, wrappedObject(wrapper));   \
