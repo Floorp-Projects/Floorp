@@ -1403,29 +1403,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     return dropIndex;
   },
 
-  // ----------
-  // Function: childHit
-  // Called by one of the groupItem's children when the child is clicked on.
-  //
-  // Returns an object:
-  //   shouldZoom - true if the browser should launch into the tab represented by the child
-  //   callback - called after the zoom animation is complete
-  childHit: function GroupItem_childHit(child) {
-    var self = this;
-
-    // ___ normal click
-    if (!this._isStacked || this.expanded) {
-      return {
-        shouldZoom: true,
-        callback: function() {
-          self.collapse();
-        }
-      };
-    }
-
-    return { shouldZoom: true };
-  },
-
   expand: function GroupItem_expand() {
     var self = this;
     // ___ we're stacked, and command is held down so expand

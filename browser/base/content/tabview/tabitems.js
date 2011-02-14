@@ -614,12 +614,12 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     if (this.parent && this.parent.hidden)
       return;
 
-    var self = this;
-    var $tabEl = this.$container, $canvas = this.$canvas;
-    var childHitResult = { shouldZoom: true };
+    let self = this;
+    let $tabEl = this.$container;
+    let $canvas = this.$canvas;
+
     UI.setActiveTab(this);
     if (this.parent) {
-      childHitResult = this.parent.childHit(this);
       GroupItems.setActiveGroupItem(this.parent);
     } else {
       GroupItems.setActiveOrphanTab(this);
@@ -628,35 +628,34 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.shouldHideCachedData = true;
     TabItems._update(this.tab);
 
-    if (childHitResult.shouldZoom) {
-      // Zoom in!
-      var tab = this.tab;
+    // Zoom in!
+    let tab = this.tab;
 
-      function onZoomDone() {
-        $canvas.css({ '-moz-transform': null });
-        $tabEl.removeClass("front");
+    function onZoomDone() {
+      $canvas.css({ '-moz-transform': null });
+      $tabEl.removeClass("front");
 
-        UI.goToTab(tab);
+      UI.goToTab(tab);
 
-        // tab might not be selected because hideTabView() is invoked after 
-        // UI.goToTab() so we need to setup everything for the gBrowser.selectedTab
-        if (tab != gBrowser.selectedTab) {
-          UI.onTabSelect(gBrowser.selectedTab);
-        } else { 
-          if (isNewBlankTab)
-            gWindow.gURLBar.focus();
-        }
-        if (childHitResult.callback)
-          childHitResult.callback();
+      // tab might not be selected because hideTabView() is invoked after 
+      // UI.goToTab() so we need to setup everything for the gBrowser.selectedTab
+      if (tab != gBrowser.selectedTab) {
+        UI.onTabSelect(gBrowser.selectedTab);
+      } else { 
+        if (isNewBlankTab)
+          gWindow.gURLBar.focus();
       }
+      if (self.parent && self.parent.expanded)
+        self.parent.collapse();
+    }
 
-      let animateZoom = gPrefBranch.getBoolPref("animate_zoom");
-      if (animateZoom) {
-        let transform = this.getZoomTransform();
-        TabItems.pausePainting();
+    let animateZoom = gPrefBranch.getBoolPref("animate_zoom");
+    if (animateZoom) {
+      let transform = this.getZoomTransform();
+      TabItems.pausePainting();
 
-        $tabEl.addClass("front");
-        $canvas
+      $tabEl.addClass("front");
+      $canvas
         .css({ '-moz-transform-origin': transform.transformOrigin })
         .animate({ '-moz-transform': transform.transform }, {
           duration: 230,
@@ -669,9 +668,8 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
             }, 0);
           }
         });
-      } else {
-        setTimeout(onZoomDone, 0);
-      } 
+    } else {
+      setTimeout(onZoomDone, 0);
     }
   },
 
