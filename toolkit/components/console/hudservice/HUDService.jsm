@@ -4071,10 +4071,9 @@ JSTerm.prototype = {
   {
     let self = this;
     let propPanel;
-    // The property panel has two buttons:
-    // 1. `Update`: reexecutes the string executed on the command line. The
+    // The property panel has one button:
+    //    `Update`: reexecutes the string executed on the command line. The
     //    result will be inspected by this panel.
-    // 2. `Close`: destroys the panel.
     let buttons = [];
 
     // If there is a evalString passed to this function, then add a `Update`
@@ -4102,22 +4101,14 @@ JSTerm.prototype = {
       });
     }
 
-    buttons.push({
-      label: HUDService.getStr("close.button"),
-      accesskey: HUDService.getStr("close.accesskey"),
-      class: "jsPropertyPanelCloseButton",
-      oncommand: function () {
-        propPanel.destroy();
-        aAnchor._panelOpen = false;
-      }
-    });
-
     let doc = self.parentNode.ownerDocument;
     let parent = doc.getElementById("mainPopupSet");
     let title = (aEvalString
         ? HUDService.getFormatStr("jsPropertyInspectTitle", [aEvalString])
         : HUDService.getStr("jsPropertyTitle"));
+
     propPanel = new PropertyPanel(parent, doc, title, aOutputObject, buttons);
+    propPanel.linkNode = aAnchor;
 
     let panel = propPanel.panel;
     panel.openPopup(aAnchor, "after_pointer", 0, 0, false, false);
