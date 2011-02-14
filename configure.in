@@ -4741,7 +4741,7 @@ AC_CHECK_PROGS(YASM, yasm, "")
 if test -n "$YASM"; then
   dnl Pull out yasm's version string
   changequote(,)
-  _YASM_VER_FILTER='s|.* \([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\).*|\1|p'
+  _YASM_VER_FILTER='s|.* \([0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\).*|\1|p'
   changequote([,])
 
   YASM_VERSION=`yasm --version | sed -ne "$_YASM_VER_FILTER"`
