@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <!--
+      This test makes sure that scrolling a normal sized canvas would correctly
+      scroll its contents.  Normal sized canvases are accelerated, so this test
+      makes sure that the accelerated code path for this operaton works correctly.
+
+      The padding in this test is added mostly to make sure that scrollLeft/Top
+      correctly skip the padding.
+    -->
+    <div id="container" style="width: 100px; height: 100px; padding: 10px; overflow: hidden">
+      <canvas width="300" height="300" id="c"></canvas>
+    </div>
+    <script>
+      var ctx = document.getElementById("c").getContext("2d");
+      ctx.fillStyle = "red";
+      ctx.fillRect(0, 0, 300, 100);
+      ctx.fillStyle = "green";
+      ctx.fillRect(0, 100, 300, 200);
+      var container = document.getElementById("container");
+      container.scrollLeft = 10;
+      container.scrollTop = 110;
+    </script>
+  </body>
+</html>
