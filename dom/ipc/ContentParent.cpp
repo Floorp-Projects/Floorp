@@ -70,6 +70,11 @@
 #include "nsConsoleMessage.h"
 #include "AudioParent.h"
 
+#if defined(ANDROID) || defined(LINUX)
+#include <sys/time.h>
+#include <sys/resource.h>
+#endif
+
 #ifdef MOZ_PERMISSIONS
 #include "nsPermissionManager.h"
 #endif
@@ -145,6 +150,26 @@ ContentParent::OnChannelConnected(int32 pid)
     }
     else {
         SetOtherProcess(handle);
+
+#if defined(ANDROID) || defined(LINUX)
+        EnsurePrefService();
+        nsCOMPtr<nsIPrefBranch> branch;
+        branch = do_QueryInterface(mPrefService);
+
+        // Check nice preference
+        PRInt32 nice = 0;
+        branch->GetIntPref("dom.ipc.content.nice", &nice);
+
+        // Environment variable overrides preference
+        char* relativeNicenessStr = getenv("MOZ_CHILD_PROCESS_RELATIVE_NICENESS");
+        if (relativeNicenessStr) {
+            nice = atoi(relativeNicenessStr);
+        }
+
+        if (nice != 0) {
+            setpriority(PRIO_PROCESS, pid, getpriority(PRIO_PROCESS, pid) + nice);
+        }
+#endif
     }
 }
 
