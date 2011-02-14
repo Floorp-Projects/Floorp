@@ -3062,8 +3062,8 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp)
     /* Construct a regexp statics object for this global object. */
     JSObject *res = regexp_statics_construct(cx, obj);
     if (!res ||
-        !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_REGEXP_STATICS,
-                            ObjectValue(*res))) {
+        !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_REGEXP_STATICS, ObjectValue(*res)) ||
+        !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_FLAGS, Int32Value(0))) {
         return NULL;
     }
 
@@ -3937,11 +3937,25 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
 
     /* Clear cached class objects on the global object. */
     if (obj->isGlobal()) {
+        /* This can return false but that doesn't mean it failed. */
+        obj->unbrand(cx);
+
         for (int key = JSProto_Null; key < JSProto_LIMIT * 3; key++)
             JS_SetReservedSlot(cx, obj, key, JSVAL_VOID);
 
+        /* Clear regexp statics. */
+        RegExpStatics::extractFrom(obj)->clear();
+
         /* Clear the CSP eval-is-allowed cache. */
         JS_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_EVAL_ALLOWED, JSVAL_VOID);
+
+        /*
+         * Mark global as cleared. If we try to execute any compile-and-go
+         * scripts from here on, we will throw.
+         */
+        int32 flags = obj->getReservedSlot(JSRESERVED_GLOBAL_FLAGS).toInt32();
+        flags |= JSGLOBAL_FLAGS_CLEARED;
+        JS_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_FLAGS, Jsvalify(Int32Value(flags)));
     }
 
     js_InitRandom(cx);
