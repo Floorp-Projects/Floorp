@@ -52,7 +52,8 @@
 
 <dialog windowtype="Addons:Blocklist" title="&blocklist.title;" align="stretch"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="init();" ondialogaccept="return accept()"
+        onload="init();" ondialogaccept="return finish(true)"
+                         ondialogcancel="return finish(false)"
         buttons="accept,cancel" style="&blocklist.style;"
         buttonlabelaccept="&blocklist.accept.label;"
         buttonaccesskeyaccept="&blocklist.accept.accesskey;">
