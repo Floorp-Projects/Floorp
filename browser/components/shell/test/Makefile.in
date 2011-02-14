@@ -48,7 +48,6 @@ XPCSHELL_TESTS	= unit
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES = browser_420786.js \
-    browser_633221.js \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
