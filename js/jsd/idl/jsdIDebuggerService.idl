@@ -482,7 +482,7 @@ interface jsdIFilter : nsISupports
 /**
  * Notify client code that debugMode has been activated.
  */
-[scriptable, uuid(6da7f5fb-3a84-4abe-9e23-8b2045960732)]
+[scriptable, function, uuid(6da7f5fb-3a84-4abe-9e23-8b2045960732)]
 interface jsdIActivationCallback : nsISupports
 {
     void onDebuggerActivated ();
@@ -491,7 +491,7 @@ interface jsdIActivationCallback : nsISupports
 /**
  * Pass an instance of one of these to jsdIDebuggerService::enterNestedEventLoop.
  */
-[scriptable, uuid(88bea60f-9b5d-4b39-b08b-1c3a278782c6)]
+[scriptable, function, uuid(88bea60f-9b5d-4b39-b08b-1c3a278782c6)]
 interface jsdINestCallback : nsISupports
 {
     /**
@@ -505,7 +505,7 @@ interface jsdINestCallback : nsISupports
 /**
  * Pass an instance of one of these to jsdIDebuggerService::enumerateFilters.
  */
-[scriptable, uuid(e391ba85-9379-4762-b387-558e38db730f)]
+[scriptable, function, uuid(e391ba85-9379-4762-b387-558e38db730f)]
 interface jsdIFilterEnumerator : nsISupports
 {
     /**
@@ -518,7 +518,7 @@ interface jsdIFilterEnumerator : nsISupports
 /**
  * Pass an instance of one of these to jsdIDebuggerService::enumerateScripts.
  */
-[scriptable, uuid(4eef60c2-9bbc-48fa-b196-646a832c6c81)]
+[scriptable, function, uuid(4eef60c2-9bbc-48fa-b196-646a832c6c81)]
 interface jsdIScriptEnumerator : nsISupports
 {
     /**
@@ -531,7 +531,7 @@ interface jsdIScriptEnumerator : nsISupports
 /**
  * Pass an instance of one of these to jsdIDebuggerService::enumerateContexts.
  */
-[scriptable, uuid(57d18286-550c-4ca9-ac33-56f12ebba91e)]
+[scriptable, function, uuid(57d18286-550c-4ca9-ac33-56f12ebba91e)]
 interface jsdIContextEnumerator : nsISupports
 {
     /**
@@ -562,7 +562,7 @@ interface jsdIScriptHook : nsISupports
  * Hook instances of this interface up to the
  * jsdIDebuggerService::functionHook and toplevelHook properties.
  */
-[scriptable, uuid(3eff1314-7ae3-4cf8-833b-c33c24a55633)]
+[scriptable, function, uuid(3eff1314-7ae3-4cf8-833b-c33c24a55633)]
 interface jsdICallHook : nsISupports
 {
     /**
@@ -594,7 +594,7 @@ interface jsdICallHook : nsISupports
     void onCall (in jsdIStackFrame frame, in unsigned long type);
 };
 
-[scriptable, uuid(e6b45eee-d974-4d85-9d9e-f5a67218deb4)]
+[scriptable, function, uuid(e6b45eee-d974-4d85-9d9e-f5a67218deb4)]
 interface jsdIErrorHook : nsISupports
 {
     /**
@@ -634,7 +634,7 @@ interface jsdIErrorHook : nsISupports
  * jsdIDebuggerService::breakpointHook, debuggerHook, errorHook, interruptHook,
  * and throwHook properties.
  */
-[scriptable, uuid(3a722496-9d78-4f0a-a797-293d9e8cb8d2)]
+[scriptable, function, uuid(3a722496-9d78-4f0a-a797-293d9e8cb8d2)]
 interface jsdIExecutionHook : nsISupports
 {
     /**
