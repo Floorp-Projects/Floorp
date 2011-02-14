@@ -1768,15 +1768,6 @@ extern JSBool
 js_SetNativeAttributes(JSContext *cx, JSObject *obj, js::Shape *shape,
                        uintN attrs);
 
-/*
- * Hack fix for bug 611653: Do not use for any other purpose.
- *
- * Unbrand and set all slot values to undefined (except reserved slots that
- * are not used for cached prototypes).
- */
-JS_FRIEND_API(void)
-js_UnbrandAndClearSlots(JSContext *cx, JSObject *obj);
-
 namespace js {
 
 /*
