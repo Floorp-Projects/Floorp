@@ -422,6 +422,14 @@ pref("plugin.disable", true);
 #endif
 pref("dom.ipc.plugins.enabled", true);
 
+// process priority
+// higher values give content process less CPU time
+#if MOZ_PLATFORM_MAEMO
+pref("dom.ipc.content.nice", 10);
+#else
+pref("dom.ipc.content.nice", 1);
+#endif
+
 // product URLs
 // The breakpad report server to link to in about:crashes
 pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");
