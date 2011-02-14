@@ -64,7 +64,6 @@
 //   bounds - a <Rect>; otherwise based on the locations of the provided elements
 //   container - a DOM element to use as the container for this groupItem; otherwise will create
 //   title - the title for the groupItem; otherwise blank
-//   dontPush - true if this groupItem shouldn't push away on creation; default is false
 //   dontPush - true if this groupItem shouldn't push away or snap on creation; default is false
 //   immediately - true if we want all placement immediately, not with animation
 function GroupItem(listOfEls, options) {
@@ -690,7 +689,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         GroupItems.setActiveGroupItem(closestTabItem.parent);
       } else {
         GroupItems.setActiveOrphanTab(closestTabItem);
-        GroupItems.setActiveGroupItem(null);
       }
     } else {
       GroupItems.setActiveGroupItem(null);
@@ -1425,7 +1423,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       };
     }
 
-    GroupItems.setActiveGroupItem(self);
     return { shouldZoom: true };
   },
 
@@ -2277,6 +2274,8 @@ let GroupItems = {
   // Paramaters:
   //  groupItem - the active <TabItem> or <null>
   setActiveOrphanTab: function GroupItems_setActiveOrphanTab(tabItem) {
+    if (tabItem !== null)
+      this.setActiveGroupItem(null);
     this._activeOrphanTab = tabItem;
   },
 
@@ -2305,11 +2304,11 @@ let GroupItems = {
     Utils.assertThrow(tabItem && tabItem.isATabItem, "tabItem must be a TabItem");
 
     let groupItem = tabItem.parent;
-    this.setActiveGroupItem(groupItem);
 
-    if (groupItem)
+    if (groupItem) {
+      this.setActiveGroupItem(groupItem);
       groupItem.setActiveTab(tabItem);
-    else
+    } else
       this.setActiveOrphanTab(tabItem);
 
     this._updateTabBar();
