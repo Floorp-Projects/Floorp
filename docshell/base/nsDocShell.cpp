@@ -6077,7 +6077,27 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
         SetDocPendingStateObj(mLSHE);
 
         mIsExecutingOnLoadHandler = PR_TRUE;
-        mContentViewer->LoadComplete(aStatus);
+        rv = mContentViewer->LoadComplete(aStatus);
+
+        // If the load wasn't stopped during LoadComplete, fire the popstate
+        // event, if we're not suppressing it.
+        if (NS_SUCCEEDED(rv) && rv != NS_SUCCESS_LOAD_STOPPED &&
+            !mSuppressPopstate) {
+
+            // XXX should I get the window via mScriptGlobal?  This is tricky
+            // since we're near onload and things might be changing.  But I
+            // think mContentViewer has the right view of the world.
+            nsCOMPtr<nsIDocument> document = mContentViewer->GetDocument();
+            if (document) {
+                nsCOMPtr<nsPIDOMWindow> window = document->GetWindow();
+                if (window) {
+                    // Dispatch the popstate event , passing PR_TRUE to indicate
+                    // that this is an "initial" (i.e. after-onload) popstate.
+                    window->DispatchSyncPopState(PR_TRUE);
+                }
+            }
+        }
+
         mIsExecutingOnLoadHandler = PR_FALSE;
 
         mEODForCurrentDocument = PR_TRUE;
@@ -8213,7 +8233,11 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     mAllowKeywordFixup =
       (aFlags & INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) != 0;
     mURIResultedInDocument = PR_FALSE;  // reset the clock...
-   
+
+    // If we've gotten this far, reset our "don't fire a popState" flag.  This
+    // will get set to true the next time someone calls push/replaceState.
+    mSuppressPopstate = PR_FALSE;
+
     //
     // First:
     // Check to see if the new URI is an anchor in the existing document.
@@ -8410,10 +8434,15 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
             SetDocPendingStateObj(mOSHE);
 
-            // Dispatch the popstate and hashchange events, as appropriate
+            // Dispatch the popstate and hashchange events, as appropriate.
             nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mScriptGlobal);
             if (window) {
-                window->DispatchSyncPopState();
+                NS_ASSERTION(!mSuppressPopstate,
+                             "Popstate shouldn't be suppressed here.");
+
+                // Pass PR_FALSE to indicate that this is not an "initial" (i.e.
+                // after-onload) popstate.
+                window->DispatchSyncPopState(PR_FALSE);
 
                 if (doHashchange)
                   window->DispatchAsyncHashchange();
@@ -9789,6 +9818,10 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     else {
         FireDummyOnLocationChange();
     }
+
+    // A call to push/replaceState prevents popstate events from firing until
+    // the next time we call InternalLoad.
+    mSuppressPopstate = PR_TRUE;
 
     return NS_OK;
 }

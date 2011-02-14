@@ -55,6 +55,7 @@ DOMCI_DATA(PopStateEvent, nsDOMPopStateEvent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMPopStateEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMPopStateEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMPopStateEvent_MOZILLA_2_BRANCH)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(PopStateEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
@@ -76,10 +77,29 @@ nsDOMPopStateEvent::InitPopStateEvent(const nsAString &aTypeArg,
                                       PRBool aCancelableArg,
                                       nsIVariant *aStateArg)
 {
+  return InitPopStateEvent(aTypeArg, aCanBubbleArg, aCancelableArg, aStateArg, PR_FALSE);
+}
+
+NS_IMETHODIMP
+nsDOMPopStateEvent::InitPopStateEvent(const nsAString &aTypeArg,
+                                      PRBool aCanBubbleArg,
+                                      PRBool aCancelableArg,
+                                      nsIVariant *aStateArg,
+                                      PRBool aIsInitial)
+{
   nsresult rv = nsDOMEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mState = aStateArg;
+  mIsInitial = aIsInitial;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMPopStateEvent::GetInitial(PRBool *aOut)
+{
+  NS_ENSURE_ARG_POINTER(aOut);
+  *aOut = mIsInitial;
   return NS_OK;
 }
 
