@@ -52,8 +52,10 @@ using std::vector;
 using namespace CrashReporter;
 
 static GtkWidget* gViewReportButton = 0;
+static GtkWidget* gCommentTextLabel = 0;
 static GtkWidget* gCommentText = 0;
 static GtkWidget* gEmailMeCheck = 0;
+static GtkWidget* gEmailEntryLabel = 0;
 static GtkWidget* gEmailEntry = 0;
 
 static bool gEmailFieldHint = true;
@@ -486,7 +488,9 @@ bool UIShowCrashUI(const string& dumpfile,
   gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled),
                                       GTK_SHADOW_IN);
 
+  gCommentTextLabel = gtk_label_new(gStrings[ST_COMMENTGRAYTEXT].c_str());
   gCommentText = gtk_text_view_new();
+  gtk_label_set_mnemonic_widget(GTK_LABEL(gCommentTextLabel), gCommentText);
   gtk_text_view_set_accepts_tab(GTK_TEXT_VIEW(gCommentText), FALSE);
   g_signal_connect(gCommentText, "focus-in-event", G_CALLBACK(CommentFocusChange), 0);
   g_signal_connect(gCommentText, "focus-out-event", G_CALLBACK(CommentFocusChange), 0);
@@ -519,7 +523,9 @@ bool UIShowCrashUI(const string& dumpfile,
   gtk_box_pack_start(GTK_BOX(emailIndentBox), gtk_label_new(""),
                      FALSE, FALSE, 9);
 
+  gEmailEntryLabel = gtk_label_new(gStrings[ST_EMAILGRAYTEXT].c_str());
   gEmailEntry = gtk_entry_new();
+  gtk_label_set_mnemonic_widget(GTK_LABEL(gEmailEntryLabel), gEmailEntry);
   gtk_box_pack_start(GTK_BOX(emailIndentBox), gEmailEntry, TRUE, TRUE, 0);
   g_signal_connect(gEmailEntry, "changed", G_CALLBACK(EmailChanged), 0);
   g_signal_connect(gEmailEntry, "focus-in-event", G_CALLBACK(EmailFocusChange), 0);
