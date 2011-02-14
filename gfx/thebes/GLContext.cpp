@@ -340,18 +340,6 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
                 break;
             }
         }
-
-#ifdef MOZ_X11
-        // bug 629265: block NVIDIA 260.19 on X11
-        if (mVendor == VendorNVIDIA &&
-            strstr((const char *)fGetString(LOCAL_GL_VERSION), "260.19") &&
-            !PR_GetEnv("MOZ_GLX_IGNORE_BLACKLIST"))
-        {
-            printf_stderr("[GLX] NVIDIA driver version 260.19 is blacklisted because of many crash reports (see bug 629265), "
-                          "define the MOZ_GLX_IGNORE_BLACKLIST environment variable to bypass this.\n");
-            mInitialized = PR_FALSE;
-        }
-#endif
     }
 
     if (mInitialized) {
