@@ -617,8 +617,13 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var self = this;
     var $tabEl = this.$container, $canvas = this.$canvas;
     var childHitResult = { shouldZoom: true };
-    if (this.parent)
+    UI.setActiveTab(this);
+    if (this.parent) {
       childHitResult = this.parent.childHit(this);
+      GroupItems.setActiveGroupItem(this.parent);
+    } else {
+      GroupItems.setActiveOrphanTab(this);
+    }
 
     this.shouldHideCachedData = true;
     TabItems._update(this.tab);
