@@ -622,10 +622,6 @@ CairoImageD3D9::SetData(const CairoImage::Data &aData)
   mSize = aData.mSize;
   mCachedSurface = aData.mSurface;
   mTexture = NULL;
-
-  // Try to upload the surface immediately, so that we don't block the
-  // rendering pipeline at paint time.
-  (void) GetOrCreateTexture();
 }
 
 IDirect3DTexture9*
