@@ -45,6 +45,7 @@
 #include "jsproxy.h"
 #include "jsscope.h"
 #include "jstracer.h"
+#include "jswrapper.h"
 #include "assembler/wtf/Platform.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"
@@ -170,6 +171,12 @@ JSCompartment::arenaListsAreEmpty()
   return true;
 }
 
+static bool
+IsCrossCompartmentWrapper(JSObject *wrapper)
+{
+    return !!(JSWrapper::wrapperHandler(wrapper)->flags() & JSWrapper::CROSS_COMPARTMENT);
+}
+
 bool
 JSCompartment::wrap(JSContext *cx, Value *vp)
 {
@@ -270,8 +277,16 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     /* If we already have a wrapper for this value, use it. */
     if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(*vp)) {
         *vp = p->value;
-        if (vp->isObject())
-            vp->toObject().setParent(global);
+        if (vp->isObject()) {
+            JSObject *obj = &vp->toObject();
+            JS_ASSERT(IsCrossCompartmentWrapper(obj));
+            if (obj->getParent() != global) {
+                do {
+                    obj->setParent(global);
+                    obj = obj->getProto();
+                } while (obj && IsCrossCompartmentWrapper(obj));
+            }
+        }
         return true;
     }
 
