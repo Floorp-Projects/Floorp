@@ -2327,6 +2327,8 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
     (dbl = script->getConst(GET_FULL_INDEX(PCOFF)).toDouble())
 
+    bool methodJitFailed = false;
+    
 #ifdef JS_METHODJIT
 
 #define MONITOR_BRANCH_METHODJIT()                                            \
@@ -2342,6 +2344,9 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
             if (inlineCallCount)                                              \
                 goto jit_return;                                              \
             goto leave_on_safe_point;                                         \
+        }                                                                     \
+        if (status == mjit::Compile_Abort) {                                  \
+            methodJitFailed = true;                                           \
         }                                                                     \
     JS_END_MACRO
 
@@ -2383,8 +2388,11 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 #define MONITOR_BRANCH()                                                      \
     JS_BEGIN_MACRO                                                            \
         if (TRACING_ENABLED(cx)) {                                            \
-            if (!TRACE_RECORDER(cx) && !TRACE_PROFILER(cx) &&                 \
-                interpMode == JSINTERP_NORMAL)                                \
+            if (!TRACE_RECORDER(cx) &&                                        \
+                !TRACE_PROFILER(cx) &&                                        \
+                interpMode == JSINTERP_NORMAL &&                              \
+                cx->methodJitEnabled &&                                       \
+                !methodJitFailed)                                             \
             {                                                                 \
                 MONITOR_BRANCH_METHODJIT();                                   \
             } else {                                                          \
@@ -2401,12 +2409,17 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
                 if (r == MONITOR_ERROR)                                       \
                     goto error;                                               \
             }                                                                 \
+        } else {                                                              \
+            MONITOR_BRANCH_METHODJIT();                                       \
         }                                                                     \
     JS_END_MACRO
 
 #else /* !JS_TRACER */
 
-#define MONITOR_BRANCH() ((void) 0)
+#define MONITOR_BRANCH()                                                      \
+    JS_BEGIN_MACRO                                                            \
+        MONITOR_BRANCH_METHODJIT();                                           \
+    JS_END_MACRO
 
 #endif /* !JS_TRACER */
 
