@@ -62,7 +62,6 @@
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #include "jsobj.h"
-#include "jsscript.h"
 #include "jscntxt.h"
 
 #include "mozilla/FunctionTimer.h"
