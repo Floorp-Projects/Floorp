@@ -870,10 +870,13 @@ function synthSelectAll(aNodeOrID, aCheckerOrEventSeq, aEventType)
 
   this.invoke = function synthSelectAll_invoke()
   {
-    if (this.DOMNode instanceof Components.interfaces.nsIDOMHTMLInputElement)
+    if (this.DOMNode instanceof Components.interfaces.nsIDOMHTMLInputElement ||
+        this.DOMNode instanceof Components.interfaces.nsIDOMXULTextBoxElement) {
       this.DOMNode.select();
-    else
+
+    } else {
       window.getSelection().selectAllChildren(this.DOMNode);
+    }
   }
 
   this.getID = function synthSelectAll_getID()
@@ -948,6 +951,19 @@ function textChangeChecker(aID, aStart, aEnd, aTextOrFunc, aIsInserted)
        "Text was " + changeInfo + " for " + prettyName(aID));
     is(aEvent.modifiedText, modifiedText,
        "Wrong " + changeInfo + " text for " + prettyName(aID));
+  }
+}
+
+/**
+ * Caret move events checker.
+ */
+function caretMoveChecker(aCaretOffset)
+{
+  this.check = function caretMoveChecker_check(aEvent)
+  {
+    is(aEvent.QueryInterface(nsIAccessibleCaretMoveEvent).caretOffset,
+       aCaretOffset,
+       "Wrong caret offset for " + prettyName(aEvent.accessible));
   }
 }
 
