@@ -757,13 +757,13 @@ gfxWindowsPlatform::GetFontCacheSize(nsAString& aSize)
     if (file == INVALID_HANDLE_VALUE) {
         return;
     }
-     
+
     WCHAR size[256];
 
     double sizeMB = (double(findFileData.nFileSizeLow) +
                      findFileData.nFileSizeHigh * (double(MAXDWORD) + 1))
                     / 1000000.0;
-    swprintf_s(size, sizeof(size), L"%.2f MB", sizeMB);
+    swprintf_s(size, NS_ARRAY_LENGTH(size), L"%.2f MB", sizeMB);
     aSize.Assign(size);
     FindClose(file);
 }
