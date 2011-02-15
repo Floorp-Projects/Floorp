@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Caret move event testing">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+    /**
+     * Do tests.
+     */
+
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+
+    function doTests()
+    {
+      gQueue = new eventQueue(EVENT_TEXT_CARET_MOVED);
+
+      var id = "textbox";
+      gQueue.push(new synthFocus(id, new caretMoveChecker(5)));
+      gQueue.push(new synthSelectAll(id, new caretMoveChecker(5)));
+      gQueue.push(new synthHomeKey(id, new caretMoveChecker(0)));
+      gQueue.push(new synthRightKey(id, new caretMoveChecker(1)));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=634240"
+         title="No caret move events are fired for XUL textbox accessible">
+        Mozilla Bug 634240
+      </a>
+      <p id="display"></p>
+      <div id="content" style="display: none"></div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <textbox id="textbox" value="hello"/>
+
+      <vbox id="eventdump"/>
+    </vbox>
+  </hbox>
+</window>
