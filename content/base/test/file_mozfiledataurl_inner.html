@@ -62,7 +62,7 @@ onload = function() {
   iframe = document.getElementById('iframe');
   iframe.onerror = iframe.onload = iframeNotifyParent;
   audio = document.getElementById('audio');
-  audio.onerror = audio.onloadedmetadata = audioNotifyParent;
+  audio.onerror = audio.oncanplay = audioNotifyParent;
 }
 
 </script>
