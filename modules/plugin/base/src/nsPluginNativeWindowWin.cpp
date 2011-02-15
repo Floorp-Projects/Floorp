@@ -58,10 +58,7 @@
 #include "nsThreadUtils.h"
 #include "nsAutoPtr.h"
 #include "nsTWeakRef.h"
-
-#ifdef _MSC_VER
 #include "nsCrashOnException.h"
-#endif
 
 #define NP_POPUP_API_VERSION 16
 
@@ -388,11 +385,7 @@ static LRESULT CALLBACK PluginWndProcInternal(HWND hWnd, UINT msg, WPARAM wParam
 
 static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-#ifdef _MSC_VER
   return mozilla::CallWindowProcCrashProtected(PluginWndProcInternal, hWnd, msg, wParam, lParam);
-#else
-  return PluginWndProcInternal(hWnd, msg, wParam, lParam);
-#endif
 }
 
 /*
