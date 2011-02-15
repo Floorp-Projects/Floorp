@@ -2290,11 +2290,13 @@ static PRBool IsJustifiableCharacter(const nsTextFragment* aFrag, PRInt32 aPos,
   return PR_FALSE;
 }
 
-static void ClearMetrics(nsHTMLReflowMetrics& aMetrics)
+void
+nsTextFrame::ClearMetrics(nsHTMLReflowMetrics& aMetrics)
 {
   aMetrics.width = 0;
   aMetrics.height = 0;
   aMetrics.ascent = 0;
+  mAscent = 0;
 }
 
 static PRInt32 FindChar(const nsTextFragment* frag,
