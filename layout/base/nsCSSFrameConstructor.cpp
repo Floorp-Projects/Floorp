@@ -5505,8 +5505,12 @@ IsRootBoxFrame(nsIFrame *aFrame)
 nsresult
 nsCSSFrameConstructor::ReconstructDocElementHierarchy()
 {
-  return RecreateFramesForContent(mPresShell->GetDocument()->GetRootElement(),
-				  PR_FALSE);
+  Element* rootElement = mDocument->GetRootElement();
+  if (!rootElement) {
+    /* nothing to do */
+    return NS_OK;
+  }
+  return RecreateFramesForContent(rootElement, PR_FALSE);
 }
 
 nsIFrame*
