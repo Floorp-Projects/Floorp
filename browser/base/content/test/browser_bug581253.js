@@ -37,6 +37,7 @@ function test() {
 function waitForStarChange(aValue, aCallback) {
   if (PlacesStarButton._pendingStmt || starButton.hasAttribute("starred") != aValue) {
     info("Waiting for star button change.");
+    info("pendingStmt: " + (!!PlacesStarButton._pendingStmt) + ", hasAttribute: " + starButton.hasAttribute("starred") + ", tracked uri: " + PlacesStarButton._uri.spec);
     timerID = setTimeout(arguments.callee, 50, aValue, aCallback);
     return;
   }
