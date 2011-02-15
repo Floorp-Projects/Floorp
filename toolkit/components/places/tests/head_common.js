@@ -680,3 +680,28 @@ function run_next_test()
     do_test_finished();
   }
 }
+
+/**
+ * Compares 2 arrays returning whether they contains the same elements.
+ *
+ * @param a1
+ *        First array to compare.
+ * @param a2
+ *        Second array to compare.
+ * @param [optional] sorted
+ *        Whether the comparison should take in count position of the elements.
+ * @return true if the arrays contain the same elements, false otherwise.
+ */
+function do_compare_arrays(a1, a2, sorted)
+{
+  if (a1.length != a2.length)
+    return false;
+
+  if (sorted) {
+    return a1.every(function (e, i) e == a2[i]);
+  }
+  else {
+    return a1.filter(function (e) a2.indexOf(e) == -1).length == 0 &&
+           a2.filter(function (e) a1.indexOf(e) == -1).length == 0;
+  }
+}
