@@ -13,6 +13,7 @@ const PORT      = 4444;
 const BASE_URL  = "http://localhost:" + PORT;
 
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
+const PREF_GETADDONS_CACHE_TYPES   = "extensions.getAddons.cache.types";
 const PREF_GETADDONS_BYIDS         = "extensions.getAddons.get.url";
 const PREF_EM_AUTOUPDATE_DEFAULT   = "extensions.update.autoUpdateDefault";
 const GETADDONS_RESULTS            = BASE_URL + "/data/test_AddonRepository_cache.xml";
@@ -282,6 +283,59 @@ const WITH_CACHE = [{
                             thumbnailURL: BASE_URL + "/repo/3/secondThumbnail.png",
                             caption:      "Repo Add-on 3 - Second Caption"
                           }],
+  sourceURI:              NetUtil.newURI(ADDON_FILES[2]).spec
+}];
+
+// Expected add-ons when using cache
+const WITH_EXTENSION_CACHE = [{
+  id:                     ADDON_IDS[0],
+  type:                   "extension",
+  name:                   "XPI Add-on 1",
+  version:                "1.1",
+  creator:                {
+                            name: "Repo Add-on 1 - Creator",
+                            url:  BASE_URL + "/repo/1/creator.html"
+                          },
+  developers:             [{ name: "XPI Add-on 1 - First Developer" },
+                           { name: "XPI Add-on 1 - Second Developer" }],
+  translators:            [{ name: "XPI Add-on 1 - First Translator" },
+                           { name: "XPI Add-on 1 - Second Translator" }],
+  contributors:           [{ name: "XPI Add-on 1 - First Contributor" },
+                           { name: "XPI Add-on 1 - Second Contributor" }],
+  description:            "XPI Add-on 1 - Description",
+  fullDescription:        "Repo Add-on 1 - Full Description & some extra",
+  developerComments:      "Repo Add-on 1\nDeveloper Comments",
+  eula:                   "Repo Add-on 1 - EULA",
+  iconURL:                BASE_URL + "/xpi/1/icon.png",
+  homepageURL:            BASE_URL + "/xpi/1/homepage.html",
+  supportURL:             BASE_URL + "/repo/1/support.html",
+  optionsURL:             BASE_URL + "/xpi/1/options.html",
+  aboutURL:               BASE_URL + "/xpi/1/about.html",
+  contributionURL:        BASE_URL + "/repo/1/meetDevelopers.html",
+  contributionAmount:     "$11.11",
+  averageRating:          1,
+  reviewCount:            1111,
+  reviewURL:              BASE_URL + "/repo/1/review.html",
+  totalDownloads:         2221,
+  weeklyDownloads:        3331,
+  dailyUsers:             4441,
+  sourceURI:              NetUtil.newURI(ADDON_FILES[0]).spec,
+  repositoryStatus:       4
+}, {
+  id:                     ADDON_IDS[1],
+  type:                   "theme",
+  name:                   "XPI Add-on 2",
+  version:                "1.2",
+  sourceURI:              NetUtil.newURI(ADDON_FILES[1]).spec
+}, {
+  id:                     ADDON_IDS[2],
+  type:                   "theme",
+  name:                   "XPI Add-on 3",
+  version:                "1.3",
+  get iconURL () {
+    return get_subfile_uri(ADDON_IDS[2], "icon.png");
+  },
+  screenshots:            [{ get url () { return get_subfile_uri(ADDON_IDS[2], "preview.png"); } }],
   sourceURI:              NetUtil.newURI(ADDON_FILES[2]).spec
 }];
 
@@ -663,7 +717,19 @@ function run_test_16() {
 
   AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
     check_results(aAddons, WITH_CACHE);
-    end_test();
+    run_test_17();
+  });
+}
+
+// Tests that setting a list of types to cache works
+function run_test_17() {
+  Services.prefs.setCharPref(PREF_GETADDONS_CACHE_TYPES, "foo,bar,extension,baz");
+
+  trigger_background_update(function() {
+    AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
+      check_results(aAddons, WITH_EXTENSION_CACHE);
+      end_test();
+    });
   });
 }
 
