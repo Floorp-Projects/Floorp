@@ -128,16 +128,12 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
 #endif // OS_WIN
     , mAsyncCallMutex("PluginInstanceChild::mAsyncCallMutex")
 #if defined(OS_MACOSX)
-#if defined(NP_NO_CARBON)
-    , mEventModel(NPEventModelCocoa)
-    , mDrawingModel(NPDrawingModelCoreGraphics)
-#else
+#if defined(__i386__)
     , mEventModel(NPEventModelCarbon)
-    , mDrawingModel(NPDrawingModelQuickDraw)
 #endif
     , mShColorSpace(nsnull)
     , mShContext(nsnull)
-
+    , mDrawingModel(NPDrawingModelCoreGraphics)
     , mCurrentEvent(nsnull)
 #endif
     , mLayersRendering(false)
@@ -480,25 +476,25 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
 
 #ifdef XP_MACOSX
     case NPPVpluginDrawingModel: {
+        NPError rv;
         int drawingModel = (int16) (intptr_t) aValue;
 
-        NPError rv = NPERR_GENERIC_ERROR;
         if (!CallNPN_SetValue_NPPVpluginDrawingModel(drawingModel, &rv))
             return NPERR_GENERIC_ERROR;
-
-        mDrawingModel = static_cast<NPDrawingModel>(drawingModel);
+        mDrawingModel = drawingModel;
 
         return rv;
     }
 
     case NPPVpluginEventModel: {
+        NPError rv;
         int eventModel = (int16) (intptr_t) aValue;
 
-        NPError rv = NPERR_GENERIC_ERROR;
         if (!CallNPN_SetValue_NPPVpluginEventModel(eventModel, &rv))
             return NPERR_GENERIC_ERROR;
-
+#if defined(__i386__)
         mEventModel = static_cast<NPEventModel>(eventModel);
+#endif
 
         return rv;
     }
