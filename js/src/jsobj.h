@@ -581,7 +581,7 @@ struct JSObject : js::gc::Cell {
      * Defined in jsobjinlines.h, but not declared inline per standard style in
      * order to avoid gcc warnings.
      */
-    bool methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp);
+    const js::Shape *methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp);
 
     /*
      * Write barrier to check for a change of method value. Defined inline in

@@ -3136,7 +3136,7 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, jsid id,
         if (shape->isMethod()) {
             AutoShapeRooter root(cx, shape);
             vp->setObject(shape->methodObject());
-            return obj2->methodReadBarrier(cx, *shape, vp);
+            return !!obj2->methodReadBarrier(cx, *shape, vp);
         }
 
         /* Peek at the native property's slot value, without doing a Get. */
