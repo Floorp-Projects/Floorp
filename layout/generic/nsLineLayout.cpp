@@ -743,14 +743,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   printf("\n");
 #endif
 
-  // See if this frame depends on the width of its containing block.  If
-  // so, disable resize reflow optimizations for the line.  (Note that,
-  // to be conservative, we do this if we *try* to fit a frame on a
-  // line, even if we don't succeed.)
-  if (GetFlag(LL_GOTLINEBOX) && IsPercentageAware(aFrame)) {
-    mLineBox->DisableResizeReflowOptimization();
-  }
-
   mTextJustificationNumSpaces = 0;
   mTextJustificationNumLetters = 0;
 
@@ -822,6 +814,17 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     pfd->mOffsets.SizeTo(0, 0, 0, 0);
     // Text reflow doesn't look at the dirty bits on the frame being reflowed,
     // so no need to propagate NS_FRAME_IS_DIRTY from the parent.
+  }
+
+  // See if this frame depends on the width of its containing block.  If
+  // so, disable resize reflow optimizations for the line.  (Note that,
+  // to be conservative, we do this if we *try* to fit a frame on a
+  // line, even if we don't succeed.)  (Note also that we can only make
+  // this IsPercentageAware check *after* we've constructed our
+  // nsHTMLReflowState, because that construction may be what forces aFrame
+  // to lazily initialize its (possibly-percent-valued) intrinsic size.)
+  if (GetFlag(LL_GOTLINEBOX) && IsPercentageAware(aFrame)) {
+    mLineBox->DisableResizeReflowOptimization();
   }
 
   // Let frame know that are reflowing it. Note that we don't bother
