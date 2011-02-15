@@ -414,6 +414,9 @@
               width: width,
               height: height
             });
+
+            // If the window size is changing, make sure the displayport is in sync
+            this.getRootView()._updateCacheViewport();
           ]]>
         </body>
       </method>
