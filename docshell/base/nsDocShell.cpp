@@ -6565,6 +6565,13 @@ nsDocShell::CanSavePresentation(PRUint32 aLoadType,
     if (!mOSHE)
         return PR_FALSE; // no entry to save into
 
+    nsCOMPtr<nsIContentViewer> viewer;
+    mOSHE->GetContentViewer(getter_AddRefs(viewer));
+    if (viewer) {
+        NS_WARNING("mOSHE already has a content viewer!");
+        return PR_FALSE;
+    }
+
     // Only save presentation for "normal" loads and link loads.  Anything else
     // probably wants to refetch the page, so caching the old presentation
     // would be incorrect.
