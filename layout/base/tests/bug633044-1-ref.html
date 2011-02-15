@@ -1,0 +1,16 @@
+<html>
+  <head>
+    <script>
+        onload = function() {
+          var el;
+          while (el = document.querySelector("br")) {
+            el.parentNode.removeChild(el);
+          }
+          focus();
+          document.body.focus();
+          getSelection().collapse(document.body.firstChild, 0);
+        }
+    </script>
+</head>
+
+<body style="white-space:pre-wrap;" contenteditable></body></html>
