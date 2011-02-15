@@ -1910,7 +1910,13 @@ PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor
         return false;
     }
 
-#if defined(XP_MACOSX) && defined(__i386__)
+#if defined(XP_MACOSX)
+    if (getenv("NPAPI_MODEL_DEBUG")) {
+        printf("OOP plugin negotiated NPAPI event model: %d\n", childInstance->EventModel());
+        printf("OOP plugin negotiated NPAPI drawing model: %d\n", childInstance->DrawingModel());
+    }
+
+#if defined(__i386__)
     // If an i386 Mac OS X plugin has selected the Carbon event model then
     // we have to fail. We do not support putting Carbon event model plugins
     // out of process. Note that Carbon is the default model so out of process
@@ -1925,6 +1931,7 @@ PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor
       // Fail to instantiate.
       *rv = NPERR_MODULE_LOAD_FAILED_ERROR;
     }
+#endif
 #endif
 
     return true;
