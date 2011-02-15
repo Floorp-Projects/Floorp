@@ -2580,7 +2580,12 @@ jsdService::ActivateDebugger (JSRuntime *rt)
         return rv;
     
     xpc->InitClasses (cx, glob);
-    
+
+    /* Start watching for script creation/destruction and manage jsdScript
+     * objects accordingly
+     */
+    JSD_SetScriptHook (mCx, jsds_ScriptHookProc, NULL);
+
     /* If any of these mFooHook objects are installed, do the required JSD
      * hookup now.   See also, jsdService::SetFooHook().
      */

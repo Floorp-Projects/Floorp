@@ -246,9 +246,12 @@ JSStackFrame::stealFrameAndSlots(js::Value *vp, JSStackFrame *otherfp,
     JS_ASSERT(othersp >= otherfp->slots());
     JS_ASSERT(othersp <= otherfp->base() + otherfp->numSlots());
 
-    size_t nbytes = (othersp - othervp) * sizeof(js::Value);
-    memcpy(vp, othervp, nbytes);
-    JS_ASSERT(vp == actualArgs() - 2);
+    PodCopy(vp, othervp, othersp - othervp);
+    JS_ASSERT(vp == this->actualArgs() - 2);
+
+    /* Catch bad-touching of non-canonical args (e.g., generator_trace). */
+    if (otherfp->hasOverflowArgs())
+        Debug_SetValueRangeToCrashOnTouch(othervp, othervp + 2 + otherfp->numFormalArgs());
 
     /*
      * Repoint Call, Arguments, Block and With objects to the new live frame.
@@ -374,7 +377,6 @@ JSStackFrame::computeThis(JSContext *cx)
     }
     if (!js::BoxThisForVp(cx, &thisv - 1))
         return false;
-    JS_ASSERT(IsSaneThisObject(thisv.toObject()));
     return true;
 }
 
@@ -585,8 +587,8 @@ InvokeSessionGuard::invoke(JSContext *cx) const
     formals_[-2] = savedCallee_;
     formals_[-1] = savedThis_;
 
-    void *code;
 #ifdef JS_METHODJIT
+    void *code;
     if (!optimized() || !(code = script_->getJIT(false /* !constructing */)->invokeEntry))
 #else
     if (!optimized())

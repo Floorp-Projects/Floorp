@@ -955,11 +955,14 @@ JS_StringToVersion(const char *string);
 
 #define JSOPTION_METHODJIT      JS_BIT(14)      /* Whole-method JIT. */
 #define JSOPTION_PROFILING      JS_BIT(15)      /* Profiler to make tracer/methodjit choices. */
+#define JSOPTION_METHODJIT_ALWAYS \
+                                JS_BIT(16)      /* Always whole-method JIT,
+                                                   don't tune at run-time. */
 
 /* Options which reflect compile-time properties of scripts. */
 #define JSCOMPILEOPTION_MASK    (JSOPTION_XML | JSOPTION_ANONFUNFIX)
 
-#define JSRUNOPTION_MASK        (JS_BITMASK(16) & ~JSCOMPILEOPTION_MASK)
+#define JSRUNOPTION_MASK        (JS_BITMASK(17) & ~JSCOMPILEOPTION_MASK)
 #define JSALLOPTION_MASK        (JSCOMPILEOPTION_MASK | JSRUNOPTION_MASK)
 
 extern JS_PUBLIC_API(uint32)

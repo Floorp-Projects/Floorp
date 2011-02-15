@@ -590,7 +590,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
             JSObject *proto = obj->getProto();
             if (last) {
                 NativeIterator *lastni = last->getNativeIterator();
-                if (!(lastni->flags & JSITER_ACTIVE) &&
+                if (!(lastni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
                     obj->isNative() && 
                     obj->shape() == lastni->shapes_array[0] &&
                     proto && proto->isNative() && 
@@ -627,7 +627,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
             JSObject *iterobj = cx->compartment->nativeIterCache.get(key);
             if (iterobj) {
                 NativeIterator *ni = iterobj->getNativeIterator();
-                if (!(ni->flags & JSITER_ACTIVE) &&
+                if (!(ni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
                     ni->shapes_key == key &&
                     ni->shapes_length == shapes.length() &&
                     Compare(ni->shapes_array, shapes.begin(), ni->shapes_length)) {
@@ -882,6 +882,10 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, IdPredicate predicat
                         memmove(idp, idp + 1, (props_end - (idp + 1)) * sizeof(jsid));
                         ni->props_end = ni->end() - 1;
                     }
+
+                    /* Don't reuse modified native iterators. */
+                    ni->flags |= JSITER_UNREUSABLE;
+
                     if (predicate.matchesAtMostOne())
                         break;
                 }
@@ -1080,9 +1084,17 @@ generator_trace(JSTracer *trc, JSObject *obj)
 
     JSStackFrame *fp = gen->floatingFrame();
     JS_ASSERT(gen->liveFrame() == fp);
-    MarkValueRange(trc, gen->floatingStack, fp->formalArgsEnd(), "generator slots");
+
+    /*
+     * Currently, generators are not mjitted. Still, (overflow) args can be
+     * pushed by the mjit and need to be conservatively marked. Technically, the
+     * formal args and generator slots are safe for exact marking, but since the
+     * plan is to eventually mjit generators, it makes sense to future-proof
+     * this code and save someone an hour later.
+     */
+    MarkStackRangeConservatively(trc, gen->floatingStack, fp->formalArgsEnd());
     js_TraceStackFrame(trc, fp);
-    MarkValueRange(trc, fp->slots(), gen->regs.sp, "generator slots");
+    MarkStackRangeConservatively(trc, fp->slots(), gen->regs.sp);
 }
 
 Class js_GeneratorClass = {

@@ -604,6 +604,7 @@ pref("javascript.options.methodjit.content", true);
 pref("javascript.options.methodjit.chrome",  false);
 pref("javascript.options.jitprofiling.content", true);
 pref("javascript.options.jitprofiling.chrome",  false);
+pref("javascript.options.methodjit_always", false);
 // This preference limits the memory usage of javascript.
 // If you want to change these values for your device,
 // please find Bug 417052 comment 17 and Bug 456721

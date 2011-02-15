@@ -1850,7 +1850,7 @@ js_DestroyScriptsToGC(JSContext *cx, JSCompartment *comp)
         while ((script = *listp) != NULL) {
             *listp = script->u.nextToGC;
             script->u.nextToGC = NULL;
-            js_DestroyScriptFromGC(cx, script);
+            js_DestroyCachedScript(cx, script);
         }
     }
 }

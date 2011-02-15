@@ -554,10 +554,7 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     // sure any updates also get written back to the trace native stack.
     // For simplicity, we just leave trace, since this is presumably not
     // a common operation.
-    if (JS_ON_TRACE(cx)) {
-        DeepBail(cx);
-        return false;
-    }
+    LeaveTrace(cx);
 #endif
 
     if (!InstanceOf(cx, obj, &js_ArgumentsClass, NULL))
@@ -1707,6 +1704,46 @@ fun_enumerate(JSContext *cx, JSObject *obj)
     return true;
 }
 
+static JSObject *
+ResolveInterpretedFunctionPrototype(JSContext *cx, JSObject *obj)
+{
+    JSFunction *fun = obj->getFunctionPrivate();
+    JS_ASSERT(fun->isInterpreted());
+    JS_ASSERT(!fun->isFunctionPrototype());
+
+    /*
+     * Assert that fun is not a compiler-created function object, which
+     * must never leak to script or embedding code and then be mutated.
+     * Also assert that obj is not bound, per the ES5 15.3.4.5 ref above.
+     */
+    JS_ASSERT(!IsInternalFunctionObject(obj));
+    JS_ASSERT(!obj->isBoundFunction());
+
+    /*
+     * Make the prototype object an instance of Object with the same parent
+     * as the function object itself.
+     */
+    JSObject *parent = obj->getParent();
+    JSObject *proto;
+    if (!js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
+        return NULL;
+    proto = NewNativeClassInstance(cx, &js_ObjectClass, proto, parent);
+    if (!proto)
+        return NULL;
+
+    /*
+     * ECMA (15.3.5.2) says that a user-defined function's .prototype property
+     * is non-configurable, non-enumerable, and (initially) writable. Hence
+     * JSPROP_PERMANENT below. By contrast, the built-in constructors, such as
+     * Object (15.2.3.1) and Function (15.3.3.1), have non-writable
+     * .prototype properties. Those are eagerly defined, with attributes
+     * JSPROP_PERMANENT | JSPROP_READONLY, in js_InitClass.
+     */
+    if (!js_SetClassPrototype(cx, obj, proto, JSPROP_PERMANENT))
+        return NULL;
+    return proto;
+}
+
 static JSBool
 fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             JSObject **objp)
@@ -1733,36 +1770,8 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         if (fun->isNative() || fun->isFunctionPrototype())
             return true;
 
-        /*
-         * Assert that fun is not a compiler-created function object, which
-         * must never leak to script or embedding code and then be mutated.
-         * Also assert that obj is not bound, per the ES5 15.3.4.5 ref above.
-         */
-        JS_ASSERT(!IsInternalFunctionObject(obj));
-        JS_ASSERT(!obj->isBoundFunction());
-
-        /*
-         * Make the prototype object an instance of Object with the same parent
-         * as the function object itself.
-         */
-        JSObject *parent = obj->getParent();
-        JSObject *proto;
-        if (!js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
+        if (!ResolveInterpretedFunctionPrototype(cx, obj))
             return false;
-        proto = NewNativeClassInstance(cx, &js_ObjectClass, proto, parent);
-        if (!proto)
-            return false;
-
-        /*
-         * ECMA (15.3.5.2) says that constructor.prototype is DontDelete for
-         * user-defined functions, but DontEnum | ReadOnly | DontDelete for
-         * native "system" constructors such as Object or Function.  So lazily
-         * set the former here in fun_resolve, but eagerly define the latter
-         * in js_InitClass, with the right attributes.
-         */
-        if (!js_SetClassPrototype(cx, obj, proto, JSPROP_PERMANENT))
-            return false;
-
         *objp = obj;
         return true;
     }
@@ -2631,6 +2640,28 @@ JS_FRIEND_API(bool)
 IsBuiltinFunctionConstructor(JSFunction *fun)
 {
     return fun->maybeNative() == Function;
+}
+
+const Shape *
+LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj)
+{
+    JSFunction *fun = funobj->getFunctionPrivate();
+    JS_ASSERT(fun->isInterpreted());
+    JS_ASSERT(!fun->isFunctionPrototype());
+    JS_ASSERT(!funobj->isBoundFunction());
+
+    jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
+    const Shape *shape = funobj->nativeLookup(id);
+    if (!shape) {
+        if (!ResolveInterpretedFunctionPrototype(cx, funobj))
+            return false;
+        shape = funobj->nativeLookup(id);
+    }
+    JS_ASSERT(!shape->configurable());
+    JS_ASSERT(shape->isDataDescriptor());
+    JS_ASSERT(shape->hasSlot());
+    JS_ASSERT(!shape->isMethod());
+    return shape;
 }
 
 }

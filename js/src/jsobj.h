@@ -518,6 +518,7 @@ struct JSObject : js::gc::Cell {
     void protoShapeChange(JSContext *cx);
     void shadowingShapeChange(JSContext *cx, const js::Shape &shape);
     bool globalObjectOwnShapeChange(JSContext *cx);
+    void watchpointOwnShapeChange(JSContext *cx) { generateOwnShape(cx); }
 
     void extensibleShapeChange(JSContext *cx) {
         /* This will do for now. */
@@ -1893,7 +1894,6 @@ JS_FRIEND_API(void) js_DumpObject(JSObject *obj);
 JS_FRIEND_API(void) js_DumpValue(const js::Value &val);
 JS_FRIEND_API(void) js_DumpId(jsid id);
 JS_FRIEND_API(void) js_DumpStackFrame(JSContext *cx, JSStackFrame *start = NULL);
-bool IsSaneThisObject(JSObject &obj);
 #endif
 
 extern uintN

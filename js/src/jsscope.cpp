@@ -139,7 +139,7 @@ JS_FRIEND_DATA(JSScopeStats) js_scope_stats = {0};
 
 # define METER(x)       JS_ATOMIC_INCREMENT(&js_scope_stats.x)
 #else
-# define METER(x)       /* nothing */
+# define METER(x)       ((void) 0)
 #endif
 
 bool
@@ -768,10 +768,9 @@ JSObject::addProperty(JSContext *cx, jsid id,
         return NULL;
 
     /* Update any watchpoints referring to this property. */
-    if (!js_UpdateWatchpointsForShape(cx, this, shape)) {
+    shape = js_UpdateWatchpointsForShape(cx, this, shape);
+    if (!shape)
         METER(wrapWatchFails);
-        return NULL;
-    }
 
     return shape;
 }
@@ -896,13 +895,14 @@ JSObject::putProperty(JSContext *cx, jsid id,
             return NULL;
         }
 
-        const Shape *new_shape =
+        const Shape *newShape =
             addPropertyInternal(cx, id, getter, setter, slot, attrs, flags, shortid, spp);
-        if (!js_UpdateWatchpointsForShape(cx, this, new_shape)) {
-            METER(wrapWatchFails);
+        if (!newShape)
             return NULL;
-        }
-        return new_shape;
+        newShape = js_UpdateWatchpointsForShape(cx, this, newShape);
+        if (!newShape)
+            METER(wrapWatchFails);
+        return newShape;
     }
 
     /* Property exists: search must have returned a valid *spp. */
@@ -1038,12 +1038,10 @@ JSObject::putProperty(JSContext *cx, jsid id,
     CHECK_SHAPE_CONSISTENCY(this);
     METER(puts);
 
-    if (!js_UpdateWatchpointsForShape(cx, this, shape)) {
+    const Shape *newShape = js_UpdateWatchpointsForShape(cx, this, shape);
+    if (!newShape)
         METER(wrapWatchFails);
-        return NULL;
-    }
-
-    return shape;
+    return newShape;
 }
 
 const Shape *
@@ -1109,11 +1107,12 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
         lastProp->shape = js_GenerateShape(cx);
         clearOwnShape();
 
-        if (!js_UpdateWatchpointsForShape(cx, this, shape)) {
+        shape = js_UpdateWatchpointsForShape(cx, this, shape);
+        if (!shape) {
             METER(wrapWatchFails);
             return NULL;
         }
-
+        JS_ASSERT(shape == mutableShape);
         newShape = mutableShape;
     } else if (shape == lastProp) {
         Shape child(shape->id, getter, setter, shape->slot, attrs, shape->flags, shape->shortid);

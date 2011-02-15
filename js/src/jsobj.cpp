@@ -1249,8 +1249,22 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
 
     JSScript *script = NULL;
     JSScript **bucket = EvalCacheHash(cx, linearStr);
-    if (evalType == DIRECT_EVAL && caller->isFunctionFrame() && !caller->isEvalFrame())
+    if (evalType == DIRECT_EVAL && caller->isFunctionFrame() && !caller->isEvalFrame()) {
         script = EvalCacheLookup(cx, linearStr, caller, staticLevel, principals, scopeobj, bucket);
+
+        /*
+         * Although the eval cache keeps a script alive from the perspective of
+         * the JS engine, from a jsdbgapi user's perspective each eval()
+         * creates and destroys a script. This hides implementation details and
+         * allows jsdbgapi clients to avoid calling JS_GetScriptObject after a
+         * script has been returned to the eval cache, which is invalid since
+         * script->u.object aliases script->u.nextToGC.
+         */
+        if (script) {
+            js_CallNewScriptHook(cx, script, NULL);
+            MUST_FLOW_THROUGH("destroy");
+        }
+    }
 
     /*
      * We can't have a callerFrame (down in js::Execute's terms) if we're in
@@ -1279,6 +1293,9 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
     JSBool ok = js_CheckPrincipalsAccess(cx, scopeobj, principals,
                                          cx->runtime->atomState.evalAtom) &&
                 Execute(cx, scopeobj, script, callerFrame, JSFRAME_EVAL, vp);
+
+    MUST_FLOW_LABEL(destroy);
+    js_CallDestroyScriptHook(cx, script);
 
     script->u.nextToGC = *bucket;
     *bucket = script;
@@ -2979,59 +2996,37 @@ js_String_tn(JSContext* cx, JSObject* proto, JSString* str)
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, STRING, 0,
                      nanojit::ACCSET_STORE_ANY)
 
-JSObject* FASTCALL
-js_CreateThisFromTrace(JSContext *cx, Class *clasp, JSObject *ctor)
+JSObject * FASTCALL
+js_CreateThisFromTrace(JSContext *cx, JSObject *ctor, uintN protoSlot)
 {
-    JS_ASSERT(JS_ON_TRACE(cx));
+#ifdef DEBUG
     JS_ASSERT(ctor->isFunction());
-
-    if (!ctor->ensureClassReservedSlots(cx))
-        return NULL;
-
-    jsid classPrototypeId = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
-    const Shape *shape = ctor->nativeLookup(classPrototypeId);
-    Value pval = shape ? ctor->getSlot(shape->slot) : MagicValue(JS_GENERIC_MAGIC);
+    JS_ASSERT(ctor->getFunctionPrivate()->isInterpreted());
+    jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
+    const Shape *shape = ctor->nativeLookup(id);
+    JS_ASSERT(shape->slot == protoSlot);
+    JS_ASSERT(!shape->configurable());
+    JS_ASSERT(!shape->isMethod());
+#endif
 
     JSObject *parent = ctor->getParent();
     JSObject *proto;
-    if (pval.isObject()) {
-        /* An object in ctor.prototype, let's use it as the new instance's proto. */
-        proto = &pval.toObject();
+    const Value &protov = ctor->getSlotRef(protoSlot);
+    if (protov.isObject()) {
+        proto = &protov.toObject();
     } else {
-        /* A hole or a primitive: either way, we need to get Object.prototype. */
+        /*
+         * GetInterpretedFunctionPrototype found that ctor.prototype is
+         * primitive. Use Object.prototype for proto, per ES5 13.2.2 step 7.
+         */
         if (!js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
             return NULL;
-
-        if (pval.isMagic(JS_GENERIC_MAGIC)) {
-            /*
-             * No ctor.prototype was set, so we inline-expand and optimize
-             * fun_resolve's prototype creation code.
-             */
-            proto = NewNativeClassInstance(cx, clasp, proto, parent);
-            if (!proto)
-                return NULL;
-            JSFunction *fun = ctor->getFunctionPrivate();
-            if (!fun->isNative() && !fun->isFunctionPrototype()) {
-                if (!js_SetClassPrototype(cx, ctor, proto, JSPROP_ENUMERATE | JSPROP_PERMANENT))
-                    return NULL;
-            }
-        } else {
-            /*
-             * A primitive value in .prototype means to use Object.prototype
-             * for proto. See ES5 13.2.2 step 7.
-             */
-        }
     }
 
-    /*
-     * FIXME: 561785 at least. Quasi-natives including XML objects prevent us
-     * from easily or unconditionally calling NewNativeClassInstance here.
-     */
-    gc::FinalizeKind kind = NewObjectGCKind(cx, clasp);
-    return NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, kind);
+    gc::FinalizeKind kind = NewObjectGCKind(cx, &js_ObjectClass);
+    return NewNativeClassInstance(cx, &js_ObjectClass, proto, parent, kind);
 }
-
-JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_CreateThisFromTrace, CONTEXT, CLASS, OBJECT, 0,
+JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_CreateThisFromTrace, CONTEXT, OBJECT, UINTN, 0,
                      nanojit::ACCSET_STORE_ANY)
 
 #else  /* !JS_TRACER */
@@ -6969,18 +6964,6 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
         fputc('\n', stderr);
     }
 }
-
-#ifdef DEBUG
-bool
-IsSaneThisObject(JSObject &obj)
-{
-    Class *clasp = obj.getClass();
-    return clasp != &js_CallClass &&
-           clasp != &js_BlockClass &&
-           clasp != &js_DeclEnvClass &&
-           clasp != &js_WithClass;
-}
-#endif
 
 #endif /* DEBUG */
 
