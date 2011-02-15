@@ -278,7 +278,7 @@ The second animation overrides the first animation for a short time, and has few
 
 The third animation has additive="sum", with fewer items than the lower priority animation 1, allowing us to test object identity and other state in that scenario. TODO: some type aware tests to check whether the composite fails or works?
 
-At t=0s and t=1s we test the affect of an attribute value changes in the absence and presence of SMIL animation respectively.
+At t=0s and t=1s we test the effect of an attribute value changes in the absence and presence of SMIL animation respectively.
 
 At t=10s we programatically remove the fill="freeze" from animation 1.
 */
@@ -769,7 +769,7 @@ function run_animVal_API_tests()
 
 
 /**
- * This function runs some basic tests to check the affect of setAttribute()
+ * This function runs some basic tests to check the effect of setAttribute()
  * calls on object identidy, without taking SMIL animation into consideration.
  */
 function run_basic_setAttribute_tests()
@@ -814,7 +814,7 @@ function run_basic_setAttribute_tests()
          'by a change in list length between the successive accesses.');
     }
 
-    // Test the affect of setting the attribute to new values:
+    // Test the effect of setting the attribute to new values:
 
     t.old_baseVal_items = get_array_of_list_items(t.baseVal);
     t.old_animVal_items = get_array_of_list_items(t.animVal);
