@@ -1611,5 +1611,3 @@ random-if(winWidget) HTTP(..) == 621918-2.svg 621918-2-ref.svg # same 1px issue 
 == 625409-1.html 625409-1-ref.html
 == 627393-1.html about:blank
 == 631352-1.html 631352-1-ref.html
-== 632781-verybig.html 632781-ref.html
-== 632781-normalsize.html 632781-ref.html
