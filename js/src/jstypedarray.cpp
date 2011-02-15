@@ -768,7 +768,7 @@ class TypedArrayTemplate
                 cx->destroy<ThisTypeArray>(tarray);
                 return false;
             }
-        } else if (argv[0].isObject()) {
+        } else if (argc > 0 && argv[0].isObject()) {
             int32_t byteOffset = -1;
             int32_t length = -1;
 
