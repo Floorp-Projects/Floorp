@@ -442,19 +442,14 @@ XrayWrapper<Base>::resolveOwnProperty(JSContext *cx, JSObject *wrapper, jsid id,
     JSObject *holder = GetHolder(wrapper);
     JSObject *expando = GetExpandoObject(holder);
     if (expando) {
-        if (!JS_GetPropertyDescriptorById(cx, expando, id, 0, desc)) {
+        if (!JS_GetPropertyDescriptorById(cx, expando, id,
+                                          (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
+                                          desc)) {
             return false;
         }
-        if (desc->obj) {
-            return true;
-        }
-    }
 
-    if (!JS_GetPropertyDescriptorById(cx, holder, id, 0, desc)) {
-        return false;
-    }
-    if (desc->obj) {
-        return true;
+        if (desc->obj)
+            return true;
     }
 
     JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
