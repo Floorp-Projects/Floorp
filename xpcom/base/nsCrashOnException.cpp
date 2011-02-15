@@ -36,10 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _MSC_VER
-#error This file only makes sense on Windows.
-#endif
-
 #include "nsCrashOnException.h"
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
@@ -65,10 +61,10 @@ XPCOM_API(LRESULT)
 CallWindowProcCrashProtected(WNDPROC wndProc, HWND hWnd, UINT msg,
                             WPARAM wParam, LPARAM lParam)
 {
-  __try {
+  MOZ_SEH_TRY {
     return wndProc(hWnd, msg, wParam, lParam);
   }
-  __except(ReportException(GetExceptionInformation())) {
+  MOZ_SEH_EXCEPT(ReportException(GetExceptionInformation())) {
     ::TerminateProcess(::GetCurrentProcess(), 253);
   }
   return 0; // not reached

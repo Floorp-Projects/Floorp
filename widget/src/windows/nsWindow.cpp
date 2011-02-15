@@ -228,11 +228,7 @@
 #endif
 
 #include "mozilla/FunctionTimer.h"
-
-#ifdef _MSC_VER
 #include "nsCrashOnException.h"
-#endif
-
 #include "nsIXULRuntime.h"
 
 using namespace mozilla::widget;
@@ -4520,11 +4516,7 @@ DisplaySystemMenu(HWND hWnd, nsSizeMode sizeMode, PRBool isRtl, PRInt32 x, PRInt
 // and http://msdn.microsoft.com/en-us/library/ms633573%28VS.85%29.aspx
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-#ifdef _MSC_VER
   return mozilla::CallWindowProcCrashProtected(WindowProcInternal, hWnd, msg, wParam, lParam);
-#else
-  return WindowProcInternal(hWnd, msg, wParam, lParam);
-#endif
 }
 
 LRESULT CALLBACK nsWindow::WindowProcInternal(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
