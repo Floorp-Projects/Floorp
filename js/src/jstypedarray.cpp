@@ -936,7 +936,7 @@ class TypedArrayTemplate
         }
 
         // first arg must be either a typed array or a JS array
-        if (!argv[0].isObject()) {
+        if (argc == 0 || !argv[0].isObject()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_TYPED_ARRAY_BAD_ARGS);
             return false;
