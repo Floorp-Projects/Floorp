@@ -35,25 +35,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+let testWindow = null;
+
 function test() {
   waitForExplicitFinish();
 
-  let tab = gBrowser.addTab();
-  gBrowser.selectedTab = tab;
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-
+  testWindow = OpenBrowserWindow();
+  testWindow.addEventListener("load", function() {
     ok(true, "Load listener called");
-    waitForFocus(onFocus, content);
-  }, true);
 
-  content.location = "data:text/html,<h1>A Page</h1>";
+    executeSoon(function() {
+      let selectedBrowser = testWindow.gBrowser.selectedBrowser;
+      selectedBrowser.addEventListener("pageshow", function() {
+        selectedBrowser.removeEventListener("pageshow", arguments.callee,
+                                            false);
+        ok(true, "pageshow listener called");
+        waitForFocus(onFocus, testWindow.content);
+      }, true);
+      testWindow.content.location = "data:text/html,<h1>A Page</h1>";
+    });
+  }, false);
 }
 
 function onFocus() {
   EventUtils.synthesizeKey("/", {});
   ok(gFindBarInitialized, "find bar is now initialized");
-  gFindBar.close();
-  gBrowser.removeCurrentTab();
+  testWindow.gFindBar.close();
+  testWindow.close();
   finish();
 }
