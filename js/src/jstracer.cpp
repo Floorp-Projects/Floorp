@@ -13740,7 +13740,6 @@ TraceRecorder::createThis(JSObject& ctor, LIns* ctor_ins, LIns** thisobj_insp)
 
     // Given the above conditions, ctor.prototype is a non-configurable data
     // property with a slot.
-    jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
     const Shape *shape = LookupInterpretedFunctionPrototype(cx, &ctor);
     if (!shape)
         RETURN_ERROR("new f: error resolving f.prototype");

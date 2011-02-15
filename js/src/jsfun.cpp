@@ -1707,9 +1707,11 @@ fun_enumerate(JSContext *cx, JSObject *obj)
 static JSObject *
 ResolveInterpretedFunctionPrototype(JSContext *cx, JSObject *obj)
 {
+#ifdef DEBUG
     JSFunction *fun = obj->getFunctionPrivate();
     JS_ASSERT(fun->isInterpreted());
     JS_ASSERT(!fun->isFunctionPrototype());
+#endif
 
     /*
      * Assert that fun is not a compiler-created function object, which
@@ -2645,10 +2647,12 @@ IsBuiltinFunctionConstructor(JSFunction *fun)
 const Shape *
 LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj)
 {
+#ifdef DEBUG
     JSFunction *fun = funobj->getFunctionPrivate();
     JS_ASSERT(fun->isInterpreted());
     JS_ASSERT(!fun->isFunctionPrototype());
     JS_ASSERT(!funobj->isBoundFunction());
+#endif
 
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
     const Shape *shape = funobj->nativeLookup(id);
