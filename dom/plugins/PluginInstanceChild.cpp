@@ -50,6 +50,7 @@
 #endif
 #ifdef XP_WIN
 #include "mozilla/gfx/SharedDIBSurface.h"
+#include "nsCrashOnException.h"
 
 using mozilla::gfx::SharedDIBSurface;
 #endif
@@ -77,10 +78,6 @@ using namespace mozilla::plugins;
 #endif
 
 #include "nsWindowsDllInterceptor.h"
-
-#ifdef _MSC_VER
-#include "nsCrashOnException.h"
-#endif
 
 typedef BOOL (WINAPI *User32TrackPopupMenu)(HMENU hMenu,
                                             UINT uFlags,
@@ -1145,11 +1142,7 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
                                       WPARAM wParam,
                                       LPARAM lParam)
 {
-#ifdef _MSC_VER
   return mozilla::CallWindowProcCrashProtected(PluginWindowProcInternal, hWnd, message, wParam, lParam);
-#else
-  return PluginWindowProcInternal(hWnd, message, wParam, lParam);
-#endif
 }
 
 // static
