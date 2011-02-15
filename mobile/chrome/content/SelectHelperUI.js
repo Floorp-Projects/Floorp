@@ -11,14 +11,7 @@ var SelectHelperUI = {
     return this._panel = document.getElementById("select-container");
   },
 
-  get _textbox() {
-    delete this._textbox;
-    return this._textbox = document.getElementById("select-helper-textbox");
-  },
-
   show: function selectHelperShow(aList) {
-    this.showFilter = false;
-    this._textbox.blur();
     this._list = aList;
 
     this._container = document.getElementById("select-list");
@@ -69,17 +62,6 @@ var SelectHelperUI = {
     this._panel.addEventListener("overflow", this, true);
   },
 
-  _showFilter: false,
-  get showFilter() {
-    return this._showFilter;
-  },
-
-  set showFilter(val) {
-    this._showFilter = val;
-    if (!this._panel.hidden)
-      this._textbox.hidden = !val;
-  },
-
   dock: function selectHelperDock(aContainer) {
     aContainer.insertBefore(this._panel, aContainer.lastChild);
     this.resize();
@@ -101,7 +83,6 @@ var SelectHelperUI = {
     this._list = null;
     this._selectedIndexes = null;
     this._panel.height = "";
-    this._textbox.value = "";
   },
 
   resize: function selectHelperResize() {
@@ -112,7 +93,6 @@ var SelectHelperUI = {
     if (!this._list)
       return;
 
-    this.showFilter = false;
     this._container.removeEventListener("click", this, false);
     this._panel.removeEventListener("overflow", this, true);
 
@@ -124,16 +104,6 @@ var SelectHelperUI = {
       BrowserUI.popPopup(this);
 
     this.reset();
-  },
-
-  filter: function selectHelperFilter(aValue) {
-    let reg = new RegExp(aValue, "gi");
-    let options = this._container.childNodes;
-    for (let i = 0; i < options.length; i++) {
-      let option = options[i];
-      option.getAttribute("label").match(reg) ? option.removeAttribute("filtered")
-                                              : option.setAttribute("filtered", "true");
-    }
   },
 
   unselectAll: function selectHelperUnselectAll() {
@@ -251,10 +221,6 @@ var SelectHelperUI = {
           }
           this.onSelect(item.optionIndex, item.selected, !this._list.multiple);
         }
-        break;
-      case "overflow":
-        if (!this._textbox.value)
-          this.showFilter = true;
         break;
     }
   },

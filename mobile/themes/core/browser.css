@@ -1333,7 +1333,6 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 #content-navigator:not([type="form"]) > #select-container,
-#content-navigator:not([type="form"]) > #select-helper-textbox,
 #content-navigator:not([type="find"]) > #find-helper-textbox {
   display: none;
 }
@@ -1398,7 +1397,6 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 #form-helper-autofill,
-#select-helper-textbox,
 #find-helper-textbox {
   border: none;
   margin: @margin_small@;
@@ -1486,9 +1484,6 @@ pageaction:not([image]) > hbox >.pageaction-image {
   -moz-box-align: center;
 }
 
-.chrome-select-option[filtered="true"] {
-  display: none;
-}
 
 .chrome-select-option[selected="true"] {
   background-color: #8db8d8;
