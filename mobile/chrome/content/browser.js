@@ -2439,13 +2439,11 @@ Tab.prototype = {
     let oldScale = browser.scale;
     let newScale = this.clampZoomLevel(oldScale * aNewWidth / aOldWidth);
     let scaleRatio = newScale / oldScale;
-  
-    // Recalculate whether the visible area is actually in bounds
-    let view = browser.getRootView();
-    view.scrollBy(0,0);
 
+    let view = browser.getRootView();
     let pos = view.getPosition();
     browser.fuzzyZoom(newScale, pos.x * scaleRatio, pos.y * scaleRatio);
+    browser.finishFuzzyZoom();
   },
 
   startLoading: function startLoading() {
@@ -2766,17 +2764,17 @@ var ViewableAreaObserver = {
     let startup = !oldHeight && !oldWidth;
     for (let i = Browser.tabs.length - 1; i >= 0; i--) {
       let tab = Browser.tabs[i];
-      tab.updateViewportSize();
-      
-      // Don't bother updating the zoom level on startup
-      if (!startup)
-        tab.updateDefaultZoomLevel();
+      let oldContentWindowWidth = tab.browser.contentWindowWidth;
+      tab.updateViewportSize(); // contentWindowWidth may change here.
 
-      // If the viewport width is still the same, the page layout has not
-      // changed, so we can keep keep the same content on-screen.
-      if (tab.browser.contentWindowWidth == oldWidth) {
-        tab.restoreViewportPosition(oldWidth, newWidth);
-        tab.browser.finishFuzzyZoom();
+      // Don't bother updating the zoom level on startup
+      if (!startup) {
+        // If the viewport width is still the same, the page layout has not
+        // changed, so we can keep keep the same content on-screen.
+        if (tab.browser.contentWindowWidth == oldContentWindowWidth)
+          tab.restoreViewportPosition(oldWidth, newWidth);
+
+        tab.updateDefaultZoomLevel();
       }
     }
 
