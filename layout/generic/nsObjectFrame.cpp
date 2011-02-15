@@ -750,6 +750,12 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     return NS_OK;       //XXX why OK? MMP
   }
 
+  PRBool needsWidget = !aViewOnly;
+  PRBool canCreateWidget = !nsIWidget::UsePuppetWidgets();
+  if (needsWidget && !canCreateWidget) {
+    NS_WARNING("Can't use native widgets, and can't hand a plugins a PuppetWidget");
+  }
+
   nsIViewManager* viewMan = view->GetViewManager();
   // mark the view as hidden since we don't know the (x,y) until Paint
   // XXX is the above comment correct?
@@ -775,7 +781,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     return NS_ERROR_FAILURE;
   }
 
-  if (!aViewOnly && !mWidget) {
+  if (needsWidget && !mWidget && canCreateWidget) {
     // XXX this breaks plugins in popups ... do we care?
     nsIWidget* parentWidget =
       rpc->PresShell()->FrameManager()->GetRootFrame()->GetNearestWidget();
@@ -870,7 +876,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     viewMan->SetViewVisibility(view, nsViewVisibility_kShow);
   }
 
-  return NS_OK;
+  return (needsWidget && !canCreateWidget) ? NS_ERROR_NOT_AVAILABLE : NS_OK;
 }
 
 #define EMBED_DEF_WIDTH 240
