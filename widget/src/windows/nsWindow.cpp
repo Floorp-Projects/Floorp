@@ -1230,6 +1230,13 @@ NS_METHOD nsWindow::Show(PRBool bState)
   // SetWindowPos would get the correct answer.
   mIsVisible = bState;
 
+  // We may have cached an out of date visible state. This can happen
+  // when session restore sets the full screen mode.
+  if (mIsVisible)
+    mOldStyle |= WS_VISIBLE;
+  else
+    mOldStyle &= ~WS_VISIBLE;
+
   if (!mIsVisible && wasVisible) {
       ClearCachedResources();
   }
