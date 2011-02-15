@@ -1692,10 +1692,7 @@ class TraceRecorder
 #define TRACE_2(x,a,b)          TRACE_ARGS(x, (a, b))
 
 extern JS_REQUIRES_STACK MonitorResult
-MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount);
-
-extern JS_REQUIRES_STACK MonitorResult
-ProfileLoopEdge(JSContext* cx, uintN& inlineCallCount);
+MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, JSInterpMode interpMode);
 
 extern JS_REQUIRES_STACK TracePointAction
 RecordTracePoint(JSContext*, uintN& inlineCallCount, bool* blacklist);
