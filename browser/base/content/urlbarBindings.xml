@@ -902,8 +902,10 @@
         // Calling updateProgress can sometimes cause this notification to be
         // removed in the middle of refreshing the notification panel which
         // makes the panel get refreshed again. Just initialise to the
-        // undetermined state.
+        // undetermined state and then schedule a proper check at the next
+        // opportunity
         this.setProgress(0, -1);
+        setTimeout(this.updateProgress.bind(this), 0);
       ]]></constructor>
 
       <destructor><![CDATA[
