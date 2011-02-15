@@ -2314,6 +2314,9 @@ TraceRecorder::TraceRecorder(JSContext* cx, TraceMonitor *tm,
     JS_ASSERT(globalObj->hasOwnShape());
     JS_ASSERT(cx->regs->pc == (jsbytecode*)fragment->ip);
 
+    if (TRACE_PROFILER(cx))
+        AbortProfiling(cx);
+
     JS_ASSERT(JS_THREAD_DATA(cx)->onTraceCompartment == NULL);
     JS_ASSERT(JS_THREAD_DATA(cx)->profilingCompartment == NULL);
     JS_ASSERT(JS_THREAD_DATA(cx)->recordingCompartment == NULL);
@@ -5628,7 +5631,6 @@ TraceRecorder::startRecorder(JSContext* cx, TraceMonitor *tm, VMSideExit* anchor
                              JSScript* outerScript, jsbytecode* outerPC, uint32 outerArgc,
                              bool speculate)
 {
-    JS_ASSERT(!tm->profile);
     JS_ASSERT(!tm->needFlush);
     JS_ASSERT_IF(cx->fp()->hasImacropc(), f->root != f);
 
@@ -6494,6 +6496,9 @@ TracerState::TracerState(JSContext* cx, TraceMonitor* tm, TreeFragment* f,
     prev = tm->tracerState;
     tm->tracerState = this;
 
+    if (TRACE_PROFILER(cx))
+        AbortProfiling(cx);
+
     JS_ASSERT(JS_THREAD_DATA(cx)->onTraceCompartment == NULL);
     JS_ASSERT(JS_THREAD_DATA(cx)->recordingCompartment == NULL ||
               JS_THREAD_DATA(cx)->recordingCompartment == cx->compartment);
@@ -7086,8 +7091,6 @@ RecordLoopEdge(JSContext* cx, TraceMonitor* tm, uintN& inlineCallCount)
     TraceVisStateObj tvso(cx, S_MONITOR);
 #endif
 
-    JS_ASSERT(!tm->profile);
-
     /* Is the recorder currently active? */
     if (tm->recorder) {
         tm->recorder->assertInsideLoop();
@@ -7296,6 +7299,8 @@ TraceRecorder::monitorRecording(JSOp op)
 {
     JS_ASSERT(!addPropShapeBefore);
 
+    JS_ASSERT(traceMonitor == &cx->compartment->traceMonitor);
+    
     TraceMonitor &localtm = *traceMonitor;
     debug_only_stmt( JSContext *localcx = cx; )
     assertInsideLoop();
@@ -17020,7 +17025,6 @@ LookupLoopProfile(TraceMonitor *tm, jsbytecode *pc)
 void
 LoopProfile::stopProfiling(JSContext *cx)
 {
-    JS_ASSERT(JS_THREAD_DATA(cx)->onTraceCompartment == NULL);
     JS_ASSERT(JS_THREAD_DATA(cx)->recordingCompartment == NULL);
     JS_THREAD_DATA(cx)->profilingCompartment = NULL;
 
@@ -17039,10 +17043,14 @@ MonitorTracePoint(JSContext *cx, uintN& inlineCallCount, bool* blacklist,
     *blacklist = false;
 
     /*
-     * We may have re-entered Interpret while profiling. We don't profile
-     * the nested invocation.
+     * This is the only place where we check for re-entering the profiler.
+     * The assumption is that MonitorTracePoint is the only place where we
+     * start profiling. When we do so, we enter an interpreter frame with
+     * JSINTERP_PROFILE mode. All other entry points to the profiler check
+     * that the interpreter mode is JSINTERP_PROFILE. If it isn't, they
+     * don't profile.
      */
-    if (tm->profile)
+    if (TRACE_PROFILER(cx))
         return TPA_Nothing;
 
     jsbytecode* pc = cx->regs->pc;
@@ -17072,7 +17080,6 @@ MonitorTracePoint(JSContext *cx, uintN& inlineCallCount, bool* blacklist,
     tm->profile = prof;
 
     JS_ASSERT(JS_THREAD_DATA(cx)->profilingCompartment == NULL);
-    JS_ASSERT(JS_THREAD_DATA(cx)->onTraceCompartment == NULL);
     JS_ASSERT(JS_THREAD_DATA(cx)->recordingCompartment == NULL);
     JS_THREAD_DATA(cx)->profilingCompartment = cx->compartment;
 
@@ -17108,6 +17115,9 @@ LoopProfile::ProfileAction
 LoopProfile::profileOperation(JSContext* cx, JSOp op)
 {
     TraceMonitor* tm = JS_TRACE_MONITOR_FROM_CONTEXT(cx);
+
+    JS_ASSERT(tm == traceMonitor);
+    JS_ASSERT(&entryScript->compartment->traceMonitor == tm);
 
     if (profiled) {
         stopProfiling(cx);
@@ -17465,10 +17475,10 @@ LoopProfile::decide(JSContext *cx)
 }
 
 JS_REQUIRES_STACK MonitorResult
-MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
+MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, JSInterpMode interpMode)
 {
     TraceMonitor *tm = JS_TRACE_MONITOR_FROM_CONTEXT(cx);
-    if (tm->profile)
+    if (interpMode == JSINTERP_PROFILE && tm->profile)
         return tm->profile->profileLoopEdge(cx, inlineCallCount);
     else
         return RecordLoopEdge(cx, tm, inlineCallCount);
@@ -17490,7 +17500,7 @@ AbortProfiling(JSContext *cx)
 #else /* JS_METHODJIT */
 
 JS_REQUIRES_STACK MonitorResult
-MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
+MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, JSInterpMode interpMode)
 {
     TraceMonitor *tm = JS_TRACE_MONITOR_FROM_CONTEXT(cx);
     return RecordLoopEdge(cx, tm, inlineCallCount);
