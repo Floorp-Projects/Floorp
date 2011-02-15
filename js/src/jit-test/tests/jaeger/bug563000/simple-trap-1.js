@@ -1,3 +1,4 @@
+// |jit-test| debug
 setDebug(true);
 var x = "failure";
 function main() { x = "success"; }

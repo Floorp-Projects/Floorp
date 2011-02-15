@@ -1,3 +1,4 @@
+// |jit-test| debug
 var result = "unset";
 function main() {
   result = "failure";

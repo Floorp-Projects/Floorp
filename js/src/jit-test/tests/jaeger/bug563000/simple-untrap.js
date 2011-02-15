@@ -1,3 +1,4 @@
+// |jit-test| debug
 setDebug(true);
 var x = "notset";
 function main() { x = "success"; }

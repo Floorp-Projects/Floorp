@@ -145,6 +145,9 @@ CompartmentHasLiveScripts(JSCompartment *comp)
 JS_FRIEND_API(JSBool)
 JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
 {
+    if (comp->debugMode == debug)
+        return JS_TRUE;
+
     // This should only be called when no scripts are live. It would even be
     // incorrect to discard just the non-live scripts' JITScripts because they
     // might share ICs with live scripts (bug 632343).
