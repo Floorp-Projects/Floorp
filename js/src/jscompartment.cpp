@@ -180,7 +180,8 @@ JSCompartment::arenaListsAreEmpty()
 static bool
 IsCrossCompartmentWrapper(JSObject *wrapper)
 {
-    return !!(JSWrapper::wrapperHandler(wrapper)->flags() & JSWrapper::CROSS_COMPARTMENT);
+    return wrapper->isWrapper() &&
+           !!(JSWrapper::wrapperHandler(wrapper)->flags() & JSWrapper::CROSS_COMPARTMENT);
 }
 
 bool
