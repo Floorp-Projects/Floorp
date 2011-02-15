@@ -465,6 +465,9 @@ _TEST_FILES2 = \
 		bug466080.sjs \
 		test_bug625722.html \
 		test_bug631615.html \
+		test_bug558431.html \
+		file_bug558431.html \
+		file_bug558431.html^headers^ \
 		$(NULL)
 
 # This test fails on the Mac for some reason
