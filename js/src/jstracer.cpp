@@ -2314,8 +2314,10 @@ TraceRecorder::TraceRecorder(JSContext* cx, TraceMonitor *tm,
     JS_ASSERT(globalObj->hasOwnShape());
     JS_ASSERT(cx->regs->pc == (jsbytecode*)fragment->ip);
 
+#ifdef JS_METHODJIT
     if (TRACE_PROFILER(cx))
         AbortProfiling(cx);
+#endif
 
     JS_ASSERT(JS_THREAD_DATA(cx)->onTraceCompartment == NULL);
     JS_ASSERT(JS_THREAD_DATA(cx)->profilingCompartment == NULL);
@@ -6496,8 +6498,10 @@ TracerState::TracerState(JSContext* cx, TraceMonitor* tm, TreeFragment* f,
     prev = tm->tracerState;
     tm->tracerState = this;
 
+#ifdef JS_METH
     if (TRACE_PROFILER(cx))
         AbortProfiling(cx);
+#endif
 
     JS_ASSERT(JS_THREAD_DATA(cx)->onTraceCompartment == NULL);
     JS_ASSERT(JS_THREAD_DATA(cx)->recordingCompartment == NULL ||
