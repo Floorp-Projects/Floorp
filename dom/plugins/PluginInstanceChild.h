@@ -390,10 +390,12 @@ private:
 #endif // defined(OS_WIN)
 #if defined(OS_MACOSX)
 private:
+#if defined(__i386__)
     NPEventModel          mEventModel;
-    NPDrawingModel        mDrawingModel;
+#endif
     CGColorSpaceRef       mShColorSpace;
     CGContextRef          mShContext;
+    int16_t               mDrawingModel;
     nsCARenderer          mCARenderer;
 
 public:
@@ -401,8 +403,9 @@ public:
         return mCurrentEvent;
     }
 
-    NPEventModel   EventModel() { return mEventModel; }
-    NPDrawingModel DrawingModel() { return mDrawingModel; }
+#if defined(__i386__)
+    NPEventModel EventModel() { return mEventModel; }
+#endif
 
 private:
     const NPCocoaEvent   *mCurrentEvent;
