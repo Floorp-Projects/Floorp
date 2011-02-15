@@ -226,6 +226,14 @@ AudioParent::RecvShutdown()
   return true;
 }
 
+bool
+AudioParent::SendDrainDone()
+{
+  if (mIPCOpen)
+    return PAudioParent::SendDrainDone();
+  return true;
+}
+
 AudioParent::AudioParent(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat)
   : mIPCOpen(PR_TRUE)
 {
