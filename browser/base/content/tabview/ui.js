@@ -479,6 +479,8 @@ let UI = {
     let event = document.createEvent("Events");
     event.initEvent("tabviewshown", true, false);
 
+    Storage.saveVisibilityData(gWindow, "true");
+
     // Close the active group if it was empty. This will happen when the
     // user returns to Panorama after looking at an app tab, having
     // closed all other tabs. (If the user is looking at an orphan tab, then
@@ -523,8 +525,6 @@ let UI = {
 
       TabItems.resumePainting();
     }
-
-    Storage.saveVisibilityData(gWindow, "true");
   },
 
   // ----------
@@ -558,11 +558,11 @@ let UI = {
 #ifdef XP_MACOSX
     this.setTitlebarColors(false);
 #endif
+    Storage.saveVisibilityData(gWindow, "false");
+
     let event = document.createEvent("Events");
     event.initEvent("tabviewhidden", true, false);
     dispatchEvent(event);
-
-    Storage.saveVisibilityData(gWindow, "false");
   },
 
 #ifdef XP_MACOSX
