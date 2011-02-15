@@ -2244,8 +2244,8 @@ nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType)
   HANDLE theme = GetTheme(aWidgetType);
   // For the classic theme we don't really have a way of knowing
   if (!theme) {
-    // menu backgrounds which can't be themed are opaque
-    if (aWidgetType == NS_THEME_MENUPOPUP) {
+    // menu backgrounds and tooltips which can't be themed are opaque
+    if (aWidgetType == NS_THEME_MENUPOPUP || aWidgetType == NS_THEME_TOOLTIP) {
       return eOpaque;
     }
     return eUnknownTransparency;
