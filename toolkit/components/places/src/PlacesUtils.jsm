@@ -2049,11 +2049,15 @@ var PlacesUtils = {
    *        nsIURI or spec of the page.
    * @param aCallback
    *        Function to be called when done.
-   *        The function will receive an array of itemIds associated to aURI.
+   *        The function will receive an array of itemIds associated to aURI and
+   *        aURI itself.
    * @param aScope
    *        Scope for the callback.
    *
-   * @note Children of live bookmarks folders are excluded.
+   * @return A mozIStoragePendingStatement that can be used to cancel the request.
+   *
+   * @note Children of live bookmarks folders are excluded. The callback function is
+   *       not invoked if the request is cancelled or hits an error.
    */
   asyncGetBookmarkIds: function PU_asyncGetBookmarkIds(aURI, aCallback, aScope)
   {
@@ -2078,7 +2082,7 @@ var PlacesUtils = {
     let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
     this._asyncGetBookmarksStmt.params.url = url;
     this._asyncGetBookmarksStmt.params.name = this.LMANNO_FEEDURI;
-    this._asyncGetBookmarksStmt.executeAsync({
+    return this._asyncGetBookmarksStmt.executeAsync({
       _itemIds: [],
       handleResult: function(aResultSet) {
         let row, haveMatches = false;
@@ -2093,7 +2097,7 @@ var PlacesUtils = {
       handleCompletion: function(aReason)
       {
         if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-          aCallback.apply(aScope, [this._itemIds]);
+          aCallback.apply(aScope, [this._itemIds, aURI]);
         }
       }
     });
