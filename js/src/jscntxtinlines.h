@@ -327,7 +327,11 @@ StackSpace::getCallFrame(JSContext *cx, Value *firstUnused, uintN nactual,
     uintN ncopy = 2 + nformal;
     if (JS_UNLIKELY(!check(*this, cx, firstUnused, ncopy + nvals)))
         return NULL;
-    memcpy(firstUnused, firstUnused - (2 + nactual), ncopy * sizeof(Value));
+
+    Value *dst = firstUnused;
+    Value *src = firstUnused - (2 + nactual);
+    PodCopy(dst, src, ncopy);
+    Debug_SetValueRangeToCrashOnTouch(src, ncopy);
     return reinterpret_cast<JSStackFrame *>(firstUnused + ncopy);
 }
 

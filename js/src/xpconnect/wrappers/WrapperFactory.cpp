@@ -184,11 +184,12 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
     if (!wn->GetClassInfo())
         return DoubleWrap(cx, obj, flags);
 
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, obj))
+        return nsnull;
+    XPCCallContext ccx(JS_CALLER, cx, obj);
+
     {
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, obj))
-            return nsnull;
-        XPCCallContext ccx(JS_CALLER, cx, obj);
         if (NATIVE_HAS_FLAG(&ccx, WantPreCreate)) {
             // We have a precreate hook. This object might enforce that we only
             // ever create JS object for it.
@@ -211,16 +212,12 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
         }
     }
 
-    // The object we're looking at might allow us to create a new wrapped
-    // native in the new scope. Try it and continue wrapping on the
-    // possibly-new object.
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, scope))
-        return nsnull;
-
     // NB: Passing a holder here inhibits slim wrappers under
     // WrapNativeToJSVal.
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+
+    // This public WrapNativeToJSVal API enters the compartment of 'scope'
+    // so we don't have to.
     jsval v;
     nsresult rv =
         nsXPConnect::FastGetXPConnect()->WrapNativeToJSVal(cx, scope, wn->Native(), nsnull,

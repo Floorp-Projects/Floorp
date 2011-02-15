@@ -1322,6 +1322,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'm':
             JS_ToggleOptions(cx, JSOPTION_METHODJIT);
             break;
+        case 'p':
+            JS_ToggleOptions(cx, JSOPTION_PROFILING);
+            break;
         default:
             return usage();
         }

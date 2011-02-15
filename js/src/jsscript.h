@@ -373,6 +373,8 @@ struct JSScript {
   private:
     uint16          version;    /* JS version under which script was compiled */
 
+    size_t          callCount_; /* Number of times the script has been called. */
+
   public:
     uint16          nfixed;     /* number of slots besides stack operands in
                                    slot array */
@@ -472,6 +474,9 @@ struct JSScript {
     js::mjit::JITScript *getJIT(bool constructing) {
         return constructing ? jitCtor : jitNormal;
     }
+
+    size_t callCount() const  { return callCount_; }
+    size_t incCallCount() { return ++callCount_; }
 
     JITScriptStatus getJITStatus(bool constructing) {
         void *addr = constructing ? jitArityCheckCtor : jitArityCheckNormal;
@@ -649,7 +654,7 @@ js_SweepScriptFilenames(JSRuntime *rt);
 extern JS_FRIEND_API(void)
 js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun);
 
-extern JS_FRIEND_API(void)
+extern void
 js_CallDestroyScriptHook(JSContext *cx, JSScript *script);
 
 /*
@@ -659,12 +664,17 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script);
 extern void
 js_DestroyScript(JSContext *cx, JSScript *script);
 
-/*
- * If data is not null, it indicates that the script could been accessed only
- * from that thread.
- */
 extern void
 js_DestroyScriptFromGC(JSContext *cx, JSScript *script);
+
+/*
+ * Script objects may be cached and reused, in which case their JSD-visible
+ * lifetimes may be shorter than their actual lifetimes. Destroy one such
+ * script for real as part of a GC pass. From JSD's point of view, the script
+ * is already dead.
+ */
+extern void
+js_DestroyCachedScript(JSContext *cx, JSScript *script);
 
 extern void
 js_TraceScript(JSTracer *trc, JSScript *script);

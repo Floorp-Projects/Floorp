@@ -482,6 +482,13 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool                         marked;
     
+    typedef js::HashMap<jsbytecode*,
+                        size_t,
+                        js::DefaultHasher<jsbytecode*>,
+                        js::SystemAllocPolicy> BackEdgeMap;
+
+    BackEdgeMap                  backEdgeTable;
+
   public:
     js::MathCache *getMathCache(JSContext *cx) {
         return mathCache ? mathCache : allocMathCache(cx);
@@ -489,6 +496,9 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool isMarked() { return marked; }
     void clearMark() { marked = false; }
+
+    size_t backEdgeCount(jsbytecode *pc) const;
+    size_t incBackEdgeCount(jsbytecode *pc);
 };
 
 #define JS_SCRIPTS_TO_GC(cx)    ((cx)->compartment->scriptsToGC)

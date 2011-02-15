@@ -565,7 +565,7 @@ JS_ClearInterrupt(JSRuntime *rt, JSInterruptHook *hoop, void **closurep)
 
 struct JSWatchPoint {
     JSCList             links;
-    JSObject            *object;        /* weak link, see js_FinalizeObject */
+    JSObject            *object;        /* weak link, see js_SweepWatchPoints */
     const Shape         *shape;
     StrictPropertyOp    setter;
     JSWatchPointHandler handler;
@@ -711,45 +711,110 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
          &wp->links != &rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
         const Shape *shape = wp->shape;
-        if (wp->object == obj && SHAPE_USERID(shape) == id &&
-            !(wp->flags & JSWP_HELD)) {
+        if (wp->object == obj && SHAPE_USERID(shape) == id && !(wp->flags & JSWP_HELD)) {
             wp->flags |= JSWP_HELD;
             DBG_UNLOCK(rt);
 
             jsid propid = shape->id;
+            shape = obj->nativeLookup(propid);
+            JS_ASSERT(IsWatchedProperty(cx, shape));
             jsid userid = SHAPE_USERID(shape);
 
-            /* NB: wp is held, so we can safely dereference it still. */
-            if (!wp->handler(cx, obj, propid,
-                             obj->containsSlot(shape->slot)
-                             ? Jsvalify(obj->nativeGetSlot(shape->slot))
-                             : JSVAL_VOID,
-                             Jsvalify(vp), wp->closure)) {
-                DBG_LOCK(rt);
-                DropWatchPointAndUnlock(cx, wp, JSWP_HELD);
-                return JS_FALSE;
+            /* Determine the property's old value. */
+            bool ok;
+            uint32 slot = shape->slot;
+            Value old = obj->containsSlot(slot) ? obj->nativeGetSlot(slot) : UndefinedValue();
+            const Shape *needMethodSlotWrite = NULL;
+            if (shape->isMethod()) {
+                /*
+                 * We get here in two cases: (1) the existing watched property
+                 * is a method; or (2) the watched property was deleted and is
+                 * now in the middle of being re-added via JSOP_SETMETHOD. In
+                 * both cases we must trip the method read barrier in order to
+                 * avoid passing an uncloned function object to the handler.
+                 *
+                 * Case 2 is especially hairy. js_watch_set, uniquely, gets
+                 * called in the middle of creating a method property, after
+                 * shape is in obj but before the slot has been set. So in this
+                 * case we must finish initializing the half-finished method
+                 * property before triggering the method read barrier.
+                 *
+                 * Bonus weirdness: because this changes obj's shape,
+                 * js_NativeSet (which is our caller) will not write to the
+                 * slot, as it will appear the property was deleted and a new
+                 * property added. We must write the slot ourselves -- however
+                 * we must do it after calling the watchpoint handler. So set
+                 * needMethodSlotWrite here and use it to write to the slot
+                 * below, if the handler does not tinker with the property
+                 * further.
+                 */
+                JS_ASSERT(!wp->setter);
+                Value method = ObjectValue(shape->methodObject());
+                if (old.isUndefined())
+                    obj->nativeSetSlot(slot, method);
+                ok = obj->methodReadBarrier(cx, *shape, &method);
+                if (!ok)
+                    goto out;
+                wp->shape = shape = needMethodSlotWrite = obj->nativeLookup(propid);
+                JS_ASSERT(shape->isDataDescriptor());
+                JS_ASSERT(!shape->isMethod());
+                if (old.isUndefined())
+                    obj->nativeSetSlot(shape->slot, old);
+                else
+                    old = method;
             }
 
-            /* Handler could have redefined the shape; see bug 624050. */
-            shape = wp->shape;
+            {
+                Conditionally<AutoShapeRooter> tvr(needMethodSlotWrite, cx, needMethodSlotWrite);
 
-            /*
-             * Pass the output of the handler to the setter. Security wrappers
-             * prevent any funny business between watchpoints and setters.
-             */
-            JSBool ok = !wp->setter ||
-                        (shape->hasSetterValue()
+                /*
+                 * Call the handler. This invalidates shape, so re-lookup the shape.
+                 * NB: wp is held, so we can safely dereference it still.
+                 */
+                ok = wp->handler(cx, obj, propid, Jsvalify(old), Jsvalify(vp), wp->closure);
+                if (!ok)
+                    goto out;
+                shape = obj->nativeLookup(propid);
+                JS_ASSERT_IF(!shape, !wp->setter);
+
+                if (!shape) {
+                    ok = true;
+                } else if (wp->setter) {
+                    /*
+                     * Pass the output of the handler to the setter. Security wrappers
+                     * prevent any funny business between watchpoints and setters.
+                     */
+                    ok = shape->hasSetterValue()
                          ? ExternalInvoke(cx, ObjectValue(*obj),
                                           ObjectValue(*CastAsObject(wp->setter)),
                                           1, vp, vp)
-                         : CallJSPropertyOpSetter(cx, wp->setter, obj, userid, strict, vp));
+                         : CallJSPropertyOpSetter(cx, wp->setter, obj, userid, strict, vp);
+                } else if (shape == needMethodSlotWrite) {
+                    /* See comment above about needMethodSlotWrite. */
+                    obj->nativeSetSlot(shape->slot, *vp);
+                    ok = true;
+                } else {
+                    /*
+                     * A property with the default setter might be either a method
+                     * or an ordinary function-valued data property subject to the
+                     * method write barrier.
+                     *
+                     * It is not the setter's job to call methodWriteBarrier,
+                     * but js_watch_set must do so, because the caller will be
+                     * fooled into not doing it: shape does *not* have the
+                     * default setter and therefore seems not to be a method.
+                     */
+                    ok = obj->methodWriteBarrier(cx, *shape, *vp) != NULL;
+                }
+            }
 
+        out:
             DBG_LOCK(rt);
             return DropWatchPointAndUnlock(cx, wp, JSWP_HELD) && ok;
         }
     }
     DBG_UNLOCK(rt);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -825,23 +890,23 @@ WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, StrictPropertyOp setter)
     return CastAsStrictPropertyOp(FUN_OBJECT(wrapper));
 }
 
-static bool
-UpdateWatchpointShape(JSContext *cx, JSWatchPoint *wp, const js::Shape *newShape)
+static const Shape *
+UpdateWatchpointShape(JSContext *cx, JSWatchPoint *wp, const Shape *newShape)
 {
     JS_ASSERT_IF(wp->shape, wp->shape->id == newShape->id);
     JS_ASSERT(!IsWatchedProperty(cx, newShape));
 
     /* Create a watching setter we can substitute for the new shape's setter. */
-    js::StrictPropertyOp watchingSetter = 
+    StrictPropertyOp watchingSetter =
         WrapWatchedSetter(cx, newShape->id, newShape->attributes(), newShape->setter());
     if (!watchingSetter)
-        return false;
+        return NULL;
 
     /*
      * Save the shape's setter; we don't know whether js_ChangeNativePropertyAttrs will
      * return a new shape, or mutate this one.
      */
-    js::StrictPropertyOp originalSetter = newShape->setter();
+    StrictPropertyOp originalSetter = newShape->setter();
 
     /*
      * Drop the watching setter into the object, in place of newShape. Note that a single
@@ -849,21 +914,21 @@ UpdateWatchpointShape(JSContext *cx, JSWatchPoint *wp, const js::Shape *newShape
      * wrap all (JSPropertyOp, not JSObject *) setters with js_watch_set, so shapes that
      * differ only in their setter may all get wrapped to the same shape.
      */
-    const js::Shape *watchingShape = 
+    const Shape *watchingShape = 
         js_ChangeNativePropertyAttrs(cx, wp->object, newShape, 0, newShape->attributes(),
                                      newShape->getter(), watchingSetter);
     if (!watchingShape)
-        return false;
+        return NULL;
 
     /* Update the watchpoint with the new shape and its original setter. */
     wp->setter = originalSetter;
     wp->shape = watchingShape;
 
-    return true;
+    return watchingShape;
 }
 
-bool
-js_SlowPathUpdateWatchpointsForShape(JSContext *cx, JSObject *obj, const js::Shape *newShape)
+const Shape *
+js_SlowPathUpdateWatchpointsForShape(JSContext *cx, JSObject *obj, const Shape *newShape)
 {
     /*
      * The watchpoint code uses the normal property-modification functions to install its
@@ -873,11 +938,11 @@ js_SlowPathUpdateWatchpointsForShape(JSContext *cx, JSObject *obj, const js::Sha
      * proceed without interference.
      */
     if (IsWatchedProperty(cx, newShape))
-        return true;
+        return newShape;
 
     JSWatchPoint *wp = FindWatchPoint(cx->runtime, obj, newShape->id);
     if (!wp)
-        return true;
+        return newShape;
 
     return UpdateWatchpointShape(cx, wp, newShape);
 }
@@ -1034,6 +1099,13 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         JS_APPEND_LINK(&wp->links, &rt->watchPointList);
         ++rt->debuggerMutations;
     }
+
+    /*
+     * Ensure that an object with watchpoints never has the same shape as an
+     * object without them, even if the watched properties are deleted.
+     */
+    obj->watchpointOwnShapeChange(cx);
+
     wp->handler = handler;
     wp->closure = reinterpret_cast<JSObject*>(closure);
     DBG_UNLOCK(rt);

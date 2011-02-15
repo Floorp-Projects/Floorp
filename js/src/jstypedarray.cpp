@@ -768,7 +768,7 @@ class TypedArrayTemplate
                 cx->destroy<ThisTypeArray>(tarray);
                 return false;
             }
-        } else if (argv[0].isObject()) {
+        } else if (argc > 0 && argv[0].isObject()) {
             int32_t byteOffset = -1;
             int32_t length = -1;
 
@@ -936,7 +936,7 @@ class TypedArrayTemplate
         }
 
         // first arg must be either a typed array or a JS array
-        if (!argv[0].isObject()) {
+        if (argc == 0 || !argv[0].isObject()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_TYPED_ARRAY_BAD_ARGS);
             return false;

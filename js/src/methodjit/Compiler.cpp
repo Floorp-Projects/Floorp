@@ -645,7 +645,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 #ifdef JS_TRACER
         jitTraceICs[i].loopCounterStart = GetHotloop(cx);
 #endif
-        jitTraceICs[i].loopCounter = jitTraceICs[i].loopCounterStart;
+        jitTraceICs[i].loopCounter = jitTraceICs[i].loopCounterStart
+            - cx->compartment->backEdgeCount(traceICs[i].jumpTarget);
         
         stubCode.patch(traceICs[i].addrLabel, &jitTraceICs[i]);
     }
@@ -4032,7 +4033,8 @@ mjit::Compiler::iter(uintN flags)
     /* Test for active iterator. */
     Address flagsAddr(nireg, offsetof(NativeIterator, flags));
     masm.load32(flagsAddr, T1);
-    Jump activeIterator = masm.branchTest32(Assembler::NonZero, T1, Imm32(JSITER_ACTIVE));
+    Jump activeIterator = masm.branchTest32(Assembler::NonZero, T1,
+                                            Imm32(JSITER_ACTIVE|JSITER_UNREUSABLE));
     stubcc.linkExit(activeIterator, Uses(1));
 
     /* Compare shape of object with iterator. */
@@ -4224,9 +4226,8 @@ mjit::Compiler::iterEnd()
     Address flagAddr(T1, offsetof(NativeIterator, flags));
     masm.loadPtr(flagAddr, T2);
 
-    /* Test for (flags == ENUMERATE | ACTIVE). */
-    Jump notEnumerate = masm.branch32(Assembler::NotEqual, T2,
-                                      Imm32(JSITER_ENUMERATE | JSITER_ACTIVE));
+    /* Test for a normal enumerate iterator. */
+    Jump notEnumerate = masm.branchTest32(Assembler::Zero, T2, Imm32(JSITER_ENUMERATE));
     stubcc.linkExit(notEnumerate, Uses(1));
 
     /* Clear active bit. */
