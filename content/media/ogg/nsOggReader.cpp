@@ -1355,7 +1355,7 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
   // the seek target.
   ogg_int64_t startOffset = aRange.mOffsetStart;
   ogg_int64_t startTime = aRange.mTimeStart;
-  ogg_int64_t startLength = 0;
+  ogg_int64_t startLength = 0; // Length of the page at startOffset.
   ogg_int64_t endOffset = aRange.mOffsetEnd;
   ogg_int64_t endTime = aRange.mTimeEnd;
 
@@ -1363,10 +1363,14 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
   PRInt64 seekLowerBound = NS_MAX(static_cast<PRInt64>(0), aTarget - aFuzz);
   int hops = 0;
   ogg_int64_t previousGuess = -1;
-  int backsteps = 1;
+  int backsteps = 0;
   const int maxBackStep = 10;
   NS_ASSERTION(static_cast<PRUint64>(PAGE_STEP) * pow(2.0, maxBackStep) < PR_INT32_MAX,
                "Backstep calculation must not overflow");
+
+  // Seek via bisection search. Loop until we find the offset where the page
+  // before the offset is before the seek target, and the page after the offset
+  // is after the seek target.
   while (PR_TRUE) {
     ogg_int64_t duration = 0;
     double target = 0;
@@ -1376,12 +1380,12 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
     int skippedBytes = 0;
     ogg_int64_t pageOffset = 0;
     ogg_int64_t pageLength = 0;
-    int backoff = 0;
     ogg_int64_t granuleTime = -1;
-    PRInt64 oldPageOffset = 0;
+    PRBool mustBackoff = PR_FALSE;
 
     // Guess where we should bisect to, based on the bit rate and the time
-    // remaining in the interval.
+    // remaining in the interval. Loop until we can determine the time at
+    // the guess offset.
     while (PR_TRUE) {
   
       // Discard any previously buffered packets/pages.
@@ -1389,33 +1393,49 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
         return NS_ERROR_FAILURE;
       }
 
+      interval = endOffset - startOffset - startLength;
+      if (interval == 0) {
+        // Our interval is empty, we've found the optimal seek point, as the
+        // page at the start offset is before the seek target, and the page
+        // at the end offset is after the seek target.
+        SEEK_LOG(PR_LOG_DEBUG, ("Interval narrowed, terminating bisection."));
+        break;
+      }
+
       // Guess bisection point.
       duration = endTime - startTime;
       target = (double)(seekTarget - startTime) / (double)duration;
-      interval = endOffset - startOffset - startLength;
       guess = startOffset + startLength +
-              (ogg_int64_t)((double)interval * target) - backoff;
+              static_cast<ogg_int64_t>((double)interval * target);
       guess = NS_MIN(guess, endOffset - PAGE_STEP);
+      if (mustBackoff) {
+        // We previously failed to determine the time at the guess offset,
+        // probably because we ran out of data to decode. This usually happens
+        // when we guess very close to the end offset. So reduce the guess
+        // offset using an exponential backoff until we determine the time.
+        SEEK_LOG(PR_LOG_DEBUG, ("Backing off %d bytes, backsteps=%d",
+          static_cast<PRInt32>(PAGE_STEP * pow(2.0, backsteps)), backsteps));
+        guess -= PAGE_STEP * pow(2.0, backsteps);
+        backsteps = NS_MIN(backsteps + 1, maxBackStep);
+        // We reset mustBackoff. If we still need to backoff further, it will
+        // be set to PR_TRUE again.
+        mustBackoff = PR_FALSE;
+      } else {
+        backsteps = 0;
+      }
       guess = NS_MAX(guess, startOffset + startLength);
 
-      if (interval == 0 || guess == previousGuess) {
-        interval = 0;
-        // Our interval is empty, we've found the optimal seek point, as the
-        // start page is before the seek target, and the end page after the
-        // seek target.
-        break;
-      }
+      SEEK_LOG(PR_LOG_DEBUG, ("Seek loop start[o=%lld..%lld t=%lld] "
+                              "end[o=%lld t=%lld] "
+                              "interval=%lld target=%lf guess=%lld",
+                              startOffset, (startOffset+startLength), startTime,
+                              endOffset, endTime, interval, target, guess));
 
       NS_ASSERTION(guess >= startOffset + startLength, "Guess must be after range start");
       NS_ASSERTION(guess < endOffset, "Guess must be before range end");
       NS_ASSERTION(guess != previousGuess, "Guess should be differnt to previous");
       previousGuess = guess;
 
-      SEEK_LOG(PR_LOG_DEBUG, ("Seek loop offset_start=%lld start_end=%lld "
-                              "offset_guess=%lld offset_end=%lld interval=%lld "
-                              "target=%lf time_start=%lld time_end=%lld",
-                              startOffset, (startOffset+startLength), guess,
-                              endOffset, interval, target, startTime, endTime));
       hops++;
     
       // Locate the next page after our seek guess, and then figure out the
@@ -1436,34 +1456,28 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
       pageLength = page.header_len + page.body_len;
       mPageOffset = pageOffset + pageLength;
 
-      if (mPageOffset == endOffset || res == PAGE_SYNC_END_OF_RANGE) {
+      if (res == PAGE_SYNC_END_OF_RANGE) {
         // Our guess was too close to the end, we've ended up reading the end
         // page. Backoff exponentially from the end point, in case the last
         // page/frame/sample is huge.
-        backsteps = NS_MIN(backsteps + 1, maxBackStep);
-        backoff = PAGE_STEP * pow(2.0, backsteps);
+        mustBackoff = PR_TRUE;
+        SEEK_LOG(PR_LOG_DEBUG, ("Hit the end of range, backing off"));
         continue;
       }
-
-      NS_ASSERTION(mPageOffset < endOffset, "Page read cursor should be inside range");
 
       // Read pages until we can determine the granule time of the audio and 
       // video bitstream.
       ogg_int64_t audioTime = -1;
       ogg_int64_t videoTime = -1;
-      int ret;
-      oldPageOffset = mPageOffset;
-      while ((mVorbisState && audioTime == -1) ||
-             (mTheoraState && videoTime == -1)) {
-      
+      do {
         // Add the page to its codec state, determine its granule time.
         PRUint32 serial = ogg_page_serialno(&page);
         nsOggCodecState* codecState = nsnull;
         mCodecStates.Get(serial, &codecState);
         if (codecState && codecState->mActive) {
-          ret = ogg_stream_pagein(&codecState->mState, &page);
+          int ret = ogg_stream_pagein(&codecState->mState, &page);
           NS_ENSURE_TRUE(ret == 0, NS_ERROR_FAILURE);
-        }      
+        }
 
         ogg_int64_t granulepos = ogg_page_granulepos(&page);
 
@@ -1481,17 +1495,37 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
           videoTime = mTheoraState->StartTime(granulepos);
         }
 
-        mPageOffset += page.header_len + page.body_len;
+        if (mPageOffset == endOffset) {
+          // Hit end of readable data.
+          break;
+        }
+
         if (ReadOggPage(&page) == -1) {
           break;
         }
-      }
+        
+      } while ((mVorbisState && audioTime == -1) ||
+               (mTheoraState && videoTime == -1));
+
+      NS_ASSERTION(mPageOffset <= endOffset, "Page read cursor should be inside range");
 
       if ((HasAudio() && audioTime == -1) ||
           (HasVideo() && videoTime == -1)) 
       {
-        backsteps = NS_MIN(backsteps + 1, maxBackStep);
-        backoff = PAGE_STEP * pow(2.0, backsteps);
+        // We don't have timestamps for all active tracks...
+        if (pageOffset == startOffset + startLength && mPageOffset == endOffset) {
+          // We read the entire interval without finding timestamps for all
+          // active tracks. We know the interval start offset is before the seek
+          // target, and the interval end is after the seek target, and we can't
+          // terminate inside the interval, so we terminate the seek at the
+          // start of the interval.
+          interval = 0;
+          break;
+        }
+
+        // We should backoff; cause the guess to back off from the end, so
+        // that we've got more room to capture.
+        mustBackoff = PR_TRUE;
         continue;
       }
 
@@ -1500,12 +1534,12 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
       granuleTime = NS_MAX(audioTime, videoTime);
       NS_ASSERTION(granuleTime > 0, "Must get a granuletime");
       break;
-    }
+    } // End of "until we determine time at guess offset" loop.
 
     if (interval == 0) {
       // Seek termination condition; we've found the page boundary of the
       // last page before the target, and the first page after the target.
-      SEEK_LOG(PR_LOG_DEBUG, ("Seek loop (interval == 0) break"));
+      SEEK_LOG(PR_LOG_DEBUG, ("Terminating seek at offset=%lld", startOffset));
       NS_ASSERTION(startTime < aTarget, "Start time must always be less than target");
       res = stream->Seek(nsISeekableStream::NS_SEEK_SET, startOffset);
       NS_ENSURE_SUCCESS(res,res);
@@ -1519,12 +1553,13 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
     SEEK_LOG(PR_LOG_DEBUG, ("Time at offset %lld is %lldms", guess, granuleTime));
     if (granuleTime < seekTarget && granuleTime > seekLowerBound) {
       // We're within the fuzzy region in which we want to terminate the search.
-      res = stream->Seek(nsISeekableStream::NS_SEEK_SET, oldPageOffset);
+      res = stream->Seek(nsISeekableStream::NS_SEEK_SET, pageOffset);
       NS_ENSURE_SUCCESS(res,res);
-      mPageOffset = oldPageOffset;
+      mPageOffset = pageOffset;
       if (NS_FAILED(ResetDecode())) {
         return NS_ERROR_FAILURE;
       }
+      SEEK_LOG(PR_LOG_DEBUG, ("Terminating seek at offset=%lld", mPageOffset));
       break;
     }
 
