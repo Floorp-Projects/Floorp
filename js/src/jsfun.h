@@ -432,6 +432,21 @@ GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
 extern JS_FRIEND_API(bool)
 IsBuiltinFunctionConstructor(JSFunction *fun);
 
+/*
+ * Preconditions: funobj->isInterpreted() && !funobj->isFunctionPrototype() &&
+ * !funobj->isBoundFunction(). This is sufficient to establish that funobj has
+ * a non-configurable non-method .prototype data property, thought it might not
+ * have been resolved yet, and its value could be anything.
+ *
+ * Return the shape of the .prototype property of funobj, resolving it if
+ * needed. On error, return NULL.
+ *
+ * This is not safe to call on trace because it defines properties, which can
+ * trigger lookups that could reenter.
+ */
+const Shape *
+LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj);
+
 } /* namespace js */
 
 extern JSString *

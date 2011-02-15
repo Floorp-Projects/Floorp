@@ -168,13 +168,13 @@ class LinkerHelper : public JSC::LinkBuffer
         if (!ep)
             return ep;
 
-        m_size = masm.size();
         m_code = executableCopy(masm, ep);
         if (!m_code) {
             ep->release();
             js_ReportOutOfMemory(cx);
             return NULL;
         }
+        m_size = masm.size();   // must come after the call to executableCopy()
         return ep;
     }
 

@@ -46,19 +46,19 @@
 
 #if defined(JS_HAS_OBJ_WATCHPOINT) && defined(__cplusplus)
 
-extern bool
+extern const js::Shape *
 js_SlowPathUpdateWatchpointsForShape(JSContext *cx, JSObject *obj, const js::Shape *newShape);
 
 /*
- * Update any watchpoints on |obj| on |new_shape->id| to use |new_shape|. Property-manipulating
+ * Update any watchpoints on |obj| on |newShape->id| to use |newShape|. Property-manipulating
  * functions must call this any time it takes on a new shape to represent a potentially
  * watched property, or when it mutates a shape's attributes/setter/getter.
  */
-static inline bool
+static inline const js::Shape *
 js_UpdateWatchpointsForShape(JSContext *cx, JSObject *obj, const js::Shape *newShape)
 {
     if (JS_CLIST_IS_EMPTY(&cx->runtime->watchPointList))
-        return true;
+        return newShape;
 
     return js_SlowPathUpdateWatchpointsForShape(cx, obj, newShape);
 }
