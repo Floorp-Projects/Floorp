@@ -126,6 +126,7 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
     , mNeedsOblique(PR_FALSE)
     , mNeedsBold(aNeedsBold)
     , mUseSubpixelPositions(PR_FALSE)
+    , mAllowManualShowGlyphs(PR_TRUE)
 {
     gfxDWriteFontEntry *fe =
         static_cast<gfxDWriteFontEntry*>(aFontEntry);
@@ -220,10 +221,10 @@ gfxDWriteFont::ComputeMetrics()
         mUseSubpixelPositions = PR_FALSE;
         // if we have bitmaps, we need to tell Cairo NOT to use subpixel AA,
         // to avoid the manual-subpixel codepath in cairo-d2d-surface.cpp
-        // which fails to render bitmap glyphs (see bug 626299)
-        if (mAntialiasOption == kAntialiasDefault && UsingClearType()) {
-            mAntialiasOption = kAntialiasGrayscale;
-        }
+        // which fails to render bitmap glyphs (see bug 626299).
+        // This option will be passed to the cairo_dwrite_scaled_font_t
+        // after creation.
+        mAllowManualShowGlyphs = PR_FALSE;
     }
 
     mMetrics = new gfxFont::Metrics;
@@ -592,6 +593,9 @@ gfxDWriteFont::CairoScaledFont()
                                                     &identityMatrix,
                                                     fontOptions);
         cairo_font_options_destroy(fontOptions);
+
+        cairo_dwrite_scaled_font_allow_manual_show_glyphs(mCairoScaledFont,
+                                                          mAllowManualShowGlyphs);
     }
 
     NS_ASSERTION(mAdjustedSize == 0.0 ||
