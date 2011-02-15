@@ -2498,22 +2498,16 @@ nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
     nsresult rv;
     const char jsdServiceCtrID[] = "@mozilla.org/js/jsd/debugger-service;1";
     nsCOMPtr<jsdIDebuggerService> jsds = do_GetService(jsdServiceCtrID, &rv);
-    if (NS_FAILED(rv)) {
+    if (!NS_SUCCEEDED(rv)) {
         goto fail;
     }
 
     if (!(cx = JS_NewContext(rt, 256))) {
         goto fail;
     }
+    JS_BeginRequest(cx);
 
     {
-        struct AutoDestroyContext {
-            JSContext *cx;
-            AutoDestroyContext(JSContext *cx) : cx(cx) {}
-            ~AutoDestroyContext() { JS_DestroyContext(cx); }
-        } adc(cx);
-        JSAutoRequest ar(cx);
-
         js::WrapperVector &vector = rt->compartments;
         for (JSCompartment **p = vector.begin(); p != vector.end(); ++p) {
             JSCompartment *comp = *p;
@@ -2524,21 +2518,16 @@ nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
 
             /* ParticipatesInCycleCollection means "on the main thread" */
             if (xpc::CompartmentParticipatesInCycleCollection(cx, comp)) {
-                if (gDesiredDebugMode) {
-                    if (!JS_SetDebugModeForCompartment(cx, comp, JS_TRUE))
-                        goto fail;
-                } else {
-                    /*
-                     * Debugging may be turned off with live scripts, so just
-                     * mark future scripts to be compiled into non-debug mode.
-                     * Existing scripts will continue to call JSD callbacks,
-                     * which will have no effect.
-                     */
-                    comp->debugMode = JS_FALSE;
+                rv = jsds->RecompileForDebugMode(cx, comp, gDesiredDebugMode);
+                if (!NS_SUCCEEDED(rv)) {
+                    goto fail;
                 }
             }
         }
     }
+
+    JS_EndRequest(cx);
+    JS_DestroyContext(cx);
 
     if (gDesiredDebugMode) {
         rv = jsds->ActivateDebugger(rt);
@@ -2551,14 +2540,9 @@ fail:
     if (jsds)
         jsds->DeactivateDebugger();
 
-    /*
-     * If an attempt to turn debug mode on fails, cancel the request. It's
-     * always safe to turn debug mode off, since DeactivateDebugger prevents
-     * debugger callbacks from having any effect.
-     */
-    if (gDesiredDebugMode)
-        JS_SetRuntimeDebugMode(rt, JS_FALSE);
-    gDesiredDebugMode = gDebugMode = JS_FALSE;
+    // if the attempt failed, cancel the debugMode request
+    gDesiredDebugMode = gDebugMode;
+    JS_SetRuntimeDebugMode(rt, gDebugMode);
 }
 
 /* JSContext Pop (); */
@@ -2588,21 +2572,18 @@ nsXPConnect::Push(JSContext * cx)
 
      if (gDebugMode != gDesiredDebugMode && NS_IsMainThread()) {
          const nsTArray<XPCJSContextInfo>* stack = data->GetJSContextStack()->GetStack();
-         if (!gDesiredDebugMode) {
-             /* Turn off debug mode immediately, even if JS code is currently running */
-             CheckForDebugMode(mRuntime->GetJSRuntime());
-         } else {
-             bool runningJS = false;
-             for (PRUint32 i = 0; i < stack->Length(); ++i) {
-                 JSContext *cx = (*stack)[i].cx;
-                 if (cx && cx->getCurrentSegment()) {
-                     runningJS = true;
-                     break;
-                 }
+         bool runningJS = false;
+         for (PRUint32 i = 0; i < stack->Length(); ++i) {
+             JSContext *cx = (*stack)[i].cx;
+             /* Use ParticipatesInCycleCollection to detect main thread */
+             if (cx && cx->regs && xpc::ParticipatesInCycleCollection(cx, cx->globalObject)) {
+                 runningJS = true;
+                 break;
              }
-             if (!runningJS)
-                 CheckForDebugMode(mRuntime->GetJSRuntime());
          }
+         /* Turning debugging off is immediate even if JS is running */
+         if (!runningJS || !gDesiredDebugMode)
+             CheckForDebugMode(mRuntime->GetJSRuntime());
      }
  
      return data->GetJSContextStack()->Push(cx);
