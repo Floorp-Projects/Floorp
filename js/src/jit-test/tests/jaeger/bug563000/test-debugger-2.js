@@ -1,3 +1,4 @@
+// |jit-test| debug
 function main() {
   debugger;
   return "failure";
