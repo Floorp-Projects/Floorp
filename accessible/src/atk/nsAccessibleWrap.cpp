@@ -459,10 +459,7 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
 
     if (!nsAccUtils::MustPrune(this)) {  // These interfaces require children
       //nsIAccessibleHypertext
-      nsCOMPtr<nsIAccessibleHyperText> accessInterfaceHypertext;
-      QueryInterface(NS_GET_IID(nsIAccessibleHyperText),
-                     getter_AddRefs(accessInterfaceHypertext));
-      if (accessInterfaceHypertext) {
+      if (IsHyperText()) {
           interfacesBits |= 1 << MAI_INTERFACE_HYPERTEXT;
       }
 
