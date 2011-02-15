@@ -1583,9 +1583,9 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 @media (@orientation@: portrait) {
-  #appmenu[count="4"],
-  #appmenu[count="5"],
-  #appmenu[count="6"] {
+  #appmenu:not([hidden])[count="4"],
+  #appmenu:not([hidden])[count="5"],
+  #appmenu:not([hidden])[count="6"] {
     height: @appmenu_portrait_height@;
     display: inline-block;
   }

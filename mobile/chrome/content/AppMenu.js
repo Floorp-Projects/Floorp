@@ -8,7 +8,7 @@ var AppMenu = {
     if (BrowserUI.activePanel || BrowserUI.isPanelVisible())
       return;
     this.panel.setAttribute("count", this.panel.childNodes.length);
-    this.panel.collapsed = false;
+    this.panel.hidden = false;
 
     addEventListener("keypress", this, true);
 
@@ -17,7 +17,7 @@ var AppMenu = {
   },
 
   hide: function hide() {
-    this.panel.collapsed = true;
+    this.panel.hidden = true;
 
     removeEventListener("keypress", this, true);
 
@@ -26,7 +26,7 @@ var AppMenu = {
   },
 
   toggle: function toggle() {
-    this.panel.collapsed ? this.show() : this.hide();
+    this.panel.hidden ? this.show() : this.hide();
   },
 
   handleEvent: function handleEvent(aEvent) {
