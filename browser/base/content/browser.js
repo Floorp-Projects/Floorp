@@ -3981,11 +3981,11 @@ var FullScreen = {
             els[i].setAttribute("iconsize", "small");
           }
 
-          // Give the main nav bar the fullscreen context menu, otherwise remove it
-          // to prevent breakage
+          // Give the main nav bar and the tab bar the fullscreen context menu,
+          // otherwise remove context menu to prevent breakage
           els[i].setAttribute("saved-context",
                               els[i].getAttribute("context"));
-          if (els[i].id == "nav-bar")
+          if (els[i].id == "nav-bar" || els[i].id == "TabsToolbar")
             els[i].setAttribute("context", "autohide-context");
           else
             els[i].removeAttribute("context");
