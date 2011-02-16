@@ -59,7 +59,7 @@
 #include "mozilla/dom/PCrashReporterChild.h"
 
 #include "nsAudioStream.h"
-
+#include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
 #include "nsTObserverArray.h"
 #include "nsIObserver.h"
@@ -82,6 +82,7 @@
 #include "nsFrameMessageManager.h"
 
 #include "nsIGeolocationProvider.h"
+#include "mozilla/dom/PMemoryReportRequestChild.h"
 
 #ifdef MOZ_PERMISSIONS
 #include "nsPermission.h"
@@ -101,6 +102,24 @@ using namespace mozilla::docshell;
 
 namespace mozilla {
 namespace dom {
+
+class MemoryReportRequestChild : public PMemoryReportRequestChild
+{
+public:
+    MemoryReportRequestChild();
+    virtual ~MemoryReportRequestChild();
+};
+
+MemoryReportRequestChild::MemoryReportRequestChild()
+{
+    MOZ_COUNT_CTOR(MemoryReportRequestChild);
+}
+
+MemoryReportRequestChild::~MemoryReportRequestChild()
+{
+    MOZ_COUNT_DTOR(MemoryReportRequestChild);
+}
+
 class AlertObserver
 {
 public:
@@ -258,6 +277,53 @@ ContentChild::InitXPCOM()
     mConsoleListener = new ConsoleListener(this);
     if (NS_FAILED(svc->RegisterListener(mConsoleListener)))
         NS_WARNING("Couldn't register console listener for child process");
+}
+
+PMemoryReportRequestChild*
+ContentChild::AllocPMemoryReportRequest()
+{
+    return new MemoryReportRequestChild();
+}
+
+bool
+ContentChild::RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* child)
+{
+    InfallibleTArray<MemoryReport> reports;
+    
+    nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
+    nsCOMPtr<nsISimpleEnumerator> r;
+    mgr->EnumerateReporters(getter_AddRefs(r));
+
+    PRBool more;
+    while (NS_SUCCEEDED(r->HasMoreElements(&more)) && more) {
+      nsCOMPtr<nsIMemoryReporter> report;
+      r->GetNext(getter_AddRefs(report));
+
+      nsCString path;
+      nsCString desc;
+      PRInt64 memoryUsed;
+      report->GetPath(getter_Copies(path));
+      report->GetDescription(getter_Copies(desc));
+      report->GetMemoryUsed(&memoryUsed);
+
+      MemoryReport memreport(nsPrintfCString("Content Process - %d - ", getpid()),
+                             path,
+                             desc,
+                             memoryUsed);
+
+      reports.AppendElement(memreport);
+
+    }
+
+    child->Send__delete__(child, reports);
+    return true;
+}
+
+bool
+ContentChild::DeallocPMemoryReportRequest(PMemoryReportRequestChild* actor)
+{
+    delete actor;
+    return true;
 }
 
 PBrowserChild*
