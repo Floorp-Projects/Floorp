@@ -778,7 +778,7 @@ nsFrameManager::ReparentStyleContext(nsIFrame* aFrame)
     NS_ASSERTION(outOfFlow, "no out-of-flow frame");
     do {
       ReparentStyleContext(outOfFlow);
-    } while (outOfFlow = outOfFlow->GetNextContinuation());
+    } while ((outOfFlow = outOfFlow->GetNextContinuation()));
   }
 
   // DO NOT verify the style tree before reparenting.  The frame
@@ -1498,7 +1498,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                                       aRestyleTracker,
                                       kidsDesiredA11yNotification,
                                       aVisibleKidsOfHiddenElement);
-              } while (outOfFlowFrame = outOfFlowFrame->GetNextContinuation());
+              } while ((outOfFlowFrame = outOfFlowFrame->GetNextContinuation()));
 
               // reresolve placeholder's context under the same parent
               // as the out-of-flow frame
