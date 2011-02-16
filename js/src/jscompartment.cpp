@@ -146,6 +146,9 @@ JSCompartment::init()
         return false;
 #endif
 
+    if (!toSourceCache.init())
+        return false;
+
 #if ENABLE_YARR_JIT
     regExpAllocator = JSC::ExecutableAllocator::create();
     if (!regExpAllocator)
@@ -547,7 +550,7 @@ JSCompartment::purge(JSContext *cx)
     js_DestroyScriptsToGC(cx, this);
 
     nativeIterCache.purge();
-    toSourceCache.destroyIfConstructed();
+    toSourceCache.clear();
 
 #ifdef JS_TRACER
     /*
