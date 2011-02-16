@@ -71,6 +71,7 @@ ContainerLayerD3D9::InsertAfter(Layer* aChild, Layer* aAfter)
       mLastChild = aChild;
     }
     NS_ADDREF(aChild);
+    DidInsertChild(aChild);
     return;
   }
   for (Layer *child = GetFirstChild();
@@ -86,6 +87,7 @@ ContainerLayerD3D9::InsertAfter(Layer* aChild, Layer* aAfter)
       }
       aChild->SetPrevSibling(child);
       NS_ADDREF(aChild);
+      DidInsertChild(aChild);
       return;
     }
   }
@@ -105,6 +107,7 @@ ContainerLayerD3D9::RemoveChild(Layer *aChild)
     aChild->SetNextSibling(nsnull);
     aChild->SetPrevSibling(nsnull);
     aChild->SetParent(nsnull);
+    DidRemoveChild(aChild);
     NS_RELEASE(aChild);
     return;
   }
@@ -122,6 +125,7 @@ ContainerLayerD3D9::RemoveChild(Layer *aChild)
       child->SetNextSibling(nsnull);
       child->SetPrevSibling(nsnull);
       child->SetParent(nsnull);
+      DidRemoveChild(aChild);
       NS_RELEASE(aChild);
       return;
     }
