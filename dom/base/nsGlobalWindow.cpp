@@ -1920,6 +1920,15 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     if (aDocument != oldDoc) {
       nsWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject);
     }
+
+    // The API we're really looking for here is to go clear all of the
+    // Xray wrappers associated with our outer window. However, we
+    // don't expose that API because the implementation would be
+    // identical to that of JS_TransplantObject, so we just call that
+    // instead.
+    if (!JS_TransplantObject(cx, mJSObject, mJSObject)) {
+      return NS_ERROR_FAILURE;
+    }
   } else {
     if (aState) {
       newInnerWindow = wsh->GetInnerWindow();
