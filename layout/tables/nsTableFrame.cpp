@@ -5903,9 +5903,9 @@ nsTableFrame::CalcBCBorders()
           // set the flag on the next border indicating it is not the start of a
           // new segment
           if (iter.mCellMap) {
-            tableCellMap->SetNotTopStart(NS_SIDE_BOTTOM, *iter.mCellMap,
-                                         info.GetCellEndRowIndex(),
-                                         info.GetCellEndColIndex() + 1);
+            tableCellMap->ResetTopStart(NS_SIDE_BOTTOM, *iter.mCellMap,
+                                        info.GetCellEndRowIndex(),
+                                        info.GetCellEndColIndex() + 1);
           }
         }
       }
