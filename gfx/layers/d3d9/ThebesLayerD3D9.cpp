@@ -453,7 +453,7 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
       // of our DEFAULT texture and then use UpdateTexture and add dirty rects
       // to update in a single call.
       nsRefPtr<gfxWindowsSurface> dest = new gfxWindowsSurface(
-          gfxIntSize(bounds.width, bounds.height), gfxASurface::ImageFormatARGB32);
+          gfxIntSize(scaledSize.width, scaledSize.height), gfxASurface::ImageFormatARGB32);
       // If the contents of this layer don't require component alpha in the
       // end of rendering, it's safe to enable Cleartype since all the Cleartype
       // glyphs must be over (or under) opaque pixels.
