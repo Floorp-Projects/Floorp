@@ -825,6 +825,7 @@ BookmarksStore.prototype = {
       // Reorder children according to the GUID list. Gracefully deal
       // with missing items, e.g. locally deleted.
       let delta = 0;
+      let parent = null;
       for (let idx = 0; idx < children.length; idx++) {
         let itemid = this.idForGUID(children[idx]);
         if (itemid == -1) {
@@ -833,7 +834,12 @@ BookmarksStore.prototype = {
           continue;
         }
         try {
-          Svc.Bookmark.setItemIndex(itemid, idx - delta);
+          // This code path could be optimized by caching the parent earlier.
+          // Doing so should take in count any edge case due to reparenting
+          // or parent invalidations though.
+          if (!parent)
+            parent = Svc.Bookmark.getFolderIdForItem(itemid);
+          Svc.Bookmark.moveItem(itemid, parent, idx - delta);
         } catch (ex) {
           this._log.debug("Could not move item " + children[idx] + ": " + ex);
         }
