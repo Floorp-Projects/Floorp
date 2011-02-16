@@ -44,7 +44,7 @@
 
 // See the comment in this file's header.
 
-using namespace mozilla;
+namespace mozilla {
 
 static nsSVGAttrTearoffTable<void, DOMSVGPointList>
   sSVGPointListTearoffTable;
@@ -54,7 +54,9 @@ NS_SVG_VAL_IMPL_CYCLE_COLLECTION(DOMSVGPointList, mElement)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGPointList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGPointList)
 
-DOMCI_DATA(SVGPointList, DOMSVGPointList)
+} // namespace mozilla
+DOMCI_DATA(SVGPointList, mozilla::DOMSVGPointList)
+namespace mozilla {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGPointList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPointList)
@@ -396,3 +398,4 @@ DOMSVGPointList::EnsureItemAt(PRUint32 aIndex)
   }
 }
 
+} // namespace mozilla

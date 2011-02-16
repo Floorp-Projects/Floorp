@@ -62,7 +62,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGLengthList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGLengthList)
 
-}
+} // namespace mozilla
 DOMCI_DATA(SVGLengthList, mozilla::DOMSVGLengthList)
 namespace mozilla {
 
