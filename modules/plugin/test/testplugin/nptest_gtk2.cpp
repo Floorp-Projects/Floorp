@@ -381,13 +381,17 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
     if (expose.x < clip.left || expose.y < clip.top ||
         expose.x + expose.width > clip.right ||
         expose.y + expose.height > clip.bottom) {
-      g_warning("expose rectangle not in clip rectangle");
+      g_warning("expose rectangle (x=%d,y=%d,w=%d,h=%d) not in clip rectangle (l=%d,t=%d,r=%d,b=%d)",
+                expose.x, expose.y, expose.width, expose.height,
+                clip.left, clip.top, clip.right, clip.bottom);
       return 0;
     }
     if (expose.x < window.x || expose.y < window.y ||
         expose.x + expose.width > window.x + int32_t(window.width) ||
         expose.y + expose.height > window.y + int32_t(window.height)) {
-      g_warning("expose rectangle not in plugin rectangle");
+      g_warning("expose rectangle (x=%d,y=%d,w=%d,h=%d) not in plugin rectangle (x=%d,y=%d,w=%d,h=%d)",
+                expose.x, expose.y, expose.width, expose.height,
+                window.x, window.y, window.width, window.height);
       return 0;
     }      
 

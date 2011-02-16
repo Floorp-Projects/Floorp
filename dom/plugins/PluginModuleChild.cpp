@@ -1876,7 +1876,6 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
         mQuirks |= QUIRK_FLASH_THROTTLE_WMUSER_EVENTS; 
         mQuirks |= QUIRK_FLASH_HOOK_SETLONGPTR;
         mQuirks |= QUIRK_FLASH_HOOK_GETWINDOWINFO;
-        mQuirks |= QUIRK_FLASH_MASK_CLEARTYPE_SETTINGS;
         mQuirks |= QUIRK_FLASH_FIXUP_MOUSE_CAPTURE;
     }
 #endif
