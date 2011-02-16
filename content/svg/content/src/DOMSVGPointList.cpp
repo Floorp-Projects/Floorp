@@ -44,6 +44,26 @@
 
 // See the comment in this file's header.
 
+// local helper functions
+namespace {
+
+using mozilla::DOMSVGPoint;
+
+void
+UpdateListIndicesFromIndex(nsTArray<DOMSVGPoint*>& aItemsArray,
+                           PRUint32 aStartingIndex)
+{
+  PRUint32 length = aItemsArray.Length();
+
+  for (PRUint32 i = aStartingIndex; i < length; ++i) {
+    if (aItemsArray[i]) {
+      aItemsArray[i]->UpdateListIndex(i);
+    }
+  }
+}
+
+} // namespace
+
 namespace mozilla {
 
 static nsSVGAttrTearoffTable<void, DOMSVGPointList>
@@ -285,11 +305,7 @@ DOMSVGPointList::InsertItemBefore(nsIDOMSVGPoint *aNewItem,
   // data from InternalList() itself!:
   domItem->InsertingIntoList(this, aIndex, IsAnimValList());
 
-  for (PRUint32 i = aIndex + 1; i < Length(); ++i) {
-    if (mItems[i]) {
-      mItems[i]->UpdateListIndex(i);
-    }
-  }
+  UpdateListIndicesFromIndex(mItems, aIndex + 1);
 
   Element()->DidChangePointList(PR_TRUE);
 #ifdef MOZ_SMIL
@@ -368,11 +384,7 @@ DOMSVGPointList::RemoveItem(PRUint32 aIndex,
   InternalList().RemoveItem(aIndex);
   mItems.RemoveElementAt(aIndex);
 
-  for (PRUint32 i = aIndex; i < Length(); ++i) {
-    if (mItems[i]) {
-      mItems[i]->UpdateListIndex(i);
-    }
-  }
+  UpdateListIndicesFromIndex(mItems, aIndex);
 
   Element()->DidChangePointList(PR_TRUE);
 #ifdef MOZ_SMIL

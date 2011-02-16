@@ -360,12 +360,7 @@ DOMSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *aNewItem,
   // data from InternalList() itself!:
   domItem->InsertingIntoList(this, aIndex, IsAnimValList());
 
-  for (PRUint32 i = aIndex + 1; i < Length(); ++i) {
-    mItems[i].mInternalDataIndex += 1 + argCount;
-    if (ItemAt(i)) {
-      ItemAt(i)->UpdateListIndex(i);
-    }
-  }
+  UpdateListIndicesFromIndex(aIndex + 1, argCount + 1);
 
   Element()->DidChangePathSegList(PR_TRUE);
 #ifdef MOZ_SMIL
@@ -470,12 +465,7 @@ DOMSVGPathSegList::RemoveItem(PRUint32 aIndex,
   InternalList().mData.RemoveElementsAt(internalIndex, 1 + argCount);
   mItems.RemoveElementAt(aIndex);
 
-  for (PRUint32 i = aIndex; i < Length(); ++i) {
-    mItems[i].mInternalDataIndex -= 1 + argCount;
-    if (ItemAt(i)) {
-      ItemAt(i)->UpdateListIndex(i);
-    }
-  }
+  UpdateListIndicesFromIndex(aIndex, -(argCount + 1));
 
   Element()->DidChangePathSegList(PR_TRUE);
 #ifdef MOZ_SMIL
@@ -498,6 +488,20 @@ DOMSVGPathSegList::EnsureItemAt(PRUint32 aIndex)
 {
   if (!ItemAt(aIndex)) {
     ItemAt(aIndex) = DOMSVGPathSeg::CreateFor(this, aIndex, IsAnimValList());
+  }
+}
+
+void
+DOMSVGPathSegList::UpdateListIndicesFromIndex(PRUint32 aStartingIndex,
+                                              PRInt32  aInternalDataIndexDelta)
+{
+  PRUint32 length = Length();
+
+  for (PRUint32 i = aStartingIndex; i < length; ++i) {
+    mItems[i].mInternalDataIndex += aInternalDataIndexDelta;
+    if (ItemAt(i)) {
+      ItemAt(i)->UpdateListIndex(i);
+    }
   }
 }
 
