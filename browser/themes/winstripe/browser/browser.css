@@ -699,19 +699,8 @@ menuitem.bookmark-item {
 }
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
-#nav-bar .toolbarbutton-1 > .toolbarbutton-icon {
+#nav-bar .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon {
   margin: 1px;
-  width: 16px;
-  height: 16px;
-}
-
-/* Default icons have a built-in glow, so they are 18*18px even in small mode,
-   except for the large back icon, which is why the code below uses 'auto' rather
-   than 18px. This will pick the correct size based on the image region. */
-:-moz-any(@primaryToolbarButtons@) > .toolbarbutton-icon {
-  margin: 0 !important;
-  width: auto !important;
-  height: auto !important;
 }
 
 toolbar[mode="full"] .toolbarbutton-1,
