@@ -349,6 +349,9 @@ DOMSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *aNewItem,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  // Now that we know we're inserting, keep animVal list in sync as necessary.
+  MaybeInsertNullInAnimValListAt(aIndex, internalIndex, argCount);
+
   float segAsRaw[1 + NS_SVG_PATH_SEG_MAX_ARGS];
   domItem->ToSVGPathSegEncodedData(segAsRaw);
 
@@ -462,6 +465,11 @@ DOMSVGPathSegList::RemoveItem(PRUint32 aIndex,
   PRUint32 segType = SVGPathSegUtils::DecodeType(InternalList().mData[internalIndex]);
   PRUint32 argCount = SVGPathSegUtils::ArgCountForType(segType);
 
+  // Now that we know we're removing, keep animVal list in sync as necessary.
+  // Do this *before* touching InternalList() so the removed item can get its
+  // internal value.
+  MaybeRemoveItemFromAnimValListAt(aIndex, argCount);
+
   InternalList().mData.RemoveElementsAt(internalIndex, 1 + argCount);
   mItems.RemoveElementAt(aIndex);
 
@@ -492,10 +500,69 @@ DOMSVGPathSegList::EnsureItemAt(PRUint32 aIndex)
 }
 
 void
+DOMSVGPathSegList::
+  MaybeInsertNullInAnimValListAt(PRUint32 aIndex,
+                                 PRUint32 aInternalIndex,
+                                 PRUint32 aArgCountForItem)
+{
+  NS_ABORT_IF_FALSE(!IsAnimValList(), "call from baseVal to animVal");
+
+  if (AttrIsAnimating()) {
+    // animVal not a clone of baseVal
+    return;
+  }
+
+  // The anim val list is in sync with the base val list
+  DOMSVGPathSegList *animVal =
+    GetDOMWrapperIfExists(InternalAList().GetAnimValKey());
+  if (!animVal) {
+    // No animVal list wrapper
+    return;
+  }
+
+  NS_ABORT_IF_FALSE(animVal->mItems.Length() == mItems.Length(),
+                    "animVal list not in sync!");
+
+  animVal->mItems.InsertElementAt(aIndex, ItemProxy(nsnull, aInternalIndex));
+
+  animVal->UpdateListIndicesFromIndex(aIndex + 1, 1 + aArgCountForItem);
+}
+
+void
+DOMSVGPathSegList::
+  MaybeRemoveItemFromAnimValListAt(PRUint32 aIndex,
+                                   PRUint32 aArgCountForItem)
+{
+  NS_ABORT_IF_FALSE(!IsAnimValList(), "call from baseVal to animVal");
+
+  if (AttrIsAnimating()) {
+    // animVal not a clone of baseVal
+    return;
+  }
+
+  DOMSVGPathSegList *animVal =
+    GetDOMWrapperIfExists(InternalAList().GetAnimValKey());
+  if (!animVal) {
+    // No animVal list wrapper
+    return;
+  }
+
+  NS_ABORT_IF_FALSE(animVal->mItems.Length() == mItems.Length(),
+                    "animVal list not in sync!");
+
+  if (animVal->ItemAt(aIndex)) {
+    animVal->ItemAt(aIndex)->RemovingFromList();
+  }
+  animVal->mItems.RemoveElementAt(aIndex);
+
+  animVal->UpdateListIndicesFromIndex(aIndex, -(1 + aArgCountForItem));
+}
+
+void
 DOMSVGPathSegList::UpdateListIndicesFromIndex(PRUint32 aStartingIndex,
                                               PRInt32  aInternalDataIndexDelta)
 {
-  PRUint32 length = Length();
+  PRUint32 length = mItems.Length();
 
   for (PRUint32 i = aStartingIndex; i < length; ++i) {
     mItems[i].mInternalDataIndex += aInternalDataIndexDelta;
