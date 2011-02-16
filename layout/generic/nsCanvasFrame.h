@@ -173,10 +173,12 @@ public:
 
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
+                                   const nsRect& aAllowVisibleRegionExpansion,
                                    PRBool& aContainsRootContentDocBG)
   {
     PRBool retval = NS_GET_A(mExtraBackgroundColor) > 0 ||
            nsDisplayBackground::ComputeVisibility(aBuilder, aVisibleRegion,
+                                                  aAllowVisibleRegionExpansion,
                                                   aContainsRootContentDocBG);
     if (retval && mFrame->PresContext()->IsRootContentDocument()) {
       aContainsRootContentDocBG = PR_TRUE;
