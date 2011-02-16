@@ -142,6 +142,7 @@
   border-radius: 8px;
   color: WindowText;
   background-color: Window;
+  background-clip: padding-box;
 }
 
 .alert .alert-title {

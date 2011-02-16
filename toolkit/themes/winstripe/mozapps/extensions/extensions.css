@@ -226,6 +226,7 @@
   border: 1px solid #A8B8D1;
   border-radius: 8px;
   background-image: -moz-linear-gradient(top, #FFF, #ECF1F7);
+  background-clip: padding-box;
   box-shadow: 2px 2px 4px #999; 
 }
 
