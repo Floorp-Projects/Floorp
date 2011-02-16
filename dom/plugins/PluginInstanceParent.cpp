@@ -40,6 +40,7 @@
 #include "PluginInstanceParent.h"
 
 #include "BrowserStreamParent.h"
+#include "PluginBackgroundDestroyer.h"
 #include "PluginModuleParent.h"
 #include "PluginStreamParent.h"
 #include "StreamNotifyParent.h"
@@ -498,6 +499,12 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
                                const SurfaceDescriptor& newSurface,
                                SurfaceDescriptor* prevSurface)
 {
+    PLUGIN_LOG_DEBUG(
+        ("[InstanceParent][%p] RecvShow for <x=%d,y=%d, w=%d,h=%d>",
+         this, updatedRect.left, updatedRect.top,
+         updatedRect.right - updatedRect.left,
+         updatedRect.bottom - updatedRect.top));
+
     nsRefPtr<gfxASurface> surface;
     if (newSurface.type() == SurfaceDescriptor::TShmem) {
         if (!newSurface.get_Shmem().IsReadable()) {
@@ -529,6 +536,11 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
 #ifdef MOZ_X11
     if (mFrontSurface &&
         mFrontSurface->GetType() == gfxASurface::SurfaceTypeXlib)
+        // This is the "old front buffer" we're about to hand back to
+        // the plugin.  We might still have drawing operations
+        // referencing it, so we XSync here to let them finish before
+        // the plugin starts scribbling on it again, or worse,
+        // destroys it.
         XSync(DefaultXDisplay(), False);
 #endif
 
@@ -539,6 +551,9 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
 
     mFrontSurface = surface;
     RecvNPN_InvalidateRect(updatedRect);
+
+    PLUGIN_LOG_DEBUG(("   (RecvShow invalidated for surface %p)",
+                      mFrontSurface.get()));
 
     return true;
 }
@@ -626,6 +641,164 @@ PluginInstanceParent::IsRemoteDrawingCoreAnimation(PRBool *aDrawing)
     return NS_OK;
 }
 #endif
+
+nsresult
+PluginInstanceParent::SetBackgroundUnknown()
+{
+    PLUGIN_LOG_DEBUG(("[InstanceParent][%p] SetBackgroundUnknown", this));
+
+    if (mBackground) {
+        DestroyBackground();
+        NS_ABORT_IF_FALSE(!mBackground, "Background not destroyed");
+    }
+
+    return NS_OK;
+}
+
+nsresult
+PluginInstanceParent::BeginUpdateBackground(const nsIntRect& aRect,
+                                            gfxContext** aCtx)
+{
+    PLUGIN_LOG_DEBUG(
+        ("[InstanceParent][%p] BeginUpdateBackground for <x=%d,y=%d, w=%d,h=%d>",
+         this, aRect.x, aRect.y, aRect.width, aRect.height));
+
+    if (!mBackground) {
+        // XXX if we failed to create a background surface on one
+        // update, there's no guarantee that later updates will be for
+        // the entire background area until successful.  We might want
+        // to fix that eventually.
+        NS_ABORT_IF_FALSE(aRect.TopLeft() == nsIntPoint(0, 0),
+                          "Expecting rect for whole frame");
+        if (!CreateBackground(aRect.Size())) {
+            *aCtx = nsnull;
+            return NS_OK;
+        }
+    }
+
+#ifdef DEBUG
+    gfxIntSize sz = mBackground->GetSize();
+    NS_ABORT_IF_FALSE(nsIntRect(0, 0, sz.width, sz.height).Contains(aRect),
+                      "Update outside of background area");
+#endif
+
+    nsRefPtr<gfxContext> ctx = new gfxContext(mBackground);
+    *aCtx = ctx.forget().get();
+
+    return NS_OK;
+}
+
+nsresult
+PluginInstanceParent::EndUpdateBackground(gfxContext* aCtx,
+                                          const nsIntRect& aRect)
+{
+    PLUGIN_LOG_DEBUG(
+        ("[InstanceParent][%p] EndUpdateBackground for <x=%d,y=%d, w=%d,h=%d>",
+         this, aRect.x, aRect.y, aRect.width, aRect.height));
+
+#ifdef MOZ_X11
+    // Have to XSync here to avoid the plugin trying to draw with this
+    // surface racing with its creation in the X server.  We also want
+    // to avoid the plugin drawing onto stale pixels, then handing us
+    // back a front surface from those pixels that we might
+    // recomposite for "a while" until the next update.  This XSync
+    // still doesn't guarantee that the plugin draws onto a consistent
+    // view of its background, but it does mean that the plugin is
+    // drawing onto pixels no older than those in the latest
+    // EndUpdateBackground().
+    XSync(DefaultXDisplay(), False);
+#endif
+
+    unused << SendUpdateBackground(BackgroundDescriptor(), aRect);
+
+    return NS_OK;
+}
+
+bool
+PluginInstanceParent::CreateBackground(const nsIntSize& aSize)
+{
+    NS_ABORT_IF_FALSE(!mBackground, "Already have a background");
+
+    // XXX refactor me
+
+#if defined(MOZ_X11)
+    Screen* screen = DefaultScreenOfDisplay(DefaultXDisplay());
+    Visual* visual = DefaultVisualOfScreen(screen);
+    mBackground = gfxXlibSurface::Create(screen, visual,
+                                         gfxIntSize(aSize.width, aSize.height));
+    return !!mBackground;
+
+#elif defined(XP_WIN)
+    // We have chosen to create an unsafe surface in which the plugin
+    // can read from the region while we're writing to it.
+    mBackground =
+        gfxSharedImageSurface::CreateUnsafe(
+            this,
+            gfxIntSize(aSize.width, aSize.height),
+            gfxASurface::ImageFormatRGB24);
+    return !!mBackground;
+#else
+    return nsnull;
+#endif
+}
+
+void
+PluginInstanceParent::DestroyBackground()
+{
+    if (!mBackground) {
+        return;
+    }
+
+    // Relinquish ownership of |mBackground| to its destroyer
+    PPluginBackgroundDestroyerParent* pbd =
+        new PluginBackgroundDestroyerParent(mBackground);
+    mBackground = nsnull;
+
+    // If this fails, there's no problem: |bd| will be destroyed along
+    // with the old background surface.
+    unused << SendPPluginBackgroundDestroyerConstructor(pbd);
+}
+
+SurfaceDescriptor
+PluginInstanceParent::BackgroundDescriptor()
+{
+    NS_ABORT_IF_FALSE(mBackground, "Need a background here");
+
+    // XXX refactor me
+
+#ifdef MOZ_X11
+    gfxXlibSurface* xsurf = static_cast<gfxXlibSurface*>(mBackground.get());
+    return SurfaceDescriptorX11(xsurf->XDrawable(), xsurf->XRenderFormat()->id,
+                                xsurf->GetSize());
+#endif
+
+#ifdef XP_WIN
+    NS_ABORT_IF_FALSE(gfxSharedImageSurface::IsSharedImage(mBackground),
+                      "Expected shared image surface");
+    gfxSharedImageSurface* shmem =
+        static_cast<gfxSharedImageSurface*>(mBackground.get());
+    return shmem->GetShmem();
+#endif
+
+    // If this is ever used, which it shouldn't be, it will trigger a
+    // hard assertion in IPDL-generated code.
+    return SurfaceDescriptor();
+}
+
+PPluginBackgroundDestroyerParent*
+PluginInstanceParent::AllocPPluginBackgroundDestroyer()
+{
+    NS_RUNTIMEABORT("'Power-user' ctor is used exclusively");
+    return nsnull;
+}
+
+bool
+PluginInstanceParent::DeallocPPluginBackgroundDestroyer(
+    PPluginBackgroundDestroyerParent* aActor)
+{
+    delete aActor;
+    return true;
+}
 
 NPError
 PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
