@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head>
+<style type="text/css">
+#one {
+  position:absolute;
+  left:0px; top:0px;
+  z-index:1;
+}
+#two {
+  position:absolute;
+  top:0px; left:0px;
+  width:200px; height:200px;
+  z-index:0;
+  background-color: rgb(255,0,0);
+  -moz-transform-origin: 0 0;
+  -moz-transform: translate(100px,100px);
+}
+</style>
+</head>
+<body>
+  <div id="two"></div>
+  <embed id="one" type="application/x-test" width="400" height="400" drawmode="solid" color="9900FF00"></embed>
+</body>
+</html>
+
