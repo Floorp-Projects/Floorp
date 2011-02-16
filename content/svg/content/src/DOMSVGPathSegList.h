@@ -190,6 +190,12 @@ private:
   // aIndex, if it doesn't already exist.
   void EnsureItemAt(PRUint32 aIndex);
 
+  // Calls UpdateListIndex on all elements in |mItems| that satisfy ItemAt(),
+  // from |aStartingIndex| to the end of |mItems|.  Also adjusts
+  // |mItems.mInternalDataIndex| by the requested amount.
+  void UpdateListIndicesFromIndex(PRUint32 aStartingIndex,
+                                  PRInt32  aInternalDataIndexDelta);
+
   DOMSVGPathSeg*& ItemAt(PRUint32 aIndex) {
     return mItems[aIndex].mItem;
   }
