@@ -216,7 +216,7 @@ class GeckoAppShell
             if (Build.VERSION.SDK_INT >= 8) {
                 File extHome =  geckoApp.getExternalFilesDir(null);
                 File extProf = new File (extHome, "mozilla");
-                if (extHome.exists())
+                if (extHome != null && extProf != null && extProf.exists())
                     moveDir(extProf, profileDir);
             }
         } else {
@@ -231,7 +231,7 @@ class GeckoAppShell
 
             File intHome =  geckoApp.getFilesDir();
             File intProf = new File(intHome, "mozilla");
-            if (intHome.exists())
+            if (intHome != null && intProf != null && intProf.exists())
                 moveDir(intProf, profileDir);
         }
         GeckoAppShell.putenv("HOME=" + homeDir);
