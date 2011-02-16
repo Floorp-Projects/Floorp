@@ -22,7 +22,8 @@ function init()
     }
 
     description('Verify texImage2D and texSubImage2D code paths taking Video Elements');
-
+    dump('Verify texImage2D and texSubImage2D code paths taking Video Elements\n');
+    
     var canvas = document.getElementById("example");
     gl = wtu.create3DContext(canvas);
     var program = wtu.setupTexturedQuad(gl);
@@ -48,6 +49,8 @@ function runOneIteration(videoElement, useTexSubImage2D, flipY, topColor, bottom
 {
     debug('Testing ' + (useTexSubImage2D ? 'texSubImage2D' : 'texImage2D') +
           ' with flipY=' + flipY);
+    dump('Testing ' + (useTexSubImage2D ? 'texSubImage2D' : 'texImage2D') +
+          ' with flipY=' + flipY + '\n');
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     // Disable any writes to the alpha channel
     gl.colorMask(1, 1, 1, 0);
