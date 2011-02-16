@@ -83,7 +83,7 @@
 #define __inline__ inline
 #endif
 
-#if defined(DEBUG) || defined(NJ_NO_VARIADIC_MACROS)
+#if defined(DEBUG)
 #if !defined _DEBUG
 #define _DEBUG
 #endif
