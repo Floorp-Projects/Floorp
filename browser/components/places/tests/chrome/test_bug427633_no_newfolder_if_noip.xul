@@ -76,9 +76,6 @@
       */
 
     function runTest() {
-      const Cc = Components.classes;
-      const Ci = Components.interfaces;
-
       var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
                getService(Ci.nsINavBookmarksService);
       var ios = Cc["@mozilla.org/network/io-service;1"].
