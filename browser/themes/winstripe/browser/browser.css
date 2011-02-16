@@ -54,8 +54,8 @@
 %define selectedTabHighlight rgba(255,255,255,.7)
 %define toolbarShadowColor rgba(10%,10%,10%,.4)
 %define toolbarShadowOnTab -moz-linear-gradient(bottom, rgba(10%,10%,10%,.4) 1px, transparent 1px)
-%define bgTabTexture -moz-linear-gradient(transparent, hsla(0,0%,36%,.15) 1px, hsla(0,0%,0%,.3))
-%define bgTabTextureHover -moz-linear-gradient(transparent, hsla(0,0%,70%,.15) 1px, hsla(0,0%,20%,.3))
+%define bgTabTexture -moz-linear-gradient(transparent, hsla(0,0%,45%,.1) 1px, hsla(0,0%,32%,.2) 80%, hsla(0,0%,0%,.2))
+%define bgTabTextureHover -moz-linear-gradient(hsla(0,0%,100%,.3) 1px, hsla(0,0%,75%,.2) 80%, hsla(0,0%,60%,.2))
 %define navbarTextboxCustomBorder border-color: rgba(0,0,0,.25) rgba(0,0,0,.32) rgba(0,0,0,.37);
 
 #menubar-items {
