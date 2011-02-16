@@ -1941,8 +1941,11 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
     else {
         if (!nsWindow::DragInProgress()) {
             ReleaseGrabs();
-            gtk_grab_remove(widget);
         }
+        // There may not have been a drag in process when aDoCapture was set,
+        // so make sure to remove any added grab.  This is a no-op if the grab
+        // was not added to this widget.
+        gtk_grab_remove(widget);
         gRollupListener = nsnull;
         NS_IF_RELEASE(gMenuRollup);
         gRollupWindow = nsnull;
