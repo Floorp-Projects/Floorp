@@ -1835,8 +1835,7 @@ nsObjectFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
       mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics &&
       mInstanceOwner->IsRemoteDrawingCoreAnimation())
   {
-    // Disabled on Mac OS X for now.
-    return mozilla::LAYER_NONE;
+    return mozilla::LAYER_ACTIVE;
   }
 #endif
 
@@ -3253,7 +3252,16 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
               presContext->DevPixelsToAppUnits(invalidRect->top),
               presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
               presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
+#ifndef XP_MACOSX
   mObjectFrame->InvalidateLayer(rect + mObjectFrame->GetUsedBorderAndPadding().TopLeft(), nsDisplayItem::TYPE_PLUGIN);
+#else
+  if (FrameLayerBuilder::HasDedicatedLayer(mObjectFrame, nsDisplayItem::TYPE_PLUGIN)) {
+    mObjectFrame->InvalidateWithFlags(rect + mObjectFrame->GetUsedBorderAndPadding().TopLeft(),
+                                      nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
+  } else {
+    mObjectFrame->Invalidate(rect + mObjectFrame->GetUsedBorderAndPadding().TopLeft());
+  }
+#endif
   return NS_OK;
 }
 
