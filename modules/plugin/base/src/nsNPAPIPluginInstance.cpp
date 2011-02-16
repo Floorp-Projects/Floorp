@@ -850,12 +850,7 @@ nsNPAPIPluginInstance::AsyncSetWindow(NPWindow* window)
   if (RUNNING != mRunning)
     return NS_OK;
 
-  PluginDestructionGuard guard(this);
-
-  if (!mPlugin)
-    return NS_ERROR_FAILURE;
-
-  PluginLibrary* library = mPlugin->GetLibrary();
+  AutoPluginLibraryCall library(this);
   if (!library)
     return NS_ERROR_FAILURE;
 
@@ -868,12 +863,7 @@ nsNPAPIPluginInstance::GetSurface(gfxASurface** aSurface)
   if (RUNNING != mRunning)
     return NS_OK;
 
-  PluginDestructionGuard guard(this);
-
-  if (!mPlugin)
-    return NS_ERROR_FAILURE;
-
-  PluginLibrary* library = mPlugin->GetLibrary();
+  AutoPluginLibraryCall library(this);
   if (!library)
     return NS_ERROR_FAILURE;
 
@@ -905,17 +895,53 @@ nsNPAPIPluginInstance::UseAsyncPainting(PRBool* aIsAsync)
     return NS_OK;
   }
 
-  PluginDestructionGuard guard(this);
-
-  if (!mPlugin)
-    return NS_ERROR_FAILURE;
-
-  PluginLibrary* library = mPlugin->GetLibrary();
+  AutoPluginLibraryCall library(this);
   if (!library)
     return NS_ERROR_FAILURE;
 
   *aIsAsync = library->UseAsyncPainting();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::SetBackgroundUnknown()
+{
+  if (RUNNING != mRunning)
+    return NS_OK;
+
+  AutoPluginLibraryCall library(this);
+  if (!library)
+    return NS_ERROR_FAILURE;
+
+  return library->SetBackgroundUnknown(&mNPP);
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::BeginUpdateBackground(nsIntRect* aRect,
+                                             gfxContext** aContext)
+{
+  if (RUNNING != mRunning)
+    return NS_OK;
+
+  AutoPluginLibraryCall library(this);
+  if (!library)
+    return NS_ERROR_FAILURE;
+
+  return library->BeginUpdateBackground(&mNPP, *aRect, aContext);
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::EndUpdateBackground(gfxContext* aContext,
+                                           nsIntRect* aRect)
+{
+  if (RUNNING != mRunning)
+    return NS_OK;
+
+  AutoPluginLibraryCall library(this);
+  if (!library)
+    return NS_ERROR_FAILURE;
+
+  return library->EndUpdateBackground(&mNPP, aContext, *aRect);
 }
 
 NS_IMETHODIMP

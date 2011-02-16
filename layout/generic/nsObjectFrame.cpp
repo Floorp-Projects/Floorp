@@ -470,10 +470,12 @@ public:
   // Return true if we set image with valid surface
   PRBool SetCurrentImage(ImageContainer* aContainer);
 
-  // Methods to update the background image we send to async plugins
-  void SetBackgroundUnknown() {}
-  already_AddRefed<gfxContext> BeginUpdateBackground(const nsIntRect& aRect) { return nsnull; }
-  void EndUpdateBackground(gfxContext* aContext, const nsIntRect& aRect) {}
+  // Methods to update the background image we send to async plugins.
+  // The eventual target of these operations is PluginInstanceParent,
+  // but it takes several hops to get there.
+  void SetBackgroundUnknown();
+  already_AddRefed<gfxContext> BeginUpdateBackground(const nsIntRect& aRect);
+  void EndUpdateBackground(gfxContext* aContext, const nsIntRect& aRect);
 
   PRBool UseAsyncRendering()
   {
@@ -509,6 +511,13 @@ private:
     if (container->GetCurrentSize() != gfxIntSize(mPluginWindow->width, mPluginWindow->height))
       return PR_FALSE;
     return PR_TRUE;
+  }
+
+  already_AddRefed<nsIPluginInstance_MOZILLA_2_0_BRANCH>
+  GetInstance()
+  {
+    nsCOMPtr<nsIPluginInstance_MOZILLA_2_0_BRANCH> inst = do_QueryInterface(mInstance);
+    return inst.forget();
   }
 
   void FixUpURLS(const nsString &name, nsAString &value);
@@ -1980,6 +1989,39 @@ nsPluginInstanceOwner::SetCurrentImage(ImageContainer* aContainer)
   }
   aContainer->SetCurrentImage(nsnull);
   return PR_FALSE;
+}
+
+void
+nsPluginInstanceOwner::SetBackgroundUnknown()
+{
+  nsCOMPtr<nsIPluginInstance_MOZILLA_2_0_BRANCH> inst = GetInstance();
+  if (inst) {
+    inst->SetBackgroundUnknown();
+  }
+}
+
+already_AddRefed<gfxContext>
+nsPluginInstanceOwner::BeginUpdateBackground(const nsIntRect& aRect)
+{
+  nsIntRect rect = aRect;
+  nsCOMPtr<nsIPluginInstance_MOZILLA_2_0_BRANCH> inst = GetInstance();
+  nsRefPtr<gfxContext> ctx;
+  if (inst &&
+      NS_SUCCEEDED(inst->BeginUpdateBackground(&rect, getter_AddRefs(ctx)))) {
+    return ctx.forget();
+  }
+  return nsnull;
+}
+
+void
+nsPluginInstanceOwner::EndUpdateBackground(gfxContext* aContext,
+                                           const nsIntRect& aRect)
+{
+  nsIntRect rect = aRect;
+  nsCOMPtr<nsIPluginInstance_MOZILLA_2_0_BRANCH> inst = GetInstance();
+  if (inst) {
+    inst->EndUpdateBackground(aContext, &rect);
+  }
 }
 
 mozilla::LayerState
