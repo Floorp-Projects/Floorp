@@ -76,14 +76,14 @@ Texture2D tRGBWhite;
 SamplerState LayerTextureSamplerLinear
 {
     Filter   = uint(MIN_MAG_MIP_LINEAR /* 21 */);
-    AddressU = uint(WRAP /* 1 */);
-    AddressV = uint(WRAP /* 1 */);
+    AddressU = uint(CLAMP /* 3 */);
+    AddressV = uint(CLAMP /* 3 */);
 };
 SamplerState LayerTextureSamplerPoint
 {
     Filter   = uint(MIN_MAG_MIP_POINT /* 0 */);
-    AddressU = uint(WRAP /* 1 */);
-    AddressV = uint(WRAP /* 1 */);
+    AddressU = uint(CLAMP /* 3 */);
+    AddressV = uint(CLAMP /* 3 */);
 };
 
 //
@@ -2017,10 +2017,10 @@ technique10 RenderSolidColorLayer
 
 const BYTE g_main[] =
 {
-     68,  88,  66,  67, 115, 243, 
-     93,  75,  60, 125, 157,  33, 
-    111, 128, 156,  20,  14, 161, 
-    216, 147,   1,   0,   0,   0, 
+     68,  88,  66,  67, 105, 120, 
+    157,  39, 125,  94,  29,  78, 
+     15, 169,  65, 191,  70, 115, 
+    164,  88,   1,   0,   0,   0, 
     231, 121,   0,   0,   1,   0, 
       0,   0,  36,   0,   0,   0, 
      70,  88,  49,  48, 187, 121, 
@@ -2184,9 +2184,9 @@ const BYTE g_main[] =
       0,   0,   0,   2,   0,   0, 
       0,  21,   0,   0,   0,   1, 
       0,   0,   0,   2,   0,   0, 
-      0,   1,   0,   0,   0,   1, 
+      0,   3,   0,   0,   0,   1, 
       0,   0,   0,   2,   0,   0, 
-      0,   1,   0,   0,   0,  76, 
+      0,   3,   0,   0,   0,  76, 
      97, 121, 101, 114,  84, 101, 
     120, 116, 117, 114, 101,  83, 
      97, 109, 112, 108, 101, 114, 
@@ -2194,9 +2194,9 @@ const BYTE g_main[] =
       1,   0,   0,   0,   2,   0, 
       0,   0,   0,   0,   0,   0, 
       1,   0,   0,   0,   2,   0, 
-      0,   0,   1,   0,   0,   0, 
+      0,   0,   3,   0,   0,   0, 
       1,   0,   0,   0,   2,   0, 
-      0,   0,   1,   0,   0,   0, 
+      0,   0,   3,   0,   0,   0, 
      82, 101, 110, 100, 101, 114, 
      82,  71,  66,  76,  97, 121, 
     101, 114,  80, 114, 101, 109, 
