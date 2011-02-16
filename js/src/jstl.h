@@ -311,6 +311,9 @@ class LazilyConstructed
 
     T &asT() { return *storage.addr(); }
 
+    LazilyConstructed operator=(const LazilyConstructed &other);
+    explicit LazilyConstructed(const LazilyConstructed &other);
+
   public:
     LazilyConstructed() { constructed = false; }
     ~LazilyConstructed() { if (constructed) asT().~T(); }
@@ -364,6 +367,11 @@ class LazilyConstructed
     void destroy() {
         ref().~T();
         constructed = false;
+    }
+
+    void destroyIfConstructed() {
+        if (!empty())
+            destroy();
     }
 };
 
