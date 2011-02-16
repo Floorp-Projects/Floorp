@@ -304,6 +304,10 @@ toolbarbutton.bookmark-item > menupopup {
   background-image: -moz-linear-gradient(rgba(255,255,255,0.3), rgba(50,50,50,0.2) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.13));
 }
 
+.toolbarbutton-1[type="menu-button"] {
+  padding: 0;
+}
+
 .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   margin: 0;
