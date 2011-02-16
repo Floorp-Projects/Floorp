@@ -685,6 +685,14 @@ gfxFT2Font::InitTextRun(gfxContext *aContext,
     if (gfxPlatform::GetPlatform()->UseHarfBuzzLevel() >=
         gfxUnicodeProperties::ScriptShapingLevel(aRunScript))
     {
+        if (!mHarfBuzzShaper) 
+        {
+            gfxFT2LockedFace face(this);
+            mFUnitsConvFactor = face.XScale();
+
+            mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
+
+        }
         ok = mHarfBuzzShaper->InitTextRun(aContext, aTextRun, aString,
                                           aRunStart, aRunLength, aRunScript);
     }
@@ -803,8 +811,6 @@ gfxFT2Font::gfxFT2Font(cairo_scaled_font_t *aCairoFont,
     NS_ASSERTION(mFontEntry, "Unable to find font entry for font.  Something is whack.");
 
     mCharGlyphCache.Init(64);
-
-    mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
 }
 
 gfxFT2Font::~gfxFT2Font()
