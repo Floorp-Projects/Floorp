@@ -155,7 +155,7 @@ DOMSVGNumberList::Clear()
   if (Length() > 0) {
     // Notify any existing DOM items of removal *before* truncating the lists
     // so that they can find their SVGNumber internal counterparts and copy
-    // their values:
+    // their values. This also notifies the animVal list:
     mAList->InternalBaseValListWillChangeTo(SVGNumberList());
 
     mItems.Clear();
@@ -246,6 +246,9 @@ DOMSVGNumberList::InsertItemBefore(nsIDOMSVGNumber *newItem,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  // Now that we know we're inserting, keep animVal list in sync as necessary.
+  MaybeInsertNullInAnimValListAt(index);
+
   InternalList().InsertItem(index, domItem->ToSVGNumber());
   mItems.InsertElementAt(index, domItem.get());
 
@@ -322,6 +325,12 @@ DOMSVGNumberList::RemoveItem(PRUint32 index,
   if (index >= Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
+
+  // Now that we know we're removing, keep animVal list in sync as necessary.
+  // Do this *before* touching InternalList() so the removed item can get its
+  // internal value.
+  MaybeRemoveItemFromAnimValListAt(index);
+
   // We have to return the removed item, so make sure it exists:
   EnsureItemAt(index);
 
@@ -357,6 +366,49 @@ DOMSVGNumberList::EnsureItemAt(PRUint32 aIndex)
   if (!mItems[aIndex]) {
     mItems[aIndex] = new DOMSVGNumber(this, AttrEnum(), aIndex, IsAnimValList());
   }
+}
+
+void
+DOMSVGNumberList::MaybeInsertNullInAnimValListAt(PRUint32 aIndex)
+{
+  NS_ABORT_IF_FALSE(!IsAnimValList(), "call from baseVal to animVal");
+
+  DOMSVGNumberList* animVal = mAList->mAnimVal;
+
+  if (!animVal || mAList->IsAnimating()) {
+    // No animVal list wrapper, or animVal not a clone of baseVal
+    return;
+  }
+
+  NS_ABORT_IF_FALSE(animVal->mItems.Length() == mItems.Length(),
+                    "animVal list not in sync!");
+
+  animVal->mItems.InsertElementAt(aIndex, static_cast<DOMSVGNumber*>(nsnull));
+
+  UpdateListIndicesFromIndex(animVal->mItems, aIndex + 1);
+}
+
+void
+DOMSVGNumberList::MaybeRemoveItemFromAnimValListAt(PRUint32 aIndex)
+{
+  NS_ABORT_IF_FALSE(!IsAnimValList(), "call from baseVal to animVal");
+
+  DOMSVGNumberList* animVal = mAList->mAnimVal;
+
+  if (!animVal || mAList->IsAnimating()) {
+    // No animVal list wrapper, or animVal not a clone of baseVal
+    return;
+  }
+
+  NS_ABORT_IF_FALSE(animVal->mItems.Length() == mItems.Length(),
+                    "animVal list not in sync!");
+
+  if (animVal->mItems[aIndex]) {
+    animVal->mItems[aIndex]->RemovingFromList();
+  }
+  animVal->mItems.RemoveElementAt(aIndex);
+
+  UpdateListIndicesFromIndex(animVal->mItems, aIndex);
 }
 
 } // namespace mozilla
