@@ -886,11 +886,7 @@
             return { width: cacheWidth, height: cacheHeight };
           },
 
-          /**
-           * The cache viewport is what parts of content is cached in the parent process for
-           * fast scrolling. This syncs that up with the current projection viewport.
-           */
-          _updateCacheViewport: function() {
+          _sendDisplayportUpdate: function(scrollX, scrollY) {
             let self = this.self;
             if (!self.active)
                return;
@@ -910,8 +906,8 @@
 
             let rootScale = self.scale;
             self.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
-              scrollX: contentView.scrollX / rootScale,
-              scrollY: contentView.scrollY / rootScale,
+              scrollX: scrollX / rootScale,
+              scrollY: scrollY / rootScale,
               x: displayport.x / rootScale,
               y: displayport.y / rootScale,
               w: displayport.width / rootScale,
@@ -922,6 +918,21 @@
 
             this._pixelsPannedSinceRefresh.x = 0;
             this._pixelsPannedSinceRefresh.y = 0;
+          },
+
+          _updateCSSViewport: function() {
+            let contentView = this._contentView;
+            this._sendDisplayportUpdate(contentView.scrollX,
+                                        contentView.scrollY);
+          },
+
+          /**
+           * The cache viewport is what parts of content is cached in the parent process for
+           * fast scrolling. This syncs that up with the current projection viewport.
+           */
+          _updateCacheViewport: function() {
+            // Do not update scroll values for content.
+            this._sendDisplayportUpdate(-1, -1);
           },
 
           _getContentSize: function() {
@@ -1106,11 +1117,8 @@
       <method name="_updateCSSViewport">
         <body>
           <![CDATA[
-            let rootView = this._contentViewManager.rootContentView;
-            this.messageManager.sendAsyncMessage("Content:ScrollTo", {
-              x: rootView.scrollX / this.scale,
-              y: rootView.scrollY / this.scale
-            });
+            let rootView = this.getRootView();
+            rootView._updateCSSViewport();
           ]]>
         </body>
       </method>

@@ -272,11 +272,9 @@ let DOMEvents =  {
 DOMEvents.init();
 
 let ContentScroll =  {
-  ignoreScroll: false,
+  _scrollOffset: { x: 0, y: 0 },
 
   init: function() {
-    addMessageListener("Content:ScrollTo", this);
-    addMessageListener("Content:ScrollBy", this);
     addMessageListener("Content:SetCacheViewport", this);
     addMessageListener("Content:SetWindowSize", this);
 
@@ -291,28 +289,19 @@ let ContentScroll =  {
     return { x: scrollX.value, y: scrollY.value };
   },
 
+  getScrollOffsetForElement: function(aElement) {
+    return this.getScrollOffset(aElement.ownerDocument.defaultView);
+  },
+
+  setScrollOffsetForElement: function(aElement, aLeft, aTop) {
+    aElement.ownerDocument.defaultView.scrollTo(aLeft, aTop);
+  },
+
   receiveMessage: function(aMessage) {
     let json = aMessage.json;
     switch (aMessage.name) {
-      case "Content:ScrollTo": {
-        let scrollOffset = this.getScrollOffset(content);
-        if (scrollOffset.x == json.x && scrollOffset.y == json.y)
-          return;
-
-        this.ignoreScroll = true;
-        content.scrollTo(json.x, json.y);
-        break;
-      }
-
-      case "Content:ScrollBy":
-        if (!json.dx && !json.dy)
-          return;
-
-        this.ignoreScroll = true;
-        content.scrollBy(json.dx, json.dy);
-        break;
-
       case "Content:SetCacheViewport": {
+        // Set resolution for root view
         let rootCwu = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         if (json.id == 1)
           rootCwu.setResolution(json.scale, json.scale);
@@ -321,33 +310,27 @@ let ContentScroll =  {
         if (displayport.isEmpty())
           break;
 
+        // Map ID to element
         let cwu20 = rootCwu.QueryInterface(Ci.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
         let element = cwu20.findElementWithViewId(json.id);
         if (!element)
           break;
 
-        let win = element.ownerDocument.defaultView;
-
-        let displayportElement;
-        let scrollOffset;
-
-        if (element.parentNode != element.ownerDocument) {
-          element.scrollLeft = json.scrollX;
-          element.scrollTop = json.scrollY;
-          displayportElement = element;
-          scrollOffset = { x: element.scrollLeft, y: element.scrollTop };
-        } else {
-          if (json.id != 1)
-            win.scrollTo(json.scrollX, json.scrollY);
-          displayportElement = null;
-          scrollOffset = this.getScrollOffset(win);
+        // Set the scroll offset for this element if specified
+        if (json.scrollX >= 0 && json.scrollY >= 0) {
+          this.setScrollOffsetForElement(element, json.scrollX, json.scrollY)
+          if (json.id == 1)
+            this._scrollOffset = this.getScrollOffset(content);
         }
 
+        // Set displayport. We want to set this after setting the scroll offset, because
+        // it is calculated based on the scroll offset.
+        let scrollOffset = this.getScrollOffsetForElement(element);
+        let win = element.ownerDocument.defaultView;
         let winCwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         winCwu.setDisplayPort(
           displayport.x - scrollOffset.x, displayport.y - scrollOffset.y,
-          displayport.width, displayport.height,
-          element);
+          displayport.width, displayport.height);
 
         break;
       }
@@ -363,16 +346,15 @@ let ContentScroll =  {
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "scroll": {
-        if (this.ignoreScroll) {
-          this.ignoreScroll = false;
-          return;
-        }
-
         let doc = aEvent.target;
         if (doc != content.document)
-          return;
+          break;
 
         let scrollOffset = this.getScrollOffset(content);
+        if (this._scrollOffset.x == scrollOffset.x && this._scrollOffset.y == scrollOffset.y)
+          break;
+
+        this._scrollOffset = scrollOffset;
         sendAsyncMessage("scroll", scrollOffset);
         break;
       }

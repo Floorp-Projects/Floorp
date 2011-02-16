@@ -1184,8 +1184,6 @@ Browser.MainDragger.prototype = {
         // Update the scroll position of the content
         let browser = getBrowser();
         browser._updateCSSViewport();
-        let view = browser.getRootView();
-        view._updateCacheViewport();
         break;
       }
       case "SizeChanged":
