@@ -1277,44 +1277,47 @@ JS_WrapValue(JSContext *cx, jsval *vp)
 JS_PUBLIC_API(JSObject *)
 JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target)
 {
-     // This function is called when an object moves between two different
-     // compartments. In that case, we need to "move" the window from origobj's
-     // compartment to target's compartment.
+     // This function is called when an object moves between two
+     // different compartments. In that case, we need to "move" the
+     // window from origobj's compartment to target's compartment.
     JSCompartment *destination = target->getCompartment();
+    WrapperMap &map = destination->crossCompartmentWrappers;
+    Value origv = ObjectValue(*origobj);
+    JSObject *obj;
+
     if (origobj->getCompartment() == destination) {
         // If the original object is in the same compartment as the
         // destination, then we know that we won't find wrapper in the
-        // destination's cross compartment map and that the same object
-        // will continue to work.
-        if (!origobj->swap(cx, target))
+        // destination's cross compartment map and that the same
+        // object will continue to work.  Note the rare case where
+        // |origobj == target|. In that case, we can just treat this
+        // as a same compartment navigation. The effect is to clear
+        // all of the wrappers and their holders if they have
+        // them. This would be cleaner as a separate API.
+        if (origobj != target && !origobj->swap(cx, target))
             return NULL;
-        return origobj;
-    }
-
-    JSObject *obj;
-    WrapperMap &map = destination->crossCompartmentWrappers;
-    Value origv = ObjectValue(*origobj);
-
-    // There might already be a wrapper for the original object in the new
-    // compartment.
-    if (WrapperMap::Ptr p = map.lookup(origv)) {
-        // If there is, make it the primary outer window proxy around the
-        // inner (accomplished by swapping target's innards with the old,
-        // possibly security wrapper, innards).
+        obj = origobj;
+    } else if (WrapperMap::Ptr p = map.lookup(origv)) {
+        // There might already be a wrapper for the original object in
+        // the new compartment. If there is, make it the primary outer
+        // window proxy around the inner (accomplished by swapping
+        // target's innards with the old, possibly security wrapper,
+        // innards).
         obj = &p->value.toObject();
         map.remove(p);
         if (!obj->swap(cx, target))
             return NULL;
     } else {
-        // Otherwise, this is going to be our outer window proxy in the new
-        // compartment.
+        // Otherwise, this is going to be our outer window proxy in
+        // the new compartment.
         obj = target;
     }
 
-    // Now, iterate through other scopes looking for references to the old
-    // outer window. They need to be updated to point at the new outer window.
-    // They also might transition between different types of security wrappers
-    // based on whether the new compartment is same origin with them.
+    // Now, iterate through other scopes looking for references to the
+    // old outer window. They need to be updated to point at the new
+    // outer window.  They also might transition between different
+    // types of security wrappers based on whether the new compartment
+    // is same origin with them.
     Value targetv = ObjectValue(*obj);
     WrapperVector &vector = cx->runtime->compartments;
     AutoValueVector toTransplant(cx);
@@ -1335,17 +1338,17 @@ JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target)
         JS_ASSERT(pmap.lookup(origv));
         pmap.remove(origv);
 
-        // First, we wrap it in the new compartment. This will return a
-        // new wrapper.
+        // First, we wrap it in the new compartment. This will return
+        // a new wrapper.
         AutoCompartment ac(cx, wobj);
         JSObject *tobj = obj;
         if (!ac.enter() || !wcompartment->wrap(cx, &tobj))
             return NULL;
 
-        // Now, because we need to maintain object identity, we do a brain
-        // transplant on the old object. At the same time, we update the
-        // entry in the compartment's wrapper map to point to the old
-        // wrapper.
+        // Now, because we need to maintain object identity, we do a
+        // brain transplant on the old object. At the same time, we
+        // update the entry in the compartment's wrapper map to point
+        // to the old wrapper.
         JS_ASSERT(tobj != wobj);
         if (!wobj->swap(cx, tobj))
             return NULL;
@@ -1353,7 +1356,7 @@ JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target)
     }
 
     // Lastly, update the original object to point to the new one.
-    {
+    if (origobj->getCompartment() != destination) {
         AutoCompartment ac(cx, origobj);
         JSObject *tobj = obj;
         if (!ac.enter() || !JS_WrapObject(cx, &tobj))
