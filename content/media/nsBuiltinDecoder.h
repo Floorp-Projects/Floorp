@@ -450,6 +450,9 @@ class nsBuiltinDecoder : public nsMediaDecoder
   }
 
  public:
+  // Return the preloadAction
+  nsHTMLMediaElement::PreloadAction GetPreloadAction();
+
   // Return the current state. Can be called on any thread. If called from
   // a non-main thread, the decoder monitor must be held.
   PlayState GetState() {
