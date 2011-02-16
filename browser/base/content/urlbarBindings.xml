@@ -1079,7 +1079,7 @@
                 class="splitmenu-menuitem"
                 xbl:inherits="iconic,label,disabled,onclick=oncommand,_moz-menuactive=active"/>
       <xul:menu anonid="menu" class="splitmenu-menu"
-                xbl:inherits="disabled"
+                xbl:inherits="disabled,_moz-menuactive=active"
                 oncommand="event.stopPropagation();">
         <children includes="menupopup"/>
       </xul:menu>
