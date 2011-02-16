@@ -3188,9 +3188,7 @@ nsJSContext::ClearScope(void *aGlobalObj, PRBool aClearFromProtoChain)
 
     JS_ClearScope(mContext, obj);
 
-    if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
-      JS_ClearScope(mContext, &obj->getProxyExtra().toObject());
-    }
+    NS_ABORT_IF_FALSE(!xpc::WrapperFactory::IsXrayWrapper(obj), "unexpected wrapper");
 
     if (window != JSVAL_VOID) {
       if (!JS_DefineProperty(mContext, obj, "window", window,
