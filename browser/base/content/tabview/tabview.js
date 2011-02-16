@@ -7,20 +7,6 @@ Cu.import("resource:///modules/tabview/utils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "gWindow", function() {
-  return window.parent;
-});
-
-XPCOMUtils.defineLazyGetter(this, "gBrowser", function() gWindow.gBrowser);
-
-XPCOMUtils.defineLazyGetter(this, "gTabViewDeck", function() {
-  return gWindow.document.getElementById("tab-view-deck");
-});
-
-XPCOMUtils.defineLazyGetter(this, "gTabViewFrame", function() {
-  return gWindow.document.getElementById("tab-view");
-});
-
 XPCOMUtils.defineLazyGetter(this, "tabviewBundle", function() {
   return Services.strings.
     createBundle("chrome://browser/locale/tabview.properties");
@@ -36,6 +22,12 @@ XPCOMUtils.defineLazyGetter(this, "gPrivateBrowsing", function() {
   return Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
 });
+
+var gWindow = window.parent;
+var gBrowser = gWindow.gBrowser;
+var gTabView = gWindow.TabView;
+var gTabViewDeck = gWindow.document.getElementById("tab-view-deck");
+var gTabViewFrame = gWindow.document.getElementById("tab-view");
 
 # NB: Certain files need to evaluate before others
 
