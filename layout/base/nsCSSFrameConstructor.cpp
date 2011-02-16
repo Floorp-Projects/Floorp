@@ -7668,7 +7668,7 @@ UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager,
           do {
             DoApplyRenderingChangeToTree(outOfFlowFrame, aViewManager,
                                          aFrameManager, aChange);
-          } while (outOfFlowFrame = outOfFlowFrame->GetNextContinuation());
+          } while ((outOfFlowFrame = outOfFlowFrame->GetNextContinuation()));
         } else if (childList == nsGkAtoms::popupList) {
           DoApplyRenderingChangeToTree(child, aViewManager,
                                        aFrameManager, aChange);
