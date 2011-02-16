@@ -97,6 +97,10 @@ let Storage = {
 
     this._sessionStore.setTabValue(tab, this.TAB_DATA_IDENTIFIER,
       JSON.stringify(data));
+
+    // Notify subscribers
+    if (data && data.imageData && tab._tabViewTabItem)
+      tab._tabViewTabItem._sendToSubscribers("savedImageData");
   },
 
   // ----------

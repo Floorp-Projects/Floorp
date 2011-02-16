@@ -243,19 +243,18 @@ let UI = {
       });
 
       // ___ setup observer to save canvas images
-      function quitObserver(subject, topic, data) {
-        if (topic == "quit-application-requested") {
+      function domWinClosedObserver(subject, topic, data) {
+        if (topic == "domwindowclosed" && subject == gWindow) {
           if (self.isTabViewVisible())
             GroupItems.removeHiddenGroups();
-
           TabItems.saveAll(true);
           self._save();
         }
       }
       Services.obs.addObserver(
-        quitObserver, "quit-application-requested", false);
+        domWinClosedObserver, "domwindowclosed", false);
       this._cleanupFunctions.push(function() {
-        Services.obs.removeObserver(quitObserver, "quit-application-requested");
+        Services.obs.removeObserver(domWinClosedObserver, "domwindowclosed");
       });
 
       // ___ Done
