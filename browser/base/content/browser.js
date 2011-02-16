@@ -8494,7 +8494,7 @@ var TabContextMenu = {
 
     // Hide "Move to Group" if it's a pinned tab.
     document.getElementById("context_tabViewMenu").hidden =
-      (this.contextTab.pinned || !TabView.firstRunExperienced);
+      (this.contextTab.pinned || !TabView.firstUseExperienced);
   }
 };
 

@@ -103,6 +103,7 @@ _BROWSER_FILES = \
                  browser_tabview_bug625424.js \
                  browser_tabview_bug626368.js \
                  browser_tabview_bug626525.js \
+                 browser_tabview_bug626791.js \
                  browser_tabview_bug627288.js \
                  browser_tabview_bug627736.js \
                  browser_tabview_bug628165.js \
@@ -126,7 +127,6 @@ _BROWSER_FILES = \
                  browser_tabview_snapping.js \
                  browser_tabview_startup_transitions.js \
                  browser_tabview_undo_group.js \
-                 browser_tabview_firstrun_pref.js \
                  dummy_page.html \
                  head.js \
                  search1.html \

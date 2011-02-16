@@ -104,7 +104,7 @@ function test() {
       // when the second tab is hidden, the iframe should be initialized and 
       // the first tab should be visible.
       let onTabHide = function() {
-        newWin.gBrowser.tabContainer.addEventListener("TabHide", onTabHide, true);
+        newWin.gBrowser.tabContainer.removeEventListener("TabHide", onTabHide, true);
 
         ok(newWin.TabView.getContentWindow(), "");
 
