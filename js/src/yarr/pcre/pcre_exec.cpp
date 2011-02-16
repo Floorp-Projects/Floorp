@@ -484,6 +484,7 @@ match(JSArenaPool *regExpPool, const UChar* subjectPtr, const unsigned char* ins
     bool minimize = false; /* Initialization not really needed, but some compilers think so. */
     unsigned remainingMatchCount = matchLimit;
     int othercase; /* Declare here to avoid errors during jumps */
+    bool minSatisfied;
     
     MatchStack stack(regExpPool);
 
@@ -556,7 +557,7 @@ RECURSE:
                 do {
                     /* We need to extract this into a variable so we can correctly pass it by value
                      through RECURSIVE_MATCH_NEW_GROUP, which modifies currentFrame. */
-                    bool minSatisfied = stack.currentFrame->locals.minSatisfied;
+                    minSatisfied = stack.currentFrame->locals.minSatisfied;
                     RECURSIVE_MATCH_NEW_GROUP(2, stack.currentFrame->args.instructionPtr + stack.currentFrame->locals.skipBytes + LINK_SIZE, stack.currentFrame->args.bracketChain, minSatisfied);
                     if (isMatch) {
                         DPRINTF(("non-capturing bracket succeeded\n"));
@@ -1862,7 +1863,7 @@ RECURSE:
                     do {
                         /* We need to extract this into a variable so we can correctly pass it by value
                          through RECURSIVE_MATCH_NEW_GROUP, which modifies currentFrame. */
-                        bool minSatisfied = stack.currentFrame->locals.minSatisfied;
+                        minSatisfied = stack.currentFrame->locals.minSatisfied;
                         RECURSIVE_MATCH_NEW_GROUP(1, stack.currentFrame->args.instructionPtr + stack.currentFrame->locals.skipBytes + LINK_SIZE, stack.currentFrame->args.bracketChain, minSatisfied);
                         if (isMatch)
                             RRETURN;
@@ -2153,7 +2154,7 @@ int jsRegExpExecute(JSContext *cx, const JSRegExp* re,
         }
 
         if (returnCode != 1) {
-            JS_ASSERT(returnCode == JSRegExpErrorHitLimit || returnCode == JSRegExpErrorNoMemory);
+            JS_ASSERT(returnCode == JSRegExpErrorHitLimit);
             DPRINTF((">>>> error: returning %d\n", returnCode));
             return returnCode;
         }
@@ -2169,6 +2170,7 @@ int jsRegExpExecute(JSContext *cx, const JSRegExp* re,
             offsets[1] = matchBlock.endMatchPtr - matchBlock.startSubject;
         }
         
+        JS_ASSERT(returnCode >= 0);
         DPRINTF((">>>> returning %d\n", returnCode));
         return returnCode;
     } while (!(re->options & IsAnchoredOption) && startMatch <= endSubject);
