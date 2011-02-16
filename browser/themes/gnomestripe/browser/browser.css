@@ -1722,7 +1722,11 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   -moz-transform: translate(0, 2px);
 }
 
-/* Application menu toolbar button */
+/* Application button menu */
+
+.splitmenu-menuitem {
+  -moz-margin-end: 1px;
+}
 
 #appmenu-toolbar-button > .toolbarbutton-text,
 #appmenu-toolbar-button > .toolbarbutton-menu-dropmarker {
