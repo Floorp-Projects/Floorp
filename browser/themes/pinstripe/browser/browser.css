@@ -932,10 +932,6 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
   height: 16px;
 }
 
-.ac-comment {
-  font-size: 1.1em;
-}
-
 .ac-extra > .ac-comment {
   font-size: inherit;
 }
@@ -943,7 +939,7 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 .ac-url-text,
 .ac-action-text {
   color: -moz-nativehyperlinktext;
-  font-size: 0.95em;
+  font: message-box;
 }
 
 richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
