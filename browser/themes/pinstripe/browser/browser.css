@@ -345,8 +345,6 @@ toolbar:not([mode="icons"]) #restore-button {
 .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon,
 .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
   margin: 2px;
-  height: 16px;
-  width: 16px;
 }
 
 .toolbarbutton-1[disabled="true"] > .toolbarbutton-icon,
