@@ -72,9 +72,6 @@
   <![CDATA[
 
     function runTest() {
-      const Cc = Components.classes;
-      const Ci = Components.interfaces;
-
       var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
                getService(Ci.nsINavBookmarksService);
       var ts = Cc["@mozilla.org/browser/tagging-service;1"].
