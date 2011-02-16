@@ -264,6 +264,7 @@ public:
 private:
     void InitQuirksModes(const nsCString& aMimeType);
     bool InitGraphics();
+    void DeinitGraphics();
 #if defined(MOZ_WIDGET_GTK2)
     static gboolean DetectNestedEventLoop(gpointer data);
     static gboolean ProcessBrowserEvents(gpointer data);
