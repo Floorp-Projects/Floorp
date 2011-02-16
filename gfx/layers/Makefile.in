@@ -68,12 +68,14 @@ EXPORTS = \
         Layers.h \
         LayerManagerOGL.h \
         LayerManagerOGLProgram.h \
+        ReadbackLayer.h \
         $(NULL)
 
 CPPSRCS = \
-	Layers.cpp \
         BasicImages.cpp \
         BasicLayers.cpp \
+        Layers.cpp \
+        ReadbackProcessor.cpp \
         ThebesLayerBuffer.cpp \
         CanvasLayerOGL.cpp \
         ColorLayerOGL.cpp \
