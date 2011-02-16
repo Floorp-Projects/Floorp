@@ -297,6 +297,9 @@ DOMSVGPointList::InsertItemBefore(nsIDOMSVGPoint *aNewItem,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  // Now that we know we're inserting, keep animVal list in sync as necessary.
+  MaybeInsertNullInAnimValListAt(aIndex);
+
   InternalList().InsertItem(aIndex, domItem->ToSVGPoint());
   mItems.InsertElementAt(aIndex, domItem.get());
 
@@ -373,6 +376,12 @@ DOMSVGPointList::RemoveItem(PRUint32 aIndex,
   if (aIndex >= Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
+
+  // Now that we know we're removing, keep animVal list in sync as necessary.
+  // Do this *before* touching InternalList() so the removed item can get its
+  // internal value.
+  MaybeRemoveItemFromAnimValListAt(aIndex);
+
   // We have to return the removed item, so make sure it exists:
   EnsureItemAt(aIndex);
 
@@ -408,6 +417,60 @@ DOMSVGPointList::EnsureItemAt(PRUint32 aIndex)
   if (!mItems[aIndex]) {
     mItems[aIndex] = new DOMSVGPoint(this, aIndex, IsAnimValList());
   }
+}
+
+void
+DOMSVGPointList::MaybeInsertNullInAnimValListAt(PRUint32 aIndex)
+{
+  NS_ABORT_IF_FALSE(!IsAnimValList(), "call from baseVal to animVal");
+
+  if (AttrIsAnimating()) {
+    // animVal not a clone of baseVal
+    return;
+  }
+
+  // The anim val list is in sync with the base val list
+  DOMSVGPointList *animVal =
+    GetDOMWrapperIfExists(InternalAList().GetAnimValKey());
+  if (!animVal) {
+    // No animVal list wrapper
+    return;
+  }
+
+  NS_ABORT_IF_FALSE(animVal->mItems.Length() == mItems.Length(),
+                    "animVal list not in sync!");
+
+  animVal->mItems.InsertElementAt(aIndex, static_cast<DOMSVGPoint*>(nsnull));
+
+  UpdateListIndicesFromIndex(animVal->mItems, aIndex + 1);
+}
+
+void
+DOMSVGPointList::MaybeRemoveItemFromAnimValListAt(PRUint32 aIndex)
+{
+  NS_ABORT_IF_FALSE(!IsAnimValList(), "call from baseVal to animVal");
+
+  if (AttrIsAnimating()) {
+    // animVal not a clone of baseVal
+    return;
+  }
+
+  DOMSVGPointList *animVal =
+    GetDOMWrapperIfExists(InternalAList().GetAnimValKey());
+  if (!animVal) {
+    // No animVal list wrapper
+    return;
+  }
+
+  NS_ABORT_IF_FALSE(animVal->mItems.Length() == mItems.Length(),
+                    "animVal list not in sync!");
+
+  if (animVal->mItems[aIndex]) {
+    animVal->mItems[aIndex]->RemovingFromList();
+  }
+  animVal->mItems.RemoveElementAt(aIndex);
+
+  UpdateListIndicesFromIndex(animVal->mItems, aIndex);
 }
 
 } // namespace mozilla
