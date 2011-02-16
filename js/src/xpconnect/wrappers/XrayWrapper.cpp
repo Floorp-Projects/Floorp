@@ -192,7 +192,7 @@ holder_get(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
             return false;
         JSBool retval = true;
         nsresult rv = wn->GetScriptableCallback()->GetProperty(wn, cx, wrapper, id, vp, &retval);
-        if (NS_FAILED(rv)) {
+        if (NS_FAILED(rv) || !retval) {
             if (retval)
                 XPCThrower::Throw(rv, cx);
             return false;
@@ -219,7 +219,7 @@ holder_set(JSContext *cx, JSObject *wrapper, jsid id, JSBool strict, jsval *vp)
             return false;
         JSBool retval = true;
         nsresult rv = wn->GetScriptableCallback()->SetProperty(wn, cx, wrapper, id, vp, &retval);
-        if (NS_FAILED(rv)) {
+        if (NS_FAILED(rv) || !retval) {
             if (retval)
                 XPCThrower::Throw(rv, cx);
             return false;
@@ -439,27 +439,38 @@ XrayWrapper<Base>::resolveOwnProperty(JSContext *cx, JSObject *wrapper, jsid id,
         return true;
     }
 
+    desc->obj = NULL;
+
+    uintN flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
     JSObject *holder = GetHolder(wrapper);
     JSObject *expando = GetExpandoObject(holder);
-    if (expando) {
-        if (!JS_GetPropertyDescriptorById(cx, expando, id,
-                                          (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
-                                          desc)) {
-            return false;
-        }
 
-        if (desc->obj)
-            return true;
+    // Check for expando properties first.
+    if (expando && !JS_GetPropertyDescriptorById(cx, expando, id, flags, desc)) {
+        return false;
+    }
+    if (desc->obj) {
+        // Pretend the property lives on the wrapper.
+        desc->obj = wrapper;
+        return true;
     }
 
-    JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
-    XPCWrappedNative *wn = GetWrappedNative(wnObject);
+    JSBool hasProp;
+    if (!JS_HasPropertyById(cx, holder, id, &hasProp)) {
+        return false;
+    }
+    if (!hasProp) {
+        JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
+        XPCWrappedNative *wn = GetWrappedNative(wnObject);
 
-    // Run the resolve hook of the wrapped native.
-    if (NATIVE_HAS_FLAG(wn, WantNewResolve)) {
+        // Run the resolve hook of the wrapped native.
+        if (!NATIVE_HAS_FLAG(wn, WantNewResolve)) {
+            desc->obj = nsnull;
+            return true;
+        }
+
         JSBool retval = true;
         JSObject *pobj = NULL;
-        uintN flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
         nsresult rv = wn->GetScriptableInfo()->GetCallback()->NewResolve(wn, cx, wrapper, id,
                                                                          flags, &pobj, &retval);
         if (NS_FAILED(rv)) {
@@ -468,20 +479,23 @@ XrayWrapper<Base>::resolveOwnProperty(JSContext *cx, JSObject *wrapper, jsid id,
             return false;
         }
 
-        if (pobj) {
-#ifdef DEBUG
-            JSBool hasProp;
-            NS_ASSERTION(JS_HasPropertyById(cx, holder, id, &hasProp) &&
-                         hasProp, "id got defined somewhere else?");
-#endif
-            if (!JS_GetPropertyDescriptorById(cx, holder, id, flags, desc))
-                return false;
-            desc->obj = wrapper;
+        if (!pobj) {
+            desc->obj = nsnull;
             return true;
         }
+
+#ifdef DEBUG
+        NS_ASSERTION(JS_HasPropertyById(cx, holder, id, &hasProp) &&
+                     hasProp, "id got defined somewhere else?");
+#endif
     }
 
-    desc->obj = nsnull;
+    if (!JS_GetPropertyDescriptorById(cx, holder, id, flags, desc))
+        return false;
+
+    // Pretend we found the property on the wrapper, not the holder.
+    desc->obj = wrapper;
+
     return true;
 }
 
