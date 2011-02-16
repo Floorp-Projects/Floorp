@@ -227,6 +227,10 @@
   -moz-margin-start: .5em;
 }
 
+.splitmenu-menuitem {
+  -moz-margin-end: 1px;
+}
+
 .splitmenu-menu {
   -moz-box-pack: end;
 }
