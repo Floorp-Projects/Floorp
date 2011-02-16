@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=631751
+-->
+<head>
+  <title>Test for Bug 631751</title>
+  <script type="text/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="text/javascript" 
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js">
+          </script>
+  <script type="text/javascript" src="CharsetDetectionTests.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=631751">Mozilla Bug 631751</a>
+<p id="display"></p>
+<div id="content" style="display: none">  
+</div>
+<iframe id="testframe"></iframe>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 631751 **/
+/* Note! This test uses the chardet test harness but doesn't test chardet! */
+CharsetDetectionTests("bug631751le_text.html",
+		      "UTF-16LE",
+		      new Array(""));
+</script>
+</pre>
+</body>
+</html>
