@@ -79,7 +79,7 @@ public:
     inline nsXPCWrappedJS* Add(nsXPCWrappedJS* wrapper)
     {
         NS_PRECONDITION(wrapper,"bad param");
-        JSObject* obj = wrapper->GetJSObject();
+        JSObject* obj = wrapper->GetJSObjectPreserveColor();
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, obj, JS_DHASH_ADD);
         if(!entry)
@@ -94,7 +94,8 @@ public:
     inline void Remove(nsXPCWrappedJS* wrapper)
     {
         NS_PRECONDITION(wrapper,"bad param");
-        JS_DHashTableOperate(mTable, wrapper->GetJSObject(), JS_DHASH_REMOVE);
+        JS_DHashTableOperate(mTable, wrapper->GetJSObjectPreserveColor(),
+                             JS_DHASH_REMOVE);
     }
 
     inline uint32 Count() {return mTable->entryCount;}

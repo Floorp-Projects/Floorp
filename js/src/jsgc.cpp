@@ -505,7 +505,7 @@ IsAboutToBeFinalized(JSContext *cx, void *thing)
 }
 
 JS_FRIEND_API(bool)
-js_GCThingIsMarked(void *thing, uint32 color = BLACK)
+js_GCThingIsMarked(void *thing, uintN color = BLACK)
 {
     JS_ASSERT(thing);
     AssertValidColor(thing, color);
