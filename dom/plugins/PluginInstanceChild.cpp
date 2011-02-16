@@ -2951,12 +2951,23 @@ PluginInstanceChild::ShowPluginFrame()
         // ... and hand off to the plugin
         // BEWARE: mBackground may die during this call
         PaintRectToSurface(rect, mCurrentSurface, gfxRGBA(0.0, 0.0, 0.0, 0.0));
-    } else if (mDoAlphaExtraction) {
+    } else if (!temporarilyMakeVisible && mDoAlphaExtraction) {
+        // We don't want to pay the expense of alpha extraction for
+        // phony paints.
         PLUGIN_LOG_DEBUG(("  (with alpha recovery)"));
         PaintRectWithAlphaExtraction(rect, mCurrentSurface);
     } else {
         PLUGIN_LOG_DEBUG(("  (onto opaque surface)"));
-        PaintRectToSurface(rect, mCurrentSurface, gfxRGBA(0.0, 0.0, 0.0, 0.0));
+
+        // If we're on a platform that needs helper surfaces for
+        // plugins, and we're forcing a throwaway paint of a
+        // wmode=transparent plugin, then make sure to use the helper
+        // surface here.
+        nsRefPtr<gfxASurface> target =
+            (temporarilyMakeVisible && mHelperSurface) ?
+            mHelperSurface : mCurrentSurface;
+
+        PaintRectToSurface(rect, target, gfxRGBA(0.0, 0.0, 0.0, 0.0));
     }
     mHasPainted = true;
 
@@ -2971,6 +2982,14 @@ PluginInstanceChild::ShowPluginFrame()
         if (mPluginIface->setwindow) {
             mPluginIface->setwindow(&mData, &mWindow);
         }
+
+        // Skip forwarding the results of the phony paint to the
+        // browser.  We may have painted a transparent plugin using
+        // the opaque-plugin path, which can result in wrong pixels.
+        // We also don't want to pay the expense of forwarding the
+        // surface for plugins that might really be invisible.
+        mAccumulatedInvalidRect.SetRect(0, 0, mWindow.width, mWindow.height);
+        return true;
     }
 
     NPRect r = { (uint16_t)rect.y, (uint16_t)rect.x,
