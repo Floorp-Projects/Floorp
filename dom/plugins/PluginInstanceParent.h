@@ -282,6 +282,11 @@ public:
 #ifdef XP_MACOSX
     nsresult IsRemoteDrawingCoreAnimation(PRBool *aDrawing);
 #endif
+    nsresult SetBackgroundUnknown() { return NS_OK; }
+    nsresult BeginUpdateBackground(const nsIntRect& aRect,
+                                   gfxContext** aCtx) { return NS_OK; }
+    nsresult EndUpdateBackground(gfxContext* aCtx,
+                                 const nsIntRect& aRect) { return NS_OK; }
 
 private:
     // Quirks mode support for various plugin mime types
