@@ -1293,6 +1293,9 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
     window->PageHidden();
 
   if (aIsUnload) {
+    // Poke the GC. The window might be collectable garbage now.
+    nsJSContext::PokeGC();
+
     // if Destroy() was called during OnPageHide(), mDocument is nsnull.
     NS_ENSURE_STATE(mDocument);
 
