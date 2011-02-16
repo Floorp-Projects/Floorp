@@ -48,7 +48,7 @@
             src="chrome://global/content/aboutMemory.js"/>
   </head>
 
-  <body onload="doLoad()">
+  <body onload="doLoad()" onunload="doUnload()">
     <h1>Memory Usage</h1>
 
     <div id="memOverview" class="memOverview memBox">
