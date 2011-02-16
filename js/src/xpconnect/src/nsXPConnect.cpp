@@ -167,22 +167,19 @@ nsXPConnect::GetXPConnect()
         if(!gSelf)
             return nsnull;
 
-        if(!gSelf->mRuntime ||
-           !gSelf->mInterfaceInfoManager)
-        {
-            // ctor failed to create an acceptable instance
-            delete gSelf;
-            gSelf = nsnull;
+        if (!gSelf->mRuntime) {
+            NS_RUNTIMEABORT("Couldn't create XPCJSRuntime.");
         }
-        else
-        {
-            // Initial extra ref to keep the singleton alive
-            // balanced by explicit call to ReleaseXPConnectSingleton()
-            NS_ADDREF(gSelf);
-            if (NS_FAILED(NS_SetGlobalThreadObserver(gSelf))) {
-                NS_RELEASE(gSelf);
-                // Fall through to returning null
-            }
+        if (!gSelf->mInterfaceInfoManager) {
+            NS_RUNTIMEABORT("Couldn't get global interface info manager.");
+        }
+
+        // Initial extra ref to keep the singleton alive
+        // balanced by explicit call to ReleaseXPConnectSingleton()
+        NS_ADDREF(gSelf);
+        if (NS_FAILED(NS_SetGlobalThreadObserver(gSelf))) {
+            NS_RELEASE(gSelf);
+            // Fall through to returning null
         }
     }
     return gSelf;
