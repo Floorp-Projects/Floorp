@@ -2379,7 +2379,7 @@ nsXPConnect::AfterProcessNextEvent(nsIThreadInternal *aThread,
 {
     // Call cycle collector occasionally.
     if (NS_IsMainThread()) {
-        nsJSContext::MaybeCCIfUserInactive();
+        nsJSContext::MaybePokeCC();
     }
 
     return Pop(nsnull);

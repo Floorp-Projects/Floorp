@@ -148,8 +148,6 @@ public:
   virtual PRBool IsContextInitialized();
   virtual void FinalizeContext();
 
-  virtual void GC();
-
   virtual void ScriptEvaluated(PRBool aTerminated);
   virtual nsresult SetTerminationFunction(nsScriptTerminationFunc aFunc,
                                           nsISupports* aRef);
@@ -187,37 +185,17 @@ public:
   static void LoadStart();
   static void LoadEnd();
 
-  // CC does always call cycle collector and it also updates the counters
-  // that MaybeCC uses.
-  static void CC(nsICycleCollectorListener *aListener,
-                 PRBool aForceGC = PR_FALSE);
+  static void GarbageCollectNow();
+  static void CycleCollectNow(nsICycleCollectorListener *aListener = nsnull);
 
-  // MaybeCC calls cycle collector if certain conditions are fulfilled.
-  // The conditions are:
-  // - The timer related to page load (sGCTimer) must not be active.
-  // - At least NS_MIN_CC_INTERVAL milliseconds must have elapsed since the
-  //   previous cycle collector call.
-  // - Certain number of MaybeCC calls have occurred.
-  //   The number of needed MaybeCC calls depends on the aHigherProbability
-  //   parameter. If the parameter is true, probability for calling cycle
-  //   collector rises increasingly. If the parameter is all the time false,
-  //   at least NS_MAX_DELAYED_CCOLLECT MaybeCC calls are needed.
-  //   If the previous call to cycle collector did collect something,
-  //   MaybeCC works effectively as if aHigherProbability was true.
-  // @return PR_TRUE if cycle collector was called.
-  static PRBool MaybeCC(PRBool aHigherProbability, PRBool aForceGC = PR_FALSE);
+  static void PokeGC();
+  static void KillGCTimer();
 
-  // IntervalCC() calls CC() if at least NS_MIN_CC_INTERVAL milliseconds have
-  // elapsed since the previous cycle collector call.
-  static PRBool IntervalCC(PRBool aForceGC = PR_FALSE);
+  static void PokeCC();
+  static void MaybePokeCC();
+  static void KillCCTimer();
 
-  // Calls IntervalCC(PR_TRUE) if user is currently inactive,
-  // otherwise MaybeCC(PR_TRUE, PR_TRUE)
-  static void CCIfUserInactive();
-
-  static void MaybeCCIfUserInactive();
-
-  static void FireGCTimer(PRBool aLoadInProgress);
+  virtual void GC();
 
 protected:
   nsresult InitializeExternalClasses();
