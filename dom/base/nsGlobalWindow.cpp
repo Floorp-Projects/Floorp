@@ -66,6 +66,7 @@
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
+#include "nsJSEnvironment.h"
 
 // Other Classes
 #include "nsIEventListenerManager.h"
