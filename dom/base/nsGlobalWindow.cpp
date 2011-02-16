@@ -2491,6 +2491,21 @@ nsGlobalWindow::UpdateParentTarget()
   }
 }
 
+PRBool
+nsGlobalWindow::GetIsTabModalPromptAllowed()
+{
+  PRBool allowTabModal = PR_TRUE;
+  if (mDocShell) {
+    nsCOMPtr<nsIContentViewer> cv;
+    mDocShell->GetContentViewer(getter_AddRefs(cv));
+    nsCOMPtr<nsIContentViewer_MOZILLA_2_0_BRANCH> cv2 = do_QueryInterface(cv);
+    if (cv2)
+      cv2->GetIsTabModalPromptAllowed(&allowTabModal);
+  }
+
+  return allowTabModal;
+}
+
 nsresult
 nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
@@ -4633,14 +4648,7 @@ nsGlobalWindow::Alert(const nsAString& aString)
 
   // Check if we're being called at a point where we can't use tab-modal
   // prompts, because something doesn't want reentrancy.
-  PRBool allowTabModal = PR_TRUE;
-  if (mDocShell) {
-    nsCOMPtr<nsIContentViewer> cv;
-    mDocShell->GetContentViewer(getter_AddRefs(cv));
-    nsCOMPtr<nsIContentViewer_MOZILLA_2_0_BRANCH> cv2 = do_QueryInterface(cv);
-    if (cv2)
-      cv2->GetIsTabModalPromptAllowed(&allowTabModal);
-  }
+  PRBool allowTabModal = GetIsTabModalPromptAllowed();
 
   nsresult rv;
   nsCOMPtr<nsIPromptFactory> promptFac =
@@ -4706,14 +4714,7 @@ nsGlobalWindow::Confirm(const nsAString& aString, PRBool* aReturn)
 
   // Check if we're being called at a point where we can't use tab-modal
   // prompts, because something doesn't want reentrancy.
-  PRBool allowTabModal = PR_TRUE;
-  if (mDocShell) {
-    nsCOMPtr<nsIContentViewer> cv;
-    mDocShell->GetContentViewer(getter_AddRefs(cv));
-    nsCOMPtr<nsIContentViewer_MOZILLA_2_0_BRANCH> cv2 = do_QueryInterface(cv);
-    if (cv2)
-      cv2->GetIsTabModalPromptAllowed(&allowTabModal);
-  }
+  PRBool allowTabModal = GetIsTabModalPromptAllowed();
 
   nsresult rv;
   nsCOMPtr<nsIPromptFactory> promptFac =
@@ -4782,14 +4783,7 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
 
   // Check if we're being called at a point where we can't use tab-modal
   // prompts, because something doesn't want reentrancy.
-  PRBool allowTabModal = PR_TRUE;
-  if (mDocShell) {
-    nsCOMPtr<nsIContentViewer> cv;
-    mDocShell->GetContentViewer(getter_AddRefs(cv));
-    nsCOMPtr<nsIContentViewer_MOZILLA_2_0_BRANCH> cv2 = do_QueryInterface(cv);
-    if (cv2)
-      cv2->GetIsTabModalPromptAllowed(&allowTabModal);
-  }
+  PRBool allowTabModal = GetIsTabModalPromptAllowed();
 
   nsresult rv;
   nsCOMPtr<nsIPromptFactory> promptFac =
