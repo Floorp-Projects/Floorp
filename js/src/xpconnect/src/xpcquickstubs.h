@@ -581,7 +581,7 @@ castNativeFromWrapper(JSContext *cx,
     if(wrapper)
     {
         native = wrapper->GetIdentityObject();
-        cur = wrapper->GetFlatJSObjectAndMark();
+        cur = wrapper->GetFlatJSObject();
     }
     else
     {
