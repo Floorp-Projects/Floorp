@@ -69,7 +69,6 @@ function TabItem(tab, options) {
   let $div = iQ(div);
 
   this._cachedImageData = null;
-  this.shouldHideCachedData = false;
   this.canvasSizeForced = false;
   this.$thumb = iQ('.thumb', $div);
   this.$fav   = iQ('.favicon', $div);
@@ -88,6 +87,7 @@ function TabItem(tab, options) {
   this._hasBeenDrawn = false;
   this._reconnected = false;
   this.isStacked = false;
+  this.url = "";
 
   var self = this;
 
@@ -259,12 +259,6 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Parameters:
   //   tabData - the tab data
   showCachedData: function TabItem_showCachedData(tabData) {
-    if (!this._cachedImageData) {
-      TabItems.cachedDataCounter++;
-      this.tab.linkedBrowser._tabViewTabItemWithCachedData = this;
-      if (TabItems.cachedDataCounter == 1)
-        gBrowser.addTabsProgressListener(TabItems.tabsProgressListener);
-    }
     this._cachedImageData = tabData.imageData;
     this.$cachedThumb.attr("src", this._cachedImageData).show();
     this.$canvas.css({opacity: 0.0});
@@ -277,13 +271,8 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   hideCachedData: function TabItem_hideCachedData() {
     this.$cachedThumb.hide();
     this.$canvas.css({opacity: 1.0});
-    if (this._cachedImageData) {
-      TabItems.cachedDataCounter--;
+    if (this._cachedImageData)
       this._cachedImageData = null;
-      this.tab.linkedBrowser._tabViewTabItemWithCachedData = null;
-      if (TabItems.cachedDataCounter == 0)
-        gBrowser.removeTabsProgressListener(TabItems.tabsProgressListener);
-    }
   },
 
   // ----------
@@ -338,7 +327,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   _reconnect: function TabItem__reconnect() {
     Utils.assertThrow(!this._reconnected, "shouldn't already be reconnected");
     Utils.assertThrow(this.tab, "should have a xul:tab");
-    
+
     let tabData = Storage.getTabData(this.tab);
     if (tabData && TabItems.storageSanity(tabData)) {
       if (this.parent)
@@ -363,7 +352,12 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
 
       let currentUrl = this.tab.linkedBrowser.currentURI.spec;
-      if (tabData.imageData && tabData.url == currentUrl)
+
+      // If we have a cached image, then show it if the loaded URL matches
+      // what the cache is from, OR the loaded URL is blank, which means
+      // that the page hasn't loaded yet.
+      if (tabData.imageData && (tabData.url == currentUrl ||
+        currentUrl == 'about:blank'))
         this.showCachedData(tabData);
     } else {
       // create tab by double click is handled in UI_init().
@@ -778,11 +772,10 @@ let TabItems = {
   _fragment: null,
   items: [],
   paintingPaused: 0,
-  cachedDataCounter: 0,  // total number of cached data being displayed.
-  tabsProgressListener: null,
   _tabsWaitingForUpdate: null,
   _heartbeat: null, // see explanation at startHeartbeat() below
-  _heartbeatTiming: 100, // milliseconds between calls
+  _heartbeatTiming: 200, // milliseconds between calls
+  _maxTimeForUpdating: 200, // milliseconds that consecutive updates can take
   _lastUpdateTime: Date.now(),
   _eventListeners: [],
   _pauseUpdateForTest: false,
@@ -813,18 +806,6 @@ let TabItems = {
     // algorithm breaks down
     this.tempCanvas.width = 150;
     this.tempCanvas.height = 112;
-
-    this.tabsProgressListener = {
-      onStateChange: function(browser, webProgress, request, stateFlags, status) {
-        if ((stateFlags & Ci.nsIWebProgressListener.STATE_STOP) &&
-            (stateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW)) {
-          // browser would only has _tabViewTabItemWithCachedData if 
-          // it's showing cached data.
-          if (browser._tabViewTabItemWithCachedData)
-            browser._tabViewTabItemWithCachedData.shouldHideCachedData = true;
-        }
-      }
-    };
 
     // When a tab is opened, create the TabItem
     this._eventListeners["open"] = function(tab) {
@@ -865,9 +846,6 @@ let TabItems = {
   // ----------
   // Function: uninit
   uninit: function TabItems_uninit() {
-    if (this.tabsProgressListener)
-      gBrowser.removeTabsProgressListener(this.tabsProgressListener);
-
     for (let name in this._eventListeners) {
       AllTabs.unregister(name, this._eventListeners[name]);
     }
@@ -908,6 +886,22 @@ let TabItems = {
   },
 
   // ----------
+  // Function: isComplete
+  // Return whether the xul:tab has fully loaded.
+  isComplete: function TabItems_update(tab) {
+    // If our readyState is complete, but we're showing about:blank,
+    // and we're not loading about:blank, it means we haven't really
+    // started loading. This can happen to the first few tabs in a
+    // page.
+    Utils.assertThrow(tab, "tab");
+    return (
+      tab.linkedBrowser.contentDocument.readyState == 'complete' &&
+      !(tab.linkedBrowser.contentDocument.URL == 'about:blank' &&
+        tab._tabViewTabItem.url != 'about:blank')
+    );
+  },
+
+  // ----------
   // Function: update
   // Takes in a xul:tab.
   update: function TabItems_update(tab) {
@@ -942,12 +936,11 @@ let TabItems = {
 
       Utils.assertThrow(tab, "tab");
 
-      // ___ remove from waiting list if needed
-      this._tabsWaitingForUpdate.remove(tab);
-
       // ___ get the TabItem
       Utils.assertThrow(tab._tabViewTabItem, "must already be linked");
       let tabItem = tab._tabViewTabItem;
+
+      // Even if the page hasn't loaded, display the favicon and title
 
       // ___ icon
       if (this.shouldLoadFavIcon(tab.linkedBrowser)) {
@@ -965,6 +958,16 @@ let TabItems = {
         iQ(tabItem.$fav[0]).hide();
       }
 
+      // ___ label
+      let label = tab.label;
+      let $name = tabItem.$tabTitle;
+      if ($name.text() != label)
+        $name.text(label);
+
+      // ___ remove from waiting list now that we have no other
+      // early returns
+      this._tabsWaitingForUpdate.remove(tab);
+
       // ___ URL
       let tabUrl = tab.linkedBrowser.currentURI.spec;
       if (tabUrl != tabItem.url) {
@@ -973,13 +976,12 @@ let TabItems = {
         tabItem.save();
       }
 
-      // ___ label
-      let label = tab.label;
-      let $name = tabItem.$tabTitle;
-      let isLabelUpdateAllowed = !tabItem.isShowingCachedData() ||
-                                 tabItem.shouldHideCachedData;
-      if (isLabelUpdateAllowed && $name.text() != label)
-        $name.text(label);
+      // ___ Make sure the tab is complete and ready for updating.
+      if (!this.isComplete(tab)) {
+        // If it's incomplete, stick it on the end of the queue
+        this._tabsWaitingForUpdate.push(tab);
+        return;
+      }
 
       // ___ thumbnail
       let $canvas = tabItem.$canvas;
@@ -998,7 +1000,7 @@ let TabItems = {
       tabItem.tabCanvas.paint();
 
       // ___ cache
-      if (tabItem.isShowingCachedData() && tabItem.shouldHideCachedData)
+      if (tabItem.isShowingCachedData())
         tabItem.hideCachedData();
 
       // ___ notify subscribers that a full update has completed.
@@ -1094,41 +1096,54 @@ let TabItems = {
   _checkHeartbeat: function TabItems__checkHeartbeat() {
     this._heartbeat = null;
 
-    if (this.isPaintingPaused())
+    if (this.isPaintingPaused() || !UI.isIdle)
       return;
 
-    if (UI.isIdle())
-      this._update(this._tabsWaitingForUpdate.peek());
+    let accumTime = 0;
+    let items = this._tabsWaitingForUpdate.getItems();
+    // Do as many updates as we can fit into a "perceived" amount
+    // of time, which is tunable.
+    while (accumTime < this._maxTimeForUpdating && items.length) {
+      let updateBegin = Date.now();
+      this._update(items.pop());
+      let updateEnd = Date.now();
+
+      // Maintain a simple average of time for each tabitem update
+      // We can use this as a base by which to delay things like
+      // tab zooming, so there aren't any hitches.
+      let deltaTime = updateEnd - updateBegin;
+      accumTime += deltaTime;
+    }
 
     if (this._tabsWaitingForUpdate.hasItems())
       this.startHeartbeat();
   },
 
-   // ----------
-   // Function: pausePainting
-   // Tells TabItems to stop updating thumbnails (so you can do
-   // animations without thumbnail paints causing stutters).
-   // pausePainting can be called multiple times, but every call to
-   // pausePainting needs to be mirrored with a call to <resumePainting>.
-   pausePainting: function TabItems_pausePainting() {
-     this.paintingPaused++;
-     if (this._heartbeat) {
-       clearTimeout(this._heartbeat);
-       this._heartbeat = null;
-     }
-   },
+  // ----------
+  // Function: pausePainting
+  // Tells TabItems to stop updating thumbnails (so you can do
+  // animations without thumbnail paints causing stutters).
+  // pausePainting can be called multiple times, but every call to
+  // pausePainting needs to be mirrored with a call to <resumePainting>.
+  pausePainting: function TabItems_pausePainting() {
+    this.paintingPaused++;
+    if (this._heartbeat) {
+      clearTimeout(this._heartbeat);
+      this._heartbeat = null;
+    }
+  },
 
-   // ----------
-   // Function: resumePainting
-   // Undoes a call to <pausePainting>. For instance, if you called
-   // pausePainting three times in a row, you'll need to call resumePainting
-   // three times before TabItems will start updating thumbnails again.
-   resumePainting: function TabItems_resumePainting() {
-     this.paintingPaused--;
-     Utils.assert(this.paintingPaused > -1, "paintingPaused should not go below zero");
-     if (!this.isPaintingPaused())
-       this.startHeartbeat();
-   },
+  // ----------
+  // Function: resumePainting
+  // Undoes a call to <pausePainting>. For instance, if you called
+  // pausePainting three times in a row, you'll need to call resumePainting
+  // three times before TabItems will start updating thumbnails again.
+  resumePainting: function TabItems_resumePainting() {
+    this.paintingPaused--;
+    Utils.assert(this.paintingPaused > -1, "paintingPaused should not go below zero");
+    if (!this.isPaintingPaused())
+      this.startHeartbeat();
+  },
 
   // ----------
   // Function: isPaintingPaused
@@ -1285,7 +1300,6 @@ function TabPriorityQueue() {
 };
 
 TabPriorityQueue.prototype = {
-  _popToggle: false,
   _low: [], // low priority queue
   _high: [], // high priority queue
 
@@ -1302,6 +1316,13 @@ TabPriorityQueue.prototype = {
   // Return whether pending items exist
   hasItems: function TabPriorityQueue_hasItems() {
     return (this._low.length > 0) || (this._high.length > 0);
+  },
+
+  // ----------
+  // Function: getItems
+  // Returns all queued items, ordered from low to high priority
+  getItems: function TabPriorityQueue_getItems() {
+    return this._low.concat(this._high);
   },
 
   // ----------
