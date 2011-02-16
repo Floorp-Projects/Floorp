@@ -442,7 +442,8 @@ struct JS_FRIEND_API(JSCompartment) {
 
     js::NativeIterCache          nativeIterCache;
 
-    js::ToSourceCache            toSourceCache;
+    typedef js::LazilyConstructed<js::ToSourceCache> LazyToSourceCache;
+    LazyToSourceCache            toSourceCache;
 
     JSCompartment(JSRuntime *rt);
     ~JSCompartment();
