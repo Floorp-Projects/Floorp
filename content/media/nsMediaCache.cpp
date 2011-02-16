@@ -2084,9 +2084,6 @@ nsMediaCacheStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
     return NS_ERROR_FAILURE;
   }
 
-  if (mStreamOffset < 0)
-    return NS_ERROR_FAILURE;
-
   LOG(PR_LOG_DEBUG, ("Stream %p Seek to %lld", this, (long long)mStreamOffset));
   gMediaCache->NoteSeek(this, oldOffset);
 
