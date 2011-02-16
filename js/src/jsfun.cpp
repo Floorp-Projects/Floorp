@@ -2044,8 +2044,8 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
     if (!fun)
         return NULL;
 
-    if (!indent && !cx->compartment->toSourceCache.empty()) {
-        ToSourceCache::Ptr p = cx->compartment->toSourceCache.ref().lookup(fun);
+    if (!indent) {
+        ToSourceCache::Ptr p = cx->compartment->toSourceCache.lookup(fun);
         if (p)
             return p->value;
     }
@@ -2054,17 +2054,8 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
     if (!str)
         return false;
 
-    if (!indent) {
-        LazilyConstructed<ToSourceCache> &lazy = cx->compartment->toSourceCache;
-
-        if (lazy.empty()) {
-            lazy.construct();
-            if (!lazy.ref().init())
-                return false;
-        }
-
-        lazy.ref().put(fun, str);
-    }
+    if (!indent)
+        cx->compartment->toSourceCache.put(fun, str);
 
     return str;
 }
