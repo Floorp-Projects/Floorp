@@ -1937,7 +1937,6 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
         if (!nsWindow::DragInProgress()) {
             gtk_grab_add(widget);
             GrabPointer();
-            GrabKeyboard();
         }
     }
     else {
