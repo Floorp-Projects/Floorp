@@ -121,17 +121,10 @@
   padding-bottom: 1px;
 }
 
-#nav-bar:not(:-moz-lwtheme),
-#nav-bar[collapsed="true"] + toolbar:not(:-moz-lwtheme),
-#nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme),
 #navigator-toolbox[tabsontop="true"] > #nav-bar,
 #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar,
 #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar {
   background-image: -moz-linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
-}
-
-#navigator-toolbox[tabsontop="false"] > #toolbar-menubar:not(:-moz-lwtheme) {
-  background-image: -moz-linear-gradient(@toolbarHighlight@, @toolbarHighlight@);
 }
 
 #personal-bookmarks {

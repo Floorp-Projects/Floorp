@@ -129,10 +129,6 @@
     border-left-style: none !important;
     border-right-style: none !important;
   }
-  #toolbar-menubar:not(:-moz-lwtheme),
-  #navigator-toolbox[tabsontop=false] > #nav-bar:not(:-moz-lwtheme) {
-    background-image: none !important;
-  }
 
   /* Vertical toolbar border */
   #main-window[sizemode=normal] #navigator-toolbox:not([inFullscreen])::after,
@@ -285,6 +281,23 @@
 }
 
 @media not all and (-moz-windows-compositor) {
+  #main-window:-moz-system-metric(windows-default-theme) {
+    background-color: rgb(185,209,234);
+  }
+  #main-window:-moz-system-metric(windows-default-theme):-moz-window-inactive {
+    background-color: rgb(215,228,242);
+  }
+
+  #toolbar-menubar:not([autohide=true]):not(:-moz-lwtheme):-moz-system-metric(windows-default-theme),
+  #main-window:not([tabsintitlebar]) #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme):-moz-system-metric(windows-default-theme),
+  #navigator-toolbox[tabsontop=false] > toolbar:not(#toolbar-menubar):not(:-moz-lwtheme):-moz-system-metric(windows-default-theme) {
+    -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
+    background-color: transparent;
+  }
+  #toolbar-menubar[autohide=true]:-moz-system-metric(windows-default-theme) {
+    background-color: transparent;
+  }
+
   #print-preview-toolbar:not(:-moz-lwtheme) {
     -moz-appearance: -moz-win-browsertabbar-toolbox;
   }
