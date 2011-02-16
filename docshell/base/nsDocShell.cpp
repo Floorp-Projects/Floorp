@@ -7128,9 +7128,15 @@ nsDocShell::RestoreFromHistory()
     // Reattach to the window object.
     rv = mContentViewer->Open(windowState, mLSHE);
 
+    // Hack to keep nsDocShellEditorData alive across the
+    // SetContentViewer(nsnull) call below.
+    nsAutoPtr<nsDocShellEditorData> data(mLSHE->ForgetEditorData());
+
     // Now remove it from the cached presentation.
     mLSHE->SetContentViewer(nsnull);
     mEODForCurrentDocument = PR_FALSE;
+
+    mLSHE->SetEditorData(data.forget());
 
 #ifdef DEBUG
  {
