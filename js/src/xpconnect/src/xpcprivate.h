@@ -60,7 +60,6 @@
 #include "jsdbgapi.h"
 #include "jsgc.h"
 #include "jscompartment.h"
-#include "xpcpublic.h"
 #include "nscore.h"
 #include "nsXPCOM.h"
 #include "nsAutoPtr.h"
@@ -489,9 +488,6 @@ private:
 ****************************************************************************
 ***************************************************************************/
 
-static const uint32 XPC_GC_COLOR_BLACK = 0;
-static const uint32 XPC_GC_COLOR_GRAY = 1;
-
 // We have a general rule internally that getters that return addref'd interface
 // pointer generally do so using an 'out' parm. When interface pointers are
 // returned as function call result values they are not addref'd. Exceptions
@@ -556,11 +552,6 @@ public:
     virtual ~nsXPConnect();
 
     JSBool IsShuttingDown() const {return mShuttingDown;}
-
-    // The JS GC marks objects gray that are held alive directly or indirectly
-    // by an XPConnect root. The cycle collector explores only this subset
-    // of the JS heap.
-    static JSBool IsGray(void *thing);
 
     nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
@@ -2550,14 +2541,26 @@ public:
     nsISupports*
     GetIdentityObject() const {return mIdentity;}
 
+    /**
+     * This getter clears the gray bit before handing out the JSObject which
+     * means that the object is guaranteed to be kept alive past the next CC.
+     */
     JSObject*
-    GetFlatJSObjectAndMark() const
-        {if(mFlatJSObject && mFlatJSObject != INVALID_OBJECT)
-             mFlatJSObject->markIfUnmarked();
+    GetFlatJSObject() const
+        {if(mFlatJSObject != INVALID_OBJECT)
+             xpc_UnmarkGrayObject(mFlatJSObject);
          return mFlatJSObject;}
 
+    /**
+     * This getter does not change the color of the JSObject meaning that the
+     * object returned is not guaranteed to be kept alive past the next CC.
+     *
+     * This should only be called if you are certain that the return value won't
+     * be passed into a JS API function and that it won't be stored without
+     * being rooted (or otherwise signaling the stored value to the CC).
+     */
     JSObject*
-    GetFlatJSObjectNoMark() const {return mFlatJSObject;}
+    GetFlatJSObjectPreserveColor() const {return mFlatJSObject;}
 
     XPCLock*
     GetLock() const {return IsValid() && HasProto() ?
@@ -2695,7 +2698,7 @@ public:
         if(mScriptableInfo && JS_IsGCMarkingTracer(trc))
             mScriptableInfo->Mark();
         if(HasProto()) GetProto()->TraceJS(trc);
-        JSObject* wrapper = GetWrapper();
+        JSObject* wrapper = GetWrapperPreserveColor();
         if(wrapper)
             JS_CALL_OBJECT_TRACER(trc, wrapper, "XPCWrappedNative::mWrapper");
     }
@@ -2741,9 +2744,19 @@ public:
     JSBool NeedsCOW() { return !!(mWrapperWord & NEEDS_COW); }
     void SetNeedsCOW() { mWrapperWord |= NEEDS_COW; }
 
+    JSObject* GetWrapperPreserveColor() const
+        {return (JSObject*)(mWrapperWord & (size_t)~(size_t)FLAG_MASK);}
+
     JSObject* GetWrapper()
     {
-        return (JSObject *) (mWrapperWord & (size_t)~(size_t)FLAG_MASK);
+        JSObject* wrapper = GetWrapperPreserveColor();
+        if(wrapper)
+        {
+            xpc_UnmarkGrayObject(wrapper);
+            // Call this to unmark mFlatJSObject.
+            GetFlatJSObject();
+        }
+        return wrapper;
     }
     void SetWrapper(JSObject *obj)
     {
@@ -3005,7 +3018,24 @@ public:
                  nsXPCWrappedJS** wrapper);
 
     nsISomeInterface* GetXPTCStub() { return mXPTCStub; }
-    JSObject* GetJSObject() const {return mJSObj;}
+
+    /**
+     * This getter clears the gray bit before handing out the JSObject which
+     * means that the object is guaranteed to be kept alive past the next CC.
+     */
+    JSObject* GetJSObject() const {xpc_UnmarkGrayObject(mJSObj);
+                                   return mJSObj;}
+
+    /**
+     * This getter does not change the color of the JSObject meaning that the
+     * object returned is not guaranteed to be kept alive past the next CC.
+     *
+     * This should only be called if you are certain that the return value won't
+     * be passed into a JS API function and that it won't be stored without
+     * being rooted (or otherwise signaling the stored value to the CC).
+     */
+    JSObject* GetJSObjectPreserveColor() const {return mJSObj;}
+
     nsXPCWrappedJSClass*  GetClass() const {return mClass;}
     REFNSIID GetIID() const {return GetClass()->GetIID();}
     nsXPCWrappedJS* GetRootWrapper() const {return mRoot;}
@@ -4321,10 +4351,25 @@ public:
     static XPCVariant* newVariant(XPCCallContext& ccx, jsval aJSVal);
 
     /**
-     * nsIVariant exposes a GetAsJSVal() method, which also returns mJSVal.
-     * But if you can, you should call this one, since it can be inlined.
+     * This getter clears the gray bit before handing out the jsval if the jsval
+     * represents a JSObject. That means that the object is guaranteed to be
+     * kept alive past the next CC.
      */
-    jsval GetJSVal() const {return mJSVal;}
+    jsval GetJSVal() const
+        {if(!JSVAL_IS_PRIMITIVE(mJSVal))
+             xpc_UnmarkGrayObject(JSVAL_TO_OBJECT(mJSVal));
+         return mJSVal;}
+
+    /**
+     * This getter does not change the color of the jsval (if it represents a
+     * JSObject) meaning that the value returned is not guaranteed to be kept
+     * alive past the next CC.
+     *
+     * This should only be called if you are certain that the return value won't
+     * be passed into a JS API function and that it won't be stored without
+     * being rooted (or otherwise signaling the stored value to the CC).
+     */
+    jsval GetJSValPreserveColor() const {return mJSVal;}
 
     XPCVariant(XPCCallContext& ccx, jsval aJSVal);
 
@@ -4515,7 +4560,9 @@ struct CompartmentPrivate
     JSObject *LookupExpandoObject(XPCWrappedNative *wn) {
         if (!expandoMap)
             return nsnull;
-        return expandoMap->Get(wn);
+        JSObject *obj = expandoMap->Get(wn);
+        xpc_UnmarkGrayObject(obj);
+        return obj;
     }
 };
 
