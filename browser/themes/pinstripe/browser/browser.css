@@ -1327,13 +1327,11 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   @hudButtonPressed@
 }
 
-#editBookmarkPanel .expander-up,
-#editBookmarkPanel .expander-down:hover:active {
+#editBookmarkPanel .expander-up {
   list-style-image: url("chrome://browser/skin/hud-style-expander-open.png");
 }
 
-#editBookmarkPanel .expander-down,
-#editBookmarkPanel .expander-up:hover:active {
+#editBookmarkPanel .expander-down {
   list-style-image: url("chrome://browser/skin/hud-style-expander-closed.png");
 }
 
