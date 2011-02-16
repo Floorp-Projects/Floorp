@@ -2557,8 +2557,8 @@ PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
     HDC dc = NULL;
 
     if (curSurface) {
-        NS_ASSERTION(SharedDIBSurface::IsSharedDIBSurface(curSurface),
-                     "Expected (SharedDIB) image surface.");
+        if (!SharedDIBSurface::IsSharedDIBSurface(curSurface))
+            NS_RUNTIMEABORT("Expected SharedDIBSurface!");
 
         SharedDIBSurface* dibsurf = static_cast<SharedDIBSurface*>(curSurface.get());
         dc = dibsurf->GetHDC();
@@ -2779,46 +2779,100 @@ void
 PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
                                                   gfxASurface* aSurface)
 {
-    // Paint onto black image
-    bool needImageSurface = true;
-    nsRefPtr<gfxImageSurface> blackImage;
-    gfxIntSize clipSize(aRect.width, aRect.height);
-    gfxPoint deviceOffset(-aRect.x, -aRect.y);
-    // Try to re-use existing image surface, and avoid one copy
-    if (aSurface->GetType() == gfxASurface::SurfaceTypeImage) {
-        gfxImageSurface *surface = static_cast<gfxImageSurface*>(aSurface);
-        if (surface->Format() == gfxASurface::ImageFormatARGB32) {
-            needImageSurface = false;
-            blackImage = surface->GetSubimage(GfxFromNsRect(aRect));
+    NS_ABORT_IF_FALSE(aSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA,
+                      "Refusing to pointlessly recover alpha");
+
+    nsIntRect rect(aRect);
+    // If |aSurface| can be used to paint and can have alpha values
+    // recovered directly to it, do that to save a tmp surface and
+    // copy.
+    bool useSurfaceSubimageForBlack = false;
+    if (gfxASurface::SurfaceTypeImage == aSurface->GetType()) {
+        gfxImageSurface* surfaceAsImage =
+            static_cast<gfxImageSurface*>(aSurface);
+        useSurfaceSubimageForBlack =
+            (surfaceAsImage->Format() == gfxASurface::ImageFormatARGB32);
+        // If we're going to use a subimage, nudge the rect so that we
+        // can use optimal alpha recovery.  If we're not using a
+        // subimage, the temporaries should automatically get
+        // fast-path alpha recovery so we don't need to do anything.
+        if (useSurfaceSubimageForBlack) {
+            rect =
+                gfxAlphaRecovery::AlignRectForSubimageRecovery(aRect,
+                                                               surfaceAsImage);
         }
     }
-    // otherwise create new helper surface
-    if (needImageSurface) {
-        blackImage = new gfxImageSurface(clipSize, gfxASurface::ImageFormatARGB32);
+
+    nsRefPtr<gfxImageSurface> whiteImage;
+    nsRefPtr<gfxImageSurface> blackImage;
+    gfxRect targetRect(rect.x, rect.y, rect.width, rect.height);
+    gfxIntSize targetSize(rect.width, rect.height);
+    gfxPoint deviceOffset = -targetRect.pos;
+
+    // We always use a temporary "white image"
+    whiteImage = new gfxImageSurface(targetSize, gfxASurface::ImageFormatRGB24);
+
+#ifdef XP_WIN
+    // On windows, we need an HDC and so can't paint directly to
+    // vanilla image surfaces.  Bifurcate this painting code so that
+    // we don't accidentally attempt that.
+    if (!SharedDIBSurface::IsSharedDIBSurface(aSurface))
+        NS_RUNTIMEABORT("Expected SharedDIBSurface!");
+
+    // Paint the plugin directly onto the target, with a white
+    // background and copy the result
+    PaintRectToSurface(rect, aSurface, gfxRGBA(1.0, 1.0, 1.0));
+    {
+        gfxRect copyRect(gfxPoint(0, 0), targetRect.size);
+        nsRefPtr<gfxContext> ctx = new gfxContext(whiteImage);
+        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+        ctx->SetSource(aSurface, deviceOffset);
+        ctx->Rectangle(copyRect);
+        ctx->Fill();
     }
 
-    // Paint to black image
-    blackImage->SetDeviceOffset(deviceOffset);
-    PaintRectToSurface(aRect, blackImage, gfxRGBA(0.0, 0.0, 0.0));
+    // Paint the plugin directly onto the target, with a black
+    // background
+    PaintRectToSurface(rect, aSurface, gfxRGBA(0.0, 0.0, 0.0));
 
-    // Paint onto white image
-    nsRefPtr<gfxImageSurface> whiteImage =
-        new gfxImageSurface(clipSize, gfxASurface::ImageFormatRGB24);
+    // Don't copy the result, just extract a subimage so that we can
+    // recover alpha directly into the target
+    gfxImageSurface *image = static_cast<gfxImageSurface*>(aSurface);
+    blackImage = image->GetSubimage(targetRect);
 
+#else
+    // Paint onto white background
     whiteImage->SetDeviceOffset(deviceOffset);
-    PaintRectToSurface(aRect, whiteImage, gfxRGBA(1.0, 1.0, 1.0));
+    PaintRectToSurface(rect, whiteImage, gfxRGBA(1.0, 1.0, 1.0));
 
-    // Extract Alpha from black and white image and store to black Image
-    gfxRect rect(aRect.x, aRect.y, aRect.width, aRect.height);
-    if (!gfxAlphaRecovery::RecoverAlpha(blackImage, whiteImage, nsnull)) {
+    if (useSurfaceSubimageForBlack) {
+        gfxImageSurface *surface = static_cast<gfxImageSurface*>(aSurface);
+        blackImage = surface->GetSubimage(targetRect);
+    } else {
+        blackImage = new gfxImageSurface(targetSize,
+                                         gfxASurface::ImageFormatARGB32);
+    }
+
+    // Paint onto black background
+    blackImage->SetDeviceOffset(deviceOffset);
+    PaintRectToSurface(rect, blackImage, gfxRGBA(0.0, 0.0, 0.0));
+#endif
+
+    NS_ABORT_IF_FALSE(whiteImage && blackImage, "Didn't paint enough!");
+
+    // Extract alpha from black and white image and store to black
+    // image
+    if (!gfxAlphaRecovery::RecoverAlpha(blackImage, whiteImage)) {
         return;
     }
 
-    if (needImageSurface) {
+    // If we had to use a temporary black surface, copy the pixels
+    // with alpha back to the target
+    if (!useSurfaceSubimageForBlack) {
         nsRefPtr<gfxContext> ctx = new gfxContext(aSurface);
         ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
         ctx->SetSource(blackImage);
-        ctx->Rectangle(GfxFromNsRect(aRect));
+        ctx->Rectangle(targetRect);
         ctx->Fill();
     }
 }
