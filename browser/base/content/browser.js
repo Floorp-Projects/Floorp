@@ -800,6 +800,11 @@ const gXPInstallObserver = {
       messageString = messageString.replace("#2", installInfo.installs.length);
       messageString = messageString.replace("#3", brandShortName);
 
+      // Remove notificaion on dismissal, since it's possible to cancel the
+      // install through the addons manager UI, making the "restart" prompt
+      // irrelevant.
+      options.removeOnDismissal = true;
+
       PopupNotifications.show(browser, notificationID, messageString, anchorID,
                               action, null, options);
       break;
