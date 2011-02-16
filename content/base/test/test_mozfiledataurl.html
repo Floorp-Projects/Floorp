@@ -12,7 +12,7 @@
 <iframe id=inner></iframe>
 <iframe id=iframe></iframe>
 <img id=img onload="gen.send(event);">
-<audio id=audio oncanplay="gen.send(event);">
+<audio id=audio onloadedmetadata="gen.send(event);">
 <input type=file id=fileList>
 </p>
 <div id="content" style="display: none">
@@ -90,11 +90,11 @@ function runTest() {
   var fileurl = URL.createObjectURL(file);
   audio.src = fileurl;
   var e = (yield);
-  is(e.type, "canplay", "loaded successfully");
+  is(e.type, "loadedmetadata", "loaded successfully");
 
   // Revoke url and attempt to load a audio in this document
   audio.src = "file_mozfiledataurl_audio.ogg";
-  is((yield).type, "canplay", "successfully reset audio");
+  is((yield).type, "loadedmetadata", "successfully reset audio");
   URL.revokeObjectURL(fileurl);
   todo(false, "urls need to act like 404s, not fail to parse");
 /*  img.src = fileurl;
@@ -113,7 +113,7 @@ function runTest() {
   yield;
   inner.contentWindow.postMessage(JSON.stringify({audio:fileurl}), "*");
   var res = (yield);
-  is(res.type, "canplay", "loaded successfully");
+  is(res.type, "loadedmetadata", "loaded successfully");
   
   // Attempt to load an audio in a different cross-origin document
   inner.src = innerCrossSiteURI;

@@ -855,6 +855,10 @@ void nsBuiltinDecoder::Resume(PRBool aForceBuffering)
   }
 }
 
+nsHTMLMediaElement::PreloadAction nsBuiltinDecoder::GetPreloadAction() {
+  return mElement->GetPreloadAction();
+}
+
 void nsBuiltinDecoder::StopProgressUpdates()
 {
   NS_ASSERTION(IsCurrentThread(mStateMachineThread), "Should be on state machine thread.");
