@@ -53,7 +53,7 @@ NS_SVG_VAL_IMPL_CYCLE_COLLECTION(DOMSVGAnimatedLengthList, mElement)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGAnimatedLengthList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGAnimatedLengthList)
 
-}
+} // namespace mozilla
 DOMCI_DATA(SVGAnimatedLengthList, mozilla::DOMSVGAnimatedLengthList)
 namespace mozilla {
 
