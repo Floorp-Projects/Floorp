@@ -6250,6 +6250,10 @@ IsEntryTypeCompatible(const Value &v, JSValueType type)
 static inline bool
 IsFrameObjPtrTypeCompatible(void *p, JSStackFrame *fp, JSValueType type)
 {
+    debug_only_printf(LC_TMTracer, "%c/%c ", TypeToChar(type),
+                      (p == fp->addressOfScopeChain() || fp->hasArgsObj())
+                      ? TypeToChar(JSVAL_TYPE_NONFUNOBJ)
+                      : TypeToChar(JSVAL_TYPE_NULL));
     if (p == fp->addressOfScopeChain())
         return type == JSVAL_TYPE_NONFUNOBJ;
     JS_ASSERT(p == fp->addressOfArgs());
@@ -12684,7 +12688,7 @@ GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp, PIC
     }
 
     /* Only update the table when the object is the holder of the property. */
-    if (obj == holder && shape->hasSlot()) {
+    if (obj == holder && shape->hasSlot() && shape->hasDefaultGetter()) {
         /*
          * Note: we insert the non-normalized id into the table so you don't need to
          * normalize it before hitting in the table (faster lookup).
