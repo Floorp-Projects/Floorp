@@ -297,6 +297,7 @@ private:
 
 //-------------------------------------------------------------
 class DocumentViewerImpl : public nsIDocumentViewer,
+                           public nsIContentViewer_MOZILLA_2_0_BRANCH,
                            public nsIContentViewerEdit,
                            public nsIContentViewerFile,
                            public nsIMarkupDocumentViewer,
@@ -356,6 +357,8 @@ public:
   // nsIDocumentViewerPrint Printing Methods
   NS_DECL_NSIDOCUMENTVIEWERPRINT
 
+  // nsIContentViewer_MOZILLA_2_0_BRANCH interface...
+  NS_DECL_NSICONTENTVIEWER_MOZILLA_2_0_BRANCH
 protected:
   virtual ~DocumentViewerImpl();
 
@@ -585,6 +588,7 @@ NS_INTERFACE_MAP_BEGIN(DocumentViewerImpl)
 #ifdef NS_PRINTING
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPrint)
 #endif
+    NS_INTERFACE_MAP_ENTRY(nsIContentViewer_MOZILLA_2_0_BRANCH)
 NS_INTERFACE_MAP_END
 
 DocumentViewerImpl::~DocumentViewerImpl()
@@ -4300,6 +4304,13 @@ NS_IMETHODIMP
 DocumentViewerImpl::GetHistoryEntry(nsISHEntry **aHistoryEntry)
 {
   NS_IF_ADDREF(*aHistoryEntry = mSHEntry);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocumentViewerImpl::GetIsTabModalPromptAllowed(PRBool *aAllowed)
+{
+  *aAllowed = !(mInPermitUnload || mHidden);
   return NS_OK;
 }
 
