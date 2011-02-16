@@ -149,6 +149,7 @@ enum { XKeyPress = KeyPress };
 #include "nsIObjectFrame.h"
 #include "nsPluginNativeWindow.h"
 #include "nsIPluginDocument.h"
+#include "FrameLayerBuilder.h"
 
 #include "nsThreadUtils.h"
 
@@ -3255,7 +3256,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
 #ifndef XP_MACOSX
   mObjectFrame->InvalidateLayer(rect + mObjectFrame->GetUsedBorderAndPadding().TopLeft(), nsDisplayItem::TYPE_PLUGIN);
 #else
-  if (FrameLayerBuilder::HasDedicatedLayer(mObjectFrame, nsDisplayItem::TYPE_PLUGIN)) {
+  if (mozilla::FrameLayerBuilder::HasDedicatedLayer(mObjectFrame, nsDisplayItem::TYPE_PLUGIN)) {
     mObjectFrame->InvalidateWithFlags(rect + mObjectFrame->GetUsedBorderAndPadding().TopLeft(),
                                       nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
   } else {
