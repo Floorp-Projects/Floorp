@@ -16309,7 +16309,6 @@ TraceRecorder::record_JSOP_ARRAYPUSH()
     JS_ASSERT(cx->fp()->slots() + slot < cx->regs->sp - 1);
     Value &arrayval = cx->fp()->slots()[slot];
     JS_ASSERT(arrayval.isObject());
-    JS_ASSERT(arrayval.toObject().isDenseArray());
     LIns *array_ins = get(&arrayval);
     Value &elt = stackval(-1);
     LIns *elt_ins = box_value_for_native_call(elt, get(&elt));
