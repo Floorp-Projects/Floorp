@@ -899,6 +899,141 @@ nsCocoaIMEHandler::ExecutePendingMethods()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+#pragma mark -
+
+
+/******************************************************************************
+ *
+ * nsCocoaIMEHandler implementation (native event handlers)
+ *
+ ******************************************************************************/
+
+PRUint32
+nsCocoaIMEHandler::ConvertToTextRangeType(PRUint32 aUnderlineStyle,
+                                          NSRange& aSelectedRange)
+{
+#ifdef DEBUG_IME_HANDLER
+  NSLog(@"****in ConvertToTextRangeType = %d", aUnderlineStyle);
+#endif
+  // We assume that aUnderlineStyle is NSUnderlineStyleSingle or
+  // NSUnderlineStyleThick.  NSUnderlineStyleThick should indicate a selected
+  // clause.  Otherwise, should indicate non-selected clause.
+
+  if (aSelectedRange.length == 0) {
+    switch (aUnderlineStyle) {
+      case NSUnderlineStyleSingle:
+        return NS_TEXTRANGE_RAWINPUT;
+      case NSUnderlineStyleThick:
+        return NS_TEXTRANGE_SELECTEDRAWTEXT;
+      default:
+        NS_WARNING("Unexpected line style");
+        return NS_TEXTRANGE_SELECTEDRAWTEXT;
+    }
+  }
+
+  switch (aUnderlineStyle) {
+    case NSUnderlineStyleSingle:
+      return NS_TEXTRANGE_CONVERTEDTEXT;
+    case NSUnderlineStyleThick:
+      return NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+    default:
+      NS_WARNING("Unexpected line style");
+      return NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+  }
+}
+
+PRUint32
+nsCocoaIMEHandler::GetRangeCount(NSAttributedString *aAttrString)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  // Iterate through aAttrString for the NSUnderlineStyleAttributeName and
+  // count the different segments adjusting limitRange as we go.
+  PRUint32 count = 0;
+  NSRange effectiveRange;
+  NSRange limitRange = NSMakeRange(0, [aAttrString length]);
+  while (limitRange.length > 0) {
+    [aAttrString  attribute:NSUnderlineStyleAttributeName 
+                    atIndex:limitRange.location 
+      longestEffectiveRange:&effectiveRange
+                    inRange:limitRange];
+    limitRange =
+      NSMakeRange(NSMaxRange(effectiveRange), 
+                  NSMaxRange(limitRange) - NSMaxRange(effectiveRange));
+    count++;
+  }
+  return count;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
+}
+
+void
+nsCocoaIMEHandler::SetTextRangeList(nsTArray<nsTextRange>& aTextRangeList,
+                                    NSAttributedString *aAttrString,
+                                    NSRange& aSelectedRange)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  // Convert the Cocoa range into the nsTextRange Array used in Gecko.
+  // Iterate through the attributed string and map the underline attribute to
+  // Gecko IME textrange attributes.  We may need to change the code here if
+  // we change the implementation of validAttributesForMarkedText.
+  NSRange limitRange = NSMakeRange(0, [aAttrString length]);
+  PRUint32 rangeCount = GetRangeCount(aAttrString);
+  for (PRUint32 i = 0; i < rangeCount && limitRange.length > 0; i++) {
+    NSRange effectiveRange;
+    id attributeValue = [aAttrString attribute:NSUnderlineStyleAttributeName
+                                       atIndex:limitRange.location
+                         longestEffectiveRange:&effectiveRange
+                                       inRange:limitRange];
+
+    nsTextRange range;
+    range.mStartOffset = effectiveRange.location;
+    range.mEndOffset = NSMaxRange(effectiveRange);
+    range.mRangeType =
+      ConvertToTextRangeType([attributeValue intValue], aSelectedRange);
+    aTextRangeList.AppendElement(range);
+
+    limitRange =
+      NSMakeRange(NSMaxRange(effectiveRange), 
+                  NSMaxRange(limitRange) - NSMaxRange(effectiveRange));
+  }
+
+  // Get current caret position.
+  nsTextRange range;
+  range.mStartOffset = aSelectedRange.location + aSelectedRange.length;
+  range.mEndOffset = range.mStartOffset;
+  range.mRangeType = NS_TEXTRANGE_CARETPOSITION;
+  aTextRangeList.AppendElement(range);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+PRBool
+nsCocoaIMEHandler::DispatchTextEvent(const nsString& aText,
+                                     NSAttributedString* aAttrString,
+                                     NSRange& aSelectedRange,
+                                     PRBool aDoCommit)
+{
+#ifdef DEBUG_IME_HANDLER
+  NSLog(@"****in DispatchTextEvent; string = '%@'", aAttrString);
+  NSLog(@" aSelectedRange = %d, %d",
+        aSelectedRange.location, aSelectedRange.length);
+#endif
+
+  nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, mOwnerWidget);
+  textEvent.time = PR_IntervalNow();
+  textEvent.theText = aText;
+  nsAutoTArray<nsTextRange, 4> textRanges;
+  if (!aDoCommit) {
+    SetTextRangeList(textRanges, aAttrString, aSelectedRange);
+  }
+  textEvent.rangeArray = textRanges.Elements();
+  textEvent.rangeCount = textRanges.Length();
+
+  return mOwnerWidget->DispatchWindowEvent(textEvent);
+}
+
 
 #pragma mark -
 
