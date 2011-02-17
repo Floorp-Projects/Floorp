@@ -222,6 +222,10 @@ html[dir=rtl] .groupItem.activeGroupItem {
     rgba(0,0,0,0.8) -2px 2px 8px;
 }
 
+.groupItem .close {
+  z-index: 10;
+}
+
 .phantom {
   border: 1px solid rgba(255, 255, 255, 0.5);
 }
