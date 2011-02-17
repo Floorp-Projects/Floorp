@@ -3,8 +3,7 @@
  */
 
 /**
- * Tests that clicking does not go to detail view if the target is a link or button,
- * but clicking anywhere else does.
+ * Tests that double-click does not go to detail view if the target is a link or button.
  */
 
 function test() {
@@ -41,7 +40,7 @@ function is_in_detail(aManager, view) {
   is(doc.getElementById("view-port").selectedPanel.id, "detail-view", "Should be on the right view");
 }
 
-// Check that clicking on the addon item does something.
+// Check that double-click does something.
 add_test(function() {
   open_manager("addons://list/extension", function(aManager) {
     info("Part 1");
@@ -49,7 +48,8 @@ add_test(function() {
 
     var addon = get_addon_element(aManager, "test1@tests.mozilla.org");
     addon.parentNode.ensureElementIsVisible(addon);
-    EventUtils.synthesizeMouseAtCenter(addon, { }, aManager);
+    EventUtils.synthesizeMouseAtCenter(addon, { clickCount: 1 }, aManager);
+    EventUtils.synthesizeMouseAtCenter(addon, { clickCount: 2 }, aManager);
 
     wait_for_view_load(aManager, function(aManager) {
       info("Part 2");
@@ -110,6 +110,7 @@ add_test(function() {
       var rect = target.getBoundingClientRect();
       var addonRect = addon.getBoundingClientRect();
 
+      EventUtils.synthesizeMouse(target, rect.width / 2, rect.height / 2, { clickCount: 1 }, aManager);
       EventUtils.synthesizeMouse(addon,
         rect.left - addonRect.left + rect.width / 2,
         rect.top - addonRect.top + rect.height / 2,
