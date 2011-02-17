@@ -119,6 +119,19 @@ SessionStore.prototype = {
     }
   },
 
+  _clearDisk: function ss_clearDisk() {
+    if (this._sessionFile.exists()) {
+      try {
+        this._sessionFile.remove(false);
+      } catch (ex) { dump(ex + '\n'); } // couldn't remove the file - what now?
+    }
+    if (this._sessionFileBackup.exists()) {
+      try {
+        this._sessionFileBackup.remove(false);
+      } catch (ex) { dump(ex + '\n'); } // couldn't remove the file - what now?
+    }
+  },
+
   observe: function ss_observe(aSubject, aTopic, aData) {
     let self = this;
     let observerService = Services.obs;
@@ -128,6 +141,7 @@ SessionStore.prototype = {
         observerService.addObserver(this, "domwindowopened", true);
         observerService.addObserver(this, "domwindowclosed", true);
         observerService.addObserver(this, "browser-lastwindow-close-granted", true);
+        observerService.addObserver(this, "browser:purge-session-history", true);
         observerService.addObserver(this, "quit-application-requested", true);
         observerService.addObserver(this, "quit-application-granted", true);
         observerService.addObserver(this, "quit-application", true);
@@ -174,8 +188,12 @@ SessionStore.prototype = {
         break;
       case "quit-application":
         // If we are restarting, lets restore the tabs
-        if (aData == "restart")
+        if (aData == "restart") {
           Services.prefs.setBoolPref("browser.sessionstore.resume_session_once", true);
+
+          // Ignore purges when restarting. The notification is fired after "quit-application".
+          Services.obs.removeObserver(this, "browser:purge-session-history");
+        }
 
         // Freeze the data at what we've got (ignoring closing windows)
         this._loadState = STATE_QUITTING;
@@ -195,6 +213,25 @@ SessionStore.prototype = {
           this._saveTimer.cancel();
           this._saveTimer = null;
           this.saveState();
+        }
+        break;
+      case "browser:purge-session-history": // catch sanitization 
+        this._clearDisk();
+
+        // If the browser is shutting down, simply return after clearing the
+        // session data on disk as this notification fires after the
+        // quit-application notification so the browser is about to exit.
+        if (this._loadState == STATE_QUITTING)
+          return;
+
+        // Clear all data about closed tabs
+        for (let [ssid, win] in Iterator(this._windows))
+          win.closedTabs = [];
+
+        if (this._loadState == STATE_RUNNING) {
+          // The next delayed save request should execute immediately
+          this._lastSaveTime -= this._interval;
+          this.saveStateDelayed();
         }
         break;
       case "timer-callback":
