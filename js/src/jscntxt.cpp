@@ -626,8 +626,6 @@ js_FinishThreads(JSRuntime *rt)
         js_delete(thread);
     }
     rt->threads.clear();
-#else
-    rt->threadData.finish();
 #endif
 }
 
