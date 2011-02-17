@@ -335,7 +335,7 @@ nsresult nsWebMReader::ReadMetadata()
       // mDataOffset is not used by the WebM backend.
       // See bug 566779 for a suggestion to refactor
       // and remove it.
-      mInfo.mDataOffset = 0;
+      mInfo.mDataOffset = -1;
     }
     else if (!mHasAudio && type == NESTEGG_TRACK_AUDIO) {
       nestegg_audio_params params;
