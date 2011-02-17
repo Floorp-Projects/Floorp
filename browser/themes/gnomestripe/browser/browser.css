@@ -72,7 +72,8 @@
   border-bottom: 1px solid ThreeDShadow;
 }
 
-#navigator-toolbox > toolbar:not(:-moz-lwtheme):not(#toolbar-menubar) {
+#navigator-toolbox[tabsontop=true] > toolbar:not(:-moz-lwtheme):not(#toolbar-menubar):not(#TabsToolbar),
+#navigator-toolbox[tabsontop=false] > toolbar:not(:-moz-lwtheme):not(#toolbar-menubar) {
   -moz-appearance: none;
   border-style: none;
   background-color: -moz-Dialog;
@@ -1380,7 +1381,11 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   padding: 0;
 }
 
-#TabsToolbar:not(:-moz-lwtheme),
+#TabsToolbar[tabsontop=true]:not(:-moz-lwtheme) {
+  -moz-appearance: menubar;
+  color: -moz-menubartext;
+}
+
 #TabsToolbar[tabsontop=false] {
   background-image:
     -moz-linear-gradient(bottom, rgba(0,0,0,.3) 1px, rgba(0,0,0,.05) 1px, transparent 50%);
@@ -1395,6 +1400,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-position: 1px 2px;
   background-size: 100% -moz-calc(100% - 2px);
   background-repeat: no-repeat;
+  color: inherit;
   margin: 0;
   padding: 0;
   -moz-border-image: url(tabbrowser/tab.png) 4 5 3 6 / 4px 5px 3px 6px repeat stretch;
@@ -1410,6 +1416,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 .tabbrowser-tab[selected="true"] {
   background-image: -moz-linear-gradient(@selectedTabHighlight@, @toolbarHighlight@ 32%),
                     -moz-linear-gradient(-moz-dialog, -moz-dialog);
+  color: -moz-dialogtext;
 }
 
 #main-window[tabsontop=false]:not([disablechrome]) .tabbrowser-tab[selected=true]:not(:-moz-lwtheme) {
@@ -1418,12 +1425,9 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
                     -moz-linear-gradient(-moz-dialog, -moz-dialog);
 }
 
-.tabbrowser-tab:-moz-lwtheme {
-  color: inherit;
-}
-
 .tabbrowser-tab[selected="true"]:-moz-lwtheme {
   background-image: -moz-linear-gradient(@selectedTabHighlight@, @toolbarHighlight@ 32%);
+  color: inherit;
 }
 
 .tabbrowser-tab:-moz-lwtheme-brighttext:not([selected="true"]),
@@ -1726,6 +1730,10 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 
 .splitmenu-menuitem {
   -moz-margin-end: 1px;
+}
+
+#appmenu-toolbar-button:not(:hover):not([open]):not(:-moz-lwtheme) {
+  color: inherit;
 }
 
 #appmenu-toolbar-button > .toolbarbutton-text,
