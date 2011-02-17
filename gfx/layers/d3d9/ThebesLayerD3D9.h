@@ -41,9 +41,12 @@
 #include "Layers.h"
 #include "LayerManagerD3D9.h"
 #include "gfxImageSurface.h"
+#include "ReadbackProcessor.h"
 
 namespace mozilla {
 namespace layers {
+
+class ReadbackProcessor;
 
 class ThebesLayerD3D9 : public ThebesLayer,
                         public LayerD3D9
@@ -58,9 +61,11 @@ public:
   /* LayerD3D9 implementation */
   Layer* GetLayer();
   virtual PRBool IsEmpty();
-  virtual void RenderLayer();
+  virtual void RenderLayer() { RenderThebesLayer(nsnull); }
   virtual void CleanResources();
   virtual void LayerManagerDestroyed();
+
+  void RenderThebesLayer(ReadbackProcessor* aReadback);
 
 private:
   /*
@@ -96,7 +101,8 @@ private:
   void RenderVisibleRegion();
 
   /* Have a region of our layer drawn */
-  void DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode);
+  void DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
+                  const nsTArray<ReadbackProcessor::Update>& aReadbackUpdates);
 
   /* Create a new texture */
   void CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode);

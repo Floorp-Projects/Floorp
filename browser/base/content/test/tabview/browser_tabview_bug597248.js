@@ -77,9 +77,15 @@ function setupTwo() {
   let tabItems = contentWindow.TabItems.getItems();
   is(tabItems.length, 2, "There should be 2 tab items before closing");
 
-  // force all canvas to update
+  let numTabsToSave = tabItems.length;
+
+  // force all canvases to update, and hook in imageData save detection
   tabItems.forEach(function(tabItem) {
     contentWindow.TabItems._update(tabItem.tab);
+    tabItem.addSubscriber(tabItem, "savedImageData", function(item) {
+      item.removeSubscriber(item, "savedImageData");
+      --numTabsToSave;
+    });
   });
 
   // after the window is closed, restore it.
@@ -94,6 +100,9 @@ function setupTwo() {
       restoredWin = undoCloseWindow();
       restoredWin.addEventListener("load", function(event) {
         restoredWin.removeEventListener("load", arguments.callee, false);
+
+        // ensure that closed tabs have been saved
+        is(numTabsToSave, 0, "All tabs were saved when window was closed.");
 
         // execute code when the frame is initialized.
         let onTabViewFrameInitialized = function() {
@@ -128,35 +137,10 @@ function setupTwo() {
     });
   };
 
-  // check the storage for stored image data
-  let checkDataAndCloseWindow = function() {
-    tabItems.forEach(function(tabItem) {
-      let tabData = contentWindow.Storage.getTabData(tabItem.tab);
-      ok(tabData && tabData.imageData,
-        "TabItem has stored image data before closing");
-    });
-
-    Services.obs.addObserver(
-      xulWindowDestory, "xul-window-destroyed", false);
-    newWin.close();
-  }
-
-  // stimulate a quit application requested so the image data gets stored
-  let quitRequestObserver = function(aSubject, aTopic, aData) {
-    ok(aTopic == "quit-application-requested" &&
-        aSubject instanceof Ci.nsISupportsPRBool,
-        "Received a quit request and going to deny it");
-    Services.obs.removeObserver(
-      quitRequestObserver, "quit-application-requested", false);
-    // cancel the shut down
-    aSubject.data = true;
-    // save all images is execuated when "quit-application-requested" topic is 
-    // announced so executeSoon is used to avoid racing condition.
-    executeSoon(checkDataAndCloseWindow);
-  }
   Services.obs.addObserver(
-    quitRequestObserver, "quit-application-requested", false);
-  ok(!Application.quit(), "Tried to quit and canceled it");
+    xulWindowDestory, "xul-window-destroyed", false);
+
+  newWin.close();
 }
 
 let gTabsProgressListener = {

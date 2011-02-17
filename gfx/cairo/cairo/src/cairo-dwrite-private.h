@@ -112,6 +112,7 @@ struct _cairo_dwrite_scaled_font {
     cairo_matrix_t mat_inverse;
     cairo_antialias_t antialias_mode;
     DWRITE_MEASURING_MODE measuring_mode;
+    cairo_bool_t manual_show_glyphs_allowed;
 };
 typedef struct _cairo_dwrite_scaled_font cairo_dwrite_scaled_font_t;
 

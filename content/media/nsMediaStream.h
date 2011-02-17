@@ -285,6 +285,11 @@ protected:
     MOZ_COUNT_CTOR(nsMediaStream);
   }
 
+  // Set the request's load flags to aFlags.  If the request is part of a
+  // load group, the request is removed from the group, the flags are set, and
+  // then the request is added back to the load group.
+  void ModifyLoadFlags(nsLoadFlags aFlags);
+
   // This is not an nsCOMPointer to prevent a circular reference
   // between the decoder to the media stream object. The stream never
   // outlives the lifetime of the decoder.

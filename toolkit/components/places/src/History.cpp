@@ -927,8 +927,10 @@ private:
     // However, if it isn't recent enough, we don't care to log anything about
     // the referrer and we'll start a new session.
     else {
-      // This is sufficient to ignore our referrer.  This behavior has test
-      // coverage, so if this invariant changes, we'll know.
+      // We must change both the place and referrer to indicate that we will
+      // not be using the referrer's data. This behavior has test coverage, so
+      // if this invariant changes, we'll know.
+      aPlace.referrerSpec.Truncate();
       aReferrer.visitId = 0;
     }
   }

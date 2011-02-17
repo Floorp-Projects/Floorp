@@ -117,8 +117,7 @@ function properyPanelShown(aEvent) {
 
   executeSoon(function() {
     aEvent.target.addEventListener("popuphidden", propertyPanelHidden, false);
-    let closeButton = aEvent.target.querySelector(".jsPropertyPanelCloseButton");
-    closeButton.doCommand();
+    aEvent.target.hidePopup();
   });
 }
 

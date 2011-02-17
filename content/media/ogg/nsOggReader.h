@@ -208,10 +208,11 @@ private:
   ogg_sync_state mOggState;
 
   // Vorbis/Theora data used to compute timestamps. This is written on the
-  // decoder thread and read on the main thread. All reading on the
-  // main thread must be done after metadataloaded. We can't use the
-  // existing data in the codec states due to threading issues.
-  // See bug 605457.
+  // decoder thread and read on the main thread. All reading on the main
+  // thread must be done after metadataloaded. We can't use the existing
+  // data in the codec states due to threading issues. You must check the
+  // associated mTheoraState or mVorbisState pointer is non-null before
+  // using this codec data.
   PRUint32 mVorbisSerial;
   PRUint32 mTheoraSerial;
   vorbis_info mVorbisInfo;

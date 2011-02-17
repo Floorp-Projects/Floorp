@@ -43,6 +43,25 @@
 
 // See the comment in this file's header.
 
+// local helper functions
+namespace {
+
+using mozilla::DOMSVGLength;
+
+void UpdateListIndicesFromIndex(nsTArray<DOMSVGLength*>& aItemsArray,
+                                PRUint32 aStartingIndex)
+{
+  PRUint32 length = aItemsArray.Length();
+
+  for (PRUint32 i = aStartingIndex; i < length; ++i) {
+    if (aItemsArray[i]) {
+      aItemsArray[i]->UpdateListIndex(i);
+    }
+  }
+}
+
+} // namespace
+
 namespace mozilla {
 
 // We could use NS_IMPL_CYCLE_COLLECTION_1, except that in Unlink() we need to
@@ -62,7 +81,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGLengthList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGLengthList)
 
-}
+} // namespace mozilla
 DOMCI_DATA(SVGLengthList, mozilla::DOMSVGLengthList)
 namespace mozilla {
 
@@ -136,7 +155,7 @@ DOMSVGLengthList::Clear()
   if (Length() > 0) {
     // Notify any existing DOM items of removal *before* truncating the lists
     // so that they can find their SVGLength internal counterparts and copy
-    // their values:
+    // their values. This also notifies the animVal list:
     mAList->InternalBaseValListWillChangeTo(SVGLengthList());
 
     mItems.Clear();
@@ -227,6 +246,9 @@ DOMSVGLengthList::InsertItemBefore(nsIDOMSVGLength *newItem,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  // Now that we know we're inserting, keep animVal list in sync as necessary.
+  MaybeInsertNullInAnimValListAt(index);
+
   InternalList().InsertItem(index, domItem->ToSVGLength());
   mItems.InsertElementAt(index, domItem.get());
 
@@ -235,11 +257,7 @@ DOMSVGLengthList::InsertItemBefore(nsIDOMSVGLength *newItem,
   // data from InternalList() itself!:
   domItem->InsertingIntoList(this, AttrEnum(), index, IsAnimValList());
 
-  for (PRUint32 i = index + 1; i < Length(); ++i) {
-    if (mItems[i]) {
-      mItems[i]->UpdateListIndex(i);
-    }
-  }
+  UpdateListIndicesFromIndex(mItems, index + 1);
 
   Element()->DidChangeLengthList(AttrEnum(), PR_TRUE);
 #ifdef MOZ_SMIL
@@ -307,6 +325,12 @@ DOMSVGLengthList::RemoveItem(PRUint32 index,
   if (index >= Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
+
+  // Now that we know we're removing, keep animVal list in sync as necessary.
+  // Do this *before* touching InternalList() so the removed item can get its
+  // internal value.
+  MaybeRemoveItemFromAnimValListAt(index);
+
   // We have to return the removed item, so make sure it exists:
   EnsureItemAt(index);
 
@@ -318,11 +342,7 @@ DOMSVGLengthList::RemoveItem(PRUint32 index,
   InternalList().RemoveItem(index);
   mItems.RemoveElementAt(index);
 
-  for (PRUint32 i = index; i < Length(); ++i) {
-    if (mItems[i]) {
-      mItems[i]->UpdateListIndex(i);
-    }
-  }
+  UpdateListIndicesFromIndex(mItems, index);
 
   Element()->DidChangeLengthList(AttrEnum(), PR_TRUE);
 #ifdef MOZ_SMIL
@@ -346,6 +366,49 @@ DOMSVGLengthList::EnsureItemAt(PRUint32 aIndex)
   if (!mItems[aIndex]) {
     mItems[aIndex] = new DOMSVGLength(this, AttrEnum(), aIndex, IsAnimValList());
   }
+}
+
+void
+DOMSVGLengthList::MaybeInsertNullInAnimValListAt(PRUint32 aIndex)
+{
+  NS_ABORT_IF_FALSE(!IsAnimValList(), "call from baseVal to animVal");
+
+  DOMSVGLengthList* animVal = mAList->mAnimVal;
+
+  if (!animVal || mAList->IsAnimating()) {
+    // No animVal list wrapper, or animVal not a clone of baseVal
+    return;
+  }
+
+  NS_ABORT_IF_FALSE(animVal->mItems.Length() == mItems.Length(),
+                    "animVal list not in sync!");
+
+  animVal->mItems.InsertElementAt(aIndex, static_cast<DOMSVGLength*>(nsnull));
+
+  UpdateListIndicesFromIndex(animVal->mItems, aIndex + 1);
+}
+
+void
+DOMSVGLengthList::MaybeRemoveItemFromAnimValListAt(PRUint32 aIndex)
+{
+  NS_ABORT_IF_FALSE(!IsAnimValList(), "call from baseVal to animVal");
+
+  DOMSVGLengthList* animVal = mAList->mAnimVal;
+
+  if (!animVal || mAList->IsAnimating()) {
+    // No animVal list wrapper, or animVal not a clone of baseVal
+    return;
+  }
+
+  NS_ABORT_IF_FALSE(animVal->mItems.Length() == mItems.Length(),
+                    "animVal list not in sync!");
+
+  if (animVal->mItems[aIndex]) {
+    animVal->mItems[aIndex]->RemovingFromList();
+  }
+  animVal->mItems.RemoveElementAt(aIndex);
+
+  UpdateListIndicesFromIndex(animVal->mItems, aIndex);
 }
 
 } // namespace mozilla

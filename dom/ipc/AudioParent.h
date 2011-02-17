@@ -73,6 +73,9 @@ class AudioParent : public PAudioParent, public nsITimerCallback
     virtual bool
     RecvShutdown();
 
+    virtual bool
+    SendDrainDone();
+
     AudioParent(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat);
     virtual ~AudioParent();
     virtual void ActorDestroy(ActorDestroyReason);

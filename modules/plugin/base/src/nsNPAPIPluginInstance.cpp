@@ -59,13 +59,13 @@
 #include "nsJSNPRuntime.h"
 #include "nsPluginStreamListenerPeer.h"
 
+using namespace mozilla;
 using namespace mozilla::plugins::parent;
-using mozilla::TimeStamp;
 
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 
-NS_IMPL_ISUPPORTS1(nsNPAPIPluginInstance, nsIPluginInstance)
+NS_IMPL_ISUPPORTS2(nsNPAPIPluginInstance, nsIPluginInstance, nsIPluginInstance_MOZILLA_2_0_BRANCH)
 
 nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
   :
@@ -716,6 +716,22 @@ NS_IMETHODIMP nsNPAPIPluginInstance::GetDrawingModel(PRInt32* aModel)
 #endif
 }
 
+NS_IMETHODIMP nsNPAPIPluginInstance::IsRemoteDrawingCoreAnimation(PRBool* aDrawing)
+{
+#ifdef XP_MACOSX
+  if (!mPlugin)
+      return NS_ERROR_FAILURE;
+
+  PluginLibrary* library = mPlugin->GetLibrary();
+  if (!library)
+      return NS_ERROR_FAILURE;
+  
+  return library->IsRemoteDrawingCoreAnimation(&mNPP, aDrawing);
+#else
+  return NS_ERROR_FAILURE;
+#endif
+}
+
 NS_IMETHODIMP
 nsNPAPIPluginInstance::GetJSObject(JSContext *cx, JSObject** outObject)
 {
@@ -809,18 +825,32 @@ nsNPAPIPluginInstance::IsWindowless(PRBool* isWindowless)
   return NS_OK;
 }
 
+class NS_STACK_CLASS AutoPluginLibraryCall
+{
+public:
+  AutoPluginLibraryCall(nsNPAPIPluginInstance* aThis)
+    : mThis(aThis), mGuard(aThis), mLibrary(nsnull)
+  {
+    nsNPAPIPlugin* plugin = mThis->GetPlugin();
+    if (plugin)
+      mLibrary = plugin->GetLibrary();
+  }
+  operator bool() { return !!mLibrary; }
+  PluginLibrary* operator->() { return mLibrary; }
+
+private:
+  nsNPAPIPluginInstance* mThis;
+  PluginDestructionGuard mGuard;
+  PluginLibrary* mLibrary;
+};
+
 NS_IMETHODIMP
 nsNPAPIPluginInstance::AsyncSetWindow(NPWindow* window)
 {
   if (RUNNING != mRunning)
     return NS_OK;
 
-  PluginDestructionGuard guard(this);
-
-  if (!mPlugin)
-    return NS_ERROR_FAILURE;
-
-  PluginLibrary* library = mPlugin->GetLibrary();
+  AutoPluginLibraryCall library(this);
   if (!library)
     return NS_ERROR_FAILURE;
 
@@ -833,18 +863,22 @@ nsNPAPIPluginInstance::GetSurface(gfxASurface** aSurface)
   if (RUNNING != mRunning)
     return NS_OK;
 
-  PluginDestructionGuard guard(this);
-
-  if (!mPlugin)
-    return NS_ERROR_FAILURE;
-
-  PluginLibrary* library = mPlugin->GetLibrary();
+  AutoPluginLibraryCall library(this);
   if (!library)
     return NS_ERROR_FAILURE;
 
   return library->GetSurface(&mNPP, aSurface);
 }
 
+NS_IMETHODIMP
+nsNPAPIPluginInstance::GetImage(ImageContainer* aContainer, Image** aImage)
+{
+  if (RUNNING != mRunning)
+    return NS_OK;
+
+  AutoPluginLibraryCall library(this);
+  return !library ? NS_ERROR_FAILURE : library->GetImage(&mNPP, aContainer, aImage);
+}
 
 NS_IMETHODIMP
 nsNPAPIPluginInstance::NotifyPainted(void)
@@ -861,17 +895,53 @@ nsNPAPIPluginInstance::UseAsyncPainting(PRBool* aIsAsync)
     return NS_OK;
   }
 
-  PluginDestructionGuard guard(this);
-
-  if (!mPlugin)
-    return NS_ERROR_FAILURE;
-
-  PluginLibrary* library = mPlugin->GetLibrary();
+  AutoPluginLibraryCall library(this);
   if (!library)
     return NS_ERROR_FAILURE;
 
   *aIsAsync = library->UseAsyncPainting();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::SetBackgroundUnknown()
+{
+  if (RUNNING != mRunning)
+    return NS_OK;
+
+  AutoPluginLibraryCall library(this);
+  if (!library)
+    return NS_ERROR_FAILURE;
+
+  return library->SetBackgroundUnknown(&mNPP);
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::BeginUpdateBackground(nsIntRect* aRect,
+                                             gfxContext** aContext)
+{
+  if (RUNNING != mRunning)
+    return NS_OK;
+
+  AutoPluginLibraryCall library(this);
+  if (!library)
+    return NS_ERROR_FAILURE;
+
+  return library->BeginUpdateBackground(&mNPP, *aRect, aContext);
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::EndUpdateBackground(gfxContext* aContext,
+                                           nsIntRect* aRect)
+{
+  if (RUNNING != mRunning)
+    return NS_OK;
+
+  AutoPluginLibraryCall library(this);
+  if (!library)
+    return NS_ERROR_FAILURE;
+
+  return library->EndUpdateBackground(&mNPP, aContext, *aRect);
 }
 
 NS_IMETHODIMP

@@ -3501,6 +3501,11 @@ _cairo_dwrite_manual_show_glyphs_on_d2d_surface(void			    *surface,
 						cairo_dwrite_scaled_font_t  *scaled_font,
 						cairo_clip_t		    *clip)
 {
+    cairo_dwrite_scaled_font_t *dwritesf = reinterpret_cast<cairo_dwrite_scaled_font_t*>(scaled_font);
+    if (!dwritesf->manual_show_glyphs_allowed) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
     cairo_dwrite_font_face_t *dwriteff = reinterpret_cast<cairo_dwrite_font_face_t*>(scaled_font->base.font_face);
     cairo_d2d_surface_t *dst = reinterpret_cast<cairo_d2d_surface_t*>(surface);
 
