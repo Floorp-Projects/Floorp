@@ -226,9 +226,10 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
 
     mLayerProgram =
       gl()->UploadSurfaceToTexture(mCanvasSurface,
-                                   drawRect,
+                                   nsIntRect(0, 0, drawRect.width, drawRect.height),
                                    mTexture,
-                                   true);
+                                   true,
+                                   drawRect.TopLeft());
   }
   if (!program) { 
     program = mOGLManager->GetColorTextureLayerProgram(mLayerProgram);

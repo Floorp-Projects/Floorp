@@ -1816,6 +1816,11 @@ pref("ui.trackpoint_hack.enabled", -1);
 // some trackpad drivers behave better.
 pref("ui.window_class_override", "");
 
+// Enables or disables the Elantech gesture hacks.  -1 is autodetect, 0 is off,
+// and 1 is on.  Set this to 1 if three-finger swipe gestures do not cause
+// page back/forward actions, or if pinch-to-zoom does not work.
+pref("ui.elantech_gesture_hacks.enabled", -1);
+
 # WINNT
 #endif
 
@@ -2572,9 +2577,6 @@ pref("autocomplete.ungrab_during_mode_switch", true);
 // toggling to use the XUL filepicker
 pref("ui.allow_platform_file_picker", true);
 
-// should NetworkManager be authoritative for online/offline status?
-pref("toolkit.networkmanager.disable", true);
-
 pref("helpers.global_mime_types_file", "/etc/mime.types");
 pref("helpers.global_mailcap_file", "/etc/mailcap");
 pref("helpers.private_mime_types_file", "~/.mime.types");
@@ -2845,9 +2847,6 @@ pref("autocomplete.ungrab_during_mode_switch", true);
 // Default to using the system filepicker if possible, but allow
 // toggling to use the XUL filepicker
 pref("ui.allow_platform_file_picker", true);
-
-// should NetworkManager be authoritative for online/offline status?
-pref("toolkit.networkmanager.disable", true);
 
 pref("helpers.global_mime_types_file", "/etc/mime.types");
 pref("helpers.global_mailcap_file", "/etc/mailcap");
@@ -3199,7 +3198,7 @@ pref("image.mem.decodeondraw", false);
 // Minimum timeout for image discarding (in milliseconds). The actual time in
 // which an image must inactive for it to be discarded will vary between this
 // value and twice this value.
-pref("image.mem.min_discard_timeout_ms", 10000);
+pref("image.mem.min_discard_timeout_ms", 120000);
 
 // Chunk size for calls to the image decoders
 pref("image.mem.decode_bytes_at_a_time", 200000);

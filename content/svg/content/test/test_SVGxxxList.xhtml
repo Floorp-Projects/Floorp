@@ -12,7 +12,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=515116
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=515116">Mozilla Bug 515116</a>
 <p id="display"></p>
 <div id="content" style="display:none;">
-<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100" height="100"
+     onload="this.pauseAnimations();">
   <desc>
     <filter>
       <feComponentTransfer>
@@ -79,6 +80,12 @@ To have the battery of generic tests run for a new list attribute, add an elemen
   attr_val_5a:
   attr_val_5b:
     Two attribute values containing five different items.
+  item_constructor:
+    Function to create a dummy list item.
+  item_is:
+    Function to compare two list items for equality, like "is()". If this
+    property is omitted, it is assumed that we can just compare
+    "item.value" (which is the case for most list types).
 */
 
 var tests = [
@@ -167,6 +174,17 @@ var tests = [
     item_constructor: function() {
       // XXX return different values each time
       return document.getElementById('svg').createSVGPoint();
+    },
+    item_is: function(itemA, itemB, message) {
+      ok(typeof(itemA.x) != 'undefined' &&
+         typeof(itemB.x) != 'undefined',
+         'expecting x property');
+      ok(typeof(itemA.y) != 'undefined' &&
+         typeof(itemB.y) != 'undefined',
+         'expecting y property');
+
+      is(itemA.x, itemB.x, message);
+      is(itemA.y, itemB.y, message);
     }
   },
   {
@@ -188,6 +206,14 @@ var tests = [
     item_constructor: function() {
       // XXX return different values each time
       return document.getElementById('path').createSVGPathSegMovetoAbs(1, 1);
+    },
+    item_is: function(itemA, itemB, message) {
+      ok(typeof(itemA.pathSegType) != 'undefined' &&
+         typeof(itemB.pathSegType) != 'undefined',
+         'expecting pathSegType property');
+
+      // NOTE: Just comparing pathSegType - probably sufficient for our purposes
+      is(itemA.pathSegType, itemB.pathSegType, message);
     }
   },
 /*
@@ -210,6 +236,14 @@ var tests = [
     item_constructor: function() {
       // XXX return different values each time
       return SVGPathElement.createSVGPathSegLinetoAbs(1, 1);
+    },
+    item_is: function(itemA, itemB, message) {
+      ok(typeof(itemA.pathSegType) != 'undefined' &&
+         typeof(itemB.pathSegType) != 'undefined',
+         'expecting pathSegType property');
+
+      // NOTE: Just comparing pathSegType - probably sufficient for our purposes
+      is(itemA.pathSegType, itemB.pathSegType, message);
     }
   },
   {
@@ -278,7 +312,7 @@ The second animation overrides the first animation for a short time, and has few
 
 The third animation has additive="sum", with fewer items than the lower priority animation 1, allowing us to test object identity and other state in that scenario. TODO: some type aware tests to check whether the composite fails or works?
 
-At t=0s and t=1s we test the affect of an attribute value changes in the absence and presence of SMIL animation respectively.
+At t=0s and t=1s we test the effect of an attribute value changes in the absence and presence of SMIL animation respectively.
 
 At t=10s we programatically remove the fill="freeze" from animation 1.
 */
@@ -769,7 +803,7 @@ function run_animVal_API_tests()
 
 
 /**
- * This function runs some basic tests to check the affect of setAttribute()
+ * This function runs some basic tests to check the effect of setAttribute()
  * calls on object identidy, without taking SMIL animation into consideration.
  */
 function run_basic_setAttribute_tests()
@@ -814,7 +848,7 @@ function run_basic_setAttribute_tests()
          'by a change in list length between the successive accesses.');
     }
 
-    // Test the affect of setting the attribute to new values:
+    // Test the effect of setting the attribute to new values:
 
     t.old_baseVal_items = get_array_of_list_items(t.baseVal);
     t.old_animVal_items = get_array_of_list_items(t.animVal);
@@ -861,6 +895,95 @@ function run_basic_setAttribute_tests()
   }
 }
 
+/**
+ * This function verifies that a list's animVal is kept in sync with its
+ * baseVal, when we add & remove items from the baseVal.
+ */
+function run_list_mutation_tests()
+{
+  for each (var t in tests) {
+    if (t.animVal) {
+      // Test removeItem()
+      // =================
+      // Save second item in baseVal list; then make it the first item, and
+      // check that animVal is updated accordingly.
+      t.element.setAttribute(t.attr_name, t.attr_val_4);
+
+      var secondVal = t.baseVal.getItem(1);
+      var removedFirstVal = t.baseVal.removeItem(0);
+      t.item_is(t.animVal.getItem(0), secondVal,
+                'animVal for '+t.attr_name+' needs update after first item ' +
+                'removed');
+
+      // Repeat with last item
+      var secondToLastVal = t.baseVal.getItem(1);
+      var removedLastVal = t.baseVal.removeItem(2);
+
+      var threw = false;
+      try {
+        t.animVal.getItem(2);
+      } catch(e) {
+        threw = true;
+      }
+      ok(threw,
+         'The method '+t.attr_name+'.animVal.getItem() for previously-final ' +
+         'index should throw after final item is removed from baseVal.');
+
+      t.item_is(t.animVal.getItem(1), secondToLastVal,
+                'animVal for ' + t.attr_name +' needs update after last item ' +
+                'removed');
+
+      // Test insertItemBefore()
+      // =======================
+      // Reset base value, insert value @ start, check that animVal is updated.
+      t.element.setAttribute(t.attr_name, t.attr_val_3a);
+      t.baseVal.insertItemBefore(removedLastVal, 0);
+      t.item_is(t.animVal.getItem(0), removedLastVal,
+                'animVal for '+t.attr_name+' needs update after insert at ' +
+                'beginning');
+
+      // Repeat with insert at end
+      t.element.setAttribute(t.attr_name, t.attr_val_3a);
+      t.baseVal.insertItemBefore(removedFirstVal, t.baseVal.numberOfItems);
+      t.item_is(t.animVal.getItem(t.baseVal.numberOfItems - 1),
+                removedFirstVal,
+                'animVal for '+t.attr_name+' needs update after insert at end');
+
+      // Test appendItem()
+      // =================
+      var dummy = t.item_constructor();
+      t.baseVal.appendItem(dummy);
+      t.item_is(t.animVal.getItem(t.baseVal.numberOfItems - 1), dummy,
+                'animVal for '+t.attr_name+' needs update after appendItem');
+
+      // Test clear()
+      // ============
+      t.baseVal.clear();
+      threw = false;
+      try {
+        t.animVal.getItem(0);
+      } catch(e) {
+        threw = true;
+      }
+      ok(threw,
+         'The method '+t.attr_name+'.animVal.getItem() should throw after ' +
+         'we\'ve cleared baseVal.');
+
+      is(t.animVal.numberOfItems, 0,
+         'animVal for '+t.attr_name+' should be empty after baseVal cleared');
+
+      // Test initialize()
+      // =================
+      t.element.setAttribute(t.attr_name, t.attr_val_3a);
+      t.baseVal.initialize(dummy);
+
+      is(t.animVal.numberOfItems, 1,
+         'animVal for '+t.attr_name+' should have length 1 after initialize');
+      t.item_is(t.animVal.getItem(0), dummy,
+                'animVal for '+t.attr_name+' needs update after initialize');
+    }
+  }
+}
 
 /**
  * In this function we run a series of tests at various points along the SMIL
@@ -1133,8 +1256,6 @@ function run_animation_timeline_tests()
 
 function run_tests()
 {
-    document.getElementById('svg').pauseAnimations();
-
   // Initialize each test object with some useful properties, and create their
   // 'animate' elements. Note that 'prop' and 'animVal' may be null.
   for each (var t in tests) {
@@ -1152,6 +1273,16 @@ function run_tests()
     }
     t.prop_type = t.prop_type || null;
 
+    // use fallback 'is' function, if none was provided.
+    if (!t.item_is) {
+      t.item_is = function(itemA, itemB, message) {
+      ok(typeof(itemA.value) != 'undefined' &&
+         typeof(itemB.value) != 'undefined',
+         'expecting value property');
+        is(itemA.value, itemB.value, message);
+      };
+    }
+
     t.element.appendChild(create_animate_elements(t));
   }
 
@@ -1160,6 +1291,7 @@ function run_tests()
   run_baseVal_API_tests();
   run_animVal_API_tests();
   run_basic_setAttribute_tests();
+  run_list_mutation_tests();
   run_animation_timeline_tests();
 
   // After all the other test manipulations, we check that the following

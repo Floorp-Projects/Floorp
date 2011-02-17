@@ -1353,7 +1353,9 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     mStrIDs[0] = JSID_VOID;
 
     mJSRuntime = JS_NewRuntime(32L * 1024L * 1024L); // pref ?
-    if(mJSRuntime)
+    if (!mJSRuntime)
+        NS_RUNTIMEABORT("JS_NewRuntime failed.");
+
     {
         // Unconstrain the runtime's threshold on nominal heap size, to avoid
         // triggering GC too often if operating continuously near an arbitrary
@@ -1370,6 +1372,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
                                   xpc::WrapperFactory::Rewrap,
                                   xpc::WrapperFactory::PrepareForWrapping);
         mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
+        if (!mWatchdogWakeup)
+            NS_RUNTIMEABORT("JS_NEW_CONDVAR failed.");
 
         mJSRuntime->setActivityCallback(ActivityCallback, this);
 
@@ -1399,6 +1403,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         mWatchdogThread = PR_CreateThread(PR_USER_THREAD, WatchdogMain, this,
                                           PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
                                           PR_UNJOINABLE_THREAD, 0);
+        if (!mWatchdogThread)
+            NS_RUNTIMEABORT("PR_CreateThread failed!");
     }
 }
 
@@ -1426,6 +1432,9 @@ XPCJSRuntime::newXPCJSRuntime(nsXPConnect* aXPConnect)
     {
         return self;
     }
+
+    NS_RUNTIMEABORT("new XPCJSRuntime failed to initialize.");
+
     delete self;
     return nsnull;
 }

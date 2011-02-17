@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+include protocol PPluginBackgroundDestroyer;
 include protocol PPluginModule;
 include protocol PPluginScriptableObject;
 include protocol PBrowserStream;
@@ -57,6 +58,7 @@ using mozilla::gfxSurfaceType;
 using gfxIntSize;
 using mozilla::null_t;
 using mozilla::plugins::WindowsSharedMemoryHandle;
+using nsIntRect;
 
 namespace mozilla {
 namespace plugins {
@@ -83,6 +85,7 @@ rpc protocol PPluginInstance
 {
   manager PPluginModule;
 
+  manages PPluginBackgroundDestroyer;
   manages PPluginScriptableObject;
   manages PBrowserStream;
   manages PPluginStream;
@@ -125,6 +128,13 @@ child:
   //        plugin child must create offscreen buffer
   //        with type equals to surfaceType
   async AsyncSetWindow(gfxSurfaceType surfaceType, NPRemoteWindow window);
+
+  // There is now an opaque background behind this instance (or the
+  // background was updated).  The changed area is |rect|.  The
+  // browser owns the background surface, and it's read-only from
+  // within the plugin process.  |background| is either null_t to
+  // refer to the existing background or a fresh descriptor.
+  async UpdateBackground(SurfaceDescriptor background, nsIntRect rect);
 
   rpc NPP_Destroy()
     returns (NPError rv);
@@ -236,6 +246,8 @@ parent:
 child:
   rpc SetPluginFocus();
   rpc UpdateWindow();
+
+  async PPluginBackgroundDestroyer();
 };
 
 } // namespace plugins

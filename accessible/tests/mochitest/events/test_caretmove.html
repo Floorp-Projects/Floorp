@@ -20,24 +20,11 @@
 
   <script type="application/javascript">
     /**
-     * Generic checker.
-     */
-    function checker(aCaretOffset)
-    {
-      this.check = function checker_check(aEvent)
-      {
-        is(aEvent.QueryInterface(nsIAccessibleCaretMoveEvent).caretOffset,
-           aCaretOffset,
-           "Wrong caret offset for " + prettyName(aEvent.accessible));
-      }
-    }
-
-    /**
      * Click checker.
      */
     function clickChecker(aCaretOffset, aExtraNodeOrID, aExtraCaretOffset)
     {
-      this.__proto__ = new checker(aCaretOffset);
+      this.__proto__ = new caretMoveChecker(aCaretOffset);
 
       this.extraNode = getNode(aExtraNodeOrID);
 
@@ -59,6 +46,7 @@
     var gQueue = null;
 
     // gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
 
     function testCaretOffset(aAccOrElmOrID, aCaretOffset)
     {
@@ -79,27 +67,27 @@
       gQueue = new eventQueue(EVENT_TEXT_CARET_MOVED);
 
       var id = "textbox";
-      gQueue.push(new synthFocus(id, new checker(5)));
-      gQueue.push(new synthSelectAll(id, new checker(5)));
-      gQueue.push(new synthClick(id, new checker(0)));
-      gQueue.push(new synthRightKey(id, new checker(1)));
+      gQueue.push(new synthFocus(id, new caretMoveChecker(5)));
+      gQueue.push(new synthSelectAll(id, new caretMoveChecker(5)));
+      gQueue.push(new synthClick(id, new caretMoveChecker(0)));
+      gQueue.push(new synthRightKey(id, new caretMoveChecker(1)));
 
       id = "textarea";
-      gQueue.push(new synthClick(id, new checker(0)));
-      gQueue.push(new synthRightKey(id, new checker(1)));
-      gQueue.push(new synthDownKey(id, new checker(12)));
+      gQueue.push(new synthClick(id, new caretMoveChecker(0)));
+      gQueue.push(new synthRightKey(id, new caretMoveChecker(1)));
+      gQueue.push(new synthDownKey(id, new caretMoveChecker(12)));
 
       id = "p";
-      gQueue.push(new synthClick(id, new checker(0)));
-      gQueue.push(new synthRightKey(id, new checker(1)));
-      gQueue.push(new synthDownKey(id, new checker(6)));
+      gQueue.push(new synthClick(id, new caretMoveChecker(0)));
+      gQueue.push(new synthRightKey(id, new caretMoveChecker(1)));
+      gQueue.push(new synthDownKey(id, new caretMoveChecker(6)));
 
       gQueue.push(new synthClick("p1_in_div",
                                  new clickChecker(0, "p2_in_div", -1)));
 
-      gQueue.push(new synthShiftTab("p", new checker(0)));
-      gQueue.push(new synthShiftTab("textarea", new checker(12)));
-      gQueue.push(new synthTab("p", new checker(0)));
+      gQueue.push(new synthShiftTab("p", new caretMoveChecker(0)));
+      gQueue.push(new synthShiftTab("textarea", new caretMoveChecker(12)));
+      gQueue.push(new synthTab("p", new caretMoveChecker(0)));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

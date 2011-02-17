@@ -304,6 +304,10 @@ toolbarbutton.bookmark-item > menupopup {
   background-image: -moz-linear-gradient(rgba(255,255,255,0.3), rgba(50,50,50,0.2) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.13));
 }
 
+.toolbarbutton-1[type="menu-button"] {
+  padding: 0;
+}
+
 .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   margin: 0;
@@ -341,8 +345,6 @@ toolbar:not([mode="icons"]) #restore-button {
 .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon,
 .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
   margin: 2px;
-  height: 16px;
-  width: 16px;
 }
 
 .toolbarbutton-1[disabled="true"] > .toolbarbutton-icon,
@@ -930,10 +932,6 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
   height: 16px;
 }
 
-.ac-comment {
-  font-size: 1.1em;
-}
-
 .ac-extra > .ac-comment {
   font-size: inherit;
 }
@@ -941,7 +939,7 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 .ac-url-text,
 .ac-action-text {
   color: -moz-nativehyperlinktext;
-  font-size: 0.95em;
+  font: message-box;
 }
 
 richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
@@ -1329,13 +1327,11 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   @hudButtonPressed@
 }
 
-#editBookmarkPanel .expander-up,
-#editBookmarkPanel .expander-down:hover:active {
+#editBookmarkPanel .expander-up {
   list-style-image: url("chrome://browser/skin/hud-style-expander-open.png");
 }
 
-#editBookmarkPanel .expander-down,
-#editBookmarkPanel .expander-up:hover:active {
+#editBookmarkPanel .expander-down {
   list-style-image: url("chrome://browser/skin/hud-style-expander-closed.png");
 }
 
@@ -2086,6 +2082,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .geolocation-text-link {
   color: #fff;
+  -moz-margin-start: 0; /* override default label margin to match description margin */
 }
 
 #addons-notification-icon {

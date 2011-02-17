@@ -141,6 +141,9 @@ private:
   /// Creates a DOMSVGNumber for aIndex, if it doesn't already exist.
   void EnsureItemAt(PRUint32 aIndex);
 
+  void MaybeInsertNullInAnimValListAt(PRUint32 aIndex);
+  void MaybeRemoveItemFromAnimValListAt(PRUint32 aIndex);
+
   // Weak refs to our DOMSVGNumber items. The items are friends and take care
   // of clearing our pointer to them when they die.
   nsTArray<DOMSVGNumber*> mItems;

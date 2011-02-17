@@ -1217,9 +1217,6 @@ nsCanvasRenderingContext2D::Render(gfxContext *ctx, gfxPattern::GraphicsFilter a
         mThebes->HasError())
         return NS_ERROR_FAILURE;
 
-    if (!mSurface)
-        return NS_ERROR_FAILURE;
-
     nsRefPtr<gfxPattern> pat = new gfxPattern(mSurface);
 
     pat->SetFilter(aFilter);

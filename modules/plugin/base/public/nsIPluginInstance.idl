@@ -45,9 +45,19 @@ interface nsIOutputStream;
 #include "npapi.h"
 #include "nsStringGlue.h"
 #include "gfxASurface.h"
+#include "ImageLayers.h"
 struct JSContext;
 struct JSObject;
 class gfxASurface;
+class gfxContext;
+struct nsIntRect;
+
+namespace mozilla {
+namespace layers {
+class Image;
+class ImageContainer;
+}
+}
 
 #define NPRUNTIME_JSCLASS_NAME "NPObject JS wrapper class"
 %}
@@ -55,6 +65,10 @@ class gfxASurface;
 [ptr] native JSContextPtr(JSContext);
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native gfxASurfacePtr(gfxASurface);
+[ptr] native gfxContextPtr(gfxContext);
+[ptr] native ImagePtr(mozilla::layers::Image);
+[ptr] native ImageContainerPtr(mozilla::layers::ImageContainer);
+[ptr] native nsIntRectPtr(nsIntRect);
 
 [uuid(84994340-E120-4051-824F-D4EE8AEF1A3E)]
 interface nsIPluginInstance : nsISupports
@@ -246,4 +260,20 @@ interface nsIPluginInstance : nsISupports
      * @return true if plugin module supports async rendering
      */
     PRBool useAsyncPainting();
+};
+
+
+// XXX kill me after branching
+[noscript, uuid(324f3c02-4fbd-430b-8afa-db083d3867fc)]
+interface nsIPluginInstance_MOZILLA_2_0_BRANCH : nsIPluginInstance
+{
+    PRBool isRemoteDrawingCoreAnimation();
+    void getImage(in ImageContainerPtr aContainer, out ImagePtr aImage);
+    /**
+     * This is the second leg in the trip to PluginInstanceParent.  It
+     * approximately follows the ReadbackSink API.
+     */
+    void setBackgroundUnknown();
+    void beginUpdateBackground(in nsIntRectPtr rect, out gfxContextPtr ctx);
+    void endUpdateBackground(in gfxContextPtr ctx, in nsIntRectPtr rect);
 };

@@ -44,8 +44,12 @@ interface nsIDOMPopStateEvent : nsIDOMEvent
    */
   readonly attribute nsIVariant state;
 
-  void initPopStateEvent(in DOMString typeArg,
-                         in boolean canBubbleArg,
-                         in boolean cancelableArg,
-                         in nsIVariant stateArg);
+  /**
+   * This function sets isInitial to false.  If you want to set isInitial to
+   * true, use the method in nsIDOMPopStateEvent_MOZILLA_2_BRANCH.
+   */
+  [noscript] void initPopStateEvent(in DOMString typeArg,
+                                    in boolean canBubbleArg,
+                                    in boolean cancelableArg,
+                                    in nsIVariant stateArg);
 };

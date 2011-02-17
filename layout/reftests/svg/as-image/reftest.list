@@ -58,7 +58,7 @@ asserts(72) == img-and-image-1.html img-and-image-1-ref.svg
 # More complex <img> tests
 random-if(gtk2Widget) == img-anim-1.html  lime100x100-ref.html # bug 612214
 == img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html
-random == img-dyn-1.html img-dyn-1-ref.html # Bug 596478
+== img-dyn-1.html img-dyn-1-ref.html
 
 fails-if(d2d) == img-widthAndHeight-meet-1.html  img-widthAndHeight-meet-1-ref.html # bug 633072
 == img-widthAndHeight-meet-2.html  img-widthAndHeight-meet-2-ref.html
