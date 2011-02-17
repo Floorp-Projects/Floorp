@@ -8,13 +8,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366682
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>  
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=366682">Mozilla Bug 366682</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -43,7 +42,7 @@ function getSpellCheckSelection() {
                           .getInterface(Ci.nsIEditingSession);
   var editor = editingSession.getEditorForWindow(win);
   var selcon = editor.selectionController;
-  return selcon.getSelection(selcon.SELECTION_SPELLCHECK);  
+  return selcon.getSelection(selcon.SELECTION_SPELLCHECK);
 }
 
 function runTest() {
@@ -51,8 +50,8 @@ function runTest() {
   gMisspeltWords = ["errror", "errror"];
   editDoc().designMode = "on";
   setTimeout(function() { evalTest(); }, 0);
-}  
- 
+}
+
 function evalTest() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   is(isSpellingCheckOk(), true, "All misspellings accounted for.");
@@ -62,12 +61,12 @@ function evalTest() {
 function isSpellingCheckOk() {
   var sel = getSpellCheckSelection();
   var numWords = sel.rangeCount;
-  
+
   is(numWords, gMisspeltWords.length, "Correct number of misspellings and words.");
-  
-  if (numWords != gMisspeltWords.length) 
+
+  if (numWords != gMisspeltWords.length)
     return false;
-  
+
   for (var i=0; i<numWords; i++) {
     var word = sel.getRangeAt(i);
     is (word, gMisspeltWords[i], "Misspelling is what we think it is.");
