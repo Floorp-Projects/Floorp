@@ -500,10 +500,9 @@ var BrowserUI = {
       Elements.tabs.addEventListener("TabOpen", BrowserUI, true);
       Elements.tabs.addEventListener("TabRemove", BrowserUI, true);
 
-      // Init the views
+      // Init the tool panel views
       ExtensionsView.init();
       DownloadsView.init();
-      PreferencesView.init();
       ConsoleView.init();
 
 #ifdef MOZ_IPC
@@ -534,6 +533,23 @@ var BrowserUI = {
       updatePrompt.checkForUpdates();
 #endif
     }, false);
+
+    let panels = document.getElementById("panel-items");
+    let panelViews = { // Use strings to avoid lazy-loading objects too soon.
+      "prefs-container": "PreferencesView",
+      "downloads-container": "DownloadsView",
+      "addons-container": "ExtensionsView",
+      "console-container": "ConsoleView"
+    };
+
+    // Some initialization can be delayed until a panel is selected.
+    panels.addEventListener("select", function(aEvent) {
+      if (aEvent.target != panels)
+        return;
+      let viewName = panelViews[panels.selectedPanel.id];
+      if (viewName)
+        window[viewName].delayedInit();
+    }, true);
 
 #ifndef MOZ_OFFICIAL_BRANDING
       setTimeout(function() {

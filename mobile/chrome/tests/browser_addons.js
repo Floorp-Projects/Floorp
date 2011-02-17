@@ -269,7 +269,7 @@ function open_manager(aView, aCallback) {
   BrowserUI.showPanel("addons-container");
 
   ExtensionsView.init();
-  ExtensionsView._delayedInit();
+  ExtensionsView.delayedInit();
 
   window.addEventListener("ViewChanged", function() {
     window.removeEventListener("ViewChanged", arguments.callee, true);

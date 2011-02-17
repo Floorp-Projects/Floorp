@@ -97,28 +97,11 @@ var PreferencesView = {
     }
   },
 
-  init: function ev_init() {
-    if (this._msg)
-      return;
-
-    this._msg = document.getElementById("prefs-messages");
-
-    let self = this;
-    let panels = document.getElementById("panel-items");
-    panels.addEventListener("select",
-                            function(aEvent) {
-                              if (aEvent.target != panels)
-                                return;
-                              if (panels.selectedPanel.id == "prefs-container")
-                                self._delayedInit();
-                            },
-                            false);
-  },
-
-  _delayedInit: function pv__delayedInit() {
+  delayedInit: function pv__delayedInit() {
     if (this._languages)
       return;
 
+    this._msg = document.getElementById("prefs-messages");
     this._languages = document.getElementById("prefs-languages");
     this._loadLocales();
 
