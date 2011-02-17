@@ -68,12 +68,14 @@ EXPORTS = \
         Layers.h \
         LayerManagerOGL.h \
         LayerManagerOGLProgram.h \
+        ReadbackLayer.h \
         $(NULL)
 
 CPPSRCS = \
-	Layers.cpp \
         BasicImages.cpp \
         BasicLayers.cpp \
+        Layers.cpp \
+        ReadbackProcessor.cpp \
         ThebesLayerBuffer.cpp \
         CanvasLayerOGL.cpp \
         ColorLayerOGL.cpp \
@@ -82,6 +84,12 @@ CPPSRCS = \
         LayerManagerOGL.cpp \
         ThebesLayerOGL.cpp \
         $(NULL)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+CMMSRCS = \
+        MacIOSurfaceImageOGL.mm \
+        $(NULL)
+endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifdef MOZ_ENABLE_D3D9_LAYER
@@ -104,6 +112,7 @@ endif
 ifdef MOZ_ENABLE_D3D10_LAYER
 EXPORTS += \
         LayerManagerD3D10.h \
+        ReadbackManagerD3D10.h \
         $(NULL)
 
 CPPSRCS += \
@@ -113,6 +122,7 @@ CPPSRCS += \
         ImageLayerD3D10.cpp \
         ColorLayerD3D10.cpp \
         CanvasLayerD3D10.cpp \
+        ReadbackManagerD3D10.cpp \
         $(NULL)
 endif
 endif

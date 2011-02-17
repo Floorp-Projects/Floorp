@@ -351,8 +351,19 @@ protected:
   // while seeking.
   PRPackedBool mPinnedForSeek;
 
-  // Has our size changed since the last repaint?
+  // Set to PR_TRUE when the video width, height or pixel aspect ratio is
+  // changed by SetVideoData().  The next call to Invalidate() will recalculate
+  // and update the intrinsic size on the element, request a frame reflow and
+  // then reset this flag.
   PRPackedBool mSizeChanged;
+
+  // Set to PR_TRUE in SetVideoData() if the new image has a different size
+  // than the current image.  The image size is also affected by transforms
+  // so this can be true even if mSizeChanged is false, for example when
+  // zooming.  The next call to Invalidate() will call nsIFrame::Invalidate
+  // when this flag is set, rather than just InvalidateLayer, and then reset
+  // this flag.
+  PRPackedBool mImageContainerSizeChanged;
 
   // True if the decoder is being shutdown. At this point all events that
   // are currently queued need to return immediately to prevent javascript

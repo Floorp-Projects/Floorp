@@ -211,6 +211,7 @@ WebGLContext::BindBuffer(WebGLenum target, nsIWebGLBuffer *bobj)
         if ((buf->Target() != LOCAL_GL_NONE) && (target != buf->Target()))
             return ErrorInvalidOperation("BindBuffer: buffer already bound to a different target");
         buf->SetTarget(target);
+        buf->SetHasEverBeenBound(PR_TRUE);
     }
 
     MakeContextCurrent();
@@ -239,6 +240,7 @@ WebGLContext::BindFramebuffer(WebGLenum target, nsIWebGLFramebuffer *fbobj)
         gl->fBindFramebuffer(target, gl->GetOffscreenFBO());
     } else {
         gl->fBindFramebuffer(target, framebuffername);
+        wfb->SetHasEverBeenBound(PR_TRUE);
     }
 
     mBoundFramebuffer = wfb;
@@ -258,6 +260,9 @@ WebGLContext::BindRenderbuffer(WebGLenum target, nsIWebGLRenderbuffer *rbobj)
 
     if (!GetConcreteObjectAndGLName("bindRenderBuffer", rbobj, &wrb, &renderbuffername, &isNull))
         return NS_OK;
+
+    if (!isNull)
+        wrb->SetHasEverBeenBound(PR_TRUE);
 
     MakeContextCurrent();
 
@@ -486,6 +491,9 @@ WebGLContext::BufferSubData_buf(GLenum target, WebGLsizei byteOffset, js::ArrayB
         return ErrorInvalidEnumInfo("bufferSubData: target", target);
     }
 
+    if (byteOffset < 0)
+        return ErrorInvalidValue("bufferSubData: negative offset");
+
     if (!boundBuffer)
         return ErrorInvalidOperation("BufferData: no buffer bound!");
 
@@ -519,6 +527,9 @@ WebGLContext::BufferSubData_array(WebGLenum target, WebGLsizei byteOffset, js::T
     } else {
         return ErrorInvalidEnumInfo("bufferSubData: target", target);
     }
+
+    if (byteOffset < 0)
+        return ErrorInvalidValue("bufferSubData: negative offset");
 
     if (!boundBuffer)
         return ErrorInvalidOperation("BufferData: no buffer bound!");
@@ -1667,9 +1678,6 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
         case LOCAL_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
         case LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
         case LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS:
-        case LOCAL_GL_MAX_FRAGMENT_UNIFORM_COMPONENTS:
-        case LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS:
-        case LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS:
         case LOCAL_GL_MAX_RENDERBUFFER_SIZE:
         case LOCAL_GL_RED_BITS:
         case LOCAL_GL_GREEN_BITS:
@@ -1684,21 +1692,16 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
         }
             break;
 
+        case LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS:
+            wrval->SetAsInt32(mGLMaxVertexUniformVectors);
+            break;
+
+        case LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS:
+            wrval->SetAsInt32(mGLMaxFragmentUniformVectors);
+            break;
+
         case LOCAL_GL_MAX_VARYING_VECTORS:
-        {
-            if (gl->IsGLES2()) {
-                GLint i = 0;
-                gl->fGetIntegerv(pname, &i);
-                wrval->SetAsInt32(i);
-            } else {
-                // since this pname is absent from desktop OpenGL, we have to implement it by hand.
-                // The formula below comes from the public_webgl list, "problematic GetParameter pnames" thread
-                GLint i = 0, j = 0;
-                gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS, &i);
-                gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS, &j);
-                wrval->SetAsInt32(PR_MIN(i,j)/4);
-            }
-        }
+            wrval->SetAsInt32(mGLMaxVaryingVectors);
             break;
 
         case LOCAL_GL_NUM_COMPRESSED_TEXTURE_FORMATS:
@@ -2537,11 +2540,14 @@ NS_IMETHODIMP
 WebGLContext::IsBuffer(nsIWebGLBuffer *bobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
-    WebGLuint obj;
-    PRBool ok = GetGLName<WebGLBuffer>("isBuffer", bobj, &obj, 0, &isDeleted) && !isDeleted;
+    WebGLuint buffername;
+    WebGLBuffer *buffer;
+    PRBool ok = GetConcreteObjectAndGLName("isBuffer", bobj, &buffer, &buffername, nsnull, &isDeleted) && 
+                !isDeleted &&
+                buffer->HasEverBeenBound();
     if (ok) {
         MakeContextCurrent();
-        ok = gl->fIsBuffer(obj);
+        ok = gl->fIsBuffer(buffername);
     }
 
     *retval = ok;
@@ -2552,11 +2558,14 @@ NS_IMETHODIMP
 WebGLContext::IsFramebuffer(nsIWebGLFramebuffer *fbobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
-    WebGLuint obj;
-    PRBool ok = GetGLName<WebGLFramebuffer>("isFramebuffer", fbobj, &obj, 0, &isDeleted) && !isDeleted;
+    WebGLuint fbname;
+    WebGLFramebuffer *fb;
+    PRBool ok = GetConcreteObjectAndGLName("isFramebuffer", fbobj, &fb, &fbname, nsnull, &isDeleted) &&
+                !isDeleted &&
+                fb->HasEverBeenBound();
     if (ok) {
         MakeContextCurrent();
-        ok = gl->fIsFramebuffer(obj);
+        ok = gl->fIsFramebuffer(fbname);
     }
 
     *retval = ok;
@@ -2568,18 +2577,10 @@ WebGLContext::IsProgram(nsIWebGLProgram *pobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
     WebGLProgram *prog = nsnull;
-    PRBool ok = GetConcreteObject("isProgram", pobj, &prog, 0, &isDeleted, PR_FALSE);
-    if (!ok) {
-        *retval = PR_FALSE;
-        return NS_OK;
-    }
+    PRBool ok = GetConcreteObject("isProgram", pobj, &prog, nsnull, &isDeleted, PR_FALSE) &&
+                !isDeleted;
 
-    if (isDeleted) {
-        *retval = PR_FALSE;
-    } else {
-        *retval = PR_TRUE;
-    }
-
+    *retval = ok;
     return NS_OK;
 }
 
@@ -2587,11 +2588,14 @@ NS_IMETHODIMP
 WebGLContext::IsRenderbuffer(nsIWebGLRenderbuffer *rbobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
-    WebGLuint obj;
-    PRBool ok = GetGLName<WebGLRenderbuffer>("isRenderBuffer", rbobj, &obj, 0, &isDeleted) && !isDeleted;
+    WebGLuint rbname;
+    WebGLRenderbuffer *rb;
+    PRBool ok = GetConcreteObjectAndGLName("isRenderBuffer", rbobj, &rb, &rbname, nsnull, &isDeleted) &&
+                !isDeleted &&
+                rb->HasEverBeenBound();
     if (ok) {
         MakeContextCurrent();
-        ok = gl->fIsRenderbuffer(obj);
+        ok = gl->fIsRenderbuffer(rbname);
     }
 
     *retval = ok;
@@ -2603,18 +2607,10 @@ WebGLContext::IsShader(nsIWebGLShader *sobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
     WebGLShader *shader = nsnull;
-    PRBool ok = GetConcreteObject("isShader", sobj, &shader, 0, &isDeleted, PR_FALSE);
-    if (!ok) {
-        *retval = PR_FALSE;
-        return NS_OK;
-    }
+    PRBool ok = GetConcreteObject("isShader", sobj, &shader, nsnull, &isDeleted, PR_FALSE) &&
+                !isDeleted;
 
-    if (isDeleted) {
-        *retval = PR_FALSE;
-    } else {
-        *retval = PR_TRUE;
-    }
-
+    *retval = ok;
     return NS_OK;
 }
 
@@ -2622,11 +2618,14 @@ NS_IMETHODIMP
 WebGLContext::IsTexture(nsIWebGLTexture *tobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
-    WebGLuint obj;
-    PRBool ok = GetGLName<WebGLTexture>("isTexture", tobj, &obj, 0, &isDeleted) && !isDeleted;
+    WebGLuint texname;
+    WebGLTexture *tex;
+    PRBool ok = GetConcreteObjectAndGLName("isTexture", tobj, &tex, &texname, nsnull, &isDeleted) &&
+                !isDeleted &&
+                tex->HasEverBeenBound();
     if (ok) {
         MakeContextCurrent();
-        ok = gl->fIsTexture(obj);
+        ok = gl->fIsTexture(texname);
     }
 
     *retval = ok;

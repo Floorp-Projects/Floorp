@@ -118,6 +118,57 @@ function CSPdebug(aMsg) {
                     .logStringMessage(aMsg);
 }
 
+// Callback to resume a request once the policy-uri has been fetched
+function CSPPolicyURIListener(policyURI, docRequest, csp) {
+  this._policyURI = policyURI;    // location of remote policy
+  this._docRequest = docRequest;  // the parent document request
+  this._csp = csp;                // parent document's CSP
+  this._policy = "";              // contents fetched from policyURI
+  this._wrapper = null;           // nsIScriptableInputStream
+  this._docURI = docRequest.QueryInterface(Components.interfaces.nsIChannel)
+                 .originalURI;    // parent document URI (to be used as 'self')
+}
+
+CSPPolicyURIListener.prototype = {
+
+  QueryInterface: function(iid) {
+    if (iid.equals(Components.interfaces.nsIStreamListener) ||
+        iid.equals(Components.interfaces.nsIRequestObserver) ||
+        iid.equals(Components.interfaces.nsISupports))
+      return this;
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  onStartRequest:
+  function(request, context) {},
+
+  onDataAvailable:
+  function(request, context, inputStream, offset, count) {
+    if (this._wrapper == null) {
+      this._wrapper = Components.classes["@mozilla.org/scriptableinputstream;1"]
+                      .createInstance(Components.interfaces.nsIScriptableInputStream);
+      this._wrapper.init(inputStream);
+    }
+    // store the remote policy as it becomes available
+    this._policy += this._wrapper.read(count);
+  },
+
+  onStopRequest:
+  function(request, context, status) {
+    if (Components.isSuccessCode(status)) {
+      // send the policy we received back to the parent document's CSP
+      // for parsing
+      this._csp.refinePolicy(this._policy, this._docURI, this._docRequest);
+    }
+    else {
+      // problem fetching policy so fail closed
+      this._csp.refinePolicy("allow 'none'", null, this._docURI, this._docRequest);
+    }
+    // resume the parent document request
+    this._docRequest.resume();
+  }
+};
+
 //:::::::::::::::::::::::: CLASSES ::::::::::::::::::::::::::// 
 
 /**
@@ -162,10 +213,15 @@ CSPRep.OPTIONS_DIRECTIVE = "options";
   *        string rep of a CSP
   * @param self (optional)
   *        string or CSPSource representing the "self" source
+  * @param docRequest (optional)
+  *        request for the parent document which may need to be suspended
+  *        while the policy-uri is asynchronously fetched
+  * @param csp (optional)
+  *        the CSP object to update once the policy has been fetched
   * @returns
   *        an instance of CSPRep
   */
-CSPRep.fromString = function(aStr, self) {
+CSPRep.fromString = function(aStr, self, docRequest, csp) {
   var SD = CSPRep.SRC_DIRECTIVES;
   var UD = CSPRep.URI_DIRECTIVES;
   var aCSPR = new CSPRep();
@@ -284,6 +340,12 @@ CSPRep.fromString = function(aStr, self) {
         CSPError("policy-uri directive can only appear alone");
         return CSPRep.fromString("allow 'none'");
       }
+      // if we were called without a reference to the parent document request
+      // we won't be able to suspend it while we fetch the policy -> fail closed
+      if (!docRequest || !csp) {
+        CSPError("The policy-uri cannot be fetched without a parent request and a CSP.");
+        return CSPRep.fromString("allow 'none'");
+      }
 
       var uri = '';
       try {
@@ -309,31 +371,25 @@ CSPRep.fromString = function(aStr, self) {
         }
       }
 
-      var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]  
-                  .createInstance(Components.interfaces.nsIXMLHttpRequest);  
-
-      // insert error hook
-      req.onerror = CSPError;
-
-      // synchronous -- otherwise we need to architect a callback into the
-      // xpcom component so that whomever creates the policy object gets
-      // notified when it's loaded and ready to go.
-      req.open("GET", uri.asciiSpec, false);
-
-      // make request anonymous
-      // This prevents sending cookies with the request, in case the policy URI
-      // is injected, it can't be abused for CSRF.
-      req.channel.loadFlags |= Components.interfaces.nsIChannel.LOAD_ANONYMOUS;
-
-      req.send(null);
-      if (req.status == 200) {
-        aCSPR = CSPRep.fromString(req.responseText, self);
-        // remember where we got the policy
-        aCSPR._directives[UD.POLICY_URI] = dirvalue;
-        return aCSPR;
+      // suspend the parent document request while we fetch the policy-uri
+      try {
+        docRequest.suspend();
+        var chan = gIoService.newChannel(uri.asciiSpec, null, null);
+        // make request anonymous (no cookies, etc.) so the request for the
+        // policy-uri can't be abused for CSRF
+        chan.loadFlags |= Components.interfaces.nsIChannel.LOAD_ANONYMOUS;
+        chan.asyncOpen(new CSPPolicyURIListener(uri, docRequest, csp), null);
       }
-      CSPError("Error fetching policy URI: server response was " + req.status);
-      return CSPRep.fromString("allow 'none'");
+      catch (e) {
+        // resume the document request and apply most restrictive policy
+        docRequest.resume();
+        CSPError("Error fetching policy-uri: " + e);
+        return CSPRep.fromString("allow 'none'");
+      }
+
+      // return a fully-open policy to be intersected with the contents of the
+      // policy-uri when it returns
+      return CSPRep.fromString("allow *");
     }
 
     // UNIDENTIFIED DIRECTIVE /////////////////////////////////////////////

@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=615501
+-->
+<head>
+  <title>Test for Bug 615501</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=615501">Mozilla Bug 615501</a>
+
+<iframe id='iframe' src='file_bug615501.html'></iframe>
+
+<script type="application/javascript;version=1.7">
+
+/** Test for Bug 615501 **/
+
+SimpleTest.waitForExplicitFinish();
+
+// Called by inner frame on DOMContentLoaded.
+function innerDOMContentLoaded() {
+}
+
+// Called by inner frame on load.
+function innerLoad() {
+}
+
+// Called by inner frame on popstate.
+var numPopstates = 0;
+function innerPopstate(e) {
+  numPopstates++;
+
+  if (numPopstates == 1) {
+    // This is the inner frame's initial popstate.  Spin the event loop, then
+    // start the test.
+    ok(true, 'Got initial popstate.');
+    is(e.initial, true, 'Initial popstate should have .initial set to true.');
+    setTimeout(runTest, 0);
+  }
+  else {
+    is(e.initial, false, 'State-change popstate should have .initial set to false.');
+    is(e.state, '1', 'Correct state after back.');
+    SimpleTest.finish();
+  }
+}
+
+function runTest() {
+  var win = $('iframe').contentWindow;
+  win.history.replaceState('1', '1', '1');
+  win.history.pushState('2', '2', '2');
+  win.history.back();
+
+  // If back() is synchronous, this replaceState call won't cause us to cancel
+  // the popstate from the call to back.
+  win.history.replaceState('a', 'a', 'a');
+}
+
+</script>
+</body>
+</html>

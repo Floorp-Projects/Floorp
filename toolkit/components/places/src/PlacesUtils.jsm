@@ -2049,11 +2049,15 @@ var PlacesUtils = {
    *        nsIURI or spec of the page.
    * @param aCallback
    *        Function to be called when done.
-   *        The function will receive an array of itemIds associated to aURI.
+   *        The function will receive an array of itemIds associated to aURI and
+   *        aURI itself.
    * @param aScope
    *        Scope for the callback.
    *
-   * @note Children of live bookmarks folders are excluded.
+   * @return A object with a .cancel() method allowing to cancel the request.
+   *
+   * @note Children of live bookmarks folders are excluded. The callback function is
+   *       not invoked if the request is cancelled or hits an error.
    */
   asyncGetBookmarkIds: function PU_asyncGetBookmarkIds(aURI, aCallback, aScope)
   {
@@ -2078,7 +2082,11 @@ var PlacesUtils = {
     let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
     this._asyncGetBookmarksStmt.params.url = url;
     this._asyncGetBookmarksStmt.params.name = this.LMANNO_FEEDURI;
-    this._asyncGetBookmarksStmt.executeAsync({
+
+    // Storage does not guarantee that invoking cancel() on a statement
+    // will cause a REASON_CANCELED.  Thus we wrap the statement.
+    let stmt = new AsyncStatementCancelWrapper(this._asyncGetBookmarksStmt);
+    return stmt.executeAsync({
       _itemIds: [],
       handleResult: function(aResultSet) {
         let row, haveMatches = false;
@@ -2086,19 +2094,50 @@ var PlacesUtils = {
           this._itemIds.push(row.getResultByIndex(0));
         }
       },
-      handleError: function(aError) {
-        Cu.reportError("Async statement execution returned (" + aError.result +
-                       "): " + aError.message);
-      },
       handleCompletion: function(aReason)
       {
         if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-          aCallback.apply(aScope, [this._itemIds]);
+          aCallback.apply(aScope, [this._itemIds, aURI]);
         }
       }
     });
   }
 };
+
+/**
+ * Wraps the provided statement so that invoking cancel() on the pending
+ * statement object will always cause a REASON_CANCELED.
+ */
+function AsyncStatementCancelWrapper(aStmt) {
+  this._stmt = aStmt;
+}
+AsyncStatementCancelWrapper.prototype = {
+  _canceled: false,
+  _cancel: function() {
+    this._canceled = true;
+    this._pendingStmt.cancel();
+  },
+  handleResult: function(aResultSet) {
+    this._callback.handleResult(aResultSet);
+  },
+  handleError: function(aError) {
+    Cu.reportError("Async statement execution returned (" + aError.result +
+                   "): " + aError.message);
+  },
+  handleCompletion: function(aReason)
+  {
+    let reason = this._canceled ?
+                   Ci.mozIStorageStatementCallback.REASON_CANCELED :
+                   aReason;
+    this._callback.handleCompletion(reason);
+  },
+  executeAsync: function(aCallback) {
+    this._pendingStmt = this._stmt.executeAsync(this);
+    this._callback = aCallback;
+    let self = this;
+    return { cancel: function () { self._cancel(); } }
+  }
+}
 
 XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "history",
                                    "@mozilla.org/browser/nav-history-service;1",

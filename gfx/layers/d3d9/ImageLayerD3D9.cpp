@@ -53,13 +53,18 @@ SurfaceToTexture(IDirect3DDevice9 *aDevice,
                  gfxASurface *aSurface,
                  const gfxIntSize &aSize)
 {
-  nsRefPtr<gfxImageSurface> imageSurface =
-    new gfxImageSurface(aSize, gfxASurface::ImageFormatARGB32);
 
-  nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
+  nsRefPtr<gfxImageSurface> imageSurface = aSurface->GetAsImageSurface();
 
-  context->SetSource(aSurface);
-  context->Paint();
+  if (!imageSurface) {
+    imageSurface = new gfxImageSurface(aSize,
+                                       gfxASurface::ImageFormatARGB32);
+    
+    nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
+    context->SetSource(aSurface);
+    context->SetOperator(gfxContext::OPERATOR_SOURCE);
+    context->Paint();
+  }
 
   nsRefPtr<IDirect3DTexture9> texture;
   nsRefPtr<IDirect3DDevice9Ex> deviceEx;
@@ -617,10 +622,6 @@ CairoImageD3D9::SetData(const CairoImage::Data &aData)
   mSize = aData.mSize;
   mCachedSurface = aData.mSurface;
   mTexture = NULL;
-
-  // Try to upload the surface immediately, so that we don't block the
-  // rendering pipeline at paint time.
-  (void) GetOrCreateTexture();
 }
 
 IDirect3DTexture9*

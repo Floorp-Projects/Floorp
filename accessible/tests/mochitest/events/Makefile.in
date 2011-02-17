@@ -56,6 +56,7 @@ _TEST_FILES =\
 		test_aria_statechange.html \
 		test_attrs.html \
 		test_caretmove.html \
+		test_caretmove.xul \
 		test_coalescence.html \
 		test_contextmenu.html \
 		test_docload.html \

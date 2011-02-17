@@ -1541,7 +1541,7 @@ nsOfflineCacheDevice::OpenInputStreamForEntry(nsCacheEntry      *entry,
 
   *result = nsnull;
 
-  NS_ENSURE_TRUE(offset < entry->DataSize(), NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(!offset || (offset < entry->DataSize()), NS_ERROR_INVALID_ARG);
 
   // return an input stream to the entry's data file.  the stream
   // may be read on a background thread.

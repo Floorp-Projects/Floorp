@@ -50,10 +50,6 @@
     }
 
     function continue_test() {
-      const Cc = Components.classes;
-      const Ci = Components.interfaces;
-      Components.utils.import("resource://gre/modules/Services.jsm");
-
       // Add some visits.
       let vtime = Date.now() * 1000;
       const ttype = PlacesUtils.history.TRANSITION_TYPED;

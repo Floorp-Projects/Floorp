@@ -128,7 +128,6 @@ static PRBool gMenuConsumed;
 // stacking order, so the window at gAndroidBounds[0] is the topmost
 // one.
 static nsTArray<nsWindow*> gTopLevelWindows;
-static nsWindow* gFocusedWindow = nsnull;
 
 static nsRefPtr<gl::GLContext> sGLContext;
 static bool sFailedToCreateGLContext = false;
@@ -176,15 +175,17 @@ nsWindow::DumpWindows(const nsTArray<nsWindow*>& wins, int indent)
 
 nsWindow::nsWindow() :
     mIsVisible(PR_FALSE),
-    mParent(nsnull)
+    mParent(nsnull),
+    mFocus(nsnull)
 {
 }
 
 nsWindow::~nsWindow()
 {
     gTopLevelWindows.RemoveElement(this);
-    if (gFocusedWindow == this)
-        gFocusedWindow = nsnull;
+    nsWindow *top = FindTopLevel();
+    if (top->mFocus == this)
+        top->mFocus = nsnull;
     ALOG("nsWindow %p destructor", (void*)this);
 }
 
@@ -341,29 +342,39 @@ nsWindow::Show(PRBool aState)
         return NS_ERROR_FAILURE;
     }
 
-    if ((aState && !mIsVisible) ||
-        (!aState && mIsVisible))
-    {
-        mIsVisible = aState;
+    if (aState == mIsVisible)
+        return NS_OK;
 
-        if (IsTopLevel()) {
-            // XXX should we bring this to the front when it's shown,
-            // if it's a toplevel widget?
+    mIsVisible = aState;
 
-            // XXX we should synthesize a NS_MOUSE_EXIT (for old top
-            // window)/NS_MOUSE_ENTER (for new top window) since we need
-            // to pretend that the top window always has focus.  Not sure
-            // if Show() is the right place to do this, though.
+    if (IsTopLevel()) {
+        // XXX should we bring this to the front when it's shown,
+        // if it's a toplevel widget?
 
-            if (mIsVisible) {
-                // It just became visible, so send a resize update if necessary
-                // and bring it to the front.
-                Resize(0, 0, gAndroidBounds.width, gAndroidBounds.height, PR_FALSE);
-                BringToFront();
+        // XXX we should synthesize a NS_MOUSE_EXIT (for old top
+        // window)/NS_MOUSE_ENTER (for new top window) since we need
+        // to pretend that the top window always has focus.  Not sure
+        // if Show() is the right place to do this, though.
+
+        if (aState) {
+            // It just became visible, so send a resize update if necessary
+            // and bring it to the front.
+            Resize(0, 0, gAndroidBounds.width, gAndroidBounds.height, PR_FALSE);
+            BringToFront();
+        } else if (TopWindow() == this) {
+            // find the next visible window to show
+            int i;
+            for (i = 1; i < gTopLevelWindows.Length(); i++) {
+                nsWindow *win = gTopLevelWindows[i];
+                if (!win->mIsVisible)
+                    continue;
+
+                win->BringToFront();
+                break;
             }
-        } else if (FindTopLevel() == TopWindow()) {
-            nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
         }
+    } else if (FindTopLevel() == TopWindow()) {
+        nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
     }
 
 #ifdef ANDROID_DEBUG_WIDGET
@@ -544,11 +555,12 @@ nsWindow::SetFocus(PRBool aRaise)
     if (!aRaise)
         ALOG("nsWindow::SetFocus: can't set focus without raising, ignoring aRaise = false!");
 
-    gFocusedWindow = this;
     if (!AndroidBridge::Bridge())
         return NS_OK;
 
-    FindTopLevel()->BringToFront();
+    nsWindow *top = FindTopLevel();
+    top->mFocus = this;
+    top->BringToFront();
 
     return NS_OK;
 }
@@ -816,8 +828,8 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 
         case AndroidGeckoEvent::KEY_EVENT:
             win->UserActivity();
-            if (gFocusedWindow)
-                gFocusedWindow->OnKeyEvent(ae);
+            if (win->mFocus)
+                win->mFocus->OnKeyEvent(ae);
             break;
 
         case AndroidGeckoEvent::DRAW:
@@ -826,8 +838,8 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 
         case AndroidGeckoEvent::IME_EVENT:
             win->UserActivity();
-            if (gFocusedWindow) {
-                gFocusedWindow->OnIMEEvent(ae);
+            if (win->mFocus) {
+                win->mFocus->OnIMEEvent(ae);
             } else {
                 NS_WARNING("Sending unexpected IME event to top window");
                 win->OnIMEEvent(ae);

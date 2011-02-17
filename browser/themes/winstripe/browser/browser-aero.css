@@ -74,7 +74,7 @@
 }
 
 @media all and (-moz-windows-compositor) {
-  /* these should be hidden w/glass enabled. windows draws it's own buttons. */
+  /* These should be hidden w/ glass enabled. Windows draws its own buttons. */
   .titlebar-button {
     display: none;
   }
@@ -126,26 +126,28 @@
     background-color: transparent !important;
     color: black;
     text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
-  }
-  #toolbar-menubar:not(:-moz-lwtheme),
-  #navigator-toolbox[tabsontop=false] > #nav-bar:not(:-moz-lwtheme) {
-    background-image: none !important;
+    border-left-style: none !important;
+    border-right-style: none !important;
   }
 
   /* Vertical toolbar border */
-  #main-window[sizemode="normal"] #navigator-toolbox:not([inFullscreen="true"])::after,
-  #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not([inFullscreen="true"]):not(:-moz-lwtheme) {
+  #main-window[sizemode=normal] #navigator-toolbox:not([inFullscreen])::after,
+  #main-window[sizemode=normal] #navigator-toolbox[tabsontop=true] > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not([inFullscreen]),
+  #main-window[sizemode=normal] #navigator-toolbox[tabsontop=false] > toolbar:not(#toolbar-menubar):not(#nav-bar):not([inFullScreen]) {
     border-left: 1px solid @toolbarShadowColor@;
     border-right: 1px solid @toolbarShadowColor@;
     background-clip: padding-box;
   }
-  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #browser-border-start,
-  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #browser-border-end {
+  #main-window[sizemode=normal] #navigator-toolbox > toolbar:-moz-lwtheme {
+    border-color: transparent !important;
+  }
+  #main-window[sizemode=normal]:not([inFullscreen]) #browser-border-start,
+  #main-window[sizemode=normal]:not([inFullscreen]) #browser-border-end {
     display: -moz-box;
     background-color: @toolbarShadowColor@;
     width: 1px;
   }
-  #main-window[sizemode="normal"] #browser-bottombox {
+  #main-window[sizemode=normal] #browser-bottombox {
     border: 1px solid @toolbarShadowColor@;
     border-top-style: none;
   }
@@ -159,7 +161,7 @@
   /* This code is only needed for restored windows (i.e. sizemode=normal)
      because of the border radius on the toolbar below the tab bar.
      :not([inFullscreen=true]) is added to ease the transition to and from
-     fullscreen mode, as the sidemode attribute isn't updated immediately. */
+     fullscreen mode, as the sizemode attribute isn't updated immediately. */
   #main-window[sizemode=normal]:not([inFullscreen=true])[tabsontop=true] #nav-bar:not(:-moz-lwtheme),
   #main-window[sizemode=normal][tabsontop=true] > #nav-bar[collapsed=true]:not([customizing]) + toolbar:not(:-moz-lwtheme),
   #main-window[sizemode=normal][tabsontop=true] > #nav-bar[collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme) {
@@ -179,9 +181,13 @@
     background-image: none !important;
   }
 
-  #navigator-toolbox:not([tabsontop="true"]) > #PersonalToolbar {
+  #navigator-toolbox[tabsontop=false] > #PersonalToolbar {
     padding-top: 0 !important;
-    margin-top: 3px;
+    margin-top: 2px;
+    border-top: 1px solid @toolbarShadowColor@;
+  }
+  #navigator-toolbox[tabsontop=false] > #PersonalToolbar:not(:-moz-lwtheme) {
+    background-image: -moz-linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
   }
 
   #main-window[sizemode="normal"] #TabsToolbar[tabsontop="true"]:not([inFullscreen="true"]):not(:-moz-lwtheme) {
@@ -275,6 +281,23 @@
 }
 
 @media not all and (-moz-windows-compositor) {
+  #main-window:-moz-system-metric(windows-default-theme) {
+    background-color: rgb(185,209,234);
+  }
+  #main-window:-moz-system-metric(windows-default-theme):-moz-window-inactive {
+    background-color: rgb(215,228,242);
+  }
+
+  #toolbar-menubar:not([autohide=true]):not(:-moz-lwtheme):-moz-system-metric(windows-default-theme),
+  #main-window:not([tabsintitlebar]) #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme):-moz-system-metric(windows-default-theme),
+  #navigator-toolbox[tabsontop=false] > toolbar:not(#toolbar-menubar):not(:-moz-lwtheme):-moz-system-metric(windows-default-theme) {
+    -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
+    background-color: transparent;
+  }
+  #toolbar-menubar[autohide=true]:-moz-system-metric(windows-default-theme) {
+    background-color: transparent;
+  }
+
   #print-preview-toolbar:not(:-moz-lwtheme) {
     -moz-appearance: -moz-win-browsertabbar-toolbox;
   }

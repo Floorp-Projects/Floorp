@@ -25,6 +25,11 @@ interface nsIContentViewer : nsISupports
   attribute nsISupports container;
 
   void loadStart(in nsISupports aDoc);
+
+  /**
+   * On success, returns NS_SUCCESS_LOAD_STOPPED if the load was stopped by the
+   * end of the method, and NS_OK otherwise.
+   */
   void loadComplete(in unsigned long aStatus);
 
   /**
@@ -133,4 +138,17 @@ interface nsIContentViewer : nsISupports
    * destroyed.  Can return null
    */
   readonly attribute nsISHEntry historyEntry;
+};
+
+[scriptable, uuid(4710ef6e-6de3-47fe-88f4-e49b48c87fc9)]
+interface nsIContentViewer_MOZILLA_2_0_BRANCH : nsISupports
+{
+  /*
+   * Indicates when we're in a state where content shouldn't be allowed to
+   * trigger a tab-modal prompt (as opposed to a window-modal prompt) because
+   * we're part way through some operation (eg beforeunload) that shouldn't be
+   * rentrant if the user closes the tab while the prompt is showing.
+   * See bug 613800.
+   */
+  readonly attribute boolean isTabModalPromptAllowed;
 };

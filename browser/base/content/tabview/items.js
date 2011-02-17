@@ -182,6 +182,8 @@ Item.prototype = {
       stop: function() {
         drag.info.stop();
         drag.info = null;
+        if (!this.isAGroupItem && !this.parent)
+          gTabView.firstUseExperienced = true;
       },
       // The minimum the mouse must move after mouseDown in order to move an 
       // item

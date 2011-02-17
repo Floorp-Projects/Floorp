@@ -69,15 +69,15 @@ Texture2D tRGBWhite;
 SamplerState LayerTextureSamplerLinear
 {
     Filter = MIN_MAG_MIP_LINEAR;
-    AddressU = Wrap;
-    AddressV = Wrap;
+    AddressU = Clamp;
+    AddressV = Clamp;
 };
 
 SamplerState LayerTextureSamplerPoint
 {
     Filter = MIN_MAG_MIP_POINT;
-    AddressU = Wrap;
-    AddressV = Wrap;
+    AddressU = Clamp;
+    AddressV = Clamp;
 };
 
 struct VS_INPUT {
