@@ -432,17 +432,22 @@ function test_url() {
 },
 
 function test_localfile() {
-  // Wait for the complete notification
-  wait_for_notification(function(aPanel) {
-    let notification = aPanel.childNodes[0];
-    is(notification.id, "addon-install-failed-notification", "Should have seen the install fail");
-    is(notification.getAttribute("label"),
-       "This add-on could not be installed because it appears to be corrupt.",
-       "Should have seen the right message");
+  // Wait for the install to fail
+  Services.obs.addObserver(function() {
+    Services.obs.removeObserver(arguments.callee, "addon-install-failed");
 
-    wait_for_notification_close(runNextTest);
-    gBrowser.removeTab(gBrowser.selectedTab);
-  });
+    // Wait for the browser code to add the failure notification
+    executeSoon(function() {
+      let notification = PopupNotifications.panel.childNodes[0];
+      is(notification.id, "addon-install-failed-notification", "Should have seen the install fail");
+      is(notification.getAttribute("label"),
+         "This add-on could not be installed because it appears to be corrupt.",
+         "Should have seen the right message");
+
+      wait_for_notification_close(runNextTest);
+      gBrowser.removeTab(gBrowser.selectedTab);
+    });
+  }, "addon-install-failed", false);
 
   var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                      .getService(Components.interfaces.nsIChromeRegistry);
