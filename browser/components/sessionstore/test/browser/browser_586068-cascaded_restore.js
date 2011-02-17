@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Cu.import("resource://gre/modules/Services.jsm");
 let ss = Cc["@mozilla.org/browser/sessionstore;1"].
          getService(Ci.nsISessionStore);
 
@@ -764,4 +763,3 @@ function countTabs() {
 function r() {
   return "" + Date.now() + Math.random();
 }
-
