@@ -4809,7 +4809,9 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
 
   // If layout could possibly trigger scripts, then it's only safe to flush if
   // it's safe to run script.
-  if (mDocument->GetScriptGlobalObject()) {
+  PRBool hasHadScriptObject;
+  if (mDocument->GetScriptHandlingObject(hasHadScriptObject) ||
+      hasHadScriptObject) {
     isSafeToFlush = isSafeToFlush && nsContentUtils::IsSafeToRunScript();
   }
 
