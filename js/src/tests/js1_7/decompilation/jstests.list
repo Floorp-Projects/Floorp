@@ -46,4 +46,4 @@ script regress-379925.js
 script regress-380506.js
 script regress-410571.js
 script regress-410649.js
-skip script regress-429252.js
+require-or(debugMode,skip) script regress-429252.js
