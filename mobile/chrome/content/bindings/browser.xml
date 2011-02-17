@@ -876,10 +876,10 @@
             // bigger than our content size. In those cases, we take that sliver of leftover
             // space and apply it to the other dimension.
             if (contentWidth < cacheWidth) {
-              cacheHeight += (cacheWidth - contentWidth) * contentHeight / contentWidth;
+              cacheHeight += (cacheWidth - contentWidth) * cacheHeight / cacheWidth;
               cacheWidth = contentWidth;
             } else if (contentHeight < cacheHeight) {
-              cacheWidth += (cacheHeight - contentHeight) * contentWidth / contentHeight;
+              cacheWidth += (cacheHeight - contentHeight) * cacheWidth / cacheHeight;
               cacheHeight = contentHeight;
             }
 
