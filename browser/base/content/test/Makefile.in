@@ -192,6 +192,7 @@ _BROWSER_FILES = \
                  browser_inspector_treePanel_output.js \
                  browser_inspector_treePanel_input.html \
                  browser_inspector_treePanel_result.html \
+                 browser_overflowScroll.js \
                  browser_pageInfo.js \
                  browser_page_style_menu.js \
                  browser_pinnedTabs.js \
@@ -263,12 +264,6 @@ _BROWSER_FILES += \
 # TODO: Activate after carbon test plugin lands, bug 628651
 # 		browser_maconly_carbon_mismatch_plugin.js \
 
-endif
-
-ifneq (gtk2,$(MOZ_WIDGET_TOOLKIT))
-_BROWSER_FILES += \
-		browser_overflowScroll.js \
-		$(NULL)
 endif
 
 libs:: $(_TEST_FILES)
