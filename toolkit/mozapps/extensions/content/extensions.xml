@@ -847,7 +847,7 @@
   <binding id="addon-generic"
            extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
     <content>
-      <xul:hbox anonid="warning-container" align="center"
+      <xul:hbox anonid="warning-container"
                 class="warning">
         <xul:image class="warning-icon"/>
         <xul:label anonid="warning" flex="1"/>
@@ -855,14 +855,14 @@
         <xul:button anonid="warning-btn" class="button-link"/>
         <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
       </xul:hbox>
-      <xul:hbox anonid="error-container" align="center"
+      <xul:hbox anonid="error-container"
                 class="error">
         <xul:image class="error-icon"/>
         <xul:label anonid="error" flex="1"/>
         <xul:label anonid="error-link" class="text-link"/>
         <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
       </xul:hbox>
-      <xul:hbox anonid="pending-container" align="center"
+      <xul:hbox anonid="pending-container"
                 class="pending">
         <xul:image class="pending-icon"/>
         <xul:label anonid="pending" flex="1"/>
@@ -876,14 +876,13 @@
         <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
       </xul:hbox>
 
-      <xul:hbox align="start">
-        <xul:vbox align="center" pack="center" class="icon-container">
+      <xul:hbox class="content-container">
+        <xul:vbox class="icon-container">
           <xul:image anonid="icon" class="icon"/>
         </xul:vbox>
-        <xul:vbox flex="1">
-          <xul:hbox align="start">
-            <xul:vbox flex="1">
-              <xul:hbox class="name-container" align="end">
+        <xul:vbox class="content-inner-container" flex="1">
+          <xul:hbox class="basicinfo-container">
+              <xul:hbox class="name-container">
                 <xul:label anonid="name" class="name" crop="end" flex="1"
                            xbl:inherits="value=name,tooltiptext=name"/>
                 <xul:label anonid="version" class="version"/>
@@ -891,15 +890,14 @@
                 <xul:label class="update-postfix" value="&addon.update.postfix;"/>
                 <xul:spacer flex="5000"/> <!-- Necessary to make the name crop -->
               </xul:hbox>
-            </xul:vbox>
             <xul:label anonid="date-updated" class="date-updated"
                        unknown="&addon.unknownDate;"/>
           </xul:hbox>
 
-          <xul:hbox flex="1" align="end">
-            <xul:vbox flex="1">
-              <xul:hbox align="center" class="description-container">
-                <xul:label flex="1" anonid="description" class="description" crop="end"/>
+          <xul:hbox class="advancedinfo-container" flex="1">
+            <xul:vbox class="description-outer-container" flex="1">
+              <xul:hbox class="description-container">
+                <xul:label anonid="description" class="description" crop="end" flex="1"/>
                 <xul:button anonid="details-btn" class="details"
                             tooltiptext="&addon.details.tooltip;"
                             oncommand="document.getBindingParent(this).showInDetailView();"/>
@@ -912,7 +910,7 @@
                            value="&addon.errorLoadingReleaseNotes.label;"/>
                 <xul:vbox anonid="relnotes" class="relnotes"/>
               </xul:vbox>
-              <xul:hbox pack="start">
+              <xul:hbox class="relnotes-toggle-container">
                 <xul:button anonid="relnotes-toggle-btn" class="relnotes-toggle"
                             hidden="true" label="&cmd.showReleaseNotes.label;"
                             tooltiptext="&cmd.showReleaseNotes.tooltip;"
@@ -923,18 +921,18 @@
                             oncommand="document.getBindingParent(this).toggleReleaseNotes();"/>
               </xul:hbox>
             </xul:vbox>
-            <xul:vbox>
-              <xul:hbox class="status-container" pack="end">
+            <xul:vbox class="status-control-wrapper">
+              <xul:hbox class="status-container">
                 <xul:hbox anonid="checking-update" hidden="true">
                   <xul:image class="spinner"/>
                   <xul:label value="&addon.checkingForUpdates.label;"/>
                 </xul:hbox>
                 <xul:vbox anonid="update-available" class="update-available"
-                          hidden="true" align="end">
+                          hidden="true">
                   <xul:checkbox anonid="include-update" class="include-update"
                                 label="&addon.includeUpdate.label;" checked="true"
                                 oncommand="document.getBindingParent(this).onIncludeUpdateChanged();"/>
-                  <xul:hbox align="center">
+                  <xul:hbox class="update-info-container">
                     <xul:label class="update-available-notice"
                                value="&addon.updateAvailable.label;"/>
                     <xul:button anonid="update-btn" class="addon-control update"
@@ -946,8 +944,7 @@
                 <xul:hbox anonid="install-status" class="install-status"
                           hidden="true"/>
               </xul:hbox>
-              <xul:hbox anonid="control-container" class="control-container"
-                        pack="end">
+              <xul:hbox anonid="control-container" class="control-container">
                 <xul:button anonid="preferences-btn"
                             class="addon-control preferences"
 #ifdef XP_WIN
@@ -1716,7 +1713,7 @@
   <binding id="addon-uninstalled"
            extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
     <content>
-      <xul:hbox class="pending" align="center">
+      <xul:hbox class="pending">
         <xul:image class="pending-icon"/>
         <xul:label anonid="notice" flex="1"/>
         <xul:button anonid="restart-btn" class="button-link"
@@ -1825,27 +1822,26 @@
   <binding id="addon-installing"
            extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
     <content>
-      <xul:hbox anonid="warning-container" align="center"
-                class="warning">
+      <xul:hbox anonid="warning-container" class="warning">
         <xul:image class="warning-icon"/>
         <xul:label anonid="warning" flex="1"/>
         <xul:button anonid="warning-link" class="button-link"
                    oncommand="document.getBindingParent(this).retryInstall();"/>
         <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
       </xul:hbox>
-      <xul:hbox align="stretch">
-        <xul:vbox pack="start">
-          <xul:vbox align="center" pack="center" class="icon-container">
+      <xul:hbox class="content-container">
+        <xul:vbox class="icon-outer-container">
+          <xul:vbox class="icon-container">
             <xul:image anonid="icon" class="icon"/>
           </xul:vbox>
         </xul:vbox>
-        <xul:vbox flex="1" class="fade" align="stretch" pack="center">
-          <xul:hbox class="name-container" align="end">
-            <xul:label anonid="name" class="name"/>
+        <xul:vbox class="fade name-outer-container" flex="1">
+          <xul:hbox class="name-container">
+            <xul:label anonid="name" class="name" crop="end"/>
             <xul:label anonid="version" class="version" hidden="true"/>
           </xul:hbox>
         </xul:vbox>
-        <xul:vbox align="end" pack="end">
+        <xul:vbox class="install-status-container">
           <xul:hbox anonid="install-status" class="install-status"/>
         </xul:vbox>
       </xul:hbox>
