@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://gre/modules/Services.jsm");
 let ss = Cc["@mozilla.org/browser/sessionstore;1"].
             getService(Ci.nsISessionStore);
 
