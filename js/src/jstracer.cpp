@@ -10328,7 +10328,7 @@ class BoxArg
  * argument values into the object as properties in case it is used after
  * this frame returns.
  */
-JS_REQUIRES_STACK void
+JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::putActivationObjects()
 {
     JSStackFrame *const fp = cx->fp();
@@ -10336,7 +10336,20 @@ TraceRecorder::putActivationObjects()
     bool have_call = fp->isFunctionFrame() && fp->fun()->isHeavyweight();
 
     if (!have_args && !have_call)
-        return;
+        return ARECORD_CONTINUE;
+
+    if (have_args && !fp->script()->usesArguments) {
+        /*
+         * have_args is true, so |arguments| has been accessed, but
+         * usesArguments is false, so there's no statically visible access.
+         * It must have been a dodgy access like |f["arguments"]|;  just
+         * abort.  (In the case where the record-time property name is not
+         * "arguments" but a later run-time property name is, we wouldn't have
+         * emitted the call to js_PutArgumentsOnTrace(), and js_GetArgsValue()
+         * will deep bail asking for the top JSStackFrame.)
+         */
+        RETURN_STOP_A("dodgy arguments access");
+    }
 
     uintN nformal = fp->numFormalArgs();
     uintN nactual = fp->numActualArgs();
@@ -10380,6 +10393,8 @@ TraceRecorder::putActivationObjects()
                          w.nameImmi(fp->numFormalArgs()), scopeChain_ins, cx_ins };
         w.call(&js_PutCallObjectOnTrace_ci, args);
     }
+
+    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -10572,7 +10587,7 @@ TraceRecorder::record_JSOP_RETURN()
         return endLoop();
     }
 
-    putActivationObjects();
+    CHECK_STATUS_A(putActivationObjects());
 
     if (Probes::callTrackingActive(cx)) {
         LIns* args[] = { w.immi(0), w.nameImmpNonGC(cx->fp()->fun()), cx_ins };
@@ -16219,7 +16234,7 @@ TraceRecorder::record_JSOP_STOP()
         return ARECORD_CONTINUE;
     }
 
-    putActivationObjects();
+    CHECK_STATUS_A(putActivationObjects());
 
     if (Probes::callTrackingActive(cx)) {
         LIns* args[] = { w.immi(0), w.nameImmpNonGC(cx->fp()->fun()), cx_ins };
