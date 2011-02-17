@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -523,19 +523,6 @@ class AutoNamespaceArray : protected AutoGCRooter {
     JSXMLArray array;
 };
 
-JS_ALWAYS_INLINE
-AutoResolving::AutoResolving(JSContext *cx, JSObject *obj, jsid id, Kind kind
-                             JS_GUARD_OBJECT_NOTIFIER_PARAM_NO_INIT)
-  : object(obj),
-    id(id),
-    kind(kind),
-    lastp(&JS_THREAD_DATA(cx)->resolvingList),
-    prev(*lastp)
-{
-    JS_GUARD_OBJECT_NOTIFIER_INIT;
-    *lastp = this;
-}
-    
 #ifdef DEBUG
 class CompartmentChecker
 {

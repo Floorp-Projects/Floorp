@@ -653,21 +653,9 @@ class StackSpace
     static const size_t STACK_QUOTA    = (VALUES_PER_STACK_FRAME + 18) *
                                          JS_MAX_INLINE_CALL_COUNT;
 
-    /* The constructor must be called over zeroed memory. */
-    StackSpace() {
-        JS_ASSERT(!base);
-#ifdef XP_WIN
-        JS_ASSERT(!commitEnd);
-#endif
-        JS_ASSERT(!end);
-        JS_ASSERT(!currentSegment);
-        JS_ASSERT(!invokeSegment);
-        JS_ASSERT(!invokeFrame);
-        JS_ASSERT(!invokeArgEnd);
-    }
-
+    /* Kept as a member of JSThreadData; cannot use constructor/destructor. */
     bool init();
-    ~StackSpace();
+    void finish();
 
 #ifdef DEBUG
     template <class T>
@@ -853,55 +841,6 @@ struct JSPendingProxyOperation {
     JSObject *object;
 };
 
-namespace js {
-
-/*
- * Class to detect recursive invocation of Class::resolve hooks and watch
- * handlers.
- *
- * We optimize for the case of just few entries in the resolving set and use a
- * linked list of AutoResolving instances with the explicit search, not a hash
- * set, to check for duplicated keys. We assume that cases like recursive
- * resolving hooks or watch handlers will be dealt with a native stack
- * recursion checks long before O(N) complexity of adding a new entry to the
- * list will affect performance.
- *
- * The linked list may contain duplicated entries as the user of th class may
- * not use the alreadyStarted method, see js_InitFunctionAndObjectClasses. It
- * allows to skip any checks in the destructor making the common case of no
- * dups in the list faster.
- */
-class AutoResolving {
-  public:
-    enum Kind {
-        LOOKUP,
-        WATCH
-    };
-
-    JS_ALWAYS_INLINE AutoResolving(JSContext *cx, JSObject *obj, jsid id, Kind kind = LOOKUP
-                                   JS_GUARD_OBJECT_NOTIFIER_PARAM);
-
-    ~AutoResolving() {
-        *lastp = prev;
-    }
-
-    bool alreadyStarted() const {
-        return prev && isDuplicate();
-    }
-
-  private:
-    bool isDuplicate() const;
-
-    JSObject        *const object;
-    jsid            const id;
-    Kind            const kind;
-    AutoResolving   **const lastp;
-    AutoResolving   *const prev;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-} /* namespace js */
-
 struct JSThreadData {
 #ifdef JS_THREADSAFE
     /* The request depth for this thread. */
@@ -963,46 +902,10 @@ struct JSThreadData {
 
     js::ConservativeGCThreadData conservativeGC;
 
-    js::AutoResolving   *resolvingList;
-
-    /* The constructor must be called over zeroed memory. */
-    JSThreadData() {
-#ifdef JS_THREADSAFE
-        JS_ASSERT(!requestDepth);
-#endif
-
-#ifdef JS_TRACER
-        JS_ASSERT(!onTraceCompartment);
-        JS_ASSERT(!recordingCompartment);
-        JS_ASSERT(!profilingCompartment);
-        JS_ASSERT(!maxCodeCacheBytes);
-#endif
-        JS_ASSERT(!interruptFlags);
-        JS_ASSERT(!waiveGCQuota);
-        JS_ASSERT(!dtoaState);
-        JS_ASSERT(!nativeStackBase);
-        JS_ASSERT(!pendingProxyOperation);
-    }
-
     bool init();
-
-    ~JSThreadData() {
-        if (dtoaState)
-            js_DestroyDtoaState(dtoaState);
-
-        js_FinishGSNCache(&gsnCache);
-    }
-
-    void mark(JSTracer *trc) {
-        stackSpace.mark(trc);
-    }
-
-    void purge(JSContext *cx) {
-        js_PurgeGSNCache(&gsnCache);
-
-        /* FIXME: bug 506341. */
-        propertyCache.purge(cx);
-    }
+    void finish();
+    void mark(JSTracer *trc);
+    void purge(JSContext *cx);
 
     /* This must be called with the GC lock held. */
     inline void triggerOperationCallback(JSRuntime *rt);
@@ -1035,30 +938,6 @@ struct JSThread {
 
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
-
-    /* The constructor must be called over zeroed memory. */
-    JSThread(void *id)
-      : id(id)
-    {
-        JS_INIT_CLIST(&contextList);
-        JS_ASSERT(!suspendCount);
-        JS_ASSERT(!checkRequestDepth);
-    }
-
-    bool init() {
-        return data.init();
-    }
-
-    ~JSThread() {
-        /* The thread must have zero contexts. */
-        JS_ASSERT(JS_CLIST_IS_EMPTY(&contextList));
-
-        /*
-         * The conservative GC scanner should be disabled when the thread leaves
-         * the last request.
-         */
-        JS_ASSERT(!data.conservativeGC.hasStackToScan());
-    }
 };
 
 #define JS_THREAD_DATA(cx)      (&(cx)->thread->data)
@@ -1178,7 +1057,7 @@ struct JSRuntime {
 
     /*
      * Compartment that triggered GC. If more than one Compatment need GC,
-     * gcTriggerCompartment is reset to NULL and a global GC is performed.
+     * gcTriggerCompartment is reset to NULL and a global GC is performed. 
      */
     JSCompartment       *gcTriggerCompartment;
 
@@ -1583,6 +1462,27 @@ struct JSArgumentFormatMap {
 };
 #endif
 
+/*
+ * Key and entry types for the JSContext.resolvingTable hash table, typedef'd
+ * here because all consumers need to see these declarations (and not just the
+ * typedef names, as would be the case for an opaque pointer-to-typedef'd-type
+ * declaration), along with cx->resolvingTable.
+ */
+typedef struct JSResolvingKey {
+    JSObject            *obj;
+    jsid                id;
+} JSResolvingKey;
+
+typedef struct JSResolvingEntry {
+    JSDHashEntryHdr     hdr;
+    JSResolvingKey      key;
+    uint32              flags;
+} JSResolvingEntry;
+
+#define JSRESFLAG_LOOKUP        0x1     /* resolving id from lookup */
+#define JSRESFLAG_WATCH         0x2     /* resolving id from watch */
+#define JSRESOLVE_INFER         0xffff  /* infer bits from current bytecode */
+
 extern const JSDebugHooks js_NullDebugHooks;  /* defined in jsdbgapi.cpp */
 
 namespace js {
@@ -1716,7 +1616,6 @@ typedef js::HashSet<JSObject *,
 struct JSContext
 {
     explicit JSContext(JSRuntime *rt);
-    ~JSContext();
 
     /* JSRuntime contextList linkage. */
     JSCList             link;
@@ -1737,6 +1636,14 @@ struct JSContext
   public:
     /* Locale specific callbacks for string conversion. */
     JSLocaleCallbacks   *localeCallbacks;
+
+    /*
+     * cx->resolvingTable is non-null and non-empty if we are initializing
+     * standard classes lazily, or if we are otherwise recursing indirectly
+     * from js_LookupProperty through a Class.resolve hook.  It is used to
+     * limit runaway recursion (see jsapi.c and jsobj.c).
+     */
+    JSDHashTable        *resolvingTable;
 
     /*
      * True if generating an error, to prevent runaway recursion.
@@ -1959,7 +1866,7 @@ struct JSContext
     /*
      * Return:
      * - The override version, if there is an override version.
-     * - The newest scripted frame's version, if there is such a frame.
+     * - The newest scripted frame's version, if there is such a frame. 
      * - The default verion.
      *
      * Note: if this ever shows up in a profile, just add caching!
@@ -3068,6 +2975,17 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp);
  */
 extern JS_FRIEND_API(JSContext *)
 js_NextActiveContext(JSRuntime *, JSContext *);
+
+/*
+ * Class.resolve and watchpoint recursion damping machinery.
+ */
+extern JSBool
+js_StartResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
+                  JSResolvingEntry **entryp);
+
+extern void
+js_StopResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
+                 JSResolvingEntry *entry, uint32 generation);
 
 /*
  * Report an exception, which is currently realized as a printf-style format
