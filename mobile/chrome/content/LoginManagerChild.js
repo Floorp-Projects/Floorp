@@ -82,21 +82,14 @@ var loginManager = {
 
     init : function () {
         // Cache references to current |this| in utility objects
-        this._webProgressListener._pwmgr = this;
         this._domEventListener._pwmgr    = this;
         this._observer._pwmgr            = this;
 
         // Form submit observer checks forms for new logins and pw changes.
         Services.obs.addObserver(this._observer, "earlyformsubmit", false);
 
-        // WebProgressListener for getting notification of new doc loads.
-        var progress = docShell.QueryInterface(Ci.nsIInterfaceRequestor).
-                       getInterface(Ci.nsIWebProgress);
-        progress.addProgressListener(this._webProgressListener,
-                                     Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
-
         // Add event listener to process page when DOM is complete.
-        addEventListener("DOMContentLoaded", this._domEventListener, false);
+        addEventListener("pageshow", this._domEventListener, false);
         addEventListener("unload", this._domEventListener, false);
 
         // Get constructor for nsILoginInfo
@@ -742,56 +735,6 @@ var loginManager = {
 
 
     /*
-     * _webProgressListener object
-     *
-     * Internal utility object, implements nsIWebProgressListener interface.
-     * This is attached to the document loader service, so we get
-     * notifications about all page loads.
-     */
-    _webProgressListener : {
-        _pwmgr : null,
-
-        QueryInterface : XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                                Ci.nsISupportsWeakReference]),
-
-
-        onStateChange : function (aWebProgress, aRequest,
-                                  aStateFlags,  aStatus) {
-
-            // STATE_START is too early, doc is still the old page.
-            if (!(aStateFlags & Ci.nsIWebProgressListener.STATE_TRANSFERRING))
-                return;
-
-            if (!this._pwmgr._remember)
-                return;
-
-            var domWin = aWebProgress.DOMWindow;
-            var domDoc = domWin.document;
-
-            // Only process things which might have HTML forms.
-            if (!(domDoc instanceof Ci.nsIDOMHTMLDocument))
-                return;
-
-            this._pwmgr.log("onStateChange accepted: req = " +
-                            (aRequest ?  aRequest.name : "(null)") +
-                            ", flags = 0x" + aStateFlags.toString(16));
-
-            // Fastback doesn't fire DOMContentLoaded, so process forms now.
-            if (aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING) {
-                this._pwmgr.log("onStateChange: restoring document");
-                this._pwmgr._fillDocument(domDoc);
-            }
-        },
-
-        // stubs for the nsIWebProgressListener interfaces which we don't use.
-        onProgressChange : function() { throw "Unexpected onProgressChange"; },
-        onLocationChange : function() { throw "Unexpected onLocationChange"; },
-        onStatusChange   : function() { throw "Unexpected onStatusChange";   },
-        onSecurityChange : function() { throw "Unexpected onSecurityChange"; }
-    },
-
-
-    /*
      * _domEventListener object
      *
      * Internal utility object, implements nsIDOMEventListener
@@ -837,8 +780,10 @@ var loginManager = {
                     }
                     return;
 
-                case "DOMContentLoaded":
-                    this._pwmgr._fillDocument(event.target);
+                case "pageshow":
+                    // Only process when we need to
+                    if (this._pwmgr._remember && event.target instanceof Ci.nsIDOMHTMLDocument)
+                        this._pwmgr._fillDocument(event.target);
                     break;
 
                 case "unload":
@@ -851,7 +796,7 @@ var loginManager = {
                     return;
             }
         }
-    },
+    }
 };
 
 loginManager.init();
