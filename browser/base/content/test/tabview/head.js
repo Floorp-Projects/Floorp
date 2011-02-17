@@ -46,10 +46,51 @@ function createEmptyGroupItem(contentWindow, width, height, padding, noAnimation
   box.height = height;
   
   let immediately = noAnimation ? true: false;
-  let emptyGroupItem = 
+  let emptyGroupItem =
     new contentWindow.GroupItem([], { bounds: box, immediately: immediately });
 
   return emptyGroupItem;
+}
+
+// ----------
+function createGroupItemWithTabs(win, width, height, padding, urls, animate) {
+  let contentWindow = win.TabView.getContentWindow();
+  let groupItemCount = contentWindow.GroupItems.groupItems.length;
+  // create empty group item
+  let groupItem = createEmptyGroupItem(contentWindow, width, height, padding, animate);
+  ok(groupItem.isEmpty(), "This group is empty");
+  is(contentWindow.GroupItems.groupItems.length, ++groupItemCount,
+     "The number of groups is increased by 1");
+  // add blank items
+  contentWindow.GroupItems.setActiveGroupItem(groupItem);
+  let t = 0;
+  urls.forEach( function(url) {
+    let newItem = win.gBrowser.loadOneTab(url)._tabViewTabItem;
+    ok(newItem.container, "Created element "+t+":"+newItem.container);
+    ++t;
+  });
+  return groupItem;
+}
+
+// ----------
+function createGroupItemWithBlankTabs(win, width, height, padding, numNewTabs, animate) {
+  let urls = [];
+  while(numNewTabs--)
+    urls.push("about:blank");
+  return createGroupItemWithTabs(win, width, height, padding, urls, animate);
+}
+
+// ----------
+function closeGroupItem(groupItem, callback) {
+  groupItem.addSubscriber(groupItem, "groupHidden", function() {
+    groupItem.removeSubscriber(groupItem, "groupHidden");
+    groupItem.addSubscriber(groupItem, "close", function() {
+      groupItem.removeSubscriber(groupItem, "close");
+      callback();
+    });
+    groupItem.closeHidden();
+  });
+  groupItem.closeAll();
 }
 
 // ----------

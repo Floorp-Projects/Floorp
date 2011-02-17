@@ -1,0 +1,277 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="menu tree and events">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    function openMenu(aID, aTree)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_MENUPOPUP_START, getNode(aID))
+      ];
+
+      this.invoke = function openMenu_invoke()
+      {
+        var button = getNode("button");
+        getNode(aID).openPopup(button, "after_start", 0, 0, true, false);
+      }
+
+      this.finalCheck = function openMenu_finalCheck(aEvent)
+      {
+        testAccessibleTree(aID, aTree);
+      }
+
+      this.getID = function openMenu_getID()
+      {
+        return "open menu " + prettyName(aID);
+      }
+    }
+
+    function selectNextMenuItem(aID)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_FOCUS, getNode(aID))
+      ];
+
+      this.invoke = function selectMenuItem_invoke()
+      {
+        synthesizeKey("VK_DOWN", { });
+      }
+
+      this.getID = function selectMenuItem_getID()
+      {
+        return "select menuitem " + prettyName(aID);
+      }
+    }
+    
+    function openSubMenu(aSubMenuID, aItemID)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_FOCUS, getNode(aItemID)),
+      ];
+
+      this.invoke = function openSubMenu_invoke()
+      {
+        synthesizeKey("VK_ENTER", { });
+      }
+
+      this.finalCheck = function openSubMenu_finalCheck(aEvent)
+      {
+        getAccessible(aItemID);
+      }
+
+      this.getID = function openSubMenu_getID()
+      {
+        return "open submenu " + prettyName(aSubMenuID) + " focusing item " + prettyName(aItemID);
+      }
+    }
+
+    function closeSubMenu(aSubMenuID, aItemID)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_FOCUS, getNode(aItemID)),
+      ];
+
+      this.invoke = function closeSubMenu_invoke()
+      {
+        synthesizeKey("VK_ESCAPE", { });
+      }
+
+      this.getID = function closeSubMenu_getID()
+      {
+        return "close submenu " + prettyName(aSubMenuID) + " focusing item " + prettyName(aItemID);
+      }
+    }
+
+    function closeMenu(aID)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_MENUPOPUP_END, getNode(aID))
+      ];
+
+      this.invoke = function closeMenu_invoke()
+      {
+        synthesizeKey("VK_ESCAPE", { });
+      }
+
+      this.getID = function closeMenu_getID()
+      {
+        return "close menu " + prettyName(aID);
+      }
+    }
+
+    //gA11yEventDumpID = "eventdump";
+    //gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+    var gContextTree = {};
+
+    // bug 527646
+    if (LINUX || SOLARIS) {
+      gContextTree = {
+        role: ROLE_MENUPOPUP,
+        children: [
+          {
+            name: "item0",
+            role: ROLE_MENUITEM,
+            children: []
+          },
+          {
+            name: "item1",
+            role: ROLE_MENUITEM,
+            children: []
+          },
+          {
+            name: "item2",
+            role: ROLE_PARENT_MENUITEM,
+            children: [
+              {
+                name: "item2.0",
+                role: ROLE_PARENT_MENUITEM,
+                children: [
+                  { 
+                    name: "item2.0.0",
+                    role: ROLE_MENUITEM,
+                    children: []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+    } else {
+      gContextTree = {
+        role: ROLE_MENUPOPUP,
+        children: [
+          {
+            name: "item0",
+            role: ROLE_MENUITEM,
+            children: []
+          },
+          {
+            name: "item1",
+            role: ROLE_MENUITEM,
+            children: []
+          },
+          {
+            name: "item2",
+            role: ROLE_PARENT_MENUITEM,
+            children: [
+              {
+                name: "item2",
+                role: ROLE_MENUPOPUP,
+                children: [
+                  {
+                    name: "item2.0",
+                    role: ROLE_PARENT_MENUITEM,
+                    children: [
+                      { 
+                        name: "item2.0",
+                        role: ROLE_MENUPOPUP,
+                        children: [
+                          { 
+                            name: "item2.0.0",
+                            role: ROLE_MENUITEM,
+                            children: []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+    }
+
+
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      // Check initial empty tree
+      testAccessibleTree("context", { MENUPOPUP: [] });
+
+      // Open context menu and check that menu item accesibles are created.
+      gQueue.push(new openMenu("context", gContextTree));
+
+      // Select items and check focus event on them.
+      gQueue.push(new selectNextMenuItem("item0"));
+      gQueue.push(new selectNextMenuItem("item1"));
+      gQueue.push(new selectNextMenuItem("item2"));
+
+      // Open sub menu and check menu item accessibles and focus event.
+      gQueue.push(new openSubMenu("submenu2", "item2.0"));
+      gQueue.push(new openSubMenu("submenu2.0", "item2.0.0"));
+
+      // Close submenus and check that focus goes to parent.
+      gQueue.push(new closeSubMenu("submenu2.0", "item2.0"));
+      gQueue.push(new closeSubMenu("submenu2", "item2"));
+
+      gQueue.push(new closeMenu("context"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=630194"
+       title="Update accessible tree when opening the menu popup">
+      Mozilla Bug 630194
+    </a>
+  <p id="display"></p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+    <vbox flex="1">
+
+      <menupopup id="context">
+        <menuitem id="item0" label="item0"/>
+        <menuitem id="item1" label="item1"/>
+        <menu id="item2" label="item2">
+          <menupopup id="submenu2">
+            <menu id="item2.0" label="item2.0">
+              <menupopup id="submenu2.0">
+                <menuitem id="item2.0.0" label="item2.0.0"/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </menu>
+      </menupopup>
+
+      <button context="context" id="button">btn</button>
+
+      <vbox id="eventdump" role="log"/>
+    </vbox>
+  </hbox>
+</window>

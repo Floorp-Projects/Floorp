@@ -323,7 +323,7 @@ nsIOSurface* nsIOSurface::LookupSurface(IOSurfaceID aIOSurfaceID) {
 
   nsIOSurface* ioSurface = new nsIOSurface(surfaceRef);
   if (!ioSurface) {
-    ::CFRelease(ioSurface);
+    ::CFRelease(surfaceRef);
     return nsnull;
   }
   return ioSurface;
@@ -356,6 +356,19 @@ void nsIOSurface::Lock() {
 
 void nsIOSurface::Unlock() {
   nsIOSurfaceLib::IOSurfaceUnlock(mIOSurfacePtr, READ_ONLY, NULL);
+}
+
+CGLError 
+nsIOSurface::CGLTexImageIOSurface2D(CGLContextObj ctxt,
+                                    GLenum internalFormat, GLenum format, 
+                                    GLenum type, GLuint plane)
+{
+  return nsIOSurfaceLib::CGLTexImageIOSurface2D(ctxt,
+                                                GL_TEXTURE_RECTANGLE_ARB, 
+                                                internalFormat,
+                                                GetWidth(), GetHeight(),
+                                                format, type,
+                                                mIOSurfacePtr, plane);
 }
 
 nsCARenderer::~nsCARenderer() {

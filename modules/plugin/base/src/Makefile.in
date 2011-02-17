@@ -102,6 +102,10 @@ endif
 endif
 endif
 
+LOCAL_INCLUDES = \
+  -I$(topsrcdir)/xpcom/base/ \
+  $(NULL)
+
 ifneq (,$(filter WINNT Darwin,$(OS_ARCH)))
 EXTRA_DSO_LIBS	+= gkgfx
 endif

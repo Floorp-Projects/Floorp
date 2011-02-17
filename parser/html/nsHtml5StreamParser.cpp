@@ -334,6 +334,48 @@ nsHtml5StreamParser::SetupDecodingFromBom(const char* aCharsetName, const char* 
   return rv;
 }
 
+void
+nsHtml5StreamParser::SniffBOMlessUTF16BasicLatin(const PRUint8* aFromSegment,
+                                                 PRUint32 aCountToSniffingLimit)
+{
+  // Make sure there's enough data. Require room for "<title></title>"
+  if (mSniffingLength + aCountToSniffingLimit < 30) {
+    return;
+  }
+  // even-numbered bytes tracked at 0, odd-numbered bytes tracked at 1
+  PRBool byteNonZero[2] = { PR_FALSE, PR_FALSE };
+  PRUint32 i = 0;
+  if (mSniffingBuffer) {
+    for (; i < mSniffingLength; ++i) {
+      if (mSniffingBuffer[i]) {
+        if (byteNonZero[1 - (i % 2)]) {
+          return;
+        }
+        byteNonZero[i % 2] = PR_TRUE;
+      }
+    }
+  }
+  if (aFromSegment) {
+    for (PRUint32 j = 0; j < aCountToSniffingLimit; ++j) {
+      if (aFromSegment[j]) {
+        if (byteNonZero[1 - ((i + j) % 2)]) {
+          return;
+        }
+        byteNonZero[(i + j) % 2] = PR_TRUE;
+      }
+    }
+  }
+
+  if (byteNonZero[0]) {
+    mCharset.Assign("UTF-16LE");
+  } else {
+    mCharset.Assign("UTF-16BE");
+  }
+  mCharsetSource = kCharsetFromIrreversibleAutoDetection;
+  mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
+  mFeedChardet = PR_FALSE;
+}
+
 nsresult
 nsHtml5StreamParser::FinalizeSniffing(const PRUint8* aFromSegment, // can be null
                                       PRUint32 aCount,
@@ -346,6 +388,10 @@ nsHtml5StreamParser::FinalizeSniffing(const PRUint8* aFromSegment, // can be nul
     mFeedChardet = PR_FALSE;
     return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
   }
+  // Check for BOMless UTF-16 with Basic
+  // Latin content for compat with IE. See bug 631751.
+  SniffBOMlessUTF16BasicLatin(aFromSegment, aCountToSniffingLimit);
+  // the charset may have been set now
   // maybe try chardet now; 
   if (mFeedChardet) {
     PRBool dontFeed;

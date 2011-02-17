@@ -64,6 +64,7 @@ class ContentPermissionRequestParent : public PContentPermissionRequestParent
 
  private:  
   virtual bool Recvprompt();
+  virtual void ActorDestroy(ActorDestroyReason why);
 };
   
 } // namespace dom
@@ -76,6 +77,7 @@ class nsContentPermissionRequestProxy : public nsIContentPermissionRequest
   virtual ~nsContentPermissionRequestProxy();
   
   nsresult Init(const nsACString& type, mozilla::dom::ContentPermissionRequestParent* parent);
+  void OnParentDestroyed();
   
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTENTPERMISSIONREQUEST

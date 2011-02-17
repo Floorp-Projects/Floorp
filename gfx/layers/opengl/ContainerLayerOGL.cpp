@@ -57,6 +57,7 @@ ContainerInsertAfter(Container* aContainer, Layer* aChild, Layer* aAfter)
       aContainer->mLastChild = aChild;
     }
     NS_ADDREF(aChild);
+    aContainer->DidInsertChild(aChild);
     return;
   }
   for (Layer *child = aContainer->GetFirstChild(); 
@@ -72,6 +73,7 @@ ContainerInsertAfter(Container* aContainer, Layer* aChild, Layer* aAfter)
       }
       aChild->SetPrevSibling(child);
       NS_ADDREF(aChild);
+      aContainer->DidInsertChild(aChild);
       return;
     }
   }
@@ -92,6 +94,7 @@ ContainerRemoveChild(Container* aContainer, Layer* aChild)
     aChild->SetNextSibling(nsnull);
     aChild->SetPrevSibling(nsnull);
     aChild->SetParent(nsnull);
+    aContainer->DidRemoveChild(aChild);
     NS_RELEASE(aChild);
     return;
   }
@@ -109,6 +112,7 @@ ContainerRemoveChild(Container* aContainer, Layer* aChild)
       child->SetNextSibling(nsnull);
       child->SetPrevSibling(nsnull);
       child->SetParent(nsnull);
+      aContainer->DidRemoveChild(aChild);
       NS_RELEASE(aChild);
       return;
     }
@@ -256,25 +260,22 @@ ContainerRender(Container* aContainer,
 
     if (needsFramebuffer) {
       scissorRect.MoveBy(- visibleRect.TopLeft());
-    } else {
-      if (!frameBuffer) {
-        // Transform scissorRect here
-        aManager->WorldTransformRect(scissorRect);
-      }
+    }
 
-      if (!aPreviousFrameBuffer) {
-        /**
-         * glScissor coordinates are oriented with 0,0 being at the bottom left,
-         * the opposite to layout (0,0 at the top left).
-         * All rendering to an FBO is upside-down, making the coordinate systems
-         * match.
-         * When rendering directly to a window (No current or previous FBO),
-         * we need to flip the scissor rect.
-         */
-        aContainer->gl()->FixWindowCoordinateRect(scissorRect,
-                                                  aManager->GetWigetSize().height);
-      }
-
+    if (aManager->IsDrawingFlipped()) {
+      /**
+       * glScissor coordinates are oriented with 0,0 being at the bottom left,
+       * the opposite to layout (0,0 at the top left).
+       * All rendering to an FBO is upside-down, making the coordinate systems
+       * match.
+       * When rendering directly to a window (No current or previous FBO),
+       * we need to flip the scissor rect.
+       */
+      aContainer->gl()->FixWindowCoordinateRect(scissorRect,
+                                                aContainer->gl()->ViewportRect().height);
+    }
+    
+    if (clipRect && !needsFramebuffer) {
       scissorRect.IntersectRect(scissorRect, cachedScissor);
     }
 
@@ -294,6 +295,7 @@ ContainerRender(Container* aContainer,
     }
 
     layerToRender->RenderLayer(frameBuffer, childOffset);
+    aContainer->gl()->MakeCurrent();
   }
 
   aContainer->gl()->PopScissorRect();

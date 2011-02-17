@@ -146,6 +146,9 @@ private:
   /// Creates a DOMSVGLength for aIndex, if it doesn't already exist.
   void EnsureItemAt(PRUint32 aIndex);
 
+  void MaybeInsertNullInAnimValListAt(PRUint32 aIndex);
+  void MaybeRemoveItemFromAnimValListAt(PRUint32 aIndex);
+
   // Weak refs to our DOMSVGLength items. The items are friends and take care
   // of clearing our pointer to them when they die.
   nsTArray<DOMSVGLength*> mItems;

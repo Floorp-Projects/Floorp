@@ -51,7 +51,7 @@ function runOverflowTests(aEvent) {
      "(" + left(scrollbox) + " <= " + left(firstScrollable()) + ")");
 
   element = nextRightElement();
-  EventUtils.synthesizeMouse(downButton, 1, 1, {});
+  EventUtils.synthesizeMouseAtCenter(downButton, {});
   isRight(element, "Scrolled one tab to the right with a single click");
 
   gBrowser.selectedTab = tabs[tabs.length - 1];

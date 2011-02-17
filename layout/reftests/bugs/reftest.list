@@ -1458,7 +1458,7 @@ asserts(5) == 528038-2.html 528038-2-ref.html # bug 512749
 == 539880-1-dynamic.html 539880-1-ref.html
 == 539949-1.html#test2 539949-1-ref.html#test2
 == 541382-1.html 541382-1-ref.html
-random-if(!haveTestPlugin) == 541406-1.html 541406-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)||!haveTestPlugin) == 541406-1.html 541406-1-ref.html
 needs-focus != 542116-1.html 542116-1-ref.html
 needs-focus != 542116-2.html 542116-2-ref.html
 needs-focus != 542116-3.html 542116-3-ref.html
@@ -1611,3 +1611,5 @@ random-if(winWidget) HTTP(..) == 621918-2.svg 621918-2-ref.svg # same 1px issue 
 == 625409-1.html 625409-1-ref.html
 == 627393-1.html about:blank
 == 631352-1.html 631352-1-ref.html
+fails-if(winWidget) == 632781-verybig.html 632781-ref.html # large canvas elements are not drawn on Windows, see bug 633936
+== 632781-normalsize.html 632781-ref.html

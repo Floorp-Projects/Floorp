@@ -592,7 +592,7 @@ LayerManagerOGL::Render()
   if (clipRect) {
     nsIntRect r = *clipRect;
     WorldTransformRect(r);
-    if (!mGLContext->IsDoubleBuffered() && !mTarget)
+    if (IsDrawingFlipped())
       mGLContext->FixWindowCoordinateRect(r, mWidgetSize.height);
     mGLContext->fScissor(r.x, r.y, r.width, r.height);
   } else {
@@ -760,7 +760,7 @@ LayerManagerOGL::SetupPipeline(int aWidth, int aHeight, WorldTransforPolicy aTra
   // XXX we keep track of whether the window size changed, so we can
   // skip this update if it hadn't since the last call.
   gfx3DMatrix viewMatrix;
-  if (mGLContext->IsDoubleBuffered() && !mTarget) {
+  if (IsDrawingFlipped()) {
     /* If it's double buffered, we don't have a frontbuffer FBO,
      * so put in a Y-flip in this transform.
      */
@@ -955,6 +955,10 @@ LayerManagerOGL::CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
                              LOCAL_GL_LINEAR);
   mGLContext->fTexParameteri(mFBOTextureTarget, LOCAL_GL_TEXTURE_MAG_FILTER,
                              LOCAL_GL_LINEAR);
+  mGLContext->fTexParameteri(mFBOTextureTarget, LOCAL_GL_TEXTURE_WRAP_S, 
+                             LOCAL_GL_CLAMP_TO_EDGE);
+  mGLContext->fTexParameteri(mFBOTextureTarget, LOCAL_GL_TEXTURE_WRAP_T, 
+                             LOCAL_GL_CLAMP_TO_EDGE);
   mGLContext->fBindTexture(mFBOTextureTarget, 0);
 
   mGLContext->fGenFramebuffers(1, &fbo);

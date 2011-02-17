@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      function doIt() {
+        var doc = window.frames[0].document;
+        var ok = (doc.form1 == doc.getElementById("test1"));
+        window.parent.postMessage(
+          JSON.stringify({ ok: ok,
+                           reason: "Should be able to get named items by name" }),
+                         "*");
+        window.parent.postMessage("finish", "*");
+      }
+
+      window.onmessage = function(ev) {
+        if (ev.data == "start") {
+          doIt();
+        }
+      }
+
+      document.domain = "example.org";
+    </script>
+  </head>
+  <body>
+    <iframe id="subframe"></iframe>
+    <script>
+      document.getElementById("subframe").src =
+        "http://test2.example.org" +
+        location.pathname.replace(/file1_bug629227.html/, "file2_bug629227.html");
+    </script>
+  </body>
+</html>

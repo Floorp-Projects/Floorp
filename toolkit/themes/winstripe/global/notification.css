@@ -63,7 +63,7 @@ notification[type="critical"] .messageImage {
   max-width: 248px;
 }
 
-.popup-notification-menubutton {
+.popup-notification-button-container {
   margin-top: 17px;
 }
 

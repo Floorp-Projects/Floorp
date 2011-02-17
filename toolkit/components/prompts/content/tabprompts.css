@@ -19,8 +19,6 @@ tabmodalprompt {
   white-space: pre-wrap;
 }
 
-%ifdef XP_WIN
-.buttonContainer {
-  -moz-box-pack: center;
+label[value=""] {
+  visibility: collapse;
 }
-%endif
