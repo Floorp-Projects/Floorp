@@ -41,8 +41,13 @@
 // gSyncUI handles updating the tools menu
 let gSyncUI = {
   init: function SUI_init() {
-    // this will be the first notification fired during init
-    // we can set up everything else later
+    // Proceed to set up the UI if Sync has already started up.
+    // Otherwise we'll do it when Sync is firing up.
+    if (Weave.Status.ready) {
+      this.initUI();
+      return;
+    }
+
     Services.obs.addObserver(this, "weave:service:ready", true);
 
     // Remove the observer if the window is closed before the observer
@@ -52,6 +57,7 @@ let gSyncUI = {
       Services.obs.removeObserver(gSyncUI, "weave:service:ready");
     }, false);
   },
+
   initUI: function SUI_initUI() {
     let obs = ["weave:service:sync:start",
                "weave:service:sync:finish",
