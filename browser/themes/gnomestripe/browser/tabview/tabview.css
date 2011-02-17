@@ -471,10 +471,6 @@ input.name:-moz-placeholder {
   color: GrayText;
 }
 
-.title-container {
-  cursor: text;
-}
-
 .title-shield {
   margin-top: 3px;
   -moz-margin-end: 0;
@@ -485,6 +481,7 @@ input.name:-moz-placeholder {
   top: 0;
   width: 100%;
   height: 100%;
+  cursor: text;
 }
 
 html[dir=rtl] .title-shield {
