@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Cu.import("resource://gre/modules/Services.jsm");
 const SS_SVC = Cc["@mozilla.org/browser/sessionstore;1"].
                getService(Ci.nsISessionStore);
 
