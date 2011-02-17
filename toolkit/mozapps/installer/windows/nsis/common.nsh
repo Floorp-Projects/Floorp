@@ -6419,6 +6419,9 @@
  * passed to the macro and all other shortcuts installed by the application with
  * the current application user model ID. Requires ApplicationID.
  *
+ * NOTE: this does not update Desktop shortcut application user model ID due to
+ *       bug 633728.
+ *
  * @param   _EXE_PATH
  *          The main application executable path
  * @param   _APP_ID
@@ -6498,27 +6501,6 @@
               ${GetLongPath} "$R4" $R4
               ${If} "$R4" == "$R9" ; link path == install path
                 ApplicationID::Set "$QUICKLAUNCH\$R5" "$R8"
-                Pop $R4
-              ${EndIf}
-            ${EndIf}
-          ${Loop}
-
-          ; Update the Desktop shortcuts' App ID for this application
-          StrCpy $R2 -1
-          ${Do}
-            IntOp $R2 $R2 + 1 ; Increment the counter
-            ClearErrors
-            ReadINIStr $R5 "$R6" "DESKTOP" "Shortcut$R2"
-            ${If} ${Errors}
-              ${ExitDo}
-            ${EndIf}
-
-            ${If} ${FileExists} "$DESKTOP\$R5"
-              ShellLink::GetShortCutTarget "$DESKTOP\$R5"
-              Pop $R4
-              ${GetLongPath} "$R4" $R4
-              ${If} "$R4" == "$R9" ; link path == install path
-                ApplicationID::Set "$DESKTOP\$R5" "$R8"
                 Pop $R4
               ${EndIf}
             ${EndIf}
