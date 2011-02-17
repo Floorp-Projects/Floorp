@@ -1,2 +1,2 @@
 load 403965-1.xhtml
-load 580151-1.xhtml
+asserts(6) load 580151-1.xhtml # Bug 439258
