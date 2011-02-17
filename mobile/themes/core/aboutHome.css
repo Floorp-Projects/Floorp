@@ -241,13 +241,26 @@ body[dir="rtl"] {
   padding: 10px;
   margin-top: 24px;
   box-shadow: inset rgba(0, 0, 0, 0.2) 0 -3px 0px, rgba(0, 0, 0, 0.1) 0px 2px 0px;
-  display: none;
 }
 
-#promo > img {
-  vertical-align: middle;
-}
-
-#promo > span {
+#promo-label {
   padding-left: 16px;
+}
+
+#promo-button {
+  padding: 8px;
+  margin: 0;
+  color: black;
+  font-size: 18px;
+  -moz-padding-end: 20px;
+}
+
+body[dir="ltr"] #promo-button {
+  float: right;
+  background: rgb(254,210,13) url("images/arrowright-16.png") 99% center no-repeat;
+}
+
+body[dir="rtl"] #promo-button {
+  float: left;
+  background: rgb(254,210,13) url("images/arrowleft-16.png") 1% center no-repeat;
 }
