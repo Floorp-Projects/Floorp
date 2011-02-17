@@ -49,9 +49,11 @@
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
 #include "npapi.h"
+#include "nsTArray.h"
 
 struct PRLogModuleInfo;
 class nsChildView;
+struct nsTextRange;
 
 /**
  * nsTISInputSource is a wrapper for the TISInputSourceRef.  If we get the
@@ -235,6 +237,21 @@ public:
   void OnUpdateIMEComposition(NSString* aIMECompositionString);
   void OnEndIMEComposition();
 
+  /**
+   * DispatchTextEvent() dispatches a text event on mOwnerWidget.
+   *
+   * @param aText                 User text input.
+   * @param aAttrString           An NSAttributedString instance which indicates
+   *                              current composition string.
+   * @param aSelectedRange        Current selected range (or caret position).
+   * @param aDoCommit             TRUE if the composition string should be
+   *                              committed.  Otherwise, FALSE.
+   */
+  PRBool DispatchTextEvent(const nsString& aText,
+                           NSAttributedString* aAttrString,
+                           NSRange& aSelectedRange,
+                           PRBool aDoCommit);
+
   PRBool IsIMEComposing() { return mIsIMEComposing; }
   PRBool IsIMEOpened();
   PRBool IsIMEEnabled() { return mIsIMEEnabled; }
@@ -321,6 +338,46 @@ private:
                                              CFDictionaryRef aUserInfo);
 
   static void FlushPendingMethods(nsITimer* aTimer, void* aClosure);
+
+  /**
+   * ConvertToTextRangeStyle converts the given native underline style to
+   * our defined text range type.
+   *
+   * @param aUnderlineStyle       NSUnderlineStyleSingle or
+   *                              NSUnderlineStyleThick.
+   * @param aSelectedRange        Current selected range (or caret position).
+   * @return                      NS_TEXTRANGE_*.
+   */
+  PRUint32 ConvertToTextRangeType(PRUint32 aUnderlineStyle,
+                                  NSRange& aSelectedRange);
+
+  /**
+   * GetRangeCount() computes the range count of aAttrString.
+   *
+   * @param aAttrString           An NSAttributedString instance whose number of
+   *                              NSUnderlineStyleAttributeName ranges you with
+   *                              to know.
+   * @return                      The count of NSUnderlineStyleAttributeName
+   *                              ranges in aAttrString.
+   */
+  PRUint32 GetRangeCount(NSAttributedString *aString);
+
+  /**
+   * SetTextRangeList() appends text ranges to aTextRangeList.
+   *
+   * @param aTextRangeList        When SetTextRangeList() returns, this will
+   *                              be set to the NSUnderlineStyleAttributeName
+   *                              ranges in aAttrString.  Note that if you pass
+   *                              in a large enough auto-range instance for most
+   *                              cases (e.g., nsAutoTArray<nsTextRange, 4>),
+   *                              it prevents memory fragmentation.
+   * @param aAttrString           An NSAttributedString instance which indicates
+   *                              current composition string.
+   * @param aSelectedRange        Current selected range (or caret position).
+   */
+  void SetTextRangeList(nsTArray<nsTextRange>& aTextRangeList,
+                        NSAttributedString *aAttrString,
+                        NSRange& aSelectedRange);
 
   // The focused IME handler.  Please note that the handler might lost the
   // actual focus by deactivating the application.  If we are active, this
