@@ -89,9 +89,9 @@ WebGLContext::SafeToCreateCanvas3DContext(nsHTMLCanvasElement *canvasElement)
     nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
-    PRBool allSites = PR_FALSE;
-    rv = prefService->GetBoolPref("webgl.enabled_for_all_sites", &allSites);
-    if (NS_SUCCEEDED(rv) && allSites) {
+    PRBool disabled = PR_FALSE;
+    rv = prefService->GetBoolPref("webgl.disabled", &disabled);
+    if (NS_SUCCEEDED(rv) && !disabled) {
         // the all-sites pref was set, we're good to go
         return PR_TRUE;
     }

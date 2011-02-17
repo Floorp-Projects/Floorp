@@ -529,6 +529,15 @@ nsAccessibilityService::ContentRemoved(nsIPresShell* aPresShell,
 }
 
 void
+nsAccessibilityService::UpdateText(nsIPresShell* aPresShell,
+                                   nsIContent* aContent)
+{
+  nsDocAccessible* document = GetDocAccessible(aPresShell->GetDocument());
+  if (document)
+    document->UpdateText(aContent);
+}
+
+void
 nsAccessibilityService::PresShellDestroyed(nsIPresShell *aPresShell)
 {
   // Presshell destruction will automatically destroy shells for descendant
@@ -555,17 +564,10 @@ nsAccessibilityService::RecreateAccessible(nsIPresShell* aPresShell,
                                            nsIContent* aContent)
 {
   nsDocAccessible* document = GetDocAccessible(aPresShell->GetDocument());
-  if (document)
-    document->RecreateAccessible(aContent);
-}
-
-// nsAccessibilityService protected
-nsAccessible *
-nsAccessibilityService::GetCachedAccessible(nsINode *aNode,
-                                            nsIWeakReference *aWeakShell)
-{
-  nsDocAccessible *docAccessible = GetDocAccessible(aNode->GetOwnerDoc());
-  return docAccessible ? docAccessible->GetCachedAccessible(aNode) : nsnull;
+  if (document) {
+    document->HandleNotification<nsDocAccessible, nsIContent>
+      (document, &nsDocAccessible::RecreateAccessible, aContent);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -783,7 +785,7 @@ nsAccessibilityService::GetAccessibleInShell(nsINode* aNode,
     return nsnull;
 
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aPresShell));
-  return GetAccessibleByRule(aNode, weakShell, eGetAccForNode);
+  return GetAccessibleInWeakShell(aNode, weakShell);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -792,36 +794,20 @@ nsAccessibilityService::GetAccessibleInShell(nsINode* aNode,
 nsAccessible*
 nsAccessibilityService::GetAccessible(nsINode* aNode)
 {
-  if (aNode) {
-    nsCOMPtr<nsIWeakReference> weakShell(nsCoreUtils::GetWeakShellFor(aNode));
-    if (weakShell)
-      return GetAccessibleByRule(aNode, weakShell, eGetAccForNode);
-  }
-  return nsnull;
+  nsDocAccessible* document = GetDocAccessible(aNode->GetOwnerDoc());
+  return document ? document->GetAccessible(aNode) : nsnull;
 }
 
 nsAccessible*
-nsAccessibilityService::GetCachedAccessibleOrContainer(nsINode* aNode)
+nsAccessibilityService::GetAccessibleOrContainer(nsINode* aNode,
+                                                 nsIWeakReference* aWeakShell)
 {
   if (!aNode)
     return nsnull;
 
-  nsIDocument *document = aNode->GetCurrentDoc();
-  if (!document)
-    return nsnull;
-
-  nsIPresShell *presShell = document->GetShell();
-  if (!presShell)
-    return nsnull;
-
-  nsINode *currNode = aNode;
-  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
-
-  nsAccessible *accessible = nsnull;
-  while (!(accessible = GetCachedAccessible(currNode, weakShell)) &&
-         (currNode = currNode->GetNodeParent()));
-
-  return accessible;
+  // XXX: weak shell is ignored until multiple shell documents are supported.
+  nsDocAccessible* document = GetDocAccessible(aNode->GetOwnerDoc());
+  return document ? document->GetAccessibleOrContainer(aNode) : nsnull;
 }
 
 static PRBool HasRelatedContent(nsIContent *aContent)
@@ -861,7 +847,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     *aIsSubtreeHidden = false;
 
   // Check to see if we already have an accessible for this node in the cache.
-  nsAccessible *cachedAccessible = GetCachedAccessible(aNode, aWeakShell);
+  nsAccessible* cachedAccessible = GetAccessibleInWeakShell(aNode, aWeakShell);
   if (cachedAccessible) {
     NS_ADDREF(cachedAccessible);
     return cachedAccessible;
@@ -929,25 +915,22 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
 
   // Attempt to create an accessible based on what we know.
   nsRefPtr<nsAccessible> newAcc;
-  if (content->IsNodeOfType(nsINode::eTEXT)) {
-    // --- Create HTML for visible text frames ---
-    nsIFrame* f = weakFrame.GetFrame();
-    if (f && f->IsEmpty()) {
-      nsAutoString renderedWhitespace;
-      f->GetRenderedText(&renderedWhitespace, nsnull, nsnull, 0, 1);
-      if (renderedWhitespace.IsEmpty()) {
-        // Really empty -- nothing is rendered
-        if (aIsSubtreeHidden)
-          *aIsSubtreeHidden = true;
 
-        return nsnull;
-      }
-    }
-    if (weakFrame.IsAlive()) {
-      newAcc = weakFrame.GetFrame()->CreateAccessible();
-      if (docAcc->BindToDocument(newAcc, nsnull))
-        return newAcc.forget();
+  // Create accessible for visible text frames.
+  if (content->IsNodeOfType(nsINode::eTEXT)) {
+    nsAutoString text;
+    weakFrame->GetRenderedText(&text, nsnull, nsnull, 0, PR_UINT32_MAX);
+    if (text.IsEmpty()) {
+      if (aIsSubtreeHidden)
+        *aIsSubtreeHidden = true;
+
       return nsnull;
+    }
+
+    newAcc = weakFrame->CreateAccessible();
+    if (docAcc->BindToDocument(newAcc, nsnull)) {
+      newAcc->AsTextLeaf()->SetText(text);
+      return newAcc.forget();
     }
 
     return nsnull;
@@ -1228,76 +1211,13 @@ nsAccessibilityService::HasUniversalAriaProperty(nsIContent *aContent)
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_flowto) ||
          nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_grabbed) ||
          nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_haspopup) ||
-         // purposely ignore aria-hidden; since we use gecko for detecting this anyways
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_hidden) ||
          nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_invalid) ||
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_label) ||
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_labelledby) ||
          nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_live) ||
          nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_owns) ||
          nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_relevant);
-}
-
-nsAccessible*
-nsAccessibilityService::GetAccessibleByRule(nsINode* aNode,
-                                            nsIWeakReference* aWeakShell,
-                                            EWhatAccToGet aWhatToGet)
-{
-  if (!aNode || !aWeakShell)
-    return nsnull;
-
-  if (aWhatToGet & eGetAccForNode) {
-    nsAccessible* cachedAcc = GetCachedAccessible(aNode, aWeakShell);
-    if (cachedAcc && (cachedAcc->IsBoundToParent() || cachedAcc->IsDocument()))
-      return cachedAcc;
-  }
-
-  // Go up looking for the nearest accessible container having cached children.
-  nsTArray<nsINode*> nodes;
-
-  nsINode* node = aNode;
-  nsAccessible* cachedAcc = nsnull;
-  while ((node = node->GetNodeParent())) {
-    cachedAcc = GetCachedAccessible(node, aWeakShell);
-    if (cachedAcc && cachedAcc->IsBoundToParent())
-      break;
-
-    nodes.AppendElement(node);
-  }
-
-  // Node is not in accessible document.
-  if (!cachedAcc)
-    return nsnull;
-
-  // If children of the cached accessible weren't initialized then go down to
-  // the given node and create accessible tree.
-  nsAccessible* containerAcc = cachedAcc;
-  if (!cachedAcc->AreChildrenCached()) {
-    cachedAcc->EnsureChildren();
-    for (PRInt32 idx = nodes.Length() - 1; idx >= 0; idx--) {
-      cachedAcc = GetCachedAccessible(nodes[idx], aWeakShell);
-      if (cachedAcc) {
-        cachedAcc->EnsureChildren();
-        containerAcc = cachedAcc;
-      }
-    }
-  }
-
-  // If the given node is accessible then it should be cached at this point.
-  // Exception is an area element because area and imagemap nodes aren't in
-  // the same parent chain.
-  cachedAcc = GetCachedAccessible(aNode, aWeakShell);
-  if (!cachedAcc && aNode->IsElement()) {
-    nsIFrame* frame = aNode->AsElement()->GetPrimaryFrame();
-    if (frame && frame->GetContent() != aNode)
-      cachedAcc = GetAreaAccessible(frame, aNode, aWeakShell, &containerAcc);
-  }
-
-  if ((aWhatToGet & eGetAccForNode) && cachedAcc)
-    return cachedAcc;
-  else if (aWhatToGet & eGetAccForContainer)
-    return containerAcc;
-
-  return nsnull;
 }
 
 nsAccessible*
@@ -1317,8 +1237,8 @@ nsAccessibilityService::GetAreaAccessible(nsIFrame* aImageFrame,
 
   // Try to get image map accessible from the global cache or create it
   // if failed.
-  nsRefPtr<nsAccessible> image = GetCachedAccessible(aImageFrame->GetContent(),
-                                                     aWeakShell);
+  nsRefPtr<nsAccessible> image =
+    GetAccessibleInWeakShell(aImageFrame->GetContent(), aWeakShell);
   if (!image) {
     image = CreateHTMLImageAccessible(aImageFrame->GetContent(),
                                       aImageFrame->PresContext()->PresShell());
@@ -1341,7 +1261,7 @@ nsAccessibilityService::GetAreaAccessible(nsIFrame* aImageFrame,
   // that they should be available in global cache.
   image->EnsureChildren();
 
-  return GetCachedAccessible(aAreaNode, aWeakShell);
+  return GetAccessibleInWeakShell(aAreaNode, aWeakShell);
 }
 
 already_AddRefed<nsAccessible>

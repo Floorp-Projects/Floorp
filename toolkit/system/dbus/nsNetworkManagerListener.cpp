@@ -45,8 +45,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIObserverService.h"
 #include "nsStringAPI.h"
-#include "nsIPrefBranch2.h"
-#include "nsIPrefService.h"
 
 // Define NetworkManager API constants. This avoids a dependency on
 // NetworkManager-devel.
@@ -190,16 +188,6 @@ nsNetworkManagerListener::UpdateNetworkStatus(DBusMessage* msg) {
                              DBUS_TYPE_INVALID))
     return;
 
-  // Don't update status if disabled by pref
-  nsCOMPtr<nsIPrefBranch2> prefs =
-    do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    PRBool ignore = PR_FALSE;
-    prefs->GetBoolPref("toolkit.networkmanager.disable", &ignore);
-    if (ignore)
-      return;
-  }
-
   mNetworkManagerActive = PR_TRUE;
   
   PRBool wasUp = mLinkUp;
@@ -209,3 +197,4 @@ nsNetworkManagerListener::UpdateNetworkStatus(DBusMessage* msg) {
 
   NotifyNetworkStatusObservers();
 }
+

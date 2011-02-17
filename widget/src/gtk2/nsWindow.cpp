@@ -290,7 +290,7 @@ UpdateLastInputEventTime()
 }
 
 // this is the last window that had a drag event happen on it.
-nsWindow *nsWindow::mLastDragMotionWindow = NULL;
+nsWindow *nsWindow::sLastDragMotionWindow = NULL;
 PRBool nsWindow::sIsDraggingOutOf = PR_FALSE;
 
 // This is the time of the last button press event.  The drag service
@@ -401,7 +401,6 @@ nsWindow::nsWindow()
     mHasMappedToplevel   = PR_FALSE;
     mIsFullyObscured     = PR_FALSE;
     mRetryPointerGrab    = PR_FALSE;
-    mRetryKeyboardGrab   = PR_FALSE;
     mTransientParent     = nsnull;
     mWindowType          = eWindowType_child;
     mSizeState           = nsSizeMode_Normal;
@@ -419,14 +418,6 @@ nsWindow::nsWindow()
         initialize_prefs();
     }
 
-    if (mLastDragMotionWindow == this)
-        mLastDragMotionWindow = NULL;
-    mDragMotionWidget = 0;
-    mDragMotionContext = 0;
-    mDragMotionX = 0;
-    mDragMotionY = 0;
-    mDragMotionTime = 0;
-    mDragMotionTimerID = 0;
     mLastMotionPressure = 0;
 
 #ifdef ACCESSIBILITY
@@ -453,8 +444,8 @@ nsWindow::nsWindow()
 nsWindow::~nsWindow()
 {
     LOG(("nsWindow::~nsWindow() [%p]\n", (void *)this));
-    if (mLastDragMotionWindow == this) {
-        mLastDragMotionWindow = NULL;
+    if (sLastDragMotionWindow == this) {
+        sLastDragMotionWindow = NULL;
     }
 
     delete[] mTransparencyBitmap;
@@ -764,11 +755,6 @@ nsWindow::Destroy(void)
     // Destroy thebes surface now. Badness can happen if we destroy
     // the surface after its X Window.
     mThebesSurface = nsnull;
-
-    if (mDragMotionTimerID) {
-        g_source_remove(mDragMotionTimerID);
-        mDragMotionTimerID = 0;
-    }
 
     if (mDragLeaveTimer) {
         mDragLeaveTimer->Cancel();
@@ -1950,14 +1936,16 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
         if (!nsWindow::DragInProgress()) {
             gtk_grab_add(widget);
             GrabPointer();
-            GrabKeyboard();
         }
     }
     else {
         if (!nsWindow::DragInProgress()) {
             ReleaseGrabs();
-            gtk_grab_remove(widget);
         }
+        // There may not have been a drag in process when aDoCapture was set,
+        // so make sure to remove any added grab.  This is a no-op if the grab
+        // was not added to this widget.
+        gtk_grab_remove(widget);
         gRollupListener = nsnull;
         NS_IF_RELEASE(gMenuRollup);
         gRollupWindow = nsnull;
@@ -3450,16 +3438,16 @@ nsWindow::CheckNeedDragLeaveEnter(nsWindow* aInnerMostWidget,
                                   nscoord aX, nscoord aY)
 {
     // check to see if there was a drag motion window already in place
-    if (mLastDragMotionWindow) {
+    if (sLastDragMotionWindow) {
         // same as the last window so no need for dragenter and dragleave events
-        if (mLastDragMotionWindow == aInnerMostWidget) {
+        if (sLastDragMotionWindow == aInnerMostWidget) {
             UpdateDragStatus(aDragContext, aDragService);
             return;
         }
 
         // send a dragleave event to the last window that got a motion event
-        nsRefPtr<nsWindow> kungFuDeathGrip = mLastDragMotionWindow;
-        mLastDragMotionWindow->OnDragLeave();
+        nsRefPtr<nsWindow> kungFuDeathGrip = sLastDragMotionWindow;
+        sLastDragMotionWindow->OnDragLeave();
     }
 
     // Make sure that the drag service knows we're now dragging
@@ -3470,7 +3458,7 @@ nsWindow::CheckNeedDragLeaveEnter(nsWindow* aInnerMostWidget,
     aInnerMostWidget->OnDragEnter(aX, aY);
 
     // set the last window to the innerMostWidget
-    mLastDragMotionWindow = aInnerMostWidget;
+    sLastDragMotionWindow = aInnerMostWidget;
 }
 
 gboolean
@@ -3501,9 +3489,6 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
     }
 
     sIsDraggingOutOf = PR_FALSE;
-
-    // Reset out drag motion timer
-    ResetDragMotionTimer(aWidget, aDragContext, aX, aY, aTime);
 
     // get our drag context
     nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
@@ -3569,9 +3554,6 @@ nsWindow::OnDragLeaveEvent(GtkWidget *aWidget,
     LOGDRAG(("nsWindow::OnDragLeaveSignal(%p)\n", (void*)this));
 
     sIsDraggingOutOf = PR_TRUE;
-
-    // make sure to unset any drag motion timers here.
-    ResetDragMotionTimer(0, 0, 0, 0, 0);
 
     if (mDragLeaveTimer) {
         return;
@@ -3662,8 +3644,8 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     // event and and that case is handled in that handler.
     dragSessionGTK->TargetSetLastContext(0, 0, 0);
 
-    // clear the mLastDragMotion window
-    mLastDragMotionWindow = 0;
+    // clear the sLastDragMotion window
+    sLastDragMotionWindow = 0;
 
     // Make sure to end the drag session. If this drag started in a
     // different app, we won't get a drag_end signal to end it from.
@@ -4499,8 +4481,6 @@ nsWindow::EnsureGrabs(void)
 {
     if (mRetryPointerGrab)
         GrabPointer();
-    if (mRetryKeyboardGrab)
-        GrabKeyboard();
 }
 
 void
@@ -4876,53 +4856,12 @@ nsWindow::GrabPointer(void)
 }
 
 void
-nsWindow::GrabKeyboard(void)
-{
-    LOG(("GrabKeyboard %d\n", mRetryKeyboardGrab));
-
-    mRetryKeyboardGrab = PR_FALSE;
-
-    // If the window isn't visible, just set the flag to retry the
-    // grab.  When this window becomes visible, the grab will be
-    // retried.
-    if (!mHasMappedToplevel || mIsFullyObscured) {
-        LOG(("GrabKeyboard: window not visible\n"));
-        mRetryKeyboardGrab = PR_TRUE;
-        return;
-    }
-
-    // we need to grab the keyboard on the transient parent so that we
-    // don't end up with any focus events that end up on the parent
-    // window that will cause the popup to go away
-    GdkWindow *grabWindow;
-
-    if (mTransientParent)
-        grabWindow = GTK_WIDGET(mTransientParent)->window;
-    else if (mGdkWindow)
-        grabWindow = mGdkWindow;
-    else
-        return;
-
-    gint retval;
-    retval = gdk_keyboard_grab(grabWindow, TRUE, GDK_CURRENT_TIME);
-
-    if (retval != GDK_GRAB_SUCCESS) {
-        LOG(("GrabKeyboard: keyboard grab failed %d\n", retval));
-        gdk_pointer_ungrab(GDK_CURRENT_TIME);
-        mRetryKeyboardGrab = PR_TRUE;
-    }
-}
-
-void
 nsWindow::ReleaseGrabs(void)
 {
     LOG(("ReleaseGrabs\n"));
 
     mRetryPointerGrab = PR_FALSE;
-    mRetryKeyboardGrab = PR_FALSE;
-
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
-    gdk_keyboard_ungrab(GDK_CURRENT_TIME);
 }
 
 void
@@ -5317,10 +5256,10 @@ check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
 PRBool
 nsWindow::DragInProgress(void)
 {
-    // mLastDragMotionWindow means the drag arrow is over mozilla
+    // sLastDragMotionWindow means the drag arrow is over mozilla
     // sIsDraggingOutOf means the drag arrow is out of mozilla
     // both cases mean the dragging is happenning.
-    return (mLastDragMotionWindow || sIsDraggingOutOf);
+    return (sLastDragMotionWindow || sIsDraggingOutOf);
 }
 
 /* static */
@@ -6199,60 +6138,6 @@ initialize_prefs(void)
 }
 
 void
-nsWindow::ResetDragMotionTimer(GtkWidget *aWidget,
-                               GdkDragContext *aDragContext,
-                               gint aX, gint aY, guint aTime)
-{
-
-    // We have to be careful about ref ordering here.  if aWidget ==
-    // mDraMotionWidget be careful not to let the refcnt drop to zero.
-    // Same with the drag context.
-    if (aWidget)
-        g_object_ref(aWidget);
-    if (mDragMotionWidget)
-        g_object_unref(mDragMotionWidget);
-    mDragMotionWidget = aWidget;
-
-    if (aDragContext)
-        g_object_ref(aDragContext);
-    if (mDragMotionContext)
-        g_object_unref(mDragMotionContext);
-    mDragMotionContext = aDragContext;
-
-    mDragMotionX = aX;
-    mDragMotionY = aY;
-    mDragMotionTime = aTime;
-
-    // always clear the timer
-    if (mDragMotionTimerID) {
-        g_source_remove(mDragMotionTimerID);
-        mDragMotionTimerID = 0;
-        LOG(("*** canceled motion timer\n"));
-    }
-
-    // if no widget was passed in, just return instead of setting a new
-    // timer
-    if (!aWidget) {
-        return;
-    }
-
-    // otherwise we create a new timer
-    mDragMotionTimerID = g_timeout_add(100,
-                                       (GtkFunction)DragMotionTimerCallback,
-                                       this);
-}
-
-void
-nsWindow::FireDragMotionTimer(void)
-{
-    LOGDRAG(("nsWindow::FireDragMotionTimer(%p)\n", (void*)this));
-
-    OnDragMotionEvent(mDragMotionWidget, mDragMotionContext,
-                      mDragMotionX, mDragMotionY, mDragMotionTime,
-                      this);
-}
-
-void
 nsWindow::FireDragLeaveTimer(void)
 {
     LOGDRAG(("nsWindow::FireDragLeaveTimer(%p)\n", (void*)this));
@@ -6260,21 +6145,12 @@ nsWindow::FireDragLeaveTimer(void)
     mDragLeaveTimer = nsnull;
 
     // clean up any pending drag motion window info
-    if (mLastDragMotionWindow) {
-        nsRefPtr<nsWindow> kungFuDeathGrip = mLastDragMotionWindow;
+    if (sLastDragMotionWindow) {
+        nsRefPtr<nsWindow> kungFuDeathGrip = sLastDragMotionWindow;
         // send our leave signal
-        mLastDragMotionWindow->OnDragLeave();
-        mLastDragMotionWindow = 0;
+        sLastDragMotionWindow->OnDragLeave();
+        sLastDragMotionWindow = 0;
     }
-}
-
-/* static */
-guint
-nsWindow::DragMotionTimerCallback(gpointer aClosure)
-{
-    nsRefPtr<nsWindow> window = static_cast<nsWindow *>(aClosure);
-    window->FireDragMotionTimer();
-    return FALSE;
 }
 
 /* static */

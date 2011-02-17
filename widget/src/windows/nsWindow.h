@@ -196,7 +196,7 @@ public:
 #ifdef MOZ_XUL
   virtual void            SetTransparencyMode(nsTransparencyMode aMode);
   virtual nsTransparencyMode GetTransparencyMode();
-  virtual void            UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion, const nsIntRegion& aPossiblyTransparentRegion);
+  virtual void            UpdateTransparentRegion(const nsIntRegion& aTransparentRegion);
 #endif // MOZ_XUL
 #ifdef NS_ENABLE_TSF
   NS_IMETHOD              OnIMEFocusChange(PRBool aFocus);
@@ -317,6 +317,7 @@ protected:
   static BOOL    CALLBACK EnumAllThreadWindowProc(HWND aWnd, LPARAM aParam);
   static void             AllowD3D9Callback(nsWindow *aWindow);
   static void             AllowD3D9WithReinitializeCallback(nsWindow *aWindow);
+  static BOOL CALLBACK    FindOurWindowAtPointCallback(HWND aHWND, LPARAM aLPARAM);
 
   /**
    * Window utilities
@@ -332,16 +333,19 @@ protected:
   void                    InvalidateNonClientRegion();
   HRGN                    ExcludeNonClientFromPaintRegion(HRGN aRegion);
 #if !defined(WINCE)
-  static void             InitInputHackDefaults();
+  static void             InitInputWorkaroundPrefDefaults();
 #endif
+  static PRBool           GetInputWorkaroundPref(const char* aPrefName, PRBool aValueIfAutomatic);
   static PRBool           UseTrackPointHack();
+  static void             PerformElantechSwipeGestureHack(UINT& aVirtualKeyCode, nsModifierKeyState& aModKeyState);
   static void             GetMainWindowClass(nsAString& aClass);
   PRBool                  HasGlass() const {
     return mTransparencyMode == eTransparencyGlass ||
            mTransparencyMode == eTransparencyBorderlessGlass;
   }
-  PRBool                  IsOurProcessWindow(HWND aHWND);
-  HWND                    FindOurProcessWindow(HWND aHWND);
+  static PRBool           IsOurProcessWindow(HWND aHWND);
+  static HWND             FindOurProcessWindow(HWND aHWND);
+  static HWND             FindOurWindowAtPoint(const POINT& aPoint);
 
   /**
    * Event processing helpers
@@ -527,6 +531,7 @@ protected:
   nsPopupType           mPopupType;
   nsSizeMode            mOldSizeMode;
   WindowHook            mWindowHook;
+  DWORD                 mAssumeWheelIsZoomUntil;
   static PRUint32       sInstanceCount;
   static TriStateBool   sCanQuit;
   static nsWindow*      sCurrentWindow;
@@ -540,6 +545,7 @@ protected:
   static int            sTrimOnMinimize;
   static PRBool         sDefaultTrackPointHack;
   static const char*    sDefaultMainWindowClass;
+  static PRBool         sUseElantechGestureHacks;
   static bool           sAllowD3D9;
 #ifdef MOZ_IPC
   static PRUint32       sOOPPPluginFocusEvent;

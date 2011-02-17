@@ -467,6 +467,35 @@ gfxUtils::ClipToRegionSnapped(gfxContext* aContext, const nsIntRegion& aRegion)
   ClipToRegionInternal(aContext, aRegion, PR_TRUE);
 }
 
+/*static*/ gfxFloat
+gfxUtils::ClampToScaleFactor(gfxFloat aVal)
+{
+  // Arbitary scale factor limitation. We can increase this
+  // for better scaling performance at the cost of worse
+  // quality.
+  static const gfxFloat kScaleResolution = 2;
+
+  // Negative scaling is just a flip and irrelevant to
+  // our resolution calculation.
+  if (aVal < 0.0) {
+    aVal = -aVal;
+  }
+
+  gfxFloat power = log(aVal)/log(kScaleResolution);
+
+  // If power is within 1e-6 of an integer, round to nearest to
+  // prevent floating point errors, otherwise round up to the
+  // next integer value.
+  if (fabs(power - NS_round(power)) < 1e-6) {
+    power = NS_round(power);
+  } else {
+    power = NS_ceil(power);
+  }
+
+  return pow(kScaleResolution, power);
+}
+
+
 /*static*/ void
 gfxUtils::PathFromRegion(gfxContext* aContext, const nsIntRegion& aRegion)
 {

@@ -12,6 +12,7 @@ function run_test()
            },
            function(mdump, extra) {
              do_check_eq(extra.TestKey, "TestValue");
+             do_check_true(/xpcom_runtime_abort/.test(extra.Notes));
            },
           // process will exit with a zero exit status
           true);

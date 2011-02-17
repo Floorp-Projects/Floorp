@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=579767
+-->
+<head>
+  <title>Test for Bug 579767</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    iframe {
+      width: 1006px;
+      height: 306px;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=579767">Mozilla Bug 579767</a>
+<p id="display"></p>
+<div id="content">
+<iframe src="file_bug579767_1.html" id="f1"></iframe>
+<iframe src="file_bug579767_2.html" id="f2"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 579767 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var f1 = document.getElementById("f1");
+  var f2 = document.getElementById("f2");
+  var t1 = f1.contentDocument.documentElement;
+  var t2 = f2.contentDocument.documentElement;
+
+  setTimeout(function() {
+    // drag the vertical handle 10px to the right
+    synthesizeMouse(t1, 100, 6, {type: "mousedown"}, f1.contentWindow);
+    synthesizeMouse(t1, 101, 6, {type: "mousemove"}, f1.contentWindow);
+    synthesizeMouse(t1, 102, 6, {type: "mousemove"}, f1.contentWindow);
+    synthesizeMouse(t1, 103, 6, {type: "mousemove"}, f1.contentWindow);
+    synthesizeMouse(t1, 104, 6, {type: "mousemove"}, f1.contentWindow);
+    synthesizeMouse(t1, 105, 6, {type: "mousemove"}, f1.contentWindow);
+    synthesizeMouse(t1, 106, 6, {type: "mousemove"}, f1.contentWindow);
+    synthesizeMouse(t1, 107, 6, {type: "mousemove"}, f1.contentWindow);
+    synthesizeMouse(t1, 108, 6, {type: "mousemove"}, f1.contentWindow);
+    synthesizeMouse(t1, 109, 6, {type: "mousemove"}, f1.contentWindow);
+    synthesizeMouse(t1, 200, 6, {type: "mouseup"  }, f1.contentWindow);
+
+    setTimeout(function() {
+      // drag the horizontal handle 10px to down and 5px to right
+      synthesizeMouse(t1, 2, 92, {type: "mousedown"}, f1.contentWindow);
+      synthesizeMouse(t1, 3, 93, {type: "mousemove"}, f1.contentWindow);
+      synthesizeMouse(t1, 4, 94, {type: "mousemove"}, f1.contentWindow);
+      synthesizeMouse(t1, 5, 95, {type: "mousemove"}, f1.contentWindow);
+      synthesizeMouse(t1, 7, 102,{type: "mousemove"}, f1.contentWindow);
+      synthesizeMouse(t1, 7, 102,{type: "mouseup"  }, f1.contentWindow);
+
+      setTimeout(function() {
+        // now compare the two windows
+        ok(compareSnapshots(snapshotWindow(f1.contentWindow),
+                            snapshotWindow(f2.contentWindow), true)[0],
+           "The borders should be painted correctly after resizing");
+        is(t1.querySelectorAll("frameset")[0].getAttribute("cols"), "11%,89%",
+           "The cols attribute should be correctly updated");
+        is(t1.querySelectorAll("frameset")[1].getAttribute("rows"), "100,200",
+           "The rows attribute should be correctly updated");
+        SimpleTest.finish();
+      }, 0);
+    }, 0);
+  }, 0);
+});
+
+</script>
+</pre>
+</body>
+</html>

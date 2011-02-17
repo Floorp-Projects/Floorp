@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "PluginBackgroundDestroyer.h"
 #include "PluginInstanceChild.h"
 #include "PluginModuleChild.h"
 #include "BrowserStreamChild.h"
@@ -50,7 +51,8 @@
 #endif
 #ifdef XP_WIN
 #include "mozilla/gfx/SharedDIBSurface.h"
-
+#include "nsCrashOnException.h"
+extern const PRUnichar* kFlashFullscreenClass;
 using mozilla::gfx::SharedDIBSurface;
 #endif
 #include "gfxSharedImageSurface.h"
@@ -136,6 +138,10 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
     , mCurrentEvent(nsnull)
 #endif
     , mLayersRendering(false)
+#ifdef XP_WIN
+    , mCurrentSurfaceActor(NULL)
+    , mBackSurfaceActor(NULL)
+#endif
     , mAccumulatedInvalidRect(0,0,0,0)
     , mIsTransparent(false)
     , mSurfaceType(gfxASurface::SurfaceTypeMax)
@@ -162,7 +168,6 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
 #endif // OS_WIN
 #if defined(OS_WIN)
     InitPopupMenuHook();
-    HookSystemParametersInfo();
 #endif // OS_WIN
 #ifdef MOZ_X11
     // Maemo flash can render plugin with any provided rectangle and not require this quirk.
@@ -409,6 +414,13 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         *((NPBool*)aValue) = true;
         return NPERR_NO_ERROR;
     }
+
+#ifndef NP_NO_CARBON
+    case NPNVsupportsCarbonBool: {
+      *((NPBool*)aValue) = false;
+      return NPERR_NO_ERROR;
+    }
+#endif
 
     case NPNVsupportsUpdatedCocoaTextInputBool: {
       *static_cast<NPBool*>(aValue) = true;
@@ -913,6 +925,11 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
     }
 #endif
 
+    PLUGIN_LOG_DEBUG(
+        ("[InstanceChild][%p] Answer_SetWindow w=<x=%d,y=%d, w=%d,h=%d>, clip=<l=%d,t=%d,r=%d,b=%d>",
+         this, mWindow.x, mWindow.y, mWindow.width, mWindow.height,
+         mWindow.clipRect.left, mWindow.clipRect.top, mWindow.clipRect.right, mWindow.clipRect.bottom));
+
     if (mPluginIface->setwindow)
         (void) mPluginIface->setwindow(&mData, &mWindow);
 
@@ -942,6 +959,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
                   mPluginWndProc = reinterpret_cast<WNDPROC>(
                       SetWindowLongPtr(mPluginWindowHWND, GWLP_WNDPROC,
                                        reinterpret_cast<LONG_PTR>(PluginWindowProc)));
+                  NS_ASSERTION(mPluginWndProc != PluginWindowProc, "WTF?");
               }
               RemoveProp(mPluginWindowHWND, kPluginIgnoreSubclassProperty);
               HookSetWindowLongPtr();
@@ -1129,6 +1147,16 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
                                       WPARAM wParam,
                                       LPARAM lParam)
 {
+  return mozilla::CallWindowProcCrashProtected(PluginWindowProcInternal, hWnd, message, wParam, lParam);
+}
+
+// static
+LRESULT CALLBACK
+PluginInstanceChild::PluginWindowProcInternal(HWND hWnd,
+                                              UINT message,
+                                              WPARAM wParam,
+                                              LPARAM lParam)
+{
     NS_ASSERTION(!mozilla::ipc::SyncChannel::IsPumpingMessages(),
                  "Failed to prevent a nonqueued message from running!");
     PluginInstanceChild* self = reinterpret_cast<PluginInstanceChild*>(
@@ -1139,6 +1167,7 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
     }
 
     NS_ASSERTION(self->mPluginWindowHWND == hWnd, "Wrong window!");
+    NS_ASSERTION(self->mPluginWndProc != PluginWindowProc, "Self-referential windowproc. Infinite recursion will happen soon.");
 
     // Adobe's shockwave positions the plugin window relative to the browser
     // frame when it initializes. With oopp disabled, this wouldn't have an
@@ -1189,23 +1218,27 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
         return 0;
     }
 
+    NS_ASSERTION(self->mPluginWndProc != PluginWindowProc,
+      "Self-referential windowproc happened inside our hook proc. "
+      "Infinite recursion will happen soon.");
+
     LRESULT res = CallWindowProc(self->mPluginWndProc, hWnd, message, wParam,
                                  lParam);
 
     // Make sure capture is released by the child on mouse events. Fixes a
     // problem with flash full screen mode mouse input. Appears to be
     // caused by a bug in flash, since we are not setting the capture
-    // on the window. (In non-oopp land, we would set and release via
-    // widget for other reasons.)
-    switch (message) {
-      case WM_LBUTTONDOWN:
-      case WM_MBUTTONDOWN:
-      case WM_RBUTTONDOWN:
-      case WM_LBUTTONUP:
-      case WM_MBUTTONUP:
-      case WM_RBUTTONUP:
-      ReleaseCapture();
-      break;
+    // on the window.
+    if (message == WM_LBUTTONDOWN &&
+        self->GetQuirks() & PluginModuleChild::QUIRK_FLASH_FIXUP_MOUSE_CAPTURE) {
+      PRUnichar szClass[26];
+      HWND hwnd = GetForegroundWindow();
+      if (hwnd && GetClassNameW(hwnd, szClass,
+                                sizeof(szClass)/sizeof(PRUnichar)) &&
+          !wcscmp(szClass, kFlashFullscreenClass)) {
+        ReleaseCapture();
+        SetFocus(hwnd);
+      }
     }
 
     if (message == WM_CLOSE)
@@ -1215,47 +1248,6 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
         RemoveProp(hWnd, kPluginInstanceChildProperty);
 
     return res;
-}
-
-/* system parameters info hook for flash */
-
-typedef BOOL (WINAPI *User32SystemParametersInfoW)(UINT uiAction,
-                                                   UINT uiParam,
-                                                   PVOID pvParam,
-                                                   UINT fWinIni);
-
-static User32SystemParametersInfoW sUser32SystemParametersInfoWStub = NULL;
-
-static BOOL WINAPI User32SystemParametersInfoHook(UINT uiAction,
-                                                  UINT uiParam,
-                                                  PVOID pvParam,
-                                                  UINT fWinIni)
-{
-  if (!sUser32SystemParametersInfoWStub) {
-      NS_NOTREACHED("sUser32SystemParametersInfoWStub not set??");
-      return FALSE;
-  }
-
-  // Tell them cleartype is disabled, so they don't mess with
-  // the alpha channel in our buffers.
-  if (uiAction == SPI_GETFONTSMOOTHINGTYPE && pvParam) {
-      *((UINT*)(pvParam)) = FE_FONTSMOOTHINGSTANDARD;
-      return TRUE;
-  }
-
-  return sUser32SystemParametersInfoWStub(uiAction, uiParam, pvParam, fWinIni);
-}
-
-void
-PluginInstanceChild::HookSystemParametersInfo()
-{
-    if (!(GetQuirks() & PluginModuleChild::QUIRK_FLASH_MASK_CLEARTYPE_SETTINGS))
-        return;
-    if (sUser32SystemParametersInfoWStub)
-        return;
-    sUser32Intercept.Init("gdi32.dll");
-    sUser32Intercept.AddHook("SystemParametersInfoW", User32SystemParametersInfoHook,
-                             (void**) &sUser32SystemParametersInfoWStub);
 }
 
 /* set window long ptr hook for flash */
@@ -1349,9 +1341,14 @@ PluginInstanceChild::SetWindowLongAHook(HWND hWnd,
         GetProp(hWnd, kPluginInstanceChildProperty));
 
     // Hook our subclass back up, just like we do on setwindow.   
-    self->mPluginWndProc =
-        reinterpret_cast<WNDPROC>(sUser32SetWindowLongAHookStub(hWnd, nIndex,
-            reinterpret_cast<LONG_PTR>(PluginWindowProc)));
+    WNDPROC currentProc =
+        reinterpret_cast<WNDPROC>(GetWindowLongPtr(hWnd, GWLP_WNDPROC));
+    if (currentProc != PluginWindowProc) {
+        self->mPluginWndProc =
+            reinterpret_cast<WNDPROC>(sUser32SetWindowLongWHookStub(hWnd, nIndex,
+                reinterpret_cast<LONG_PTR>(PluginWindowProc)));
+        NS_ASSERTION(self->mPluginWndProc != PluginWindowProc, "Infinite recursion coming up!");
+    }
     return proc;
 }
 
@@ -1378,9 +1375,14 @@ PluginInstanceChild::SetWindowLongWHook(HWND hWnd,
         GetProp(hWnd, kPluginInstanceChildProperty));
 
     // Hook our subclass back up, just like we do on setwindow.   
-    self->mPluginWndProc =
-        reinterpret_cast<WNDPROC>(sUser32SetWindowLongWHookStub(hWnd, nIndex,
-            reinterpret_cast<LONG_PTR>(PluginWindowProc)));
+    WNDPROC currentProc =
+        reinterpret_cast<WNDPROC>(GetWindowLongPtr(hWnd, GWLP_WNDPROC));
+    if (currentProc != PluginWindowProc) {
+        self->mPluginWndProc =
+            reinterpret_cast<WNDPROC>(sUser32SetWindowLongWHookStub(hWnd, nIndex,
+                reinterpret_cast<LONG_PTR>(PluginWindowProc)));
+        NS_ASSERTION(self->mPluginWndProc != PluginWindowProc, "Infinite recursion coming up!");
+    }
     return proc;
 }
 
@@ -2268,6 +2270,10 @@ PluginInstanceChild::DoAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
                                       const NPRemoteWindow& aWindow,
                                       bool aIsAsync)
 {
+    PLUGIN_LOG_DEBUG(
+        ("[InstanceChild][%p] AsyncSetWindow to <x=%d,y=%d, w=%d,h=%d>",
+         this, aWindow.x, aWindow.y, aWindow.width, aWindow.height));
+
     AssertPluginThread();
     NS_ASSERTION(!aWindow.window, "Remote window should be null.");
     NS_ASSERTION(!mPendingPluginCall, "Can't do SetWindow during plugin call!");
@@ -2280,12 +2286,8 @@ PluginInstanceChild::DoAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
     }
 
     mWindow.window = NULL;
-    if (mWindow.width != aWindow.width || mWindow.height != aWindow.height) {
-        mCurrentSurface = nsnull;
-        mHelperSurface = nsnull;
-        mAccumulatedInvalidRect = nsIntRect(0, 0, aWindow.width, aWindow.height);
-    }
-    if (mWindow.clipRect.top != aWindow.clipRect.top ||
+    if (mWindow.width != aWindow.width || mWindow.height != aWindow.height ||
+        mWindow.clipRect.top != aWindow.clipRect.top ||
         mWindow.clipRect.left != aWindow.clipRect.left ||
         mWindow.clipRect.bottom != aWindow.clipRect.bottom ||
         mWindow.clipRect.right != aWindow.clipRect.right)
@@ -2326,10 +2328,16 @@ GfxFromNsRect(const nsIntRect& aRect)
 bool
 PluginInstanceChild::CreateOptSurface(void)
 {
+    NS_ABORT_IF_FALSE(mSurfaceType != gfxASurface::SurfaceTypeMax,
+                      "Need a valid surface type here");
+    NS_ASSERTION(!mCurrentSurface, "mCurrentSurfaceActor can get out of sync.");
+
     nsRefPtr<gfxASurface> retsurf;
+    // Use an opaque surface unless we're transparent and *don't* have
+    // a background to source from.
     gfxASurface::gfxImageFormat format =
-        mIsTransparent ? gfxASurface::ImageFormatARGB32 :
-                         gfxASurface::ImageFormatRGB24;
+        (mIsTransparent && !mBackground) ? gfxASurface::ImageFormatARGB32 :
+                                           gfxASurface::ImageFormatRGB24;
 
 #if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
     // On Maemo 5, we must send the Visibility event to activate the plugin
@@ -2367,10 +2375,12 @@ PluginInstanceChild::CreateOptSurface(void)
 #ifdef XP_WIN
     if (mSurfaceType == gfxASurface::SurfaceTypeWin32 ||
         mSurfaceType == gfxASurface::SurfaceTypeD2D) {
+        bool willHaveTransparentPixels = mIsTransparent && !mBackground;
 
         SharedDIBSurface* s = new SharedDIBSurface();
         if (!s->Create(reinterpret_cast<HDC>(mWindow.window),
-                       mWindow.width, mWindow.height, mIsTransparent))
+                       mWindow.width, mWindow.height,
+                       willHaveTransparentPixels))
             return false;
 
         mCurrentSurface = s;
@@ -2451,6 +2461,8 @@ PluginInstanceChild::MaybeCreatePlatformHelperSurface(void)
             return false;
         }
     }
+#elif defined(XP_WIN)
+    mDoAlphaExtraction = mIsTransparent && !mBackground;
 #endif
 
     return true;
@@ -2459,12 +2471,38 @@ PluginInstanceChild::MaybeCreatePlatformHelperSurface(void)
 bool
 PluginInstanceChild::EnsureCurrentBuffer(void)
 {
-    if (mCurrentSurface) {
-       return true;
+    nsIntRect toInvalidate(0, 0, 0, 0);
+    gfxIntSize winSize = gfxIntSize(mWindow.width, mWindow.height);
+
+    if (mBackground && mBackground->GetSize() != winSize) {
+        // It would be nice to keep the old background here, but doing
+        // so can lead to cases in which we permanently keep the old
+        // background size.
+        mBackground = nsnull;
+        toInvalidate.UnionRect(toInvalidate,
+                               nsIntRect(0, 0, winSize.width, winSize.height));
     }
 
-    if (!mWindow.width || !mWindow.height) {
-        return false;
+    if (mCurrentSurface) {
+        gfxIntSize surfSize = mCurrentSurface->GetSize();
+        if (winSize != surfSize ||
+            (mBackground && !CanPaintOnBackground()) ||
+            (mBackground &&
+             gfxASurface::CONTENT_COLOR != mCurrentSurface->GetContentType()) ||
+            (!mBackground && mIsTransparent &&
+             gfxASurface::CONTENT_COLOR == mCurrentSurface->GetContentType())) {
+            // Don't try to use an old, invalid DC.
+            mWindow.window = nsnull;
+            ClearCurrentSurface();
+            toInvalidate.UnionRect(toInvalidate,
+                                   nsIntRect(0, 0, winSize.width, winSize.height));
+        }
+    }
+
+    mAccumulatedInvalidRect.UnionRect(mAccumulatedInvalidRect, toInvalidate);
+
+    if (mCurrentSurface) {
+       return true;
     }
 
     if (!CreateOptSurface()) {
@@ -2509,7 +2547,7 @@ PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
             mWindow.window = nsnull;
             mWsInfo.depth = gfxUtils::ImageFormatToDepth(img->Format());
             mWsInfo.colormap = 0;
-            needWindowUpdate = PR_TRUE;
+            needWindowUpdate = true;
         }
     }
 #endif // MAEMO
@@ -2518,8 +2556,8 @@ PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
     HDC dc = NULL;
 
     if (curSurface) {
-        NS_ASSERTION(SharedDIBSurface::IsSharedDIBSurface(curSurface),
-                     "Expected (SharedDIB) image surface.");
+        if (!SharedDIBSurface::IsSharedDIBSurface(curSurface))
+            NS_RUNTIMEABORT("Expected SharedDIBSurface!");
 
         SharedDIBSurface* dibsurf = static_cast<SharedDIBSurface*>(curSurface.get());
         dc = dibsurf->GetHDC();
@@ -2575,6 +2613,11 @@ PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
     }
 #endif
 
+    PLUGIN_LOG_DEBUG(
+        ("[InstanceChild][%p] UpdateWindow w=<x=%d,y=%d, w=%d,h=%d>, clip=<l=%d,t=%d,r=%d,b=%d>",
+         this, mWindow.x, mWindow.y, mWindow.width, mWindow.height,
+         mWindow.clipRect.left, mWindow.clipRect.top, mWindow.clipRect.right, mWindow.clipRect.bottom));
+
     if (mPluginIface->setwindow) {
         mPluginIface->setwindow(&mData, &mWindow);
     }
@@ -2584,12 +2627,6 @@ void
 PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
                                                 gfxASurface* aSurface)
 {
-    bool temporarilyMakeVisible = !IsVisible() && !mHasPainted;
-    if (temporarilyMakeVisible) {
-        mWindow.clipRect.right = mWindow.width;
-        mWindow.clipRect.bottom = mWindow.height;
-    }
-
     UpdateWindowAttributes();
 
 #ifdef MOZ_X11
@@ -2678,14 +2715,6 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
 #else
     NS_RUNTIMEABORT("Surface type not implemented.");
 #endif
-
-    if (temporarilyMakeVisible) {
-        mWindow.clipRect.right = mWindow.clipRect.bottom = 0;
-
-        if (mPluginIface->setwindow) {
-            mPluginIface->setwindow(&mData, &mWindow);
-        }
-    }
 }
 
 void
@@ -2715,7 +2744,7 @@ PluginInstanceChild::PaintRectToSurface(const nsIntRect& aRect,
     }
 #endif
 
-    if (mIsTransparent) {
+    if (aColor.a > 0.0) {
        // Clear surface content for transparent rendering
        nsRefPtr<gfxContext> ctx = new gfxContext(renderSurface);
        ctx->SetColor(aColor);
@@ -2740,86 +2769,228 @@ void
 PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
                                                   gfxASurface* aSurface)
 {
-    // Paint onto black image
-    bool needImageSurface = true;
-    nsRefPtr<gfxImageSurface> blackImage;
-    gfxIntSize clipSize(aRect.width, aRect.height);
-    gfxPoint deviceOffset(-aRect.x, -aRect.y);
-    // Try to re-use existing image surface, and avoid one copy
-    if (aSurface->GetType() == gfxASurface::SurfaceTypeImage) {
-        gfxImageSurface *surface = static_cast<gfxImageSurface*>(aSurface);
-        if (surface->Format() == gfxASurface::ImageFormatARGB32) {
-            needImageSurface = false;
-            blackImage = surface->GetSubimage(GfxFromNsRect(aRect));
+    NS_ABORT_IF_FALSE(aSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA,
+                      "Refusing to pointlessly recover alpha");
+
+    nsIntRect rect(aRect);
+    // If |aSurface| can be used to paint and can have alpha values
+    // recovered directly to it, do that to save a tmp surface and
+    // copy.
+    bool useSurfaceSubimageForBlack = false;
+    if (gfxASurface::SurfaceTypeImage == aSurface->GetType()) {
+        gfxImageSurface* surfaceAsImage =
+            static_cast<gfxImageSurface*>(aSurface);
+        useSurfaceSubimageForBlack =
+            (surfaceAsImage->Format() == gfxASurface::ImageFormatARGB32);
+        // If we're going to use a subimage, nudge the rect so that we
+        // can use optimal alpha recovery.  If we're not using a
+        // subimage, the temporaries should automatically get
+        // fast-path alpha recovery so we don't need to do anything.
+        if (useSurfaceSubimageForBlack) {
+            rect =
+                gfxAlphaRecovery::AlignRectForSubimageRecovery(aRect,
+                                                               surfaceAsImage);
         }
     }
-    // otherwise create new helper surface
-    if (needImageSurface) {
-        blackImage = new gfxImageSurface(clipSize, gfxASurface::ImageFormatARGB32);
-    }
 
-    // Paint to black image
-    blackImage->SetDeviceOffset(deviceOffset);
-    PaintRectToSurface(aRect, blackImage, gfxRGBA(0.0, 0.0, 0.0));
+    nsRefPtr<gfxImageSurface> whiteImage;
+    nsRefPtr<gfxImageSurface> blackImage;
+    gfxRect targetRect(rect.x, rect.y, rect.width, rect.height);
+    gfxIntSize targetSize(rect.width, rect.height);
+    gfxPoint deviceOffset = -targetRect.pos;
 
-    // Paint onto white image
-    nsRefPtr<gfxImageSurface> whiteImage =
-        new gfxImageSurface(clipSize, gfxASurface::ImageFormatRGB24);
-
-    whiteImage->SetDeviceOffset(deviceOffset);
-    PaintRectToSurface(aRect, whiteImage, gfxRGBA(1.0, 1.0, 1.0));
-
-    // Extract Alpha from black and white image and store to black Image
-    gfxRect rect(aRect.x, aRect.y, aRect.width, aRect.height);
-    if (!gfxAlphaRecovery::RecoverAlpha(blackImage, whiteImage, nsnull)) {
+    // We always use a temporary "white image"
+    whiteImage = new gfxImageSurface(targetSize, gfxASurface::ImageFormatRGB24);
+    if (whiteImage->CairoStatus()) {
         return;
     }
 
-    if (needImageSurface) {
+#ifdef XP_WIN
+    // On windows, we need an HDC and so can't paint directly to
+    // vanilla image surfaces.  Bifurcate this painting code so that
+    // we don't accidentally attempt that.
+    if (!SharedDIBSurface::IsSharedDIBSurface(aSurface))
+        NS_RUNTIMEABORT("Expected SharedDIBSurface!");
+
+    // Paint the plugin directly onto the target, with a white
+    // background and copy the result
+    PaintRectToSurface(rect, aSurface, gfxRGBA(1.0, 1.0, 1.0));
+    {
+        gfxRect copyRect(gfxPoint(0, 0), targetRect.size);
+        nsRefPtr<gfxContext> ctx = new gfxContext(whiteImage);
+        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+        ctx->SetSource(aSurface, deviceOffset);
+        ctx->Rectangle(copyRect);
+        ctx->Fill();
+    }
+
+    // Paint the plugin directly onto the target, with a black
+    // background
+    PaintRectToSurface(rect, aSurface, gfxRGBA(0.0, 0.0, 0.0));
+
+    // Don't copy the result, just extract a subimage so that we can
+    // recover alpha directly into the target
+    gfxImageSurface *image = static_cast<gfxImageSurface*>(aSurface);
+    blackImage = image->GetSubimage(targetRect);
+
+#else
+    // Paint onto white background
+    whiteImage->SetDeviceOffset(deviceOffset);
+    PaintRectToSurface(rect, whiteImage, gfxRGBA(1.0, 1.0, 1.0));
+
+    if (useSurfaceSubimageForBlack) {
+        gfxImageSurface *surface = static_cast<gfxImageSurface*>(aSurface);
+        blackImage = surface->GetSubimage(targetRect);
+    } else {
+        blackImage = new gfxImageSurface(targetSize,
+                                         gfxASurface::ImageFormatARGB32);
+    }
+
+    // Paint onto black background
+    blackImage->SetDeviceOffset(deviceOffset);
+    PaintRectToSurface(rect, blackImage, gfxRGBA(0.0, 0.0, 0.0));
+#endif
+
+    NS_ABORT_IF_FALSE(whiteImage && blackImage, "Didn't paint enough!");
+
+    // Extract alpha from black and white image and store to black
+    // image
+    if (!gfxAlphaRecovery::RecoverAlpha(blackImage, whiteImage)) {
+        return;
+    }
+
+    // If we had to use a temporary black surface, copy the pixels
+    // with alpha back to the target
+    if (!useSurfaceSubimageForBlack) {
         nsRefPtr<gfxContext> ctx = new gfxContext(aSurface);
         ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
         ctx->SetSource(blackImage);
-        ctx->Rectangle(GfxFromNsRect(aRect));
+        ctx->Rectangle(targetRect);
         ctx->Fill();
     }
 }
 
 bool
+PluginInstanceChild::CanPaintOnBackground()
+{
+    return (mBackground &&
+            mCurrentSurface &&
+            mCurrentSurface->GetSize() == mBackground->GetSize());
+}
+
+bool
 PluginInstanceChild::ShowPluginFrame()
 {
-    if (mPendingPluginCall) {
+    // mLayersRendering can be false if we somehow get here without
+    // receiving AsyncSetWindow() first.  mPendingPluginCall is our
+    // re-entrancy guard; we can't paint while nested inside another
+    // paint.
+    if (!mLayersRendering || mPendingPluginCall) {
         return false;
     }
 
     AutoRestore<bool> pending(mPendingPluginCall);
     mPendingPluginCall = true;
 
+    bool temporarilyMakeVisible = !IsVisible() && !mHasPainted;
+    if (temporarilyMakeVisible && mWindow.width && mWindow.height) {
+        mWindow.clipRect.right = mWindow.width;
+        mWindow.clipRect.bottom = mWindow.height;
+    } else if (!IsVisible()) {
+        // If we're not visible, don't bother painting a <0,0,0,0>
+        // rect.  If we're eventually made visible, the visibility
+        // change will invalidate our window.
+        ClearCurrentSurface();
+        return true;
+    }
+
     if (!EnsureCurrentBuffer()) {
         return false;
     }
 
-    // Make expose rect not bigger than clip rect
-    mAccumulatedInvalidRect.IntersectRect(mAccumulatedInvalidRect,
-        nsIntRect(mWindow.clipRect.left, mWindow.clipRect.top,
-                  mWindow.clipRect.right - mWindow.clipRect.left,
-                  mWindow.clipRect.bottom - mWindow.clipRect.top));
+    NS_ASSERTION(mWindow.width == (mWindow.clipRect.right - mWindow.clipRect.left) &&
+                 mWindow.height == (mWindow.clipRect.bottom - mWindow.clipRect.top),
+                 "Clip rect should be same size as window when using layers");
 
     // Clear accRect here to be able to pass
     // test_invalidate_during_plugin_paint  test
     nsIntRect rect = mAccumulatedInvalidRect;
     mAccumulatedInvalidRect.Empty();
 
+    // Fix up old invalidations that might have been made when our
+    // surface was a different size
+    gfxIntSize surfaceSize = mCurrentSurface->GetSize();
+    rect.IntersectRect(rect,
+                       nsIntRect(0, 0, surfaceSize.width, surfaceSize.height));
+
     if (!ReadbackDifferenceRect(rect)) {
-        // Just repaint whole plugin, because we cannot read back from Shmem which is owned by another process
+        // We couldn't read back the pixels that differ between the
+        // current surface and last, so we have to invalidate the
+        // entire window.
         rect.SetRect(0, 0, mWindow.width, mWindow.height);
     }
 
-    if (mDoAlphaExtraction) {
+    bool haveTransparentPixels =
+        gfxASurface::CONTENT_COLOR_ALPHA == mCurrentSurface->GetContentType();
+    PLUGIN_LOG_DEBUG(
+        ("[InstanceChild][%p] Painting%s <x=%d,y=%d, w=%d,h=%d> on surface <w=%d,h=%d>",
+         this, haveTransparentPixels ? " with alpha" : "",
+         rect.x, rect.y, rect.width, rect.height,
+         mCurrentSurface->GetSize().width, mCurrentSurface->GetSize().height));
+
+    if (CanPaintOnBackground()) {
+        PLUGIN_LOG_DEBUG(("  (on background)"));
+        // Source the background pixels ...
+        {
+            nsRefPtr<gfxContext> ctx = new gfxContext(mCurrentSurface);
+            ctx->SetSource(mBackground);
+            ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+            ctx->Rectangle(gfxRect(rect.x, rect.y, rect.width, rect.height));
+            ctx->Fill();
+        }
+        // ... and hand off to the plugin
+        // BEWARE: mBackground may die during this call
+        PaintRectToSurface(rect, mCurrentSurface, gfxRGBA(0.0, 0.0, 0.0, 0.0));
+    } else if (!temporarilyMakeVisible && mDoAlphaExtraction) {
+        // We don't want to pay the expense of alpha extraction for
+        // phony paints.
+        PLUGIN_LOG_DEBUG(("  (with alpha recovery)"));
         PaintRectWithAlphaExtraction(rect, mCurrentSurface);
     } else {
-        PaintRectToSurface(rect, mCurrentSurface, gfxRGBA(0.0, 0.0, 0.0, 0.0));
+        PLUGIN_LOG_DEBUG(("  (onto opaque surface)"));
+
+        // If we're on a platform that needs helper surfaces for
+        // plugins, and we're forcing a throwaway paint of a
+        // wmode=transparent plugin, then make sure to use the helper
+        // surface here.
+        nsRefPtr<gfxASurface> target =
+            (temporarilyMakeVisible && mHelperSurface) ?
+            mHelperSurface : mCurrentSurface;
+
+        PaintRectToSurface(rect, target, gfxRGBA(0.0, 0.0, 0.0, 0.0));
     }
     mHasPainted = true;
+
+    if (temporarilyMakeVisible) {
+        mWindow.clipRect.right = mWindow.clipRect.bottom = 0;
+
+        PLUGIN_LOG_DEBUG(
+            ("[InstanceChild][%p] Undoing temporary clipping w=<x=%d,y=%d, w=%d,h=%d>, clip=<l=%d,t=%d,r=%d,b=%d>",
+             this, mWindow.x, mWindow.y, mWindow.width, mWindow.height,
+             mWindow.clipRect.left, mWindow.clipRect.top, mWindow.clipRect.right, mWindow.clipRect.bottom));
+
+        if (mPluginIface->setwindow) {
+            mPluginIface->setwindow(&mData, &mWindow);
+        }
+
+        // Skip forwarding the results of the phony paint to the
+        // browser.  We may have painted a transparent plugin using
+        // the opaque-plugin path, which can result in wrong pixels.
+        // We also don't want to pay the expense of forwarding the
+        // surface for plugins that might really be invisible.
+        mAccumulatedInvalidRect.SetRect(0, 0, mWindow.width, mWindow.height);
+        return true;
+    }
 
     NPRect r = { (uint16_t)rect.y, (uint16_t)rect.x,
                  (uint16_t)rect.YMost(), (uint16_t)rect.XMost() };
@@ -2836,10 +3007,17 @@ PluginInstanceChild::ShowPluginFrame()
 #endif
 #ifdef XP_WIN
     if (SharedDIBSurface::IsSharedDIBSurface(mCurrentSurface)) {
-        base::SharedMemoryHandle handle = NULL;
         SharedDIBSurface* s = static_cast<SharedDIBSurface*>(mCurrentSurface.get());
-        s->ShareToProcess(PluginModuleChild::current()->OtherProcess(), &handle);
-        currSurf = SurfaceDescriptorWin(handle, mCurrentSurface->GetSize(), mIsTransparent);
+        if (!mCurrentSurfaceActor) {
+            base::SharedMemoryHandle handle = NULL;
+            s->ShareToProcess(PluginModuleChild::current()->OtherProcess(), &handle);
+
+            mCurrentSurfaceActor =
+                SendPPluginSurfaceConstructor(handle,
+                                              mCurrentSurface->GetSize(),
+                                              haveTransparentPixels);
+        }
+        currSurf = mCurrentSurfaceActor;
         s->Flush();
     } else
 #endif
@@ -2857,15 +3035,7 @@ PluginInstanceChild::ShowPluginFrame()
         return false;
     }
 
-    nsRefPtr<gfxASurface> tmp = mCurrentSurface;
-    mCurrentSurface = mBackSurface;
-    mBackSurface = tmp;
-    // Outdated back surface... not usable anymore due to changed plugin size.
-    // Dropping obsolete surface
-    if (mCurrentSurface && mBackSurface &&
-        mCurrentSurface->GetSize() != mBackSurface->GetSize()) {
-        mCurrentSurface = nsnull;
-    }
+    SwapSurfaces();
     mSurfaceDifferenceRect = rect;
     return true;
 }
@@ -2889,8 +3059,16 @@ PluginInstanceChild::ReadbackDifferenceRect(const nsIntRect& rect)
     return false;
 #endif
 
+    if (mCurrentSurface->GetContentType() != mBackSurface->GetContentType())
+        return false;
+
     if (mSurfaceDifferenceRect.IsEmpty())
         return true;
+
+    PLUGIN_LOG_DEBUG(
+        ("[InstanceChild][%p] Reading back part of <x=%d,y=%d, w=%d,h=%d>",
+         this, mSurfaceDifferenceRect.x, mSurfaceDifferenceRect.y,
+         mSurfaceDifferenceRect.width, mSurfaceDifferenceRect.height));
 
     // Read back previous content
     nsRefPtr<gfxContext> ctx = new gfxContext(mCurrentSurface);
@@ -2917,7 +3095,7 @@ PluginInstanceChild::InvalidateRectDelayed(void)
     }
 
     mCurrentInvalidateTask = nsnull;
-    if (mAccumulatedInvalidRect.IsEmpty() || (mHasPainted && !IsVisible())) {
+    if (mAccumulatedInvalidRect.IsEmpty()) {
         return;
     }
 
@@ -2929,7 +3107,7 @@ PluginInstanceChild::InvalidateRectDelayed(void)
 void
 PluginInstanceChild::AsyncShowPluginFrame(void)
 {
-    if (mCurrentInvalidateTask || (mHasPainted && !IsVisible())) {
+    if (mCurrentInvalidateTask) {
         return;
     }
 
@@ -2965,7 +3143,109 @@ PluginInstanceChild::InvalidateRect(NPRect* aInvalidRect)
         AsyncShowPluginFrame();
         return;
     }
+    // If we were going to use layers rendering but it's not set up
+    // yet, and the plugin happens to call this first, we'll forward
+    // the invalidation to the browser.  It's unclear whether
+    // non-layers plugins need this rect forwarded when their window
+    // width or height is 0, which it would be for layers plugins
+    // before their first SetWindow().
     SendNPN_InvalidateRect(*aInvalidRect);
+}
+
+bool
+PluginInstanceChild::RecvUpdateBackground(const SurfaceDescriptor& aBackground,
+                                          const nsIntRect& aRect)
+{
+    NS_ABORT_IF_FALSE(mIsTransparent, "Only transparent plugins use backgrounds");
+
+    if (!mBackground) {
+        // XXX refactor me
+        switch (aBackground.type()) {
+#ifdef MOZ_X11
+        case SurfaceDescriptor::TSurfaceDescriptorX11: {
+            SurfaceDescriptorX11 xdesc = aBackground.get_SurfaceDescriptorX11();
+            XRenderPictFormat pf;
+            pf.id = xdesc.xrenderPictID();
+            XRenderPictFormat *incFormat =
+                XRenderFindFormat(DefaultXDisplay(), PictFormatID, &pf, 0);
+            mBackground =
+                new gfxXlibSurface(DefaultScreenOfDisplay(DefaultXDisplay()),
+                                   xdesc.XID(), incFormat, xdesc.size());
+            break;
+        }
+#endif
+        case SurfaceDescriptor::TShmem: {
+            mBackground = gfxSharedImageSurface::Open(aBackground.get_Shmem());
+            break;
+        }
+        default:
+            NS_RUNTIMEABORT("Unexpected background surface descriptor");
+        }
+
+        if (!mBackground) {
+            return false;
+        }
+
+        gfxIntSize bgSize = mBackground->GetSize();
+        mAccumulatedInvalidRect.UnionRect(mAccumulatedInvalidRect,
+                                          nsIntRect(0, 0, bgSize.width, bgSize.height));
+        AsyncShowPluginFrame();
+        return true;
+    }
+
+    // XXX refactor me
+    mAccumulatedInvalidRect.UnionRect(aRect, mAccumulatedInvalidRect);
+
+    // The browser is limping along with a stale copy of our pixels.
+    // Try to repaint ASAP.  This will ClearCurrentBackground() if we
+    // needed it.
+    if (!ShowPluginFrame()) {
+        NS_WARNING("Couldn't immediately repaint plugin instance");
+        AsyncShowPluginFrame();
+    }
+
+    return true;
+}
+
+PPluginBackgroundDestroyerChild*
+PluginInstanceChild::AllocPPluginBackgroundDestroyer()
+{
+    return new PluginBackgroundDestroyerChild();
+}
+
+bool
+PluginInstanceChild::RecvPPluginBackgroundDestroyerConstructor(
+    PPluginBackgroundDestroyerChild* aActor)
+{
+    // Our background changed, so we have to invalidate the area
+    // painted with the old background.  If the background was
+    // destroyed because we have a new background, then we expect to
+    // be notified of that "soon", before processing the asynchronous
+    // invalidation here.  If we're *not* getting a new background,
+    // our current front surface is stale and we want to repaint
+    // "soon" so that we can hand the browser back a surface with
+    // alpha values.  (We should be notified of that invalidation soon
+    // too, but we don't assume that here.)
+    if (mBackground) {
+        gfxIntSize bgsize = mBackground->GetSize();
+        mAccumulatedInvalidRect.UnionRect(
+            nsIntRect(0, 0, bgsize.width, bgsize.height), mAccumulatedInvalidRect);
+
+        // NB: we don't have to XSync here because only ShowPluginFrame()
+        // uses mBackground, and it always XSyncs after finishing.
+        mBackground = nsnull;
+        AsyncShowPluginFrame();
+    }
+
+    return PPluginBackgroundDestroyerChild::Send__delete__(aActor);
+}
+
+bool
+PluginInstanceChild::DeallocPPluginBackgroundDestroyer(
+    PPluginBackgroundDestroyerChild* aActor)
+{
+    delete aActor;
+    return true;
 }
 
 uint32_t
@@ -3036,16 +3316,55 @@ DeleteObject(DeletingObjectEntry* e, void* userArg)
     return PL_DHASH_NEXT;
 }
 
-bool
-PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
+void
+PluginInstanceChild::SwapSurfaces()
 {
-    PLUGIN_LOG_DEBUG_METHOD;
-    AssertPluginThread();
-
-#if defined(OS_WIN)
-    SetProp(mPluginWindowHWND, kPluginIgnoreSubclassProperty, (HANDLE)1);
+    nsRefPtr<gfxASurface> tmpsurf = mCurrentSurface;
+#ifdef XP_WIN
+    PPluginSurfaceChild* tmpactor = mCurrentSurfaceActor;
 #endif
 
+    mCurrentSurface = mBackSurface;
+#ifdef XP_WIN
+    mCurrentSurfaceActor = mBackSurfaceActor;
+#endif
+
+    mBackSurface = tmpsurf;
+#ifdef XP_WIN
+    mBackSurfaceActor = tmpactor;
+#endif
+
+    // Outdated back surface... not usable anymore due to changed plugin size.
+    // Dropping obsolete surface
+    if (mCurrentSurface && mBackSurface &&
+        (mCurrentSurface->GetSize() != mBackSurface->GetSize() ||
+         mCurrentSurface->GetContentType() != mBackSurface->GetContentType())) {
+        mCurrentSurface = nsnull;
+#ifdef XP_WIN
+        if (mCurrentSurfaceActor) {
+            PPluginSurfaceChild::Send__delete__(mCurrentSurfaceActor);
+            mCurrentSurfaceActor = NULL;
+        }
+#endif
+    }
+}
+
+void
+PluginInstanceChild::ClearCurrentSurface()
+{
+    mCurrentSurface = nsnull;
+#ifdef XP_WIN
+    if (mCurrentSurfaceActor) {
+        PPluginSurfaceChild::Send__delete__(mCurrentSurfaceActor);
+        mCurrentSurfaceActor = NULL;
+    }
+#endif
+    mHelperSurface = nsnull;
+}
+
+void
+PluginInstanceChild::ClearAllSurfaces()
+{
     if (mBackSurface) {
         // Get last surface back, and drop it
         SurfaceDescriptor temp = null_t();
@@ -3058,6 +3377,28 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
         DeallocShmem(static_cast<gfxSharedImageSurface*>(mBackSurface.get())->GetShmem());
     mCurrentSurface = nsnull;
     mBackSurface = nsnull;
+
+#ifdef XP_WIN
+    if (mCurrentSurfaceActor) {
+        PPluginSurfaceChild::Send__delete__(mCurrentSurfaceActor);
+        mCurrentSurfaceActor = NULL;
+    }
+    if (mBackSurfaceActor) {
+        PPluginSurfaceChild::Send__delete__(mBackSurfaceActor);
+        mBackSurfaceActor = NULL;
+    }
+#endif
+}
+
+bool
+PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
+{
+    PLUGIN_LOG_DEBUG_METHOD;
+    AssertPluginThread();
+
+#if defined(OS_WIN)
+    SetProp(mPluginWindowHWND, kPluginIgnoreSubclassProperty, (HANDLE)1);
+#endif
 
     InfallibleTArray<PBrowserStreamChild*> streams;
     ManagedPBrowserStreamChild(streams);
@@ -3087,6 +3428,8 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
     // allowed to make async calls on this instance.
     PluginModuleChild::current()->NPP_Destroy(this);
     mData.ndata = 0;
+
+    ClearAllSurfaces();
 
     mDeletingHash = new nsTHashtable<DeletingObjectEntry>;
     mDeletingHash->Init();

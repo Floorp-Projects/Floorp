@@ -85,11 +85,10 @@ let gTests = [
   run: function ()
   {
     let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
-    let snippetsElt = doc.getElementById("defaultSnippets");
-    ok(snippetsElt, "Found default snippets element")
-    ok(Array.some(snippetsElt.getElementsByTagName("span"), function(elt) {
-      return !elt.hidden;
-    }), "A default snippet is visible.");
+    let snippetsElt = doc.getElementById("snippets");
+    ok(snippetsElt, "Found snippets element")
+    is(snippetsElt.getElementsByTagName("span").length, 1,
+       "A default snippet is visible.");
     executeSoon(runNextTest);
   }
 },
@@ -108,13 +107,8 @@ let gTests = [
 
     let snippetsElt = doc.getElementById("snippets");
     ok(snippetsElt, "Found snippets element");
-    ok(snippetsElt.hidden, "Snippets element is hidden");
-
-    let defaultsElt = doc.getElementById("defaultSnippets");
-    ok(defaultsElt, "Found default snippets element")
-    ok(Array.some(defaultsElt.getElementsByTagName("span"), function(elt) {
-      return !elt.hidden;
-    }), "A default snippet is visible.");
+    is(snippetsElt.getElementsByTagName("span").length, 1,
+       "A default snippet is visible.");
 
     executeSoon(runNextTest);
   }

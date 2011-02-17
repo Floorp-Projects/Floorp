@@ -70,6 +70,11 @@
 #include "nsConsoleMessage.h"
 #include "AudioParent.h"
 
+#if defined(ANDROID) || defined(LINUX)
+#include <sys/time.h>
+#include <sys/resource.h>
+#endif
+
 #ifdef MOZ_PERMISSIONS
 #include "nsPermissionManager.h"
 #endif
@@ -145,6 +150,26 @@ ContentParent::OnChannelConnected(int32 pid)
     }
     else {
         SetOtherProcess(handle);
+
+#if defined(ANDROID) || defined(LINUX)
+        EnsurePrefService();
+        nsCOMPtr<nsIPrefBranch> branch;
+        branch = do_QueryInterface(mPrefService);
+
+        // Check nice preference
+        PRInt32 nice = 0;
+        branch->GetIntPref("dom.ipc.content.nice", &nice);
+
+        // Environment variable overrides preference
+        char* relativeNicenessStr = getenv("MOZ_CHILD_PROCESS_RELATIVE_NICENESS");
+        if (relativeNicenessStr) {
+            nice = atoi(relativeNicenessStr);
+        }
+
+        if (nice != 0) {
+            setpriority(PRIO_PROCESS, pid, getpriority(PRIO_PROCESS, pid) + nice);
+        }
+#endif
     }
 }
 
@@ -165,8 +190,23 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         kungFuDeathGrip(static_cast<nsIThreadObserver*>(this));
     nsCOMPtr<nsIObserverService>
         obs(do_GetService("@mozilla.org/observer-service;1"));
-    if (obs)
+    if (obs) {
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "xpcom-shutdown");
+        obs->RemoveObserver(static_cast<nsIObserver*>(this), "memory-pressure");
+        obs->RemoveObserver(static_cast<nsIObserver*>(this),
+                           NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC);
+    }
+
+    // remove the global remote preferences observers
+    nsCOMPtr<nsIPrefBranch2> prefs 
+            (do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefs) { 
+        prefs->RemoveObserver("", this);
+    }
+
+    RecvRemoveGeolocationListener();
+    RecvRemoveAccelerometerListener();
+
     nsCOMPtr<nsIThreadInternal>
         threadInt(do_QueryInterface(NS_GetCurrentThread()));
     if (threadInt)
@@ -347,17 +387,6 @@ ContentParent::Observe(nsISupports* aSubject,
                        const PRUnichar* aData)
 {
     if (!strcmp(aTopic, "xpcom-shutdown") && mSubprocess) {
-        // remove the global remote preferences observers
-        nsCOMPtr<nsIPrefBranch2> prefs 
-            (do_GetService(NS_PREFSERVICE_CONTRACTID));
-        if (prefs) { 
-            if (gSingleton) {
-                prefs->RemoveObserver("", this);
-            }
-        }
-
-        RecvRemoveGeolocationListener();
-            
         Close();
         NS_ASSERTION(!mSubprocess, "Close should have nulled mSubprocess");
     }
@@ -367,20 +396,7 @@ ContentParent::Observe(nsISupports* aSubject,
 
     // listening for memory pressure event
     if (!strcmp(aTopic, "memory-pressure")) {
-      NS_ConvertUTF16toUTF8 dataStr(aData);
-      const char *deathPending = dataStr.get();
-
-      if (!strcmp(deathPending, "oom-kill")) {
-#ifdef MOZ_CRASHREPORTER
-          nsCOMPtr<nsICrashReporter> cr = do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-          if (cr) {
-              cr->AnnotateCrashReport(NS_LITERAL_CSTRING("oom"), NS_LITERAL_CSTRING("true"));
-          }
-#endif
-          KillProcess(OtherProcess(), 0, false);
-      }
-      else
-        SendFlushMemory(nsDependentString(aData));
+      SendFlushMemory(nsDependentString(aData));
     }
     // listening for remotePrefs...
     else if (!strcmp(aTopic, "nsPref:changed")) {
@@ -390,9 +406,22 @@ ContentParent::Observe(nsISupports* aSubject,
         nsCOMPtr<nsIPrefServiceInternal> prefService =
           do_GetService("@mozilla.org/preferences-service;1");
 
-        PRBool prefHasValue;
-        prefService->PrefHasUserValue(strData, &prefHasValue);
-        if (prefHasValue) {
+        PRBool prefNeedUpdate;
+        prefService->PrefHasUserValue(strData, &prefNeedUpdate);
+
+        // If the pref does not have a user value, check if it exist on the
+        // default branch or not
+        if (!prefNeedUpdate) {
+          nsCOMPtr<nsIPrefBranch> defaultBranch;
+          nsCOMPtr<nsIPrefService> prefsService = do_QueryInterface(prefService);
+          prefsService->GetDefaultBranch(nsnull, getter_AddRefs(defaultBranch));
+
+          PRInt32 prefType = nsIPrefBranch::PREF_INVALID;
+          defaultBranch->GetPrefType(strData.get(), &prefType);
+          prefNeedUpdate = (prefType != nsIPrefBranch::PREF_INVALID);
+        }
+
+        if (prefNeedUpdate) {
             // Pref was created, or previously existed and its value
             // changed.
             PrefTuple pref;

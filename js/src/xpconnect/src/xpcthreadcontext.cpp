@@ -218,7 +218,7 @@ static JSClass global_class = {
 #else
     0,
 #endif
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, SafeGlobalResolve, JS_ConvertStub, SafeFinalize,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };

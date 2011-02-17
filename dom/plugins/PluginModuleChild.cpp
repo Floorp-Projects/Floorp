@@ -107,9 +107,9 @@ static HWND sBrowserHwnd = NULL;
 
 PluginModuleChild::PluginModuleChild() :
     mLibrary(0),
+    mQuirks(QUIRKS_NOT_INITIALIZED),
     mShutdownFunc(0),
-    mInitializeFunc(0),
-    mQuirks(QUIRKS_NOT_INITIALIZED)
+    mInitializeFunc(0)
 #if defined(OS_WIN) || defined(OS_MACOSX)
   , mGetEntryPointsFunc(0)
 #elif defined(MOZ_WIDGET_GTK2)
@@ -137,14 +137,9 @@ PluginModuleChild::~PluginModuleChild()
     if (mLibrary) {
         PR_UnloadLibrary(mLibrary);
     }
-#ifdef MOZ_WIDGET_QT
-    nsQAppInstance::Release();
-    if (sGtkLib) {
-        PR_UnloadLibrary(sGtkLib);
-        sGtkLib = nsnull;
-        s_gtk_init = nsnull;
-    }
-#endif
+
+    DeinitGraphics();
+
     gInstance = nsnull;
 }
 
@@ -559,6 +554,26 @@ PluginModuleChild::InitGraphics()
     return true;
 }
 
+void
+PluginModuleChild::DeinitGraphics()
+{
+#ifdef MOZ_WIDGET_QT
+    nsQAppInstance::Release();
+    if (sGtkLib) {
+        PR_UnloadLibrary(sGtkLib);
+        sGtkLib = nsnull;
+        s_gtk_init = nsnull;
+    }
+#endif
+
+#if defined(MOZ_X11) && defined(NS_FREE_PERMANENT_DATA)
+    // We free some data off of XDisplay close hooks, ensure they're
+    // run.  Closing the display is pretty scary, so we only do it to
+    // silence leak checkers.
+    XCloseDisplay(DefaultXDisplay());
+#endif
+}
+
 bool
 PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
 {
@@ -580,9 +595,42 @@ PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
 }
 
 bool
-PluginModuleChild::AnswerURLRedirectNotifySupported(bool *aBoolVal)
+PluginModuleChild::AnswerOptionalFunctionsSupported(bool *aURLRedirectNotify,
+                                                    bool *aClearSiteData,
+                                                    bool *aGetSitesWithData)
 {
-    *aBoolVal = !!mFunctions.urlredirectnotify;
+    *aURLRedirectNotify = !!mFunctions.urlredirectnotify;
+    *aClearSiteData = !!mFunctions.clearsitedata;
+    *aGetSitesWithData = !!mFunctions.getsiteswithdata;
+    return true;
+}
+
+bool
+PluginModuleChild::AnswerNPP_ClearSiteData(const nsCString& aSite,
+                                           const uint64_t& aFlags,
+                                           const uint64_t& aMaxAge,
+                                           NPError* aResult)
+{
+    *aResult =
+        mFunctions.clearsitedata(NullableStringGet(aSite), aFlags, aMaxAge);
+    return true;
+}
+
+bool
+PluginModuleChild::AnswerNPP_GetSitesWithData(InfallibleTArray<nsCString>* aResult)
+{
+    char** result = mFunctions.getsiteswithdata();
+    if (!result)
+        return true;
+
+    char** iterator = result;
+    while (*iterator) {
+        aResult->AppendElement(*iterator);
+        NS_Free(*iterator);
+        ++iterator;
+    }
+    NS_Free(result);
+
     return true;
 }
 
@@ -1828,7 +1876,7 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
         mQuirks |= QUIRK_FLASH_THROTTLE_WMUSER_EVENTS; 
         mQuirks |= QUIRK_FLASH_HOOK_SETLONGPTR;
         mQuirks |= QUIRK_FLASH_HOOK_GETWINDOWINFO;
-        mQuirks |= QUIRK_FLASH_MASK_CLEARTYPE_SETTINGS;
+        mQuirks |= QUIRK_FLASH_FIXUP_MOUSE_CAPTURE;
     }
 #endif
 }
@@ -1884,7 +1932,13 @@ PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor
     // plugins need to actively negotiate something else in order to work
     // out of process.
     if (childInstance->EventModel() == NPEventModelCarbon) {
-        *rv = NPERR_MODULE_LOAD_FAILED_ERROR;
+      // Send notification that a plugin tried to negotiate Carbon NPAPI so that
+      // users can be notified that restarting the browser in i386 mode may allow
+      // them to use the plugin.
+      childInstance->SendNegotiatedCarbon();
+
+      // Fail to instantiate.
+      *rv = NPERR_MODULE_LOAD_FAILED_ERROR;
     }
 #endif
 

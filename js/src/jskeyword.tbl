@@ -74,13 +74,16 @@ JS_KEYWORD(void,        TOK_UNARYOP,    JSOP_VOID,      JSVERSION_DEFAULT)
 JS_KEYWORD(while,       TOK_WHILE,      JSOP_NOP,       JSVERSION_DEFAULT)
 JS_KEYWORD(with,        TOK_WITH,       JSOP_NOP,       JSVERSION_DEFAULT)
 
-/* ES5 FutureReservedWord keywords. */
-JS_KEYWORD(class,       TOK_RESERVED,   JSOP_NOP,       JSVERSION_DEFAULT)
-JS_KEYWORD(enum,        TOK_RESERVED,   JSOP_NOP,       JSVERSION_DEFAULT)
-JS_KEYWORD(export,      TOK_RESERVED,   JSOP_NOP,       JSVERSION_DEFAULT)
-JS_KEYWORD(extends,     TOK_RESERVED,   JSOP_NOP,       JSVERSION_DEFAULT)
-JS_KEYWORD(import,      TOK_RESERVED,   JSOP_NOP,       JSVERSION_DEFAULT)
-JS_KEYWORD(super,       TOK_RESERVED,   JSOP_NOP,       JSVERSION_DEFAULT)
+/*
+ * ES5 FutureReservedWord keywords which we historically unreserved, forcing us
+ * to re-reserve them only in strict mode.
+ */
+JS_KEYWORD(class,       TOK_STRICT_RESERVED, JSOP_NOP,  JSVERSION_DEFAULT)
+JS_KEYWORD(enum,        TOK_STRICT_RESERVED, JSOP_NOP,  JSVERSION_DEFAULT)
+JS_KEYWORD(export,      TOK_STRICT_RESERVED, JSOP_NOP,  JSVERSION_DEFAULT)
+JS_KEYWORD(extends,     TOK_STRICT_RESERVED, JSOP_NOP,  JSVERSION_DEFAULT)
+JS_KEYWORD(import,      TOK_STRICT_RESERVED, JSOP_NOP,  JSVERSION_DEFAULT)
+JS_KEYWORD(super,       TOK_STRICT_RESERVED, JSOP_NOP,  JSVERSION_DEFAULT)
 
 /*
  * ES5 reserved keywords with long-implemented behavior, allowed in our

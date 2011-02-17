@@ -67,6 +67,7 @@ class Display
     virtual bool getHalfFloatTextureSupport(bool *filtering, bool *renderable);
     virtual bool getLuminanceTextureSupport();
     virtual bool getLuminanceAlphaTextureSupport();
+    virtual D3DPOOL getBufferPool(DWORD usage) const;
 
     bool isD3d9exDevice() { return mD3d9ex != NULL; }
 

@@ -73,6 +73,7 @@ let Change = {
     // load some other elements & info from the window
     this._dialog = document.getElementById("change-dialog");
     this._dialogType = window.arguments[0];
+    this._duringSetup = window.arguments[1];
     this._status = document.getElementById("status");
     this._statusIcon = document.getElementById("statusIcon");
     this._statusRow = document.getElementById("statusRow");
@@ -103,7 +104,7 @@ let Change = {
         }
         else {
           document.getElementById("generatePassphraseButton").hidden = false;
-          document.getElementById("generatePassphraseButton").hidden = false;
+          document.getElementById("passphraseBackupButtons").hidden = false;
           this._passphraseBox.setAttribute("readonly", "true");
           let pp = Weave.Service.passphrase;
           if (Weave.Utils.isPassphrase(pp))
@@ -115,6 +116,9 @@ let Change = {
           warningText.textContent = this._str("change.synckey2.warningText");
           this._dialog.getButton("finish").label
             = this._str("change.synckey.acceptButton");
+          if (this._duringSetup) {
+            this._dialog.getButton("finish").disabled = false;
+          }
         }
         break;
       case "ChangePassword":

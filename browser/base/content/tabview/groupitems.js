@@ -25,6 +25,8 @@
  * Ehsan Akhgari <ehsan@mozilla.com>
  * Raymond Lee <raymond@appcoast.com>
  * Tim Taubert <tim.taubert@gmx.de>
+ * Sean Dunn <seanedunn@yahoo.com>
+ * Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -58,12 +60,10 @@
 //
 // Possible options:
 //   id - specifies the groupItem's id; otherwise automatically generated
-//   locked - see <Item.locked>; default is {}
 //   userSize - see <Item.userSize>; default is null
 //   bounds - a <Rect>; otherwise based on the locations of the provided elements
 //   container - a DOM element to use as the container for this groupItem; otherwise will create
 //   title - the title for the groupItem; otherwise blank
-//   dontPush - true if this groupItem shouldn't push away on creation; default is false
 //   dontPush - true if this groupItem shouldn't push away or snap on creation; default is false
 //   immediately - true if we want all placement immediately, not with animation
 function GroupItem(listOfEls, options) {
@@ -78,7 +78,6 @@ function GroupItem(listOfEls, options) {
   this.id = options.id || GroupItems.getNextID();
   this._isStacked = false;
   this.expanded = null;
-  this.locked = (options.locked ? Utils.copy(options.locked) : {});
   this.topChild = null;
   this.hidden = false;
   this.fadeAwayUndoButtonDelay = 15000;
@@ -189,37 +188,38 @@ function GroupItem(listOfEls, options) {
 
   this.$title
     .blur(function() {
+      self._titleFocused = false;
       self.$titleShield.show();
+      if (self.getTitle())
+        gTabView.firstUseExperienced = true;
     })
     .focus(function() {
-      if (self.locked.title) {
-        (self.$title)[0].blur();
-        return;
+      if (!self._titleFocused) {
+        (self.$title)[0].select();
+        self._titleFocused = true;
       }
-      (self.$title)[0].select();
+    })
+    .mousedown(function(e) {
+      e.stopPropagation();
     })
     .keydown(handleKeyDown)
     .keyup(handleKeyUp);
 
-  if (this.locked.title)
-    this.$title.addClass('name-locked');
-  else {
-    this.$titleShield
-      .mousedown(function(e) {
-        self.lastMouseDownTarget = (Utils.isRightClick(e) ? null : e.target);
-      })
-      .mouseup(function(e) {
-        var same = (e.target == self.lastMouseDownTarget);
-        self.lastMouseDownTarget = null;
-        if (!same)
-          return;
+  this.$titleShield
+    .mousedown(function(e) {
+      self.lastMouseDownTarget = (Utils.isLeftClick(e) ? e.target : null);
+    })
+    .mouseup(function(e) {
+      var same = (e.target == self.lastMouseDownTarget);
+      self.lastMouseDownTarget = null;
+      if (!same)
+        return;
 
-        if (!self.isDragging) {
-          self.$titleShield.hide();
-          (self.$title)[0].focus();
-        }
-      });
-  }
+      if (!self.isDragging) {
+        self.$titleShield.hide();
+        (self.$title)[0].focus();
+      }
+    });
 
   // ___ Stack Expander
   this.$expander = iQ("<div/>")
@@ -228,21 +228,17 @@ function GroupItem(listOfEls, options) {
     .hide();
 
   // ___ app tabs: create app tab tray and populate it
+  let appTabTrayContainer = iQ("<div/>")
+    .addClass("appTabTrayContainer")
+    .appendTo($container);
   this.$appTabTray = iQ("<div/>")
     .addClass("appTabTray")
-    .appendTo($container);
+    .appendTo(appTabTrayContainer);
 
   AllTabs.tabs.forEach(function(xulTab) {
     if (xulTab.pinned && xulTab.ownerDocument.defaultView == gWindow)
-      self.addAppTab(xulTab);
+      self.addAppTab(xulTab, {dontAdjustTray: true});
   });
-
-  // ___ locking
-  if (this.locked.bounds)
-    $container.css({cursor: 'default'});
-
-  if (this.locked.close)
-    this.$closeButton.hide();
 
   // ___ Undo Close
   this.$undoContainer = null;
@@ -262,8 +258,7 @@ function GroupItem(listOfEls, options) {
   // ___ Finish Up
   this._addHandlers($container);
 
-  if (!this.locked.bounds)
-    this.setResizable(true, immediately);
+  this.setResizable(true, immediately);
 
   GroupItems.register(this);
 
@@ -317,7 +312,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var data = {
       bounds: this.getBounds(),
       userSize: null,
-      locked: Utils.copy(this.locked),
       title: this.getTitle(),
       id: this.id
     };
@@ -333,6 +327,23 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Returns true if the tab groupItem is empty and unnamed.
   isEmpty: function GroupItem_isEmpty() {
     return !this._children.length && !this.getTitle();
+  },
+
+  // ----------
+  // Function: isStacked
+  // Returns true if this item is in a stacked groupItem.
+  isStacked: function GroupItem_isStacked() {
+    return this._isStacked;
+  },
+
+  // ----------
+  // Function: isTopOfStack
+  // Returns true if the item is showing on top of this group's stack,
+  // determined by whether the tab is this group's topChild, or
+  // if it doesn't have one, its first child.
+  isTopOfStack: function GroupItem_isTopOfStack(item) {
+    return this.isStacked() && ((this.topChild == item) ||
+      (!this.topChild && this.getChild(0) == item));
   },
 
   // ----------
@@ -387,6 +398,77 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   },
 
   // ----------
+  // Function: adjustAppTabTray
+  // Used to adjust the appTabTray size, to split the appTabIcons across
+  // multiple columns when needed - if the groupItem size is too small.
+  //
+  // Parameters:
+  //   arrangeGroup - rearrange the groupItem if the number of appTab columns
+  //   changes. If true, then this.arrange() is called, otherwise not.
+  adjustAppTabTray: function GroupItem_adjustAppTabTray(arrangeGroup) {
+    let icons = iQ(".appTabIcon", this.$appTabTray);
+    let container = iQ(this.$appTabTray[0].parentNode);
+    if (!icons.length) {
+      // There are no icons, so hide the appTabTray if needed.
+      if (parseInt(container.css("width")) != 0) {
+        this.$appTabTray.css("-moz-column-count", "auto");
+        this.$appTabTray.css("height", 0);
+        container.css("width", 0);
+        container.css("height", 0);
+
+        if (container.hasClass("appTabTrayContainerTruncated"))
+          container.removeClass("appTabTrayContainerTruncated");
+
+        if (arrangeGroup)
+          this.arrange();
+      }
+      return;
+    }
+
+    let iconBounds = iQ(icons[0]).bounds();
+    let boxBounds = this.getBounds();
+    let contentHeight = boxBounds.height -
+                        parseInt(container.css("top")) -
+                        this.$resizer.height();
+    let rows = Math.floor(contentHeight / iconBounds.height);
+    let columns = Math.ceil(icons.length / rows);
+    let columnsGap = parseInt(this.$appTabTray.css("-moz-column-gap"));
+    let iconWidth = iconBounds.width + columnsGap;
+    let maxColumns = Math.floor((boxBounds.width * 0.20) / iconWidth);
+
+    Utils.assert(rows > 0 && columns > 0 && maxColumns > 0,
+      "make sure the calculated rows, columns and maxColumns are correct");
+
+    if (columns > maxColumns)
+      container.addClass("appTabTrayContainerTruncated");
+    else if (container.hasClass("appTabTrayContainerTruncated"))
+      container.removeClass("appTabTrayContainerTruncated");
+
+    // Need to drop the -moz- prefix when Gecko makes it obsolete.
+    // See bug 629452.
+    if (parseInt(this.$appTabTray.css("-moz-column-count")) != columns)
+      this.$appTabTray.css("-moz-column-count", columns);
+
+    if (parseInt(this.$appTabTray.css("height")) != contentHeight) {
+      this.$appTabTray.css("height", contentHeight + "px");
+      container.css("height", contentHeight + "px");
+    }
+
+    let fullTrayWidth = iconWidth * columns - columnsGap;
+    if (parseInt(this.$appTabTray.css("width")) != fullTrayWidth)
+      this.$appTabTray.css("width", fullTrayWidth + "px");
+
+    let trayWidth = iconWidth * Math.min(columns, maxColumns) - columnsGap;
+    if (parseInt(container.css("width")) != trayWidth) {
+      container.css("width", trayWidth + "px");
+
+      // Rearrange the groupItem if the width changed.
+      if (arrangeGroup)
+        this.arrange();
+    }
+  },
+
+  // ----------
   // Function: getContentBounds
   // Returns a <Rect> for the groupItem's content area (which doesn't include the title, etc).
   getContentBounds: function GroupItem_getContentBounds() {
@@ -395,7 +477,11 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     box.top += titleHeight;
     box.height -= titleHeight;
 
-    var appTabTrayWidth = this.$appTabTray.width();
+    let appTabTrayContainer = iQ(this.$appTabTray[0].parentNode);
+    var appTabTrayWidth = appTabTrayContainer.width();
+    if (appTabTrayWidth)
+      appTabTrayWidth += parseInt(appTabTrayContainer.css(UI.rtl ? "left" : "right"));
+
     box.width -= appTabTrayWidth;
     if (UI.rtl) {
       box.left += appTabTrayWidth;
@@ -420,16 +506,19 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //
   // Possible options:
   //   force - true to always update the DOM even if the bounds haven't changed; default false
-  setBounds: function GroupItem_setBounds(rect, immediately, options) {
-    if (!Utils.isRect(rect)) {
-      Utils.trace('GroupItem.setBounds: rect is not a real rectangle!', rect);
+  setBounds: function GroupItem_setBounds(inRect, immediately, options) {
+    if (!Utils.isRect(inRect)) {
+      Utils.trace('GroupItem.setBounds: rect is not a real rectangle!', inRect);
       return;
     }
 
+    // Validate and conform passed in size
+    let validSize = GroupItems.calcValidSize(
+      new Point(inRect.width, inRect.height));
+    let rect = new Rect(inRect.left, inRect.top, validSize.x, validSize.y);
+
     if (!options)
       options = {};
-
-    GroupItems.enforceMinSize(rect);
 
     var titleHeight = this.$titlebar.height();
 
@@ -461,13 +550,19 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var offset = new Point(rect.left - this.bounds.left, rect.top - this.bounds.top);
     this.bounds = new Rect(rect);
 
+    // Make sure the AppTab icons fit the new groupItem size.
+    if (css.width || css.height)
+      this.adjustAppTabTray();
+
     // ___ Deal with children
     if (css.width || css.height) {
       this.arrange({animate: !immediately}); //(immediately ? 'sometimes' : true)});
     } else if (css.left || css.top) {
       this._children.forEach(function(child) {
-        var box = child.getBounds();
-        child.setPosition(box.left + offset.x, box.top + offset.y, immediately);
+        if (!child.getHidden()) {
+          var box = child.getBounds();
+          child.setPosition(box.left + offset.x, box.top + offset.y, immediately);
+        }
       });
     }
 
@@ -490,7 +585,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       });
     }
 
-    this.adjustTitleSize();
+    if (css.width) {      
+      this.adjustTitleSize();
+    }
 
     UI.clearShouldResizeItems();
 
@@ -530,36 +627,41 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // ----------
   // Function: close
   // Closes the groupItem, removing (but not closing) all of its children.
-  close: function GroupItem_close() {
+  //
+  // Parameters:
+  //   options - An object with optional settings for this call.
+  //
+  // Options:
+  //   immediately - (bool) if true, no animation will be used
+  close: function GroupItem_close(options) {
     this.removeAll({dontClose: true});
     GroupItems.unregister(this);
 
-    if (this.hidden) {
-      iQ(this.container).remove();
-      if (this.$undoContainer) {
-        this.$undoContainer.remove();
-        this.$undoContainer = null;
-       }
-      this.removeTrenches();
+    let self = this;
+    let destroyGroup = function () {
+      iQ(self.container).remove();
+      if (self.$undoContainer) {
+        self.$undoContainer.remove();
+        self.$undoContainer = null;
+      }
+      self.removeTrenches();
       Items.unsquish();
-      this._sendToSubscribers("close");
+      self._sendToSubscribers("close");
       GroupItems.updateGroupCloseButtons();
+    }
+
+    if (this.hidden || (options && options.immediately)) {
+      destroyGroup();
     } else {
-      let self = this;
       iQ(this.container).animate({
         opacity: 0,
         "-moz-transform": "scale(.3)",
       }, {
         duration: 170,
-        complete: function() {
-          iQ(this).remove();
-          self.removeTrenches();
-          Items.unsquish();
-          self._sendToSubscribers("close");
-          GroupItems.updateGroupCloseButtons();
-        }
+        complete: destroyGroup
       });
     }
+
     this.deleteData();
   },
 
@@ -582,11 +684,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         }
       });
 
+      this.droppable(false);
       this._createUndoButton();
-    } else {
-      if (!this.locked.close)
-        this.close();
-    }
+    } else
+      this.close();
     
     this._makeClosestTabActive();
   },
@@ -607,12 +708,26 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         GroupItems.setActiveGroupItem(closestTabItem.parent);
       } else {
         GroupItems.setActiveOrphanTab(closestTabItem);
-        GroupItems.setActiveGroupItem(null);
       }
     } else {
       GroupItems.setActiveGroupItem(null);
       GroupItems.setActiveOrphanTab(null);
     }
+  },
+
+  // ----------
+  // Function: closeIfEmpty
+  // Closes the group if it's empty, has no title, is closable, and
+  // autoclose is enabled (see pauseAutoclose()). Returns true if the close
+  // occurred and false otherwise.
+  closeIfEmpty: function() {
+    if (!this._children.length && !this.getTitle() &&
+        !GroupItems.getUnclosableGroupItemId() &&
+        !GroupItems._autoclosePaused) {
+      this.close();
+      return true;
+    }
+    return false;
   },
 
   // ----------
@@ -625,6 +740,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.hidden = false;
     this.$undoContainer.remove();
     this.$undoContainer = null;
+    this.droppable(true);
 
     iQ(this.container).show().animate({
       "-moz-transform": "scale(1)",
@@ -664,6 +780,22 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       group.newTab();
     }
 
+    this.destroy();
+  },
+
+  // ----------
+  // Function: destroy
+  // Close all tabs linked to children (tabItems), removes all children and 
+  // close the groupItem.
+  //
+  // Parameters:
+  //   options - An object with optional settings for this call.
+  //
+  // Options:
+  //   immediately - (bool) if true, no animation will be used
+  destroy: function GroupItem_destroy(options) {
+    let self = this;
+
     // when "TabClose" event is fired, the browser tab is about to close and our 
     // item "close" event is fired.  And then, the browser tab gets closed. 
     // In other words, the group "close" event is fired before all browser
@@ -694,7 +826,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       this.$undoContainer.fadeOut(function() { self._unhide() });
     } else {
-      this.close();
+      this.close(options);
     }
   },
 
@@ -833,8 +965,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         $el = iQ(a);
         item = Items.item($el);
       }
-      Utils.assertThrow(!item.parent || item.parent == this,
-          "shouldn't already be in another groupItem");
+
+      // safeguard to remove the item from its previous group
+      if (item.parent && item.parent !== this)
+        item.parent.remove(item);
 
       item.removeTrenches();
 
@@ -862,7 +996,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         item.groupItemData = {};
 
         item.addSubscriber(this, "close", function() {
-          self.remove(item);
+          let dontClose = !item.closedManually && gBrowser._numPinnedTabs > 0;
+          self.remove(item, { dontClose: dontClose });
+
           if (self._children.length > 0 && self._activeTab) {
             GroupItems.setActiveGroupItem(self);
             UI.setActiveTab(self._activeTab);
@@ -939,6 +1075,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       item.setParent(null);
       item.removeClass("tabInGroupItem");
       item.removeClass("stacked");
+      item.isStacked = false;
+      item.setHidden(false);
       item.removeClass("stack-trayed");
       item.setRotation(0);
 
@@ -948,17 +1086,16 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       if (typeof item.setResizable == 'function')
         item.setResizable(true, options.immediately);
 
-      if (this._children.length == 0 && !this.locked.close && !this.getTitle() && 
-          !options.dontClose) {
-        if (!GroupItems.getUnclosableGroupItemId()) {
-          this.close();
-          this._makeClosestTabActive();
-        } else {
-          // this.close();  this line is causing the leak but the leak doesn't happen after re-enabling it
-        }
-      } else if (!options.dontArrange) {
+      // if a blank tab is selected while restoring a tab the blank tab gets
+      // removed. we need to keep the group alive for the restored tab.
+      if (item.tab._tabViewTabIsRemovedAfterRestore)
+        options.dontClose = true;
+
+      let closed = options.dontClose ? false : this.closeIfEmpty();
+      if (closed)
+        this._makeClosestTabActive();
+      else if (!options.dontArrage)
         this.arrange({animate: !options.immediately});
-      }
 
       this._sendToSubscribers("childRemoved",{ groupItemId: this.id, item: item });
     } catch(e) {
@@ -996,7 +1133,15 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
   // ----------
   // Adds the given xul:tab as an app tab in this group's apptab tray
-  addAppTab: function GroupItem_addAppTab(xulTab) {
+  //
+  // Parameters:
+  //   options - change how the app tab is added.
+  //
+  // Options:
+  //   dontAdjustTray - (boolean) if true, the $appTabTray size is not adjusted,
+  //                    which means that the adjustAppTabTray() method is not
+  //                    called.
+  addAppTab: function GroupItem_addAppTab(xulTab, options) {
     let self = this;
 
     xulTab.addEventListener("error", this._onAppTabError, false);
@@ -1009,19 +1154,16 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       .data("xulTab", xulTab)
       .appendTo(this.$appTabTray)
       .click(function(event) {
-        if (Utils.isRightClick(event))
+        if (!Utils.isLeftClick(event))
           return;
 
         GroupItems.setActiveGroupItem(self);
         UI.goToTab(iQ(this).data("xulTab"));
       });
 
-    // adjust the tray
-    let columnWidth = $appTab.width();
-    if (parseInt(this.$appTabTray.css("width")) != columnWidth) {
-      this.$appTabTray.css({width: columnWidth});
-      this.arrange();
-    }
+    // adjust the tray, if needed.
+    if (!options || !options.dontAdjustTray)
+      this.adjustAppTabTray(true);
   },
 
   // ----------
@@ -1037,10 +1179,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     });
     
     // adjust the tray
-    if (!iQ(".appTabIcon", this.$appTabTray).length) {
-      this.$appTabTray.css({width: 0});
-      this.arrange();
-    }
+    this.adjustAppTabTray(true);
 
     xulTab.removeEventListener("error", this._onAppTabError, false);
   },
@@ -1068,7 +1207,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
   // ----------
   // Function: shouldStack
-  // Returns true if the groupItem should stack (instead of grid).
+  // Returns true if the groupItem, given "count", should stack (instead of 
+  // grid).
   shouldStack: function GroupItem_shouldStack(count) {
     if (count <= 1)
       return false;
@@ -1076,7 +1216,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var bb = this.getContentBounds();
     var options = {
       return: 'widthAndColumns',
-      count: count || this._children.length
+      count: count || this._children.length,
+      hideTitle: false
     };
     let arrObj = Items.arrange(null, bb, options);
  
@@ -1156,51 +1297,59 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     if (!count)
       return;
 
-    var zIndex = this.getZ() + count + 1;
-    var maxRotation = 35; // degress
-    var scale = 0.8;
-    var newTabsPad = 10;
-    var w;
-    var h;
-    var itemAspect = TabItems.tabHeight / TabItems.tabWidth;
-    var bbAspect = bb.height / bb.width;
+    let itemAspect = TabItems.tabHeight / TabItems.tabWidth;
+    let zIndex = this.getZ() + count + 1;
+    let maxRotation = 35; // degress
+    let scale = 0.7;
+    let newTabsPad = 10;
+    let bbAspect = bb.height / bb.width;
+    let numInPile = 6;
+    let angleDelta = 3.5; // degrees
 
-    // compute h and w. h and w are the dimensions of each of the tabs... in other words, the
-    // height and width of the entire stack, modulo rotation.
+    // compute size of the entire stack, modulo rotation.
+    let size;
     if (bbAspect > itemAspect) { // Tall, thin groupItem
-      w = bb.width * scale;
-      h = w * itemAspect;
-      // let's say one, because, even though there's more space, we're enforcing that with scale.
-    } else { // Short, wide groupItem
-      h = bb.height * scale;
-      w = h * (1 / itemAspect);
-    }
+      size = TabItems.calcValidSize(new Point(bb.width * scale, -1),
+        {hideTitle:true});
+     } else { // Short, wide groupItem
+      size = TabItems.calcValidSize(new Point(-1, bb.height * scale),
+        {hideTitle:true});
+     }
+
 
     // x is the left margin that the stack will have, within the content area (bb)
     // y is the vertical margin
-    var x = (bb.width - w) / 2;
-
-    var y = Math.min(x, (bb.height - h) / 2);
-    var box = new Rect(bb.left + x, bb.top + y, w, h);
+    var x = (bb.width - size.x) / 2;
+    var y = Math.min(size.x, (bb.height - size.y) / 2);
+    var box = new Rect(bb.left + x, bb.top + y, size.x, size.y);
 
     var self = this;
     var children = [];
     childrenToArrange.forEach(function GroupItem__stackArrange_order(child) {
-      if (child == self.topChild)
-        children.unshift(child);
-      else
-        children.push(child);
+      // Children are still considered stacked even if they're hidden later.
+      child.addClass("stacked");
+      child.isStacked = true;
+      if (numInPile-- > 0) {
+        child.setHidden(false);
+        if (child == self.topChild)
+          children.unshift(child);
+        else
+          children.push(child);
+      } else {
+        child.setHidden(true);
+      }
     });
 
+    let angleAccum = 0;
     children.forEach(function GroupItem__stackArrange_apply(child, index) {
-      if (!child.locked.bounds) {
-        child.setZ(zIndex);
-        zIndex--;
+      child.setZ(zIndex);
+      zIndex--;
 
-        child.addClass("stacked");
-        child.setBounds(box, !animate);
-        child.setRotation((UI.rtl ? -1 : 1) * Math.min(index, 5) * 5);
-      }
+      // Force a recalculation of height because we've changed how the title
+      // is shown.
+      child.setBounds(box, !animate, {force:true});
+      child.setRotation((UI.rtl ? -1 : 1) * angleAccum);
+      angleAccum += angleDelta;
     });
 
     self._isStacked = true;
@@ -1224,7 +1373,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //   dropIndex - (int) the index at which a dragged item (if there is one) should be added
   //               if it is dropped. Otherwise (boolean) false.
   _gridArrange: function GroupItem__gridArrange(childrenToArrange, box, options) {
-    this.topChild = null;
     let arrangeOptions;
     if (this.expanded) {
       // if we're expanded, we actually want to use the expanded tray's bounds.
@@ -1232,13 +1380,16 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       box.inset(8, 8);
       arrangeOptions = Utils.extend({}, options, {z: 99999});
     } else {
+      this.topChild = null;
       this._isStacked = false;
       arrangeOptions = Utils.extend({}, options, {
         columns: this._columns
       });
 
       childrenToArrange.forEach(function(child) {
-        child.removeClass("stacked")
+        child.removeClass("stacked");
+        child.isStacked = false;
+        child.setHidden(false);
       });
     }
   
@@ -1248,10 +1399,11 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     // Items.arrange will determine where/how the child items should be
     // placed, but will *not* actually move them for us. This is our job.
     let result = Items.arrange(childrenToArrange, box, arrangeOptions);
-    let {dropIndex, rects} = result;
+    let {dropIndex, rects, columns} = result;
     if ("oldDropIndex" in options && options.oldDropIndex === dropIndex)
       return dropIndex;
 
+    this._columns = columns;
     let index = 0;
     let self = this;
     childrenToArrange.forEach(function GroupItem_arrange_children_each(child, i) {
@@ -1260,40 +1412,14 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       // (and skip one for the dropPos)
       if (self._dropSpaceActive && index === dropIndex)
         index++;
-      if (!child.locked.bounds) {
-        child.setBounds(rects[index], !options.animate);
-        child.setRotation(0);
-        if (arrangeOptions.z)
-          child.setZ(arrangeOptions.z);
-      }
+      child.setBounds(rects[index], !options.animate);
+      child.setRotation(0);
+      if (arrangeOptions.z)
+        child.setZ(arrangeOptions.z);
       index++;
     });
 
     return dropIndex;
-  },
-
-  // ----------
-  // Function: childHit
-  // Called by one of the groupItem's children when the child is clicked on.
-  //
-  // Returns an object:
-  //   shouldZoom - true if the browser should launch into the tab represented by the child
-  //   callback - called after the zoom animation is complete
-  childHit: function GroupItem_childHit(child) {
-    var self = this;
-
-    // ___ normal click
-    if (!this._isStacked || this.expanded) {
-      return {
-        shouldZoom: true,
-        callback: function() {
-          self.collapse();
-        }
-      };
-    }
-
-    GroupItems.setActiveGroupItem(self);
-    return { shouldZoom: true };
   },
 
   expand: function GroupItem_expand() {
@@ -1353,6 +1479,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     this._children.forEach(function(child) {
       child.addClass("stack-trayed");
+      child.setHidden(false);
     });
 
     var $shield = iQ('<div>')
@@ -1431,6 +1558,13 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     // Create new tab and zoom in on it after a double click
     container.mousedown(function(e) {
+      if (!Utils.isLeftClick(e))
+        return;
+
+      // clicking in the title bar shouldn't create new tabs
+      if (self.$titlebar[0] == e.target || self.$titlebar.contains(e.target))
+        return;
+
       if (Date.now() - self._lastClick <= UI.DBLCLICK_INTERVAL &&
           (self._lastClickPositions.x - UI.DBLCLICK_OFFSET) <= e.clientX &&
           (self._lastClickPositions.x + UI.DBLCLICK_OFFSET) >= e.clientX &&
@@ -1506,12 +1640,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
                                   animate: true});
       }
 
-      // remove the item from its parent if that's not the current groupItem.
-      // this may occur when dragging too quickly so the out event is not fired.
-      var groupItem = drag.info.item.parent;
-      if (groupItem && self !== groupItem)
-        groupItem.remove(drag.info.$el, {dontClose: true});
-
       if (dropIndex !== false)
         options = {index: dropIndex};
       this.add(drag.info.$el, options);
@@ -1534,9 +1662,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       iQ(this.container).removeClass("acceptsDrop");
     }
 
-    if (!this.locked.bounds)
-      this.draggable();
-
+    this.draggable();
     this.droppable(true);
 
     this.$expander.click(function() {
@@ -1643,7 +1769,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
 // ##########
 // Class: GroupItems
-// Singelton for managing all <GroupItem>s.
+// Singleton for managing all <GroupItem>s.
 let GroupItems = {
   groupItems: [],
   nextID: 1,
@@ -1655,6 +1781,7 @@ let GroupItems = {
   _arrangesPending: [],
   _removingHiddenGroups: false,
   _delayedModUpdates: [],
+  _autoclosePaused: false,
   minGroupHeight: 110,
   minGroupWidth: 125,
 
@@ -1874,7 +2001,6 @@ let GroupItems = {
   // ----------
   // Function: reconstitute
   // Restores to stored state, creating groupItems as needed.
-  // If no data, sets up blank slate (including "new tabs" groupItem).
   reconstitute: function GroupItems_reconstitute(groupItemsData, groupItemData) {
     try {
       let activeGroupId;
@@ -1892,7 +2018,7 @@ let GroupItems = {
           let data = groupItemData[id];
           if (this.groupItemStorageSanity(data)) {
             let groupItem = this.groupItem(data.id); 
-            if (groupItem) {
+            if (groupItem && !groupItem.hidden) {
               groupItem.userSize = data.userSize;
               groupItem.setTitle(data.title);
               groupItem.setBounds(data.bounds, true);
@@ -1912,7 +2038,7 @@ let GroupItems = {
         }
 
         toClose.forEach(function(groupItem) {
-          groupItem.close();
+          groupItem.destroy({immediately: true});
         });
       }
 
@@ -2084,7 +2210,7 @@ let GroupItems = {
     // the orphan tab would be the same as tabItem when all tabs are app tabs
     // and a new tab is created.
     if (orphanTabItem && orphanTabItem.tab != tabItem.tab) {
-      newGroupItemBounds = orphanTabItem.getBoundsWithTitle();
+      newGroupItemBounds = orphanTabItem.getBounds();
       tabItems = [orphanTabItem, tabItem];
     } else {
       tabItem.setPosition(60, 60, true);
@@ -2144,6 +2270,8 @@ let GroupItems = {
   // Paramaters:
   //  groupItem - the active <TabItem> or <null>
   setActiveOrphanTab: function GroupItems_setActiveOrphanTab(tabItem) {
+    if (tabItem !== null)
+      this.setActiveGroupItem(null);
     this._activeOrphanTab = tabItem;
   },
 
@@ -2172,11 +2300,11 @@ let GroupItems = {
     Utils.assertThrow(tabItem && tabItem.isATabItem, "tabItem must be a TabItem");
 
     let groupItem = tabItem.parent;
-    this.setActiveGroupItem(groupItem);
 
-    if (groupItem)
+    if (groupItem) {
+      this.setActiveGroupItem(groupItem);
       groupItem.setActiveTab(tabItem);
-    else
+    } else
       this.setActiveOrphanTab(tabItem);
 
     this._updateTabBar();
@@ -2338,10 +2466,8 @@ let GroupItems = {
 
     if (shouldUpdateTabBar)
       this._updateTabBar();
-    else if (shouldShowTabView) {
-      tab._tabViewTabItem.setZoomPrep(false);
+    else if (shouldShowTabView)
       UI.showTabView();
-    }
   },
 
   // ----------
@@ -2359,18 +2485,6 @@ let GroupItems = {
      });
 
     this._removingHiddenGroups = false;
-  },
-
-  // ----------
-  // Function: enforceMinSize
-  // Takes a <Rect> and modifies that <Rect> in case it is too small to be
-  // the bounds of a <GroupItem>.
-  //
-  // Parameters:
-  //   bounds - (<Rect>) the target bounds of a <GroupItem>
-  enforceMinSize: function GroupItems_enforceMinSize(bounds) {
-    bounds.width = Math.max(bounds.width, this.minGroupWidth);
-    bounds.height = Math.max(bounds.height, this.minGroupHeight);
   },
 
   // ----------
@@ -2410,5 +2524,33 @@ let GroupItems = {
         groupItem.$closeButton.show();
       });
     }
+  },
+  
+  // ----------
+  // Function: calcValidSize
+  // Basic measure rules. Assures that item is a minimum size.
+  calcValidSize: function GroupItems_calcValidSize(size, options) {
+    Utils.assert(Utils.isPoint(size), 'input is a Point');
+    Utils.assert((size.x>0 || size.y>0) && (size.x!=0 && size.y!=0), 
+      "dimensions are valid:"+size.x+","+size.y);
+    return new Point(
+      Math.max(size.x, GroupItems.minGroupWidth),
+      Math.max(size.y, GroupItems.minGroupHeight));
+  },
+
+  // ----------
+  // Function: pauseAutoclose()
+  // Temporarily disable the behavior that closes groups when they become
+  // empty. This is used when entering private browsing, to avoid trashing the
+  // user's groups while private browsing is shuffling things around.
+  pauseAutoclose: function GroupItems_pauseAutoclose() {
+    this._autoclosePaused = true;
+  },
+
+  // ----------
+  // Function: unpauseAutoclose()
+  // Re-enables the auto-close behavior.
+  resumeAutoclose: function GroupItems_resumeAutoclose() {
+    this._autoclosePaused = false;
   }
 };

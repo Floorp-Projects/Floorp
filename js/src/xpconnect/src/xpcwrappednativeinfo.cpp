@@ -93,16 +93,9 @@ XPCNativeMember::GetCallInfo(XPCCallContext& ccx,
                              XPCNativeInterface** pInterface,
                              XPCNativeMember**    pMember)
 {
-    jsval ifaceVal;
-    jsval memberVal;
-
-    if(!JS_GetReservedSlot(ccx, funobj, 0, &ifaceVal) ||
-       JSVAL_IS_VOID(ifaceVal) ||
-       !JS_GetReservedSlot(ccx, funobj, 1, &memberVal) ||
-       JSVAL_IS_VOID(memberVal))
-    {
-        return JS_FALSE;
-    }
+    funobj = funobj->unwrap();
+    jsval ifaceVal = js::Jsvalify(funobj->getSlot(0));
+    jsval memberVal = js::Jsvalify(funobj->getSlot(1));
 
     *pInterface = (XPCNativeInterface*) JSVAL_TO_PRIVATE(ifaceVal);
     *pMember = (XPCNativeMember*) JSVAL_TO_PRIVATE(memberVal);
@@ -142,7 +135,7 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
         jsval resultVal;
 
         if(!XPCConvert::NativeData2JS(ccx, &resultVal, &v.val, v.type,
-                                      nsnull, nsnull, nsnull))
+                                      nsnull, nsnull))
             return JS_FALSE;
 
         *vp = resultVal;
@@ -668,7 +661,11 @@ XPCNativeSet::GetNewOrUsed(XPCCallContext& ccx, nsIClassInfo* classInfo)
     if(set)
     {   // scoped lock
         XPCAutoLock lock(rt->GetMapLock());
-        XPCNativeSet* set2 = map->Add(classInfo, set);
+
+#ifdef DEBUG
+        XPCNativeSet* set2 =
+#endif
+          map->Add(classInfo, set);
         NS_ASSERTION(set2, "failed to add our set!");
         NS_ASSERTION(set2 == set, "hashtables inconsistent!");
     }

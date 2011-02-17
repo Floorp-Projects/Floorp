@@ -35,6 +35,7 @@
 # ***** END LICENSE BLOCK *****
 
 IPDLSRCS = \
+  PPluginBackgroundDestroyer.ipdl \
   PPluginModule.ipdl \
   PPluginIdentifier.ipdl \
   PPluginInstance.ipdl \
@@ -42,4 +43,5 @@ IPDLSRCS = \
   PBrowserStream.ipdl \
   PPluginStream.ipdl \
   PStreamNotify.ipdl \
+  PPluginSurface.ipdl \
   $(NULL)

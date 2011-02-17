@@ -744,11 +744,11 @@ static const yytype_uint16 yyrline[] =
     1553,  1558,  1563,  1568,  1573,  1578,  1583,  1588,  1593,  1598,
     1604,  1610,  1616,  1621,  1626,  1631,  1644,  1657,  1665,  1668,
     1683,  1714,  1718,  1724,  1732,  1748,  1752,  1756,  1757,  1763,
-    1764,  1765,  1766,  1767,  1771,  1772,  1772,  1772,  1780,  1781,
-    1786,  1789,  1797,  1800,  1806,  1807,  1811,  1819,  1823,  1833,
-    1838,  1855,  1855,  1860,  1860,  1867,  1867,  1875,  1878,  1884,
-    1887,  1893,  1897,  1904,  1911,  1918,  1925,  1936,  1945,  1949,
-    1956,  1959,  1965,  1965
+    1764,  1765,  1766,  1767,  1771,  1772,  1772,  1772,  1782,  1783,
+    1788,  1791,  1801,  1804,  1810,  1811,  1815,  1823,  1827,  1837,
+    1842,  1859,  1859,  1864,  1864,  1871,  1871,  1879,  1882,  1888,
+    1891,  1897,  1901,  1908,  1915,  1922,  1929,  1940,  1949,  1953,
+    1960,  1963,  1969,  1969
 };
 #endif
 
@@ -4094,8 +4094,10 @@ yyreduce:
   case 157:
 
     {
-        if ((yyvsp[(3) - (5)].interm.intermAggregate) != 0)
+        if ((yyvsp[(3) - (5)].interm.intermAggregate) != 0) {
             (yyvsp[(3) - (5)].interm.intermAggregate)->setOp(EOpSequence);
+            (yyvsp[(3) - (5)].interm.intermAggregate)->setEndLine((yyvsp[(5) - (5)].lex).line);
+        }
         (yyval.interm.intermAggregate) = (yyvsp[(3) - (5)].interm.intermAggregate);
     ;}
     break;
@@ -4120,8 +4122,10 @@ yyreduce:
   case 161:
 
     {
-        if ((yyvsp[(2) - (3)].interm.intermAggregate))
+        if ((yyvsp[(2) - (3)].interm.intermAggregate)) {
             (yyvsp[(2) - (3)].interm.intermAggregate)->setOp(EOpSequence);
+            (yyvsp[(2) - (3)].interm.intermAggregate)->setEndLine((yyvsp[(3) - (3)].lex).line);
+        }
         (yyval.interm.intermNode) = (yyvsp[(2) - (3)].interm.intermAggregate);
     ;}
     break;
@@ -4481,6 +4485,9 @@ yyreduce:
         (yyval.interm.intermNode)->getAsAggregate()->setOptimize(context->contextPragma.optimize);
         (yyval.interm.intermNode)->getAsAggregate()->setDebug(context->contextPragma.debug);
         (yyval.interm.intermNode)->getAsAggregate()->addToPragmaTable(context->contextPragma.pragmaTable);
+
+        if ((yyvsp[(3) - (3)].interm.intermNode) && (yyvsp[(3) - (3)].interm.intermNode)->getAsAggregate())
+            (yyval.interm.intermNode)->getAsAggregate()->setEndLine((yyvsp[(3) - (3)].interm.intermNode)->getAsAggregate()->getEndLine());
     ;}
     break;
 

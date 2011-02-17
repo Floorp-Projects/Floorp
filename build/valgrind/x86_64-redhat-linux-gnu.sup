@@ -1,0 +1,30 @@
+{
+    inflateReset2
+    Memcheck:Cond
+    fun:inflateReset2
+    fun:inflateInit2_
+}
+{
+   write-XQueryExtension
+   Memcheck:Param
+   writev(vector[...])
+   fun:writev
+   fun:_X11TransSocketWritev
+   fun:_XSend
+   fun:XQueryExtension
+}
+{
+   write-pthread
+   Memcheck:Param
+   write(buf)
+   obj:/lib64/libpthread-2.5.so
+}
+{
+   write-XChangeProperty
+   Memcheck:Param
+   writev(vector[...])
+   fun:writev
+   fun:_X11TransSocketWritev
+   fun:_XSend
+   fun:XChangeProperty
+}

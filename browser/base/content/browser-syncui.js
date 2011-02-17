@@ -214,7 +214,6 @@ let gSyncUI = {
     Weave.Notifications.removeAll(title);
 
     this.updateUI();
-    this._updateLastSyncTime();
   },
 
   onLoginError: function SUI_onLoginError() {
@@ -222,7 +221,7 @@ let gSyncUI = {
     Weave.Notifications.removeAll();
 
     // if we haven't set up the client, don't show errors
-    if (this._needsSetup()) {
+    if (this._needsSetup() || Weave.Service.shouldIgnoreError()) {
       this.updateUI();
       return;
     }
@@ -274,17 +273,8 @@ let gSyncUI = {
   },
 
   // Commands
-  doLogin: function SUI_doLogin() {
-    Weave.Service.login();
-  },
-
-  doLogout: function SUI_doLogout() {
-    Weave.Service.logout();
-  },
-
   doSync: function SUI_doSync() {
-    if (Weave.Service.isLoggedIn || Weave.Service.login())
-      setTimeout(function() Weave.Service.sync(), 0);
+    setTimeout(function() Weave.Service.sync(), 0);
   },
 
   handleToolbarButton: function SUI_handleStatusbarButton() {
@@ -355,6 +345,14 @@ let gSyncUI = {
         this.onLoginError();
         return;
       }
+
+      // Ignore network related errors unless we haven't been able to
+      // sync for a while.
+      if (Weave.Service.shouldIgnoreError()) {
+        this.updateUI();
+        return;
+      }
+
       let error = Weave.Utils.getErrorString(Weave.Status.sync);
       let description =
         this._stringBundle.formatStringFromName("error.sync.description", [error], 1);
@@ -420,7 +418,6 @@ let gSyncUI = {
     }
 
     this.updateUI();
-    this._updateLastSyncTime();
   },
   
   observe: function SUI_observe(subject, topic, data) {

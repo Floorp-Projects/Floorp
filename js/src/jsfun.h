@@ -429,6 +429,24 @@ GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
     return js_anonymous_str;
 }
 
+extern JS_FRIEND_API(bool)
+IsBuiltinFunctionConstructor(JSFunction *fun);
+
+/*
+ * Preconditions: funobj->isInterpreted() && !funobj->isFunctionPrototype() &&
+ * !funobj->isBoundFunction(). This is sufficient to establish that funobj has
+ * a non-configurable non-method .prototype data property, thought it might not
+ * have been resolved yet, and its value could be anything.
+ *
+ * Return the shape of the .prototype property of funobj, resolving it if
+ * needed. On error, return NULL.
+ *
+ * This is not safe to call on trace because it defines properties, which can
+ * trigger lookups that could reenter.
+ */
+const Shape *
+LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj);
+
 } /* namespace js */
 
 extern JSString *
@@ -529,13 +547,13 @@ extern JSBool
 GetCallUpvar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-SetCallArg(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
+SetCallArg(JSContext *cx, JSObject *obj, jsid id, JSBool strict, js::Value *vp);
 
 extern JSBool
-SetCallVar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
+SetCallVar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, js::Value *vp);
 
 extern JSBool
-SetCallUpvar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
+SetCallUpvar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, js::Value *vp);
 
 } // namespace js
 

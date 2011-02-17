@@ -1,6 +1,6 @@
 == placeholder-simple.html placeholder-simple-ref.html
-== placeholder-focus.html placeholder-focus-ref.html
-== placeholder-blur.html placeholder-simple-ref.html
+needs-focus == placeholder-focus.html placeholder-focus-ref.html
+needs-focus == placeholder-blur.html placeholder-simple-ref.html
 == placeholder-value.html placeholder-value-ref.html
 == placeholder-empty-string.html placeholder-empty-string-ref.html
 == placeholder-complex.html placeholder-complex-ref.html

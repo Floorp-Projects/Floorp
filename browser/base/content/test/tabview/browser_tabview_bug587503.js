@@ -38,61 +38,35 @@
 function test() {
   waitForExplicitFinish();
 
-  window.addEventListener("tabviewshown", onTabViewWindowLoaded, false);
-  if (TabView.isVisible())
-    onTabViewWindowLoaded();
-  else
-    TabView.show();
+  newWindowWithTabView(onTabViewWindowLoaded);
 }
 
-function onTabViewWindowLoaded() {
-  window.removeEventListener("tabviewshown", onTabViewWindowLoaded, false);
+function onTabViewWindowLoaded(win) {
+  ok(win.TabView.isVisible(), "Tab View is visible");
 
-  ok(TabView.isVisible(), "Tab View is visible");
-
-  let contentWindow = document.getElementById("tab-view").contentWindow;
-  let [originalTab] = gBrowser.visibleTabs;
+  let contentWindow = win.document.getElementById("tab-view").contentWindow;
+  let [originalTab] = win.gBrowser.visibleTabs;
 
   let currentGroup = contentWindow.GroupItems.getActiveGroupItem();
 
   // Create a group and make it active
-  let box = new contentWindow.Rect(100, 100, 370, 370);
+  let box = new contentWindow.Rect(100, 100, 400, 430);
   let group = new contentWindow.GroupItem([], { bounds: box });
   ok(group.isEmpty(), "This group is empty");
   contentWindow.GroupItems.setActiveGroupItem(group);
   
   // Create a bunch of tabs in the group
   let tabs = [];
-  tabs.push(gBrowser.loadOneTab("about:blank#0", {inBackground: true}));
-  tabs.push(gBrowser.loadOneTab("about:blank#1", {inBackground: true}));
-  tabs.push(gBrowser.loadOneTab("about:blank#2", {inBackground: true}));
-  tabs.push(gBrowser.loadOneTab("about:blank#3", {inBackground: true}));
-  tabs.push(gBrowser.loadOneTab("about:blank#4", {inBackground: true}));
-  tabs.push(gBrowser.loadOneTab("about:blank#5", {inBackground: true}));
-  tabs.push(gBrowser.loadOneTab("about:blank#6", {inBackground: true}));
+  tabs.push(win.gBrowser.loadOneTab("about:blank#0", {inBackground: true}));
+  tabs.push(win.gBrowser.loadOneTab("about:blank#1", {inBackground: true}));
+  tabs.push(win.gBrowser.loadOneTab("about:blank#2", {inBackground: true}));
+  tabs.push(win.gBrowser.loadOneTab("about:blank#3", {inBackground: true}));
+  tabs.push(win.gBrowser.loadOneTab("about:blank#4", {inBackground: true}));
+  tabs.push(win.gBrowser.loadOneTab("about:blank#5", {inBackground: true}));
+  tabs.push(win.gBrowser.loadOneTab("about:blank#6", {inBackground: true}));
 
   ok(!group.shouldStack(group._children.length), "Group should not stack.");
-  
-  // PREPARE FINISH:
-  group.addSubscriber(group, "close", function() {
-    group.removeSubscriber(group, "close");
-
-    ok(group.isEmpty(), "The group is empty again");
-
-    contentWindow.GroupItems.setActiveGroupItem(currentGroup);
-    isnot(contentWindow.GroupItems.getActiveGroupItem(), null, "There is an active group");
-    is(gBrowser.tabs.length, 1, "There is only one tab left");
-    is(gBrowser.visibleTabs.length, 1, "There is also only one visible tab");
-
-    let onTabViewHidden = function() {
-      window.removeEventListener("tabviewhidden", onTabViewHidden, false);
-      finish();
-    };
-    window.addEventListener("tabviewhidden", onTabViewHidden, false);
-    gBrowser.selectedTab = originalTab;
-
-    TabView.hide();
-  });
+  is(group._columns, 3, "There should be three columns.");
   
   // STAGE 1: move the last tab to the third position
   let currentTarget = tabs[6]._tabViewTabItem;
@@ -153,16 +127,18 @@ function onTabViewWindowLoaded() {
           // Call with time = 4000
           checkDropIndexAndDropSpace(currentTarget, group, vector.x, vector.y, contentWindow,
                                      function(index, dropSpaceActiveValues) {
+
+            is(group._columns, 3, "There should be three columns.");
+
             // Now: 0, 6, 2, 3, 4, 5, 1
             is(index, 4, "Tab 5 is back and again the fifth tab.");
             contentWindow.Utils.log('dropSpaceActiveValues',dropSpaceActiveValues);
             is(dropSpaceActiveValues[0], false, "The group began by not showing a dropSpace");
             is(dropSpaceActiveValues[dropSpaceActiveValues.length - 1], true, "In the end, the group was showing a dropSpace");
             
-            // Get rid of the group and its children
-            // The group close will trigger a finish().
-            group.closeAll();
-            group.closeHidden();
+            // Close the window and we're done!
+            win.close();
+            finish();
           }, 6000, false);
         },1000);
         
@@ -177,9 +153,7 @@ function simulateSlowDragDrop(srcElement, offsetX, offsetY, contentWindow, time)
   // enter drag mode
   let dataTransfer;
 
-  // contentWindow.Utils.log('offset', offsetX, offsetY);
   let bounds = srcElement.getBoundingClientRect();
-  // contentWindow.Utils.log('original center', bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
 
   EventUtils.synthesizeMouse(
     srcElement, 2, 2, { type: "mousedown" }, contentWindow);

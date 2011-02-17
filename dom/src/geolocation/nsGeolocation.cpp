@@ -239,10 +239,12 @@ nsDOMGeoPositionError::NotifyCallback(nsIDOMGeoPositionErrorCallback* aCallback)
 nsGeolocationRequest::nsGeolocationRequest(nsGeolocation* aLocator,
                                            nsIDOMGeoPositionCallback* aCallback,
                                            nsIDOMGeoPositionErrorCallback* aErrorCallback,
-                                           nsIDOMGeoPositionOptions* aOptions)
+                                           nsIDOMGeoPositionOptions* aOptions,
+                                           PRBool aWatchPositionRequest)
   : mAllowed(PR_FALSE),
     mCleared(PR_FALSE),
     mIsFirstUpdate(PR_TRUE),
+    mIsWatchPositionRequest(aWatchPositionRequest),
     mCallback(aCallback),
     mErrorCallback(aErrorCallback),
     mOptions(aOptions),
@@ -454,7 +456,8 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
   JSContext* cx;
   stack->Pop(&cx);
 
-  SetTimeoutTimer();
+  if (mIsWatchPositionRequest)
+    SetTimeoutTimer();
 }
 
 void
@@ -1025,7 +1028,11 @@ nsGeolocation::GetCurrentPosition(nsIDOMGeoPositionCallback *callback,
   if (mPendingCallbacks.Length() > MAX_GEO_REQUESTS_PER_WINDOW)
     return NS_ERROR_NOT_AVAILABLE;
 
-  nsRefPtr<nsGeolocationRequest> request = new nsGeolocationRequest(this, callback, errorCallback, options);
+  nsRefPtr<nsGeolocationRequest> request = new nsGeolocationRequest(this,
+								    callback,
+								    errorCallback,
+								    options,
+								    PR_FALSE);
   if (!request)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1033,7 +1040,9 @@ nsGeolocation::GetCurrentPosition(nsIDOMGeoPositionCallback *callback,
     return NS_ERROR_FAILURE; // this as OKAY.  not sure why we wouldn't throw. xxx dft
 
   if (mOwner) {
-    RegisterRequestWithPrompt(request);
+    if (!RegisterRequestWithPrompt(request))
+      return NS_ERROR_NOT_AVAILABLE;
+    
     mPendingCallbacks.AppendElement(request);
     return NS_OK;
   }
@@ -1064,7 +1073,11 @@ nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *callback,
   if (mPendingCallbacks.Length() > MAX_GEO_REQUESTS_PER_WINDOW)
     return NS_ERROR_NOT_AVAILABLE;
 
-  nsRefPtr<nsGeolocationRequest> request = new nsGeolocationRequest(this, callback, errorCallback, options);
+  nsRefPtr<nsGeolocationRequest> request = new nsGeolocationRequest(this,
+								    callback,
+								    errorCallback,
+								    options,
+								    PR_TRUE);
   if (!request)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1072,7 +1085,8 @@ nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *callback,
     return NS_ERROR_FAILURE; // this as OKAY.  not sure why we wouldn't throw. xxx dft
 
   if (mOwner) {
-    RegisterRequestWithPrompt(request);
+    if (!RegisterRequestWithPrompt(request))
+      return NS_ERROR_NOT_AVAILABLE;
 
     // need to hand back an index/reference.
     mWatchingCallbacks.AppendElement(request);
@@ -1130,18 +1144,20 @@ nsGeolocation::WindowOwnerStillExists()
   return PR_TRUE;
 }
 
-void
+bool
 nsGeolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
 {
 #ifdef MOZ_IPC
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mOwner);
     if (!window)
-      return;
+      return true;
 
     // because owner implements nsITabChild, we can assume that it is
     // the one and only TabChild.
     TabChild* child = GetTabChildFrom(window->GetDocShell());
+    if (!child)
+      return false;
     
     // Retain a reference so the object isn't deleted without IPDL's knowledge.
     // Corresponding release occurs in DeallocPContentPermissionRequest.
@@ -1151,7 +1167,7 @@ nsGeolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
     child->SendPContentPermissionRequestConstructor(request, type, IPC::URI(mURI));
     
     request->Sendprompt();
-    return;
+    return true;
   }
 #endif
 
@@ -1159,10 +1175,11 @@ nsGeolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
   {
     nsCOMPtr<nsIRunnable> ev  = new RequestAllowEvent(nsContentUtils::GetBoolPref("geo.prompt.testing.allow", PR_FALSE), request);
     NS_DispatchToMainThread(ev);
-    return;
+    return true;
   }
 
   nsCOMPtr<nsIRunnable> ev  = new RequestPromptEvent(request);
   NS_DispatchToMainThread(ev);
+  return true;
 }
 

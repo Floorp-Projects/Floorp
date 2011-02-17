@@ -805,7 +805,6 @@ static nsresult pref_LoadPrefsInDirList(const char *listId)
 static nsresult pref_InitDefaults()
 {
   nsCOMPtr<nsIFile> greprefsFile;
-  nsCOMPtr<nsIFile> defaultPrefDir;
   nsresult          rv;
 
   rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(greprefsFile));
@@ -817,35 +816,6 @@ static nsresult pref_InitDefaults()
   rv = openPrefFile(greprefsFile);
   if (NS_FAILED(rv)) {
     NS_WARNING("Error parsing GRE default preferences. Is this an old-style embedding app?");
-  }
-
-  // now parse the "application" default preferences
-  rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(defaultPrefDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  /* these pref file names should not be used: we process them after all other application pref files for backwards compatibility */
-  static const char* specialFiles[] = {
-#if defined(XP_MAC) || defined(XP_MACOSX)
-      "macprefs.js"
-#elif defined(XP_WIN)
-      "winpref.js"
-#elif defined(XP_UNIX)
-      "unix.js"
-#if defined(VMS)
-      , "openvms.js"
-#elif defined(_AIX)
-      , "aix.js"
-#endif
-#elif defined(XP_OS2)
-      "os2pref.js"
-#elif defined(XP_BEOS)
-      "beos.js"
-#endif
-  };
-
-  rv = pref_LoadPrefsInDir(defaultPrefDir, specialFiles, NS_ARRAY_LENGTH(specialFiles));
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Error parsing application default preferences.");
   }
 
   return NS_OK;
@@ -896,24 +866,6 @@ static nsresult pref_InitAppDefaultsFromOmnijar()
       NS_WARNING("Error parsing preferences.");
   }
 
-  nsCOMPtr<nsIFile> file;
-  // Bug 591866 - channel-prefs.js should not be in omni.jar
-  rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(file));
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Error getting default prefs dir");
-    return NS_OK;
-  }
-
-  rv = file->AppendNative(NS_LITERAL_CSTRING("channel-prefs.js"));
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Error setting channel-prefs.js path");
-    return NS_OK;
-  }
-
-  rv = openPrefFile(file);
-  if (NS_FAILED(rv))
-    NS_WARNING("Error reading channel-prefs.js");
-
   return NS_OK;
 }
 #endif
@@ -929,6 +881,32 @@ static nsresult pref_InitInitialObjects()
   rv = pref_InitDefaults();
 #endif
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFile> defaultPrefDir;
+  // now parse the "application" default preferences
+  rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(defaultPrefDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  /* these pref file names should not be used: we process them after all other application pref files for backwards compatibility */
+  static const char* specialFiles[] = {
+#if defined(XP_MAC) || defined(XP_MACOSX)
+      "macprefs.js"
+#elif defined(XP_WIN)
+      "winpref.js"
+#elif defined(XP_UNIX)
+      "unix.js"
+#if defined(_AIX)
+      , "aix.js"
+#endif
+#elif defined(XP_OS2)
+      "os2pref.js"
+#endif
+  };
+
+  rv = pref_LoadPrefsInDir(defaultPrefDir, specialFiles, NS_ARRAY_LENGTH(specialFiles));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Error parsing application default preferences.");
+  }
 
   rv = pref_LoadPrefsInDirList(NS_APP_PREFS_DEFAULTS_DIR_LIST);
   NS_ENSURE_SUCCESS(rv, rv);

@@ -80,10 +80,18 @@ typedef HashSet<JSScript *,
                 DefaultHasher<JSScript *>,
                 SystemAllocPolicy> TracedScriptSet;
 
+typedef HashMap<JSFunction *,
+                JSString *,
+                DefaultHasher<JSFunction *>,
+                SystemAllocPolicy> ToSourceCache;
+
+struct TraceMonitor;
+
 /* Holds the execution state during trace execution. */
 struct TracerState
 {
     JSContext*     cx;                  // current VM context handle
+    TraceMonitor*  traceMonitor;        // current TM
     double*        stackBase;           // native stack base
     double*        sp;                  // native stack pointer, stack[0] is spbase[0]
     double*        eos;                 // first unusable word after the native stack / begin of globals
@@ -220,7 +228,7 @@ struct TraceMonitor {
     LoopProfile*            profile;
 
     GlobalState             globalStates[MONITOR_N_GLOBAL_STATES];
-    TreeFragment*           vmfragments[FRAGMENT_TABLE_SIZE];
+    TreeFragment            *vmfragments[FRAGMENT_TABLE_SIZE];
     RecordAttemptMap*       recordAttempts;
 
     /* A hashtable mapping PC values to loop profiles for those loops. */
@@ -332,6 +340,33 @@ class NativeIterCache {
     }
 };
 
+/*
+ * A single-entry cache for some base-10 double-to-string conversions. This
+ * helps date-format-xparb.js.  It also avoids skewing the results for
+ * v8-splay.js when measured by the SunSpider harness, where the splay tree
+ * initialization (which includes many repeated double-to-string conversions)
+ * is erroneously included in the measurement; see bug 562553.
+ */
+class DtoaCache {
+    double   d;
+    jsint    base;
+    JSString *s;        // if s==NULL, d and base are not valid
+  public:
+    DtoaCache() : s(NULL) {}
+    void purge() { s = NULL; }
+
+    JSString *lookup(jsint base, double d) {
+        return this->s && base == this->base && d == this->d ? this->s : NULL;
+    }
+
+    void cache(jsint base, double d, JSString *s) {
+        this->base = base;
+        this->d = d;
+        this->s = s;
+    }
+
+};
+
 } /* namespace js */
 
 struct JS_FRIEND_API(JSCompartment) {
@@ -363,13 +398,42 @@ struct JS_FRIEND_API(JSCompartment) {
 #endif
 
     void                         *data;
-    bool                         marked;
     bool                         active;  // GC flag, whether there are active frames
     js::WrapperMap               crossCompartmentWrappers;
 
 #ifdef JS_METHODJIT
     js::mjit::JaegerCompartment  *jaegerCompartment;
 #endif
+
+    /*
+     * Shared scope property tree, and arena-pool for allocating its nodes.
+     */
+    js::PropertyTree             propertyTree;
+
+#ifdef DEBUG
+    /* Property metering. */
+    jsrefcount                   livePropTreeNodes;
+    jsrefcount                   totalPropTreeNodes;
+    jsrefcount                   propTreeKidsChunks;
+    jsrefcount                   liveDictModeNodes;
+#endif
+
+    /*
+     * Runtime-shared empty scopes for well-known built-in objects that lack
+     * class prototypes (the usual locus of an emptyShape). Mnemonic: ABCDEW
+     */
+    js::EmptyShape               *emptyArgumentsShape;
+    js::EmptyShape               *emptyBlockShape;
+    js::EmptyShape               *emptyCallShape;
+    js::EmptyShape               *emptyDeclEnvShape;
+    js::EmptyShape               *emptyEnumeratorShape;
+    js::EmptyShape               *emptyWithShape;
+
+    typedef js::HashSet<js::EmptyShape *,
+                        js::DefaultHasher<js::EmptyShape *>,
+                        js::SystemAllocPolicy> EmptyShapeSet;
+
+    EmptyShapeSet                emptyShapes;
 
     bool                         debugMode;  // true iff debug mode on
     JSCList                      scripts;    // scripts in this compartment
@@ -378,17 +442,25 @@ struct JS_FRIEND_API(JSCompartment) {
 
     js::NativeIterCache          nativeIterCache;
 
-    JSCompartment(JSRuntime *cx);
+    js::ToSourceCache            toSourceCache;
+
+    JSCompartment(JSRuntime *rt);
     ~JSCompartment();
 
     bool init();
 
+    /* Mark cross-compartment pointers. */
+    void markCrossCompartment(JSTracer *trc);
+
+    /* Mark this compartment's local roots. */
     void mark(JSTracer *trc);
+
     bool wrap(JSContext *cx, js::Value *vp);
     bool wrap(JSContext *cx, JSString **strp);
     bool wrap(JSContext *cx, JSObject **objp);
     bool wrapId(JSContext *cx, jsid *idp);
     bool wrap(JSContext *cx, js::PropertyOp *op);
+    bool wrap(JSContext *cx, js::StrictPropertyOp *op);
     bool wrap(JSContext *cx, js::PropertyDescriptor *desc);
     bool wrap(JSContext *cx, js::AutoIdVector &props);
 
@@ -401,19 +473,97 @@ struct JS_FRIEND_API(JSCompartment) {
 
     void setGCLastBytes(size_t lastBytes);
 
+    js::DtoaCache dtoaCache;
+
   private:
     js::MathCache                *mathCache;
 
     js::MathCache *allocMathCache(JSContext *cx);
 
+    bool                         marked;
+    
+    typedef js::HashMap<jsbytecode*,
+                        size_t,
+                        js::DefaultHasher<jsbytecode*>,
+                        js::SystemAllocPolicy> BackEdgeMap;
+
+    BackEdgeMap                  backEdgeTable;
+
   public:
     js::MathCache *getMathCache(JSContext *cx) {
         return mathCache ? mathCache : allocMathCache(cx);
     }
+
+    bool isMarked() { return marked; }
+    void clearMark() { marked = false; }
+
+    size_t backEdgeCount(jsbytecode *pc) const;
+    size_t incBackEdgeCount(jsbytecode *pc);
 };
 
-#define JS_TRACE_MONITOR(cx)    (cx->compartment->traceMonitor)
-#define JS_SCRIPTS_TO_GC(cx)    (cx->compartment->scriptsToGC)
+#define JS_SCRIPTS_TO_GC(cx)    ((cx)->compartment->scriptsToGC)
+#define JS_PROPERTY_TREE(cx)    ((cx)->compartment->propertyTree)
+
+#ifdef DEBUG
+#define JS_COMPARTMENT_METER(x) x
+#else
+#define JS_COMPARTMENT_METER(x)
+#endif
+
+/*
+ * N.B. JS_ON_TRACE(cx) is true if JIT code is on the stack in the current
+ * thread, regardless of whether cx is the context in which that trace is
+ * executing. cx must be a context on the current thread.
+ */
+static inline bool
+JS_ON_TRACE(JSContext *cx)
+{
+#ifdef JS_TRACER
+    if (JS_THREAD_DATA(cx)->onTraceCompartment)
+        return JS_THREAD_DATA(cx)->onTraceCompartment->traceMonitor.ontrace();
+#endif
+    return false;
+}
+
+#ifdef JS_TRACER
+static inline js::TraceMonitor *
+JS_TRACE_MONITOR_ON_TRACE(JSContext *cx)
+{
+    JS_ASSERT(JS_ON_TRACE(cx));
+    return &JS_THREAD_DATA(cx)->onTraceCompartment->traceMonitor;
+}
+
+/*
+ * Only call this directly from the interpreter loop or the method jit.
+ * Otherwise, we may get the wrong compartment, and thus the wrong
+ * TraceMonitor.
+ */
+static inline js::TraceMonitor *
+JS_TRACE_MONITOR_FROM_CONTEXT(JSContext *cx)
+{
+    return &cx->compartment->traceMonitor;
+}
+#endif
+
+static inline js::TraceRecorder *
+TRACE_RECORDER(JSContext *cx)
+{
+#ifdef JS_TRACER
+    if (JS_THREAD_DATA(cx)->recordingCompartment)
+        return JS_THREAD_DATA(cx)->recordingCompartment->traceMonitor.recorder;
+#endif
+    return NULL;
+}
+
+static inline js::LoopProfile *
+TRACE_PROFILER(JSContext *cx)
+{
+#ifdef JS_TRACER
+    if (JS_THREAD_DATA(cx)->profilingCompartment)
+        return JS_THREAD_DATA(cx)->profilingCompartment->traceMonitor.profile;
+#endif
+    return NULL;
+}
 
 namespace js {
 static inline MathCache *

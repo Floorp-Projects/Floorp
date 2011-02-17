@@ -1545,6 +1545,22 @@ int NS_main(int argc, NS_tchar **argv)
   }
 #endif
 
+#ifdef XP_WIN
+  // Remove everything except close window from the context menu
+  {
+    HKEY hkApp;
+    if (RegCreateKeyExW(HKEY_CURRENT_USER,
+                        L"Software\\Classes\\Applications\\updater.exe",
+                        0, NULL, REG_OPTION_VOLATILE, KEY_SET_VALUE, NULL,
+                        &hkApp, NULL) == ERROR_SUCCESS) {
+      RegSetValueExW(hkApp, L"IsHostApp", 0, REG_NONE, 0, 0);
+      RegSetValueExW(hkApp, L"NoOpenWith", 0, REG_NONE, 0, 0);
+      RegSetValueExW(hkApp, L"NoStartPage", 0, REG_NONE, 0, 0);
+      RegCloseKey(hkApp);
+    }
+  }
+#endif
+
   // If there is a PID specified and it is not '0' then wait for the process to exit.
   if (argc > 3) {
 #ifdef XP_WIN

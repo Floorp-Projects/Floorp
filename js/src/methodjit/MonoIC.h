@@ -43,8 +43,10 @@
 
 #include "assembler/assembler/MacroAssembler.h"
 #include "assembler/assembler/CodeLocation.h"
+#include "assembler/moco/MocoStubs.h"
 #include "methodjit/MethodJIT.h"
 #include "CodeGenIncludes.h"
+#include "methodjit/ICRepatcher.h"
 
 namespace js {
 namespace mjit {
@@ -90,19 +92,12 @@ class FrameSize
 
 namespace ic {
 
-struct MICInfo {
-    enum Kind
-#ifdef _MSC_VER
-    : uint8_t
-#endif
-    {
-        GET,
-        SET
-    };
+struct GlobalNameIC
+{
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
 
-    /* Used by multiple MICs. */
-    JSC::CodeLocationLabel entry;
-    JSC::CodeLocationLabel stubEntry;
+    JSC::CodeLocationLabel  fastPathStart;
+    JSC::CodeLocationCall   slowPathCall;
 
     /*
      * - ARM and x64 always emit exactly one instruction which needs to be
@@ -113,21 +108,38 @@ struct MICInfo {
      *   of this, x86 is the only platform which requires non-trivial patching
      *   code.
      */
-    JSC::CodeLocationLabel load;
-    JSC::CodeLocationDataLabel32 shape;
-    JSC::CodeLocationCall stubCall;
+    int32 loadStoreOffset   : 15;
+    int32 shapeOffset       : 15;
+    bool usePropertyCache   : 1;
+};
 
-    /* Used by all MICs. */
-    Kind kind : 3;
-    union {
-        /* Used by GET/SET. */
-        struct {
-            bool touched : 1;
-            bool typeConst : 1;
-            bool dataConst : 1;
-            bool usePropertyCache : 1;
-        } name;
-    } u;
+struct GetGlobalNameIC : public GlobalNameIC
+{
+};
+
+struct SetGlobalNameIC : public GlobalNameIC
+{
+    JSC::CodeLocationLabel  slowPathStart;
+
+    /* Dynamically generted stub for method-write checks. */
+    JSC::JITCode            extraStub;
+
+    /* SET only, if we had to generate an out-of-line path. */
+    int inlineShapeJump : 10;   /* Offset into inline path for shape jump. */
+    int extraShapeGuard : 6;    /* Offset into stub for shape guard. */
+    bool objConst : 1;          /* True if the object is constant. */
+    RegisterID objReg   : 5;    /* Register for object, if objConst is false. */
+    RegisterID shapeReg : 5;    /* Register for shape; volatile. */
+    bool hasExtraStub : 1;      /* Extra stub is preset. */
+
+    int fastRejoinOffset : 16;  /* Offset from fastPathStart to rejoin. */
+    int extraStoreOffset : 16;  /* Offset into store code. */
+
+    /* SET only. */
+    ValueRemat vr;              /* RHS value. */
+
+    void patchInlineShapeGuard(Repatcher &repatcher, int32 shape);
+    void patchExtraShapeGuard(Repatcher &repatcher, int32 shape);
 };
 
 struct TraceICInfo {
@@ -153,8 +165,8 @@ struct TraceICInfo {
 
 static const uint16 BAD_TRACEIC_INDEX = (uint16)0xffff;
 
-void JS_FASTCALL GetGlobalName(VMFrame &f, ic::MICInfo *ic);
-void JS_FASTCALL SetGlobalName(VMFrame &f, ic::MICInfo *ic);
+void JS_FASTCALL GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic);
+void JS_FASTCALL SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic);
 
 struct EqualityICInfo {
     typedef JSC::MacroAssembler::RegisterID RegisterID;

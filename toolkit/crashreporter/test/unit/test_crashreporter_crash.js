@@ -21,6 +21,7 @@ function run_test()
              do_check_true('StartupTime' in extra);
              do_check_true('CrashTime' in extra);
              do_check_true(CrashTestUtils.dumpHasStream(mdump.path, CrashTestUtils.MD_THREAD_LIST_STREAM));
+             do_check_true(CrashTestUtils.dumpHasInstructionPointerMemory(mdump.path));
              if (is_win7_or_newer)
                do_check_true(CrashTestUtils.dumpHasStream(mdump.path, CrashTestUtils.MD_MEMORY_INFO_LIST_STREAM));
            });

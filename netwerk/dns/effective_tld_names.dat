@@ -509,7 +509,12 @@ edu.bs
 gov.bs
 
 // bt : http://en.wikipedia.org/wiki/.bt
-*.bt
+bt
+com.bt
+edu.bt
+gov.bt
+net.bt
+org.bt
 
 // bv : No registrations at this time.
 // Submitted by registry <jarle@uninett.no> 2006-06-16

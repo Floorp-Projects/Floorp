@@ -233,6 +233,8 @@ if __name__ == '__main__':
                   help='run particularly slow tests as well as average-speed tests')
     op.add_option('--xul-info', dest='xul_info_src',
                   help='config data for xulRuntime (avoids search for config/autoconf.mk)')
+    op.add_option('--no-extensions', dest='no_extensions', action='store_true',
+                  help='run only tests conforming to the ECMAScript 5 standard')
     (OPTIONS, args) = op.parse_args()
     if len(args) < 1:
         if not OPTIONS.check_manifest:
@@ -259,7 +261,7 @@ if __name__ == '__main__':
         OPTIONS.show_output = True 
     else:
         debugger_prefix = []
-    
+
     TestTask.set_js_cmd_prefix(JS, OPTIONS.shell_args.split(), debugger_prefix)
 
     output_file = sys.stdout
@@ -313,6 +315,9 @@ if __name__ == '__main__':
 
     if OPTIONS.exclude_file:
         test_list = exclude_tests(test_list, OPTIONS.exclude_file)
+
+    if OPTIONS.no_extensions:
+        test_list = [_ for _ in test_list if '/extensions/' not in _.path]
 
     if not OPTIONS.random:
         test_list = [ _ for _ in test_list if not _.random ]

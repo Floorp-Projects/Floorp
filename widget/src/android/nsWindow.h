@@ -182,6 +182,7 @@ protected:
     PRPackedBool mIsVisible;
     nsTArray<nsWindow*> mChildren;
     nsWindow* mParent;
+    nsWindow* mFocus;
 
     bool mGestureFinished;
     double mStartDist;

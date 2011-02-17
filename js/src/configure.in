@@ -288,8 +288,8 @@ if test "$target" = "arm-android-eabi" ; then
     STRIP="$android_toolchain"/bin/arm-eabi-strip
 
     CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
-    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CFLAGS"
-    CXXFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CXXFLAGS"
+    CFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CFLAGS"
+    CXXFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CXXFLAGS"
 
     dnl Add -llog by default, since we use it all over the place.
     dnl Add --allow-shlib-undefined, because libGLESv2 links to an
@@ -1374,6 +1374,11 @@ MINGW*_NT*)
 AIX)
     OS_RELEASE=`uname -v`.`uname -r`
     OS_TEST=${target_cpu}
+    if test -z "$GNU_CC"; then
+        if test "`$CC -qversion 2>&1 | egrep -c 'IBM XL'`" != "0"; then
+            AIX_IBM_XLC=1
+        fi
+    fi
     ;;
 BSD_386)
     OS_ARCH=BSD
@@ -1920,22 +1925,21 @@ case "$target" in
         DSO_CFLAGS='-qflag=w:w'
         DSO_PIC_CFLAGS=
         LDFLAGS="$LDFLAGS -Wl,-brtl -blibpath:/usr/lib:/lib"
-        AC_MSG_WARN([Clearing MOZ_FIX_LINK_PATHS till we can fix bug 332075.])
         MOZ_FIX_LINK_PATHS=
         MKSHLIB='$(CXX) $(DSO_LDOPTS) -o $@'
         MKCSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
         if test "$COMPILE_ENVIRONMENT"; then
             AC_LANG_SAVE
             AC_LANG_CPLUSPLUS
-            AC_MSG_CHECKING([for VisualAge C++ compiler version >= 6.0.0.3])
+            AC_MSG_CHECKING([for IBM XLC/C++ compiler version >= 9.0.0.7])
             AC_TRY_COMPILE([],
-                [#if (__IBMCPP__ < 600)
+                [#if (__IBMCPP__ < 900)
                  #error "Bad compiler"
                  #endif],
                 _BAD_COMPILER=,_BAD_COMPILER=1)
             if test -n "$_BAD_COMPILER"; then
                 AC_MSG_RESULT([no])    
-                AC_MSG_ERROR([VisualAge C++ version 6.0.0.3 or higher is required to build.])
+                AC_MSG_ERROR([IBM XLC/C++ 9.0.0.7 or higher is required to build.])
             else
                 AC_MSG_RESULT([yes])    
             fi
@@ -2466,6 +2470,12 @@ ia64*-hpux*)
         if test $_MSC_VER -ge 1400; then
             LDFLAGS="$LDFLAGS -SAFESEH"
         fi
+
+        if test -n "$GNU_CC"; then
+            CFLAGS="$CFLAGS -mstackrealign"
+            CXXFLAGS="$CXXFLAGS -mstackrealign"
+        fi
+
     	AC_CHECK_HEADERS(mmintrin.h)
     	AC_DEFINE(_X86_)
 	;;
@@ -2804,6 +2814,8 @@ alpha*-*-osf*)
     else
         MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fno-omit-frame-pointer"
     fi
+    # The Maemo builders don't know about this flag
+    MOZ_ARM_VFP_FLAGS="-mfpu=vfp"
     ;;
 
 esac
@@ -4531,12 +4543,7 @@ fi
 dnl Top-level Mozilla switched to requiring NSPR 4.8.6 (bug 560582), but we don't need it in JS.
 if test -n "$_USE_SYSTEM_NSPR"; then
     MOZ_NATIVE_NSPR=
-    AM_PATH_NSPR(4.7.0, [MOZ_NATIVE_NSPR=1])
-    if test -z "$MOZ_NATIVE_NSPR"; then
-        AC_MSG_ERROR([--with-system-nspr given, but configure could not find a suitable NSPR.
-Pass --with-nspr-exec-prefix, --with-nspr-prefix, or --with-nspr-cflags/libs.
-See 'configure --help'.])
-    fi
+    AM_PATH_NSPR(4.7.0, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSPR"; then
@@ -4647,9 +4654,9 @@ if test -n "$MOZ_THUMB2"; then
       if test "$GNU_CC"; then
         AC_DEFINE(MOZ_THUMB2)
         AC_DEFINE(MOZ_ARM_ARCH)
-        CFLAGS="$CFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
-        CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
-        ASFLAGS="$ASFLAGS -march=armv7-a -mthumb"
+        CFLAGS="$CFLAGS -march=armv7-a -mthumb -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
+        CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
+        ASFLAGS="$ASFLAGS -march=armv7-a -mthumb -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
       else
         AC_MSG_ERROR([--enable-thumb2 is not supported for non-GNU toolchains])
       fi
@@ -4663,9 +4670,9 @@ elif test "$MOZ_ARM_ARCH" = "armv7"; then
     arm*)
       if test "$GNU_CC"; then
         AC_DEFINE(MOZ_ARM_ARCH)
-        CFLAGS="$CFLAGS -march=armv7-a -marm -Wa, -march=armv7-a -Wa, -marm"
-        CXXFLAGS="$CXXFLAGS -march=armv7-a -marm -Wa, -march=armv7-a -Wa, -marm"
-        ASFLAGS="$ASFLAGS -march=armv7-a -marm"
+        CFLAGS="$CFLAGS -march=armv7-a -marm -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
+        CXXFLAGS="$CXXFLAGS -march=armv7-a -marm -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
+        ASFLAGS="$ASFLAGS -march=armv7-a -marm -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
       else
         AC_MSG_ERROR([--with-cpu-arch=armv7 is not supported for non-GNU toolchains])
       fi
@@ -4678,9 +4685,9 @@ else
   case "$target_cpu" in
     arm*)
       if test "$GNU_CC"; then
-        CFLAGS="$CFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
-        CXXFLAGS="$CXXFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
-        ASFLAGS="$ASFLAGS -march=armv5te -mthumb-interwork"
+        CFLAGS="$CFLAGS -march=armv5te -mthumb-interwork -msoft-float"
+        CXXFLAGS="$CXXFLAGS -march=armv5te -mthumb-interwork -msoft-float"
+        ASFLAGS="$ASFLAGS -march=armv5te -mthumb-interwork -msoft-float"
       fi
       ;;
   esac
@@ -5750,6 +5757,7 @@ AC_SUBST(HOST_CC)
 AC_SUBST(HOST_CXX)
 AC_SUBST(HOST_CFLAGS)
 AC_SUBST(HOST_CXXFLAGS)
+AC_SUBST(HOST_LDFLAGS)
 AC_SUBST(HOST_OPTIMIZE_FLAGS)
 AC_SUBST(HOST_AR)
 AC_SUBST(HOST_AR_FLAGS)
@@ -6059,6 +6067,14 @@ if test "$JS_HAS_CTYPES"; then
       ac_configure_args="$ac_configure_args CC=gcc CFLAGS=-m32 LD= LDFLAGS="
     else
       ac_configure_args="$ac_configure_args CC=gcc CFLAGS=-m64 LD= LDFLAGS="
+    fi
+  fi
+  if test "$AIX_IBM_XLC"; then
+    # Always use gcc for libffi on IBM AIX5/AIX6
+    if test ! "$HAVE_64BIT_OS"; then
+      ac_configure_args="$ac_configure_args CC=gcc CFLAGS=-maix32"
+    else
+      ac_configure_args="$ac_configure_args CC=gcc CFLAGS=-maix64"
     fi
   fi
   if test "$OS_ARCH" = "OS2"; then

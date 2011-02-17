@@ -193,6 +193,7 @@ let UI = {
 
             self._lastClick = 0;
             self._lastClickPositions = null;
+            gTabView.firstUseExperienced = true;
           } else {
             self._lastClick = Date.now();
             self._lastClickPositions = new Point(e.clientX, e.clientY);
@@ -224,13 +225,8 @@ let UI = {
       TabItems.init();
       TabItems.pausePainting();
 
-      // if first time in Panorama or no group data:
-      let firstTime = true;
-      if (gPrefBranch.prefHasUserValue("experienced_first_run"))
-        firstTime = !gPrefBranch.getBoolPref("experienced_first_run");
-
-      if (firstTime || !hasGroupItemsData)
-        this.reset(firstTime);
+      if (!hasGroupItemsData)
+        this.reset();
 
       // ___ resizing
       if (this._pageBounds)
@@ -243,19 +239,18 @@ let UI = {
       });
 
       // ___ setup observer to save canvas images
-      function quitObserver(subject, topic, data) {
-        if (topic == "quit-application-requested") {
+      function domWinClosedObserver(subject, topic, data) {
+        if (topic == "domwindowclosed" && subject == gWindow) {
           if (self.isTabViewVisible())
             GroupItems.removeHiddenGroups();
-
           TabItems.saveAll(true);
           self._save();
         }
       }
       Services.obs.addObserver(
-        quitObserver, "quit-application-requested", false);
+        domWinClosedObserver, "domwindowclosed", false);
       this._cleanupFunctions.push(function() {
-        Services.obs.removeObserver(quitObserver, "quit-application-requested");
+        Services.obs.removeObserver(domWinClosedObserver, "domwindowclosed");
       });
 
       // ___ Done
@@ -300,8 +295,7 @@ let UI = {
 
   // Function: reset
   // Resets the Panorama view to have just one group with all tabs
-  // and, if firstTime == true, add the welcome video/tab
-  reset: function UI_reset(firstTime) {
+  reset: function UI_reset() {
     let padding = Trenches.defaultRadius;
     let welcomeWidth = 300;
     let pageBounds = Items.getPageBounds();
@@ -339,31 +333,6 @@ let UI = {
       groupItem.add(item, {immediately: true});
     });
     GroupItems.setActiveGroupItem(groupItem);
-
-    if (firstTime) {
-      gPrefBranch.setBoolPref("experienced_first_run", true);
-      // ensure that the first run pref is flushed to the file, in case a crash 
-      // or force quit happens before the pref gets flushed automatically.
-      Services.prefs.savePrefFile(null);
-
-      /* DISABLED BY BUG 626754. To be reenabled via bug 626926.
-      let url = gPrefBranch.getCharPref("welcome_url");
-      let newTab = gBrowser.loadOneTab(url, {inBackground: true});
-      let newTabItem = newTab._tabViewTabItem;
-      let parent = newTabItem.parent;
-      Utils.assert(parent, "should have a parent");
-
-      newTabItem.parent.remove(newTabItem);
-      let aspect = TabItems.tabHeight / TabItems.tabWidth;
-      let welcomeBounds = new Rect(UI.rtl ? pageBounds.left : box.right, box.top,
-                                   welcomeWidth, welcomeWidth * aspect);
-      newTabItem.setBounds(welcomeBounds, true);
-
-      // Remove the newly created welcome-tab from the tab bar
-      if (!this.isTabViewVisible())
-        GroupItems._updateTabBar();
-      */
-    }
   },
 
   // Function: blurAll
@@ -418,7 +387,7 @@ let UI = {
       let self = this;
       this._activeTab.addSubscriber(this, "close", function(closedTabItem) {
         if (self._activeTab == closedTabItem)
-          self._activeTab = null;
+          self.setActiveTab(null);
       });
 
       this._activeTab.makeActive();
@@ -479,6 +448,19 @@ let UI = {
     let event = document.createEvent("Events");
     event.initEvent("tabviewshown", true, false);
 
+    Storage.saveVisibilityData(gWindow, "true");
+
+    // Close the active group if it was empty. This will happen when the
+    // user returns to Panorama after looking at an app tab, having
+    // closed all other tabs. (If the user is looking at an orphan tab, then
+    // there is no active group for the purposes of this check.)
+    let activeGroupItem = null;
+    if (!GroupItems.getActiveOrphanTab()) {
+      activeGroupItem = GroupItems.getActiveGroupItem();
+      if (activeGroupItem && activeGroupItem.closeIfEmpty())
+        activeGroupItem = null;
+    }
+
     if (zoomOut && currentTab && currentTab._tabViewTabItem) {
       item = currentTab._tabViewTabItem;
       // If there was a previous currentTab we want to animate
@@ -492,11 +474,8 @@ let UI = {
 
         self.setActiveTab(item);
 
-        if (item.parent) {
-          var activeGroupItem = GroupItems.getActiveGroupItem();
-          if (activeGroupItem)
-            activeGroupItem.setTopChild(item);
-        }
+        if (activeGroupItem && item.parent)
+          activeGroupItem.setTopChild(item);
 
         self._resize(true);
         dispatchEvent(event);
@@ -507,9 +486,6 @@ let UI = {
         TabItems.resumePainting();
       });
     } else {
-      if (currentTab && currentTab._tabViewTabItem)
-        currentTab._tabViewTabItem.setZoomPrep(false);
-
       self.setActiveTab(null);
       dispatchEvent(event);
 
@@ -518,8 +494,6 @@ let UI = {
 
       TabItems.resumePainting();
     }
-
-    Storage.saveVisibilityData(gWindow, "true");
   },
 
   // ----------
@@ -553,11 +527,11 @@ let UI = {
 #ifdef XP_MACOSX
     this.setTitlebarColors(false);
 #endif
+    Storage.saveVisibilityData(gWindow, "false");
+
     let event = document.createEvent("Events");
     event.initEvent("tabviewhidden", true, false);
     dispatchEvent(event);
-
-    Storage.saveVisibilityData(gWindow, "false");
   },
 
 #ifdef XP_MACOSX
@@ -591,8 +565,10 @@ let UI = {
   // Pauses the storage activity that conflicts with sessionstore updates and 
   // private browsing mode switches. Calls can be nested. 
   storageBusy: function UI_storageBusy() {
-    if (!this._storageBusyCount)
+    if (!this._storageBusyCount) {
       TabItems.pauseReconnecting();
+      GroupItems.pauseAutoclose();
+    }
     
     this._storageBusyCount++;
   },
@@ -606,10 +582,11 @@ let UI = {
     if (!this._storageBusyCount) {
       let hasGroupItemsData = GroupItems.load();
       if (!hasGroupItemsData)
-        this.reset(false);
+        this.reset();
   
       TabItems.resumeReconnecting();
       GroupItems._updateTabBar();
+      GroupItems.resumeAutoclose();
     }
   },
 
@@ -723,19 +700,23 @@ let UI = {
           let closingLastOfGroup = (groupItem && 
               groupItem._children.length == 1 && 
               groupItem._children[0].tab == tab);
-          
+
           // 2) Take care of the case where you've closed the last tab in
           // an un-named groupItem, which means that the groupItem is gone (null) and
           // there are no visible tabs. 
           let closingUnnamedGroup = (groupItem == null &&
               gBrowser.visibleTabs.length <= 1); 
-              
-          if (closingLastOfGroup || closingUnnamedGroup) {
+
+          // 3) When a blank tab is active while restoring a closed tab the
+          // blank tab gets removed. The active group is not closed as this is
+          // where the restored tab goes. So do not show the TabView.
+          let closingBlankTabAfterRestore =
+            (tab && tab._tabViewTabIsRemovedAfterRestore);
+
+          if ((closingLastOfGroup || closingUnnamedGroup) &&
+              !closingBlankTabAfterRestore) {
             // for the tab focus event to pick up.
             self._closedLastVisibleTab = true;
-            // remove the zoom prep.
-            if (tab && tab._tabViewTabItem)
-              tab._tabViewTabItem.setZoomPrep(false);
             self.showTabView();
           }
         }
@@ -776,6 +757,10 @@ let UI = {
 
       TabItems.handleTabUnpin(tab);
       GroupItems.removeAppTab(tab);
+
+      let groupItem = tab._tabViewTabItem.parent;
+      if (groupItem)
+        self.setReorderTabItemsOnShow(groupItem);
     };
 
     // Actually register the above handlers
@@ -875,15 +860,6 @@ let UI = {
       if (GroupItems.getActiveGroupItem() || GroupItems.getActiveOrphanTab())
         GroupItems._updateTabBar();
     }
-
-    // ___ prepare for when we return to TabView
-    if (newItem != oldItem) {
-      if (oldItem)
-        oldItem.setZoomPrep(false);
-      if (newItem)
-        newItem.setZoomPrep(true);
-    } else if (oldItem)
-      oldItem.setZoomPrep(true);
   },
 
   // ----------
@@ -997,7 +973,7 @@ let UI = {
       if (norm != null) {
         var nextTab = getClosestTabBy(norm);
         if (nextTab) {
-          if (nextTab.inStack() && !nextTab.parent.expanded)
+          if (nextTab.isStacked && !nextTab.parent.expanded)
             nextTab = nextTab.parent.getChild(0);
           self.setActiveTab(nextTab);
         }
@@ -1061,7 +1037,7 @@ let UI = {
   //   event - the event triggers this action.
   enableSearch: function UI_enableSearch(event) {
     if (!isSearchEnabled()) {
-      ensureSearchShown(null);
+      ensureSearchShown();
       SearchEventHandler.switchToInMode();
       
       if (event) {
@@ -1187,6 +1163,7 @@ let UI = {
         GroupItems.setActiveGroupItem(groupItem);
         phantom.remove();
         dragOutInfo = null;
+        gTabView.firstUseExperienced = true;
       } else {
         collapse();
       }
@@ -1232,9 +1209,6 @@ let UI = {
     itemBounds.width = 1;
     itemBounds.height = 1;
     items.forEach(function(item) {
-      if (item.locked.bounds)
-        return;
-
       var bounds = item.getBounds();
       itemBounds = (itemBounds ? itemBounds.union(bounds) : new Rect(bounds));
     });
@@ -1262,9 +1236,6 @@ let UI = {
     var self = this;
     var pairs = [];
     items.forEach(function(item) {
-      if (item.locked.bounds)
-        return;
-
       var bounds = item.getBounds();
       bounds.left += (UI.rtl ? -1 : 1) * (newPageBounds.left - self._pageBounds.left);
       bounds.left *= scale;
@@ -1452,7 +1423,7 @@ let UI = {
     this._save();
     GroupItems.saveAll();
     TabItems.saveAll();
-  },
+  }
 };
 
 // ----------

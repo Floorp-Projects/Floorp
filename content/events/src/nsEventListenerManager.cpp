@@ -734,16 +734,29 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
 
     if (csp) {
       PRBool inlineOK;
-      // this call will trigger violaton reports if necessary
       rv = csp->GetAllowsInlineScript(&inlineOK);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if ( !inlineOK ) {
-        //can log something here too.
-        //nsAutoString attr;
-        //aName->ToString(attr);
-        //printf(" *** CSP bailing on adding event listener for: %s\n",
-        //       ToNewCString(attr));
+        // gather information to log with violation report
+        nsIURI* uri = doc->GetDocumentURI();
+        nsCAutoString asciiSpec;
+        if (uri)
+          uri->GetAsciiSpec(asciiSpec);
+        nsAutoString scriptSample, attr, tagName(NS_LITERAL_STRING("UNKNOWN"));
+        aName->ToString(attr);
+        nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aObject));
+        if (domNode)
+          domNode->GetNodeName(tagName);
+        // build a "script sample" based on what we know about this element
+        scriptSample.Assign(attr);
+        scriptSample.AppendLiteral(" attribute on ");
+        scriptSample.Append(tagName);
+        scriptSample.AppendLiteral(" element");
+        csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_SCRIPT,
+                                 NS_ConvertUTF8toUTF16(asciiSpec),
+                                 scriptSample,
+                                 nsnull);
         return NS_OK;
       }
     }

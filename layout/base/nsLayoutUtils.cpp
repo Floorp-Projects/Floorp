@@ -1387,7 +1387,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   if (aFlags & PAINT_SYNC_DECODE_IMAGES) {
     builder.SetSyncDecodeImages(PR_TRUE);
   }
-  if (aFlags & PAINT_WIDGET_LAYERS || aFlags & PAINT_TO_WINDOW) {
+  if (aFlags & (PAINT_WIDGET_LAYERS | PAINT_TO_WINDOW)) {
     builder.SetPaintingToWindow(PR_TRUE);
   }
   if (aFlags & PAINT_IGNORE_SUPPRESSION) {
@@ -1538,18 +1538,15 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
       NS_WARNING("Flushing retained layers!");
       flags |= nsDisplayList::PAINT_FLUSH_LAYERS;
     } else if (widget && !(aFlags & PAINT_DOCUMENT_RELATIVE)) {
-      // XXX we should simplify this API now that dirtyWindowRegion always
-      // covers the entire window
+      nsIWidget_MOZILLA_2_0_BRANCH* widget2 =
+        static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget);
       PRInt32 pixelRatio = presContext->AppUnitsPerDevPixel();
       nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(pixelRatio));
-      nsIntRegion dirtyWindowRegion(aDirtyRegion.ToOutsidePixels(pixelRatio));
       builder.SetFinalTransparentRegion(visibleRegion);
-      widget->UpdatePossiblyTransparentRegion(dirtyWindowRegion, visibleWindowRegion);
+      widget2->UpdateTransparentRegion(visibleWindowRegion);
 
       // If we're finished building display list items for painting of the outermost
       // pres shell, notify the widget about any toolbars we've encountered.
-      nsIWidget_MOZILLA_2_0_BRANCH* widget2 =
-        static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget);
       widget2->UpdateThemeGeometries(builder.GetThemeGeometries());
     }
   }
@@ -3778,6 +3775,12 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
 
   if (!imageLoader)
     return result;
+
+  // Push a null JSContext on the stack so that code that runs within
+  // the below code doesn't think it's being called by JS. See bug
+  // 604262.
+  nsCxPusher pusher;
+  pusher.PushNull();
 
   nsCOMPtr<imgIRequest> imgRequest;
   rv = imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,

@@ -52,7 +52,7 @@
         let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, data.num, "Good key");
-          is(cursor.value, data.id, "Good value");
+          is(cursor.primaryKey, data.id, "Good value");
           seenCount++;
           cursor.continue();
         }

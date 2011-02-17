@@ -103,7 +103,9 @@ CreateDummyWindow(HDC *aWindowDC = nsnull)
         gSharedWindowPixelFormat = ChoosePixelFormat(dc, &pfd);
     }
 
-    if (!SetPixelFormat(dc, gSharedWindowPixelFormat, NULL)) {
+    if (!gSharedWindowPixelFormat ||
+        !SetPixelFormat(dc, gSharedWindowPixelFormat, NULL))
+    {
         NS_WARNING("SetPixelFormat failed!");
         DestroyWindow(win);
         return NULL;

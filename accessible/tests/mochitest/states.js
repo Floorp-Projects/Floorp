@@ -19,6 +19,7 @@ const STATE_FOCUSABLE = nsIAccessibleStates.STATE_FOCUSABLE;
 const STATE_FOCUSED = nsIAccessibleStates.STATE_FOCUSED;
 const STATE_HASPOPUP = nsIAccessibleStates.STATE_HASPOPUP;
 const STATE_INVALID = nsIAccessibleStates.STATE_INVALID;
+const STATE_INVISIBLE = nsIAccessibleStates.STATE_INVISIBLE;
 const STATE_LINKED = nsIAccessibleStates.STATE_LINKED;
 const STATE_MIXED = nsIAccessibleStates.STATE_MIXED;
 const STATE_MULTISELECTABLE = nsIAccessibleStates.STATE_MULTISELECTABLE;

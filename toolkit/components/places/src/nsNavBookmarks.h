@@ -74,8 +74,8 @@ namespace places {
     PRUint16 itemType;
   };
 
-  typedef void (nsNavBookmarks::*ItemVisitMethod)(ItemVisitData);
-  typedef void (nsNavBookmarks::*ItemChangeMethod)(ItemChangeData);
+  typedef void (nsNavBookmarks::*ItemVisitMethod)(const ItemVisitData&);
+  typedef void (nsNavBookmarks::*ItemChangeMethod)(const ItemChangeData&);
 
 } // namespace places
 } // namespace mozilla
@@ -211,7 +211,7 @@ public:
    * @param aData
    *        Details about the new visit.
    */
-  void NotifyItemVisited(mozilla::places::ItemVisitData aData);
+  void NotifyItemVisited(const mozilla::places::ItemVisitData& aData);
 
   /**
    * Notifies that a bookmark has changed.
@@ -221,7 +221,7 @@ public:
    * @param aData
    *        Details about the change.
    */
-  void NotifyItemChanged(mozilla::places::ItemChangeData aData);
+  void NotifyItemChanged(const mozilla::places::ItemChangeData& aData);
 
 private:
   static nsNavBookmarks* gBookmarksService;

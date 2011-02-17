@@ -1164,7 +1164,7 @@ nsCanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *docShell, gfxASur
     // then the surface became cleared, and we need to redraw everything.
     Redraw();
 
-    return NS_OK;
+    return mValid ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
@@ -1215,9 +1215,6 @@ nsCanvasRenderingContext2D::Render(gfxContext *ctx, gfxPattern::GraphicsFilter a
     if (!mValid || !mSurface ||
         mSurface->CairoStatus() ||
         mThebes->HasError())
-        return NS_ERROR_FAILURE;
-
-    if (!mSurface)
         return NS_ERROR_FAILURE;
 
     nsRefPtr<gfxPattern> pat = new gfxPattern(mSurface);
@@ -1594,7 +1591,7 @@ nsCanvasRenderingContext2D::CreateLinearGradient(float x0, float y0, float x1, f
                                                  nsIDOMCanvasGradient **_retval)
 {
     if (!FloatValidate(x0,y0,x1,y1))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
     nsRefPtr<gfxPattern> gradpat = new gfxPattern(x0, y0, x1, y1);
     if (!gradpat)
@@ -1613,7 +1610,7 @@ nsCanvasRenderingContext2D::CreateRadialGradient(float x0, float y0, float r0, f
                                                  nsIDOMCanvasGradient **_retval)
 {
     if (!FloatValidate(x0,y0,r0,x1,y1,r1))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
     nsRefPtr<gfxPattern> gradpat = new gfxPattern(x0, y0, r0, x1, y1, r1);
     if (!gradpat)
@@ -2141,6 +2138,9 @@ nsCanvasRenderingContext2D::Arc(float x, float y, float r, float startAngle, flo
 {
     if (!FloatValidate(x,y,r,startAngle,endAngle))
         return NS_ERROR_DOM_SYNTAX_ERR;
+
+    if (r < 0.0)
+        return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
     gfxPoint p(x,y);
 
@@ -3075,8 +3075,8 @@ nsCanvasRenderingContext2D::MozTextAlongPath(const nsAString& textToDraw, PRBool
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetLineWidth(float width)
 {
-    if (!FloatValidate(width))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+    if (!FloatValidate(width) || width <= 0.0)
+        return NS_OK;
 
     mThebes->SetLineWidth(width);
     return NS_OK;
@@ -3165,8 +3165,8 @@ nsCanvasRenderingContext2D::GetLineJoin(nsAString& joinstyle)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetMiterLimit(float miter)
 {
-    if (!FloatValidate(miter))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+    if (!FloatValidate(miter) || miter <= 0.0)
+        return NS_OK;
 
     mThebes->SetMiterLimit(miter);
     return NS_OK;
@@ -4063,6 +4063,7 @@ nsCanvasRenderingContext2D::GetCanvasLayer(CanvasLayer *aOldLayer,
             // of the rectangle based on Redraw args.
             aOldLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
             MarkContextClean();
+            HTMLCanvasElement()->GetPrimaryCanvasFrame()->MarkLayersActive();
         }
 
         return aOldLayer;

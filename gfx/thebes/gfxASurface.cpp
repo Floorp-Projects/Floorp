@@ -221,9 +221,11 @@ gfxASurface::Init(cairo_surface_t* surface, PRBool existingSurface)
         mFloatingRefs = 0;
     } else {
         mFloatingRefs = 1;
+#ifdef MOZ_TREE_CAIRO
         if (cairo_surface_get_content(surface) != CAIRO_CONTENT_COLOR) {
             cairo_surface_set_subpixel_antialiasing(surface, CAIRO_SUBPIXEL_ANTIALIASING_DISABLED);
         }
+#endif
     }
 }
 
@@ -435,10 +437,12 @@ gfxASurface::FormatFromContent(gfxASurface::gfxContentType type)
 void
 gfxASurface::SetSubpixelAntialiasingEnabled(PRBool aEnabled)
 {
+#ifdef MOZ_TREE_CAIRO
     if (!mSurfaceValid)
         return;
     cairo_surface_set_subpixel_antialiasing(mSurface,
         aEnabled ? CAIRO_SUBPIXEL_ANTIALIASING_ENABLED : CAIRO_SUBPIXEL_ANTIALIASING_DISABLED);
+#endif
 }
 
 PRBool
@@ -446,7 +450,11 @@ gfxASurface::GetSubpixelAntialiasingEnabled()
 {
     if (!mSurfaceValid)
       return PR_FALSE;
+#ifdef MOZ_TREE_CAIRO
     return cairo_surface_get_subpixel_antialiasing(mSurface) == CAIRO_SUBPIXEL_ANTIALIASING_ENABLED;
+#else
+    return PR_TRUE;
+#endif
 }
 
 PRInt32

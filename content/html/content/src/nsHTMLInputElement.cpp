@@ -2698,10 +2698,10 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
       return success;
     }
     if (aAttribute == nsGkAtoms::width) {
-      return aResult.ParseSpecialIntValue(aValue, PR_TRUE);
+      return aResult.ParseSpecialIntValue(aValue);
     }
     if (aAttribute == nsGkAtoms::height) {
-      return aResult.ParseSpecialIntValue(aValue, PR_TRUE);
+      return aResult.ParseSpecialIntValue(aValue);
     }
     if (aAttribute == nsGkAtoms::maxlength) {
       return aResult.ParseNonNegativeIntValue(aValue);
@@ -2857,8 +2857,12 @@ nsHTMLInputElement::SetSelectionRange(PRInt32 aSelectionStart,
 
   if (formControlFrame) {
     nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
-    if (textControlFrame)
+    if (textControlFrame) {
       rv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd);
+      if (NS_SUCCEEDED(rv)) {
+        rv = textControlFrame->ScrollSelectionIntoView();
+      }
+    }
   }
 
   return rv;
@@ -2881,8 +2885,12 @@ nsHTMLInputElement::SetSelectionStart(PRInt32 aSelectionStart)
 
   if (formControlFrame) {
     nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
-    if (textControlFrame)
+    if (textControlFrame) {
       rv = textControlFrame->SetSelectionStart(aSelectionStart);
+      if (NS_SUCCEEDED(rv)) {
+        rv = textControlFrame->ScrollSelectionIntoView();
+      }
+    }
   }
 
   return rv;
@@ -2906,8 +2914,12 @@ nsHTMLInputElement::SetSelectionEnd(PRInt32 aSelectionEnd)
 
   if (formControlFrame) {
     nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
-    if (textControlFrame)
+    if (textControlFrame) {
       rv = textControlFrame->SetSelectionEnd(aSelectionEnd);
+      if (NS_SUCCEEDED(rv)) {
+        rv = textControlFrame->ScrollSelectionIntoView();
+      }
+    }
   }
 
   return rv;
@@ -3314,9 +3326,10 @@ nsHTMLInputElement::IntrinsicState() const
     } else {
       state |= NS_EVENT_STATE_INVALID;
 
-      if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
-          (GET_BOOLBIT(mBitField, BF_CAN_SHOW_INVALID_UI) &&
-           ShouldShowValidityUI())) {
+      if ((!mForm || !mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) &&
+          (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
+           (GET_BOOLBIT(mBitField, BF_CAN_SHOW_INVALID_UI) &&
+            ShouldShowValidityUI()))) {
         state |= NS_EVENT_STATE_MOZ_UI_INVALID;
       }
     }
@@ -3326,11 +3339,14 @@ nsHTMLInputElement::IntrinsicState() const
     //    :-moz-ui-invalid applying before it was focused ;
     // 2. The element is either valid or isn't allowed to have
     //    :-moz-ui-invalid applying ;
-    // 3. The rules to have :-moz-ui-valid applying are fulfilled
-    //    (see ShouldShowValidityUI()).
-    if (GET_BOOLBIT(mBitField, BF_CAN_SHOW_VALID_UI) && ShouldShowValidityUI() &&
-        (IsValid() || (!state.HasState(NS_EVENT_STATE_MOZ_UI_INVALID) &&
-                       !GET_BOOLBIT(mBitField, BF_CAN_SHOW_INVALID_UI)))) {
+    // 3. The element has no form owner or its form owner doesn't have the
+    //    novalidate attribute set ;
+    // 4. The element has already been modified or the user tried to submit the
+    //    form owner while invalid.
+    if ((!mForm || !mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) &&
+        (GET_BOOLBIT(mBitField, BF_CAN_SHOW_VALID_UI) && ShouldShowValidityUI() &&
+         (IsValid() || (!state.HasState(NS_EVENT_STATE_MOZ_UI_INVALID) &&
+                        !GET_BOOLBIT(mBitField, BF_CAN_SHOW_INVALID_UI))))) {
       state |= NS_EVENT_STATE_MOZ_UI_VALID;
     }
   }

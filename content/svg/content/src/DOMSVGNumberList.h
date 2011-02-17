@@ -79,12 +79,12 @@ public:
                    const SVGNumberList &aInternalList)
     : mAList(aAList)
   {
-    // We can NOT use InternalList() here - it depends on IsAnimValList, which
-    // in turn depends on this object having been assigned to either aAList's
-    // mBaseVal or mAnimVal. At this point we haven't been assigned to either!
-    // This is why our caller must pass in aInternalList.
+    // aInternalList must be passed in explicitly because we can't use
+    // InternalList() here. (Because it depends on IsAnimValList, which depends
+    // on this object having been assigned to aAList's mBaseVal or mAnimVal,
+    // which hasn't happend yet.)
 
-    InternalListLengthWillChange(aInternalList.Length()); // Initialize mItems
+    InternalListLengthWillChange(aInternalList.Length()); // Sync mItems
   }
 
   ~DOMSVGNumberList() {
@@ -140,6 +140,9 @@ private:
 
   /// Creates a DOMSVGNumber for aIndex, if it doesn't already exist.
   void EnsureItemAt(PRUint32 aIndex);
+
+  void MaybeInsertNullInAnimValListAt(PRUint32 aIndex);
+  void MaybeRemoveItemFromAnimValListAt(PRUint32 aIndex);
 
   // Weak refs to our DOMSVGNumber items. The items are friends and take care
   // of clearing our pointer to them when they die.

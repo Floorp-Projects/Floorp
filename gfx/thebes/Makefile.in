@@ -20,6 +20,7 @@ EXPORTS	= \
 	gfxColor.h \
 	gfxContext.h \
 	gfxDrawable.h \
+	gfxFailure.h \
 	gfxFont.h \
 	gfxFontConstants.h \
 	gfxFontUtils.h \
@@ -275,7 +276,7 @@ CPPSRCS	+= gfxGDIFont.cpp \
 	   gfxGDIShaper.cpp \
 	   gfxUniscribeShaper.cpp \
 	   $(NULL)
-_OS_LIBS = usp10 msimg32 ole32 version advapi32
+_OS_LIBS = usp10 msimg32 ole32 version advapi32 shlwapi shell32
 endif
 
 CPPSRCS +=	gfxPDFSurface.cpp

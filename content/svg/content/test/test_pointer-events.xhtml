@@ -15,6 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=619959
 SimpleTest.waitForExplicitFinish();
 
 var pointer_events_values = [
+  'auto',
   'visiblePainted',
   'visibleFill',
   'visibleStroke',
@@ -46,14 +47,15 @@ var visibility_values = [
 
 /**
  * List of attributes and various values for which we want to test permutations
- * when hit testing stroke and fill.
+ * when hit testing a pointer event that is over an element's fill area,
+ * stroke area, or both (where they overlap).
  *
  * We're using an array of objects so that we have control over the order in
  * which permutations are tested.
  *
  * TODO: test the effect of clipping, masking, filters, markers, etc.
  */
-var hit_test_attr_values = {
+var hit_test_inputs = {
   fill: [
     { name: 'pointer-events',  values: pointer_events_values },
     { name: 'fill',            values: paint_values },
@@ -63,6 +65,15 @@ var hit_test_attr_values = {
   ],
   stroke: [
     { name: 'pointer-events',  values: pointer_events_values },
+    { name: 'stroke',          values: paint_values },
+    { name: 'stroke-opacity',  values: opacity_values },
+    { name: 'opacity',         values: opacity_values },
+    { name: 'visibility',      values: visibility_values }
+  ],
+  both: [
+    { name: 'pointer-events',  values: pointer_events_values },
+    { name: 'fill',            values: paint_values },
+    { name: 'fill-opacity',    values: opacity_values },
     { name: 'stroke',          values: paint_values },
     { name: 'stroke-opacity',  values: opacity_values },
     { name: 'opacity',         values: opacity_values },
@@ -88,6 +99,16 @@ var hit_test_attr_values = {
  * of the values listed in the given array.
  */
 var hit_conditions = {
+  auto: {
+    'fill-intercepts-iff': {
+      'visibility': ['visible'],
+      'fill!': ['none']
+    },
+    'stroke-intercepts-iff': {
+      'visibility': ['visible'],
+      'stroke!': ['none']
+    }
+  },
   visiblePainted: {
     'fill-intercepts-iff': {
       'visibility': ['visible'],
@@ -151,36 +172,46 @@ var hit_conditions = {
   }
 }
 
+// bit flags
+var POINT_OVER_FILL   = 0x1;
+var POINT_OVER_STROKE = 0x2;
+
 /**
- * Examine the current attribute values and return true if the specified target
- * (fill or stroke) is expected to intercept events, or else return false.
+ * Examine the element's attribute values and, based on the area(s) of the
+ * element that the pointer event is over (fill and/or stroke areas), return
+ * true if the element is expected to intercept the event, otherwise false.
  */
-function hit_expected(target /* {stroke|fill} */, attributes)
+function hit_expected(element, over /* bit flags indicating which area(s) of the element the pointer is over */)
 {
-  var intercepts_iff =
-    hit_conditions[attributes['pointer-events']][target + '-intercepts-iff'];
+  function expect_hit(target){
+    var intercepts_iff =
+      hit_conditions[element.getAttribute('pointer-events')][target + '-intercepts-iff'];
 
-  if (!intercepts_iff) {
-    return false; // never intercepts events
+    if (!intercepts_iff) {
+      return false; // never intercepts events
+    }
+
+    for (var attr in intercepts_iff) {
+      var vals = intercepts_iff[attr];  // must get this before we adjust 'attr'
+      var invert = false;
+      if (attr.substr(-1) == '!') {
+        invert = true;
+        attr = attr.substr(0, attr.length-1);
+      }
+      var match = vals.indexOf(element.getAttribute(attr)) > -1;
+      if (invert) {
+        match = !match;
+      }
+      if (!match) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
-  for (var attr in intercepts_iff) {
-    var vals = intercepts_iff[attr];  // must get this before we adjust 'attr'
-    var invert = false;
-    if (attr.substr(-1) == '!') {
-      invert = true;
-      attr = attr.substr(0, attr.length-1);
-    }
-    var match = vals.indexOf(attributes[attr]) > -1;
-    if (invert) {
-      match = !match;
-    }
-    if (!match) {
-      return false;
-    }
-  }
-
-  return true;
+  return (over & POINT_OVER_FILL) != 0   && expect_hit('fill') ||
+         (over & POINT_OVER_STROKE) != 0 && expect_hit('stroke');
 }
 
 function for_all_permutations(inputs, callback)
@@ -201,55 +232,95 @@ function for_all_permutations(inputs, callback)
   callback(current_permutation);
 }
 
-function log_msg(target, id, attributes)
+function make_log_msg(over, tag, attributes)
 {
-  var msg = 'Check if events are intercepted by '+target+' on '+id+' for';
+  var target;
+  if (over == (POINT_OVER_FILL | POINT_OVER_STROKE)) {
+    target = 'fill and stroke';
+  } else if (over == POINT_OVER_FILL) {
+    target = 'fill';
+  } else if (over == POINT_OVER_STROKE) {
+    target = 'stroke';
+  } else {
+    throw "unexpected bit combination in 'over'";
+  }
+  var msg = 'Check if events are intercepted at a point over the '+target+' on <'+tag+'> for';
   for (var attr in attributes) {
     msg += ' '+attr+'='+attributes[attr];
   }
   return msg;
 }
 
-function run_tests()
-{
-  var div = document.getElementById("div");
-  var dx = div.offsetLeft;
-  var dy = div.offsetTop;
+var dx, dy; // offset of <svg> element from pointer coordinates origin
 
-  var id, element, target;  // target is 'fill' or 'stroke'
-  var x, y;  // coordinates to hit test
+function test_element(id, x, y, over /* bit flags indicating which area(s) of the element the pointer is over */)
+{
+  var element = document.getElementById(id);
+  var tag = element.tagName;
 
   function test_permutation(attributes) {
     for (var attr in attributes) {
       element.setAttribute(attr, attributes[attr]);
     }
-    var hit = document.elementFromPoint(dx + x, dy + y) == element;
-    is(hit, hit_expected(target, attributes), log_msg(target, id, attributes));
+    var hits = document.elementFromPoint(dx + x, dy + y) == element;
+    var msg = make_log_msg(over, tag, attributes);
+
+    is(hits, hit_expected(element, over), msg);
   }
 
-  // To reduce the chance of bogus results
-  function clear_attributes_for_next_test(inputs) {
-    for (var i = 0; i < inputs.length; ++i) {
-      element.removeAttribute(inputs[i].name);
-    }
-    element.setAttribute('fill', 'none');
-    element.setAttribute('stroke', 'none');
+  var inputs;
+  if (over == (POINT_OVER_FILL | POINT_OVER_STROKE)) {
+    inputs = hit_test_inputs['both'];
+  } else if (over == POINT_OVER_FILL) {
+    inputs = hit_test_inputs['fill'];
+  } else if (over == POINT_OVER_STROKE) {
+    inputs = hit_test_inputs['stroke'];
+  } else {
+    throw "unexpected bit combination in 'over'";
   }
 
-  id = 'rect';
-  element = document.getElementById(id);
+  for_all_permutations(inputs, test_permutation);
 
-  var target = 'fill';
-  x = 30;
-  y = 30;
-  for_all_permutations(hit_test_attr_values[target], test_permutation);
-  clear_attributes_for_next_test(hit_test_attr_values[target]);
+  // To reduce the chance of bogus results in subsequent tests:
+  element.setAttribute('fill', 'none');
+  element.setAttribute('stroke', 'none');
+}
 
-  var target = 'stroke';
-  x = 5;
-  y = 5;
-  for_all_permutations(hit_test_attr_values[target], test_permutation);
-  clear_attributes_for_next_test(hit_test_attr_values[target]);
+function run_tests()
+{
+  var div = document.getElementById("div");
+  dx = div.offsetLeft;
+  dy = div.offsetTop;
+
+  test_element('rect', 30, 30, POINT_OVER_FILL);
+  test_element('rect', 5, 5, POINT_OVER_STROKE);
+
+  // The SVG 1.1 spec essentially says that, for text, hit testing is done
+  // against the character cells of the text, and not the fill and stroke as
+  // you might expect for a normal graphics element like <path>. See the
+  // paragraph starting "For text elements..." in this section:
+  //
+  //   http://www.w3.org/TR/SVG11/interact.html#PointerEventsProperty
+  //
+  // This requirement essentially means that for the purposes of hit testing
+  // the fill and stroke areas are the same area - the character cell. (At
+  // least until we support having any fill or stroke that lies outside the
+  // character cells intercept events like Opera does - see below.) Thus, for
+  // text, when a pointer event is over a character cell it is essentially over
+  // both the fill and stroke at the same time. That's the reason we pass both
+  // the POINT_OVER_FILL and POINT_OVER_STROKE bits in test_element's 'over'
+  // argument below. It's also the reason why we only test one point in the
+  // text rather than having separate tests for fill and stroke.
+  //
+  // For hit testing of text, Opera essentially treats fill and stroke like it
+  // would on any normal element, but it adds the character cells of glyhs to
+  // both the glyphs' fill AND stroke. I think this is what we should do too.
+  // It's compatible with the letter of the SVG 1.1 rules, and it allows any
+  // parts of a glyph that are outside the glyph's character cells to also
+  // intercept events in the normal way. When we make that change we'll be able
+  // to add separate fill and stroke tests for text below.
+
+  test_element('text', 210, 30, POINT_OVER_FILL | POINT_OVER_STROKE);
 
   SimpleTest.finish();
 }
@@ -264,6 +335,7 @@ function run_tests()
 
   <svg xmlns="http://www.w3.org/2000/svg" id="svg">
     <rect id="rect" x="10" y="10" width="40" height="40" stroke-width="20"/>
+    <text id="text" x="190" y="50" font-size="40px" stroke-width="20">X</text>
   </svg>
 
 </div>

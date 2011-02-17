@@ -25,7 +25,7 @@
            preserveAspectRatio value) -->
       <use xlink:href="#rect"/>
     </symbol>
-    
+
     <!-- Single column from the testcase -->
     <g id="column">
       <use y="0"   xlink:href="#pAR_xMaxYMax_slice" width="60"  height="20"/>

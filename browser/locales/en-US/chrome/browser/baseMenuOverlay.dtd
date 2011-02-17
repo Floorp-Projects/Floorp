@@ -14,14 +14,9 @@
 <!ENTITY aboutProduct.accesskey   "A">
 <!ENTITY productHelp.label        "&brandShortName; Help">
 <!ENTITY productHelp.accesskey    "H">
-<!ENTITY helpForIEUsers.label     "For Internet Explorer Users">
-<!ENTITY helpForIEUsers.accesskey "I">
 <!ENTITY helpMac.commandkey       "?">
 <!ENTITY helpSafeMode.label       "Restart with Add-ons Disabled…">
 <!ENTITY helpSafeMode.accesskey   "R">
-
-<!ENTITY helpReleaseNotes.label         "Release Notes">
-<!ENTITY helpReleaseNotes.accesskey     "N">
 
 <!ENTITY helpTroubleshootingInfo.label      "Troubleshooting Information">
 <!ENTITY helpTroubleshootingInfo.accesskey  "T">

@@ -11,6 +11,13 @@ try {
 Cu.import("resource://services-sync/util.js");
 
 function run_test() {
+  if (this.gczeal) {
+    _("Running deriveKey tests with gczeal(2).");
+    gczeal(2);
+  } else {
+    _("Running deriveKey tests with default gczeal.");
+  }
+
   var iv = cryptoSvc.generateRandomIV();
   var der_passphrase = "secret phrase";
   var der_salt = "RE5YUHpQcGl3bg==";   // btoa("DNXPzPpiwn")
@@ -37,12 +44,6 @@ function run_test() {
   _("Derived key in base64: " + der_key);
   do_check_eq(cryptoSvc.decrypt(cryptoSvc.encrypt("bacon", der_key, iv), der_key, iv), "bacon");
   
-  // Test the equivalence of our NSS and JS versions.
-  // Will only work on FF4, of course.
-  do_check_eq(
-      Utils.deriveEncodedKeyFromPassphrase(der_passphrase, der_salt, 16, false),
-      Utils.deriveEncodedKeyFromPassphrase(der_passphrase, der_salt, 16, true));
-  
   // Base64, 16-byte output.
   var der_key = Utils.deriveEncodedKeyFromPassphrase(der_passphrase, der_salt, 16);
   _("Derived key in base64: " + der_key);
@@ -58,4 +59,15 @@ function run_test() {
   do_check_eq(b32key.length, 26);
   do_check_eq(hyphenated.length, 31);  // 1 char, plus 5 groups of 5, hyphenated = 5 + (5*5) + 1 = 31.
   do_check_eq(hyphenated, "9-5wmnu-95tqc-78z2h-amkbw-izqzi");
+
+  if (this.gczeal)
+    gczeal(0);
+
+  // Test the equivalence of our NSS and JS versions.
+  // Will only work on FF4, of course.
+  // Note that we don't add gczeal here: the pure-JS implementation is
+  // astonishingly slow, and this check takes five minutes to run.
+  do_check_eq(
+      Utils.deriveEncodedKeyFromPassphrase(der_passphrase, der_salt, 16, false),
+      Utils.deriveEncodedKeyFromPassphrase(der_passphrase, der_salt, 16, true));
 }

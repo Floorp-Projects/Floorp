@@ -22,6 +22,7 @@
  * Ian Gilman <ian@iangilman.com>
  * Aza Raskin <aza@mozilla.com>
  * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
+ * Sean Dunn <seanedunn@yahoo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,7 +46,7 @@
 // Superclass for all visible objects (<TabItem>s and <GroupItem>s).
 //
 // If you subclass, in addition to the things Item provides, you need to also provide these methods:
-//   setBounds - function(rect, immediately)
+//   setBounds - function(rect, immediately, options)
 //   setZ - function(value)
 //   close - function()
 //   save - function()
@@ -54,7 +55,6 @@
 //
 // ... and this property:
 //   defaultSize - a Point
-//   locked - an object (see below)
 //
 // Make sure to call _init() from your subclass's constructor.
 function Item() {
@@ -64,6 +64,7 @@ function Item() {
 
   // Variable: bounds
   // The position and size of this Item, represented as a <Rect>.
+  // This should never be modified without using setBounds()
   this.bounds = null;
 
   // Variable: zIndex
@@ -82,15 +83,6 @@ function Item() {
   // Variable: container
   // The outermost DOM element that describes this item on screen.
   this.container = null;
-
-  // Variable: locked
-  // Affects whether an item can be pushed, closed, renamed, etc
-  //
-  // The object may have properties to specify what can't be changed:
-  //   .bounds - true if it can't be pushed, dragged, resized, etc
-  //   .close - true if it can't be closed
-  //   .title - true if it can't be renamed
-  this.locked = null;
 
   // Variable: parent
   // The groupItem that this item is a child of
@@ -156,10 +148,10 @@ Item.prototype = {
     Utils.assert(typeof this.close == 'function', 'Subclass must provide close');
     Utils.assert(typeof this.save == 'function', 'Subclass must provide save');
     Utils.assert(Utils.isPoint(this.defaultSize), 'Subclass must provide defaultSize');
-    Utils.assert(this.locked, 'Subclass must provide locked');
     Utils.assert(Utils.isRect(this.bounds), 'Subclass must provide bounds');
 
     this.container = container;
+    this.$container = iQ(container);
 
     if (this.debug) {
       this.$debug = iQ('<div>')
@@ -190,6 +182,8 @@ Item.prototype = {
       stop: function() {
         drag.info.stop();
         drag.info = null;
+        if (!this.isAGroupItem && !this.parent)
+          gTabView.firstUseExperienced = true;
       },
       // The minimum the mouse must move after mouseDown in order to move an 
       // item
@@ -243,7 +237,7 @@ Item.prototype = {
   // Function: getBounds
   // Returns a copy of the Item's bounds as a <Rect>.
   getBounds: function Item_getBounds() {
-    Utils.assert(Utils.isRect(this.bounds), 'this.bounds');
+    Utils.assert(Utils.isRect(this.bounds), 'this.bounds should be a rect');
     return new Rect(this.bounds);
   },
 
@@ -358,7 +352,7 @@ Item.prototype = {
       var bbc = bb.center();
 
       items.forEach(function Item_pushAway_pushOne_pushEach(item) {
-        if (item == baseItem || item.locked.bounds)
+        if (item == baseItem)
           return;
 
         var data = item.pushAwayData;
@@ -421,7 +415,7 @@ Item.prototype = {
     var pageBounds = Items.getSafeWindowBounds();
     items.forEach(function Item_pushAway_squish(item) {
       var data = item.pushAwayData;
-      if (data.generation == 0 || item.locked.bounds)
+      if (data.generation == 0)
         return;
 
       let apply = function Item_pushAway_squish_apply(item, posStep, posStep2, sizeStep) {
@@ -434,19 +428,22 @@ Item.prototype = {
         bounds.height -= sizeStep.y;
         bounds.left += posStep.x;
         bounds.top += posStep.y;
-        
+
+        let validSize;
         if (item.isAGroupItem) {
-          GroupItems.enforceMinSize(bounds);
+          validSize = GroupItems.calcValidSize(
+            new Point(bounds.width, bounds.height));
+          bounds.width = validSize.x;
+          bounds.height = validSize.y;
         } else {
-          TabItems.enforceMinSize(bounds);
           if (sizeStep.y > sizeStep.x) {
-            var newWidth = bounds.height * (TabItems.tabWidth / TabItems.tabHeight);
-            bounds.left += (bounds.width - newWidth) / 2;
-            bounds.width = newWidth;
+            validSize = TabItems.calcValidSize(new Point(-1, bounds.height));
+            bounds.left += (bounds.width - validSize.x) / 2;
+            bounds.width = validSize.x;
           } else {
-            var newHeight = bounds.width * (TabItems.tabHeight / TabItems.tabWidth);
-            bounds.top += (bounds.height - newHeight) / 2;
-            bounds.height = newHeight;
+            validSize = TabItems.calcValidSize(new Point(bounds.width, -1));
+            bounds.top += (bounds.height - validSize.y) / 2;
+            bounds.height = validSize.y;        
           }
         }
 
@@ -485,7 +482,7 @@ Item.prototype = {
       }
 
       if (posStep.x || posStep.y || sizeStep.x || sizeStep.y)
-        apply(item, posStep, posStep2, sizeStep);
+        apply(item, posStep, posStep2, sizeStep);        
     });
 
     // ___ Unsquish
@@ -697,7 +694,7 @@ Item.prototype = {
 
       // ___ mousedown
       $container.mousedown(function(e) {
-        if (Utils.isRightClick(e))
+        if (!Utils.isLeftClick(e))
           return;
 
         var cancel = false;
@@ -829,7 +826,7 @@ Item.prototype = {
           .addClass('iq-resizable-handle iq-resizable-se')
           .appendTo($container)
           .mousedown(function(e) {
-            if (Utils.isRightClick(e))
+            if (!Utils.isLeftClick(e))
               return;
 
             startMouse = new Point(e.pageX, e.pageY);
@@ -933,9 +930,9 @@ let Items = {
   //             when a tab is dragged over.
   //
   // Returns:
-  //   By default, an object with two properties: `rects`, the list of <Rect>s,
-  //   and `dropIndex`, the index which a dragged tab should have if dropped
-  //   (null if no `dropPos` was specified);
+  //   By default, an object with three properties: `rects`, the list of <Rect>s,
+  //   `dropIndex`, the index which a dragged tab should have if dropped
+  //   (null if no `dropPos` was specified), and the number of columns (`columns`).
   //   If the `return` option is set to 'widthAndColumns', an object with the
   //   width value of the child items (`childWidth`) and the number of columns
   //   (`columns`) is returned.
@@ -947,7 +944,6 @@ let Items = {
 
     var rects = [];
 
-    var tabAspect = TabItems.tabHeight / TabItems.tabWidth;
     var count = options.count || (items ? items.length : 0);
     if (options.addTab)
       count++;
@@ -962,7 +958,6 @@ let Items = {
     var itemMargin = items && items.length ?
                        parseInt(iQ(items[0].container).css('margin-left')) : 0;
     var padding = itemMargin * 2;
-    var yScale = 1.1; // to allow for titles
     var rows;
     var tabWidth;
     var tabHeight;
@@ -970,9 +965,13 @@ let Items = {
 
     function figure() {
       rows = Math.ceil(count / columns);
-      tabWidth = (bounds.width - (padding * columns)) / columns;
-      tabHeight = tabWidth * tabAspect;
-      totalHeight = (tabHeight * yScale * rows) + (padding * rows);
+      let validSize = TabItems.calcValidSize(
+        new Point((bounds.width - (padding * columns)) / columns, -1),
+        options);
+      tabWidth = validSize.x;
+      tabHeight = validSize.y;
+
+      totalHeight = (tabHeight * rows) + (padding * rows);    
     }
 
     figure();
@@ -983,8 +982,10 @@ let Items = {
     }
 
     if (rows == 1) {
-      tabWidth = Math.min(tabWidth, (bounds.height - 2 * itemMargin) / tabAspect);
-      tabHeight = tabWidth * tabAspect;
+      let validSize = TabItems.calcValidSize(new Point(tabWidth,
+        bounds.height - 2 * itemMargin), options);
+      tabWidth = validSize.x;
+      tabHeight = validSize.y;
     }
     
     if (options.return == 'widthAndColumns')
@@ -1020,12 +1021,12 @@ let Items = {
       column++;
       if (column == columns) {
         box.left = bounds.left + initialOffset;
-        box.top += (box.height * yScale) + padding;
+        box.top += box.height + padding;
         column = 0;
       }
     }
 
-    return {rects: rects, dropIndex: dropIndex};
+    return {rects: rects, dropIndex: dropIndex, columns: columns};
   },
 
   // ----------
@@ -1053,7 +1054,7 @@ let Items = {
     var pageBounds = Items.getSafeWindowBounds();
     pairs.forEach(function(pair) {
       var item = pair.item;
-      if (item.locked.bounds || item == ignore)
+      if (item == ignore)
         return;
 
       var bounds = pair.bounds;
@@ -1062,8 +1063,12 @@ let Items = {
       var newSize;
       if (Utils.isPoint(item.userSize))
         newSize = new Point(item.userSize);
+      else if (item.isAGroupItem)
+        newSize = GroupItems.calcValidSize(
+          new Point(GroupItems.minGroupWidth, -1));
       else
-        newSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
+        newSize = TabItems.calcValidSize(
+          new Point(TabItems.tabWidth, -1));
 
       if (item.isAGroupItem) {
           newBounds.width = Math.max(newBounds.width, newSize.x);

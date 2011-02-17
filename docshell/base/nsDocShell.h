@@ -383,10 +383,13 @@ protected:
     // |aReplaceEntry|.  |aSrcShell| is a (possibly null) docshell which
     // corresponds to |aSrcEntry| via its mLSHE or mOHE pointers, and will
     // have that pointer updated to point to the cloned history entry.
+    // If aCloneChildren is true then the children of the entry with id
+    // |aCloneID| will be cloned into |aReplaceEntry|.
     static nsresult CloneAndReplace(nsISHEntry *aSrcEntry,
                                     nsDocShell *aSrcShell,
                                     PRUint32 aCloneID,
                                     nsISHEntry *aReplaceEntry,
+                                    PRBool aCloneChildren,
                                     nsISHEntry **aDestEntry);
 
     // Child-walking callback for CloneAndReplace
@@ -792,6 +795,7 @@ protected:
     PRPackedBool               mIsOffScreenBrowser;
     PRPackedBool               mIsActive;
     PRPackedBool               mIsAppTab;
+    PRPackedBool               mUseGlobalHistory;
 
     // This boolean is set to true right before we fire pagehide and generally
     // unset when we embed a new content viewer.  While it's true no navigation
@@ -819,6 +823,9 @@ protected:
 
     // @see nsIDocShellHistory::createdDynamically
     PRPackedBool               mDynamicallyCreated;
+
+    // If this is true, we won't fire a popstate event.
+    PRPackedBool               mSuppressPopstate;
 #ifdef DEBUG
     PRPackedBool               mInEnsureScriptEnv;
 #endif

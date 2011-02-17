@@ -153,6 +153,7 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 
 // sets up our view, attaching it to its owning gecko view
 - (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild;
+- (void)forceRefreshOpenGL;
 
 // sends gecko an ime composition event
 - (void) sendCompositionEvent:(PRInt32)aEventType;
@@ -1710,8 +1711,9 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect, PRBool aIsSynchron
 PRBool
 nsChildView::GetShouldAccelerate()
 {
-  // Don't use OpenGL for transparent windows.
-  if (!mView || ![[mView window] isOpaque])
+  // Don't use OpenGL for transparent windows or for popup windows.
+  if (!mView || ![[mView window] isOpaque] ||
+      [[mView window] isKindOfClass:[PopupWindow class]])
     return PR_FALSE;
 
   return nsBaseWidget::GetShouldAccelerate();
@@ -2128,8 +2130,9 @@ nsChildView::BeginSecureKeyboardInput()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsresult rv = nsBaseWidget::BeginSecureKeyboardInput();
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
     ::EnableSecureEventInput();
+  }
   return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -2141,8 +2144,9 @@ nsChildView::EndSecureKeyboardInput()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsresult rv = nsBaseWidget::EndSecureKeyboardInput();
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
     ::DisableSecureEventInput();
+  }
   return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -2253,6 +2257,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mCumulativeMagnification = 0.0;
     mCumulativeRotation = 0.0;
 
+    // We can't call forceRefreshOpenGL here because, in order to work around
+    // the bug, it seems we need to have a draw already happening. Therefore,
+    // we call it in drawRect:inContext:, when we know that a draw is in
+    // progress.
+    mDidForceRefreshOpenGL = NO;
+
     [self setFocusRingType:NSFocusRingTypeNone];
   }
   
@@ -2297,6 +2307,23 @@ NSEvent* gLastDragMouseDownEvent = nil;
   return self;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+// Work around bug 603134.
+// OS X has a bug that causes new OpenGL windows to only paint once or twice,
+// then stop painting altogether. By clearing the drawable from the GL context,
+// and then resetting the view to ourselves, we convince OS X to start updating
+// again.
+// This can cause a flash in new windows - bug 631339 - but it's very hard to
+// fix that while maintaining this workaround.
+- (void)forceRefreshOpenGL
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  [mGLContext clearDrawable];
+  [mGLContext setView:self];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void)dealloc
@@ -2756,6 +2783,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
       [mGLContext retain];
     }
     mGeckoChild->DispatchWindowEvent(paintEvent);
+
+    // Force OpenGL to refresh the very first time we draw. This works around a
+    // Mac OS X bug that stops windows updating on OS X when we use OpenGL.
+    if (!mDidForceRefreshOpenGL) {
+      [self performSelector:@selector(forceRefreshOpenGL) withObject:nil afterDelay:0];
+      mDidForceRefreshOpenGL = YES;
+    }
+
     return;
   }
 

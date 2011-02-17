@@ -144,6 +144,7 @@ nsSHEntry::nsSHEntry(const nsSHEntry &other)
   , mParent(other.mParent)
   , mViewerBounds(0, 0, 0, 0)
   , mOwner(other.mOwner)
+  , mStateData(other.mStateData)
   , mDocShellID(other.mDocShellID)
 {
 }
@@ -1001,14 +1002,14 @@ nsSHEntry::SetDocshellID(PRUint64 aID)
 
 
 NS_IMETHODIMP
-nsSHEntry::GetLastTouched(unsigned int *aLastTouched)
+nsSHEntry::GetLastTouched(PRUint32 *aLastTouched)
 {
   *aLastTouched = mLastTouched;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHEntry::SetLastTouched(unsigned int aLastTouched)
+nsSHEntry::SetLastTouched(PRUint32 aLastTouched)
 {
   mLastTouched = aLastTouched;
   return NS_OK;

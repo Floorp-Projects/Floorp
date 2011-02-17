@@ -523,19 +523,13 @@ protected:
    */
   bool ShouldShowValidityUI() const {
     /**
-     * Never show the validity UI if the form has the novalidate attribute set.
      * Always show the validity UI if the form has already tried to be submitted
      * but was invalid.
      *
      * Otherwise, show the validity UI if the selection has been changed.
      */
-    if (mForm) {
-      if (mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) {
-        return false;
-      }
-      if (mForm->HasEverTriedInvalidSubmit()) {
-        return true;
-      }
+    if (mForm && mForm->HasEverTriedInvalidSubmit()) {
+      return true;
     }
 
     return mSelectionHasChanged;

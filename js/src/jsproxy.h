@@ -71,7 +71,8 @@ class JS_FRIEND_API(JSProxyHandler) {
     virtual bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     virtual bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     virtual bool get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, js::Value *vp);
-    virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, js::Value *vp);
+    virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
+                     js::Value *vp);
     virtual bool keys(JSContext *cx, JSObject *proxy, js::AutoIdVector &props);
     virtual bool iterate(JSContext *cx, JSObject *proxy, uintN flags, js::Value *vp);
 
@@ -117,7 +118,8 @@ class JSProxy {
     static bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     static bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     static bool get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp);
-    static bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp);
+    static bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
+                    Value *vp);
     static bool keys(JSContext *cx, JSObject *proxy, js::AutoIdVector &props);
     static bool iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp);
 

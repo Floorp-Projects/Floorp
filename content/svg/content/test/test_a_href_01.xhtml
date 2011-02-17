@@ -11,12 +11,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=620295
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=620295">Mozilla Bug 620295</a>
 <p id="display"></p>
-<div id="content" style="visibility: hidden">
-<iframe id="iframe1" src="a_href_helper_01.svg" onload="frameLoaded()"></iframe>
-<iframe id="iframe2" src="a_href_helper_02_03.svg" onload="frameLoaded()"></iframe>
-<iframe id="iframe3" src="a_href_helper_02_03.svg" onload="frameLoaded()"></iframe>
-<iframe id="iframe4" src="a_href_helper_04.svg" onload="frameLoaded()"></iframe>
-</div>
 <pre id="test">
 <script class="testbody" type="text/javascript"><![CDATA[
 
@@ -88,5 +82,12 @@ window.onload = windowLoaded;
 
 ]]></script>
 </pre>
+<div id="content" style="visibility: hidden">
+<!-- These must come after frameLoaded is defined -->
+<iframe id="iframe1" src="a_href_helper_01.svg" onload="frameLoaded()"></iframe>
+<iframe id="iframe2" src="a_href_helper_02_03.svg" onload="frameLoaded()"></iframe>
+<iframe id="iframe3" src="a_href_helper_02_03.svg" onload="frameLoaded()"></iframe>
+<iframe id="iframe4" src="a_href_helper_04.svg" onload="frameLoaded()"></iframe>
+</div>
 </body>
 </html>

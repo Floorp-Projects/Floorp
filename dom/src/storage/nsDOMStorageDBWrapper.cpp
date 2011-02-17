@@ -359,6 +359,9 @@ nsDOMStorageDBWrapper::CreateDomainScopeDBKey(nsIURI* aUri, nsACString& aKey)
         (NS_SUCCEEDED(aUri->SchemeIs("moz-safe-about", &isAboutUrl)) && isAboutUrl)) {
       rv = aUri->GetPath(domainScope);
       NS_ENSURE_SUCCESS(rv, rv);
+      // While the host is always canonicalized to lowercase, the path is not,
+      // thus need to force the casing.
+      ToLowerCase(domainScope);
     }
   }
 

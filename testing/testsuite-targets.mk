@@ -112,14 +112,43 @@ endif
 RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py \
   $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
 
+ifeq ($(OS_ARCH),WINNT) #{
+# GPU-rendered shadow layers are unsupported here
+OOP_CONTENT = --setpref=browser.tabs.remote=true --setpref=layers.acceleration.disabled=true
+GPU_RENDERING =
+else
+OOP_CONTENT = --setpref=browser.tabs.remote=true
+GPU_RENDERING = --setpref=layers.acceleration.force-enabled=true
+endif #}
+
 reftest: TEST_PATH?=layout/reftests/reftest.list
 reftest:
 	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH))
 	$(CHECK_TEST_ERROR)
 
+reftest-ipc: TEST_PATH?=layout/reftests/reftest.list
+reftest-ipc:
+	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH) $(OOP_CONTENT))
+	$(CHECK_TEST_ERROR)
+
+reftest-ipc-gpu: TEST_PATH?=layout/reftests/reftest.list
+reftest-ipc-gpu:
+	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH) $(OOP_CONTENT) $(GPU_RENDERING))
+	$(CHECK_TEST_ERROR)
+
 crashtest: TEST_PATH?=testing/crashtest/crashtests.list
 crashtest:
 	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH))
+	$(CHECK_TEST_ERROR)
+
+crashtest-ipc: TEST_PATH?=testing/crashtest/crashtests.list
+crashtest-ipc:
+	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH) $(OOP_CONTENT))
+	$(CHECK_TEST_ERROR)
+
+crashtest-ipc-gpu: TEST_PATH?=testing/crashtest/crashtests.list
+crashtest-ipc-gpu:
+	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH) $(OOP_CONTENT) $(GPU_RENDERING))
 	$(CHECK_TEST_ERROR)
 
 jstestbrowser: TEST_PATH?=js/src/tests/jstests.list

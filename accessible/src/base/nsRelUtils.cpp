@@ -39,7 +39,7 @@
 #include "nsRelUtils.h"
 
 #include "nsAccessibilityService.h"
-#include "nsAccessNode.h"
+#include "nsAccessible.h"
 #include "nsCoreUtils.h"
 
 #include "nsIDOMDocument.h"

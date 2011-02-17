@@ -190,6 +190,42 @@
         ]]></body>
       </method>
 
+      <method name="_setCloseKeyState">
+        <parameter name="aEnabled"/>
+        <body><![CDATA[
+          let keyClose = document.getElementById("key_close");
+          let closeKeyEnabled = keyClose.getAttribute("disabled") != "true";
+          if (closeKeyEnabled == aEnabled)
+            return;
+
+          if (aEnabled)
+            keyClose.removeAttribute("disabled");
+          else
+            keyClose.setAttribute("disabled", "true");
+
+          // We also want to remove the keyboard shortcut from the file menu
+          // when the shortcut is disabled, and bring it back when it's
+          // renabled.
+          //
+          // Fixing bug 630826 could make that happen automatically.
+          // Fixing bug 630830 could avoid the ugly hack below.
+          
+          let closeMenuItem = document.getElementById("menu_close");
+          let parentPopup = closeMenuItem.parentNode;
+          let nextItem = closeMenuItem.nextSibling;
+          let clonedItem = closeMenuItem.cloneNode(true);
+
+          parentPopup.removeChild(closeMenuItem);
+
+          if (aEnabled)
+            clonedItem.setAttribute("key", "key_close");
+          else
+            clonedItem.removeAttribute("key");
+
+          parentPopup.insertBefore(clonedItem, nextItem);
+        ]]></body>
+      </method>
+
       <method name="pinTab">
         <parameter name="aTab"/>
         <body><![CDATA[
@@ -205,6 +241,9 @@
           this.tabContainer.adjustTabstrip();
 
           this.getBrowserForTab(aTab).docShell.isAppTab = true;
+
+          if (aTab.selected)
+            this._setCloseKeyState(false);
 
           let event = document.createEvent("Events");
           event.initEvent("TabPinned", true, false);
@@ -226,6 +265,9 @@
           this.tabContainer.adjustTabstrip();
 
           this.getBrowserForTab(aTab).docShell.isAppTab = false;
+
+          if (aTab.selected)
+            this._setCloseKeyState(true);
 
           let event = document.createEvent("Events");
           event.initEvent("TabUnpinned", true, false);
@@ -892,6 +934,9 @@
                                           true, false);
             }
 
+            if (this.mCurrentTab.selected)
+              this._setCloseKeyState(!this.mCurrentTab.pinned);
+
             // TabSelect events are suppressed during preview mode to avoid confusing extensions and other bits of code
             // that might rely upon the other changes suppressed.
             // Focus is suppressed in the event that the main browser window is minimized - focusing a tab would restore the window
@@ -919,12 +964,6 @@
                     break;
                   }
                 }
-
-                // If the find bar is focused, keep it focused.
-                if (gFindBarInitialized &&
-                    !gFindBar.hidden &&
-                    gFindBar.getElement("findbar-textbox").getAttribute("focused") == "true")
-                  break;
 
                 // Otherwise, focus the content area.
                 let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
@@ -1226,15 +1265,6 @@
 
             this.tabContainer.appendChild(t);
 
-            if (this.tabContainer.mTabstrip._isRTLScrollbox) {
-              /* In RTL UI, the tab is visually added to the left side of the
-               * tabstrip. This means the tabstip has to be scrolled back in
-               * order to make sure the same set of tabs is visible before and
-               * after the new tab is added.  See bug 508816. */
-
-              this.tabContainer.mTabstrip.scrollByPixels(t.clientWidth);
-            }
-
             // invalidate cache, because tabContainer is about to change
             this._browsers = null;
 
@@ -1250,7 +1280,8 @@
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
 
-            if (window.gShowPageResizers && document.getElementById("addon-bar").collapsed) {
+            if (window.gShowPageResizers && document.getElementById("addon-bar").collapsed &&
+                window.windowState == window.STATE_NORMAL) {
               b.setAttribute("showresizer", "true");
             }
 
@@ -2621,7 +2652,7 @@
     </resources>
 
     <content>
-      <xul:hbox align="start">
+      <xul:hbox align="end">
         <xul:image class="tab-drop-indicator" anonid="tab-drop-indicator" collapsed="true"/>
       </xul:hbox>
       <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1"
@@ -3220,7 +3251,6 @@
 
         ind.style.MozTransform = "translate(" + Math.round(newMargin) + "px)";
         ind.style.MozMarginStart = (-ind.clientWidth) + "px";
-        ind.style.marginTop = (-ind.clientHeight) + "px";
       ]]></handler>
 
       <handler event="drop"><![CDATA[
@@ -3689,6 +3719,51 @@
         XULBrowserWindow.setOverLink("", null);
       ]]></handler>
 
+    </handlers>
+  </binding>
+
+  <binding id="statuspanel" display="xul:hbox">
+    <content>
+      <xul:hbox class="statuspanel-inner">
+        <xul:label class="statuspanel-label"
+                   role="status"
+                   xbl:inherits="value=label,mirror"
+                   flex="1"
+                   crop="end"/>
+      </xul:hbox>
+    </content>
+
+    <implementation>
+      <property name="label">
+        <setter><![CDATA[
+          if (!this.label)
+            this.removeAttribute("mirror");
+
+          this.style.minWidth = this.getAttribute("type") == "status" &&
+                                this.getAttribute("previoustype") == "status"
+                                  ? getComputedStyle(this).width : "";
+
+          this.setAttribute("label", val);
+          return val;
+        ]]></setter>
+        <getter>
+          return this.getAttribute("label");
+        </getter>
+      </property>
+
+      <method name="_mirror">
+        <body>
+          if (this.hasAttribute("mirror"))
+            this.removeAttribute("mirror");
+          else
+            this.setAttribute("mirror", "true");
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="mouseover" action="this._mirror();"/>
+      <handler event="dragover" action="this._mirror();"/>
     </handlers>
   </binding>
 

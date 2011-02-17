@@ -21,6 +21,7 @@
  *  Justin Dolske <dolske@mozilla.com>
  *  Anant Narayanan <anant@kix.in>
  *  Philipp von Weitershausen <philipp@weitershausen.de>
+ *  Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,6 +42,7 @@ const EXPORTED_SYMBOLS = ['PasswordEngine', 'LoginRec'];
 const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cr = Components.results;
 
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/constants.js");
@@ -67,6 +69,7 @@ PasswordEngine.prototype = {
   _storeObj: PasswordStore,
   _trackerObj: PasswordTracker,
   _recordObj: LoginRec,
+  applyIncomingBatchSize: PASSWORDS_STORE_BATCH_SIZE,
 
   _syncFinish: function _syncFinish() {
     SyncEngine.prototype._syncFinish.call(this);
@@ -91,6 +94,9 @@ PasswordEngine.prototype = {
 
   _findDupe: function _findDupe(item) {
     let login = this._store._nsLoginInfoFromRecord(item);
+    if (!login)
+      return;
+
     let logins = Svc.Login.findLogins({}, login.hostname, login.formSubmitURL,
       login.httpRealm);
 
@@ -105,14 +111,35 @@ function PasswordStore(name) {
   Store.call(this, name);
   this._nsLoginInfo = new Components.Constructor(
     "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
+
+  Utils.lazy2(this, "DBConnection", function() {
+    try {
+      return Svc.Login.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.mozIStorageConnection);
+    } catch (ex if (ex.result == Cr.NS_ERROR_NO_INTERFACE)) {
+      // Gecko <2.0 *sadface*
+      return null;
+    }
+  });
 }
 PasswordStore.prototype = {
   __proto__: Store.prototype,
 
   _nsLoginInfoFromRecord: function PasswordStore__nsLoginInfoRec(record) {
+    if (record.formSubmitURL &&
+        record.httpRealm) {
+      this._log.warn("Record " + record.id +
+                     " has both formSubmitURL and httpRealm. Skipping.");
+      return null;
+    }
+    
+    // Passing in "undefined" results in an empty string, which later
+    // counts as a value. Explicitly `|| null` these fields according to JS
+    // truthiness. Records with empty strings or null will be unmolested.
+    function nullUndefined(x) (x == undefined) ? null : x;
     let info = new this._nsLoginInfo(record.hostname,
-                                     record.formSubmitURL,
-                                     record.httpRealm,
+                                     nullUndefined(record.formSubmitURL),
+                                     nullUndefined(record.httpRealm),
                                      record.username,
                                      record.password,
                                      record.usernameField,
@@ -135,6 +162,16 @@ PasswordStore.prototype = {
       this._log.trace("No items matching " + id + " found. Ignoring");
     }
     return false;
+  },
+
+  applyIncomingBatch: function applyIncomingBatch(records) {
+    if (!this.DBConnection) {
+      return Store.prototype.applyIncomingBatch.call(this, records);
+    }
+
+    return Utils.runInTransaction(this.DBConnection, function() {
+      return Store.prototype.applyIncomingBatch.call(this, records);
+    }, this);
   },
 
   getAllIDs: function PasswordStore__getAllIDs() {
@@ -198,8 +235,18 @@ PasswordStore.prototype = {
   },
 
   create: function PasswordStore__create(record) {
+    let login = this._nsLoginInfoFromRecord(record);
+    if (!login)
+      return;
     this._log.debug("Adding login for " + record.hostname);
-    Svc.Login.addLogin(this._nsLoginInfoFromRecord(record));
+    this._log.trace("httpRealm: " + JSON.stringify(login.httpRealm) + "; " +
+                    "formSubmitURL: " + JSON.stringify(login.formSubmitURL));
+    try {
+      Svc.Login.addLogin(login);
+    } catch(ex) {
+      this._log.debug("Adding record " + record.id +
+                      " resulted in exception " + Utils.exceptionStr(ex));
+    }
   },
 
   remove: function PasswordStore__remove(record) {
@@ -223,7 +270,15 @@ PasswordStore.prototype = {
 
     this._log.debug("Updating " + record.hostname);
     let newinfo = this._nsLoginInfoFromRecord(record);
-    Svc.Login.modifyLogin(loginItem, newinfo);
+    if (!newinfo)
+      return;
+    try {
+      Svc.Login.modifyLogin(loginItem, newinfo);
+    } catch(ex) {
+      this._log.debug("Modifying record " + record.id +
+                      " resulted in exception " + Utils.exceptionStr(ex) +
+                      ". Not modifying.");
+    }
   },
 
   wipe: function PasswordStore_wipe() {

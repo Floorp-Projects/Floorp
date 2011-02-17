@@ -287,7 +287,11 @@ typedef unsigned char uint8_t;
 typedef unsigned uint32_t;
 typedef unsigned long long uint64_t;
 typedef unsigned long long uintmax_t;
+#if defined(MOZ_MEMORY_SIZEOF_PTR_2POW) && (MOZ_MEMORY_SIZEOF_PTR_2POW == 3)
+typedef long long ssize_t;
+#else
 typedef long ssize_t;
+#endif
 
 #define	MALLOC_DECOMMIT
 #endif

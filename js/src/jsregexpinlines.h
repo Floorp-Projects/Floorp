@@ -140,8 +140,10 @@ class RegExp
     /*
      * Parse regexp flags. Report an error and return false if an invalid
      * sequence of flags is encountered (repeat/invalid flag).
+     *
+     * N.B. flagStr must be rooted.
      */
-    static bool parseFlags(JSContext *cx, JSString *flagStr, uint32 &flagsOut);
+    static bool parseFlags(JSContext *cx, JSString *flagStr, uintN *flagsOut);
 
     /*
      * Execute regexp on |input| at |*lastIndex|.
@@ -179,7 +181,6 @@ class RegExp
     static JSObject *createObjectNoStatics(JSContext *cx, const jschar *chars, size_t length,
                                            uint32 flags);
     static RegExp *extractFrom(JSObject *obj);
-    static AlreadyIncRefed<RegExp> clone(JSContext *cx, const RegExp &other);
 
     /* Mutators */
 
@@ -215,7 +216,7 @@ class RegExpMatchBuilder
     }
 
     bool append(jsid id, Value val) {
-        return !!js_DefineProperty(cx, array, id, &val, js::PropertyStub, js::PropertyStub,
+        return !!js_DefineProperty(cx, array, id, &val, js::PropertyStub, js::StrictPropertyStub,
                                    JSPROP_ENUMERATE);
     }
 
@@ -574,12 +575,6 @@ RegExp::extractFrom(JSObject *obj)
         CompartmentChecker::check(obj->getCompartment(), re->compartment);
 #endif
     return re;
-}
-
-inline AlreadyIncRefed<RegExp>
-RegExp::clone(JSContext *cx, const RegExp &other)
-{
-    return create(cx, other.source, other.flags);
 }
 
 /* RegExpStatics inlines. */

@@ -84,6 +84,8 @@
                onpopupshowing="if (event.target != this)
                                  return true;
                                gContextMenu = new nsContextMenu(this, getPanelBrowser());
+                               if (gContextMenu.shouldDisplay)
+                                 document.popupNode = this.triggerNode;
                                return gContextMenu.shouldDisplay;"
                onpopuphiding="if (event.target == this)
                                 gContextMenu = null;">

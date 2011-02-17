@@ -110,7 +110,6 @@ void
 IDBRequest::Reset()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  mHelper = nsnull;
   mResultVal = JSVAL_VOID;
   mHaveResultOrErrorCode = false;
   mErrorCode = 0;
@@ -119,19 +118,66 @@ IDBRequest::Reset()
   }
 }
 
-void
+nsresult
 IDBRequest::SetDone(AsyncConnectionHelper* aHelper)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!mHelper, "Already called!");
+  NS_ASSERTION(!mHaveResultOrErrorCode, "Already called!");
+  NS_ASSERTION(!mResultValRooted, "Already rooted?!");
+  NS_ASSERTION(JSVAL_IS_VOID(mResultVal), "Should be undefined!");
 
-  mErrorCode = NS_ERROR_GET_CODE(aHelper->GetResultCode());
-  if (mErrorCode) {
-    mHaveResultOrErrorCode = true;
+  // See if our window is still valid. If not then we're going to pretend that
+  // we never completed.
+  if (NS_FAILED(CheckInnerWindowCorrectness())) {
+    return NS_OK;
+  }
+
+  mHaveResultOrErrorCode = true;
+
+  nsresult rv = aHelper->GetResultCode();
+
+  // If the request failed then set the error code and return.
+  if (NS_FAILED(rv)) {
+    mErrorCode = NS_ERROR_GET_CODE(rv);
+    return NS_OK;
+  }
+
+  // Otherwise we need to get the result from the helper.
+  JSContext* cx = static_cast<JSContext*>(mScriptContext->GetNativeContext());
+  NS_ASSERTION(cx, "Failed to get a context!");
+
+  JSObject* global = static_cast<JSObject*>(mScriptContext->GetNativeGlobal());
+  NS_ASSERTION(global, "Failed to get global object!");
+
+  JSAutoRequest ar(cx);
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(cx, global)) {
+    rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
   else {
-    mHelper = aHelper;
+    RootResultVal();
+
+    rv = aHelper->GetSuccessResult(cx, &mResultVal);
+    if (NS_SUCCEEDED(rv)) {
+      // Unroot if we don't really need to be rooted.
+      if (!JSVAL_IS_GCTHING(mResultVal)) {
+        UnrootResultVal();
+      }
+    }
+    else {
+      NS_WARNING("GetSuccessResult failed!");
+    }
   }
+
+  if (NS_SUCCEEDED(rv)) {
+    mErrorCode = 0;
+  }
+  else {
+    mErrorCode = NS_ERROR_GET_CODE(rv);
+    mResultVal = JSVAL_VOID;
+  }
+
+  return rv;
 }
 
 void
@@ -155,7 +201,7 @@ IDBRequest::GetReadyState(PRUint16* aReadyState)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (mHaveResultOrErrorCode || mHelper) {
+  if (mHaveResultOrErrorCode) {
     *aReadyState = nsIIDBRequest::DONE;
   }
   else {
@@ -185,45 +231,17 @@ IDBRequest::GetTransaction(nsIIDBTransaction** aTransaction)
 }
 
 NS_IMETHODIMP
-IDBRequest::GetResult(JSContext* aCx,
-                      jsval* aResult)
+IDBRequest::GetResult(jsval* aResult)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsresult rv = NS_OK;
-
   if (!mHaveResultOrErrorCode) {
-    if (!mHelper) {
-      // XXX Need a real error code here.
-      return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
-    }
-
-    NS_ASSERTION(!mResultValRooted, "Huh?!");
-    NS_ASSERTION(JSVAL_IS_VOID(mResultVal), "Should be undefined!");
-
-    if (NS_SUCCEEDED(mHelper->GetResultCode())) {
-      // It's common practice for result values to be rooted before being set.
-      // Root now, even though we may unroot below, to make mResultVal safe from
-      // GC.
-      RootResultVal();
-
-      rv = mHelper->GetSuccessResult(aCx, &mResultVal);
-      if (NS_FAILED(rv)) {
-        mResultVal = JSVAL_VOID;
-      }
-
-      // There's no point in rooting non-GCThings. Unroot if possible.
-      if (!JSVAL_IS_GCTHING(mResultVal)) {
-        UnrootResultVal();
-      }
-    }
-
-    mHaveResultOrErrorCode = true;
-    mHelper = nsnull;
+    // XXX Need a real error code here.
+    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
   *aResult = mResultVal;
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -231,7 +249,7 @@ IDBRequest::GetErrorCode(PRUint16* aErrorCode)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mHaveResultOrErrorCode && !mHelper) {
+  if (!mHaveResultOrErrorCode) {
     // XXX Need a real error code here.
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
@@ -282,17 +300,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBRequest,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnSuccessListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSource)
-
-  // mHelper is a threadsafe runnable and can't use a cycle-collecting refcnt.
-  // We traverse manually here.
-  if (tmp->mHelper) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mHelper->mDatabase,
-                                                         nsPIDOMEventTarget)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mHelper->mTransaction,
-                                                         nsPIDOMEventTarget)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mHelper->mRequest,
-                                                         nsPIDOMEventTarget)
-  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBRequest,
@@ -300,9 +307,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBRequest,
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnSuccessListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSource)
-
-  // Unlinking mHelper will unlink all the objects that we really care about.
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mHelper)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBRequest)

@@ -407,6 +407,7 @@ VPATH += 	$(srcdir)/assembler \
 CPPSRCS += 	Assertions.cpp \
 		ExecutableAllocatorPosix.cpp \
 		ExecutableAllocatorWin.cpp \
+		ExecutableAllocatorOS2.cpp \
 		ExecutableAllocator.cpp \
 		ARMAssembler.cpp \
                 Logging.cpp \

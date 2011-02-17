@@ -76,9 +76,9 @@ function test() {
           "tabview-groups": '{"nextID":3,"activeGroupId":2}',
           "tabview-group": 
             '{"1":{"bounds":{"left":15,"top":5,"width":280,"height":232},' + 
-            '"userSize":null,"locked":{},"title":"","id":1},' + 
+            '"userSize":null,"title":"","id":1},' + 
             '"2":{"bounds":{"left":309,"top":5,"width":267,"height":226},' + 
-            '"userSize":null,"locked":{},"title":"","id":2}}',
+            '"userSize":null,"title":"","id":2}}',
           "tabview-ui": '{"pageBounds":{"left":0,"top":0,"width":788,"height":548}}'
         }, sizemode:"normal"
       }]
@@ -104,7 +104,7 @@ function test() {
       // when the second tab is hidden, the iframe should be initialized and 
       // the first tab should be visible.
       let onTabHide = function() {
-        newWin.gBrowser.tabContainer.addEventListener("TabHide", onTabHide, true);
+        newWin.gBrowser.tabContainer.removeEventListener("TabHide", onTabHide, true);
 
         ok(newWin.TabView.getContentWindow(), "");
 

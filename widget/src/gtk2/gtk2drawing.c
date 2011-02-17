@@ -789,6 +789,9 @@ moz_gtk_init()
 {
     GtkWidgetClass *entry_class;
 
+    if (is_initialized)
+        return MOZ_GTK_SUCCESS;
+
     is_initialized = TRUE;
     have_arrow_scaling = (gtk_major_version > 2 ||
                           (gtk_major_version == 2 && gtk_minor_version >= 12));
@@ -3362,8 +3365,7 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
 
 GtkWidget* moz_gtk_get_scrollbar_widget(void)
 {
-    if (!is_initialized)
-        return NULL;
+    NS_ASSERTION(is_initialized, "Forgot to call moz_gtk_init()");
     ensure_scrollbar_widget();
     return gHorizScrollbarWidget;
 }

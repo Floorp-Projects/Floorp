@@ -149,6 +149,7 @@ enum { XKeyPress = KeyPress };
 #include "nsIObjectFrame.h"
 #include "nsPluginNativeWindow.h"
 #include "nsIPluginDocument.h"
+#include "FrameLayerBuilder.h"
 
 #include "nsThreadUtils.h"
 
@@ -163,10 +164,11 @@ enum { XKeyPress = KeyPress };
 #include "gfxImageSurface.h"
 #include "gfxUtils.h"
 #include "Layers.h"
+#include "ReadbackLayer.h"
 
 // accessibility support
 #ifdef ACCESSIBILITY
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 #endif
 
 #ifdef MOZ_LOGGING
@@ -237,6 +239,10 @@ static PRLogModuleInfo *nsObjectFrameLM = PR_NewLogModule("nsObjectFrame");
 #define MAC_CARBON_PLUGINS
 #endif
 
+using namespace mozilla;
+#ifdef MOZ_IPC
+using namespace mozilla::plugins;
+#endif
 using namespace mozilla::layers;
 
 // special class for handeling DOM context menu events because for
@@ -330,6 +336,7 @@ public:
 #elif defined(XP_MACOSX)
   void Paint(const gfxRect& aDirtyRect, CGContextRef cgContext);  
   void RenderCoreAnimation(CGContextRef aCGContext, int aWidth, int aHeight);
+  void DoCocoaEventDrawRect(const gfxRect& aDrawRect, CGContextRef cgContext);
 #elif defined(MOZ_X11)
   void Paint(gfxContext* aContext,
              const gfxRect& aFrameRect,
@@ -362,6 +369,7 @@ public:
 
 #ifdef XP_MACOSX
   NPDrawingModel GetDrawingModel();
+  PRBool IsRemoteDrawingCoreAnimation();
   NPEventModel GetEventModel();
   static void CARefresh(nsITimer *aTimer, void *aClosure);
   static void AddToCARefreshTimer(nsPluginInstanceOwner *aPluginInstance);
@@ -464,7 +472,14 @@ public:
   // Return true if we set image with valid surface
   PRBool SetCurrentImage(ImageContainer* aContainer);
 
-  PRBool UseLayers()
+  // Methods to update the background image we send to async plugins.
+  // The eventual target of these operations is PluginInstanceParent,
+  // but it takes several hops to get there.
+  void SetBackgroundUnknown();
+  already_AddRefed<gfxContext> BeginUpdateBackground(const nsIntRect& aRect);
+  void EndUpdateBackground(gfxContext* aContext, const nsIntRect& aRect);
+
+  PRBool UseAsyncRendering()
   {
     PRBool useAsyncRendering;
     return (mInstance &&
@@ -475,13 +490,36 @@ public:
   }
 
 private:
+
   // return FALSE if LayerSurface dirty (newly created and don't have valid plugin content yet)
   PRBool IsUpToDate()
   {
-    nsRefPtr<gfxASurface> readyToUse;
-    return NS_SUCCEEDED(mInstance->GetSurface(getter_AddRefs(readyToUse))) &&
-           readyToUse && readyToUse->GetSize() == gfxIntSize(mPluginWindow->width,
-                                                             mPluginWindow->height);
+    nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
+    if (!container) {
+      return PR_FALSE;
+    }
+
+    nsCOMPtr<nsIPluginInstance_MOZILLA_2_0_BRANCH> inst = do_QueryInterface(mInstance);
+    if (!inst) {
+      return PR_FALSE;
+    }
+
+    nsRefPtr<Image> image;
+    if (!NS_SUCCEEDED(inst->GetImage(container, getter_AddRefs(image))) || !image)
+      return PR_FALSE;
+
+    container->SetCurrentImage(image);
+
+    if (container->GetCurrentSize() != gfxIntSize(mPluginWindow->width, mPluginWindow->height))
+      return PR_FALSE;
+    return PR_TRUE;
+  }
+
+  already_AddRefed<nsIPluginInstance_MOZILLA_2_0_BRANCH>
+  GetInstance()
+  {
+    nsCOMPtr<nsIPluginInstance_MOZILLA_2_0_BRANCH> inst = do_QueryInterface(mInstance);
+    return inst.forget();
   }
 
   void FixUpURLS(const nsString &name, nsAString &value);
@@ -602,8 +640,54 @@ private:
 
 #endif
 
-  nsRefPtr<gfxASurface> mLayerSurface;
   PRPackedBool          mWaitingForPaint;
+};
+
+class PluginBackgroundSink : public ReadbackSink {
+public:
+  PluginBackgroundSink(nsObjectFrame* aFrame, PRUint64 aStartSequenceNumber)
+    : mLastSequenceNumber(aStartSequenceNumber), mFrame(aFrame) {}
+  ~PluginBackgroundSink()
+  {
+    if (mFrame) {
+      mFrame->mBackgroundSink = nsnull;
+    }
+  }
+
+  virtual void SetUnknown(PRUint64 aSequenceNumber)
+  {
+    if (!AcceptUpdate(aSequenceNumber))
+      return;
+    mFrame->mInstanceOwner->SetBackgroundUnknown();
+  }
+
+  virtual already_AddRefed<gfxContext>
+      BeginUpdate(const nsIntRect& aRect, PRUint64 aSequenceNumber)
+  {
+    if (!AcceptUpdate(aSequenceNumber))
+      return nsnull;
+    return mFrame->mInstanceOwner->BeginUpdateBackground(aRect);
+  }
+
+  virtual void EndUpdate(gfxContext* aContext, const nsIntRect& aRect)
+  {
+    return mFrame->mInstanceOwner->EndUpdateBackground(aContext, aRect);
+  }
+
+  void Destroy() { mFrame = nsnull; }
+
+protected:
+  PRBool AcceptUpdate(PRUint64 aSequenceNumber) {
+    if (aSequenceNumber > mLastSequenceNumber && mFrame &&
+        mFrame->mInstanceOwner) {
+      mLastSequenceNumber = aSequenceNumber;
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
+
+  PRUint64 mLastSequenceNumber;
+  nsObjectFrame* mFrame;
 };
 
   // Mac specific code to fix up port position and clip
@@ -635,7 +719,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsObjectFrameSuper)
 already_AddRefed<nsAccessible>
 nsObjectFrame::CreateAccessible()
 {
-  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+  nsAccessibilityService* accService = nsIPresShell::AccService();
   return accService ?
     accService->CreateHTMLObjectFrameAccessible(this, mContent,
                                                 PresContext()->PresShell()) :
@@ -650,7 +734,6 @@ NS_IMETHODIMP nsObjectFrame::GetPluginPort(HWND *aPort)
 }
 #endif
 #endif
-
 
 static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
 
@@ -687,6 +770,10 @@ nsObjectFrame::DestroyFrom(nsIFrame* aDestructRoot)
   if (mWidget) {
     mInnerView->DetachWidgetEventHandler(mWidget);
     mWidget->Destroy();
+  }
+
+  if (mBackgroundSink) {
+    mBackgroundSink->Destroy();
   }
 
   nsObjectFrameSuper::DestroyFrom(aDestructRoot);
@@ -733,6 +820,12 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     return NS_OK;       //XXX why OK? MMP
   }
 
+  PRBool needsWidget = !aViewOnly;
+  PRBool canCreateWidget = !nsIWidget::UsePuppetWidgets();
+  if (needsWidget && !canCreateWidget) {
+    NS_WARNING("Can't use native widgets, and can't hand a plugins a PuppetWidget");
+  }
+
   nsIViewManager* viewMan = view->GetViewManager();
   // mark the view as hidden since we don't know the (x,y) until Paint
   // XXX is the above comment correct?
@@ -758,7 +851,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     return NS_ERROR_FAILURE;
   }
 
-  if (!aViewOnly && !mWidget) {
+  if (needsWidget && !mWidget && canCreateWidget) {
     // XXX this breaks plugins in popups ... do we care?
     nsIWidget* parentWidget =
       rpc->PresShell()->FrameManager()->GetRootFrame()->GetNearestWidget();
@@ -787,8 +880,13 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     // allow the view to attach its event handler to mWidget even though
     // mWidget isn't the view's designated widget.
     EVENT_CALLBACK eventHandler = mInnerView->AttachWidgetEventHandler(mWidget);
-    mWidget->Create(parentWidget, nsnull, nsIntRect(0,0,0,0),
-                    eventHandler, dx, nsnull, nsnull, &initData);
+    rv = mWidget->Create(parentWidget, nsnull, nsIntRect(0,0,0,0),
+                         eventHandler, dx, nsnull, nsnull, &initData);
+    if (NS_FAILED(rv)) {
+      mWidget->Destroy();
+      mWidget = nsnull;
+      return rv;
+    }
 
     mWidget->EnableDragDrop(PR_TRUE);
 
@@ -848,7 +946,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     viewMan->SetViewVisibility(view, nsViewVisibility_kShow);
   }
 
-  return NS_OK;
+  return (needsWidget && !canCreateWidget) ? NS_ERROR_NOT_AVAILABLE : NS_OK;
 }
 
 #define EMBED_DEF_WIDTH 240
@@ -1136,7 +1234,7 @@ nsObjectFrame::CallSetWindow(PRBool aCheckIsHidden)
 
   // this will call pi->SetWindow and take care of window subclassing
   // if needed, see bug 132759.
-  if (mInstanceOwner->UseLayers()) {
+  if (mInstanceOwner->UseAsyncRendering()) {
     rv = pi->AsyncSetWindow(window);
   }
   else {
@@ -1248,19 +1346,57 @@ nsObjectFrame::PaintPrintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
   static_cast<nsObjectFrame*>(aFrame)->PrintPlugin(*aCtx, aDirtyRect);
 }
 
-nsRect
-nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder)
-{
-  nsRect r = mFrame->GetContentRect() - mFrame->GetPosition() +
-    ToReferenceFrame();
-  if (aBuilder->IsForPluginGeometry()) {
-    // Return the geometry we want, not the geometry we have (which is based
-    // on the surface the plugin last gave us)
-    return r;
+class nsDisplayPluginReadback : public nsDisplayItem {
+public:
+  nsDisplayPluginReadback(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame)
+  {
+    MOZ_COUNT_CTOR(nsDisplayPluginReadback);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayPluginReadback() {
+    MOZ_COUNT_DTOR(nsDisplayPluginReadback);
+  }
+#endif
+
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
+  virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                   nsRegion* aVisibleRegion,
+                                   const nsRect& aAllowVisibleRegionExpansion,
+                                   PRBool& aContainsRootContentDocBG);
+
+  NS_DISPLAY_DECL_NAME("PluginReadback", TYPE_PLUGIN_READBACK)
+
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager)
+  {
+    return static_cast<nsObjectFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this);
   }
 
-  nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
-  if (mozilla::LAYER_ACTIVE == f->GetLayerState(aBuilder, nsnull)) {
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager)
+  {
+    return LAYER_ACTIVE;
+  }
+};
+
+static nsRect
+GetDesiredDisplayItemBounds(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem, nsIFrame* aFrame)
+{
+  nsRect r = aFrame->GetContentRect() - aFrame->GetPosition() +
+    aItem->ToReferenceFrame();
+  return r;
+}
+
+static nsRect
+GetDrawnDisplayItemBounds(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem, nsIFrame* aFrame)
+{
+  nsRect r = aFrame->GetContentRect() - aFrame->GetPosition() +
+    aItem->ToReferenceFrame();
+
+#ifndef XP_MACOSX
+  nsObjectFrame* f = static_cast<nsObjectFrame*>(aFrame);
+  if (LAYER_ACTIVE == f->GetLayerState(aBuilder, nsnull)) {
     ImageContainer* c = f->GetImageContainer();
     if (c) {
       gfxIntSize size = c->GetCurrentSize();
@@ -1271,7 +1407,48 @@ nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder)
       r.SizeTo(sizeAppUnits);
     }
   }
+#endif
   return r;
+}
+
+nsRect
+nsDisplayPluginReadback::GetBounds(nsDisplayListBuilder* aBuilder)
+{
+  return GetDesiredDisplayItemBounds(aBuilder, this, mFrame);
+}
+
+PRBool
+nsDisplayPluginReadback::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                           nsRegion* aVisibleRegion,
+                                           const nsRect& aAllowVisibleRegionExpansion,
+                                           PRBool& aContainsRootContentDocBG)
+{
+  if (!nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
+                                        aAllowVisibleRegionExpansion,
+                                        aContainsRootContentDocBG))
+    return PR_FALSE;
+
+  nsRect expand;
+  expand.IntersectRect(aAllowVisibleRegionExpansion, GetBounds(aBuilder));
+  // *Add* our bounds to the visible region so that stuff underneath us is
+  // likely to be made visible, so we can use it for a background! This is
+  // a bit crazy since we normally only subtract from the visible region.
+  aVisibleRegion->Or(*aVisibleRegion, expand);
+  return PR_TRUE;
+}
+
+nsRect
+nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder)
+{
+  // We use display lists to notify plugins of visibility.  But we
+  // also need to return the "real" visible bounds, possibly those of
+  // our Image, when actually painting.  Usually those will be the
+  // same, but for the plugin to paint initially, something needs to
+  // notify it that it's visible.  So return whichever the appropriate
+  // rect here.
+  return aBuilder->IsForPluginGeometry() ?
+    GetDesiredDisplayItemBounds(aBuilder, this, mFrame) :
+    GetDrawnDisplayItemBounds(aBuilder, this, mFrame);
 }
 
 void
@@ -1284,10 +1461,14 @@ nsDisplayPlugin::Paint(nsDisplayListBuilder* aBuilder,
 
 PRBool
 nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion)
+                                   nsRegion* aVisibleRegion,
+                                   const nsRect& aAllowVisibleRegionExpansion,
+                                   PRBool& aContainsRootContentDocBG)
 {
   mVisibleRegion.And(*aVisibleRegion, GetBounds(aBuilder));  
-  return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion);
+  return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
+                                          aAllowVisibleRegionExpansion,
+                                          aContainsRootContentDocBG);
 }
 
 nsRegion
@@ -1422,6 +1603,18 @@ PRBool
 nsObjectFrame::IsOpaque() const
 {
 #if defined(XP_MACOSX)
+  // ???
+  return PR_FALSE;
+#else
+  return !IsTransparentMode();
+#endif
+}
+
+PRBool
+nsObjectFrame::IsTransparentMode() const
+{
+#if defined(XP_MACOSX)
+  // ???
   return PR_FALSE;
 #else
   if (!mInstanceOwner)
@@ -1430,7 +1623,7 @@ nsObjectFrame::IsOpaque() const
   NPWindow *window;
   mInstanceOwner->GetWindow(window);
   if (window->type != NPWindowTypeDrawable)
-    return PR_TRUE;
+    return PR_FALSE;
 
   nsresult rv;
   nsCOMPtr<nsIPluginInstance> pi;
@@ -1440,7 +1633,7 @@ nsObjectFrame::IsOpaque() const
 
   PRBool transparent = PR_FALSE;
   pi->IsTransparent(&transparent);
-  return !transparent;
+  return transparent;
 #endif
 }
 
@@ -1449,10 +1642,12 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
 {
+  AddStateBits(NS_OBJECT_NEEDS_SET_IMAGE);
+
   // XXX why are we painting collapsed object frames?
   if (!IsVisibleOrCollapsedForPainting(aBuilder))
     return NS_OK;
-    
+
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1473,7 +1668,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsDisplayList replacedContent;
 
-  if (aBuilder->IsForPainting() && mInstanceOwner && mInstanceOwner->UseLayers()) {
+  if (aBuilder->IsForPainting() && mInstanceOwner && mInstanceOwner->UseAsyncRendering()) {
     NPWindow* window = nsnull;
     mInstanceOwner->GetWindow(window);
     PRBool isVisible = window && window->width > 0 && window->height > 0;
@@ -1497,6 +1692,14 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         nsDisplayGeneric(aBuilder, this, PaintPrintPlugin, "PrintPlugin",
                          nsDisplayItem::TYPE_PRINT_PLUGIN));
   } else {
+    if (aBuilder->IsPaintingToWindow() &&
+        GetLayerState(aBuilder, nsnull) == LAYER_ACTIVE &&
+        IsTransparentMode()) {
+      rv = replacedContent.AppendNewToTop(new (aBuilder)
+          nsDisplayPluginReadback(aBuilder, this));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     rv = replacedContent.AppendNewToTop(new (aBuilder)
         nsDisplayPlugin(aBuilder, this));
   }
@@ -1774,37 +1977,95 @@ nsPluginInstanceOwner::NotifyPaintWaiter(nsDisplayListBuilder* aBuilder)
   }
 }
 
+static void DrawPlugin(ImageContainer* aContainer, void* aObjectFrame)
+{
+  static_cast<nsObjectFrame*>(aObjectFrame)->UpdateImageLayer(aContainer, gfxRect(0,0,0,0));
+}
+
+void
+nsObjectFrame::UpdateImageLayer(ImageContainer* aContainer, const gfxRect& aRect)
+{
+#ifdef XP_MACOSX
+  mInstanceOwner->DoCocoaEventDrawRect(aRect, nsnull);
+#endif
+
+  mInstanceOwner->SetCurrentImage(aContainer);
+}
+
 PRBool
 nsPluginInstanceOwner::SetCurrentImage(ImageContainer* aContainer)
 {
-  mInstance->GetSurface(getter_AddRefs(mLayerSurface));
-  if (!mLayerSurface) {
-    aContainer->SetCurrentImage(nsnull);
-    return PR_FALSE;
+  nsCOMPtr<nsIPluginInstance_MOZILLA_2_0_BRANCH> inst = do_QueryInterface(mInstance);
+  if (inst) {
+    nsRefPtr<Image> image;
+    inst->GetImage(aContainer, getter_AddRefs(image));
+    if (image) {
+#ifdef XP_MACOSX
+      if (image->GetFormat() == Image::MAC_IO_SURFACE) {
+        MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image.get());
+        oglImage->SetCallback(&DrawPlugin, mObjectFrame);
+      }
+#endif
+      aContainer->SetCurrentImage(image);
+      return PR_TRUE;
+    }
   }
+  aContainer->SetCurrentImage(nsnull);
+  return PR_FALSE;
+}
 
-  Image::Format format = Image::CAIRO_SURFACE;
-  nsRefPtr<Image> image;
-  image = aContainer->CreateImage(&format, 1);
-  if (!image)
-    return PR_FALSE;
+void
+nsPluginInstanceOwner::SetBackgroundUnknown()
+{
+  nsCOMPtr<nsIPluginInstance_MOZILLA_2_0_BRANCH> inst = GetInstance();
+  if (inst) {
+    inst->SetBackgroundUnknown();
+  }
+}
 
-  NS_ASSERTION(image->GetFormat() == Image::CAIRO_SURFACE, "Wrong format?");
-  CairoImage* pluginImage = static_cast<CairoImage*>(image.get());
-  CairoImage::Data cairoData;
-  cairoData.mSurface = mLayerSurface.get();
-  cairoData.mSize = mLayerSurface->GetSize();
-  pluginImage->SetData(cairoData);
-  aContainer->SetCurrentImage(image);
+already_AddRefed<gfxContext>
+nsPluginInstanceOwner::BeginUpdateBackground(const nsIntRect& aRect)
+{
+  nsIntRect rect = aRect;
+  nsCOMPtr<nsIPluginInstance_MOZILLA_2_0_BRANCH> inst = GetInstance();
+  nsRefPtr<gfxContext> ctx;
+  if (inst &&
+      NS_SUCCEEDED(inst->BeginUpdateBackground(&rect, getter_AddRefs(ctx)))) {
+    return ctx.forget();
+  }
+  return nsnull;
+}
 
-  return PR_TRUE;
+void
+nsPluginInstanceOwner::EndUpdateBackground(gfxContext* aContext,
+                                           const nsIntRect& aRect)
+{
+  nsIntRect rect = aRect;
+  nsCOMPtr<nsIPluginInstance_MOZILLA_2_0_BRANCH> inst = GetInstance();
+  if (inst) {
+    inst->EndUpdateBackground(aContext, &rect);
+  }
 }
 
 mozilla::LayerState
 nsObjectFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager)
 {
-  if (!mInstanceOwner || !mInstanceOwner->UseLayers())
+  if (!mInstanceOwner)
+    return mozilla::LAYER_NONE;
+
+#ifdef XP_MACOSX
+  if (aManager &&
+      aManager->GetBackendType() == LayerManager::LAYERS_OPENGL &&
+      mInstanceOwner->GetEventModel() == NPEventModelCocoa &&
+      mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics &&
+      mInstanceOwner->IsRemoteDrawingCoreAnimation())
+  {
+    return mozilla::LAYER_ACTIVE;
+  }
+#endif
+
+  if (!mInstanceOwner->UseAsyncRendering())
     return mozilla::LAYER_NONE;
 
   return mozilla::LAYER_ACTIVE;
@@ -1826,6 +2087,18 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (window->width <= 0 || window->height <= 0)
     return nsnull;
 
+  // Create image
+  nsRefPtr<ImageContainer> container = GetImageContainer(aManager);
+  if (!container)
+    return nsnull;
+  if (GetStateBits() & NS_OBJECT_NEEDS_SET_IMAGE) {
+    RemoveStateBits(NS_OBJECT_NEEDS_SET_IMAGE);
+    if (!mInstanceOwner->SetCurrentImage(container)) {
+      return nsnull;
+    }
+  }
+  gfxIntSize size = container->GetCurrentSize();
+
   nsRect area = GetContentRect() + aBuilder->ToReferenceFrame(GetParent());
   gfxRect r = nsLayoutUtils::RectToGfxRect(area, PresContext()->AppUnitsPerDevPixel());
   // to provide crisper and faster drawing.
@@ -1833,41 +2106,63 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   nsRefPtr<Layer> layer =
     (aBuilder->LayerBuilder()->GetLeafLayerFor(aBuilder, aManager, aItem));
 
-  if (!layer) {
-    mInstanceOwner->NotifyPaintWaiter(aBuilder);
-    // Initialize ImageLayer
-    layer = aManager->CreateImageLayer();
+  if (aItem->GetType() == nsDisplayItem::TYPE_PLUGIN) {
+    if (!layer) {
+      mInstanceOwner->NotifyPaintWaiter(aBuilder);
+      // Initialize ImageLayer
+      layer = aManager->CreateImageLayer();
+      if (!layer)
+        return nsnull;
+    }
+
+    NS_ASSERTION(layer->GetType() == Layer::TYPE_IMAGE, "Bad layer type");
+
+    ImageLayer* imglayer = static_cast<ImageLayer*>(layer.get());
+    UpdateImageLayer(container, r);
+
+    imglayer->SetContainer(container);
+    imglayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
+
+    layer->SetContentFlags(IsOpaque() ? Layer::CONTENT_OPAQUE : 0);
+  } else {
+    NS_ASSERTION(aItem->GetType() == nsDisplayItem::TYPE_PLUGIN_READBACK,
+                 "Unknown item type");
+    NS_ABORT_IF_FALSE(!IsOpaque(), "Opaque plugins don't use backgrounds");
+
+    if (!layer) {
+      layer = aManager->CreateReadbackLayer();
+      if (!layer)
+        return nsnull;
+    }
+    NS_ASSERTION(layer->GetType() == Layer::TYPE_READBACK, "Bad layer type");
+
+    ReadbackLayer* readback = static_cast<ReadbackLayer*>(layer.get());
+    if (readback->GetSize() != nsIntSize(size.width, size.height)) {
+      // This will destroy any old background sink and notify us that the
+      // background is now unknown
+      readback->SetSink(nsnull);
+      NS_ASSERTION(!mBackgroundSink, "Should have been cleared");
+
+      readback->SetSize(nsIntSize(size.width, size.height));
+
+      mBackgroundSink =
+        new PluginBackgroundSink(this,
+                                 readback->AllocateSequenceNumber());
+      readback->SetSink(mBackgroundSink);
+      // The layer has taken ownership of our sink. When either the sink dies
+      // or the frame dies, the connection from the surviving object is nulled out.
+    }
   }
-
-  if (!layer)
-    return nsnull;
-
-  NS_ASSERTION(layer->GetType() == Layer::TYPE_IMAGE, "ObjectFrame works only with ImageLayer");
-  // Create image
-  nsRefPtr<ImageContainer> container = GetImageContainer(aManager);
-  if (!container)
-    return nsnull;
-
-  if (!mInstanceOwner->SetCurrentImage(container)) {
-    return nsnull;
-  }
-
-  ImageLayer* imglayer = static_cast<ImageLayer*>(layer.get());
-  imglayer->SetContainer(container);
-  imglayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
-
-  layer->SetContentFlags(IsOpaque() ? Layer::CONTENT_OPAQUE : 0);
 
   // Set a transform on the layer to draw the plugin in the right place
   gfxMatrix transform;
   // Center plugin if layer size != frame rect
-  r.pos.x += (r.Width() - container->GetCurrentSize().width) / 2;
-  r.pos.y += (r.Height() - container->GetCurrentSize().height) / 2;
+  r.pos.x += (r.Width() - size.width) / 2;
+  r.pos.y += (r.Height() - size.height) / 2;
   transform.Translate(r.pos);
 
   layer->SetTransform(gfx3DMatrix::From2D(transform));
-  nsRefPtr<Layer> result = layer.forget();
-  return result.forget();
+  return layer.forget();
 }
 
 void
@@ -2032,7 +2327,7 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
         // double pass render. If this plugin isn't oop, the register window message
         // will be ignored.
         NPEvent pluginEvent;
-        pluginEvent.event = mozilla::plugins::DoublePassRenderingEvent();
+        pluginEvent.event = DoublePassRenderingEvent();
         pluginEvent.wParam = 0;
         pluginEvent.lParam = 0;
         if (pluginEvent.event)
@@ -2346,12 +2641,9 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
   mPreventInstantiation = PR_FALSE;
 
 #ifdef ACCESSIBILITY
-  if (PresContext()->PresShell()->IsAccessibilityActive()) {
-    nsCOMPtr<nsIAccessibilityService> accService =
-      do_GetService("@mozilla.org/accessibilityService;1");
-    if (accService) {
-      accService->RecreateAccessible(PresContext()->PresShell(), mContent);
-    }
+  nsAccessibilityService* accService = nsIPresShell::AccService();
+  if (accService) {
+    accService->RecreateAccessible(PresContext()->PresShell(), mContent);
   }
 #endif
 
@@ -2418,12 +2710,9 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
                "Instantiation should still be prevented!");
 
 #ifdef ACCESSIBILITY
-  if (PresContext()->PresShell()->IsAccessibilityActive()) {
-    nsCOMPtr<nsIAccessibilityService> accService =
-      do_GetService("@mozilla.org/accessibilityService;1");
-    if (accService) {
-      accService->RecreateAccessible(PresContext()->PresShell(), mContent);
-    }
+  nsAccessibilityService* accService = nsIPresShell::AccService();
+  if (accService) {
+    accService->RecreateAccessible(PresContext()->PresShell(), mContent);
   }
 #endif
 
@@ -3215,7 +3504,16 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
               presContext->DevPixelsToAppUnits(invalidRect->top),
               presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
               presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
+#ifndef XP_MACOSX
   mObjectFrame->InvalidateLayer(rect + mObjectFrame->GetUsedBorderAndPadding().TopLeft(), nsDisplayItem::TYPE_PLUGIN);
+#else
+  if (mozilla::FrameLayerBuilder::HasDedicatedLayer(mObjectFrame, nsDisplayItem::TYPE_PLUGIN)) {
+    mObjectFrame->InvalidateWithFlags(rect + mObjectFrame->GetUsedBorderAndPadding().TopLeft(),
+                                      nsIFrame::INVALIDATE_NO_UPDATE_LAYER_TREE);
+  } else {
+    mObjectFrame->Invalidate(rect + mObjectFrame->GetUsedBorderAndPadding().TopLeft());
+  }
+#endif
   return NS_OK;
 }
 
@@ -3936,6 +4234,19 @@ NPDrawingModel nsPluginInstanceOwner::GetDrawingModel()
   return drawingModel;
 }
 
+PRBool nsPluginInstanceOwner::IsRemoteDrawingCoreAnimation()
+{
+  nsCOMPtr<nsIPluginInstance_MOZILLA_2_0_BRANCH> inst = do_QueryInterface(mInstance);
+  if (!inst)
+    return PR_FALSE;
+
+  PRBool coreAnimation;
+  if (!NS_SUCCEEDED(inst->IsRemoteDrawingCoreAnimation(&coreAnimation)))
+    return PR_FALSE;
+
+  return coreAnimation;
+}
+
 NPEventModel nsPluginInstanceOwner::GetEventModel()
 {
   return mEventModel;
@@ -4067,7 +4378,7 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
   nsresult rt = mCARenderer.Render(aWidth, aHeight, &caImage);
   if (rt == NS_OK && mIOSurface) {
     nsCARenderer::DrawSurfaceToCGContext(aCGContext, mIOSurface, CreateSystemColorSpace(),
-                                         0, 0, aWidth, aHeight); 
+                                         0, 0, aWidth, aHeight);
   } else if (rt == NS_OK && caImage != NULL) {
     // Significant speed up by resetting the scaling
     ::CGContextSetInterpolationQuality(aCGContext, kCGInterpolationNone );
@@ -5450,12 +5761,9 @@ void
 nsPluginInstanceOwner::PrepareToStop(PRBool aDelayedStop)
 {
   // Drop image reference because the child may destroy the surface after we return.
-  if (mLayerSurface) {
-     nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
-     if (container) {
-       container->SetCurrentImage(nsnull);
-     }
-     mLayerSurface = nsnull;
+  nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
+  if (container) {
+    container->SetCurrentImage(nsnull);
   }
 
 #if defined(XP_WIN) || defined(MOZ_X11)
@@ -5509,20 +5817,25 @@ void nsPluginInstanceOwner::Paint(const gfxRect& aDirtyRect, CGContextRef cgCont
     } else if (GetEventModel() == NPEventModelCocoa)
 #endif
     {
-      // The context given here is only valid during the HandleEvent call.
-      NPCocoaEvent updateEvent;
-      InitializeNPCocoaEvent(&updateEvent);
-      updateEvent.type = NPCocoaEventDrawRect;
-      updateEvent.data.draw.context = cgContext;
-      updateEvent.data.draw.x = aDirtyRect.X();
-      updateEvent.data.draw.y = aDirtyRect.Y();
-      updateEvent.data.draw.width = aDirtyRect.Width();
-      updateEvent.data.draw.height = aDirtyRect.Height();
-
-      mInstance->HandleEvent(&updateEvent, nsnull);
+      DoCocoaEventDrawRect(aDirtyRect, cgContext);
     }
     pluginWidget->EndDrawPlugin();
   }
+}
+
+void nsPluginInstanceOwner::DoCocoaEventDrawRect(const gfxRect& aDrawRect, CGContextRef cgContext)
+{
+  // The context given here is only valid during the HandleEvent call.
+  NPCocoaEvent updateEvent;
+  InitializeNPCocoaEvent(&updateEvent);
+  updateEvent.type = NPCocoaEventDrawRect;
+  updateEvent.data.draw.context = cgContext;
+  updateEvent.data.draw.x = aDrawRect.X();
+  updateEvent.data.draw.y = aDrawRect.Y();
+  updateEvent.data.draw.width = aDrawRect.Width();
+  updateEvent.data.draw.height = aDrawRect.Height();
+
+  mInstance->HandleEvent(&updateEvent, nsnull);
 }
 #endif
 
@@ -6534,7 +6847,7 @@ void nsPluginInstanceOwner::UpdateWindowPositionAndClipRect(PRBool aSetWindow)
   // For windowless plugins a non-empty clip rectangle will be
   // passed to the plugin during paint, an additional update
   // of the the clip rectangle here is not required
-  if (aSetWindow && !mWidget && mPluginWindowVisible && !UseLayers())
+  if (aSetWindow && !mWidget && mPluginWindowVisible && !UseAsyncRendering())
     return;
 
   const NPWindow oldWindow = *mPluginWindow;
@@ -6575,7 +6888,7 @@ nsPluginInstanceOwner::CallSetWindow()
   if (!mInstance)
     return;
 
-  if (UseLayers()) {
+  if (UseAsyncRendering()) {
     mInstance->AsyncSetWindow(mPluginWindow);
   } else {
     mInstance->SetWindow(mPluginWindow);

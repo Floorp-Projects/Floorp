@@ -949,6 +949,9 @@ public:
    */
   nsIContent* GetEditingHost();
 
+  // Overloaded from nsINode
+  virtual already_AddRefed<nsIURI> GetBaseURI() const;
+
 protected:
   /**
    * Hook for implementing GetID.  This is guaranteed to only be

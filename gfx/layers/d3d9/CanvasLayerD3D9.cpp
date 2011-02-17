@@ -191,6 +191,12 @@ CanvasLayerD3D9::Updated(const nsIntRect& aRect)
       sourceStride = sourceSurface->Stride();
     }
 
+    if (sourceSurface->Format() != gfxASurface::ImageFormatARGB32) {
+      mHasAlpha = false;
+    } else {
+      mHasAlpha = true;
+    }
+
     for (int y = 0; y < aRect.height; y++) {
       memcpy((PRUint8*)lockedRect.pBits + lockedRect.Pitch * y,
              startBits + sourceStride * y,
@@ -229,7 +235,11 @@ CanvasLayerD3D9::RenderLayer()
 
   SetShaderTransformAndOpacity();
 
-  mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
+  if (mHasAlpha) {
+    mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
+  } else {
+    mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER);
+  }
 
   if (mFilter == gfxPattern::FILTER_NEAREST) {
     device()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);

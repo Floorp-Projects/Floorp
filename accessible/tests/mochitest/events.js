@@ -12,6 +12,7 @@ const EVENT_MENU_START = nsIAccessibleEvent.EVENT_MENU_START;
 const EVENT_MENU_END = nsIAccessibleEvent.EVENT_MENU_END;
 const EVENT_MENUPOPUP_START = nsIAccessibleEvent.EVENT_MENUPOPUP_START;
 const EVENT_MENUPOPUP_END = nsIAccessibleEvent.EVENT_MENUPOPUP_END;
+const EVENT_OBJECT_ATTRIBUTE_CHANGED = nsIAccessibleEvent.EVENT_OBJECT_ATTRIBUTE_CHANGED;
 const EVENT_REORDER = nsIAccessibleEvent.EVENT_REORDER;
 const EVENT_SCROLLING_START = nsIAccessibleEvent.EVENT_SCROLLING_START;
 const EVENT_SELECTION_ADD = nsIAccessibleEvent.EVENT_SELECTION_ADD;
@@ -330,7 +331,7 @@ function eventQueue(aEventType)
     var idx = 0;
     for (; idx < this.mEventSeq.length; idx++) {
       if (!this.isEventUnexpected(idx) && (invoker.wasCaught[idx] == true) &&
-          this.compareEvents(idx, aEvent)) {
+          this.isAlreadyCaught(idx, aEvent)) {
 
         var msg = "Doubled event { event type: " +
           this.getEventTypeAsString(idx) + ", target: " +
@@ -540,6 +541,15 @@ function eventQueue(aEventType)
     var target2 = (aEvent instanceof nsIDOMEvent) ?
       aEvent.originalTarget : aEvent.DOMNode;
     return target1 == target2;
+  }
+
+  this.isAlreadyCaught = function eventQueue_isAlreadyCaught(aIdx, aEvent)
+  {
+    // We don't have stored info about handled event other than its type and
+    // target, thus we should filter text change events since they may occur
+    // on the same element because of complex changes.
+    return this.compareEvents(aIdx, aEvent) &&
+      !(aEvent instanceof nsIAccessibleTextChangeEvent);
   }
 
   this.checkEvent = function eventQueue_checkEvent(aIdx, aEvent)
@@ -860,10 +870,13 @@ function synthSelectAll(aNodeOrID, aCheckerOrEventSeq, aEventType)
 
   this.invoke = function synthSelectAll_invoke()
   {
-    if (this.DOMNode instanceof Components.interfaces.nsIDOMHTMLInputElement)
+    if (this.DOMNode instanceof Components.interfaces.nsIDOMHTMLInputElement ||
+        this.DOMNode instanceof Components.interfaces.nsIDOMXULTextBoxElement) {
       this.DOMNode.select();
-    else
+
+    } else {
       window.getSelection().selectAllChildren(this.DOMNode);
+    }
   }
 
   this.getID = function synthSelectAll_getID()
@@ -906,7 +919,7 @@ function invokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg)
   function invokerChecker_targetDescrGetter()
   {
     if (typeof this.mTarget == "function")
-      return this.mTarget.toSource() + this.mTargetFuncArg;
+      return this.mTarget.name + ", arg: " + this.mTargetFuncArg;
 
     return prettyName(this.mTarget);
   }
@@ -938,6 +951,19 @@ function textChangeChecker(aID, aStart, aEnd, aTextOrFunc, aIsInserted)
        "Text was " + changeInfo + " for " + prettyName(aID));
     is(aEvent.modifiedText, modifiedText,
        "Wrong " + changeInfo + " text for " + prettyName(aID));
+  }
+}
+
+/**
+ * Caret move events checker.
+ */
+function caretMoveChecker(aCaretOffset)
+{
+  this.check = function caretMoveChecker_check(aEvent)
+  {
+    is(aEvent.QueryInterface(nsIAccessibleCaretMoveEvent).caretOffset,
+       aCaretOffset,
+       "Wrong caret offset for " + prettyName(aEvent.accessible));
   }
 }
 

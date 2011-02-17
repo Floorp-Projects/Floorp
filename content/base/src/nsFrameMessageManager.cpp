@@ -716,6 +716,16 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
   }
 }
 
+// static
+void
+nsFrameScriptExecutor::Traverse(nsFrameScriptExecutor *tmp,
+                                nsCycleCollectionTraversalCallback &cb)
+{
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobal)
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCx");
+  nsContentUtils::XPConnect()->NoteJSContext(tmp->mCx, cb);
+}
+
 NS_IMPL_ISUPPORTS1(nsScriptCacheCleaner, nsIObserver)
 
 nsFrameMessageManager* nsFrameMessageManager::sChildProcessManager = nsnull;

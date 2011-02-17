@@ -39,7 +39,7 @@
 import sys, os.path, re
 
 commentRE = re.compile(r"\s+#")
-conditionsRE = re.compile(r"^(fails|random|skip|asserts)")
+conditionsRE = re.compile(r"^(fails|needs-focus|random|skip|asserts)")
 httpRE = re.compile(r"HTTP\((\.\.(\/\.\.)*)\)")
 protocolRE = re.compile(r"^\w+:")
 

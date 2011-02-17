@@ -45,14 +45,13 @@
     do {                                        \
         passed(__FUNCTION__);                   \
         return NS_OK;                           \
-    } while (0);
-
+    } while (0)
 
 #define FAIL(why)                               \
     do {                                        \
-        fail(why);                              \
+        fail("%s | %s - %s", __FILE__, __FUNCTION__, why); \
         return NS_ERROR_FAILURE;                \
-    } while (0);
+    } while (0)
 
 #ifdef OLD_API
 #  include "nsAutoLock.h"
@@ -191,7 +190,7 @@ MaxDepsNsq(const int N, const int K)
 int
 main(int argc, char** argv)
 {
-    ScopedXPCOM xpcom("Deadlock detector scalability");
+    ScopedXPCOM xpcom("Deadlock detector scalability (" __FILE__ ")");
     if (xpcom.failed())
         return 1;
 
@@ -199,17 +198,23 @@ main(int argc, char** argv)
 
     // Uncomment these tests to run them.  Not expected to be common.
 
-#ifdef DD_TEST1
+#ifndef DD_TEST1
+    puts("Skipping not-requested LengthNDepChain() test");
+#else
     if (NS_FAILED(LengthNDepChain(1 << 14))) // 16K
         rv = 1;
 #endif
 
-#ifdef DD_TEST2
+#ifndef DD_TEST2
+    puts("Skipping not-requested OneLockNDeps() test");
+#else
     if (NS_FAILED(OneLockNDeps(1 << 14, 100))) // 16k
         rv = 1;
 #endif
 
-#ifdef DD_TEST3
+#ifndef DD_TEST3
+    puts("Skipping not-requested MaxDepsNsq() test");
+#else
     if (NS_FAILED(MaxDepsNsq(1 << 10, 10))) // 1k
         rv = 1;
 #endif

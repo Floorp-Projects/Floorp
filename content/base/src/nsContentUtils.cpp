@@ -1523,6 +1523,11 @@ nsContentUtils::GetDocumentFromCaller()
   sXPConnect->GetCaller(&cx, &obj);
   NS_ASSERTION(cx && obj, "Caller ensures something is running");
 
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(cx, obj)) {
+    return nsnull;
+  }
+
   nsCOMPtr<nsPIDOMWindow> win =
     do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, obj));
   if (!win) {
@@ -6499,3 +6504,21 @@ nsIContentUtils2::CheckSameOrigin(nsIChannel *aOldChannel, nsIChannel *aNewChann
 {
   return nsContentUtils::CheckSameOrigin(aOldChannel, aNewChannel);
 }
+
+#ifndef MOZ_ENABLE_LIBXUL
+
+NS_IMPL_ISUPPORTS1(nsIContentUtils_MOZILLA_2_0_BRANCH, nsIContentUtils_MOZILLA_2_0_BRANCH)
+
+nsresult
+nsIContentUtils_MOZILLA_2_0_BRANCH::DispatchTrustedEvent(nsIDocument* aDoc,
+                                                         nsISupports* aTarget,
+                                                         const nsAString& aEventName,
+                                                         PRBool aCanBubble,
+                                                         PRBool aCancelable,
+                                                         PRBool *aDefaultAction)
+{
+  return nsContentUtils::DispatchTrustedEvent(aDoc, aTarget, aEventName,
+                                              aCanBubble, aCancelable, aDefaultAction);
+}
+
+#endif
