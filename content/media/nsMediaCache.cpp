@@ -2067,27 +2067,22 @@ nsMediaCacheStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
     return NS_ERROR_FAILURE;
 
   PRInt64 oldOffset = mStreamOffset;
-  PRInt64 newOffset = mStreamOffset;
   switch (aWhence) {
   case PR_SEEK_END:
     if (mStreamLength < 0)
       return NS_ERROR_FAILURE;
-    newOffset = mStreamLength + aOffset;
+    mStreamOffset = mStreamLength + aOffset;
     break;
   case PR_SEEK_CUR:
-    newOffset += aOffset;
+    mStreamOffset += aOffset;
     break;
   case PR_SEEK_SET:
-    newOffset = aOffset;
+    mStreamOffset = aOffset;
     break;
   default:
     NS_ERROR("Unknown whence");
     return NS_ERROR_FAILURE;
   }
-
-  if (newOffset < 0)
-    return NS_ERROR_FAILURE;
-  mStreamOffset = newOffset;
 
   LOG(PR_LOG_DEBUG, ("Stream %p Seek to %lld", this, (long long)mStreamOffset));
   gMediaCache->NoteSeek(this, oldOffset);

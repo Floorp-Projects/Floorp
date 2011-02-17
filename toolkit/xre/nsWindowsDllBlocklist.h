@@ -102,7 +102,7 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
 
   // Music download filter for vkontakte.ru - old instances
   // of this DLL cause crashes
-  {"vksaver.dll", MAKE_VERSION(1,0,0,1)},
+  {"vksaver.dll", MAKE_VERSION(2,2,2,0)},
 
   // Topcrash in Firefox 4.0b1
   {"rlxf.dll", MAKE_VERSION(1,2,323,1)},
