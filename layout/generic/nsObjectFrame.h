@@ -180,6 +180,8 @@ public:
   virtual PRBool ReflowFinished();
   virtual void ReflowCallbackCanceled();
 
+  void UpdateImageLayer(ImageContainer* aContainer, const gfxRect& aRect);
+
   /**
    * Builds either an ImageLayer or a ReadbackLayer, depending on the type
    * of aItem (TYPE_PLUGIN or TYPE_PLUGIN_READBACK respectively).

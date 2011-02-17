@@ -1977,6 +1977,21 @@ nsPluginInstanceOwner::NotifyPaintWaiter(nsDisplayListBuilder* aBuilder)
   }
 }
 
+static void DrawPlugin(ImageContainer* aContainer, void* aObjectFrame)
+{
+  static_cast<nsObjectFrame*>(aObjectFrame)->UpdateImageLayer(aContainer, gfxRect(0,0,0,0));
+}
+
+void
+nsObjectFrame::UpdateImageLayer(ImageContainer* aContainer, const gfxRect& aRect)
+{
+#ifdef XP_MACOSX
+  mInstanceOwner->DoCocoaEventDrawRect(aRect, nsnull);
+#endif
+
+  mInstanceOwner->SetCurrentImage(aContainer);
+}
+
 PRBool
 nsPluginInstanceOwner::SetCurrentImage(ImageContainer* aContainer)
 {
@@ -1985,6 +2000,12 @@ nsPluginInstanceOwner::SetCurrentImage(ImageContainer* aContainer)
     nsRefPtr<Image> image;
     inst->GetImage(aContainer, getter_AddRefs(image));
     if (image) {
+#ifdef XP_MACOSX
+      if (image->GetFormat() == Image::MAC_IO_SURFACE) {
+        MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image.get());
+        oglImage->SetCallback(&DrawPlugin, mObjectFrame);
+      }
+#endif
       aContainer->SetCurrentImage(image);
       return PR_TRUE;
     }
@@ -2094,14 +2115,11 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
         return nsnull;
     }
 
-#ifdef XP_MACOSX
-    // Until we get async plugins on mac we need to manually trigger the DrawRect event
-    mInstanceOwner->DoCocoaEventDrawRect(r, nsnull);
-#endif
-
     NS_ASSERTION(layer->GetType() == Layer::TYPE_IMAGE, "Bad layer type");
 
     ImageLayer* imglayer = static_cast<ImageLayer*>(layer.get());
+    UpdateImageLayer(container, r);
+
     imglayer->SetContainer(container);
     imglayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
 
@@ -3491,7 +3509,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
 #else
   if (mozilla::FrameLayerBuilder::HasDedicatedLayer(mObjectFrame, nsDisplayItem::TYPE_PLUGIN)) {
     mObjectFrame->InvalidateWithFlags(rect + mObjectFrame->GetUsedBorderAndPadding().TopLeft(),
-                                      nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
+                                      nsIFrame::INVALIDATE_NO_UPDATE_LAYER_TREE);
   } else {
     mObjectFrame->Invalidate(rect + mObjectFrame->GetUsedBorderAndPadding().TopLeft());
   }

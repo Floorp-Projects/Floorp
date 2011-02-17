@@ -295,6 +295,7 @@ ContainerRender(Container* aContainer,
     }
 
     layerToRender->RenderLayer(frameBuffer, childOffset);
+    aContainer->gl()->MakeCurrent();
   }
 
   aContainer->gl()->PopScissorRect();
