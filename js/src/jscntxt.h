@@ -599,7 +599,7 @@ class StackSpace
                              InvokeFrameGuard *fg);
     void popInvokeFrameSlow(const CallArgs &args);
 
-    bool getSegmentAndFrame(JSContext *cx, uintN vplen, uintN nfixed,
+    bool getSegmentAndFrame(JSContext *cx, uintN vplen, uintN nslots,
                             FrameGuard *fg) const;
     void pushSegmentAndFrame(JSContext *cx, JSFrameRegs *regs, FrameGuard *fg);
     void popSegmentAndFrame(JSContext *cx);
@@ -728,7 +728,7 @@ class StackSpace
     inline void popInlineFrame(JSContext *cx, JSStackFrame *prev, js::Value *newsp);
 
     /* These functions are called inside SendToGenerator. */
-    bool getGeneratorFrame(JSContext *cx, uintN vplen, uintN nfixed,
+    bool getGeneratorFrame(JSContext *cx, uintN vplen, uintN nslots,
                            GeneratorFrameGuard *fg);
     void pushGeneratorFrame(JSContext *cx, JSFrameRegs *regs, GeneratorFrameGuard *fg);
 
