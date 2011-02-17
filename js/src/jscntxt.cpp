@@ -112,6 +112,9 @@ using namespace js::gc;
 static const size_t ARENA_HEADER_SIZE_HACK = 40;
 static const size_t TEMP_POOL_CHUNK_SIZE = 4096 - ARENA_HEADER_SIZE_HACK;
 
+static void
+FreeContext(JSContext *cx);
+
 #ifdef DEBUG
 JS_REQUIRES_STACK bool
 StackSegment::contains(const JSStackFrame *fp) const
@@ -167,10 +170,9 @@ StackSpace::init()
     return true;
 }
 
-StackSpace::~StackSpace()
+void
+StackSpace::finish()
 {
-    if (!base)
-        return;
 #ifdef XP_WIN
     VirtualFree(base, (commitEnd - base) * sizeof(Value), MEM_DECOMMIT);
     VirtualFree(base, 0, MEM_RELEASE);
@@ -495,16 +497,87 @@ AllFramesIter::operator++()
 bool
 JSThreadData::init()
 {
+#ifdef DEBUG
+    /* The data must be already zeroed. */
+    for (size_t i = 0; i != sizeof(*this); ++i)
+        JS_ASSERT(reinterpret_cast<uint8*>(this)[i] == 0);
+#endif
+    if (!stackSpace.init())
+        return false;
+    dtoaState = js_NewDtoaState();
+    if (!dtoaState) {
+        finish();
+        return false;
+    }
     nativeStackBase = GetNativeStackBase();
+
 #ifdef JS_TRACER
     /* Set the default size for the code cache to 16MB. */
     maxCodeCacheBytes = 16 * 1024 * 1024;
 #endif
-    
-    return stackSpace.init() && !!(dtoaState = js_NewDtoaState());
+
+    return true;
+}
+
+void
+JSThreadData::finish()
+{
+    if (dtoaState)
+        js_DestroyDtoaState(dtoaState);
+
+    js_FinishGSNCache(&gsnCache);
+    propertyCache.~PropertyCache();
+    stackSpace.finish();
+}
+
+void
+JSThreadData::mark(JSTracer *trc)
+{
+    stackSpace.mark(trc);
+}
+
+void
+JSThreadData::purge(JSContext *cx)
+{
+    js_PurgeGSNCache(&gsnCache);
+
+    /* FIXME: bug 506341. */
+    propertyCache.purge(cx);
 }
 
 #ifdef JS_THREADSAFE
+
+static JSThread *
+NewThread(void *id)
+{
+    JS_ASSERT(js_CurrentThreadId() == id);
+    JSThread *thread = (JSThread *) js_calloc(sizeof(JSThread));
+    if (!thread)
+        return NULL;
+    JS_INIT_CLIST(&thread->contextList);
+    thread->id = id;
+    if (!thread->data.init()) {
+        js_free(thread);
+        return NULL;
+    }
+    return thread;
+}
+
+static void
+DestroyThread(JSThread *thread)
+{
+    /* The thread must have zero contexts. */
+    JS_ASSERT(JS_CLIST_IS_EMPTY(&thread->contextList));
+
+    /*
+     * The conservative GC scanner should be disabled when the thread leaves
+     * the last request.
+     */
+    JS_ASSERT(!thread->data.conservativeGC.hasStackToScan());
+
+    thread->data.finish();
+    js_free(thread);
+}
 
 JSThread *
 js_CurrentThread(JSRuntime *rt)
@@ -531,21 +604,14 @@ js_CurrentThread(JSRuntime *rt)
             thread->data.nativeStackBase = GetNativeStackBase();
     } else {
         JS_UNLOCK_GC(rt);
-
-        void *threadMemory = js_calloc(sizeof(JSThread));
-        if (!threadMemory)
+        thread = NewThread(id);
+        if (!thread)
             return NULL;
-        thread = new (threadMemory) JSThread(id);
-        if (!thread->init()) {
-            js_delete(thread);
-            return NULL;
-        }
-
         JS_LOCK_GC(rt);
         js_WaitForGC(rt);
         if (!rt->threads.relookupOrAdd(p, id, thread)) {
             JS_UNLOCK_GC(rt);
-            js_delete(thread);
+            DestroyThread(thread);
             return NULL;
         }
 
@@ -623,7 +689,8 @@ js_FinishThreads(JSRuntime *rt)
         return;
     for (JSThread::Map::Range r = rt->threads.all(); !r.empty(); r.popFront()) {
         JSThread *thread = r.front().value;
-        js_delete(thread);
+        JS_ASSERT(JS_CLIST_IS_EMPTY(&thread->contextList));
+        DestroyThread(thread);
     }
     rt->threads.clear();
 #else
@@ -642,7 +709,8 @@ js_PurgeThreads(JSContext *cx)
 
         if (JS_CLIST_IS_EMPTY(&thread->contextList)) {
             JS_ASSERT(cx->thread != thread);
-            js_delete(thread);
+
+            DestroyThread(thread);
             e.removeFront();
         } else {
             thread->data.purge(cx);
@@ -687,13 +755,13 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     JS_ASSERT(cx->resolveFlags == 0);
 
     if (!cx->busyArrays.init()) {
-        js_delete(cx);
+        FreeContext(cx);
         return NULL;
     }
 
 #ifdef JS_THREADSAFE
     if (!js_InitContextThread(cx)) {
-        js_delete(cx);
+        FreeContext(cx);
         return NULL;
     }
 #endif
@@ -1025,7 +1093,41 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     cx->dstOffsetCache.dumpStats();
 #endif
     JS_UNLOCK_GC(rt);
-    js_delete(cx);
+    FreeContext(cx);
+}
+
+static void
+FreeContext(JSContext *cx)
+{
+#ifdef JS_THREADSAFE
+    JS_ASSERT(!cx->thread);
+#endif
+
+    /* Free the stuff hanging off of cx. */
+    VOUCH_DOES_NOT_REQUIRE_STACK();
+    JS_FinishArenaPool(&cx->tempPool);
+    JS_FinishArenaPool(&cx->regExpPool);
+
+    if (cx->lastMessage)
+        js_free(cx->lastMessage);
+
+    /* Remove any argument formatters. */
+    JSArgumentFormatMap *map = cx->argumentFormatMap;
+    while (map) {
+        JSArgumentFormatMap *temp = map;
+        map = map->next;
+        cx->free(temp);
+    }
+
+    /* Destroy the resolve recursion damper. */
+    if (cx->resolvingTable) {
+        JS_DHashTableDestroy(cx->resolvingTable);
+        cx->resolvingTable = NULL;
+    }
+
+    /* Finally, free cx itself. */
+    cx->~JSContext();
+    js_free(cx);
 }
 
 JSContext *
@@ -1056,21 +1158,107 @@ js_NextActiveContext(JSRuntime *rt, JSContext *cx)
 #endif
 }
 
-namespace js {
-
-bool
-AutoResolving::isDuplicate() const
+static JSDHashNumber
+resolving_HashKey(JSDHashTable *table, const void *ptr)
 {
-    JS_ASSERT(prev);
-    AutoResolving *cursor = prev;
-    do {
-        if (cursor->object == object && cursor->id == id && cursor->kind == kind)
-            return true;
-    } while (!!(cursor = cursor->prev));
-    return false;
-}        
+    const JSResolvingKey *key = (const JSResolvingKey *)ptr;
 
-} /* namespace js */
+    return (JSDHashNumber(uintptr_t(key->obj)) >> JS_GCTHING_ALIGN) ^ JSID_BITS(key->id);
+}
+
+static JSBool
+resolving_MatchEntry(JSDHashTable *table,
+                     const JSDHashEntryHdr *hdr,
+                     const void *ptr)
+{
+    const JSResolvingEntry *entry = (const JSResolvingEntry *)hdr;
+    const JSResolvingKey *key = (const JSResolvingKey *)ptr;
+
+    return entry->key.obj == key->obj && entry->key.id == key->id;
+}
+
+static const JSDHashTableOps resolving_dhash_ops = {
+    JS_DHashAllocTable,
+    JS_DHashFreeTable,
+    resolving_HashKey,
+    resolving_MatchEntry,
+    JS_DHashMoveEntryStub,
+    JS_DHashClearEntryStub,
+    JS_DHashFinalizeStub,
+    NULL
+};
+
+JSBool
+js_StartResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
+                  JSResolvingEntry **entryp)
+{
+    JSDHashTable *table;
+    JSResolvingEntry *entry;
+
+    table = cx->resolvingTable;
+    if (!table) {
+        table = JS_NewDHashTable(&resolving_dhash_ops, NULL,
+                                 sizeof(JSResolvingEntry),
+                                 JS_DHASH_MIN_SIZE);
+        if (!table)
+            goto outofmem;
+        cx->resolvingTable = table;
+    }
+
+    entry = (JSResolvingEntry *)
+            JS_DHashTableOperate(table, key, JS_DHASH_ADD);
+    if (!entry)
+        goto outofmem;
+
+    if (entry->flags & flag) {
+        /* An entry for (key, flag) exists already -- dampen recursion. */
+        entry = NULL;
+    } else {
+        /* Fill in key if we were the first to add entry, then set flag. */
+        if (!entry->key.obj)
+            entry->key = *key;
+        entry->flags |= flag;
+    }
+    *entryp = entry;
+    return JS_TRUE;
+
+outofmem:
+    JS_ReportOutOfMemory(cx);
+    return JS_FALSE;
+}
+
+void
+js_StopResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
+                 JSResolvingEntry *entry, uint32 generation)
+{
+    JSDHashTable *table;
+
+    /*
+     * Clear flag from entry->flags and return early if other flags remain.
+     * We must take care to re-lookup entry if the table has changed since
+     * it was found by js_StartResolving.
+     */
+    table = cx->resolvingTable;
+    if (!entry || table->generation != generation) {
+        entry = (JSResolvingEntry *)
+                JS_DHashTableOperate(table, key, JS_DHASH_LOOKUP);
+    }
+    JS_ASSERT(JS_DHASH_ENTRY_IS_BUSY(&entry->hdr));
+    entry->flags &= ~flag;
+    if (entry->flags)
+        return;
+
+    /*
+     * Do a raw remove only if fewer entries were removed than would cause
+     * alpha to be less than .5 (alpha is at most .75).  Otherwise, we just
+     * call JS_DHashTableOperate to re-lookup the key and remove its entry,
+     * compressing or shrinking the table as needed.
+     */
+    if (table->removedCount < JS_DHASH_TABLE_SIZE(table) >> 2)
+        JS_DHashTableRawRemove(table, &entry->hdr);
+    else
+        JS_DHashTableOperate(table, key, JS_DHASH_REMOVE);
+}
 
 static void
 ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,
@@ -1802,29 +1990,6 @@ JSContext::JSContext(JSRuntime *rt)
     regs(NULL),
     busyArrays()
 {}
-
-JSContext::~JSContext()
-{
-#ifdef JS_THREADSAFE
-    JS_ASSERT(!thread);
-#endif
-
-    /* Free the stuff hanging off of cx. */
-    VOUCH_DOES_NOT_REQUIRE_STACK();
-    JS_FinishArenaPool(&tempPool);
-    JS_FinishArenaPool(&regExpPool);
-
-    if (lastMessage)
-        js_free(lastMessage);
-
-    /* Remove any argument formatters. */
-    JSArgumentFormatMap *map = argumentFormatMap;
-    while (map) {
-        JSArgumentFormatMap *temp = map;
-        map = map->next;
-        js_free(temp);
-    }
-}
 
 void
 JSContext::resetCompartment()

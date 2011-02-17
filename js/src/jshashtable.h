@@ -112,18 +112,6 @@ class HashTable : AllocPolicy
         Ptr(Entry &entry) : entry(&entry) {}
 
       public:
-        /*
-         * Any method on Ptr instantiated with the default constructor should
-         * only be called after initializing the Ptr with assignment operator
-         * from another Ptr instance.
-         */
-        Ptr() {
-#ifdef DEBUG
-            /* Initialize to some small invalid address. */
-            entry = reinterpret_cast<Entry *>(0xBAD);
-#endif
-        }
-
         bool found() const                    { return entry->isLive(); }
         operator ConvertibleToBool() const    { return found() ? &Ptr::nonNull : 0; }
         bool operator==(const Ptr &rhs) const { JS_ASSERT(found() && rhs.found()); return entry == rhs.entry; }

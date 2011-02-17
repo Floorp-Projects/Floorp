@@ -1660,8 +1660,6 @@ extern int
 js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                            JSObject **objp, JSProperty **propp);
 
-/* Infer resolve flags from the current bytecode. */
-#define JSRESOLVE_INFER         0xffff
 
 /*
  * We cache name lookup results only for the global object or for native

@@ -1320,35 +1320,53 @@ static JSBool
 obj_watch_handler(JSContext *cx, JSObject *obj, jsid id, jsval old,
                   jsval *nvp, void *closure)
 {
-    JSObject *callable = (JSObject *) closure;
-    
-    JSSecurityCallbacks *callbacks = JS_GetSecurityCallbacks(cx);
+    JSObject *callable;
+    JSSecurityCallbacks *callbacks;
+    JSStackFrame *caller;
+    JSPrincipals *subject, *watcher;
+    JSResolvingKey key;
+    JSResolvingEntry *entry;
+    uint32 generation;
+    Value argv[3];
+    JSBool ok;
+
+    callable = (JSObject *) closure;
+
+    callbacks = JS_GetSecurityCallbacks(cx);
     if (callbacks && callbacks->findObjectPrincipals) {
         /* Skip over any obj_watch_* frames between us and the real subject. */
-        JSStackFrame *caller = js_GetScriptedCaller(cx, NULL);
+        caller = js_GetScriptedCaller(cx, NULL);
         if (caller) {
             /*
              * Only call the watch handler if the watcher is allowed to watch
              * the currently executing script.
              */
-            JSPrincipals *watcher = callbacks->findObjectPrincipals(cx, callable);
-            JSPrincipals *subject = js_StackFramePrincipals(cx, caller);
+            watcher = callbacks->findObjectPrincipals(cx, callable);
+            subject = js_StackFramePrincipals(cx, caller);
 
             if (watcher && subject && !watcher->subsume(watcher, subject)) {
                 /* Silently don't call the watch handler. */
-                return true;
+                return JS_TRUE;
             }
         }
     }
 
-    /* Avoid recursion on (obj, id) already being watched. */
-    AutoResolving resolving(cx, obj, id, AutoResolving::WATCH);
-    if (resolving.alreadyStarted())
-        return true;
-    
-    Value argv[] = { IdToValue(id), Valueify(old), Valueify(*nvp) };
-    return ExternalInvoke(cx, ObjectValue(*obj), ObjectOrNullValue(callable),
-                          JS_ARRAY_LENGTH(argv), argv, Valueify(nvp));
+    /* Avoid recursion on (obj, id) already being watched on cx. */
+    key.obj = obj;
+    key.id = id;
+    if (!js_StartResolving(cx, &key, JSRESFLAG_WATCH, &entry))
+        return JS_FALSE;
+    if (!entry)
+        return JS_TRUE;
+    generation = cx->resolvingTable->generation;
+
+    argv[0] = IdToValue(id);
+    argv[1] = Valueify(old);
+    argv[2] = Valueify(*nvp);
+    ok = ExternalInvoke(cx, ObjectValue(*obj), ObjectOrNullValue(callable), 3, argv,
+                        Valueify(nvp));
+    js_StopResolving(cx, &key, JSRESFLAG_WATCH, entry, generation);
+    return ok;
 }
 
 static JSBool
@@ -4161,36 +4179,52 @@ JSBool
 js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
                   JSObject **objp)
 {
+    JSObject *cobj;
+    JSResolvingKey rkey;
+    JSResolvingEntry *rentry;
+    uint32 generation;
+    JSObjectOp init;
+    Value v;
+
     obj = obj->getGlobal();
     if (!obj->isGlobal()) {
         *objp = NULL;
-        return true;
+        return JS_TRUE;
     }
 
-    Value v = obj->getReservedSlot(key);
+    v = obj->getReservedSlot(key);
     if (v.isObject()) {
         *objp = &v.toObject();
-        return true;
+        return JS_TRUE;
     }
 
-    AutoResolving resolving(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.classAtoms[key]));
-    if (resolving.alreadyStarted()) {
+    rkey.obj = obj;
+    rkey.id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[key]);
+    if (!js_StartResolving(cx, &rkey, JSRESFLAG_LOOKUP, &rentry))
+        return JS_FALSE;
+    if (!rentry) {
         /* Already caching key in obj -- suppress recursion. */
         *objp = NULL;
-        return true;
+        return JS_TRUE;
+    }
+    generation = cx->resolvingTable->generation;
+
+    JSBool ok = true;
+    cobj = NULL;
+    init = lazy_prototype_init[key];
+    if (init) {
+        if (!init(cx, obj)) {
+            ok = JS_FALSE;
+        } else {
+            v = obj->getReservedSlot(key);
+            if (v.isObject())
+                cobj = &v.toObject();
+        }
     }
 
-    JSObject *cobj = NULL;
-    if (JSObjectOp init = lazy_prototype_init[key]) {
-        if (!init(cx, obj))
-            return false;
-        v = obj->getReservedSlot(key);
-        if (v.isObject())
-            cobj = &v.toObject();
-    }
-
+    js_StopResolving(cx, &rkey, JSRESFLAG_LOOKUP, rentry, generation);
     *objp = cobj;
-    return true;
+    return ok;
 }
 
 JSBool
@@ -4800,61 +4834,116 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
     JS_SCOPE_DEPTH_METERING(JS_BASIC_STATS_ACCUM(bs, val))
 
 /*
- * Call obj's resolve hook.
+ * Call obj's resolve hook. obj is a native object and the caller holds its
+ * scope lock.
+ *
+ * cx, start, id, and flags are the parameters initially passed to the ongoing
+ * lookup; objp and propp are its out parameters. obj is an object along
+ * start's prototype chain.
+ *
+ * There are four possible outcomes:
+ *
+ *   - On failure, report an error or exception, unlock obj, and return false.
+ *
+ *   - If we are alrady resolving a property of *curobjp, set *recursedp = true,
+ *     unlock obj, and return true.
+ *
+ *   - If the resolve hook finds or defines the sought property, set *objp and
+ *     *propp appropriately, set *recursedp = false, and return true with *objp's
+ *     lock held.
+ *
+ *   - Otherwise no property was resolved. Set *propp = NULL and *recursedp = false
+ *     and return true.
  */
 static JSBool
 CallResolveOp(JSContext *cx, JSObject *start, JSObject *obj, jsid id, uintN flags,
-              JSObject **objp, JSProperty **propp)
+              JSObject **objp, JSProperty **propp, bool *recursedp)
 {
     Class *clasp = obj->getClass();
     JSResolveOp resolve = clasp->resolve;
 
-    JSObject *obj2;
+    /*
+     * Avoid recursion on (obj, id) already being resolved on cx.
+     *
+     * Once we have successfully added an entry for (obj, key) to
+     * cx->resolvingTable, control must go through cleanup: before
+     * returning.  But note that JS_DHASH_ADD may find an existing
+     * entry, in which case we bail to suppress runaway recursion.
+     */
+    JSResolvingKey key = {obj, id};
+    JSResolvingEntry *entry;
+    if (!js_StartResolving(cx, &key, JSRESFLAG_LOOKUP, &entry))
+        return false;
+    if (!entry) {
+        /* Already resolving id in obj -- suppress recursion. */
+        *recursedp = true;
+        return true;
+    }
+    uint32 generation = cx->resolvingTable->generation;
+    *recursedp = false;
+
+    *propp = NULL;
+
+    JSBool ok;
+    const Shape *shape = NULL;
     if (clasp->flags & JSCLASS_NEW_RESOLVE) {
         JSNewResolveOp newresolve = (JSNewResolveOp)resolve;
         if (flags == JSRESOLVE_INFER)
             flags = js_InferFlags(cx, 0);
-        obj2 = (clasp->flags & JSCLASS_NEW_RESOLVE_GETS_START) ? start : NULL;
-        
+        JSObject *obj2 = (clasp->flags & JSCLASS_NEW_RESOLVE_GETS_START) ? start : NULL;
+
         {
             /* Protect id and all atoms from a GC nested in resolve. */
             AutoKeepAtoms keep(cx->runtime);
-            if (!newresolve(cx, obj, id, flags, &obj2))
-                return false;
+            ok = newresolve(cx, obj, id, flags, &obj2);
         }
-        
-        /*
-         * We trust the new style resolve hook to set obj2 to NULL when
-         * the id cannot be resolved. But, when obj2 is not null, we do
-         * not assume that id must exist and lookup the property again
-         * for compatibility.
-         */
-        if (!obj2) {
-            *propp = NULL;
-            return true;
-        }
-            
-        if (!obj2->isNative()) {
-            /* Whoops, newresolve handed back a foreign obj2. */
-            JS_ASSERT(obj2 != obj);
-            return obj2->lookupProperty(cx, id, objp, propp);
+        if (!ok)
+            goto cleanup;
+
+        if (obj2) {
+            /* Resolved: lookup id again for backward compatibility. */
+            if (!obj2->isNative()) {
+                /* Whoops, newresolve handed back a foreign obj2. */
+                JS_ASSERT(obj2 != obj);
+                ok = obj2->lookupProperty(cx, id, objp, propp);
+                if (!ok || *propp)
+                    goto cleanup;
+            } else {
+                /*
+                 * Require that obj2 not be empty now, as we do for old-style
+                 * resolve.  If it doesn't, then id was not truly resolved, and
+                 * we'll find it in the proto chain, or miss it if obj2's proto
+                 * is not on obj's proto chain.  That last case is a "too bad!"
+                 * case.
+                 */
+                if (!obj2->nativeEmpty())
+                    shape = obj2->nativeLookup(id);
+            }
+            if (shape) {
+                JS_ASSERT(!obj2->nativeEmpty());
+                obj = obj2;
+            }
         }
     } else {
-        if (!resolve(cx, obj, id))
-            return false;
-        obj2 = obj;
-    }
-    
-    JS_ASSERT(obj2->isNative());
-    if (const Shape *shape = obj2->nativeLookup(id)) {
-        *objp = obj2;
-        *propp = (JSProperty *) shape;
-        return true;
+        /*
+         * Old resolve always requires id re-lookup if obj is not empty after
+         * resolve returns.
+         */
+        ok = resolve(cx, obj, id);
+        if (!ok)
+            goto cleanup;
+        JS_ASSERT(obj->isNative());
+        if (!obj->nativeEmpty())
+            shape = obj->nativeLookup(id);
     }
 
-    /* The id was not resolved. */
-    *propp = NULL;
-    return true;
+cleanup:
+    if (ok && shape) {
+        *objp = obj;
+        *propp = (JSProperty *) shape;
+    }
+    js_StopResolving(cx, &key, JSRESFLAG_LOOKUP, entry, generation);
+    return ok;
 }
 
 static JS_ALWAYS_INLINE int
@@ -4878,12 +4967,11 @@ js_LookupPropertyWithFlagsInline(JSContext *cx, JSObject *obj, jsid id, uintN fl
 
         /* Try obj's class resolve hook if id was not found in obj's scope. */
         if (!shape && obj->getClass()->resolve != JS_ResolveStub) {
-            /* Avoid recursion on (obj, id) already being resolved. */
-            AutoResolving resolving(cx, obj, id);
-            if (resolving.alreadyStarted())
-                break;
-            if (!CallResolveOp(cx, start, obj, id, flags, objp, propp))
+            bool recursed;
+            if (!CallResolveOp(cx, start, obj, id, flags, objp, propp, &recursed))
                 return -1;
+            if (recursed)
+                break;
             if (*propp) {
                 /* Recalculate protoIndex in case it was resolved on some other object. */
                 protoIndex = 0;
