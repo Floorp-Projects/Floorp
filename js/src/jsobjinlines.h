@@ -151,6 +151,10 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
     JS_ASSERT(nativeContains(shape));
     JS_ASSERT(shape.isMethod());
     JS_ASSERT(&shape.methodObject() == &vp->toObject());
+    JS_ASSERT(shape.writable());
+    JS_ASSERT(shape.slot != SHAPE_INVALID_SLOT);
+    JS_ASSERT(shape.hasDefaultSetter() || shape.setterOp() == js_watch_set);
+    JS_ASSERT(!isGlobal());  /* i.e. we are not changing the global shape */
 
     JSObject *funobj = &vp->toObject();
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
@@ -161,9 +165,19 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
         return false;
     funobj->setMethodObj(*this);
 
+    /*
+     * Replace the method property with an ordinary data property. This is
+     * equivalent to this->setProperty(cx, shape.id, vp) except that any
+     * watchpoint on the property is not triggered.
+     */
+    uint32 slot = shape.slot;
+    const js::Shape *newshape = methodShapeChange(cx, shape);
+    if (!newshape)
+        return NULL;
+    JS_ASSERT(!newshape->isMethod());
+    JS_ASSERT(newshape->slot == slot);
     vp->setObject(*funobj);
-    if (!js_SetPropertyHelper(cx, this, shape.id, 0, vp, false))
-        return false;
+    nativeSetSlot(slot, *vp);
 
 #ifdef DEBUG
     if (cx->runtime->functionMeterFilename) {
@@ -835,7 +849,8 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
     AutoPropertyDescriptorRooter(JSContext *cx) : AutoGCRooter(cx, DESCRIPTOR) {
         obj = NULL;
         attrs = 0;
-        getter = setter = (PropertyOp) NULL;
+        getter = (PropertyOp) NULL;
+        setter = (StrictPropertyOp) NULL;
         value.setUndefined();
     }
 
@@ -1050,7 +1065,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
 {
     /* Bootstrap the ur-object, and make it the default prototype object. */
     if (withProto == WithProto::Class && !proto) {
-        if (!FindProto (cx, clasp, parent, &proto))
+        if (!FindProto(cx, clasp, parent, &proto))
           return NULL;
     }
 
@@ -1133,7 +1148,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
 }
 
 /*
- * As for js_GetGCObjectKind, where numSlots is a guess at the final size of
+ * As for gc::GetGCObjectKind, where numSlots is a guess at the final size of
  * the object, zero if the final size is unknown.
  */
 static inline gc::FinalizeKind
@@ -1176,6 +1191,28 @@ CopyInitializerObject(JSContext *cx, JSObject *baseobj)
     obj->objShape = baseobj->objShape;
 
     return obj;
+}
+
+/*
+ * When we have an object of a builtin class, we don't quite know what its
+ * valueOf/toString methods are, since these methods may have been overwritten
+ * or shadowed. However, we can still do better than js_TryMethod by
+ * hard-coding the necessary properties for us to find the native we expect.
+ *
+ * TODO: a per-thread shape-based cache would be faster and simpler.
+ */
+static JS_ALWAYS_INLINE bool
+ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *clasp, jsid methodid,
+                    Native native)
+{
+    JS_ASSERT(obj->getClass() == clasp);
+
+    if (HasNativeMethod(obj, methodid, native))
+        return true;
+
+    JSObject *pobj = obj->getProto();
+    return pobj && pobj->getClass() == clasp &&
+           HasNativeMethod(pobj, methodid, native);
 }
 
 } /* namespace js */

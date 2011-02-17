@@ -38,14 +38,14 @@
 #ifndef nsAccDocManager_h_
 #define nsAccDocManager_h_
 
-#include "nsAccessible.h"
-
 #include "nsIDocument.h"
 #include "nsIDOMEventListener.h"
+#include "nsRefPtrHashtable.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 
+class nsAccessible;
 class nsDocAccessible;
 
 //#define DEBUG_ACCDOCMGR

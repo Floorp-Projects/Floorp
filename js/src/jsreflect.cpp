@@ -135,7 +135,7 @@ char const *callbackNames[] = {
     NULL
 };
 
-typedef Vector<Value, 8> NodeVector;
+typedef AutoValueVector NodeVector;
 
 /*
  * JSParseNode is a somewhat intricate data structure, and its invariants have
@@ -915,12 +915,17 @@ NodeBuilder::tryStatement(Value body, NodeVector &catches, Value finally,
                callback(cb, body, handler, opt(finally), pos, dst);
     }
 
-    if (catches.empty())
+    switch (catches.length()) {
+      case 0:
         handler.setNull();
-    else if (catches.length() == 1)
+        break;
+      case 1:
         handler = catches[0];
-    else if (!newArray(catches, &handler))
-        return false;
+        break;
+      default:
+        if (!newArray(catches, &handler))
+            return false;
+    }
 
     return newNode(AST_TRY_STMT, pos,
                    "block", body,
@@ -3173,7 +3178,7 @@ Class js_ReflectClass = {
     PropertyStub,
     PropertyStub,
     PropertyStub,
-    PropertyStub,
+    StrictPropertyStub,
     EnumerateStub,
     ResolveStub,
     ConvertStub
@@ -3279,7 +3284,7 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
 
     Parser parser(cx);
 
-    if (!parser.init(chars, length, filename, lineno))
+    if (!parser.init(chars, length, filename, lineno, cx->findVersion()))
         return JS_FALSE;
 
     JSParseNode *pn = parser.parse(NULL);
@@ -3310,7 +3315,7 @@ js_InitReflectClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     if (!JS_DefineProperty(cx, obj, js_Reflect_str, OBJECT_TO_JSVAL(Reflect),
-                           JS_PropertyStub, JS_PropertyStub, 0)) {
+                           JS_PropertyStub, JS_StrictPropertyStub, 0)) {
         return NULL;
     }
 

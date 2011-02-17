@@ -65,7 +65,7 @@ protected:
   virtual NS_HIDDEN_(nsresult) LaunchDefaultWithFile(nsIFile* aFile);
   virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI);
   nsCOMPtr<nsIMutableArray> mHandlerApps;
-  nsCString mMimeType;
+  nsCString mType;
   nsTArray<nsCString> mExtensions;
   PRBool mAlwaysAsk;
   nsHandlerInfoAction mPrefAction;

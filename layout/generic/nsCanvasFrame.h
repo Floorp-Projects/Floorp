@@ -172,10 +172,18 @@ public:
   }
 
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion)
+                                   nsRegion* aVisibleRegion,
+                                   const nsRect& aAllowVisibleRegionExpansion,
+                                   PRBool& aContainsRootContentDocBG)
   {
-    return NS_GET_A(mExtraBackgroundColor) > 0 ||
-           nsDisplayBackground::ComputeVisibility(aBuilder, aVisibleRegion);
+    PRBool retval = NS_GET_A(mExtraBackgroundColor) > 0 ||
+           nsDisplayBackground::ComputeVisibility(aBuilder, aVisibleRegion,
+                                                  aAllowVisibleRegionExpansion,
+                                                  aContainsRootContentDocBG);
+    if (retval && mFrame->PresContext()->IsRootContentDocument()) {
+      aContainsRootContentDocBG = PR_TRUE;
+    }
+    return retval;
   }
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    PRBool* aForceTransparentSurface = nsnull)

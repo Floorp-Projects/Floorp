@@ -44,6 +44,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/log4moz.js");
 
 const FORMS_TTL = 5184000; // 60 days
@@ -159,6 +160,8 @@ FormEngine.prototype = {
   _storeObj: FormStore,
   _trackerObj: FormTracker,
   _recordObj: FormRec,
+  applyIncomingBatchSize: FORMS_STORE_BATCH_SIZE,
+
   get prefName() "history",
 
   _findDupe: function _findDupe(item) {
@@ -172,6 +175,12 @@ function FormStore(name) {
 }
 FormStore.prototype = {
   __proto__: Store.prototype,
+
+  applyIncomingBatch: function applyIncomingBatch(records) {
+    return Utils.runInTransaction(Svc.Form.DBConnection, function() {
+      return Store.prototype.applyIncomingBatch.call(this, records);
+    }, this);
+  },
 
   getAllIDs: function FormStore_getAllIDs() {
     let guids = {};

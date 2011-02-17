@@ -958,8 +958,10 @@ function escapeAddonURI(aAddon, aUri, aUpdateType, aAppVersion)
 
   if (!aAddon.isCompatible)
     addonStatus += ",incompatible";
-  if (aAddon.blocklistState > 0)
+  if (aAddon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
     addonStatus += ",blocklisted";
+  if (aAddon.blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED)
+    addonStatus += ",softblocked";
 
   try {
     var xpcomABI = Services.appinfo.XPCOMABI;

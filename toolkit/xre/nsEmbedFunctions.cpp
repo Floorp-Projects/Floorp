@@ -635,8 +635,46 @@ nsresult
 XRE_RunAppShell()
 {
     nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
-    NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
+#if defined(XP_MACOSX)
+    {
+      // In content processes that want XPCOM (and hence want
+      // AppShell), we usually run our hybrid event loop through
+      // MessagePump::Run(), by way of nsBaseAppShell::Run().  The
+      // Cocoa nsAppShell impl, however, implements its own Run()
+      // that's unaware of MessagePump.  That's all rather suboptimal,
+      // but oddly enough not a problem... usually.
+      // 
+      // The problem with this setup comes during startup.
+      // XPCOM-in-subprocesses depends on IPC, e.g. to init the pref
+      // service, so we have to init IPC first.  But, IPC also
+      // indirectly kinda-depends on XPCOM, because MessagePump
+      // schedules work from off-main threads (e.g. IO thread) by
+      // using NS_DispatchToMainThread().  If the IO thread receives a
+      // Message from the parent before nsThreadManager is
+      // initialized, then DispatchToMainThread() will fail, although
+      // MessagePump will remember the task.  This race condition
+      // isn't a problem when appShell->Run() ends up in
+      // MessagePump::Run(), because MessagePump will immediate see it
+      // has work to do.  It *is* a problem when we end up in [NSApp
+      // run], because it's not aware that MessagePump has work that
+      // needs to be processed; that was supposed to be signaled by
+      // nsIRunnable(s).
+      // 
+      // So instead of hacking Cocoa nsAppShell or rewriting the
+      // event-loop system, we compromise here by processing any tasks
+      // that might have been enqueued on MessagePump, *before*
+      // MessagePump::ScheduleWork was able to successfully
+      // DispatchToMainThread().
+      MessageLoop* loop = MessageLoop::current();
+      bool couldNest = loop->NestableTasksAllowed();
 
+      loop->SetNestableTasksAllowed(true);
+      loop->PostTask(FROM_HERE, new MessageLoop::QuitTask());
+      loop->Run();
+
+      loop->SetNestableTasksAllowed(couldNest);
+    }
+#endif  // XP_MACOSX
     return appShell->Run();
 }
 
@@ -661,7 +699,17 @@ XRE_ShutdownChildProcess()
   //  (3) ProcessChild goes out of scope and terminates the IO thread
   //  (4) ProcessChild joins the IO thread
   //  (5) exit()
-  MessageLoop::current()->Quit(); 
+  MessageLoop::current()->Quit();
+#if defined(XP_MACOSX)
+  nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
+  if (appShell) {
+      // On Mac, we might be only above nsAppShell::Run(), not
+      // MessagePump::Run().  See XRE_RunAppShell(). To account for
+      // that case, we fire off an Exit() here.  If we were indeed
+      // above MessagePump::Run(), this Exit() is just superfluous.
+      appShell->Exit();
+  }
+#endif // XP_MACOSX
 }
 
 namespace {

@@ -281,6 +281,14 @@ public:
             || (FuzzyEqual(xy, 0.0) && FuzzyEqual(yx, 0.0)));
     }
 
+    /**
+     * Returns true if the matrix has non-integer scale
+     */
+    PRBool HasNonIntegerScale() const {
+        return !FuzzyEqual(xx, NS_floor(xx + 0.5)) ||
+               !FuzzyEqual(yy, NS_floor(yy + 0.5));
+    }
+
 private:
     static PRBool FuzzyEqual(gfxFloat aV1, gfxFloat aV2) {
         return fabs(aV2 - aV1) < 1e-6;

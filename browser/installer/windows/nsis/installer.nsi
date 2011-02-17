@@ -108,10 +108,12 @@ VIAddVersionKey "OriginalFilename" "setup.exe"
 !insertmacro GetPathFromString
 !insertmacro GetParent
 !insertmacro IsHandlerForInstallDir
+!insertmacro IsPinnedToTaskBar
 !insertmacro LogDesktopShortcut
 !insertmacro LogQuickLaunchShortcut
 !insertmacro LogStartMenuShortcut
 !insertmacro ManualCloseAppPrompt
+!insertmacro PinnedToStartMenuLnkCount
 !insertmacro RegCleanAppHandler
 !insertmacro RegCleanMain
 !insertmacro RegCleanUninstall
@@ -279,7 +281,12 @@ Section "-Application" APP_IDX
 
   ; Default for creating Quick Launch shortcut (1 = create, 0 = don't create)
   ${If} $AddQuickLaunchSC == ""
-    StrCpy $AddQuickLaunchSC "1"
+    ; Don't install the quick launch shortcut on Windows 7
+    ${If} ${AtLeastWin7}
+      StrCpy $AddQuickLaunchSC "0"
+    ${Else}
+      StrCpy $AddQuickLaunchSC "1"
+    ${EndIf}
   ${EndIf}
 
   ; Default for creating Desktop shortcut (1 = create, 0 = don't create)
@@ -348,12 +355,12 @@ Section "-Application" APP_IDX
     ${SetStartMenuInternet}
     ${FixShellIconHandler}
 
-    ; If we are writing to HKLM and create the quick launch and the desktop
+    ; If we are writing to HKLM and create either the desktop or start menu
     ; shortcuts set IconsVisible to 1 otherwise to 0.
     ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
     StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
-    ${If} $AddQuickLaunchSC == 1
-    ${OrIf} $AddDesktopSC == 1
+    ${If} $AddDesktopSC == 1
+    ${OrIf} $AddStartMenuSC == 1
       WriteRegDWORD HKLM "$0" "IconsVisible" 1
     ${Else}
       WriteRegDWORD HKLM "$0" "IconsVisible" 0
@@ -392,45 +399,80 @@ Section "-Application" APP_IDX
   ${LogQuickLaunchShortcut} "${BrandFullName}.lnk"
   ${LogDesktopShortcut} "${BrandFullName}.lnk"
 
+  ; Best effort to update the Win7 taskbar and start menu shortcut app model
+  ; id's. The possible contexts are current user / system and the user that
+  ; elevated the installer.
+  Call FixShortcutAppModelIDs
+  ; If the current context is all also perform Win7 taskbar and start menu link
+  ; maintenance for the current user context.
+  ${If} $TmpVal == "HKLM"
+    SetShellVarContext current  ; Set SHCTX to HKCU
+    Call FixShortcutAppModelIDs
+    SetShellVarContext all  ; Set SHCTX to HKLM
+  ${EndIf}
+
+  ; If running elevated also perform Win7 taskbar and start menu link
+  ; maintenance for the unelevated user context in case that is different than
+  ; the current user.
+  ClearErrors
+  ${GetParameters} $0
+  ${GetOptions} "$0" "/UAC:" $0
+  ${Unless} ${Errors}
+    GetFunctionAddress $0 FixShortcutAppModelIDs
+    UAC::ExecCodeSegment $0
+  ${EndIf}
+
   ; UAC only allows elevating to an Admin account so there is no need to add
   ; the Start Menu or Desktop shortcuts from the original unelevated process
   ; since this will either add it for the user if unelevated or All Users if
   ; elevated.
   ${If} $AddStartMenuSC == 1
-    CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" \
-                   "" "$INSTDIR\${FileMainEXE}" 0
-    ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
+    CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
+    ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
+      ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
                                            "$INSTDIR"
-    ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "${AppUserModelID}"
-    ${LogMsg} "Added Shortcut: $SMPROGRAMS\$StartMenuDir\${BrandFullName}.lnk"
+      ${If} ${AtLeastWin7}
+        ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "${AppUserModelID}"
+      ${EndIf}
+      ${LogMsg} "Added Shortcut: $SMPROGRAMS\${BrandFullName}.lnk"
+    ${Else}
+      ${LogMsg} "** ERROR Adding Shortcut: $SMPROGRAMS\${BrandFullName}.lnk"
+    ${EndIf}
   ${EndIf}
 
   ${If} $AddDesktopSC == 1
-    CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" \
-                   "" "$INSTDIR\${FileMainEXE}" 0
-    ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" \
-                                           "$INSTDIR"
-    ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "${AppUserModelID}"
-    ${LogMsg} "Added Shortcut: $DESKTOP\${BrandFullName}.lnk"
+    CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
+    ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
+      ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" \
+                                             "$INSTDIR"
+      ${If} ${AtLeastWin7}
+        ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "${AppUserModelID}"
+      ${EndIf}
+      ${LogMsg} "Added Shortcut: $DESKTOP\${BrandFullName}.lnk"
+    ${Else}
+      ${LogMsg} "** ERROR Adding Shortcut: $DESKTOP\${BrandFullName}.lnk"
+    ${EndIf}
   ${EndIf}
 
   ; If elevated the Quick Launch shortcut must be added from the unelevated
   ; original process.
   ${If} $AddQuickLaunchSC == 1
-    ClearErrors
-    ${GetParameters} $0
-    ${GetOptions} "$0" "/UAC:" $0
-    ${If} ${Errors}
-      Call AddQuickLaunchShortcut
-      ${LogMsg} "Added Shortcut: $QUICKLAUNCH\${BrandFullName}.lnk"
-    ${Else}
-      ; It is not possible to add a log entry from the unelevated process so
-      ; add the log entry without the path since there is no simple way to know
-      ; the correct full path.
-      ${LogMsg} "Added Quick Launch Shortcut: ${BrandFullName}.lnk"
-      GetFunctionAddress $0 AddQuickLaunchShortcut
-      UAC::ExecCodeSegment $0
-    ${EndIf}
+    ${Unless} ${AtLeastWin7}
+      ClearErrors
+      ${GetParameters} $0
+      ${GetOptions} "$0" "/UAC:" $0
+      ${If} ${Errors}
+        Call AddQuickLaunchShortcut
+        ${LogMsg} "Added Shortcut: $QUICKLAUNCH\${BrandFullName}.lnk"
+      ${Else}
+        ; It is not possible to add a log entry from the unelevated process so
+        ; add the log entry without the path since there is no simple way to
+        ; know the correct full path.
+        ${LogMsg} "Added Quick Launch Shortcut: ${BrandFullName}.lnk"
+        GetFunctionAddress $0 AddQuickLaunchShortcut
+        UAC::ExecCodeSegment $0
+      ${EndIf}
+    ${EndUnless}
   ${EndIf}
 SectionEnd
 
@@ -456,11 +498,14 @@ Section "-InstallEndCleanup"
     ${EndIf}
   ${EndUnless}
 
-  ; Win7 taskbar and start menu link maintenance
-  ${UpdateShortcutAppModelIDs} "$INSTDIR\${FileMainEXE}" "${AppUserModelID}" $0
+  ; Adds a pinned Task Bar shortcut (see MigrateTaskBarShortcut for details).
+  ${MigrateTaskBarShortcut}
+
+  ${GetShortcutsLogPath} $0
+  WriteIniStr "$0" "TASKBAR" "Migrated" "true"
 
   ; Refresh desktop icons
-  System::Call "shell32::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)"
+  System::Call "shell32::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)"
 
   ${InstallEndCleanupCommon}
 
@@ -565,11 +610,11 @@ FunctionEnd
 # Helper Functions
 
 Function AddQuickLaunchShortcut
-  CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" \
-                 "" "$INSTDIR\${FileMainEXE}" 0
-  ShellLink::SetShortCutWorkingDirectory "$QUICKLAUNCH\${BrandFullName}.lnk" \
-                                         "$INSTDIR"
-  ApplicationID::Set "$QUICKLAUNCH\${BrandFullName}.lnk" "${AppUserModelID}"
+  CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
+  ${If} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
+    ShellLink::SetShortCutWorkingDirectory "$QUICKLAUNCH\${BrandFullName}.lnk" \
+                                           "$INSTDIR"
+  ${EndIf}
 FunctionEnd
 
 Function CheckExistingInstall
@@ -736,7 +781,10 @@ Function leaveShortcuts
   ${EndIf}
   ${MUI_INSTALLOPTIONS_READ} $AddDesktopSC "shortcuts.ini" "Field 2" "State"
   ${MUI_INSTALLOPTIONS_READ} $AddStartMenuSC "shortcuts.ini" "Field 3" "State"
-  ${MUI_INSTALLOPTIONS_READ} $AddQuickLaunchSC "shortcuts.ini" "Field 4" "State"
+  ; Don't install the quick launch shortcut on Windows 7
+  ${Unless} ${AtLeastWin7}
+    ${MUI_INSTALLOPTIONS_READ} $AddQuickLaunchSC "shortcuts.ini" "Field 4" "State"
+  ${EndUnless}
 
   ${If} $InstallType == ${INSTALLTYPE_CUSTOM}
     Call CheckExistingInstall
@@ -791,9 +839,14 @@ Function preSummary
   WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" "Write Test"
   ${Unless} ${Errors}
     DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
-    ; Check if Firefox is already the handler for http. This is set on all
-    ; versions of Windows.
+    ; Check if Firefox is the http handler for this user.
+    SetShellVarContext current ; Set SHCTX to the current user
     ${IsHandlerForInstallDir} "http" $R9
+    ${If} $TmpVal == "HKLM"
+      SetShellVarContext all ; Set SHCTX to all users
+    ${EndIf}
+    ; If Firefox isn't the http handler for this user show the option to set
+    ; Firefox as the default browser.
     ${If} "$R9" != "true"
       WriteINIStr "$PLUGINSDIR\summary.ini" "Settings" NumFields "4"
       WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Type   "checkbox"
@@ -916,7 +969,12 @@ Function .onInit
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Bottom "87"
 
   ; Setup the shortcuts.ini file for the Custom Shortcuts Page
-  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Settings" NumFields "4"
+  ; Don't offer to install the quick launch shortcut on Windows 7
+  ${If} ${AtLeastWin7}
+    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Settings" NumFields "3"
+  ${Else}
+    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Settings" NumFields "4"
+  ${EndIf}
 
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 1" Type   "label"
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 1" Text   "$(CREATE_ICONS_DESC)"
@@ -942,13 +1000,16 @@ Function .onInit
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Bottom "50"
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" State  "1"
 
-  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Type   "checkbox"
-  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Text   "$(ICONS_QUICKLAUNCH)"
-  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Left   "15"
-  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Right  "-1"
-  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Top    "60"
-  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Bottom "70"
-  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" State  "1"
+  ; Don't offer to install the quick launch shortcut on Windows 7
+  ${Unless} ${AtLeastWin7}
+    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Type   "checkbox"
+    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Text   "$(ICONS_QUICKLAUNCH)"
+    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Left   "15"
+    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Right  "-1"
+    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Top    "60"
+    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Bottom "70"
+    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" State  "1"
+  ${EndUnless}
 
   ; There must always be a core directory.
   ${GetSize} "$EXEDIR\core\" "/S=0K" $R5 $R7 $R8

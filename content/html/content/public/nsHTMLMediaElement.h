@@ -328,6 +328,19 @@ public:
    */
   PRBool GetPlayedOrSeeked() const { return mHasPlayedOrSeeked; }
 
+  /**
+   * The preloading action to perform. These dictate how we react to the 
+   * preload attribute. See mPreloadAction.
+   */
+  enum PreloadAction {
+    PRELOAD_UNDEFINED = 0, // not determined - used only for initialization
+    PRELOAD_NONE = 1,      // do not preload
+    PRELOAD_METADATA = 2,  // preload only the metadata (and first frame)
+    PRELOAD_ENOUGH = 3     // preload enough data to allow uninterrupted
+                           // playback
+  };
+  PreloadAction GetPreloadAction() const { return mPreloadAction; }
+
   nsresult CopyInnerTo(nsGenericElement* aDest) const;
 
   /**
@@ -476,18 +489,6 @@ protected:
     PRELOAD_ATTR_NONE,     // set to "none"
     PRELOAD_ATTR_METADATA, // set to "metadata"
     PRELOAD_ATTR_AUTO      // set to "auto"
-  };
-
-  /**
-   * The preloading action to perform. These dictate how we react to the 
-   * preload attribute. See mPreloadAction.
-   */
-  enum PreloadAction {
-    PRELOAD_UNDEFINED = 0, // not determined - used only for initialization
-    PRELOAD_NONE = 1,      // do not preload
-    PRELOAD_METADATA = 2,  // preload only the metadata (and first frame)
-    PRELOAD_ENOUGH = 3     // preload enough data to allow uninterrupted
-                           // playback
   };
 
   /**

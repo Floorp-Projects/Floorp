@@ -112,6 +112,17 @@ GARBAGE += leaktest.py
 libs:: $(_LEAKTEST_FILES)
 	$(INSTALL) $^ $(_LEAKTEST_DIR)
 
+_VALGRIND_DIR = $(DEPTH)/_valgrind
+GARBAGE_DIRS += $(_VALGRIND_DIR)
+
+_VALGRIND_FILES = \
+		$(topsrcdir)/build/valgrind/i686-redhat-linux-gnu.sup \
+		$(topsrcdir)/build/valgrind/x86_64-redhat-linux-gnu.sup \
+		$(NULL)
+
+libs:: $(_VALGRIND_FILES)
+	$(INSTALL) $^ $(_VALGRIND_DIR)
+
 ifdef ENABLE_TESTS
 libs:: $(topsrcdir)/tools/rb/fix_stack_using_bpsyms.py
 	$(INSTALL) $< $(DIST)/bin

@@ -110,6 +110,10 @@ function generateSVGAttrsForParams(aViewboxArr, aWidth, aHeight,
     }
     str += "%22";
   }
+
+  // Add 'font-size' just in case the client wants to use ems
+  str += "%20font-size%3D%22" + "10px" + "%22";
+
   return str;
 }
 
@@ -132,38 +136,47 @@ function generateHostNode(aHostNodeTagName, aUri,
 
 // THIS IS THE CHIEF HELPER FUNCTION TO BE CALLED BY CLIENTS
 function appendSVGArrayWithParams(aSVGParams, aHostNodeTagName) {
-  var rootNode = document.getElementsByTagName("body")[0];
-
   // These are width & height vals that will be used for the *host node*.
   // (i.e. the <img> or <embed> node -- not the <svg> node)
   var hostNodeWidthVals  = [ null, HOST_NODE_WIDTH  ];
   var hostNodeHeightVals = [ null, HOST_NODE_HEIGHT ];
 
   for (var i = 0; i < hostNodeWidthVals.length; i++) {
-    var hostWidth = hostNodeWidthVals[i];
+    var hostNodeWidth = hostNodeWidthVals[i];
     for (var j = 0; j < hostNodeHeightVals.length; j++) {
-      var hostHeight = hostNodeHeightVals[j];
-      for (var k = 0; k < ALIGN_VALS.length; k++) {
-        var alignVal = ALIGN_VALS[k];
+      var hostNodeHeight = hostNodeHeightVals[j];
+      appendSVGSubArrayWithParams(aSVGParams, aHostNodeTagName,
+                                  hostNodeWidth, hostNodeHeight);
+    }
+  }
+}
 
-        // Generate the Data URI
-        var uri = generateSVGDataURI(aSVGParams.viewBox,
-                                     aSVGParams.width, aSVGParams.height,
-                                     alignVal,
-                                     aSVGParams.meetOrSlice);
+// Helper function for above, for a fixed [host-node-width][host-node-height]
+function appendSVGSubArrayWithParams(aSVGParams, aHostNodeTagName,
+                                     aHostNodeWidth, aHostNodeHeight) {
+  var rootNode = document.getElementsByTagName("body")[0];
+  for (var k = 0; k < ALIGN_VALS.length; k++) {
+    var alignVal = ALIGN_VALS[k];
+    if (!aSVGParams.meetOrSlice) {
+      alignVal = "none";
+    }
 
-        // Generate & append the host node element
-        var hostNode = generateHostNode(aHostNodeTagName, uri,
-                                        hostWidth, hostHeight);
-        rootNode.appendChild(hostNode);
+    // Generate the Data URI
+    var uri = generateSVGDataURI(aSVGParams.viewBox,
+                                 aSVGParams.width, aSVGParams.height,
+                                 alignVal,
+                                 aSVGParams.meetOrSlice);
 
-        // Cosmetic: Add a newline when we get halfway through the ALIGN_VALS
-        // and then again when we reach the end
-        if (k + 1 == ALIGN_VALS.length / 2 ||
-            k + 1 == ALIGN_VALS.length) {
-          rootNode.appendChild(document.createElement("br"));
-        }
-      }
+    // Generate & append the host node element
+    var hostNode = generateHostNode(aHostNodeTagName, uri,
+                                    aHostNodeWidth, aHostNodeHeight);
+    rootNode.appendChild(hostNode);
+
+    // Cosmetic: Add a newline when we get halfway through the ALIGN_VALS
+    // and then again when we reach the end
+    if (k + 1 == ALIGN_VALS.length / 2 ||
+        k + 1 == ALIGN_VALS.length) {
+      rootNode.appendChild(document.createElement("br"));
     }
   }
 }

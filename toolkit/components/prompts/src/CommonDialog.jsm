@@ -172,7 +172,8 @@ CommonDialog.prototype = {
 
         // set the icon
         let icon = this.ui.infoIcon;
-        this.iconClass.forEach(function(el,idx,arr) icon.classList.add(el));
+        if (icon)
+            this.iconClass.forEach(function(el,idx,arr) icon.classList.add(el));
 
         // set default result to cancelled
         this.args.ok = false;
@@ -180,7 +181,7 @@ CommonDialog.prototype = {
 
 
         // Set the default button
-        let b = (this.args.defaultButtonNum || 0)
+        let b = (this.args.defaultButtonNum || 0);
         let button = this.ui["button" + b];
 
         if (xulDialog)

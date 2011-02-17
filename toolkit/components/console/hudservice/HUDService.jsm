@@ -128,9 +128,8 @@ const CATEGORY_NETWORK = 0;
 const CATEGORY_CSS = 1;
 const CATEGORY_JS = 2;
 const CATEGORY_WEBDEV = 3;
-const CATEGORY_MISC = 4;    // always on
-const CATEGORY_INPUT = 5;   // always on
-const CATEGORY_OUTPUT = 6;  // always on
+const CATEGORY_INPUT = 4;   // always on
+const CATEGORY_OUTPUT = 5;  // always on
 
 // The possible message severities. As before, we start at zero so we can use
 // these as indexes into MESSAGE_PREFERENCE_KEYS.
@@ -153,6 +152,12 @@ const MIN_HTTP_ERROR_CODE = 400;
 // The highest HTTP response code (exclusive) that is considered an error.
 const MAX_HTTP_ERROR_CODE = 600;
 
+// HTTP status codes.
+const HTTP_MOVED_PERMANENTLY = 301;
+const HTTP_FOUND = 302;
+const HTTP_SEE_OTHER = 303;
+const HTTP_TEMPORARY_REDIRECT = 307;
+
 // The HTML namespace.
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -165,7 +170,6 @@ const CATEGORY_CLASS_FRAGMENTS = [
   "cssparser",
   "exception",
   "console",
-  "misc",
   "input",
   "output",
 ];
@@ -189,7 +193,6 @@ const MESSAGE_PREFERENCE_KEYS = [
   [ "csserror",   "cssparser",  null,   null,          ],  // CSS
   [ "exception",  "jswarn",     null,   null,          ],  // JS
   [ "error",      "warn",       "info", "log",         ],  // Web Developer
-  [ null,         null,         null,   null,          ],  // Misc.
   [ null,         null,         null,   null,          ],  // Input
   [ null,         null,         null,   null,          ],  // Output
 ];
@@ -342,7 +345,7 @@ ResponseListener.prototype =
 
     let data = NetUtil.readInputStreamToString(aInputStream, aCount);
 
-    if (HUDService.saveRequestAndResponseBodies &&
+    if (!this.httpActivity.response.bodyDiscarded &&
         this.receivedData.length < RESPONSE_BODY_LIMIT) {
       this.receivedData += NetworkHelper.
                            convertToUnicode(data, aRequest.contentCharset);
@@ -359,6 +362,25 @@ ResponseListener.prototype =
   onStartRequest: function RL_onStartRequest(aRequest, aContext)
   {
     this.request = aRequest;
+
+    // Always discard the response body if logging is not enabled in the Web
+    // Console.
+    this.httpActivity.response.bodyDiscarded =
+      !HUDService.saveRequestAndResponseBodies;
+
+    // Check response status and discard the body for redirects.
+    if (!this.httpActivity.response.bodyDiscarded &&
+        this.httpActivity.channel instanceof Ci.nsIHttpChannel) {
+      switch (this.httpActivity.channel.responseStatus) {
+        case HTTP_MOVED_PERMANENTLY:
+        case HTTP_FOUND:
+        case HTTP_SEE_OTHER:
+        case HTTP_TEMPORARY_REDIRECT:
+          this.httpActivity.response.bodyDiscarded = true;
+          break;
+      }
+    }
+
     // Asynchronously wait for the data coming from the request.
     this.setAsyncListener(this.sink.inputStream, this);
   },
@@ -380,7 +402,7 @@ ResponseListener.prototype =
     // Retrieve the response headers, as they are, from the server.
     let response = null;
     for each (let item in HUDService.openResponseHeaders) {
-      if (item.channel === aRequest) {
+      if (item.channel === this.httpActivity.channel) {
         response = item;
         break;
       }
@@ -413,11 +435,9 @@ ResponseListener.prototype =
     // Remove our listener from the request input stream.
     this.setAsyncListener(this.sink.inputStream, null);
 
-    if (HUDService.saveRequestAndResponseBodies) {
+    if (!this.httpActivity.response.bodyDiscarded &&
+        HUDService.saveRequestAndResponseBodies) {
       this.httpActivity.response.body = this.receivedData;
-    }
-    else {
-      this.httpActivity.response.bodyDiscarded = true;
     }
 
     if (HUDService.lastFinishedRequestCallback) {
@@ -1948,7 +1968,7 @@ HUD_SERVICE.prototype =
     let hud = this.hudReferences[aHUDId];
     let chromeDocument = hud.HUDBox.ownerDocument;
     let message = stringBundle.GetStringFromName("ConsoleAPIDisabled");
-    let node = ConsoleUtils.createMessageNode(chromeDocument, CATEGORY_MISC,
+    let node = ConsoleUtils.createMessageNode(chromeDocument, CATEGORY_JS,
                                               SEVERITY_WARNING, message);
     ConsoleUtils.outputMessageNode(node, aHUDId);
   },
@@ -2699,20 +2719,9 @@ HUD_SERVICE.prototype =
       }
     }
 
-    // Need to detect that the console component has been paved over. Do this by
-    // checking whether its global object is equal to that of an object
-    // returned by our native ConsoleAPI nsIDOMGlobalPropertyInitializer.
+    // Need to detect that the console component has been paved over.
     let consoleObject = unwrap(aContentWindow).console;
-    let consoleGlobal = Cu.getGlobalForObject(consoleObject);
-
-    let nativeConsoleObj = Cc["@mozilla.org/console-api;1"].
-                           createInstance(Ci.nsIDOMGlobalPropertyInitializer).
-                           init(aContentWindow);
-    let nativeConsoleGlobal = Cu.getGlobalForObject(nativeConsoleObj);
-
-    // Need a "===" comparison because backstagepass objects have strange
-    // behavior with ==
-    if (consoleGlobal !== nativeConsoleGlobal)
+    if (!("__mozillaConsole__" in consoleObject))
       this.logWarningAboutReplacedAPI(hudId);
 
     // register the controller to handle "select all" properly
@@ -2854,17 +2863,26 @@ HUD_SERVICE.prototype =
     // Gather up the selected items and concatenate their clipboard text.
 
     let strings = [];
+    let newGroup = false;
     for (let i = 0; i < aOutputNode.selectedCount; i++) {
       let item = aOutputNode.selectedItems[i];
 
       // Add newlines between groups so that group boundaries show up in the
       // copied output.
       if (i > 0 && item.classList.contains("webconsole-new-group")) {
-        strings.push("\n");
+        newGroup = true;
       }
 
-      let timestampString = ConsoleUtils.timestampString(item.timestamp);
-      strings.push("[" + timestampString + "] " + item.clipboardText);
+      // Ensure the selected item hasn't been filtered by type or string.
+      if (!item.classList.contains("hud-filtered-by-type") &&
+          !item.classList.contains("hud-filtered-by-string")) {
+        let timestampString = ConsoleUtils.timestampString(item.timestamp);
+        if (newGroup) {
+          strings.push("\n");
+          newGroup = false;
+        }
+        strings.push("[" + timestampString + "] " + item.clipboardText);
+      }
     }
     clipboardHelper.copyString(strings.join("\n"));
   }
@@ -4076,10 +4094,9 @@ JSTerm.prototype = {
   {
     let self = this;
     let propPanel;
-    // The property panel has two buttons:
-    // 1. `Update`: reexecutes the string executed on the command line. The
+    // The property panel has one button:
+    //    `Update`: reexecutes the string executed on the command line. The
     //    result will be inspected by this panel.
-    // 2. `Close`: destroys the panel.
     let buttons = [];
 
     // If there is a evalString passed to this function, then add a `Update`
@@ -4107,26 +4124,18 @@ JSTerm.prototype = {
       });
     }
 
-    buttons.push({
-      label: HUDService.getStr("close.button"),
-      accesskey: HUDService.getStr("close.accesskey"),
-      class: "jsPropertyPanelCloseButton",
-      oncommand: function () {
-        propPanel.destroy();
-        aAnchor._panelOpen = false;
-      }
-    });
-
     let doc = self.parentNode.ownerDocument;
     let parent = doc.getElementById("mainPopupSet");
     let title = (aEvalString
         ? HUDService.getFormatStr("jsPropertyInspectTitle", [aEvalString])
         : HUDService.getStr("jsPropertyTitle"));
+
     propPanel = new PropertyPanel(parent, doc, title, aOutputObject, buttons);
+    propPanel.linkNode = aAnchor;
 
     let panel = propPanel.panel;
     panel.openPopup(aAnchor, "after_pointer", 0, 0, false, false);
-    panel.sizeTo(200, 400);
+    panel.sizeTo(350, 450);
     return propPanel;
   },
 

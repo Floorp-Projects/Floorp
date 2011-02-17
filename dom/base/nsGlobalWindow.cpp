@@ -66,6 +66,7 @@
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
+#include "nsJSEnvironment.h"
 
 // Other Classes
 #include "nsIEventListenerManager.h"
@@ -118,6 +119,7 @@
 #include "nsIDOMMessageEvent.h"
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMPopStateEvent.h"
+#include "nsIDOMPopStateEvent_MOZILLA_2_BRANCH.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDOMGeoGeolocation.h"
 #include "nsIDOMDesktopNotification.h"
@@ -221,6 +223,7 @@
 #include "nsXPCOMCID.h"
 
 #include "mozilla/FunctionTimer.h"
+#include "mozIThirdPartyUtil.h"
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
@@ -957,20 +960,6 @@ nsGlobalWindow::~nsGlobalWindow()
            ("DOMWINDOW %p destroyed", this));
 #endif
 
-  if (mObserver) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os) {
-      os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
-      os->RemoveObserver(mObserver, "dom-storage2-changed");
-      os->RemoveObserver(mObserver, "dom-storage-changed");
-    }
-
-    // Drop its reference to this dying window, in case for some bogus reason
-    // the object stays around.
-    mObserver->Forget();
-    NS_RELEASE(mObserver);
-  }
-
   if (IsOuterWindow()) {
     // An outer window is destroyed with inner windows still possibly
     // alive, iterate through the inner windows and null out their
@@ -1081,9 +1070,22 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
     return;
   mCleanedUp = PR_TRUE;
 
+  if (mObserver) {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
+      os->RemoveObserver(mObserver, "dom-storage2-changed");
+      os->RemoveObserver(mObserver, "dom-storage-changed");
+    }
+
+    // Drop its reference to this dying window, in case for some bogus reason
+    // the object stays around.
+    mObserver->Forget();
+    NS_RELEASE(mObserver);
+  }
+
   mNavigator = nsnull;
   mScreen = nsnull;
-  mHistory = nsnull;
   mMenubar = nsnull;
   mToolbar = nsnull;
   mLocationbar = nsnull;
@@ -1091,10 +1093,11 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
   mStatusbar = nsnull;
   mScrollbars = nsnull;
   mLocation = nsnull;
+  mHistory = nsnull;
   mFrames = nsnull;
   mApplicationCache = nsnull;
   mIndexedDB = nsnull;
-  delete mPendingStorageEventsObsolete;
+  mPendingStorageEventsObsolete = nsnull;
 
 
   ClearControllers();
@@ -1159,42 +1162,36 @@ nsGlobalWindow::ClearControllers()
   }
 }
 
-class ClearScopeEvent : public nsRunnable
+// static
+void
+nsGlobalWindow::TryClearWindowScope(nsISupports *aWindow)
 {
-public:
-  ClearScopeEvent(nsGlobalWindow *innerWindow)
-    : mInnerWindow(innerWindow) {
-  }
+  nsGlobalWindow *window =
+          static_cast<nsGlobalWindow *>(static_cast<nsIDOMWindow*>(aWindow));
 
-  NS_IMETHOD Run()
-  {
-    mInnerWindow->ReallyClearScope(this);
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<nsGlobalWindow> mInnerWindow;
-};
+  // This termination function might be called when any script evaluation in our
+  // context terminated, even if there are other scripts in the stack. Thus, we
+  // have to check again if a script is executing and post a new termination
+  // function if necessary.
+  window->ClearScopeWhenAllScriptsStop();
+}
 
 void
-nsGlobalWindow::ReallyClearScope(nsRunnable *aRunnable)
+nsGlobalWindow::ClearScopeWhenAllScriptsStop()
 {
   NS_ASSERTION(IsInnerWindow(), "Must be an inner window");
 
+  // We cannot clear scope safely until all the scripts in our script context
+  // stopped. This might be a long wait, for example if one script is busy
+  // because it started a nested event loop for a modal dialog.
   nsIScriptContext *jsscx = GetContextInternal();
   if (jsscx && jsscx->GetExecutingScript()) {
-    if (!aRunnable) {
-      aRunnable = new ClearScopeEvent(this);
-      if (!aRunnable) {
-        // The only reason that we clear scope here is to try to prevent
-        // leaks. Failing to clear scope might mean that we'll leak more
-        // but if we don't have enough memory to allocate a ClearScopeEvent
-        // we probably don't have to worry about this anyway.
-        return;
-      }
-    }
-
-    NS_DispatchToMainThread(aRunnable);
+    // We ignore the return value because the only reason that we clear scope
+    // here is to try to prevent leaks. Failing to clear scope might mean that
+    // we'll leak more but if we don't have enough memory to allocate a
+    // termination function we probably don't have to worry about this anyway.
+    jsscx->SetTerminationFunction(TryClearWindowScope,
+                                  static_cast<nsIDOMWindow *>(this));
     return;
   }
 
@@ -1228,7 +1225,7 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
   indexedDB::IndexedDatabaseManager* idbManager =
     indexedDB::IndexedDatabaseManager::Get();
   if (idbManager) {
-    idbManager->CloseDatabasesForWindow(this);
+    idbManager->AbortCloseDatabasesForWindow(this);
   }
 
   ClearAllTimeouts();
@@ -1241,6 +1238,7 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
   }
 
   mLocation = nsnull;
+  mHistory = nsnull;
 
   if (mDocument) {
     NS_ASSERTION(mDoc, "Why is mDoc null?");
@@ -1269,9 +1267,7 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
   mIndexedDB = nsnull;
 
   if (aClearScope) {
-    // NB: This might not clear our scope, but fire an event to do so
-    // instead.
-    ReallyClearScope(nsnull);
+    ClearScopeWhenAllScriptsStop();
   }
 
   if (mDummyJavaPluginOwner) {
@@ -1926,6 +1922,15 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     if (aDocument != oldDoc) {
       nsWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject);
     }
+
+    // The API we're really looking for here is to go clear all of the
+    // Xray wrappers associated with our outer window. However, we
+    // don't expose that API because the implementation would be
+    // identical to that of JS_TransplantObject, so we just call that
+    // instead.
+    if (!JS_TransplantObject(cx, mJSObject, mJSObject)) {
+      return NS_ERROR_FAILURE;
+    }
   } else {
     if (aState) {
       newInnerWindow = wsh->GetInnerWindow();
@@ -2106,7 +2111,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     } else {
       if (!JS_DefineProperty(cx, newInnerWindow->mJSObject, "window",
                              OBJECT_TO_JSVAL(mJSObject),
-                             JS_PropertyStub, JS_PropertyStub,
+                             JS_PropertyStub, JS_StrictPropertyStub,
                              JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)) {
         NS_ERROR("can't create the 'window' property");
         return NS_ERROR_FAILURE;
@@ -2395,8 +2400,6 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
 
   if (mNavigator)
     mNavigator->SetDocShell(aDocShell);
-  if (mHistory)
-    mHistory->SetDocShell(aDocShell);
   if (mFrames)
     mFrames->SetDocShell(aDocShell);
   if (mScreen)
@@ -2488,6 +2491,21 @@ nsGlobalWindow::UpdateParentTarget()
   if (!mParentTarget) {
     mParentTarget = mChromeEventHandler;
   }
+}
+
+PRBool
+nsGlobalWindow::GetIsTabModalPromptAllowed()
+{
+  PRBool allowTabModal = PR_TRUE;
+  if (mDocShell) {
+    nsCOMPtr<nsIContentViewer> cv;
+    mDocShell->GetContentViewer(getter_AddRefs(cv));
+    nsCOMPtr<nsIContentViewer_MOZILLA_2_0_BRANCH> cv2 = do_QueryInterface(cv);
+    if (cv2)
+      cv2->GetIsTabModalPromptAllowed(&allowTabModal);
+  }
+
+  return allowTabModal;
 }
 
 nsresult
@@ -2917,12 +2935,12 @@ nsGlobalWindow::GetScreen(nsIDOMScreen** aScreen)
 NS_IMETHODIMP
 nsGlobalWindow::GetHistory(nsIDOMHistory** aHistory)
 {
-  FORWARD_TO_OUTER(GetHistory, (aHistory), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_INNER(GetHistory, (aHistory), NS_ERROR_NOT_INITIALIZED);
 
   *aHistory = nsnull;
 
-  if (!mHistory && mDocShell) {
-    mHistory = new nsHistory(mDocShell);
+  if (!mHistory) {
+    mHistory = new nsHistory(this);
     if (!mHistory) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -4446,6 +4464,8 @@ nsGlobalWindow::Dump(const nsAString& aStr)
 void
 nsGlobalWindow::EnsureReflowFlushAndPaint()
 {
+  NS_ASSERTION(IsOuterWindow(), "EnsureReflowFlushAndPaint() must be called on"
+               "the outer window");
   NS_ASSERTION(mDocShell, "EnsureReflowFlushAndPaint() called with no "
                "docshell!");
 
@@ -4628,6 +4648,10 @@ nsGlobalWindow::Alert(const nsAString& aString)
   nsAutoString final;
   nsContentUtils::StripNullChars(*str, final);
 
+  // Check if we're being called at a point where we can't use tab-modal
+  // prompts, because something doesn't want reentrancy.
+  PRBool allowTabModal = GetIsTabModalPromptAllowed();
+
   nsresult rv;
   nsCOMPtr<nsIPromptFactory> promptFac =
     do_GetService("@mozilla.org/prompter;1", &rv);
@@ -4640,7 +4664,7 @@ nsGlobalWindow::Alert(const nsAString& aString)
 
   nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompt);
   if (promptBag)
-    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), PR_TRUE);
+    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), allowTabModal);
 
   if (shouldEnableDisableDialog) {
     PRBool disallowDialog = PR_FALSE;
@@ -4690,6 +4714,10 @@ nsGlobalWindow::Confirm(const nsAString& aString, PRBool* aReturn)
   nsAutoString final;
   nsContentUtils::StripNullChars(aString, final);
 
+  // Check if we're being called at a point where we can't use tab-modal
+  // prompts, because something doesn't want reentrancy.
+  PRBool allowTabModal = GetIsTabModalPromptAllowed();
+
   nsresult rv;
   nsCOMPtr<nsIPromptFactory> promptFac =
     do_GetService("@mozilla.org/prompter;1", &rv);
@@ -4702,7 +4730,7 @@ nsGlobalWindow::Confirm(const nsAString& aString, PRBool* aReturn)
 
   nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompt);
   if (promptBag)
-    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), PR_TRUE);
+    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), allowTabModal);
 
   if (shouldEnableDisableDialog) {
     PRBool disallowDialog = PR_FALSE;
@@ -4725,6 +4753,9 @@ NS_IMETHODIMP
 nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
                        nsAString& aReturn)
 {
+  FORWARD_TO_OUTER(Prompt, (aMessage, aInitial, aReturn),
+                   NS_ERROR_NOT_INITIALIZED);
+
   SetDOMStringToNull(aReturn);
 
   if (AreDialogsBlocked())
@@ -4752,6 +4783,10 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
   nsContentUtils::StripNullChars(aMessage, fixedMessage);
   nsContentUtils::StripNullChars(aInitial, fixedInitial);
 
+  // Check if we're being called at a point where we can't use tab-modal
+  // prompts, because something doesn't want reentrancy.
+  PRBool allowTabModal = GetIsTabModalPromptAllowed();
+
   nsresult rv;
   nsCOMPtr<nsIPromptFactory> promptFac =
     do_GetService("@mozilla.org/prompter;1", &rv);
@@ -4764,7 +4799,7 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
 
   nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompt);
   if (promptBag)
-    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), PR_TRUE);
+    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), allowTabModal);
 
   // Pass in the default value, if any.
   PRUnichar *inoutValue = ToNewUnicode(fixedInitial);
@@ -5071,7 +5106,7 @@ nsGlobalWindow::Print()
 
       EnterModalState();
       webBrowserPrint->Print(printSettings, nsnull);
-      LeaveModalState();
+      LeaveModalState(nsnull);
 
       PRBool savePrintSettings =
         nsContentUtils::GetBoolPref("print.save_print_settings", PR_FALSE);
@@ -6276,7 +6311,7 @@ nsGlobalWindow::ReallyCloseWindow()
   }
 }
 
-void
+nsIDOMWindow *
 nsGlobalWindow::EnterModalState()
 {
   nsGlobalWindow* topWin = GetTop();
@@ -6284,7 +6319,7 @@ nsGlobalWindow::EnterModalState()
   if (!topWin) {
     NS_ERROR("Uh, EnterModalState() called w/o a reachable top window?");
 
-    return;
+    return nsnull;
   }
 
   // If there is an active ESM in this window, clear it. Otherwise, this can
@@ -6319,9 +6354,20 @@ nsGlobalWindow::EnterModalState()
   }
   topWin->mModalStateDepth++;
 
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
+
+  nsCOMPtr<nsIDOMWindow> callerWin;
+  nsIScriptContext *scx;
+  if (cx && (scx = GetScriptContextFromJSContext(cx))) {
+    scx->EnterModalState();
+    callerWin = do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
+  }
+
   if (mContext) {
     mContext->EnterModalState();
   }
+
+  return callerWin;
 }
 
 // static
@@ -6395,7 +6441,7 @@ private:
 };
 
 void
-nsGlobalWindow::LeaveModalState()
+nsGlobalWindow::LeaveModalState(nsIDOMWindow *aCallerWin)
 {
   nsGlobalWindow *topWin = GetTop();
 
@@ -6417,6 +6463,14 @@ nsGlobalWindow::LeaveModalState()
       mSuspendedDoc->UnsuppressEventHandlingAndFireEvents(currentDoc == mSuspendedDoc);
       mSuspendedDoc = nsnull;
     }
+  }
+
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
+
+  if (aCallerWin) {
+    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aCallerWin));
+    nsIScriptContext *scx = sgo->GetContext();
+    scx->LeaveModalState();
   }
 
   if (mContext) {
@@ -6744,6 +6798,9 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
                                 const nsAString& aOptions,
                                 nsIVariant **aRetVal)
 {
+  FORWARD_TO_OUTER(ShowModalDialog, (aURI, aArgs, aOptions, aRetVal),
+                   NS_ERROR_NOT_INITIALIZED);
+
   *aRetVal = nsnull;
 
   // Before bringing up the window/dialog, unsuppress painting and flush
@@ -6770,7 +6827,7 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
                              GetPrincipal(),    // aCalleePrincipal
                              nsnull,            // aJSCallerContext
                              getter_AddRefs(dlgWin));
-  LeaveModalState();
+  LeaveModalState(nsnull);
 
   NS_ENSURE_SUCCESS(rv, rv);
   
@@ -7642,9 +7699,9 @@ nsGlobalWindow::FireHashchange()
 }
 
 nsresult
-nsGlobalWindow::DispatchSyncPopState()
+nsGlobalWindow::DispatchSyncPopState(PRBool aIsInitial)
 {
-  FORWARD_TO_INNER(DispatchSyncPopState, (), NS_OK);
+  FORWARD_TO_INNER(DispatchSyncPopState, (aIsInitial), NS_OK);
 
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
                "Must be safe to run script here.");
@@ -7733,10 +7790,12 @@ nsGlobalWindow::DispatchSyncPopState()
   NS_ENSURE_TRUE(privateEvent, NS_ERROR_FAILURE);
 
   // Initialize the popstate event, which does bubble but isn't cancellable.
-  nsCOMPtr<nsIDOMPopStateEvent> popstateEvent = do_QueryInterface(domEvent);
+  nsCOMPtr<nsIDOMPopStateEvent_MOZILLA_2_BRANCH> popstateEvent =
+    do_QueryInterface(domEvent);
   rv = popstateEvent->InitPopStateEvent(NS_LITERAL_STRING("popstate"),
                                         PR_TRUE, PR_FALSE,
-                                        stateObj);
+                                        stateObj,
+                                        aIsInitial);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = privateEvent->SetTrusted(PR_TRUE);
@@ -7750,7 +7809,7 @@ nsGlobalWindow::DispatchSyncPopState()
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool dummy; // default action
-  return DispatchEvent(popstateEvent, &dummy);
+  return DispatchEvent(domEvent, &dummy);
 }
 
 // Find an nsICanvasFrame under aFrame.  Only search the principal
@@ -8036,8 +8095,23 @@ NS_IMETHODIMP
 nsGlobalWindow::GetMozIndexedDB(nsIIDBFactory** _retval)
 {
   if (!mIndexedDB) {
-    mIndexedDB = indexedDB::IDBFactory::Create();
-    NS_ENSURE_TRUE(mIndexedDB, NS_ERROR_FAILURE);
+    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+      do_GetService(THIRDPARTYUTIL_CONTRACTID);
+    NS_ENSURE_TRUE(thirdPartyUtil, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    PRBool isThirdParty;
+    nsresult rv = thirdPartyUtil->IsThirdPartyWindow(this, nsnull,
+                                                     &isThirdParty);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    if (isThirdParty) {
+      NS_WARNING("IndexedDB is not permitted in a third-party window.");
+      *_retval = nsnull;
+      return NS_OK;
+    }
+
+    mIndexedDB = indexedDB::IDBFactory::Create(this);
+    NS_ENSURE_TRUE(mIndexedDB, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   nsCOMPtr<nsIIDBFactory> request(mIndexedDB);
@@ -8388,7 +8462,7 @@ nsGlobalWindow::FireDelayedDOMEvents()
 {
   FORWARD_TO_INNER(FireDelayedDOMEvents, (), NS_ERROR_UNEXPECTED);
 
-  for (PRUint32 i = 0; i < mPendingStorageEvents.Count(); ++i) {
+  for (PRInt32 i = 0; i < mPendingStorageEvents.Count(); ++i) {
     Observe(mPendingStorageEvents[i], "dom-storage2-changed", nsnull);
   }
 

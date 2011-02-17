@@ -57,6 +57,70 @@
 #include "nsIDOMNodeList.h"
 #include "nsTArray.h"
 
+#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
+#include "nsExceptionHandler.h"
+#endif
+
+extern "C" {
+  void StoreSpline(int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy);
+  void CrashSpline(double tolerance, int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy);
+}
+
+static int crash_ax;
+static int crash_ay;
+static int crash_bx;
+static int crash_by;
+static int crash_cx;
+static int crash_cy;
+static int crash_dx;
+static int crash_dy;
+
+void
+StoreSpline(int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy) {
+    crash_ax = ax;
+    crash_ay = ay;
+    crash_bx = bx;
+    crash_by = by;
+    crash_cx = cx;
+    crash_cy = cy;
+    crash_dx = dx;
+    crash_dy = dy;
+}
+
+void
+CrashSpline(double tolerance, int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy) {
+#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
+  static bool annotated;
+
+  if (!annotated) {
+    nsCAutoString note;
+
+    note.AppendPrintf("curve ");
+    note.AppendPrintf("%x ", crash_ax);
+    note.AppendPrintf("%x, ", crash_ay);
+    note.AppendPrintf("%x ", crash_bx);
+    note.AppendPrintf("%x, ", crash_by);
+    note.AppendPrintf("%x ", crash_cx);
+    note.AppendPrintf("%x, ", crash_cy);
+    note.AppendPrintf("%x ", crash_dx);
+    note.AppendPrintf("%x\n", crash_dy);
+    note.AppendPrintf("crv-crash(%f): ", tolerance);
+    note.AppendPrintf("%x ", ax);
+    note.AppendPrintf("%x, ", ay);
+    note.AppendPrintf("%x ", bx);
+    note.AppendPrintf("%x, ", by);
+    note.AppendPrintf("%x ", cx);
+    note.AppendPrintf("%x, ", cy);
+    note.AppendPrintf("%x ", dx);
+    note.AppendPrintf("%x\n", dy);
+
+    CrashReporter::AppendAppNotesToCrashReport(note);
+    annotated = true;
+  }
+#endif
+}
+
+
 using namespace mozilla::widget;
 
 NS_IMPL_ISUPPORTS3(GfxInfoBase, nsIGfxInfo, nsIObserver, nsISupportsWeakReference)
@@ -499,6 +563,7 @@ GfxInfoBase::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 GfxInfoBase::GfxInfoBase()
+    : mFailureCount(0)
 {
 }
 
@@ -602,4 +667,51 @@ GfxInfoBase::EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo)
 
     ++i;
   }
+}
+
+NS_IMETHODIMP_(void)
+GfxInfoBase::LogFailure(const nsACString &failure)
+{
+  /* We only keep the first 9 failures */
+  if (mFailureCount < NS_ARRAY_LENGTH(mFailures)) {
+    mFailures[mFailureCount++] = failure;
+
+    /* record it in the crash notes too */
+#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
+    CrashReporter::AppendAppNotesToCrashReport(failure);
+#endif
+  }
+
+}
+
+/* void getFailures ([optional] out unsigned long failureCount, [array, size_is (failureCount), retval] out string failures); */
+/* XPConnect method of returning arrays is very ugly. Would not recommend. Fallable nsMemory::Alloc makes things worse */
+NS_IMETHODIMP GfxInfoBase::GetFailures(PRUint32 *failureCount NS_OUTPARAM, char ***failures NS_OUTPARAM)
+{
+
+  NS_ENSURE_ARG_POINTER(failureCount);
+  NS_ENSURE_ARG_POINTER(failures);
+
+  *failures = nsnull;
+  *failureCount = mFailureCount;
+
+  if (*failureCount != 0) {
+    *failures = (char**)nsMemory::Alloc(*failureCount * sizeof(char*));
+    if (!failures)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    /* copy over the failure messages into the array we just allocated */
+    for (PRUint32 i = 0; i < *failureCount; i++) {
+      nsPromiseFlatCString flattenedFailureMessage(mFailures[i]);
+      (*failures)[i] = (char*)nsMemory::Clone(flattenedFailureMessage.get(), flattenedFailureMessage.Length() + 1);
+
+      if (!(*failures)[i]) {
+        /* <sarcasm> I'm too afraid to use an inline function... </sarcasm> */
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, (*failures));
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+
+  return NS_OK;
 }

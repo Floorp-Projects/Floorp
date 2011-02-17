@@ -440,6 +440,25 @@ BrowserGlue.prototype = {
     if ((aCancelQuit instanceof Ci.nsISupportsPRBool) && aCancelQuit.data)
       return;
 
+    // There are several cases where we won't show a dialog here:
+    // 1. There is only 1 tab open in 1 window
+    // 2. The session will be restored at startup, indicated by
+    //    browser.startup.page == 3 or browser.sessionstore.resume_session_once == true
+    // 3. browser.warnOnQuit == false
+    // 4. The browser is currently in Private Browsing mode
+    //
+    // Otherwise these are the conditions and the associated dialogs that will be shown:
+    // 1. aQuitType == "lastwindow" or "quit" and browser.showQuitWarning == true
+    //    - The quit dialog will be shown
+    // 2. aQuitType == "restart" && browser.warnOnRestart == true
+    //    - The restart dialog will be shown
+    // 3. aQuitType == "lastwindow" && browser.tabs.warnOnClose == true
+    //    - The "closing multiple tabs" dialog will be shown
+    //
+    // aQuitType == "lastwindow" is overloaded. "lastwindow" is used to indicate
+    // "the last window is closing but we're not quitting (a non-browser window is open)"
+    // and also "we're quitting by closing the last window".
+
     var windowcount = 0;
     var pagecount = 0;
     var browserEnum = Services.wm.getEnumerator("navigator:browser");
@@ -456,38 +475,56 @@ BrowserGlue.prototype = {
     if (pagecount < 2)
       return;
 
-    if (aQuitType != "restart")
+    if (!aQuitType)
       aQuitType = "quit";
 
-    var showPrompt = true;
-    try {
-      // browser.warnOnQuit is a hidden global boolean to override all quit prompts
-      // browser.warnOnRestart specifically covers app-initiated restarts where we restart the app
-      // browser.tabs.warnOnClose is the global "warn when closing multiple tabs" pref
-
-      var sessionWillBeSaved = Services.prefs.getIntPref("browser.startup.page") == 3 ||
-                               Services.prefs.getBoolPref("browser.sessionstore.resume_session_once");
-      if (sessionWillBeSaved || !Services.prefs.getBoolPref("browser.warnOnQuit"))
-        showPrompt = false;
-      else if (aQuitType == "restart")
-        showPrompt = Services.prefs.getBoolPref("browser.warnOnRestart");
-      else
-        showPrompt = Services.prefs.getBoolPref("browser.tabs.warnOnClose");
-    } catch (ex) {}
-
-    // Never show a prompt inside the private browsing mode
+    // Never show a prompt inside private browsing mode
     var inPrivateBrowsing = Cc["@mozilla.org/privatebrowsing;1"].
                             getService(Ci.nsIPrivateBrowsingService).
                             privateBrowsingEnabled;
-    if (!showPrompt || inPrivateBrowsing)
+    if (inPrivateBrowsing)
+      return;
+
+    var showPrompt = false;
+    var mostRecentBrowserWindow;
+
+    // browser.warnOnQuit is a hidden global boolean to override all quit prompts
+    // browser.showQuitWarning specifically covers quitting
+    // browser.warnOnRestart specifically covers app-initiated restarts where we restart the app
+    // browser.tabs.warnOnClose is the global "warn when closing multiple tabs" pref
+
+    var sessionWillBeRestored = Services.prefs.getIntPref("browser.startup.page") == 3 ||
+                                Services.prefs.getBoolPref("browser.sessionstore.resume_session_once");
+    if (sessionWillBeRestored || !Services.prefs.getBoolPref("browser.warnOnQuit"))
+      return;
+
+    // On last window close or quit && showQuitWarning, we want to show the
+    // quit warning.
+    if (aQuitType != "restart" && Services.prefs.getBoolPref("browser.showQuitWarning")) {
+      showPrompt = true;
+    }
+    else if (aQuitType == "restart" && Services.prefs.getBoolPref("browser.warnOnRestart")) {
+      showPrompt = true;
+    }
+    else if (aQuitType == "lastwindow") {
+      // If aQuitType is "lastwindow" and we aren't showing the quit warning,
+      // we should show the window closing warning instead. warnAboutClosing
+      // tabs checks browser.tabs.warnOnClose and returns if it's ok to close
+      // the window. It doesn't actually close the window.
+      mostRecentBrowserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+      aCancelQuit.data = !mostRecentBrowserWindow.gBrowser.warnAboutClosingTabs(true);
+      return;
+    }
+
+    if (!showPrompt)
       return;
 
     var quitBundle = Services.strings.createBundle("chrome://browser/locale/quitDialog.properties");
     var brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
 
     var appName = brandBundle.GetStringFromName("brandShortName");
-    var quitDialogTitle = quitBundle.formatStringFromName(aQuitType + "DialogTitle",
-                                                          [appName], 1);
+    var quitTitleString = (aQuitType == "restart" ? "restart" : "quit") + "DialogTitle";
+    var quitDialogTitle = quitBundle.formatStringFromName(quitTitleString, [appName], 1);
 
     var message;
     if (aQuitType == "restart")
@@ -519,7 +556,10 @@ BrowserGlue.prototype = {
       button2Title = quitBundle.GetStringFromName("quitTitle");
     }
 
-    var mostRecentBrowserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    // This wouldn't have been set above since we shouldn't be here for
+    // aQuitType == "lastwindow"
+    mostRecentBrowserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+
     var buttonChoice =
       promptService.confirmEx(mostRecentBrowserWindow, quitDialogTitle, message,
                               flags, button0Title, button1Title, button2Title,
@@ -528,7 +568,7 @@ BrowserGlue.prototype = {
     switch (buttonChoice) {
     case 2: // Quit
       if (neverAsk.value)
-        Services.prefs.setBoolPref("browser.tabs.warnOnClose", false);
+        Services.prefs.setBoolPref("browser.showQuitWarning", false);
       break;
     case 1: // Cancel
       aCancelQuit.QueryInterface(Ci.nsISupportsPRBool);

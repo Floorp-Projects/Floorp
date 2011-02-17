@@ -44,6 +44,7 @@
 #include "gfxImageSurface.h"
 #include "gfxQuartzSurface.h"
 #include "gfxPlatform.h"
+#include "gfxFailure.h"
 #include "prenv.h"
 
 namespace mozilla {
@@ -335,6 +336,11 @@ protected:
         mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
 
         if (!data) {
+            nsCAutoString failure;
+            failure += "Pixel buffer binding failed: ";
+            failure.AppendPrintf("%dx%d\n", aSize.width, aSize.height);
+            gfx::LogFailure(failure);
+
             mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
             return gfxPlatform::GetPlatform()->
                 CreateOffscreenSurface(aSize, 

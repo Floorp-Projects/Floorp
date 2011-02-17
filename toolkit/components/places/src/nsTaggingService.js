@@ -226,13 +226,13 @@ TaggingService.prototype = {
     var result = this._getTagResult(aTagId);
     if (!result)
       return;
-    var node = result.root;
-    node.QueryInterface(Ci.nsINavHistoryContainerResultNode);
+    var node = PlacesUtils.asContainer(result.root);
     node.containerOpen = true;
     var cc = node.childCount;
     node.containerOpen = false;
-    if (cc == 0)
-      PlacesUtils.bookmarks.removeItem(node.itemId);
+    if (cc == 0) {
+      PlacesUtils.bookmarks.removeItem(aTagId);
+    }
   },
 
   // nsITaggingService
@@ -263,7 +263,6 @@ TaggingService.prototype = {
             if (itemId != -1) {
               // There is a tagged item.
               PlacesUtils.bookmarks.removeItem(itemId);
-              this._removeTagIfEmpty(tag.id);
             }
           }
         }, taggingService);
@@ -431,6 +430,11 @@ TaggingService.prototype = {
       var tagIds = this._getTagsIfUnbookmarkedURI(itemURI);
       if (tagIds)
         this.untagURI(itemURI, tagIds);
+    }
+
+    // Item is a tag entry.  If this was the last entry for this tag, remove it.
+    else if (itemURI && this._tagFolders[aFolderId]) {
+      this._removeTagIfEmpty(aFolderId);
     }
   },
 

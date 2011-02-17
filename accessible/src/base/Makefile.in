@@ -77,10 +77,13 @@ CPPSRCS = \
   nsTextAccessible.cpp \
   nsTextEquivUtils.cpp \
   nsTextAttrs.cpp \
+  TextUpdater.cpp \
   $(NULL)
 
 EXPORTS = \
   a11yGeneric.h \
+  nsAccDocManager.h \
+  nsAccessibilityService.h \
   nsAccessible.h \
   nsAccessNode.h \
   nsARIAMap.h \

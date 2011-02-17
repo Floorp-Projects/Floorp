@@ -733,7 +733,9 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
   // Else, block the parser till the script has loaded.
   if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
     mScriptElements.AppendObject(sele);
-    mParser->BlockParser();
+    if (mParser) {
+      mParser->BlockParser();
+    }
   } else {
     // This may have already happened if the script executed, but in case
     // it didn't then remove the element so that it doesn't get stuck forever.
@@ -764,7 +766,8 @@ nsHtml5TreeOpExecutor::Start()
 }
 
 void
-nsHtml5TreeOpExecutor::NeedsCharsetSwitchTo(const char* aEncoding)
+nsHtml5TreeOpExecutor::NeedsCharsetSwitchTo(const char* aEncoding,
+                                            PRInt32 aSource)
 {
   EndDocUpdate();
 
@@ -780,7 +783,7 @@ nsHtml5TreeOpExecutor::NeedsCharsetSwitchTo(const char* aEncoding)
 
   // ask the webshellservice to load the URL
   if (NS_SUCCEEDED(wss->StopDocumentLoad())) {
-    wss->ReloadDocument(aEncoding, kCharsetFromMetaTag);
+    wss->ReloadDocument(aEncoding, aSource);
   }
   // if the charset switch was accepted, wss has called Terminate() on the
   // parser by now

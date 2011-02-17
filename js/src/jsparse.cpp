@@ -203,13 +203,12 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSStackFrame *cfp)
 }
 
 bool
-Parser::init(const jschar *base, size_t length, const char *filename, uintN lineno)
+Parser::init(const jschar *base, size_t length, const char *filename, uintN lineno,
+             JSVersion version)
 {
     JSContext *cx = context;
-    version = cx->findVersion();
-    
     tempPoolMark = JS_ARENA_MARK(&cx->tempPool);
-    if (!tokenStream.init(version, base, length, filename, lineno)) {
+    if (!tokenStream.init(base, length, filename, lineno, version)) {
         JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
         return false;
     }
@@ -887,7 +886,7 @@ JSScript *
 Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
                         JSPrincipals *principals, uint32 tcflags,
                         const jschar *chars, size_t length,
-                        const char *filename, uintN lineno,
+                        const char *filename, uintN lineno, JSVersion version,
                         JSString *source /* = NULL */,
                         uintN staticLevel /* = 0 */)
 {
@@ -911,7 +910,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
     JS_ASSERT_IF(staticLevel != 0, callerFrame);
 
     Compiler compiler(cx, principals, callerFrame);
-    if (!compiler.init(chars, length, filename, lineno))
+    if (!compiler.init(chars, length, filename, lineno, version))
         return NULL;
 
     JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode),
@@ -1032,6 +1031,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
 
         if (!js_EmitTree(cx, &cg, pn))
             goto out;
+
 #if JS_HAS_XML_SUPPORT
         if (PN_TYPE(pn) != TOK_SEMI ||
             !pn->pn_kid ||
@@ -1109,13 +1109,18 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
      */
     if (js_Emit1(cx, &cg, JSOP_STOP) < 0)
         goto out;
+
 #ifdef METER_PARSENODES
     printf("Code-gen growth: %d (%u bytecodes, %u srcnotes)\n",
            (char *)sbrk(0) - (char *)before, CG_OFFSET(&cg), cg.noteCount);
 #endif
+
 #ifdef JS_ARENAMETER
     JS_DumpArenaStats(stdout);
 #endif
+
+    JS_ASSERT(cg.version() == version);
+
     script = JSScript::NewScriptFromCG(cx, &cg);
     if (script && funbox)
         script->savedCallerFun = true;
@@ -1183,9 +1188,8 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
 
         JSProperty *prop;
 
-        if (!js_DefineNativeProperty(cx, globalObj, id, rval, PropertyStub,
-                                     PropertyStub, JSPROP_ENUMERATE | JSPROP_PERMANENT,
-                                     0, 0, &prop)) {
+        if (!js_DefineNativeProperty(cx, globalObj, id, rval, PropertyStub, StrictPropertyStub,
+                                     JSPROP_ENUMERATE | JSPROP_PERMANENT, 0, 0, &prop)) {
             return false;
         }
 
@@ -1414,10 +1418,10 @@ CheckStrictAssignment(JSContext *cx, JSTreeContext *tc, JSParseNode *lhs)
 }
 
 /*
- * Check that it is permitted to introduce a binding for atom.  Strict
- * mode forbids introducing new definitions for 'eval' or 'arguments'.
- * Use pn for reporting error locations, or use tc's token stream if
- * pn is NULL.
+ * Check that it is permitted to introduce a binding for atom.  Strict mode
+ * forbids introducing new definitions for 'eval', 'arguments', or for any
+ * strict mode reserved keyword.  Use pn for reporting error locations, or use
+ * tc's token stream if pn is NULL.
  */
 bool
 CheckStrictBinding(JSContext *cx, JSTreeContext *tc, JSAtom *atom, JSParseNode *pn)
@@ -1426,65 +1430,83 @@ CheckStrictBinding(JSContext *cx, JSTreeContext *tc, JSAtom *atom, JSParseNode *
         return true;
 
     JSAtomState *atomState = &cx->runtime->atomState;
-    if (atom == atomState->evalAtom || atom == atomState->argumentsAtom) {
+    if (atom == atomState->evalAtom ||
+        atom == atomState->argumentsAtom ||
+        FindKeyword(atom->charsZ(), atom->length()))
+    {
         JSAutoByteString name;
         if (!js_AtomToPrintableString(cx, atom, &name))
             return false;
         return ReportStrictModeError(cx, TS(tc->parser), tc, pn, JSMSG_BAD_BINDING, name.ptr());
     }
+
     return true;
 }
 
+static bool
+ReportBadParameter(JSContext *cx, JSTreeContext *tc, JSAtom *name, uintN errorNumber)
+{
+    JSDefinition *dn = ALE_DEFN(tc->decls.lookup(name));
+    JSAutoByteString bytes;
+    return js_AtomToPrintableString(cx, name, &bytes) &&
+           ReportStrictModeError(cx, TS(tc->parser), tc, dn, errorNumber, bytes.ptr());
+}
+
 /*
- * In strict mode code, all formal parameter names must be distinct. If fun's
- * formals are legit given fun's strictness level, return true. Otherwise,
- * report an error and return false. Use pn for error position reporting,
- * unless we can find something more accurate in tc's decls.
- *
- * In some cases the code to parse the argument list will already have noticed
- * the duplication; we could try to use that knowledge instead of re-checking
- * here. But since the strictness of the function's body determines what
- * constraints to apply to the argument list, we can't report the error until
- * after we've parsed the body. And as it turns out, the function's local name
- * list makes it reasonably cheap to find duplicates after the fact.
+ * In strict mode code, all parameter names must be distinct, must not be
+ * strict mode reserved keywords, and must not be 'eval' or 'arguments'.  We
+ * must perform these checks here, and not eagerly during parsing, because a
+ * function's body may turn on strict mode for the function head.
  */
 static bool
-CheckStrictFormals(JSContext *cx, JSTreeContext *tc, JSFunction *fun,
-                   JSParseNode *pn)
+CheckStrictParameters(JSContext *cx, JSTreeContext *tc)
 {
-    if (!tc->needStrictChecks())
+    JS_ASSERT(tc->inFunction());
+
+    if (!tc->needStrictChecks() || tc->bindings.countArgs() == 0)
         return true;
 
-    if (JSAtom *atom = tc->bindings.findDuplicateArgument()) {
-        /*
-         * We have found a duplicate parameter name. If we can find the
-         * JSDefinition for the argument, that will have a more accurate source
-         * location.
-         */
-        JSDefinition *dn = ALE_DEFN(tc->decls.lookup(atom));
-        if (dn->pn_op == JSOP_GETARG)
-            pn = dn;
-        JSAutoByteString name;
-        if (!js_AtomToPrintableString(cx, atom, &name) ||
-            !ReportStrictModeError(cx, TS(tc->parser), tc, pn, JSMSG_DUPLICATE_FORMAL,
-                                   name.ptr())) {
+    JSAtom *argumentsAtom = cx->runtime->atomState.argumentsAtom;
+    JSAtom *evalAtom = cx->runtime->atomState.evalAtom;
+
+    /* name => whether we've warned about the name already */
+    HashMap<JSAtom *, bool> parameters(cx);
+    if (!parameters.init(tc->bindings.countArgs()))
+        return false;
+
+    /* Start with lastVariable(), not lastArgument(), for destructuring. */
+    for (Shape::Range r = tc->bindings.lastVariable(); !r.empty(); r.popFront()) {
+        jsid id = r.front().id;
+        if (!JSID_IS_ATOM(id))
+            continue;
+
+        JSAtom *name = JSID_TO_ATOM(id);
+
+        if (name == argumentsAtom || name == evalAtom) {
+            if (!ReportBadParameter(cx, tc, name, JSMSG_BAD_BINDING))
+                return false;
+        }
+
+        if (tc->inStrictMode() && FindKeyword(name->charsZ(), name->length())) {
+            /*
+             * JSOPTION_STRICT is supposed to warn about future keywords, too,
+             * but we took care of that in the scanner.
+             */
+            JS_ALWAYS_TRUE(!ReportBadParameter(cx, tc, name, JSMSG_RESERVED_ID));
             return false;
         }
-    }
 
-    if (tc->flags & (TCF_FUN_PARAM_ARGUMENTS | TCF_FUN_PARAM_EVAL)) {
-        JSAtomState *atoms = &cx->runtime->atomState;
-        JSAtom *atom = (tc->flags & TCF_FUN_PARAM_ARGUMENTS)
-                       ? atoms->argumentsAtom
-                       : atoms->evalAtom;
-
-        /* The definition's source position will be more precise. */
-        JSDefinition *dn = ALE_DEFN(tc->decls.lookup(atom));
-        JS_ASSERT(dn->pn_atom == atom);
-        JSAutoByteString name;
-        if (!js_AtomToPrintableString(cx, atom, &name) ||
-            !ReportStrictModeError(cx, TS(tc->parser), tc, dn, JSMSG_BAD_BINDING, name.ptr())) {
-            return false;
+        /*
+         * Check for a duplicate parameter: warn or report an error exactly
+         * once for each duplicated parameter.
+         */
+        if (HashMap<JSAtom *, bool>::AddPtr p = parameters.lookupForAdd(name)) {
+            if (!p->value && !ReportBadParameter(cx, tc, name, JSMSG_DUPLICATE_FORMAL))
+                return false;
+            p->value = true;
+        } else {
+            if (!parameters.add(p, name, false))
+                return false;
         }
     }
 
@@ -1544,7 +1566,7 @@ Parser::functionBody()
         pn->pn_pos.begin.lineno = firstLine;
 
         /* Check for falling off the end of a function that returns a value. */
-        if (JS_HAS_STRICT_OPTION(context) && (tc->flags & TCF_RETURN_EXPR) &&
+        if (context->hasStrictOption() && (tc->flags & TCF_RETURN_EXPR) &&
             !CheckFinalReturn(context, tc, pn)) {
             pn = NULL;
         }
@@ -1739,8 +1761,6 @@ DefineArg(JSParseNode *pn, JSAtom *atom, uintN i, JSTreeContext *tc)
     /* Flag tc so we don't have to lookup arguments on every use. */
     if (atom == tc->parser->context->runtime->atomState.argumentsAtom)
         tc->flags |= TCF_FUN_PARAM_ARGUMENTS;
-    if (atom == tc->parser->context->runtime->atomState.evalAtom)
-        tc->flags |= TCF_FUN_PARAM_EVAL;
 
     /*
      * Make an argument definition node, distinguished by being in tc->decls
@@ -1782,11 +1802,11 @@ DefineArg(JSParseNode *pn, JSAtom *atom, uintN i, JSTreeContext *tc)
 bool
 Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
                               Bindings *bindings, const jschar *chars, size_t length,
-                              const char *filename, uintN lineno)
+                              const char *filename, uintN lineno, JSVersion version)
 {
     Compiler compiler(cx, principals);
 
-    if (!compiler.init(chars, length, filename, lineno))
+    if (!compiler.init(chars, length, filename, lineno, version))
         return false;
 
     /* No early return from after here until the js_FinishArenaPool calls. */
@@ -1847,7 +1867,7 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
     tokenStream.mungeCurrentToken(TOK_LC);
     JSParseNode *pn = fn ? parser.functionBody() : NULL;
     if (pn) {
-        if (!CheckStrictFormals(cx, &funcg, fun, pn)) {
+        if (!CheckStrictParameters(cx, &funcg)) {
             pn = NULL;
         } else if (!tokenStream.matchToken(TOK_EOF)) {
             parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
@@ -1928,8 +1948,6 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext 
     /* Flag tc so we don't have to lookup arguments on every use. */
     if (atom == tc->parser->context->runtime->atomState.argumentsAtom)
         tc->flags |= TCF_FUN_PARAM_ARGUMENTS;
-    if (atom == tc->parser->context->runtime->atomState.evalAtom)
-        tc->flags |= TCF_FUN_PARAM_EVAL;
 
     JS_ASSERT(tc->inFunction());
 
@@ -2073,8 +2091,15 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
          * TCF_FUN_HEAVYWEIGHT bottom up, funbox's ancestor function nodes have
          * already been marked as funargs by this point. Therefore we have to
          * flag only funbox->node and funbox->kids' nodes here.
+         *
+         * Generators need to be treated in the same way. Even if the value
+         * of a generator function doesn't escape, anything defined or referred
+         * to inside the generator can escape through a call to the generator.
+         * We could imagine doing static analysis to track the calls and see
+         * if any iterators or values returned by iterators escape, but that
+         * would be hard, so instead we just assume everything might escape.
          */
-        if (funbox->tcflags & TCF_FUN_HEAVYWEIGHT) {
+        if (funbox->tcflags & (TCF_FUN_HEAVYWEIGHT | TCF_FUN_IS_GENERATOR)) {
             fn->setFunArg();
             for (JSFunctionBox *kid = funbox->kids; kid; kid = kid->siblings)
                 kid->node->setFunArg();
@@ -3036,7 +3061,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
             JS_ASSERT(!dn->pn_used);
             JS_ASSERT(dn->pn_defn);
 
-            if (JS_HAS_STRICT_OPTION(context) || dn_kind == JSDefinition::CONST) {
+            if (context->hasStrictOption() || dn_kind == JSDefinition::CONST) {
                 JSAutoByteString name;
                 if (!js_AtomToPrintableString(context, funAtom, &name) ||
                     !reportErrorNumber(NULL,
@@ -3191,10 +3216,10 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
     if (!body)
         return NULL;
 
-    if (!CheckStrictBinding(context, &funtc, funAtom, pn))
+    if (funAtom && !CheckStrictBinding(context, &funtc, funAtom, pn))
         return NULL;
 
-    if (!CheckStrictFormals(context, &funtc, fun, pn))
+    if (!CheckStrictParameters(context, &funtc))
         return NULL;
 
 #if JS_HAS_EXPR_CLOSURES
@@ -3349,7 +3374,7 @@ Parser::functionStmt()
     if (tokenStream.getToken(TSF_KEYWORD_IS_NAME) == TOK_NAME) {
         name = tokenStream.currentToken().t_atom;
     } else {
-        if (context->options & JSOPTION_ANONFUNFIX) {
+        if (hasAnonFunFix()) {
             /* Extension: accept unnamed function expressions as statements. */
             reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             return NULL;
@@ -3910,7 +3935,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
                           (dn_kind == JSDefinition::LET &&
                            (stmt->type != STMT_CATCH || OuterLet(tc, stmt, atom))));
 
-            if (JS_HAS_STRICT_OPTION(cx)
+            if (cx->hasStrictOption()
                 ? op != JSOP_DEFVAR || dn_kind != JSDefinition::VAR
                 : error) {
                 JSAutoByteString name;
@@ -4801,7 +4826,7 @@ Parser::returnOrYield(bool useAssignExpr)
         return NULL;
     }
 
-    if (JS_HAS_STRICT_OPTION(context) &&
+    if (context->hasStrictOption() &&
         (~tc->flags & (TCF_RETURN_EXPR | TCF_RETURN_VOID)) == 0 &&
         !ReportBadReturn(context, tc, JSREPORT_WARNING | JSREPORT_STRICT,
                          JSMSG_NO_RETURN_VALUE,
@@ -5259,7 +5284,7 @@ Parser::forStatement()
         if (TokenKindIsDecl(tt)
             ? (pn1->pn_count > 1 || pn1->pn_op == JSOP_DEFCONST
 #if JS_HAS_DESTRUCTURING
-               || (VersionNumber(version) == JSVERSION_1_7 &&
+               || (versionNumber() == JSVERSION_1_7 &&
                    pn->pn_op == JSOP_ITER &&
                    !(pn->pn_iflags & JSITER_FOREACH) &&
                    (pn1->pn_head->pn_type == TOK_RC ||
@@ -5273,7 +5298,7 @@ Parser::forStatement()
             : (pn1->pn_type != TOK_NAME &&
                pn1->pn_type != TOK_DOT &&
 #if JS_HAS_DESTRUCTURING
-               ((VersionNumber(version) == JSVERSION_1_7 &&
+               ((versionNumber() == JSVERSION_1_7 &&
                  pn->pn_op == JSOP_ITER &&
                  !(pn->pn_iflags & JSITER_FOREACH))
                 ? (pn1->pn_type != TOK_RB || pn1->pn_count != 2)
@@ -5386,7 +5411,7 @@ Parser::forStatement()
             if (pn1 == pn2 && !CheckDestructuring(context, NULL, pn2, NULL, tc))
                 return NULL;
 
-            if (VersionNumber(version) == JSVERSION_1_7) {
+            if (versionNumber() == JSVERSION_1_7) {
                 /*
                  * Destructuring for-in requires [key, value] enumeration
                  * in JS1.7.
@@ -6018,7 +6043,7 @@ Parser::statement()
         PopStatement(tc);
         pn->pn_pos.end = pn3->pn_pos.end;
         pn->pn_right = pn3;
-        if (VersionNumber(version) != JSVERSION_ECMA_3) {
+        if (versionNumber() != JSVERSION_ECMA_3) {
             /*
              * All legacy and extended versions must do automatic semicolon
              * insertion after do-while.  See the testcase and discussion in
@@ -7253,7 +7278,7 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid,
             if (!CheckDestructuring(context, &data, pn3, NULL, tc))
                 return NULL;
 
-            if (VersionNumber(version) == JSVERSION_1_7) {
+            if (versionNumber() == JSVERSION_1_7) {
                 /* Destructuring requires [key, value] enumeration in JS1.7. */
                 if (pn3->pn_type != TOK_RB || pn3->pn_count != 2) {
                     reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_FOR_LEFTSIDE);
@@ -8258,26 +8283,16 @@ Parser::xmlElementOrList(JSBool allowList)
 JSParseNode *
 Parser::xmlElementOrListRoot(JSBool allowList)
 {
-    uint32 oldopts;
-    JSParseNode *pn;
-
     /*
      * Force XML support to be enabled so that comments and CDATA literals
      * are recognized, instead of <! followed by -- starting an HTML comment
      * to end of line (used in script tags to hide content from old browsers
      * that don't recognize <script>).
      */
-    oldopts = JS_SetOptions(context, context->options | JSOPTION_XML);
-    version = context->findVersion();
-    tokenStream.setVersion(version);
-    JS_ASSERT(VersionHasXML(version));
-
-    pn = xmlElementOrList(allowList);
-
-    JS_SetOptions(context, oldopts);
-    version = context->findVersion();
-    tokenStream.setVersion(version);
-    JS_ASSERT(!!(oldopts & JSOPTION_XML) == VersionHasXML(version));
+    bool hadXML = tokenStream.hasXML();
+    tokenStream.setXML(true);
+    JSParseNode *pn = xmlElementOrList(allowList);
+    tokenStream.setXML(hadXML);
     return pn;
 }
 
@@ -8911,13 +8926,15 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                  * followed by ::. This is the only case where a keyword after
                  * . or .. is not treated as a property name.
                  */
-                tt = js_CheckKeyword(pn->pn_atom->chars(), pn->pn_atom->length());
-                if (tt == TOK_FUNCTION) {
+                const KeywordInfo *ki = FindKeyword(pn->pn_atom->charsZ(), pn->pn_atom->length());
+                if (ki) {
+                    if (ki->tokentype != TOK_FUNCTION) {
+                        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_KEYWORD_NOT_NS);
+                        return NULL;
+                    }
+
                     pn->pn_arity = PN_NULLARY;
                     pn->pn_type = TOK_FUNCTION;
-                } else if (tt != TOK_EOF) {
-                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_KEYWORD_NOT_NS);
-                    return NULL;
                 }
             }
             pn = qualifiedSuffix(pn);
@@ -9353,7 +9370,6 @@ Boolish(JSParseNode *pn)
 
       case JSOP_DEFFUN:
       case JSOP_LAMBDA:
-      case JSOP_THIS:
       case JSOP_TRUE:
         return 1;
 

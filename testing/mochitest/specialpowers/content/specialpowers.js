@@ -89,8 +89,44 @@ var SpecialPowers = {
       msg = {'op':'set', 'prefName': aPrefName, 'prefType': aPrefType, 'prefValue': aValue};
     }
     return(sendSyncMessage('SPPrefService', msg)[0]);
-  }
+  },
+
+  _getTopChromeWindow: function(window) {
+    var Ci = Components.interfaces;
+    return window.QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsIWebNavigation)
+                 .QueryInterface(Ci.nsIDocShellTreeItem)
+                 .rootTreeItem
+                 .QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsIDOMWindow)
+                 .QueryInterface(Ci.nsIDOMChromeWindow);
+  },
+  _getAutoCompletePopup: function(window) {
+    return this._getTopChromeWindow(window).document
+                                           .getElementById("PopupAutoComplete");
+  },
+  addAutoCompletePopupEventListener: function(window, listener) {
+    this._getAutoCompletePopup(window).addEventListener("popupshowing",
+                                                        listener,
+                                                        false);
+  },
+  removeAutoCompletePopupEventListener: function(window, listener) {
+    this._getAutoCompletePopup(window).removeEventListener("popupshowing",
+                                                           listener,
+                                                           false);
+  },
+  isBackButtonEnabled: function(window) {
+    return !this._getTopChromeWindow(window).document
+                                      .getElementById("Browser:Back")
+                                      .hasAttribute("disabled")
+  },
 }
+
+SpecialPowers.__exposedProps__ = {};
+for each (i in Object.keys(SpecialPowers).filter(function(v) {return v.charAt(0) != "_"})) {
+  SpecialPowers.__exposedProps__[i] = "r";
+}
+
 
 // Attach our API to the window
 function attachSpecialPwrToWindow(aSubject) {

@@ -100,6 +100,7 @@ DEFINES += -D_IMPL_NS_LAYOUT
 # js/src/xpconnect/src/dom_quickstubs.qsconf.
 XPIDLSRCS = \
   nsIIDBCursor.idl \
+  nsIIDBCursorWithValue.idl \
   nsIIDBDatabase.idl \
   nsIIDBDatabaseException.idl \
   nsIIDBFactory.idl \

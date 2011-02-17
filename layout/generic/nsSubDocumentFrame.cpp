@@ -100,7 +100,7 @@ using mozilla::layout::RenderFrameParent;
 
 // For Accessibility
 #ifdef ACCESSIBILITY
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 #endif
 #include "nsIServiceManager.h"
 
@@ -131,7 +131,7 @@ nsSubDocumentFrame::nsSubDocumentFrame(nsStyleContext* aContext)
 already_AddRefed<nsAccessible>
 nsSubDocumentFrame::CreateAccessible()
 {
-  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+  nsAccessibilityService* accService = nsIPresShell::AccService();
   return accService ?
     accService->CreateOuterDocAccessible(mContent, PresContext()->PresShell()) :
     nsnull;
@@ -411,9 +411,13 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // Add the canvas background color to the bottom of the list. This
       // happens after we've built the list so that AddCanvasBackgroundColorItem
       // can monkey with the contents if necessary.
+      PRUint32 flags = nsIPresShell_MOZILLA_2_0_BRANCH::FORCE_DRAW;
+      if (presContext->IsRootContentDocument()) {
+        flags |= nsIPresShell_MOZILLA_2_0_BRANCH::ROOT_CONTENT_DOC_BG;
+      }
       rv = presShell->AddCanvasBackgroundColorItem(
              *aBuilder, childItems, subdocRootFrame ? subdocRootFrame : this,
-             bounds, NS_RGBA(0,0,0,0), PR_TRUE);
+             bounds, NS_RGBA(0,0,0,0), flags);
     }
   }
 
@@ -669,11 +673,6 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
   CheckInvalidateSizeChange(aDesiredSize);
 
   FinishAndStoreOverflow(&aDesiredSize);
-
-  // Invalidate the frame contents
-  // XXX is this really needed?
-  nsRect rect(nsPoint(0, 0), GetSize());
-  Invalidate(rect);
 
   if (!aPresContext->IsPaginated() && !mPostedReflowCallback) {
     PresContext()->PresShell()->PostReflowCallback(this);

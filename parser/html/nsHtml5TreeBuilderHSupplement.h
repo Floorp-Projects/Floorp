@@ -92,7 +92,7 @@
 
     void StreamEnded();
 
-    void NeedsCharsetSwitchTo(const nsACString& aEncoding);
+    void NeedsCharsetSwitchTo(const nsACString& aEncoding, PRInt32 aSource);
 
     void AddSnapshotToScript(nsAHtml5TreeBuilderState* aSnapshot, PRInt32 aLine);
 

@@ -1,9 +1,8 @@
 body {
   background-color: transparent;  
-  font-family: Tahoma, sans-serif !important;
+  font: message-box;
   color: rgba(0, 0, 0, 0.6);
   font-size: 12px;
-  line-height: 16px;
 }
 
 #bg {
@@ -27,7 +26,6 @@ body {
   box-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.5);
   cursor: pointer;
-  margin: 8px;
 }
 
 .tab canvas,
@@ -85,11 +83,14 @@ html[dir=rtl] .favicon {
   right: 6px;
   width: 16px;
   height: 16px;
-  background: url(chrome://global/skin/icons/closetab.png) no-repeat;
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 0.5s;
-  -moz-transition-timing-function: ease-out;
-  opacity: 0.2;
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/close.png), 0, 16, 16, 0);
+  background-repeat: no-repeat;
+}
+.close:hover {
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/close.png), 0, 32, 16, 16);
+}
+.close:active {
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/close.png), 0, 48, 16, 32);
 }
 
 html[dir=rtl] .close {
@@ -115,8 +116,8 @@ html[dir=rtl] .expander {
   -moz-transform: scaleX(-1);
 }
 
-.close:hover,
-.expander:hover {
+.expander:hover,
+.appTabIcon:hover {
   -moz-transition-property: opacity;
   -moz-transition-duration: 0.5s;
   -moz-transition-timing-function: ease-out;
@@ -124,7 +125,6 @@ html[dir=rtl] .expander {
 }
 
 .favicon img:hover, 
-.close img:hover, 
 .expander img:hover {
   opacity: 1;
   border: none;
@@ -197,6 +197,7 @@ html[dir=rtl] .stack-trayed .tab-title {
   box-shadow: none;
   border-color: transparent;
   background-color: transparent;
+  margin: 8px;
 }
 
 .tabInGroupItem .favicon {
@@ -205,7 +206,7 @@ html[dir=rtl] .stack-trayed .tab-title {
 
 .groupItem {
   cursor: move;
-  background-color: #EBEBEB;
+  background-color: rgb(240,240,240);
   border-radius: 0.4em;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -213,12 +214,12 @@ html[dir=rtl] .stack-trayed .tab-title {
 
 .groupItem.activeGroupItem {
   box-shadow:
-    rgba(0,0,0,0.6) 1px 1px 5.5px;
+    rgba(0,0,0,0.8) 2px 2px 8px;
 }
 
 html[dir=rtl] .groupItem.activeGroupItem {
   box-shadow:
-    rgba(0,0,0,0.6) -1px 1px 5.5px;
+    rgba(0,0,0,0.8) -2px 2px 8px;
 }
 
 .phantom {
@@ -239,20 +240,51 @@ html[dir=rtl] .overlay {
   box-shadow: -3px 3px 5.5px rgba(0,0,0,.5);
 }
 
-.appTabTray {
+.appTabTrayContainer {
   top: 34px;
   right: 1px;
+  -moz-border-start: 1px solid #E1E1E1;
+  padding: 0 5px;
+  overflow: -moz-hidden-unscrollable;
+  text-align: start;
+  line-height: 0;
 }
 
-html[dir=rtl] .appTabTray {
+html[dir=rtl] .appTabTrayContainer {
   right: auto;
   left: 1px;
+}
+
+.appTabTray {
+  display: inline-block;
+  -moz-column-width: 16px;
+  -moz-column-gap: 5px;
+}
+
+.appTabTrayContainerTruncated {
+  padding-bottom: 7px;
+}
+
+.appTabTrayContainerTruncated:after {
+  content: "…";
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 15px;
+  line-height: 15px;
+  text-align: center;
+  font-size: 15px;
 }
 
 .appTabIcon {
   width: 16px;
   height: 16px;
   cursor: pointer;
+  opacity: 0.8;
+  padding-bottom: 3px;
+  display: block;
 }
 
 .undo {
@@ -388,7 +420,6 @@ html[dir=rtl] .acceptsDrop {
 
 .titlebar {
   font-size: 12px;
-  line-height: 18px;
   height: 18px;
 }
 
@@ -425,18 +456,12 @@ input.name:-moz-placeholder {
   font-style: italic !important;
   color: transparent;
   background-image: url(chrome://browser/skin/tabview/edit-light.png);
-  background-image-opacity: .1;
   background-repeat: no-repeat;
   -moz-padding-start: 20px;
-  -moz-margin-end: -20px;
 }
 
 .title-container:hover input.name:-moz-placeholder {
   color: #CCC;
-}
-
-.title-container {
-  cursor: text;
 }
 
 .title-shield {
@@ -449,6 +474,7 @@ input.name:-moz-placeholder {
   top: 0;
   width: 100%;
   height: 100%;
+  cursor: text;
 }
 
 html[dir=rtl] .title-shield {

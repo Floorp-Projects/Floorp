@@ -1,4 +1,4 @@
-Patch libffi to fix bug 550602, bug 538216, bug 594611, and bug 605421.
+Patch libffi to fix bug 550602, bug 538216, bug545634, bug 594611, and bug 605421.
 
 diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
 --- a/js/src/ctypes/libffi/Makefile.in
@@ -983,3 +983,94 @@ diff --git a/js/src/ctypes/libffi/testsuite/libffi.call/cls_longdouble_va.c b/js
  {
  	char*		format	= *(char**)args[0];
  	long double	ldValue	= *(long double*)args[1];
+diff -r bb9089ae2322 js/src/ctypes/libffi/include/ffi.h.in
+--- a/js/src/ctypes/libffi/include/ffi.h.in	Fri Jan 21 15:40:14 2011 -0800
++++ b/js/src/ctypes/libffi/include/ffi.h.in	Thu Jan 27 19:10:51 2011 +0100
+@@ -72,25 +72,37 @@ extern "C" {
+ #endif
+ 
+ #include <stddef.h>
+ #include <limits.h>
+ 
+ /* LONG_LONG_MAX is not always defined (not if STRICT_ANSI, for example).
+    But we can find it either under the correct ANSI name, or under GNU
+    C's internal name.  */
++
++#define FFI_64_BIT_MAX 9223372036854775807
++
+ #ifdef LONG_LONG_MAX
+ # define FFI_LONG_LONG_MAX LONG_LONG_MAX
+ #else
+ # ifdef LLONG_MAX
+ #  define FFI_LONG_LONG_MAX LLONG_MAX
+ # else
+ #  ifdef __GNUC__
+ #   define FFI_LONG_LONG_MAX __LONG_LONG_MAX__
+ #  endif
++#  ifdef _AIX
++#   ifndef __PPC64__
++#    if defined (__IBMC__) || defined (__IBMCPP__)
++#     define FFI_LONG_LONG_MAX LONGLONG_MAX
++#    endif
++#   endif /* __PPC64__ */
++#   undef  FFI_64_BIT_MAX
++#   define FFI_64_BIT_MAX 9223372036854775807LL
++#  endif
+ # endif
+ #endif
+ 
+ /* The closure code assumes that this works on pointers, i.e. a size_t	*/
+ /* can hold a pointer.							*/
+ 
+ typedef struct _ffi_type
+ {
+@@ -127,27 +139,27 @@ typedef struct _ffi_type
+ #elif INT_MAX == 9223372036854775807
+ # define ffi_type_uint         ffi_type_uint64
+ # define ffi_type_sint         ffi_type_sint64
+ #else
+  #error "int size not supported"
+ #endif
+ 
+ #if LONG_MAX == 2147483647
+-# if FFI_LONG_LONG_MAX != 9223372036854775807
++# if FFI_LONG_LONG_MAX != FFI_64_BIT_MAX
+  #error "no 64-bit data type supported"
+ # endif
+-#elif LONG_MAX != 9223372036854775807
++#elif LONG_MAX != FFI_64_BIT_MAX
+  #error "long size not supported"
+ #endif
+ 
+ #if LONG_MAX == 2147483647
+ # define ffi_type_ulong        ffi_type_uint32
+ # define ffi_type_slong        ffi_type_sint32
+-#elif LONG_MAX == 9223372036854775807
++#elif LONG_MAX == FFI_64_BIT_MAX
+ # define ffi_type_ulong        ffi_type_uint64
+ # define ffi_type_slong        ffi_type_sint64
+ #else
+  #error "long size not supported"
+ #endif
+ 
+ /* These are defined in types.c */
+ extern ffi_type ffi_type_void;
+@@ -190,17 +202,17 @@ typedef struct {
+ #endif
+ } ffi_cif;
+ 
+ /* ---- Definitions for the raw API -------------------------------------- */
+ 
+ #ifndef FFI_SIZEOF_ARG
+ # if LONG_MAX == 2147483647
+ #  define FFI_SIZEOF_ARG        4
+-# elif LONG_MAX == 9223372036854775807
++# elif LONG_MAX == FFI_64_BIT_MAX
+ #  define FFI_SIZEOF_ARG        8
+ # endif
+ #endif
+ 
+ #ifndef FFI_SIZEOF_JAVA_RAW
+ #  define FFI_SIZEOF_JAVA_RAW FFI_SIZEOF_ARG
+ #endif
+ 

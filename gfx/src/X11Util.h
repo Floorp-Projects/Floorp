@@ -158,13 +158,21 @@ public:
 
     ~ScopedXErrorHandler();
 
-    /** \returns true if a X error occurred since the last time this method was called on this ScopedXErrorHandler object.
+    /** \returns true if a X error occurred since the last time this method was called on this ScopedXErrorHandler object,
+     *           or since the creation of this ScopedXErrorHandler object if this method was never called on it.
      *
-     * \param ev this optional parameter, if set, will be filled with the XErrorEvent object
+     * \param ev this optional parameter, if set, will be filled with the XErrorEvent object. If multiple errors occurred,
+     *           the first one will be returned.
      */
     bool SyncAndGetError(Display *dpy, XErrorEvent *ev = nsnull);
-};
 
+    /** Like SyncAndGetError, but does not sync. Faster, but only reliably catches errors in synchronous calls.
+     *
+     * \param ev this optional parameter, if set, will be filled with the XErrorEvent object. If multiple errors occurred,
+     *           the first one will be returned.
+     */
+    bool GetError(XErrorEvent *ev = nsnull);
+};
 
 } // namespace mozilla
 

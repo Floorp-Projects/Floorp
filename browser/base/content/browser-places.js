@@ -346,8 +346,6 @@ var PlacesCommandHook = {
     if (aBrowser.contentWindow == window.content) {
       var starIcon = aBrowser.ownerDocument.getElementById("star-button");
       if (starIcon && isElementVisible(starIcon)) {
-        // Make sure the bookmark properties dialog hangs toward the middle of
-        // the location bar in RTL builds
         if (aShowEditUI)
           StarUI.showEditBookmarkPopup(itemId, starIcon, "bottomcenter topright");
         return;
@@ -386,30 +384,21 @@ var PlacesCommandHook = {
   },
 
   /**
-   * This function returns a list of nsIURI objects characterizing the
-   * tabs currently open in the browser.  The URIs will appear in the
-   * list in the order in which their corresponding tabs appeared.  However,
-   * only the first instance of each URI will be returned.
-   *
-   * @returns a list of nsIURI objects representing unique locations open
+   * List of nsIURI objects characterizing the tabs currently open in the
+   * browser, modulo pinned tabs.  The URIs will be in the order in which their
+   * corresponding tabs appeared and duplicates are discarded.
    */
-  _getUniqueTabInfo: function BATC__getUniqueTabInfo() {
-    var tabList = [];
-    var seenURIs = {};
-
-    let tabs = gBrowser.visibleTabs;
-    for (let i = 0; i < tabs.length; ++i) {
-      let uri = tabs[i].linkedBrowser.currentURI;
-
-      // skip redundant entries
-      if (uri.spec in seenURIs)
-        continue;
-
-      // add to the set of seen URIs
-      seenURIs[uri.spec] = null;
-      tabList.push(uri);
-    }
-    return tabList;
+  get uniqueCurrentPages() {
+    let uniquePages = {};
+    let URIs = [];
+    gBrowser.visibleTabs.forEach(function (tab) {
+      let spec = tab.linkedBrowser.currentURI.spec;
+      if (!tab.pinned && !(spec in uniquePages)) {
+        uniquePages[spec] = null;
+        URIs.push(tab.linkedBrowser.currentURI);
+      }
+    });
+    return URIs;
   },
 
   /**
@@ -417,11 +406,27 @@ var PlacesCommandHook = {
    * window.
    */
   bookmarkCurrentPages: function PCH_bookmarkCurrentPages() {
-    var tabURIs = this._getUniqueTabInfo();
-    PlacesUIUtils.showMinimalAddMultiBookmarkUI(tabURIs);
+    let pages = this.uniqueCurrentPages;
+    if (pages.length > 1) {
+      PlacesUIUtils.showMinimalAddMultiBookmarkUI(pages);
+    }
   },
 
-  
+  /**
+   * Updates disabled state for the "Bookmark All Tabs" command.
+   */
+  updateBookmarkAllTabsCommand:
+  function PCH_updateBookmarkAllTabsCommand() {
+    // There's nothing to do in non-browser windows.
+    if (window.location.href != getBrowserURL())
+      return;
+
+    // Disable "Bookmark All Tabs" if there are less than two
+    // "unique current pages".
+    goSetCommandEnabled("Browser:BookmarkAllTabs",
+                        this.uniqueCurrentPages.length >= 2);
+  },
+
   /**
    * Adds a Live Bookmark to a feed associated with the current page. 
    * @param     url
@@ -472,6 +477,11 @@ var PlacesCommandHook = {
 
 // View for the history menu.
 function HistoryMenu(aPopupShowingEvent) {
+  // Workaround for Bug 610187.  The sidebar does not include all the Places
+  // views definitions, and we don't need them there.
+  // Defining the prototype inheritance in the prototype itself would cause
+  // browser.js to halt on "PlacesMenu is not defined" error.
+  this.__proto__.__proto__ = PlacesMenu.prototype;
   XPCOMUtils.defineLazyServiceGetter(this, "_ss",
                                      "@mozilla.org/browser/sessionstore;1",
                                      "nsISessionStore");
@@ -480,8 +490,6 @@ function HistoryMenu(aPopupShowingEvent) {
 }
 
 HistoryMenu.prototype = {
-  __proto__: PlacesMenu.prototype,
-
   toggleRecentlyClosedTabs: function HM_toggleRecentlyClosedTabs() {
     // enable/disable the Recently Closed Tabs sub menu
     var undoMenu = this._rootElt.getElementsByClassName("recentlyClosedTabsMenu")[0];
@@ -710,8 +718,10 @@ var BookmarksEventHandler = {
    * If the click came through a menu, close the menu.
    * @param aEvent
    *        DOMEvent for the click
+   * @param aView
+   *        The places view which aEvent should be associated with.
    */
-  onClick: function BEH_onClick(aEvent) {
+  onClick: function BEH_onClick(aEvent, aView) {
     // Only handle middle-click or left-click with modifiers.
 #ifdef XP_MACOSX
     var modifKey = aEvent.metaKey || aEvent.shiftKey;
@@ -741,11 +751,11 @@ var BookmarksEventHandler = {
       // is middle-clicked or when a non-bookmark item except for Open in Tabs)
       // in a bookmarks menupopup is middle-clicked.
       if (target.localName == "menu" || target.localName == "toolbarbutton")
-        PlacesUIUtils.openContainerNodeInTabs(target._placesNode, aEvent);
+        PlacesUIUtils.openContainerNodeInTabs(target._placesNode, aEvent, aView);
     }
     else if (aEvent.button == 1) {
       // left-clicks with modifier are already served by onCommand
-      this.onCommand(aEvent);
+      this.onCommand(aEvent, aView);
     }
   },
 
@@ -755,11 +765,13 @@ var BookmarksEventHandler = {
    * Opens the item.
    * @param aEvent 
    *        DOMEvent for the command
+   * @param aView
+   *        The places view which aEvent should be associated with.
    */
-  onCommand: function BEH_onCommand(aEvent) {
+  onCommand: function BEH_onCommand(aEvent, aView) {
     var target = aEvent.originalTarget;
     if (target._placesNode)
-      PlacesUIUtils.openNodeWithEvent(target._placesNode, aEvent);
+      PlacesUIUtils.openNodeWithEvent(target._placesNode, aEvent, aView);
   },
 
   fillInBHTooltip: function BEH_fillInBHTooltip(aDocument, aEvent) {
@@ -929,6 +941,10 @@ var PlacesStarButton = {
     if (this._hasBookmarksObserver) {
       PlacesUtils.bookmarks.removeObserver(this);
     }
+    if (this._pendingStmt) {
+      this._pendingStmt.cancel();
+      delete this._pendingStmt;
+    }
   },
 
   QueryInterface: XPCOMUtils.generateQI([
@@ -959,15 +975,23 @@ var PlacesStarButton = {
     this._uri = gBrowser.currentURI;
     this._itemIds = [];
 
-    // Ignore clicks on the star while we update its state.
-    this._ignoreClicks = true;
+    if (this._pendingStmt) {
+      this._pendingStmt.cancel();
+      delete this._pendingStmt;
+    }
 
     // We can load about:blank before the actual page, but there is no point in handling that page.
     if (this._uri.spec == "about:blank") {
       return;
     }
 
-    PlacesUtils.asyncGetBookmarkIds(this._uri, function (aItemIds) {
+    this._pendingStmt = PlacesUtils.asyncGetBookmarkIds(this._uri, function (aItemIds, aURI) {
+      // Safety check that the bookmarked URI equals the tracked one.
+      if (!aURI.equals(this._uri)) {
+        Components.utils.reportError("PlacesStarButton did not receive current URI");
+        return;
+      }
+
       this._itemIds = aItemIds;
       this._updateStateInternal();
 
@@ -981,8 +1005,7 @@ var PlacesStarButton = {
         }
       }
 
-      // Finally re-enable the star.
-      this._ignoreClicks = false;
+      delete this._pendingStmt;
     }, this);
   },
 
@@ -1004,7 +1027,8 @@ var PlacesStarButton = {
 
   onClick: function PSB_onClick(aEvent)
   {
-    if (aEvent.button == 0 && !this._ignoreClicks) {
+    // Ignore clicks on the star while we update its state.
+    if (aEvent.button == 0 && !this._pendingStmt) {
       PlacesCommandHook.bookmarkCurrentPage(this._itemIds.length > 0);
     }
     // Don't bubble to the textbox, to avoid unwanted selection of the address.

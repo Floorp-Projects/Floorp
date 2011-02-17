@@ -835,28 +835,6 @@ nsSVGElement::IsNodeOfType(PRUint32 aFlags) const
   return !(aFlags & ~(eCONTENT | eSVG));
 }
 
-already_AddRefed<nsIURI>
-nsSVGElement::GetBaseURI() const
-{
-  nsCOMPtr<nsIURI> baseURI = nsSVGElementBase::GetBaseURI();
-
-  nsIContent* bindingParent = GetBindingParent();
-  if (bindingParent) {
-    nsIDocument* doc = bindingParent->GetOwnerDoc();
-    if (doc) {
-      nsXBLBinding* binding = doc->BindingManager()->GetBinding(bindingParent);
-      if (binding) {
-        // XXX sXBL/XBL2 issue
-        // If this is an anonymous XBL element use the binding
-        // document for the base URI. 
-        // XXX Will fail with xml:base
-        baseURI = binding->PrototypeBinding()->DocURI();
-      }
-    }
-  }
-  return baseURI.forget();
-}
-
 NS_IMETHODIMP
 nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
@@ -1510,11 +1488,12 @@ nsSVGElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 
   NS_ASSERTION(aAttrEnum < info.mLengthCount, "aAttrEnum out of range");
 
-  nsAutoString newStr;
-  info.mLengths[aAttrEnum].GetBaseValueString(newStr);
+  nsAutoString serializedValue;
+  info.mLengths[aAttrEnum].GetBaseValueString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, *info.mLengthInfo[aAttrEnum].mName,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mLengthInfo[aAttrEnum].mName, nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
@@ -1589,11 +1568,12 @@ nsSVGElement::DidChangeLengthList(PRUint8 aAttrEnum, PRBool aDoSetAttr)
                "DidChangeLengthList on element with no length list attribs");
   NS_ASSERTION(aAttrEnum < info.mLengthListCount, "aAttrEnum out of range");
 
-  nsAutoString newStr;
-  info.mLengthLists[aAttrEnum].GetBaseValue().GetValueAsString(newStr);
+  nsAutoString serializedValue;
+  info.mLengthLists[aAttrEnum].GetBaseValue().GetValueAsString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, *info.mLengthListInfo[aAttrEnum].mName,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mLengthListInfo[aAttrEnum].mName,
+                nsnull, attrValue, PR_TRUE);
 }
 
 void
@@ -1670,11 +1650,12 @@ nsSVGElement::DidChangeNumberList(PRUint8 aAttrEnum, PRBool aDoSetAttr)
                     "DidChangeNumberList on element with no number list attribs");
   NS_ABORT_IF_FALSE(aAttrEnum < info.mNumberListCount, "aAttrEnum out of range");
 
-  nsAutoString newStr;
-  info.mNumberLists[aAttrEnum].GetBaseValue().GetValueAsString(newStr);
+  nsAutoString serializedValue;
+  info.mNumberLists[aAttrEnum].GetBaseValue().GetValueAsString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, *info.mNumberListInfo[aAttrEnum].mName,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mNumberListInfo[aAttrEnum].mName,
+                nsnull, attrValue, PR_TRUE);
 }
 
 void
@@ -1724,10 +1705,12 @@ nsSVGElement::DidChangePointList(PRBool aDoSetAttr)
   if (!aDoSetAttr)
     return;
 
-  nsAutoString newStr;
-  GetAnimatedPointList()->GetBaseValue().GetValueAsString(newStr);
+  nsAutoString serializedValue;
+  GetAnimatedPointList()->GetBaseValue().GetValueAsString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, GetPointListAttrName(), newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, GetPointListAttrName(), nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
@@ -1748,15 +1731,15 @@ nsSVGElement::DidAnimatePointList()
 void
 nsSVGElement::DidChangePathSegList(PRBool aDoSetAttr)
 {
-  NS_ABORT_IF_FALSE(GetPathDataAttrName(), "Changing non-existent path data?");
-
   if (!aDoSetAttr)
     return;
 
-  nsAutoString newStr;
-  GetAnimPathSegList()->GetBaseValue().GetValueAsString(newStr);
+  nsAutoString serializedValue;
+  GetAnimPathSegList()->GetBaseValue().GetValueAsString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, GetPathDataAttrName(), newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, GetPathDataAttrName(), nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
@@ -1799,11 +1782,12 @@ nsSVGElement::DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 
   NS_ASSERTION(aAttrEnum < info.mNumberCount, "aAttrEnum out of range");
 
-  nsAutoString newStr;
-  info.mNumbers[aAttrEnum].GetBaseValueString(newStr);
+  nsAutoString serializedValue;
+  info.mNumbers[aAttrEnum].GetBaseValueString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, *info.mNumberInfo[aAttrEnum].mName,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mNumberInfo[aAttrEnum].mName, nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
@@ -1865,11 +1849,12 @@ nsSVGElement::DidChangeInteger(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 
   NS_ASSERTION(aAttrEnum < info.mIntegerCount, "aAttrEnum out of range");
 
-  nsAutoString newStr;
-  info.mIntegers[aAttrEnum].GetBaseValueString(newStr);
+  nsAutoString serializedValue;
+  info.mIntegers[aAttrEnum].GetBaseValueString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, *info.mIntegerInfo[aAttrEnum].mName,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mIntegerInfo[aAttrEnum].mName, nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
@@ -1932,11 +1917,12 @@ nsSVGElement::DidChangeAngle(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 
   NS_ASSERTION(aAttrEnum < info.mAngleCount, "aAttrEnum out of range");
 
-  nsAutoString newStr;
-  info.mAngles[aAttrEnum].GetBaseValueString(newStr);
+  nsAutoString serializedValue;
+  info.mAngles[aAttrEnum].GetBaseValueString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, *info.mAngleInfo[aAttrEnum].mName,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mAngleInfo[aAttrEnum].mName, nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
@@ -1977,11 +1963,12 @@ nsSVGElement::DidChangeBoolean(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 
   NS_ASSERTION(aAttrEnum < info.mBooleanCount, "aAttrEnum out of range");
 
-  nsAutoString newStr;
-  info.mBooleans[aAttrEnum].GetBaseValueString(newStr);
+  nsAutoString serializedValue;
+  info.mBooleans[aAttrEnum].GetBaseValueString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, *info.mBooleanInfo[aAttrEnum].mName,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mBooleanInfo[aAttrEnum].mName, nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
@@ -2022,11 +2009,12 @@ nsSVGElement::DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 
   NS_ASSERTION(aAttrEnum < info.mEnumCount, "aAttrEnum out of range");
 
-  nsAutoString newStr;
-  info.mEnums[aAttrEnum].GetBaseValueString(newStr, this);
+  nsAutoString serializedValue;
+  info.mEnums[aAttrEnum].GetBaseValueString(serializedValue, this);
 
-  SetAttr(kNameSpaceID_None, *info.mEnumInfo[aAttrEnum].mName,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mEnumInfo[aAttrEnum].mName, nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
@@ -2058,10 +2046,12 @@ nsSVGElement::DidChangeViewBox(PRBool aDoSetAttr)
 
   NS_ASSERTION(viewBox, "DidChangeViewBox on element with no viewBox attrib");
 
-  nsAutoString newStr;
-  viewBox->GetBaseValueString(newStr);
+  nsAutoString serializedValue;
+  viewBox->GetBaseValueString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, nsGkAtoms::viewBox, newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, nsGkAtoms::viewBox, nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
@@ -2094,11 +2084,12 @@ nsSVGElement::DidChangePreserveAspectRatio(PRBool aDoSetAttr)
   NS_ASSERTION(preserveAspectRatio,
                "DidChangePreserveAspectRatio on element with no preserveAspectRatio attrib");
 
-  nsAutoString newStr;
-  preserveAspectRatio->GetBaseValueString(newStr);
+  nsAutoString serializedValue;
+  preserveAspectRatio->GetBaseValueString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, nsGkAtoms::preserveAspectRatio,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, nsGkAtoms::preserveAspectRatio, nsnull,
+                attrValue, PR_TRUE);
 }
 
 void

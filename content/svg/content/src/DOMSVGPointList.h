@@ -160,11 +160,7 @@ private:
     : mElement(aElement)
     , mIsAnimValList(aIsAnimValList)
   {
-    // This call populates mItems with the same number of items as there are
-    // points in the internal list. We ignore OOM failure since being out of
-    // sync is safe so long as we have *fewer* items than our internal list.
-
-    InternalListWillChangeTo(InternalList());
+    InternalListWillChangeTo(InternalList()); // Sync mItems
   }
 
   ~DOMSVGPointList();
@@ -190,9 +186,11 @@ private:
 
   SVGAnimatedPointList& InternalAList();
 
-  /// Creates an instance of the appropriate DOMSVGPoint sub-class for
-  // aIndex, if it doesn't already exist.
+  /// Creates a DOMSVGPoint for aIndex, if it doesn't already exist.
   void EnsureItemAt(PRUint32 aIndex);
+
+  void MaybeInsertNullInAnimValListAt(PRUint32 aIndex);
+  void MaybeRemoveItemFromAnimValListAt(PRUint32 aIndex);
 
   // Weak refs to our DOMSVGPoint items. The items are friends and take care
   // of clearing our pointer to them when they die.

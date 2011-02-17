@@ -2822,32 +2822,17 @@ nsXPCComponents_Utils::LookupMethod()
     jsval funval;
     JSFunction *oldfunction;
 
-    {
-        JSAutoEnterCompartment ac;
+    // get (and perhaps lazily create) the member's cloned function
+    if(!member->NewFunctionObject(inner_cc, iface,
+                                  JSVAL_TO_OBJECT(argv[0]),
+                                  &funval))
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-        if (!ac.enter(inner_cc, wrapper->GetFlatJSObjectAndMark())) {
-            return NS_ERROR_UNEXPECTED;
-        }
-
-        // get (and perhaps lazily create) the member's cloned function
-        if(!member->NewFunctionObject(inner_cc, iface,
-                                      wrapper->GetFlatJSObjectAndMark(),
-                                      &funval))
-            return NS_ERROR_XPC_BAD_CONVERT_JS;
-
-        oldfunction = JS_ValueToFunction(inner_cc, funval);
-        NS_ASSERTION(oldfunction, "Function is not a function");
-    }
+    oldfunction = JS_ValueToFunction(inner_cc, funval);
+    NS_ASSERTION(oldfunction, "Function is not a function");
 
     // Stick the function in the return value. This roots it.
     *retval = funval;
-
-    // Callers of this method are implicitly buying into
-    // XPCNativeWrapper-like protection. The easiest way to enforce
-    // this is to let the JS engine wrap the function.
-    if (!JS_WrapValue(inner_cc, retval)) {
-        return NS_ERROR_UNEXPECTED;
-    }
 
     // Tell XPConnect that we returned the function through the call context.
     cc->SetReturnValueWasSet(PR_TRUE);
@@ -3131,7 +3116,7 @@ sandbox_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 static JSClass SandboxClass = {
     "Sandbox",
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_GLOBAL_FLAGS,
-    JS_PropertyStub,   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_PropertyStub,   JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     sandbox_enumerate, sandbox_resolve, sandbox_convert,  sandbox_finalize,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
@@ -3718,13 +3703,12 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                     // exception into a string.
                     str = JS_ValueToString(sandcx->GetJSContext(), exn);
 
-                    JSAutoRequest req(cx);
                     if (str) {
                         // We converted the exception to a string. Use that
                         // as the value exception.
                         exn = STRING_TO_JSVAL(str);
                         if (JS_WrapValue(cx, &exn)) {
-                            JS_SetPendingException(cx, STRING_TO_JSVAL(str));
+                            JS_SetPendingException(cx, exn);
                         } else {
                             JS_ClearPendingException(cx);
                             rv = NS_ERROR_FAILURE;
@@ -3734,8 +3718,6 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                         rv = NS_ERROR_FAILURE;
                     }
                 } else {
-                    JSAutoRequest req(cx);
-
                     if (JS_WrapValue(cx, &exn)) {
                         JS_SetPendingException(cx, exn);
                     }
@@ -3757,7 +3739,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 
             xpc::CompartmentPrivate *sandboxdata =
                 static_cast<xpc::CompartmentPrivate *>
-                           (JS_GetCompartmentPrivate(cx, sandbox->getCompartment()));
+                           (JS_GetCompartmentPrivate(cx, sandbox->compartment()));
             if (!ac.enter(cx, callingScope) ||
                 !WrapForSandbox(cx, sandboxdata->wantXrays, &v)) {
                 rv = NS_ERROR_FAILURE;

@@ -545,7 +545,7 @@ IndexedDatabaseManager::SetDatabaseVersion(IDBDatabase* aDatabase,
 }
 
 void
-IndexedDatabaseManager::CloseDatabasesForWindow(nsPIDOMWindow* aWindow)
+IndexedDatabaseManager::AbortCloseDatabasesForWindow(nsPIDOMWindow* aWindow)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aWindow, "Null pointer!");
@@ -553,12 +553,45 @@ IndexedDatabaseManager::CloseDatabasesForWindow(nsPIDOMWindow* aWindow)
   nsAutoTArray<IDBDatabase*, 50> liveDatabases;
   mLiveDatabases.EnumerateRead(EnumerateToTArray, &liveDatabases);
 
+  TransactionThreadPool* pool = TransactionThreadPool::Get();
+
   for (PRUint32 index = 0; index < liveDatabases.Length(); index++) {
     IDBDatabase*& database = liveDatabases[index];
-    if (database->Owner() == aWindow && NS_FAILED(database->Close())) {
-      NS_WARNING("Failed to close database for dying window!");
+    if (database->Owner() == aWindow) {
+      if (NS_FAILED(database->Close())) {
+        NS_WARNING("Failed to close database for dying window!");
+      }
+
+      if (pool) {
+        pool->AbortTransactionsForDatabase(database);
+      }
     }
   }
+}
+
+bool
+IndexedDatabaseManager::HasOpenTransactions(nsPIDOMWindow* aWindow)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aWindow, "Null pointer!");
+
+  nsAutoTArray<IDBDatabase*, 50> liveDatabases;
+  mLiveDatabases.EnumerateRead(EnumerateToTArray, &liveDatabases);
+
+  TransactionThreadPool* pool = TransactionThreadPool::Get();
+  if (!pool) {
+    return false;
+  }
+
+  for (PRUint32 index = 0; index < liveDatabases.Length(); index++) {
+    IDBDatabase*& database = liveDatabases[index];
+    if (database->Owner() == aWindow &&
+        pool->HasTransactionsForDatabase(database)) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 void

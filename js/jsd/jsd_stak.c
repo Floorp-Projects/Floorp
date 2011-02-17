@@ -358,9 +358,9 @@ jsd_GetThisForStackFrame(JSDContext* jsdc,
 }
 
 JSString*
-jsd_GetNameForStackFrame(JSDContext* jsdc, 
-                         JSDThreadState* jsdthreadstate,
-                         JSDStackFrameInfo* jsdframe)
+jsd_GetIdForStackFrame(JSDContext* jsdc, 
+                       JSDThreadState* jsdthreadstate,
+                       JSDStackFrameInfo* jsdframe)
 {
     JSString *rv = NULL;
     

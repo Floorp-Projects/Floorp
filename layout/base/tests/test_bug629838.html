@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tests for MozAfterPaint</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display">
+<embed type="application/x-test" width="100" height="100" id="p"
+       drawmode="solid" color="FF00FF00"></embed>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var initialPaintCount, afterPaintCount;
+var color = 0;
+
+function onAfterPaint () {
+  afterPaintCount += 1;
+}
+
+function startTest() {
+  setTimeout(function () {
+    afterPaintCount = 0;
+    initialPaintCount = window.mozPaintCount;
+    window.addEventListener("MozAfterPaint", onAfterPaint, true);
+    doBackgroundFlicker();
+  }, 500);
+}
+
+document.addEventListener("DOMContentLoaded", startTest, true);
+
+// Unfortunately we cannot reliably assert that mozPaintCount and afterPaintCount increment perfectly
+// in sync, because they can diverge in the presence of OS-triggered paints or system load.
+// Instead, we wait for mozPaintCount to increase by a set amount, and then assert that we got a
+// minimum number of MozAfterPaint events. This number needs to be high enough to ensure that this test
+// will fail if empty transactions are not triggering MozAfterPaint, but low enough to allow the test to
+// pass even if the operating system triggers extra repaints or the browser is running slowly.
+// If this test still fails occasionally, examine the output to see whether minimumAfterPaints needs to be
+// adjusted down or whether you are dealing with a different issue.
+const mozPaintsToWait = 50;
+const minimumAfterPaintsToPass = 37;
+
+function doPluginFlicker() {
+  ok(true, "Plugin color iteration " + color + 
+     ", afterpaint count: " + afterPaintCount +
+     ", mozpaint count: " + window.mozPaintCount);
+  var mozPaints = (window.mozPaintCount - initialPaintCount);
+  if (mozPaints >= mozPaintsToWait) { 
+    ok(true, "mozPaintCount incremented enough from plugin color changes.");
+    ok(afterPaintCount >= minimumAfterPaintsToPass, "Got MozAfterPaint event " + afterPaintCount + " time(s).");
+    SimpleTest.finish();
+    return;
+  }
+
+  color = (color + 1) % 256;
+  var str = color.toString(16);
+  if (str.length < 2) {
+    str = "0" + str;
+  }
+  str = "FF" + str + str + str;
+  document.getElementById("p").setColor(str);
+  setTimeout(doPluginFlicker, 0);
+}
+
+function doBackgroundFlicker() {
+  ok(true, "Background color iteration " + color + 
+     ", afterpaint count: " + afterPaintCount +
+     ", mozpaint count: " + window.mozPaintCount);
+  var mozPaints = (window.mozPaintCount - initialPaintCount);
+  if (mozPaints >= mozPaintsToWait) {
+    ok(true, "mozPaintCount incremented enough from background color changes.");
+    ok(afterPaintCount >= minimumAfterPaintsToPass, "Got MozAfterPaint event " + afterPaintCount + " time(s).");
+    afterPaintCount = 0;
+    initialPaintCount = window.mozPaintCount;
+    doPluginFlicker();
+    return;
+  }
+
+  color = (color + 1) % 256;
+  document.body.style.backgroundColor = "rgb(" + color + "," + color + "," + color + ")";
+  setTimeout(doBackgroundFlicker, 0);
+}
+
+</script>
+</pre>
+
+<div style="height:4000px"></div>
+<a id="first"  href="http://www.mozilla.org/">first<br>link</a>
+<a id="second" href="http://www.mozilla.org/">second link</a>
+<a id="third"  href="http://www.mozilla.org/">third<br>link</a>
+<div style="height:4000px"></div>
+
+</body>
+</html>
+

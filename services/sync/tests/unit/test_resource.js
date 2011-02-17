@@ -3,6 +3,7 @@ Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/ext/Sync.js");
 
 let logger;
 
@@ -189,7 +190,7 @@ function run_test() {
 
   Utils.prefs.setIntPref("network.numRetries", 1); // speed up test
 
-  _("Resource object memebers");
+  _("Resource object members");
   let res = new Resource("http://localhost:8080/open");
   do_check_true(res.uri instanceof Ci.nsIURI);
   do_check_eq(res.uri.spec, "http://localhost:8080/open");
@@ -406,6 +407,7 @@ function run_test() {
   } catch(ex) {
     error = ex;
   }
+  do_check_eq(error.result, Cr.NS_ERROR_CONNECTION_REFUSED);
   do_check_eq(error.message, "NS_ERROR_CONNECTION_REFUSED");
   do_check_eq(typeof error.stack, "string");
 
@@ -489,6 +491,7 @@ function run_test() {
   }
 
   // It throws and logs.
+  do_check_eq(error.result, Cr.NS_ERROR_MALFORMED_URI);
   do_check_eq(error, "Error: NS_ERROR_MALFORMED_URI");
   do_check_eq(warnings.pop(),
               "Got exception calling onProgress handler during fetch of " +
@@ -511,11 +514,23 @@ function run_test() {
   }
 
   // It throws and logs.
+  do_check_eq(error.result, Cr.NS_ERROR_XPC_JS_THREW_STRING);
   do_check_eq(error, "Error: NS_ERROR_XPC_JS_THREW_STRING");
   do_check_eq(warnings.pop(),
               "Got exception calling onProgress handler during fetch of " +
               "http://localhost:8080/json");
-  
-  
+
+
+  _("Ensure channel timeouts are thrown appropriately.");
+  let res19 = new Resource("http://localhost:8080/json");
+  res19.ABORT_TIMEOUT = 0;
+  error = undefined;
+  try {
+    content = res19.get();
+  } catch (ex) {
+    error = ex;
+  }
+  do_check_eq(error.result, Cr.NS_ERROR_NET_TIMEOUT);
+
   server.stop(do_test_finished);
 }

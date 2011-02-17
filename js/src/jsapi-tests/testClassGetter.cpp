@@ -29,10 +29,10 @@ static JSClass ptestClass = {
     "PTest",
     JSCLASS_HAS_PRIVATE,
 
-    JS_PropertyStub, // add
-    JS_PropertyStub, // delete
-    test_prop_get,   // get
-    JS_PropertyStub, // set
+    JS_PropertyStub,       // add
+    JS_PropertyStub,       // delete
+    test_prop_get,         // get
+    JS_StrictPropertyStub, // set
     JS_EnumerateStub,
     JS_ResolveStub,
     JS_ConvertStub,

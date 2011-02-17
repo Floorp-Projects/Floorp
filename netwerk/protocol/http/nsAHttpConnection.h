@@ -105,6 +105,11 @@ public:
     // called by a transaction when the transaction reads more from the socket
     // than it should have (eg. containing part of the next pipelined response).
     virtual nsresult PushBack(const char *data, PRUint32 length) = 0;
+
+    // Used by a transaction to manage the state of previous response bodies on
+    // the same connection and work around buggy servers.
+    virtual PRBool LastTransactionExpectedNoContent() = 0;
+    virtual void   SetLastTransactionExpectedNoContent(PRBool) = 0;
 };
 
 #define NS_DECL_NSAHTTPCONNECTION \
@@ -116,6 +121,8 @@ public:
     void GetSecurityInfo(nsISupports **); \
     PRBool IsPersistent(); \
     PRBool IsReused(); \
-    nsresult PushBack(const char *, PRUint32);
+    nsresult PushBack(const char *, PRUint32); \
+    PRBool LastTransactionExpectedNoContent(); \
+    void   SetLastTransactionExpectedNoContent(PRBool);
 
 #endif // nsAHttpConnection_h__

@@ -1,12 +1,12 @@
 body {
-  font-family: Tahoma, sans-serif !important;
-  color: rgba(0,0,0,0.4);
+  font: -moz-window;
+  color: WindowText;
   font-size: 12px;
-  line-height: 16px;
 }
 
 #bg {
-  background: -moz-linear-gradient(top,#C4C4C4,#9E9E9E);
+  background-color: window;
+  background-image: -moz-linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,.2));
 }
 
 /* Tabs
@@ -25,7 +25,6 @@ body {
               -1px 0 1px rgba(255, 255, 255, 0.4) inset,
               0 1px 1.5px rgba(0, 0, 0, 0.4);
   cursor: pointer;
-  margin: 4px;
 }
 
 html[dir=rtl] .tab {
@@ -100,7 +99,8 @@ html[dir=rtl] .close {
   left: 6px;
 }
 
-.close:hover {
+.close:hover,
+.appTabIcon:hover {
   opacity: 1.0;
 }
 
@@ -124,7 +124,8 @@ html[dir=rtl] .expander {
 }
 
 .close:hover,
-.expander:hover {
+.expander:hover,
+.appTabIcon:hover {
   -moz-transition-property: opacity;
   -moz-transition-duration: 0.5s;
   -moz-transition-timing-function: ease-out;
@@ -159,7 +160,7 @@ html[dir=rtl] .stacked .thumb {
 
 .stack-trayed .tab-title {
   text-shadow: rgba(0,0,0,1) 1px 1px 1.5px;
-  color: #EEE;
+  color: WindowText;
   font-size: 11px;
 }
 
@@ -171,8 +172,9 @@ html[dir=rtl] .stack-trayed .tab-title {
   box-shadow: none !important;
 }
 
-.focus {
-  box-shadow: rgba(54,79,225,1) 0px 0px 3.5px -1px !important;
+.tab.focus {
+  box-shadow: Highlight 0px 0px 5px 1px !important;
+  border: 1px solid Highlight;
 }
 
 /* Tab: Zooming
@@ -196,12 +198,14 @@ html[dir=rtl] .stack-trayed .tab-title {
 .tabInGroupItem {
   border: none;
   box-shadow: none !important;
+  margin: 4px;
 }
 
 .groupItem {
   cursor: move;
   border: 1px solid rgba(230,230,230,1);
-  background-color: rgba(248,248,248,1);
+  background-color: window;
+  background-image: -moz-linear-gradient(rgba(255,255,255,.3),rgba(255,255,255,.1));
   border-radius: 0.4em;
   box-shadow:
     inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
@@ -216,12 +220,12 @@ html[dir=rtl] .groupItem {
 
 .groupItem.activeGroupItem {
   box-shadow:
-    rgba(0,0,0,0.6) 1px 1px 5.5px;
+    rgba(0,0,0,0.8) 2px 2px 8px;
 }
 
 html[dir=rtl] .groupItem.activeGroupItem {
   box-shadow:
-    rgba(0,0,0,0.6) -1px 1px 5.5px;
+    rgba(0,0,0,0.8) -2px 2px 8px;
 }
 
 .phantom {
@@ -242,30 +246,61 @@ html[dir=rtl] .overlay {
   box-shadow: -3px 3px 5.5px rgba(0,0,0,.5);
 }
 
-.appTabTray {
+.appTabTrayContainer {
   top: 34px;
   right: 1px;
+  -moz-border-start: 1px solid #E1E1E1;
+  padding: 0 5px;
+  overflow: -moz-hidden-unscrollable;
+  text-align: start;
+  line-height: 0;
 }
 
-html[dir=rtl] .appTabTray {
+html[dir=rtl] .appTabTrayContainer {
   right: auto;
   left: 1px;
+}
+
+.appTabTray {
+  display: inline-block;
+  -moz-column-width: 16px;
+  -moz-column-gap: 5px;
+}
+
+.appTabTrayContainerTruncated {
+  padding-bottom: 7px;
+}
+
+.appTabTrayContainerTruncated:after {
+  content: "…";
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 15px;
+  line-height: 15px;
+  text-align: center;
+  font-size: 15px;
 }
 
 .appTabIcon {
   width: 16px;
   height: 16px;
   cursor: pointer;
+  opacity: 0.8;
+  padding-bottom: 3px;
+  display: block;
 }
 
 .undo {
-  background-color: #A0A0A0;
+  background-color: rgba(0,0,0,.2);
   width: 150px;
   height: 30px;
   line-height: 30px;
-  box-shadow: 0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.24);
-  text-shadow: 0px -1px 0px rgba(255,255,255,.2);
-  color: rgba( 0,0,0, .8);
+  box-shadow: 0 1px 0 rgba(255,255,255,.4), 0 1px 0 rgba(0,0,0,.3) inset;
+  text-shadow: 0 1px 0 rgba(255,255,255,.2);
+  color: WindowText;
   border-radius: 0.4em;
   text-align: center;
   border: none;
@@ -273,7 +308,7 @@ html[dir=rtl] .appTabTray {
 }
 
 .undo:hover {
-  background-color: #949494;
+  background-color: rgba(0,0,0,.3);
 }
 
 .undo .close {
@@ -392,14 +427,13 @@ html[dir=rtl] .acceptsDrop {
 
 .titlebar {
   font-size: 12px;
-  line-height: 18px;
   height: 18px;
 }
 
 input.name {
   background: transparent;
   border: 1px solid transparent;
-  color: #999;
+  color: GrayText;
   margin-top: 3px;
   -moz-margin-end: 0;
   margin-bottom: 0;
@@ -422,25 +456,19 @@ html[dir=rtl] input.name {
 }
 
 input.name:focus {
-  color: #555;
+  color: WindowText;
 }
 
 input.name:-moz-placeholder {
   font-style: italic !important;
   color: transparent;
   background-image: url(chrome://browser/skin/tabview/edit-light.png);
-  background-image-opacity: .1;
   background-repeat: no-repeat;
   -moz-padding-start: 20px;
-  -moz-padding-end: -20px;
 }
 
 .title-container:hover input.name:-moz-placeholder {
-  color: #CCC;
-}
-
-.title-container {
-  cursor: text;
+  color: GrayText;
 }
 
 .title-shield {
@@ -453,6 +481,7 @@ input.name:-moz-placeholder {
   top: 0;
   width: 100%;
   height: 100%;
+  cursor: text;
 }
 
 html[dir=rtl] .title-shield {
@@ -647,3 +676,4 @@ html[dir=rtl] #otherresults {
   max-width: 200px;
   height: 15px;
 }
+

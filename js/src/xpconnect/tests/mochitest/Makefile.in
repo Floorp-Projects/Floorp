@@ -75,9 +75,18 @@ _TEST_FILES =	bug500931_helper.html \
 		test_frameWrapping.html \
 		test_bug585745.html \
 		test_bug589028.html \
+		test_bug628410.html \
 		bug589028_helper.html \
 		test_bug605167.html \
+		test_bug623437.html \
 		test_bug601299.html \
+		test_bug629227.html \
+		file1_bug629227.html \
+		file2_bug629227.html \
+		test_bug629331.html \
+		test1_bug629331.html \
+		test2_bug629331.html \
+		test_bug618017.html \
 		$(NULL)
 
 		#test_bug484107.html \

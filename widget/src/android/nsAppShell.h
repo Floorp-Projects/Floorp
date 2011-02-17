@@ -83,10 +83,10 @@ protected:
     virtual void ScheduleNativeEventCallback();
     virtual ~nsAppShell();
 
-    int mNumDraws;
     PRLock *mQueueLock;
     PRLock *mCondLock;
     PRCondVar *mQueueCond;
+    int mNumDraws;
     nsTArray<mozilla::AndroidGeckoEvent *> mEventQueue;
     nsInterfaceHashtable<nsStringHashKey, nsIObserver> mObserversHash;
 

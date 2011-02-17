@@ -406,12 +406,12 @@
 @BINPATH@/components/@DLL_PREFIX@mozgnome@DLL_SUFFIX@
 #endif
 
-; ANGLE on Win32
-#ifdef XP_WIN32
-#ifndef HAVE_64BIT_OS
+; ANGLE GLES-on-D3D rendering library
+#ifdef MOZ_ANGLE
 @BINPATH@/libEGL.dll
 @BINPATH@/libGLESv2.dll
-#endif
+@BINPATH@/@MOZ_D3DX9_DLL@
+@BINPATH@/@MOZ_D3DCOMPILER_DLL@
 #endif
 
 ; [Browser Chrome Files]

@@ -24,6 +24,18 @@ function run_test() {
   let logger = Log4Moz.repository.rootLogger;
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
+  try {
+    _("The right bits are set when we're offline.");
+    Svc.IO.offline = true;
+    do_check_eq(Service._ignorableErrorCount, 0);
+    do_check_false(!!Service.login());
+    do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+    do_check_eq(Service._ignorableErrorCount, 0);
+    Svc.IO.offline = false;
+  } finally {
+    Svc.Prefs.resetBranch("");
+  }
+ 
   do_test_pending();
   let server = httpd_setup({
     "/1.0/johndoe/info/collections": login_handler,
@@ -111,7 +123,7 @@ function run_test() {
     Service.logout();
     do_check_false(Service.isLoggedIn);
     do_check_false(Svc.Prefs.get("autoconnect"));
-    
+
     /*
      * Testing login-on-sync.
      */

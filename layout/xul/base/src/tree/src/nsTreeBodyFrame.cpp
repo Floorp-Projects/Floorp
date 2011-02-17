@@ -1670,8 +1670,7 @@ nsTreeBodyFrame::GetCellAt(nscoord aX, nscoord aY, PRInt32* aRow,
 
     if (aX >= cellRect.x && aX < cellRect.x + cellRect.width) {
       // We know the column hit now.
-      if (aCol)
-        *aCol = currCol;
+      *aCol = currCol;
 
       if (currCol->IsCycler())
         // Cyclers contain only images.  Fill this in immediately and return.

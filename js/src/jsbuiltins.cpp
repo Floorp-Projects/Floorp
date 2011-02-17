@@ -72,7 +72,11 @@ using namespace js;
 JS_FRIEND_API(void)
 js_SetTraceableNativeFailed(JSContext *cx)
 {
-    SetBuiltinError(cx);
+    /*
+     * We might not be on trace (we might have deep bailed) so we hope
+     * cx->compartment is correct.
+     */
+    SetBuiltinError(JS_TRACE_MONITOR_FROM_CONTEXT(cx));
 }
 
 /*

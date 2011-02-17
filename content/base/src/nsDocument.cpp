@@ -185,6 +185,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 #include "mozAutoDocUpdate.h"
 #include "nsGlobalWindow.h"
+#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 
 #ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
@@ -202,6 +203,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 #include "mozilla/dom/Link.h"
 #include "nsIHTMLDocument.h"
+#include "nsXULAppAPI.h"
 
 using namespace mozilla::dom;
 
@@ -882,6 +884,17 @@ TransferZoomLevels(nsIDocument* aFromDoc,
   toCtxt->SetTextZoom(fromCtxt->TextZoom());
 }
 
+void
+TransferShowingState(nsIDocument* aFromDoc, nsIDocument* aToDoc)
+{
+  NS_ABORT_IF_FALSE(aFromDoc && aToDoc,
+                    "transferring showing state from/to null doc");
+
+  if (aFromDoc->IsShowing()) {
+    aToDoc->OnPageShow(PR_TRUE, nsnull);
+  }
+}
+
 nsresult
 nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
                                            nsIDocumentViewer* aViewer,
@@ -941,6 +954,7 @@ nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
     newResource->mLoadGroup = aLoadGroup;
     if (doc) {
       TransferZoomLevels(aDisplayDocument, doc);
+      TransferShowingState(aDisplayDocument, doc);
     }
   }
 
@@ -3789,7 +3803,7 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     if (!mWillReparent) {
       // We really shouldn't have a wrapper here but if we do we need to make sure
       // it has the correct parent.
-      JSObject *obj = GetWrapper();
+      JSObject *obj = GetWrapperPreserveColor();
       if (obj) {
         JSObject *newScope = aScriptGlobalObject->GetGlobalJSObject();
         nsIScriptContext *scx = aScriptGlobalObject->GetContext();
@@ -7029,6 +7043,7 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
     }
   }
 
+  // Check if we have pending network requests
   nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
   if (loadGroup) {
     nsCOMPtr<nsISimpleEnumerator> requests;
@@ -7054,6 +7069,13 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
         return PR_FALSE;
       }
     }
+  }
+
+  // Check if we have running IndexedDB transactions
+  indexedDB::IndexedDatabaseManager* idbManager =
+    indexedDB::IndexedDatabaseManager::Get();
+  if (idbManager && idbManager->HasOpenTransactions(win)) {
+    return PR_FALSE;
   }
 
   PRBool canCache = PR_TRUE;
@@ -8114,22 +8136,24 @@ nsDocument::AddImage(imgIRequest* aImage)
   if (!success)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  nsresult rv = NS_OK;
+
   // If this is the first insertion and we're locking images, lock this image
   // too.
-  if ((oldCount == 0) && mLockingImages) {
-    nsresult rv = aImage->LockImage();
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = aImage->RequestDecode();
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (oldCount == 0 && mLockingImages) {
+    rv = aImage->LockImage();
+    if (NS_SUCCEEDED(rv))
+      rv = aImage->RequestDecode();
   }
 
   // If this is the first insertion and we're animating images, request
   // that this image be animated too.
   if (oldCount == 0 && mAnimatingImages) {
-    return aImage->IncrementAnimationConsumers();
+    nsresult rv2 = aImage->IncrementAnimationConsumers();
+    rv = NS_SUCCEEDED(rv) ? rv2 : rv;
   }
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult
@@ -8154,17 +8178,21 @@ nsDocument::RemoveImage(imgIRequest* aImage)
     mImageTracker.Put(aImage, count);
   }
 
+  nsresult rv = NS_OK;
+
   // If we removed the image from the tracker and we're locking images, unlock
   // this image.
-  if ((count == 0) && mLockingImages)
-    return aImage->UnlockImage();
+  if (count == 0 && mLockingImages)
+    rv = aImage->UnlockImage();
 
   // If we removed the image from the tracker and we're animating images,
   // remove our request to animate this image.
-  if (count == 0 && mAnimatingImages)
-    return aImage->DecrementAnimationConsumers();
+  if (count == 0 && mAnimatingImages) {
+    nsresult rv2 = aImage->DecrementAnimationConsumers();
+    rv = NS_SUCCEEDED(rv) ? rv2 : rv;
+  }
 
-  return NS_OK;
+  return rv;
 }
 
 PLDHashOperator LockEnumerator(imgIRequest* aKey,
@@ -8188,6 +8216,13 @@ PLDHashOperator UnlockEnumerator(imgIRequest* aKey,
 nsresult
 nsDocument::SetImageLockingState(PRBool aLocked)
 {
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content &&
+      !nsContentUtils::GetBoolPref("content.image.allow_locking", PR_TRUE)) {
+    return NS_OK;
+  }
+#endif // MOZ_IPC
+
   // If there's no change, there's nothing to do.
   if (mLockingImages == aLocked)
     return NS_OK;

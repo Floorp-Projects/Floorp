@@ -146,7 +146,19 @@ class nsHtml5TreeOperation {
     inline void Init(eHtml5TreeOperation aOpCode, 
                      const nsACString& aString,
                      PRInt32 aInt32) {
-      Init(aOpCode, aString);
+      NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
+        "Op code must be uninitialized when initializing.");
+
+      PRInt32 len = aString.Length();
+      char* str = new char[len + 1];
+      const char* start = aString.BeginReading();
+      for (PRInt32 i = 0; i < len; ++i) {
+        str[i] = start[i];
+      }
+      str[len] = '\0';
+
+      mOpCode = aOpCode;
+      mOne.charPtr = str;
       mInt = aInt32;
     }
 
@@ -262,22 +274,6 @@ class nsHtml5TreeOperation {
       mTwo.stringPair = new nsHtml5TreeOperationStringPair(aPublicId, aSystemId);
     }
     
-    inline void Init(eHtml5TreeOperation aOpCode, const nsACString& aString) {
-      NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
-        "Op code must be uninitialized when initializing.");
-
-      PRInt32 len = aString.Length();
-      char* str = new char[len + 1];
-      const char* start = aString.BeginReading();
-      for (PRInt32 i = 0; i < len; ++i) {
-        str[i] = start[i];
-      }
-      str[len] = '\0';
-
-      mOpCode = aOpCode;
-      mOne.charPtr = str;
-    }
-
     inline void Init(eHtml5TreeOperation aOpCode, const nsAString& aString) {
       NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
         "Op code must be uninitialized when initializing.");

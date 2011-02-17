@@ -41,6 +41,7 @@
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "mozilla/SSE.h"
+#include "nsRect.h"
 
 class THEBES_API gfxAlphaRecovery {
 public:
@@ -50,6 +51,16 @@ public:
         gfxFloat alpha;
         gfxFloat r, g, b;
     };
+
+    /**
+     * Some SIMD fast-paths only can be taken if the relative
+     * byte-alignment of images' pointers and strides meets certain
+     * criteria.  Aligning image pointers and strides by
+     * |GoodAlignmentLog2()| below will ensure that fast-paths aren't
+     * skipped because of misalignment.  Fast-paths may still be taken
+     * even if GoodAlignmentLog2() is not met, in some conditions.
+     */
+    static PRUint32 GoodAlignmentLog2() { return 4; /* for SSE2 */ }
 
     /* Given two surfaces of equal size with the same rendering, one onto a
      * black background and the other onto white, recovers alpha values from
@@ -62,12 +73,30 @@ public:
                                 Analysis *analysis = nsnull);
 
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
-    /* This does the save as the previous function, but uses SSE2
+    /* This does the same as the previous function, but uses SSE2
      * optimizations. Usually this should not be called directly.  Be sure to
      * check mozilla::supports_sse2() before calling this function.
      */
     static PRBool RecoverAlphaSSE2 (gfxImageSurface *blackSurface,
                                     const gfxImageSurface *whiteSurface);
+
+    /**
+     * A common use-case for alpha recovery is to paint into a
+     * temporary "white image", then paint onto a subrect of the
+     * surface, the "black image", into which alpha-recovered pixels
+     * are eventually to be written.  This function returns a rect
+     * aligned so that recovering alpha for that rect will hit SIMD
+     * fast-paths, if possible.  It's not always possible to align
+     * |aRect| so that fast-paths will be taken.
+     *
+     * The returned rect is always a superset of |aRect|.
+     */
+    static nsIntRect AlignRectForSubimageRecovery(const nsIntRect& aRect,
+                                                  gfxImageSurface* aSurface);
+#else
+    static nsIntRect AlignRectForSubimageRecovery(const nsIntRect& aRect,
+                                                  gfxImageSurface*)
+    { return aRect; }
 #endif
 
     /** from cairo-xlib-utils.c, modified */

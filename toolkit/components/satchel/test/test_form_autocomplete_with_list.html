@@ -77,6 +77,9 @@ function checkForm(expectedValue) {
     is(input.value, expectedValue, "Checking " + formID + " input");
 }
 
+function nextTest(aTestNum) {
+  setTimeout(runTest, 50, aTestNum + 1); // XXX 40ms was too slow, why?
+}
 
 /*
 * Main section of test...
@@ -173,6 +176,7 @@ function runTest(testNum) {
 
         // Trigger autocomplete popup
         // Look at form 3, try to trigger autocomplete popup
+        input.value = "";
         input = $_(3, "field2");
         testNum = 99;
         restoreForm();
@@ -267,16 +271,19 @@ function runTest(testNum) {
       var toRemove = datalist.children[1]
       datalist.removeChild(toRemove);
 
-      doKey("down");
-      doKey("down");
-      doKey("return");
-      checkForm("final");
+      SimpleTest.executeSoon(function() {
+        doKey("down");
+        doKey("down");
+        doKey("return");
+        checkForm("final");
 
-      // Restore the element.
-      datalist.insertBefore(toRemove, datalist.children[1]);
-      restoreForm();
-      doKey("down");
-      break;
+        // Restore the element.
+        datalist.insertBefore(toRemove, datalist.children[1]);
+        restoreForm();
+        doKey("down");
+        nextTest(testNum);
+      });
+      return;
 
     case 201:
       // Adding an attribute after the first one while on the first then going
@@ -286,16 +293,19 @@ function runTest(testNum) {
       var added = Option("Foo");
       datalist.insertBefore(added, datalist.children[1]);
 
-      doKey("down");
-      doKey("down");
-      doKey("return");
-      checkForm("Foo");
+      SimpleTest.executeSoon(function() {
+        doKey("down");
+        doKey("down");
+        doKey("return");
+        checkForm("Foo");
 
-      // Remove the element.
-      datalist.removeChild(added);
-      restoreForm();
-      doKey("down");
-      break;
+        // Remove the element.
+        datalist.removeChild(added);
+        restoreForm();
+        doKey("down");
+        nextTest(testNum);
+      });
+      return;
 
     case 202:
       // Change the first element value attribute.
@@ -304,14 +314,17 @@ function runTest(testNum) {
       var prevValue = datalist.children[0].value;
       datalist.children[0].value = "foo";
 
-      doKey("down");
-      doKey("return");
-      checkForm("foo");
+      SimpleTest.executeSoon(function() {
+        doKey("down");
+        doKey("return");
+        checkForm("foo");
 
-      datalist.children[0].value = prevValue;
-      restoreForm();
-      doKey("down");
-      break;
+        datalist.children[0].value = prevValue;
+        restoreForm();
+        doKey("down");
+        nextTest(testNum);
+      });
+      return;
 
     case 203:
       // Change the textContent to update the value attribute.
@@ -321,15 +334,18 @@ function runTest(testNum) {
       datalist.children[0].removeAttribute('value');
       datalist.children[0].textContent = "foobar";
 
-      doKey("down");
-      doKey("return");
-      checkForm("foobar");
+      SimpleTest.executeSoon(function() {
+        doKey("down");
+        doKey("return");
+        checkForm("foobar");
 
-      datalist.children[0].setAttribute('value', prevValue);
-      testNum = 299;
-      restoreForm();
-      doKey("down");
-      break;
+        datalist.children[0].setAttribute('value', prevValue);
+        testNum = 299;
+        restoreForm();
+        doKey("down");
+        nextTest(testNum);
+      });
+      return;
 
     // Tests for filtering (or not).
     case 300:
@@ -341,7 +357,7 @@ function runTest(testNum) {
         checkForm("final");
         restoreForm();
         doKey("down");
-        setTimeout(runTest, 50, testNum + 1); // XXX 40ms was too slow, why?
+        nextTest(testNum);
       }, 500);
       return;
       break;
@@ -356,7 +372,7 @@ function runTest(testNum) {
         checkForm("final");
         restoreForm();
         doKey("down");
-        setTimeout(runTest, 50, testNum + 1); // XXX 40ms was too slow, why?
+        nextTest(testNum);
       }, 500);
       return;
       break;
@@ -373,7 +389,7 @@ function runTest(testNum) {
         restoreForm();
         doKey("down");
         testNum = 399;
-        setTimeout(runTest, 50, testNum + 1); // XXX 40ms was too slow, why?
+        nextTest(testNum);
       }, 500);
       return;
       break;
@@ -400,7 +416,7 @@ function runTest(testNum) {
         return;
     }
 
-    setTimeout(runTest, 50, testNum + 1); // XXX 40ms was too slow, why?
+    nextTest(testNum);
 }
 
 function checkMenuEntries(expectedValues) {

@@ -73,6 +73,7 @@ _TEST_FILES = \
 		animated-svg-image-helper.html \
 		animated-svg-image-helper.svg \
 		test_SVGLengthList.xhtml \
+		test_SVGLengthList-2.xhtml \
 		test_SVGPathSegList.xhtml \
 		test_SVGStyleElement.xhtml \
 		test_SVGxxxList.xhtml \

@@ -106,7 +106,7 @@
         if (cursor) {
           is(cursor.key, objectStoreDataWeightSort[keyIndex].value.weight,
              "Correct key");
-          is(cursor.value, objectStoreDataWeightSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataWeightSort[keyIndex].key,
              "Correct value");
           keyIndex++;
 

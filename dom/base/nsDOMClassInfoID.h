@@ -73,6 +73,7 @@ enum nsDOMClassInfoID {
  *          that implements one of these interfaces must be directly castable
  *          to that interface from the *canonical* nsISupports!
  */
+#undef DOMCI_CASTABLE_INTERFACE
 #define DOMCI_CASTABLE_INTERFACES(_extra)                                     \
 DOMCI_CASTABLE_INTERFACE(nsINode, nsINode, 0, _extra)                         \
 DOMCI_CASTABLE_INTERFACE(nsIContent, nsIContent, 1, _extra)                   \

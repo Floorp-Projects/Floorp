@@ -142,6 +142,7 @@
   border-radius: 8px;
   color: WindowText;
   background-color: Window;
+  background-clip: padding-box;
 }
 
 .alert .alert-title {
@@ -421,7 +422,7 @@
 .icon-container {
   width: 48px;
   height: 48px;
-  margin: 22px 7px 7px 7px;
+  margin: 3px 7px;
 }
 
 .icon {

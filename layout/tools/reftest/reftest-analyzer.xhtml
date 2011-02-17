@@ -56,6 +56,13 @@ Features to add:
   <title>Reftest analyzer</title>
   <style type="text/css"><![CDATA[
 
+  html, body { margin: 0; padding: 0 }
+
+  #pixelarea, #itemlist, #images { position: absolute; overflow: auto; }
+  #pixelarea { top: 0; left: 0; width: 320px; height: 84px; }
+  #itemlist { top: 84px; left: 0; width: 320px; bottom: 0; }
+  #images { top: 0; bottom: 0; left: 320px; right: 0; }
+
   #leftpane { width: 320px; }
   #images { position: fixed; top: 10px; left: 340px; }
 
@@ -69,11 +76,12 @@ Features to add:
   #itemlist > table > tbody > tr.fail > td.url { background: red; }
   */
 
-  #magnification { margin-top: 1em; }
-  #pixelinfo { font: small sans-serif; position: absolute; width: 200px; left: 100px; margin-top: 2px; }
-  #pixelinfo table { border-collapse: collapse; white-space: nowrap;}
-  #pixelinfo table td, #pixelinfo table th { padding: 0 6px 2px 0; text-align: left; }
-  #pixelinfo table td { font-family: monospace; }
+  #magnification > svg { display: block; width: 84px; height: 84px; }
+
+  #pixelinfo { font: small sans-serif; position: absolute; width: 200px; left: 84px; }
+  #pixelinfo table { border-collapse: collapse; }
+  #pixelinfo table th { white-space: nowrap; text-align: left; padding: 0; }
+  #pixelinfo table td { font-family: monospace; padding: 0 0 0 0.25em; }
 
   #pixelhint { display: inline; color: #88f; cursor: help; }
   #pixelhint > * { display: none; position: absolute; margin: 8px 0 0 8px; padding: 4px; width: 400px; background: #ffa; color: black; box-shadow: 3px 3px 2px #888; z-index: 1; }
@@ -450,7 +458,7 @@ function show_pixelinfo(x, y, pix1rgb, pix1hex, pix2rgb, pix2hex) {
 <div id="loading" style="display:none">Loading log...</div>
 
 <div id="viewer" style="display:none">
-  <div id="leftpane">
+  <div id="pixelarea">
     <div id="pixelinfo">
       <table>
         <tbody>
@@ -472,12 +480,12 @@ function show_pixelinfo(x, y, pix1rgb, pix1hex, pix2rgb, pix2hex) {
       </div>
     </div>
     <div id="magnification">
-      <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" shape-rendering="optimizeSpeed">
+      <svg xmlns="http://www.w3.org/2000/svg" width="84" height="84" shape-rendering="optimizeSpeed">
         <g id="mag"/>
       </svg>
     </div>
-    <div id="itemlist"></div>
   </div>
+  <div id="itemlist"></div>
   <div id="images" style="display:none">
     <form id="imgcontrols">
     <label><input type="radio" name="which" value="0" onchange="show_image(1)" checked="checked" />Image 1</label>

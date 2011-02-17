@@ -314,6 +314,16 @@ NS_IMETHODIMP nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight
 {
   if (mRootView) {
     if (mRootView->IsEffectivelyVisible()) {
+      if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
+          mDelayedResize != nsSize(aWidth, aHeight)) {
+        // We have a delayed resize; that now obsolete size may already have
+        // been flushed to the PresContext so we need to update the PresContext
+        // with the new size because if the new size is exactly the same as the
+        // root view's current size then DoSetWindowDimensions will not
+        // request a resize reflow (which would correct it). See bug 617076.
+        mDelayedResize = nsSize(aWidth, aHeight);
+        FlushDelayedResize(PR_FALSE);
+      }
       mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
       DoSetWindowDimensions(aWidth, aHeight);
     } else {
@@ -1317,6 +1327,8 @@ void nsViewManager::InvalidateHorizontalBandDifference(nsView *aView, const nsRe
 
 void nsViewManager::InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
   PRUint32 aUpdateFlags) {
+  NS_ASSERTION(aView->GetViewManager() == this,
+               "InvalidateRectDifference called on view we don't own");
   if (aRect.y < aCutOut.y) {
     InvalidateHorizontalBandDifference(aView, aRect, aCutOut, aUpdateFlags, aRect.y, aCutOut.y, PR_FALSE);
   }
@@ -1336,25 +1348,27 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
 
   view->GetDimensions(oldDimensions);
   if (!oldDimensions.IsExactEqual(aRect)) {
-    nsView* parentView = view->GetParent();
-    if (parentView == nsnull)
-      parentView = view;
-
     // resize the view.
     // Prevent Invalidation of hidden views 
     if (view->GetVisibility() == nsViewVisibility_kHide) {  
       view->SetDimensions(aRect, PR_FALSE);
     } else {
+      nsView* parentView = view->GetParent();
+      if (!parentView) {
+        parentView = view;
+      }
       nsRect oldBounds = view->GetBoundsInParentUnits();
       view->SetDimensions(aRect, PR_TRUE);
+      nsViewManager* parentVM = parentView->GetViewManager();
       if (!aRepaintExposedAreaOnly) {
         //Invalidate the union of the old and new size
         UpdateView(view, aRect, NS_VMREFRESH_NO_SYNC);
-        UpdateView(parentView, oldBounds, NS_VMREFRESH_NO_SYNC);
+        parentVM->UpdateView(parentView, oldBounds, NS_VMREFRESH_NO_SYNC);
       } else {
         InvalidateRectDifference(view, aRect, oldDimensions, NS_VMREFRESH_NO_SYNC);
         nsRect newBounds = view->GetBoundsInParentUnits();
-        InvalidateRectDifference(parentView, oldBounds, newBounds, NS_VMREFRESH_NO_SYNC);
+        parentVM->InvalidateRectDifference(parentView, oldBounds, newBounds,
+                                           NS_VMREFRESH_NO_SYNC);
       } 
     }
   }

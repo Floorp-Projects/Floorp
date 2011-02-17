@@ -2376,7 +2376,9 @@ public:
 
     static void relinkJump(void* from, void* to)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       ISPFX "##relinkJump ((from=%p)) ((to=%p))\n",
+                       from, to);
         setRel32(from, to);
     }
 
@@ -2412,7 +2414,10 @@ public:
 
     static void repatchLoadPtrToLEA(void* where)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       ISPFX "##repatchLoadPtrToLEA ((where=%p))\n",
+                       where);
+
 #if WTF_CPU_X86_64
         // On x86-64 pointer memory accesses require a 64-bit operand, and as such a REX prefix.
         // Skip over the prefix byte.
@@ -2423,7 +2428,9 @@ public:
     
     static void repatchLEAToLoadPtr(void* where)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       ISPFX "##repatchLEAToLoadPtr ((where=%p))\n",
+                       where);
 #if WTF_CPU_X86_64
         // On x86-64 pointer memory accesses require a 64-bit operand, and as such a REX prefix.
         // Skip over the prefix byte.

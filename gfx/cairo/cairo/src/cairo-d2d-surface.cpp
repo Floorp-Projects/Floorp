@@ -2450,8 +2450,11 @@ _cairo_d2d_finish(void	    *surface)
 
     reset_clip(d2dsurf);
 
-    cairo_release_device(&d2dsurf->device->base);
+    // We need to release the device after calling the constructor, since the
+    // device destruction may release the D3D/D2D libraries.
+    cairo_device_t *device = &d2dsurf->device->base;
     d2dsurf->~cairo_d2d_surface_t();
+    cairo_release_device(device);
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -3498,6 +3501,11 @@ _cairo_dwrite_manual_show_glyphs_on_d2d_surface(void			    *surface,
 						cairo_dwrite_scaled_font_t  *scaled_font,
 						cairo_clip_t		    *clip)
 {
+    cairo_dwrite_scaled_font_t *dwritesf = reinterpret_cast<cairo_dwrite_scaled_font_t*>(scaled_font);
+    if (!dwritesf->manual_show_glyphs_allowed) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
     cairo_dwrite_font_face_t *dwriteff = reinterpret_cast<cairo_dwrite_font_face_t*>(scaled_font->base.font_face);
     cairo_d2d_surface_t *dst = reinterpret_cast<cairo_d2d_surface_t*>(surface);
 

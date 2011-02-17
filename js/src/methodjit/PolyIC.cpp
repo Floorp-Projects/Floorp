@@ -485,7 +485,7 @@ class SetPropCompiler : public PICStubCompiler
 
         Class *clasp = obj->getClass();
 
-        if (clasp->setProperty != PropertyStub)
+        if (clasp->setProperty != StrictPropertyStub)
             return disable("set property hook");
         if (clasp->ops.lookupProperty)
             return disable("ops lookup property hook");
@@ -2702,8 +2702,9 @@ JITScript::purgePICs()
 
     Repatcher repatcher(this);
 
+    ic::PICInfo *pics_ = pics();
     for (uint32 i = 0; i < nPICs; i++) {
-        ic::PICInfo &pic = pics[i];
+        ic::PICInfo &pic = pics_[i];
         switch (pic.kind) {
           case ic::PICInfo::SET:
           case ic::PICInfo::SETMETHOD:
@@ -2727,10 +2728,12 @@ JITScript::purgePICs()
         pic.reset();
     }
 
+    ic::GetElementIC *getElems_ = getElems();
+    ic::SetElementIC *setElems_ = setElems();
     for (uint32 i = 0; i < nGetElems; i++)
-        getElems[i].purge(repatcher);
+        getElems_[i].purge(repatcher);
     for (uint32 i = 0; i < nSetElems; i++)
-        setElems[i].purge(repatcher);
+        setElems_[i].purge(repatcher);
 }
 
 void

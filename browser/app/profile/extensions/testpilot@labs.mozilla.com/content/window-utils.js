@@ -112,14 +112,10 @@ var TestPilotWindowUtils;
       this.openInTab(url);
     },
 
-    openFeedbackPage: function(aIsHappy) {
+    openFeedbackPage: function(menuItemChosen) {
       Components.utils.import("resource://testpilot/modules/feedback.js");
       FeedbackManager.setCurrUrl(this.getCurrentTabUrl());
-      if (aIsHappy) {
-        this.openInTab(FeedbackManager.happyUrl);
-      } else {
-        this.openInTab(FeedbackManager.sadUrl);
-      }
+      this.openInTab(FeedbackManager.getFeedbackUrl(menuItemChosen));
     },
 
     openChromeless: function(url) {

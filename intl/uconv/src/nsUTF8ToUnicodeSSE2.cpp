@@ -43,9 +43,6 @@
 namespace mozilla {
 namespace SSE2 {
 
-#if defined(__i386__) && defined(__MINGW32__)
-__attribute__((__force_align_arg_pointer__))
-#endif
 void
 Convert_ascii_run(const char *&src,
                   PRUnichar  *&dst,

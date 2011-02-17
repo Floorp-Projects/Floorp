@@ -463,6 +463,8 @@ gfxPlatformFontList::FindFamily(const nsAString& aFamily)
     PRBool found;
     GenerateFontListKey(aFamily, key);
 
+    NS_ASSERTION(mFontFamilies.Count() != 0, "system font list was not initialized correctly");
+
     // lookup in canonical (i.e. English) family name list
     if ((familyEntry = mFontFamilies.GetWeak(key, &found))) {
         return familyEntry;

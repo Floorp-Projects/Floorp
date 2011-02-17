@@ -36,10 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "prtypes.h"
 #include "MacLaunchHelper.h"
 
 #include "nsMemory.h"
 #include "nsAutoPtr.h"
+#include "nsIAppStartup.h"
 
 #include <stdio.h>
 #include <spawn.h>
@@ -55,9 +57,17 @@ cpu_type_t pref_cpu_types[2] = {
                                  CPU_TYPE_POWERPC,
 #endif
                                  CPU_TYPE_ANY };
+
+cpu_type_t cpu_i386_types[2] = {
+                                 CPU_TYPE_X86,
+                                 CPU_TYPE_ANY };
+
+cpu_type_t cpu_x64_86_types[2] = {
+                                 CPU_TYPE_X86_64,
+                                 CPU_TYPE_ANY };
 }
 
-void LaunchChildMac(int aArgc, char** aArgv)
+void LaunchChildMac(int aArgc, char** aArgv, PRUint32 aRestartType)
 {
   // "posix_spawnp" uses null termination for arguments rather than a count.
   // Note that we are not duplicating the argument strings themselves.
@@ -74,10 +84,17 @@ void LaunchChildMac(int aArgc, char** aArgv)
     return;
   }
 
+  cpu_type_t *wanted_type = pref_cpu_types;
+
+  if (aRestartType & nsIAppStartup::eRestarti386)
+    wanted_type = cpu_i386_types;
+  else if (aRestartType & nsIAppStartup::eRestartx86_64)
+    wanted_type = cpu_x64_86_types;
+
   // Set spawn attributes.
-  size_t attr_count = NS_ARRAY_LENGTH(pref_cpu_types);
+  size_t attr_count = NS_ARRAY_LENGTH(wanted_type);
   size_t attr_ocount = 0;
-  if (posix_spawnattr_setbinpref_np(&spawnattr, attr_count, pref_cpu_types, &attr_ocount) != 0 ||
+  if (posix_spawnattr_setbinpref_np(&spawnattr, attr_count, wanted_type, &attr_ocount) != 0 ||
       attr_ocount != attr_count) {
     printf("Failed to set binary preference on posix spawn attribute.");
     posix_spawnattr_destroy(&spawnattr);

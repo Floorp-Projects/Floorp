@@ -125,7 +125,7 @@
       <menu id="context_tabViewMenu" label="&moveToGroup.label;"
             accesskey="&moveToGroup.accesskey;">
         <menupopup id="context_tabViewMenuPopup"
-                   onpopupshowing="if (event.target == this) TabView.updateContextMenu(TabContextMenu.contextTab, this);">
+                   onpopupshowing="if (event.target == this) TabView.moveToGroupPopupShowing(event);">
           <menuseparator id="context_tabViewNamedGroups" hidden="true"/>
           <menuitem id="context_tabViewNewGroup" label="&moveToNewGroup.label;"
                     oncommand="TabView.moveTabTo(TabContextMenu.contextTab, null);"/>
@@ -467,6 +467,8 @@
            defaultmode="icons" mode="icons"
 #ifdef WINCE
            defaulticonsize="small" iconsize="small"
+#else
+           iconsize="large"
 #endif
            tabsontop="true"
            persist="tabsontop">
@@ -649,8 +651,8 @@
                      placespopup="true"
                      context="placesContext"
                      openInTabs="children"
-                     oncommand="BookmarksEventHandler.onCommand(event);"
-                     onclick="BookmarksEventHandler.onClick(event);"
+                     oncommand="BookmarksEventHandler.onCommand(event, this.parentNode._placesView);"
+                     onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
                      onpopupshowing="BookmarksMenuButton.onPopupShowing(event);
                                      if (!this.parentNode._placesView)
                                        new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');"
@@ -749,8 +751,8 @@
         <hbox flex="1"
               id="PlacesToolbar"
               context="placesContext"
-              onclick="BookmarksEventHandler.onClick(event);"
-              oncommand="BookmarksEventHandler.onCommand(event);"
+              onclick="BookmarksEventHandler.onClick(event, this._placesView);"
+              oncommand="BookmarksEventHandler.onCommand(event, this._placesView);"
               tooltip="bhTooltip"
               popupsinherittooltip="true">
           <toolbarbutton class="bookmark-item bookmarks-toolbar-customize"
@@ -981,6 +983,7 @@
                   contentcontextmenu="contentAreaContextMenu"
                   autocompletepopup="PopupAutoComplete"
                   onclick="return contentAreaClick(event, false);"/>
+      <statuspanel id="statusbar-display" label=""/>
     </vbox>
     <vbox id="browser-border-end" hidden="true" layer="true"/>
   </hbox>
@@ -994,11 +997,12 @@
              mode="icons" iconsize="small" defaulticonsize="small"
              lockiconsize="true"
              defaultset="addonbar-closebutton,spring,status-bar"
-             customizable="true">
+             customizable="true"
+             key="key_toggleAddonBar">
       <toolbarbutton id="addonbar-closebutton"
                      tooltiptext="&addonBarCloseButton.tooltip;"
                      oncommand="setToolbarVisibility(this.parentNode, false);"/>
-      <statusbar id="status-bar"/>
+      <statusbar id="status-bar" ordinal="1000"/>
     </toolbar>
   </vbox>
 

@@ -8,23 +8,17 @@ tabmodalprompt {
 
 .mainContainer {
   min-width: 20em;
+  min-height: 12em;
 }
 
 .info\.body {
-  max-width: 45em;
+  margin: 0 !important;
   -moz-user-focus: normal;
   -moz-user-select: text;
   cursor: text !important;
   white-space: pre-wrap;
 }
 
-.infoContainer {
-  max-height: 10em;
-  overflow-y: auto;
+label[value=""] {
+  visibility: collapse;
 }
-
-%ifdef XP_WIN
-.buttonContainer {
-  -moz-box-pack: center;
-}
-%endif

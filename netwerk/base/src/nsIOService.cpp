@@ -268,15 +268,15 @@ nsIOService::Init()
 #endif
         mNetworkLinkService = do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID);
 
-    if (!mNetworkLinkService) {
-        mManageOfflineStatus = PR_FALSE;
+    if (!mNetworkLinkService)
         // We can't really determine if the machine has a usable network connection,
         // so let's cross our fingers!
-        SetOffline(PR_FALSE);
-    }
+        mManageOfflineStatus = PR_FALSE;
 
     if (mManageOfflineStatus)
         TrackNetworkLinkStatusForOffline();
+    else
+        SetOffline(PR_FALSE);
     
     NS_TIME_FUNCTION_MARK("Set up network link service");
 

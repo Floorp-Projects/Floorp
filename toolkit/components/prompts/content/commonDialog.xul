@@ -55,7 +55,11 @@
         <hbox id="iconContainer" align="start">
           <image id="info.icon" class="spaced"/>
         </hbox>
-        <vbox id="infoContainer">
+        <vbox id="infoContainer"
+#ifndef XP_MACOSX
+              pack="center"
+#endif
+        >
           <!-- Only shown on OS X, since it has no dialog title -->
           <description id="info.title"
 #ifndef XP_MACOSX

@@ -62,7 +62,7 @@ END_TEST(testConservativeGC)
 BEGIN_TEST(testDerivedValues)
 {
   JSString *str = JS_NewStringCopyZ(cx, "once upon a midnight dreary");
-  js::Anchor<JSString *> str_anchor(str);
+  JS::Anchor<JSString *> str_anchor(str);
   static const jschar expected[] = { 'o', 'n', 'c', 'e' };
   const jschar *ch = JS_GetStringCharsZ(cx, str);
   str = NULL;

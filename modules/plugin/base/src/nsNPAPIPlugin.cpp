@@ -288,6 +288,7 @@ static PRInt32 OSXVersion()
   return gOSXVersion;
 }
 
+#if defined(__i386__)
 // Detects machines with Intel GMA9xx GPUs.
 // kCGLRendererIDMatchingMask and kCGLRendererIntel900ID are only defined in the 10.6 SDK.
 #define CGLRendererIDMatchingMask 0x00FE7F00
@@ -311,6 +312,7 @@ static PRBool GMA9XXGraphics()
   }
   return hasIntelGMA9XX;
 }
+#endif
 #endif
 
 PRBool
@@ -345,11 +347,14 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
         return PR_FALSE;
       }
     }
+
+#if defined(__i386__)
     // At this point we have Flash 10.1+ but now we also need to blacklist
     // if the machine has a Intel GMA9XX GPU.
     if (GMA9XXGraphics()) {
       return PR_FALSE;
     }
+#endif
   }
 #endif
 
@@ -474,7 +479,7 @@ GetNewPluginLibrary(nsPluginTag *aPluginTag)
 
 // Creates an nsNPAPIPlugin object. One nsNPAPIPlugin object exists per plugin (not instance).
 nsresult
-nsNPAPIPlugin::CreatePlugin(nsPluginTag *aPluginTag, nsIPlugin** aResult)
+nsNPAPIPlugin::CreatePlugin(nsPluginTag *aPluginTag, nsNPAPIPlugin** aResult)
 {
   *aResult = nsnull;
 
@@ -1517,7 +1522,10 @@ _retainobject(NPObject* npobj)
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_retainobject called from the wrong thread\n"));
   }
   if (npobj) {
-    int32_t refCnt = PR_AtomicIncrement((PRInt32*)&npobj->referenceCount);
+#ifdef NS_BUILD_REFCNT_LOGGING
+    int32_t refCnt =
+#endif
+      PR_AtomicIncrement((PRInt32*)&npobj->referenceCount);
     NS_LOG_ADDREF(npobj, refCnt, "BrowserNPObject", sizeof(NPObject));
   }
 
