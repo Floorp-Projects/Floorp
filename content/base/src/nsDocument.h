@@ -517,7 +517,8 @@ class nsDocument : public nsIDocument,
                    public nsIScriptObjectPrincipal,
                    public nsIRadioGroupContainer,
                    public nsIApplicationCacheContainer,
-                   public nsStubMutationObserver
+                   public nsStubMutationObserver,
+                   public nsIDOMNSDocument_MOZILLA_2_0_BRANCH
 {
 public:
   typedef mozilla::dom::Element Element;
@@ -808,6 +809,7 @@ public:
 
   // nsIDOMNSDocument
   NS_DECL_NSIDOMNSDOCUMENT
+  NS_DECL_NSIDOMNSDOCUMENT_MOZILLA_2_0_BRANCH
 
   // nsIDOMDocumentEvent
   NS_DECL_NSIDOMDOCUMENTEVENT
