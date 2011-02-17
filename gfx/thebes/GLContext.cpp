@@ -323,31 +323,16 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
 
     mInitialized = LoadSymbols(&symbols[0], trygl, prefix);
 
+    const char *glVendorString;
+
     if (mInitialized) {
-        InitExtensions();
-
-        NS_ASSERTION(!IsExtensionSupported(GLContext::ARB_pixel_buffer_object) ||
-                     (mSymbols.fMapBuffer && mSymbols.fUnmapBuffer),
-                     "ARB_pixel_buffer_object supported without glMapBuffer/UnmapBuffer being available!");
-
-        GLint v[4];
-
-        fGetIntegerv(LOCAL_GL_SCISSOR_BOX, v);
-        mScissorStack.AppendElement(nsIntRect(v[0], v[1], v[2], v[3]));
-
-        fGetIntegerv(LOCAL_GL_VIEWPORT, v);
-        mViewportStack.AppendElement(nsIntRect(v[0], v[1], v[2], v[3]));
-
-        const char *glVendorString = (const char *)fGetString(LOCAL_GL_VENDOR);
+        glVendorString = (const char *)fGetString(LOCAL_GL_VENDOR);
         const char *vendorMatchStrings[VendorOther] = {
                 "Intel",
                 "NVIDIA",
                 "ATI",
                 "Qualcomm"
         };
-
-        fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &mMaxTextureSize);
-
         mVendor = VendorOther;
         for (int i = 0; i < VendorOther; ++i) {
             if (DoesVendorStringMatch(glVendorString, vendorMatchStrings[i])) {
@@ -355,7 +340,9 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
                 break;
             }
         }
+    }
 
+    if (mInitialized) {
 #ifdef DEBUG
         static bool once = false;
         if (!once) {
@@ -375,6 +362,22 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
             }
         }
 #endif
+
+        InitExtensions();
+
+        NS_ASSERTION(!IsExtensionSupported(GLContext::ARB_pixel_buffer_object) ||
+                     (mSymbols.fMapBuffer && mSymbols.fUnmapBuffer),
+                     "ARB_pixel_buffer_object supported without glMapBuffer/UnmapBuffer being available!");
+
+        GLint v[4];
+
+        fGetIntegerv(LOCAL_GL_SCISSOR_BOX, v);
+        mScissorStack.AppendElement(nsIntRect(v[0], v[1], v[2], v[3]));
+
+        fGetIntegerv(LOCAL_GL_VIEWPORT, v);
+        mViewportStack.AppendElement(nsIntRect(v[0], v[1], v[2], v[3]));
+
+        fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &mMaxTextureSize);
 
         UpdateActualFormat();
     }
@@ -418,6 +421,7 @@ static const char *sExtensionNames[] = {
     "GL_APPLE_client_storage",
     "GL_ARB_texture_non_power_of_two",
     "GL_ARB_pixel_buffer_object",
+    "GL_ARB_ES2_compatibility",
     NULL
 };
 

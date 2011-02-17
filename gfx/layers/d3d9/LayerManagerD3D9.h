@@ -149,6 +149,8 @@ public:
 
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
 
+  virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer();
+
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
 
   virtual LayersBackend GetBackendType() { return LAYERS_D3D9; }

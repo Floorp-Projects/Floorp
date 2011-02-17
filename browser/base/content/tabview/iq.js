@@ -346,18 +346,16 @@ iQClass.prototype = {
 
   // ----------
   // Function: width
-  // Returns the width of the receiver.
+  // Returns the width of the receiver, including padding and border.
   width: function iQClass_width() {
-    let bounds = this.bounds();
-    return bounds.width;
+    return Math.floor(this[0].offsetWidth);
   },
 
   // ----------
   // Function: height
-  // Returns the height of the receiver.
+  // Returns the height of the receiver, including padding and border.
   height: function iQClass_height() {
-    let bounds = this.bounds();
-    return bounds.height;
+    return Math.floor(this[0].offsetHeight);
   },
 
   // ----------

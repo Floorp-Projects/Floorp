@@ -70,7 +70,7 @@
 
 #ifdef _WIN32
 # include <windows.h>
-#else
+#elif !defined(__OS2__)
 # include <unistd.h>
 # include <sys/mman.h>
 # ifndef MAP_ANON
@@ -127,6 +127,38 @@ GetDesiredRegionSize()
   SYSTEM_INFO sinfo;
   GetSystemInfo(&sinfo);
   return sinfo.dwAllocationGranularity;
+}
+
+#define RESERVE_FAILED 0
+
+#elif defined(__OS2__)
+static void *
+ReserveRegion(PRUword region, PRUword size)
+{
+  // OS/2 doesn't support allocation at an arbitrary address,
+  // so return an address that is known to be invalid.
+  return (void*)0xFFFD0000;
+}
+
+static void
+ReleaseRegion(void *region, PRUword size)
+{
+  return;
+}
+
+static bool
+ProbeRegion(PRUword region, PRUword size)
+{
+  // There's no reliable way to probe an address in the system
+  // arena other than by touching it and seeing if a trap occurs.
+  return false;
+}
+
+static PRUword
+GetDesiredRegionSize()
+{
+  // Page size is fixed at 4k.
+  return 0x1000;
 }
 
 #define RESERVE_FAILED 0

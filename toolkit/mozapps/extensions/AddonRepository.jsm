@@ -49,6 +49,8 @@ Components.utils.import("resource://gre/modules/AddonManager.jsm");
 var EXPORTED_SYMBOLS = [ "AddonRepository" ];
 
 const PREF_GETADDONS_CACHE_ENABLED       = "extensions.getAddons.cache.enabled";
+const PREF_GETADDONS_CACHE_TYPES         = "extensions.getAddons.cache.types";
+const PREF_GETADDONS_CACHE_ID_ENABLED    = "extensions.%ID%.getAddons.cache.enabled"
 const PREF_GETADDONS_BROWSEADDONS        = "extensions.getAddons.browseAddons";
 const PREF_GETADDONS_BYIDS               = "extensions.getAddons.get.url";
 const PREF_GETADDONS_BROWSERECOMMENDED   = "extensions.getAddons.recommended.browseURL";
@@ -59,6 +61,7 @@ const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
 const XMLURI_PARSE_ERROR  = "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 
 const API_VERSION = "1.5";
+const DEFAULT_CACHE_TYPES = "extension,theme,locale";
 
 const KEY_PROFILEDIR = "ProfD";
 const FILE_DATABASE  = "addons.sqlite";
@@ -131,6 +134,39 @@ function convertHTMLToPlainText(html) {
   if (output.value instanceof Ci.nsISupportsString)
     return output.value.data.replace("\r\n", "\n", "g");
   return html;
+}
+
+function getAddonsToCache(aIds, aCallback) {
+  try {
+    var types = Services.prefs.getCharPref(PREF_GETADDONS_CACHE_TYPES);
+  }
+  catch (e) { }
+  if (!types)
+    types = DEFAULT_CACHE_TYPES;
+
+  types = types.split(",");
+
+  AddonManager.getAddonsByIDs(aIds, function(aAddons) {
+    let enabledIds = [];
+    for (var i = 0; i < aIds.length; i++) {
+      var preference = PREF_GETADDONS_CACHE_ID_ENABLED.replace("%ID%", aIds[i]);
+      try {
+        if (!Services.prefs.getBoolPref(preference))
+          continue;
+      } catch(e) {
+        // If the preference doesn't exist caching is enabled by default
+      }
+
+      // The add-ons manager may not know about this ID yet if it is a pending
+      // install. In that case we'll just cache it regardless
+      if (aAddons[i] && (types.indexOf(aAddons[i].type) == -1))
+        continue;
+
+      enabledIds.push(aIds[i]);
+    }
+
+    aCallback(enabledIds);
+  });
 }
 
 function AddonSearchResult(aId) {
@@ -545,8 +581,6 @@ var AddonRepository = {
    *         The optional callback to call once complete
    */
   repopulateCache: function(aIds, aCallback) {
-    let self = this;
-
     // Completely remove cache if caching is not enabled
     if (!this.cacheEnabled) {
       this._addons = null;
@@ -555,36 +589,28 @@ var AddonRepository = {
       return;
     }
 
-    let enabledIds = aIds.filter(function(aId) {
-      let preference = "extensions." + aId + ".getAddons.cache.enabled";
-      let enabled = true;
-      try {
-        enabled = Services.prefs.getBoolPref(preference);
-      } catch(e) {
-        // If pref doesn't exist, default to enabled = true
+    let self = this;
+    getAddonsToCache(aIds, function(aAddons) {
+      // Completely remove cache if there are no add-ons to cache
+      if (aAddons.length == 0) {
+        this._addons = null;
+        this._pendingCallbacks = null;
+        AddonDatabase.delete(aCallback);
+        return;
       }
-      return enabled;
-    });
 
-    // Completely remove cache if there are no add-ons to cache
-    if (enabledIds.length == 0) {
-      this._addons = null;
-      this._pendingCallbacks = null;
-      AddonDatabase.delete(aCallback);
-      return;
-    }
-
-    this.getAddonsByIDs(enabledIds, {
-      searchSucceeded: function(aAddons) {
-        self._addons = {};
-        aAddons.forEach(function(aAddon) { self._addons[aAddon.id] = aAddon; });
-        AddonDatabase.repopulate(aAddons, aCallback);
-      },
-      searchFailed: function() {
-        WARN("Search failed when repopulating cache");
-        if (aCallback)
-          aCallback();
-      }
+      self.getAddonsByIDs(aAddons, {
+        searchSucceeded: function(aAddons) {
+          self._addons = {};
+          aAddons.forEach(function(aAddon) { self._addons[aAddon.id] = aAddon; });
+          AddonDatabase.repopulate(aAddons, aCallback);
+        },
+        searchFailed: function() {
+          WARN("Search failed when repopulating cache");
+          if (aCallback)
+            aCallback();
+        }
+      });
     });
   },
 
@@ -605,35 +631,26 @@ var AddonRepository = {
       return;
     }
 
-    let enabledIds = aIds.filter(function(aId) {
-      let preference = "extensions." + aId + ".getAddons.cache.enabled";
-      let enabled = true;
-      try {
-        enabled = Services.prefs.getBoolPref(preference);
-      } catch(e) {
-        // If pref doesn't exist, default to enabled = true
-      }
-      return enabled;
-    });
-
-    // If there are no add-ons to cache, act as if caching is disabled
-    if (enabledIds.length == 0) {
-      if (aCallback)
-        aCallback();
-      return;
-    }
-
     let self = this;
-    this.getAddonsByIDs(enabledIds, {
-      searchSucceeded: function(aAddons) {
-        aAddons.forEach(function(aAddon) { self._addons[aAddon.id] = aAddon; });
-        AddonDatabase.insertAddons(aAddons, aCallback);
-      },
-      searchFailed: function() {
-        WARN("Search failed when adding add-ons to cache");
+    getAddonsToCache(aIds, function(aAddons) {
+      // If there are no add-ons to cache, act as if caching is disabled
+      if (aAddons.length == 0) {
         if (aCallback)
           aCallback();
+        return;
       }
+
+      self.getAddonsByIDs(aAddons, {
+        searchSucceeded: function(aAddons) {
+          aAddons.forEach(function(aAddon) { self._addons[aAddon.id] = aAddon; });
+          AddonDatabase.insertAddons(aAddons, aCallback);
+        },
+        searchFailed: function() {
+          WARN("Search failed when adding add-ons to cache");
+          if (aCallback)
+            aCallback();
+        }
+      });
     });
   },
 

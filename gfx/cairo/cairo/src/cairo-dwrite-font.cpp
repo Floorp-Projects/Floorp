@@ -488,6 +488,8 @@ _cairo_dwrite_font_face_scaled_font_create (void			*abstract_face,
 	dwriteFont->antialias_mode = options->antialias;
     }
 
+    dwriteFont->manual_show_glyphs_allowed = TRUE;
+
     return _cairo_scaled_font_set_metrics (*font, &extents);
 }
 
@@ -1059,6 +1061,13 @@ cairo_dwrite_font_face_create_for_dwrite_fontface(void* dwrite_font, void* dwrit
     _cairo_font_face_init (&((cairo_dwrite_font_face_t*)font_face)->base, &_cairo_dwrite_font_face_backend);
 
     return font_face;
+}
+
+void
+cairo_dwrite_scaled_font_allow_manual_show_glyphs(void* dwrite_scaled_font, cairo_bool_t allowed)
+{
+    cairo_dwrite_scaled_font_t *font = static_cast<cairo_dwrite_scaled_font_t*>(dwrite_scaled_font);
+    font->manual_show_glyphs_allowed = allowed;
 }
 
 cairo_int_status_t

@@ -61,7 +61,7 @@ function initTest() {
 
 function waitForStarChange(aValue, aCallback) {
   let starButton = document.getElementById("star-button");
-  if (PlacesStarButton._ignoreClicks || starButton.hasAttribute("starred") != aValue) {
+  if (PlacesStarButton._pendingStmt || starButton.hasAttribute("starred") != aValue) {
     info("Waiting for star button change.");
     setTimeout(arguments.callee, 50, aValue, aCallback);
     return;

@@ -36,6 +36,9 @@
         </targetApplication>
       </versionRange>
     </emItem>
+    <emItem id="ShopperReports@ShopperReports.com">
+      <versionRange minVersion="3.1.22.0" maxVersion="3.1.22.0"/>
+    </emItem>
     <emItem id="support@daemon-tools.cc">
       <versionRange minVersion=" " maxVersion="1.0.0.5"/>
     </emItem>

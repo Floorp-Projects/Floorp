@@ -419,13 +419,8 @@ void Elf::write(std::ofstream &file)
                 Elf_Phdr phdr;
                 phdr.p_type = (*seg)->getType();
                 phdr.p_flags = (*seg)->getFlags();
-                if ((*seg)->getFirstSection()) {
-                    phdr.p_offset = (*seg)->getFirstSection()->getOffset();
-                    phdr.p_vaddr = (*seg)->getFirstSection()->getAddr();
-                } else {
-                    phdr.p_offset = 0;
-                    phdr.p_vaddr = 0;
-                }
+                phdr.p_offset = (*seg)->getOffset();
+                phdr.p_vaddr = (*seg)->getAddr();
                 phdr.p_paddr = phdr.p_vaddr + (*seg)->getVPDiff();
                 phdr.p_filesz = (*seg)->getFileSize();
                 phdr.p_memsz = (*seg)->getMemSize();
@@ -515,10 +510,16 @@ unsigned int ElfSection::getOffset()
         else
             offset = (offset & ~4095) + (getAddr() & 4095);
     }
-    // TODO: carefully handle this, as this isn't always safe, cf. when
-    // resizing .dynamic.
     if ((getType() != SHT_NOBITS) && (offset & (getAddrAlign() - 1)))
         offset = (offset | (getAddrAlign() - 1)) + 1;
+
+    // Two subsequent sections can't be mapped in the same page in memory
+    // if they aren't in the same 4K block on disk.
+    if ((getType() != SHT_NOBITS) && getAddr()) {
+        if (((offset >> 12) != (previous->getOffset() >> 12)) &&
+            ((getAddr() >> 12) == (previous->getAddr() >> 12)))
+            throw std::runtime_error("Moving section would require overlapping segments");
+    }
 
     return (shdr.sh_offset = offset);
 }
@@ -551,10 +552,14 @@ Elf_Shdr &ElfSection::getShdr()
 
 ElfSegment::ElfSegment(Elf_Phdr *phdr)
 : type(phdr->p_type), v_p_diff(phdr->p_paddr - phdr->p_vaddr),
-  flags(phdr->p_flags), align(phdr->p_align) {}
+  flags(phdr->p_flags), align(phdr->p_align), vaddr(phdr->p_vaddr),
+  filesz(phdr->p_filesz), memsz(phdr->p_memsz) {}
 
 void ElfSegment::addSection(ElfSection *section)
 {
+    // Make sure all sections in PT_GNU_RELRO won't be moved by elfhack
+    assert(!((type == PT_GNU_RELRO) && (section->isRelocatable())));
+
     //TODO: Check overlapping sections
     std::list<ElfSection *>::iterator i;
     for (i = sections.begin(); i != sections.end(); ++i)
@@ -565,6 +570,9 @@ void ElfSegment::addSection(ElfSection *section)
 
 unsigned int ElfSegment::getFileSize()
 {
+    if (type == PT_GNU_RELRO)
+        return filesz;
+
     if (sections.empty())
         return 0;
     // Search the last section that is not SHT_NOBITS
@@ -576,25 +584,38 @@ unsigned int ElfSegment::getFileSize()
 
     unsigned int end = (*i)->getAddr() + (*i)->getSize();
 
-    // GNU_RELRO segment end is page aligned.
-    if (type == PT_GNU_RELRO)
-        end = (end + 4095) & ~4095;
-
     return end - sections.front()->getAddr();
 }
 
 unsigned int ElfSegment::getMemSize()
 {
+    if (type == PT_GNU_RELRO)
+        return memsz;
+
     if (sections.empty())
         return 0;
 
     unsigned int end = sections.back()->getAddr() + sections.back()->getSize();
 
-    // GNU_RELRO segment end is page aligned.
-    if (type == PT_GNU_RELRO)
-        end = (end + 4095) & ~4095;
-
     return end - sections.front()->getAddr();
+}
+
+unsigned int ElfSegment::getOffset()
+{
+    if ((type == PT_GNU_RELRO) && !sections.empty() &&
+        (sections.front()->getAddr() != vaddr))
+        throw std::runtime_error("PT_GNU_RELRO segment doesn't start on a section start");
+
+    return sections.empty() ? 0 : sections.front()->getOffset();
+}
+
+unsigned int ElfSegment::getAddr()
+{
+    if ((type == PT_GNU_RELRO) && !sections.empty() &&
+        (sections.front()->getAddr() != vaddr))
+        throw std::runtime_error("PT_GNU_RELRO segment doesn't start on a section start");
+
+    return sections.empty() ? 0 : sections.front()->getAddr();
 }
 
 ElfSegment *ElfSegment::splitBefore(ElfSection *section)
@@ -611,6 +632,8 @@ ElfSegment *ElfSegment::splitBefore(ElfSection *section)
     phdr.p_paddr = phdr.p_vaddr + v_p_diff;
     phdr.p_flags = flags;
     phdr.p_align = 0x1000;
+    phdr.p_filesz = (unsigned int)-1;
+    phdr.p_memsz = (unsigned int)-1;
     ElfSegment *segment = new ElfSegment(&phdr);
 
     for (rm = i; i != sections.end(); ++i)
@@ -655,10 +678,6 @@ void ElfDynamic_Section::setValueForType(unsigned int tag, ElfValue *val)
     if (i < shdr.sh_size / shdr.sh_entsize)
         return;
 
-    // Growing the .dynamic section needs it to be moved depending where it
-    // was originally. Growing it blindly is dangerous. Safer to just fail
-    // for now
-    throw std::runtime_error("Growing .dynamic section is unsupported");
     Elf_DynValue value;
     value.tag = DT_NULL;
     value.value = NULL;

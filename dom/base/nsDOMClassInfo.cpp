@@ -88,6 +88,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMPopStateEvent.h"
+#include "nsIDOMPopStateEvent_MOZILLA_2_BRANCH.h"
 #include "nsContentUtils.h"
 #include "nsDOMWindowUtils.h"
 #include "nsIDOMGlobalPropertyInitializer.h"
@@ -514,7 +515,6 @@ static const char kDOMStringBundleURL[] =
   nsIXPCScriptable::WANT_SETPROPERTY |                                        \
   nsIXPCScriptable::WANT_PRECREATE |                                          \
   nsIXPCScriptable::WANT_ADDPROPERTY |                                        \
-  nsIXPCScriptable::WANT_DELPROPERTY |                                        \
   nsIXPCScriptable::WANT_FINALIZE |                                           \
   nsIXPCScriptable::WANT_EQUALITY |                                           \
   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |                               \
@@ -1947,7 +1947,8 @@ nsDOMClassInfo::ThrowJSException(JSContext *cx, nsresult aResult)
 PRBool
 nsDOMClassInfo::ObjectIsNativeWrapper(JSContext* cx, JSObject* obj)
 {
-  return xpc::WrapperFactory::IsXrayWrapper(obj);
+  return xpc::WrapperFactory::IsXrayWrapper(obj) &&
+         !xpc::WrapperFactory::IsPartiallyTransparent(obj);
 }
 
 nsDOMClassInfo::nsDOMClassInfo(nsDOMClassInfoData* aData) : mData(aData)
@@ -2495,8 +2496,9 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(PopStateEvent, nsIDOMPopStateEvent)
+  DOM_CLASSINFO_MAP_BEGIN(PopStateEvent, nsIDOMPopStateEvent_MOZILLA_2_BRANCH)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMPopStateEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPopStateEvent_MOZILLA_2_BRANCH)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -5292,35 +5294,6 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 #endif
 
-  JSObject *realObj;
-  wrapper->GetJSObject(&realObj);
-  if (win->IsOuterWindow() && realObj == obj) {
-    // XXXjst: Do security checks here when we remove the security
-    // checks on the inner window.
-
-    nsGlobalWindow *innerWin = win->GetCurrentInnerWindowInternal();
-
-    JSObject *innerObj;
-    if (innerWin && (innerObj = innerWin->GetGlobalJSObject())) {
-#ifdef DEBUG_SH_FORWARDING
-      printf(" --- Forwarding get to inner window %p\n", (void *)innerWin);
-#endif
-
-      // Forward the get to the inner object
-      if (JSID_IS_STRING(id)) {
-        *_retval = ::JS_GetPropertyById(cx, innerObj, id, vp);
-      } else if (JSID_IS_INT(id)) {
-        *_retval = ::JS_GetElement(cx, innerObj, JSID_TO_INT(id), vp);
-      } else {
-        NS_ERROR("Write me!");
-
-        return NS_ERROR_NOT_IMPLEMENTED;
-      }
-
-      return NS_OK;
-    }
-  }
-
   // The order in which things are done in this method are a bit
   // whacky, that's because this method is *extremely* performace
   // critical. Don't touch this unless you know what you're doing.
@@ -5412,53 +5385,6 @@ NS_IMETHODIMP
 nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval)
 {
-  nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
-
-#ifdef DEBUG_SH_FORWARDING
-  {
-    nsDependentJSString str(::JS_ValueToString(cx, id));
-
-    if (win->IsInnerWindow()) {
-#ifdef DEBUG_PRINT_INNER
-      printf("Property '%s' set on inner window %p\n",
-             NS_ConvertUTF16toUTF8(str).get(), (void *)win);
-#endif
-    } else {
-      printf("Property '%s' set on outer window %p\n",
-             NS_ConvertUTF16toUTF8(str).get(), (void *)win);
-    }
-  }
-#endif
-
-  JSObject *realObj;
-  wrapper->GetJSObject(&realObj);
-  if (win->IsOuterWindow() && obj == realObj) {
-    // XXXjst: Do security checks here when we remove the security
-    // checks on the inner window.
-
-    nsGlobalWindow *innerWin = win->GetCurrentInnerWindowInternal();
-
-    JSObject *innerObj;
-    if (innerWin && (innerObj = innerWin->GetGlobalJSObject())) {
-#ifdef DEBUG_SH_FORWARDING
-      printf(" --- Forwarding set to inner window %p\n", (void *)innerWin);
-#endif
-
-      // Forward the set to the inner object
-      if (JSID_IS_STRING(id)) {
-        *_retval = ::JS_SetPropertyById(cx, innerObj, id, vp);
-      } else if (JSID_IS_INT(id)) {
-        *_retval = ::JS_SetElement(cx, innerObj, JSID_TO_INT(id), vp);
-      } else {
-        NS_ERROR("Write me!");
-
-        return NS_ERROR_NOT_IMPLEMENTED;
-      }
-
-      return NS_OK;
-    }
-  }
-
   if (id == sLocation_id) {
     JSAutoRequest ar(cx);
 
@@ -5486,50 +5412,6 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   return nsEventReceiverSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
-}
-
-NS_IMETHODIMP
-nsWindowSH::DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                        JSObject *obj, jsid id, jsval *vp, PRBool *_retval)
-{
-  nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
-
-#ifdef DEBUG_SH_FORWARDING
-  {
-    nsDependentJSString str(::JS_ValueToString(cx, id));
-
-    if (win->IsInnerWindow()) {
-#ifdef DEBUG_PRINT_INNER
-      printf("Property '%s' del on inner window %p\n",
-             NS_ConvertUTF16toUTF8(str).get(), (void *)win);
-#endif
-    } else {
-      printf("Property '%s' del on outer window %p\n",
-             NS_ConvertUTF16toUTF8(str).get(), (void *)win);
-    }
-  }
-#endif
-
-  if (win->IsOuterWindow() && !ObjectIsNativeWrapper(cx, obj)) {
-    // XXXjst: Do security checks here when we remove the security
-    // checks on the inner window.
-
-    nsGlobalWindow *innerWin = win->GetCurrentInnerWindowInternal();
-
-    JSObject *innerObj;
-    if (innerWin && (innerObj = innerWin->GetGlobalJSObject())) {
-#ifdef DEBUG_SH_FORWARDING
-      printf(" --- Forwarding del to inner window %p\n", (void *)innerWin);
-#endif
-
-      // Forward the del to the inner object
-      *_retval = JS_DeletePropertyById(cx, innerObj, id);
-
-      return NS_OK;
-    }
-  }
-
-  return NS_OK;
 }
 
 static const char*
@@ -6692,7 +6574,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   JSBool ok = JS_TRUE;
   jsval exn = JSVAL_VOID;
-  if (win->IsInnerWindow()) {
+  if (!ObjectIsNativeWrapper(cx, obj)) {
     JSAutoEnterCompartment ac;
 
     if (!my_context) {
@@ -6709,14 +6591,9 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     JSAutoRequest transfer(my_cx);
 
-    JSObject *realObj;
-    wrapper->GetJSObject(&realObj);
-
     // Don't resolve standard classes on XPCNativeWrapper etc, only
     // resolve them if we're resolving on the real global object.
-    ok = obj == realObj ?
-         ::JS_ResolveStandardClass(my_cx, obj, id, &did_resolve) :
-         JS_TRUE;
+    ok = JS_ResolveStandardClass(my_cx, obj, id, &did_resolve);
 
     if (!ok) {
       // Trust the JS engine (or the script security manager) to set
@@ -6768,8 +6645,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // method on an interface that would let us just call into the
   // window code directly...
 
-  if (!xpc::WrapperFactory::IsXrayWrapper(obj) ||
-      xpc::WrapperFactory::IsPartiallyTransparent(obj)) {
+  if (!ObjectIsNativeWrapper(cx, obj)) {
     nsCOMPtr<nsIDocShellTreeNode> dsn(do_QueryInterface(win->GetDocShell()));
 
     PRInt32 count = 0;
@@ -6993,7 +6869,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       // property
       *objp = obj;
 
-      if (ObjectIsNativeWrapper(cx, obj)) {
+      // NB: We need to do this for any Xray wrapper.
+      if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
         // Unless our object is a native wrapper, in which case we have to
         // define it ourselves.
 
@@ -7068,8 +6945,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // binding a name) a new undefined property that's not already
   // defined on our prototype chain. This way we can access this
   // expando w/o ever getting back into XPConnect.
-  if ((flags & JSRESOLVE_ASSIGNING) && !(flags & JSRESOLVE_WITH) &&
-      win->IsInnerWindow()) {
+  if ((flags & JSRESOLVE_ASSIGNING) && !(flags & JSRESOLVE_WITH)) {
     JSObject *realObj;
     wrapper->GetJSObject(&realObj);
 
@@ -10280,8 +10156,18 @@ nsStorageSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
                         JSObject **objp, PRBool *_retval)
 {
+  if (ObjectIsNativeWrapper(cx, obj)) {
+    return NS_OK;
+  }
+
   JSObject *realObj;
   wrapper->GetJSObject(&realObj);
+
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(cx, realObj)) {
+    *_retval = PR_FALSE;
+    return NS_ERROR_FAILURE;
+  }
 
   // First check to see if the property is defined on our prototype.
 
@@ -10450,8 +10336,18 @@ nsStorage2SH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsid id, PRUint32 flags,
                          JSObject **objp, PRBool *_retval)
 {
+  if (ObjectIsNativeWrapper(cx, obj)) {
+    return NS_OK;
+  }
+
   JSObject *realObj;
   wrapper->GetJSObject(&realObj);
+
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(cx, realObj)) {
+    *_retval = PR_FALSE;
+    return NS_ERROR_FAILURE;
+  }
 
   // First check to see if the property is defined on our prototype,
   // after converting id to a string if it's an integer.

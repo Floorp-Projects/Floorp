@@ -46,9 +46,20 @@
 #include "nsTArray.h"
 #include "nsPluginError.h"
 
-class nsNPAPIPlugin;
 class gfxASurface;
+class gfxContext;
 class nsCString;
+struct nsIntRect;
+class nsNPAPIPlugin;
+
+namespace mozilla {
+namespace layers {
+class Image;
+class ImageContainer;
+}
+}
+
+using namespace mozilla::layers;
 
 namespace mozilla {
 
@@ -88,7 +99,21 @@ public:
 
   virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window) = 0;
   virtual nsresult GetSurface(NPP instance, gfxASurface** aSurface) = 0;
+  virtual nsresult GetImage(NPP instance, ImageContainer* aContainer, Image** aImage) = 0;
   virtual bool UseAsyncPainting() = 0;
+#if defined(XP_MACOSX)
+  virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, PRBool *aDrawing) = 0;
+#endif
+  /**
+   * The next three methods are the third leg in the trip to
+   * PluginInstanceParent.  They approximately follow the ReadbackSink
+   * API.
+   */
+  virtual nsresult SetBackgroundUnknown(NPP instance) = 0;
+  virtual nsresult BeginUpdateBackground(NPP instance,
+                                         const nsIntRect&, gfxContext**) = 0;
+  virtual nsresult EndUpdateBackground(NPP instance,
+                                       gfxContext*, const nsIntRect&) = 0;
 };
 
 

@@ -41,9 +41,7 @@
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
 
-// The number 130 more or less comes out of thin air.
-// See https://bugzilla.mozilla.org/show_bug.cgi?id=355178#c78 for a pseudo-rationale.
-#define UNREASONABLE_WORD_LENGTH 130
+#define UNREASONABLE_WORD_LENGTH 64
 
 #define DEFAULT_SPELL_CHECKER "@mozilla.org/spellchecker/engine;1"
 

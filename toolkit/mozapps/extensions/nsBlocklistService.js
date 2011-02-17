@@ -559,10 +559,14 @@ Blocklist.prototype = {
       request = aEvent.target.channel.QueryInterface(Ci.nsIRequest);
       status = request.status;
     }
-    var statusText = request.statusText;
+    var statusText = "nsIXMLHttpRequest channel unavailable";
     // When status is 0 we don't have a valid channel.
-    if (status == 0)
-      statusText = "nsIXMLHttpRequest channel unavailable";
+    if (status != 0) {
+      try {
+        statusText = request.statusText;
+      } catch (e) {
+      }
+    }
     LOG("Blocklist:onError: There was an error loading the blocklist file\r\n" +
         statusText);
   },

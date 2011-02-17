@@ -50,6 +50,7 @@ _TEST_FILES =\
 		test_doc.html \
 		test_list_editabledoc.html \
 		test_list.html \
+		test_menu.xul \
 		test_recreation.html \
 		test_select.html \
 		test_textleaf.html \

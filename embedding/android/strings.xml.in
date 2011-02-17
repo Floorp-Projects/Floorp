@@ -19,4 +19,6 @@
   <string name="crash_restart_label">&crash_restart_label;</string>
   <string name="sending_crash_report">&sending_crash_report;</string>
   <string name="exit_label">&exit_label;</string>
+  <string name="incompatable_device">&incompatable_device;</string>
+  <string name="continue_label">&continue_label;</string>
 </resources>

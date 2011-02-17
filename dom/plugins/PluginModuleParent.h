@@ -231,7 +231,18 @@ private:
     virtual bool HasRequiredFunctions();
     virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);
     virtual nsresult GetSurface(NPP instance, gfxASurface** aSurface);
+    virtual nsresult GetImage(NPP instance, mozilla::layers::ImageContainer* aContainer, mozilla::layers::Image** aImage);
     NS_OVERRIDE virtual bool UseAsyncPainting() { return true; }
+    NS_OVERRIDE
+    virtual nsresult SetBackgroundUnknown(NPP instance);
+    NS_OVERRIDE
+    virtual nsresult BeginUpdateBackground(NPP instance,
+                                           const nsIntRect& aRect,
+                                           gfxContext** aCtx);
+    NS_OVERRIDE
+    virtual nsresult EndUpdateBackground(NPP instance,
+                                         gfxContext* aCtx,
+                                         const nsIntRect& aRect);
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
     virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error);
@@ -252,6 +263,10 @@ private:
     virtual nsresult NPP_ClearSiteData(const char* site, uint64_t flags,
                                        uint64_t maxAge);
     virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& result);
+
+#if defined(XP_MACOSX)
+    virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, PRBool *aDrawing);
+#endif
 
 private:
     void WritePluginExtraDataForMinidump(const nsAString& id);

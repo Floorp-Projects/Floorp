@@ -9,7 +9,7 @@ function test() {
 
   // disable the first run pref
   prefsBranch = Services.prefs.getBranch("browser.panorama.");
-  prefsBranch.setBoolPref("experienced_first_run", false);
+  prefsBranch.setBoolPref("experienced_first_use", false);
 
   let win =
     window.openDialog(getBrowserURL(), "_blank", "all,dialog=no", "about:blank");
@@ -67,7 +67,7 @@ function test2(win) {
 // move a tab to another group including iframe initialization.  Then,
 // use the key combination to change to the next group.
 function test3(win) {
-  prefsBranch.setBoolPref("experienced_first_run", true);
+  prefsBranch.setBoolPref("experienced_first_use", true);
 
   let newTab = win.gBrowser.addTab("about:blank");
 

@@ -26,7 +26,7 @@
         <spacer flex="1"/>
         <hbox pack="center">
             <vbox anonid="mainContainer" class="mainContainer">
-                <grid anonid="topContainer" class="topContainer" flex="1">
+                <grid class="topContainer" flex="1">
                     <columns>
                         <column/>
                         <column flex="1"/>
@@ -64,7 +64,7 @@
                     <button anonid="button0" label="&okButton.label;"/>
 #else
                     <button anonid="button3" hidden="true"/>
-                    <spacer anonid="buttonSpacer" flex="1" hidden="true"/>
+                    <spacer anonid="buttonSpacer" flex="1"/>
                     <button anonid="button0" label="&okButton.label;"/>
                     <button anonid="button2" hidden="true"/>
                     <button anonid="button1" label="&cancelButton.label;"/>
@@ -220,7 +220,6 @@
                     return document.getAnonymousElementByAttribute(self, "anonid", anonid);
                 }
                 let main = getElement("mainContainer");
-                let top  = getElement("topContainer");
                 let info = getElement("infoContainer");
                 let body = this.ui.infoBody;
 
@@ -230,9 +229,9 @@
                 if (!this.minHeight)
                   this.minHeight = parseInt(window.getComputedStyle(main).minHeight);
                 let maxWidth = Math.max(Math.floor(availWidth * 0.6), this.minWidth) +
-                               top.clientWidth - main.clientWidth;
+                               info.clientWidth - main.clientWidth;
                 let maxHeight = Math.max(Math.floor(availHeight * 0.6), this.minHeight) +
-                                top.clientHeight - main.clientHeight;
+                                info.clientHeight - main.clientHeight;
                 body.style.maxWidth = maxWidth + "px";
                 info.style.overflow = info.style.width = info.style.height = "";
 

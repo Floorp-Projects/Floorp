@@ -161,6 +161,7 @@ mIsSuspended(PR_FALSE),
 mIsPluginInitJSStream(mInst->mInPluginInitCall &&
                       aURL && strncmp(aURL, "javascript:",
                                       sizeof("javascript:") - 1) == 0),
+mRedirectDenied(PR_FALSE),
 mResponseHeaderBuf(nsnull)
 {
   memset(&mNPStream, 0, sizeof(mNPStream));
@@ -765,16 +766,19 @@ nsNPAPIPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
   
   if (!mInst || !mInst->CanFireNotifications())
     return NS_ERROR_FAILURE;
-  
+
   // check if the stream is of seekable type and later its destruction
-  // see bug 91140    
+  // see bug 91140
   nsresult rv = NS_OK;
   NPReason reason = NS_FAILED(status) ? NPRES_NETWORK_ERR : NPRES_DONE;
+  if (mRedirectDenied) {
+    reason = NPRES_USER_BREAK;
+  }
   if (mStreamType != NP_SEEK ||
       (NP_SEEK == mStreamType && NS_BINDING_ABORTED == status)) {
     rv = CleanUpStream(reason);
   }
-  
+
   return rv;
 }
 
@@ -892,6 +896,7 @@ nsNPAPIPluginStreamListener::URLRedirectResponse(NPBool allow)
 {
   if (mHTTPRedirectCallback) {
     mHTTPRedirectCallback->OnRedirectVerifyCallback(allow ? NS_OK : NS_ERROR_FAILURE);
+    mRedirectDenied = allow ? PR_FALSE : PR_TRUE;
     mHTTPRedirectCallback = nsnull;
   }
 }

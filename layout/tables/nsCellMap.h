@@ -229,11 +229,11 @@ protected:
 public:
   void ExpandZeroColSpans();
 
-  void SetNotTopStart(PRUint8    aSide,
-                      nsCellMap& aCellMap,
-                      PRUint32   aYPos,
-                      PRUint32   aXPos,
-                      PRBool     aIsLowerRight = PR_FALSE);
+  void ResetTopStart(PRUint8    aSide,
+                     nsCellMap& aCellMap,
+                     PRUint32   aYPos,
+                     PRUint32   aXPos,
+                     PRBool     aIsLowerRight = PR_FALSE);
 
   void SetBCBorderEdge(mozilla::css::Side aEdge,
                        nsCellMap&    aCellMap,
