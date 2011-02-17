@@ -5,8 +5,15 @@
 let testURL = "data:text/plain,nothing but plain text";
 let testTag = "581253_tag";
 let starButton = document.getElementById("star-button");
+let timerID = -1;
 
 function test() {
+  registerCleanupFunction(function() {
+    PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
+    if (timerID > 0) {
+      clearTimeout(timerID);
+    }
+  });
   waitForExplicitFinish();
 
   let tab = gBrowser.selectedTab = gBrowser.addTab();
@@ -28,12 +35,13 @@ function test() {
 }
 
 function waitForStarChange(aValue, aCallback) {
-  let starButton = document.getElementById("star-button");
-  if (starButton.hidden || starButton.hasAttribute("starred") != aValue) {
+  if (PlacesStarButton._pendingStmt || starButton.hasAttribute("starred") != aValue) {
     info("Waiting for star button change.");
-    setTimeout(arguments.callee, 50, aValue, aCallback);
+    info("pendingStmt: " + (!!PlacesStarButton._pendingStmt) + ", hasAttribute: " + starButton.hasAttribute("starred") + ", tracked uri: " + PlacesStarButton._uri.spec);
+    timerID = setTimeout(arguments.callee, 50, aValue, aCallback);
     return;
   }
+  timerID = -1;
   aCallback();
 }
 

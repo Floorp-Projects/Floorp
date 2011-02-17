@@ -1,6 +1,7 @@
+// |jit-test| mjitalways
 setDebug(true);
 
-__defineGetter__("someProperty", function () { evalInFrame(1, "var x = 'success'"); });
+this.__defineGetter__("someProperty", function () { evalInFrame(1, "var x = 'success'"); });
 function caller(obj) {
   assertJit();
   obj.someProperty;

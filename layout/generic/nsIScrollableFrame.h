@@ -136,13 +136,14 @@ public:
   virtual nsSize GetPageScrollAmount() const = 0;
 
   /**
-   * When a scroll operation is requested, we ask for either instant
-   * scrolling or smooth scrolling. SMOOTH will only be smooth if
-   * smooth scrolling is actually enabled. If an INSTANT request
-   * happens while a smooth scroll is already in progress, the smooth
-   * scroll is interrupted and we instantly scroll to the destination.
+   * When a scroll operation is requested, we ask for instant, smooth or normal
+   * scrolling. SMOOTH will only be smooth if smooth scrolling is actually
+   * enabled. INSTANT is always synchronous, NORMAL can be asynchronous.
+   * If an INSTANT request happens while a smooth or async scroll is already in
+   * progress, the async scroll is interrupted and we instantly scroll to the
+   * destination.
    */
-  enum ScrollMode { INSTANT, SMOOTH };
+  enum ScrollMode { INSTANT, SMOOTH, NORMAL };
   /**
    * Clamps aScrollPosition to GetScrollRange and sets the scroll position
    * to that value.

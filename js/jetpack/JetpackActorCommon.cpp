@@ -432,11 +432,19 @@ JetpackActorCommon::RecvMessage(JSContext* cx,
   if (results)
     results->Clear();
 
+  JSObject* implGlobal = JS_GetGlobalObject(cx);
+
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(cx, implGlobal))
+    return false;
+
   RecList* list;
   if (!mReceivers.Get(messageName, &list))
     return true;
+
   nsAutoTArray<jsval, 4> snapshot;
-  list->copyTo(snapshot);
+  if (!list->copyTo(cx, snapshot))
+    return false;
   if (!snapshot.Length())
     return true;
   
@@ -461,13 +469,7 @@ JetpackActorCommon::RecvMessage(JSContext* cx,
     if (!jsval_from_Variant(cx, data.ElementAt(i), argv + i + 1))
       return false;
 
-  JSObject* implGlobal = JS_GetGlobalObject(cx);
   js::AutoValueRooter rval(cx);
-
-  JSAutoEnterCompartment ac;
-  if (!ac.enter(cx, implGlobal))
-    return false;
-
   for (PRUint32 i = 0; i < snapshot.Length(); ++i) {
     Variant* vp = results ? results->AppendElement() : NULL;
     rval.set(JSVAL_VOID);
@@ -529,12 +531,17 @@ JetpackActorCommon::RecList::remove(jsval v)
   }
 }
 
-void
-JetpackActorCommon::RecList::copyTo(nsTArray<jsval>& dst) const
+bool
+JetpackActorCommon::RecList::copyTo(JSContext *cx, nsTArray<jsval>& dst) const
 {
   dst.Clear();
-  for (RecNode* node = mHead; node; node = node->down)
-    dst.AppendElement(node->value());
+  for (RecNode* node = mHead; node; node = node->down) {
+    jsval v = node->value();
+    if (!JS_WrapValue(cx, &v))
+      return false;
+    dst.AppendElement(v);
+  }
+  return true;
 }
 
 nsresult

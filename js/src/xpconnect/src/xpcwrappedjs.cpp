@@ -81,7 +81,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
         // nsXPCWrappedJS roots its mJSObj when its refcount is > 1, see
         // the comment above nsXPCWrappedJS::AddRef.
         cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                           tmp->GetJSObject());
+                           tmp->GetJSObjectPreserveColor());
 
     nsXPCWrappedJS* root = tmp->GetRootWrapper();
     if(root == tmp)
@@ -262,7 +262,7 @@ nsXPCWrappedJS::TraceJS(JSTracer* trc)
 {
     NS_ASSERTION(mRefCnt >= 2 && IsValid(), "must be strongly referenced");
     JS_SET_TRACING_DETAILS(trc, PrintTraceName, this, 0);
-    JS_CallTracer(trc, mJSObj, JSTRACE_OBJECT);
+    JS_CallTracer(trc, GetJSObjectPreserveColor(), JSTRACE_OBJECT);
 }
 
 #ifdef DEBUG
@@ -290,9 +290,9 @@ NS_IMETHODIMP
 nsXPCWrappedJS::GetJSObject(JSObject** aJSObj)
 {
     NS_PRECONDITION(aJSObj, "bad param");
-    NS_PRECONDITION(mJSObj, "bad wrapper");
+    NS_PRECONDITION(IsValid(), "bad wrapper");
 
-    if(!(*aJSObj = mJSObj))
+    if(!(*aJSObj = GetJSObject()))
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
@@ -627,7 +627,8 @@ nsXPCWrappedJS::GetEnumerator(nsISimpleEnumerator * *aEnumerate)
     if(!ccx.IsValid())
         return NS_ERROR_UNEXPECTED;
 
-    return nsXPCWrappedJSClass::BuildPropertyEnumerator(ccx, mJSObj, aEnumerate);
+    return nsXPCWrappedJSClass::BuildPropertyEnumerator(ccx, GetJSObject(),
+                                                        aEnumerate);
 }
 
 /* nsIVariant getProperty (in AString name); */
@@ -646,7 +647,7 @@ nsXPCWrappedJS::GetProperty(const nsAString & name, nsIVariant **_retval)
         buf->AddRef();
 
     return nsXPCWrappedJSClass::
-        GetNamedPropertyAsVariant(ccx, mJSObj, jsstr, _retval);
+        GetNamedPropertyAsVariant(ccx, GetJSObject(), jsstr, _retval);
 }
 
 /***************************************************************************/

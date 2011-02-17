@@ -76,6 +76,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsContentList.h"
 #include "nsDOMTokenList.h"
+#include "nsXBLPrototypeBinding.h"
 #include "nsDOMError.h"
 #include "nsDOMString.h"
 #include "nsIScriptSecurityManager.h"
@@ -914,6 +915,77 @@ nsIContent::LookupNamespaceURI(const nsAString& aNamespacePrefix,
       return NS_OK;
   } while ((content = content->GetParent()));
   return NS_ERROR_FAILURE;
+}
+
+already_AddRefed<nsIURI>
+nsIContent::GetBaseURI() const
+{
+  nsIDocument* doc = GetOwnerDoc();
+  if (!doc) {
+    // We won't be able to do security checks, etc.  So don't go any
+    // further.  That said, this really shouldn't happen...
+    NS_ERROR("Element without owner document");
+    return nsnull;
+  }
+
+  // Start with document base
+  nsCOMPtr<nsIURI> base = doc->GetDocBaseURI();
+
+  // Collect array of xml:base attribute values up the parent chain. This
+  // is slightly slower for the case when there are xml:base attributes, but
+  // faster for the far more common case of there not being any such
+  // attributes.
+  // Also check for SVG elements which require special handling
+  nsAutoTArray<nsString, 5> baseAttrs;
+  nsString attr;
+  const nsIContent *elem = this;
+  do {
+    // First check for SVG specialness (why is this SVG specific?)
+    if (elem->IsSVG()) {
+      nsIContent* bindingParent = elem->GetBindingParent();
+      if (bindingParent) {
+        nsIDocument* bindingDoc = bindingParent->GetOwnerDoc();
+        if (bindingDoc) {
+          nsXBLBinding* binding =
+            bindingDoc->BindingManager()->GetBinding(bindingParent);
+          if (binding) {
+            // XXX sXBL/XBL2 issue
+            // If this is an anonymous XBL element use the binding
+            // document for the base URI. 
+            // XXX Will fail with xml:base
+            base = binding->PrototypeBinding()->DocURI();
+            break;
+          }
+        }
+      }
+    }
+    
+    // Otherwise check for xml:base attribute
+    elem->GetAttr(kNameSpaceID_XML, nsGkAtoms::base, attr);
+    if (!attr.IsEmpty()) {
+      baseAttrs.AppendElement(attr);
+    }
+    elem = elem->GetParent();
+  } while(elem);
+  
+  // Now resolve against all xml:base attrs
+  for (PRUint32 i = baseAttrs.Length() - 1; i != PRUint32(-1); --i) {
+    nsCOMPtr<nsIURI> newBase;
+    nsresult rv = NS_NewURI(getter_AddRefs(newBase), baseAttrs[i],
+                            doc->GetDocumentCharacterSet().get(), base);
+    // Do a security check, almost the same as nsDocument::SetBaseURL()
+    // Only need to do this on the final uri
+    if (NS_SUCCEEDED(rv) && i == 0) {
+      rv = nsContentUtils::GetSecurityManager()->
+        CheckLoadURIWithPrincipal(NodePrincipal(), newBase,
+                                  nsIScriptSecurityManager::STANDARD);
+    }
+    if (NS_SUCCEEDED(rv)) {
+      base.swap(newBase);
+    }
+  }
+
+  return base.forget();
 }
 
 //----------------------------------------------------------------------
@@ -3396,51 +3468,6 @@ nsGenericElement::GetExistingAttrNameFromQName(const nsAString& aStr) const
   return nodeInfo;
 }
 
-already_AddRefed<nsIURI>
-nsGenericElement::GetBaseURI() const
-{
-  nsIDocument* doc = GetOwnerDoc();
-  if (!doc) {
-    // We won't be able to do security checks, etc.  So don't go any
-    // further.  That said, this really shouldn't happen...
-    NS_ERROR("Element without owner document");
-    return nsnull;
-  }
-
-  // Our base URL depends on whether we have an xml:base attribute, as
-  // well as on whether any of our ancestors do.
-  nsCOMPtr<nsIURI> parentBase;
-
-  nsIContent *parent = GetParent();
-  if (parent) {
-    parentBase = parent->GetBaseURI();
-  } else {
-    // No parent, so just use the document (we must be the root or not in the
-    // tree).
-    parentBase = doc->GetBaseURI();
-  }
-  
-  // Now check for an xml:base attr 
-  nsAutoString value;
-  GetAttr(kNameSpaceID_XML, nsGkAtoms::base, value);
-  if (value.IsEmpty()) {
-    // No xml:base, so we just use the parent's base URL
-    return parentBase.forget();
-  }
-
-  nsCOMPtr<nsIURI> ourBase;
-  nsresult rv = NS_NewURI(getter_AddRefs(ourBase), value,
-                          doc->GetDocumentCharacterSet().get(), parentBase);
-  if (NS_SUCCEEDED(rv)) {
-    // do a security check, almost the same as nsDocument::SetBaseURL()
-    rv = nsContentUtils::GetSecurityManager()->
-      CheckLoadURIWithPrincipal(NodePrincipal(), ourBase,
-                                nsIScriptSecurityManager::STANDARD);
-  }
-
-  return NS_SUCCEEDED(rv) ? ourBase.forget() : parentBase.forget();
-}
-
 PRBool
 nsGenericElement::IsLink(nsIURI** aURI) const
 {
@@ -4557,11 +4584,55 @@ nsGenericElement::CopyInnerTo(nsGenericElement* aDst) const
   return NS_OK;
 }
 
+PRBool
+nsGenericElement::MaybeCheckSameAttrVal(PRInt32 aNamespaceID, nsIAtom* aName,
+                                        nsIAtom* aPrefix, const nsAString& aValue,
+                                        PRBool aNotify, nsAutoString* aOldValue,
+                                        PRUint8* aModType, PRBool* aHasListeners)
+{
+  PRBool modification = PR_FALSE;
+  *aHasListeners = aNotify &&
+    nsContentUtils::HasMutationListeners(this,
+                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
+                                         this);
+
+  // If we have no listeners and aNotify is false, we are almost certainly
+  // coming from the content sink and will almost certainly have no previous
+  // value.  Even if we do, setting the value is cheap when we have no
+  // listeners and don't plan to notify.  The check for aNotify here is an
+  // optimization, the check for *aHasListeners is a correctness issue.
+  if (*aHasListeners || aNotify) {
+    nsAttrInfo info(GetAttrInfo(aNamespaceID, aName));
+    if (info.mValue) {
+      // Check whether the old value is the same as the new one.  Note that we
+      // only need to actually _get_ the old value if we have listeners.
+      PRBool valueMatches;
+      if (*aHasListeners) {
+        // Need to store the old value
+        info.mValue->ToString(*aOldValue);
+        valueMatches = aValue.Equals(*aOldValue);
+      } else if (aNotify) {
+        valueMatches = info.mValue->Equals(aValue, eCaseMatters);
+      }
+      if (valueMatches && aPrefix == info.mName->GetPrefix()) {
+        return PR_TRUE;
+      }
+      modification = PR_TRUE;
+    }
+  }
+  *aModType = modification ?
+    static_cast<PRUint8>(nsIDOMMutationEvent::MODIFICATION) :
+    static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION);
+  return PR_FALSE;
+}
+
 nsresult
 nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                           nsIAtom* aPrefix, const nsAString& aValue,
                           PRBool aNotify)
 {
+  // Keep this in sync with SetParsedAttr below
+
   NS_ENSURE_ARG_POINTER(aName);
   NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
                "Don't call SetAttr with unknown namespace");
@@ -4570,45 +4641,18 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     return NS_ERROR_FAILURE;
   }
 
+  PRUint8 modType;
+  PRBool hasListeners;
   nsAutoString oldValue;
-  PRBool modification = PR_FALSE;
-  PRBool hasListeners = aNotify &&
-    nsContentUtils::HasMutationListeners(this,
-                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
-                                         this);
-  
-  // If we have no listeners and aNotify is false, we are almost certainly
-  // coming from the content sink and will almost certainly have no previous
-  // value.  Even if we do, setting the value is cheap when we have no
-  // listeners and don't plan to notify.  The check for aNotify here is an
-  // optimization, the check for haveListeners is a correctness issue.
-  if (hasListeners || aNotify) {
-    nsAttrInfo info(GetAttrInfo(aNamespaceID, aName));
-    if (info.mValue) {
-      // Check whether the old value is the same as the new one.  Note that we
-      // only need to actually _get_ the old value if we have listeners.
-      PRBool valueMatches;
-      if (hasListeners) {
-        // Need to store the old value
-        info.mValue->ToString(oldValue);
-        valueMatches = aValue.Equals(oldValue);
-      } else if (aNotify) {
-        valueMatches = info.mValue->Equals(aValue, eCaseMatters);
-      }
-      if (valueMatches && aPrefix == info.mName->GetPrefix()) {
-        return NS_OK;
-      }
-      modification = PR_TRUE;
-    }
-  }
 
+  if (MaybeCheckSameAttrVal(aNamespaceID, aName, aPrefix, aValue, aNotify,
+                            &oldValue, &modType, &hasListeners)) {
+    return NS_OK;
+  }
 
   nsresult rv = BeforeSetAttr(aNamespaceID, aName, &aValue, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  PRUint8 modType = modification ?
-    static_cast<PRUint8>(nsIDOMMutationEvent::MODIFICATION) :
-    static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION);
+
   if (aNotify) {
     nsNodeUtils::AttributeWillChange(this, aNamespaceID, aName, modType);
   }
@@ -4622,7 +4666,46 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                           attrValue, modType, hasListeners, aNotify,
                           &aValue);
 }
-  
+
+nsresult
+nsGenericElement::SetParsedAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                nsIAtom* aPrefix, nsAttrValue& aParsedValue,
+                                PRBool aNotify)
+{
+  // Keep this in sync with SetAttr above
+
+  NS_ENSURE_ARG_POINTER(aName);
+  NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
+               "Don't call SetAttr with unknown namespace");
+
+  if (!mAttrsAndChildren.CanFitMoreAttrs()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoString value;
+  aParsedValue.ToString(value);
+
+  PRUint8 modType;
+  PRBool hasListeners;
+  nsAutoString oldValue;
+
+  if (MaybeCheckSameAttrVal(aNamespaceID, aName, aPrefix, value, aNotify,
+                            &oldValue, &modType, &hasListeners)) {
+    return NS_OK;
+  }
+
+  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aNotify) {
+    nsNodeUtils::AttributeWillChange(this, aNamespaceID, aName, modType);
+  }
+
+  return SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue,
+                          aParsedValue, modType, hasListeners, aNotify,
+                          &value);
+}
+
 nsresult
 nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
                                    nsIAtom* aName,

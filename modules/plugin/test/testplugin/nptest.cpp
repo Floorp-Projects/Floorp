@@ -44,6 +44,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <list>
 
 #ifdef XP_WIN
 #include <process.h>
@@ -162,6 +163,8 @@ static bool getReflector(NPObject* npobj, const NPVariant* args, uint32_t argCou
 static bool isVisible(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getWindowPosition(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool constructObject(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool setSitesWithData(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool setSitesWithDataCapabilities(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -216,7 +219,9 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getReflector",
   "isVisible",
   "getWindowPosition",
-  "constructObject"
+  "constructObject",
+  "setSitesWithData",
+  "setSitesWithDataCapabilities"
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[] = {
@@ -272,7 +277,9 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   getReflector,
   isVisible,
   getWindowPosition,
-  constructObject
+  constructObject,
+  setSitesWithData,
+  setSitesWithDataCapabilities
 };
 
 STATIC_ASSERT(ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
@@ -346,6 +353,18 @@ static int32_t sInstanceCount = 0;
  * stopWatchingInstanceCount.
  */
 static bool sWatchingInstanceCount = false;
+
+/**
+ * A list representing sites for which the plugin has stored data. See
+ * NPP_ClearSiteData and NPP_GetSitesWithData.
+ */
+struct siteData {
+  string site;
+  uint64_t flags;
+  uint64_t age;
+};
+static list<siteData>* sSitesWithData;
+static bool sClearByAgeSupported;
 
 static void initializeIdentifiers()
 {
@@ -595,6 +614,8 @@ static bool fillPluginFunctionTable(NPPluginFuncs* pFuncs)
   pFuncs->getvalue = NPP_GetValue;
   pFuncs->setvalue = NPP_SetValue;
   pFuncs->urlredirectnotify = NPP_URLRedirectNotify;
+  pFuncs->clearsitedata = NPP_ClearSiteData;
+  pFuncs->getsiteswithdata = NPP_GetSitesWithData;
 
   return true;
 }
@@ -1344,6 +1365,84 @@ NPP_URLRedirectNotify(NPP instance, const char* url, int32_t status, void* notif
     return;
   }
   NPN_URLRedirectResponse(instance, notifyData, true);
+}
+
+NPError
+NPP_ClearSiteData(const char* site, uint64_t flags, uint64_t maxAge)
+{
+  if (!sSitesWithData)
+    return NPERR_NO_ERROR;
+
+  // Error condition: no support for clear-by-age
+  if (!sClearByAgeSupported && maxAge != uint64_t(int64_t(-1)))
+    return NPERR_TIME_RANGE_NOT_SUPPORTED;
+
+  // Iterate over list and remove matches
+  list<siteData>::iterator iter = sSitesWithData->begin();
+  list<siteData>::iterator end = sSitesWithData->end();
+  while (iter != end) {
+    const siteData& data = *iter;
+    list<siteData>::iterator next = iter;
+    ++next;
+    if ((!site || data.site.compare(site) == 0) &&
+        (flags == NP_CLEAR_ALL || data.flags & flags) &&
+        data.age <= maxAge) {
+      sSitesWithData->erase(iter);
+    }
+    iter = next;
+  }
+
+  return NPERR_NO_ERROR;
+}
+
+char**
+NPP_GetSitesWithData()
+{
+  int length = 0;
+  char** result;
+
+  if (sSitesWithData)
+    length = sSitesWithData->size();
+
+  // Allocate the maximum possible size the list could be.
+  result = static_cast<char**>(NPN_MemAlloc((length + 1) * sizeof(char*)));
+  result[length] = NULL;
+
+  if (length == 0) {
+    // Represent the no site data case as an array of length 1 with a NULL
+    // entry.
+    return result;
+  }
+
+  // Iterate the list of stored data, and build a list of strings.
+  list<string> sites;
+  {
+    list<siteData>::iterator iter = sSitesWithData->begin();
+    list<siteData>::iterator end = sSitesWithData->end();
+    for (; iter != end; ++iter) {
+      const siteData& data = *iter;
+      sites.push_back(data.site);
+    }
+  }
+
+  // Remove duplicate strings.
+  sites.sort();
+  sites.unique();
+
+  // Add strings to the result array, and null terminate.
+  {
+    int i = 0;
+    list<string>::iterator iter = sites.begin();
+    list<string>::iterator end = sites.end();
+    for (; iter != end; ++iter, ++i) {
+      const string& site = *iter;
+      result[i] = static_cast<char*>(NPN_MemAlloc(site.length() + 1));
+      memcpy(result[i], site.c_str(), site.length() + 1);
+    }
+  }
+  result[sites.size()] = NULL;
+
+  return result;
 }
 
 //
@@ -3273,3 +3372,57 @@ bool constructObject(NPObject* npobj, const NPVariant* args, uint32_t argCount, 
 
   return NPN_Construct(npp, ctor, args + 1, argCount - 1, result);
 }
+
+bool setSitesWithData(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 1 || !NPVARIANT_IS_STRING(args[0]))
+    return false;
+
+  // Clear existing data.
+  delete sSitesWithData;
+
+  const NPString* str = &NPVARIANT_TO_STRING(args[0]);
+  if (str->UTF8Length == 0)
+    return true;
+
+  // Parse the comma-delimited string into a vector.
+  sSitesWithData = new list<siteData>;
+  const char* iterator = str->UTF8Characters;
+  const char* end = iterator + str->UTF8Length;
+  while (1) {
+    const char* next = strchr(iterator, ',');
+    if (!next)
+      next = end;
+
+    // Parse out the three tokens into a siteData struct.
+    const char* siteEnd = strchr(iterator, ':');
+    *((char*) siteEnd) = NULL;
+    const char* flagsEnd = strchr(siteEnd + 1, ':');
+    *((char*) flagsEnd) = NULL;
+    *((char*) next) = NULL;
+    
+    siteData data;
+    data.site = string(iterator);
+    data.flags = atoi(siteEnd + 1);
+    data.age = atoi(flagsEnd + 1);
+    
+    sSitesWithData->push_back(data);
+
+    if (next == end)
+      break;
+
+    iterator = next + 1;
+  }
+
+  return true;
+}
+
+bool setSitesWithDataCapabilities(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 1 || !NPVARIANT_IS_BOOLEAN(args[0]))
+    return false;
+
+  sClearByAgeSupported = NPVARIANT_TO_BOOLEAN(args[0]);
+  return true;
+}
+

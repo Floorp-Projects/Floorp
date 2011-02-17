@@ -411,6 +411,11 @@ inline PRInt32 NSToIntRoundUp(float aValue)
   return PRInt32(NS_floorf(aValue + 0.5f));
 }
 
+inline PRInt32 NSToIntRoundUp(double aValue)
+{
+  return PRInt32(NS_floor(aValue + 0.5));
+}
+
 /* 
  * App Unit/Pixel conversions
  */
@@ -431,6 +436,11 @@ inline nscoord NSIntPixelsToAppUnits(PRInt32 aPixels, PRInt32 aAppUnitsPerPixel)
 inline float NSAppUnitsToFloatPixels(nscoord aAppUnits, float aAppUnitsPerPixel)
 {
   return (float(aAppUnits) / aAppUnitsPerPixel);
+}
+
+inline double NSAppUnitsToDoublePixels(nscoord aAppUnits, nscoord aAppUnitsPerPixel)
+{
+  return (double(aAppUnits) / double(aAppUnitsPerPixel));
 }
 
 inline PRInt32 NSAppUnitsToIntPixels(nscoord aAppUnits, float aAppUnitsPerPixel)

@@ -1,25 +1,30 @@
 url-prefix ../../jsreftest.html?test=ecma_5/extensions/
-script 15.4.4.11.js
 script 8.12.5-01.js
+script 15.4.4.11.js
 script Boolean-toSource.js
 script Number-toSource.js
+script Object-keys-and-object-ids.js
 script String-toSource.js
+script bug352085.js
+script bug472534.js
+script bug496985.js
+script bug566661.js
+script eval-native-callback-is-indirect.js
+script extension-methods-reject-null-undefined-this.js
+skip-if(!xulRuntime.shell) script function-definition-with.js # needs evaluate()
+script iterator-in-catch.js
+fails script nested-delete-name-in-evalcode.js # bug 604301, at a minimum
 script proxy-strict.js
 script regress-bug567606.js
+script regress-bug607284.js
+script regress-bug629723.js
+script strict-function-statements.js
+script strict-option-redeclared-parameter.js
 script string-literal-getter-setter-decompilation.js
 script uneval-strict-functions.js
+script watch-array-length.js
 script watch-inherited-property.js
 script watch-replaced-setter.js
 script watch-setter-become-setter.js
 script watch-value-prop-becoming-setter.js
 script watchpoint-deletes-JSPropertyOp-setter.js
-script eval-native-callback-is-indirect.js
-script regress-bug607284.js
-script Object-keys-and-object-ids.js
-fails script nested-delete-name-in-evalcode.js # bug 604301, at a minimum
-script bug352085.js
-script bug472534.js
-script bug496985.js
-script bug566661.js
-script iterator-in-catch.js
-script strict-function-statements.js

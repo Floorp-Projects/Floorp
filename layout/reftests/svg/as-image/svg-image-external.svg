@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="100" height="100">
+  <!-- This blue rect should be covered up by the <image> when this SVG is
+       loaded as an image by a local document, but not when the document is
+       served over HTTP: -->
+  <rect width="100" height="100" fill="blue"/>
+  <image width="100" height="100"
+         xlink:href="lime100x100.png"/>
+</svg>

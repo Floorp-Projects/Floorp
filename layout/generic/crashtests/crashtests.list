@@ -35,7 +35,7 @@ load 342322-1.html
 load 343206-1.xhtml
 load 345139-1.xhtml
 load 345617-1.html
-load 348887-1.html
+skip load 348887-1.html # bug 623091
 load 348991-1.xhtml
 load 354458-1.html
 load 354458-2.html
@@ -298,7 +298,8 @@ load 501535-1.html
 load 503961-1.xhtml
 load 503961-2.html
 load 508168-1.html
-#load 508908-1.html # Test disabled due to it accessing the network, and causing pain.  See bug 616085.
+load 508816-1.xul
+load 508908-1.html
 load 505912-1.html
 load 509749-1.html
 load 511482.html
@@ -345,7 +346,7 @@ load 591141.html
 asserts(0-1) load 592118.html
 load 594808-1.html
 asserts(4) load 595435-1.xhtml # bug 610331
-!= 595740-1.html about:blank # != rather than load to work around bug 624279
+load 595740-1.html
 load 603490-1.html
 load 603510-1.html
 load 604314-1.html

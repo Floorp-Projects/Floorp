@@ -2446,6 +2446,17 @@ ScaleDimension(const nsStyleBackground::Size::Dimension& aDimension,
   }
 }
 
+static inline PRBool
+IsTransformed(nsIFrame* aForFrame, nsIFrame* aTopFrame)
+{
+  for (nsIFrame* f = aForFrame; f != aTopFrame; f = f->GetParent()) {
+    if (f->IsTransformed()) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
 static BackgroundLayerState
 PrepareBackgroundLayer(nsPresContext* aPresContext,
                        nsIFrame* aForFrame,
@@ -2616,13 +2627,15 @@ PrepareBackgroundLayer(nsPresContext* aPresContext,
       }
     }
 
-    if (aFlags & nsCSSRendering::PAINTBG_TO_WINDOW) {
+    if (aFlags & nsCSSRendering::PAINTBG_TO_WINDOW &&
+        !IsTransformed(aForFrame, topFrame)) {
       // Clip background-attachment:fixed backgrounds to the viewport, if we're
-      // painting to the screen. This avoids triggering tiling in common cases,
-      // without affecting output since drawing is always clipped to the viewport
-      // when we draw to the screen. (But it's not a pure optimization since it
-      // can affect the values of pixels at the edge of the viewport ---
-      // whether they're sampled from a putative "next tile" or not.)
+      // painting to the screen and not transformed. This avoids triggering
+      // tiling in common cases, without affecting output since drawing is
+      // always clipped to the viewport when we draw to the screen. (But it's
+      // not a pure optimization since it can affect the values of pixels at the
+      // edge of the viewport --- whether they're sampled from a putative "next
+      // tile" or not.)
       bgClipRect.IntersectRect(bgClipRect, bgPositioningArea + aBorderArea.TopLeft());
     }
   }

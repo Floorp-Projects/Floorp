@@ -7,73 +7,23 @@
 
 var currentStep = 1;
 
-var __observer = {
-  QueryInterface: function(iid)
-  {
-    if (iid.equals(nsIObserver) ||
-        iid.equals(nsISupports))
-      return this;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
-  
-  observe: function(subject, topic, data)
-  {
-    ok(true, "Observed: " + topic);
-  }    
-}
-
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var obsSvc = Components.classes["@mozilla.org/observer-service;1"]
-              .getService(Components.interfaces.nsIObserverService);
-              
-function setupTestObserver()
-{
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  
-  obsSvc.addObserver(__observer, "domstorage-flush-timer", false);
-  obsSvc.addObserver(__observer, "cookie-changed", false);
-  obsSvc.addObserver(__observer, "offline-app-removed", false);
-  obsSvc.addObserver(__observer, "private-browsing", false);
-  obsSvc.addObserver(__observer, "perm-changed", false);
-}
-
-function releaseTestObserver()
-{
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  
-  obsSvc.removeObserver(__observer, "domstorage-flush-timer");
-  obsSvc.removeObserver(__observer, "cookie-changed");
-  obsSvc.removeObserver(__observer, "offline-app-removed");
-  obsSvc.removeObserver(__observer, "private-browsing");
-  obsSvc.removeObserver(__observer, "perm-changed");
-}
-
 function doStep()
 {
   switch (currentStep)
   {
     case 1:
-      setupTestObserver();
       localStorage.setItem("X", "1");
       is(localStorage.getItem("X"), "1", "X is 1 in the master");
       break;
 
     case 3:
       is(localStorage.getItem("X"), "1", "X remains 1 in the master");
-      is(localStorage.getItem("X"), "1", "X remains 1 in the master");
-      is(localStorage.length, 1, "One item in the master");
-      is(localStorage.getItem("X"), "1", "X remains 1 in the master");
-      is(localStorage.length, 1, "One item in the master");
-      is(localStorage.getItem("X"), "1", "X remains 1 in the master");
-
       localStorage.removeItem("X");
       is(localStorage.getItem("X"), null, "X was removed from the master");
       break;
 
     case 5:
       is(localStorage.getItem("Y"), null, "Y null in the master");
-      releaseTestObserver();
       break;
 
     case 7:

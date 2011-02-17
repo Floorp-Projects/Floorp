@@ -1,8 +1,8 @@
 This is the ANGLE project, from http://code.google.com/p/angleproject/.
 
-Current revision: r515
+Current revision: r550
 
-Local patches:
+Applied local patches:
     angle-shared.patch - add declspec dllexport/dllimport support on win32
 
     angle-fixes.patch - fix angle issues 51 & 52

@@ -118,7 +118,7 @@ static const char *CodeToken[] = {
 #undef OPDEF
 };
 
-#if defined(DEBUG) || defined(JS_JIT_SPEW)
+#if defined(DEBUG) || defined(JS_JIT_SPEW) || defined(JS_METHODJIT_SPEW)
 /*
  * Array of JS bytecode names used by DEBUG-only js_Disassemble and by
  * JIT debug spew.
@@ -1910,14 +1910,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                ? JSOP_IFEQ                                                    \
                : JSOP_NOP)
 
-/*
- * Callers know that ATOM_IS_STRING(atom), and we leave it to the optimizer to
- * common ATOM_TO_STRING(atom) here and near the call sites.
- */
-#define ATOM_IS_IDENTIFIER(atom) js_IsIdentifier(ATOM_TO_STRING(atom))
-#define ATOM_IS_KEYWORD(atom)                                                 \
-    (js_CheckKeyword(ATOM_TO_STRING(atom)->chars(),                           \
-                     ATOM_TO_STRING(atom)->length()) != TOK_EOF)
+#define ATOM_IS_IDENTIFIER(atom) js_IsIdentifier(atom)
 
 /*
  * Given an atom already fetched from jp->script's atom map, quote/escape its
@@ -4841,20 +4834,6 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
 
     AutoScriptUntrapper untrapper(cx, script, &pc);
 
-    /* Print a strict mode code directive, if needed. */
-    if (script->strictModeCode && !jp->strict) {
-        if (jp->fun && (jp->fun->flags & JSFUN_EXPR_CLOSURE)) {
-            /*
-             * We have no syntax for strict function expressions;
-             * at least give a hint.
-             */
-            js_printf(jp, "\t/* use strict */ \n");
-        } else {
-            js_printf(jp, "\t\"use strict\";\n");
-        }
-        jp->strict = true;
-    }
-
     /* Initialize a sprinter for use with the offset stack. */
     mark = JS_ARENA_MARK(&cx->tempPool);
     ok = InitSprintStack(cx, &ss, jp, depth);
@@ -4900,10 +4879,36 @@ out:
     return ok;
 }
 
+/*
+ * Decompile a function body, expression closure expression, or complete
+ * script. Start at |pc|; go to the end of |script|. Include a directive
+ * prologue, if appropriate.
+ */
+static JSBool
+DecompileBody(JSPrinter *jp, JSScript *script, jsbytecode *pc)
+{
+    /* Print a strict mode code directive, if needed. */
+    if (script->strictModeCode && !jp->strict) {
+        if (jp->fun && (jp->fun->flags & JSFUN_EXPR_CLOSURE)) {
+            /*
+             * We have no syntax for strict function expressions;
+             * at least give a hint.
+             */
+            js_printf(jp, "\t/* use strict */ \n");
+        } else {
+            js_printf(jp, "\t\"use strict\";\n");
+        }
+        jp->strict = true;
+    }
+
+    jsbytecode *end = script->code + script->length;
+    return DecompileCode(jp, script, pc, end - pc, 0);
+}
+
 JSBool
 js_DecompileScript(JSPrinter *jp, JSScript *script)
 {
-    return DecompileCode(jp, script, script->code, (uintN)script->length, 0);
+    return DecompileBody(jp, script, script->code);
 }
 
 JSString *
@@ -4940,7 +4945,7 @@ js_DecompileFunctionBody(JSPrinter *jp)
     }
 
     script = jp->fun->u.i.script;
-    return DecompileCode(jp, script, script->code, (uintN)script->length, 0);
+    return DecompileBody(jp, script, script->code);
 }
 
 JSBool
@@ -4950,7 +4955,6 @@ js_DecompileFunction(JSPrinter *jp)
     uintN i;
     JSAtom *param;
     jsbytecode *pc, *endpc;
-    ptrdiff_t len;
     JSBool ok;
 
     fun = jp->fun;
@@ -5057,8 +5061,7 @@ js_DecompileFunction(JSPrinter *jp)
             jp->indent += 4;
         }
 
-        len = script->code + script->length - pc;
-        ok = DecompileCode(jp, script, pc, (uintN)len, 0);
+        ok = DecompileBody(jp, script, pc);
         if (!ok)
             return JS_FALSE;
 

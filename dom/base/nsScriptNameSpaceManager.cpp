@@ -55,7 +55,6 @@
 #include "nsDOMClassInfo.h"
 #include "nsCRT.h"
 #include "nsIObserverService.h"
-#include "nsPrintfCString.h"
 
 #define NS_INTERFACE_PREFIX "nsI"
 #define NS_DOM_INTERFACE_PREFIX "nsIDOM"
@@ -645,6 +644,24 @@ nsScriptNameSpaceManager::AddCategoryEntryToHash(nsICategoryManager* aCategoryMa
                                                  const char* aCategory,
                                                  nsISupports* aEntry)
 {
+  // Get the type from the category name.
+  // NOTE: we could have passed the type in FillHash() and guessed it in
+  // Observe() but this way, we have only one place to update and this is
+  // not performance sensitive.
+  nsGlobalNameStruct::nametype type;
+  if (strcmp(aCategory, JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY) == 0) {
+    type = nsGlobalNameStruct::eTypeExternalConstructor;
+  } else if (strcmp(aCategory, JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY) == 0 ||
+             strcmp(aCategory, JAVASCRIPT_GLOBAL_PRIVILEGED_PROPERTY_CATEGORY) == 0) {
+    type = nsGlobalNameStruct::eTypeProperty;
+  } else if (strcmp(aCategory, JAVASCRIPT_GLOBAL_STATIC_NAMESET_CATEGORY) == 0) {
+    type = nsGlobalNameStruct::eTypeStaticNameSet;
+  } else if (strcmp(aCategory, JAVASCRIPT_GLOBAL_DYNAMIC_NAMESET_CATEGORY) == 0) {
+    type = nsGlobalNameStruct::eTypeDynamicNameSet;
+  } else {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsISupportsCString> strWrapper = do_QueryInterface(aEntry);
 
   if (!strWrapper) {
@@ -671,26 +688,6 @@ nsScriptNameSpaceManager::AddCategoryEntryToHash(nsICategoryManager* aCategoryMa
   if (NS_FAILED(rv)) {
     NS_WARNING("Bad contract id registed with the script namespace manager");
     return NS_OK;
-  }
-
-  // Get the type from the category name.
-  // NOTE: we could have passed the type in FillHash() and guessed it in
-  // Observe() but this way, we have only one place to update and this is
-  // not performance sensitive.
-  nsGlobalNameStruct::nametype type;
-  if (strcmp(aCategory, JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY) == 0) {
-    type = nsGlobalNameStruct::eTypeExternalConstructor;
-  } else if (strcmp(aCategory, JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY) == 0 ||
-             strcmp(aCategory, JAVASCRIPT_GLOBAL_PRIVILEGED_PROPERTY_CATEGORY) == 0) {
-    type = nsGlobalNameStruct::eTypeProperty;
-  } else if (strcmp(aCategory, JAVASCRIPT_GLOBAL_STATIC_NAMESET_CATEGORY) == 0) {
-    type = nsGlobalNameStruct::eTypeStaticNameSet;
-  } else if (strcmp(aCategory, JAVASCRIPT_GLOBAL_DYNAMIC_NAMESET_CATEGORY) == 0) {
-    type = nsGlobalNameStruct::eTypeDynamicNameSet;
-  } else {
-    NS_WARNING(nsPrintfCString(128, "The category '%s' has no corresponding type!",
-                               aCategory).get());
-    return NS_ERROR_UNEXPECTED;
   }
 
   // Copy CID onto the stack, so we can free it right away and avoid having

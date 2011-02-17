@@ -160,6 +160,7 @@
   border: 1px solid #A8B8D1;
   border-radius: 8px;
   background-image: -moz-linear-gradient(top, rgba(255, 255, 255, 0.7), rgba(236, 241, 247, 0.7));
+  background-clip: padding-box;
   box-shadow: 0 -3px 0 rgba(58, 78, 103, 0.05) inset,
               0 3px 0 rgba(175, 195, 220, 0.3);  
 }
@@ -447,7 +448,7 @@
 .icon-container {
   width: 48px;
   height: 48px;
-  margin: 22px 7px 7px 7px;
+  margin: 3px 7px;
 }
 
 .icon {

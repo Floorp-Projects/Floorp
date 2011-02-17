@@ -178,33 +178,29 @@ ConstantFoldForIntArray(JSContext *cx, js::TypedArray *tarray, ValueRemat *vr)
     if (!vr->isConstant())
         return true;
 
-    if (vr->knownType() == JSVAL_TYPE_INT32) {
-        if (tarray->type == js::TypedArray::TYPE_UINT8_CLAMPED)
-            *vr = ValueRemat::FromConstant(Int32Value(ClampIntForUint8Array(vr->value().toInt32())));
-        return true;
-    }
-
+    // Convert from string to double first (see bug 624483).
     Value v = vr->value();
-    if (v.isDouble()) {
-        int32 i32 = tarray->type == js::TypedArray::TYPE_UINT8_CLAMPED
-                    ? js_TypedArray_uint8_clamp_double(v.toDouble())
-                    : js_DoubleToECMAInt32(v.toDouble());
-        *vr = ValueRemat::FromConstant(Int32Value(i32));
-        return true;
+    if (v.isString()) {
+        double d;
+        if (!StringToNumberType<double>(cx, v.toString(), &d))
+            return false;
+        v.setNumber(d);
     }
 
     int32 i32 = 0;
-    if (v.isString()) {
-        if (!StringToNumberType<int32>(cx, v.toString(), &i32))
-            return false;
+    if (v.isDouble()) {
+        i32 = (tarray->type == js::TypedArray::TYPE_UINT8_CLAMPED)
+              ? js_TypedArray_uint8_clamp_double(v.toDouble())
+              : js_DoubleToECMAInt32(v.toDouble());
+    } else if (v.isInt32()) {
+        i32 = v.toInt32();
+        if (tarray->type == js::TypedArray::TYPE_UINT8_CLAMPED)
+            i32 = ClampIntForUint8Array(i32);
     } else if (v.isBoolean()) {
         i32 = v.toBoolean() ? 1 : 0;
     } else {
         JS_NOT_REACHED("unknown constant type");
     }
-
-    if (tarray->type == js::TypedArray::TYPE_UINT8_CLAMPED)
-        i32 = ClampIntForUint8Array(i32);
 
     *vr = ValueRemat::FromConstant(Int32Value(i32));
 
@@ -414,6 +410,7 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, js::TypedArray *tarray, T addr
             return false;
 
         PreserveRegisters saveRHS(masm);
+        PreserveRegisters saveLHS(masm);
 
         // There are three tricky situations to handle:
         //   (1) The RHS needs conversion. saveMask will be stomped, and 
@@ -445,7 +442,7 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, js::TypedArray *tarray, T addr
             //   - won't clobber the key, object, or RHS type regs
             //   - is temporary, but
             //   - is not in saveMask, which contains live volatile registers.
-            uint32 allowMask = Registers::TempRegs;
+            uint32 allowMask = Registers::AvailRegs;
             if (singleByte)
                 allowMask &= Registers::SingleByteRegs;
 
@@ -469,11 +466,25 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, js::TypedArray *tarray, T addr
                 } else {
                     // Oh no! *All* single byte registers are pinned. This
                     // sucks. We'll swap the type and data registers in |vr|
-                    // and unswap them later. First, save both registers to
-                    // make this easier.
-                    saveRHS.preserve(Registers::mask2Regs(vr.typeReg(), vr.dataReg()));
+                    // and unswap them later.
 
-                    // Perform the swap.
+                    // If |vr|'s registers are part of the address, swapping is
+                    // going to cause problems during the store.
+                    uint32 vrRegs = Registers::mask2Regs(vr.dataReg(), vr.typeReg());
+                    uint32 lhsMask = vrRegs & Assembler::maskAddress(address);
+
+                    // We'll also need to save any of the registers which won't
+                    // be restored via |lhsMask| above.
+                    uint32 rhsMask = vrRegs & ~lhsMask;
+
+                    // Push them, but get the order right. We'll pop LHS first.
+                    saveRHS.preserve(rhsMask);
+                    saveLHS.preserve(lhsMask);
+
+                    // Don't store/restore registers if we dont have to.
+                    saveMask &= ~lhsMask;
+
+                    // Actually perform the swap.
                     masm.swap(vr.typeReg(), vr.dataReg());
                     vr = ValueRemat::FromRegisters(vr.dataReg(), vr.typeReg());
                     newReg = vr.dataReg();
@@ -495,12 +506,17 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, js::TypedArray *tarray, T addr
         }
 
         GenConversionForIntArray(masm, tarray, vr, saveMask);
+
+        // Restore the registers in |address|. |GenConversionForIntArray| won't
+        // restore them because we told it not to by fiddling with |saveMask|.
+        saveLHS.restore();
+
         if (vr.isConstant())
             StoreToIntArray(masm, tarray, Imm32(vr.value().toInt32()), address);
         else
             StoreToIntArray(masm, tarray, vr.dataReg(), address);
 
-        // Note that this will also correctly restore the damage from the
+        // Note that this will finish restoring the damage from the
         // earlier register swap.
         saveRHS.restore();
         break;

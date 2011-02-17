@@ -1,0 +1,32 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+  <head>
+    <title>Plugin Clear Site Data sanitize test without age</title>
+
+    <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+
+    <script type="application/javascript">
+      function testSteps()
+      {
+        // Make sure clearing by timerange is disabled.
+        var p = document.getElementById("plugin1");
+        p.setSitesWithDataCapabilities(false);
+
+        p.setSitesWithData(
+          "foo.com:0:5," +
+          "bar.com:0:100," +
+          "baz.com:1:5," +
+          "qux.com:1:100"
+        );
+
+        setTimeout(testFinishedCallback, 0);
+      }
+    </script>
+  </head>
+
+  <body onload="testSteps();"></body>
+
+</html>

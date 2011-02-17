@@ -75,7 +75,8 @@ class JS_FRIEND_API(JSWrapper) : public js::JSProxyHandler {
     virtual bool has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
     virtual bool hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
     virtual bool get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, js::Value *vp);
-    virtual bool set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, js::Value *vp);
+    virtual bool set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, bool strict,
+                     js::Value *vp);
     virtual bool keys(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
     virtual bool iterate(JSContext *cx, JSObject *wrapper, uintN flags, js::Value *vp);
 
@@ -92,7 +93,7 @@ class JS_FRIEND_API(JSWrapper) : public js::JSProxyHandler {
 
     /* Policy enforcement traps. */
     enum Action { GET, SET, CALL };
-    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act);
+    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act, bool *bp);
     virtual void leave(JSContext *cx, JSObject *wrapper);
 
     static JSWrapper singleton;
@@ -137,7 +138,8 @@ class JS_FRIEND_API(JSCrossCompartmentWrapper) : public JSWrapper {
     virtual bool has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
     virtual bool hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
     virtual bool get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, js::Value *vp);
-    virtual bool set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, js::Value *vp);
+    virtual bool set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, bool strict,
+                     js::Value *vp);
     virtual bool keys(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
     virtual bool iterate(JSContext *cx, JSObject *wrapper, uintN flags, js::Value *vp);
 
@@ -148,8 +150,6 @@ class JS_FRIEND_API(JSCrossCompartmentWrapper) : public JSWrapper {
     virtual bool hasInstance(JSContext *cx, JSObject *wrapper, const js::Value *vp, bool *bp);
     virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper);
     virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, uintN indent);
-
-    static bool isCrossCompartmentWrapper(JSObject *obj);
 
     static JSCrossCompartmentWrapper singleton;
 };

@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=595310
+-->
+<head>
+  <title>Test for Bug 595310</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=595310">Mozilla Bug 595310</a>
+<p id="display"></p>
+<div id="content">
+  <input id='i' value="bar">
+  <textarea id='t'>bar</textarea>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 595310 **/
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  // We want to compare to value="bar" and no placeholder shown.
+  // That is what is currently showed.
+  var s1 = snapshotWindow(window, false);
+
+  var content = document.getElementById('content');
+  var i = document.getElementById('i');
+  var t = document.getElementById('t');
+  i.value = ""; i.placeholder = "foo";
+  t.value = ""; t.placeholder = "foo";
+
+  // Flushing.
+  // Note: one call would have been enough actually but I didn't want to favour
+  // one element... ;)
+  i.getBoundingClientRect();
+  t.getBoundingClientRect();
+
+  function synthesizeDropText(aElement, aText)
+  {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var Ci = Components.interfaces;
+    var editor = aElement.QueryInterface(Ci.nsIDOMNSEditableElement)
+                         .editor
+                         .QueryInterface(Ci.nsIPlaintextEditor);
+
+    editor.insertText(aText);
+  }
+
+  // We insert "bar" and we should only see "bar" now.
+  synthesizeDropText(i, "bar");
+  synthesizeDropText(t, "bar");
+
+  var s2 = snapshotWindow(window, false);
+
+  ok(compareSnapshots(s1, s2, true)[0],
+     "When setting the value, the placeholder should disappear.");
+
+  SimpleTest.finish();
+});
+
+
+</script>
+</pre>
+</body>
+</html>

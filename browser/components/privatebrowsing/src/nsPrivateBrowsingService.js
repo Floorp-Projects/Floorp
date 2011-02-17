@@ -616,6 +616,22 @@ PrivateBrowsingService.prototype = {
       }
     }
 
+    // Plugin data
+    let (ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost)) {
+      const phInterface = Ci.nsIPluginHost_MOZILLA_2_0_BRANCH;
+      const FLAG_CLEAR_ALL = phInterface.FLAG_CLEAR_ALL;
+      ph.QueryInterface(phInterface);
+
+      let tags = ph.getPluginTags();
+      for (let i = 0; i < tags.length; i++) {
+        try {
+          ph.clearSiteData(tags[i], aDomain, FLAG_CLEAR_ALL, -1);
+        } catch (e) {
+          // Ignore errors from the plugin
+        }
+      }
+    }
+
     // Downloads
     let (dm = Cc["@mozilla.org/download-manager;1"].
               getService(Ci.nsIDownloadManager)) {

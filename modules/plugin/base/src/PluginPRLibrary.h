@@ -63,6 +63,8 @@ public:
         mNP_GetEntryPoints(nsnull),
 #endif
         mNPP_New(nsnull),
+        mNPP_ClearSiteData(nsnull),
+        mNPP_GetSitesWithData(nsnull),
         mLibrary(aLibrary)
     {
         NS_ASSERTION(mLibrary, "need non-null lib");
@@ -133,9 +135,25 @@ public:
                              char* argv[], NPSavedData* saved,
                              NPError* error);
 
+    virtual nsresult NPP_ClearSiteData(const char* site, uint64_t flags,
+                                       uint64_t maxAge);
+    virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& result);
+
     virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);
     virtual nsresult GetSurface(NPP instance, gfxASurface** aSurface);
+    virtual nsresult GetImage(NPP instance, ImageContainer* aContainer, Image** aImage);
     NS_OVERRIDE virtual bool UseAsyncPainting() { return false; }
+#if defined(XP_MACOSX)
+    virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, PRBool *aDrawing);
+#endif
+    NS_OVERRIDE
+    virtual nsresult SetBackgroundUnknown(NPP instance);
+    NS_OVERRIDE
+    virtual nsresult BeginUpdateBackground(NPP instance,
+                                           const nsIntRect&, gfxContext** aCtx);
+    NS_OVERRIDE
+    virtual nsresult EndUpdateBackground(NPP instance,
+                                         gfxContext* aCtx, const nsIntRect&);
 
 private:
     NP_InitializeFunc mNP_Initialize;
@@ -148,6 +166,8 @@ private:
     NP_GetEntryPointsFunc mNP_GetEntryPoints;
 #endif
     NPP_NewProcPtr mNPP_New;
+    NPP_ClearSiteDataPtr mNPP_ClearSiteData;
+    NPP_GetSitesWithDataPtr mNPP_GetSitesWithData;
     PRLibrary* mLibrary;
 };
 

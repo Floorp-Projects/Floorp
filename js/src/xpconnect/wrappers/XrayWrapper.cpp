@@ -99,7 +99,7 @@ static JSBool
 holder_get(JSContext *cx, JSObject *holder, jsid id, jsval *vp);
 
 static JSBool
-holder_set(JSContext *cx, JSObject *holder, jsid id, jsval *vp);
+holder_set(JSContext *cx, JSObject *holder, jsid id, JSBool strict, jsval *vp);
 
 namespace XrayUtils {
 
@@ -192,7 +192,7 @@ holder_get(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
             return false;
         JSBool retval = true;
         nsresult rv = wn->GetScriptableCallback()->GetProperty(wn, cx, wrapper, id, vp, &retval);
-        if (NS_FAILED(rv)) {
+        if (NS_FAILED(rv) || !retval) {
             if (retval)
                 XPCThrower::Throw(rv, cx);
             return false;
@@ -202,7 +202,7 @@ holder_get(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
 }
 
 static JSBool
-holder_set(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
+holder_set(JSContext *cx, JSObject *wrapper, jsid id, JSBool strict, jsval *vp)
 {
     NS_ASSERTION(wrapper->isProxy(), "bad this object in set");
     JSObject *holder = GetHolder(wrapper);
@@ -219,7 +219,7 @@ holder_set(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
             return false;
         JSBool retval = true;
         nsresult rv = wn->GetScriptableCallback()->SetProperty(wn, cx, wrapper, id, vp, &retval);
-        if (NS_FAILED(rv)) {
+        if (NS_FAILED(rv) || !retval) {
             if (retval)
                 XPCThrower::Throw(rv, cx);
             return false;
@@ -273,12 +273,7 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid i
         }
     } else if (member->IsAttribute()) {
         // This is a getter/setter. Clone a function for it.
-
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, wnObject))
-            return false;
-
-        if (!member->NewFunctionObject(ccx, iface, wnObject, &fval)) {
+        if (!member->NewFunctionObject(ccx, iface, wrapper, &fval)) {
             JS_ReportError(cx, "Failed to clone function object for native getter/setter");
             return false;
         }
@@ -291,12 +286,8 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid i
         // for it. This avoids keeping garbage alive through that slot.
         desc->attrs |= JSPROP_SHARED;
     } else {
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, wnObject))
-            return false;
-
         // This is a method. Clone a function for it.
-        if (!member->NewFunctionObject(ccx, iface, wnObject, &desc->value)) {
+        if (!member->NewFunctionObject(ccx, iface, wrapper, &desc->value)) {
             JS_ReportError(cx, "Failed to clone function object for native function");
             return false;
         }
@@ -305,12 +296,9 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid i
         // don't have one, we have to avoid calling the scriptable helper's
         // GetProperty method for this property, so stub out the getter and
         // setter here explicitly.
-        desc->getter = desc->setter = JS_PropertyStub;
+        desc->getter = JS_PropertyStub;
+        desc->setter = JS_StrictPropertyStub;
     }
-
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, holder))
-        return false;
 
     if (!JS_WrapValue(cx, &desc->value) || !JS_WrapValue(cx, &fval))
         return false;
@@ -318,7 +306,7 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid i
     if (desc->attrs & JSPROP_GETTER)
         desc->getter = CastAsJSPropertyOp(JSVAL_TO_OBJECT(fval));
     if (desc->attrs & JSPROP_SETTER)
-        desc->setter = desc->getter;
+        desc->setter = CastAsJSStrictPropertyOp(JSVAL_TO_OBJECT(fval));
 
     // Define the property.
     return JS_DefinePropertyById(cx, holder, id, desc->value,
@@ -366,22 +354,22 @@ XrayToString(JSContext *cx, uintN argc, jsval *vp)
     return true;
 }
 
-template <typename Base, typename Policy>
-XrayWrapper<Base, Policy>::XrayWrapper(uintN flags)
+template <typename Base>
+XrayWrapper<Base>::XrayWrapper(uintN flags)
   : Base(flags | WrapperFactory::IS_XRAY_WRAPPER_FLAG)
 {
 }
 
-template <typename Base, typename Policy>
-XrayWrapper<Base, Policy>::~XrayWrapper()
+template <typename Base>
+XrayWrapper<Base>::~XrayWrapper()
 {
 }
 
-template <typename Base, typename Policy>
+template <typename Base>
 class AutoLeaveHelper
 {
   public:
-    AutoLeaveHelper(XrayWrapper<Base, Policy> &xray, JSContext *cx, JSObject *wrapper)
+    AutoLeaveHelper(XrayWrapper<Base> &xray, JSContext *cx, JSObject *wrapper)
       : xray(xray), cx(cx), wrapper(wrapper)
     {
     }
@@ -391,7 +379,7 @@ class AutoLeaveHelper
     }
 
   private:
-    XrayWrapper<Base, Policy> &xray;
+    XrayWrapper<Base> &xray;
     JSContext *cx;
     JSObject *wrapper;
 };
@@ -426,18 +414,21 @@ IsTransparent(JSContext *cx, JSObject *wrapper)
 
 }
 
-template <typename Base, typename Policy>
+template <typename Base>
 bool
-XrayWrapper<Base, Policy>::resolveOwnProperty(JSContext *cx, JSObject *wrapper, jsid id, bool set,
-                                              PropertyDescriptor *desc_in)
+XrayWrapper<Base>::resolveOwnProperty(JSContext *cx, JSObject *wrapper, jsid id, bool set,
+                                      PropertyDescriptor *desc_in)
 {
     JSPropertyDescriptor *desc = Jsvalify(desc_in);
 
     if (id == nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
-        if (!this->enter(cx, wrapper, id, set ? JSWrapper::SET : JSWrapper::GET))
-            return false;
+        bool status;
+        JSWrapper::Action action = set ? JSWrapper::SET : JSWrapper::GET;
+        desc->obj = NULL; // default value
+        if (!this->enter(cx, wrapper, id, action, &status))
+            return status;
 
-        AutoLeaveHelper<Base, Policy> helper(*this, cx, wrapper);
+        AutoLeaveHelper<Base> helper(*this, cx, wrapper);
 
         desc->obj = wrapper;
         desc->attrs = JSPROP_ENUMERATE|JSPROP_SHARED;
@@ -448,27 +439,38 @@ XrayWrapper<Base, Policy>::resolveOwnProperty(JSContext *cx, JSObject *wrapper, 
         return true;
     }
 
+    desc->obj = NULL;
+
+    uintN flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
     JSObject *holder = GetHolder(wrapper);
     JSObject *expando = GetExpandoObject(holder);
-    if (expando) {
-        if (!JS_GetPropertyDescriptorById(cx, expando, id,
-                                          (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
-                                          desc)) {
-            return false;
-        }
 
-        if (desc->obj)
-            return true;
+    // Check for expando properties first.
+    if (expando && !JS_GetPropertyDescriptorById(cx, expando, id, flags, desc)) {
+        return false;
+    }
+    if (desc->obj) {
+        // Pretend the property lives on the wrapper.
+        desc->obj = wrapper;
+        return true;
     }
 
-    JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
-    XPCWrappedNative *wn = GetWrappedNative(wnObject);
+    JSBool hasProp;
+    if (!JS_HasPropertyById(cx, holder, id, &hasProp)) {
+        return false;
+    }
+    if (!hasProp) {
+        JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
+        XPCWrappedNative *wn = GetWrappedNative(wnObject);
 
-    // Run the resolve hook of the wrapped native.
-    if (NATIVE_HAS_FLAG(wn, WantNewResolve)) {
+        // Run the resolve hook of the wrapped native.
+        if (!NATIVE_HAS_FLAG(wn, WantNewResolve)) {
+            desc->obj = nsnull;
+            return true;
+        }
+
         JSBool retval = true;
         JSObject *pobj = NULL;
-        uintN flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
         nsresult rv = wn->GetScriptableInfo()->GetCallback()->NewResolve(wn, cx, wrapper, id,
                                                                          flags, &pobj, &retval);
         if (NS_FAILED(rv)) {
@@ -477,27 +479,30 @@ XrayWrapper<Base, Policy>::resolveOwnProperty(JSContext *cx, JSObject *wrapper, 
             return false;
         }
 
-        if (pobj) {
-#ifdef DEBUG
-            JSBool hasProp;
-            NS_ASSERTION(JS_HasPropertyById(cx, holder, id, &hasProp) &&
-                         hasProp, "id got defined somewhere else?");
-#endif
-            if (!JS_GetPropertyDescriptorById(cx, holder, id, flags, desc))
-                return false;
-            desc->obj = wrapper;
+        if (!pobj) {
+            desc->obj = nsnull;
             return true;
         }
+
+#ifdef DEBUG
+        NS_ASSERTION(JS_HasPropertyById(cx, holder, id, &hasProp) &&
+                     hasProp, "id got defined somewhere else?");
+#endif
     }
 
-    desc->obj = nsnull;
+    if (!JS_GetPropertyDescriptorById(cx, holder, id, flags, desc))
+        return false;
+
+    // Pretend we found the property on the wrapper, not the holder.
+    desc->obj = wrapper;
+
     return true;
 }
 
-template <typename Base, typename Policy>
+template <typename Base>
 bool
-XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                                 bool set, PropertyDescriptor *desc_in)
+XrayWrapper<Base>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+                                         bool set, PropertyDescriptor *desc_in)
 {
     JSPropertyDescriptor *desc = Jsvalify(desc_in);
     JSObject *holder = GetHolder(wrapper);
@@ -506,10 +511,13 @@ XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
         return true;
     }
 
-    if (!this->enter(cx, wrapper, id, set ? JSWrapper::SET : JSWrapper::GET))
-        return false;
+    bool status;
+    JSWrapper::Action action = set ? JSWrapper::SET : JSWrapper::GET;
+    desc->obj = NULL; // default value
+    if (!this->enter(cx, wrapper, id, action, &status))
+        return status;
 
-    AutoLeaveHelper<Base, Policy> helper(*this, cx, wrapper);
+    AutoLeaveHelper<Base> helper(*this, cx, wrapper);
 
     ResolvingId resolving(holder, id);
 
@@ -538,12 +546,7 @@ XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
     if (desc->obj)
         return true;
 
-    void *priv;
-    if (!Policy::enter(cx, wrapper, &id, set ? JSWrapper::SET : JSWrapper::GET, &priv))
-        return false;
-
     bool ok = ResolveNativeProperty(cx, wrapper, holder, id, set, desc);
-    Policy::leave(cx, wrapper, priv);
     if (!ok || desc->obj)
         return ok;
 
@@ -564,10 +567,10 @@ XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
     return true;
 }
 
-template <typename Base, typename Policy>
+template <typename Base>
 bool
-XrayWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                                    bool set, PropertyDescriptor *desc_in)
+XrayWrapper<Base>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+                                            bool set, PropertyDescriptor *desc_in)
 {
     JSPropertyDescriptor *desc = Jsvalify(desc_in);
     JSObject *holder = GetHolder(wrapper);
@@ -576,10 +579,13 @@ XrayWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wra
         return true;
     }
 
-    if (!this->enter(cx, wrapper, id, set ? JSWrapper::SET : JSWrapper::GET))
-        return false;
+    bool status;
+    JSWrapper::Action action = set ? JSWrapper::SET : JSWrapper::GET;
+    desc->obj = NULL; // default value
+    if (!this->enter(cx, wrapper, id, action, &status))
+        return status;
 
-    AutoLeaveHelper<Base, Policy> helper(*this, cx, wrapper);
+    AutoLeaveHelper<Base> helper(*this, cx, wrapper);
 
     ResolvingId resolving(holder, id);
 
@@ -608,10 +614,10 @@ XrayWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wra
     return this->resolveOwnProperty(cx, wrapper, id, set, desc_in);
 }
 
-template <typename Base, typename Policy>
+template <typename Base>
 bool
-XrayWrapper<Base, Policy>::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
-                                          js::PropertyDescriptor *desc)
+XrayWrapper<Base>::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
+                                  js::PropertyDescriptor *desc)
 {
     JSObject *holder = GetHolder(wrapper);
     JSPropertyDescriptor *jsdesc = Jsvalify(desc);
@@ -706,17 +712,17 @@ EnumerateNames(JSContext *cx, JSObject *wrapper, uintN flags, js::AutoIdVector &
     return true;
 }
 
-template <typename Base, typename Policy>
+template <typename Base>
 bool
-XrayWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
-                                               js::AutoIdVector &props)
+XrayWrapper<Base>::getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
+                                       js::AutoIdVector &props)
 {
     return EnumerateNames(cx, wrapper, JSITER_OWNONLY | JSITER_HIDDEN, props);
 }
 
-template <typename Base, typename Policy>
+template <typename Base>
 bool
-XrayWrapper<Base, Policy>::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
+XrayWrapper<Base>::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
     JSObject *holder = GetHolder(wrapper);
     jsval v;
@@ -748,25 +754,25 @@ XrayWrapper<Base, Policy>::delete_(JSContext *cx, JSObject *wrapper, jsid id, bo
     return true;
 }
 
-template <typename Base, typename Policy>
+template <typename Base>
 bool
-XrayWrapper<Base, Policy>::enumerate(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props)
+XrayWrapper<Base>::enumerate(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props)
 {
     return EnumerateNames(cx, wrapper, 0, props);
 }
 
-template <typename Base, typename Policy>
+template <typename Base>
 bool
-XrayWrapper<Base, Policy>::fix(JSContext *cx, JSObject *proxy, js::Value *vp)
+XrayWrapper<Base>::fix(JSContext *cx, JSObject *proxy, js::Value *vp)
 {
     vp->setUndefined();
     return true;
 }
 
-template <typename Base, typename Policy>
+template <typename Base>
 bool
-XrayWrapper<Base, Policy>::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
-                               js::Value *vp)
+XrayWrapper<Base>::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
+                       js::Value *vp)
 {
     // Skip our Base if it isn't already JSProxyHandler.
     // NB: None of the functions we call are prepared for the receiver not
@@ -774,52 +780,111 @@ XrayWrapper<Base, Policy>::get(JSContext *cx, JSObject *wrapper, JSObject *recei
     return JSProxyHandler::get(cx, wrapper, wrapper, id, vp);
 }
 
-template <typename Base, typename Policy>
+template <typename Base>
 bool
-XrayWrapper<Base, Policy>::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
-                               js::Value *vp)
+XrayWrapper<Base>::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
+                       bool strict, js::Value *vp)
 {
     // Skip our Base if it isn't already JSProxyHandler.
     // NB: None of the functions we call are prepared for the receiver not
     // being the wrapper, so ignore the receiver here.
-    return JSProxyHandler::set(cx, wrapper, wrapper, id, vp);
+    return JSProxyHandler::set(cx, wrapper, wrapper, id, strict, vp);
 }
 
-template <typename Base, typename Policy>
+template <typename Base>
 bool
-XrayWrapper<Base, Policy>::has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
+XrayWrapper<Base>::has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
     // Skip our Base if it isn't already JSProxyHandler.
     return JSProxyHandler::has(cx, wrapper, id, bp);
 }
 
-template <typename Base, typename Policy>
+template <typename Base>
 bool
-XrayWrapper<Base, Policy>::hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
+XrayWrapper<Base>::hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
     // Skip our Base if it isn't already JSProxyHandler.
     return JSProxyHandler::hasOwn(cx, wrapper, id, bp);
 }
 
-template <typename Base, typename Policy>
+template <typename Base>
 bool
-XrayWrapper<Base, Policy>::keys(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props)
+XrayWrapper<Base>::keys(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props)
 {
     // Skip our Base if it isn't already JSProxyHandler.
     return JSProxyHandler::keys(cx, wrapper, props);
 }
 
-template <typename Base, typename Policy>
+template <typename Base>
 bool
-XrayWrapper<Base, Policy>::iterate(JSContext *cx, JSObject *wrapper, uintN flags, js::Value *vp)
+XrayWrapper<Base>::iterate(JSContext *cx, JSObject *wrapper, uintN flags, js::Value *vp)
 {
     // Skip our Base if it isn't already JSProxyHandler.
     return JSProxyHandler::iterate(cx, wrapper, flags, vp);
 }
 
-template <typename Base, typename Policy>
+template <typename Base>
+bool
+XrayWrapper<Base>::call(JSContext *cx, JSObject *wrapper, uintN argc, js::Value *vp)
+{
+    JSObject *holder = GetHolder(wrapper);
+    JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
+    XPCWrappedNative *wn = GetWrappedNative(wnObject);
+
+    // Run the resolve hook of the wrapped native.
+    if (NATIVE_HAS_FLAG(wn, WantCall)) {
+        XPCCallContext ccx(JS_CALLER, cx, wrapper, nsnull, JSID_VOID, argc,
+                           Jsvalify(vp + 2), Jsvalify(vp));
+        if (!ccx.IsValid())
+            return false;
+        PRBool ok = PR_TRUE;
+        nsresult rv = wn->GetScriptableInfo()->GetCallback()->Call(wn, cx, wrapper,
+                                                                   argc, Jsvalify(vp + 2),
+                                                                   Jsvalify(vp), &ok);
+        if (NS_FAILED(rv)) {
+            if (ok)
+                XPCThrower::Throw(rv, cx);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+template <typename Base>
+bool
+XrayWrapper<Base>::construct(JSContext *cx, JSObject *wrapper, uintN argc,
+                             js::Value *argv, js::Value *rval)
+{
+    JSObject *holder = GetHolder(wrapper);
+    JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
+    XPCWrappedNative *wn = GetWrappedNative(wnObject);
+
+    // Run the resolve hook of the wrapped native.
+    if (NATIVE_HAS_FLAG(wn, WantConstruct)) {
+        XPCCallContext ccx(JS_CALLER, cx, wrapper, nsnull, JSID_VOID, argc,
+                           Jsvalify(argv), Jsvalify(rval));
+        if (!ccx.IsValid())
+            return false;
+        PRBool ok = PR_TRUE;
+        nsresult rv = wn->GetScriptableInfo()->GetCallback()->Construct(wn, cx, wrapper,
+                                                                        argc,
+                                                                        Jsvalify(argv),
+                                                                        Jsvalify(rval),
+                                                                        &ok);
+        if (NS_FAILED(rv)) {
+            if (ok)
+                XPCThrower::Throw(rv, cx);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+template <typename Base>
 JSObject *
-XrayWrapper<Base, Policy>::createHolder(JSContext *cx, JSObject *wrappedNative, JSObject *parent)
+XrayWrapper<Base>::createHolder(JSContext *cx, JSObject *wrappedNative, JSObject *parent)
 {
     JSObject *holder = JS_NewObjectWithGivenProto(cx, &HolderClass, nsnull, parent);
     if (!holder)
@@ -840,27 +905,8 @@ XrayWrapper<Base, Policy>::createHolder(JSContext *cx, JSObject *wrappedNative, 
     return holder;
 }
 
-bool
-CrossCompartmentXray::enter(JSContext *cx, JSObject *wrapper, jsid *idp,
-                            JSWrapper::Action act, void **priv)
-{
-    JSObject *target = wrapper->unwrap();
-    JSCrossCompartmentCall *call = JS_EnterCrossCompartmentCall(cx, target);
-    if (!call)
-        return false;
-
-    *priv = call;
-    return true;
-}
-
-void
-CrossCompartmentXray::leave(JSContext *cx, JSObject *wrapper, void *priv)
-{
-    JS_LeaveCrossCompartmentCall(static_cast<JSCrossCompartmentCall *>(priv));
-}
-
-#define XPCNW XrayWrapper<JSCrossCompartmentWrapper, CrossCompartmentXray>
-#define SCNW XrayWrapper<JSWrapper, SameCompartmentXray>
+#define XPCNW XrayWrapper<JSCrossCompartmentWrapper>
+#define SCNW XrayWrapper<JSWrapper>
 
 template <> XPCNW XPCNW::singleton(0);
 template <> SCNW SCNW::singleton(0);

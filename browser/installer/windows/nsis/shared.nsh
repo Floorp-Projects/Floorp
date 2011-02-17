@@ -44,6 +44,8 @@
   ${RegCleanMain} "Software\Mozilla"
   ${RegCleanUninstall}
   ${UpdateProtocolHandlers}
+  ; Win7 taskbar and start menu link maintenance
+  Call FixShortcutAppModelIDs
 
   ClearErrors
   WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" "Write Test"
@@ -58,6 +60,9 @@
     ${UpdateProtocolHandlers}
     ${FixShellIconHandler}
     ${SetAppLSPCategories} ${LSP_CATEGORIES}
+
+    ; Win7 taskbar and start menu link maintenance
+    Call FixShortcutAppModelIDs
 
     ; Only update the Clients\StartMenuInternet registry key values if they
     ; don't exist or this installation is the same as the one set in those keys.
@@ -82,14 +87,14 @@
   ; root of the Start Menu Programs directory.
   ${MigrateStartMenuShortcut}
 
+  ; Adds a pinned Task Bar shortcut (see MigrateTaskBarShortcut for details).
+  ${MigrateTaskBarShortcut}
+
   ${RemoveDeprecatedKeys}
 
   ${SetAppKeys}
   ${FixClassKeys}
   ${SetUninstallKeys}
-
-  ; Win7 taskbar and start menu link maintenance
-  ${UpdateShortcutAppModelIDs} "$INSTDIR\${FileMainEXE}" "${AppUserModelID}" $0
 
   ; Remove files that may be left behind by the application in the
   ; VirtualStore directory.
@@ -119,6 +124,7 @@
   ${StrFilter} "${FileMainEXE}" "+" "" "" $0
   StrCpy $R1 "Software\Clients\StartMenuInternet\$0\InstallInfo"
   WriteRegDWORD HKLM "$R1" "IconsVisible" 0
+
   SetShellVarContext all  ; Set $DESKTOP to All Users
   ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
     SetShellVarContext current  ; Set $DESKTOP to the current user's desktop
@@ -180,48 +186,61 @@
 
   SetShellVarContext all  ; Set $DESKTOP to All Users
   ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-    CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" \
-                   "" "$INSTDIR\${FileMainEXE}" 0
-    ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR"
-    ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "${AppUserModelID}"
-    ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
+    CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
+    ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
+      ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR"
+      ${If} ${AtLeastWin7}
+        ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "${AppUserModelID}"
+      ${EndIf}
+    ${Else}
       SetShellVarContext current  ; Set $DESKTOP to the current user's desktop
       ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-        CreateShortCut "$DESKTOP\${BrandFullName}.lnk" \
-                       "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
-        ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" \
-                                               "$INSTDIR"
-        ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "${AppUserModelID}"
+        CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
+        ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
+          ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" \
+                                                 "$INSTDIR"
+          ${If} ${AtLeastWin7}
+            ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "${AppUserModelID}"
+          ${EndIf}
+        ${EndIf}
       ${EndUnless}
-    ${EndUnless}
+    ${EndIf}
   ${EndUnless}
 
-  SetShellVarContext all  ; Set $DESKTOP to All Users
+  SetShellVarContext all  ; Set $SMPROGRAMS to All Users
   ${Unless} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
-    CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" \
-                   "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
-    ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
-                                           "$INSTDIR"
-    ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "${AppUserModelID}"
-    ${Unless} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
+    CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
+    ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
+      ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
+                                             "$INSTDIR"
+      ${If} ${AtLeastWin7}
+        ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "${AppUserModelID}"
+      ${EndIf}
+    ${Else}
       SetShellVarContext current  ; Set $SMPROGRAMS to the current user's Start
                                   ; Menu Programs directory
       ${Unless} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
-        CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" \
-                       "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
-        ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
-                                               "$INSTDIR"
-        ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "${AppUserModelID}"
+        CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
+        ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
+          ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
+                                                 "$INSTDIR"
+          ${If} ${AtLeastWin7}
+            ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "${AppUserModelID}"
+          ${EndIf}
+        ${EndIf}
       ${EndUnless}
-    ${EndUnless}
+    ${EndIf}
   ${EndUnless}
 
-  ${Unless} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
+  ; Windows 7 doesn't use the QuickLaunch directory
+  ${Unless} ${AtLeastWin7}
+  ${AndUnless} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
     CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" \
-                   "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
-    ShellLink::SetShortCutWorkingDirectory "$QUICKLAUNCH\${BrandFullName}.lnk" \
-                                           "$INSTDIR"
-    ApplicationID::Set "$QUICKLAUNCH\${BrandFullName}.lnk" "${AppUserModelID}"
+                   "$INSTDIR\${FileMainEXE}"
+    ${If} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
+      ShellLink::SetShortCutWorkingDirectory "$QUICKLAUNCH\${BrandFullName}.lnk" \
+                                             "$INSTDIR"
+    ${EndIf}
   ${EndUnless}
 !macroend
 !define ShowShortcuts "!insertmacro ShowShortcuts"
@@ -662,6 +681,110 @@
 !macroend
 !define RemoveDeprecatedFiles "!insertmacro RemoveDeprecatedFiles"
 
+; Adds a pinned shortcut to Task Bar on update for Windows 7 and above if this
+; macro has never been called before and the application is default (see
+; PinToTaskBar for more details).
+!macro MigrateTaskBarShortcut
+  ${GetShortcutsLogPath} $0
+  ${If} ${FileExists} "$0"
+    ClearErrors
+    ReadINIStr $1 "$0" "TASKBAR" "Migrated"
+    ${If} ${Errors}
+      ClearErrors
+      WriteIniStr "$0" "TASKBAR" "Migrated" "true"
+      ${If} ${AtLeastWin7}
+        ; Check if the Firefox is the http handler for this user
+        SetShellVarContext current ; Set SHCTX to the current user
+        ${IsHandlerForInstallDir} "http" $R9
+        ${If} $TmpVal == "HKLM"
+          SetShellVarContext all ; Set SHCTX to all users
+        ${EndIf}
+        ${If} "$R9" == "true"
+          ${PinToTaskBar}
+        ${EndIf}
+      ${EndIf}
+    ${EndIf}
+  ${EndIf}
+!macroend
+!define MigrateTaskBarShortcut "!insertmacro MigrateTaskBarShortcut"
+
+; Adds a pinned Task Bar shortcut on Windows 7 if there isn't one for the main
+; application executable already. Existing pinned shortcuts for the same
+; application model ID must be removed first to prevent breaking the pinned
+; item's lists but multiple installations with the same application model ID is
+; an edgecase. If removing existing pinned shortcuts with the same application
+; model ID removes a pinned pinned Start Menu shortcut this will also add a
+; pinned Start Menu shortcut.
+!macro PinToTaskBar
+  ${If} ${AtLeastWin7}
+    StrCpy $8 "false" ; Whether a shortcut had to be created
+    ${IsPinnedToTaskBar} "$INSTDIR\${FileMainEXE}" $R9
+    ${If} "$R9" == "false"
+      ; Find an existing Start Menu shortcut or create one to use for pinning
+      ${GetShortcutsLogPath} $0
+      ${If} ${FileExists} "$0"
+        ClearErrors
+        ReadINIStr $1 "$0" "STARTMENU" "Shortcut0"
+        ${Unless} ${Errors}
+          SetShellVarContext all ; Set SHCTX to all users
+          ${Unless} ${FileExists} "$SMPROGRAMS\$1"
+            SetShellVarContext current ; Set SHCTX to the current user
+            ${Unless} ${FileExists} "$SMPROGRAMS\$1"
+              StrCpy $8 "true"
+              CreateShortCut "$SMPROGRAMS\$1" "$INSTDIR\${FileMainEXE}"
+              ${If} ${FileExists} "$SMPROGRAMS\$1"
+                ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\$1" \
+                                                       "$INSTDIR"
+                ApplicationID::Set "$SMPROGRAMS\$1" "${AppUserModelID}"
+              ${EndIf}
+            ${EndUnless}
+          ${EndUnless}
+
+          ${If} ${FileExists} "$SMPROGRAMS\$1"
+            ; Count of Start Menu pinned shortcuts before unpinning.
+            ${PinnedToStartMenuLnkCount} $R9
+
+            ; Having multiple shortcuts pointing to different installations with
+            ; the same AppUserModelID (e.g. side by side installations of the
+            ; same version) will make the TaskBar shortcut's lists into an bad
+            ; state where the lists are not shown. To prevent this first
+            ; uninstall the pinned item.
+            ApplicationID::UninstallPinnedItem "$SMPROGRAMS\$1"
+
+            ; Count of Start Menu pinned shortcuts after unpinning.
+            ${PinnedToStartMenuLnkCount} $R8
+
+            ; If there is a change in the number of Start Menu pinned shortcuts
+            ; assume that unpinning unpinned a side by side installation from
+            ; the Start Menu and pin this installation to the Start Menu.
+            ${Unless} $R8 == $R9
+              ; Pin the shortcut to the Start Menu. 5381 is the shell32.dll
+              ; resource id for the "Pin to Start Menu" string.
+              InvokeShellVerb::DoIt "$SMPROGRAMS" "$1" "5381"
+            ${EndUnless}
+
+            ; Pin the shortcut to the TaskBar. 5386 is the shell32.dll resource
+            ; id for the "Pin to Taskbar" string.
+            InvokeShellVerb::DoIt "$SMPROGRAMS" "$1" "5386"
+
+            ; Delete the shortcut if it was created
+            ${If} "$8" == "true"
+              Delete "$SMPROGRAMS\$1"
+            ${EndIf}
+          ${EndIf}
+
+          ${If} $TmpVal == "HKCU"
+            SetShellVarContext current ; Set SHCTX to the current user
+          ${Else}
+            SetShellVarContext all ; Set SHCTX to all users
+          ${EndIf}
+        ${EndUnless}
+      ${EndIf}
+    ${EndIf}
+  ${EndIf}
+!macroend
+!define PinToTaskBar "!insertmacro PinToTaskBar"
+
 ; Adds a shortcut to the root of the Start Menu Programs directory if the
 ; application's Start Menu Programs directory exists with a shortcut pointing to
 ; this installation directory. This will also remove the old shortcuts and the
@@ -689,12 +812,15 @@
               Pop $4
               ${If} "$INSTDIR\${FileMainEXE}" == "$4"
                 CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" \
-                               "$INSTDIR\${FileMainEXE}" "" \
-                               "$INSTDIR\${FileMainEXE}" 0
-                ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
-                                                       "$INSTDIR"
-                ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" \
-                                   "${AppUserModelID}"
+                               "$INSTDIR\${FileMainEXE}"
+                ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
+                  ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
+                                                         "$INSTDIR"
+                  ${If} ${AtLeastWin7}
+                    ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" \
+                                       "${AppUserModelID}"
+                  ${EndIf}
+                ${EndIf}
               ${EndIf}
             ${EndIf}
           ${EndUnless}
@@ -836,6 +962,13 @@ Function SetAsDefaultAppUserHKCU
     ${EndUnless}
   ${EndIf}
   ${RemoveDeprecatedKeys}
+
+  ${PinToTaskBar}
+FunctionEnd
+
+; Helper for updating the shortcut application model IDs.
+Function FixShortcutAppModelIDs
+  ${UpdateShortcutAppModelIDs} "$INSTDIR\${FileMainEXE}" "${AppUserModelID}" $0
 FunctionEnd
 
 ; The !ifdef NO_LOG prevents warnings when compiling the installer.nsi due to

@@ -666,7 +666,7 @@ public:
 
     WebGLBuffer(WebGLContext *context, WebGLuint name) :
         WebGLContextBoundObject(context),
-        mName(name), mDeleted(PR_FALSE),
+        mName(name), mDeleted(PR_FALSE), mHasEverBeenBound(PR_FALSE),
         mByteLength(0), mTarget(LOCAL_GL_NONE), mData(nsnull)
     { }
 
@@ -687,6 +687,8 @@ public:
     }
 
     PRBool Deleted() const { return mDeleted; }
+    PRBool HasEverBeenBound() { return mHasEverBeenBound; }
+    void SetHasEverBeenBound(PRBool x) { mHasEverBeenBound = x; }
     GLuint GLName() const { return mName; }
     GLuint ByteLength() const { return mByteLength; }
     GLenum Target() const { return mTarget; }
@@ -764,6 +766,7 @@ public:
 protected:
     WebGLuint mName;
     PRBool mDeleted;
+    PRBool mHasEverBeenBound;
     GLuint mByteLength;
     GLenum mTarget;
 
@@ -771,7 +774,7 @@ protected:
     PRBool mHasCachedMaxUbyteElement;
     PRUint16 mCachedMaxUshortElement;
     PRBool mHasCachedMaxUshortElement;
-    
+
     void* mData; // in the case of an Element Array Buffer, we keep a copy.
 };
 
@@ -790,7 +793,7 @@ public:
 
     WebGLTexture(WebGLContext *context, WebGLuint name) :
         WebGLContextBoundObject(context),
-        mDeleted(PR_FALSE), mName(name),
+        mDeleted(PR_FALSE), mHasEverBeenBound(PR_FALSE), mName(name),
         mTarget(0),
         mMinFilter(LOCAL_GL_NEAREST_MIPMAP_LINEAR),
         mMagFilter(LOCAL_GL_LINEAR),
@@ -811,6 +814,8 @@ public:
     }
 
     PRBool Deleted() { return mDeleted; }
+    PRBool HasEverBeenBound() { return mHasEverBeenBound; }
+    void SetHasEverBeenBound(PRBool x) { mHasEverBeenBound = x; }
     WebGLuint GLName() { return mName; }
 
     NS_DECL_ISUPPORTS
@@ -821,6 +826,7 @@ protected:
     friend class WebGLFramebuffer;
 
     PRBool mDeleted;
+    PRBool mHasEverBeenBound;
     WebGLuint mName;
 
     // we store information about the various images that are part of
@@ -925,7 +931,7 @@ public:
         // this function should only be called by bindTexture().
         // it assumes that the GL context is already current.
 
-        PRBool firstTimeThisTextureIsBound = mTarget == 0;
+        PRBool firstTimeThisTextureIsBound = !mHasEverBeenBound;
 
         if (!firstTimeThisTextureIsBound && aTarget != mTarget) {
             mContext->ErrorInvalidOperation("bindTexture: this texture has already been bound to a different target");
@@ -949,6 +955,8 @@ public:
             if (mTarget == LOCAL_GL_TEXTURE_CUBE_MAP && !mContext->gl->IsGLES2())
                 mContext->gl->fTexParameteri(mTarget, LOCAL_GL_TEXTURE_WRAP_R, LOCAL_GL_CLAMP_TO_EDGE);
         }
+
+        mHasEverBeenBound = PR_TRUE;
     }
 
     void SetImageInfo(WebGLenum aTarget, WebGLint aLevel,
@@ -1385,7 +1393,7 @@ public:
         WebGLContextBoundObject(context),
         mName(name),
         mInternalFormat(0),
-        mDeleted(PR_FALSE), mInitialized(PR_FALSE)
+        mDeleted(PR_FALSE), mHasEverBeenBound(PR_FALSE), mInitialized(PR_FALSE)
     { }
 
     void Delete() {
@@ -1395,6 +1403,8 @@ public:
         mDeleted = PR_TRUE;
     }
     PRBool Deleted() const { return mDeleted; }
+    PRBool HasEverBeenBound() { return mHasEverBeenBound; }
+    void SetHasEverBeenBound(PRBool x) { mHasEverBeenBound = x; }
     WebGLuint GLName() const { return mName; }
 
     PRBool Initialized() const { return mInitialized; }
@@ -1411,6 +1421,7 @@ protected:
     WebGLenum mInternalFormat;
 
     PRBool mDeleted;
+    PRBool mHasEverBeenBound;
     PRBool mInitialized;
 
     friend class WebGLFramebuffer;
@@ -1515,7 +1526,7 @@ public:
 
     WebGLFramebuffer(WebGLContext *context, WebGLuint name) :
         WebGLContextBoundObject(context),
-        mName(name), mDeleted(PR_FALSE),
+        mName(name), mDeleted(PR_FALSE), mHasEverBeenBound(PR_FALSE),
         mColorAttachment(LOCAL_GL_COLOR_ATTACHMENT0),
         mDepthAttachment(LOCAL_GL_DEPTH_ATTACHMENT),
         mStencilAttachment(LOCAL_GL_STENCIL_ATTACHMENT),
@@ -1529,6 +1540,8 @@ public:
         mDeleted = PR_TRUE;
     }
     PRBool Deleted() { return mDeleted; }
+    PRBool HasEverBeenBound() { return mHasEverBeenBound; }
+    void SetHasEverBeenBound(PRBool x) { mHasEverBeenBound = x; }
     WebGLuint GLName() { return mName; }
 
     nsresult FramebufferRenderbuffer(WebGLenum target,
@@ -1819,6 +1832,7 @@ protected:
 
     WebGLuint mName;
     PRPackedBool mDeleted;
+    PRBool mHasEverBeenBound;
 
     // we only store pointers to attached renderbuffers, not to attached textures, because
     // we will only need to initialize renderbuffers. Textures are already initialized.

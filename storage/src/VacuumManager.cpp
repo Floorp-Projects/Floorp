@@ -148,7 +148,6 @@ private:
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
   nsCString mDBFilename;
   nsCOMPtr<mozIStorageConnection> mDBConn;
-  bool mRestoreWAL;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -180,7 +179,7 @@ NotifyCallback::NotifyCallback(Vacuumer *aVacuumer,
 NS_IMETHODIMP
 NotifyCallback::HandleCompletion(PRUint16 aReason)
 {
-  // We succeeded if both vacuum are WAL restoration succeeded.
+  // We succeeded if vacuum succeeded.
   nsresult rv = mVacuumer->notifyCompletion(mVacuumSucceeded);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
@@ -193,7 +192,6 @@ Vacuumer::Vacuumer(mozIStorageVacuumParticipant *aParticipant,
                    nsIPrefBranch *aPrefBranch)
   : mParticipant(aParticipant)
   , mPrefBranch(aPrefBranch)
-  , mRestoreWAL(false)
 {
 }
 
@@ -222,7 +220,7 @@ Vacuumer::execute()
     expectedPageSize = mozIStorageConnection::DEFAULT_PAGE_SIZE;
   }
 
-  bool canOptimizePageSize;
+  bool canOptimizePageSize = false;
   {
     nsCOMPtr<mozIStorageStatement> stmt;
     rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
@@ -237,7 +235,26 @@ Vacuumer::execute()
     rv = stmt->GetInt32(0, &currentPageSize);
     NS_ENSURE_SUCCESS(rv, false);
     NS_ASSERTION(currentPageSize > 0, "Got invalid page size value?");
-    canOptimizePageSize = currentPageSize != expectedPageSize;
+    if (currentPageSize != expectedPageSize) {
+      // Check journal mode.  WAL journaling does not allow vacuum to change
+      // the page size.
+      // TODO Bug 634374: figure out a strategy to fix page size with WAL.
+      nsCAutoString journalMode;
+      {
+        nsCOMPtr<mozIStorageStatement> stmt;
+        rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+          "PRAGMA journal_mode"
+        ), getter_AddRefs(stmt));
+        NS_ENSURE_SUCCESS(rv, false);
+        PRBool hasResult;
+        rv = stmt->ExecuteStep(&hasResult);
+        NS_ENSURE_SUCCESS(rv, false);
+        NS_ENSURE_TRUE(hasResult, false);
+        rv = stmt->GetUTF8String(0, journalMode);
+        NS_ENSURE_SUCCESS(rv, false);
+      }
+      canOptimizePageSize = !journalMode.EqualsLiteral("wal");
+    }
   }
 
   // Get the database filename.  Last vacuum time is stored under this name
@@ -282,41 +299,6 @@ Vacuumer::execute()
   }
 
   if (canOptimizePageSize) {
-    // Check journal mode.  WAL journaling does not allow vacuum to change page
-    // size, thus we have to temporarily switch the journal mode to TRUNCATE.
-    nsCOMPtr<mozIStorageStatement> stmt;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "PRAGMA journal_mode"
-    ), getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, false);
-    PRBool hasResult;
-    rv = stmt->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, false);
-    NS_ENSURE_TRUE(hasResult, false);
-    nsCAutoString journalMode;
-    rv = stmt->GetUTF8String(0, journalMode);
-    NS_ENSURE_SUCCESS(rv, false);
-    rv = stmt->Reset();
-    NS_ENSURE_SUCCESS(rv, false);
-
-    if (journalMode.EqualsLiteral("wal")) {
-      mRestoreWAL = true;
-      // Set the journal mode to a backwards compatible one.
-      nsCOMPtr<mozIStorageAsyncStatement> stmt;
-      rv = mDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
-        "PRAGMA journal_mode = TRUNCATE"
-      ), getter_AddRefs(stmt));
-      NS_ENSURE_SUCCESS(rv, false);
-      nsCOMPtr<BaseCallback> callback = new BaseCallback();
-      NS_ENSURE_TRUE(callback, false);
-      nsCOMPtr<mozIStoragePendingStatement> ps;
-      rv = stmt->ExecuteAsync(callback, getter_AddRefs(ps));
-      NS_ENSURE_SUCCESS(rv, false);
-    }
-
-    // WARNING: any statement after we check for journal mode must be async
-    //          to ensure the correct execution order.
-
     nsCOMPtr<mozIStorageAsyncStatement> pageSizeStmt;
     rv = mDBConn->CreateAsyncStatement(nsPrintfCString(
       "PRAGMA page_size = %ld", expectedPageSize
@@ -399,27 +381,7 @@ Vacuumer::HandleCompletion(PRUint16 aReason)
     (void)mPrefBranch->SetIntPref(mDBFilename.get(), now);
   }
 
-  // Check if we should restore WAL journal mode.
-  if (mRestoreWAL) {
-    // Restoring WAL is expensive, so must be done async.
-    // End of vacuum will be notified once it finishes.
-    nsCOMPtr<mozIStorageAsyncStatement> stmt;
-    (void)mDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
-      "PRAGMA journal_mode = WAL"
-    ), getter_AddRefs(stmt));
-    nsCOMPtr<NotifyCallback> callback =
-      new NotifyCallback(this, aReason == REASON_FINISHED);
-    // Handle errors now, it's important to notify participant before throwing.
-    if (!stmt || !callback) {
-      notifyCompletion(false);
-      return NS_ERROR_UNEXPECTED;
-    }
-    nsCOMPtr<mozIStoragePendingStatement> ps;
-    stmt->ExecuteAsync(callback, getter_AddRefs(ps));
-  }
-  else {
-    notifyCompletion(aReason == REASON_FINISHED);
-  }
+  notifyCompletion(aReason == REASON_FINISHED);
 
   return NS_OK;
 }

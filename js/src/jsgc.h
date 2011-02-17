@@ -39,6 +39,14 @@
 
 #ifndef jsgc_h___
 #define jsgc_h___
+
+/* Gross special case for Gecko, which defines malloc/calloc/free. */
+#ifdef mozilla_mozalloc_macro_wrappers_h
+#  define JS_GC_UNDEFD_MOZALLOC_WRAPPERS
+/* The "anti-header" */
+#  include "mozilla/mozalloc_undef_macro_wrappers.h"
+#endif
+
 /*
  * JS Garbage Collector.
  */
@@ -203,6 +211,13 @@ struct ArenaBitmap {
             *word |= mask;
         }
         return true;
+    }
+
+    JS_ALWAYS_INLINE void unmark(size_t bit, uint32 color) {
+        bit += color;
+        JS_ASSERT(bit < BitCount);
+        uintptr_t *word = &bitmap[bit / JS_BITS_PER_WORD];
+        *word &= ~(uintptr_t(1) << (bit % JS_BITS_PER_WORD));
     }
 
 #ifdef DEBUG
@@ -451,6 +466,14 @@ Cell::markIfUnmarked(uint32 color = BLACK) const
 {
     AssertValidColor(this, color);
     return bitmap()->markIfUnmarked(cellIndex(), color);
+}
+
+void
+Cell::unmark(uint32 color) const
+{
+    JS_ASSERT(color != BLACK);
+    AssertValidColor(this, color);
+    bitmap()->unmark(cellIndex(), color);
 }
 
 JSCompartment *
@@ -792,7 +815,7 @@ extern JS_FRIEND_API(bool)
 IsAboutToBeFinalized(JSContext *cx, void *thing);
 
 extern JS_FRIEND_API(bool)
-js_GCThingIsMarked(void *thing, uint32 color);
+js_GCThingIsMarked(void *thing, uintN color);
 
 extern void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp);
@@ -1085,5 +1108,9 @@ JSObject::getCompartment() const
 {
     return compartment();
 }
+
+#ifdef JS_GC_UNDEFD_MOZALLOC_WRAPPERS
+#  include "mozilla/mozalloc_macro_wrappers.h"
+#endif
 
 #endif /* jsgc_h___ */

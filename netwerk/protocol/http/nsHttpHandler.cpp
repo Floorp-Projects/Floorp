@@ -130,6 +130,7 @@ static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 #define INTL_ACCEPT_CHARSET     "intl.charset.default"
 #define NETWORK_ENABLEIDN       "network.enableIDN"
 #define BROWSER_PREF_PREFIX     "browser.cache."
+#define DONOTTRACK_HEADER_ENABLED "privacy.donottrackheader.enabled"
 
 #define UA_PREF(_pref) UA_PREF_PREFIX _pref
 #define HTTP_PREF(_pref) HTTP_PREF_PREFIX _pref
@@ -198,6 +199,7 @@ nsHttpHandler::nsHttpHandler()
     , mPromptTempRedirect(PR_TRUE)
     , mSendSecureXSiteReferrer(PR_TRUE)
     , mEnablePersistentHttpsCaching(PR_FALSE)
+    , mDoNotTrackEnabled(PR_FALSE)
 {
 #if defined(PR_LOGGING)
     gHttpLog = PR_NewLogModule("nsHttp");
@@ -262,6 +264,7 @@ nsHttpHandler::Init()
         prefBranch->AddObserver(INTL_ACCEPT_CHARSET, this, PR_TRUE);
         prefBranch->AddObserver(NETWORK_ENABLEIDN, this, PR_TRUE);
         prefBranch->AddObserver(BROWSER_PREF("disk_cache_ssl"), this, PR_TRUE);
+        prefBranch->AddObserver(DONOTTRACK_HEADER_ENABLED, this, PR_TRUE);
 
         PrefsChanged(prefBranch, nsnull);
     }
@@ -404,6 +407,13 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
     } else if (useProxy) {
         // Bug 92006
         request->SetHeader(nsHttp::Connection, close);
+    }
+
+    // Add the "Do-Not-Track" header
+    if (mDoNotTrackEnabled) {
+      rv = request->SetHeader(nsHttp::DoNotTrack,
+                              NS_LITERAL_CSTRING("1"));
+      if (NS_FAILED(rv)) return rv;
     }
 
     const nsHttpAtom &header = useProxy ? nsHttp::Proxy_Connection
@@ -1124,6 +1134,18 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         }
         else if (!enableIDN && mIDNConverter)
             mIDNConverter = nsnull;
+    }
+
+    //
+    // Tracking options
+    //
+
+    if (PREF_CHANGED(DONOTTRACK_HEADER_ENABLED)) {
+        cVar = PR_FALSE;
+        rv = prefs->GetBoolPref(DONOTTRACK_HEADER_ENABLED, &cVar);
+        if (NS_SUCCEEDED(rv)) {
+            mDoNotTrackEnabled = cVar;
+        }
     }
 
 #undef PREF_CHANGED

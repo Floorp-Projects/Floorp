@@ -84,15 +84,18 @@ public:
     mCursor(aCursor)
   { }
 
+  ~ContinueHelper()
+  {
+    IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffer);
+  }
+
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
-  nsresult OnSuccess();
   nsresult GetSuccessResult(JSContext* aCx,
                             jsval* aVal);
 
   void ReleaseMainThreadObjects()
   {
     mCursor = nsnull;
-    mCloneBuffer.clear();
     AsyncConnectionHelper::ReleaseMainThreadObjects();
   }
 
@@ -272,9 +275,11 @@ IDBCursor::CreateCommon(IDBRequest* aRequest,
 IDBCursor::IDBCursor()
 : mType(OBJECTSTORE),
   mDirection(nsIIDBCursor::NEXT),
+  mCachedPrimaryKey(JSVAL_VOID),
   mCachedValue(JSVAL_VOID),
+  mHaveCachedPrimaryKey(false),
   mHaveCachedValue(false),
-  mValueRooted(false),
+  mRooted(false),
   mContinueCalled(false),
   mHaveValue(true)
 {
@@ -285,7 +290,7 @@ IDBCursor::~IDBCursor()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (mValueRooted) {
+  if (mRooted) {
     NS_DROP_JS_OBJECTS(this, IDBCursor);
   }
   IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffer);
@@ -306,18 +311,29 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBCursor)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(IDBCursor)
-  if (tmp->mValueRooted) {
+  if (tmp->mRooted) {
     NS_DROP_JS_OBJECTS(tmp, IDBCursor);
+    tmp->mCachedPrimaryKey = JSVAL_VOID;
     tmp->mCachedValue = JSVAL_VOID;
+    tmp->mHaveCachedPrimaryKey = false;
     tmp->mHaveCachedValue = false;
-    tmp->mValueRooted = false;
+    tmp->mRooted = false;
     tmp->mHaveValue = false;
   }
 NS_IMPL_CYCLE_COLLECTION_ROOT_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBCursor)
+  NS_ASSERTION(tmp->mHaveCachedPrimaryKey ||
+               JSVAL_IS_VOID(tmp->mCachedPrimaryKey),
+               "Should have a cached primary key");
+  NS_ASSERTION(tmp->mHaveCachedValue || JSVAL_IS_VOID(tmp->mCachedValue),
+               "Should have a cached value");
   if (JSVAL_IS_GCTHING(tmp->mCachedValue)) {
     void *gcThing = JSVAL_TO_GCTHING(tmp->mCachedValue);
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing)
+  }
+  if (JSVAL_IS_GCTHING(tmp->mCachedPrimaryKey)) {
+    void *gcThing = JSVAL_TO_GCTHING(tmp->mCachedPrimaryKey);
     NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing)
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
@@ -331,7 +347,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IDBCursor)
   NS_INTERFACE_MAP_ENTRY(nsIIDBCursor)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBCursor)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIDBCursorWithValue, mType != INDEXKEY)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(IDBCursorWithValue,
+                                                   mType != INDEXKEY)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(IDBCursor,
+                                                   mType == INDEXKEY)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -339,6 +359,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(IDBCursor)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(IDBCursor)
 
 DOMCI_DATA(IDBCursor, IDBCursor)
+DOMCI_DATA(IDBCursorWithValue, IDBCursor)
 
 NS_IMETHODIMP
 IDBCursor::GetDirection(PRUint16* aDirection)
@@ -401,8 +422,8 @@ IDBCursor::GetKey(nsIVariant** aKey)
 }
 
 NS_IMETHODIMP
-IDBCursor::GetValue(JSContext* aCx,
-                    jsval* aValue)
+IDBCursor::GetPrimaryKey(JSContext* aCx,
+                         jsval* aValue)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -411,21 +432,45 @@ IDBCursor::GetValue(JSContext* aCx,
     return NS_OK;
   }
 
-  nsresult rv;
+  if (!mHaveCachedPrimaryKey) {
+    if (!mRooted) {
+      NS_HOLD_JS_OBJECTS(this, IDBCursor);
+      mRooted = true;
+    }
 
-  if (mType == INDEXKEY) {
-    NS_ASSERTION(!mObjectKey.IsUnset(), "Bad key!");
+    JSAutoRequest ar(aCx);
 
-    rv = IDBObjectStore::GetJSValFromKey(mObjectKey, aCx, aValue);
+    NS_ASSERTION(mType == OBJECTSTORE ? !mKey.IsUnset() :
+                                        !mObjectKey.IsUnset(), "Bad key!");
+
+    nsresult rv =
+      IDBObjectStore::GetJSValFromKey(mType == OBJECTSTORE ? mKey : mObjectKey,
+                                      aCx, &mCachedPrimaryKey);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    mHaveCachedPrimaryKey = true;
+  }
+
+  *aValue = mCachedPrimaryKey;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBCursor::GetValue(JSContext* aCx,
+                    jsval* aValue)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(mType != INDEXKEY, "GetValue shouldn't exist on index keys");
+
+  if (!mHaveValue) {
+    *aValue = JSVAL_VOID;
     return NS_OK;
   }
 
   if (!mHaveCachedValue) {
-    if (!mValueRooted) {
+    if (!mRooted) {
       NS_HOLD_JS_OBJECTS(this, IDBCursor);
-      mValueRooted = true;
+      mRooted = true;
     }
 
     JSAutoRequest ar(aCx);
@@ -655,49 +700,38 @@ ContinueHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-ContinueHelper::OnSuccess()
+ContinueHelper::GetSuccessResult(JSContext* aCx,
+                                 jsval* aVal)
 {
   // Remove cached stuff from last time.
   mCursor->mCachedKey = nsnull;
-  mCursor->mCachedObjectKey = nsnull;
   mCursor->mCachedValue = JSVAL_VOID;
+  mCursor->mCachedPrimaryKey = JSVAL_VOID;
   mCursor->mHaveCachedValue = false;
+  mCursor->mHaveCachedPrimaryKey = false;
   mCursor->mContinueCalled = false;
 
   if (mKey.IsUnset()) {
     mCursor->mHaveValue = false;
+    *aVal = JSVAL_VOID;
   }
   else {
+    NS_ASSERTION(mCursor->mType == IDBCursor::OBJECTSTORE ||
+                 !mObjectKey.IsUnset(), "Bad key!");
+
     // Set new values.
     mCursor->mKey = mKey;
     mCursor->mObjectKey = mObjectKey;
-    mCursor->mCloneBuffer.clear();
-    mCursor->mCloneBuffer.swap(mCloneBuffer);
     mCursor->mContinueToKey = Key::UNSETKEY;
+
+    mCursor->mCloneBuffer.swap(mCloneBuffer);
+    mCloneBuffer.clear(aCx);
+
+    nsresult rv = WrapNative(aCx, mCursor, aVal);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // We want an event, with a result, etc. Call the base class method.
-  return AsyncConnectionHelper::OnSuccess();
-}
-
-nsresult
-ContinueHelper::GetSuccessResult(JSContext* aCx,
-                                 jsval* aVal)
-{
-  if (mKey.IsUnset()) {
-    NS_ASSERTION(!mCursor->mHaveValue, "Should have unset this!");
-    *aVal = JSVAL_VOID;
-    return NS_OK;
-  }
-
-#ifdef DEBUG
-  if (mCursor->mType != IDBCursor::OBJECTSTORE) {
-    NS_ASSERTION(!mObjectKey.IsUnset(), "Bad key!");
-  }
-#endif
-
-  NS_ASSERTION(mCursor->mHaveValue, "This should still be set to true!");
-  return WrapNative(aCx, mCursor, aVal);
+  return NS_OK;
 }
 
 nsresult

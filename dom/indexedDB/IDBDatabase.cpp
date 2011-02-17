@@ -82,7 +82,6 @@ public:
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
-  nsresult OnSuccess();
   nsresult GetSuccessResult(JSContext* aCx,
                             jsval* aVal);
 
@@ -957,7 +956,8 @@ SetVersionHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-SetVersionHelper::OnSuccess()
+SetVersionHelper::GetSuccessResult(JSContext* aCx,
+                                   jsval* aVal)
 {
   DatabaseInfo* info;
   if (!DatabaseInfo::Get(mDatabase->Id(), &info)) {
@@ -966,15 +966,12 @@ SetVersionHelper::OnSuccess()
   }
   info->version = mVersion;
 
-  // We want an event, with a result, etc. Call the base class method.
-  return AsyncConnectionHelper::OnSuccess();
-}
+  nsresult rv = WrapNative(aCx, NS_ISUPPORTS_CAST(nsPIDOMEventTarget*,
+                                                  mTransaction),
+                           aVal);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-nsresult
-SetVersionHelper::GetSuccessResult(JSContext* aCx,
-                                   jsval* aVal)
-{
-  return WrapNative(aCx, static_cast<nsPIDOMEventTarget*>(mTransaction), aVal);
+  return NS_OK;
 }
 
 nsresult

@@ -2236,13 +2236,20 @@ nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType)
     return eOpaque;
   case NS_THEME_WIN_GLASS:
   case NS_THEME_WIN_BORDERLESS_GLASS:
+  case NS_THEME_SCALE_HORIZONTAL:
+  case NS_THEME_SCALE_VERTICAL:
     return eTransparent;
   }
 
   HANDLE theme = GetTheme(aWidgetType);
   // For the classic theme we don't really have a way of knowing
-  if (!theme)
+  if (!theme) {
+    // menu backgrounds and tooltips which can't be themed are opaque
+    if (aWidgetType == NS_THEME_MENUPOPUP || aWidgetType == NS_THEME_TOOLTIP) {
+      return eOpaque;
+    }
     return eUnknownTransparency;
+  }
 
   PRInt32 part, state;
   nsresult rv = GetThemePartAndState(aFrame, aWidgetType, part, state);

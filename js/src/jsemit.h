@@ -213,8 +213,7 @@ struct JSStmtInfo {
  */
 #define TCF_STRICT_MODE_CODE    0x40000
 
-/* Function has parameter named 'eval'. */
-#define TCF_FUN_PARAM_EVAL      0x80000
+/* bit 0x80000 is unused */
 
 /*
  * Flag signifying that the current function seems to be a constructor that
@@ -464,7 +463,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
  * JSOPTION_STRICT warnings or strict mode errors.
  */
 inline bool JSTreeContext::needStrictChecks() {
-    return JS_HAS_STRICT_OPTION(parser->context) || inStrictMode();
+    return parser->context->hasStrictOption() || inStrictMode();
 }
 
 /*
@@ -653,17 +652,18 @@ struct JSCodeGenerator : public JSTreeContext
      */
     bool addGlobalUse(JSAtom *atom, uint32 slot, js::UpvarCookie *cookie);
 
-    bool hasSharps() {
+    bool hasSharps() const {
         bool rv = !!(flags & TCF_HAS_SHARPS);
         JS_ASSERT((sharpSlotBase >= 0) == rv);
         return rv;
     }
 
-    uintN sharpSlots() {
+    uintN sharpSlots() const {
         return hasSharps() ? SHARP_NSLOTS : 0;
     }
 
-    bool compilingForEval() { return !!(flags & TCF_COMPILE_FOR_EVAL); }
+    bool compilingForEval() const { return !!(flags & TCF_COMPILE_FOR_EVAL); }
+    JSVersion version() const { return parser->versionWithFlags(); }
 
     bool shouldNoteClosedName(JSParseNode *pn);
 

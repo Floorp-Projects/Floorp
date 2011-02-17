@@ -53,9 +53,9 @@
 inline void
 js::Shape::freeTable(JSContext *cx)
 {
-    if (table) {
-        cx->destroy(table);
-        table = NULL;
+    if (hasTable()) {
+        cx->destroy(getTable());
+        setTable(NULL);
     }
 }
 
@@ -107,7 +107,7 @@ JSObject::updateShape(JSContext *cx)
     JS_ASSERT(isNative());
     js::LeaveTraceIfGlobalObject(cx, this);
     if (hasOwnShape())
-        setOwnShape(js_GenerateShape(cx, false));
+        setOwnShape(js_GenerateShape(cx));
     else
         objShape = lastProp->shape;
 }
@@ -146,13 +146,13 @@ JSObject::trace(JSTracer *trc)
          * it must have the same shape as lastProp.
          */
         if (!shape->hasRegenFlag()) {
-            shape->shape = js_RegenerateShapeForGC(cx);
+            shape->shape = js_RegenerateShapeForGC(cx->runtime);
             shape->setRegenFlag();
         }
 
         uint32 newShape = shape->shape;
         if (hasOwnShape()) {
-            newShape = js_RegenerateShapeForGC(cx);
+            newShape = js_RegenerateShapeForGC(cx->runtime);
             JS_ASSERT(newShape != shape->shape);
         }
         objShape = newShape;
@@ -167,10 +167,10 @@ JSObject::trace(JSTracer *trc)
 namespace js {
 
 inline
-Shape::Shape(jsid id, js::PropertyOp getter, js::PropertyOp setter, uint32 slot, uintN attrs,
+Shape::Shape(jsid id, js::PropertyOp getter, js::StrictPropertyOp setter, uint32 slot, uintN attrs,
              uintN flags, intN shortid, uint32 shape, uint32 slotSpan)
   : JSObjectMap(shape, slotSpan),
-    numSearches(0), table(NULL), id(id), rawGetter(getter), rawSetter(setter), slot(slot),
+    numLinearSearches(0), id(id), rawGetter(getter), rawSetter(setter), slot(slot),
     attrs(uint8(attrs)), flags(uint8(flags)), shortid(int16(shortid)), parent(NULL)
 {
     JS_ASSERT_IF(slotSpan != SHAPE_INVALID_SLOT, slotSpan < JSObject::NSLOTS_LIMIT);
@@ -180,10 +180,17 @@ Shape::Shape(jsid id, js::PropertyOp getter, js::PropertyOp setter, uint32 slot,
 }
 
 inline
-Shape::Shape(JSContext *cx, Class *aclasp)
-  : JSObjectMap(js_GenerateShape(cx, false), JSSLOT_FREE(aclasp)), numSearches(0), table(NULL),
-    id(JSID_EMPTY), clasp(aclasp), rawSetter(NULL), slot(SHAPE_INVALID_SLOT), attrs(0),
-    flags(SHARED_EMPTY), shortid(0), parent(NULL)
+Shape::Shape(JSCompartment *comp, Class *aclasp)
+  : JSObjectMap(js_GenerateShape(comp->rt), JSSLOT_FREE(aclasp)),
+    numLinearSearches(0),
+    id(JSID_EMPTY),
+    clasp(aclasp),
+    rawSetter(NULL),
+    slot(SHAPE_INVALID_SLOT),
+    attrs(0),
+    flags(SHARED_EMPTY),
+    shortid(0),
+    parent(NULL)
 {
     kids.setNull();
 }
@@ -218,7 +225,7 @@ Shape::matches(const js::Shape *other) const
 }
 
 inline bool
-Shape::matchesParamsAfterId(js::PropertyOp agetter, js::PropertyOp asetter, uint32 aslot,
+Shape::matchesParamsAfterId(js::PropertyOp agetter, js::StrictPropertyOp asetter, uint32 aslot,
                             uintN aattrs, uintN aflags, intN ashortid) const
 {
     JS_ASSERT(!JSID_IS_VOID(id));
@@ -257,7 +264,7 @@ Shape::get(JSContext* cx, JSObject *receiver, JSObject* obj, JSObject *pobj, js:
 }
 
 inline bool
-Shape::set(JSContext* cx, JSObject* obj, js::Value* vp) const
+Shape::set(JSContext* cx, JSObject* obj, bool strict, js::Value* vp) const
 {
     JS_ASSERT_IF(hasDefaultSetter(), hasGetterValue());
 
@@ -272,16 +279,16 @@ Shape::set(JSContext* cx, JSObject* obj, js::Value* vp) const
     /* See the comment in js::Shape::get as to why we check for With. */
     if (obj->getClass() == &js_WithClass)
         obj = js_UnwrapWithObject(cx, obj);
-    return js::CallJSPropertyOpSetter(cx, setterOp(), obj, SHAPE_USERID(this), vp);
+    return js::CallJSPropertyOpSetter(cx, setterOp(), obj, SHAPE_USERID(this), strict, vp);
 }
 
 inline
-EmptyShape::EmptyShape(JSContext *cx, js::Class *aclasp)
-  : js::Shape(cx, aclasp)
+EmptyShape::EmptyShape(JSCompartment *comp, js::Class *aclasp)
+  : js::Shape(comp, aclasp)
 {
 #ifdef DEBUG
-    if (cx->runtime->meterEmptyShapes())
-        cx->runtime->emptyShapes.put(this);
+    if (comp->rt->meterEmptyShapes())
+        comp->emptyShapes.put(this);
 #endif
 }
 

@@ -91,7 +91,8 @@ class nsGeolocationRequest
   nsGeolocationRequest(nsGeolocation* locator,
                        nsIDOMGeoPositionCallback* callback,
                        nsIDOMGeoPositionErrorCallback* errorCallback,
-                       nsIDOMGeoPositionOptions* options);
+                       nsIDOMGeoPositionOptions* options,
+                       PRBool watchPositionRequest = PR_FALSE);
   nsresult Init();
   void Shutdown();
 
@@ -118,6 +119,7 @@ class nsGeolocationRequest
   PRPackedBool mAllowed;
   PRPackedBool mCleared;
   PRPackedBool mIsFirstUpdate;
+  PRPackedBool mIsWatchPositionRequest;
 
   nsCOMPtr<nsITimer> mTimeoutTimer;
   nsCOMPtr<nsIDOMGeoPositionCallback> mCallback;
@@ -231,7 +233,7 @@ private:
 
   ~nsGeolocation();
 
-  void RegisterRequestWithPrompt(nsGeolocationRequest* request);
+  bool RegisterRequestWithPrompt(nsGeolocationRequest* request);
 
   // Two callback arrays.  The first |mPendingCallbacks| holds objects for only
   // one callback and then they are released/removed from the array.  The second

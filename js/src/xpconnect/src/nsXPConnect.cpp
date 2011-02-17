@@ -49,6 +49,7 @@
 #include "jsatom.h"
 #include "jsobj.h"
 #include "jsfun.h"
+#include "jsgc.h"
 #include "jsscript.h"
 #include "nsThreadUtilsInternal.h"
 #include "dom_quickstubs.h"
@@ -167,22 +168,19 @@ nsXPConnect::GetXPConnect()
         if(!gSelf)
             return nsnull;
 
-        if(!gSelf->mRuntime ||
-           !gSelf->mInterfaceInfoManager)
-        {
-            // ctor failed to create an acceptable instance
-            delete gSelf;
-            gSelf = nsnull;
+        if (!gSelf->mRuntime) {
+            NS_RUNTIMEABORT("Couldn't create XPCJSRuntime.");
         }
-        else
-        {
-            // Initial extra ref to keep the singleton alive
-            // balanced by explicit call to ReleaseXPConnectSingleton()
-            NS_ADDREF(gSelf);
-            if (NS_FAILED(NS_SetGlobalThreadObserver(gSelf))) {
-                NS_RELEASE(gSelf);
-                // Fall through to returning null
-            }
+        if (!gSelf->mInterfaceInfoManager) {
+            NS_RUNTIMEABORT("Couldn't get global interface info manager.");
+        }
+
+        // Initial extra ref to keep the singleton alive
+        // balanced by explicit call to ReleaseXPConnectSingleton()
+        NS_ADDREF(gSelf);
+        if (NS_FAILED(NS_SetGlobalThreadObserver(gSelf))) {
+            NS_RELEASE(gSelf);
+            // Fall through to returning null
         }
     }
     return gSelf;
@@ -558,6 +556,43 @@ nsXPConnect::Unroot(void *p)
     return NS_OK;
 }
 
+static void
+UnmarkGrayChildren(JSTracer *trc, void *thing, uint32 kind)
+{
+    // If this thing is not a CC-kind or already non-gray then we're done.
+    if(!ADD_TO_CC(kind) || !xpc_IsGrayGCThing(thing))
+        return;
+
+    // Unmark.
+    static_cast<js::gc::Cell *>(thing)->unmark(XPC_GC_COLOR_GRAY);
+
+    // Trace children.
+    JS_TraceChildren(trc, thing, kind);
+}
+
+void
+xpc_UnmarkGrayObjectRecursive(JSObject *obj)
+{
+    NS_ASSERTION(obj, "Don't pass me null!");
+
+    // Unmark.
+    obj->unmark(XPC_GC_COLOR_GRAY);
+
+    // Tracing requires a JSContext...
+    JSContext *cx;
+    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+    if(!xpc || NS_FAILED(xpc->GetSafeJSContext(&cx)) || !cx)
+    {
+        NS_ERROR("Failed to get safe JSContext!");
+        return;
+    }
+
+    // Trace children.
+    JSTracer trc;
+    JS_TRACER_INIT(&trc, cx, UnmarkGrayChildren);
+    JS_TraceChildren(&trc, obj, JSTRACE_OBJECT);
+}
+
 struct TraversalTracer : public JSTracer
 {
     TraversalTracer(nsCycleCollectionTraversalCallback &aCb) : cb(aCb)
@@ -572,6 +607,12 @@ NoteJSChild(JSTracer *trc, void *thing, uint32 kind)
     if(ADD_TO_CC(kind))
     {
         TraversalTracer *tracer = static_cast<TraversalTracer*>(trc);
+
+        // There's no point in further traversing a non-gray object here unless
+        // we explicitly want to see all traces.
+        if(!xpc_IsGrayGCThing(thing) && !tracer->cb.WantAllTraces())
+            return;
+
 #if defined(DEBUG)
         if (NS_UNLIKELY(tracer->cb.WantDebugInfo())) {
             // based on DumpNotify in jsapi.c
@@ -611,12 +652,6 @@ WrapperIsNotMainThreadOnly(XPCWrappedNative *wrapper)
     // can only be used on the main thread too.
     nsXPCOMCycleCollectionParticipant* participant;
     return NS_FAILED(CallQueryInterface(wrapper->Native(), &participant));
-}
-
-JSBool
-nsXPConnect::IsGray(void *thing)
-{
-    return js_GCThingIsMarked(thing, XPC_GC_COLOR_GRAY);
 }
 
 NS_IMETHODIMP
@@ -680,7 +715,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 #endif
     {
         // Normal codepath (matches non-DEBUG_CC codepath).
-        type = !markJSObject && IsGray(p) ? GCUnmarked : GCMarked;
+        type = !markJSObject && xpc_IsGrayGCThing(p) ? GCUnmarked : GCMarked;
     }
 
     if (cb.WantDebugInfo()) {
@@ -775,7 +810,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 
     if(traceKind != JSTRACE_OBJECT || dontTraverse)
         return NS_OK;
-    
+
     if(clazz == &XPC_WN_Tearoff_JSClass)
     {
         // A tearoff holds a strong reference to its native object
@@ -945,7 +980,7 @@ TempGlobalResolve(JSContext *aJSContext, JSObject *obj, jsid id)
 
 static JSClass xpcTempGlobalClass = {
     "xpcTempGlobalClass", JSCLASS_GLOBAL_FLAGS,
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_StrictPropertyStub,
     JS_EnumerateStub, TempGlobalResolve, JS_ConvertStub,   nsnull,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
@@ -970,7 +1005,7 @@ CreateNewCompartment(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
         return false;
 
     *global = tempGlobal;
-    *compartment = tempGlobal->getCompartment();
+    *compartment = tempGlobal->compartment();
 
     js::SwitchToCompartment sc(cx, *compartment);
     JS_SetCompartmentPrivate(cx, *compartment, priv_holder.forget());
@@ -1093,6 +1128,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     JSAutoEnterCompartment ac;
     if(!ac.enter(ccx, tempGlobal))
         return UnexpectedFailure(NS_ERROR_FAILURE);
+    ccx.SetScopeForNewJSObjects(tempGlobal);
 
     PRBool system = (aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT) != 0;
     if(system && !JS_MakeSystemObject(aJSContext, tempGlobal))
@@ -1113,8 +1149,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         if(!XPCConvert::NativeInterface2JSObject(ccx, &v,
                                                  getter_AddRefs(holder),
                                                  helper, &aIID, nsnull,
-                                                 tempGlobal, PR_FALSE,
-                                                 OBJ_IS_GLOBAL, &rv))
+                                                 PR_FALSE, OBJ_IS_GLOBAL, &rv))
             return UnexpectedFailure(rv);
 
         NS_ASSERTION(NS_SUCCEEDED(rv) && holder, "Didn't wrap properly");
@@ -1207,10 +1242,16 @@ NativeInterface2JSObject(XPCLazyCallContext & lccx,
                          jsval *aVal,
                          nsIXPConnectJSObjectHolder **aHolder)
 {
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(lccx.GetJSContext(), aScope))
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    lccx.SetScopeForNewJSObjects(aScope);
+
     nsresult rv;
     xpcObjectHelper helper(aCOMObj, aCache);
     if(!XPCConvert::NativeInterface2JSObject(lccx, aVal, aHolder, helper, aIID,
-                                             nsnull, aScope, aAllowWrapping,
+                                             nsnull, aAllowWrapping,
                                              OBJ_IS_NOT_GLOBAL, &rv))
         return rv;
 
@@ -1588,7 +1629,7 @@ MoveWrapper(XPCCallContext& ccx, XPCWrappedNative *wrapper,
 
         NS_ENSURE_SUCCESS(rv, rv);
 
-        newParent = parentWrapper->GetFlatJSObjectNoMark();
+        newParent = parentWrapper->GetFlatJSObject();
     }
     else
         NS_ASSERTION(betterScope == newScope, "Weird scope returned");
@@ -2273,8 +2314,10 @@ nsXPConnect::VariantToJS(JSContext* ctx, JSObject* scope, nsIVariant* value, jsv
         return NS_ERROR_FAILURE;
     XPCLazyCallContext lccx(ccx);
 
+    ccx.SetScopeForNewJSObjects(scope);
+
     nsresult rv = NS_OK;
-    if(!XPCVariant::VariantDataToJS(lccx, value, scope, &rv, _retval))
+    if(!XPCVariant::VariantDataToJS(lccx, value, &rv, _retval))
     {
         if(NS_FAILED(rv)) 
             return rv;
@@ -2336,7 +2379,7 @@ nsXPConnect::AfterProcessNextEvent(nsIThreadInternal *aThread,
 {
     // Call cycle collector occasionally.
     if (NS_IsMainThread()) {
-        nsJSContext::MaybeCCIfUserInactive();
+        nsJSContext::MaybePokeCC();
     }
 
     return Pop(nsnull);
@@ -2473,34 +2516,68 @@ nsXPConnect::Peek(JSContext * *_retval)
 
 void 
 nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
-    if (gDebugMode != gDesiredDebugMode) {
-        // This can happen if a Worker is running, but we don't have the ability
-        // to debug workers right now, so just return.
-        if (!NS_IsMainThread()) {
-            return;
-        }
+    JSContext *cx = NULL;
 
-        JS_SetRuntimeDebugMode(rt, gDesiredDebugMode);
+    if (gDebugMode == gDesiredDebugMode) {
+        return;
+    }
+        
+    // This can happen if a Worker is running, but we don't have the ability to
+    // debug workers right now, so just return.
+    if (!NS_IsMainThread()) {
+        return;
+    }
 
-        nsresult rv;
-        const char jsdServiceCtrID[] = "@mozilla.org/js/jsd/debugger-service;1";
-        nsCOMPtr<jsdIDebuggerService> jsds = do_GetService(jsdServiceCtrID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-            if (gDesiredDebugMode == PR_FALSE) {
-                rv = jsds->RecompileForDebugMode(rt, PR_FALSE);
-            } else {
-                rv = jsds->ActivateDebugger(rt);
+    JS_SetRuntimeDebugMode(rt, gDesiredDebugMode);
+
+    nsresult rv;
+    const char jsdServiceCtrID[] = "@mozilla.org/js/jsd/debugger-service;1";
+    nsCOMPtr<jsdIDebuggerService> jsds = do_GetService(jsdServiceCtrID, &rv);
+    if (!NS_SUCCEEDED(rv)) {
+        goto fail;
+    }
+
+    if (!(cx = JS_NewContext(rt, 256))) {
+        goto fail;
+    }
+    JS_BeginRequest(cx);
+
+    {
+        js::WrapperVector &vector = rt->compartments;
+        for (JSCompartment **p = vector.begin(); p != vector.end(); ++p) {
+            JSCompartment *comp = *p;
+            if (!comp->principals) {
+                /* Ignore special compartments (atoms, JSD compartments) */
+                continue;
+            }
+
+            /* ParticipatesInCycleCollection means "on the main thread" */
+            if (xpc::CompartmentParticipatesInCycleCollection(cx, comp)) {
+                rv = jsds->RecompileForDebugMode(cx, comp, gDesiredDebugMode);
+                if (!NS_SUCCEEDED(rv)) {
+                    goto fail;
+                }
             }
         }
-
-        if (NS_SUCCEEDED(rv)) {
-            gDebugMode = gDesiredDebugMode;
-        } else {
-            // if the attempt failed, cancel the debugMode request
-            gDesiredDebugMode = gDebugMode;
-            JS_SetRuntimeDebugMode(rt, gDebugMode);
-        }
     }
+
+    JS_EndRequest(cx);
+    JS_DestroyContext(cx);
+
+    if (gDesiredDebugMode) {
+        rv = jsds->ActivateDebugger(rt);
+    }
+
+    gDebugMode = gDesiredDebugMode;
+    return;
+
+fail:
+    if (jsds)
+        jsds->DeactivateDebugger();
+
+    // if the attempt failed, cancel the debugMode request
+    gDesiredDebugMode = gDebugMode;
+    JS_SetRuntimeDebugMode(rt, gDebugMode);
 }
 
 /* JSContext Pop (); */
@@ -2528,16 +2605,23 @@ nsXPConnect::Push(JSContext * cx)
     if(!data)
         return NS_ERROR_FAILURE;
 
-    PRInt32 count;
-    nsresult rv;
-    rv = data->GetJSContextStack()->GetCount(&count);
-    if (NS_FAILED(rv))
-        return rv;
-
-    if (count == 0)
-        CheckForDebugMode(mRuntime->GetJSRuntime());
-
-    return data->GetJSContextStack()->Push(cx);
+     if (gDebugMode != gDesiredDebugMode && NS_IsMainThread()) {
+         const nsTArray<XPCJSContextInfo>* stack = data->GetJSContextStack()->GetStack();
+         bool runningJS = false;
+         for (PRUint32 i = 0; i < stack->Length(); ++i) {
+             JSContext *cx = (*stack)[i].cx;
+             /* Use ParticipatesInCycleCollection to detect main thread */
+             if (cx && cx->regs && xpc::ParticipatesInCycleCollection(cx, cx->globalObject)) {
+                 runningJS = true;
+                 break;
+             }
+         }
+         /* Turning debugging off is immediate even if JS is running */
+         if (!runningJS || !gDesiredDebugMode)
+             CheckForDebugMode(mRuntime->GetJSRuntime());
+     }
+ 
+     return data->GetJSContextStack()->Push(cx);
 }
 
 /* attribute JSContext SafeJSContext; */
@@ -2802,6 +2886,8 @@ NS_IMETHODIMP
 nsXPConnect::SetDebugModeWhenPossible(PRBool mode)
 {
     gDesiredDebugMode = mode;
+    if (!mode)
+        CheckForDebugMode(mRuntime->GetJSRuntime());
     return NS_OK;
 }
 

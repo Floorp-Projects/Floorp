@@ -123,10 +123,10 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
   { 0xcc443f0b, 0xaf39, 0x415d, \
     { 0x9c, 0x4b, 0x7e, 0x06, 0xea, 0xa8, 0xb1, 0x3b } }
 
-// d64532e0-03d6-421c-8e63-da2cff624825
+// {8FC2D005-5359-4dbf-ACB1-701992FB4617}
 #define NS_IWIDGET_MOZILLA_2_0_BRANCH_IID \
-  { 0xd64532e0, 0x03d6, 0x421c, \
-    { 0x8e, 0x63, 0xda, 0x2c, 0xff, 0x62, 0x48, 0x25 } }
+  { 0x8fc2d005, 0x5359, 0x4dbf, \
+    { 0xac, 0xb1, 0x70, 0x19, 0x92, 0xfb, 0x46, 0x17 } }
 
 /*
  * Window shadow styles
@@ -791,11 +791,7 @@ class nsIWidget : public nsISupports {
     virtual nsTransparencyMode GetTransparencyMode() = 0;
 
     /**
-     * Updates a region of the window that might not have opaque content drawn. Widgets should
-     * assume that the initial possibly transparent region is empty.
-     *
-     * @param aDirtyRegion the region of the window that aMaybeTransparentRegion pertains to
-     * @param aPossiblyTransparentRegion the region of the window that is possibly transparent
+     * depreciated, see 2.0 interface.
      */
     virtual void UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
                                                  const nsIntRegion &aPossiblyTransparentRegion) {};
@@ -1334,7 +1330,6 @@ class nsIWidget : public nsISupports {
                                               PRBool aIsHorizontal,
                                               PRInt32 &aOverriddenDelta) = 0;
 
-#ifdef MOZ_IPC
     /**
      * Return true if this process shouldn't use platform widgets, and
      * so should use PuppetWidgets instead.  If this returns true, the
@@ -1343,8 +1338,15 @@ class nsIWidget : public nsISupports {
      */
     static bool
     UsePuppetWidgets()
-    { return XRE_GetProcessType() == GeckoProcessType_Content; }
+    {
+#ifdef MOZ_IPC
+      return XRE_GetProcessType() == GeckoProcessType_Content;
+#else
+      return PR_FALSE;
+#endif
+    }
 
+#ifdef MOZ_IPC
     /**
      * Allocate and return a "puppet widget" that doesn't directly
      * correlate to a platform widget; platform events and data must
@@ -1434,6 +1436,16 @@ class nsIWidget_MOZILLA_2_0_BRANCH : public nsIWidget {
      * paint anything.
      */
     virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) = 0;
+
+    /**
+     * Informs the widget about the region of the window that is partially
+     * transparent. Widgets should assume that the initial transparent
+     * region is empty.
+     *
+     * @param aTransparentRegion the region of the window that is partially
+     * transparent.
+     */
+    virtual void UpdateTransparentRegion(const nsIntRegion &aTransparentRegion) {};
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIWidget_MOZILLA_2_0_BRANCH, NS_IWIDGET_MOZILLA_2_0_BRANCH_IID)

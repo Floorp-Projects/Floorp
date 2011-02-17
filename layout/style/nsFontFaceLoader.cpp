@@ -54,6 +54,7 @@
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsContentUtils.h"
+#include "nsIPrefService.h"
 
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -89,8 +90,91 @@ nsFontFaceLoader::nsFontFaceLoader(gfxFontEntry *aFontToLoad, nsIURI *aFontURI,
 
 nsFontFaceLoader::~nsFontFaceLoader()
 {
+  if (mLoadTimer) {
+    mLoadTimer->Cancel();
+    mLoadTimer = nsnull;
+  }
   if (mFontSet) {
     mFontSet->RemoveLoader(this);
+  }
+}
+
+void
+nsFontFaceLoader::StartedLoading(nsIStreamLoader *aStreamLoader)
+{
+  PRInt32 loadTimeout = 3000;
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    prefs->GetIntPref("gfx.downloadable_fonts.fallback_delay", &loadTimeout);
+  }
+  if (loadTimeout > 0) {
+    mLoadTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (mLoadTimer) {
+      mLoadTimer->InitWithFuncCallback(LoadTimerCallback,
+                                       static_cast<void*>(this),
+                                       loadTimeout,
+                                       nsITimer::TYPE_ONE_SHOT);
+    }
+  } else {
+    gfxProxyFontEntry *pe =
+      static_cast<gfxProxyFontEntry*>(mFontEntry.get());
+    pe->mLoadingState = gfxProxyFontEntry::LOADING_SLOWLY;
+  }
+  mStreamLoader = aStreamLoader;
+}
+
+void
+nsFontFaceLoader::LoadTimerCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsFontFaceLoader *loader = static_cast<nsFontFaceLoader*>(aClosure);
+
+  if (!loader->mFontEntry->mIsProxy) {
+    return;
+  }
+
+  gfxProxyFontEntry *pe =
+    static_cast<gfxProxyFontEntry*>(loader->mFontEntry.get());
+  bool updateUserFontSet = true;
+
+  // If the entry is loading, check whether it's >75% done; if so,
+  // we allow another timeout period before showing a fallback font.
+  if (pe->mLoadingState == gfxProxyFontEntry::LOADING_STARTED) {
+    PRInt32 contentLength;
+    loader->mChannel->GetContentLength(&contentLength);
+    PRUint32 numBytesRead;
+    loader->mStreamLoader->GetNumBytesRead(&numBytesRead);
+
+    if (contentLength > 0 &&
+        numBytesRead > 3 * (PRUint32(contentLength) >> 2))
+    {
+      // More than 3/4 the data has been downloaded, so allow 50% extra
+      // time and hope the remainder will arrive before the additional
+      // time expires.
+      pe->mLoadingState = gfxProxyFontEntry::LOADING_ALMOST_DONE;
+      PRUint32 delay;
+      loader->mLoadTimer->GetDelay(&delay);
+      loader->mLoadTimer->InitWithFuncCallback(LoadTimerCallback,
+                                               static_cast<void*>(loader),
+                                               delay >> 1,
+                                               nsITimer::TYPE_ONE_SHOT);
+      updateUserFontSet = false;
+      LOG(("fontdownloader (%p) 75%% done, resetting timer\n", loader));
+    }
+  }
+
+  // If the font is not 75% loaded, or if we've already timed out once
+  // before, we mark this entry as "loading slowly", so the fallback
+  // font will be used in the meantime, and tell the context to refresh.
+  if (updateUserFontSet) {
+    pe->mLoadingState = gfxProxyFontEntry::LOADING_SLOWLY;
+    nsPresContext *ctx = loader->mFontSet->GetPresContext();
+    NS_ASSERTION(ctx, "fontSet doesn't have a presContext?");
+    gfxUserFontSet *fontSet;
+    if (ctx && (fontSet = ctx->GetUserFontSet()) != nsnull) {
+      fontSet->IncrementGeneration();
+      ctx->UserFontSetUpdated();
+      LOG(("fontdownloader (%p) timeout reflow\n", loader));
+    }
   }
 }
 
@@ -156,6 +240,10 @@ void
 nsFontFaceLoader::Cancel()
 {
   mFontSet = nsnull;
+  if (mLoadTimer) {
+    mLoadTimer->Cancel();
+    mLoadTimer = nsnull;
+  }
   mChannel->Cancel(NS_BINDING_ABORTED);
 }
 
@@ -343,6 +431,7 @@ nsUserFontSet::StartLoad(gfxFontEntry *aFontToLoad,
 
   if (NS_SUCCEEDED(rv)) {
     mLoaders.PutEntry(fontLoader);
+    fontLoader->StartedLoading(streamLoader);
   }
 
   return rv;

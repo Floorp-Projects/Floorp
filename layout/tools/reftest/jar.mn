@@ -2,6 +2,7 @@ reftest.jar:
 % content reftest %content/
 *  content/quit.js (quit.js)
 *  content/reftest.js (reftest.js)
+  content/reftest-content.js (reftest-content.js)
   content/reftest.xul (reftest.xul)
   content/MozillaFileLogger.js (../../../testing/mochitest/tests/SimpleTest/MozillaFileLogger.js)
 #ifdef XPI_NAME

@@ -590,12 +590,6 @@ var gTests = [
     cleanDatabase(run_next_test);
   },
 
-  function lastTestJustCallsTestFinished() {
-    // close out our over-arching test
-    do_test_finished();
-    // and let run_next_test close out its pending test too.
-    run_next_test();
-  },
 ];
 
 // The tag keys in query URIs, i.e., "place:tag=foo&!tags=1"
@@ -832,9 +826,5 @@ function setsAreEqual(aArr1, aArr2, aIsOrdered) {
 ///////////////////////////////////////////////////////////////////////////////
 
 function run_test() {
-  // Create an overarching test for our entire test run.  this is balanced
-  // by a dummy test as the last test in our test list that just calls
-  // do_test_finished().
-  do_test_pending();
   run_next_test();
 }

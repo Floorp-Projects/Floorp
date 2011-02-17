@@ -127,8 +127,8 @@ struct nsIntPoint {
 inline nsIntPoint
 nsPoint::ToNearestPixels(nscoord aAppUnitsPerPixel) const {
   return nsIntPoint(
-      NSToIntRoundUp(NSAppUnitsToFloatPixels(x, float(aAppUnitsPerPixel))),
-      NSToIntRoundUp(NSAppUnitsToFloatPixels(y, float(aAppUnitsPerPixel))));
+      NSToIntRoundUp(NSAppUnitsToDoublePixels(x, aAppUnitsPerPixel)),
+      NSToIntRoundUp(NSAppUnitsToDoublePixels(y, aAppUnitsPerPixel)));
 }
 
 inline nsPoint

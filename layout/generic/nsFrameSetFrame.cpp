@@ -101,7 +101,6 @@ void nsFramesetDrag::Reset(PRBool               aVertical,
   mIndex    = aIndex;
   mChange   = aChange;
   mSource   = aSource;
-  mActive   = PR_TRUE;
 }
 
 void nsFramesetDrag::UnSet()
@@ -110,7 +109,6 @@ void nsFramesetDrag::UnSet()
   mIndex    = -1;
   mChange   = 0;
   mSource   = nsnull;
-  mActive   = PR_FALSE;
 }
 
 /*******************************************************************************
@@ -999,10 +997,8 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
     return NS_OK;
   }
 
-  if (!mDrag.mActive) {
-    CalculateRowCol(aPresContext, width, mNumCols, colSpecs, mColSizes);
-    CalculateRowCol(aPresContext, height, mNumRows, rowSpecs, mRowSizes);
-  }
+  CalculateRowCol(aPresContext, width, mNumCols, colSpecs, mColSizes);
+  CalculateRowCol(aPresContext, height, mNumRows, rowSpecs, mRowSizes);
 
   nsAutoArrayPtr<PRBool>  verBordersVis; // vertical borders visibility
   nsAutoArrayPtr<nscolor> verBorderColors;

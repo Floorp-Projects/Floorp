@@ -86,7 +86,7 @@ var SidebarUtils = {
     else if (!mouseInGutter && openInTabs &&
             aEvent.originalTarget.localName == "treechildren") {
       tbo.view.selection.select(row.value);
-      PlacesUIUtils.openContainerNodeInTabs(aTree.selectedNode, aEvent);
+      PlacesUIUtils.openContainerNodeInTabs(aTree.selectedNode, aEvent, tbo.view);
     }
     else if (!mouseInGutter && !isContainer &&
              aEvent.originalTarget.localName == "treechildren") {
@@ -94,13 +94,18 @@ var SidebarUtils = {
       // do this *before* attempting to load the link since openURL uses
       // selection as an indication of which link to load.
       tbo.view.selection.select(row.value);
-      PlacesUIUtils.openNodeWithEvent(aTree.selectedNode, aEvent);
+      PlacesUIUtils.openNodeWithEvent(aTree.selectedNode, aEvent, tbo.view);
     }
   },
 
   handleTreeKeyPress: function SU_handleTreeKeyPress(aEvent) {
-    if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN)
-      PlacesUIUtils.openNodeWithEvent(aEvent.target.selectedNode, aEvent);
+    // XXX Bug 627901: Post Fx4, this method should take a tree parameter.
+    let node = aEvent.target.selectedNode;
+    if (node) {
+      let view = PlacesUIUtils.getViewForNode(node);
+      if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN)
+        PlacesUIUtils.openNodeWithEvent(node, aEvent, view);
+    }
   },
 
   /**

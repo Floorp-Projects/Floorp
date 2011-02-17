@@ -6,7 +6,7 @@
 == image-outside-document-invalidate.html about:blank
 == canvas-outside-document-invalidate-01.html about:blank
 == canvas-outside-document-invalidate-02.html about:blank
-== element-paint-simple.html element-paint-simple-ref.html
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == element-paint-simple.html element-paint-simple-ref.html
 == element-paint-repeated.html element-paint-repeated-ref.html
 == element-paint-recursion.html element-paint-recursion-ref.html
 HTTP(..) == element-paint-continuation.html element-paint-continuation-ref.html
@@ -16,7 +16,7 @@ random-if(d2d) == element-paint-transform-02.html element-paint-transform-02-ref
 == element-paint-background-size-02.html element-paint-background-size-02-ref.html
 == element-paint-transform-repeated.html element-paint-transform-repeated-ref.html
 == element-paint-transform-03.html element-paint-transform-03-ref.html
-== element-paint-native-widget.html element-paint-native-widget-ref.html
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == element-paint-native-widget.html element-paint-native-widget-ref.html
 == element-paint-subimage-sampling-restriction.html about:blank
 == element-paint-clippath.html element-paint-clippath-ref.html
 == element-paint-sharpness-01a.html element-paint-sharpness-01b.html

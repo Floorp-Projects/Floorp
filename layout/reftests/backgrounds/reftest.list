@@ -107,3 +107,8 @@ fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
 # start failing when we do.
 fails == background-size-no-intrinsic-width-image.html background-size-no-intrinsic-width-image-ref.html
 fails == background-size-no-intrinsic-height-image.html background-size-no-intrinsic-height-image-ref.html
+
+== fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-ref.html
+
+HTTP == root-background-1.html root-background-ref.html
+HTTP != root-background-1.html about:blank

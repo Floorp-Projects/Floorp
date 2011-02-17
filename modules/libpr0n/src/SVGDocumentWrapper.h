@@ -124,7 +124,7 @@ public:
    * Returns a PRBool indicating whether the wrapped document has been parsed
    * successfully.
    *
-   * @return PR_TRUE if the document has been parsed successfully, 
+   * @return PR_TRUE if the document has been parsed successfully,
    *         PR_FALSE otherwise (e.g. if there's a syntax error in the SVG).
    */
   inline PRBool    ParsedSuccessfully()  { return !!GetRootSVGElem(); }
@@ -145,7 +145,7 @@ public:
    * (First, though, it sets the mIgnoreInvalidation flag so that we won't
    * notify the image's observers and trigger unwanted repaint-requests.)
    */
-  void FlushPreserveAspectRatioOverride();
+  void FlushImageTransformInvalidation();
 
   /**
    * Returns a PRBool indicating whether the document has any SMIL animations.

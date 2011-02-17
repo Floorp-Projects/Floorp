@@ -48,6 +48,7 @@
 #include "methodjit/CodeGenIncludes.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/ICRepatcher.h"
+#include "methodjit/PolyIC.h"
 #include "InlineFrameAssembler.h"
 #include "jsobj.h"
 
@@ -66,25 +67,25 @@ typedef JSC::MacroAssembler::Jump Jump;
 typedef JSC::MacroAssembler::Imm32 Imm32;
 typedef JSC::MacroAssembler::ImmPtr ImmPtr;
 typedef JSC::MacroAssembler::Call Call;
+typedef JSC::MacroAssembler::Label Label;
+typedef JSC::MacroAssembler::DataLabel32 DataLabel32;
 
 #if defined JS_MONOIC
 
 static void
-PatchGetFallback(VMFrame &f, ic::MICInfo *ic)
+PatchGetFallback(VMFrame &f, ic::GetGlobalNameIC *ic)
 {
     Repatcher repatch(f.jit());
     JSC::FunctionPtr fptr(JS_FUNC_TO_DATA_PTR(void *, stubs::GetGlobalName));
-    repatch.relink(ic->stubCall, fptr);
+    repatch.relink(ic->slowPathCall, fptr);
 }
 
 void JS_FASTCALL
-ic::GetGlobalName(VMFrame &f, ic::MICInfo *ic)
+ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
 {
     JSObject *obj = f.fp()->scopeChain().getGlobal();
     JSAtom *atom = f.fp()->script()->getAtom(GET_INDEX(f.regs.pc));
     jsid id = ATOM_TO_JSID(atom);
-
-    JS_ASSERT(ic->kind == ic::MICInfo::GET);
 
     const Shape *shape = obj->nativeLookup(id);
     if (!shape ||
@@ -98,14 +99,13 @@ ic::GetGlobalName(VMFrame &f, ic::MICInfo *ic)
     }
     uint32 slot = shape->slot;
 
-    ic->u.name.touched = true;
-
     /* Patch shape guard. */
     Repatcher repatcher(f.jit());
-    repatcher.repatch(ic->shape, obj->shape());
+    repatcher.repatch(ic->fastPathStart.dataLabel32AtOffset(ic->shapeOffset), obj->shape());
 
     /* Patch loads. */
-    repatcher.patchAddressOffsetForValueLoad(ic->load, slot * sizeof(Value));
+    JSC::CodeLocationLabel label = ic->fastPathStart.labelAtOffset(ic->loadStoreOffset);
+    repatcher.patchAddressOffsetForValueLoad(label, slot * sizeof(Value));
 
     /* Do load anyway... this time. */
     stubs::GetGlobalName(f);
@@ -113,79 +113,220 @@ ic::GetGlobalName(VMFrame &f, ic::MICInfo *ic)
 
 template <JSBool strict>
 static void JS_FASTCALL
-DisabledSetGlobal(VMFrame &f, ic::MICInfo *ic)
+DisabledSetGlobal(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
     JSScript *script = f.fp()->script();
     JSAtom *atom = script->getAtom(GET_INDEX(f.regs.pc));
     stubs::SetGlobalName<strict>(f, atom);
 }
 
-template void JS_FASTCALL DisabledSetGlobal<true>(VMFrame &f, ic::MICInfo *ic);
-template void JS_FASTCALL DisabledSetGlobal<false>(VMFrame &f, ic::MICInfo *ic);
+template void JS_FASTCALL DisabledSetGlobal<true>(VMFrame &f, ic::SetGlobalNameIC *ic);
+template void JS_FASTCALL DisabledSetGlobal<false>(VMFrame &f, ic::SetGlobalNameIC *ic);
 
 template <JSBool strict>
 static void JS_FASTCALL
-DisabledSetGlobalNoCache(VMFrame &f, ic::MICInfo *ic)
+DisabledSetGlobalNoCache(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
     JSScript *script = f.fp()->script();
     JSAtom *atom = script->getAtom(GET_INDEX(f.regs.pc));
     stubs::SetGlobalNameNoCache<strict>(f, atom);
 }
 
-template void JS_FASTCALL DisabledSetGlobalNoCache<true>(VMFrame &f, ic::MICInfo *ic);
-template void JS_FASTCALL DisabledSetGlobalNoCache<false>(VMFrame &f, ic::MICInfo *ic);
+template void JS_FASTCALL DisabledSetGlobalNoCache<true>(VMFrame &f, ic::SetGlobalNameIC *ic);
+template void JS_FASTCALL DisabledSetGlobalNoCache<false>(VMFrame &f, ic::SetGlobalNameIC *ic);
 
 static void
-PatchSetFallback(VMFrame &f, ic::MICInfo *ic)
+PatchSetFallback(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
     JSScript *script = f.fp()->script();
 
     Repatcher repatch(f.jit());
-    VoidStubMIC stub = ic->u.name.usePropertyCache
-                       ? STRICT_VARIANT(DisabledSetGlobal)
-                       : STRICT_VARIANT(DisabledSetGlobalNoCache);
+    VoidStubSetGlobal stub = ic->usePropertyCache
+                             ? STRICT_VARIANT(DisabledSetGlobal)
+                             : STRICT_VARIANT(DisabledSetGlobalNoCache);
     JSC::FunctionPtr fptr(JS_FUNC_TO_DATA_PTR(void *, stub));
-    repatch.relink(ic->stubCall, fptr);
+    repatch.relink(ic->slowPathCall, fptr);
 }
 
-void JS_FASTCALL
-ic::SetGlobalName(VMFrame &f, ic::MICInfo *ic)
+void
+SetGlobalNameIC::patchExtraShapeGuard(Repatcher &repatcher, int32 shape)
 {
-    JSObject *obj = f.fp()->scopeChain().getGlobal();
-    JSScript *script = f.fp()->script();
-    JSAtom *atom = script->getAtom(GET_INDEX(f.regs.pc));
-    jsid id = ATOM_TO_JSID(atom);
+    JS_ASSERT(hasExtraStub);
 
-    JS_ASSERT(ic->kind == ic::MICInfo::SET);
+    JSC::CodeLocationLabel label(JSC::MacroAssemblerCodePtr(extraStub.start()));
+    repatcher.repatch(label.dataLabel32AtOffset(extraShapeGuard), shape);
+}
 
-    const Shape *shape = obj->nativeLookup(id);
-    if (!shape ||
-        shape->isMethod() ||
+void
+SetGlobalNameIC::patchInlineShapeGuard(Repatcher &repatcher, int32 shape)
+{
+    JSC::CodeLocationDataLabel32 label = fastPathStart.dataLabel32AtOffset(shapeOffset);
+    repatcher.repatch(label, shape);
+}
+
+static LookupStatus
+UpdateSetGlobalNameStub(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, const Shape *shape)
+{
+    Repatcher repatcher(ic->extraStub);
+
+    ic->patchExtraShapeGuard(repatcher, obj->shape());
+
+    JSC::CodeLocationLabel label(JSC::MacroAssemblerCodePtr(ic->extraStub.start()));
+    label = label.labelAtOffset(ic->extraStoreOffset);
+    repatcher.patchAddressOffsetForValueStore(label, shape->slot * sizeof(Value),
+                                              ic->vr.isTypeKnown());
+
+    return Lookup_Cacheable;
+}
+
+static LookupStatus
+AttachSetGlobalNameStub(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, const Shape *shape)
+{
+    Assembler masm;
+
+    Label start = masm.label();
+
+    DataLabel32 shapeLabel;
+    Jump guard = masm.branch32WithPatch(Assembler::NotEqual, ic->shapeReg, Imm32(obj->shape()),
+                                        shapeLabel);
+
+    /* A constant object needs rematerialization. */
+    if (ic->objConst)
+        masm.move(ImmPtr(obj), ic->objReg);
+
+    JS_ASSERT(obj->branded());
+
+    /*
+     * Load obj->slots. If ic->objConst, then this clobbers objReg, because
+     * ic->objReg == ic->shapeReg.
+     */
+    masm.loadPtr(Address(ic->objReg, offsetof(JSObject, slots)), ic->shapeReg);
+
+    /* Test if overwriting a function-tagged slot. */
+    Address slot(ic->shapeReg, sizeof(Value) * shape->slot);
+    Jump isNotObject = masm.testObject(Assembler::NotEqual, slot);
+
+    /* Now, test if the object is a function object. */
+    masm.loadPayload(slot, ic->shapeReg);
+    Jump isFun = masm.testFunction(Assembler::Equal, ic->shapeReg);
+
+    /* Restore shapeReg to obj->slots, since we clobbered it. */
+    if (ic->objConst)
+        masm.move(ImmPtr(obj), ic->objReg);
+    masm.loadPtr(Address(ic->objReg, offsetof(JSObject, slots)), ic->shapeReg);
+
+    /* If the object test fails, shapeReg is still obj->slots. */
+    isNotObject.linkTo(masm.label(), &masm);
+    DataLabel32 store = masm.storeValueWithAddressOffsetPatch(ic->vr, slot);
+
+    Jump done = masm.jump();
+
+    JITScript *jit = f.jit();
+    LinkerHelper linker(masm);
+    JSC::ExecutablePool *ep = linker.init(f.cx);
+    if (!ep)
+        return Lookup_Error;
+    if (!jit->execPools.append(ep)) {
+        ep->release();
+        js_ReportOutOfMemory(f.cx);
+        return Lookup_Error;
+    }
+
+    if (!linker.verifyRange(jit)) {
+        ep->release();
+        return Lookup_Uncacheable;
+    }
+
+    linker.link(done, ic->fastPathStart.labelAtOffset(ic->fastRejoinOffset));
+    linker.link(guard, ic->slowPathStart);
+    linker.link(isFun, ic->slowPathStart);
+
+    JSC::CodeLocationLabel cs = linker.finalize();
+    JaegerSpew(JSpew_PICs, "generated setgname stub at %p\n", cs.executableAddress());
+
+    Repatcher repatcher(f.jit());
+    repatcher.relink(ic->fastPathStart.jumpAtOffset(ic->inlineShapeJump), cs);
+
+    int offset = linker.locationOf(shapeLabel) - linker.locationOf(start);
+    ic->extraShapeGuard = offset;
+    JS_ASSERT(ic->extraShapeGuard == offset);
+
+    ic->extraStub = JSC::JITCode(cs.executableAddress(), linker.size());
+    offset = linker.locationOf(store) - linker.locationOf(start);
+    ic->extraStoreOffset = offset;
+    JS_ASSERT(ic->extraStoreOffset == offset);
+
+    ic->hasExtraStub = true;
+
+    return Lookup_Cacheable;
+}
+
+static LookupStatus
+UpdateSetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, const Shape *shape)
+{
+    /* Give globals a chance to appear. */
+    if (!shape)
+        return Lookup_Uncacheable;
+
+    if (shape->isMethod() ||
         !shape->hasDefaultSetter() ||
         !shape->writable() ||
         !shape->hasSlot())
     {
-        if (shape)
-            PatchSetFallback(f, ic);
-        if (ic->u.name.usePropertyCache)
-            STRICT_VARIANT(stubs::SetGlobalName)(f, atom);
-        else
-            STRICT_VARIANT(stubs::SetGlobalNameNoCache)(f, atom);
-        return;
+        /* Disable the IC for weird shape attributes. */
+        PatchSetFallback(f, ic);
+        return Lookup_Uncacheable;
     }
-    uint32 slot = shape->slot;
 
-    ic->u.name.touched = true;
+    /* Branded sets must guard that they don't overwrite method-valued properties. */
+    if (obj->branded()) {
+        /*
+         * If this slot has a function valued property, the tail of this opcode
+         * could change the shape. Even if it doesn't, the IC is probably
+         * pointless, because it will always hit the function-test path and
+         * bail out. In these cases, don't bother building or updating the IC.
+         */
+        const Value &v = obj->getSlot(shape->slot);
+        if (v.isObject() && v.toObject().isFunction()) {
+            /*
+             * If we're going to rebrand, the object may unbrand, allowing this
+             * IC to come back to life. In that case, we don't disable the IC.
+             */
+            if (!ChangesMethodValue(v, f.regs.sp[-1]))
+                PatchSetFallback(f, ic);
+            return Lookup_Uncacheable;
+        }
 
-    /* Patch shape guard. */
+        if (ic->hasExtraStub)
+            return UpdateSetGlobalNameStub(f, ic, obj, shape);
+
+        return AttachSetGlobalNameStub(f, ic, obj, shape);
+    }
+
+    /* Object is not branded, so we can use the inline path. */
     Repatcher repatcher(f.jit());
-    repatcher.repatch(ic->shape, obj->shape());
+    ic->patchInlineShapeGuard(repatcher, obj->shape());
 
-    /* Patch loads. */
-    repatcher.patchAddressOffsetForValueStore(ic->load, slot * sizeof(Value),
-                                              ic->u.name.typeConst);
+    JSC::CodeLocationLabel label = ic->fastPathStart.labelAtOffset(ic->loadStoreOffset);
+    repatcher.patchAddressOffsetForValueStore(label, shape->slot * sizeof(Value),
+                                              ic->vr.isTypeKnown());
 
-    if (ic->u.name.usePropertyCache)
+    return Lookup_Cacheable;
+}
+
+void JS_FASTCALL
+ic::SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic)
+{
+    JSObject *obj = f.fp()->scopeChain().getGlobal();
+    JSScript *script = f.fp()->script();
+    JSAtom *atom = script->getAtom(GET_INDEX(f.regs.pc));
+    const Shape *shape = obj->nativeLookup(ATOM_TO_JSID(atom));
+
+    LookupStatus status = UpdateSetGlobalName(f, ic, obj, shape);
+    if (status == Lookup_Error)
+        THROW();
+
+    if (ic->usePropertyCache)
         STRICT_VARIANT(stubs::SetGlobalName)(f, atom);
     else
         STRICT_VARIANT(stubs::SetGlobalNameNoCache)(f, atom);
@@ -809,7 +950,8 @@ class CallCompiler : public BaseCompiler
         // If the function cannot be jitted (generally unjittable or empty script),
         // patch this site to go to a slow path always.
         if (!ucr.codeAddr) {
-            disable(jit);
+            if (ucr.unjittable)
+                disable(jit);
             return NULL;
         }
             
@@ -1034,29 +1176,26 @@ ic::SplatApplyArgs(VMFrame &f)
 void
 JITScript::purgeMICs()
 {
-    if (!nMICs)
+    if (!nGetGlobalNames || !nSetGlobalNames)
         return;
 
     Repatcher repatch(this);
 
-    for (uint32 i = 0; i < nMICs; i++) {
-        ic::MICInfo &mic = mics[i];
-        switch (mic.kind) {
-          case ic::MICInfo::SET:
-          case ic::MICInfo::GET:
-          {
-            /* Patch shape guard. */
-            repatch.repatch(mic.shape, int(JSObjectMap::INVALID_SHAPE));
+    ic::GetGlobalNameIC *getGlobalNames_ = getGlobalNames();
+    for (uint32 i = 0; i < nGetGlobalNames; i++) {
+        ic::GetGlobalNameIC &ic = getGlobalNames_[i];
+        JSC::CodeLocationDataLabel32 label = ic.fastPathStart.dataLabel32AtOffset(ic.shapeOffset);
+        repatch.repatch(label, int(JSObjectMap::INVALID_SHAPE));
+    }
 
-            /* 
-             * If the stub call was patched, leave it alone -- it probably will
-             * just be invalidated again.
-             */
-            break;
-          }
-          default:
-            JS_NOT_REACHED("Unknown MIC type during purge");
-            break;
+    ic::SetGlobalNameIC *setGlobalNames_ = setGlobalNames();
+    for (uint32 i = 0; i < nSetGlobalNames; i++) {
+        ic::SetGlobalNameIC &ic = setGlobalNames_[i];
+        ic.patchInlineShapeGuard(repatch, int32(JSObjectMap::INVALID_SHAPE));
+
+        if (ic.hasExtraStub) {
+            Repatcher repatcher(ic.extraStub);
+            ic.patchExtraShapeGuard(repatcher, int32(JSObjectMap::INVALID_SHAPE));
         }
     }
 }
@@ -1081,8 +1220,9 @@ JITScript::nukeScriptDependentICs()
 
     Repatcher repatcher(this);
 
+    ic::CallICInfo *callICs_ = callICs();
     for (uint32 i = 0; i < nCallICs; i++) {
-        ic::CallICInfo &ic = callICs[i];
+        ic::CallICInfo &ic = callICs_[i];
         if (!ic.fastGuardedObject)
             continue;
         repatcher.repatch(ic.funGuard, NULL);
@@ -1104,8 +1244,9 @@ JITScript::sweepCallICs(JSContext *cx, bool purgeAll)
      * alive pools that we are trying to destroy (see JSCompartment::sweep).
      */
 
+    ic::CallICInfo *callICs_ = callICs();
     for (uint32 i = 0; i < nCallICs; i++) {
-        ic::CallICInfo &ic = callICs[i];
+        ic::CallICInfo &ic = callICs_[i];
 
         /*
          * If the object is unreachable, we're guaranteed not to be currently
@@ -1144,8 +1285,9 @@ JITScript::sweepCallICs(JSContext *cx, bool purgeAll)
         /* Purge ICs generating stubs into execPools. */
         uint32 released = 0;
 
+        ic::EqualityICInfo *equalityICs_ = equalityICs();
         for (uint32 i = 0; i < nEqualityICs; i++) {
-            ic::EqualityICInfo &ic = equalityICs[i];
+            ic::EqualityICInfo &ic = equalityICs_[i];
             if (!ic.generated)
                 continue;
 
@@ -1154,6 +1296,16 @@ JITScript::sweepCallICs(JSContext *cx, bool purgeAll)
             repatcher.relink(ic.jumpToStub, ic.stubEntry);
 
             ic.generated = false;
+            released++;
+        }
+
+        ic::SetGlobalNameIC *setGlobalNames_ = setGlobalNames();
+        for (uint32 i = 0; i < nSetGlobalNames; i ++) {
+            ic::SetGlobalNameIC &ic = setGlobalNames_[i];
+            if (!ic.hasExtraStub)
+                continue;
+            repatcher.relink(ic.fastPathStart.jumpAtOffset(ic.inlineShapeJump), ic.slowPathStart);
+            ic.hasExtraStub = false;
             released++;
         }
 

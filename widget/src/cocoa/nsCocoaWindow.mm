@@ -148,7 +148,6 @@ nsCocoaWindow::nsCocoaWindow()
 , mSheetNeedsShow(PR_FALSE)
 , mFullScreen(PR_FALSE)
 , mModal(PR_FALSE)
-, mIsShowing(PR_FALSE)
 , mNumModalDescendents(0)
 {
 
@@ -171,10 +170,6 @@ void nsCocoaWindow::DestroyNativeWindow()
 nsCocoaWindow::~nsCocoaWindow()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (mFullScreen) {
-    nsCocoaUtils::HideOSChromeOnScreen(PR_FALSE, [mWindow screen]);
-  }
 
   // Notify the children that we're gone.  Popup windows (e.g. tooltips) can
   // have nsChildView children.  'kid' is an nsChildView object if and only if
@@ -490,6 +485,10 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
   nsBaseWidget::Destroy();
   nsBaseWidget::OnDestroy();
 
+  if (mFullScreen) {
+    nsCocoaUtils::HideOSChromeOnScreen(PR_FALSE, [mWindow screen]);
+  }
+
   return NS_OK;
 }
 
@@ -533,20 +532,14 @@ void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
 }
 
-PRBool
-nsCocoaWindow::IsVisible()
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  return [mWindow isVisible] || mSheetNeedsShow || mIsShowing;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
-}
-
 NS_IMETHODIMP nsCocoaWindow::IsVisible(PRBool & aState)
 {
-  aState = IsVisible();
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  aState = ([mWindow isVisible] || mSheetNeedsShow);
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
@@ -631,7 +624,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 
   // We need to re-execute sometimes in order to bring already-visible
   // windows forward.
-  if (!bState && !IsVisible())
+  if (!mSheetNeedsShow && !bState && ![mWindow isVisible])
     return NS_OK;
 
   nsIWidget* parentWidget = mParent;
@@ -640,23 +633,10 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
     (NSWindow*)parentWidget->GetNativeData(NS_NATIVE_WINDOW) : nil;
 
   if (bState && !mBounds.IsEmpty()) {
-    // IsVisible can be entered from inside this method, for example through
-    // synchronous painting. Unfortunately, at that point [mWindow isVisible]
-    // still returns NO, so we use mIsShowing to tell us that we should return
-    // true from IsVisible anyway.
-    mIsShowing = PR_TRUE;
-
-    if (mPopupContentView) {
-      // Ensure our content view is visible. We never need to hide it.
-      mPopupContentView->Show(PR_TRUE);
-    }
-
     if (mWindowType == eWindowType_sheet) {
       // bail if no parent window (its basically what we do in Carbon)
-      if (!nativeParentWindow || !piParentWidget) {
-        mIsShowing = PR_FALSE;
+      if (!nativeParentWindow || !piParentWidget)
         return NS_ERROR_FAILURE;
-      }
 
       NSWindow* topNonSheetWindow = nativeParentWindow;
       
@@ -749,7 +729,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       NS_OBJC_END_TRY_LOGONLY_BLOCK;
       SendSetZLevelEvent();
     }
-    mIsShowing = PR_FALSE;
   }
   else {
     // roll up any popups if a top-level window is going away
@@ -855,6 +834,9 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       }
     }
   }
+  
+  if (mPopupContentView)
+      mPopupContentView->Show(bState);
 
   return NS_OK;
 
@@ -1717,8 +1699,9 @@ NS_IMETHODIMP nsCocoaWindow::BeginSecureKeyboardInput()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsresult rv = nsBaseWidget::BeginSecureKeyboardInput();
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
     ::EnableSecureEventInput();
+  }
   return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -1729,8 +1712,9 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsresult rv = nsBaseWidget::EndSecureKeyboardInput();
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
     ::DisableSecureEventInput();
+  }
   return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -2182,6 +2166,17 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 - (float)getDPI
 {
   return mDPI;
+}
+
+- (BOOL)respondsToSelector:(SEL)aSelector
+{
+  // Claim the window doesn't respond to this so that the system
+  // doesn't steal keyboard equivalents for it. Bug 613710.
+  if (aSelector == @selector(cancelOperation:)) {
+    return NO;
+  }
+
+  return [super respondsToSelector:aSelector];
 }
 
 - (void) doCommandBySelector:(SEL)aSelector

@@ -642,7 +642,7 @@ class TypedArrayTemplate
 
     static JSBool
     obj_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
-                       PropertyOp getter, PropertyOp setter, uintN attrs)
+                       PropertyOp getter, StrictPropertyOp setter, uintN attrs)
     {
         if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
             return true;
@@ -768,7 +768,7 @@ class TypedArrayTemplate
                 cx->destroy<ThisTypeArray>(tarray);
                 return false;
             }
-        } else if (argv[0].isObject()) {
+        } else if (argc > 0 && argv[0].isObject()) {
             int32_t byteOffset = -1;
             int32_t length = -1;
 
@@ -820,21 +820,22 @@ class TypedArrayTemplate
             cx->destroy<ThisTypeArray>(tarray);
     }
 
-    /* slice(start[, end]) */
+    /* subarray(start[, end]) */
     static JSBool
-    fun_slice(JSContext *cx, uintN argc, Value *vp)
+    fun_subarray(JSContext *cx, uintN argc, Value *vp)
     {
-        Value *argv = JS_ARGV(cx, vp);
-        JSObject *obj = ComputeThisFromVp(cx, vp);
+        JSObject *obj = ToObject(cx, &vp[1]);
+        if (!obj)
+            return false;
 
-        if (!InstanceOf(cx, obj, ThisTypeArray::fastClass(), vp+2))
+        if (!InstanceOf(cx, obj, ThisTypeArray::fastClass(), vp + 2))
             return false;
 
         if (obj->getClass() != fastClass()) {
-            // someone tried to apply this slice() to the wrong class
+            // someone tried to apply this subarray() to the wrong class
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_INCOMPATIBLE_METHOD,
-                                 fastClass()->name, "slice", obj->getClass()->name);
+                                 fastClass()->name, "subarray", obj->getClass()->name);
             return false;
         }
 
@@ -847,6 +848,7 @@ class TypedArrayTemplate
         int32_t length = int32(tarray->length);
 
         if (argc > 0) {
+            Value *argv = JS_ARGV(cx, vp);
             if (!ValueToInt32(cx, argv[0], &begin))
                 return false;
             if (begin < 0) {
@@ -873,7 +875,7 @@ class TypedArrayTemplate
         if (begin > end)
             begin = end;
 
-        ThisTypeArray *ntarray = tarray->slice(cx, begin, end);
+        ThisTypeArray *ntarray = tarray->subarray(cx, begin, end);
         if (!ntarray) {
             // this should rarely ever happen
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -898,10 +900,11 @@ class TypedArrayTemplate
     static JSBool
     fun_set(JSContext *cx, uintN argc, Value *vp)
     {
-        Value *argv = JS_ARGV(cx, vp);
-        JSObject *obj = ComputeThisFromVp(cx, vp);
+        JSObject *obj = ToObject(cx, &vp[1]);
+        if (!obj)
+            return false;
 
-        if (!InstanceOf(cx, obj, ThisTypeArray::fastClass(), vp+2))
+        if (!InstanceOf(cx, obj, ThisTypeArray::fastClass(), vp + 2))
             return false;
 
         if (obj->getClass() != fastClass()) {
@@ -919,6 +922,7 @@ class TypedArrayTemplate
         // these are the default values
         int32_t offset = 0;
 
+        Value *argv = JS_ARGV(cx, vp);
         if (argc > 1) {
             if (!ValueToInt32(cx, argv[1], &offset))
                 return false;
@@ -932,7 +936,7 @@ class TypedArrayTemplate
         }
 
         // first arg must be either a typed array or a JS array
-        if (!argv[0].isObject()) {
+        if (argc == 0 || !argv[0].isObject()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_TYPED_ARRAY_BAD_ARGS);
             return false;
@@ -978,7 +982,7 @@ class TypedArrayTemplate
         return reinterpret_cast<ThisTypeArray*>(obj->getPrivate());
     }
 
-    // helper used by both the constructor and Slice()
+    // helper used by both the constructor and Subarray()
     static bool
     makeFastWithPrivate(JSContext *cx, JSObject *obj, ThisTypeArray *tarray)
     {
@@ -1089,7 +1093,7 @@ class TypedArrayTemplate
     inline void copyIndexToValue(JSContext *cx, uint32 index, Value *vp);
 
     ThisTypeArray *
-    slice(JSContext *cx, uint32 begin, uint32 end)
+    subarray(JSContext *cx, uint32 begin, uint32 end)
     {
         if (begin > length || end > length)
             return NULL;
@@ -1437,10 +1441,10 @@ TypedArrayTemplate<double>::copyIndexToValue(JSContext *cx, uint32 index, Value 
 Class ArrayBuffer::jsclass = {
     "ArrayBuffer",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
+    PropertyStub,         /* addProperty */
+    PropertyStub,         /* delProperty */
+    PropertyStub,         /* getProperty */
+    StrictPropertyStub,   /* setProperty */
     EnumerateStub,
     ResolveStub,
     ConvertStub,
@@ -1450,7 +1454,7 @@ Class ArrayBuffer::jsclass = {
 JSPropertySpec ArrayBuffer::jsprops[] = {
     { "byteLength",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(ArrayBuffer::prop_getByteLength), Jsvalify(ArrayBuffer::prop_getByteLength) },
+      Jsvalify(ArrayBuffer::prop_getByteLength), JS_StrictPropertyStub },
     {0,0,0,0,0}
 };
 
@@ -1461,16 +1465,16 @@ JSPropertySpec ArrayBuffer::jsprops[] = {
 JSPropertySpec TypedArray::jsprops[] = {
     { js_length_str,
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getLength), Jsvalify(TypedArray::prop_getLength) },
+      Jsvalify(TypedArray::prop_getLength), JS_StrictPropertyStub },
     { "byteLength",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getByteLength), Jsvalify(TypedArray::prop_getByteLength) },
+      Jsvalify(TypedArray::prop_getByteLength), JS_StrictPropertyStub },
     { "byteOffset",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getByteOffset), Jsvalify(TypedArray::prop_getByteOffset) },
+      Jsvalify(TypedArray::prop_getByteOffset), JS_StrictPropertyStub },
     { "buffer",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getBuffer), Jsvalify(TypedArray::prop_getBuffer) },
+      Jsvalify(TypedArray::prop_getBuffer), JS_StrictPropertyStub },
     {0,0,0,0,0}
 };
 
@@ -1480,7 +1484,7 @@ JSPropertySpec TypedArray::jsprops[] = {
 
 #define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                  \
 template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
-    JS_FN("slice", _typedArray::fun_slice, 2, 0),                              \
+    JS_FN("subarray", _typedArray::fun_subarray, 2, 0),                            \
     JS_FN("set", _typedArray::fun_set, 2, 0),                                  \
     JS_FS_END                                                                  \
 }
@@ -1489,10 +1493,10 @@ template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
 {                                                                              \
     #_typedArray,                                                              \
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_##_typedArray),     \
-    PropertyStub,   /* addProperty */                                          \
-    PropertyStub,   /* delProperty */                                          \
-    PropertyStub,   /* getProperty */                                          \
-    PropertyStub,   /* setProperty */                                          \
+    PropertyStub,         /* addProperty */                                    \
+    PropertyStub,         /* delProperty */                                    \
+    PropertyStub,         /* getProperty */                                    \
+    StrictPropertyStub,   /* setProperty */                                    \
     EnumerateStub,                                                             \
     ResolveStub,                                                               \
     ConvertStub,                                                               \
@@ -1503,10 +1507,10 @@ template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
 {                                                                              \
     #_typedArray,                                                              \
     Class::NON_NATIVE | JSCLASS_HAS_PRIVATE,                                   \
-    PropertyStub,   /* addProperty */                                          \
-    PropertyStub,   /* delProperty */                                          \
-    PropertyStub,   /* getProperty */                                          \
-    PropertyStub,   /* setProperty */                                          \
+    PropertyStub,         /* addProperty */                                    \
+    PropertyStub,         /* delProperty */                                    \
+    PropertyStub,         /* getProperty */                                    \
+    StrictPropertyStub,   /* setProperty */                                    \
     EnumerateStub,                                                             \
     ResolveStub,                                                               \
     ConvertStub,                                                               \
@@ -1549,11 +1553,11 @@ do {                                                                           \
     if (!ctor ||                                                               \
         !JS_DefineProperty(cx, ctor, "BYTES_PER_ELEMENT",                      \
                            INT_TO_JSVAL(sizeof(_typedArray::ThisType)),        \
-                           JS_PropertyStub, JS_PropertyStub,                   \
+                           JS_PropertyStub, JS_StrictPropertyStub,             \
                            JSPROP_PERMANENT | JSPROP_READONLY) ||              \
         !JS_DefineProperty(cx, proto, "BYTES_PER_ELEMENT",                     \
                            INT_TO_JSVAL(sizeof(_typedArray::ThisType)),        \
-                           JS_PropertyStub, JS_PropertyStub,                   \
+                           JS_PropertyStub, JS_StrictPropertyStub,             \
                            JSPROP_PERMANENT | JSPROP_READONLY))                \
     {                                                                          \
         return NULL;                                                           \

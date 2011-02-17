@@ -18,10 +18,10 @@ my_Equality(JSContext *cx, JSObject *obj, const jsval *, JSBool *bp)
 js::Class TestExtendedEq_JSClass = {
     "TestExtendedEq",
     0,
-    js::PropertyStub, /* addProperty */
-    js::PropertyStub, /* delProperty */
-    js::PropertyStub, /* getProperty */
-    js::PropertyStub, /* setProperty */
+    js::PropertyStub,       /* addProperty */
+    js::PropertyStub,       /* delProperty */
+    js::PropertyStub,       /* getProperty */
+    js::StrictPropertyStub, /* setProperty */
     JS_EnumerateStub,
     JS_ResolveStub,
     NULL,           /* convert */

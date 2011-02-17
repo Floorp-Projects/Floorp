@@ -57,6 +57,7 @@ _CHROME_FILES = \
 	     chrome_over_plugin_window.xul \
 	test_default_background.xul \
 	     default_background_window.xul \
+    test_leaf_layers_partition_browser_window.xul \
 	test_printpreview.xul \
 	     printpreview_helper.xul \
 	test_printpreview_bug396024.xul \

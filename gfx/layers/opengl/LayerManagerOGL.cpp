@@ -416,17 +416,19 @@ LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
     return;
   }
 
-  // The results of our drawing always go directly into a pixel buffer,
-  // so we don't need to pass any global transform here.
-  mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
+  if (mRoot) {
+    // The results of our drawing always go directly into a pixel buffer,
+    // so we don't need to pass any global transform here.
+    mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
 
-  mThebesLayerCallback = aCallback;
-  mThebesLayerCallbackData = aCallbackData;
+    mThebesLayerCallback = aCallback;
+    mThebesLayerCallbackData = aCallbackData;
 
-  Render();
+    Render();
 
-  mThebesLayerCallback = nsnull;
-  mThebesLayerCallbackData = nsnull;
+    mThebesLayerCallback = nsnull;
+    mThebesLayerCallbackData = nsnull;
+  }
 
   mTarget = NULL;
 
@@ -550,6 +552,7 @@ LayerManagerOGL::Render()
 
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
+  WorldTransformRect(rect);
 
   GLint width = rect.width;
   GLint height = rect.height;
@@ -575,7 +578,7 @@ LayerManagerOGL::Render()
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
   SetupBackBuffer(width, height);
-  SetupPipeline(width, height);
+  SetupPipeline(width, height, ApplyWorldTransform);
 
   // Default blend function implements "OVER"
   mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
@@ -588,7 +591,8 @@ LayerManagerOGL::Render()
 
   if (clipRect) {
     nsIntRect r = *clipRect;
-    if (!mGLContext->IsDoubleBuffered() && !mTarget)
+    WorldTransformRect(r);
+    if (IsDrawingFlipped())
       mGLContext->FixWindowCoordinateRect(r, mWidgetSize.height);
     mGLContext->fScissor(r.x, r.y, r.width, r.height);
   } else {
@@ -662,6 +666,8 @@ LayerManagerOGL::Render()
   nsIntRegionRectIterator iter(mClippingRegion);
 
   while ((r = iter.Next()) != nsnull) {
+    nsIntRect cRect = *r; r = &cRect;
+    WorldTransformRect(cRect);
     float left = (GLfloat)r->x / width;
     float right = (GLfloat)r->XMost() / width;
     float top = (GLfloat)r->y / height;
@@ -706,7 +712,32 @@ LayerManagerOGL::Render()
 }
 
 void
-LayerManagerOGL::SetupPipeline(int aWidth, int aHeight)
+LayerManagerOGL::SetWorldTransform(const gfxMatrix& aMatrix)
+{
+  NS_ASSERTION(aMatrix.PreservesAxisAlignedRectangles(),
+               "SetWorldTransform only accepts matrices that satisfy PreservesAxisAlignedRectangles");
+  NS_ASSERTION(!aMatrix.HasNonIntegerScale(),
+               "SetWorldTransform only accepts matrices with integer scale");
+
+  mWorldMatrix = aMatrix;
+}
+
+gfxMatrix&
+LayerManagerOGL::GetWorldTransform(void)
+{
+  return mWorldMatrix;
+}
+
+void
+LayerManagerOGL::WorldTransformRect(nsIntRect& aRect)
+{
+  gfxRect grect(aRect.x, aRect.y, aRect.width, aRect.height);
+  grect = mWorldMatrix.TransformBounds(grect);
+  aRect.SetRect(grect.pos.x, grect.pos.y, grect.size.width, grect.size.height);
+}
+
+void
+LayerManagerOGL::SetupPipeline(int aWidth, int aHeight, WorldTransforPolicy aTransformPolicy)
 {
   // Set the viewport correctly. 
   //
@@ -729,7 +760,7 @@ LayerManagerOGL::SetupPipeline(int aWidth, int aHeight)
   // XXX we keep track of whether the window size changed, so we can
   // skip this update if it hadn't since the last call.
   gfx3DMatrix viewMatrix;
-  if (mGLContext->IsDoubleBuffered() && !mTarget) {
+  if (IsDrawingFlipped()) {
     /* If it's double buffered, we don't have a frontbuffer FBO,
      * so put in a Y-flip in this transform.
      */
@@ -742,6 +773,10 @@ LayerManagerOGL::SetupPipeline(int aWidth, int aHeight)
     viewMatrix._22 = 2.0f / float(aHeight);
     viewMatrix._41 = -1.0f;
     viewMatrix._42 = -1.0f;
+  }
+
+  if (aTransformPolicy == ApplyWorldTransform) {
+    viewMatrix = gfx3DMatrix::From2D(mWorldMatrix) * viewMatrix;
   }
 
   SetLayerProgramProjectionMatrix(viewMatrix);
@@ -920,6 +955,10 @@ LayerManagerOGL::CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
                              LOCAL_GL_LINEAR);
   mGLContext->fTexParameteri(mFBOTextureTarget, LOCAL_GL_TEXTURE_MAG_FILTER,
                              LOCAL_GL_LINEAR);
+  mGLContext->fTexParameteri(mFBOTextureTarget, LOCAL_GL_TEXTURE_WRAP_S, 
+                             LOCAL_GL_CLAMP_TO_EDGE);
+  mGLContext->fTexParameteri(mFBOTextureTarget, LOCAL_GL_TEXTURE_WRAP_T, 
+                             LOCAL_GL_CLAMP_TO_EDGE);
   mGLContext->fBindTexture(mFBOTextureTarget, 0);
 
   mGLContext->fGenFramebuffers(1, &fbo);

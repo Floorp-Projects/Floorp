@@ -246,7 +246,8 @@ namespace ic {
     struct SetElementIC;
 # endif
 # if defined JS_MONOIC
-    struct MICInfo;
+    struct GetGlobalNameIC;
+    struct SetGlobalNameIC;
     struct EqualityICInfo;
     struct TraceICInfo;
     struct CallICInfo;
@@ -276,8 +277,8 @@ typedef JSBool (JS_FASTCALL *BoolStubUInt32)(VMFrame &f, uint32);
 #ifdef JS_MONOIC
 typedef void (JS_FASTCALL *VoidStubCallIC)(VMFrame &, js::mjit::ic::CallICInfo *);
 typedef void * (JS_FASTCALL *VoidPtrStubCallIC)(VMFrame &, js::mjit::ic::CallICInfo *);
-typedef void (JS_FASTCALL *VoidStubMIC)(VMFrame &, js::mjit::ic::MICInfo *);
-typedef void * (JS_FASTCALL *VoidPtrStubMIC)(VMFrame &, js::mjit::ic::MICInfo *);
+typedef void (JS_FASTCALL *VoidStubGetGlobal)(VMFrame &, js::mjit::ic::GetGlobalNameIC *);
+typedef void (JS_FASTCALL *VoidStubSetGlobal)(VMFrame &, js::mjit::ic::SetGlobalNameIC *);
 typedef JSBool (JS_FASTCALL *BoolStubEqualityIC)(VMFrame &, js::mjit::ic::EqualityICInfo *);
 typedef void * (JS_FASTCALL *VoidPtrStubTraceIC)(VMFrame &, js::mjit::ic::TraceICInfo *);
 #endif
@@ -300,47 +301,56 @@ struct JITScript {
     typedef JSC::MacroAssemblerCodeRef CodeRef;
     CodeRef         code;       /* pool & code addresses */
 
-    NativeMapEntry  *nmap;      /* array of NativeMapEntrys, sorted by .bcOff.
-                                   .ncode values may not be NULL. */
-    size_t          nNmapPairs; /* number of entries in nmap */
 
     void            *invokeEntry;       /* invoke address */
     void            *fastEntry;         /* cached entry, fastest */
     void            *arityCheckEntry;   /* arity check address */
 
-    /* To minimize the size of this struct on 64-bit, put uint32s after all pointers. */
-    js::mjit::CallSite *callSites;
-#ifdef JS_MONOIC
-    ic::MICInfo     *mics;      /* MICs in this script. */
-    ic::CallICInfo  *callICs;   /* CallICs in this script. */
-    ic::EqualityICInfo *equalityICs;
-    ic::TraceICInfo *traceICs;
-#endif
-#ifdef JS_POLYIC
-    ic::PICInfo     *pics;      /* PICs in this script */
-    ic::GetElementIC *getElems;
-    ic::SetElementIC *setElems;
-#endif
-
-    uint32          nCallSites:31;
+    /*
+     * This struct has several variable-length sections that are allocated on
+     * the end:  nmaps, MICs, callICs, etc.  To save space -- worthwhile
+     * because JITScripts are common -- we only record their lengths.  We can
+     * find any of the sections from the lengths because we know their order.
+     * Therefore, do not change the section ordering in finishThisUp() without
+     * changing nMICs() et al as well.
+     */
+    uint32          nNmapPairs:31;      /* The NativeMapEntrys are sorted by .bcOff.
+                                           .ncode values may not be NULL. */
     bool            singleStepMode:1;   /* compiled in "single step mode" */
 #ifdef JS_MONOIC
-    uint32          nMICs;      /* number of MonoICs */
-    uint32          nCallICs;   /* number of call ICs */
+    uint32          nGetGlobalNames;
+    uint32          nSetGlobalNames;
+    uint32          nCallICs;
     uint32          nEqualityICs;
     uint32          nTraceICs;
 #endif
 #ifdef JS_POLYIC
-    uint32          nPICs;      /* number of PolyICs */
     uint32          nGetElems;
     uint32          nSetElems;
+    uint32          nPICs;
 #endif
+    uint32          nCallSites;
 
 #ifdef JS_MONOIC
     // Additional ExecutablePools that IC stubs were generated into.
     typedef Vector<JSC::ExecutablePool *, 0, SystemAllocPolicy> ExecPoolVector;
     ExecPoolVector execPools;
 #endif
+
+    NativeMapEntry *nmap() const;
+#ifdef JS_MONOIC
+    ic::GetGlobalNameIC *getGlobalNames() const;
+    ic::SetGlobalNameIC *setGlobalNames() const;
+    ic::CallICInfo *callICs() const;
+    ic::EqualityICInfo *equalityICs() const;
+    ic::TraceICInfo *traceICs() const;
+#endif
+#ifdef JS_POLYIC
+    ic::GetElementIC *getElems() const;
+    ic::SetElementIC *setElems() const;
+    ic::PICInfo     *pics() const;
+#endif
+    js::mjit::CallSite *callSites() const;
 
     ~JITScript();
 
@@ -358,6 +368,14 @@ struct JITScript {
     size_t scriptDataSize();
 
     size_t mainCodeSize() { return code.m_size; } /* doesn't account for fragmentation */
+
+    jsbytecode *nativeToPC(void *returnAddress) const;
+
+  private:
+    /* Helpers used to navigate the variable-length sections. */
+    char *nmapSectionLimit() const;
+    char *monoICSectionsLimit() const;
+    char *polyICSectionsLimit() const;
 };
 
 /*
@@ -376,7 +394,8 @@ enum CompileStatus
 {
     Compile_Okay,
     Compile_Abort,
-    Compile_Error
+    Compile_Error,
+    Compile_Skipped
 };
 
 void JS_FASTCALL
@@ -387,19 +406,6 @@ TryCompile(JSContext *cx, JSStackFrame *fp);
 
 void
 ReleaseScriptCode(JSContext *cx, JSScript *script);
-
-static inline CompileStatus
-CanMethodJIT(JSContext *cx, JSScript *script, JSStackFrame *fp)
-{
-    if (!cx->methodJitEnabled)
-        return Compile_Abort;
-    JITScriptStatus status = script->getJITStatus(fp->isConstructing());
-    if (status == JITScript_Invalid)
-        return Compile_Abort;
-    if (status == JITScript_None)
-        return TryCompile(cx, fp);
-    return Compile_Okay;
-}
 
 struct CallSite
 {
@@ -466,7 +472,7 @@ JSScript::maybeNativeCodeForPC(bool constructing, jsbytecode *pc)
     if (!jit)
         return NULL;
     JS_ASSERT(pc >= code && pc < code + length);
-    return bsearch_nmap(jit->nmap, jit->nNmapPairs, (size_t)(pc - code));
+    return bsearch_nmap(jit->nmap(), jit->nNmapPairs, (size_t)(pc - code));
 }
 
 inline void *
@@ -474,7 +480,7 @@ JSScript::nativeCodeForPC(bool constructing, jsbytecode *pc)
 {
     js::mjit::JITScript *jit = getJIT(constructing);
     JS_ASSERT(pc >= code && pc < code + length);
-    void* native = bsearch_nmap(jit->nmap, jit->nNmapPairs, (size_t)(pc - code));
+    void* native = bsearch_nmap(jit->nmap(), jit->nNmapPairs, (size_t)(pc - code));
     JS_ASSERT(native);
     return native;
 }

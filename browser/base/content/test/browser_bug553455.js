@@ -4,7 +4,9 @@
 
 const TESTROOT = "http://example.com/browser/toolkit/mozapps/extensions/test/xpinstall/";
 const TESTROOT2 = "http://example.org/browser/toolkit/mozapps/extensions/test/xpinstall/";
+const SECUREROOT = "https://example.com/browser/toolkit/mozapps/extensions/test/xpinstall/";
 const XPINSTALL_URL = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
+const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
 
 var rootDir = getRootDirectory(gTestPath);
 var path = rootDir.split('/');
@@ -57,6 +59,17 @@ function wait_for_install_dialog(aCallback) {
     onWindowTitleChange: function(aXULWindow, aNewTitle) {
     }
   });
+}
+
+function setup_redirect(aSettings) {
+  var url = "https://example.com/browser/toolkit/mozapps/extensions/test/xpinstall/redirect.sjs?mode=setup";
+  for (var name in aSettings) {
+    url += "&" + name + "=" + aSettings[name];
+  }
+
+  var req = new XMLHttpRequest();
+  req.open("GET", url, false);
+  req.send(null);
 }
 
 var TESTS = [
@@ -549,6 +562,7 @@ function test_theme() {
             isnot(aAddon, null, "Test theme will have been installed");
             aAddon.uninstall();
 
+            Services.perms.remove("example.com", "install");
             runNextTest();
           });
         });
@@ -750,6 +764,55 @@ function test_cancel_restart() {
   }));
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
+},
+
+function test_failed_security() {
+  Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, false);
+
+  setup_redirect({
+    "Location": TESTROOT + "unsigned.xpi"
+  });
+
+  // Wait for the blocked notification
+  wait_for_notification(function(aPanel) {
+    let notification = aPanel.childNodes[0];
+    is(notification.id, "addon-install-blocked-notification", "Should have seen the install blocked");
+
+    // Click on Allow
+    EventUtils.synthesizeMouse(notification.button, 20, 10, {});
+
+    // Notification should have changed to progress notification
+    ok(PopupNotifications.isPanelOpen, "Notification should still be open");
+    is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
+    notification = aPanel.childNodes[0];
+    is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
+
+    // Wait for it to fail
+    Services.obs.addObserver(function() {
+      Services.obs.removeObserver(arguments.callee, "addon-install-failed");
+
+      // Wait for the browser code to add the failure notification
+      executeSoon(function() {
+        // Wait for the progress notification to dismiss itself
+        executeSoon(function() {
+          ok(PopupNotifications.isPanelOpen, "Notification should still be open");
+          is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
+          notification = aPanel.childNodes[0];
+          is(notification.id, "addon-install-failed-notification", "Should have seen the install fail");
+
+          gBrowser.removeTab(gBrowser.selectedTab);
+          Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, true);
+          runNextTest();
+        });
+      });
+    }, "addon-install-failed", false);
+  });
+
+  var triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "redirect.sjs?mode=redirect"
+  }));
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.loadURI(SECUREROOT + "installtrigger.html?" + triggers);
 }
 ];
 

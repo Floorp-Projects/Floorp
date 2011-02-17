@@ -75,7 +75,9 @@
 #if (MOZ_PLATFORM_MAEMO == 6)
 #include <QUrl>
 #include <QString>
+#if (MOZ_ENABLE_CONTENTACTION)
 #include <contentaction/contentaction.h>
+#endif
 #endif
 
 #include "nsDirectoryServiceDefs.h"
@@ -1899,7 +1901,7 @@ nsLocalFile::Launch()
     
     return NS_ERROR_FAILURE;
 #endif
-#elif (MOZ_PLATFORM_MAEMO == 6)
+#elif defined(MOZ_ENABLE_CONTENTACTION)
     QUrl uri = QUrl::fromLocalFile(QString::fromUtf8(mPath.get()));
     ContentAction::Action action =
       ContentAction::Action::defaultActionForFile(uri);

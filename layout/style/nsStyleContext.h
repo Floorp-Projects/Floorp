@@ -322,6 +322,14 @@ public:
    */
   void* Alloc(size_t aSize);
 
+  /**
+   * Start the background image loads for this style context.
+   */
+  void StartBackgroundImageLoads() {
+    // Just get our background struct; that should do the trick
+    GetStyleBackground();
+  }
+
 #ifdef DEBUG
   void List(FILE* out, PRInt32 aIndent);
 #endif

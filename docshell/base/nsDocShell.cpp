@@ -712,6 +712,7 @@ nsDocShell::nsDocShell():
     mIsOffScreenBrowser(PR_FALSE),
     mIsActive(PR_TRUE),
     mIsAppTab(PR_FALSE),
+    mUseGlobalHistory(PR_FALSE),
     mFiredUnloadEvent(PR_FALSE),
     mEODForCurrentDocument(PR_FALSE),
     mURIResultedInDocument(PR_FALSE),
@@ -3090,7 +3091,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     childDocShell->SetChildOffset(dynamic ? -1 : mChildList.Count() - 1);
 
     /* Set the child's global history if the parent has one */
-    if (mGlobalHistory) {
+    if (mUseGlobalHistory) {
         nsCOMPtr<nsIDocShellHistory>
             dsHistoryChild(do_QueryInterface(aChild));
         if (dsHistoryChild)
@@ -3368,6 +3369,7 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
             nsCOMPtr<nsISHEntry> nextEntry;
             aCloneRef->GetID(&cloneID);
             rv = CloneAndReplace(currentEntry, this, cloneID, aNewEntry,
+                                 loadType == LOAD_PUSHSTATE,
                                  getter_AddRefs(nextEntry));
 
             if (NS_SUCCEEDED(rv)) {
@@ -3432,8 +3434,16 @@ nsDocShell::SetUseGlobalHistory(PRBool aUseGlobalHistory)
 {
     nsresult rv;
 
+    mUseGlobalHistory = aUseGlobalHistory;
+
     if (!aUseGlobalHistory) {
         mGlobalHistory = nsnull;
+        return NS_OK;
+    }
+
+    // No need to initialize mGlobalHistory if IHistory is available.
+    nsCOMPtr<IHistory> history = services::GetHistoryService();
+    if (history) {
         return NS_OK;
     }
 
@@ -3448,7 +3458,7 @@ nsDocShell::SetUseGlobalHistory(PRBool aUseGlobalHistory)
 NS_IMETHODIMP
 nsDocShell::GetUseGlobalHistory(PRBool *aUseGlobalHistory)
 {
-    *aUseGlobalHistory = (mGlobalHistory != nsnull);
+    *aUseGlobalHistory = mUseGlobalHistory;
     return NS_OK;
 }
 
@@ -4949,7 +4959,7 @@ nsDocShell::SetTitle(const PRUnichar * aTitle)
             treeOwnerAsWin->SetTitle(aTitle);
     }
 
-    if (mCurrentURI && mLoadType != LOAD_ERROR_PAGE) {
+    if (mCurrentURI && mLoadType != LOAD_ERROR_PAGE && mUseGlobalHistory) {
         nsCOMPtr<IHistory> history = services::GetHistoryService();
         if (history) {
             history->SetURITitle(mCurrentURI, mTitle);
@@ -6067,7 +6077,27 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
         SetDocPendingStateObj(mLSHE);
 
         mIsExecutingOnLoadHandler = PR_TRUE;
-        mContentViewer->LoadComplete(aStatus);
+        rv = mContentViewer->LoadComplete(aStatus);
+
+        // If the load wasn't stopped during LoadComplete, fire the popstate
+        // event, if we're not suppressing it.
+        if (NS_SUCCEEDED(rv) && rv != NS_SUCCESS_LOAD_STOPPED &&
+            !mSuppressPopstate) {
+
+            // XXX should I get the window via mScriptGlobal?  This is tricky
+            // since we're near onload and things might be changing.  But I
+            // think mContentViewer has the right view of the world.
+            nsCOMPtr<nsIDocument> document = mContentViewer->GetDocument();
+            if (document) {
+                nsCOMPtr<nsPIDOMWindow> window = document->GetWindow();
+                if (window) {
+                    // Dispatch the popstate event , passing PR_TRUE to indicate
+                    // that this is an "initial" (i.e. after-onload) popstate.
+                    window->DispatchSyncPopState(PR_TRUE);
+                }
+            }
+        }
+
         mIsExecutingOnLoadHandler = PR_FALSE;
 
         mEODForCurrentDocument = PR_TRUE;
@@ -6554,6 +6584,13 @@ nsDocShell::CanSavePresentation(PRUint32 aLoadType,
 {
     if (!mOSHE)
         return PR_FALSE; // no entry to save into
+
+    nsCOMPtr<nsIContentViewer> viewer;
+    mOSHE->GetContentViewer(getter_AddRefs(viewer));
+    if (viewer) {
+        NS_WARNING("mOSHE already has a content viewer!");
+        return PR_FALSE;
+    }
 
     // Only save presentation for "normal" loads and link loads.  Anything else
     // probably wants to refetch the page, so caching the old presentation
@@ -7297,12 +7334,29 @@ nsDocShell::RestoreFromHistory()
         }
     }
 
+    // The FinishRestore call below can kill these, null them out so we don't
+    // have invalid pointer lying around.
+    newRootView = rootViewSibling = rootViewParent = nsnull;
+    newVM = nsnull;
+
     // Simulate the completion of the load.
     nsDocShell::FinishRestore();
 
     // Restart plugins, and paint the content.
-    if (shell)
+    if (shell) {
         shell->Thaw();
+
+        newVM = shell->GetViewManager();
+        if (newVM) {
+            // When we insert the root view above the resulting invalidate is
+            // dropped because painting is suppressed in the presshell until we
+            // call Thaw. So we issue the invalidate here.
+            newVM->GetRootView(newRootView);
+            if (newRootView) {
+                newVM->UpdateView(newRootView, NS_VMREFRESH_NO_SYNC);
+            }
+        }
+    }
 
     return privWin->FireDelayedDOMEvents();
 }
@@ -8179,7 +8233,11 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     mAllowKeywordFixup =
       (aFlags & INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) != 0;
     mURIResultedInDocument = PR_FALSE;  // reset the clock...
-   
+
+    // If we've gotten this far, reset our "don't fire a popState" flag.  This
+    // will get set to true the next time someone calls push/replaceState.
+    mSuppressPopstate = PR_FALSE;
+
     //
     // First:
     // Check to see if the new URI is an anchor in the existing document.
@@ -8352,12 +8410,14 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
             /* Set the title for the Global History entry for this anchor url.
              */
-            nsCOMPtr<IHistory> history = services::GetHistoryService();
-            if (history) {
-                history->SetURITitle(aURI, mTitle);
-            }
-            else if (mGlobalHistory) {
-                mGlobalHistory->SetPageTitle(aURI, mTitle);
+            if (mUseGlobalHistory) {
+                nsCOMPtr<IHistory> history = services::GetHistoryService();
+                if (history) {
+                    history->SetURITitle(aURI, mTitle);
+                }
+                else if (mGlobalHistory) {
+                    mGlobalHistory->SetPageTitle(aURI, mTitle);
+                }
             }
 
             if (sameDocIdent) {
@@ -8374,10 +8434,15 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
             SetDocPendingStateObj(mOSHE);
 
-            // Dispatch the popstate and hashchange events, as appropriate
+            // Dispatch the popstate and hashchange events, as appropriate.
             nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mScriptGlobal);
             if (window) {
-                window->DispatchSyncPopState();
+                NS_ASSERTION(!mSuppressPopstate,
+                             "Popstate shouldn't be suppressed here.");
+
+                // Pass PR_FALSE to indicate that this is not an "initial" (i.e.
+                // after-onload) popstate.
+                window->DispatchSyncPopState(PR_FALSE);
 
                 if (doHashchange)
                   window->DispatchAsyncHashchange();
@@ -9564,8 +9629,6 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     nsCOMPtr<nsIDocument> document = do_GetInterface(GetAsSupports(this));
     NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
-    mLoadType = LOAD_PUSHSTATE;
-
     // Step 1: Clone aData by getting its JSON representation
     nsString dataStr;
     rv = StringifyJSValVariant(aData, dataStr);
@@ -9683,6 +9746,8 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     NS_ENSURE_TRUE(mOSHE, NS_ERROR_FAILURE);
     nsCOMPtr<nsISHEntry> oldOSHE = mOSHE;
 
+    mLoadType = LOAD_PUSHSTATE;
+
     nsCOMPtr<nsISHEntry> newSHEntry;
     if (!aReplace) {
         // Save the current scroll position (bug 590573).
@@ -9753,6 +9818,10 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     else {
         FireDummyOnLocationChange();
     }
+
+    // A call to push/replaceState prevents popstate events from firing until
+    // the next time we call InternalLoad.
+    mSuppressPopstate = PR_TRUE;
 
     return NS_OK;
 }
@@ -9913,6 +9982,16 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
 
 
     if (root == static_cast<nsIDocShellTreeItem *>(this) && mSessionHistory) {
+        // Bug 629559: Detect if this is an anchor navigation and clone the
+        // session history in that case too
+        if (mLoadType == LOAD_PUSHSTATE && mOSHE) {
+            PRUint32 cloneID;
+            mOSHE->GetID(&cloneID);
+            nsCOMPtr<nsISHEntry> newEntry;
+            CloneAndReplace(mOSHE, this, cloneID, entry, PR_TRUE, getter_AddRefs(newEntry));
+            NS_ASSERTION(entry == newEntry, "The new session history should be in the new entry");
+        }
+
         // This is the root docshell
         if (LOAD_TYPE_HAS_FLAGS(mLoadType, LOAD_FLAGS_REPLACE_HISTORY)) {            
             // Replace current entry in session history.
@@ -10126,12 +10205,14 @@ nsDocShell::WalkHistoryEntries(nsISHEntry *aRootEntry,
 struct NS_STACK_CLASS CloneAndReplaceData
 {
     CloneAndReplaceData(PRUint32 aCloneID, nsISHEntry *aReplaceEntry,
-                        nsISHEntry *aDestTreeParent)
+                        PRBool aCloneChildren, nsISHEntry *aDestTreeParent)
         : cloneID(aCloneID),
+          cloneChildren(aCloneChildren),
           replaceEntry(aReplaceEntry),
           destTreeParent(aDestTreeParent) { }
 
     PRUint32              cloneID;
+    PRBool                cloneChildren;
     nsISHEntry           *replaceEntry;
     nsISHEntry           *destTreeParent;
     nsCOMPtr<nsISHEntry>  resultEntry;
@@ -10161,9 +10242,19 @@ nsDocShell::CloneAndReplaceChild(nsISHEntry *aEntry, nsDocShell *aShell,
     aEntry->GetID(&srcID);
 
     if (srcID == cloneID) {
-        // Just replace the entry, and don't walk the children.
+        // Replace the entry
         dest = replaceEntry;
         dest->SetIsSubFrame(PR_TRUE);
+
+        if (data->cloneChildren) {
+            // Walk the children
+            CloneAndReplaceData childData(cloneID, replaceEntry,
+                                          data->cloneChildren, dest);
+            result = WalkHistoryEntries(aEntry, aShell,
+                                        CloneAndReplaceChild, &childData);
+            if (NS_FAILED(result))
+                return result;
+        }
     } else {
         // Clone the SHEntry...
         result = aEntry->Clone(getter_AddRefs(dest));
@@ -10174,7 +10265,8 @@ nsDocShell::CloneAndReplaceChild(nsISHEntry *aEntry, nsDocShell *aShell,
         dest->SetIsSubFrame(PR_TRUE);
 
         // Walk the children
-        CloneAndReplaceData childData(cloneID, replaceEntry, dest);
+        CloneAndReplaceData childData(cloneID, replaceEntry,
+                                      data->cloneChildren, dest);
         result = WalkHistoryEntries(aEntry, aShell,
                                     CloneAndReplaceChild, &childData);
         if (NS_FAILED(result))
@@ -10196,12 +10288,13 @@ nsDocShell::CloneAndReplace(nsISHEntry *aSrcEntry,
                                    nsDocShell *aSrcShell,
                                    PRUint32 aCloneID,
                                    nsISHEntry *aReplaceEntry,
+                                   PRBool aCloneChildren,
                                    nsISHEntry **aResultEntry)
 {
     NS_ENSURE_ARG_POINTER(aResultEntry);
     NS_ENSURE_TRUE(aReplaceEntry, NS_ERROR_FAILURE);
 
-    CloneAndReplaceData data(aCloneID, aReplaceEntry, nsnull);
+    CloneAndReplaceData data(aCloneID, aReplaceEntry, aCloneChildren, nsnull);
     nsresult rv = CloneAndReplaceChild(aSrcEntry, aSrcShell, 0, &data);
 
     data.resultEntry.swap(*aResultEntry);
@@ -10526,8 +10619,9 @@ nsDocShell::AddURIVisit(nsIURI* aURI,
 {
     NS_ASSERTION(aURI, "Visited URI is null!");
 
-    // Only content-type docshells save URI visits.
-    if (mItemType != typeContent) {
+    // Only content-type docshells save URI visits.  Also don't do
+    // anything here if we're not supposed to use global history.
+    if (mItemType != typeContent || !mUseGlobalHistory) {
         return;
     }
 

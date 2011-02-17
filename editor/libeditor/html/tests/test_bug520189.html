@@ -442,14 +442,7 @@ function runTest(test) {
 
     clipboard.setData(trans, null, Components.interfaces.nsIClipboard.kGlobalClipboard);
 
-    var mainWindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIWebNavigation)
-                           .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
-                           .rootTreeItem
-                           .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIDOMWindow);
-
-    mainWindow.goDoCommand("cmd_paste");
+    synthesizeKey("V", {accelKey: true});
   }
 
   if ("checkResult" in test) {

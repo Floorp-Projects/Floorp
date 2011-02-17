@@ -623,6 +623,21 @@ MarkValueRange(JSTracer *trc, size_t len, Value *vec, const char *name)
     MarkValueRange(trc, vec, vec + len, name);
 }
 
+static inline void
+MarkShapeRange(JSTracer *trc, const Shape **beg, const Shape **end, const char *name)
+{
+    for (const Shape **sp = beg; sp < end; ++sp) {
+        JS_SET_TRACING_INDEX(trc, name, sp - beg);
+        (*sp)->trace(trc);
+    }
+}
+
+static inline void
+MarkShapeRange(JSTracer *trc, size_t len, const Shape **vec, const char *name)
+{
+    MarkShapeRange(trc, vec, vec + len, name);
+}
+
 /* N.B. Assumes JS_SET_TRACING_NAME/INDEX has already been called. */
 static inline void
 MarkGCThing(JSTracer *trc, void *thing, uint32 kind)

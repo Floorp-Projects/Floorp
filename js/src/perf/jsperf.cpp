@@ -216,7 +216,7 @@ static const struct pm_const {
 
 static JSClass pm_class = {
     "PerfMeasurement", JSCLASS_HAS_PRIVATE,
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, pm_finalize,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
@@ -265,7 +265,7 @@ RegisterPerfMeasurement(JSContext *cx, JSObject *global)
 
     for (const pm_const *c = pm_consts; c->name; c++) {
         if (!JS_DefineProperty(cx, ctor, c->name, INT_TO_JSVAL(c->value),
-                               JS_PropertyStub, JS_PropertyStub, PM_CATTRS))
+                               JS_PropertyStub, JS_StrictPropertyStub, PM_CATTRS))
             return 0;
     }
 

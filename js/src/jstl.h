@@ -381,6 +381,9 @@ class Conditionally {
 
     template <class T1>
     Conditionally(bool b, const T1 &t1) { if (b) t.construct(t1); }
+
+    template <class T1, class T2>
+    Conditionally(bool b, const T1 &t1, const T2 &t2) { if (b) t.construct(t1, t2); }
 };
 
 template <class T>

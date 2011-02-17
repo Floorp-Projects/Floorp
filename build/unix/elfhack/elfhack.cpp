@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#undef NDEBUG
 #include <assert.h>
 #include <cstring>
 #include <cstdlib>
@@ -47,6 +48,9 @@
 
 #ifndef R_ARM_V4BX
 #define R_ARM_V4BX 0x28
+#endif
+#ifndef R_ARM_THM_JUMP24
+#define R_ARM_THM_JUMP24 0x1e
 #endif
 
 char *rundir = NULL;
@@ -122,22 +126,43 @@ public:
         if (elf->getMachine() != parent.getMachine())
             throw std::runtime_error("architecture of object for injected code doesn't match");
 
+        ElfSymtab_Section *symtab = NULL;
+
         // Get all executable sections from the injected code object.
         // Most of the time, there will only be one for the init function,
         // but on e.g. x86, there is a separate section for
         // __i686.get_pc_thunk.$reg
-        for (ElfSection *text = elf->getSection(1); text != NULL;
-             text = text->getNext()) {
-            if ((text->getType() == SHT_PROGBITS) &&
-                (text->getFlags() & SHF_EXECINSTR)) {
-                code.push_back(text);
+        // Find the symbol table at the same time.
+        for (ElfSection *section = elf->getSection(1); section != NULL;
+             section = section->getNext()) {
+            if ((section->getType() == SHT_PROGBITS) &&
+                (section->getFlags() & SHF_EXECINSTR)) {
+                code.push_back(section);
                 // We need to align this section depending on the greater
                 // alignment required by code sections.
-                if (shdr.sh_addralign < text->getAddrAlign())
-                    shdr.sh_addralign = text->getAddrAlign();
+                if (shdr.sh_addralign < section->getAddrAlign())
+                    shdr.sh_addralign = section->getAddrAlign();
+            } else if (section->getType() == SHT_SYMTAB) {
+                symtab = (ElfSymtab_Section *) section;
             }
         }
         assert(code.size() != 0);
+        if (symtab == NULL)
+            throw std::runtime_error("Couldn't find a symbol table for the injected code");
+
+        // Find the init symbol
+        entry_point = -1;
+        int shndx = 0;
+        for (std::vector<Elf_SymValue>::iterator sym = symtab->syms.begin();
+             sym != symtab->syms.end(); sym++) {
+            if (strcmp(sym->name, "init") == 0) {
+                entry_point = sym->value.getValue();
+                shndx = sym->value.getSection()->getIndex();
+                break;
+            }
+        }
+        if (entry_point == -1)
+            throw std::runtime_error("Couldn't find an 'init' symbol in the injected code");
 
         // Adjust code sections offsets according to their size
         std::vector<ElfSection *>::iterator c = code.begin();
@@ -154,6 +179,8 @@ public:
         for (c = code.begin(); c != code.end(); c++) {
             memcpy(buf, (*c)->getData(), (*c)->getSize());
             buf += (*c)->getSize();
+            if ((*c)->getIndex() < shndx)
+                entry_point += (*c)->getSize();
         }
         name = elfhack_text;
     }
@@ -187,43 +214,91 @@ public:
         return true;
     }
 
+    unsigned int getEntryPoint() {
+        return entry_point;
+    }
 private:
-    void apply_pc32_relocation(ElfSection *the_code, char *base, Elf_Rel *r, unsigned int addr)
+    class pc32_relocation {
+    public:
+        Elf32_Addr operator()(unsigned int base_addr, Elf32_Off offset,
+                              Elf32_Word addend, unsigned int addr)
+        {
+            return addr + addend - offset - base_addr;
+        }
+    };
+
+    class arm_plt32_relocation {
+    public:
+        Elf32_Addr operator()(unsigned int base_addr, Elf32_Off offset,
+                              Elf32_Word addend, unsigned int addr)
+        {
+            // We don't care about sign_extend because the only case where this is
+            // going to be used only jumps forward.
+            Elf32_Addr tmp = (Elf32_Addr) (addr - offset - base_addr) >> 2;
+            tmp = (addend + tmp) & 0x00ffffff;
+            return (addend & 0xff000000) | tmp;
+        }
+    };
+
+    class arm_thm_jump24_relocation {
+    public:
+        Elf32_Addr operator()(unsigned int base_addr, Elf32_Off offset,
+                              Elf32_Word addend, unsigned int addr)
+        {
+            /* Follows description of b.w instructions as per
+               ARM Architecture Reference Manual ARM® v7-A and ARM® v7-R edition, A8.6.16
+               We limit ourselves to Encoding T3.
+               We don't care about sign_extend because the only case where this is
+               going to be used only jumps forward. */
+            Elf32_Addr tmp = (Elf32_Addr) (addr - offset - base_addr);
+            unsigned int word0 = addend & 0xffff,
+                         word1 = addend >> 16;
+
+            if (((word0 & 0xf800) != 0xf000) || ((word1 & 0xd000) != 0x9000))
+                throw std::runtime_error("R_ARM_THM_JUMP24 relocation only supported for B.W <label>");
+
+            unsigned int s = (word0 & (1 << 10)) >> 10;
+            unsigned int j1 = (word1 & (1 << 13)) >> 13;
+            unsigned int j2 = (word1 & (1 << 11)) >> 11;
+            unsigned int i1 = j1 ^ s ? 0 : 1;
+            unsigned int i2 = j2 ^ s ? 0 : 1;
+
+            tmp += ((s << 24) | (i1 << 23) | (i2 << 22) | ((word0 & 0x3ff) << 12) | ((word1 & 0x7ff) << 1));
+
+            s = (tmp & (1 << 24)) >> 24;
+            j1 = ((tmp & (1 << 23)) >> 23) ^ !s;
+            j2 = ((tmp & (1 << 22)) >> 22) ^ !s;
+
+            return 0xf000 | (s << 10) | ((tmp & (0x3ff << 12)) >> 12) | 
+                   (0x9000 << 16) | (j1 << 29) | (j2 << 27) | ((tmp & 0xffe) << 15);
+        }
+    };
+
+    class gotoff_relocation {
+    public:
+        Elf32_Addr operator()(unsigned int base_addr, Elf32_Off offset,
+                              Elf32_Word addend, unsigned int addr)
+        {
+            return addr + addend;
+        }
+    };
+
+    template <class relocation_type>
+    void apply_relocation(ElfSection *the_code, char *base, Elf_Rel *r, unsigned int addr)
     {
-        *(Elf32_Addr *)(base + r->r_offset) += (Elf32_Addr) (addr - r->r_offset - the_code->getAddr());
+        relocation_type relocation;
+        Elf32_Addr value;
+        memcpy(&value, base + r->r_offset, 4);
+        value = relocation(the_code->getAddr(), r->r_offset, value, addr);
+        memcpy(base + r->r_offset, &value, 4);
     }
 
-    void apply_pc32_relocation(ElfSection *the_code, char *base, Elf_Rela *r, unsigned int addr)
+    template <class relocation_type>
+    void apply_relocation(ElfSection *the_code, char *base, Elf_Rela *r, unsigned int addr)
     {
-        *(Elf32_Addr *)(base + r->r_offset) = (Elf32_Addr) (addr + r->r_addend - r->r_offset - the_code->getAddr());
-    }
-
-    void apply_arm_plt32_relocation(ElfSection *the_code, char *base, Elf_Rel *r, unsigned int addr)
-    {
-        // We don't care about sign_extend because the only case where this is
-        // going to be used only jumps forward.
-        Elf32_Addr addend = (Elf32_Addr) (addr - r->r_offset - the_code->getAddr()) >> 2;
-        addend = (*(Elf32_Addr *)(base + r->r_offset) + addend) & 0x00ffffff;
-        *(Elf32_Addr *)(base + r->r_offset) = (*(Elf32_Addr *)(base + r->r_offset) & 0xff000000) | addend;
-    }
-
-    void apply_arm_plt32_relocation(ElfSection *the_code, char *base, Elf_Rela *r, unsigned int addr)
-    {
-        // We don't care about sign_extend because the only case where this is
-        // going to be used only jumps forward.
-        Elf32_Addr addend = (Elf32_Addr) (addr - r->r_offset - the_code->getAddr()) >> 2;
-        addend = (r->r_addend + addend) & 0x00ffffff;
-        *(Elf32_Addr *)(base + r->r_offset) = (r->r_addend & 0xff000000) | addend;
-    }
-
-    void apply_gotoff_relocation(ElfSection *the_code, char *base, Elf_Rel *r, unsigned int addr)
-    {
-        *(Elf32_Addr *)(base + r->r_offset) += (Elf32_Addr) addr;
-    }
-
-    void apply_gotoff_relocation(ElfSection *the_code, char *base, Elf_Rela *r, unsigned int addr)
-    {
-        *(Elf32_Addr *)(base + r->r_offset) = (Elf32_Addr) addr + r->r_addend;
+        relocation_type relocation;
+        Elf32_Addr value = relocation(the_code->getAddr(), r->r_offset, r->r_addend, addr);
+        memcpy(base + r->r_offset, &value, 4);
     }
 
     template <typename Rel_Type>
@@ -233,12 +308,11 @@ private:
         char *buf = data + (the_code->getAddr() - code.front()->getAddr());
         // TODO: various checks on the sections
         ElfSymtab_Section *symtab = (ElfSymtab_Section *)rel->getLink();
-        ElfStrtab_Section *strtab = (ElfStrtab_Section *)symtab->getLink();
         for (typename std::vector<Rel_Type>::iterator r = rel->rels.begin(); r != rel->rels.end(); r++) {
             // TODO: various checks on the symbol
-            const char *name = strtab->getStr(symtab->syms[ELF32_R_SYM(r->r_info)].st_name);
+            const char *name = symtab->syms[ELF32_R_SYM(r->r_info)].name;
             unsigned int addr;
-            if (symtab->syms[ELF32_R_SYM(r->r_info)].st_shndx == 0) {
+            if (symtab->syms[ELF32_R_SYM(r->r_info)].value.getSection() == NULL) {
                 if (strcmp(name, "relhack") == 0) {
                     addr = getNext()->getAddr();
                 } else if (strcmp(name, "elf_header") == 0) {
@@ -255,13 +329,12 @@ private:
                     // This is for R_ARM_V4BX, until we find something better
                     addr = -1;
                 } else {
-                    fprintf(stderr, "Unsupported symbol in relocation: %s\n", name);
-                    break;
+                    throw std::runtime_error("Unsupported symbol in relocation");
                 }
             } else {
-                ElfSection *section = elf->getSection(symtab->syms[ELF32_R_SYM(r->r_info)].st_shndx);
+                ElfSection *section = symtab->syms[ELF32_R_SYM(r->r_info)].value.getSection();
                 assert((section->getType() == SHT_PROGBITS) && (section->getFlags() & SHF_EXECINSTR));
-                addr = section->getAddr() + symtab->syms[ELF32_R_SYM(r->r_info)].st_value;
+                addr = symtab->syms[ELF32_R_SYM(r->r_info)].value.getValue();
             }
             // Do the relocation
 #define REL(machine, type) (EM_ ## machine | (R_ ## machine ## _ ## type << 8))
@@ -270,20 +343,24 @@ private:
             case REL(386, PC32):
             case REL(386, GOTPC):
             case REL(ARM, GOTPC):
-                apply_pc32_relocation(the_code, buf, &*r, addr);
+            case REL(ARM, REL32):
+                apply_relocation<pc32_relocation>(the_code, buf, &*r, addr);
                 break;
             case REL(ARM, PLT32):
-                apply_arm_plt32_relocation(the_code, buf, &*r, addr);
+                apply_relocation<arm_plt32_relocation>(the_code, buf, &*r, addr);
+                break;
+            case REL(ARM, THM_JUMP24):
+                apply_relocation<arm_thm_jump24_relocation>(the_code, buf, &*r, addr);
                 break;
             case REL(386, GOTOFF):
             case REL(ARM, GOTOFF):
-                apply_gotoff_relocation(the_code, buf, &*r, addr);
+                apply_relocation<gotoff_relocation>(the_code, buf, &*r, addr);
                 break;
             case REL(ARM, V4BX):
                 // Ignore R_ARM_V4BX relocations
                 break;
             default:
-                fprintf(stderr, "Unsupported relocation type\n");
+                throw std::runtime_error("Unsupported relocation type");
             }
         }
     }
@@ -291,6 +368,7 @@ private:
     Elf *elf, &parent;
     std::vector<ElfSection *> code;
     ElfSection *init;
+    int entry_point;
 };
 
 template <typename Rel_Type>
@@ -316,8 +394,6 @@ int do_relocation_section(Elf *elf, unsigned int rel_type)
     Elf_Shdr relhackcode_section(relhackcode32_section);
     ElfRelHack_Section *relhack = new ElfRelHack_Section(relhack_section);
     ElfRelHackCode_Section *relhackcode = new ElfRelHackCode_Section(relhackcode_section, *elf);
-    relhackcode->insertAfter(section);
-    relhack->insertAfter(relhackcode);
 
     std::vector<Rel_Type> new_rels;
     Elf_RelHack relhack_entry;
@@ -329,8 +405,8 @@ int do_relocation_section(Elf *elf, unsigned int rel_type)
         // Our injected code is likely not to be allowed to write there.
         ElfSection *section = elf->getSectionAt(i->r_offset);
         if (!(section->getFlags() & SHF_WRITE) || (ELF32_R_TYPE(i->r_info) != rel_type) ||
-            (relro && (i->r_offset >= relro->getFirstSection()->getAddr()) &&
-                      (i->r_offset < relro->getFirstSection()->getAddr() + relro->getMemSize())))
+            (relro && (i->r_offset >= relro->getAddr()) &&
+                      (i->r_offset < relro->getAddr() + relro->getMemSize())))
             new_rels.push_back(*i);
         else {
             // TODO: check that i->r_addend == *i->r_offset
@@ -350,12 +426,22 @@ int do_relocation_section(Elf *elf, unsigned int rel_type)
     relhack_entry.r_offset = relhack_entry.r_info = 0;
     relhack->push_back(relhack_entry);
 
+    relhackcode->insertAfter(section);
+    relhack->insertAfter(relhackcode);
+
+    unsigned int old_end = section->getOffset() + section->getSize();
     section->rels.assign(new_rels.begin(), new_rels.end());
     section->shrink(new_rels.size() * section->getEntSize());
-    ElfLocation *init = new ElfLocation(relhackcode, 0);
+    ElfLocation *init = new ElfLocation(relhackcode, relhackcode->getEntryPoint());
     dyn->setValueForType(DT_INIT, init);
     // TODO: adjust the value according to the remaining number of relative relocations
-    dyn->setValueForType(Rel_Type::d_tag_count, new ElfPlainValue(0));
+    if (dyn->getValueForType(Rel_Type::d_tag_count))
+        dyn->setValueForType(Rel_Type::d_tag_count, new ElfPlainValue(0));
+
+    if (relhack->getOffset() + relhack->getSize() >= old_end) {
+        fprintf(stderr, "No gain. Aborting\n");
+        return -1;
+    }
     return 0;
 }
 
@@ -385,10 +471,10 @@ void do_file(const char *name, bool backup = false)
         exit = do_relocation_section<Elf_Rel>(elf, R_ARM_RELATIVE);
         break;
     }
-    if (elf->getSize() >= size)
-        fprintf(stderr, "No gain. Aborting\n");
-    else if (exit == 0) {
-        if (backup && backup_file(name) != 0) {
+    if (exit == 0) {
+        if (elf->getSize() >= size) {
+            fprintf(stderr, "No gain. Aborting\n");
+        } else if (backup && backup_file(name) != 0) {
             fprintf(stderr, "Couln't create backup file\n");
         } else {
             std::ofstream ofile(name, std::ios::out|std::ios::binary|std::ios::trunc);

@@ -332,7 +332,7 @@ public:
         ASSERT(lo != ARMRegisters::S0);
         ASSERT(address.base != ARMRegisters::S0);
         DataLabel32 dataLabel(this);
-        m_assembler.ldr_un_imm(ARMRegisters::S0, 0);
+        m_assembler.ldr_un_imm(ARMRegisters::S0, address.offset);
         m_assembler.add_r(ARMRegisters::S0, ARMRegisters::S0, address.base);
         m_assembler.dtr_u(false, lo, ARMRegisters::S0, 0);
         m_assembler.dtr_u(false, hi, ARMRegisters::S0, 4);
@@ -347,7 +347,7 @@ public:
         ASSERT(address.base != ARMRegisters::S0);
         ASSERT(address.base != ARMRegisters::S1);
         DataLabel32 dataLabel(this);
-        m_assembler.ldr_un_imm(ARMRegisters::S0, 0);
+        m_assembler.ldr_un_imm(ARMRegisters::S0, address.offset);
         m_assembler.moveImm(hi.m_value, ARMRegisters::S1);
         m_assembler.add_r(ARMRegisters::S0, ARMRegisters::S0, address.base);
         m_assembler.dtr_u(false, lo, ARMRegisters::S0, 0);
@@ -360,7 +360,7 @@ public:
         ASSERT(address.base != ARMRegisters::S0);
         ASSERT(address.base != ARMRegisters::S1);
         DataLabel32 dataLabel(this);
-        m_assembler.ldr_un_imm(ARMRegisters::S0, 0);
+        m_assembler.ldr_un_imm(ARMRegisters::S0, address.offset);
         m_assembler.add_r(ARMRegisters::S0, ARMRegisters::S0, address.base);
         m_assembler.moveImm(lo.m_value, ARMRegisters::S1);
         m_assembler.dtr_u(false, ARMRegisters::S1, ARMRegisters::S0, 0);

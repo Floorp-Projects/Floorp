@@ -60,8 +60,10 @@ DEFINES		+= -DMOZ_USE_STDCALL -DMOZ_NEED_LEADING_UNDERSCORE
 endif
 else
 
+ifneq ($(OS_TEST),x86_64)
 # FIXME: bug 413019
 OS_COMPILE_CXXFLAGS += -GL-
+endif
 
 CPPSRCS		= xptcinvoke.cpp xptcstubs.cpp
 
