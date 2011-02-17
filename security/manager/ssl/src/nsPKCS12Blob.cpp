@@ -272,6 +272,7 @@ finish:
   // finish the decoder
   if (dcx)
     SEC_PKCS12DecoderFinish(dcx);
+  SECITEM_ZfreeItem(&unicodePw, PR_FALSE);
   return NS_OK;
 }
 
@@ -487,6 +488,7 @@ finish:
     PR_Close(this->mTmpFile);
     this->mTmpFile = NULL;
   }
+  SECITEM_ZfreeItem(&unicodePw, PR_FALSE);
   return rv;
 }
 

@@ -426,7 +426,8 @@
         <xul:description class="popup-notification-description"
                          xbl:inherits="xbl:text=label"/>
         <xul:spacer flex="1"/>
-        <xul:hbox pack="end">
+        <xul:hbox class="popup-notification-button-container"
+                  pack="end" align="center">
           <xul:button anonid="button"
                       class="popup-notification-menubutton"
                       type="menu-button"

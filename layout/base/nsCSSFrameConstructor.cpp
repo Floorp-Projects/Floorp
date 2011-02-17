@@ -5505,8 +5505,12 @@ IsRootBoxFrame(nsIFrame *aFrame)
 nsresult
 nsCSSFrameConstructor::ReconstructDocElementHierarchy()
 {
-  return RecreateFramesForContent(mPresShell->GetDocument()->GetRootElement(),
-				  PR_FALSE);
+  Element* rootElement = mDocument->GetRootElement();
+  if (!rootElement) {
+    /* nothing to do */
+    return NS_OK;
+  }
+  return RecreateFramesForContent(rootElement, PR_FALSE);
 }
 
 nsIFrame*
@@ -7664,7 +7668,7 @@ UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager,
           do {
             DoApplyRenderingChangeToTree(outOfFlowFrame, aViewManager,
                                          aFrameManager, aChange);
-          } while (outOfFlowFrame = outOfFlowFrame->GetNextContinuation());
+          } while ((outOfFlowFrame = outOfFlowFrame->GetNextContinuation()));
         } else if (childList == nsGkAtoms::popupList) {
           DoApplyRenderingChangeToTree(child, aViewManager,
                                        aFrameManager, aChange);
@@ -11763,6 +11767,17 @@ nsCSSFrameConstructor::GenerateChildFrames(nsIFrame* aFrame)
 
     EndUpdate();
   }
+
+#ifdef ACCESSIBILITY
+  nsAccessibilityService* accService = nsIPresShell::AccService();
+  if (accService) {
+    nsIContent* container = aFrame->GetContent();
+    nsIContent* child = container->GetFirstChild();
+    if (child) {
+      accService->ContentRangeInserted(mPresShell, container, child, nsnull);
+    }
+  }
+#endif
 
   // call XBL constructors after the frames are created
   mPresShell->GetDocument()->BindingManager()->ProcessAttachedQueue();

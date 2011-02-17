@@ -124,6 +124,7 @@ _TEST_FILES = \
 		test_bug522632.html \
 		test_bug589621.html \
 		test_bug589623.html \
+		test_bug632379.xul \
 		$(srcdir)/../../reftests/backgrounds/blue-32x32.png \
 		$(srcdir)/../../reftests/backgrounds/fuchsia-32x32.png \
 		$(NULL)

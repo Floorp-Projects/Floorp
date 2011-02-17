@@ -190,6 +190,18 @@ private:
   // aIndex, if it doesn't already exist.
   void EnsureItemAt(PRUint32 aIndex);
 
+  void MaybeInsertNullInAnimValListAt(PRUint32 aIndex,
+                                      PRUint32 aInternalIndex,
+                                      PRUint32 aArgCountForItem);
+  void MaybeRemoveItemFromAnimValListAt(PRUint32 aIndex,
+                                        PRUint32 aArgCountForItem);
+
+  // Calls UpdateListIndex on all elements in |mItems| that satisfy ItemAt(),
+  // from |aStartingIndex| to the end of |mItems|.  Also adjusts
+  // |mItems.mInternalDataIndex| by the requested amount.
+  void UpdateListIndicesFromIndex(PRUint32 aStartingIndex,
+                                  PRInt32  aInternalDataIndexDelta);
+
   DOMSVGPathSeg*& ItemAt(PRUint32 aIndex) {
     return mItems[aIndex].mItem;
   }

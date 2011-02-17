@@ -344,7 +344,9 @@ NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
 #if defined(DEBUG) && defined(_WIN32)
      RealBreak();
 #endif
+#ifdef DEBUG
      nsTraceRefcntImpl::WalkTheStack(stderr);
+#endif
      Abort(buf.buffer);
      return;
    }
