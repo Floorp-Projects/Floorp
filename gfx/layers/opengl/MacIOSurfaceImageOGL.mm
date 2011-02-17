@@ -83,8 +83,23 @@ MacIOSurfaceImageOGL::SetData(const MacIOSurfaceImage::Data &aData)
   mIOSurface->CGLTexImageIOSurface2D((CGLContextObj)[nsCtx CGLContextObj],
                                      LOCAL_GL_RGBA, LOCAL_GL_BGRA,
                                      LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV, 0);
-
+  
   gl->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
+}
+
+void
+MacIOSurfaceImageOGL::SetCallback(UpdateSurfaceCallback aCallback, void* aObjectFrame)
+{
+  mCallback = aCallback;
+  mObjectFrame = aObjectFrame;
+}
+
+void 
+MacIOSurfaceImageOGL::Update(ImageContainer* aContainer)
+{
+  if (mCallback) {
+    mCallback(aContainer, mObjectFrame);
+  }
 }
 
 } /* layers */
