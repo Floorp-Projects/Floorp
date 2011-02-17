@@ -56,16 +56,6 @@ let ConsoleView = {
     this._count = 0;
     this.limit = 250;
 
-    let self = this;
-    let panels = document.getElementById("panel-items");
-
-    panels.addEventListener("select",
-                            function(aEvent) {
-                              if (panels.selectedPanel.id == "console-container")
-                                self._delayedInit();
-                            },
-                            false);
-
     try {
       // update users using the legacy pref
       if (Services.prefs.getBoolPref("browser.console.showInPanel")) {
@@ -79,10 +69,12 @@ let ConsoleView = {
     Services.prefs.addObserver(this._enabledPref, this, false);
   },
 
-  _delayedInit: function cv__delayedInit() {
+  delayedInit: function cv__delayedInit() {
     if (this._inited)
       return;
     this._inited = true;
+
+    this.init(); // In case the panel is selected before init has been called.
 
     Services.console.registerListener(this);
 
@@ -94,8 +86,7 @@ let ConsoleView = {
     this._evalFrame.collapsed = true;
     document.getElementById("console-container").appendChild(this._evalFrame);
 
-    let self = this;
-    this._evalFrame.addEventListener("load", function() { self.loadOrDisplayResult(); }, true);
+    this._evalFrame.addEventListener("load", this.loadOrDisplayResult.bind(this), true);
   },
 
   uninit: function cv_uninit() {

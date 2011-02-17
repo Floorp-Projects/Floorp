@@ -146,20 +146,13 @@ var DownloadsView = {
 
     // Monitor downloads being removed by the download manager (non-UI)
     os.addObserver(this, "download-manager-remove-download", true);
-
-    let self = this;
-    let panels = document.getElementById("panel-items");
-    panels.addEventListener("select",
-                            function(aEvent) {
-                              if (panels.selectedPanel.id == "downloads-container")
-                                self._delayedInit();
-                            },
-                            false);
   },
 
-  _delayedInit: function dv__delayedInit() {
+  delayedInit: function dv__delayedInit() {
     if (this._list)
       return;
+
+    this.init(); // In case the panel is selected before init has been called.
 
     this._list = document.getElementById("downloads-list");
 

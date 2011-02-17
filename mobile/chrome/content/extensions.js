@@ -225,15 +225,6 @@ var ExtensionsView = {
     if (!Services.prefs.getBoolPref("extensions.hideUpdateButton"))
       document.getElementById("addons-update-all").hidden = false;
 
-    let self = this;
-    let panels = document.getElementById("panel-items");
-    panels.addEventListener("select",
-                            function(aEvent) {
-                              if (panels.selectedPanel.id == "addons-container")
-                                self._delayedInit();
-                            },
-                            false);
-
 #ifdef ANDROID
     // Hide the notification
     let alertsService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
@@ -243,9 +234,11 @@ var ExtensionsView = {
 #endif
   },
 
-  _delayedInit: function ev__delayedInit() {
+  delayedInit: function ev__delayedInit() {
     if (this._list)
       return;
+
+    this.init(); // In case the panel is selected before init has been called.
 
     this._list = document.getElementById("addons-list");
     this._localItem = document.getElementById("addons-local");
