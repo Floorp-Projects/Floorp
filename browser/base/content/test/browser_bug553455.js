@@ -21,15 +21,17 @@ const CHROMEROOT = croot;
 
 var gApp = document.getElementById("bundle_brand").getString("brandShortName");
 var gVersion = Services.appinfo.version;
+var check_notification;
 
 function wait_for_notification(aCallback) {
   info("Waiting for notification");
-  PopupNotifications.panel.addEventListener("popupshown", function() {
-    PopupNotifications.panel.removeEventListener("popupshown", arguments.callee, false);
+  check_notification = function() {
+    PopupNotifications.panel.removeEventListener("popupshown", check_notification, false);
     info("Saw notification");
     is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
     aCallback(PopupNotifications.panel);
-  }, false);
+  };
+  PopupNotifications.panel.addEventListener("popupshown", check_notification, false);
 }
 
 function wait_for_notification_close(aCallback) {
@@ -878,6 +880,7 @@ function test() {
   registerCleanupFunction(function() {
     // Make sure no more test parts run in case we were timed out
     TESTS = [];
+    PopupNotifications.panel.removeEventListener("popupshown", check_notification, false);
 
     AddonManager.getAllInstalls(function(aInstalls) {
       aInstalls.forEach(function(aInstall) {
