@@ -5,7 +5,7 @@ load 407277-1.html
 load 418923-1.html
 load 420439.html
 load 428489-1.html
-load 431086-1.xhtml
+asserts(0-16) load 431086-1.xhtml # Bug 439258
 load 448329-1.html
 load 448329-2.html
 load 448329-3.html
@@ -19,5 +19,5 @@ load 535632-1.xhtml
 load 574558-1.xhtml
 load 582138-1.xhtml
 load 612565-1.html
-load 615015-1.html
+asserts(6) load 615015-1.html # Bug 439258
 load 615450-1.html
