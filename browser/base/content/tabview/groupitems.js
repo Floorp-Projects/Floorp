@@ -1330,7 +1330,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       child.addClass("stacked");
       child.isStacked = true;
       if (numInPile-- > 0) {
-        child.setHidden(false);
         if (child == self.topChild)
           children.unshift(child);
         else
@@ -1347,8 +1346,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       // Force a recalculation of height because we've changed how the title
       // is shown.
-      child.setBounds(box, !animate, {force:true});
+      child.setBounds(box, !animate || child.getHidden(), {force:true});
       child.setRotation((UI.rtl ? -1 : 1) * angleAccum);
+      child.setHidden(false);
       angleAccum += angleDelta;
     });
 
