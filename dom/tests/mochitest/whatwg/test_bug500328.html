@@ -222,12 +222,16 @@ function runTest() {
   popstateExpected("Going back to page 1 should trigger a popstate.");
   is(JSON.stringify(gLastPopStateEvent.state), JSON.stringify(testObj1),
      "Wrong state object popped after going back to page 1.");
+  ok(gLastPopStateEvent.state === iframeCw.document.mozCurrentStateObject,
+     "Wrong state object in document after going back to page 1.");
   ok(iframeCw.location.toString().match(/file_bug500328_1.html$/),
       "Going back to page 1 hould take us to original page.");
 
   iframeCw.history.back();
   popstateExpected("Going back to page 0 should trigger a popstate.");
   is(gLastPopStateEvent.state, null,
+      "Going back to page 0 should pop a null state.");
+  is(iframeCw.document.mozCurrentStateObject, null,
       "Going back to page 0 should pop a null state.");
   is(iframeCw.location.search, "",
       "Going back to page 0 should clear the querystring.");
@@ -236,6 +240,8 @@ function runTest() {
   popstateExpected("Going forward to page 1 should trigger a popstate.");
   is(JSON.stringify(gLastPopStateEvent.state), JSON.stringify(testObj1),
       "Wrong state object popped after going forward to page 1.");
+  ok(gLastPopStateEvent.state === iframeCw.document.mozCurrentStateObject,
+      "Wrong state object in document after going forward to page 1.");
   ok(iframeCw.location.toString().match(/file_bug500328_1.html$/),
       "Going forward to page 1 should leave us at original page.");
 
@@ -246,6 +252,8 @@ function runTest() {
   popstateExpected("Going forward to page 2 should trigger a popstate.");
   is(JSON.stringify(gLastPopStateEvent.state), JSON.stringify(testObj2),
      "Wrong state object popped after going forward to page 2.");
+  ok(iframeCw.document.mozCurrentStateObject === gLastPopStateEvent.state,
+     "Wrong state object in document after going forward to page 2.");
   ok(iframeCw.location.toString().match(/file_bug500328_1.html\?test1#foo$/),
      "Going forward to page 2 took us to " + iframeCw.location.toString());
 
