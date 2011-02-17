@@ -361,6 +361,14 @@ public:
   */
   virtual void SetData(const Data& aData) = 0;
 
+  /**
+   * Temporary hacks to force plugin drawing during an empty transaction.
+   * This should not be used for anything else, and will be removed
+   * when async plugin rendering is complete.
+   */
+  typedef void (*UpdateSurfaceCallback)(ImageContainer* aContainer, void* aInstanceOwner);
+  virtual void SetCallback(UpdateSurfaceCallback aCallback, void* aInstanceOwner) =0;
+
 protected:
   MacIOSurfaceImage(void* aImplData) : Image(aImplData, MAC_IO_SURFACE) {}
 };
