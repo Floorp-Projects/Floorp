@@ -1013,12 +1013,10 @@ nsRect
 nsLayoutUtils::MatrixTransformRect(const nsRect &aBounds,
                                    const gfxMatrix &aMatrix, float aFactor)
 {
-  nsRect outside = aBounds;
-  outside.ScaleRoundOut(1/aFactor);
-  gfxRect image = aMatrix.TransformBounds(gfxRect(outside.x,
-                                                  outside.y,
-                                                  outside.width,
-                                                  outside.height));
+  gfxRect image = aMatrix.TransformBounds(gfxRect(NSAppUnitsToFloatPixels(aBounds.x, aFactor),
+                                                  NSAppUnitsToFloatPixels(aBounds.y, aFactor),
+                                                  NSAppUnitsToFloatPixels(aBounds.width, aFactor),
+                                                  NSAppUnitsToFloatPixels(aBounds.height, aFactor)));
 
   return RoundGfxRectToAppRect(image, aFactor);
 }
