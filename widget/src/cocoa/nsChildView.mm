@@ -158,13 +158,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 // sends gecko an ime composition event
 - (void) sendCompositionEvent:(PRInt32)aEventType;
 
-// sends gecko an ime text event
-- (void) sendTextEvent:(PRUnichar*) aBuffer 
-                       attributedString:(NSAttributedString*) aString
-                       selectedRange:(NSRange)selRange
-                       markedRange:(NSRange)markRange
-                       doCommit:(BOOL)doCommit;
-
 // do generic gecko event setup with a generic cocoa event. accepts nil inEvent.
 - (void) convertGenericCocoaEvent:(NSEvent*)inEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent;
 
@@ -344,121 +337,6 @@ static void
 InitNPCocoaEvent(NPCocoaEvent* event)
 {
   memset(event, 0, sizeof(NPCocoaEvent));
-}
-
-static PRUint32
-UnderlineAttributeToTextRangeType(PRUint32 aUnderlineStyle, NSRange selRange)
-{
-#ifdef DEBUG_IME
-  NSLog(@"****in underlineAttributeToTextRangeType = %d", aUnderlineStyle);
-#endif
-
-  // For more info on the underline attribute, please see: 
-  // http://developer.apple.com/techpubs/macosx/Cocoa/TasksAndConcepts/ProgrammingTopics/AttributedStrings/Tasks/AccessingAttrs.html
-  // We are not clear where the define for value 2 is right now. 
-  // To see this value in japanese ime, type 'aaaaaaaaa' and hit space to make the
-  // ime send you some part of text in 1 (NSSingleUnderlineStyle) and some part in 2. 
-  // ftang will ask apple for more details
-  //
-  // It probably means show 1-pixel thickness underline vs 2-pixel thickness.
-  
-  PRUint32 attr;
-  if (selRange.length == 0) {
-    switch (aUnderlineStyle) {
-      case 1:
-        attr = NS_TEXTRANGE_RAWINPUT;
-        break;
-      case 2:
-      default:
-        attr = NS_TEXTRANGE_SELECTEDRAWTEXT;
-        break;
-    }
-  }
-  else {
-    switch (aUnderlineStyle) {
-      case 1:
-        attr = NS_TEXTRANGE_CONVERTEDTEXT;
-        break;
-      case 2:
-      default:
-        attr = NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
-        break;
-    }
-  }
-  return attr;
-}
-
-static PRUint32
-CountRanges(NSAttributedString *aString)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  // Iterate through aString for the NSUnderlineStyleAttributeName and count the 
-  // different segments adjusting limitRange as we go.
-  PRUint32 count = 0;
-  NSRange effectiveRange;
-  NSRange limitRange = NSMakeRange(0, [aString length]);
-  while (limitRange.length > 0) {
-    [aString attribute:NSUnderlineStyleAttributeName 
-               atIndex:limitRange.location 
- longestEffectiveRange:&effectiveRange
-               inRange:limitRange];
-    limitRange = NSMakeRange(NSMaxRange(effectiveRange), 
-                             NSMaxRange(limitRange) - NSMaxRange(effectiveRange));
-    count++;
-  }
-  return count;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
-}
-
-static void
-ConvertAttributeToGeckoRange(NSAttributedString *aString, NSRange markRange, NSRange selRange, PRUint32 inCount, nsTextRange* aRanges)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  // Convert the Cocoa range into the nsTextRange Array used in Gecko.
-  // Iterate through the attributed string and map the underline attribute to Gecko IME textrange attributes.
-  // We may need to change the code here if we change the implementation of validAttributesForMarkedText.
-  PRUint32 i = 0;
-  NSRange effectiveRange;
-  NSRange limitRange = NSMakeRange(0, [aString length]);
-  while ((limitRange.length > 0) && (i < inCount)) {
-    id attributeValue = [aString attribute:NSUnderlineStyleAttributeName 
-                              atIndex:limitRange.location 
-                              longestEffectiveRange:&effectiveRange
-                              inRange:limitRange];
-    aRanges[i].mStartOffset = effectiveRange.location;                         
-    aRanges[i].mEndOffset = NSMaxRange(effectiveRange);                         
-    aRanges[i].mRangeType = UnderlineAttributeToTextRangeType([attributeValue intValue], selRange); 
-    limitRange = NSMakeRange(NSMaxRange(effectiveRange), 
-                             NSMaxRange(limitRange) - NSMaxRange(effectiveRange));
-    i++;
-  }
-  // Get current caret position.
-  aRanges[i].mStartOffset = selRange.location + selRange.length;                         
-  aRanges[i].mEndOffset = aRanges[i].mStartOffset;                         
-  aRanges[i].mRangeType = NS_TEXTRANGE_CARETPOSITION;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-static void
-FillTextRangeInTextEvent(nsTextEvent *aTextEvent, NSAttributedString* aString, NSRange markRange, NSRange selRange)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  // Count the number of segments in the attributed string and add one more count for sending current caret position to Gecko.
-  // Allocate the right size of nsTextRange and draw caret at right position.
-  // Convert the attributed string into an array of nsTextRange and get current caret position by calling above functions.
-  PRUint32 count = CountRanges(aString) + 1;
-  aTextEvent->rangeArray = new nsTextRange[count];
-  if (aTextEvent->rangeArray) {
-    aTextEvent->rangeCount = count;
-    ConvertAttributeToGeckoRange(aString, markRange, selRange, aTextEvent->rangeCount,  aTextEvent->rangeArray);
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 #if defined(DEBUG) && defined(PR_LOGGING)
@@ -4879,30 +4757,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   mGeckoChild->DispatchWindowEvent(event);
 }
 
-- (void)sendTextEvent:(PRUnichar*) aBuffer 
-                      attributedString:(NSAttributedString*) aString  
-                      selectedRange:(NSRange) selRange 
-                      markedRange:(NSRange) markRange
-                      doCommit:(BOOL) doCommit
-{
-#ifdef DEBUG_IME
-  NSLog(@"****in sendTextEvent; string = '%@'", aString);
-  NSLog(@" markRange = %d, %d;  selRange = %d, %d", markRange.location, markRange.length, selRange.location, selRange.length);
-#endif
-
-  if (!mGeckoChild)
-    return;
-
-  nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, mGeckoChild);
-  textEvent.time = PR_IntervalNow();
-  textEvent.theText = aBuffer;
-  if (!doCommit)
-    FillTextRangeInTextEvent(&textEvent, aString, markRange, selRange);
-
-  mGeckoChild->DispatchWindowEvent(textEvent);
-  if (textEvent.rangeArray)
-    delete [] textEvent.rangeArray;
-}
 
 #pragma mark -
 // NSTextInput implementation
@@ -5012,10 +4866,12 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
       insertString =
         [[[NSAttributedString alloc] initWithString:tmpStr] autorelease];
     }
-    [self sendTextEvent:bufPtr attributedString:insertString
-                               selectedRange:NSMakeRange(0, len)
-                               markedRange:mMarkedRange
-                               doCommit:YES];
+    if (mGeckoChild) {
+      NSRange range = NSMakeRange(0, len);
+      mGeckoChild->TextInputHandler()->
+        DispatchTextEvent(nsDependentString(bufPtr), insertString,
+                          range, PR_TRUE);
+    }
     // Note: mGeckoChild might have become null here. Don't count on it from here on.
 
     [self sendCompositionEvent:NS_COMPOSITION_END];
@@ -5107,14 +4963,12 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   if (mGeckoChild->TextInputHandler()->IsIMEComposing()) {
     mGeckoChild->TextInputHandler()->OnUpdateIMEComposition(tmpStr);
 
-    BOOL commit = len == 0;
-    [self sendTextEvent:bufPtr attributedString:aString
-                                  selectedRange:selRange
-                                    markedRange:mMarkedRange
-                                       doCommit:commit];
+    PRBool doCommit = (len == 0);
+    mGeckoChild->TextInputHandler()->
+      DispatchTextEvent(nsDependentString(bufPtr), aString, selRange, doCommit);
     // Note: mGeckoChild might have become null here. Don't count on it from here on.
 
-    if (commit) {
+    if (doCommit) {
       [self sendCompositionEvent:NS_COMPOSITION_END];
       // Note: mGeckoChild might have become null here. Don't count on it from here on.
       if (mGeckoChild) {
