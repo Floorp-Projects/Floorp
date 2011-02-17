@@ -801,20 +801,26 @@ function test_failed_security() {
     Services.obs.addObserver(function() {
       Services.obs.removeObserver(arguments.callee, "addon-install-failed");
 
-      // Wait for the browser code to add the failure notification
-      executeSoon(function() {
-        // Wait for the progress notification to dismiss itself
-        executeSoon(function() {
-          ok(PopupNotifications.isPanelOpen, "Notification should still be open");
-          is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
-          notification = aPanel.childNodes[0];
-          is(notification.id, "addon-install-failed-notification", "Should have seen the install fail");
+      function waitForSingleNotification() {
+        // Notification should never close while we wait
+        ok(PopupNotifications.isPanelOpen, "Notification should still be open");
+        if (PopupNotifications.panel.childNodes.length == 2) {
+          executeSoon(waitForSingleNotification);
+          return;
+        }
 
-          Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, true);
-          wait_for_notification_close(runNextTest);
-          gBrowser.removeTab(gBrowser.selectedTab);
-        });
-      });
+        is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
+        notification = aPanel.childNodes[0];
+        is(notification.id, "addon-install-failed-notification", "Should have seen the install fail");
+
+        Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, true);
+        wait_for_notification_close(runNextTest);
+        gBrowser.removeTab(gBrowser.selectedTab);
+      }
+
+      // Allow the browser code to add the failure notification and then wait
+      // for the progress notification to dismiss itself
+      executeSoon(waitForSingleNotification);
     }, "addon-install-failed", false);
   });
 
