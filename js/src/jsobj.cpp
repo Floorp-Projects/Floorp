@@ -4772,7 +4772,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
                 JS_ASSERT(existingShape->getter() != getter);
 
                 if (!obj->methodReadBarrier(cx, *existingShape, &valueCopy))
-                    return NULL;
+                    return false;
             }
         } else {
             adding = true;
@@ -6810,14 +6810,14 @@ DumpProperty(JSObject *obj, const Shape &shape)
     if (shape.hasGetterValue())
         fprintf(stderr, "getterValue=%p ", (void *) shape.getterObject());
     else if (!shape.hasDefaultGetter())
-        fprintf(stderr, "getterOp=%p ", (void *) shape.getterOp());
+        fprintf(stderr, "getterOp=%p ", JS_FUNC_TO_DATA_PTR(void *, shape.getterOp()));
 
     if (shape.hasSetterValue())
         fprintf(stderr, "setterValue=%p ", (void *) shape.setterObject());
     else if (shape.setterOp() == js_watch_set)
         fprintf(stderr, "setterOp=js_watch_set ");
     else if (!shape.hasDefaultSetter())
-        fprintf(stderr, "setterOp=%p ", (void *) shape.setterOp());
+        fprintf(stderr, "setterOp=%p ", JS_FUNC_TO_DATA_PTR(void *, shape.setterOp()));
 
     if (JSID_IS_ATOM(id))
         dumpString(JSID_TO_STRING(id));
