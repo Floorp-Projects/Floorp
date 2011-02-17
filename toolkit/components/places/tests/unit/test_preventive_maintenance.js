@@ -694,74 +694,17 @@ tests.push({
 });
 
 //------------------------------------------------------------------------------
-
+//XXX TODO
 tests.push({
   name: "D.10",
   desc: "Recalculate positions",
 
-  _bookmarks: [],
-
   setup: function() {
-    const NUM_BOOKMARKS = 30;
-    bs.runInBatchMode({
-      runBatched: function (aUserData) {
-        for (let i = 0; i < NUM_BOOKMARKS; i++) {
-          bs.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                            NetUtil.newURI("http://example.com/"),
-                            bs.DEFAULT_INDEX, "testbookmark");
-        }
-      }
-    }, null);
 
-    // Set random positions for the added bookmarks.
-    let stmt = mDBConn.createStatement(
-      "UPDATE moz_bookmarks SET position = :rand " +
-      "WHERE id IN ( " +
-        "SELECT id FROM moz_bookmarks WHERE parent = :unfiled " +
-        "ORDER BY RANDOM() LIMIT 1 " +
-      ") "
-    );
-    for (let i = 0; i < (NUM_BOOKMARKS / 2); i++) {
-      stmt.params["unfiled"] = PlacesUtils.unfiledBookmarksFolderId;
-      stmt.params["rand"] = Math.round(Math.random() * (NUM_BOOKMARKS - 1));
-      stmt.execute();
-      stmt.reset();
-    }
-    stmt.finalize();
-
-    // Build the expected ordered list of bookmarks.
-    stmt = mDBConn.createStatement(
-      "SELECT id, position " +
-      "FROM moz_bookmarks WHERE parent = :unfiled " +
-      "ORDER BY position ASC, ROWID ASC "
-    );
-    stmt.params["unfiled"] = PlacesUtils.unfiledBookmarksFolderId;
-    while (stmt.executeStep()) {
-      this._bookmarks.push(stmt.row.id);
-      print(stmt.row.id + "\t" + stmt.row.position + "\t" + (this._bookmarks.length - 1));
-    }
-    stmt.finalize();
   },
 
   check: function() {
-    // Build the expected ordered list of bookmarks.
-    let stmt = mDBConn.createStatement(
-      "SELECT id, position FROM moz_bookmarks WHERE parent = :unfiled " +
-      "ORDER BY position ASC"
-    );
-    stmt.params["unfiled"] = PlacesUtils.unfiledBookmarksFolderId;
-    let pass = true;
-    while (stmt.executeStep()) {
-      print(stmt.row.id + "\t" + stmt.row.position);
-      if (this._bookmarks.indexOf(stmt.row.id) != stmt.row.position) {
-        pass = false;
-      }
-    }
-    if (!pass) {
-      dump_table("moz_bookmarks");
-      do_throw("Unexpected bookmarks order.");
-    }
-    stmt.finalize();
+
   }
 });
 
