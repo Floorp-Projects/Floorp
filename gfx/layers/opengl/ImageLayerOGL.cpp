@@ -743,15 +743,6 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
   InitTexture(gl, tex, LOCAL_GL_RGBA, aData.mSize);
   mSize = aData.mSize;
 
-  if (!mASurfaceAsGLContext) {
-    mASurfaceAsGLContext = GLContextProvider::CreateForNativePixmapSurface(aData.mSurface);
-    if (mASurfaceAsGLContext)
-      mASurfaceAsGLContext->BindTexImage();
-  }
-
-  if (mASurfaceAsGLContext)
-    return;
-
   mLayerProgram =
     gl->UploadSurfaceToTexture(aData.mSurface,
                                nsIntRect(0,0, mSize.width, mSize.height),

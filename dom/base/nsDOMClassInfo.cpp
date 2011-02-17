@@ -2193,7 +2193,8 @@ nsDOMClassInfo::WrapNativeParent(JSContext *cx, JSObject *scope,
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Document)                                  \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)                                      \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXPathEvaluator)                             \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)                               \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument_MOZILLA_2_0_BRANCH)
 
 
 #define DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES                                \
@@ -2496,7 +2497,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(PopStateEvent, nsIDOMPopStateEvent_MOZILLA_2_BRANCH)
+  DOM_CLASSINFO_MAP_BEGIN(PopStateEvent, nsIDOMPopStateEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMPopStateEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMPopStateEvent_MOZILLA_2_BRANCH)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
