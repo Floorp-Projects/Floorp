@@ -49,4 +49,30 @@ JSFunction::inStrictMode() const
     return script()->strictModeCode;
 }
 
+namespace js {
+
+static inline bool
+IsSafeForLazyThisCoercion(JSContext *cx, JSObject *callee)
+{
+    /*
+     * Look past any wrappers. If the callee is a strict function it is always
+     * safe because we won't do 'this' coercion in strict mode. Otherwise the
+     * callee is only safe to transform into the lazy 'this' token (undefined)
+     * if it is in the current scope. Without this restriction, lazy 'this'
+     * coercion would pick up the wrong global in the other scope.
+     */
+    if (callee->isProxy()) {
+        callee = callee->unwrap();
+        if (!callee->isFunction())
+            return true; // treat any non-wrapped-function proxy as strict
+
+        JSFunction *fun = callee->getFunctionPrivate();
+        if (fun->isInterpreted() && fun->inStrictMode())
+            return true;
+    }
+    return callee->getGlobal() == cx->fp()->scopeChain().getGlobal();
+}
+
+}
+
 #endif /* jsfuninlines_h___ */
