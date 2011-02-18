@@ -75,7 +75,8 @@ XPCOMUtils.defineLazyGetter(this, "CommonUI", function() {
   ["FindHelperUI"],
   ["NewTabPopup"],
   ["PageActions"],
-  ["BrowserSearch"]
+  ["BrowserSearch"],
+  ["CharsetMenu"]
 ].forEach(function (aObject) {
   XPCOMUtils.defineLazyGetter(window, aObject, function() {
     return CommonUI[aObject];

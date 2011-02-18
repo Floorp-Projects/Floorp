@@ -266,6 +266,7 @@ let Content = {
     addMessageListener("Browser:SaveAs", this);
     addMessageListener("Browser:ZoomToPoint", this);
     addMessageListener("Browser:MozApplicationCache:Fetch", this);
+    addMessageListener("Browser:SetCharset", this);
 
     if (Util.isParentProcess())
       addEventListener("DOMActivate", this, true);
@@ -522,6 +523,15 @@ let Content = {
         let updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"]
                             .getService(Ci.nsIOfflineCacheUpdateService);
         updateService.scheduleUpdate(manifestURI, currentURI, content);
+        break;
+      }
+
+      case "Browser:SetCharset": {
+        let docCharset = docShell.QueryInterface(Ci.nsIDocCharset);
+        docCharset.charset = json.charset;
+    
+        let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+        webNav.reload(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
         break;
       }
     }

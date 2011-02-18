@@ -38,12 +38,15 @@ let WebProgressListener = {
     let spec = aLocationURI ? aLocationURI.spec : "";
     let location = spec.split("#")[0];
 
+    let charset = content.document.characterSet;
+
     let json = {
       contentWindowId: content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
-      documentURI: aWebProgress.DOMWindow.document.documentURIObject.spec,
-      location: spec,
-      canGoBack: docShell.canGoBack,
-      canGoForward: docShell.canGoForward
+      documentURI:     aWebProgress.DOMWindow.document.documentURIObject.spec,
+      location:        spec,
+      canGoBack:       docShell.canGoBack,
+      canGoForward:    docShell.canGoForward,
+      charset:         charset.toString()
     };
 
     sendAsyncMessage("Content:LocationChange", json);
