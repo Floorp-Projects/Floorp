@@ -1057,7 +1057,7 @@ struct JSRuntime {
 
     /*
      * Compartment that triggered GC. If more than one Compatment need GC,
-     * gcTriggerCompartment is reset to NULL and a global GC is performed. 
+     * gcTriggerCompartment is reset to NULL and a global GC is performed.
      */
     JSCompartment       *gcTriggerCompartment;
 
@@ -1866,7 +1866,7 @@ struct JSContext
     /*
      * Return:
      * - The override version, if there is an override version.
-     * - The newest scripted frame's version, if there is such a frame. 
+     * - The newest scripted frame's version, if there is such a frame.
      * - The default verion.
      *
      * Note: if this ever shows up in a profile, just add caching!
