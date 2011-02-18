@@ -37,9 +37,10 @@
 
 #include "nsISupports.idl"
 
+interface nsIFile;
 interface mozIPersonalDictionary;
 
-[scriptable, uuid(43987F7B-0FAA-4019-811E-42BECAC73FC5)]
+[scriptable, uuid(6eb307d6-3567-481a-971a-feb666b8ae72)]
 
 /**
  * This interface represents a SpellChecker.
@@ -95,6 +96,11 @@ interface mozISpellCheckingEngine : nsISupports {
    * get a list of suggestions for a misspelled word
    */
   void suggest(in wstring word,[array, size_is(count)] out wstring suggestions, out PRUint32 count);
+
+  /**
+   * Load dictionaries from the specified dir
+   */
+  void loadDictionariesFromDir(in nsIFile dir);
 };
 
 %{C++
