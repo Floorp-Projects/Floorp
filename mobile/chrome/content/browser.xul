@@ -343,6 +343,7 @@
         <pageaction id="pageaction-reset" title="&pageactions.reset;"
           onclick="PageActions.clearPagePermissions(event);"/>
         <pageaction id="pageaction-search" title="&pageactions.search.addNew;"/>
+        <pageaction id="pageaction-charset" title="&pageactions.charEncoding;" onclick="CharsetMenu.show();"/>
       </hbox>
     </arrowbox>
 
@@ -466,6 +467,7 @@
                   <setting pref="browser.ui.zoom.reflow" title="&reflowZoom.title;" type="bool"/>
                   <setting pref="permissions.default.image" title="&showImages.title;" type="boolint" on="1" off="2"/>
                   <setting pref="javascript.enabled" type="bool" title="&enableJavaScript.title;"/>
+                  <setting pref="browser.menu.showCharacterEncoding" type="bool" localized="true" title="&showCharset.title;"/>
                 </settings>
               </richlistbox>
             </notificationbox>

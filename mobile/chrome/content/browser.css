@@ -30,6 +30,10 @@ setting[type="bool"] {
   -moz-binding: url("chrome://browser/content/bindings/setting.xml#setting-bool");
 }
 
+setting[type="bool"][localized="true"] {
+  -moz-binding: url("chrome://browser/content/bindings/setting.xml#setting-localized-bool");
+}
+
 setting[type="boolint"] {
   -moz-binding: url("chrome://browser/content/bindings/setting.xml#setting-boolint");
 }

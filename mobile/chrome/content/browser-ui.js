@@ -526,6 +526,7 @@ var BrowserUI = {
       PageActions.init();
       FullScreenVideo.init();
       NewTabPopup.init();
+      CharsetMenu.init();
 
 #ifdef MOZ_UPDATER
       // Check for updates in progress

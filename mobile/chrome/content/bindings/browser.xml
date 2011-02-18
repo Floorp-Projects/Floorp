@@ -219,6 +219,7 @@
                   this._browser._webNavigation._currentURI = locationURI;
                   this._browser._webNavigation.canGoBack = json.canGoBack;
                   this._browser._webNavigation.canGoForward = json.canGoForward;
+                  this._browser._charset = json.charset;
                 } catch(e) {}
 
                 if (this._browser.updateWindowId(json.contentWindowId)) {
@@ -722,8 +723,18 @@
                 readonly="true"/>
 
       <property name="documentCharsetInfo"
-                onget="return null"
-                readonly="true"/>
+                readonly="true">
+         <getter><![CDATA[
+            return {
+               forcedCharset : this._charset,
+               forcedDetector : false,
+               parentCharset : "",
+               parentCharsetSource : 0
+            }
+         ]]></getter>
+      </property>
+
+      <field name="_charset"></field>
 
       <constructor>
         <![CDATA[

@@ -19,3 +19,4 @@
 <!ENTITY homepage.none                             "Blank Page">
 <!ENTITY homepage.default                          "&brandShortName; Start">
 <!ENTITY homepage.currentpage                      "Use Current Page">
+<!ENTITY showCharset.title                         "Show Character Encoding">
