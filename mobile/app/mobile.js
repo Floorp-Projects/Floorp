@@ -439,7 +439,7 @@ pref("dom.ipc.content.nice", 1);
 // The breakpad report server to link to in about:crashes
 pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");
 pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
-pref("app.sync.tutorialURL", "https://www.mozilla.com/%LOCALE%/mobile/sync/");
+pref("app.sync.tutorialURL", "https://support.mozilla.com/kb/sync-firefox-between-desktop-and-mobile");
 pref("app.support.baseURL", "http://mobile.support.mozilla.com/");
 pref("app.feedbackURL", "http://input.mozilla.com/feedback/");
 pref("app.privacyURL", "https://www.mozilla.com/%LOCALE%/legal/privacy/firefox/mobile/");
