@@ -145,7 +145,7 @@ CompartmentHasLiveScripts(JSCompartment *comp)
 JS_FRIEND_API(JSBool)
 JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
 {
-    if (comp->debugMode == debug)
+    if (comp->debugMode == !!debug)
         return JS_TRUE;
 
     // This should only be called when no scripts are live. It would even be
@@ -154,7 +154,7 @@ JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
     JS_ASSERT(!CompartmentHasLiveScripts(comp));
 
     // All scripts compiled from this point on should be in the requested debugMode.
-    comp->debugMode = debug;
+    comp->debugMode = !!debug;
 
     // Discard JIT code for any scripts that change debugMode. This function
     // assumes that 'comp' is in the same thread as 'cx'.
