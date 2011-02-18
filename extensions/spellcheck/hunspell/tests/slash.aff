@@ -1,0 +1,4 @@
+# slashes in words (\/)
+
+# (only for tokenization)
+WORDCHARS /:
