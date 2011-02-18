@@ -269,9 +269,9 @@ class ToString {
     JSAutoByteString mBytes;
 };
 
-class IdToString : public ToString {
+class IdStringifier : public ToString {
 public:
-    IdToString(JSContext *cx, jsid id, JSBool aThrow = JS_FALSE)
+    IdStringifier(JSContext *cx, jsid id, JSBool aThrow = JS_FALSE)
     : ToString(cx, IdToJsval(id), aThrow)
     { }
 };
@@ -5118,7 +5118,7 @@ its_addProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!its_noisy)
         return JS_TRUE;
 
-    IdToString idString(cx, id);
+    IdStringifier idString(cx, id);
     fprintf(gOutFile, "adding its property %s,", idString.getBytes());
     ToString valueString(cx, *vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
@@ -5131,7 +5131,7 @@ its_delProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!its_noisy)
         return JS_TRUE;
 
-    IdToString idString(cx, id);
+    IdStringifier idString(cx, id);
     fprintf(gOutFile, "deleting its property %s,", idString.getBytes());
     ToString valueString(cx, *vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
@@ -5144,7 +5144,7 @@ its_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!its_noisy)
         return JS_TRUE;
 
-    IdToString idString(cx, id);
+    IdStringifier idString(cx, id);
     fprintf(gOutFile, "getting its property %s,", idString.getBytes());
     ToString valueString(cx, *vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
@@ -5154,7 +5154,7 @@ its_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 static JSBool
 its_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
-    IdToString idString(cx, id);
+    IdStringifier idString(cx, id);
     if (its_noisy) {
         fprintf(gOutFile, "setting its property %s,", idString.getBytes());
         ToString valueString(cx, *vp);
@@ -5225,7 +5225,7 @@ its_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             JSObject **objp)
 {
     if (its_noisy) {
-        IdToString idString(cx, id);
+        IdStringifier idString(cx, id);
         fprintf(gOutFile, "resolving its property %s, flags {%s,%s,%s}\n",
                idString.getBytes(),
                (flags & JSRESOLVE_QUALIFIED) ? "qualified" : "",
@@ -5521,7 +5521,7 @@ env_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 #if !defined XP_OS2 && !defined SOLARIS
     int rv;
 
-    IdToString idstr(cx, id, JS_TRUE);
+    IdStringifier idstr(cx, id, JS_TRUE);
     if (idstr.threw())
         return JS_FALSE;
     ToString valstr(cx, *vp, JS_TRUE);
@@ -5600,7 +5600,7 @@ env_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     if (flags & JSRESOLVE_ASSIGNING)
         return JS_TRUE;
 
-    IdToString idstr(cx, id, JS_TRUE);
+    IdStringifier idstr(cx, id, JS_TRUE);
     if (idstr.threw())
         return JS_FALSE;
 
