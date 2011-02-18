@@ -4445,6 +4445,31 @@ JSObject::freeSlot(JSContext *cx, uint32 slot)
     return false;
 }
 
+namespace js {
+
+bool
+IsCacheableCallee(JSContext *cx, const Value &funval)
+{
+    JS_ASSERT(funval.isObject());
+
+    /*
+     * Look past any wrappers. If the callee is a strict function it is always
+     * cacheable because we won't do 'this' coercion in strict mode. Otherwise
+     * the callee is only cacheable if it is in the current scope. Without this
+     * restriction lazy 'this' computation would pick up the wrong global in
+     * the other scope.
+     */
+    JSObject *funobj = funval.toObject().unwrap();
+    if (funobj->isFunction()) {
+        JSFunction *fun = funobj->getFunctionPrivate();
+        if (fun->isInterpreted() && fun->inStrictMode())
+            return true;
+    }
+    return funobj->getGlobal() == cx->fp()->scopeChain().getGlobal();
+}
+
+}
+
 /* JSBOXEDWORD_INT_MAX as a string */
 #define JSBOXEDWORD_INT_MAX_STRING "1073741823"
 
@@ -5052,7 +5077,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
     parent = obj->getParent();
     for (scopeIndex = 0;
          parent
-         ? js_IsCacheableNonGlobalScope(obj)
+         ? IsCacheableNonGlobalScope(obj)
          : !obj->getOps()->lookupProperty;
          ++scopeIndex) {
         protoIndex =
@@ -5162,11 +5187,11 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
      * farther checks or lookups. For details see the JSOP_BINDNAME case of
      * js_Interpret.
      *
-     * The test order here matters because js_IsCacheableNonGlobalScope
+     * The test order here matters because IsCacheableNonGlobalScope
      * must not be passed a global object (i.e. one with null parent).
      */
     for (int scopeIndex = 0;
-         !obj->getParent() || js_IsCacheableNonGlobalScope(obj);
+         !obj->getParent() || IsCacheableNonGlobalScope(obj);
          scopeIndex++) {
         JSObject *pobj;
         JSProperty *prop;
