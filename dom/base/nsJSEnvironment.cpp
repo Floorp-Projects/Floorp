@@ -3264,7 +3264,9 @@ nsJSContext::GarbageCollectNow()
   sPendingLoadCount = 0;
   sLoadingInProgress = PR_FALSE;
 
-  nsContentUtils::XPConnect()->GarbageCollect();
+  if (nsContentUtils::XPConnect()) {
+    nsContentUtils::XPConnect()->GarbageCollect();
+  }
 }
 
 //Static
