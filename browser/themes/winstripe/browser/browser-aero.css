@@ -177,8 +177,11 @@
   #main-window[sizemode=normal]:not([inFullscreen=true]) #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme),
   #main-window[sizemode=normal]:not([inFullscreen=true])[disablechrome] #TabsToolbar {
     margin-bottom: -1px;
-    position: relative;
     background-image: none !important;
+  }
+  #main-window[sizemode=normal]:not([inFullscreen=true]) #tabbrowser-tabs[tabsontop=true] > .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox > .scrollbox-innerbox:not(:-moz-lwtheme),
+  #main-window[sizemode=normal]:not([inFullscreen=true])[disablechrome] .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox > .scrollbox-innerbox {
+    position: relative;
   }
 
   #navigator-toolbox[tabsontop=false] > #PersonalToolbar {
