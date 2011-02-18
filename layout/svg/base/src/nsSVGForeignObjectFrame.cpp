@@ -528,6 +528,15 @@ void nsSVGForeignObjectFrame::UpdateGraphic()
 void
 nsSVGForeignObjectFrame::MaybeReflowFromOuterSVGFrame()
 {
+  // If IsDisabled() is true, then we know that our DoReflow() call will return
+  // early, leaving us with a marked-dirty but not-reflowed kid. That'd be bad;
+  // it'd mean that all future calls to this method would be doomed to take the
+  // NS_FRAME_IS_DIRTY early-return below. To avoid that problem, we need to
+  // bail out *before* we mark our kid as dirty.
+  if (IsDisabled()) {
+    return;
+  }
+
   nsIFrame* kid = GetFirstChild(nsnull);
 
   // If we're already scheduled to reflow (if we or our kid is dirty) we don't
