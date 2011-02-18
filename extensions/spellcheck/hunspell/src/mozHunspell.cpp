@@ -361,7 +361,7 @@ mozHunspell::LoadDictionaryList()
   }
 }
 
-void
+NS_IMETHODIMP
 mozHunspell::LoadDictionariesFromDir(nsIFile* aDir)
 {
   nsresult rv;
@@ -369,20 +369,20 @@ mozHunspell::LoadDictionariesFromDir(nsIFile* aDir)
   PRBool check = PR_FALSE;
   rv = aDir->Exists(&check);
   if (NS_FAILED(rv) || !check)
-    return;
+    return NS_ERROR_UNEXPECTED;
 
   rv = aDir->IsDirectory(&check);
   if (NS_FAILED(rv) || !check)
-    return;
+    return NS_ERROR_UNEXPECTED;
 
   nsCOMPtr<nsISimpleEnumerator> e;
   rv = aDir->GetDirectoryEntries(getter_AddRefs(e));
   if (NS_FAILED(rv))
-    return;
+    return NS_ERROR_UNEXPECTED;
 
   nsCOMPtr<nsIDirectoryEnumerator> files(do_QueryInterface(e));
   if (!files)
-    return;
+    return NS_ERROR_UNEXPECTED;
 
   nsCOMPtr<nsIFile> file;
   while (NS_SUCCEEDED(files->GetNextFile(getter_AddRefs(file))) && file) {
@@ -408,6 +408,8 @@ mozHunspell::LoadDictionariesFromDir(nsIFile* aDir)
 
     mDictionaries.Put(dict, file);
   }
+
+  return NS_OK;
 }
 
 nsresult mozHunspell::ConvertCharset(const PRUnichar* aStr, char ** aDst)
