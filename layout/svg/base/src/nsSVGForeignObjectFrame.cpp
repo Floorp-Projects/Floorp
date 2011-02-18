@@ -559,7 +559,9 @@ nsSVGForeignObjectFrame::DoReflow()
                              GetStateBits() & NS_FRAME_FIRST_REFLOW),
                "Calling InitialUpdate too early - must not call DoReflow!!!");
 
-  if (IsDisabled())
+  // Skip reflow if we're zero-sized, unless this is our first reflow.
+  if (IsDisabled() &&
+      !(GetStateBits() & NS_FRAME_FIRST_REFLOW))
     return;
 
   if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
@@ -586,6 +588,10 @@ nsSVGForeignObjectFrame::DoReflow()
     fO->mLengthAttributes[nsSVGForeignObjectElement::WIDTH].GetAnimValue(fO);
   float height =
     fO->mLengthAttributes[nsSVGForeignObjectElement::HEIGHT].GetAnimValue(fO);
+
+  // Clamp height & width to be non-negative (to match UpdateCoveredRegion).
+  width = NS_MAX(width, 0.0f);
+  height = NS_MAX(height, 0.0f);
 
   nsSize size(nsPresContext::CSSPixelsToAppUnits(width),
               nsPresContext::CSSPixelsToAppUnits(height));
