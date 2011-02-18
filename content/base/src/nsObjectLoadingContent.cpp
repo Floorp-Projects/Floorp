@@ -934,10 +934,10 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
   nsIDocument* doc = thisContent->GetOwnerDoc();
-  if (!doc || doc->IsStaticDocument()) {
+  if (!doc || doc->IsStaticDocument() || doc->IsBeingUsedAsImage()) {
     return NS_OK;
   }
-  
+
   // "revoke" any existing instantiate event as it likely has out of
   // date data (frame pointer etc).
   mPendingInstantiateEvent = nsnull;
