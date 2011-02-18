@@ -13802,7 +13802,7 @@ TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc,
     if (constructing) {
         LIns* thisobj_ins;
         CHECK_STATUS(createThis(fval.toObject(), get(&fval), &thisobj_ins));
-        stack(-argc - 1, thisobj_ins);
+        stack(-int(argc) - 1, thisobj_ins);
     }
 
     // Generate a type map for the outgoing frame and stash it in the LIR
