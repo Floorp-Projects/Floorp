@@ -42,6 +42,7 @@
 
 interface nsIBoxObject;
 interface nsIDOMLocation;
+interface nsIVariant;
 
 [scriptable, uuid(92f2c6f8-3668-4a47-8251-2a900afe11fa)]
 interface nsIDOMNSDocument : nsISupports
@@ -128,4 +129,10 @@ interface nsIDOMNSDocument : nsISupports
    */
   void mozSetImageElement(in DOMString aImageElementId,
                           in nsIDOMElement aImageElement);
+};
+
+[scriptable, uuid(fee67aed-3b94-4136-ad7d-fb88ef23f45f)]
+interface nsIDOMNSDocument_MOZILLA_2_0_BRANCH : nsISupports
+{
+  readonly attribute nsIVariant mozCurrentStateObject;
 };

@@ -2327,8 +2327,12 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
     (dbl = script->getConst(GET_FULL_INDEX(PCOFF)).toDouble())
 
-    bool methodJitFailed = false;
-    
+#ifdef JS_METHODJIT
+    bool useMethodJIT = cx->methodJitEnabled && interpMode == JSINTERP_NORMAL;
+#else
+    bool useMethodJIT = false;
+#endif
+
 #ifdef JS_METHODJIT
 
 #define MONITOR_BRANCH_METHODJIT()                                            \
@@ -2346,7 +2350,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
             goto leave_on_safe_point;                                         \
         }                                                                     \
         if (status == mjit::Compile_Abort) {                                  \
-            methodJitFailed = true;                                           \
+            useMethodJIT = false;                                             \
         }                                                                     \
     JS_END_MACRO
 
@@ -2388,12 +2392,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 #define MONITOR_BRANCH()                                                      \
     JS_BEGIN_MACRO                                                            \
         if (TRACING_ENABLED(cx)) {                                            \
-            if (!TRACE_RECORDER(cx) &&                                        \
-                !TRACE_PROFILER(cx) &&                                        \
-                interpMode == JSINTERP_NORMAL &&                              \
-                cx->methodJitEnabled &&                                       \
-                !methodJitFailed)                                             \
-            {                                                                 \
+            if (!TRACE_RECORDER(cx) && !TRACE_PROFILER(cx) && useMethodJIT) { \
                 MONITOR_BRANCH_METHODJIT();                                   \
             } else {                                                          \
                 MonitorResult r = MonitorLoopEdge(cx, inlineCallCount, interpMode); \

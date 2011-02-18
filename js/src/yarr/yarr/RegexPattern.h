@@ -26,9 +26,9 @@
 #ifndef RegexPattern_h
 #define RegexPattern_h
 
-
 #include "jsvector.h"
 #include "yarr/jswtfbridge.h"
+#include "yarr/yarr/RegexCommon.h"
 
 
 namespace JSC { namespace Yarr {

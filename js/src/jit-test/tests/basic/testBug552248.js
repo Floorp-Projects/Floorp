@@ -1,3 +1,4 @@
+// |jit-test| debug
 setDebug(true);
 var a = new Array();
 

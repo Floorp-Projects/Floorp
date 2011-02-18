@@ -211,6 +211,7 @@ RegExp::handleYarrError(JSContext *cx, int error)
       COMPILE_EMSG(CharacterClassRangeSingleChar, JSMSG_BAD_CLASS_RANGE);
       COMPILE_EMSG(EscapeUnterminated, JSMSG_TRAILING_SLASH);
       COMPILE_EMSG(QuantifierTooLarge, JSMSG_BAD_QUANTIFIER);
+      COMPILE_EMSG(HitRecursionLimit, JSMSG_REGEXP_TOO_COMPLEX);
 #undef COMPILE_EMSG
       default:
         JS_NOT_REACHED("Precondition violation: unknown Yarr error code.");
@@ -224,6 +225,7 @@ RegExp::handlePCREError(JSContext *cx, int error)
     JS_ReportErrorFlagsAndNumberUC(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL, msg_); \
     return
     switch (error) {
+      case -2: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
       case 0: JS_NOT_REACHED("Precondition violation: an error must have occurred.");
       case 1: REPORT(JSMSG_TRAILING_SLASH);
       case 2: REPORT(JSMSG_TRAILING_SLASH);

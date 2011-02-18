@@ -1745,9 +1745,16 @@ SetDebug(JSContext *cx, uintN argc, jsval *vp)
                              JSSMSG_NOT_ENOUGH_ARGS, "setDebug");
         return JS_FALSE;
     }
+
+    /*
+     * Debug mode can only be set when there is no JS code executing on the
+     * stack. Unfortunately, that currently means that this call will fail
+     * unless debug mode is already set to what you're trying to set it to.
+     * In the future, this restriction may be lifted.
+     */
     
-    JS_SetDebugMode(cx, JSVAL_TO_BOOLEAN(argv[0]));
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    JSBool rv = JS_SetDebugMode(cx, JSVAL_TO_BOOLEAN(argv[0]));
+    JS_SET_RVAL(cx, vp, rv ? JSVAL_TRUE : JSVAL_FALSE);
     return JS_TRUE;
 }
 
