@@ -1,0 +1,11 @@
+all:
+	./prepare
+	./test
+
+single:
+	./prepare2
+	./test
+
+clean:
+	rm *.[1-5] result.*
+
