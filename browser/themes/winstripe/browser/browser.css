@@ -115,12 +115,6 @@
 }
 %endif
 
-#navigator-toolbox[iconsize="small"] > #nav-bar,
-#navigator-toolbox > toolbar:not(#nav-bar):not(#toolbar-menubar):not(#TabsToolbar)[iconsize="small"] {
-  padding-top: 1px;
-  padding-bottom: 1px;
-}
-
 #navigator-toolbox[tabsontop="true"] > #nav-bar,
 #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar,
 #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar {
@@ -587,6 +581,16 @@ menuitem.bookmark-item {
 #nav-bar {
   /* force iconsize="small" on this toolbar */
   counter-reset: smallicons;
+}
+
+#navigator-toolbox[iconsize=small] > #nav-bar {
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+#navigator-toolbox[iconsize=large][mode=icons] > #nav-bar {
+  padding-left: 2px;
+  padding-right: 2px;
 }
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button,

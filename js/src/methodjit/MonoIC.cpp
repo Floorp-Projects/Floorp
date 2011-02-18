@@ -1277,8 +1277,15 @@ JITScript::sweepCallICs(JSContext *cx, bool purgeAll)
             repatcher.relink(oolJump, icCall);
         }
 
-        repatcher.relink(ic.funJump, ic.slowPathStart);
-        ic.hit = false;
+        /*
+         * Only relink the fast-path if there are no connected stubs, or we're
+         * trying to disconnect all stubs. Otherwise, we're just disabling an
+         * optimization that must take up space anyway (see bug 632729).
+         */
+        if (purgeAll || !(ic.fastGuardedObject || ic.fastGuardedNative)) {
+            repatcher.relink(ic.funJump, ic.slowPathStart);
+            ic.hit = false;
+        }
     }
 
     if (purgeAll) {

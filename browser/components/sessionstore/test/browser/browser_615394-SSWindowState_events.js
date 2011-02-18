@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Cu.import("resource://gre/modules/Services.jsm");
 const ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
 
@@ -390,4 +389,3 @@ function test_undoCloseWindow() {
     runNextTest();
   }
 }
-
