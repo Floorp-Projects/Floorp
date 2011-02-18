@@ -4,6 +4,9 @@
 
 // Tests the list view
 
+Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
+
+
 var gProvider;
 var gManagerWindow;
 var gCategoryUtilities;
@@ -13,6 +16,20 @@ var gVersion = Services.appinfo.version;
 var gBlocklistURL = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
 var gPluginURL = Services.urlFormatter.formatURLPref("plugins.update.url");
 var gDate = new Date(2010, 7, 16);
+
+var gLWTheme = {
+                id: "4",
+                version: "1",
+                name: "Bling",
+                description: "SO MUCH BLING!",
+                author: "Pixel Pusher",
+                homepageURL: "http://localhost:4444/data/index.html",
+                headerURL: "http://localhost:4444/data/header.png",
+                footerURL: "http://localhost:4444/data/footer.png",
+                previewURL: "http://localhost:4444/data/preview.png",
+                iconURL: "http://localhost:4444/data/icon.png"
+              };
+
 
 function test() {
   waitForExplicitFinish();
@@ -628,4 +645,33 @@ add_test(function() {
   catch (e) { }
 
   run_next_test();
+});
+
+
+add_test(function() {
+  info("Enabling lightweight theme");
+  LightweightThemeManager.currentTheme = gLWTheme;
+  
+  gManagerWindow.loadView("addons://list/theme");
+  wait_for_view_load(gManagerWindow, function() {
+    var addon = get_addon_element(gManagerWindow, "4@personas.mozilla.org");
+
+    is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
+    is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
+    is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");
+    is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
+
+    info("Disabling lightweight theme");
+    LightweightThemeManager.currentTheme = null;
+
+    is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
+    is_element_visible(get_node(addon, "enable-btn"), "Enable button should be hidden");
+    is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be visible");
+    is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
+
+    AddonManager.getAddonByID("4@personas.mozilla.org", function(aAddon) {
+      aAddon.uninstall();
+      run_next_test();
+    });
+  });
 });

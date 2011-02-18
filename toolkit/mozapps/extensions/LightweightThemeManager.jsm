@@ -87,10 +87,11 @@ __defineSetter__("_maxUsedThemes", function(aVal) {
   return this._maxUsedThemes = aVal;
 });
 
-// Holds the ID of the theme being enabled while sending out the events so
-// cached AddonWrapper instances can return correct values for permissions and
-// pendingOperations
+// Holds the ID of the theme being enabled or disabled while sending out the
+// events so cached AddonWrapper instances can return correct values for
+// permissions and pendingOperations
 var _themeIDBeingEnabled = null;
+var _themeIDBeingDisbled = null;
 
 var LightweightThemeManager = {
   get usedThemes () {
@@ -330,6 +331,7 @@ var LightweightThemeManager = {
     if (current) {
       if (current.id == id)
         return;
+      _themeIDBeingDisbled = current.id;
       let wrapper = new AddonWrapper(current);
       if (aPendingRestart) {
         Services.prefs.setCharPref(PREF_LWTHEME_TO_SELECT, "");
@@ -340,6 +342,7 @@ var LightweightThemeManager = {
         this.themeChanged(null);
         AddonManagerPrivate.callAddonListeners("onDisabled", wrapper);
       }
+      _themeIDBeingDisbled = null;
     }
 
     if (id) {
@@ -477,12 +480,16 @@ function AddonWrapper(aTheme) {
     let permissions = AddonManager.PERM_CAN_UNINSTALL;
     if (this.userDisabled)
       permissions |= AddonManager.PERM_CAN_ENABLE;
+    else
+      permissions |= AddonManager.PERM_CAN_DISABLE;
     return permissions;
   });
 
   this.__defineGetter__("userDisabled", function() {
     if (_themeIDBeingEnabled == aTheme.id)
       return false;
+    if (_themeIDBeingDisbled == aTheme.id)
+      return true;
 
     try {
       let toSelect = Services.prefs.getCharPref(PREF_LWTHEME_TO_SELECT);
