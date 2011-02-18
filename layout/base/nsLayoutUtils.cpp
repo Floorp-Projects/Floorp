@@ -1398,8 +1398,19 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     builder.SetSnappingEnabled(PR_FALSE);
   }
   nsRect canvasArea(nsPoint(0, 0), aFrame->GetSize());
+
+#ifdef DEBUG
   if (ignoreViewportScrolling) {
-    NS_ASSERTION(!aFrame->GetParent(), "must have root frame");
+    nsIDocument* doc = aFrame->GetContent() ?
+      aFrame->GetContent()->GetCurrentDoc() : nsnull;
+    NS_ASSERTION(!aFrame->GetParent() ||
+                 (doc && doc->IsBeingUsedAsImage()),
+                 "Only expecting ignoreViewportScrolling for root frames and "
+                 "for image documents.");
+  }
+#endif
+
+  if (ignoreViewportScrolling && !aFrame->GetParent()) {
     nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
     if (rootScrollFrame) {
       nsIScrollableFrame* rootScrollableFrame =
