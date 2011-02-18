@@ -4429,6 +4429,11 @@ JSObject::freeSlot(JSContext *cx, uint32 slot)
     return false;
 }
 
+namespace js {
+
+
+}
+
 /* JSBOXEDWORD_INT_MAX as a string */
 #define JSBOXEDWORD_INT_MAX_STRING "1073741823"
 
@@ -5036,7 +5041,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
     parent = obj->getParent();
     for (scopeIndex = 0;
          parent
-         ? js_IsCacheableNonGlobalScope(obj)
+         ? IsCacheableNonGlobalScope(obj)
          : !obj->getOps()->lookupProperty;
          ++scopeIndex) {
         protoIndex =
@@ -5146,11 +5151,11 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
      * farther checks or lookups. For details see the JSOP_BINDNAME case of
      * js_Interpret.
      *
-     * The test order here matters because js_IsCacheableNonGlobalScope
+     * The test order here matters because IsCacheableNonGlobalScope
      * must not be passed a global object (i.e. one with null parent).
      */
     for (int scopeIndex = 0;
-         !obj->getParent() || js_IsCacheableNonGlobalScope(obj);
+         !obj->getParent() || IsCacheableNonGlobalScope(obj);
          scopeIndex++) {
         JSObject *pobj;
         JSProperty *prop;
