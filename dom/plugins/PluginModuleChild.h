@@ -249,6 +249,9 @@ public:
         // Win: Addresses a flash bug with mouse capture and full screen
         // windows.
         QUIRK_FLASH_FIXUP_MOUSE_CAPTURE                 = 1 << 6,
+        // Win: QuickTime steals focus on SetWindow calls even if it's hidden.
+        // Avoid calling SetWindow in that case.
+        QUIRK_QUICKTIME_AVOID_SETWINDOW                 = 1 << 7,
     };
 
     int GetQuirks() { return mQuirks; }
@@ -278,8 +281,8 @@ private:
     virtual void ExitedCxxStack();
 #endif
 
-    std::string mPluginFilename;
     PRLibrary* mLibrary;
+    nsCString mPluginFilename;
     nsCString mUserAgent;
     int mQuirks;
 
