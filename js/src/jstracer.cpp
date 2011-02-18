@@ -6250,6 +6250,10 @@ IsEntryTypeCompatible(const Value &v, JSValueType type)
 static inline bool
 IsFrameObjPtrTypeCompatible(void *p, JSStackFrame *fp, JSValueType type)
 {
+    debug_only_printf(LC_TMTracer, "%c/%c ", TypeToChar(type),
+                      (p == fp->addressOfScopeChain() || fp->hasArgsObj())
+                      ? TypeToChar(JSVAL_TYPE_NONFUNOBJ)
+                      : TypeToChar(JSVAL_TYPE_NULL));
     if (p == fp->addressOfScopeChain())
         return type == JSVAL_TYPE_NONFUNOBJ;
     JS_ASSERT(p == fp->addressOfArgs());
@@ -6498,7 +6502,7 @@ TracerState::TracerState(JSContext* cx, TraceMonitor* tm, TreeFragment* f,
     prev = tm->tracerState;
     tm->tracerState = this;
 
-#ifdef JS_METH
+#ifdef JS_METHODJIT
     if (TRACE_PROFILER(cx))
         AbortProfiling(cx);
 #endif
@@ -6626,8 +6630,6 @@ ExecuteTree(JSContext* cx, TraceMonitor* tm, TreeFragment* f, uintN& inlineCallC
     TraceVisStateObj tvso(cx, S_EXECUTE);
 #endif
     JS_ASSERT(f->root == f && f->code());
-
-    JS_ASSERT(!tm->profile);
 
     if (!ScopeChainCheck(cx, f) || !cx->stack().ensureEnoughSpaceToEnterTrace() ||
         inlineCallCount + f->maxCallDepth > JS_MAX_INLINE_CALL_COUNT) {
@@ -12686,7 +12688,7 @@ GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp, PIC
     }
 
     /* Only update the table when the object is the holder of the property. */
-    if (obj == holder && shape->hasSlot()) {
+    if (obj == holder && shape->hasSlot() && shape->hasDefaultGetter()) {
         /*
          * Note: we insert the non-normalized id into the table so you don't need to
          * normalize it before hitting in the table (faster lookup).
@@ -13740,7 +13742,6 @@ TraceRecorder::createThis(JSObject& ctor, LIns* ctor_ins, LIns** thisobj_insp)
 
     // Given the above conditions, ctor.prototype is a non-configurable data
     // property with a slot.
-    jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
     const Shape *shape = LookupInterpretedFunctionPrototype(cx, &ctor);
     if (!shape)
         RETURN_ERROR("new f: error resolving f.prototype");

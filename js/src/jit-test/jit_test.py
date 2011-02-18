@@ -95,6 +95,8 @@ class Test:
                         test.valgrind = options.valgrind
                     elif name == 'mjitalways':
                         test.jitflags.append('-a')
+                    elif name == 'debug':
+                        test.jitflags.append('-d')
                     else:
                         print('warning: unrecognized |jit-test| attribute %s'%part)
 

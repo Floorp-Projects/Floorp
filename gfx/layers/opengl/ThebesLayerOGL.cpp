@@ -379,11 +379,9 @@ BasicBufferOGL::GetQuadrantRectangle(XSide aXSide, YSide aYSide)
 
 static void
 FillSurface(gfxASurface* aSurface, const nsIntRegion& aRegion,
-            const nsIntPoint& aOffset, const gfxRGBA& aColor,
-            float aXRes, float aYRes)
+            const nsIntPoint& aOffset, const gfxRGBA& aColor)
 {
   nsRefPtr<gfxContext> ctx = new gfxContext(aSurface);
-  ctx->Scale(aXRes, aYRes);
   ctx->Translate(-gfxPoint(aOffset.x, aOffset.y));
   gfxUtils::ClipToRegion(ctx, aRegion);
   ctx->SetColor(aColor);
@@ -451,14 +449,15 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
     return result;
 
   nsIntRect visibleBounds = mLayer->GetVisibleRegion().GetBounds();
-  if (visibleBounds.width > gl()->GetMaxTextureSize() ||
-      visibleBounds.height > gl()->GetMaxTextureSize()) {
-    return result;
-  }
-
   nsIntRect drawBounds = result.mRegionToDraw.GetBounds();
   nsIntSize destBufferDims = ScaledSize(visibleBounds.Size(),
                                         aXResolution, aYResolution);
+  
+  if (destBufferDims.width > gl()->GetMaxTextureSize() ||
+      destBufferDims.height > gl()->GetMaxTextureSize()) {
+    return result;
+  }
+
   nsRefPtr<TextureImage> destBuffer;
   nsRefPtr<TextureImage> destBufferOnWhite;
   nsIntRect destBufferRect;
@@ -609,8 +608,8 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
     gfxASurface *onWhite = mTexImageOnWhite->BeginUpdate(result.mRegionToDraw);
     NS_ASSERTION(result.mRegionToDraw == drawRegionCopy,
                  "BeginUpdate should always modify the draw region in the same way!");
-    FillSurface(onBlack, result.mRegionToDraw, nsIntPoint(0,0), gfxRGBA(0.0, 0.0, 0.0, 1.0), aXResolution, aYResolution);
-    FillSurface(onWhite, result.mRegionToDraw, nsIntPoint(0,0), gfxRGBA(1.0, 1.0, 1.0, 1.0), aXResolution, aYResolution);
+    FillSurface(onBlack, result.mRegionToDraw, nsIntPoint(0,0), gfxRGBA(0.0, 0.0, 0.0, 1.0));
+    FillSurface(onWhite, result.mRegionToDraw, nsIntPoint(0,0), gfxRGBA(1.0, 1.0, 1.0, 1.0));
     gfxASurface* surfaces[2] = { onBlack, onWhite };
     nsRefPtr<gfxTeeSurface> surf = new gfxTeeSurface(surfaces, NS_ARRAY_LENGTH(surfaces));
 

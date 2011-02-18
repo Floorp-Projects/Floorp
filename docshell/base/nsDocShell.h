@@ -564,10 +564,10 @@ protected:
                                  nsIChannel * aChannel,
                                  nsresult aResult);
 
-    // Sets the current document's pending state object to the given SHEntry's
-    // state object.  The pending state object is eventually given to the page
+    // Sets the current document's current state object to the given SHEntry's
+    // state object.  The current state object is eventually given to the page
     // in the PopState event.
-    nsresult SetDocPendingStateObj(nsISHEntry *shEntry);
+    nsresult SetDocCurrentStateObj(nsISHEntry *shEntry);
 
     nsresult CheckLoadingPermissions();
 

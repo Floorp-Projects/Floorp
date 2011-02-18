@@ -2193,7 +2193,8 @@ nsDOMClassInfo::WrapNativeParent(JSContext *cx, JSObject *scope,
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Document)                                  \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)                                      \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXPathEvaluator)                             \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)                               \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument_MOZILLA_2_0_BRANCH)
 
 
 #define DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES                                \

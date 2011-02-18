@@ -182,7 +182,6 @@
   }
 
   #navigator-toolbox[tabsontop=false] > #PersonalToolbar {
-    padding-top: 0 !important;
     margin-top: 2px;
     border-top: 1px solid @toolbarShadowColor@;
   }
