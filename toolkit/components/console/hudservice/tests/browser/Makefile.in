@@ -122,6 +122,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_613280_jsterm_copy.js \
 	browser_webconsole_bug_630733_response_redirect_headers.js \
 	browser_webconsole_bug_621644_jsterm_dollar.js \
+	browser_webconsole_bug_632817.js \
 	head.js \
 	$(NULL)
 
