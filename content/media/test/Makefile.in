@@ -177,6 +177,7 @@ _TEST_FILES += \
 		bug495794.ogg \
 		bug461281.ogg \
 		bug482461.ogv \
+		bug482461-theora.ogv \
 		bug498380.ogv \
 		bug498855-1.ogv \
 		bug498855-2.ogv \
