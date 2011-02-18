@@ -1,0 +1,4 @@
+# case suggestions
+MAXNGRAMSUGS 0
+# capitalise baz->Baz
+TRY B
