@@ -24,7 +24,7 @@ try
 }
 catch (e)
 {
-  assertEq(e instanceof TypeError, true, "expected TypeError, got: " + e);
+  reportCompare(e instanceof TypeError, true, "expected TypeError, got: " + e);
 }
 
 /******************************************************************************/
