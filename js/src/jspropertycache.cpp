@@ -155,6 +155,8 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                 JS_ASSERT(pobj->hasMethodBarrier());
                 JSObject &funobj = shape->methodObject();
                 JS_ASSERT(&funobj == &pobj->nativeGetSlot(shape->slot).toObject());
+                if (!IsCacheableCallee(cx, ObjectValue(funobj)))
+                    return JS_NO_PROP_CACHE_FILL;
                 vword.setFunObj(funobj);
                 break;
             }
@@ -191,6 +193,8 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                         if (!pobj->brand(cx))
                             return JS_NO_PROP_CACHE_FILL;
                     }
+                    if (!IsCacheableCallee(cx, v))
+                        return JS_NO_PROP_CACHE_FILL;
                     vword.setFunObj(*funobj);
                     break;
                 }
