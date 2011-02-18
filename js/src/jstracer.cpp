@@ -10654,7 +10654,7 @@ TraceRecorder::record_JSOP_IFNE()
 }
 
 LIns*
-TraceRecorder::newArguments(LIns* callee_ins, bool strict)
+TraceRecorder::newArguments(LIns* callee_ins)
 {
     LIns* global_ins = w.immpObjGC(globalObj);
     LIns* argc_ins = w.nameImmi(cx->fp()->numActualArgs());
@@ -10662,13 +10662,6 @@ TraceRecorder::newArguments(LIns* callee_ins, bool strict)
     LIns* args[] = { callee_ins, argc_ins, global_ins, cx_ins };
     LIns* argsobj_ins = w.call(&js_NewArgumentsOnTrace_ci, args);
     guard(false, w.eqp0(argsobj_ins), OOM_EXIT);
-
-    if (strict) {
-        LIns* argsData_ins = w.getObjPrivatizedSlot(argsobj_ins, JSObject::JSSLOT_ARGS_DATA);
-        ptrdiff_t slotsOffset = offsetof(ArgumentsData, slots);
-        cx->fp()->forEachCanonicalActualArg(BoxArg(this, ArgsSlotOffsetAddress(argsData_ins,
-                                                                               slotsOffset)));
-    }
 
     return argsobj_ins;
 }
@@ -10683,14 +10676,15 @@ TraceRecorder::record_JSOP_ARGUMENTS()
 
     if (fp->hasOverriddenArgs())
         RETURN_STOP_A("Can't trace |arguments| if |arguments| is assigned to");
+    if (fp->fun()->inStrictMode())
+        RETURN_STOP_A("Can't trace strict-mode arguments");
 
     LIns* a_ins = getFrameObjPtr(fp->addressOfArgs());
     LIns* args_ins;
     LIns* callee_ins = get(&fp->calleeValue());
-    bool strict = fp->fun()->inStrictMode();
     if (a_ins->isImmP()) {
         // |arguments| is set to 0 by EnterFrame on this trace, so call to create it.
-        args_ins = newArguments(callee_ins, strict);
+        args_ins = newArguments(callee_ins);
     } else {
         // Generate LIR to create arguments only if it has not already been created.
 
@@ -10700,7 +10694,7 @@ TraceRecorder::record_JSOP_ARGUMENTS()
         if (isZero_ins->isImmI(0)) {
             w.stAlloc(a_ins, mem_ins);
         } else if (isZero_ins->isImmI(1)) {
-            LIns* call_ins = newArguments(callee_ins, strict);
+            LIns* call_ins = newArguments(callee_ins);
             w.stAlloc(call_ins, mem_ins);
         } else {
             LIns* br1 = w.jtUnoptimizable(isZero_ins);
@@ -10708,7 +10702,7 @@ TraceRecorder::record_JSOP_ARGUMENTS()
             LIns* br2 = w.j(NULL);
             w.label(br1);
 
-            LIns* call_ins = newArguments(callee_ins, strict);
+            LIns* call_ins = newArguments(callee_ins);
             w.stAlloc(call_ins, mem_ins);
             w.label(br2);
         }
