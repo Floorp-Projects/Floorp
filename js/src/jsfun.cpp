@@ -1002,6 +1002,10 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
     if (fp->hasCallObj())
         return &fp->callObj();
 
+    JS_ASSERT(!fp->isEvalFrame());
+    if (fp->isEvalFrame())
+        *((int *)0xeca1) = 0;
+
 #ifdef DEBUG
     /* A call object should be a frame's outermost scope chain element.  */
     Class *clasp = fp->scopeChain().getClass();
@@ -1369,11 +1373,25 @@ call_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     return true;
 }
 
+JS_PUBLIC_DATA(volatile JSStackFrame *volatile) leakage;
+
 static void
 call_trace(JSTracer *trc, JSObject *obj)
 {
+    JSStackFrame frameCopy[3];
+
     JS_ASSERT(obj->isCall());
     if (JSStackFrame *fp = obj->maybeCallObjStackFrame()) {
+        memset(&frameCopy[0], 0xaa, sizeof(JSStackFrame));
+        memcpy(&frameCopy[1], fp, sizeof(JSStackFrame));
+        memset(&frameCopy[2], 0xbb, sizeof(JSStackFrame));
+        leakage = frameCopy;
+
+        bool bad = fp->isEvalFrame() && !fp->script()->strictModeCode;
+        JS_ASSERT(!bad);
+        if (bad)
+            *(int *)0xbad = 0;
+
         /*
          * FIXME: Hide copies of stack values rooted by fp from the Cycle
          * Collector, which currently lacks a non-stub Unlink implementation

@@ -110,6 +110,22 @@ using namespace js::gc;
 JSObject *const JSStackFrame::sInvalidScopeChain = (JSObject *)0xbeef;
 #endif
 
+JS_NEVER_INLINE void
+js::PutActivationObjects(JSContext *cx, JSStackFrame *fp)
+{
+    JS_ASSERT(fp->isFunctionFrame() && !fp->isEvalFrame());
+ 
+    if (fp->isEvalFrame())
+        *((int *)0x1337) = 0;
+
+    /* The order is important as js_PutCallObject needs to access argsObj. */
+    if (fp->hasCallObj()) {
+        js_PutCallObject(cx, fp);
+    } else if (fp->hasArgsObj()) {
+        js_PutArgsObject(cx, fp);
+    }
+}
+
 jsbytecode *
 JSStackFrame::pc(JSContext *cx, JSStackFrame *next)
 {
