@@ -132,9 +132,56 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+struct TabWidth {
+  TabWidth(PRUint32 aOffset, PRUint32 aWidth)
+    : mOffset(aOffset), mWidth(aWidth)
+  { }
+
+  PRUint32 mOffset; // character offset within the text covered by the
+                    // PropertyProvider
+  float    mWidth;  // extra space to be added at this position (in app units)
+};
+
+struct TabWidthStore {
+  TabWidthStore()
+    : mLimit(0)
+  { }
+
+  // Apply tab widths to the aSpacing array, which corresponds to characters
+  // beginning at aOffset and has length aLength. (Width records outside this
+  // range will be ignored.)
+  void ApplySpacing(gfxTextRun::PropertyProvider::Spacing *aSpacing,
+                    PRUint32 aOffset, PRUint32 aLength);
+
+  PRUint32           mLimit;  // offset up to which tabs have been measured;
+                              // positions beyond this have not been calculated
+                              // yet but may be appended if needed later
+  nsTArray<TabWidth> mWidths; // (offset,width) records for each tab character
+};
+
+void
+TabWidthStore::ApplySpacing(gfxTextRun::PropertyProvider::Spacing *aSpacing,
+                            PRUint32 aOffset, PRUint32 aLength)
+{
+  // We could binary-search for the first record that falls within the range,
+  // but as the number of tabs is normally small and we usually process them
+  // sequentially from the beginning of the line, it doesn't seem worth doing
+  // at this point.
+  for (PRUint32 i = 0; i < mWidths.Length(); ++i) {
+    TabWidth& tw = mWidths[i];
+    if (tw.mOffset < aOffset) {
+      continue;
+    }
+    if (tw.mOffset - aOffset >= aLength) {
+      break;
+    }
+    aSpacing[tw.mOffset - aOffset].mAfter += tw.mWidth;
+  }
+}
+
 static void DestroyTabWidth(void* aPropertyValue)
 {
-  delete static_cast<nsTArray<gfxFloat>*>(aPropertyValue);
+  delete static_cast<TabWidthStore*>(aPropertyValue);
 }
 
 NS_DECLARE_FRAME_PROPERTY(TabWidthProperty, DestroyTabWidth)
@@ -2366,7 +2413,8 @@ public:
       mTextStyle(aTextStyle), mFrag(aFrag),
       mLineContainer(aLineContainer),
       mFrame(aFrame), mStart(aStart), mTempIterator(aStart),
-      mTabWidths(nsnull), mLength(aLength),
+      mTabWidths(nsnull), mTabWidthsAnalyzedLimit(0),
+      mLength(aLength),
       mWordSpacing(mTextStyle->mWordSpacing),
       mLetterSpacing(StyleToCoord(mTextStyle->mLetterSpacing)),
       mJustificationSpacing(0),
@@ -2388,7 +2436,7 @@ public:
       mFrag(aFrame->GetContent()->GetText()),
       mLineContainer(nsnull),
       mFrame(aFrame), mStart(aStart), mTempIterator(aStart),
-      mTabWidths(nsnull),
+      mTabWidths(nsnull), mTabWidthsAnalyzedLimit(0),
       mLength(aFrame->GetContentLength()),
       mWordSpacing(mTextStyle->mWordSpacing),
       mLetterSpacing(StyleToCoord(mTextStyle->mLetterSpacing)),
@@ -2448,7 +2496,7 @@ public:
     return mFontMetrics;
   }
 
-  gfxFloat* GetTabWidths(PRUint32 aTransformedStart, PRUint32 aTransformedLength);
+  void CalcTabWidths(PRUint32 aTransformedStart, PRUint32 aTransformedLength);
 
   const gfxSkipCharsIterator& GetEndHint() { return mTempIterator; }
 
@@ -2469,9 +2517,11 @@ protected:
   gfxSkipCharsIterator  mStart;  // Offset in original and transformed string
   gfxSkipCharsIterator  mTempIterator;
   
-  // Widths for each transformed string character, 0 for non-tab characters.
   // Either null, or pointing to the frame's tabWidthProperty.
-  nsTArray<gfxFloat>*   mTabWidths;
+  TabWidthStore*        mTabWidths;
+  // how far we've done tab-width calculation; this is ONLY valid
+  // when mTabWidths is NULL (otherwise rely on mTabWidths->mLimit instead)
+  PRUint32              mTabWidthsAnalyzedLimit;
 
   PRInt32               mLength; // DOM string length, may be PR_INT32_MAX
   gfxFloat              mWordSpacing;     // space for each whitespace char
@@ -2602,11 +2652,10 @@ PropertyProvider::GetSpacingInternal(PRUint32 aStart, PRUint32 aLength,
 
   // Now add tab spacing, if there is any
   if (!aIgnoreTabs) {
-    gfxFloat* tabs = GetTabWidths(aStart, aLength);
-    if (tabs) {
-      for (index = 0; index < aLength; ++index) {
-        aSpacing[index].mAfter += tabs[index];
-      }
+    CalcTabWidths(aStart, aLength);
+    if (mTabWidths) {
+      mTabWidths->ApplySpacing(aSpacing,
+                               aStart - mStart.GetSkippedOffset(), aLength);
     }
   }
 
@@ -2675,43 +2724,42 @@ AdvanceToNextTab(gfxFloat aX, nsIFrame* aFrame,
   return NS_ceil((aX + 1)/(*aCachedTabWidth))*(*aCachedTabWidth);
 }
 
-gfxFloat*
-PropertyProvider::GetTabWidths(PRUint32 aStart, PRUint32 aLength)
+void
+PropertyProvider::CalcTabWidths(PRUint32 aStart, PRUint32 aLength)
 {
   if (!mTabWidths) {
+    if (mReflowing && !mLineContainer) {
+      // Intrinsic width computation does its own tab processing. We
+      // just don't do anything here.
+      return;
+    }
     if (!mReflowing) {
-      mTabWidths = static_cast<nsTArray<gfxFloat>*>
+      mTabWidths = static_cast<TabWidthStore*>
         (mFrame->Properties().Get(TabWidthProperty()));
-      if (!mTabWidths) {
-        NS_WARNING("We need precomputed tab widths, but they're not here...");
-        return nsnull;
+#ifdef DEBUG
+      // If we're not reflowing, we should have already computed the
+      // tab widths; check that they're available as far as the last
+      // tab character present (if any)
+      for (PRUint32 i = aStart + aLength; i > aStart; --i) {
+        if (mTextRun->GetChar(i - 1) == '\t') {
+          NS_ASSERTION(mTabWidths && mTabWidths->mLimit >= i,
+                       "Precomputed tab widths are missing!");
+          break;
+        }
       }
-    } else {
-      if (!mLineContainer) {
-        // Intrinsic width computation does its own tab processing. We
-        // just don't do anything here.
-        return nsnull;
-      }
-
-      nsAutoPtr<nsTArray<gfxFloat> > tabs(new nsTArray<gfxFloat>());
-      if (!tabs)
-        return nsnull;
-      mFrame->Properties().Set(TabWidthProperty(), tabs);
-      mTabWidths = tabs.forget();
+#endif
+      return;
     }
   }
 
   PRUint32 startOffset = mStart.GetSkippedOffset();
-  PRUint32 tabsEnd = startOffset + mTabWidths->Length();
+  PRUint32 tabsEnd = mTabWidths ?
+    mTabWidths->mLimit : PR_MAX(mTabWidthsAnalyzedLimit, startOffset);
+
   if (tabsEnd < aStart + aLength) {
-    if (!mReflowing) {
-      NS_WARNING("We need precomputed tab widths, but we don't have enough...");
-      return nsnull;
-    }
-    
-    if (!mTabWidths->AppendElements(aStart + aLength - tabsEnd))
-      return nsnull;
-    
+    NS_ASSERTION(mReflowing,
+                 "We need precomputed tab widths, but don't have enough.");
+
     gfxFloat tabWidth = -1;
     for (PRUint32 i = tabsEnd; i < aStart + aLength; ++i) {
       Spacing spacing;
@@ -2719,7 +2767,6 @@ PropertyProvider::GetTabWidths(PRUint32 aStart, PRUint32 aLength)
       mOffsetFromBlockOriginForTabs += spacing.mBefore;
 
       if (mTextRun->GetChar(i) != '\t') {
-        (*mTabWidths)[i - startOffset] = 0;
         if (mTextRun->IsClusterStart(i)) {
           PRUint32 clusterEnd = i + 1;
           while (clusterEnd < mTextRun->GetLength() &&
@@ -2730,17 +2777,31 @@ PropertyProvider::GetTabWidths(PRUint32 aStart, PRUint32 aLength)
             mTextRun->GetAdvanceWidth(i, clusterEnd - i, nsnull);
         }
       } else {
+        if (!mTabWidths) {
+          mTabWidths = new TabWidthStore();
+          mFrame->Properties().Set(TabWidthProperty(), mTabWidths);
+        }
         double nextTab = AdvanceToNextTab(mOffsetFromBlockOriginForTabs,
                 mFrame, mTextRun, &tabWidth);
-        (*mTabWidths)[i - startOffset] = nextTab - mOffsetFromBlockOriginForTabs;
+        mTabWidths->mWidths.AppendElement(
+          TabWidth(i - startOffset, nextTab - mOffsetFromBlockOriginForTabs));
         mOffsetFromBlockOriginForTabs = nextTab;
       }
 
       mOffsetFromBlockOriginForTabs += spacing.mAfter;
     }
+
+    if (mTabWidths) {
+      mTabWidths->mLimit = aStart + aLength;
+    }
   }
 
-  return mTabWidths->Elements() + aStart - startOffset;
+  if (!mTabWidths) {
+    // Delete any stale property that may be left on the frame
+    mFrame->Properties().Delete(TabWidthProperty());
+    mTabWidthsAnalyzedLimit = PR_MAX(mTabWidthsAnalyzedLimit,
+                                     aStart + aLength);
+  }
 }
 
 gfxFloat
