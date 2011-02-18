@@ -12852,10 +12852,9 @@ GetPropertyWithNativeGetter(JSContext* cx, JSObject* obj, Shape* shape, Value* v
     LeaveTraceIfGlobalObject(cx, obj);
 
 #ifdef DEBUG
-    JSProperty* prop;
     JSObject* pobj;
-    JS_ASSERT(obj->lookupProperty(cx, shape->id, &pobj, &prop));
-    JS_ASSERT(prop == (JSProperty*) shape);
+    const Shape* shape2;
+    JS_ASSERT_IF(SafeLookup(cx, obj, shape->id, &pobj, &shape2), shape == shape2);
 #endif
 
     // Shape::get contains a special case for With objects. We can elide it
