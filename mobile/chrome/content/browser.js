@@ -1534,9 +1534,11 @@ const ContentTouchHandler = {
             this.tapOver(aEvent.clientX, aEvent.clientY);
             break;
           case "TapUp":
-            if (aEvent.isClick && !Browser.selectedTab.allowZoom) {
-              this.tapSingle(aEvent.clientX, aEvent.clientY, aEvent.modifiers);
-              aEvent.preventDefault();
+            if (aEvent.isClick) {
+              if (!Browser.selectedTab.allowZoom) {
+                this.tapSingle(aEvent.clientX, aEvent.clientY, aEvent.modifiers);
+                aEvent.preventDefault();
+              }
             } else {
               this.tapUp(aEvent.clientX, aEvent.clientY);
             }
@@ -1576,7 +1578,6 @@ const ContentTouchHandler = {
   /** Invalidates any messages received from content that are sensitive to time. */
   _clearPendingMessages: function _clearPendingMessages() {
     this._messageId++;
-    this._contextMenu = null;
     let browser = getBrowser();
     browser.messageManager.sendAsyncMessage("Browser:MouseCancel", {});
   },
@@ -1620,14 +1621,11 @@ const ContentTouchHandler = {
   },
 
   tapUp: function tapUp(aX, aY) {
-    this._contextMenu = null;
     let browser = getBrowser();
     browser.messageManager.sendAsyncMessage("Browser:MouseCancel", {});
   },
 
   tapSingle: function tapSingle(aX, aY, aModifiers) {
-    this._contextMenu = null;
-
     // Cancel the mouse click if we are showing a context menu
     if (!ContextHelper.popupState)
       this._dispatchMouseEvent("Browser:MouseUp", aX, aY, { modifiers: aModifiers });

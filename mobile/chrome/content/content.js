@@ -428,7 +428,6 @@ let Content = {
       }
 
       case "Browser:MouseUp": {
-        this._cancelTapHighlight();
         this._formAssistant.focusSync = true;
         let element = elementFromPoint(x, y);
         if (modifiers == Ci.nsIDOMNSEvent.CONTROL_MASK) {
@@ -436,12 +435,13 @@ let Content = {
           if (uri)
             sendAsyncMessage("Browser:OpenURI", { uri: uri,
                                                   referrer: element.ownerDocument.documentURIObject.spec });
-        } else if (!this._formAssistant.open(element)) {
+        } else if (!this._formAssistant.open(element) && this._highlightElement) {
           sendAsyncMessage("FindAssist:Hide", { });
-          this._sendMouseEvent("mousemove", element, x, y);
-          this._sendMouseEvent("mousedown", element, x, y);
-          this._sendMouseEvent("mouseup", element, x, y);
+          this._sendMouseEvent("mousemove", this._highlightElement, x, y);
+          this._sendMouseEvent("mousedown", this._highlightElement, x, y);
+          this._sendMouseEvent("mouseup", this._highlightElement, x, y);
         }
+        this._cancelTapHighlight();
         ContextHandler.reset();
         this._formAssistant.focusSync = false;
         break;
@@ -537,12 +537,16 @@ let Content = {
     }
   },
 
-  _doTapHighlight: function _doTapHighlight(aElt) {
-    gDOMUtils.setContentState(aElt, kStateActive);
+  _highlightElement: null,
+
+  _doTapHighlight: function _doTapHighlight(aElement) {
+    gDOMUtils.setContentState(aElement, kStateActive);
+    this._highlightElement = aElement;
   },
 
-  _cancelTapHighlight: function _cancelTapHighlight() {
+  _cancelTapHighlight: function _cancelTapHighlight(aElement) {
     gDOMUtils.setContentState(content.document.documentElement, kStateActive);
+    this._highlightElement = null;
   },
 
   _sendMouseEvent: function _sendMouseEvent(aName, aElement, aX, aY, aButton) {
