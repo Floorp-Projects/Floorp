@@ -1,0 +1,6 @@
+SET UTF-8
+WORDCHARS '.
+
+SFX S N 1
+SFX S 0 's .
+
