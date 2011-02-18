@@ -210,6 +210,7 @@ body[dir="rtl"] {
 
 .no-items {
   text-align: center;
+  -moz-margin-start: 0 !important;
 }
 
 #footer-wrapper {
