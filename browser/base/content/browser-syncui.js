@@ -41,8 +41,13 @@
 // gSyncUI handles updating the tools menu
 let gSyncUI = {
   init: function SUI_init() {
-    // this will be the first notification fired during init
-    // we can set up everything else later
+    // Proceed to set up the UI if Sync has already started up.
+    // Otherwise we'll do it when Sync is firing up.
+    if (Weave.Status.ready) {
+      this.initUI();
+      return;
+    }
+
     Services.obs.addObserver(this, "weave:service:ready", true);
 
     // Remove the observer if the window is closed before the observer
@@ -52,6 +57,7 @@ let gSyncUI = {
       Services.obs.removeObserver(gSyncUI, "weave:service:ready");
     }, false);
   },
+
   initUI: function SUI_initUI() {
     let obs = ["weave:service:sync:start",
                "weave:service:sync:finish",
@@ -70,19 +76,16 @@ let gSyncUI = {
       obs.push("weave:notification:added");
     }
 
-    let self = this;
     obs.forEach(function(topic) {
-      Services.obs.addObserver(self, topic, true);
-    });
+      Services.obs.addObserver(this, topic, true);
+    }, this);
 
     // Find the alltabs-popup, only if there is a gBrowser
     if (gBrowser) {
       let popup = document.getElementById("alltabs-popup");
       if (popup) {
-        let self = this;
-        popup.addEventListener("popupshowing", function() {
-          self.alltabsPopupShowing();
-        }, true);
+        popup.addEventListener(
+          "popupshowing", this.alltabsPopupShowing.bind(this), true);
       }
 
       if (Weave.Notifications.notifications.length)
@@ -118,12 +121,6 @@ let gSyncUI = {
            firstSync == "notReady";
   },
 
-  _isLoggedIn: function() {
-    if (this._needsSetup())
-      return false;
-    return Weave.Service.isLoggedIn;
-  },
-
   updateUI: function SUI_updateUI() {
     let needsSetup = this._needsSetup();
     document.getElementById("sync-setup-state").hidden = !needsSetup;
@@ -144,6 +141,8 @@ let gSyncUI = {
 
   alltabsPopupShowing: function(event) {
     // Should we show the menu item?
+    //XXXphilikon We should remove the check for isLoggedIn here and have
+    //            about:sync-tabs auto-login (bug 583344)
     if (!Weave.Service.isLoggedIn || !Weave.Engines.get("tabs").enabled)
       return;
 
