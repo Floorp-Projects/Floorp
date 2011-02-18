@@ -122,7 +122,6 @@
   border-bottom-left-radius: 0;
 }
 
-
 /*** global warnings ***/
 
 .global-warning-container {
@@ -542,8 +541,6 @@
   width: 48px;
   height: 48px;
   margin: 3px 7px;
-  -moz-box-align: center;
-  -moz-box-pack: center;
 }
 
 .icon {
@@ -575,7 +572,6 @@
   color: #3F3F3F;
   margin-bottom: 0;
   text-shadow: 1px 1px 1px #FFF;
-  -moz-box-align: end;
 }
 
 .creator {
@@ -589,7 +585,6 @@
 .description-container {
   margin-top: 8px;
   -moz-margin-start: 6px;
-  -moz-box-align: center;
 }
 
 .description {
@@ -602,44 +597,6 @@
   -moz-margin-start: 48px;
   font-weight: bold;
   text-shadow: 1px 1px 1px #FFF;
-  -moz-box-align: center;
-}
-
-.content-container,
-.basicinfo-container {
-  -moz-box-align: start;
-}
-
-.addon[status="installing"] > .content-container {
-  -moz-box-align: stretch;
-}
-
-.update-info-container {
-  -moz-box-align: center;
-}
-
-.advancedinfo-container,
-.update-available {
-  -moz-box-align: end;
-}
-
-.install-status-container {
-  -moz-box-pack: end;
-  -moz-box-align: end;
-}
-
-.name-outer-container {
-  -moz-box-pack: center;
-}
-
-.relnotes-toggle-container,
-.icon-outer-container {
-  -moz-box-pack: start;
-}
-
-.status-container,
-.control-container {
-  -moz-box-pack: end;
 }
 
 .addon-view .warning {
