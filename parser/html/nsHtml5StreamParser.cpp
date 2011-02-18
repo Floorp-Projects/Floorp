@@ -569,6 +569,8 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
     PRInt32 utf16Count = NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE - end;
 
     NS_ASSERTION(utf16Count, "Trying to convert into a buffer with no free space!");
+    // byteCount may be zero to force the decoder to output a pending surrogate
+    // pair.
 
     nsresult convResult = mUnicodeDecoder->Convert((const char*)aFromSegment, &byteCount, mLastBuffer->getBuffer() + end, &utf16Count);
 
@@ -580,8 +582,6 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
     NS_ASSERTION(end <= NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE,
         "The Unicode decoder wrote too much data.");
     NS_ASSERTION(byteCount >= -1, "The decoder consumed fewer than -1 bytes.");
-    NS_ASSERTION(byteCount > 0 || NS_FAILED(convResult),
-        "The decoder consumed too few bytes but did not signal an error.");
 
     if (NS_FAILED(convResult)) {
       // Using the more generic NS_FAILED test above in case there are still
@@ -619,8 +619,9 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
       }
     } else if (convResult == NS_PARTIAL_MORE_OUTPUT) {
       mLastBuffer = mLastBuffer->next = new nsHtml5UTF16Buffer(NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
-      NS_ASSERTION(totalByteCount < (PRInt32)aCount,
-          "The Unicode decoder consumed too many bytes.");
+      // All input may have been consumed if there is a pending surrogate pair
+      // that doesn't fit in the output buffer. Loop back to push a zero-length
+      // input to the decoder in that case.
     } else {
       NS_ASSERTION(totalByteCount == (PRInt32)aCount,
           "The Unicode decoder consumed the wrong number of bytes.");
