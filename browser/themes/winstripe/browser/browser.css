@@ -216,6 +216,9 @@
 
 .splitmenu-menuitem {
   -moz-margin-end: 1px;
+%ifdef WINSTRIPE_AERO
+  -moz-padding-end: 0.5em;
+%endif
 }
 
 .splitmenu-menu {
