@@ -4,6 +4,10 @@
 
 // Bug 591465 - Context menu of add-ons miss context related state change entries
 
+
+Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
+
+
 const PREF_GETADDONS_MAXRESULTS = "extensions.getAddons.maxResults";
 const PREF_GETADDONS_GETSEARCHRESULTS = "extensions.getAddons.search.url";
 const SEARCH_URL = TESTROOT + "browser_bug591465.xml";
@@ -12,6 +16,18 @@ const SEARCH_QUERY = "SEARCH";
 var gManagerWindow;
 var gProvider;
 var gContextMenu;
+var gLWTheme = {
+                id: "4",
+                version: "1",
+                name: "Bling",
+                description: "SO MUCH BLING!",
+                author: "Pixel Pusher",
+                homepageURL: "http://localhost:4444/data/index.html",
+                headerURL: "http://localhost:4444/data/header.png",
+                footerURL: "http://localhost:4444/data/footer.png",
+                previewURL: "http://localhost:4444/data/preview.png",
+                iconURL: "http://localhost:4444/data/icon.png"
+              };
 
 
 function test() {
@@ -46,6 +62,7 @@ function test() {
     type: "theme",
     permissions: 0
   }]);
+
 
   open_manager("addons://list/extension", function(aWindow) {
     gManagerWindow = aWindow;
@@ -224,6 +241,96 @@ add_test(function() {
   info("Opening context menu on disabled theme item");
   EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
   EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
+});
+
+
+add_test(function() {
+  LightweightThemeManager.currentTheme = gLWTheme;
+
+  var el = get_addon_element(gManagerWindow, "4@personas.mozilla.org");
+
+  gContextMenu.addEventListener("popupshown", function() {
+    gContextMenu.removeEventListener("popupshown", arguments.callee, false);
+
+    check_contextmenu(true, true, false, false, false);
+
+    gContextMenu.hidePopup();
+    run_next_test();
+  }, false);
+
+  info("Opening context menu on enabled LW theme item");
+  EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+  EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
+});
+
+
+add_test(function() {
+  LightweightThemeManager.currentTheme = null;
+
+  var el = get_addon_element(gManagerWindow, "4@personas.mozilla.org");
+
+  gContextMenu.addEventListener("popupshown", function() {
+    gContextMenu.removeEventListener("popupshown", arguments.callee, false);
+
+    check_contextmenu(true, false, false, false, false);
+
+    gContextMenu.hidePopup();
+    run_next_test();
+  }, false);
+
+  info("Opening context menu on disabled LW theme item");
+  EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+  EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
+});
+
+
+add_test(function() {
+  LightweightThemeManager.currentTheme = gLWTheme;
+
+  gManagerWindow.loadView("addons://detail/4@personas.mozilla.org");
+  wait_for_view_load(gManagerWindow, function() {
+
+    gContextMenu.addEventListener("popupshown", function() {
+      gContextMenu.removeEventListener("popupshown", arguments.callee, false);
+
+      check_contextmenu(true, true, false, true, false);
+
+      gContextMenu.hidePopup();
+      run_next_test();
+    }, false);
+
+    info("Opening context menu on enabled LW theme, in detail view");
+    var el = gManagerWindow.document.querySelector("#detail-view .detail-view-container");
+    EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+    EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
+  });
+});
+
+
+add_test(function() {
+  LightweightThemeManager.currentTheme = null;
+
+  gManagerWindow.loadView("addons://detail/4@personas.mozilla.org");
+  wait_for_view_load(gManagerWindow, function() {
+
+    gContextMenu.addEventListener("popupshown", function() {
+      gContextMenu.removeEventListener("popupshown", arguments.callee, false);
+
+      check_contextmenu(true, false, false, true, false);
+
+      gContextMenu.hidePopup();
+
+      AddonManager.getAddonByID("4@personas.mozilla.org", function(aAddon) {
+        aAddon.uninstall();
+        run_next_test();
+      });
+    }, false);
+
+    info("Opening context menu on disabled LW theme, in detail view");
+    var el = gManagerWindow.document.querySelector("#detail-view .detail-view-container");
+    EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+    EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
+  });
 });
 
 
