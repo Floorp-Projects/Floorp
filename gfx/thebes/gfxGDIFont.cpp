@@ -265,7 +265,6 @@ gfxGDIFont::SetupCairoFont(gfxContext *aContext)
         return PR_FALSE;
     }
     cairo_set_scaled_font(aContext->GetCairo(), mScaledFont);
-    cairo_win32_scaled_font_select_font(mScaledFont, DCFromContext(aContext));
     return PR_TRUE;
 }
 
@@ -484,11 +483,8 @@ gfxGDIFont::GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
         return width;
     }
 
-    DCFromContext dc(aCtx);
-    AutoSelectFont fs(dc, GetHFONT());
-
     int devWidth;
-    if (GetCharWidthI(dc, aGID, 1, NULL, &devWidth)) {
+    if (GetCharWidthI(DCFromContext(aCtx), aGID, 1, NULL, &devWidth)) {
         // ensure width is positive, 16.16 fixed-point value
         width = (devWidth & 0x7fff) << 16;
         mGlyphWidths.Put(aGID, width);
