@@ -276,7 +276,6 @@ public:
     void DispatchSizeModeEvent();
 
     virtual gfxASurface* GetThebesSurface();
-    virtual void DrawOver(LayerManager* aManager, nsIntRect aRect);
 
     // be notified that a some form of drag event needs to go into Gecko
     virtual PRBool DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers);
