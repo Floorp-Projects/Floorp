@@ -123,6 +123,10 @@ using mozilla::plugins::PluginModuleParent;
 #include "mozilla/X11Util.h"
 #endif
 
+#ifdef XP_WIN
+#include <windows.h>
+#endif
+
 using namespace mozilla::plugins::parent;
 
 // We should make this const...
