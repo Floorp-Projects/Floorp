@@ -151,9 +151,6 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
   // Valid when mKeyPressSent is true.
   PRBool mKeyPressHandled;
 
-  // needed for NSTextInput implementation
-  NSRange mMarkedRange;
-  
   // when mouseDown: is called, we store its event here (strong)
   NSEvent* mLastMouseDownEvent;
 
