@@ -53,6 +53,8 @@
 //#define DEBUG_IME_HANDLER 1
 //#define DEBUG_TEXT_INPUT_HANDLER 1
 
+// TODO: static methods should be moved to nsCocoaUtils
+
 static void
 GetStringForNSString(const NSString *aSrc, nsAString& aDist)
 {
@@ -67,6 +69,21 @@ GetStringForNSString(const NSString *aSrc, nsAString& aDist)
   [aSrc getCharacters: aDist.BeginWriting()];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+static NSString* ToNSString(const nsAString& aString)
+{
+  return [NSString stringWithCharacters:aString.BeginReading()
+                                 length:aString.Length()];
+}
+
+static inline void
+GeckoRectToNSRect(const nsIntRect& inGeckoRect, NSRect& outCocoaRect)
+{
+  outCocoaRect.origin.x = inGeckoRect.x;
+  outCocoaRect.origin.y = inGeckoRect.y;
+  outCocoaRect.size.width = inGeckoRect.width;
+  outCocoaRect.size.height = inGeckoRect.height;
 }
 
 #ifdef DEBUG_IME_HANDLER
@@ -1158,6 +1175,169 @@ nsCocoaIMEHandler::SetMarkedText(NSAttributedString* aAttrString,
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+NSInteger
+nsCocoaIMEHandler::ConversationIdentifier()
+{
+  // NOTE: The size of NSInteger is same as pointer size.
+  nsQueryContentEvent textContent(PR_TRUE, NS_QUERY_TEXT_CONTENT, mOwnerWidget);
+  textContent.InitForQueryTextContent(0, 0);
+  mOwnerWidget->DispatchWindowEvent(textContent);
+  if (!textContent.mSucceeded) {
+    return reinterpret_cast<NSInteger>(mView);
+  }
+  // XXX This might return same ID as a previously existing editor if the
+  //     deleted editor was created at the same address.  Is there a better way?
+  return reinterpret_cast<NSInteger>(textContent.mReply.mContentsRoot);
+}
+
+NSAttributedString*
+nsCocoaIMEHandler::GetAttributedSubstringFromRange(NSRange& aRange)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+#if DEBUG_IME_HANDLER
+  NSLog(@"****in GetAttributedSubstringFromRange");
+  NSLog(@" aRange      = %d, %d", aRange.location, aRange.length);
+#endif
+
+  if (aRange.location == NSNotFound || aRange.length == 0) {
+    return nil;
+  }
+
+  nsAutoString str;
+  nsQueryContentEvent textContent(PR_TRUE, NS_QUERY_TEXT_CONTENT, mOwnerWidget);
+  textContent.InitForQueryTextContent(aRange.location, aRange.length);
+  mOwnerWidget->DispatchWindowEvent(textContent);
+
+  if (!textContent.mSucceeded || textContent.mReply.mString.IsEmpty()) {
+    return nil;
+  }
+
+  NSString* nsstr = ToNSString(textContent.mReply.mString);
+  NSAttributedString* result =
+    [[[NSAttributedString alloc] initWithString:nsstr
+                                     attributes:nil] autorelease];
+  return result;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+NSRange
+nsCocoaIMEHandler::SelectedRange()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+#if DEBUG_IME_HANDLER
+  NSLog(@"****in SelectedRange");
+#endif
+  nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, mOwnerWidget);
+  mOwnerWidget->DispatchWindowEvent(selection);
+  if (!selection.mSucceeded) {
+    return NSMakeRange(NSNotFound, 0);
+  }
+
+#if DEBUG_IME_HANDLER
+  NSLog(@" result of SelectedRange = %d, %d",
+        selection.mReply.mOffset, selection.mReply.mString.Length());
+#endif
+  return NSMakeRange(selection.mReply.mOffset,
+                     selection.mReply.mString.Length());
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakeRange(0, 0));
+}
+
+NSRect
+nsCocoaIMEHandler::FirstRectForCharacterRange(NSRange& aRange)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+#if DEBUG_IME_HANDLER
+  NSLog(@"****in FirstRectForCharacterRange");
+  NSLog(@" aRange      = %d, %d", aRange.location, aRange.length);
+#endif
+  // XXX this returns first character rect or caret rect, it is limitation of
+  // now. We need more work for returns first line rect. But current
+  // implementation is enough for IMEs.
+
+  NSRect rect;
+  if (aRange.location == NSNotFound) {
+    return rect;
+  }
+
+  nsIntRect r;
+  PRBool useCaretRect = (aRange.length == 0);
+  if (!useCaretRect) {
+    nsQueryContentEvent charRect(PR_TRUE, NS_QUERY_TEXT_RECT, mOwnerWidget);
+    charRect.InitForQueryTextRect(aRange.location, 1);
+    mOwnerWidget->DispatchWindowEvent(charRect);
+    if (charRect.mSucceeded) {
+      r = charRect.mReply.mRect;
+    } else {
+      useCaretRect = PR_TRUE;
+    }
+  }
+
+  if (useCaretRect) {
+    nsQueryContentEvent caretRect(PR_TRUE, NS_QUERY_CARET_RECT, mOwnerWidget);
+    caretRect.InitForQueryCaretRect(aRange.location);
+    mOwnerWidget->DispatchWindowEvent(caretRect);
+    if (!caretRect.mSucceeded) {
+      return rect;
+    }
+    r = caretRect.mReply.mRect;
+    r.width = 0;
+  }
+
+  nsIWidget* rootWidget = mOwnerWidget->GetTopLevelWidget();
+  NSWindow* rootWindow =
+    static_cast<NSWindow*>(rootWidget->GetNativeData(NS_NATIVE_WINDOW));
+  NSView* rootView =
+    static_cast<NSView*>(rootWidget->GetNativeData(NS_NATIVE_WIDGET));
+  if (!rootWindow || !rootView) {
+    return rect;
+  }
+  GeckoRectToNSRect(r, rect);
+  rect = [rootView convertRect:rect toView:nil];
+  rect.origin = [rootWindow convertBaseToScreen:rect.origin];
+#if DEBUG_IME_HANDLER
+  NSLog(@" result rect (x,y,w,h) = %f, %f, %f, %f",
+        rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+#endif
+  return rect;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakeRect(0.0, 0.0, 0.0, 0.0));
+}
+
+NSUInteger
+nsCocoaIMEHandler::CharacterIndexForPoint(NSPoint& aPoint)
+{
+#if DEBUG_IME
+  NSLog(@"****in CharacterIndexForPoint");
+#endif
+  // To implement this, we'd have to grovel in text frames looking at text
+  // offsets.
+  return 0;
+}
+
+NSArray*
+nsCocoaIMEHandler::GetValidAttributesForMarkedText()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+#if DEBUG_IME
+  NSLog(@"****in GetValidAttributesForMarkedText");
+#endif
+
+  //return [NSArray arrayWithObjects:NSUnderlineStyleAttributeName,
+  //                                 NSMarkedClauseSegmentAttributeName,
+  //                                 NSTextInputReplacementRangeAttributeName,
+  //                                 nil];
+  // empty array; we don't support any attributes right now
+  return [NSArray array];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 
