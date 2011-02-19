@@ -1268,6 +1268,20 @@ JITScript::sweepCallICs(JSContext *cx, bool purgeAll)
         bool nativeDead = ic.fastGuardedNative &&
             (purgeAll || IsAboutToBeFinalized(cx, ic.fastGuardedNative));
 
+        /*
+         * There are three conditions where we need to relink:
+         * (1) purgeAll is true.
+         * (2) The native is dead, since it always has a stub.
+         * (3) The fastFun is dead *and* there is a closure stub.
+         *
+         * Note although both objects can be non-NULL, there can only be one
+         * of [closure, native] stub per call IC.
+         */
+        if (purgeAll || nativeDead || (fastFunDead && ic.hasJsFunCheck)) {
+            repatcher.relink(ic.funJump, ic.slowPathStart);
+            ic.hit = false;
+        }
+
         if (fastFunDead) {
             repatcher.repatch(ic.funGuard, NULL);
             ic.releasePool(CallICInfo::Pool_ClosureStub);
@@ -1285,16 +1299,6 @@ JITScript::sweepCallICs(JSContext *cx, bool purgeAll)
             JSC::CodeLocationJump oolJump = ic.slowPathStart.jumpAtOffset(ic.oolJumpOffset);
             JSC::CodeLocationLabel icCall = ic.slowPathStart.labelAtOffset(ic.icCallOffset);
             repatcher.relink(oolJump, icCall);
-        }
-
-        /*
-         * Only relink the fast-path if there are no connected stubs, or we're
-         * trying to disconnect all stubs. Otherwise, we're just disabling an
-         * optimization that must take up space anyway (see bug 632729).
-         */
-        if (purgeAll || !(ic.fastGuardedObject || ic.fastGuardedNative)) {
-            repatcher.relink(ic.funJump, ic.slowPathStart);
-            ic.hit = false;
         }
     }
 
