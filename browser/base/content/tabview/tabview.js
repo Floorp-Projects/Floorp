@@ -23,6 +23,12 @@ XPCOMUtils.defineLazyGetter(this, "gPrivateBrowsing", function() {
            getService(Ci.nsIPrivateBrowsingService);
 });
 
+XPCOMUtils.defineLazyGetter(this, "gNetUtil", function() {
+  var obj = {};
+  Cu.import("resource://gre/modules/NetUtil.jsm", obj);
+  return obj.NetUtil;
+});
+
 var gWindow = window.parent;
 var gBrowser = gWindow.gBrowser;
 var gTabView = gWindow.TabView;
