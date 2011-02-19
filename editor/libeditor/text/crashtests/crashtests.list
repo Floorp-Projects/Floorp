@@ -1,2 +1,2 @@
-load 403965-1.xhtml
-asserts(6) load 580151-1.xhtml # Bug 439258
+asserts(6) load 403965-1.xhtml # Bug 439258, but also charged to the wrong test
+load 580151-1.xhtml
