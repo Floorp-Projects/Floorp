@@ -114,6 +114,7 @@ public:
   PRPackedBool  mCanUnloadLibrary;
   PRPackedBool  mIsJavaPlugin;
   PRPackedBool  mIsNPRuntimeEnabledJavaPlugin;
+  PRPackedBool  mIsFlashPlugin;
   nsCString     mFileName; // UTF-8
   nsCString     mFullPath; // UTF-8
   nsCString     mVersion;  // UTF-8
