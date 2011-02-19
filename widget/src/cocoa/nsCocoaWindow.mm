@@ -71,17 +71,12 @@
 #include "gfxPlatform.h"
 #include "qcms.h"
 
-#include "GLContext.h"
-#include "LayerManagerOGL.h"
-#include "gfxQuartzSurface.h"
-
 namespace mozilla {
 namespace layers {
 class LayerManager;
 }
 }
 using namespace mozilla::layers;
-using namespace mozilla::gl;
 
 // defined in nsAppShell.mm
 extern nsCocoaAppModalWindowList *gCocoaAppModalWindowList;
@@ -944,79 +939,6 @@ nsCocoaWindow::GetLayerManager(LayerManagerPersistence, bool* aAllowRetaining)
     return mPopupContentView->GetLayerManager(aAllowRetaining);
   }
   return nsnull;
-}
-
-void
-nsCocoaWindow::DrawOver(LayerManager* aManager, nsIntRect aRect)
-{
-  if (!([mWindow styleMask] & NSResizableWindowMask)) {
-    return;
-  }
-
-  nsRefPtr<LayerManagerOGL> manager(static_cast<LayerManagerOGL*>(aManager));
-  if (!manager) {
-    return;
-  }
-  
-  float bottomX = aRect.x + aRect.width;
-  float bottomY = aRect.y + aRect.height;
-
-  nsRefPtr<gfxQuartzSurface> image =
-    new gfxQuartzSurface(gfxIntSize(15, 15), gfxASurface::ImageFormatARGB32);
-  CGContextRef ctx = image->GetCGContext();
-
-  CGContextSetShouldAntialias(ctx, false);
-  CGPoint points[6];
-  points[0] = CGPointMake(13.0f, 4.0f);
-  points[1] = CGPointMake(3.0f, 14.0f);
-  points[2] = CGPointMake(13.0f, 8.0f);
-  points[3] = CGPointMake(7.0f, 14.0f);
-  points[4] = CGPointMake(13.0f, 12.0f);
-  points[5] = CGPointMake(11.0f, 14.0f);
-  CGContextSetRGBStrokeColor(ctx, 0.00f, 0.00f, 0.00f, 0.15f);
-  CGContextStrokeLineSegments(ctx, points, 6);
-
-  points[0] = CGPointMake(13.0f, 5.0f);
-  points[1] = CGPointMake(4.0f, 14.0f);
-  points[2] = CGPointMake(13.0f, 9.0f);
-  points[3] = CGPointMake(8.0f, 14.0f);
-  points[4] = CGPointMake(13.0f, 13.0f);
-  points[5] = CGPointMake(12.0f, 14.0f);
-  CGContextSetRGBStrokeColor(ctx, 0.13f, 0.13f, 0.13f, 0.54f);
-  CGContextStrokeLineSegments(ctx, points, 6);
-
-  points[0] = CGPointMake(13.0f, 6.0f);
-  points[1] = CGPointMake(5.0f, 14.0f);
-  points[2] = CGPointMake(13.0f, 10.0f);
-  points[3] = CGPointMake(9.0f, 14.0f);
-  points[5] = CGPointMake(13.0f, 13.9f);
-  points[4] = CGPointMake(13.0f, 14.0f);
-  CGContextSetRGBStrokeColor(ctx, 0.84f, 0.84f, 0.84f, 0.55f);
-  CGContextStrokeLineSegments(ctx, points, 6);
-
-  GLuint tex = 0;
-
-  ShaderProgramType shader = 
-#ifdef MOZ_ENABLE_LIBXUL
-    manager->gl()->UploadSurfaceToTexture(image, nsIntRect(0, 0, 15, 15), tex);
-#else
-    manager->gl()->UploadSurfaceToTextureExternal(image, nsIntRect(0, 0, 15, 15), tex);
-#endif
-
-  ColorTextureLayerProgram *program =
-    manager->GetColorTextureLayerProgram(shader);
-  program->Activate();
-  program->SetLayerQuadRect(nsIntRect(bottomX - 15,
-                                      bottomY - 15,
-                                      15,
-                                      15));
-  program->SetLayerTransform(gfx3DMatrix());
-  program->SetLayerOpacity(1.0);
-  program->SetRenderOffset(nsIntPoint(0,0));
-  program->SetTextureUnit(0);
-
-  manager->BindAndDrawQuad(program);
-  manager->gl()->fDeleteTextures(1, &tex);
 }
 
 nsTransparencyMode nsCocoaWindow::GetTransparencyMode()
