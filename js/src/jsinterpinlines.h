@@ -98,8 +98,21 @@ JSStackFrame::initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
 }
 
 inline void
-JSStackFrame::resetInvokeCallFrame()
+JSStackFrame::resetInvokeCallFrame(JSContext *cx)
 {
+#ifdef DEBUG
+    if (!hasCallObj() && scopeChain_ != calleeValue().toObject().getParent()) {
+        js_DumpValue(calleeValue());
+        if (JSObject *sc = scopeChain_)
+            js_DumpObject(sc);
+        else
+            fprintf(stderr, "scopeChain_ == NULL\n");
+        if (JSObject *par = calleeValue().toObject().getParent())
+            js_DumpObject(par);
+        else
+            fprintf(stderr, "parent == NULL\n");
+    }
+#endif
     /* Undo changes to frame made during execution; see initCallFrame */
 
     if (hasArgsObj())
@@ -598,7 +611,7 @@ InvokeSessionGuard::invoke(JSContext *cx) const
     /* Clear any garbage left from the last Invoke. */
     JSStackFrame *fp = frame_.fp();
     fp->clearMissingArgs();
-    fp->resetInvokeCallFrame();
+    fp->resetInvokeCallFrame(cx);
     SetValueRangeToUndefined(fp->slots(), script_->nfixed);
 
     JSBool ok;
