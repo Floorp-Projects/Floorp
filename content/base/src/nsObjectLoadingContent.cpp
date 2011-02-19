@@ -1194,7 +1194,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   NS_ASSERTION(thisContent, "must be a content");
 
   nsIDocument* doc = thisContent->GetOwnerDoc();
-  if (!doc) {
+  if (!doc || doc->IsBeingUsedAsImage()) {
     return NS_OK;
   }
 
