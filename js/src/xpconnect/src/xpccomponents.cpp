@@ -3630,16 +3630,9 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
     {
         JSAutoRequest req(cx);
 
-        if (!JS_GetGlobalForCallingScript(cx, &callingScope)) {
-            return NS_ERROR_FAILURE;
-        }
+        callingScope = JS_GetGlobalForScopeChain(cx);
         if (!callingScope) {
-            callingScope = JS_GetGlobalObject(cx);
-            if (!callingScope)
-                return NS_ERROR_FAILURE;
-            OBJ_TO_INNER_OBJECT(cx, callingScope);
-            if (!callingScope)
-                return NS_ERROR_FAILURE;
+            return NS_ERROR_FAILURE;
         }
     }
 
