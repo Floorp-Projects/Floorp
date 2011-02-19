@@ -588,9 +588,9 @@ js_regexp_toString(JSContext *cx, JSObject *obj, Value *vp)
     if (size_t len = src->length()) {
         if (!sb.reserve(len + 2))
             return false;
-        JS_ALWAYS_TRUE(sb.append('/'));
-        JS_ALWAYS_TRUE(sb.append(src->chars(), len));
-        JS_ALWAYS_TRUE(sb.append('/'));
+        sb.infallibleAppend('/');
+        sb.infallibleAppend(src->chars(), len);
+        sb.infallibleAppend('/');
     } else {
         if (!sb.append("/(?:)/"))
             return false;
@@ -641,7 +641,7 @@ EscapeNakedForwardSlashes(JSContext *cx, JSString *unescaped)
             if (!newChars.length()) {
                 if (!newChars.reserve(oldLen + 1))
                     return NULL;
-                JS_ALWAYS_TRUE(newChars.append(oldChars, size_t(it - oldChars)));
+                newChars.infallibleAppend(oldChars, size_t(it - oldChars));
             }
             if (!newChars.append('\\'))
                 return NULL;
@@ -651,17 +651,17 @@ EscapeNakedForwardSlashes(JSContext *cx, JSString *unescaped)
             return NULL;
     }
 
-    if (newChars.length()) {
-        size_t len = newChars.length();
-        if (!newChars.append('\0'))
-            return NULL;
-        jschar *chars = newChars.extractRawBuffer();
-        JSString *escaped = js_NewString(cx, chars, len);
-        if (!escaped)
-            cx->free(chars);
-        return escaped;
-    }
-    return unescaped;
+    if (newChars.empty())
+        return unescaped;
+
+    size_t len = newChars.length();
+    if (!newChars.append('\0'))
+        return NULL;
+    jschar *chars = newChars.extractRawBuffer();
+    JSString *escaped = js_NewString(cx, chars, len);
+    if (!escaped)
+        cx->free(chars);
+    return escaped;
 }
 
 static bool

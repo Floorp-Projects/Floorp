@@ -1336,13 +1336,14 @@ JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target)
     Value targetv = ObjectValue(*obj);
     WrapperVector &vector = cx->runtime->compartments;
     AutoValueVector toTransplant(cx);
-    toTransplant.reserve(vector.length());
+    if (!toTransplant.reserve(vector.length()))
+        return NULL;
 
     for (JSCompartment **p = vector.begin(), **end = vector.end(); p != end; ++p) {
         WrapperMap &pmap = (*p)->crossCompartmentWrappers;
         if (WrapperMap::Ptr wp = pmap.lookup(origv)) {
             // We found a wrapper. Remember and root it.
-            toTransplant.append(wp->value);
+            toTransplant.infallibleAppend(wp->value);
         }
     }
 
@@ -1429,13 +1430,14 @@ js_TransplantObjectWithWrapper(JSContext *cx,
     Value targetv = ObjectValue(*targetobj);
     WrapperVector &vector = cx->runtime->compartments;
     AutoValueVector toTransplant(cx);
-    toTransplant.reserve(vector.length());
+    if (!toTransplant.reserve(vector.length()))
+        return NULL;
 
     for (JSCompartment **p = vector.begin(), **end = vector.end(); p != end; ++p) {
         WrapperMap &pmap = (*p)->crossCompartmentWrappers;
         if (WrapperMap::Ptr wp = pmap.lookup(origv)) {
             // We found a wrapper. Remember and root it.
-            toTransplant.append(wp->value);
+            toTransplant.infallibleAppend(wp->value);
         }
     }
 

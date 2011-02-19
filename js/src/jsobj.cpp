@@ -1887,7 +1887,7 @@ obj_keys(JSContext *cx, uintN argc, Value *vp)
             JSString *str = js_IntToString(cx, JSID_TO_INT(id));
             if (!str)
                 return false;
-            JS_ALWAYS_TRUE(vals.append(StringValue(str)));
+            vals.infallibleAppend(StringValue(str));
         } else {
             JS_ASSERT(JSID_IS_OBJECT(id));
         }
