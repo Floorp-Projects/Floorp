@@ -63,16 +63,6 @@ EXPORTS += \
 	$(NULL)
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-EXPORTS	+= \
-	gfxBeOSPlatform.h \
-	gfxBeOSSurface.h \
-	gfxFT2FontBase.h \
-	gfxPDFSurface.h \
-	gfxPangoFonts.h \
-	$(NULL)
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 EXPORTS += \
 	gfxPlatformMac.h \
@@ -368,17 +358,6 @@ CPPSRCS +=	gfxPDFSurface.cpp
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS) $(CAIRO_FT_LIBS) $(XEXT_LIBS)
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-CPPSRCS	+= 	gfxBeOSSurface.cpp gfxBeOSPlatform.cpp
-CPPSRCS +=	gfxPangoFonts.cpp 
-CPPSRCS +=	gfxFT2FontBase.cpp
-CPPSRCS +=	gfxFT2Utils.cpp
-#CPPSRCS +=	gfxPDFSurface.cpp
-CPPSRCS +=	gfxFontconfigUtils.cpp
-CPPSRCS +=	nsUnicodeRange.cpp
-EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(CAIRO_FT_LIBS) -lfontconfig
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CPPSRCS	+= \
 	gfxQuartzSurface.cpp \
@@ -472,10 +451,6 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CXXFLAGS += $(MOZ_PANGO_CFLAGS)
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-CXXFLAGS += $(CAIRO_FT_CFLAGS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)

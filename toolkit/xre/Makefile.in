@@ -98,9 +98,6 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS += nsNativeAppSupportOS2.cpp
 else
-ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-CPPSRCS += nsNativeAppSupportBeOS.cpp
-else
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CPPSRCS += nsNativeAppSupportUnix.cpp
 else

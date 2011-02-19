@@ -163,13 +163,6 @@ using mozilla::dom::ContentParent;
 #include <pwd.h>
 #endif
 
-#ifdef XP_BEOS
-// execv() behaves bit differently in R5 and Zeta, looks unreliable in such situation
-//#include <unistd.h>
-#include <AppKit.h>
-#include <AppFileInfo.h>
-#endif //XP_BEOS
-
 #ifdef XP_WIN
 #ifndef WINCE
 #include <process.h>
@@ -1615,18 +1608,6 @@ XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
   if (NS_FAILED(rv))
     return rv;
 
-#elif defined(XP_BEOS)
-  int32 cookie = 0;
-  image_info info;
-
-  if(get_next_image_info(0, &cookie, &info) != B_OK)
-    return NS_ERROR_FAILURE;
-
-  rv = NS_NewNativeLocalFile(nsDependentCString(info.name), PR_TRUE,
-                             getter_AddRefs(lf));
-  if (NS_FAILED(rv))
-    return rv;
-
 #else
 #error Oops, you need platform-specific code here
 #endif
@@ -1794,12 +1775,6 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
     return NS_ERROR_FAILURE;
 #elif defined(XP_UNIX)
   if (execv(exePath.get(), gRestartArgv) == -1)
-    return NS_ERROR_FAILURE;
-#elif defined(XP_BEOS)
-  extern char **environ;
-  status_t res;
-  res = resume_thread(load_image(gRestartArgc,(const char **)gRestartArgv,(const char **)environ));
-  if (res != B_OK)
     return NS_ERROR_FAILURE;
 #else
   PRProcess* process = PR_CreateProcess(exePath.get(), gRestartArgv,

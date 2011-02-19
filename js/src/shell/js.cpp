@@ -5259,7 +5259,7 @@ static JSBool
 env_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
-#if !defined XP_BEOS && !defined XP_OS2 && !defined SOLARIS
+#if !defined XP_OS2 && !defined SOLARIS
     int rv;
 
     IdToString idstr(cx, id, JS_TRUE);
@@ -5295,7 +5295,7 @@ env_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
         return JS_FALSE;
     }
     *vp = valstr.getJSVal();
-#endif /* !defined XP_BEOS && !defined XP_OS2 && !defined SOLARIS */
+#endif /* !defined XP_OS2 && !defined SOLARIS */
     return JS_TRUE;
 }
 

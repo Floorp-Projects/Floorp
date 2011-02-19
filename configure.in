@@ -1841,12 +1841,6 @@ dnl ========================================================
 dnl System overrides of the defaults for host
 dnl ========================================================
 case "$host" in
-*-beos*)
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_BEOS -DBeOS -DBEOS -D_POSIX_SOURCE -DNO_X11"
-    HOST_NSPR_MDCPUCFG='\"md/_beos.cfg\"'
-    HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
-    ;;
-
 *mingw*|*wince|*winmo)
     if test -n "$_WIN32_MSVC"; then
         HOST_AR=lib
@@ -1987,24 +1981,6 @@ case "$target" in
         AC_CHECK_HEADERS(sys/inttypes.h)
     fi
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-    ;;
-
-*-beos*)
-    no_x=yes
-    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -Wl,-h,$@ -o $@'
-    _PLATFORM_DEFAULT_TOOLKIT="cairo-beos"
-    DSO_LDOPTS='-nostart'
-    TK_LIBS='-lbe -lroot'
-    LIBS="$LIBS -lbe"
-    if test "$COMPILE_ENVIRONMENT"; then
-        AC_CHECK_LIB(bind,main,LIBS="$LIBS -lbind")
-        AC_CHECK_LIB(zeta,main,LIBS="$LIBS -lzeta")
-    fi
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-multichar"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-multichar"
-    _MOZ_USE_RTTI=1
-    USE_DEPENDENT_LIBS=
-    MOZ_USER_DIR="Mozilla"
     ;;
 
 *-bsdi*)
@@ -3374,15 +3350,13 @@ case $target in
 esac
 
 dnl We don't want to link with libdl even if it's present on OS X, since
-dnl it's not used and not part of the default installation.
-dnl The same goes for BeOS. OS/2 has dlfcn in libc.
+dnl it's not used and not part of the default installation. OS/2 has dlfcn
+dnl in libc.
 dnl We don't want to link against libm or libpthread on Darwin since
 dnl they both are just symlinks to libSystem and explicitly linking
 dnl against libSystem causes issues when debugging (see bug 299601).
 case $target in
 *-darwin*)
-    ;;
-*-beos*)
     ;;
 *-os2*)
     ;;
@@ -5123,7 +5097,6 @@ MOZ_ARG_HEADER(Toolkit Options)
 	[  --enable-default-toolkit=TK
                           Select default toolkit
                           Platform specific defaults:
-                            BeOS - cairo-beos
                             Mac OS X - cairo-cocoa
                             Neutrino/QNX - photon
                             OS/2 - cairo-os2
@@ -5140,7 +5113,6 @@ MOZ_ARG_HEADER(Toolkit Options)
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2-dfb" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2-x11" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-qt" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-beos" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-os2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-android"
@@ -5224,13 +5196,6 @@ cairo-qt)
     TK_LIBS='$(MOZ_QT_LIBS)'
     AC_DEFINE(MOZ_WIDGET_QT)
     MOZ_PDF_PRINTING=1
-    ;;
-
-cairo-beos)
-    MOZ_WIDGET_TOOLKIT=beos
-    USE_FC_FREETYPE=1
-    TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
-    TK_LIBS='$(MOZ_CAIRO_LIBS)'
     ;;
 
 cairo-os2)
@@ -8679,12 +8644,6 @@ if test "$MOZ_TREE_CAIRO"; then
         CAIRO_FT_CFLAGS="-I${MZFTCFGFT2}/include"
         CAIRO_FT_LIBS="-L${MZFTCFGFT2}/lib -lmozft -lmzfntcfg"
     fi
-    if test "$MOZ_WIDGET_TOOLKIT" = "beos"; then
-        PKG_CHECK_MODULES(CAIRO_FT, fontconfig freetype2)
-        BEOS_SURFACE_FEATURE="#define CAIRO_HAS_BEOS_SURFACE 1"
-        FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
-        MOZ_ENABLE_CAIRO_FT=1
-    fi
     if test "$USE_FC_FREETYPE"; then
         FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
     fi
@@ -8714,7 +8673,6 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(XCB_SURFACE_FEATURE)
     AC_SUBST(WIN32_SURFACE_FEATURE)
     AC_SUBST(OS2_SURFACE_FEATURE)
-    AC_SUBST(BEOS_SURFACE_FEATURE)
     AC_SUBST(DIRECTFB_SURFACE_FEATURE)
     AC_SUBST(FT_FONT_FEATURE)
     AC_SUBST(FC_FONT_FEATURE)
@@ -9329,9 +9287,7 @@ fi
 dnl Set various defines and substitutions
 dnl ========================================================
 
-if test "$OS_ARCH" = "BeOS"; then
-  AC_DEFINE(XP_BEOS)
-elif test "$OS_ARCH" = "Darwin"; then
+if test "$OS_ARCH" = "Darwin"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
 elif test "$OS_ARCH" = "OpenVMS"; then

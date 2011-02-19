@@ -64,9 +64,6 @@
 #elif defined(XP_WIN)
 #include <windows.h>
 #include <shlobj.h>
-#elif defined(XP_BEOS)
-#include <Path.h>
-#include <Directory.h>
 #elif defined(XP_UNIX)
 #include <unistd.h>
 #elif defined(XP_OS2)
@@ -313,38 +310,6 @@ nsCommandLine::ResolveFile(const nsAString& aArgument, nsIFile* *aResult)
   if (NS_FAILED(rv)) return rv;
 
   NS_ADDREF(*aResult = newfile);
-  return NS_OK;
-
-#elif defined(XP_BEOS)
-  nsCOMPtr<nsILocalFile> lf (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
-  NS_ENSURE_TRUE(lf, NS_ERROR_OUT_OF_MEMORY);
-
-  if (aArgument.First() == '/') {
-    // absolute path
-    rv = lf->InitWithPath(aArgument);
-    if (NS_FAILED(rv)) return rv;
-
-    NS_ADDREF(*aResult = lf);
-    return NS_OK;
-  }
-
-  nsCAutoString carg;
-  NS_CopyUnicodeToNative(aArgument, carg);
-
-  nsCAutoString wd;
-  rv = mWorkingDir->GetNativePath(wd);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  BDirectory bwd(wd.get());
-
-  BPath resolved(&bwd, carg.get(), true);
-  if (resolved.InitCheck() != B_OK)
-    return NS_ERROR_FAILURE;
-
-  rv = lf->InitWithNativePath(nsDependentCString(resolved.Path()));
-  if (NS_FAILED(rv)) return rv;
-
-  NS_ADDREF(*aResult = lf);
   return NS_OK;
 
 #elif defined(XP_UNIX)

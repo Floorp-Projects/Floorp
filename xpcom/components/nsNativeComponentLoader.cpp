@@ -78,7 +78,7 @@
 #include <ssdef.h>
 #endif
 
-#if defined(DEBUG) && !defined(XP_BEOS)
+#ifdef DEBUG
 #define IMPLEMENT_BREAK_AFTER_LOAD
 #endif
 

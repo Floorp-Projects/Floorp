@@ -72,10 +72,6 @@
 #include <os2.h>
 #endif
 
-#ifdef XP_BEOS
-#include "Alert.h"
-#endif
-
 #define BOGUS_DEFAULT_INT_PREF_VALUE (-5632)
 #define BOGUS_DEFAULT_BOOL_PREF_VALUE (-2)
 

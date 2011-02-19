@@ -43,9 +43,6 @@
 #include <windows.h>
 #include <shlobj.h>
 #endif
-#ifdef XP_BEOS
-#include <Path.h>
-#endif
 #ifdef XP_UNIX
 #include <unistd.h>
 #endif
@@ -953,14 +950,6 @@ XRE_GetFileFromPath(const char *aPath, nsILocalFile* *aResult)
 
     return NS_NewLocalFile(nsDependentString(fullPath), PR_TRUE,
                            aResult);
-
-#elif defined(XP_BEOS)
-    BPath fullPath;
-    if (fullPath.SetTo(aPath, NULL, true))
-        return NS_ERROR_FAILURE;
-
-    return NS_NewNativeLocalFile(nsDependentCString(fullPath.Leaf()), PR_TRUE,
-                                 aResult);
 
 #else
 #error Platform-specific logic needed here.

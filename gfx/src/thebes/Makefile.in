@@ -89,10 +89,6 @@ CPPSRCS		+= nsSystemFontsOS2.cpp \
 		   $(NULL)
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-CPPSRCS		+= nsSystemFontsBeOS.cpp
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS		= nsSystemFontsMac.mm
 endif
