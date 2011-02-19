@@ -567,8 +567,12 @@ toolbar[mode="icons"] #forward-button {
 
 /* tabview button */
 
-#tabview-button {
+#tabview-button,
+#menu_tabview {
   list-style-image: url(chrome://browser/skin/tabview/tabview.png);
+}
+
+#tabview-button {
   -moz-image-region: rect(0, 100px, 20px, 80px);
 }
 
@@ -586,6 +590,26 @@ toolbar[mode="icons"] #forward-button {
 
 #tabview-button[groups="3"] {
   -moz-image-region: rect(0, 80px, 20px, 60px);
+}
+
+#menu_tabview {
+  -moz-image-region: rect(2px, 98px, 18px, 82px);
+}
+
+#menu_tabview[groups="0"] {
+  -moz-image-region: rect(2px, 18px, 18px, 2px);
+}
+
+#menu_tabview[groups="1"] {
+  -moz-image-region: rect(2px, 38px, 18px, 22px);
+}
+
+#menu_tabview[groups="2"] {
+  -moz-image-region: rect(2px, 58px, 18px, 42px);
+}
+
+#menu_tabview[groups="3"] {
+  -moz-image-region: rect(2px, 78px, 18px, 62px);
 }
 
 /* download manager button */

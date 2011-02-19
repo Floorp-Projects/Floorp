@@ -158,16 +158,12 @@ let gSyncUI = {
     menuitem.setAttribute("class", "alltabs-item");
     menuitem.setAttribute("oncommand", "BrowserOpenSyncTabs();");
 
-    let sep = document.createElement("menuseparator");
-    sep.setAttribute("id", "sync-tabs-sep");
-
     // Fake the tab object on the menu entries, so that we don't have to worry
     // about removing them ourselves. They will just get cleaned up by popup
     // binding.
     menuitem.tab = { "linkedBrowser": { "currentURI": { "spec": label } } };
-    sep.tab = { "linkedBrowser": { "currentURI": { "spec": " " } } };
 
-    popup.insertBefore(sep, popup.firstChild);
+    let sep = document.getElementById("alltabs-popup-separator");
     popup.insertBefore(menuitem, sep);
   },
 
