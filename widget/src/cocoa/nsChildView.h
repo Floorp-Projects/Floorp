@@ -71,6 +71,12 @@ class nsChildView;
 class nsCocoaWindow;
 union nsPluginPort;
 
+namespace mozilla {
+namespace gl {
+class TextureImage;
+}
+}
+
 #ifndef NP_NO_CARBON
 enum {
   // Currently focused ChildView (while this TSM document is active).
@@ -460,6 +466,7 @@ protected:
 #endif
 
   nsRefPtr<gfxASurface> mTempThebesSurface;
+  nsRefPtr<mozilla::gl::TextureImage> mResizerImage;
 
   PRPackedBool          mVisible;
   PRPackedBool          mDrawing;
