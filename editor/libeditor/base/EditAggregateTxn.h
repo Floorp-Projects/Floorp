@@ -51,10 +51,9 @@
 class EditAggregateTxn : public EditTxn
 {
 public:
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void **aInstancePtr);
-
   EditAggregateTxn();
 
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(EditAggregateTxn, EditTxn)
 
   NS_DECL_EDITTXN
