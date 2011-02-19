@@ -371,9 +371,8 @@ TokenStream::peekChars(intN n, jschar *cp)
     return i == n;
 }
 
-/* Finds the next EOL, but stops once 'max' chars past the start of the token have been scanned. */
 jschar *
-TokenStream::findWlineLimit(jschar *tokptr, int max)
+TokenStream::findEOL()
 {
     TokenBuf tmpUserbuf = userbuf;
     jschar *tmpLinebase = linebase;
@@ -381,24 +380,12 @@ TokenStream::findWlineLimit(jschar *tokptr, int max)
     uintN tmpFlags = flags;
     uintN tmpLineno = lineno;
 
-    /* FIXME: this assertion is commented out due to bug 635144. */
-    /*JS_ASSERT(userbuf.base <= tokptr && tokptr <= userbuf.limit);*/
-    userbuf.ptr = tokptr;   /* Start scanning at tokptr. */
-
-    jschar *wlinelimit;
-    jschar *wlinelimitmax = tokptr + max + 1;
     while (true) {
-        if (userbuf.ptr > wlinelimitmax) {
-            wlinelimit = wlinelimitmax;
-            break;
-        }
-        jschar* next = userbuf.ptr;
         int32 c = getChar();
-        if (c == '\n' || c == EOF) {
-            wlinelimit = next;
+        if (c == '\n' || c == EOF)
             break;
-        }
     }
+    jschar *linelimit = userbuf.ptr;
 
     /* Need to restore everything changed by getChar(). */
     userbuf = tmpUserbuf;
@@ -407,7 +394,7 @@ TokenStream::findWlineLimit(jschar *tokptr, int max)
     flags = tmpFlags;
     lineno = tmpLineno;
 
-    return wlinelimit;
+    return linelimit;
 }
 
 bool
@@ -416,15 +403,10 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
 {
     JSErrorReport report;
     char *message;
-
-    /* "wline" is short for "window into line", because we might not show it all. */
-    size_t wlinelength;
-    jschar *wlinechars;
-    jschar *wlinelimit;
-    jschar *wlinebase;
-    jschar *tokptr;
-    char *wlinebytes;
-
+    size_t linelength;
+    jschar *linechars;
+    jschar *linelimit;
+    char *linebytes;
     bool warning;
     JSBool ok;
     TokenPos *tp;
@@ -444,8 +426,8 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
     report.flags = flags;
     report.errorNumber = errorNumber;
     message = NULL;
-    wlinechars = NULL;
-    wlinebytes = NULL;
+    linechars = NULL;
+    linebytes = NULL;
 
     MUST_FLOW_THROUGH("out");
     ok = js_ExpandErrorArguments(cx, js_GetErrorMessage, NULL,
@@ -469,49 +451,29 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
     }
     report.lineno = lineno;
 
+    linelimit = findEOL();
+    linelength = linelimit - linebase;
+
+    linechars = (jschar *)cx->malloc((linelength + 1) * sizeof(jschar));
+    if (!linechars) {
+        warning = false;
+        goto out;
+    }
+    memcpy(linechars, linebase, linelength * sizeof(jschar));
+    linechars[linelength] = 0;
+    linebytes = js_DeflateString(cx, linechars, linelength);
+    if (!linebytes) {
+        warning = false;
+        goto out;
+    }
+    report.linebuf = linebytes;     /* the offending source line, without final \n */
+
     index = (tp->begin.lineno == tp->end.lineno) 
-            ? tp->begin.index   /* the column number of the start of the bad token */
-            : 0;                /* the bad token didn't start on this line; don't give a column */
-    tokptr = linebase + index;
-
-    /*
-     * We show only a portion of the line around the erroneous token -- WINDOW
-     * chars before and after the first char in the token.  This is because
-     * lines can be very long and printing the whole line is (a) not that
-     * helpful, and (b) can waste a lot of memory.  See bug 634444.
-     */
-    static const size_t WINDOW = 100;
-
-    /* Truncate at the front if necessary. */
-    if (linebase + WINDOW < tokptr) {
-        wlinebase = tokptr - WINDOW;
-        size_t nTrunc = wlinebase - linebase;
-        index -= nTrunc;
-    } else {
-        wlinebase = linebase;
-    }
-
-    /* Find EOL, or truncate at the back if necessary. */
-    wlinelimit = findWlineLimit(tokptr, WINDOW);
-
-    wlinelength = wlinelimit - wlinebase;
-    JS_ASSERT(wlinelength <= WINDOW * 2 + 1);
-    wlinechars = (jschar *)cx->malloc((wlinelength + 1) * sizeof(jschar));
-    if (!wlinechars) {
-        warning = false;
-        goto out;
-    }
-    memcpy(wlinechars, wlinebase, wlinelength * sizeof(jschar));
-    wlinechars[wlinelength] = 0;
-    wlinebytes = js_DeflateString(cx, wlinechars, wlinelength);
-    if (!wlinebytes) {
-        warning = false;
-        goto out;
-    }
-    report.linebuf = wlinebytes;    /* some or all of the offending source line, without final \n */
+            ? tp->begin.index         /* the column number of the start of the bad token */
+            : 0;
 
     report.tokenptr = report.linebuf + index;
-    report.uclinebuf = wlinechars;
+    report.uclinebuf = linechars;
     report.uctokenptr = report.uclinebuf + index;
 
     /*
@@ -568,10 +530,10 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
         (*onError)(cx, message, &report);
 
   out:
-    if (wlinebytes)
-        cx->free(wlinebytes);
-    if (wlinechars)
-        cx->free(wlinechars);
+    if (linebytes)
+        cx->free(linebytes);
+    if (linechars)
+        cx->free(linechars);
     if (message)
         cx->free(message);
     if (report.ucmessage)
@@ -810,7 +772,6 @@ TokenStream::newToken(ptrdiff_t adjust)
     cursor = (cursor + 1) & ntokensMask;
     Token *tp = &tokens[cursor];
     tp->ptr = userbuf.ptr + adjust;
-    JS_ASSERT(tp->ptr >= linebase);
     tp->pos.begin.index = tp->ptr - linebase;
     tp->pos.begin.lineno = tp->pos.end.lineno = lineno;
     return tp;
@@ -839,7 +800,6 @@ TokenStream::getTokenInternal()
     Token *tp;
     JSAtom *atom;
     bool hadUnicodeEscape;
-    int adjust;
 #if JS_HAS_XML_SUPPORT
     JSBool inTarget;
     size_t targetLength;
@@ -1015,28 +975,22 @@ TokenStream::getTokenInternal()
 
   retry:
     /*
-     * This gets the next non-space char and starts the token.  adjust is set
-     * to -1 because we'll probably scan the first char of the upcoming token
-     * while chewing up the whitespace.
+     * This gets the next non-space char and starts the token.
      */
-    adjust = -1;   
     do {
         c = getChar();
         if (c == '\n') {
             flags &= ~TSF_DIRTYLINE;
-            if (flags & TSF_NEWLINES) {
-                adjust = 0;     /* early break means we didn't scan an extra char */
+            if (flags & TSF_NEWLINES)
                 break;
-            }
         }
     } while (ScanAsSpace((jschar)c));
 
+    tp = newToken(-1);
     if (c == EOF) {
-        tp = newToken(0);   /* no -1 here because userbuf.ptr isn't incremented for EOF */
         tt = TOK_EOF;
         goto out;
     }
-    tp = newToken(adjust);
 
     /*
      * Look for an identifier.
