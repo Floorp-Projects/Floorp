@@ -1841,7 +1841,7 @@ ASTSerializer::statements(JSParseNode *pn, NodeVector &elts)
         Value elt;
         if (!sourceElement(next, &elt))
             return false;
-        JS_ALWAYS_TRUE(elts.append(elt)); /* space check above */
+        elts.infallibleAppend(elt);
     }
 
     return true;
@@ -1857,7 +1857,7 @@ ASTSerializer::expressions(JSParseNode *pn, NodeVector &elts)
         Value elt;
         if (!expression(next, &elt))
             return false;
-        JS_ALWAYS_TRUE(elts.append(elt)); /* space check above */
+        elts.infallibleAppend(elt);
     }
 
     return true;
@@ -1873,7 +1873,7 @@ ASTSerializer::xmls(JSParseNode *pn, NodeVector &elts)
         Value elt;
         if (!xml(next, &elt))
             return false;
-        JS_ALWAYS_TRUE(elts.append(elt)); /* space check above */
+        elts.infallibleAppend(elt);
     }
 
     return true;
@@ -1938,8 +1938,6 @@ ASTSerializer::variableDeclaration(JSParseNode *pn, bool let, Value *dst)
     VarDeclKind kind = let ? VARDECL_LET : VARDECL_VAR;
 
     NodeVector dtors(cx);
-    if (!dtors.reserve(pn->pn_count))
-        return false;
 
     /* In a for-in context, variable declarations contain just a single pattern. */
     if (pn->pn_xflags & PNX_FORINVAR) {
@@ -1950,11 +1948,13 @@ ASTSerializer::variableDeclaration(JSParseNode *pn, bool let, Value *dst)
                builder.variableDeclaration(dtors, kind, &pn->pn_pos, dst);
     }
 
+    if (!dtors.reserve(pn->pn_count))
+        return false;
     for (JSParseNode *next = pn->pn_head; next; next = next->pn_next) {
         Value child;
         if (!variableDeclarator(next, &kind, &child))
             return false;
-        JS_ALWAYS_TRUE(dtors.append(child)); /* space check above */
+        dtors.infallibleAppend(child);
     }
 
     return builder.variableDeclaration(dtors, kind, &pn->pn_pos, dst);
@@ -2000,7 +2000,7 @@ ASTSerializer::letHead(JSParseNode *pn, NodeVector &dtors)
          */
         if (!variableDeclarator(next, &kind, &child))
             return false;
-        JS_ALWAYS_TRUE(dtors.append(child)); /* space check above */
+        dtors.infallibleAppend(child);
     }
 
     return true;
@@ -2048,7 +2048,7 @@ ASTSerializer::switchStatement(JSParseNode *pn, Value *dst)
 #endif
         if (!switchCase(next, &child))
             return false;
-        JS_ALWAYS_TRUE(cases.append(child)); /* space check above */
+        cases.infallibleAppend(child);
     }
 
     return builder.switchStatement(disc, cases, lexical, &pn->pn_pos, dst);
@@ -2081,7 +2081,7 @@ ASTSerializer::tryStatement(JSParseNode *pn, Value *dst)
             Value clause;
             if (!catchClause(next->pn_expr, &clause))
                 return false;
-            JS_ALWAYS_TRUE(clauses.append(clause)); /* space check above */
+            clauses.infallibleAppend(clause);
         }
     }
 
@@ -2578,7 +2578,7 @@ ASTSerializer::expression(JSParseNode *pn, Value *dst)
             Value arg;
             if (!expression(next, &arg))
                 return false;
-            JS_ALWAYS_TRUE(args.append(arg)); /* space check above */
+            args.infallibleAppend(arg);
         }
 
         return PN_TYPE(pn) == TOK_NEW
@@ -2616,12 +2616,12 @@ ASTSerializer::expression(JSParseNode *pn, Value *dst)
 
         for (JSParseNode *next = pn->pn_head; next; next = next->pn_next) {
             if (PN_TYPE(next) == TOK_COMMA) {
-                JS_ALWAYS_TRUE(elts.append(MagicValue(JS_SERIALIZE_NO_NODE))); /* space check above */
+                elts.infallibleAppend(MagicValue(JS_SERIALIZE_NO_NODE));
             } else {
                 Value expr;
                 if (!expression(next, &expr))
                     return false;
-                JS_ALWAYS_TRUE(elts.append(expr)); /* space check above */
+                elts.infallibleAppend(expr);
             }
         }
 
@@ -2638,7 +2638,7 @@ ASTSerializer::expression(JSParseNode *pn, Value *dst)
             Value prop;
             if (!property(next, &prop))
                 return false;
-            JS_ALWAYS_TRUE(elts.append(prop)); /* space check above */
+            elts.infallibleAppend(prop);
         }
 
         return builder.objectExpression(elts, &pn->pn_pos, dst);
@@ -2937,12 +2937,12 @@ ASTSerializer::arrayPattern(JSParseNode *pn, VarDeclKind *pkind, Value *dst)
 
     for (JSParseNode *next = pn->pn_head; next; next = next->pn_next) {
         if (PN_TYPE(next) == TOK_COMMA) {
-            JS_ALWAYS_TRUE(elts.append(MagicValue(JS_SERIALIZE_NO_NODE))); /* space check above */
+            elts.infallibleAppend(MagicValue(JS_SERIALIZE_NO_NODE));
         } else {
             Value patt;
             if (!pattern(next, pkind, &patt))
                 return false;
-            JS_ALWAYS_TRUE(elts.append(patt)); /* space check above */
+            elts.infallibleAppend(patt);
         }
     }
 
@@ -2968,7 +2968,7 @@ ASTSerializer::objectPattern(JSParseNode *pn, VarDeclKind *pkind, Value *dst)
             return false;
         }
 
-        JS_ALWAYS_TRUE(elts.append(prop)); /* space check above */
+        elts.infallibleAppend(prop);
     }
 
     return builder.objectPattern(elts, &pn->pn_pos, dst);

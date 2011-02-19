@@ -3257,7 +3257,7 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone)
      */
     jsuint jsvalCount = JS_MIN(obj->getDenseArrayCapacity(), length);
 
-    js::AutoValueVector vector(cx);
+    AutoValueVector vector(cx);
     if (!vector.reserve(jsvalCount))
         return JS_FALSE;
 
@@ -3277,7 +3277,7 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone)
             return JS_TRUE;
         }
 
-        vector.append(val);
+        vector.infallibleAppend(val);
     }
 
     *clone = NewDenseCopiedArray(cx, jsvalCount, vector.begin());

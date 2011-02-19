@@ -4782,8 +4782,8 @@ NewFunctionInfo(JSContext* cx,
     if (!ffiType)
       return NULL;
 
-    fninfo->mArgTypes.append(argType);
-    fninfo->mFFITypes.append(ffiType);
+    fninfo->mArgTypes.infallibleAppend(argType);
+    fninfo->mFFITypes.infallibleAppend(ffiType);
   }
 
   if (fninfo->mIsVariadic)
