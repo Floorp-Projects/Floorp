@@ -735,8 +735,6 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
             JS_ASSERT(fp->hasCallObj());
             JS_ASSERT(fp->callObj().callIsForEval());
             js_PutCallObject(cx, fp);
-        } else if (fp->hasCallObj()) {
-            fp->callObj().setSkipped();
         }
     } else {
         /*
@@ -747,8 +745,6 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
         if (fp->isFunctionFrame() && !fp->isYielding()) {
             JS_ASSERT_IF(fp->hasCallObj(), !fp->callObj().callIsForEval());
             PutActivationObjects(cx, fp);
-        } else if (fp->hasCallObj()) {
-            fp->callObj().setSkipped();
         }
     }
 

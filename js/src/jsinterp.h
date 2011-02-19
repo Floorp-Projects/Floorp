@@ -814,10 +814,10 @@ GetScopeChain(JSContext *cx);
  * must reflect at runtime.
  */
 extern JSObject *
-GetScopeChain(JSContext *cx, JSStackFrame *fp, Origins);
+GetScopeChain(JSContext *cx, JSStackFrame *fp);
 
 extern JSObject *
-GetScopeChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen, Origins);
+GetScopeChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen);
 
 /*
  * Report an error that the this value passed as |this| in the given arguments
@@ -837,7 +837,7 @@ ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp);
 template <typename T>
 bool GetPrimitiveThis(JSContext *cx, Value *vp, T *v);
 
-inline void
+void
 PutActivationObjects(JSContext *cx, JSStackFrame *fp);
 
 /*

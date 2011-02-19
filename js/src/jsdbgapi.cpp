@@ -1395,7 +1395,7 @@ JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fp)
 
     /* Force creation of argument and call objects if not yet created */
     (void) JS_GetFrameCallObject(cx, fp);
-    return GetScopeChain(cx, fp, ORIGIN_GET_FRAME_SCOPE_CHAIN);
+    return GetScopeChain(cx, fp);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -1417,7 +1417,7 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
      * XXX ill-defined: null return here means error was reported, unlike a
      *     null returned above or in the #else
      */
-    return js_GetCallObject(cx, fp, ORIGIN_GET_FRAME_OBJ);
+    return js_GetCallObject(cx, fp);
 }
 
 JS_PUBLIC_API(JSBool)
