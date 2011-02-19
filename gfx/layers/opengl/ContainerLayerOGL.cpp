@@ -334,7 +334,7 @@ ContainerRender(Container* aContainer,
 
     DEBUG_GL_ERROR_CHECK(aContainer->gl());
 
-    aManager->BindAndDrawQuad(rgb, aContainer->gl()->IsDoubleBuffered());
+    aManager->BindAndDrawQuad(rgb, aPreviousFrameBuffer == 0);
 
     DEBUG_GL_ERROR_CHECK(aContainer->gl());
 
