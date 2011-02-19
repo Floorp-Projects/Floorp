@@ -271,6 +271,69 @@ public:
    */
   void InsertTextAsCommittingComposition(NSAttributedString* aAttrString);
 
+  /**
+   * ConversationIdentifier() returns an ID for the current editor.  The ID is
+   * guaranteed to be unique among currently existing editors.  But it might be
+   * the same as the ID of an editor that has already been destroyed.
+   *
+   * @return                      An identifier of current focused editor.
+   */
+  NSInteger ConversationIdentifier();
+
+  /**
+   * GetAttributedSubstringFromRange() returns an NSAttributedString instance
+   * which is allocated as autorelease for aRange.
+   *
+   * @param aRange                The range of string which you want.
+   * @return                      The string in aRange.  If the string is empty,
+   *                              this returns nil.  If succeeded, this returns
+   *                              an instance which is allocated as autorelease.
+   *                              If this has some troubles, returns nil.
+   */
+  NSAttributedString* GetAttributedSubstringFromRange(NSRange& aRange);
+
+  /**
+   * SelectedRange() returns current selected range.
+   *
+   * @return                      If an editor has focus, this returns selection
+   *                              range in the editor.  Otherwise, this returns
+   *                              selection range  in the focused document.
+   */
+  NSRange SelectedRange();
+
+  /**
+   * FirstRectForCharacterRange() returns first *character* rect in the range.
+   * Cocoa needs the first line rect in the range, but we cannot compute it
+   * on current implementation.
+   *
+   * @param aRange                A range of text to examine.  Its position is
+   *                              an offset from the beginning of the focused
+   *                              editor or document.
+   * @return                      An NSRect containing the first character in
+   *                              aRange, in screen coordinates.
+   *                              If the length of aRange is 0, the width will
+   *                              be 0.
+   */
+  NSRect FirstRectForCharacterRange(NSRange& aRange);
+
+  /**
+   * CharacterIndexForPoint() returns an offset of a character at aPoint.
+   * XXX This isn't implemented, always returns 0.
+   *
+   * @param                       The point in screen coordinates.
+   * @return                      The offset of the character at aPoint from
+   *                              the beginning of the focused editor or
+   *                              document.
+   */
+  NSUInteger CharacterIndexForPoint(NSPoint& aPoint);
+
+  /**
+   * GetValidAttributesForMarkedText() returns attributes which we support.
+   *
+   * @return                      Always empty array for now.
+   */
+  NSArray* GetValidAttributesForMarkedText();
+
   PRBool HasMarkedText()
   {
     return (mMarkedRange.location != NSNotFound) && (mMarkedRange.length != 0);
