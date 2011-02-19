@@ -524,6 +524,19 @@ struct AutoInterpPreparer  {
     }
 };
 
+inline void
+PutActivationObjects(JSContext *cx, JSStackFrame *fp)
+{
+    JS_ASSERT(fp->isFunctionFrame() && !fp->isEvalFrame());
+
+    /* The order is important as js_PutCallObject needs to access argsObj. */
+    if (fp->hasCallObj()) {
+        js_PutCallObject(cx, fp);
+    } else if (fp->hasArgsObj()) {
+        js_PutArgsObject(cx, fp);
+    }
+}
+
 class InvokeSessionGuard
 {
     InvokeArgsGuard args_;
@@ -722,6 +735,8 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
             JS_ASSERT(fp->hasCallObj());
             JS_ASSERT(fp->callObj().callIsForEval());
             js_PutCallObject(cx, fp);
+        } else if (fp->hasCallObj()) {
+            fp->callObj().setSkipped();
         }
     } else {
         /*
@@ -732,6 +747,8 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
         if (fp->isFunctionFrame() && !fp->isYielding()) {
             JS_ASSERT_IF(fp->hasCallObj(), !fp->callObj().callIsForEval());
             PutActivationObjects(cx, fp);
+        } else if (fp->hasCallObj()) {
+            fp->callObj().setSkipped();
         }
     }
 

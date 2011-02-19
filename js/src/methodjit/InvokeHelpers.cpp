@@ -325,7 +325,7 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
     f.regs.sp = fp->base();
     f.regs.pc = script->code;
 
-    if (fun->isHeavyweight() && !js_GetCallObject(cx, fp))
+    if (fun->isHeavyweight() && !js_GetCallObject(cx, fp, ORIGIN_COMPILE_FUNCTION))
         THROWV(NULL);
 
     CompileStatus status = CanMethodJIT(cx, script, fp, CompileRequest_JIT);
@@ -368,7 +368,7 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
     JS_ASSERT(newfp == f.regs.fp);
 
     /* Scope with a call object parented by callee's parent. */
-    if (newfun->isHeavyweight() && !js_GetCallObject(cx, newfp))
+    if (newfun->isHeavyweight() && !js_GetCallObject(cx, newfp, ORIGIN_UIC))
         return false;
 
     /* Try to compile if not already compiled. */
@@ -588,7 +588,7 @@ void JS_FASTCALL
 stubs::GetCallObject(VMFrame &f)
 {
     JS_ASSERT(f.fp()->fun()->isHeavyweight());
-    if (!js_GetCallObject(f.cx, f.fp()))
+    if (!js_GetCallObject(f.cx, f.fp(), ORIGIN_MJIT_GCO))
         THROW();
 }
 

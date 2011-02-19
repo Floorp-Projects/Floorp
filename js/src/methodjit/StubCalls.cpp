@@ -725,7 +725,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
     } else {
         JS_ASSERT(!fun->isFlatClosure());
 
-        obj2 = GetScopeChainFast(cx, fp, JSOP_DEFFUN, JSOP_DEFFUN_LENGTH);
+        obj2 = GetScopeChainFast(cx, fp, JSOP_DEFFUN, JSOP_DEFFUN_LENGTH, ORIGIN_MJIT_DEFFUN);
         if (!obj2)
             THROW();
     }
@@ -1386,7 +1386,7 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
             THROWV(NULL);
     } else {
         JSObject *parent = GetScopeChainFast(f.cx, f.fp(), JSOP_DEFLOCALFUN,
-                                             JSOP_DEFLOCALFUN_LENGTH);
+                                             JSOP_DEFLOCALFUN_LENGTH, ORIGIN_MJIT_DEFLOCALFUN);
         if (!parent)
             THROWV(NULL);
 
@@ -1515,7 +1515,7 @@ stubs::Lambda(VMFrame &f, JSFunction *fun)
     if (FUN_NULL_CLOSURE(fun)) {
         parent = &f.fp()->scopeChain();
     } else {
-        parent = GetScopeChainFast(f.cx, f.fp(), JSOP_LAMBDA, JSOP_LAMBDA_LENGTH);
+        parent = GetScopeChainFast(f.cx, f.fp(), JSOP_LAMBDA, JSOP_LAMBDA_LENGTH, ORIGIN_MJIT_LAMBDA);
         if (!parent)
             THROWV(NULL);
     }
