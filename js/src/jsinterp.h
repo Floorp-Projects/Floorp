@@ -196,7 +196,7 @@ struct JSStackFrame
                               uint32 nactual, uint32 flags);
 
     /* Used for SessionInvoke. */
-    inline void resetInvokeCallFrame();
+    inline void resetInvokeCallFrame(JSContext *cx);
 
     /* Called by method-jit stubs and serve as a specification for jit-code. */
     inline void initCallFrameCallerHalf(JSContext *cx, uint32 flags, void *ncode);
