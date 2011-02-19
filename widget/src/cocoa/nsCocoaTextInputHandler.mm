@@ -1034,6 +1034,132 @@ nsCocoaIMEHandler::DispatchTextEvent(const nsString& aText,
   return mOwnerWidget->DispatchWindowEvent(textEvent);
 }
 
+void
+nsCocoaIMEHandler::InitCompositionEvent(nsCompositionEvent& aCompositionEvent)
+{
+  aCompositionEvent.time = PR_IntervalNow();
+}
+
+void
+nsCocoaIMEHandler::InsertTextAsCommittingComposition(
+                     NSAttributedString* aAttrString)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+#if DEBUG_IME
+  NSLog(@"****in InsertTextAsCommittingComposition: '%@'", aAttrString);
+  NSLog(@" mMarkedRange = %d, %d", mMarkedRange.location, mMarkedRange.length);
+#endif
+
+  nsRefPtr<nsChildView> kungFuDeathGrip(mOwnerWidget);
+
+  nsString str;
+  GetStringForNSString([aAttrString string], str);
+
+  if (!IsIMEComposing()) {
+    // XXXmnakano Probably, we shouldn't emulate composition in this case.
+    // I think that we should just fire DOM3 textInput event if we implement it.
+    nsCompositionEvent compStart(PR_TRUE, NS_COMPOSITION_START, mOwnerWidget);
+    InitCompositionEvent(compStart);
+
+    mOwnerWidget->DispatchWindowEvent(compStart);
+    if (!mView) {
+      return; // we're destroyed
+    }
+
+    OnStartIMEComposition();
+  }
+
+  if (IgnoreIMECommit()) {
+    str.Truncate();
+  }
+
+  NSRange range = NSMakeRange(0, str.Length());
+  DispatchTextEvent(str, aAttrString, range, PR_TRUE);
+  if (!mView) {
+    return; // we're destroyed
+  }
+
+  OnUpdateIMEComposition([aAttrString string]);
+
+  nsCompositionEvent compEnd(PR_TRUE, NS_COMPOSITION_END, mOwnerWidget);
+  InitCompositionEvent(compEnd);
+  mOwnerWidget->DispatchWindowEvent(compEnd);
+  if (!mView) {
+    return; // we're destroyed
+  }
+
+  OnEndIMEComposition();
+
+  mMarkedRange = NSMakeRange(NSNotFound, 0);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void
+nsCocoaIMEHandler::SetMarkedText(NSAttributedString* aAttrString,
+                                 NSRange& aSelectedRange)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+#if DEBUG_IME_HANDLER 
+  NSLog(@"****in SetMarkedText location: %d, length: %d",
+        aSelectedRange.location, aSelectedRange.length);
+  NSLog(@" mMarkedRange = %d, %d", mMarkedRange.location, mMarkedRange.length);
+  NSLog(@" aAttrString = '%@'", aAttrString);
+#endif
+
+  if (IgnoreIMEComposition()) {
+    return;
+  }
+
+  nsRefPtr<nsChildView> kungFuDeathGrip(mOwnerWidget);
+
+  nsString str;
+  GetStringForNSString([aAttrString string], str);
+
+  mMarkedRange.length = str.Length();
+
+  if (!IsIMEComposing() && !str.IsEmpty()) {
+    nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT,
+                                  mOwnerWidget);
+    mOwnerWidget->DispatchWindowEvent(selection);
+    mMarkedRange.location = selection.mSucceeded ? selection.mReply.mOffset : 0;
+
+    nsCompositionEvent compStart(PR_TRUE, NS_COMPOSITION_START, mOwnerWidget);
+    InitCompositionEvent(compStart);
+
+    mOwnerWidget->DispatchWindowEvent(compStart);
+    if (!mView) {
+      return; // we're destroyed
+    }
+
+    OnStartIMEComposition();
+  }
+
+  if (IsIMEComposing()) {
+    OnUpdateIMEComposition([aAttrString string]);
+
+    PRBool doCommit = str.IsEmpty();
+    DispatchTextEvent(str, aAttrString, aSelectedRange, doCommit);
+    if (!mView) {
+      return; // we're destroyed
+    }
+
+    if (doCommit) {
+      nsCompositionEvent compEnd(PR_TRUE, NS_COMPOSITION_END, mOwnerWidget);
+      InitCompositionEvent(compEnd);
+      mOwnerWidget->DispatchWindowEvent(compEnd);
+      if (!mView) {
+        return; // we're destroyed
+      }
+      OnEndIMEComposition();
+    }
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 
 #pragma mark -
 
@@ -1053,6 +1179,9 @@ nsCocoaIMEHandler::nsCocoaIMEHandler() :
 {
   gHandlerInstanceCount++;
   InitStaticMembers();
+
+  mMarkedRange.location = NSNotFound;
+  mMarkedRange.length = 0;
 }
 
 nsCocoaIMEHandler::~nsCocoaIMEHandler()
@@ -1131,19 +1260,18 @@ nsCocoaIMEHandler::OnDestroyView(NSView<mozView> *aDestroyingView)
 }
 
 void
-nsCocoaIMEHandler::OnStartIMEComposition(NSView<mozView> *aView)
+nsCocoaIMEHandler::OnStartIMEComposition()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
 #ifdef DEBUG_IME_HANDLER
   DebugPrintPointer(this);
   NSLog(@"nsCocoaIMEHandler::OnStartIMEComposition");
-  NSLog(@"  aView:%p mView:%p currentInputManager:%p",
-        aView, mView, [NSInputManager currentInputManager]);
+  NSLog(@"  mView=%p, currentInputManager:%p",
+        mView, [NSInputManager currentInputManager]);
 #endif // DEBUG_IME_HANDLER
 
   NS_ASSERTION(!mIsIMEComposing, "There is a composition already");
-  NS_ASSERTION(aView == mView, "The composition is started on another view");
   mIsIMEComposing = PR_TRUE;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;

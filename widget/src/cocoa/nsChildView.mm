@@ -155,9 +155,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 - (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild;
 - (void)forceRefreshOpenGL;
 
-// sends gecko an ime composition event
-- (void) sendCompositionEvent:(PRInt32)aEventType;
-
 // do generic gecko event setup with a generic cocoa event. accepts nil inEvent.
 - (void) convertGenericCocoaEvent:(NSEvent*)inEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent;
 
@@ -2199,10 +2196,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mKeyPressSent = NO;
     mPendingDisplay = NO;
     mBlockedLastMouseDown = NO;
-
-    // initialization for NSTextInput
-    mMarkedRange.location = NSNotFound;
-    mMarkedRange.length = 0;
 
     mLastMouseDownEvent = nil;
     mClickThroughMouseDownEvent = nil;
@@ -4742,21 +4735,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   mPluginComplexTextInputRequested = YES;
 }
 
-- (void)sendCompositionEvent:(PRInt32) aEventType
-{
-#ifdef DEBUG_IME
-  NSLog(@"****in sendCompositionEvent; type = %d", aEventType);
-#endif
-
-  if (!mGeckoChild)
-    return;
-
-  // static void init_composition_event( *aEvent, int aType)
-  nsCompositionEvent event(PR_TRUE, aEventType, mGeckoChild);
-  event.time = PR_IntervalNow();
-  mGeckoChild->DispatchWindowEvent(event);
-}
-
 
 #pragma mark -
 // NSTextInput implementation
@@ -4769,7 +4747,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
 #if DEBUG_IME
   NSLog(@"****in insertText: '%@'", insertString);
-  NSLog(@" markRange = %d, %d", mMarkedRange.location, mMarkedRange.length);
 #endif
   if (!mGeckoChild)
     return;
@@ -4850,37 +4827,9 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
     }
   }
   else {
-    if (!mGeckoChild->TextInputHandler()->IsIMEComposing()) {
-      [self sendCompositionEvent:NS_COMPOSITION_START];
-      // Note: mGeckoChild might have become null here. Don't count on it from here on.
-      if (mGeckoChild) {
-        mGeckoChild->TextInputHandler()->OnStartIMEComposition(self);
-        // Note: mGeckoChild might have become null here. Don't count on it from here on.
-      }
-    }
-
-    if (mGeckoChild && mGeckoChild->TextInputHandler()->IgnoreIMECommit()) {
-      tmpStr = [tmpStr init];
-      len = 0;
-      bufPtr[0] = PRUnichar('\0');
-      insertString =
-        [[[NSAttributedString alloc] initWithString:tmpStr] autorelease];
-    }
-    if (mGeckoChild) {
-      NSRange range = NSMakeRange(0, len);
-      mGeckoChild->TextInputHandler()->
-        DispatchTextEvent(nsDependentString(bufPtr), insertString,
-                          range, PR_TRUE);
-    }
-    // Note: mGeckoChild might have become null here. Don't count on it from here on.
-
-    [self sendCompositionEvent:NS_COMPOSITION_END];
-    // Note: mGeckoChild might have become null here. Don't count on it from here on.
-    if (mGeckoChild) {
-      mGeckoChild->TextInputHandler()->OnEndIMEComposition();
-      // Note: mGeckoChild might have become null here. Don't count on it from here on.
-    }
-    mMarkedRange = NSMakeRange(NSNotFound, 0);
+    NSAttributedString* attrStr =
+      static_cast<NSAttributedString*>(insertString);
+    mGeckoChild->TextInputHandler()->InsertTextAsCommittingComposition(attrStr);
   }
 
   if (bufPtr != buffer)
@@ -4912,95 +4861,32 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-#if DEBUG_IME 
-  NSLog(@"****in setMarkedText location: %d, length: %d", selRange.location, selRange.length);
-  NSLog(@" markRange = %d, %d", mMarkedRange.location, mMarkedRange.length);
-  NSLog(@" aString = '%@'", aString);
-#endif
-
-  if (!mGeckoChild)
-    return;
-
-  if (mGeckoChild->TextInputHandler()->IgnoreIMEComposition())
-    return;
+  NS_ENSURE_TRUE(mGeckoChild, );
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
-  if (![aString isKindOfClass:[NSAttributedString class]])
-    aString = [[[NSAttributedString alloc] initWithString:aString] autorelease];
-
-  NSMutableAttributedString *mutableAttribStr = aString;
-  NSString *tmpStr = [mutableAttribStr string];
-  unsigned int len = [tmpStr length];
-  PRUnichar buffer[MAX_BUFFER_SIZE];
-  PRUnichar *bufPtr = (len >= MAX_BUFFER_SIZE) ? new PRUnichar[len + 1] : buffer;
-  [tmpStr getCharacters:bufPtr];
-  bufPtr[len] = PRUnichar('\0');
-
-#if DEBUG_IME 
-  printf("****in setMarkedText, len = %d, text = ", len);
-  PRUint32 n = 0;
-  PRUint32 maxlen = len > 12 ? 12 : len;
-  for (PRUnichar *a = bufPtr; (*a != PRUnichar('\0')) && n<maxlen; a++, n++)
-    printf((*a&0xff80) ? "\\u%4X" : "%c", *a); 
-  printf("\n");
-#endif
-
-  mMarkedRange.length = len;
-
-  if (!mGeckoChild->TextInputHandler()->IsIMEComposing() && len > 0) {
-    nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, mGeckoChild);
-    mGeckoChild->DispatchWindowEvent(selection);
-    mMarkedRange.location = selection.mSucceeded ? selection.mReply.mOffset : 0;
-    [self sendCompositionEvent:NS_COMPOSITION_START];
-    // Note: mGeckoChild might have become null here. Don't count on it from here on.
-    if (mGeckoChild) {
-      mGeckoChild->TextInputHandler()->OnStartIMEComposition(self);
-      // Note: mGeckoChild might have become null here. Don't count on it from here on.
-    }
+  NSAttributedString* attrStr;
+  if ([aString isKindOfClass:[NSAttributedString class]]) {
+    attrStr = static_cast<NSAttributedString*>(aString);
+  } else {
+    attrStr = [[[NSAttributedString alloc] initWithString:aString] autorelease];
   }
 
-  if (mGeckoChild->TextInputHandler()->IsIMEComposing()) {
-    mGeckoChild->TextInputHandler()->OnUpdateIMEComposition(tmpStr);
-
-    PRBool doCommit = (len == 0);
-    mGeckoChild->TextInputHandler()->
-      DispatchTextEvent(nsDependentString(bufPtr), aString, selRange, doCommit);
-    // Note: mGeckoChild might have become null here. Don't count on it from here on.
-
-    if (doCommit) {
-      [self sendCompositionEvent:NS_COMPOSITION_END];
-      // Note: mGeckoChild might have become null here. Don't count on it from here on.
-      if (mGeckoChild) {
-        mGeckoChild->TextInputHandler()->OnEndIMEComposition();
-        // Note: mGeckoChild might have become null here. Don't count on it from here on.
-      }
-    }
-  }
-
-  if (bufPtr != buffer)
-    delete[] bufPtr;
+  mGeckoChild->TextInputHandler()->SetMarkedText(attrStr, selRange);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void) unmarkText
 {
-#if DEBUG_IME
-  NSLog(@"****in unmarkText");
-  NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
-#endif
-  if (mGeckoChild)
-    mGeckoChild->TextInputHandler()->CommitIMEComposition();
+  NS_ENSURE_TRUE(mGeckoChild, );
+  mGeckoChild->TextInputHandler()->CommitIMEComposition();
 }
 
 - (BOOL) hasMarkedText
 {
-#if DEBUG_IME
-  NSLog(@"****in hasMarkText");
-  NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
-#endif
-  return (mMarkedRange.location != NSNotFound) && (mMarkedRange.length != 0);
+  NS_ENSURE_TRUE(mGeckoChild, NO);
+  return mGeckoChild->TextInputHandler()->HasMarkedText();
 }
 
 - (NSInteger) conversationIdentifier
@@ -5028,7 +4914,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 #if DEBUG_IME
   NSLog(@"****in attributedSubstringFromRange");
   NSLog(@" theRange      = %d, %d", theRange.location, theRange.length);
-  NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
 #endif
   if (!mGeckoChild || theRange.length == 0)
     return nil;
@@ -5054,16 +4939,8 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-#if DEBUG_IME
-  NSLog(@"****in markedRange");
-  NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
-#endif
-
-  if (![self hasMarkedText]) {
-    return NSMakeRange(NSNotFound, 0);
-  }
-
-  return mMarkedRange;
+  NS_ENSURE_TRUE(mGeckoChild, NSMakeRange(NSNotFound, 0));
+  return mGeckoChild->TextInputHandler()->MarkedRange();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakeRange(0, 0));
 }
@@ -5074,7 +4951,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
 #if DEBUG_IME
   NSLog(@"****in selectedRange");
-  NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
 #endif
   if (!mGeckoChild)
     return NSMakeRange(NSNotFound, 0);
@@ -5100,7 +4976,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 #if DEBUG_IME
   NSLog(@"****in firstRectForCharacterRange");
   NSLog(@" theRange      = %d, %d", theRange.location, theRange.length);
-  NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
 #endif
   // XXX this returns first character rect or caret rect, it is limitation of
   // now. We need more work for returns first line rect. But current
@@ -5155,7 +5030,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 {
 #if DEBUG_IME
   NSLog(@"****in characterIndexForPoint");
-  NSLog(@" markRange = %d, %d", mMarkedRange.location, mMarkedRange.length);
 #endif
 
   // To implement this, we'd have to grovel in text frames looking at text offsets.
@@ -5168,7 +5042,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
 #if DEBUG_IME
   NSLog(@"****in validAttributesForMarkedText");
-  NSLog(@" markRange = %d, %d", mMarkedRange.location, mMarkedRange.length);
 #endif
 
   //return [NSArray arrayWithObjects:NSUnderlineStyleAttributeName, NSMarkedClauseSegmentAttributeName, NSTextInputReplacementRangeAttributeName, nil];
