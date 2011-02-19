@@ -466,13 +466,11 @@ gfxUniscribeShaper::InitTextRun(gfxContext *aContext,
                                 PRUint32 aRunLength,
                                 PRInt32 aRunScript)
 {
+    mFont->SetupCairoFont(aContext);
     DCFromContext aDC(aContext);
  
     PRBool result = PR_TRUE;
     HRESULT rv;
-
-    gfxGDIFont *font = static_cast<gfxGDIFont*>(mFont);
-    AutoSelectFont fs(aDC, font->GetHFONT());
 
     Uniscribe us(aString + aRunStart, aRunLength, aTextRun);
 
