@@ -3242,6 +3242,9 @@ class AutoVectorRooter : protected AutoGCRooter
 
     bool append(const T &v) { return vector.append(v); }
 
+    /* For use when space has already been reserved. */
+    void infallibleAppend(const T &v) { vector.infallibleAppend(v); }
+
     void popBack() { vector.popBack(); }
 
     bool growBy(size_t inc) {

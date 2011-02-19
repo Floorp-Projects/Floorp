@@ -1057,14 +1057,12 @@ ResolveRelativePath(JSContext *cx, const char *base, JSString *filename)
     size_t nchars;
     if (!JS_DecodeBytes(cx, base, dirLen + 1, NULL, &nchars))
         return NULL;
-    if (!result.reserve(dirLen + 1 + fileLen)) {
-        JS_ReportOutOfMemory(cx);
+    if (!result.reserve(dirLen + 1 + fileLen))
         return NULL;
-    }
     JS_ALWAYS_TRUE(result.resize(dirLen + 1));
     if (!JS_DecodeBytes(cx, base, dirLen + 1, result.begin(), &nchars))
         return NULL;
-    JS_ALWAYS_TRUE(result.append(fileChars, fileLen));
+    result.infallibleAppend(fileChars, fileLen);
     return JS_NewUCStringCopyN(cx, result.begin(), result.length());
 }
 
