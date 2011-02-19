@@ -9642,13 +9642,33 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
 
     nsresult rv;
 
-    nsCOMPtr<nsIDocument> document = do_GetInterface(GetAsSupports(this));
-    NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
-
-    // Step 1: Clone aData by getting its JSON representation
+    // Step 1: Clone aData by getting its JSON representation.
+    //
+    // StringifyJSValVariant might cause arbitrary JS to run, and this code
+    // might navigate the page we're on, potentially to a different origin! (bug
+    // 634834)  To protect against this, we abort if our principal changes due
+    // to the stringify call.
     nsString dataStr;
-    rv = StringifyJSValVariant(aData, dataStr);
-    NS_ENSURE_SUCCESS(rv, rv);
+    {
+        nsCOMPtr<nsIDocument> origDocument =
+            do_GetInterface(GetAsSupports(this));
+        if (!origDocument)
+            return NS_ERROR_DOM_SECURITY_ERR;
+        nsCOMPtr<nsIPrincipal> origPrincipal = origDocument->NodePrincipal();
+
+        rv = StringifyJSValVariant(aData, dataStr);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIDocument> newDocument =
+            do_GetInterface(GetAsSupports(this));
+        if (!newDocument)
+            return NS_ERROR_DOM_SECURITY_ERR;
+        nsCOMPtr<nsIPrincipal> newPrincipal = newDocument->NodePrincipal();
+
+        PRBool principalsEqual = PR_FALSE;
+        origPrincipal->Equals(newPrincipal, &principalsEqual);
+        NS_ENSURE_TRUE(principalsEqual, NS_ERROR_DOM_SECURITY_ERR);
+    }
 
     // Check that the state object isn't too long.
     // Default max length: 640k chars.
@@ -9662,6 +9682,9 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     }
     NS_ENSURE_TRUE(dataStr.Length() <= (PRUint32)maxStateObjSize,
                    NS_ERROR_ILLEGAL_VALUE);
+
+    nsCOMPtr<nsIDocument> document = do_GetInterface(GetAsSupports(this));
+    NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
     // Step 2: Resolve aURL
     PRBool equalURIs = PR_TRUE;

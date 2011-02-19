@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=634834
+-->
+<head>
+  <title>Test for Bug 634834</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=634834">Mozilla Bug 634834</a>
+
+<iframe id='iframe' src='file_bug634834.html' onload='iframe_loaded()'></iframe>
+
+<script type='application/javascript;version=1.7'>
+SimpleTest.waitForExplicitFinish();
+
+function iframe_loaded() {
+  var loadedAfterPushstate = false;
+  $('iframe').onload = function() {
+    loadedAfterPushstate = true;
+  }
+
+  var obj = { name: 'name' };
+  obj.__defineGetter__('a', function() {
+    $('iframe').contentWindow.location = 'http://example.com';
+
+    // Wait until we've loaded example.com.
+    do {
+        var r = new XMLHttpRequest();
+        r.open("GET", location.href, false);
+        r.overrideMimeType("text/plain");
+        try { r.send(null); }
+        catch (e) {}
+    } while (!loadedAfterPushstate);
+  });
+
+  try {
+    $('iframe').contentWindow.history.pushState(obj, '');
+    ok(false, 'pushState should throw exception.');
+  }
+  catch(e) {
+    ok(true, 'pushState threw an exception.');
+  }
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>
