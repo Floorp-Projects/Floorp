@@ -159,8 +159,10 @@
     <!-- basic navigation -->
     <key id="key_back" keycode="VK_LEFT" command="cmd_back" modifiers="control"/>
     <key id="key_forward" keycode="VK_RIGHT" command="cmd_forward" modifiers="control"/>
+#ifndef ANDROID
     <key id="key_back2" keycode="VK_BACK" command="cmd_back"/>
     <key id="key_forward2" keycode="VK_BACK" command="cmd_forward" modifiers="shift"/>
+#endif
 #ifndef MOZ_PLATFORM_MAEMO
     <key id="key_reload" keycode="VK_F5" command="cmd_reload"/>
     <key id="key_forceReload" keycode="VK_F5" modifiers="shift" command="cmd_forceReload"/>
