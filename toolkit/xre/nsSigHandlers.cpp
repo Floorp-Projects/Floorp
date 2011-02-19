@@ -70,15 +70,6 @@
 #include <ucontext.h>
 #endif
 
-#ifdef XP_BEOS
-#include <be/app/Application.h>
-#include <string.h>
-#include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
-#include "nsIAppStartup.h"
-#include "nsToolkitCompsCID.h"
-#endif
-
 static char _progname[1024] = "huh?";
 static unsigned int _gdb_sleep_duration = 300;
 
@@ -147,26 +138,6 @@ child_ah_crap_handler(int signum)
 #endif
 
 #endif // CRAWL_STACK_ON_SIGSEGV
-
-#ifdef XP_BEOS
-void beos_signal_handler(int signum) {
-#ifdef DEBUG
-	fprintf(stderr, "beos_signal_handler: %d\n", signum);
-#endif
-	nsresult rv;
-	nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
-	if (NS_FAILED(rv)) {
-		// Failed to get the appstartup service so shutdown the hard way
-#ifdef DEBUG
-		fprintf(stderr, "beos_signal_handler: appShell->do_GetService() failed\n");
-#endif
-		exit(13);
-	}
-
-	// Exit the appshell so that the app can shutdown normally
-	appStartup->Quit(nsIAppStartup::eAttemptQuit);
-}
-#endif
 
 #ifdef MOZ_WIDGET_GTK2
 // Need this include for version test below.
@@ -350,10 +321,6 @@ void InstallSignalHandlers(const char *ProgramName)
 	    }
     }
 #endif //SOLARIS
-
-#ifdef XP_BEOS
-	signal(SIGTERM, beos_signal_handler);
-#endif
 
 #if defined(MOZ_WIDGET_GTK2) && (GLIB_MAJOR_VERSION > 2 || (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
   const char *assertString = PR_GetEnv("XPCOM_DEBUG_BREAK");

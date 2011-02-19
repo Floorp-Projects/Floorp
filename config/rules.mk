@@ -914,9 +914,6 @@ ifndef NO_COMPONENTS_MANIFEST
 	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/chrome.manifest "manifest components/components.manifest"
 	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/components/components.manifest "binary-component $(SHARED_LIBRARY)"
 endif
-ifdef BEOS_ADDON_WORKAROUND
-	( cd $(FINAL_TARGET)/components && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
-endif
 else # ! IS_COMPONENT
 ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
 	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
@@ -924,9 +921,6 @@ else
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib
 endif
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)
-ifdef BEOS_ADDON_WORKAROUND
-	( cd $(FINAL_TARGET) && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
-endif
 endif # IS_COMPONENT
 endif # SHARED_LIBRARY
 ifdef PROGRAM
@@ -1060,12 +1054,6 @@ endif
 ifdef MOZ_POST_PROGRAM_COMMAND
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 endif
-ifeq ($(OS_ARCH),BeOS)
-ifdef BEOS_PROGRAM_RESOURCE
-	xres -o $@ $(BEOS_PROGRAM_RESOURCE)
-	mimeset $@
-endif
-endif # BeOS
 
 $(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_LIBS_DEPS) $(HOST_EXTRA_DEPS) $(GLOBAL_DEPS)
 ifeq (WINCE,$(OS_ARCH))
