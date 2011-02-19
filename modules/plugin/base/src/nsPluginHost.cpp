@@ -1799,6 +1799,19 @@ static nsresult CreateNPAPIPlugin(nsPluginTag *aPluginTag,
   return rv;
 }
 
+nsresult nsPluginHost::EnsurePluginLoaded(nsPluginTag* plugin)
+{
+  nsRefPtr<nsNPAPIPlugin> entrypoint = plugin->mEntryPoint;
+  if (!entrypoint) {
+    nsresult rv = CreateNPAPIPlugin(plugin, getter_AddRefs(entrypoint));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    plugin->mEntryPoint = entrypoint;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsPluginHost::GetPlugin(const char *aMimeType, nsIPlugin** aPlugin)
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -1822,16 +1835,12 @@ NS_IMETHODIMP nsPluginHost::GetPlugin(const char *aMimeType, nsIPlugin** aPlugin
       printf("For %s found plugin %s\n", aMimeType, pluginTag->mFileName.get());
 #endif
 
-    // Create a plugin object if necessary
-    nsRefPtr<nsNPAPIPlugin> plugin = pluginTag->mEntryPoint;
-    if (!plugin) {
-      rv = CreateNPAPIPlugin(pluginTag, getter_AddRefs(plugin));
-      if (NS_FAILED(rv))
-        return rv;
-      pluginTag->mEntryPoint = plugin;
+    rv = EnsurePluginLoaded(pluginTag);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
 
-    NS_ADDREF(*aPlugin = plugin);
+    NS_ADDREF(*aPlugin = pluginTag->mEntryPoint);
     return NS_OK;
   }
 
@@ -1938,32 +1947,6 @@ nsPluginHost::EnumerateSiteData(const nsACString& domain,
   return NS_OK;
 }
 
-// Ensure that 'plugin' is still a live, valid tag, and that it's loaded.
-nsPluginTag*
-nsPluginHost::EnsurePlugin(nsIPluginTag* plugin)
-{
-  LoadPlugins();
-
-  // Make sure the nsIPluginTag we're given is still live.
-  nsPluginTag* tag;
-  for (tag = mPlugins; tag && tag != plugin; tag = tag->mNext);
-  if (!tag) {
-    return NULL;
-  }
-
-  nsRefPtr<nsNPAPIPlugin> entrypoint = tag->mEntryPoint;
-  if (!entrypoint) {
-    nsresult rv = CreateNPAPIPlugin(tag, getter_AddRefs(entrypoint));
-    if (NS_FAILED(rv)) {
-      return NULL;
-    }
-
-    tag->mEntryPoint = entrypoint;
-  }
-
-  return tag;
-}
-
 NS_IMETHODIMP
 nsPluginHost::ClearSiteData(nsIPluginTag* plugin, const nsACString& domain,
                             PRUint64 flags, PRInt64 maxAge)
@@ -1971,9 +1954,24 @@ nsPluginHost::ClearSiteData(nsIPluginTag* plugin, const nsACString& domain,
   // maxAge must be either a nonnegative integer or -1.
   NS_ENSURE_ARG(maxAge >= 0 || maxAge == -1);
 
-  nsPluginTag* tag = EnsurePlugin(plugin);
-  if (!tag) {
+  // Caller may give us a tag object that is no longer live.
+  if (!IsLiveTag(plugin)) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsPluginTag* tag = static_cast<nsPluginTag*>(plugin);
+
+  // We only ensure support for clearing Flash site data for now.
+  // We will also attempt to clear data for any plugin that happens
+  // to be loaded already.
+  if (!tag->mIsFlashPlugin && !tag->mEntryPoint) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Make sure the plugin is loaded.
+  nsresult rv = EnsurePluginLoaded(tag);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   PluginLibrary* library = tag->mEntryPoint->GetLibrary();
@@ -1985,7 +1983,7 @@ nsPluginHost::ClearSiteData(nsIPluginTag* plugin, const nsACString& domain,
 
   // Get the list of sites from the plugin.
   InfallibleTArray<nsCString> sites;
-  nsresult rv = library->NPP_GetSitesWithData(sites);
+  rv = library->NPP_GetSitesWithData(sites);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Enumerate the sites and build a list of matches.
@@ -2007,16 +2005,31 @@ NS_IMETHODIMP
 nsPluginHost::SiteHasData(nsIPluginTag* plugin, const nsACString& domain,
                           PRBool* result)
 {
-  nsPluginTag* tag = EnsurePlugin(plugin);
-  if (!tag) {
+  // Caller may give us a tag object that is no longer live.
+  if (!IsLiveTag(plugin)) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsPluginTag* tag = static_cast<nsPluginTag*>(plugin);
+
+  // We only ensure support for clearing Flash site data for now.
+  // We will also attempt to clear data for any plugin that happens
+  // to be loaded already.
+  if (!tag->mIsFlashPlugin && !tag->mEntryPoint) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Make sure the plugin is loaded.
+  nsresult rv = EnsurePluginLoaded(tag);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   PluginLibrary* library = tag->mEntryPoint->GetLibrary();
 
   // Get the list of sites from the plugin.
   InfallibleTArray<nsCString> sites;
-  nsresult rv = library->NPP_GetSitesWithData(sites);
+  rv = library->NPP_GetSitesWithData(sites);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If there's no data, we're done.
@@ -2053,7 +2066,7 @@ static PRBool isUnwantedPlugin(nsPluginTag * tag)
     if (!PL_strcasecmp(tag->mMimeTypeArray[i], "application/pdf"))
       return PR_FALSE;
 
-    if (!PL_strcasecmp(tag->mMimeTypeArray[i], "application/x-shockwave-flash"))
+    if (tag->mIsFlashPlugin)
       return PR_FALSE;
 
     if (!PL_strcasecmp(tag->mMimeTypeArray[i], "application/x-director"))
@@ -2077,6 +2090,19 @@ PRBool nsPluginHost::IsJavaMIMEType(const char* aType)
                           sizeof("application/x-java-applet") - 1)) ||
      (0 == PL_strncasecmp(aType, "application/x-java-bean",
                           sizeof("application/x-java-bean") - 1)));
+}
+
+// Check whether or not a tag is a live, valid tag, and that it's loaded.
+PRBool
+nsPluginHost::IsLiveTag(nsIPluginTag* aPluginTag)
+{
+  nsPluginTag* tag;
+  for (tag = mPlugins; tag; tag = tag->mNext) {
+    if (tag == aPluginTag) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
 }
 
 nsPluginTag * nsPluginHost::HaveSamePlugin(nsPluginTag * aPluginTag)
