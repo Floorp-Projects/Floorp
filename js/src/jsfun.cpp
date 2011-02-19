@@ -359,7 +359,7 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
      * _DBG* opcodes used by wrappers created here must cope with unresolved
      * upvars and throw them as reference errors. Caveat debuggers!
      */
-    JSObject *scopeChain = GetScopeChain(cx, fp, ORIGIN_WESC);
+    JSObject *scopeChain = GetScopeChain(cx, fp);
     if (!scopeChain)
         return NULL;
 
@@ -948,8 +948,7 @@ namespace js {
  * on behalf of which the call object is being created.
  */
 JSObject *
-NewCallObject(JSContext *cx, Bindings *bindings, JSObject &scopeChain, JSObject *callee,
-              Origins origin)
+NewCallObject(JSContext *cx, Bindings *bindings, JSObject &scopeChain, JSObject *callee)
 {
     size_t argsVars = bindings->countArgsAndVars();
     size_t slots = JSObject::CALL_RESERVED_SLOTS + argsVars;
@@ -978,7 +977,6 @@ NewCallObject(JSContext *cx, Bindings *bindings, JSObject &scopeChain, JSObject 
 #endif
 
     callobj->setCallObjCallee(callee);
-    callobj->setOrigin(origin);
     return callobj;
 }
 
@@ -997,7 +995,7 @@ NewDeclEnvObject(JSContext *cx, JSStackFrame *fp)
 }
 
 JSObject *
-js_GetCallObject(JSContext *cx, JSStackFrame *fp, Origins origin)
+js_GetCallObject(JSContext *cx, JSStackFrame *fp)
 {
     /* Create a call object for fp only if it lacks one. */
     JS_ASSERT(fp->isFunctionFrame());
@@ -1038,7 +1036,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp, Origins origin)
     }
 
     JSObject *callobj =
-        NewCallObject(cx, &fp->fun()->script()->bindings, fp->scopeChain(), &fp->callee(), origin);
+        NewCallObject(cx, &fp->fun()->script()->bindings, fp->scopeChain(), &fp->callee());
     if (!callobj)
         return NULL;
 
@@ -1059,7 +1057,7 @@ js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSO
     JS_ASSERT(!js_IsNamedLambda(fun));
     JS_ASSERT(scopeChain);
     JS_ASSERT(callee);
-    return NewCallObject(cx, &fun->script()->bindings, *scopeChain, callee, ORIGIN_ON_TRACE);
+    return NewCallObject(cx, &fun->script()->bindings, *scopeChain, callee);
 }
 
 JS_DEFINE_CALLINFO_4(extern, OBJECT, js_CreateCallObjectOnTrace, CONTEXT, FUNCTION, OBJECT, OBJECT,
@@ -1371,68 +1369,11 @@ call_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     return true;
 }
 
-struct Cargo
-{
-    uint32 bef;
-
-    JSObject *callObjCallee;
-    uint32 atomLength;
-    jschar atom[64];
-    uint32 filenameLength;
-    char filename[128];
-    uint32 lineno;
-    uint32 callObjFlags;
-
-    uint32 aft;
-
-    Cargo() : bef(0xaaaaaaaa), aft(0xbbbbbbbb) {}
-};
-
-JS_PUBLIC_DATA(Cargo *) cargoEscape;
-
 static void
 call_trace(JSTracer *trc, JSObject *obj)
 {
     JS_ASSERT(obj->isCall());
-
     if (JSStackFrame *fp = obj->maybeCallObjStackFrame()) {
-
-        // TEMPORARY BUG FINDING CODE
-        Cargo cargo;
-        cargoEscape = &cargo;
-
-        cargo.callObjFlags = obj->flags;
-        cargo.callObjCallee = obj->getCallObjCallee();
-
-        if (cargo.callObjCallee) {
-            JSFunction *fun = cargo.callObjCallee->getFunctionPrivate();
-            if (fun->atom) {
-                cargo.atomLength = fun->atom->length();
-                js_strncpy(cargo.atom, fun->atom->chars(), Min(cargo.atomLength, (uint32)64));
-            } else {
-                strcpy((char *)cargo.atom, "(unnamed)");
-            }
-            if (fun->isInterpreted()) {
-                JSScript *script = fun->script();
-                cargo.lineno = script->lineno;
-                cargo.filenameLength = strlen(script->filename);
-                if (const char *filename = script->filename) {
-                    strncpy(cargo.filename, filename, Min(cargo.filenameLength, (uint32)128));
-                } else {
-                    strcpy(cargo.filename, "(no file)");
-                }
-            } else {
-                *((int *)0xbad1) = 0;
-            }
-        } else {
-            strcpy((char *)cargo.atom, "(eval)");
-        }
-
-        bool bad = obj != &fp->callObj();
-        JS_ASSERT(!bad);
-        if (bad)
-            *((int *)0xbad2) = 0;
-
         /*
          * FIXME: Hide copies of stack values rooted by fp from the Cycle
          * Collector, which currently lacks a non-stub Unlink implementation

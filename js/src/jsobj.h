@@ -287,31 +287,6 @@ namespace nanojit {
 class ValidateWriter;
 }
 
-// TEMPORARY CRASH-FINDING
-enum Origins {
-    ORIGIN_ON_TRACE              = 1,
-    ORIGIN_EXEC                  = 2,
-    ORIGIN_GET_FRAME_OBJ         = 3,
-    ORIGIN_INVOKE                = 4,
-    ORIGIN_INTERP                = 5,
-    ORIGIN_GET_SCOPE_CHAIN_API   = 6,
-    ORIGIN_CLONE_FUNOBJ          = 7,
-    ORIGIN_GET_FRAME_SCOPE_CHAIN = 8,
-    ORIGIN_WESC                  = 9,
-    ORIGIN_DEVAL                 = 10,
-    ORIGIN_WITH                  = 11,
-    ORIGIN_DEFFUN                = 12,
-    ORIGIN_DEFLOCALFUN           = 13,
-    ORIGIN_LAMBDA                = 14,
-    ORIGIN_LAME                  = 15,
-    ORIGIN_MJIT_DEFFUN           = 16,
-    ORIGIN_MJIT_DEFLOCALFUN      = 17,
-    ORIGIN_MJIT_LAMBDA           = 18,
-    ORIGIN_COMPILE_FUNCTION      = 19,
-    ORIGIN_UIC                   = 20,
-    ORIGIN_MJIT_GCO              = 21
-};
-
 /*
  * JSObject struct, with members sized to fit in 32 bytes on 32-bit targets,
  * 64 bytes on 64-bit systems. The JSFunction struct is an extension of this
@@ -411,22 +386,8 @@ struct JSObject : js::gc::Cell {
         HAS_EQUALITY              = 0x200,
         METHOD_THRASH_COUNT_MASK  = 0xc00,
         METHOD_THRASH_COUNT_SHIFT =    10,
-        METHOD_THRASH_COUNT_MAX   = METHOD_THRASH_COUNT_MASK >> METHOD_THRASH_COUNT_SHIFT,
-
-        ORIGIN_MASK          = 0xff000000,
-        ORIGIN_SHIFT         = 24,
-        SKIPPED_BIT          = 0x00100000
-
+        METHOD_THRASH_COUNT_MAX   = METHOD_THRASH_COUNT_MASK >> METHOD_THRASH_COUNT_SHIFT
     };
-
-    // TMP CRASH-FINDING
-    void setOrigin(Origins origin) {
-        flags = (flags & ~(uint32)ORIGIN_MASK) | (origin << ORIGIN_SHIFT);
-    }
-
-    void setSkipped() {
-        flags |= SKIPPED_BIT;
-    }
 
     /*
      * Impose a sane upper bound, originally checked only for dense arrays, on
