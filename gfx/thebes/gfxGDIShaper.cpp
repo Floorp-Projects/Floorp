@@ -57,9 +57,8 @@ gfxGDIShaper::InitTextRun(gfxContext *aContext,
                           PRUint32 aRunLength,
                           PRInt32 aRunScript)
 {
-    gfxGDIFont *f = static_cast<gfxGDIFont*>(mFont);
+    mFont->SetupCairoFont(aContext);
     DCFromContext dc(aContext);
-    AutoSelectFont fs(dc, f->GetHFONT());
 
     nsAutoTArray<WORD,500> glyphArray;
     if (!glyphArray.SetLength(aRunLength)) {

@@ -86,6 +86,10 @@ struct DCFromContext {
         {
             dc = static_cast<gfxWindowsSurface*>(aSurface.get())->GetDC();
             needsRelease = PR_FALSE;
+            SaveDC(dc);
+            cairo_scaled_font_t* scaled =
+                cairo_get_scaled_font(aContext->GetCairo());
+            cairo_win32_scaled_font_select_font(scaled, dc);
         }
         if (!dc) {
             dc = GetDC(NULL);
@@ -95,8 +99,11 @@ struct DCFromContext {
     }
 
     ~DCFromContext() {
-        if (needsRelease)
+        if (needsRelease) {
             ReleaseDC(NULL, dc);
+        } else {
+            RestoreDC(dc, -1);
+        }
     }
 
     operator HDC () {
