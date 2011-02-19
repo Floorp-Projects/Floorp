@@ -110,22 +110,6 @@ using namespace js::gc;
 JSObject *const JSStackFrame::sInvalidScopeChain = (JSObject *)0xbeef;
 #endif
 
-JS_NEVER_INLINE void
-js::PutActivationObjects(JSContext *cx, JSStackFrame *fp)
-{
-    JS_ASSERT(fp->isFunctionFrame() && !fp->isEvalFrame());
- 
-    if (fp->isEvalFrame())
-        *((int *)0x1337) = 0;
-
-    /* The order is important as js_PutCallObject needs to access argsObj. */
-    if (fp->hasCallObj()) {
-        js_PutCallObject(cx, fp);
-    } else if (fp->hasArgsObj()) {
-        js_PutArgsObject(cx, fp);
-    }
-}
-
 jsbytecode *
 JSStackFrame::pc(JSContext *cx, JSStackFrame *next)
 {
@@ -265,7 +249,7 @@ js::GetBlockChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen)
  * some other cases --- entering 'with' blocks, for example.
  */
 static JSObject *
-GetScopeChainFull(JSContext *cx, JSStackFrame *fp, JSObject *blockChain)
+GetScopeChainFull(JSContext *cx, JSStackFrame *fp, JSObject *blockChain, Origins origin)
 {
     JSObject *sharedBlock = blockChain;
 
@@ -293,7 +277,7 @@ GetScopeChainFull(JSContext *cx, JSStackFrame *fp, JSObject *blockChain)
     if (fp->isFunctionFrame() && !fp->hasCallObj()) {
         JS_ASSERT_IF(fp->scopeChain().isClonedBlock(),
                      fp->scopeChain().getPrivate() != js_FloatingFrameIfGenerator(cx, fp));
-        if (!js_GetCallObject(cx, fp))
+        if (!js_GetCallObject(cx, fp, origin))
             return NULL;
 
         /* We know we must clone everything on blockChain. */
@@ -386,15 +370,15 @@ GetScopeChainFull(JSContext *cx, JSStackFrame *fp, JSObject *blockChain)
 }
 
 JSObject *
-js::GetScopeChain(JSContext *cx, JSStackFrame *fp)
+js::GetScopeChain(JSContext *cx, JSStackFrame *fp, Origins origin)
 {
-    return GetScopeChainFull(cx, fp, GetBlockChain(cx, fp));
+    return GetScopeChainFull(cx, fp, GetBlockChain(cx, fp), origin);
 }
 
 JSObject *
-js::GetScopeChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen)
+js::GetScopeChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen, Origins origin)
 {
-    return GetScopeChainFull(cx, fp, GetBlockChainFast(cx, fp, op, oplen));
+    return GetScopeChainFull(cx, fp, GetBlockChainFast(cx, fp, op, oplen), origin);
 }
 
 /* Some objects (e.g., With) delegate 'this' to another object. */
@@ -709,7 +693,7 @@ Invoke(JSContext *cx, const CallArgs &argsRef, uint32 flags)
     cx->stack().pushInvokeFrame(cx, args, &frame);
 
     /* Now that the new frame is rooted, maybe create a call object. */
-    if (fun->isHeavyweight() && !js_GetCallObject(cx, fp))
+    if (fun->isHeavyweight() && !js_GetCallObject(cx, fp, ORIGIN_INVOKE))
         return false;
 
     /* Run function until JSOP_STOP, JSOP_RETURN or error. */
@@ -949,7 +933,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
      */
     if ((flags & JSFRAME_EVAL) && script->strictModeCode) {
         AutoScriptRooter root(cx, script);
-        initialVarObj = NewCallObject(cx, &script->bindings, *initialVarObj, NULL);
+        initialVarObj = NewCallObject(cx, &script->bindings, *initialVarObj, NULL, ORIGIN_EXEC);
         if (!initialVarObj)
             return false;
         initialVarObj->setPrivate(frame.fp());
@@ -1300,7 +1284,7 @@ DirectEval(JSContext *cx, JSFunction *evalfun, uint32 argc, Value *vp)
     AutoFunctionCallProbe callProbe(cx, evalfun, caller->script());
 
     JSObject *scopeChain =
-        GetScopeChainFast(cx, caller, JSOP_EVAL, JSOP_EVAL_LENGTH + JSOP_LINENO_LENGTH);
+        GetScopeChainFast(cx, caller, JSOP_EVAL, JSOP_EVAL_LENGTH + JSOP_LINENO_LENGTH, ORIGIN_DEVAL);
     if (!scopeChain || !EvalKernel(cx, argc, vp, DIRECT_EVAL, caller, scopeChain))
         return false;
     cx->regs->sp = vp + 1;
@@ -1353,7 +1337,7 @@ js_EnterWith(JSContext *cx, jsint stackIndex, JSOp op, size_t oplen)
         sp[-1].setObject(*obj);
     }
 
-    JSObject *parent = GetScopeChainFast(cx, fp, op, oplen);
+    JSObject *parent = GetScopeChainFast(cx, fp, op, oplen, ORIGIN_WITH);
     if (!parent)
         return JS_FALSE;
 
@@ -4713,7 +4697,7 @@ BEGIN_CASE(JSOP_FUNCALL)
             atoms = script->atomMap.vector;
 
             /* Now that the new frame is rooted, maybe create a call object. */
-            if (newfun->isHeavyweight() && !js_GetCallObject(cx, regs.fp))
+            if (newfun->isHeavyweight() && !js_GetCallObject(cx, regs.fp, ORIGIN_INTERP))
                 goto error;
 
             inlineCallCount++;
@@ -5377,7 +5361,7 @@ BEGIN_CASE(JSOP_DEFFUN)
     } else {
         JS_ASSERT(!fun->isFlatClosure());
 
-        obj2 = GetScopeChainFast(cx, regs.fp, JSOP_DEFFUN, JSOP_DEFFUN_LENGTH);
+        obj2 = GetScopeChainFast(cx, regs.fp, JSOP_DEFFUN, JSOP_DEFFUN_LENGTH, ORIGIN_DEFFUN);
         if (!obj2)
             goto error;
     }
@@ -5516,7 +5500,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
             goto error;
     } else {
         JSObject *parent = GetScopeChainFast(cx, regs.fp, JSOP_DEFLOCALFUN,
-                                             JSOP_DEFLOCALFUN_LENGTH);
+                                             JSOP_DEFLOCALFUN_LENGTH, ORIGIN_DEFLOCALFUN);
         if (!parent)
             goto error;
 
@@ -5679,7 +5663,7 @@ BEGIN_CASE(JSOP_LAMBDA)
             }
 #endif
         } else {
-            parent = GetScopeChainFast(cx, regs.fp, JSOP_LAMBDA, JSOP_LAMBDA_LENGTH);
+            parent = GetScopeChainFast(cx, regs.fp, JSOP_LAMBDA, JSOP_LAMBDA_LENGTH, ORIGIN_LAMBDA);
             if (!parent)
                 goto error;
         }

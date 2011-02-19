@@ -4189,7 +4189,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     assertSameCompartment(cx, parent);  // XXX no funobj for now
     if (!parent) {
         if (cx->hasfp())
-            parent = GetScopeChain(cx, cx->fp());
+            parent = GetScopeChain(cx, cx->fp(), ORIGIN_CLONE_FUNOBJ);
         if (!parent)
             parent = cx->globalObject;
         JS_ASSERT(parent);

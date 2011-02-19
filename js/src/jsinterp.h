@@ -811,10 +811,10 @@ GetBlockChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen);
  * must reflect at runtime.
  */
 extern JSObject *
-GetScopeChain(JSContext *cx, JSStackFrame *fp);
+GetScopeChain(JSContext *cx, JSStackFrame *fp, Origins);
 
 extern JSObject *
-GetScopeChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen);
+GetScopeChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen, Origins);
 
 /*
  * Report an error that the this value passed as |this| in the given arguments
@@ -834,7 +834,7 @@ ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp);
 template <typename T>
 bool GetPrimitiveThis(JSContext *cx, Value *vp, T *v);
 
-void
+inline void
 PutActivationObjects(JSContext *cx, JSStackFrame *fp);
 
 /*
