@@ -242,6 +242,7 @@ body[dir="rtl"] {
   padding: 10px;
   margin-top: 24px;
   box-shadow: inset rgba(0, 0, 0, 0.2) 0 -3px 0px, rgba(0, 0, 0, 0.1) 0px 2px 0px;
+  display: none;
 }
 
 #promo-label {
