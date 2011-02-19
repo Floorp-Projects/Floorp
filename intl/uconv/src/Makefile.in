@@ -106,7 +106,6 @@ CPPSRCS			+= nsUNIXCharset.cpp
 endif
 endif
 endif
-endif
 
 EXTRA_DSO_LDOPTS = \
 		../util/$(LIB_PREFIX)ucvutil_s.$(LIB_SUFFIX) \
