@@ -4891,48 +4891,15 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
 - (NSInteger) conversationIdentifier
 {
-#if DEBUG_IME
-  NSLog(@"****in conversationIdentifier");
-#endif
-  if (!mGeckoChild)
-    return (long)self;
-  nsQueryContentEvent textContent(PR_TRUE, NS_QUERY_TEXT_CONTENT, mGeckoChild);
-  textContent.InitForQueryTextContent(0, 0);
-  mGeckoChild->DispatchWindowEvent(textContent);
-  if (!textContent.mSucceeded)
-    return (long)self;
-#if DEBUG_IME
-  NSLog(@" the ID = %ld", (long)textContent.mReply.mContentsRoot);
-#endif
-  return (long)textContent.mReply.mContentsRoot;
+  NS_ENSURE_TRUE(mGeckoChild, reinterpret_cast<NSInteger>(self));
+  return mGeckoChild->TextInputHandler()->ConversationIdentifier();
 }
 
 - (NSAttributedString *) attributedSubstringFromRange:(NSRange)theRange
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-#if DEBUG_IME
-  NSLog(@"****in attributedSubstringFromRange");
-  NSLog(@" theRange      = %d, %d", theRange.location, theRange.length);
-#endif
-  if (!mGeckoChild || theRange.length == 0)
-    return nil;
-
-  nsAutoString str;
-  nsQueryContentEvent textContent(PR_TRUE, NS_QUERY_TEXT_CONTENT, mGeckoChild);
-  textContent.InitForQueryTextContent(theRange.location, theRange.length);
-  mGeckoChild->DispatchWindowEvent(textContent);
-
-  if (!textContent.mSucceeded || textContent.mReply.mString.IsEmpty())
-    return nil;
-
-  NSString* nsstr = ToNSString(textContent.mReply.mString);
-  NSAttributedString* result =
-    [[[NSAttributedString alloc] initWithString:nsstr
-                                     attributes:nil] autorelease];
-  return result;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_ENSURE_TRUE(mGeckoChild, nil);
+  return mGeckoChild->TextInputHandler()->
+    GetAttributedSubstringFromRange(theRange);
 }
 
 - (NSRange) markedRange
@@ -4949,103 +4916,31 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-#if DEBUG_IME
-  NSLog(@"****in selectedRange");
-#endif
-  if (!mGeckoChild)
-    return NSMakeRange(NSNotFound, 0);
-  nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, mGeckoChild);
-  mGeckoChild->DispatchWindowEvent(selection);
-  if (!selection.mSucceeded)
-    return NSMakeRange(NSNotFound, 0);
-
-#if DEBUG_IME
-  NSLog(@" result of selectedRange = %d, %d",
-        selection.mReply.mOffset, selection.mReply.mString.Length());
-#endif
-  return NSMakeRange(selection.mReply.mOffset,
-                     selection.mReply.mString.Length());
+  NS_ENSURE_TRUE(mGeckoChild, NSMakeRange(NSNotFound, 0));
+  return mGeckoChild->TextInputHandler()->SelectedRange();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakeRange(0, 0));
 }
 
 - (NSRect) firstRectForCharacterRange:(NSRange)theRange
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-#if DEBUG_IME
-  NSLog(@"****in firstRectForCharacterRange");
-  NSLog(@" theRange      = %d, %d", theRange.location, theRange.length);
-#endif
-  // XXX this returns first character rect or caret rect, it is limitation of
-  // now. We need more work for returns first line rect. But current
-  // implementation is enough for IMEs.
-
   NSRect rect;
-  if (!mGeckoChild || theRange.location == NSNotFound)
-    return rect;
-
-  nsIntRect r;
-  PRBool useCaretRect = theRange.length == 0;
-  if (!useCaretRect) {
-    nsQueryContentEvent charRect(PR_TRUE, NS_QUERY_TEXT_RECT, mGeckoChild);
-    charRect.InitForQueryTextRect(theRange.location, 1);
-    mGeckoChild->DispatchWindowEvent(charRect);
-    if (charRect.mSucceeded)
-      r = charRect.mReply.mRect;
-    else
-      useCaretRect = PR_TRUE;
-  }
-
-  if (useCaretRect) {
-    nsQueryContentEvent caretRect(PR_TRUE, NS_QUERY_CARET_RECT, mGeckoChild);
-    caretRect.InitForQueryCaretRect(theRange.location);
-    mGeckoChild->DispatchWindowEvent(caretRect);
-    if (!caretRect.mSucceeded)
-      return rect;
-    r = caretRect.mReply.mRect;
-    r.width = 0;
-  }
-
-  nsIWidget* rootWidget = mGeckoChild->GetTopLevelWidget();
-  NSWindow* rootWindow =
-    static_cast<NSWindow*>(rootWidget->GetNativeData(NS_NATIVE_WINDOW));
-  NSView* rootView =
-    static_cast<NSView*>(rootWidget->GetNativeData(NS_NATIVE_WIDGET));
-  if (!rootWindow || !rootView)
-    return rect;
-  GeckoRectToNSRect(r, rect);
-  rect = [rootView convertRect:rect toView:nil];
-  rect.origin = [rootWindow convertBaseToScreen:rect.origin];
-#if DEBUG_IME
-  NSLog(@" result rect (x,y,w,h) = %f, %f, %f, %f",
-        rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
-#endif
-  return rect;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakeRect(0.0, 0.0, 0.0, 0.0));
+  NS_ENSURE_TRUE(mGeckoChild, rect);
+  return mGeckoChild->TextInputHandler()->FirstRectForCharacterRange(theRange);
 }
 
 - (NSUInteger)characterIndexForPoint:(NSPoint)thePoint
 {
-#if DEBUG_IME
-  NSLog(@"****in characterIndexForPoint");
-#endif
-
-  // To implement this, we'd have to grovel in text frames looking at text offsets.
-  return 0;
+  NS_ENSURE_TRUE(mGeckoChild, 0);
+  return mGeckoChild->TextInputHandler()->CharacterIndexForPoint(thePoint);
 }
 
 - (NSArray*) validAttributesForMarkedText
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-#if DEBUG_IME
-  NSLog(@"****in validAttributesForMarkedText");
-#endif
-
-  //return [NSArray arrayWithObjects:NSUnderlineStyleAttributeName, NSMarkedClauseSegmentAttributeName, NSTextInputReplacementRangeAttributeName, nil];
-  return [NSArray array]; // empty array; we don't support any attributes right now
+  NS_ENSURE_TRUE(mGeckoChild, [NSArray array]);
+  return mGeckoChild->TextInputHandler()->GetValidAttributesForMarkedText();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
