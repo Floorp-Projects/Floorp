@@ -328,8 +328,7 @@ namespace js {
  * must be null.
  */
 extern JSObject *
-NewCallObject(JSContext *cx, js::Bindings *bindings, JSObject &scopeChain, JSObject *callee,
-              Origins origin);
+NewCallObject(JSContext *cx, js::Bindings *bindings, JSObject &scopeChain, JSObject *callee);
 
 /*
  * NB: jsapi.h and jsobj.h must be included before any call to this macro.
@@ -517,7 +516,7 @@ extern void
 js_ReportIsNotFunction(JSContext *cx, const js::Value *vp, uintN flags);
 
 extern JSObject *
-js_GetCallObject(JSContext *cx, JSStackFrame *fp, Origins origin);
+js_GetCallObject(JSContext *cx, JSStackFrame *fp);
 
 extern JSObject * JS_FASTCALL
 js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSObject *scopeChain);
