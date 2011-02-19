@@ -50,6 +50,7 @@
 #include "nsITimer.h"
 #include "npapi.h"
 #include "nsTArray.h"
+#include "nsEvent.h"
 
 struct PRLogModuleInfo;
 class nsChildView;
@@ -233,10 +234,6 @@ public:
   virtual void OnFocusChangeInGecko(PRBool aFocus);
   virtual void OnDestroyView(NSView<mozView> *aDestroyingView);
 
-  void OnStartIMEComposition(NSView<mozView> *aView);
-  void OnUpdateIMEComposition(NSString* aIMECompositionString);
-  void OnEndIMEComposition();
-
   /**
    * DispatchTextEvent() dispatches a text event on mOwnerWidget.
    *
@@ -251,6 +248,41 @@ public:
                            NSAttributedString* aAttrString,
                            NSRange& aSelectedRange,
                            PRBool aDoCommit);
+
+  /**
+   * SetMarkedText() is a handler of setMarkedText of NSTextInput.
+   *
+   * @param aAttrString           This mut be an instance of NSAttributedString.
+   *                              If the aString parameter to
+   *                              [ChildView setMarkedText:setSelectedRange:]
+   *                              isn't an instance of NSAttributedString,
+   *                              create an NSAttributedString from it and pass
+   *                              that instead.
+   * @param aSelectedRange        Current selected range (or caret position).
+   */
+  void SetMarkedText(NSAttributedString* aAttrString,
+                     NSRange& aSelectedRange);
+
+  /**
+   * InsertTextAsCommittingComposition() commits current composition.  If there
+   * is no composition, this starts a composition and commits it immediately.
+   *
+   * @param aAttrString           A string which is committed.
+   */
+  void InsertTextAsCommittingComposition(NSAttributedString* aAttrString);
+
+  PRBool HasMarkedText()
+  {
+    return (mMarkedRange.location != NSNotFound) && (mMarkedRange.length != 0);
+  }
+
+  NSRange MarkedRange()
+  {
+    if (!HasMarkedText()) {
+      return NSMakeRange(NSNotFound, 0);
+    }
+    return mMarkedRange;
+  }
 
   PRBool IsIMEComposing() { return mIsIMEComposing; }
   PRBool IsIMEOpened();
@@ -308,6 +340,8 @@ protected:
 private:
   // If mIsIMEComposing is true, the composition string is stored here.
   NSString* mIMECompositionString;
+
+  NSRange mMarkedRange;
 
   PRPackedBool mIsIMEComposing;
   PRPackedBool mIsIMEEnabled;
@@ -378,6 +412,29 @@ private:
   void SetTextRangeList(nsTArray<nsTextRange>& aTextRangeList,
                         NSAttributedString *aAttrString,
                         NSRange& aSelectedRange);
+
+  /**
+   * InitCompositionEvent() initializes aCompositionEvent.
+   *
+   * @param aCompositionEvent     A composition event which you want to
+   *                              initialize.
+   */
+  void InitCompositionEvent(nsCompositionEvent& aCompositionEvent);
+
+  /**
+   * When a composition starts, OnStartIMEComposition() is called.
+   */
+  void OnStartIMEComposition();
+
+  /**
+   * When a composition is updated, OnUpdateIMEComposition() is called.
+   */
+  void OnUpdateIMEComposition(NSString* aIMECompositionString);
+
+  /**
+   * When a composition is finished, OnEndIMEComposition() is called.
+   */
+  void OnEndIMEComposition();
 
   // The focused IME handler.  Please note that the handler might lost the
   // actual focus by deactivating the application.  If we are active, this
