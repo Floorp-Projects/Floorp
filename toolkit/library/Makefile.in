@@ -234,10 +234,6 @@ ifdef MOZ_ENABLE_LIBPROXY
 EXTRA_DSO_LDOPTS += $(MOZ_LIBPROXY_LIBS)
 endif
 
-ifeq ($(OS_ARCH),BeOS)
-EXTRA_DSO_LDOPTS += -lbe -ltracker
-endif
-
 ifeq ($(OS_ARCH),SunOS)
 ifdef GNU_CC
 EXTRA_DSO_LDOPTS += -lelf

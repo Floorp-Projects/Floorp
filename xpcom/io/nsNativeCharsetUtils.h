@@ -67,7 +67,7 @@ NS_COM nsresult NS_CopyUnicodeToNative(const nsAString  &input, nsACString &outp
  * system  encoding is UTF-8.
  * On Unix (but not on Mac OS X), it depends on the locale and is not known
  * in advance (at the compilation time) so that this function needs to be 
- * a real function. On Mac OS X and BeOS, it's always UTF-8 while on Windows 
+ * a real function. On Mac OS X it's always UTF-8 while on Windows 
  * and other platforms (e.g. OS2), it's never UTF-8.  
  */
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(ANDROID)
@@ -75,7 +75,7 @@ NS_COM PRBool NS_IsNativeUTF8();
 #else
 inline PRBool NS_IsNativeUTF8()
 {
-#if defined(XP_MACOSX) || defined(XP_BEOS) || defined(ANDROID)
+#if defined(XP_MACOSX) || defined(ANDROID)
     return PR_TRUE;
 #else
     return PR_FALSE;

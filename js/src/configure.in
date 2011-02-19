@@ -1822,12 +1822,6 @@ dnl ========================================================
 dnl System overrides of the defaults for host
 dnl ========================================================
 case "$host" in
-*-beos*)
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_BEOS -DBeOS -DBEOS -D_POSIX_SOURCE -DNO_X11"
-    HOST_NSPR_MDCPUCFG='\"md/_beos.cfg\"'
-    HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
-    ;;
-
 *mingw*|*wince|*winmo)
     # we need Python 2.5 on Windows
     PYTHON_VERSION=2.5
@@ -1959,24 +1953,6 @@ case "$target" in
     fi
     AC_DEFINE(JS_SYS_TYPES_H_DEFINES_EXACT_SIZE_TYPES)
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-    ;;
-
-*-beos*)
-    no_x=yes
-    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -Wl,-h,$@ -o $@'
-    _PLATFORM_DEFAULT_TOOLKIT="cairo-beos"
-    DSO_LDOPTS='-nostart'
-    TK_LIBS='-lbe -lroot'
-    LIBS="$LIBS -lbe"
-    if test "$COMPILE_ENVIRONMENT"; then
-        AC_CHECK_LIB(bind,main,LIBS="$LIBS -lbind")
-        AC_CHECK_LIB(zeta,main,LIBS="$LIBS -lzeta")
-    fi
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-multichar"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-multichar"
-    _MOZ_USE_RTTI=1
-    USE_DEPENDENT_LIBS=
-    MOZ_USER_DIR="Mozilla"
     ;;
 
 *-bsdi*)
@@ -3458,15 +3434,13 @@ case $target in
 esac
 
 dnl We don't want to link with libdl even if it's present on OS X, since
-dnl it's not used and not part of the default installation.
-dnl The same goes for BeOS. OS/2 has dlfcn in libc.
+dnl it's not used and not part of the default installation. OS/2 has dlfcn
+dnl in libc.
 dnl We don't want to link against libm or libpthread on Darwin since
 dnl they both are just symlinks to libSystem and explicitly linking
 dnl against libSystem causes issues when debugging (see bug 299601).
 case $target in
 *-darwin*)
-    ;;
-*-beos*)
     ;;
 *-os2*)
     ;;
@@ -5860,9 +5834,7 @@ fi # COMPILE_ENVIRONMENT
 dnl Set various defines and substitutions
 dnl ========================================================
 
-if test "$OS_ARCH" = "BeOS"; then
-  AC_DEFINE(XP_BEOS)
-elif test "$OS_ARCH" = "Darwin"; then
+if test "$OS_ARCH" = "Darwin"; then
   AC_DEFINE(XP_MACOSX)
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)

@@ -333,12 +333,6 @@ LIBPATH=${MOZ_DIST_BIN}:${MRE_HOME}${LIBPATH:+":$LIBPATH"}
 ## Set DYLD_LIBRARY_PATH for Mac OS X (Darwin)
 DYLD_LIBRARY_PATH=${MOZ_DIST_BIN}:${MRE_HOME}${DYLD_LIBRARY_PATH:+":$DYLD_LIBRARY_PATH"}
 #
-## Set LIBRARY_PATH for BeOS
-LIBRARY_PATH=${MOZ_DIST_BIN}:${MOZ_DIST_BIN}/components:${MRE_HOME}${LIBRARY_PATH:+":$LIBRARY_PATH"}
-#
-## Set ADDON_PATH for BeOS
-ADDON_PATH=${MOZ_DIST_BIN}${ADDON_PATH:+":$ADDON_PATH"}
-#
 ## Solaris Xserver(Xsun) tuning - use shared memory transport if available
 if [ "$XSUNTRANSPORT" = "" ]
 then 
