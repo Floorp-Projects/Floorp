@@ -3484,6 +3484,12 @@ DOMGCCallback(JSContext *cx, JSGCStatus status)
         nsJSContext::PokeCC();
       }
     }
+
+    // If we didn't end up scheduling a GC, and there are unused
+    // chunks waiting to expire, make sure we will GC again soon.
+    if (!sGCTimer && JS_GetGCParameter(cx->runtime, JSGC_UNUSED_CHUNKS) > 0) {
+      nsJSContext::PokeGC();
+    }
   }
 
   JSBool result = gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
