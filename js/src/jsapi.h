@@ -1785,7 +1785,10 @@ typedef enum JSGCParamKey {
     JSGC_MAX_CODE_CACHE_BYTES = 6,
 
     /* Select GC mode. */
-    JSGC_MODE = 7
+    JSGC_MODE = 7,
+
+    /* Number of GC chunks waiting to expire. */
+    JSGC_UNUSED_CHUNKS = 8
 } JSGCParamKey;
 
 typedef enum JSGCMode {
