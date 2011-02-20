@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+"use strict";
+
+var f2;
+
+function newIframe()
+{
+  var f = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
+  f.setAttributeNS(null, "src", "631421.png");
+  document.body.appendChild(f);
+  return f;
+}
+
+function b1()
+{
+  void newIframe();
+  f2 = newIframe();
+  setTimeout(b2, 0);
+}
+
+function b2()
+{
+  document.body.removeChild(f2);
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="b1();"></body>
+</html>
