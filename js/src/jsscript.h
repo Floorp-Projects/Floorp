@@ -514,10 +514,6 @@ struct JSScript {
         return (JSTryNoteArray *) ((uint8 *) (this + 1) + trynotesOffset);
     }
 
-    bool hasGlobals() const {
-        return isValidOffset(globalsOffset);
-    }
-
     js::GlobalSlotArray *globals() {
         JS_ASSERT(isValidOffset(globalsOffset));
         return (js::GlobalSlotArray *) ((uint8 *) (this + 1) + globalsOffset);
