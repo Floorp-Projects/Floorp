@@ -340,7 +340,6 @@ struct Chunk {
                                         sizeof(MarkingDelay);
 
     static const size_t ArenasPerChunk = (GC_CHUNK_SIZE - sizeof(ChunkInfo)) / BytesPerArena;
-    static const size_t MaxAge = 3;
 
     Arena<FreeCell> arenas[ArenasPerChunk];
     ArenaBitmap     bitmaps[ArenasPerChunk];
@@ -362,7 +361,6 @@ struct Chunk {
     void releaseArena(Arena<T> *a);
 
     JSRuntime *getRuntime();
-    bool expire();
 };
 JS_STATIC_ASSERT(sizeof(Chunk) <= GC_CHUNK_SIZE);
 JS_STATIC_ASSERT(sizeof(Chunk) + Chunk::BytesPerArena > GC_CHUNK_SIZE);
