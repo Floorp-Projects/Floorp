@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=633762
+-->
+<head>
+  <title>Test for Bug 633762</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+</head>
+<body>
+<p><a target="_blank" href="https://bugzilla.mozilla.org/show_bug?id=633762">Mozilla Bug 633762</a>
+
+<iframe id="i" src="bug633762_iframe.html#a"></iframe>
+
+<pre id="test">
+<script>
+
+var doc;
+
+function runTests() {
+  var i = document.getElementById("i");
+  doc = i.contentDocument;
+  var win = i.contentWindow;
+  // set display none on b
+  doc.getElementById("b").style.display = "none";
+  // flush layout
+  doc.documentElement.offsetLeft;
+  // click in middle of iframe document to give it focus
+  synthesizeMouseAtCenter(i, {}, win);
+  win.focus();
+  // record scrolltop
+  scrollTopBefore = doc.body.scrollTop;
+  // send up arrow key event
+  sendKey("UP", doc.body);
+
+  setTimeout("finish();", 0);
+}
+
+function finish() {
+  // assert that scroll top is now less than before
+  ok(scrollTopBefore > doc.body.scrollTop, "pressing up arrow should scroll up");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+</script>
+</pre>
+
+</body>
+</html>
