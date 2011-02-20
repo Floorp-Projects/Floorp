@@ -3,6 +3,7 @@ let testURL_01 = baseURI + "browser_scrollbar.sjs?";
 
 let gCurrentTest = null;
 let gTests = [];
+let gOpenedTabs = []; // for cleanup
 
 //------------------------------------------------------------------------------
 // Iterating tests by shifting test out one by one as runNextTest is called.
@@ -60,36 +61,36 @@ gTests.push({
 
   run: function() {
     waitForPageShow(testURL_01 + "blank", gCurrentTest.checkNotScrollable);
-    Browser.addTab(testURL_01 + "blank", true);
+    gOpenedTabs.push(Browser.addTab(testURL_01 + "blank", true));
   },
 
   checkNotScrollable: function() {
     checkScrollbars(false, false);
 
     waitForPageShow(testURL_01 + "horizontal", gCurrentTest.checkHorizontalScrollable);
-    Browser.addTab(testURL_01 + "horizontal", true);
+    gOpenedTabs.push(Browser.addTab(testURL_01 + "horizontal", true));
   },
 
   checkHorizontalScrollable: function() {
     checkScrollbars(true, false);
 
     waitForPageShow(testURL_01 + "vertical", gCurrentTest.checkVerticalScrollable);
-    Browser.addTab(testURL_01 + "vertical", true);
+    gOpenedTabs.push(Browser.addTab(testURL_01 + "vertical", true));
   },
 
   checkVerticalScrollable: function() {
     checkScrollbars(false, true);
 
     waitForPageShow(testURL_01 + "both", gCurrentTest.checkBothScrollable);
-    Browser.addTab(testURL_01 + "both", true);
+    gOpenedTabs.push(Browser.addTab(testURL_01 + "both", true));
   },
 
   checkBothScrollable: function() {
     checkScrollbars(true, true);
     Elements.browsers.addEventListener("PanFinished", function(aEvent) {
       setTimeout(function() {
-        while (Browser.tabs.length > 1)
-          BrowserUI.closeTab();
+        for (let iTab=0; iTab<gOpenedTabs.length; iTab++)
+          Browser.closeTab(gOpenedTabs[iTab]);
       }, 0);
     }, false);
     runNextTest();
