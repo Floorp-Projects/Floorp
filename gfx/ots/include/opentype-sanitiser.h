@@ -14,12 +14,16 @@ typedef int int32_t;
 typedef unsigned int uint32_t;
 typedef __int64 int64_t;
 typedef unsigned __int64 uint64_t;
-#include <Winsock2.h>  // for htons/ntohs
+#else
+#include <stdint.h>
+#endif
+
+#ifdef _WIN32
+#include <winsock2.h>  // for htons/ntohs
 #undef min
 #undef max
 #else
 #include <arpa/inet.h>
-#include <stdint.h>
 #endif
 
 #include <algorithm>  // for std::min
