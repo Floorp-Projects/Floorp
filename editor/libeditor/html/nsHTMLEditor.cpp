@@ -170,13 +170,7 @@ nsHTMLEditor::~nsHTMLEditor()
   
   // Clean up after our anonymous content -- we don't want these nodes to
   // stay around (which they would, since the frames have an owning reference).
-
-  if (mAbsolutelyPositionedObject)
-    HideGrabber();
-  if (mInlineEditedCell)
-    HideInlineTableEditingUI();
-  if (mResizedObject)
-    HideResizers();
+  HideAnonymousEditingUIs();
 
   //the autopointers will clear themselves up. 
   //but we need to also remove the listeners or we have a leak
@@ -223,6 +217,17 @@ nsHTMLEditor::~nsHTMLEditor()
   RemoveEventListeners();
 }
 
+void
+nsHTMLEditor::HideAnonymousEditingUIs()
+{
+  if (mAbsolutelyPositionedObject)
+    HideGrabber();
+  if (mInlineEditedCell)
+    HideInlineTableEditingUI();
+  if (mResizedObject)
+    HideResizers();
+}
+
 /* static */
 void
 nsHTMLEditor::Shutdown()
@@ -236,11 +241,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLEditor, nsPlaintextEditor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTypeInState)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTextServices)
 
-  tmp->HideResizers();
-
-  tmp->HideGrabber();
-
-  tmp->HideInlineTableEditingUI();
+  tmp->HideAnonymousEditingUIs();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLEditor, nsPlaintextEditor)
