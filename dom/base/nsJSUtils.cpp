@@ -190,18 +190,19 @@ nsJSUtils::GetCurrentlyRunningCodeWindowID(JSContext *aContext)
   if (!aContext)
     return 0;
 
-  JSObject *jsGlobal;
-  if (!JS_GetGlobalForCallingScript(aContext, &jsGlobal) || !jsGlobal)
-    return 0;
+  PRUint64 windowID = 0;
 
-  JSAutoEnterCompartment ac;
-  if (!ac.enter(aContext, jsGlobal))
-    return 0;
-  nsIScriptGlobalObject *sg = GetStaticScriptGlobal(aContext, jsGlobal);
-  if (!sg)
-    return 0;
+  JSObject *jsGlobal = JS_GetGlobalForScopeChain(aContext);
+  if (jsGlobal) {
+    nsIScriptGlobalObject *scriptGlobal = GetStaticScriptGlobal(aContext,
+                                                                jsGlobal);
+    if (scriptGlobal) {
+      nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(scriptGlobal);
+      if (win)
+        windowID = win->GetOuterWindow()->WindowID();
+    }
+  }
 
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(sg);
-  return win ? win->GetOuterWindow()->WindowID() : 0;
+  return windowID;
 }
 

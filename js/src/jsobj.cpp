@@ -4242,17 +4242,33 @@ JSBool
 js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
                    Value *vp, Class *clasp)
 {
+    JSStackFrame *fp;
     JSObject *obj, *cobj, *pobj;
     jsid id;
     JSProperty *prop;
     const Shape *shape;
 
+    /*
+     * Find the global object. Use cx->fp() directly to avoid falling off
+     * trace; all JIT-elided stack frames have the same global object as
+     * cx->fp().
+     */
+    VOUCH_DOES_NOT_REQUIRE_STACK();
+    if (!start && (fp = cx->maybefp()) != NULL)
+        start = &fp->scopeChain();
+
     if (start) {
-        obj = start->getGlobal();
+        /* Find the topmost object in the scope chain. */
+        do {
+            obj = start;
+            start = obj->getParent();
+        } while (start);
     } else {
-        obj = cx->getGlobalFromScopeChain();
-        if (!obj)
-            return JS_FALSE;
+        obj = cx->globalObject;
+        if (!obj) {
+            vp->setUndefined();
+            return JS_TRUE;
+        }
     }
 
     OBJ_TO_INNER_OBJECT(cx, obj);
@@ -6173,9 +6189,15 @@ js_GetClassPrototype(JSContext *cx, JSObject *scopeobj, JSProtoKey protoKey,
 
     if (protoKey != JSProto_Null) {
         if (!scopeobj) {
-            scopeobj = cx->getGlobalFromScopeChain();
-            if (!scopeobj)
-                return false;
+            if (cx->hasfp())
+                scopeobj = &cx->fp()->scopeChain();
+            if (!scopeobj) {
+                scopeobj = cx->globalObject;
+                if (!scopeobj) {
+                    *protop = NULL;
+                    return true;
+                }
+            }
         }
         scopeobj = scopeobj->getGlobal();
         if (scopeobj->isGlobal()) {
