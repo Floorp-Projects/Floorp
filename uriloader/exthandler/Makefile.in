@@ -65,7 +65,6 @@ endif
 endif
 endif
 endif
-endif
 
 VPATH		:= $(srcdir) $(srcdir)/$(OSDIR)
 
