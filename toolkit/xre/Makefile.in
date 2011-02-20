@@ -112,7 +112,6 @@ endif
 endif
 endif
 endif
-endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS += MacLaunchHelper.mm
