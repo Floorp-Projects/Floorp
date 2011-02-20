@@ -3365,8 +3365,6 @@ nsJSContext::PokeGC()
 
   if (!sGCTimer) {
     NS_WARNING("Failed to create timer");
-
-    GarbageCollectNow();
     return;
   }
 
@@ -3403,8 +3401,6 @@ nsJSContext::PokeCC()
 
   if (!sCCTimer) {
     NS_WARNING("Failed to create timer");
-
-    CycleCollectNow();
     return;
   }
 
