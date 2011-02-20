@@ -1310,7 +1310,7 @@ Browser.WebProgress.prototype = {
         let location = spec.split("#")[0]; // Ignore fragment identifier changes.
 
         if (tab == Browser.selectedTab)
-          BrowserUI.updateURI({ captionOnly: true }); // Do less for more speed
+          BrowserUI.updateURI();
 
         let locationHasChanged = (location != tab.browser.lastLocation);
         if (locationHasChanged) {
@@ -1372,11 +1372,8 @@ Browser.WebProgress.prototype = {
   _networkStop: function _networkStop(aTab) {
     aTab.endLoading();
 
-    if (aTab == Browser.selectedTab) {
-      // Now that pageload is finished, do the more expensive updates
-      BrowserUI.updateURI();
+    if (aTab == Browser.selectedTab)
       BrowserUI.update(TOOLBARSTATE_LOADED);
-    }
 
     if (aTab.browser.currentURI.spec != "about:blank")
       aTab.updateThumbnail();
@@ -2573,6 +2570,9 @@ Tab.prototype = {
   },
 
   scrolledAreaChanged: function scrolledAreaChanged() {
+    if (!this._browser)
+      return;
+
     this.updateDefaultZoomLevel();
 
     if (!this.useFallbackWidth && this._browser.contentDocumentWidth > kDefaultBrowserWidth)
