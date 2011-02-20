@@ -114,7 +114,7 @@ ReturnKeyRange(JSContext* aCx,
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   NS_ASSERTION(xpc, "This should never be null!");
 
-  JSObject* global = JS_GetGlobalForScopeChain(aCx);
+  JSObject* global = JS_GetGlobalForObject(aCx, JS_GetScopeChain(aCx));
   NS_ENSURE_TRUE(global, JS_FALSE);
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;

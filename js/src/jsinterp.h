@@ -196,7 +196,7 @@ struct JSStackFrame
                               uint32 nactual, uint32 flags);
 
     /* Used for SessionInvoke. */
-    inline void resetInvokeCallFrame(JSContext *cx);
+    inline void resetInvokeCallFrame();
 
     /* Called by method-jit stubs and serve as a specification for jit-code. */
     inline void initCallFrameCallerHalf(JSContext *cx, uint32 flags, void *ncode);
@@ -802,6 +802,9 @@ GetBlockChain(JSContext *cx, JSStackFrame *fp);
 
 extern JSObject *
 GetBlockChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen);
+
+extern JSObject *
+GetScopeChain(JSContext *cx);
 
 /*
  * Refresh and return fp->scopeChain.  It may be stale if block scopes are

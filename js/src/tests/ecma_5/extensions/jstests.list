@@ -9,7 +9,6 @@ script bug352085.js
 script bug472534.js
 script bug496985.js
 script bug566661.js
-skip-if(!xulRuntime.shell) script cross-global-call.js # needs newGlobal()
 script eval-native-callback-is-indirect.js
 script extension-methods-reject-null-undefined-this.js
 skip-if(!xulRuntime.shell) script function-definition-with.js # needs evaluate()
