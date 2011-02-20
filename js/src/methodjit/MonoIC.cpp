@@ -808,19 +808,9 @@ class CallCompiler : public BaseCompiler
         if (!CallJSNative(cx, fun->u.n.native, ic.frameSize.getArgc(f), vp))
             THROWV(true);
 
-        /*
-         * Right now, take slow-path for IC misses or multiple stubs. Also take
-         * it if the call crosses, or might cross, globals: in that case
-         * JSContext::getGlobalFromScopeChain requires we note the change of
-         * global.
-         */
-        if (ic.fastGuardedNative ||
-            ic.hasJsFunCheck ||
-            !f.regs.fp->script()->compileAndGo ||
-            obj->getGlobal() != f.regs.fp->scopeChain().getGlobal())
-        {
+        /* Right now, take slow-path for IC misses or multiple stubs. */
+        if (ic.fastGuardedNative || ic.hasJsFunCheck)
             return true;
-        }
 
         /* Native MIC needs to warm up first. */
         if (!ic.hit) {

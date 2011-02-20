@@ -803,6 +803,9 @@ GetBlockChain(JSContext *cx, JSStackFrame *fp);
 extern JSObject *
 GetBlockChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen);
 
+extern JSObject *
+GetScopeChain(JSContext *cx);
+
 /*
  * Refresh and return fp->scopeChain.  It may be stale if block scopes are
  * active but not yet reflected by objects in the scope chain.  If a block

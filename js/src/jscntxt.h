@@ -245,10 +245,6 @@ class StackSegment
     /* Whether this segment was suspended by JS_SaveFrameChain. */
     bool                saved;
 
-    /* Maintained to implement getGlobalFromScopeChain. */
-    JSObject            *savedLastNativeCalleeScope_;
-    void                *savedLastNativeCalleeScopePtr_;
-
     /* Align at 8 bytes on all platforms. */
 #if JS_BITS_PER_WORD == 32
     void                *padding;
@@ -264,8 +260,7 @@ class StackSegment
     StackSegment()
       : cx(NULL), previousInContext(NULL), previousInMemory(NULL),
         initialFrame(NULL), suspendedRegs(NON_NULL_SUSPENDED_REGS),
-        initialVarObj(NULL), saved(false), savedLastNativeCalleeScope_(NULL),
-         savedLastNativeCalleeScopePtr_(NULL)
+        initialVarObj(NULL), saved(false)
     {
         JS_ASSERT(!inContext());
     }
@@ -353,9 +348,19 @@ class StackSegment
 
     /* When isSuspended, transitioning isSaved <--> !isSaved */
 
-    void save(JSFrameRegs *regs, JSObject *lastNativeCalleeScope, void *lastNativeCalleeScopePtr);
+    void save(JSFrameRegs *regs) {
+        JS_ASSERT(!isSuspended());
+        suspend(regs);
+        saved = true;
+        JS_ASSERT(isSaved());
+    }
 
-    void restore();
+    void restore() {
+        JS_ASSERT(isSaved());
+        saved = false;
+        resume();
+        JS_ASSERT(!isSuspended());
+    }
 
     /* Data available when inContext */
 
@@ -409,21 +414,6 @@ class StackSegment
     JSObject &getInitialVarObj() const {
         JS_ASSERT(inContext() && initialVarObj);
         return *initialVarObj;
-    }
-
-    bool hasLastNativeCalleeScope() const {
-        JS_ASSERT(inContext());
-        return savedLastNativeCalleeScope_ != NULL;
-    }
-
-    JSObject *lastNativeCalleeScope() const {
-        JS_ASSERT(inContext());
-        return savedLastNativeCalleeScope_;
-    }
-
-    void *lastNativeCalleeScopePtr() const {
-        JS_ASSERT(inContext());
-        return savedLastNativeCalleeScopePtr_;
     }
 
 #ifdef DEBUG
@@ -633,6 +623,8 @@ class StackSpace
     inline void popInvokeArgs(const InvokeArgsGuard &args);
     inline void popInvokeFrame(const InvokeFrameGuard &ag);
 
+    inline Value *firstUnused() const;
+
     inline bool isCurrentAndActive(JSContext *cx) const;
     friend class AllFramesIter;
     StackSegment *getCurrentSegment() const { return currentSegment; }
@@ -641,11 +633,6 @@ class StackSpace
     /* Commit more memory from the reserved stack space. */
     JS_FRIEND_API(bool) bumpCommit(Value *from, ptrdiff_t nvals) const;
 #endif
-
-    /* The first stack location available to push new values and frames. */
-    inline js::Value *firstUnused() const;
-  public:
-    inline void *constFirstUnused() const;
 
   public:
     static const size_t CAPACITY_VALS   = 512 * 1024;
@@ -1697,32 +1684,6 @@ struct JSContext
         return !!regs;
     }
 
-    /*
-     * An object created for the global of the currently executing native
-     * method, native getter, or native setter (or null if none is executing),
-     * used for scope chain computation.  The exact identity of this value is
-     * unspecified: function calls and property accesses fill this with
-     * different values, and the trace JIT and method JIT don't update the
-     * value during intra-global-object method calls and property accesses.
-     */
-    JSObject *lastNativeCalleeScope;
-
-    /*
-     * A JavaScript stack location associated with a native call/property
-     * access.
-     */
-    void *lastNativeCalleeScopePtr;
-
-    /*
-     * Computes the global object corresponding to the current scope chain, as
-     * determined by the current callee if one exists, by the object being
-     * accessed if a native property operation is occurring, or by the context
-     * global object if one does not.
-     */
-    inline JSObject *getGlobalFromScopeChain();
-
-    void reportInactive();
-
   public:
     friend class js::StackSpace;
     friend bool js::Interpret(JSContext *, JSStackFrame *, uintN, JSInterpMode);
@@ -1807,7 +1768,7 @@ struct JSContext
         return currentSegment;
     }
 
-    inline js::RegExpStatics *getRegExpStatics();
+    inline js::RegExpStatics *regExpStatics();
 
     /* Add the given segment to the list as the new active segment. */
     void pushSegmentAndFrame(js::StackSegment *newseg, JSFrameRegs &regs);

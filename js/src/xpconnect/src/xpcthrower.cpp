@@ -317,9 +317,10 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
         }
         else if((xpc = nsXPConnect::GetXPConnect()))
         {
-            JSObject* glob = JS_GetGlobalForScopeChain(cx);
+            JSObject* glob = JS_GetScopeChain(cx);
             if(!glob)
                 return JS_FALSE;
+            glob = JS_GetGlobalForObject(cx, glob);
 
             nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
             nsresult rv = xpc->WrapNative(cx, glob, e,
