@@ -22,4 +22,3 @@ script regress-450871-02.js
 script regress-462734-01.js
 script extensibility.js
 script regress-595207.js
-skip-if(!xulRuntime.shell) script cross-global-settings.js

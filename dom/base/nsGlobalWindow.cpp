@@ -5804,17 +5804,30 @@ nsGlobalWindow::CallerInnerWindow()
     return nsnull;
   }
 
-  JSObject *callerGlobal;
-  if (!::JS_GetGlobalForCallingScript(cx, &callerGlobal) || !callerGlobal)
-      return nsnull;
+  JSObject *scope = nsnull;
+  JSStackFrame *fp = nsnull;
+  JS_FrameIterator(cx, &fp);
+  if (fp) {
+    while (fp->isDummyFrame()) {
+      if (!JS_FrameIterator(cx, &fp))
+        break;
+    }
+
+    if (fp)
+      scope = &fp->scopeChain();
+  }
+
+  if (!scope)
+    scope = JS_GetScopeChain(cx);
 
   JSAutoEnterCompartment ac;
-  if (!ac.enter(cx, callerGlobal))
+  if (!ac.enter(cx, scope))
     return nsnull;
 
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
   nsContentUtils::XPConnect()->
-    GetWrappedNativeOfJSObject(cx, callerGlobal, getter_AddRefs(wrapper));
+    GetWrappedNativeOfJSObject(cx, ::JS_GetGlobalForObject(cx, scope),
+                               getter_AddRefs(wrapper));
   if (!wrapper)
     return nsnull;
 

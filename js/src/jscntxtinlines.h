@@ -49,51 +49,41 @@
 #include "jsregexp.h"
 #include "jsgc.h"
 
+namespace js {
+
+static inline JSObject *
+GetGlobalForScopeChain(JSContext *cx)
+{
+    /*
+     * This is essentially GetScopeChain(cx)->getGlobal(), but without
+     * falling off trace.
+     *
+     * This use of cx->fp, possibly on trace, is deliberate:
+     * cx->fp->scopeChain->getGlobal() returns the same object whether we're on
+     * trace or not, since we do not trace calls across global objects.
+     */
+    VOUCH_DOES_NOT_REQUIRE_STACK();
+
+    if (cx->hasfp())
+        return cx->fp()->scopeChain().getGlobal();
+
+    JSObject *scope = cx->globalObject;
+    if (!scope) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
+        return NULL;
+    }
+    OBJ_TO_INNER_OBJECT(cx, scope);
+    return scope;
+}
+
+}
+
 #ifdef JS_METHODJIT
 inline js::mjit::JaegerCompartment *JSContext::jaegerCompartment()
 {
     return compartment->jaegerCompartment;
 }
 #endif
-
-inline JSObject *
-JSContext::getGlobalFromScopeChain()
-{
-    if (regs) {
-        /*
-         * It's fine if the frame is stale on-trace, because we don't trace
-         * calls crossing globals.
-         */
-        VOUCH_DOES_NOT_REQUIRE_STACK();
-
-        /* Consult the frame if it's newer than any last native call. */
-        if (regs->fp > lastNativeCalleeScopePtr)
-            return regs->fp->scopeChain().getGlobal();
-
-        /* Otherwise the callee gives us our global object. */
-        JS_ASSERT(lastNativeCalleeScopePtr <= stack().constFirstUnused());
-        JS_ASSERT(currentSegment < lastNativeCalleeScopePtr);
-        return lastNativeCalleeScope->getGlobal();
-    }
-
-    /* If we have only native calls, consult the last one. */
-    if (lastNativeCalleeScope) {
-        JS_ASSERT(lastNativeCalleeScopePtr <= stack().constFirstUnused());
-        return lastNativeCalleeScope->getGlobal();
-    }
-
-    /*
-     * If no native call has occurred, this is a free-floating request for
-     * a global: return the context globalObject if possible.
-     */
-    JSObject *globalObj = globalObject;
-    if (!globalObj) {
-        reportInactive();
-        return NULL;
-    }
-    OBJ_TO_INNER_OBJECT(this, globalObj);
-    return globalObj;
-}
 
 inline bool
 JSContext::ensureGeneratorStackSpace()
@@ -120,36 +110,12 @@ JSContext::computeNextFrame(JSStackFrame *fp)
 }
 
 inline js::RegExpStatics *
-JSContext::getRegExpStatics()
+JSContext::regExpStatics()
 {
-    JSObject *global = getGlobalFromScopeChain();
-    if (!global)
-        return NULL;
-    return js::RegExpStatics::extractFrom(global);
+    return js::RegExpStatics::extractFrom(js::GetGlobalForScopeChain(this));
 }
 
 namespace js {
-
-JS_ALWAYS_INLINE void
-StackSegment::save(JSFrameRegs *regs, JSObject *lastNativeCalleeScope,
-                   void *lastNativeCalleeScopePtr)
-{
-    JS_ASSERT(!isSuspended());
-    suspend(regs);
-    saved = true;
-    savedLastNativeCalleeScope_ = lastNativeCalleeScope;
-    savedLastNativeCalleeScopePtr_ = lastNativeCalleeScopePtr;
-    JS_ASSERT(isSaved());
-}
-
-JS_ALWAYS_INLINE void
-StackSegment::restore()
-{
-    JS_ASSERT(isSaved());
-    saved = false;
-    resume();
-    JS_ASSERT(!isSuspended());
-}
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE JSFrameRegs *
 StackSegment::getCurrentRegs() const
@@ -185,12 +151,6 @@ StackSpace::firstUnused() const
     JS_ASSERT(invokeArgEnd);
     JS_ASSERT(invokeSegment == currentSegment);
     return invokeArgEnd;
-}
-
-JS_REQUIRES_STACK inline void *
-StackSpace::constFirstUnused() const
-{
-    return firstUnused();
 }
 
 
@@ -572,7 +532,7 @@ class CompartmentChecker
 
   public:
     explicit CompartmentChecker(JSContext *cx) : context(cx), compartment(cx->compartment) {
-        check(cx->getGlobalFromScopeChain());
+        check(cx->hasfp() ? JS_GetGlobalForScopeChain(cx) : cx->globalObject);
         VOUCH_DOES_NOT_REQUIRE_STACK();
     }
 
@@ -730,35 +690,6 @@ assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
 
 #undef START_ASSERT_SAME_COMPARTMENT
 
-namespace detail {
-
-class AutoScopeChainSetter {
-    JSContext * const cx;
-    JSObject * const oldLastNativeCalleeScope;
-    void * const oldLastNativeCalleeScopePtr;
-    JSObject * const scope;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-  public:
-    AutoScopeChainSetter(JSContext *cx, JSObject *scope, void *scopePtr
-                         JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : cx(cx),
-        oldLastNativeCalleeScope(cx->lastNativeCalleeScope),
-        oldLastNativeCalleeScopePtr(cx->lastNativeCalleeScopePtr),
-        scope(scope)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-        cx->lastNativeCalleeScope = scope;
-        cx->lastNativeCalleeScopePtr = scopePtr;
-    }
-    ~AutoScopeChainSetter() {
-        cx->lastNativeCalleeScope = oldLastNativeCalleeScope;
-        cx->lastNativeCalleeScopePtr = oldLastNativeCalleeScopePtr;
-    }
-};
-
-}
-
 STATIC_PRECONDITION_ASSUME(ubound(vp) >= argc + 2)
 JS_ALWAYS_INLINE bool
 CallJSNative(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
@@ -766,7 +697,6 @@ CallJSNative(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
 #ifdef DEBUG
     JSBool alreadyThrowing = cx->isExceptionPending();
 #endif
-    detail::AutoScopeChainSetter scs(cx, &vp[0].toObject(), vp);
     assertSameCompartment(cx, ValueArray(vp, argc + 2));
     JSBool ok = native(cx, argc, vp);
     if (ok) {
@@ -817,15 +747,6 @@ JS_ALWAYS_INLINE bool
 CallJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
 {
     assertSameCompartment(cx, obj, id, *vp);
-
-    /*
-     * This property access may occur not in relation to a stack location, so
-     * we can't use |vp| here.  However, since we use the location only in
-     * comparisons, to determine when to refer to the last interpreted frame's
-     * scope chain versus the last native callee's global object, the first
-     * unused location at the end of the stack will suffice.
-     */
-    detail::AutoScopeChainSetter scs(cx, obj, cx->stack().constFirstUnused());
     JSBool ok = op(cx, obj, id, vp);
     if (ok)
         assertSameCompartment(cx, obj, *vp);
@@ -837,9 +758,6 @@ CallJSPropertyOpSetter(JSContext *cx, js::StrictPropertyOp op, JSObject *obj, js
                        JSBool strict, js::Value *vp)
 {
     assertSameCompartment(cx, obj, id, *vp);
-
-    /* See the comment in CallJSPropertyOp for an explanation. */
-    detail::AutoScopeChainSetter scs(cx, obj, cx->stack().constFirstUnused());
     return op(cx, obj, id, strict, vp);
 }
 

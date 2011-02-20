@@ -971,9 +971,15 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::FinalizeKind kind)
     JS_ASSERT(protoKey != JSProto_Null);
 
     /* NB: inline-expanded and specialized version of js_GetClassPrototype. */
-    JSObject *global = cx->getGlobalFromScopeChain();
-    if (!global)
-        return NULL;
+    JSObject *global;
+    if (!cx->hasfp()) {
+        global = cx->globalObject;
+        OBJ_TO_INNER_OBJECT(cx, global);
+        if (!global)
+            return NULL;
+    } else {
+        global = cx->fp()->scopeChain().getGlobal();
+    }
     JS_ASSERT(global->isGlobal());
 
     const Value &v = global->getReservedSlot(JSProto_LIMIT + protoKey);
