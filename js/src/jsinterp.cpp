@@ -142,6 +142,33 @@ JSStackFrame::pc(JSContext *cx, JSStackFrame *next)
 #endif
 }
 
+JSObject *
+js::GetScopeChain(JSContext *cx)
+{
+    JSStackFrame *fp = js_GetTopStackFrame(cx);
+    if (!fp) {
+        /*
+         * There is no code active on this context. In place of an actual
+         * scope chain, use the context's global object, which is set in
+         * js_InitFunctionAndObjectClasses, and which represents the default
+         * scope chain for the embedding. See also js_FindClassObject.
+         *
+         * For embeddings that use the inner and outer object hooks, the inner
+         * object represents the ultimate global object, with the outer object
+         * acting as a stand-in.
+         */
+        JSObject *obj = cx->globalObject;
+        if (!obj) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
+            return NULL;
+        }
+
+        OBJ_TO_INNER_OBJECT(cx, obj);
+        return obj;
+    }
+    return GetScopeChain(cx, fp);
+}
+
 /*
  * This computes the blockChain by iterating through the bytecode
  * of the current script until it reaches the PC. Each time it sees

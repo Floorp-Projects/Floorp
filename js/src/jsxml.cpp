@@ -1677,32 +1677,6 @@ GetXMLSettingFlags(JSContext *cx, uintN *flagsp)
     return true;
 }
 
-static JSObject *
-GetXMLScopeChain(JSContext *cx)
-{
-    if (JSStackFrame *fp = js_GetTopStackFrame(cx))
-        return GetScopeChain(cx, fp);
-
-    /*
-     * There is no code active on this context. In place of an actual scope
-     * chain, use the context's global object, which is set in
-     * s_InitFunctionAndObjectClasses, and which represents the default scope
-     * chain for the embedding. See also js_FindClassObject.
-     *
-     * For embeddings that use the inner and outer object hooks, the inner
-     * object represents the ultimate global object, with the outer object
-     * acting as a stand-in.
-     */
-    JSObject *obj = cx->globalObject;
-    if (!obj) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
-        return NULL;
-    }
-
-    OBJ_TO_INNER_OBJECT(cx, obj);
-    return obj;
-}
-
 static JSXML *
 ParseXMLSource(JSContext *cx, JSString *src)
 {
@@ -1782,7 +1756,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
     {
         Parser parser(cx);
         if (parser.init(chars, length, filename, lineno, cx->findVersion())) {
-            JSObject *scopeChain = GetXMLScopeChain(cx);
+            JSObject *scopeChain = GetScopeChain(cx);
             if (!scopeChain) {
                 cx->free(chars);
                 return NULL;
@@ -7257,7 +7231,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
     JSObject *ns, *obj, *tmp;
     jsval v;
 
-    JSObject *scopeChain = GetXMLScopeChain(cx);
+    JSObject *scopeChain = GetScopeChain(cx);
 
     obj = NULL;
     for (tmp = scopeChain; tmp; tmp = tmp->getParent()) {

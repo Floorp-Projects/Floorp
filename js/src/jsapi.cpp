@@ -1931,6 +1931,13 @@ JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject **objp)
 }
 
 JS_PUBLIC_API(JSObject *)
+JS_GetScopeChain(JSContext *cx)
+{
+    CHECK_REQUEST(cx);
+    return GetScopeChain(cx);
+}
+
+JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
 {
     assertSameCompartment(cx, obj);
@@ -1941,24 +1948,7 @@ JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForScopeChain(JSContext *cx)
 {
     CHECK_REQUEST(cx);
-    return cx->getGlobalFromScopeChain();
-}
-
-JS_PUBLIC_API(JSBool)
-JS_GetGlobalForCallingScript(JSContext *cx, JSObject **objp)
-{
-    JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
-    if (!fp) {
-        *objp = NULL;
-        return true;
-    }
-
-    JSObject *scope = JS_GetFrameScopeChain(cx, fp);
-    if (!scope)
-        return false;
-
-    *objp = scope->getGlobal();
-    return true;
+    return GetGlobalForScopeChain(cx);
 }
 
 JS_PUBLIC_API(jsval)
