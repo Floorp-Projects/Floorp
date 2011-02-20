@@ -123,14 +123,14 @@ gTests.push({
   desc: "Test the double tap behavior",
 
   run: function() {
-    let browser = gCurrentTab.browser;
-    let width = browser.getBoundingClientRect().width;
-    let height = browser.getBoundingClientRect().height;
+    let inputHandler = gCurrentTab.browser.parentNode;
+    let width = inputHandler.getBoundingClientRect().width;
+    let height = inputHandler.getBoundingClientRect().height;
 
     // Should fire "TapSingle"
     info("Test good single tap");
     clearEvents();
-    EventUtils.synthesizeMouse(browser, width / 2, height / 2, {});
+    EventUtils.synthesizeMouse(inputHandler, width / 2, height / 2, {});
 
     // We wait a bit because of the delay allowed for double clicking on device
     // where it is not native
@@ -142,46 +142,53 @@ gTests.push({
   },
 
   doubleTapTest: function() {
-    let width = window.innerWidth;
-    let height = window.innerHeight;
+    let inputHandler = gCurrentTab.browser.parentNode;
+    let width = inputHandler.getBoundingClientRect().width;
+    let height = inputHandler.getBoundingClientRect().height;
 
     // Should fire "TapDouble"
     info("Test good double tap");
     clearEvents();
-    EventUtils.synthesizeMouse(document.documentElement, width / 2, height / 2, {});
-    EventUtils.synthesizeMouse(document.documentElement, width / 2, height / 2, {});
-    ok(checkEvents(["TapDouble"]), "Fired a good double tap");
-    clearEvents();
+    EventUtils.synthesizeMouse(inputHandler, width / 2, height / 2, {});
+    EventUtils.synthesizeMouse(inputHandler, width / 2, height / 2, {});
 
-    setTimeout(function() { gCurrentTest.doubleTapFailTest(); }, 500);
+    setTimeout(function() {
+      ok(checkEvents(["TapDouble"]), "Fired a good double tap");
+      clearEvents();
+
+      gCurrentTest.doubleTapFailTest();
+    }, 500);
   },
 
   doubleTapFailTest: function() {
-    let browser = gCurrentTab.browser;
-    let width = browser.getBoundingClientRect().width;
-    let height = browser.getBoundingClientRect().height;
+    let inputHandler = gCurrentTab.browser.parentNode;
+    let width = inputHandler.getBoundingClientRect().width;
+    let height = inputHandler.getBoundingClientRect().height;
 
     // Should fire "TapSingle", "TapSingle"
     info("Test two single taps in different locations");
     clearEvents();
-    EventUtils.synthesizeMouse(browser, width / 4, height / 4, {});
-    EventUtils.synthesizeMouse(browser, width * 3 / 4, height * 3 / 4, {});
-    ok(checkEvents(["TapSingle", "TapSingle"]), "Fired two single taps in different places, not a double tap");
-    clearEvents();
+    EventUtils.synthesizeMouse(inputHandler, width / 3, height / 3, {});
+    EventUtils.synthesizeMouse(inputHandler, width * 2 / 3, height * 2 / 3, {});
 
-    setTimeout(function() { gCurrentTest.tapPanTest(); }, 500);
+    setTimeout(function() {
+      ok(checkEvents(["TapSingle", "TapSingle"]), "Fired two single taps in different places, not a double tap");
+      clearEvents();
+
+      gCurrentTest.tapPanTest();
+    }, 500);
   },
 
   tapPanTest: function() {
-    let browser = gCurrentTab.browser;
-    let width = browser.getBoundingClientRect().width;
-    let height = browser.getBoundingClientRect().height;
+    let inputHandler = gCurrentTab.browser.parentNode;
+    let width = inputHandler.getBoundingClientRect().width;
+    let height = inputHandler.getBoundingClientRect().height;
 
     info("Test a pan - non-tap event");
     clearEvents();
-    EventUtils.synthesizeMouse(browser, width / 2, height / 4, { type: "mousedown" });
-    EventUtils.synthesizeMouse(browser, width / 2, height * 3 / 4, { type: "mousemove" });
-    EventUtils.synthesizeMouse(browser, width / 2, height * 3 / 4, { type: "mouseup" });
+    EventUtils.synthesizeMouse(inputHandler, width / 2, height / 3, { type: "mousedown" });
+    EventUtils.synthesizeMouse(inputHandler, width / 2, height * 2 / 3, { type: "mousemove" });
+    EventUtils.synthesizeMouse(inputHandler, width / 2, height * 2 / 3, { type: "mouseup" });
     ok(checkEvents([]), "Fired a pan which should be seen as a non event");
     clearEvents();
 
@@ -189,16 +196,16 @@ gTests.push({
   },
 
   longTapFailTest: function() {
-    let browser = gCurrentTab.browser;
-    let width = browser.getBoundingClientRect().width;
-    let height = browser.getBoundingClientRect().height;
+    let inputHandler = gCurrentTab.browser.parentNode;
+    let width = inputHandler.getBoundingClientRect().width;
+    let height = inputHandler.getBoundingClientRect().height;
 
     info("Test a long pan - non-tap event");
     clearEvents();
-    EventUtils.synthesizeMouse(browser, width / 2, height / 4, { type: "mousedown" });
-    EventUtils.synthesizeMouse(browser, width / 2, height * 3 / 4, { type: "mousemove" });
+    EventUtils.synthesizeMouse(inputHandler, width / 2, height / 3, { type: "mousedown" });
+    EventUtils.synthesizeMouse(inputHandler, width / 2, height * 2 / 3, { type: "mousemove" });
     setTimeout(function() {
-      EventUtils.synthesizeMouse(browser, width / 2, height * 3 / 4, { type: "mouseup" });
+      EventUtils.synthesizeMouse(inputHandler, width / 2, height * 2 / 3, { type: "mouseup" });
       ok(checkEvents([]), "Fired a pan + delay which should be seen as a non-event");
       clearEvents();
 
@@ -208,12 +215,13 @@ gTests.push({
 
   longTapPassTest: function() {
     let browser = gCurrentTab.browser;
-    let width = browser.getBoundingClientRect().width;
-    let height = browser.getBoundingClientRect().height;
+    let inputHandler = browser.parentNode;
+    let width = inputHandler.getBoundingClientRect().width;
+    let height = inputHandler.getBoundingClientRect().height;
 
     window.addEventListener("TapLong", function() {
       window.removeEventListener("TapLong", arguments.callee, true);
-      EventUtils.synthesizeMouse(browser, width / 2, height / 4, { type: "mouseup" });
+      EventUtils.synthesizeMouse(inputHandler, width / 2, height / 2, { type: "mouseup" });
       ok(checkEvents(["TapLong"]), "Fired a good long tap");
       clearEvents();
     }, true);
@@ -225,7 +233,7 @@ gTests.push({
 
     info("Test a good long pan");
     clearEvents();
-    EventUtils.synthesizeMouse(browser, width / 2, height / 4, { type: "mousedown" });
+    EventUtils.synthesizeMouse(inputHandler, width / 2, height / 2, { type: "mousedown" });
   },
 
   contextPlainLinkTest: function() {
