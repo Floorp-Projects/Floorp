@@ -2644,6 +2644,8 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
         return rt->gcBytes;
       case JSGC_MODE:
         return uint32(rt->gcMode);
+      case JSGC_UNUSED_CHUNKS:
+        return uint32(rt->gcChunksWaitingToExpire);
       default:
         JS_ASSERT(key == JSGC_NUMBER);
         return rt->gcNumber;
