@@ -3639,7 +3639,6 @@ resolver_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **
     JS_ALWAYS_TRUE(JS_GetReservedSlot(cx, obj, 0, &v));
     return CopyProperty(cx, obj, JSVAL_TO_OBJECT(v), id, flags, objp);
 }
-static JSNewResolveOp resolver_resolve_check = resolver_resolve;
 
 static JSBool
 resolver_enumerate(JSContext *cx, JSObject *obj)
