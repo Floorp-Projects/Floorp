@@ -45,10 +45,10 @@
 
 
 /**
- * XXX to get CAIRO_HAS_D2D_SURFACE and
- * CAIRO_HAS_DWRITE_FONT
+ * XXX to get CAIRO_HAS_D2D_SURFACE, CAIRO_HAS_DWRITE_FONT
+ * and cairo_win32_scaled_font_select_font
  */
-#include "cairo.h"
+#include "cairo-win32.h"
 
 #include "gfxFontUtils.h"
 #include "gfxWindowsSurface.h"
