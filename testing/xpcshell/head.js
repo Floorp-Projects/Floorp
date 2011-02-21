@@ -1,3 +1,4 @@
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -23,6 +24,7 @@
  *  Boris Zbarsky <bzbarsky@mit.edu>
  *  Jeff Walden <jwalden+code@mit.edu>
  *  Serge Gautherie <sgautherie.bz@free.fr>
+ *  Kyle Huey <me@kylehuey.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,6 +50,7 @@ var _quit = false;
 var _passed = true;
 var _tests_pending = 0;
 var _passedChecks = 0, _falsePassedChecks = 0;
+var _todoChecks = 0;
 var _cleanupFunctions = [];
 var _pendingTimers = [];
 
@@ -359,6 +362,8 @@ function _execute_test() {
   if (truePassedChecks > 0) {
     _dump("TEST-PASS | (xpcshell/head.js) | " + truePassedChecks + " (+ " +
             _falsePassedChecks + ") check(s) passed\n");
+    _dump("TEST-INFO | (xpcshell/head.js) | " + _todoChecks +
+            " check(s) todo\n");
   } else {
     // ToDo: switch to TEST-UNEXPECTED-FAIL when all tests have been updated. (Bug 496443)
     _dump("TEST-INFO | (xpcshell/head.js) | No (+ " + _falsePassedChecks + ") checks actually run\n");
@@ -446,6 +451,23 @@ function do_throw(text, stack) {
   throw Components.results.NS_ERROR_ABORT;
 }
 
+function do_throw_todo(text, stack) {
+  if (!stack)
+    stack = Components.stack.caller;
+
+  _passed = false;
+  _dump("TEST-UNEXPECTED-PASS | " + stack.filename + " | " + text +
+         " - See following stack:\n");
+  var frame = Components.stack;
+  while (frame != null) {
+    _dump(frame + "\n");
+    frame = frame.caller;
+  }
+
+  _do_quit();
+  throw Components.results.NS_ERROR_ABORT;
+}
+
 function do_report_unexpected_exception(ex, text) {
   var caller_stack = Components.stack.caller;
   text = text ? text + " - " : "";
@@ -468,17 +490,65 @@ function do_note_exception(ex, text) {
          "\n");
 }
 
-function do_check_neq(left, right, stack) {
+function _do_check_neq(left, right, stack, todo) {
   if (!stack)
     stack = Components.stack.caller;
 
   var text = left + " != " + right;
   if (left == right) {
-    do_throw(text, stack);
+    if (!todo) {
+      do_throw(text, stack);
+    } else {
+      ++_todoChecks;
+      _dump("TEST-KNOWN-FAIL | " + stack.filename + " | [" + stack.name +
+            " : " + stack.lineNumber + "] " + text +"\n");
+    }
   } else {
-    ++_passedChecks;
-    _dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
-         stack.lineNumber + "] " + text + "\n");
+    if (!todo) {
+      ++_passedChecks;
+      _dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
+            stack.lineNumber + "] " + text + "\n");
+    } else {
+      do_throw_todo(text, stack);
+    }
+  }
+}
+
+function do_check_neq(left, right, stack) {
+  if (!stack)
+    stack = Components.stack.caller;
+
+  _do_check_neq(left, right, stack, false);
+}
+
+function todo_check_neq(left, right, stack) {
+  if (!stack)
+      stack = Components.stack.caller;
+
+  _do_check_neq(left, right, stack, true);
+}
+
+function _do_check_eq(left, right, stack, todo) {
+  if (!stack)
+    stack = Components.stack.caller;
+
+  var text = left + " == " + right;
+  if (left != right) {
+    if (!todo) {
+      do_throw(text, stack);
+    } else {
+      ++_todoChecks;
+      _dump("TEST-KNOWN-FAIL | " + stack.filename + " | [" + stack.name +
+            " : " + stack.lineNumber + "] " + text +"\n");
+    }
+  } else {
+    if (!todo) {
+      ++_passedChecks;
+      _dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
+            stack.lineNumber + "] " + text + "\n");
+    } else {
+      do_throw_todo(text, stack);
+    }
   }
 }
 
@@ -486,14 +556,14 @@ function do_check_eq(left, right, stack) {
   if (!stack)
     stack = Components.stack.caller;
 
-  var text = left + " == " + right;
-  if (left != right) {
-    do_throw(text, stack);
-  } else {
-    ++_passedChecks;
-    _dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
-         stack.lineNumber + "] " + text + "\n");
-  }
+  _do_check_eq(left, right, stack, false);
+}
+
+function todo_check_eq(left, right, stack) {
+  if (!stack)
+      stack = Components.stack.caller;
+
+  _do_check_eq(left, right, stack, true);
 }
 
 function do_check_true(condition, stack) {
@@ -503,11 +573,25 @@ function do_check_true(condition, stack) {
   do_check_eq(condition, true, stack);
 }
 
+function todo_check_true(condition, stack) {
+  if (!stack)
+    stack = Components.stack.caller;
+
+  todo_check_eq(condition, true, stack);
+}
+
 function do_check_false(condition, stack) {
   if (!stack)
     stack = Components.stack.caller;
 
   do_check_eq(condition, false, stack);
+}
+
+function todo_check_false(condition, stack) {
+  if (!stack)
+    stack = Components.stack.caller;
+
+  todo_check_eq(condition, false, stack);
 }
 
 function do_test_pending() {
