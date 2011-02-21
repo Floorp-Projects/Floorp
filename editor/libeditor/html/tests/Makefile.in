@@ -93,6 +93,7 @@ _CHROME_TEST_FILES = \
 		test_bug490879.xul \
 		test_bug607584.xul \
 		test_bug616590.xul \
+		test_bug635636.html \
 		green.png \
 		$(NULL)
 
