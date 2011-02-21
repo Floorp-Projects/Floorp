@@ -9203,7 +9203,7 @@ void
 nsHTMLEditRules::DocumentModifiedWorker()
 {
   if (!mHTMLEditor) {
-    return NS_OK;
+    return;
   }
   nsCOMPtr<nsIHTMLEditor> kungFuDeathGrip(mHTMLEditor);
   nsCOMPtr<nsISelection> selection;
