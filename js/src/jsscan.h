@@ -476,7 +476,7 @@ class TokenStream
     bool matchUnicodeEscapeIdent(int32 *c);
     JSBool peekChars(intN n, jschar *cp);
     JSBool getXMLEntity();
-    jschar *findEOL();
+    jschar *findWlineLimit(jschar *tokptr, int max);
 
     JSBool matchChar(int32 expect) {
         int32 c = getChar();
