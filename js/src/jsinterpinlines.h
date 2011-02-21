@@ -479,7 +479,7 @@ JSStackFrame::callObj() const
     JS_ASSERT(hasCallObj());
     JSObject *pobj = &scopeChain();
     while (JS_UNLIKELY(pobj->getClass() != &js_CallClass)) {
-        JS_ASSERT(js::IsCacheableNonGlobalScope(pobj) || pobj->isWith());
+        JS_ASSERT(js_IsCacheableNonGlobalScope(pobj) || pobj->isWith());
         pobj = pobj->getParent();
     }
     return *pobj;
