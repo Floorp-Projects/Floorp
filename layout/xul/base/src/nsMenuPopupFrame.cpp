@@ -320,8 +320,11 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
       baseWindow->GetMainWidget(getter_AddRefs(parentWidget));
   }
 
-  aView->CreateWidgetForPopup(&widgetData, parentWidget,
-                              PR_TRUE, PR_TRUE);
+  nsresult rv = aView->CreateWidgetForPopup(&widgetData, parentWidget,
+                                            PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   nsIWidget* widget = aView->GetWidget();
   widget->SetTransparencyMode(mode);
