@@ -313,6 +313,18 @@ function convertPosition(anchor, align)
   return "";
 }
 
+/*
+ * When checking position of the bottom or right edge of the popup's rect,
+ * use this instead of strict equality check of rounded values,
+ * because we snap the top/left edges to pixel boundaries,
+ * which can shift the bottom/right up to 0.5px from its "ideal" location,
+ * and could cause it to round differently. (See bug 622507.)
+ */
+function isWithinHalfPixel(a, b)
+{
+  return Math.abs(a - b) <= 0.5;
+}
+
 function compareEdge(anchor, popup, edge, offsetX, offsetY, testname)
 {
   testname += " " + edge;
@@ -368,22 +380,22 @@ function compareEdge(anchor, popup, edge, offsetX, offsetY, testname)
   }
 
   if (edge.indexOf("before") == 0)
-    check1 = (Math.round(anchorrect.top) + offsetY == Math.round(popuprect.bottom));
+    check1 = isWithinHalfPixel(anchorrect.top + offsetY, popuprect.bottom);
   else if (edge.indexOf("after") == 0)
     check1 = (Math.round(anchorrect.bottom) + offsetY == Math.round(popuprect.top));
   else if (edge.indexOf("start") == 0)
-    check1 = (Math.round(anchorrect.left) + offsetX == Math.round(popuprect.right));
+    check1 = isWithinHalfPixel(anchorrect.left + offsetX, popuprect.right);
   else if (edge.indexOf("end") == 0)
     check1 = (Math.round(anchorrect.right) + offsetX == Math.round(popuprect.left));
 
   if (0 < edge.indexOf("before"))
     check2 = (Math.round(anchorrect.top) + offsetY == Math.round(popuprect.top));
   else if (0 < edge.indexOf("after"))
-    check2 = (Math.round(anchorrect.bottom) + offsetY == Math.round(popuprect.bottom));
+    check2 = isWithinHalfPixel(anchorrect.bottom + offsetY, popuprect.bottom);
   else if (0 < edge.indexOf("start"))
     check2 = (Math.round(anchorrect.left) + offsetX == Math.round(popuprect.left));
   else if (0 < edge.indexOf("end"))
-    check2 = (Math.round(anchorrect.right) + offsetX == Math.round(popuprect.right));
+    check2 = isWithinHalfPixel(anchorrect.right + offsetX, popuprect.right);
 
   ok(check1 && check2, testname + " position");
 }
