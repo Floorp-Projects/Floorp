@@ -1191,7 +1191,9 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
   SetVisibleRectForLayer(layer, itemVisibleRect);
 
   tempManager->SetRoot(layer);
+  aBuilder->LayerBuilder()->WillEndTransaction(tempManager);
   tempManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, aBuilder);
+  aBuilder->LayerBuilder()->DidEndTransaction(tempManager);
 }
 
 /*
