@@ -49,7 +49,6 @@
 #include "jsobj.h"
 #include "jsprobes.h"
 #include "jspropertytree.h"
-#include "jsproxy.h"
 #include "jsscope.h"
 #include "jsstaticcheck.h"
 #include "jsxml.h"
@@ -61,7 +60,6 @@
 #include "jsscopeinlines.h"
 #include "jsstr.h"
 
-#include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsprobes.h"
 

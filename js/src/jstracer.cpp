@@ -6595,7 +6595,7 @@ ScopeChainCheck(JSContext* cx, TreeFragment* f)
      */
     JSObject* child = &cx->fp()->scopeChain();
     while (JSObject* parent = child->getParent()) {
-        if (!IsCacheableNonGlobalScope(child)) {
+        if (!js_IsCacheableNonGlobalScope(child)) {
             debug_only_print0(LC_TMTracer,"Blacklist: non-cacheable object on scope chain.\n");
             Blacklist((jsbytecode*) f->root->ip);
             return false;
@@ -15183,7 +15183,7 @@ TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *target
     /* There was a call object, or should be a call object now. */
     for (;;) {
         if (obj != globalObj) {
-            if (!IsCacheableNonGlobalScope(obj))
+            if (!js_IsCacheableNonGlobalScope(obj))
                 RETURN_STOP("scope chain lookup crosses non-cacheable object");
 
             // We must guard on the shape of all call objects for heavyweight functions
