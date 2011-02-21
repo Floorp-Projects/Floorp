@@ -6368,7 +6368,8 @@ HasSoftHyphenBefore(const nsTextFragment* aFrag, gfxTextRun* aTextRun,
 }
 
 void
-nsTextFrame::SetLength(PRInt32 aLength, nsLineLayout* aLineLayout)
+nsTextFrame::SetLength(PRInt32 aLength, nsLineLayout* aLineLayout,
+                       PRUint32 aSetLengthFlags)
 {
   mContentLengthHint = aLength;
   PRInt32 end = GetContentOffset() + aLength;
@@ -6393,7 +6394,8 @@ nsTextFrame::SetLength(PRInt32 aLength, nsLineLayout* aLineLayout)
     if (aLineLayout &&
         GetStyleText()->WhiteSpaceIsSignificant() &&
         HasTerminalNewline() &&
-        GetParent()->GetType() != nsGkAtoms::letterFrame) {
+        GetParent()->GetType() != nsGkAtoms::letterFrame &&
+        (aSetLengthFlags & ALLOW_FRAME_CREATION_AND_DESTRUCTION)) {
       // Whatever text we hand to our next-in-flow will end up in a frame all of
       // its own, since it ends in a forced linebreak.  Might as well just put
       // it in a separate frame now.  This is important to prevent text run
@@ -6401,6 +6403,9 @@ nsTextFrame::SetLength(PRInt32 aLength, nsLineLayout* aLineLayout)
       // textruns for all our following continuations.
       // We skip this optimization when the parent is a first-letter frame
       // because it doesn't deal well with more than one child frame.
+      // We also skip this optimization if we were called during bidi
+      // resolution, so as not to create a new frame which doesn't appear in
+      // the bidi resolver's list of frames
       nsPresContext* presContext = PresContext();
       nsIFrame* newFrame;
       nsresult rv = presContext->PresShell()->FrameConstructor()->
@@ -6436,7 +6441,8 @@ nsTextFrame::SetLength(PRInt32 aLength, nsLineLayout* aLineLayout)
     // this optimization to the case where they are on the same child list.
     // Otherwise we might remove the only child of a nsFirstLetterFrame
     // for example and it can't handle that.  See bug 597627 for details.
-    if (next && next->mContentOffset <= end && f->GetNextSibling() == next) {
+    if (next && next->mContentOffset <= end && f->GetNextSibling() == next &&
+        (aSetLengthFlags & ALLOW_FRAME_CREATION_AND_DESTRUCTION)) {
       // |f| is now empty.  We may as well remove it, instead of copying all
       // the text from |next| into it instead; the latter leads to use
       // rebuilding textruns for all following continuations.  We have to be
@@ -6445,6 +6451,9 @@ nsTextFrame::SetLength(PRInt32 aLength, nsLineLayout* aLineLayout)
       // in-flows (and sometimes all its following continuations in general).
       // So we remove |f| from the flow first, to make sure that only |f| is
       // destroyed.
+      // We skip this optimization if we were called during bidi resolution,
+      // since the bidi resolver may try to handle the destroyed frame later
+      // and crash
       nsSplittableFrame::RemoveFromFlow(f);
       f->GetParent()->RemoveFrame(nsGkAtoms::nextBidi, f);
     }
@@ -6627,7 +6636,8 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // Layout dependent styles are a problem because we need to reconstruct
   // the gfxTextRun based on our layout.
   if (aLineLayout.GetInFirstLetter() || aLineLayout.GetInFirstLine()) {
-    SetLength(maxContentLength, &aLineLayout);
+    SetLength(maxContentLength, &aLineLayout,
+              ALLOW_FRAME_CREATION_AND_DESTRUCTION);
 
     if (aLineLayout.GetInFirstLetter()) {
       // floating first-letter boundaries are significant in textrun
@@ -6669,7 +6679,8 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
         // Change this frame's length to the first-letter length right now
         // so that when we rebuild the textrun it will be built with the
         // right first-letter boundary
-        SetLength(offset + length - GetContentOffset(), &aLineLayout);
+        SetLength(offset + length - GetContentOffset(), &aLineLayout,
+                  ALLOW_FRAME_CREATION_AND_DESTRUCTION);
         // Ensure that the textrun will be rebuilt
         ClearTextRun(nsnull);
       }
@@ -7001,7 +7012,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
         charsFit - numJustifiableCharacters);
   }
 
-  SetLength(contentLength, &aLineLayout);
+  SetLength(contentLength, &aLineLayout, ALLOW_FRAME_CREATION_AND_DESTRUCTION);
 
   if (mContent->HasFlag(NS_TEXT_IN_SELECTION)) {
     SelectionDetails* details = GetSelectionDetails();
@@ -7445,7 +7456,7 @@ nsTextFrame::AdjustOffsetsForBidi(PRInt32 aStart, PRInt32 aEnd)
   }
 
   mContentOffset = aStart;
-  SetLength(aEnd - aStart, nsnull);
+  SetLength(aEnd - aStart, nsnull, 0);
 }
 
 /**
