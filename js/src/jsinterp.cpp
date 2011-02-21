@@ -624,6 +624,7 @@ RunScript(JSContext *cx, JSScript *script, JSStackFrame *fp)
         int32 flags = fp->scopeChain().getGlobal()->getReservedSlot(JSRESERVED_GLOBAL_FLAGS).toInt32();
         if (flags & JSGLOBAL_FLAGS_CLEARED) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CLEARED_SCOPE);
+            PutActivationObjects(cx, fp);
             return false;
         }
     }
