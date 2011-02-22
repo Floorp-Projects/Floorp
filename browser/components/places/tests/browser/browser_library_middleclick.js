@@ -39,9 +39,6 @@
  * Tests middle-clicking items in the Library.
  */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 const ENABLE_HISTORY_PREF = "places.history.enabled";
 
 var gLibrary = null;
