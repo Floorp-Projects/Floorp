@@ -463,12 +463,12 @@ JSCompartment::mark(JSTracer *trc)
 {
     if (IS_GC_MARKING_TRACER(trc)) {
         JSRuntime *rt = trc->context->runtime;
-        if (rt->gcCurrentCompartment != NULL && rt->gcCurrentCompartment != this)
+
+        if (rt->gcCurrentCompartment && rt->gcCurrentCompartment != this)
             return;
-        
+
         if (marked)
             return;
-        
         marked = true;
     }
 
