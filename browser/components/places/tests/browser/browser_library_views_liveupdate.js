@@ -39,9 +39,6 @@
  * Tests Library Left pane view for liveupdate.
  */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 var gLibrary = null;
 
 function test() {

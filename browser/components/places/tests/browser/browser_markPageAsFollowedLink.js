@@ -6,9 +6,6 @@
  * Tests that visits across frames are correctly represented in the database.
  */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 const BASE_URL = "http://mochi.test:8888/browser/browser/components/places/tests/browser";
 const PAGE_URL = BASE_URL + "/framedPage.html";
 const LEFT_URL = BASE_URL + "/frameLeft.html";
