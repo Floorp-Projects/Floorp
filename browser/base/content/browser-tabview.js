@@ -60,15 +60,15 @@ let TabView = {
   // ----------
   set firstUseExperienced(val) {
     if (val != this._firstUseExperienced)
-      Services.prefs.setBoolPref("browser.panorama.experienced_first_use", val);
+      Services.prefs.setBoolPref("browser.panorama.experienced_first_run", val);
   },
 
   // ----------
   init: function TabView_init() {
-    if (!Services.prefs.prefHasUserValue("browser.panorama.experienced_first_use") ||
-        !Services.prefs.getBoolPref("browser.panorama.experienced_first_use")) {
+    if (!Services.prefs.prefHasUserValue("browser.panorama.experienced_first_run") ||
+        !Services.prefs.getBoolPref("browser.panorama.experienced_first_run")) {
       Services.prefs.addObserver(
-        "browser.panorama.experienced_first_use", this, false);
+        "browser.panorama.experienced_first_run", this, false);
     } else {
       this._firstUseExperienced = true;
 
@@ -104,7 +104,7 @@ let TabView = {
   observe: function TabView_observe(subject, topic, data) {
     if (topic == "nsPref:changed") {
       Services.prefs.removeObserver(
-        "browser.panorama.experienced_first_use", this);
+        "browser.panorama.experienced_first_run", this);
       this._firstUseExperienced = true;
       this._addToolbarButton();
     }
@@ -115,7 +115,7 @@ let TabView = {
   uninit: function TabView_uninit() {
     if (!this._firstUseExperienced) {
       Services.prefs.removeObserver(
-        "browser.panorama.experienced_first_use", this);
+        "browser.panorama.experienced_first_run", this);
     }
     if (this._tabShowEventListener) {
       gBrowser.tabContainer.removeEventListener(
