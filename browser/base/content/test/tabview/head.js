@@ -201,3 +201,31 @@ function whenTabViewIsShown(callback, win) {
     callback();
   }, false);
 }
+
+// ----------
+function hideGroupItem(groupItem, callback) {
+  if (groupItem.hidden) {
+    callback();
+    return;
+  }
+
+  groupItem.addSubscriber(groupItem, "groupHidden", function () {
+    groupItem.removeSubscriber(groupItem, "groupHidden");
+    callback();
+  });
+  groupItem.closeAll();
+}
+
+// ----------
+function unhideGroupItem(groupItem, callback) {
+  if (!groupItem.hidden) {
+    callback();
+    return;
+  }
+
+  groupItem.addSubscriber(groupItem, "groupShown", function () {
+    groupItem.removeSubscriber(groupItem, "groupShown");
+    callback();
+  });
+  groupItem._unhide();
+}
