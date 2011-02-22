@@ -8399,13 +8399,13 @@ var LightWeightThemeWebInstaller = {
  * @param aURI
  *        URI to search for
  * @param aOpenNew
- *        True to open a new tab and switch to it, if no existing tab is found
+ *        True to open a new tab and switch to it, if no existing tab is found.
+ *        If no suitable window is found, a new one will be opened.
  * @return True if an existing tab was found, false otherwise
  */
 function switchToTabHavingURI(aURI, aOpenNew) {
+  // This will switch to the tab in aWindow having aURI, if present.
   function switchIfURIInWindow(aWindow) {
-    if (!("gBrowser" in aWindow))
-      return false;
     let browsers = aWindow.gBrowser.browsers;
     for (let i = 0; i < browsers.length; i++) {
       let browser = browsers[i];
@@ -8421,10 +8421,12 @@ function switchToTabHavingURI(aURI, aOpenNew) {
 
   // This can be passed either nsIURI or a string.
   if (!(aURI instanceof Ci.nsIURI))
-    aURI = makeURI(aURI);
+    aURI = Services.io.newURI(aURI, null, null);
+
+  let isBrowserWindow = !!window.gBrowser;
 
   // Prioritise this window.
-  if (switchIfURIInWindow(window))
+  if (isBrowserWindow && switchIfURIInWindow(window))
     return true;
 
   let winEnum = Services.wm.getEnumerator("navigator:browser");
@@ -8440,7 +8442,7 @@ function switchToTabHavingURI(aURI, aOpenNew) {
 
   // No opened tab has that url.
   if (aOpenNew) {
-    if (isTabEmpty(gBrowser.selectedTab))
+    if (isBrowserWindow && isTabEmpty(gBrowser.selectedTab))
       gBrowser.selectedBrowser.loadURI(aURI.spec);
     else
       openUILinkIn(aURI.spec, "tab");
