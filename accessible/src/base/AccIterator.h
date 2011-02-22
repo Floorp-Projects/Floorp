@@ -125,6 +125,7 @@ private:
   RelatedAccIterator(const RelatedAccIterator&);
   RelatedAccIterator& operator = (const RelatedAccIterator&);
 
+  nsDocAccessible* mDocument;
   nsIAtom* mRelAttr;
   nsDocAccessible::AttrRelProviderArray* mProviders;
   nsIContent* mBindingParent;
