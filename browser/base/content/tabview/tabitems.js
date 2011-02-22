@@ -628,8 +628,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       GroupItems.setActiveOrphanTab(this);
     }
 
-    this.shouldHideCachedData = true;
-    TabItems._update(this.tab);
+    TabItems._update(this.tab, {force: true});
 
     // Zoom in!
     let tab = this.tab;
@@ -697,8 +696,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         complete();
     };
 
-    this.shouldHideCachedData = true;
-    TabItems._update(this.tab);
+    TabItems._update(this.tab, {force: true});
 
     $tab.addClass("front");
 
@@ -943,7 +941,14 @@ let TabItems = {
   // ----------
   // Function: _update
   // Takes in a xul:tab.
-  _update: function TabItems__update(tab) {
+  //
+  // Parameters:
+  //   tab - a xul tab to update
+  //   options - an object with additional parameters, see below
+  //
+  // Possible options:
+  //   force - true to always update the tab item even if it's incomplete
+  _update: function TabItems__update(tab, options) {
     try {
       if (this._pauseUpdateForTest)
         return;
@@ -991,7 +996,7 @@ let TabItems = {
       }
 
       // ___ Make sure the tab is complete and ready for updating.
-      if (!this.isComplete(tab)) {
+      if (!this.isComplete(tab) && (!options || !options.force)) {
         // If it's incomplete, stick it on the end of the queue
         this._tabsWaitingForUpdate.push(tab);
         return;
