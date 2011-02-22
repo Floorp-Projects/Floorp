@@ -1277,7 +1277,7 @@ nsXULTreeBuilder::ReplaceMatch(nsIXULTemplateResult* aOldResult,
             if (mFlags & eDontRecurse)
                 return NS_OK;
 
-            if (result && (result != mRootResult)) {
+            if (result != mRootResult) {
                 // don't open containers if child processing isn't allowed
                 PRBool mayProcessChildren;
                 nsresult rv = result->GetMayProcessChildren(&mayProcessChildren);
