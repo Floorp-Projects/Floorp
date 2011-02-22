@@ -337,6 +337,8 @@ nsWindowsRegKey::ReadStringValue(const nsAString &name, nsAString &result)
     resultLen = ExpandEnvironmentStringsW(flatSource.get(), NULL, 0);
     if (resultLen > 0) {
       nsAutoString expandedResult;
+      // |resultLen| includes the terminating null character
+      --resultLen;
       expandedResult.SetLength(resultLen);
       nsAString::iterator begin;
       expandedResult.BeginWriting(begin);
@@ -345,11 +347,11 @@ nsWindowsRegKey::ReadStringValue(const nsAString &name, nsAString &result)
 
       resultLen = ExpandEnvironmentStringsW(flatSource.get(),
                                             begin.get(),
-                                            resultLen);
+                                            resultLen + 1);
       if (resultLen <= 0) {
         rv = ERROR_UNKNOWN_FEATURE;
         result.Truncate();
-      } else if (resultLen > 0) {
+      } else {
         rv = ERROR_SUCCESS;
         result = expandedResult;
       }
