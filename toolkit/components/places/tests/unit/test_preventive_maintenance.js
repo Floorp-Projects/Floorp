@@ -694,17 +694,93 @@ tests.push({
 });
 
 //------------------------------------------------------------------------------
-//XXX TODO
+
 tests.push({
   name: "D.10",
   desc: "Recalculate positions",
 
-  setup: function() {
+  _unfiledBookmarks: [],
+  _toolbarBookmarks: [],
 
+  setup: function() {
+    const NUM_BOOKMARKS = 20;
+    bs.runInBatchMode({
+      runBatched: function (aUserData) {
+        // Add bookmarks to two folders to better perturbate the table.
+        for (let i = 0; i < NUM_BOOKMARKS; i++) {
+          bs.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
+                            NetUtil.newURI("http://example.com/"),
+                            bs.DEFAULT_INDEX, "testbookmark");
+        }
+        for (let i = 0; i < NUM_BOOKMARKS; i++) {
+          bs.insertBookmark(PlacesUtils.toolbarFolderId,
+                            NetUtil.newURI("http://example.com/"),
+                            bs.DEFAULT_INDEX, "testbookmark");
+        }
+      }
+    }, null);
+
+    function randomize_positions(aParent, aResultArray) {
+      let stmt = mDBConn.createStatement(
+        "UPDATE moz_bookmarks SET position = :rand " +
+        "WHERE id IN ( " +
+          "SELECT id FROM moz_bookmarks WHERE parent = :parent " +
+          "ORDER BY RANDOM() LIMIT 1 " +
+        ") "
+      );
+      for (let i = 0; i < (NUM_BOOKMARKS / 2); i++) {
+        stmt.params["parent"] = aParent;
+        stmt.params["rand"] = Math.round(Math.random() * (NUM_BOOKMARKS - 1));
+        stmt.execute();
+        stmt.reset();
+      }
+      stmt.finalize();
+
+      // Build the expected ordered list of bookmarks.
+      stmt = mDBConn.createStatement(
+        "SELECT id, position " +
+        "FROM moz_bookmarks WHERE parent = :parent " +
+        "ORDER BY position ASC, ROWID ASC "
+      );
+      stmt.params["parent"] = aParent;
+      while (stmt.executeStep()) {
+        aResultArray.push(stmt.row.id);
+        print(stmt.row.id + "\t" + stmt.row.position + "\t" +
+              (aResultArray.length - 1));
+      }
+      stmt.finalize();
+    }
+
+    // Set random positions for the added bookmarks.
+    randomize_positions(PlacesUtils.unfiledBookmarksFolderId,
+                        this._unfiledBookmarks);
+    randomize_positions(PlacesUtils.toolbarFolderId, this._toolbarBookmarks);
   },
 
   check: function() {
+    function check_order(aParent, aResultArray) {
+      // Build the expected ordered list of bookmarks.
+      let stmt = mDBConn.createStatement(
+        "SELECT id, position FROM moz_bookmarks WHERE parent = :parent " +
+        "ORDER BY position ASC"
+      );
+      stmt.params["parent"] = aParent;
+      let pass = true;
+      while (stmt.executeStep()) {
+        print(stmt.row.id + "\t" + stmt.row.position);
+        if (aResultArray.indexOf(stmt.row.id) != stmt.row.position) {
+          pass = false;
+        }
+      }
+      stmt.finalize();
+      if (!pass) {
+        dump_table("moz_bookmarks");
+        do_throw("Unexpected unfiled bookmarks order.");
+      }
+    }
 
+    check_order(PlacesUtils.unfiledBookmarksFolderId, this._unfiledBookmarks);
+    check_order(PlacesUtils.toolbarFolderId, this._toolbarBookmarks);
   }
 });
 

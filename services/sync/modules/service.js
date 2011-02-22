@@ -433,9 +433,12 @@ WeaveSvc.prototype = {
     }
 
     // Send an event now that Weave service is ready.  We don't do this
-    // synchronously so that observers will definitely have access to the
-    // 'Weave' namespace.
-    Utils.delay(function() Svc.Obs.notify("weave:service:ready"), 0);
+    // synchronously so that observers can import this module before
+    // registering an observer.
+    Utils.delay(function() {
+      Status.ready = true;
+      Svc.Obs.notify("weave:service:ready");
+    }, 0);
   },
 
   _checkSetup: function WeaveSvc__checkSetup() {

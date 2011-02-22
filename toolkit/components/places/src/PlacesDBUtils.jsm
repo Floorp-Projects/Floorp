@@ -303,7 +303,7 @@ let PlacesDBUtils = {
 
     // MOZ_ANNO_ATTRIBUTES
     // A.1 remove unused attributes
-    let deleteUnusedAnnoAttributes = DBConn.createStatement(
+    let deleteUnusedAnnoAttributes = DBConn.createAsyncStatement(
       "DELETE FROM moz_anno_attributes WHERE id IN ( " +
         "SELECT id FROM moz_anno_attributes n " +
         "WHERE NOT EXISTS " +
@@ -315,7 +315,7 @@ let PlacesDBUtils = {
 
     // MOZ_ANNOS
     // B.1 remove annos with an invalid attribute
-    let deleteInvalidAttributeAnnos = DBConn.createStatement(
+    let deleteInvalidAttributeAnnos = DBConn.createAsyncStatement(
       "DELETE FROM moz_annos WHERE id IN ( " +
         "SELECT id FROM moz_annos a " +
         "WHERE NOT EXISTS " +
@@ -325,7 +325,7 @@ let PlacesDBUtils = {
     cleanupStatements.push(deleteInvalidAttributeAnnos);
 
     // B.2 remove orphan annos
-    let deleteOrphanAnnos = DBConn.createStatement(
+    let deleteOrphanAnnos = DBConn.createAsyncStatement(
       "DELETE FROM moz_annos WHERE id IN ( " +
         "SELECT id FROM moz_annos a " +
         "WHERE NOT EXISTS " +
@@ -342,7 +342,7 @@ let PlacesDBUtils = {
     selectPlacesRoot.params["places_root"] = PlacesUtils.placesRootId;
     if (!selectPlacesRoot.executeStep()) {
       // We are missing the root, try to recreate it.
-      let createPlacesRoot = DBConn.createStatement(
+      let createPlacesRoot = DBConn.createAsyncStatement(
         "INSERT INTO moz_bookmarks (id, type, fk, parent, position, title, "
       +                            "guid) "
       + "VALUES (:places_root, 2, NULL, 0, 0, :title, GENERATE_GUID())");
@@ -351,7 +351,7 @@ let PlacesDBUtils = {
       cleanupStatements.push(createPlacesRoot);
 
       // Now ensure that other roots are children of Places root.
-      let fixPlacesRootChildren = DBConn.createStatement(
+      let fixPlacesRootChildren = DBConn.createAsyncStatement(
         "UPDATE moz_bookmarks SET parent = :places_root WHERE id IN " +
           "(SELECT folder_id FROM moz_bookmarks_roots " +
             "WHERE folder_id <> :places_root)");
@@ -366,30 +366,30 @@ let PlacesDBUtils = {
     let updateRootTitleSql = "UPDATE moz_bookmarks SET title = :title " +
                              "WHERE id = :root_id AND title <> :title";
     // root
-    let fixPlacesRootTitle = DBConn.createStatement(updateRootTitleSql);
+    let fixPlacesRootTitle = DBConn.createAsyncStatement(updateRootTitleSql);
     fixPlacesRootTitle.params["root_id"] = PlacesUtils.placesRootId;
     fixPlacesRootTitle.params["title"] = "";
     cleanupStatements.push(fixPlacesRootTitle);
     // bookmarks menu
-    let fixBookmarksMenuTitle = DBConn.createStatement(updateRootTitleSql);
+    let fixBookmarksMenuTitle = DBConn.createAsyncStatement(updateRootTitleSql);
     fixBookmarksMenuTitle.params["root_id"] = PlacesUtils.bookmarksMenuFolderId;
     fixBookmarksMenuTitle.params["title"] =
       PlacesUtils.getString("BookmarksMenuFolderTitle");
     cleanupStatements.push(fixBookmarksMenuTitle);
     // bookmarks toolbar
-    let fixBookmarksToolbarTitle = DBConn.createStatement(updateRootTitleSql);
+    let fixBookmarksToolbarTitle = DBConn.createAsyncStatement(updateRootTitleSql);
     fixBookmarksToolbarTitle.params["root_id"] = PlacesUtils.toolbarFolderId;
     fixBookmarksToolbarTitle.params["title"] =
       PlacesUtils.getString("BookmarksToolbarFolderTitle");
     cleanupStatements.push(fixBookmarksToolbarTitle);
     // unsorted bookmarks
-    let fixUnsortedBookmarksTitle = DBConn.createStatement(updateRootTitleSql);
+    let fixUnsortedBookmarksTitle = DBConn.createAsyncStatement(updateRootTitleSql);
     fixUnsortedBookmarksTitle.params["root_id"] = PlacesUtils.unfiledBookmarksFolderId;
     fixUnsortedBookmarksTitle.params["title"] =
       PlacesUtils.getString("UnsortedBookmarksFolderTitle");
     cleanupStatements.push(fixUnsortedBookmarksTitle);
     // tags
-    let fixTagsRootTitle = DBConn.createStatement(updateRootTitleSql);
+    let fixTagsRootTitle = DBConn.createAsyncStatement(updateRootTitleSql);
     fixTagsRootTitle.params["root_id"] = PlacesUtils.tagsFolderId;
     fixTagsRootTitle.params["title"] =
       PlacesUtils.getString("TagsFolderTitle");
@@ -398,7 +398,7 @@ let PlacesDBUtils = {
     // MOZ_BOOKMARKS
     // D.1 remove items without a valid place
     // if fk IS NULL we fix them in D.7
-    let deleteNoPlaceItems = DBConn.createStatement(
+    let deleteNoPlaceItems = DBConn.createAsyncStatement(
       "DELETE FROM moz_bookmarks WHERE id NOT IN ( " +
         "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
       ") AND id IN (" +
@@ -410,7 +410,7 @@ let PlacesDBUtils = {
     cleanupStatements.push(deleteNoPlaceItems);
 
     // D.2 remove items that are not uri bookmarks from tag containers
-    let deleteBogusTagChildren = DBConn.createStatement(
+    let deleteBogusTagChildren = DBConn.createAsyncStatement(
       "DELETE FROM moz_bookmarks WHERE id NOT IN ( " +
         "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
       ") AND id IN (" +
@@ -424,7 +424,7 @@ let PlacesDBUtils = {
     cleanupStatements.push(deleteBogusTagChildren);
 
     // D.3 remove empty tags
-    let deleteEmptyTags = DBConn.createStatement(
+    let deleteEmptyTags = DBConn.createAsyncStatement(
       "DELETE FROM moz_bookmarks WHERE id NOT IN ( " +
         "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
       ") AND id IN (" +
@@ -438,7 +438,7 @@ let PlacesDBUtils = {
     cleanupStatements.push(deleteEmptyTags);
 
     // D.4 move orphan items to unsorted folder
-    let fixOrphanItems = DBConn.createStatement(
+    let fixOrphanItems = DBConn.createAsyncStatement(
       "UPDATE moz_bookmarks SET parent = :unsorted_folder WHERE id NOT IN ( " +
         "SELECT folder_id FROM moz_bookmarks_roots " +  // skip roots
       ") AND id IN (" +
@@ -451,7 +451,7 @@ let PlacesDBUtils = {
     cleanupStatements.push(fixOrphanItems);
 
     // D.5 fix wrong keywords
-    let fixInvalidKeywords = DBConn.createStatement(
+    let fixInvalidKeywords = DBConn.createAsyncStatement(
       "UPDATE moz_bookmarks SET keyword_id = NULL WHERE id NOT IN ( " +
         "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
       ") AND id IN ( " +
@@ -466,7 +466,7 @@ let PlacesDBUtils = {
     //     Folders, separators and dynamic containers should not have an fk.
     //     If they have a valid fk convert them to bookmarks. Later in D.9 we
     //     will move eventual children to unsorted bookmarks.
-    let fixBookmarksAsFolders = DBConn.createStatement(
+    let fixBookmarksAsFolders = DBConn.createAsyncStatement(
       "UPDATE moz_bookmarks SET type = :bookmark_type WHERE id NOT IN ( " +
         "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
       ") AND id IN ( " +
@@ -483,7 +483,7 @@ let PlacesDBUtils = {
     // D.7 fix wrong item types
     //     Bookmarks should have an fk, if they don't have any, convert them to
     //     folders.
-    let fixFoldersAsBookmarks = DBConn.createStatement(
+    let fixFoldersAsBookmarks = DBConn.createAsyncStatement(
       "UPDATE moz_bookmarks SET type = :folder_type WHERE id NOT IN ( " +
         "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
       ") AND id IN ( " +
@@ -498,7 +498,7 @@ let PlacesDBUtils = {
     // D.8 fix wrong item types
     //     Dynamic containers should have a folder_type, if they don't have any
     //     convert them to folders.
-    let fixFoldersAsDynamic = DBConn.createStatement(
+    let fixFoldersAsDynamic = DBConn.createAsyncStatement(
       "UPDATE moz_bookmarks SET type = :folder_type WHERE id NOT IN ( " +
         "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
       ") AND id IN ( " +
@@ -513,7 +513,7 @@ let PlacesDBUtils = {
     // D.9 fix wrong parents
     //     Items cannot have dynamic containers, separators or other bookmarks
     //     as parent, if they have bad parent move them to unsorted bookmarks.
-    let fixInvalidParents = DBConn.createStatement(
+    let fixInvalidParents = DBConn.createAsyncStatement(
       "UPDATE moz_bookmarks SET parent = :unsorted_folder WHERE id NOT IN ( " +
         "SELECT folder_id FROM moz_bookmarks_roots " +  // skip roots
       ") AND id IN ( " +
@@ -529,40 +529,66 @@ let PlacesDBUtils = {
     fixInvalidParents.params["dynamic_type"] = PlacesUtils.bookmarks.TYPE_DYNAMIC_CONTAINER;
     cleanupStatements.push(fixInvalidParents);
 
-/* XXX needs test
     // D.10 recalculate positions
     //      This requires multiple related statements.
     //      We can detect a folder with bad position values comparing the sum of
-    //      all position values with the triangular numbers obtained by the number
-    //      of children: (n * (n + 1) / 2). Starting from 0 is (n * (n - 1) / 2).
-    let detectWrongPositionsParents = DBConn.createStatement(
-      "SELECT parent FROM " +
-        "(SELECT parent, " +
-                "(SUM(position) - (count(*) * (count(*) - 1) / 2)) AS diff " +
+    //      all distinct position values (+1 since position is 0-based) with the
+    //      triangular numbers obtained by the number of children (n).
+    //      SUM(DISTINCT position + 1) == (n * (n + 1) / 2).
+    cleanupStatements.push(DBConn.createAsyncStatement(
+      "CREATE TEMP TABLE IF NOT EXISTS moz_bm_reindex_temp ( " +
+      "  id INTEGER PRIMARY_KEY " +
+      ", parent INTEGER " +
+      ", position INTEGER " +
+      ") "
+    ));
+    cleanupStatements.push(DBConn.createAsyncStatement(
+      "INSERT INTO moz_bm_reindex_temp " +
+      "SELECT id, parent, 0 " +
+      "FROM moz_bookmarks b " +
+      "WHERE parent IN ( " +
+        "SELECT parent " +
         "FROM moz_bookmarks " +
-        "GROUP BY parent) " +
-      "WHERE diff <> 0");
-    while (detectWrongPositionsParents.executeStep()) {
-      let parent = detectWrongPositionsParents.getInt64(0);
-      // We will lose the previous position values and reposition items based
-      // on the ROWID value. Not perfect, but we can't rely on position values.
-      let fixPositionsForParent = DBConn.createStatement(
-        "UPDATE moz_bookmarks SET position = ( " +
-          "SELECT " +
-          "((SELECT count(*) FROM moz_bookmarks WHERE parent = :parent) - " +
-           "(SELECT count(*) FROM moz_bookmarks " +
-            "WHERE parent = :parent AND ROWID >= b.ROWID)) " +
-          "FROM moz_bookmarks b WHERE parent = :parent AND id = moz_bookmarks.id " +
-        ") WHERE parent = :parent");
-      fixPositionsForParent.params["parent"] = parent;
-      cleanupStatements.push(fixPositionsForParent);
-    }
-*/
+        "GROUP BY parent " +
+        "HAVING (SUM(DISTINCT position + 1) - (count(*) * (count(*) + 1) / 2)) <> 0 " +
+      ") " +
+      "ORDER BY parent ASC, position ASC, ROWID ASC "
+    ));
+    cleanupStatements.push(DBConn.createAsyncStatement(
+      "CREATE INDEX IF NOT EXISTS moz_bm_reindex_temp_index " +
+      "ON moz_bm_reindex_temp(parent)"
+    ));
+    cleanupStatements.push(DBConn.createAsyncStatement(
+      "UPDATE moz_bm_reindex_temp SET position = ( " +
+        "ROWID - (SELECT MIN(t.ROWID) FROM moz_bm_reindex_temp t " +
+                 "WHERE t.parent = moz_bm_reindex_temp.parent) " +
+      ") "
+    ));
+    cleanupStatements.push(DBConn.createAsyncStatement(
+      "CREATE TEMP TRIGGER IF NOT EXISTS moz_bm_reindex_temp_trigger " +
+      "BEFORE DELETE ON moz_bm_reindex_temp " +
+      "FOR EACH ROW " +
+      "BEGIN " +
+        "UPDATE moz_bookmarks SET position = OLD.position WHERE id = OLD.id; " +
+      "END "
+    ));
+    cleanupStatements.push(DBConn.createAsyncStatement(
+      "DELETE FROM moz_bm_reindex_temp "
+    ));
+    cleanupStatements.push(DBConn.createAsyncStatement(
+      "DROP INDEX moz_bm_reindex_temp_index "
+    ));
+    cleanupStatements.push(DBConn.createAsyncStatement(
+      "DROP TRIGGER moz_bm_reindex_temp_trigger "
+    ));
+    cleanupStatements.push(DBConn.createAsyncStatement(
+      "DROP TABLE moz_bm_reindex_temp "
+    ));
 
     // D.11 remove old livemarks status items
     //      Livemark status items are now static but some livemark has still old
     //      status items bookmarks inside it. We should remove them.
-    let removeLivemarkStaticItems = DBConn.createStatement(
+    let removeLivemarkStaticItems = DBConn.createAsyncStatement(
       "DELETE FROM moz_bookmarks WHERE type = :bookmark_type AND fk IN ( " +
         "SELECT id FROM moz_places WHERE url = :lmloading OR url = :lmfailed " +
       ")");
@@ -574,7 +600,7 @@ let PlacesDBUtils = {
     // D.12 Fix empty-named tags.
     //      Tags were allowed to have empty names due to a UI bug.  Fix them
     //      replacing their title with "(notitle)".
-    let fixEmptyNamedTags = DBConn.createStatement(
+    let fixEmptyNamedTags = DBConn.createAsyncStatement(
       "UPDATE moz_bookmarks SET title = :empty_title " +
       "WHERE length(title) = 0 AND type = :folder_type " +
         "AND parent = :tags_folder"
@@ -586,7 +612,7 @@ let PlacesDBUtils = {
 
     // MOZ_FAVICONS
     // E.1 remove orphan icons
-    let deleteOrphanIcons = DBConn.createStatement(
+    let deleteOrphanIcons = DBConn.createAsyncStatement(
       "DELETE FROM moz_favicons WHERE id IN (" +
         "SELECT id FROM moz_favicons f " +
         "WHERE NOT EXISTS " +
@@ -596,7 +622,7 @@ let PlacesDBUtils = {
 
     // MOZ_HISTORYVISITS
     // F.1 remove orphan visits
-    let deleteOrphanVisits = DBConn.createStatement(
+    let deleteOrphanVisits = DBConn.createAsyncStatement(
       "DELETE FROM moz_historyvisits WHERE id IN (" +
         "SELECT id FROM moz_historyvisits v " +
         "WHERE NOT EXISTS " +
@@ -606,7 +632,7 @@ let PlacesDBUtils = {
 
     // MOZ_INPUTHISTORY
     // G.1 remove orphan input history
-    let deleteOrphanInputHistory = DBConn.createStatement(
+    let deleteOrphanInputHistory = DBConn.createAsyncStatement(
       "DELETE FROM moz_inputhistory WHERE place_id IN (" +
         "SELECT place_id FROM moz_inputhistory i " +
         "WHERE NOT EXISTS " +
@@ -616,7 +642,7 @@ let PlacesDBUtils = {
 
     // MOZ_ITEMS_ANNOS
     // H.1 remove item annos with an invalid attribute
-    let deleteInvalidAttributeItemsAnnos = DBConn.createStatement(
+    let deleteInvalidAttributeItemsAnnos = DBConn.createAsyncStatement(
       "DELETE FROM moz_items_annos WHERE id IN ( " +
         "SELECT id FROM moz_items_annos t " +
         "WHERE NOT EXISTS " +
@@ -626,7 +652,7 @@ let PlacesDBUtils = {
     cleanupStatements.push(deleteInvalidAttributeItemsAnnos);
 
     // H.2 remove orphan item annos
-    let deleteOrphanItemsAnnos = DBConn.createStatement(
+    let deleteOrphanItemsAnnos = DBConn.createAsyncStatement(
       "DELETE FROM moz_items_annos WHERE id IN ( " +
         "SELECT id FROM moz_items_annos t " +
         "WHERE NOT EXISTS " +
@@ -636,7 +662,7 @@ let PlacesDBUtils = {
 
     // MOZ_KEYWORDS
     // I.1 remove unused keywords
-    let deleteUnusedKeywords = DBConn.createStatement(
+    let deleteUnusedKeywords = DBConn.createAsyncStatement(
       "DELETE FROM moz_keywords WHERE id IN ( " +
         "SELECT id FROM moz_keywords k " +
         "WHERE NOT EXISTS " +
@@ -646,7 +672,7 @@ let PlacesDBUtils = {
 
     // MOZ_PLACES
     // L.1 fix wrong favicon ids
-    let fixInvalidFaviconIds = DBConn.createStatement(
+    let fixInvalidFaviconIds = DBConn.createAsyncStatement(
       "UPDATE moz_places SET favicon_id = NULL WHERE id IN ( " +
         "SELECT id FROM moz_places h " +
         "WHERE favicon_id NOT NULL " +

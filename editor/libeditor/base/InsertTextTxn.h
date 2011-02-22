@@ -70,16 +70,12 @@ public:
 
   InsertTextTxn();
 
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InsertTextTxn, EditTxn)
 	
   NS_DECL_EDITTXN
 
   NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
-
-// nsISupports declarations
-
-  // override QueryInterface to handle InsertTextTxn request
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   /** return the string data associated with this transaction */
   NS_IMETHOD GetData(nsString& aResult);

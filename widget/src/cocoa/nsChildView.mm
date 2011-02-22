@@ -89,12 +89,14 @@
 #include "nsRegion.h"
 #include "Layers.h"
 #include "LayerManagerOGL.h"
+#include "GLContext.h"
 
 #include <dlfcn.h>
 
 #include <ApplicationServices/ApplicationServices.h>
 
 using namespace mozilla::layers;
+using namespace mozilla::gl;
 #undef DEBUG_IME
 #undef DEBUG_UPDATE
 #undef INVALIDATE_DEBUGGING  // flash areas as they are invalidated
@@ -515,6 +517,8 @@ nsChildView::~nsChildView()
   }
 
   NS_WARN_IF_FALSE(mOnDestroyCalled, "nsChildView object destroyed without calling Destroy()");
+
+  mResizerImage = nsnull;
 
   // An nsChildView object that was in use can be destroyed without Destroy()
   // ever being called on it.  So we also need to do a quick, safe cleanup
@@ -2094,13 +2098,98 @@ nsChildView::GetThebesSurface()
   return mTempThebesSurface;
 }
 
+static void
+DrawResizer(CGContextRef aCtx)
+{
+  CGContextSetShouldAntialias(aCtx, false);
+  CGPoint points[6];
+  points[0] = CGPointMake(13.0f, 4.0f);
+  points[1] = CGPointMake(3.0f, 14.0f);
+  points[2] = CGPointMake(13.0f, 8.0f);
+  points[3] = CGPointMake(7.0f, 14.0f);
+  points[4] = CGPointMake(13.0f, 12.0f);
+  points[5] = CGPointMake(11.0f, 14.0f);
+  CGContextSetRGBStrokeColor(aCtx, 0.00f, 0.00f, 0.00f, 0.15f);
+  CGContextStrokeLineSegments(aCtx, points, 6);
+
+  points[0] = CGPointMake(13.0f, 5.0f);
+  points[1] = CGPointMake(4.0f, 14.0f);
+  points[2] = CGPointMake(13.0f, 9.0f);
+  points[3] = CGPointMake(8.0f, 14.0f);
+  points[4] = CGPointMake(13.0f, 13.0f);
+  points[5] = CGPointMake(12.0f, 14.0f);
+  CGContextSetRGBStrokeColor(aCtx, 0.13f, 0.13f, 0.13f, 0.54f);
+  CGContextStrokeLineSegments(aCtx, points, 6);
+
+  points[0] = CGPointMake(13.0f, 6.0f);
+  points[1] = CGPointMake(5.0f, 14.0f);
+  points[2] = CGPointMake(13.0f, 10.0f);
+  points[3] = CGPointMake(9.0f, 14.0f);
+  points[5] = CGPointMake(13.0f, 13.9f);
+  points[4] = CGPointMake(13.0f, 14.0f);
+  CGContextSetRGBStrokeColor(aCtx, 0.84f, 0.84f, 0.84f, 0.55f);
+  CGContextStrokeLineSegments(aCtx, points, 6);
+}
+
 void
 nsChildView::DrawOver(LayerManager* aManager, nsIntRect aRect)
 {
-  nsCocoaWindow *cocoaWindow = GetXULWindowWidget();
-  if (cocoaWindow) {
-    cocoaWindow->DrawOver(aManager, aRect);
+  if (!ShowsResizeIndicator(nsnull)) {
+    return;
   }
+
+  nsRefPtr<LayerManagerOGL> manager(static_cast<LayerManagerOGL*>(aManager));
+  if (!manager) {
+    return;
+  }
+
+  if (!mResizerImage) {
+    mResizerImage = manager->gl()->CreateTextureImage(nsIntSize(15, 15),
+                                                      gfxASurface::CONTENT_COLOR_ALPHA,
+                                                      LOCAL_GL_CLAMP_TO_EDGE,
+                                                      /* aUseNearestFilter = */ PR_TRUE);
+
+    // Creation of texture images can fail.
+    if (!mResizerImage)
+      return;
+
+    nsIntRegion update(nsIntRect(0, 0, 15, 15));
+    gfxASurface *asurf = mResizerImage->BeginUpdate(update);
+    if (!asurf) {
+      mResizerImage = nsnull;
+      return;
+    }
+
+    NS_ABORT_IF_FALSE(asurf->GetType() == gfxASurface::SurfaceTypeQuartz,
+                  "BeginUpdate must return a Quartz surface!");
+
+    nsRefPtr<gfxQuartzSurface> image = static_cast<gfxQuartzSurface*>(asurf);
+    DrawResizer(image->GetCGContext());
+
+    mResizerImage->EndUpdate();
+  }
+
+  NS_ABORT_IF_FALSE(mResizerImage, "Must have a texture allocated by now!");
+
+  float bottomX = aRect.x + aRect.width;
+  float bottomY = aRect.y + aRect.height;
+
+  manager->gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+  manager->gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mResizerImage->Texture());
+
+  ColorTextureLayerProgram *program =
+    manager->GetColorTextureLayerProgram(mResizerImage->GetShaderProgramType());
+  program->Activate();
+  program->SetLayerQuadRect(nsIntRect(bottomX - 15,
+                                      bottomY - 15,
+                                      15,
+                                      15));
+  program->SetLayerTransform(gfx3DMatrix());
+  program->SetLayerOpacity(1.0);
+  program->SetRenderOffset(nsIntPoint(0,0));
+  program->SetTextureUnit(0);
+
+  manager->BindAndDrawQuad(program);
 }
 
 void
@@ -5761,17 +5850,19 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
 
   // create event for use by plugins
+  if (mIsPluginView) {
 #ifndef NP_NO_CARBON
-  EventRecord carbonEvent;
-  if (mPluginEventModel == NPEventModelCarbon) {
-    ConvertCocoaKeyEventToCarbonEvent(theEvent, carbonEvent, message);
-    geckoEvent.pluginEvent = &carbonEvent;
-  }
+    EventRecord carbonEvent;
+    if (mPluginEventModel == NPEventModelCarbon) {
+      ConvertCocoaKeyEventToCarbonEvent(theEvent, carbonEvent, message);
+      geckoEvent.pluginEvent = &carbonEvent;
+    }
 #endif
-  NPCocoaEvent cocoaEvent;
-  if (mPluginEventModel == NPEventModelCocoa) {
-    ConvertCocoaKeyEventToNPCocoaEvent(theEvent, cocoaEvent, message);
-    geckoEvent.pluginEvent = &cocoaEvent;
+    NPCocoaEvent cocoaEvent;
+    if (mPluginEventModel == NPEventModelCocoa) {
+      ConvertCocoaKeyEventToNPCocoaEvent(theEvent, cocoaEvent, message);
+      geckoEvent.pluginEvent = &cocoaEvent;
+    }
   }
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);

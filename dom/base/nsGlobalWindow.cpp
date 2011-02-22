@@ -6469,7 +6469,8 @@ nsGlobalWindow::LeaveModalState(nsIDOMWindow *aCallerWin)
   if (aCallerWin) {
     nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aCallerWin));
     nsIScriptContext *scx = sgo->GetContext();
-    scx->LeaveModalState();
+    if (scx)
+      scx->LeaveModalState();
   }
 
   if (mContext) {

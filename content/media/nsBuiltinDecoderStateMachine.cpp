@@ -97,7 +97,7 @@ static const PRUint32 LOW_VIDEO_FRAMES = 1;
 static const PRUint32 AMPLE_VIDEO_FRAMES = 10;
 
 // Arbitrary "frame duration" when playing only audio.
-static const int AUDIO_DURATION_MS = 40;
+static const int AUDIO_DURATION_MS = 150;
 
 // If we increase our "low audio threshold" (see LOW_AUDIO_MS above), we
 // use this as a factor in all our calculations. Increasing this will cause
@@ -1101,7 +1101,7 @@ nsresult nsBuiltinDecoderStateMachine::Run()
                          "Seek target should lie inside the first audio block after seek");
             PRInt64 startTime = (audio && audio->mTime < seekTime) ? audio->mTime : seekTime;
             mAudioStartTime = startTime;
-            mPlayDuration = TimeDuration::FromMilliseconds(startTime);
+            mPlayDuration = TimeDuration::FromMilliseconds(startTime - mStartTime);
             if (HasVideo()) {
               nsAutoPtr<VideoData> video(mReader->mVideoQueue.PeekFront());
               if (video) {
@@ -1326,7 +1326,8 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
       clock_time = audio_time;
       // Resync against the audio clock, while we're trusting the
       // audio clock. This ensures no "drift", particularly on Linux.
-      mPlayStartTime = TimeStamp::Now() - TimeDuration::FromMilliseconds(clock_time);
+      mPlayDuration = TimeDuration::FromMilliseconds(clock_time - mStartTime);
+      mPlayStartTime = TimeStamp::Now();
     } else {
       // Sound is disabled on this system. Sync to the system clock.
       TimeDuration t = TimeStamp::Now() - mPlayStartTime + mPlayDuration;
@@ -1336,33 +1337,41 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
       clock_time = NS_MAX(mCurrentFrameTime, clock_time) + mStartTime;
     }
 
+    PRInt64 remainingTime = AUDIO_DURATION_MS;
+
     NS_ASSERTION(clock_time >= mStartTime, "Should have positive clock time.");
-    nsAutoPtr<VideoData> videoData;
+    nsAutoPtr<VideoData> currentFrame;
     if (mReader->mVideoQueue.GetSize() > 0) {
-      VideoData* data = mReader->mVideoQueue.PeekFront();
-      while (clock_time >= data->mTime) {
-        mVideoFrameEndTime = data->mEndTime;
-        videoData = data;
+      VideoData* frame = mReader->mVideoQueue.PeekFront();
+      while (clock_time >= frame->mTime) {
+        mVideoFrameEndTime = frame->mEndTime;
+        currentFrame = frame;
         mReader->mVideoQueue.PopFront();
-        mDecoder->UpdatePlaybackOffset(data->mOffset);
+        mDecoder->UpdatePlaybackOffset(frame->mOffset);
         if (mReader->mVideoQueue.GetSize() == 0)
           break;
-        data = mReader->mVideoQueue.PeekFront();
+        frame = mReader->mVideoQueue.PeekFront();
+      }
+      // Current frame has already been presented, wait until it's time to
+      // present the next frame.
+      if (frame && !currentFrame) {
+        PRInt64 now = (TimeStamp::Now() - mPlayStartTime + mPlayDuration).ToMilliseconds();
+        remainingTime = frame->mTime - mStartTime - now;
       }
     }
 
-    PRInt64 frameDuration = AUDIO_DURATION_MS;
-    if (videoData) {
+    if (currentFrame) {
       // Decode one frame and display it
-      NS_ASSERTION(videoData->mTime >= mStartTime, "Should have positive frame time");
+      NS_ASSERTION(currentFrame->mTime >= mStartTime, "Should have positive frame time");
       {
         MonitorAutoExit exitMon(mDecoder->GetMonitor());
         // If we have video, we want to increment the clock in steps of the frame
         // duration.
-        RenderVideoFrame(videoData);
+        RenderVideoFrame(currentFrame);
       }
-      frameDuration = videoData->mEndTime - videoData->mTime;
-      videoData = nsnull;
+      PRInt64 now = (TimeStamp::Now() - mPlayStartTime + mPlayDuration).ToMilliseconds();
+      remainingTime = currentFrame->mEndTime - mStartTime - now;
+      currentFrame = nsnull;
     }
 
     // Kick the decode thread in case it filled its buffers and put itself
@@ -1390,8 +1399,9 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
     // ready state. Post an update to do so.
     UpdateReadyState();
 
-    NS_ASSERTION(frameDuration >= 0, "Frame duration must be positive.");
-    Wait(frameDuration);
+    if (remainingTime > 0) {
+      Wait(remainingTime);
+    }
   } else {
     if (IsPlaying()) {
       StopPlayback(AUDIO_PAUSE);
@@ -1413,8 +1423,7 @@ void nsBuiltinDecoderStateMachine::Wait(PRUint32 aMs) {
          mState != DECODER_STATE_SHUTDOWN &&
          mState != DECODER_STATE_SEEKING)
   {
-    TimeDuration d = end - now;
-    PRInt64 ms = d.ToSeconds() * 1000;
+    PRInt64 ms = NS_round((end - now).ToSeconds() * 1000);
     if (ms == 0) {
       break;
     }

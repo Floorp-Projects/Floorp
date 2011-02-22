@@ -21,9 +21,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
           src="editabletext.js"></script>
 
   <script type="application/javascript">
-    function addTestEditable(aID, aTestRun)
+    function addTestEditable(aID, aTestRun, aTrailChar)
     {
       var et = new editableTextTest(aID);
+
+      //////////////////////////////////////////////////////////////////////////
+      // setTextContents
+      et.setTextContents("hello");
+      et.setTextContents("olleh", aTrailChar); // due to some reason this reports '\n' in the end
+      et.setTextContents("");
 
       //////////////////////////////////////////////////////////////////////////
       // insertText
@@ -33,12 +39,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
       et.insertText(" hello", 10, "mama hello hello");
 
       // XXX: bug 452584
-
-      //////////////////////////////////////////////////////////////////////////
-      // setTextContents
-//      et.setTextContents("hello", "hello");
-//      et.setTextContents("olleh", "olleh");
-//      et.setTextContents("", "");
 
       //////////////////////////////////////////////////////////////////////////
       // deleteText
@@ -71,8 +71,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
       var testRun = new editableTextTestRun();
 
       addTestEditable("input", testRun);
-      addTestEditable("div", testRun);
-      addTestEditable(getNode("frame").contentDocument, testRun);
+      addTestEditable("div", testRun, '\n');
+      addTestEditable(getNode("frame").contentDocument, testRun, '\n');
 
       testRun.run(); // Will call SimpleTest.finish();
     }

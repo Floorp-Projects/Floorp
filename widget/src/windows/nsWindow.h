@@ -323,6 +323,7 @@ protected:
    * Window utilities
    */
   static BOOL             SetNSWindowPtr(HWND aWnd, nsWindow * ptr);
+  static PRInt32          GetMonitorCount();
   LPARAM                  lParamToScreen(LPARAM lParam);
   LPARAM                  lParamToClient(LPARAM lParam);
   virtual void            SubclassWindow(BOOL bState);
@@ -532,6 +533,7 @@ protected:
   nsSizeMode            mOldSizeMode;
   WindowHook            mWindowHook;
   DWORD                 mAssumeWheelIsZoomUntil;
+  static PRBool         sDropShadowEnabled;
   static PRUint32       sInstanceCount;
   static TriStateBool   sCanQuit;
   static nsWindow*      sCurrentWindow;

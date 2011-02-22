@@ -48,6 +48,9 @@
 #include "prmem.h"
 #include "nsArrayEnumerator.h"
 
+#include <windows.h>
+#include "nsIWindowsRegKey.h"
+
 typedef struct structVer
 {
   WORD wMajor;
@@ -237,6 +240,10 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
   if (!prefs)
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIWindowsRegKey> regKey =
+    do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  NS_ENSURE_TRUE(regKey, NS_ERROR_FAILURE);
+
   if (nsCRT::strcmp(charProp, NS_WIN_4DOTX_SCAN_KEY) == 0) {
     // Check our prefs to see if scanning the 4.x folder has been
     // explictly overriden failure to get the pref is okay, we'll do
@@ -249,38 +256,29 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
 
     // Look for the plugin folder that the user has in their
     // Communicator 4x install
-    HKEY keyloc;
-    long result;
-    DWORD type;
-    WCHAR szKey[_MAX_PATH] = L"Software\\Netscape\\Netscape Navigator";
-    WCHAR path[_MAX_PATH];
+    rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
+                      NS_LITERAL_STRING("Software\\Netscape\\Netscape Navigator"),
+                      nsIWindowsRegKey::ACCESS_READ);
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoString currentVersion;
+      rv = regKey->ReadStringValue(NS_LITERAL_STRING("CurrentVersion"),
+                                   currentVersion);
+      if (NS_SUCCEEDED(rv)) {
+        nsAutoString childName = currentVersion;
+        childName.Append(NS_LITERAL_STRING("\\Main"));
+        nsCOMPtr<nsIWindowsRegKey> childKey;
 
-    result = ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, szKey, 0, KEY_READ, &keyloc);
-
-    if (result == ERROR_SUCCESS) {
-      WCHAR current_version[80];
-      DWORD length = NS_ARRAY_LENGTH(current_version);
-
-      result = ::RegQueryValueExW(keyloc, L"CurrentVersion", NULL, &type,
-                                  (LPBYTE)&current_version, &length);
-
-      ::RegCloseKey(keyloc);
-      wcscat(szKey, L"\\");
-      wcscat(szKey, current_version);
-      wcscat(szKey, L"\\Main");
-      result = ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, szKey, 0, KEY_READ, &keyloc);
-
-      if (result == ERROR_SUCCESS) {
-        DWORD pathlen = NS_ARRAY_LENGTH(path);
-
-        result = ::RegQueryValueExW(keyloc, L"Plugins Directory", NULL, &type,
-                                   (LPBYTE)&path, &pathlen);
-        if (result == ERROR_SUCCESS) {
-          rv = NS_NewLocalFile(nsDependentString(path),
-                               PR_TRUE, getter_AddRefs(localFile));
+        rv = regKey->OpenChild(childName, nsIWindowsRegKey::ACCESS_READ,
+                               getter_AddRefs(childKey));
+        if (NS_SUCCEEDED(rv) && childKey) {
+          nsAutoString pluginsDirectory;
+          rv = childKey->ReadStringValue(NS_LITERAL_STRING("Plugins Directory"),
+                                         pluginsDirectory);
+          if (NS_SUCCEEDED(rv)) {
+            rv = NS_NewLocalFile(pluginsDirectory, PR_TRUE,
+                                 getter_AddRefs(localFile));
+          }
         }
-
-        ::RegCloseKey(keyloc);
       }
     }
   } else if (nsCRT::strcmp(charProp, NS_WIN_JRE_SCAN_KEY) == 0) {
@@ -290,110 +288,89 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
     verBlock minVer;
     TranslateVersionStr(NS_ConvertASCIItoUTF16(strVer).get(), &minVer);
 
-    // Look for the Java OJI plugin via the JRE install path
-    HKEY baseloc;
-    HKEY keyloc;
-    HKEY entryloc;
-    FILETIME modTime;
-    DWORD type;
-    DWORD index = 0;
-    DWORD numChars = _MAX_PATH;
-    DWORD pathlen;
+    rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
+                      NS_LITERAL_STRING("Software\\JavaSoft\\Java Runtime Environment"),
+                      nsIWindowsRegKey::ACCESS_READ);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     verBlock maxVer;
     ClearVersion(&maxVer);
-    WCHAR curKey[_MAX_PATH] = L"Software\\JavaSoft\\Java Runtime Environment";
-    WCHAR path[_MAX_PATH];
-    // Add + 15 to prevent buffer overrun when adding \bin (+ optionally
-    // \new_plugin)
-#define JAVA_PATH_SIZE _MAX_PATH + 15
-    WCHAR newestPath[JAVA_PATH_SIZE];
-    WCHAR browserJavaVersion[_MAX_PATH];
 
-    newestPath[0] = 0;
-    LONG result = ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, curKey, 0, KEY_READ,
-                                  &baseloc);
-    if (ERROR_SUCCESS != result)
-      return NS_ERROR_FAILURE;
+    nsAutoString newestPath;
+    nsAutoString browserJavaVersion;
+    regKey->ReadStringValue(NS_LITERAL_STRING("BrowserJavaVersion"),
+                            browserJavaVersion);
 
-    // Look for "BrowserJavaVersion"
-    if (ERROR_SUCCESS != ::RegQueryValueExW(baseloc, L"BrowserJavaVersion", NULL,
-                                            NULL, (LPBYTE)&browserJavaVersion,
-                                            &numChars))
-      browserJavaVersion[0] = 0;
+    PRUint32 childCount = 0;
+    regKey->GetChildCount(&childCount);
 
     // We must enumerate through the keys because what if there is
     // more than one version?
-    do {
-      path[0] = 0;
-      numChars = _MAX_PATH;
-      pathlen = NS_ARRAY_LENGTH(path);
-      result = ::RegEnumKeyExW(baseloc, index, curKey, &numChars, NULL, NULL,
-                               NULL, &modTime);
-      index++;
-
-      // Skip major.minor as it always points to latest in its family
-      numChars = 0;
-      for (WCHAR *p = curKey; *p; p++) {
-        if (*p == '.') {
-          numChars++;
+    for (PRUint32 index = 0; index < childCount; ++index) {
+      nsAutoString childName;
+      rv = regKey->GetChildName(index, childName);
+      if (NS_SUCCEEDED(rv)) {
+        // Skip major.minor as it always points to latest in its family
+        PRUint32 numChars = 0;
+        PRInt32 offset = 0;
+        while ((offset = childName.FindChar(L'.', offset + 1)) >= 0) {
+          ++numChars;
         }
-      }
-      if (numChars < 2)
-        continue;
+        if (numChars < 2)
+          continue;
 
-      if (ERROR_SUCCESS == result) {
-        if (ERROR_SUCCESS == ::RegOpenKeyExW(baseloc, curKey, 0,
-                                             KEY_QUERY_VALUE, &keyloc)) {
-          // We have a sub key
-          if (ERROR_SUCCESS == ::RegQueryValueExW(keyloc, L"JavaHome", NULL,
-                                                  &type, (LPBYTE)&path,
-                                                  &pathlen)) {
+        nsCOMPtr<nsIWindowsRegKey> childKey;
+        rv = regKey->OpenChild(childName, nsIWindowsRegKey::ACCESS_QUERY_VALUE,
+                               getter_AddRefs(childKey));
+        if (NS_SUCCEEDED(rv) && childKey) {
+          nsAutoString path;
+          rv = childKey->ReadStringValue(NS_LITERAL_STRING("JavaHome"), path);
+          if (NS_SUCCEEDED(rv)) {
             verBlock curVer;
-            TranslateVersionStr(curKey, &curVer);
+            TranslateVersionStr(PromiseFlatString(childName).get(), &curVer);
             if (CompareVersion(curVer, minVer) >= 0) {
-              if (!wcsncmp(browserJavaVersion, curKey, _MAX_PATH)) {
-                wcscpy(newestPath, path);
-                ::RegCloseKey(keyloc);
+              if (browserJavaVersion == childName) {
+                newestPath = path;
                 break;
               }
 
               if (CompareVersion(curVer, maxVer) >= 0) {
-                wcscpy(newestPath, path);
+                newestPath = path;
                 CopyVersion(&maxVer, &curVer);
               }
             }
           }
-          ::RegCloseKey(keyloc);
         }
       }
-    } while (ERROR_SUCCESS == result);
+    }
 
-    ::RegCloseKey(baseloc);
-
-    if (newestPath[0] == 0) {
+    if (newestPath.IsEmpty()) {
       return NS_ERROR_FAILURE;
     }
 
     // We require the newer NPAPI Java plugin.
-    wcscat(newestPath, L"\\bin\\new_plugin");
+    newestPath += NS_LITERAL_STRING("\\bin\\new_plugin");
 
-    rv = NS_NewLocalFile(nsDependentString(newestPath),
+    rv = NS_NewLocalFile(newestPath,
                          PR_TRUE, getter_AddRefs(localFile));
 
     if (NS_SUCCEEDED(rv)) {
-      const WCHAR mozPath[_MAX_PATH] = L"Software\\mozilla.org\\Mozilla";
-      if (ERROR_SUCCESS == ::RegCreateKeyExW(HKEY_LOCAL_MACHINE, mozPath, 0,
-                                             NULL, REG_OPTION_NON_VOLATILE,
-                                             KEY_SET_VALUE|KEY_QUERY_VALUE,
-                                             NULL, &entryloc, NULL)) {
-        if (ERROR_SUCCESS != ::RegQueryValueExW(entryloc, L"CurrentVersion", 0,
-                                                NULL, NULL, NULL)) {
-          static const WCHAR kMozillaVersion[] = NS_L(MOZILLA_VERSION);
-          ::RegSetValueExW(entryloc, L"CurrentVersion", 0, REG_SZ,
-                           (const BYTE*) kMozillaVersion,
-                           NS_ARRAY_LENGTH(kMozillaVersion));
+      nsCOMPtr<nsIWindowsRegKey> newKey =
+        do_CreateInstance("@mozilla.org/windows-registry-key;1");
+      NS_ENSURE_TRUE(newKey, NS_ERROR_FAILURE);
+
+      rv = newKey->Create(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
+                          NS_LITERAL_STRING("Software\\mozilla.org\\Mozilla"),
+                          nsIWindowsRegKey::ACCESS_QUERY_VALUE |
+                          nsIWindowsRegKey::ACCESS_SET_VALUE);
+      if (NS_SUCCEEDED(rv)) {
+        PRBool currentVersionExists = PR_FALSE;
+        newKey->HasValue(NS_LITERAL_STRING("CurrentVersion"),
+                         &currentVersionExists);
+        if (!currentVersionExists) {
+          newKey->WriteStringValue(NS_LITERAL_STRING("CurrentVersion"),
+                                   NS_LITERAL_STRING(MOZILLA_VERSION));
         }
-        ::RegCloseKey(entryloc);
       }
     }
   } else if (nsCRT::strcmp(charProp, NS_WIN_QUICKTIME_SCAN_KEY) == 0) {
@@ -404,40 +381,36 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
     TranslateVersionStr(NS_ConvertASCIItoUTF16(strVer).get(), &minVer);
 
     // Look for the Quicktime system installation plugins directory
-    HKEY keyloc;
-    long result;
-    DWORD type;
     verBlock qtVer;
     ClearVersion(&qtVer);
-    WCHAR path[_MAX_PATH];
-    DWORD pathlen = NS_ARRAY_LENGTH(path);
 
     // First we need to check the version of Quicktime via checking
     // the EXE's version table
-    if (ERROR_SUCCESS == ::RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                                         L"software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\QuickTimePlayer.exe",
-                                         0, KEY_READ, &keyloc)) {
-      if (ERROR_SUCCESS == ::RegQueryValueExW(keyloc, NULL, NULL, &type,
-                                              (LPBYTE)&path, &pathlen)) {
-        GetFileVersion(path, &qtVer);
+    rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
+                      NS_LITERAL_STRING("software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\QuickTimePlayer.exe"),
+                      nsIWindowsRegKey::ACCESS_READ);
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoString path;
+      rv = regKey->ReadStringValue(NS_LITERAL_STRING(""), path);
+      if (NS_SUCCEEDED(rv)) {
+        GetFileVersion(PromiseFlatString(path).get(), &qtVer);
       }
-      ::RegCloseKey(keyloc);
+      regKey->Close();
     }
     if (CompareVersion(qtVer, minVer) < 0)
       return rv;
 
-    if (ERROR_SUCCESS == ::RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                                         L"software\\Apple Computer, Inc.\\QuickTime",
-                                        0, KEY_READ, &keyloc)) {
-      DWORD pathlen = NS_ARRAY_LENGTH(path);
-
-      result = ::RegQueryValueExW(keyloc, L"InstallDir", NULL, &type,
-                                  (LPBYTE)&path, &pathlen);
-      wcscat(path, L"\\Plugins");
-      if (result == ERROR_SUCCESS)
-        rv = NS_NewLocalFile(nsDependentString(path), PR_TRUE,
+    rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
+                      NS_LITERAL_STRING("software\\Apple Computer, Inc.\\QuickTime"),
+                      nsIWindowsRegKey::ACCESS_READ);
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoString path;
+      rv = regKey->ReadStringValue(NS_LITERAL_STRING("InstallDir"), path);
+      if (NS_SUCCEEDED(rv)) {
+        path += NS_LITERAL_STRING("\\Plugins");
+        rv = NS_NewLocalFile(path, PR_TRUE,
                              getter_AddRefs(localFile));
-      ::RegCloseKey(keyloc);
+      }
     }
   } else if (nsCRT::strcmp(charProp, NS_WIN_WMP_SCAN_KEY) == 0) {
     nsXPIDLCString strVer;
@@ -447,37 +420,35 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
     TranslateVersionStr(NS_ConvertASCIItoUTF16(strVer).get(), &minVer);
 
     // Look for Windows Media Player system installation plugins directory
-    HKEY keyloc;
-    DWORD type;
     verBlock wmpVer;
     ClearVersion(&wmpVer);
-    WCHAR path[_MAX_PATH];
-    DWORD pathlen = NS_ARRAY_LENGTH(path);
 
     // First we need to check the version of WMP
-    if (ERROR_SUCCESS == ::RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                                         L"software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\wmplayer.exe",
-                                         0, KEY_READ, &keyloc)) {
-      if (ERROR_SUCCESS == ::RegQueryValueExW(keyloc, NULL, NULL, &type,
-                                              (LPBYTE)&path, &pathlen)) {
-        GetFileVersion(path, &wmpVer);
+    rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
+                      NS_LITERAL_STRING("software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\wmplayer.exe"),
+                      nsIWindowsRegKey::ACCESS_READ);
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoString path;
+      rv = regKey->ReadStringValue(NS_LITERAL_STRING(""), path);
+      if (NS_SUCCEEDED(rv)) {
+        GetFileVersion(PromiseFlatString(path).get(), &wmpVer);
       }
-      ::RegCloseKey(keyloc);
+      regKey->Close();
     }
     if (CompareVersion(wmpVer, minVer) < 0)
       return rv;
 
-    if (ERROR_SUCCESS == ::RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                                         L"software\\Microsoft\\MediaPlayer", 0,
-                                         KEY_READ, &keyloc)) {
-      if (ERROR_SUCCESS == ::RegQueryValueExW(keyloc, L"Installation Directory",
-                                             NULL, &type, (LPBYTE)&path,
-                                             &pathlen)) {
-        rv = NS_NewLocalFile(nsDependentString(path), PR_TRUE,
+    rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
+                      NS_LITERAL_STRING("software\\Microsoft\\MediaPlayer"),
+                      nsIWindowsRegKey::ACCESS_READ);
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoString path;
+      rv = regKey->ReadStringValue(NS_LITERAL_STRING("Installation Directory"),
+                                   path);
+      if (NS_SUCCEEDED(rv)) {
+        rv = NS_NewLocalFile(path, PR_TRUE,
                              getter_AddRefs(localFile));
       }
-
-      ::RegCloseKey(keyloc);
     }
   } else if (nsCRT::strcmp(charProp, NS_WIN_ACROBAT_SCAN_KEY) == 0) {
     nsXPIDLCString strVer;
@@ -489,70 +460,60 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
     TranslateVersionStr(NS_ConvertASCIItoUTF16(strVer).get(), &minVer);
 
     // Look for Adobe Acrobat system installation plugins directory
-    HKEY baseloc;
-    HKEY keyloc;
-    FILETIME modTime;
-    DWORD type;
-    DWORD index = 0;
-    DWORD numChars = _MAX_PATH;
-    DWORD pathlen;
     verBlock maxVer;
     ClearVersion(&maxVer);
-    WCHAR curKey[_MAX_PATH] = L"software\\Adobe\\Acrobat Reader";
-    WCHAR path[_MAX_PATH];
-    // Add + 8 to prevent buffer overrun when adding \browser
-    WCHAR newestPath[_MAX_PATH + 8];
 
-    newestPath[0] = 0;
-    if (ERROR_SUCCESS != ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, curKey, 0,
-                                         KEY_READ, &baseloc)) {
-      wcscpy(curKey, L"software\\Adobe\\Adobe Acrobat");
-      if (ERROR_SUCCESS != ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, curKey, 0,
-                                           KEY_READ, &baseloc)) {
+    nsAutoString newestPath;
+
+    rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
+                      NS_LITERAL_STRING("software\\Adobe\\Acrobat Reader"),
+                      nsIWindowsRegKey::ACCESS_READ);
+    if (NS_FAILED(rv)) {
+      rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
+                        NS_LITERAL_STRING("software\\Adobe\\Adobe Reader"),
+                        nsIWindowsRegKey::ACCESS_READ);
+      if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
       }
     }
 
     // We must enumerate through the keys because what if there is
     // more than one version?
-    LONG result = ERROR_SUCCESS;
-    while (ERROR_SUCCESS == result) {
-      path[0] = 0;
-      numChars = _MAX_PATH;
-      pathlen = NS_ARRAY_LENGTH(path);
-      result = ::RegEnumKeyExW(baseloc, index, curKey, &numChars, NULL, NULL,
-                               NULL, &modTime);
-      index++;
+    PRUint32 childCount = 0;
+    regKey->GetChildCount(&childCount);
 
-      if (ERROR_SUCCESS == result) {
+    for (PRUint32 index = 0; index < childCount; ++index) {
+      nsAutoString childName;
+      rv = regKey->GetChildName(index, childName);
+      if (NS_SUCCEEDED(rv)) {
         verBlock curVer;
-        TranslateVersionStr(curKey, &curVer);
-        wcscat(curKey, L"\\InstallPath");
-        if (ERROR_SUCCESS == ::RegOpenKeyExW(baseloc, curKey, 0,
-                                             KEY_QUERY_VALUE, &keyloc)) {
+        TranslateVersionStr(PromiseFlatString(childName).get(), &curVer);
+
+        childName += NS_LITERAL_STRING("\\InstallPath");
+
+        nsCOMPtr<nsIWindowsRegKey> childKey;
+        rv = regKey->OpenChild(childName, nsIWindowsRegKey::ACCESS_QUERY_VALUE,
+                               getter_AddRefs(childKey));
+        if (NS_SUCCEEDED(rv)) {
           // We have a sub key
-          if (ERROR_SUCCESS == ::RegQueryValueExW(keyloc, NULL, NULL, &type,
-                                                  (LPBYTE)&path, &pathlen)) {
+          nsAutoString path;
+          rv = childKey->ReadStringValue(NS_LITERAL_STRING(""), path);
+          if (NS_SUCCEEDED(rv)) {
             if (CompareVersion(curVer, maxVer) >= 0 &&
                 CompareVersion(curVer, minVer) >= 0) {
-              wcscpy(newestPath, path);
+              newestPath = path;
               CopyVersion(&maxVer, &curVer);
             }
           }
-
-          ::RegCloseKey(keyloc);
         }
       }
     }
 
-    ::RegCloseKey(baseloc);
-
-    if (newestPath[0] != 0) {
-      wcscat(newestPath, L"\\browser");
-      rv = NS_NewLocalFile(nsDependentString(newestPath), PR_TRUE,
+    if (!newestPath.IsEmpty()) {
+      newestPath += NS_LITERAL_STRING("\\browser");
+      rv = NS_NewLocalFile(newestPath, PR_TRUE,
                            getter_AddRefs(localFile));
     }
-
   }
 
   if (localFile && NS_SUCCEEDED(rv))
@@ -569,77 +530,76 @@ nsPluginDirServiceProvider::GetPLIDDirectories(nsISimpleEnumerator **aEnumerator
 
   nsCOMArray<nsILocalFile> dirs;
 
-  GetPLIDDirectoriesWithHKEY(HKEY_CURRENT_USER, dirs);
-  GetPLIDDirectoriesWithHKEY(HKEY_LOCAL_MACHINE, dirs);
+  GetPLIDDirectoriesWithRootKey(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER, dirs);
+  GetPLIDDirectoriesWithRootKey(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE, dirs);
 
   return NS_NewArrayEnumerator(aEnumerator, dirs);
 }
 
 nsresult
-nsPluginDirServiceProvider::GetPLIDDirectoriesWithHKEY(HKEY aKey, nsCOMArray<nsILocalFile> &aDirs)
+nsPluginDirServiceProvider::GetPLIDDirectoriesWithRootKey(PRUint32 aKey, nsCOMArray<nsILocalFile> &aDirs)
 {
-  WCHAR subkey[_MAX_PATH] = L"Software\\MozillaPlugins";
-  HKEY baseloc;
+  nsCOMPtr<nsIWindowsRegKey> regKey =
+    do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  NS_ENSURE_TRUE(regKey, NS_ERROR_FAILURE);
 
-  if (ERROR_SUCCESS != ::RegOpenKeyExW(aKey, subkey, 0, KEY_READ, &baseloc))
-    return NS_ERROR_FAILURE;
+  nsresult rv = regKey->Open(aKey,
+                             NS_LITERAL_STRING("Software\\MozillaPlugins"),
+                             nsIWindowsRegKey::ACCESS_READ);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  DWORD index = 0;
-  DWORD subkeylen = _MAX_PATH;
-  FILETIME modTime;
-  while (ERROR_SUCCESS == ::RegEnumKeyExW(baseloc, index++, subkey, &subkeylen,
-                                          NULL, NULL, NULL, &modTime)) {
-    subkeylen = _MAX_PATH;
-    HKEY keyloc;
+  PRUint32 childCount = 0;
+  regKey->GetChildCount(&childCount);
 
-    if (ERROR_SUCCESS == ::RegOpenKeyExW(baseloc, subkey, 0, KEY_QUERY_VALUE,
-                                         &keyloc)) {
-      DWORD type;
-      WCHAR path[_MAX_PATH];
-      DWORD pathlen = NS_ARRAY_LENGTH(path);
-
-      if (ERROR_SUCCESS == ::RegQueryValueExW(keyloc, L"Path", NULL, &type,
-                                              (LPBYTE)&path, &pathlen)) {
-        nsCOMPtr<nsILocalFile> localFile;
-        if (NS_SUCCEEDED(NS_NewLocalFile(nsDependentString(path), PR_TRUE,
-                                         getter_AddRefs(localFile))) &&
-            localFile)
-        {
-          // Some vendors use a path directly to the DLL so chop off
-          // the filename
-          PRBool isDir = PR_FALSE;
-          if (NS_SUCCEEDED(localFile->IsDirectory(&isDir)) && !isDir) {
-            nsCOMPtr<nsIFile> temp;
-            localFile->GetParent(getter_AddRefs(temp));
-            if (temp)
-              localFile = do_QueryInterface(temp);
-          }
-
-          // Now we check to make sure it's actually on disk and
-          // To see if we already have this directory in the array
-          PRBool isFileThere = PR_FALSE;
-          PRBool isDupEntry = PR_FALSE;
-          if (NS_SUCCEEDED(localFile->Exists(&isFileThere)) && isFileThere) {
-            PRInt32 c = aDirs.Count();
-            for (PRInt32 i = 0; i < c; i++) {
-              nsIFile *dup = static_cast<nsIFile*>(aDirs[i]);
-              if (dup &&
-                  NS_SUCCEEDED(dup->Equals(localFile, &isDupEntry)) &&
-                  isDupEntry) {
-                break;
-              }
+  for (PRUint32 index = 0; index < childCount; ++index) {
+    nsAutoString childName;
+    rv = regKey->GetChildName(index, childName);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIWindowsRegKey> childKey;
+      rv = regKey->OpenChild(childName, nsIWindowsRegKey::ACCESS_QUERY_VALUE,
+                             getter_AddRefs(childKey));
+      if (NS_SUCCEEDED(rv) && childKey) {
+        nsAutoString path;
+        rv = childKey->ReadStringValue(NS_LITERAL_STRING("Path"), path);
+        if (NS_SUCCEEDED(rv)) {
+          nsCOMPtr<nsILocalFile> localFile;
+          if (NS_SUCCEEDED(NS_NewLocalFile(path, PR_TRUE,
+                                           getter_AddRefs(localFile))) &&
+              localFile) {
+            // Some vendors use a path directly to the DLL so chop off
+            // the filename
+            PRBool isDir = PR_FALSE;
+            if (NS_SUCCEEDED(localFile->IsDirectory(&isDir)) && !isDir) {
+              nsCOMPtr<nsIFile> temp;
+              localFile->GetParent(getter_AddRefs(temp));
+              if (temp)
+                localFile = do_QueryInterface(temp);
             }
 
-            if (!isDupEntry) {
-              aDirs.AppendObject(localFile);
+            // Now we check to make sure it's actually on disk and
+            // To see if we already have this directory in the array
+            PRBool isFileThere = PR_FALSE;
+            PRBool isDupEntry = PR_FALSE;
+            if (NS_SUCCEEDED(localFile->Exists(&isFileThere)) && isFileThere) {
+              PRInt32 c = aDirs.Count();
+              for (PRInt32 i = 0; i < c; i++) {
+                nsIFile *dup = static_cast<nsIFile*>(aDirs[i]);
+                if (dup &&
+                    NS_SUCCEEDED(dup->Equals(localFile, &isDupEntry)) &&
+                    isDupEntry) {
+                  break;
+                }
+              }
+
+              if (!isDupEntry) {
+                aDirs.AppendObject(localFile);
+              }
             }
           }
         }
       }
-      ::RegCloseKey(keyloc);
     }
   }
-  ::RegCloseKey(baseloc);
   return NS_OK;
 }
 

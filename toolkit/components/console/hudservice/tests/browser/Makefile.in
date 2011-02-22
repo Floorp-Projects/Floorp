@@ -121,6 +121,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_618078_network_exceptions.js \
 	browser_webconsole_bug_613280_jsterm_copy.js \
 	browser_webconsole_bug_630733_response_redirect_headers.js \
+	browser_webconsole_bug_621644_jsterm_dollar.js \
 	head.js \
 	$(NULL)
 
@@ -187,6 +188,7 @@ _BROWSER_TEST_PAGES = \
 	test-bug-599725-response-headers.sjs \
 	test-bug-618078-network-exceptions.html \
 	test-bug-630733-response-redirect-headers.sjs \
+	test-bug-621644-jsterm-dollar.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
