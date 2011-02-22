@@ -3945,12 +3945,9 @@ void nsWindow::DispatchPendingEvents()
     --recursionBlocker;
   }
 
-  // Quickly check to see if there are any paint events pending,
-  // but only dispatch them if it has been long enough since the
-  // last paint completed.
-  if (::GetQueueStatus(QS_PAINT) && 
-      (mLastPaintEndTime.IsNull() ||
-       (TimeStamp::Now() - mLastPaintEndTime).ToMilliseconds() >= 50)) {
+  // Quickly check to see if there are any
+  // paint events pending.
+  if (::GetQueueStatus(QS_PAINT)) {
     // Find the top level window.
     HWND topWnd = GetTopLevelHWND(mWnd);
 
