@@ -340,6 +340,11 @@ nsImageDocument::Destroy()
     if (mObservingImageLoader) {
       nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageContent);
       if (imageLoader) {
+        // Push a null JSContext on the stack so that code that
+        // nsImageLoadingContent doesn't think it's being called by JS.  See
+        // Bug 631241
+        nsCxPusher pusher;
+        pusher.PushNull();
         imageLoader->RemoveObserver(this);
       }
     }

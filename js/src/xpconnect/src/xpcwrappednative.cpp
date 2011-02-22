@@ -81,7 +81,7 @@ TraverseExpandoObjects(xpc::PtrAndPrincipalHashKey *aKey, JSCompartment *compart
 
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(closure->cb, "XPCWrappedNative expando object");
     closure->cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                                priv->LookupExpandoObject(closure->wn));
+                                priv->LookupExpandoObjectPreserveColor(closure->wn));
 
     return PL_DHASH_NEXT;
 }

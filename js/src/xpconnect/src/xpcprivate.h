@@ -4557,10 +4557,24 @@ struct CompartmentPrivate
         return expandoMap->Put(wn, expando);
     }
 
+    /**
+     * This lookup does not change the color of the JSObject meaning that the
+     * object returned is not guaranteed to be kept alive past the next CC.
+     *
+     * This should only be called if you are certain that the return value won't
+     * be passed into a JS API function and that it won't be stored without
+     * being rooted (or otherwise signaling the stored value to the CC).
+     */
+    JSObject *LookupExpandoObjectPreserveColor(XPCWrappedNative *wn) {
+        return expandoMap ? expandoMap->Get(wn) : nsnull;
+    }
+
+    /**
+     * This lookup clears the gray bit before handing out the JSObject which
+     * means that the object is guaranteed to be kept alive past the next CC.
+     */
     JSObject *LookupExpandoObject(XPCWrappedNative *wn) {
-        if (!expandoMap)
-            return nsnull;
-        JSObject *obj = expandoMap->Get(wn);
+        JSObject *obj = LookupExpandoObjectPreserveColor(wn);
         xpc_UnmarkGrayObject(obj);
         return obj;
     }

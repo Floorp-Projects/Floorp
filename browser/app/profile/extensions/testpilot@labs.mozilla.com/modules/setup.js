@@ -56,6 +56,7 @@ const POPUP_CHECK_INTERVAL = "extensions.testpilot.popup.delayAfterStartup";
 const POPUP_REMINDER_INTERVAL = "extensions.testpilot.popup.timeBetweenChecks";
 const ALWAYS_SUBMIT_DATA = "extensions.testpilot.alwaysSubmitData";
 const LOG_FILE_NAME = "TestPilotErrorLog.log";
+const RANDOM_DEPLOY_PREFIX = "extensions.testpilot.deploymentRandomizer";
 
 let TestPilotSetup = {
   didReminderAfterStartup: false,
@@ -694,7 +695,7 @@ let TestPilotSetup = {
      * specifies a requirement that we don't meet. */
     let logger = this._logger;
     try {
-      let minTpVer, minFxVer, expName, runOrNotFunc;
+      let minTpVer, minFxVer, expName, runOrNotFunc, randomDeployment;
       /* Could be an experiment, which specifies experimentInfo, or survey,
        * which specifies surveyInfo. */
       let info = experiment.experimentInfo ?
@@ -709,6 +710,7 @@ let TestPilotSetup = {
       minFxVer = info.minFXVersion;
       expName =  info.testName;
       runOrNotFunc = info.runOrNotFunc;
+      randomDeployment = info.randomDeployment;
 
       // Minimum test pilot version:
       if (minTpVer && this._isNewerThanMe(minTpVer)) {
@@ -733,6 +735,25 @@ let TestPilotSetup = {
         logger.warn("Not loading " + expName);
         logger.warn("Because it requires Firefox version " + minFxVer);
         return false;
+      }
+
+      // Random deployment (used to give study to random subsample of users)
+      if (randomDeployment) {
+        /* Roll a hundred-sided die. Remember what we roll for later reference.  A study
+         * using random subsample deployment will provide a range (say, 0 ~ 30) which means
+         * only users who roll within that range will run the study. */
+        let prefName = RANDOM_DEPLOY_PREFIX + "." + randomDeployment.rolloutCode;
+        let myRoll = this._prefs.getValue(prefName, null);
+        if (myRoll == null) {
+          myRoll = Math.floor(Math.random()*100);
+          this._prefs.setValue(prefName, myRoll);
+        }
+        if (myRoll < randomDeployment.minRoll) {
+          return false;
+        }
+        if (myRoll > randomDeployment.maxRoll) {
+          return false;
+        }
       }
 
       /* The all-purpose, arbitrary code "Should this study run?" function - if

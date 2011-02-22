@@ -54,7 +54,7 @@ function setup() {
     is(groupItemOne.getChildren().length, 2, "Group one has 2 tab items");
 
     // create group two with a blank tab.
-    let groupItemTwo = createEmptyGroupItem(contentWindow, 250, 250, 40, true);
+    let groupItemTwo = createEmptyGroupItem(contentWindow, 250, 250, 40);
     createNewTabItemInGroupItem(groupItemTwo, contentWindow, function() {
       // start the first test.
       testGroups(groupItemOne, groupItemTwo, contentWindow);

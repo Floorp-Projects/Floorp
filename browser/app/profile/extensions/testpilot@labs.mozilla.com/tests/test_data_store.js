@@ -403,6 +403,21 @@ StubHandlers.prototype = {
   }
 };
 
+function clearAllPrefsForStudy(studyId) {
+  dump("Looking for prefs to delete...\n");
+  let prefService = Cc["@mozilla.org/preferences-service;1"]
+                     .getService(Ci.nsIPrefService)
+                     .QueryInterface(Ci.nsIPrefBranch2);
+  let prefStem = "extensions.testpilot";
+  let prefNames = prefService.getChildList(prefStem);
+  for each (let prefName in prefNames) {
+    if (prefName.indexOf(studyId) != -1) {
+      dump("Clearing pref " + prefName + "\n");
+      prefService.clearUserPref(prefName);
+    }
+  }
+
+}
 
 function testRecurringStudyStateChange() {
 
@@ -422,18 +437,7 @@ function testRecurringStudyStateChange() {
     versionNumber: 1
   };
 
-  dump("Looking for prefs to delete...\n");
-  let prefService = Cc["@mozilla.org/preferences-service;1"]
-                     .getService(Ci.nsIPrefService)
-                     .QueryInterface(Ci.nsIPrefBranch2);
-  let prefStem = "extensions.testpilot";
-  let prefNames = prefService.getChildList(prefStem);
-  for each (let prefName in prefNames) {
-    if (prefName.indexOf("unit_test_recur_study") != -1) {
-      dump("Clearing pref " + prefName + "\n");
-      prefService.clearUserPref(prefName);
-    }
-  }
+  clearAllPrefsForStudy("unit_test_recur_study");
 
   const START_DATE = 1292629441000;
   let stubDate = START_DATE;
@@ -559,7 +563,8 @@ function runAllTests() {
   //testRemoteLoader();
   //testRemoteLoaderIndexCache();
   //testRecurringStudyStateChange();
-  testKillSwitch();
+  //testKillSwitch();
+  testSameGUIDs();
   dump("TESTING COMPLETE.  " + testsPassed + " out of " + testsRun +
        " tests passed.");
 }
@@ -692,3 +697,90 @@ function testKillSwitch() {
     });
   });
 }
+
+// To test:  The random subsample deployment... deployment when fx version or test pilot version
+// is or is not sufficient for study... deployment with arbitrary runOrNot func returning true
+// or false.
+
+function testSameGUIDs() {
+
+  // make a study and survey that knows the study as 'related study'.
+
+  // start and submit study first, start and submit survey second: ensure that both have same
+  // submission GUID.
+  Cu.import("resource://testpilot/modules/tasks.js");
+
+  let expInfo = {
+    startDate: null,
+    duration: 7,
+    testName: "Study w Survey n Guid",
+    testId: "unit_test_guid_study",
+    testInfoUrl: "https://testpilot.mozillalabs.com/",
+    summary: "Be sure to wipe all prefs and the store in the setup/teardown",
+    thumbnail: "",
+    optInRequired: false,
+    recursAutomatically: false,
+    recurrenceInterval: 0,
+    versionNumber: 1
+  };
+
+  let surveyInfo = { surveyId: "unit_test_guid_survey",
+      surveyName: "Survey with associated study",
+      surveyUrl: "",
+      summary: "",
+      thumbnail: "",
+      uploadWithExperiment: expInfo.testId,
+      versionNumber: 1,
+      surveyQuestions: {},
+      surveyExplanation: ""
+  };
+
+  clearAllPrefsForStudy("unit_test_guid_study");
+  clearAllPrefsForStudy("unit_test_guid_survey");
+
+  let dataStore = new StubDataStore();
+  let handlers = new StubHandlers();
+  let webContent = new StubWebContent();
+  let experiment = new TestPilotExperiment(expInfo, dataStore, handlers, webContent);
+  let survey = new TestPilotBuiltinSurvey(surveyInfo);
+
+  // Start the study so it will generate a GUID
+  experiment.changeStatus(TaskConstants.STATUS_STARTING, true);
+  experiment.checkDate();
+
+  // Get GUIDs from study and from survey, compare:
+  experiment._prependMetadataToJSON(function(jsonString) {
+    let expGuid = JSON.parse(jsonString).metadata.task_guid;
+    survey._prependMetadataToJSON(function(jsonString) {
+      let surveyGuid = JSON.parse(jsonString).metadata.task_guid;
+      dump("expGuid is " + expGuid + ", surveyGuid is " + surveyGuid + "\n");
+      cheapAssertEqual(expGuid, surveyGuid, "guids should match");
+      cheapAssertEqual((expGuid != ""), true, "guid should be non-empty");
+
+      // Clear everything for next part of test:
+      clearAllPrefsForStudy("unit_test_guid_study");
+      clearAllPrefsForStudy("unit_test_guid_survey");
+
+      let experiment2 = new TestPilotExperiment(expInfo, dataStore, handlers, webContent);
+      let survey2 = new TestPilotBuiltinSurvey(surveyInfo);
+
+      // this time we query the survey for the GUID first, without starting the study:
+      survey2._prependMetadataToJSON(function(jsonString) {
+        let survey2Guid = JSON.parse(jsonString).metadata.task_guid;
+        // after that, start the study:
+        experiment2.changeStatus(TaskConstants.STATUS_STARTING, true);
+        experiment2.checkDate();
+        // experiment and survey should have same GUID again:
+        experiment2._prependMetadataToJSON(function(jsonString) {
+          let exp2Guid = JSON.parse(jsonString).metadata.task_guid;
+          dump("exp2Guid is " + exp2Guid + ", survey2Guid is " + survey2Guid + "\n");
+          cheapAssertEqual(exp2Guid, survey2Guid, "guids should match");
+          cheapAssertEqual((exp2Guid != ""), true, "guid should be non-empty");
+        });
+      });
+    });
+  });
+}
+
+// TODO test for continuity of GUID with recurring study (longitudinal) - i don't think this
+// has actually been working so far because a new GUID is generted every time the study starts up...

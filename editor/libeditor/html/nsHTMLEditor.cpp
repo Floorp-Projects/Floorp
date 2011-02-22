@@ -170,13 +170,7 @@ nsHTMLEditor::~nsHTMLEditor()
   
   // Clean up after our anonymous content -- we don't want these nodes to
   // stay around (which they would, since the frames have an owning reference).
-
-  if (mAbsolutelyPositionedObject)
-    HideGrabber();
-  if (mInlineEditedCell)
-    HideInlineTableEditingUI();
-  if (mResizedObject)
-    HideResizers();
+  HideAnonymousEditingUIs();
 
   //the autopointers will clear themselves up. 
   //but we need to also remove the listeners or we have a leak
@@ -223,6 +217,17 @@ nsHTMLEditor::~nsHTMLEditor()
   RemoveEventListeners();
 }
 
+void
+nsHTMLEditor::HideAnonymousEditingUIs()
+{
+  if (mAbsolutelyPositionedObject)
+    HideGrabber();
+  if (mInlineEditedCell)
+    HideInlineTableEditingUI();
+  if (mResizedObject)
+    HideResizers();
+}
+
 /* static */
 void
 nsHTMLEditor::Shutdown()
@@ -230,10 +235,53 @@ nsHTMLEditor::Shutdown()
   NS_IF_RELEASE(sRangeHelper);
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLEditor)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLEditor, nsPlaintextEditor)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTypeInState)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTextServices)
+
+  tmp->HideAnonymousEditingUIs();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLEditor, nsPlaintextEditor)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTypeInState)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTextServices)
+
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTopLeftHandle)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTopHandle)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTopRightHandle)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLeftHandle)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRightHandle)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBottomLeftHandle)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBottomHandle)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBottomRightHandle)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mActivatedHandle)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mResizingShadow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mResizingInfo)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mResizedObject)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mMouseMotionListenerP)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSelectionListenerP)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mResizeEventListenerP)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(objectResizeEventListeners)
+
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mAbsolutelyPositionedObject)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGrabber)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPositioningShadow)
+
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mInlineEditedCell)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mAddColumnBeforeButton)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRemoveColumnButton)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mAddColumnAfterButton)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mAddRowBeforeButton)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRemoveRowButton)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mAddRowAfterButton)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_ADDREF_INHERITED(nsHTMLEditor, nsEditor)
 NS_IMPL_RELEASE_INHERITED(nsHTMLEditor, nsEditor)
 
-NS_INTERFACE_MAP_BEGIN(nsHTMLEditor)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsHTMLEditor)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLEditor)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLEditor_MOZILLA_2_0_BRANCH)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLObjectResizer)

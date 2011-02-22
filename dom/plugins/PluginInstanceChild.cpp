@@ -937,6 +937,13 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
     switch (aWindow.type) {
       case NPWindowTypeWindow:
       {
+          if ((GetQuirks() & PluginModuleChild::QUIRK_QUICKTIME_AVOID_SETWINDOW) &&
+              aWindow.width == 0 &&
+              aWindow.height == 0) {
+            // Skip SetWindow call for hidden QuickTime plugins
+            return true;
+          }
+
           if (!CreatePluginWindow())
               return false;
 

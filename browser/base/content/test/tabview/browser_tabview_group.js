@@ -65,7 +65,7 @@ function testEmptyGroupItem(contentWindow) {
   let groupItemCount = contentWindow.GroupItems.groupItems.length;
   
   // create empty group item
-  let emptyGroupItem = createEmptyGroupItem(contentWindow, 300, 300, 100, true);
+  let emptyGroupItem = createEmptyGroupItem(contentWindow, 300, 300, 100);
   ok(emptyGroupItem.isEmpty(), "This group is empty");
 
   is(contentWindow.GroupItems.groupItems.length, ++groupItemCount,
@@ -89,7 +89,7 @@ function testEmptyGroupItem(contentWindow) {
 }
 
 function testGroupItemWithTabItem(contentWindow) {
-  let groupItem = createEmptyGroupItem(contentWindow, 300, 300, 200, true);
+  let groupItem = createEmptyGroupItem(contentWindow, 300, 300, 200);
   let tabItemCount = 0;
 
   let onTabViewHidden = function() {
