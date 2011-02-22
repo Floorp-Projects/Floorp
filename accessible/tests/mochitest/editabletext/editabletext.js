@@ -36,19 +36,23 @@ function editableTextTest(aID)
   /**
    * setTextContents test.
    */
-  this.setTextContents = function setTextContents(aStr, aResValue)
+  this.setTextContents = function setTextContents(aValue, aTrailChar)
   {
-    var testID = "setTextContents '" + aStr + "' for " + prettyName(aID);
+    var testID = "setTextContents '" + aValue + "' for " + prettyName(aID);
 
     function setTextContentsInvoke()
     {
       var acc = getAccessible(aID, nsIAccessibleEditableText);
-      acc.setTextContents(aStr);
+      acc.setTextContents(aValue);
     }
 
-    this.scheduleTest(aID, null, [0, aStr.length, aStr],
-                      setTextContentsInvoke, getValueChecker(aID, aResValue),
-                      testID);
+    var newValue = aValue + (aTrailChar ? aTrailChar : "");
+    var insertTripple = newValue ? [0, newValue.length, newValue] : null;
+    var oldValue = getValue(aID);
+    var removeTripple = oldValue ? [0, oldValue.length, oldValue] : null;
+
+    this.scheduleTest(aID, removeTripple, insertTripple, setTextContentsInvoke,
+                      getValueChecker(aID, aValue), testID);
   }
 
   /**
@@ -207,6 +211,19 @@ function editableTextTest(aID)
   //////////////////////////////////////////////////////////////////////////////
   // Implementation details.
 
+  function getValue(aID)
+  {
+    var value = "";
+    var elm = getNode(aID);
+    if (elm instanceof Components.interfaces.nsIDOMNSEditableElement)
+      return elm.value;
+
+    if (elm instanceof Components.interfaces.nsIDOMHTMLDocument)
+      return elm.body.textContent;
+
+    return elm.textContent;
+  }
+
   /**
    * Common checkers.
    */
@@ -215,16 +232,7 @@ function editableTextTest(aID)
     var checker = {
       check: function valueChecker_check()
       {
-        var value = "";
-        var elm = getNode(aID);
-        if (elm instanceof Components.interfaces.nsIDOMNSEditableElement)
-          value = elm.value;
-        else if (elm instanceof Components.interfaces.nsIDOMHTMLDocument)
-          value = elm.body.textContent;
-        else
-          value = elm.textContent;
-
-        is(value, aValue, "Wrong value " + aValue);
+        is(getValue(aID), aValue, "Wrong value " + aValue);
       }
     };
     return checker;
