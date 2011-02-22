@@ -360,14 +360,6 @@ Chunk::releaseArena(Arena<T> *arena)
         info.age = 0;
 }
 
-bool
-Chunk::expire()
-{
-    if (!unused())
-        return false;
-    return info.age++ > MaxAge;
-}
-
 JSRuntime *
 Chunk::getRuntime()
 {
@@ -456,16 +448,22 @@ PickChunk(JSRuntime *rt)
 static void
 ExpireGCChunks(JSRuntime *rt)
 {
+    static const size_t MaxAge = 3;
+
     /* Remove unused chunks. */
     AutoLockGC lock(rt);
 
+    rt->gcChunksWaitingToExpire = 0;
     for (GCChunkSet::Enum e(rt->gcChunkSet); !e.empty(); e.popFront()) {
         Chunk *chunk = e.front();
         JS_ASSERT(chunk->info.runtime == rt);
-        if (chunk->expire()) {
-            e.removeFront();
-            ReleaseGCChunk(rt, chunk);
-            continue;
+        if (chunk->unused()) {
+            if (chunk->info.age++ > MaxAge) {
+                e.removeFront();
+                ReleaseGCChunk(rt, chunk);
+                continue;
+            }
+            rt->gcChunksWaitingToExpire++;
         }
     }
 }

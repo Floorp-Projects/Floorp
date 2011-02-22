@@ -1447,8 +1447,10 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
         ctor = JS_GetConstructor(cx, fun_proto);
         if (!ctor)
             return NULL;
-        obj->defineProperty(cx, ATOM_TO_JSID(CLASS_ATOM(cx, Function)),
-                            ObjectValue(*ctor), 0, 0, 0);
+        if (!obj->defineProperty(cx, ATOM_TO_JSID(CLASS_ATOM(cx, Function)),
+                                 ObjectValue(*ctor), 0, 0, 0)) {
+            return NULL;
+        }
     }
 
     /* Initialize the object class next so Object.prototype works. */
@@ -2642,6 +2644,8 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
         return rt->gcBytes;
       case JSGC_MODE:
         return uint32(rt->gcMode);
+      case JSGC_UNUSED_CHUNKS:
+        return uint32(rt->gcChunksWaitingToExpire);
       default:
         JS_ASSERT(key == JSGC_NUMBER);
         return rt->gcNumber;
