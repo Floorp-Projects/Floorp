@@ -241,9 +241,13 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
     JS_RestoreExceptionState(cx, exceptionState);
     JS_LeaveCrossCompartmentCall(call);
 
-    stringval = STRING_TO_JSVAL(string);
-    call = JS_EnterCrossCompartmentCall(cx, jsdc->glob);
-    if(!call || !JS_WrapValue(cx, &stringval)) {
+    if(string) {
+        stringval = STRING_TO_JSVAL(string);
+        call = JS_EnterCrossCompartmentCall(cx, jsdc->glob);
+    }
+    if(!string || !call || !JS_WrapValue(cx, &stringval)) {
+        if(call)
+            JS_LeaveCrossCompartmentCall(call);
         JS_EndRequest(cx);
         return NULL;
     }
