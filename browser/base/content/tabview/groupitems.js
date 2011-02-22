@@ -806,7 +806,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     toClose.forEach(function(child) {
       child.removeSubscriber(self, "close");
 
-      let removed = child.close();
+      let removed = child.close(true);
       if (removed) {
         shouldRemoveTabItems.push(child);
       } else {
