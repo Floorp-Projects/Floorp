@@ -1608,8 +1608,11 @@ HTTP(..) == 621253-2-externalFilter.html 621253-2-ref.html
 HTTP(..) == 619511-1.html 619511-1-ref.html
 random-if(winWidget) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
 random-if(winWidget) HTTP(..) == 621918-2.svg 621918-2-ref.svg # same 1px issue as above, and HTTP(..) for filters.svg, used to mask antialiasing issues where glyphs touch
+== 622585-1.html 622585-1-ref.html
 == 625409-1.html 625409-1-ref.html
 == 627393-1.html about:blank
 == 631352-1.html 631352-1-ref.html
 fails-if(winWidget) == 632781-verybig.html 632781-ref.html # large canvas elements are not drawn on Windows, see bug 633936
 == 632781-normalsize.html 632781-ref.html
+== 634232-1.html 634232-1-ref.html
+== 635302-1.html 635302-1-ref.html

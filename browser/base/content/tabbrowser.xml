@@ -3690,11 +3690,13 @@
       <handler event="popuphidden">
       <![CDATA[
         // clear out the menu popup and remove the listeners
-        while (this.hasChildNodes()) {
-          var menuItem = this.lastChild;
-          menuItem.removeEventListener("command", this, false);
-          menuItem.tab.mCorrespondingMenuitem = null;
-          this.removeChild(menuItem);
+        for (let i = this.childNodes.length - 1; i > 0; i--) {
+          let menuItem = this.childNodes[i];
+          if (!menuItem.hasAttribute("keepme")) {
+            menuItem.removeEventListener("command", this, false);
+            menuItem.tab.mCorrespondingMenuitem = null;
+            this.removeChild(menuItem);
+          }
         }
         var tabcontainer = gBrowser.tabContainer;
         tabcontainer.mTabstrip.removeEventListener("scroll", this, false);

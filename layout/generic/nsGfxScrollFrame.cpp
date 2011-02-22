@@ -2442,7 +2442,8 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent)
                              -scrolledRect.y) +
            scrolledRect.y;
 
-  if (dest == GetScrollPosition()) {
+  // If we have an async scroll pending don't stomp on that by calling ScrollTo.
+  if (mAsyncScroll && dest == GetScrollPosition()) {
     return;
   }
 

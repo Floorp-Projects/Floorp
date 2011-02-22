@@ -141,6 +141,7 @@ public:
 //NOTE macro used is for classes that inherit from 
 // another class. Only the base class should use NS_DECL_ISUPPORTS
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLEditor, nsPlaintextEditor)
 
 
            nsHTMLEditor();
@@ -928,6 +929,7 @@ protected:
   void     SetFinalSize(PRInt32 aX, PRInt32 aY);
   void     DeleteRefToAnonymousNode(nsIDOMNode * aNode);
   void     SetResizeIncrements(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt32 aH, PRBool aPreserveRatio);
+  void     HideAnonymousEditingUIs();
 
   /* ABSOLUTE POSITIONING */
 
