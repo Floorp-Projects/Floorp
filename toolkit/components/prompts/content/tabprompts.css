@@ -11,6 +11,11 @@ tabmodalprompt {
   min-height: 12em;
 }
 
+.info\.title {
+  margin-bottom: 1em !important;
+  font-weight: bold;
+}
+
 .info\.body {
   margin: 0 !important;
   -moz-user-focus: normal;
