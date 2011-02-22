@@ -864,7 +864,7 @@ HashSetLookup(U **values, unsigned count, T key)
 }
 
 struct TypeObjectKey {
-    static uint32 keyBits(TypeObject *obj) { return (uint32) obj; }
+    static intptr_t keyBits(TypeObject *obj) { return (intptr_t) obj; }
     static TypeObject *getKey(TypeObject *obj) { return obj; }
 };
 
