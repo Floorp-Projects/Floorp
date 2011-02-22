@@ -1094,7 +1094,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       let closed = options.dontClose ? false : this.closeIfEmpty();
       if (closed)
         this._makeClosestTabActive();
-      else if (!options.dontArrage)
+      else if (!options.dontArrange)
         this.arrange({animate: !options.immediately});
 
       this._sendToSubscribers("childRemoved",{ groupItemId: this.id, item: item });
