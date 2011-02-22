@@ -681,7 +681,7 @@ nsDocAccessible::Shutdown()
 }
 
 nsIFrame*
-nsDocAccessible::GetFrame()
+nsDocAccessible::GetFrame() const
 {
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
 
