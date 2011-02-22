@@ -541,8 +541,24 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: close
   // Closes this item (actually closes the tab associated with it, which automatically
   // closes the item.
+  // Parameters:
+  //   groupClose - true if this method is called by group close action.
   // Returns true if this tab is removed.
-  close: function TabItem_close() {
+  close: function TabItem_close(groupClose) {
+    // When the last tab is closed, put a new tab into closing tab's group. If
+    // closing tab doesn't belong to a group and no empty group, create a new 
+    // one for the new tab.
+    if (!groupClose && gBrowser.tabs.length == 1) {
+      if (this.tab._tabViewTabItem.parent) {
+        group = this.tab._tabViewTabItem.parent;
+      } else {
+        let emptyGroups = GroupItems.groupItems.filter(function (groupItem) {
+          return (!groupItem.getChildren().length);
+        });
+        group = (emptyGroups.length ? emptyGroups[0] : GroupItems.newGroup());
+      }
+      group.newTab();
+    }
     // when "TabClose" event is fired, the browser tab is about to close and our 
     // item "close" is fired before the browser tab actually get closed. 
     // Therefore, we need "tabRemoved" event below.
