@@ -316,6 +316,15 @@ inline static void DidAnimateAttr(Element *aFilterPrimitive)
   }
 }
 
+inline static void DidAnimateAttrViaParent(Element *aFilterPrimitive) {
+  // No frame, use parent's
+  NS_ASSERTION(!aFilterPrimitive->GetPrimaryFrame(), "Not expecting a frame");
+  Element *parent = nsSVGUtils::GetParentElement(aFilterPrimitive);
+  if (parent) {
+    DidAnimateAttr(parent);
+  }
+}
+
 void
 nsSVGFE::DidAnimateLength(PRUint8 aAttrEnum)
 {
@@ -1776,21 +1785,15 @@ public:
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
   virtual void DidAnimateNumber(PRUint8 aAttrEnum) {
-    // No frame, use parent's
-    NS_ASSERTION(!GetPrimaryFrame(), "Not expecting a frame");
-    DidAnimateAttr(nsSVGUtils::GetParentElement(this));
+    DidAnimateAttrViaParent(this);
   }
   virtual EnumAttributesInfo GetEnumInfo();
   virtual void DidAnimateEnum(PRUint8 aAttrEnum) {
-    // No frame, use parent's
-    NS_ASSERTION(!GetPrimaryFrame(), "Not expecting a frame");
-    DidAnimateAttr(nsSVGUtils::GetParentElement(this));
+    DidAnimateAttrViaParent(this);
   }
   virtual NumberListAttributesInfo GetNumberListInfo();
   virtual void DidAnimateNumberList(PRUint8 aAttrEnum) {
-    // No frame, use parent's
-    NS_ASSERTION(!GetPrimaryFrame(), "Not expecting a frame");
-    DidAnimateAttr(nsSVGUtils::GetParentElement(this));
+    DidAnimateAttrViaParent(this);
   }
 
   // nsIDOMSVGComponentTransferFunctionElement properties:
@@ -4329,9 +4332,7 @@ public:
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
   virtual void DidAnimateNumber(PRUint8 aAttrEnum) {
-    // No frame, use parent's
-    NS_ASSERTION(!GetPrimaryFrame(), "Not expecting a frame");
-    DidAnimateAttr(nsSVGUtils::GetParentElement(this));
+    DidAnimateAttrViaParent(this);
   }
 
   enum { AZIMUTH, ELEVATION };
@@ -4422,9 +4423,7 @@ public:
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
   virtual void DidAnimateNumber(PRUint8 aAttrEnum) {
-    // No frame, use parent's
-    NS_ASSERTION(!GetPrimaryFrame(), "Not expecting a frame");
-    DidAnimateAttr(nsSVGUtils::GetParentElement(this));
+    DidAnimateAttrViaParent(this);
   }
 
   enum { X, Y, Z };
@@ -4520,9 +4519,7 @@ public:
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
   virtual void DidAnimateNumber(PRUint8 aAttrEnum) {
-    // No frame, use parent's
-    NS_ASSERTION(!GetPrimaryFrame(), "Not expecting a frame");
-    DidAnimateAttr(nsSVGUtils::GetParentElement(this));
+    DidAnimateAttrViaParent(this);
   }
 
   enum { X, Y, Z, POINTS_AT_X, POINTS_AT_Y, POINTS_AT_Z,
