@@ -702,6 +702,11 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     $tab.addClass("front");
 
+    // If we're in a stacked group, make sure we become the
+    // topChild now so that we show the zoom animation correctly.
+    if (this.parent && this.parent.isStacked())
+      this.parent.setTopChild(this);
+
     let animateZoom = gPrefBranch.getBoolPref("animate_zoom");
     if (animateZoom) {
       // The scaleCheat of 2 here is a clever way to speed up the zoom-out
