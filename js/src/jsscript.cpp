@@ -935,7 +935,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
     } else {
         script->globalsOffset = JSScript::INVALID_OFFSET;
     }
-    JS_ASSERT((cursor - (uint8 *)script) < 0xFF);
+    JS_ASSERT((cursor - scriptEnd) < 0xFF);
     if (nconsts != 0) {
         script->constOffset = (uint8)(cursor - scriptEnd);
         cursor += sizeof(JSConstArray);
