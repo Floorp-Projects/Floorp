@@ -10328,7 +10328,7 @@ class BoxArg
  * argument values into the object as properties in case it is used after
  * this frame returns.
  */
-JS_REQUIRES_STACK void
+JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::putActivationObjects()
 {
     JSStackFrame *const fp = cx->fp();
@@ -10336,7 +10336,20 @@ TraceRecorder::putActivationObjects()
     bool have_call = fp->isFunctionFrame() && fp->fun()->isHeavyweight();
 
     if (!have_args && !have_call)
-        return;
+        return ARECORD_CONTINUE;
+
+    if (have_args && !fp->script()->usesArguments) {
+        /*
+         * have_args is true, so |arguments| has been accessed, but
+         * usesArguments is false, so there's no statically visible access.
+         * It must have been a dodgy access like |f["arguments"]|;  just
+         * abort.  (In the case where the record-time property name is not
+         * "arguments" but a later run-time property name is, we wouldn't have
+         * emitted the call to js_PutArgumentsOnTrace(), and js_GetArgsValue()
+         * will deep bail asking for the top JSStackFrame.)
+         */
+        RETURN_STOP_A("dodgy arguments access");
+    }
 
     uintN nformal = fp->numFormalArgs();
     uintN nactual = fp->numActualArgs();
@@ -10380,6 +10393,8 @@ TraceRecorder::putActivationObjects()
                          w.nameImmi(fp->numFormalArgs()), scopeChain_ins, cx_ins };
         w.call(&js_PutCallObjectOnTrace_ci, args);
     }
+
+    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -10572,7 +10587,7 @@ TraceRecorder::record_JSOP_RETURN()
         return endLoop();
     }
 
-    putActivationObjects();
+    CHECK_STATUS_A(putActivationObjects());
 
     if (Probes::callTrackingActive(cx)) {
         LIns* args[] = { w.immi(0), w.nameImmpNonGC(cx->fp()->fun()), cx_ins };
@@ -10639,7 +10654,7 @@ TraceRecorder::record_JSOP_IFNE()
 }
 
 LIns*
-TraceRecorder::newArguments(LIns* callee_ins, bool strict)
+TraceRecorder::newArguments(LIns* callee_ins)
 {
     LIns* global_ins = w.immpObjGC(globalObj);
     LIns* argc_ins = w.nameImmi(cx->fp()->numActualArgs());
@@ -10647,13 +10662,6 @@ TraceRecorder::newArguments(LIns* callee_ins, bool strict)
     LIns* args[] = { callee_ins, argc_ins, global_ins, cx_ins };
     LIns* argsobj_ins = w.call(&js_NewArgumentsOnTrace_ci, args);
     guard(false, w.eqp0(argsobj_ins), OOM_EXIT);
-
-    if (strict) {
-        LIns* argsData_ins = w.getObjPrivatizedSlot(argsobj_ins, JSObject::JSSLOT_ARGS_DATA);
-        ptrdiff_t slotsOffset = offsetof(ArgumentsData, slots);
-        cx->fp()->forEachCanonicalActualArg(BoxArg(this, ArgsSlotOffsetAddress(argsData_ins,
-                                                                               slotsOffset)));
-    }
 
     return argsobj_ins;
 }
@@ -10668,14 +10676,15 @@ TraceRecorder::record_JSOP_ARGUMENTS()
 
     if (fp->hasOverriddenArgs())
         RETURN_STOP_A("Can't trace |arguments| if |arguments| is assigned to");
+    if (fp->fun()->inStrictMode())
+        RETURN_STOP_A("Can't trace strict-mode arguments");
 
     LIns* a_ins = getFrameObjPtr(fp->addressOfArgs());
     LIns* args_ins;
     LIns* callee_ins = get(&fp->calleeValue());
-    bool strict = fp->fun()->inStrictMode();
     if (a_ins->isImmP()) {
         // |arguments| is set to 0 by EnterFrame on this trace, so call to create it.
-        args_ins = newArguments(callee_ins, strict);
+        args_ins = newArguments(callee_ins);
     } else {
         // Generate LIR to create arguments only if it has not already been created.
 
@@ -10685,7 +10694,7 @@ TraceRecorder::record_JSOP_ARGUMENTS()
         if (isZero_ins->isImmI(0)) {
             w.stAlloc(a_ins, mem_ins);
         } else if (isZero_ins->isImmI(1)) {
-            LIns* call_ins = newArguments(callee_ins, strict);
+            LIns* call_ins = newArguments(callee_ins);
             w.stAlloc(call_ins, mem_ins);
         } else {
             LIns* br1 = w.jtUnoptimizable(isZero_ins);
@@ -10693,7 +10702,7 @@ TraceRecorder::record_JSOP_ARGUMENTS()
             LIns* br2 = w.j(NULL);
             w.label(br1);
 
-            LIns* call_ins = newArguments(callee_ins, strict);
+            LIns* call_ins = newArguments(callee_ins);
             w.stAlloc(call_ins, mem_ins);
             w.label(br2);
         }
@@ -12843,10 +12852,9 @@ GetPropertyWithNativeGetter(JSContext* cx, JSObject* obj, Shape* shape, Value* v
     LeaveTraceIfGlobalObject(cx, obj);
 
 #ifdef DEBUG
-    JSProperty* prop;
     JSObject* pobj;
-    JS_ASSERT(obj->lookupProperty(cx, shape->id, &pobj, &prop));
-    JS_ASSERT(prop == (JSProperty*) shape);
+    const Shape* shape2;
+    JS_ASSERT_IF(SafeLookup(cx, obj, shape->id, &pobj, &shape2), shape == shape2);
 #endif
 
     // Shape::get contains a special case for With objects. We can elide it
@@ -13793,7 +13801,7 @@ TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc,
     if (constructing) {
         LIns* thisobj_ins;
         CHECK_STATUS(createThis(fval.toObject(), get(&fval), &thisobj_ins));
-        stack(-argc - 1, thisobj_ins);
+        stack(-int(argc) - 1, thisobj_ins);
     }
 
     // Generate a type map for the outgoing frame and stash it in the LIR
@@ -16219,7 +16227,7 @@ TraceRecorder::record_JSOP_STOP()
         return ARECORD_CONTINUE;
     }
 
-    putActivationObjects();
+    CHECK_STATUS_A(putActivationObjects());
 
     if (Probes::callTrackingActive(cx)) {
         LIns* args[] = { w.immi(0), w.nameImmpNonGC(cx->fp()->fun()), cx_ins };
@@ -16309,7 +16317,6 @@ TraceRecorder::record_JSOP_ARRAYPUSH()
     JS_ASSERT(cx->fp()->slots() + slot < cx->regs->sp - 1);
     Value &arrayval = cx->fp()->slots()[slot];
     JS_ASSERT(arrayval.isObject());
-    JS_ASSERT(arrayval.toObject().isDenseArray());
     LIns *array_ins = get(&arrayval);
     Value &elt = stackval(-1);
     LIns *elt_ins = box_value_for_native_call(elt, get(&elt));

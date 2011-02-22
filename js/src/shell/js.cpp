@@ -3564,6 +3564,127 @@ ShapeOf(JSContext *cx, uintN argc, jsval *vp)
     return JS_NewNumberValue(cx, obj->shape(), vp);
 }
 
+/*
+ * If referent has an own property named id, copy that property to obj[id].
+ * Since obj is native, this isn't totally transparent; properties of a
+ * non-native referent may be simplified to data properties.
+ */
+static JSBool
+CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
+             uintN lookupFlags, JSObject **objp)
+{
+    JSProperty *prop;
+    PropertyDescriptor desc;
+    uintN propFlags = 0;
+    JSObject *obj2;
+
+    *objp = NULL;
+    if (referent->isNative()) {
+        if (js_LookupPropertyWithFlags(cx, referent, id, lookupFlags, &obj2, &prop) < 0)
+            return false;
+        if (obj2 != referent)
+            return true;
+
+        const Shape *shape = (Shape *) prop;
+        if (shape->isMethod()) {
+            shape = referent->methodReadBarrier(cx, *shape, &desc.value);
+            if (!shape)
+                return false;
+        } else if (shape->hasSlot()) {
+            desc.value = referent->nativeGetSlot(shape->slot);
+        } else {
+            desc.value.setUndefined();
+        }
+
+        desc.attrs = shape->attributes();
+        desc.getter = shape->getter();
+        if (!desc.getter && !(desc.attrs & JSPROP_GETTER))
+            desc.getter = PropertyStub;
+        desc.setter = shape->setter();
+        if (!desc.setter && !(desc.attrs & JSPROP_SETTER))
+            desc.setter = StrictPropertyStub;
+        desc.shortid = shape->shortid; 
+        propFlags = shape->getFlags();
+   } else if (referent->isProxy()) {
+        PropertyDescriptor desc;
+        if (!JSProxy::getOwnPropertyDescriptor(cx, referent, id, false, &desc))
+            return false;
+        if (!desc.obj)
+            return true;
+    } else {
+        if (!referent->lookupProperty(cx, id, objp, &prop))
+            return false;
+        if (*objp != referent)
+            return true;
+        if (!referent->getProperty(cx, id, &desc.value) ||
+            !referent->getAttributes(cx, id, &desc.attrs)) {
+            return false;
+        }
+        desc.attrs &= JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
+        desc.getter = PropertyStub;
+        desc.setter = StrictPropertyStub;
+        desc.shortid = 0;
+    }
+
+    *objp = obj;
+    return js_DefineNativeProperty(cx, obj, id, desc.value,
+                                   desc.getter, desc.setter, desc.attrs, propFlags,
+                                   desc.shortid, &prop);
+}
+
+static JSBool
+resolver_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
+{
+    jsval v;
+    JS_ALWAYS_TRUE(JS_GetReservedSlot(cx, obj, 0, &v));
+    return CopyProperty(cx, obj, JSVAL_TO_OBJECT(v), id, flags, objp);
+}
+static JSNewResolveOp resolver_resolve_check = resolver_resolve;
+
+static JSBool
+resolver_enumerate(JSContext *cx, JSObject *obj)
+{
+    jsval v;
+    JS_ALWAYS_TRUE(JS_GetReservedSlot(cx, obj, 0, &v));
+    JSObject *referent = JSVAL_TO_OBJECT(v);
+
+    AutoIdArray ida(cx, JS_Enumerate(cx, referent));
+    bool ok = !!ida;
+    JSObject *ignore;
+    for (size_t i = 0; ok && i < ida.length(); i++)
+        ok = CopyProperty(cx, obj, referent, ida[i], JSRESOLVE_QUALIFIED, &ignore);
+    return ok;
+}
+
+static JSClass resolver_class = {
+    "resolver",
+    JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1),
+    JS_PropertyStub,   JS_PropertyStub,
+    JS_PropertyStub,   JS_StrictPropertyStub,
+    resolver_enumerate, (JSResolveOp)resolver_resolve,
+    JS_ConvertStub,    NULL,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
+
+static JSBool
+Resolver(JSContext *cx, uintN argc, jsval *vp)
+{
+    JSObject *referent, *proto = NULL;
+    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "o/o", &referent, &proto))
+        return false;
+
+    JSObject *result = (argc > 1
+                        ? JS_NewObjectWithGivenProto
+                        : JS_NewObject)(cx, &resolver_class, proto, JS_GetParent(cx, referent));
+    if (!result)
+        return false;
+
+    JS_ALWAYS_TRUE(JS_SetReservedSlot(cx, result, 0, OBJECT_TO_JSVAL(referent)));
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(result));
+    return true;
+}
+
 #ifdef JS_THREADSAFE
 
 /*
@@ -4416,6 +4537,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("evalcx",         EvalInContext,  1,0),
     JS_FN("evalInFrame",    EvalInFrame,    2,0),
     JS_FN("shapeOf",        ShapeOf,        1,0),
+    JS_FN("resolver",       Resolver,       1,0),
 #ifdef MOZ_CALLGRIND
     JS_FN("startCallgrind", js_StartCallgrind,  0,0),
     JS_FN("stopCallgrind",  js_StopCallgrind,   0,0),
@@ -4543,6 +4665,8 @@ static const char *const shell_help_messages[] = {
 "evalInFrame(n,str,save)  Evaluate 'str' in the nth up frame.\n"
 "                         If 'save' (default false), save the frame chain",
 "shapeOf(obj)             Get the shape of obj (an implementation detail)",
+"resolver(src[, proto])   Create object with resolve hook that copies properties\n"
+"                         from src. If proto is omitted, use Object.prototype.",
 #ifdef MOZ_CALLGRIND
 "startCallgrind()         Start callgrind instrumentation",
 "stopCallgrind()          Stop callgrind instrumentation",

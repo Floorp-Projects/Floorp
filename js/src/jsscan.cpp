@@ -857,6 +857,7 @@ TokenStream::getTokenInternal()
                 c = getChar();
             } while (JS_ISXMLSPACE(c));
             ungetChar(c);
+            tp->pos.end.lineno = lineno;
             tt = TOK_XMLSPACE;
             goto out;
         }

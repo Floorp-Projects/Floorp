@@ -915,7 +915,6 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
                        JSObject *parent, gc::FinalizeKind kind)
 {
     JS_ASSERT(proto);
-    JS_ASSERT(proto->isNative());
     JS_ASSERT(parent);
 
     /*
