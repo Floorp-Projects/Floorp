@@ -1126,7 +1126,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       let $icon = iQ(icon);
       if ($icon.data("xulTab") == event.target) {
         $icon.attr("src", Utils.defaultFaviconURL);
-        return true;
       }
     });
   },
