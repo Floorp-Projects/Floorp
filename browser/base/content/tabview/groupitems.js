@@ -742,6 +742,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.$undoContainer = null;
     this.droppable(true);
 
+    GroupItems.setActiveGroupItem(this);
+    if (this._activeTab)
+      UI.setActiveTab(this._activeTab);
+
     iQ(this.container).show().animate({
       "-moz-transform": "scale(1)",
       "opacity": 1
