@@ -128,7 +128,7 @@ class PropertyTree
 
     void orphanChildren(js::Shape *shape);
     void sweepShapes(JSContext *cx);
-    bool checkShapesAllUnmarked(JSContext *cx);
+    void unmarkShapes(JSContext *cx);
 
     static void dumpShapes(JSContext *cx);
 #ifdef DEBUG

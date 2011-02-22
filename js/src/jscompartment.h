@@ -449,7 +449,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool init();
 
-    /* Mark cross-compartment pointers. */
+    /* Mark cross-compartment wrappers. */
     void markCrossCompartment(JSTracer *trc);
 
     /* Mark this compartment's local roots. */
