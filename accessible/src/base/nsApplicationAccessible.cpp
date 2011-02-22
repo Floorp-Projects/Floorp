@@ -55,6 +55,7 @@
 nsApplicationAccessible::nsApplicationAccessible() :
   nsAccessibleWrap(nsnull, nsnull)
 {
+  mFlags |= eApplicationAccessible;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
