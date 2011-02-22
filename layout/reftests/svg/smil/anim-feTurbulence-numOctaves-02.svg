@@ -32,7 +32,7 @@
   -->
 
 
-  <!-- Some tests animating *up* to higer values. -->
+  <!-- Some tests animating *up* to higher values. -->
 
   <!-- Each of the four values should get an equal slice of the duration -
        that is 3.25s - so at 3s the animated value should still be 1. -->
