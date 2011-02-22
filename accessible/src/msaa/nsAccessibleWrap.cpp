@@ -215,11 +215,13 @@ __try {
   }
 
   nsAccessible* xpParentAcc = GetParent();
-  NS_ASSERTION(xpParentAcc,
-               "No parent accessible where we're not direct child of window");
+  if (!xpParentAcc) {
+    if (IsApplication())
+      return S_OK;
 
-  if (!xpParentAcc)
+    NS_ERROR("No parent accessible. Should we really assert here?");
     return E_UNEXPECTED;
+  }
 
   *ppdispParent = NativeAccessible(xpParentAcc);
 
