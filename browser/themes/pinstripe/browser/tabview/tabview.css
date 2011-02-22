@@ -201,7 +201,7 @@ html[dir=rtl] .stack-trayed .tab-title {
 }
 
 .tabInGroupItem .favicon {
-  background-color: #EBEBEB;
+  background-color: rgb(240,240,240);
 }
 
 .groupItem {
