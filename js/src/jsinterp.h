@@ -837,8 +837,11 @@ ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp);
 template <typename T>
 bool GetPrimitiveThis(JSContext *cx, Value *vp, T *v);
 
-void
+inline void
 PutActivationObjects(JSContext *cx, JSStackFrame *fp);
+
+inline void
+PutOwnedActivationObjects(JSContext *cx, JSStackFrame *fp);
 
 /*
  * For a call's vp (which necessarily includes callee at vp[0] and the original

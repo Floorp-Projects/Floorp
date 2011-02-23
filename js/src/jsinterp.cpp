@@ -618,39 +618,46 @@ JS_REQUIRES_STACK bool
 RunScript(JSContext *cx, JSScript *script, JSStackFrame *fp)
 {
     JS_ASSERT(script);
+    JS_ASSERT(fp == cx->fp());
+    JS_ASSERT(fp->script() == script);
+#ifdef JS_METHODJIT_SPEW
+    JMCheckLogging();
+#endif
+
+    AutoInterpPreparer prepareInterp(cx, script);
+    bool ok;
 
     /* FIXME: Once bug 470510 is fixed, make this an assert. */
     if (script->compileAndGo) {
         int32 flags = fp->scopeChain().getGlobal()->getReservedSlot(JSRESERVED_GLOBAL_FLAGS).toInt32();
         if (flags & JSGLOBAL_FLAGS_CLEARED) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CLEARED_SCOPE);
-            // FIXME Remove hack with bug 635811
-            if (fp->isFunctionFrame() && (!fp->isEvalFrame() || fp->script()->strictModeCode))
-                PutActivationObjects(cx, fp);
-            return false;
+            goto error;
         }
     }
 
-#ifdef JS_METHODJIT_SPEW
-    JMCheckLogging();
-#endif
-
-    AutoInterpPreparer prepareInterp(cx, script);
-
-    JS_ASSERT(fp == cx->fp());
-    JS_ASSERT(fp->script() == script);
-
 #ifdef JS_METHODJIT
-    mjit::CompileStatus status =
-        mjit::CanMethodJIT(cx, script, fp, mjit::CompileRequest_Interpreter);
+    mjit::CompileStatus status;
+    status = mjit::CanMethodJIT(cx, script, fp, mjit::CompileRequest_Interpreter);
     if (status == mjit::Compile_Error)
-        return JS_FALSE;
+        goto error;
 
-    if (status == mjit::Compile_Okay)
-        return mjit::JaegerShot(cx);
+    if (status == mjit::Compile_Okay) {
+        ok = mjit::JaegerShot(cx);
+        JS_ASSERT_IF(!fp->isYielding() && !(fp->isEvalFrame() && !fp->script()->strictModeCode),
+                     !fp->hasCallObj() && !fp->hasArgsObj());
+        return ok;
+    }
 #endif
 
-    return Interpret(cx, fp);
+    ok = Interpret(cx, fp);
+    JS_ASSERT_IF(!fp->isYielding() && !(fp->isEvalFrame() && !fp->script()->strictModeCode),
+                 !fp->hasCallObj() && !fp->hasArgsObj());
+    return ok;
+
+  error:
+    PutOwnedActivationObjects(cx, fp);
+    return false;
 }
 
 /*
