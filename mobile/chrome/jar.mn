@@ -22,7 +22,7 @@ chrome.jar:
 * content/browser-ui.js                (content/browser-ui.js)
 * content/browser-scripts.js           (content/browser-scripts.js)
 * content/common-ui.js                 (content/common-ui.js)
-  content/AlertsHelper.js              (content/AlertsHelper.js)
+* content/AlertsHelper.js              (content/AlertsHelper.js)
   content/AppMenu.js                   (content/AppMenu.js)
   content/AwesomePanel.js              (content/AwesomePanel.js)
   content/BookmarkHelper.js            (content/BookmarkHelper.js)

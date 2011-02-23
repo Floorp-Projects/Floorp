@@ -1273,35 +1273,36 @@ pageaction:not([image]) > hbox >.pageaction-image {
 
 /* alerts popup ----------------------------------------------------------- */
 #alerts-container {
-  width: 300px;
-}
-
-@media (max-width: 499px) {
-  #alerts-container {
-    width: 200px;
-  }
-}
-
-#alerts-container {
-  -moz-transform: translatex(100%);
-  -moz-transition-property: -moz-transform;
-  -moz-transition-duration: 0.5s;
+  color: white;
+  background-color: #5e6166;
+  border: @border_width_small@ solid #767973;
+  border-radius: @border_radius_normal@;
+  box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@;
+  padding: @padding_normal@; /* core spacing on top/bottom */
   margin-bottom: @margin_large@;
-  -moz-margin-end: @margin_large@;
-}
-
-#alerts-container:-moz-locale-dir(rtl) {
-  -moz-transform: translatex(-100%);
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 0.5s;
+  opacity: 0;
 }
 
 #alerts-container.showing {
-  -moz-transform: translatex(0);
+  opacity: 1;
+}
+
+#alerts-title {
+  font-size: @font_small@ !important;
 }
 
 #alerts-text {
-  font-size: @font_small@ !important;
-  white-space: pre-wrap;
+  font-size: @font_xsmall@ !important;
+  white-space: pre;
 }
+
+%ifndef ANDROID
+#alerts-container {
+  -moz-margin-end: @margin_large@;
+}
+%endif
 
 /* helperapp (save-as) popup ----------------------------------------------- */
 #helperapp-target {
