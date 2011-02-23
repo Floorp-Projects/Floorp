@@ -756,6 +756,9 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     }
   }
 
+  // Drawing thebes layers can change the current context, reset it.
+  gl()->MakeCurrent();
+
   DEBUG_GL_ERROR_CHECK(gl());
 
   gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
