@@ -67,8 +67,6 @@ class PluginBackgroundSink;
 
 #define nsObjectFrameSuper nsFrame
 
-#define NS_OBJECT_NEEDS_SET_IMAGE NS_FRAME_STATE_BIT(31)
-
 class nsObjectFrame : public nsObjectFrameSuper,
                       public nsIObjectFrame,
                       public nsIReflowCallback {
