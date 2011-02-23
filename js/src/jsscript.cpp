@@ -1617,15 +1617,11 @@ DestroyScript(JSContext *cx, JSScript *script)
 
     /* FIXME: bug 506341; would like to do this only if regenerating shapes. */
     if (!cx->runtime->gcRunning) {
-        JSStackFrame *fp = js_GetTopStackFrame(cx);
-
-        if (!(fp && fp->isEvalFrame())) {
-            JS_PROPERTY_CACHE(cx).purgeForScript(script);
+        JS_PROPERTY_CACHE(cx).purgeForScript(cx, script);
 
 #ifdef CHECK_SCRIPT_OWNER
-            JS_ASSERT(script->owner == cx->thread);
+        JS_ASSERT(script->owner == cx->thread);
 #endif
-        }
     }
 
 #ifdef JS_TRACER
