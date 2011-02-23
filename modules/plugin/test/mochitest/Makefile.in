@@ -70,7 +70,6 @@ _MOCHITEST_FILES = \
   test_pluginstream_poststream.html \
   test_pluginstream_seek.html \
   test_pluginstream_newstream.html \
-  test_pluginstream_seek_close.html \
   test_fullpage.html \
   loremipsum.xtest \
   loremipsum.xtest^headers^ \

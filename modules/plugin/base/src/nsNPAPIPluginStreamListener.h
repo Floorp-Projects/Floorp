@@ -45,7 +45,7 @@
 #include "nsIRequest.h"
 #include "nsITimer.h"
 #include "nsAutoPtr.h"
-#include "nsCOMArray.h"
+#include "nsCOMPtr.h"
 #include "nsIOutputStream.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsString.h"
@@ -68,49 +68,14 @@ class nsINPAPIPluginStreamInfo : public nsIPluginStreamInfo
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INPAPIPLUGINSTREAMINFO_IID)
-
-  void TrackRequest(nsIRequest* request)
-  {
-    mRequests.AppendObject(request);
-  }
-
-  void ReplaceRequest(nsIRequest* oldRequest, nsIRequest* newRequest)
-  {
-    PRInt32 i = mRequests.IndexOfObject(oldRequest);
-    if (i == -1) {
-      NS_ASSERTION(mRequests.Count() == 0,
-                   "Only our initial stream should be unknown!");
-      mRequests.AppendObject(oldRequest);
-    }
-    else {
-      mRequests.ReplaceObjectAt(newRequest, i);
-    }
-  }
   
-  void CancelRequests(nsresult status)
+  nsIRequest *GetRequest()
   {
-    // Copy the array to avoid modification during the loop.
-    nsCOMArray<nsIRequest> requestsCopy(mRequests);
-    for (PRInt32 i = 0; i < requestsCopy.Count(); ++i)
-      requestsCopy[i]->Cancel(status);
-  }
-
-  void SuspendRequests() {
-    nsCOMArray<nsIRequest> requestsCopy(mRequests);
-    for (PRInt32 i = 0; i < requestsCopy.Count(); ++i)
-      requestsCopy[i]->Suspend();
-  }
-
-  void ResumeRequests() {
-    nsCOMArray<nsIRequest> requestsCopy(mRequests);
-    for (PRInt32 i = 0; i < requestsCopy.Count(); ++i)
-      requestsCopy[i]->Resume();
+    return mRequest;
   }
 
 protected:
-  friend class nsPluginByteRangeStreamListener;
-  
-  nsCOMArray<nsIRequest> mRequests;
+  nsCOMPtr<nsIRequest> mRequest;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINPAPIPluginStreamInfo,
@@ -156,7 +121,7 @@ public:
   nsresult CleanUpStream(NPReason reason);
   void CallURLNotify(NPReason reason);
   void SetCallNotify(PRBool aCallNotify) { mCallNotify = aCallNotify; }
-  void SuspendRequest();
+  nsresult SuspendRequest();
   void ResumeRequest();
   nsresult StartDataPump();
   void StopDataPump();
