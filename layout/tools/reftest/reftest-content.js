@@ -650,9 +650,19 @@ function LogInfo(str)
     sendAsyncMessage("reftest:Log", { type: "info", msg: str });
 }
 
+const SYNC_DEFAULT = 0x0;
+const SYNC_ALLOW_DISABLE = 0x1;
 var gDummyCanvas = null;
-function SynchronizeForSnapshot()
+function SynchronizeForSnapshot(flags)
 {
+    if (flags & SYNC_ALLOW_DISABLE) {
+        var docElt = content.document.documentElement;
+        if (docElt && docElt.hasAttribute("reftest-no-sync-layers")) {
+            LogInfo("Test file chose to skip SynchronizeForSnapshot");
+            return;
+        }
+    }
+
     if (gDummyCanvas == null) {
         gDummyCanvas = content.document.createElementNS(XHTML_NS, "canvas");
         gDummyCanvas.setAttribute("width", 1);
@@ -736,7 +746,7 @@ function SendInitCanvasWithSnapshot()
     // NB: this is a test-harness optimization only, it must not
     // affect the validity of the tests.
     if (gBrowserIsRemote) {
-        SynchronizeForSnapshot();
+        SynchronizeForSnapshot(SYNC_DEFAULT);
     }
 
     // For in-process browser, we have to make a synchronous request
@@ -790,7 +800,7 @@ function SendUpdateCanvasForEvent(event)
     if (!gBrowserIsRemote) {
         sendSyncMessage("reftest:UpdateCanvasForInvalidation", { rects: rects });
     } else {
-        SynchronizeForSnapshot();
+        SynchronizeForSnapshot(SYNC_ALLOW_DISABLE);
         sendAsyncMessage("reftest:UpdateCanvasForInvalidation", { rects: rects });
     }
 }
