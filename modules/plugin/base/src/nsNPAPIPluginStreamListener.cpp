@@ -361,7 +361,7 @@ nsNPAPIPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
   return NS_OK;
 }
 
-nsresult
+void
 nsNPAPIPluginStreamListener::SuspendRequest()
 {
   NS_ASSERTION(!mIsSuspended,
@@ -369,19 +369,18 @@ nsNPAPIPluginStreamListener::SuspendRequest()
   
   nsCOMPtr<nsINPAPIPluginStreamInfo> pluginInfoNPAPI =
   do_QueryInterface(mStreamInfo);
-  nsIRequest *request;
   
-  if (!pluginInfoNPAPI || !(request = pluginInfoNPAPI->GetRequest())) {
-    NS_ERROR("Trying to suspend a non-suspendable stream!");
-    return NS_ERROR_FAILURE;
+  if (!pluginInfoNPAPI) {
+    return;
   }
   
   nsresult rv = StartDataPump();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv))
+    return;
   
   mIsSuspended = PR_TRUE;
   
-  return request->Suspend();
+  pluginInfoNPAPI->SuspendRequests();
 }
 
 void
@@ -390,11 +389,7 @@ nsNPAPIPluginStreamListener::ResumeRequest()
   nsCOMPtr<nsINPAPIPluginStreamInfo> pluginInfoNPAPI =
   do_QueryInterface(mStreamInfo);
   
-  nsIRequest *request = pluginInfoNPAPI->GetRequest();
-  
-  // request can be null if the network stream is done.
-  if (request)
-    request->Resume();
+  pluginInfoNPAPI->ResumeRequests();
   
   mIsSuspended = PR_FALSE;
 }
@@ -609,7 +604,7 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
         if (numtowrite <= 0 ||
             (!mIsPluginInitJSStream && PluginInitJSLoadInProgress())) {
           if (!mIsSuspended) {
-            rv = SuspendRequest();
+            SuspendRequest();
           }
           
           // Break out of the inner loop, but keep going through the
@@ -676,7 +671,7 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
         // resume the request.
         if (mIsSuspended || ++zeroBytesWriteCount == 3) {
           if (!mIsSuspended) {
-            rv = SuspendRequest();
+            SuspendRequest();
           }
           
           // Break out of the for loop, but keep going through the
@@ -758,9 +753,8 @@ nsNPAPIPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
     nsCOMPtr<nsINPAPIPluginStreamInfo> pluginInfoNPAPI =
     do_QueryInterface(mStreamInfo);
     
-    nsIRequest *request;
-    if (pluginInfoNPAPI && (request = pluginInfoNPAPI->GetRequest())) {
-      request->Cancel(status);
+    if (pluginInfoNPAPI) {
+      pluginInfoNPAPI->CancelRequests(status);
     }
   }
   
