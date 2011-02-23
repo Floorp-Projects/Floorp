@@ -72,6 +72,7 @@ SUBMAKEFILES += \
 # This makefile uses variable overrides from the libs-% target to
 # build non-default locales to non-default dist/ locations. Be aware!
 
+# XXXCallek Unused?
 APP_VERSION := $(shell cat $(srcdir)/../config/version.txt)
 
 PWD := $(CURDIR)
@@ -257,7 +258,6 @@ libs:: crashreporter-override.ini
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
 endif
 
-
 ident:
 	@printf "fx_revision "
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py \
@@ -265,52 +265,6 @@ ident:
 	@printf "buildid "
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py \
 	    $(STAGEDIST)/application.ini App BuildID
-
-#These make targets call prepare-repackages by setting different UPLOAD_DIR
-prepare-upload-latest-%:
-	@$(MAKE) prepare-repackages-$* UPLOAD_DIR=$(DIST)/upload/latest
-
-prepare-upload-dated-%:
-	@$(MAKE) prepare-repackages-$* UPLOAD_DIR=$(DIST)/upload/`date "+%Y-%m-%d-%H"`-$(MOZ_PKG_APPNAME)$(MOZ_APP_VERSION)-l10n
-
-#Each platform uploads their xpi files to different folders
-ifeq (Linux, $(OS_ARCH))
-XPI_DESTINATION = linux-xpi
-endif
-ifeq (Darwin, $(OS_ARCH))
-XPI_DESTINATION = mac-xpi
-endif
-ifeq (WINNT, $(OS_ARCH))
-XPI_DESTINATION = windows-xpi
-endif
-
-# This target will generate a UPLOAD_DIR folder with
-# l10n repackages in the way that we offer l10n nightlies
-#  1) ./ the binary
-#  2) ./{linux,mac,windows}-xpi/locale.xpi
-prepare-repackages-%:
-ifndef XPI_DESTINATION
-	$(error XPI_DESTINATION not defined; \
-	This is the folder where the xpi files will be moved to)
-endif
-ifndef UPLOAD_DIR
-	$(error UPLOAD_DIR not defined)
-endif
-	$(NSINSTALL) -D $(UPLOAD_DIR)
-	$(NSINSTALL) -D $(UPLOAD_DIR)/$(XPI_DESTINATION)
-# Move the langpack
-	mv $(DIST)/install/firefox-$(MOZ_APP_VERSION).$*.langpack.xpi \
-	   $(UPLOAD_DIR)/$(XPI_DESTINATION)/$*.xpi
-# Move the repackage
-	mv $(DIST)/firefox-$(MOZ_APP_VERSION).$*.* \
-	   $(UPLOAD_DIR)/.
-# Move the windows installer
-ifeq (WINNT, $(OS_ARCH))
-	mv $(DIST)/install/sea/firefox-$(MOZ_APP_VERSION).$*.win32.installer.exe \
-	   $(UPLOAD_DIR)/.
-endif
-# Set the permissions that the folders will have in ftp once uploaded
-	chmod -vR 775 $(UPLOAD_DIR)
 
 merge-%:
 ifdef LOCALE_MERGEDIR
