@@ -648,6 +648,7 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
                             shadowRoot->GetFrameMetrics(),
                             view->GetViewConfig(),
                             aManager, aFrame, aBuilder);
+  mContainer->SetVisibleRegion(aVisibleRect);
 
   return nsRefPtr<Layer>(mContainer).forget();
 }

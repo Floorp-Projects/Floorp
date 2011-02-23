@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<style>
+#d {
+    background: red;
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    height: 200px;
+    width: 800px;
+    transform: rotate(40deg);
+    -moz-transform: rotate(40deg);
+}
+#d2 {
+    background: white;
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    height: 204px;
+    width: 804px;
+    transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+}
+</style>
+</head>
+<body>
+<script>
+function doTest() {
+  // The first rotation here makes the transform active. The second rotation
+  // sets it back where it belongs.
+  var d = document.getElementById("d");
+  d.style.transform = d.style.MozTransform = 'rotate(45deg)';
+  document.documentElement.removeAttribute('class');
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+<div id="d">test</div>
+<!-- d2 covers up d completely so that we don't get a reftest failure due to a difference
+     between the rendering of an 'active transform' (transformed via layers) vs an inactive
+     transform (transformed via D2D or cairo) -->
+<div id="d2">test</div>
+</body>
+</html>

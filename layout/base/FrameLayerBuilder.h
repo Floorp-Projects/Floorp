@@ -139,8 +139,8 @@ public:
    * children of the new container, and assigning all other items to
    * ThebesLayer children created and managed by the FrameLayerBuilder.
    * Returns a layer with clip rect cleared; it is the
-   * caller's responsibility to add any clip rect and set the visible
-   * region.
+   * caller's responsibility to add any clip rect. The visible region
+   * is set based on what's in the layer.
    */
   already_AddRefed<ContainerLayer>
   BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
