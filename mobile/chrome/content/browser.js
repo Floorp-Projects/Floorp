@@ -1125,6 +1125,7 @@ Browser.MainDragger.prototype = {
     let browser = getBrowser();
     let bcr = browser.getBoundingClientRect();
     this._contentView = browser.getViewAt(clientX - bcr.left, clientY - bcr.top);
+    this._stopAtSidebar = 0;
   },
 
   dragStop: function dragStop(dx, dy, scroller) {
@@ -1139,6 +1140,10 @@ Browser.MainDragger.prototype = {
     // First calculate any panning to take sidebars out of view
     let panOffset = this._panControlsAwayOffset(doffset);
 
+    // If we started at one sidebar, stop when we get to the other.
+    if (panOffset.x != 0 && !this._stopAtSidebar)
+      this._stopAtSidebar = panOffset.x; // negative: stop at left; positive: stop at right
+
     if (this._contentView && !this._contentView.isRoot()) {
       this._panContentView(this._contentView, doffset);
       // XXX we may need to have "escape borders" for iframe panning
@@ -1150,7 +1155,13 @@ Browser.MainDragger.prototype = {
 
     // Any leftover panning in doffset would bring controls into view. Add to sidebar
     // away panning for the total scroll offset.
-    doffset.add(panOffset);
+    if (this._stopAtSidebar > 0 && doffset.x > 0)
+      doffset.x = panOffset.x;
+    else if (this._stopAtSidebar < 0 && doffset.x < 0)
+      doffset.x = panOffset.x;
+    else
+      doffset.add(panOffset);
+
     Browser.tryFloatToolbar(doffset.x, 0);
     this._panScroller(Browser.controlsScrollboxScroller, doffset);
     this._panScroller(Browser.pageScrollboxScroller, doffset);
