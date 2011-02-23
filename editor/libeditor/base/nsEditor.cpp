@@ -4822,15 +4822,14 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
         priorNodeAsText->GetLength(&length);
         if (0<length)
         {
-          DeleteTextTxn *txn;
+          nsRefPtr<DeleteTextTxn> txn;
           result = CreateTxnForDeleteCharacter(priorNodeAsText, length,
-                                               ePrevious, &txn);
+                                               ePrevious, getter_AddRefs(txn));
           if (NS_SUCCEEDED(result)) {
             aTxn->AppendChild(txn);
             NS_ADDREF(*aNode = priorNode);
             *aOffset = txn->GetOffset();
             *aLength = txn->GetNumCharsToDelete();
-            NS_RELEASE(txn);
           }
         }
         else
@@ -4841,11 +4840,10 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
       }
       else
       { // priorNode is not text, so tell it's parent to delete it
-        DeleteElementTxn *txn;
-        result = CreateTxnForDeleteElement(priorNode, &txn);
+        nsRefPtr<DeleteElementTxn> txn;
+        result = CreateTxnForDeleteElement(priorNode, getter_AddRefs(txn));
         if (NS_SUCCEEDED(result)) {
           aTxn->AppendChild(txn);
-          NS_RELEASE(txn);
           NS_ADDREF(*aNode = priorNode);
         }
       }
@@ -4865,14 +4863,14 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
         nextNodeAsText->GetLength(&length);
         if (0<length)
         {
-          DeleteTextTxn *txn;
-          result = CreateTxnForDeleteCharacter(nextNodeAsText, 0, eNext, &txn);
+          nsRefPtr<DeleteTextTxn> txn;
+          result = CreateTxnForDeleteCharacter(nextNodeAsText, 0, eNext,
+                                               getter_AddRefs(txn));
           if (NS_SUCCEEDED(result)) {
             aTxn->AppendChild(txn);
             NS_ADDREF(*aNode = nextNode);
             *aOffset = txn->GetOffset();
             *aLength = txn->GetNumCharsToDelete();
-            NS_RELEASE(txn);
           }
         }
         else
@@ -4883,11 +4881,10 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
       }
       else
       { // nextNode is not text, so tell it's parent to delete it
-        DeleteElementTxn *txn;
-        result = CreateTxnForDeleteElement(nextNode, &txn);
+        nsRefPtr<DeleteElementTxn> txn;
+        result = CreateTxnForDeleteElement(nextNode, getter_AddRefs(txn));
         if (NS_SUCCEEDED(result)) {
           aTxn->AppendChild(txn);
-          NS_RELEASE(txn);
           NS_ADDREF(*aNode = nextNode);
         }
       }
