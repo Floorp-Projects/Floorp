@@ -778,7 +778,6 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
                 if (!ok)
                     goto out;
                 shape = obj->nativeLookup(propid);
-                JS_ASSERT_IF(!shape, !wp->setter);
 
                 if (!shape) {
                     ok = true;
