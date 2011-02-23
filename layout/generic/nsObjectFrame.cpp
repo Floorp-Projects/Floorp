@@ -1608,8 +1608,6 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
 {
-  AddStateBits(NS_OBJECT_NEEDS_SET_IMAGE);
-
   // XXX why are we painting collapsed object frames?
   if (!IsVisibleOrCollapsedForPainting(aBuilder))
     return NS_OK;
@@ -1900,10 +1898,13 @@ nsObjectFrame::GetImageContainer(LayerManager* aManager)
 
   // XXX - in the future image containers will be manager independent and
   // we can remove the manager equals check and only check the backend type.
-  if (mImageContainer && 
-      (!mImageContainer->Manager() || mImageContainer->Manager() == manager) &&
-      mImageContainer->GetBackendType() == manager->GetBackendType()) {
-    return mImageContainer;
+  if (mImageContainer) {
+    if ((!mImageContainer->Manager() || mImageContainer->Manager() == manager) &&
+        mImageContainer->GetBackendType() == manager->GetBackendType())
+      return mImageContainer;
+    // Clear current image before we reset mImageContainer. Only mImageContainer
+    // is allowed to contain the image for this plugin.
+    mImageContainer->SetCurrentImage(nsnull);
   }
 
   mImageContainer = manager->CreateImageContainer();
@@ -2084,12 +2085,17 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   nsRefPtr<ImageContainer> container = GetImageContainer(aManager);
   if (!container)
     return nsnull;
-  if (GetStateBits() & NS_OBJECT_NEEDS_SET_IMAGE) {
-    RemoveStateBits(NS_OBJECT_NEEDS_SET_IMAGE);
-    if (!mInstanceOwner->SetCurrentImage(container)) {
-      return nsnull;
+
+  {
+    nsRefPtr<Image> current = container->GetCurrentImage();
+    if (!current) {
+      // Only set the current image if there isn't already one. If there is
+      // already one, InvalidateRect() will be keeping it up to date.
+      if (!mInstanceOwner->SetCurrentImage(container))
+        return nsnull;
     }
   }
+
   gfxIntSize size = container->GetCurrentSize();
 
   nsRect area = GetContentRect() + aBuilder->ToReferenceFrame(GetParent());
