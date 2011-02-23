@@ -70,6 +70,21 @@ nsIWidget::CreatePuppetWidget(PBrowserChild *aTabChild)
 namespace mozilla {
 namespace widget {
 
+static bool
+IsPopup(const nsWidgetInitData* aInitData)
+{
+  return aInitData && aInitData->mWindowType == eWindowType_popup;
+}
+
+static bool
+MightNeedIMEFocus(const nsWidgetInitData* aInitData)
+{
+  // In the puppet-widget world, popup widgets are just dummies and
+  // shouldn't try to mess with IME state.
+  return !IsPopup(aInitData);
+}
+
+
 // Arbitrary, fungible.
 const size_t PuppetWidget::kMaxDimension = 4000;
 
@@ -112,9 +127,11 @@ PuppetWidget::Create(nsIWidget        *aParent,
                                       gfxASurface::ContentFromFormat(gfxASurface::ImageFormatARGB32));
 
   mIMEComposing = PR_FALSE;
-  PRUint32 chromeSeqno;
-  mTabChild->SendNotifyIMEFocus(false, &mIMEPreference, &chromeSeqno);
-  mIMELastBlurSeqno = mIMELastReceivedSeqno = chromeSeqno;
+  if (MightNeedIMEFocus(aInitData)) {
+    PRUint32 chromeSeqno;
+    mTabChild->SendNotifyIMEFocus(false, &mIMEPreference, &chromeSeqno);
+    mIMELastBlurSeqno = mIMELastReceivedSeqno = chromeSeqno;
+  }
 
   PuppetWidget* parent = static_cast<PuppetWidget*>(aParent);
   if (parent) {
@@ -137,8 +154,7 @@ PuppetWidget::CreateChild(const nsIntRect  &aRect,
                           nsWidgetInitData *aInitData,
                           PRBool           aForceUseIWidgetParent)
 {
-  bool isPopup = aInitData && aInitData->mWindowType == eWindowType_popup;
-
+  bool isPopup = IsPopup(aInitData);
   nsCOMPtr<nsIWidget> widget = nsIWidget::CreatePuppetWidget(mTabChild);
   return ((widget &&
            NS_SUCCEEDED(widget->Create(isPopup ? nsnull: this, nsnull, aRect,
