@@ -487,8 +487,12 @@ class DeviceManager:
   #  success: pid
   #  failure: None
   def fireProcess(self, appname):
+    if (not appname):
+      if (self.debug >= 1): print "WARNING: fireProcess called with no command to run"
+      return None
+
     if (self.debug >= 2): print "FIRE PROC: '" + appname + "'"
-    
+
     if (self.processExist(appname) != None):
       print "WARNING: process %s appears to be running already\n" % appname
     
@@ -514,6 +518,10 @@ class DeviceManager:
   #  success: output filename
   #  failure: None
   def launchProcess(self, cmd, outputFile = "process.txt", cwd = '', env = ''):
+    if not cmd:
+      if (self.debug >= 1): print "WARNING: launchProcess called without command to run"
+      return None
+
     cmdline = subprocess.list2cmdline(cmd)
     if (outputFile == "process.txt" or outputFile == None):
       outputFile = self.getDeviceRoot();
@@ -1154,13 +1162,13 @@ class DeviceManager:
     if (destPath):
       cmd += " " + destPath
 
-    if (self.debug > 3): print "INFO: updateApp using command: " + str(cmd)
-
     if (ipAddr is not None):
       ip, port = self.getCallbackIpAndPort(ipAddr, port)
       cmd += " %s %s" % (ip, port)
       # Set up our callback server
       callbacksvr = callbackServer(ip, port, self.debug)
+
+    if (self.debug >= 3): print "INFO: updateApp using command: " + str(cmd)
 
     try:
       status = self.verifySendCMD([cmd])
@@ -1170,7 +1178,7 @@ class DeviceManager:
     if ipAddr is not None:
       status = callbacksvr.disconnect()
 
-    if (self.debug > 3): print "INFO: updateApp: got status back: " + str(status)
+    if (self.debug >= 3): print "INFO: updateApp: got status back: " + str(status)
 
     return status
 
@@ -1209,13 +1217,66 @@ class DeviceManager:
     Returns a properly formatted env string for the agent.
     Input - env, which is either None, '', or a dict
     Output - a quoted string of the form: '"envvar1=val1,envvar2=val2..."'
-    If env is None or '' return '""' (empty quoted string)
+    If env is None or '' return '' (empty quoted string)
   """
   def formatEnvString(self, env):
     if (env == None or env == ''):
-      return '""'
+      return ''
 
-    return '"%s"' % ','.join(map(lambda x: '%s=%s' % (x[0], x[1]), env.iteritems()))
+    retVal = '"%s"' % ','.join(map(lambda x: '%s=%s' % (x[0], x[1]), env.iteritems()))
+    print "got retval: '%s'" % retVal
+    if (retVal == '""'):
+      return ''
+
+    return retVal
+
+  """
+    adjust the screen resolution on the device, REBOOT REQUIRED
+    NOTE: this only works on a tegra ATM
+    success: True
+    failure: False
+
+    supported resolutions: 640x480, 800x600, 1024x768, 1152x864, 1200x1024, 1440x900, 1680x1050, 1920x1080
+  """
+  def adjustResolution(self, width=1680, height=1050, type='hdmi'):
+    if self.getInfo('os')['os'][0].split()[0] != 'harmony-eng':
+      if (self.debug >= 2): print "WARNING: unable to adjust screen resolution on non Tegra device"
+      return False
+
+    results = self.getInfo('screen')
+    parts = results['screen'][0].split(':')
+    if (self.debug >= 3): print "INFO: we have a current resolution of %s, %s" % (parts[1].split()[0], parts[2].split()[0])
+
+    #verify screen type is valid, and set it to the proper value (https://bugzilla.mozilla.org/show_bug.cgi?id=632895#c4)
+    screentype = -1
+    if (type == 'hdmi'):
+      screentype = 5
+    elif (type == 'vga' or type == 'crt'):
+      screentype = 3
+    else:
+      return False
+
+    #verify we have numbers
+    if not (isinstance(width, int) and isinstance(height, int)):
+      return False
+
+    if (width < 100 or width > 9999):
+      return False
+
+    if (height < 100 or height > 9999):
+      return False
+
+    if (self.debug >= 3): print "INFO: adjusting screen resolution to %s, %s and rebooting" % (width, height)
+    try:
+      self.verifySendCMD(["exec setprop persist.tegra.dpy%s.mode.width %s" % (screentype, width)])
+      self.verifySendCMD(["exec setprop persist.tegra.dpy%s.mode.height %s" % (screentype, height)])
+    except(DMError):
+      return False
+
+    if (self.reboot(True) == None):
+      return False
+
+    return True
 
 gCallbackData = ''
 
@@ -1228,7 +1289,7 @@ class callbackServer():
     self.port = port
     self.connected = False
     self.debug = debuglevel
-    if (self.debug > 3) : print "Creating server with " + str(ip) + ":" + str(port)
+    if (self.debug >= 3) : print "Creating server with " + str(ip) + ":" + str(port)
     self.server = myServer((ip, port), self.myhandler)
     self.server_thread = Thread(target=self.server.serve_forever) 
     self.server_thread.setDaemon(True)
@@ -1236,17 +1297,17 @@ class callbackServer():
 
   def disconnect(self, step = 60, timeout = 600):
     t = 0
-    if (self.debug > 3): print "Calling disconnect on callback server"
+    if (self.debug >= 3): print "Calling disconnect on callback server"
     while t < timeout:
       if (gCallbackData):
         # Got the data back
-        if (self.debug > 3): print "Got data back from agent: " + str(gCallbackData)
+        if (self.debug >= 3): print "Got data back from agent: " + str(gCallbackData)
         break
       time.sleep(step)
       t += step
 
     try:
-      if (self.debug > 3): print "Shutting down server now"
+      if (self.debug >= 3): print "Shutting down server now"
       self.server.shutdown()
     except:
       print "Unable to shutdown callback server - check for a connection on port: " + str(self.port)
