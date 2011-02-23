@@ -3341,6 +3341,8 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
       rv = AddHeadersToChannel(aHeadersData, aHeadersDataLen, httpChannel);
   }
   rv = channel->AsyncOpen(listenerPeer, nsnull);
+  if (NS_SUCCEEDED(rv))
+    listenerPeer->TrackRequest(channel);
   return rv;
 }
 
