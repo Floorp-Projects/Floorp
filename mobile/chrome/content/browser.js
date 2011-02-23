@@ -2672,14 +2672,8 @@ Tab.prototype = {
       Elements.browsers.selectedPanel = notification;
       browser.active = true;
       document.getElementById("tabs").selectedTab = this._chromeTab;
-
-      // Ensure that the content process has gets an activate event
-      let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
-      browser.focus();
-      try {
-        fl.activateRemoteFrame();
-      } catch (e) {}
-    } else {
+    }
+    else {
       browser.messageManager.sendAsyncMessage("Browser:Blur", { });
       browser.setAttribute("type", "content");
       browser.active = false;
