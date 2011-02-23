@@ -3051,3 +3051,34 @@ js_ReportIsNotFunction(JSContext *cx, const Value *vp, uintN flags)
 
     js_ReportValueError3(cx, error, spindex, *vp, NULL, name, source);
 }
+
+namespace js {
+
+bool
+IsSafeForLazyThisCoercion(JSContext *cx, JSObject *callee)
+{
+    /*
+     * Look past any function wrappers. If the callee is a wrapped strict-mode
+     * function, lazy 'this' coercion is vacuously safe because strict-mode
+     * functions don't coerce 'this' at all. Otherwise, the callee is safe to
+     * transform into the lazy 'this' cookie (the undefined value) only if it
+     * is in the current scope.
+     *
+     * Without this restriction, lazy 'this' coercion would pick up the "wrong"
+     * global at the end of the callee function object's scope, rather than the
+     * "right" (backward compatible since 1995) global that was the "Reference
+     * base object" in the callee expression.
+     */
+    if (callee->isProxy()) {
+        callee = callee->unwrap();
+        if (!callee->isFunction())
+            return true; // treat any non-wrapped-function proxy as strict
+
+        JSFunction *fun = callee->getFunctionPrivate();
+        if (fun->isInterpreted() && fun->inStrictMode())
+            return true;
+    }
+    return callee->getGlobal() == cx->fp()->scopeChain().getGlobal();
+}
+
+}
