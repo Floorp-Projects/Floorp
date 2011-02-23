@@ -424,7 +424,7 @@ function test_non_addable_uri_errors()
 
     // If we have had all of our callbacks, continue running tests.
     if (++callbackCount == places.length) {
-      run_next_test();
+      waitForAsyncUpdates(run_next_test);
     }
   });
 }
@@ -458,7 +458,7 @@ function test_duplicate_guid_errors()
       do_check_eq(aResultCode, Cr.NS_ERROR_STORAGE_CONSTRAINT);
       do_check_false(gGlobalHistory.isVisited(badPlace.uri));
 
-      run_next_test();
+      waitForAsyncUpdates(run_next_test);
     });
   });
 }
@@ -495,7 +495,7 @@ function test_invalid_referrerURI_ignored()
     do_check_eq(stmt.row.from_visit, 0);
     stmt.finalize();
 
-    run_next_test();
+    waitForAsyncUpdates(run_next_test);
   });
 }
 
@@ -527,7 +527,7 @@ function test_nonnsIURI_referrerURI_ignored()
     do_check_eq(stmt.row.from_visit, 0);
     stmt.finalize();
 
-    run_next_test();
+    waitForAsyncUpdates(run_next_test);
   });
 }
 
@@ -563,7 +563,7 @@ function test_invalid_sessionId_ignored()
     do_check_neq(stmt.row.session, place.visits[0].sessionId);
     stmt.finalize();
 
-    run_next_test();
+    waitForAsyncUpdates(run_next_test);
   });
 }
 
@@ -612,7 +612,7 @@ function test_unstored_sessionId_ignored()
     do_check_eq(maxSessionId + 1, newMaxSessionId);
     stmt.finalize();
 
-    run_next_test();
+    waitForAsyncUpdates(run_next_test);
   });
 }
 
@@ -668,7 +668,7 @@ function test_old_referrer_ignored()
       do_check_eq(stmt.row.count, 1);
       stmt.finalize();
 
-      run_next_test();
+      waitForAsyncUpdates(run_next_test);
     });
   });
 }
@@ -705,7 +705,7 @@ function test_place_id_ignored()
       do_check_neq(aPlaceInfo.placeId, placeId);
       do_check_true(gGlobalHistory.isVisited(badPlace.uri));
 
-      run_next_test();
+      waitForAsyncUpdates(run_next_test);
     });
   });
 }
@@ -748,7 +748,7 @@ function test_observer_topic_dispatched_when_complete()
       do_check_eq(aTopic, TOPIC_UPDATEPLACES_COMPLETE);
       do_check_eq(callbackCount, EXPECTED_COUNT);
       Services.obs.removeObserver(observer, TOPIC_UPDATEPLACES_COMPLETE);
-      run_next_test();
+      waitForAsyncUpdates(run_next_test);
     },
   };
   Services.obs.addObserver(observer, TOPIC_UPDATEPLACES_COMPLETE, false);
@@ -812,7 +812,7 @@ function test_add_visit()
 
     // If we have had all of our callbacks, continue running tests.
     if (++callbackCount == place.visits.length) {
-      run_next_test();
+      waitForAsyncUpdates(run_next_test);
     }
   });
 }
@@ -908,7 +908,7 @@ function test_properties_saved()
 
     // If we have had all of our callbacks, continue running tests.
     if (++callbackCount == places.length) {
-      run_next_test();
+      waitForAsyncUpdates(run_next_test);
     }
   });
 }
@@ -932,7 +932,7 @@ function test_guid_saved()
     do_check_eq(aPlaceInfo.guid, place.guid);
     do_check_guid_for_uri(uri, place.guid);
 
-    run_next_test();
+    waitForAsyncUpdates(run_next_test);
   });
 }
 
@@ -987,7 +987,7 @@ function test_referrer_saved()
     do_check_eq(stmt.row.count, 1);
     stmt.finalize();
 
-    run_next_test();
+    waitForAsyncUpdates(run_next_test);
   });
 }
 
@@ -1022,7 +1022,7 @@ function test_sessionId_saved()
     do_check_eq(stmt.row.count, 1);
     stmt.finalize();
 
-    run_next_test();
+    waitForAsyncUpdates(run_next_test);
   });
 }
 
@@ -1047,7 +1047,7 @@ function test_guid_change_saved()
       do_check_true(Components.isSuccessCode(aResultCode));
       do_check_guid_for_uri(place.uri, place.guid);
 
-      run_next_test();
+      waitForAsyncUpdates(run_next_test);
     });
   });
 }
@@ -1088,7 +1088,7 @@ function test_title_change_saved()
           do_check_true(Components.isSuccessCode(aResultCode));
           do_check_title_for_uri(place.uri, place.title);
 
-          run_next_test();
+          waitForAsyncUpdates(run_next_test);
         });
       });
     });
@@ -1118,7 +1118,7 @@ function test_no_title_does_not_clear_title()
       do_check_true(Components.isSuccessCode(aResultCode));
       do_check_title_for_uri(place.uri, TITLE);
 
-      run_next_test();
+      waitForAsyncUpdates(run_next_test);
     });
   });
 }
@@ -1161,7 +1161,7 @@ function test_title_change_notifies()
       case 2:
         PlacesUtils.history.removeObserver(silentObserver);
         PlacesUtils.history.removeObserver(observer);
-        run_next_test();
+        waitForAsyncUpdates(run_next_test);
     };
   });
   PlacesUtils.history.addObserver(observer, false);
@@ -1183,7 +1183,7 @@ function test_visit_notifies()
   let callbackCount = 0;
   let finisher = function() {
     if (++callbackCount == 2) {
-      run_next_test();
+      waitForAsyncUpdates(run_next_test);
     }
   }
   let visitObserver = new VisitObserver(place.uri, function(aVisitDate,
@@ -1244,7 +1244,7 @@ function test_referrer_sessionId_persists()
 
       do_check_eq(aPlaceInfo.visits[0].sessionId, sessionId);
 
-      run_next_test();
+      waitForAsyncUpdates(run_next_test);
     });
   });
 }
@@ -1261,6 +1261,8 @@ let gTests = [
   test_add_visit_no_date_throws,
   test_add_visit_no_transitionType_throws,
   test_add_visit_invalid_transitionType_throws,
+  // Note: all asynchronous tests (every test below this point) should
+  // waitForAsyncUpdates before calling run_next_test.
   test_non_addable_uri_errors,
   test_duplicate_guid_errors,
   test_invalid_referrerURI_ignored,
