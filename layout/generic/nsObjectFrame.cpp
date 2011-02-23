@@ -471,6 +471,12 @@ public:
   void NotifyPaintWaiter(nsDisplayListBuilder* aBuilder);
   // Return true if we set image with valid surface
   PRBool SetCurrentImage(ImageContainer* aContainer);
+  /**
+   * Returns the bounds of the current async-rendered surface. This can only
+   * change in response to messages received by the event loop (i.e. not during
+   * painting).
+   */
+  nsIntSize GetCurrentImageSize();
 
   // Methods to update the background image we send to async plugins.
   // The eventual target of these operations is PluginInstanceParent,
@@ -1381,40 +1387,17 @@ public:
 };
 
 static nsRect
-GetDesiredDisplayItemBounds(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem, nsIFrame* aFrame)
+GetDisplayItemBounds(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem, nsIFrame* aFrame)
 {
-  nsRect r = aFrame->GetContentRect() - aFrame->GetPosition() +
+  // XXX For slightly more accurate region computations we should pixel-snap this
+  return aFrame->GetContentRect() - aFrame->GetPosition() +
     aItem->ToReferenceFrame();
-  return r;
-}
-
-static nsRect
-GetDrawnDisplayItemBounds(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem, nsIFrame* aFrame)
-{
-  nsRect r = aFrame->GetContentRect() - aFrame->GetPosition() +
-    aItem->ToReferenceFrame();
-
-#ifndef XP_MACOSX
-  nsObjectFrame* f = static_cast<nsObjectFrame*>(aFrame);
-  if (LAYER_ACTIVE == f->GetLayerState(aBuilder, nsnull)) {
-    ImageContainer* c = f->GetImageContainer();
-    if (c) {
-      gfxIntSize size = c->GetCurrentSize();
-      PRInt32 appUnitsPerDevPixel = f->PresContext()->AppUnitsPerDevPixel();
-      nsSize sizeAppUnits(size.width*appUnitsPerDevPixel, size.height*appUnitsPerDevPixel);
-      r += nsPoint((r.width - sizeAppUnits.width) / 2,
-                   (r.height - sizeAppUnits.height) / 2);
-      r.SizeTo(sizeAppUnits);
-    }
-  }
-#endif
-  return r;
 }
 
 nsRect
 nsDisplayPluginReadback::GetBounds(nsDisplayListBuilder* aBuilder)
 {
-  return GetDesiredDisplayItemBounds(aBuilder, this, mFrame);
+  return GetDisplayItemBounds(aBuilder, this, mFrame);
 }
 
 PRBool
@@ -1440,15 +1423,7 @@ nsDisplayPluginReadback::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 nsRect
 nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder)
 {
-  // We use display lists to notify plugins of visibility.  But we
-  // also need to return the "real" visible bounds, possibly those of
-  // our Image, when actually painting.  Usually those will be the
-  // same, but for the plugin to paint initially, something needs to
-  // notify it that it's visible.  So return whichever the appropriate
-  // rect here.
-  return aBuilder->IsForPluginGeometry() ?
-    GetDesiredDisplayItemBounds(aBuilder, this, mFrame) :
-    GetDrawnDisplayItemBounds(aBuilder, this, mFrame);
+  return GetDisplayItemBounds(aBuilder, this, mFrame);
 }
 
 void
@@ -1496,7 +1471,10 @@ nsDisplayPlugin::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
       }
     }
   }
-  if (f->IsOpaque()) {
+  if (f->IsOpaque() &&
+      (aBuilder->IsForPluginGeometry() ||
+       (f->GetPaintedRect(this) + ToReferenceFrame()).Contains(GetBounds(aBuilder)))) {
+    // We can treat this as opaque
     result = GetBounds(aBuilder);
   }
   return result;
@@ -1944,6 +1922,22 @@ nsObjectFrame::GetImageContainer(LayerManager* aManager)
   return mImageContainer;
 }
 
+nsRect
+nsObjectFrame::GetPaintedRect(nsDisplayPlugin* aItem)
+{
+  if (!mInstanceOwner)
+    return nsRect();
+  nsRect r = GetContentRect() - GetPosition();
+  if (!mInstanceOwner->UseAsyncRendering())
+    return r;
+
+  nsIntSize size = mInstanceOwner->GetCurrentImageSize();
+  nsPresContext* pc = PresContext();
+  r.IntersectRect(r, nsRect(0, 0, pc->DevPixelsToAppUnits(size.width),
+                                  pc->DevPixelsToAppUnits(size.height)));
+  return r;
+}
+
 class AsyncPaintWaitEvent : public nsRunnable
 {
 public:
@@ -2047,12 +2041,23 @@ nsPluginInstanceOwner::EndUpdateBackground(gfxContext* aContext,
   }
 }
 
-mozilla::LayerState
+nsIntSize
+nsPluginInstanceOwner::GetCurrentImageSize()
+{
+  nsCOMPtr<nsIPluginInstance_MOZILLA_2_0_BRANCH> inst = GetInstance();
+  nsIntSize size(0,0);
+  if (inst) {
+    inst->GetImageSize(&size);
+  }
+  return size;
+}
+
+LayerState
 nsObjectFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager)
 {
   if (!mInstanceOwner)
-    return mozilla::LAYER_NONE;
+    return LAYER_NONE;
 
 #ifdef XP_MACOSX
   if (aManager &&
@@ -2061,14 +2066,14 @@ nsObjectFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
       mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics &&
       mInstanceOwner->IsRemoteDrawingCoreAnimation())
   {
-    return mozilla::LAYER_ACTIVE;
+    return LAYER_ACTIVE;
   }
 #endif
 
   if (!mInstanceOwner->UseAsyncRendering())
-    return mozilla::LAYER_NONE;
+    return LAYER_NONE;
 
-  return mozilla::LAYER_ACTIVE;
+  return LAYER_ACTIVE;
 }
 
 already_AddRefed<Layer>
@@ -2156,9 +2161,6 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   // Set a transform on the layer to draw the plugin in the right place
   gfxMatrix transform;
-  // Center plugin if layer size != frame rect
-  r.pos.x += (r.Width() - size.width) / 2;
-  r.pos.y += (r.Height() - size.height) / 2;
   transform.Translate(r.pos);
 
   layer->SetTransform(gfx3DMatrix::From2D(transform));

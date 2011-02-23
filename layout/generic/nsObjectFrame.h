@@ -194,6 +194,12 @@ public:
                                    LayerManager* aManager);
 
   ImageContainer* GetImageContainer(LayerManager* aManager = nsnull);
+  /**
+   * Get the rectangle (relative to this frame) which it will paint. Normally
+   * the frame's content-box but may be smaller if the plugin is rendering
+   * asynchronously and has a different-sized image temporarily.
+   */
+  nsRect GetPaintedRect(nsDisplayPlugin* aItem);
 
   /**
    * If aContent has a nsObjectFrame, then prepare it for a DocShell swap.
