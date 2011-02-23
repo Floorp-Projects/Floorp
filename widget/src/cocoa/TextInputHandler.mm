@@ -804,6 +804,227 @@ TextInputHandler::~TextInputHandler()
   [mView uninstallTextInputHandler];
 }
 
+PRBool
+TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  if (Destroyed()) {
+    return PR_FALSE;
+  }
+
+  nsRefPtr<nsChildView> kungFuDeathGrip(mWidget);
+
+  mCurrentKeyEvent.Set(aNativeEvent);
+  AutoKeyEventStateCleaner remover(this);
+
+  BOOL nonDeadKeyPress = [[aNativeEvent characters] length] > 0;
+  if (nonDeadKeyPress && !IsIMEComposing()) {
+    NSResponder* firstResponder = [[mView window] firstResponder];
+
+    nsKeyEvent keydownEvent(PR_TRUE, NS_KEY_DOWN, mWidget);
+    InitKeyEvent(aNativeEvent, keydownEvent);
+
+#ifndef NP_NO_CARBON
+    EventRecord carbonEvent;
+    if ([mView pluginEventModel] == NPEventModelCarbon) {
+      ConvertCocoaKeyEventToCarbonEvent(aNativeEvent, carbonEvent, PR_TRUE);
+      keydownEvent.pluginEvent = &carbonEvent;
+    }
+#endif // #ifndef NP_NO_CARBON
+
+    mCurrentKeyEvent.mKeyDownHandled = DispatchEvent(keydownEvent);
+    if (Destroyed()) {
+      return mCurrentKeyEvent.KeyDownOrPressHandled();
+    }
+
+    // The key down event may have shifted the focus, in which
+    // case we should not fire the key press.
+    // XXX This is a special code only on Cocoa widget, why is this needed?
+    if (firstResponder != [[mView window] firstResponder]) {
+      return mCurrentKeyEvent.KeyDownOrPressHandled();
+    }
+
+    // If this is the context menu key command, send a context menu key event.
+    NSUInteger modifierFlags =
+      [aNativeEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
+    if (modifierFlags == NSControlKeyMask &&
+        [[aNativeEvent charactersIgnoringModifiers] isEqualToString:@" "]) {
+      nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU,
+                                    [mView widget], nsMouseEvent::eReal,
+                                    nsMouseEvent::eContextMenuKey);
+      contextMenuEvent.isShift = contextMenuEvent.isControl =
+        contextMenuEvent.isAlt = contextMenuEvent.isMeta = PR_FALSE;
+
+      PRBool cmEventHandled = DispatchEvent(contextMenuEvent);
+      [mView maybeInitContextMenuTracking];
+      // Bail, there is nothing else to do here.
+      return (cmEventHandled || mCurrentKeyEvent.KeyDownOrPressHandled());
+    }
+
+    nsKeyEvent keypressEvent(PR_TRUE, NS_KEY_PRESS, mWidget);
+    InitKeyEvent(aNativeEvent, keypressEvent);
+
+    // if this is a non-letter keypress, or the control key is down,
+    // dispatch the keydown to gecko, so that we trap delete,
+    // control-letter combinations etc before Cocoa tries to use
+    // them for keybindings.
+    // XXX This is wrong. IME may be handle the non-letter keypress event as
+    //     its owning shortcut key.  See bug 477291.
+    if ((!keypressEvent.isChar || keypressEvent.isControl) &&
+        !IsIMEComposing()) {
+      if (mCurrentKeyEvent.mKeyDownHandled) {
+        keypressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+      }
+      mCurrentKeyEvent.mKeyPressHandled = DispatchEvent(keypressEvent);
+      mCurrentKeyEvent.mKeyPressDispatched = PR_TRUE;
+      if (Destroyed()) {
+        return mCurrentKeyEvent.KeyDownOrPressHandled();
+      }
+    }
+  }
+
+  // Let Cocoa interpret the key events, caching IsIMEComposing first.
+  PRBool wasComposing = IsIMEComposing();
+  PRBool interpretKeyEventsCalled = PR_FALSE;
+  if (IsIMEEnabled() || IsASCIICapableOnly()) {
+    [mView interpretKeyEvents:[NSArray arrayWithObject:aNativeEvent]];
+    interpretKeyEventsCalled = PR_TRUE;
+  }
+
+  if (Destroyed()) {
+    return mCurrentKeyEvent.KeyDownOrPressHandled();
+  }
+
+  if (!mCurrentKeyEvent.mKeyPressDispatched && nonDeadKeyPress &&
+      !wasComposing && !IsIMEComposing()) {
+    nsKeyEvent keypressEvent(PR_TRUE, NS_KEY_PRESS, mWidget);
+    InitKeyEvent(aNativeEvent, keypressEvent);
+
+    // If we called interpretKeyEvents and this isn't normal character input
+    // then IME probably ate the event for some reason. We do not want to
+    // send a key press event in that case.
+    // TODO:
+    // There are some other cases which IME eats the current event.
+    // 1. If key events were nested during calling interpretKeyEvents, it means
+    //    that IME did something.  Then, we should do nothing.
+    // 2. If one or more commands are called like "deleteBackward", we should
+    //    dispatch keypress event at that time.  Note that the command may have
+    //    been a converted or generated action by IME.  Then, we shouldn't do
+    //    our default action for this key.
+    if (!(interpretKeyEventsCalled &&
+          IsNormalCharInputtingEvent(keypressEvent))) {
+      if (mCurrentKeyEvent.mKeyDownHandled) {
+        keypressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+      }
+      mCurrentKeyEvent.mKeyPressHandled = DispatchEvent(keypressEvent);
+    }
+  }
+
+  // Note: mWidget might have become null here. Don't count on it from here on.
+
+  return mCurrentKeyEvent.KeyDownOrPressHandled();
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
+}
+
+void
+TextInputHandler::InsertText(NSAttributedString *aAttrString)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (Destroyed()) {
+    return;
+  }
+
+  if (IgnoreIMEComposition()) {
+    return;
+  }
+
+  nsString str;
+  GetStringForNSString([aAttrString string], str);
+  if (!IsIMEComposing() && str.IsEmpty()) {
+    return; // nothing to do
+  }
+
+  if (str.Length() != 1 || IsIMEComposing()) {
+    InsertTextAsCommittingComposition(aAttrString);
+    return;
+  }
+
+  // Don't let the same event be fired twice when hitting
+  // enter/return! (Bug 420502)
+  if (mCurrentKeyEvent.mKeyPressDispatched) {
+    return;
+  }
+
+  nsRefPtr<nsChildView> kungFuDeathGrip(mWidget);
+
+  // Dispatch keypress event with char instead of textEvent
+  nsKeyEvent keypressEvent(PR_TRUE, NS_KEY_PRESS, mWidget);
+  keypressEvent.time      = PR_IntervalNow();
+  keypressEvent.charCode  = str.CharAt(0);
+  keypressEvent.keyCode   = 0;
+  keypressEvent.isChar    = PR_TRUE;
+
+  // Don't set other modifiers from the current event, because here in
+  // -insertText: they've already been taken into account in creating
+  // the input string.
+
+  // create event for use by plugins
+#ifndef NP_NO_CARBON
+  EventRecord carbonEvent;
+#endif // #ifndef NP_NO_CARBON
+
+  if (mCurrentKeyEvent.mKeyEvent) {
+    NSEvent* keyEvent = mCurrentKeyEvent.mKeyEvent;
+
+    // XXX The ASCII characters inputting mode of egbridge (Japanese IME)
+    // might send the keyDown event with wrong keyboard layout if other
+    // keyboard layouts are already loaded. In that case, the native event
+    // doesn't match to this gecko event...
+#ifndef NP_NO_CARBON
+    if ([mView pluginEventModel] == NPEventModelCarbon) {
+      ConvertCocoaKeyEventToCarbonEvent(keyEvent, carbonEvent, PR_TRUE);
+      keypressEvent.pluginEvent = &carbonEvent;
+    }
+#endif // #ifndef NP_NO_CARBON
+
+    if (mCurrentKeyEvent.mKeyDownHandled) {
+      keypressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+    }
+
+    keypressEvent.isShift = ([keyEvent modifierFlags] & NSShiftKeyMask) != 0;
+    if (!IsPrintableChar(keypressEvent.charCode)) {
+      keypressEvent.keyCode =
+        ComputeGeckoKeyCode([keyEvent keyCode],
+                            [keyEvent charactersIgnoringModifiers]);
+      keypressEvent.charCode = 0;
+    }
+  } else {
+    // Note that insertText is not called only at key pressing.
+    if (!IsPrintableChar(keypressEvent.charCode)) {
+      keypressEvent.keyCode =
+        ComputeGeckoKeyCodeFromChar(keypressEvent.charCode);
+      keypressEvent.charCode = 0;
+    }
+  }
+
+  // TODO:
+  // If mCurrentKeyEvent.mKeyEvent is null and when we implement textInput
+  // event of DOM3 Events, we should dispatch it instead of keypress event.
+  PRBool keyPressHandled = DispatchEvent(keypressEvent);
+
+  // Note: mWidget might have become null here. Don't count on it from here on.
+
+  if (mCurrentKeyEvent.mKeyEvent) {
+    mCurrentKeyEvent.mKeyPressHandled = keyPressHandled;
+    mCurrentKeyEvent.mKeyPressDispatched = PR_TRUE;
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 
 #pragma mark -
 
@@ -948,6 +1169,7 @@ IMEInputHandler::GetCurrentTSMDocumentID()
   [NSInputManager currentInputManager];
   return ::TSMGetActiveDocument();
 }
+
 
 #pragma mark -
 
@@ -2014,6 +2236,103 @@ PluginTextInputHandler::PluginTextInputHandler(nsChildView* aWidget,
 PluginTextInputHandler::~PluginTextInputHandler()
 {
 }
+
+#ifndef NP_NO_CARBON
+
+/* static */ PRBool
+PluginTextInputHandler::ConvertUnicodeToCharCode(PRUnichar aUniChar,
+                                                 unsigned char* aOutChar)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  UnicodeToTextInfo converterInfo;
+  TextEncoding      systemEncoding;
+  Str255            convertedString;
+
+  *aOutChar = nsnull;
+
+  OSStatus err =
+    ::UpgradeScriptInfoToTextEncoding(smSystemScript,
+                                      kTextLanguageDontCare,
+                                      kTextRegionDontCare,
+                                      NULL,
+                                      &systemEncoding);
+  NS_ENSURE_TRUE(err == noErr, PR_FALSE);
+
+  err = ::CreateUnicodeToTextInfoByEncoding(systemEncoding, &converterInfo);
+  NS_ENSURE_TRUE(err == noErr, PR_FALSE);
+
+  err = ::ConvertFromUnicodeToPString(converterInfo, sizeof(PRUnichar),
+                                      &aUniChar, convertedString);
+  NS_ENSURE_TRUE(err == noErr, PR_FALSE);
+
+  *aOutChar = convertedString[1];
+  ::DisposeUnicodeToTextInfo(&converterInfo);
+  return PR_TRUE;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
+}
+
+/* static */ void
+PluginTextInputHandler::ConvertCocoaKeyEventToCarbonEvent(
+                          NSEvent* aCocoaKeyEvent,
+                          EventRecord& aCarbonKeyEvent,
+                          PRBool aMakeKeyDownEventIfNSFlagsChanged)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  UInt32 charCode = 0;
+  if ([aCocoaKeyEvent type] == NSFlagsChanged) {
+    aCarbonKeyEvent.what = aMakeKeyDownEventIfNSFlagsChanged ? keyDown : keyUp;
+  } else {
+    if ([[aCocoaKeyEvent characters] length] > 0) {
+      charCode = [[aCocoaKeyEvent characters] characterAtIndex:0];
+    }
+    if ([aCocoaKeyEvent type] == NSKeyDown) {
+      aCarbonKeyEvent.what = [aCocoaKeyEvent isARepeat] ? autoKey : keyDown;
+    } else {
+      aCarbonKeyEvent.what = keyUp;
+    }
+  }
+
+  if (charCode >= 0x0080) {
+    switch (charCode) {
+      case NSUpArrowFunctionKey:
+        charCode = kUpArrowCharCode;
+        break;
+      case NSDownArrowFunctionKey:
+        charCode = kDownArrowCharCode;
+        break;
+      case NSLeftArrowFunctionKey:
+        charCode = kLeftArrowCharCode;
+        break;
+      case NSRightArrowFunctionKey:
+        charCode = kRightArrowCharCode;
+        break;
+      default:
+        unsigned char convertedCharCode;
+        if (ConvertUnicodeToCharCode(charCode, &convertedCharCode)) {
+          charCode = convertedCharCode;
+        }
+        //NSLog(@"charcode is %d, converted to %c, char is %@",
+        //      charCode, convertedCharCode, [aCocoaKeyEvent characters]);
+        break;
+    }
+  }
+
+  aCarbonKeyEvent.message =
+    (charCode & 0x00FF) | ([aCocoaKeyEvent keyCode] << 8);
+  aCarbonKeyEvent.when = ::TickCount();
+  ::GetGlobalMouse(&aCarbonKeyEvent.where);
+  // XXX Is this correct? If ::GetCurrentKeyModifiers() returns "current"
+  //     state and there is one or more pending modifier key events,
+  //     the result is mismatch with the state at current key event.
+  aCarbonKeyEvent.modifiers = ::GetCurrentKeyModifiers();
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+#endif // NP_NO_CARBON
 
 
 #pragma mark -
