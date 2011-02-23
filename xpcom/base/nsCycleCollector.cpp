@@ -3286,7 +3286,6 @@ class nsCycleCollectorRunner : public nsRunnable
     CondVar mReply;
     PRBool mRunning;
     PRBool mCollected;
-    PRBool mJSGCHasRun;
 
 public:
     NS_IMETHOD Run()
@@ -3330,8 +3329,7 @@ public:
           mRequest(mLock, "cycle collector request condvar"),
           mReply(mLock, "cycle collector reply condvar"),
           mRunning(PR_FALSE),
-          mCollected(PR_FALSE),
-          mJSGCHasRun(PR_FALSE)
+          mCollected(PR_FALSE)
     {
         NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     }
@@ -3342,7 +3340,7 @@ public:
 
         MutexAutoLock autoLock(mLock);
 
-        if (!mRunning || !mJSGCHasRun)
+        if (!mRunning)
             return 0;
 
         nsAutoTPtrArray<PtrInfo, 4000> whiteNodes;
@@ -3381,14 +3379,6 @@ public:
         mRequest.Notify();
         mReply.Wait();
     }
-
-    void JSGCHasRun()
-    {
-        NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-        MutexAutoLock autoLock(mLock);
-        mJSGCHasRun = PR_TRUE;
-    }
 };
 
 // Holds a reference.
@@ -3396,43 +3386,6 @@ static nsCycleCollectorRunner* sCollectorRunner;
 
 // Holds a reference.
 static nsIThread* sCollectorThread;
-
-static JSBool
-nsCycleCollector_gccallback(JSContext *cx, JSGCStatus status)
-{
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-    if (status == JSGC_END) {
-        if (sCollectorRunner)
-            sCollectorRunner->JSGCHasRun();
-
-        nsCOMPtr<nsIJSRuntimeService> rts =
-          do_GetService(nsIXPConnect::GetCID());
-        NS_WARN_IF_FALSE(rts, "Failed to get XPConnect?!");
-        if (rts)
-            rts->UnregisterGCCallback(nsCycleCollector_gccallback);
-    }
-
-    return JS_TRUE;
-}
-
-class nsCycleCollectorGCHookRunnable : public nsRunnable
-{
-public:
-    NS_IMETHOD Run()
-    {
-        NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-        nsCOMPtr<nsIJSRuntimeService> rts =
-            do_GetService(nsIXPConnect::GetCID());
-        if (!rts) {
-            NS_RUNTIMEABORT("This must never fail!");
-        }
-
-        rts->RegisterGCCallback(nsCycleCollector_gccallback);
-        return NS_OK;
-    }
-};
 
 nsresult
 nsCycleCollector_startup()
@@ -3442,17 +3395,11 @@ nsCycleCollector_startup()
 
     sCollector = new nsCycleCollector();
 
-    // We can't get XPConnect yet as it hasn't been initialized yet.
-    nsRefPtr<nsCycleCollectorGCHookRunnable> hook =
-        new nsCycleCollectorGCHookRunnable();
-    nsresult rv = NS_DispatchToCurrentThread(hook);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsRefPtr<nsCycleCollectorRunner> runner =
         new nsCycleCollectorRunner(sCollector);
 
     nsCOMPtr<nsIThread> thread;
-    rv = NS_NewThread(getter_AddRefs(thread), runner);
+    nsresult rv = NS_NewThread(getter_AddRefs(thread), runner);
     NS_ENSURE_SUCCESS(rv, rv);
 
     runner.swap(sCollectorRunner);
