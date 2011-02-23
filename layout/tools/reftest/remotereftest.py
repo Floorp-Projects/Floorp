@@ -362,6 +362,10 @@ def main():
     if os.path.exists(args[0]):
         manifest = "http://" + str(options.remoteWebServer) + ":" + str(options.httpPort) + "/" + args[0]
 
+    procName = options.app.split('/')[-1]
+    if (dm.processExist(procName)):
+      dm.killProcess(procName)
+
 #an example manifest name to use on the cli
 #    manifest = "http://" + options.remoteWebServer + "/reftests/layout/reftests/reftest-sanity/reftest.list"
     reftest.runTests(manifest, options)
