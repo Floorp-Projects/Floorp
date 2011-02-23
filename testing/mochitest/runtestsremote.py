@@ -294,6 +294,11 @@ def main():
     
     auto.setRemoteLog(options.remoteLogFile)
     auto.setServerInfo(options.webServer, options.httpPort, options.sslPort)
+
+    procName = options.app.split('/')[-1]
+    if (dm.processExist(procName)):
+      dm.killProcess(procName)
+
     sys.exit(mochitest.runTests(options))
     
 if __name__ == "__main__":
