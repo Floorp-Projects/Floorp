@@ -921,8 +921,9 @@ documenttab[selected="true"] {
   background-color: white;
   opacity: 0.5;
 
-  /* if there is no outline, blank thumbnail are invisible */
-  outline: 0px solid transparent;
+  /* if there is no border, blank thumbnail are invisible */
+  border: 1px solid white;
+  margin: -1px;
 }
 
 documenttab:hover:active > stack > .documenttab-thumbnail,
