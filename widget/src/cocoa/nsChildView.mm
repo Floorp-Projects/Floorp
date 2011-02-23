@@ -163,9 +163,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 // set up a gecko mouse event based on a cocoa mouse event
 - (void) convertCocoaMouseEvent:(NSEvent*)aMouseEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent;
 
-// set up a gecko key event based on a cocoa key event
-- (void) convertCocoaKeyEvent:(NSEvent*)aKeyEvent toGeckoEvent:(nsKeyEvent*)outGeckoEvent;
-
 - (NSMenu*)contextMenu;
 
 - (void)setIsPluginView:(BOOL)aIsPlugin;
@@ -184,8 +181,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 - (void)processPendingRedraws;
 
 - (void)maybeInitContextMenuTracking;
-
-+ (NSEvent*)makeNewCocoaEventWithType:(NSEventType)type fromEvent:(NSEvent*)theEvent;
 
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
 
@@ -212,79 +207,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 @end
 
 #pragma mark -
-
-// Key code constants
-enum
-{
-  kEscapeKeyCode      = 0x35,
-  kRCommandKeyCode    = 0x36, // right command key
-  kCommandKeyCode     = 0x37,
-  kShiftKeyCode       = 0x38,
-  kCapsLockKeyCode    = 0x39,
-  kOptionkeyCode      = 0x3A,
-  kControlKeyCode     = 0x3B,
-  kRShiftKeyCode      = 0x3C, // right shift key
-  kROptionKeyCode     = 0x3D, // right option key
-  kRControlKeyCode    = 0x3E, // right control key
-  kClearKeyCode       = 0x47,
-
-  // function keys
-  kF1KeyCode          = 0x7A,
-  kF2KeyCode          = 0x78,
-  kF3KeyCode          = 0x63,
-  kF4KeyCode          = 0x76,
-  kF5KeyCode          = 0x60,
-  kF6KeyCode          = 0x61,
-  kF7KeyCode          = 0x62,
-  kF8KeyCode          = 0x64,
-  kF9KeyCode          = 0x65,
-  kF10KeyCode         = 0x6D,
-  kF11KeyCode         = 0x67,
-  kF12KeyCode         = 0x6F,
-  kF13KeyCode         = 0x69,
-  kF14KeyCode         = 0x6B,
-  kF15KeyCode         = 0x71,
-  
-  kPrintScreenKeyCode = kF13KeyCode,
-  kScrollLockKeyCode  = kF14KeyCode,
-  kPauseKeyCode       = kF15KeyCode,
-  
-  // keypad
-  kKeypad0KeyCode     = 0x52,
-  kKeypad1KeyCode     = 0x53,
-  kKeypad2KeyCode     = 0x54,
-  kKeypad3KeyCode     = 0x55,
-  kKeypad4KeyCode     = 0x56,
-  kKeypad5KeyCode     = 0x57,
-  kKeypad6KeyCode     = 0x58,
-  kKeypad7KeyCode     = 0x59,
-  kKeypad8KeyCode     = 0x5B,
-  kKeypad9KeyCode     = 0x5C,
-
-  kKeypadMultiplyKeyCode  = 0x43,
-  kKeypadAddKeyCode       = 0x45,
-  kKeypadSubtractKeyCode  = 0x4E,
-  kKeypadDecimalKeyCode   = 0x41,
-  kKeypadDivideKeyCode    = 0x4B,
-  kKeypadEqualsKeyCode    = 0x51, // no correpsonding gecko key code
-  kEnterKeyCode           = 0x4C,
-  kReturnKeyCode          = 0x24,
-  kPowerbookEnterKeyCode  = 0x34, // Enter on Powerbook's keyboard is different
-  
-  kInsertKeyCode          = 0x72, // also help key
-  kDeleteKeyCode          = 0x75, // also forward delete key
-  kTabKeyCode             = 0x30,
-  kTildeKeyCode           = 0x32,
-  kBackspaceKeyCode       = 0x33,
-  kHomeKeyCode            = 0x73, 
-  kEndKeyCode             = 0x77,
-  kPageUpKeyCode          = 0x74,
-  kPageDownKeyCode        = 0x79,
-  kLeftArrowKeyCode       = 0x7B,
-  kRightArrowKeyCode      = 0x7C,
-  kUpArrowKeyCode         = 0x7E,
-  kDownArrowKeyCode       = 0x7D
-};
 
 /* Convenience routines to go from a gecko rect to cocoa NSRects and back
  *
@@ -1332,92 +1254,17 @@ NS_IMETHODIMP nsChildView::StartComplexTextInputForCurrentEvent()
   return NS_OK;
 }
 
-static NSString* ToNSString(const nsAString& aString)
-{
-  return [NSString stringWithCharacters:aString.BeginReading()
-                                 length:aString.Length()];
-}
-
-struct KeyboardLayoutOverride {
-  PRInt32 mKeyboardLayout;
-  PRBool mOverrideEnabled;
-};
-
-static KeyboardLayoutOverride gOverrideKeyboardLayout;
-
-static const PRUint32 sModifierFlagMap[][2] = {
-  { nsIWidget::CAPS_LOCK, NSAlphaShiftKeyMask },
-  { nsIWidget::SHIFT_L, NSShiftKeyMask },
-  { nsIWidget::SHIFT_R, NSShiftKeyMask },
-  { nsIWidget::CTRL_L, NSControlKeyMask },
-  { nsIWidget::CTRL_R, NSControlKeyMask },
-  { nsIWidget::ALT_L, NSAlternateKeyMask },
-  { nsIWidget::ALT_R, NSAlternateKeyMask },
-  { nsIWidget::COMMAND_L, NSCommandKeyMask },
-  { nsIWidget::COMMAND_R, NSCommandKeyMask },
-  { nsIWidget::NUMERIC_KEY_PAD, NSNumericPadKeyMask },
-  { nsIWidget::HELP, NSHelpKeyMask },
-  { nsIWidget::FUNCTION, NSFunctionKeyMask }
-};
 nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
                                                PRInt32 aNativeKeyCode,
                                                PRUint32 aModifierFlags,
                                                const nsAString& aCharacters,
                                                const nsAString& aUnmodifiedCharacters)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-  
-  PRUint32 modifierFlags = 0;
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sModifierFlagMap); ++i) {
-    if (aModifierFlags & sModifierFlagMap[i][0]) {
-      modifierFlags |= sModifierFlagMap[i][1];
-    }
-  }
-  int windowNumber = [[mView window] windowNumber];
-  BOOL sendFlagsChangedEvent = NO;
-  switch (aNativeKeyCode) {
-    case kCapsLockKeyCode:
-    case kRCommandKeyCode:
-    case kCommandKeyCode:
-    case kShiftKeyCode:
-    case kOptionkeyCode:
-    case kControlKeyCode:
-    case kRShiftKeyCode:
-    case kROptionKeyCode:
-    case kRControlKeyCode:
-      sendFlagsChangedEvent = YES;
-  }
-  NSEventType eventType = sendFlagsChangedEvent ? NSFlagsChanged : NSKeyDown;
-  NSEvent* downEvent = [NSEvent keyEventWithType:eventType
-                                        location:NSMakePoint(0,0)
-                                   modifierFlags:modifierFlags
-                                       timestamp:0
-                                    windowNumber:windowNumber
-                                         context:[NSGraphicsContext currentContext]
-                                      characters:ToNSString(aCharacters)
-                     charactersIgnoringModifiers:ToNSString(aUnmodifiedCharacters)
-                                       isARepeat:NO
-                                         keyCode:aNativeKeyCode];
-
-  NSEvent* upEvent = sendFlagsChangedEvent ? nil :
-                       [ChildView makeNewCocoaEventWithType:NSKeyUp
-                                                  fromEvent:downEvent];
-
-  if (downEvent && (sendFlagsChangedEvent || upEvent)) {
-    KeyboardLayoutOverride currentLayout = gOverrideKeyboardLayout;
-    gOverrideKeyboardLayout.mKeyboardLayout = aNativeKeyboardLayout;
-    gOverrideKeyboardLayout.mOverrideEnabled = PR_TRUE;
-    [NSApp sendEvent:downEvent];
-    if (upEvent)
-      [NSApp sendEvent:upEvent];
-    // processKeyDownEvent and keyUp block exceptions so we're sure to
-    // reach here to restore gOverrideKeyboardLayout
-    gOverrideKeyboardLayout = currentLayout;
-  }
-
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  return mTextInputHandler->SynthesizeNativeKeyEvent(aNativeKeyboardLayout,
+                                                     aNativeKeyCode,
+                                                     aModifierFlags,
+                                                     aCharacters,
+                                                     aUnmodifiedCharacters);
 }
 
 nsresult nsChildView::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
@@ -4113,231 +3960,6 @@ static void ConvertCocoaKeyEventToCarbonEvent(NSEvent* cocoaEvent, EventRecord& 
 }
 #endif // NP_NO_CARBON
 
-static PRBool IsPrintableChar(PRUnichar aChar)
-{
-  return (aChar >= 0x20 && aChar <= 0x7E) || aChar >= 0xA0;
-}
-
-static PRUint32 GetGeckoKeyCodeFromChar(PRUnichar aChar)
-{
-  // We don't support the key code for non-ASCII characters
-  if (aChar > 0x7E)
-    return 0;
-
-  if (aChar >= 'a' && aChar <= 'z') // lowercase
-    return PRUint32(toupper(aChar));
-  else if (aChar >= 'A' && aChar <= 'Z') // uppercase
-    return PRUint32(aChar);
-  else if (aChar >= '0' && aChar <= '9')
-    return PRUint32(aChar - '0' + NS_VK_0);
-
-  switch (aChar)
-  {
-    case kReturnCharCode:
-    case kEnterCharCode:
-    case '\n':
-      return NS_VK_RETURN;
-    case '{':
-    case '[':
-      return NS_VK_OPEN_BRACKET;
-    case '}':
-    case ']':
-      return NS_VK_CLOSE_BRACKET;
-    case '\'':
-    case '"':
-      return NS_VK_QUOTE;
-
-    case '\\':                  return NS_VK_BACK_SLASH;
-    case ' ':                   return NS_VK_SPACE;
-    case ';':                   return NS_VK_SEMICOLON;
-    case '=':                   return NS_VK_EQUALS;
-    case ',':                   return NS_VK_COMMA;
-    case '.':                   return NS_VK_PERIOD;
-    case '/':                   return NS_VK_SLASH;
-    case '`':                   return NS_VK_BACK_QUOTE;
-    case '\t':                  return NS_VK_TAB;
-    case '-':                   return NS_VK_SUBTRACT;
-    case '+':                   return NS_VK_ADD;
-
-    default:
-      if (!IsPrintableChar(aChar))
-        NS_WARNING("GetGeckoKeyCodeFromChar has failed.");
-      return 0;
-    }
-}
-
-static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, NSString* characters)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  PRUint32 geckoKeyCode = 0;
-
-  switch (keyCode)
-  {
-    // modifiers. We don't get separate events for these
-    case kEscapeKeyCode:        geckoKeyCode = NS_VK_ESCAPE;         break;
-    case kRCommandKeyCode:
-    case kCommandKeyCode:       geckoKeyCode = NS_VK_META;           break;
-    case kRShiftKeyCode:
-    case kShiftKeyCode:         geckoKeyCode = NS_VK_SHIFT;          break;
-    case kCapsLockKeyCode:      geckoKeyCode = NS_VK_CAPS_LOCK;      break;
-    case kRControlKeyCode:
-    case kControlKeyCode:       geckoKeyCode = NS_VK_CONTROL;        break;
-    case kROptionKeyCode:
-    case kOptionkeyCode:        geckoKeyCode = NS_VK_ALT;            break;
-    case kClearKeyCode:         geckoKeyCode = NS_VK_CLEAR;          break;
-
-    // function keys
-    case kF1KeyCode:            geckoKeyCode = NS_VK_F1;             break;
-    case kF2KeyCode:            geckoKeyCode = NS_VK_F2;             break;
-    case kF3KeyCode:            geckoKeyCode = NS_VK_F3;             break;
-    case kF4KeyCode:            geckoKeyCode = NS_VK_F4;             break;
-    case kF5KeyCode:            geckoKeyCode = NS_VK_F5;             break;
-    case kF6KeyCode:            geckoKeyCode = NS_VK_F6;             break;
-    case kF7KeyCode:            geckoKeyCode = NS_VK_F7;             break;
-    case kF8KeyCode:            geckoKeyCode = NS_VK_F8;             break;
-    case kF9KeyCode:            geckoKeyCode = NS_VK_F9;             break;
-    case kF10KeyCode:           geckoKeyCode = NS_VK_F10;            break;
-    case kF11KeyCode:           geckoKeyCode = NS_VK_F11;            break;
-    case kF12KeyCode:           geckoKeyCode = NS_VK_F12;            break;
-    // case kF13KeyCode:           geckoKeyCode = NS_VK_F13;            break;    // clash with the 3 below
-    // case kF14KeyCode:           geckoKeyCode = NS_VK_F14;            break;
-    // case kF15KeyCode:           geckoKeyCode = NS_VK_F15;            break;
-    case kPauseKeyCode:         geckoKeyCode = NS_VK_PAUSE;          break;
-    case kScrollLockKeyCode:    geckoKeyCode = NS_VK_SCROLL_LOCK;    break;
-    case kPrintScreenKeyCode:   geckoKeyCode = NS_VK_PRINTSCREEN;    break;
-
-    // keypad
-    case kKeypad0KeyCode:       geckoKeyCode = NS_VK_NUMPAD0;        break;
-    case kKeypad1KeyCode:       geckoKeyCode = NS_VK_NUMPAD1;        break;
-    case kKeypad2KeyCode:       geckoKeyCode = NS_VK_NUMPAD2;        break;
-    case kKeypad3KeyCode:       geckoKeyCode = NS_VK_NUMPAD3;        break;
-    case kKeypad4KeyCode:       geckoKeyCode = NS_VK_NUMPAD4;        break;
-    case kKeypad5KeyCode:       geckoKeyCode = NS_VK_NUMPAD5;        break;
-    case kKeypad6KeyCode:       geckoKeyCode = NS_VK_NUMPAD6;        break;
-    case kKeypad7KeyCode:       geckoKeyCode = NS_VK_NUMPAD7;        break;
-    case kKeypad8KeyCode:       geckoKeyCode = NS_VK_NUMPAD8;        break;
-    case kKeypad9KeyCode:       geckoKeyCode = NS_VK_NUMPAD9;        break;
-
-    case kKeypadMultiplyKeyCode:  geckoKeyCode = NS_VK_MULTIPLY;     break;
-    case kKeypadAddKeyCode:       geckoKeyCode = NS_VK_ADD;          break;
-    case kKeypadSubtractKeyCode:  geckoKeyCode = NS_VK_SUBTRACT;     break;
-    case kKeypadDecimalKeyCode:   geckoKeyCode = NS_VK_DECIMAL;      break;
-    case kKeypadDivideKeyCode:    geckoKeyCode = NS_VK_DIVIDE;       break;
-
-    // these may clash with forward delete and help
-    case kInsertKeyCode:        geckoKeyCode = NS_VK_INSERT;         break;
-    case kDeleteKeyCode:        geckoKeyCode = NS_VK_DELETE;         break;
-
-    case kBackspaceKeyCode:     geckoKeyCode = NS_VK_BACK;           break;
-    case kTabKeyCode:           geckoKeyCode = NS_VK_TAB;            break;
-    case kHomeKeyCode:          geckoKeyCode = NS_VK_HOME;           break;
-    case kEndKeyCode:           geckoKeyCode = NS_VK_END;            break;
-    case kPageUpKeyCode:        geckoKeyCode = NS_VK_PAGE_UP;        break;
-    case kPageDownKeyCode:      geckoKeyCode = NS_VK_PAGE_DOWN;      break;
-    case kLeftArrowKeyCode:     geckoKeyCode = NS_VK_LEFT;           break;
-    case kRightArrowKeyCode:    geckoKeyCode = NS_VK_RIGHT;          break;
-    case kUpArrowKeyCode:       geckoKeyCode = NS_VK_UP;             break;
-    case kDownArrowKeyCode:     geckoKeyCode = NS_VK_DOWN;           break;
-    case kVK_ANSI_1:            geckoKeyCode = NS_VK_1;              break;
-    case kVK_ANSI_2:            geckoKeyCode = NS_VK_2;              break;
-    case kVK_ANSI_3:            geckoKeyCode = NS_VK_3;              break;
-    case kVK_ANSI_4:            geckoKeyCode = NS_VK_4;              break;
-    case kVK_ANSI_5:            geckoKeyCode = NS_VK_5;              break;
-    case kVK_ANSI_6:            geckoKeyCode = NS_VK_6;              break;
-    case kVK_ANSI_7:            geckoKeyCode = NS_VK_7;              break;
-    case kVK_ANSI_8:            geckoKeyCode = NS_VK_8;              break;
-    case kVK_ANSI_9:            geckoKeyCode = NS_VK_9;              break;
-    case kVK_ANSI_0:            geckoKeyCode = NS_VK_0;              break;
-
-    default:
-      // if we haven't gotten the key code already, look at the char code
-      if ([characters length])
-        geckoKeyCode = GetGeckoKeyCodeFromChar([characters characterAtIndex:0]);
-  }
-
-  return geckoKeyCode;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
-}
-
-static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
-{
-  PRBool  isSpecial;
-  
-  // this table is used to determine which keys are special and should not generate a charCode
-  switch (macKeyCode)
-  {
-    // modifiers - we don't get separate events for these yet
-    case kEscapeKeyCode:
-    case kShiftKeyCode:
-    case kRShiftKeyCode:
-    case kCommandKeyCode:
-    case kRCommandKeyCode:
-    case kCapsLockKeyCode:
-    case kControlKeyCode:
-    case kRControlKeyCode:
-    case kOptionkeyCode:
-    case kROptionKeyCode:
-    case kClearKeyCode:
-      
-      // function keys
-    case kF1KeyCode:
-    case kF2KeyCode:
-    case kF3KeyCode:
-    case kF4KeyCode:
-    case kF5KeyCode:
-    case kF6KeyCode:
-    case kF7KeyCode:
-    case kF8KeyCode:
-    case kF9KeyCode:
-    case kF10KeyCode:
-    case kF11KeyCode:
-    case kF12KeyCode:
-    case kPauseKeyCode:
-    case kScrollLockKeyCode:
-    case kPrintScreenKeyCode:
-      
-    case kInsertKeyCode:
-    case kDeleteKeyCode:
-    case kTabKeyCode:
-    case kBackspaceKeyCode:
-      
-    case kHomeKeyCode:
-    case kEndKeyCode:
-    case kPageUpKeyCode:
-    case kPageDownKeyCode:
-    case kLeftArrowKeyCode:
-    case kRightArrowKeyCode:
-    case kUpArrowKeyCode:
-    case kDownArrowKeyCode:
-    case kReturnKeyCode:
-    case kEnterKeyCode:
-    case kPowerbookEnterKeyCode:
-      isSpecial = PR_TRUE;
-      break;
-      
-    default:
-      isSpecial = PR_FALSE;
-      break;
-  }
-  
-  return isSpecial;
-}
-
-static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
-{
-  // this is not character inputting event, simply.
-  if (!aEvent.isChar || !aEvent.charCode || aEvent.isMeta)
-    return PR_FALSE;
-  // if this is unicode char inputting event, we don't need to check
-  // ctrl/alt/command keys
-  if (aEvent.charCode > 0x7F)
-    return PR_TRUE;
-  // ASCII chars should be inputted without ctrl/alt/command keys
-  return !aEvent.isControl && !aEvent.isAlt;
-}
-
 // Basic conversion for cocoa to gecko events, common to all conversions.
 // Note that it is OK for inEvent to be nil.
 - (void) convertGenericCocoaEvent:(NSEvent*)inEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent
@@ -4377,283 +3999,6 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
   NSPoint localPoint = [self convertPoint:locationInWindow fromView:nil];
   outGeckoEvent->refPoint.x = static_cast<nscoord>(localPoint.x);
   outGeckoEvent->refPoint.y = static_cast<nscoord>(localPoint.y);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-// #define DEBUG_KB 1
-
-static PRUint32
-UCKeyTranslateToUnicode(const UCKeyboardLayout* aHandle, UInt32 aKeyCode, UInt32 aModifiers,
-                        UInt32 aKbType)
-{
-#ifdef DEBUG_KB
-  NSLog(@"**** UCKeyTranslateToUnicode: aHandle: %p, aKeyCode: %X, aModifiers: %X, aKbType: %X",
-        aHandle, aKeyCode, aModifiers, aKbType);
-  PRBool isShift = aModifiers & shiftKey;
-  PRBool isCtrl = aModifiers & controlKey;
-  PRBool isOpt = aModifiers & optionKey;
-  PRBool isCmd = aModifiers & cmdKey;
-  PRBool isCL = aModifiers & alphaLock;
-  PRBool isNL = aModifiers & kEventKeyModifierNumLockMask;
-  NSLog(@"        Shift: %s, Ctrl: %s, Opt: %s, Cmd: %s, CapsLock: %s, NumLock: %s",
-        isShift ? "ON" : "off", isCtrl ? "ON" : "off", isOpt ? "ON" : "off",
-        isCmd ? "ON" : "off", isCL ? "ON" : "off", isNL ? "ON" : "off");
-#endif
-  UInt32 deadKeyState = 0;
-  UniCharCount len;
-  UniChar chars[5];
-  OSStatus err = ::UCKeyTranslate(aHandle, aKeyCode,
-                                  kUCKeyActionDown, aModifiers >> 8,
-                                  aKbType, kUCKeyTranslateNoDeadKeysMask,
-                                  &deadKeyState, 5, &len, chars);
-  PRUint32 ch = (err == noErr && len == 1) ? PRUint32(chars[0]) : 0;
-#ifdef DEBUG_KB
-  NSLog(@"       result: %X(%C)", ch, ch > ' ' ? ch : ' ');
-#endif
-  return ch;
-}
-
-struct KeyTranslateData {
-  KeyTranslateData() {
-    mUchr.mLayout = nsnull;
-    mUchr.mKbType = 0;
-  }
-
-  struct {
-    const UCKeyboardLayout* mLayout;
-    UInt32 mKbType;
-  } mUchr;
-};
-
-static PRUint32
-GetUniCharFromKeyTranslate(KeyTranslateData& aData,
-                           UInt32 aKeyCode, UInt32 aModifiers)
-{
-  if (aData.mUchr.mLayout) {
-    return UCKeyTranslateToUnicode(aData.mUchr.mLayout, aKeyCode, aModifiers,
-                                   aData.mUchr.mKbType);
-  }
-
-  return 0;
-}
-
-static PRUint32
-GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
-{
-  static const UCKeyboardLayout* sUSLayout = nsnull;
-  if (!sUSLayout) {
-    TISInputSourceWrapper tis("com.apple.keylayout.US");
-    sUSLayout = tis.GetUCKeyboardLayout();
-    NS_ENSURE_TRUE(sUSLayout, 0);
-  }
-
-  UInt32 kbType = 40; // ANSI, don't use actual layout
-  return UCKeyTranslateToUnicode(sUSLayout, aKeyCode, aModifiers, kbType);
-}
-
-- (void) convertCocoaKeyEvent:(NSEvent*)aKeyEvent toGeckoEvent:(nsKeyEvent*)outGeckoEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  NS_ASSERTION(aKeyEvent && outGeckoEvent, "convertCocoaKeyEvent:toGeckoEvent: requires non-null arguments");
-  if (!aKeyEvent || !outGeckoEvent)
-    return;
-
-  [self convertGenericCocoaEvent:aKeyEvent toGeckoEvent:outGeckoEvent];
-
-  // coords for key events are always 0,0
-  outGeckoEvent->refPoint.x = outGeckoEvent->refPoint.y = 0;
-
-  // Initialize whether or not we are using charCodes to false.
-  outGeckoEvent->isChar = PR_FALSE;
-
-  // Check to see if the message is a key press that does not involve
-  // one of our special key codes.
-  if (outGeckoEvent->message == NS_KEY_PRESS &&
-      !IsSpecialGeckoKey([aKeyEvent keyCode])) {
-    outGeckoEvent->isChar = PR_TRUE; // this is not a special key
-    
-    outGeckoEvent->charCode = 0;
-    outGeckoEvent->keyCode  = 0; // not set for key press events
-    
-    NSString* chars = [aKeyEvent characters];
-    if ([chars length] > 0)
-      outGeckoEvent->charCode = [chars characterAtIndex:0];
-    
-    // convert control-modified charCode to raw charCode (with appropriate case)
-    if (outGeckoEvent->isControl && outGeckoEvent->charCode <= 26)
-      outGeckoEvent->charCode += (outGeckoEvent->isShift) ? ('A' - 1) : ('a' - 1);
-
-    // Accel and access key handling needs to know the characters that this
-    // key produces with Shift up or down.  So, provide this information
-    // when Ctrl or Command or Alt is pressed.
-    if (outGeckoEvent->isControl || outGeckoEvent->isMeta ||
-        outGeckoEvent->isAlt) {
-      KeyTranslateData kt;
-
-      PRBool isRomanKeyboardLayout;
-
-      TISInputSourceWrapper tis;
-      if (gOverrideKeyboardLayout.mOverrideEnabled) {
-        tis.InitByLayoutID(gOverrideKeyboardLayout.mKeyboardLayout);
-      } else {
-        tis.InitByCurrentKeyboardLayout();
-      }
-      kt.mUchr.mLayout = tis.GetUCKeyboardLayout();
-      isRomanKeyboardLayout = tis.IsASCIICapable();
-
-      // If a keyboard layout override is set, we also need to force the
-      // keyboard type to something ANSI to avoid test failures on machines
-      // with JIS keyboards (since the pair of keyboard layout and physical
-      // keyboard type form the actual key layout).  This assumes that the
-      // test setting the override was written assuming an ANSI keyboard.
-      if (kt.mUchr.mLayout)
-        kt.mUchr.mKbType = gOverrideKeyboardLayout.mOverrideEnabled ? 40 : ::LMGetKbdType();
-
-      UInt32 key = [aKeyEvent keyCode];
-
-      // Caps lock and num lock modifier state:
-      UInt32 lockState = 0;
-      if ([aKeyEvent modifierFlags] & NSAlphaShiftKeyMask)
-        lockState |= alphaLock;
-      if ([aKeyEvent modifierFlags] & NSNumericPadKeyMask)
-        lockState |= kEventKeyModifierNumLockMask;
-
-      // normal chars
-      PRUint32 unshiftedChar = GetUniCharFromKeyTranslate(kt, key, lockState);
-      UInt32 shiftLockMod = shiftKey | lockState;
-      PRUint32 shiftedChar = GetUniCharFromKeyTranslate(kt, key, shiftLockMod);
-
-      // characters generated with Cmd key
-      // XXX we should remove CapsLock state, which changes characters from
-      //     Latin to Cyrillic with Russian layout on 10.4 only when Cmd key
-      //     is pressed.
-      UInt32 numState = (lockState & ~alphaLock); // only num lock state
-      PRUint32 uncmdedChar = GetUniCharFromKeyTranslate(kt, key, numState);
-      UInt32 shiftNumMod = numState | shiftKey;
-      PRUint32 uncmdedShiftChar =
-                 GetUniCharFromKeyTranslate(kt, key, shiftNumMod);
-      PRUint32 uncmdedUSChar = GetUSLayoutCharFromKeyTranslate(key, numState);
-      UInt32 cmdNumMod = cmdKey | numState;
-      PRUint32 cmdedChar = GetUniCharFromKeyTranslate(kt, key, cmdNumMod);
-      UInt32 cmdShiftNumMod = shiftKey | cmdNumMod;
-      PRUint32 cmdedShiftChar =
-        GetUniCharFromKeyTranslate(kt, key, cmdShiftNumMod);
-
-      // Is the keyboard layout changed by Cmd key?
-      // E.g., Arabic, Russian, Hebrew, Greek and Dvorak-QWERTY.
-      PRBool isCmdSwitchLayout = uncmdedChar != cmdedChar;
-      // Is the keyboard layout for Latin, but Cmd key switches the layout?
-      // I.e., Dvorak-QWERTY
-      PRBool isDvorakQWERTY = isCmdSwitchLayout && isRomanKeyboardLayout;
-
-      // If the current keyboard is not Dvorak-QWERTY or Cmd is not pressed,
-      // we should append unshiftedChar and shiftedChar for handling the
-      // normal characters.  These are the characters that the user is most
-      // likely to associate with this key.
-      if ((unshiftedChar || shiftedChar) &&
-          (!outGeckoEvent->isMeta || !isDvorakQWERTY)) {
-        nsAlternativeCharCode altCharCodes(unshiftedChar, shiftedChar);
-        outGeckoEvent->alternativeCharCodes.AppendElement(altCharCodes);
-      }
-
-      // Most keyboard layouts provide the same characters in the NSEvents
-      // with Command+Shift as with Command.  However, with Command+Shift we
-      // want the character on the second level.  e.g. With a US QWERTY
-      // layout, we want "?" when the "/","?" key is pressed with
-      // Command+Shift.
-
-      // On a German layout, the OS gives us '/' with Cmd+Shift+SS(eszett)
-      // even though Cmd+SS is 'SS' and Shift+'SS' is '?'.  This '/' seems
-      // like a hack to make the Cmd+"?" event look the same as the Cmd+"?"
-      // event on a US keyboard.  The user thinks they are typing Cmd+"?", so
-      // we'll prefer the "?" character, replacing charCode with shiftedChar
-      // when Shift is pressed.  However, in case there is a layout where the
-      // character unique to Cmd+Shift is the character that the user expects,
-      // we'll send it as an alternative char.
-      PRBool hasCmdShiftOnlyChar =
-        cmdedChar != cmdedShiftChar && uncmdedShiftChar != cmdedShiftChar;
-      PRUint32 originalCmdedShiftChar = cmdedShiftChar;
-
-      // If we can make a good guess at the characters that the user would
-      // expect this key combination to produce (with and without Shift) then
-      // use those characters.  This also corrects for CapsLock, which was
-      // ignored above.
-      if (!isCmdSwitchLayout) {
-        // The characters produced with Command seem similar to those without
-        // Command.
-        if (unshiftedChar)
-          cmdedChar = unshiftedChar;
-        if (shiftedChar)
-          cmdedShiftChar = shiftedChar;
-      } else if (uncmdedUSChar == cmdedChar) {
-        // It looks like characters from a US layout are provided when Command
-        // is down.
-        PRUint32 ch = GetUSLayoutCharFromKeyTranslate(key, lockState);
-        if (ch)
-          cmdedChar = ch;
-        ch = GetUSLayoutCharFromKeyTranslate(key, shiftLockMod);
-        if (ch)
-          cmdedShiftChar = ch;
-      }
-
-      // Only charCode (not alternativeCharCodes) is available to javascript,
-      // so attempt to set this to the most likely intended (or most useful)
-      // character.  Note that cmdedChar and cmdedShiftChar are usually
-      // Latin/ASCII characters and that is what is wanted here as accel
-      // keys are expected to be Latin characters.
-      //
-      // XXX We should do something similar when Control is down (bug 429510).
-      if (outGeckoEvent->isMeta &&
-           !(outGeckoEvent->isControl || outGeckoEvent->isAlt)) {
-
-        // The character to use for charCode.
-        PRUint32 preferredCharCode = 0;
-        preferredCharCode = outGeckoEvent->isShift ? cmdedShiftChar : cmdedChar;
-
-        if (preferredCharCode) {
-#ifdef DEBUG_KB
-          if (outGeckoEvent->charCode != preferredCharCode) {
-            NSLog(@"      charCode replaced: %X(%C) to %X(%C)",
-                  outGeckoEvent->charCode,
-                  outGeckoEvent->charCode > ' ' ? outGeckoEvent->charCode : ' ',
-                  preferredCharCode,
-                  preferredCharCode > ' ' ? preferredCharCode : ' ');
-          }
-#endif
-          outGeckoEvent->charCode = preferredCharCode;
-        }
-      }
-
-      // If the current keyboard layout is switched by the Cmd key,
-      // we should append cmdedChar and shiftedCmdChar that are
-      // Latin char for the key. But don't append at Dvorak-QWERTY.
-      if ((cmdedChar || cmdedShiftChar) &&
-          isCmdSwitchLayout && !isDvorakQWERTY) {
-        nsAlternativeCharCode altCharCodes(cmdedChar, cmdedShiftChar);
-        outGeckoEvent->alternativeCharCodes.AppendElement(altCharCodes);
-      }
-      // Special case for 'SS' key of German layout. See the comment of
-      // hasCmdShiftOnlyChar definition for the detail.
-      if (hasCmdShiftOnlyChar && originalCmdedShiftChar) {
-        nsAlternativeCharCode altCharCodes(0, originalCmdedShiftChar);
-        outGeckoEvent->alternativeCharCodes.AppendElement(altCharCodes);
-      }
-    }
-  }
-  else {
-    NSString* characters = nil;
-    if ([aKeyEvent type] != NSFlagsChanged)
-      characters = [aKeyEvent charactersIgnoringModifiers];
-    
-    outGeckoEvent->keyCode =
-      ConvertMacToGeckoKeyCode([aKeyEvent keyCode], outGeckoEvent, characters);
-    outGeckoEvent->charCode = 0;
-  } 
-
-  if (outGeckoEvent->message == NS_KEY_PRESS && !outGeckoEvent->isMeta)
-    [NSCursor setHiddenUntilMouseMoves:YES];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -4747,12 +4092,12 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
     if (::ConvertEventRefToEventRecord(cloneEvent, &eventRec)) {
       nsKeyEvent keyDownEvent(PR_TRUE, NS_KEY_DOWN, mGeckoChild);
 
-      PRUint32 keyCode(ConvertMacToGeckoKeyCode(macKeyCode, &keyDownEvent, @""));
+      PRUint32 keyCode = TextInputHandler::ComputeGeckoKeyCode(macKeyCode, @"");
       PRUint32 charCode(charCodes.ElementAt(i));
 
       keyDownEvent.time       = PR_IntervalNow();
       keyDownEvent.pluginEvent  = &eventRec;
-      if (IsSpecialGeckoKey(macKeyCode)) {
+      if (TextInputHandler::IsSpecialGeckoKey(macKeyCode)) {
         keyDownEvent.keyCode  = keyCode;
       } else {
         keyDownEvent.charCode = charCode;
@@ -4847,21 +4192,22 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 #endif
 
       geckoEvent.isShift = ([mCurKeyEvent modifierFlags] & NSShiftKeyMask) != 0;
-      if (!IsPrintableChar(geckoEvent.charCode)) {
+      if (!TextInputHandler::IsPrintableChar(geckoEvent.charCode)) {
         geckoEvent.keyCode = 
-          ConvertMacToGeckoKeyCode([mCurKeyEvent keyCode], &geckoEvent,
-                                   [mCurKeyEvent charactersIgnoringModifiers]);
+          TextInputHandler::ComputeGeckoKeyCode([mCurKeyEvent keyCode],
+            [mCurKeyEvent charactersIgnoringModifiers]);
         geckoEvent.charCode = 0;
       }
     } else {
       // Note that insertText is not called only at key pressing.
-      if (!IsPrintableChar(geckoEvent.charCode)) {
-        geckoEvent.keyCode = GetGeckoKeyCodeFromChar(geckoEvent.charCode);
+      if (!TextInputHandler::IsPrintableChar(geckoEvent.charCode)) {
+        geckoEvent.keyCode =
+          TextInputHandler::ComputeGeckoKeyCodeFromChar(geckoEvent.charCode);
         geckoEvent.charCode = 0;
       }
     }
 
-    PRBool keyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
+    PRBool keyPressHandled = mTextInputHandler->DispatchEvent(geckoEvent);
     // Note: mGeckoChild might have become null here. Don't count on it from here on.
     // Only record the results of dispatching geckoEvent if we're currently
     // processing a keyDown event.
@@ -4990,25 +4336,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
 #pragma mark -
 
-+ (NSEvent*)makeNewCocoaEventWithType:(NSEventType)type fromEvent:(NSEvent*)theEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  NSEvent* newEvent = [NSEvent keyEventWithType:type
-                                       location:[theEvent locationInWindow] 
-                                  modifierFlags:[theEvent modifierFlags]
-                                      timestamp:[theEvent timestamp]
-                                   windowNumber:[theEvent windowNumber]
-                                        context:[theEvent context]
-                                     characters:[theEvent characters]
-                    charactersIgnoringModifiers:[theEvent charactersIgnoringModifiers]
-                                      isARepeat:[theEvent isARepeat]
-                                        keyCode:[theEvent keyCode]];
-  return newEvent;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
 #ifdef PR_LOGGING
 static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 {
@@ -5053,8 +4380,8 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   if (nonDeadKeyPress && !mTextInputHandler->IsIMEComposing()) {
     NSResponder* firstResponder = [[self window] firstResponder];
 
-    nsKeyEvent geckoKeydown(PR_TRUE, NS_KEY_DOWN, nsnull);
-    [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoKeydown];
+    nsKeyEvent geckoKeydown(PR_TRUE, NS_KEY_DOWN, mGeckoChild);
+    mTextInputHandler->InitKeyEvent(theEvent, geckoKeydown);
 
 #ifndef NP_NO_CARBON
     EventRecord carbonEvent;
@@ -5092,8 +4419,8 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
       return handled;
     }
 
-    nsKeyEvent geckoKeypress(PR_TRUE, NS_KEY_PRESS, nsnull);
-    [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoKeypress];
+    nsKeyEvent geckoKeypress(PR_TRUE, NS_KEY_PRESS, mGeckoChild);
+    mTextInputHandler->InitKeyEvent(theEvent, geckoKeypress);
 
     // if this is a non-letter keypress, or the control key is down,
     // dispatch the keydown to gecko, so that we trap delete,
@@ -5103,7 +4430,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
         !mTextInputHandler->IsIMEComposing()) {
       if (mKeyDownHandled)
         geckoKeypress.flags |= NS_EVENT_FLAG_NO_DEFAULT;
-      mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoKeypress);
+      mKeyPressHandled = mTextInputHandler->DispatchEvent(geckoKeypress);
       mKeyPressSent = YES;
       if (!mGeckoChild)
         return (mKeyDownHandled || mKeyPressHandled);
@@ -5125,17 +4452,18 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
   if (!mKeyPressSent && nonDeadKeyPress && !wasComposing &&
       !mTextInputHandler->IsIMEComposing()) {
-    nsKeyEvent geckoKeypress(PR_TRUE, NS_KEY_PRESS, nsnull);
-    [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoKeypress];
+    nsKeyEvent geckoKeypress(PR_TRUE, NS_KEY_PRESS, mGeckoChild);
+    mTextInputHandler->InitKeyEvent(theEvent, geckoKeypress);
 
     // If we called interpretKeyEvents and this isn't normal character input
     // then IME probably ate the event for some reason. We do not want to
     // send a key press event in that case.
-    if (!(interpretKeyEventsCalled && IsNormalCharInputtingEvent(geckoKeypress))) {
+    if (!(interpretKeyEventsCalled &&
+        TextInputHandler::IsNormalCharInputtingEvent(geckoKeypress))) {
       if (mKeyDownHandled) {
         geckoKeypress.flags |= NS_EVENT_FLAG_NO_DEFAULT;
       }
-      mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoKeypress);
+      mKeyPressHandled = mTextInputHandler->DispatchEvent(geckoKeypress);
     }
   }
 
@@ -5384,8 +4712,8 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
         return;
       }
 
-      nsKeyEvent keyUpEvent(PR_TRUE, NS_KEY_UP, nsnull);
-      [self convertCocoaKeyEvent:theEvent toGeckoEvent:&keyUpEvent];
+      nsKeyEvent keyUpEvent(PR_TRUE, NS_KEY_UP, mGeckoChild);
+      mTextInputHandler->InitKeyEvent(theEvent, keyUpEvent);
       NPCocoaEvent pluginEvent;
       ConvertCocoaKeyEventToNPCocoaEvent(theEvent, pluginEvent);
       keyUpEvent.pluginEvent = &pluginEvent;
@@ -5415,8 +4743,8 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
       // be sent when it actually happens (they need to be able to detect how
       // long a key has been held down) -- which wouldn't be possible if we sent
       // them from processPluginKeyEvent.)
-      nsKeyEvent keyUpEvent(PR_TRUE, NS_KEY_UP, nsnull);
-      [self convertCocoaKeyEvent:theEvent toGeckoEvent:&keyUpEvent];
+      nsKeyEvent keyUpEvent(PR_TRUE, NS_KEY_UP, mGeckoChild);
+      mTextInputHandler->InitKeyEvent(theEvent, keyUpEvent);
       EventRecord macKeyUpEvent;
       ConvertCocoaKeyEventToCarbonEvent(theEvent, macKeyUpEvent);
       keyUpEvent.pluginEvent = &macKeyUpEvent;
@@ -5432,8 +4760,8 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
     return;
   }
 
-  nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_UP, nsnull);
-  [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
+  nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_UP, mGeckoChild);
+  mTextInputHandler->InitKeyEvent(theEvent, geckoEvent);
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);
 
@@ -5529,8 +4857,8 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   NPCocoaEvent cocoaEvent;
 	
   // Fire a key event.
-  nsKeyEvent geckoEvent(PR_TRUE, message, nsnull);
-  [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
+  nsKeyEvent geckoEvent(PR_TRUE, message, mGeckoChild);
+  mTextInputHandler->InitKeyEvent(theEvent, geckoEvent);
 
   // create event for use by plugins
   if (mIsPluginView) {
