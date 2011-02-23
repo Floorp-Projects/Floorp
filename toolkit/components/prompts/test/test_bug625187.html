@@ -43,13 +43,10 @@ function hasTabModalPrompts() {
 
 function runtest()
 {
-  if (!hasTabModalPrompts()) {
-    todo(false, "Test disabled when tab modal prompts are not enabled.");
-    SimpleTest.finish();
-    return;
-  }
-
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  isTabModal = hasTabModalPrompts();
+  ok(isTabModal, "Test must run with tab modal prompts enabled.");
 
   startCallbackTimer();
 
