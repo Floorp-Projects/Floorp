@@ -7102,7 +7102,12 @@ RecordLoopEdge(JSContext* cx, TraceMonitor* tm, uintN& inlineCallCount)
         tm->recorder->assertInsideLoop();
         jsbytecode* pc = cx->regs->pc;
         if (pc == tm->recorder->tree->ip) {
-            tm->recorder->closeLoop();
+            AbortableRecordingStatus status = tm->recorder->closeLoop();
+            if (status != ARECORD_COMPLETED) {
+                if (tm->recorder)
+                    AbortRecording(cx, "closeLoop failed");
+                return MONITOR_NOT_RECORDING;
+            }
         } else {
             MonitorResult r = TraceRecorder::recordLoopEdge(cx, tm->recorder, inlineCallCount);
             JS_ASSERT((r == MONITOR_RECORDING) == (tm->recorder != NULL));
