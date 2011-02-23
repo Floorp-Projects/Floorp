@@ -1487,8 +1487,8 @@ let Utils = {
   },
 
   mpLocked: function mpLocked() {
-    let modules = Cc["@mozilla.org/security/pkcs11moduledb;1"].
-                  getService(Ci.nsIPKCS11ModuleDB);
+    let modules = Cc["@mozilla.org/security/pkcs11moduledb;1"]
+                    .getService(Ci.nsIPKCS11ModuleDB);
     let sdrSlot = modules.findSlotByName("");
     let status  = sdrSlot.status;
     let slots = Ci.nsIPKCS11Slot;
@@ -1507,13 +1507,13 @@ let Utils = {
   // If Master Password is enabled and locked, present a dialog to unlock it.
   // Return whether the system is unlocked.
   ensureMPUnlocked: function ensureMPUnlocked() {
-    sdr = Cc["@mozilla.org/security/sdr;1"].getService(Ci.nsISecretDecoderRing);
-    var ok = false;
+    let sdr = Cc["@mozilla.org/security/sdr;1"]
+                .getService(Ci.nsISecretDecoderRing);
     try {
       sdr.encryptString("bacon");
-      ok = true;
+      return true;
     } catch(e) {}
-    return ok;
+    return false;
   },
   
   __prefs: null,
