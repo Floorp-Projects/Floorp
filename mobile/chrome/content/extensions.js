@@ -773,9 +773,15 @@ var ExtensionsView = {
             updateable = true;
             break;
           case "compatibility":
-            statusMsg = strings.GetStringFromName("addonUpdate.compatibility");
             if (addon.pendingOperations & AddonManager.PENDING_INSTALL || addon.pendingOperations & AddonManager.PENDING_UPGRADE)
               updateable = true;
+
+            // A compatibility update may require a restart, but will not fire an install
+            if (addon.pendingOperations & AddonManager.PENDING_ENABLE &&
+                addon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_ENABLE) {
+              statusMsg = strings.GetStringFromName("addonUpdate.compatibility");
+              this.showRestart();
+            }
             break;
           case "error":
             statusMsg = strings.GetStringFromName("addonUpdate.error");
