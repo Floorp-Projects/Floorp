@@ -196,7 +196,7 @@ html[dir=rtl] .stack-trayed .tab-title {
 .tabInGroupItem {
   box-shadow: none;
   border-color: transparent;
-  background-color: transparent;
+  background-color: rgb(240,240,240);
   margin: 8px;
 }
 
