@@ -25,7 +25,10 @@ function waitForPageShow(aPageURL, aCallback) {
   messageManager.addMessageListener("pageshow", function(aMessage) {
     if (aMessage.target.currentURI.spec == aPageURL) {
       messageManager.removeMessageListener("pageshow", arguments.callee);
-      setTimeout(function() { aCallback(); }, 0);
+      messageManager.addMessageListener("MozScrolledAreaChanged", function(aMessage) {
+        messageManager.removeMessageListener("MozScrolledAreaChanged", arguments.callee);
+        aCallback();
+      });
     }
   });
 };
@@ -91,6 +94,7 @@ gTests.push({
       setTimeout(function() {
         for (let iTab=0; iTab<gOpenedTabs.length; iTab++)
           Browser.closeTab(gOpenedTabs[iTab]);
+        Browser.hideSidebars();
       }, 0);
     }, false);
     runNextTest();
