@@ -2158,6 +2158,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   transform.Translate(r.pos);
 
   layer->SetTransform(gfx3DMatrix::From2D(transform));
+  layer->SetVisibleRegion(nsIntRect(0, 0, size.width, size.height));
   return layer.forget();
 }
 
