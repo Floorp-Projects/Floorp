@@ -50,6 +50,7 @@
 #include "jsscope.h"
 
 #include "jsgcinlines.h"
+#include "jsinterpinlines.h"
 
 using namespace js;
 using namespace js::mjit;
@@ -765,13 +766,23 @@ mjit::EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code, Value *stackLi
 static inline JSBool
 CheckStackAndEnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code)
 {
-    JS_CHECK_RECURSION(cx, return JS_FALSE;);
+    bool ok;
+    Value *stackLimit;
 
-    Value *stackLimit = cx->stack().getStackLimit(cx);
+    JS_CHECK_RECURSION(cx, goto error;);
+
+    stackLimit = cx->stack().getStackLimit(cx);
     if (!stackLimit)
-        return false;
+        goto error;
 
-    return EnterMethodJIT(cx, fp, code, stackLimit);
+    ok = EnterMethodJIT(cx, fp, code, stackLimit);
+    JS_ASSERT_IF(!fp->isYielding() && !(fp->isEvalFrame() && !fp->script()->strictModeCode),
+                 !fp->hasCallObj() && !fp->hasArgsObj());
+    return ok;
+
+  error:
+    js::PutOwnedActivationObjects(cx, fp);
+    return false;
 }
 
 JSBool

@@ -367,10 +367,6 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
     stack.pushInlineFrame(cx, newscript, newfp, &f.regs);
     JS_ASSERT(newfp == f.regs.fp);
 
-    /* Scope with a call object parented by callee's parent. */
-    if (newfun->isHeavyweight() && !js_GetCallObject(cx, newfp))
-        return false;
-
     /* Try to compile if not already compiled. */
     if (newscript->getJITStatus(newfp->isConstructing()) == JITScript_None) {
         CompileStatus status = CanMethodJIT(cx, newscript, newfp, CompileRequest_Interpreter);
@@ -382,6 +378,10 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
         if (status == Compile_Abort)
             *unjittable = true;
     }
+
+    /* Create call object now that we can't fail entering callee. */
+    if (newfun->isHeavyweight() && !js_GetCallObject(cx, newfp))
+        return false;
 
     /* If newscript was successfully compiled, run it. */
     if (JITScript *jit = newscript->getJIT(newfp->isConstructing())) {

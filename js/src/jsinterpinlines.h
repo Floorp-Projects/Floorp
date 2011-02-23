@@ -527,7 +527,8 @@ struct AutoInterpPreparer  {
 inline void
 PutActivationObjects(JSContext *cx, JSStackFrame *fp)
 {
-    JS_ASSERT(fp->isFunctionFrame() && !fp->isEvalFrame());
+    JS_ASSERT(!fp->isYielding());
+    JS_ASSERT(!fp->isEvalFrame() || fp->script()->strictModeCode);
 
     /* The order is important as js_PutCallObject needs to access argsObj. */
     if (fp->hasCallObj()) {
@@ -535,6 +536,19 @@ PutActivationObjects(JSContext *cx, JSStackFrame *fp)
     } else if (fp->hasArgsObj()) {
         js_PutArgsObject(cx, fp);
     }
+}
+
+/*
+ * FIXME Remove with bug 635811
+ *
+ * NB: a non-strict eval frame aliases its non-eval-parent's call/args object.
+ */
+inline void
+PutOwnedActivationObjects(JSContext *cx, JSStackFrame *fp)
+{
+    JS_ASSERT(!fp->isYielding());
+    if (!fp->isEvalFrame() || fp->script()->strictModeCode)
+        PutActivationObjects(cx, fp);
 }
 
 class InvokeSessionGuard
