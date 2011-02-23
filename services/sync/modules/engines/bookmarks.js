@@ -635,6 +635,34 @@ BookmarksStore.prototype = {
     return false;
   },
 
+  // Turn a record's nsINavBookmarksService constant and other attributes into
+  // a granular type for comparison.
+  _recordType: function _recordType(itemId) {
+    let bms  = this._bms;
+    let type = bms.getItemType(itemId);
+
+    switch (type) {
+      case bms.TYPE_FOLDER:
+        if (this._ls.isLivemark(itemId))
+          return "livemark";
+        return "folder";
+
+      case bms.TYPE_BOOKMARK:
+        if (this._ms && this._ms.hasMicrosummary(itemId))
+          return "microsummary";
+        let bmkUri = bms.getBookmarkURI(itemId).spec;
+        if (bmkUri.search(/^place:/) == 0)
+          return "query";
+        return "bookmark";
+
+      case bms.TYPE_SEPARATOR:
+        return "separator";
+
+      default:
+        return null;
+    }
+  },
+
   create: function BStore_create(record) {
     // Default to unfiled if we don't have the parent yet
     if (!record._parent) {
@@ -722,26 +750,23 @@ BookmarksStore.prototype = {
     this._setGUID(newId, record.id);
   },
 
-  remove: function BStore_remove(record) {
-    let itemId = this.idForGUID(record.id);
-    if (itemId <= 0) {
-      this._log.debug("Item " + record.id + " already removed");
-      return;
-    }
-    var type = this._bms.getItemType(itemId);
+  // Factored out of `remove` to avoid redundant DB queries when the Places ID
+  // is already known.
+  removeById: function removeById(itemId, guid) {
+    let type = this._bms.getItemType(itemId);
 
     switch (type) {
     case this._bms.TYPE_BOOKMARK:
-      this._log.debug("  -> removing bookmark " + record.id);
+      this._log.debug("  -> removing bookmark " + guid);
       this._ts.untagURI(this._bms.getBookmarkURI(itemId), null);
       this._bms.removeItem(itemId);
       break;
     case this._bms.TYPE_FOLDER:
-      this._log.debug("  -> removing folder " + record.id);
+      this._log.debug("  -> removing folder " + guid);
       Svc.Bookmark.removeItem(itemId);
       break;
     case this._bms.TYPE_SEPARATOR:
-      this._log.debug("  -> removing separator " + record.id);
+      this._log.debug("  -> removing separator " + guid);
       this._bms.removeItem(itemId);
       break;
     default:
@@ -750,11 +775,39 @@ BookmarksStore.prototype = {
     }
   },
 
+  remove: function BStore_remove(record) {
+    let itemId = this.idForGUID(record.id);
+    if (itemId <= 0) {
+      this._log.debug("Item " + record.id + " already removed");
+      return;
+    }
+    this.removeById(itemId, record.id);
+  },
+
   update: function BStore_update(record) {
     let itemId = this.idForGUID(record.id);
 
     if (itemId <= 0) {
       this._log.debug("Skipping update for unknown item: " + record.id);
+      return;
+    }
+
+    // Two items are the same type if they have the same ItemType in Places,
+    // and also share some key characteristics (e.g., both being livemarks).
+    // We figure this out by examining the item to find the equivalent granular
+    // (string) type.
+    // If they're not the same type, we can't just update attributes. Delete
+    // then recreate the record instead.
+    let localItemType    = this._recordType(itemId);
+    let remoteRecordType = record.type;
+    this._log.trace("Local type: " + localItemType + ". " +
+                    "Remote type: " + remoteRecordType + ".");
+
+    if (localItemType != remoteRecordType) {
+      this._log.debug("Local record and remote record differ in type. " +
+                      "Deleting and recreating.");
+      this.removeById(itemId, record.id);
+      this.create(record);
       return;
     }
 
