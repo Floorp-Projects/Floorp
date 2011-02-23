@@ -687,6 +687,8 @@ nsHttpTransaction::LocateHttpStart(char *buf, PRUint32 len,
 
     static const char HTTPHeader[] = "HTTP/1.";
     static const PRInt32 HTTPHeaderLen = sizeof(HTTPHeader) - 1;
+    static const char HTTP2Header[] = "HTTP/2.0";
+    static const PRUint32 HTTP2HeaderLen = sizeof(HTTP2Header) - 1;
     
     if (aAllowPartialMatch && (len < HTTPHeaderLen))
         return (PL_strncasecmp(buf, HTTPHeader, len) == 0) ? buf : nsnull;
@@ -713,6 +715,7 @@ nsHttpTransaction::LocateHttpStart(char *buf, PRUint32 len,
         mLineBuf.Truncate();
     }
 
+    PRBool firstByte = PR_TRUE;
     while (len > 0) {
         if (PL_strncasecmp(buf, HTTPHeader, PR_MIN(len, HTTPHeaderLen)) == 0) {
             if (len < HTTPHeaderLen) {
@@ -725,6 +728,20 @@ nsHttpTransaction::LocateHttpStart(char *buf, PRUint32 len,
             // whole HTTPHeader sequence found
             return buf;
         }
+
+        // At least "SmarterTools/2.0.3974.16813" generates nonsensical
+        // HTTP/2.0 responses to our HTTP/1 requests. Treat the minimal case of
+        // it as HTTP/1.1 to be compatible with old versions of ourselves and
+        // other browsers
+
+        if (firstByte && !mInvalidResponseBytesRead && len >= HTTP2HeaderLen &&
+            (PL_strncasecmp(buf, HTTP2Header, HTTP2HeaderLen) == 0)) {
+            LOG(("nsHttpTransaction:: Identified HTTP/2.0 treating as 1.x\n"));
+            return buf;
+        }
+
+        if (!nsCRT::IsAsciiSpace(*buf))
+            firstByte = PR_FALSE;
         buf++;
         len--;
     }
