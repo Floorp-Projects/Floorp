@@ -45,7 +45,7 @@
 #include "nsIRequest.h"
 #include "nsITimer.h"
 #include "nsAutoPtr.h"
-#include "nsCOMPtr.h"
+#include "nsCOMArray.h"
 #include "nsIOutputStream.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsString.h"
@@ -68,14 +68,49 @@ class nsINPAPIPluginStreamInfo : public nsIPluginStreamInfo
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INPAPIPLUGINSTREAMINFO_IID)
-  
-  nsIRequest *GetRequest()
+
+  void TrackRequest(nsIRequest* request)
   {
-    return mRequest;
+    mRequests.AppendObject(request);
+  }
+
+  void ReplaceRequest(nsIRequest* oldRequest, nsIRequest* newRequest)
+  {
+    PRInt32 i = mRequests.IndexOfObject(oldRequest);
+    if (i == -1) {
+      NS_ASSERTION(mRequests.Count() == 0,
+                   "Only our initial stream should be unknown!");
+      mRequests.AppendObject(oldRequest);
+    }
+    else {
+      mRequests.ReplaceObjectAt(newRequest, i);
+    }
+  }
+  
+  void CancelRequests(nsresult status)
+  {
+    // Copy the array to avoid modification during the loop.
+    nsCOMArray<nsIRequest> requestsCopy(mRequests);
+    for (PRInt32 i = 0; i < requestsCopy.Count(); ++i)
+      requestsCopy[i]->Cancel(status);
+  }
+
+  void SuspendRequests() {
+    nsCOMArray<nsIRequest> requestsCopy(mRequests);
+    for (PRInt32 i = 0; i < requestsCopy.Count(); ++i)
+      requestsCopy[i]->Suspend();
+  }
+
+  void ResumeRequests() {
+    nsCOMArray<nsIRequest> requestsCopy(mRequests);
+    for (PRInt32 i = 0; i < requestsCopy.Count(); ++i)
+      requestsCopy[i]->Resume();
   }
 
 protected:
-  nsCOMPtr<nsIRequest> mRequest;
+  friend class nsPluginByteRangeStreamListener;
+  
+  nsCOMArray<nsIRequest> mRequests;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINPAPIPluginStreamInfo,
@@ -121,7 +156,7 @@ public:
   nsresult CleanUpStream(NPReason reason);
   void CallURLNotify(NPReason reason);
   void SetCallNotify(PRBool aCallNotify) { mCallNotify = aCallNotify; }
-  nsresult SuspendRequest();
+  void SuspendRequest();
   void ResumeRequest();
   nsresult StartDataPump();
   void StopDataPump();
