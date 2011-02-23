@@ -408,29 +408,6 @@ public:
                                     const nsAString& aUnmodifiedCharacters);
 
   /**
-   * IsPrintableChar() checks whether the unicode character is
-   * a non-printable ASCII character or not.  Note that this returns
-   * TRUE even if aChar is a non-printable UNICODE character.
-   *
-   * @param aChar                 A unicode character.
-   * @return                      TRUE if aChar is a printable ASCII character
-   *                              or a unicode character.  Otherwise, i.e,
-   *                              if aChar is a non-printable ASCII character,
-   *                              FALSE.
-   */
-  static PRBool IsPrintableChar(PRUnichar aChar);
-
-  /**
-   * ComputeGeckoKeyCodeFromChar() computes Gecko defined keyCode value from
-   * aChar.  If aChar is not an ASCII character, this always returns FALSE.
-   *
-   * @param aChar                 A unicode character.
-   * @return                      A Gecko defined keyCode.  Or zero if aChar
-   *                              is a unicode character.
-   */
-  static PRUint32 ComputeGeckoKeyCodeFromChar(PRUnichar aChar);
-
-  /**
    * ComputeGeckoKeyCode() computes Gecko defined keyCode from the native
    * keyCode or the characters.
    *
@@ -458,24 +435,6 @@ public:
    *                              TRUE.  Otherwise, FALSE.
    */
   static PRBool IsSpecialGeckoKey(UInt32 aNativeKeyCode);
-
-  /**
-   * IsNormalCharInputtingEvent() checks whether aKeyEvent causes text input.
-   *
-   * @param aKeyEvent             A key event.
-   * @return                      TRUE if the key event causes text input.
-   *                              Otherwise, FALSE.
-   */
-  static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aKeyEvent);
-
-  /**
-   * IsModifierKey() checks whether the native keyCode is for a modifier key.
-   *
-   * @param aNativeKeyCode        A native keyCode.
-   * @return                      TRUE if aNativeKeyCode is for a modifier key.
-   *                              Otherwise, FALSE.
-   */
-  static PRBool IsModifierKey(UInt32 aNativeKeyCode);
 
 protected:
   nsAutoRefCnt mRefCnt;
@@ -507,6 +466,121 @@ protected:
 
   PRBool Destroyed() { return !mWidget; }
 
+  /**
+   * mCurrentKeyEvent indicates what key event we are handling.  While
+   * handling a native keydown event, we need to store the event for insertText,
+   * doCommandBySelector and various action message handlers of NSResponder
+   * such as [NSResponder insertNewline:sender].
+   */
+  struct KeyEventState
+  {
+    // Handling native key event
+    NSEvent* mKeyEvent;
+    // Whether keydown event was consumed by web contents or chrome contents.
+    PRPackedBool mKeyDownHandled;
+    // Whether keypress event was dispatched for mKeyEvent.
+    PRPackedBool mKeyPressDispatched;
+    // Whether keypress event was consumed by web contents or chrome contents.
+    PRPackedBool mKeyPressHandled;
+
+    KeyEventState() : mKeyEvent(nsnull)
+    {
+      Clear();
+    }
+
+    ~KeyEventState()
+    {
+      Clear();
+    }
+
+    void Set(NSEvent* aNativeKeyEvent)
+    {
+      NS_PRECONDITION(aNativeKeyEvent, "aNativeKeyEvent must not be NULL");
+      Clear();
+      mKeyEvent = [aNativeKeyEvent retain];
+    }
+
+    void Clear()
+    {
+      if (mKeyEvent) {
+        [mKeyEvent release];
+        mKeyEvent = nsnull;
+      }
+      mKeyDownHandled = PR_FALSE;
+      mKeyPressDispatched = PR_FALSE;
+      mKeyPressHandled = PR_FALSE;
+    }
+
+    PRBool KeyDownOrPressHandled()
+    {
+      return mKeyDownHandled || mKeyPressHandled;
+    }
+  };
+
+  /**
+   * Helper class for guaranteeing cleaning mCurrentKeyEvent
+   */
+  class AutoKeyEventStateCleaner
+  {
+  public:
+    AutoKeyEventStateCleaner(TextInputHandlerBase* aHandler) :
+      mHandler(aHandler)
+    {
+    }
+
+    ~AutoKeyEventStateCleaner()
+    {
+      mHandler->mCurrentKeyEvent.Clear();
+    }
+  private:
+    TextInputHandlerBase* mHandler;
+  };
+
+  // XXX If keydown event was nested, the key event is overwritten by newer
+  //     event.  This is wrong behavior.  Some IMEs are making such situation.
+  KeyEventState mCurrentKeyEvent;
+
+  /**
+   * IsPrintableChar() checks whether the unicode character is
+   * a non-printable ASCII character or not.  Note that this returns
+   * TRUE even if aChar is a non-printable UNICODE character.
+   *
+   * @param aChar                 A unicode character.
+   * @return                      TRUE if aChar is a printable ASCII character
+   *                              or a unicode character.  Otherwise, i.e,
+   *                              if aChar is a non-printable ASCII character,
+   *                              FALSE.
+   */
+  static PRBool IsPrintableChar(PRUnichar aChar);
+
+  /**
+   * ComputeGeckoKeyCodeFromChar() computes Gecko defined keyCode value from
+   * aChar.  If aChar is not an ASCII character, this always returns FALSE.
+   *
+   * @param aChar                 A unicode character.
+   * @return                      A Gecko defined keyCode.  Or zero if aChar
+   *                              is a unicode character.
+   */
+  static PRUint32 ComputeGeckoKeyCodeFromChar(PRUnichar aChar);
+
+  /**
+   * IsNormalCharInputtingEvent() checks whether aKeyEvent causes text input.
+   *
+   * @param aKeyEvent             A key event.
+   * @return                      TRUE if the key event causes text input.
+   *                              Otherwise, FALSE.
+   */
+  static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aKeyEvent);
+
+  /**
+   * IsModifierKey() checks whether the native keyCode is for a modifier key.
+   *
+   * @param aNativeKeyCode        A native keyCode.
+   * @return                      TRUE if aNativeKeyCode is for a modifier key.
+   *                              Otherwise, FALSE.
+   */
+  static PRBool IsModifierKey(UInt32 aNativeKeyCode);
+
 private:
   struct KeyboardLayoutOverride {
     PRInt32 mKeyboardLayout;
@@ -527,9 +601,46 @@ private:
 
 class PluginTextInputHandler : public TextInputHandlerBase
 {
+public:
+
+#ifndef NP_NO_CARBON
+  /**
+   * ConvertCocoaKeyEventToCarbonEvent() converts aCocoaKeyEvent to
+   * aCarbonKeyEvent.
+   *
+   * @param aCocoaKeyEvent        A Cocoa key event.
+   * @param aCarbonKeyEvent       Converted Carbon event from aCocoaEvent.
+   * @param aMakeKeyDownEventIfNSFlagsChanged
+   *                              If aCocoaKeyEvent isn't NSFlagsChanged event,
+   *                              this is ignored.  Otherwise, i.e., if
+   *                              aCocoaKeyEvent is NSFlagsChanged event,
+   *                              set TRUE if you need a keydown event.
+   *                              Otherwise, Set FALSE for a keyup event.
+   */
+  static void ConvertCocoaKeyEventToCarbonEvent(
+                NSEvent* aCocoaKeyEvent,
+                EventRecord& aCarbonKeyEvent,
+                PRBool aMakeKeyDownEventIfNSFlagsChanged = PR_FALSE);
+#endif // NP_NO_CARBON
+
 protected:
   PluginTextInputHandler(nsChildView* aWidget, NSView<mozView> *aNativeView);
   ~PluginTextInputHandler();
+
+#ifndef NP_NO_CARBON
+
+  /**
+   * ConvertUnicodeToCharCode() converts aUnichar to native encoded string.
+   *
+   * @param aUniChar              A unicode character.
+   * @param aOutChar              Native encoded string for aUniChar.
+   * @return                      TRUE if the converting succeeded.
+   *                              Otherwise, FALSE.
+   */
+  static PRBool ConvertUnicodeToCharCode(PRUnichar aUniChar,
+                                         unsigned char* aOutChar);
+
+#endif // NP_NO_CARBON
 };
 
 /**
@@ -580,14 +691,6 @@ public:
    */
   void SetMarkedText(NSAttributedString* aAttrString,
                      NSRange& aSelectedRange);
-
-  /**
-   * InsertTextAsCommittingComposition() commits current composition.  If there
-   * is no composition, this starts a composition and commits it immediately.
-   *
-   * @param aAttrString           A string which is committed.
-   */
-  void InsertTextAsCommittingComposition(NSAttributedString* aAttrString);
 
   /**
    * ConversationIdentifier() returns an ID for the current editor.  The ID is
@@ -713,6 +816,14 @@ protected:
 
   virtual void ExecutePendingMethods();
 
+  /**
+   * InsertTextAsCommittingComposition() commits current composition.  If there
+   * is no composition, this starts a composition and commits it immediately.
+   *
+   * @param aAttrString           A string which is committed.
+   */
+  void InsertTextAsCommittingComposition(NSAttributedString* aAttrString);
+
 private:
   // If mIsIMEComposing is true, the composition string is stored here.
   NSString* mIMECompositionString;
@@ -831,6 +942,39 @@ public:
 
   TextInputHandler(nsChildView* aWidget, NSView<mozView> *aNativeView);
   virtual ~TextInputHandler();
+
+  /**
+   * KeyDown event handler.
+   *
+   * @param aNativeEvent          A native keydown event which you want to
+   *                              handle.
+   * @return                      TRUE if the event is consumed by web contents
+   *                              or chrome contents.  Otherwise, FALSE.
+   */
+  PRBool HandleKeyDownEvent(NSEvent* aNativeEvent);
+
+  /**
+   * Insert the string to content.  I.e., this is a text input event handler.
+   * If this is called during keydown event handling, this may dispatch a
+   * NS_KEY_PRESS event.  If this is called during composition, this commits
+   * the composition by the aAttrString.
+   *
+   * @param aAttrString           An inserted string.
+   */
+  void InsertText(NSAttributedString *aAttrString);
+
+  /**
+   * KeyPressWasHandled() checks whether keypress event was handled or not.
+   *
+   * @return                      TRUE if keypress event for latest native key
+   *                              event was handled.  Otherwise, FALSE.
+   *                              If this handler isn't handling any key events,
+   *                              always returns FALSE.
+   */
+  PRBool KeyPressWasHandled()
+  {
+    return mCurrentKeyEvent.mKeyPressHandled;
+  }
 };
 
 } // namespace widget

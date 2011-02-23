@@ -169,7 +169,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 - (BOOL)isPluginView;
 - (void)setPluginEventModel:(NPEventModel)eventModel;
 - (void)setPluginDrawingModel:(NPDrawingModel)drawingModel;
-- (NPEventModel)pluginEventModel;
 - (NPDrawingModel)pluginDrawingModel;
 
 #ifndef NP_NO_CARBON
@@ -179,8 +178,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 - (BOOL)isRectObscuredBySubview:(NSRect)inRect;
 
 - (void)processPendingRedraws;
-
-- (void)maybeInitContextMenuTracking;
 
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
 
@@ -197,8 +194,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 #ifdef ACCESSIBILITY
 - (id<mozAccessible>)accessible;
 #endif
-
-- (BOOL)isFirstResponder;
 
 - (void)fireKeyEventForFlagsChanged:(NSEvent*)theEvent keyDown:(BOOL)isKeyDown;
 
@@ -2069,10 +2064,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #else
     mPluginDrawingModel = NPDrawingModelCoreGraphics;
 #endif
-    mCurKeyEvent = nil;
-    mKeyDownHandled = PR_FALSE;
-    mKeyPressHandled = NO;
-    mKeyPressSent = NO;
     mPendingDisplay = NO;
     mBlockedLastMouseDown = NO;
 
@@ -3853,38 +3844,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-#ifndef NP_NO_CARBON
-static PRBool ConvertUnicodeToCharCode(PRUnichar inUniChar, unsigned char* outChar)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  UnicodeToTextInfo converterInfo;
-  TextEncoding      systemEncoding;
-  Str255            convertedString;
-  OSStatus          err;
-  
-  *outChar = 0;
-  
-  err = ::UpgradeScriptInfoToTextEncoding(smSystemScript, kTextLanguageDontCare, kTextRegionDontCare, NULL, &systemEncoding);
-  if (err != noErr)
-    return PR_FALSE;
-  
-  err = ::CreateUnicodeToTextInfoByEncoding(systemEncoding, &converterInfo);
-  if (err != noErr)
-    return PR_FALSE;
-  
-  err = ::ConvertFromUnicodeToPString(converterInfo, sizeof(PRUnichar), &inUniChar, convertedString);
-  if (err != noErr)
-    return PR_FALSE;
-
-  *outChar = convertedString[1];
-  ::DisposeUnicodeToTextInfo(&converterInfo);
-  return PR_TRUE;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
-}
-#endif // NP_NO_CARBON
-
 static void ConvertCocoaKeyEventToNPCocoaEvent(NSEvent* cocoaEvent, NPCocoaEvent& pluginEvent, PRUint32 keyType = 0)
 {
   InitNPCocoaEvent(&pluginEvent);
@@ -3911,54 +3870,6 @@ static void ConvertCocoaKeyEventToNPCocoaEvent(NSEvent* cocoaEvent, NPCocoaEvent
     pluginEvent.data.key.isARepeat = [cocoaEvent isARepeat];
   }
 }
-
-#ifndef NP_NO_CARBON
-static void ConvertCocoaKeyEventToCarbonEvent(NSEvent* cocoaEvent, EventRecord& pluginEvent, PRUint32 keyType = 0)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-    UInt32 charCode = 0;
-    if ([cocoaEvent type] == NSFlagsChanged) {
-      pluginEvent.what = keyType == NS_KEY_DOWN ? keyDown : keyUp;
-    } else {
-      if ([[cocoaEvent characters] length] > 0)
-        charCode = [[cocoaEvent characters] characterAtIndex:0];
-      if ([cocoaEvent type] == NSKeyDown)
-        pluginEvent.what = [cocoaEvent isARepeat] ? autoKey : keyDown;
-      else
-        pluginEvent.what = keyUp;
-    }
-
-    if (charCode >= 0x0080) {
-        switch (charCode) {
-        case NSUpArrowFunctionKey:
-            charCode = kUpArrowCharCode;
-            break;
-        case NSDownArrowFunctionKey:
-            charCode = kDownArrowCharCode;
-            break;
-        case NSLeftArrowFunctionKey:
-            charCode = kLeftArrowCharCode;
-            break;
-        case NSRightArrowFunctionKey:
-            charCode = kRightArrowCharCode;
-            break;
-        default:
-            unsigned char convertedCharCode;
-            if (ConvertUnicodeToCharCode(charCode, &convertedCharCode))
-              charCode = convertedCharCode;
-            //NSLog(@"charcode is %d, converted to %c, char is %@", charCode, convertedCharCode, [cocoaEvent characters]);
-            break;
-        }
-    }
-    pluginEvent.message = (charCode & 0x00FF) | ([cocoaEvent keyCode] << 8);
-    pluginEvent.when = ::TickCount();
-    ::GetGlobalMouse(&pluginEvent.where);
-    pluginEvent.modifiers = ::GetCurrentKeyModifiers();
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-#endif // NP_NO_CARBON
 
 // Basic conversion for cocoa to gecko events, common to all conversions.
 // Note that it is OK for inEvent to be nil.
@@ -4128,8 +4039,6 @@ static void ConvertCocoaKeyEventToCarbonEvent(NSEvent* cocoaEvent, EventRecord& 
 #pragma mark -
 // NSTextInput implementation
 
-#define MAX_BUFFER_SIZE 32
-
 - (void)insertText:(id)insertString
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -4137,93 +4046,20 @@ static void ConvertCocoaKeyEventToCarbonEvent(NSEvent* cocoaEvent, EventRecord& 
 #if DEBUG_IME
   NSLog(@"****in insertText: '%@'", insertString);
 #endif
-  if (!mGeckoChild || !mTextInputHandler)
-    return;
 
-  if (mTextInputHandler->IgnoreIMEComposition())
-    return;
+  NS_ENSURE_TRUE(mGeckoChild, );
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
-  if (![insertString isKindOfClass:[NSAttributedString class]])
-    insertString = [[[NSAttributedString alloc] initWithString:insertString] autorelease];
-
-  NSString *tmpStr = [insertString string];
-  unsigned int len = [tmpStr length];
-  if (!mTextInputHandler->IsIMEComposing() && len == 0)
-    return; // nothing to do
-  PRUnichar buffer[MAX_BUFFER_SIZE];
-  PRUnichar *bufPtr = (len >= MAX_BUFFER_SIZE) ? new PRUnichar[len + 1] : buffer;
-  [tmpStr getCharacters:bufPtr];
-  bufPtr[len] = PRUnichar('\0');
-
-  if (len == 1 && !mTextInputHandler->IsIMEComposing()) {
-    // don't let the same event be fired twice when hitting
-    // enter/return! (Bug 420502)
-    if (mKeyPressSent)
-      return;
-
-    // dispatch keypress event with char instead of textEvent
-    nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, mGeckoChild);
-    geckoEvent.time      = PR_IntervalNow();
-    geckoEvent.charCode  = bufPtr[0]; // gecko expects OS-translated unicode
-    geckoEvent.keyCode   = 0;
-    geckoEvent.isChar    = PR_TRUE;
-    if (mKeyDownHandled)
-      geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
-    // don't set other modifiers from the current event, because here in
-    // -insertText: they've already been taken into account in creating
-    // the input string.
-        
-    // create event for use by plugins
-#ifndef NP_NO_CARBON
-    EventRecord carbonEvent;
-#endif
-    if (mCurKeyEvent) {
-      // XXX The ASCII characters inputting mode of egbridge (Japanese IME)
-      // might send the keyDown event with wrong keyboard layout if other
-      // keyboard layouts are already loaded. In that case, the native event
-      // doesn't match to this gecko event...
-#ifndef NP_NO_CARBON
-      if (mPluginEventModel == NPEventModelCarbon) {
-        ConvertCocoaKeyEventToCarbonEvent(mCurKeyEvent, carbonEvent);
-        geckoEvent.pluginEvent = &carbonEvent;
-      }
-#endif
-
-      geckoEvent.isShift = ([mCurKeyEvent modifierFlags] & NSShiftKeyMask) != 0;
-      if (!TextInputHandler::IsPrintableChar(geckoEvent.charCode)) {
-        geckoEvent.keyCode = 
-          TextInputHandler::ComputeGeckoKeyCode([mCurKeyEvent keyCode],
-            [mCurKeyEvent charactersIgnoringModifiers]);
-        geckoEvent.charCode = 0;
-      }
-    } else {
-      // Note that insertText is not called only at key pressing.
-      if (!TextInputHandler::IsPrintableChar(geckoEvent.charCode)) {
-        geckoEvent.keyCode =
-          TextInputHandler::ComputeGeckoKeyCodeFromChar(geckoEvent.charCode);
-        geckoEvent.charCode = 0;
-      }
-    }
-
-    PRBool keyPressHandled = mTextInputHandler->DispatchEvent(geckoEvent);
-    // Note: mGeckoChild might have become null here. Don't count on it from here on.
-    // Only record the results of dispatching geckoEvent if we're currently
-    // processing a keyDown event.
-    if (mCurKeyEvent) {
-      mKeyPressHandled = keyPressHandled;
-      mKeyPressSent = YES;
-    }
-  }
-  else {
-    NSAttributedString* attrStr =
-      static_cast<NSAttributedString*>(insertString);
-    mTextInputHandler->InsertTextAsCommittingComposition(attrStr);
+  NSAttributedString* attrStr;
+  if ([insertString isKindOfClass:[NSAttributedString class]]) {
+    attrStr = static_cast<NSAttributedString*>(insertString);
+  } else {
+    attrStr =
+      [[[NSAttributedString alloc] initWithString:insertString] autorelease];
   }
 
-  if (bufPtr != buffer)
-    delete[] bufPtr;
+  mTextInputHandler->InsertText(attrStr);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -4237,12 +4073,15 @@ static void ConvertCocoaKeyEventToCarbonEvent(NSEvent* cocoaEvent, EventRecord& 
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  PRBool ignore = mGeckoChild && mTextInputHandler->KeyPressWasHandled();
+
 #if DEBUG_IME 
-  NSLog(@"**** in doCommandBySelector %s (ignore %d)", aSelector, mKeyPressHandled);
+  NSLog(@"**** in doCommandBySelector %s (ignore %d)", aSelector, ignore);
 #endif
 
-  if (!mKeyPressHandled)
+  if (!ignore) {
     [super doCommandBySelector:aSelector];
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -4374,110 +4213,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
           ToEscapedString([theEvent charactersIgnoringModifiers], str2)));
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  mCurKeyEvent = theEvent;
-
-  BOOL nonDeadKeyPress = [[theEvent characters] length] > 0;
-  if (nonDeadKeyPress && !mTextInputHandler->IsIMEComposing()) {
-    NSResponder* firstResponder = [[self window] firstResponder];
-
-    nsKeyEvent geckoKeydown(PR_TRUE, NS_KEY_DOWN, mGeckoChild);
-    mTextInputHandler->InitKeyEvent(theEvent, geckoKeydown);
-
-#ifndef NP_NO_CARBON
-    EventRecord carbonEvent;
-    if (mPluginEventModel == NPEventModelCarbon) {
-      ConvertCocoaKeyEventToCarbonEvent(theEvent, carbonEvent);
-      geckoKeydown.pluginEvent = &carbonEvent;
-    }
-#endif
-
-    mKeyDownHandled = mGeckoChild->DispatchWindowEvent(geckoKeydown);
-    if (!mGeckoChild) {
-      return mKeyDownHandled;
-    }
-
-    // The key down event may have shifted the focus, in which
-    // case we should not fire the key press.
-    if (firstResponder != [[self window] firstResponder]) {
-      PRBool handled = mKeyDownHandled;
-      mCurKeyEvent = nil;
-      mKeyDownHandled = PR_FALSE;
-      return handled;
-    }
-
-    // If this is the context menu key command, send a context menu key event.
-    unsigned int modifierFlags = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
-    if (modifierFlags == NSControlKeyMask && [[theEvent charactersIgnoringModifiers] isEqualToString:@" "]) {
-      nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU, [self widget], nsMouseEvent::eReal, nsMouseEvent::eContextMenuKey);
-      contextMenuEvent.isShift = contextMenuEvent.isControl = contextMenuEvent.isAlt = contextMenuEvent.isMeta = PR_FALSE;
-      PRBool cmEventHandled = mGeckoChild->DispatchWindowEvent(contextMenuEvent);
-      [self maybeInitContextMenuTracking];
-      // Bail, there is nothing else to do here.
-      PRBool handled = (cmEventHandled || mKeyDownHandled);
-      mCurKeyEvent = nil;
-      mKeyDownHandled = PR_FALSE;
-      return handled;
-    }
-
-    nsKeyEvent geckoKeypress(PR_TRUE, NS_KEY_PRESS, mGeckoChild);
-    mTextInputHandler->InitKeyEvent(theEvent, geckoKeypress);
-
-    // if this is a non-letter keypress, or the control key is down,
-    // dispatch the keydown to gecko, so that we trap delete,
-    // control-letter combinations etc before Cocoa tries to use
-    // them for keybindings.
-    if ((!geckoKeypress.isChar || geckoKeypress.isControl) &&
-        !mTextInputHandler->IsIMEComposing()) {
-      if (mKeyDownHandled)
-        geckoKeypress.flags |= NS_EVENT_FLAG_NO_DEFAULT;
-      mKeyPressHandled = mTextInputHandler->DispatchEvent(geckoKeypress);
-      mKeyPressSent = YES;
-      if (!mGeckoChild)
-        return (mKeyDownHandled || mKeyPressHandled);
-    }
-  }
-
-  // Let Cocoa interpret the key events, caching IsIMEComposing first.
-  PRBool wasComposing = mTextInputHandler->IsIMEComposing();
-  PRBool interpretKeyEventsCalled = PR_FALSE;
-  if (mTextInputHandler->IsIMEEnabled() ||
-      mTextInputHandler->IsASCIICapableOnly()) {
-    [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
-    interpretKeyEventsCalled = PR_TRUE;
-  }
-
-  if (!mGeckoChild) {
-    return (mKeyDownHandled || mKeyPressHandled);
-  }
-
-  if (!mKeyPressSent && nonDeadKeyPress && !wasComposing &&
-      !mTextInputHandler->IsIMEComposing()) {
-    nsKeyEvent geckoKeypress(PR_TRUE, NS_KEY_PRESS, mGeckoChild);
-    mTextInputHandler->InitKeyEvent(theEvent, geckoKeypress);
-
-    // If we called interpretKeyEvents and this isn't normal character input
-    // then IME probably ate the event for some reason. We do not want to
-    // send a key press event in that case.
-    if (!(interpretKeyEventsCalled &&
-        TextInputHandler::IsNormalCharInputtingEvent(geckoKeypress))) {
-      if (mKeyDownHandled) {
-        geckoKeypress.flags |= NS_EVENT_FLAG_NO_DEFAULT;
-      }
-      mKeyPressHandled = mTextInputHandler->DispatchEvent(geckoKeypress);
-    }
-  }
-
-  // Note: mGeckoChild might have become null here. Don't count on it from here on.
-
-  PRBool handled = (mKeyDownHandled || mKeyPressHandled);
-
-  // See note about nested event loops where these variables are declared in header.
-  mKeyPressHandled = NO;
-  mKeyPressSent = NO;
-  mCurKeyEvent = nil;
-  mKeyDownHandled = PR_FALSE;
-
-  return handled;
+  return mTextInputHandler->HandleKeyDownEvent(theEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
@@ -4746,7 +4482,9 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
       nsKeyEvent keyUpEvent(PR_TRUE, NS_KEY_UP, mGeckoChild);
       mTextInputHandler->InitKeyEvent(theEvent, keyUpEvent);
       EventRecord macKeyUpEvent;
-      ConvertCocoaKeyEventToCarbonEvent(theEvent, macKeyUpEvent);
+      TextInputHandler::ConvertCocoaKeyEventToCarbonEvent(theEvent,
+                                                          macKeyUpEvent,
+                                                          PR_FALSE);
       keyUpEvent.pluginEvent = &macKeyUpEvent;
       mGeckoChild->DispatchWindowEvent(keyUpEvent);      
     }
@@ -4864,7 +4602,9 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   if (mIsPluginView) {
 #ifndef NP_NO_CARBON
     if (mPluginEventModel == NPEventModelCarbon) {
-      ConvertCocoaKeyEventToCarbonEvent(theEvent, carbonEvent, message);
+      TextInputHandler::ConvertCocoaKeyEventToCarbonEvent(theEvent,
+                                                          carbonEvent,
+                                                          isKeyDown);
       geckoEvent.pluginEvent = &carbonEvent;
     }
 #endif
@@ -5474,8 +5214,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   if (NS_FAILED(rv))
     return NO;
 
-  if (!mGeckoChild)
-    return NO;
+  NS_ENSURE_TRUE(mGeckoChild, PR_FALSE);
 
   nsContentCommandEvent command(PR_TRUE,
                                 NS_CONTENT_COMMAND_PASTE_TRANSFERABLE,
