@@ -873,11 +873,25 @@ nsNPAPIPluginInstance::GetSurface(gfxASurface** aSurface)
 NS_IMETHODIMP
 nsNPAPIPluginInstance::GetImage(ImageContainer* aContainer, Image** aImage)
 {
+  *aImage = nsnull;
+
   if (RUNNING != mRunning)
     return NS_OK;
 
   AutoPluginLibraryCall library(this);
   return !library ? NS_ERROR_FAILURE : library->GetImage(&mNPP, aContainer, aImage);
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::GetImageSize(nsIntSize* aSize)
+{
+  *aSize = nsIntSize(0, 0);
+
+  if (RUNNING != mRunning)
+    return NS_OK;
+
+  AutoPluginLibraryCall library(this);
+  return !library ? NS_ERROR_FAILURE : library->GetImageSize(&mNPP, aSize);
 }
 
 NS_IMETHODIMP

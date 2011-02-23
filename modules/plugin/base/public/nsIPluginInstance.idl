@@ -51,6 +51,7 @@ struct JSObject;
 class gfxASurface;
 class gfxContext;
 struct nsIntRect;
+struct nsIntSize;
 
 namespace mozilla {
 namespace layers {
@@ -69,6 +70,7 @@ class ImageContainer;
 [ptr] native ImagePtr(mozilla::layers::Image);
 [ptr] native ImageContainerPtr(mozilla::layers::ImageContainer);
 [ptr] native nsIntRectPtr(nsIntRect);
+[ptr] native nsIntSizePtr(nsIntSize);
 
 [uuid(84994340-E120-4051-824F-D4EE8AEF1A3E)]
 interface nsIPluginInstance : nsISupports
@@ -253,6 +255,7 @@ interface nsIPluginInstance : nsISupports
 
     /**
      * This should return a valid gfxASurface pointer, or null if there is nothing to render yet.
+     * NO LONGER USED. Do not call.
      */
     void getSurface(out gfxASurfacePtr aSurface);
 
@@ -264,11 +267,24 @@ interface nsIPluginInstance : nsISupports
 
 
 // XXX kill me after branching
-[noscript, uuid(324f3c02-4fbd-430b-8afa-db083d3867fc)]
+[noscript, uuid(24235105-ac5f-483b-86ec-7c9446ddcb8a)]
 interface nsIPluginInstance_MOZILLA_2_0_BRANCH : nsIPluginInstance
 {
     PRBool isRemoteDrawingCoreAnimation();
+    /**
+     * Returns a new Image object which draws an asynchronously-rendered
+     * plugin. The Image is created using aContainer.
+     * Fails if the plugin is using async rendering but no image has yet
+     * been received, or if the plugin is not using async rendering.
+     */
     void getImage(in ImageContainerPtr aContainer, out ImagePtr aImage);
+    /**
+     * Returns the size of the Image object that would be created if we called
+     * getImage.
+     * Fails if the plugin is using async rendering but no image has yet
+     * been received, or if the plugin is not using async rendering.
+     */
+    void getImageSize(in nsIntSizePtr aSize);
     /**
      * This is the second leg in the trip to PluginInstanceParent.  It
      * approximately follows the ReadbackSink API.

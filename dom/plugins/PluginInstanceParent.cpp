@@ -642,6 +642,25 @@ PluginInstanceParent::GetImage(ImageContainer* aContainer, Image** aImage)
     return NS_OK;
 }
 
+nsresult
+PluginInstanceParent::GetImageSize(nsIntSize* aSize)
+{
+    if (mFrontSurface) {
+        gfxIntSize size = mFrontSurface->GetSize();
+        *aSize = nsIntSize(size.width, size.height);
+        return NS_OK;
+    }
+
+#ifdef XP_MACOSX
+    if (mIOSurface) {
+        *aSize = nsIntSize(mIOSurface->GetWidth(), mIOSurface->GetHeight());
+        return NS_OK;
+    }
+#endif
+
+    return NS_ERROR_NOT_AVAILABLE;
+}
+
 #ifdef XP_MACOSX
 nsresult
 PluginInstanceParent::IsRemoteDrawingCoreAnimation(PRBool *aDrawing)
