@@ -500,25 +500,13 @@ private:
   // return FALSE if LayerSurface dirty (newly created and don't have valid plugin content yet)
   PRBool IsUpToDate()
   {
-    nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
-    if (!container) {
-      return PR_FALSE;
-    }
-
     nsCOMPtr<nsIPluginInstance_MOZILLA_2_0_BRANCH> inst = do_QueryInterface(mInstance);
-    if (!inst) {
-      return PR_FALSE;
-    }
-
-    nsRefPtr<Image> image;
-    if (!NS_SUCCEEDED(inst->GetImage(container, getter_AddRefs(image))) || !image)
+    if (!inst)
       return PR_FALSE;
 
-    container->SetCurrentImage(image);
-
-    if (container->GetCurrentSize() != gfxIntSize(mPluginWindow->width, mPluginWindow->height))
-      return PR_FALSE;
-    return PR_TRUE;
+    nsIntSize size;
+    return NS_SUCCEEDED(inst->GetImageSize(&size)) &&
+           size == nsIntSize(mPluginWindow->width, mPluginWindow->height);
   }
 
   already_AddRefed<nsIPluginInstance_MOZILLA_2_0_BRANCH>
