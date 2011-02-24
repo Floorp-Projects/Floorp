@@ -44,16 +44,25 @@ function load_page(aURL, aCanHide, aCallback) {
       is_chrome_visible();
 
     if (aURL == "about:addons") {
-      gNewBrowser.contentDocument.addEventListener("Initialized", function() {
-        gNewBrowser.contentDocument.removeEventListener("Initialized", arguments.callee, false);
-
+      function check_after_init() {
         if (aCanHide)
           is_chrome_hidden();
         else
           is_chrome_visible();
 
         aCallback();
-      }, false);
+      }
+
+      if (gNewBrowser.contentWindow.gIsInitializing) {
+        gNewBrowser.contentDocument.addEventListener("Initialized", function() {
+          gNewBrowser.contentDocument.removeEventListener("Initialized", arguments.callee, false);
+
+          check_after_init();
+        }, false);
+      }
+      else {
+        check_after_init();
+      }
     }
     else {
       executeSoon(aCallback);
