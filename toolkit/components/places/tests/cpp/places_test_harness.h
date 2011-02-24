@@ -50,6 +50,11 @@
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "nsPIPlacesDatabase.h"
+#include "nsIObserver.h"
+#include "prinrval.h"
+
+#define TOPIC_FRECENCY_UPDATED "places-frecency-updated"
+#define WAITFORTOPIC_TIMEOUT_SECONDS 5
 
 using namespace mozilla;
 
@@ -121,6 +126,59 @@ void do_test_pending();
 void do_test_finished();
 
 /**
+ * Spins current thread until a topic is received.
+ */
+class WaitForTopicSpinner : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  WaitForTopicSpinner(const char* const aTopic)
+  : mTopic(aTopic)
+  , mTopicReceived(false)
+  , mStartTime(PR_IntervalNow())
+  {
+  }
+
+  void Spin() {
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    if (observerService) {
+      (void)observerService->AddObserver(this, mTopic, PR_FALSE);
+
+      while (!mTopicReceived) {
+        if (PR_IntervalNow() - mStartTime > WAITFORTOPIC_TIMEOUT_SECONDS * PR_USEC_PER_SEC) {
+          // Timed out waiting for the topic.
+          do_check_true(false);
+          break;
+        }
+        (void)NS_ProcessNextEvent();
+      }
+
+      (void)observerService->RemoveObserver(this, mTopic);
+    }
+  }
+
+  NS_IMETHOD Observe(nsISupports* aSubject,
+                     const char* aTopic,
+                     const PRUnichar* aData)
+  {
+    do_check_false(strcmp(aTopic, mTopic));
+    mTopicReceived = true;
+    return NS_OK;
+  }
+
+private:
+  const char* const mTopic;
+  bool mTopicReceived;
+  PRIntervalTime mStartTime;
+};
+NS_IMPL_ISUPPORTS1(
+  WaitForTopicSpinner,
+  nsIObserver
+)
+
+/**
  * Adds a URI to the database.
  *
  * @param aURI
@@ -137,6 +195,11 @@ addURI(nsIURI* aURI)
                                nsINavHistoryService::TRANSITION_LINK, PR_FALSE,
                                0, &id);
   do_check_success(rv);
+
+  // Wait for frecency update.
+  nsRefPtr<WaitForTopicSpinner> spinner =
+    new WaitForTopicSpinner(TOPIC_FRECENCY_UPDATED);
+  spinner->Spin();
 }
 
 struct PlaceRecord
