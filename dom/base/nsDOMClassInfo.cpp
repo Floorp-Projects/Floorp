@@ -9404,6 +9404,31 @@ nsHTMLFormElementSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
 // HTMLSelectElement helper
 
 NS_IMETHODIMP
+nsHTMLSelectElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                                  JSObject *obj, jsid id, PRUint32 flags,
+                                  JSObject **objp, PRBool *_retval)
+{
+  PRInt32 n = GetArrayIndexFromId(cx, id);
+  if (n >= 0) {
+    nsHTMLSelectElement *s =
+      nsHTMLSelectElement::FromSupports(GetNative(wrapper, obj));
+
+    nsHTMLOptionCollection *options = s->GetOptions();
+    if (options) {
+      nsresult rv;
+      nsISupports *node = options->GetNodeAt(n, &rv);
+      if (node) {
+        *objp = obj;
+        *_retval = JS_DefineElement(cx, obj, n, JSVAL_VOID, nsnull, nsnull,
+                                    JSPROP_ENUMERATE | JSPROP_SHARED);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTMLSelectElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
                                    JSContext *cx, JSObject *obj, jsid id,
                                    jsval *vp, PRBool *_retval)

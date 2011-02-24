@@ -15,6 +15,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633133
 <div id="content" style="display: none">
   <div id='foo'></div>
   <div name='bar'></div>
+  <select id="select">
+    <option>option1</option>
+    <option>option2</option>
+  </select>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -27,6 +31,14 @@ ok("foo" in divCollection, "'foo' should be in the div collection");
 ok("bar" in divCollection, "'bar' should be in the div collection");
 ok(!("" in divCollection), "empty string shouldn't be in the div collection");
 ok(!("foobar" in divCollection), "'foobar' shouldn't be in the div collection");
+
+var select = $('select');
+is(select[0].text, "option1", "select elements work");
+Math.sin();
+ok(1 in select, "in works");
+is(select[1].text, "option2", "can get it too");
+ok(!(2 in select), "in works for elements out of range");
+is(select[2], undefined, "can get them too and they're undefined");
 
 </script>
 </pre>
