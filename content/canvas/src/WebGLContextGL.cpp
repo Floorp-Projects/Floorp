@@ -808,8 +808,9 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
     if (!tex)
         return ErrorInvalidOperation("copyTexSubImage2D: no texture bound to this target");
 
-    WebGLsizei texWidth = tex->ImageInfoAt(level,0).mWidth;
-    WebGLsizei texHeight = tex->ImageInfoAt(level,0).mHeight;
+    WebGLint face = WebGLTexture::FaceForTarget(target);
+    WebGLsizei texWidth = tex->ImageInfoAt(level, face).mWidth;
+    WebGLsizei texHeight = tex->ImageInfoAt(level, face).mHeight;
 
     if (xoffset + width > texWidth || xoffset + width < 0)
       return ErrorInvalidValue("copyTexSubImage2D: xoffset+width is too large");
@@ -817,7 +818,7 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
     if (yoffset + height > texHeight || yoffset + height < 0)
       return ErrorInvalidValue("copyTexSubImage2D: yoffset+height is too large");
 
-    WebGLenum format = tex->ImageInfoAt(level,0).mFormat;
+    WebGLenum format = tex->ImageInfoAt(level, face).mFormat;
     PRBool texFormatRequiresAlpha = format == LOCAL_GL_RGBA ||
                                     format == LOCAL_GL_ALPHA ||
                                     format == LOCAL_GL_LUMINANCE_ALPHA;
