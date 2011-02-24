@@ -1,0 +1,225 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Mobile Browser.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Mark Finkle <mfinkle@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+%filter substitution
+%include defines.inc
+
+/* Content Navigator popup ------------------------------------------------- */
+#content-navigator {
+  display: none;
+  pointer-events: none;
+  padding: 0;
+  background-color: transparent !important;
+}
+
+#content-navigator[type="find"],
+#content-navigator[type="form"] {
+  display: -moz-box;
+}
+
+#content-navigator > .previous-button,
+#content-navigator > .next-button {
+  opacity: 0.9;
+  pointer-events: auto;
+  -moz-user-focus: ignore !important;
+}
+
+#content-navigator > .previous-button[disabled="true"],
+#content-navigator > .next-button[disabled="true"] {
+  opacity: 0.4;
+}
+
+#content-navigator > .previous-button {
+  -moz-margin-end: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border: @border_width_small@ solid white !important;
+  background-color: rgba(41,41,41,0.8);
+  background-image: none !important;
+  list-style-image: url("chrome://browser/skin/images/previous-hdpi.png");
+  box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@;
+}
+
+#content-navigator > .next-button {
+  -moz-margin-start: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border: @border_width_small@ solid white !important;
+  background-color: rgba(41,41,41,0.8);
+  background-image: none !important;
+  list-style-image: url("chrome://browser/skin/images/next-hdpi.png");
+  box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@;
+}
+
+/* Find Helper ------------------------------------------------------------- */
+#content-navigator[type="find"] > .previous-button {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  -moz-margin-start: 0;
+}
+
+#content-navigator:not([type="find"]) > #find-helper-textbox {
+  display: none;
+}
+
+#find-helper-textbox {
+  opacity: 0.9;
+  pointer-events: auto;
+  margin: @margin_normal@;
+  -moz-margin-end: 0;
+  padding: @padding_xnormal@;
+  border-radius: @border_radius_normal@;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border: @border_width_small@ solid white !important;
+  box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@;
+  width: 10em;
+}
+
+#find-helper-textbox[status="1"] { /* Ci.nsITypeAheadFind.FIND_NOTFOUND */
+  background: rgb(255,200,200);
+}
+
+/* Form Helper Autofill ---------------------------------------------------- */
+#form-helper-suggestions-container .panel-arrowcontent {
+  border-radius: @border_radius_normal@;
+  padding: 0; /* half core spacing & none (autorepeat arrows compensate) */
+  background-color: rgb(235,235,235);
+  background-image: url("chrome://browser/skin/images/button-bg.png");
+}
+
+#form-helper-suggestions {
+  margin: 0;
+  color: black;
+}
+
+#form-helper-suggestions > .autorepeatbutton-down,
+#form-helper-suggestions > .autorepeatbutton-up {
+  border: none;
+}
+
+#form-helper-suggestions > .autorepeatbutton-down {
+  list-style-image: url("chrome://browser/skin/images/arrowright-16.png");
+}
+
+#form-helper-suggestions > .autorepeatbutton-down:-moz-locale-dir(rtl) {
+  list-style-image: url("chrome://browser/skin/images/arrowleft-16.png");
+}
+
+#form-helper-suggestions > .autorepeatbutton-up {
+  list-style-image: url("chrome://browser/skin/images/arrowleft-16.png");
+}
+
+#form-helper-suggestions > .autorepeatbutton-up:-moz-locale-dir(rtl) {
+  list-style-image: url("chrome://browser/skin/images/arrowright-16.png");
+}
+
+/* force the autorepeat buttons to create a 'padding' when collapsed */
+#form-helper-suggestions > autorepeatbutton[collapsed="true"],
+#form-helper-suggestions > autorepeatbutton[disabled="true"] {
+  visibility: hidden;
+}
+
+#form-helper-suggestions .form-helper-suggestions-label {
+  padding: @padding_xxnormal@ @padding_normal@; /* 12px helps get row size for the labels */
+  margin: 0;
+  border-color: transparent rgb(215,215,215) transparent rgb(255,255,255);
+  border-style: solid;
+  border-width: @border_width_tiny@;
+}
+
+#form-helper-suggestions .form-helper-suggestions-label:first-child {
+  -moz-padding-start: -moz-initial; /* the arrowscrollbox creates enough left padding */
+  -moz-border-start: none;
+}
+
+#form-helper-suggestions .form-helper-suggestions-label:last-child {
+  -moz-border-end: none;
+}
+
+#form-helper-suggestions .form-helper-suggestions-label:hover:active {
+  background-color: #8db8d8;
+}
+
+/* Select popup ------------------------------------------------------------- */
+#select-container button {
+  display: none;
+  -moz-user-focus: ignore;
+  -moz-user-select: none;
+}
+
+#select-container[multiple="true"] button {
+  display: -moz-box;
+}
+
+#select-commands {
+  background: transparent;
+  border-top: @border_width_tiny@ solid rgb(205,205,205);
+  padding: 0;
+  -moz-user-focus: ignore;
+}
+
+/* Common style for Select & Menulist -------------------------------------- */
+.options-title {
+  padding: @padding_xxnormal@ @padding_small@ @padding_small@ @padding_small@;
+  font-size: @font_small@;
+  text-align: center;
+}
+
+.options-title[value=""] {
+  display: none;
+}
+
+.option-command image {
+  width: 30px;
+  height: 30px;
+  margin: @margin_tiny@;
+}
+
+.option-command[selected="true"] image {
+  list-style-image: url("chrome://browser/skin/images/check-30.png");
+}
+
+.option-command.optgroup {
+  font-weight: bold;
+  font-style: italic;
+}
+
+.option-command .in-optgroup {
+  -moz-padding-start: -moz-calc(30px + @padding_large@);
+}
+
