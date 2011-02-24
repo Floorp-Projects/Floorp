@@ -685,9 +685,10 @@ class PrimitiveBehavior<double> {
  *
  *    This is a backward compatibility measure; see bug 634590.
  *
- * 4. Finally, obj is neither a declarative scope object to be censored, nor
- *    both the callee's global and not the caller's global object in which the
- *    unqualified invoked name was found. Bind |this| to obj->thisObject().
+ * 4. Finally, obj is neither a declarative scope object to be censored, nor a
+ *    global where the callee requires neither backward-compatible special care
+ *    nor future-proofing based on (explicit or imputed by Harmony in the proxy
+ *    case) strict mode opt-in. Bind |this| to obj->thisObject().
  *
  * We set *vp to undefined early to reduce code size and bias this code for the
  * common and future-friendly cases.
