@@ -1227,6 +1227,16 @@ nsSocketTransport::InitiateSocket()
             }
         }
         //
+        // A SOCKS request was rejected; get the actual error code from
+        // the OS error
+        //
+        else if (PR_UNKNOWN_ERROR == code &&
+                 mProxyTransparent &&
+                 !mProxyHost.IsEmpty()) {
+            code = PR_GetOSError();
+            rv = ErrorAccordingToNSPR(code);
+        }
+        //
         // The connection was refused...
         //
         else {
@@ -1549,7 +1559,16 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, PRInt16 outFlags)
                 mPollFlags = (PR_POLL_EXCEPT | PR_POLL_WRITE);
                 // Update poll timeout in case it was changed
                 mPollTimeout = mTimeouts[TIMEOUT_CONNECT];
-            } 
+            }
+            //
+            // The SOCKS proxy rejected our request. Find out why.
+            //
+            else if (PR_UNKNOWN_ERROR == code &&
+                     mProxyTransparent &&
+                     !mProxyHost.IsEmpty()) {
+                code = PR_GetOSError();
+                mCondition = ErrorAccordingToNSPR(code);
+            }
             else {
                 //
                 // else, the connection failed...
