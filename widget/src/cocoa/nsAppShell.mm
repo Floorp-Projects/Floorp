@@ -61,8 +61,11 @@
 #include "nsCocoaUtils.h"
 #include "nsChildView.h"
 #include "nsToolkit.h"
+#include "TextInputHandler.h"
 
 #include "npapi.h"
+
+using namespace mozilla::widget;
 
 // defined in nsChildView.mm
 extern nsIRollupListener * gRollupListener;
@@ -337,7 +340,7 @@ nsAppShell::Init()
   rv = nsBaseAppShell::Init();
 
 #ifndef NP_NO_CARBON
-  NS_InstallPluginKeyEventsHandler();
+  TextInputHandler::InstallPluginKeyEventsHandler();
 #endif
 
   gCocoaAppModalWindowList = new nsCocoaAppModalWindowList;
@@ -792,7 +795,7 @@ nsAppShell::Exit(void)
   gCocoaAppModalWindowList = NULL;
 
 #ifndef NP_NO_CARBON
-  NS_RemovePluginKeyEventsHandler();
+  TextInputHandler::RemovePluginKeyEventsHandler();
 #endif
 
   // Quoting from Apple's doc on the [NSApplication stop:] method (from their

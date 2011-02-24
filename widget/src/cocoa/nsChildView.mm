@@ -171,10 +171,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 - (void)setPluginDrawingModel:(NPDrawingModel)drawingModel;
 - (NPDrawingModel)pluginDrawingModel;
 
-#ifndef NP_NO_CARBON
-- (void)setPluginTSMInComposition:(BOOL)inComposition;
-#endif
-
 - (BOOL)isRectObscuredBySubview:(NSRect)inRect;
 
 - (void)processPendingRedraws;
@@ -358,13 +354,7 @@ nsresult nsChildView::Create(nsIWidget *aParent,
     nsToolkit::SwizzleMethods([NSView class], @selector(mouseDownCanMoveWindow),
                               @selector(nsChildView_NSView_mouseDownCanMoveWindow));
 #ifndef NP_NO_CARBON
-    Class IMKInputSessionClass = ::NSClassFromString(@"IMKInputSession");
-    nsToolkit::SwizzleMethods(IMKInputSessionClass, @selector(handleEvent:),
-                              @selector(nsChildView_IMKInputSession_handleEvent:));
-    nsToolkit::SwizzleMethods(IMKInputSessionClass, @selector(commitComposition),
-                              @selector(nsChildView_IMKInputSession_commitComposition));
-    nsToolkit::SwizzleMethods(IMKInputSessionClass, @selector(finishSession),
-                              @selector(nsChildView_IMKInputSession_finishSession));
+    TextInputHandler::SwizzleMethods();
 #endif
     gChildViewMethodsSwizzled = PR_TRUE;
   }
@@ -1245,8 +1235,7 @@ NS_IMETHODIMP nsChildView::SetPluginDrawingModel(int inDrawingModel)
 
 NS_IMETHODIMP nsChildView::StartComplexTextInputForCurrentEvent()
 {
-  [(ChildView*)mView pluginRequestsComplexTextInputForCurrentEvent];
-  return NS_OK;
+  return mTextInputHandler->StartComplexTextInputForCurrentEvent();
 }
 
 nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
@@ -2071,14 +2060,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mClickThroughMouseDownEvent = nil;
     mDragService = nsnull;
 
-#ifndef NP_NO_CARBON
-    mPluginTSMDoc = nil;
-    mPluginTSMInComposition = NO;
-#endif
-    mPluginComplexTextInputRequested = NO;
-
-    mIgnoreNextKeyUpEvent = NO;
-
     mGestureState = eGestureState_None;
     mCumulativeMagnification = 0.0;
     mCumulativeRotation = 0.0;
@@ -2171,10 +2152,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   [mLastMouseDownEvent release];
   [mClickThroughMouseDownEvent release];
   ChildViewMouseTracker::OnDestroyView(self);
-#ifndef NP_NO_CARBON
-  if (mPluginTSMDoc)
-    ::DeleteTSMDocument(mPluginTSMDoc);
-#endif
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
@@ -2404,13 +2381,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 {
   return mPluginDrawingModel;
 }
-
-#ifndef NP_NO_CARBON
-- (void)setPluginTSMInComposition:(BOOL)inComposition
-{
-  mPluginTSMInComposition = inComposition;
-}
-#endif
 
 - (void)sendFocusEvent:(PRUint32)eventType
 {
@@ -3844,33 +3814,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-static void ConvertCocoaKeyEventToNPCocoaEvent(NSEvent* cocoaEvent, NPCocoaEvent& pluginEvent, PRUint32 keyType = 0)
-{
-  InitNPCocoaEvent(&pluginEvent);
-  NSEventType nativeType = [cocoaEvent type];
-  switch (nativeType) {
-    case NSKeyDown:
-      pluginEvent.type = NPCocoaEventKeyDown;
-      break;
-    case NSKeyUp:
-      pluginEvent.type = NPCocoaEventKeyUp;
-      break;
-    case NSFlagsChanged:
-      pluginEvent.type = NPCocoaEventFlagsChanged;
-      break;
-    default:
-      printf("Asked to convert key event of unknown type to Cocoa plugin event!");
-  }
-  pluginEvent.data.key.modifierFlags = [cocoaEvent modifierFlags];
-  pluginEvent.data.key.keyCode = [cocoaEvent keyCode];
-  // don't try to access character data for flags changed events, it will raise an exception
-  if (nativeType != NSFlagsChanged) {
-    pluginEvent.data.key.characters = (NPNSString*)[cocoaEvent characters];
-    pluginEvent.data.key.charactersIgnoringModifiers = (NPNSString*)[cocoaEvent charactersIgnoringModifiers];
-    pluginEvent.data.key.isARepeat = [cocoaEvent isARepeat];
-  }
-}
-
 // Basic conversion for cocoa to gecko events, common to all conversions.
 // Note that it is OK for inEvent to be nil.
 - (void) convertGenericCocoaEvent:(NSEvent*)inEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent
@@ -3912,127 +3855,6 @@ static void ConvertCocoaKeyEventToNPCocoaEvent(NSEvent* cocoaEvent, NPCocoaEvent
   outGeckoEvent->refPoint.y = static_cast<nscoord>(localPoint.y);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-#ifndef NP_NO_CARBON
-// Called from PluginKeyEventsHandler() (a handler for Carbon TSM events) to
-// process a Carbon key event for the currently focused plugin.  Both Unicode
-// characters and "Mac encoding characters" (in the MBCS or "multibyte
-// character system") are (or should be) available from aKeyEvent, but here we
-// use the MCBS characters.  This is how the WebKit does things, and seems to
-// be what plugins expect.
-- (void) processPluginKeyEvent:(EventRef)aKeyEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (!mGeckoChild)
-    return;
-
-  if (mPluginEventModel == NPEventModelCocoa) {
-    UInt32 size;
-    OSStatus status = ::GetEventParameter(aKeyEvent, kEventParamKeyUnicodes, typeUnicodeText, NULL, 0, &size, NULL);
-    if (status != noErr)
-      return;
-
-    UniChar* chars = (UniChar*)malloc(size);
-    if (!chars)
-      return;
-
-    status = ::GetEventParameter(aKeyEvent, kEventParamKeyUnicodes, typeUnicodeText, NULL, size, NULL, chars);
-    if (status != noErr) {
-      free(chars);
-      return;
-    }
-
-    CFStringRef text = ::CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault, chars, (size / sizeof(UniChar)), kCFAllocatorNull);
-    if (!text) {
-      free(chars);
-      return;
-    }
-
-    NPCocoaEvent cocoaTextEvent;
-    InitNPCocoaEvent(&cocoaTextEvent);
-    cocoaTextEvent.type = NPCocoaEventTextInput;
-    cocoaTextEvent.data.text.text = (NPNSString*)text;
-
-    nsPluginEvent pluginEvent(PR_TRUE, NS_PLUGIN_INPUT_EVENT, mGeckoChild);
-    InitPluginEvent(pluginEvent, cocoaTextEvent);
-    mGeckoChild->DispatchWindowEvent(pluginEvent);
-
-    ::CFRelease(text);
-    free(chars);
-
-    return;
-  }
-
-  nsAutoRetainCocoaObject kungFuDeathGrip(self);
-
-  UInt32 numCharCodes;
-  OSStatus status = ::GetEventParameter(aKeyEvent, kEventParamKeyMacCharCodes,
-                                        typeChar, NULL, 0, &numCharCodes, NULL);
-  if (status != noErr)
-    return;
-
-  nsAutoTArray<unsigned char, 3> charCodes;
-  charCodes.SetLength(numCharCodes);
-  status = ::GetEventParameter(aKeyEvent, kEventParamKeyMacCharCodes,
-                               typeChar, NULL, numCharCodes, NULL, charCodes.Elements());
-  if (status != noErr)
-    return;
-
-  UInt32 modifiers;
-  status = ::GetEventParameter(aKeyEvent, kEventParamKeyModifiers,
-                               typeUInt32, NULL, sizeof(modifiers), NULL, &modifiers);
-  if (status != noErr)
-    return;
-
-  UInt32 macKeyCode;
-  status = ::GetEventParameter(aKeyEvent, kEventParamKeyCode,
-                               typeUInt32, NULL, sizeof(macKeyCode), NULL, &macKeyCode);
-  if (status != noErr)
-    return;
-
-  EventRef cloneEvent = ::CopyEvent(aKeyEvent);
-  for (unsigned int i = 0; i < numCharCodes; ++i) {
-    status = ::SetEventParameter(cloneEvent, kEventParamKeyMacCharCodes,
-                                 typeChar, 1, charCodes.Elements() + i);
-    if (status != noErr)
-      break;
-
-    EventRecord eventRec;
-    if (::ConvertEventRefToEventRecord(cloneEvent, &eventRec)) {
-      nsKeyEvent keyDownEvent(PR_TRUE, NS_KEY_DOWN, mGeckoChild);
-
-      PRUint32 keyCode = TextInputHandler::ComputeGeckoKeyCode(macKeyCode, @"");
-      PRUint32 charCode(charCodes.ElementAt(i));
-
-      keyDownEvent.time       = PR_IntervalNow();
-      keyDownEvent.pluginEvent  = &eventRec;
-      if (TextInputHandler::IsSpecialGeckoKey(macKeyCode)) {
-        keyDownEvent.keyCode  = keyCode;
-      } else {
-        keyDownEvent.charCode = charCode;
-        keyDownEvent.isChar   = PR_TRUE;
-      }
-      keyDownEvent.isShift   = ((modifiers & shiftKey) != 0);
-      keyDownEvent.isControl = ((modifiers & controlKey) != 0);
-      keyDownEvent.isAlt     = ((modifiers & optionKey) != 0);
-      keyDownEvent.isMeta    = ((modifiers & cmdKey) != 0); // Should never happen
-      mGeckoChild->DispatchWindowEvent(keyDownEvent);
-      if (!mGeckoChild)
-        break;
-    }
-  }
-
-  ::ReleaseEvent(cloneEvent);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-#endif // NP_NO_CARBON
-
-- (void)pluginRequestsComplexTextInputForCurrentEvent
-{
-  mPluginComplexTextInputRequested = YES;
 }
 
 
@@ -4228,38 +4050,6 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 }
 #endif
 
-#ifndef NP_NO_CARBON
-// Create a TSM document for use with plugins, so that we can support IME in
-// them.  Once it's created, if need be (re)activate it.  Some plugins (e.g.
-// the Flash plugin running in Camino) don't create their own TSM document --
-// without which IME can't work.  Others (e.g. the Flash plugin running in
-// Firefox) create a TSM document that (somehow) makes the input window behave
-// badly when it contains more than one kind of input (say Hiragana and
-// Romaji).  (We can't just use the per-NSView TSM documents that Cocoa
-// provides (those created and managed by the NSTSMInputContext class) -- for
-// some reason TSMProcessRawKeyEvent() doesn't work with them.)
-- (void)activatePluginTSMDoc
-{
-  if (!mPluginTSMDoc) {
-    // Create a TSM document that supports both non-Unicode and Unicode input.
-    // Though [ChildView processPluginKeyEvent:] only sends Mac char codes to
-    // the plugin, this makes the input window behave better when it contains
-    // more than one kind of input (say Hiragana and Romaji).  This is what
-    // the OS does when it creates a TSM document for use by an
-    // NSTSMInputContext class.
-    InterfaceTypeList supportedServices;
-    supportedServices[0] = kTextServiceDocumentInterfaceType;
-    supportedServices[1] = kUnicodeDocumentInterfaceType;
-    ::NewTSMDocument(2, supportedServices, &mPluginTSMDoc, 0);
-    // We'll need to use the "input window".
-    ::UseInputWindow(mPluginTSMDoc, YES);
-    ::ActivateTSMDocument(mPluginTSMDoc);
-  } else if (::TSMGetActiveDocument() != mPluginTSMDoc) {
-    ::ActivateTSMDocument(mPluginTSMDoc);
-  }
-}
-#endif // NP_NO_CARBON
-
 // This is a private API that Cocoa uses.
 // Cocoa will call this after the menu system returns "NO" for "performKeyEquivalent:".
 // We want all they key events we can get so just return YES. In particular, this fixes
@@ -4269,140 +4059,13 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   return YES;
 }
 
-- (BOOL)inCocoaPluginComposition
-{
-#ifdef NP_NO_CARBON
-  return [[ComplexTextInputPanel sharedComplexTextInputPanel] inComposition];
-#else
-  return mPluginTSMInComposition;
-#endif
-}
-
-- (void)sendCocoaNPAPITextEvent:(NSString*)string
-{
-  NPCocoaEvent cocoaTextEvent;
-  InitNPCocoaEvent(&cocoaTextEvent);
-  cocoaTextEvent.type = NPCocoaEventTextInput;
-  cocoaTextEvent.data.text.text = (NPNSString*)string;
-
-  nsPluginEvent pluginEvent(PR_TRUE, NS_PLUGIN_INPUT_EVENT, mGeckoChild);
-  InitPluginEvent(pluginEvent, cocoaTextEvent);
-  mGeckoChild->DispatchWindowEvent(pluginEvent);
-}
-
 - (void)keyDown:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (mGeckoChild && mIsPluginView) {
-#ifdef NP_NO_CARBON
-    if (mPluginEventModel == NPEventModelCocoa) {
-      ComplexTextInputPanel* ctiPanel = [ComplexTextInputPanel sharedComplexTextInputPanel];
-
-      // If a composition is in progress then simply let the input panel continue it.
-      if ([self inCocoaPluginComposition]) {
-        // Don't send key up events for key downs associated with compositions.
-        mIgnoreNextKeyUpEvent = YES;
-
-        NSString* textString = nil;
-        [ctiPanel interpretKeyEvent:theEvent string:&textString];
-        if (textString) {
-          [self sendCocoaNPAPITextEvent:textString];
-        }
-
-        return;
-      }
-
-      // Reset complex text input request flag.
-      mPluginComplexTextInputRequested = NO;
-
-      // Send key down event to the plugin.
-      nsPluginEvent pluginEvent(PR_TRUE, NS_PLUGIN_INPUT_EVENT, mGeckoChild);
-      NPCocoaEvent cocoaEvent;
-      ConvertCocoaKeyEventToNPCocoaEvent(theEvent, cocoaEvent);
-      InitPluginEvent(pluginEvent, cocoaEvent);
-      mGeckoChild->DispatchWindowEvent(pluginEvent);
-      if (!mGeckoChild) {
-        return;
-      }
-
-      // Start complex text composition if requested.
-      if (mPluginComplexTextInputRequested) {
-        // Don't send key up events for key downs associated with compositions.
-        mIgnoreNextKeyUpEvent = YES;
-
-        NSString* textString = nil;
-        [ctiPanel interpretKeyEvent:theEvent string:&textString];
-        if (textString) {
-          [self sendCocoaNPAPITextEvent:textString];
-        }
-
-        return;
-      }
-
-      // Nothing else to do for Cocoa NPAPI plugins.
-      return;
-    }
-#endif
-
-#ifndef NP_NO_CARBON
-    BOOL wasInComposition = NO;
-    if (mPluginEventModel == NPEventModelCocoa) {
-      if ([self inCocoaPluginComposition]) {
-        wasInComposition = YES;
-
-        // Don't send key up events for key downs associated with compositions.
-        mIgnoreNextKeyUpEvent = YES;
-      }
-      else {
-        // Reset complex text input request flag.
-        mPluginComplexTextInputRequested = NO;
-
-        // Send key down event to the plugin.
-        nsPluginEvent pluginEvent(PR_TRUE, NS_PLUGIN_INPUT_EVENT, mGeckoChild);
-        NPCocoaEvent cocoaEvent;
-        ConvertCocoaKeyEventToNPCocoaEvent(theEvent, cocoaEvent);
-        InitPluginEvent(pluginEvent, cocoaEvent);
-        mGeckoChild->DispatchWindowEvent(pluginEvent);
-        if (!mGeckoChild) {
-          return;
-        }
-
-        // Only continue if plugin wants complex text input.
-        if (mPluginComplexTextInputRequested) {
-          // Don't send key up events for key downs associated with compositions.
-          mIgnoreNextKeyUpEvent = YES;
-        }
-        else {
-          return;
-        }
-      }
-
-      // Don't send complex text input to a plugin in Cocoa event mode if
-      // either the Control key or the Command key is pressed -- even if the
-      // plugin has requested it, or we are already in IME composition.  This
-      // conforms to our behavior in 64-bit mode and fixes bug 619217.
-      NSUInteger modifierFlags = [theEvent modifierFlags];
-      if ((modifierFlags & NSControlKeyMask) || (modifierFlags & NSCommandKeyMask)) {
-        return;
-      }
-    }
-
-    // This will take care of all Carbon plugin events and also send Cocoa plugin
-    // text events when NSInputContext is not available (ifndef NP_NO_CARBON).
-    [self activatePluginTSMDoc];
-    // We use the active TSM document to pass a pointer to ourselves (the
-    // currently focused ChildView) to PluginKeyEventsHandler().  Because this
-    // pointer is weak, we should retain and release ourselves around the call
-    // to TSMProcessRawKeyEvent().
-    nsAutoRetainCocoaObject kungFuDeathGrip(self);
-    ::TSMSetDocumentProperty(mPluginTSMDoc, kFocusedChildViewTSMDocPropertyTag,
-                             sizeof(ChildView *), &self);
-    ::TSMProcessRawKeyEvent([theEvent _eventRef]);
-    ::TSMRemoveDocumentProperty(mPluginTSMDoc, kFocusedChildViewTSMDocPropertyTag);
-
+    mTextInputHandler->HandleKeyDownEventForPlugin(theEvent);
     return;
-#endif
   }
 
   PRBool handled = [self processKeyDownEvent:theEvent];
@@ -4434,61 +4097,15 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   if (!mGeckoChild || !mTextInputHandler)
     return;
 
-  if (mIgnoreNextKeyUpEvent) {
-    mIgnoreNextKeyUpEvent = NO;
+  if (mTextInputHandler->DoesIgnoreNextKeyUpEvent()) {
+    mTextInputHandler->ResetIgnoreNextKeyUpEvent();
     return;
   }
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   if (mIsPluginView) {
-    if (mPluginEventModel == NPEventModelCocoa) {
-      // Don't send key up events to Cocoa plugins during composition.
-      if ([self inCocoaPluginComposition]) {
-        return;
-      }
-
-      nsKeyEvent keyUpEvent(PR_TRUE, NS_KEY_UP, mGeckoChild);
-      mTextInputHandler->InitKeyEvent(theEvent, keyUpEvent);
-      NPCocoaEvent pluginEvent;
-      ConvertCocoaKeyEventToNPCocoaEvent(theEvent, pluginEvent);
-      keyUpEvent.pluginEvent = &pluginEvent;
-      mGeckoChild->DispatchWindowEvent(keyUpEvent);
-    }
-#ifndef NP_NO_CARBON
-    if (mPluginEventModel == NPEventModelCarbon) {
-      // I'm not sure the call to TSMProcessRawKeyEvent() is needed here (though
-      // WebKit makes one).
-      ::TSMProcessRawKeyEvent([theEvent _eventRef]);
-      
-      // Don't send a keyUp event if the corresponding keyDown event(s) is/are
-      // still being processed (idea borrowed from WebKit).
-      ChildView *keyDownTarget = nil;
-      OSStatus status = ::TSMGetDocumentProperty(mPluginTSMDoc, kFocusedChildViewTSMDocPropertyTag,
-                                                 sizeof(ChildView *), nil, &keyDownTarget);
-      if (status != noErr)
-        keyDownTarget = nil;
-      if (keyDownTarget == self)
-        return;
-      
-      // PluginKeyEventsHandler() never sends keyUp events to [ChildView
-      // processPluginKeyEvent:], so we need to send them to Gecko here.  (This
-      // means that when commiting text from IME, several keyDown events may be
-      // sent to Gecko (in processPluginKeyEvent) for one keyUp event here.
-      // But this is how the WebKit does it, and games expect a keyUp event to
-      // be sent when it actually happens (they need to be able to detect how
-      // long a key has been held down) -- which wouldn't be possible if we sent
-      // them from processPluginKeyEvent.)
-      nsKeyEvent keyUpEvent(PR_TRUE, NS_KEY_UP, mGeckoChild);
-      mTextInputHandler->InitKeyEvent(theEvent, keyUpEvent);
-      EventRecord macKeyUpEvent;
-      TextInputHandler::ConvertCocoaKeyEventToCarbonEvent(theEvent,
-                                                          macKeyUpEvent,
-                                                          PR_FALSE);
-      keyUpEvent.pluginEvent = &macKeyUpEvent;
-      mGeckoChild->DispatchWindowEvent(keyUpEvent);      
-    }
-#endif
+    mTextInputHandler->HandleKeyUpEventForPlugin(theEvent);
     return;
   }
 
@@ -4609,7 +4226,8 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
     }
 #endif
     if (mPluginEventModel == NPEventModelCocoa) {
-      ConvertCocoaKeyEventToNPCocoaEvent(theEvent, cocoaEvent, message);
+      TextInputHandler::ConvertCocoaKeyEventToNPCocoaEvent(theEvent,
+                                                           cocoaEvent);
       geckoEvent.pluginEvent = &cocoaEvent;
     }
   }
@@ -5568,140 +5186,6 @@ ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEvent,
 }
 
 #pragma mark -
-
-#ifndef NP_NO_CARBON
-
-// Target for text services events sent as the result of calls made to
-// TSMProcessRawKeyEvent() in [ChildView keyDown:] (above) when a plugin has
-// the focus.  The calls to TSMProcessRawKeyEvent() short-circuit Cocoa-based
-// IME (which would otherwise interfere with our efforts) and allow Carbon-
-// based IME to work in plugins (via the NPAPI).  This strategy doesn't cause
-// trouble for plugins that (like the Java Embedding Plugin) bypass the NPAPI
-// to get their keyboard events and do their own Cocoa-based IME.
-OSStatus PluginKeyEventsHandler(EventHandlerCallRef inHandlerRef,
-                                EventRef inEvent, void *userData)
-{
-  nsAutoreleasePool localPool;
-
-  TSMDocumentID activeDoc = ::TSMGetActiveDocument();
-  if (!activeDoc) {
-    return eventNotHandledErr;
-  }
-
-  ChildView *target = nil;
-  OSStatus status = ::TSMGetDocumentProperty(activeDoc, kFocusedChildViewTSMDocPropertyTag,
-                                             sizeof(ChildView *), nil, &target);
-  if (status != noErr)
-    target = nil;
-  if (!target) {
-    return eventNotHandledErr;
-  }
-
-  EventRef keyEvent = NULL;
-  status = ::GetEventParameter(inEvent, kEventParamTextInputSendKeyboardEvent,
-                               typeEventRef, NULL, sizeof(EventRef), NULL, &keyEvent);
-  if ((status != noErr) || !keyEvent) {
-    return eventNotHandledErr;
-  }
-
-  [target processPluginKeyEvent:keyEvent];
-
-  return noErr;
-}
-
-static EventHandlerRef gPluginKeyEventsHandler = NULL;
-
-// Called from nsAppShell::Init()
-void NS_InstallPluginKeyEventsHandler()
-{
-  if (gPluginKeyEventsHandler)
-    return;
-  static const EventTypeSpec sTSMEvents[] =
-    { { kEventClassTextInput, kEventTextInputUnicodeForKeyEvent } };
-  ::InstallEventHandler(::GetEventDispatcherTarget(),
-                        ::NewEventHandlerUPP(PluginKeyEventsHandler),
-                        GetEventTypeCount(sTSMEvents),
-                        sTSMEvents,
-                        NULL,
-                        &gPluginKeyEventsHandler);
-}
-
-// Called from nsAppShell::Exit()
-void NS_RemovePluginKeyEventsHandler()
-{
-  if (!gPluginKeyEventsHandler)
-    return;
-  ::RemoveEventHandler(gPluginKeyEventsHandler);
-  gPluginKeyEventsHandler = NULL;
-}
-
-// IMKInputSession is an undocumented class in the HIToolbox framework.  It's
-// present on both Leopard and SnowLeopard, and is used at a low level to
-// process IME input regardless of which high-level API is used (Text Services
-// Manager or Cocoa).  It works the same way in both 32-bit and 64-bit code.
-@interface NSObject (IMKInputSessionMethodSwizzling)
-- (BOOL)nsChildView_IMKInputSession_handleEvent:(EventRef)theEvent;
-- (void)nsChildView_IMKInputSession_commitComposition;
-- (void)nsChildView_IMKInputSession_finishSession;
-@end
-
-@implementation NSObject (IMKInputSessionMethodSwizzling)
-
-- (BOOL)nsChildView_IMKInputSession_handleEvent:(EventRef)theEvent
-{
-  [self retain];
-  BOOL retval = [self nsChildView_IMKInputSession_handleEvent:theEvent];
-  NSUInteger retainCount = [self retainCount];
-  [self release];
-  // Return without doing anything if we've been deleted.
-  if (retainCount == 1) {
-    return retval;
-  }
-
-  NSWindow *mainWindow = [NSApp mainWindow];
-  NSResponder *firstResponder = [mainWindow firstResponder];
-  if (![firstResponder isKindOfClass:[ChildView class]]) {
-    return retval;
-  }
-
-  // 'charactersEntered' is the length (in bytes) of currently "marked text"
-  // -- text that's been entered in IME but not yet committed.  If it's
-  // non-zero we're composing text in an IME session; if it's zero we're
-  // not in an IME session.
-  NSInteger charactersEntered = 0;
-  object_getInstanceVariable(self, "charactersEntered", (void **) &charactersEntered);
-  [(ChildView*)firstResponder setPluginTSMInComposition:(charactersEntered != 0)];
-
-  return retval;
-}
-
-// This method is called whenever IME input is committed as a result of an
-// "abnormal" termination -- for example when changing the keyboard focus from
-// one input field to another.
-- (void)nsChildView_IMKInputSession_commitComposition
-{
-  NSWindow *mainWindow = [NSApp mainWindow];
-  NSResponder *firstResponder = [mainWindow firstResponder];
-  if ([firstResponder isKindOfClass:[ChildView class]]) {
-    [(ChildView*)firstResponder setPluginTSMInComposition:NO];
-  }
-  [self nsChildView_IMKInputSession_commitComposition];
-}
-
-// This method is called just before we're deallocated.
-- (void)nsChildView_IMKInputSession_finishSession
-{
-  NSWindow *mainWindow = [NSApp mainWindow];
-  NSResponder *firstResponder = [mainWindow firstResponder];
-  if ([firstResponder isKindOfClass:[ChildView class]]) {
-    [(ChildView*)firstResponder setPluginTSMInComposition:NO];
-  }
-  [self nsChildView_IMKInputSession_finishSession];
-}
-
-@end
-
-#endif // NP_NO_CARBON
 
 @interface NSView (MethodSwizzling)
 - (BOOL)nsChildView_NSView_mouseDownCanMoveWindow;
