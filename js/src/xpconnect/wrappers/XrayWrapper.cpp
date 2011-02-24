@@ -536,8 +536,7 @@ XrayWrapper<Base>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid 
                 return false;
         }
 
-        if (desc->obj)
-            desc->obj = wrapper;
+        desc->obj = wrapper;
         return cx->compartment->wrap(cx, desc_in);
     }
 
