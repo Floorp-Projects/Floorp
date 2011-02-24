@@ -882,6 +882,12 @@ public:
         return const_cast<WebGLTexture*>(this)->ImageInfoAt(level, face);
     }
 
+    PRBool HasImageInfoAt(size_t level, size_t face) const {
+        return level <= mMaxLevelWithCustomImages &&
+               face < mFacesCount &&
+               ImageInfoAt(level, 0).mIsDefined;
+    }
+
     static size_t FaceForTarget(WebGLenum target) {
         return target == LOCAL_GL_TEXTURE_2D ? 0 : target - LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
     }
