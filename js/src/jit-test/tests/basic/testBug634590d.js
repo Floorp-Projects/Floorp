@@ -3,7 +3,11 @@ var sb = evalcx('');
 sb.name = "inner";
 sb.parent = this;
 this.f = function name(outer) {
-    if (outer) return name(false);
+    if (outer) {
+        return function () {
+            return name(false);
+        }();
+    }
     return this.name;
 }
 assertEq(evalcx('this.f = parent.f;\n' +
