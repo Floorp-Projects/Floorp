@@ -737,6 +737,10 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
     if (level < 0)
         return ErrorInvalidValue("copyTexImage2D: level may not be negative");
 
+    WebGLsizei maxTextureSize = MaxTextureSizeForTarget(target);
+    if (!(maxTextureSize >> level))
+        return ErrorInvalidValue("copyTexImage2D: 2^level exceeds maximum texture size");
+
     if (level >= 1) {
         if (!(is_pot_assuming_nonnegative(width) &&
               is_pot_assuming_nonnegative(height)))
@@ -789,6 +793,10 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
 
     if (level < 0)
         return ErrorInvalidValue("copyTexSubImage2D: level may not be negative");
+
+    WebGLsizei maxTextureSize = MaxTextureSizeForTarget(target);
+    if (!(maxTextureSize >> level))
+        return ErrorInvalidValue("copyTexSubImage2D: 2^level exceeds maximum texture size");
 
     if (width < 0 || height < 0)
         return ErrorInvalidValue("copyTexSubImage2D: width and height may not be negative");
@@ -3948,12 +3956,12 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
     if (format != internalformat)
         return ErrorInvalidOperation("texImage2D: format does not match internalformat");
 
-    WebGLsizei maxTextureSize = target == LOCAL_GL_TEXTURE_2D ? mGLMaxTextureSize : mGLMaxCubeMapTextureSize;
+    WebGLsizei maxTextureSize = MaxTextureSizeForTarget(target);
 
     if (level < 0)
         return ErrorInvalidValue("texImage2D: level must be >= 0");
 
-    if ((1 << level) > maxTextureSize)
+    if (!(maxTextureSize >> level))
         return ErrorInvalidValue("texImage2D: 2^level exceeds maximum texture size");
 
     if (width < 0 || height < 0)
@@ -4131,12 +4139,12 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
             return ErrorInvalidEnumInfo("texSubImage2D: target", target);
     }
 
-    WebGLsizei maxTextureSize = target == LOCAL_GL_TEXTURE_2D ? mGLMaxTextureSize : mGLMaxCubeMapTextureSize;
+    WebGLsizei maxTextureSize = MaxTextureSizeForTarget(target);
 
     if (level < 0)
         return ErrorInvalidValue("texSubImage2D: level must be >= 0");
 
-    if ((1 << level) > maxTextureSize)
+    if (!(maxTextureSize >> level))
         return ErrorInvalidValue("texSubImage2D: 2^level exceeds maximum texture size");
 
     if (width < 0 || height < 0)
