@@ -2178,31 +2178,6 @@ ScriptPrologue(JSContext *cx, JSStackFrame *fp)
     return true;
 }
 
-static inline bool
-ComputeThis(JSContext *cx, JSObject *obj, const Value &funval, Value *vp)
-{
-    if (!funval.isObject() ||
-        (obj->isGlobal()
-         ? IsSafeForLazyThisCoercion(cx, &funval.toObject())
-         : IsCacheableNonGlobalScope(obj))) {
-        /*
-         * We can avoid computing 'this' eagerly and push the implicit 'this'
-         * value (undefined), as long the scope is cachable and we are not
-         * crossing into another scope (in which case lazy calculation of 'this'
-         * would pick up the new and incorrect scope). 'strict' functions are an
-         * exception. We don't want to eagerly calculate 'this' for them even if
-         * the callee is in a different scope.
-         */
-        *vp = UndefinedValue();
-        return true;
-    }
-
-    if (!(obj = obj->thisObject(cx)))
-        return false;
-    *vp = ObjectValue(*obj);
-    return true;
-}
-
 namespace js {
 
 JS_REQUIRES_STACK JS_NEVER_INLINE bool
@@ -4826,10 +4801,10 @@ BEGIN_CASE(JSOP_SETCALL)
 }
 END_CASE(JSOP_SETCALL)
 
-#define PUSH_THISV(cx, obj, funval)                                           \
+#define PUSH_IMPLICIT_THIS(cx, obj, funval)                                   \
     JS_BEGIN_MACRO                                                            \
         Value v;                                                              \
-        if (!ComputeThis(cx, obj, funval, &v))                                \
+        if (!ComputeImplicitThis(cx, obj, funval, &v))                        \
             goto error;                                                       \
         PUSH_COPY(v);                                                         \
     JS_END_MACRO                                                              \
@@ -4864,7 +4839,7 @@ BEGIN_CASE(JSOP_CALLNAME)
 
         JS_ASSERT(obj->isGlobal() || IsCacheableNonGlobalScope(obj));
         if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
-            PUSH_THISV(cx, obj, regs.sp[-1]);
+            PUSH_IMPLICIT_THIS(cx, obj, regs.sp[-1]);
         len = JSOP_NAME_LENGTH;
         DO_NEXT_OP(len);
     }
@@ -4902,7 +4877,7 @@ BEGIN_CASE(JSOP_CALLNAME)
 
     /* obj must be on the scope chain, thus not a function. */
     if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
-        PUSH_THISV(cx, obj, rval);
+        PUSH_IMPLICIT_THIS(cx, obj, rval);
 }
 END_CASE(JSOP_NAME)
 
@@ -6405,7 +6380,7 @@ BEGIN_CASE(JSOP_XMLNAME)
         goto error;
     regs.sp[-1] = rval;
     if (op == JSOP_CALLXMLNAME)
-        PUSH_THISV(cx, obj, rval);
+        PUSH_IMPLICIT_THIS(cx, obj, rval);
 }
 END_CASE(JSOP_XMLNAME)
 

@@ -610,11 +610,4 @@ js_fun_apply(JSContext *cx, uintN argc, js::Value *vp);
 extern JSBool
 js_fun_call(JSContext *cx, uintN argc, js::Value *vp);
 
-namespace js {
-
-bool
-IsSafeForLazyThisCoercion(JSContext *cx, JSObject *callee);
-
-}
-
 #endif /* jsfun_h___ */
