@@ -809,6 +809,9 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
         return ErrorInvalidOperation("copyTexSubImage2D: no texture bound to this target");
 
     WebGLint face = WebGLTexture::FaceForTarget(target);
+    if (!tex->HasImageInfoAt(level, face))
+        return ErrorInvalidOperation("copyTexSubImage2D: to texture image previously defined for this level and face");
+
     WebGLsizei texWidth = tex->ImageInfoAt(level, face).mWidth;
     WebGLsizei texHeight = tex->ImageInfoAt(level, face).mHeight;
 
