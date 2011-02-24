@@ -2368,6 +2368,7 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
         (*c)->propertyTree.unmarkShapes(cx);
 
     PropertyTree::dumpShapes(cx);
+    TIMESTAMP(sweepShapeEnd);
 
     /*
      * Destroy arenas after we finished the sweeping so finalizers can safely
@@ -2487,6 +2488,7 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
         (*c)->propertyTree.sweepShapes(cx);
 
     PropertyTree::dumpShapes(cx);
+    TIMESTAMP(sweepShapeEnd);
 
     SweepCompartments(cx, gckind);
 
