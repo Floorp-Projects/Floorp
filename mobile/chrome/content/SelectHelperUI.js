@@ -3,20 +3,36 @@
  *   Supports simultaneous selection of choices and group headers.
  */
 var SelectHelperUI = {
-  _list: null,
   _selectedIndexes: null,
+  _list: null,
 
-  get _panel() {
-    delete this._panel;
-    return this._panel = document.getElementById("select-container");
+  get _container() {
+    delete this._container;
+    return this._container = document.getElementById("select-container");
   },
 
-  show: function selectHelperShow(aList) {
+  get _listbox() {
+    delete this._listbox;
+    return this._listbox = document.getElementById("select-commands");
+  },
+
+  get _title() {
+    delete this._title;
+    return this._title = document.getElementById("select-title");
+  },
+
+  show: function selectHelperShow(aList, aTitle) {
+    if (this._list)
+      this.reset();
+
     this._list = aList;
 
-    this._container = document.getElementById("select-list");
+    // The element label is used as a title to give more context
+    this._title.value = aTitle || "";
     this._container.setAttribute("multiple", aList.multiple ? "true" : "false");
 
+    // Save already selected indexes to detect what has changed when a a new
+    // element is selected
     this._selectedIndexes = this._getSelectedIndexes();
     let firstSelected = null;
 
@@ -25,10 +41,18 @@ var SelectHelperUI = {
     let choices = aList.choices;
     for (let i = 0; i < choices.length; i++) {
       let choice = choices[i];
-      let item = document.createElement("option");
-      item.className = "chrome-select-option";
+      let item = document.createElement("listitem");
+
+      item.setAttribute("class", "option-command listitem-iconic prompt-button");
+      item.setAttribute("image", "");
+      item.setAttribute("flex", "1");
+      item.setAttribute("crop", "center");
       item.setAttribute("label", choice.text);
-      choice.disabled ? item.setAttribute("disabled", choice.disabled)
+
+      choice.selected ? item.setAttribute("selected", "true")
+                      : item.removeAttribute("selected");
+
+      choice.disabled ? item.setAttribute("disabled", "true")
                       : item.removeAttribute("disabled");
       fragment.appendChild(item);
 
@@ -48,62 +72,46 @@ var SelectHelperUI = {
         firstSelected = firstSelected || item;
       }
     }
-    this._container.appendChild(fragment);
-
-    this._panel.hidden = false;
-    this._panel.height = this._panel.getBoundingClientRect().height;
-
-    if (!this._docked)
-      BrowserUI.pushPopup(this, this._panel);
-
+    this._listbox.appendChild(fragment);
+    this._container.hidden = false;
+  
+    BrowserUI.pushPopup(this, this._container);
     this._scrollElementIntoView(firstSelected);
-
     this._container.addEventListener("click", this, false);
-    this._panel.addEventListener("overflow", this, true);
-  },
+    window.addEventListener("resize", this, true);
+    this.sizeToContent();
 
-  dock: function selectHelperDock(aContainer) {
-    aContainer.insertBefore(this._panel, aContainer.lastChild);
-    this.resize();
-    this._docked = true;
-  },
-
-  undock: function selectHelperUndock() {
-    let rootNode = Elements.stack;
-    rootNode.insertBefore(this._panel, rootNode.lastChild);
-    this._panel.style.maxHeight = "";
-    this._docked = false;
+    let evt = document.createEvent("UIEvents");
+    evt.initUIEvent("SelectUI", true, false, window, true);
+    window.dispatchEvent(evt);
   },
 
   reset: function selectHelperReset() {
     this._updateControl();
-    let empty = this._container.cloneNode(false);
-    this._container.parentNode.replaceChild(empty, this._container);
-    this._container = empty;
+    while (this._listbox.hasChildNodes())
+      this._listbox.removeChild(this._listbox.lastChild);
     this._list = null;
+    this._title.value = "";
     this._selectedIndexes = null;
-    this._panel.height = "";
+    BrowserUI.popPopup(this);
   },
 
-  resize: function selectHelperResize() {
-    this._panel.style.maxHeight = (window.innerHeight / 1.8) + "px";
+  sizeToContent: function selectHelperSizeToContent() {
+    this._container.firstChild.maxHeight = window.innerHeight * 0.75;
   },
 
-  hide: function selectHelperResize() {
+  hide: function selectHelperHide() {
     if (!this._list)
       return;
 
+    window.removeEventListener("resize", this, true);
     this._container.removeEventListener("click", this, false);
-    this._panel.removeEventListener("overflow", this, true);
-
-    this._panel.hidden = true;
-
-    if (this._docked)
-      this.undock();
-    else
-      BrowserUI.popPopup(this);
-
+    this._container.hidden = true;
     this.reset();
+
+    let evt = document.createEvent("UIEvents");
+    evt.initUIEvent("SelectUI", true, false, window, true);
+    window.dispatchEvent(evt);
   },
 
   unselectAll: function selectHelperUnselectAll() {
@@ -122,12 +130,19 @@ var SelectHelperUI = {
       return;
 
     let choices = this._list.choices;
-    for (let i = 0; i < this._container.childNodes.length; i++) {
-      let option = this._container.childNodes[i];
+    let children = this._listbox.childNodes;
+    for (let i = 0; i < children.length; i++) {
+      let option = children[i];
       if (option.optionIndex == aIndex) {
-        option.selected = true;
-        this._choices[i].selected = true;
-        this._scrollElementIntoView(option);
+        let choice = choices[i];
+        if (this._list.multiple) {
+          choice.selected = !choice.selected;
+          option.setAttribute("selected", choice.selected);
+        } else {
+          option.setAttribute("selected", "true");
+          choice.selected = true;
+          this._scrollElementIntoView(option);
+        }
         break;
       }
     }
@@ -155,7 +170,7 @@ var SelectHelperUI = {
     let index = -1;
     this._forEachOption(
       function(aItem, aIndex) {
-        if (aElement.optionIndex == aItem.optionIndex)
+        if (aItem.optionIndex == aElement.optionIndex)
           index = aIndex;
       }
     );
@@ -163,20 +178,19 @@ var SelectHelperUI = {
     if (index == -1)
       return;
 
-    let scrollBoxObject = this._container.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+    let scrollBoxObject = this._listbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
     let itemHeight = aElement.getBoundingClientRect().height;
-    let visibleItemsCount = this._container.boxObject.height / itemHeight;
+    let visibleItemsCount = this._listbox.boxObject.height / itemHeight;
     if ((index + 1) > visibleItemsCount) {
       let delta = Math.ceil(visibleItemsCount / 2);
       scrollBoxObject.scrollTo(0, ((index + 1) - delta) * itemHeight);
-    }
-    else {
+    } else {
       scrollBoxObject.scrollTo(0, 0);
     }
   },
 
   _forEachOption: function _selectHelperForEachOption(aCallback) {
-    let children = this._container.children;
+    let children = this._listbox.childNodes;
     for (let i = 0; i < children.length; i++) {
       let item = children[i];
       if (!item.hasOwnProperty("optionIndex"))
@@ -210,17 +224,23 @@ var SelectHelperUI = {
         let item = aEvent.target;
         if (item && item.hasOwnProperty("optionIndex")) {
           if (this._list.multiple) {
-            // Toggle the item state
-            item.selected = !item.selected;
-          }
-          else {
+            item.classList.toggle("selected");
+          } else {
             this.unselectAll();
 
             // Select the new one and update the control
-            item.selected = true;
+            item.classList.add("selected");
           }
-          this.onSelect(item.optionIndex, item.selected, !this._list.multiple);
+          this.onSelect(item.optionIndex, item.classList.contains("selected"), !this._list.multiple);
+        } else if (item == this._container) {
+          // The click is outside the listbox area, so we need to hide the list
+          // This is used instead of the popup mechanism otherwise the click
+          // will be dispatched while we want to inhibit it (I think)
+          this.hide();
         }
+        break;
+      case "resize":
+        this.sizeToContent();
         break;
     }
   },
@@ -234,12 +254,11 @@ var SelectHelperUI = {
     Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:ChoiceSelect", json);
 
     // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-button-element.html#the-select-element
+    // The list will be closed as soon as the user click if it is not multiple,
+    // while list with multiple choices have a button to close it
     if (!this._list.multiple) {
       this._updateControl();
-      // Update the selectedIndex so the field will fire a new change event if
-      // needed
-      this._selectedIndexes = [aIndex];
+      this.hide();
     }
-
   }
 };

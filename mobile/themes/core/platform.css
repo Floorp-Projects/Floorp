@@ -91,6 +91,7 @@ textbox.search-bar {
   border: @border_width_small@ solid rgba(0,0,0,0.4);
   background-color: #f9f9f9;
   background: url("chrome://browser/skin/images/textbox-bg.png") top left repeat-x;
+  background-size: 100% 100%; 
 }
 
 textbox[disabled="true"] {

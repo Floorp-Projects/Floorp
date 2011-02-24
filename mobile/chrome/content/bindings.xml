@@ -1477,13 +1477,10 @@
   </binding>
 
   <binding id="content-navigator">
-    <content pack="end">
-      <children includes="vbox"/>
-      <xul:hbox class="content-navigator-box panel-dark" pack="end">
-        <children includes="textbox|arrowscrollbox"/>
-        <xul:toolbarbutton anonid="previous-button" class="content-navigator-item previous-button" xbl:inherits="command=previous"/>
-        <xul:toolbarbutton anonid="next-button" class="content-navigator-item next-button" xbl:inherits="command=next"/>
-      </xul:hbox>
+    <content class="content-navigator-box" orient="horizontal" pack="end">
+      <children includes="textbox"/>
+      <xul:button anonid="previous-button" class="content-navigator-item previous-button" xbl:inherits="command=previous"/>
+      <xul:button anonid="next-button" class="content-navigator-item next-button" xbl:inherits="command=next"/>
     </content>
 
     <implementation>
@@ -1495,26 +1492,23 @@
         document.getAnonymousElementByAttribute(this, "anonid", "next-button");
       </field>
 
-      <field name="_spacer">
-        document.getElementById(this.getAttribute("spacer"));
-      </field>
-
       <method name="contentHasChanged">
         <body><![CDATA[
-          let height = Math.floor(this.getBoundingClientRect().height);
-          let oldHeight = parseInt(this._spacer.getAttribute("height"));
-          this.top = window.innerHeight - height;
-          this._spacer.setAttribute("height", height);
+          if (!this.isActive)
+            return;
 
-          if (height != oldHeight) {
-            let event = document.createEvent("Events");
-            event.initEvent("SizeChanged", true, false);
-            this.dispatchEvent(event);
-          }
+          // There is a race condition with getBoundingClientRect and when the
+          // box is displayed, the padding is ignored in the size calculation
+          this.getBoundingClientRect();
+
+          setTimeout(function(self) {
+            let height = Math.floor(self.getBoundingClientRect().height);
+            self.top = window.innerHeight - height;
+          }, 0, this);
         ]]></body>
       </method>
 
-      <property name="isActive" onget="return !this._spacer.hidden;"/>
+      <property name="isActive" onget="return !!this.model;"/>
 
       <field name="model">null</field>
       <method name="show">
@@ -1537,7 +1531,6 @@
 
           this.model = aModel;
           this.contentHasChanged();
-          this._spacer.hidden = false;
         ]]></body>
       </method>
 
@@ -1549,9 +1542,8 @@
           this.removeAttribute("close");
           this.removeAttribute("type");
 
-          this.model = null;
           this.contentHasChanged();
-          this._spacer.hidden = true;
+          this.model = null;
         ]]></body>
       </method>
     </implementation>

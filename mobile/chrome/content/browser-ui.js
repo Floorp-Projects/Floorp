@@ -429,8 +429,7 @@ var BrowserUI = {
     popup.width = windowW;
 
     // content navigator helper
-    let contentHelper = document.getElementById("content-navigator");
-    contentHelper.top = windowH - contentHelper.getBoundingClientRect().height;
+    document.getElementById("content-navigator").contentHasChanged();
   },
 
   init: function() {

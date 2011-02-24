@@ -41,6 +41,7 @@
 
 <?xml-stylesheet href="chrome://browser/skin/platform.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/forms.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 
 <!DOCTYPE window [
@@ -274,16 +275,13 @@
                 <!-- vertical scrollbar -->
                 <box id="vertical-scroller" class="scroller" orient="vertical" right="2" top="0"/>
               </stack>
-              <box id="content-navigator-spacer" hidden="true"/>
             </vbox>
           </vbox>
         </scrollbox>
 
         <!-- popup for content navigator helper -->
-        <vbox id="content-navigator" class="window-width" top="0" spacer="content-navigator-spacer">
-          <arrowscrollbox id="form-helper-autofill" collapsed="true" align="center" flex="1" orient="horizontal"
-                          onclick="FormHelperUI.doAutoComplete(event.target);"/>
-          <textbox id="find-helper-textbox" class="search-bar content-navigator-item" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search" flex="1"/>
+        <vbox id="content-navigator" class="window-width" top="0">
+          <textbox id="find-helper-textbox" class="search-bar content-navigator-item" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search"/>
         </vbox>
 
         <!-- horizontal scrollbar -->
@@ -347,6 +345,11 @@
         <pageaction id="pageaction-search" title="&pageactions.search.addNew;"/>
         <pageaction id="pageaction-charset" title="&pageactions.charEncoding;" onclick="CharsetMenu.show();"/>
       </hbox>
+    </arrowbox>
+
+    <!-- Form Helper suggestions helper popup -->
+    <arrowbox id="form-helper-suggestions-container" flex="1" hidden="true" offset="0" top="0" left="0">
+      <arrowscrollbox id="form-helper-suggestions" align="center" flex="1" orient="horizontal" onclick="FormHelperUI.doAutoComplete(event.target);"/>
     </arrowbox>
 
     <arrowbox id="bookmark-popup" hidden="true" align="center" offset="12">
@@ -579,15 +582,16 @@
     </vbox>
 
     <!-- options dialog for select form field -->
-    <vbox id="select-container" hidden="true" pack="center">
-      <spacer id="select-spacer" flex="1000"/>
-      <vbox id="select-container-inner" class="dialog-dark" flex="1">
-        <scrollbox id="select-list" flex="1" orient="vertical"/>
-        <hbox id="select-buttons" pack="center">
-          <button id="select-buttons-done" label="&selectHelper.done;" oncommand="SelectHelperUI.hide();"/>
+    <vbox id="select-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">
+      <vbox id="select-popup" class="dialog-dark">
+        <hbox pack="center">
+          <label id="select-title" class="options-title" align="center" crop="center" flex="1"/>
+        </hbox>
+        <scrollbox id="select-commands" onclick="if (event.target != this) SelectHelperUI.selectByIndex(event.target.optionIndex);" orient="vertical" flex="1"/>
+        <hbox pack="center">
+          <button label="&selectHelper.done;" oncommand="SelectHelperUI.hide();"/>
         </hbox>
       </vbox>
-      <spacer flex="1000"/>
     </vbox>
 
     <hbox id="context-container" class="window-width window-height context-block" top="0" left="0" hidden="true">
@@ -656,6 +660,7 @@
     <hbox id="menulist-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">
       <vbox id="menulist-popup" class="dialog-dark">
         <label id="menulist-title" crop="center" flex="1"/>
+        <label id="menulist-title" class="options-title" crop="center" flex="0"/>
         <richlistbox id="menulist-commands" class="prompt-buttons" onclick="if (event.target != this) MenuListHelperUI.selectByIndex(this.selectedIndex);" flex="1"/>
       </vbox>
     </hbox>

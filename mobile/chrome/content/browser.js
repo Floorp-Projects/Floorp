@@ -172,7 +172,7 @@ var Browser = {
     /* handles web progress management for open browsers */
     Elements.browsers.webProgress = new Browser.WebProgress();
 
-    let keySender = new ContentCustomKeySender(Elements.browsers);
+    this.keySender = new ContentCustomKeySender(Elements.browsers);
     let mouseModule = new MouseModule();
     let gestureModule = new GestureModule(Elements.browsers);
     let scrollWheelModule = new ScrollwheelModule(Elements.browsers);
@@ -318,9 +318,6 @@ var Browser = {
 #if MOZ_PLATFORM_MAEMO == 6
     os.addObserver(ViewableAreaObserver, "softkb-change", false);
 #endif
-    Elements.contentNavigator.addEventListener("SizeChanged", function() {
-      ViewableAreaObserver.update();
-    }, true);
 
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
 
@@ -1113,7 +1110,6 @@ Browser.MainDragger = function MainDragger() {
 
   Elements.browsers.addEventListener("PanBegin", this, false);
   Elements.browsers.addEventListener("PanFinished", this, false);
-  Elements.contentNavigator.addEventListener("SizeChanged", this, false);
 };
 
 Browser.MainDragger.prototype = {
@@ -1171,9 +1167,9 @@ Browser.MainDragger.prototype = {
   },
 
   handleEvent: function handleEvent(aEvent) {
+    let browser = getBrowser();
     switch (aEvent.type) {
       case "PanBegin": {
-        let browser = Browser.selectedBrowser;
         let width = ViewableAreaObserver.width, height = ViewableAreaObserver.height;
         let contentWidth = browser.contentDocumentWidth * browser.scale;
         let contentHeight = browser.contentDocumentHeight * browser.scale;
@@ -1189,17 +1185,12 @@ Browser.MainDragger.prototype = {
         this._showScrollbars();
         break;
       }
-      case "PanFinished": {
+      case "PanFinished":
         this._hideScrollbars();
 
         // Update the scroll position of the content
         let browser = getBrowser();
         browser._updateCSSViewport();
-        break;
-      }
-      case "SizeChanged":
-        let height = Elements.contentNavigator.getBoundingClientRect().height;
-        this._horizontalScrollbar.setAttribute("bottom", 2 + height);
         break;
     }
   },
@@ -2737,7 +2728,7 @@ var ViewableAreaObserver = {
   },
 
   get height() {
-    return (this._height || window.innerHeight) - Elements.contentNavigator.getBoundingClientRect().height;
+    return (this._height || window.innerHeight);
   },
 
   observe: function va_observe(aSubject, aTopic, aData) {
