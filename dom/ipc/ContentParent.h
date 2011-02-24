@@ -42,7 +42,6 @@
 #include "base/waitable_event_watcher.h"
 
 #include "mozilla/dom/PContentParent.h"
-#include "mozilla/dom/PMemoryReportRequestParent.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
 #include "nsIObserver.h"
@@ -53,8 +52,6 @@
 #include "nsIPermissionManager.h"
 #include "nsIDOMGeoPositionCallback.h"
 #include "nsIAccelerometer.h"
-#include "nsIMemoryReporter.h"
-#include "nsCOMArray.h"
 
 namespace mozilla {
 
@@ -101,8 +98,6 @@ public:
 
     bool IsAlive();
 
-    void SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& report);
-
 protected:
     void OnChannelConnected(int32 pid);
     virtual void ActorDestroy(ActorDestroyReason why);
@@ -123,9 +118,6 @@ private:
 
     virtual PCrashReporterParent* AllocPCrashReporter();
     virtual bool DeallocPCrashReporter(PCrashReporterParent* crashreporter);
-
-    virtual PMemoryReportRequestParent* AllocPMemoryReportRequest();
-    virtual bool DeallocPMemoryReportRequest(PMemoryReportRequestParent* actor);
 
     virtual PTestShellParent* AllocPTestShell();
     virtual bool DeallocPTestShell(PTestShellParent* shell);
@@ -209,12 +201,6 @@ private:
     int mRunToCompletionDepth;
     bool mShouldCallUnblockChild;
     nsCOMPtr<nsIThreadObserver> mOldObserver;
-
-    // This is a cache of all of the memory reporters
-    // registered in the child process.  To update this, one
-    // can broadcast the topic "child-memory-reporter-request" using
-    // the nsIObserverService.
-    nsCOMArray<nsIMemoryReporter> mMemoryReporters;
 
     bool mIsAlive;
     nsCOMPtr<nsIPrefServiceInternal> mPrefService;

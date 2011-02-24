@@ -83,15 +83,6 @@ public:
     virtual PCrashReporterChild* AllocPCrashReporter();
     virtual bool DeallocPCrashReporter(PCrashReporterChild*);
 
-    virtual PMemoryReportRequestChild*
-    AllocPMemoryReportRequest();
-
-    virtual bool
-    DeallocPMemoryReportRequest(PMemoryReportRequestChild* actor);
-
-    virtual bool
-    RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* child);
-
     virtual PTestShellChild* AllocPTestShell();
     virtual bool DeallocPTestShell(PTestShellChild*);
     virtual bool RecvPTestShellConstructor(PTestShellChild*);

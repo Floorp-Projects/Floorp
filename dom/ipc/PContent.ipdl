@@ -43,7 +43,6 @@ include protocol PTestShell;
 include protocol PNecko;
 include protocol PExternalHelperApp;
 include protocol PStorage;
-include protocol PMemoryReportRequest;
 
 include "mozilla/chrome/RegistryMessageUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
@@ -97,12 +96,9 @@ rpc protocol PContent
     manages PNecko;
     manages PExternalHelperApp;
     manages PStorage;
-    manages PMemoryReportRequest;
 
 child:
     PBrowser(PRUint32 chromeFlags);
-
-    PMemoryReportRequest();
 
     PTestShell();
 

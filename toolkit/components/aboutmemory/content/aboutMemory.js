@@ -139,7 +139,6 @@ function updateMemoryStatus()
         mo.removeChild(mo.lastChild);
 
     var otherCount = 0;
-
     for each (var rep in gMemReporters) {
         var row = makeTableRow([rep.path, rep.description],
                                makeTableCell(formatNumber(rep.memoryUsed), "memValue"));
@@ -155,10 +154,8 @@ function updateMemoryStatus()
     }
 }
 
-function updateMemoryReporters()
+function doLoad()
 {
-    gMemReporters = [];
-
     var mgr = Components
         .classes["@mozilla.org/memory-reporter-manager;1"]
         .getService(Components.interfaces.nsIMemoryReporterManager);
@@ -168,30 +165,7 @@ function updateMemoryReporters()
         var mr = e.getNext().QueryInterface(Components.interfaces.nsIMemoryReporter);
         gMemReporters[mr.path] = mr;
     }
-}
 
-function ChildMemoryListener(subject, topic, data) {
-  updateMemoryReporters();
-  updateMemoryStatus();
-}
-
-
-function doLoad()
-{
-    var os = Components.classes["@mozilla.org/observer-service;1"].
-        getService(Components.interfaces.nsIObserverService);
-    os.notifyObservers(null, "child-memory-reporter-request", null);
-
-    os.addObserver(ChildMemoryListener, "child-memory-reporter-update", false);
-
-    updateMemoryReporters();
     updateMemoryStatus();
 }
 
-function doUnload()
-{
-    var os = Components.classes["@mozilla.org/observer-service;1"].
-        getService(Components.interfaces.nsIObserverService);
-    os.removeObserver(ChildMemoryListener, "child-memory-reporter-update");
-    
-}
