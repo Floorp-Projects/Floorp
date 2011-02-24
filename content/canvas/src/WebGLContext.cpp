@@ -113,11 +113,17 @@ WebGLContext::WebGLContext()
     mBlackTexturesAreInitialized = PR_FALSE;
     mFakeBlackStatus = DoNotNeedFakeBlack;
 
-    mFakeVertexAttrib0Array = nsnull;
     mVertexAttrib0Vector[0] = 0;
     mVertexAttrib0Vector[1] = 0;
     mVertexAttrib0Vector[2] = 0;
     mVertexAttrib0Vector[3] = 1;
+    mFakeVertexAttrib0BufferObjectVector[0] = 0;
+    mFakeVertexAttrib0BufferObjectVector[1] = 0;
+    mFakeVertexAttrib0BufferObjectVector[2] = 0;
+    mFakeVertexAttrib0BufferObjectVector[3] = 1;
+    mFakeVertexAttrib0BufferObjectSize = 0;
+    mFakeVertexAttrib0BufferObject = 0;
+    mFakeVertexAttrib0BufferStatus = VertexAttrib0Status::Default;
 }
 
 WebGLContext::~WebGLContext()
@@ -221,6 +227,10 @@ WebGLContext::DestroyResourcesAndContext()
         gl->fDeleteTextures(1, &mBlackTexture2D);
         gl->fDeleteTextures(1, &mBlackTextureCubeMap);
         mBlackTexturesAreInitialized = PR_FALSE;
+    }
+
+    if (mFakeVertexAttrib0BufferObject) {
+        gl->fDeleteBuffers(1, &mFakeVertexAttrib0BufferObject);
     }
 
     // We just got rid of everything, so the context had better

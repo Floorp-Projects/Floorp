@@ -80,6 +80,10 @@ class WebGLContextBoundObject;
 
 enum FakeBlackStatus { DoNotNeedFakeBlack, DoNeedFakeBlack, DontKnowIfNeedFakeBlack };
 
+struct VertexAttrib0Status {
+    enum { Default, EmulatedUninitializedArray, EmulatedInitializedArray };
+};
+
 struct WebGLTexelFormat {
     enum { Generic, Auto, RGBA8, RGB8, RGBX8, BGRA8, BGR8, BGRX8, RGBA5551, RGBA4444, RGB565, R8, RA8, A8 };
 };
@@ -371,6 +375,7 @@ public:
     // all context resources to be lost.
     PRUint32 Generation() { return mGeneration.value(); }
 
+protected:
     void SetDontKnowIfNeedFakeBlack() {
         mFakeBlackStatus = DontKnowIfNeedFakeBlack;
     }
@@ -379,11 +384,11 @@ public:
     void BindFakeBlackTextures();
     void UnbindFakeBlackTextures();
 
-    PRBool NeedFakeVertexAttrib0();
+    int WhatDoesVertexAttrib0Need();
     void DoFakeVertexAttrib0(WebGLuint vertexCount);
     void UndoFakeVertexAttrib0();
+    void InvalidateFakeVertexAttrib0();
 
-protected:
     nsCOMPtr<nsIDOMHTMLCanvasElement> mCanvasElement;
     nsHTMLCanvasElement *HTMLCanvasElement() {
         return static_cast<nsHTMLCanvasElement*>(mCanvasElement.get());
@@ -550,7 +555,10 @@ protected:
     PRBool mBlackTexturesAreInitialized;
 
     WebGLfloat mVertexAttrib0Vector[4];
-    nsAutoArrayPtr<WebGLfloat> mFakeVertexAttrib0Array;
+    WebGLfloat mFakeVertexAttrib0BufferObjectVector[4];
+    size_t mFakeVertexAttrib0BufferObjectSize;
+    GLuint mFakeVertexAttrib0BufferObject;
+    int mFakeVertexAttrib0BufferStatus;
 
     WebGLint mStencilRef;
     WebGLuint mStencilValueMask, mStencilWriteMask;
