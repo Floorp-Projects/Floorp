@@ -461,6 +461,7 @@ class InvokeFrameGuard
     InvokeFrameGuard() : cx_(NULL) {}
     ~InvokeFrameGuard() { if (pushed()) pop(); }
     bool pushed() const { return cx_ != NULL; }
+    JSContext *pushedFrameContext() const { JS_ASSERT(pushed()); return cx_; }
     void pop();
     JSStackFrame *fp() const { return regs_.fp; }
 };
