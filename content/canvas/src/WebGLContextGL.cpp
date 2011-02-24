@@ -183,6 +183,9 @@ WebGLContext::BindAttribLocation(nsIWebGLProgram *pobj, WebGLuint location, cons
     if (name.IsEmpty())
         return ErrorInvalidValue("BindAttribLocation: name can't be null or empty");
 
+    if (!ValidateAttribIndex(location, "bindAttribLocation"))
+        return NS_OK;
+
     MakeContextCurrent();
 
     gl->fBindAttribLocation(progname, location, NS_LossyConvertUTF16toASCII(name).get());
@@ -1087,8 +1090,8 @@ WebGLContext::DepthRange(WebGLfloat zNear, WebGLfloat zFar)
 NS_IMETHODIMP
 WebGLContext::DisableVertexAttribArray(WebGLuint index)
 {
-    if (index > mAttribBuffers.Length())
-        return ErrorInvalidValue("DisableVertexAttribArray: index out of range");
+    if (!ValidateAttribIndex(index, "disableVertexAttribArray"))
+        return NS_OK;
 
     MakeContextCurrent();
 
@@ -1452,8 +1455,8 @@ NS_IMETHODIMP WebGLContext::Disable(WebGLenum cap)
 NS_IMETHODIMP
 WebGLContext::EnableVertexAttribArray(WebGLuint index)
 {
-    if (index > mAttribBuffers.Length())
-        return ErrorInvalidValue("EnableVertexAttribArray: index out of range");
+    if (!ValidateAttribIndex(index, "enableVertexAttribArray"))
+        return NS_OK;
 
     MakeContextCurrent();
 
@@ -2512,8 +2515,8 @@ WebGLContext::GetVertexAttrib(WebGLuint index, WebGLenum pname, nsIVariant **ret
 {
     *retval = nsnull;
 
-    if (index >= mAttribBuffers.Length())
-        return ErrorInvalidValue("getVertexAttrib: invalid index");
+    if (!ValidateAttribIndex(index, "getVertexAttrib"))
+        return NS_OK;
 
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
@@ -2579,8 +2582,8 @@ WebGLContext::GetVertexAttribOffset(WebGLuint index, WebGLenum pname, WebGLuint 
 {
     *retval = 0;
 
-    if (index >= mAttribBuffers.Length())
-        return ErrorInvalidValue("getVertexAttribOffset: invalid index");
+    if (!ValidateAttribIndex(index, "getVertexAttribOffset"))
+        return NS_OK;
 
     if (pname != LOCAL_GL_VERTEX_ATTRIB_ARRAY_POINTER)
         return ErrorInvalidEnum("getVertexAttribOffset: bad parameter");
@@ -3873,8 +3876,8 @@ WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type
     // requiredAlignment should always be a power of two.
     WebGLsizei requiredAlignmentMask = requiredAlignment - 1;
 
-    if (index >= mAttribBuffers.Length())
-        return ErrorInvalidValue("VertexAttribPointer: index out of range - %d >= %d", index, mAttribBuffers.Length());
+    if (!ValidateAttribIndex(index, "vertexAttribPointer"))
+        return NS_OK;
 
     if (size < 1 || size > 4)
         return ErrorInvalidValue("VertexAttribPointer: invalid element size");
