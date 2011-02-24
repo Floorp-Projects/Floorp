@@ -361,6 +361,7 @@ public:
     nsresult ErrorInvalidEnumInfo(const char *info, PRUint32 enumvalue) {
         return ErrorInvalidEnum("%s: invalid enum value 0x%x", info, enumvalue);
     }
+    nsresult ErrorOutOfMemory(const char *fmt = 0, ...);
 
     WebGLTexture *activeBoundTextureForTarget(WebGLenum target) {
         return target == LOCAL_GL_TEXTURE_2D ? mBound2DTextures[mActiveTexture]
@@ -710,19 +711,25 @@ public:
 
     // element array buffers are the only buffers for which we need to keep a copy of the data.
     // this method assumes that the byte length has previously been set by calling SetByteLength.
-    void CopyDataIfElementArray(const void* data) {
+    PRBool CopyDataIfElementArray(const void* data) {
         if (mTarget == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
             mData = realloc(mData, mByteLength);
+            if (!mData)
+                return PR_FALSE;
             memcpy(mData, data, mByteLength);
         }
+        return PR_TRUE;
     }
 
     // same comments as for CopyElementArrayData
-    void ZeroDataIfElementArray() {
+    PRBool ZeroDataIfElementArray() {
         if (mTarget == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
             mData = realloc(mData, mByteLength);
+            if (!mData)
+                return PR_FALSE;
             memset(mData, 0, mByteLength);
         }
+        return PR_TRUE;
     }
 
     // same comments as for CopyElementArrayData
