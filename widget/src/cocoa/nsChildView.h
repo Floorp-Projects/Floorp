@@ -213,18 +213,6 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
   // when handling |draggingUpdated:| messages.
   nsIDragService* mDragService;
 
-#ifndef NP_NO_CARBON
-  // For use with plugins, so that we can support IME in them.  We can't use
-  // Cocoa TSM documents (those created and managed by the NSTSMInputContext
-  // class) -- for some reason TSMProcessRawKeyEvent() doesn't work with them.
-  TSMDocumentID mPluginTSMDoc;
-  BOOL mPluginTSMInComposition;
-#endif
-  BOOL mPluginComplexTextInputRequested;
-
-  // When this is YES the next key up event (keyUp:) will be ignored.
-  BOOL mIgnoreNextKeyUpEvent;
-
   NSOpenGLContext *mGLContext;
 
   // Simple gestures support
@@ -272,11 +260,6 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
 - (void)sendMouseEnterOrExitEvent:(NSEvent*)aEvent
                             enter:(BOOL)aEnter
                              type:(nsMouseEvent::exitType)aType;
-
-#ifndef NP_NO_CARBON
-- (void) processPluginKeyEvent:(EventRef)aKeyEvent;
-#endif
-- (void)pluginRequestsComplexTextInputForCurrentEvent;
 
 - (void)update;
 - (void)lockFocus;
@@ -468,6 +451,12 @@ public:
   nsCocoaWindow*    GetXULWindowWidget();
 
   NS_IMETHOD        ReparentNativeWidget(nsIWidget* aNewParent);
+
+  mozilla::widget::TextInputHandler* GetTextInputHandler()
+  {
+    return mTextInputHandler;
+  }
+
 protected:
 
   PRBool            ReportDestroyEvent();
