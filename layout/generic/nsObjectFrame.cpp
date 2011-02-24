@@ -3190,7 +3190,7 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
 
   if (mWaitingForPaint) {
     // We don't care when the event is dispatched as long as it's "soon",
-    // since whoever needs it will be wwaiting for it
+    // since whoever needs it will be waiting for it.
     nsCOMPtr<nsIRunnable> event = new AsyncPaintWaitEvent(mContent, PR_TRUE);
     NS_DispatchToMainThread(event);
   }
@@ -3459,7 +3459,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
   // up-to-date-ness, so just fire off the event.
   if (mWaitingForPaint && (!mObjectFrame || IsUpToDate())) {
     // We don't care when the event is dispatched as long as it's "soon",
-    // since whoever needs it will be wwaiting for it
+    // since whoever needs it will be waiting for it.
     nsCOMPtr<nsIRunnable> event = new AsyncPaintWaitEvent(mContent, PR_TRUE);
     NS_DispatchToMainThread(event);
     mWaitingForPaint = false;
@@ -3472,7 +3472,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
   // InvalidateRect is called. We notify reftests that painting is up to
   // date and update our ImageContainer with the new surface.
   nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
+  gfxIntSize oldSize;
   if (container) {
+    oldSize = container->GetCurrentSize();
     SetCurrentImage(container);
   }
 
@@ -3503,14 +3505,24 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
               presContext->DevPixelsToAppUnits(invalidRect->top),
               presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
               presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
+ if (container) {
+   gfxIntSize newSize = container->GetCurrentSize();
+   if (newSize != oldSize) {
+     // The image size has changed - invalidate the old area too, bug 635405.
+     nsRect oldRect = nsRect(0, 0,
+                             presContext->DevPixelsToAppUnits(oldSize.width),
+                             presContext->DevPixelsToAppUnits(oldSize.height));
+     rect.UnionRect(rect, oldRect);
+   }
+ }
+ rect.MoveBy(mObjectFrame->GetUsedBorderAndPadding().TopLeft());
 #ifndef XP_MACOSX
-  mObjectFrame->InvalidateLayer(rect + mObjectFrame->GetUsedBorderAndPadding().TopLeft(), nsDisplayItem::TYPE_PLUGIN);
+  mObjectFrame->InvalidateLayer(rect, nsDisplayItem::TYPE_PLUGIN);
 #else
   if (mozilla::FrameLayerBuilder::HasDedicatedLayer(mObjectFrame, nsDisplayItem::TYPE_PLUGIN)) {
-    mObjectFrame->InvalidateWithFlags(rect + mObjectFrame->GetUsedBorderAndPadding().TopLeft(),
-                                      nsIFrame::INVALIDATE_NO_UPDATE_LAYER_TREE);
+    mObjectFrame->InvalidateWithFlags(rect, nsIFrame::INVALIDATE_NO_UPDATE_LAYER_TREE);
   } else {
-    mObjectFrame->Invalidate(rect + mObjectFrame->GetUsedBorderAndPadding().TopLeft());
+    mObjectFrame->Invalidate(rect);
   }
 #endif
   return NS_OK;
