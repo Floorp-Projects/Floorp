@@ -69,6 +69,7 @@ function FormAssistant() {
   addMessageListener("FormAssist:AutoComplete", this);
   addMessageListener("Content:SetWindowSize", this);
 
+  addEventListener("keypress", this, true);
   addEventListener("keyup", this, false);
   addEventListener("focus", this, true);
   addEventListener("pageshow", this, false);
@@ -282,15 +283,17 @@ FormAssistant.prototype = {
     if ((!this._open && aEvent.type != "focus") || shouldIgnoreFocus)
       return;
 
+    let currentElement = this.currentElement;
     switch (aEvent.type) {
       case "pagehide":
       case "pageshow":
         // When reacting to a page show/hide, if the focus is different this
         // could mean the web page has dramatically changed because of
         // an Ajax change based on fragment identifier
-        if (gFocusManager.focusedElement != this.currentElement)
+        if (gFocusManager.focusedElement != currentElement)
           this.close();
         break;
+
       case "focus":
         let focusedElement = gFocusManager.getFocusedElementForWindow(content, true, {}) || aEvent.target;
 
@@ -309,7 +312,7 @@ FormAssistant.prototype = {
 
         // if an element is focused while we're closed but the element can be handle
         // by the assistant, try to activate it (only during mouseup)
-        if (!this.currentElement) {
+        if (!currentElement) {
           if (focusedElement && this._isValidElement(focusedElement)) {
             this._executeDelayed(function(self) {
               self.open(focusedElement);
@@ -323,19 +326,46 @@ FormAssistant.prototype = {
           this.currentIndex = focusedIndex;
         break;
 
+      // key processing inside a select element are done during the keypress
+      // handler, preventing this one to be fired cancel the selection change
+      case "keypress":
+        let formExceptions = { button: true, checkbox: true, file: true, image: true, radio: true, reset: true, submit: true };
+        if (this._isSelectElement(currentElement) || formExceptions[currentElement.type] ||
+            currentElement instanceof HTMLButtonElement || (currentElement.getAttribute("role") == "button" && currentElement.hasAttribute("tabindex"))) {
+          switch (aEvent.keyCode) {
+            case aEvent.DOM_VK_RIGHT:
+              this._executeDelayed(function(self) {
+                self.currentIndex++;
+              });
+              aEvent.stopPropagation();
+              aEvent.preventDefault();
+              break;
+
+            case aEvent.DOM_VK_LEFT:
+              this._executeDelayed(function(self) {
+                self.currentIndex--;
+              });
+              aEvent.stopPropagation();
+              aEvent.preventDefault();
+              break;
+          }
+        }
+        break;
+
       case "keyup":
-        let currentElement = this.currentElement;
         switch (aEvent.keyCode) {
           case aEvent.DOM_VK_DOWN:
             if (currentElement instanceof HTMLInputElement && !this._isAutocomplete(currentElement)) {
               if (this._hasKeyListener(currentElement))
                 return;
-            }
-            else if (currentElement instanceof HTMLTextAreaElement) {
+            } else if (currentElement instanceof HTMLTextAreaElement) {
               let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
               let isEnd = (currentElement.textLength == currentElement.selectionEnd);
               if (!isEnd || existSelection)
                 return;
+            } else if (getListForElement(currentElement)) {
+              this.currentIndex = this.currentIndex;
+              return;
             }
 
             this.currentIndex++;
@@ -345,23 +375,28 @@ FormAssistant.prototype = {
             if (currentElement instanceof HTMLInputElement && !this._isAutocomplete(currentElement)) {
               if (this._hasKeyListener(currentElement))
                 return;
-            }
-            else if (currentElement instanceof HTMLTextAreaElement) {
+            } else if (currentElement instanceof HTMLTextAreaElement) {
               let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
               let isStart = (currentElement.selectionEnd == 0);
               if (!isStart || existSelection)
                 return;
+            } else if (this._isSelectElement(currentElement)) {
+              this.currentIndex = this.currentIndex;
+              return;
             }
 
             this.currentIndex--;
             break;
 
           case aEvent.DOM_VK_RETURN:
+          case aEvent.DOM_VK_ESCAPE:
             break;
 
           default:
             if (this._isAutocomplete(aEvent.target))
               sendAsyncMessage("FormAssist:AutoComplete", this._getJSON());
+            else if (this._isSelectElement(currentElement))
+              this.currentIndex = this.currentIndex;
             break;
         }
 
@@ -494,9 +529,8 @@ FormAssistant.prototype = {
   _getCaretRect: function _formHelperGetCaretRect() {
     let element = this.currentElement;
     let focusedElement = gFocusManager.getFocusedElementForWindow(content, true, {});
-    if ((element instanceof HTMLTextAreaElement ||
-        (element instanceof HTMLInputElement && element.type == "text")) &&
-        focusedElement == element) {
+    if ((element.mozIsTextField && element.mozIsTextField(false) ||
+        element instanceof HTMLTextAreaElement) && focusedElement == element) {
       let utils = Util.getWindowUtils(element.ownerDocument.defaultView);
       let rect = utils.sendQueryContentEvent(utils.QUERY_CARET_RECT, element.selectionEnd, 0, 0, 0);
       if (rect) {
@@ -516,7 +550,7 @@ FormAssistant.prototype = {
 
     let labels = this._getLabels();
     for (let i=0; i<labels.length; i++) {
-      let labelRect = getBoundingContentRect(labels[i]);
+      let labelRect = labels[i].rect;
       if (labelRect.left < elRect.left) {
         let isClose = Math.abs(labelRect.left - elRect.left) - labelRect.width < kDistanceMax &&
                       Math.abs(labelRect.top - elRect.top) - labelRect.height < kDistanceMax;
@@ -535,11 +569,16 @@ FormAssistant.prototype = {
     let element = this.currentElement;
     let labels = element.ownerDocument.getElementsByTagName("label");
     for (let i=0; i<labels.length; i++) {
-      if (labels[i].control == element)
-        associatedLabels.push(labels[i]);
+      let label = labels[i];
+      if ((label.control == element || label.getAttribute("for") == element.id) && this._isVisibleElement(label)) {
+        associatedLabels.push({
+          rect: getBoundingContentRect(label),
+          title: label.textContent
+        });
+      }
     }
 
-    return associatedLabels.filter(this._isVisibleElement);
+    return associatedLabels;
   },
 
   _getAllElements: function getAllElements(aElement) {
@@ -596,10 +635,12 @@ FormAssistant.prototype = {
   _getJSON: function() {
     let element = this.currentElement;
     let list = getListForElement(element);
+    let labels = this._getLabels();
     return {
       current: {
         id: element.id,
         name: element.name,
+        title: labels.length ? labels[0].title : "",
         value: element.value,
         maxLength: element.maxLength,
         type: (element.getAttribute("type") || "").toLowerCase(),
