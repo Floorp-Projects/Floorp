@@ -87,6 +87,7 @@ _TEST_FILES =	bug500931_helper.html \
 		test1_bug629331.html \
 		test2_bug629331.html \
 		test_bug618017.html \
+		test_bug636097.html \
 		$(NULL)
 
 		#test_bug484107.html \
