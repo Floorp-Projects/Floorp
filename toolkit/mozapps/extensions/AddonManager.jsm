@@ -348,6 +348,10 @@ var AddonManagerInternal = {
     scope.LightweightThemeManager.updateCurrentTheme();
 
     this.getAllAddons(function getAddonsCallback(aAddons) {
+      pendingUpdates++;
+      var ids = [a.id for each (a in aAddons)];
+      scope.AddonRepository.repopulateCache(ids, notifyComplete);
+
       pendingUpdates += aAddons.length;
       var autoUpdateDefault = AddonManager.autoUpdateDefault;
 
@@ -361,12 +365,7 @@ var AddonManagerInternal = {
         return autoUpdateDefault;
       }
 
-      var ids = [];
-
       aAddons.forEach(function BUC_forEachCallback(aAddon) {
-        if (shouldAutoUpdate(aAddon))
-          ids.push(aAddon.id);
-
         // Check all add-ons for updates so that any compatibility updates will
         // be applied
         aAddon.findUpdates({
@@ -382,11 +381,6 @@ var AddonManagerInternal = {
           onUpdateFinished: notifyComplete
         }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
       });
-
-      if (ids.length > 0) {
-        pendingUpdates++;
-        scope.AddonRepository.repopulateCache(ids, notifyComplete);
-      }
 
       notifyComplete();
     });
