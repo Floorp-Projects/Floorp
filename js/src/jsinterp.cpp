@@ -2352,13 +2352,16 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
     (dbl = script->getConst(GET_FULL_INDEX(PCOFF)).toDouble())
 
-#ifdef JS_METHODJIT
-    bool useMethodJIT = cx->methodJitEnabled && interpMode == JSINTERP_NORMAL;
-#else
     bool useMethodJIT = false;
-#endif
-
+    
 #ifdef JS_METHODJIT
+
+#define RESET_USE_METHODJIT()                                                 \
+    JS_BEGIN_MACRO                                                            \
+        useMethodJIT = cx->methodJitEnabled &&                                \
+            interpMode == JSINTERP_NORMAL &&                                  \
+            script->getJITStatus(regs.fp->isConstructing()) != JITScript_Invalid; \
+    JS_END_MACRO
 
 #define MONITOR_BRANCH_METHODJIT()                                            \
     JS_BEGIN_MACRO                                                            \
@@ -2381,10 +2384,12 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 
 #else
 
+#define RESET_USE_METHODJIT() ((void) 0)
+
 #define MONITOR_BRANCH_METHODJIT() ((void) 0)
 
 #endif
-        
+
 #ifdef JS_TRACER
 
 #ifdef MOZ_TRACEVIS
@@ -2588,6 +2593,8 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
     }
 
     CHECK_INTERRUPT_HANDLER();
+
+    RESET_USE_METHODJIT();
 
     /* State communicated between non-local jumps: */
     JSBool interpReturnOK;
@@ -2909,6 +2916,7 @@ BEGIN_CASE(JSOP_STOP)
         atoms = FrameAtomBase(cx, regs.fp);
 
         /* Resume execution in the calling frame. */
+        RESET_USE_METHODJIT();
         JS_ASSERT(inlineCallCount);
         inlineCallCount--;
         if (JS_LIKELY(interpReturnOK)) {
@@ -4752,6 +4760,7 @@ BEGIN_CASE(JSOP_FUNCALL)
             if (newfun->isHeavyweight() && !js_GetCallObject(cx, regs.fp))
                 goto error;
 
+            RESET_USE_METHODJIT();
             inlineCallCount++;
             JS_RUNTIME_METER(rt, inlineCalls);
 
