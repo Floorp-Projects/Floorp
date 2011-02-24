@@ -514,6 +514,9 @@ protected:
                                 PRBool *isNull = 0,
                                 PRBool *isDeleted = 0);
 
+    PRInt32 MaxTextureSizeForTarget(WebGLenum target) const {
+        return target == LOCAL_GL_TEXTURE_2D ? mGLMaxTextureSize : mGLMaxCubeMapTextureSize;
+    }
 
     // the buffers bound to the current program's attribs
     nsTArray<WebGLVertexAttribData> mAttribBuffers;
