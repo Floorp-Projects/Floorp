@@ -257,6 +257,19 @@ class RemoteReftest(RefTest):
         remoteXrePath = options.xrePath
         remoteUtilityPath = options.utilityPath
         localAutomation = Automation()
+        localAutomation.IS_WIN32 = False
+        localAutomation.IS_LINUX = False
+        localAutomation.IS_MAC = False
+        localAutomation.UNIXISH = False
+        hostos = sys.platform
+        if (hostos == 'mac' or  hostos == 'darwin'):
+          localAutomation.IS_MAC = True
+        elif (hostos == 'linux' or hostos == 'linux2'):
+          localAutomation.IS_LINUX = True
+          localAutomation.UNIXISH = True
+        elif (hostos == 'win32' or hostos == 'win64'):
+          localAutomation.BIN_SUFFIX = ".exe"
+          localAutomation.IS_WIN32 = True
 
         paths = [options.xrePath, localAutomation.DIST_BIN, self.automation._product, os.path.join('..', self.automation._product)]
         options.xrePath = self.findPath(paths)
@@ -325,8 +338,8 @@ class RemoteReftest(RefTest):
         RefTest.cleanup(self, profileDir)
 
 def main():
-    dm = DeviceManager(None, None)
-    automation = RemoteAutomation(dm)
+    dm_none = DeviceManager(None, None)
+    automation = RemoteAutomation(dm_none)
     parser = RemoteOptions(automation)
     options, args = parser.parse_args()
 
