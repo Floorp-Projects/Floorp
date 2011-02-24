@@ -440,6 +440,7 @@ protected:
     PRBool ValidateTexFormatAndType(WebGLenum format, WebGLenum type,
                                       PRUint32 *texelSize, const char *info);
     PRBool ValidateDrawModeEnum(WebGLenum mode, const char *info);
+    PRBool ValidateAttribIndex(WebGLuint index, const char *info);
 
     void Invalidate();
     void DestroyResourcesAndContext();
