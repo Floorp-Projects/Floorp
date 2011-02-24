@@ -1189,7 +1189,6 @@ Browser.MainDragger.prototype = {
         this._hideScrollbars();
 
         // Update the scroll position of the content
-        let browser = getBrowser();
         browser._updateCSSViewport();
         break;
     }
