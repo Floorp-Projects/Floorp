@@ -8125,6 +8125,62 @@ nsDOMTokenListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
 // Named Array helper
 
 NS_IMETHODIMP
+nsNamedArraySH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                           JSObject *obj, jsid id, PRUint32 flags,
+                           JSObject **objp, PRBool *_retval)
+{
+  if ((!(JSRESOLVE_ASSIGNING & flags)) && JSID_IS_STRING(id) &&
+      !ObjectIsNativeWrapper(cx, obj)) {
+
+    {
+      JSObject *realObj;
+
+      if (wrapper) {
+        wrapper->GetJSObject(&realObj);
+      } else {
+        realObj = obj;
+      }
+
+      JSAutoEnterCompartment ac;
+
+      if (!ac.enter(cx, realObj)) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_FAILURE;
+      }
+
+      JSObject *proto = ::JS_GetPrototype(cx, realObj);
+      JSBool hasProp;
+
+      if (proto && ::JS_HasPropertyById(cx, proto, id, &hasProp) && hasProp) {
+        // We found the property we're resolving on the prototype,
+        // nothing left to do here then.
+        return NS_OK;
+      }
+    }
+
+    // Make sure rv == NS_OK here, so GetNamedItem implementations
+    // that never fail don't have to set rv.
+    nsresult rv = NS_OK;
+    nsWrapperCache *cache;
+
+    nsISupports* item = GetNamedItem(GetNative(wrapper, obj),
+                                     nsDependentJSString(id), &cache, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (item) {
+      *_retval = ::JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, nsnull,
+                                         nsnull, JSPROP_ENUMERATE | JSPROP_SHARED);
+
+      *objp = obj;
+
+      return *_retval ? NS_OK : NS_ERROR_FAILURE;
+    }
+  }
+
+  return nsArraySH::NewResolve(wrapper, cx, obj, id, flags, objp, _retval);
+}
+
+NS_IMETHODIMP
 nsNamedArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                             JSObject *obj, jsid id, jsval *vp,
                             PRBool *_retval)
