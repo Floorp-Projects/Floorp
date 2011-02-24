@@ -280,6 +280,9 @@ class DeviceManager:
   #  success: True
   #  failure: False
   def pushFile(self, localname, destname):
+    if (os.name == "nt"):
+      destname = destname.replace('\\', '/')
+
     if (self.debug >= 3): print "in push file with: " + localname + ", and: " + destname
     if (self.validateFile(destname, localname) == True):
       if (self.debug >= 3): print "files are validated"
@@ -486,7 +489,7 @@ class DeviceManager:
   # returns:
   #  success: pid
   #  failure: None
-  def fireProcess(self, appname):
+  def fireProcess(self, appname, failIfRunning=False):
     if (not appname):
       if (self.debug >= 1): print "WARNING: fireProcess called with no command to run"
       return None
@@ -495,6 +498,8 @@ class DeviceManager:
 
     if (self.processExist(appname) != None):
       print "WARNING: process %s appears to be running already\n" % appname
+      if (failIfRunning):
+        return None
     
     try:
       data = self.verifySendCMD(['exec ' + appname])
@@ -517,7 +522,7 @@ class DeviceManager:
   # returns:
   #  success: output filename
   #  failure: None
-  def launchProcess(self, cmd, outputFile = "process.txt", cwd = '', env = ''):
+  def launchProcess(self, cmd, outputFile = "process.txt", cwd = '', env = '', failIfRunning=False):
     if not cmd:
       if (self.debug >= 1): print "WARNING: launchProcess called without command to run"
       return None
@@ -533,7 +538,7 @@ class DeviceManager:
     # Prepend our env to the command 
     cmdline = '%s %s' % (self.formatEnvString(env), cmdline)
 
-    if self.fireProcess(cmdline) is None:
+    if self.fireProcess(cmdline, failIfRunning) is None:
       return None
     return outputFile
   
@@ -1081,7 +1086,7 @@ class DeviceManager:
           proclist.append(l.split('\t'))
       result['process'] = proclist
 
-    print "results: " + str(result)
+    if (self.debug >= 3): print "results: " + str(result)
     return result
 
   """
@@ -1224,7 +1229,6 @@ class DeviceManager:
       return ''
 
     retVal = '"%s"' % ','.join(map(lambda x: '%s=%s' % (x[0], x[1]), env.iteritems()))
-    print "got retval: '%s'" % retVal
     if (retVal == '""'):
       return ''
 
