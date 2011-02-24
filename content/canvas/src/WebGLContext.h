@@ -882,6 +882,10 @@ public:
         return const_cast<WebGLTexture*>(this)->ImageInfoAt(level, face);
     }
 
+    static size_t FaceForTarget(WebGLenum target) {
+        return target == LOCAL_GL_TEXTURE_2D ? 0 : target - LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+    }
+
 protected:
 
     WebGLenum mTarget;
@@ -972,14 +976,12 @@ public:
 
     void SetImageInfo(WebGLenum aTarget, WebGLint aLevel,
                       WebGLsizei aWidth, WebGLsizei aHeight,
-                      WebGLenum aFormat = 0, WebGLenum aType = 0) {
-        size_t face = 0;
-        if (aTarget == LOCAL_GL_TEXTURE_2D) {
-            if (mTarget != LOCAL_GL_TEXTURE_2D) return;
-        } else {
-            if (mTarget == LOCAL_GL_TEXTURE_2D) return;
-            face = aTarget - LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-        }
+                      WebGLenum aFormat = 0, WebGLenum aType = 0)
+    {
+        if ( (aTarget == LOCAL_GL_TEXTURE_2D) != (mTarget == LOCAL_GL_TEXTURE_2D) )
+            return;
+
+        size_t face = FaceForTarget(aTarget);
 
         EnsureMaxLevelWithCustomImagesAtLeast(aLevel);
 
