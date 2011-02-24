@@ -4132,7 +4132,7 @@ nsIFrame::InvalidateInternalAfterResize(const nsRect& aDamageRect, nscoord aX,
   }
   if (IsTransformed()) {
     nsRect newDamageRect;
-    newDamageRect.UnionRect(nsDisplayTransform::TransformRect
+    newDamageRect.UnionRect(nsDisplayTransform::TransformRectOut
                             (aDamageRect, this, nsPoint(-aX, -aY)), aDamageRect);
     GetParent()->
       InvalidateInternal(newDamageRect, aX + mRect.x, aY + mRect.y, this,
