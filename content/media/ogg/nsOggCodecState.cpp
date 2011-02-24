@@ -114,7 +114,7 @@ PRBool nsOggCodecState::PageInFromBuffer() {
   int ret = ogg_stream_pagein(&mState, p);
   NS_ENSURE_TRUE(ret == 0, PR_FALSE);
   mBuffer.PopFront();
-  delete p->header;
+  delete [] p->header;
   delete p;
   return PR_TRUE;
 }
