@@ -98,14 +98,16 @@ ptests.push({
     var start = Date.now();
     var sb = document.getElementById("sidebar");
     sb.addEventListener("load", function() {
-      var duration = Date.now() - start;
       sb.removeEventListener("load", arguments.callee, true);
-      toggleSidebar("viewBookmarksSidebar", false);
-      self.times.push(duration);
-      if (self.times.length == TEST_REPEAT_COUNT)
-        self.finish();
-      else
-        self.run();
+      executeSoon(function() {
+        var duration = Date.now() - start;
+        toggleSidebar("viewBookmarksSidebar", false);
+        self.times.push(duration);
+        if (self.times.length == TEST_REPEAT_COUNT)
+          self.finish();
+        else
+          self.run();
+      });
     }, true);
     toggleSidebar("viewBookmarksSidebar", true);
   },
@@ -122,6 +124,7 @@ ptests.push({
 });
 
 function test() {
+  requestLongerTimeout(2);
   // kick off tests
   setTimeout(runNextTest, 0);
 }
