@@ -1743,8 +1743,6 @@ public:
   }
   virtual ~BasicShadowableThebesLayer()
   {
-    NS_ABORT_IF_FALSE(!HasShadow() || !BasicManager()->InTransaction(),
-                      "Shadow layers can't be destroyed during txns!");
     if (IsSurfaceDescriptorValid(mBackBuffer))
       BasicManager()->ShadowLayerForwarder::DestroySharedSurface(&mBackBuffer);
     MOZ_COUNT_DTOR(BasicShadowableThebesLayer);
