@@ -54,7 +54,7 @@
 class OggPageDeallocator : public nsDequeFunctor {
   virtual void* operator() (void* aPage) {
     ogg_page* p = static_cast<ogg_page*>(aPage);
-    delete p->header;
+    delete [] p->header;
     delete p;
     return nsnull;
   }
