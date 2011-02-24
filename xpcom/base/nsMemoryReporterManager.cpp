@@ -288,45 +288,6 @@ nsMemoryReporterManager::UnregisterReporter(nsIMemoryReporter *reporter)
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsMemoryReporter, nsIMemoryReporter)
-
-nsMemoryReporter::nsMemoryReporter(nsCString& prefix,
-                                   nsCString& path,
-                                   nsCString& desc,
-                                   PRInt64 memoryUsed)
-: mDesc(desc)
-, mMemoryUsed(memoryUsed) 
-{
-  if (!prefix.IsEmpty()) {
-    mPath.Append(prefix);
-    mPath.Append(NS_LITERAL_CSTRING(" - "));
-  }
-  mPath.Append(path);
-}
-
-nsMemoryReporter::~nsMemoryReporter()
-{
-}
-
-NS_IMETHODIMP nsMemoryReporter::GetPath(char **aPath)
-{
-  *aPath = strdup(mPath.get());
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMemoryReporter::GetDescription(char **aDescription)
-{
-  *aDescription = strdup(mDesc.get());
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMemoryReporter::GetMemoryUsed(PRInt64 *aMemoryUsed)
-{
-  *aMemoryUsed = mMemoryUsed;
-  return NS_OK;
-}
-
-
 NS_COM nsresult
 NS_RegisterMemoryReporter (nsIMemoryReporter *reporter)
 {

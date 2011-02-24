@@ -88,10 +88,6 @@
 #include "mozilla/dom/StorageParent.h"
 #include "nsAccelerometer.h"
 
-#include "nsIMemoryReporter.h"
-#include "nsMemoryReporterManager.h"
-#include "mozilla/dom/PMemoryReportRequestParent.h"
-
 #ifdef ANDROID
 #include "gfxAndroidPlatform.h"
 #endif
@@ -106,38 +102,6 @@ namespace mozilla {
 namespace dom {
 
 #define NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC "ipc:network:set-offline"
-
-class MemoryReportRequestParent : public PMemoryReportRequestParent
-{
-public:
-    MemoryReportRequestParent();
-    virtual ~MemoryReportRequestParent();
-
-    virtual bool    Recv__delete__(const InfallibleTArray<MemoryReport>& report);
-private:
-    ContentParent* Owner()
-    {
-        return static_cast<ContentParent*>(Manager());
-    }
-};
-    
-
-MemoryReportRequestParent::MemoryReportRequestParent()
-{
-    MOZ_COUNT_CTOR(MemoryReportRequestParent);
-}
-
-bool
-MemoryReportRequestParent::Recv__delete__(const InfallibleTArray<MemoryReport>& report)
-{
-    Owner()->SetChildMemoryReporters(report);
-    return true;
-}
-
-MemoryReportRequestParent::~MemoryReportRequestParent()
-{
-    MOZ_COUNT_DTOR(MemoryReportRequestParent);
-}
 
 ContentParent* ContentParent::gSingleton;
 
@@ -165,7 +129,6 @@ ContentParent::GetSingleton(PRBool aForceNew)
                 obs->AddObserver(
                   parent, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, PR_FALSE);
 
-                obs->AddObserver(parent, "child-memory-reporter-request", PR_FALSE);
                 obs->AddObserver(parent, "memory-pressure", PR_FALSE); 
             }
             nsCOMPtr<nsIThreadInternal>
@@ -234,13 +197,9 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
     if (obs) {
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "xpcom-shutdown");
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "memory-pressure");
-        obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-memory-reporter-request");
-        obs->RemoveObserver(static_cast<nsIObserver*>(this), NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC);
+        obs->RemoveObserver(static_cast<nsIObserver*>(this),
+                           NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC);
     }
-
-    // clear the child memory reporters
-    InfallibleTArray<MemoryReport> empty;
-    SetChildMemoryReporters(empty);
 
     // remove the global remote preferences observers
     nsCOMPtr<nsIPrefBranch2> prefs 
@@ -505,10 +464,6 @@ ContentParent::Observe(nsISupports* aSubject,
                                       nsDependentString(aData)))
             return NS_ERROR_NOT_AVAILABLE;
     }
-    else if (!strcmp(aTopic, "child-memory-reporter-request")) {
-        SendPMemoryReportRequestConstructor();
-    }
-
     return NS_OK;
 }
 
@@ -541,48 +496,6 @@ ContentParent::DeallocPCrashReporter(PCrashReporterParent* crashreporter)
 {
   delete crashreporter;
   return true;
-}
-
-PMemoryReportRequestParent*
-ContentParent::AllocPMemoryReportRequest()
-{
-  MemoryReportRequestParent* parent = new MemoryReportRequestParent();
-  return parent;
-}
-
-bool
-ContentParent::DeallocPMemoryReportRequest(PMemoryReportRequestParent* actor)
-{
-  delete actor;
-  return true;
-}
-
-void
-ContentParent::SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& report)
-{
-    nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
-    for (PRUint32 i = 0; i < mMemoryReporters.Count(); i++)
-        mgr->UnregisterReporter(mMemoryReporters[i]);
-
-    for (PRUint32 i = 0; i < report.Length(); i++) {
-
-        nsCString prefix = report[i].prefix();
-        nsCString path   = report[i].path();
-        nsCString desc   = report[i].desc();
-        PRInt64 memoryUsed = report[i].memoryUsed();
-        
-        nsRefPtr<nsMemoryReporter> r = new nsMemoryReporter(prefix,
-                                                            path,
-                                                            desc,
-                                                            memoryUsed);
-      mMemoryReporters.AppendObject(r);
-      mgr->RegisterReporter(r);
-    }
-
-    nsCOMPtr<nsIObserverService> obs =
-        do_GetService("@mozilla.org/observer-service;1");
-    if (obs)
-        obs->NotifyObservers(nsnull, "child-memory-reporter-update", nsnull);
 }
 
 PTestShellParent*
