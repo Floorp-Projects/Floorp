@@ -398,7 +398,8 @@ WebGLContext::BufferData_size(WebGLenum target, WebGLsizei size, WebGLenum usage
     MakeContextCurrent();
 
     boundBuffer->SetByteLength(size);
-    boundBuffer->ZeroDataIfElementArray();
+    if (!boundBuffer->ZeroDataIfElementArray())
+        return ErrorOutOfMemory("bufferData: out of memory");
     boundBuffer->InvalidateCachedMaxElements();
 
     gl->fBufferData(target, size, 0, usage);
@@ -428,7 +429,8 @@ WebGLContext::BufferData_buf(WebGLenum target, js::ArrayBuffer *wb, WebGLenum us
     MakeContextCurrent();
 
     boundBuffer->SetByteLength(wb->byteLength);
-    boundBuffer->CopyDataIfElementArray(wb->data);
+    if (!boundBuffer->CopyDataIfElementArray(wb->data))
+        return ErrorOutOfMemory("bufferData: out of memory");
     boundBuffer->InvalidateCachedMaxElements();
 
     gl->fBufferData(target, wb->byteLength, wb->data, usage);
@@ -458,7 +460,8 @@ WebGLContext::BufferData_array(WebGLenum target, js::TypedArray *wa, WebGLenum u
     MakeContextCurrent();
 
     boundBuffer->SetByteLength(wa->byteLength);
-    boundBuffer->CopyDataIfElementArray(wa->data);
+    if (!boundBuffer->CopyDataIfElementArray(wa->data))
+        return ErrorOutOfMemory("bufferData: out of memory");
     boundBuffer->InvalidateCachedMaxElements();
 
     gl->fBufferData(target, wa->byteLength, wa->data, usage);
@@ -656,7 +659,7 @@ WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
         // Hopefully calloc will just mmap zero pages here.
         void *tempZeroData = calloc(1, bytesNeeded);
         if (!tempZeroData)
-            return SynthesizeGLError(LOCAL_GL_OUT_OF_MEMORY, "%s: could not allocate %d bytes (for zero fill)", info, bytesNeeded);
+            return ErrorOutOfMemory("%s: could not allocate %d bytes (for zero fill)", info, bytesNeeded);
 
         // now initialize the texture as black
 
@@ -4048,7 +4051,7 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
         // Hopefully calloc will just mmap zero pages here.
         void *tempZeroData = calloc(1, bytesNeeded);
         if (!tempZeroData)
-            return SynthesizeGLError(LOCAL_GL_OUT_OF_MEMORY, "texImage2D: could not allocate %d bytes (for zero fill)", bytesNeeded);
+            return ErrorOutOfMemory("texImage2D: could not allocate %d bytes (for zero fill)", bytesNeeded);
 
         gl->fTexImage2D(target, level, internalformat, width, height, border, format, type, tempZeroData);
 
