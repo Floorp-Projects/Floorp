@@ -775,7 +775,14 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
         if (fun->isNative())
             break;
         script_ = fun->script();
-        if (fun->isHeavyweight() || script_->isEmpty() || cx->compartment->debugMode)
+        if (fun->isHeavyweight() || script_->isEmpty())
+            break;
+
+        /*
+         * The frame will remain pushed even when the callee isn't active which
+         * will affect the observable current global, so avoid any change.
+         */
+        if (callee.getGlobal() != GetGlobalForScopeChain(cx))
             break;
 
         /* Push the stack frame once for the session. */
