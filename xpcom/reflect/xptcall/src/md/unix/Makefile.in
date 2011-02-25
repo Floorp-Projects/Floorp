@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 LIBRARY_NAME	= xptcmd
+EXPORT_LIBRARY	= ../..
 MOZILLA_INTERNAL_API = 1
 
 
@@ -573,6 +574,3 @@ endif
 endif
 endif
 endif
-
-libs:: $(LIBRARY)
-	$(INSTALL) $(LIBRARY) $(FAKE_LIBRARY) ../..
