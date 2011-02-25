@@ -124,15 +124,20 @@ endif
 LIBS += \
 	$(STATIC_COMPONENTS_LINKER_PATH) \
 	$(EXTRA_DSO_LIBS) \
-	$(MOZ_JS_LIBS) \
 	$(APP_XPCOM_LIBS) \
 	$(NSPR_LIBS) \
+	$(NULL)
+
+ifdef BUILD_STATIC_LIBS
+LIBS += \
+	$(MOZ_JS_LIBS) \
 	$(TK_LIBS) \
 	$(NULL)
 
 # Add explicit X11 dependency when building against X11 toolkits
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 LIBS += $(XLDFLAGS) $(XLIBS) $(ZLIB_LIBS)
+endif
 endif
 
 ifdef MOZ_JPROF
