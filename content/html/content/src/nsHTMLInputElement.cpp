@@ -814,6 +814,9 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         mType == NS_FORM_INPUT_RADIO &&
         (mForm || !(GET_BOOLBIT(mBitField, BF_PARSER_CREATING)))) {
       AddedToRadioGroup();
+      UpdateValueMissingValidityStateForRadio(false);
+      states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
+                NS_EVENT_STATE_REQUIRED | NS_EVENT_STATE_OPTIONAL;
     }
 
     // If @value is changed and BF_VALUE_CHANGED is false, @value is the value
@@ -3494,6 +3497,13 @@ nsHTMLInputElement::AddedToRadioGroup()
     nsAutoString name;
     if (GetNameIfExists(name)) {
       container->AddToRadioGroup(name, static_cast<nsIFormControl*>(this));
+
+      // We initialize the validity of the element to the validity of the group
+      // because we assume UpdateValueMissingState() will be called after.
+      nsCOMPtr<nsIRadioGroupContainer_MOZILLA_2_0_BRANCH> container2 =
+        do_QueryInterface(container);
+      SetValidityState(VALIDITY_STATE_VALUE_MISSING,
+                       container2->GetValueMissingState(name));
     }
   }
 }
@@ -3927,10 +3937,11 @@ nsHTMLInputElement::UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf)
   nsCOMPtr<nsIRadioGroupContainer_MOZILLA_2_0_BRANCH> container =
     do_QueryInterface(c);
   nsAutoString name;
+  GetNameIfExists(name);
 
   // If the current radio is required and not ignored, we can assume the entire
   // group is required.
-  if (!required && container && GetNameIfExists(name)) {
+  if (!required && container && !name.IsEmpty()) {
     required = (aIgnoreSelf && HasAttr(kNameSpaceID_None, nsGkAtoms::required))
                  ? container->GetRequiredRadioCount(name) - 1
                  : container->GetRequiredRadioCount(name);
@@ -3938,12 +3949,20 @@ nsHTMLInputElement::UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf)
 
   valueMissing = required && !selected;
 
-  SetValidityState(VALIDITY_STATE_VALUE_MISSING, valueMissing);
+  if (container && !name.IsEmpty()) {
+    if (container->GetValueMissingState(name) != valueMissing) {
+      container->SetValueMissingState(name, valueMissing);
 
-  nsCOMPtr<nsIRadioVisitor> visitor =
-    NS_SetRadioValueMissingState(this, GetCurrentDoc(), valueMissing,
-                                 notify);
-  VisitGroup(visitor, notify);
+      SetValidityState(VALIDITY_STATE_VALUE_MISSING, valueMissing);
+
+      nsCOMPtr<nsIRadioVisitor> visitor =
+        NS_SetRadioValueMissingState(this, GetCurrentDoc(), valueMissing,
+                                     notify);
+      VisitGroup(visitor, notify);
+    }
+  } else {
+    SetValidityState(VALIDITY_STATE_VALUE_MISSING, valueMissing);
+  }
 }
 
 void

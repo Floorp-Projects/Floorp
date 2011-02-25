@@ -138,8 +138,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIRadioGroupContainer,
                               NS_IRADIOGROUPCONTAINER_IID)
 
 #define NS_IRADIOGROUPCONTAINER_MOZILLA_2_0_BRANCH_IID \
-{ 0xdb6419eb, 0xff3d, 0x4bce, \
-  { 0x9e, 0x4d, 0x47, 0x8c, 0x43, 0xb8, 0x1a, 0x10 } }
+{ 0xaa9ec446, 0xcdc7, 0x4030, \
+  { 0xab, 0x02, 0xda, 0x44, 0xee, 0xb1, 0x80, 0x0a } }
 
 class nsIRadioGroupContainer_MOZILLA_2_0_BRANCH : public nsIRadioGroupContainer
 {
@@ -149,6 +149,8 @@ public:
   virtual PRUint32 GetRequiredRadioCount(const nsAString& aName) const = 0;
   virtual void RadioRequiredChanged(const nsAString& aName,
                                     nsIFormControl* aRadio) = 0;
+  virtual bool GetValueMissingState(const nsAString& aName) const = 0;
+  virtual void SetValueMissingState(const nsAString& aName, bool aValue) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIRadioGroupContainer_MOZILLA_2_0_BRANCH,
