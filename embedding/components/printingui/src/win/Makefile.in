@@ -44,6 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= embedcomponents
 LIBRARY_NAME	= printingui_s
+EXPORT_LIBRARY	= ..
 LIBXUL_LIBRARY	= 1
 
 

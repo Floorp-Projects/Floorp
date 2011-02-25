@@ -888,15 +888,24 @@ $(PARALLEL_DIRS_libs): %_libs: %/Makefile
 	+@$(call SUBMAKE,libs,$*)
 endif
 
+ifdef EXPORT_LIBRARY
+ifeq ($(EXPORT_LIBRARY),1)
+ifdef IS_COMPONENT
+EXPORT_LIBRARY = $(DEPTH)/staticlib/components
+else
+EXPORT_LIBRARY = $(DEPTH)/staticlib
+endif
+else
+# If EXPORT_LIBRARY has a value, we'll be installing there. We also need to cleanup there
+GARBAGE += $(foreach lib,$(LIBRARY) $(FAKE_LIBRARY),$(EXPORT_LIBRARY)/$(lib))
+endif
+endif # EXPORT_LIBRARY
+
 libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(JAVA_LIBRARY)
 ifndef NO_DIST_INSTALL
 ifdef LIBRARY
 ifdef EXPORT_LIBRARY # Stage libs that will be linked into a static build
-ifdef IS_COMPONENT
-	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(FAKE_LIBRARY) $(DEPTH)/staticlib/components
-else
-	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(FAKE_LIBRARY) $(DEPTH)/staticlib
-endif
+	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(FAKE_LIBRARY) $(EXPORT_LIBRARY)
 endif # EXPORT_LIBRARY
 ifdef DIST_INSTALL
 ifdef IS_COMPONENT
