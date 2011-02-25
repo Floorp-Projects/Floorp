@@ -79,6 +79,7 @@
     <!-- Test that learnmore is used as the add-on's homepageURL
          if there is no homepage defined -->
     <learnmore>http://localhost:4444/learnmore2.html</learnmore>
+    <homepage/>
     <support>http://localhost:4444/support2.html</support>
     <contribution_data>
       <link>http://localhost:4444/contribution2.html</link>
