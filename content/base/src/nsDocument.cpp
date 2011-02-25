@@ -500,11 +500,16 @@ struct FindContentData
  */
 struct nsRadioGroupStruct
 {
+  nsRadioGroupStruct()
+    : mRequiredRadioCount(0)
+  {}
+
   /**
    * A strong pointer to the currently selected radio button.
    */
   nsCOMPtr<nsIDOMHTMLInputElement> mSelectedRadioButton;
   nsCOMArray<nsIFormControl> mRadioButtons;
+  PRUint32 mRequiredRadioCount;
 };
 
 
@@ -1725,6 +1730,7 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsPIDOMEventTarget)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsISupportsWeakReference)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer_MOZILLA_2_0_BRANCH)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIMutationObserver)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIApplicationCacheContainer)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSDocument_MOZILLA_2_0_BRANCH)
@@ -6710,6 +6716,12 @@ nsDocument::AddToRadioGroup(const nsAString& aName,
   GetRadioGroup(aName, &radioGroup);
   if (radioGroup) {
     radioGroup->mRadioButtons.AppendObject(aRadio);
+
+    nsCOMPtr<nsIContent> element = do_QueryInterface(aRadio);
+    NS_ASSERTION(element, "radio controls have to be content elements");
+    if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+      radioGroup->mRequiredRadioCount++;
+    }
   }
 
   return NS_OK;
@@ -6723,6 +6735,14 @@ nsDocument::RemoveFromRadioGroup(const nsAString& aName,
   GetRadioGroup(aName, &radioGroup);
   if (radioGroup) {
     radioGroup->mRadioButtons.RemoveObject(aRadio);
+
+    nsCOMPtr<nsIContent> element = do_QueryInterface(aRadio);
+    NS_ASSERTION(element, "radio controls have to be content elements");
+    if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+      radioGroup->mRequiredRadioCount--;
+      NS_ASSERTION(radioGroup->mRequiredRadioCount >= 0,
+                   "mRequiredRadioCount shouldn't be negative!");
+    }
   }
 
   return NS_OK;
@@ -6748,6 +6768,42 @@ nsDocument::WalkRadioGroup(const nsAString& aName,
   }
 
   return NS_OK;
+}
+
+PRUint32
+nsDocument::GetRequiredRadioCount(const nsAString& aName) const
+{
+  nsRadioGroupStruct* radioGroup = nsnull;
+  // TODO: we should call GetRadioGroup here (and make it const) but for that
+  // we would need to have an explicit CreateRadioGroup() instead of create
+  // one when GetRadioGroup is called. See bug 636123.
+  nsAutoString tmKey(aName);
+  if (IsHTML())
+     ToLowerCase(tmKey); //should case-insensitive.
+  mRadioGroups.Get(tmKey, &radioGroup);
+
+  return radioGroup ? radioGroup->mRequiredRadioCount : 0;
+}
+
+void
+nsDocument::RadioRequiredChanged(const nsAString& aName, nsIFormControl* aRadio)
+{
+  nsRadioGroupStruct* radioGroup = nsnull;
+  GetRadioGroup(aName, &radioGroup);
+
+  if (!radioGroup) {
+    return;
+  }
+
+  nsCOMPtr<nsIContent> element = do_QueryInterface(aRadio);
+  NS_ASSERTION(element, "radio controls have to be content elements");
+  if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+    radioGroup->mRequiredRadioCount++;
+  } else {
+    radioGroup->mRequiredRadioCount--;
+    NS_ASSERTION(radioGroup->mRequiredRadioCount >= 0,
+                 "mRequiredRadioCount shouldn't be negative!");
+  }
 }
 
 void
