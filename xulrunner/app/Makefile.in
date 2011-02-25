@@ -107,17 +107,10 @@ endif
 
 LIBS += \
 	$(EXTRA_DSO_LIBS) \
-	$(MOZ_JS_LIBS) \
 	$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
-	$(TK_LIBS) \
 	$(NULL)
-
-# Add explicit X11 dependency when building against X11 toolkits
-ifneq (,$(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)))
-LIBS += $(XLDFLAGS) $(XLIBS) $(XEXT_LIBS) $(XCOMPOSITE_LIBS)
-endif
 
 ifdef MOZ_JPROF
 LIBS += -ljprof
