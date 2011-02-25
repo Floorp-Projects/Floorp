@@ -899,8 +899,9 @@ var AddonRepository = {
       let localName = node.localName;
 
       // Handle case where the wanted string value is located in text content
+      // but only if the content is not empty
       if (localName in STRING_KEY_MAP) {
-        addon[STRING_KEY_MAP[localName]] = this._getTextContent(node);
+        addon[STRING_KEY_MAP[localName]] = this._getTextContent(node) || addon[STRING_KEY_MAP[localName]];
         continue;
       }
 
