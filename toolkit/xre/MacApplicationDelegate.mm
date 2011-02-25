@@ -64,6 +64,21 @@
 #include "nsIStandaloneNativeMenu.h"
 #include "nsILocalFileMac.h"
 #include "nsString.h"
+#include "nsCommandLineServiceMac.h"
+
+class AutoAutoreleasePool {
+public:
+  AutoAutoreleasePool()
+  {
+    mLocalPool = [[NSAutoreleasePool alloc] init];
+  }
+  ~AutoAutoreleasePool()
+  {
+    [mLocalPool release];
+  }
+private:
+  NSAutoreleasePool *mLocalPool;
+};
 
 @interface MacApplicationDelegate : NSObject
 {
@@ -71,7 +86,9 @@
 
 @end
 
-// Something to call from non-objective code.
+static PRBool sProcessedGetURLEvent = PR_FALSE;
+
+// Methods that can be called from non-Objective-C code.
 
 // This is needed, on relaunch, to force the OS to use the "Cocoa Dock API"
 // instead of the "Carbon Dock API".  For more info see bmo bug 377166.
@@ -92,7 +109,10 @@ SetupMacApplicationDelegate()
 
   // this is called during startup, outside an event loop, and therefore
   // needs an autorelease pool to avoid cocoa object leakage (bug 559075)
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  AutoAutoreleasePool pool;
+
+  // Ensure that ProcessPendingGetURLAppleEvents() doesn't regress bug 377166.
+  [NSApplication sharedApplication];
 
   // This call makes it so that application:openFile: doesn't get bogus calls
   // from Cocoa doing its own parsing of the argument string. And yes, we need
@@ -104,9 +124,31 @@ SetupMacApplicationDelegate()
   MacApplicationDelegate *delegate = [[MacApplicationDelegate alloc] init];
   [NSApp setDelegate:delegate];
 
-  [pool release];
-
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+// Indirectly make the OS process any pending GetURL Apple events.  This is
+// done via _DPSNextEvent() (an undocumented AppKit function called from
+// [NSApplication nextEventMatchingMask:untilDate:inMode:dequeue:]).  Apple
+// events are only processed if 'dequeue' is 'YES' -- so we need to call
+// [NSApplication sendEvent:] on any event that gets returned.  'event' will
+// never itself be an Apple event, and it may be 'nil' even when Apple events
+// are processed.
+void
+ProcessPendingGetURLAppleEvents()
+{
+  AutoAutoreleasePool pool;
+  PRBool keepSpinning = PR_TRUE;
+  while (keepSpinning) {
+    sProcessedGetURLEvent = PR_FALSE;
+    NSEvent *event = [NSApp nextEventMatchingMask:NSAnyEventMask
+                                        untilDate:nil
+                                           inMode:NSDefaultRunLoopMode
+                                          dequeue:YES];
+    if (event)
+      [NSApp sendEvent:event];
+    keepSpinning = sProcessedGetURLEvent;
+  }
 }
 
 @implementation MacApplicationDelegate
@@ -175,10 +217,20 @@ SetupMacApplicationDelegate()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  NSString *escapedPath = [filename stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+  NSURL *url = [NSURL fileURLWithPath:filename];
+  if (!url)
+    return NO;
+
+  NSString *urlString = [url absoluteString];
+  if (!urlString)
+    return NO;
+
+  // Add the URL to any command line we're currently setting up.
+  if (CommandLineServiceMac::AddURLToCurrentCommandLine([urlString UTF8String]))
+    return YES;
 
   nsCOMPtr<nsILocalFileMac> inFile;
-  nsresult rv = NS_NewLocalFileWithCFURL((CFURLRef)[NSURL URLWithString:escapedPath], PR_TRUE, getter_AddRefs(inFile));
+  nsresult rv = NS_NewLocalFileWithCFURL((CFURLRef)url, PR_TRUE, getter_AddRefs(inFile));
   if (NS_FAILED(rv))
     return NO;
 
@@ -307,7 +359,14 @@ SetupMacApplicationDelegate()
   if (!event)
     return;
 
-  if (([event eventClass] == kInternetEventClass && [event eventID] == kAEGetURL) ||
+  AutoAutoreleasePool pool;
+
+  PRBool isGetURLEvent =
+    ([event eventClass] == kInternetEventClass && [event eventID] == kAEGetURL);
+  if (isGetURLEvent)
+    sProcessedGetURLEvent = PR_TRUE;
+
+  if (isGetURLEvent ||
       ([event eventClass] == 'WWW!' && [event eventID] == 'OURL')) {
     NSString* urlString = [[event paramDescriptorForKeyword:keyDirectObject] stringValue];
 
@@ -319,6 +378,10 @@ SetupMacApplicationDelegate()
                         range:NSMakeRange(0, [schemeString length])] == NSOrderedSame) {
       return;
     }
+
+    // Add the URL to any command line we're currently setting up.
+    if (CommandLineServiceMac::AddURLToCurrentCommandLine([urlString UTF8String]))
+      return;
 
     nsCOMPtr<nsICommandLineRunner> cmdLine(do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
     if (!cmdLine) {

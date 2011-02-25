@@ -53,7 +53,16 @@ _TEST_FILES	= \
 		idn_child.html \
 		file_location.html \
 		test_location.html \
+		test_innerWidthHeight_script.html \
+		innerWidthHeight_script.html \
 		$(NULL)
+
+ifeq (mobile,$(MOZ_BUILD_APP))
+_TEST_FILES += \
+		test_innerWidthHeight_metaviewport.html \
+		innerWidthHeight_metaviewport.html \
+		$(NULL)
+endif
 
 libs:: 	$(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

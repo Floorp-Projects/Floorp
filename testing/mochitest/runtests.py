@@ -356,13 +356,21 @@ class MochitestServer:
 class WebSocketServer(object):
   "Class which encapsulates the mod_pywebsocket server"
 
-  def __init__(self, automation, options, scriptdir):
+  def __init__(self, automation, options, scriptdir, debuggerInfo=None):
     self.port = options.webSocketPort
     self._automation = automation
     self._scriptdir = scriptdir
+    self.debuggerInfo = debuggerInfo
 
   def start(self):
-    script = os.path.join(self._scriptdir, 'pywebsocket/standalone.py')
+    # If we're running tests under an interactive debugger, tell the server to
+    # ignore SIGINT so it doesn't capture a ctrl+c meant for the debugger.
+    if self.debuggerInfo and self.debuggerInfo['interactive']:
+        scriptPath = 'pywebsocket_ignore_sigint.py'
+    else:
+        scriptPath = 'pywebsocket/standalone.py'
+
+    script = os.path.join(self._scriptdir, scriptPath)
     cmd = [sys.executable, script, '-p', str(self.port), '-w', self._scriptdir, '-l', os.path.join(self._scriptdir, "websock.log"), '--log-level=debug']
 
     self._process = self._automation.Process(cmd)
@@ -420,12 +428,13 @@ class Mochitest(object):
       testURL = "about:blank"
     return testURL
 
-  def startWebSocketServer(self, options):
+  def startWebSocketServer(self, options, debuggerInfo):
     """ Launch the websocket server """
     if options.webServer != '127.0.0.1':
       return
 
-    self.wsserver = WebSocketServer(self.automation, options, self.SCRIPT_DIRECTORY)
+    self.wsserver = WebSocketServer(self.automation, options,
+                                    self.SCRIPT_DIRECTORY, debuggerInfo)
     self.wsserver.start()
 
   def stopWebSocketServer(self, options):
@@ -463,11 +472,27 @@ class Mochitest(object):
     """
     return self.getFullPath(logFile)
 
+  def installSpecialPowersExtension(self, options):
+    """ install the Special Powers extension for special testing capabilities """
+    extensionSource = os.path.normpath(os.path.join(self.SCRIPT_DIRECTORY, "specialpowers"))
+    self.automation.log.info("INFO | runtests.py | Installing extension at %s to %s." % 
+                             (extensionSource, options.profilePath))
+
+    self.automation.installExtension(extensionSource, options.profilePath, "special-powers@mozilla.org")
+    self.automation.log.info("INFO | runtests.py | Done installing extension.")
+
   def buildProfile(self, options):
     """ create the profile and add optional chrome bits and files if requested """
     self.automation.initializeProfile(options.profilePath, options.extraPrefs, useServerLocations = True)
     manifest = self.addChromeToProfile(options)
     self.copyExtraFilesToProfile(options)
+
+    # We only need special powers in non-chrome harnesses
+    if (not options.browserChrome and
+        not options.chrome and
+        not options.a11y):
+      self.installSpecialPowersExtension(options)
+
     return manifest
 
   def buildBrowserEnv(self, options):
@@ -579,8 +604,9 @@ class Mochitest(object):
     manifest = self.buildProfile(options)
     if manifest is None:
       return 1
+
     self.startWebServer(options)
-    self.startWebSocketServer(options)
+    self.startWebSocketServer(options, debuggerInfo)
 
     testURL = self.buildTestPath(options)
     self.buildURLOptions(options)

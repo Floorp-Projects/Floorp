@@ -120,6 +120,7 @@ postflight_all:
 	  $(DIST_UNI)/$(MOZ_PKG_APPNAME)/$(APPNAME)
 # A universal .dmg can now be produced by making in either architecture's
 # INSTALLER_DIR.
+ifdef ENABLE_TESTS
 # Now, repeat the process for the test package.
 	$(MAKE) -C $(OBJDIR_ARCH_1) UNIVERSAL_BINARY= CHROME_JAR= package-tests
 	$(MAKE) -C $(OBJDIR_ARCH_2) UNIVERSAL_BINARY= CHROME_JAR= package-tests
@@ -137,3 +138,4 @@ postflight_all:
              $(DIST_ARCH_1)/test-package-stage                          \
              $(DIST_ARCH_2)/test-package-stage                          \
              $(DIST_UNI)/test-package-stage; fi
+endif

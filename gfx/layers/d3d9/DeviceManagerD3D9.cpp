@@ -181,7 +181,8 @@ SwapChainD3D9::Reset()
 #define LACKS_CAP(a, b) !(((a) & (b)) == (b))
 
 DeviceManagerD3D9::DeviceManagerD3D9()
-  : mHasDynamicTextures(false)
+  : mDeviceResetCount(0)
+  , mHasDynamicTextures(false)
   , mDeviceWasRemoved(false)
 {
 }
@@ -363,6 +364,20 @@ DeviceManagerD3D9::Init()
     return false;
   }
 
+  hr = mDevice->CreatePixelShader((DWORD*)ComponentPass1ShaderPS,
+                                  getter_AddRefs(mComponentPass1PS));
+
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  hr = mDevice->CreatePixelShader((DWORD*)ComponentPass2ShaderPS,
+                                  getter_AddRefs(mComponentPass2PS));
+
+  if (FAILED(hr)) {
+    return false;
+  }
+
   hr = mDevice->CreatePixelShader((DWORD*)YCbCrShaderPS,
                                   getter_AddRefs(mYCbCrPS));
 
@@ -436,6 +451,12 @@ DeviceManagerD3D9::SetupRenderState()
   mDevice->SetRenderState(D3DRS_SRCBLENDALPHA, D3DBLEND_ONE);
   mDevice->SetRenderState(D3DRS_DESTBLENDALPHA, D3DBLEND_INVSRCALPHA);
   mDevice->SetRenderState(D3DRS_BLENDOPALPHA, D3DBLENDOP_ADD);
+  mDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+  mDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+  mDevice->SetSamplerState(1, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+  mDevice->SetSamplerState(1, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+  mDevice->SetSamplerState(2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+  mDevice->SetSamplerState(2, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
   mDevice->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
   mDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
   mDevice->SetSamplerState(1, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
@@ -449,6 +470,15 @@ DeviceManagerD3D9::CreateSwapChain(HWND hWnd)
 {
   nsRefPtr<SwapChainD3D9> swapChain = new SwapChainD3D9(this);
   
+  // See bug 604647. This line means that if we create a window while the
+  // device is lost LayerManager initialization will fail, this window
+  // will be permanently unaccelerated. This should be a rare situation
+  // though and the need for a low-risk fix for this bug outweighs the
+  // downside.
+  if (!VerifyReadyForRendering()) {
+    return nsnull;
+  }
+
   if (!swapChain->Init(hWnd)) {
     return nsnull;
   }
@@ -467,6 +497,14 @@ DeviceManagerD3D9::SetShaderMode(ShaderMode aMode)
     case RGBALAYER:
       mDevice->SetVertexShader(mLayerVS);
       mDevice->SetPixelShader(mRGBAPS);
+      break;
+    case COMPONENTLAYERPASS1:
+      mDevice->SetVertexShader(mLayerVS);
+      mDevice->SetPixelShader(mComponentPass1PS);
+      break;
+    case COMPONENTLAYERPASS2:
+      mDevice->SetVertexShader(mLayerVS);
+      mDevice->SetPixelShader(mComponentPass2PS);
       break;
     case YCBCRLAYER:
       mDevice->SetVertexShader(mLayerVS);
@@ -488,28 +526,11 @@ DeviceManagerD3D9::VerifyReadyForRendering()
     if (IsD3D9Ex()) {
       hr = mDeviceEx->CheckDeviceState(mFocusWnd);
 
-      if (hr == D3DERR_DEVICEREMOVED) {
+      if (FAILED(hr)) {
         mDeviceWasRemoved = true;
         LayerManagerD3D9::OnDeviceManagerDestroy(this);
+        ++mDeviceResetCount;
         return false;
-      }
-
-      if (FAILED(hr)) {
-        D3DPRESENT_PARAMETERS pp;
-        memset(&pp, 0, sizeof(D3DPRESENT_PARAMETERS));
-
-        pp.BackBufferWidth = 1;
-        pp.BackBufferHeight = 1;
-        pp.BackBufferFormat = D3DFMT_A8R8G8B8;
-        pp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-        pp.Windowed = TRUE;
-        pp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
-        pp.hDeviceWindow = mFocusWnd;
-        
-        hr = mDeviceEx->ResetEx(&pp, NULL);
-        if (FAILED(hr)) {
-          return false;
-        }
       }
     }
     return true;
@@ -536,6 +557,7 @@ DeviceManagerD3D9::VerifyReadyForRendering()
   pp.hDeviceWindow = mFocusWnd;
 
   hr = mDevice->Reset(&pp);
+  ++mDeviceResetCount;
 
   if (hr == D3DERR_DEVICELOST) {
     return false;

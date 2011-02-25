@@ -274,7 +274,14 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   const unsigned long STENCIL_BACK_REF               = 0x8CA3;
   const unsigned long STENCIL_BACK_VALUE_MASK        = 0x8CA4;
   const unsigned long STENCIL_BACK_WRITEMASK         = 0x8CA5;
-  const unsigned long VIEWPORT_RECT                  = 0x0BA2;
+  // This is defined using a scriptable helper in nsDOMClassInfo.h,
+  // because otherwise the case conflicts with the viewport()
+  // method.  WebIDL is case-sensitive, but our current IDL parser
+  // is not.  Once this is fixed, the WebGL context can go back to
+  // using nsDOMGenericSH instead of nsWebGLViewportHandlerSH.
+  // It is not visible to non-JS languages, but the constant value
+  // can just be used.
+  //const unsigned long VIEWPORT                       = 0x0BA2;
   const unsigned long SCISSOR_BOX                    = 0x0C10;
   /*      GL_SCISSOR_TEST */
   const unsigned long COLOR_CLEAR_VALUE              = 0x0C22;
@@ -579,10 +586,12 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   [noscript] void bufferData_size(in WebGLenum target, in WebGLsizei size, in WebGLenum usage);
   [noscript] void bufferData_buf(in WebGLenum target, in WebGLArrayBufferPtr data, in WebGLenum usage);
   [noscript] void bufferData_array(in WebGLenum target, in WebGLArrayPtr data, in WebGLenum usage);
+  [noscript] void bufferData_null();
 
   void bufferSubData([optional] in long dummy);
   [noscript] void bufferSubData_buf(in WebGLenum target, in long offset, in WebGLArrayBufferPtr data);
   [noscript] void bufferSubData_array(in WebGLenum target, in long offset, in WebGLArrayPtr data);
+  [noscript] void bufferSubData_null();
 
   WebGLenum checkFramebufferStatus(in WebGLenum target);
   void clear(in WebGLbitfield mask);
@@ -820,4 +829,12 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void vertexAttribPointer(in WebGLuint idx, in WebGLint size, in WebGLenum type, in WebGLboolean normalized, in WebGLsizei stride, in WebGLsizeiptr offset);
 
   void viewport(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height);
+
+  // get an underlying GL parameter, without any WebGL intervention.
+  // Most useful for querying GL_VENDOR/GL_RENDERER for identifying
+  // the underlying renderer to the user.
+  [noscript] DOMString mozGetUnderlyingParamString(in WebGLenum pname);
+
+  // extensions
+  nsISupports getExtension(in DOMString name);
 };

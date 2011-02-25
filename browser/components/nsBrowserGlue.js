@@ -57,6 +57,11 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   return NetUtil;
 });
 
+XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
+  Cu.import("resource://gre/modules/PlacesUtils.jsm");
+  return PlacesUtils;
+});
+
 const PREF_EM_NEW_ADDONS_LIST = "extensions.newAddons";
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
 const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
@@ -141,9 +146,9 @@ BrowserGlue.prototype = {
     // delays are in seconds
     const MAX_DELAY = 300;
     let delay = 3;
-    let enum = Services.wm.getEnumerator("navigator:browser");
-    while (enum.hasMoreElements()) {
-      delay += enum.getNext().gBrowser.tabs.length;
+    let browserEnum = Services.wm.getEnumerator("navigator:browser");
+    while (browserEnum.hasMoreElements()) {
+      delay += browserEnum.getNext().gBrowser.tabs.length;
     }
     delay = delay <= MAX_DELAY ? delay : MAX_DELAY;
 
@@ -252,7 +257,9 @@ BrowserGlue.prototype = {
         if (data == "post-update-notification") {
           if (Services.prefs.prefHasUserValue("app.update.postupdate"))
             this._showUpdateNotification();
-          break;
+        }
+        else if (data == "force-ui-migration") {
+          this._migrateUI();
         }
         break;
     }
@@ -417,10 +424,7 @@ BrowserGlue.prototype = {
     }
 
     // Load the "more info" page for a locked places.sqlite
-    // This property is set earlier in the startup process:
-    // nsPlacesDBFlush loads after profile-after-change and initializes
-    // the history service, which sends out places-database-locked
-    // which sets this property.
+    // This property is set earlier by places-database-locked topic.
     if (this._isPlacesDatabaseLocked) {
       this._showPlacesLockedNotificationBox();
     }
@@ -435,6 +439,25 @@ BrowserGlue.prototype = {
     // If user has already dismissed quit request, then do nothing
     if ((aCancelQuit instanceof Ci.nsISupportsPRBool) && aCancelQuit.data)
       return;
+
+    // There are several cases where we won't show a dialog here:
+    // 1. There is only 1 tab open in 1 window
+    // 2. The session will be restored at startup, indicated by
+    //    browser.startup.page == 3 or browser.sessionstore.resume_session_once == true
+    // 3. browser.warnOnQuit == false
+    // 4. The browser is currently in Private Browsing mode
+    //
+    // Otherwise these are the conditions and the associated dialogs that will be shown:
+    // 1. aQuitType == "lastwindow" or "quit" and browser.showQuitWarning == true
+    //    - The quit dialog will be shown
+    // 2. aQuitType == "restart" && browser.warnOnRestart == true
+    //    - The restart dialog will be shown
+    // 3. aQuitType == "lastwindow" && browser.tabs.warnOnClose == true
+    //    - The "closing multiple tabs" dialog will be shown
+    //
+    // aQuitType == "lastwindow" is overloaded. "lastwindow" is used to indicate
+    // "the last window is closing but we're not quitting (a non-browser window is open)"
+    // and also "we're quitting by closing the last window".
 
     var windowcount = 0;
     var pagecount = 0;
@@ -452,38 +475,56 @@ BrowserGlue.prototype = {
     if (pagecount < 2)
       return;
 
-    if (aQuitType != "restart")
+    if (!aQuitType)
       aQuitType = "quit";
 
-    var showPrompt = true;
-    try {
-      // browser.warnOnQuit is a hidden global boolean to override all quit prompts
-      // browser.warnOnRestart specifically covers app-initiated restarts where we restart the app
-      // browser.tabs.warnOnClose is the global "warn when closing multiple tabs" pref
-
-      var sessionWillBeSaved = Services.prefs.getIntPref("browser.startup.page") == 3 ||
-                               Services.prefs.getBoolPref("browser.sessionstore.resume_session_once");
-      if (sessionWillBeSaved || !Services.prefs.getBoolPref("browser.warnOnQuit"))
-        showPrompt = false;
-      else if (aQuitType == "restart")
-        showPrompt = Services.prefs.getBoolPref("browser.warnOnRestart");
-      else
-        showPrompt = Services.prefs.getBoolPref("browser.tabs.warnOnClose");
-    } catch (ex) {}
-
-    // Never show a prompt inside the private browsing mode
+    // Never show a prompt inside private browsing mode
     var inPrivateBrowsing = Cc["@mozilla.org/privatebrowsing;1"].
                             getService(Ci.nsIPrivateBrowsingService).
                             privateBrowsingEnabled;
-    if (!showPrompt || inPrivateBrowsing)
+    if (inPrivateBrowsing)
+      return;
+
+    var showPrompt = false;
+    var mostRecentBrowserWindow;
+
+    // browser.warnOnQuit is a hidden global boolean to override all quit prompts
+    // browser.showQuitWarning specifically covers quitting
+    // browser.warnOnRestart specifically covers app-initiated restarts where we restart the app
+    // browser.tabs.warnOnClose is the global "warn when closing multiple tabs" pref
+
+    var sessionWillBeRestored = Services.prefs.getIntPref("browser.startup.page") == 3 ||
+                                Services.prefs.getBoolPref("browser.sessionstore.resume_session_once");
+    if (sessionWillBeRestored || !Services.prefs.getBoolPref("browser.warnOnQuit"))
+      return;
+
+    // On last window close or quit && showQuitWarning, we want to show the
+    // quit warning.
+    if (aQuitType != "restart" && Services.prefs.getBoolPref("browser.showQuitWarning")) {
+      showPrompt = true;
+    }
+    else if (aQuitType == "restart" && Services.prefs.getBoolPref("browser.warnOnRestart")) {
+      showPrompt = true;
+    }
+    else if (aQuitType == "lastwindow") {
+      // If aQuitType is "lastwindow" and we aren't showing the quit warning,
+      // we should show the window closing warning instead. warnAboutClosing
+      // tabs checks browser.tabs.warnOnClose and returns if it's ok to close
+      // the window. It doesn't actually close the window.
+      mostRecentBrowserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+      aCancelQuit.data = !mostRecentBrowserWindow.gBrowser.warnAboutClosingTabs(true);
+      return;
+    }
+
+    if (!showPrompt)
       return;
 
     var quitBundle = Services.strings.createBundle("chrome://browser/locale/quitDialog.properties");
     var brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
 
     var appName = brandBundle.GetStringFromName("brandShortName");
-    var quitDialogTitle = quitBundle.formatStringFromName(aQuitType + "DialogTitle",
-                                                          [appName], 1);
+    var quitTitleString = (aQuitType == "restart" ? "restart" : "quit") + "DialogTitle";
+    var quitDialogTitle = quitBundle.formatStringFromName(quitTitleString, [appName], 1);
 
     var message;
     if (aQuitType == "restart")
@@ -515,7 +556,10 @@ BrowserGlue.prototype = {
       button2Title = quitBundle.GetStringFromName("quitTitle");
     }
 
-    var mostRecentBrowserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    // This wouldn't have been set above since we shouldn't be here for
+    // aQuitType == "lastwindow"
+    mostRecentBrowserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+
     var buttonChoice =
       promptService.confirmEx(mostRecentBrowserWindow, quitDialogTitle, message,
                               flags, button0Title, button1Title, button2Title,
@@ -524,7 +568,7 @@ BrowserGlue.prototype = {
     switch (buttonChoice) {
     case 2: // Quit
       if (neverAsk.value)
-        Services.prefs.setBoolPref("browser.tabs.warnOnClose", false);
+        Services.prefs.setBoolPref("browser.showQuitWarning", false);
       break;
     case 1: // Cancel
       aCancelQuit.QueryInterface(Ci.nsISupportsPRBool);
@@ -767,24 +811,19 @@ BrowserGlue.prototype = {
     // We must instantiate the history service since it will tell us if we
     // need to import or restore bookmarks due to first-run, corruption or
     // forced migration (due to a major schema change).
-    var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                  getService(Ci.nsINavHistoryService);
-
     // If the database is corrupt or has been newly created we should
     // import bookmarks.
-    var databaseStatus = histsvc.databaseStatus;
-    var importBookmarks = databaseStatus == histsvc.DATABASE_STATUS_CREATE ||
-                          databaseStatus == histsvc.DATABASE_STATUS_CORRUPT;
+    var dbStatus = PlacesUtils.history.databaseStatus;
+    var importBookmarks = dbStatus == PlacesUtils.history.DATABASE_STATUS_CREATE ||
+                          dbStatus == PlacesUtils.history.DATABASE_STATUS_CORRUPT;
 
-    if (databaseStatus == histsvc.DATABASE_STATUS_CREATE) {
+    if (dbStatus == PlacesUtils.history.DATABASE_STATUS_CREATE) {
       // If the database has just been created, but we already have any
       // bookmark, this is not the initial import.  This can happen after a
       // migration from a different browser since migrators run before us.
       // In such a case we should not import, unless some pref has been set.
-      var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                  getService(Ci.nsINavBookmarksService);
-      if (bmsvc.getIdForItemAt(bmsvc.bookmarksMenuFolder, 0) != -1 ||
-          bmsvc.getIdForItemAt(bmsvc.toolbarFolder, 0) != -1)
+      if (PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.bookmarksMenuFolderId, 0) != -1 ||
+          PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.toolbarFolderId, 0) != -1)
         importBookmarks = false;
     }
 
@@ -814,7 +853,6 @@ BrowserGlue.prototype = {
     // from bookmarks.html, we will try to restore from JSON
     if (importBookmarks && !restoreDefaultBookmarks && !importBookmarksHTML) {
       // get latest JSON backup
-      Cu.import("resource://gre/modules/PlacesUtils.jsm");
       var bookmarksBackupFile = PlacesUtils.backups.getMostRecent("json");
       if (bookmarksBackupFile) {
         // restore from JSON backup
@@ -946,8 +984,6 @@ BrowserGlue.prototype = {
    * Backup bookmarks if needed.
    */
   _backupBookmarks: function BG__backupBookmarks() {
-    Cu.import("resource://gre/modules/PlacesUtils.jsm");
-
     let lastBackupFile = PlacesUtils.backups.getMostRecent();
 
     // Backup bookmarks if there are no backups or the maximum interval between
@@ -1003,7 +1039,8 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 3;
+    const UI_VERSION = 5;
+    const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
     let currentUIVersion = 0;
     try {
       currentUIVersion = Services.prefs.getIntPref("browser.migration.version");
@@ -1020,7 +1057,7 @@ BrowserGlue.prototype = {
       let currentsetResource = this._rdf.GetResource("currentset");
       let toolbars = ["nav-bar", "toolbar-menubar", "PersonalToolbar"];
       for (let i = 0; i < toolbars.length; i++) {
-        let toolbar = this._rdf.GetResource("chrome://browser/content/browser.xul#" + toolbars[i]);
+        let toolbar = this._rdf.GetResource(BROWSER_DOCURL + toolbars[i]);
         let currentset = this._getPersist(toolbar, currentsetResource);
         if (!currentset) {
           // toolbar isn't customized
@@ -1045,7 +1082,7 @@ BrowserGlue.prototype = {
     if (currentUIVersion < 2) {
       // This code adds the customizable bookmarks button.
       let currentsetResource = this._rdf.GetResource("currentset");
-      let toolbarResource = this._rdf.GetResource("chrome://browser/content/browser.xul#nav-bar");
+      let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "nav-bar");
       let currentset = this._getPersist(toolbarResource, currentsetResource);
       // Need to migrate only if toolbar is customized and the element is not found.
       if (currentset &&
@@ -1064,7 +1101,7 @@ BrowserGlue.prototype = {
     if (currentUIVersion < 3) {
       // This code merges the reload/stop/go button into the url bar.
       let currentsetResource = this._rdf.GetResource("currentset");
-      let toolbarResource = this._rdf.GetResource("chrome://browser/content/browser.xul#nav-bar");
+      let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "nav-bar");
       let currentset = this._getPersist(toolbarResource, currentsetResource);
       // Need to migrate only if toolbar is customized and all 3 elements are found.
       if (currentset &&
@@ -1072,11 +1109,55 @@ BrowserGlue.prototype = {
           currentset.indexOf("stop-button") != -1 &&
           currentset.indexOf("urlbar-container") != -1 &&
           currentset.indexOf("urlbar-container,reload-button,stop-button") == -1) {
-        currentset = currentset.replace(/(^|,)reload-button($|,)/, "$1$2").
-                                replace(/(^|,)stop-button($|,)/, "$1$2").
-                                replace(/(^|,)urlbar-container($|,)/,
+        currentset = currentset.replace(/(^|,)reload-button($|,)/, "$1$2")
+                               .replace(/(^|,)stop-button($|,)/, "$1$2")
+                               .replace(/(^|,)urlbar-container($|,)/,
                                         "$1urlbar-container,reload-button,stop-button$2");
         this._setPersist(toolbarResource, currentsetResource, currentset);
+      }
+    }
+
+    if (currentUIVersion < 4) {
+      // This code moves the home button to the immediate left of the bookmarks menu button.
+      let currentsetResource = this._rdf.GetResource("currentset");
+      let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "nav-bar");
+      let currentset = this._getPersist(toolbarResource, currentsetResource);
+      // Need to migrate only if toolbar is customized and the elements are found.
+      if (currentset &&
+          currentset.indexOf("home-button") != -1 &&
+          currentset.indexOf("bookmarks-menu-button-container") != -1) {
+        currentset = currentset.replace(/(^|,)home-button($|,)/, "$1$2")
+                               .replace(/(^|,)bookmarks-menu-button-container($|,)/,
+                                        "$1home-button,bookmarks-menu-button-container$2");
+        this._setPersist(toolbarResource, currentsetResource, currentset);
+      }
+    }
+
+    if (currentUIVersion < 5) {
+      // This code uncollapses PersonalToolbar if its collapsed status is not
+      // persisted, and user customized it or changed default bookmarks.
+      let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "PersonalToolbar");
+      let collapsedResource = this._rdf.GetResource("collapsed");
+      let collapsed = this._getPersist(toolbarResource, collapsedResource);
+      // If the user does not have a persisted value for the toolbar's
+      // "collapsed" attribute, try to determine whether it's customized.
+      if (collapsed === null) {
+        // We consider the toolbar customized if it has more than
+        // 3 children, or if it has a persisted currentset value.
+        let currentsetResource = this._rdf.GetResource("currentset");
+        let toolbarIsCustomized = !!this._getPersist(toolbarResource,
+                                                     currentsetResource);
+        function getToolbarFolderCount() {
+          let toolbarFolder =
+            PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId).root;
+          let toolbarChildCount = toolbarFolder.childCount;
+          toolbarFolder.containerOpen = false;
+          return toolbarChildCount;
+        }
+
+        if (toolbarIsCustomized || getToolbarFolderCount() > 3) {
+          this._setPersist(toolbarResource, collapsedResource, "false");
+        }
       }
     }
 
@@ -1110,6 +1191,15 @@ BrowserGlue.prototype = {
       else {
         this._dataSource.Assert(aSource, aProperty, this._rdf.GetLiteral(aTarget), true);
       }
+
+      // Add the entry to the persisted set for this document if it's not there.
+      // This code is mostly borrowed from nsXULDocument::Persist.
+      let docURL = aSource.ValueUTF8.split("#")[0];
+      let docResource = this._rdf.GetResource(docURL);
+      let persistResource = this._rdf.GetResource("http://home.netscape.com/NC-rdf#persist");
+      if (!this._dataSource.HasAssertion(docResource, persistResource, aSource, true)) {
+        this._dataSource.Assert(docResource, persistResource, aSource, true);
+      }
     }
     catch(ex) {}
   },
@@ -1137,54 +1227,39 @@ BrowserGlue.prototype = {
     // TODO bug 399268: should this be a pref?
     const MAX_RESULTS = 10;
 
-    // get current smart bookmarks version
-    // By default, if the pref is not set up, we must create Smart Bookmarks
-    var smartBookmarksCurrentVersion = 0;
+    // Get current smart bookmarks version.  If not set, create them.
+    let smartBookmarksCurrentVersion = 0;
     try {
       smartBookmarksCurrentVersion = Services.prefs.getIntPref(SMART_BOOKMARKS_PREF);
-    } catch(ex) { /* no version set, new profile */ }
+    } catch(ex) {}
 
-    // bail out if we don't have to create or update Smart Bookmarks
+    // If version is current or smart bookmarks are disabled, just bail out.
     if (smartBookmarksCurrentVersion == -1 ||
-        smartBookmarksCurrentVersion >= SMART_BOOKMARKS_VERSION)
+        smartBookmarksCurrentVersion >= SMART_BOOKMARKS_VERSION) {
       return;
+    }
 
-    var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                getService(Ci.nsINavBookmarksService);
-    var annosvc = Cc["@mozilla.org/browser/annotation-service;1"].
-                  getService(Ci.nsIAnnotationService);
-
-    var callback = {
-      _uri: function BG_EPDQI__uri(aSpec) {
-        return Services.io.newURI(aSpec, null, null);
-      },
-
+    let batch = {
       runBatched: function BG_EPDQI_runBatched() {
-        var smartBookmarks = [];
-        var bookmarksMenuIndex = 0;
-        var bookmarksToolbarIndex = 0;
+        let menuIndex = 0;
+        let toolbarIndex = 0;
+        let bundle = Services.strings.createBundle("chrome://browser/locale/places/places.properties");
 
-        var placesBundle = Services.strings.createBundle("chrome://browser/locale/places/places.properties");
-
-        // MOST VISITED
-        var smart = {queryId: "MostVisited", // don't change this
-                     itemId: null,
-                     title: placesBundle.GetStringFromName("mostVisitedTitle"),
-                     uri: this._uri("place:redirectsMode=" +
-                                    Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_TARGET +
-                                    "&sort=" +
-                                    Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING +
-                                    "&maxResults=" + MAX_RESULTS),
-                     parent: bmsvc.toolbarFolder,
-                     position: bookmarksToolbarIndex++,
-                     newInVersion: 1 };
-        smartBookmarks.push(smart);
-
-        // RECENTLY BOOKMARKED
-        smart = {queryId: "RecentlyBookmarked", // don't change this
-                 itemId: null,
-                 title: placesBundle.GetStringFromName("recentlyBookmarkedTitle"),
-                 uri: this._uri("place:folder=BOOKMARKS_MENU" +
+        let smartBookmarks = {
+          MostVisited: {
+            title: bundle.GetStringFromName("mostVisitedTitle"),
+            uri: NetUtil.newURI("place:redirectsMode=" +
+                                Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_TARGET +
+                                "&sort=" +
+                                Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING +
+                                "&maxResults=" + MAX_RESULTS),
+            parent: PlacesUtils.toolbarFolderId,
+            position: toolbarIndex++,
+            newInVersion: 1
+          },
+          RecentlyBookmarked: {
+            title: bundle.GetStringFromName("recentlyBookmarkedTitle"),
+            uri: NetUtil.newURI("place:folder=BOOKMARKS_MENU" +
                                 "&folder=UNFILED_BOOKMARKS" +
                                 "&folder=TOOLBAR" +
                                 "&queryType=" +
@@ -1194,84 +1269,91 @@ BrowserGlue.prototype = {
                                 "&excludeItemIfParentHasAnnotation=livemark%2FfeedURI" +
                                 "&maxResults=" + MAX_RESULTS +
                                 "&excludeQueries=1"),
-                 parent: bmsvc.bookmarksMenuFolder,
-                 position: bookmarksMenuIndex++,
-                 newInVersion: 1 };
-        smartBookmarks.push(smart);
+            parent: PlacesUtils.bookmarksMenuFolderId,
+            position: menuIndex++,
+            newInVersion: 1
+          },
+          RecentTags: {
+            title: bundle.GetStringFromName("recentTagsTitle"),
+            uri: NetUtil.newURI("place:"+
+                                "type=" +
+                                Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY +
+                                "&sort=" +
+                                Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_DESCENDING +
+                                "&maxResults=" + MAX_RESULTS),
+            parent: PlacesUtils.bookmarksMenuFolderId,
+            position: menuIndex++,
+            newInVersion: 1
+          },
+        };
 
-        // RECENT TAGS
-        smart = {queryId: "RecentTags", // don't change this
-                 itemId: null,
-                 title: placesBundle.GetStringFromName("recentTagsTitle"),
-                 uri: this._uri("place:"+
-                    "type=" +
-                    Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY +
-                    "&sort=" +
-                    Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_DESCENDING +
-                    "&maxResults=" + MAX_RESULTS),
-                 parent: bmsvc.bookmarksMenuFolder,
-                 position: bookmarksMenuIndex++,
-                 newInVersion: 1 };
-        smartBookmarks.push(smart);
-
-        var smartBookmarkItemIds = annosvc.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
         // Set current itemId, parent and position if Smart Bookmark exists,
         // we will use these informations to create the new version at the same
         // position.
-        for each(var itemId in smartBookmarkItemIds) {
-          var queryId = annosvc.getItemAnnotation(itemId, SMART_BOOKMARKS_ANNO);
-          for (var i = 0; i < smartBookmarks.length; i++){
-            if (smartBookmarks[i].queryId == queryId) {
-              smartBookmarks[i].found = true;
-              smartBookmarks[i].itemId = itemId;
-              smartBookmarks[i].parent = bmsvc.getFolderIdForItem(itemId);
-              smartBookmarks[i].position = bmsvc.getItemIndex(itemId);
-              // remove current item, since it will be replaced
-              bmsvc.removeItem(itemId);
-              break;
-            }
+        let smartBookmarkItemIds = PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
+        smartBookmarkItemIds.forEach(function (itemId) {
+          let queryId = PlacesUtils.annotations.getItemAnnotation(itemId, SMART_BOOKMARKS_ANNO);
+          if (queryId in smartBookmarks) {
+            let smartBookmark = smartBookmarks[queryId];
+            smartBookmarks[queryId].itemId = itemId;
+            smartBookmarks[queryId].parent = PlacesUtils.bookmarks.getFolderIdForItem(itemId);
+            smartBookmarks[queryId].position = PlacesUtils.bookmarks.getItemIndex(itemId);
+          }
+          else {
             // We don't remove old Smart Bookmarks because user could still
             // find them useful, or could have personalized them.
             // Instead we remove the Smart Bookmark annotation.
-            if (i == smartBookmarks.length - 1)
-              annosvc.removeItemAnnotation(itemId, SMART_BOOKMARKS_ANNO);
+            PlacesUtils.annotations.removeItemAnnotation(itemId, SMART_BOOKMARKS_ANNO);
           }
-        }
+        });
 
-        // create smart bookmarks
-        for each(var smartBookmark in smartBookmarks) {
+        for (let queryId in smartBookmarks) {
+          let smartBookmark = smartBookmarks[queryId];
+
           // We update or create only changed or new smart bookmarks.
           // Also we respect user choices, so we won't try to create a smart
           // bookmark if it has been removed.
           if (smartBookmarksCurrentVersion > 0 &&
               smartBookmark.newInVersion <= smartBookmarksCurrentVersion &&
-              !smartBookmark.found)
+              !smartBookmark.itemId)
             continue;
 
-          smartBookmark.itemId = bmsvc.insertBookmark(smartBookmark.parent,
-                                                      smartBookmark.uri,
-                                                      smartBookmark.position,
-                                                      smartBookmark.title);
-          annosvc.setItemAnnotation(smartBookmark.itemId,
-                                    SMART_BOOKMARKS_ANNO, smartBookmark.queryId,
-                                    0, annosvc.EXPIRE_NEVER);
+          // Remove old version of the smart bookmark if it exists, since it
+          // will be replaced in place.
+          if (smartBookmark.itemId) {
+            PlacesUtils.bookmarks.removeItem(smartBookmark.itemId);
+          }
+
+          // Create the new smart bookmark and store its updated itemId.
+          smartBookmark.itemId =
+            PlacesUtils.bookmarks.insertBookmark(smartBookmark.parent,
+                                                 smartBookmark.uri,
+                                                 smartBookmark.position,
+                                                 smartBookmark.title);
+          PlacesUtils.annotations.setItemAnnotation(smartBookmark.itemId,
+                                                    SMART_BOOKMARKS_ANNO,
+                                                    queryId, 0,
+                                                    PlacesUtils.annotations.EXPIRE_NEVER);
         }
 
         // If we are creating all Smart Bookmarks from ground up, add a
         // separator below them in the bookmarks menu.
         if (smartBookmarksCurrentVersion == 0 &&
             smartBookmarkItemIds.length == 0) {
-          let id = bmsvc.getIdForItemAt(bmsvc.bookmarksMenuFolder,
-                                        bookmarksMenuIndex);
+          let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.bookmarksMenuFolderId,
+                                                        menuIndex);
           // Don't add a separator if the menu was empty or there is one already.
-          if (id != -1 && bmsvc.getItemType(id) != bmsvc.TYPE_SEPARATOR)
-            bmsvc.insertSeparator(bmsvc.bookmarksMenuFolder, bookmarksMenuIndex);
+          if (id != -1 &&
+              PlacesUtils.bookmarks.getItemType(id) != PlacesUtils.bookmarks.TYPE_SEPARATOR) {
+            PlacesUtils.bookmarks.insertSeparator(PlacesUtils.bookmarksMenuFolderId,
+                                                  menuIndex);
+          }
         }
       }
     };
 
     try {
-      bmsvc.runInBatchMode(callback, null);
+      PlacesUtils.bookmarks.runInBatchMode(batch, null);
     }
     catch(ex) {
       Components.utils.reportError(ex);

@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      div:not(:lang(foo)) { display: none; }
+    </style>
+  </head>
+  <body onload="document.body.offsetWidth; document.body.lang = 'foo'">
+    <div>This text should be visible</div>
+  </body>
+</html>

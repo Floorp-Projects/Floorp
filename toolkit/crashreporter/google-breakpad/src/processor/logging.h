@@ -68,6 +68,15 @@
 
 namespace google_breakpad {
 
+// These are defined in Microsoft headers.
+#ifdef SEVERITY_ERROR
+#undef SEVERITY_ERROR
+#endif
+
+#ifdef ERROR
+#undef ERROR
+#endif
+
 class LogStream {
  public:
   enum Severity {

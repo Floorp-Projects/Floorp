@@ -71,6 +71,9 @@
 #include "nsIDOMDocument.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
+#if defined(XP_MACOSX)
+#include "nsThreadUtils.h"
+#endif
 
 // CIDs
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -948,7 +951,28 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
 
 //*****************************************************************************
 // nsContentTreeOwner: Accessors
-//*****************************************************************************   
+//*****************************************************************************
+
+#if defined(XP_MACOSX)
+class nsContentTitleSettingEvent : public nsRunnable
+{
+public:
+  nsContentTitleSettingEvent(nsIDOMElement *dse, const nsAString& wtm)
+    : mElement(dse),
+      mTitleDefault(wtm) {}
+
+  NS_IMETHOD Run()
+  {
+    mElement->SetAttribute(NS_LITERAL_STRING("titledefault"), mTitleDefault);
+    mElement->RemoveAttribute(NS_LITERAL_STRING("titlemodifier"));
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIDOMElement> mElement;
+  nsString mTitleDefault;
+};
+#endif
 
 void nsContentTreeOwner::XULWindow(nsXULWindow* aXULWindow)
 {
@@ -975,9 +999,9 @@ void nsContentTreeOwner::XULWindow(nsXULWindow* aXULWindow)
             // On OS X, treat the titlemodifier like it's the titledefault, and don't ever append
             // the separator + appname.
             if (mTitleDefault.IsEmpty()) {
-                docShellElement->SetAttribute(NS_LITERAL_STRING("titledefault"),
-                                              mWindowTitleModifier);
-                docShellElement->RemoveAttribute(NS_LITERAL_STRING("titlemodifier"));
+                NS_DispatchToCurrentThread(
+                    new nsContentTitleSettingEvent(docShellElement,
+                                                   mWindowTitleModifier));
                 mTitleDefault = mWindowTitleModifier;
                 mWindowTitleModifier.Truncate();
             }

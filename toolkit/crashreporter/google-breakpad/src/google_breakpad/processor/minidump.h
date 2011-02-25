@@ -79,7 +79,9 @@
 #ifndef GOOGLE_BREAKPAD_PROCESSOR_MINIDUMP_H__
 #define GOOGLE_BREAKPAD_PROCESSOR_MINIDUMP_H__
 
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 
 #include <iostream>
 #include <map>

@@ -63,7 +63,7 @@ function onTabViewWindowLoaded() {
   let contentWindow = newWin.document.getElementById("tab-view").contentWindow;
 
   // 1) the tab should belong to a group, and no orphan tabs
-  ok(tabOne.tabItem.parent, "Tab one belongs to a group");
+  ok(tabOne._tabViewTabItem.parent, "Tab one belongs to a group");
   is(contentWindow.GroupItems.getOrphanedTabs().length, 0, "No orphaned tabs");
 
   // 2) create a group, add a blank tab 
@@ -92,7 +92,7 @@ function onTabViewWindowLoaded() {
     };
     let tabItem = groupItem.getChild(0);
     // the item may not be connected so subscriber would be used in that case.
-    if (tabItem.reconnected) {
+    if (tabItem._reconnected) {
       checkAndFinish();
     } else {
       tabItem.addSubscriber(tabItem, "reconnected", function() {

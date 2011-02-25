@@ -395,8 +395,9 @@ NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
   //  seem to be reliable in all cases: http://gcc.gnu.org/PR46164
   PRUint32 result;
   asm (
+    "mov    r3, sp\n"
     "mov    %[stack_space_size], %[param_count_plus_2], lsl #3\n"
-    "tst    sp, #4\n" /* check stack alignment */
+    "tst    r3, #4\n" /* check stack alignment */
 
     "add    %[stack_space_size], #(4 * 16)\n" /* space for VFP registers */
     "mov    r3, %[params]\n"

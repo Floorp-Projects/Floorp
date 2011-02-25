@@ -341,6 +341,39 @@ nsSVGTextFrame::UpdateGlyphPositioning(PRBool aForceGlobalTransform)
   
     PRUint8 anchor = firstFragment->GetTextAnchor();
 
+    /**
+     * XXXsmontagu: The SVG spec is very vague as to how 'text-anchor'
+     *  interacts with bidirectional text. It says:
+     *
+     *   "For scripts that are inherently right to left such as Hebrew and
+     *   Arabic [text-anchor: start] is equivalent to right alignment."
+     * and
+     *   "For scripts that are inherently right to left such as Hebrew and
+     *   Arabic, [text-anchor: end] is equivalent to left alignment.
+     *
+     * It's not clear how this should be implemented in terms of defined
+     * properties, i.e. how one should determine that a particular element
+     * contains a script that is inherently right to left.
+     *
+     * The code below follows http://www.w3.org/TR/SVGTiny12/text.html#TextAnchorProperty
+     * and swaps the values of text-anchor: end and  text-anchor: start
+     * whenever the 'direction' property is rtl.
+     *
+     * This is probably the "right" thing to do, but other browsers don't do it,
+     * so I am leaving it inside #if 0 for now for interoperability.
+     *
+     * See also XXXsmontagu comments in nsSVGGlyphFrame::EnsureTextRun
+     */
+#if 0
+    if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+      if (anchor == NS_STYLE_TEXT_ANCHOR_END) {
+        anchor = NS_STYLE_TEXT_ANCHOR_START;
+      } else if (anchor == NS_STYLE_TEXT_ANCHOR_START) {
+        anchor = NS_STYLE_TEXT_ANCHOR_END;
+      }
+    }
+#endif
+
     float chunkLength = 0.0f;
     if (anchor != NS_STYLE_TEXT_ANCHOR_START) {
       // need to get the total chunk length

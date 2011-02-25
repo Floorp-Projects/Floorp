@@ -102,7 +102,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStandaloneNativeMenu)
 #include "GfxInfo.h"
 namespace mozilla {
 namespace widget {
-NS_GENERIC_FACTORY_CONSTRUCTOR(GfxInfo)
+// This constructor should really be shared with all platforms.
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GfxInfo, Init)
 }
 }
 

@@ -37,12 +37,14 @@
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsISVGValueUtils.h"
-#include "nsSVGPreserveAspectRatio.h"
+#include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsSVGMatrix.h"
 #include "nsDOMError.h"
 #include "nsSVGUtils.h"
 #include "nsSVGMarkerElement.h"
 #include "gfxMatrix.h"
+
+using namespace mozilla;
 
 nsSVGElement::LengthInfo nsSVGMarkerElement::sLengthInfo[4] =
 {
@@ -218,7 +220,8 @@ NS_IMETHODIMP nsSVGMarkerElement::SetOrientToAngle(nsIDOMSVGAngle *angle)
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
   float f;
-  angle->GetValue(&f);
+  nsresult rv = angle->GetValue(&f);
+  NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_FINITE(f, NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
   mAngleAttributes[ORIENT].SetBaseValue(f, this);
 
@@ -371,7 +374,7 @@ nsSVGMarkerElement::GetViewBox()
   return &mViewBox;
 }
 
-nsSVGPreserveAspectRatio *
+SVGAnimatedPreserveAspectRatio *
 nsSVGMarkerElement::GetPreserveAspectRatio()
 {
   return &mPreserveAspectRatio;

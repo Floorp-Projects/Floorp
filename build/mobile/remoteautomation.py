@@ -72,6 +72,21 @@ class RemoteAutomation(Automation):
     def setRemoteLog(self, logfile):
         self._remoteLog = logfile
 
+    # Set up what we need for the remote environment
+    def environment(self, env = None, xrePath = None, crashreporter = True):
+        # Because we are running remote, we don't want to mimic the local env
+        # so no copying of os.environ
+        if env is None:
+            env = {}
+
+        if crashreporter:
+            env['MOZ_CRASHREPORTER_NO_REPORT'] = '1'
+            env['MOZ_CRASHREPORTER'] = '1'
+        else:
+            env['MOZ_CRASHREPORTER_DISABLE'] = '1'
+
+        return env
+
     def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsDir):
         # maxTime is used to override the default timeout, we should honor that
         status = proc.wait(timeout = maxTime)
@@ -115,7 +130,7 @@ class RemoteAutomation(Automation):
         dm = None
         def __init__(self, dm, cmd, stdout = None, stderr = None, env = None, cwd = '.'):
             self.dm = dm
-            self.proc = dm.launchProcess(cmd, stdout)
+            self.proc = dm.launchProcess(cmd, stdout, cwd, env)
             exepath = cmd[0]
             name = exepath.split('/')[-1]
             self.procName = name
@@ -127,7 +142,7 @@ class RemoteAutomation(Automation):
         @property
         def pid(self):
             hexpid = self.dm.processExist(self.procName)
-            if (hexpid == '' or hexpid == None):
+            if (hexpid == None):
                 hexpid = "0x0"
             return int(hexpid, 0)
     

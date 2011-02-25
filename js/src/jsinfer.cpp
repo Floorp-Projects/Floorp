@@ -818,7 +818,7 @@ TypeConstraintElem::newType(JSContext *cx, TypeSet *source, jstype type)
         else
             target->addType(cx, TYPE_UNKNOWN);
     }
-};
+}
 
 void
 TypeConstraintNewObject::newType(JSContext *cx, TypeSet *source, jstype type)
@@ -1471,16 +1471,6 @@ TypeCompartment::addDynamicPush(JSContext *cx, JSScript *script, uint32 offset,
     if (cs->format & (JOF_INC | JOF_DEC)) {
 
         switch (op) {
-          case JSOP_INCGLOBAL:
-          case JSOP_DECGLOBAL:
-          case JSOP_GLOBALINC:
-          case JSOP_GLOBALDEC: {
-            jsid id = GetGlobalId(cx, script, pc);
-            TypeSet *types = script->getGlobalType()->getProperty(cx, id, true);
-            types->addType(cx, type);
-            break;
-          }
-
           case JSOP_INCGNAME:
           case JSOP_DECGNAME:
           case JSOP_GNAMEINC:
@@ -1628,9 +1618,11 @@ TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32 offset)
       case JSOP_INITMETHOD:
       case JSOP_FORPROP:
       case JSOP_FORNAME:
+      case JSOP_FORGNAME:
       case JSOP_ENUMELEM:
       case JSOP_DEFFUN:
       case JSOP_DEFFUN_FC:
+      case JSOP_ARRAYPUSH:
         break;
       case JSOP_INCNAME:
       case JSOP_DECNAME:
@@ -1905,8 +1897,8 @@ void BuildScopeStack(JSContext *cx, JSScript *script, AnalyzeState &state)
         ScriptScope scope;
         scope.script = script;
         scope.localNames = NULL;
-        if (script->fun && script->fun->hasLocalNames())
-            scope.localNames = script->fun->getLocalNameArray(cx, &state.pool);
+        if (script->bindings.hasLocalNames())
+            scope.localNames = script->bindings.getLocalNameArray(cx, &state.pool);
 
         state.scopeStack[state.scopeCount++] = scope;
         script = script->parent;
@@ -2242,6 +2234,12 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
             pushed[0].addType(cx, TYPE_UNKNOWN);
         break;
 
+      case JSOP_OBJECT: {
+        JSObject *obj = GetScriptObject(cx, script, pc, 0);
+        pushed[0].addType(cx, (jstype) obj->getType());
+        break;
+      }
+
       case JSOP_STOP:
         /* If a stop is reachable then the return type may be void. */
         if (script->fun)
@@ -2319,7 +2317,8 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
         }
 
         if (op == JSOP_CALLGLOBAL || op == JSOP_CALLGNAME || op == JSOP_CALLNAME)
-            pushed[1].addType(cx, scope.unknown() ? TYPE_UNKNOWN : TYPE_UNDEFINED);
+            pushed[1].addType(cx, TYPE_UNKNOWN);
+
         if (CheckNextTest(pc))
             pushed[0].addType(cx, TYPE_UNDEFINED);
         break;
@@ -2390,35 +2389,14 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
         break;
       }
 
-      case JSOP_SETGLOBAL:
       case JSOP_SETCONST: {
-        /*
-         * Even though they are on the global object, GLOBAL accesses do not run into
-         * the issues which require monitoring that other property accesses do:
-         * __proto__ is still emitted as a SETGNAME even if there is a 'var __proto__',
-         * and there will be no getter/setter in a prototype, and 'constructor',
-         * 'prototype' and 'caller' do not have special meaning on the global object.
-         */
-        jsid id = (op == JSOP_SETGLOBAL) ? GetGlobalId(cx, script, pc) : GetAtomId(cx, script, pc, 0);
+        jsid id = GetAtomId(cx, script, pc, 0);
         TypeSet *types = script->getGlobalType()->getProperty(cx, id, true);
         state.popped(0).types->addSubset(cx, pool, types);
         state.popped(0).types->addSubset(cx, pool, &pushed[0]);
         break;
       }
 
-      case JSOP_INCGLOBAL:
-      case JSOP_DECGLOBAL:
-      case JSOP_GLOBALINC:
-      case JSOP_GLOBALDEC: {
-        jsid id = GetGlobalId(cx, script, pc);
-        TypeSet *types = script->getGlobalType()->getProperty(cx, id, true);
-        types->addArith(cx, cx->compartment->types.pool, types);
-        types->addSubset(cx, cx->compartment->types.pool, &pushed[0]);
-        break;
-      }
-
-      case JSOP_GETUPVAR:
-      case JSOP_CALLUPVAR:
       case JSOP_GETFCSLOT:
       case JSOP_CALLFCSLOT: {
         unsigned index = GET_UINT16(pc);
@@ -2431,7 +2409,7 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
             types->addSubset(cx, newScript->types->pool, &pushed[0]);
         else
             pushed[0].addType(cx, type);
-        if (op == JSOP_CALLUPVAR || op == JSOP_CALLFCSLOT)
+        if (op == JSOP_CALLFCSLOT)
             pushed[1].addType(cx, TYPE_UNDEFINED);
         break;
       }
@@ -2807,7 +2785,8 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
         pushed[1].addType(cx, TYPE_BOOLEAN);
         break;
 
-      case JSOP_FORNAME: {
+      case JSOP_FORNAME:
+      case JSOP_FORGNAME: {
         jsid id = GetAtomId(cx, script, pc, 0);
 
         ScriptScopeResult scope;
@@ -2819,12 +2798,6 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
             SetForTypes(cx, script, state, scope.types);
         else
             cx->compartment->types.monitorBytecode(cx, script, offset);
-        break;
-      }
-
-      case JSOP_FORGLOBAL: {
-        jsid id = GetGlobalId(cx, script, pc);
-        SetForTypes(cx, script, state, script->getGlobalType()->getProperty(cx, id, true));
         break;
       }
 
@@ -3171,8 +3144,6 @@ TypeScript::nukeUpvarTypes(JSContext *cx, JSScript *script)
 
         JSOp op = JSOp(*pc);
         switch (op) {
-          case JSOP_GETUPVAR:
-          case JSOP_CALLUPVAR:
           case JSOP_GETFCSLOT:
           case JSOP_CALLFCSLOT:
           case JSOP_GETXPROP:
@@ -3474,8 +3445,8 @@ IgnorePushed(JSOp op, unsigned index)
 
       /* We don't keep track of the iteration state for 'for in' or 'for each in' loops. */
       case JSOP_FORNAME:
+      case JSOP_FORGNAME:
       case JSOP_FORLOCAL:
-      case JSOP_FORGLOBAL:
       case JSOP_FORARG:
       case JSOP_FORPROP:
       case JSOP_FORELEM:

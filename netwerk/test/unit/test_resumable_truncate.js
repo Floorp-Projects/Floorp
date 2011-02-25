@@ -8,8 +8,6 @@ function make_channel(url, callback, ctx) {
   return ios.newChannel(url, "", null);
 }
 
-var do304 = false;
-
 const responseBody = "response body";
 
 function cachedHandler(metadata, response) {
@@ -27,9 +25,6 @@ function cachedHandler(metadata, response) {
     // always respond to successful range requests with 206
     response.setStatusLine(metadata.httpVersion, 206, "Partial Content");
     response.setHeader("Content-Range", from + "-" + to + "/" + responseBody.length, false);
-  } else if (do304) {
-    response.setStatusLine(metadata.httpVersion, 304, "Not Modified");
-    return;
   }
 
   response.setHeader("Content-Type", "text/plain", false);
@@ -71,13 +66,11 @@ function finish_test() {
 }
 
 function start_cache_read() {
-  do304 = true;
   var chan = make_channel("http://localhost:4444/cached/test.gz");
   chan.asyncOpen(new ChannelListener(finish_test, null), null);
 }
 
 function start_canceler() {
-  do304 = false;
   var chan = make_channel("http://localhost:4444/cached/test.gz");
   chan.asyncOpen(new Canceler(start_cache_read), null);
 }
@@ -87,7 +80,6 @@ function run_test() {
   httpserver.registerPathHandler("/cached/test.gz", cachedHandler);
   httpserver.start(4444);
 
-  do304 = false;
   var chan = make_channel("http://localhost:4444/cached/test.gz");
   chan.asyncOpen(new ChannelListener(start_canceler, null), null);
   do_test_pending();

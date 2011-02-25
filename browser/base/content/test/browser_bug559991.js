@@ -18,19 +18,12 @@ function test() {
   let oldAPTS = FullZoom._applyPrefToSetting;
   let uri = "http://example.org/browser/browser/base/content/test/dummy_page.html";
 
-  // ------------------------------------------------------
-  // Test 1 - Zoom should not be called if URIs don't match
-  FullZoom._applyPrefToSetting = function() {
-    ok(false, "This should not be called");
-  };
-  FullZoom.onLocationChange(makeURI(uri), true);
-
   let tab = gBrowser.addTab();
   tab.linkedBrowser.addEventListener("load", function(event) {
     tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
 
     // -------------------------------------------------------------------
-    // Test 2 - Trigger a tab switch that should now update the zoom level
+    // Test - Trigger a tab switch that should update the zoom level
     FullZoom._applyPrefToSetting = function() {
       ok(true, "applyPrefToSetting was called");
       endTest();

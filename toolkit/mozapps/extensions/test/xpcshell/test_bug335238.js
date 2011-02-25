@@ -69,6 +69,30 @@ var EXPECTED = [
     appAbi: "noarch-spidermonkey",
     locale: "en-US",
     reqVersion: "2"
+  },
+  {
+    id: "bug335238_3@tests.mozilla.org",
+    version: "58",
+    maxAppVersion: "*",
+    status: "userDisabled,softblocked",
+    appId: "xpcshell@tests.mozilla.org",
+    appVersion: "1",
+    appOs: "XPCShell",
+    appAbi: "noarch-spidermonkey",
+    locale: "en-US",
+    reqVersion: "2"
+  },
+  {
+    id: "bug335238_4@tests.mozilla.org",
+    version: "4",
+    maxAppVersion: "2+",
+    status: "userEnabled,blocklisted",
+    appId: "xpcshell@tests.mozilla.org",
+    appVersion: "1",
+    appOs: "XPCShell",
+    appAbi: "noarch-spidermonkey",
+    locale: "en-US",
+    reqVersion: "2"
   }
 ];
 
@@ -76,8 +100,51 @@ var ADDONS = [
   {id: "bug335238_1@tests.mozilla.org",
    addon: "test_bug335238_1"},
   {id: "bug335238_2@tests.mozilla.org",
-   addon: "test_bug335238_2"}
+   addon: "test_bug335238_2"},
+  {id: "bug335238_3@tests.mozilla.org",
+   addon: "test_bug335238_3"},
+  {id: "bug335238_4@tests.mozilla.org",
+   addon: "test_bug335238_4"}
 ];
+
+// This is a replacement for the blocklist service
+var BlocklistService = {
+  getAddonBlocklistState: function(aId, aVersion, aAppVersion, aToolkitVersion) {
+    if (aId == "bug335238_3@tests.mozilla.org")
+      return Ci.nsIBlocklistService.STATE_SOFTBLOCKED;
+    if (aId == "bug335238_4@tests.mozilla.org")
+      return Ci.nsIBlocklistService.STATE_BLOCKED;
+    return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
+  },
+
+  getPluginBlocklistState: function(aPlugin, aVersion, aAppVersion, aToolkitVersion) {
+    return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
+  },
+
+  isAddonBlocklisted: function(aId, aVersion, aAppVersion, aToolkitVersion) {
+    return this.getAddonBlocklistState(aId, aVersion, aAppVersion, aToolkitVersion) ==
+           Ci.nsIBlocklistService.STATE_BLOCKED;
+  },
+
+  QueryInterface: function(iid) {
+    if (iid.equals(Components.interfaces.nsIBlocklistService)
+     || iid.equals(Components.interfaces.nsISupports))
+      return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  }
+};
+
+var BlocklistServiceFactory = {
+  createInstance: function (outer, iid) {
+    if (outer != null)
+      throw Components.results.NS_ERROR_NO_AGGREGATION;
+    return BlocklistService.QueryInterface(iid);
+  }
+};
+var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+registrar.registerFactory(Components.ID("{61189e7a-6b1b-44b8-ac81-f180a6105085}"), "BlocklistService",
+                          "@mozilla.org/extensions/blocklist;1", BlocklistServiceFactory);
 
 var server;
 
@@ -117,6 +184,8 @@ function run_test() {
   server = new nsHttpServer();
   server.registerPathHandler("/0", requestHandler);
   server.registerPathHandler("/1", requestHandler);
+  server.registerPathHandler("/2", requestHandler);
+  server.registerPathHandler("/3", requestHandler);
   server.start(4444);
 
   Services.prefs.setBoolPref(PREF_MATCH_OS_LOCALE, false);

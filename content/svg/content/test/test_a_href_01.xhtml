@@ -1,0 +1,93 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=620295
+-->
+<head>
+  <title>Test that activating SVG 'a' elements navigate to their xlink:href</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=620295">Mozilla Bug 620295</a>
+<p id="display"></p>
+<pre id="test">
+<script class="testbody" type="text/javascript"><![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var testCount = 4;
+var didWindowLoad = false;
+var frameLoadCount = 0;
+var navigationCount = 0;
+
+function endsWith(s1, s2) {
+  s1 = String(s1);
+  return s1.length >= s2.length && s1.substring(s1.length - s2.length) == s2;
+}
+
+function windowLoaded() {
+  didWindowLoad = true;
+  doNavigationIfReady();
+}
+
+function frameLoaded() {
+  frameLoadCount++;
+  doNavigationIfReady();
+}
+
+function doNavigationIfReady() {
+  if (didWindowLoad && frameLoadCount == testCount) {
+    doNavigation();
+  }
+}
+
+function doNavigation() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserWrite");
+
+  // Test clicking on an unmodified <a>.
+  doNavigationTest(1, "a_href_helper_01.svg");
+  // Test clicking on an <a> whose xlink:href is modified by assigning to href.baseVal.
+  doNavigationTest(2, "a_href_helper_02_03.svg", function(a) { a.href.baseVal = "a_href_destination.svg"; });
+  // Test clicking on an <a> whose xlink:href is modified by a setAttributeNS call.
+  doNavigationTest(3, "a_href_helper_02_03.svg", function(a) { a.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "a_href_destination.svg"); });
+  // Test clicking on an <a> whose xlink:href is modified by animation.
+  doNavigationTest(4, "a_href_helper_04.svg");
+}
+
+function doNavigationTest(testNumber, initialHref, f) {
+  var iframe = document.getElementById("iframe" + testNumber);
+  var a = iframe.contentDocument.getElementById("a");
+  ok(endsWith(iframe.contentWindow.location, initialHref), "Initial href of test " + testNumber);
+  iframe.onload = function() {
+    ok(endsWith(iframe.contentWindow.location, "a_href_destination.svg"), "Final href of test " + testNumber);
+    if (++navigationCount == testCount) {
+      SimpleTest.finish();
+    }
+  };
+  if (f) {
+    f(a);
+  }
+  dispatchClickEvent(a);
+}
+
+function dispatchClickEvent(element) {
+  var event = element.ownerDocument.createEvent("MouseEvent");
+  event.initMouseEvent("click", true, true, element.ownerDocument.defaultView, 1, 0, 0, 0, 0, false, false,
+                       false, false, 0, null);
+  element.dispatchEvent(event);
+}
+
+window.onload = windowLoaded;
+
+]]></script>
+</pre>
+<div id="content" style="visibility: hidden">
+<!-- These must come after frameLoaded is defined -->
+<iframe id="iframe1" src="a_href_helper_01.svg" onload="frameLoaded()"></iframe>
+<iframe id="iframe2" src="a_href_helper_02_03.svg" onload="frameLoaded()"></iframe>
+<iframe id="iframe3" src="a_href_helper_02_03.svg" onload="frameLoaded()"></iframe>
+<iframe id="iframe4" src="a_href_helper_04.svg" onload="frameLoaded()"></iframe>
+</div>
+</body>
+</html>

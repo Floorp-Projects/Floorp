@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *  Mihai Șucan <mihai.sucan@gmail.com>
+ *  Patrick Walton <pcwalton@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -94,11 +95,8 @@ function tab1Reloaded(aEvent) {
   let display1 = HUDService.getOutputNodeById(hudId1);
   let outputNode1 = display1.querySelector(".hud-output-node");
 
-  const successMsg1 = "Found the iframe network request in tab1";
-  const errorMsg1 = "Failed to find the iframe network request in tab1";
-
-  testLogEntry(outputNode1, TEST_IFRAME_URI,
-               { success: successMsg1, err: errorMsg1}, true);
+  let msg = "Found the iframe network request in tab1";
+  testLogEntry(outputNode1, TEST_IFRAME_URI, msg, true);
 
   let hudId2 = HUDService.getHudIdByWindow(tab2.linkedBrowser.contentWindow);
   let display2 = HUDService.getOutputNodeById(hudId2);
@@ -108,16 +106,11 @@ function tab1Reloaded(aEvent) {
   isnot(outputNode1, outputNode2,
         "the two HUD outputNodes must be different");
 
-  const successMsg2 = "The iframe network request is not in tab2";
-  const errorMsg2 = "Found the iframe network request in tab2";
-
-  testLogEntry(outputNode2, TEST_IFRAME_URI,
-               { success: successMsg2, err: errorMsg2}, true, true);
+  msg = "Didn't find the iframe network request in tab2";
+  testLogEntry(outputNode2, TEST_IFRAME_URI, msg, true, true);
 
   HUDService.deactivateHUDForContext(tab2);
   gBrowser.removeTab(tab2);
-
-  tab1 = tab2 = null;
 
   finishTest();
 }

@@ -44,6 +44,15 @@ assertEq(Object.getOwnPropertyDescriptor(o, "baz"), undefined);
 assertEq(o.baz, 12);
 assertEq(o.hasOwnProperty("baz"), false);
 
+try {
+  var actual =
+    Object.create(Object.create({},
+                                { boom: { get: function() { return "base"; }}}),
+                  { boom: { get: function() { return "overridden"; }}}).boom
+} catch (e) {
+}
+assertEq(actual, "overridden");
+
 /******************************************************************************/
 
 reportCompare(true, true);

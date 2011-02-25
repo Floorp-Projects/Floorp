@@ -176,8 +176,6 @@ exports.RemoteExperimentLoader.prototype = {
   _init: function(logRepo, fileGetterFunction) {
     this._logger = logRepo.getLogger("TestPilot.Loader");
     this._expLogger = logRepo.getLogger("TestPilot.RemoteCode");
-    this._studyResults = [];
-    this._legacyStudies = [];
     let prefs = require("preferences-service");
     this._baseUrl = prefs.get(BASE_URL_PREF, "");
     if (fileGetterFunction != undefined) {
@@ -185,9 +183,8 @@ exports.RemoteExperimentLoader.prototype = {
     } else {
       this._fileGetter = downloadFile;
     }
-    this._logger.trace("About to instantiate preferences store.");
+    this._logger.trace("About to instantiate jar store.");
     this._jarStore = new JarStore();
-    this._experimentFileNames = [];
     let self = this;
     this._logger.trace("About to instantiate cuddlefish loader.");
     this._refreshLoader();
@@ -217,6 +214,11 @@ exports.RemoteExperimentLoader.prototype = {
          [self._jarStore, Cuddlefish.parentLoader.fs]),
        console: this._expLogger
       });
+
+    // Clear all of our lists of studies/surveys/results when refreshing loader
+    this._studyResults = [];
+    this._legacyStudies = [];
+    this._experimentFileNames = [];
   },
 
   getLocalizedStudyInfo: function(studiesIndex) {
@@ -260,12 +262,34 @@ exports.RemoteExperimentLoader.prototype = {
     this._studyResults = data.results;
     this._legacyStudies = data.legacy;
 
-    /* Go through each record indicated in index.json for our locale;
-     * download the specified .jar file (replacing any version on disk)
+
+    /* Look in the "maintain_experiments" section of the index file.  Experiments
+     * listed here should be run IF we alrady have the code present on disk, but should
+     * not be downloaded if we don't already have them.
+     */
+    if (data.maintain_experiments) {
+      this._logger.trace(data.maintain_experiments.length + " files to maintain.\n");
+      for each (let studyFile in data.maintain_experiments) {
+        this._experimentFileNames.push(studyFile);
+      }
+    }
+
+    /* Look in the "new_experiments" section of the index file for new jar files
+     * to download. Go through each record indicated in index.json, look up the
+     * .jar file specified for our locale, and download it (replacing any version
+     * on disk)
      */
     let jarFiles = this.getLocalizedStudyInfo(data.new_experiments);
     let numFilesToDload = jarFiles.length;
+    this._logger.trace(numFilesToDload + " files to download.\n");
     let self = this;
+
+    if (numFilesToDload == 0) {
+      this._logger.trace("Num files to download is 0, bailing\n");
+      // nothing has changed --> callback false
+      callback(false);
+      return;
+    }
 
     for each (let j in jarFiles) {
       let filename = j.jarfile;
@@ -310,6 +334,13 @@ exports.RemoteExperimentLoader.prototype = {
     this._studyResults = data.results;
     this._legacyStudies = data.legacy;
 
+    // Studies to be maintained:
+    if (data.maintain_experiments) {
+      for each (let studyFile in data.maintain_experiments) {
+        this._experimentFileNames.push(studyFile);
+      }
+    }
+
     // Read names of experiment modules from index.
     let jarFiles = this.getLocalizedStudyInfo(data.new_experiments);
     for each (let j in jarFiles) {
@@ -324,11 +355,17 @@ exports.RemoteExperimentLoader.prototype = {
 
   // TODO a bad thing that can go wrong: If we have a net connection but the index file
   // has not changed, we currently don't try to download anything...
+  // The logic is bad because executeCachedIndexFile is called in two different
+  // cases: the one with no network, and the one with network but unchanged file.
 
   // Another bad thing: If there's a jar download that's corrupt or unreadable or has
-    // the wrong permissions or something, we need to kill it and download a new one.
+  // the wrong permissions or something, we need to kill it and download a new one.
+  // Should also try to download a new jar if any required modules are missing
+  // (Which is currently the case!)
 
-  // WTF every jar file I'm downloading appears as 0 bytes with __x__x___ permissions!
+  // (module "about_firefox.js" is not found; there is no about_firefox.jar on disk,
+  // indicating it didn't download, and we're not trying again because index-dev is
+  // unmodified.  Hmmm.)
 
   _cachedIndexNsiFile: null,
   get cachedIndexNsiFile() {
@@ -441,9 +478,11 @@ exports.RemoteExperimentLoader.prototype = {
     let url = resolveUrl(self._baseUrl, indexFileName);
     self._fileGetter(url, function onDone(data) {
       if (data) {
+        self._logger.trace("Index file updated on server.\n");
         self._executeFreshIndexFile(data, callback);
         // cache index file contents so we can read them later if we can't get online.
         self._cacheIndexFile(data);
+        // executeFreshIndexFile will call the callback.
       } else {
         self._logger.info("Could not download index.json, using cached version.");
         let data = self._loadCachedIndexFile();
@@ -495,4 +534,3 @@ exports.RemoteExperimentLoader.prototype = {
 
 // TODO but once the study is expired, should delete the jar for it and
 // just load the LegacyStudy version.
-

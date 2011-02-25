@@ -19,12 +19,12 @@ function testSteps()
   const name = window.location.pathname;
   const description = "My Test Database";
 
-  var request = moz_indexedDB.open(name, description);
+  var request = mozIndexedDB.open(name, description);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   var event = yield;
 
-  var db = event.result;
+  var db = event.target.result;
 
   var test = {
     name: "inline key; key generator",
@@ -38,26 +38,27 @@ function testSteps()
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
 
-  let objectStore = db.createObjectStore(test.name, test.keyName,
-                                         test.autoIncrement);
+  let objectStore = db.createObjectStore(test.name,
+                                         { keyPath: test.keyName,
+                                           autoIncrement: test.autoIncrement });
 
   request = objectStore.add(test.storedObject);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
 
-  let id = event.result;
+  let id = event.target.result;
   request = objectStore.get(id);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
 
   // Sanity check!
-  is(event.result.name, test.storedObject.name,
+  is(event.target.result.name, test.storedObject.name,
      "The correct object was stored.");
 
   // Ensure that the id was also stored on the object.
-  is(event.result.id, id, "The object had the id stored on it.");
+  is(event.target.result.id, id, "The object had the id stored on it.");
 
   finishTest();
   yield;

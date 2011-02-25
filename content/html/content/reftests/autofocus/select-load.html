@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <script>
+    function focusHandler()
+    {
+      setTimeout(document.documentElement.removeAttribute('class'), 0);
+    }
+  </script>
+  <body>
+    <select></select><select autofocus onfocus="focusHandler();"></select><select autofocus onfocus="focusHandler();"></select>
+  </body>
+</html>

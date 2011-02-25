@@ -38,9 +38,9 @@
       ];
 
       const indexData = [
-        { name: "name", keyPath: "name", unique: true },
-        { name: "height", keyPath: "height", unique: false },
-        { name: "weight", keyPath: "weight", unique: false }
+        { name: "name", keyPath: "name", options: { unique: true } },
+        { name: "height", keyPath: "height", options: { } },
+        { name: "weight", keyPath: "weight", options: { unique: false } }
       ];
 
       const objectStoreDataNameSort = [
@@ -69,19 +69,19 @@
         { key: "237-23-7734", value: { name: "Ron", height: 73, weight: 180 } }
       ];
 
-      let request = moz_indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
 
       request = db.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      let objectStore = db.createObjectStore(objectStoreName, "");
+      let objectStore = db.createObjectStore(objectStoreName, { keyPath: "" });
 
       // First, add all our data to the object store.
       let addedData = 0;
@@ -100,7 +100,7 @@
       // Now create the indexes.
       for (let i in indexData) {
         objectStore.createIndex(indexData[i].name, indexData[i].keyPath,
-                                indexData[i].unique);
+                                indexData[i].options);
       }
       is(objectStore.indexNames.length, indexData.length, "Good index count");
       continueToNextStep();
@@ -124,44 +124,48 @@
         is(index.name, indexData[i].name, "Correct name");
         is(index.storeName, objectStore.name, "Correct store name");
         is(index.keyPath, indexData[i].keyPath, "Correct keyPath");
-        is(index.unique, indexData[i].unique, "Correct keyPath");
+        is(index.unique, indexData[i].options.unique ? true : false,
+           "Correct unique value");
       }
+
+      request = objectStore.index("name").getKey("Bob");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.target.result, "237-23-7732", "Correct key returned!");
 
       request = objectStore.index("name").get("Bob");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, "237-23-7732", "Correct key returned!");
+      is(event.target.result.name, "Bob", "Correct name returned!");
+      is(event.target.result.height, 60, "Correct height returned!");
+      is(event.target.result.weight, 120, "Correct weight returned!");
 
-      request = objectStore.index("name").getObject("Bob");
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
-
-      is(event.result.name, "Bob", "Correct name returned!");
-      is(event.result.height, 60, "Correct height returned!");
-      is(event.result.weight, 120, "Correct weight returned!");
+      ok(true, "Test group 1");
 
       let keyIndex = 0;
 
-      request = objectStore.index("name").openCursor();
+      request = objectStore.index("name").openKeyCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
-          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
-             "Correct value");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
+          ok(!("value" in cursor), "No value");
 
-          let retval = cursor.continue();
-          is(retval, true, "Correct return from continue");
+          cursor.continue();
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
-          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
+          ok(!("value" in cursor), "No value");
 
           keyIndex++;
         }
@@ -173,24 +177,25 @@
 
       is(keyIndex, objectStoreData.length, "Saw all the expected keys");
 
+      ok(true, "Test group 2");
+
       keyIndex = 0;
 
-      request = objectStore.index("weight").openCursor(null, NEXT);
+      request = objectStore.index("weight").openKeyCursor(null, NEXT);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataWeightSort[keyIndex].value.weight,
              "Correct key");
-          is(cursor.value, objectStoreDataWeightSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataWeightSort[keyIndex].key,
              "Correct value");
 
-          let retval = cursor.continue();
-          is(retval, true, "Correct return from continue");
+          cursor.continue();
 
           is(cursor.key, objectStoreDataWeightSort[keyIndex].value.weight,
              "Correct key");
-          is(cursor.value, objectStoreDataWeightSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataWeightSort[keyIndex].key,
              "Correct value");
 
           keyIndex++;
@@ -212,24 +217,25 @@
       request.onsuccess = unexpectedSuccessHandler;
       event = yield;
 
+      ok(true, "Test group 3");
+
       keyIndex = objectStoreDataNameSort.length - 1;
 
-      request = objectStore.index("name").openCursor(null, PREV);
+      request = objectStore.index("name").openKeyCursor(null, PREV);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
-          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
 
-          let retval = cursor.continue();
-          is(retval, true, "Correct return from continue");
+          cursor.continue();
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
-          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
 
           keyIndex--;
@@ -242,17 +248,19 @@
 
       is(keyIndex, -1, "Saw all the expected keys");
 
+      ok(true, "Test group 4");
+
       keyIndex = 1;
       let keyRange = IDBKeyRange.bound("Bob", "Ron");
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
-          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
 
           cursor.continue();
@@ -265,18 +273,20 @@
       yield;
 
       is(keyIndex, 5, "Saw all the expected keys");
+
+      ok(true, "Test group 5");
 
       keyIndex = 2;
       let keyRange = IDBKeyRange.bound("Bob", "Ron", true);
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
-          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
 
           cursor.continue();
@@ -290,17 +300,19 @@
 
       is(keyIndex, 5, "Saw all the expected keys");
 
+      ok(true, "Test group 6");
+
       keyIndex = 1;
       let keyRange = IDBKeyRange.bound("Bob", "Ron", false, true);
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
-          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
 
           cursor.continue();
@@ -313,18 +325,20 @@
       yield;
 
       is(keyIndex, 4, "Saw all the expected keys");
+
+      ok(true, "Test group 7");
 
       keyIndex = 2;
       keyRange = IDBKeyRange.bound("Bob", "Ron", true, true);
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
-          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
 
           cursor.continue();
@@ -338,17 +352,19 @@
 
       is(keyIndex, 4, "Saw all the expected keys");
 
+      ok(true, "Test group 8");
+
       keyIndex = 1;
       keyRange = IDBKeyRange.lowerBound("Bob");
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
-          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
 
           cursor.continue();
@@ -361,18 +377,20 @@
       yield;
 
       is(keyIndex, objectStoreDataNameSort.length, "Saw all the expected keys");
+
+      ok(true, "Test group 9");
 
       keyIndex = 2;
       keyRange = IDBKeyRange.lowerBound("Bob", true);
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
-          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
 
           cursor.continue();
@@ -386,17 +404,19 @@
 
       is(keyIndex, objectStoreDataNameSort.length, "Saw all the expected keys");
 
+      ok(true, "Test group 10");
+
       keyIndex = 0;
       keyRange = IDBKeyRange.upperBound("Joe");
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
-          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
 
           cursor.continue();
@@ -410,17 +430,19 @@
 
       is(keyIndex, 3, "Saw all the expected keys");
 
+      ok(true, "Test group 11");
+
       keyIndex = 0;
       keyRange = IDBKeyRange.upperBound("Joe", true);
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
-          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
 
           cursor.continue();
@@ -434,17 +456,19 @@
 
       is(keyIndex, 2, "Saw all the expected keys");
 
+      ok(true, "Test group 12");
+
       keyIndex = 3;
       keyRange = IDBKeyRange.only("Pat");
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
-          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
 
           cursor.continue();
@@ -458,15 +482,19 @@
 
       is(keyIndex, 4, "Saw all the expected keys");
 
+      ok(true, "Test group 13");
+
       keyIndex = 0;
 
-      request = objectStore.index("name").openObjectCursor();
+      request = objectStore.index("name").openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -478,11 +506,12 @@
                "Correct weight");
           }
 
-          let retval = cursor.continue();
-          is(retval, true, "Correct return from continue");
+          cursor.continue();
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -504,15 +533,19 @@
 
       is(keyIndex, objectStoreDataNameSort.length, "Saw all the expected keys");
 
+      ok(true, "Test group 14");
+
       keyIndex = objectStoreDataNameSort.length - 1;
 
-      request = objectStore.index("name").openObjectCursor(null, PREV);
+      request = objectStore.index("name").openCursor(null, PREV);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -524,11 +557,12 @@
                "Correct weight");
           }
 
-          let retval = cursor.continue();
-          is(retval, true, "Correct return from continue");
+          cursor.continue();
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -550,16 +584,20 @@
 
       is(keyIndex, -1, "Saw all the expected keys");
 
+      ok(true, "Test group 15");
+
       keyIndex = 1;
       keyRange = IDBKeyRange.bound("Bob", "Ron");
 
-      request = objectStore.index("name").openObjectCursor(keyRange);
+      request = objectStore.index("name").openCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -571,11 +609,12 @@
                "Correct weight");
           }
 
-          let retval = cursor.continue();
-          is(retval, true, "Correct return from continue");
+          cursor.continue();
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -596,17 +635,21 @@
       yield;
 
       is(keyIndex, 5, "Saw all the expected keys");
+
+      ok(true, "Test group 16");
 
       keyIndex = 2;
       keyRange = IDBKeyRange.bound("Bob", "Ron", true);
 
-      request = objectStore.index("name").openObjectCursor(keyRange);
+      request = objectStore.index("name").openCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -618,11 +661,12 @@
                "Correct weight");
           }
 
-          let retval = cursor.continue();
-          is(retval, true, "Correct return from continue");
+          cursor.continue();
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -644,16 +688,20 @@
 
       is(keyIndex, 5, "Saw all the expected keys");
 
+      ok(true, "Test group 17");
+
       keyIndex = 1;
       keyRange = IDBKeyRange.bound("Bob", "Ron", false, true);
 
-      request = objectStore.index("name").openObjectCursor(keyRange);
+      request = objectStore.index("name").openCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -665,11 +713,12 @@
                "Correct weight");
           }
 
-          let retval = cursor.continue();
-          is(retval, true, "Correct return from continue");
+          cursor.continue();
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -690,17 +739,21 @@
       yield;
 
       is(keyIndex, 4, "Saw all the expected keys");
+
+      ok(true, "Test group 18");
 
       keyIndex = 2;
       keyRange = IDBKeyRange.bound("Bob", "Ron", true, true);
 
-      request = objectStore.index("name").openObjectCursor(keyRange);
+      request = objectStore.index("name").openCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -712,11 +765,12 @@
                "Correct weight");
           }
 
-          let retval = cursor.continue();
-          is(retval, true, "Correct return from continue");
+          cursor.continue();
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -738,16 +792,20 @@
 
       is(keyIndex, 4, "Saw all the expected keys");
 
+      ok(true, "Test group 19");
+
       keyIndex = 4;
       keyRange = IDBKeyRange.bound("Bob", "Ron");
 
-      request = objectStore.index("name").openObjectCursor(keyRange, PREV);
+      request = objectStore.index("name").openCursor(keyRange, PREV);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -759,11 +817,12 @@
                "Correct weight");
           }
 
-          let retval = cursor.continue();
-          is(retval, true, "Correct return from continue");
+          cursor.continue();
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -785,19 +844,113 @@
 
       is(keyIndex, 0, "Saw all the expected keys");
 
+      ok(true, "Test group 20");
+
       // Test NEXT_NO_DUPLICATE
+      keyIndex = 3;
+      keyRange = IDBKeyRange.only(65);
+
+      request = objectStore.index("height").openKeyCursor(keyRange, NEXT);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.target.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct key");
+          is(cursor.primaryKey, objectStoreDataHeightSort[keyIndex].key,
+             "Correct value");
+
+          cursor.continue();
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, 5, "Saw all the expected keys");
+
+      ok(true, "Test group 21");
+
+      keyIndex = 3;
+      keyRange = IDBKeyRange.only(65);
+
+      request = objectStore.index("height").openKeyCursor(keyRange,
+                                                          NEXT_NO_DUPLICATE);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.target.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct key");
+          is(cursor.primaryKey, objectStoreDataHeightSort[keyIndex].key,
+             "Correct value");
+
+          cursor.continue();
+          keyIndex++;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, 4, "Saw all the expected keys");
+
+      ok(true, "Test group 22");
+
+      keyIndex = 5;
+
+      request = objectStore.index("height").openKeyCursor(null,
+                                                          PREV_NO_DUPLICATE);
+      request.onerror = errorHandler;
+      request.onsuccess = function (event) {
+        let cursor = event.target.result;
+        if (cursor) {
+          is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct key");
+          is(cursor.primaryKey, objectStoreDataHeightSort[keyIndex].key,
+             "Correct value");
+
+          cursor.continue();
+          if (keyIndex == 5) {
+            keyIndex--;
+          }
+          keyIndex--;
+        }
+        else {
+          testGenerator.next();
+        }
+      }
+      yield;
+
+      is(keyIndex, -1, "Saw all the expected keys");
+
+      ok(true, "Test group 23");
+
       keyIndex = 3;
       keyRange = IDBKeyRange.only(65);
 
       request = objectStore.index("height").openCursor(keyRange, NEXT);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
              "Correct key");
-          is(cursor.value, objectStoreDataHeightSort[keyIndex].key,
-             "Correct value");
+          is(cursor.primaryKey, objectStoreDataHeightSort[keyIndex].key,
+             "Correct primary key");
+          is(cursor.value.name, objectStoreDataHeightSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataHeightSort[keyIndex].value.weight,
+               "Correct weight");
+          }
 
           cursor.continue();
           keyIndex++;
@@ -810,19 +963,31 @@
 
       is(keyIndex, 5, "Saw all the expected keys");
 
-      keyIndex = 4;
+      ok(true, "Test group 24");
+
+      keyIndex = 3;
       keyRange = IDBKeyRange.only(65);
 
       request = objectStore.index("height").openCursor(keyRange,
                                                        NEXT_NO_DUPLICATE);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
              "Correct key");
-          is(cursor.value, objectStoreDataHeightSort[keyIndex].key,
-             "Correct value");
+          is(cursor.primaryKey, objectStoreDataHeightSort[keyIndex].key,
+             "Correct primary key");
+          is(cursor.value.name, objectStoreDataHeightSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataHeightSort[keyIndex].value.weight,
+               "Correct weight");
+          }
 
           cursor.continue();
           keyIndex++;
@@ -833,7 +998,9 @@
       }
       yield;
 
-      is(keyIndex, 5, "Saw all the expected keys");
+      is(keyIndex, 4, "Saw all the expected keys");
+
+      ok(true, "Test group 25");
 
       keyIndex = 5;
 
@@ -841,15 +1008,25 @@
                                                        PREV_NO_DUPLICATE);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
              "Correct key");
-          is(cursor.value, objectStoreDataHeightSort[keyIndex].key,
-             "Correct value");
+          is(cursor.primaryKey, objectStoreDataHeightSort[keyIndex].key,
+             "Correct primary key");
+          is(cursor.value.name, objectStoreDataHeightSort[keyIndex].value.name,
+             "Correct name");
+          is(cursor.value.height,
+             objectStoreDataHeightSort[keyIndex].value.height,
+             "Correct height");
+          if ("weight" in cursor.value) {
+            is(cursor.value.weight,
+               objectStoreDataHeightSort[keyIndex].value.weight,
+               "Correct weight");
+          }
 
           cursor.continue();
-          if (keyIndex == 4) {
+          if (keyIndex == 5) {
             keyIndex--;
           }
           keyIndex--;
@@ -862,127 +1039,27 @@
 
       is(keyIndex, -1, "Saw all the expected keys");
 
-      // Test NEXT_NO_DUPLICATE
-      keyIndex = 3;
-      keyRange = IDBKeyRange.only(65);
-
-      request = objectStore.index("height").openObjectCursor(keyRange, NEXT);
-      request.onerror = errorHandler;
-      request.onsuccess = function (event) {
-        let cursor = event.result;
-        if (cursor) {
-          is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
-             "Correct key");
-          is(cursor.value.name, objectStoreDataHeightSort[keyIndex].value.name,
-             "Correct name");
-          is(cursor.value.height,
-             objectStoreDataHeightSort[keyIndex].value.height,
-             "Correct height");
-          if ("weight" in cursor.value) {
-            is(cursor.value.weight,
-               objectStoreDataHeightSort[keyIndex].value.weight,
-               "Correct weight");
-          }
-
-          cursor.continue();
-          keyIndex++;
-        }
-        else {
-          testGenerator.next();
-        }
-      }
-      yield;
-
-      is(keyIndex, 5, "Saw all the expected keys");
-
-      keyIndex = 4;
-      keyRange = IDBKeyRange.only(65);
-
-      request = objectStore.index("height").openObjectCursor(keyRange,
-                                                             NEXT_NO_DUPLICATE);
-      request.onerror = errorHandler;
-      request.onsuccess = function (event) {
-        let cursor = event.result;
-        if (cursor) {
-          is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
-             "Correct key");
-          is(cursor.value.name, objectStoreDataHeightSort[keyIndex].value.name,
-             "Correct name");
-          is(cursor.value.height,
-             objectStoreDataHeightSort[keyIndex].value.height,
-             "Correct height");
-          if ("weight" in cursor.value) {
-            is(cursor.value.weight,
-               objectStoreDataHeightSort[keyIndex].value.weight,
-               "Correct weight");
-          }
-
-          cursor.continue();
-          keyIndex++;
-        }
-        else {
-          testGenerator.next();
-        }
-      }
-      yield;
-
-      is(keyIndex, 5, "Saw all the expected keys");
-
-      keyIndex = 5;
-
-      request = objectStore.index("height").openObjectCursor(null,
-                                                             PREV_NO_DUPLICATE);
-      request.onerror = errorHandler;
-      request.onsuccess = function (event) {
-        let cursor = event.result;
-        if (cursor) {
-          is(cursor.key, objectStoreDataHeightSort[keyIndex].value.height,
-             "Correct key");
-          is(cursor.value.name, objectStoreDataHeightSort[keyIndex].value.name,
-             "Correct name");
-          is(cursor.value.height,
-             objectStoreDataHeightSort[keyIndex].value.height,
-             "Correct height");
-          if ("weight" in cursor.value) {
-            is(cursor.value.weight,
-               objectStoreDataHeightSort[keyIndex].value.weight,
-               "Correct weight");
-          }
-
-          cursor.continue();
-          if (keyIndex == 4) {
-            keyIndex--;
-          }
-          keyIndex--;
-        }
-        else {
-          testGenerator.next();
-        }
-      }
-      yield;
-
-      is(keyIndex, -1, "Saw all the expected keys");
+      ok(true, "Test group 26");
 
       keyIndex = 0;
 
-      request = objectStore.index("name").openCursor();
+      request = objectStore.index("name").openKeyCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
-          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
 
           let nextKey = !keyIndex ? "Pat" : undefined;
 
-          let retval = cursor.continue(nextKey);
-          is(retval, true, "Correct return from continue");
+          cursor.continue(nextKey);
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
-          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
 
           if (!keyIndex) {
@@ -1000,29 +1077,30 @@
 
       is(keyIndex, objectStoreData.length, "Saw all the expected keys");
 
+      ok(true, "Test group 27");
+
       keyIndex = 0;
 
-      request = objectStore.index("name").openCursor();
+      request = objectStore.index("name").openKeyCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
-          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
 
           let nextKey = !keyIndex ? "Flo" : undefined;
 
-          let retval = cursor.continue(nextKey);
-          is(retval, true, "Correct return from continue");
+          cursor.continue(nextKey);
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
-          is(cursor.value, objectStoreDataNameSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
              "Correct value");
 
-          keyIndex++;
+          keyIndex += keyIndex ? 1 : 2;
         }
         else {
           testGenerator.next();
@@ -1032,15 +1110,19 @@
 
       is(keyIndex, objectStoreData.length, "Saw all the expected keys");
 
+      ok(true, "Test group 28");
+
       keyIndex = 0;
 
-      request = objectStore.index("name").openObjectCursor();
+      request = objectStore.index("name").openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -1054,11 +1136,12 @@
 
           let nextKey = !keyIndex ? "Pat" : undefined;
 
-          let retval = cursor.continue(nextKey);
-          is(retval, true, "Correct return from continue");
+          cursor.continue(nextKey);
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -1085,15 +1168,19 @@
 
       is(keyIndex, objectStoreDataNameSort.length, "Saw all the expected keys");
 
+      ok(true, "Test group 29");
+
       keyIndex = 0;
 
-      request = objectStore.index("name").openObjectCursor();
+      request = objectStore.index("name").openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -1107,11 +1194,12 @@
 
           let nextKey = !keyIndex ? "Flo" : undefined;
 
-          let retval = cursor.continue(nextKey);
-          is(retval, true, "Correct return from continue");
+          cursor.continue(nextKey);
 
           is(cursor.key, objectStoreDataNameSort[keyIndex].value.name,
              "Correct key");
+          is(cursor.primaryKey, objectStoreDataNameSort[keyIndex].key,
+             "Correct primary key");
           is(cursor.value.name, objectStoreDataNameSort[keyIndex].value.name,
              "Correct name");
           is(cursor.value.height,
@@ -1123,7 +1211,7 @@
                "Correct weight");
           }
 
-          keyIndex++;
+          keyIndex += keyIndex ? 1 : 2;
         }
         else {
           testGenerator.next();

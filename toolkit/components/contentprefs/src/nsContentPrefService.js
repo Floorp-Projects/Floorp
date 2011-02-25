@@ -41,6 +41,8 @@ const Cc = Components.classes;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+const CACHE_MAX_GROUP_ENTRIES = 100;
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /**
@@ -141,6 +143,7 @@ ContentPrefService.prototype = {
 
   classID:          Components.ID("{e6a3f533-4ffa-4615-8eb4-d4e72d883fa7}"),
   QueryInterface:   XPCOMUtils.generateQI([Ci.nsIContentPrefService,
+                                           Ci.nsIContentPrefService_MOZILLA_2_0,
                                            Ci.nsIFrameMessageListener]),
 
 
@@ -212,6 +215,75 @@ ContentPrefService.prototype = {
 
 
   //**************************************************************************//
+  // Prefs cache
+
+  _cache: {
+    _prefCache: {},
+
+    cachePref: function(aName, aValue, aGroup) {
+      aGroup = aGroup || "__GlobalPrefs__";
+
+      if (!this._prefCache[aGroup]) {
+        this._possiblyCleanCache();
+        this._prefCache[aGroup] = {};
+      }
+
+      this._prefCache[aGroup][aName] = aValue;
+    },
+
+    getPref: function(aName, aGroup) {
+      aGroup = aGroup || "__GlobalPrefs__";
+
+      if (this._prefCache[aGroup] && this._prefCache[aGroup].hasOwnProperty(aName)) {
+        let value = this._prefCache[aGroup][aName];
+        return [true, value];
+      }
+      return [false, undefined];
+    },
+
+    setPref: function(aName, aValue, aGroup) {
+      if (typeof aValue == "boolean")
+        aValue = aValue ? 1 : 0;
+      else if (aValue === undefined)
+        aValue = null;
+
+      this.cachePref(aName, aValue, aGroup);
+    },
+
+    removePref: function(aName, aGroup) {
+      aGroup = aGroup || "__GlobalPrefs__";
+
+      if (this._prefCache[aGroup].hasOwnProperty(aName)) {
+        delete this._prefCache[aGroup][aName];
+        if (Object.keys(this._prefCache[aGroup]).length == 0) {
+          // remove empty group
+          delete this._prefCache[aGroup];
+        }
+      }
+    },
+
+    invalidate: function() {
+      this._prefCache = {};
+    },
+
+    _possiblyCleanCache: function() {
+      let groupCount = Object.keys(this._prefCache).length;
+
+      if (groupCount >= CACHE_MAX_GROUP_ENTRIES) {
+        // Clean half of the entries
+        for (let entry in this._prefCache) {
+          delete this._prefCache[entry];
+          groupCount--;
+
+          if (groupCount < CACHE_MAX_GROUP_ENTRIES / 2)
+            break;
+        }
+      }
+    }
+  },
+
+
+  //**************************************************************************//
   // nsIContentPrefService
 
   getPref: function ContentPrefService_getPref(aGroup, aName, aCallback) {
@@ -262,6 +334,7 @@ ContentPrefService.prototype = {
     else
       this._insertPref(groupID, settingID, aValue);
 
+    this._cache.setPref(aName, aValue, group);
     for each (var observer in this._getObservers(aName)) {
       try {
         observer.onContentPrefSet(group, aName, aValue);
@@ -276,6 +349,16 @@ ContentPrefService.prototype = {
     // XXX If consumers end up calling this method regularly, then we should
     // optimize this to query the database directly.
     return (typeof this.getPref(aGroup, aName) != "undefined");
+  },
+
+  hasCachedPref: function ContentPrefService_hasCachedPref(aGroup, aName) {
+    if (!aName)
+      throw Components.Exception("aName cannot be null or an empty string",
+                                 Cr.NS_ERROR_ILLEGAL_VALUE);
+
+    let group = this._parseGroupParam(aGroup);
+    let [cached,] = this._cache.getPref(aName, group);
+    return cached;
   },
 
   removePref: function ContentPrefService_removePref(aGroup, aName) {
@@ -303,10 +386,12 @@ ContentPrefService.prototype = {
     if (groupID)
       this._deleteGroupIfUnused(groupID);
 
+    this._cache.removePref(aName, group);
     this._notifyPrefRemoved(group, aName);
   },
 
   removeGroupedPrefs: function ContentPrefService_removeGroupedPrefs() {
+    this._cache.invalidate();
     this._dbConnection.beginTransaction();
     try {
       this._dbConnection.executeSimpleSQL("DELETE FROM prefs WHERE groupID IS NOT NULL");
@@ -361,6 +446,7 @@ ContentPrefService.prototype = {
     this._dbConnection.executeSimpleSQL("DELETE FROM settings WHERE id = " + settingID);
 
     for (var i = 0; i < groupNames.length; i++) {
+      this._cache.removePref(aName, groupNames[i]);
       this._notifyPrefRemoved(groupNames[i], aName);
       if (groupNames[i]) // ie. not null, which will be last (and i == groupIDs.length)
         this._deleteGroupIfUnused(groupIDs[i]);
@@ -475,17 +561,39 @@ ContentPrefService.prototype = {
     return this.__stmtSelectPref;
   },
 
+  _scheduleCallback: function(func) {
+    let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
+    tm.mainThread.dispatch(func, Ci.nsIThread.DISPATCH_NORMAL);
+  },
+
   _selectPref: function ContentPrefService__selectPref(aGroup, aSetting, aCallback) {
-    var value;
+
+    let [cached, value] = this._cache.getPref(aSetting, aGroup);
+    if (cached) {
+      if (aCallback) {
+        this._scheduleCallback(function(){aCallback.onResult(value);});
+        return;
+      }
+      return value;
+    }
 
     try {
       this._stmtSelectPref.params.group = aGroup;
       this._stmtSelectPref.params.setting = aSetting;
 
-      if (aCallback)
-        new AsyncStatement(this._stmtSelectPref).execute(aCallback);
-      else if (this._stmtSelectPref.executeStep())
-        value = this._stmtSelectPref.row["value"];
+      if (aCallback) {
+        let cache = this._cache;
+        new AsyncStatement(this._stmtSelectPref).execute({onResult: function(aResult) {
+          cache.cachePref(aSetting, aResult, aGroup);
+          aCallback.onResult(aResult);
+        }});
+      }
+      else {
+        if (this._stmtSelectPref.executeStep()) {
+          value = this._stmtSelectPref.row["value"];
+        }
+        this._cache.cachePref(aSetting, value, aGroup);
+      }
     }
     finally {
       this._stmtSelectPref.reset();
@@ -509,15 +617,32 @@ ContentPrefService.prototype = {
   },
 
   _selectGlobalPref: function ContentPrefService__selectGlobalPref(aName, aCallback) {
-    var value;
+
+    let [cached, value] = this._cache.getPref(aName, null);
+    if (cached) {
+      if (aCallback) {
+        this._scheduleCallback(function(){aCallback.onResult(value);});
+        return;
+      }
+      return value;
+    }
 
     try {
       this._stmtSelectGlobalPref.params.name = aName;
 
-      if (aCallback)
-        new AsyncStatement(this._stmtSelectGlobalPref).execute(aCallback);
-      else if (this._stmtSelectGlobalPref.executeStep())
-        value = this._stmtSelectGlobalPref.row["value"];
+      if (aCallback) {
+        let cache = this._cache;
+        new AsyncStatement(this._stmtSelectGlobalPref).execute({onResult: function(aResult) {
+          cache.cachePref(aName, aResult);
+          aCallback.onResult(aResult);
+        }});
+      }
+      else {
+        if (this._stmtSelectGlobalPref.executeStep()) {
+          value = this._stmtSelectGlobalPref.row["value"];
+        }
+        this._cache.cachePref(aName, value);
+      }
     }
     finally {
       this._stmtSelectGlobalPref.reset();

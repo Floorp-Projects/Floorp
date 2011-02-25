@@ -52,6 +52,7 @@ LIBXUL_LIBRARY  = 1
 
 
 CPPSRCS	= \
+	GfxInfo.cpp \
 	nsWidgetFactory.cpp \
 	nsAppShell.cpp \
 	nsToolkit.cpp \
@@ -100,6 +101,7 @@ DEFINES += -D_IMPL_NS_WIDGET
 
 LOCAL_INCLUDES += \
 	-I$(topsrcdir)/widget/src/xpwidgets \
+	-I$(topsrcdir)/widget/src/shared \
 	-I$(topsrcdir)/dom/system/android \
 	-I$(srcdir) \
 	$(NULL)

@@ -151,7 +151,17 @@ public: // new functions
     }
 
 protected:
+    virtual PRBool InitTextRun(gfxContext *aContext,
+                               gfxTextRun *aTextRun,
+                               const PRUnichar *aString,
+                               PRUint32 aRunStart,
+                               PRUint32 aRunLength,
+                               PRInt32 aRunScript,
+                               PRBool aPreferPlatformShaping = PR_FALSE);
+
     void FillGlyphDataForChar(PRUint32 ch, CachedGlyphData *gd);
+
+    void AddRange(gfxTextRun *aTextRun, const PRUnichar *str, PRUint32 offset, PRUint32 len);
 
     typedef nsBaseHashtableET<nsUint32HashKey, CachedGlyphData> CharGlyphMapEntryType;
     typedef nsTHashtable<CharGlyphMapEntryType> CharGlyphMap;
@@ -166,24 +176,11 @@ public: // new functions
     virtual ~gfxFT2FontGroup ();
 
 protected: // from gfxFontGroup
-    virtual gfxTextRun *MakeTextRun(const PRUnichar *aString, 
-                                    PRUint32 aLength,
-                                    const Parameters *aParams, 
-                                    PRUint32 aFlags);
-
-    virtual gfxTextRun *MakeTextRun(const PRUint8 *aString, 
-                                    PRUint32 aLength,
-                                    const Parameters *aParams, 
-                                    PRUint32 aFlags);
 
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle);
 
 
 protected: // new functions
-    void InitTextRun(gfxTextRun *aTextRun);
-
-    void CreateGlyphRunsFT(gfxTextRun *aTextRun);
-    void AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnichar *str, PRUint32 offset, PRUint32 len);
 
     static PRBool FontCallback (const nsAString & fontName, 
                                 const nsACString & genericName, 

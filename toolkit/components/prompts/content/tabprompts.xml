@@ -18,29 +18,25 @@
         <stylesheet src="chrome://global/skin/tabprompts.css"/>
     </resources>
 
-    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                 role="dialog"
+                 aria-describedby="info.body">
 
         <!-- This is based on the guts of commonDialog.xul -->
         <spacer flex="1"/>
-        <hbox>
-            <spacer flex="1"/>
-            <vbox class="mainContainer">
-                <grid class="topContainer">
+        <hbox pack="center">
+            <vbox anonid="mainContainer" class="mainContainer">
+                <grid class="topContainer" flex="1">
                     <columns>
                         <column/>
                         <column flex="1"/>
                     </columns>
 
                     <rows>
-                        <row>
-                            <hbox align="start">
-                                <image anonid="info.icon" class="info.icon"/>
-                            </hbox>
-                            <vbox class="infoContainer">
-                                <description anonid="info.title" hidden="true"/>
-                                <description anonid="info.body" class="info.body"/>
-                            </vbox>
-                        </row>
+                        <vbox anonid="infoContainer" align="center" pack="center" flex="1">
+                            <description anonid="info.title" hidden="true"/>
+                            <description anonid="info.body" class="info.body"/>
+                        </vbox>
 
                         <row anonid="loginContainer" hidden="true" align="center">
                             <label anonid="loginLabel" value="&editfield0.label;" control="loginTextbox"/>
@@ -68,14 +64,13 @@
                     <button anonid="button0" label="&okButton.label;"/>
 #else
                     <button anonid="button3" hidden="true"/>
-                    <spacer anonid="buttonSpacer" flex="1" hidden="true"/>
+                    <spacer anonid="buttonSpacer" flex="1"/>
                     <button anonid="button0" label="&okButton.label;"/>
                     <button anonid="button2" hidden="true"/>
                     <button anonid="button1" label="&cancelButton.label;"/>
 #endif
                 </hbox>
             </vbox>
-            <spacer flex="1"/>
         </hbox>
         <spacer flex="2"/>
     </xbl:content>
@@ -98,7 +93,7 @@
                 password1Label     : getElement("password1Label"),
                 infoBody           : getElement("info.body"),
                 infoTitle          : getElement("info.title"),
-                infoIcon           : getElement("info.icon"),
+                infoIcon           : null,
                 checkbox           : getElement("checkbox"),
                 checkboxContainer  : getElement("checkboxContainer"),
                 button3            : getElement("button3"),
@@ -114,14 +109,28 @@
             this.ui.button3.addEventListener("command", this.onButtonClick.bind(this, 3), false);
             // Anonymous wrapper used here because |Dialog| doesn't exist until init() is called!
             this.ui.checkbox.addEventListener("command", function() { self.Dialog.onCheckbox(); } , false);
+            this.isLive = false;
         ]]>
         </constructor>
+        <destructor>
+        <![CDATA[
+            if (this.isLive) {
+                this.Dialog.abortPrompt();
+                this.shutdownPrompt();
+            }
+        ]]>  
+        </destructor>
 
         <field name="ui"/>
         <field name="args"/>
         <field name="linkedTab"/>
         <field name="onCloseCallback"/>
         <field name="Dialog"/>
+        <field name="isLive"/>
+        <field name="availWidth"/>
+        <field name="availHeight"/>
+        <field name="minWidth"/>
+        <field name="minHeight"/>
 
         <method name="init">
             <parameter name="args"/>
@@ -139,8 +148,10 @@
                 // We need to remove the prompt when the tab or browser window is closed or
                 // the page navigates, else we never unwind the event loop and that's sad times.
                 // Remember to cleanup in shutdownPrompt()!
-                linkedTab.addEventListener("TabClose", this, false);
+                this.isLive = true;
+                window.addEventListener("resize", this, false);
                 window.addEventListener("unload", this, false);
+                linkedTab.addEventListener("TabClose", this, false);
                 this.args.domWindow.addEventListener("pagehide", this, false);
 
                 let tmp = {};
@@ -150,6 +161,8 @@
 
                 // TODO: should unhide buttonSpacer on Windows when there are 4 buttons.
                 //       Better yet, just drop support for 4-button dialogs. (bug 609510)
+
+                this.onResize();
             ]]>
             </body>
         </method>
@@ -159,10 +172,12 @@
             <![CDATA[
                 // remove our event listeners
                 try {
-                    this.linkedTab.removeEventListener("TabClose", this, false);
+                    window.removeEventListener("resize", this, false);
                     window.removeEventListener("unload", this, false);
+                    this.linkedTab.removeEventListener("TabClose", this, false);
                     this.args.domWindow.removeEventListener("pagehide", this, false);
                 } catch(e) { }
+                this.isLive = false;
                 // invoke callback
                 this.onCloseCallback();
             ]]>
@@ -174,12 +189,60 @@
             <body>
             <![CDATA[
                 switch (aEvent.type) {
-                  case "TabClose":
+                  case "resize":
+                    this.onResize();
+                    break;
                   case "unload":
+                  case "TabClose":
                   case "pagehide":
                     this.Dialog.abortPrompt();
                     this.shutdownPrompt();
                     break;
+                }
+            ]]>
+            </body>
+        </method>
+
+        <method name="onResize">
+            <body>
+            <![CDATA[
+                // XXX the <notificationbox/>; to be made app-agnostic later
+                let container = this.parentNode.parentNode;
+                let availWidth = container.clientWidth;
+                let availHeight = container.clientHeight;
+                if (availWidth == this.availWidth && availHeight == this.availHeight)
+                    return;
+                this.availWidth = availWidth;
+                this.availHeight = availHeight;
+
+                let self = this;
+                function getElement(anonid) {
+                    return document.getAnonymousElementByAttribute(self, "anonid", anonid);
+                }
+                let main = getElement("mainContainer");
+                let info = getElement("infoContainer");
+                let body = this.ui.infoBody;
+
+                // cap prompt dimensions at 60% width and 60% height of content area
+                if (!this.minWidth)
+                  this.minWidth = parseInt(window.getComputedStyle(main).minWidth);
+                if (!this.minHeight)
+                  this.minHeight = parseInt(window.getComputedStyle(main).minHeight);
+                let maxWidth = Math.max(Math.floor(availWidth * 0.6), this.minWidth) +
+                               info.clientWidth - main.clientWidth;
+                let maxHeight = Math.max(Math.floor(availHeight * 0.6), this.minHeight) +
+                                info.clientHeight - main.clientHeight;
+                body.style.maxWidth = maxWidth + "px";
+                info.style.overflow = info.style.width = info.style.height = "";
+
+                // when prompt text is too long, use scrollbars
+                if (info.clientWidth > maxWidth) {
+                    info.style.overflow = "auto";
+                    info.style.width = maxWidth + "px";
+                }
+                if (info.clientHeight > maxHeight) {
+                    info.style.overflow = "auto";
+                    info.style.height = maxHeight + "px";
                 }
             ]]>
             </body>
@@ -203,11 +266,10 @@
                 if (event.getPreventDefault())
                     return;
 
+                event.stopPropagation();
                 if (action == "default") {
                     let bnum = this.args.defaultButtonNum || 0;
                     let button = this.ui["button" + bnum];
-                    if (!button.hasAttribute("default"))
-                        return;
                     this.onButtonClick(bnum);
                 } else { // action == "cancel"
                     this.onButtonClick(1); // Cancel button
@@ -225,14 +287,35 @@
                  group="system" action="this.onKeyAction('default', event);"/>
         <handler event="keypress" keycode="VK_ESCAPE"
                  group="system" action="this.onKeyAction('cancel', event);"/>
-#ifndef XP_MACOSX
+#ifdef XP_MACOSX
+        <handler event="keypress" key="." modifiers="meta"
+                 group="system" action="this.onKeyAction('cancel', event);"/>
+#endif
         <handler event="focus" phase="capturing">
-            // Focus shift clears the default button.
+            let bnum = this.args.defaultButtonNum || 0;
+            let defaultButton = this.ui["button" + bnum];
+
+#ifdef XP_MACOSX
+            // On OS X, the default button always stays marked as such (until
+            // the entire prompt blurs).
+            defaultButton.setAttribute("default", true);
+#else
+            // On other platforms, the default button is only marked as such
+            // when no other button has focus. XUL buttons on not-OSX will
+            // react to pressing enter as a command, so you can't trigger the
+            // default without tabbing to it or something that isn't a button.
+            let focusedDefault = (event.originalTarget == defaultButton);
+            let someButtonFocused = event.originalTarget instanceof Ci.nsIDOMXULButtonElement;
+            defaultButton.setAttribute("default", focusedDefault || !someButtonFocused);
+#endif
+        </handler>
+        <handler event="blur">
+            // If focus shifted to somewhere else in the browser, don't make
+            // the default button look active.
             let bnum = this.args.defaultButtonNum || 0;
             let button = this.ui["button" + bnum];
-            button.setAttribute("default", event.originalTarget == button);
+            button.setAttribute("default", false);
         </handler>
-#endif
     </handlers>
 
   </binding>

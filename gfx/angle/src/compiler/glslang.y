@@ -1770,8 +1770,10 @@ simple_statement
 compound_statement
     : LEFT_BRACE RIGHT_BRACE { $$ = 0; }
     | LEFT_BRACE { context->symbolTable.push(); } statement_list { context->symbolTable.pop(); } RIGHT_BRACE {
-        if ($3 != 0)
+        if ($3 != 0) {
             $3->setOp(EOpSequence);
+            $3->setEndLine($5.line);
+        }
         $$ = $3;
     }
     ;
@@ -1787,8 +1789,10 @@ compound_statement_no_new_scope
         $$ = 0;
     }
     | LEFT_BRACE statement_list RIGHT_BRACE {
-        if ($2)
+        if ($2) {
             $2->setOp(EOpSequence);
+            $2->setEndLine($3.line);
+        }
         $$ = $2;
     }
     ;
@@ -2061,6 +2065,9 @@ function_definition
         $$->getAsAggregate()->setOptimize(context->contextPragma.optimize);
         $$->getAsAggregate()->setDebug(context->contextPragma.debug);
         $$->getAsAggregate()->addToPragmaTable(context->contextPragma.pragmaTable);
+
+        if ($3 && $3->getAsAggregate())
+            $$->getAsAggregate()->setEndLine($3->getAsAggregate()->getEndLine());
     }
     ;
 

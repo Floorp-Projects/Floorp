@@ -1,13 +1,16 @@
 body {
   background-color: transparent;  
-  font-family: Tahoma, sans-serif !important;
+  font: message-box;
   color: rgba(0, 0, 0, 0.6);
   font-size: 12px;
-  line-height: 16px;
 }
 
 #bg {
-  background: -moz-linear-gradient(top,#C4C4C4,#9E9E9E);
+  background: -moz-linear-gradient(#C4C4C4,#9E9E9E);
+}
+
+#bg:-moz-window-inactive {
+  background: -moz-linear-gradient(rgb(237,237,237),rgb(216,216,216));
 }
 
 /* Tabs
@@ -23,7 +26,6 @@ body {
   box-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.5);
   cursor: pointer;
-  margin: 8px;
 }
 
 .tab canvas,
@@ -81,11 +83,14 @@ html[dir=rtl] .favicon {
   right: 6px;
   width: 16px;
   height: 16px;
-  background: url(chrome://global/skin/icons/closetab.png) no-repeat;
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 0.5s;
-  -moz-transition-timing-function: ease-out;
-  opacity: 0.2;
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/close.png), 0, 16, 16, 0);
+  background-repeat: no-repeat;
+}
+.close:hover {
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/close.png), 0, 32, 16, 16);
+}
+.close:active {
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/close.png), 0, 48, 16, 32);
 }
 
 html[dir=rtl] .close {
@@ -111,8 +116,8 @@ html[dir=rtl] .expander {
   -moz-transform: scaleX(-1);
 }
 
-.close:hover,
-.expander:hover {
+.expander:hover,
+.appTabIcon:hover {
   -moz-transition-property: opacity;
   -moz-transition-duration: 0.5s;
   -moz-transition-timing-function: ease-out;
@@ -120,7 +125,6 @@ html[dir=rtl] .expander {
 }
 
 .favicon img:hover, 
-.close img:hover, 
 .expander img:hover {
   opacity: 1;
   border: none;
@@ -132,7 +136,7 @@ html[dir=rtl] .expander {
   width: 94.5%;
   white-space: nowrap;
   overflow: hidden;
-	text-shadow: 0 1px rgba(255, 255, 255, 0.6);
+  text-shadow: 0 1px rgba(255, 255, 255, 0.6);
 }
 
 .stacked {
@@ -193,6 +197,7 @@ html[dir=rtl] .stack-trayed .tab-title {
   box-shadow: none;
   border-color: transparent;
   background-color: transparent;
+  margin: 8px;
 }
 
 .tabInGroupItem .favicon {
@@ -201,7 +206,7 @@ html[dir=rtl] .stack-trayed .tab-title {
 
 .groupItem {
   cursor: move;
-  background-color: #EBEBEB;
+  background-color: rgb(240,240,240);
   border-radius: 0.4em;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -209,16 +214,20 @@ html[dir=rtl] .stack-trayed .tab-title {
 
 .groupItem.activeGroupItem {
   box-shadow:
-    rgba(0,0,0,0.6) 1px 1px 5.5px;
+    rgba(0,0,0,0.8) 2px 2px 8px;
 }
 
 html[dir=rtl] .groupItem.activeGroupItem {
   box-shadow:
-    rgba(0,0,0,0.6) -1px 1px 5.5px;
+    rgba(0,0,0,0.8) -2px 2px 8px;
 }
 
 .phantom {
   border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.dragRegion {
+  background: rgba(235, 235, 235, 0.4);
 }
 
 .overlay {
@@ -231,20 +240,51 @@ html[dir=rtl] .overlay {
   box-shadow: -3px 3px 5.5px rgba(0,0,0,.5);
 }
 
-.appTabTray {
+.appTabTrayContainer {
   top: 34px;
   right: 1px;
+  -moz-border-start: 1px solid #E1E1E1;
+  padding: 0 5px;
+  overflow: -moz-hidden-unscrollable;
+  text-align: start;
+  line-height: 0;
 }
 
-html[dir=rtl] .appTabTray {
+html[dir=rtl] .appTabTrayContainer {
   right: auto;
   left: 1px;
+}
+
+.appTabTray {
+  display: inline-block;
+  -moz-column-width: 16px;
+  -moz-column-gap: 5px;
+}
+
+.appTabTrayContainerTruncated {
+  padding-bottom: 7px;
+}
+
+.appTabTrayContainerTruncated:after {
+  content: "…";
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 15px;
+  line-height: 15px;
+  text-align: center;
+  font-size: 15px;
 }
 
 .appTabIcon {
   width: 16px;
   height: 16px;
   cursor: pointer;
+  opacity: 0.8;
+  padding-bottom: 3px;
+  display: block;
 }
 
 .undo {
@@ -380,7 +420,6 @@ html[dir=rtl] .acceptsDrop {
 
 .titlebar {
   font-size: 12px;
-  line-height: 18px;
   height: 18px;
 }
 
@@ -391,17 +430,16 @@ input.name {
   margin-top: 3px;
   -moz-margin-end: 0;
   margin-bottom: 0;
-  -moz-margin-begin: 3px;
+  -moz-margin-start: 3px;
   padding: 1px;
-  background-image: url(chrome://browser/skin/tabview/edit-light.png);
-  -moz-padding-start: 20px;
 }
 
 html[dir=rtl] input.name {
   background-position: right top;
 }
 
-.title-container:hover input.name {
+.title-container:hover input.name,
+.title-container input.name:focus {
   border: 1px solid #ddd;
 }
 
@@ -414,30 +452,29 @@ input.name:focus {
   color: #555;
 }
 
-input.defaultName {
+input.name:-moz-placeholder {
   font-style: italic !important;
-  background-image-opacity: .1;
   color: transparent;
+  background-image: url(chrome://browser/skin/tabview/edit-light.png);
+  background-repeat: no-repeat;
+  -moz-padding-start: 20px;
 }
 
-.title-container:hover input.defaultName {
+.title-container:hover input.name:-moz-placeholder {
   color: #CCC;
-}
-
-.title-container {
-  cursor: text;
 }
 
 .title-shield {
   margin-top: 3px;
   -moz-margin-end: 0;
   margin-bottom: 0;
-  -moz-margin-begin: 3px;
+  -moz-margin-start: 3px;
   padding: 1px;
   left: 0;
   top: 0;
   width: 100%;
   height: 100%;
+  cursor: text;
 }
 
 html[dir=rtl] .title-shield {
@@ -450,15 +487,15 @@ html[dir=rtl] .title-shield {
 }
 
 .stackExpander {
-  opacity: .4;
   cursor: pointer;
-  background-image: url(chrome://browser/skin/tabview/stack-expander.png);
+  bottom: 8px;
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/stack-expander.png), 0, 48, 24, 24);
   width: 24px;
   height: 24px;
 }
 
 .stackExpander:hover {
-  opacity: .7 !important;
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/stack-expander.png), 0, 24, 24, 0);
 }
 
 /* Resizable
@@ -486,8 +523,10 @@ html[dir=rtl] .resizer {
   cursor: se-resize;
   width: 12px;
   height: 12px;
-  right: 1px;
-  bottom: 1px;
+  padding-right: 3px;
+  padding-bottom: 3px;
+  right: -2px;
+  bottom: -2px;
 }
 
 html[dir=rtl] .iq-resizable-se {
@@ -499,16 +538,14 @@ html[dir=rtl] .iq-resizable-se {
 /* Exit button
 +----------------------------------*/
 #exit-button {
-  cursor: default;
-  top: 0;
-  right: 1px;
   width: 20px;
   height: 20px;
-  -moz-margin-end: 2px;
-  margin-top: 2px;
+  -moz-margin-end: 3px;
+  margin-top: 0px;
   background-image: -moz-image-rect(url(chrome://browser/skin/tabview/tabview.png), 0, 100, 20, 80);
   background-attachment: scroll;
   background-repeat: no-repeat;
+  border: none;
 }
 
 #exit-button[groups="0"] {
@@ -527,17 +564,16 @@ html[dir=rtl] .iq-resizable-se {
   background-image: -moz-image-rect(url(chrome://browser/skin/tabview/tabview.png), 0, 80, 20, 60);
 }
 
-html[dir=rtl] #exit-button {
-  right: auto;
-  left: 0;
-}
-
 /* Search
 ----------------------------------*/
 #searchshade{
   background-color: rgba(0,0,0,.42);
   width: 100%;
   height: 100%;
+}
+
+#searchshade:-moz-window-inactive {
+  background: -moz-linear-gradient(rgba(237,237,237,.42),rgba(216,216,216,.42));
 }
 
 #search{
@@ -558,11 +594,18 @@ html[dir=rtl] #exit-button {
   font-size: 14px;  
 }
 
+#searchbox:-moz-window-inactive {
+  background-color: #BBBBBB;
+  box-shadow: 0px 1px 0px rgba(255,255,255,.1), 0px -1px 0px rgba(0,0,0,0.3), 0px 0px 13px rgba(0,0,0,.2);
+}
+
 #actions {
-  width: 26px;
-  height: 26px;
-  border: none;
+  width: 29px;
   text-align: center;
+  background-color: #EBEBEB;
+  border-radius: 0.4em;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 #actions #searchbutton {
@@ -571,6 +614,7 @@ html[dir=rtl] #exit-button {
   width: 20px;
   height: 20px;
   margin-top: 3px;
+  -moz-margin-end: 1px;
 }
 
 .notMainMatch {

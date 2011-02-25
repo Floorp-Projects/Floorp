@@ -598,10 +598,11 @@ void nsTableFrame::InsertCol(nsTableColFrame& aColFrame,
             nsTableColGroupFrame* lastColGroup = (nsTableColGroupFrame *)mColGroups.LastChild();
             if (lastColGroup) {
               lastColGroup->RemoveChild(*lastCol, PR_FALSE);
-            }
-            // remove the col group if it is empty
-            if (lastColGroup->GetColCount() <= 0) {
-              mColGroups.DestroyFrame((nsIFrame*)lastColGroup);
+
+              // remove the col group if it is empty
+              if (lastColGroup->GetColCount() <= 0) {
+                mColGroups.DestroyFrame((nsIFrame*)lastColGroup);
+              }
             }
             removedFromCache = PR_TRUE;
           }
@@ -1953,7 +1954,7 @@ nsTableFrame::PushChildren(const RowGroupArray& aRowGroups,
   PRUint32 childX;
   for (childX = aPushFrom; childX < aRowGroups.Length(); ++childX) {
     nsTableRowGroupFrame* rgFrame = aRowGroups[childX];
-    if (!rgFrame || !rgFrame->IsRepeatable()) {
+    if (!rgFrame->IsRepeatable()) {
       mFrames.RemoveFrame(rgFrame);
       frames.AppendFrame(nsnull, rgFrame);
     }
@@ -5902,9 +5903,9 @@ nsTableFrame::CalcBCBorders()
           // set the flag on the next border indicating it is not the start of a
           // new segment
           if (iter.mCellMap) {
-            tableCellMap->SetNotTopStart(NS_SIDE_BOTTOM, *iter.mCellMap,
-                                         info.GetCellEndRowIndex(),
-                                         info.GetCellEndColIndex() + 1);
+            tableCellMap->ResetTopStart(NS_SIDE_BOTTOM, *iter.mCellMap,
+                                        info.GetCellEndRowIndex(),
+                                        info.GetCellEndColIndex() + 1);
           }
         }
       }

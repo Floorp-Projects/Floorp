@@ -42,6 +42,7 @@
 #define jsjaeger_assembler_h__
 
 #include "assembler/assembler/MacroAssembler.h"
+#include "methodjit/CodeGenIncludes.h"
 #include "methodjit/RematInfo.h"
 
 namespace js {
@@ -81,6 +82,7 @@ class NunboxAssembler : public JSC::MacroAssembler
 
     template <typename T>
     T payloadOf(T address) {
+        JS_ASSERT(PAYLOAD_OFFSET == 0);
         return address;
     }
 
@@ -168,6 +170,119 @@ class NunboxAssembler : public JSC::MacroAssembler
     }
 
     /*
+     * Load a (64b) js::Value from 'address' into 'type' and 'payload', and
+     * return a label which can be used by
+     * ICRepatcher::patchAddressOffsetForValueLoad to patch the address'
+     * offset.
+     *
+     * The data register is guaranteed to be clobbered last. (This makes the
+     * base register for the address reusable as 'dreg'.)
+     */
+    Label loadValueWithAddressOffsetPatch(Address address, RegisterID treg, RegisterID dreg) {
+        JS_ASSERT(address.base != treg); /* treg is clobbered first. */
+
+        Label start = label();
+#if defined JS_CPU_X86
+        /*
+         * On x86 there are two loads to patch and they both encode the offset
+         * in-line.
+         */
+        loadTypeTag(address, treg);
+        DBGLABEL_NOMASM(endType);
+        loadPayload(address, dreg);
+        DBGLABEL_NOMASM(endPayload);
+        JS_ASSERT(differenceBetween(start, endType) == 6);
+        JS_ASSERT(differenceBetween(endType, endPayload) == 6);
+        return start;
+#elif defined JS_CPU_ARM
+        /* 
+         * On ARM, the first instruction loads the offset from a literal pool, so the label
+         * returned points at that instruction.
+         */
+        DataLabel32 load = load64WithAddressOffsetPatch(address, treg, dreg);
+        JS_ASSERT(differenceBetween(start, load) == 0);
+        (void) load;
+        return start;
+#endif
+    }
+
+    /*
+     * Store a (64b) js::Value from type |treg| and payload |dreg| into |address|, and
+     * return a label which can be used by
+     * ICRepatcher::patchAddressOffsetForValueStore to patch the address'
+     * offset.
+     */
+    DataLabel32 storeValueWithAddressOffsetPatch(RegisterID treg, RegisterID dreg, Address address) {
+        DataLabel32 start = dataLabel32();
+#if defined JS_CPU_X86
+        /*
+         * On x86 there are two stores to patch and they both encode the offset
+         * in-line.
+         */
+        storeTypeTag(treg, address);
+        DBGLABEL_NOMASM(endType);
+        storePayload(dreg, address);
+        DBGLABEL_NOMASM(endPayload);
+        JS_ASSERT(differenceBetween(start, endType) == 6);
+        JS_ASSERT(differenceBetween(endType, endPayload) == 6);
+        return start;
+#elif defined JS_CPU_ARM
+        return store64WithAddressOffsetPatch(treg, dreg, address);
+#endif
+    }
+
+    /* Overloaded for storing a constant type. */
+    DataLabel32 storeValueWithAddressOffsetPatch(ImmType type, RegisterID dreg, Address address) {
+        DataLabel32 start = dataLabel32();
+#if defined JS_CPU_X86
+        storeTypeTag(type, address);
+        DBGLABEL_NOMASM(endType);
+        storePayload(dreg, address);
+        DBGLABEL_NOMASM(endPayload);
+        JS_ASSERT(differenceBetween(start, endType) == 10);
+        JS_ASSERT(differenceBetween(endType, endPayload) == 6);
+        return start;
+#elif defined JS_CPU_ARM
+        return store64WithAddressOffsetPatch(type, dreg, address);
+#endif
+    }
+
+    /* Overloaded for storing constant type and data. */
+    DataLabel32 storeValueWithAddressOffsetPatch(const Value &v, Address address) {
+        jsval_layout jv;
+        jv.asBits = JSVAL_BITS(Jsvalify(v));
+        ImmTag type(jv.s.tag);
+        Imm32 payload(jv.s.payload.u32);
+        DataLabel32 start = dataLabel32();
+#if defined JS_CPU_X86
+        store32(type, tagOf(address));
+        DBGLABEL_NOMASM(endType);
+        store32(payload, payloadOf(address));
+        DBGLABEL_NOMASM(endPayload);
+        JS_ASSERT(differenceBetween(start, endType) == 10);
+        JS_ASSERT(differenceBetween(endType, endPayload) == 10);
+        return start;
+#elif defined JS_CPU_ARM
+        return store64WithAddressOffsetPatch(type, payload, address);
+#endif
+    }
+
+    /* Overloaded for store with value remat info. */
+    DataLabel32 storeValueWithAddressOffsetPatch(const ValueRemat &vr, Address address) {
+        if (vr.isConstant()) {
+            return storeValueWithAddressOffsetPatch(vr.value(), address);
+        } else if (vr.isTypeKnown()) {
+            ImmType type(vr.knownType());
+            RegisterID data(vr.dataReg());
+            return storeValueWithAddressOffsetPatch(type, data, address);
+        } else {
+            RegisterID type(vr.typeReg());
+            RegisterID data(vr.dataReg());
+            return storeValueWithAddressOffsetPatch(type, data, address);
+        }
+    }
+
+    /*
      * Stores type first, then payload.
      */
     template <typename T>
@@ -217,7 +332,7 @@ class NunboxAssembler : public JSC::MacroAssembler
         loadPtr(privAddr, to);
     }
 
-    void loadFunctionPrivate(RegisterID base, RegisterID to) {
+    void loadObjPrivate(RegisterID base, RegisterID to) {
         Address priv(base, offsetof(JSObject, privateData));
         loadPtr(priv, to);
     }
@@ -308,6 +423,37 @@ class NunboxAssembler : public JSC::MacroAssembler
         return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_STRING));
     }
 
+#ifdef JS_CPU_X86
+    void fastLoadDouble(RegisterID lo, RegisterID hi, FPRegisterID fpReg) {
+        if (MacroAssemblerX86Common::getSSEState() >= HasSSE4_1) {
+            m_assembler.movd_rr(lo, fpReg);
+            m_assembler.pinsrd_rr(hi, fpReg);
+        } else {
+            m_assembler.movd_rr(lo, fpReg);
+            m_assembler.movd_rr(hi, Registers::FPConversionTemp);
+            m_assembler.unpcklps_rr(Registers::FPConversionTemp, fpReg);
+        }
+    }
+#endif
+
+    void breakDouble(FPRegisterID srcDest, RegisterID typeReg, RegisterID dataReg) {
+#ifdef JS_CPU_X86
+        // Move the low 32-bits of the 128-bit XMM register into dataReg.
+        // Then, right shift the 128-bit XMM register by 4 bytes.
+        // Finally, move the new low 32-bits of the 128-bit XMM register into typeReg.
+        m_assembler.movd_rr(srcDest, dataReg);
+        m_assembler.psrldq_rr(srcDest, 4);
+        m_assembler.movd_rr(srcDest, typeReg);
+#else
+        JS_NOT_REACHED("implement this - push double, pop pop is easiest");
+#endif
+    }
+
+    void loadStaticDouble(const double *dp, FPRegisterID dest, RegisterID scratch) {
+        move(ImmPtr(dp), scratch);
+        loadDouble(Address(scratch), dest);
+    }
+
     template <typename T>
     Jump fastArrayLoadSlot(T address, bool holeCheck,
                            MaybeRegisterID typeReg, RegisterID dataReg)
@@ -321,21 +467,6 @@ class NunboxAssembler : public JSC::MacroAssembler
         }
         loadPayload(address, dataReg);
         return notHole;
-    }
-
-    /* :FIXME: borrowed from patch in bug 594247 */
-    void breakDouble(FPRegisterID srcDest, RegisterID typeReg, RegisterID dataReg) {
-#ifdef JS_CPU_X86
-        // Move the low 32-bits of the 128-bit XMM register into dataReg.
-        // Then, right shift the 128-bit XMM register by 4 bytes.
-        // Finally, move the new low 32-bits of the 128-bit XMM register into typeReg.
-        m_assembler.movd_rr(srcDest, dataReg);
-        m_assembler.psrldq_rr(srcDest, 4);
-        m_assembler.movd_rr(srcDest, typeReg);
-#else
-        JS_STATIC_ASSERT(0);
-        JS_NOT_REACHED("implement this - push double, pop pop is easiest");
-#endif
     }
 };
 

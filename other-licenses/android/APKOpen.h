@@ -53,6 +53,8 @@ const struct mapping_info * getLibraryMapping();
 struct lib_cache_info {
   char name[MAX_LIB_CACHE_NAME_LEN];
   int fd;
+  uint32_t lib_size;
+  void* buffer;
 };
 
 const struct lib_cache_info * getLibraryCache();

@@ -39,17 +39,20 @@
 # ***** END LICENSE BLOCK *****
 
 <menupopup id="appmenu-popup"
+           onpopupshowing="if (event.target == this) {
+                             updateEditUIVisibility();
 #ifdef MOZ_SERVICES_SYNC
-           onpopupshowing="updateEditUIVisibility();gSyncUI.updateUI();">
-#else
-           onpopupshowing="updateEditUIVisibility();">
+                             gSyncUI.updateUI();
 #endif
+                             return;
+                           }
+                           if (event.target.parentNode.parentNode.parentNode.parentNode == this)
+                             this._currentPopup = event.target;">
   <hbox>
     <vbox id="appmenuPrimaryPane">
       <splitmenu id="appmenu_newTab"
                  label="&tabCmd.label;"
-                 command="cmd_newNavigatorTab"
-                 key="key_newNavigatorTab">
+                 command="cmd_newNavigatorTab">
           <menupopup>
             <menuitem id="appmenu_newTab_popup"
                       label="&tabCmd.label;"
@@ -98,6 +101,45 @@
                        command="cmd_paste"
                        onclick="if (!this.disabled) hidePopup();"
                        tooltiptext="&pasteButton.tooltip;"/>
+        <spacer flex="1"/>
+        <menu id="appmenu-editmenu">
+          <menupopup id="appmenu-editmenu-menupopup">
+            <menuitem id="appmenu-editmenu-cut"
+                      class="menuitem-iconic"
+                      label="&cutCmd.label;"
+                      key="key_cut"
+                      command="cmd_cut"/>
+            <menuitem id="appmenu-editmenu-copy"
+                      class="menuitem-iconic"
+                      label="&copyCmd.label;"
+                      key="key_copy"
+                      command="cmd_copy"/>
+            <menuitem id="appmenu-editmenu-paste"
+                      class="menuitem-iconic"
+                      label="&pasteCmd.label;"
+                      key="key_paste"
+                      command="cmd_paste"/>
+            <menuseparator/>
+            <menuitem id="appmenu-editmenu-undo"
+                      label="&undoCmd.label;"
+                      key="key_undo"
+                      command="cmd_undo"/>
+            <menuitem id="appmenu-editmenu-redo"
+                      label="&redoCmd.label;"
+                      key="key_redo"
+                      command="cmd_redo"/>
+            <menuseparator/>
+            <menuitem id="appmenu-editmenu-selectAll"
+                      label="&selectAllCmd.label;"
+                      key="key_selectAll"
+                      command="cmd_selectAll"/>
+            <menuseparator/>
+            <menuitem id="appmenu-editmenu-delete"
+                      label="&deleteCmd.label;"
+                      key="key_delete"
+                      command="cmd_delete"/>
+          </menupopup>
+        </menu>
       </hbox>
       <menuitem id="appmenu_find"
                 class="menuitem-tooltip"
@@ -116,8 +158,7 @@
       <splitmenu id="appmenu_print"
                  iconic="true"
                  label="&printCmd.label;"
-                 command="cmd_print"
-                 key="printKb">
+                 command="cmd_print">
           <menupopup>
             <menuitem id="appmenu_print_popup"
                       class="menuitem-iconic"
@@ -146,16 +187,21 @@
                     type="checkbox"
                     command="Tools:Inspect"
                     key="key_inspect"/>
-          <menuseparator/>
           <menuitem id="appmenu_pageSource"
                     label="&viewPageSourceCmd.label;"
                     command="View:PageSource"
                     key="key_viewSource"/>
+          <menuitem id="appmenu_errorConsole"
+                    hidden="true"
+                    label="&errorConsoleCmd.label;"
+                    key="key_errorConsole"
+                    oncommand="toJavaScriptConsole();"/>
           <menuseparator/>
 #define ID_PREFIX appmenu_developer_
+#define OMIT_ACCESSKEYS
 #include browser-charsetmenu.inc
 #undef ID_PREFIX
-          <menuseparator/>
+#undef OMIT_ACCESSKEYS
           <menuitem label="&goOfflineCmd.label;"
                     type="checkbox"
                     observes="workOfflineMenuitemState"
@@ -164,14 +210,27 @@
       </menu>
       <menuseparator class="appmenu-menuseparator"/>
 #define ID_PREFIX appmenu_
+#define OMIT_ACCESSKEYS
 #include browser-charsetmenu.inc
 #undef ID_PREFIX
+#undef OMIT_ACCESSKEYS
       <menuitem id="appmenu_fullScreen"
                 class="menuitem-tooltip"
                 label="&fullScreenCmd.label;"
                 type="checkbox"
                 observes="View:FullScreen"
                 key="key_fullScreen"/>
+#ifdef MOZ_SERVICES_SYNC
+      <!-- only one of sync-setup or sync-syncnow will be showing at once -->
+      <menuitem id="sync-setup-appmenu"
+                label="&syncSetup.label;"
+                observes="sync-setup-state"
+                oncommand="gSyncUI.openSetup()"/>
+      <menuitem id="sync-syncnowitem-appmenu"
+                label="&syncSyncNowItem.label;"
+                observes="sync-syncnow-state"
+                oncommand="gSyncUI.doSync(event);"/>
+#endif
       <menuitem id="appmenu-quit"
                 class="menuitem-iconic"
 #ifdef XP_WIN
@@ -185,8 +244,7 @@
       <splitmenu id="appmenu_bookmarks"
                  iconic="true"
                  label="&bookmarksMenu.label;"
-                 command="Browser:ShowAllBookmarks"
-                 key="manBookmarkKb">
+                 command="Browser:ShowAllBookmarks">
           <menupopup id="appmenu_bookmarksPopup"
                      placespopup="true"
                      context="placesContext"
@@ -249,8 +307,7 @@
       <splitmenu id="appmenu_history"
                  iconic="true"
                  label="&historyMenu.label;"
-                 command="Browser:ShowAllHistory"
-                 key="showAllHistoryKb">
+                 command="Browser:ShowAllHistory">
           <menupopup id="appmenu_historyMenupopup"
                      placespopup="true"
                      oncommand="this.parentNode._placesView._onCommand(event);"
@@ -351,7 +408,6 @@
                       onclick="checkForMiddleClick(this, event);"/>
             <menuseparator/>
             <menuitem id="appmenu_safeMode"
-                      accesskey="&appMenuSafeMode.accesskey;"
                       label="&appMenuSafeMode.label;"
                       oncommand="safeModeRestart();"/>
             <menuseparator/>
@@ -360,18 +416,6 @@
                       oncommand="openAboutDialog();"/>
           </menupopup>
       </splitmenu>
-#ifdef MOZ_SERVICES_SYNC
-      <spacer flex="1"/>
-      <!-- only one of sync-setup or sync-syncnow will be showing at once -->
-      <menuitem id="sync-setup-appmenu"
-                label="&syncSetup.label;"
-                observes="sync-setup-state"
-                oncommand="gSyncUI.openSetup()"/>
-      <menuitem id="sync-syncnowitem-appmenu"
-                label="&syncSyncNowItem.label;"
-                observes="sync-syncnow-state"
-                oncommand="gSyncUI.doSync(event);"/>
-#endif
     </vbox>
   </hbox>
 </menupopup>

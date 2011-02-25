@@ -35,7 +35,7 @@ load 342322-1.html
 load 343206-1.xhtml
 load 345139-1.xhtml
 load 345617-1.html
-load 348887-1.html
+skip load 348887-1.html # bug 623091
 load 348991-1.xhtml
 load 354458-1.html
 load 354458-2.html
@@ -298,13 +298,15 @@ load 501535-1.html
 load 503961-1.xhtml
 load 503961-2.html
 load 508168-1.html
-#load 508908-1.html # Test disabled due to it accessing the network, and causing pain.  See bug 616085.
+load 508816-1.xul
+load 508908-1.html
 load 505912-1.html
 load 509749-1.html
 load 511482.html
 load 512724-1.html
 load 512725-1.html
 load 513394-1.html
+load 514098-1.xhtml
 load 514800-1.html
 load 515811-1.html
 load 517968.html
@@ -320,14 +322,17 @@ load 541277-2.html
 load 541714-1.html
 load 541714-2.html
 load 542136-1.html
+load 545571-1.html
 load 547338.xul
 load 547843-1.xhtml
 load 551635-1.html
+asserts(5) load 553504-1.xhtml # nscoord_MAX assertions (bug 575011)
 load 564368-1.xhtml
 load 564968.xhtml
 load 570160.html
 load 570289-1.html
 load 571618-1.svg
+asserts(1) load 571975-1.html # bug 574889
 load 574958.xhtml
 load 580504-1.xhtml
 load 585598-1.xhtml
@@ -341,6 +346,7 @@ load 591141.html
 asserts(0-1) load 592118.html
 load 594808-1.html
 asserts(4) load 595435-1.xhtml # bug 610331
+load 595740-1.html
 load 603490-1.html
 load 603510-1.html
 load 604314-1.html

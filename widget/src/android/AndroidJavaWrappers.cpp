@@ -130,7 +130,6 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jYField = getField("mY", "F");
     jZField = getField("mZ", "F");
     jRectField = getField("mRect", "Landroid/graphics/Rect;");
-    jNativeWindowField = getField("mNativeWindow", "I");
 
     jCharactersField = getField("mCharacters", "Ljava/lang/String;");
     jKeyCodeField = getField("mKeyCode", "I");
@@ -277,7 +276,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
     mAction = jenv->GetIntField(jobj, jActionField);
     mType = jenv->GetIntField(jobj, jTypeField);
-    mNativeWindow = (void*) jenv->GetIntField(jobj, jNativeWindowField);
 
     switch (mType) {
         case SIZE_CHANGED:
@@ -296,6 +294,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
         case MOTION_EVENT:
             mTime = jenv->GetLongField(jobj, jTimeField);
+            mMetaState = jenv->GetIntField(jobj, jMetaStateField);
             mCount = jenv->GetIntField(jobj, jCountField);
             ReadP0Field(jenv);
             if (mCount > 1)
@@ -346,7 +345,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
     }
 
 #ifndef ANDROID_DEBUG_EVENTS
-    ALOG("AndroidGeckoEvent: %p : %d %p", (void*)jobj, mType, (void*)mNativeWindow);
+    ALOG("AndroidGeckoEvent: %p : %d", (void*)jobj, mType);
 #endif
 }
 
@@ -354,14 +353,12 @@ void
 AndroidGeckoEvent::Init(int aType)
 {
     mType = aType;
-    mNativeWindow = nsnull;
 }
 
 void
-AndroidGeckoEvent::Init(void *window, int x1, int y1, int x2, int y2)
+AndroidGeckoEvent::Init(int x1, int y1, int x2, int y2)
 {
     mType = DRAW;
-    mNativeWindow = window;
     mRect.Empty();
 }
 
@@ -450,8 +447,13 @@ nsJNIString::nsJNIString(jstring jstr, JNIEnv *jenv)
     JNIEnv *jni = jenv;
     if (!jni)
         jni = JNI();
-    const jchar* jCharPtr = jni->GetStringChars(jstr, false);
-    int len = jni->GetStringLength(jstr);
+    const jchar* jCharPtr = jni->GetStringChars(jstr, NULL);
+    jsize len = jni->GetStringLength(jstr);
+    if (!jCharPtr || len <= 0) {
+        SetIsVoid(PR_TRUE);
+        return;
+    }
+
     Assign(jCharPtr, len);
     jni->ReleaseStringChars(jstr, jCharPtr);
 }

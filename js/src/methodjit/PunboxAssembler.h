@@ -43,6 +43,7 @@
 #include "assembler/assembler/MacroAssembler.h"
 #include "methodjit/MachineRegs.h"
 #include "methodjit/RematInfo.h"
+#include "jsnum.h"
 
 namespace js {
 namespace mjit {
@@ -136,6 +137,15 @@ class PunboxAssembler : public JSC::MacroAssembler
         move(Imm64(val.asRawBits() & JSVAL_PAYLOAD_MASK), payload);
     }
 
+    /*
+     * Load a (64b) js::Value from 'address' into 'type' and 'payload', and
+     * return a label which can be used by
+     * Repatcher::patchAddressOffsetForValue to patch the address offset.
+     */
+    Label loadValueWithAddressOffsetPatch(Address address, RegisterID type, RegisterID payload) {
+        return loadValueAsComponents(address, type, payload);
+    }
+
     template <typename T>
     void storeValueFromComponents(RegisterID type, RegisterID payload, T address) {
         move(type, Registers::ValueReg);
@@ -148,6 +158,48 @@ class PunboxAssembler : public JSC::MacroAssembler
         move(type, Registers::ValueReg);
         orPtr(payload, Registers::ValueReg);
         storeValue(Registers::ValueReg, address);
+    }
+
+    /*
+     * Store a (64b) js::Value from 'type' and 'payload' into 'address', and
+     * return a label which can be used by
+     * Repatcher::patchAddressOffsetForValueStore to patch the address offset.
+     */
+    DataLabel32 storeValueWithAddressOffsetPatch(RegisterID type, RegisterID payload, Address address) {
+        move(type, Registers::ValueReg);
+        orPtr(payload, Registers::ValueReg);
+        return storePtrWithAddressOffsetPatch(Registers::ValueReg, address);
+    }
+
+    /* Overload for constant type. */
+    DataLabel32 storeValueWithAddressOffsetPatch(ImmTag type, RegisterID payload, Address address) {
+        move(type, Registers::ValueReg);
+        orPtr(payload, Registers::ValueReg);
+        return storePtrWithAddressOffsetPatch(Registers::ValueReg, address);
+    }
+
+    /* Overload for constant type and constant data. */
+    DataLabel32 storeValueWithAddressOffsetPatch(const Value &v, Address address) {
+        jsval_layout jv;
+        jv.asBits = JSVAL_BITS(Jsvalify(v));
+
+        move(ImmPtr(reinterpret_cast<void*>(jv.asBits)), Registers::ValueReg);
+        return storePtrWithAddressOffsetPatch(Registers::ValueReg, valueOf(address));
+    }
+
+    /* Overloaded for store with value remat info. */
+    DataLabel32 storeValueWithAddressOffsetPatch(const ValueRemat &vr, Address address) {
+        if (vr.isConstant()) {
+            return storeValueWithAddressOffsetPatch(vr.value(), address);
+        } else if (vr.isTypeKnown()) {
+            ImmType type(vr.knownType());
+            RegisterID data(vr.dataReg());
+            return storeValueWithAddressOffsetPatch(type, data, address);
+        } else {
+            RegisterID type(vr.typeReg());
+            RegisterID data(vr.dataReg());
+            return storeValueWithAddressOffsetPatch(type, data, address);
+        }
     }
 
     template <typename T>
@@ -225,7 +277,7 @@ class PunboxAssembler : public JSC::MacroAssembler
         lshiftPtr(Imm32(1), to);
     }
 
-    void loadFunctionPrivate(RegisterID base, RegisterID to) {
+    void loadObjPrivate(RegisterID base, RegisterID to) {
         Address priv(base, offsetof(JSObject, privateData));
         loadPtr(priv, to);
     }
@@ -315,6 +367,26 @@ class PunboxAssembler : public JSC::MacroAssembler
     Jump testString(Condition cond, Address address) {
         loadTypeTag(address, Registers::ValueReg);
         return testString(cond, Registers::ValueReg);
+    }
+
+    void breakDouble(FPRegisterID srcDest, RegisterID typeReg, RegisterID dataReg) {
+        m_assembler.movq_rr(srcDest, typeReg);
+        move(Registers::PayloadMaskReg, dataReg);
+        andPtr(typeReg, dataReg);
+        xorPtr(dataReg, typeReg);
+    }
+
+    void fastLoadDouble(RegisterID dataReg, RegisterID typeReg, FPRegisterID fpReg) {
+        move(typeReg, Registers::ValueReg);
+        orPtr(dataReg, Registers::ValueReg);
+        m_assembler.movq_rr(Registers::ValueReg, fpReg);
+    }
+
+    void loadStaticDouble(const double *dp, FPRegisterID dest, RegisterID scratch) {
+        jsdpun du;
+        du.d = *dp;
+        move(ImmPtr(reinterpret_cast<void*>(du.u64)), scratch);
+        m_assembler.movq_rr(scratch, dest);
     }
 
     template <typename T>

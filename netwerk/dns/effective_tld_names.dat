@@ -509,7 +509,12 @@ edu.bs
 gov.bs
 
 // bt : http://en.wikipedia.org/wiki/.bt
-*.bt
+bt
+com.bt
+edu.bt
+gov.bt
+net.bt
+org.bt
 
 // bv : No registrations at this time.
 // Submitted by registry <jarle@uninett.no> 2006-06-16
@@ -4459,7 +4464,7 @@ k12.de.us
 k12.fl.us
 k12.ga.us
 k12.gu.us
-k12.hi.us
+// k12.hi.us  Hawaii has a state-wide DOE login: bug 614565
 k12.ia.us
 k12.id.us
 k12.il.us

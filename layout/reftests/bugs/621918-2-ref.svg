@@ -1,0 +1,17 @@
+<svg
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   height="800px"
+   width="800px">
+
+ <!-- use an empty g to force filters.svg to load before onload -->
+ <use xlink:href="../filters.svg#empty" />
+
+ <g filter="url(../filters.svg#NonWhiteToBlack)">
+  <rect x="0" y="0" height="100%" width="100%" fill="#FFFFFF"/>
+  <text style="font-size:12px;" transform="translate(40,100)">
+    <tspan>स्वतन्त्रता और समानता प्राप्त</tspan></text>
+  <text style="font-size:12px;" transform="translate(40,140) rotate(45)">
+    <tspan>स्वतन्त्रता और समानता प्राप्त</tspan></text>
+ </g>
+</svg>

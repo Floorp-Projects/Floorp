@@ -74,6 +74,7 @@ toolbar:first-child, menubar {
 
 /* ::::: lightweight theme ::::: */
  
+menubar:-moz-lwtheme,
 toolbox:-moz-lwtheme,
 toolbar:-moz-lwtheme {
   -moz-appearance: none;

@@ -67,32 +67,38 @@ class Compiler : public BaseCompiler
     };
 
 #if defined JS_MONOIC
-    struct MICGenInfo {
-        MICGenInfo(ic::MICInfo::Kind kind) : kind(kind)
-        { }
-        Label entry;
-        Label stubEntry;
+    struct GlobalNameICInfo {
+        Label fastPathStart;
+        Call slowPathCall;
         DataLabel32 shape;
         DataLabelPtr addrLabel;
-#if defined JS_PUNBOX64
-        uint32 patchValueOffset;
-#endif
+        bool usePropertyCache;
+
+        void copyTo(ic::GlobalNameIC &to, JSC::LinkBuffer &full, JSC::LinkBuffer &stub) {
+            to.fastPathStart = full.locationOf(fastPathStart);
+
+            int offset = full.locationOf(shape) - to.fastPathStart;
+            to.shapeOffset = offset;
+            JS_ASSERT(to.shapeOffset == offset);
+
+            to.slowPathCall = stub.locationOf(slowPathCall);
+            to.usePropertyCache = usePropertyCache;
+        }
+    };
+
+    struct GetGlobalNameICInfo : public GlobalNameICInfo {
         Label load;
-        Call call;
-        ic::MICInfo::Kind kind;
-        jsbytecode *jumpTarget;
-        Jump traceHint;
-        MaybeJump slowTraceHint;
-        union {
-            struct {
-                bool typeConst;
-                bool dataConst;
-                bool usePropertyCache;
-            } name;
-            struct {
-                uint32 pcOffs;
-            } tracer;
-        } u;
+    };
+
+    struct SetGlobalNameICInfo : public GlobalNameICInfo {
+        Label slowPathStart;
+        Label fastPathRejoin;
+        DataLabel32 store;
+        Jump shapeGuardJump;
+        ValueRemat vr;
+        RegisterID objReg;
+        RegisterID shapeReg;
+        bool objConst;
     };
 
     struct EqualityGenInfo {
@@ -206,6 +212,7 @@ class Compiler : public BaseCompiler
         Jump        claspGuard;
         Jump        holeGuard;
         Int32Key    key;
+        uint32      volatileMask;
     };
 
     struct PICGenInfo : public BaseICInfo {
@@ -216,7 +223,6 @@ class Compiler : public BaseCompiler
         Label typeCheck;
         RegisterID shapeReg;
         RegisterID objReg;
-        RegisterID idReg;
         RegisterID typeReg;
         bool usePropCache;
         Label shapeGuard;
@@ -224,11 +230,50 @@ class Compiler : public BaseCompiler
         JSAtom *atom;
         bool hasTypeCheck;
         ValueRemat vr;
-# if defined JS_CPU_X64
-        ic::PICLabels labels;
-# endif
+#ifdef JS_HAS_IC_LABELS
+        union {
+            ic::GetPropLabels getPropLabels_;
+            ic::SetPropLabels setPropLabels_;
+            ic::BindNameLabels bindNameLabels_;
+            ic::ScopeNameLabels scopeNameLabels_;
+        };
 
-        void copySimpleMembersTo(ic::PICInfo &ic) const {
+        ic::GetPropLabels &getPropLabels() {
+            JS_ASSERT(kind == ic::PICInfo::GET || kind == ic::PICInfo::CALL);
+            return getPropLabels_;
+        }
+        ic::SetPropLabels &setPropLabels() {
+            JS_ASSERT(kind == ic::PICInfo::SET || kind == ic::PICInfo::SETMETHOD);
+            return setPropLabels_;
+        }
+        ic::BindNameLabels &bindNameLabels() {
+            JS_ASSERT(kind == ic::PICInfo::BIND);
+            return bindNameLabels_;
+        }
+        ic::ScopeNameLabels &scopeNameLabels() {
+            JS_ASSERT(kind == ic::PICInfo::NAME || kind == ic::PICInfo::XNAME);
+            return scopeNameLabels_;
+        }
+#else
+        ic::GetPropLabels &getPropLabels() {
+            JS_ASSERT(kind == ic::PICInfo::GET || kind == ic::PICInfo::CALL);
+            return ic::PICInfo::getPropLabels_;
+        }
+        ic::SetPropLabels &setPropLabels() {
+            JS_ASSERT(kind == ic::PICInfo::SET || kind == ic::PICInfo::SETMETHOD);
+            return ic::PICInfo::setPropLabels_;
+        }
+        ic::BindNameLabels &bindNameLabels() {
+            JS_ASSERT(kind == ic::PICInfo::BIND);
+            return ic::PICInfo::bindNameLabels_;
+        }
+        ic::ScopeNameLabels &scopeNameLabels() {
+            JS_ASSERT(kind == ic::PICInfo::NAME || kind == ic::PICInfo::XNAME);
+            return ic::PICInfo::scopeNameLabels_;
+        }
+#endif
+
+        void copySimpleMembersTo(ic::PICInfo &ic) {
             ic.kind = kind;
             ic.shapeReg = shapeReg;
             ic.objReg = objReg;
@@ -240,6 +285,16 @@ class Compiler : public BaseCompiler
                 ic.u.get.typeReg = typeReg;
                 ic.u.get.hasTypeCheck = hasTypeCheck;
             }
+#ifdef JS_HAS_IC_LABELS
+            if (ic.isGet())
+                ic.setLabels(getPropLabels());
+            else if (ic.isSet())
+                ic.setLabels(setPropLabels());
+            else if (ic.isBind())
+                ic.setLabels(bindNameLabels());
+            else if (ic.isScopeName())
+                ic.setLabels(scopeNameLabels());
+#endif
         }
 
     };
@@ -264,6 +319,17 @@ class Compiler : public BaseCompiler
         { }
     };
 
+    struct DoublePatch {
+        double d;
+        DataLabelPtr label;
+        bool ool;
+    };
+
+    struct JumpTable {
+        DataLabelPtr label;
+        size_t offsetIndex;
+    };
+
     JSStackFrame *fp;
     JSScript *script;
     JSObject *scopeChain;
@@ -279,7 +345,8 @@ class Compiler : public BaseCompiler
     analyze::LifetimeScript liveness;
     js::Vector<BranchPatch, 64, CompilerAllocPolicy> branchPatches;
 #if defined JS_MONOIC
-    js::Vector<MICGenInfo, 64, CompilerAllocPolicy> mics;
+    js::Vector<GetGlobalNameICInfo, 16, CompilerAllocPolicy> getGlobalNames;
+    js::Vector<SetGlobalNameICInfo, 16, CompilerAllocPolicy> setGlobalNames;
     js::Vector<CallGenInfo, 64, CompilerAllocPolicy> callICs;
     js::Vector<EqualityGenInfo, 64, CompilerAllocPolicy> equalityICs;
     js::Vector<TraceGenInfo, 64, CompilerAllocPolicy> traceICs;
@@ -291,6 +358,9 @@ class Compiler : public BaseCompiler
 #endif
     js::Vector<CallPatchInfo, 64, CompilerAllocPolicy> callPatches;
     js::Vector<InternalCallSite, 64, CompilerAllocPolicy> callSites;
+    js::Vector<DoublePatch, 16, CompilerAllocPolicy> doubleList;
+    js::Vector<JumpTable, 16> jumpTables;
+    js::Vector<uint32, 16> jumpTableOffsets;
     StubCompiler stubcc;
     Label invokeLabel;
     Label arityLabel;
@@ -364,7 +434,7 @@ class Compiler : public BaseCompiler
     /* Emitting helpers. */
     void restoreFrameRegs(Assembler &masm);
     bool emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
-    void iter(uintN flags);
+    bool iter(uintN flags);
     void iterNext();
     bool iterMore();
     void iterEnd();
@@ -373,7 +443,7 @@ class Compiler : public BaseCompiler
     void passICAddress(BaseICInfo *ic);
 #endif
 #ifdef JS_MONOIC
-    void passMICAddress(MICGenInfo &mic);
+    void passMICAddress(GlobalNameICInfo &mic);
 #endif
     bool constructThis();
     void ensureDouble(FrameEntry *fe);
@@ -390,7 +460,7 @@ class Compiler : public BaseCompiler
     /* Opcode handlers. */
     bool jumpAndTrace(Jump j, jsbytecode *target, Jump *slow = NULL, bool *trampoline = NULL);
     bool finishLoop(jsbytecode *head);
-    void jsop_bindname(uint32 index, bool usePropCache);
+    void jsop_bindname(JSAtom *atom, bool usePropCache);
     void jsop_setglobal(uint32 index);
     void jsop_getglobal(uint32 index);
     void jsop_getprop_slow(JSAtom *atom, bool usePropCache = true);
@@ -417,8 +487,8 @@ class Compiler : public BaseCompiler
     void jsop_eleminc(JSOp op, VoidStub);
     void jsop_getgname(uint32 index, JSValueType type, types::TypeSet *typeSet);
     void jsop_getgname_slow(uint32 index);
-    void jsop_setgname(uint32 index, bool usePropertyCache);
-    void jsop_setgname_slow(uint32 index, bool usePropertyCache);
+    void jsop_setgname(JSAtom *atom, bool usePropertyCache);
+    void jsop_setgname_slow(JSAtom *atom, bool usePropertyCache);
     void jsop_bindgname();
     void jsop_setelem_slow();
     void jsop_getelem_slow();
@@ -441,6 +511,10 @@ class Compiler : public BaseCompiler
     void leaveBlock();
     void emitEval(uint32 argc);
     void jsop_arguments();
+    bool jsop_tableswitch(jsbytecode *pc);
+    void jsop_forprop(JSAtom *atom);
+    void jsop_forname(JSAtom *atom);
+    void jsop_forgname(JSAtom *atom);
 
     /* Fast arithmetic. */
     bool jsop_binary(JSOp op, VoidStub stub, JSValueType type);
@@ -482,7 +556,6 @@ class Compiler : public BaseCompiler
     void jsop_rsh_const_unknown(FrameEntry *lhs, FrameEntry *rhs);
     void jsop_rsh_unknown_const(FrameEntry *lhs, FrameEntry *rhs);
     void jsop_rsh_unknown_any(FrameEntry *lhs, FrameEntry *rhs);
-    bool jsop_globalinc(JSOp op, uint32 index, bool popped);
     bool jsop_mod();
     void jsop_neg();
     void jsop_bitnot();
@@ -497,8 +570,8 @@ class Compiler : public BaseCompiler
     void jsop_initmethod();
     void jsop_initprop();
     void jsop_initelem();
-    bool jsop_setelem();
     void jsop_setelem_dense();
+    bool jsop_setelem(bool popGuaranteed);
     bool jsop_getelem(bool isCall);
     void jsop_getelem_dense(bool isPacked);
     bool isCacheableBaseAndIndex(FrameEntry *obj, FrameEntry *id);

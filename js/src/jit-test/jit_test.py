@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # jit_test.py -- Python harness for JavaScript trace tests.
 
 import datetime, os, re, sys, tempfile, traceback
@@ -52,7 +54,7 @@ class Test:
 
     def copy(self):
         t = Test(self.path)
-        t.jitflags = self.jitflags
+        t.jitflags = self.jitflags[:]
         t.slow = self.slow
         t.allow_oom = self.allow_oom
         t.valgrind = self.valgrind
@@ -91,6 +93,10 @@ class Test:
                         test.allow_oom = True
                     elif name == 'valgrind':
                         test.valgrind = options.valgrind
+                    elif name == 'mjitalways':
+                        test.jitflags.append('-a')
+                    elif name == 'debug':
+                        test.jitflags.append('-d')
                     else:
                         print('warning: unrecognized |jit-test| attribute %s'%part)
 
@@ -349,8 +355,8 @@ def main(argv):
                   help='Enable the |valgrind| flag, if valgrind is in $PATH.')
     op.add_option('--valgrind-all', dest='valgrind_all', action='store_true',
                   help='Run all tests with valgrind, if valgrind is in $PATH.')
-    op.add_option('--jitflags', dest='jitflags', default='j',
-                  help='Example: --jitflags=j,mj to run each test with -j and -m -j')
+    op.add_option('--jitflags', dest='jitflags', default='mjp',
+                  help='Example: --jitflags=j,mj,mjp to run each test with -j, -m -j, -m -j -p [default=%default]')
     op.add_option('--avoid-stdio', dest='avoid_stdio', action='store_true',
                   help='Use js-shell file indirection instead of piping stdio.')
     op.add_option('--write-failure-output', dest='write_failure_output', action='store_true',
@@ -424,7 +430,7 @@ def main(argv):
     for test in test_list:
         for jitflags in jitflags_list:
             new_test = test.copy()
-            new_test.jitflags = jitflags
+            new_test.jitflags.extend(jitflags)
             job_list.append(new_test)
     
 

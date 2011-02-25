@@ -55,8 +55,10 @@ ifeq ($(OS_ARCH),SunOS)
 MODULE_OPTIMIZE_FLAGS = -xO5
 endif
 ifeq ($(OS_ARCH),WINNT)
+ifneq ($(OS_TEST),x86_64)
 # FIXME: bug 413019
 OS_COMPILE_CFLAGS += -GL-
+endif
 MODULE_OPTIMIZE_FLAGS = -O2
 endif
 endif
@@ -158,7 +160,7 @@ ifdef USE_ARM_NEON_GCC
 CSRCS += pixman-arm-neon.c
 SSRCS += pixman-arm-neon-asm.S
 DEFINES += -DUSE_ARM_NEON
-ARM_NEON_CFLAGS = -mfloat-abi=softfp -mfpu=neon
+ARM_NEON_CFLAGS = -mfpu=neon
 endif
 
 EXPORTS		= pixman.h pixman-version.h

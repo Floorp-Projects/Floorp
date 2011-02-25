@@ -52,7 +52,8 @@ nsSVGGeometryFrame::Init(nsIContent* aContent,
                          nsIFrame* aParent,
                          nsIFrame* aPrevInFlow)
 {
-  AddStateBits((aParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) |
+  AddStateBits((aParent->GetStateBits() &
+                (NS_STATE_SVG_NONDISPLAY_CHILD | NS_STATE_SVG_CLIPPATH_CHILD)) |
                NS_STATE_SVG_PROPAGATE_TRANSFORM);
   nsresult rv = nsSVGGeometryFrameBase::Init(aContent, aParent, aPrevInFlow);
   return rv;
@@ -160,26 +161,6 @@ PRUint16
 nsSVGGeometryFrame::GetClipRule()
 {
   return GetStyleSVG()->mClipRule;
-}
-
-PRBool
-nsSVGGeometryFrame::IsClipChild()
-{
-  nsIContent *node = mContent;
-
-  do {
-    // Return false if we find a non-svg ancestor. Non-SVG elements are not
-    // allowed inside an SVG clipPath element.
-    if (node->GetNameSpaceID() != kNameSpaceID_SVG) {
-      break;
-    }
-    if (node->NodeInfo()->Equals(nsGkAtoms::clipPath, kNameSpaceID_SVG)) {
-      return PR_TRUE;
-    }
-    node = node->GetParent();
-  } while (node);
-    
-  return PR_FALSE;
 }
 
 static void
@@ -343,4 +324,63 @@ nsSVGGeometryFrame::SetupCairoStroke(gfxContext *aContext)
                             &nsStyleSVG::mStroke, opacity);
 
   return PR_TRUE;
+}
+
+PRUint16
+nsSVGGeometryFrame::GetHittestMask()
+{
+  PRUint16 mask = 0;
+
+  switch(GetStyleVisibility()->mPointerEvents) {
+  case NS_STYLE_POINTER_EVENTS_NONE:
+    break;
+  case NS_STYLE_POINTER_EVENTS_AUTO:
+  case NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED:
+    if (GetStyleVisibility()->IsVisible()) {
+      if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None)
+        mask |= HITTEST_MASK_FILL;
+      if (GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None)
+        mask |= HITTEST_MASK_STROKE;
+      if (GetStyleSVG()->mStrokeOpacity > 0)
+        mask |= HITTEST_MASK_CHECK_MRECT;
+    }
+    break;
+  case NS_STYLE_POINTER_EVENTS_VISIBLEFILL:
+    if (GetStyleVisibility()->IsVisible()) {
+      mask |= HITTEST_MASK_FILL;
+    }
+    break;
+  case NS_STYLE_POINTER_EVENTS_VISIBLESTROKE:
+    if (GetStyleVisibility()->IsVisible()) {
+      mask |= HITTEST_MASK_STROKE;
+    }
+    break;
+  case NS_STYLE_POINTER_EVENTS_VISIBLE:
+    if (GetStyleVisibility()->IsVisible()) {
+      mask |= HITTEST_MASK_FILL | HITTEST_MASK_STROKE;
+    }
+    break;
+  case NS_STYLE_POINTER_EVENTS_PAINTED:
+    if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None)
+      mask |= HITTEST_MASK_FILL;
+    if (GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None)
+      mask |= HITTEST_MASK_STROKE;
+    if (GetStyleSVG()->mStrokeOpacity)
+      mask |= HITTEST_MASK_CHECK_MRECT;
+    break;
+  case NS_STYLE_POINTER_EVENTS_FILL:
+    mask |= HITTEST_MASK_FILL;
+    break;
+  case NS_STYLE_POINTER_EVENTS_STROKE:
+    mask |= HITTEST_MASK_STROKE;
+    break;
+  case NS_STYLE_POINTER_EVENTS_ALL:
+    mask |= HITTEST_MASK_FILL | HITTEST_MASK_STROKE;
+    break;
+  default:
+    NS_ERROR("not reached");
+    break;
+  }
+
+  return mask;
 }

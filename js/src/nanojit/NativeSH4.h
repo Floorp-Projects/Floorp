@@ -40,6 +40,8 @@
 #ifndef __nanojit_NativeSH4__
 #define __nanojit_NativeSH4__
 
+#include "NativeCommon.h"
+
 namespace nanojit
 {
     /***********************************************************************
@@ -47,64 +49,63 @@ namespace nanojit
      */
 
     // General purpose and ABI registers.
-    typedef uint32_t Register;
-    static const Register
-        // Scratch registers (a.k.a caller-saved, a.k.a local).
-        R0 = { 0 },
-        R1 = { 1 },
-        R2 = { 2 },
-        R3 = { 3 }, // Excluded from the regalloc because of its use as a hyper-scratch.
-        R4 = { 4 },
-        R5 = { 5 },
-        R6 = { 6 },
-        R7 = { 7 },
 
-        // Saved registers (a.k.a callee-saved, a.k.a global).
-        R8 = { 8 },
-        R9 = { 9 },
-        R10 = { 10 },
-        R11 = { 11 },
-        R12 = { 12 },
-        R13 = { 13 },
+    // Scratch registers (a.k.a caller-saved, a.k.a local).
+    static const Register R0 = { 0 };
+    static const Register R1 = { 1 };
+    static const Register R2 = { 2 };
+    static const Register R3 = { 3 }; // Excluded from the regalloc because of its use as a hyper-scratch.
+    static const Register R4 = { 4 };
+    static const Register R5 = { 5 };
+    static const Register R6 = { 6 };
+    static const Register R7 = { 7 };
 
-        // ABI registers, excluded from the register allocation.
-        FP = { 14 },
-        SP = { 15 },
+    // Saved registers (a.k.a callee-saved, a.k.a global).
+    static const Register R8 = { 8 };
+    static const Register R9 = { 9 };
+    static const Register R10 = { 10 };
+    static const Register R11 = { 11 };
+    static const Register R12 = { 12 };
+    static const Register R13 = { 13 };
 
-        // Floatting-point registers.
-        _D0 = { 16 },
-        _F0 = _D0,
-        _F1 = { 17 },
-        _D1 = { 18 },
-        _F2 = _D1,
-        _F3 = { 19 },
-        _D2 = { 20 },
-        _F4 = _D2,
-        _F5 = { 21 },
-        _D3 = { 22 },
-        _F6 = _D3,
-        _F7 = { 23 },
-        _D4 = { 24 },
-        _F8 = _D4,
-        _F9 = { 25 },
-        _D5 = { 26 },
-        _F10 = _D5,
-        _F11 = { 27 },
-        _D6 = { 28 },
-        _F12 = _D6,
-        _F13 = { 29 },
-        _D7 = { 30 },
-        _F14 = _D7, // Excluded from the regalloc because of its use as a hyper-scratch.
-        _F15 = { 31 },
+    // ABI registers, excluded from the register allocation.
+    static const Register FP = { 14 };
+    static const Register SP = { 15 };
 
-        // Helpers.
-        deprecated_UnknownReg = { 32 },
-        UnspecifiedReg = { 32 },
-        Rtemp = R3,
-        Dtemp = _D7;
+    // Floatting-point registers.
+    static const Register _D0 = { 16 };
+    static const Register _F0 = _D0;
+    static const Register _F1 = { 17 };
+    static const Register _D1 = { 18 };
+    static const Register _F2 = _D1;
+    static const Register _F3 = { 19 };
+    static const Register _D2 = { 20 };
+    static const Register _F4 = _D2;
+    static const Register _F5 = { 21 };
+    static const Register _D3 = { 22 };
+    static const Register _F6 = _D3;
+    static const Register _F7 = { 23 };
+    static const Register _D4 = { 24 };
+    static const Register _F8 = _D4;
+    static const Register _F9 = { 25 };
+    static const Register _D5 = { 26 };
+    static const Register _F10 = _D5;
+    static const Register _F11 = { 27 };
+    static const Register _D6 = { 28 };
+    static const Register _F12 = _D6;
+    static const Register _F13 = { 29 };
+    static const Register _D7 = { 30 };
+    static const Register _F14 = _D7; // Excluded from the regalloc because of its use as a hyper-scratch.
+    static const Register _F15 = { 31 };
 
-    static const uint32_t FirstRegNum = R0;
-    static const uint32_t LastRegNum  = _D7;
+    // Helpers.
+    static const Register deprecated_UnknownReg = { 32 };
+    static const Register UnspecifiedReg = { 32 };
+    static const Register Rtemp = R3;
+    static const Register Dtemp = _D7;
+
+    static const uint32_t FirstRegNum = 0;
+    static const uint32_t LastRegNum  = 30;
 }
 
 #define NJ_USE_UINT32_REGISTER 1
@@ -116,14 +117,14 @@ namespace nanojit
     typedef uint32_t RegisterMask;
 
     static const int NumSavedRegs         = 6;
-    static const RegisterMask SavedRegs   = ((1<<R8) | (1<<R9) | (1<<R10) | (1<<R11) | (1<<R12) | (1<<R13));
-    static const RegisterMask ScratchRegs = ((1<<R0) | (1<<R1) | (1<<R2) | (1<<R4) | (1<<R5) | (1<<R6) | (1<<R7));
+    static const RegisterMask SavedRegs   = ((1<<REGNUM(R8)) | (1<<REGNUM(R9)) | (1<<REGNUM(R10)) | (1<<REGNUM(R11)) | (1<<REGNUM(R12)) | (1<<REGNUM(R13)));
+    static const RegisterMask ScratchRegs = ((1<<REGNUM(R0)) | (1<<REGNUM(R1)) | (1<<REGNUM(R2)) | (1<<REGNUM(R4)) | (1<<REGNUM(R5)) | (1<<REGNUM(R6)) | (1<<REGNUM(R7)));
 
     static const RegisterMask GpRegs = ScratchRegs  | SavedRegs;
-    static const RegisterMask FpRegs = ((1<<_D0) | (1<<_D1) | (1<<_D2) | (1<<_D3) | (1<<_D4) | (1<<_D5) | (1<<_D6));
+    static const RegisterMask FpRegs = ((1<<REGNUM(_D0)) | (1<<REGNUM(_D1)) | (1<<REGNUM(_D2)) | (1<<REGNUM(_D3)) | (1<<REGNUM(_D4)) | (1<<REGNUM(_D5)) | (1<<REGNUM(_D6)));
 
-#define IsFpReg(reg) ((rmask((Register)(reg)) & (FpRegs | (1<<_D7))) != 0)
-#define IsGpReg(reg) ((rmask((Register)(reg)) & (GpRegs)) != 0)
+#define IsFpReg(reg) ((rmask((reg)) & (FpRegs | (1<<REGNUM(_D7)))) != 0)
+#define IsGpReg(reg) ((rmask((reg)) & (GpRegs)) != 0)
 
     /***********************************************************************
      * Definitions for the code generation.

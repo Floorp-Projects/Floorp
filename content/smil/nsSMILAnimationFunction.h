@@ -344,6 +344,10 @@ protected:
            !HasAttr(nsGkAtoms::from);
   }
 
+  // Returns PR_TRUE if we know our composited value won't change over the
+  // simple duration of this animation (for a fixed base value).
+  virtual PRBool IsValueFixedForSimpleDuration() const;
+
   inline PRBool IsAdditive() const {
     /*
      * Animation is additive if:
@@ -409,9 +413,6 @@ protected:
   nsTArray<double>              mKeyTimes;
   nsTArray<nsSMILKeySpline>     mKeySplines;
 
-  PRPackedBool                  mIsActive;
-  PRPackedBool                  mIsFrozen;
-
   // These are the parameters provided by the previous sample. Currently we
   // perform lazy calculation. That is, we only calculate the result if and when
   // instructed by the compositor. This allows us to apply the result directly
@@ -420,9 +421,6 @@ protected:
   nsSMILTime                    mSampleTime; // sample time within simple dur
   nsSMILTimeValue               mSimpleDuration;
   PRUint32                      mRepeatIteration;
-  PRPackedBool                  mLastValue;
-  PRPackedBool                  mHasChanged;
-  PRPackedBool                  mValueNeedsReparsingEverySample;
 
   nsSMILTime                    mBeginTime; // document time
 
@@ -466,6 +464,14 @@ protected:
   // sample to sample (because if neither target nor animated value have
   // changed, we don't have to do anything).
   nsSMILWeakTargetIdentifier    mLastTarget;
+
+  // Boolean flags
+  PRPackedBool                  mIsActive:1;
+  PRPackedBool                  mIsFrozen:1;
+  PRPackedBool                  mLastValue:1;
+  PRPackedBool                  mHasChanged:1;
+  PRPackedBool                  mValueNeedsReparsingEverySample:1;
+  PRPackedBool                  mPrevSampleWasSingleValueAnimation:1;
 };
 
 #endif // NS_SMILANIMATIONFUNCTION_H_

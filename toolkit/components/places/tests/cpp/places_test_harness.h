@@ -16,7 +16,7 @@
  * The Original Code is places test code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -62,7 +62,7 @@ static size_t gPassedTests = 0;
     if (aCondition) { \
       gPassedTests++; \
     } else { \
-      fail("Expected true, got false at %s:%d!", __FILE__, __LINE__); \
+      fail("%s | Expected true, got false at line %d", __FILE__, __LINE__); \
     } \
   PR_END_MACRO
 
@@ -72,15 +72,34 @@ static size_t gPassedTests = 0;
     if (!aCondition) { \
       gPassedTests++; \
     } else { \
-      fail("Expected false, got true at %s:%d!", __FILE__, __LINE__); \
+      fail("%s | Expected false, got true at line %d", __FILE__, __LINE__); \
     } \
   PR_END_MACRO
 
 #define do_check_success(aResult) \
   do_check_true(NS_SUCCEEDED(aResult))
 
-#define do_check_eq(aFirst, aSecond) \
-  do_check_true(aFirst == aSecond)
+#ifdef LINUX
+// XXX Linux opt builds on tinderbox are orange due to linking with stdlib.
+// This is sad and annoying, but it's a workaround that works.
+#define do_check_eq(aExpected, aActual) \
+  do_check_true(aExpected == aActual)
+#else
+#include <sstream>
+
+#define do_check_eq(aActual, aExpected) \
+  PR_BEGIN_MACRO \
+    gTotalTests++; \
+    if (aExpected == aActual) { \
+      gPassedTests++; \
+    } else { \
+      std::ostringstream temp; \
+      temp << __FILE__ << " | Expected '" << aExpected << "', got '"; \
+      temp << aActual <<"' at line " << __LINE__; \
+      fail(temp.str().c_str()); \
+    } \
+  PR_END_MACRO
+#endif
 
 struct Test
 {
@@ -126,6 +145,7 @@ struct PlaceRecord
   PRInt32 hidden;
   PRInt32 typed;
   PRInt32 visitCount;
+  nsCString guid;
 };
 
 struct VisitRecord
@@ -182,22 +202,21 @@ do_get_place(nsIURI* aURI, PlaceRecord& result)
   do_check_success(rv);
 
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT id, hidden, typed, visit_count FROM moz_places_temp "
+    "SELECT id, hidden, typed, visit_count, guid FROM moz_places "
     "WHERE url=?1 "
-    "UNION ALL "
-    "SELECT id, hidden, typed, visit_count FROM moz_places "
-    "WHERE url=?1 "
-    "LIMIT 1"
   ), getter_AddRefs(stmt));
   do_check_success(rv);
 
-  rv = stmt->BindUTF8StringParameter(0, spec);
+  rv = stmt->BindUTF8StringByIndex(0, spec);
   do_check_success(rv);
 
   PRBool hasResults;
   rv = stmt->ExecuteStep(&hasResults);
-  do_check_true(hasResults);
   do_check_success(rv);
+  if (!hasResults) {
+    result.id = 0;
+    return;
+  }
 
   rv = stmt->GetInt64(0, &result.id);
   do_check_success(rv);
@@ -206,6 +225,8 @@ do_get_place(nsIURI* aURI, PlaceRecord& result)
   rv = stmt->GetInt32(2, &result.typed);
   do_check_success(rv);
   rv = stmt->GetInt32(3, &result.visitCount);
+  do_check_success(rv);
+  rv = stmt->GetUTF8String(4, result.guid);
   do_check_success(rv);
 }
 
@@ -222,22 +243,23 @@ do_get_lastVisit(PRInt64 placeId, VisitRecord& result)
   nsCOMPtr<mozIStorageStatement> stmt;
 
   nsresult rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT id, from_visit, visit_type FROM moz_historyvisits_temp "
-    "WHERE place_id=?1 "
-    "UNION ALL "
     "SELECT id, from_visit, visit_type FROM moz_historyvisits "
     "WHERE place_id=?1 "
     "LIMIT 1"
   ), getter_AddRefs(stmt));
   do_check_success(rv);
 
-  rv = stmt->BindInt64Parameter(0, placeId);
+  rv = stmt->BindInt64ByIndex(0, placeId);
   do_check_success(rv);
 
   PRBool hasResults;
   rv = stmt->ExecuteStep(&hasResults);
-  do_check_true(hasResults);
   do_check_success(rv);
+
+  if (!hasResults) {
+    result.id = 0;
+    return;
+  }
 
   rv = stmt->GetInt64(0, &result.id);
   do_check_success(rv);

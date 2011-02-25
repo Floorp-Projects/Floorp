@@ -52,6 +52,8 @@
 #include "BasicLayers.h"
 #include "LayerManagerOGL.h"
 #include "nsIXULRuntime.h"
+#include "nsIGfxInfo.h"
+#include "npapi.h"
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -135,6 +137,10 @@ nsBaseWidget::~nsBaseWidget()
   if (mLayerManager &&
       mLayerManager->GetBackendType() == LayerManager::LAYERS_BASIC) {
     static_cast<BasicLayerManager*>(mLayerManager.get())->ClearRetainerWidget();
+  }
+
+  if (mLayerManager) {
+    mLayerManager->Destroy();
   }
 
 #ifdef NOISY_WIDGET_LEAKS
@@ -295,8 +301,9 @@ nsBaseWidget::AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction,
 {
   NS_ASSERTION((mWindowType == eWindowType_toplevel ||
                 mWindowType == eWindowType_dialog ||
-                mWindowType == eWindowType_invisible),
-               "Can't attach to child?");
+                mWindowType == eWindowType_invisible ||
+                mWindowType == eWindowType_child),
+               "Can't attach to window of that type");
 
   mViewCallback = aViewEventFunction;
 
@@ -743,7 +750,7 @@ nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
   : mWidget(aWidget)
 {
   BasicLayerManager* manager =
-    static_cast<BasicLayerManager*>(mWidget->GetLayerManager());
+    static_cast<BasicLayerManager*>(mWidget->GetLayerManager(nsnull));
   if (manager) {
     NS_ASSERTION(manager->GetBackendType() == LayerManager::LAYERS_BASIC,
       "AutoLayerManagerSetup instantiated for non-basic layer backend!");
@@ -754,7 +761,7 @@ nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
 nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup()
 {
   BasicLayerManager* manager =
-    static_cast<BasicLayerManager*>(mWidget->GetLayerManager());
+    static_cast<BasicLayerManager*>(mWidget->GetLayerManager(nsnull));
   if (manager) {
     NS_ASSERTION(manager->GetBackendType() == LayerManager::LAYERS_BASIC,
       "AutoLayerManagerSetup instantiated for non-basic layer backend!");
@@ -779,13 +786,48 @@ nsBaseWidget::GetShouldAccelerate()
   nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
   PRBool disableAcceleration = PR_FALSE;
+  PRBool forceAcceleration = PR_FALSE;
+#if defined(XP_WIN) || defined(ANDROID) || (MOZ_PLATFORM_MAEMO > 5)
+  PRBool accelerateByDefault = PR_TRUE;
+#elif defined(XP_MACOSX)
+/* quickdraw plugins don't work with OpenGL so we need to avoid OpenGL when we want to support
+ * them. e.g. 10.5 */
+# if defined(NP_NO_QUICKDRAW)
   PRBool accelerateByDefault = PR_TRUE;
 
+  // 10.6.2 and lower have a bug involving textures and pixel buffer objects
+  // that caused bug 629016, so we don't allow OpenGL-accelerated layers on
+  // those versions of the OS.
+  // This will still let full-screen video be accelerated on OpenGL, because
+  // that XUL widget opts in to acceleration, but that's probably OK.
+  SInt32 major, minor, bugfix;
+  OSErr err1 = ::Gestalt(gestaltSystemVersionMajor, &major);
+  OSErr err2 = ::Gestalt(gestaltSystemVersionMinor, &minor);
+  OSErr err3 = ::Gestalt(gestaltSystemVersionBugFix, &bugfix);
+  if (err1 == noErr && err2 == noErr && err3 == noErr) {
+    if (major == 10 && minor == 6) {
+      if (bugfix <= 2) {
+        accelerateByDefault = PR_FALSE;
+      }
+    }
+  }
+
+# else
+  PRBool accelerateByDefault = PR_FALSE;
+# endif
+
+#else
+  PRBool accelerateByDefault = PR_FALSE;
+#endif
+
   if (prefs) {
-    prefs->GetBoolPref("layers.accelerate-all",
-                       &accelerateByDefault);
-    prefs->GetBoolPref("layers.accelerate-none",
+    // we should use AddBoolPrefVarCache
+    prefs->GetBoolPref("layers.acceleration.disabled",
                        &disableAcceleration);
+
+    prefs->GetBoolPref("layers.acceleration.force-enabled",
+                       &forceAcceleration);
+
   }
 
   const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
@@ -800,16 +842,36 @@ nsBaseWidget::GetShouldAccelerate()
   if (disableAcceleration || safeMode)
     return PR_FALSE;
 
+  if (forceAcceleration)
+    return PR_TRUE;
+
+  nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+  if (gfxInfo) {
+    PRInt32 status;
+    if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status))) {
+      if (status != nsIGfxInfo::FEATURE_NO_INFO) {
+        NS_WARNING("OpenGL-accelerated layers are not supported on this system.");
+        return PR_FALSE;
+      }
+    }
+  }
+
   if (accelerateByDefault)
     return PR_TRUE;
 
+  /* use the window acceleration flag */
   return mUseAcceleratedRendering;
 }
 
 LayerManager* nsBaseWidget::GetLayerManager(bool* aAllowRetaining)
 {
+  return GetLayerManager(LAYER_MANAGER_CURRENT, aAllowRetaining);
+}
+
+LayerManager* nsBaseWidget::GetLayerManager(LayerManagerPersistence,
+                                            bool* aAllowRetaining)
+{
   if (!mLayerManager) {
-    nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
     mUseAcceleratedRendering = GetShouldAccelerate();
 
@@ -1027,6 +1089,9 @@ nsBaseWidget::SetAcceleratedRendering(PRBool aEnabled)
     return NS_OK;
   }
   mUseAcceleratedRendering = aEnabled;
+  if (mLayerManager) {
+    mLayerManager->Destroy();
+  }
   mLayerManager = NULL;
   return NS_OK;
 }

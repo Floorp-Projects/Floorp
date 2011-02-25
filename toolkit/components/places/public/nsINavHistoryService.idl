@@ -1454,7 +1454,7 @@ interface nsINavHistoryService : nsISupports
    *
    * @param aURI
    *        URI to retrieve character-set for
-   * @returns character-set, empty string if not found
+   * @return character-set, empty string if not found
    */
   AString getCharsetForURI(in nsIURI aURI);
 
@@ -1497,8 +1497,9 @@ interface nsINavHistoryService : nsISupports
    *                         unhidden by visiting it with a non-redirect).
    * @param aSessionID       The session ID that this page belongs to. Use 0 for
    *                         no session.
-   * @returns The ID of the created visit. This will be 0 if the URI is not
-   *          valid for adding to history (canAddURI = false).
+   * @return The ID of the created visit. This will be 0 if the URI cannot
+   *         be added to history (canAddURI = false) or the visit is session
+   *         persistent (TRANSITION_EMBED).
    */
   long long addVisit(in nsIURI aURI, in PRTime aTime,
                      in nsIURI aReferringURI, in long aTransitionType,

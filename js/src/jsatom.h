@@ -375,6 +375,7 @@ struct JSAtomState
     JSAtom              *lineAtom;
     JSAtom              *InfinityAtom;
     JSAtom              *NaNAtom;
+    JSAtom              *builderAtom;
 
 #if JS_HAS_XML_SUPPORT
     JSAtom              *etagoAtom;
@@ -404,7 +405,7 @@ struct JSAtomState
 
     JSAtom              *hasAtom;
     JSAtom              *hasOwnAtom;
-    JSAtom              *enumerateOwnAtom;
+    JSAtom              *keysAtom;
     JSAtom              *iterateAtom;
 
     /* Less frequently used atoms, pinned lazily by JS_ResolveStandardClass. */

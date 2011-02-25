@@ -473,7 +473,7 @@
       <xul:stack class="wizard-header-stack" flex="1">
         <xul:vbox class="wizard-header-box-1">
           <xul:vbox class="wizard-header-box-text">
-            <xul:label class="wizard-header-label" xbl:inherits="value=label"/>
+            <xul:label class="wizard-header-label" xbl:inherits="xbl:text=label"/>
           </xul:vbox>
         </xul:vbox>
         <xul:hbox class="wizard-header-box-icon">
@@ -519,8 +519,8 @@
     <content>
       <xul:hbox class="wizard-header-box-1" flex="1">
         <xul:vbox class="wizard-header-box-text" flex="1">
-          <xul:label class="wizard-header-label" xbl:inherits="value=label"/>
-          <xul:label class="wizard-header-description" xbl:inherits="value=description"/>
+          <xul:label class="wizard-header-label" xbl:inherits="xbl:text=label"/>
+          <xul:label class="wizard-header-description" xbl:inherits="xbl:text=description"/>
         </xul:vbox>
         <xul:image class="wizard-header-icon" xbl:inherits="src=iconsrc"/>
       </xul:hbox>

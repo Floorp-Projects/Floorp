@@ -20,7 +20,36 @@ EXPORTS      = chromium_types.h \
 CPPSRCS = yuv_convert.cpp \
           yuv_row_c.cpp \
           yuv_row_table.cpp \
+          ycbcr_to_rgb565.cpp \
           $(NULL)
+
+# Are we targeting x86 or x64?  If so, build yuv_convert_mmx.cpp and
+# yuv_convert_sse2.cpp. These files use MMX and SSE2 intrinsics, so they need
+# special compile flags on some compilers.
+ifneq (,$(INTEL_ARCHITECTURE))
+CPPSRCS += yuv_convert_sse2.cpp
+
+# MSVC doesn't support MMX when targeting AMD64.
+ifdef _MSC_VER
+ifneq ($(OS_TEST),x86_64)
+CPPSRCS += yuv_convert_mmx.cpp
+endif
+else
+CPPSRCS += yuv_convert_mmx.cpp
+endif
+
+ifdef GNU_CC
+yuv_convert_mmx.$(OBJ_SUFFIX): CXXFLAGS += -mmmx
+yuv_convert_sse2.$(OBJ_SUFFIX): CXXFLAGS += -msse2
+endif
+
+ifdef SOLARIS_SUNPRO_CXX
+yuv_convert_mmx.$(OBJ_SUFFIX): CXXFLAGS += -xarch=mmx -xO4
+yuv_convert_sse2.$(OBJ_SUFFIX): CXXFLAGS += -xarch=sse2 -xO4
+endif
+
+endif
+
 
 ifdef _MSC_VER
 CPPSRCS += yuv_row_win.cpp \
@@ -44,6 +73,11 @@ endif # Darwin
 endif # SunOS
 endif # linux
 endif # windows
+
+ifeq (arm,$(findstring arm,$(OS_TEST)))
+CPPSRCS += yuv_convert_arm.cpp \
+           $(NULL)
+endif
 
 EXTRA_DSO_LDOPTS += \
         $(LIBS_DIR) \

@@ -30,7 +30,7 @@ js::Class HasCustomIterClass = {
     js::PropertyStub,
     js::PropertyStub,
     js::PropertyStub,
-    js::PropertyStub,
+    js::StrictPropertyStub,
     js::EnumerateStub,
     js::ResolveStub,
     js::ConvertStub,

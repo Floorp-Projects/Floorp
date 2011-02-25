@@ -52,8 +52,12 @@ void
 nsChromeRegistryContent::RegisterRemoteChrome(
     const nsTArray<ChromePackage>& aPackages,
     const nsTArray<ResourceMapping>& aResources,
-    const nsTArray<OverrideMapping>& aOverrides)
+    const nsTArray<OverrideMapping>& aOverrides,
+    const nsACString& aLocale)
 {
+  NS_ABORT_IF_FALSE(mLocale == nsDependentCString(""),
+                    "RegisterChrome twice?");
+
   for (PRUint32 i = aPackages.Length(); i > 0; ) {
     --i;
     RegisterPackage(aPackages[i]);
@@ -68,6 +72,8 @@ nsChromeRegistryContent::RegisterRemoteChrome(
     --i;
     RegisterOverride(aOverrides[i]);
   }
+
+  mLocale = aLocale;
 }
 
 void
@@ -243,7 +249,12 @@ NS_IMETHODIMP
 nsChromeRegistryContent::GetSelectedLocale(const nsACString& aPackage,
                                            nsACString& aLocale)
 {
-  CONTENT_NOT_IMPLEMENTED();
+  if (aPackage != nsDependentCString("global")) {
+    NS_ERROR("Uh-oh, caller wanted something other than 'some local'");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  aLocale = mLocale;
+  return NS_OK;
 }
   
 NS_IMETHODIMP

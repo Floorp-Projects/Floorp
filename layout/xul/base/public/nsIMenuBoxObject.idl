@@ -51,6 +51,15 @@ interface nsIMenuBoxObject : nsISupports
   boolean handleKeyPress(in nsIDOMKeyEvent keyEvent);
 };
 
+// This interface is implemented by menus, but could also
+// be implemented by menubars
+[scriptable, uuid(D03150F6-92A3-4307-A73C-864C8DAD3F22)]
+interface nsIMenuBoxObject_MOZILLA_2_0_BRANCH : nsISupports
+{
+  // true if the menu or menubar was opened via a keypress.
+  readonly attribute boolean openedWithKey;
+};
+
 %{C++
 nsresult
 NS_NewMenuBoxObject(nsIBoxObject** aResult);

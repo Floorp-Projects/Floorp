@@ -55,7 +55,8 @@ class nsChromeRegistryContent : public nsChromeRegistry
   
   void RegisterRemoteChrome(const nsTArray<ChromePackage>& aPackages,
                             const nsTArray<ResourceMapping>& aResources,
-                            const nsTArray<OverrideMapping>& aOverrides);
+                            const nsTArray<OverrideMapping>& aOverrides,
+                            const nsACString& aLocale);
 
   NS_OVERRIDE NS_IMETHOD GetLocalesForPackage(const nsACString& aPackage,
                                               nsIUTF8StringEnumerator* *aResult);
@@ -95,6 +96,7 @@ class nsChromeRegistryContent : public nsChromeRegistry
   NS_OVERRIDE nsresult GetFlagsFromPackage(const nsCString& aPackage, PRUint32* aFlags);
 
   nsClassHashtable<nsCStringHashKey, PackageEntry> mPackagesHash;
+  nsCString mLocale;
 
   virtual void ManifestContent(ManifestProcessingContext& cx, int lineno,
                                char *const * argv, bool platform,

@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['PrefsEngine'];
+const EXPORTED_SYMBOLS = ['PrefsEngine', 'PrefRec'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -44,13 +44,22 @@ const Cu = Components.utils;
 const WEAVE_SYNC_PREFS = "services.sync.prefs.sync.";
 
 Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/stores.js");
-Cu.import("resource://services-sync/trackers.js");
-Cu.import("resource://services-sync/type_records/prefs.js");
+Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 
 const PREFS_GUID = Utils.encodeBase64url(Svc.AppInfo.ID);
+
+function PrefRec(collection, id) {
+  CryptoWrapper.call(this, collection, id);
+}
+PrefRec.prototype = {
+  __proto__: CryptoWrapper.prototype,
+  _logName: "Record.Pref",
+};
+
+Utils.deferGetSet(PrefRec, "cleartext", ["value"]);
+
 
 function PrefsEngine() {
   SyncEngine.call(this, "Prefs");
@@ -133,16 +142,13 @@ PrefStore.prototype = {
     let ltmExists = true;
     let ltm = {};
     let enabledBefore = false;
+    let enabledPref = "lightweightThemes.isThemeSelected";
     let prevTheme = "";
     try {
       Cu.import("resource://gre/modules/LightweightThemeManager.jsm", ltm);
       ltm = ltm.LightweightThemeManager;
-
-      let enabledPref = "lightweightThemes.isThemeSelected";
-      if (this._prefs.getPrefType(enabledPref) == this._prefs.PREF_BOOL) {
-        enabledBefore = this._prefs.getBoolPref(enabledPref);
-        prevTheme = ltm.currentTheme;
-      }
+      enabledBefore = this._prefs.get(enabledPref, false);
+      prevTheme = ltm.currentTheme;
     } catch(ex) {
       ltmExists = false;
     } // LightweightThemeManager only exists in Firefox 3.6+
@@ -166,7 +172,7 @@ PrefStore.prototype = {
 
     // Notify the lightweight theme manager of all the new values
     if (ltmExists) {
-      let enabledNow = this._prefs.getBoolPref("lightweightThemes.isThemeSelected");    
+      let enabledNow = this._prefs.get(enabledPref, false);
       if (enabledBefore && !enabledNow)
         ltm.currentTheme = null;
       else if (enabledNow && ltm.usedThemes[0] != prevTheme) {

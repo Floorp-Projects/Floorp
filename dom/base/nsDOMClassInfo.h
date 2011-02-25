@@ -48,7 +48,6 @@
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 #include "nsIScriptGlobalObject.h"
 #include "nsContentUtils.h"
-#include "xpcpublic.h"
 
 class nsIDOMWindow;
 class nsIDOMNSHTMLOptionCollection;
@@ -178,6 +177,17 @@ public:
 
   static nsresult ThrowJSException(JSContext *cx, nsresult aResult);
 
+  /*
+   * The following two functions exist because of the way that Xray wrappers
+   * work. In order to allow scriptable helpers to define non-IDL defined but
+   * still "safe" properties for Xray wrappers, we call into the scriptable
+   * helper with |obj| being the wrapper.
+   *
+   * Ideally, that would be the end of the story, however due to complications
+   * dealing with document.domain, it's possible to end up in a scriptable
+   * helper with a wrapper, even though we should be treating the lookup as a
+   * transparent one.
+   */
   static PRBool ObjectIsNativeWrapper(JSContext* cx, JSObject* obj);
 
   static nsISupports *GetNative(nsIXPConnectWrappedNative *wrapper, JSObject *obj);
@@ -232,7 +242,8 @@ protected:
             id == sScrollMaxY_id   ||
             id == sLength_id       ||
             id == sFrames_id       ||
-            id == sSelf_id);
+            id == sSelf_id         ||
+            id == sURL_id);
   }
 
   static inline PRBool IsWritableReplaceable(jsid id)
@@ -248,28 +259,11 @@ protected:
             id == sName_id);
   }
 
-  static nsresult WrapNative(JSContext *cx, JSObject *scope,
-                             nsISupports *native, nsWrapperCache *cache,
-                             const nsIID* aIID, jsval *vp,
-                             nsIXPConnectJSObjectHolder** aHolder,
-                             PRBool aAllowWrapping)
-  {
-    if (!native) {
-      NS_ASSERTION(!aHolder || !*aHolder, "*aHolder should be null!");
-
-      *vp = JSVAL_NULL;
-
-      return NS_OK;
-    }
-
-    JSObject *wrapper = xpc_GetCachedSlimWrapper(cache, scope, vp);
-    if (wrapper) {
-      return NS_OK;
-    }
-
-    return sXPConnect->WrapNativeToJSVal(cx, scope, native, cache, aIID,
-                                         aAllowWrapping, vp, aHolder);
-  }
+  inline static nsresult WrapNative(JSContext *cx, JSObject *scope,
+                                    nsISupports *native, nsWrapperCache *cache,
+                                    const nsIID* aIID, jsval *vp,
+                                    nsIXPConnectJSObjectHolder** aHolder,
+                                    PRBool aAllowWrapping);
 
   static nsIXPConnect *sXPConnect;
   static nsIScriptSecurityManager *sSecMan;
@@ -281,6 +275,7 @@ protected:
   static PRBool sDisableDocumentAllSupport;
   static PRBool sDisableGlobalScopePollutionSupport;
 
+public:
   static jsid sTop_id;
   static jsid sParent_id;
   static jsid sScrollbars_id;
@@ -320,6 +315,8 @@ protected:
   static jsid sOnsubmit_id;
   static jsid sOnreset_id;
   static jsid sOnchange_id;
+  static jsid sOninput_id;
+  static jsid sOninvalid_id;
   static jsid sOnselect_id;
   static jsid sOnload_id;
   static jsid sOnpopstate_id;
@@ -389,7 +386,12 @@ protected:
   static jsid sOnbeforescriptexecute_id;
   static jsid sOnafterscriptexecute_id;
   static jsid sWrappedJSObject_id;
+  static jsid sURL_id;
+  static jsid sKeyPath_id;
+  static jsid sAutoIncrement_id;
+  static jsid sUnique_id;
 
+protected:
   static JSPropertyOp sXPCNativeWrapperGetPropertyOp;
   static JSPropertyOp sXrayWrapperPropertyHolderGetPropertyOp;
 };
@@ -550,8 +552,6 @@ public:
                          JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
-  NS_IMETHOD DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
                         JSObject **objp, PRBool *_retval);
@@ -567,8 +567,10 @@ public:
                                               JSObject **objp);
   static JSBool GlobalScopePolluterGetProperty(JSContext *cx, JSObject *obj,
                                                jsid id, jsval *vp);
+  static JSBool SecurityCheckOnAddDelProp(JSContext *cx, JSObject *obj, jsid id,
+                                          jsval *vp);
   static JSBool SecurityCheckOnSetProp(JSContext *cx, JSObject *obj, jsid id,
-                                       jsval *vp);
+                                       JSBool strict, jsval *vp);
   static void InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj);
   static nsresult InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
                                              nsIHTMLDocument *doc);
@@ -1693,6 +1695,8 @@ protected:
   }
 
 public:
+  NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
+                       JSObject *globalObj, JSObject **parentObj);
   NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto)
   {
     return NS_OK;
@@ -1795,6 +1799,36 @@ public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsFileListSH(aData);
+  }
+};
+
+class nsWebGLViewportHandlerSH : public nsDOMGenericSH
+{
+protected:
+  nsWebGLViewportHandlerSH(nsDOMClassInfoData *aData) : nsDOMGenericSH(aData)
+  {
+  }
+
+  virtual ~nsWebGLViewportHandlerSH()
+  {
+  }
+
+public:
+  NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto) {
+    nsresult rv = nsDOMGenericSH::PostCreatePrototype(cx, proto);
+    if (NS_SUCCEEDED(rv)) {
+      if (!::JS_DefineProperty(cx, proto, "VIEWPORT", INT_TO_JSVAL(0x0BA2),
+                               nsnull, nsnull, JSPROP_ENUMERATE))
+      {
+        return NS_ERROR_UNEXPECTED;
+      }
+    }
+    return rv;
+  }
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsWebGLViewportHandlerSH(aData);
   }
 };
 

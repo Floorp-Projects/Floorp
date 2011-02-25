@@ -1,0 +1,13 @@
+<!-- This SVG file uses itself as an image.  Currently, we don't paint
+     recursively-referenced images beyond the first level.  When this testcase
+     is viewed directly, it gets treated as a document (not an image), so its
+     <image> element is painted.  However, the <image>'s own *internal* <image>
+     element does *not* get painted.  So we end up painting two blue circles:
+     one for the <circle> and one for the <image>'s <circle> (and no more). -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="100" height="100">
+  <circle cx="10" cy="10" r="10" fill="blue"/>
+  <image x="20" y="20" width="100" height="100"
+         xlink:href="svg-image-recursive-1a.svg"/> <!-- my own filename -->
+</svg>

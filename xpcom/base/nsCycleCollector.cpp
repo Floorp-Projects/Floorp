@@ -994,8 +994,6 @@ struct nsCycleCollector
 
     nsPurpleBuffer mPurpleBuf;
 
-    nsCOMPtr<nsICycleCollectorListener> mListener;
-
     void RegisterRuntime(PRUint32 langID, 
                          nsCycleCollectionLanguageRuntime *rt);
     nsCycleCollectionLanguageRuntime * GetRuntime(PRUint32 langID);
@@ -1407,7 +1405,7 @@ private:
     PtrInfo *mCurrPi;
     nsCycleCollectionLanguageRuntime **mRuntimes; // weak, from nsCycleCollector
     nsCString mNextEdgeName;
-    nsCOMPtr<nsICycleCollectorListener> mListener;
+    nsICycleCollectorListener *mListener;
 
 public:
     GCGraphBuilder(GCGraph &aGraph,
@@ -2499,7 +2497,6 @@ void
 nsCycleCollector::CleanupAfterCollection()
 {
     mWhiteNodes = nsnull;
-    mListener = nsnull;
     mCollectionInProgress = PR_FALSE;
 
 #ifdef XP_OS2
@@ -2526,14 +2523,6 @@ nsCycleCollector::Collect(PRUint32 aTryCollections,
 
     if (!PrepareForCollection(&whiteNodes))
         return 0;
-
-#ifdef DEBUG_CC
-    nsCOMPtr<nsICycleCollectorListener> tempListener;
-    if (!aListener && mParams.mDrawGraphs) {
-        tempListener = new nsCycleCollectorLogger();
-        aListener = tempListener;
-    }
-#endif
 
     PRUint32 totalCollections = 0;
     while (aTryCollections > totalCollections) {
@@ -2891,6 +2880,12 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
         ScanRoots();
 
         mScanInProgress = PR_FALSE;
+
+        for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
+            if (mRuntimes[i]) {
+                mRuntimes[i]->FinishTraverse();
+            }
+        }
 
         PRBool describeExtraRefcounts = PR_FALSE;
         PRBool findCycleRoots = PR_FALSE;
@@ -3285,13 +3280,12 @@ nsCycleCollector_DEBUG_wasFreed(nsISupports *n)
 class nsCycleCollectorRunner : public nsRunnable
 {
     nsCycleCollector *mCollector;
-    nsCOMPtr<nsICycleCollectorListener> mListener;
+    nsICycleCollectorListener *mListener;
     Mutex mLock;
     CondVar mRequest;
     CondVar mReply;
     PRBool mRunning;
     PRBool mCollected;
-    PRBool mJSGCHasRun;
 
 public:
     NS_IMETHOD Run()
@@ -3330,12 +3324,12 @@ public:
 
     nsCycleCollectorRunner(nsCycleCollector *collector)
         : mCollector(collector),
+          mListener(nsnull),
           mLock("cycle collector lock"),
           mRequest(mLock, "cycle collector request condvar"),
           mReply(mLock, "cycle collector reply condvar"),
           mRunning(PR_FALSE),
-          mCollected(PR_FALSE),
-          mJSGCHasRun(PR_FALSE)
+          mCollected(PR_FALSE)
     {
         NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     }
@@ -3346,7 +3340,7 @@ public:
 
         MutexAutoLock autoLock(mLock);
 
-        if (!mRunning || !mJSGCHasRun)
+        if (!mRunning)
             return 0;
 
         nsAutoTPtrArray<PtrInfo, 4000> whiteNodes;
@@ -3385,14 +3379,6 @@ public:
         mRequest.Notify();
         mReply.Wait();
     }
-
-    void JSGCHasRun()
-    {
-        NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-        MutexAutoLock autoLock(mLock);
-        mJSGCHasRun = PR_TRUE;
-    }
 };
 
 // Holds a reference.
@@ -3400,43 +3386,6 @@ static nsCycleCollectorRunner* sCollectorRunner;
 
 // Holds a reference.
 static nsIThread* sCollectorThread;
-
-static JSBool
-nsCycleCollector_gccallback(JSContext *cx, JSGCStatus status)
-{
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-    if (status == JSGC_END) {
-        if (sCollectorRunner)
-            sCollectorRunner->JSGCHasRun();
-
-        nsCOMPtr<nsIJSRuntimeService> rts =
-          do_GetService(nsIXPConnect::GetCID());
-        NS_WARN_IF_FALSE(rts, "Failed to get XPConnect?!");
-        if (rts)
-            rts->UnregisterGCCallback(nsCycleCollector_gccallback);
-    }
-
-    return JS_TRUE;
-}
-
-class nsCycleCollectorGCHookRunnable : public nsRunnable
-{
-public:
-    NS_IMETHOD Run()
-    {
-        NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-        nsCOMPtr<nsIJSRuntimeService> rts =
-            do_GetService(nsIXPConnect::GetCID());
-        if (!rts) {
-            NS_RUNTIMEABORT("This must never fail!");
-        }
-
-        rts->RegisterGCCallback(nsCycleCollector_gccallback);
-        return NS_OK;
-    }
-};
 
 nsresult
 nsCycleCollector_startup()
@@ -3446,17 +3395,11 @@ nsCycleCollector_startup()
 
     sCollector = new nsCycleCollector();
 
-    // We can't get XPConnect yet as it hasn't been initialized yet.
-    nsRefPtr<nsCycleCollectorGCHookRunnable> hook =
-        new nsCycleCollectorGCHookRunnable();
-    nsresult rv = NS_DispatchToCurrentThread(hook);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsRefPtr<nsCycleCollectorRunner> runner =
         new nsCycleCollectorRunner(sCollector);
 
     nsCOMPtr<nsIThread> thread;
-    rv = NS_NewThread(getter_AddRefs(thread), runner);
+    nsresult rv = NS_NewThread(getter_AddRefs(thread), runner);
     NS_ENSURE_SUCCESS(rv, rv);
 
     runner.swap(sCollectorRunner);
@@ -3469,9 +3412,16 @@ PRUint32
 nsCycleCollector_collect(nsICycleCollectorListener *aListener)
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    nsCOMPtr<nsICycleCollectorListener> listener(aListener);
+#ifdef DEBUG_CC
+    if (!aListener && sCollector && sCollector->mParams.mDrawGraphs) {
+        listener = new nsCycleCollectorLogger();
+    }
+#endif
+
     if (sCollectorRunner)
-        return sCollectorRunner->Collect(aListener);
-    return sCollector ? sCollector->Collect(1, aListener) : 0;
+        return sCollectorRunner->Collect(listener);
+    return sCollector ? sCollector->Collect(1, listener) : 0;
 }
 
 void

@@ -691,7 +691,7 @@ public:
     // EOT header on output
     static nsresult
     MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
-                  nsTArray<PRUint8> *aHeader, FontDataOverlay *aOverlay);
+                  FallibleTArray<PRUint8> *aHeader, FontDataOverlay *aOverlay);
 
     // determine whether a font (which has already passed ValidateSFNTHeaders)
     // is CFF format rather than TrueType
@@ -713,17 +713,17 @@ public:
     // appended on the end, returns true on success
     static nsresult
     RenameFont(const nsAString& aName, const PRUint8 *aFontData, 
-               PRUint32 aFontDataLength, nsTArray<PRUint8> *aNewFont);
+               PRUint32 aFontDataLength, FallibleTArray<PRUint8> *aNewFont);
     
     // read all names matching aNameID, returning in aNames array
     static nsresult
-    ReadNames(nsTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
+    ReadNames(FallibleTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
               PRInt32 aPlatformID, nsTArray<nsString>& aNames);
       
     // reads English or first name matching aNameID, returning in aName
     // platform based on OS
     static nsresult
-    ReadCanonicalName(nsTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
+    ReadCanonicalName(FallibleTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
                       nsString& aName);
       
     // convert a name from the raw name table data into an nsString,
@@ -802,7 +802,7 @@ public:
 
 protected:
     static nsresult
-    ReadNames(nsTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
+    ReadNames(FallibleTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
               PRInt32 aLangID, PRInt32 aPlatformID, nsTArray<nsString>& aNames);
 
     // convert opentype name-table platform/encoding/language values to a charset name

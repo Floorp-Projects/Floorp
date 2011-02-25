@@ -70,22 +70,22 @@ void nsBuiltinDecoder::Pause()
   ChangeState(PLAY_STATE_PAUSED);
 }
 
-void nsBuiltinDecoder::SetVolume(float volume)
+void nsBuiltinDecoder::SetVolume(double aVolume)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  mInitialVolume = volume;
+  mInitialVolume = aVolume;
   if (mDecoderStateMachine) {
-    mDecoderStateMachine->SetVolume(volume);
+    mDecoderStateMachine->SetVolume(aVolume);
   }
 }
 
-float nsBuiltinDecoder::GetDuration()
+double nsBuiltinDecoder::GetDuration()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mDuration >= 0) {
-     return static_cast<float>(mDuration) / 1000.0;
+     return static_cast<double>(mDuration) / 1000.0;
   }
-  return std::numeric_limits<float>::quiet_NaN();
+  return std::numeric_limits<double>::quiet_NaN();
 }
 
 nsBuiltinDecoder::nsBuiltinDecoder() :
@@ -256,7 +256,7 @@ nsresult nsBuiltinDecoder::Play()
   return NS_OK;
 }
 
-nsresult nsBuiltinDecoder::Seek(float aTime)
+nsresult nsBuiltinDecoder::Seek(double aTime)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   MonitorAutoEnter mon(mMonitor);
@@ -265,6 +265,7 @@ nsresult nsBuiltinDecoder::Seek(float aTime)
     return NS_ERROR_FAILURE;
 
   mRequestedSeekTime = aTime;
+  mCurrentTime = aTime;
 
   // If we are already in the seeking state, then setting mRequestedSeekTime
   // above will result in the new seek occurring when the current seek
@@ -289,7 +290,7 @@ nsresult nsBuiltinDecoder::PlaybackRateChanged()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-float nsBuiltinDecoder::GetCurrentTime()
+double nsBuiltinDecoder::GetCurrentTime()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   return mCurrentTime;
@@ -599,6 +600,7 @@ void nsBuiltinDecoder::NotifyBytesConsumed(PRInt64 aBytes)
                "Should be on play state machine or decode thread.");
   if (!mIgnoreProgressData) {
     mDecoderPosition += aBytes;
+    mPlaybackStatistics.AddBytes(aBytes);
   }
 }
 
@@ -645,6 +647,7 @@ void nsBuiltinDecoder::SeekingStopped()
   if (mShuttingDown)
     return;
 
+  PRBool seekWasAborted = PR_FALSE;
   {
     MonitorAutoEnter mon(mMonitor);
 
@@ -652,6 +655,7 @@ void nsBuiltinDecoder::SeekingStopped()
     // in operation.
     if (mRequestedSeekTime >= 0.0) {
       ChangeState(PLAY_STATE_SEEKING);
+      seekWasAborted = PR_TRUE;
     } else {
       UnpinForSeek();
       ChangeState(mNextState);
@@ -660,7 +664,9 @@ void nsBuiltinDecoder::SeekingStopped()
 
   if (mElement) {
     UpdateReadyStateForData();
-    mElement->SeekCompleted();
+    if (!seekWasAborted) {
+      mElement->SeekCompleted();
+    }
   }
 }
 
@@ -674,6 +680,7 @@ void nsBuiltinDecoder::SeekingStoppedAtEnd()
     return;
 
   PRBool fireEnded = PR_FALSE;
+  PRBool seekWasAborted = PR_FALSE;
   {
     MonitorAutoEnter mon(mMonitor);
 
@@ -681,6 +688,7 @@ void nsBuiltinDecoder::SeekingStoppedAtEnd()
     // in operation.
     if (mRequestedSeekTime >= 0.0) {
       ChangeState(PLAY_STATE_SEEKING);
+      seekWasAborted = PR_TRUE;
     } else {
       UnpinForSeek();
       fireEnded = mNextState != PLAY_STATE_PLAYING;
@@ -690,9 +698,11 @@ void nsBuiltinDecoder::SeekingStoppedAtEnd()
 
   if (mElement) {
     UpdateReadyStateForData();
-    mElement->SeekCompleted();
-    if (fireEnded) {
-      mElement->PlaybackEnded();
+    if (!seekWasAborted) {
+      mElement->SeekCompleted();
+      if (fireEnded) {
+        mElement->PlaybackEnded();
+      }
     }
   }
 }
@@ -757,7 +767,7 @@ void nsBuiltinDecoder::PlaybackPositionChanged()
   if (mShuttingDown)
     return;
 
-  float lastTime = mCurrentTime;
+  double lastTime = mCurrentTime;
 
   // Control the scope of the monitor so it is not
   // held while the timeupdate and the invalidate is run.

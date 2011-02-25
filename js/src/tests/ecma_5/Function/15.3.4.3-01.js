@@ -29,6 +29,8 @@ function expectTypeError(fun, msg)
 
 function fun() { }
 
+var global = this;
+
 
 /* Step 1. */
 var nonfuns = [null, 1, -1, 2.5, "[[Call]]", undefined, true, false, {}];
@@ -47,22 +49,75 @@ for (var i = 0, sz = nonfuns.length; i < sz; i++)
 /* Step 2. */
 var thisObj = {};
 
+var currentThis, currentThisBox;
 function funLength()
 {
   assertEq(arguments.length, 0, "should have been called with no arguments");
+  assertEq(this, currentThis, "wrong this");
 }
-
-funLength.apply();
-
-function funThisLength()
+function strictFunLength()
 {
-  assertEq(this, thisObj, "should have gotten thisObj as this");
+  "use strict";
   assertEq(arguments.length, 0, "should have been called with no arguments");
+  assertEq(this, currentThis, "wrong this");
 }
 
-funThisLength.apply(thisObj);
-funThisLength.apply(thisObj, null);
-funThisLength.apply(thisObj, undefined);
+currentThis = global;
+funLength.apply();
+funLength.apply(undefined);
+funLength.apply(undefined, undefined);
+funLength.apply(undefined, null);
+
+currentThis = undefined;
+strictFunLength.apply();
+strictFunLength.apply(undefined);
+strictFunLength.apply(undefined, undefined);
+strictFunLength.apply(undefined, null);
+
+currentThis = null;
+strictFunLength.apply(null);
+strictFunLength.apply(null, undefined);
+strictFunLength.apply(null, null);
+
+currentThis = thisObj;
+funLength.apply(thisObj);
+funLength.apply(thisObj, null);
+funLength.apply(thisObj, undefined);
+strictFunLength.apply(thisObj);
+strictFunLength.apply(thisObj, null);
+strictFunLength.apply(thisObj, undefined);
+
+currentThis = 17;
+strictFunLength.apply(17);
+strictFunLength.apply(17, null);
+strictFunLength.apply(17, undefined);
+
+function funThisPrimitive()
+{
+  assertEq(arguments.length, 0, "should have been called with no arguments");
+  assertEq(this instanceof currentThisBox, true,
+           "this not instanceof " + currentThisBox);
+  assertEq(this.valueOf(), currentThis,
+           "wrong this valueOf()");
+}
+
+currentThis = 17;
+currentThisBox = Number;
+funThisPrimitive.apply(17);
+funThisPrimitive.apply(17, undefined);
+funThisPrimitive.apply(17, null);
+
+currentThis = "foopy";
+currentThisBox = String;
+funThisPrimitive.apply("foopy");
+funThisPrimitive.apply("foopy", undefined);
+funThisPrimitive.apply("foopy", null);
+
+currentThis = false;
+currentThisBox = Boolean;
+funThisPrimitive.apply(false);
+funThisPrimitive.apply(false, undefined);
+funThisPrimitive.apply(false, null);
 
 
 /* Step 3. */
@@ -86,6 +141,11 @@ catch (e)
   assertEq(e, 42, "didn't throw result of [[Get]] on arguments object");
 }
 
+
+/*
+ * NB: There was an erratum removing the steps numbered 5 and 7 in the original
+ *     version of ES5; see also the comments in js_fun_apply.
+ */
 
 /* Step 5. */
 var called = false;
@@ -113,35 +173,69 @@ assertEq(upvar, "both", "didn't call all hooks properly");
 
 
 /* Step 6-9. */
-var steps = [];
+var seenThis, res, steps;
 var argsAccessors =
   {
-    length: 3,
+    length: 4,
     get 0() { steps.push("0"); return 1; },
     get 1() { steps.push("1"); return 2; },
-    get 2() { steps.push("2"); return 4; },
+    // make sure values shine through holes
+    get 3() { steps.push("3"); return 8; },
   };
 
-var seenThis = "not seen";
+Object.prototype[2] = 729;
+
+seenThis = "not seen";
 function argsAsArray()
 {
   seenThis = this;
-  steps.push("3");
+  steps.push(Math.PI);
   return Array.prototype.map.call(arguments, function(v) { return v; });
 }
 
-var res = argsAsArray.apply(thisObj, argsAccessors);
+steps = [];
+res = argsAsArray.apply(thisObj, argsAccessors);
 assertEq(seenThis, thisObj, "saw wrong this");
 
 assertEq(steps.length, 4, "wrong steps: " + steps);
-for (var i = 0; i < 3; i++)
-  assertEq(steps[i], "" + i, "bad step " + i);
-assertEq(steps[3], "3", "bad call");
+assertEq(steps[0], "0", "bad step 0");
+assertEq(steps[1], "1", "bad step 1");
+assertEq(steps[2], "3", "bad step 3");
+assertEq(steps[3], Math.PI, "bad last step");
 
-assertEq(res.length, 3, "wrong return: " + res);
-for (var i = 0; i < 3; i++)
-  assertEq(res[i], 1 << i, "wrong ret[" + i + "]: " + res[i]);
+assertEq(res.length, 4, "wrong return: " + res);
+assertEq(res[0], 1, "wrong ret[0]");
+assertEq(res[1], 2, "wrong ret[0]");
+assertEq(res[2], 729, "wrong ret[0]");
+assertEq(res[3], 8, "wrong ret[0]");
 
+seenThis = "not seen";
+function strictArgsAsArray()
+{
+  "use strict";
+  seenThis = this;
+  steps.push(NaN);
+  return Array.prototype.map.call(arguments, function(v) { return v; });
+}
+
+steps = [];
+res = strictArgsAsArray.apply(null, argsAccessors);
+assertEq(seenThis, null, "saw wrong this");
+
+assertEq(steps.length, 4, "wrong steps: " + steps);
+assertEq(steps[0], "0", "bad step 0");
+assertEq(steps[1], "1", "bad step 1");
+assertEq(steps[2], "3", "bad step 3");
+assertEq(steps[3], 0 / 0, "bad last step");
+
+assertEq(res.length, 4, "wrong return: " + res);
+assertEq(res[0], 1, "wrong ret[0]");
+assertEq(res[1], 2, "wrong ret[0]");
+assertEq(res[2], 729, "wrong ret[0]");
+assertEq(res[3], 8, "wrong ret[0]");
+
+strictArgsAsArray.apply(17, argsAccessors);
+assertEq(seenThis, 17, "saw wrong this");
 
 /******************************************************************************/
 

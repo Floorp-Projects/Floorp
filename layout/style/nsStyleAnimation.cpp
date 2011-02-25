@@ -245,6 +245,16 @@ SetCalcValue(const nsStyleCoord::Calc* aCalc, nsCSSValue& aValue)
   aValue.SetArrayValue(arr, eCSSUnit_Calc);
 }
 
+static already_AddRefed<nsStringBuffer>
+GetURIAsUtf16StringBuffer(nsIURI* aUri)
+{
+  nsCAutoString utf8String;
+  nsresult rv = aUri->GetSpec(utf8String);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  return nsCSSValue::BufferFromString(NS_ConvertUTF8toUTF16(utf8String));
+}
+
 // CLASS METHODS
 // -------------
 
@@ -362,7 +372,8 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
                               pair2->mXValue.GetUnit());
       unit[1] = GetCommonUnit(aProperty, pair1->mYValue.GetUnit(),
                               pair2->mYValue.GetUnit());
-      if (unit[0] == eCSSUnit_Null || unit[1] == eCSSUnit_Null) {
+      if (unit[0] == eCSSUnit_Null || unit[1] == eCSSUnit_Null ||
+          unit[0] == eCSSUnit_URL) {
         return PR_FALSE;
       }
 
@@ -1457,7 +1468,8 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
                               pair2->mXValue.GetUnit());
       unit[1] = GetCommonUnit(aProperty, pair1->mYValue.GetUnit(),
                               pair2->mYValue.GetUnit());
-      if (unit[0] == eCSSUnit_Null || unit[1] == eCSSUnit_Null) {
+      if (unit[0] == eCSSUnit_Null || unit[1] == eCSSUnit_Null ||
+          unit[0] == eCSSUnit_URL) {
         return PR_FALSE;
       }
 
@@ -2242,13 +2254,13 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         case eCSSProperty_border_spacing: {
           const nsStyleTableBorder *styleTableBorder =
             static_cast<const nsStyleTableBorder*>(styleStruct);
-          nsCSSValuePair *pair = new nsCSSValuePair;
+          nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
           if (!pair) {
             return PR_FALSE;
           }
           nscoordToCSSValue(styleTableBorder->mBorderSpacingX, pair->mXValue);
           nscoordToCSSValue(styleTableBorder->mBorderSpacingY, pair->mYValue);
-          aComputedValue.SetAndAdoptCSSValuePairValue(pair,
+          aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
                                                       eUnit_CSSValuePair);
           break;
         }
@@ -2256,7 +2268,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         case eCSSProperty__moz_transform_origin: {
           const nsStyleDisplay *styleDisplay =
             static_cast<const nsStyleDisplay*>(styleStruct);
-          nsCSSValuePair *pair = new nsCSSValuePair;
+          nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
           if (!pair ||
               !StyleCoordToCSSValue(styleDisplay->mTransformOrigin[0],
                                     pair->mXValue) ||
@@ -2264,7 +2276,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                                     pair->mYValue)) {
             return PR_FALSE;
           }
-          aComputedValue.SetAndAdoptCSSValuePairValue(pair,
+          aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
                                                       eUnit_CSSValuePair);
           break;
         }
@@ -2571,13 +2583,14 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         corners->Get(NS_FULL_TO_HALF_CORNER(fullCorner, PR_FALSE));
       const nsStyleCoord &vert =
         corners->Get(NS_FULL_TO_HALF_CORNER(fullCorner, PR_TRUE));
-      nsCSSValuePair *pair = new nsCSSValuePair;
+      nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
       if (!pair ||
           !StyleCoordToCSSValue(horiz, pair->mXValue) ||
           !StyleCoordToCSSValue(vert, pair->mYValue)) {
         return PR_FALSE;
       }
-      aComputedValue.SetAndAdoptCSSValuePairValue(pair, eUnit_CSSValuePair);
+      aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
+                                                  eUnit_CSSValuePair);
       return PR_TRUE;
     }
     case eStyleAnimType_nscoord:
@@ -2607,16 +2620,35 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
     case eStyleAnimType_PaintServer: {
       const nsStyleSVGPaint &paint = *static_cast<const nsStyleSVGPaint*>(
         StyleDataAtOffset(styleStruct, ssOffset));
-      // FIXME: At some point in the future, we should animate gradients.
       if (paint.mType == eStyleSVGPaintType_Color) {
         aComputedValue.SetColorValue(paint.mPaint.mColor);
         return PR_TRUE;
       }
-      if (paint.mType == eStyleSVGPaintType_None) {
-        aComputedValue.SetNoneValue();
+      if (paint.mType == eStyleSVGPaintType_Server) {
+        if (!paint.mPaint.mPaintServer) {
+          NS_WARNING("Null paint server");
+          return PR_FALSE;
+        }
+        nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
+        nsRefPtr<nsStringBuffer> uriAsStringBuffer =
+          GetURIAsUtf16StringBuffer(paint.mPaint.mPaintServer);
+        NS_ENSURE_TRUE(!!uriAsStringBuffer, PR_FALSE);
+        nsIDocument* doc = aStyleContext->PresContext()->Document();
+        nsRefPtr<nsCSSValue::URL> url =
+          new nsCSSValue::URL(paint.mPaint.mPaintServer,
+                              uriAsStringBuffer,
+                              doc->GetDocumentURI(),
+                              doc->NodePrincipal());
+        pair->mXValue.SetURLValue(url);
+        pair->mYValue.SetColorValue(paint.mFallbackColor);
+        aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
+                                                    eUnit_CSSValuePair);
         return PR_TRUE;
       }
-      return PR_FALSE;
+      NS_ABORT_IF_FALSE(paint.mType == eStyleSVGPaintType_None,
+          "Unexpected SVG paint type");
+      aComputedValue.SetNoneValue();
+      return PR_TRUE;
     }
     case eStyleAnimType_Shadow: {
       const nsCSSShadowArray *shadowArray =

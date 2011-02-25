@@ -21,22 +21,22 @@
       const START_DATA = "hi";
       const END_DATA = "bye";
       const objectStoreInfo = [
-        { name: "1", keyPath: "", key: 1,
+        { name: "1", options: { keyPath: "" }, key: 1,
           entry: { data: START_DATA } },
-        { name: "2", keyPath: "foo",
+        { name: "2", options: { keyPath: "foo" },
           entry: { foo: 1, data: START_DATA } },
-        { name: "3", keyPath: "", autoIncrement: true,
+        { name: "3", options: { keyPath: "", autoIncrement: true },
           entry: { data: START_DATA } },
-        { name: "4", keyPath: "foo", autoIncrement: true,
+        { name: "4", options: { keyPath: "foo", autoIncrement: true },
           entry: { data: START_DATA } },
       ];
 
-      let request = moz_indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
 
       for (let i = 0; i < objectStoreInfo.length; i++) {
         // Create our object stores.
@@ -49,15 +49,15 @@
         event = yield;
 
         ok(true, "2");
-        let objectStore = info.hasOwnProperty("autoIncrement") ?
-                          db.createObjectStore(info.name, info.keyPath,
-                                               info.autoIncrement) :
-                          db.createObjectStore(info.name, info.keyPath);
+        let objectStore = info.hasOwnProperty("options") ?
+                          db.createObjectStore(info.name, info.options) :
+                          db.createObjectStore(info.name);
 
         // Create the indexes on 'data' on the object store.
-        let index = objectStore.createIndex("data_index", "data", false);
-        let uniqueIndex = objectStore.createIndex("unique_data_index", "data", true);
-
+        let index = objectStore.createIndex("data_index", "data",
+                                            { unique: false });
+        let uniqueIndex = objectStore.createIndex("unique_data_index", "data",
+                                                  { unique: true });
         // Populate the object store with one entry of data.
         request = info.hasOwnProperty("key") ?
                   objectStore.add(info.entry, info.key) :
@@ -74,7 +74,7 @@
         event = yield;
         ok(true, "4");
 
-        let cursor = event.result;
+        let cursor = request.result;
         let obj = cursor.value;
         obj.data = END_DATA;
         request = cursor.update(obj);
@@ -84,21 +84,21 @@
         ok(true, "5");
 
         // Check both indexes to make sure that they were updated.
-        request = index.getObject(END_DATA);
+        request = index.get(END_DATA);
         request.onerror = errorHandler;
         request.onsuccess = grabEventAndContinueHandler;
         event = yield;
         ok(true, "6");
-        SimpleTest.ok(obj.data, event.result.data,
+        SimpleTest.ok(obj.data, event.target.result.data,
                       "Non-unique index was properly updated.");
 
-        request = uniqueIndex.getObject(END_DATA);
+        request = uniqueIndex.get(END_DATA);
         request.onerror = errorHandler;
         request.onsuccess = grabEventAndContinueHandler;
         event = yield;
 
         ok(true, "7");
-        SimpleTest.ok(obj.data, event.result.data,
+        SimpleTest.ok(obj.data, event.target.result.data,
                       "Unique index was properly updated.");
       }
 

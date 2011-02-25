@@ -43,23 +43,6 @@
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
-nsHtml5MetaScanner::nsHtml5MetaScanner()
- : readable(nsnull),
-   metaState(NS_HTML5META_SCANNER_NO),
-   contentIndex(-1),
-   charsetIndex(-1),
-   stateSave(NS_HTML5META_SCANNER_DATA),
-   strBufLen(0),
-   strBuf(jArray<PRUnichar,PRInt32>::newJArray(36))
-{
-  MOZ_COUNT_CTOR(nsHtml5MetaScanner);
-}
-
-nsHtml5MetaScanner::~nsHtml5MetaScanner()
-{
-  MOZ_COUNT_DTOR(nsHtml5MetaScanner);
-}
-
 void
 nsHtml5MetaScanner::sniff(nsHtml5ByteReadable* bytes, nsIUnicodeDecoder** decoder, nsACString& charset)
 {
@@ -86,7 +69,7 @@ nsHtml5MetaScanner::tryCharset(nsString* charset)
   }
   nsCAutoString encoding;
   CopyUTF16toUTF8(*charset, encoding);
-  // XXX spec says only UTF-16
+  encoding.Trim(" \t\r\n\f");
   if (encoding.LowerCaseEqualsLiteral("utf-16") ||
       encoding.LowerCaseEqualsLiteral("utf-16be") ||
       encoding.LowerCaseEqualsLiteral("utf-16le")) {

@@ -108,13 +108,13 @@ head.insertBefore(basehref0, head.firstChild);
 verifyBase("base6/", "insert base with href before existing");
 
 // Insert base as grandchild of head
-var baseerr = document.createElement("base");
-baseerr.href = "baseerr/";
+var basehref3 = document.createElement("base");
+basehref3.href = "base7/";
 var tmp = document.createElement("head");
-tmp.appendChild(baseerr);
+tmp.appendChild(basehref3);
 head.insertBefore(tmp, head.firstChild);
-verifyBase("base6/", "inserted base as grandchild of head");
-is(baseerr.parentNode.parentNode, head, "base got inserted correctly");
+verifyBase("base7/", "inserted base as grandchild of head at the beginning of head");
+is(basehref3.parentNode.parentNode, head, "base got inserted correctly");
 
 // Remove secondary bases
 var tmp, tmp2;
@@ -124,7 +124,7 @@ for (tmp = head.firstChild; tmp = tmp.nextSibling; tmp) {
     head.removeChild(tmp);
     tmp = tmp2;
   }
-  verifyBase("base6/", "remove unneeded base");
+  verifyBase("base7/", "remove unneeded base");
 }
 
 // Remove head
@@ -132,8 +132,8 @@ document.documentElement.removeChild(head);
 verifyBase("", "removed head");
 
 // Insert base in body
-document.body.insertBefore(baseerr, document.body.firstChild);
-verifyBase("", "inserted base in body");
+document.body.insertBefore(basehref3, document.body.firstChild);
+verifyBase("base7/", "inserted base in body");
 
 </script>
 </pre>

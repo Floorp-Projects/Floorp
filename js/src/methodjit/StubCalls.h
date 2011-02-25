@@ -80,7 +80,7 @@ void JS_FASTCALL LeaveScript(VMFrame &f);
  * These functions can have one of two results:
  *
  *   (1) The function was executed in the interpreter. Then all fields
- *       are NULL.
+ *       are NULL except unjittable.
  *
  *   (2) The function was not executed, and the function has been compiled
  *       to JM native code. Then all fields are non-NULL.
@@ -89,11 +89,13 @@ struct UncachedCallResult {
     JSObject   *callee;       // callee object
     JSFunction *fun;          // callee function
     void       *codeAddr;     // code address of compiled callee function
+    bool       unjittable;    // did we try to JIT and fail?
 
     void init() {
         callee = NULL;
         fun = NULL;
         codeAddr = NULL;
+        unjittable = false;
     }        
 };
 
@@ -107,7 +109,7 @@ void UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr);
 
 void JS_FASTCALL CreateThis(VMFrame &f, JSObject *proto);
 void JS_FASTCALL Throw(VMFrame &f);
-void JS_FASTCALL PutCallObject(VMFrame &f);
+void JS_FASTCALL PutStrictEvalCallObject(VMFrame &f);
 void JS_FASTCALL PutActivationObjects(VMFrame &f);
 void JS_FASTCALL GetCallObject(VMFrame &f);
 #if JS_MONOIC
@@ -176,15 +178,6 @@ void JS_FASTCALL ArgSub(VMFrame &f, uint32 n);
 void JS_FASTCALL EnterBlock(VMFrame &f, JSObject *obj);
 void JS_FASTCALL LeaveBlock(VMFrame &f, JSObject *blockChain);
 
-void JS_FASTCALL VpInc(VMFrame &f, Value *vp);
-void JS_FASTCALL VpDec(VMFrame &f, Value *vp);
-void JS_FASTCALL DecVp(VMFrame &f, Value *vp);
-void JS_FASTCALL IncVp(VMFrame &f, Value *vp);
-void JS_FASTCALL LocalInc(VMFrame &f, uint32 slot);
-void JS_FASTCALL LocalDec(VMFrame &f, uint32 slot);
-void JS_FASTCALL IncLocal(VMFrame &f, uint32 slot);
-void JS_FASTCALL DecLocal(VMFrame &f, uint32 slot);
-
 JSBool JS_FASTCALL LessThan(VMFrame &f);
 JSBool JS_FASTCALL LessEqual(VMFrame &f);
 JSBool JS_FASTCALL GreaterThan(VMFrame &f);
@@ -225,6 +218,11 @@ void JS_FASTCALL Unbrand(VMFrame &f);
 /* Helper for triggering recompilation should a name read produce an undefined value or -0. */
 void JS_FASTCALL UndefinedHelper(VMFrame &f);
 void JS_FASTCALL NegZeroHelper(VMFrame &f);
+
+template <bool strict> int32 JS_FASTCALL ConvertToTypedInt(JSContext *cx, Value *vp);
+void JS_FASTCALL ConvertToTypedFloat(JSContext *cx, Value *vp);
+
+void JS_FASTCALL Exception(VMFrame &f);
 
 } /* namespace stubs */
 

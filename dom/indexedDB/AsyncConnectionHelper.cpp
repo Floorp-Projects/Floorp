@@ -41,6 +41,7 @@
 
 #include "mozilla/storage.h"
 #include "nsComponentManagerUtils.h"
+#include "nsContentUtils.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
@@ -75,6 +76,48 @@ public:
 private:
   IDBTransaction* mTransaction;
 };
+
+// This inline is just so that we always clear aBuffers appropriately even if
+// something fails.
+inline
+nsresult
+ConvertCloneBuffersToArrayInternal(
+                                JSContext* aCx,
+                                nsTArray<JSAutoStructuredCloneBuffer>& aBuffers,
+                                jsval* aResult)
+{
+  JSObject* array = JS_NewArrayObject(aCx, 0, nsnull);
+  if (!array) {
+    NS_WARNING("Failed to make array!");
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  if (!aBuffers.IsEmpty()) {
+    if (!JS_SetArrayLength(aCx, array, jsuint(aBuffers.Length()))) {
+      NS_WARNING("Failed to set array length!");
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    jsint count = jsint(aBuffers.Length());
+    for (jsint index = 0; index < count; index++) {
+      JSAutoStructuredCloneBuffer& buffer = aBuffers[index];
+
+      jsval val;
+      if (!buffer.read(&val, aCx)) {
+        NS_WARNING("Failed to decode!");
+        return NS_ERROR_DOM_DATA_CLONE_ERR;
+      }
+
+      if (!JS_SetElement(aCx, array, index, &val)) {
+        NS_WARNING("Failed to set array element!");
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      }
+    }
+  }
+
+  *aResult = OBJECT_TO_JSVAL(array);
+  return NS_OK;
+}
 
 } // anonymous namespace
 
@@ -141,22 +184,33 @@ NS_IMETHODIMP
 AsyncConnectionHelper::Run()
 {
   if (NS_IsMainThread()) {
-    if (mRequest) {
-      mRequest->SetDone();
+    if (mTransaction &&
+        mTransaction->IsAborted() &&
+        NS_SUCCEEDED(mResultCode)) {
+      // Don't fire success events if the transaction has since been aborted.
+      // Instead convert to an error event.
+      mResultCode = NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
     }
 
-    SetCurrentTransaction(mTransaction);
+    IDBTransaction* oldTransaction = gCurrentTransaction;
+    gCurrentTransaction = mTransaction;
+
+    if (mRequest) {
+      nsresult rv = mRequest->SetDone(this);
+      if (NS_SUCCEEDED(mResultCode) && NS_FAILED(rv)) {
+        mResultCode = rv;
+      }
+    }
 
     // Call OnError if the database had an error or if the OnSuccess handler
     // has an error.
     if (NS_FAILED(mResultCode) ||
-        NS_FAILED((mResultCode = OnSuccess(mRequest)))) {
-      OnError(mRequest, mResultCode);
+        NS_FAILED((mResultCode = OnSuccess()))) {
+      OnError();
     }
 
-    NS_ASSERTION(GetCurrentTransaction() == mTransaction,
-                 "Should be unchanged!");
-    SetCurrentTransaction(nsnull);
+    NS_ASSERTION(gCurrentTransaction == mTransaction, "Should be unchanged!");
+    gCurrentTransaction = oldTransaction;
 
     if (mDispatched && mTransaction) {
       mTransaction->OnRequestFinished();
@@ -319,95 +373,90 @@ AsyncConnectionHelper::GetCurrentTransaction()
   return gCurrentTransaction;
 }
 
-// static
-void
-AsyncConnectionHelper::SetCurrentTransaction(IDBTransaction* aTransaction)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (aTransaction) {
-    NS_ASSERTION(!gCurrentTransaction, "Overwriting current transaction!");
-  }
-
-  gCurrentTransaction = aTransaction;
-}
-
-
 nsresult
 AsyncConnectionHelper::Init()
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
   return NS_OK;
 }
 
 nsresult
-AsyncConnectionHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+AsyncConnectionHelper::OnSuccess()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(mRequest, "Null request!");
 
-  nsCOMPtr<nsIWritableVariant> variant =
-    do_CreateInstance(NS_VARIANT_CONTRACTID);
-  if (!variant) {
-    NS_ERROR("Couldn't create variant!");
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  nsresult rv = GetSuccessResult(variant);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // Check to make sure we have a listener here before actually firing.
-  nsCOMPtr<nsPIDOMEventTarget> target(do_QueryInterface(aTarget));
-  if (target) {
-    nsIEventListenerManager* manager = target->GetListenerManager(PR_FALSE);
-    if (!manager ||
-        !manager->HasListenersFor(NS_LITERAL_STRING(SUCCESS_EVT_STR))) {
-      // No listeners here, skip creating and dispatching the event.
-      return NS_OK;
-    }
-  }
-
-  if (NS_FAILED(variant->SetWritable(PR_FALSE))) {
-    NS_ERROR("Failed to make variant readonly!");
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  nsCOMPtr<nsIDOMEvent> event =
-    IDBSuccessEvent::Create(mRequest, variant, mTransaction);
+  nsRefPtr<nsDOMEvent> event =
+    CreateGenericEvent(NS_LITERAL_STRING(SUCCESS_EVT_STR));
   if (!event) {
     NS_ERROR("Failed to create event!");
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   PRBool dummy;
-  aTarget->DispatchEvent(event, &dummy);
+  nsresult rv = mRequest->DispatchEvent(event, &dummy);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsEvent* internalEvent = event->GetInternalNSEvent();
+  NS_ASSERTION(internalEvent, "This should never be null!");
+
+  NS_ASSERTION(!mTransaction ||
+               mTransaction->IsOpen() ||
+               mTransaction->IsAborted(),
+               "How else can this be closed?!");
+
+  if ((internalEvent->flags & NS_EVENT_FLAG_EXCEPTION_THROWN) &&
+      mTransaction &&
+      mTransaction->IsOpen()) {
+    rv = mTransaction->Abort();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return NS_OK;
 }
 
 void
-AsyncConnectionHelper::OnError(nsIDOMEventTarget* aTarget,
-                               nsresult aErrorCode)
+AsyncConnectionHelper::OnError()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(mRequest, "Null request!");
 
   // Make an error event and fire it at the target.
-  nsCOMPtr<nsIDOMEvent> event(IDBErrorEvent::Create(mRequest, aErrorCode));
+  nsRefPtr<nsDOMEvent> event =
+    CreateGenericEvent(NS_LITERAL_STRING(ERROR_EVT_STR), PR_TRUE);
   if (!event) {
     NS_ERROR("Failed to create event!");
     return;
   }
 
-  PRBool dummy;
-  aTarget->DispatchEvent(event, &dummy);
+  PRBool doDefault;
+  nsresult rv = mRequest->DispatchEvent(event, &doDefault);
+  if (NS_SUCCEEDED(rv)) {
+    NS_ASSERTION(!mTransaction ||
+                 mTransaction->IsOpen() ||
+                 mTransaction->IsAborted(),
+                 "How else can this be closed?!");
+
+    if (doDefault &&
+        mTransaction &&
+        mTransaction->IsOpen() &&
+        NS_FAILED(mTransaction->Abort())) {
+      NS_WARNING("Failed to abort transaction!");
+    }
+  }
+  else {
+    NS_WARNING("DispatchEvent failed!");
+  }
 }
 
 nsresult
-AsyncConnectionHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
+AsyncConnectionHelper::GetSuccessResult(JSContext* aCx,
+                                        jsval* aVal)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  // Leave the variant remain set to empty.
-
+  *aVal = JSVAL_VOID;
   return NS_OK;
 }
 
@@ -419,6 +468,78 @@ AsyncConnectionHelper::ReleaseMainThreadObjects()
   mDatabase = nsnull;
   mTransaction = nsnull;
   mRequest = nsnull;
+}
+
+nsresult
+AsyncConnectionHelper::WrapNative(JSContext* aCx,
+                                  nsISupports* aNative,
+                                  jsval* aResult)
+{
+  NS_ASSERTION(aCx, "Null context!");
+  NS_ASSERTION(aNative, "Null pointer!");
+  NS_ASSERTION(aResult, "Null pointer!");
+  NS_ASSERTION(mRequest, "Null request!");
+
+  JSObject* global =
+    static_cast<JSObject*>(mRequest->ScriptContext()->GetNativeGlobal());
+  NS_ENSURE_TRUE(global, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsresult rv =
+    nsContentUtils::WrapNative(aCx, global, aNative, aResult);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  return NS_OK;
+}
+
+// static
+nsresult
+AsyncConnectionHelper::ConvertCloneBufferToJSVal(
+                                           JSContext* aCx,
+                                           JSAutoStructuredCloneBuffer& aBuffer,
+                                           jsval* aResult)
+{
+  NS_ASSERTION(aCx, "Null context!");
+  NS_ASSERTION(aResult, "Null pointer!");
+
+  JSAutoRequest ar(aCx);
+
+  if (aBuffer.data()) {
+    JSBool ok = aBuffer.read(aResult, aCx);
+
+    aBuffer.clear(aCx);
+
+    if (!ok) {
+      NS_ERROR("Failed to decode!");
+      return NS_ERROR_DOM_DATA_CLONE_ERR;
+    }
+  }
+  else {
+    *aResult = JSVAL_VOID;
+  }
+
+  return NS_OK;
+}
+
+// static
+nsresult
+AsyncConnectionHelper::ConvertCloneBuffersToArray(
+                                JSContext* aCx,
+                                nsTArray<JSAutoStructuredCloneBuffer>& aBuffers,
+                                jsval* aResult)
+{
+  NS_ASSERTION(aCx, "Null context!");
+  NS_ASSERTION(aResult, "Null pointer!");
+
+  JSAutoRequest ar(aCx);
+
+  nsresult rv = ConvertCloneBuffersToArrayInternal(aCx, aBuffers, aResult);
+
+  for (PRUint32 index = 0; index < aBuffers.Length(); index++) {
+    aBuffers[index].clear(aCx);
+  }
+  aBuffers.Clear();
+
+  return rv;
 }
 
 NS_IMETHODIMP_(nsrefcnt)

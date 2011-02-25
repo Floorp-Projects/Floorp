@@ -77,11 +77,6 @@ public:
     virtual already_AddRefed<gfxASurface>
     CreateSimilarSurface(gfxContentType aType, const gfxIntSize& aSize);
 
-    virtual TextQuality GetTextQualityInTransparentSurfaces()
-    {
-      return TEXT_QUALITY_OK_OVER_OPAQUE_PIXELS;
-    }
-
     virtual const gfxIntSize GetSize() const { return mSize; }
 
     Display* XDisplay() { return mDisplay; }

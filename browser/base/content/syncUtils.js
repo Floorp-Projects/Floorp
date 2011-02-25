@@ -67,7 +67,7 @@ let gSyncUtils = {
     input.value = Weave.Clients.localName;
   },
 
-  openChange: function openChange(type) {
+  openChange: function openChange(type, duringSetup) {
     // Just re-show the dialog if it's already open
     let openedDialog = Weave.Svc.WinMediator.getMostRecentWindow("Sync:" + type);
     if (openedDialog != null) {
@@ -77,20 +77,24 @@ let gSyncUtils = {
 
     // Open up the change dialog
     let changeXUL = "chrome://browser/content/syncGenericChange.xul";
-    let changeOpt = "centerscreen,chrome,dialog,modal,resizable=no";
-    Weave.Svc.WinWatcher.activeWindow.openDialog(changeXUL, "", changeOpt, type);
+    let changeOpt = "centerscreen,chrome,resizable=no";
+    Weave.Svc.WinWatcher.activeWindow.openDialog(changeXUL, "", changeOpt,
+                                                 type, duringSetup);
   },
 
   changePassword: function () {
-    this.openChange("ChangePassword");
+    if (Weave.Utils.ensureMPUnlocked())
+      this.openChange("ChangePassword");
   },
 
-  resetPassphrase: function () {
-    this.openChange("ResetPassphrase");
+  resetPassphrase: function (duringSetup) {
+    if (Weave.Utils.ensureMPUnlocked())
+      this.openChange("ResetPassphrase", duringSetup);
   },
 
   updatePassphrase: function () {
-    this.openChange("UpdatePassphrase");
+    if (Weave.Utils.ensureMPUnlocked())
+      this.openChange("UpdatePassphrase");
   },
 
   resetPassword: function () {

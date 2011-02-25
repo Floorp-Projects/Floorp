@@ -836,6 +836,7 @@ function intPrefIs(aPrefName, aExpectedVal, aMsg) {
 ///////////////////////////////////////////////////////////////////////////////
 
 function test() {
+  requestLongerTimeout(2);
   blankSlate();
   waitForExplicitFinish();
   // Kick off all the tests in the gAllTests array.

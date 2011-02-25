@@ -42,14 +42,8 @@
 
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
-#include "nsIIDBEvent.h"
-#include "nsIIDBErrorEvent.h"
-#include "nsIIDBSuccessEvent.h"
-#include "nsIIDBTransactionEvent.h"
-#include "nsIIDBTransaction.h"
 #include "nsIIDBVersionChangeEvent.h"
 #include "nsIRunnable.h"
-#include "nsIVariant.h"
 
 #include "nsDOMEvent.h"
 
@@ -65,209 +59,60 @@
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class IDBRequest;
-class IDBTransaction;
+already_AddRefed<nsDOMEvent>
+CreateGenericEvent(const nsAString& aType,
+                   PRBool aBubblesAndCancelable = PR_FALSE);
 
-class IDBEvent : public nsDOMEvent,
-                 public nsIIDBEvent
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIIDBEVENT
-  NS_FORWARD_TO_NSDOMEVENT
+already_AddRefed<nsIRunnable>
+CreateGenericEventRunnable(const nsAString& aType,
+                           nsIDOMEventTarget* aTarget);
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBEvent, nsDOMEvent)
-
-  static already_AddRefed<nsIDOMEvent>
-  CreateGenericEvent(const nsAString& aType);
-
-  static already_AddRefed<nsIRunnable>
-  CreateGenericEventRunnable(const nsAString& aType,
-                             nsIDOMEventTarget* aTarget);
-
-protected:
-  IDBEvent() : nsDOMEvent(nsnull, nsnull) { }
-  virtual ~IDBEvent() { }
-
-  nsCOMPtr<nsISupports> mSource;
-};
-
-class IDBErrorEvent : public IDBEvent,
-                      public nsIIDBErrorEvent
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIIDBERROREVENT
-  NS_FORWARD_NSIDOMEVENT(IDBEvent::)
-  NS_FORWARD_NSIIDBEVENT(IDBEvent::)
-
-  static already_AddRefed<nsIDOMEvent>
-  Create(IDBRequest* aRequest,
-         nsresult aResult);
-
-  static already_AddRefed<nsIRunnable>
-  CreateRunnable(IDBRequest* aRequest,
-                 nsresult aResult);
-
-  static already_AddRefed<nsIDOMEvent>
-  MaybeDuplicate(nsIDOMEvent* aOther);
-
-protected:
-  IDBErrorEvent() { }
-
-  PRUint16 mCode;
-  nsString mMessage;
-};
-
-class IDBSuccessEvent : public IDBEvent,
-                        public nsIIDBTransactionEvent
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIIDBSUCCESSEVENT
-  NS_DECL_NSIIDBTRANSACTIONEVENT
-  NS_FORWARD_NSIDOMEVENT(IDBEvent::)
-  NS_FORWARD_NSIIDBEVENT(IDBEvent::)
-
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBSuccessEvent, IDBEvent)
-
-  static already_AddRefed<nsIDOMEvent>
-  Create(IDBRequest* aRequest,
-         nsIVariant* aResult,
-         nsIIDBTransaction* aTransaction);
-
-  static already_AddRefed<nsIRunnable>
-  CreateRunnable(IDBRequest* aRequest,
-                 nsIVariant* aResult,
-                 nsIIDBTransaction* aTransaction);
-
-protected:
-  IDBSuccessEvent() { }
-
-  nsCOMPtr<nsIVariant> mResult;
-  nsCOMPtr<nsIIDBTransaction> mTransaction;
-};
-
-class GetSuccessEvent : public IDBSuccessEvent
-{
-public:
-  GetSuccessEvent(const nsAString& aValue)
-  : mValue(aValue),
-    mCachedValue(JSVAL_VOID),
-    mValueRooted(PR_FALSE)
-  { }
-
-  ~GetSuccessEvent();
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(GetSuccessEvent,
-                                                         IDBSuccessEvent)
-
-  NS_IMETHOD GetResult(JSContext* aCx,
-                       jsval* aResult);
-
-  nsresult Init(IDBRequest* aRequest,
-                IDBTransaction* aTransaction);
-
-private:
-  nsString mValue;
-
-protected:
-  void RootCachedValue();
-
-  jsval mCachedValue;
-  JSRuntime* mJSRuntime;
-  PRBool mValueRooted;
-};
-
-class GetAllSuccessEvent : public GetSuccessEvent
-{
-public:
-  GetAllSuccessEvent(nsTArray<nsString>& aValues)
-  : GetSuccessEvent(EmptyString())
-  {
-    if (!mValues.SwapElements(aValues)) {
-      NS_ERROR("Failed to swap elements!");
-    }
-  }
-
-  NS_IMETHOD GetResult(JSContext* aCx,
-                       jsval* aResult);
-
-private:
-  nsTArray<nsString> mValues;
-};
-
-class GetAllKeySuccessEvent : public GetSuccessEvent
-{
-public:
-  GetAllKeySuccessEvent(nsTArray<Key>& aKeys)
-  : GetSuccessEvent(EmptyString())
-  {
-    if (!mKeys.SwapElements(aKeys)) {
-      NS_ERROR("Failed to swap elements!");
-    }
-  }
-
-  NS_IMETHOD GetResult(JSContext* aCx,
-                       jsval* aResult);
-
-private:
-  nsTArray<Key> mKeys;
-};
-
-class IDBVersionChangeEvent : public IDBEvent,
+class IDBVersionChangeEvent : public nsDOMEvent,
                               public nsIIDBVersionChangeEvent
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
+  NS_FORWARD_TO_NSDOMEVENT
   NS_DECL_NSIIDBVERSIONCHANGEEVENT
-  NS_FORWARD_NSIDOMEVENT(IDBEvent::)
-  NS_FORWARD_NSIIDBEVENT(IDBEvent::)
 
   inline static already_AddRefed<nsIDOMEvent>
   Create(const nsAString& aVersion)
   {
-    NS_NAMED_LITERAL_STRING(type, VERSIONCHANGE_EVT_STR);
-    return CreateInternal(nsnull, type, aVersion);
+    return CreateInternal(NS_LITERAL_STRING(VERSIONCHANGE_EVT_STR), aVersion);
   }
 
   inline static already_AddRefed<nsIDOMEvent>
-  CreateBlocked(nsISupports* aSource,
-                const nsAString& aVersion)
+  CreateBlocked(const nsAString& aVersion)
   {
-    NS_NAMED_LITERAL_STRING(type, BLOCKED_EVT_STR);
-    return CreateInternal(aSource, type, aVersion);
+    return CreateInternal(NS_LITERAL_STRING(BLOCKED_EVT_STR), aVersion);
   }
 
   inline static already_AddRefed<nsIRunnable>
   CreateRunnable(const nsAString& aVersion,
                  nsIDOMEventTarget* aTarget)
   {
-    NS_NAMED_LITERAL_STRING(type, VERSIONCHANGE_EVT_STR);
-    return CreateRunnableInternal(nsnull, type, aVersion, aTarget);
+    return CreateRunnableInternal(NS_LITERAL_STRING(VERSIONCHANGE_EVT_STR),
+                                  aVersion, aTarget);
   }
 
   static already_AddRefed<nsIRunnable>
-  CreateBlockedRunnable(nsISupports* aSource,
-                        const nsAString& aVersion,
+  CreateBlockedRunnable(const nsAString& aVersion,
                         nsIDOMEventTarget* aTarget)
   {
-    NS_NAMED_LITERAL_STRING(type, BLOCKED_EVT_STR);
-    return CreateRunnableInternal(aSource, type, aVersion, aTarget);
+    return CreateRunnableInternal(NS_LITERAL_STRING(BLOCKED_EVT_STR), aVersion,
+                                  aTarget);
   }
 
 protected:
-  IDBVersionChangeEvent() { }
+  IDBVersionChangeEvent() : nsDOMEvent(nsnull, nsnull) { }
+  virtual ~IDBVersionChangeEvent() { }
 
   static already_AddRefed<nsIDOMEvent>
-  CreateInternal(nsISupports* aSource,
-                 const nsAString& aType,
+  CreateInternal(const nsAString& aType,
                  const nsAString& aVersion);
 
   static already_AddRefed<nsIRunnable>
-  CreateRunnableInternal(nsISupports* aSource,
-                         const nsAString& aType,
+  CreateRunnableInternal(const nsAString& aType,
                          const nsAString& aVersion,
                          nsIDOMEventTarget* aTarget);
 

@@ -100,18 +100,15 @@ DEFINES += -D_IMPL_NS_LAYOUT
 # js/src/xpconnect/src/dom_quickstubs.qsconf.
 XPIDLSRCS = \
   nsIIDBCursor.idl \
+  nsIIDBCursorWithValue.idl \
   nsIIDBDatabase.idl \
   nsIIDBDatabaseException.idl \
-  nsIIDBErrorEvent.idl \
-  nsIIDBEvent.idl \
   nsIIDBFactory.idl \
   nsIIDBIndex.idl \
   nsIIDBKeyRange.idl \
   nsIIDBObjectStore.idl \
   nsIIDBRequest.idl \
-  nsIIDBSuccessEvent.idl \
   nsIIDBTransaction.idl \
-  nsIIDBTransactionEvent.idl \
   nsIIDBVersionChangeEvent.idl \
   nsIIDBVersionChangeRequest.idl \
   nsIIndexedDatabaseManager.idl \

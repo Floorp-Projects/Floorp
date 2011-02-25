@@ -37,31 +37,34 @@ void FastConvertYUVToRGB32Row(const uint8* y_buf,
 // Can do 1x, half size or any scale down by an integer amount.
 // Step can be negative (mirroring, rotate 180).
 // This is the third fastest of the scalers.
-void ConvertYUVToRGB32Row(const uint8* y_buf,
-                          const uint8* u_buf,
-                          const uint8* v_buf,
-                          uint8* rgb_buf,
-                          int width,
-                          int step);
+// Only defined on Windows x86-32.
+void ConvertYUVToRGB32Row_SSE(const uint8* y_buf,
+                              const uint8* u_buf,
+                              const uint8* v_buf,
+                              uint8* rgb_buf,
+                              int width,
+                              int step);
 
 // Rotate is like Convert, but applies different step to Y versus U and V.
 // This allows rotation by 90 or 270, by stepping by stride.
 // This is the forth fastest of the scalers.
-void RotateConvertYUVToRGB32Row(const uint8* y_buf,
-                                const uint8* u_buf,
-                                const uint8* v_buf,
-                                uint8* rgb_buf,
-                                int width,
-                                int ystep,
-                                int uvstep);
+// Only defined on Windows x86-32.
+void RotateConvertYUVToRGB32Row_SSE(const uint8* y_buf,
+                                    const uint8* u_buf,
+                                    const uint8* v_buf,
+                                    uint8* rgb_buf,
+                                    int width,
+                                    int ystep,
+                                    int uvstep);
 
 // Doubler does 4 pixels at a time.  Each pixel is replicated.
 // This is the fastest of the scalers.
-void DoubleYUVToRGB32Row(const uint8* y_buf,
-                         const uint8* u_buf,
-                         const uint8* v_buf,
-                         uint8* rgb_buf,
-                         int width);
+// Only defined on Windows x86-32.
+void DoubleYUVToRGB32Row_SSE(const uint8* y_buf,
+                             const uint8* u_buf,
+                             const uint8* v_buf,
+                             uint8* rgb_buf,
+                             int width);
 
 // Handles arbitrary scaling up or down.
 // Mirroring is supported, but not 90 or 270 degree rotation.

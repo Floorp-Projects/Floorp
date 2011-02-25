@@ -1,6 +1,5 @@
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/engines/history.js");
-Cu.import("resource://services-sync/type_records/history.js");
 Cu.import("resource://services-sync/util.js");
 
 const TIMESTAMP1 = (Date.now() - 103406528) * 1000;
@@ -64,8 +63,14 @@ function ensureThrows(func) {
 }
 
 function run_test() {
-  _("Verify that we've got an empty store to work with.");
+  initTestLogging("Trace");
+
   let store = new HistoryEngine()._store;
+  function applyEnsureNoFailures(records) {
+    do_check_eq(store.applyIncomingBatch(records).length, 0);
+  }
+
+  _("Verify that we've got an empty store to work with.");
   do_check_eq([id for (id in store.getAllIDs())].length, 0);
 
   let fxuri, fxguid, tburi, tbguid;
@@ -106,9 +111,12 @@ function run_test() {
       do_check_eq(queryres[1].title, "Hol Dir Firefox!");
       next();
     }));
-    store.update({histUri: record.histUri,
-                  title: "Hol Dir Firefox!",
-                  visits: [record.visits[0], secondvisit]});
+    applyEnsureNoFailures([
+      {id: fxguid,
+       histUri: record.histUri,
+       title: "Hol Dir Firefox!",
+       visits: [record.visits[0], secondvisit]}
+    ]);
 
   }, function (next) {
 
@@ -123,11 +131,31 @@ function run_test() {
       do_check_eq(queryres[0].title, "The bird is the word!");
       next();
     }));
-    store.create({id: tbguid,
-                  histUri: tburi.spec,
-                  title: "The bird is the word!",
-                  visits: [{date: TIMESTAMP3,
-                            type: Ci.nsINavHistoryService.TRANSITION_TYPED}]});
+    applyEnsureNoFailures([
+      {id: tbguid,
+       histUri: tburi.spec,
+       title: "The bird is the word!",
+       visits: [{date: TIMESTAMP3,
+                 type: Ci.nsINavHistoryService.TRANSITION_TYPED}]}
+    ]);
+
+  }, function (next) {
+
+    _("Make sure we handle a null title gracefully (it can happen in some cases, e.g. for resource:// URLs)");
+    let resguid = Utils.makeGUID();
+    let resuri = Utils.makeURI("unknown://title");
+    applyEnsureNoFailures([
+      {id: resguid,
+       histUri: resuri.spec,
+       title: null,
+       visits: [{date: TIMESTAMP3,
+                 type: Ci.nsINavHistoryService.TRANSITION_TYPED}]}
+    ]);
+    do_check_eq([id for (id in store.getAllIDs())].length, 3);
+    let queryres = queryHistoryVisits(resuri);
+    do_check_eq(queryres.length, 1);
+    do_check_eq(queryres[0].time, TIMESTAMP3);
+    next();
 
   }, function (next) {
 
@@ -138,10 +166,83 @@ function run_test() {
       + "VALUES ('invalid-uri', 'Invalid URI', '.', 1, " + TIMESTAMP3 + ")";
     let stmt = Utils.createStatement(Svc.History.DBConnection, query);
     let result = Utils.queryAsync(stmt);    
-    do_check_eq([id for (id in store.getAllIDs())].length, 3);
+    do_check_eq([id for (id in store.getAllIDs())].length, 4);
 
-    _("Remove a record from the store.");
-    store.remove({id: fxguid});
+    _("Make sure we report records with invalid URIs.");
+    let invalid_uri_guid = Utils.makeGUID();
+    let failed = store.applyIncomingBatch([{
+      id: invalid_uri_guid,
+      histUri: ":::::::::::::::",
+      title: "Doesn't have a valid URI",
+      visits: [{date: TIMESTAMP3,
+                type: Ci.nsINavHistoryService.TRANSITION_EMBED}]}
+    ]);
+    do_check_eq(failed.length, 1);
+    do_check_eq(failed[0], invalid_uri_guid);
+
+    _("Make sure we handle records with invalid GUIDs gracefully (ignore).");
+    applyEnsureNoFailures([
+      {id: "invalid",
+       histUri: "http://invalid.guid/",
+       title: "Doesn't have a valid GUID",
+       visits: [{date: TIMESTAMP3,
+                 type: Ci.nsINavHistoryService.TRANSITION_EMBED}]}
+    ]);
+
+    _("Make sure we report records with invalid visits, gracefully handle non-integer dates.");
+    let no_date_visit_guid = Utils.makeGUID();
+    let no_type_visit_guid = Utils.makeGUID();
+    let invalid_type_visit_guid = Utils.makeGUID();
+    let non_integer_visit_guid = Utils.makeGUID();
+    failed = store.applyIncomingBatch([
+      {id: no_date_visit_guid,
+       histUri: "http://no.date.visit/",
+       title: "Visit has no date",
+       visits: [{date: TIMESTAMP3}]},
+      {id: no_type_visit_guid,
+       histUri: "http://no.type.visit/",
+       title: "Visit has no type",
+       visits: [{type: Ci.nsINavHistoryService.TRANSITION_EMBED}]},
+      {id: invalid_type_visit_guid,
+       histUri: "http://invalid.type.visit/",
+       title: "Visit has invalid type",
+       visits: [{date: TIMESTAMP3,
+                 type: Ci.nsINavHistoryService.TRANSITION_LINK - 1}]},
+      {id: non_integer_visit_guid,
+       histUri: "http://non.integer.visit/",
+       title: "Visit has non-integer date",
+       visits: [{date: 1234.567,
+                 type: Ci.nsINavHistoryService.TRANSITION_EMBED}]}
+    ]);
+    do_check_eq(failed.length, 3);
+    failed.sort();
+    let expected = [no_date_visit_guid,
+                    no_type_visit_guid,
+                    invalid_type_visit_guid].sort();
+    for (let i = 0; i < expected.length; i++) {
+      do_check_eq(failed[i], expected[i]);
+    }
+
+    _("Make sure we handle records with javascript: URLs gracefully.");
+    applyEnsureNoFailures([
+      {id: Utils.makeGUID(),
+       histUri: "javascript:''",
+       title: "javascript:''",
+       visits: [{date: TIMESTAMP3,
+                 type: Ci.nsINavHistoryService.TRANSITION_EMBED}]}
+    ]);
+
+    _("Make sure we handle records without any visits gracefully.");
+    applyEnsureNoFailures([
+      {id: Utils.makeGUID(),
+       histUri: "http://getfirebug.com",
+       title: "Get Firebug!",
+       visits: []}
+    ]);
+
+    _("Remove an existent record and a non-existent from the store.");
+    applyEnsureNoFailures([{id: fxguid, deleted: true},
+                           {id: Utils.makeGUID(), deleted: true}]);
     do_check_false(store.itemExists(fxguid));
     let queryres = queryHistoryVisits(fxuri);
     do_check_eq(queryres.length, 0);

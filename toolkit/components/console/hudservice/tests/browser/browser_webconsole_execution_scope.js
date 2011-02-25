@@ -62,7 +62,7 @@ function testExecutionScope() {
   jsterm.execute("location;");
 
   let nodes = jsterm.outputNode.querySelectorAll(".hud-msg-node");
-  is(nodes.length, 1, "Three children in output");
+  is(nodes.length, 2, "Two children in output");
 
   is(/location;/.test(nodes[0].textContent), true,
      "'location;' written to output");

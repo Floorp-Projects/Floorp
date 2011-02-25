@@ -84,7 +84,6 @@ static int extensionAtom = 0;
 
 static Scope *macros = 0;
 #define MAX_MACRO_ARGS  64
-#define MAX_IF_NESTING  64
 
 static SourceLoc ifloc; /* outermost #if */
 
@@ -191,6 +190,9 @@ static int CPPdefine(yystypepp * yylvalpp)
         if (token == '\\') {
             CPPErrorToInfoLog("The line continuation character (\\) is not part of the OpenGL ES Shading Language");
             return token;
+        } else if (token <= 0) { // EOF or error
+            CPPErrorToInfoLog("unexpected end of input in #define preprocessor directive - expected a newline");
+            return 0;
         }
         RecordToken(mac.body, token, yylvalpp);
         token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
@@ -267,9 +269,13 @@ static int CPPelse(int matchelse, yystypepp * yylvalpp)
 	
 	while (token > 0) {
         if (token != '#') {
-		    while (token != '\n')
+            while (token != '\n') {
                 token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
-            
+                if (token <= 0) { // EOF or error
+                    CPPErrorToInfoLog("unexpected end of input in #else preprocessor directive - expected a newline");
+                    return 0;
+                }
+            }
             token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
             continue;
         }
@@ -278,25 +284,42 @@ static int CPPelse(int matchelse, yystypepp * yylvalpp)
         atom = yylvalpp->sc_ident;
         if (atom == ifAtom || atom == ifdefAtom || atom == ifndefAtom){
             depth++; cpp->ifdepth++; cpp->elsetracker++;
+            if (cpp->ifdepth > MAX_IF_NESTING) {
+                CPPErrorToInfoLog("max #if nesting depth exceeded");
+                cpp->CompileError = 1;
+                return 0;
+            }
+            // sanity check elsetracker
+            if (cpp->elsetracker < 0 || cpp->elsetracker >= MAX_IF_NESTING) {
+                CPPErrorToInfoLog("mismatched #if/#endif statements");
+                cpp->CompileError = 1;
+                return 0;
+            }
             cpp->elsedepth[cpp->elsetracker] = 0;
-		}
-		else if (atom == endifAtom) {
+        }
+        else if (atom == endifAtom) {
             if(--depth<0){
-			    --cpp->elsetracker;
+                if (cpp->elsetracker)
+                    --cpp->elsetracker;
                 if (cpp->ifdepth) 
                     --cpp->ifdepth;
                 break;
             }             
-                --cpp->elsetracker;
-                --cpp->ifdepth;
-            }
+            --cpp->elsetracker;
+            --cpp->ifdepth;
+        }
         else if (((int)(matchelse) != 0)&& depth==0) {
 			if (atom == elseAtom ) {
                 token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
                 if (token != '\n') {
                     CPPWarningToInfoLog("unexpected tokens following #else preprocessor directive - expected a newline");
-                    while (token != '\n')
+                    while (token != '\n') {
                         token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
+                        if (token <= 0) { // EOF or error
+                            CPPErrorToInfoLog("unexpected end of input following #else preprocessor directive - expected a newline");
+                            return 0;
+                        }
+                    }
                 } 
 				break;
 			} 
@@ -313,6 +336,7 @@ static int CPPelse(int matchelse, yystypepp * yylvalpp)
         else if((atom==elseAtom) && (!ChkCorrectElseNesting())){
             CPPErrorToInfoLog("#else after a #else");
             cpp->CompileError=1;
+            return 0;
         }
 	};
     return token;
@@ -457,19 +481,33 @@ error:
 static int CPPif(yystypepp * yylvalpp) {
     int token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
     int res = 0, err = 0;
-	cpp->elsetracker++;
-    cpp->elsedepth[cpp->elsetracker] = 0;
+
     if (!cpp->ifdepth++)
         ifloc = *cpp->tokenLoc;
-	if(cpp->ifdepth >MAX_IF_NESTING){
+    if(cpp->ifdepth > MAX_IF_NESTING){
         CPPErrorToInfoLog("max #if nesting depth exceeded");
-		return 0;
-	}
-	token = eval(token, MIN_PREC, &res, &err, yylvalpp);
+        cpp->CompileError = 1;
+        return 0;
+    }
+    cpp->elsetracker++;
+    // sanity check elsetracker
+    if (cpp->elsetracker < 0 || cpp->elsetracker >= MAX_IF_NESTING) {
+        CPPErrorToInfoLog("mismatched #if/#endif statements");
+        cpp->CompileError = 1;
+        return 0;
+    }
+    cpp->elsedepth[cpp->elsetracker] = 0;
+
+    token = eval(token, MIN_PREC, &res, &err, yylvalpp);
     if (token != '\n') {
-        CPPWarningToInfoLog("unexpected tokens following the preprocessor directive - expected a newline");
-        while (token != '\n')
+        CPPWarningToInfoLog("unexpected tokens following #if preprocessor directive - expected a newline");
+        while (token != '\n') {
             token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
+            if (token <= 0) { // EOF or error
+                CPPErrorToInfoLog("unexpected end of input in #if preprocessor directive - expected a newline");
+                return 0;
+            }
+        }
     } 
     if (!res && !err) {
         token = CPPelse(1, yylvalpp);
@@ -482,12 +520,20 @@ static int CPPifdef(int defined, yystypepp * yylvalpp)
 {
     int token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
     int name = yylvalpp->sc_ident;
-	if(++cpp->ifdepth >MAX_IF_NESTING){
-	    CPPErrorToInfoLog("max #if nesting depth exceeded");
-		return 0;
-	}
-	cpp->elsetracker++;
+    if(++cpp->ifdepth > MAX_IF_NESTING){
+        CPPErrorToInfoLog("max #if nesting depth exceeded");
+        cpp->CompileError = 1;
+        return 0;
+    }
+    cpp->elsetracker++;
+    // sanity check elsetracker
+    if (cpp->elsetracker < 0 || cpp->elsetracker >= MAX_IF_NESTING) {
+        CPPErrorToInfoLog("mismatched #if/#endif statements");
+        cpp->CompileError = 1;
+        return 0;
+    }
     cpp->elsedepth[cpp->elsetracker] = 0;
+
     if (token != CPP_IDENTIFIER) {
             defined ? CPPErrorToInfoLog("ifdef"):CPPErrorToInfoLog("ifndef");
     } else {
@@ -495,8 +541,13 @@ static int CPPifdef(int defined, yystypepp * yylvalpp)
         token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
         if (token != '\n') {
             CPPWarningToInfoLog("unexpected tokens following #ifdef preprocessor directive - expected a newline");
-            while (token != '\n')
+            while (token != '\n') {
                 token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
+                if (token <= 0) { // EOF or error
+                    CPPErrorToInfoLog("unexpected end of input in #ifdef preprocessor directive - expected a newline");
+                    return 0;
+                }
+            }
         }
         if (((s && !s->details.mac.undef) ? 1 : 0) != defined)
             token = CPPelse(1, yylvalpp);
@@ -544,7 +595,10 @@ static int CPPerror(yystypepp * yylvalpp) {
     const char *message;
 	
     while (token != '\n') {
-		if (token == CPP_FLOATCONSTANT || token == CPP_INTCONSTANT){
+        if (token <= 0){
+            CPPErrorToInfoLog("unexpected end of input in #error preprocessor directive - expected a newline");
+            return 0;
+        }else if (token == CPP_FLOATCONSTANT || token == CPP_INTCONSTANT){
             StoreStr(yylvalpp->symbol_name);
 		}else if(token == CPP_IDENTIFIER || token == CPP_STRCONSTANT){
 			StoreStr(GetStringOfAtom(atable,yylvalpp->sc_ident));
@@ -723,38 +777,57 @@ int readCPPline(yystypepp * yylvalpp)
                  if (!cpp->ifdepth ){
                      CPPErrorToInfoLog("#else mismatch");
                      cpp->CompileError=1;
+                     return 0;
                  }
                  token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
                  if (token != '\n') {
                      CPPWarningToInfoLog("unexpected tokens following #else preprocessor directive - expected a newline");
-                     while (token != '\n')
+                     while (token != '\n') {
                          token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
+                         if (token <= 0) { // EOF or error
+                             CPPErrorToInfoLog("unexpected end of input in #ifdef preprocessor directive - expected a newline");
+                             return 0;
+                         }
+                     }
                  }
 			     token = CPPelse(0, yylvalpp);
              }else{
                  CPPErrorToInfoLog("#else after a #else");
-                 cpp->ifdepth=0;
+                 cpp->ifdepth = 0;
+                 cpp->elsetracker = 0;
                  cpp->pastFirstStatement = 1;
+                 cpp->CompileError = 1;
                  return 0;
              }
 		} else if (yylvalpp->sc_ident == elifAtom) {
             if (!cpp->ifdepth){
                  CPPErrorToInfoLog("#elif mismatch");
                  cpp->CompileError=1;
+                 return 0;
             } 
             // this token is really a dont care, but we still need to eat the tokens
             token = cpp->currentInput->scan(cpp->currentInput, yylvalpp); 
-            while (token != '\n')
+            while (token != '\n') {
                 token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
+                if (token <= 0) { // EOF or error
+                    CPPErrorToInfoLog("unexpect tokens following #elif preprocessor directive - expected a newline");
+                    cpp->CompileError = 1;
+                    return 0;
+                }
+            }
 		    token = CPPelse(0, yylvalpp);
         } else if (yylvalpp->sc_ident == endifAtom) {
-		     --cpp->elsetracker;
              if (!cpp->ifdepth){
                  CPPErrorToInfoLog("#endif mismatch");
                  cpp->CompileError=1;
+                 return 0;
              }
              else
-			  	 --cpp->ifdepth;
+                 --cpp->ifdepth;
+
+             if (cpp->elsetracker)
+                 --cpp->elsetracker;
+
 	    } else if (yylvalpp->sc_ident == ifAtom) {
              token = CPPif(yylvalpp);
         } else if (yylvalpp->sc_ident == ifdefAtom) {
@@ -1015,9 +1088,14 @@ int MacroExpand(int atom, yystypepp * yylvalpp)
 
 int ChkCorrectElseNesting(void)
 {
-    if(cpp->elsedepth[cpp->elsetracker]==0){
-	  cpp->elsedepth[cpp->elsetracker]=1;
-      return 1;          
+    // sanity check to make sure elsetracker is in a valid range
+    if (cpp->elsetracker < 0 || cpp->elsetracker >= MAX_IF_NESTING) {
+        return 0;
+    }
+
+    if (cpp->elsedepth[cpp->elsetracker] == 0) {
+        cpp->elsedepth[cpp->elsetracker] = 1;
+        return 1;
     }
     return 0;
 }

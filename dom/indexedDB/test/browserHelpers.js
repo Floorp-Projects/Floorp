@@ -22,7 +22,7 @@ function finishTestNow()
 {
   if (testGenerator) {
     testGenerator.close();
-    delete testGenerator;
+    testGenerator = undefined;
   }
 }
 
@@ -39,7 +39,7 @@ function grabEventAndContinueHandler(event)
 
 function errorHandler(event)
 {
-  throw new Error(event.code + ": " + event.message);
+  throw new Error("indexedDB error, code " + event.target.errorCode);
 }
 
 function continueToNextStep()

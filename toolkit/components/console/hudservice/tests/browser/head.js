@@ -89,41 +89,58 @@ function addTab(aURL)
  *        the HUD output node.
  * @param {string} aMatchString
  *        the string you want to check if it exists in the output node.
+ * @param {string} aMsg
+ *        the message describing the test
  * @param {boolean} [aOnlyVisible=false]
  *        find only messages that are visible, not hidden by the filter.
  * @param {boolean} [aFailIfFound=false]
  *        fail the test if the string is found in the output node.
+ * @param {string} aClass [optional]
+ *        find only messages with the given CSS class.
  */
-function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj, aOnlyVisible,
-                      aFailIfFound)
+function testLogEntry(aOutputNode, aMatchString, aMsg, aOnlyVisible,
+                      aFailIfFound, aClass)
 {
-  let found = true;
-  let notfound = false;
-  let foundMsg = aSuccessErrObj.success;
-  let notfoundMsg = aSuccessErrObj.err;
-
-  if (aFailIfFound) {
-    found = false;
-    notfound = true;
-    foundMsg = aSuccessErrObj.success;
-    notfoundMsg = aSuccessErrObj.err;
-  }
-
   let selector = ".hud-msg-node";
   // Skip entries that are hidden by the filter.
   if (aOnlyVisible) {
     selector += ":not(.hud-filtered-by-type)";
   }
+  if (aClass) {
+    selector += "." + aClass;
+  }
 
   let msgs = aOutputNode.querySelectorAll(selector);
+  let found = false;
   for (let i = 0, n = msgs.length; i < n; i++) {
     let message = msgs[i].textContent.indexOf(aMatchString);
     if (message > -1) {
-      ok(found, foundMsg);
-      return;
+      found = true;
+      break;
+    }
+
+    // Search the labels too.
+    let labels = msgs[i].querySelectorAll("label");
+    for (let j = 0; j < labels.length; j++) {
+      if (labels[j].getAttribute("value").indexOf(aMatchString) > -1) {
+        found = true;
+        break;
+      }
     }
   }
-  ok(notfound, notfoundMsg);
+
+  is(found, !aFailIfFound, aMsg);
+}
+
+/**
+ * A convenience method to call testLogEntry().
+ *
+ * @param string aString
+ *        The string to find.
+ */
+function findLogEntry(aString)
+{
+  testLogEntry(outputNode, aString, "found " + aString);
 }
 
 function openConsole()

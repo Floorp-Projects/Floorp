@@ -126,12 +126,14 @@ function test() {
   crD.append("Crash Reports");
   let crashes = add_fake_crashes(crD, 1);
   // we don't need much data here, it's not going to a real Socorro
-  crashes.push(addPendingCrashreport(crD, {'ServerURL': 'http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs',
-                                           'ProductName': 'Test App',
-                                           // test that we don't truncate
-                                           // at = (bug 512853)
-                                           'Foo': 'ABC=XYZ'
-                                          }));
+  crashes.push(addPendingCrashreport(crD,
+                                     crashes[crashes.length - 1].date + 60000,
+                                     {'ServerURL': 'http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs',
+                                      'ProductName': 'Test App',
+                                      // test that we don't truncate
+                                      // at = (bug 512853)
+                                      'Foo': 'ABC=XYZ'
+                                     }));
   crashes.sort(function(a,b) b.date - a.date);
 
   // set this pref so we can link to our test server

@@ -58,10 +58,6 @@
 /*static*/ PRBool
 nsSVGFeatures::HaveFeature(const nsAString& aFeature)
 {
-  if (!NS_SVGEnabled()) {
-    return PR_FALSE;
-  }
-
 #define SVG_SUPPORTED_FEATURE(str) if (aFeature.Equals(NS_LITERAL_STRING(str).get())) return PR_TRUE;
 #define SVG_UNSUPPORTED_FEATURE(str)
 #include "nsSVGFeaturesList.h"

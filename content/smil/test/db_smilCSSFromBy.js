@@ -61,7 +61,7 @@ var _fromByTestLists =
                                          toComp:   "40px"}),
   ],
   lengthNoUnitsSVG: [
-    new AnimTestcaseFromBy("0", "50",  { fromComp: "0px", // 0 acts like 0px
+    new AnimTestcaseFromBy("0", "50",  { fromComp: "0",
                                          midComp:  "25",
                                          toComp:   "50"}),
     new AnimTestcaseFromBy("30", "10", { fromComp: "30",
@@ -69,9 +69,9 @@ var _fromByTestLists =
                                          toComp:   "40"}),
   ],
   lengthPx: [
-    new AnimTestcaseFromBy("0", "8px", { fromComp: "0px", // 0 acts like 0px
-                                         midComp: "4px",
-                                         toComp: "8px"}),
+    new AnimTestcaseFromBy("0px", "8px", { fromComp: "0px",
+                                           midComp: "4px",
+                                           toComp: "8px"}),
     new AnimTestcaseFromBy("1px", "10px", { midComp: "6px", toComp: "11px"}),
   ],
   opacity: [
@@ -85,9 +85,6 @@ var _fromByTestLists =
   paint: [
     // The "none" keyword & URI values aren't addiditve, so the animations in
     // these testcases are expected to have no effect.
-    // XXXdholbert Of course, we don't support animation between URI values yet
-    // (bug 520487), so the testcases that use URIs currently have no effect
-    // for that reason, too.
     new AnimTestcaseFromBy("none", "none",  { noEffect: 1 }),
     new AnimTestcaseFromBy("url(#gradA)", "url(#gradB)", { noEffect: 1 }),
     new AnimTestcaseFromBy("url(#gradA)", "url(#gradB) red", { noEffect: 1 }),

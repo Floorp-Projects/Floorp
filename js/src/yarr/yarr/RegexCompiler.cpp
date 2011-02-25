@@ -139,7 +139,8 @@ public:
 
     CharacterClass* charClass()
     {
-        CharacterClass* characterClass = new CharacterClass(0);
+        // FIXME: bug 574459 -- no NULL check
+        CharacterClass* characterClass = js_new<CharacterClass>((CharacterClassTable*)NULL);
 
         characterClass->m_matches.append(m_matches);
         characterClass->m_ranges.append(m_ranges);
@@ -344,7 +345,8 @@ public:
         if (capture)
             m_pattern.m_numSubpatterns++;
 
-        PatternDisjunction* parenthesesDisjunction = new PatternDisjunction(m_alternative);
+        // FIXME: bug 574459 -- no NULL check
+        PatternDisjunction* parenthesesDisjunction = js_new<PatternDisjunction>(m_alternative);
         m_pattern.m_disjunctions.append(parenthesesDisjunction);
         m_alternative->m_terms.append(PatternTerm(PatternTerm::TypeParenthesesSubpattern, subpatternId, parenthesesDisjunction, capture));
         m_alternative = parenthesesDisjunction->addNewAlternative();
@@ -352,7 +354,8 @@ public:
 
     void atomParentheticalAssertionBegin(bool invert = false)
     {
-        PatternDisjunction* parenthesesDisjunction = new PatternDisjunction(m_alternative);
+        // FIXME: bug 574459 -- no NULL check
+        PatternDisjunction* parenthesesDisjunction = js_new<PatternDisjunction>(m_alternative);
         m_pattern.m_disjunctions.append(parenthesesDisjunction);
         m_alternative->m_terms.append(PatternTerm(PatternTerm::TypeParentheticalAssertion, m_pattern.m_numSubpatterns + 1, parenthesesDisjunction, invert));
         m_alternative = parenthesesDisjunction->addNewAlternative();
@@ -397,7 +400,8 @@ public:
 
     PatternDisjunction* copyDisjunction(PatternDisjunction* disjunction)
     {
-        PatternDisjunction* newDisjunction = new PatternDisjunction();
+        // FIXME: bug 574459 -- no NULL check
+        PatternDisjunction* newDisjunction = js_new<PatternDisjunction>();
 
         newDisjunction->m_parent = disjunction->m_parent;
         for (unsigned alt = 0; alt < disjunction->m_alternatives.length(); ++alt) {
@@ -467,7 +471,8 @@ public:
 
     void regexBegin()
     {
-        m_pattern.m_body = new PatternDisjunction();
+        // FIXME: bug 574459 -- no NULL check
+        m_pattern.m_body = js_new<PatternDisjunction>();
         m_alternative = m_pattern.m_body->addNewAlternative();
         m_pattern.m_disjunctions.append(m_pattern.m_body);
     }
@@ -526,14 +531,17 @@ public:
             case PatternTerm::TypeParenthesesSubpattern:
                 // Note: for fixed once parentheses we will ensure at least the minimum is available; others are on their own.
                 term.frameLocation = currentCallFrameSize;
-                if ((term.quantityCount == 1) && !term.parentheses.isCopy) {
-                    if (term.quantityType == QuantifierFixedCount) {
-                        currentCallFrameSize = setupDisjunctionOffsets(term.parentheses.disjunction, currentCallFrameSize, currentInputPosition);
-                        currentInputPosition += term.parentheses.disjunction->m_minimumSize;
-                    } else {
+                if (term.quantityCount == 1 && !term.parentheses.isCopy) {
+                    if (term.quantityType != QuantifierFixedCount)
                         currentCallFrameSize += RegexStackSpaceForBackTrackInfoParenthesesOnce;
-                        currentCallFrameSize = setupDisjunctionOffsets(term.parentheses.disjunction, currentCallFrameSize, currentInputPosition);
-                    }
+                    currentCallFrameSize = setupDisjunctionOffsets(term.parentheses.disjunction, currentCallFrameSize, currentInputPosition);
+                    // If quantity is fixed, then pre-check its minimum size.
+                    if (term.quantityType == QuantifierFixedCount)
+                        currentInputPosition += term.parentheses.disjunction->m_minimumSize;
+                    term.inputPosition = currentInputPosition;
+                } else if (term.parentheses.isTerminal) {
+                    currentCallFrameSize += RegexStackSpaceForBackTrackInfoParenthesesTerminal;
+                    currentCallFrameSize = setupDisjunctionOffsets(term.parentheses.disjunction, currentCallFrameSize, currentInputPosition);
                     term.inputPosition = currentInputPosition;
                 } else {
                     term.inputPosition = currentInputPosition;
@@ -587,6 +595,33 @@ public:
         setupDisjunctionOffsets(m_pattern.m_body, 0, 0);
     }
 
+    // This optimization identifies sets of parentheses that we will never need to backtrack.
+    // In these cases we do not need to store state from prior iterations.
+    // We can presently avoid backtracking for:
+    //   * a set of parens at the end of the regular expression (last term in any of the alternatives of the main body disjunction).
+    //   * where the parens are non-capturing, and quantified unbounded greedy (*).
+    //   * where the parens do not contain any capturing subpatterns.
+    void checkForTerminalParentheses()
+    {
+        // This check is much too crude; should be just checking whether the candidate
+        // node contains nested capturing subpatterns, not the whole expression!
+        if (m_pattern.m_numSubpatterns)
+            return;
+
+        js::Vector<PatternAlternative*, 0, js::SystemAllocPolicy>& alternatives = m_pattern.m_body->m_alternatives;
+        for (unsigned i =0; i < alternatives.length(); ++i) {
+            js::Vector<PatternTerm, 0, js::SystemAllocPolicy>& terms = alternatives[i]->m_terms;
+            if (terms.length()) {
+                PatternTerm& term = terms.back();
+                if (term.type == PatternTerm::TypeParenthesesSubpattern
+                    && term.quantityType == QuantifierGreedy
+                    && term.quantityCount == UINT_MAX
+                    && !term.capture())
+                    term.parentheses.isTerminal = true;
+            }
+        }
+    }
+
 private:
     RegexPattern& m_pattern;
     PatternAlternative* m_alternative;
@@ -619,6 +654,7 @@ int compileRegex(const UString& patternString, RegexPattern& pattern)
         JS_ASSERT(numSubpatterns == pattern.m_numSubpatterns);
     }
 
+    constructor.checkForTerminalParentheses();
     constructor.setupOffsets();
 
     return 0;

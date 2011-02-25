@@ -72,6 +72,8 @@ CPPSRCS = \
           History.cpp \
           nsPlacesImportExportService.cpp \
           AsyncFaviconHelpers.cpp \
+          PlaceInfo.cpp \
+          VisitInfo.cpp \
           $(NULL)
 
 EXTRA_DSO_LDOPTS += \
@@ -80,13 +82,21 @@ EXTRA_DSO_LDOPTS += \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
 
+ifndef MOZ_ENABLE_LIBXUL
+EXTRA_DSO_LDOPTS += \
+	$(MOZ_JS_LIBS) \
+	$(NULL)
+endif
+
 LOCAL_INCLUDES += -I$(srcdir)/../../build
+
+# This is the default value.  Must be in sync with the one defined in SQLite.
+DEFINES += -DSQLITE_DEFAULT_PAGE_SIZE=32768
 
 EXTRA_COMPONENTS = \
   toolkitplaces.manifest \
   nsLivemarkService.js \
   nsTaggingService.js \
-  nsPlacesDBFlush.js \
   nsPlacesExpiration.js \
   nsMicrosummaryService.js \
   PlacesCategoriesStarter.js \

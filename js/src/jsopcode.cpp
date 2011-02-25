@@ -118,7 +118,7 @@ static const char *CodeToken[] = {
 #undef OPDEF
 };
 
-#if defined(DEBUG) || defined(JS_JIT_SPEW)
+#if defined(DEBUG) || defined(JS_JIT_SPEW) || defined(JS_METHODJIT_SPEW)
 /*
  * Array of JS bytecode names used by DEBUG-only js_Disassemble and by
  * JIT debug spew.
@@ -756,7 +756,12 @@ QuoteString(Sprinter *sp, JSString *str, uint32 quote)
                  ? Sprint(sp, "%c", (char)c) >= 0
                  : Sprint(sp, "\\%c", e[1]) >= 0;
         } else {
-            ok = Sprint(sp, (c >> 8) ? "\\u%04X" : "\\x%02X", c) >= 0;
+            /*
+             * Use \x only if the high byte is 0 and we're in a quoted string,
+             * because ECMA-262 allows only \u, not \x, in Unicode identifiers
+             * (see bug 621814).
+             */
+            ok = Sprint(sp, (qc && !(c >> 8)) ? "\\x%02X" : "\\u%04X", c) >= 0;
         }
         if (!ok)
             return NULL;
@@ -827,8 +832,8 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     jp->pcstack = NULL;
     jp->fun = fun;
     jp->localNames = NULL;
-    if (fun && FUN_INTERPRETED(fun) && fun->hasLocalNames()) {
-        jp->localNames = fun->getLocalNameArray(cx, &jp->pool);
+    if (fun && fun->isInterpreted() && fun->script()->bindings.hasLocalNames()) {
+        jp->localNames = fun->script()->bindings.getLocalNameArray(cx, &jp->pool);
         if (!jp->localNames) {
             js_DestroyPrinter(jp);
             return NULL;
@@ -1335,7 +1340,7 @@ GetArgOrVarAtom(JSPrinter *jp, uintN slot)
     JSAtom *name;
 
     LOCAL_ASSERT_RV(jp->fun, NULL);
-    LOCAL_ASSERT_RV(slot < jp->fun->countLocalNames(), NULL);
+    LOCAL_ASSERT_RV(slot < jp->fun->script()->bindings.countLocalNames(), NULL);
     name = JS_LOCAL_NAME_TO_ATOM(jp->localNames[slot]);
 #if !JS_HAS_DESTRUCTURING
     LOCAL_ASSERT_RV(name, NULL);
@@ -1470,7 +1475,6 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
         LOCAL_ASSERT(*pc == JSOP_POP);
         break;
 
-      case JSOP_SETGLOBAL:
       case JSOP_SETARG:
       case JSOP_SETLOCAL:
         LOCAL_ASSERT(pc[oplen] == JSOP_POP || pc[oplen] == JSOP_POPN);
@@ -1482,8 +1486,6 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
         if (op == JSOP_SETARG) {
             atom = GetArgOrVarAtom(jp, GET_SLOTNO(pc));
             LOCAL_ASSERT(atom);
-        } else if (op == JSOP_SETGLOBAL) {
-            atom = jp->script->getGlobalAtom(GET_SLOTNO(pc));
         } else if (IsVarSlot(jp, pc, &i)) {
             atom = GetArgOrVarAtom(jp, i);
             LOCAL_ASSERT(atom);
@@ -1908,14 +1910,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                ? JSOP_IFEQ                                                    \
                : JSOP_NOP)
 
-/*
- * Callers know that ATOM_IS_STRING(atom), and we leave it to the optimizer to
- * common ATOM_TO_STRING(atom) here and near the call sites.
- */
-#define ATOM_IS_IDENTIFIER(atom) js_IsIdentifier(ATOM_TO_STRING(atom))
-#define ATOM_IS_KEYWORD(atom)                                                 \
-    (js_CheckKeyword(ATOM_TO_STRING(atom)->chars(),                           \
-                     ATOM_TO_STRING(atom)->length()) != TOK_EOF)
+#define ATOM_IS_IDENTIFIER(atom) js_IsIdentifier(atom)
 
 /*
  * Given an atom already fetched from jp->script's atom map, quote/escape its
@@ -2878,8 +2873,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
               }
 
-              case JSOP_GETUPVAR:
-              case JSOP_CALLUPVAR:
               case JSOP_GETUPVAR_DBG:
               case JSOP_CALLUPVAR_DBG:
               case JSOP_GETFCSLOT:
@@ -2890,12 +2883,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     jp->fun = jp->script->getFunction(0);
                 }
 
-                if (!jp->localNames)
-                    jp->localNames = jp->fun->getLocalNameArray(cx, &jp->pool);
+                if (!jp->localNames) {
+                    JS_ASSERT(fun == jp->fun);
+                    jp->localNames =
+                        jp->fun->script()->bindings.getLocalNameArray(cx, &jp->pool);
+                }
 
                 uintN index = GET_UINT16(pc);
-                if (index < jp->fun->u.i.nupvars) {
-                    index += jp->fun->countArgsAndVars();
+                if (index < jp->fun->script()->bindings.countUpvars()) {
+                    index += jp->fun->script()->bindings.countArgsAndVars();
                 } else {
                     JSUpvarArray *uva;
 #ifdef DEBUG
@@ -2914,8 +2910,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                             fp = fp->prev();
                         JS_ASSERT(fp->script() == jp->script);
                         JS_ASSERT(fp->prev()->fun() == jp->fun);
-                        JS_ASSERT(FUN_INTERPRETED(jp->fun));
-                        JS_ASSERT(jp->script != jp->fun->u.i.script);
+                        JS_ASSERT(jp->fun->isInterpreted());
+                        JS_ASSERT(jp->script != jp->fun->script());
                         JS_ASSERT(JSScript::isValidOffset(jp->script->upvarsOffset));
                     }
 #endif
@@ -3423,10 +3419,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 xval = "&&";
                 goto do_logical_connective;
 
-              case JSOP_FORGLOBAL:
-                atom = jp->script->getGlobalAtom(GET_SLOTNO(pc));
-                goto do_forname;
-
               case JSOP_FORARG:
                 sn = NULL;
                 i = GET_ARGNO(pc);
@@ -3449,9 +3441,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
 
               case JSOP_FORNAME:
+              case JSOP_FORGNAME:
                 LOAD_ATOM(0);
 
-              do_forname:
                 sn = js_GetSrcNote(jp->script, pc);
                 todo = SprintCString(&ss->sprinter, VarPrefix(sn));
                 if (todo < 0 || !QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0))
@@ -3562,10 +3554,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_SETARG:
                 atom = GetArgOrVarAtom(jp, GET_ARGNO(pc));
                 LOCAL_ASSERT(atom);
-                goto do_setname;
-
-              case JSOP_SETGLOBAL:
-                atom = jp->script->getGlobalAtom(GET_SLOTNO(pc));
                 goto do_setname;
 
               case JSOP_SETCONST:
@@ -3739,11 +3727,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 LOCAL_ASSERT(atom);
                 goto do_incatom;
 
-              case JSOP_INCGLOBAL:
-              case JSOP_DECGLOBAL:
-                atom = jp->script->getGlobalAtom(GET_SLOTNO(pc));
-                goto do_incatom;
-
               case JSOP_INCNAME:
               case JSOP_DECNAME:
               case JSOP_INCGNAME:
@@ -3798,11 +3781,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_ARGDEC:
                 atom = GetArgOrVarAtom(jp, GET_ARGNO(pc));
                 LOCAL_ASSERT(atom);
-                goto do_atominc;
-
-              case JSOP_GLOBALINC:
-              case JSOP_GLOBALDEC:
-                atom = jp->script->getGlobalAtom(GET_SLOTNO(pc));
                 goto do_atominc;
 
               case JSOP_NAMEINC:
@@ -4092,14 +4070,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * release to mark before returning.
                      */
                     mark = JS_ARENA_MARK(&cx->tempPool);
-                    if (!fun->hasLocalNames()) {
-                        innerLocalNames = NULL;
-                    } else {
-                        innerLocalNames = fun->getLocalNameArray(cx, &cx->tempPool);
+                    if (fun->script()->bindings.hasLocalNames()) {
+                        innerLocalNames =
+                            fun->script()->bindings.getLocalNameArray(cx, &cx->tempPool);
                         if (!innerLocalNames)
                             return NULL;
+                    } else {
+                        innerLocalNames = NULL;
                     }
-                    inner = fun->u.i.script;
+                    inner = fun->script();
                     if (!InitSprintStack(cx, &ss2, jp, StackDepth(inner))) {
                         JS_ARENA_RELEASE(&cx->tempPool, mark);
                         return NULL;
@@ -4120,7 +4099,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     jp->script = inner;
                     jp->fun = fun;
                     jp->localNames = innerLocalNames;
-                    ok = Decompile(&ss2, inner->code, inner->length, JSOP_NOP) != NULL;
+
+                    /*
+                     * Decompile only the main bytecode, to avoid tripping over
+                     * new prolog ops that have stack effects.
+                     */
+                    ok = Decompile(&ss2, inner->main,
+                                   inner->length - (inner->main - inner->code),
+                                   JSOP_NOP)
+                         != NULL;
                     jp->script = outer;
                     jp->fun = outerfun;
                     jp->localNames = outerLocalNames;
@@ -4234,12 +4221,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_OBJECT:
                 LOAD_OBJECT(0);
-                LOCAL_ASSERT(obj->getClass() == &js_RegExpClass);
-                goto do_regexp;
+                str = js_ValueToSource(cx, ObjectValue(*obj));
+                if (!str)
+                    return NULL;
+                goto sprint_string;
 
               case JSOP_REGEXP:
                 GET_REGEXP_FROM_BYTECODE(jp->script, pc, 0, obj);
-              do_regexp:
                 if (!js_regexp_toString(cx, obj, Valueify(&val)))
                     return NULL;
                 str = JSVAL_TO_STRING(val);
@@ -4618,12 +4606,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
 #endif /* JS_HAS_SHARP_VARS */
 
-#if JS_HAS_DEBUGGER_KEYWORD
               case JSOP_DEBUGGER:
                 js_printf(jp, "\tdebugger;\n");
                 todo = -2;
                 break;
-#endif /* JS_HAS_DEBUGGER_KEYWORD */
 
 #if JS_HAS_XML_SUPPORT
               case JSOP_STARTXML:
@@ -4893,10 +4879,36 @@ out:
     return ok;
 }
 
+/*
+ * Decompile a function body, expression closure expression, or complete
+ * script. Start at |pc|; go to the end of |script|. Include a directive
+ * prologue, if appropriate.
+ */
+static JSBool
+DecompileBody(JSPrinter *jp, JSScript *script, jsbytecode *pc)
+{
+    /* Print a strict mode code directive, if needed. */
+    if (script->strictModeCode && !jp->strict) {
+        if (jp->fun && (jp->fun->flags & JSFUN_EXPR_CLOSURE)) {
+            /*
+             * We have no syntax for strict function expressions;
+             * at least give a hint.
+             */
+            js_printf(jp, "\t/* use strict */ \n");
+        } else {
+            js_printf(jp, "\t\"use strict\";\n");
+        }
+        jp->strict = true;
+    }
+
+    jsbytecode *end = script->code + script->length;
+    return DecompileCode(jp, script, pc, end - pc, 0);
+}
+
 JSBool
 js_DecompileScript(JSPrinter *jp, JSScript *script)
 {
-    return DecompileCode(jp, script, script->code, (uintN)script->length, 0);
+    return DecompileBody(jp, script, script->code);
 }
 
 JSString *
@@ -4933,7 +4945,7 @@ js_DecompileFunctionBody(JSPrinter *jp)
     }
 
     script = jp->fun->u.i.script;
-    return DecompileCode(jp, script, script->code, (uintN)script->length, 0);
+    return DecompileBody(jp, script, script->code);
 }
 
 JSBool
@@ -4943,7 +4955,6 @@ js_DecompileFunction(JSPrinter *jp)
     uintN i;
     JSAtom *param;
     jsbytecode *pc, *endpc;
-    ptrdiff_t len;
     JSBool ok;
 
     fun = jp->fun;
@@ -5044,28 +5055,13 @@ js_DecompileFunction(JSPrinter *jp)
 #endif
         if (!ok)
             return JS_FALSE;
-        if (fun->flags & JSFUN_EXPR_CLOSURE) {
-            js_printf(jp, ") ");
-            if (fun->u.i.script->strictModeCode && !jp->strict) {
-                /*
-                 * We have no syntax for strict function expressions;
-                 * at least give a hint.
-                 */
-                js_printf(jp, "\t/* use strict */ \n");
-                jp->strict = true;
-            }
-            
-        } else {
-            js_printf(jp, ") {\n");
+        js_printf(jp, ") ");
+        if (!(fun->flags & JSFUN_EXPR_CLOSURE)) {
+            js_printf(jp, "{\n");
             jp->indent += 4;
-            if (fun->u.i.script->strictModeCode && !jp->strict) {
-                js_printf(jp, "\t'use strict';\n");
-                jp->strict = true;
-            }
         }
 
-        len = script->code + script->length - pc;
-        ok = DecompileCode(jp, script, pc, (uintN)len, 0);
+        ok = DecompileBody(jp, script, pc);
         if (!ok)
             return JS_FALSE;
 
@@ -5105,6 +5101,9 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
     pc = fp->hasImacropc() ? fp->imacropc() : cx->regs->pc;
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);
 
+    if (pc < script->main)
+        goto do_fallback;
+    
     if (spindex != JSDVG_IGNORE_STACK) {
         jsbytecode **pcstack;
 
@@ -5161,6 +5160,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
     }
 
     {
+        jsbytecode* basepc = cx->regs->pc;
         jsbytecode* savedImacropc = fp->maybeImacropc();
         if (savedImacropc) {
             JS_ASSERT(cx->hasfp());
@@ -5180,7 +5180,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
 
         if (savedImacropc) {
             JS_ASSERT(cx->hasfp());
-            cx->regs->pc = savedImacropc;
+            cx->regs->pc = basepc;
             fp->setImacropc(savedImacropc);
         }
 
@@ -5489,8 +5489,8 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
         return ReconstructImacroPCStack(cx, script, imacstart, target, pcstack);
 #endif
 
-    LOCAL_ASSERT(script->main <= target && target < script->code + script->length);
-    jsbytecode *pc = script->main;
+    LOCAL_ASSERT(script->code <= target && target < script->code + script->length);
+    jsbytecode *pc = script->code;
     uintN pcdepth = 0;
     ptrdiff_t oplen;
     for (; pc < target; pc += oplen) {

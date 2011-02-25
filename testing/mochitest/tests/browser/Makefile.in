@@ -50,6 +50,8 @@ _BROWSER_TEST_FILES = \
 	                  browser_pass.js \
 	                  browser_async.js \
 	                  browser_privileges.js \
+	                  browser_popupNode.js \
+	                  browser_popupNode_check.js \
 # Disabled, these are only good for testing the harness' failure reporting
 #	                  browser_zz_fail_openwindow.js \
 #	                  browser_fail.js \

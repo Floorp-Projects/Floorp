@@ -1247,7 +1247,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
     nsIFrame *theFrame;
     PRInt32 currentOffset, frameStart, frameEnd;
 
-    if (aAmount == eSelectCharacter || aAmount == eSelectWord)
+    if (aAmount >= eSelectCharacter && aAmount <= eSelectWord)
     {
       // For left/right, PeekOffset() sets pos.mResultFrame correctly, but does not set pos.mAttachForward,
       // so determine the hint here based on the result frame and offset:
@@ -2191,15 +2191,15 @@ nsresult
 nsFrameSelection::CharacterMove(PRBool aForward, PRBool aExtend)
 {
   if (aForward)
-    return MoveCaret(nsIDOMKeyEvent::DOM_VK_RIGHT,aExtend,eSelectCharacter);
+    return MoveCaret(nsIDOMKeyEvent::DOM_VK_RIGHT, aExtend, eSelectCluster);
   else
-    return MoveCaret(nsIDOMKeyEvent::DOM_VK_LEFT,aExtend,eSelectCharacter);
+    return MoveCaret(nsIDOMKeyEvent::DOM_VK_LEFT, aExtend, eSelectCluster);
 }
 
 nsresult
 nsFrameSelection::CharacterExtendForDelete()
 {
-  return MoveCaret(nsIDOMKeyEvent::DOM_VK_DELETE, PR_TRUE, eSelectCharacter);
+  return MoveCaret(nsIDOMKeyEvent::DOM_VK_DELETE, PR_TRUE, eSelectCluster);
 }
 
 nsresult
@@ -4066,10 +4066,16 @@ nsTypedSelection::GetIndicesForInterval(nsINode* aBeginNode,
                                         PRInt32 *aStartIndex,
                                         PRInt32 *aEndIndex)
 {
-  if (aStartIndex)
-    *aStartIndex = -1;
-  if (aEndIndex)
-    *aEndIndex = -1;
+  PRInt32 startIndex;
+  PRInt32 endIndex;
+
+  if (!aStartIndex)
+    aStartIndex = &startIndex;
+  if (!aEndIndex)
+    aEndIndex = &endIndex;
+
+  *aStartIndex = -1;
+  *aEndIndex = -1;
 
   if (mRanges.Length() == 0)
     return;
@@ -4347,11 +4353,6 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIRange *aRange, PR
   if (!mFrameSelection || !aPresContext)
     return NS_OK; // nothing to do
   nsIPresShell *presShell = aPresContext->GetPresShell();
-  if (!presShell)
-    return NS_OK;
-
-  // Re-get shell because the flush might have destroyed it 
-  presShell = aPresContext->GetPresShell();
   if (!presShell)
     return NS_OK;
 
@@ -4815,9 +4816,14 @@ nsTypedSelection::AddRange(nsIRange* aRange)
 
   nsRefPtr<nsPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
+
+  // Ensure all frames are properly constructed for selectFrames, bug 602331.
+  nsIPresShell* presShell = presContext ? presContext->GetPresShell() : nsnull;
+  if (presShell) {
+    presShell->FlushPendingNotifications(Flush_Frames);
+  }
   selectFrames(presContext, aRange, PR_TRUE);        
 
-  //ScrollIntoView(); this should not happen automatically
   if (!mFrameSelection)
     return NS_OK;//nothing to do
 
@@ -5847,7 +5853,7 @@ nsTypedSelection::Modify(const nsAString& aAlter, const nsAString& aDirection,
   nsSelectionAmount amount;
   PRUint32 keycode;
   if (aGranularity.LowerCaseEqualsLiteral("character")) {
-    amount = eSelectCharacter;
+    amount = eSelectCluster;
     keycode = forward ? (PRUint32) nsIDOMKeyEvent::DOM_VK_RIGHT :
                         (PRUint32) nsIDOMKeyEvent::DOM_VK_LEFT;
   }

@@ -1,0 +1,44 @@
+<svg class="reftest-wait"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     onload="setTimeout(go, 0);">
+<script>
+  function setMatrixForElem(id, matrix) {
+    var elem = document.getElementById(id);
+    elem.setAttribute("transform", "matrix("+matrix+")");
+  }
+
+  function go() {
+    // This moves image1 completely offscreen
+    setMatrixForElem("image1", "0.5 -1 0 1 0 -30");
+
+    // This flattens image2 to take up 0 space
+    setMatrixForElem("image2", "1    0 0 0 0 0");
+
+    // NOTE: The third image should be unaffected by the above
+    // and should still render.
+
+    document.documentElement.removeAttribute('class');
+  }
+</script>
+<defs>
+ <path id="P1" d="M 0   50 h50 v-50 h-50 z"/>
+ <path id="P2" d="M 50 100 h50 v-50 h-50 z"/>
+ <path id="P3" d="M 0  100 h50 v-50 h-50 z"/>
+ <clipPath id="Q1"><use x="25" xlink:href="#P1"/></clipPath>
+ <clipPath id="Q2"><use x="25" xlink:href="#P2"/></clipPath>
+ <clipPath id="Q3"><use x="25" xlink:href="#P3"/></clipPath>
+</defs>
+
+<image xlink:href="solidblue.png" id="image1"
+       width="100" height="100"
+       x="25"  clip-path="url(#Q1)"/>
+
+<image xlink:href="solidblue.png" id="image2"
+       width="100" height="100"
+       x="25" y="50" clip-path="url(#Q2)"/>
+
+<image xlink:href="solidblue.png"
+       width="100" height="100"
+       x="25" clip-path="url(#Q3)"/>
+</svg>

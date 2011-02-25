@@ -273,6 +273,12 @@ typedef PRUint64 nsFrameState;
 // Frame's overflow area was clipped by the 'clip' property.
 #define NS_FRAME_HAS_CLIP                           NS_FRAME_STATE_BIT(35)
 
+// Frame is a display root and the retained layer tree needs to be updated
+// at the next paint via display list construction.
+// Only meaningful for display roots, so we don't really need a global state
+// bit; we could free up this bit with a little extra complexity.
+#define NS_FRAME_UPDATE_LAYER_TREE                  NS_FRAME_STATE_BIT(36)
+
 // The lower 20 bits and upper 32 bits of the frame state are reserved
 // by this API.
 #define NS_FRAME_RESERVED                           ~NS_FRAME_IMPL_RESERVED
@@ -289,13 +295,18 @@ typedef PRUint64 nsFrameState;
 //----------------------------------------------------------------------
 
 enum nsSelectionAmount {
-  eSelectCharacter = 0,
-  eSelectWord      = 1,
-  eSelectLine      = 2,  //previous drawn line in flow.
-  eSelectBeginLine = 3,
-  eSelectEndLine   = 4,
-  eSelectNoAmount  = 5,   //just bounce back current offset.
-  eSelectParagraph = 6    //select a "paragraph"
+  eSelectCharacter = 0, // a single Unicode character;
+                        // do not use this (prefer Cluster) unless you
+                        // are really sure it's what you want
+  eSelectCluster   = 1, // a grapheme cluster: this is usually the right
+                        // choice for movement or selection by "character"
+                        // as perceived by the user
+  eSelectWord      = 2,
+  eSelectLine      = 3, // previous drawn line in flow.
+  eSelectBeginLine = 4,
+  eSelectEndLine   = 5,
+  eSelectNoAmount  = 6, // just bounce back current offset.
+  eSelectParagraph = 7  // select a "paragraph"
 };
 
 enum nsDirection {
@@ -1298,6 +1309,14 @@ public:
                                PRInt32         aModType) = 0;
 
   /**
+   * When the content states of a content object change, this method is invoked
+   * on the primary frame of that content object.
+   *
+   * @param aStates the changed states
+   */
+  virtual void ContentStatesChanged(nsEventStates aStates) { };
+
+  /**
    * Return how your frame can be split.
    */
   virtual nsSplittableType GetSplittableType() const = 0;
@@ -1999,6 +2018,13 @@ public:
   void InvalidateLayer(const nsRect& aDamageRect, PRUint32 aDisplayItemKey);
 
   /**
+   * Invalidate the area of the parent that's covered by the transformed
+   * visual overflow rect of this frame. Don't depend on the transform style
+   * for this frame, in case that's changed since this frame was painted.
+   */
+  void InvalidateTransformLayer();
+
+  /**
    * Helper function that can be overridden by frame classes. The rectangle
    * (plus aOffsetX/aOffsetY) is relative to this frame.
    * 
@@ -2038,6 +2064,10 @@ public:
    * This flag is useful when, during painting, FrameLayerBuilder discovers that
    * a region of the window needs to be drawn differently, and that region
    * may or may not be contained in the currently painted region.
+   * @param aFlags INVALIDATE_NO_UPDATE_LAYER_TREE: display lists and the
+   * layer tree do not need to be updated. This can be used when the layer
+   * tree has already been updated outside a transaction, e.g. via
+   * ImageContainer::SetCurrentImage.
    */
   enum {
     INVALIDATE_IMMEDIATE = 0x01,
@@ -2048,7 +2078,8 @@ public:
                              INVALIDATE_REASON_SCROLL_REPAINT,
     INVALIDATE_NO_THEBES_LAYERS = 0x10,
     INVALIDATE_ONLY_THEBES_LAYERS = 0x20,
-    INVALIDATE_EXCLUDE_CURRENT_PAINT = 0x40
+    INVALIDATE_EXCLUDE_CURRENT_PAINT = 0x40,
+    INVALIDATE_NO_UPDATE_LAYER_TREE = 0x80
   };
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aOffsetX, nscoord aOffsetY,
@@ -2618,6 +2649,37 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
    */
   virtual void PullOverflowsFromPrevInFlow() {}
 
+  /**
+   * Clear the list of child PresShells generated during the last paint
+   * so that we can begin generating a new one.
+   */  
+  void ClearPresShellsFromLastPaint() { 
+    PaintedPresShellList()->Clear(); 
+  }
+  
+  /**
+   * Flag a child PresShell as painted so that it will get its paint count
+   * incremented during empty transactions.
+   */  
+  void AddPaintedPresShell(nsIPresShell* shell) { 
+    PaintedPresShellList()->AppendElement(do_GetWeakReference(shell)); 
+  }
+  
+  /**
+   * Increment the paint count of all child PresShells that were painted during
+   * the last repaint.
+   */  
+  void UpdatePaintCountForPaintedPresShells() {
+    nsTArray<nsWeakPtr> * list = PaintedPresShellList();
+    for (int i = 0, l = list->Length(); i < l; i++) {
+      nsCOMPtr<nsIPresShell> shell = do_QueryReferent(list->ElementAt(i));
+      
+      if (shell) {
+        shell->IncrementPaintCount();
+      }
+    }
+  }  
+  
 protected:
   // Members
   nsRect           mRect;
@@ -2627,6 +2689,31 @@ protected:
 private:
   nsIFrame*        mNextSibling;  // doubly-linked list of frames
   nsIFrame*        mPrevSibling;  // Do not touch outside SetNextSibling!
+
+  static void DestroyPaintedPresShellList(void* propertyValue) {
+    nsTArray<nsWeakPtr>* list = static_cast<nsTArray<nsWeakPtr>*>(propertyValue);
+    list->Clear();
+    delete list;
+  }
+
+  // Stores weak references to all the PresShells that were painted during
+  // the last paint event so that we can increment their paint count during
+  // empty transactions
+  NS_DECLARE_FRAME_PROPERTY(PaintedPresShellsProperty, DestroyPaintedPresShellList)
+  
+  nsTArray<nsWeakPtr>* PaintedPresShellList() {
+    nsTArray<nsWeakPtr>* list = static_cast<nsTArray<nsWeakPtr>*>(
+      Properties().Get(PaintedPresShellsProperty())
+    );
+    
+    if (!list) {
+      list = new nsTArray<nsWeakPtr>();
+      Properties().Set(PaintedPresShellsProperty(), list);
+    }
+    
+    return list;
+  }
+
 protected:
   nsFrameState     mState;
 
@@ -2672,11 +2759,15 @@ protected:
    * @param  aForward [in] Are we moving forward (or backward) in content order.
    * @param  aOffset [in/out] At what offset into the frame to start looking.
    *         on output - what offset was reached (whether or not we found a place to stop).
+   * @param  aRespectClusters [in] Whether to restrict result to valid cursor locations
+   *         (between grapheme clusters) - default TRUE maintains "normal" behavior,
+   *         FALSE is used for selection by "code unit" (instead of "character")
    * @return PR_TRUE: An appropriate offset was found within this frame,
    *         and is given by aOffset.
    *         PR_FALSE: Not found within this frame, need to try the next frame.
    */
-  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset) = 0;
+  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset,
+                                     PRBool aRespectClusters = PR_TRUE) = 0;
   
   /**
    * Search the frame for the next word boundary

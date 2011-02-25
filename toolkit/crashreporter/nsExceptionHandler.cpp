@@ -193,6 +193,17 @@ static const char kTimeSinceLastCrashParameter[] = "SecondsSinceLastCrash=";
 static const int kTimeSinceLastCrashParameterLen =
                                      sizeof(kTimeSinceLastCrashParameter)-1;
 
+static const char kSysMemoryParameter[] = "SystemMemoryUsePercentage=";
+static const int kSysMemoryParameterLen = sizeof(kSysMemoryParameter)-1;
+
+static const char kTotalVirtualMemoryParameter[] = "TotalVirtualMemory=";
+static const int kTotalVirtualMemoryParameterLen =
+  sizeof(kTotalVirtualMemoryParameter)-1;
+
+static const char kAvailableVirtualMemoryParameter[] = "AvailableVirtualMemory=";
+static const int kAvailableVirtualMemoryParameterLen =
+  sizeof(kAvailableVirtualMemoryParameter)-1;
+
 // this holds additional data sent via the API
 static AnnotationTable* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nsnull;
@@ -327,14 +338,14 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
 {
   bool returnValue = showOSCrashReporter ? false : succeeded;
 
-  XP_CHAR minidumpPath[XP_PATH_MAX];
+  static XP_CHAR minidumpPath[XP_PATH_MAX];
   int size = XP_PATH_MAX;
   XP_CHAR* p = Concat(minidumpPath, dump_path, &size);
   p = Concat(p, XP_PATH_SEPARATOR, &size);
   p = Concat(p, minidump_id, &size);
   Concat(p, dumpFileExtension, &size);
 
-  XP_CHAR extraDataPath[XP_PATH_MAX];
+  static XP_CHAR extraDataPath[XP_PATH_MAX];
   size = XP_PATH_MAX;
   p = Concat(extraDataPath, dump_path, &size);
   p = Concat(p, XP_PATH_SEPARATOR, &size);
@@ -414,6 +425,34 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
         WriteFile(hFile, kTimeSinceLastCrashParameter,
                   kTimeSinceLastCrashParameterLen, &nBytes, NULL);
         WriteFile(hFile, timeSinceLastCrashString, timeSinceLastCrashStringLen,
+                  &nBytes, NULL);
+        WriteFile(hFile, "\n", 1, &nBytes, NULL);
+      }
+      // Try to get some information about memory.
+      MEMORYSTATUSEX statex;
+      statex.dwLength = sizeof(statex);
+      if (GlobalMemoryStatusEx(&statex)) {
+        char buffer[128];
+        int bufferLen;
+        WriteFile(hFile, kSysMemoryParameter,
+                  kSysMemoryParameterLen, &nBytes, NULL);
+        ltoa(statex.dwMemoryLoad, buffer, 10);
+        bufferLen = strlen(buffer);
+        WriteFile(hFile, buffer, bufferLen,
+                  &nBytes, NULL);
+        WriteFile(hFile, "\n", 1, &nBytes, NULL);
+        WriteFile(hFile, kTotalVirtualMemoryParameter,
+                  kTotalVirtualMemoryParameterLen, &nBytes, NULL);
+        _ui64toa(statex.ullTotalVirtual, buffer, 10);
+        bufferLen = strlen(buffer);
+        WriteFile(hFile, buffer, bufferLen,
+                  &nBytes, NULL);
+        WriteFile(hFile, "\n", 1, &nBytes, NULL);
+        WriteFile(hFile, kAvailableVirtualMemoryParameter,
+                  kAvailableVirtualMemoryParameterLen, &nBytes, NULL);
+        _ui64toa(statex.ullAvailVirtual, buffer, 10);
+        bufferLen = strlen(buffer);
+        WriteFile(hFile, buffer, bufferLen,
                   &nBytes, NULL);
         WriteFile(hFile, "\n", 1, &nBytes, NULL);
       }
@@ -612,10 +651,10 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   crashReporterPath = ToNewCString(crashReporterPath_temp);
 #else
   // On Android, we launch using the application package name
-  // instead of a filename, so use MOZ_APP_NAME to do that here.
+  // instead of a filename, so use ANDROID_PACKAGE_NAME to do that here.
   //TODO: don't hardcode org.mozilla here, so other vendors can
   // ship XUL apps with different package names on Android?
-  nsCString package("org.mozilla." MOZ_APP_NAME "/.CrashReporter");
+  nsCString package(ANDROID_PACKAGE_NAME "/.CrashReporter");
   crashReporterPath = ToNewCString(package);
 #endif
 
@@ -678,6 +717,35 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   }
 #endif
 
+#ifdef XP_WIN32
+  MINIDUMP_TYPE minidump_type = MiniDumpNormal;
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  // Try to determine what version of dbghelp.dll we're using.
+  // MinidumpWithFullMemoryInfo is only available in 6.1.x or newer.
+
+  DWORD version_size = GetFileVersionInfoSizeW(L"dbghelp.dll", NULL);
+  if (version_size > 0) {
+    std::vector<BYTE> buffer(version_size);
+    if (GetFileVersionInfoW(L"dbghelp.dll",
+                            0,
+                            version_size,
+                            &buffer[0])) {
+      UINT len;
+      VS_FIXEDFILEINFO* file_info;
+      VerQueryValue(&buffer[0], L"\\", (void**)&file_info, &len);
+      WORD major = HIWORD(file_info->dwFileVersionMS),
+           minor = LOWORD(file_info->dwFileVersionMS),
+           revision = HIWORD(file_info->dwFileVersionLS);
+      if (major > 6 || (major == 6 && minor > 1) ||
+          (major == 6 && minor == 1 && revision >= 7600)) {
+        minidump_type = MiniDumpWithFullMemoryInfo;
+      }
+    }
+  }
+#endif // MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+#endif // XP_WIN32
+
   // now set the exception handler
   gExceptionHandler = new google_breakpad::
     ExceptionHandler(tempPath.get(),
@@ -689,7 +757,10 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
                      MinidumpCallback,
                      nsnull,
 #if defined(XP_WIN32)
-                     google_breakpad::ExceptionHandler::HANDLER_ALL);
+                     google_breakpad::ExceptionHandler::HANDLER_ALL,
+                     minidump_type,
+                     NULL,
+                     NULL);
 #else
                      true
 #if defined(XP_MACOSX)
@@ -700,6 +771,10 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
 
   if (!gExceptionHandler)
     return NS_ERROR_OUT_OF_MEMORY;
+
+#ifdef XP_WIN
+  gExceptionHandler->set_handle_debug_exceptions(true);
+#endif
 
   // store application start time
   char timeString[32];
@@ -1793,6 +1868,9 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
                      MiniDumpNormal,
                      NS_ConvertASCIItoUTF16(crashPipe).BeginReading(),
                      NULL);
+#ifdef XP_WIN
+  gExceptionHandler->set_handle_debug_exceptions(true);
+#endif
 
   // we either do remote or nothing, no fallback to regular crash reporting
   return gExceptionHandler->IsOutOfProcess();
@@ -1935,6 +2013,7 @@ CurrentThreadId()
     if (threads_for_task[i] == mach_thread_self())
       return i;
   }
+  abort();
 #else
 #  error "Unsupported platform"
 #endif

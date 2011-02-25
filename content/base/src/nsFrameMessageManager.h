@@ -184,7 +184,10 @@ class nsScriptCacheCleaner;
 
 struct nsFrameScriptExecutorJSObjectHolder
 {
-  nsFrameScriptExecutorJSObjectHolder(JSObject* aObject) : mObject(aObject) {}
+  nsFrameScriptExecutorJSObjectHolder(JSObject* aObject) : mObject(aObject)
+  { MOZ_COUNT_CTOR(nsFrameScriptExecutorJSObjectHolder); }
+  ~nsFrameScriptExecutorJSObjectHolder()
+  { MOZ_COUNT_DTOR(nsFrameScriptExecutorJSObjectHolder); }
   JSObject* mObject;
 };
 
@@ -193,11 +196,16 @@ class nsFrameScriptExecutor
 public:
   static void Shutdown();
 protected:
-  nsFrameScriptExecutor() : mCx(nsnull) {}
+  nsFrameScriptExecutor() : mCx(nsnull)
+  { MOZ_COUNT_CTOR(nsFrameScriptExecutor); }
+  ~nsFrameScriptExecutor()
+  { MOZ_COUNT_DTOR(nsFrameScriptExecutor); }
   void DidCreateCx();
   // Call this when you want to destroy mCx.
   void DestroyCx();
   void LoadFrameScriptInternal(const nsAString& aURL);
+  static void Traverse(nsFrameScriptExecutor *tmp,
+                       nsCycleCollectionTraversalCallback &cb);
   nsCOMPtr<nsIXPConnectJSObjectHolder> mGlobal;
   JSContext* mCx;
   nsCOMPtr<nsIPrincipal> mPrincipal;

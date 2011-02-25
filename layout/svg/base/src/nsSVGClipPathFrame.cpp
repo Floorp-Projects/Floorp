@@ -290,18 +290,19 @@ nsSVGClipPathFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                                   aAttribute, aModType);
 }
 
-#ifdef DEBUG
 NS_IMETHODIMP
 nsSVGClipPathFrame::Init(nsIContent* aContent,
                          nsIFrame* aParent,
                          nsIFrame* aPrevInFlow)
 {
+#ifdef DEBUG
   nsCOMPtr<nsIDOMSVGClipPathElement> clipPath = do_QueryInterface(aContent);
   NS_ASSERTION(clipPath, "Content is not an SVG clipPath!");
+#endif
 
+  AddStateBits(NS_STATE_SVG_CLIPPATH_CHILD);
   return nsSVGClipPathFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
-#endif /* DEBUG */
 
 nsIAtom *
 nsSVGClipPathFrame::GetType() const

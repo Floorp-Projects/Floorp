@@ -37,16 +37,70 @@
 
 #include "ImageLayerD3D10.h"
 #include "gfxImageSurface.h"
+#include "gfxD2DSurface.h"
+#include "gfxWindowsSurface.h"
 #include "yuv_convert.h"
+#include "../d3d9/Nv3DVUtils.h"
 
 namespace mozilla {
 namespace layers {
 
 using mozilla::MutexAutoLock;
 
-ImageContainerD3D10::ImageContainerD3D10(LayerManagerD3D10 *aManager)
-  : ImageContainer(aManager)
-  , mDevice(aManager->device())
+static already_AddRefed<ID3D10Texture2D>
+SurfaceToTexture(ID3D10Device *aDevice,
+                 gfxASurface *aSurface,
+                 const gfxIntSize &aSize)
+{
+  if (aSurface && aSurface->GetType() == gfxASurface::SurfaceTypeD2D) {
+    void *data = aSurface->GetData(&gKeyD3D10Texture);
+    if (data) {
+      nsRefPtr<ID3D10Texture2D> texture = static_cast<ID3D10Texture2D*>(data);
+      ID3D10Device *dev;
+      texture->GetDevice(&dev);
+      if (dev == aDevice) {
+        return texture.forget();
+      }
+    }
+  }
+
+  nsRefPtr<gfxImageSurface> imageSurface = aSurface->GetAsImageSurface();
+
+  if (!imageSurface) {
+    imageSurface = new gfxImageSurface(aSize,
+                                       gfxASurface::ImageFormatARGB32);
+    
+    nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
+    context->SetSource(aSurface);
+    context->SetOperator(gfxContext::OPERATOR_SOURCE);
+    context->Paint();
+  }
+
+  D3D10_SUBRESOURCE_DATA data;
+  
+  CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM,
+                             imageSurface->GetSize().width,
+                             imageSurface->GetSize().height,
+                             1, 1);
+  desc.Usage = D3D10_USAGE_IMMUTABLE;
+  
+  data.pSysMem = imageSurface->Data();
+  data.SysMemPitch = imageSurface->Stride();
+
+  nsRefPtr<ID3D10Texture2D> texture;
+  HRESULT hr = aDevice->CreateTexture2D(&desc, &data, getter_AddRefs(texture));
+
+  if (FAILED(hr)) {
+    LayerManagerD3D10::ReportFailure(NS_LITERAL_CSTRING("Failed to create texture for image surface"),
+                                     hr);
+  }
+
+  return texture.forget();
+}
+
+ImageContainerD3D10::ImageContainerD3D10(ID3D10Device1 *aDevice)
+  : ImageContainer(nsnull)
+  , mDevice(aDevice)
   , mActiveImageLock("mozilla.layers.ImageContainerD3D10.mActiveImageLock")
 {
 }
@@ -134,7 +188,9 @@ ImageContainerD3D10::GetCurrentSize()
 PRBool
 ImageContainerD3D10::SetLayerManager(LayerManager *aManager)
 {
-  // we can't do anything here for now
+  if (aManager->GetBackendType() == LayerManager::LAYERS_D3D10) {
+    return PR_TRUE;
+  }
   return PR_FALSE;
 }
 
@@ -152,17 +208,95 @@ ImageLayerD3D10::RenderLayer()
   }
 
   nsRefPtr<Image> image = GetContainer()->GetCurrentImage();
+  if (!image) {
+    return;
+  }
 
   SetEffectTransformAndOpacity();
 
   ID3D10EffectTechnique *technique;
 
-  if (image->GetFormat() == Image::PLANAR_YCBCR) {
+  if (GetContainer()->GetBackendType() != LayerManager::LAYERS_D3D10 ||
+      image->GetFormat() == Image::CAIRO_SURFACE)
+  {
+    gfxIntSize size;
+    bool hasAlpha;
+    nsRefPtr<ID3D10ShaderResourceView> srView;
+
+    if (GetContainer()->GetBackendType() != LayerManager::LAYERS_D3D10)
+    {
+      nsRefPtr<gfxASurface> surf = GetContainer()->GetCurrentAsSurface(&size);
+      
+      nsRefPtr<ID3D10Texture2D> texture = SurfaceToTexture(device(), surf, size);
+
+      if (!texture) {
+        NS_WARNING("Failed to create texture for surface.");
+        return;
+      }
+      
+      hasAlpha = surf->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
+      
+      device()->CreateShaderResourceView(texture, NULL, getter_AddRefs(srView));
+    } else {
+      ImageContainerD3D10 *container =
+        static_cast<ImageContainerD3D10*>(GetContainer());
+
+      if (container->device() != device()) {
+        container->SetDevice(device());
+      }
+
+      // image->GetFormat() == Image::CAIRO_SURFACE
+      CairoImageD3D10 *cairoImage =
+        static_cast<CairoImageD3D10*>(image.get());
+      
+      if (cairoImage->mDevice != device()) {
+        // This shader resource view was for an old device! Can't draw that
+        // now.
+        return;
+      }
+
+      srView = cairoImage->mSRView;
+      hasAlpha = cairoImage->mHasAlpha;
+      size = cairoImage->mSize;
+    }
+
+    if (hasAlpha) {
+      if (mFilter == gfxPattern::FILTER_NEAREST) {
+        technique = effect()->GetTechniqueByName("RenderRGBALayerPremulPoint");
+      } else {
+        technique = effect()->GetTechniqueByName("RenderRGBALayerPremul");
+      }
+    } else {
+      if (mFilter == gfxPattern::FILTER_NEAREST) {
+        technique = effect()->GetTechniqueByName("RenderRGBLayerPremulPoint");
+      } else {
+        technique = effect()->GetTechniqueByName("RenderRGBLayerPremul");
+      }
+    }
+
+    if (srView) {
+      effect()->GetVariableByName("tRGB")->AsShaderResource()->SetResource(srView);
+    }
+
+    effect()->GetVariableByName("vLayerQuad")->AsVector()->SetFloatVector(
+      ShaderConstantRectD3D10(
+        (float)0,
+        (float)0,
+        (float)size.width,
+        (float)size.height)
+      );
+  } else if (image->GetFormat() == Image::PLANAR_YCBCR) {
     PlanarYCbCrImageD3D10 *yuvImage =
       static_cast<PlanarYCbCrImageD3D10*>(image.get());
 
     if (!yuvImage->HasData()) {
       return;
+    }
+
+    if (yuvImage->mDevice != device()) {
+        // These shader resources were created for an old device! Can't draw
+        // that here.
+        return;
     }
 
     // TODO: At some point we should try to deal with mFilter here, you don't
@@ -176,33 +310,45 @@ ImageLayerD3D10::RenderLayer()
     effect()->GetVariableByName("tCb")->AsShaderResource()->SetResource(yuvImage->mCbView);
     effect()->GetVariableByName("tCr")->AsShaderResource()->SetResource(yuvImage->mCrView);
 
+    /*
+     * Send 3d control data and metadata to NV3DVUtils
+     */
+    if (GetNv3DVUtils()) {
+      Nv_Stereo_Mode mode;
+      switch (yuvImage->mData.mStereoMode) {
+      case STEREO_MODE_LEFT_RIGHT:
+        mode = NV_STEREO_MODE_LEFT_RIGHT;
+        break;
+      case STEREO_MODE_RIGHT_LEFT:
+        mode = NV_STEREO_MODE_RIGHT_LEFT;
+        break;
+      case STEREO_MODE_BOTTOM_TOP:
+        mode = NV_STEREO_MODE_BOTTOM_TOP;
+        break;
+      case STEREO_MODE_TOP_BOTTOM:
+        mode = NV_STEREO_MODE_TOP_BOTTOM;
+        break;
+      case STEREO_MODE_MONO:
+        mode = NV_STEREO_MODE_MONO;
+        break;
+      }
+      
+      // Send control data even in mono case so driver knows to leave stereo mode.
+      GetNv3DVUtils()->SendNv3DVControl(mode, true, FIREFOX_3DV_APP_HANDLE);
+
+      if (yuvImage->mData.mStereoMode != STEREO_MODE_MONO) {
+        // Dst resource is optional
+        GetNv3DVUtils()->SendNv3DVMetaData((unsigned int)yuvImage->mSize.width, 
+                                           (unsigned int)yuvImage->mSize.height, (HANDLE)(yuvImage->mYTexture), (HANDLE)(NULL));
+      }
+    }
+
     effect()->GetVariableByName("vLayerQuad")->AsVector()->SetFloatVector(
       ShaderConstantRectD3D10(
         (float)0,
         (float)0,
         (float)yuvImage->mSize.width,
         (float)yuvImage->mSize.height)
-      );
-  } else if (image->GetFormat() == Image::CAIRO_SURFACE) {
-    CairoImageD3D10 *cairoImage =
-      static_cast<CairoImageD3D10*>(image.get());
-
-    if (mFilter == gfxPattern::FILTER_NEAREST) {
-      technique = effect()->GetTechniqueByName("RenderRGBALayerPremulPoint");
-    } else {
-      technique = effect()->GetTechniqueByName("RenderRGBALayerPremul");
-    }
-
-    if (cairoImage->mSRView) {
-      effect()->GetVariableByName("tRGB")->AsShaderResource()->SetResource(cairoImage->mSRView);
-    }
-
-    effect()->GetVariableByName("vLayerQuad")->AsVector()->SetFloatVector(
-      ShaderConstantRectD3D10(
-        (float)0,
-        (float)0,
-        (float)cairoImage->mSize.width,
-        (float)cairoImage->mSize.height)
       );
   }
 
@@ -356,37 +502,47 @@ void
 CairoImageD3D10::SetData(const CairoImage::Data &aData)
 {
   mSize = aData.mSize;
+  NS_ASSERTION(aData.mSurface->GetContentType() != gfxASurface::CONTENT_ALPHA,
+               "Invalid content type passed to CairoImageD3D10.");
 
-  nsRefPtr<gfxImageSurface> imageSurface;
+  mTexture = SurfaceToTexture(mDevice, aData.mSurface, mSize);
 
-  if (aData.mSurface->GetType() == gfxASurface::SurfaceTypeImage) {
-    imageSurface = static_cast<gfxImageSurface*>(aData.mSurface);
-  } else {
-    imageSurface = new gfxImageSurface(aData.mSize,
-                                       gfxASurface::ImageFormatARGB32);
-    
-    nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
-    context->SetSource(aData.mSurface);
-    context->SetOperator(gfxContext::OPERATOR_SOURCE);
-    context->Paint();
+  if (!mTexture) {
+    NS_WARNING("Failed to create texture for CairoImage.");
+    return;
   }
 
-  D3D10_SUBRESOURCE_DATA data;
-  
-  CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, mSize.width, mSize.height, 1, 1);
-  desc.Usage = D3D10_USAGE_IMMUTABLE;
-  
-  data.pSysMem = imageSurface->Data();
-  data.SysMemPitch = imageSurface->Stride();
+  if (aData.mSurface->GetContentType() == gfxASurface::CONTENT_COLOR) {
+    mHasAlpha = false;
+  } else {
+    mHasAlpha = true;
+  }
 
-  mDevice->CreateTexture2D(&desc, &data, getter_AddRefs(mTexture));
   mDevice->CreateShaderResourceView(mTexture, NULL, getter_AddRefs(mSRView));
 }
 
 already_AddRefed<gfxASurface>
 CairoImageD3D10::GetAsSurface()
 {
-  return nsnull;
+  nsRefPtr<ID3D10Texture2D> surfTexture;
+
+  // Make a copy of the texture since our current texture is not suitable for
+  // drawing with Direct2D because it is immutable and cannot be bound as a
+  // render target.
+  D3D10_TEXTURE2D_DESC texDesc;
+  mTexture->GetDesc(&texDesc);
+  texDesc.Usage = D3D10_USAGE_DEFAULT;
+  texDesc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
+  texDesc.MiscFlags = D3D10_RESOURCE_MISC_GDI_COMPATIBLE;
+
+  mDevice->CreateTexture2D(&texDesc, NULL, getter_AddRefs(surfTexture));
+
+  mDevice->CopyResource(surfTexture, mTexture);
+
+  nsRefPtr<gfxASurface> surf =
+    new gfxD2DSurface(surfTexture, mHasAlpha ? gfxASurface::CONTENT_COLOR_ALPHA :
+                                               gfxASurface::CONTENT_COLOR);
+  return surf.forget();
 }
 
 } /* layers */

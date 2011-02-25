@@ -1,7 +1,7 @@
 this.watch("x", Object.create)
 try {
   (function() {
-    __defineGetter__("x",
+    this.__defineGetter__("x",
     function() {
       return this
     })

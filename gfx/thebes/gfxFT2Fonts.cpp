@@ -62,6 +62,8 @@
 #include FT_TRUETYPE_TAGS_H
 #include FT_TRUETYPE_TABLES_H
 #include "gfxFontUtils.h"
+#include "gfxHarfBuzzShaper.h"
+#include "gfxUnicodeProperties.h"
 #include "gfxAtoms.h"
 #include "nsTArray.h"
 #include "nsUnicodeRange.h"
@@ -266,7 +268,7 @@ FontEntry::ReadCMAP()
     NS_ENSURE_TRUE(status == 0, NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(len != 0, NS_ERROR_FAILURE);
 
-    nsAutoTArray<PRUint8,16384> buffer;
+    AutoFallibleTArray<PRUint8,16384> buffer;
     if (!buffer.AppendElements(len)) {
         return NS_ERROR_FAILURE;
     }
@@ -399,61 +401,6 @@ gfxFT2FontGroup::Copy(const gfxFontStyle *aStyle)
 {
     return new gfxFT2FontGroup(mFamilies, aStyle, nsnull);
 }
-
-/**
- * We use this to append an LTR or RTL Override character to the start of the
- * string. This forces Pango to honour our direction even if there are neutral
- * characters in the string.
- */
-static PRInt32 AppendDirectionalIndicatorUTF8(PRBool aIsRTL, nsACString& aString)
-{
-    static const PRUnichar overrides[2][2] = { { 0x202d, 0 }, { 0x202e, 0 }}; // LRO, RLO
-    AppendUTF16toUTF8(overrides[aIsRTL], aString);
-    return 3; // both overrides map to 3 bytes in UTF8
-}
-
-gfxTextRun *gfxFT2FontGroup::MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
-                                        const Parameters* aParams, PRUint32 aFlags)
-{
-    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
-    if (!textRun)
-        return nsnull;
-
-    mString.Assign(nsDependentSubstring(aString, aString + aLength));
-
-    InitTextRun(textRun);
-
-    textRun->FetchGlyphExtents(aParams->mContext);
-
-    return textRun;
-}
-
-gfxTextRun *gfxFT2FontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
-                                        const Parameters *aParams, PRUint32 aFlags)
-{
-    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
-    NS_ASSERTION(aFlags & TEXT_IS_8BIT, "8bit should have been set");
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
-    if (!textRun)
-        return nsnull;
-
-    const char *chars = reinterpret_cast<const char *>(aString);
-
-    mString.Assign(NS_ConvertASCIItoUTF16(nsDependentCSubstring(chars, chars + aLength)));
-
-    InitTextRun(textRun);
-
-    textRun->FetchGlyphExtents(aParams->mContext);
-
-    return textRun;
-}
-
-void gfxFT2FontGroup::InitTextRun(gfxTextRun *aTextRun)
-{
-    CreateGlyphRunsFT(aTextRun);
-}
-
 
 // Helper function to return the leading UTF-8 character in a char pointer
 // as 32bit number. Also sets the length of the current character (i.e. the
@@ -720,36 +667,50 @@ gfxFT2FontGroup::WhichSystemFontSupportsChar(PRUint32 aCh)
     return nsnull;
 }
 
-void gfxFT2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun)
-{
-    ComputeRanges(mRanges, mString.get(), 0, mString.Length(), 0);
+/**
+ * gfxFT2Font
+ */
 
-    PRUint32 offset = 0;
-    for (PRUint32 i = 0; i < mRanges.Length(); ++i) {
-        const gfxTextRange& range = mRanges[i];
-        PRUint32 rangeLength = range.Length();
-        gfxFT2Font *font = static_cast<gfxFT2Font *>(range.font ? range.font.get() : GetFontAt(0));
-        AddRange(aTextRun, font, mString.get(), offset, rangeLength);
-        offset += rangeLength;
+PRBool
+gfxFT2Font::InitTextRun(gfxContext *aContext,
+                        gfxTextRun *aTextRun,
+                        const PRUnichar *aString,
+                        PRUint32 aRunStart,
+                        PRUint32 aRunLength,
+                        PRInt32 aRunScript,
+                        PRBool aPreferPlatformShaping)
+{
+    PRBool ok = PR_FALSE;
+
+    if (gfxPlatform::GetPlatform()->UseHarfBuzzLevel() >=
+        gfxUnicodeProperties::ScriptShapingLevel(aRunScript))
+    {
+        ok = mHarfBuzzShaper->InitTextRun(aContext, aTextRun, aString,
+                                          aRunStart, aRunLength, aRunScript);
     }
 
+    if (!ok) {
+        AddRange(aTextRun, aString, aRunStart, aRunLength);
+    }
+
+    return PR_TRUE;
 }
 
 void
-gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnichar *str, PRUint32 offset, PRUint32 len)
+gfxFT2Font::AddRange(gfxTextRun *aTextRun, const PRUnichar *str, PRUint32 offset, PRUint32 len)
 {
     const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
     // we'll pass this in/figure it out dynamically, but at this point there can be only one face.
-    gfxFT2LockedFace faceLock(font);
+    gfxFT2LockedFace faceLock(this);
     FT_Face face = faceLock.get();
 
     gfxTextRun::CompressedGlyph g;
 
     const gfxFT2Font::CachedGlyphData *cgd = nsnull, *cgdNext = nsnull;
 
-    FT_UInt spaceGlyph = font->GetSpaceGlyph();
+    FT_UInt spaceGlyph = GetSpaceGlyph();
 
-    aTextRun->AddGlyphRun(font, offset);
+    aTextRun->AddGlyphRun(this, offset);
     for (PRUint32 i = 0; i < len; i++) {
         PRUint32 ch = str[offset + i];
 
@@ -759,13 +720,13 @@ gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnicha
             continue;
         }
 
-        NS_ASSERTION(!IsInvalidChar(ch), "Invalid char detected");
+        NS_ASSERTION(!gfxFontGroup::IsInvalidChar(ch), "Invalid char detected");
 
         if (cgdNext) {
             cgd = cgdNext;
             cgdNext = nsnull;
         } else {
-            cgd = font->GetGlyphDataForChar(ch);
+            cgd = GetGlyphDataForChar(ch);
         }
 
         FT_UInt gid = cgd->glyphIndex;
@@ -783,7 +744,7 @@ gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnicha
             if (FT_HAS_KERNING(face) && i + 1 < len) {
                 chNext = str[offset + i + 1];
                 if (chNext != 0) {
-                    cgdNext = font->GetGlyphDataForChar(chNext);
+                    cgdNext = GetGlyphDataForChar(chNext);
                     gidNext = cgdNext->glyphIndex;
                     if (gidNext && gidNext != spaceGlyph)
                         lsbDeltaNext = cgdNext->lsbDelta;
@@ -834,9 +795,6 @@ gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnicha
     }
 }
 
-/**
- * gfxFT2Font
- */
 gfxFT2Font::gfxFT2Font(cairo_scaled_font_t *aCairoFont,
                        FontEntry *aFontEntry,
                        const gfxFontStyle *aFontStyle)
@@ -845,6 +803,8 @@ gfxFT2Font::gfxFT2Font(cairo_scaled_font_t *aCairoFont,
     NS_ASSERTION(mFontEntry, "Unable to find font entry for font.  Something is whack.");
 
     mCharGlyphCache.Init(64);
+
+    mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
 }
 
 gfxFT2Font::~gfxFT2Font()

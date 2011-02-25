@@ -188,7 +188,7 @@ NS_IMPL_ISUPPORTS8(imgRequest,
 
 imgRequest::imgRequest() : 
   mCacheId(0), mValidator(nsnull), mImageSniffers("image-sniffing-services"),
-  mDecodeRequested(PR_FALSE), mIsMultiPartChannel(PR_FALSE),
+  mWindowId(0), mDecodeRequested(PR_FALSE), mIsMultiPartChannel(PR_FALSE),
   mGotData(PR_FALSE), mIsInCache(PR_FALSE)
 {}
 
@@ -241,19 +241,15 @@ nsresult imgRequest::Init(nsIURI *aURI,
 
   // Register our pref observer if it hasn't been done yet.
   if (NS_UNLIKELY(!gRegisteredPrefObserver)) {
-    imgRequestPrefObserver *observer = new imgRequestPrefObserver();
-    if (observer) {
-      nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-      if (branch) {
-        branch->AddObserver(DISCARD_PREF, observer, PR_FALSE);
-        branch->AddObserver(DECODEONDRAW_PREF, observer, PR_FALSE);
-        branch->AddObserver(DISCARD_TIMEOUT_PREF, observer, PR_FALSE);
-        ReloadPrefs(branch);
-        gRegisteredPrefObserver = PR_TRUE;
-      }
+    nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (branch) {
+      nsCOMPtr<nsIObserver> observer(new imgRequestPrefObserver());
+      branch->AddObserver(DISCARD_PREF, observer, PR_FALSE);
+      branch->AddObserver(DECODEONDRAW_PREF, observer, PR_FALSE);
+      branch->AddObserver(DISCARD_TIMEOUT_PREF, observer, PR_FALSE);
+      ReloadPrefs(branch);
+      gRegisteredPrefObserver = PR_TRUE;
     }
-    else
-      delete observer;
   }
 
   return NS_OK;
@@ -1025,6 +1021,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     } else {
       mImage = new RasterImage(mStatusTracker.forget());
     }
+    mImage->SetWindowID(mWindowId);
     imageType = mImage->GetType();
 
     // Notify any imgRequestProxys that are observing us that we have an Image.

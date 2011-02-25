@@ -16,19 +16,21 @@
       const name = window.location.pathname;
       const description = "My Test Database";
 
-      let request = moz_indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = request.result;
 
       request = db.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let objectStore = db.createObjectStore("foo", "");
+      ok(event.target === request, "Good event target");
+
+      let objectStore = db.createObjectStore("foo", { keyPath: "" });
       let key = 10;
 
       request = objectStore.add({}, key);
@@ -36,7 +38,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, key, "Correct key");
+      is(request.result, key, "Correct key");
 
       request = objectStore.add({}, key);
       request.onerror = new ExpectError(IDBDatabaseException.CONSTRAINT_ERR);

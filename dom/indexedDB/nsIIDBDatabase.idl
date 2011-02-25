@@ -55,7 +55,7 @@ interface nsIDOMEventListener;
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBDatabase
  * for more information.
  */
-[scriptable, uuid(a4a707af-f5bb-45e4-a615-7616b03a5edc)]
+[scriptable, uuid(42b38d02-1a29-45f0-99ef-04fd5b441270)]
 interface nsIIDBDatabase : nsISupports
 {
   readonly attribute DOMString name;
@@ -64,10 +64,18 @@ interface nsIIDBDatabase : nsISupports
 
   readonly attribute nsIDOMDOMStringList objectStoreNames;
 
+  /**
+   * Optional arguments:
+   *   - keyPath (string):
+   *       Specifies key path on objects in the objectStore. Defaults to no key
+   *       path.
+   *   - autoIncrement (boolean):
+   *       Specifies if the objectStore has a key generator. Defaults to false.
+   */
+  [implicit_jscontext]
   nsIIDBObjectStore
   createObjectStore(in AString name,
-                    in AString keyPath,
-                    [optional /* false */] in boolean autoIncrement);
+                    [optional /* none */] in jsval options);
 
   void
   deleteObjectStore(in AString name);

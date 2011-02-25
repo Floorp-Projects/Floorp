@@ -53,6 +53,7 @@
 #include "nsHashKeys.h"
 #include "nsRect.h"
 #include "gfxASurface.h"
+#include "ImageLayers.h"
 #ifdef MOZ_X11
 class gfxXlibSurface;
 #endif
@@ -68,6 +69,7 @@ class PluginInstanceParent : public PPluginInstanceParent
     friend class PluginModuleParent;
     friend class BrowserStreamParent;
     friend class PluginStreamParent;
+    friend class StreamNotifyParent;
 
 public:
     PluginInstanceParent(PluginModuleParent* parent,
@@ -175,6 +177,14 @@ public:
              const SurfaceDescriptor& newSurface,
              SurfaceDescriptor* prevSurface);
 
+    virtual PPluginSurfaceParent*
+    AllocPPluginSurface(const WindowsSharedMemoryHandle& handle,
+                        const gfxIntSize& size,
+                        const bool& transparent);
+
+    virtual bool
+    DeallocPPluginSurface(PPluginSurfaceParent* s);
+
     virtual bool
     AnswerNPN_PushPopupsEnabledState(const bool& aState);
 
@@ -212,10 +222,16 @@ public:
                            double *destY,
                            bool *result);
 
+    NS_OVERRIDE virtual bool
+    RecvNegotiatedCarbon();
+
     NPError NPP_SetWindow(const NPWindow* aWindow);
 
     NPError NPP_GetValue(NPPVariable variable, void* retval);
     NPError NPP_SetValue(NPNVariable variable, void* value);
+
+    void NPP_URLRedirectNotify(const char* url, int32_t status,
+                               void* notifyData);
 
     NPError NPP_NewStream(NPMIMEType type, NPStream* stream,
                           NPBool seekable, uint16_t* stype);
@@ -262,8 +278,31 @@ public:
 
     nsresult AsyncSetWindow(NPWindow* window);
     nsresult GetSurface(gfxASurface** aSurface);
+    nsresult GetImage(mozilla::layers::ImageContainer* aContainer, mozilla::layers::Image** aImage);
+#ifdef XP_MACOSX
+    nsresult IsRemoteDrawingCoreAnimation(PRBool *aDrawing);
+#endif
+    nsresult SetBackgroundUnknown();
+    nsresult BeginUpdateBackground(const nsIntRect& aRect,
+                                   gfxContext** aCtx);
+    nsresult EndUpdateBackground(gfxContext* aCtx,
+                                 const nsIntRect& aRect);
 
 private:
+    // Create an appropriate platform surface for a background of size
+    // |aSize|.  Return true if successful.
+    bool CreateBackground(const nsIntSize& aSize);
+    void DestroyBackground();
+    SurfaceDescriptor BackgroundDescriptor() /*const*/;
+
+    NS_OVERRIDE
+    virtual PPluginBackgroundDestroyerParent*
+    AllocPPluginBackgroundDestroyer();
+
+    NS_OVERRIDE
+    virtual bool
+    DeallocPPluginBackgroundDestroyer(PPluginBackgroundDestroyerParent* aActor);
+
     // Quirks mode support for various plugin mime types
     enum PluginQuirks {
         // OSX: Don't use the refresh timer for plug-ins
@@ -320,6 +359,16 @@ private:
 
     // ObjectFrame layer wrapper
     nsRefPtr<gfxASurface>    mFrontSurface;
+    // For windowless+transparent instances, this surface contains a
+    // "pretty recent" copy of the pixels under its <object> frame.
+    // On the plugin side, we use this surface to avoid doing alpha
+    // recovery when possible.  This surface is created and owned by
+    // the browser, but a "read-only" reference is sent to the plugin.
+    //
+    // We have explicitly chosen not to provide any guarantees about
+    // the consistency of the pixels in |mBackground|.  A plugin may
+    // be able to observe partial updates to the background.
+    nsRefPtr<gfxASurface>    mBackground;
 };
 
 

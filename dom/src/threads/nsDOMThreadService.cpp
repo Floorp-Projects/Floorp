@@ -46,8 +46,6 @@
 #include "nsIConsoleService.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNavigator.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIEventTarget.h"
 #include "nsIJSContextStack.h"
 #include "nsIJSRuntimeService.h"
@@ -65,6 +63,7 @@
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
 #include "nsDeque.h"
+#include "nsGlobalWindow.h"
 #include "nsIClassInfoImpl.h"
 #include "nsStringBuffer.h"
 #include "nsThreadUtils.h"
@@ -156,6 +155,47 @@ public:
 private:
   JSContext* mCx;
 };
+
+class nsDestroyJSContextRunnable : public nsIRunnable
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  nsDestroyJSContextRunnable(JSContext* aCx)
+  : mCx(aCx)
+  {
+    NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+    NS_ASSERTION(aCx, "Null pointer!");
+    NS_ASSERTION(!JS_GetGlobalObject(aCx), "Should not have a global!");
+
+    // We're removing this context from this thread. Let the JS engine know.
+    JS_ClearContextThread(aCx);
+  }
+
+  NS_IMETHOD Run()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+    // We're about to use this context on this thread. Let the JS engine know.
+    if (!!JS_SetContextThread(mCx)) {
+      NS_WARNING("JS_SetContextThread failed!");
+    }
+
+    if (nsContentUtils::XPConnect()) {
+      nsContentUtils::XPConnect()->ReleaseJSContext(mCx, PR_TRUE);
+    }
+    else {
+      NS_WARNING("Failed to release JSContext!");
+    }
+
+    return NS_OK;
+  }
+
+private:
+  JSContext* mCx;
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsDestroyJSContextRunnable, nsIRunnable)
 
 /**
  * This class is used as to post an error to the worker's outer handler.
@@ -597,6 +637,8 @@ DOMWorkerErrorReporter(JSContext* aCx,
     return;
   }
 
+  nsCOMPtr<nsIScriptError2> scriptError2(do_QueryInterface(scriptError));
+
   nsAutoString message, filename, line;
   PRUint32 lineNumber, columnNumber, flags, errorNumber;
 
@@ -620,8 +662,11 @@ DOMWorkerErrorReporter(JSContext* aCx,
     message.AssignWithConversion(aMessage);
   }
 
-  rv = scriptError->Init(message.get(), filename.get(), line.get(), lineNumber,
-                         columnNumber, flags, "DOM Worker javascript");
+  rv = scriptError2->InitWithWindowID(message.get(), filename.get(), line.get(),
+                                      lineNumber, columnNumber, flags,
+                                      "DOM Worker javascript",
+                                      worker->Pool()->WindowID());
+
   if (NS_FAILED(rv)) {
     return;
   }
@@ -751,6 +796,9 @@ nsDOMThreadService::Init()
   success = mPools.Init();
   NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
+  success = mThreadsafeContractIDs.Init();
+  NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
+
   success = mJSContexts.SetCapacity(THREADPOOL_THREAD_CAP);
   NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
@@ -837,6 +885,9 @@ nsDOMThreadService::Cleanup()
   // This will either be called at 'xpcom-shutdown' or earlier if the call to
   // Init fails somehow. We can therefore assume that all services will still
   // be available here.
+
+  // Cancel all workers that weren't tied to a window.
+  CancelWorkersForGlobal(nsnull);
 
   {
     nsAutoMonitor mon(mMonitor);
@@ -1028,7 +1079,9 @@ nsDOMThreadService::CreateJSContext()
   JS_SetNativeStackQuota(cx, 256*1024);
   JS_SetScriptStackQuota(cx, 100*1024*1024);
 
-  JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_JIT | JSOPTION_ANONFUNFIX);
+  JS_SetOptions(cx,
+    JS_GetOptions(cx) | JSOPTION_METHODJIT | JSOPTION_JIT |
+    JSOPTION_PROFILING | JSOPTION_ANONFUNFIX);
   JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 1 * 1024 * 1024);
 
   return cx.forget();
@@ -1038,8 +1091,6 @@ already_AddRefed<nsDOMWorkerPool>
 nsDOMThreadService::GetPoolForGlobal(nsIScriptGlobalObject* aGlobalObject,
                                      PRBool aRemove)
 {
-  NS_ASSERTION(aGlobalObject, "Null pointer!");
-
   nsAutoMonitor mon(mMonitor);
 
   nsRefPtr<nsDOMWorkerPool> pool;
@@ -1112,8 +1163,6 @@ nsDOMThreadService::RescheduleSuspendedWorkerForPool(nsDOMWorkerPool* aPool)
 void
 nsDOMThreadService::CancelWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject)
 {
-  NS_ASSERTION(aGlobalObject, "Null pointer!");
-
   nsRefPtr<nsDOMWorkerPool> pool = GetPoolForGlobal(aGlobalObject, PR_TRUE);
   if (pool) {
     pool->Cancel();
@@ -1209,6 +1258,43 @@ nsDOMThreadService::ChangeThreadPoolMaxThreads(PRInt16 aDelta)
   }
 
   return NS_OK;
+}
+
+void
+nsDOMThreadService::NoteThreadsafeContractId(const nsACString& aContractId,
+                                             PRBool aIsThreadsafe)
+{
+  NS_ASSERTION(!aContractId.IsEmpty(), "Empty contract id!");
+
+  nsAutoMonitor mon(mMonitor);
+
+#ifdef DEBUG
+  {
+    PRBool isThreadsafe;
+    if (mThreadsafeContractIDs.Get(aContractId, &isThreadsafe)) {
+      NS_ASSERTION(aIsThreadsafe == isThreadsafe, "Inconsistent threadsafety!");
+    }
+  }
+#endif
+
+  if (!mThreadsafeContractIDs.Put(aContractId, aIsThreadsafe)) {
+    NS_WARNING("Out of memory!");
+  }
+}
+
+ThreadsafeStatus
+nsDOMThreadService::GetContractIdThreadsafeStatus(const nsACString& aContractId)
+{
+  NS_ASSERTION(!aContractId.IsEmpty(), "Empty contract id!");
+
+  nsAutoMonitor mon(mMonitor);
+
+  PRBool isThreadsafe;
+  if (mThreadsafeContractIDs.Get(aContractId, &isThreadsafe)) {
+    return isThreadsafe ? Threadsafe : NotThreadsafe;
+  }
+
+  return Unknown;
 }
 
 // static
@@ -1351,7 +1437,14 @@ nsDOMThreadService::OnThreadShuttingDown()
 
     gThreadJSContextStack->SetSafeJSContext(nsnull);
 
-    nsContentUtils::XPConnect()->ReleaseJSContext(cx, PR_TRUE);
+    // The cycle collector may be running on the main thread. If so we cannot
+    // simply destroy this context. Instead we proxy the context destruction to
+    // the main thread. If that fails somehow then we simply leak the context.
+    nsCOMPtr<nsIRunnable> runnable = new nsDestroyJSContextRunnable(cx);
+
+    if (NS_FAILED(NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL))) {
+      NS_WARNING("Failed to dispatch release runnable!");
+    }
   }
 
   return NS_OK;
@@ -1362,9 +1455,8 @@ nsDOMThreadService::RegisterWorker(nsDOMWorker* aWorker,
                                    nsIScriptGlobalObject* aGlobalObject)
 {
   NS_ASSERTION(aWorker, "Null pointer!");
-  NS_ASSERTION(aGlobalObject, "Null pointer!");
 
-  if (NS_IsMainThread()) {
+  if (aGlobalObject && NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindow> domWindow(do_QueryInterface(aGlobalObject));
     NS_ENSURE_TRUE(domWindow, NS_ERROR_NO_INTERFACE);
 
@@ -1397,36 +1489,32 @@ nsDOMThreadService::RegisterWorker(nsDOMWorker* aWorker,
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
     if (!mNavigatorStringsLoaded) {
-      nsCOMPtr<nsIDOMWindowInternal> internal(do_QueryInterface(aGlobalObject));
-      NS_ENSURE_TRUE(internal, NS_ERROR_NO_INTERFACE);
-
-      nsCOMPtr<nsIDOMNavigator> navigator;
-      rv = internal->GetNavigator(getter_AddRefs(navigator));
+      rv = NS_GetNavigatorAppName(mAppName);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = navigator->GetAppName(mAppName);
+      rv = NS_GetNavigatorAppVersion(mAppVersion);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = navigator->GetAppVersion(mAppVersion);
+      rv = NS_GetNavigatorPlatform(mPlatform);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = navigator->GetPlatform(mPlatform);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = navigator->GetUserAgent(mUserAgent);
+      rv = NS_GetNavigatorUserAgent(mUserAgent);
       NS_ENSURE_SUCCESS(rv, rv);
 
       mNavigatorStringsLoaded = PR_TRUE;
     }
 
-    nsCOMPtr<nsPIDOMWindow> domWindow(do_QueryInterface(aGlobalObject));
-    NS_ENSURE_TRUE(domWindow, NS_ERROR_NO_INTERFACE);
+    nsCOMPtr<nsIDocument> document;
+    if (aGlobalObject) {
+      nsCOMPtr<nsPIDOMWindow> domWindow(do_QueryInterface(aGlobalObject));
+      NS_ENSURE_TRUE(domWindow, NS_ERROR_NO_INTERFACE);
 
-    nsIDOMDocument* domDocument = domWindow->GetExtantDocument();
-    NS_ENSURE_STATE(domDocument);
+      nsIDOMDocument* domDocument = domWindow->GetExtantDocument();
+      NS_ENSURE_STATE(domDocument);
 
-    nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
-    NS_ENSURE_STATE(document);
+      document = do_QueryInterface(domDocument);
+      NS_ENSURE_STATE(document);
+    }
 
     pool = new nsDOMWorkerPool(aGlobalObject, document);
     NS_ENSURE_TRUE(pool, NS_ERROR_OUT_OF_MEMORY);

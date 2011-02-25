@@ -40,6 +40,7 @@
 #ifdef MOZ_IPC
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/unused.h"
 #endif
 #include "nsPermissionManager.h"
 #include "nsPermission.h"
@@ -65,6 +66,7 @@ static nsPermissionManager *gPermissionManager = nsnull;
 #ifdef MOZ_IPC
 using mozilla::dom::ContentParent;
 using mozilla::dom::ContentChild;
+using mozilla::unused; // ha!
 
 static PRBool
 IsChildProcess()
@@ -225,13 +227,19 @@ nsPermissionManager::Init()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  mObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    mObserverService->AddObserver(this, "profile-before-change", PR_TRUE);
+    mObserverService->AddObserver(this, "profile-do-change", PR_TRUE);
+  }
+
 #ifdef MOZ_IPC
   if (IsChildProcess()) {
     // Get the permissions from the parent process
     InfallibleTArray<IPC::Permission> perms;
     ChildProcess()->SendReadPermissions(&perms);
 
-    for (int i = 0; i < perms.Length(); i++) {
+    for (PRUint32 i = 0; i < perms.Length(); i++) {
       const IPC::Permission &perm = perms[i];
       AddInternal(perm.host, perm.type, perm.capability, 0, perm.expireType,
                   perm.expireTime, eNotify, eNoDBOperation);
@@ -246,12 +254,6 @@ nsPermissionManager::Init()
   // persistent storage - e.g. if there's no profile).
   // XXX should we tell the user about this?
   InitDB(PR_FALSE);
-
-  mObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
-    mObserverService->AddObserver(this, "profile-before-change", PR_TRUE);
-    mObserverService->AddObserver(this, "profile-do-change", PR_TRUE);
-  }
 
   return NS_OK;
 }
@@ -481,7 +483,7 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
       IPC::Permission permission((aHost),
                                  (aType),
                                  aPermission, aExpireType, aExpireTime);
-      ParentProcess()->SendAddPermission(permission);
+      unused << ParentProcess()->SendAddPermission(permission);
     }
   }
 #endif

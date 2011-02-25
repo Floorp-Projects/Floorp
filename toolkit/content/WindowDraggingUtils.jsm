@@ -58,11 +58,12 @@ WindowDraggingElement.prototype = {
         aEvent.getPreventDefault())
       return false;
 
-    // Maybe we have been removed from the document
-    if (!this._elem._alive)
+    let target = aEvent.originalTarget, parent = aEvent.originalTarget;
+
+    // The target may be inside an embedded iframe or browser. (bug 615152)
+    if (target.ownerDocument.defaultView != this._window)
       return false;
 
-    let target = aEvent.originalTarget, parent = aEvent.originalTarget;
     while (parent != this._elem) {
       let mousethrough = parent.getAttribute("mousethrough");
       if (mousethrough == "always")

@@ -44,6 +44,7 @@
 #import "ApplicationServices/ApplicationServices.h"
 #include "nscore.h"
 #include "gfxTypes.h"
+#import <QuartzCore/QuartzCore.h>
 
 // Get the system color space.
 CGColorSpaceRef THEBES_API CreateSystemColorSpace();
@@ -103,6 +104,9 @@ public:
   size_t GetBytesPerRow();
   void Lock();
   void Unlock();
+  CGLError CGLTexImageIOSurface2D(CGLContextObj ctxt,
+                                  GLenum internalFormat, GLenum format, 
+                                  GLenum type, GLuint plane);
 private:
   friend class nsCARenderer;
   CFTypeRef mIOSurfacePtr;

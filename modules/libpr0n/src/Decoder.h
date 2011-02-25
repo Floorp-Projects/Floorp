@@ -122,6 +122,16 @@ public:
   bool HasDecoderError() { return NS_FAILED(mFailCode); };
   nsresult GetDecoderError() { return mFailCode; };
 
+  // flags.  Keep these in sync with imgIContainer.idl.
+  // SetDecodeFlags must be called before Init(), otherwise
+  // default flags are assumed.
+  enum {
+    DECODER_NO_PREMULTIPLY_ALPHA = 0x2,
+    DECODER_NO_COLORSPACE_CONVERSION = 0x4
+  };
+  void SetDecodeFlags(PRUint32 aFlags) { mDecodeFlags = aFlags; }
+  PRUint32 GetDecodeFlags() { return mDecodeFlags; }
+
 protected:
 
   /*
@@ -165,6 +175,8 @@ protected:
    *
    */
   nsRefPtr<RasterImage> mImage;
+
+  PRUint32 mDecodeFlags;
 
 private:
   nsCOMPtr<imgIDecoderObserver> mObserver;

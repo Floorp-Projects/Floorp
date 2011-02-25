@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(0.5, true)">
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <rect x="15" y="15" width="200" height="200" fill="blue" display="none">
+    <!-- The following animation is marked as additive even though the display
+         property is not additive. We should basically behave as if the additive
+         attribute were not specified and set display to 'block' after 0.5s.
+         -->
+    <animate attributeName="display" from="none" to="block" additive="sum"
+      dur="1s" fill="freeze"/>
+  </rect>
+</svg>

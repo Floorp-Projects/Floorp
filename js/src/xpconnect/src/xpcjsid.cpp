@@ -551,8 +551,11 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         AutoMarkingNativeInterfacePtr iface(ccx);
         iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
 
-        if(iface && other_wrapper->FindTearOff(ccx, iface))
+        nsresult findResult = NS_OK;
+        if(iface && other_wrapper->FindTearOff(ccx, iface, JS_FALSE, &findResult))
             *bp = JS_TRUE;
+        if (NS_FAILED(findResult) && findResult != NS_ERROR_NO_INTERFACE)
+            rv = findResult;
     }
     return rv;
 }

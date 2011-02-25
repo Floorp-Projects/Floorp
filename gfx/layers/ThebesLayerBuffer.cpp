@@ -313,7 +313,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
   result.mContext = GetContextForQuadrantUpdate(drawBounds,
                                                 aXResolution, aYResolution);
 
-  gfxUtils::ClipToRegion(result.mContext, result.mRegionToDraw);
+  gfxUtils::ClipToRegionSnapped(result.mContext, result.mRegionToDraw);
   if (aContentType == gfxASurface::CONTENT_COLOR_ALPHA && !isClear) {
     result.mContext->SetOperator(gfxContext::OPERATOR_CLEAR);
     result.mContext->Paint();

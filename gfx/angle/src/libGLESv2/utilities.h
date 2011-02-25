@@ -14,6 +14,8 @@
 #include <GLES2/gl2ext.h>
 #include <d3d9.h>
 
+#include <string>
+
 namespace gl
 {
 
@@ -52,6 +54,7 @@ D3DBLENDOP ConvertBlendOp(GLenum blendOp);
 D3DSTENCILOP ConvertStencilOp(GLenum stencilOp);
 D3DTEXTUREADDRESS ConvertTextureWrap(GLenum wrap);
 D3DCULL ConvertCullMode(GLenum cullFace, GLenum frontFace);
+D3DCUBEMAP_FACES ConvertCubeFace(GLenum cubeFace);
 DWORD ConvertColorMask(bool red, bool green, bool blue, bool alpha);
 D3DTEXTUREFILTERTYPE ConvertMagFilter(GLenum magFilter);
 void ConvertMinFilter(GLenum minFilter, D3DTEXTUREFILTERTYPE *d3dMinFilter, D3DTEXTUREFILTERTYPE *d3dMipFilter);
@@ -61,7 +64,7 @@ unsigned int GetGreenSize(D3DFORMAT colorFormat);
 unsigned int GetBlueSize(D3DFORMAT colorFormat);
 unsigned int GetDepthSize(D3DFORMAT depthFormat);
 unsigned int GetStencilSize(D3DFORMAT stencilFormat);
-bool ConvertPrimitiveType(GLenum primitiveType, GLsizei primitiveCount,
+bool ConvertPrimitiveType(GLenum primitiveType, GLsizei elementCount,
                           D3DPRIMITIVETYPE *d3dPrimitiveType, int *d3dPrimitiveCount);
 D3DFORMAT ConvertRenderbufferFormat(GLenum format);
 D3DMULTISAMPLE_TYPE GetMultisampleTypeFromSamples(GLsizei samples);
@@ -76,5 +79,8 @@ GLenum ConvertBackBufferFormat(D3DFORMAT format);
 GLenum ConvertDepthStencilFormat(D3DFORMAT format);
 
 }
+
+std::string getTempPath();
+void writeFile(const char* path, const void* data, size_t size);
 
 #endif  // LIBGLESV2_UTILITIES_H

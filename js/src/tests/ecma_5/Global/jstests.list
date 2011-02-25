@@ -1,4 +1,5 @@
 url-prefix ../../jsreftest.html?test=ecma_5/Global/
+fails-if(!xulRuntime.shell) script adding-global-var-nonextensible-error.js
 script parseInt-01.js
 script parseFloat-01.js
 script eval-01.js
@@ -7,3 +8,4 @@ script eval-inside-with-is-direct.js
 script parenthesized-eval-is-direct.js
 script eval-native-callback-is-indirect.js
 script direct-eval-but-not.js
+script eval-in-strict-eval-in-normal-function.js

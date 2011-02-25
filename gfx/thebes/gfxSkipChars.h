@@ -103,7 +103,7 @@ public:
     friend class gfxSkipChars;
 
 private:
-    typedef nsAutoTArray<PRUint8,256> Buffer;
+    typedef AutoFallibleTArray<PRUint8,256> Buffer;
 
     /**
      * Moves mRunCharCount/mRunSkipped to the buffer (updating mCharCount),

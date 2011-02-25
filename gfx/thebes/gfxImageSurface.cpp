@@ -37,6 +37,7 @@
 
 #include "prmem.h"
 
+#include "gfxAlphaRecovery.h"
 #include "gfxImageSurface.h"
 
 #include "cairo.h"
@@ -96,6 +97,24 @@ gfxImageSurface::InitWithData(unsigned char *aData, const gfxIntSize& aSize,
     Init(surface);
 }
 
+static void*
+TryAllocAlignedBytes(size_t aSize)
+{
+    // Use fallible allocators here
+#if defined(HAVE_POSIX_MEMALIGN) || defined(HAVE_JEMALLOC_POSIX_MEMALIGN)
+    void* ptr;
+    // Try to align for fast alpha recovery.  This should only help
+    // cairo too, can't hurt.
+    return moz_posix_memalign(&ptr,
+                              1 << gfxAlphaRecovery::GoodAlignmentLog2(),
+                              aSize) ?
+             nsnull : ptr;
+#else
+    // Oh well, hope that luck is with us in the allocator
+    return moz_malloc(aSize);
+#endif
+}
+
 gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) :
     mSize(size), mOwnsData(PR_FALSE), mData(nsnull), mFormat(format)
 {
@@ -107,8 +126,9 @@ gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) 
     // if we have a zero-sized surface, just leave mData nsnull
     if (mSize.height * mStride > 0) {
 
-        // Use the fallible allocator here
-        mData = (unsigned char *) moz_malloc(mSize.height * mStride);
+        // This can fail to allocate memory aligned as we requested,
+        // or it can fail to allocate any memory at all.
+        mData = (unsigned char *) TryAllocAlignedBytes(mSize.height * mStride);
         if (!mData)
             return;
         memset(mData, 0, mSize.height * mStride);
@@ -149,24 +169,24 @@ gfxImageSurface::~gfxImageSurface()
         free(mData);
 }
 
-long
-gfxImageSurface::ComputeStride() const
+/*static*/ long
+gfxImageSurface::ComputeStride(const gfxIntSize& aSize, gfxImageFormat aFormat)
 {
     long stride;
 
-    if (mFormat == ImageFormatARGB32)
-        stride = mSize.width * 4;
-    else if (mFormat == ImageFormatRGB24)
-        stride = mSize.width * 4;
-    else if (mFormat == ImageFormatRGB16_565)
-        stride = mSize.width * 2;
-    else if (mFormat == ImageFormatA8)
-        stride = mSize.width;
-    else if (mFormat == ImageFormatA1) {
-        stride = (mSize.width + 7) / 8;
+    if (aFormat == ImageFormatARGB32)
+        stride = aSize.width * 4;
+    else if (aFormat == ImageFormatRGB24)
+        stride = aSize.width * 4;
+    else if (aFormat == ImageFormatRGB16_565)
+        stride = aSize.width * 2;
+    else if (aFormat == ImageFormatA8)
+        stride = aSize.width;
+    else if (aFormat == ImageFormatA1) {
+        stride = (aSize.width + 7) / 8;
     } else {
         NS_WARNING("Unknown format specified to gfxImageSurface!");
-        stride = mSize.width * 4;
+        stride = aSize.width * 4;
     }
 
     stride = ((stride + 3) / 4) * 4;

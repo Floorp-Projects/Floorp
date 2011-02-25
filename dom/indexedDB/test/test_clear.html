@@ -19,21 +19,21 @@
       const description = "My Test Database";
       const entryCount = 1000;
 
-      let request = moz_indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = request.result;
 
       request = db.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      event.transaction.oncomplete = continueToNextStep;
+      event.target.transaction.oncomplete = continueToNextStep;
 
-      let objectStore = db.createObjectStore("foo", "", true);
+      let objectStore = db.createObjectStore("foo", { autoIncrement: true });
 
       let firstKey;
       for (let i = 0; i < entryCount; i++) {
@@ -41,7 +41,7 @@
         request.onerror = errorHandler;
         if (!i) {
           request.onsuccess = function(event) {
-            firstKey = event.result;
+            firstKey = event.target.result;
           };
         }
       }
@@ -54,7 +54,7 @@
       request = db.transaction("foo").objectStore("foo").openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           seenEntryCount++;
           cursor.continue();
@@ -80,12 +80,14 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      ok(event.result === null, "Correct event.result");
+      ok(event.target.result === undefined, "Correct event.target.result");
+      ok(request.result === undefined, "Correct request.result");
+      ok(request === event.target, "Correct event.target");
 
       request = db.transaction("foo").objectStore("foo").openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        let cursor = event.result;
+        let cursor = request.result;
         if (cursor) {
           ok(false, "Shouldn't have any entries");
         }
@@ -98,7 +100,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      isnot(event.result, firstKey, "Got a different key");
+      isnot(event.target.result, firstKey, "Got a different key");
 
       finishTest();
       yield;

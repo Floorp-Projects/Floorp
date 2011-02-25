@@ -43,6 +43,11 @@
 #  pragma warning( disable: 4267 4996 4146 )
 # endif
 
+#elif defined(XP_OS2)
+
+# define INCL_DOSMEMMGR
+# include <os2.h>
+
 #elif defined(XP_MACOSX) || defined(DARWIN)
 
 # include <libkern/OSAtomic.h>
@@ -155,6 +160,100 @@ UnmapPages(void *addr, size_t size)
 }
 
 # endif /* !WINCE */
+
+#elif defined(XP_OS2)
+
+#define JS_GC_HAS_MAP_ALIGN 1
+#define OS2_MAX_RECURSIONS  16
+
+static void
+UnmapPages(void *addr, size_t size)
+{
+    if (!DosFreeMem(addr))
+        return;
+
+    /* if DosFreeMem() failed, 'addr' is probably part of an "expensive"
+     * allocation, so calculate the base address and try again
+     */
+    unsigned long cb = 2 * size;
+    unsigned long flags;
+    if (DosQueryMem(addr, &cb, &flags) || cb < size)
+        return;
+
+    jsuword base = reinterpret_cast<jsuword>(addr) - ((2 * size) - cb);
+    DosFreeMem(reinterpret_cast<void*>(base));
+
+    return;
+}
+
+static void *
+MapAlignedPagesRecursively(size_t size, size_t alignment, int& recursions)
+{
+    if (++recursions >= OS2_MAX_RECURSIONS)
+        return NULL;
+
+    void *tmp;
+    if (DosAllocMem(&tmp, size,
+                    OBJ_ANY | PAG_COMMIT | PAG_READ | PAG_WRITE)) {
+        JS_ALWAYS_TRUE(DosAllocMem(&tmp, size,
+                                   PAG_COMMIT | PAG_READ | PAG_WRITE) == 0);
+    }
+    size_t offset = reinterpret_cast<jsuword>(tmp) & (alignment - 1);
+    if (!offset)
+        return tmp;
+
+    /* if there are 'filler' bytes of free space above 'tmp', free 'tmp',
+     * then reallocate it as a 'filler'-sized block;  assuming we're not
+     * in a race with another thread, the next recursion should succeed
+     */
+    size_t filler = size + alignment - offset;
+    unsigned long cb = filler;
+    unsigned long flags = 0;
+    unsigned long rc = DosQueryMem(&(static_cast<char*>(tmp))[size],
+                                   &cb, &flags);
+    if (!rc && (flags & PAG_FREE) && cb >= filler) {
+        UnmapPages(tmp, 0);
+        if (DosAllocMem(&tmp, filler,
+                        OBJ_ANY | PAG_COMMIT | PAG_READ | PAG_WRITE)) {
+            JS_ALWAYS_TRUE(DosAllocMem(&tmp, filler,
+                                       PAG_COMMIT | PAG_READ | PAG_WRITE) == 0);
+        }
+    }
+
+    void *p = MapAlignedPagesRecursively(size, alignment, recursions);
+    UnmapPages(tmp, 0);
+
+    return p;
+}
+
+static void *
+MapAlignedPages(size_t size, size_t alignment)
+{
+    int recursions = -1;
+
+    /* make up to OS2_MAX_RECURSIONS attempts to get an aligned block
+     * of the right size by recursively allocating blocks of unaligned
+     * free memory until only an aligned allocation is possible
+     */
+    void *p = MapAlignedPagesRecursively(size, alignment, recursions);
+    if (p)
+        return p;
+
+    /* if memory is heavily fragmented, the recursive strategy may fail;
+     * instead, use the "expensive" strategy:  allocate twice as much
+     * as requested and return an aligned address within this block
+     */
+    if (DosAllocMem(&p, 2 * size,
+                    OBJ_ANY | PAG_COMMIT | PAG_READ | PAG_WRITE)) {
+        JS_ALWAYS_TRUE(DosAllocMem(&p, 2 * size,
+                                   PAG_COMMIT | PAG_READ | PAG_WRITE) == 0);
+    }
+
+    jsuword addr = reinterpret_cast<jsuword>(p);
+    addr = (addr + (alignment - 1)) & ~(alignment - 1);
+
+    return reinterpret_cast<void *>(addr);
+}
 
 #elif defined(XP_MACOSX) || defined(DARWIN)
 

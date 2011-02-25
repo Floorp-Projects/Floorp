@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if !defined jsjaeger_logging_h__
+#if !defined jsjaeger_logging_h__ && (defined JS_METHODJIT || defined JS_TRACER)
 #define jsjaeger_logging_h__
 
 #include "prmjtime.h"

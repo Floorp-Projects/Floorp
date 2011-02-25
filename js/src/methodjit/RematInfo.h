@@ -90,7 +90,7 @@ struct StateRemat {
     // the largest local:
     //   ((UINT16_LIMIT - 1) * sizeof(Value) + sizeof(JSStackFrame),
     // And an extra bit for the sign on arguments.
-#define MIN_STATE_REMAT_BITS        17
+#define MIN_STATE_REMAT_BITS        21
 
     bool isConstant() const { return offset_ == CONSTANT; }
     bool inRegister() const { return offset_ >= 0 &&

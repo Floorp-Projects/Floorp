@@ -42,6 +42,7 @@
 
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
+#include "jsproxy.h"
 
 /***************************************************************************/
 
@@ -208,7 +209,7 @@ js::Class XPC_WN_NoHelper_Proto_JSClass = {
     js::PropertyStub,               // addProperty;
     js::PropertyStub,               // delProperty;
     js::PropertyStub,               // getProperty;
-    js::PropertyStub,               // setProperty;
+    js::StrictPropertyStub,         // setProperty;
     js::EnumerateStub,              // enumerate;
     JS_ResolveStub,                 // resolve;
     js::ConvertStub,                // convert;
@@ -362,7 +363,7 @@ WrappedNativeJSGCThingTracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
     if(wrapper->HasExternalReference() && !wrapper->IsWrapperExpired())
     {
         JSTracer* trc = (JSTracer *)arg;
-        JS_CALL_OBJECT_TRACER(trc, wrapper->GetFlatJSObjectNoMark(),
+        JS_CALL_OBJECT_TRACER(trc, wrapper->GetFlatJSObjectPreserveColor(),
                               "XPCWrappedNative::mFlatJSObject");
     }
 
@@ -399,32 +400,12 @@ static JSDHashOperator
 WrappedNativeSuspecter(JSDHashTable *table, JSDHashEntryHdr *hdr,
                        uint32 number, void *arg)
 {
-    SuspectClosure* closure = static_cast<SuspectClosure*>(arg);
     XPCWrappedNative* wrapper = ((Native2WrappedNativeMap::Entry*)hdr)->value;
 
-    if(wrapper->IsValid() &&
-       wrapper->HasExternalReference() &&
-       !wrapper->IsWrapperExpired())
+    if(wrapper->HasExternalReference())
     {
-        NS_ASSERTION(NS_IsMainThread() || NS_IsCycleCollectorThread(), 
-                     "Suspecting wrapped natives from non-CC thread");
-
-        // Only suspect wrappedJSObjects that are in a compartment that
-        // participates in cycle collection.
-        JSObject* obj = wrapper->GetFlatJSObjectAndMark();
-        if(!xpc::ParticipatesInCycleCollection(closure->cx, obj))
-            return JS_DHASH_NEXT;
-
-        NS_ASSERTION(!JS_IsAboutToBeFinalized(closure->cx, obj),
-                     "WrappedNativeSuspecter attempting to touch dead object");
-
-        // Only record objects that might be part of a cycle as roots, unless
-        // the callback wants all traces (a debug feature).
-        if(!(closure->cb.WantAllTraces()) && !nsXPConnect::IsGray(obj))
-            return JS_DHASH_NEXT;
-
-        closure->cb.NoteRoot(nsIProgrammingLanguage::JAVASCRIPT, obj,
-                             nsXPConnect::GetXPConnect());
+        SuspectClosure* closure = static_cast<SuspectClosure*>(arg);
+        XPCJSRuntime::SuspectWrappedNative(closure->cx, wrapper, closure->cb);
     }
 
     return JS_DHASH_NEXT;
@@ -756,6 +737,7 @@ GetScopeOfObject(JSObject* obj)
 
 #ifdef DEBUG
 void DEBUG_CheckForComponentsInScope(JSContext* cx, JSObject* obj,
+                                     JSObject* startingObj,
                                      JSBool OKIfNotInitialized,
                                      XPCJSRuntime* runtime)
 {
@@ -776,10 +758,25 @@ void DEBUG_CheckForComponentsInScope(JSContext* cx, JSObject* obj,
     // global properties of that document's window are *gone*. Generally this
     // indicates a problem that should be addressed in the design and use of the
     // callback code.
-    NS_ERROR("XPConnect is being called on a scope without a 'Components' property!");
+    NS_ERROR("XPConnect is being called on a scope without a 'Components' property!  (stack and details follow)");
+    printf("The current JS stack is:\n");
+    xpc_DumpJSStack(cx, JS_TRUE, JS_TRUE, JS_TRUE);
+
+    printf("And the object whose scope lacks a 'Components' property is:\n");
+    js_DumpObject(startingObj);
+
+    JSObject *p = startingObj;
+    while(p->isWrapper())
+    {
+        p = p->getProxyPrivate().toObjectOrNull();
+        if(!p)
+            break;
+        printf("which is a wrapper for:\n");
+        js_DumpObject(p);
+    }
 }
 #else
-#define DEBUG_CheckForComponentsInScope(ccx, obj, OKIfNotInitialized, runtime) \
+#define DEBUG_CheckForComponentsInScope(ccx, obj, startingObj, OKIfNotInitialized, runtime) \
     ((void)0)
 #endif
 
@@ -805,6 +802,10 @@ XPCWrappedNativeScope::FindInJSObjectScope(JSContext* cx, JSObject* obj,
 
     JSAutoEnterCompartment ac;
     ac.enterAndIgnoreErrors(cx, obj);
+
+#ifdef DEBUG
+    JSObject *startingObj = obj;
+#endif
 
     obj = JS_GetGlobalForObject(cx, obj);
 
@@ -834,7 +835,8 @@ XPCWrappedNativeScope::FindInJSObjectScope(JSContext* cx, JSObject* obj,
 
     if(found) {
         // This cannot be called within the map lock!
-        DEBUG_CheckForComponentsInScope(cx, obj, OKIfNotInitialized, runtime);
+        DEBUG_CheckForComponentsInScope(cx, obj, startingObj,
+                                        OKIfNotInitialized, runtime);
         return found;
     }
 

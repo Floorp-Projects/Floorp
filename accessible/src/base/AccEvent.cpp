@@ -279,7 +279,7 @@ AccStateChangeEvent::CreateXPCOMObject()
 // XXX revisit this when coalescence is faster (eCoalesceFromSameSubtree)
 AccTextChangeEvent::
   AccTextChangeEvent(nsAccessible* aAccessible, PRInt32 aStart,
-                     nsAString& aModifiedText, PRBool aIsInserted,
+                     const nsAString& aModifiedText, PRBool aIsInserted,
                      EIsFromUserInput aIsFromUserInput)
   : AccEvent(aIsInserted ?
              static_cast<PRUint32>(nsIAccessibleEvent::EVENT_TEXT_INSERTED) :
@@ -306,8 +306,8 @@ AccTextChangeEvent::CreateXPCOMObject()
 
 AccMutationEvent::
   AccMutationEvent(PRUint32 aEventType, nsAccessible* aTarget,
-                   nsINode* aTargetNode, EIsFromUserInput aIsFromUserInput) :
-  AccEvent(aEventType, aTarget, aIsFromUserInput, eCoalesceFromSameSubtree)
+                   nsINode* aTargetNode) :
+  AccEvent(aEventType, aTarget, eAutoDetect, eCoalesceFromSameSubtree)
 {
   mNode = aTargetNode;
 }
@@ -318,12 +318,10 @@ AccMutationEvent::
 ////////////////////////////////////////////////////////////////////////////////
 
 AccHideEvent::
-  AccHideEvent(nsAccessible* aTarget, nsINode* aTargetNode,
-               EIsFromUserInput aIsFromUserInput) :
-  AccMutationEvent(::nsIAccessibleEvent::EVENT_HIDE, aTarget, aTargetNode,
-                   aIsFromUserInput)
+  AccHideEvent(nsAccessible* aTarget, nsINode* aTargetNode) :
+  AccMutationEvent(::nsIAccessibleEvent::EVENT_HIDE, aTarget, aTargetNode)
 {
-  mParent = mAccessible->GetCachedParent();
+  mParent = mAccessible->GetParent();
   mNextSibling = mAccessible->GetCachedNextSibling();
   mPrevSibling = mAccessible->GetCachedPrevSibling();
 }
@@ -334,10 +332,8 @@ AccHideEvent::
 ////////////////////////////////////////////////////////////////////////////////
 
 AccShowEvent::
-  AccShowEvent(nsAccessible* aTarget, nsINode* aTargetNode,
-               EIsFromUserInput aIsFromUserInput) :
-  AccMutationEvent(::nsIAccessibleEvent::EVENT_SHOW, aTarget, aTargetNode,
-                   aIsFromUserInput)
+  AccShowEvent(nsAccessible* aTarget, nsINode* aTargetNode) :
+  AccMutationEvent(::nsIAccessibleEvent::EVENT_SHOW, aTarget, aTargetNode)
 {
 }
 

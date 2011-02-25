@@ -20,12 +20,12 @@
       const description = "My Test Database";
       const osName = "foo";
 
-      let request = moz_indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
 
       request = db.setVersion("1");
@@ -33,7 +33,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      db.createObjectStore(osName, "", true);
+      db.createObjectStore(osName, { autoIncrement: "true" });
 
       let key1, key2;
 
@@ -42,8 +42,8 @@
                   .add({});
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        is(event.transaction.mode, READ_WRITE, "Correct mode");
-        key1 = event.result;
+        is(event.target.transaction.mode, READ_WRITE, "Correct mode");
+        key1 = event.target.result;
         testGenerator.next();
       }
       yield;
@@ -51,8 +51,8 @@
       request = db.transaction(osName, READ_WRITE).objectStore(osName).add({});
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        is(event.transaction.mode, READ_WRITE, "Correct mode");
-        key2 = event.result;
+        is(event.target.transaction.mode, READ_WRITE, "Correct mode");
+        key2 = event.target.result;
         testGenerator.next();
       }
       yield;
@@ -62,7 +62,7 @@
                   .put({}, key1);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        is(event.transaction.mode, READ_WRITE, "Correct mode");
+        is(event.target.transaction.mode, READ_WRITE, "Correct mode");
         testGenerator.next();
       }
       yield;
@@ -72,7 +72,7 @@
                   .put({}, key2);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        is(event.transaction.mode, READ_WRITE, "Correct mode");
+        is(event.target.transaction.mode, READ_WRITE, "Correct mode");
         testGenerator.next();
       }
       yield;
@@ -82,7 +82,7 @@
                   .put({}, key1);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        is(event.transaction.mode, READ_WRITE, "Correct mode");
+        is(event.target.transaction.mode, READ_WRITE, "Correct mode");
         testGenerator.next();
       }
       yield;
@@ -92,7 +92,7 @@
                   .put({}, key1);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        is(event.transaction.mode, READ_WRITE, "Correct mode");
+        is(event.target.transaction.mode, READ_WRITE, "Correct mode");
         testGenerator.next();
       }
       yield;
@@ -102,7 +102,7 @@
                   .delete(key1);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        is(event.transaction.mode, READ_WRITE, "Correct mode");
+        is(event.target.transaction.mode, READ_WRITE, "Correct mode");
         testGenerator.next();
       }
       yield;
@@ -112,7 +112,7 @@
                   .delete(key2);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        is(event.transaction.mode, READ_WRITE, "Correct mode");
+        is(event.target.transaction.mode, READ_WRITE, "Correct mode");
         testGenerator.next();
       }
       yield;

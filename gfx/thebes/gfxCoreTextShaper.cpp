@@ -62,14 +62,6 @@
 
 #include "nsUnicodeRange.h"
 
-// Uncomment this to dump all text runs created to the log (if enabled)
-//#define DUMP_TEXT_RUNS
-
-#ifdef DUMP_TEXT_RUNS
-static PRLogModuleInfo *gCoreTextTextRunLog = PR_NewLogModule("coreTextTextRun");
-#endif
-
-
 // standard font descriptors that we construct the first time they're needed
 CTFontDescriptorRef gfxCoreTextShaper::sDefaultFeaturesDescriptor = NULL;
 CTFontDescriptorRef gfxCoreTextShaper::sDisableLigaturesDescriptor = NULL;

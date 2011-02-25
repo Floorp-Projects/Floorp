@@ -34,7 +34,7 @@ function tabLoad1(aEvent) {
 function tabLoad2(aEvent) {
   browser.removeEventListener(aEvent.type, arguments.callee, true);
 
-  outputItem = outputNode.querySelector(".hud-network");
+  outputItem = outputNode.querySelector(".hud-networkinfo .hud-clickable");
   ok(outputItem, "found a network message");
   document.addEventListener("popupshown", networkPanelShown, false);
 
@@ -94,7 +94,8 @@ function networkPanelHidden(aEvent) {
     HUD.jsterm.setInputValue("document");
     HUD.jsterm.execute();
 
-    outputItem = outputNode.querySelector(".jsterm-output-line");
+    outputItem = outputNode.querySelector(".webconsole-msg-output " +
+                                          ".hud-clickable");
     ok(outputItem, "found a jsterm output message");
 
     document.addEventListener("popupshown", properyPanelShown, false);
@@ -116,8 +117,7 @@ function properyPanelShown(aEvent) {
 
   executeSoon(function() {
     aEvent.target.addEventListener("popuphidden", propertyPanelHidden, false);
-    let closeButton = aEvent.target.querySelector(".jsPropertyPanelCloseButton");
-    closeButton.doCommand();
+    aEvent.target.hidePopup();
   });
 }
 

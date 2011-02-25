@@ -132,10 +132,10 @@ extern "C"
                           exception_data_t exception_code,
                           mach_msg_type_number_t code_count,
                           thread_state_flavor_t *target_flavor,
-                          thread_state_t thread_state,
-                          mach_msg_type_number_t thread_state_count,
-                          thread_state_t thread_state,
-                          mach_msg_type_number_t *thread_state_count);
+                          thread_state_t in_thread_state,
+                          mach_msg_type_number_t in_thread_state_count,
+                          thread_state_t out_thread_state,
+                          mach_msg_type_number_t *out_thread_state_count);
 
   kern_return_t
     exception_raise_state_identity(mach_port_t target_port,
@@ -145,10 +145,10 @@ extern "C"
                                    exception_data_t exception_code,
                                    mach_msg_type_number_t exception_code_count,
                                    thread_state_flavor_t *target_flavor,
-                                   thread_state_t thread_state,
-                                   mach_msg_type_number_t thread_state_count,
-                                   thread_state_t thread_state,
-                                   mach_msg_type_number_t *thread_state_count);
+                                   thread_state_t in_thread_state,
+                                   mach_msg_type_number_t in_thread_state_count,
+                                   thread_state_t out_thread_state,
+                                   mach_msg_type_number_t *out_thread_state_count);
 
   kern_return_t breakpad_exception_raise_state(mach_port_t exception_port,
                                                exception_type_t exception,

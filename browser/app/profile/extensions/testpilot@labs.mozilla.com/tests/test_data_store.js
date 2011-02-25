@@ -1,7 +1,18 @@
 EXPORTED_SYMBOLS = ["runAllTests"];
 var Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 var testsRun = 0;
 var testsPassed = 0;
+
+function base64decode(data) {
+  // base64 encode/decode is built into window object, but we're in a module so we
+  // need to fetch a window reference first:
+  let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+    getService(Ci.nsIWindowMediator);
+  let window = wm.getMostRecentWindow("navigator:browser");
+  return window.atob(data);
+}
 
 function cheapAssertEqual(a, b, errorMsg) {
   testsRun += 1;
@@ -247,7 +258,7 @@ function testRemoteLoader() {
     }
   };
 
-  let remoteLoader = new remoteLoaderModule.RemoteExperimentLoader(getFileFunc);
+  let remoteLoader = new remoteLoaderModule.RemoteExperimentLoader(stubLogger, getFileFunc);
 
   remoteLoader.checkForUpdates(function(success) {
     if (success) {
@@ -289,6 +300,14 @@ function testRemotelyLoadTabsExperiment() {
   // (~/testpilot/website/testcases/tab-open-close/tabs_experiment.js)
 }
 
+let stubLogger = {
+  getLogger: function() { return {trace: function(str) {dump("Trace: " + str +"\n");},
+                                  warn: function(str) {dump("Warn: " + str +"\n");},
+                                  info: function(str) {dump("Info: " + str +"\n");},
+                                  debug: function(str) {dump("Debug: " + str +"\n");}};}
+};
+
+
 function testRemoteLoaderIndexCache() {
   var Cuddlefish = {};
   Cu.import("resource://testpilot/modules/lib/cuddlefish.js",
@@ -301,29 +320,250 @@ function testRemoteLoaderIndexCache() {
     callback(null);
   };
 
-  let stubLogger = {
-    getLogger: function() { return {trace: function() {},
-                                    warn: function() {},
-                                    info: function() {},
-                                    debug: function() {}};}
-  };
-
   let remoteLoader = new remoteLoaderModule.RemoteExperimentLoader(stubLogger, getFileFunc);
   let data = "Foo bar baz quux";
   remoteLoader._cacheIndexFile(data);
   cheapAssertEqual(remoteLoader._loadCachedIndexFile(), data);
+
+  // Clean up by killing the file so we don't break Test Pilot so bad
+  dump("Killing the mungled index file.\n");
+  let indexFile = remoteLoader.cachedIndexNsiFile;
+  if (indexFile.exists()) {
+    indexFile.remove(false);
+  }
 }
 
+
+function StubDataStore(fileName, tableName, columns) {
+}
+StubDataStore.prototype = {
+  storeEvent: function(uiEvent, callback) {
+    callback(true);
+  },
+  getJSONRows: function(callback) {
+    callback([]);
+  },
+  getAllDataAsJSON: function(useDisplayValues, callback) {
+    callback([]);
+  },
+  wipeAllData: function(callback) {
+    callback(true);
+  },
+  nukeTable: function() {
+  },
+  haveData: function(callback) {
+    callback(true);
+  },
+  getHumanReadableColumnNames: function() {
+  },
+  getPropertyNames: function() {
+  }
+};
+
+function StubWebContent() {
+}
+StubWebContent.prototype = {
+  inProgressHtml: "",
+  completedHtml: "",
+  upcomingHtml: "",
+  canceledHtml: "",
+  remainDataHtml: "",
+  dataExpiredHtml: "",
+  deletedRemainDataHtml: "",
+  inProgressDataPrivacyHtml: "",
+  completedDataPrivacyHtml: "",
+  canceledDataPrivacyHtml: "",
+  dataExpiredDataPrivacyHtml: "",
+  remainDataPrivacyHtml: "",
+  deletedRemainDataPrivacyHtml: "",
+  onPageLoad: function(experiment, document, graphUtils) {
+  }
+};
+
+function StubHandlers() {
+}
+StubHandlers.prototype = {
+  onNewWindow: function(window) {
+  },
+  onWindowClosed: function(window) {
+  },
+  onAppStartup: function() {
+  },
+  onAppShutdown: function() {
+  },
+  onExperimentStartup: function(store) {
+  },
+  onExperimentShutdown: function() {
+  },
+  onEnterPrivateBrowsing: function() {
+  },
+  onExitPrivateBrowsing: function() {
+  },
+  uninstallAll: function() {
+  }
+};
+
+
+function testRecurringStudyStateChange() {
+
+  Cu.import("resource://testpilot/modules/tasks.js");
+
+  let expInfo = {
+    startDate: null,
+    duration: 7,
+    testName: "Unit Test Recurring Study",
+    testId: "unit_test_recur_study",
+    testInfoUrl: "https://testpilot.mozillalabs.com/",
+    summary: "Be sure to wipe all prefs and the store in the setup/teardown",
+    thumbnail: "",
+    optInRequired: false,
+    recursAutomatically: true,
+    recurrenceInterval: 30,
+    versionNumber: 1
+  };
+
+  dump("Looking for prefs to delete...\n");
+  let prefService = Cc["@mozilla.org/preferences-service;1"]
+                     .getService(Ci.nsIPrefService)
+                     .QueryInterface(Ci.nsIPrefBranch2);
+  let prefStem = "extensions.testpilot";
+  let prefNames = prefService.getChildList(prefStem);
+  for each (let prefName in prefNames) {
+    if (prefName.indexOf("unit_test_recur_study") != -1) {
+      dump("Clearing pref " + prefName + "\n");
+      prefService.clearUserPref(prefName);
+    }
+  }
+
+  const START_DATE = 1292629441000;
+  let stubDate = START_DATE;
+
+  let stubDateFunction = function() {
+    return stubDate;
+  };
+
+  let advanceDate = function(days) {
+    stubDate += days * 24 * 60 * 60 * 1000;
+  };
+
+  let dataStore = new StubDataStore();
+  let handlers = new StubHandlers();
+  let webContent = new StubWebContent();
+  let task = new TestPilotExperiment(expInfo, dataStore, handlers, webContent,
+                                    stubDateFunction);
+
+  // for this test, show popup on new study is set to true...
+  prefService.setBoolPref("extensions.testpilot.popup.showOnNewStudy", true);
+  // TODO another test with this turned off.
+
+  cheapAssertEqual(task.id, "unit_test_recur_study", "id should be id");
+  cheapAssertEqual(task.version, 1, "version should be version");
+  cheapAssertEqual(task.title, "Unit Test Recurring Study", "title should be title");
+  cheapAssertEqual(task.taskType, TaskConstants.TYPE_EXPERIMENT, "Should be experiment");
+  // Ensure that end date is 7 days past the start date
+  cheapAssertEqual(task.startDate, START_DATE, "Start date is wrong");
+  cheapAssertEqual(task.endDate, START_DATE + 7 * 24 * 60 * 60 * 1000, "End date is wrong");
+
+  cheapAssertEqual(task.status, TaskConstants.STATUS_NEW, "Status should be new");
+  // advance time a little and check date... b/c showOnNewStudy is true, it won't start:
+  advanceDate(1);
+  task.checkDate();
+  cheapAssertEqual(task.status, TaskConstants.STATUS_NEW, "Status should still be new");
+  // Now we fake the user action needed to advance it from NEW to STARTING:
+  task.changeStatus(TaskConstants.STATUS_STARTING);
+  cheapAssertEqual(task.status, TaskConstants.STATUS_STARTING, "Status should now be starting");
+  // when we check date again, it should advance from starting to in-progress:
+  task.checkDate();
+  cheapAssertEqual(task.status, TaskConstants.STATUS_IN_PROGRESS, "Status should be in progress");
+
+  // Go 7 days into the future
+  advanceDate(7);
+  task.checkDate();
+  cheapAssertEqual(task.status, TaskConstants.STATUS_FINISHED, "Status should be finished");
+
+  /* So how is the buggy bug happening?  It seems like:
+   *
+   * - Data is posted successfully
+   * - Task status set to 6
+   * - (Reschedule is happening somewhere silently in here, which is screwing things
+   *    up maybe?)
+   * - Reload everything
+   * - It's past its end date, so the task status gets switched to Finished.
+   */
+
+  // TODO ideally figure out how to fake an upload - until then, just set status to 6.
+  task.changeStatus(TaskConstants.STATUS_SUBMITTED);
+  cheapAssertEqual(task.status, TaskConstants.STATUS_SUBMITTED, "Should be submitted.");
+
+  // Delete and recreate task, make sure it recovers its status and start/end
+  // dates correctly
+  task = null;
+  let task2 = new TestPilotExperiment(expInfo, dataStore, handlers, webContent,
+                                      stubDateFunction);
+  cheapAssertEqual(task2.status, TaskConstants.STATUS_SUBMITTED, "Status should be submitted!");
+  // It should remain submitted; it should have rescheduled itself to 30 days ahead.
+  cheapAssertEqual(task2.startDate, START_DATE + 30 * 24 * 60 * 60 * 1000,
+                   "Start date is wrong");
+  cheapAssertEqual(task2.endDate, START_DATE + 37 * 24 * 60 * 60 * 1000,
+                   "End date is wrong");
+
+
+
+  // test task._reschedule()?
+  // basically test everything that can happen in checkDate:
+  /* - reset of automatically recurring test (with NEVER_SUBMIT on and with it off) when
+   *    we pass the (new) start date.
+  * - test that we jumped ahead to STARTING if optInRequired is false... and that
+  *    we don't jump ahead to starting if it's true!  And the popup.showOnNewStudy pref
+  *    should have the same effect!!
+  *
+  * - When a test finishes (status is less than finished and current date passes end date)
+  *     then it should switch to finish.  If it recurs automatically, it should then
+  *     reschedule; if study-specific recur pref is ALWAYS_SUBMIT (OR if global
+  *      extensions.testpilot.alwaysSubmitData is true) it should then submit, but if it's
+  *      NEVER_SUBMIT it should then cancel and wipe data.  If none of these are true
+  *      it should just reschedule but remain on status = finished.
+  *
+  *    If it ends and doesn't recur automatically, then it should autosubmit if
+  *      extensions.testpilot.alwaysSubmitData is true.
+  *
+  *    At this point, a data deletion date and an expiration date for data submission
+  *     should be set (unless dat was already wiped as a result of NEVER_SUBMIT).
+  *
+  *
+  * - Data expiration (this clause looks maybe wrong in the code - why is there another
+  *                        autosubmit command here?)
+  *     If study is finished but not submitted and we pass expiration date for data
+  *      submission, cancel and wipe data.  (Expired should really be a status code!!)
+  *    If study is submitted and we pass the date for data deletion, then wipe the data.
+  *
+  * */
+  // Trying to upload when status is already submitted or greater should be a no-op.
+  // Successful submit should advance us to SUBMITTED and generate/store a time for
+  // data deletion.
+
+  /* getWebContent and getDataPrivacyContent should give us back the right strings
+   * based on all the state. */
+
+}
+
+
 function runAllTests() {
-  testTheDataStore();
-  testFirefoxVersionCheck();
-  testStringSanitizer();
+  testsRun = 0;
+  testsPassed = 0;
+
+  //testTheDataStore();
+  //testFirefoxVersionCheck();
+  //testStringSanitizer();
   //testTheCuddlefishPreferencesFilesystem();
   //testRemoteLoader();
-  testRemoteLoaderIndexCache();
+  //testRemoteLoaderIndexCache();
+  //testRecurringStudyStateChange();
+  testKillSwitch();
   dump("TESTING COMPLETE.  " + testsPassed + " out of " + testsRun +
        " tests passed.");
 }
+
 
 //exports.runAllTests = runAllTests;
 
@@ -333,3 +573,122 @@ function runAllTests() {
 // Test that every observer that is installed gets uninstalled.
 
 // Test that the observer is writing to the data store correctly.
+
+function testKillSwitch() {
+  var Cuddlefish = {};
+  Cu.import("resource://testpilot/modules/lib/cuddlefish.js",
+                          Cuddlefish);
+  let cfl = new Cuddlefish.Loader({rootPaths: ["resource://testpilot/modules/",
+                                               "resource://testpilot/modules/lib/"]});
+  let remoteLoaderModule = cfl.require("remote-experiment-loader");
+
+  var indexJson1 = '{"new_experiments": [{"default": {"name": "Foo Study", '
+                    + '"jarfile": "foo.jar", "studyfile": "foo.js",'
+                    + '"hash": "19f32c805f93697e1b180a782bc7a8c7575f32138008d2617e9843a9bde14b38"}}]}';
+
+  var indexJson2 = '{"new_experiments": [], "maintain_experiments": ["foo.js"]}';
+  var indexJson3 = '{"new_experiments": []}';
+
+  var indexJson = indexJson1;
+
+  var theRemoteFile = "exports.foo = function(x, y) { return x * y; }";
+
+  let getFileFunc = function(url, callback) {
+    if (url.indexOf("index.json") > -1 || url.indexOf("index-dev.json") > -1) {
+      if (indexJson != "") {
+        callback(indexJson);
+      } else {
+        callback(null);
+      }
+    } else if (url.indexOf("foo.jar") > -1) {
+      // Binary file (got this by base64encoding foo.jar):
+      callback(base64decode(
+        'UEsDBBQACAAIAFd2Pj4AAAAAAAAAAAAAAAAJAAQATUVUQS1JTkYv/soAAAMAUEsHCAAAAAACAAAAAAAA' +
+	'AFBLAwQUAAgACABXdj4+AAAAAAAAAAAAAAAAFAAAAE1FVEEtSU5GL01BTklGRVNULk1G803My0xLLS7R' +
+	'DUstKs7Mz7NSMNQz4OVyLkpNLElN0XWqBAmY6RnEGxkpaDgWFOSkKnjmJetp8nLxcgEAUEsHCPlAfs88' +
+	'AAAAPAAAAFBLAwQUAAgACAA1dj4+AAAAAAAAAAAAAAAABgAAAGZvby5qc0utKMgvKinWS8vPV7BVSCvN' +
+	'Sy7JzM/TqNBRqNRUqFYoSi0pLcpTqFDQUqi0Vqi1BgBQSwcIGwhXqzEAAAAvAAAAUEsBAhQAFAAIAAgA' +
+	'V3Y+PgAAAAACAAAAAAAAAAkABAAAAAAAAAAAAAAAAAAAAE1FVEEtSU5GL/7KAABQSwECFAAUAAgACABX' +
+	'dj4++UB+zzwAAAA8AAAAFAAAAAAAAAAAAAAAAAA9AAAATUVUQS1JTkYvTUFOSUZFU1QuTUZQSwECFAAU' +
+	'AAgACAA1dj4+GwhXqzEAAAAvAAAABgAAAAAAAAAAAAAAAAC7AAAAZm9vLmpzUEsFBgAAAAADAAMAsQAA' +
+	'ACABAAAAAA=='));
+    } else {
+      callback(null);
+    }
+  };
+
+  let remoteLoader = new remoteLoaderModule.RemoteExperimentLoader(stubLogger, getFileFunc);
+
+  function clearIndexFileCache() {
+    // TODO this needs to go in a teardown
+    dump("Killing the mungled index file.\n");
+    let indexFile = remoteLoader.cachedIndexNsiFile;
+    if (indexFile.exists()) {
+      indexFile.remove(false);
+    }
+  }
+
+  dump("Preparing To Test Kill Switch!!!\n");
+  remoteLoader.checkForUpdates(function(hasChanges) {
+    if (hasChanges) {
+      dump("Testing that foo study is loaded.\n");
+      let exp = remoteLoader.getExperiments();
+      let count = 0;
+      for (let i in exp) {
+        count += 1;
+      }
+      cheapAssertEqual(count, 1, "Supposed to find one file.");
+      let fooModule = exp["foo.js"];
+      cheapAssertEqual(fooModule.foo(3, 4), 12, "Supposed to load the foo module.\n");
+    } else {
+      cheapAssertFail("checkForUpdates is supposed to find changes.");
+    }
+
+    /* Now we change the index file and call checkForUpdates again... test that:
+     * a. with indexJson2, the Foo Study continues to run.
+     * b. with indexJson3, the Foo Study stops immediately.
+     * */
+    clearIndexFileCache();
+    indexJson = indexJson2;
+    dump("Preparing to check for updates 2nd time.\n");
+    remoteLoader.checkForUpdates( function(hasChanges) {
+      dump("in the callback for check for updates 2nd time.\n");
+      if (hasChanges) {
+        dump("checkforUpdates 2nd time - has changes.\n");
+      } else {
+        dump("checkforUpdates 2nd time - does not have changes.\n");
+      }
+
+      dump("Testing that foo study is loaded. (2nd time)\n");
+      let exp = remoteLoader.getExperiments();
+      let count = 0;
+      for (let i in exp) {
+        count += 1;
+      }
+      cheapAssertEqual(count, 1, "Supposed to find one file (2nd time).");
+      let fooModule = exp["foo.js"];
+      cheapAssertEqual(fooModule.foo(3, 4), 12, "Supposed to load the foo module (2).\n");
+
+
+      clearIndexFileCache();
+      indexJson = indexJson3;
+      remoteLoader.checkForUpdates( function(hasChanges) {
+        if (hasChanges) {
+          dump("checkForUpdates 3rd time - has changes.\n");
+        } else {
+          dump("checkForUpdates 3rd time - has no changes.\n");
+        }
+
+        dump("Testing that foo study is NOT loaded. (3rd time)\n");
+        let exp = remoteLoader.getExperiments();
+        let count = 0;
+        for (let i in exp) {
+          count += 1;
+        }
+        cheapAssertEqual(count, 0, "File should be killed!\n");
+
+        clearIndexFileCache();
+      });
+    });
+  });
+}

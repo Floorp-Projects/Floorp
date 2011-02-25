@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script type="text/javascript">
+      function boom()
+      {
+        iframe = document.getElementById("iframe");
+        iframeBody = iframe.contentDocument.body;
+        iframeBody.appendChild(makeNamedSpan("w"));
+        remove(iframe);
+        iframeBody.appendChild(makeNamedSpan("w"));
+        remove(iframeBody);
+        document.documentElement.className = "";
+      }
+
+      function makeNamedSpan(i)
+      {
+        var s = document.createElement("span");
+        s.id = i;
+        return s;
+      }
+
+      function remove(n)    { n.parentNode.removeChild(n); }
+    </script>
+  </head>
+  <body onload="boom();">
+    <iframe id="iframe" src="data:text/html,S"></iframe>
+  </body>
+</html>

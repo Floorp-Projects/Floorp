@@ -104,8 +104,6 @@ class StubCompiler
         return masm.buffer();
     }
 
-    Call vpInc(JSOp op, uint32 depth);
-
     /*
      * Force a frame sync and return a label before the syncing code.
      * A Jump may bind to the label with leaveExitDirect().

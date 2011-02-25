@@ -97,6 +97,10 @@ let Storage = {
 
     this._sessionStore.setTabValue(tab, this.TAB_DATA_IDENTIFIER,
       JSON.stringify(data));
+
+    // Notify subscribers
+    if (data && data.imageData && tab._tabViewTabItem)
+      tab._tabViewTabItem._sendToSubscribers("savedImageData");
   },
 
   // ----------
@@ -183,6 +187,14 @@ let Storage = {
   // Reads the global data for the <UIManager> singleton for the given window.
   readUIData: function Storage_readUIData(win) {
     return this.readData(win, this.UI_DATA_IDENTIFIER);
+  },
+
+  // ----------
+  // Function: saveVisibilityData
+  // Saves visibility for the given window.
+  saveVisibilityData: function Storage_saveVisibilityData(win, data) {
+    this._sessionStore.setWindowValue(
+      win, win.TabView.VISIBILITY_IDENTIFIER, data);
   },
 
   // ----------

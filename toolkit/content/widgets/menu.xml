@@ -60,6 +60,12 @@
         ]]></setter>
       </property>
 
+      <property name="openedWithKey" readonly="true">
+        <getter><![CDATA[
+          return this.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject_MOZILLA_2_0_BRANCH).openedWithKey;
+        ]]></getter>
+      </property>
+
       <!-- nsIDOMXULContainerElement interface -->
       <method name="appendItem">
         <parameter name="aLabel"/>

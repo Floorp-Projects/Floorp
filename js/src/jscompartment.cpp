@@ -44,26 +44,73 @@
 #include "jsiter.h"
 #include "jsproxy.h"
 #include "jsscope.h"
+#include "jstracer.h"
+#include "jswrapper.h"
+#include "assembler/wtf/Platform.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"
 #include "methodjit/MonoIC.h"
 
 #include "jsgcinlines.h"
 
+#if ENABLE_YARR_JIT
+#include "assembler/jit/ExecutableAllocator.h"
+#endif
+
 using namespace js;
 using namespace js::gc;
 
 JSCompartment::JSCompartment(JSRuntime *rt)
-  : rt(rt), principals(NULL), data(NULL), marked(false), active(false), debugMode(rt->debugMode),
-    anynameObject(NULL), functionNamespaceObject(NULL)
+  : rt(rt),
+    principals(NULL),
+    gcBytes(0),
+    gcTriggerBytes(0),
+    gcLastBytes(0),
+    data(NULL),
+    active(false),
+#ifdef JS_METHODJIT
+    jaegerCompartment(NULL),
+#endif
+    propertyTree(this),
+    debugMode(rt->debugMode),
+#if ENABLE_YARR_JIT
+    regExpAllocator(NULL),
+#endif
+    mathCache(NULL),
+    marked(false)
 {
     JS_INIT_CLIST(&scripts);
+
+#ifdef JS_TRACER
+    /* InitJIT expects this area to be zero'd. */
+    PodZero(&traceMonitor);
+#endif
+
+    PodArrayZero(scriptsToGC);
 }
 
 JSCompartment::~JSCompartment()
 {
+    Shape::finishEmptyShapes(this);
+    propertyTree.finish();
+
+#if ENABLE_YARR_JIT
+    js_delete(regExpAllocator);
+#endif
+
+#if defined JS_TRACER
+    FinishJIT(&traceMonitor);
+#endif
+
 #ifdef JS_METHODJIT
-    delete jaegerCompartment;
+    js_delete(jaegerCompartment);
+#endif
+
+    js_delete(mathCache);
+
+#ifdef DEBUG
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(scriptsToGC); ++i)
+        JS_ASSERT(!scriptsToGC[i]);
 #endif
 }
 
@@ -82,8 +129,38 @@ JSCompartment::init()
     if (!crossCompartmentWrappers.init())
         return false;
 
+    if (!propertyTree.init())
+        return false;
+
+#ifdef DEBUG
+    if (rt->meterEmptyShapes()) {
+        if (!emptyShapes.init())
+            return false;
+    }
+#endif
+
+    if (!Shape::initEmptyShapes(this))
+        return false;
+
+#ifdef JS_TRACER
+    if (!InitJIT(&traceMonitor))
+        return false;
+#endif
+
+    if (!toSourceCache.init())
+        return false;
+
+#if ENABLE_YARR_JIT
+    regExpAllocator = JSC::ExecutableAllocator::create();
+    if (!regExpAllocator)
+        return false;
+#endif
+
+    if (!backEdgeTable.init())
+        return false;
+
 #ifdef JS_METHODJIT
-    if (!(jaegerCompartment = new mjit::JaegerCompartment))
+    if (!(jaegerCompartment = js_new<mjit::JaegerCompartment>()))
         return false;
     return jaegerCompartment->Initialize();
 #else
@@ -99,6 +176,13 @@ JSCompartment::arenaListsAreEmpty()
            return false;
   }
   return true;
+}
+
+static bool
+IsCrossCompartmentWrapper(JSObject *wrapper)
+{
+    return wrapper->isWrapper() &&
+           !!(JSWrapper::wrapperHandler(wrapper)->flags() & JSWrapper::CROSS_COMPARTMENT);
 }
 
 bool
@@ -127,7 +211,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
         /* If the string is an atom, we don't have to copy. */
         if (str->isAtomized()) {
-            JS_ASSERT(str->asCell()->compartment() == cx->runtime->defaultCompartment);
+            JS_ASSERT(str->asCell()->compartment() == cx->runtime->atomsCompartment);
             return true;
         }
     }
@@ -169,17 +253,21 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
             if (obj->getCompartment() == this)
                 return true;
 
-            if (cx->runtime->preWrapObjectCallback)
+            if (cx->runtime->preWrapObjectCallback) {
                 obj = cx->runtime->preWrapObjectCallback(cx, global, obj, flags);
-            if (!obj)
-                return false;
+                if (!obj)
+                    return false;
+            }
 
             vp->setObject(*obj);
             if (obj->getCompartment() == this)
                 return true;
         } else {
-            if (cx->runtime->preWrapObjectCallback)
+            if (cx->runtime->preWrapObjectCallback) {
                 obj = cx->runtime->preWrapObjectCallback(cx, global, obj, flags);
+                if (!obj)
+                    return false;
+            }
 
             JS_ASSERT(!obj->isWrapper() || obj->getClass()->ext.innerObject);
             vp->setObject(*obj);
@@ -197,8 +285,16 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     /* If we already have a wrapper for this value, use it. */
     if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(*vp)) {
         *vp = p->value;
-        if (vp->isObject())
-            vp->toObject().setParent(global);
+        if (vp->isObject()) {
+            JSObject *obj = &vp->toObject();
+            JS_ASSERT(IsCrossCompartmentWrapper(obj));
+            if (obj->getParent() != global) {
+                do {
+                    obj->setParent(global);
+                    obj = obj->getProto();
+                } while (obj && IsCrossCompartmentWrapper(obj));
+            }
+        }
         return true;
     }
 
@@ -293,6 +389,16 @@ JSCompartment::wrap(JSContext *cx, PropertyOp *propp)
 }
 
 bool
+JSCompartment::wrap(JSContext *cx, StrictPropertyOp *propp)
+{
+    Value v = CastAsObjectJsval(*propp);
+    if (!wrap(cx, &v))
+        return false;
+    *propp = CastAsStrictPropertyOp(v.toObjectOrNull());
+    return true;
+}
+
+bool
 JSCompartment::wrap(JSContext *cx, PropertyDescriptor *desc)
 {
     return wrap(cx, &desc->obj) &&
@@ -313,24 +419,7 @@ JSCompartment::wrap(JSContext *cx, AutoIdVector &props)
     return true;
 }
 
-bool
-JSCompartment::wrapException(JSContext *cx)
-{
-    JS_ASSERT(cx->compartment == this);
-
-    if (cx->throwing) {
-        AutoValueRooter tvr(cx, cx->exception);
-        cx->throwing = false;
-        cx->exception.setNull();
-        if (wrap(cx, tvr.addr())) {
-            cx->throwing = true;
-            cx->exception = tvr.value();
-        }
-        return false;
-    }
-    return true;
-}
-
+#if defined JS_METHODJIT && defined JS_MONOIC
 /*
  * Check if the pool containing the code for jit should be destroyed, per the
  * heuristics in JSCompartment::sweep.
@@ -355,6 +444,47 @@ ScriptPoolDestroyed(JSContext *cx, mjit::JITScript *jit,
     }
     return pool->m_destroy;
 }
+#endif
+
+/*
+ * This method marks pointers that cross compartment boundaries. It should be
+ * called only by per-compartment GCs, since full GCs naturally follow pointers
+ * across compartments.
+ */
+void
+JSCompartment::markCrossCompartment(JSTracer *trc)
+{
+    for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront())
+        MarkValue(trc, e.front().key, "cross-compartment wrapper");
+}
+
+void
+JSCompartment::mark(JSTracer *trc)
+{
+    if (IS_GC_MARKING_TRACER(trc)) {
+        JSRuntime *rt = trc->context->runtime;
+
+        if (rt->gcCurrentCompartment && rt->gcCurrentCompartment != this)
+            return;
+
+        if (marked)
+            return;
+        marked = true;
+    }
+
+    if (emptyArgumentsShape)
+        emptyArgumentsShape->trace(trc);
+    if (emptyBlockShape)
+        emptyBlockShape->trace(trc);
+    if (emptyCallShape)
+        emptyCallShape->trace(trc);
+    if (emptyDeclEnvShape)
+        emptyDeclEnvShape->trace(trc);
+    if (emptyEnumeratorShape)
+        emptyEnumeratorShape->trace(trc);
+    if (emptyWithShape)
+        emptyWithShape->trace(trc);
+}
 
 void
 JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
@@ -362,14 +492,28 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
     chunk = NULL;
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        JS_ASSERT_IF(IsAboutToBeFinalized(e.front().key.toGCThing()) &&
-                     !IsAboutToBeFinalized(e.front().value.toGCThing()),
+        JS_ASSERT_IF(IsAboutToBeFinalized(cx, e.front().key.toGCThing()) &&
+                     !IsAboutToBeFinalized(cx, e.front().value.toGCThing()),
                      e.front().key.isString());
-        if (IsAboutToBeFinalized(e.front().key.toGCThing()) ||
-            IsAboutToBeFinalized(e.front().value.toGCThing())) {
+        if (IsAboutToBeFinalized(cx, e.front().key.toGCThing()) ||
+            IsAboutToBeFinalized(cx, e.front().value.toGCThing())) {
             e.removeFront();
         }
     }
+
+#ifdef JS_TRACER
+    traceMonitor.sweep(cx);
+#endif
+
+#ifdef JS_TYPE_INFERENCE
+    for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
+        JSScript *script = reinterpret_cast<JSScript *>(cursor);
+        if (script->types)
+            script->types->sweep(cx);
+    }
+#endif
+
+#if defined JS_METHODJIT && defined JS_MONOIC
 
     /*
      * The release interval is the frequency with which we should try to destroy
@@ -383,14 +527,9 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 
     for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
         JSScript *script = reinterpret_cast<JSScript *>(cursor);
-#ifdef JS_TYPE_INFERENCE
-        if (script->types)
-            script->types->sweep(cx);
-#endif
 
-#if defined JS_METHODJIT && defined JS_MONOIC
         if (script->hasJITCode()) {
-            mjit::ic::SweepCallICs(script, discardScripts);
+            mjit::ic::SweepCallICs(cx, script, discardScripts);
             if (discardScripts) {
                 if (script->jitNormal &&
                     ScriptPoolDestroyed(cx, script->jitNormal, releaseInterval, counter)) {
@@ -403,8 +542,9 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
                 }
             }
         }
-#endif
     }
+
+#endif
 
     types.sweep(cx);
     active = false;
@@ -414,6 +554,22 @@ void
 JSCompartment::purge(JSContext *cx)
 {
     freeLists.purge();
+    dtoaCache.purge();
+
+    /* Destroy eval'ed scripts. */
+    js_DestroyScriptsToGC(cx, this);
+
+    nativeIterCache.purge();
+    toSourceCache.clear();
+
+#ifdef JS_TRACER
+    /*
+     * If we are about to regenerate shapes, we have to flush the JIT cache,
+     * which will eventually abort any current recording.
+     */
+    if (cx->runtime->gcRegenShapes)
+        traceMonitor.needFlush = JS_TRUE;
+#endif
 
 #ifdef JS_METHODJIT
     for (JSScript *script = (JSScript *)scripts.next;
@@ -435,3 +591,35 @@ JSCompartment::purge(JSContext *cx)
     }
 #endif
 }
+
+MathCache *
+JSCompartment::allocMathCache(JSContext *cx)
+{
+    JS_ASSERT(!mathCache);
+    mathCache = js_new<MathCache>();
+    if (!mathCache)
+        js_ReportOutOfMemory(cx);
+    return mathCache;
+}
+
+size_t
+JSCompartment::backEdgeCount(jsbytecode *pc) const
+{
+    if (BackEdgeMap::Ptr p = backEdgeTable.lookup(pc))
+        return p->value;
+
+    return 0;
+}
+
+size_t
+JSCompartment::incBackEdgeCount(jsbytecode *pc)
+{
+    if (BackEdgeMap::AddPtr p = backEdgeTable.lookupForAdd(pc)) {
+        p->value++;
+        return p->value;
+    } else {
+        backEdgeTable.add(p, pc, 1);
+        return 1;
+    }
+}
+

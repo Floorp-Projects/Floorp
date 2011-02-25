@@ -54,6 +54,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsPluginLogging.h"
 #include "nsICategoryManager.h"
+#include "nsNPAPIPlugin.h"
 #include "mozilla/TimeStamp.h"
 
 using mozilla::TimeStamp;
@@ -285,7 +286,7 @@ static nsresult ConvertToUTF8(nsIUnicodeDecoder *aUnicodeDecoder,
 
 nsresult nsPluginTag::EnsureMembersAreUTF8()
 {
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MACOSX)
   return NS_OK;
 #else
   nsresult rv;

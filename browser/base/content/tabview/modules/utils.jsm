@@ -156,16 +156,16 @@ Rect.prototype = {
 
   // ----------
   // Function: contains
-  // Returns a boolean denoting if the <Rect> is contained inside
-  // of the bounding rect.
+  // Returns a boolean denoting if the given <Rect> is contained within
+  // this rectangle.
   //
   // Paramaters
   //  - A <Rect>
   contains: function Rect_contains(rect) {
-    return (rect.left > this.left &&
-            rect.right < this.right &&
-            rect.top > this.top &&
-            rect.bottom < this.bottom);
+    return (rect.left >= this.left &&
+            rect.right <= this.right &&
+            rect.top >= this.top &&
+            rect.bottom <= this.bottom);
   },
 
   // ----------
@@ -262,22 +262,6 @@ Rect.prototype = {
     this.top = a.top;
     this.width = a.width;
     this.height = a.height;
-  },
-
-  // ----------
-  // Function: css
-  // Returns an object with the dimensions of this rectangle, suitable for
-  // passing into iQ's css method. You could of course just pass the rectangle
-  // straight in, but this is cleaner, as it removes all the extraneous
-  // properties. If you give a <Rect> to <iQClass.css> without this, it will
-  // ignore the extraneous properties, but result in CSS warnings.
-  css: function Rect_css() {
-    return {
-      left: this.left,
-      top: this.top,
-      width: this.width,
-      height: this.height
-    };
   }
 };
 
@@ -595,6 +579,20 @@ let Utils = {
   },
 
   // ___ Misc
+
+  // ----------
+  // Function: isLeftClick
+  // Given a DOM mouse event, returns true if it was for the left mouse button.
+  isLeftClick: function Utils_isLeftClick(event) {
+    return event.button == 0;
+  },
+
+  // ----------
+  // Function: isMiddleClick
+  // Given a DOM mouse event, returns true if it was for the middle mouse button.
+  isMiddleClick: function Utils_isMiddleClick(event) {
+    return event.button == 1;
+  },
 
   // ----------
   // Function: isRightClick

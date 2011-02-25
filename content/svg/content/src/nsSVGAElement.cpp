@@ -63,11 +63,12 @@ NS_IMPL_RELEASE_INHERITED(nsSVGAElement, nsSVGAElementBase)
 DOMCI_NODE_DATA(SVGAElement, nsSVGAElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGAElement)
-  NS_NODE_INTERFACE_TABLE6(nsSVGAElement,
+  NS_NODE_INTERFACE_TABLE7(nsSVGAElement,
                            nsIDOMNode,
                            nsIDOMElement,
                            nsIDOMSVGElement,
                            nsIDOMSVGAElement,
+                           nsIDOMSVGURIReference,
                            nsILink,
                            Link)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAElement)

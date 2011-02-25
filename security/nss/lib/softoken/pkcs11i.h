@@ -46,7 +46,7 @@
 #include "pkcs11t.h"
 
 #include "sftkdbt.h"
-
+#include "hasht.h"
 
 /* 
  * Configuration Defines 
@@ -701,6 +701,21 @@ PRBool sftk_poisonHandle(SFTKSlot *slot, SECItem *dbkey,
 SFTKObject * sftk_NewTokenObject(SFTKSlot *slot, SECItem *dbKey, 
 						CK_OBJECT_HANDLE handle);
 SFTKTokenObject *sftk_convertSessionToToken(SFTKObject *so);
+
+
+/* J-PAKE (jpakesftk.c) */
+extern
+CK_RV jpake_Round1(HASH_HashType hashType,
+                   CK_NSS_JPAKERound1Params * params,
+                   SFTKObject * key);
+extern
+CK_RV jpake_Round2(HASH_HashType hashType,
+                   CK_NSS_JPAKERound2Params * params,
+                   SFTKObject * sourceKey, SFTKObject * key);
+extern
+CK_RV jpake_Final(HASH_HashType hashType,
+                  const CK_NSS_JPAKEFinalParams * params,
+                  SFTKObject * sourceKey, SFTKObject * key);
 
 /****************************************
  * implement TLS Pseudo Random Function (PRF)

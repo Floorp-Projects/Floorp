@@ -142,6 +142,9 @@ class FrameEntry
         setConstant(Jsvalify(newValue));
     }
 
+    bool isCopy() const { return !!copy; }
+    bool isCopied() const { return copied; }
+
     inline bool initializerArray() {
         return initArray;
     }
@@ -217,17 +220,9 @@ class FrameEntry
             knownType = cv.extractNonDoubleType();
     }
 
-    bool isCopied() const {
-        return copied;
-    }
-
     void setCopied() {
         JS_ASSERT(!isCopy());
         copied = true;
-    }
-
-    bool isCopy() const {
-        return !!copy;
     }
 
     FrameEntry *copyOf() const {

@@ -129,7 +129,7 @@
 #include "nsIXULDocument.h"
 #endif
 #ifdef ACCESSIBILITY
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 #endif
 
 #include "nsInlineFrame.h"
@@ -144,12 +144,10 @@
 #ifdef MOZ_MATHML
 #include "nsMathMLParts.h"
 #endif
-#ifdef MOZ_SVG
 #include "nsSVGFeatures.h"
 #include "nsSVGEffects.h"
 #include "nsSVGUtils.h"
 #include "nsSVGOuterSVGFrame.h"
-#endif
 
 #include "nsRefreshDriver.h"
 
@@ -164,11 +162,8 @@ nsIFrame*
 NS_NewHTMLVideoFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 #endif
 
-#ifdef MOZ_SVG
 #include "nsSVGTextContainerFrame.h"
 
-PRBool
-NS_SVGEnabled();
 nsIFrame*
 NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
@@ -217,7 +212,6 @@ nsIFrame*
 NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-#endif
 
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"
@@ -2371,6 +2365,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     return NS_OK;
   }
 
+  // Make sure to start any background image loads for the root element now.
+  styleContext->StartBackgroundImageLoads();
+
   nsFrameConstructorSaveState absoluteSaveState;
   if (mHasRootAbsPosContainingBlock) {
     // Push the absolute containing block now so we can absolutely position
@@ -2408,9 +2405,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   }
   else
 #endif
-#ifdef MOZ_SVG
   if (aDocElement->GetNameSpaceID() == kNameSpaceID_SVG) {
-    if (aDocElement->Tag() == nsGkAtoms::svg && NS_SVGEnabled()) {
+    if (aDocElement->Tag() == nsGkAtoms::svg) {
       contentFrame = NS_NewSVGOuterSVGFrame(mPresShell, styleContext);
       if (NS_UNLIKELY(!contentFrame)) {
         return NS_ERROR_OUT_OF_MEMORY;
@@ -2436,10 +2432,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     } else {
       return NS_ERROR_FAILURE;
     }
-  }
-  else
-#endif
-  {
+  } else {
     PRBool docElemIsTable = (display->mDisplay == NS_STYLE_DISPLAY_TABLE);
     if (docElemIsTable) {
       // We're going to call the right function ourselves, so no need to give a
@@ -3371,7 +3364,6 @@ FindAncestorWithGeneratedContentPseudo(nsIFrame* aFrame)
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindTextData(nsIFrame* aParentFrame)
 {
-#ifdef MOZ_SVG
   if (aParentFrame && aParentFrame->IsFrameOfType(nsIFrame::eSVG)) {
     nsIFrame *ancestorFrame =
       nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
@@ -3385,7 +3377,6 @@ nsCSSFrameConstructor::FindTextData(nsIFrame* aParentFrame)
     }
     return nsnull;
   }
-#endif
 
   static const FrameConstructionData sTextData =
     FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT, NS_NewTextFrame);
@@ -3945,15 +3936,12 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
     nsIContent* content = aContent[i];
     NS_ASSERTION(content, "null anonymous content?");
 
-#ifdef MOZ_SVG
     // least-surprise CSS binding until we do the SVG specified
     // cascading rules for <svg:use> - bug 265894
     if (aParent &&
         aParent->NodeInfo()->Equals(nsGkAtoms::use, kNameSpaceID_SVG)) {
       content->SetFlags(NODE_IS_ANONYMOUS);
-    } else
-#endif
-    {
+    } else {
       content->SetNativeAnonymous();
     }
 
@@ -4732,7 +4720,6 @@ nsCSSFrameConstructor::FindMathMLData(nsIContent* aContent,
 }
 #endif // MOZ_MATHML
 
-#ifdef MOZ_SVG
 // Only outer <svg> elements can be floated or positioned.  All other SVG
 // should be in-flow.
 #define SIMPLE_SVG_FCDATA(_func)                                        \
@@ -4750,7 +4737,7 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
                                    nsIFrame* aParentFrame,
                                    nsStyleContext* aStyleContext)
 {
-  if (aNameSpaceID != kNameSpaceID_SVG || !NS_SVGEnabled()) {
+  if (aNameSpaceID != kNameSpaceID_SVG) {
     return nsnull;
   }
 
@@ -4806,27 +4793,25 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
     return &sSuppressData;
   }
 
-  // Elements with failing conditional processing attributes never get
-  // rendered.  Note that this is not where we select which frame in a
-  // <switch> to render!  That happens in nsSVGSwitchFrame::PaintSVG.
-  if (!nsSVGFeatures::PassesConditionalProcessingTests(aContent)) {
-    return &sContainerData;
-  }
-
-  // Special case for aTag == nsGkAtoms::svg because we don't want to
-  // have to recompute parentIsSVG for it.
-  if (aTag == nsGkAtoms::svg) {
-    if (parentIsSVG) {
-      static const FrameConstructionData sInnerSVGData =
-        SIMPLE_SVG_FCDATA(NS_NewSVGInnerSVGFrame);
-      return &sInnerSVGData;
-    }
-
+  if (aTag == nsGkAtoms::svg && !parentIsSVG) {
+    // We need outer <svg> elements to have an nsSVGOuterSVGFrame regardless
+    // of whether they fail conditional processing attributes, since various
+    // SVG frames assume that one exists.  We handle the non-rendering
+    // of failing outer <svg> element contents like <switch> statements,
+    // and do the PassesConditionalProcessingTests call in
+    // nsSVGOuterSVGFrame::Init.
     static const FrameConstructionData sOuterSVGData =
       FCDATA_DECL(FCDATA_FORCE_VIEW | FCDATA_SKIP_ABSPOS_PUSH |
                   FCDATA_DISALLOW_GENERATED_CONTENT,
                   NS_NewSVGOuterSVGFrame);
     return &sOuterSVGData;
+  }
+  
+  if (!nsSVGFeatures::PassesConditionalProcessingTests(aContent)) {
+    // Elements with failing conditional processing attributes never get
+    // rendered.  Note that this is not where we select which frame in a
+    // <switch> to render!  That happens in nsSVGSwitchFrame::PaintSVG.
+    return &sContainerData;
   }
 
   // Special cases for text/tspan/textPath, because the kind of frame
@@ -4858,6 +4843,7 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
   }
 
   static const FrameConstructionDataByTag sSVGData[] = {
+    SIMPLE_SVG_CREATE(svg, NS_NewSVGInnerSVGFrame),
     SIMPLE_SVG_CREATE(g, NS_NewSVGGFrame),
     SIMPLE_SVG_CREATE(svgSwitch, NS_NewSVGSwitchFrame),
     SIMPLE_SVG_CREATE(polygon, NS_NewSVGPathGeometryFrame),
@@ -4972,8 +4958,6 @@ nsCSSFrameConstructor::ConstructSVGForeignObjectFrame(nsFrameConstructorState& a
 
   return rv;
 }
-
-#endif // MOZ_SVG
 
 void
 nsCSSFrameConstructor::AddPageBreakItem(nsIContent* aContent,
@@ -5192,14 +5176,11 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   const FrameConstructionData* data;
   if (isText) {
     data = FindTextData(aParentFrame);
-#ifdef MOZ_SVG
     if (!data) {
       // Nothing to do here; suppressed text inside SVG
       return;
     }
-#endif /* MOZ_SVG */
   } else {
-#ifdef MOZ_SVG
     // Don't create frames for non-SVG element children of SVG elements.
     if (aNameSpaceID != kNameSpaceID_SVG &&
         aParentFrame &&
@@ -5210,7 +5191,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
                               isGeneratedContent);
       return;
     }
-#endif /* MOZ_SVG */
 
     data = FindHTMLData(aContent, aTag, aNameSpaceID, aParentFrame,
                         styleContext);
@@ -5222,12 +5202,10 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
       data = FindMathMLData(aContent, aTag, aNameSpaceID, styleContext);
     }
 #endif
-#ifdef MOZ_SVG
     if (!data) {
       data = FindSVGData(aContent, aTag, aNameSpaceID, aParentFrame,
                          styleContext);
     }
-#endif /* MOZ_SVG */
 
     // Now check for XUL display types
     if (!data) {
@@ -5485,11 +5463,9 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
                               aFrameItems);
   }
 
-  // Start background loads during frame construction. This is just
-  // a hint; the paint code will do the right thing in any case.
-  {
-    styleContext->GetStyleBackground();
-  }
+  // Start background loads during frame construction so that we're
+  // guaranteed that they will be started before onload fires.
+  styleContext->StartBackgroundImageLoads();
 
   nsFrameState savedStateBits = aState.mAdditionalStateBits;
   if (item.mIsGeneratedContent) {
@@ -5529,8 +5505,12 @@ IsRootBoxFrame(nsIFrame *aFrame)
 nsresult
 nsCSSFrameConstructor::ReconstructDocElementHierarchy()
 {
-  return RecreateFramesForContent(mPresShell->GetDocument()->GetRootElement(),
-				  PR_FALSE);
+  Element* rootElement = mDocument->GetRootElement();
+  if (!rootElement) {
+    /* nothing to do */
+    return NS_OK;
+  }
+  return RecreateFramesForContent(rootElement, PR_FALSE);
 }
 
 nsIFrame*
@@ -6765,13 +6745,10 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
 #endif
 
 #ifdef ACCESSIBILITY
-  if (mPresShell->IsAccessibilityActive()) {
-    nsCOMPtr<nsIAccessibilityService> accService =
-      do_GetService("@mozilla.org/accessibilityService;1");
-    if (accService) {
-      accService->ContentRangeInserted(mPresShell, aContainer,
-                                       aFirstNewContent, nsnull);
-    }
+  nsAccessibilityService* accService = nsIPresShell::AccService();
+  if (accService) {
+    accService->ContentRangeInserted(mPresShell, aContainer,
+                                     aFirstNewContent, nsnull);
   }
 #endif
 
@@ -6956,13 +6933,10 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
     }
 
 #ifdef ACCESSIBILITY
-    if (mPresShell->IsAccessibilityActive()) {
-      nsCOMPtr<nsIAccessibilityService> accService =
-          do_GetService("@mozilla.org/accessibilityService;1");
-      if (accService) {
-        accService->ContentRangeInserted(mPresShell, aContainer,
-                                         aStartChild, aEndChild);
-      }
+    nsAccessibilityService* accService = nsIPresShell::AccService();
+    if (accService) {
+      accService->ContentRangeInserted(mPresShell, aContainer,
+                                       aStartChild, aEndChild);
     }
 #endif
 
@@ -7369,13 +7343,10 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
 #endif
 
 #ifdef ACCESSIBILITY
-  if (mPresShell->IsAccessibilityActive()) {
-    nsCOMPtr<nsIAccessibilityService> accService =
-      do_GetService("@mozilla.org/accessibilityService;1");
-    if (accService) {
-      accService->ContentRangeInserted(mPresShell, aContainer,
-                                       aStartChild, aEndChild);
-    }
+  nsAccessibilityService* accService = nsIPresShell::AccService();
+  if (accService) {
+    accService->ContentRangeInserted(mPresShell, aContainer,
+                                     aStartChild, aEndChild);
   }
 #endif
 
@@ -7512,12 +7483,9 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
     }
 
 #ifdef ACCESSIBILITY
-    if (mPresShell->IsAccessibilityActive()) {
-      nsCOMPtr<nsIAccessibilityService> accService =
-          do_GetService("@mozilla.org/accessibilityService;1");
-      if (accService) {
-        accService->ContentRemoved(mPresShell, aContainer, aChild);
-      }
+    nsAccessibilityService* accService = nsIPresShell::AccService();
+    if (accService) {
+      accService->ContentRemoved(mPresShell, aContainer, aChild);
     }
 #endif
 
@@ -7691,8 +7659,7 @@ UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager,
   do {
     nsIFrame* child = aFrame->GetFirstChild(childList);
     while (child) {
-      if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
-          || (child->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+      if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
         // only do frames that don't have placeholders
         if (nsGkAtoms::placeholderFrame == child->GetType()) {
           // do the out-of-flow frame and its continuations
@@ -7701,7 +7668,7 @@ UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager,
           do {
             DoApplyRenderingChangeToTree(outOfFlowFrame, aViewManager,
                                          aFrameManager, aChange);
-          } while (outOfFlowFrame = outOfFlowFrame->GetNextContinuation());
+          } while ((outOfFlowFrame = outOfFlowFrame->GetNextContinuation()));
         } else if (childList == nsGkAtoms::popupList) {
           DoApplyRenderingChangeToTree(child, aViewManager,
                                        aFrameManager, aChange);
@@ -7739,7 +7706,6 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     // if frame has view, will already be invalidated
     if (aChange & nsChangeHint_RepaintFrame) {
       if (aFrame->IsFrameOfType(nsIFrame::eSVG)) {
-#ifdef MOZ_SVG
         if (!(aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
           nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(aFrame);
           if (outerSVGFrame) {
@@ -7757,7 +7723,6 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
             outerSVGFrame->UpdateAndInvalidateCoveredRegion(aFrame);
           }
         }
-#endif
       } else {
         aFrame->InvalidateOverflowRect();
       }
@@ -7770,8 +7735,9 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     
     if (aChange & nsChangeHint_UpdateTransformLayer) {
       aFrame->MarkLayersActive();
-      aFrame->InvalidateLayer(aFrame->GetVisualOverflowRectRelativeToSelf(),
-                              nsDisplayItem::TYPE_TRANSFORM);
+      // Invalidate the old transformed area. The new transformed area
+      // will be invalidated by nsFrame::FinishAndStoreOverflowArea.
+      aFrame->InvalidateTransformLayer();
     }
   }
 }
@@ -8046,11 +8012,9 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       RecreateFramesForContent(content, PR_FALSE);
     } else {
       NS_ASSERTION(frame, "This shouldn't happen");
-#ifdef MOZ_SVG
       if (hint & nsChangeHint_UpdateEffects) {
         nsSVGEffects::UpdateEffects(frame);
       }
-#endif
       if (hint & nsChangeHint_NeedReflow) {
         StyleChangeReflow(frame, hint);
         didReflow = PR_TRUE;
@@ -8174,9 +8138,9 @@ nsCSSFrameConstructor::DoContentStateChanged(Element* aElement,
     // If it's generated content, ignore LOADING/etc state changes on it.
     if (!primaryFrame->IsGeneratedContentFrame() &&
         aStateMask.HasAtLeastOneOfStates(NS_EVENT_STATE_BROKEN |
-                                  NS_EVENT_STATE_USERDISABLED |
-                                  NS_EVENT_STATE_SUPPRESSED |
-                                  NS_EVENT_STATE_LOADING)) {
+                                         NS_EVENT_STATE_USERDISABLED |
+                                         NS_EVENT_STATE_SUPPRESSED |
+                                         NS_EVENT_STATE_LOADING)) {
       hint = nsChangeHint_ReconstructFrame;
     } else {
       PRUint8 app = primaryFrame->GetStyleDisplay()->mAppearance;
@@ -8192,6 +8156,8 @@ nsCSSFrameConstructor::DoContentStateChanged(Element* aElement,
         }
       }
     }
+
+    primaryFrame->ContentStatesChanged(aStateMask);
   }
 
   nsRestyleHint rshint = 
@@ -8819,9 +8785,29 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
     nsIFrame* prevPlaceholder = mPresShell->FrameManager()->GetPlaceholderFrameFor(fixed);
     if (prevPlaceholder &&
         nsLayoutUtils::IsProperAncestorFrame(prevCanvasFrame, prevPlaceholder)) {
-      nsresult rv = ConstructFrame(state, fixed->GetContent(),
-                                   canvasFrame, fixedPlaceholders);
-      NS_ENSURE_SUCCESS(rv, rv);
+      // We want to use the same style as the primary style frame for
+      // our content
+      nsIContent* content = fixed->GetContent();
+      nsStyleContext* styleContext =
+        nsLayoutUtils::GetStyleFrame(content->GetPrimaryFrame())->
+          GetStyleContext();
+      FrameConstructionItemList items;
+      AddFrameConstructionItemsInternal(state, content, canvasFrame,
+                                        content->Tag(),
+                                        content->GetNameSpaceID(),
+                                        PR_TRUE,
+                                        styleContext,
+                                        ITEM_ALLOW_XBL_BASE |
+                                          ITEM_ALLOW_PAGE_BREAK,
+                                        items);
+      for (FCItemIterator iter(items); !iter.IsDone(); iter.Next()) {
+        NS_ASSERTION(iter.item().DesiredParentType() ==
+                       GetParentType(canvasFrame),
+                     "This is not going to work");
+        nsresult rv =
+          ConstructFramesFromItem(state, iter, canvasFrame, fixedPlaceholders);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
   }
 
@@ -9695,10 +9681,10 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
     nsContentUtils::ReportToConsole(nsContentUtils::eXUL_PROPERTIES,
                                     message,
                                     params, NS_ARRAY_LENGTH(params),
-                                    mDocument->GetDocumentURI(),
+                                    nsnull,
                                     EmptyString(), 0, 0, // not useful
                                     nsIScriptError::warningFlag,
-                                    "FrameConstructor");
+                                    "FrameConstructor", mDocument);
 
     nsRefPtr<nsStyleContext> blockSC = mPresShell->StyleSet()->
       ResolveAnonymousBoxStyle(nsCSSAnonBoxes::mozXULAnonymousBlock,
@@ -11781,6 +11767,17 @@ nsCSSFrameConstructor::GenerateChildFrames(nsIFrame* aFrame)
 
     EndUpdate();
   }
+
+#ifdef ACCESSIBILITY
+  nsAccessibilityService* accService = nsIPresShell::AccService();
+  if (accService) {
+    nsIContent* container = aFrame->GetContent();
+    nsIContent* child = container->GetFirstChild();
+    if (child) {
+      accService->ContentRangeInserted(mPresShell, container, child, nsnull);
+    }
+  }
+#endif
 
   // call XBL constructors after the frames are created
   mPresShell->GetDocument()->BindingManager()->ProcessAttachedQueue();

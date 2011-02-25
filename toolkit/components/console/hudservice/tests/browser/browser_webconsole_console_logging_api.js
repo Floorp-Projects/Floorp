@@ -101,8 +101,8 @@ function testConsoleLoggingAPI(aMethod) {
   // test for multiple arguments.
   console[aMethod]("foo", "bar");
 
-  let node = outputNode.querySelectorAll(".hud-msg-node")[0];
-  ok(/foo bar/.test(node.textContent),
+  let node = outputNode.querySelector(".hud-msg-node");
+  ok(/"foo" "bar"/.test(node.textContent),
     "Emitted both console arguments");
 }
 

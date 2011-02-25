@@ -1,6 +1,6 @@
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/base_records/crypto.js");
-Cu.import("resource://services-sync/auth.js");
+Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/util.js");
@@ -104,7 +104,7 @@ function run_test() {
     catch(ex) {
       error = ex;
     }
-    do_check_eq(error.substr(0, 32), "Record SHA256 HMAC mismatch: foo");
+    do_check_eq(error.substr(0, 42), "Record SHA256 HMAC mismatch: should be foo");
 
     // Checking per-collection keys and default key handling.
     

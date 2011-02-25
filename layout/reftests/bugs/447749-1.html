@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <title>Bug 4477749</title>
+  <style type="text/css">
+   div.scroller { overflow: scroll; width: 100px; }
+   span { border: 1px solid blue; }
+  </style>
+  <script type="text/javascript">
+function testit()
+{
+  var inner=document.getElementById("testinner").childNodes[0];
+  window.getSelection().collapse(inner, 0);
+  document.getElementById("testmid").scrollLeft=-1000;
+  document.getElementById("testouter").style.direction="ltr";
+}
+  </script>
+ </head>
+ <body onload="testit()">
+  <div id="testouter" dir="rtl">
+   <div id="testmid" class="scroller"><span id="testinner">TextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextText</span></div>
+  </div>
+ </body>
+</html>

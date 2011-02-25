@@ -49,6 +49,8 @@
 
 #include "yuv_convert.h"
 
+#include "gfxPlatform.h"
+
 using mozilla::Monitor;
 
 namespace mozilla {
@@ -103,6 +105,7 @@ protected:
  * in a memory buffer and converted to a cairo surface lazily.
  */
 class BasicPlanarYCbCrImage : public PlanarYCbCrImage, public BasicImageImplData {
+   typedef gfxASurface::gfxImageFormat gfxImageFormat;
 public:
    /** 
     * aScaleHint is a size that the image is expected to be rendered at.
@@ -110,17 +113,22 @@ public:
     */
   BasicPlanarYCbCrImage(const gfxIntSize& aScaleHint) :
     PlanarYCbCrImage(static_cast<BasicImageImplData*>(this)),
-    mScaleHint(aScaleHint)
+    mScaleHint(aScaleHint),
+    mOffscreenFormat(gfxASurface::ImageFormatUnknown)
     {}
 
   virtual void SetData(const Data& aData);
 
   virtual already_AddRefed<gfxASurface> GetAsSurface();
 
+  void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
+  gfxImageFormat GetOffscreenFormat() { return mOffscreenFormat; }
+
 protected:
   nsAutoArrayPtr<PRUint8>              mBuffer;
   nsCountedRef<nsMainThreadSurfaceRef> mSurface;
   gfxIntSize                           mScaleHint;
+  gfxImageFormat                       mOffscreenFormat;
 };
 
 void
@@ -131,13 +139,27 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
     NS_ERROR("Illegal width or height");
     return;
   }
+
+  gfxASurface::gfxImageFormat format = GetOffscreenFormat();
+
   // 'prescale' is true if the scaling is to be done as part of the
   // YCbCr to RGB conversion rather than on the RGB data when rendered.
   PRBool prescale = mScaleHint.width > 0 && mScaleHint.height > 0;
+  if (format == gfxASurface::ImageFormatRGB16_565) {
+#ifndef HAVE_SCALE_YCBCR_TO_RGB565
+    // yuv2rgb16 with scale function not yet available
+    prescale = PR_FALSE;
+#endif
+#ifndef HAVE_YCBCR_TO_RGB565
+    // yuv2rgb16 function not yet available for non-arm
+    format = gfxASurface::ImageFormatRGB24;
+#endif
+  }
   gfxIntSize size(prescale ? mScaleHint.width : aData.mPicSize.width,
                   prescale ? mScaleHint.height : aData.mPicSize.height);
 
-  mBuffer = new PRUint8[size.width * size.height * 4];
+  int bpp = gfxASurface::BytePerPixelFromFormat(format);
+  mBuffer = new PRUint8[size.width * size.height * bpp];
   if (!mBuffer) {
     // out of memory
     return;
@@ -162,34 +184,52 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
  
   // Convert from YCbCr to RGB now, scaling the image if needed.
   if (size != aData.mPicSize) {
-    gfx::ScaleYCbCrToRGB32(aData.mYChannel,
-                           aData.mCbChannel,
-                           aData.mCrChannel,
-                           mBuffer,
-                           aData.mPicSize.width,
-                           aData.mPicSize.height,
-                           size.width,
-                           size.height,
-                           aData.mYStride,
-                           aData.mCbCrStride,
-                           size.width*4,
-                           type,
-                           gfx::ROTATE_0,
-                           gfx::FILTER_BILINEAR);
-  }
-  else {
-    gfx::ConvertYCbCrToRGB32(aData.mYChannel,
+    if (format == gfxASurface::ImageFormatRGB24) {
+      gfx::ScaleYCbCrToRGB32(aData.mYChannel,
                              aData.mCbChannel,
                              aData.mCrChannel,
                              mBuffer,
-                             aData.mPicX,
-                             aData.mPicY,
                              aData.mPicSize.width,
                              aData.mPicSize.height,
+                             size.width,
+                             size.height,
                              aData.mYStride,
                              aData.mCbCrStride,
-                             aData.mPicSize.width*4,
-                             type);                                                          
+                             size.width*bpp,
+                             type,
+                             gfx::ROTATE_0,
+                             gfx::FILTER_BILINEAR);
+    } else {
+       NS_ERROR("Fail, ScaleYCbCrToRGB format not supported\n");
+    }
+  } else { // no prescale
+    if (format == gfxASurface::ImageFormatRGB16_565) {
+      gfx::ConvertYCbCrToRGB565(aData.mYChannel,
+                                aData.mCbChannel,
+                                aData.mCrChannel,
+                                mBuffer,
+                                aData.mPicX,
+                                aData.mPicY,
+                                aData.mPicSize.width,
+                                aData.mPicSize.height,
+                                aData.mYStride,
+                                aData.mCbCrStride,
+                                aData.mPicSize.width*bpp,
+                                type);
+    } else { // format != gfxASurface::ImageFormatRGB16_565
+      gfx::ConvertYCbCrToRGB32(aData.mYChannel,
+                               aData.mCbChannel,
+                               aData.mCrChannel,
+                               mBuffer,
+                               aData.mPicX,
+                               aData.mPicY,
+                               aData.mPicSize.width,
+                               aData.mPicSize.height,
+                               aData.mYStride,
+                               aData.mCbCrStride,
+                               aData.mPicSize.width*bpp,
+                               type);
+    }
   }
   mSize = size;
 }
@@ -215,10 +255,13 @@ BasicPlanarYCbCrImage::GetAsSurface()
   if (!mBuffer) {
     return nsnull;
   }
+
+  gfxASurface::gfxImageFormat format = GetOffscreenFormat();
+
   nsRefPtr<gfxImageSurface> imgSurface =
       new gfxImageSurface(mBuffer, mSize,
-                          mSize.width * gfxASurface::BytePerPixelFromFormat(gfxASurface::ImageFormatRGB24),
-                          gfxASurface::ImageFormatRGB24);
+                          mSize.width * gfxASurface::BytePerPixelFromFormat(format),
+                          format);
   if (!imgSurface) {
     return nsnull;
   }
@@ -246,9 +289,12 @@ BasicPlanarYCbCrImage::GetAsSurface()
  */
 class BasicImageContainer : public ImageContainer {
 public:
-  BasicImageContainer(BasicLayerManager* aManager) :
-    ImageContainer(aManager), mMonitor("BasicImageContainer"),
-    mScaleHint(-1, -1)
+  typedef gfxASurface::gfxImageFormat gfxImageFormat;
+
+  BasicImageContainer() :
+    ImageContainer(nsnull), mMonitor("BasicImageContainer"),
+    mScaleHint(-1, -1),
+    mOffscreenFormat(gfxASurface::ImageFormatUnknown)
   {}
   virtual already_AddRefed<Image> CreateImage(const Image::Format* aFormats,
                                               PRUint32 aNumFormats);
@@ -258,11 +304,14 @@ public:
   virtual gfxIntSize GetCurrentSize();
   virtual PRBool SetLayerManager(LayerManager *aManager);
   virtual void SetScaleHint(const gfxIntSize& aScaleHint);
+  void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
+  virtual LayerManager::LayersBackend GetBackendType() { return LayerManager::LAYERS_BASIC; }
 
 protected:
   Monitor mMonitor;
   nsRefPtr<Image> mImage;
   gfxIntSize mScaleHint;
+  gfxImageFormat mOffscreenFormat;
 };
 
 /**
@@ -291,6 +340,7 @@ BasicImageContainer::CreateImage(const Image::Format* aFormats,
   } else if (FormatInList(aFormats, aNumFormats, Image::PLANAR_YCBCR)) {
     MonitorAutoEnter mon(mMonitor);
     image = new BasicPlanarYCbCrImage(mScaleHint);
+    static_cast<BasicPlanarYCbCrImage*>(image.get())->SetOffscreenFormat(mOffscreenFormat);
   }
   return image.forget();
 }
@@ -351,15 +401,15 @@ BasicImageContainer::SetLayerManager(LayerManager *aManager)
     return PR_FALSE;
   }
 
-  // for basic layers, we can just swap; no magic needed.
-  mManager = aManager;
   return PR_TRUE;
 }
 
 already_AddRefed<ImageContainer>
 BasicLayerManager::CreateImageContainer()
 {
-  nsRefPtr<ImageContainer> container = new BasicImageContainer(this);
+  nsRefPtr<ImageContainer> container = new BasicImageContainer();
+  static_cast<BasicImageContainer*>(container.get())->
+    SetOffscreenFormat(gfxPlatform::GetPlatform()->GetOffscreenFormat());
   return container.forget();
 }
 

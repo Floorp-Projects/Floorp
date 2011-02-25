@@ -1,0 +1,57 @@
+<html>
+<body>
+<iframe id="inner" style="height: 10px; width: 10px"></iframe>
+<div style="width: 1000px; height: 1000px"></div>
+<script type="application/javascript;version=1.8">
+function grabEventAndGo(event) {
+  gen.send(event);
+}
+
+function waitAsync() {
+  setTimeout(function() { gen.next() }, 0);
+}
+
+function postPos() {
+  parent.postMessage(JSON.stringify({ top: document.body.scrollTop,
+                                      left: document.body.scrollLeft }),
+                     "*");
+}
+
+function runTest() {
+  var inner = document.getElementById("inner");
+  window.onload = grabEventAndGo;
+  yield;
+
+  document.body.scrollTop = 300;
+  document.body.scrollLeft = 300;
+
+  postPos();
+
+  inner.src = "bug583889_inner2.html#id1";
+  inner.onload = grabEventAndGo;
+  yield;
+  
+  postPos();
+  
+  inner.onload = null;
+  dump("hi");
+  inner.contentWindow.location = "bug583889_inner2.html#id2"
+  waitAsync();
+  yield;
+
+  postPos();
+
+  inner.contentWindow.location.hash = "#id3"
+  waitAsync();
+  yield;
+
+  postPos();
+
+  parent.postMessage("done", "*");
+}
+
+var gen = runTest();
+gen.next();
+</script>
+</body>
+</html>

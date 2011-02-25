@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<script>
+
+try {
+  var docType = document.implementation.createDocumentType(undefined, '', '');
+  var doc = document.implementation.createDocument('', '', null);
+  var xp = new XSLTProcessor;
+  xp.importStylesheet(doc);
+  xp.transformToDocument(docType);
+}
+catch (ex) {}
+
+try {
+  docType = document.implementation.createDocumentType(undefined, '', '');
+  doc = document.implementation.createDocument('', '', null);
+  xp = new XSLTProcessor;
+  xp.importStylesheet(doc);
+  xp.transformToFragment(docType, document);
+}
+catch (ex) {}
+
+</script>

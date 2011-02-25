@@ -687,22 +687,28 @@ let TestPilotSetup = {
   },
 
   _experimentRequirementsAreMet: function TPS__requirementsMet(experiment) {
-    // Returns true if we we meet the requirements to run this experiment
-    // (e.g. meet the minimum Test Pilot version and Firefox version)
-    // false if not.
-    // If the experiment doesn't specify minimum versions, attempt to run it.
+    /* Returns true if we we meet the requirements to run this experiment
+     * (e.g. meet the minimum Test Pilot version and Firefox version)
+     * false if not.
+     * Default is always to run the study - return true UNLESS the study
+     * specifies a requirement that we don't meet. */
     let logger = this._logger;
     try {
-      let minTpVer, minFxVer, expName;
-      if (experiment.experimentInfo) {
-        minTpVer = experiment.experimentInfo.minTPVersion;
-        minFxVer = experiment.experimentInfo.minFXVersion;
-        expName =  experiment.experimentInfo.testName;
-      } else if (experiment.surveyInfo) {
-        minTpVer = experiment.surveyInfo.minTPVersion;
-        minFxVer = experiment.surveyInfo.minFXVersion;
-        expName = experiment.surveyInfo.surveyName;
+      let minTpVer, minFxVer, expName, runOrNotFunc;
+      /* Could be an experiment, which specifies experimentInfo, or survey,
+       * which specifies surveyInfo. */
+      let info = experiment.experimentInfo ?
+                   experiment.experimentInfo :
+                   experiment.surveyInfo;
+      if (!info) {
+        // If neither one is supplied, study lacks metadata required to run
+        logger.warn("Study lacks minimum metadata to run.");
+        return false;
       }
+      minTpVer = info.minTPVersion;
+      minFxVer = info.minFXVersion;
+      expName =  info.testName;
+      runOrNotFunc = info.runOrNotFunc;
 
       // Minimum test pilot version:
       if (minTpVer && this._isNewerThanMe(minTpVer)) {
@@ -727,6 +733,12 @@ let TestPilotSetup = {
         logger.warn("Not loading " + expName);
         logger.warn("Because it requires Firefox version " + minFxVer);
         return false;
+      }
+
+      /* The all-purpose, arbitrary code "Should this study run?" function - if
+       * provided, use its return value. */
+      if (runOrNotFunc) {
+        return runOrNotFunc();
       }
     } catch (e) {
       logger.warn("Error in requirements check " +  e);

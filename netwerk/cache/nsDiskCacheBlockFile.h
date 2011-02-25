@@ -57,12 +57,14 @@ public:
            : mFD(nsnull)
            , mBitMap(nsnull)
            , mBlockSize(0)
+           , mBitMapWords(0)
            , mFileSize(0)
            , mBitMapDirty(PR_FALSE)
             {}
     ~nsDiskCacheBlockFile() { (void) Close(PR_TRUE); }
     
-    nsresult  Open( nsILocalFile *  blockFile, PRUint32  blockSize);
+    nsresult  Open( nsILocalFile *  blockFile, PRUint32  blockSize,
+                    PRUint32  bitMapSize);
     nsresult  Close(PRBool flush);
     
     /*
@@ -89,6 +91,7 @@ private:
     PRFileDesc *                mFD;
     PRUint32 *                  mBitMap;      // XXX future: array of bit map blocks
     PRUint32                    mBlockSize;
+    PRUint32                    mBitMapWords;
     PRInt32                     mFileSize;
     PRBool                      mBitMapDirty;
 };

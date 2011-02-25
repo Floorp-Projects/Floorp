@@ -59,7 +59,7 @@ function test() {
     toggleSidebar();
   }
 
-  const TEST_URL = "javascript:alert(\"test\");";
+  const TEST_URL = "http://mochi.test:8888/browser/browser/components/places/tests/browser/sidebarpanels_click_test_page.html";
 
   let tests = [];
   tests.push({
@@ -87,8 +87,10 @@ function test() {
     init: function() {
       // Add a history entry.
       this.cleanup();
-      hs.addVisit(PlacesUtils._uri(TEST_URL), Date.now() * 1000,
-                  null, hs.TRANSITION_TYPED, false, 0);
+      let uri = PlacesUtils._uri(TEST_URL);
+      hs.addVisit(uri, Date.now() * 1000, null, hs.TRANSITION_TYPED, false, 0);
+      let gh = hs.QueryInterface(Ci.nsIGlobalHistory2);
+      ok(gh.isVisited(uri), "Item is visited");
     },
     prepare: function() {
       sidebar.contentDocument.getElementById("byvisited").doCommand();
@@ -177,9 +179,20 @@ function test() {
   }
 
   function runNextTest() {
+    // Remove any extraneous tabs.
+    for (let tabCount = gBrowser.tabContainer.childNodes.length;
+         tabCount > 1; tabCount--) {
+      gBrowser.selectedTab = gBrowser.tabContainer.childNodes[tabCount - 1];
+      gBrowser.removeCurrentTab();
+    }
+
     if (tests.length == 0)
       finish();
     else {
+      // Create a new tab for our test to use.
+      gBrowser.selectedTab = gBrowser.addTab();
+
+      // Now we can run our test.
       currentTest = tests.shift();
       testPlacesPanel(function() {
         changeSidebarDirection("ltr");

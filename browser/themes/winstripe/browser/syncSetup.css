@@ -57,8 +57,8 @@ wizardpage {
 }
 
 /* Override the text-link style from global.css */
-.text-link,
-.text-link:focus {
+description > .text-link,
+description > .text-link:focus {
   margin: 0px;
   padding: 0px;
   border: 0px;
@@ -99,8 +99,18 @@ wizardpage {
   -moz-margin-end: 2px
 }
 
-#connect-throbber image,
-#passphrase-throbber image {
+.pin {
+  font-size: 18pt;
+  width: 4em;
+  text-align: center; 
+}
+
+#passphraseHelpSpacer {
+  width: 0.5em;
+}
+
+#add-device-throbber > image,
+#login-throbber > image {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 

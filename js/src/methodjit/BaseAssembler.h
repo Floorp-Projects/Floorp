@@ -100,6 +100,15 @@ struct ImmIntPtr : public JSC::MacroAssembler::ImmPtr
     { }
 };
 
+struct StackMarker {
+    uint32 base;
+    uint32 bytes;
+
+    StackMarker(uint32 base, uint32 bytes)
+      : base(base), bytes(bytes)
+    { }
+};
+
 class Assembler : public ValueAssembler
 {
     struct CallPatch {
@@ -128,9 +137,12 @@ class Assembler : public ValueAssembler
     Vector<CallPatch, 64, SystemAllocPolicy> callPatches;
     Vector<DoublePatch, 16, SystemAllocPolicy> doublePatches;
 
-    // List and count of registers that will be saved and restored across a call.
-    uint32      saveCount;
-    RegisterID  savedRegs[TotalRegisters];
+    // Registers that can be clobbered during a call sequence.
+    Registers   availInCall;
+
+    // Extra number of bytes that can be used for storing structs/references
+    // across calls.
+    uint32      extraStackSpace;
 
     // Calling convention used by the currently in-progress call.
     Registers::CallConvention callConvention;
@@ -147,7 +159,9 @@ class Assembler : public ValueAssembler
   public:
     Assembler()
       : callPatches(SystemAllocPolicy()),
-        saveCount(0)
+        availInCall(0),
+        extraStackSpace(0),
+        stackAdjust(0)
 #ifdef DEBUG
         , callIsAligned(false)
 #endif
@@ -274,58 +288,64 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
 #endif
     }
 
-    // Prepares for a stub call.
-    void *getCallTarget(void *fun) {
+    /* Prepare for a call that might THROW. */
+    void *getFallibleCallTarget(void *fun) {
 #ifdef JS_CPU_ARM
         /*
          * Insert a veneer for ARM to allow it to catch exceptions. There is no
          * reliable way to determine the location of the return address on the
-         * stack, so it cannot be hijacked.
+         * stack, so a typical C(++) return address cannot be hijacked.
          *
-         * :TODO: It wouldn't surprise me if GCC always pushes LR first. In that
-         * case, this looks like the x86-style call, and we can hijack the stack
-         * slot accordingly, thus avoiding the cost of a veneer. This should be
-         * investigated.
-         */
-
-        void *pfun = JS_FUNC_TO_DATA_PTR(void *, JaegerStubVeneer);
-
-        /*
          * We put the real target address into IP, as this won't conflict with
-         * the EABI argument-passing mechanism. Technically, this isn't ABI-
-         * compliant.
+         * the EABI argument-passing mechanism. JaegerStubVeneer is responsible
+         * for calling 'fun' (in IP) and catching exceptions.
+         *
+         * Note that we must use 'moveWithPatch' here, rather than 'move',
+         * because 'move' might try to optimize the constant load, and we need a
+         * consistent code sequence for patching.
          */
-        move(Imm32(intptr_t(fun)), JSC::ARMRegisters::ip);
+        moveWithPatch(Imm32(intptr_t(fun)), JSC::ARMRegisters::ip);
+
+        return JS_FUNC_TO_DATA_PTR(void *, JaegerStubVeneer);
 #else
         /*
          * Architectures that push the return address to an easily-determined
          * location on the stack can hijack C++'s return mechanism by overwriting
          * that address, so a veneer is not required.
          */
-        void *pfun = fun;
+        return fun;
 #endif
-        return pfun;
     }
 
-    /* :FIXME: unused */
-#if 0
-    // Save all registers in the given mask.
-    void saveRegs(uint32 volatileMask) {
-        // Only one use per call.
-        JS_ASSERT(saveCount == 0);
-        // Must save registers before pushing arguments or setting up calls.
-        JS_ASSERT(!callIsAligned);
-
-        Registers set(volatileMask);
-        while (!set.empty()) {
-            JS_ASSERT(saveCount < TotalRegisters);
-
-            RegisterID reg = set.takeAnyReg();
-            savedRegs[saveCount++] = reg;
-            push(reg);
-        }
+    static inline uint32 align(uint32 bytes, uint32 alignment) {
+        return (alignment - (bytes % alignment)) % alignment;
     }
-#endif
+
+    // Specifies extra stack space that is available across a call, for storing
+    // large parameters (structs) or returning values via references. All extra
+    // stack space must be reserved up-front, and is aligned on an 8-byte
+    // boundary.
+    //
+    // Returns an offset that can be used to index into this stack 
+    StackMarker allocStack(uint32 bytes, uint32 alignment = 4) {
+        bytes += align(bytes + extraStackSpace, alignment);
+        subPtr(Imm32(bytes), stackPointerRegister);
+        extraStackSpace += bytes;
+        return StackMarker(extraStackSpace, bytes);
+    }
+
+    // Similar to allocStack(), but combines it with a push().
+    void saveReg(RegisterID reg) {
+        push(reg);
+        extraStackSpace += sizeof(void *);
+    }
+
+    // Similar to freeStack(), but combines it with a pop().
+    void restoreReg(RegisterID reg) {
+        JS_ASSERT(extraStackSpace >= sizeof(void *));
+        extraStackSpace -= sizeof(void *);
+        pop(reg);
+    }
 
     static const uint32 StackAlignment = 16;
 
@@ -333,7 +353,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
         // If StackAlignment is a power of two, % is just two shifts.
         // 16 - (x % 16) gives alignment, extra % 16 handles total == 0.
-        return (StackAlignment - (stackBytes % StackAlignment)) % StackAlignment;
+        return align(stackBytes, StackAlignment);
 #else
         return 0;
 #endif
@@ -374,7 +394,12 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
     // Prepare the stack for a call sequence. This must be called AFTER all
     // volatile regs have been saved, and BEFORE pushArg() is used. The stack
     // is assumed to be aligned to 16-bytes plus any pushes that occured via
-    // saveVolatileRegs().
+    // saveRegs().
+    //
+    // During a call sequence all registers are "owned" by the Assembler.
+    // Attempts to perform loads, nested calls, or anything that can clobber
+    // a register, is asking for breaking on some platform or some situation.
+    // Be careful to limit to storeArg() during setupABICall.
     void setupABICall(Registers::CallConvention convention, uint32 generalArgs) {
         JS_ASSERT(!callIsAligned);
 
@@ -383,9 +408,16 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
                            ? generalArgs - numArgRegs
                            : 0;
 
-        // Adjust the stack for alignment and parameters all at once.
-        stackAdjust = (pushCount + saveCount) * sizeof(void *);
-        stackAdjust += alignForCall(stackAdjust);
+        // Assume all temporary regs are available to clobber.
+        availInCall = Registers::TempRegs;
+
+        // Find the total number of bytes the stack will have been adjusted by,
+        // in order to compute alignment.
+        uint32 total = (pushCount * sizeof(void *)) +
+                       extraStackSpace;
+
+        stackAdjust = (pushCount * sizeof(void *)) +
+                      alignForCall(total);
 
 #ifdef _WIN64
         // Windows x64 ABI requires 32 bytes of "shadow space" for the callee
@@ -402,7 +434,25 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
 #endif
     }
 
-    // This is an internal function only for use inside a startABICall(),
+    // Computes an interior pointer into VMFrame during a call.
+    Address vmFrameOffset(uint32 offs) {
+        return Address(stackPointerRegister, stackAdjust + extraStackSpace + offs);
+    }
+
+    // Get an Address to the extra space already allocated before the call.
+    Address addressOfExtra(const StackMarker &marker) {
+        // Stack looks like this:
+        //   extraStackSpace
+        //   stackAdjust
+        // To get to the requested offset into extraStackSpace, we can walk
+        // up to the top of the extra stack space, then subtract |offs|.
+        //
+        // Note that it's not required we're in a call - stackAdjust can be 0.
+        JS_ASSERT(marker.base <= extraStackSpace);
+        return Address(stackPointerRegister, stackAdjust + extraStackSpace - marker.base);
+    }
+
+    // This is an internal function only for use inside a setupABICall(),
     // callWithABI() sequence, and only for arguments known to fit in
     // registers.
     Address addressOfArg(uint32 i) {
@@ -422,18 +472,65 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
         if (Registers::regForArg(callConvention, i, &to)) {
             if (reg != to)
                 move(reg, to);
+            availInCall.takeRegUnchecked(to);
         } else {
             storePtr(reg, addressOfArg(i));
+        }
+    }
+
+    // This variant can clobber temporary registers. However, it will NOT
+    // clobber any registers that have already been set via storeArg().
+    void storeArg(uint32 i, Address address) {
+        JS_ASSERT(callIsAligned);
+        RegisterID to;
+        if (Registers::regForArg(callConvention, i, &to)) {
+            loadPtr(address, to);
+            availInCall.takeRegUnchecked(to);
+        } else if (!availInCall.empty()) {
+            // Memory-to-memory, and there is a temporary register free.
+            RegisterID reg = availInCall.takeAnyReg().reg();
+            loadPtr(address, reg);
+            storeArg(i, reg);
+            availInCall.putReg(reg);
+        } else {
+            // Memory-to-memory, but no temporary registers are free.
+            // This shouldn't happen on any platforms, because
+            // (TempRegs) Union (ArgRegs) != 0
+            JS_NOT_REACHED("too much reg pressure");
+        }
+    }
+
+    // This variant can clobber temporary registers. However, it will NOT
+    // clobber any registers that have already been set via storeArg().
+    void storeArgAddr(uint32 i, Address address) {
+        JS_ASSERT(callIsAligned);
+        RegisterID to;
+        if (Registers::regForArg(callConvention, i, &to)) {
+            lea(address, to);
+            availInCall.takeRegUnchecked(to);
+        } else if (!availInCall.empty()) {
+            // Memory-to-memory, and there is a temporary register free.
+            RegisterID reg = availInCall.takeAnyReg().reg();
+            lea(address, reg);
+            storeArg(i, reg);
+            availInCall.putReg(reg);
+        } else {
+            // Memory-to-memory, but no temporary registers are free.
+            // This shouldn't happen on any platforms, because
+            // (TempRegs) Union (ArgRegs) != 0
+            JS_NOT_REACHED("too much reg pressure");
         }
     }
 
     void storeArg(uint32 i, Imm32 imm) {
         JS_ASSERT(callIsAligned);
         RegisterID to;
-        if (Registers::regForArg(callConvention, i, &to))
+        if (Registers::regForArg(callConvention, i, &to)) {
             move(imm, to);
-        else
+            availInCall.takeRegUnchecked(to);
+        } else {
             store32(imm, addressOfArg(i));
+        }
     }
 
     // High-level call helper, given an optional function pointer and a
@@ -441,7 +538,17 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
     // as well as each numbered argument stored with storeArg().
     //
     // After callWithABI(), the call state is reset, so a new call may begin.
-    Call callWithABI(void *fun) {
+    Call callWithABI(void *fun, bool canThrow) {
+        // [Bug 614953]: This can only be made conditional once the ARM back-end
+        // is able to distinguish and patch both call sequences. Other
+        // architecutres are unaffected regardless.
+        //if (canThrow) {
+            // Some platforms (such as ARM) require a call veneer if the target
+            // might THROW. For other platforms, getFallibleCallTarget does
+            // nothing.
+            fun = getFallibleCallTarget(fun);
+        //}
+
         JS_ASSERT(callIsAligned);
 
         Call cl = call();
@@ -450,17 +557,21 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
         if (stackAdjust)
             addPtr(Imm32(stackAdjust), stackPointerRegister);
 
+        stackAdjust = 0;
+
 #ifdef DEBUG
         callIsAligned = false;
 #endif
         return cl;
     }
 
-    // Restore registers after a call.
-    void restoreRegs() {
-        // Note that saveCount will safely decrement back to 0.
-        while (saveCount)
-            pop(savedRegs[--saveCount]);
+    // Frees stack space allocated by allocStack().
+    void freeStack(const StackMarker &mark) {
+        JS_ASSERT(!callIsAligned);
+        JS_ASSERT(mark.bytes <= extraStackSpace);
+
+        extraStackSpace -= mark.bytes;
+        addPtr(Imm32(mark.bytes), stackPointerRegister);
     }
 
     // Wrap AbstractMacroAssembler::getLinkerCallReturnOffset which is protected.
@@ -527,7 +638,6 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
     }
 
     Call wrapVMCall(void *ptr) {
-        JS_ASSERT(!saveCount);
         JS_ASSERT(!callIsAligned);
 
         // Every stub call has at most two arguments.
@@ -540,7 +650,12 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
         storeArg(0, Registers::ArgReg0);
         storeArg(1, Registers::ArgReg1);
 
-        return callWithABI(getCallTarget(ptr));
+        // [Bug 614953]: The second argument, 'canThrow', can be set to 'false'
+        // for infallibleVMCall invocations. However, this changes the call
+        // sequence on ARM, and the ARM repatcher cannot currently distinguish
+        // between the two sequences. The argument does not affect the code
+        // generated by x86 or amd64.
+        return callWithABI(ptr, true);
     }
 
     // Constant doubles can't be directly moved into a register, we need to put
@@ -683,6 +798,15 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
         else
             loadInlineSlot(objReg, shape->slot, typeReg, dataReg);
     }
+
+    static uint32 maskAddress(Address address) {
+        return Registers::maskReg(address.base);
+    }
+
+    static uint32 maskAddress(BaseIndex address) {
+        return Registers::maskReg(address.base) |
+               Registers::maskReg(address.index);
+    }
 };
 
 /* Return f<true> if the script is strict mode code, f<false> otherwise. */
@@ -700,6 +824,33 @@ struct FrameFlagsAddress : JSC::MacroAssembler::Address
     FrameFlagsAddress()
       : Address(JSFrameReg, JSStackFrame::offsetOfFlags())
     {}
+};
+
+class PreserveRegisters {
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
+
+    Assembler   &masm;
+    uint32      count;
+    RegisterID  regs[JSC::MacroAssembler::TotalRegisters];
+
+  public:
+    PreserveRegisters(Assembler &masm) : masm(masm), count(0) { }
+    ~PreserveRegisters() { JS_ASSERT(!count); }
+
+    void preserve(Registers mask) {
+        JS_ASSERT(!count);
+
+        while (!mask.empty()) {
+            RegisterID reg = mask.takeAnyReg().reg();
+            regs[count++] = reg;
+            masm.saveReg(reg);
+        }
+    }
+
+    void restore() {
+        while (count)
+            masm.restoreReg(regs[--count]);
+    }
 };
 
 } /* namespace mjit */

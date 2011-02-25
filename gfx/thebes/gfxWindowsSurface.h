@@ -67,6 +67,9 @@ public:
 
     gfxWindowsSurface(cairo_surface_t *csurf);
 
+    virtual already_AddRefed<gfxASurface> CreateSimilarSurface(gfxContentType aType,
+                                                               const gfxIntSize& aSize);
+
     void InitWithDC(PRUint32 flags);
 
     virtual ~gfxWindowsSurface();
@@ -80,11 +83,6 @@ public:
     already_AddRefed<gfxWindowsSurface> OptimizeToDDB(HDC dc,
                                                       const gfxIntSize& size,
                                                       gfxImageFormat format);
-
-    virtual TextQuality GetTextQualityInTransparentSurfaces()
-    {
-      return TEXT_QUALITY_OK_OVER_OPAQUE_PIXELS;
-    }
 
     nsresult BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName);
     nsresult EndPrinting();

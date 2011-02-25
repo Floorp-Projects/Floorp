@@ -54,8 +54,10 @@ static void set_dlerror(int err)
 
 void *__wrap_dlopen(const char *filename, int flag)
 {
+#ifdef DEBUG
     if (extractLibs)
         return dlopen(filename, flag);
+#endif
 
     soinfo *ret;
 

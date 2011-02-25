@@ -39,6 +39,7 @@
 #include "LayerManagerD3D10Effect.h"
 #include "gfxWindowsPlatform.h"
 #include "gfxD2DSurface.h"
+#include "gfxFailure.h"
 #include "cairo-win32.h"
 #include "dxgi.h"
 
@@ -46,7 +47,10 @@
 #include "ThebesLayerD3D10.h"
 #include "ColorLayerD3D10.h"
 #include "CanvasLayerD3D10.h"
+#include "ReadbackLayerD3D10.h"
 #include "ImageLayerD3D10.h"
+
+#include "../d3d9/Nv3DVUtils.h"
 
 namespace mozilla {
 namespace layers {
@@ -65,15 +69,12 @@ struct Vertex
     float position[2];
 };
 
-// {17F88CCB-1F49-4c08-8002-ADA7BD44856D}
-static const GUID sEffect = 
-{ 0x17f88ccb, 0x1f49, 0x4c08, { 0x80, 0x2, 0xad, 0xa7, 0xbd, 0x44, 0x85, 0x6d } };
-// {19599D91-912C-4C2F-A8C5-299DE85FBD34}
-static const GUID sInputLayout = 
-{ 0x19599d91, 0x912c, 0x4c2f, { 0xa8, 0xc5, 0x29, 0x9d, 0xe8, 0x5f, 0xbd, 0x34 } };
-// {293157D2-09C7-4680-AE27-C28E370E418B}
-static const GUID sVertexBuffer = 
-{ 0x293157d2, 0x9c7, 0x4680, { 0xae, 0x27, 0xc2, 0x8e, 0x37, 0xe, 0x41, 0x8b } };
+// {592BF306-0EED-4F76-9D03-A0846450F472}
+static const GUID sDeviceAttachments = 
+{ 0x592bf306, 0xeed, 0x4f76, { 0x9d, 0x3, 0xa0, 0x84, 0x64, 0x50, 0xf4, 0x72 } };
+// {716AEDB1-C9C3-4B4D-8332-6F65D44AF6A8}
+static const GUID sLayerManagerCount = 
+{ 0x716aedb1, 0xc9c3, 0x4b4d, { 0x83, 0x32, 0x6f, 0x65, 0xd4, 0x4a, 0xf6, 0xa8 } };
 
 cairo_user_data_key_t gKeyD3D10Texture;
 
@@ -82,9 +83,43 @@ LayerManagerD3D10::LayerManagerD3D10(nsIWidget *aWidget)
 {
 }
 
+struct DeviceAttachments
+{
+  nsRefPtr<ID3D10Effect> mEffect;
+  nsRefPtr<ID3D10InputLayout> mInputLayout;
+  nsRefPtr<ID3D10Buffer> mVertexBuffer;
+  nsRefPtr<ReadbackManagerD3D10> mReadbackManager;
+};
+
 LayerManagerD3D10::~LayerManagerD3D10()
 {
+  if (mDevice) {
+    int referenceCount = 0;
+    UINT size = sizeof(referenceCount);
+    HRESULT hr = mDevice->GetPrivateData(sLayerManagerCount, &size, &referenceCount);
+    NS_ASSERTION(SUCCEEDED(hr), "Reference count not found on device.");
+    referenceCount--;
+    mDevice->SetPrivateData(sLayerManagerCount, sizeof(referenceCount), &referenceCount);
+
+    if (!referenceCount) {
+      DeviceAttachments *attachments;
+      size = sizeof(attachments);
+      mDevice->GetPrivateData(sDeviceAttachments, &size, &attachments);
+      // No LayerManagers left for this device. Clear out interfaces stored which
+      // hold a reference to the device.
+      mDevice->SetPrivateData(sDeviceAttachments, 0, NULL);
+
+      delete attachments;
+    }
+  }
+
   Destroy();
+}
+
+static bool
+IsOptimus()
+{
+  return GetModuleHandleA("nvumdshim.dll");
 }
 
 bool
@@ -92,15 +127,48 @@ LayerManagerD3D10::Initialize()
 {
   HRESULT hr;
 
-  cairo_device_t *device = gfxWindowsPlatform::GetPlatform()->GetD2DDevice();
-  if (!device) {
-    return false;
+  /* Create an Nv3DVUtils instance */
+  if (!mNv3DVUtils) {
+    mNv3DVUtils = new Nv3DVUtils();
+    if (!mNv3DVUtils) {
+      NS_WARNING("Could not create a new instance of Nv3DVUtils.\n");
+    }
   }
 
-  mDevice = cairo_d2d_device_get_device(device);
+  /* Initialize the Nv3DVUtils object */
+  if (mNv3DVUtils) {
+    mNv3DVUtils->Initialize();
+  }
 
-  UINT size = sizeof(ID3D10Effect*);
-  if (FAILED(mDevice->GetPrivateData(sEffect, &size, mEffect.StartAssignment()))) {
+  mDevice = gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
+  if (!mDevice) {
+      return false;
+  }
+
+  /*
+   * Do some post device creation setup
+   */
+  if (mNv3DVUtils) {
+    IUnknown* devUnknown = NULL;
+    if (mDevice) {
+      mDevice->QueryInterface(IID_IUnknown, (void **)&devUnknown);
+    }
+    mNv3DVUtils->SetDeviceInfo(devUnknown);
+  }
+
+  int referenceCount = 0;
+  UINT size = sizeof(referenceCount);
+  // If this isn't there yet it'll fail, count will remain 0, which is correct.
+  mDevice->GetPrivateData(sLayerManagerCount, &size, &referenceCount);
+  referenceCount++;
+  mDevice->SetPrivateData(sLayerManagerCount, sizeof(referenceCount), &referenceCount);
+
+  DeviceAttachments *attachments;
+  size = sizeof(DeviceAttachments*);
+  if (FAILED(mDevice->GetPrivateData(sDeviceAttachments, &size, &attachments))) {
+    attachments = new DeviceAttachments;
+    mDevice->SetPrivateData(sDeviceAttachments, sizeof(attachments), &attachments);
+
     D3D10CreateEffectFromMemoryFunc createEffect = (D3D10CreateEffectFromMemoryFunc)
 	GetProcAddress(LoadLibraryA("d3d10_1.dll"), "D3D10CreateEffectFromMemory");
 
@@ -119,11 +187,8 @@ LayerManagerD3D10::Initialize()
       return false;
     }
 
-    mDevice->SetPrivateDataInterface(sEffect, mEffect);
-  }
-
-  size = sizeof(ID3D10InputLayout*);
-  if (FAILED(mDevice->GetPrivateData(sInputLayout, &size, mInputLayout.StartAssignment()))) {
+    attachments->mEffect = mEffect;
+  
     D3D10_INPUT_ELEMENT_DESC layout[] =
     {
       { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D10_INPUT_PER_VERTEX_DATA, 0 },
@@ -142,11 +207,8 @@ LayerManagerD3D10::Initialize()
       return false;
     }
 
-    mDevice->SetPrivateDataInterface(sInputLayout, mInputLayout);
-  }
-
-  size = sizeof(ID3D10Buffer*);
-  if (FAILED(mDevice->GetPrivateData(sVertexBuffer, &size, mVertexBuffer.StartAssignment()))) {
+    attachments->mInputLayout = mInputLayout;
+  
     Vertex vertices[] = { {0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0} };
     CD3D10_BUFFER_DESC bufferDesc(sizeof(vertices), D3D10_BIND_VERTEX_BUFFER);
     D3D10_SUBRESOURCE_DATA data;
@@ -158,7 +220,11 @@ LayerManagerD3D10::Initialize()
       return false;
     }
 
-    mDevice->SetPrivateDataInterface(sVertexBuffer, mVertexBuffer);
+    attachments->mVertexBuffer = mVertexBuffer;
+  } else {
+    mEffect = attachments->mEffect;
+    mVertexBuffer = attachments->mVertexBuffer;
+    mInputLayout = attachments->mInputLayout;
   }
 
   nsRefPtr<IDXGIDevice> dxgiDevice;
@@ -182,6 +248,17 @@ LayerManagerD3D10::Initialize()
   swapDesc.SampleDesc.Quality = 0;
   swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
   swapDesc.BufferCount = 1;
+  // We don't really need this flag, however it seems on some NVidia hardware
+  // smaller area windows do not present properly without this flag. This flag
+  // should have no negative consequences by itself. See bug 613790. This flag
+  // is broken on optimus devices. As a temporary solution we don't set it
+  // there, the only way of reliably detecting we're on optimus is looking for
+  // the DLL. See Bug 623807.
+  if (IsOptimus()) {
+    swapDesc.Flags = 0;
+  } else {
+    swapDesc.Flags = DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE;
+  }
   swapDesc.OutputWindow = (HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW);
   swapDesc.Windowed = TRUE;
 
@@ -230,20 +307,33 @@ LayerManagerD3D10::BeginTransactionWithTarget(gfxContext* aTarget)
   mTarget = aTarget;
 }
 
+bool
+LayerManagerD3D10::EndEmptyTransaction()
+{
+  if (!mRoot)
+    return false;
+
+  EndTransaction(nsnull, nsnull);
+  return true;
+}
+
 void
 LayerManagerD3D10::EndTransaction(DrawThebesLayerCallback aCallback,
                                   void* aCallbackData)
 {
-  mCurrentCallbackInfo.Callback = aCallback;
-  mCurrentCallbackInfo.CallbackData = aCallbackData;
+  if (mRoot) {
+    mCurrentCallbackInfo.Callback = aCallback;
+    mCurrentCallbackInfo.CallbackData = aCallbackData;
 
-  // The results of our drawing always go directly into a pixel buffer,
-  // so we don't need to pass any global transform here.
-  mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
+    // The results of our drawing always go directly into a pixel buffer,
+    // so we don't need to pass any global transform here.
+    mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
 
-  Render();
-  mCurrentCallbackInfo.Callback = nsnull;
-  mCurrentCallbackInfo.CallbackData = nsnull;
+    Render();
+    mCurrentCallbackInfo.Callback = nsnull;
+    mCurrentCallbackInfo.CallbackData = nsnull;
+  }
+
   mTarget = nsnull;
 }
 
@@ -282,10 +372,17 @@ LayerManagerD3D10::CreateCanvasLayer()
   return layer.forget();
 }
 
+already_AddRefed<ReadbackLayer>
+LayerManagerD3D10::CreateReadbackLayer()
+{
+  nsRefPtr<ReadbackLayer> layer = new ReadbackLayerD3D10(this);
+  return layer.forget();
+}
+
 already_AddRefed<ImageContainer>
 LayerManagerD3D10::CreateImageContainer()
 {
-  nsRefPtr<ImageContainer> layer = new ImageContainerD3D10(this);
+  nsRefPtr<ImageContainer> layer = new ImageContainerD3D10(mDevice);
   return layer.forget();
 }
 
@@ -329,6 +426,13 @@ LayerManagerD3D10::CreateOptimalSurface(const gfxIntSize &aSize,
                    ReleaseTexture);
 
   return surface.forget();
+}
+
+ReadbackManagerD3D10*
+LayerManagerD3D10::readbackManager()
+{
+  EnsureReadbackManager();
+  return mReadbackManager;
 }
 
 void
@@ -432,17 +536,48 @@ LayerManagerD3D10::VerifyBufferSize()
   }
 
   mRTView = nsnull;
-  mSwapChain->ResizeBuffers(1, rect.width, rect.height,
-                            DXGI_FORMAT_B8G8R8A8_UNORM, 0);
+  if (IsOptimus()) {
+    mSwapChain->ResizeBuffers(1, rect.width, rect.height,
+                              DXGI_FORMAT_B8G8R8A8_UNORM,
+                              0);
+  } else {
+    mSwapChain->ResizeBuffers(1, rect.width, rect.height,
+                              DXGI_FORMAT_B8G8R8A8_UNORM,
+                              DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE);
+  }
 
+}
+
+void
+LayerManagerD3D10::EnsureReadbackManager()
+{
+  if (mReadbackManager) {
+    return;
+  }
+
+  DeviceAttachments *attachments;
+  UINT size = sizeof(DeviceAttachments*);
+  if (FAILED(mDevice->GetPrivateData(sDeviceAttachments, &size, &attachments))) {
+    // Strange! This shouldn't happen ... return a readback manager for this
+    // layer manager only.
+    mReadbackManager = new ReadbackManagerD3D10();
+    gfx::LogFailure(NS_LITERAL_CSTRING("Couldn't get device attachments for device."));
+    return;
+  }
+
+  if (attachments->mReadbackManager) {
+    mReadbackManager = attachments->mReadbackManager;
+    return;
+  }
+
+  mReadbackManager = new ReadbackManagerD3D10();
+  attachments->mReadbackManager = mReadbackManager;
 }
 
 void
 LayerManagerD3D10::Render()
 {
-  if (mRoot) {
-    static_cast<LayerD3D10*>(mRoot->ImplData())->Validate();
-  }
+  static_cast<LayerD3D10*>(mRoot->ImplData())->Validate();
 
   SetupPipeline();
 
@@ -452,23 +587,21 @@ LayerManagerD3D10::Render()
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
 
-  if (mRoot) {
-    const nsIntRect *clipRect = mRoot->GetClipRect();
-    D3D10_RECT r;
-    if (clipRect) {
-      r.left = (LONG)clipRect->x;
-      r.top = (LONG)clipRect->y;
-      r.right = (LONG)(clipRect->x + clipRect->width);
-      r.bottom = (LONG)(clipRect->y + clipRect->height);
-    } else {
-      r.left = r.top = 0;
-      r.right = rect.width;
-      r.bottom = rect.height;
-    }
-    device()->RSSetScissorRects(1, &r);
-
-    static_cast<LayerD3D10*>(mRoot->ImplData())->RenderLayer();
+  const nsIntRect *clipRect = mRoot->GetClipRect();
+  D3D10_RECT r;
+  if (clipRect) {
+    r.left = (LONG)clipRect->x;
+    r.top = (LONG)clipRect->y;
+    r.right = (LONG)(clipRect->x + clipRect->width);
+    r.bottom = (LONG)(clipRect->y + clipRect->height);
+  } else {
+    r.left = r.top = 0;
+    r.right = rect.width;
+    r.bottom = rect.height;
   }
+  device()->RSSetScissorRects(1, &r);
+
+  static_cast<LayerD3D10*>(mRoot->ImplData())->RenderLayer();
 
   if (mTarget) {
     PaintToTarget();
@@ -513,6 +646,19 @@ LayerManagerD3D10::PaintToTarget()
   mTarget->Paint();
 
   readTexture->Unmap(0);
+}
+
+void
+LayerManagerD3D10::ReportFailure(const nsACString &aMsg, HRESULT aCode)
+{
+  // We could choose to abort here when hr == E_OUTOFMEMORY.
+  nsCString msg;
+  msg.Append(aMsg);
+  msg.AppendLiteral(" Error code: ");
+  msg.AppendInt(PRUint32(aCode));
+  NS_WARNING(msg.BeginReading());
+
+  gfx::LogFailure(msg);
 }
 
 LayerD3D10::LayerD3D10(LayerManagerD3D10 *aManager)

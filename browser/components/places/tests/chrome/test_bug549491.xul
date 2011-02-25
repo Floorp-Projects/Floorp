@@ -53,9 +53,6 @@
     }
 
     function continue_test() {
-      const Cc = Components.classes;
-      const Ci = Components.interfaces;
-      Components.utils.import("resource://gre/modules/Services.jsm");
       PlacesUtils.history
                  .addVisit(Services.io.newURI("http://example.tld/", null, null),
                            Date.now() * 1000, null, PlacesUtils.history.TRANSITION_TYPED, false, 0);

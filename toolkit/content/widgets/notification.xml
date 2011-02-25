@@ -426,22 +426,36 @@
         <xul:description class="popup-notification-description"
                          xbl:inherits="xbl:text=label"/>
         <xul:spacer flex="1"/>
-        <xul:hbox pack="end">
+        <xul:hbox class="popup-notification-button-container"
+                  pack="end" align="center">
           <xul:button anonid="button"
                       class="popup-notification-menubutton"
-                      xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey,type=buttontype">
+                      type="menu-button"
+                      xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey">
             <xul:menupopup anonid="menupopup"
                            xbl:inherits="oncommand=menucommand">
               <children/>
+              <xul:menuitem class="menuitem-iconic popup-notification-closeitem"
+                            label="&closeNotificationItem.label;"
+                            xbl:inherits="oncommand=closeitemcommand"/>
             </xul:menupopup>
           </xul:button>
         </xul:hbox>
+      </xul:vbox>
+      <xul:vbox pack="start">
+        <xul:toolbarbutton anonid="closebutton"
+                           class="messageCloseButton popup-notification-closebutton"
+                           xbl:inherits="oncommand=closebuttoncommand"
+                           tooltiptext="&closeNotification.tooltip;"/>
       </xul:vbox>
     </content>
     <resources>
       <stylesheet src="chrome://global/skin/notification.css"/>
     </resources>
     <implementation>
+      <field name="closebutton" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "closebutton");
+      </field>
       <field name="button" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "button");
       </field>

@@ -107,16 +107,17 @@ class RemoteOptions(MochitestOptions):
 
     def verifyRemoteOptions(self, options, automation):
         options.remoteTestRoot = automation._devicemanager.getDeviceRoot()
+        productRoot = options.remoteTestRoot + "/" + automation._product
 
-        options.utilityPath = options.remoteTestRoot + "/bin"
-        options.certPath = options.remoteTestRoot + "/certs"
+        if (options.utilityPath == self._automation.DIST_BIN):
+            options.utilityPath = productRoot + "/bin"
 
-       
-        if options.remoteWebServer == None and os.name != "nt":
-            options.remoteWebServer = automation.getLanIp()
-        elif os.name == "nt":
-            print "ERROR: you must specify a remoteWebServer ip address\n"
-            return None
+        if options.remoteWebServer == None:
+            if os.name != "nt":
+                options.remoteWebServer = automation.getLanIp()
+            else:
+                print "ERROR: you must specify a --remote-webserver=<ip address>\n"
+                return None
 
         options.webServer = options.remoteWebServer
 
@@ -125,14 +126,10 @@ class RemoteOptions(MochitestOptions):
             return None
 
         if (options.remoteLogFile == None):
-            options.remoteLogFile = automation._devicemanager.getDeviceRoot() + '/test.log'
+            options.remoteLogFile = options.remoteTestRoot + '/mochitest.log'
 
         if (options.remoteLogFile.count('/') < 1):
-            options.remoteLogFile = automation._devicemanager.getDeviceRoot() + '/' + options.remoteLogFile
-
-        # Set up our options that we depend on based on the above
-        productRoot = options.remoteTestRoot + "/" + automation._product
-        options.utilityPath = productRoot + "/bin"
+            options.remoteLogFile = options.remoteTestRoot + '/' + options.remoteLogFile
 
         # remoteAppPath or app must be specified to find the product to launch
         if (options.remoteAppPath and options.app):
@@ -262,7 +259,7 @@ class MochiRemote(Mochitest):
           return "NO_CHROME_ON_DROID"
         path = '/'.join(parts[:-1])
         manifest = path + "/chrome/" + os.path.basename(filename)
-        if self._dm.pushFile(filename, manifest) == None:
+        if self._dm.pushFile(filename, manifest) == False:
             raise devicemanager.FileError("Unable to install Chrome files on device.")
         return manifest
 

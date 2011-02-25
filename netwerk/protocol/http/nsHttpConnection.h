@@ -46,13 +46,13 @@
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "prlock.h"
+#include "nsAutoPtr.h"
 
 #include "nsIStreamListener.h"
 #include "nsISocketTransport.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsITimer.h"
 
 //-----------------------------------------------------------------------------
 // nsHttpConnection - represents a connection to a HTTP server (or proxy)
@@ -109,6 +109,16 @@ public:
                              mIdleTimeout = 0; }
     void     DropTransport() { DontReuse(); mSocketTransport = 0; }
 
+    PRBool   LastTransactionExpectedNoContent()
+    {
+        return mLastTransactionExpectedNoContent;
+    }
+
+    void     SetLastTransactionExpectedNoContent(PRBool val)
+    {
+        mLastTransactionExpectedNoContent = val;
+    }
+
     nsAHttpTransaction   *Transaction()    { return mTransaction; }
     nsHttpConnectionInfo *ConnectionInfo() { return mConnInfo; }
 
@@ -131,11 +141,6 @@ private:
     nsresult ProxyStartSSL();
 
     nsresult CreateTransport(PRUint8 caps);
-    nsresult CreateTransport(PRUint8 caps,
-                             nsISocketTransport **sock,
-                             nsIAsyncInputStream **instream,
-                             nsIAsyncOutputStream **outstream);
-
     nsresult OnTransactionDone(nsresult reason);
     nsresult OnSocketWritable();
     nsresult OnSocketReadable();
@@ -145,11 +150,6 @@ private:
     PRBool   IsAlive();
     PRBool   SupportsPipelining(nsHttpResponseHead *);
     
-    static void  IdleSynTimeout(nsITimer *, void *);
-    nsresult     SelectPrimaryTransport(nsIAsyncOutputStream *out);
-    nsresult     ReleaseBackupTransport(nsISocketTransport *sock,
-                                        nsIAsyncOutputStream *outs,
-                                        nsIAsyncInputStream *ins);
 private:
     nsCOMPtr<nsISocketTransport>    mSocketTransport;
     nsCOMPtr<nsIAsyncInputStream>   mSocketIn;
@@ -164,8 +164,6 @@ private:
     nsAHttpTransaction             *mTransaction; // hard ref
     nsHttpConnectionInfo           *mConnInfo;    // hard ref
 
-    PRLock                         *mLock;
-
     PRUint32                        mLastReadTime;
     PRUint16                        mMaxHangTime;    // max download time before dropping keep-alive status
     PRUint16                        mIdleTimeout;    // value of keep-alive: timeout=
@@ -175,21 +173,7 @@ private:
     PRPackedBool                    mSupportsPipelining;
     PRPackedBool                    mIsReused;
     PRPackedBool                    mCompletedSSLConnect;
-
-    PRUint32                        mActivationCount;
-
-    // These items are used to implement a parallel connection opening
-    // attempt when network.http.connection-retry-timeout has expired
-    PRUint8                         mSocketCaps;
-    nsCOMPtr<nsITimer>              mIdleSynTimer;
-
-    nsCOMPtr<nsISocketTransport>    mSocketTransport1;
-    nsCOMPtr<nsIAsyncInputStream>   mSocketIn1;
-    nsCOMPtr<nsIAsyncOutputStream>  mSocketOut1;
-
-    nsCOMPtr<nsISocketTransport>    mSocketTransport2;
-    nsCOMPtr<nsIAsyncInputStream>   mSocketIn2;
-    nsCOMPtr<nsIAsyncOutputStream>  mSocketOut2;
+    PRPackedBool                    mLastTransactionExpectedNoContent;
 };
 
 #endif // nsHttpConnection_h__

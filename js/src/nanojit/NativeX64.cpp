@@ -221,7 +221,10 @@ namespace nanojit
         // but from the following instruction.  Eg. 'jmp $0' will jump to the
         // next instruction.
         int64_t offset = target ? target - _nIns : 0;
-        NanoAssert(isS32(offset));
+        if (!isS32(offset)) {
+            setError(BranchTooFar);
+            NanoAssert(0);  // assert because we'd like to know if this ever happens
+        }
         emit(op | uint64_t(uint32_t(offset))<<32);
     }
 
@@ -651,7 +654,11 @@ namespace nanojit
     // we cannot do that if an 8-bit relative jump is used, so we can't use
     // JMP().
     void Assembler::JMPl(NIns* target) {
-        JMP32(8, target);
+        if (!target || isTargetWithinS32(target)) {
+            JMP32(8, target);
+        } else {
+            JMP64(16, target);
+        }
     }
 
     void Assembler::JMP(NIns *target) {
@@ -1329,10 +1336,6 @@ namespace nanojit
     }
 
     NIns* Assembler::asm_branch_ov(LOpcode, NIns* target) {
-        if (target && !isTargetWithinS32(target)) {
-            setError(ConditionalBranchTooFar);
-            NanoAssert(0);
-        }
         // We must ensure there's room for the instr before calculating
         // the offset.  And the offset determines the opcode (8bit or 32bit).
         if (target && isTargetWithinS8(target))
@@ -2009,7 +2012,10 @@ namespace nanojit
         }
         // Guards can result in a valid branch being patched again later, so don't assert
         // that the old value is poison.
-        NanoAssert(isS32(target - next));
+        if (!isS32(target - next)) {
+            setError(BranchTooFar);
+            NanoAssert(0);  // assert because we'd like to know if this ever happens
+        }
         ((int32_t*)next)[-1] = int32_t(target - next);
         if (next[0] == 0x0F && next[1] == 0x8A) {
             // code is jne<target>,jp<target>, for LIR_jf(feq)

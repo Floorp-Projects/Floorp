@@ -15,7 +15,7 @@
  * The Original Code is Places code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -38,14 +38,38 @@
 
 #include "Helpers.h"
 #include "mozIStorageError.h"
+#include "plbase64.h"
+#include "prio.h"
 #include "nsString.h"
 #include "nsNavHistory.h"
+#include "mozilla/Services.h"
+
+// The length of guids that are used by history and bookmarks.
+#define GUID_LENGTH 12
 
 namespace mozilla {
 namespace places {
 
 ////////////////////////////////////////////////////////////////////////////////
 //// AsyncStatementCallback
+
+NS_IMPL_ISUPPORTS1(
+  AsyncStatementCallback
+, mozIStorageStatementCallback
+)
+
+NS_IMETHODIMP
+AsyncStatementCallback::HandleResult(mozIStorageResultSet *aResultSet)
+{
+  NS_ABORT_IF_FALSE(false, "Was not expecting a resultset, but got it.");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AsyncStatementCallback::HandleCompletion(PRUint16 aReason)
+{
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 AsyncStatementCallback::HandleError(mozIStorageError *aError)
@@ -209,6 +233,182 @@ ReverseString(const nsString& aInput, nsString& aReversed)
     aReversed.Append(aInput[i]);
   }
 }
+
+static
+nsresult
+Base64urlEncode(const PRUint8* aBytes,
+                PRUint32 aNumBytes,
+                nsCString& _result)
+{
+  // SetLength does not set aside space for NULL termination.  PL_Base64Encode
+  // will not NULL terminate, however, nsCStrings must be NULL terminated.  As a
+  // result, we set the capacity to be one greater than what we need, and the
+  // length to our desired length.
+  PRUint32 length = (aNumBytes + 2) / 3 * 4; // +2 due to integer math.
+  NS_ENSURE_TRUE(_result.SetCapacity(length + 1), NS_ERROR_OUT_OF_MEMORY);
+  _result.SetLength(length);
+  (void)PL_Base64Encode(reinterpret_cast<const char*>(aBytes), aNumBytes,
+                        _result.BeginWriting());
+
+  // base64url encoding is defined in RFC 4648.  It replaces the last two
+  // alphabet characters of base64 encoding with '-' and '_' respectively.
+  _result.ReplaceChar('+', '-');
+  _result.ReplaceChar('/', '_');
+  return NS_OK;
+}
+
+#ifdef XP_WIN
+// Included here because windows.h conflicts with the use of mozIStorageError
+// above.
+#include <windows.h>
+#include <wincrypt.h>
+#endif
+
+static
+nsresult
+GenerateRandomBytes(PRUint32 aSize,
+                    PRUint8* _buffer)
+{
+  // On Windows, we'll use its built-in cryptographic API.
+#if defined(XP_WIN)
+  HCRYPTPROV cryptoProvider;
+  BOOL rc = CryptAcquireContext(&cryptoProvider, 0, 0, PROV_RSA_FULL,
+                                CRYPT_VERIFYCONTEXT | CRYPT_SILENT);
+  if (rc) {
+    rc = CryptGenRandom(cryptoProvider, aSize, _buffer);
+    (void)CryptReleaseContext(cryptoProvider, 0);
+  }
+  return rc ? NS_OK : NS_ERROR_FAILURE;
+
+  // On Unix, we'll just read in from /dev/urandom.
+#elif defined(XP_UNIX)
+  NS_ENSURE_ARG_MAX(aSize, PR_INT32_MAX);
+  PRFileDesc* urandom = PR_Open("/dev/urandom", PR_RDONLY, 0);
+  nsresult rv = NS_ERROR_FAILURE;
+  if (urandom) {
+    PRInt32 bytesRead = PR_Read(urandom, _buffer, aSize);
+    if (bytesRead == static_cast<PRInt32>(aSize)) {
+      rv = NS_OK;
+    }
+    (void)PR_Close(urandom);
+  }
+  return rv;
+#endif
+}
+
+nsresult
+GenerateGUID(nsCString& _guid)
+{
+  _guid.Truncate();
+
+  // Request raw random bytes and base64url encode them.  For each set of three
+  // bytes, we get one character.
+  const PRUint32 kRequiredBytesLength =
+    static_cast<PRUint32>(GUID_LENGTH / 4 * 3);
+
+  PRUint8 buffer[kRequiredBytesLength];
+  nsresult rv = GenerateRandomBytes(kRequiredBytesLength, buffer);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = Base64urlEncode(buffer, kRequiredBytesLength, _guid);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ASSERTION(_guid.Length() == GUID_LENGTH, "GUID is not the right size!");
+  return NS_OK;
+}
+
+bool
+IsValidGUID(const nsCString& aGUID)
+{
+  nsCString::size_type len = aGUID.Length();
+  if (len != GUID_LENGTH) {
+    return false;
+  }
+
+  for (nsCString::size_type i = 0; i < len; i++ ) {
+    char c = aGUID[i];
+    if (c >= 'a' && c <= 'z' || // a-z
+        c >= 'A' && c <= 'Z' || // A-Z
+        c >= '0' && c <= '9' || // 0-9
+        c == '-' || c == '_') { // - or _
+      continue;
+    }
+    return false;
+  }
+  return true;
+}
+
+void
+ForceWALCheckpoint(mozIStorageConnection* aDBConn)
+{
+  nsCOMPtr<mozIStorageAsyncStatement> stmt;
+  (void)aDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
+    "pragma wal_checkpoint "
+  ), getter_AddRefs(stmt));
+  nsCOMPtr<mozIStoragePendingStatement> handle;
+  (void)stmt->ExecuteAsync(nsnull, getter_AddRefs(handle));
+}
+
+bool
+GetHiddenState(bool aIsRedirect,
+               PRUint32 aTransitionType)
+{
+  return aTransitionType == nsINavHistoryService::TRANSITION_FRAMED_LINK ||
+         aTransitionType == nsINavHistoryService::TRANSITION_EMBED ||
+         aIsRedirect;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// PlacesEvent
+
+PlacesEvent::PlacesEvent(const char* aTopic)
+: mTopic(aTopic)
+, mDoubleEnqueue(false)
+{
+}
+
+PlacesEvent::PlacesEvent(const char* aTopic,
+                         bool aDoubleEnqueue)
+: mTopic(aTopic)
+, mDoubleEnqueue(aDoubleEnqueue)
+{
+}
+
+NS_IMETHODIMP
+PlacesEvent::Run()
+{
+  Notify();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PlacesEvent::Complete()
+{
+  Notify();
+  return NS_OK;
+}
+
+void
+PlacesEvent::Notify()
+{
+  if (mDoubleEnqueue) {
+    mDoubleEnqueue = false;
+    (void)NS_DispatchToMainThread(this);
+  }
+  else {
+    NS_ASSERTION(NS_IsMainThread(), "Must only be used on the main thread!");
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+      (void)obs->NotifyObservers(nsnull, mTopic, nsnull);
+    }
+  }
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(
+  PlacesEvent
+, mozIStorageCompletionCallback
+, nsIRunnable
+)
 
 } // namespace places
 } // namespace mozilla

@@ -44,12 +44,18 @@ let kURIs = [
   "http://abc.com/",
   "moz-action:switchtab,http://abc.com/",
   "http://xyz.net/",
-  "moz-action:switchtab,http://xyz.net/"
+  "moz-action:switchtab,http://xyz.net/",
+  "about:robots",
+  "moz-action:switchtab,about:robots",
+  "data:text/html,test",
+  "moz-action:switchtab,data:text/html,test"
 ];
 
 let kTitles = [
   "ABC rocks",
-  "xyz.net - we're better than ABC"
+  "xyz.net - we're better than ABC",
+  "about:robots",
+  "data:text/html,test"
 ];
 
 addPageBook(0, 0);
@@ -59,6 +65,11 @@ gPages[3] = [3, 1];
 
 addOpenPages(0, 1);
 
+// PAges that cannot be registered in history.
+addOpenPages(4, 1);
+gPages[5] = [5, 2];
+addOpenPages(6, 1);
+gPages[7] = [7, 3];
 
 let gTests = [
   ["0: single result, that is also a tab match",
@@ -85,20 +96,30 @@ let gTests = [
    gTabRestrictChar + " abc", [1],
    function() {
     addOpenPages(0, 1);
-   }]
+   }],
+  ["6: tab match with not-addable pages",
+   "robots", [5]],
+  ["7: tab match with not-addable pages and restriction character",
+   gTabRestrictChar + " robots", [5]],
+  ["8: tab match with not-addable pages and only restriction character",
+   gTabRestrictChar, [1, 5, 7]],
 ];
 
 
 function addOpenPages(aUri, aCount) {
   let num = aCount || 1;
+  let acprovider = Cc["@mozilla.org/autocomplete/search;1?name=history"].
+                   getService(Ci.mozIPlacesAutoComplete);
   for (let i = 0; i < num; i++) {
-    bhist.registerOpenPage(toURI(kURIs[aUri]));
+    acprovider.registerOpenPage(toURI(kURIs[aUri]));
   }
 }
 
 function removeOpenPages(aUri, aCount) {
   let num = aCount || 1;
+  let acprovider = Cc["@mozilla.org/autocomplete/search;1?name=history"].
+                   getService(Ci.mozIPlacesAutoComplete);
   for (let i = 0; i < num; i++) {
-    bhist.unregisterOpenPage(toURI(kURIs[aUri]));
+    acprovider.unregisterOpenPage(toURI(kURIs[aUri]));
   }
 }

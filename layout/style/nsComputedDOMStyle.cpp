@@ -1815,12 +1815,13 @@ nsComputedDOMStyle::DoGetMozBackgroundSize(nsIDOMCSSValue** aValue)
         }
 
         nsROCSSPrimitiveValue* valX = GetROCSSPrimitiveValue();
-        nsROCSSPrimitiveValue* valY = GetROCSSPrimitiveValue();
         if (!valX || !itemList->AppendCSSValue(valX)) {
           delete valueList;
           delete valX;
           return NS_ERROR_OUT_OF_MEMORY;
         }
+
+        nsROCSSPrimitiveValue* valY = GetROCSSPrimitiveValue();
         if (!valY || !itemList->AppendCSSValue(valY)) {
           delete valueList;
           delete valY;
@@ -2867,6 +2868,7 @@ nsComputedDOMStyle::DoGetCursor(nsIDOMCSSValue** aValue)
         delete valueList;
         return NS_ERROR_OUT_OF_MEMORY;
       }
+
       nsROCSSPrimitiveValue *valY = GetROCSSPrimitiveValue();
       if (!valY || !itemList->AppendCSSValue(valY)) {
         delete valY;

@@ -19,10 +19,10 @@
     var destroyed = false;
     p.callOnDestroy(function() {
       destroyed = true;
-      ok(!p.streamTest('loremipsum.txt', false, null,
+      ok(!p.streamTest('loremipsum.txt', false, null, null,
                        function(r, t) {
                          ok(false, "get-during-destroy should have failed");
-                       }), "NPN_GetURLNotify should fail during NPP_Destroy");
+                       }, null, true), "NPN_GetURLNotify should fail during NPP_Destroy");
     });
     document.body.removeChild(p);
 

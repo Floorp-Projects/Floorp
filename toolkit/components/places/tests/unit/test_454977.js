@@ -36,35 +36,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Get services
-var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-         getService(Ci.nsINavHistoryService);
-var mDBConn = hs.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
-
 // Cache actual visit_count value, filled by add_visit, used by check_results
-var visit_count = 0;
+let visit_count = 0;
 
 function add_visit(aURI, aVisitDate, aVisitType) {
-  var isRedirect = aVisitType == hs.TRANSITION_REDIRECT_PERMANENT ||
-                   aVisitType == hs.TRANSITION_REDIRECT_TEMPORARY;
-  var visitId = hs.addVisit(aURI, aVisitDate, null,
-                            aVisitType, isRedirect, 0);
-  do_check_true(visitId > 0);
+  let isRedirect = aVisitType == TRANSITION_REDIRECT_PERMANENT ||
+                   aVisitType == TRANSITION_REDIRECT_TEMPORARY;
+  let visitId = PlacesUtils.history.addVisit(aURI, aVisitDate, null,
+                                             aVisitType, isRedirect, 0);
+
   // Increase visit_count if applicable
   if (aVisitType != 0 &&
-      aVisitType != hs.TRANSITION_EMBED &&
-      aVisitType != hs.TRANSITION_FRAMED_LINK &&
-      aVisitType != hs.TRANSITION_DOWNLOAD)
+      aVisitType != TRANSITION_EMBED &&
+      aVisitType != TRANSITION_FRAMED_LINK &&
+      aVisitType != TRANSITION_DOWNLOAD) {
     visit_count ++;
+  }
+
   // Get the place id
-  var sql = "SELECT place_id FROM moz_historyvisits_view WHERE id = ?1";
-  var stmt = mDBConn.createStatement(sql);
-  stmt.bindInt64Parameter(0, visitId);
-  do_check_true(stmt.executeStep());
-  var placeId = stmt.getInt64(0);
-  stmt.finalize();
-  do_check_true(placeId > 0);
-  return placeId;
+  if (visitId > 0) {
+    let sql = "SELECT place_id FROM moz_historyvisits WHERE id = ?1";
+    let stmt = DBConn().createStatement(sql);
+    stmt.bindInt64Parameter(0, visitId);
+    do_check_true(stmt.executeStep());
+    let placeId = stmt.getInt64(0);
+    stmt.finalize();
+    do_check_true(placeId > 0);
+    return placeId;
+  }
+  return 0;
 }
 
 /**
@@ -75,14 +75,13 @@ function add_visit(aURI, aVisitDate, aVisitType) {
  *          Number of history results we are expecting (included hidden ones)
  */
 function check_results(aExpectedCount, aExpectedCountWithHidden) {
-  var query = hs.getNewQuery();
+  let query = PlacesUtils.history.getNewQuery();
   // used to check visit_count
   query.minVisits = visit_count;
   query.maxVisits = visit_count;
-  var options = hs.getNewQueryOptions();
+  let options = PlacesUtils.history.getNewQueryOptions();
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY;
-  var result = hs.executeQuery(query, options);
-  var root = result.root;
+  let root = PlacesUtils.history.executeQuery(query, options).root;
   root.containerOpen = true;
   // Children without hidden ones
   do_check_eq(root.childCount, aExpectedCount);
@@ -91,8 +90,7 @@ function check_results(aExpectedCount, aExpectedCountWithHidden) {
   // Execute again with includeHidden = true
   // This will ensure visit_count is correct
   options.includeHidden = true;
-  result = hs.executeQuery(query, options);
-  var root = result.root;
+  root = PlacesUtils.history.executeQuery(query, options).root;
   root.containerOpen = true;
   // Children with hidden ones
   do_check_eq(root.childCount, aExpectedCountWithHidden);
@@ -101,24 +99,24 @@ function check_results(aExpectedCount, aExpectedCountWithHidden) {
 
 // main
 function run_test() {
-  var testURI = uri("http://test.mozilla.org/");
+  const TEST_URI = uri("http://test.mozilla.org/");
 
   // Add a visit that force hidden
-  var placeId = add_visit(testURI, Date.now()*1000, hs.TRANSITION_EMBED);
+  add_visit(TEST_URI, Date.now()*1000, TRANSITION_EMBED);
+  check_results(0, 0);
+
+  let placeId = add_visit(TEST_URI, Date.now()*1000, TRANSITION_FRAMED_LINK);
   check_results(0, 1);
 
-  var placeId = add_visit(testURI, Date.now()*1000, hs.TRANSITION_FRAMED_LINK);
-  check_results(0, 1);
-
-  // Add a visit that force unhide and check place id
+  // Add a visit that force unhide and check the place id.
   // - We expect that the place gets hidden = 0 while retaining the same
-  //   place_id and a correct visit_count.
-  do_check_eq(add_visit(testURI, Date.now()*1000, hs.TRANSITION_TYPED), placeId);
+  //   place id and a correct visit_count.
+  do_check_eq(add_visit(TEST_URI, Date.now()*1000, TRANSITION_TYPED), placeId);
   check_results(1, 1);
 
-  // Add a visit, check that hidden is not overwritten and check place id
-  // - We expect that the place has still hidden = 0, while retaining the same
-  //   place_id and a correct visit_count.
-  do_check_eq(add_visit(testURI, Date.now()*1000, hs.TRANSITION_EMBED), placeId);
+  // Add a visit, check that hidden is not overwritten
+  // - We expect that the place has still hidden = 0, while retaining
+  //   correct visit_count.
+  add_visit(TEST_URI, Date.now()*1000, TRANSITION_EMBED);
   check_results(1, 1);
 }

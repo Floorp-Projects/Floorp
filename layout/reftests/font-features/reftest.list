@@ -10,18 +10,17 @@
 HTTP(..) != font-features-turkish.html font-features-ref.html
 
 # check that disabling ligatures causes a change
-fails-if(gtk2Widget) HTTP(..) != font-features-noliga.html font-features-ref.html
+HTTP(..) != font-features-noliga.html font-features-ref.html
 
 # check that enabling optional ligatures causes a change
-fails-if(gtk2Widget) HTTP(..) != font-features-hlig.html font-features-ref.html
+HTTP(..) != font-features-hlig.html font-features-ref.html
 
 # compare Turkish rendering with reference using ZWNJ to break the ligature
 # (also works via Pango)
-HTTP(..) == font-features-turkish.html font-features-turkish-ref.html
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) HTTP(..) == font-features-turkish.html font-features-turkish-ref.html
 
 # compare Turkish rendering with explicitly disabled ligatures
-# (fails on Linux because Pango recognizes the Turkish lang but not the feature setting)
-fails-if(gtk2Widget) HTTP(..) == font-features-turkish.html font-features-noliga.html
+HTTP(..) == font-features-turkish.html font-features-noliga.html
 
 # The following should pass even if feature support isn't available,
 # because both testcase and reference will have the default rendering,

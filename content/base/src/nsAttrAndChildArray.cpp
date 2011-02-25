@@ -321,7 +321,7 @@ nsAttrAndChildArray::GetAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID) const
   PRUint32 i, slotCount = AttrSlotCount();
   if (aNamespaceID == kNameSpaceID_None) {
     // This should be the common case so lets make an optimized loop
-    for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {
+    for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
       if (ATTRS(mImpl)[i].mName.Equals(aLocalName)) {
         return &ATTRS(mImpl)[i].mValue;
       }
@@ -332,7 +332,7 @@ nsAttrAndChildArray::GetAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID) const
     }
   }
   else {
-    for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {
+    for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
       if (ATTRS(mImpl)[i].mName.Equals(aLocalName, aNamespaceID)) {
         return &ATTRS(mImpl)[i].mValue;
       }
@@ -360,7 +360,7 @@ nsresult
 nsAttrAndChildArray::SetAttr(nsIAtom* aLocalName, const nsAString& aValue)
 {
   PRUint32 i, slotCount = AttrSlotCount();
-  for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {
+  for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
     if (ATTRS(mImpl)[i].mName.Equals(aLocalName)) {
       ATTRS(mImpl)[i].mValue.SetTo(aValue);
 
@@ -385,7 +385,7 @@ nsresult
 nsAttrAndChildArray::SetAndTakeAttr(nsIAtom* aLocalName, nsAttrValue& aValue)
 {
   PRUint32 i, slotCount = AttrSlotCount();
-  for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {
+  for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
     if (ATTRS(mImpl)[i].mName.Equals(aLocalName)) {
       ATTRS(mImpl)[i].mValue.Reset();
       ATTRS(mImpl)[i].mValue.SwapValueWith(aValue);
@@ -418,7 +418,7 @@ nsAttrAndChildArray::SetAndTakeAttr(nsINodeInfo* aName, nsAttrValue& aValue)
   }
 
   PRUint32 i, slotCount = AttrSlotCount();
-  for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {
+  for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
     if (ATTRS(mImpl)[i].mName.Equals(localName, namespaceID)) {
       ATTRS(mImpl)[i].mName.SetTo(aName);
       ATTRS(mImpl)[i].mValue.Reset();
@@ -521,7 +521,7 @@ const nsAttrName*
 nsAttrAndChildArray::GetExistingAttrNameFromQName(const nsAString& aName) const
 {
   PRUint32 i, slotCount = AttrSlotCount();
-  for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {
+  for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
     if (ATTRS(mImpl)[i].mName.QualifiedNameEquals(aName)) {
       return &ATTRS(mImpl)[i].mName;
     }
@@ -550,14 +550,14 @@ nsAttrAndChildArray::IndexOfAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID) cons
   PRUint32 slotCount = AttrSlotCount();
   if (aNamespaceID == kNameSpaceID_None) {
     // This should be the common case so lets make an optimized loop
-    for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {
+    for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
       if (ATTRS(mImpl)[i].mName.Equals(aLocalName)) {
         return i + mapped;
       }
     }
   }
   else {
-    for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {
+    for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
       if (ATTRS(mImpl)[i].mName.Equals(aLocalName, aNamespaceID)) {
         return i + mapped;
       }
@@ -655,7 +655,7 @@ nsAttrAndChildArray::Clear()
   }
 
   PRUint32 i, slotCount = AttrSlotCount();
-  for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {
+  for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
     ATTRS(mImpl)[i].~InternalAttr();
   }
 

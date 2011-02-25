@@ -53,7 +53,7 @@ function test1() {
       checkPopupHide();
 
       // Clean-up
-      gBrowser.removeTab(gBrowser.selectedTab, {animate: false});
+      gBrowser.removeTab(gBrowser.selectedTab);
 
       // Next test
       executeSoon(test2);
@@ -84,7 +84,7 @@ function test2()
     checkPopupMessage(doc);
 
     // Clean-up and next test.
-    gBrowser.removeTab(gBrowser.selectedTab, {animate: false});
+    gBrowser.removeTab(gBrowser.selectedTab);
     executeSoon(test3);
   }, false);
 
@@ -118,8 +118,8 @@ function test3()
     checkPopupMessage(doc);
 
     // Clean-up and next test.
-    gBrowser.removeTab(gBrowser.selectedTab, {animate: false});
-    executeSoon(test4);
+    gBrowser.removeTab(gBrowser.selectedTab);
+    executeSoon(test4a);
   }, false);
 
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
@@ -133,10 +133,10 @@ function test3()
 }
 
 /**
- * In this test, we check that, we can hide the popup by interacting with the
- * invalid element.
+ * In this test, we check that, we hide the popup by interacting with the
+ * invalid element if the element becomes valid.
  */
-function test4()
+function test4a()
 {
   let uri = "data:text/html,<iframe name='t'></iframe><form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>";
   let tab = gBrowser.addTab();
@@ -157,7 +157,47 @@ function test4()
       checkPopupHide();
 
       // Clean-up and next test.
-      gBrowser.removeTab(gBrowser.selectedTab, {animate: false});
+      gBrowser.removeTab(gBrowser.selectedTab);
+      executeSoon(test4b);
+    });
+  }, false);
+
+  tab.linkedBrowser.addEventListener("load", function(aEvent) {
+    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+
+    gBrowser.contentDocument.getElementById('s').click();
+  }, true);
+
+  gBrowser.selectedTab = tab;
+  gBrowser.selectedTab.linkedBrowser.loadURI(uri);
+}
+
+/**
+ * In this test, we check that, we don't hide the popup by interacting with the
+ * invalid element if the element is still invalid.
+ */
+function test4b()
+{
+  let uri = "data:text/html,<iframe name='t'></iframe><form target='t' action='data:text/html,'><input type='email' id='i' required><input id='s' type='submit'></form>";
+  let tab = gBrowser.addTab();
+
+  gInvalidFormPopup.addEventListener("popupshown", function() {
+    gInvalidFormPopup.removeEventListener("popupshown", arguments.callee, false);
+
+    let doc = gBrowser.contentDocument;
+    is(doc.activeElement, doc.getElementById('i'),
+       "First invalid element should be focused");
+
+    checkPopupShow();
+    checkPopupMessage(doc);
+
+    EventUtils.synthesizeKey("a", {});
+
+    executeSoon(function () {
+      checkPopupShow();
+
+      // Clean-up and next test.
+      gBrowser.removeTab(gBrowser.selectedTab);
       executeSoon(test5);
     });
   }, false);
@@ -197,7 +237,7 @@ function test5()
       checkPopupHide();
 
       // Clean-up and next test.
-      gBrowser.removeTab(gBrowser.selectedTab, {animate: false});
+      gBrowser.removeTab(gBrowser.selectedTab);
       executeSoon(test6);
     });
   }, false);
@@ -236,7 +276,7 @@ function test6()
       checkPopupHide();
 
       // Clean-up and next test.
-      gBrowser.removeTab(gBrowser.selectedTab, {animate: false});
+      gBrowser.removeTab(gBrowser.selectedTab);
       executeSoon(test7);
     });
   }, false);
@@ -276,8 +316,8 @@ function test7()
       checkPopupHide();
 
       // Clean-up and next test.
-      gBrowser.removeTab(gBrowser.selectedTab, {animate: false});
-      gBrowser.removeTab(gBrowser.selectedTab, {animate: false});
+      gBrowser.removeTab(gBrowser.selectedTab);
+      gBrowser.removeTab(gBrowser.selectedTab);
       executeSoon(test8);
     });
   }, false);
@@ -313,7 +353,7 @@ function test8()
       // Clean-up
       Services.obs.removeObserver(gObserver, "invalidformsubmit");
       gObserver.notifyInvalidSubmit = function () {};
-      gBrowser.removeTab(tab, {animate: false});
+      gBrowser.removeTab(tab);
 
       // Next test
       executeSoon(test9);
@@ -355,8 +395,56 @@ function test9()
        "The panel should show the author defined error message");
 
     // Clean-up and next test.
-    gBrowser.removeTab(gBrowser.selectedTab, {animate: false});
-    executeSoon(finish);
+    gBrowser.removeTab(gBrowser.selectedTab);
+    executeSoon(test10);
+  }, false);
+
+  tab.linkedBrowser.addEventListener("load", function(aEvent) {
+    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+
+    gBrowser.contentDocument.getElementById('s').click();
+  }, true);
+
+  gBrowser.selectedTab = tab;
+  gBrowser.selectedTab.linkedBrowser.loadURI(uri);
+}
+
+/**
+ * In this test, we check that the message is correctly updated when it changes.
+ */
+function test10()
+{
+  let uri = "data:text/html,<iframe name='t'></iframe><form target='t' action='data:text/html,'><input type='email' required id='i'><input id='s' type='submit'></form>";
+  let tab = gBrowser.addTab();
+
+  gInvalidFormPopup.addEventListener("popupshown", function() {
+    gInvalidFormPopup.removeEventListener("popupshown", arguments.callee, false);
+
+    let doc = gBrowser.contentDocument;
+    let input = doc.getElementById('i');
+    is(doc.activeElement, input, "First invalid element should be focused");
+
+    checkPopupShow();
+
+    is(gInvalidFormPopup.firstChild.textContent, input.validationMessage,
+       "The panel should show the current validation message");
+
+    input.addEventListener('input', function() {
+      input.removeEventListener('input', arguments.callee, false);
+
+      executeSoon(function() {
+        // Now, the element suffers from another error, the message should have
+	// been updated.
+        is(gInvalidFormPopup.firstChild.textContent, input.validationMessage,
+           "The panel should show the current validation message");
+
+        // Clean-up and next test.
+        gBrowser.removeTab(gBrowser.selectedTab);
+        executeSoon(finish);
+      });
+    }, false);
+
+    EventUtils.synthesizeKey('f', {});
   }, false);
 
   tab.linkedBrowser.addEventListener("load", function(aEvent) {

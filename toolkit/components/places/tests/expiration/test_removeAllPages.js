@@ -88,7 +88,7 @@ function add_old_anno(aIdentifier, aName, aValue, aExpirePolicy,
           "WHERE id = ( " +
             "SELECT a.id FROM moz_annos a " +
             "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id " +
-            "JOIN moz_places_view h on h.id = a.place_id " +
+            "JOIN moz_places h on h.id = a.place_id " +
             "WHERE h.url = :id " +
             "AND n.name = :anno_name " +
             "ORDER BY a.dateAdded DESC LIMIT 1 " +

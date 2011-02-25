@@ -183,6 +183,11 @@ struct NS_GFX nsRect {
   nsRect& ScaleRoundOut(float aScale) { return ScaleRoundOut(aScale, aScale); }
   nsRect& ScaleRoundOut(float aXScale, float aYScale);
 
+  // Extend the rect outwards such that the edges are on integer boundaries
+  // and the edges scaled by aXMult/aYMult are also on integer boundaries.
+  // aXMult/aYMult must be N or 1/N for integer N.
+  nsRect& ExtendForScaling(float aXMult, float aYMult);
+
   // Converts this rect from aFromAPP, an appunits per pixel ratio, to aToAPP.
   // In the RoundOut version we make the rect the smallest rect containing the
   // unrounded result. In the RoundIn version we make the rect the largest rect
@@ -292,8 +297,9 @@ struct NS_GFX nsIntRect {
 
   PRBool Contains(const nsIntRect& aRect) const
   {
-    return (PRBool) ((aRect.x >= x) && (aRect.y >= y) &&
-                     (aRect.XMost() <= XMost()) && (aRect.YMost() <= YMost()));
+    return aRect.IsEmpty() ||
+        (PRBool) ((aRect.x >= x) && (aRect.y >= y) &&
+                  (aRect.XMost() <= XMost()) && (aRect.YMost() <= YMost()));
   }
   PRBool Contains(PRInt32 aX, PRInt32 aY) const
   {
@@ -336,6 +342,8 @@ struct NS_GFX nsIntRect {
   PRInt32 YMost() const {return y + height;}
 
   inline nsRect ToAppUnits(nscoord aAppUnitsPerPixel) const;
+
+  nsIntRect& ScaleRoundOut(float aXScale, float aYScale);
 
   // Returns a special nsIntRect that's used in some places to signify
   // "all available space".
@@ -390,12 +398,12 @@ inline nsIntRect
 nsRect::ToNearestPixels(nscoord aAppUnitsPerPixel) const
 {
   nsIntRect rect;
-  rect.x = NSToIntRoundUp(NSAppUnitsToFloatPixels(x, float(aAppUnitsPerPixel)));
-  rect.y = NSToIntRoundUp(NSAppUnitsToFloatPixels(y, float(aAppUnitsPerPixel)));
-  rect.width  = NSToIntRoundUp(NSAppUnitsToFloatPixels(XMost(),
-                               float(aAppUnitsPerPixel))) - rect.x;
-  rect.height = NSToIntRoundUp(NSAppUnitsToFloatPixels(YMost(),
-                               float(aAppUnitsPerPixel))) - rect.y;
+  rect.x = NSToIntRoundUp(NSAppUnitsToDoublePixels(x, aAppUnitsPerPixel));
+  rect.y = NSToIntRoundUp(NSAppUnitsToDoublePixels(y, aAppUnitsPerPixel));
+  rect.width  = NSToIntRoundUp(NSAppUnitsToDoublePixels(XMost(),
+                               aAppUnitsPerPixel)) - rect.x;
+  rect.height = NSToIntRoundUp(NSAppUnitsToDoublePixels(YMost(),
+                               aAppUnitsPerPixel)) - rect.y;
   return rect;
 }
 

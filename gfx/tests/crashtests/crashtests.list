@@ -78,6 +78,9 @@ load 546870-1.html
 load balinese-letter-spacing.html
 load 580100-1.html
 load 580212-1.html
-skip-if(gtk2Widget) load 580233-1.html
+load 580233-1.html
 load 580719-1.html
+load 594654-1.xhtml
 load 595727-1.html
+load 633453-1.html
+load 633322-1.html

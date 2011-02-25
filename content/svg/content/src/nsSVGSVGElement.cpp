@@ -48,7 +48,7 @@
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsSVGMatrix.h"
-#include "nsSVGPoint.h"
+#include "DOMSVGPoint.h"
 #include "nsSVGTransform.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIFrame.h"
@@ -61,6 +61,7 @@
 #include "nsSVGUtils.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGEffects.h" // For nsSVGEffects::RemoveAllRenderingObservers
+#include "nsContentErrors.h" // For NS_PROPTABLE_PROP_OVERWRITTEN
 
 #ifdef MOZ_SMIL
 #include "nsEventDispatcher.h"
@@ -130,8 +131,9 @@ nsSVGTranslatePoint::DOMVal::MatrixTransform(nsIDOMSVGMatrix *matrix,
 
   float x = mVal->GetX();
   float y = mVal->GetY();
-  
-  return NS_NewSVGPoint(_retval, a*x + c*y + e, b*x + d*y + f);
+
+  NS_ADDREF(*_retval = new DOMSVGPoint(a*x + c*y + e, b*x + d*y + f));
+  return NS_OK;
 }
 
 nsSVGElement::LengthInfo nsSVGSVGElement::sLengthInfo[4] =
@@ -211,6 +213,8 @@ nsSVGSVGElement::nsSVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 #ifdef MOZ_SMIL
   , mStartAnimationOnBindToTree(!aFromParser)
 #endif // MOZ_SMIL
+  , mImageNeedsTransformInvalidation(PR_FALSE)
+  , mIsPaintingSVGImageElement(PR_FALSE)
 {
 }
 
@@ -536,25 +540,20 @@ nsSVGSVGElement::SetCurrentTime(float seconds)
 #ifdef MOZ_SMIL
   if (NS_SMILEnabled()) {
     if (mTimedDocumentRoot) {
+      // Make sure the timegraph is up-to-date
+      FlushAnimations();
       double fMilliseconds = double(seconds) * PR_MSEC_PER_SEC;
       // Round to nearest whole number before converting, to avoid precision
       // errors
       nsSMILTime lMilliseconds = PRInt64(NS_round(fMilliseconds));
       mTimedDocumentRoot->SetCurrentTime(lMilliseconds);
-      // Force a resample now
-      //
-      // It's not sufficient to just request a resample here because calls to
-      // BeginElement etc. expect to operate on an up-to-date timegraph or else
-      // instance times may be incorrectly discarded.
-      //
-      // See the mochitest: test_smilSync.xhtml:testSetCurrentTime()
-      nsIDocument* doc = GetCurrentDoc();
-      if (doc) {
-        nsSMILAnimationController* smilController = doc->GetAnimationController();
-        if (smilController) {
-          smilController->Resample();
-        }
-      }
+      AnimationNeedsResample();
+      // Trigger synchronous sample now, to:
+      //  - Make sure we get an up-to-date paint after this method
+      //  - re-enable event firing (it got disabled during seeking, and it
+      //  doesn't get re-enabled until the first sample after the seek -- so
+      //  let's make that happen now.)
+      FlushAnimations();
     } // else we're not the outermost <svg> or not bound to a tree, so silently
       // fail
     return NS_OK;
@@ -655,7 +654,8 @@ nsSVGSVGElement::CreateSVGAngle(nsIDOMSVGAngle **_retval)
 NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGPoint(nsIDOMSVGPoint **_retval)
 {
-  return NS_NewSVGPoint(_retval);
+  NS_ADDREF(*_retval = new DOMSVGPoint(0, 0));
+  return NS_OK;
 }
 
 /* nsIDOMSVGMatrix createSVGMatrix (); */
@@ -963,12 +963,38 @@ nsSVGSVGElement::IsEventName(nsIAtom* aName)
          (EventNameType_SVGGraphic | EventNameType_SVGSVG));
 }
 
+// Helper for GetViewBoxTransform on root <svg> node
+// * aLength: internal value for our <svg> width or height attribute.
+// * aViewportLength: length of the corresponding dimension of the viewport.
+// * aSelf: the outermost <svg> node itself.
+// NOTE: aSelf is not an ancestor viewport element, so it can't be used to
+// resolve percentage lengths. (It can only be used to resolve
+// 'em'/'ex'-valued units).
+inline float
+ComputeSynthesizedViewBoxDimension(nsSVGLength2& aLength,
+                                   float aViewportLength,
+                                   nsSVGSVGElement* aSelf)
+{
+  if (aLength.IsPercentage()) {
+    return aViewportLength * aLength.GetAnimValInSpecifiedUnits() / 100.0f;
+  }
+
+  return aLength.GetAnimValue(aSelf);
+}
+
 //----------------------------------------------------------------------
 // public helpers:
 
 gfxMatrix
 nsSVGSVGElement::GetViewBoxTransform()
 {
+  // Do we have an override preserveAspectRatio value?
+  const SVGPreserveAspectRatio* overridePARPtr =
+    GetImageOverridePreserveAspectRatio();
+
+  // May assign this to overridePARPtr if we have no viewBox but are faking one:
+  SVGPreserveAspectRatio tmpPAR;
+
   float viewportWidth, viewportHeight;
   if (nsSVGUtils::IsInnerSVG(this)) {
     nsSVGSVGElement *ctx = GetCtx();
@@ -984,8 +1010,33 @@ nsSVGSVGElement::GetViewBoxTransform()
     viewBox = mViewBox.GetAnimValue();
   } else {
     viewBox.x = viewBox.y = 0.0f;
-    viewBox.width  = viewportWidth;
-    viewBox.height = viewportHeight;
+    if (ShouldSynthesizeViewBox()) {
+      // Special case -- fake a viewBox, using height & width attrs.
+      // (Use |this| as context, since if we get here, we're outermost <svg>.)
+      viewBox.width =
+        ComputeSynthesizedViewBoxDimension(mLengthAttributes[WIDTH],
+                                           mViewportWidth, this);
+      viewBox.height =
+        ComputeSynthesizedViewBoxDimension(mLengthAttributes[HEIGHT],
+                                           mViewportHeight, this);
+      NS_ABORT_IF_FALSE(!overridePARPtr,
+                        "shouldn't have overridePAR if we're "
+                        "synthesizing a viewBox");
+
+      // If we're synthesizing a viewBox, use preserveAspectRatio="none";
+      tmpPAR.SetAlign(nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE);
+
+      // (set the other pAR attributes too, just so they're initialized):
+      tmpPAR.SetDefer(PR_FALSE);
+      tmpPAR.SetMeetOrSlice(nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE);
+
+      overridePARPtr = &tmpPAR;
+    } else {
+      // No viewBox attribute, so we shouldn't auto-scale. This is equivalent
+      // to having a viewBox that exactly matches our viewport size.
+      viewBox.width  = viewportWidth;
+      viewBox.height = viewportHeight;
+    }
   }
 
   if (viewBox.width <= 0.0f || viewBox.height <= 0.0f) {
@@ -996,7 +1047,8 @@ nsSVGSVGElement::GetViewBoxTransform()
                                          viewportWidth, viewportHeight,
                                          viewBox.x, viewBox.y,
                                          viewBox.width, viewBox.height,
-                                         mPreserveAspectRatio);
+                                         overridePARPtr ? *overridePARPtr :
+                                         mPreserveAspectRatio.GetAnimValue());
 }
 
 #ifdef MOZ_SMIL
@@ -1098,6 +1150,13 @@ nsSVGSVGElement::InvalidateTransformNotifyFrame()
 #endif
 }
 
+PRBool
+nsSVGSVGElement::HasPreserveAspectRatio()
+{
+  return HasAttr(kNameSpaceID_None, nsGkAtoms::preserveAspectRatio) ||
+    mPreserveAspectRatio.IsAnimated();
+}
+
 //----------------------------------------------------------------------
 // nsSVGSVGElement
 
@@ -1110,15 +1169,18 @@ nsSVGSVGElement::GetLength(PRUint8 aCtxType)
     const nsSVGViewBoxRect& viewbox = mViewBox.GetAnimValue();
     w = viewbox.width;
     h = viewbox.height;
+  } else if (nsSVGUtils::IsInnerSVG(this)) {
+    nsSVGSVGElement *ctx = GetCtx();
+    w = mLengthAttributes[WIDTH].GetAnimValue(ctx);
+    h = mLengthAttributes[HEIGHT].GetAnimValue(ctx);
+  } else if (ShouldSynthesizeViewBox()) {
+    w = ComputeSynthesizedViewBoxDimension(mLengthAttributes[WIDTH],
+                                           mViewportWidth, this);
+    h = ComputeSynthesizedViewBoxDimension(mLengthAttributes[HEIGHT],
+                                           mViewportHeight, this);
   } else {
-    if (nsSVGUtils::IsInnerSVG(this)) {
-      nsSVGSVGElement *ctx = GetCtx();
-      w = mLengthAttributes[WIDTH].GetAnimValue(ctx);
-      h = mLengthAttributes[HEIGHT].GetAnimValue(ctx);
-    } else {
-      w = mViewportWidth;
-      h = mViewportHeight;
-    }
+    w = mViewportWidth;
+    h = mViewportHeight;
   }
 
   w = NS_MAX(w, 0.0f);
@@ -1226,7 +1288,7 @@ nsSVGSVGElement::DidAnimatePreserveAspectRatio()
   InvalidateTransformNotifyFrame();
 }
 
-nsSVGPreserveAspectRatio *
+SVGAnimatedPreserveAspectRatio *
 nsSVGSVGElement::GetPreserveAspectRatio()
 {
   return &mPreserveAspectRatio;
@@ -1240,3 +1302,119 @@ nsSVGSVGElement::RemoveAllRenderingObservers()
   nsSVGEffects::RemoveAllRenderingObservers(this);
 }
 #endif // !MOZ_LIBXUL
+
+PRBool
+nsSVGSVGElement::ShouldSynthesizeViewBox()
+{
+  NS_ABORT_IF_FALSE(!HasValidViewbox(),
+                    "Should only be called if we lack a viewBox");
+
+  nsIDocument* doc = GetCurrentDoc();
+  return doc &&
+    doc->IsBeingUsedAsImage() &&
+    !mIsPaintingSVGImageElement &&
+    !GetParent();
+}
+
+
+// Callback function, for freeing PRUint64 values stored in property table
+static void
+ReleasePreserveAspectRatioPropertyValue(void*    aObject,       /* unused */
+                                        nsIAtom* aPropertyName, /* unused */
+                                        void*    aPropertyValue,
+                                        void*    aData          /* unused */)
+{
+  SVGPreserveAspectRatio* valPtr =
+    static_cast<SVGPreserveAspectRatio*>(aPropertyValue);
+  delete valPtr;
+}
+
+void
+nsSVGSVGElement::
+  SetImageOverridePreserveAspectRatio(const SVGPreserveAspectRatio& aPAR)
+{
+#ifdef DEBUG
+  NS_ABORT_IF_FALSE(GetCurrentDoc()->IsBeingUsedAsImage(),
+                    "should only override preserveAspectRatio in images");
+#endif
+
+  if (!HasValidViewbox() && ShouldSynthesizeViewBox()) {
+    // My non-<svg:image> clients will have been painting me with a synthesized
+    // viewBox, but my <svg:image> client that's about to paint me now does NOT
+    // want that.  Need to tell ourselves to flush our transform.
+    mImageNeedsTransformInvalidation = PR_TRUE;
+  }
+  mIsPaintingSVGImageElement = PR_TRUE;
+
+  if (!mViewBox.IsValid()) {
+    return; // preserveAspectRatio irrelevant (only matters if we have viewBox)
+  }
+
+  if (aPAR.GetDefer() && HasPreserveAspectRatio()) {
+    return; // Referring element defers to my own preserveAspectRatio value.
+  }
+
+  SVGPreserveAspectRatio* pAROverridePtr = new SVGPreserveAspectRatio(aPAR);
+  nsresult rv = SetProperty(nsGkAtoms::overridePreserveAspectRatio,
+                            pAROverridePtr,
+                            ReleasePreserveAspectRatioPropertyValue);
+  NS_ABORT_IF_FALSE(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
+                    "Setting override value when it's already set...?"); 
+
+  if (NS_LIKELY(NS_SUCCEEDED(rv))) {
+    mImageNeedsTransformInvalidation = PR_TRUE;
+  } else {
+    // property-insertion failed (e.g. OOM in property-table code)
+    delete pAROverridePtr;
+  }
+}
+
+void
+nsSVGSVGElement::ClearImageOverridePreserveAspectRatio()
+{
+#ifdef DEBUG
+  NS_ABORT_IF_FALSE(GetCurrentDoc()->IsBeingUsedAsImage(),
+                    "should only override preserveAspectRatio in images");
+#endif
+
+  mIsPaintingSVGImageElement = PR_FALSE;
+  if (!HasValidViewbox() && ShouldSynthesizeViewBox()) {
+    // My non-<svg:image> clients will want to paint me with a synthesized
+    // viewBox, but my <svg:image> client that just painted me did NOT
+    // use that.  Need to tell ourselves to flush our transform.
+    mImageNeedsTransformInvalidation = PR_TRUE;
+  }
+
+  void* valPtr = UnsetProperty(nsGkAtoms::overridePreserveAspectRatio);
+  if (valPtr) {
+    mImageNeedsTransformInvalidation = PR_TRUE;
+    delete static_cast<SVGPreserveAspectRatio*>(valPtr);
+  }
+}
+
+const SVGPreserveAspectRatio*
+nsSVGSVGElement::GetImageOverridePreserveAspectRatio()
+{
+  void* valPtr = GetProperty(nsGkAtoms::overridePreserveAspectRatio);
+#ifdef DEBUG
+  if (valPtr) {
+    NS_ABORT_IF_FALSE(GetCurrentDoc()->IsBeingUsedAsImage(),
+                      "should only override preserveAspectRatio in images");
+  }
+#endif
+
+  return static_cast<SVGPreserveAspectRatio*>(valPtr);
+}
+
+void
+nsSVGSVGElement::FlushImageTransformInvalidation()
+{
+  NS_ABORT_IF_FALSE(!GetParent(), "Should only be called on root node");
+  NS_ABORT_IF_FALSE(GetCurrentDoc()->IsBeingUsedAsImage(),
+                    "Should only be called on image documents");
+
+  if (mImageNeedsTransformInvalidation) {
+    InvalidateTransformNotifyFrame();
+    mImageNeedsTransformInvalidation = PR_FALSE;
+  }
+}

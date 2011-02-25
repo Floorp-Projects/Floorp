@@ -1,9 +1,9 @@
-Cu.import("resource://services-sync/auth.js");
 Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/ext/Sync.js");
 
 let logger;
 
@@ -137,6 +137,36 @@ function server_headers(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
+/*
+ * Utility to allow us to fake a bad cached response within AsyncResource.
+ * Swap out the _onComplete handler, pretending to throw before setting
+ * status to non-zero. Return an empty response.
+ *
+ * This should prompt Res_get to retry once.
+ *
+ * Set FAKE_ZERO_COUNTER accordingly.
+ */
+let FAKE_ZERO_COUNTER = 0;
+function fake_status_failure() {
+  _("Switching in status-0 _onComplete handler.");
+  let c = AsyncResource.prototype._onComplete;
+  AsyncResource.prototype._onComplete = function(error, data) {
+    if (FAKE_ZERO_COUNTER > 0) {
+      _("Faking status 0 return...");
+      FAKE_ZERO_COUNTER--;
+      let ret = new String(data);
+      ret.headers = {};
+      ret.status = 0;
+      ret.success = false;
+      Utils.lazy2(ret, "obj", function() JSON.parse(ret));
+
+      this._callback(null, ret);
+    }
+    else {
+      c.apply(this, arguments);
+    }
+  };
+}
 
 function run_test() {
   do_test_pending();
@@ -160,7 +190,7 @@ function run_test() {
 
   Utils.prefs.setIntPref("network.numRetries", 1); // speed up test
 
-  _("Resource object memebers");
+  _("Resource object members");
   let res = new Resource("http://localhost:8080/open");
   do_check_true(res.uri instanceof Ci.nsIURI);
   do_check_eq(res.uri.spec, "http://localhost:8080/open");
@@ -377,6 +407,7 @@ function run_test() {
   } catch(ex) {
     error = ex;
   }
+  do_check_eq(error.result, Cr.NS_ERROR_CONNECTION_REFUSED);
   do_check_eq(error.message, "NS_ERROR_CONNECTION_REFUSED");
   do_check_eq(typeof error.stack, "string");
 
@@ -411,6 +442,95 @@ function run_test() {
   do_check_eq(content, "This path exists and is protected - failed");
   do_check_eq(content.status, 401);
   do_check_false(content.success);
+
+  // Faking problems.
+  fake_status_failure();
+
+  // POST doesn't do our inner retry, so we get a status 0.
+  FAKE_ZERO_COUNTER = 1;
+  let res14 = new Resource("http://localhost:8080/open");
+  content = res14.post("hello");
+  do_check_eq(content.status, 0);
+  do_check_false(content.success);
+
+  // And now we succeed...
+  let res15 = new Resource("http://localhost:8080/open");
+  content = res15.post("hello");
+  do_check_eq(content.status, 405);
+  do_check_false(content.success);
+
+  // Now check that GET silent failures get retried.
+  FAKE_ZERO_COUNTER = 1;
+  let res16 = new Resource("http://localhost:8080/open");
+  content = res16.get();
+  do_check_eq(content.status, 200);
+  do_check_true(content.success);
+
+  // ... but only once.
+  FAKE_ZERO_COUNTER = 2;
+  let res17 = new Resource("http://localhost:8080/open");
+  content = res17.get();
+  do_check_eq(content.status, 0);
+  do_check_false(content.success);
+
+  _("Checking handling of errors in onProgress.");
+  let res18 = new Resource("http://localhost:8080/json");
+  let onProgress = function(rec) {
+    // Provoke an XPC exception without a Javascript wrapper.
+    Svc.IO.newURI("::::::::", null, null);
+  };
+  res18._onProgress = onProgress;
+  let oldWarn = res18._log.warn;
+  let warnings = [];
+  res18._log.warn = function(msg) { warnings.push(msg) };
+  error = undefined;
+  try {
+    content = res18.get();
+  } catch (ex) {
+    error = ex;
+  }
+
+  // It throws and logs.
+  do_check_eq(error.result, Cr.NS_ERROR_MALFORMED_URI);
+  do_check_eq(error, "Error: NS_ERROR_MALFORMED_URI");
+  do_check_eq(warnings.pop(),
+              "Got exception calling onProgress handler during fetch of " +
+              "http://localhost:8080/json");
+  
+  // And this is what happens if JS throws an exception.
+  res18 = new Resource("http://localhost:8080/json");
+  onProgress = function(rec) {
+    throw "BOO!";
+  };
+  res18._onProgress = onProgress;
+  oldWarn = res18._log.warn;
+  warnings = [];
+  res18._log.warn = function(msg) { warnings.push(msg) };
+  error = undefined;
+  try {
+    content = res18.get();
+  } catch (ex) {
+    error = ex;
+  }
+
+  // It throws and logs.
+  do_check_eq(error.result, Cr.NS_ERROR_XPC_JS_THREW_STRING);
+  do_check_eq(error, "Error: NS_ERROR_XPC_JS_THREW_STRING");
+  do_check_eq(warnings.pop(),
+              "Got exception calling onProgress handler during fetch of " +
+              "http://localhost:8080/json");
+
+
+  _("Ensure channel timeouts are thrown appropriately.");
+  let res19 = new Resource("http://localhost:8080/json");
+  res19.ABORT_TIMEOUT = 0;
+  error = undefined;
+  try {
+    content = res19.get();
+  } catch (ex) {
+    error = ex;
+  }
+  do_check_eq(error.result, Cr.NS_ERROR_NET_TIMEOUT);
 
   server.stop(do_test_finished);
 }

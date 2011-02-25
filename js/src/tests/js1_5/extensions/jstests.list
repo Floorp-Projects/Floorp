@@ -44,10 +44,10 @@ script regress-328556.js
 skip script regress-330569.js # Yarr doesn't bail on complex regexps.
 script regress-333541.js
 skip script regress-335700.js # bug xxx - reftest hang, BigO
-skip-if(!xulRuntime.shell) script regress-336409-1.js # no results reported.
-skip-if(!xulRuntime.shell&&xulRuntime.XPCOMABI.match(/x86_64/)) silentfail script regress-336409-2.js # can fail silently due to out of memory
+skip-if(!xulRuntime.shell) slow script regress-336409-1.js # no results reported.
+skip-if(!xulRuntime.shell&&((isDebugBuild&&xulRuntime.OS=="Linux")||xulRuntime.XPCOMABI.match(/x86_64/))) silentfail script regress-336409-2.js # can fail silently due to out of memory, bug 615011 - timeouts on slow debug Linux
 skip-if(!xulRuntime.shell) silentfail script regress-336410-1.js # can fail silently due to out of memory
-skip-if(!xulRuntime.shell&&(xulRuntime.XPCOMABI.match(/x86_64/)||xulRuntime.OS=="WINNT")) silentfail script regress-336410-2.js # can fail silently due to out of memory
+skip-if(!xulRuntime.shell&&((isDebugBuild&&xulRuntime.OS=="Linux")||xulRuntime.XPCOMABI.match(/x86_64/)||xulRuntime.OS=="WINNT")) silentfail script regress-336410-2.js # can fail silently due to out of memory, bug 621348 - timeouts on slow debug Linux
 script regress-338804-01.js
 script regress-338804-02.js
 script regress-338804-03.js
@@ -106,7 +106,7 @@ script regress-361856.js
 skip script regress-361964.js # slow, alert not dismissed, now busted by harness
 random script regress-363258.js # bug 524788
 script regress-363988.js
-script regress-365527.js
+slow script regress-365527.js
 script regress-365692.js
 script regress-365869.js
 script regress-366288.js
@@ -123,7 +123,7 @@ script regress-367501-01.js
 script regress-367501-02.js
 script regress-367501-03.js
 script regress-367501-04.js
-skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) script regress-367589.js # slow 
+skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) slow script regress-367589.js
 script regress-367630.js
 script regress-367923.js
 script regress-368859.js
@@ -151,10 +151,10 @@ script regress-390597.js
 script regress-390598.js
 script regress-394967.js
 script regress-396326.js
-script regress-406572.js
+skip script regress-406572.js
 script regress-407019.js
 script regress-407501.js
-skip-if(!xulRuntime.shell) script regress-407720.js # slow
+skip-if(!xulRuntime.shell) slow script regress-407720.js
 script regress-412926.js
 script regress-414755.js
 script regress-416354.js

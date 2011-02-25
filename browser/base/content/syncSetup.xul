@@ -89,9 +89,11 @@
     <separator class="groove"/>
     <vbox align="center" flex="1">
       <spacer flex="3"/>
+      <label value="&setup.haveAccount.label;" />
+      <spacer flex="1"/>
       <button id="existingAccount"
               class="accountChoiceButton"
-              label="&button.haveAccount.label;"
+              label="&button.connect.label;"
               oncommand="gSyncSetup.useExistingAccount()"/>
       <spacer flex="3"/>
     </vbox>
@@ -145,22 +147,18 @@
           </hbox>
         </row>
         <row align="center">
-          <label control="serverType"
+          <label control="server"
                  value="&server.label;"/>
-          <menulist id="serverType" oncommand="gSyncSetup.onServerChange()">
+          <menulist id="server"
+                    oncommand="gSyncSetup.onServerCommand()"
+                    oninput="gSyncSetup.onServerInput()">
             <menupopup>
               <menuitem label="&serverType.main.label;"
                         value="main"/>
-              <menuitem label="&serverType.custom.label;"
+              <menuitem label="&serverType.custom2.label;"
                         value="custom"/>
             </menupopup>
           </menulist>
-        </row>
-        <row id="serverRow" hidden="true" align="center">
-          <label value="&signIn.serverURL.label;"
-                 accesskey="&signIn.serverURL.accesskey;"
-                 control="weaveServerURL"/>
-          <textbox id="weaveServerURL" oninput="gSyncSetup.onServerInput()"/>
         </row>
         <row id="serverFeedbackRow" align="center" hidden="true">
           <spacer/>
@@ -174,18 +172,21 @@
           <hbox align="center">
             <checkbox id="tos"
                       accesskey="&setup.tosAgree1.accesskey;"
-                      oncommand="gSyncSetup.checkFields();"/>
+                      oncommand="this.focus(); gSyncSetup.checkFields();"/>
             <description id="tosDesc"
+                         flex="1"
                          onclick="document.getElementById('tos').focus();
                                   document.getElementById('tos').click()">
               &setup.tosAgree1.label;
               <label class="text-link inline-link"
-                     onclick="event.stopPropagation();gSyncUtils.openToS();"
-                     value="&setup.tosLink.label;"/>
+                     onclick="event.stopPropagation();gSyncUtils.openToS();">
+                &setup.tosLink.label;
+              </label>
               &setup.tosAgree2.label;
               <label class="text-link inline-link"
-                     onclick="event.stopPropagation();gSyncUtils.openPrivacyPolicy();"
-                     value="&setup.ppLink.label;"/>
+                     onclick="event.stopPropagation();gSyncUtils.openPrivacyPolicy();">
+                &setup.ppLink.label;
+              </label>
               &setup.tosAgree3.label;
             </description>
           </hbox>
@@ -243,8 +244,43 @@
     </vbox>
   </wizardpage>
 
-  <wizardpage id="useExisting"
-              label="&setup.existingAccount.title.label;"
+  <wizardpage id="addDevice"
+              label="&addDevice.title.label;"
+              onextra1="gSyncSetup.onSyncOptions()"
+              onpageshow="gSyncSetup.onPageShow()">
+    <description>
+      &addDevice.setup.description.label;
+      <label class="text-link"
+             value="&addDevice.showMeHow.label;"
+             href="https://services.mozilla.com/sync/help/easy-setup"/>
+    </description>
+    <description>&addDevice.setup.enterCode.label;</description>
+    <spacer flex="1"/>
+    <vbox align="center" flex="1">
+      <textbox id="easySetupPIN1"
+               class="pin"
+               value=""
+               disabled="true"
+               />
+      <textbox id="easySetupPIN2"
+               class="pin"
+               value=""
+               disabled="true"
+               />
+      <textbox id="easySetupPIN3"
+               class="pin"
+               value=""
+               disabled="true"
+               />
+    </vbox>
+    <spacer flex="3"/>
+    <label class="text-link"
+           value="&addDevice.dontHaveDevice.label;"
+           onclick="gSyncSetup.manualSetup();"/>
+  </wizardpage>
+
+  <wizardpage id="existingAccount"
+              label="&setup.signInPage.title.label;"
               onextra1="gSyncSetup.onSyncOptions()"
               onpageshow="gSyncSetup.onPageShow()">
       <grid>
@@ -253,41 +289,14 @@
           <column class="inputColumn" flex="1"/>
         </columns>
         <rows>
-          <row align="center">
-            <label control="existingServerType"
-                   value="&server.label;"/>
-            <menulist id="existingServerType" oncommand="gSyncSetup.onServerChange()">
-              <menupopup>
-                <menuitem label="&serverType.main.label;"
-                          value="main"/>
-                <menuitem label="&serverType.custom.label;"
-                          value="custom"/>
-              </menupopup>
-            </menulist>
-          </row>
-          <row id="existingServerRow" hidden="true" align="center">
-            <label id="existingServerURLLabel"
-                   value="&signIn.serverURL.label;"
-                   accesskey="&signIn.serverURL.accesskey;"
-                   control="existingServerURL"/>
-            <textbox id="existingServerURL"
-                     onchange="gSyncSetup.checkFields(event)"/>
-          </row>
           <row id="existingAccountRow" align="center">
             <label id="existingAccountLabel"
-                   value="&signIn.account.label;"
-                   accesskey="&signIn.account.accesskey;"
+                   value="&signIn.account2.label;"
+                   accesskey="&signIn.account2.accesskey;"
                    control="existingAccount"/>
             <textbox id="existingAccountName"
                      oninput="gSyncSetup.checkFields(event)"
                      onchange="gSyncSetup.checkFields(event)"/>
-          </row>
-          <row id="existingAccountFeedbackRow" align="center" hidden="true">
-            <spacer/>
-            <hbox>
-              <image class="statusIcon"/>
-              <label class="status" value=" "/>
-            </hbox>
           </row>
           <row id="existingPasswordRow" align="center">
             <label id="existingPasswordLabel"
@@ -299,48 +308,77 @@
                      onkeyup="gSyncSetup.checkFields(event)"
                      onchange="gSyncSetup.checkFields(event)"/>
           </row>
-          <row id="existingPasswordFeedbackRow"  align="center" hidden="true">
-            <label class="text-link small" value="&resetPassword.label;"
-                   onclick="gSyncUtils.resetPassword(); return false;"/>
+          <row id="existingPasswordFeedbackRow" align="center" hidden="true">
+            <spacer/>
             <hbox>
               <image class="statusIcon"/>
               <label class="status" value=" "/>
             </hbox>
           </row>
-          <row id="existingLoginFeedbackRow">
+          <row align="center">
             <spacer/>
-            <hbox id="connect-throbber" hidden="true">
-              <image/>
-              <label value="&connecting.label;"/>
-          </hbox>
+            <label class="text-link"
+                   value="&resetPassword.label;"
+                   onclick="gSyncUtils.resetPassword(); return false;"/>
+          </row>
+          <row align="center">
+            <label control="existingServer"
+                   value="&server.label;"/>
+            <menulist id="existingServer"
+                      oncommand="gSyncSetup.onExistingServerCommand()"
+                      oninput="gSyncSetup.onExistingServerInput()">
+              <menupopup>
+                <menuitem label="&serverType.main.label;"
+                          value="main"/>
+                <menuitem label="&serverType.custom2.label;"
+                          value="custom"/>
+              </menupopup>
+            </menulist>
+          </row>
+          <row id="existingServerFeedbackRow" align="center" hidden="true">
+            <spacer/>
+            <hbox>
+              <image class="statusIcon"/>
+              <vbox>
+                <label class="status" value=" "/>
+              </vbox>
+            </hbox>
           </row>
         </rows>
       </grid>
-  </wizardpage>
 
-  <wizardpage id="existingPassphraseEntry"
-              label="&setup.existingSyncKeyPage.title;"
-              onextra1="gSyncSetup.onSyncOptions()"
-              onpageshow="gSyncSetup.onPageShow()">
-    <description>&setup.existingSyncKeyPage.description;</description>
-    <textbox id="existingPassphrase"
-             onkeyup="gSyncSetup.onPassphraseKeyUp(event)"
-             onchange="gSyncSetup.checkFields()"/>
-    <hbox id="passphrase-throbber" hidden="true">
-      <image/>
-      <label value="&verifying.label;"/>
-    </hbox>
-    <hbox align="left" id="existingPassphraseFeedbackBox">
-      <spacer/>
-      <hbox>
-        <image class="statusIcon"/>
-        <label class="status" value=" "/>
+    <groupbox>
+      <label id="existingPassphraseLabel"
+             value="&signIn.syncKey.label;"
+             accesskey="&signIn.syncKey.accesskey;"
+             control="existingPassphrase"/>
+      <textbox id="existingPassphrase"
+               oninput="gSyncSetup.checkFields()"/>
+      <hbox id="login-throbber" hidden="true">
+        <image/>
+        <label value="&verifying.label;"/>
       </hbox>
-    </hbox>
-    <vbox class="small" id="passphraseHelpBox" hidden="true">
-      <description class="small">&existingSyncKeyHelp.description;</description>
-      <label class="text-link small" value="&lostSyncKey.label;"
-             onclick="gSyncUtils.resetPassphrase(); return false;"/>
+      <vbox align="left" id="existingPassphraseFeedbackRow" hidden="true">
+        <hbox>
+          <image class="statusIcon"/>
+          <label class="status" value=" "/>
+        </hbox>
+      </vbox>
+    </groupbox>
+
+    <vbox id="passphraseHelpBox">
+      <description>
+        &existingSyncKey.description;
+        <label class="text-link"
+               href="https://services.mozilla.com/sync/help/manual-setup">
+          &addDevice.showMeHow.label;
+        </label>
+        <spacer id="passphraseHelpSpacer"/>
+        <label class="text-link"
+               onclick="gSyncSetup.resetPassphrase(); return false;">
+          &resetSyncKey.label;
+        </label>
+      </description>
     </vbox>
   </wizardpage>
 
@@ -397,7 +435,7 @@
             <column/>
             <column flex="1"/>
           </columns>
-          <rows>
+          <rows flex="1">
             <row align="center">
               <radio id="resetClient"
                      class="mergeChoiceButton"
@@ -412,16 +450,18 @@
                      class="mergeChoiceButton"
                      aria-labelledby="wipeClientLabel"/>
               <label id="wipeClientLabel"
-                     control="wipeClient"
-                     value="&choice2.client.main.label;"/>
+                     control="wipeClient">
+                &choice2.client.main.label;
+              </label>
             </row>
             <row align="center">
               <radio id="wipeRemote"
                      class="mergeChoiceButton"
                      aria-labelledby="wipeRemoteLabel"/>
               <label id="wipeRemoteLabel"
-                     control="wipeRemote"
-                     value="&choice2.server.main.label;"/>
+                     control="wipeRemote">
+                &choice2.server.main.label;
+              </label>
             </row>
           </rows>
         </grid>

@@ -1,0 +1,48 @@
+url-prefix ../../jsreftest.html?test=ecma_5/eval/
+#
+# A dazzling variety of characteristics of an invocation of the eval function
+# affect its semantics:
+#
+#  - Is it called from a function (one written by the user, or one provided by
+#    ES5), from global code, or from nothing (e.g. setTimeout, setInterval, or
+#    at the entry point to the JSAPI)?
+#  - If it is called from script (whether global or function), is the caller
+#    strict mode code?
+#  - Is the call direct or indirect?  (ES5 15.1.2.1)
+#  - Is the eval code itself strict mode?
+#
+# We test all of these in their basic configurations in an attempt to verify
+# correct general behavior.  These tests won't help any special-case
+# optimizations we might perform -- add new tests for such changes as needed.
+#
+
+script exhaustive-fun-normalcaller-direct-normalcode.js
+script exhaustive-fun-normalcaller-direct-strictcode.js
+script exhaustive-fun-normalcaller-indirect-normalcode.js
+script exhaustive-fun-normalcaller-indirect-strictcode.js
+script exhaustive-fun-strictcaller-direct-normalcode.js
+script exhaustive-fun-strictcaller-direct-strictcode.js
+script exhaustive-fun-strictcaller-indirect-normalcode.js
+script exhaustive-fun-strictcaller-indirect-strictcode.js
+script exhaustive-global-normalcaller-direct-normalcode.js
+script exhaustive-global-normalcaller-direct-strictcode.js
+script exhaustive-global-normalcaller-indirect-normalcode.js
+script exhaustive-global-normalcaller-indirect-strictcode.js
+script exhaustive-global-strictcaller-direct-normalcode.js
+script exhaustive-global-strictcaller-direct-strictcode.js
+script exhaustive-global-strictcaller-indirect-normalcode.js
+script exhaustive-global-strictcaller-indirect-strictcode.js
+
+# Not written yet!  These require a new shell primitive to work there, though
+# browser could probably use setTimeout for this.  Moreover, we haven't
+# implemented calling eval without a scripted frame yet (FIXME: bug 602994).
+# script exhaustive-nothing-normalcaller-direct-normalcode.js
+# script exhaustive-nothing-normalcaller-direct-strictcode.js
+# script exhaustive-nothing-normalcaller-indirect-normalcode.js
+# script exhaustive-nothing-normalcaller-indirect-strictcode.js
+# script exhaustive-nothing-strictcaller-direct-normalcode.js
+# script exhaustive-nothing-strictcaller-direct-strictcode.js
+# script exhaustive-nothing-strictcaller-indirect-normalcode.js
+# script exhaustive-nothing-strictcaller-indirect-strictcode.js
+
+script undeclared-name-in-nested-strict-eval.js

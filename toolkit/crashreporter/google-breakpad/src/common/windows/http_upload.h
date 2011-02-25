@@ -98,7 +98,7 @@ class HTTPUpload {
                                   string *request_body);
 
   // Fills the supplied vector with the contents of filename.
-  static void GetFileContents(const wstring &filename, vector<char> *contents);
+  static bool GetFileContents(const wstring &filename, vector<char> *contents);
 
   // Converts a UTF8 string to UTF16.
   static wstring UTF8ToWide(const string &utf8);

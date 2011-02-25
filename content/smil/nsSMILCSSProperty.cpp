@@ -113,10 +113,10 @@ nsSMILCSSProperty::GetBaseValue() const
     // doing so involves clearing and resetting the property which can cause
     // frames to be recreated which we'd like to avoid.
     //
-    // In either case, simply returning a null-typed nsSMILValue to indicate
-    // failure is acceptable because the caller only uses base values when
-    // there's interpolation or addition, and for both the shorthand properties
-    // we know about and the display property those operations aren't supported.
+    // In either case, just return a dummy value (initialized with the right
+    // type, so as not to indicate failure).
+    nsSMILValue tmpVal(&nsSMILCSSValueType::sSingleton);
+    baseValue.Swap(tmpVal);
     return baseValue;
   }
 

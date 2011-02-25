@@ -15,6 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=610390
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
     <iframe type="content"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       src="data:text/html,&lt;script&gt;var x=3&lt;/script&gt;"
       onload="go()"
       id="ifr">

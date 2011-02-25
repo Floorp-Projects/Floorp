@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<style type="text/css">
+  tref { filter: url(#filter1); }
+</style>
+
+<filter id="filter1"><feFlood/></filter>
+
+<tref><polyline points="350,75 379,161 469,161 397,215 423,301 350,250 277,301 303,215 231,161 321,161"/></tref>
+
+</svg>

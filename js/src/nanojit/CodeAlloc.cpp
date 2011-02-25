@@ -127,15 +127,49 @@ namespace nanojit
         }
     }
 
-    void CodeAlloc::alloc(NIns* &start, NIns* &end) {
+   void CodeAlloc::alloc(NIns* &start, NIns* &end, size_t byteLimit) {
         if (!availblocks) {
             // no free mem, get more
             addMem();
         }
 
-        //  grab a block
+        // grab a block
+        NanoAssert(!byteLimit || byteLimit > blkSpaceFor(2));  // if a limit is imposed it must be bigger than 2x minimum block size (see below)
         markBlockWrite(availblocks);
         CodeList* b = removeBlock(availblocks);
+
+        // limit imposed (byteLimit > 0) and the block is too big?  then break it apart
+        if (byteLimit > 0 && b->size() > byteLimit) {
+
+            size_t consume;   // # bytes to extract from the free block
+
+            // enough space to carve out a perfectly sized blk?  (leaving at least a full free blk)
+            if (b->size() >= byteLimit + headerSpaceFor(1) + blkSpaceFor(1)) {
+                // yes, then take exactly what we need
+                consume = byteLimit + headerSpaceFor(1);
+            } else {
+                // no, then we should only take the min amount
+                consume = blkSpaceFor(1);
+
+                // ... and since b->size() > byteLimit && byteLimit > blkSpaceFor(2)
+                NanoAssert( b->size() > blkSpaceFor(2) );
+                NanoAssert( b->size() - consume > blkSpaceFor(1) );  // thus, we know that at least 1 blk left.
+            }
+
+            // break block into 2 pieces, returning the lower portion to the free list
+            CodeList* higher = b->higher;
+            b->end = (NIns*) ( (uintptr_t)b->end - consume );
+            CodeList* b1 = b->higher;
+            higher->lower = b1;
+            b1->higher = higher;
+            b1->lower = b;
+            b1->terminator = b->terminator;
+            NanoAssert(b->size() > minAllocSize);
+            addBlock(availblocks, b);  // put back the rest of the block
+            b = b1;
+        }
+        NanoAssert(b->size() >= minAllocSize);
+        b->next = 0; // not technically needed (except for debug builds), but good hygiene.
         b->isFree = false;
         start = b->start();
         end = b->end;
@@ -399,10 +433,9 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
         // shrink the hole by aligning holeStart forward and holeEnd backward
         holeStart = (NIns*) ((uintptr_t(holeStart) + sizeof(NIns*)-1) & ~(sizeof(NIns*)-1));
         holeEnd = (NIns*) (uintptr_t(holeEnd) & ~(sizeof(NIns*)-1));
-        size_t minHole = minAllocSize;
-        if (minHole < 2*sizeofMinBlock)
-            minHole = 2*sizeofMinBlock;
-        if (uintptr_t(holeEnd) - uintptr_t(holeStart) < minHole) {
+        // hole needs to be big enough for 2 headers + 1 block of free space (subtraction not used in check to avoid wraparound)
+        size_t minHole = headerSpaceFor(2) + blkSpaceFor(1);
+        if (uintptr_t(holeEnd) < minHole + uintptr_t(holeStart) ) {
             // the hole is too small to make a new free block and a new used block. just keep
             // the whole original block and don't free anything.
             add(blocks, start, end);

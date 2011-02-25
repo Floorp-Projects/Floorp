@@ -13,13 +13,10 @@
   <script type="text/javascript;version=1.7">
     function testSteps()
     {
-      const VERSION_CHANGE =
-        Components.interfaces.nsIIDBTransaction.VERSION_CHANGE;
-
       const name = window.location.pathname;
       const description = "My Test Database";
 
-      let request = moz_indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
@@ -27,65 +24,68 @@
       let versionChangeEventCount = 0;
       let db1, db2, db3;
 
-      db1 = event.result;
+      db1 = event.target.result;
       db1.addEventListener("versionchange", function(event) {
         ok(true, "Got version change event");
-        is(event.source, null, "Correct source");
+        is(event.target.source, null, "Correct source");
         is(event.target, db1, "Correct target");
-        is(event.version, "1", "Correct version");
+        is(event.target.version, "", "Correct db version");
+        is(event.version, "1", "Correct event version");
         is(versionChangeEventCount++, 0, "Correct count");
         db1.close();
       }, false);
 
-      request = moz_indexedDB.open(name, description);
+      request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      db2 = event.result;
+      db2 = event.target.result;
       db2.addEventListener("versionchange", function(event) {
         ok(true, "Got version change event");
-        is(event.source, null, "Correct source");
+        is(event.target.source, null, "Correct source");
         is(event.target, db2, "Correct target");
-        is(event.version, "2", "Correct version");
+        is(event.target.version, "1", "Correct db version");
+        is(event.version, "2", "Correct event version");
         is(versionChangeEventCount++, 1, "Correct count");
       }, false);
 
       request = db2.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
-      request.onblocked = function(event) {
-        ok(true, "Got version change blocked event");
-        is(event.source, db2, "Correct source");
-        is(event.target, request, "Correct target");
-        is(event.version, "1", "Correct version");
-        is(versionChangeEventCount++, 2, "Correct count");
-      };
-
+      request.onblocked = errorHandler;
       event = yield;
-      is(event.transaction.mode, VERSION_CHANGE, "Correct mode");
 
-      request = moz_indexedDB.open(name, description);
+      ok(event.target.result === event.target.transaction, "Good result");
+      is(event.target.transaction.mode, IDBTransaction.VERSION_CHANGE,
+         "Correct mode");
+      is(db2.version, "1", "Correct db version");
+
+      request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      db3 = event.result;
+      db3 = event.target.result;
 
       request = db3.setVersion("2");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       request.onblocked = function(event) {
         ok(true, "Got version change blocked event");
-        is(event.source, db3, "Correct source");
+        is(event.target.source, db3, "Correct source");
         is(event.target, request, "Correct target");
-        is(event.version, "2", "Correct version");
+        is(event.target.source.version, "1", "Correct db version");
+        is(event.version, "2", "Correct event version");
         versionChangeEventCount++;
         db2.close();
       };
-
       event = yield;
-      is(event.transaction.mode, VERSION_CHANGE, "Correct mode");
+
+      ok(event.target.result === event.target.transaction, "Good result");
+      is(event.target.transaction.mode, IDBTransaction.VERSION_CHANGE,
+         "Correct mode");
+      is(db3.version, "2", "Correct db version");
 
       is(versionChangeEventCount, 3, "Saw all expected events");
 

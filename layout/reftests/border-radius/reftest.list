@@ -73,3 +73,7 @@ fails-if(cocoaWidget) == intersecting-clipping-1-refc.html intersecting-clipping
 # Test for bad corner joins.
 == corner-joins-1.xhtml corner-joins-1-ref.xhtml
 random-if(winWidget) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml
+
+== scroll-1.html scroll-1-ref.html # see bug 602892
+
+== zero-radius-clip-1.html zero-radius-clip-ref.html

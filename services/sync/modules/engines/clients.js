@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Dan Mills <thunder@mozilla.com>
+ *  Philipp von Weitershausen <philipp@weitershausen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ["Clients"];
+const EXPORTED_SYMBOLS = ["Clients", "ClientsRec"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -43,9 +44,23 @@ const Cu = Components.utils;
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/ext/StringBundle.js");
-Cu.import("resource://services-sync/stores.js");
-Cu.import("resource://services-sync/type_records/clients.js");
+Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
+
+const CLIENTS_TTL = 1814400; // 21 days
+const CLIENTS_TTL_REFRESH = 604800; // 7 days
+
+function ClientsRec(collection, id) {
+  CryptoWrapper.call(this, collection, id);
+}
+ClientsRec.prototype = {
+  __proto__: CryptoWrapper.prototype,
+  _logName: "Record.Clients",
+  ttl: CLIENTS_TTL
+};
+
+Utils.deferGetSet(ClientsRec, "cleartext", ["name", "type", "commands"]);
+
 
 Utils.lazy(this, "Clients", ClientEngine);
 
@@ -62,6 +77,13 @@ ClientEngine.prototype = {
 
   // Always sync client data as it controls other sync behavior
   get enabled() true,
+
+  get lastRecordUpload() {
+    return Svc.Prefs.get(this.name + ".lastRecordUpload", 0);
+  },
+  set lastRecordUpload(value) {
+    Svc.Prefs.set(this.name + ".lastRecordUpload", Math.floor(value));
+  },
 
   // Aggregate some stats on the composition of clients on this account
   get stats() {
@@ -148,6 +170,15 @@ ClientEngine.prototype = {
     if (this._store._remoteClients[id])
       return this._store._remoteClients[id].type == "mobile";
     return false;
+  },
+
+  _syncStartup: function _syncStartup() {
+    // Reupload new client record periodically.
+    if (Date.now() / 1000 - this.lastRecordUpload > CLIENTS_TTL_REFRESH) {
+      this._tracker.addChangedID(this.localID);
+      this.lastRecordUpload = Date.now() / 1000;
+    }
+    SyncEngine.prototype._syncStartup.call(this);
   },
 
   // Always process incoming items because they might have commands

@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=615697
+-->
+<head>
+  <title>Test for Bug 615697</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=615697">Mozilla Bug 615697</a>
+<p id="display"></p>
+<div id="content">
+  <input>
+  <textarea></textarea>
+  <input type='radio'>
+  <input type='checkbox'>
+  <select>
+    <option>foo</option>
+    <option>bar</option>
+  </select>
+  <select multiple size='1'>
+    <option>tulip</option>
+  </select>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 615697 **/
+
+/**
+ * This test is making all elements trigger 'change' event.
+ * You should read the test from bottom to top:
+ * events are registered from the last one to the first one.
+ *
+ * Sometimes, elements are focused before a click. This might sound useless
+ * but it guarantees to have the element visible before simulating the click.
+ */
+
+var input = document.getElementsByTagName('input')[0];
+var textarea = document.getElementsByTagName('textarea')[0];
+var radio = document.getElementsByTagName('input')[1];
+var checkbox= document.getElementsByTagName('input')[2];
+var select = document.getElementsByTagName('select')[0];
+var selectMultiple = document.getElementsByTagName('select')[1];
+
+function checkChangeEvent(aEvent)
+{
+  ok(aEvent.bubbles, "change event should bubble");
+  ok(!aEvent.cancelable, "change event shouldn't be cancelable");
+}
+
+selectMultiple.addEventListener("change", function(aEvent) {
+  selectMultiple.removeEventListener("change", arguments.callee, false);
+  checkChangeEvent(aEvent);
+  SimpleTest.finish();
+}, false);
+
+selectMultiple.addEventListener("focus", function() {
+  selectMultiple.removeEventListener("focus", arguments.callee, false);
+  synthesizeMouseAtCenter(selectMultiple, {});
+}, false);
+
+select.addEventListener("change", function(aEvent) {
+  select.removeEventListener("change", arguments.callee, false);
+  checkChangeEvent(aEvent);
+  selectMultiple.focus();
+}, false);
+
+select.addEventListener("keyup", function() {
+  select.removeEventListener("keyup", arguments.callee, false);
+  select.blur();
+}, false);
+
+select.addEventListener("focus", function() {
+  select.removeEventListener("focus", arguments.callee, false);
+  synthesizeKey("VK_DOWN", {});
+}, false);
+
+checkbox.addEventListener("change", function(aEvent) {
+  checkbox.removeEventListener("change", arguments.callee, false);
+  checkChangeEvent(aEvent);
+  select.focus();
+}, false);
+
+checkbox.addEventListener("focus", function() {
+  checkbox.removeEventListener("focus", arguments.callee, false);
+  synthesizeMouseAtCenter(checkbox, {});
+}, false);
+
+radio.addEventListener("change", function(aEvent) {
+  radio.removeEventListener("change", arguments.callee, false);
+  checkChangeEvent(aEvent);
+  checkbox.focus();
+}, false);
+
+radio.addEventListener("focus", function() {
+  radio.removeEventListener("focus", arguments.callee, false);
+  synthesizeMouseAtCenter(radio, {});
+}, false);
+
+textarea.addEventListener("change", function(aEvent) {
+  textarea.removeEventListener("change", arguments.callee, false);
+  checkChangeEvent(aEvent);
+  radio.focus();
+}, false);
+
+textarea.addEventListener("input", function() {
+  textarea.removeEventListener("input", arguments.callee, false);
+  textarea.blur();
+}, false);
+
+textarea.addEventListener("focus", function() {
+  textarea.removeEventListener("focus", arguments.callee, false);
+  synthesizeKey('f', {});
+}, false);
+
+input.addEventListener("change", function(aEvent) {
+  input.removeEventListener("change", arguments.callee, false);
+  checkChangeEvent(aEvent);
+  textarea.focus();
+}, false);
+
+input.addEventListener("input", function() {
+  input.removeEventListener("input", arguments.callee, false);
+  input.blur();
+}, false);
+
+input.addEventListener("focus", function() {
+  input.removeEventListener("focus", arguments.callee, false);
+  synthesizeKey('f', {});
+}, false);
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  input.focus();
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -211,23 +211,10 @@ const EXPIRATION_QUERIES = {
   QUERY_FIND_VISITS_TO_EXPIRE: {
     sql: "INSERT INTO expiration_notify "
        +   "(v_id, url, visit_date, expected_results) "
-       + "SELECT v.id, IFNULL(h_t.url, h.url) AS url, "
-       +         "v.visit_date AS visit_date, "
-       +         ":limit_visits AS expected_results "
-       + "FROM moz_historyvisits_temp v "
-       + "LEFT JOIN moz_places_temp AS h_t ON h_t.id = v.place_id "
-       + "LEFT JOIN moz_places AS h ON h.id = v.place_id "
-       + "WHERE ((SELECT COUNT(*) FROM moz_places_temp) + "
-       +        "(SELECT COUNT(*) FROM moz_places)) > :max_uris "
-       + "UNION ALL "
-       + "SELECT v.id, IFNULL(h_t.url, h.url) AS url, "
-       +        "v.visit_date AS visit_date, "
-       +        ":limit_visits AS expected_results "
+       + "SELECT v.id, h.url, v.visit_date, :limit_visits "
        + "FROM moz_historyvisits v "
-       + "LEFT JOIN moz_places_temp AS h_t ON h_t.id = v.place_id "
-       + "LEFT JOIN moz_places AS h ON h.id = v.place_id "
-       + "WHERE ((SELECT COUNT(*) FROM moz_places_temp) + "
-       +        "(SELECT COUNT(*) FROM moz_places)) > :max_uris "
+       + "JOIN moz_places h ON h.id = v.place_id "
+       + "WHERE (SELECT COUNT(*) FROM moz_places) > :max_uris "
        + "ORDER BY v.visit_date ASC "
        + "LIMIT :limit_visits",
     actions: ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN | ACTION.IDLE |
@@ -236,7 +223,7 @@ const EXPIRATION_QUERIES = {
 
   // Removes the previously found visits.
   QUERY_EXPIRE_VISITS: {
-    sql: "DELETE FROM moz_historyvisits_view WHERE id IN ( "
+    sql: "DELETE FROM moz_historyvisits WHERE id IN ( "
        +   "SELECT v_id FROM expiration_notify WHERE v_id NOTNULL "
        + ")",
     actions: ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN | ACTION.IDLE |
@@ -249,26 +236,13 @@ const EXPIRATION_QUERIES = {
   QUERY_FIND_URIS_TO_EXPIRE: {
     sql: "INSERT INTO expiration_notify "
        +   "(p_id, url, visit_date, expected_results) "
-       + "SELECT h.id, h.url, h.last_visit_date AS visit_date, "
-       +        ":limit_uris AS expected_results "
-       + "FROM moz_places_temp h "
-       + "LEFT JOIN moz_historyvisits v ON h.id = v.place_id "
-       + "LEFT JOIN moz_historyvisits_temp v_t ON h.id = v_t.place_id "
-       + "LEFT JOIN moz_bookmarks b ON h.id = b.fk "
-       + "WHERE v.id IS NULL "
-       +   "AND v_t.id IS NULL "
-       +   "AND b.id IS NULL "
-       +   "AND h.ROWID <> IFNULL(:null_skips_last, (SELECT MAX(ROWID) FROM moz_places_temp)) "
-       + "UNION ALL "
-       + "SELECT h.id, h.url, h.last_visit_date AS visit_date, "
-       +       ":limit_uris AS expected_results "
+       + "SELECT h.id, h.url, h.last_visit_date, :limit_uris "
        + "FROM moz_places h "
        + "LEFT JOIN moz_historyvisits v ON h.id = v.place_id "
-       + "LEFT JOIN moz_historyvisits_temp v_t ON h.id = v_t.place_id "
        + "LEFT JOIN moz_bookmarks b ON h.id = b.fk "
        + "WHERE v.id IS NULL "
-       +   "AND v_t.id IS NULL "
        +   "AND b.id IS NULL "
+       +   "AND h.ROWID <> IFNULL(:null_skips_last, (SELECT MAX(ROWID) FROM moz_places)) "
        + "LIMIT :limit_uris",
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN |
              ACTION.IDLE | ACTION.DEBUG
@@ -276,7 +250,7 @@ const EXPIRATION_QUERIES = {
 
   // Expire found URIs from the database.
   QUERY_EXPIRE_URIS: {
-    sql: "DELETE FROM moz_places_view WHERE id IN ( "
+    sql: "DELETE FROM moz_places WHERE id IN ( "
        +   "SELECT p_id FROM expiration_notify WHERE p_id NOTNULL "
        + ")",
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN |
@@ -285,26 +259,13 @@ const EXPIRATION_QUERIES = {
 
   // Expire orphan URIs from the database.
   QUERY_SILENT_EXPIRE_ORPHAN_URIS: {
-    sql: "DELETE FROM moz_places_view WHERE id IN ( "
-       +   "SELECT h.id "
-       +   "FROM moz_places_temp h "
-       +   "LEFT JOIN moz_historyvisits v ON h.id = v.place_id "
-       +   "LEFT JOIN moz_historyvisits_temp v_t ON h.id = v_t.place_id "
-       +   "LEFT JOIN moz_bookmarks b ON h.id = b.fk "
-       +   "WHERE v.id IS NULL "
-       +     "AND v_t.id IS NULL "
-       +     "AND b.id IS NULL "
-       +     "AND SUBSTR(h.url, 1, 6) <> 'place:' "
-       +   "UNION ALL "
+    sql: "DELETE FROM moz_places WHERE id IN ( "
        +   "SELECT h.id "
        +   "FROM moz_places h "
        +   "LEFT JOIN moz_historyvisits v ON h.id = v.place_id "
-       +   "LEFT JOIN moz_historyvisits_temp v_t ON h.id = v_t.place_id "
        +   "LEFT JOIN moz_bookmarks b ON h.id = b.fk "
        +   "WHERE v.id IS NULL "
-       +     "AND v_t.id IS NULL "
        +     "AND b.id IS NULL "
-       +     "AND SUBSTR(h.url, 1, 6) <> 'place:' "
        +   "LIMIT :limit_uris "
        + ")",
     actions: ACTION.CLEAR_HISTORY
@@ -315,9 +276,7 @@ const EXPIRATION_QUERIES = {
     sql: "DELETE FROM moz_favicons WHERE id IN ( "
        +   "SELECT f.id FROM moz_favicons f "
        +   "LEFT JOIN moz_places h ON f.id = h.favicon_id "
-       +   "LEFT JOIN moz_places_temp h_t ON f.id = h_t.favicon_id "
        +   "WHERE h.favicon_id IS NULL "
-       +     "AND h_t.favicon_id IS NULL "
        +   "LIMIT :limit_favicons "
        + ")",
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY |
@@ -329,12 +288,9 @@ const EXPIRATION_QUERIES = {
     sql: "DELETE FROM moz_annos WHERE id in ( "
        +   "SELECT a.id FROM moz_annos a "
        +   "LEFT JOIN moz_places h ON a.place_id = h.id "
-       +   "LEFT JOIN moz_places_temp h_t ON a.place_id = h_t.id "
        +   "LEFT JOIN moz_historyvisits v ON a.place_id = v.place_id "
-       +   "LEFT JOIN moz_historyvisits_temp v_t ON a.place_id = v_t.place_id "
-       +   "WHERE (h.id IS NULL AND h_t.id IS NULL) "
-       +      "OR (v.id IS NULL AND v_t.id IS NULL AND "
-       +          "a.expiration <> :expire_never) "
+       +   "WHERE h.id IS NULL "
+       +      "OR (v.id IS NULL AND a.expiration <> :expire_never) "
        +   "LIMIT :limit_annos "
        + ")",
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY |
@@ -371,8 +327,6 @@ const EXPIRATION_QUERIES = {
   QUERY_EXPIRE_ANNOS_WITH_HISTORY: {
     sql: "DELETE FROM moz_annos "
        + "WHERE expiration = :expire_with_history "
-       +   "AND NOT EXISTS (SELECT id FROM moz_historyvisits_temp "
-       +                   "WHERE place_id = moz_annos.place_id LIMIT 1) "
        +   "AND NOT EXISTS (SELECT id FROM moz_historyvisits "
        +                   "WHERE place_id = moz_annos.place_id LIMIT 1)",
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY |
@@ -408,9 +362,7 @@ const EXPIRATION_QUERIES = {
     sql: "DELETE FROM moz_inputhistory WHERE place_id IN ( "
        +   "SELECT i.place_id FROM moz_inputhistory i "
        +   "LEFT JOIN moz_places h ON h.id = i.place_id "
-       +   "LEFT JOIN moz_places_temp h_t ON h_t.id = i.place_id "
        +   "WHERE h.id IS NULL "
-       +     "AND h_t.id IS NULL "
        +   "LIMIT :limit_inputhistory "
        + ")",
     actions: ACTION.CLEAR_HISTORY | ACTION.SHUTDOWN | ACTION.IDLE | ACTION.DEBUG
@@ -456,24 +408,29 @@ const EXPIRATION_QUERIES = {
 
 function nsPlacesExpiration()
 {
-  this._db = Cc["@mozilla.org/browser/nav-history-service;1"].
+  //////////////////////////////////////////////////////////////////////////////
+  //// Smart Getters
+
+  XPCOMUtils.defineLazyGetter(this, "_db", function () {
+    let db = Cc["@mozilla.org/browser/nav-history-service;1"].
              getService(Ci.nsPIPlacesDatabase).
              DBConnection;
 
-  // Create a temp table for notifications.
-  this._db.executeSimpleSQL(
-    "CREATE TEMP TABLE expiration_notify ( "
-  + "  id INTEGER PRIMARY KEY "
-  + ", v_id INTEGER "
-  + ", p_id INTEGER "
-  + ", url TEXT NOT NULL "
-  + ", visit_date INTEGER "
-  + ", expected_results INTEGER NOT NULL "
-  + ")"
-  );
+    // Create the temporary notifications table.
+    let stmt = db.createAsyncStatement(
+      "CREATE TEMP TABLE expiration_notify ( "
+    + "  id INTEGER PRIMARY KEY "
+    + ", v_id INTEGER "
+    + ", p_id INTEGER "
+    + ", url TEXT NOT NULL "
+    + ", visit_date INTEGER "
+    + ", expected_results INTEGER NOT NULL "
+    + ") ");
+    stmt.executeAsync();
+    stmt.finalize();
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// Smart Getters
+    return db;
+  });
 
   XPCOMUtils.defineLazyServiceGetter(this, "_hsn",
                                      "@mozilla.org/browser/nav-history-service;1",
@@ -610,8 +567,7 @@ nsPlacesExpiration.prototype = {
     // Check if we are over history capacity, if so visits must be expired.
     if (!this._cachedStatements["LIMIT_COUNT"]) {
       this._cachedStatements["LIMIT_COUNT"] = this._db.createAsyncStatement(
-        "SELECT (SELECT COUNT(*) FROM moz_places_temp) + "
-      +        "(SELECT COUNT(*) FROM moz_places)"
+        "SELECT COUNT(*) FROM moz_places"
       );
     }
     let self = this;

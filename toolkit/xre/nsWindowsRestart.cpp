@@ -105,9 +105,9 @@ static int ArgStrLen(const PRUnichar *s)
 /**
  * Copy string "s" to string "d", quoting the argument as appropriate and
  * escaping doublequotes along with any backslashes that immediately precede
- * duoblequotes.
+ * doublequotes.
  * The CRT parses this to retrieve the original argc/argv that we meant,
- * see STDARGV.C in the MSVC6 CRT sources.
+ * see STDARGV.C in the MSVC CRT sources.
  *
  * @return the end of the string
  */

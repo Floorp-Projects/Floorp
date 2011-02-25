@@ -119,10 +119,19 @@ function run_test() {
   let old = do_get_file("data/test_migrate.rdf");
   old.copyTo(gProfD, "extensions.rdf");
 
+  let oldCache = gProfD.clone();
+  oldCache.append("extensions.cache");
+  oldCache.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+
   // Theme state is determined by the selected theme pref
   Services.prefs.setCharPref("general.skins.selectedSkin", "theme1/1.0");
 
+  Services.prefs.setCharPref("extensions.lastAppVersion", "1");
+
   startupManager();
+
+  do_check_false(oldCache.exists());
+
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",

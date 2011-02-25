@@ -84,7 +84,16 @@ struct nsDiskCacheEntry;
  *
  *****************************************************************************/
 
-#define BLOCK_SIZE_FOR_INDEX(index)  ((index) ? (256 << (2 * ((index) - 1))) : 0)
+/*
+  We have 3 block files with roughly the same max size (32MB)
+    1 - block size 256B, number of blocks 131072
+    2 - block size  1kB, number of blocks  32768
+    3 - block size  4kB, number of blocks   8192
+*/
+#define kNumBlockFiles             3
+#define SIZE_SHIFT(idx)            (2 * ((idx) - 1))
+#define BLOCK_SIZE_FOR_INDEX(idx)  ((idx) ? (256    << SIZE_SHIFT(idx)) : 0)
+#define BITMAP_SIZE_FOR_INDEX(idx) ((idx) ? (131072 >> SIZE_SHIFT(idx)) : 0)
 
 // Min and max values for the number of records in the DiskCachemap
 #define kMinRecordCount    512
@@ -161,7 +170,7 @@ public:
         mDataLocation = 0;
         
         // set file index
-        NS_ASSERTION( index < 4,"invalid location index");
+        NS_ASSERTION( index < (kNumBlockFiles + 1), "invalid location index");
         NS_ASSERTION( index > 0,"invalid location index");
         mDataLocation |= (index << eLocationSelectorOffset) & eLocationSelectorMask;
 
@@ -229,7 +238,7 @@ public:
         mMetaLocation = 0;
         
         // set file index
-        NS_ASSERTION( index < 4, "invalid location index");
+        NS_ASSERTION( index < (kNumBlockFiles + 1), "invalid location index");
         NS_ASSERTION( index > 0, "invalid location index");
         mMetaLocation |= (index << eLocationSelectorOffset) & eLocationSelectorMask;
 
@@ -441,10 +450,12 @@ public:
 
     nsresult    GetFileForDiskCacheRecord( nsDiskCacheRecord * record,
                                            PRBool              meta,
+                                           PRBool              createPath,
                                            nsIFile **          result);
                                           
     nsresult    GetLocalFileForDiskCacheRecord( nsDiskCacheRecord *  record,
                                                 PRBool               meta,
+                                                PRBool               createPath,
                                                 nsILocalFile **      result);
 
     // On success, this returns the buffer owned by nsDiskCacheMap,
@@ -499,11 +510,16 @@ private:
     nsresult    CloseBlockFiles(PRBool flush);
     PRBool      CacheFilesExist();
 
+    nsresult    CreateCacheSubDirectories();
+
     PRUint32    CalculateFileIndex(PRUint32 size);
 
     nsresult    GetBlockFileForIndex( PRUint32 index, nsILocalFile ** result);
     PRUint32    GetBlockSizeForIndex( PRUint32 index) const {
         return BLOCK_SIZE_FOR_INDEX(index);
+    }
+    PRUint32    GetBitMapSizeForIndex( PRUint32 index) const {
+        return BITMAP_SIZE_FOR_INDEX(index);
     }
     
     // returns the bucket number    
@@ -544,7 +560,7 @@ private:
     nsCOMPtr<nsILocalFile>  mCacheDirectory;
     PRFileDesc *            mMapFD;
     nsDiskCacheRecord *     mRecordArray;
-    nsDiskCacheBlockFile    mBlockFile[3];
+    nsDiskCacheBlockFile    mBlockFile[kNumBlockFiles];
     PRUint32                mBufferSize;
     char *                  mBuffer;
     nsDiskCacheHeader       mHeader;

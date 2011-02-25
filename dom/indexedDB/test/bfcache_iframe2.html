@@ -3,8 +3,8 @@
 <head>
   <script>
 var res = {};
-moz_indexedDB.open(parent.location).onsuccess = function(e) {
-  var db = e.result;
+mozIndexedDB.open(parent.location).onsuccess = function(e) {
+  var db = e.target.result;
   res.version = db.version;
   res.storeCount = db.objectStoreNames.length;
 
@@ -13,9 +13,9 @@ moz_indexedDB.open(parent.location).onsuccess = function(e) {
     res.blockedFired = true;
   }
   req.onsuccess = function(e) {
-    var trans = e.transaction;
+    var trans = req.transaction;
     trans.objectStore("mystore").get(42).onsuccess = function(e) {
-      res.value = JSON.stringify(e.result);
+      res.value = JSON.stringify(e.target.result);
     }
     trans.oncomplete = function() {
       parent.postMessage(JSON.stringify(res), "http://mochi.test:8888");

@@ -57,6 +57,7 @@ public:
     using MacroAssemblerX86Common::store32;
     using MacroAssemblerX86Common::call;
     using MacroAssemblerX86Common::loadDouble;
+    using MacroAssemblerX86Common::storeDouble;
     using MacroAssemblerX86Common::convertInt32ToDouble;
 
     void add32(Imm32 imm, AbsoluteAddress address)
@@ -104,6 +105,13 @@ public:
     {
         move(Imm32(*static_cast<int32_t*>(src.m_ptr)), scratchRegister);
         m_assembler.cvtsi2sd_rr(scratchRegister, dest);
+    }
+
+    void convertUInt32ToDouble(RegisterID srcDest, FPRegisterID dest)
+    {
+        zeroExtend32ToPtr(srcDest, srcDest);
+        zeroDouble(dest); // break dependency chains
+        m_assembler.cvtsq2sd_rr(srcDest, dest);
     }
 
     void store32(Imm32 imm, void* address)
@@ -529,6 +537,16 @@ public:
     {
         for (int i = X86Registers::r15; i >= X86Registers::eax; i--)
             m_assembler.pop_r((RegisterID)i);
+    }
+
+    void storeDouble(ImmDouble imm, Address address)
+    {
+        storePtr(ImmPtr(reinterpret_cast<void *>(imm.u.u64)), address);
+    }
+
+    void storeDouble(ImmDouble imm, BaseIndex address)
+    {
+        storePtr(ImmPtr(reinterpret_cast<void *>(imm.u.u64)), address);
     }
 
     bool supportsFloatingPoint() const { return true; }

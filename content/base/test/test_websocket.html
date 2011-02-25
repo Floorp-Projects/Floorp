@@ -593,6 +593,9 @@ function test22()
   };
 }
 
+var domBranch;
+var oldPrefVal;
+
 function finishWSTest()
 {
   for (i = 0; i < all_ws.length; ++i) {
@@ -601,11 +604,20 @@ function finishWSTest()
       ok(false, "didn't called close on test " + all_ws[i]._testNumber + "!");
     }
   }
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  domBranch.setBoolPref("override-security-block", oldPrefVal);
   SimpleTest.finish();
 }
 
 function testWebSocket ()
 {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefService =
+      Components.classes["@mozilla.org/preferences-service;1"]
+      .getService(Components.interfaces.nsIPrefService);
+  domBranch = prefService.getBranch("network.websocket.");
+  oldPrefVal = domBranch.getBoolPref("override-security-block");
+  domBranch.setBoolPref("override-security-block", true);
   doTest(first_test);
 }
 

@@ -48,12 +48,6 @@
 
 #include <pango/pango.h>
 
-// Control when we bypass Pango
-// Enable this to use FreeType to glyph-convert 8bit-only textruns, but use Pango
-// to shape any textruns with non-8bit characters
-// XXX
-#define ENABLE_FAST_PATH_8BIT
-
 class gfxFcFontSet;
 class gfxFcFont;
 class gfxProxyFontEntry;
@@ -112,11 +106,6 @@ private:
 
     gfxFloat mSizeAdjustFactor;
     PangoLanguage *mPangoLanguage;
-
-#if defined(ENABLE_FAST_PATH_8BIT)
-    nsresult CreateGlyphRunsFast(gfxTextRun *aTextRun,
-                                 const PRUnichar *aString, PRUint32 aLength);
-#endif
 
     void GetFcFamilies(nsTArray<nsString> *aFcFamilyList,
                        nsIAtom *aLanguage);

@@ -425,9 +425,16 @@ private:
                       // Compute*Data functions don't initialize from
                       // inherited data.
 
-  // Reference count.  This just counts the style contexts that
-  // reference this rulenode.  When this goes to 0 or stops being 0,
-  // we notify the style set.
+  // Reference count.  This just counts the style contexts that reference this
+  // rulenode.  And children the rulenode has had.  When this goes to 0 or
+  // stops being 0, we notify the style set.
+  // Note, in particular, that when a child is removed mRefCnt is NOT
+  // decremented.  This is on purpose; the notifications to the style set are
+  // only used to determine when it's worth running GC on the ruletree, and
+  // this setup makes it so we only count unused ruletree leaves for purposes
+  // of deciding when to GC.  We could more accurately count unused rulenodes
+  // by releasing/addrefing our parent when our refcount transitions to or from
+  // 0, but it doesn't seem worth it to do that.
   PRUint32 mRefCnt;
 
 public:

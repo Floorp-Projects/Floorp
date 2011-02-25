@@ -408,6 +408,8 @@ nsScriptSecurityManager::PushContextPrincipal(JSContext *cx,
                                               JSStackFrame *fp,
                                               nsIPrincipal *principal)
 {
+    NS_ASSERTION(principal, "Must pass a non-null principal");
+
     ContextPrincipal *cp = new ContextPrincipal(mContextPrincipals, cx, fp,
                                                 principal);
     if (!cp)
@@ -550,14 +552,41 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
         return JS_TRUE;
 
     PRBool evalOK = PR_TRUE;
-    // this call will send violation reports as warranted (and return true if
-    // reportOnly is set).
     rv = csp->GetAllowsEval(&evalOK);
 
     if (NS_FAILED(rv))
     {
         NS_WARNING("CSP: failed to get allowsEval");
         return JS_TRUE; // fail open to not break sites.
+    }
+
+    if (!evalOK) {
+        // get the script filename, script sample, and line number
+        // to log with the violation
+        JSStackFrame *fp = nsnull;
+        nsAutoString fileName;
+        PRUint32 lineNum = 0;
+        NS_NAMED_LITERAL_STRING(scriptSample, "call to eval() or related function blocked by CSP");
+
+        fp = JS_FrameIterator(cx, &fp);
+        if (fp) {
+            JSScript *script = JS_GetFrameScript(cx, fp);
+            if (script) {
+                const char *file = JS_GetScriptFilename(cx, script);
+                if (file) {
+                    CopyUTF8toUTF16(nsDependentCString(file), fileName);
+                }
+                jsbytecode *pc = JS_GetFramePC(cx, fp);
+                if (pc) {
+                    lineNum = JS_PCToLineNumber(cx, script, pc);
+                }
+            }
+        }
+
+        csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
+                                 fileName,
+                                 scriptSample,
+                                 lineNum);
     }
 
     return evalOK;
@@ -864,6 +893,11 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
         case nsIXPCSecurityManager::ACCESS_CALL_METHOD:
             stringName.AssignLiteral("CallMethodDeniedOrigins");
         }
+
+        // Null out objectPrincipal for now, so we don't leak information about
+        // it.  Whenever we can report different error strings to content and
+        // the UI we can take this out again.
+        objectPrincipal = nsnull;
 
         NS_ConvertUTF8toUTF16 className(classInfoData.GetName());
         nsCAutoString subjectOrigin;
@@ -2172,6 +2206,9 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
                                                     nsresult *rv)
 {
     NS_PRECONDITION(rv, "Null out param");
+
+    *rv = NS_OK;
+
     if (!JS_ObjectIsFunction(cx, obj))
     {
         // Protect against pseudo-functions (like SJOWs).
@@ -2183,8 +2220,6 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
 
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
     JSScript *script = JS_GetFunctionScript(cx, fun);
-
-    *rv = NS_OK;
 
     if (!script)
     {
@@ -2539,12 +2574,32 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
     JSStackFrame *fp = nsnull;
     JSContext *cx = GetCurrentJSContext();
     fp = cx ? JS_FrameIterator(cx, &fp) : nsnull;
+
+    JSStackFrame *target = nsnull;
+    nsIPrincipal *targetPrincipal = nsnull;
+    for (ContextPrincipal *cp = mContextPrincipals; cp; cp = cp->mNext)
+    {
+        if (cp->mCx == cx)
+        {
+            target = cp->mFp;
+            targetPrincipal = cp->mPrincipal;
+            break;
+        }
+    }
+
     if (!fp)
     {
-        // No script code on stack. Allow execution.
-        *result = PR_TRUE;
+        // No script code on stack. If we had a principal pushed for this
+        // context and fp is null, then we use that principal. Otherwise, we
+        // don't have enough information and have to allow execution.
+
+        *result = (targetPrincipal && !target)
+                  ? (targetPrincipal == mSystemPrincipal)
+                  : PR_TRUE;
+
         return NS_OK;
     }
+
     *result = PR_FALSE;
     nsIPrincipal* previousPrincipal = nsnull;
     do

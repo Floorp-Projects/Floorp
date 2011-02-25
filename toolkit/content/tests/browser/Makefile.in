@@ -51,7 +51,7 @@ DIRS = \
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES = \
-  $(warning browser_keyevents_during_autoscrolling.js disabled due to frequent timeouts (bug 567950)) \
+  browser_keyevents_during_autoscrolling.js \
   browser_bug295977_autoscroll_overflow.js \
   browser_bug594509.js \
   browser_Geometry.js \

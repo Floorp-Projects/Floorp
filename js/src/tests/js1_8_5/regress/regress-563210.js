@@ -19,7 +19,8 @@ if (typeof gczeal != 'undefined' && typeof gc != 'undefined') {
 }
 
 // Reset gczeal.
-gczeal(0)
+if (typeof gczeal !== 'undefined')
+    gczeal(0)
 
 reportCompare("no assertion failure", "no assertion failure", "bug 563210");
 

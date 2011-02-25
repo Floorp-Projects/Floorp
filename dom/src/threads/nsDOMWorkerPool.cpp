@@ -68,10 +68,9 @@ nsDOMWorkerPool::nsDOMWorkerPool(nsIScriptGlobalObject* aGlobalObject,
   mParentDocument(aDocument),
   mMonitor(nsnull),
   mCanceled(PR_FALSE),
-  mSuspended(PR_FALSE)
+  mSuspended(PR_FALSE),
+  mWindowID(aDocument ? aDocument->OuterWindowID() : 0)
 {
-  NS_ASSERTION(aGlobalObject, "Must have a global object!");
-  NS_ASSERTION(aDocument, "Must have a document!");
 }
 
 nsDOMWorkerPool::~nsDOMWorkerPool()

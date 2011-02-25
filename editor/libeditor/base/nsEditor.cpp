@@ -162,6 +162,7 @@ nsEditor::nsEditor()
 ,  mDocDirtyState(-1)
 ,  mDocWeak(nsnull)
 ,  mPhonetic(nsnull)
+,  mLastKeypressEventWasTrusted(eTriUnset)
 {
   //initialize member variables here
 }
@@ -204,6 +205,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEditor)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsEditor)
+ NS_INTERFACE_MAP_ENTRY(nsIEditor_MOZILLA_2_0_BRANCH)
  NS_INTERFACE_MAP_ENTRY(nsIPhonetic)
  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
  NS_INTERFACE_MAP_ENTRY(nsIEditorIMESupport)
@@ -2517,7 +2519,7 @@ nsresult nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   // savvy to having multiple ime txns inside them.
   
   // delete empty ime text node if there is one
-  if (isIMETransaction)
+  if (isIMETransaction && mIMETextNode)
   {
     PRUint32 len;
     mIMETextNode->GetLength(&len);
@@ -3881,8 +3883,7 @@ nsEditor::GetStartNodeAndOffset(nsISelection *aSelection,
   NS_ENSURE_TRUE(outStartNode && outStartOffset && aSelection, NS_ERROR_NULL_POINTER);
 
   *outStartNode = nsnull;
-
-  // brade:  set outStartNode to null or ?
+  *outStartOffset = 0;
 
   nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(aSelection));
   nsCOMPtr<nsIEnumerator> enumerator;
@@ -4212,20 +4213,14 @@ nsresult nsEditor::EndUpdateViewBatch()
     GetFlags(&flags);
 
     // Turn view updating back on.
-    nsCOMPtr<nsIViewManager> viewManager;
-    if (presShell)
-      viewManager = presShell->GetViewManager();
-    if (viewManager)
-    {
-      PRUint32 updateFlag = NS_VMREFRESH_IMMEDIATE;
+    PRUint32 updateFlag = NS_VMREFRESH_IMMEDIATE;
 
-      // If we're doing async updates, use NS_VMREFRESH_DEFERRED here, so that
-      // the reflows we caused will get processed before the invalidates.
-      if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask) {
-        updateFlag = NS_VMREFRESH_DEFERRED;
-      }
-      mBatch.EndUpdateViewBatch(updateFlag);
+    // If we're doing async updates, use NS_VMREFRESH_DEFERRED here, so that
+    // the reflows we caused will get processed before the invalidates.
+    if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask) {
+      updateFlag = NS_VMREFRESH_DEFERRED;
     }
+    mBatch.EndUpdateViewBatch(updateFlag);
 
     // Turn selection updating and notifications back on.
 
@@ -5179,17 +5174,40 @@ nsEditor::SwitchTextDirection()
   nsIDOMElement *rootElement = GetRoot();
 
   nsresult rv;
-  nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIFrame *frame = content->GetPrimaryFrame();
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE); 
+  // If we don't have an explicit direction, determine our direction
+  // from the content's direction
+  if (!(mFlags & (nsIPlaintextEditor::eEditorLeftToRight |
+                  nsIPlaintextEditor::eEditorRightToLeft))) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsIFrame* frame = content->GetPrimaryFrame();
+    NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+
+    // Set the flag here, to enable us to use the same code path below.
+    // It will be flipped before returning from the function.
+    if (frame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+      mFlags |= nsIPlaintextEditor::eEditorRightToLeft;
+    } else {
+      mFlags |= nsIPlaintextEditor::eEditorLeftToRight;
+    }
+  }
 
   // Apply the opposite direction
-  if (frame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL)
+  if (mFlags & nsIPlaintextEditor::eEditorRightToLeft) {
+    NS_ASSERTION(!(mFlags & nsIPlaintextEditor::eEditorLeftToRight),
+                 "Unexpected mutually exclusive flag");
+    mFlags &= ~nsIPlaintextEditor::eEditorRightToLeft;
+    mFlags |= nsIPlaintextEditor::eEditorLeftToRight;
     rv = rootElement->SetAttribute(NS_LITERAL_STRING("dir"), NS_LITERAL_STRING("ltr"));
-  else
+  } else if (mFlags & nsIPlaintextEditor::eEditorLeftToRight) {
+    NS_ASSERTION(!(mFlags & nsIPlaintextEditor::eEditorRightToLeft),
+                 "Unexpected mutually exclusive flag");
+    mFlags |= nsIPlaintextEditor::eEditorRightToLeft;
+    mFlags &= ~nsIPlaintextEditor::eEditorLeftToRight;
     rv = rootElement->SetAttribute(NS_LITERAL_STRING("dir"), NS_LITERAL_STRING("rtl"));
+  }
 
   return rv;
 }
@@ -5312,4 +5330,29 @@ nsEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
   // Otherwise, we shouldn't handle any input events when we're not an active
   // element of the DOM window.
   return IsActiveInDOMWindow();
+}
+
+NS_IMETHODIMP
+nsEditor::GetLastKeypressEventTrusted(PRBool *aWasTrusted)
+{
+  NS_ENSURE_ARG_POINTER(aWasTrusted);
+
+  if (mLastKeypressEventWasTrusted == eTriUnset) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  *aWasTrusted = (mLastKeypressEventWasTrusted == eTriTrue);
+  return NS_OK;
+}
+
+void
+nsEditor::BeginKeypressHandling(nsIDOMNSEvent* aEvent)
+{
+  NS_ASSERTION(mLastKeypressEventWasTrusted == eTriUnset, "How come our status is not clear?");
+
+  if (aEvent) {
+    PRBool isTrusted = PR_FALSE;
+    aEvent->GetIsTrusted(&isTrusted);
+    mLastKeypressEventWasTrusted = isTrusted ? eTriTrue : eTriFalse;
+  }
 }

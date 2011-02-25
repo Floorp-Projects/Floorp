@@ -65,14 +65,17 @@ class nsHtml5ElementName
     static nsHtml5ElementName* ELT_NULL_ELEMENT_NAME;
     nsIAtom* name;
     nsIAtom* camelCaseName;
-    PRInt32 group;
-    PRBool special;
-    PRBool scoping;
-    PRBool fosterParenting;
+    PRInt32 flags;
+    inline PRInt32 getFlags()
+    {
+      return flags;
+    }
+
+    PRInt32 getGroup();
     static nsHtml5ElementName* elementNameByBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length, nsHtml5AtomTable* interner);
   private:
     static PRInt32 bufToHash(PRUnichar* buf, PRInt32 len);
-    nsHtml5ElementName(nsIAtom* name, nsIAtom* camelCaseName, PRInt32 group, PRBool special, PRBool scoping, PRBool fosterParenting);
+    nsHtml5ElementName(nsIAtom* name, nsIAtom* camelCaseName, PRInt32 flags);
   protected:
     nsHtml5ElementName(nsIAtom* name);
   public:
@@ -257,6 +260,7 @@ class nsHtml5ElementName
     static nsHtml5ElementName* ELT_THEAD;
     static nsHtml5ElementName* ELT_TABLE;
     static nsHtml5ElementName* ELT_TITLE;
+    static nsHtml5ElementName* ELT_TRACK;
     static nsHtml5ElementName* ELT_TSPAN;
     static nsHtml5ElementName* ELT_TIMES;
     static nsHtml5ElementName* ELT_TFOOT;
@@ -477,6 +481,14 @@ class nsHtml5ElementName
     static void releaseStatics();
 };
 
+#define NS_HTML5ELEMENT_NAME_GROUP_MASK 127
+#define NS_HTML5ELEMENT_NAME_CUSTOM (1 << 30)
+#define NS_HTML5ELEMENT_NAME_SPECIAL (1 << 29)
+#define NS_HTML5ELEMENT_NAME_FOSTER_PARENTING (1 << 28)
+#define NS_HTML5ELEMENT_NAME_SCOPING (1 << 27)
+#define NS_HTML5ELEMENT_NAME_SCOPING_AS_SVG (1 << 26)
+#define NS_HTML5ELEMENT_NAME_SCOPING_AS_MATHML (1 << 25)
+#define NS_HTML5ELEMENT_NAME_HTML_INTEGRATION_POINT (1 << 24)
 
 
 #endif

@@ -40,8 +40,8 @@
 #include "nsWebMBufferedParser.h"
 #include "nsTimeRanges.h"
 
-static const float NS_PER_S = 1e9;
-static const float MS_PER_S = 1e3;
+static const double NS_PER_S = 1e9;
+static const double MS_PER_S = 1e3;
 
 static PRUint32
 VIntLength(unsigned char aFirstByte, PRUint32* aMask)
@@ -244,8 +244,8 @@ void nsWebMBufferedState::CalculateBufferedForRange(nsTimeRanges* aBuffered,
   // from the ranges' start and end timestamps, so that those timestamps are
   // normalized in the range [0,duration].
 
-  float startTime = (mTimeMapping[start].mTimecode * aTimecodeScale - aStartTimeOffsetNS) / NS_PER_S;
-  float endTime = (mTimeMapping[end].mTimecode * aTimecodeScale - aStartTimeOffsetNS) / NS_PER_S;
+  double startTime = (mTimeMapping[start].mTimecode * aTimecodeScale - aStartTimeOffsetNS) / NS_PER_S;
+  double endTime = (mTimeMapping[end].mTimecode * aTimecodeScale - aStartTimeOffsetNS) / NS_PER_S;
   aBuffered->Add(startTime, endTime);
 }
 

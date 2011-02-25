@@ -65,7 +65,11 @@ public class GeckoEvent {
     public static final int SIZE_CHANGED = 7;
     public static final int ACTIVITY_STOPPING = 8;
     public static final int ACTIVITY_PAUSING = 9;
-    public static final int LOAD_URI = 10;
+    public static final int ACTIVITY_SHUTDOWN = 10;
+    public static final int LOAD_URI = 11;
+
+    public static final int SURFACE_CREATED = 12;
+    public static final int SURFACE_DESTROYED = 13;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
@@ -126,6 +130,7 @@ public class GeckoEvent {
         mType = MOTION_EVENT;
         mAction = m.getAction();
         mTime = m.getEventTime();
+        mMetaState = m.getMetaState();
         mP0 = new Point((int)m.getX(0), (int)m.getY(0));
         mCount = m.getPointerCount();
         if (mCount > 1)
@@ -190,7 +195,7 @@ public class GeckoEvent {
         mRect = dirty;
     }
 
-    public GeckoEvent(int etype, int w, int h, int oldw, int oldh) {
+    public GeckoEvent(int etype, int w, int h, int screenw, int screenh) {
         if (etype != SIZE_CHANGED) {
             mType = INVALID;
             return;
@@ -199,7 +204,7 @@ public class GeckoEvent {
         mType = etype;
 
         mP0 = new Point(w, h);
-        mP1 = new Point(oldw, oldh);
+        mP1 = new Point(screenw, screenh);
     }
 
     public GeckoEvent(String uri) {

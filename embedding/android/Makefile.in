@@ -43,9 +43,12 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/ipc/app/defs.mk
 
+DIRS = locales
+
 JAVAFILES = \
   GeckoApp.java \
   GeckoAppShell.java \
+  GeckoConnectivityReceiver.java \
   GeckoEvent.java \
   GeckoSurfaceView.java \
   GeckoInputConnection.java \
@@ -65,13 +68,19 @@ else
 MIN_CPU_VERSION=5
 endif
 
+ifeq (,$(ANDROID_VERSION_CODE))
+ANDROID_VERSION_CODE=$(shell $(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid | cut -c1-10)
+endif
+
 DEFINES += \
+  -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
   -DMOZ_APP_DISPLAYNAME=$(MOZ_APP_DISPLAYNAME) \
   -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
   -DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
   -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME) \
   -DMOZ_MIN_CPU_VERSION=$(MIN_CPU_VERSION) \
   -DMOZ_CRASHREPORTER=$(MOZ_CRASHREPORTER) \
+  -DANDROID_VERSION_CODE=$(ANDROID_VERSION_CODE) \
   $(NULL)
 
 GARBAGE += \
@@ -99,10 +108,16 @@ RES_LAYOUT = \
   res/layout/notification_progress_text.xml \
   $(NULL)
 
+RES_VALUES = res/values/colors.xml res/values/themes.xml
+
+AB_rCD = $(shell echo $(AB_CD) | sed -e s/-/-r/)
+
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 
 DEFAULT_BRANDPATH = $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/en-US/brand.dtd
-DEFAULT_STRINGSPATH = android_strings.dtd
+DEFAULT_STRINGSPATH = locales/en-US/android_strings.dtd
+LOCALIZED_BRANDPATH = $(DEPTH)/dist/bin/chrome/$(AB_CD)/locale/branding/brand.dtd
+LOCALIZED_STRINGSPATH = $(DEPTH)/dist/bin/chrome/android-res/res/values-$(AB_CD)/android_strings.dtd
 
 ifdef MOZ_CRASHREPORTER
 PROCESSEDJAVAFILES += CrashReporter.java
@@ -115,6 +130,10 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/desktop_notificati
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
 include $(topsrcdir)/config/rules.mk
+
+ifneq ($(AB_CD),en-US)
+LOCALIZED_STRINGS_XML = res/values-$(AB_rCD)/strings.xml
+endif
 
 # Override the Java settings with some specific android settings
 include $(topsrcdir)/config/android-common.mk
@@ -148,13 +167,17 @@ $(RES_LAYOUT): $(subst res/,$(srcdir)/resources/,$(RES_LAYOUT))
 	$(NSINSTALL) -D res/layout
 	$(NSINSTALL) $(srcdir)/resources/layout/* res/layout/
 
-R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) res/values/strings.xml $(LOCALIZED_STRINGS_XML) AndroidManifest.xml
+$(RES_VALUES): $(subst res/,$(srcdir)/resources/,$(RES_VALUES))
+	$(NSINSTALL) -D res/values
+	$(NSINSTALL) $(srcdir)/resources/values/* res/values/
+
+R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
-gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) res/values/strings.xml $(LOCALIZED_STRINGS_XML)
+gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) res/values/strings.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
-res/values/strings.xml: FORCE
+res/values/strings.xml: $(DEFAULT_BRANDPATH) $(DEFAULT_STRINGSPATH)
 	mkdir -p res/values
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) \
 	  -DBRANDPATH="$(DEFAULT_BRANDPATH)" \
@@ -162,6 +185,15 @@ res/values/strings.xml: FORCE
 	  $(srcdir)/strings.xml.in \
 	  > $@
 
-libs:: gecko.ap_ classes.dex
+res/values-$(AB_rCD)/strings.xml: $(LOCALIZED_BRANDPATH) $(LOCALIZED_STRINGSPATH)
+	mkdir -p res/values-$(AB_rCD)
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) \
+	  -DBRANDPATH="$(call core_abspath,$(LOCALIZED_BRANDPATH))" \
+	  -DSTRINGSPATH="$(call core_abspath,$(LOCALIZED_STRINGSPATH))" \
+	  $(srcdir)/strings.xml.in \
+	  > $@
+
+chrome:: $(LOCALIZED_STRINGS_XML)
+
+libs:: classes.dex
 	$(INSTALL) classes.dex $(FINAL_TARGET)
-	$(UNZIP) -o gecko.ap_ -d $(FINAL_TARGET)

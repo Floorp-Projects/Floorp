@@ -39,6 +39,7 @@
 #include "nsSVGPolyElement.h"
 #include "nsIDOMSVGPolygonElement.h"
 #include "gfxContext.h"
+#include "nsSVGUtils.h"
 
 typedef nsSVGPolyElement nsSVGPolygonElementBase;
 

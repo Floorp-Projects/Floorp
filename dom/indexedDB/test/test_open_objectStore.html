@@ -18,12 +18,12 @@
       const description = "My Test Database";
       const objectStoreName = "Objects";
 
-      let request = moz_indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
       is(db.objectStoreNames.length, 0, "Bad objectStores list");
 
       request = db.setVersion("1");
@@ -33,7 +33,8 @@
 
       is(db.objectStoreNames.length, 0, "Bad objectStores list");
 
-      let objectStore = db.createObjectStore(objectStoreName, "foo");
+      let objectStore = db.createObjectStore(objectStoreName,
+                                             { keyPath: "foo" });
 
       is(db.objectStoreNames.length, 1, "Bad objectStores list");
       is(db.objectStoreNames.item(0), objectStoreName, "Bad name");

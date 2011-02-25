@@ -72,6 +72,7 @@ NS_IMPL_ISUPPORTS1(OfflineCacheUpdateParent,
 //-----------------------------------------------------------------------------
 
 OfflineCacheUpdateParent::OfflineCacheUpdateParent()
+    : mIPCClosed(false)
 {
     // Make sure the service has been initialized
     nsOfflineCacheUpdateService* service =
@@ -85,6 +86,12 @@ OfflineCacheUpdateParent::OfflineCacheUpdateParent()
 OfflineCacheUpdateParent::~OfflineCacheUpdateParent()
 {
     LOG(("OfflineCacheUpdateParent::~OfflineCacheUpdateParent [%p]", this));
+}
+
+void
+OfflineCacheUpdateParent::ActorDestroy(ActorDestroyReason why)
+{
+    mIPCClosed = true;
 }
 
 nsresult
@@ -121,9 +128,9 @@ OfflineCacheUpdateParent::Schedule(const URI& aManifestURI,
     update->AddObserver(this, PR_FALSE);
 
     if (stickDocument) {
-      nsCOMPtr<nsIURI> stickURI;
-      documentURI->Clone(getter_AddRefs(stickURI));
-      update->StickDocument(stickURI);
+        nsCOMPtr<nsIURI> stickURI;
+        documentURI->Clone(getter_AddRefs(stickURI));
+        update->StickDocument(stickURI);
     }
 
     return NS_OK;
@@ -132,6 +139,9 @@ OfflineCacheUpdateParent::Schedule(const URI& aManifestURI,
 NS_IMETHODIMP
 OfflineCacheUpdateParent::UpdateStateChanged(nsIOfflineCacheUpdate *aUpdate, PRUint32 state)
 {
+    if (mIPCClosed)
+        return NS_ERROR_UNEXPECTED;
+
     LOG(("OfflineCacheUpdateParent::StateEvent [%p]", this));
 
     SendNotifyStateEvent(state);
@@ -154,6 +164,9 @@ OfflineCacheUpdateParent::UpdateStateChanged(nsIOfflineCacheUpdate *aUpdate, PRU
 NS_IMETHODIMP
 OfflineCacheUpdateParent::ApplicationCacheAvailable(nsIApplicationCache *aApplicationCache)
 {
+    if (mIPCClosed)
+        return NS_ERROR_UNEXPECTED;
+
     NS_ENSURE_ARG(aApplicationCache);
 
     nsCString cacheClientId;

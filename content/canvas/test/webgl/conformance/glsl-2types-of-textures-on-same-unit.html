@@ -60,7 +60,6 @@ function init()
 
   gl = initWebGL("example", "vshader", "fshader", [ "vPosition", "texCoord0"],
                  [ 0, 0, 0, 1 ], 1);
-  gl = WebGLDebugUtils.makeDebugContext(gl);
 
   gl.disable(gl.DEPTH_TEST);
   gl.disable(gl.BLEND);

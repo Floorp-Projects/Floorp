@@ -148,9 +148,8 @@ function run_test() {
     removeDirRecursive(updateTestDir);
   }
   catch (e) {
-    dump("Unable to remove directory\n" +
-         "path: " + updateTestDir.path + "\n" +
-         "Exception: " + e + "\n");
+    logTestInfo("unable to remove directory - path: " + updateTestDir.path +
+                ", exception: " + e);
   }
 
   // Add the directory where the update files will be added and add files that
@@ -193,11 +192,7 @@ function run_test() {
 
   let launchBin = getLaunchBin();
   let args = getProcessArgs();
-  let infoArgs = "";
-  args.forEach(function(aArg) {
-    infoArgs += " " + aArg;
-  });
-  logTestInfo("launching " + launchBin.path + infoArgs);
+  logTestInfo("launching " + launchBin.path + " " + args.join(" "));
 
   gProcess = AUS_Cc["@mozilla.org/process/util;1"].
                 createInstance(AUS_Ci.nsIProcess);
@@ -251,9 +246,8 @@ function end_test() {
     removeDirRecursive(updateTestDir);
   }
   catch (e) {
-    dump("Unable to remove directory\n" +
-         "path: " + updateTestDir.path + "\n" +
-         "Exception: " + e + "\n");
+    logTestInfo("unable to remove directory - path: " + updateTestDir.path +
+                ", exception: " + e);
   }
 
   // This will delete the app console log file if it exists.
@@ -442,27 +436,6 @@ function resetEnvironment() {
                 "variable");
     env.set("XRE_NO_WINDOWS_CRASH_DIALOG", "");
   }
-}
-
-/**
- * Gets the platform specific binary used to launch the application using
- * nsIProcess.
- *
- * @return  nsIFile for the binary to launch using nsIProcess.
- */
-function getLaunchBin() {
-  let launchBin;
-  if (IS_WIN) {
-    launchBin = Services.dirsvc.get("WinD", AUS_Ci.nsIFile);
-    launchBin.append("System32");
-    launchBin.append("cmd.exe");
-  }
-  else {
-    launchBin = AUS_Cc["@mozilla.org/file/local;1"].
-                createInstance(AUS_Ci.nsILocalFile);
-    launchBin.initWithPath("/bin/sh");
-  }
-  return launchBin;
 }
 
 /**

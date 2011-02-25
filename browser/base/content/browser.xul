@@ -90,7 +90,7 @@
         windowtype="navigator:browser"
         screenX="4" screenY="4"
         browsingmode="normal"
-        persist="screenX screenY width height sizemode"> 
+        persist="screenX screenY width height sizemode">
 
 # All JS files which are not content (only) dependent that browser.xul
 # wishes to include *must* go into the global-scripts.inc file
@@ -125,9 +125,9 @@
       <menu id="context_tabViewMenu" label="&moveToGroup.label;"
             accesskey="&moveToGroup.accesskey;">
         <menupopup id="context_tabViewMenuPopup"
-                   onpopupshowing="if (event.target == this) TabView.updateContextMenu(TabContextMenu.contextTab, this);">
+                   onpopupshowing="if (event.target == this) TabView.moveToGroupPopupShowing(event);">
           <menuseparator id="context_tabViewNamedGroups" hidden="true"/>
-          <menuitem label="&moveToNewGroup.label;"
+          <menuitem id="context_tabViewNewGroup" label="&moveToNewGroup.label;"
                     oncommand="TabView.moveTabTo(TabContextMenu.contextTab, null);"/>
         </menupopup>
       </menu>
@@ -302,8 +302,9 @@
                 accesskey="&viewCustomizeToolbar.accesskey;"/>
     </menupopup>
 
-    <menupopup id="blockedPopupOptions" 
-               onpopupshowing="gPopupBlockerObserver.fillPopupList(event);">
+    <menupopup id="blockedPopupOptions"
+               onpopupshowing="gPopupBlockerObserver.fillPopupList(event);"
+               onpopuphiding="gPopupBlockerObserver.onPopupHiding(event);">
       <menuitem observes="blockedPopupAllowSite"/>
       <menuitem observes="blockedPopupEditSettings"/>
       <menuitem observes="blockedPopupDontShowMessage"/>
@@ -372,7 +373,7 @@
                          class="identity-popup-description"/>
           </hbox>
           <!-- Footer button to open security page info -->
-          <hbox pack="end">
+          <hbox id="identity-popup-button-container" pack="end">
             <button id="identity-popup-more-info-button"
                     label="&identity.moreInfoLinkText;"
                     onblur="gIdentityHandler.hideIdentityPopup();"
@@ -466,6 +467,8 @@
            defaultmode="icons" mode="icons"
 #ifdef WINCE
            defaulticonsize="small" iconsize="small"
+#else
+           iconsize="large"
 #endif
            tabsontop="true"
            persist="tabsontop">
@@ -480,10 +483,15 @@
 #endif
              context="toolbar-context-menu">
       <toolbaritem id="menubar-items" align="center">
-# The entire main menubar is placed into browser-menubar.inc, so that it can be shared by 
+# The entire main menubar is placed into browser-menubar.inc, so that it can be shared by
 # hiddenWindow.xul.
 #include browser-menubar.inc
       </toolbaritem>
+
+#ifdef CAN_DRAW_IN_TITLEBAR
+      <hbox class="titlebar-placeholder" type="appmenu-button" ordinal="0"/>
+      <hbox class="titlebar-placeholder" type="caption-buttons" ordinal="1000"/>
+#endif
     </toolbar>
 
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"
@@ -491,10 +499,10 @@
              fullscreentoolbar="true" mode="icons" customizable="true"
 #ifdef WINCE
              iconsize="small" defaulticonsize="small"
-             defaultset="unified-back-forward-button,home-button,urlbar-container,reload-button,stop-button,search-container,bookmarks-menu-button-container,navigator-throbber,fullscreenflex,window-controls"
+             defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,home-button,bookmarks-menu-button-container,navigator-throbber,fullscreenflex,window-controls"
 #else
              iconsize="large"
-             defaultset="unified-back-forward-button,home-button,urlbar-container,reload-button,stop-button,search-container,bookmarks-menu-button-container,fullscreenflex,window-controls"
+             defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,home-button,bookmarks-menu-button-container,fullscreenflex,window-controls"
 #endif
              context="toolbar-context-menu">
 
@@ -512,16 +520,6 @@
                        onclick="checkForMiddleClick(this, event);"
                        tooltiptext="&forwardButton.tooltip;"/>
       </toolbaritem>
-
-      <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     persist="class" removable="true"
-                     label="&homeButton.label;"
-                     ondragover="homeButtonObserver.onDragOver(event)"
-                     ondragenter="homeButtonObserver.onDragOver(event)"
-                     ondrop="homeButtonObserver.onDrop(event)"
-                     ondragexit="homeButtonObserver.onDragExit(event)"
-                     onclick="BrowserGoHome(event);"
-                     aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
 
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width" combined="true"
                    title="&locationItem.title;" class="chromeclass-location" removable="true">
@@ -547,6 +545,7 @@
                  onfocus="document.getElementById('identity-box').style.MozUserFocus= 'normal'"
                  onblur="setTimeout(function() document.getElementById('identity-box').style.MozUserFocus = '', 0);">
           <box id="notification-popup-box" hidden="true" align="center">
+            <image id="default-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="geo-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="addons-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="indexedDB-notification-icon" class="notification-anchor-icon" role="button"/>
@@ -574,8 +573,16 @@
               </hbox>
             </hbox>
           </box>
-          <label id="urlbar-display" value="&urlbar.switchToTab.label;"/>
+          <box id="urlbar-display-box" align="center">
+            <label id="urlbar-display" value="&urlbar.switchToTab.label;"/>
+          </box>
           <hbox id="urlbar-icons">
+            <image id="page-report-button"
+                   class="urlbar-icon"
+                   hidden="true"
+                   tooltiptext="&pageReportIcon.tooltip;"
+                   onclick="gPopupBlockerObserver.onReportButtonClick(event);"/>
+
             <image id="star-button"
                    class="urlbar-icon"
                    onclick="PlacesStarButton.onClick(event);"/>
@@ -617,6 +624,16 @@
         <searchbar id="searchbar" flex="1"/>
       </toolbaritem>
 
+      <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     persist="class" removable="true"
+                     label="&homeButton.label;"
+                     ondragover="homeButtonObserver.onDragOver(event)"
+                     ondragenter="homeButtonObserver.onDragOver(event)"
+                     ondrop="homeButtonObserver.onDrop(event)"
+                     ondragexit="homeButtonObserver.onDragExit(event)"
+                     onclick="BrowserGoHome(event);"
+                     aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
+
       <toolbaritem id="bookmarks-menu-button-container"
                    class="chromeclass-toolbar-additional"
                    removable="true"
@@ -634,8 +651,8 @@
                      placespopup="true"
                      context="placesContext"
                      openInTabs="children"
-                     oncommand="BookmarksEventHandler.onCommand(event);"
-                     onclick="BookmarksEventHandler.onClick(event);"
+                     oncommand="BookmarksEventHandler.onCommand(event, this.parentNode._placesView);"
+                     onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
                      onpopupshowing="BookmarksMenuButton.onPopupShowing(event);
                                      if (!this.parentNode._placesView)
                                        new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');"
@@ -734,8 +751,8 @@
         <hbox flex="1"
               id="PlacesToolbar"
               context="placesContext"
-              onclick="BookmarksEventHandler.onClick(event);"
-              oncommand="BookmarksEventHandler.onCommand(event);"
+              onclick="BookmarksEventHandler.onClick(event, this._placesView);"
+              oncommand="BookmarksEventHandler.onCommand(event, this._placesView);"
               tooltip="bhTooltip"
               popupsinherittooltip="true">
           <toolbarbutton class="bookmark-item bookmarks-toolbar-customize"
@@ -783,9 +800,9 @@
              aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
 #ifdef APPMENU_ON_TABBAR
-             defaultset="appmenu-toolbar-button,tabbrowser-tabs,new-tab-button,alltabs-button,tabview-button,tabs-closebutton"
+             defaultset="appmenu-toolbar-button,tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
 #else
-             defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabview-button,tabs-closebutton"
+             defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
 #endif
              collapsed="true">
 
@@ -830,19 +847,16 @@
                    position="after_end"/>
       </toolbarbutton>
 
-      <toolbarbutton id="tabview-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&tabGroupsButton.label;"
-                     command="Browser:ToggleTabView"
-                     tooltiptext="&tabGroupsButton.tooltip;"
-                     removable="true"
-                     observes="tabviewGroupsNumber"/>
-
       <toolbarbutton id="tabs-closebutton"
                      class="close-button tabs-closebutton"
                      command="cmd_close"
                      label="&closeTab.label;"
                      tooltiptext="&closeTab.label;"/>
 
+#ifdef CAN_DRAW_IN_TITLEBAR
+      <hbox class="titlebar-placeholder" type="appmenu-button" ordinal="0"/>
+      <hbox class="titlebar-placeholder" type="caption-buttons" ordinal="1000"/>
+#endif
     </toolbar>
 
     <toolbarpalette id="BrowserToolbarPalette">
@@ -940,10 +954,17 @@
                    oncommand="return FeedHandler.subscribeToFeed(null, event);"
                    onclick="checkForMiddleClick(this, event);"/>
       </toolbarbutton>
+
+      <toolbarbutton id="tabview-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&tabGroupsButton.label;"
+                     command="Browser:ToggleTabView"
+                     tooltiptext="&tabGroupsButton.tooltip;"
+                     observes="tabviewGroupsNumber"/>
     </toolbarpalette>
   </toolbox>
 
   <hbox flex="1" id="browser">
+    <vbox id="browser-border-start" hidden="true" layer="true"/>
     <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
       <sidebarheader id="sidebar-header" align="center">
         <label id="sidebar-title" persist="value" flex="1" crop="end" control="sidebar"/>
@@ -962,7 +983,9 @@
                   contentcontextmenu="contentAreaContextMenu"
                   autocompletepopup="PopupAutoComplete"
                   onclick="return contentAreaClick(event, false);"/>
+      <statuspanel id="statusbar-display" label=""/>
     </vbox>
+    <vbox id="browser-border-end" hidden="true" layer="true"/>
   </hbox>
 
   <vbox id="browser-bottombox" layer="true">
@@ -973,9 +996,13 @@
              context="toolbar-context-menu" toolboxid="navigator-toolbox"
              mode="icons" iconsize="small" defaulticonsize="small"
              lockiconsize="true"
-             defaultset="status-bar"
-             customizable="true" align="right">
-      <statusbar id="status-bar"/>
+             defaultset="addonbar-closebutton,spring,status-bar"
+             customizable="true"
+             key="key_toggleAddonBar">
+      <toolbarbutton id="addonbar-closebutton"
+                     tooltiptext="&addonBarCloseButton.tooltip;"
+                     oncommand="setToolbarVisibility(this.parentNode, false);"/>
+      <statusbar id="status-bar" ordinal="1000"/>
     </toolbar>
   </vbox>
 
@@ -993,6 +1020,10 @@
 #endif
 #ifdef XP_MACOSX
   <svg:svg height="0">
+    <svg:mask id="pinstripe-keyhole-forward-mask" maskContentUnits="objectBoundingBox">
+      <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
+      <svg:circle cx="-0.46" cy="0.48" r="0.65"/>
+    </svg:mask>
     <svg:mask id="pinstripe-tab-ontop-left-curve-mask" maskContentUnits="userSpaceOnUse">
       <svg:circle cx="9" cy="3" r="3" fill="white"/>
       <svg:rect x="9" y="0" width="3" height="3" fill="white"/>

@@ -109,7 +109,7 @@ function callProvider(aProvider, aMethod, aDefault) {
     return aProvider[aMethod].apply(aProvider, args);
   }
   catch (e) {
-    ERROR("Exception calling provider" + aMethod, e);
+    ERROR("Exception calling provider " + aMethod, e);
     return aDefault;
   }
 }
@@ -242,7 +242,7 @@ var AddonManagerInternal = {
       Services.prefs.setCharPref(PREF_EM_LAST_APP_VERSION,
                                  Services.appinfo.version);
       Services.prefs.setIntPref(PREF_BLOCKLIST_PINGCOUNT,
-                                (appChanged === undefined ? 0 : 1));
+                                (appChanged === undefined ? 0 : -1));
     }
 
     // Ensure all default providers have had a chance to register themselves
@@ -348,12 +348,6 @@ var AddonManagerInternal = {
     scope.LightweightThemeManager.updateCurrentTheme();
 
     this.getAllAddons(function getAddonsCallback(aAddons) {
-      if ("getCachedAddonByID" in scope.AddonRepository) {
-        pendingUpdates++;
-        var ids = [a.id for each (a in aAddons)];
-        scope.AddonRepository.repopulateCache(ids, notifyComplete);
-      }
-
       pendingUpdates += aAddons.length;
       var autoUpdateDefault = AddonManager.autoUpdateDefault;
 
@@ -367,7 +361,12 @@ var AddonManagerInternal = {
         return autoUpdateDefault;
       }
 
+      var ids = [];
+
       aAddons.forEach(function BUC_forEachCallback(aAddon) {
+        if (shouldAutoUpdate(aAddon))
+          ids.push(aAddon.id);
+
         // Check all add-ons for updates so that any compatibility updates will
         // be applied
         aAddon.findUpdates({
@@ -383,6 +382,11 @@ var AddonManagerInternal = {
           onUpdateFinished: notifyComplete
         }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
       });
+
+      if (ids.length > 0) {
+        pendingUpdates++;
+        scope.AddonRepository.repopulateCache(ids, notifyComplete);
+      }
 
       notifyComplete();
     });
@@ -859,7 +863,7 @@ var AddonManagerInternal = {
         pos++;
     }
   },
-  
+
   get autoUpdateDefault() {
     try {
       return Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT);
@@ -1026,7 +1030,7 @@ var AddonManager = {
   SCOPE_SYSTEM: 8,
   // The combination of all scopes.
   SCOPE_ALL: 15,
-  
+
   // Constants for Addon.applyBackgroundUpdates.
   // Indicates that the Addon should not update automatically.
   AUTOUPDATE_DISABLE: 0,
@@ -1104,7 +1108,7 @@ var AddonManager = {
   removeAddonListener: function AM_removeAddonListener(aListener) {
     AddonManagerInternal.removeAddonListener(aListener);
   },
-  
+
   get autoUpdateDefault() {
     return AddonManagerInternal.autoUpdateDefault;
   }

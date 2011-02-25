@@ -55,7 +55,7 @@ body {
 		border-radius: 0.5em;
 		-webkit-border-radius: 0.5em;
 		background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/images/callout.png') no-repeat top center;
-		//display: inline;
+		/* display: inline; */
 	}
 
 #container {
@@ -124,7 +124,7 @@ body {
 		rgba(255, 255, 255, 1) 0 1px,
 		rgba(133, 153, 166, 0.3) 0px 1px 8.5px;
 	background-color: #e7eaec;
-	//display: inline;
+	/* display: inline; */
 }
 
 .home_button {
@@ -143,7 +143,7 @@ body {
 		rgba(255, 255, 255, 1) 0 1px,
 		rgba(133, 153, 166, 0.3) 0px 1px 8.5px;
 	background-color: #e7eaec;
-	//display: inline;
+	/* display: inline; */
 }
 
 .callout {
@@ -158,7 +158,7 @@ body {
 		inset rgba(185, 221, 234, 0.2) 0 -10px 8.5px,
 		inset rgba(185, 221, 234, 1) 0 0px 1px,
 		inset rgba(255, 255, 255, 0.2) 0 10px 8.5px;
-	//display: inline;
+	/* display: inline; */
 }
 
 #data-privacy-text {
@@ -169,7 +169,7 @@ body {
 .home_callout {
 	font-size: 16px;
 	vertical-align: middle;
-	width: 280px;
+ 	/* width: 280px;*/
 	padding: 8px 24px;
 	margin: 8px auto;
 	color: rgba(0, 0, 0, 0.8);
@@ -180,7 +180,7 @@ body {
 		inset rgba(185, 221, 234, 0.2) 0 -10px 8.5px,
 		inset rgba(185, 221, 234, 1) 0 0px 1px,
 		inset rgba(255, 255, 255, 0.2) 0 10px 8.5px;
-	//display: inline;
+	/* display: inline; */
 }
 
 .home_callout_continue {
@@ -197,7 +197,7 @@ body {
 		inset rgba(185, 221, 234, 0.2) 0 -10px 8.5px,
 		inset rgba(185, 221, 234, 1) 0 0px 1px,
 		inset rgba(255, 255, 255, 0.2) 0 10px 8.5px;
-	//display: inline;
+	/* display: inline; */
 }
 
 .home_callout_continue a {color: #6c9735; text-decoration: none;}

@@ -404,7 +404,8 @@
 
         // Make sure the FAYT keypress listener is attached by initializing the
         // browser property
-        setTimeout(function(aSelf) { aSelf.browser = aSelf.browser; }, 0, this);
+        if (this.getAttribute("browserid"))
+          setTimeout(function(aSelf) { aSelf.browser = aSelf.browser; }, 0, this);
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -1152,6 +1153,9 @@
         -->
       <method name="close">
         <body><![CDATA[
+          if (this.hidden)
+            return;
+
           var fm =
             Components.classes["@mozilla.org/focus-manager;1"]
                       .getService(Components.interfaces.nsIFocusManager);
@@ -1360,10 +1364,15 @@
           if (win && !this._mimeTypeIsTextBased(win.document.contentType))
               return false;
 
-          // disable FAYT in about:config and about:blank to prevent FAYT
-          // opening unexpectedly - to fix bugs 264562, 267150, 269712
-          var url = this.browser.currentURI.spec;
-          if (url == "about:blank" || url == "about:config")
+          // disable FAYT in about:blank to prevent FAYT opening unexpectedly.
+          var url = this.browser.currentURI;
+          if (url.spec == "about:blank")
+            return false;
+
+          // disable FAYT in documents that ask for it to be disabled.
+          if ((url.schemeIs("about") || url.schemeIs("chrome")) &&
+              (win.document.documentElement &&
+               win.document.documentElement.getAttribute("disablefastfind") == "true"))
             return false;
 
           if (win) {

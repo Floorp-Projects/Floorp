@@ -51,6 +51,7 @@
 #include "nsRect.h"
 #include "nsRegion.h"
 #include "gfxASurface.h"
+#include "Layers.h"
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4800 )
@@ -65,10 +66,13 @@
 namespace base { class FileDescriptor { }; }
 #endif
 
+using mozilla::layers::LayerManager;
+
 namespace mozilla {
 
 typedef gfxPattern::GraphicsFilter GraphicsFilterType;
 typedef gfxASurface::gfxSurfaceType gfxSurfaceType;
+typedef LayerManager::LayersBackend LayersBackend;
 
 // XXX there are out of place and might be generally useful.  Could
 // move to nscore.h or something.
@@ -498,6 +502,35 @@ struct ParamTraits<mozilla::gfxSurfaceType>
   }
 };
 
+ template<>
+struct ParamTraits<mozilla::LayersBackend>
+{
+  typedef mozilla::LayersBackend paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    if (LayerManager::LAYERS_NONE < param &&
+        param < LayerManager::LAYERS_LAST) {
+      WriteParam(msg, int32(param));
+      return;
+    }
+    NS_RUNTIMEABORT("surface type not reached");
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    int32 type;
+    if (!ReadParam(msg, iter, &type))
+      return false;
+
+    if (LayerManager::LAYERS_NONE < type &&
+        type < LayerManager::LAYERS_LAST) {
+      *result = paramType(type);
+      return true;
+    }
+    return false;
+  }
+};
 
 template<>
 struct ParamTraits<gfxRGBA>

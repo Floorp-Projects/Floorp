@@ -12,7 +12,7 @@ script regress-115436.js
 script regress-116228.js
 script regress-118849.js
 skip script regress-119719.js # obsolete test
-skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) script regress-127243.js # slow
+skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) slow script regress-127243.js
 script regress-127557.js
 script regress-131510-001.js
 script regress-139316.js
@@ -60,7 +60,6 @@ script regress-233483.js
 script regress-234389.js
 script regress-238881.js
 script regress-238945.js
-script regress-240317.js
 script regress-240577.js
 script regress-243174.js
 script regress-243389-n.js
@@ -131,7 +130,7 @@ script regress-31255.js
 script regress-312588.js
 random script regress-313967-01.js # BigO
 random script regress-313967-02.js # BigO
-skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) script regress-314401.js # slow
+skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) slow script regress-314401.js
 script regress-315974.js
 script regress-315990.js
 script regress-317476.js
@@ -166,7 +165,7 @@ script regress-334807-06.js
 script regress-336100.js
 script regress-338307.js
 script regress-340369.js
-skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) script regress-341360.js # slow
+skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) slow script regress-341360.js
 script regress-343713.js
 script regress-343966.js
 script regress-344711-n.js
@@ -239,13 +238,13 @@ script regress-416737-01.js
 script regress-416737-02.js
 script regress-417893.js
 script regress-418504.js
-skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) script regress-418540.js # slow
+skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) slow script regress-418540.js
 script regress-419018.js
 script regress-419803.js
 script regress-420919.js
 skip-if(xulRuntime.XPCOMABI.match(/x86_64/)) script regress-422348.js # On 64-bit, takes forever rather than throwing
 script regress-424311.js
-skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) script regress-425360.js # slow
+skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) slow script regress-425360.js
 script regress-426827.js
 script regress-428366.js
 script regress-438415-01.js

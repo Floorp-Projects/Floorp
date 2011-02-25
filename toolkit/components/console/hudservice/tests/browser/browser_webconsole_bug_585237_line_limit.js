@@ -36,8 +36,6 @@ function testLineLimit() {
   }
   is(countMessageNodes(), 20, "there are 20 message nodes in the output " +
      "when the log limit is set to 20");
-  isnot(countGroupNodes(), 0, "there is at least one group node in the " +
-     "output when the log limit is set to 20");
 
   console.log("bar");
   is(countMessageNodes(), 20, "there are still 20 message nodes in the " +
@@ -54,8 +52,6 @@ function testLineLimit() {
   console.log("baz");
   is(countMessageNodes(), 0, "there are no message nodes in the output when " +
      "the log limit is set to zero");
-  is(countGroupNodes(), 0, "there are no group nodes in the output when the " +
-     "log limit is set to zero");
 
   prefBranch.clearUserPref("loglimit");
   prefBranch = console = null;
@@ -68,8 +64,3 @@ function countMessageNodes() {
   return hudBox.querySelectorAll(".hud-msg-node").length;
 }
 
-function countGroupNodes() {
-  let hudId = HUDService.displaysIndex()[0];
-  let hudBox = HUDService.getHeadsUpDisplay(hudId);
-  return hudBox.querySelectorAll(".hud-group").length;
-}

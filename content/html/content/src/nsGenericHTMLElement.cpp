@@ -198,9 +198,24 @@ public:
       return NS_OK;
     }
 
-    // Do not autofocus if an sub-window is focused.
     nsPIDOMWindow* window = document->GetWindow();
-    if (window && window->GetFocusedNode()) {
+    if (!window) {
+      return NS_OK;
+    }
+
+    // Trying to found the top window (equivalent to window.top).
+    nsCOMPtr<nsIDOMWindow> top;
+    window->GetTop(getter_AddRefs(top));
+    if (top) {
+      window = static_cast<nsPIDOMWindow*>(top.get());
+    }
+
+    if (window->GetFocusedNode()) {
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIDocument> topDoc = do_QueryInterface(window->GetExtantDocument());
+    if (topDoc && topDoc->GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE) {
       return NS_OK;
     }
 
@@ -1601,7 +1616,7 @@ nsGenericHTMLElement::ParseImageAttribute(nsIAtom* aAttribute,
 {
   if ((aAttribute == nsGkAtoms::width) ||
       (aAttribute == nsGkAtoms::height)) {
-    return aResult.ParseSpecialIntValue(aString, PR_TRUE);
+    return aResult.ParseSpecialIntValue(aString);
   }
   else if ((aAttribute == nsGkAtoms::hspace) ||
            (aAttribute == nsGkAtoms::vspace) ||
@@ -2491,8 +2506,6 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
   // the document should not be already loaded and the "browser.autofocus"
   // preference should be 'true'.
   if (AcceptAutofocus() && HasAttr(kNameSpaceID_None, nsGkAtoms::autofocus) &&
-      aDocument &&
-      aDocument->GetReadyStateEnum() != nsIDocument::READYSTATE_COMPLETE &&
       nsContentUtils::GetBoolPref("browser.autofocus", PR_TRUE)) {
     nsCOMPtr<nsIRunnable> event = new nsAutoFocusEvent(this);
     rv = NS_DispatchToCurrentThread(event);
@@ -2711,6 +2724,22 @@ nsGenericHTMLFormElement::CanBeDisabled() const
     type != NS_FORM_LABEL &&
     type != NS_FORM_OBJECT &&
     type != NS_FORM_OUTPUT;
+}
+
+PRBool
+nsGenericHTMLFormElement::IsHTMLFocusable(PRBool aWithMouse,
+                                          PRBool* aIsFocusable,
+                                          PRInt32* aTabIndex)
+{
+  if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
+    return PR_TRUE;
+  }
+
+#ifdef XP_MACOSX
+  *aIsFocusable =
+    (!aWithMouse || nsFocusManager::sMouseFocusesFormControl) && *aIsFocusable;
+#endif
+  return PR_FALSE;
 }
 
 PRBool
@@ -3023,7 +3052,7 @@ nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericHTMLFrameElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGenericHTMLFrameElement,
                                                   nsGenericHTMLElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFrameLoader)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mFrameLoader, nsIFrameLoader)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_TABLE_HEAD(nsGenericHTMLFrameElement)
@@ -3304,10 +3333,6 @@ nsGenericHTMLElement::IsHTMLFocusable(PRBool aWithMouse,
 
   // If a tabindex is specified at all, or the default tabindex is 0, we're focusable
   *aIsFocusable = 
-#ifdef XP_MACOSX
-    // can only focus with the mouse on Mac if editable
-    (!aWithMouse || override) &&
-#endif
     (tabIndex >= 0 || (!disabled && HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)));
 
   return override;

@@ -121,6 +121,9 @@ nsGIFDecoder2::nsGIFDecoder2()
   // Clear out the structure, excluding the arrays
   memset(&mGIFStruct, 0, sizeof(mGIFStruct));
 
+  // Initialize as "animate once" in case no NETSCAPE2.0 extension is found
+  mGIFStruct.loop_count = 1;
+
   // Start with the version (GIF89a|GIF87a)
   mGIFStruct.state = gif_type;
   mGIFStruct.bytes_to_consume = 6;
@@ -146,7 +149,7 @@ nsGIFDecoder2::FinishInternal()
     mGIFOpen = PR_FALSE;
   }
 
-  mImage->SetLoopCount(mGIFStruct.loop_count);
+  mImage->SetLoopCount(mGIFStruct.loop_count - 1);
 }
 
 // Push any new rows according to mCurrentPass/mLastFlushedPass and
@@ -871,11 +874,6 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, PRUint32 aCount)
           /* Loop entire animation specified # of times.  Only read the
              loop count during the first iteration. */
           mGIFStruct.loop_count = GETINT16(q + 1);
-  
-          /* Zero loop count is infinite animation loop request */
-          if (mGIFStruct.loop_count == 0)
-            mGIFStruct.loop_count = -1;
-  
           GETN(1, gif_netscape_extension_block);
           break;
         

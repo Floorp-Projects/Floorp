@@ -13,7 +13,8 @@ version(150);
 assertEq(syntaxErrorFromXML(), true);
 revertVersion();
 
-for (vno in {150: null, 160: null, 170: null, 180: null}) {
+for (vno in {160: null, 170: null, 180: null}) {
+    print('Setting version to: ' + vno);
     version(vno);
     assertEq(syntaxErrorFromXML(), false);
     revertVersion();

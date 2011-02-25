@@ -27,6 +27,7 @@
 == background-redraw-237766.html background-redraw-237766-ref.html
 
 == background-clip-1.html background-clip-1-ref.html
+== background-clip-2.html background-clip-2-ref.html
 
 == background-size-auto-auto.html background-size-auto-ref.html
 == background-size-auto.html background-size-auto-ref.html
@@ -106,3 +107,8 @@ fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
 # start failing when we do.
 fails == background-size-no-intrinsic-width-image.html background-size-no-intrinsic-width-image-ref.html
 fails == background-size-no-intrinsic-height-image.html background-size-no-intrinsic-height-image-ref.html
+
+== fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-ref.html
+
+HTTP == root-background-1.html root-background-ref.html
+HTTP != root-background-1.html about:blank

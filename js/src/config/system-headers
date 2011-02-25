@@ -86,6 +86,7 @@ cairo-glitz.h
 cairo-os2.h
 cairo-pdf.h
 cairo-ps.h
+cairo-tee.h
 cairo-quartz.h
 cairo-win32.h
 cairo-xlib.h
@@ -1042,7 +1043,7 @@ proxy.h
 #if MOZ_PLATFORM_MAEMO==6
 contentaction/contentaction.h
 #endif
-#ifndef MOZ_TREE_PIXMAN
+#if MOZ_TREE_PIXMAN!=1
 pixman.h
 #endif
 #if MOZ_ENABLE_MEEGOTOUCHSHARE
