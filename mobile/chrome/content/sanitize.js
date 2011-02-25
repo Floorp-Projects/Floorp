@@ -280,6 +280,19 @@ Sanitizer.prototype = {
       {
         return true;
       }
+    },
+
+    syncAccount: {
+      clear: function ()
+      {
+        WeaveGlue.disconnect();
+      },
+
+      get canClear()
+      {
+        let autoconnect = Services.prefs.getBoolPref("services.sync.autoconnect");
+        return autoconnect || Weave.Service.isLoggedIn;
+      }
     }
   }
 };
