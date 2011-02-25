@@ -3259,7 +3259,7 @@ pref("geo.enabled", true);
 pref("accelerometer.enabled", true);
 
 // Enable/Disable HTML5 parser
-pref("html5.enable", true);
+pref("html5.parser.enable", true);
 // Toggle which thread the HTML5 parser uses for stream parsing
 pref("html5.offmainthread", true);
 // Toggle old parser use for document.open() on Hotmail (bug 627729)

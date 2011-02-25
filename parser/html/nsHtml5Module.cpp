@@ -61,7 +61,7 @@ nsIThread* nsHtml5Module::sMainThread = nsnull;
 void
 nsHtml5Module::InitializeStatics()
 {
-  nsContentUtils::AddBoolPrefVarCache("html5.enable", &sEnabled);
+  nsContentUtils::AddBoolPrefVarCache("html5.parser.enable", &sEnabled);
   nsContentUtils::AddBoolPrefVarCache("html5.offmainthread", &sOffMainThread);
   nsContentUtils::AddBoolPrefVarCache("html5.hotmailworkaround",
                                       &sHotmailWorkaround);

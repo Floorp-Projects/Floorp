@@ -31,7 +31,7 @@ netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var prefs = Components.classes["@mozilla.org/preferences-service;1"]
             .getService(Components.interfaces.nsIPrefBranch);
 
-if (prefs.getBoolPref("html5.enable")) {
+if (prefs.getBoolPref("html5.parser.enable")) {
   var a = document.getElementById('a');
   var b = document.getElementById('b');
   var c = document.getElementById('c');
