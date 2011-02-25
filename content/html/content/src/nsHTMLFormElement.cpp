@@ -295,6 +295,8 @@ nsHTMLFormElement::Init()
   
   NS_ENSURE_TRUE(mSelectedRadioButtons.Init(4),
                  NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(mRequiredRadioButtonCounts.Init(4),
+                 NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
 }
@@ -329,12 +331,13 @@ DOMCI_NODE_DATA(HTMLFormElement, nsHTMLFormElement)
 
 // QueryInterface implementation for nsHTMLFormElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLFormElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLFormElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE6(nsHTMLFormElement,
                                    nsIDOMHTMLFormElement,
                                    nsIDOMNSHTMLFormElement,
                                    nsIForm,
                                    nsIWebProgressListener,
-                                   nsIRadioGroupContainer)
+                                   nsIRadioGroupContainer,
+                                   nsIRadioGroupContainer_MOZILLA_2_0_BRANCH)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLFormElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFormElement)
@@ -2121,6 +2124,14 @@ NS_IMETHODIMP
 nsHTMLFormElement::AddToRadioGroup(const nsAString& aName,
                                    nsIFormControl* aRadio)
 {
+  nsCOMPtr<nsIContent> element = do_QueryInterface(aRadio);
+  NS_ASSERTION(element, "radio controls have to be content elements!");
+
+  if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+    mRequiredRadioButtonCounts.Put(aName,
+                                   mRequiredRadioButtonCounts.Get(aName)+1);
+  }
+
   return NS_OK;
 }
 
@@ -2128,8 +2139,52 @@ NS_IMETHODIMP
 nsHTMLFormElement::RemoveFromRadioGroup(const nsAString& aName,
                                         nsIFormControl* aRadio)
 {
+  nsCOMPtr<nsIContent> element = do_QueryInterface(aRadio);
+  NS_ASSERTION(element, "radio controls have to be content elements!");
+
+  if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+    PRUint32 requiredNb = mRequiredRadioButtonCounts.Get(aName);
+    NS_ASSERTION(requiredNb >= 1,
+                 "At least one radio button has to be required!");
+
+    if (requiredNb == 1) {
+      mRequiredRadioButtonCounts.Remove(aName);
+    } else {
+      mRequiredRadioButtonCounts.Put(aName, requiredNb-1);
+    }
+  }
+
   return NS_OK;
 }
+
+PRUint32
+nsHTMLFormElement::GetRequiredRadioCount(const nsAString& aName) const
+{
+  return mRequiredRadioButtonCounts.Get(aName);
+}
+
+void
+nsHTMLFormElement::RadioRequiredChanged(const nsAString& aName,
+                                        nsIFormControl* aRadio)
+{
+  nsCOMPtr<nsIContent> element = do_QueryInterface(aRadio);
+  NS_ASSERTION(element, "radio controls have to be content elements!");
+
+  if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+    mRequiredRadioButtonCounts.Put(aName,
+                                   mRequiredRadioButtonCounts.Get(aName)+1);
+  } else {
+    PRUint32 requiredNb = mRequiredRadioButtonCounts.Get(aName);
+    NS_ASSERTION(requiredNb >= 1,
+                 "At least one radio button has to be required!");
+    if (requiredNb == 1) {
+      mRequiredRadioButtonCounts.Remove(aName);
+    } else {
+      mRequiredRadioButtonCounts.Put(aName, requiredNb-1);
+    }
+  }
+}
+
 
 //----------------------------------------------------------------------
 // nsFormControlList implementation, this could go away if there were
