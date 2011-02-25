@@ -201,23 +201,14 @@ ContainerRender(Container* aContainer,
       }
     }
 
-    aContainer->gl()->fScissor(0, 0, visibleRect.width, visibleRect.height);
+    aContainer->gl()->PushViewportRect();
     framebufferRect -= childOffset; 
-    if (!aPreviousFrameBuffer) {
-      aContainer->gl()->FixWindowCoordinateRect(framebufferRect,
-                                                aManager->GetWigetSize().height);
-    }
     aManager->CreateFBOWithTexture(framebufferRect,
                                    mode,
                                    &frameBuffer,
                                    &containerSurface);
     childOffset.x = visibleRect.x;
     childOffset.y = visibleRect.y;
-
-    aContainer->gl()->PushViewportRect();
-    aManager->SetupPipeline(visibleRect.width, visibleRect.height,
-                            LayerManagerOGL::DontApplyWorldTransform);
-
   } else {
     frameBuffer = aPreviousFrameBuffer;
     aContainer->mSupportsComponentAlphaChildren = (aContainer->GetContentFlags() & Layer::CONTENT_OPAQUE) ||
@@ -260,22 +251,7 @@ ContainerRender(Container* aContainer,
 
     if (needsFramebuffer) {
       scissorRect.MoveBy(- visibleRect.TopLeft());
-    }
-
-    if (aManager->IsDrawingFlipped()) {
-      /**
-       * glScissor coordinates are oriented with 0,0 being at the bottom left,
-       * the opposite to layout (0,0 at the top left).
-       * All rendering to an FBO is upside-down, making the coordinate systems
-       * match.
-       * When rendering directly to a window (No current or previous FBO),
-       * we need to flip the scissor rect.
-       */
-      aContainer->gl()->FixWindowCoordinateRect(scissorRect,
-                                                aContainer->gl()->ViewportRect().height);
-    }
-    
-    if (clipRect && !needsFramebuffer) {
+    } else if (clipRect) {
       scissorRect.IntersectRect(scissorRect, cachedScissor);
     }
 
@@ -298,7 +274,6 @@ ContainerRender(Container* aContainer,
     aContainer->gl()->MakeCurrent();
   }
 
-  aContainer->gl()->PopScissorRect();
 
   if (needsFramebuffer) {
     // Unbind the current framebuffer and rebind the previous one.
@@ -308,6 +283,7 @@ ContainerRender(Container* aContainer,
     nsIntRect viewport = aContainer->gl()->ViewportRect();
     aManager->SetupPipeline(viewport.width, viewport.height,
                             LayerManagerOGL::ApplyWorldTransform);
+    aContainer->gl()->PopScissorRect();
 
     aContainer->gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
     aContainer->gl()->fDeleteFramebuffers(1, &frameBuffer);
@@ -332,10 +308,15 @@ ContainerRender(Container* aContainer,
                       2, f);
     }
 
-    aManager->BindAndDrawQuad(rgb, aManager->IsDrawingFlipped());
+    // Drawing is always flipped, but when copying between surfaces we want to avoid
+    // this. Pass true for the flip parameter to introduce a second flip
+    // that cancels the other one out.
+    aManager->BindAndDrawQuad(rgb, true);
 
     // Clean up resources.  This also unbinds the texture.
     aContainer->gl()->fDeleteTextures(1, &containerSurface);
+  } else {
+    aContainer->gl()->PopScissorRect();
   }
 }
 
