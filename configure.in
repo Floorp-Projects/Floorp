@@ -1225,8 +1225,8 @@ MOZ_BZ2_LIBS='$(call EXPAND_LIBNAME_PATH,bz2,$(DEPTH)/modules/libbz2/src)'
 MOZ_PNG_CFLAGS=
 MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,mozpng,$(DEPTH)/modules/libimg/png)'
 
-MOZ_JS_STATIC_LIBS='-L$(LIBXUL_DIST)/bin -ljs_static'
-MOZ_JS_SHARED_LIBS='-L$(LIBXUL_DIST)/bin -lmozjs'
+MOZ_JS_STATIC_LIBS='$(call EXPAND_LIBNAME_PATH,js_static,$(LIBXUL_DIST)/lib)'
+MOZ_JS_SHARED_LIBS='$(call EXPAND_LIBNAME_PATH,mozjs,$(LIBXUL_DIST)/lib)'
 DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/bin -lxpcom -lxpcom_core -lmozalloc'
 MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin -Wl,-rpath-link,$(prefix)/lib'
 XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/bin -lxpcom -lmozalloc'
@@ -2259,8 +2259,6 @@ ia64*-hpux*)
     MOZ_DEBUG_FLAGS='-Zi'
     MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
     MOZ_FIX_LINK_PATHS=
-    MOZ_JS_STATIC_LIBS='$(LIBXUL_DIST)/lib/js_static.lib'
-    MOZ_JS_SHARED_LIBS='$(LIBXUL_DIST)/lib/mozjs.lib'
     OBJ_SUFFIX=obj
     RANLIB='echo not_ranlib'
     STRIP='echo not_strip'
@@ -2319,8 +2317,6 @@ ia64*-hpux*)
         RCFLAGS='-O coff --use-temp-file'
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
         LIBS="$LIBS -luuid -lgdi32 -lwinmm -lwsock32"
-        MOZ_JS_STATIC_LIBS='-L$(LIBXUL_DIST)/bin -ljs_static'
-        MOZ_JS_SHARED_LIBS='-L$(LIBXUL_DIST)/bin -lmozjs'
         MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib -lxpcom -lxpcom_core -lmozalloc'
         XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/lib -lxpcom -lmozalloc'
@@ -2373,8 +2369,6 @@ ia64*-hpux*)
         else
             MOZ_OPTIMIZE_FLAGS='-O1 -Oy-'
         fi
-        MOZ_JS_STATIC_LIBS='$(LIBXUL_DIST)/lib/js_static.lib'
-        MOZ_JS_SHARED_LIBS='$(LIBXUL_DIST)/lib/mozjs.lib'
         MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
         XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
@@ -8191,6 +8185,38 @@ else
     AC_DEFINE(CPP_THROW_NEW, [throw()])
 fi
 AC_LANG_C
+
+dnl ========================================================
+dnl =
+dnl = Check what kind of list files are supported by the
+dnl = linker
+dnl =
+dnl ========================================================
+
+AC_CACHE_CHECK(what kind of list files are supported by the linker,
+    EXPAND_LIBS_LIST_STYLE,
+    [echo "int main() {return 0;}" > conftest.${ac_ext}
+     if AC_TRY_COMMAND(${CC-cc} -o conftest.${OBJ_SUFFIX} -c $CFLAGS $CPPFLAGS conftest.${ac_ext} 1>&2) && test -s conftest.${OBJ_SUFFIX}; then
+         echo "INPUT(conftest.${OBJ_SUFFIX})" > conftest.list
+         if AC_TRY_COMMAND(${CC-cc} -o conftest${ac_exeext} $LDFLAGS conftest.list $LIBS 1>&2) && test -s conftest${ac_exeext}; then
+             EXPAND_LIBS_LIST_STYLE=linkerscript
+         else
+             echo "conftest.${OBJ_SUFFIX}" > conftest.list
+             if AC_TRY_COMMAND(${CC-cc} -o conftest${ac_exeext} $LDFLAGS @conftest.list $LIBS 1>&2) && test -s conftest${ac_exeext}; then
+                 EXPAND_LIBS_LIST_STYLE=list
+             else
+                 EXPAND_LIBS_LIST_STYLE=none
+             fi
+         fi
+     else
+         dnl We really don't expect to get here, but just in case
+         AC_ERROR([couldn't compile a simple C file])
+     fi
+     rm -rf conftest*])
+
+LIBS_DESC_SUFFIX=desc
+AC_SUBST(LIBS_DESC_SUFFIX)
+AC_SUBST(EXPAND_LIBS_LIST_STYLE)
 
 dnl ========================================================
 dnl =

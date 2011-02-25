@@ -47,7 +47,6 @@ EXTRA_DEPS += $(srcdir)/../objs.mk
 
 MODULE		= xpcom
 LIBRARY_NAME	= xpcomglue
-SUPPRESS_FAKELIB = 1
 DIST_INSTALL	= 1
 
 LOCAL_INCLUDES	= \
