@@ -54,6 +54,8 @@ const CLUSTER_BACKOFF = 5 * 60 * 1000; // 5 minutes
 // How long a key to generate from an old passphrase.
 const PBKDF2_KEY_BYTES = 16;
 
+const LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S";
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/constants.js");
@@ -1661,7 +1663,8 @@ WeaveSvc.prototype = {
   },
   
   sync: function sync() {
-    this._log.debug("In wrapping sync().");
+    let dateStr = new Date().toLocaleFormat(LOG_DATE_FORMAT);
+    this._log.info("Starting sync at " + dateStr);
     this._catch(function () {
       // Make sure we're logged in.
       if (this._shouldLogin()) {
@@ -1808,7 +1811,9 @@ WeaveSvc.prototype = {
         Svc.Prefs.set("lastSync", new Date().toString());
         Status.sync = SYNC_SUCCEEDED;
         let syncTime = ((Date.now() - syncStartTime) / 1000).toFixed(2);
-        this._log.info("Sync completed successfully in " + syncTime + " secs.");
+        let dateStr = new Date().toLocaleFormat(LOG_DATE_FORMAT);
+        this._log.info("Sync completed successfully at " + dateStr
+                       + " after " + syncTime + " secs.");
       }
     } finally {
       this._syncError = false;
