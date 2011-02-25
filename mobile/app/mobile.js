@@ -310,7 +310,6 @@ pref("browser.sessionhistory.max_entries", 50);
 pref("browser.history_expire_days", 180);
 pref("browser.history_expire_days_min", 90);
 pref("browser.history_expire_sites", 40000);
-pref("privacy.item.history", true);
 pref("browser.places.migratePostDataAnnotations", true);
 pref("browser.places.updateRecentTagsUri", true);
 pref("places.frecency.numVisits", 10);
@@ -364,6 +363,7 @@ pref("privacy.item.passwords", true);
 pref("privacy.item.sessions", true);
 pref("privacy.item.geolocation", true);
 pref("privacy.item.siteSettings", true);
+pref("privacy.item.syncAccount", true);
 
 #ifdef MOZ_PLATFORM_MAEMO
 pref("plugins.force.wmode", "opaque");
