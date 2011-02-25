@@ -427,6 +427,7 @@ ConvertQNameToString(JSContext *cx, JSObject *obj)
         return NULL;
 
     if (obj->getClass() == &js_AttributeNameClass) {
+        Anchor<JSString *> anchor(str);
         size_t length = str->length();
         jschar *chars = (jschar *) cx->malloc((length + 2) * sizeof(jschar));
         if (!chars)
