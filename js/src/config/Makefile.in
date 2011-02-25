@@ -101,6 +101,8 @@ export::
 GARBAGE_DIRS += system_wrappers_js
 endif
 
+GARBAGE += $(srcdir)/*.pyc *.pyc
+
 FORCE:
 
 ifdef MKDEPEND_DIR
