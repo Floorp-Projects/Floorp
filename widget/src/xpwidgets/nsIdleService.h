@@ -77,20 +77,24 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  nsIdleServiceDaily(nsIdleService* aIdleService);
+  nsIdleServiceDaily(nsIIdleService* aIdleService);
 
   /**
-   * This function will make this class release its allocated resources (its
-   * idle timer and/or its normal timer).
+   * Initializes the daily idle observer.
+   * Keep this separated from the constructor, since it could cause pointer
+   * corruption due to AddRef/Release of "this".
    */
-  void Shutdown();
+  void Init();
+
+  virtual ~nsIdleServiceDaily();
 
 private:
   /**
-   * @note This is a normal pointer, or the idle service could keep it self
-   * alive.
+   * @note This is a normal pointer, part to avoid creating a cycle with the
+   * idle service, part to avoid potential pointer corruption due to this class
+   * being instantiated in the constructor of the service itself.
    */
-  nsIdleService* mIdleService;
+  nsIIdleService* mIdleService;
 
   /**
    * Set to true when the instantiated object has a idle observer.
@@ -192,7 +196,7 @@ private:
   /**
    * Object keeping track of the daily idle thingy.
    */
-  nsCOMPtr<nsIdleServiceDaily> mDailyIdle;
+  nsRefPtr<nsIdleServiceDaily> mDailyIdle;
 
   /**
    * Contains the time of the last idle reset or 0 if there haven't been a

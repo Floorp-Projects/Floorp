@@ -642,12 +642,15 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
   TransformShadowTree(aBuilder, mFrameLoader, aFrame, shadowRoot);
   mContainer->SetClipRect(nsnull);
 
-  const nsContentView* view = GetContentView(FrameMetrics::ROOT_SCROLL_ID);
-  BuildBackgroundPatternFor(mContainer,
-                            shadowRoot,
-                            shadowRoot->GetFrameMetrics(),
-                            view->GetViewConfig(),
-                            aManager, aFrame, aBuilder);
+  if (mFrameLoader->AsyncScrollEnabled()) {
+    const nsContentView* view = GetContentView(FrameMetrics::ROOT_SCROLL_ID);
+    BuildBackgroundPatternFor(mContainer,
+                              shadowRoot,
+                              shadowRoot->GetFrameMetrics(),
+                              view->GetViewConfig(),
+                              aManager, aFrame, aBuilder);
+  }
+  mContainer->SetVisibleRegion(aVisibleRect);
 
   return nsRefPtr<Layer>(mContainer).forget();
 }

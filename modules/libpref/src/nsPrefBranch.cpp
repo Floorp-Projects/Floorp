@@ -265,38 +265,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     }
 
     if (NS_SUCCEEDED(rv)) {
-      const char *pref = getPrefName(aPrefName);
-      PRBool  bNeedDefault = PR_FALSE;
-
-      if (mIsDefault) {
-        bNeedDefault = PR_TRUE;
-      } else {
-        // if there is no user (or locked) value
-        if (!PREF_HasUserPref(pref) && !PREF_PrefIsLocked(pref)) {
-          bNeedDefault = PR_TRUE;
-        }
-      }
-
-      // if we need to fetch the default value, do that instead, otherwise use the
-      // value we pulled in at the top of this function
-      if (bNeedDefault) {
-        nsXPIDLString utf16String;
-        rv = GetDefaultFromPropertiesFile(pref, getter_Copies(utf16String));
-        if (NS_SUCCEEDED(rv)) {
-          rv = theString->SetData(utf16String.get());
-        }
-      } else {
-        rv = GetCharPref(aPrefName, getter_Copies(utf8String));
-        if (NS_SUCCEEDED(rv)) {
-          rv = theString->SetData(NS_ConvertUTF8toUTF16(utf8String).get());
-        }
-      }
-      if (NS_SUCCEEDED(rv)) {
-        nsIPrefLocalizedString *temp = theString;
-
-        NS_ADDREF(temp);
-        *_retval = (void *)temp;
-      }
+      theString.forget(reinterpret_cast<nsIPrefLocalizedString**>(_retval));
     }
 
     return rv;

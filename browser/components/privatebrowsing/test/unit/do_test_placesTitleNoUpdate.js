@@ -37,8 +37,8 @@
 // Test to make sure that the visited page titles do not get updated inside the
 // private browsing mode.
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 function do_test()
 {

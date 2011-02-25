@@ -85,3 +85,7 @@ needs-focus load needs-focus.html
 # Bug 632636
 fails == data:text/plain,HELLO about:blank
 needs-focus == data:text/plain, about:blank
+
+# Sanity check of viewport+displayport overrides
+fails-if(!browserIsRemote) == test-displayport.html test-displayport-ref.html # bug 593168
+skip-if(!browserIsRemote) != test-displayport-2.html test-displayport-ref.html # bug 593168

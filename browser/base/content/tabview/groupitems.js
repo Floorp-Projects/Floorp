@@ -742,6 +742,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.$undoContainer = null;
     this.droppable(true);
 
+    GroupItems.setActiveGroupItem(this);
+    if (this._activeTab)
+      UI.setActiveTab(this._activeTab);
+
     iQ(this.container).show().animate({
       "-moz-transform": "scale(1)",
       "opacity": 1
@@ -806,7 +810,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     toClose.forEach(function(child) {
       child.removeSubscriber(self, "close");
 
-      let removed = child.close();
+      let removed = child.close(true);
       if (removed) {
         shouldRemoveTabItems.push(child);
       } else {
@@ -1094,7 +1098,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       let closed = options.dontClose ? false : this.closeIfEmpty();
       if (closed)
         this._makeClosestTabActive();
-      else if (!options.dontArrage)
+      else if (!options.dontArrange)
         this.arrange({animate: !options.immediately});
 
       this._sendToSubscribers("childRemoved",{ groupItemId: this.id, item: item });
@@ -1126,7 +1130,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       let $icon = iQ(icon);
       if ($icon.data("xulTab") == event.target) {
         $icon.attr("src", Utils.defaultFaviconURL);
-        return true;
       }
     });
   },

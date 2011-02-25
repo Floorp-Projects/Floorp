@@ -645,13 +645,7 @@ nsSHEntry::AddChild(nsISHEntry * aChild, PRInt32 aOffset)
   }
 #endif
 
-  // InsertObjectAt allows only appending one object.
-  // If aOffset is larger than Count(), we must first manually
-  // set the capacity.
-  if (aOffset > mChildren.Count()) {
-    mChildren.SetCount(aOffset);
-  }
-  if (!mChildren.InsertObjectAt(aChild, aOffset)) {
+  if (!mChildren.ReplaceObjectAt(aChild, aOffset)) {
     NS_WARNING("Adding a child failed!");
     aChild->SetParent(nsnull);
     return NS_ERROR_FAILURE;

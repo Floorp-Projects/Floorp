@@ -38,9 +38,6 @@
 
 function run_test_on_service()
 {
-  let Cc = Components.classes;
-  let Ci = Components.interfaces;
-  let Cu = Components.utils;
   Cu.import("resource:///modules/openLocationLastURL.jsm");
 
   function clearHistory() {

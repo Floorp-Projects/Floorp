@@ -137,6 +137,7 @@ typedef struct InstanceData {
   ActivationState focusState;
   int32_t focusEventCount;
   int32_t eventModel;
+  bool closeStream;
 } InstanceData;
 
 void notifyDidPaint(InstanceData* instanceData);

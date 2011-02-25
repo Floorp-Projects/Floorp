@@ -4,8 +4,9 @@
 
 do_load_httpd_js();
 
-const PREF_BLOCKLIST_LASTUPDATETIME = "app.update.lastUpdateTime.blocklist-background-update-timer";
-const PREF_BLOCKLIST_PINGCOUNT      = "extensions.blocklist.pingCount";
+const PREF_BLOCKLIST_LASTUPDATETIME   = "app.update.lastUpdateTime.blocklist-background-update-timer";
+const PREF_BLOCKLIST_PINGCOUNTTOTAL   = "extensions.blocklist.pingCountTotal";
+const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
 
 const SECONDS_IN_DAY = 60 * 60 * 24;
 
@@ -50,7 +51,7 @@ function test1() {
 
 function test2() {
   gNextTest = test3;
-  gExpectedQueryString = "2&2&invalid";
+  gExpectedQueryString = "invalid&invalid&invalid";
   notify_blocklist();
 }
 
@@ -58,24 +59,65 @@ function test3() {
   Services.prefs.setIntPref(PREF_BLOCKLIST_LASTUPDATETIME,
                             (getNowInSeconds() - SECONDS_IN_DAY));
   gNextTest = test4;
-  gExpectedQueryString = "3&3&1";
+  gExpectedQueryString = "2&2&1";
   notify_blocklist();
 }
 
 function test4() {
-  Services.prefs.setIntPref(PREF_BLOCKLIST_PINGCOUNT, -1);
+  Services.prefs.setIntPref(PREF_BLOCKLIST_PINGCOUNTVERSION, -1);
   Services.prefs.setIntPref(PREF_BLOCKLIST_LASTUPDATETIME,
                             (getNowInSeconds() - (SECONDS_IN_DAY * 2)));
   gNextTest = test5;
-  gExpectedQueryString = "1&4&reset";
+  gExpectedQueryString = "1&3&reset";
   notify_blocklist();
 }
 
 function test5() {
+  Services.prefs.setIntPref(PREF_BLOCKLIST_LASTUPDATETIME, getNowInSeconds());
+  gNextTest = test6;
+  gExpectedQueryString = "invalid&invalid&0";
+  notify_blocklist();
+}
+
+function test6() {
   Services.prefs.setIntPref(PREF_BLOCKLIST_LASTUPDATETIME,
                             (getNowInSeconds() - (SECONDS_IN_DAY * 3)));
+  gNextTest = test7;
+  gExpectedQueryString = "2&4&3";
+  notify_blocklist();
+}
+
+function test7() {
+  Services.prefs.setIntPref(PREF_BLOCKLIST_PINGCOUNTVERSION, 2147483647);
+  Services.prefs.setIntPref(PREF_BLOCKLIST_LASTUPDATETIME,
+                            (getNowInSeconds() - (SECONDS_IN_DAY * 4)));
+  gNextTest = test8;
+  gExpectedQueryString = "2147483647&5&4";
+  notify_blocklist();
+}
+
+function test8() {
+  Services.prefs.setIntPref(PREF_BLOCKLIST_LASTUPDATETIME,
+                            (getNowInSeconds() - (SECONDS_IN_DAY * 5)));
+  gNextTest = test9;
+  gExpectedQueryString = "1&6&reset";
+  notify_blocklist();
+}
+
+function test9() {
+  Services.prefs.setIntPref(PREF_BLOCKLIST_PINGCOUNTTOTAL, 2147483647);
+  Services.prefs.setIntPref(PREF_BLOCKLIST_LASTUPDATETIME,
+                            (getNowInSeconds() - (SECONDS_IN_DAY * 6)));
+  gNextTest = test10;
+  gExpectedQueryString = "2&2147483647&6";
+  notify_blocklist();
+}
+
+function test10() {
+  Services.prefs.setIntPref(PREF_BLOCKLIST_LASTUPDATETIME,
+                            (getNowInSeconds() - (SECONDS_IN_DAY * 7)));
   gNextTest = finish;
-  gExpectedQueryString = "2&5&3";
+  gExpectedQueryString = "3&1&reset";
   notify_blocklist();
 }
 

@@ -665,6 +665,28 @@ static const GfxDriverInfo gDriverInfo[] = {
     GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
     DRIVER_LESS_THAN, V(8,741,0,0), "10.6" ),
 
+  /* OpenGL on any ATI/AMD hardware is discouraged
+   * See:
+   *  bug 619773 - WebGL: Crash with blue screen : "NMI: Parity Check / Memory Parity Error"
+   *  bugs 584403, 584404, 620924 - crashes in atioglxx
+   *  + many complaints about incorrect rendering
+   */
+  GfxDriverInfo( DRIVER_OS_ALL,
+    vendorATI, GfxDriverInfo::allDevices,
+    nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_DISCOURAGED,
+    DRIVER_LESS_THAN, allDriverVersions ),
+  GfxDriverInfo( DRIVER_OS_ALL,
+    vendorATI, GfxDriverInfo::allDevices,
+    nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_DISCOURAGED,
+    DRIVER_LESS_THAN, allDriverVersions ),
+  GfxDriverInfo( DRIVER_OS_ALL,
+    vendorAMD, GfxDriverInfo::allDevices,
+    nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_DISCOURAGED,
+    DRIVER_LESS_THAN, allDriverVersions ),
+  GfxDriverInfo( DRIVER_OS_ALL,
+    vendorAMD, GfxDriverInfo::allDevices,
+    nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_DISCOURAGED,
+    DRIVER_LESS_THAN, allDriverVersions ),
 
   /*
    * Intel entries
@@ -718,14 +740,6 @@ static const GfxDriverInfo gDriverInfo[] = {
     vendorIntel, GfxDriverInfo::allDevices,
     nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_DISCOURAGED,
     DRIVER_LESS_THAN, allDriverVersions ),
-
-  /*
-   * NVIDIA entries
-   */
-
-  /*
-   * AMD entries
-   */
 
   GfxDriverInfo()
 };
