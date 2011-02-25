@@ -1483,11 +1483,6 @@ PrintPropertyMethod(JSTracer *trc, char *buf, size_t bufsize)
 void
 Shape::trace(JSTracer *trc) const
 {
-#ifdef DEBUG
-    JSRuntime *rt = trc->context->runtime;
-    JS_ASSERT_IF(rt->gcCurrentCompartment, compartment == rt->gcCurrentCompartment);
-#endif
-
     if (IS_GC_MARKING_TRACER(trc))
         mark();
 

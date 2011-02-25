@@ -2668,7 +2668,7 @@ LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj)
     return shape;
 }
 
-}
+} /* namespace js */
 
 static JSBool
 ThrowTypeError(JSContext *cx, uintN argc, Value *vp)
