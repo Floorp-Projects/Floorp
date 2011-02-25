@@ -2202,7 +2202,7 @@ ia64*-hpux*)
     MOZ_TOOLS_DIR=`cd $MOZ_TOOLS && pwd -W`
     MOZ_BUILD_ROOT=`cd $MOZ_BUILD_ROOT && pwd -W`
     AR_LIST="$AR -list"
-    AR_EXTRACT="$AR -extract"
+    AR_EXTRACT=
     AR_DELETE="$AR d"
     AR_FLAGS='-OUT:"$@"'
     MOZ_MEMORY=1
@@ -2227,7 +2227,8 @@ ia64*-hpux*)
     HOST_CC=cl
     HOST_CXX=cl
     HOST_LD=link
-    HOST_AR='lib -OUT:$@'
+    HOST_AR='lib'
+    HOST_AR_FLAGS='-OUT:$@'
     HOST_RANLIB='echo ranlib'
     HOST_CFLAGS="$HOST_CFLAGS -D_X86_"
         
@@ -2334,8 +2335,9 @@ ia64*-hpux*)
         if test "$AS_BIN"; then
             AS="$(basename "$AS_BIN")"
         fi
-        AR='lib -NOLOGO -OUT:"$@"'
-        AR_FLAGS=
+        AR='lib'
+        AR_FLAGS='-NOLOGO -OUT:"$@"'
+        AR_EXTRACT=
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
         PKG_SKIP_STRIP=1
