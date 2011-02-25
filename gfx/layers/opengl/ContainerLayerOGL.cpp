@@ -231,44 +231,20 @@ ContainerRender(Container* aContainer,
       continue;
     }
 
-    nsIntRect scissorRect(visibleRect);
+    nsIntRect scissorRect = 
+      layerToRender->GetLayer()->CalculateScissorRect(needsFramebuffer,
+                                                      visibleRect,
+                                                      cachedScissor,
+                                                      contTransform);
 
-    const nsIntRect *clipRect = layerToRender->GetLayer()->GetEffectiveClipRect();
-    if (clipRect) {
-      if (clipRect->IsEmpty()) {
-        continue;
-      }
-      scissorRect = *clipRect;
-      if (!needsFramebuffer) {
-        gfxRect r(scissorRect.x, scissorRect.y, scissorRect.width, scissorRect.height);
-        gfxRect trScissor = contTransform.TransformBounds(r);
-        trScissor.Round();
-        if (!gfxUtils::GfxRectToIntRect(trScissor, &scissorRect)) {
-          scissorRect = visibleRect;
-        }
-      }
+    if (scissorRect.IsEmpty()) {
+      continue;
     }
 
-    if (needsFramebuffer) {
-      scissorRect.MoveBy(- visibleRect.TopLeft());
-    } else if (clipRect) {
-      scissorRect.IntersectRect(scissorRect, cachedScissor);
-    }
-
-    /**
-     *  We can't clip to a visible region if theres no framebuffer since we might be transformed
-     */
-    if (needsFramebuffer || clipRect) {
-      aContainer->gl()->fScissor(scissorRect.x, 
-                                 scissorRect.y, 
-                                 scissorRect.width, 
-                                 scissorRect.height);
-    } else {
-      aContainer->gl()->fScissor(cachedScissor.x, 
-                                 cachedScissor.y, 
-                                 cachedScissor.width, 
-                                 cachedScissor.height);
-    }
+    aContainer->gl()->fScissor(scissorRect.x, 
+                               scissorRect.y, 
+                               scissorRect.width, 
+                               scissorRect.height);
 
     layerToRender->RenderLayer(frameBuffer, childOffset);
     aContainer->gl()->MakeCurrent();
