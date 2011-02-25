@@ -593,10 +593,13 @@ var ScrollUtils = {
    */
   _defaultDragger: {
     isDraggable: function isDraggable(target, scroller) {
-      let sX = {}, sY = {};
+      let sX = {}, sY = {},
+          pX = {}, pY = {};
+      scroller.getPosition(pX, pY);
       scroller.getScrolledSize(sX, sY);
       let rect = target.getBoundingClientRect();
-      return { x: sX.value > rect.width, y: sY.value > rect.height };
+      return { x: (sX.value > rect.width  || pX.value != 0),
+               y: (sY.value > rect.height || pY.value != 0) };
     },
 
     dragStart: function dragStart(cx, cy, target, scroller) {

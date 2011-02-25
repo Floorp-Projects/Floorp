@@ -414,12 +414,14 @@ richlistitem description.normal {
   color: gray;
   font-size: @font_small@ !important;
   white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 richlistitem label.normal-black,
 richlistitem description.normal-black {
   font-size: @font_small@  !important;
   white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 richlistitem label.normal-bold,
@@ -427,6 +429,7 @@ richlistitem description.normal-bold {
   font-weight: bold;
   font-size: @font_small@  !important;
   white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 richlistitem[selected="true"] {
