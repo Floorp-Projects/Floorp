@@ -46,7 +46,6 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/ext/StringBundle.js");
-Cu.import("resource://services-sync/ext/Sync.js");
 Cu.import("resource://services-sync/log4moz.js");
 
 let NetUtil;
@@ -57,6 +56,12 @@ try {
 } catch (ex) {
   // Firefox 3.5 :(
 }
+
+// Constants for makeSyncCallback, waitForSyncCallback
+const CB_READY = {};
+const CB_COMPLETE = {};
+const CB_FAIL = {};
+
 
 /*
  * Utility functions
@@ -230,8 +235,8 @@ let Utils = {
       names = names == null ? [] : [names];
 
     // Synchronously asyncExecute fetching all results by name
-    let [exec, execCb] = Sync.withCb(query.executeAsync, query);
-    return exec({
+    let execCb = Utils.makeSyncCallback();
+    query.executeAsync({
       items: [],
       handleResult: function handleResult(results) {
         let row;
@@ -249,6 +254,7 @@ let Utils = {
         execCb(this.items);
       }
     });
+    return Utils.waitForSyncCallback(execCb);
   },
 
   byteArrayToString: function byteArrayToString(bytes) {
@@ -1503,6 +1509,77 @@ let Utils = {
       this.__prefs.QueryInterface(Ci.nsIPrefBranch2);
     }
     return this.__prefs;
+  },
+
+  /**
+   * Helpers for making asynchronous calls within a synchronous API possible.
+   * 
+   * If you value your sanity, do not look closely at the following functions.
+   */
+
+  /**
+   * Check if the app is ready (not quitting)
+   */
+  checkAppReady: function checkAppReady() {
+    // Watch for app-quit notification to stop any sync calls
+    Svc.Obs.add("quit-application", function() {
+      Utils.checkAppReady = function() {
+        throw Components.Exception("App. Quitting", Cr.NS_ERROR_ABORT);
+      };
+    });
+    // In the common case, checkAppReady just returns true
+    return (Utils.checkAppReady = function() true)();
+  },
+
+  /**
+   * Create a sync callback that remembers state like whether it's been called
+   */
+  makeSyncCallback: function makeSyncCallback() {
+    // The main callback remembers the value it's passed and that it got data
+    let onComplete = function onComplete(data) {
+      onComplete.state = CB_COMPLETE;
+      onComplete.value = data;
+    };
+
+    // Initialize private callback data to prepare to be called
+    onComplete.state = CB_READY;
+    onComplete.value = null;
+
+    // Allow an alternate callback to trigger an exception to be thrown
+    onComplete.throw = function onComplete_throw(data) {
+      onComplete.state = CB_FAIL;
+      onComplete.value = data;
+
+      // Cause the caller to get an exception and stop execution
+      throw data;
+    };
+
+    return onComplete;
+  },
+
+  /**
+   * Wait for a sync callback to finish
+   */
+  waitForSyncCallback: function waitForSyncCallback(callback) {
+    // Grab the current thread so we can make it give up priority
+    let thread = Cc["@mozilla.org/thread-manager;1"].getService().currentThread;
+
+    // Keep waiting until our callback is triggered unless the app is quitting
+    while (Utils.checkAppReady() && callback.state == CB_READY) {
+      thread.processNextEvent(true);
+    }
+
+    // Reset the state of the callback to prepare for another call
+    let state = callback.state;
+    callback.state = CB_READY;
+
+    // Throw the value the callback decided to fail with
+    if (state == CB_FAIL) {
+      throw callback.value;
+    }
+
+    // Return the value passed to the callback
+    return callback.value;
   }
 };
 
