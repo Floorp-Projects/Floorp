@@ -1162,6 +1162,7 @@ var AddonRepository = {
 
     this._request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                     createInstance(Ci.nsIXMLHttpRequest);
+    this._request.mozBackgroundRequest = true;
     this._request.open("GET", aURI, true);
     this._request.overrideMimeType("text/xml");
 
