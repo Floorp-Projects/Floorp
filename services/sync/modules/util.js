@@ -361,7 +361,7 @@ let Utils = {
    * @param obj
    *        Object to add properties to defer in its prototype
    * @param defer
-   *        Hash property of obj to defer to (dot split each level)
+   *        Property of obj to defer to
    * @param prop
    *        Property name to defer (or an array of property names)
    */
@@ -369,44 +369,22 @@ let Utils = {
     if (Utils.isArray(prop))
       return prop.map(function(prop) Utils.deferGetSet(obj, defer, prop));
 
-    // Split the defer into each dot part for each level to dereference
-    let parts = defer.split(".");
-    let deref = function(base) Utils.deref(base, parts);
-
     let prot = obj.prototype;
 
     // Create a getter if it doesn't exist yet
     if (!prot.__lookupGetter__(prop)) {
-      // Yes, this should be a one-liner, but there are errors if it's not
-      // broken out. *sigh*
-      // Errors are these:
-      // JavaScript strict warning: resource://services-sync/util.js, line 304: reference to undefined property deref(this)[prop]
-      // JavaScript strict warning: resource://services-sync/util.js, line 304: reference to undefined property deref(this)[prop]
-      let f = function() {
-        let d = deref(this);
-        if (!d)
-          return undefined;
-        let out = d[prop];
-        return out;
-      }
-      prot.__defineGetter__(prop, f);
+      prot.__defineGetter__(prop, function () {
+        return this[defer][prop];
+      });
     }
 
     // Create a setter if it doesn't exist yet
-    if (!prot.__lookupSetter__(prop))
-      prot.__defineSetter__(prop, function(val) deref(this)[prop] = val);
+    if (!prot.__lookupSetter__(prop)) {
+      prot.__defineSetter__(prop, function (val) {
+        this[defer][prop] = val;
+      });
+    }
   },
-
-  /**
-   * Dereference an array of properties starting from a base object
-   *
-   * @param base
-   *        Base object to start dereferencing
-   * @param props
-   *        Array of properties to dereference (one for each level)
-   */
-  deref: function Utils_deref(base, props) props.reduce(function(curr, prop)
-    curr[prop], base),
 
   /**
    * Determine if some value is an array
