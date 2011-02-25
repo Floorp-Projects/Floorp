@@ -739,6 +739,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->focusState = ACTIVATION_STATE_UNKNOWN;
   instanceData->focusEventCount = 0;
   instanceData->eventModel = 0;
+  instanceData->closeStream = false;
   instance->pdata = instanceData;
 
   TestNPObject* scriptableObject = (TestNPObject*)NPN_CreateObject(instance, &sNPClass);
@@ -853,6 +854,9 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     if (strcmp(argn[i], "cleanupwidget") == 0 &&
         strcmp(argv[i], "false") == 0) {
       instanceData->cleanupWidget = false;
+    }
+    if (!strcmp(argn[i], "closestream")) {
+      instanceData->closeStream = true;
     }
   }
 
@@ -1116,7 +1120,6 @@ NPP_WriteReady(NPP instance, NPStream* stream)
 int32_t
 NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buffer)
 {
-  printf("NPP_Write, offset=%d, len=%d, end=%d\n", offset, len, stream->end);
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
   instanceData->writeCount++;
 
@@ -1163,11 +1166,18 @@ NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buf
     return len;
   }
 
-  // If the complete stream has been written, and we're doing a seek test,
-  // then call NPN_RequestRead.
-  if (instanceData->streamMode == NP_SEEK &&
+  if (instanceData->closeStream) {
+    instanceData->closeStream = false;
+    if (instanceData->testrange != NULL) {
+      NPError err = NPN_RequestRead(stream, instanceData->testrange);
+    }
+    NPN_DestroyStream(instance, stream, NPRES_USER_BREAK);
+  }
+  else if (instanceData->streamMode == NP_SEEK &&
       stream->end != 0 && 
       stream->end == ((uint32_t)instanceData->streamBufSize + len)) {
+    // If the complete stream has been written, and we're doing a seek test,
+    // then call NPN_RequestRead.
     // prevent recursion
     instanceData->streamMode = NP_NORMAL;
 

@@ -135,10 +135,10 @@ public:
    */
   virtual void Shutdown();
 
-    /**
-     * Return frame for the given access node object.
-     */
-    virtual nsIFrame* GetFrame();
+  /**
+   * Return frame for the given access node object.
+   */
+  virtual nsIFrame* GetFrame() const;
 
   /**
    * Return DOM node associated with this accessible.

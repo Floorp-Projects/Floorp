@@ -99,18 +99,6 @@ NS_GetRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
                                     nsIRadioVisitor** aVisitor);
 
 /**
- * This visitor will return (via aRequired) if an element of the group has the
- * required attribute set.
- *
- * @param aExcludeElement an element to exclude (for optimization purpose), can be null
- * @param aRequired       whether there is a radio in the group with the required attribute [OUT]
- * @return the visitor
- */
-nsIRadioVisitor*
-NS_GetRadioGroupRequiredVisitor(nsIFormControl* aExcludeElement,
-                                bool* aRequired);
-
-/**
  * This visitor will update the validity states of all radio in the group and
  * call ContentStatesChanged if needed.
  *

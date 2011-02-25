@@ -464,6 +464,18 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
         return NS_ERROR_FAILURE;
     }
 
+    static bool gcHasRun = false;
+    if(!gcHasRun)
+    {
+        JSRuntime* rt = JS_GetRuntime(mCycleCollectionContext->GetJSContext());
+        if(!rt)
+            NS_RUNTIMEABORT("Failed to get JS runtime!");
+        uint32 gcNumber = JS_GetGCParameter(rt, JSGC_NUMBER);
+        if(!gcNumber)
+            NS_RUNTIMEABORT("Cannot cycle collect if GC has not run first!");
+        gcHasRun = true;
+    }
+
 #ifdef DEBUG_CC
     NS_ASSERTION(!mJSRoots.ops, "Didn't call FinishCycleCollection?");
 

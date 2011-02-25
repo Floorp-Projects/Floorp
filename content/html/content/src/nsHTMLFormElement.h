@@ -53,6 +53,7 @@
 #include "nsUnicharUtils.h"
 #include "nsThreadUtils.h"
 #include "nsInterfaceHashtable.h"
+#include "nsDataHashtable.h"
 
 class nsFormControlList;
 class nsIMutableArray;
@@ -95,7 +96,7 @@ class nsHTMLFormElement : public nsGenericHTMLElement,
                           public nsIDOMNSHTMLFormElement,
                           public nsIWebProgressListener,
                           public nsIForm,
-                          public nsIRadioGroupContainer
+                          public nsIRadioGroupContainer_MOZILLA_2_0_BRANCH
 {
 public:
   nsHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -149,6 +150,11 @@ public:
                              nsIFormControl* aRadio);
   NS_IMETHOD RemoveFromRadioGroup(const nsAString& aName,
                                   nsIFormControl* aRadio);
+  virtual PRUint32 GetRequiredRadioCount(const nsAString& aName) const;
+  virtual void RadioRequiredChanged(const nsAString& aName,
+                                    nsIFormControl* aRadio);
+  virtual bool GetValueMissingState(const nsAString& aName) const;
+  virtual void SetValueMissingState(const nsAString& aName, bool aValue);
 
   // nsIContent
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
@@ -412,6 +418,10 @@ protected:
   nsRefPtr<nsFormControlList> mControls;
   /** The currently selected radio button of each group */
   nsInterfaceHashtable<nsStringCaseInsensitiveHashKey,nsIDOMHTMLInputElement> mSelectedRadioButtons;
+  /** The number of required radio button of each group */
+  nsDataHashtable<nsStringCaseInsensitiveHashKey,PRUint32> mRequiredRadioButtonCounts;
+  /** The value missing state of each group */
+  nsDataHashtable<nsStringCaseInsensitiveHashKey,bool> mValueMissingRadioGroups;
   /** Whether we are currently processing a submit event or not */
   PRPackedBool mGeneratingSubmit;
   /** Whether we are currently processing a reset event or not */

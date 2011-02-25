@@ -360,14 +360,6 @@ Chunk::releaseArena(Arena<T> *arena)
         info.age = 0;
 }
 
-bool
-Chunk::expire()
-{
-    if (!unused())
-        return false;
-    return info.age++ > MaxAge;
-}
-
 JSRuntime *
 Chunk::getRuntime()
 {
@@ -456,16 +448,22 @@ PickChunk(JSRuntime *rt)
 static void
 ExpireGCChunks(JSRuntime *rt)
 {
+    static const size_t MaxAge = 3;
+
     /* Remove unused chunks. */
     AutoLockGC lock(rt);
 
+    rt->gcChunksWaitingToExpire = 0;
     for (GCChunkSet::Enum e(rt->gcChunkSet); !e.empty(); e.popFront()) {
         Chunk *chunk = e.front();
         JS_ASSERT(chunk->info.runtime == rt);
-        if (chunk->expire()) {
-            e.removeFront();
-            ReleaseGCChunk(rt, chunk);
-            continue;
+        if (chunk->unused()) {
+            if (chunk->info.age++ > MaxAge) {
+                e.removeFront();
+                ReleaseGCChunk(rt, chunk);
+                continue;
+            }
+            rt->gcChunksWaitingToExpire++;
         }
     }
 }
@@ -2191,9 +2189,12 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
     while (read < end) {
         JSCompartment *compartment = *read++;
 
-        /* Unmarked compartments containing marked objects don't get deleted, except LAST_CONTEXT GC is performed. */
-        if ((!compartment->isMarked() && compartment->arenaListsAreEmpty())
-            || gckind == GC_LAST_CONTEXT)
+        /*
+         * Unmarked compartments containing marked objects don't get deleted,
+         * except when LAST_CONTEXT GC is performed.
+         */
+        if ((!compartment->isMarked() && compartment->arenaListsAreEmpty()) ||
+            gckind == GC_LAST_CONTEXT)
         {
             JS_ASSERT(compartment->freeLists.isEmpty());
             if (callback)
@@ -2358,13 +2359,16 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
     comp->finalizeStringArenaLists(cx);
     TIMESTAMP(sweepStringEnd);
 
-#ifdef DEBUG
-    /* Make sure that we didn't mark a Shape in another compartment. */
+    /*
+     * Unmark all shapes. Even a per-compartment GC can mark shapes in other
+     * compartments, and we need to clear these bits. See bug 635873. This will
+     * be fixed in bug 569422.
+     */
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        JS_ASSERT_IF(*c != comp, (*c)->propertyTree.checkShapesAllUnmarked(cx));
+        (*c)->propertyTree.unmarkShapes(cx);
 
     PropertyTree::dumpShapes(cx);
-#endif
+    TIMESTAMP(sweepShapeEnd);
 
     /*
      * Destroy arenas after we finished the sweeping so finalizers can safely
@@ -2484,6 +2488,7 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
         (*c)->propertyTree.sweepShapes(cx);
 
     PropertyTree::dumpShapes(cx);
+    TIMESTAMP(sweepShapeEnd);
 
     SweepCompartments(cx, gckind);
 
@@ -2723,7 +2728,7 @@ GCUntilDone(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIM
      * NULL to look for violations.
      */
     SwitchToCompartment(cx, (JSCompartment *)NULL);
-    
+
     JS_ASSERT(!rt->gcCurrentCompartment);
     rt->gcCurrentCompartment = comp;
 

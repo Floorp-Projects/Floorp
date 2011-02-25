@@ -315,3 +315,15 @@ WebGLContext::ErrorInvalidValue(const char *fmt, ...)
 
     return SynthesizeGLError(LOCAL_GL_INVALID_VALUE);
 }
+
+nsresult
+WebGLContext::ErrorOutOfMemory(const char *fmt, ...)
+{
+    va_list va;
+    va_start(va, fmt);
+    LogMessageIfVerbose(fmt, va);
+    va_end(va);
+
+    return SynthesizeGLError(LOCAL_GL_OUT_OF_MEMORY);
+}
+

@@ -1010,13 +1010,26 @@ nsLayoutUtils::RoundedRectIntersectRect(const nsRect& aRoundedRect,
 }
 
 nsRect
+nsLayoutUtils::MatrixTransformRectOut(const nsRect &aBounds,
+                                      const gfxMatrix &aMatrix, float aFactor)
+{
+  nsRect outside = aBounds;
+  outside.ScaleRoundOut(1/aFactor);
+  gfxRect image = aMatrix.TransformBounds(gfxRect(outside.x,
+                                                  outside.y,
+                                                  outside.width,
+                                                  outside.height));
+  return RoundGfxRectToAppRect(image, aFactor);
+}
+
+nsRect
 nsLayoutUtils::MatrixTransformRect(const nsRect &aBounds,
                                    const gfxMatrix &aMatrix, float aFactor)
 {
-  gfxRect image = aMatrix.TransformBounds(gfxRect(NSAppUnitsToFloatPixels(aBounds.x, aFactor),
-                                                  NSAppUnitsToFloatPixels(aBounds.y, aFactor),
-                                                  NSAppUnitsToFloatPixels(aBounds.width, aFactor),
-                                                  NSAppUnitsToFloatPixels(aBounds.height, aFactor)));
+  gfxRect image = aMatrix.TransformBounds(gfxRect(NSAppUnitsToDoublePixels(aBounds.x, aFactor),
+                                                  NSAppUnitsToDoublePixels(aBounds.y, aFactor),
+                                                  NSAppUnitsToDoublePixels(aBounds.width, aFactor),
+                                                  NSAppUnitsToDoublePixels(aBounds.height, aFactor)));
 
   return RoundGfxRectToAppRect(image, aFactor);
 }

@@ -1483,6 +1483,11 @@
           this.initialize();
       ]]></constructor>
 
+      <destructor><![CDATA[
+        if (this.view)
+          this.tree.view = null;
+      ]]></destructor>
+
       <field name="textbox">
         document.getBindingParent(this);
       </field>

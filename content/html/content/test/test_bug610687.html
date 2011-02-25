@@ -118,8 +118,7 @@ function checkRadios(r1, r2, r3, form)
   checkPseudoClasses(r2, true, true, false);
   checkPseudoClasses(r3, false, false, true);
 
-  // Removing the radio with the required attribute should make the entire
-  // group invalid.
+  // Removing the radio with the required attribute should make the group valid.
   r1.setCustomValidity('');
   r2.setCustomValidity('');
   r1.required = false;
@@ -136,6 +135,55 @@ function checkRadios(r1, r2, r3, form)
   p.appendChild(r2);
   checkPseudoClasses(r1, false, false, true);
   checkPseudoClasses(r2, false, false, true);
+
+  // Adding a radio element to an invalid group should make it invalid.
+  p.removeChild(r1);
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, false, false, true);
+
+  p.appendChild(r1);
+  checkPseudoClasses(r1, false, false, true);
+  checkPseudoClasses(r2, false, false, true);
+
+  // Adding a checked radio element to an invalid group should make it valid.
+  p.removeChild(r1);
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, false, false, true);
+
+  r1.checked = true;
+  p.appendChild(r1);
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, true, true, false);
+  r1.checked = false;
+
+  // Adding an invalid radio element by changing the name attribute.
+  r2.name = 'c';
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, false, false, true);
+
+  r2.name = 'a';
+  checkPseudoClasses(r1, false, false, true);
+  checkPseudoClasses(r2, false, false, true);
+
+  // Adding an element to an invalid radio group by changing the name attribute.
+  r1.name = 'c';
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, false, false, true);
+
+  r1.name = 'a';
+  checkPseudoClasses(r1, false, false, true);
+  checkPseudoClasses(r2, false, false, true);
+
+  // Adding a checked element to an invalid radio group with the name attribute.
+  r1.name = 'c';
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, false, false, true);
+
+  r1.checked = true;
+  r1.name = 'a';
+  checkPseudoClasses(r1, true, true, false);
+  checkPseudoClasses(r2, true, true, false);
+  r1.checked = false;
 }
 
 var r1 = document.getElementsByTagName('input')[0];

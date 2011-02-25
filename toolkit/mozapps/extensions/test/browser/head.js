@@ -236,7 +236,13 @@ function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
     is(aManagerWindow.location, MANAGER_URI, "Should be displaying the correct UI");
 
     wait_for_manager_load(aManagerWindow, function() {
-      wait_for_view_load(aManagerWindow, aCallback, null, aLongerTimeout);
+      wait_for_view_load(aManagerWindow, function() {
+        // Some functions like synthesizeMouse don't like to be called during
+        // the load event so ensure that has completed
+        executeSoon(function() {
+          log_exceptions(aCallback, aManagerWindow);
+        });
+      }, null, aLongerTimeout);
     });
   }
 

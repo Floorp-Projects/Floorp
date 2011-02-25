@@ -258,6 +258,7 @@ _BROWSER_FILES += \
 		$(NULL)
 else
 _BROWSER_FILES += \
+		browser_bug565667.js \
 		browser_customize.js \
 		$(NULL)
 

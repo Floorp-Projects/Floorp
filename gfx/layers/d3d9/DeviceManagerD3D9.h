@@ -233,6 +233,9 @@ private:
    */
   HWND mFocusWnd;
 
+  /* we use this to help track if our device temporarily or permanently lost */
+  HMONITOR mDeviceMonitor;
+
   PRUint32 mDeviceResetCount;
 
   /* If this device supports dynamic textures */

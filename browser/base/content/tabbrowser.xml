@@ -3086,7 +3086,16 @@
       ]]></handler>
 
       <handler event="dblclick"><![CDATA[
-        // See hack note in the tabbrowser-close-button binding
+#ifdef MOZ_WIDGET_GTK2
+        // Disable this on GTK2 when the menubar is draggable, since (a)
+        // the menubar and tabbbar have unified appearance and should
+        // thus not have different behavior (though this condition alone
+        // applies to more cases) and (b) it interacts badly with the
+        // drag handling that we use for dragging either one.
+        if (this.parentNode._dragBindingAlive)
+          return;
+#endif
+        // See hack note in the tabbrowser-close-tab-button binding
         if (!this._blockDblClick && event.button == 0 &&
             event.originalTarget.localName == "box")
           BrowserOpenTab();

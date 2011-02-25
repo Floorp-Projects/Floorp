@@ -170,17 +170,11 @@
     border-top-right-radius: 3.5px;
     background-clip: padding-box;
   }
-  #main-window[sizemode=normal]:not([inFullscreen=true])[disablechrome] #navigator-toolbox::after {
-    visibility: visible;
-    background-color: @toolbarShadowColor@;
-  }
-  #main-window[sizemode=normal]:not([inFullscreen=true]) #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme),
-  #main-window[sizemode=normal]:not([inFullscreen=true])[disablechrome] #TabsToolbar {
+  #main-window[sizemode=normal]:not([inFullscreen]):not([disablechrome]) #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme) {
     margin-bottom: -1px;
     background-image: none !important;
   }
-  #main-window[sizemode=normal]:not([inFullscreen=true]) #tabbrowser-tabs[tabsontop=true] > .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox > .scrollbox-innerbox:not(:-moz-lwtheme),
-  #main-window[sizemode=normal]:not([inFullscreen=true])[disablechrome] .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox > .scrollbox-innerbox {
+  #main-window[sizemode=normal]:not([inFullscreen]):not([disablechrome]) #tabbrowser-tabs[tabsontop=true] > .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox > .scrollbox-innerbox:not(:-moz-lwtheme) {
     position: relative;
   }
 

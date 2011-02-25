@@ -781,6 +781,7 @@ str_toSource(JSContext *cx, uintN argc, Value *vp)
     char buf[16];
     size_t j = JS_snprintf(buf, sizeof buf, "(new String(");
 
+    JS::Anchor<JSString *> anchor(str);
     size_t k = str->length();
     const jschar *s = str->getChars(cx);
     if (!s)

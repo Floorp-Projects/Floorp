@@ -109,15 +109,14 @@ public:
   // Called by GetURL and PostURL (via NewStream)
   nsresult Initialize(nsIURI *aURL,
                       nsNPAPIPluginInstance *aInstance,
-                      nsIPluginStreamListener *aListener,
-                      PRInt32 requestCount = 1);
+                      nsIPluginStreamListener *aListener);
   
   nsresult InitializeEmbedded(nsIURI *aURL,
                               nsNPAPIPluginInstance* aInstance,
                               nsIPluginInstanceOwner *aOwner = nsnull);
   
   nsresult InitializeFullPage(nsIURI* aURL, nsNPAPIPluginInstance *aInstance);
-  
+
   nsresult OnFileAvailable(nsIFile* aFile);
   
   nsresult ServeStreamAsFile(nsIRequest *request, nsISupports *ctxt);

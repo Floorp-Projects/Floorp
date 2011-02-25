@@ -1606,36 +1606,25 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Returns the source code of the XPath contains() function necessary to
-   * match the given query string.
+   * Check that the passed string matches the filter arguments.
    *
-   * @param string The query string to convert.
-   * @returns string
+   * @param String aString
+   *        to search for filter words in.
+   * @param String aFilter
+   *        is a string containing all of the words to filter on.
+   * @returns boolean
    */
-  buildXPathFunctionForString: function HS_buildXPathFunctionForString(aStr)
+  stringMatchesFilters: function stringMatchesFilters(aString, aFilter)
   {
-    let words = aStr.split(/\s+/), results = [];
-    for (let i = 0; i < words.length; i++) {
-      let word = words[i];
-      if (word === "") {
-        continue;
-      }
-
-      let result;
-      if (word.indexOf('"') === -1) {
-        result = '"' + word + '"';
-      }
-      else if (word.indexOf("'") === -1) {
-        result = "'" + word + "'";
-      }
-      else {
-        result = 'concat("' + word.replace(/"/g, "\", '\"', \"") + '")';
-      }
-
-      results.push("contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), " + result.toLowerCase() + ")");
+    if (!aFilter || !aString) {
+      return true;
     }
 
-    return (results.length === 0) ? "true()" : results.join(" and ");
+    let searchStr = aString.toLowerCase();
+    let filterStrings = aFilter.toLowerCase().split(/\s+/);
+    return !filterStrings.some(function (f) {
+      return searchStr.indexOf(f) == -1;
+    });
   },
 
   /**
@@ -1651,31 +1640,25 @@ HUD_SERVICE.prototype =
   adjustVisibilityOnSearchStringChange:
   function HS_adjustVisibilityOnSearchStringChange(aHUDId, aSearchString)
   {
-    let fn = this.buildXPathFunctionForString(aSearchString);
     let displayNode = this.getOutputNodeById(aHUDId);
     let outputNode = displayNode.querySelector(".hud-output-node");
     let doc = outputNode.ownerDocument;
 
-    // Look for message nodes ("hud-msg-node") that *aren't* filtered and
-    // that don't contain the string, and hide them.
-    let xpath = './/*[contains(@class, "hud-msg-node") and ' +
-      'not(contains(@class, "hud-filtered-by-string")) and not(' + fn + ')]';
-    let result = doc.evaluate(xpath, outputNode, null,
-      Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-    for (let i = 0; i < result.snapshotLength; i++) {
-      let node = result.snapshotItem(i);
-      node.classList.add("hud-filtered-by-string");
-    }
+    let nodes = outputNode.querySelectorAll(".hud-msg-node");
 
-    // Look for message nodes ("hud-msg-node") that *are* filtered and that
-    // *do* contain the string, and unhide them.
-    xpath = './/*[contains(@class, "hud-msg-node") and contains(@class, ' +
-      '"hud-filtered-by-string") and ' + fn + ']';
-    result = doc.evaluate(xpath, outputNode, null,
-      Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-    for (let i = 0; i < result.snapshotLength; i++) {
-      let node = result.snapshotItem(i);
-      node.classList.remove("hud-filtered-by-string");
+    for (let i = 0; i < nodes.length; ++i) {
+      let node = nodes[i];
+
+      // hide nodes that match the strings
+      let text = node.clipboardText;
+
+      // if the text matches the words in aSearchString...
+      if (this.stringMatchesFilters(text, aSearchString)) {
+        node.classList.remove("hud-filtered-by-string");
+      }
+      else {
+        node.classList.add("hud-filtered-by-string");
+      }
     }
 
     this.regroupOutput(outputNode);
@@ -5083,22 +5066,20 @@ ConsoleUtils = {
    *        The ID of the HUD which this node is to be inserted into.
    */
   filterMessageNode: function(aNode, aHUDId) {
-    // Filter on the search string.
-    let search = HUDService.getFilterStringByHUDId(aHUDId);
-    let xpath = ".[" + HUDService.buildXPathFunctionForString(search) + "]";
-    let doc = aNode.ownerDocument;
-    let result = doc.evaluate(xpath, aNode, null,
-      Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-    if (result.snapshotLength == 0) {
-      // The string filter didn't match, so the node is filtered.
-      aNode.classList.add("hud-filtered-by-string");
-    }
-
     // Filter by the message type.
     let prefKey = MESSAGE_PREFERENCE_KEYS[aNode.category][aNode.severity];
     if (prefKey && !HUDService.getFilterState(aHUDId, prefKey)) {
       // The node is filtered by type.
       aNode.classList.add("hud-filtered-by-type");
+    }
+
+    // Filter on the search string.
+    let search = HUDService.getFilterStringByHUDId(aHUDId);
+    let text = aNode.clipboardText;
+
+    // if string matches the filter text
+    if (!HUDService.stringMatchesFilters(text, search)) {
+      aNode.classList.add("hud-filtered-by-string");
     }
   },
 
