@@ -43,7 +43,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=562932
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var gHtml5Parser = Components.classes["@mozilla.org/preferences-service;1"]
                    .getService(Components.interfaces.nsIPrefBranch)
-                   .getBoolPref("html5.enable");
+                   .getBoolPref("html5.parser.enable");
 
 function checkControl(aLabelId, aElementId, aMsg)
 {

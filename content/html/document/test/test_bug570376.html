@@ -26,15 +26,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=570376
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                       .getService(Components.interfaces.nsIPrefBranch);
-var gOriginalHtml5Pref = prefs.getBoolPref("html5.enable");
-prefs.setBoolPref("html5.enable", false);
+var gOriginalHtml5Pref = prefs.getBoolPref("html5.parser.enable");
+prefs.setBoolPref("html5.parser.enable", false);
 
 $("testiframe").onload = function () {
   ok(true, "Shouldn't crash loading a form containing a legend with the html5 parser preffed off");
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
-  prefs.setBoolPref("html5.enable", gOriginalHtml5Pref);
+  prefs.setBoolPref("html5.parser.enable", gOriginalHtml5Pref);
 }
 $("testiframe").src = "data:text/html,<form><legend>";
 

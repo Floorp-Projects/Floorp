@@ -181,7 +181,7 @@ HTML_TAG("input", "Input", [], [ "imgIDecoderObserver",
 HTML_TAG("ins", "Ins", [ "nsIDOMHTMLModElement" ]);
 
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-if (prefs.getBoolPref("html5.enable")) {
+if (prefs.getBoolPref("html5.parser.enable")) {
   HTML_TAG("isindex", ""); // HTMLElement
 } else {
   HTML_TAG("isindex", "IsIndex");
