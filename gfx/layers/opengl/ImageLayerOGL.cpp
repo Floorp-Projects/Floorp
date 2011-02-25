@@ -432,8 +432,6 @@ ImageLayerOGL::RenderLayer(int,
     program->SetRenderOffset(aOffset);
     program->SetYCbCrTextureUnits(0, 1, 2);
 
-    DEBUG_GL_ERROR_CHECK(gl());
-
     mOGLManager->BindAndDrawQuad(program);
 
     // We shouldn't need to do this, but do it anyway just in case
@@ -503,8 +501,6 @@ ImageLayerOGL::RenderLayer(int,
      gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
 #endif
   }
-
-  DEBUG_GL_ERROR_CHECK(gl());
 }
 
 static void
@@ -839,8 +835,6 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   program->SetTextureUnit(0);
 
   mOGLManager->BindAndDrawQuad(program);
-
-  DEBUG_GL_ERROR_CHECK(gl());
 }
 
 #endif  // MOZ_IPC
