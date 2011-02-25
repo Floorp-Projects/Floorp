@@ -4281,34 +4281,6 @@ protected:
   nsIFormControl* mExcludeElement;
 };
 
-class nsRadioGroupRequiredVisitor : public nsRadioVisitor {
-public:
-  nsRadioGroupRequiredVisitor(nsIFormControl* aExcludeElement, bool* aRequired)
-    : mRequired(aRequired)
-    , mExcludeElement(aExcludeElement)
-    { }
-
-  NS_IMETHOD Visit(nsIFormControl* aRadio, PRBool* aStop)
-  {
-    if (aRadio == mExcludeElement) {
-      return NS_OK;
-    }
-
-    *mRequired = static_cast<nsHTMLInputElement*>(aRadio)
-      ->HasAttr(kNameSpaceID_None, nsGkAtoms::required);
-
-    if (*mRequired) {
-      *aStop = PR_TRUE;
-    }
-
-    return NS_OK;
-  }
-
-protected:
-  bool* mRequired;
-  nsIFormControl* mExcludeElement;
-};
-
 class nsRadioSetValueMissingState : public nsRadioVisitor {
 public:
   nsRadioSetValueMissingState(nsIFormControl* aExcludeElement,
@@ -4429,13 +4401,6 @@ NS_GetRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
  * visitor classes are defined after most of nsHTMLInputElement code.
  * See bug 586298
  */
-nsIRadioVisitor*
-NS_GetRadioGroupRequiredVisitor(nsIFormControl* aExcludeElement,
-                                bool* aRequired)
-{
-  return new nsRadioGroupRequiredVisitor(aExcludeElement, aRequired);
-}
-
 nsIRadioVisitor*
 NS_SetRadioValueMissingState(nsIFormControl* aExcludeElement,
                              nsIDocument* aDocument,
