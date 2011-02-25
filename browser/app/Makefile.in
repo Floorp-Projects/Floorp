@@ -243,8 +243,6 @@ endif
 endif
 endif
 
-$(PROGRAM): $(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
-
 ifneq (,$(filter-out OS2 WINNT WINCE,$(OS_ARCH)))
 
 $(MOZ_APP_NAME):: $(topsrcdir)/build/unix/mozilla.in $(GLOBAL_DEPS)
