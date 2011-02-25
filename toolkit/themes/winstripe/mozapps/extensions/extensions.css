@@ -136,11 +136,6 @@
   font-weight: bold;
 }
 
-.global-warning,
-.global-warning .button-link {
-  text-shadow: #FFFFFF 1px 1px 1px;
-}
-
 #addons-page[warning] .global-warning-container {
   background-color: rgba(255, 255, 0, 0.1);
   background-image: url("chrome://mozapps/skin/extensions/stripes-warning.png");
@@ -555,7 +550,6 @@
   font-weight: bold;
   color: #3F3F3F;
   margin-bottom: 0;
-  text-shadow: 1px 1px 1px #FFF;
   -moz-box-align: end;
 }
 
@@ -582,7 +576,6 @@
 .error {
   -moz-margin-start: 48px;
   font-weight: bold;
-  text-shadow: 1px 1px 1px #FFF;
   -moz-box-align: center;
 }
 
@@ -724,10 +717,6 @@
 .addon[selected] {
   background-color: rgba(148, 172, 204, 0.39);
   color: black;
-}
-
-.addon[selected] .name-container {
-  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.7);  
 }
 
 .addon[active="false"][selected] .name-container {
@@ -1107,11 +1096,9 @@
 
 #updates-container {
   -moz-box-align: center;
-  text-shadow: 0 0 3px white;
 }
 
 #updates-container .button-link {
-  text-shadow: 0 0 3px white;
   font-weight: bold;
 }
 
