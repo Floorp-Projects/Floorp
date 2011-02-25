@@ -46,6 +46,7 @@
 #include "Layers.h"
 #include "gfxPlatform.h"
 #include "ReadbackLayer.h"
+#include "gfxUtils.h"
 
 using namespace mozilla::layers;
 
@@ -314,6 +315,47 @@ Layer::SnapTransform(const gfx3DMatrix& aTransform,
     result = aTransform;
   }
   return result;
+}
+
+nsIntRect 
+Layer::CalculateScissorRect(bool aIntermediate,
+                            const nsIntRect& aVisibleRect,
+                            const nsIntRect& aParentScissor,
+                            const gfxMatrix& aTransform)
+{
+  nsIntRect scissorRect(aVisibleRect);
+
+  const nsIntRect *clipRect = GetEffectiveClipRect();
+
+  if (!aIntermediate && !clipRect) {
+    return aParentScissor;
+  }
+
+  if (clipRect) {
+    if (clipRect->IsEmpty()) {
+      return *clipRect;
+    }
+    scissorRect = *clipRect;
+    if (!aIntermediate) {
+      gfxRect r(scissorRect.x, scissorRect.y, scissorRect.width, scissorRect.height);
+      gfxRect trScissor = aTransform.TransformBounds(r);
+      trScissor.Round();
+      if (!gfxUtils::GfxRectToIntRect(trScissor, &scissorRect)) {
+        scissorRect = aVisibleRect;
+      }
+    }
+  }
+    
+  if (aIntermediate) {
+    scissorRect.MoveBy(- aVisibleRect.TopLeft());
+  } else if (clipRect) {
+    scissorRect.IntersectRect(scissorRect, aParentScissor);
+  }
+
+  NS_ASSERTION(scissorRect.x >= 0 && scissorRect.y >= 0,
+               "Attempting to scissor out of bounds!");
+
+  return scissorRect;
 }
 
 const gfx3DMatrix&
