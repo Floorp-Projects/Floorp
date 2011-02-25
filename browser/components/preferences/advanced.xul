@@ -68,7 +68,7 @@
 
       <preference id="general.autoScroll"              name="general.autoScroll"              type="bool"/>
       <preference id="general.smoothScroll"            name="general.smoothScroll"            type="bool"/>
-      <preference id="layers.accelerate-none"          name="layers.accelerate-none"          type="bool"   inverted="true"
+      <preference id="layers.acceleration.disabled"    name="layers.acceleration.disabled"    type="bool"   inverted="true"
                   onchange="gAdvancedPane.updateHardwareAcceleration()"/>
       <preference id="layout.spellcheckDefault"        name="layout.spellcheckDefault"        type="int"/>
 
@@ -127,6 +127,9 @@
       <preference id="security.disable_button.openDeviceManager"
                   name="security.disable_button.openDeviceManager"
                   type="bool"/>
+      <preference id="privacy.donottrackheader.enabled"
+                  name="privacy.donottrackheader.enabled"
+                  type="bool"/>
     </preferences>
     
 #ifdef HAVE_SHELL_SERVICE
@@ -184,13 +187,17 @@
             <checkbox id="allowHWAccel"
                       label="&allowHWAccel.label;"
                       accesskey="&allowHWAccel.accesskey;"
-                      preference="layers.accelerate-none"/>
+                      preference="layers.acceleration.disabled"/>
             <checkbox id="checkSpelling"
                       label="&checkSpelling.label;"
                       accesskey="&checkSpelling.accesskey;"
                       onsyncfrompreference="return gAdvancedPane.readCheckSpelling();"
                       onsynctopreference="return gAdvancedPane.writeCheckSpelling();"
                       preference="layout.spellcheckDefault"/>
+            <checkbox id="privacyDoNotTrackPrefs"
+                      label="&doNotTrack.label;"
+                      accesskey="&doNotTrack.accesskey;"
+                      preference="privacy.donottrackheader.enabled"/>
           </groupbox>
 
 #ifdef HAVE_SHELL_SERVICE

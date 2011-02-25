@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <!-- The rect that's used everywhere -->
+    <rect id="rect" x="2" y="2" width="96" height="16"
+          style="stroke-width: 4; fill:lime; stroke: teal"/>
+
+    <!-- Symbols with the testcases' preserveAspectRatio values applied -->
+    <symbol id="pAR_xMinYMin_slice"
+            viewBox="0 0 100 20" preserveAspectRatio="xMinYMin slice">
+      <use xlink:href="#rect"/>
+    </symbol>
+    <symbol id="pAR_none"
+            viewBox="0 0 100 20" preserveAspectRatio="none">
+      <use xlink:href="#rect"/>
+    </symbol>
+    <symbol id="pAR_xMaxYMax_meet"
+            viewBox="0 0 100 20" preserveAspectRatio="xMaxYMax meet">
+      <use xlink:href="#rect"/>
+    </symbol>
+    <symbol id="pAR_xMaxYMax_slice"
+            viewBox="0 0 100 20" preserveAspectRatio="xMaxYMax slice">
+      <!-- this one corresponds to 'defer' in the image used in the testcase,
+           as well as to the HTML <img> elements (which don't bring their own
+           preserveAspectRatio value) -->
+      <use xlink:href="#rect"/>
+    </symbol>
+
+    <!-- Single column from the testcase -->
+    <g id="column">
+      <use y="0"   xlink:href="#pAR_xMaxYMax_slice" width="60"  height="20"/>
+      <use y="50"  xlink:href="#pAR_xMinYMin_slice" width="100" height="40"/>
+      <use y="100" xlink:href="#pAR_none"           width="100" height="40"/>
+      <use y="150" xlink:href="#pAR_xMaxYMax_meet"  width="80"  height="40"/>
+      <use y="200" xlink:href="#pAR_xMaxYMax_slice" width="80"  height="40"/>
+      <use y="250" xlink:href="#pAR_xMaxYMax_slice" width="30"  height="50"/>
+    </g>
+  </defs>
+
+  <!-- Rendered output: 2 instances of our column (defined above) -->
+  <use xlink:href="#column"/>
+  <use x="150" xlink:href="#column"/>
+</svg>

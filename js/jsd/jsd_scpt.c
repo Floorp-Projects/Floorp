@@ -40,6 +40,7 @@
  */
 
 #include "jsd.h"
+#include "jsfriendapi.h"
 
 /* Comment this out to disable (NT specific) dumping as we go */
 /*
@@ -204,7 +205,7 @@ _dumpJSDScript(JSDContext* jsdc, JSDScript* jsdscript, const char* leadingtext)
     size_t n;
 
     name   = jsd_GetScriptFilename(jsdc, jsdscript);
-    fun    = jsd_GetScriptFunctionName(jsdc, jsdscript);
+    fun    = jsd_GetScriptFunctionId(jsdc, jsdscript);
     base   = jsd_GetScriptBaseLineNumber(jsdc, jsdscript);
     extent = jsd_GetScriptLineExtent(jsdc, jsdscript);
     n = size_t(snprintf(Buf, sizeof(Buf), "%sscript=%08X, %s, ",
@@ -497,14 +498,16 @@ jsd_GetScriptFilename(JSDContext* jsdc, JSDScript *jsdscript)
 }
 
 JSString*
-jsd_GetScriptFunctionName(JSDContext* jsdc, JSDScript *jsdscript)
+jsd_GetScriptFunctionId(JSDContext* jsdc, JSDScript *jsdscript)
 {
     JSString* str;
 
     if( ! jsdscript->function )
         return NULL;
     str = JS_GetFunctionId(jsdscript->function);
-    return str ? str : JS_GetEmptyString(jsdc->jsrt);
+
+    /* For compatibility we return "anonymous", not an empty string here. */
+    return str ? str : JS_GetAnonymousString(jsdc->jsrt);
 }
 
 uintN
@@ -524,6 +527,9 @@ jsd_GetScriptLineExtent(JSDContext* jsdc, JSDScript *jsdscript)
 jsuword
 jsd_GetClosestPC(JSDContext* jsdc, JSDScript* jsdscript, uintN line)
 {
+    jsuword pc;
+    JSCrossCompartmentCall *call;
+
 #ifdef LIVEWIRE
     if( jsdscript && jsdscript->lwscript )
     {
@@ -534,20 +540,28 @@ jsd_GetClosestPC(JSDContext* jsdc, JSDScript* jsdscript, uintN line)
     }
 #endif
 
-    return (jsuword) JS_LineNumberToPC(jsdc->dumbContext, 
-                                       jsdscript->script, line );
+    call = JS_EnterCrossCompartmentCallScript(jsdc->dumbContext, jsdscript->script);
+    if(!call)
+        return 0;
+    pc = (jsuword) JS_LineNumberToPC(jsdc->dumbContext, jsdscript->script, line );
+    JS_LeaveCrossCompartmentCall(call);
+    return pc;
 }
 
 uintN
 jsd_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, jsuword pc)
 {
+    JSCrossCompartmentCall *call;
     uintN first = jsdscript->lineBase;
     uintN last = first + jsd_GetScriptLineExtent(jsdc, jsdscript) - 1;
-    uintN line = pc
-        ? JS_PCToLineNumber(jsdc->dumbContext, 
-                            jsdscript->script,
-                            (jsbytecode*)pc)
-        : 0;
+    uintN line = 0;
+
+    call = JS_EnterCrossCompartmentCallScript(jsdc->dumbContext, jsdscript->script);
+    if(!call)
+        return 0;
+    if (pc)
+        line = JS_PCToLineNumber(jsdc->dumbContext, jsdscript->script, (jsbytecode*)pc);
+    JS_LeaveCrossCompartmentCall(call);
 
     if( line < first )
         return first;
@@ -591,10 +605,15 @@ jsd_GetScriptHook(JSDContext* jsdc, JSD_ScriptHookProc* hook, void** callerdata)
 JSBool
 jsd_EnableSingleStepInterrupts(JSDContext* jsdc, JSDScript* jsdscript, JSBool enable)
 {
+    JSCrossCompartmentCall *call;
     JSBool rv;
+    call = JS_EnterCrossCompartmentCallScript(jsdc->dumbContext, jsdscript->script);
+    if(!call)
+        return JS_FALSE;
     JSD_LOCK();
     rv = JS_SetSingleStepMode(jsdc->dumbContext, jsdscript->script, enable);
     JSD_UNLOCK();
+    JS_LeaveCrossCompartmentCall(call);
     return rv;
 }
 
@@ -799,6 +818,8 @@ jsd_SetExecutionHook(JSDContext*           jsdc,
                      void*                 callerdata)
 {
     JSDExecHook* jsdhook;
+    JSBool rv;
+    JSCrossCompartmentCall *call;
 
     JSD_LOCK();
     if( ! hook )
@@ -828,10 +849,20 @@ jsd_SetExecutionHook(JSDContext*           jsdc,
     jsdhook->hook       = hook;
     jsdhook->callerdata = callerdata;
 
-    if( ! JS_SetTrap(jsdc->dumbContext, jsdscript->script, 
-                     (jsbytecode*)pc, jsd_TrapHandler,
-                     PRIVATE_TO_JSVAL(jsdhook)) )
-    {
+    call = JS_EnterCrossCompartmentCallScript(jsdc->dumbContext, jsdscript->script);
+    if(!call) {
+        free(jsdhook);
+        JSD_UNLOCK();
+        return JS_FALSE;
+    }
+
+    rv = JS_SetTrap(jsdc->dumbContext, jsdscript->script, 
+                    (jsbytecode*)pc, jsd_TrapHandler,
+                    PRIVATE_TO_JSVAL(jsdhook));
+
+    JS_LeaveCrossCompartmentCall(call);
+
+    if ( ! rv ) {
         free(jsdhook);
         JSD_UNLOCK();
         return JS_FALSE;
@@ -848,6 +879,7 @@ jsd_ClearExecutionHook(JSDContext*           jsdc,
                        JSDScript*            jsdscript,
                        jsuword               pc)
 {
+    JSCrossCompartmentCall *call;
     JSDExecHook* jsdhook;
 
     JSD_LOCK();
@@ -859,8 +891,16 @@ jsd_ClearExecutionHook(JSDContext*           jsdc,
         return JS_FALSE;
     }
 
+    call = JS_EnterCrossCompartmentCallScript(jsdc->dumbContext, jsdscript->script);
+    if(!call) {
+        JSD_UNLOCK();
+        return JS_FALSE;
+    }
+
     JS_ClearTrap(jsdc->dumbContext, jsdscript->script, 
                  (jsbytecode*)pc, NULL, NULL );
+
+    JS_LeaveCrossCompartmentCall(call);
 
     JS_REMOVE_LINK(&jsdhook->links);
     free(jsdhook);
@@ -883,6 +923,7 @@ jsd_ClearAllExecutionHooksForScript(JSDContext* jsdc, JSDScript* jsdscript)
         free(jsdhook);
     }
 
+    /* No cross-compartment call here because we may be in the middle of GC */
     JS_ClearScriptTraps(jsdc->dumbContext, jsdscript->script);
     JSD_UNLOCK();
 

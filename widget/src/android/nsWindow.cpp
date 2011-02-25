@@ -82,6 +82,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
 // The dimensions of the current android view
 static gfxIntSize gAndroidBounds;
+static gfxIntSize gAndroidScreenBounds;
 
 #ifdef MOZ_IPC
 class ContentCreationNotifier;
@@ -99,7 +100,7 @@ class ContentCreationNotifier : public nsIObserver
         if (!strcmp(aTopic, "ipc:content-created")) {
             ContentParent *cp = ContentParent::GetSingleton(PR_FALSE);
             NS_ABORT_IF_FALSE(cp, "Must have content process if notified of its creation");
-            unused << cp->SendScreenSizeChanged(gAndroidBounds);
+            unused << cp->SendScreenSizeChanged(gAndroidScreenBounds);
         } else if (!strcmp(aTopic, "xpcom-shutdown")) {
             nsCOMPtr<nsIObserverService>
                 obs(do_GetService("@mozilla.org/observer-service;1"));
@@ -120,10 +121,6 @@ NS_IMPL_ISUPPORTS1(ContentCreationNotifier,
                    nsIObserver)
 #endif
 
-static PRBool gLeftShift;
-static PRBool gRightShift;
-static PRBool gLeftAlt;
-static PRBool gRightAlt;
 static PRBool gMenu;
 static PRBool gMenuConsumed;
 
@@ -131,10 +128,10 @@ static PRBool gMenuConsumed;
 // stacking order, so the window at gAndroidBounds[0] is the topmost
 // one.
 static nsTArray<nsWindow*> gTopLevelWindows;
-static nsWindow* gFocusedWindow = nsnull;
 
 static nsRefPtr<gl::GLContext> sGLContext;
 static bool sFailedToCreateGLContext = false;
+static bool sValidSurface;
 
 // Multitouch swipe thresholds in inches
 static const double SWIPE_MAX_PINCH_DELTA_INCHES = 0.4;
@@ -178,15 +175,17 @@ nsWindow::DumpWindows(const nsTArray<nsWindow*>& wins, int indent)
 
 nsWindow::nsWindow() :
     mIsVisible(PR_FALSE),
-    mParent(nsnull)
+    mParent(nsnull),
+    mFocus(nsnull)
 {
 }
 
 nsWindow::~nsWindow()
 {
     gTopLevelWindows.RemoveElement(this);
-    if (gFocusedWindow == this)
-        gFocusedWindow = nsnull;
+    nsWindow *top = FindTopLevel();
+    if (top->mFocus == this)
+        top->mFocus = nsnull;
     ALOG("nsWindow %p destructor", (void*)this);
 }
 
@@ -307,7 +306,7 @@ nsWindow::SetParent(nsIWidget *aNewParent)
 
     // if we are now in the toplevel window's hierarchy, schedule a redraw
     if (FindTopLevel() == TopWindow())
-        nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(TopWindow(), -1, -1, -1, -1));
+        nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
 
     return NS_OK;
 }
@@ -343,29 +342,39 @@ nsWindow::Show(PRBool aState)
         return NS_ERROR_FAILURE;
     }
 
-    if ((aState && !mIsVisible) ||
-        (!aState && mIsVisible))
-    {
-        mIsVisible = aState;
+    if (aState == mIsVisible)
+        return NS_OK;
 
-        if (IsTopLevel()) {
-            // XXX should we bring this to the front when it's shown,
-            // if it's a toplevel widget?
+    mIsVisible = aState;
 
-            // XXX we should synthesize a NS_MOUSE_EXIT (for old top
-            // window)/NS_MOUSE_ENTER (for new top window) since we need
-            // to pretend that the top window always has focus.  Not sure
-            // if Show() is the right place to do this, though.
+    if (IsTopLevel()) {
+        // XXX should we bring this to the front when it's shown,
+        // if it's a toplevel widget?
 
-            if (mIsVisible) {
-                // It just became visible, so send a resize update if necessary
-                // and bring it to the front.
-                Resize(0, 0, gAndroidBounds.width, gAndroidBounds.height, PR_FALSE);
-                BringToFront();
+        // XXX we should synthesize a NS_MOUSE_EXIT (for old top
+        // window)/NS_MOUSE_ENTER (for new top window) since we need
+        // to pretend that the top window always has focus.  Not sure
+        // if Show() is the right place to do this, though.
+
+        if (aState) {
+            // It just became visible, so send a resize update if necessary
+            // and bring it to the front.
+            Resize(0, 0, gAndroidBounds.width, gAndroidBounds.height, PR_FALSE);
+            BringToFront();
+        } else if (TopWindow() == this) {
+            // find the next visible window to show
+            int i;
+            for (i = 1; i < gTopLevelWindows.Length(); i++) {
+                nsWindow *win = gTopLevelWindows[i];
+                if (!win->mIsVisible)
+                    continue;
+
+                win->BringToFront();
+                break;
             }
-        } else if (FindTopLevel() == TopWindow()) {
-            nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(TopWindow(), -1, -1, -1, -1));
         }
+    } else if (FindTopLevel() == TopWindow()) {
+        nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
     }
 
 #ifdef ANDROID_DEBUG_WIDGET
@@ -461,7 +470,7 @@ nsWindow::Resize(PRInt32 aX,
 
     // Should we skip honoring aRepaint here?
     if (aRepaint && FindTopLevel() == TopWindow())
-        nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(TopWindow(), -1, -1, -1, -1));
+        nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
 
     return NS_OK;
 }
@@ -515,7 +524,7 @@ nsWindow::Invalidate(const nsIntRect &aRect,
                      PRBool aIsSynchronous)
 {
     ALOG("nsWindow::Invalidate %p [%d %d %d %d]", (void*) this, aRect.x, aRect.y, aRect.width, aRect.height);
-    nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(TopWindow(), -1, -1, -1, -1));
+    nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
     return NS_OK;
 }
 
@@ -546,11 +555,12 @@ nsWindow::SetFocus(PRBool aRaise)
     if (!aRaise)
         ALOG("nsWindow::SetFocus: can't set focus without raising, ignoring aRaise = false!");
 
-    gFocusedWindow = this;
     if (!AndroidBridge::Bridge())
         return NS_OK;
 
-    FindTopLevel()->BringToFront();
+    nsWindow *top = FindTopLevel();
+    top->mFocus = this;
+    top->BringToFront();
 
     return NS_OK;
 }
@@ -581,7 +591,7 @@ nsWindow::BringToFront()
     nsGUIEvent event(PR_TRUE, NS_ACTIVATE, this);
     DispatchEvent(&event);
 
-    nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(TopWindow(), -1, -1, -1, -1));
+    nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
 }
 
 NS_IMETHODIMP
@@ -657,7 +667,7 @@ nsWindow::SetWindowClass(const nsAString& xulWinType)
 }
 
 mozilla::layers::LayerManager*
-nsWindow::GetLayerManager(bool* aAllowRetaining)
+nsWindow::GetLayerManager(LayerManagerPersistence, bool* aAllowRetaining)
 {
     if (aAllowRetaining) {
         *aAllowRetaining = true;
@@ -697,6 +707,7 @@ nsWindow::GetLayerManager(bool* aAllowRetaining)
 
         if (layerManager && layerManager->Initialize(sGLContext))
             mLayerManager = layerManager;
+        sValidSurface = true;
     }
 
     if (!sGLContext || !mLayerManager) {
@@ -736,42 +747,57 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             int nw = ae->P0().x;
             int nh = ae->P0().y;
 
-            if (nw == gAndroidBounds.width &&
-                nh == gAndroidBounds.height) {
-                return;
+            if (nw != gAndroidBounds.width ||
+                nh != gAndroidBounds.height) {
+
+                gAndroidBounds.width = nw;
+                gAndroidBounds.height = nh;
+
+                // tell all the windows about the new size
+                for (size_t i = 0; i < gTopLevelWindows.Length(); ++i) {
+                    if (gTopLevelWindows[i]->mIsVisible)
+                        gTopLevelWindows[i]->Resize(gAndroidBounds.width,
+                                                    gAndroidBounds.height,
+                                                    PR_TRUE);
+                }
             }
 
-            gAndroidBounds.width = nw;
-            gAndroidBounds.height = nh;
+            int newScreenWidth = ae->P1().x;
+            int newScreenHeight = ae->P1().y;
 
-            // tell all the windows about the new size
-            for (size_t i = 0; i < gTopLevelWindows.Length(); ++i) {
-                if (gTopLevelWindows[i]->mIsVisible)
-                    gTopLevelWindows[i]->Resize(gAndroidBounds.width, gAndroidBounds.height, PR_TRUE);
-            }
+            if (newScreenWidth == gAndroidScreenBounds.width &&
+                newScreenHeight == gAndroidScreenBounds.height)
+                break;
+
+            gAndroidScreenBounds.width = newScreenWidth;
+            gAndroidScreenBounds.height = newScreenHeight;
 
 #ifdef MOZ_IPC
-            if (XRE_GetProcessType() == GeckoProcessType_Default) {
-                if (!gContentCreationNotifier) {
-                    nsCOMPtr<nsIObserverService> obs =
-                        do_GetService("@mozilla.org/observer-service;1");
-                    if (obs) {
-                        nsCOMPtr<ContentCreationNotifier> notifier = new ContentCreationNotifier;
-                        if (NS_SUCCEEDED(obs->AddObserver(notifier, "ipc:content-created", PR_FALSE))) {
-                            if (NS_SUCCEEDED(obs->AddObserver(notifier, "xpcom-shutdown", PR_FALSE)))
-                                gContentCreationNotifier = notifier;
-                            else {
-                                obs->RemoveObserver(notifier, "ipc:content-created");
-                            }
-                        }
-                    }
-                }
-                ContentParent *cp = ContentParent::GetSingleton(PR_FALSE);
-                if (cp)
-                    unused << cp->SendScreenSizeChanged(gAndroidBounds);
+            if (XRE_GetProcessType() != GeckoProcessType_Default)
+                break;
+
+            // Tell the content process the new screen size.
+            ContentParent *cp = ContentParent::GetSingleton(PR_FALSE);
+            if (cp)
+                unused << cp->SendScreenSizeChanged(gAndroidScreenBounds);
+
+            if (gContentCreationNotifier)
+                break;
+
+            // If the content process is not created yet, wait until it's
+            // created and then tell it the screen size.
+            nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1");
+            if (!obs)
+                break;
+
+            nsCOMPtr<ContentCreationNotifier> notifier = new ContentCreationNotifier;
+            if (NS_SUCCEEDED(obs->AddObserver(notifier, "ipc:content-created", PR_FALSE))) {
+                if (NS_SUCCEEDED(obs->AddObserver(notifier, "xpcom-shutdown", PR_FALSE)))
+                    gContentCreationNotifier = notifier;
+                else
+                    obs->RemoveObserver(notifier, "ipc:content-created");
             }
 #endif
-            break;
         }
 
         case AndroidGeckoEvent::MOTION_EVENT: {
@@ -802,8 +828,8 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 
         case AndroidGeckoEvent::KEY_EVENT:
             win->UserActivity();
-            if (gFocusedWindow)
-                gFocusedWindow->OnKeyEvent(ae);
+            if (win->mFocus)
+                win->mFocus->OnKeyEvent(ae);
             break;
 
         case AndroidGeckoEvent::DRAW:
@@ -812,13 +838,20 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 
         case AndroidGeckoEvent::IME_EVENT:
             win->UserActivity();
-            if (gFocusedWindow) {
-                gFocusedWindow->OnIMEEvent(ae);
+            if (win->mFocus) {
+                win->mFocus->OnIMEEvent(ae);
             } else {
                 NS_WARNING("Sending unexpected IME event to top window");
                 win->OnIMEEvent(ae);
             }
             break;
+
+	case AndroidGeckoEvent::SURFACE_CREATED:
+	    break;
+
+	case AndroidGeckoEvent::SURFACE_DESTROYED:
+	    sValidSurface = false;
+	    break;
 
         default:
             break;
@@ -868,7 +901,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
 
         nsPaintEvent event(PR_TRUE, NS_PAINT, this);
         event.region = boundsRect;
-        switch (GetLayerManager()->GetBackendType()) {
+        switch (GetLayerManager(nsnull)->GetBackendType()) {
             case LayerManager::LAYERS_BASIC: {
                 nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
 
@@ -891,7 +924,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
             }
 
             case LayerManager::LAYERS_OPENGL: {
-                static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager())->
+                static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager(nsnull))->
                     SetClippingRegion(nsIntRegion(boundsRect));
 
                 status = DispatchEvent(&event);
@@ -913,6 +946,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
         offset = targetSurface->GetDeviceOffset();
 
     for (PRUint32 i = coveringChildIndex; i < mChildren.Length(); ++i) {
+        ALOG("nsWindow[%p]::DrawTo child[%d]", (void*) this, i);
         if (mChildren[i]->mBounds.IsEmpty() ||
             !mChildren[i]->mBounds.Intersects(boundsRect)) {
             continue;
@@ -931,6 +965,8 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
 
     if (targetSurface)
         targetSurface->SetDeviceOffset(offset);
+
+    ALOG("nsWindow[%p]::DrawTo done", (void*) this);
 
     return PR_TRUE;
 }
@@ -960,7 +996,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
     AndroidBridge::Bridge()->HideProgressDialogOnce();
 
-    if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_BASIC) {
+    if (GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_BASIC) {
         jobject bytebuf = sview.GetSoftwareDrawBuffer();
         if (!bytebuf) {
             ALOG("no buffer to draw into - skipping draw");
@@ -990,14 +1026,16 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
             return;
         }
 
-        NS_ASSERTION(sGLContext, "Drawing with GLES without a GL context?");
+        if (!sValidSurface) {
+            sGLContext->RenewSurface();
+            sValidSurface = true;
+        }
 
-        sGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
+
+        NS_ASSERTION(sGLContext, "Drawing with GLES without a GL context?");
 
         DrawTo(nsnull);
 
-        if (sGLContext)
-            sGLContext->SwapBuffers();
         sview.EndDrawing();
     }
 }
@@ -1038,25 +1076,15 @@ nsWindow::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
     event.time = PR_Now() / 1000;
 }
 
-void
-nsWindow::SetInitialAndroidBounds(const gfxIntSize& sz)
-{
-    if (!gTopLevelWindows.IsEmpty()) {
-        NS_WARNING("SetInitialAndroidBounds called way too late, we already have toplevel windows!");
-    }
-
-    gAndroidBounds = sz;
-}
-
 gfxIntSize
-nsWindow::GetAndroidBounds()
+nsWindow::GetAndroidScreenBounds()
 {
 #ifdef MOZ_IPC
     if (XRE_GetProcessType() == GeckoProcessType_Content) {
         return ContentChild::GetSingleton()->GetScreenSize();
     }
 #endif
-    return gAndroidBounds;
+    return gAndroidScreenBounds;
 }
 
 void *
@@ -1114,10 +1142,10 @@ send_again:
     InitEvent(event, &pt);
 
     event.time = ae->Time();
-    event.isShift = gLeftShift || gRightShift;
+    event.isShift = !!(ae->MetaState() & AndroidKeyEvent::META_SHIFT_ON);
     event.isControl = PR_FALSE;
     event.isMeta = PR_FALSE;
-    event.isAlt = gLeftAlt || gRightAlt;
+    event.isAlt = !!(ae->MetaState() & AndroidKeyEvent::META_ALT_ON);
 
     // XXX can we synthesize different buttons?
     event.button = nsMouseEvent::eLeftButton;
@@ -1220,10 +1248,10 @@ nsWindow::DispatchGestureEvent(PRUint32 msg, PRUint32 direction, double delta,
 {
     nsSimpleGestureEvent event(PR_TRUE, msg, this, direction, delta);
 
-    event.isShift = gLeftShift || gRightShift;
+    event.isShift = PR_FALSE;
     event.isControl = PR_FALSE;
     event.isMeta = PR_FALSE;
-    event.isAlt = gLeftAlt || gRightAlt;
+    event.isAlt = PR_FALSE;
     event.time = time;
     event.refPoint = refPoint;
 
@@ -1386,10 +1414,16 @@ nsWindow::InitKeyEvent(nsKeyEvent& event, AndroidGeckoEvent& key)
         break;
     }
 
-    event.charCode = key.UnicodeChar();
-    event.isShift = gLeftShift || gRightShift;
+    // Android gives us \n, so filter out some control characters.
+    if (event.message == NS_KEY_PRESS &&
+        key.UnicodeChar() >= ' ') {
+        event.charCode = key.UnicodeChar();
+        if (key.UnicodeChar())
+            event.keyCode = 0;
+    }
+    event.isShift = !!(key.MetaState() & AndroidKeyEvent::META_SHIFT_ON);
     event.isControl = gMenu;
-    event.isAlt = PR_FALSE;
+    event.isAlt = !!(key.MetaState() & AndroidKeyEvent::META_ALT_ON);
     event.isMeta = PR_FALSE;
     event.time = key.Time();
 
@@ -1481,19 +1515,13 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
         return;
     }
 
-    PRBool isDown = ae->Action() == AndroidKeyEvent::ACTION_DOWN;
+    bool firePress = ae->Action() == AndroidKeyEvent::ACTION_DOWN;
     switch (ae->KeyCode()) {
     case AndroidKeyEvent::KEYCODE_SHIFT_LEFT:
-        gLeftShift = isDown;
-        break;
     case AndroidKeyEvent::KEYCODE_SHIFT_RIGHT:
-        gRightShift = isDown;
-        break;
     case AndroidKeyEvent::KEYCODE_ALT_LEFT:
-        gLeftAlt = isDown;
-        break;
     case AndroidKeyEvent::KEYCODE_ALT_RIGHT:
-        gRightAlt = isDown;
+        firePress = false;
         break;
     case AndroidKeyEvent::KEYCODE_BACK:
     case AndroidKeyEvent::KEYCODE_MENU:
@@ -1504,20 +1532,23 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
         return;
     }
 
+    nsEventStatus status;
     nsKeyEvent event(PR_TRUE, msg, this);
     InitKeyEvent(event, *ae);
-    if (event.charCode)
-        event.keyCode = 0;
-    DispatchEvent(&event);
+    DispatchEvent(&event, status);
 
-    if (isDown) {
-        nsKeyEvent pressEvent(PR_TRUE, NS_KEY_PRESS, this);
-        InitKeyEvent(pressEvent, *ae);
-#ifdef ANDROID_DEBUG_WIDGET
-        ALOG("Dispatching key event with keyCode %d charCode %d shift %d alt %d sym/ctrl %d metamask %d", event.keyCode, event.charCode, event.isShift, event.isAlt, event.isControl, ae->MetaState());
-#endif
-        DispatchEvent(&pressEvent);
+    if (!firePress)
+        return;
+
+    nsKeyEvent pressEvent(PR_TRUE, NS_KEY_PRESS, this);
+    InitKeyEvent(pressEvent, *ae);
+    if (status == nsEventStatus_eConsumeNoDefault) {
+        pressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
     }
+#ifdef ANDROID_DEBUG_WIDGET
+    __android_log_print(ANDROID_LOG_INFO, "Gecko", "Dispatching key pressEvent with keyCode %d charCode %d shift %d alt %d sym/ctrl %d metamask %d", pressEvent.keyCode, pressEvent.charCode, pressEvent.isShift, pressEvent.isAlt, pressEvent.isControl, ae->MetaState());
+#endif
+    DispatchEvent(&pressEvent);
 }
 
 #ifdef ANDROID_DEBUG_IME

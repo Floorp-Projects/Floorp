@@ -274,7 +274,7 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
 
     // Init mutation observer
     nsCOMPtr<nsINode> document = do_QueryInterface(aDoc);
-    document->AddMutationObserver(this);
+    document->AddMutationObserverUnlessExists(this);
 
     // disable Composer-only features
     if (IsMailEditor())
@@ -530,11 +530,14 @@ nsHTMLEditor::BeginningOfDocument()
   nsresult res = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
-    
-  // get the root element 
-  nsIDOMElement *rootElement = GetRoot(); 
-  NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER); 
-  
+
+  // Get the root element.
+  nsIDOMElement *rootElement = GetRoot();
+  if (!rootElement) {
+    NS_WARNING("GetRoot() returned a null pointer (mRootElement is null)");
+    return NS_OK;
+  }
+
   // find first editable thingy
   PRBool done = PR_FALSE;
   nsCOMPtr<nsIDOMNode> curNode(rootElement), selNode;

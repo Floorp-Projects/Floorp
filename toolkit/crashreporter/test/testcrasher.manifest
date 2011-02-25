@@ -1,3 +1,0 @@
-#filter substitution
-binary-component @SHARED_LIBRARY@
-interfaces crashreporter_test.xpt

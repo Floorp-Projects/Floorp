@@ -54,7 +54,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsCacheEntryDescriptor,
 nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry * entry,
                                                nsCacheAccessMode accessGranted)
     : mCacheEntry(entry),
-      mAccessGranted(accessGranted)
+      mAccessGranted(accessGranted),
+      mOutput(nsnull)
 {
     PR_INIT_CLIST(this);
     NS_ADDREF(nsCacheService::GlobalInstance());  // ensure it lives for the lifetime of the descriptor
@@ -612,6 +613,8 @@ nsOutputStreamWrapper::LazyInit()
                                                   getter_AddRefs(mOutput));
     if (NS_FAILED(rv)) return rv;
 
+    mDescriptor->mOutput = mOutput;
+
     nsCacheDevice* device = cacheEntry->CacheDevice();
     if (!device) return NS_ERROR_NOT_AVAILABLE;
 
@@ -670,7 +673,6 @@ nsOutputStreamWrapper::WriteFrom(nsIInputStream * inStr,
                                  PRUint32         count,
                                  PRUint32 *       result)
 {
-    NS_NOTREACHED("cache stream not buffered");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -680,7 +682,6 @@ nsOutputStreamWrapper::WriteSegments(nsReadSegmentFun  reader,
                                      PRUint32          count,
                                      PRUint32 *        result)
 {
-    NS_NOTREACHED("cache stream not buffered");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

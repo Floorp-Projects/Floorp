@@ -51,6 +51,13 @@ function getBrowserURL()
 }
 
 function getTopWin(skipPopups) {
+  // If this is called in a browser window, use that window regardless of
+  // whether it's the frontmost window, since commands can be executed in
+  // background windows (bug 626148).
+  if (top.document.documentElement.getAttribute("windowtype") == "navigator:browser" &&
+      (!skipPopups || !top.document.documentElement.getAttribute("chromehidden")))
+    return top;
+
   if (skipPopups) {
     return Components.classes["@mozilla.org/browser/browserglue;1"]
                      .getService(Components.interfaces.nsIBrowserGlue)
@@ -174,7 +181,7 @@ function openUILinkIn(url, where, aAllowThirdPartyFixup, aPostData, aReferrerURI
     };
   }
 
-  params.fromContent = false;
+  params.fromChrome = true;
 
   openLinkIn(url, where, params);
 }
@@ -183,7 +190,7 @@ function openLinkIn(url, where, params) {
   if (!where || !url)
     return;
 
-  var aFromContent          = params.fromContent;
+  var aFromChrome           = params.fromChrome;
   var aAllowThirdPartyFixup = params.allowThirdPartyFixup;
   var aPostData             = params.postData;
   var aCharset              = params.charset;
@@ -229,21 +236,14 @@ function openLinkIn(url, where, params) {
     sa.AppendElement(aPostData);
     sa.AppendElement(allowThirdPartyFixupSupports);
 
-    var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-             getService(Ci.nsIWindowWatcher);
-
-    ww.openWindow(w || window,
-                  getBrowserURL(),
-                  null,
-                  "chrome,dialog=no,all",
-                  sa);
-
+    Services.ww.openWindow(w || window, getBrowserURL(),
+                           null, "chrome,dialog=no,all", sa);
     return;
   }
 
-  var loadInBackground = aFromContent ?
-                         getBoolPref("browser.tabs.loadInBackground") :
-                         getBoolPref("browser.tabs.loadBookmarksInBackground");
+  var loadInBackground = aFromChrome ?
+                         getBoolPref("browser.tabs.loadBookmarksInBackground") :
+                         getBoolPref("browser.tabs.loadInBackground");
 
   if (where == "current" && w.gBrowser.selectedTab.pinned) {
     try {
@@ -457,18 +457,6 @@ function openAdvancedPreferences(tabID)
 }
 
 /**
- * Opens the release notes page for this version of the application.
- */
-function openReleaseNotes()
-{
-  var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
-                            .getService(Components.interfaces.nsIURLFormatter);
-  var relnotesURL = formatter.formatURLPref("app.releaseNotesURL");
-  
-  openUILinkIn(relnotesURL, "tab");
-}
-
-/**
  * Opens the troubleshooting information (about:support) page for this version
  * of the application.
  */
@@ -535,37 +523,25 @@ function makeURLAbsolute(aBase, aUrl)
  *        There will be no security check.
  */ 
 function openNewTabWith(aURL, aDocument, aPostData, aEvent,
-                        aAllowThirdPartyFixup, aReferrer)
-{
+                        aAllowThirdPartyFixup, aReferrer) {
   if (aDocument)
     urlSecurityCheck(aURL, aDocument.nodePrincipal);
 
-  var loadInBackground = getBoolPref("browser.tabs.loadInBackground");
-
-  if (aEvent && aEvent.shiftKey)
-    loadInBackground = !loadInBackground;
-
   // As in openNewWindowWith(), we want to pass the charset of the
-  // current document over to a new tab. 
-  var wintype = document.documentElement.getAttribute("windowtype");
-  var originCharset;
-  if (wintype == "navigator:browser")
+  // current document over to a new tab.
+  var originCharset = aDocument && aDocument.characterSet;
+  if (!originCharset &&
+      document.documentElement.getAttribute("windowtype") == "navigator:browser")
     originCharset = window.content.document.characterSet;
 
-  // open link in new tab
-  var referrerURI = aDocument ? aDocument.documentURIObject : aReferrer;
-  var browser = top.document.getElementById("content");
-  return browser.loadOneTab(aURL, {
-                            referrerURI: referrerURI,
-                            charset: originCharset,
-                            postData: aPostData,
-                            inBackground: loadInBackground,
-                            allowThirdPartyFixup: aAllowThirdPartyFixup});
+  openLinkIn(aURL, aEvent && aEvent.shiftKey ? "tabshifted" : "tab",
+             { charset: originCharset,
+               postData: aPostData,
+               allowThirdPartyFixup: aAllowThirdPartyFixup,
+               referrerURI: aDocument ? aDocument.documentURIObject : aReferrer });
 }
 
-function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup,
-                           aReferrer)
-{
+function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup, aReferrer) {
   if (aDocument)
     urlSecurityCheck(aURL, aDocument.nodePrincipal);
 
@@ -573,15 +549,16 @@ function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup,
   // document with a character set, then extract the current charset menu
   // setting from the current document and use it to initialize the new browser
   // window...
-  var charsetArg = null;
-  var wintype = document.documentElement.getAttribute("windowtype");
-  if (wintype == "navigator:browser")
-    charsetArg = "charset=" + window.content.document.characterSet;
+  var originCharset = aDocument && aDocument.characterSet;
+  if (!originCharset &&
+      document.documentElement.getAttribute("windowtype") == "navigator:browser")
+    originCharset = window.content.document.characterSet;
 
-  var referrerURI = aDocument ? aDocument.documentURIObject : aReferrer;
-  return window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no",
-                           aURL, charsetArg, referrerURI, aPostData,
-                           aAllowThirdPartyFixup);
+  openLinkIn(aURL, "window",
+             { charset: originCharset,
+               postData: aPostData,
+               allowThirdPartyFixup: aAllowThirdPartyFixup,
+               referrerURI: aDocument ? aDocument.documentURIObject : aReferrer });
 }
 
 /**

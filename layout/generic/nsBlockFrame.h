@@ -707,6 +707,13 @@ protected:
   nsLineList* RemoveOverflowLines();
   nsresult SetOverflowLines(nsLineList* aOverflowLines);
 
+  // Determine the computed height that's in effect for this block
+  // frame (that is, our computed height minus the heights of our
+  // previous in-flows).
+  // XXXbz this clearly makes laying out a block with N in-flows
+  // O(N^2)!  Good thing the constant is tiny.
+  nscoord GetEffectiveComputedHeight(const nsHTMLReflowState& aReflowState) const;
+
   /**
    * This class is useful for efficiently modifying the out of flow
    * overflow list. It gives the client direct writable access to

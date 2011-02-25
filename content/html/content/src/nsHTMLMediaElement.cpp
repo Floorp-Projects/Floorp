@@ -846,24 +846,29 @@ void nsHTMLMediaElement::UpdatePreloadAction()
     // Find the appropriate preload action by looking at the attribute.
     const nsAttrValue* val = mAttrsAndChildren.GetAttr(nsGkAtoms::preload,
                                                        kNameSpaceID_None);
+    PRUint32 preloadDefault = nsContentUtils::GetIntPref("media.preload.default",
+                            nsHTMLMediaElement::PRELOAD_ATTR_METADATA);
+    PRUint32 preloadAuto = nsContentUtils::GetIntPref("media.preload.auto",
+                            nsHTMLMediaElement::PRELOAD_ENOUGH);
     if (!val) {
-      // Attribute is not set. The default is to load metadata.
-      nextAction = nsHTMLMediaElement::PRELOAD_METADATA;
+      // Attribute is not set. Use the preload action specified by the 
+      // media.preload.default pref, or just preload metadata if not present.
+      nextAction = static_cast<PreloadAction>(preloadDefault);
     } else if (val->Type() == nsAttrValue::eEnum) {
       PreloadAttrValue attr = static_cast<PreloadAttrValue>(val->GetEnumValue());
       if (attr == nsHTMLMediaElement::PRELOAD_ATTR_EMPTY ||
           attr == nsHTMLMediaElement::PRELOAD_ATTR_AUTO)
       {
-        nextAction = nsHTMLMediaElement::PRELOAD_ENOUGH;
+        nextAction = static_cast<PreloadAction>(preloadAuto);
       } else if (attr == nsHTMLMediaElement::PRELOAD_ATTR_METADATA) {
         nextAction = nsHTMLMediaElement::PRELOAD_METADATA;
       } else if (attr == nsHTMLMediaElement::PRELOAD_ATTR_NONE) {
         nextAction = nsHTMLMediaElement::PRELOAD_NONE;
       }
     } else {
-      // There was a value, but it wasn't an enumerated value.
-      // Use the suggested "missing value default" of "metadata".
-      nextAction = nsHTMLMediaElement::PRELOAD_METADATA;
+      // Use the suggested "missing value default" of "metadata", or the value
+      // specified by the media.preload.default, if present.
+      nextAction = static_cast<PreloadAction>(preloadDefault);
     }
   }
 
@@ -1072,14 +1077,14 @@ NS_IMETHODIMP nsHTMLMediaElement::GetSeeking(PRBool *aSeeking)
   return NS_OK;
 }
 
-/* attribute float currentTime; */
-NS_IMETHODIMP nsHTMLMediaElement::GetCurrentTime(float *aCurrentTime)
+/* attribute double currentTime; */
+NS_IMETHODIMP nsHTMLMediaElement::GetCurrentTime(double *aCurrentTime)
 {
   *aCurrentTime = mDecoder ? mDecoder->GetCurrentTime() : 0.0;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLMediaElement::SetCurrentTime(float aCurrentTime)
+NS_IMETHODIMP nsHTMLMediaElement::SetCurrentTime(double aCurrentTime)
 {
   StopSuspendingAfterFirstFrame();
 
@@ -1100,8 +1105,8 @@ NS_IMETHODIMP nsHTMLMediaElement::SetCurrentTime(float aCurrentTime)
   }
 
   // Clamp the time to [0, duration] as required by the spec
-  float clampedTime = NS_MAX(0.0f, aCurrentTime);
-  float duration = mDecoder->GetDuration();
+  double clampedTime = NS_MAX(0.0, aCurrentTime);
+  double duration = mDecoder->GetDuration();
   if (duration >= 0) {
     clampedTime = NS_MIN(clampedTime, duration);
   }
@@ -1118,10 +1123,10 @@ NS_IMETHODIMP nsHTMLMediaElement::SetCurrentTime(float aCurrentTime)
   return rv;
 }
 
-/* readonly attribute float duration; */
-NS_IMETHODIMP nsHTMLMediaElement::GetDuration(float *aDuration)
+/* readonly attribute double duration; */
+NS_IMETHODIMP nsHTMLMediaElement::GetDuration(double *aDuration)
 {
-  *aDuration = mDecoder ? mDecoder->GetDuration() : std::numeric_limits<float>::quiet_NaN();
+  *aDuration = mDecoder ? mDecoder->GetDuration() : std::numeric_limits<double>::quiet_NaN();
   return NS_OK;
 }
 
@@ -1158,15 +1163,15 @@ NS_IMETHODIMP nsHTMLMediaElement::Pause()
   return NS_OK;
 }
 
-/* attribute float volume; */
-NS_IMETHODIMP nsHTMLMediaElement::GetVolume(float *aVolume)
+/* attribute double volume; */
+NS_IMETHODIMP nsHTMLMediaElement::GetVolume(double *aVolume)
 {
   *aVolume = mVolume;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLMediaElement::SetVolume(float aVolume)
+NS_IMETHODIMP nsHTMLMediaElement::SetVolume(double aVolume)
 {
   if (aVolume < 0.0f || aVolume > 1.0f)
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -1815,7 +1820,7 @@ nsresult nsHTMLMediaElement::InitializeDecoderAsClone(nsMediaDecoder* aOriginal)
     return NS_ERROR_FAILURE;
   }
 
-  float duration = aOriginal->GetDuration();
+  double duration = aOriginal->GetDuration();
   if (duration >= 0) {
     decoder->SetDuration(PRInt64(NS_round(duration * 1000)));
     decoder->SetSeekable(aOriginal->GetSeekable());
@@ -2209,7 +2214,8 @@ ImageContainer* nsHTMLMediaElement::GetImageContainer()
   if (!video)
     return nsnull;
 
-  nsRefPtr<LayerManager> manager = nsContentUtils::LayerManagerForDocument(GetOwnerDoc());
+  nsRefPtr<LayerManager> manager =
+    nsContentUtils::PersistentLayerManagerForDocument(GetOwnerDoc());
   if (!manager)
     return nsnull;
 
@@ -2396,6 +2402,8 @@ void nsHTMLMediaElement::DoRemoveSelfReference()
 nsresult nsHTMLMediaElement::Observe(nsISupports* aSubject,
                                      const char* aTopic, const PRUnichar* aData)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+  
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     mShuttingDown = PR_TRUE;
     AddRemoveSelfReference();
@@ -2591,7 +2599,7 @@ void nsHTMLMediaElement::FireTimeUpdate(PRBool aPeriodic)
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
   TimeStamp now = TimeStamp::Now();
-  float time = 0;
+  double time = 0;
   GetCurrentTime(&time);
 
   // Fire a timupdate event if this is not a periodic update (i.e. it's a

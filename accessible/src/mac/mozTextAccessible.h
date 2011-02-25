@@ -1,13 +1,12 @@
 #import "mozAccessible.h"
 
-#import "nsIAccessibleText.h"
-#import "nsIAccessibleEditableText.h"
+#import "nsHyperTextAccessible.h"
 
 @interface mozTextAccessible : mozAccessible
 {
   // both of these are the same old mGeckoAccessible, but already
   // QI'd for us, to the right type, for convenience.
-  nsIAccessibleText         *mGeckoTextAccessible;         // strong
+  nsHyperTextAccessible     *mGeckoTextAccessible;         // strong
   nsIAccessibleEditableText *mGeckoEditableTextAccessible; // strong
 }
 @end

@@ -47,9 +47,11 @@ LIBRARY_NAME	= mozjpeg
 
 ifeq ($(OS_ARCH),WINNT)
 LIBRARY_NAME	= jpeg32$(VERSION_NUMBER)
+ifneq ($(OS_TEST),x86_64)
 # FIXME: bug 413019
 ifndef GNU_CC
 OS_COMPILE_CFLAGS += -GL-
+endif
 endif
 endif
 

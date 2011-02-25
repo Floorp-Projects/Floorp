@@ -17,6 +17,7 @@ IPDLSRCS =					\
   PTestMultiMgrsRight.ipdl			\
   PTestMultiMgrsBottom.ipdl			\
   PTestNestedLoops.ipdl				\
+  PTestRaceDeferral.ipdl			\
   PTestRacyReentry.ipdl				\
   PTestRacyRPCReplies.ipdl			\
   PTestRPCErrorCleanup.ipdl			\

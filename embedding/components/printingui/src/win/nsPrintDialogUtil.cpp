@@ -728,6 +728,7 @@ static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM 
 
     // Looks like we were able to extend the dialog
     gDialogWasExtended = PR_TRUE;
+    return TRUE;
   }
   return 0L;
 }
@@ -870,11 +871,6 @@ ShowNativePrintDialog(HWND              aHWnd,
     } else {
       ::ClosePrinter(hPrinter);
     }
-  }
-
-  NS_ASSERTION(!printerName.IsEmpty(), "We have to have a printer name");
-  if (printerName.IsEmpty()) {
-    return NS_ERROR_FAILURE;
   }
 
   // Now create a DEVNAMES struct so the the dialog is initialized correctly.
@@ -1082,6 +1078,7 @@ ShowNativePrintDialog(HWND              aHWnd,
 #endif
     
   } else {
+    ::SetFocus(aHWnd);
     aPrintSettings->SetIsCancelled(PR_TRUE);
     if (hGlobalDevMode) ::GlobalFree(hGlobalDevMode);
     return NS_ERROR_ABORT;
@@ -1184,6 +1181,7 @@ static BOOL APIENTRY PropSheetCallBack(HWND hdlg, UINT uiMsg, UINT wParam, LONG 
 
     // Looks like we were able to extend the dialog
     gDialogWasExtended = PR_TRUE;
+    return TRUE;
   }
   return 0L;
 }

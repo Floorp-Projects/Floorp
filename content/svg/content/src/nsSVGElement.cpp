@@ -76,6 +76,7 @@
 #include "nsSVGString.h"
 #include "SVGAnimatedNumberList.h"
 #include "SVGAnimatedLengthList.h"
+#include "SVGAnimatedPointList.h"
 #include "SVGAnimatedPathSegList.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsIDOMSVGPointList.h"
@@ -166,7 +167,7 @@ nsSVGElement::Init()
     viewBox->Init();
   }
 
-  nsSVGPreserveAspectRatio *preserveAspectRatio =
+  SVGAnimatedPreserveAspectRatio *preserveAspectRatio =
     GetPreserveAspectRatio();
 
   if (preserveAspectRatio) {
@@ -185,7 +186,10 @@ nsSVGElement::Init()
     numberListInfo.Reset(i);
   }
 
-  // No need to reset SVGPathData since the default value in always the same
+  // No need to reset SVGPointList since the default value is always the same
+  // (an empty list).
+
+  // No need to reset SVGPathData since the default value is always the same
   // (an empty list).
 
   StringAttributesInfo stringInfo = GetStringInfo();
@@ -399,6 +403,22 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
     }
 
     if (!foundMatch) {
+      // Check for SVGAnimatedPointList attribute
+      if (GetPointListAttrName() == aAttribute) {
+        SVGAnimatedPointList* pointList = GetAnimatedPointList();
+        if (pointList) {
+          rv = pointList->SetBaseValueString(aValue);
+          if (NS_FAILED(rv)) {
+            ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
+            // The spec says we parse everything up to the failure, so we don't
+            // call pointList->ClearBaseValue()
+          }
+          foundMatch = PR_TRUE;
+        }
+      }
+    }
+
+    if (!foundMatch) {
       // Check for SVGAnimatedPathSegList attribute
       if (GetPathDataAttrName() == aAttribute) {
         SVGAnimatedPathSegList* segList = GetAnimPathSegList();
@@ -516,9 +536,9 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
           }
           foundMatch = PR_TRUE;
         }
-      // Check for nsSVGPreserveAspectRatio attribute
+      // Check for SVGAnimatedPreserveAspectRatio attribute
       } else if (aAttribute == nsGkAtoms::preserveAspectRatio) {
-        nsSVGPreserveAspectRatio *preserveAspectRatio =
+        SVGAnimatedPreserveAspectRatio *preserveAspectRatio =
           GetPreserveAspectRatio();
         if (preserveAspectRatio) {
           rv = preserveAspectRatio->SetBaseValueString(aValue, this, PR_FALSE);
@@ -619,6 +639,18 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
           DidChangeNumberList(i, PR_FALSE);
           foundMatch = PR_TRUE;
           break;
+        }
+      }
+    }
+
+    if (!foundMatch) {
+      // Check if this is a point list attribute going away
+      if (GetPointListAttrName() == aName) {
+        SVGAnimatedPointList *pointList = GetAnimatedPointList();
+        if (pointList) {
+          pointList->ClearBaseValue();
+          DidChangePointList(PR_FALSE);
+          foundMatch = PR_TRUE;
         }
       }
     }
@@ -727,7 +759,7 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
         }
       // Check if this is a preserveAspectRatio attribute going away
       } else if (aName == nsGkAtoms::preserveAspectRatio) {
-        nsSVGPreserveAspectRatio *preserveAspectRatio =
+        SVGAnimatedPreserveAspectRatio *preserveAspectRatio =
           GetPreserveAspectRatio();
 
         if (preserveAspectRatio) {
@@ -801,28 +833,6 @@ PRBool
 nsSVGElement::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eSVG));
-}
-
-already_AddRefed<nsIURI>
-nsSVGElement::GetBaseURI() const
-{
-  nsCOMPtr<nsIURI> baseURI = nsSVGElementBase::GetBaseURI();
-
-  nsIContent* bindingParent = GetBindingParent();
-  if (bindingParent) {
-    nsIDocument* doc = bindingParent->GetOwnerDoc();
-    if (doc) {
-      nsXBLBinding* binding = doc->BindingManager()->GetBinding(bindingParent);
-      if (binding) {
-        // XXX sXBL/XBL2 issue
-        // If this is an anonymous XBL element use the binding
-        // document for the base URI. 
-        // XXX Will fail with xml:base
-        baseURI = binding->PrototypeBinding()->DocURI();
-      }
-    }
-  }
-  return baseURI.forget();
 }
 
 NS_IMETHODIMP
@@ -1478,11 +1488,12 @@ nsSVGElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 
   NS_ASSERTION(aAttrEnum < info.mLengthCount, "aAttrEnum out of range");
 
-  nsAutoString newStr;
-  info.mLengths[aAttrEnum].GetBaseValueString(newStr);
+  nsAutoString serializedValue;
+  info.mLengths[aAttrEnum].GetBaseValueString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, *info.mLengthInfo[aAttrEnum].mName,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mLengthInfo[aAttrEnum].mName, nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
@@ -1557,11 +1568,12 @@ nsSVGElement::DidChangeLengthList(PRUint8 aAttrEnum, PRBool aDoSetAttr)
                "DidChangeLengthList on element with no length list attribs");
   NS_ASSERTION(aAttrEnum < info.mLengthListCount, "aAttrEnum out of range");
 
-  nsAutoString newStr;
-  info.mLengthLists[aAttrEnum].GetBaseValue().GetValueAsString(newStr);
+  nsAutoString serializedValue;
+  info.mLengthLists[aAttrEnum].GetBaseValue().GetValueAsString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, *info.mLengthListInfo[aAttrEnum].mName,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mLengthListInfo[aAttrEnum].mName,
+                nsnull, attrValue, PR_TRUE);
 }
 
 void
@@ -1638,11 +1650,12 @@ nsSVGElement::DidChangeNumberList(PRUint8 aAttrEnum, PRBool aDoSetAttr)
                     "DidChangeNumberList on element with no number list attribs");
   NS_ABORT_IF_FALSE(aAttrEnum < info.mNumberListCount, "aAttrEnum out of range");
 
-  nsAutoString newStr;
-  info.mNumberLists[aAttrEnum].GetBaseValue().GetValueAsString(newStr);
+  nsAutoString serializedValue;
+  info.mNumberLists[aAttrEnum].GetBaseValue().GetValueAsString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, *info.mNumberListInfo[aAttrEnum].mName,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mNumberListInfo[aAttrEnum].mName,
+                nsnull, attrValue, PR_TRUE);
 }
 
 void
@@ -1685,24 +1698,55 @@ nsSVGElement::GetAnimatedNumberList(nsIAtom *aAttrName)
 }
 
 void
-nsSVGElement::DidChangePathSegList(PRBool aDoSetAttr)
+nsSVGElement::DidChangePointList(PRBool aDoSetAttr)
 {
-  NS_ABORT_IF_FALSE(GetPathDataAttrName(), "Changing non-existant path data?");
+  NS_ABORT_IF_FALSE(GetPointListAttrName(), "Changing non-existent point list?");
 
   if (!aDoSetAttr)
     return;
 
-  nsAutoString newStr;
-  GetAnimPathSegList()->GetBaseValue().GetValueAsString(newStr);
+  nsAutoString serializedValue;
+  GetAnimatedPointList()->GetBaseValue().GetValueAsString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, GetPathDataAttrName(), newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, GetPointListAttrName(), nsnull,
+                attrValue, PR_TRUE);
+}
+
+void
+nsSVGElement::DidAnimatePointList()
+{
+  NS_ABORT_IF_FALSE(GetPointListAttrName(),
+                    "Animating non-existent path data?");
+
+  nsIFrame* frame = GetPrimaryFrame();
+
+  if (frame) {
+    frame->AttributeChanged(kNameSpaceID_None,
+                            GetPointListAttrName(),
+                            nsIDOMMutationEvent::MODIFICATION);
+  }
+}
+
+void
+nsSVGElement::DidChangePathSegList(PRBool aDoSetAttr)
+{
+  if (!aDoSetAttr)
+    return;
+
+  nsAutoString serializedValue;
+  GetAnimPathSegList()->GetBaseValue().GetValueAsString(serializedValue);
+
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, GetPathDataAttrName(), nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
 nsSVGElement::DidAnimatePathSegList()
 {
   NS_ABORT_IF_FALSE(GetPathDataAttrName(),
-                    "Animatinging non-existant path data?");
+                    "Animating non-existent path data?");
 
   nsIFrame* frame = GetPrimaryFrame();
 
@@ -1738,11 +1782,12 @@ nsSVGElement::DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 
   NS_ASSERTION(aAttrEnum < info.mNumberCount, "aAttrEnum out of range");
 
-  nsAutoString newStr;
-  info.mNumbers[aAttrEnum].GetBaseValueString(newStr);
+  nsAutoString serializedValue;
+  info.mNumbers[aAttrEnum].GetBaseValueString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, *info.mNumberInfo[aAttrEnum].mName,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mNumberInfo[aAttrEnum].mName, nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
@@ -1804,11 +1849,12 @@ nsSVGElement::DidChangeInteger(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 
   NS_ASSERTION(aAttrEnum < info.mIntegerCount, "aAttrEnum out of range");
 
-  nsAutoString newStr;
-  info.mIntegers[aAttrEnum].GetBaseValueString(newStr);
+  nsAutoString serializedValue;
+  info.mIntegers[aAttrEnum].GetBaseValueString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, *info.mIntegerInfo[aAttrEnum].mName,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mIntegerInfo[aAttrEnum].mName, nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
@@ -1871,11 +1917,12 @@ nsSVGElement::DidChangeAngle(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 
   NS_ASSERTION(aAttrEnum < info.mAngleCount, "aAttrEnum out of range");
 
-  nsAutoString newStr;
-  info.mAngles[aAttrEnum].GetBaseValueString(newStr);
+  nsAutoString serializedValue;
+  info.mAngles[aAttrEnum].GetBaseValueString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, *info.mAngleInfo[aAttrEnum].mName,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mAngleInfo[aAttrEnum].mName, nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
@@ -1916,11 +1963,12 @@ nsSVGElement::DidChangeBoolean(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 
   NS_ASSERTION(aAttrEnum < info.mBooleanCount, "aAttrEnum out of range");
 
-  nsAutoString newStr;
-  info.mBooleans[aAttrEnum].GetBaseValueString(newStr);
+  nsAutoString serializedValue;
+  info.mBooleans[aAttrEnum].GetBaseValueString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, *info.mBooleanInfo[aAttrEnum].mName,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mBooleanInfo[aAttrEnum].mName, nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
@@ -1961,11 +2009,12 @@ nsSVGElement::DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 
   NS_ASSERTION(aAttrEnum < info.mEnumCount, "aAttrEnum out of range");
 
-  nsAutoString newStr;
-  info.mEnums[aAttrEnum].GetBaseValueString(newStr, this);
+  nsAutoString serializedValue;
+  info.mEnums[aAttrEnum].GetBaseValueString(serializedValue, this);
 
-  SetAttr(kNameSpaceID_None, *info.mEnumInfo[aAttrEnum].mName,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mEnumInfo[aAttrEnum].mName, nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
@@ -1997,10 +2046,12 @@ nsSVGElement::DidChangeViewBox(PRBool aDoSetAttr)
 
   NS_ASSERTION(viewBox, "DidChangeViewBox on element with no viewBox attrib");
 
-  nsAutoString newStr;
-  viewBox->GetBaseValueString(newStr);
+  nsAutoString serializedValue;
+  viewBox->GetBaseValueString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, nsGkAtoms::viewBox, newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, nsGkAtoms::viewBox, nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
@@ -2015,7 +2066,7 @@ nsSVGElement::DidAnimateViewBox()
   }
 }
 
-nsSVGPreserveAspectRatio *
+SVGAnimatedPreserveAspectRatio *
 nsSVGElement::GetPreserveAspectRatio()
 {
   return nsnull;
@@ -2027,16 +2078,18 @@ nsSVGElement::DidChangePreserveAspectRatio(PRBool aDoSetAttr)
   if (!aDoSetAttr)
     return;
 
-  nsSVGPreserveAspectRatio *preserveAspectRatio = GetPreserveAspectRatio();
+  SVGAnimatedPreserveAspectRatio *preserveAspectRatio =
+    GetPreserveAspectRatio();
 
   NS_ASSERTION(preserveAspectRatio,
                "DidChangePreserveAspectRatio on element with no preserveAspectRatio attrib");
 
-  nsAutoString newStr;
-  preserveAspectRatio->GetBaseValueString(newStr);
+  nsAutoString serializedValue;
+  preserveAspectRatio->GetBaseValueString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, nsGkAtoms::preserveAspectRatio,
-          newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, nsGkAtoms::preserveAspectRatio, nsnull,
+                attrValue, PR_TRUE);
 }
 
 void
@@ -2352,8 +2405,10 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
 
     // preserveAspectRatio:
     if (aName == nsGkAtoms::preserveAspectRatio) {
-      nsSVGPreserveAspectRatio *preserveAspectRatio = GetPreserveAspectRatio();
-      return preserveAspectRatio ? preserveAspectRatio->ToSMILAttr(this) : nsnull;
+      SVGAnimatedPreserveAspectRatio *preserveAspectRatio =
+        GetPreserveAspectRatio();
+      return preserveAspectRatio ?
+        preserveAspectRatio->ToSMILAttr(this) : nsnull;
     }
 
     // NumberLists:
@@ -2389,6 +2444,16 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
       if (aNamespaceID == info.mStringInfo[i].mNamespaceID &&
           aName == *info.mStringInfo[i].mName) {
         return info.mStrings[i].ToSMILAttr(this);
+      }
+    }
+  }
+
+  // PointLists:
+  {
+    if (GetPointListAttrName() == aName) {
+      SVGAnimatedPointList *pointList = GetAnimatedPointList();
+      if (pointList) {
+        return pointList->ToSMILAttr(this);
       }
     }
   }

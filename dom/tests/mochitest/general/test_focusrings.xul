@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
-<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/javascript"
@@ -133,7 +133,7 @@ var htmlElements = [
   "<textarea id='elem' class='canfocus'></textarea>",
   "<select id='elem' class='canfocus'><option>One</select>",
   "<select id='elem' rows='5' class='canfocus'><option>One</select>",
-  "<div id='elem' tabindex='0' style='width: 10px; height: 10px;'></div>",
+  "<div id='elem' tabindex='0' class='canfocus' style='width: 10px; height: 10px;'></div>",
   "<a href='about:blank' class='canfocus' onclick='return false;'>about:blank</a>",
 ];
 

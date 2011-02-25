@@ -95,6 +95,11 @@ ifdef MOZ_ENABLE_QTNETWORK
         ../system/qt/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
 endif
 
+ifeq (android,$(MOZ_WIDGET_TOOLKIT))
+    SHARED_LIBRARY_LIBS += \
+        ../system/android/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
+endif
+
 LOCAL_INCLUDES = \
   -I$(srcdir)/../base/src \
   -I$(srcdir)/../dns \
@@ -126,6 +131,10 @@ endif
 
 ifdef MOZ_ENABLE_QTNETWORK
     LOCAL_INCLUDES += -I$(srcdir)/../system/qt
+endif
+
+ifeq (android,$(MOZ_WIDGET_TOOLKIT))
+    LOCAL_INCLUDES += -I$(srcdir)/../system/android
 endif
 
 ifdef NECKO_COOKIES

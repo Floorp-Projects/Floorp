@@ -964,7 +964,6 @@ js1_7/block/regress-352907.js
 js1_7/block/regress-376410.js
 js1_7/block/regress-396900.js
 js1_7/block/regress-411279.js
-js1_7/decompilation/regress-348904.js
 js1_7/decompilation/regress-349493.js
 js1_7/decompilation/regress-349499.js
 js1_7/decompilation/regress-349633.js

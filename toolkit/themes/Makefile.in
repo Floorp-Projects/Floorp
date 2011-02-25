@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 # Theme Selection
 #
 # MacOS X                 Pinstripe (toolkit/themes/pinstripe)
-# Windows (9x, 2000, XP)  Winstripe (toolkit/themes/winstripe)
+# Windows                 Winstripe (toolkit/themes/winstripe)
 # GNOME/Linux             Winstripe (toolkit/themes/winstripe) + 
 #                         GNOMEStripe overrides (toolkit/themes/gnomestripe)
 # OS/2                    Winstripe (toolkit/themes/winstripe) + 

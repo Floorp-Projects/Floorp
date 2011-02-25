@@ -79,7 +79,7 @@
 #include "nsImageMapUtils.h"
 #include "nsIScriptSecurityManager.h"
 #ifdef ACCESSIBILITY
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 #endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
@@ -103,6 +103,8 @@
 #include "nsBidiUtils.h"
 #include "nsBidiPresUtils.h"
 
+#include "gfxRect.h"
+
 // sizes (pixels) for image icon, padding and border frame
 #define ICON_SIZE        (16)
 #define ICON_PADDING     (3)
@@ -114,6 +116,9 @@
 
 // Default alignment value (so we can tell an unset value from a set value)
 #define ALIGN_UNSET PRUint8(-1)
+
+using namespace mozilla;
+using namespace mozilla::layers;
 
 // static icon information
 nsImageFrame::IconLoad* nsImageFrame::gIconLoad = nsnull;
@@ -187,8 +192,7 @@ NS_QUERYFRAME_TAIL_INHERITING(ImageFrameSuper)
 already_AddRefed<nsAccessible>
 nsImageFrame::CreateAccessible()
 {
-  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
-
+  nsAccessibilityService* accService = nsIPresShell::AccService();
   if (accService) {
     return accService->CreateHTMLImageAccessible(mContent,
                                                  PresContext()->PresShell());
@@ -213,6 +217,12 @@ nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
   if (mListener) {
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
     if (imageLoader) {
+      // Push a null JSContext on the stack so that code that runs
+      // within the below code doesn't think it's being called by
+      // JS. See bug 604262.
+      nsCxPusher pusher;
+      pusher.PushNull();
+
       imageLoader->RemoveObserver(mListener);
     }
     
@@ -243,7 +253,16 @@ nsImageFrame::Init(nsIContent*      aContent,
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(aContent);
   NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
-  imageLoader->AddObserver(mListener);
+
+  {
+    // Push a null JSContext on the stack so that code that runs
+    // within the below code doesn't think it's being called by
+    // JS. See bug 604262.
+    nsCxPusher pusher;
+    pusher.PushNull();
+
+    imageLoader->AddObserver(mListener);
+  }
 
   nsPresContext *aPresContext = PresContext();
   
@@ -587,6 +606,7 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
          r.x, r.y, r.width, r.height);
 #endif
 
+  mImageContainer = nsnull;
   Invalidate(r);
   
   return NS_OK;
@@ -666,6 +686,7 @@ nsImageFrame::FrameChanged(imgIContainer *aContainer,
 
   // Update border+content to account for image change
   Invalidate(r);
+  mImageContainer = nsnull;
   return NS_OK;
 }
 
@@ -993,10 +1014,12 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
         if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
           rv = bidiUtils->RenderText(str, maxFit, NSBIDI_RTL,
                                      aPresContext, aRenderingContext,
+                                     aRenderingContext,
                                      aRect.XMost() - strWidth, y + maxAscent);
         else
           rv = bidiUtils->RenderText(str, maxFit, NSBIDI_LTR,
                                      aPresContext, aRenderingContext,
+                                     aRenderingContext,
                                      aRect.x, y + maxAscent);
       }
     }
@@ -1171,29 +1194,6 @@ static void PaintDebugImageMap(nsIFrame* aFrame, nsIRenderingContext* aCtx,
 }
 #endif
 
-/**
- * Note that nsDisplayImage does not receive events. However, an image element
- * is replaced content so its background will be z-adjacent to the
- * image itself, and hence receive events just as if the image itself
- * received events.
- */
-class nsDisplayImage : public nsDisplayItem {
-public:
-  nsDisplayImage(nsDisplayListBuilder* aBuilder, nsImageFrame* aFrame,
-                 imgIContainer* aImage)
-    : nsDisplayItem(aBuilder, aFrame), mImage(aImage) {
-    MOZ_COUNT_CTOR(nsDisplayImage);
-  }
-  virtual ~nsDisplayImage() {
-    MOZ_COUNT_DTOR(nsDisplayImage);
-  }
-  virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
-  NS_DISPLAY_DECL_NAME("Image", TYPE_IMAGE)
-private:
-  nsCOMPtr<imgIContainer> mImage;
-};
-
 void
 nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
                       nsIRenderingContext* aCtx) {
@@ -1202,6 +1202,79 @@ nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
                aBuilder->ShouldSyncDecodeImages()
                  ? (PRUint32) imgIContainer::FLAG_SYNC_DECODE
                  : (PRUint32) imgIContainer::FLAG_NONE);
+}
+
+nsCOMPtr<imgIContainer>
+nsDisplayImage::GetImage()
+{
+  return mImage;
+}
+
+nsRefPtr<ImageContainer>
+nsDisplayImage::GetContainer(LayerManager* aManager)
+{
+  return static_cast<nsImageFrame*>(mFrame)->GetContainer(aManager, mImage);
+}
+
+void
+nsDisplayImage::ConfigureLayer(ImageLayer* aLayer)
+{
+  aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
+  
+  PRInt32 factor = nsPresContext::AppUnitsPerCSSPixel();
+  nsImageFrame* imageFrame = static_cast<nsImageFrame*>(mFrame);
+
+  nsRect dest = imageFrame->GetInnerArea() + ToReferenceFrame();
+  gfxRect destRect(dest.x, dest.y, dest.width, dest.height);
+  destRect.ScaleInverse(factor); 
+
+  PRInt32 imageWidth;
+  PRInt32 imageHeight;
+  mImage->GetWidth(&imageWidth);
+  mImage->GetHeight(&imageHeight);
+
+  gfxMatrix transform;
+  transform.Translate(destRect.pos);
+  transform.Scale(destRect.size.width/imageWidth,
+                  destRect.size.height/imageHeight);
+  aLayer->SetTransform(gfx3DMatrix::From2D(transform));
+
+  aLayer->SetVisibleRegion(nsIntRect(0, 0, imageWidth, imageHeight));
+}
+
+nsRefPtr<ImageContainer>
+nsImageFrame::GetContainer(LayerManager* aManager, imgIContainer* aImage)
+{
+  if (mImageContainer && mImageContainer->Manager() == aManager) {
+    return mImageContainer;
+  }
+
+  if (aImage->GetType() != imgIContainer::TYPE_RASTER) {
+    return nsnull;
+  }
+  
+  CairoImage::Data cairoData;
+  nsRefPtr<gfxASurface> imageSurface;
+  aImage->GetFrame(imgIContainer::FRAME_CURRENT,
+                   imgIContainer::FLAG_SYNC_DECODE,
+                   getter_AddRefs(imageSurface));
+  cairoData.mSurface = imageSurface;
+  aImage->GetWidth(&cairoData.mSize.width);
+  aImage->GetHeight(&cairoData.mSize.height);
+
+  mImageContainer = aManager->CreateImageContainer();
+  NS_ASSERTION(mImageContainer, "Failed to create ImageContainer!");
+  
+  // Now create a CairoImage to display the surface.
+  Image::Format cairoFormat = Image::CAIRO_SURFACE;
+  nsRefPtr<Image> image = mImageContainer->CreateImage(&cairoFormat, 1);
+  NS_ASSERTION(image, "Failed to create Image");
+
+  NS_ASSERTION(image->GetFormat() == cairoFormat, "Wrong format");
+  static_cast<CairoImage*>(image.get())->SetData(cairoData);
+  mImageContainer->SetCurrentImage(image);
+
+  return mImageContainer;
 }
 
 void

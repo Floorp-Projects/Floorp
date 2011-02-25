@@ -50,6 +50,7 @@
 #include "nsFrameSelection.h"
 #include "nsHTMLReflowState.h"
 #include "nsHTMLReflowMetrics.h"
+#include "nsHTMLParts.h"
 
 /**
  * nsFrame logging constants. We redefine the nspr
@@ -238,7 +239,8 @@ public:
   NS_IMETHOD  GetSelectionController(nsPresContext *aPresContext, nsISelectionController **aSelCon);
 
   virtual PRBool PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset);
-  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset);
+  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset,
+                                     PRBool aRespectClusters = PR_TRUE);
   virtual PRBool PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
                                 PRInt32* aOffset, PeekWordState *aState);
   /**
@@ -385,13 +387,14 @@ public:
    */
   void CheckInvalidateSizeChange(nsHTMLReflowMetrics&     aNewDesiredSize);
 
-  // Helper function that tests if the frame tree is too deep; if it
-  // is it marks the frame as "unflowable" and zeros out the metrics
-  // and returns PR_TRUE. Otherwise, the frame is unmarked
-  // "unflowable" and the metrics are not touched and PR_FALSE is
-  // returned.
+  // Helper function that tests if the frame tree is too deep; if it is
+  // it marks the frame as "unflowable", zeroes out the metrics, sets
+  // the reflow status, and returns PR_TRUE. Otherwise, the frame is
+  // unmarked "unflowable" and the metrics and reflow status are not
+  // touched and PR_FALSE is returned.
   PRBool IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
-                            nsHTMLReflowMetrics& aMetrics);
+                            nsHTMLReflowMetrics& aMetrics,
+                            nsReflowStatus& aStatus);
 
   // Do the work for getting the parent style context frame so that
   // other frame's |GetParentStyleContextFrame| methods can call this
@@ -569,6 +572,17 @@ public:
   static PRInt32 GetLineNumber(nsIFrame *aFrame,
                                PRBool aLockScroll,
                                nsIFrame** aContainingBlock = nsnull);
+
+  // test whether aFrame should apply paginated overflow clipping.
+  static PRBool ApplyPaginatedOverflowClipping(nsIFrame* aFrame)
+  {
+    // If we're paginated and a block, and have NS_BLOCK_CLIP_PAGINATED_OVERFLOW
+    // set, then we want to clip our overflow.
+    return
+      aFrame->PresContext()->IsPaginated() &&
+      aFrame->GetType() == nsGkAtoms::blockFrame &&
+      (aFrame->GetStateBits() & NS_BLOCK_CLIP_PAGINATED_OVERFLOW) != 0;
+  }
 
 protected:
 

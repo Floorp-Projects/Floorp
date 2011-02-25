@@ -60,12 +60,12 @@
 #include "jsdbgapi.h"
 #include "jsgc.h"
 #include "jscompartment.h"
-#include "xpcpublic.h"
 #include "nscore.h"
 #include "nsXPCOM.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollector.h"
+#include "nsDebug.h"
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
 #include "nsIClassInfoImpl.h"
@@ -488,9 +488,6 @@ private:
 ****************************************************************************
 ***************************************************************************/
 
-static const uint32 XPC_GC_COLOR_BLACK = 0;
-static const uint32 XPC_GC_COLOR_GRAY = 1;
-
 // We have a general rule internally that getters that return addref'd interface
 // pointer generally do so using an 'out' parm. When interface pointers are
 // returned as function call result values they are not addref'd. Exceptions
@@ -556,11 +553,6 @@ public:
 
     JSBool IsShuttingDown() const {return mShuttingDown;}
 
-    // The JS GC marks objects gray that are held alive directly or indirectly
-    // by an XPConnect root. The cycle collector explores only this subset
-    // of the JS heap.
-    static JSBool IsGray(void *thing);
-
     nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
 
@@ -599,6 +591,11 @@ public:
 #ifdef DEBUG_CC
     virtual void PrintAllReferencesTo(void *p);
 #endif
+
+    XPCCallContext *GetCycleCollectionContext()
+    {
+        return mCycleCollectionContext;
+    }
 
     unsigned GetOutstandingRequests(JSContext* cx);
 
@@ -803,6 +800,9 @@ public:
     nsresult RemoveJSHolder(void* aHolder);
 
     void ClearWeakRoots();
+
+    static void SuspectWrappedNative(JSContext *cx, XPCWrappedNative *wrapper,
+                                     nsCycleCollectionTraversalCallback &cb);
 
     void DebugDump(PRInt16 depth);
 
@@ -1087,10 +1087,18 @@ public:
     inline XPCContext::LangType         GetPrevCallerLanguage() const ;
     inline XPCCallContext*              GetPrevCallContext() const ;
 
-    inline JSObject*                    GetOperandJSObject() const ;
-    inline JSObject*                    GetCurrentJSObject() const ;
-    inline JSObject*                    GetFlattenedJSObject() const ;
+    /*
+     * The 'scope for new JSObjects' will be the scope for objects created when
+     * carrying out a JS/C++ call. This member is only available if HAVE_SCOPE.
+     * The object passed to the ccx constructor is used as the scope for new
+     * JSObjects. However, this object is also queried for a wrapper, so
+     * clients that don't want a wrapper (and thus pass NULL to the ccx
+     * constructor) need to manually call SetScopeForNewJSObjects.
+     */
+    inline JSObject*                    GetScopeForNewJSObjects() const ;
+    inline void                         SetScopeForNewJSObjects(JSObject *obj) ;
 
+    inline JSObject*                    GetFlattenedJSObject() const ;
     inline nsISupports*                 GetIdentityObject() const ;
     inline XPCWrappedNative*            GetWrapper() const ;
     inline XPCWrappedNativeProto*       GetProto() const ;
@@ -1126,9 +1134,6 @@ public:
 
     inline void SetRetVal(jsval val);
 
-    inline JSObject* GetCallee() const;
-    inline void SetCallee(JSObject* callee);
-
     void SetName(jsid name);
     void SetArgsAndResultPtr(uintN argc, jsval *argv, jsval *rval);
     void SetCallInfo(XPCNativeInterface* iface, XPCNativeMember* member,
@@ -1163,15 +1168,20 @@ private:
                    JSContext* cx,
                    JSBool callBeginRequest,
                    JSObject* obj,
-                   JSObject* currentJSObject,
+                   JSObject* flattenedJSObject,
                    XPCWrappedNative* wn,
                    XPCWrappedNativeTearOff* tearoff);
+
+    enum WrapperInitOptions {
+        WRAPPER_PASSED_TO_CONSTRUCTOR,
+        INIT_SHOULD_LOOKUP_WRAPPER
+    };
 
     void Init(XPCContext::LangType callerLanguage,
               JSBool callBeginRequest,
               JSObject* obj,
               JSObject* funobj,
-              JSBool getWrappedNative,
+              WrapperInitOptions wrapperInitOptions,
               jsid name,
               uintN argc,
               jsval *argv,
@@ -1183,6 +1193,7 @@ private:
         INIT_FAILED,
         SYSTEM_SHUTDOWN,
         HAVE_CONTEXT,
+        HAVE_SCOPE,
         HAVE_OBJECT,
         HAVE_NAME,
         HAVE_ARGS,
@@ -1215,8 +1226,7 @@ private:
 
     XPCCallContext*                 mPrevCallContext;
 
-    JSObject*                       mOperandJSObject;
-    JSObject*                       mCurrentJSObject;
+    JSObject*                       mScopeForNewJSObjects;
     JSObject*                       mFlattenedJSObject;
     XPCWrappedNative*               mWrapper;
     XPCWrappedNativeTearOff*        mTearOff;
@@ -1239,12 +1249,6 @@ private:
     void*                           mIDispatchMember;
 #endif
     PRUint16                        mMethodIndex;
-
-    // If not null, this is the function object of the function we're going to
-    // call.  This member only makes sense when CallerTypeIsNative() on our
-    // XPCContext returns true.  We're not responsible for rooting this object;
-    // whoever sets it on us needs to deal with that.
-    JSObject*                       mCallee;
 
 #define XPCCCX_STRING_CACHE_SIZE 2
 
@@ -1280,7 +1284,7 @@ public:
           , mCx(nsnull)
           , mCallerLanguage(JS_CALLER)
           , mObj(nsnull)
-          , mCurrentJSObject(nsnull)
+          , mFlattenedJSObject(nsnull)
           , mWrapper(nsnull)
           , mTearOff(nsnull)
 #endif
@@ -1288,7 +1292,7 @@ public:
     }
     XPCLazyCallContext(XPCContext::LangType callerLanguage, JSContext* cx,
                        JSObject* obj = nsnull,
-                       JSObject* currentJSObject = nsnull,
+                       JSObject* flattenedJSObject = nsnull,
                        XPCWrappedNative* wrapper = nsnull,
                        XPCWrappedNativeTearOff* tearoff = nsnull)
         : mCallBeginRequest(callerLanguage == NATIVE_CALLER ?
@@ -1298,7 +1302,7 @@ public:
           mCx(cx),
           mCallerLanguage(callerLanguage),
           mObj(obj),
-          mCurrentJSObject(currentJSObject),
+          mFlattenedJSObject(flattenedJSObject),
           mWrapper(wrapper),
           mTearOff(tearoff)
     {
@@ -1319,7 +1323,7 @@ public:
     }
     void SetWrapper(XPCWrappedNative* wrapper,
                     XPCWrappedNativeTearOff* tearoff);
-    void SetWrapper(JSObject* currentJSObject);
+    void SetWrapper(JSObject* flattenedJSObject);
 
     JSContext *GetJSContext()
     {
@@ -1333,12 +1337,28 @@ public:
 
         return mCx;
     }
-    JSObject *GetCurrentJSObject() const
+    JSObject *GetScopeForNewJSObjects() const
     {
         if(mCcx)
-            return mCcx->GetCurrentJSObject();
+            return mCcx->GetScopeForNewJSObjects();
 
-        return mCurrentJSObject;
+        return mObj;
+    }
+    void SetScopeForNewJSObjects(JSObject *obj)
+    {
+        if(mCcx) {
+            mCcx->SetScopeForNewJSObjects(obj);
+            return;
+        }
+        NS_ABORT_IF_FALSE(!mObj, "already set!");
+        mObj = obj;
+    }
+    JSObject *GetFlattenedJSObject() const
+    {
+        if(mCcx)
+            return mCcx->GetFlattenedJSObject();
+
+        return mFlattenedJSObject;
     }
     XPCCallContext &GetXPCCallContext()
     {
@@ -1348,7 +1368,7 @@ public:
                 new (mData) XPCCallContext(mCallerLanguage, mCx,
                                            mCallBeginRequest == CALL_BEGINREQUEST,
                                            mObj,
-                                           mCurrentJSObject, mWrapper,
+                                           mFlattenedJSObject, mWrapper,
                                            mTearOff);
             if(!mCcx->IsValid())
             {
@@ -1375,7 +1395,7 @@ private:
     JSContext *mCx;
     XPCContext::LangType mCallerLanguage;
     JSObject *mObj;
-    JSObject *mCurrentJSObject;
+    JSObject *mFlattenedJSObject;
     XPCWrappedNative *mWrapper;
     XPCWrappedNativeTearOff *mTearOff;
     char mData[sizeof(XPCCallContext)];
@@ -2521,14 +2541,26 @@ public:
     nsISupports*
     GetIdentityObject() const {return mIdentity;}
 
+    /**
+     * This getter clears the gray bit before handing out the JSObject which
+     * means that the object is guaranteed to be kept alive past the next CC.
+     */
     JSObject*
-    GetFlatJSObjectAndMark() const
-        {if(mFlatJSObject && mFlatJSObject != INVALID_OBJECT)
-             mFlatJSObject->markIfUnmarked();
+    GetFlatJSObject() const
+        {if(mFlatJSObject != INVALID_OBJECT)
+             xpc_UnmarkGrayObject(mFlatJSObject);
          return mFlatJSObject;}
 
+    /**
+     * This getter does not change the color of the JSObject meaning that the
+     * object returned is not guaranteed to be kept alive past the next CC.
+     *
+     * This should only be called if you are certain that the return value won't
+     * be passed into a JS API function and that it won't be stored without
+     * being rooted (or otherwise signaling the stored value to the CC).
+     */
     JSObject*
-    GetFlatJSObjectNoMark() const {return mFlatJSObject;}
+    GetFlatJSObjectPreserveColor() const {return mFlatJSObject;}
 
     XPCLock*
     GetLock() const {return IsValid() && HasProto() ?
@@ -2666,7 +2698,7 @@ public:
         if(mScriptableInfo && JS_IsGCMarkingTracer(trc))
             mScriptableInfo->Mark();
         if(HasProto()) GetProto()->TraceJS(trc);
-        JSObject* wrapper = GetWrapper();
+        JSObject* wrapper = GetWrapperPreserveColor();
         if(wrapper)
             JS_CALL_OBJECT_TRACER(trc, wrapper, "XPCWrappedNative::mWrapper");
     }
@@ -2712,9 +2744,19 @@ public:
     JSBool NeedsCOW() { return !!(mWrapperWord & NEEDS_COW); }
     void SetNeedsCOW() { mWrapperWord |= NEEDS_COW; }
 
+    JSObject* GetWrapperPreserveColor() const
+        {return (JSObject*)(mWrapperWord & (size_t)~(size_t)FLAG_MASK);}
+
     JSObject* GetWrapper()
     {
-        return (JSObject *) (mWrapperWord & (size_t)~(size_t)FLAG_MASK);
+        JSObject* wrapper = GetWrapperPreserveColor();
+        if(wrapper)
+        {
+            xpc_UnmarkGrayObject(wrapper);
+            // Call this to unmark mFlatJSObject.
+            GetFlatJSObject();
+        }
+        return wrapper;
     }
     void SetWrapper(JSObject *obj)
     {
@@ -2805,7 +2847,8 @@ private:
 
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
 public:
-    nsCOMPtr<nsIThread>          mThread; // Don't want to overload _mOwningThread
+    // Don't want to overload _mOwningThread
+    PRThread*                    mThread; 
 #endif
 };
 
@@ -2975,7 +3018,24 @@ public:
                  nsXPCWrappedJS** wrapper);
 
     nsISomeInterface* GetXPTCStub() { return mXPTCStub; }
-    JSObject* GetJSObject() const {return mJSObj;}
+
+    /**
+     * This getter clears the gray bit before handing out the JSObject which
+     * means that the object is guaranteed to be kept alive past the next CC.
+     */
+    JSObject* GetJSObject() const {xpc_UnmarkGrayObject(mJSObj);
+                                   return mJSObj;}
+
+    /**
+     * This getter does not change the color of the JSObject meaning that the
+     * object returned is not guaranteed to be kept alive past the next CC.
+     *
+     * This should only be called if you are certain that the return value won't
+     * be passed into a JS API function and that it won't be stored without
+     * being rooted (or otherwise signaling the stored value to the CC).
+     */
+    JSObject* GetJSObjectPreserveColor() const {return mJSObj;}
+
     nsXPCWrappedJSClass*  GetClass() const {return mClass;}
     REFNSIID GetIID() const {return GetClass()->GetIID();}
     nsXPCWrappedJS* GetRootWrapper() const {return mRoot;}
@@ -3196,15 +3256,14 @@ public:
      */    
     static JSBool NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                                 const nsXPTType& type, const nsID* iid,
-                                JSObject* scope, nsresult* pErr)
+                                nsresult* pErr)
     {
         XPCLazyCallContext lccx(ccx);
-        return NativeData2JS(lccx, d, s, type, iid, scope, pErr);
+        return NativeData2JS(lccx, d, s, type, iid, pErr);
     }
     static JSBool NativeData2JS(XPCLazyCallContext& lccx, jsval* d,
                                 const void* s, const nsXPTType& type,
-                                const nsID* iid, JSObject* scope,
-                                nsresult* pErr);
+                                const nsID* iid, nsresult* pErr);
 
     static JSBool JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                                 const nsXPTType& type,
@@ -3221,7 +3280,6 @@ public:
      * @param Interface the interface of src that we want
      * @param cache the wrapper cache for src (may be null, in which case src
      *              will be QI'ed to get the cache)
-     * @param scope the default scope to put on the new JSObject's parent chain
      * @param allowNativeWrapper if true, this method may wrap the resulting
      *        JSObject in an XPCNativeWrapper and return that, as needed.
      * @param isGlobal
@@ -3235,15 +3293,13 @@ public:
                                            xpcObjectHelper& aHelper,
                                            const nsID* iid,
                                            XPCNativeInterface** Interface,
-                                           JSObject* scope,
                                            PRBool allowNativeWrapper,
                                            PRBool isGlobal,
                                            nsresult* pErr)
     {
         XPCLazyCallContext lccx(ccx);
         return NativeInterface2JSObject(lccx, d, dest, aHelper, iid, Interface,
-                                        scope, allowNativeWrapper, isGlobal,
-                                        pErr);
+                                        allowNativeWrapper, isGlobal, pErr);
     }
     static JSBool NativeInterface2JSObject(XPCLazyCallContext& lccx,
                                            jsval* d,
@@ -3251,7 +3307,6 @@ public:
                                            xpcObjectHelper& aHelper,
                                            const nsID* iid,
                                            XPCNativeInterface** Interface,
-                                           JSObject* scope,
                                            PRBool allowNativeWrapper,
                                            PRBool isGlobal,
                                            nsresult* pErr);
@@ -3282,8 +3337,7 @@ public:
     static JSBool NativeArray2JS(XPCLazyCallContext& ccx,
                                  jsval* d, const void** s,
                                  const nsXPTType& type, const nsID* iid,
-                                 JSUint32 count, JSObject* scope,
-                                 nsresult* pErr);
+                                 JSUint32 count, nsresult* pErr);
 
     static JSBool JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
                                  JSUint32 count, JSUint32 capacity,
@@ -4029,7 +4083,7 @@ public:
      * @param errorReporter the error reporter callback function to set
      */
 
-    void StartEvaluating(JSErrorReporter errorReporter = nsnull);
+    PRBool StartEvaluating(JSObject *scope, JSErrorReporter errorReporter = nsnull);
     /**
      * Does the post script evaluation and resets the error reporter
      */
@@ -4040,6 +4094,7 @@ private:
     PRBool mErrorReporterSet;
     PRBool mEvaluated;
     jsword mContextHasThread;
+    JSAutoEnterCompartment mEnterCompartment;
     MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     // No copying or assignment allowed
@@ -4296,10 +4351,25 @@ public:
     static XPCVariant* newVariant(XPCCallContext& ccx, jsval aJSVal);
 
     /**
-     * nsIVariant exposes a GetAsJSVal() method, which also returns mJSVal.
-     * But if you can, you should call this one, since it can be inlined.
+     * This getter clears the gray bit before handing out the jsval if the jsval
+     * represents a JSObject. That means that the object is guaranteed to be
+     * kept alive past the next CC.
      */
-    jsval GetJSVal() const {return mJSVal;}
+    jsval GetJSVal() const
+        {if(!JSVAL_IS_PRIMITIVE(mJSVal))
+             xpc_UnmarkGrayObject(JSVAL_TO_OBJECT(mJSVal));
+         return mJSVal;}
+
+    /**
+     * This getter does not change the color of the jsval (if it represents a
+     * JSObject) meaning that the value returned is not guaranteed to be kept
+     * alive past the next CC.
+     *
+     * This should only be called if you are certain that the return value won't
+     * be passed into a JS API function and that it won't be stored without
+     * being rooted (or otherwise signaling the stored value to the CC).
+     */
+    jsval GetJSValPreserveColor() const {return mJSVal;}
 
     XPCVariant(XPCCallContext& ccx, jsval aJSVal);
 
@@ -4314,8 +4384,7 @@ public:
      */    
     static JSBool VariantDataToJS(XPCLazyCallContext& lccx, 
                                   nsIVariant* variant,
-                                  JSObject* scope, nsresult* pErr,
-                                  jsval* pJSVal);
+                                  nsresult* pErr, jsval* pJSVal);
 
 protected:
     virtual ~XPCVariant() { }
@@ -4448,48 +4517,83 @@ namespace xpc {
 
 struct CompartmentPrivate
 {
-  CompartmentPrivate(PtrAndPrincipalHashKey *key, bool wantXrays, bool cycleCollectionEnabled)
-    : key(key),
-      ptr(nsnull),
-      wantXrays(wantXrays),
-      cycleCollectionEnabled(cycleCollectionEnabled),
-      waiverWrapperMap(nsnull)
-  {
-  }
+    CompartmentPrivate(PtrAndPrincipalHashKey *key, bool wantXrays, bool cycleCollectionEnabled)
+        : key(key),
+          ptr(nsnull),
+          wantXrays(wantXrays),
+          cycleCollectionEnabled(cycleCollectionEnabled),
+          waiverWrapperMap(nsnull),
+          expandoMap(nsnull)
+    {
+    }
 
-  CompartmentPrivate(nsISupports *ptr, bool wantXrays, bool cycleCollectionEnabled)
-    : key(nsnull),
-      ptr(ptr),
-      wantXrays(wantXrays),
-      cycleCollectionEnabled(cycleCollectionEnabled),
-      waiverWrapperMap(nsnull)
-  {
-  }
+    CompartmentPrivate(nsISupports *ptr, bool wantXrays, bool cycleCollectionEnabled)
+        : key(nsnull),
+          ptr(ptr),
+          wantXrays(wantXrays),
+          cycleCollectionEnabled(cycleCollectionEnabled),
+          waiverWrapperMap(nsnull),
+          expandoMap(nsnull)
+    {
+    }
 
-  ~CompartmentPrivate();
+    ~CompartmentPrivate();
 
-  // NB: key and ptr are mutually exclusive.
-  nsAutoPtr<PtrAndPrincipalHashKey> key;
-  nsCOMPtr<nsISupports> ptr;
-  bool wantXrays;
-  bool cycleCollectionEnabled;
-  JSObject2JSObjectMap *waiverWrapperMap;
+    // NB: key and ptr are mutually exclusive.
+    nsAutoPtr<PtrAndPrincipalHashKey> key;
+    nsCOMPtr<nsISupports> ptr;
+    bool wantXrays;
+    bool cycleCollectionEnabled;
+    JSObject2JSObjectMap *waiverWrapperMap;
+    // NB: we don't want this map to hold a strong reference to the wrapper.
+    nsDataHashtable<nsPtrHashKey<XPCWrappedNative>, JSObject *> *expandoMap;
+
+    bool RegisterExpandoObject(XPCWrappedNative *wn, JSObject *expando) {
+        if (!expandoMap) {
+            expandoMap = new nsDataHashtable<nsPtrHashKey<XPCWrappedNative>, JSObject *>();
+            if (!expandoMap->Init(8))
+                return false;
+        }
+        return expandoMap->Put(wn, expando);
+    }
+
+    /**
+     * This lookup does not change the color of the JSObject meaning that the
+     * object returned is not guaranteed to be kept alive past the next CC.
+     *
+     * This should only be called if you are certain that the return value won't
+     * be passed into a JS API function and that it won't be stored without
+     * being rooted (or otherwise signaling the stored value to the CC).
+     */
+    JSObject *LookupExpandoObjectPreserveColor(XPCWrappedNative *wn) {
+        return expandoMap ? expandoMap->Get(wn) : nsnull;
+    }
+
+    /**
+     * This lookup clears the gray bit before handing out the JSObject which
+     * means that the object is guaranteed to be kept alive past the next CC.
+     */
+    JSObject *LookupExpandoObject(XPCWrappedNative *wn) {
+        JSObject *obj = LookupExpandoObjectPreserveColor(wn);
+        xpc_UnmarkGrayObject(obj);
+        return obj;
+    }
 };
 
 inline bool
 CompartmentParticipatesInCycleCollection(JSContext *cx, JSCompartment *compartment)
 {
-   CompartmentPrivate *priv =
-       static_cast<CompartmentPrivate *>(JS_GetCompartmentPrivate(cx, compartment));
-   NS_ASSERTION(priv, "This should never be null!");
+    CompartmentPrivate *priv =
+        static_cast<CompartmentPrivate *>(JS_GetCompartmentPrivate(cx, compartment));
+    NS_ASSERTION(priv, "This should never be null!");
 
-   return priv->cycleCollectionEnabled;
+    return priv->cycleCollectionEnabled;
 }
 
 inline bool
 ParticipatesInCycleCollection(JSContext *cx, js::gc::Cell *cell)
 {
-   return CompartmentParticipatesInCycleCollection(cx, cell->compartment());
+    return CompartmentParticipatesInCycleCollection(cx, cell->compartment());
 }
 
 }

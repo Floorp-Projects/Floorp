@@ -57,7 +57,7 @@ function test() {
   ok(!animateZoom(), "animate_zoom = false");
   
   let onLoad = function() {
-    win.removeEventListener("DOMContentLoaded", onLoad, false);
+    win.removeEventListener("load", onLoad, false);
 
     // a few shared references
     let tabViewWindow = null;
@@ -86,5 +86,5 @@ function test() {
     win.addEventListener("tabviewshown", onShown, false);
     win.TabView._initFrame(initCallback);
   }
-  win.addEventListener("DOMContentLoaded", onLoad, false);
+  win.addEventListener("load", onLoad, false);
 }

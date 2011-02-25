@@ -52,7 +52,7 @@ function run_test() {
   standardInit();
   // The HTTP server is only used for the mar file downloads which is slow
   start_httpserver(URL_PATH);
-  do_timeout(0, run_test_pt1);
+  do_execute_soon(run_test_pt1);
 }
 
 // The nsHttpServer must be stopped before calling do_test_finished
@@ -118,70 +118,70 @@ function setResponseBody(aHashFunction, aHashValue) {
 // mar download with a valid MD5 hash
 function run_test_pt1() {
   setResponseBody("MD5", MD5_HASH_SIMPLE_MAR);
-  run_test_helper_pt1("run_test_pt1 - mar download with a valid MD5 hash",
+  run_test_helper_pt1("mar download with a valid MD5 hash",
                       AUS_Cr.NS_OK, run_test_pt2);
 }
 
 // mar download with an invalid MD5 hash
 function run_test_pt2() {
   setResponseBody("MD5", MD5_HASH_SIMPLE_MAR + "0");
-  run_test_helper_pt1("run_test_pt2 - mar download with an invalid MD5 hash",
+  run_test_helper_pt1("mar download with an invalid MD5 hash",
                       AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt3);
 }
 
 // mar download with a valid SHA1 hash
 function run_test_pt3() {
   setResponseBody("SHA1", SHA1_HASH_SIMPLE_MAR);
-  run_test_helper_pt1("run_test_pt3 - mar download with a valid SHA1 hash",
+  run_test_helper_pt1("mar download with a valid SHA1 hash",
                       AUS_Cr.NS_OK, run_test_pt4);
 }
 
 // mar download with an invalid SHA1 hash
 function run_test_pt4() {
   setResponseBody("SHA1", SHA1_HASH_SIMPLE_MAR + "0");
-  run_test_helper_pt1("run_test_pt4 - mar download with an invalid SHA1 hash",
+  run_test_helper_pt1("mar download with an invalid SHA1 hash",
                       AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt5);
 }
 
 // mar download with a valid SHA256 hash
 function run_test_pt5() {
   setResponseBody("SHA256", SHA256_HASH_SIMPLE_MAR);
-  run_test_helper_pt1("run_test_pt5 - mar download with a valid SHA256 hash",
+  run_test_helper_pt1("mar download with a valid SHA256 hash",
                       AUS_Cr.NS_OK, run_test_pt6);
 }
 
 // mar download with an invalid SHA256 hash
 function run_test_pt6() {
   setResponseBody("SHA256", SHA256_HASH_SIMPLE_MAR + "0");
-  run_test_helper_pt1("run_test_pt6 - mar download with an invalid SHA256 hash",
+  run_test_helper_pt1("mar download with an invalid SHA256 hash",
                       AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt7);
 }
 
 // mar download with a valid SHA384 hash
 function run_test_pt7() {
   setResponseBody("SHA384", SHA384_HASH_SIMPLE_MAR);
-  run_test_helper_pt1("run_test_pt7 - mar download with a valid SHA384 hash",
+  run_test_helper_pt1("mar download with a valid SHA384 hash",
                       AUS_Cr.NS_OK, run_test_pt8);
 }
 
 // mar download with an invalid SHA384 hash
 function run_test_pt8() {
   setResponseBody("SHA384", SHA384_HASH_SIMPLE_MAR + "0");
-  run_test_helper_pt1("run_test_pt8 - mar download with an invalid SHA384 hash",
+  run_test_helper_pt1("mar download with an invalid SHA384 hash",
                       AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt9);
 }
 
 // mar download with a valid SHA512 hash
 function run_test_pt9() {
   setResponseBody("SHA512", SHA512_HASH_SIMPLE_MAR);
-  run_test_helper_pt1("run_test_pt9 - mar download with a valid SHA512 hash",
+  run_test_helper_pt1("mar download with a valid SHA512 hash",
                       AUS_Cr.NS_OK, run_test_pt10);
 }
 
 // mar download with an invalid SHA384 hash
 function run_test_pt10() {
   setResponseBody("SHA512", SHA512_HASH_SIMPLE_MAR + "0");
-  run_test_helper_pt1("run_test_pt10 - mar download with an invalid SHA512 hash",
+  run_test_helper_pt1("mar download with an invalid SHA512 hash",
                       AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt11);
 }
 
@@ -190,28 +190,28 @@ function run_test_pt11() {
   var patches = getRemotePatchString(null, URL_HOST + URL_PATH + "/missing.mar");
   var updates = getRemoteUpdateString(patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
-  run_test_helper_pt1("run_test_pt11 - mar download with the mar not found",
+  run_test_helper_pt1("mar download with the mar not found",
                       AUS_Cr.NS_ERROR_UNEXPECTED, finish_test);
 }
 
 /* Update download listener - nsIRequestObserver */
 const downloadListener = {
-  onStartRequest: function(request, context) {
+  onStartRequest: function DL_onStartRequest(request, context) {
   },
 
-  onProgress: function(request, context, progress, maxProgress) {
+  onProgress: function DL_onProgress(request, context, progress, maxProgress) {
   },
 
-  onStatus: function(request, context, status, statusText) {
+  onStatus: function DL_onStatus(request, context, status, statusText) {
   },
 
-  onStopRequest: function(request, context, status) {
+  onStopRequest: function DL_onStopRequest(request, context, status) {
     gStatusResult = status;
     // Use a timeout to allow the request to complete
-    do_timeout(0, gCheckFunc);
+    do_execute_soon(gCheckFunc);
   },
 
-  QueryInterface: function(iid) {
+  QueryInterface: function DL_QueryInterface(iid) {
     if (!iid.equals(AUS_Ci.nsIRequestObserver) &&
         !iid.equals(AUS_Ci.nsIProgressEventSink) &&
         !iid.equals(AUS_Ci.nsISupports))

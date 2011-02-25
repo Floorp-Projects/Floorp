@@ -135,7 +135,7 @@
 #define LAYOUT_DEBUG_MODULE
 #endif
 
-#ifdef MOZ_IPC
+#if defined(MOZ_IPC) && defined(ENABLE_JETPACK_SERVICE)
 #define JETPACK_MODULES \
     MODULE(jetpack)
 #else
@@ -233,6 +233,8 @@
 #define JSCTYPES_MODULE
 #endif
 
+#define SERVICES_CRYPTO_MODULE MODULE(nsServicesCryptoModule)
+
 #if defined(MOZ_APP_COMPONENT_INCLUDE)
 #include MOZ_APP_COMPONENT_INCLUDE
 #else
@@ -288,6 +290,7 @@
     WINDOWSPROXY_MODULE                      \
     JSCTYPES_MODULE                          \
     MODULE(jsperf)                           \
+    SERVICES_CRYPTO_MODULE                   \
     APP_COMPONENT_MODULES                    \
     /* end of list */
 

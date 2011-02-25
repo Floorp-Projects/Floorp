@@ -381,6 +381,9 @@ class Conditionally {
 
     template <class T1>
     Conditionally(bool b, const T1 &t1) { if (b) t.construct(t1); }
+
+    template <class T1, class T2>
+    Conditionally(bool b, const T1 &t1, const T2 &t2) { if (b) t.construct(t1, t2); }
 };
 
 template <class T>
@@ -433,6 +436,24 @@ Reverse(T *beg, T *end)
         *end = tmp;
         ++beg;
     }
+}
+
+template <class T>
+static inline T *
+Find(T *beg, T *end, const T &v)
+{
+    for (T *p = beg; p != end; ++p) {
+        if (*p == v)
+            return p;
+    }
+    return end;
+}
+
+template <class Container>
+static inline typename Container::ElementType *
+Find(Container &c, const typename Container::ElementType &v)
+{
+    return Find(c.begin(), c.end(), v);
 }
 
 template <typename InputIterT, typename CallableT>

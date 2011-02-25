@@ -1,0 +1,28 @@
+Elfhack is a program to optimize ELF binaries for size and cold startup
+speed.
+
+Presently, it is quite experimental, though it works well for the target
+it was created for: Firefox's libxul.so.
+
+Elfhack currently only does one thing: packing dynamic relocations ;
+which ends up being a quite complex task, that can be summarized this
+way:
+- Remove RELATIVE relocations from the .rel.dyn/.rela.dyn section.
+- Inject a small code able to apply relative relocations "by hand"
+  after the .rel.dyn/.rela.dyn section.
+- Inject a section containing relocative relocations in a different
+  and more packed format, after the small code.
+- Register the small code as DT_INIT function. Make the small code call
+  what was initially the DT_INIT function, if there was one.
+- Remove the hole between the new section containing relative
+  relocations and the following sections, adjusting offsets and base
+  addresses accordingly.
+- Adjust PT_LOAD entries to fit new offsets, and add an additional
+  PT_LOAD entry when that is necessary to handle the discrepancy between
+  offsets and base addresses, meaning the section offsets may yet again
+  need adjustments.
+- Adjust various DT_* dynamic tags to fit the new ELF layout.
+- Adjust section headers.
+- Adjust ELF headers.
+
+See http://glandium.org/blog/?p=1177#relocations for some figures.

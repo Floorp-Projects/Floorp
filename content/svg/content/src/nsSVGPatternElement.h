@@ -48,7 +48,7 @@
 #include "nsSVGEnum.h"
 #include "nsSVGString.h"
 #include "nsSVGViewBox.h"
-#include "nsSVGPreserveAspectRatio.h"
+#include "SVGAnimatedPreserveAspectRatio.h"
 
 //--------------------- Patterns ------------------------
 
@@ -68,6 +68,8 @@ protected:
   nsSVGPatternElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
+  typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
+
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -98,7 +100,7 @@ protected:
   virtual LengthAttributesInfo GetLengthInfo();
   virtual EnumAttributesInfo GetEnumInfo();
   virtual nsSVGViewBox *GetViewBox();
-  virtual nsSVGPreserveAspectRatio *GetPreserveAspectRatio();
+  virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio();
   virtual StringAttributesInfo GetStringInfo();
 
   virtual void DidAnimateTransform();
@@ -121,7 +123,7 @@ protected:
 
   // nsIDOMSVGFitToViewbox properties
   nsSVGViewBox mViewBox;
-  nsSVGPreserveAspectRatio mPreserveAspectRatio;
+  SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
 
   // helper
   nsresult CreateTransformList();

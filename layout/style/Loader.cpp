@@ -946,7 +946,7 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
                                     errorMessage,
                                     strings, NS_ARRAY_LENGTH(strings),
                                     referrer, EmptyString(), 0, 0, errorFlag,
-                                    "CSS Loader");
+                                    "CSS Loader", mLoader->mDocument);
 
     if (errorFlag == nsIScriptError::errorFlag) {
       LOG_WARN(("  Ignoring sheet with improper MIME type %s",

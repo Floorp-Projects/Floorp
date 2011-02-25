@@ -332,12 +332,14 @@ class Automation(object):
       {'allowXULXBL':[(l.host, 'noxul' not in l.options) for l in locations]});
 
     part = """\
+user_pref("browser.console.showInPanel", true);
 user_pref("browser.dom.window.dump.enabled", true);
 user_pref("dom.allow_scripts_to_close_windows", true);
 user_pref("dom.disable_open_during_load", false);
 user_pref("dom.max_script_run_time", 0); // no slow script dialogs
 user_pref("dom.max_chrome_script_run_time", 0);
 user_pref("dom.popup_maximum", -1);
+user_pref("dom.send_after_paint_to_content", true);
 user_pref("dom.successive_dialog_time_limit", 0);
 user_pref("signed.applets.codebase_principal_support", true);
 user_pref("security.warn_submit_insecure", false);
@@ -352,6 +354,7 @@ user_pref("browser.EULA.override", true);
 user_pref("javascript.options.tracejit.content", true);
 user_pref("javascript.options.methodjit.content", true);
 user_pref("javascript.options.jitprofiling.content", true);
+user_pref("javascript.options.methodjit_always", false);
 user_pref("gfx.color_management.force_srgb", true);
 user_pref("network.manage-offline-status", false);
 user_pref("test.mousescroll", true);
@@ -367,6 +370,8 @@ user_pref("browser.panorama.experienced_first_run", true); // Assume experienced
 user_pref("extensions.enabledScopes", 5);
 // Disable metadata caching for installed add-ons by default
 user_pref("extensions.getAddons.cache.enabled", false);
+// Disable intalling any distribution add-ons
+user_pref("extensions.installDistroAddons", false);
 
 user_pref("extensions.testpilot.runStudies", false);
 
@@ -385,6 +390,8 @@ user_pref("browser.safebrowsing.provider.0.updateURL", "http://%(server)s/safebr
 // Point update checks to the local testing server for fast failures
 user_pref("extensions.update.url", "http://%(server)s/extensions-dummy/updateURL");
 user_pref("extensions.blocklist.url", "http://%(server)s/extensions-dummy/blocklistURL");
+// Make sure opening about:addons won't hit the network
+user_pref("extensions.webservice.discoverURL", "http://%(server)s/extensions-dummy/discoveryURL");
 """ % { "server" : self.webServer + ":" + str(self.httpPort) }
     prefs.append(part)
 
@@ -864,7 +871,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       # create certificate database for the profile
       certificateStatus = self.fillCertificateDB(profileDir, certPath, utilityPath, xrePath)
       if certificateStatus != 0:
-        self.log.info("TEST-UNEXPECTED FAIL | automation.py | Certificate integration failed")
+        self.log.info("TEST-UNEXPECTED-FAIL | automation.py | Certificate integration failed")
         return certificateStatus
 
       # start ssltunnel to provide https:// URLs capability
@@ -923,9 +930,11 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
   def installExtension(self, extensionSource, profileDir, extensionID):
     if (not os.path.exists(extensionSource)):
       self.log.info("INFO | automation.py | Cannot install extension no source at: %s", extensionSource) 
+      return
       
     if (not os.path.exists(profileDir)):
       self.log.info("INFO | automation.py | Cannot install extension invalid profileDir at: %s", profileDir)
+      return
 
     # See if we have an XPI or a directory
     if (os.path.isfile(extensionSource)):

@@ -447,6 +447,7 @@ add_test(function() {
 
       var item = result.item;
       list.ensureElementIsVisible(item);
+      EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
       EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
       wait_for_view_load(gManagerWindow, function() {
         var name = gManagerWindow.document.getElementById("detail-name").textContent;
@@ -478,11 +479,13 @@ add_test(function() {
     if (currentIndex >= sorterNames.length) {
       sorters.handler = originalHandler;
       run_next_test();
+      return;
     }
 
     // Simulate clicking on a specific sorter
     var buttonId = buttonIds[currentIndex];
     var sorter = getAnonymousElementByAttribute(sorters, "anonid", buttonId);
+    is_element_visible(sorter);
     EventUtils.synthesizeMouseAtCenter(sorter, { }, gManagerWindow);
   }
 

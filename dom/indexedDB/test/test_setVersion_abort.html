@@ -20,28 +20,28 @@ function testSteps()
   const name = window.location.pathname;
   const description = "My Test Database";
 
-  let request = moz_indexedDB.open(name, description);
+  let request = mozIndexedDB.open(name, description);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   let event = yield;
 
-  let db = event.result;
+  let db = event.target.result;
 
   request = db.setVersion("1");
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
 
-  let objectStore = db.createObjectStore("foo", "");
+  let objectStore = db.createObjectStore("foo");
   let index = objectStore.createIndex("bar", "baz");
 
   is(db.version, "1", "Correct version");
   is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
   is(objectStore.indexNames.length, 1, "Correct indexNames length");
 
-  event.transaction.oncomplete = unexpectedSuccessHandler;
-  event.transaction.onabort = grabEventAndContinueHandler;
-  event.transaction.abort();
+  event.target.transaction.oncomplete = unexpectedSuccessHandler;
+  event.target.transaction.onabort = grabEventAndContinueHandler;
+  event.target.transaction.abort();
 
   event = yield;
 

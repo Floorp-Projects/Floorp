@@ -279,8 +279,8 @@ DumpArenaStats(JSGCArenaStats *stp, FILE *fp)
 void
 DumpCompartmentStats(JSCompartment *comp, FILE *fp)
 {
-    if (comp->rt->defaultCompartment == comp)
-        fprintf(fp, "\n**** DefaultCompartment Allocation Statistics: %p ****\n\n", (void *) comp);
+    if (comp->rt->atomsCompartment == comp)
+        fprintf(fp, "\n**** AtomsCompartment Allocation Statistics: %p ****\n\n", (void *) comp);
     else
         fprintf(fp, "\n**** Compartment Allocation Statistics: %p ****\n\n", (void *) comp);
 
@@ -422,18 +422,19 @@ GCTimer::finish(bool lastGC) {
                 gcFile = fopen("gcTimer.dat", "a");
 
                 fprintf(gcFile, "     AppTime,  Total,   Mark,  Sweep, FinObj,");
-                fprintf(gcFile, " FinStr,  Destroy,  newChunks, destroyChunks\n");
+                fprintf(gcFile, " FinStr, SwShapes, Destroy, +Chunks, -Chunks\n");
             }
             JS_ASSERT(gcFile);
-            fprintf(gcFile, "%12.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f,  %7.1f, ",
+            fprintf(gcFile, "%12.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %8.1f,  %6.1f, ",
                     (double)(enter - getFirstEnter()) / 1e6,
                     (double)(end - enter) / 1e6,
                     (double)(startSweep - startMark) / 1e6,
                     (double)(sweepDestroyEnd - startSweep) / 1e6,
                     (double)(sweepObjectEnd - startSweep) / 1e6,
                     (double)(sweepStringEnd - sweepObjectEnd) / 1e6,
-                    (double)(sweepDestroyEnd - sweepStringEnd) / 1e6);
-            fprintf(gcFile, "%10d, %10d \n", newChunkCount,
+                    (double)(sweepShapeEnd - sweepStringEnd) / 1e6,
+                    (double)(sweepDestroyEnd - sweepShapeEnd) / 1e6);
+            fprintf(gcFile, "%7d, %7d \n", newChunkCount,
                     destroyChunkCount);
             fflush(gcFile);
 

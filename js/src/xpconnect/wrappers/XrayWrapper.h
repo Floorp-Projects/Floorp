@@ -58,7 +58,7 @@ IsTransparent(JSContext *cx, JSObject *wrapper);
 }
 
 // NB: Base *must* derive from JSProxyHandler
-template <typename Base, typename Policy>
+template <typename Base>
 class XrayWrapper : public Base {
   public:
     XrayWrapper(uintN flags);
@@ -84,11 +84,15 @@ class XrayWrapper : public Base {
     virtual bool get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
                      js::Value *vp);
     virtual bool set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
-                     js::Value *vp);
+                     bool strict, js::Value *vp);
     virtual bool has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
     virtual bool hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
-    virtual bool enumerateOwn(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
+    virtual bool keys(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
     virtual bool iterate(JSContext *cx, JSObject *wrapper, uintN flags, js::Value *vp);
+
+    virtual bool call(JSContext *cx, JSObject *wrapper, uintN argc, js::Value *vp);
+    virtual bool construct(JSContext *cx, JSObject *wrapper,
+                           uintN argc, js::Value *argv, js::Value *rval);
 
     static JSObject *createHolder(JSContext *cx, JSObject *wrappedNative, JSObject *parent);
 
@@ -97,22 +101,6 @@ class XrayWrapper : public Base {
   private:
     bool resolveOwnProperty(JSContext *cx, JSObject *wrapper, jsid id, bool set,
                             js::PropertyDescriptor *desc);
-};
-
-class CrossCompartmentXray {
-  public:
-    static bool enter(JSContext *cx, JSObject *wrapper, jsid *idp,
-                      JSWrapper::Action act, void **priv);
-    static void leave(JSContext *cx, JSObject *wrapper, void *priv);
-};
-
-class SameCompartmentXray {
-  public:
-    static bool enter(JSContext *, JSObject *, jsid *, JSWrapper::Action, void **) {
-        return true;
-    }
-    static void leave(JSContext *cx, JSObject *wrapper, void *priv) {
-    }
 };
 
 }

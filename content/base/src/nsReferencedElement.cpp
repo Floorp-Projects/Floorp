@@ -140,10 +140,10 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
   }
 
   nsCOMPtr<nsIURL> documentURL = do_QueryInterface(doc->GetDocumentURI());
-  if (!documentURL)
-    return;
-
-  if (!EqualExceptRef(url, documentURL)) {
+  // We've already checked that |url| is an nsIURL.  So if the document URI is
+  // not an nsIURL then |url| is certainly not going to be pointing to the same
+  // document as the document URI.
+  if (!documentURL || !EqualExceptRef(url, documentURL)) {
     nsRefPtr<nsIDocument::ExternalResourceLoad> load;
     doc = doc->RequestExternalResource(url, aFromContent, getter_AddRefs(load));
     if (!doc) {

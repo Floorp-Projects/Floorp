@@ -1,5 +1,5 @@
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/base_records/crypto.js");
+Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
 
 Svc.DefaultPrefs.set("registerEngines", "");

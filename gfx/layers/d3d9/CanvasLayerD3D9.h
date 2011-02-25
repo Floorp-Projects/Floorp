@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_CANVASLAYEROGL_H
-#define GFX_CANVASLAYEROGL_H
+#ifndef GFX_CANVASLAYERD3D9_H
+#define GFX_CANVASLAYERD3D9_H
 
 #include "LayerManagerD3D9.h"
 #include "GLContext.h"
@@ -52,10 +52,11 @@ class THEBES_API CanvasLayerD3D9 :
 {
 public:
   CanvasLayerD3D9(LayerManagerD3D9 *aManager)
-    : CanvasLayer(aManager, NULL),
-      LayerD3D9(aManager),
-      mDataIsPremultiplied(PR_FALSE),
-      mNeedsYFlip(PR_FALSE)
+    : CanvasLayer(aManager, NULL)
+    , LayerD3D9(aManager)
+    , mDataIsPremultiplied(PR_FALSE)
+    , mNeedsYFlip(PR_FALSE)
+    , mHasAlpha(PR_TRUE)
   {
       mImplData = static_cast<LayerD3D9*>(this);
       aManager->deviceManager()->mLayersWithResources.AppendElement(this);
@@ -84,11 +85,9 @@ protected:
 
   PRUint32 mCanvasFramebuffer;
 
-  // Indicates whether our texture was obtained through D2D interop.
-  bool mIsInteropTexture;
-
   PRPackedBool mDataIsPremultiplied;
   PRPackedBool mNeedsYFlip;
+  PRPackedBool mHasAlpha;
 };
 
 } /* layers */

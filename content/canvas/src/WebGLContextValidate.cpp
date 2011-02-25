@@ -83,14 +83,13 @@ WebGLProgram::UpdateInfo(gl::GLContext *gl)
 }
 
 /*
- * Verify that we can read count consecutive elements from each bound VBO.
+ * Verify that state is consistent for drawing, and compute max number of elements (maxAllowedCount)
+ * that will be legal to be read from bound VBOs.
  */
 
 PRBool
-WebGLContext::ValidateBuffers(PRUint32 count)
+WebGLContext::ValidateBuffers(PRInt32 *maxAllowedCount, const char *info)
 {
-    NS_ENSURE_TRUE(count > 0, PR_TRUE);
-
 #ifdef DEBUG
     GLuint currentProgram = 0;
     MakeContextCurrent();
@@ -100,6 +99,8 @@ WebGLContext::ValidateBuffers(PRUint32 count)
     if (currentProgram != mCurrentProgram->GLName())
         return PR_FALSE;
 #endif
+
+    *maxAllowedCount = -1;
 
     PRUint32 attribs = mAttribBuffers.Length();
     for (PRUint32 i = 0; i < attribs; ++i) {
@@ -111,7 +112,7 @@ WebGLContext::ValidateBuffers(PRUint32 count)
             continue;
 
         if (vd.buf == nsnull) {
-            LogMessageIfVerbose("No VBO bound to enabled attrib index %d!", i);
+            ErrorInvalidOperation("%s: no VBO bound to enabled vertex attrib index %d!", info, i);
             return PR_FALSE;
         }
 
@@ -120,20 +121,32 @@ WebGLContext::ValidateBuffers(PRUint32 count)
         if (!mCurrentProgram->IsAttribInUse(i))
             continue;
 
-        // compute the number of bytes we actually need
-        CheckedUint32 checked_needed = CheckedUint32(vd.byteOffset) + // the base offset
-            CheckedUint32(vd.actualStride()) * (count-1) + // to stride to the start of the last element group
-            CheckedUint32(vd.componentSize()) * vd.size;   // and the number of bytes needed for these components
+        // the base offset
+        CheckedInt32 checked_byteLength
+          = CheckedInt32(vd.buf->ByteLength()) - vd.byteOffset;
+        CheckedInt32 checked_sizeOfLastElement
+          = CheckedInt32(vd.componentSize()) * vd.size;
 
-        if (!checked_needed.valid()) {
-            LogMessageIfVerbose("Integer overflow computing the size of bound vertex attrib buffer at index %d", i);
-            return PR_FALSE;
+        if (!checked_byteLength.valid() ||
+            !checked_sizeOfLastElement.valid())
+        {
+          ErrorInvalidOperation("%s: integer overflow occured while checking vertex attrib %d", info, i);
+          return PR_FALSE;
         }
 
-        if (vd.buf->ByteLength() < checked_needed.value()) {
-            LogMessageIfVerbose("VBO too small for bound attrib index %d: need at least %d bytes, but have only %d",
-                       i, checked_needed.value(), vd.buf->ByteLength());
+        if (checked_byteLength.value() < checked_sizeOfLastElement.value()) {
+          *maxAllowedCount = 0;
+        } else {
+          CheckedInt32 checked_maxAllowedCount
+            = ((checked_byteLength - checked_sizeOfLastElement) / vd.actualStride()) + 1;
+
+          if (!checked_maxAllowedCount.valid()) {
+            ErrorInvalidOperation("%s: integer overflow occured while checking vertex attrib %d", info, i);
             return PR_FALSE;
+          }
+
+          if (*maxAllowedCount == -1 || *maxAllowedCount > checked_maxAllowedCount.value())
+              *maxAllowedCount = checked_maxAllowedCount.value();
         }
     }
 
@@ -202,6 +215,25 @@ PRBool WebGLContext::ValidateBlendFuncSrcEnum(WebGLenum factor, const char *info
         return PR_TRUE;
     else
         return ValidateBlendFuncDstEnum(factor, info);
+}
+
+PRBool WebGLContext::ValidateBlendFuncEnumsCompatibility(WebGLenum sfactor, WebGLenum dfactor, const char *info)
+{
+    PRBool sfactorIsConstantColor = sfactor == LOCAL_GL_CONSTANT_COLOR ||
+                                    sfactor == LOCAL_GL_ONE_MINUS_CONSTANT_COLOR;
+    PRBool sfactorIsConstantAlpha = sfactor == LOCAL_GL_CONSTANT_ALPHA ||
+                                    sfactor == LOCAL_GL_ONE_MINUS_CONSTANT_ALPHA;
+    PRBool dfactorIsConstantColor = dfactor == LOCAL_GL_CONSTANT_COLOR ||
+                                    dfactor == LOCAL_GL_ONE_MINUS_CONSTANT_COLOR;
+    PRBool dfactorIsConstantAlpha = dfactor == LOCAL_GL_CONSTANT_ALPHA ||
+                                    dfactor == LOCAL_GL_ONE_MINUS_CONSTANT_ALPHA;
+    if ( (sfactorIsConstantColor && dfactorIsConstantAlpha) ||
+         (dfactorIsConstantColor && sfactorIsConstantAlpha) ) {
+        ErrorInvalidOperation("%s are mutually incompatible, see section 6.8 in the WebGL 1.0 spec", info);
+        return PR_FALSE;
+    } else {
+        return PR_TRUE;
+    }
 }
 
 PRBool WebGLContext::ValidateTextureTargetEnum(WebGLenum target, const char *info)
@@ -349,6 +381,12 @@ WebGLContext::InitAndValidateGL()
 {
     if (!gl) return PR_FALSE;
 
+    GLenum error = gl->fGetError();
+    if (error != LOCAL_GL_NO_ERROR) {
+        LogMessage("GL error 0x%x occurred during OpenGL context initialization, before WebGL initialization!", error);
+        return PR_FALSE;
+    }
+
     mActiveTexture = 0;
     mSynthesizedGLError = LOCAL_GL_NO_ERROR;
 
@@ -408,7 +446,7 @@ WebGLContext::InitAndValidateGL()
     gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS, (GLint*) &mGLMaxTextureImageUnits);
     gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, (GLint*) &mGLMaxVertexTextureImageUnits);
 
-    if (gl->IsGLES2()) {
+    if (gl->HasES2Compatibility()) {
         gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS, (GLint*) &mGLMaxFragmentUniformVectors);
         gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS, (GLint*) &mGLMaxVertexUniformVectors);
         gl->fGetIntegerv(LOCAL_GL_MAX_VARYING_VECTORS, (GLint*) &mGLMaxVaryingVectors);
@@ -417,8 +455,37 @@ WebGLContext::InitAndValidateGL()
         mGLMaxFragmentUniformVectors /= 4;
         gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_COMPONENTS, (GLint*) &mGLMaxVertexUniformVectors);
         mGLMaxVertexUniformVectors /= 4;
-        gl->fGetIntegerv(LOCAL_GL_MAX_VARYING_FLOATS, (GLint*) &mGLMaxVaryingVectors);
-        mGLMaxVaryingVectors /= 4;
+
+        // we are now going to try to read GL_MAX_VERTEX_OUTPUT_COMPONENTS and GL_MAX_FRAGMENT_INPUT_COMPONENTS,
+        // however these constants only entered the OpenGL standard at OpenGL 3.2. So we will try reading,
+        // and check OpenGL error for INVALID_ENUM.
+
+        // before we start, we check that no error already occurred, to prevent hiding it in our subsequent error handling
+        error = gl->fGetError();
+        if (error != LOCAL_GL_NO_ERROR) {
+            LogMessage("GL error 0x%x occurred during WebGL context initialization!", error);
+            return PR_FALSE;
+        }
+
+        // On the public_webgl list, "problematic GetParameter pnames" thread, the following formula was given:
+        //   mGLMaxVaryingVectors = min (GL_MAX_VERTEX_OUTPUT_COMPONENTS, GL_MAX_FRAGMENT_INPUT_COMPONENTS) / 4
+        GLint maxVertexOutputComponents,
+              minFragmentInputComponents;
+        gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS, &maxVertexOutputComponents);
+        gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS, &minFragmentInputComponents);
+
+        error = gl->fGetError();
+        switch (error) {
+            case LOCAL_GL_NO_ERROR:
+                mGLMaxVaryingVectors = PR_MIN(maxVertexOutputComponents, minFragmentInputComponents) / 4;
+                break;
+            case LOCAL_GL_INVALID_ENUM:
+                mGLMaxVaryingVectors = 16; // = 64/4, 64 is the min value for maxVertexOutputComponents in OpenGL 3.2 spec
+                break;
+            default:
+                LogMessage("GL error 0x%x occurred during WebGL context initialization!", error);
+                return PR_FALSE;
+        }
     }
 
 #if 0
@@ -464,6 +531,10 @@ WebGLContext::InitAndValidateGL()
     gl->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT,   (GLint*) &mPixelStorePackAlignment);
     gl->fGetIntegerv(LOCAL_GL_UNPACK_ALIGNMENT, (GLint*) &mPixelStoreUnpackAlignment);
 
+    gl->fGetIntegerv(LOCAL_GL_STENCIL_WRITEMASK, (GLint*) &mStencilWriteMask);
+    gl->fGetIntegerv(LOCAL_GL_STENCIL_VALUE_MASK, (GLint*) &mStencilValueMask);
+    gl->fGetIntegerv(LOCAL_GL_STENCIL_REF, (GLint*) &mStencilRef);
+
     // Check the shader validator pref
     nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
     NS_ENSURE_TRUE(prefService != nsnull, NS_ERROR_FAILURE);
@@ -482,7 +553,7 @@ WebGLContext::InitAndValidateGL()
 
     // notice that the point of calling GetError here is not only to check for error,
     // it is also to reset the error flag so that a subsequent WebGL getError call will give the correct result.
-    GLenum error = gl->fGetError();
+    error = gl->fGetError();
     if (error != LOCAL_GL_NO_ERROR) {
         LogMessage("GL error 0x%x occurred during WebGL context initialization!", error);
         return PR_FALSE;

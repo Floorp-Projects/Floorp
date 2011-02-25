@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -60,6 +60,7 @@ class ShadowContainerLayer;
 class ShadowImageLayer;
 class ShadowCanvasLayer;
 class ShadowColorLayer;
+class ReadbackProcessor;
 
 /**
  * This is a cairo/Thebes-only, main-thread-only implementation of layers.
@@ -140,6 +141,7 @@ public:
 
   virtual void BeginTransaction();
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
+  virtual bool EndEmptyTransaction();
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData);
 
@@ -151,16 +153,17 @@ public:
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
   virtual already_AddRefed<ColorLayer> CreateColorLayer();
+  virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer();
   virtual already_AddRefed<ShadowThebesLayer> CreateShadowThebesLayer()
-  { return NULL; }
+  { return nsnull; }
   virtual already_AddRefed<ShadowContainerLayer> CreateShadowContainerLayer()
-  { return NULL; }
+  { return nsnull; }
   virtual already_AddRefed<ShadowImageLayer> CreateShadowImageLayer()
-  { return NULL; }
+  { return nsnull; }
   virtual already_AddRefed<ShadowColorLayer> CreateShadowColorLayer()
-  { return NULL; }
+  { return nsnull; }
   virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer()
-  { return NULL; }
+  { return nsnull; }
 
   virtual LayersBackend GetBackendType() { return LAYERS_BASIC; }
   virtual void GetBackendName(nsAString& name) { name.AssignLiteral("Basic"); }
@@ -181,6 +184,10 @@ public:
   // Clear the cached contents of this layer.
   void ClearCachedResources();
 
+  void SetTransactionIncomplete() { mTransactionIncomplete = true; }
+
+  virtual PRBool IsCompositingCheap() { return PR_FALSE; }
+
 protected:
 #ifdef DEBUG
   enum TransactionPhase {
@@ -189,11 +196,11 @@ protected:
   TransactionPhase mPhase;
 #endif
 
-private:
   // Paints aLayer to mTarget.
   void PaintLayer(Layer* aLayer,
                   DrawThebesLayerCallback aCallback,
-                  void* aCallbackData);
+                  void* aCallbackData,
+                  ReadbackProcessor* aReadback);
 
   // Clear the contents of a layer
   void ClearLayer(Layer* aLayer);
@@ -203,6 +210,9 @@ private:
                                                           gfxPoint *aSavedOffset);
   void PopGroupWithCachedSurface(gfxContext *aTarget,
                                  const gfxPoint& aSavedOffset);
+
+  bool EndTransactionInternal(DrawThebesLayerCallback aCallback,
+                              void* aCallbackData);
 
   // Target resolution for scalable content.
   float mXResolution;
@@ -221,6 +231,7 @@ private:
 
   BufferMode   mDoubleBuffering;
   PRPackedBool mUsingDefaultTarget;
+  bool         mTransactionIncomplete;
 };
  
 
@@ -235,6 +246,7 @@ public:
   virtual ~BasicShadowLayerManager();
 
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
+  virtual bool EndEmptyTransaction();
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData);
 
@@ -262,7 +274,14 @@ public:
     mShadowManager = aShadowManager;
   }
 
+  virtual PRBool IsCompositingCheap();
+
 private:
+  /**
+   * Forward transaction results to the parent context.
+   */
+  void ForwardTransaction();
+
   LayerRefArray mKeepAlive;
 };
 #endif  // MOZ_IPC

@@ -156,6 +156,8 @@ public:
 
   virtual PRBool SetLayerManager(LayerManager *aManager);
 
+  virtual LayerManager::LayersBackend GetBackendType() { return LayerManager::LAYERS_OPENGL; }
+
 private:
   typedef mozilla::Mutex Mutex;
 
@@ -235,8 +237,8 @@ public:
   GLTexture mTexture;
   gfxIntSize mSize;
   nsRefPtr<GLContext> mASurfaceAsGLContext;
+  gl::ShaderProgramType mLayerProgram;
 };
-
 
 #ifdef MOZ_IPC
 class ShadowImageLayerOGL : public ShadowImageLayer,
@@ -255,6 +257,8 @@ public:
   Swap(gfxSharedImageSurface* aNewFront);
 
   virtual void DestroyFrontBuffer();
+
+  virtual void Disconnect();
 
   // LayerOGL impl
   virtual void Destroy();

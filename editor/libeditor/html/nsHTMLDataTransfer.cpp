@@ -1264,7 +1264,7 @@ nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnic
                                                            nsLinebreakConverter::eLinebreakAny, 
                                                            nsLinebreakConverter::eLinebreakContent, 
                                                            oldLengthInChars, &newLengthInChars);
-  if (!aStuffToPaste)
+  if (!*aStuffToPaste)
   {
     return NS_ERROR_FAILURE;
   }

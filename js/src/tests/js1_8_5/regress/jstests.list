@@ -15,6 +15,8 @@ script regress-552432.js
 script regress-553778.js
 script regress-555246-0.js
 script regress-555246-1.js
+script regress-559402-1.js
+script regress-559402-2.js
 script regress-559438.js
 script regress-560101.js
 script regress-560998-1.js
@@ -27,12 +29,24 @@ script regress-567152.js
 script regress-569306.js
 script regress-569464.js
 script regress-571014.js
+script regress-573875.js
+script regress-576847.js
 script regress-577648-1.js
 script regress-577648-2.js
 script regress-583429.js
 script regress-584355.js
+script regress-586482-1.js
+script regress-586482-2.js
+script regress-586482-3.js
+script regress-586482-4.js
+script regress-586482-5.js
 script regress-588339.js
 script regress-yarr-regexp.js
+script regress-591846.js
+script regress-592202-1.js
+script regress-592202-2.js
+script regress-592202-3.js
+script regress-592202-4.js
 script regress-592217.js
 script regress-592556-c35.js
 script regress-593256.js
@@ -60,3 +74,19 @@ script regress-617405-2.js
 script regress-618572.js
 skip-if(!xulRuntime.shell) script regress-618576.js  # uses evalcx
 fails-if(!xulRuntime.shell) script regress-618652.js
+script regress-619003-1.js
+script regress-619003-2.js
+script regress-620376-1.js
+script regress-620376-2.js
+script regress-621814.js
+script regress-620750.js
+script regress-624199.js
+script regress-624547.js
+script regress-624968.js
+script regress-626436.js
+fails-if(xulRuntime.shell) script regress-633741.js
+script regress-634210-1.js
+script regress-634210-2.js
+script regress-634210-3.js
+script regress-634210-4.js
+script regress-635195.js

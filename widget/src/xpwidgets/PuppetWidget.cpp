@@ -154,6 +154,9 @@ PuppetWidget::Destroy()
   Base::Destroy();
   mPaintTask.Revoke();
   mChild = nsnull;
+  if (mLayerManager) {
+    mLayerManager->Destroy();
+  }
   mLayerManager = nsnull;
   mTabChild = nsnull;
   return NS_OK;
@@ -180,9 +183,6 @@ PuppetWidget::Resize(PRInt32 aWidth,
                      PRInt32 aHeight,
                      PRBool  aRepaint)
 {
-  NS_ASSERTION(mEnabled && mVisible,
-               "does it make sense to Resize() a disabled or hidden widget?");
-
   nsIntRect oldBounds = mBounds;
   mBounds.SizeTo(nsIntSize(aWidth, aHeight));
 
@@ -276,43 +276,44 @@ PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
                   nsCAutoString("PuppetWidget"), nsnull);
 #endif
 
-  aStatus = nsEventStatus_eIgnore;
-  if (mEventCallback) {
-    if (event->message == NS_COMPOSITION_START) {
-      mIMEComposing = PR_TRUE;
-    }
-    switch (event->eventStructType) {
-    case NS_COMPOSITION_EVENT:
-      mIMELastReceivedSeqno = static_cast<nsCompositionEvent*>(event)->seqno;
-      if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
-        return NS_OK;
-      break;
-    case NS_TEXT_EVENT:
-      mIMELastReceivedSeqno = static_cast<nsTextEvent*>(event)->seqno;
-      if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
-        return NS_OK;
-      break;
-    case NS_SELECTION_EVENT:
-      mIMELastReceivedSeqno = static_cast<nsSelectionEvent*>(event)->seqno;
-      if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
-        return NS_OK;
-      break;
-    }
-    aStatus = (*mEventCallback)(event);
+  NS_ABORT_IF_FALSE(!mChild || mChild->mWindowType == eWindowType_popup,
+                    "Unexpected event dispatch!");
 
-    if (event->message == NS_COMPOSITION_END) {
-      mIMEComposing = PR_FALSE;
-    }
-  } else if (mChild) {
-    event->widget = mChild;
-    mChild->DispatchEvent(event, aStatus);
+  aStatus = nsEventStatus_eIgnore;
+
+  NS_ABORT_IF_FALSE(mViewCallback, "No view callback!");
+
+  if (event->message == NS_COMPOSITION_START) {
+    mIMEComposing = PR_TRUE;
+  }
+  switch (event->eventStructType) {
+  case NS_COMPOSITION_EVENT:
+    mIMELastReceivedSeqno = static_cast<nsCompositionEvent*>(event)->seqno;
+    if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
+      return NS_OK;
+    break;
+  case NS_TEXT_EVENT:
+    mIMELastReceivedSeqno = static_cast<nsTextEvent*>(event)->seqno;
+    if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
+      return NS_OK;
+    break;
+  case NS_SELECTION_EVENT:
+    mIMELastReceivedSeqno = static_cast<nsSelectionEvent*>(event)->seqno;
+    if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
+      return NS_OK;
+    break;
+  }
+  aStatus = (*mViewCallback)(event);
+
+  if (event->message == NS_COMPOSITION_END) {
+    mIMEComposing = PR_FALSE;
   }
 
   return NS_OK;
 }
 
 LayerManager*
-PuppetWidget::GetLayerManager(bool* aAllowRetaining)
+PuppetWidget::GetLayerManager(LayerManagerPersistence, bool* aAllowRetaining)
 {
   if (!mLayerManager) {
     mLayerManager = new BasicShadowLayerManager(this);
@@ -332,16 +333,19 @@ PuppetWidget::GetThebesSurface()
 nsresult
 PuppetWidget::IMEEndComposition(PRBool aCancel)
 {
-  if (!mIMEComposing)
-    return NS_OK;
-
   nsEventStatus status;
   nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, this);
   InitEvent(textEvent, nsnull);
+  // SendEndIMEComposition is always called since ResetInputState
+  // should always be called even if we aren't composing something.
   if (!mTabChild ||
       !mTabChild->SendEndIMEComposition(aCancel, &textEvent.theText)) {
     return NS_ERROR_FAILURE;
   }
+
+  if (!mIMEComposing)
+    return NS_OK;
+
   DispatchEvent(&textEvent, status);
 
   nsCompositionEvent compEvent(PR_TRUE, NS_COMPOSITION_END, this);

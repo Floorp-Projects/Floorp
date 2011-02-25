@@ -21,28 +21,28 @@
       const name = window.location.pathname;
       const description = "My Test Database";
 
-      let request = moz_indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
 
       request = db.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      is(event.transaction.mode, VERSION_CHANGE, "Correct mode");
+      is(event.target.transaction.mode, VERSION_CHANGE, "Correct mode");
 
-      let objectStore = db.createObjectStore("foo", "", true);
+      let objectStore = db.createObjectStore("foo", { autoIncrement: true });
 
       request = objectStore.add({});
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      let key = event.result;
+      let key = event.target.result;
       ok(key, "Got a key");
 
       SimpleTest.executeSoon(function() { testGenerator.next(); });
@@ -69,7 +69,7 @@
         request = db.transaction("foo").objectStore("foo").get(key);
         request.onerror = errorHandler;
         request.onsuccess = function(event) {
-          is(event.transaction.mode, READ_ONLY, "Correct mode");
+          is(event.target.transaction.mode, READ_ONLY, "Correct mode");
           callbackCount++;
           if (callbackCount == 100) {
             request = db.transaction("foo", READ_WRITE)
@@ -79,7 +79,7 @@
             request.onsuccess = function(event) {
               continueReading = false;
               finalCallbackCount = callbackCount;
-              is(event.result, callbackCount,
+              is(event.target.result, callbackCount,
                  "write callback came before later reads");
             }
           }

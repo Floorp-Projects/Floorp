@@ -108,40 +108,11 @@ def get_pids(name, minimun_pid=0):
         pids = wpk.get_pids(name)
 
     else:
-        # get_pids_cmd = ['ps', 'ax']
-        # h = killableprocess.runCommand(get_pids_cmd, stdout=subprocess.PIPE, universal_newlines=True)
-        # h.wait(group=False)
-        # data = h.stdout.readlines()
         data = getoutput(['ps', 'ax']).splitlines()
         pids = [int(line.split()[0]) for line in data if line.find(name) is not -1]
 
     matching_pids = [m for m in pids if m > minimun_pid]
     return matching_pids
-
-def kill_process_by_name(name):
-    """Find and kill all processes containing a certain name"""
-
-    pids = get_pids(name)
-
-    if os.name == 'nt' or sys.platform == 'cygwin':
-        for p in pids:
-            import wpk
-
-            wpk.kill_pid(p)
-
-    else:
-        for pid in pids:
-            try:
-                os.kill(pid, signal.SIGTERM)
-            except OSError: pass
-            sleep(.5)
-            if len(get_pids(name)) is not 0:
-                try:
-                    os.kill(pid, signal.SIGKILL)
-                except OSError: pass
-                sleep(.5)
-                if len(get_pids(name)) is not 0:
-                    logger.error('Could not kill process')
 
 def makedirs(name):
 
@@ -326,6 +297,8 @@ class FirefoxProfile(Profile):
                    'browser.warnOnQuit': False,
                    # Only install add-ons from the profile and the app folder
                    'extensions.enabledScopes' : 5,
+                   # Dont' run the add-on compatibility check during start-up
+                   'extensions.showMismatchUI' : False,
                    # Don't automatically update add-ons
                    'extensions.update.enabled'    : False,
                    # Don't open a dialog to show available add-on updates
@@ -356,7 +329,7 @@ class Runner(object):
     """Handles all running operations. Finds bins, runs and kills the process."""
 
     def __init__(self, binary=None, profile=None, cmdargs=[], env=None,
-                 aggressively_kill=['crashreporter'], kp_kwargs={}):
+                 kp_kwargs={}):
         if binary is None:
             self.binary = self.find_binary()
         elif sys.platform == 'darwin' and binary.find('Contents/MacOS/') == -1:
@@ -374,6 +347,9 @@ class Runner(object):
             else:
                 os.environ['LD_LIBRARY_PATH'] = dirname
 
+        # Set the environment to not use crash reporter by default
+        os.environ['MOZ_CRASHREPORTER_NO_REPORT'] = '1'
+
         self.profile = profile
 
         self.cmdargs = cmdargs
@@ -382,8 +358,7 @@ class Runner(object):
             self.env.update({'MOZ_NO_REMOTE':"1",})
         else:
             self.env = env
-        self.aggressively_kill = aggressively_kill
-        self.kp_kwargs = kp_kwargs
+        self.kp_kwargs = kp_kwargs or {}
 
     def find_binary(self):
         """Finds the binary for self.names if one was not provided."""
@@ -505,9 +480,6 @@ class Runner(object):
                 self.process_handler.kill(group=True)
             except Exception, e:
                 logger.error('Cannot kill process, '+type(e).__name__+' '+e.message)
-
-        for name in self.aggressively_kill:
-            kill_process_by_name(name)
 
     def stop(self):
         self.kill()

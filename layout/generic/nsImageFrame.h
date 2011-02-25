@@ -52,6 +52,11 @@
 #include "nsStubImageDecoderObserver.h"
 #include "imgIDecoderObserver.h"
 
+#include "Layers.h"
+#include "ImageLayers.h"
+#include "nsDisplayList.h"
+#include "imgIContainer.h"
+
 class nsIFrame;
 class nsImageMap;
 class nsIURI;
@@ -63,6 +68,9 @@ class nsDisplayImage;
 class nsPresContext;
 class nsImageFrame;
 class nsTransform2D;
+
+using namespace mozilla;
+using namespace mozilla::layers;
 
 class nsImageListener : public nsStubImageDecoderObserver
 {
@@ -178,6 +186,9 @@ public:
   virtual void AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
                                  InlineMinWidthData *aData);
 
+  nsRefPtr<ImageContainer> GetContainer(LayerManager* aManager,
+                                        imgIContainer* aImage);
+
 protected:
   virtual ~nsImageFrame();
 
@@ -218,7 +229,7 @@ protected:
   void PaintImage(nsIRenderingContext& aRenderingContext, nsPoint aPt,
                   const nsRect& aDirtyRect, imgIContainer* aImage,
                   PRUint32 aFlags);
-                  
+
 protected:
   friend class nsImageListener;
   nsresult OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
@@ -293,6 +304,8 @@ private:
   PRBool mDisplayingIcon;
 
   static nsIIOService* sIOService;
+  
+  nsRefPtr<ImageContainer> mImageContainer; 
 
   /* loading / broken image icon support */
 
@@ -358,6 +371,43 @@ public:
   static IconLoad* gIconLoad; // singleton pattern: one LoadIcons instance is used
   
   friend class nsDisplayImage;
+};
+
+/**
+ * Note that nsDisplayImage does not receive events. However, an image element
+ * is replaced content so its background will be z-adjacent to the
+ * image itself, and hence receive events just as if the image itself
+ * received events.
+ */
+class nsDisplayImage : public nsDisplayItem {
+public:
+  nsDisplayImage(nsDisplayListBuilder* aBuilder, nsImageFrame* aFrame,
+                 imgIContainer* aImage)
+    : nsDisplayItem(aBuilder, aFrame), mImage(aImage) {
+    MOZ_COUNT_CTOR(nsDisplayImage);
+  }
+  virtual ~nsDisplayImage() {
+    MOZ_COUNT_DTOR(nsDisplayImage);
+  }
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
+  nsCOMPtr<imgIContainer> GetImage();
+ 
+  /**
+   * Returns an ImageContainer for this image if the image type
+   * supports it (TYPE_RASTER only).
+   */
+  nsRefPtr<ImageContainer> GetContainer(LayerManager* aManager);
+  
+  /**
+   * Configure an ImageLayer for this display item.
+   * Set the required filter and scaling transform.
+   */
+  void ConfigureLayer(ImageLayer* aLayer);
+
+  NS_DISPLAY_DECL_NAME("Image", TYPE_IMAGE)
+private:
+  nsCOMPtr<imgIContainer> mImage;
 };
 
 #endif /* nsImageFrame_h___ */

@@ -55,6 +55,8 @@
 #include "nsPlaceholderFrame.h"
 #include "nsContainerFrame.h"
 #include "nsFirstLetterFrame.h"
+#include "gfxUnicodeProperties.h"
+#include "nsIThebesFontMetrics.h"
 
 using namespace mozilla;
 
@@ -1627,8 +1629,9 @@ nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
 class NS_STACK_CLASS nsIRenderingContextBidiProcessor : public nsBidiPresUtils::BidiProcessor {
 public:
   nsIRenderingContextBidiProcessor(nsIRenderingContext* aCtx,
+                                   nsIRenderingContext* aTextRunConstructionContext,
                                    const nsPoint&       aPt)
-                                   : mCtx(aCtx), mPt(aPt) { }
+    : mCtx(aCtx), mTextRunConstructionContext(aTextRunConstructionContext), mPt(aPt) { }
 
   ~nsIRenderingContextBidiProcessor()
   {
@@ -1639,7 +1642,7 @@ public:
                        PRInt32          aLength,
                        nsBidiDirection  aDirection)
   {
-    mCtx->SetTextRunRTL(aDirection==NSBIDI_RTL);
+    mTextRunConstructionContext->SetTextRunRTL(aDirection==NSBIDI_RTL);
     mText = aText;
     mLength = aLength;
   }
@@ -1647,18 +1650,23 @@ public:
   virtual nscoord GetWidth()
   {
     nscoord width;
-    mCtx->GetWidth(mText, mLength, width, nsnull);
+    mTextRunConstructionContext->GetWidth(mText, mLength, width, nsnull);
     return width;
   }
 
   virtual void DrawText(nscoord aXOffset,
                         nscoord)
   {
-    mCtx->DrawString(mText, mLength, mPt.x + aXOffset, mPt.y);
+    nsCOMPtr<nsIFontMetrics> metrics;
+    mCtx->GetFontMetrics(*getter_AddRefs(metrics));
+    nsIThebesFontMetrics* fm = static_cast<nsIThebesFontMetrics*>(metrics.get());
+    fm->DrawString(mText, mLength, mPt.x + aXOffset, mPt.y,
+                   mCtx, mTextRunConstructionContext);
   }
 
 private:
   nsIRenderingContext* mCtx;
+  nsIRenderingContext* mTextRunConstructionContext;
   nsPoint mPt;
   const PRUnichar* mText;
   PRInt32 mLength;
@@ -1670,6 +1678,7 @@ nsresult nsBidiPresUtils::ProcessTextForRenderingContext(const PRUnichar*       
                                                          nsBidiDirection        aBaseDirection,
                                                          nsPresContext*         aPresContext,
                                                          nsIRenderingContext&   aRenderingContext,
+                                                         nsIRenderingContext&   aTextRunConstructionContext,
                                                          Mode                   aMode,
                                                          nscoord                aX,
                                                          nscoord                aY,
@@ -1677,10 +1686,143 @@ nsresult nsBidiPresUtils::ProcessTextForRenderingContext(const PRUnichar*       
                                                          PRInt32                aPosResolveCount,
                                                          nscoord*               aWidth)
 {
-  nsIRenderingContextBidiProcessor processor(&aRenderingContext, nsPoint(aX, aY));
+  nsIRenderingContextBidiProcessor processor(&aRenderingContext, &aTextRunConstructionContext, nsPoint(aX, aY));
 
   return ProcessText(aText, aLength, aBaseDirection, aPresContext, processor,
                      aMode, aPosResolve, aPosResolveCount, aWidth);
+}
+
+/* static */
+void nsBidiPresUtils::WriteReverse(const PRUnichar* aSrc,
+                                   PRUint32 aSrcLength,
+                                   PRUnichar* aDest)
+{
+  const PRUnichar* src = aSrc + aSrcLength;
+  PRUnichar* dest = aDest;
+  PRUint32 UTF32Char;
+
+  while (--src >= aSrc) {
+    if (NS_IS_LOW_SURROGATE(*src)) {
+      if (src > aSrc && NS_IS_HIGH_SURROGATE(*(src - 1))) {
+        UTF32Char = SURROGATE_TO_UCS4(*(src - 1), *src);
+        --src;
+      } else {
+        UTF32Char = UCS2_REPLACEMENT_CHAR;
+      }
+    } else if (NS_IS_HIGH_SURROGATE(*src)) {
+      // paired high surrogates are handled above, so this is a lone high surrogate
+      UTF32Char = UCS2_REPLACEMENT_CHAR;
+    } else {
+      UTF32Char = *src;
+    }
+
+    UTF32Char = gfxUnicodeProperties::GetMirroredChar(UTF32Char);
+
+    if (IS_IN_BMP(UTF32Char)) {
+      *(dest++) = UTF32Char;
+    } else {
+      *(dest++) = H_SURROGATE(UTF32Char);
+      *(dest++) = L_SURROGATE(UTF32Char);
+    }
+  }
+
+  NS_ASSERTION(dest - aDest == aSrcLength, "Whole string not copied");
+}
+
+/* static */
+PRBool nsBidiPresUtils::WriteLogicalToVisual(const PRUnichar* aSrc,
+                                             PRUint32 aSrcLength,
+                                             PRUnichar* aDest,
+                                             nsBidiLevel aBaseDirection,
+                                             nsBidi* aBidiEngine)
+{
+  const PRUnichar* src = aSrc;
+  nsresult rv = aBidiEngine->SetPara(src, aSrcLength, aBaseDirection, nsnull);
+  if (NS_FAILED(rv)) {
+    return PR_FALSE;
+  }
+
+  nsBidiDirection dir;
+  rv = aBidiEngine->GetDirection(&dir);
+  // NSBIDI_LTR returned from GetDirection means the whole text is LTR
+  if (NS_FAILED(rv) || dir == NSBIDI_LTR) {
+    return PR_FALSE;
+  }
+
+  PRInt32 runCount;
+  rv = aBidiEngine->CountRuns(&runCount);
+  if (NS_FAILED(rv)) {
+    return PR_FALSE;
+  }
+
+  PRInt32 runIndex, start, length;
+  PRUnichar* dest = aDest;
+
+  for (runIndex = 0; runIndex < runCount; ++runIndex) {
+    rv = aBidiEngine->GetVisualRun(runIndex, &start, &length, &dir);
+    if (NS_FAILED(rv)) {
+      return PR_FALSE;
+    }
+
+    src = aSrc + start;
+
+    if (dir == NSBIDI_RTL) {
+      WriteReverse(src, length, dest);
+      dest += length;
+    } else {
+      do {
+        NS_ASSERTION(src >= aSrc && src < aSrc + aSrcLength,
+                     "logical index out of range");
+        NS_ASSERTION(dest < aDest + aSrcLength, "visual index out of range");
+        *(dest++) = *(src++);
+      } while (--length);
+    }
+  }
+
+  NS_ASSERTION(dest - aDest == aSrcLength, "whole string not copied");
+  return PR_TRUE;
+}
+
+void nsBidiPresUtils::CopyLogicalToVisual(const nsAString& aSource,
+                                          nsAString& aDest,
+                                          nsBidiLevel aBaseDirection,
+                                          PRBool aOverride)
+{
+  aDest.SetLength(0);
+  PRUint32 srcLength = aSource.Length();
+  if (srcLength == 0)
+    return;
+  if (!EnsureStringLength(aDest, srcLength)) {
+    return;
+  }
+  nsAString::const_iterator fromBegin, fromEnd;
+  nsAString::iterator toBegin;
+  aSource.BeginReading(fromBegin);
+  aSource.EndReading(fromEnd);
+  aDest.BeginWriting(toBegin);
+
+  if (aOverride) {
+    if (aBaseDirection == NSBIDI_RTL) {
+      // no need to use the converter -- just copy the string in reverse order
+      WriteReverse(fromBegin.get(), srcLength, toBegin.get());
+    } else {
+      // if aOverride && aBaseDirection == NSBIDI_LTR, fall through to the
+      // simple copy
+      aDest.SetLength(0);
+    }
+  } else {
+    if (!WriteLogicalToVisual(fromBegin.get(), srcLength, toBegin.get(),
+                             aBaseDirection, mBidiEngine)) {
+      aDest.SetLength(0);
+    }
+  }
+
+  if (aDest.IsEmpty()) {
+    // Either there was an error or the source is unidirectional
+    //  left-to-right. In either case, just copy source to dest.
+    CopyUnicodeTo(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd),
+                  aDest);
+  }
 }
 
 PRUint32 nsBidiPresUtils::EstimateMemoryUsed()
@@ -1696,5 +1838,23 @@ PRUint32 nsBidiPresUtils::EstimateMemoryUsed()
   return size;
 }
 
+static PLDHashOperator
+TraverseKey(nsISupports *aKey, PRInt32 aData, void *aUserArg)
+{
+  nsCycleCollectionTraversalCallback *cb =
+    static_cast<nsCycleCollectionTraversalCallback*>(aUserArg);
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mContentToFrameIndex key");
+  cb->NoteXPCOMChild(aKey);
+  return PL_DHASH_NEXT;
+}
 
+void nsBidiPresUtils::Traverse(nsCycleCollectionTraversalCallback &cb) const
+{
+  mContentToFrameIndex.EnumerateRead(TraverseKey, &cb);
+}
+
+void nsBidiPresUtils::Unlink()
+{
+  mContentToFrameIndex.Clear();
+}
 #endif // IBMBIDI

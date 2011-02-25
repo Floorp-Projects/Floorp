@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: rijndael.c,v 1.25 2009/04/09 22:11:07 julien.pierre.boogz%sun.com Exp $ */
+/* $Id: rijndael.c,v 1.25.6.1 2010/11/18 01:33:42 rrelyea%redhat.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -1027,9 +1027,14 @@ AES_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
 #if USE_HW_AES
     if (has_intel_aes == 0) {
 	unsigned long eax, ebx, ecx, edx;
+	char *disable_hw_aes = getenv("NSS_DISABLE_HW_AES");
 
-	freebl_cpuid(1, &eax, &ebx, &ecx, &edx);
-	has_intel_aes = (ecx & (1 << 25)) != 0 ? 1 : -1;
+	if (disable_hw_aes == NULL) {
+	    freebl_cpuid(1, &eax, &ebx, &ecx, &edx);
+	    has_intel_aes = (ecx & (1 << 25)) != 0 ? 1 : -1;
+	} else {
+	    has_intel_aes = -1;
+	}
     }
     use_hw_aes = (PRBool)
 		(has_intel_aes > 0 && (keysize % 8) == 0 && blocksize == 16);

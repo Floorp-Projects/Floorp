@@ -1,0 +1,84 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    const testData = [
+      { host: "http://" + window.location.host, expectedResult: true },
+      { host: "http://example.com", expectedResult: false },
+      { host: "http://sub1.test2.example.org:8000", expectedResult: false },
+      { host: "http://" + window.location.host, expectedResult: true }
+    ];
+
+    const iframe1Path =
+      window.location.pathname.replace("test_third_party.html",
+                                       "third_party_iframe1.html");
+    const iframe2URL =
+      "http://" + window.location.host +
+      window.location.pathname.replace("test_third_party.html",
+                                       "third_party_iframe2.html");
+
+    let testIndex = 0;
+    let testRunning = false;
+
+    function iframeLoaded() {
+      let message = { source: "parent", href: iframe2URL };
+      let iframe = document.getElementById("iframe1");
+      iframe.contentWindow.postMessage(message.toSource(), "*");
+    }
+
+    function setiframe() {
+      let iframe = document.getElementById("iframe1");
+
+      if (!testRunning) {
+        testRunning = true;
+        iframe.addEventListener("load", iframeLoaded, false);
+      }
+
+      iframe.src = testData[testIndex].host + iframe1Path;
+    }
+
+    function messageListener(event) {
+      let message = eval(event.data);
+
+      is(message.source, "iframe", "Good source");
+      is(message.result, testData[testIndex].expectedResult, "Good result");
+
+      if (testIndex < testData.length - 1) {
+        testIndex++;
+        setiframe();
+        return;
+      }
+
+      SimpleTest.finish();
+    }
+
+    function runTest() {
+      SimpleTest.waitForExplicitFinish();
+
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      Components.classes["@mozilla.org/permissionmanager;1"]
+                .getService(Components.interfaces.nsIPermissionManager)
+                .add(window.document.documentURIObject, "indexedDB",
+                     Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
+
+      window.addEventListener("message", messageListener, false);
+      setiframe();
+    }
+  </script>
+
+</head>
+
+<body onload="runTest();">
+  <iframe id="iframe1"></iframe>
+</body>
+
+</html>

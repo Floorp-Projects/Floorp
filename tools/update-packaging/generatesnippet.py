@@ -121,7 +121,7 @@ def generateSnippet(abstDistDir, applicationIniFile, locale,
     try:
         c.readfp(open(applicationIniFile))
     except IOError, (stderror):
-       sys.exit(stderror) 
+       sys.exit(stderror)
     buildid = c.get("App", "BuildID")
     appVersion = c.get("App", "Version")
     branchName = branch or c.get("App", "SourceRepository").split('/')[-1]
@@ -145,7 +145,7 @@ def generateSnippet(abstDistDir, applicationIniFile, locale,
                                      datedDirPath(buildid, branchName),
                                      interfix,
                                      marFileName)
-    
+
     snippet = """complete
 %(marDownloadURL)s
 sha1
@@ -154,7 +154,7 @@ sha1
 %(buildid)s
 %(appVersion)s
 %(appVersion)s
-""" % dict( marDownloadURL=marDownloadURL, 
+""" % dict( marDownloadURL=marDownloadURL,
             completeMarHash=completeMarHash,
             completeMarSize=completeMarSize,
             buildid=buildid,
@@ -174,7 +174,7 @@ def getFileHashAndSize(filepath):
         sha1Hash = shaObj.hexdigest()
         size = os.stat(filepath)[ST_SIZE]
     except IOError, (stderror):
-       sys.exit(stderror) 
+       sys.exit(stderror)
 
     return (sha1Hash, size)
 

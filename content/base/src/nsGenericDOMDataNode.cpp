@@ -771,20 +771,6 @@ nsGenericDOMDataNode::DumpContent(FILE* out, PRInt32 aIndent,
 }
 #endif
 
-already_AddRefed<nsIURI>
-nsGenericDOMDataNode::GetBaseURI() const
-{
-  // DOM Data Node inherits the base from its parent element/document
-  nsIContent *parent = GetParent();
-  if (parent) {
-    return parent->GetBaseURI();
-  }
-
-  nsIDocument *doc = GetOwnerDoc();
-
-  return doc ? doc->GetBaseURI() : nsnull;
-}
-
 PRBool
 nsGenericDOMDataNode::IsLink(nsIURI** aURI) const
 {

@@ -117,21 +117,21 @@ var _fromToTestLists = {
                                          toComp:   "80px"}),
   ],
   lengthNoUnitsSVG: [
-    new AnimTestcaseFromTo("0",  "20", { fromComp:  "0px", // 0 acts like 0px
+    new AnimTestcaseFromTo("0",  "20", { fromComp:  "0",
                                          midComp:  "10",
                                          toComp:   "20"}),
     new AnimTestcaseFromTo("50",  "0", { fromComp: "50",
                                          midComp:  "25",
-                                         toComp:    "0px"}), // 0 acts like 0px
+                                         toComp:    "0"}),
     new AnimTestcaseFromTo("30", "80", { fromComp: "30",
                                          midComp:  "55",
                                          toComp:   "80"}),
   ],
   lengthPx: [
-    new AnimTestcaseFromTo("0", "12px", { fromComp: "0px",  // 0 acts like 0px
-                                          midComp:  "6px"}),
-    new AnimTestcaseFromTo("16px", "0", { midComp: "8px",
-                                          toComp:  "0px"}), // 0 acts like 0px
+    new AnimTestcaseFromTo("0px", "12px", { fromComp: "0px",
+                                            midComp:  "6px"}),
+    new AnimTestcaseFromTo("16px", "0px", { midComp: "8px",
+                                            toComp:  "0px"}),
     new AnimTestcaseFromTo("10px", "20px", { midComp: "15px"}),
     new AnimTestcaseFromTo("41px", "1px", { midComp: "21px"}),
   ],

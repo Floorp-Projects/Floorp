@@ -63,7 +63,7 @@ function onTabViewWindowLoaded() {
     // verify that the keyboard combo works (this is the crux of bug 595518)
     // Prepare the key combo
     window.addEventListener("tabviewshown", onTabViewShown, false);
-    EventUtils.synthesizeKey("e", { accelKey: true }, contentWindow);
+    EventUtils.synthesizeKey("e", { accelKey: true, shiftKey: true }, contentWindow);
   }
   
   let onTabViewShown = function() {

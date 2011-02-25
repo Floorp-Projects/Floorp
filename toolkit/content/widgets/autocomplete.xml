@@ -27,6 +27,7 @@
 #   Masayuki Nakano (masayuki@d-toybox.com)
 #   Pamela Greene (pamg.bugs@gmail.com)
 #   Edward Lee (edward.lee@engineering.uiuc.edu)
+#   Drew Willcoxon (adw@mozilla.com)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1164,11 +1165,12 @@
       <xul:hbox align="center" class="ac-title-box">
         <xul:image xbl:inherits="src=image" class="ac-site-icon"/>
         <xul:hbox anonid="title-box" class="ac-title" flex="1"
-                  onunderflow="_doUnderflow('_title');">
+                  onunderflow="_doUnderflow('_title');"
+                  onoverflow="_doOverflow('_title');">
           <xul:description anonid="title" class="ac-normal-text ac-comment" xbl:inherits="selected"/>
         </xul:hbox>
         <xul:label anonid="title-overflow-ellipsis" xbl:inherits="selected"
-                   class="ac-ellipsis-after ac-comment" hidden="true"/>
+                   class="ac-ellipsis-after ac-comment"/>
         <xul:hbox anonid="extra-box" class="ac-extra" align="center" hidden="true">
           <xul:image class="ac-result-type-tag"/>
           <xul:label class="ac-normal-text ac-comment" xbl:inherits="selected" value=":"/>
@@ -1180,11 +1182,15 @@
         <xul:spacer class="ac-site-icon"/>
         <xul:image class="ac-action-icon"/>
         <xul:hbox anonid="url-box" class="ac-url" flex="1"
-                  onunderflow="_doUnderflow('_url');">
-          <xul:description anonid="url" class="ac-normal-text ac-url-text" xbl:inherits="selected"/>
+                  onunderflow="_doUnderflow('_url');"
+                  onoverflow="_doOverflow('_url');">
+          <xul:description anonid="url" class="ac-normal-text ac-url-text"
+                           xbl:inherits="selected type"/>
+          <xul:description anonid="action" class="ac-normal-text ac-action-text"
+                           xbl:inherits="selected type"/>
         </xul:hbox>
         <xul:label anonid="url-overflow-ellipsis" xbl:inherits="selected"
-                   class="ac-ellipsis-after ac-url-text" hidden="true"/>
+                   class="ac-ellipsis-after ac-url-text"/>
         <xul:spacer class="ac-type-icon"/>
       </xul:hbox>
     </content>
@@ -1211,6 +1217,7 @@
 
             this._urlBox = document.getAnonymousElementByAttribute(this, "anonid", "url-box");
             this._url = document.getAnonymousElementByAttribute(this, "anonid", "url");
+            this._action = document.getAnonymousElementByAttribute(this, "anonid", "action");
 
             this._titleBox = document.getAnonymousElementByAttribute(this, "anonid", "title-box");
             this._title = document.getAnonymousElementByAttribute(this, "anonid", "title");
@@ -1408,7 +1415,11 @@
 
           this.removeAttribute("actiontype");
 
-          var setupUrl = true;
+          // The ellipses are hidden via their visibility so that they always
+          // take up space and don't pop in on top of text when shown.  For
+          // keyword searches, however, the title ellipsis should not take up
+          // space when hidden.  Setting the hidden property accomplishes that.
+          this._titleOverflowEllipsis.hidden = false;
 
           // If the type includes an action, set up the item appropriately.
           var types = type.split(/\s+/);
@@ -1418,8 +1429,7 @@
             this.setAttribute("actiontype", action);
             url = param;
             let desc = "]]>&action.switchToTab.label;<![CDATA[";
-            this._setUpDescription(this._url, desc, true);
-            setupUrl = false;
+            this._setUpDescription(this._action, desc, true);
 
             // Remove the "action" substring so that the correct style, if any,
             // is applied below.
@@ -1456,6 +1466,9 @@
             this._extraBox.pack = "start";
             this._titleBox.flex = 0;
 
+            // Hide the ellipsis so it doesn't take up space.
+            this._titleOverflowEllipsis.hidden = true;
+
             // Put the parameters next to the title if we have any
             let search = this.getAttribute("text");
             let params = "";
@@ -1484,8 +1497,7 @@
 
           // Emphasize the matching search terms for the description
           this._setUpDescription(this._title, title);
-          if (setupUrl)
-            this._setUpDescription(this._url, url);
+          this._setUpDescription(this._url, url);
 
           // Set up overflow on a timeout because the contents of the box
           // might not have a width yet even though we just changed them
@@ -1501,7 +1513,7 @@
         <body>
           <![CDATA[
           // Hide the ellipsis incase there's just enough to not underflow
-          aEllipsis.hidden = true;
+          aEllipsis.style.visibility = "hidden";
 
           // Start with the parent's width and subtract off its children
           let tooltip = [];
@@ -1525,7 +1537,7 @@
           // If the children take up more space than the parent.. overflow!
           if (widthDiff < 0) {
             // Re-show the ellipsis now that we know it's needed
-            aEllipsis.hidden = false;
+            aEllipsis.style.visibility = "visible";
 
             // Separate text components with a ndash --
             aParentBox.tooltipText = tooltip.join(" \u2013 ");
@@ -1541,7 +1553,17 @@
           // Hide the ellipsis right when we know we're underflowing instead of
           // waiting for the timeout to trigger the _setUpOverflow calculations
           this[aName + "Box"].tooltipText = "";
-          this[aName + "OverflowEllipsis"].hidden = true;
+          this[aName + "OverflowEllipsis"].style.visibility = "hidden";
+          ]]>
+        </body>
+      </method>
+
+      <method name="_doOverflow">
+        <parameter name="aName"/>
+        <body>
+          <![CDATA[
+          this._setUpOverflow(this[aName + "Box"],
+                              this[aName + "OverflowEllipsis"]);
           ]]>
         </body>
       </method>

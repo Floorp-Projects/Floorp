@@ -70,7 +70,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_live_filtering_of_message_types.js \
 	browser_webconsole_live_filtering_on_search_strings.js \
 	browser_warn_user_about_replaced_api.js \
-	browser_webconsole_bug_586142_insert_newlines.js \
+	browser_webconsole_copying_multiple_messages_inserts_newlines_in_between.js \
 	browser_webconsole_bug_586388_select_all.js  \
 	browser_webconsole_bug_588967_input_expansion.js \
 	browser_webconsole_log_node_classes.js \
@@ -107,8 +107,20 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_597756_reopen_closed_tab.js \
 	browser_webconsole_bug_600183_charset.js \
 	browser_webconsole_bug_601177_log_levels.js \
-	browser_webconsole_bug_587615_lastTimestamp.js \
 	browser_webconsole_bug_597460_filter_scroll.js \
+	browser_webconsole_console_extras.js \
+	browser_webconsole_bug_598357_jsterm_output.js \
+	browser_webconsole_bug_603750_websocket.js \
+	browser_webconsole_abbreviate_source_url.js \
+	browser_webconsole_view_source.js \
+	browser_webconsole_bug_602572_log_bodies_checkbox.js \
+	browser_webconsole_bug_614793_jsterm_scroll.js \
+	browser_webconsole_bug_599725_response_headers.js \
+	browser_webconsole_bug_613642_maintain_scroll.js \
+	browser_webconsole_bug_613642_prune_scroll.js \
+	browser_webconsole_bug_618078_network_exceptions.js \
+	browser_webconsole_bug_613280_jsterm_copy.js \
+	browser_webconsole_bug_630733_response_redirect_headers.js \
 	head.js \
 	$(NULL)
 
@@ -139,6 +151,28 @@ _BROWSER_TEST_PAGES = \
 	test-bug-595934-html.html \
 	test-bug-595934-malformedxml.xhtml \
 	test-bug-595934-svg.xhtml \
+	test-bug-595934-workers.html \
+	test-bug-595934-workers.js \
+	test-bug-595934-dom-html-external.html \
+	test-bug-595934-dom-html-external.js \
+	test-bug-595934-dom-events-external.html \
+	test-bug-595934-dom-events-external.js \
+	test-bug-595934-dom-events-external2.html \
+	test-bug-595934-dom-events-external2.js \
+	test-bug-595934-canvas.html \
+	test-bug-595934-canvas.js \
+	test-bug-595934-css-parser.html \
+	test-bug-595934-css-parser.css \
+	test-bug-595934-canvas-css.html \
+	test-bug-595934-canvas-css.js \
+	test-bug-595934-malformedxml-external.html \
+	test-bug-595934-malformedxml-external.xml \
+	test-bug-595934-empty-getelementbyid.html \
+	test-bug-595934-empty-getelementbyid.js \
+	test-bug-595934-getselection.html \
+	test-bug-595934-getselection.js \
+	test-bug-595934-image.html \
+	test-bug-595934-image.jpg \
 	test-bug-597136-external-script-errors.html \
 	test-bug-597136-external-script-errors.js \
 	test-bug-613013-console-api-iframe.html \
@@ -147,6 +181,12 @@ _BROWSER_TEST_PAGES = \
 	test-bug-600183-charset.html^headers^ \
 	test-bug-601177-log-levels.html \
 	test-bug-601177-log-levels.js \
+	test-console-extras.html \
+	test-bug-603750-websocket.html \
+	test-bug-603750-websocket.js \
+	test-bug-599725-response-headers.sjs \
+	test-bug-618078-network-exceptions.html \
+	test-bug-630733-response-redirect-headers.sjs \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

@@ -34,14 +34,15 @@ function tabLoad(aEvent) {
   HUD.jsterm.execute("1+1");
 
   executeSoon(function() {
-    isnot(HUD.outputNode.scrollTop, 0, "scroll location is not at the top");
+    let scrollBox = HUD.outputNode.scrollBoxObject.element;
+    isnot(scrollBox.scrollTop, 0, "scroll location is not at the top");
 
-    let node = HUD.outputNode.querySelector(".hud-group > *:last-child");
+    let node = HUD.outputNode.getItemAtIndex(HUD.outputNode.itemCount - 1);
     let rectNode = node.getBoundingClientRect();
     let rectOutput = HUD.outputNode.getBoundingClientRect();
 
     // Visible scroll viewport.
-    let height = HUD.outputNode.scrollHeight - HUD.outputNode.scrollTop;
+    let height = scrollBox.scrollHeight - scrollBox.scrollTop;
 
     // Top position of the last message node, relative to the outputNode.
     let top = rectNode.top - rectOutput.top;
@@ -49,7 +50,8 @@ function tabLoad(aEvent) {
     // Bottom position of the last message node, relative to the outputNode.
     let bottom = rectNode.bottom - rectOutput.top;
 
-    ok(top >= 0 && bottom <= height, "last message is visible");
+    ok(top >= 0 && Math.floor(bottom) <= height + 1,
+       "last message is visible");
 
     finishTest();
   });

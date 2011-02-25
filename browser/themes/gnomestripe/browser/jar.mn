@@ -1,7 +1,6 @@
 browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
 % override chrome://global/skin/icons/warning-16.png moz-icon://stock/gtk-dialog-warning?size=menu
-  skin/classic/browser/urlbar-over-link-arrow.png
   skin/classic/browser/sanitizeDialog.css             (sanitizeDialog.css)
 * skin/classic/browser/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
 * skin/classic/browser/aboutSessionRestore.css        (aboutSessionRestore.css)
@@ -12,7 +11,6 @@ browser.jar:
 #endif
   skin/classic/browser/actionicon-tab.png
 * skin/classic/browser/browser.css                    (browser.css)
-* skin/classic/browser/effects.svg                    (effects.svg)
 * skin/classic/browser/engineManager.css              (engineManager.css)
   skin/classic/browser/fullscreen-video.css
   skin/classic/browser/inspector.css
@@ -77,9 +75,9 @@ browser.jar:
   skin/classic/browser/tabbrowser/connecting.png      (tabbrowser/connecting.png)
   skin/classic/browser/tabbrowser/loading.png         (tabbrowser/loading.png)
   skin/classic/browser/tabbrowser/tab.png             (tabbrowser/tab.png)
+  skin/classic/browser/tabbrowser/tab-overflow-border.png (tabbrowser/tab-overflow-border.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png (tabbrowser/tabDragIndicator.png)
   skin/classic/browser/tabview/edit-light.png         (tabview/edit-light.png)
-  skin/classic/browser/tabview/edit.png               (tabview/edit.png)
   skin/classic/browser/tabview/new-tab.png            (tabview/new-tab.png)
   skin/classic/browser/tabview/search.png             (tabview/search.png)  
   skin/classic/browser/tabview/stack-expander.png     (tabview/stack-expander.png)

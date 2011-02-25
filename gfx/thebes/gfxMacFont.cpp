@@ -208,7 +208,7 @@ gfxMacFont::InitMetrics()
     // which then leads to metrics errors when we read the 'hmtx' table to
     // get glyph advances for HarfBuzz, see bug 580863)
     const PRUint32 kHeadTableTag = TRUETYPE_TAG('h','e','a','d');
-    nsAutoTArray<PRUint8,sizeof(HeadTable)> headData;
+    AutoFallibleTArray<PRUint8,sizeof(HeadTable)> headData;
     if (NS_SUCCEEDED(mFontEntry->GetFontTable(kHeadTableTag, headData)) &&
         headData.Length() >= sizeof(HeadTable)) {
         HeadTable *head = reinterpret_cast<HeadTable*>(headData.Elements());
@@ -384,7 +384,10 @@ gfxMacFont::GetFontTable(PRUint32 aTag)
     if (mFontEntry->IsUserFont() && !mFontEntry->IsLocalUserFont()) {
         // for downloaded fonts, there may be layout tables cached in the entry
         // even though they're absent from the sanitized platform font
-        return mFontEntry->GetFontTable(aTag);
+        hb_blob_t *blob;
+        if (mFontEntry->GetExistingFontTable(aTag, &blob)) {
+            return blob;
+        }
     }
 
     return nsnull;

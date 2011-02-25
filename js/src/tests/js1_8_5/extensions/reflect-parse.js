@@ -116,8 +116,8 @@ function assertBlockExpr(src, patt) {
     assertBlockStmt(src, exprStmt(patt));
 }
 
-function assertBlockDecl(src, patt) {
-    blockPatt(patt).assert(Reflect.parse(blockSrc(src)));
+function assertBlockDecl(src, patt, builder) {
+    blockPatt(patt).assert(Reflect.parse(blockSrc(src), {builder: builder}));
 }
 
 function assertLocalStmt(src, patt) {
@@ -132,12 +132,13 @@ function assertLocalDecl(src, patt) {
     localPatt(patt).assert(Reflect.parse(localSrc(src)));
 }
 
-function assertGlobalStmt(src, patt) {
-    program([patt]).assert(Reflect.parse(src));
+function assertGlobalStmt(src, patt, builder) {
+    program([patt]).assert(Reflect.parse(src, {builder: builder}));
 }
 
-function assertGlobalExpr(src, patt) {
-    assertStmt(src, exprStmt(patt));
+function assertGlobalExpr(src, patt, builder) {
+    program([exprStmt(patt)]).assert(Reflect.parse(src, {builder: builder}));
+    //assertStmt(src, exprStmt(patt));
 }
 
 function assertGlobalDecl(src, patt) {
@@ -170,6 +171,7 @@ function assertError(src, errorType) {
     }
     throw new Error("expected " + errorType.name + " for " + uneval(src));
 }
+
 
 // general tests
 
@@ -289,17 +291,17 @@ assertExpr("[]", arrExpr([]));
 assertExpr("[1]", arrExpr([lit(1)]));
 assertExpr("[1,2]", arrExpr([lit(1),lit(2)]));
 assertExpr("[1,2,3]", arrExpr([lit(1),lit(2),lit(3)]));
-assertExpr("[1,,2,3]", arrExpr([lit(1),null,lit(2),lit(3)]));
-assertExpr("[1,,,2,3]", arrExpr([lit(1),null,null,lit(2),lit(3)]));
-assertExpr("[1,,,2,,3]", arrExpr([lit(1),null,null,lit(2),null,lit(3)]));
-assertExpr("[1,,,2,,,3]", arrExpr([lit(1),null,null,lit(2),null,null,lit(3)]));
-assertExpr("[,1,2,3]", arrExpr([null,lit(1),lit(2),lit(3)]));
-assertExpr("[,,1,2,3]", arrExpr([null,null,lit(1),lit(2),lit(3)]));
-assertExpr("[,,,1,2,3]", arrExpr([null,null,null,lit(1),lit(2),lit(3)]));
-assertExpr("[,,,1,2,3,]", arrExpr([null,null,null,lit(1),lit(2),lit(3)]));
-assertExpr("[,,,1,2,3,,]", arrExpr([null,null,null,lit(1),lit(2),lit(3),null]));
-assertExpr("[,,,1,2,3,,,]", arrExpr([null,null,null,lit(1),lit(2),lit(3),null,null]));
-assertExpr("[,,,,,]", arrExpr([null,null,null,null,null]));
+assertExpr("[1,,2,3]", arrExpr([lit(1),,lit(2),lit(3)]));
+assertExpr("[1,,,2,3]", arrExpr([lit(1),,,lit(2),lit(3)]));
+assertExpr("[1,,,2,,3]", arrExpr([lit(1),,,lit(2),,lit(3)]));
+assertExpr("[1,,,2,,,3]", arrExpr([lit(1),,,lit(2),,,lit(3)]));
+assertExpr("[,1,2,3]", arrExpr([,lit(1),lit(2),lit(3)]));
+assertExpr("[,,1,2,3]", arrExpr([,,lit(1),lit(2),lit(3)]));
+assertExpr("[,,,1,2,3]", arrExpr([,,,lit(1),lit(2),lit(3)]));
+assertExpr("[,,,1,2,3,]", arrExpr([,,,lit(1),lit(2),lit(3)]));
+assertExpr("[,,,1,2,3,,]", arrExpr([,,,lit(1),lit(2),lit(3),]));
+assertExpr("[,,,1,2,3,,,]", arrExpr([,,,lit(1),lit(2),lit(3),,]));
+assertExpr("[,,,,,]", arrExpr([,,,,]));
 assertExpr("({})", objExpr([]));
 assertExpr("({x:1})", objExpr([{ key: ident("x"), value: lit(1) }]));
 assertExpr("({x:1, y:2})", objExpr([{ key: ident("x"), value: lit(1) },
@@ -596,13 +598,9 @@ assertError("for each (const [x,y,z] in foo);", SyntaxError);
 // destructuring in for-in and for-each-in loop heads with initializers
 
 assertStmt("for (var {a:x,b:y,c:z} = 22 in foo);", forInStmt(varDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
-assertStmt("for (let {a:x,b:y,c:z} = 22 in foo);", forInStmt(letDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
 assertStmt("for (var [x,y,z] = 22 in foo);", forInStmt(varDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
-assertStmt("for (let [x,y,z] = 22 in foo);", forInStmt(letDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
 assertStmt("for each (var {a:x,b:y,c:z} = 22 in foo);", forEachInStmt(varDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
-assertStmt("for each (let {a:x,b:y,c:z} = 22 in foo);", forEachInStmt(letDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
 assertStmt("for each (var [x,y,z] = 22 in foo);", forEachInStmt(varDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
-assertStmt("for each (let [x,y,z] = 22 in foo);", forEachInStmt(letDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
 assertError("for (x = 22 in foo);", SyntaxError);
 assertError("for ({a:x,b:y,c:z} = 22 in foo);", SyntaxError);
 assertError("for ([x,y,z] = 22 in foo);", SyntaxError);
@@ -905,5 +903,316 @@ Pattern({ source: "quad.js", start: { line: 1, column: 20 }, end: { line: 1, col
 assertEq(Reflect.parse("42", {loc:false}).loc, null);
 program([exprStmt(lit(42))]).assert(Reflect.parse("42", {loc:false}));
 
+
+// Builder tests
+
+Pattern("program").match(Reflect.parse("42", {builder:{program:function()"program"}}));
+
+assertGlobalStmt("throw 42", 1, { throwStatement: function() 1 });
+assertGlobalStmt("for (;;);", 2, { forStatement: function() 2 });
+assertGlobalStmt("for (x in y);", 3, { forInStatement: function() 3 });
+assertGlobalStmt("{ }", 4, { blockStatement: function() 4 });
+assertGlobalStmt("foo: { }", 5, { labeledStatement: function() 5 });
+assertGlobalStmt("with (o) { }", 6, { withStatement: function() 6 });
+assertGlobalStmt("while (x) { }", 7, { whileStatement: function() 7 });
+assertGlobalStmt("do { } while(false);", 8, { doWhileStatement: function() 8 });
+assertGlobalStmt("switch (x) { }", 9, { switchStatement: function() 9 });
+assertGlobalStmt("try { } catch(e) { }", 10, { tryStatement: function() 10 });
+assertGlobalStmt(";", 11, { emptyStatement: function() 11 });
+assertGlobalStmt("debugger;", 12, { debuggerStatement: function() 12 });
+assertGlobalStmt("42;", 13, { expressionStatement: function() 13 });
+assertGlobalStmt("for (;;) break", forStmt(null, null, null, 14), { breakStatement: function() 14 });
+assertGlobalStmt("for (;;) continue", forStmt(null, null, null, 15), { continueStatement: function() 15 });
+
+assertBlockDecl("var x", "var", { variableDeclaration: function(kind) kind });
+assertBlockDecl("let x", "let", { variableDeclaration: function(kind) kind });
+assertBlockDecl("const x", "const", { variableDeclaration: function(kind) kind });
+assertBlockDecl("function f() { }", "function", { functionDeclaration: function() "function" });
+
+assertGlobalExpr("(x,y,z)", 1, { sequenceExpression: function() 1 });
+assertGlobalExpr("(x ? y : z)", 2, { conditionalExpression: function() 2 });
+assertGlobalExpr("x + y", 3, { binaryExpression: function() 3 });
+assertGlobalExpr("delete x", 4, { unaryExpression: function() 4 });
+assertGlobalExpr("x = y", 5, { assignmentExpression: function() 5 });
+assertGlobalExpr("x || y", 6, { logicalExpression: function() 6 });
+assertGlobalExpr("x++", 7, { updateExpression: function() 7 });
+assertGlobalExpr("new x", 8, { newExpression: function() 8 });
+assertGlobalExpr("x()", 9, { callExpression: function() 9 });
+assertGlobalExpr("x.y", 10, { memberExpression: function() 10 });
+assertGlobalExpr("(function() { })", 11, { functionExpression: function() 11 });
+assertGlobalExpr("[1,2,3]", 12, { arrayExpression: function() 12 });
+assertGlobalExpr("({ x: y })", 13, { objectExpression: function() 13 });
+assertGlobalExpr("this", 14, { thisExpression: function() 14 });
+assertGlobalExpr("#1={ }", 15, { graphExpression: function() 15 });
+assertGlobalExpr("#1={ self: #1# }", graphExpr(1, objExpr([{ key: ident("self"), value: 16 }])), { graphIndexExpression: function() 16 });
+assertGlobalExpr("[x for (x in y)]", 17, { comprehensionExpression: function() 17 });
+assertGlobalExpr("(x for (x in y))", 18, { generatorExpression: function() 18 });
+assertGlobalExpr("(function() { yield 42 })", genFunExpr(null, [], blockStmt([exprStmt(19)])), { yieldExpression: function() 19 });
+assertGlobalExpr("(let (x) x)", 20, { letExpression: function() 20 });
+
+assertGlobalStmt("switch (x) { case y: }", switchStmt(ident("x"), [1]), { switchCase: function() 1 });
+assertGlobalStmt("try { } catch (e) { }", tryStmt(blockStmt([]), 2, null), { catchClause: function() 2 });
+assertGlobalStmt("try { } catch (e if e instanceof A) { } catch (e if e instanceof B) { }",
+                 tryStmt(blockStmt([]), [2, 2], null),
+                 { catchClause: function() 2 });
+assertGlobalExpr("[x for (y in z) for (x in y)]", compExpr(ident("x"), [3, 3], null), { comprehensionBlock: function() 3 });
+
+assertGlobalExpr("({ x: y } = z)", aExpr("=", 1, ident("z")), { objectPattern: function() 1 });
+assertGlobalExpr("({ x: y } = z)", aExpr("=", objPatt([2]), ident("z")), { propertyPattern: function() 2 });
+assertGlobalExpr("[ x ] = y", aExpr("=", 3, ident("y")), { arrayPattern: function() 3 });
+
+assertGlobalExpr("({a:x::y}) = foo", aExpr("=", singletonObjPatt("a", 1), ident("foo")), { xmlQualifiedIdentifier: function() 1 });
+assertGlobalExpr("({a:function::x}) = foo", aExpr("=", singletonObjPatt("a", 2), ident("foo")), { xmlFunctionQualifiedIdentifier: function() 2 });
+assertGlobalExpr("({a:@x}) = foo", aExpr("=", singletonObjPatt("a", 3), ident("foo")), { xmlAttributeSelector: function() 3 });
+assertGlobalExpr("({a:x.*}) = foo", aExpr("=", singletonObjPatt("a", memExpr(ident("x"), 4)), ident("foo")), { xmlAnyName: function() 4 });
+
+assertGlobalExpr("(<x> </x>)()", callExpr(xmlElt([5, xmlText(" "), xmlEndTag([xmlName("x")])]), []), { xmlStartTag: function() 5 });
+assertGlobalExpr("(<x> </x>)()", callExpr(xmlElt([xmlStartTag([6]), xmlText(" "), xmlEndTag([6])]), []), { xmlName: function() 6 });
+assertGlobalExpr("(<x> </x>)()", callExpr(xmlElt([xmlStartTag([xmlName("x")]), 7, xmlEndTag([xmlName("x")])]), []), { xmlText: function() 7 });
+assertGlobalExpr("(<x> </x>)()", callExpr(xmlElt([xmlStartTag([xmlName("x")]), xmlText(" "), 8]), []), { xmlEndTag: function() 8 });
+assertGlobalExpr("(<x><![CDATA[hello, world]]></x>)()", callExpr(xmlElt([xmlStartTag([xmlName("x")]), 9, xmlEndTag([xmlName("x")])]), []), { xmlCdata: function() 9 });
+assertGlobalExpr("(<x><!-- hello, world --></x>)()", callExpr(xmlElt([xmlStartTag([xmlName("x")]), 10, xmlEndTag([xmlName("x")])]), []), { xmlComment: function() 10 });
+
+
+// Ensure that exceptions thrown by builder methods propagate.
+var thrown = false;
+try {
+    Reflect.parse("42", { builder: { program: function() { throw "expected" } } });
+} catch (e if e === "expected") {
+    thrown = true;
+}
+if (!thrown)
+    throw new Error("builder exception not propagated");
+
+
+// A simple proof-of-concept that the builder API can be used to generate other
+// formats, such as JsonMLAst:
+// 
+//     http://code.google.com/p/es-lab/wiki/JsonMLASTFormat
+// 
+// It's incomplete (e.g., it doesn't convert source-location information and
+// doesn't use all the direct-eval rules), but I think it proves the point.
+
+var JsonMLAst = (function() {
+function reject() {
+    throw new SyntaxError("node type not supported");
+}
+
+function isDirectEval(expr) {
+    // an approximation to the actual rules. you get the idea
+    return (expr[0] === "IdExpr" && expr[1].name === "eval");
+}
+
+function functionNode(type) {
+    return function(id, args, body, isGenerator, isExpression) {
+        if (isExpression)
+            body = ["ReturnStmt", {}, body];
+
+        if (!id)
+            id = ["Empty"];
+
+        // Patch up the argument node types: s/IdExpr/IdPatt/g
+        for (var i = 0; i < args.length; i++) {
+            args[i][0] = "IdPatt";
+        }
+
+        args.unshift("ParamDecl", {});
+
+        return [type, {}, id, args, body];
+    }
+}
+
+return {
+    program: function(stmts) {
+        stmts.unshift("Program", {});
+        return stmts;
+    },
+    identifier: function(name) {
+        return ["IdExpr", { name: name }];
+    },
+    literal: function(val) {
+        return ["LiteralExpr", { value: val }];
+    },
+    expressionStatement: function(expr) expr,
+    conditionalExpression: function(test, cons, alt) {
+        return ["ConditionalExpr", {}, test, cons, alt];
+    },
+    unaryExpression: function(op, expr) {
+        return ["UnaryExpr", {op: op}, expr];
+    },
+    binaryExpression: function(op, left, right) {
+        return ["BinaryExpr", {op: op}, left, right];
+    },
+    property: function(kind, key, val) {
+        return [kind === "init"
+                ? "DataProp"
+                : kind === "get"
+                ? "GetterProp"
+                : "SetterProp",
+                {name: key[1].name}, val];
+    },
+    functionDeclaration: functionNode("FunctionDecl"),
+    variableDeclaration: function(kind, elts) {
+        if (kind === "let" || kind === "const")
+            throw new SyntaxError("let and const not supported");
+        elts.unshift("VarDecl", {});
+        return elts;
+    },
+    variableDeclarator: function(id, init) {
+        id[0] = "IdPatt";
+        if (!init)
+            return id;
+        return ["InitPatt", {}, id, init];
+    },
+    sequenceExpression: function(exprs) {
+        var length = exprs.length;
+        var result = ["BinaryExpr", {op:","}, exprs[exprs.length - 2], exprs[exprs.length - 1]];
+        for (var i = exprs.length - 3; i >= 0; i--) {
+            result = ["BinaryExpr", {op:","}, exprs[i], result];
+        }
+        return result;
+    },
+    assignmentExpression: function(op, lhs, expr) {
+        return ["AssignExpr", {op: op}, lhs, expr];
+    },
+    logicalExpression: function(op, left, right) {
+        return [op === "&&" ? "LogicalAndExpr" : "LogicalOrExpr", {}, left, right];
+    },
+    updateExpression: function(expr, op, isPrefix) {
+        return ["CountExpr", {isPrefix:isPrefix, op:op}, expr];
+    },
+    newExpression: function(callee, args) {
+        args.unshift("NewExpr", {}, callee);
+        return args;
+    },
+    callExpression: function(callee, args) {
+        args.unshift(isDirectEval(callee) ? "EvalExpr" : "CallExpr", {}, callee);
+        return args;
+    },
+    memberExpression: function(isComputed, expr, member) {
+        return ["MemberExpr", {}, expr, isComputed ? member : ["LiteralExpr", {type: "string", value: member[1].name}]];
+    },
+    functionExpression: functionNode("FunctionExpr"),
+    arrayExpression: function(elts) {
+        for (var i = 0; i < elts.length; i++) {
+            if (!elts[i])
+                elts[i] = ["Empty"];
+        }
+        elts.unshift("ArrayExpr", {});
+        return elts;
+    },
+    objectExpression: function(props) {
+        props.unshift("ObjectExpr", {});
+        return props;
+    },
+    thisExpression: function() {
+        return ["ThisExpr", {}];
+    },
+
+    graphExpression: reject,
+    graphIndexExpression: reject,
+    comprehensionExpression: reject,
+    generatorExpression: reject,
+    yieldExpression: reject,
+    letExpression: reject,
+
+    emptyStatement: function() ["EmptyStmt", {}],
+    blockStatement: function(stmts) {
+        stmts.unshift("BlockStmt", {});
+        return stmts;
+    },
+    labeledStatement: function(lab, stmt) {
+        return ["LabelledStmt", {label: lab}, stmt];
+    },
+    ifStatement: function(test, cons, alt) {
+        return ["IfStmt", {}, test, cons, alt || ["EmptyStmt", {}]];
+    },
+    switchStatement: function(test, clauses, isLexical) {
+        clauses.unshift("SwitchStmt", {}, test);
+        return clauses;
+    },
+    whileStatement: function(expr, stmt) {
+        return ["WhileStmt", {}, expr, stmt];
+    },
+    doWhileStatement: function(stmt, expr) {
+        return ["DoWhileStmt", {}, stmt, expr];
+    },
+    forStatement: function(init, test, update, body) {
+        return ["ForStmt", {}, init || ["Empty"], test || ["Empty"], update || ["Empty"], body];
+    },
+    forInStatement: function(lhs, rhs, body) {
+        return ["ForInStmt", {}, lhs, rhs, body];
+    },
+    breakStatement: function(lab) {
+        return lab ? ["BreakStmt", {}, lab] : ["BreakStmt", {}];
+    },
+    continueStatement: function(lab) {
+        return lab ? ["ContinueStmt", {}, lab] : ["ContinueStmt", {}];
+    },
+    withStatement: function(expr, stmt) {
+        return ["WithStmt", {}, expr, stmt];
+    },
+    returnStatement: function(expr) {
+        return expr ? ["ReturnStmt", {}, expr] : ["ReturnStmt", {}];
+    },
+    tryStatement: function(body, catches, fin) {
+        if (catches.length > 1)
+            throw new SyntaxError("multiple catch clauses not supported");
+        var node = ["TryStmt", body, catches[0] || ["Empty"]];
+        if (fin)
+            node.push(fin);
+        return node;
+    },
+    throwStatement: function(expr) {
+        return ["ThrowStmt", {}, expr];
+    },
+    debuggerStatement: function() ["DebuggerStmt", {}],
+    letStatement: reject,
+    switchCase: function(expr, stmts) {
+        if (expr)
+            stmts.unshift("SwitchCase", {}, expr);
+        else
+            stmts.unshift("DefaultCase", {});
+        return stmts;
+    },
+    catchClause: function(param, guard, body) {
+        if (guard)
+            throw new SyntaxError("catch guards not supported");
+        param[0] = "IdPatt";
+        return ["CatchClause", {}, param, body];
+    },
+    comprehensionBlock: reject,
+
+    arrayPattern: reject,
+    objectPattern: reject,
+    propertyPattern: reject,
+
+    xmlAnyName: reject,
+    xmlAttributeSelector: reject,
+    xmlEscape: reject,
+    xmlFilterExpression: reject,
+    xmlDefaultDeclaration: reject,
+    xmlQualifiedIdentifier: reject,
+    xmlFunctionQualifiedIdentifier: reject,
+    xmlElement: reject,
+    xmlText: reject,
+    xmlList: reject,
+    xmlStartTag: reject,
+    xmlEndTag: reject,
+    xmlPointTag: reject,
+    xmlName: reject,
+    xmlAttribute: reject,
+    xmlCdata: reject,
+    xmlComment: reject,
+    xmlProcessingInstruction: reject
+};
+})();
+
+Pattern(["Program", {},
+         ["BinaryExpr", {op: "+"},
+          ["LiteralExpr", {value: 2}],
+          ["BinaryExpr", {op: "*"},
+           ["UnaryExpr", {op: "-"}, ["IdExpr", {name: "x"}]],
+           ["IdExpr", {name: "y"}]]]]).match(Reflect.parse("2 + (-x * y)", {loc: false, builder: JsonMLAst}));
 
 reportCompare(true, true);

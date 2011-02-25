@@ -39,12 +39,14 @@
 #include "Decoder.h"
 #include "nsIServiceManager.h"
 #include "nsIConsoleService.h"
+#include "nsIScriptError.h"
 
 namespace mozilla {
 namespace imagelib {
 
 Decoder::Decoder()
-  : mFrameCount(0)
+  : mDecodeFlags(0)
+  , mFrameCount(0)
   , mFailCode(NS_OK)
   , mInitialized(false)
   , mSizeDecode(false)
@@ -117,11 +119,25 @@ Decoder::Finish()
   if (!IsSizeDecode() && !mDecodeDone) {
 
     // Log data errors to the error console
-    nsCOMPtr<nsIConsoleService> aConsoleService = do_GetService("@mozilla.org/consoleservice;1");
-    if (aConsoleService && !HasDecoderError()) {
+    nsCOMPtr<nsIConsoleService> consoleService =
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+    nsCOMPtr<nsIScriptError2> errorObject =
+      do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
+
+    if (consoleService && errorObject && !HasDecoderError()) {
       nsAutoString msg(NS_LITERAL_STRING("Image corrupt or truncated: ") +
                        NS_ConvertASCIItoUTF16(mImage->GetURIString()));
-      aConsoleService->LogStringMessage(msg.get());
+
+      errorObject->InitWithWindowID
+        (msg.get(),
+         NS_ConvertUTF8toUTF16(mImage->GetURIString()).get(),
+         nsnull,
+         0, 0, nsIScriptError::errorFlag,
+         "Image", mImage->WindowID()
+         );
+  
+      nsCOMPtr<nsIScriptError> error = do_QueryInterface(errorObject);
+      consoleService->LogMessage(error);
     }
 
     // If we only have a data error, see if things are worth salvaging

@@ -508,7 +508,8 @@ argumentUnboxingTemplates = {
 # From JSData2Native.
 #
 # Omitted optional arguments are treated as though the caller had passed JS
-# `null`; this behavior is from XPCWrappedNative::CallMethod.
+# `null`; this behavior is from XPCWrappedNative::CallMethod. The 'jsval' type,
+# however, defaults to 'undefined'.
 #
 def writeArgumentUnboxing(f, i, name, type, haveCcx, optional, rvdeclared,
                           nullBehavior, undefinedBehavior):
@@ -522,13 +523,19 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional, rvdeclared,
     # optional - bool - True if the parameter is optional.
     # rvdeclared - bool - False if no |nsresult rv| has been declared earlier.
 
+    typeName = getBuiltinOrNativeTypeName(type)
+
     isSetter = (i is None)
 
     if isSetter:
         argPtr = "vp"
         argVal = "*vp"
     elif optional:
-        argVal = "(%d < argc ? argv[%d] : JSVAL_NULL)" % (i, i)
+        if typeName == "[jsval]":
+            val = "JSVAL_VOID"
+        else:
+            val = "JSVAL_NULL"
+        argVal = "(%d < argc ? argv[%d] : %s)" % (i, i, val)
         argPtr = "(%d < argc ? &argv[%d] : NULL)" % (i, i)
     else:
         argVal = "argv[%d]" % i
@@ -542,7 +549,6 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional, rvdeclared,
         'undefinedBehavior': undefinedBehavior or 'DefaultUndefinedBehavior'
         }
 
-    typeName = getBuiltinOrNativeTypeName(type)
     if typeName is not None:
         template = argumentUnboxingTemplates.get(typeName)
         if template is not None:
@@ -772,7 +778,10 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
     signature = "static JSBool\n"
     if isAttr:
         # JSPropertyOp signature.
-        signature += "%s(JSContext *cx, JSObject *obj, jsid id,%s jsval *vp)\n"
+        if isSetter:
+            signature += "%s(JSContext *cx, JSObject *obj, jsid id, JSBool strict,%s jsval *vp)\n"
+        else:
+            signature += "%s(JSContext *cx, JSObject *obj, jsid id,%s jsval *vp)\n"
     else:
         # JSFastNative.
         signature += "%s(JSContext *cx, uintN argc,%s jsval *vp)\n"
@@ -809,8 +818,8 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
             argumentValues = (customMethodCall['additionalArgumentValues']
                               % nativeName)
             if isAttr:
-                callTemplate += ("    return %s(cx, obj, id, %s, vp);\n"
-                                 % (templateName, argumentValues))
+                callTemplate += ("    return %s(cx, obj, id%s, %s, vp);\n"
+                                 % (templateName, ", strict" if isSetter else "", argumentValues))
             else:
                 callTemplate += ("    return %s(cx, argc, %s, vp);\n"
                                  % (templateName, argumentValues))
@@ -1202,7 +1211,7 @@ def writeTraceableArgumentConversion(f, member, i, name, type, haveCcx,
                 f.write("    nsresult rv;\n");
             f.write("    %s *%s;\n" % (type.name, name))
             f.write("    xpc_qsSelfRef %sref;\n" % name)
-            f.write("    js::Anchor<jsval> %sanchor;\n" % name);
+            f.write("    JS::Anchor<jsval> %sanchor;\n" % name);
             f.write("    rv = xpc_qsUnwrapArg<%s>("
                     "cx, js::Jsvalify(js::ValueArgToConstRef(%s)), &%s, &%sref.ptr, &%sanchor.get());\n"
                     % (type.name, argVal, name, name, name))
@@ -1342,7 +1351,7 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
     else:
         f.write("    %s *self;\n" % customMethodCall['thisType'])
     f.write("    xpc_qsSelfRef selfref;\n")
-    f.write("    js::Anchor<jsval> selfanchor;\n")
+    f.write("    JS::Anchor<jsval> selfanchor;\n")
     if haveCcx:
         f.write("    if (!xpc_qsUnwrapThisFromCcx(ccx, &self, &selfref.ptr, "
                 "&selfanchor.get())) {\n")

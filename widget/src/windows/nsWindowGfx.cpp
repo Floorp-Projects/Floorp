@@ -608,6 +608,7 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
           layerManagerD3D9->SetClippingRegion(event.region);
           result = DispatchWindowEvent(&event, eventStatus);
           if (layerManagerD3D9->DeviceWasRemoved()) {
+            mLayerManager->Destroy();
             mLayerManager = nsnull;
             // When our device was removed, we should have gfxWindowsPlatform
             // check if its render mode is up to date!
@@ -641,6 +642,7 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
   }
 
   mPaintDC = nsnull;
+  mLastPaintEndTime = TimeStamp::Now();
 
 #if defined(WIDGET_DEBUG_OUTPUT) && !defined(WINCE)
   if (debug_WantPaintFlashing())

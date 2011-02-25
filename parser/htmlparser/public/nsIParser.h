@@ -98,13 +98,14 @@ enum eParserDocType {
 #define kCharsetFromHintPrevDoc         7
 #define kCharsetFromMetaPrescan         8 // this one and smaller: HTML5 Tentative
 #define kCharsetFromMetaTag             9 // this one and greater: HTML5 Confident
-#define kCharsetFromByteOrderMark      10
-#define kCharsetFromChannel            11
-#define kCharsetFromOtherComponent     12
+#define kCharsetFromIrreversibleAutoDetection 10
+#define kCharsetFromByteOrderMark      11
+#define kCharsetFromChannel            12
+#define kCharsetFromOtherComponent     13
 // Levels below here will be forced onto childframes too
-#define kCharsetFromParentForced       13
-#define kCharsetFromUserForced         14
-#define kCharsetFromPreviousLoading    15
+#define kCharsetFromParentForced       14
+#define kCharsetFromUserForced         15
+#define kCharsetFromPreviousLoading    16
 
 enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
 

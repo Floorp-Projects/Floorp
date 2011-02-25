@@ -65,6 +65,7 @@
 #include "jsatominlines.h"
 #include "StubCalls-inl.h"
 #include "jsfuninlines.h"
+#include "jstypedarray.h"
 
 #ifdef XP_WIN
 # include "jswin.h"
@@ -190,7 +191,7 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
 
                     PCMETER(cache->pchits++);
                     PCMETER(cache->setpchits++);
-                    NATIVE_SET(cx, obj, shape, entry, &rval);
+                    NATIVE_SET(cx, obj, shape, entry, strict, &rval);
                     break;
                 }
             } else {
@@ -578,7 +579,7 @@ stubs::SetElem(VMFrame &f)
 
     Value &objval = regs.sp[-3];
     Value &idval  = regs.sp[-2];
-    Value retval  = regs.sp[-1];
+    Value rval    = regs.sp[-1];
 
     JSObject *obj;
     jsid id;
@@ -590,7 +591,7 @@ stubs::SetElem(VMFrame &f)
     if (!FetchElementId(f, obj, idval, id, &regs.sp[-2]))
         THROW();
 
-    f.script()->typeMonitorAssign(cx, regs.pc, obj, id, retval, !JSID_IS_INT(id));
+    f.script()->typeMonitorAssign(cx, regs.pc, obj, id, rval, !JSID_IS_INT(id));
 
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
@@ -603,19 +604,19 @@ stubs::SetElem(VMFrame &f)
                     if ((jsuint)i >= obj->getArrayLength())
                         obj->setArrayLength(cx, i + 1);
                 }
-                obj->setDenseArrayElement(i, regs.sp[-1]);
+                obj->setDenseArrayElement(i, rval);
                 goto end_setelem;
             }
         }
     } while (0);
-    if (!obj->setProperty(cx, id, &retval, strict))
+    if (!obj->setProperty(cx, id, &rval, strict))
         THROW();
   end_setelem:
     /* :FIXME: Moving the assigned object into the lowest stack slot
      * is a temporary hack. What we actually want is an implementation
      * of popAfterSet() that allows popping more than one value;
      * this logic can then be handled in Compiler.cpp. */
-    regs.sp[-3] = retval;
+    regs.sp[-3] = regs.sp[-1];
 }
 
 template void JS_FASTCALL stubs::SetElem<true>(VMFrame &f);
@@ -719,110 +720,6 @@ stubs::Ursh(VMFrame &f)
         f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
 }
 
-template <int32 N>
-static inline bool
-PostInc(VMFrame &f, Value *vp)
-{
-    double d;
-    if (!ValueToNumber(f.cx, *vp, &d))
-        return false;
-    f.regs.sp++;
-    f.regs.sp[-1].setNumber(d);
-    d += N;
-    if (!vp->setNumber(d))
-        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
-    return true;
-}
-
-template <int32 N>
-static inline bool
-PreInc(VMFrame &f, Value *vp)
-{
-    double d;
-    if (!ValueToNumber(f.cx, *vp, &d))
-        return false;
-    d += N;
-    if (!vp->setNumber(d))
-        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
-    f.regs.sp++;
-    f.regs.sp[-1].setNumber(d);
-    return true;
-}
-
-void JS_FASTCALL
-stubs::VpInc(VMFrame &f, Value *vp)
-{
-    if (!PostInc<1>(f, vp))
-        THROW();
-}
-
-void JS_FASTCALL
-stubs::VpDec(VMFrame &f, Value *vp)
-{
-    if (!PostInc<-1>(f, vp))
-        THROW();
-}
-
-void JS_FASTCALL
-stubs::DecVp(VMFrame &f, Value *vp)
-{
-    if (!PreInc<-1>(f, vp))
-        THROW();
-}
-
-void JS_FASTCALL
-stubs::IncVp(VMFrame &f, Value *vp)
-{
-    if (!PreInc<1>(f, vp))
-        THROW();
-}
-
-void JS_FASTCALL
-stubs::LocalInc(VMFrame &f, uint32 slot)
-{
-    double d;
-    if (!ValueToNumber(f.cx, f.regs.sp[-2], &d))
-        THROW();
-    f.regs.sp[-2].setNumber(d);
-    if (!f.regs.sp[-1].setNumber(d + 1))
-        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
-    f.fp()->slots()[slot] = f.regs.sp[-1];
-}
-
-void JS_FASTCALL
-stubs::LocalDec(VMFrame &f, uint32 slot)
-{
-    double d;
-    if (!ValueToNumber(f.cx, f.regs.sp[-2], &d))
-        THROW();
-    f.regs.sp[-2].setNumber(d);
-    if (!f.regs.sp[-1].setNumber(d - 1))
-        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
-    f.fp()->slots()[slot] = f.regs.sp[-1];
-}
-
-void JS_FASTCALL
-stubs::IncLocal(VMFrame &f, uint32 slot)
-{
-    double d;
-    if (!ValueToNumber(f.cx, f.regs.sp[-1], &d))
-        THROW();
-    if (!f.regs.sp[-1].setNumber(d + 1))
-        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
-    f.fp()->slots()[slot] = f.regs.sp[-1];
-}
-
-void JS_FASTCALL
-stubs::DecLocal(VMFrame &f, uint32 slot)
-{
-    double d;
-    if (!ValueToNumber(f.cx, f.regs.sp[-1], &d))
-        THROW();
-    if (!f.regs.sp[-1].setNumber(d - 1))
-        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
-    f.fp()->slots()[slot] = f.regs.sp[-1];
-}
-
 template<JSBool strict>
 void JS_FASTCALL
 stubs::DefFun(VMFrame &f, JSFunction *fun)
@@ -848,7 +745,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
          */
         obj2 = &fp->scopeChain();
     } else {
-        JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
+        JS_ASSERT(!fun->isFlatClosure());
 
         obj2 = GetScopeChainFast(cx, fp, JSOP_DEFFUN, JSOP_DEFFUN_LENGTH);
         if (!obj2)
@@ -885,64 +782,56 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
      */
     JSObject *parent = &fp->varobj(cx);
 
-    /*
-     * Check for a const property of the same name -- or any kind of property
-     * if executing with the strict option.  We check here at runtime as well
-     * as at compile-time, to handle eval as well as multiple HTML script tags.
-     */
+    /* ES5 10.5 (NB: with subsequent errata). */
     jsid id = ATOM_TO_JSID(fun->atom);
     JSProperty *prop = NULL;
     JSObject *pobj;
-    JSBool ok = CheckRedeclaration(cx, parent, id, attrs, &pobj, &prop);
-    if (!ok)
+    if (!parent->lookupProperty(cx, id, &pobj, &prop))
         THROW();
-
-    /*
-     * We deviate from ES3 10.1.3, ES5 10.5, by using JSObject::setProperty not
-     * JSObject::defineProperty for a function declaration in eval code whose
-     * id is already bound to a JSPROP_PERMANENT property, to ensure that such
-     * properties can't be deleted.
-     *
-     * We also use JSObject::setProperty for the existing properties of Call
-     * objects with matching attributes to preserve the internal (JSPropertyOp)
-     * getters and setters that update the value of the property in the stack
-     * frame. See bug 467495.
-     */
-    bool doSet = false;
-    if (prop) {
-        JS_ASSERT(!(attrs & ~(JSPROP_ENUMERATE | JSPROP_PERMANENT)));
-        JS_ASSERT((attrs == JSPROP_ENUMERATE) == fp->isEvalFrame());
-
-        if (attrs == JSPROP_ENUMERATE) {
-            /* In eval code: assign rather than (re-)define, always. */
-            doSet = true;
-        } else if (parent->isCall()) {
-            JS_ASSERT(parent == pobj);
-
-            uintN oldAttrs = ((Shape *) prop)->attributes();
-            JS_ASSERT(!(oldAttrs & (JSPROP_READONLY | JSPROP_GETTER | JSPROP_SETTER)));
-
-            /*
-             * We may be processing a function sub-statement or declaration in
-             * function code: we assign rather than redefine if the essential
-             * JSPROP_PERMANENT (not [[Configurable]] in ES5 terms) attribute
-             * is not changing (note that JSPROP_ENUMERATE is set for all Call
-             * object properties).
-             */
-            JS_ASSERT(oldAttrs & attrs & JSPROP_ENUMERATE);
-            if (oldAttrs & JSPROP_PERMANENT)
-                doSet = true;
-        }
-    }
 
     Value rval = ObjectValue(*obj);
-    ok = doSet
-         ? parent->setProperty(cx, id, &rval, strict)
-         : parent->defineProperty(cx, id, rval, PropertyStub, PropertyStub, attrs);
-    if (!ok)
-        THROW();
 
-    f.script()->typeMonitorAssign(cx, f.regs.pc, parent, id, rval);
+    do {
+        /* Steps 5d, 5f. */
+        if (!prop || pobj != parent) {
+            if (!parent->defineProperty(cx, id, rval, PropertyStub, StrictPropertyStub, attrs))
+                THROW();
+            break;
+        }
+
+        /* Step 5e. */
+        JS_ASSERT(parent->isNative());
+        Shape *shape = reinterpret_cast<Shape *>(prop);
+        if (parent->isGlobal()) {
+            if (shape->configurable()) {
+                if (!parent->defineProperty(cx, id, rval, PropertyStub, StrictPropertyStub, attrs))
+                    THROW();
+                break;
+            }
+
+            if (shape->isAccessorDescriptor() || !shape->writable() || !shape->enumerable()) {
+                JSAutoByteString bytes;
+                if (const char *name = js_ValueToPrintable(cx, IdToValue(id), &bytes)) {
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                         JSMSG_CANT_REDEFINE_PROP, name);
+                }
+                THROW();
+            }
+        }
+
+        /*
+         * Non-global properties, and global properties which we aren't simply
+         * redefining, must be set.  First, this preserves their attributes.
+         * Second, this will produce warnings and/or errors as necessary if the
+         * specified Call object property is not writable (const).
+         */
+
+        /* Step 5f. */
+        if (!parent->setProperty(cx, id, &rval, strict))
+            THROW();
+
+        f.script()->typeMonitorAssign(cx, f.regs.pc, parent, id, rval);
+    } while (false);
 }
 
 template void JS_FASTCALL stubs::DefFun<true>(VMFrame &f, JSFunction *fun);
@@ -1379,12 +1268,11 @@ stubs::Debugger(VMFrame &f, jsbytecode *pc)
         switch (handler(f.cx, f.cx->fp()->script(), pc, Jsvalify(&rval),
                         f.cx->debugHooks->debuggerHandlerData)) {
           case JSTRAP_THROW:
-            f.cx->throwing = JS_TRUE;
-            f.cx->exception = rval;
+            f.cx->setPendingException(rval);
             THROW();
 
           case JSTRAP_RETURN:
-            f.cx->throwing = JS_FALSE;
+            f.cx->clearPendingException();
             f.cx->fp()->setReturnValue(rval);
 #if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
             *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
@@ -1396,7 +1284,7 @@ stubs::Debugger(VMFrame &f, jsbytecode *pc)
             break;
 
           case JSTRAP_ERROR:
-            f.cx->throwing = JS_FALSE;
+            f.cx->clearPendingException();
             THROW();
 
           default:
@@ -1440,12 +1328,11 @@ stubs::Trap(VMFrame &f, uint32 trapTypes)
 
     switch (result) {
       case JSTRAP_THROW:
-        f.cx->throwing = JS_TRUE;
-        f.cx->exception = rval;
+        f.cx->setPendingException(rval);
         THROW();
 
       case JSTRAP_RETURN:
-        f.cx->throwing = JS_FALSE;
+        f.cx->clearPendingException();
         f.cx->fp()->setReturnValue(rval);
 #if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
         *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
@@ -1457,7 +1344,7 @@ stubs::Trap(VMFrame &f, uint32 trapTypes)
         break;
 
       case JSTRAP_ERROR:
-        f.cx->throwing = JS_FALSE;
+        f.cx->clearPendingException();
         THROW();
 
       default:
@@ -1542,13 +1429,6 @@ stubs::InitElem(VMFrame &f, uint32 last)
     jsid id;
     const Value &idval = regs.sp[-2];
     if (!FetchElementId(f, obj, idval, id, &regs.sp[-2]))
-        THROW();
-
-    /*
-     * Check for property redeclaration strict warning (we may be in an object
-     * initialiser, not an array initialiser).
-     */
-    if (!CheckRedeclaration(cx, obj, id, JSPROP_INITIALIZER, NULL, NULL))
         THROW();
 
     /*
@@ -2349,8 +2229,6 @@ InitPropOrMethod(VMFrame &f, JSAtom *atom, JSOp op)
         /* Get the immediate property name into id. */
         jsid id = ATOM_TO_JSID(atom);
 
-        /* No need to check for duplicate property; the compiler already did. */
-
         uintN defineHow = (op == JSOP_INITMETHOD)
                           ? JSDNP_CACHE_RESULT | JSDNP_SET_METHOD
                           : JSDNP_CACHE_RESULT;
@@ -2429,7 +2307,7 @@ stubs::StrictEq(VMFrame &f)
     if (!StrictlyEqual(f.cx, lhs, rhs, &equal))
         THROW();
     f.regs.sp--;
-    f.regs.sp[-1].setBoolean(equal == true);
+    f.regs.sp[-1].setBoolean(equal == JS_TRUE);
 }
 
 void JS_FASTCALL
@@ -2441,7 +2319,7 @@ stubs::StrictNe(VMFrame &f)
     if (!StrictlyEqual(f.cx, lhs, rhs, &equal))
         THROW();
     f.regs.sp--;
-    f.regs.sp[-1].setBoolean(equal != true);
+    f.regs.sp[-1].setBoolean(equal != JS_TRUE);
 }
 
 void JS_FASTCALL
@@ -2449,9 +2327,8 @@ stubs::Throw(VMFrame &f)
 {
     JSContext *cx = f.cx;
 
-    JS_ASSERT(!cx->throwing);
-    cx->throwing = JS_TRUE;
-    cx->exception = f.regs.sp[-1];
+    JS_ASSERT(!cx->isExceptionPending());
+    cx->setPendingException(f.regs.sp[-1]);
     THROW();
 }
 
@@ -2690,9 +2567,9 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
     }
 
     {
-        uint32 low = GET_JUMP_OFFSET(pc);
+        jsint low = GET_JUMP_OFFSET(pc);
         pc += JUMP_OFFSET_LEN;
-        uint32 high = GET_JUMP_OFFSET(pc);
+        jsint high = GET_JUMP_OFFSET(pc);
         pc += JUMP_OFFSET_LEN;
 
         tableIdx -= low;
@@ -2813,34 +2690,38 @@ stubs::DefVarOrConst(VMFrame &f, JSAtom *atom)
     uintN attrs = JSPROP_ENUMERATE;
     if (!fp->isEvalFrame())
         attrs |= JSPROP_PERMANENT;
-    if (JSOp(*f.regs.pc) == JSOP_DEFCONST)
-        attrs |= JSPROP_READONLY;
 
     /* Lookup id in order to check for redeclaration problems. */
     jsid id = ATOM_TO_JSID(atom);
-    JSProperty *prop = NULL;
-    JSObject *obj2;
-
+    bool shouldDefine;
     if (JSOp(*f.regs.pc) == JSOP_DEFVAR) {
         /*
          * Redundant declaration of a |var|, even one for a non-writable
          * property like |undefined| in ES5, does nothing.
          */
+        JSProperty *prop;
+        JSObject *obj2;
         if (!obj->lookupProperty(cx, id, &obj2, &prop))
             THROW();
+        shouldDefine = (!prop || obj2 != obj);
     } else {
-        if (!CheckRedeclaration(cx, obj, id, attrs, &obj2, &prop))
+        JS_ASSERT(JSOp(*f.regs.pc) == JSOP_DEFCONST);
+        attrs |= JSPROP_READONLY;
+        if (!CheckRedeclaration(cx, obj, id, attrs))
             THROW();
+
+        /*
+         * As attrs includes readonly, CheckRedeclaration can succeed only
+         * if prop does not exist.
+         */
+        shouldDefine = true;
     }
 
     /* Bind a variable only if it's not yet defined. */
-    if (!prop) {
-        if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(), PropertyStub, PropertyStub,
-                                     attrs, 0, 0, &prop)) {
-            THROW();
-        }
-        JS_ASSERT(prop);
-        obj2 = obj;
+    if (shouldDefine && 
+        !js_DefineNativeProperty(cx, obj, id, UndefinedValue(), PropertyStub, StrictPropertyStub,
+                                     attrs, 0, 0, NULL)) {
+        THROW();
     }
 }
 
@@ -2853,7 +2734,7 @@ stubs::SetConst(VMFrame &f, JSAtom *atom)
     JSObject *obj = &fp->varobj(cx);
     const Value &ref = f.regs.sp[-1];
     if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), ref,
-                             PropertyStub, PropertyStub,
+                             PropertyStub, StrictPropertyStub,
                              JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
         THROW();
     }
@@ -2898,4 +2779,67 @@ stubs::NegZeroHelper(VMFrame &f)
 {
     f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
     f.regs.sp[-1].setDouble(-0.0);
+}
+
+void JS_FASTCALL
+stubs::Exception(VMFrame &f)
+{
+    f.regs.sp[0] = f.cx->getPendingException();
+    f.cx->clearPendingException();
+}
+
+template <bool Clamped>
+int32 JS_FASTCALL
+stubs::ConvertToTypedInt(JSContext *cx, Value *vp)
+{
+    JS_ASSERT(!vp->isInt32());
+
+    if (vp->isDouble()) {
+        if (Clamped)
+            return js_TypedArray_uint8_clamp_double(vp->toDouble());
+        return js_DoubleToECMAInt32(vp->toDouble());
+    }
+
+    if (vp->isNull() || vp->isObject() || vp->isUndefined())
+        return 0;
+
+    if (vp->isBoolean())
+        return vp->toBoolean() ? 1 : 0;
+
+    JS_ASSERT(vp->isString());
+
+    int32 i32 = 0;
+#ifdef DEBUG
+    bool success = 
+#endif
+        StringToNumberType<jsint>(cx, vp->toString(), &i32);
+    JS_ASSERT(success);
+
+    return i32;
+}
+
+template int32 JS_FASTCALL stubs::ConvertToTypedInt<true>(JSContext *, Value *);
+template int32 JS_FASTCALL stubs::ConvertToTypedInt<false>(JSContext *, Value *);
+
+void JS_FASTCALL
+stubs::ConvertToTypedFloat(JSContext *cx, Value *vp)
+{
+    JS_ASSERT(!vp->isDouble() && !vp->isInt32());
+
+    if (vp->isNull()) {
+        vp->setDouble(0);
+    } else if (vp->isObject() || vp->isUndefined()) {
+        vp->setDouble(js_NaN);
+    } else if (vp->isBoolean()) {
+        vp->setDouble(vp->toBoolean() ? 1 : 0);
+    } else {
+        JS_ASSERT(vp->isString());
+        double d = 0;
+#ifdef DEBUG
+        bool success = 
+#endif
+            StringToNumberType<double>(cx, vp->toString(), &d);
+        JS_ASSERT(success);
+        vp->setDouble(d);
+    }
 }

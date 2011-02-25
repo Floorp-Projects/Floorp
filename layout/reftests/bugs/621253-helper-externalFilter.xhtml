@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<body style="margin: 0px">
+  <div style="filter: url(../filters.svg#NonWhiteToBlack);
+              background: lime;
+              height: 100px; width: 100px">
+  </div>
+  <svg xmlns="http://www.w3.org/2000/svg"
+       xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- use an empty g to force filters.svg to load before onload -->
+    <use xlink:href="../filters.svg#empty" />
+  </svg>
+</body>
+</html>

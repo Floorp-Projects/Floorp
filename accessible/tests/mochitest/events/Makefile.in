@@ -51,10 +51,12 @@ _TEST_FILES =\
 		focus.html \
 		scroll.html \
 		test_aria_alert.html \
+		test_aria_hidden.html \
 		test_aria_menu.html \
 		test_aria_statechange.html \
 		test_attrs.html \
 		test_caretmove.html \
+		test_caretmove.xul \
 		test_coalescence.html \
 		test_contextmenu.html \
 		test_docload.html \
@@ -70,6 +72,7 @@ _TEST_FILES =\
 		test_scroll.xul \
 		test_selection.html \
 		test_statechange.html \
+		test_text_alg.html \
 		test_text.html \
 		test_textattrchange.html \
 		test_tree.xul \

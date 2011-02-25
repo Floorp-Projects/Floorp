@@ -115,12 +115,11 @@ SessionStartup.prototype = {
     
     let doResumeSession = prefBranch.getBoolPref("sessionstore.resume_session_once") ||
                           prefBranch.getIntPref("startup.page") == 3;
-    
-    // only read the session file if config allows possibility of restoring
-    var resumeFromCrash = prefBranch.getBoolPref("sessionstore.resume_from_crash");
-    if (!resumeFromCrash && !doResumeSession || !sessionFile.exists())
+
+    // only continue if the session file exists
+    if (!sessionFile.exists())
       return;
-    
+
     // get string containing session state
     this._iniString = this._readStateFile(sessionFile);
     if (!this._iniString)
@@ -143,10 +142,11 @@ SessionStartup.prototype = {
     }
     catch (ex) { debug("The session file is invalid: " + ex); }
 
+    let resumeFromCrash = prefBranch.getBoolPref("sessionstore.resume_from_crash");
     let lastSessionCrashed =
       initialState && initialState.session && initialState.session.state &&
       initialState.session.state == STATE_RUNNING_STR;
-    
+
     // set the startup type
     if (lastSessionCrashed && resumeFromCrash)
       this._sessionType = Ci.nsISessionStartup.RECOVER_SESSION;
@@ -167,7 +167,7 @@ SessionStartup.prototype = {
              win.tabs.every(function (tab) tab.pinned)))
         Services.obs.addObserver(this, "domwindowopened", true);
 
-      Services.obs.addObserver(this, "browser:purge-session-history", true);
+      Services.obs.addObserver(this, "sessionstore-windows-restored", true);
     }
   },
 
@@ -197,6 +197,14 @@ SessionStartup.prototype = {
         self._onWindowOpened(window);
         window.removeEventListener("load", arguments.callee, false);
       }, false);
+      break;
+    case "sessionstore-windows-restored":
+      Services.obs.removeObserver(this, "sessionstore-windows-restored");
+      // We only want to start listening for the purge notification after we've
+      // sessionstore has finished its initial startup. That way we won't observe
+      // the purge notification & clear the old session before sessionstore loads
+      // it (in the case of a crash).
+      Services.obs.addObserver(this, "browser:purge-session-history", true);
       break;
     case "browser:purge-session-history":
       // reset all state on sanitization

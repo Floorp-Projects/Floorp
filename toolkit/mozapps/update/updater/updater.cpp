@@ -976,7 +976,8 @@ PatchFile::LoadSourceFile(FILE* ofile)
   unsigned int crc = crc32(buf, header.slen);
 
   if (crc != header.scrc32) {
-    LOG(("CRC check failed\n"));
+    LOG(("LoadSourceFile: destination file crc %d does not match expected " \
+         "crc %d\n", crc, header.scrc32));
     return CRC_ERROR;
   }
   
@@ -1541,6 +1542,22 @@ int NS_main(int argc, NS_tchar **argv)
 #ifndef WINCE
   if (NS_tchdir(argv[2]) != 0) {
     return 1;
+  }
+#endif
+
+#ifdef XP_WIN
+  // Remove everything except close window from the context menu
+  {
+    HKEY hkApp;
+    if (RegCreateKeyExW(HKEY_CURRENT_USER,
+                        L"Software\\Classes\\Applications\\updater.exe",
+                        0, NULL, REG_OPTION_VOLATILE, KEY_SET_VALUE, NULL,
+                        &hkApp, NULL) == ERROR_SUCCESS) {
+      RegSetValueExW(hkApp, L"IsHostApp", 0, REG_NONE, 0, 0);
+      RegSetValueExW(hkApp, L"NoOpenWith", 0, REG_NONE, 0, 0);
+      RegSetValueExW(hkApp, L"NoStartPage", 0, REG_NONE, 0, 0);
+      RegCloseKey(hkApp);
+    }
   }
 #endif
 

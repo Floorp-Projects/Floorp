@@ -258,6 +258,7 @@ _TEST_FILES = \
 		test_tmpl_xmlquerywithinlinedatawithmultiplequeries.xul \
 		test_tmpl_invalidqp.xul \
 		test_tmpl_errors.xul \
+		test_tmpl_regenerate.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

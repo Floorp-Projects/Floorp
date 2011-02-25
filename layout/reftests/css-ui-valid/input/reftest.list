@@ -32,8 +32,13 @@
 == input-fieldset-legend.html input-fieldset-legend-ref.html
 == input-checkbox-valid-changed.html success-ref.html
 == input-checkbox-valid-default.html success-ref.html
-== input-radio-valid-changed.html success-ref.html
-== input-radio-valid-default.html success-ref.html
 == input-file-valid-changed.html input-file-ref.html
 == input-file-valid-default.html input-file-ref.html
+== input-radio-required.html success-ref.html
+== input-radio-customerror.html success-ref.html
+== input-radio-dyn-valid-1.html success-ref.html
+== input-radio-dyn-valid-2.html success-ref.html
+== input-radio-nogroup-required-valid.html success-ref.html
+== input-radio-nogroup-required-invalid.html success-ref.html
+== input-novalidate.html input-withtext-ref.html
 # input type='hidden' shouldn't show

@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Tests the recent updates pane
+// Tests the list view
 
 var gProvider;
 var gManagerWindow;
@@ -81,12 +81,12 @@ function end_test() {
 function get_test_items() {
   var tests = "@tests.mozilla.org";
 
-  var items = [];
+  var items = {};
   var item = gManagerWindow.document.getElementById("addon-list").firstChild;
 
   while (item) {
     if (item.mAddon.id.substring(item.mAddon.id.length - tests.length) == tests)
-      items.push(item);
+      items[item.mAddon.name] = item;
     item = item.nextSibling;
   }
 
@@ -106,17 +106,16 @@ function get_class_node(parent, cls) {
 add_test(function() {
   gCategoryUtilities.openType("extension", function() {
     let items = get_test_items();
-    is(items.length, 7, "Should be seven add-ons installed");
+    is(Object.keys(items).length, 7, "Should be seven add-ons installed");
 
     info("Addon 1");
-    let addon = items[0];
+    let addon = items["Test add-on"];
     addon.parentNode.ensureElementIsVisible(addon);
     is(get_node(addon, "name").value, "Test add-on", "Name should be correct");
     is_element_visible(get_node(addon, "version"), "Version should be visible");
     is(get_node(addon, "version").value, "1.0", "Version should be correct");
     is_element_visible(get_node(addon, "description"), "Description should be visible");
     is(get_node(addon, "description").value, "A test add-on", "Description should be correct");
-    is_element_hidden(get_node(addon, "creator"), "Creator should be hidden");
     is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
     is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
     is(Date.parse(get_node(addon, "date-updated").value), gDate.getTime(), "Update date should be correct");
@@ -147,13 +146,12 @@ add_test(function() {
     is(get_node(addon, "pending").textContent, "Test add-on will be disabled after you restart " + gApp + ".", "Pending message should be correct");
 
     info("Addon 2");
-    addon = items[1];
+    addon = items["Test add-on 2"];
     addon.parentNode.ensureElementIsVisible(addon);
     is(get_node(addon, "name").value, "Test add-on 2", "Name should be correct");
     is_element_visible(get_node(addon, "version"), "Version should be visible");
     is(get_node(addon, "version").value, "2.0", "Version should be correct");
     is_element_hidden(get_node(addon, "description"), "Description should be hidden");
-    is_element_hidden(get_node(addon, "creator"), "Creator should be hidden");
     is_element_visible(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be visible");
     is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
     is(get_node(addon, "date-updated").value, "Unknown", "Date should be correct");
@@ -184,7 +182,7 @@ add_test(function() {
     is(get_node(addon, "pending").textContent, "Test add-on 2 will be enabled after you restart " + gApp + ".", "Pending message should be correct");
 
     info("Addon 3");
-    addon = items[2];
+    addon = items["Test add-on 3"];
     addon.parentNode.ensureElementIsVisible(addon);
     is(get_node(addon, "name").value, "Test add-on 3", "Name should be correct");
     is_element_hidden(get_node(addon, "version"), "Version should be hidden");
@@ -202,7 +200,7 @@ add_test(function() {
     is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
     info("Addon 4");
-    addon = items[3];
+    addon = items["Test add-on 4"];
     addon.parentNode.ensureElementIsVisible(addon);
     is(get_node(addon, "name").value, "Test add-on 4", "Name should be correct");
 
@@ -235,7 +233,7 @@ add_test(function() {
     is(get_node(addon, "pending").textContent, "Test add-on 4 will be enabled after you restart " + gApp + ".", "Pending message should be correct");
 
     info("Addon 5");
-    addon = items[4];
+    addon = items["Test add-on 5"];
     addon.parentNode.ensureElementIsVisible(addon);
     is(get_node(addon, "name").value, "Test add-on 5", "Name should be correct");
 
@@ -254,7 +252,7 @@ add_test(function() {
     is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
     info("Addon 6");
-    addon = items[5];
+    addon = items["Test add-on 6"];
     addon.parentNode.ensureElementIsVisible(addon);
     is(get_node(addon, "name").value, "Test add-on 6", "Name should be correct");
     is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
@@ -286,7 +284,7 @@ add_test(function() {
     is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
     info("Addon 7");
-    addon = items[6];
+    addon = items["Test add-on 7"];
     addon.parentNode.ensureElementIsVisible(addon);
     is(get_node(addon, "name").value, "Test add-on 7", "Name should be correct");
 
@@ -343,17 +341,16 @@ add_test(function() {
   gCategoryUtilities.openType("plugin", function() {
     gCategoryUtilities.openType("extension", function() {
       let items = get_test_items();
-      is(items.length, 7, "Should be seven add-ons installed");
+      is(Object.keys(items).length, 7, "Should be seven add-ons installed");
 
       info("Addon 1");
-      let addon = items[0];
+      let addon = items["Test add-on"];
       addon.parentNode.ensureElementIsVisible(addon);
       is(get_node(addon, "name").value, "Test add-on", "Name should be correct");
       is_element_visible(get_node(addon, "version"), "Version should be visible");
       is(get_node(addon, "version").value, "1.0", "Version should be correct");
       is_element_visible(get_node(addon, "description"), "Description should be visible");
       is(get_node(addon, "description").value, "A test add-on", "Description should be correct");
-      is_element_hidden(get_node(addon, "creator"), "Creator should be hidden");
       is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
       is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
       is(Date.parse(get_node(addon, "date-updated").value), gDate.getTime(), "Update date should be correct");
@@ -384,13 +381,12 @@ add_test(function() {
       is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
       info("Addon 2");
-      addon = items[1];
+      addon = items["Test add-on 2"];
       addon.parentNode.ensureElementIsVisible(addon);
       is(get_node(addon, "name").value, "Test add-on 2", "Name should be correct");
       is_element_visible(get_node(addon, "version"), "Version should be visible");
       is(get_node(addon, "version").value, "2.0", "Version should be correct");
       is_element_hidden(get_node(addon, "description"), "Description should be hidden");
-      is_element_hidden(get_node(addon, "creator"), "Creator should be hidden");
       is_element_visible(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be visible");
       is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
       is(get_node(addon, "date-updated").value, "Unknown", "Date should be correct");
@@ -421,7 +417,7 @@ add_test(function() {
       is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
       info("Addon 4");
-      addon = items[3];
+      addon = items["Test add-on 4"];
       addon.parentNode.ensureElementIsVisible(addon);
       is(get_node(addon, "name").value, "Test add-on 4", "Name should be correct");
 
@@ -454,7 +450,7 @@ add_test(function() {
       is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
       info("Addon 6");
-      addon = items[5];
+      addon = items["Test add-on 6"];
       addon.parentNode.ensureElementIsVisible(addon);
       is(get_node(addon, "name").value, "Test add-on 6", "Name should be correct");
       is_element_visible(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be visible");
@@ -486,7 +482,7 @@ add_test(function() {
       is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
       info("Addon 7");
-      addon = items[6];
+      addon = items["Test add-on 7"];
       addon.parentNode.ensureElementIsVisible(addon);
       is(get_node(addon, "name").value, "Test add-on 7", "Name should be correct");
 
@@ -549,16 +545,15 @@ add_test(function() {
   }]);
 
   let items = get_test_items();
-  is(items.length, 7, "Should be seven add-ons installed");
+  is(Object.keys(items).length, 7, "Should be seven add-ons installed");
 
-  let addon = items[0];
+  let addon = items["Test add-on replacement"];
   addon.parentNode.ensureElementIsVisible(addon);
   is(get_node(addon, "name").value, "Test add-on replacement", "Name should be correct");
   is_element_visible(get_node(addon, "version"), "Version should be visible");
   is(get_node(addon, "version").value, "2.0", "Version should be correct");
   is_element_visible(get_node(addon, "description"), "Description should be visible");
   is(get_node(addon, "description").value, "A test add-on with a new description", "Description should be correct");
-  is_element_hidden(get_node(addon, "creator"), "Creator should be hidden");
   is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
   is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
   is(Date.parse(get_node(addon, "date-updated").value), gDate.getTime(), "Update date should be correct");
@@ -573,6 +568,64 @@ add_test(function() {
   is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
   is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
   is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
+
+  run_next_test();
+});
+
+// Check that focus changes correctly move around the selected list item
+add_test(function() {
+  function is_node_in_list(aNode) {
+    var list = gManagerWindow.document.getElementById("addon-list");
+
+    while (aNode && aNode != list)
+      aNode = aNode.parentNode;
+
+    if (aNode)
+      return true;
+    return false;
+  }
+
+  // Ignore the OSX full keyboard access setting
+  Services.prefs.setBoolPref("accessibility.tabfocus_applies_to_xul", false);
+
+  let items = get_test_items();
+
+  var fm = Cc["@mozilla.org/focus-manager;1"].
+           getService(Ci.nsIFocusManager);
+
+  let addon = items["Test add-on 6"];
+  EventUtils.synthesizeMouseAtCenter(addon, { }, gManagerWindow);
+  is(fm.focusedElement, addon.parentNode, "Focus should have moved to the list");
+
+  EventUtils.synthesizeKey("VK_TAB", { }, gManagerWindow);
+  is(fm.focusedElement, get_node(addon, "details-btn"), "Focus should have moved to the more button");
+
+  EventUtils.synthesizeKey("VK_TAB", { }, gManagerWindow);
+  is(fm.focusedElement, get_node(addon, "disable-btn"), "Focus should have moved to the disable button");
+
+  EventUtils.synthesizeKey("VK_TAB", { }, gManagerWindow);
+  is(fm.focusedElement, get_node(addon, "remove-btn"), "Focus should have moved to the remove button");
+
+  EventUtils.synthesizeKey("VK_TAB", { }, gManagerWindow);
+  ok(!is_node_in_list(fm.focusedElement), "Focus should be outside the list");
+
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, gManagerWindow);
+  is(fm.focusedElement, get_node(addon, "remove-btn"), "Focus should have moved to the remove button");
+
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, gManagerWindow);
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, gManagerWindow);
+  is(fm.focusedElement, get_node(addon, "details-btn"), "Focus should have moved to the more button");
+
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, gManagerWindow);
+  is(fm.focusedElement, addon.parentNode, "Focus should have moved to the list");
+
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, gManagerWindow);
+  ok(!is_node_in_list(fm.focusedElement), "Focus should be outside the list");
+
+  try {
+    Services.prefs.clearUserPref("accessibility.tabfocus_applies_to_xul");
+  }
+  catch (e) { }
 
   run_next_test();
 });

@@ -60,7 +60,7 @@
     // Set up shortcut access to elements
     e['html'] = document.getElementsByTagName("html")[0];
     ['h1', 'd1', 'd2', 'p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'span',
-     'a1', 'a2', 'a3', 'transf', 'iframe1', 'decimal', 'body'].forEach(function(a) {
+     'a1', 'a2', 'a3', 'transf', 'iframe1', 'body'].forEach(function(a) {
       e[a] = document.getElementById(a);
     });
 
@@ -95,16 +95,6 @@
     check(39, 212, 10, 1,  30, 0, [e.d2, e.p2]);
     check(39, 212, 10, 5,  30, 0, [e.span, e.d2, e.p2]);
     check(39, 212, 10, 15, 30, 0, [e.p5, e.span, e.d2, e.p2]);
-
-    // Decimal CSS pixels
-    check(18,    330,   0, 0,    0,   0,   []);
-    check(18,    330,   0, 0.5,  0,   0,   []);
-    check(18,    330,   0, 0,    0.5, 0,   []);
-    check(18,    330,   0, 0.25, 0.5, 0,   []);
-    check(18,    330,   0, 0.5,  0.5, 0,   [e.decimal]);
-    check(144,   330.5, 0, 0,    0,   0,   [e.decimal]);
-    check(144.5, 330.5, 0, 0,    0,   0,   []);
-    check(144.5, 330.5, 0, 0,    0,   0.1, [e.decimal]);
 
     // Elements inside iframe shouldn't be returned:
     check(15, 410, 0, 30, 50, 0, [e.iframe1]);

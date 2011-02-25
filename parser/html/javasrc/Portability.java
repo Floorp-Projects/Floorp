@@ -74,31 +74,6 @@ public final class Portability {
         // No-op in Java
     }
     
-    public static void retainLocal(@Local String local) {
-        // No-op in Java
-    }
-
-    /**
-     * This MUST be a no-op on locals that are known at compile time.
-     * @param local
-     */
-    public static void releaseLocal(@Local String local) {
-        // No-op in Java
-    }
-    
-    // [NOCPP[
-    // These are no longer used in Gecko. Need to decide what to do about these in the long term.    
-    
-    public static void retainElement(Object elt) {
-        // No-op in Java
-    }
-
-    public static void releaseElement(Object elt) {
-        // No-op in Java
-    }
-    
-    // ]NOCPP]
-    
     // Comparison methods
     
     public static boolean localEqualsBuffer(@Local String local, @NoLength char[] buf, int offset, int length) {

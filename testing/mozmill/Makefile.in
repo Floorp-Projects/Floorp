@@ -64,19 +64,37 @@ TEST_HARNESS_PACKAGES = \
   mozmill \
   $(NULL)
 
-TEST_FILES := \
-  $(TEST_HARNESS_PACKAGES) \
+MOZMILL_EXTRAS := \
   virtualenv \
   README.txt \
   installmozmill.py \
+  $(NULL)
+
+TEST_FILES := \
+  $(TEST_HARNESS_PACKAGES) \
+  $(MOZMILL_EXTRAS) \
   tests \
   $(NULL)
 
-# Rules for staging the necessary harness bits for a test package
-PKG_STAGE = $(DIST)/test-package-stage
-
-stage-package:
+# assumes you are in objdir
+mozmill-dir:
 	$(NSINSTALL) -D $(PKG_STAGE)/mozmill
 	echo $(TEST_HARNESS_PACKAGES) > $(PKG_STAGE)/mozmill/PACKAGES
+
+install: mozmill-dir
 	(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(TEST_FILES)) | (cd $(PKG_STAGE)/mozmill && tar -xf -)
 
+# on WINNT, copy the tests; otherwise, assume you can symlink them
+ifeq ($(OS_ARCH),WINNT)
+install-develop: install
+else
+install-develop: mozmill-dir
+	$(INSTALL) $(foreach f, $(TEST_HARNESS_PACKAGES), "$(srcdir)/$f") $(PKG_STAGE)/mozmill/
+	(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(MOZMILL_EXTRAS)) | (cd $(PKG_STAGE)/mozmill && tar -xf -)
+	$(INSTALL) $(topsrcdir)/testing/mozmill/tests $(PKG_STAGE)/mozmill
+endif
+
+# Rules for staging the necessary harness bits for a test package
+stage-package: PKG_STAGE = $(DIST)/test-package-stage
+stage-package: install
+	

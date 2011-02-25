@@ -206,9 +206,13 @@ DisplayRows(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
   // Don't try to use the row cursor if we have to descend into placeholders;
   // we might have rows containing placeholders, where the row's overflow
   // area doesn't intersect the dirty rect but we need to descend into the row
-  // to see out of flows
-  nsIFrame* kid = f->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO
-    ? nsnull : f->GetFirstRowContaining(aDirtyRect.y, &overflowAbove);
+  // to see out of flows.
+  // Note that we really want to check ShouldDescendIntoFrame for all
+  // the rows in |f|, but that's exactly what we're trying to avoid, so we
+  // approximate it by checking it for |f|: if it's true for any row
+  // in |f| then it's true for |f| itself.
+  nsIFrame* kid = aBuilder->ShouldDescendIntoFrame(f) ?
+    nsnull : f->GetFirstRowContaining(aDirtyRect.y, &overflowAbove);
   
   if (kid) {
     // have a cursor, use it

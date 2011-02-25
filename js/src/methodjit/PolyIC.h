@@ -46,9 +46,11 @@
 #include "assembler/assembler/MacroAssembler.h"
 #include "assembler/assembler/CodeLocation.h"
 #include "methodjit/MethodJIT.h"
+#include "methodjit/ICRepatcher.h"
 #include "BaseAssembler.h"
 #include "RematInfo.h"
 #include "BaseCompiler.h"
+#include "methodjit/ICLabels.h"
 #include "assembler/moco/MocoStubs.h"
 
 namespace js {
@@ -59,117 +61,7 @@ namespace ic {
 static const uint32 MAX_PIC_STUBS = 16;
 static const uint32 MAX_GETELEM_IC_STUBS = 17;
 
-/* SetPropCompiler */
-#if defined JS_CPU_X86
-static const int32 SETPROP_INLINE_SHAPE_OFFSET     =   6; //asserted
-static const int32 SETPROP_INLINE_SHAPE_JUMP       =  12; //asserted
-static const int32 SETPROP_DSLOTS_BEFORE_CONSTANT  = -23; //asserted
-static const int32 SETPROP_DSLOTS_BEFORE_KTYPE     = -19; //asserted
-static const int32 SETPROP_DSLOTS_BEFORE_DYNAMIC   = -15; //asserted
-static const int32 SETPROP_INLINE_STORE_DYN_TYPE   =  -6; //asserted
-static const int32 SETPROP_INLINE_STORE_DYN_DATA   =   0; //asserted
-static const int32 SETPROP_INLINE_STORE_KTYPE_TYPE = -10; //asserted
-static const int32 SETPROP_INLINE_STORE_KTYPE_DATA =   0; //asserted
-static const int32 SETPROP_INLINE_STORE_CONST_TYPE = -14; //asserted
-static const int32 SETPROP_INLINE_STORE_CONST_DATA =  -4; //asserted
-static const int32 SETPROP_STUB_SHAPE_JUMP         =  12; //asserted
-#elif defined JS_CPU_X64
-static const int32 SETPROP_INLINE_STORE_VALUE      =   0; //asserted
-static const int32 SETPROP_INLINE_SHAPE_JUMP       =   6; //asserted
-#endif
-
-/* GetPropCompiler */
-#if defined JS_CPU_X86
-static const int32 GETPROP_DSLOTS_LOAD         = -15; //asserted
-static const int32 GETPROP_TYPE_LOAD           =  -6; //asserted
-static const int32 GETPROP_DATA_LOAD           =   0; //asserted
-static const int32 GETPROP_INLINE_TYPE_GUARD   =  12; //asserted
-static const int32 GETPROP_INLINE_SHAPE_OFFSET =   6; //asserted
-static const int32 GETPROP_INLINE_SHAPE_JUMP   =  12; //asserted
-static const int32 GETPROP_STUB_SHAPE_JUMP     =  12; //asserted
-#elif defined JS_CPU_X64
-static const int32 GETPROP_INLINE_TYPE_GUARD   =  19; //asserted
-static const int32 GETPROP_INLINE_SHAPE_JUMP   =   6; //asserted
-#endif
-
-/* GetElemCompiler */
-#if defined JS_CPU_X86
-static const int32 GETELEM_DSLOTS_LOAD         = -15; //asserted
-static const int32 GETELEM_TYPE_LOAD           =  -6; //asserted
-static const int32 GETELEM_DATA_LOAD           =   0; //asserted
-static const int32 GETELEM_INLINE_SHAPE_OFFSET =   6; //asserted
-static const int32 GETELEM_INLINE_SHAPE_JUMP   =  12; //asserted
-static const int32 GETELEM_INLINE_ATOM_OFFSET  =  18; //asserted
-static const int32 GETELEM_INLINE_ATOM_JUMP    =  24; //asserted
-static const int32 GETELEM_STUB_ATOM_JUMP      =  12; //asserted
-static const int32 GETELEM_STUB_SHAPE_JUMP     =  24; //asserted
-#elif defined JS_CPU_X64
-static const int32 GETELEM_INLINE_SHAPE_JUMP   =   6; //asserted
-static const int32 GETELEM_INLINE_ATOM_JUMP    =   9; //asserted
-static const int32 GETELEM_STUB_ATOM_JUMP      =  19; //asserted (probably differs)
-#endif
-
-/* ScopeNameCompiler */
-#if defined JS_CPU_X86
-static const int32 SCOPENAME_JUMP_OFFSET = 5; //asserted
-#elif defined JS_CPU_X64
-static const int32 SCOPENAME_JUMP_OFFSET = 5; //asserted
-#endif
-
-/* BindNameCompiler */
-#if defined JS_CPU_X86
-static const int32 BINDNAME_INLINE_JUMP_OFFSET = 10; //asserted
-static const int32 BINDNAME_STUB_JUMP_OFFSET   =  5; //asserted
-#elif defined JS_CPU_X64
-static const int32 BINDNAME_STUB_JUMP_OFFSET   =  5; //asserted
-#endif
-
 void PurgePICs(JSContext *cx);
-
-/*
- * x86_64 bytecode differs in length based on the involved registers.
- * Since constants won't work, we need an array of labels.
- */
-#if defined JS_CPU_X64
-union PICLabels {
-    /* SetPropCompiler */
-    struct {
-        /* Offset from storeBack to beginning of 'mov dslots, addr' */
-        int32 dslotsLoadOffset : 8;
-
-        /* Offset from shapeGuard to end of shape comparison. */
-        int32 inlineShapeOffset : 8;
-
-        /* Offset from lastStubStart to end of shape jump. */
-        // TODO: We can redefine the location of lastStubStart to be
-        // after the jump -- at which point this is always 0.
-        int32 stubShapeJump : 8;
-    } setprop;
-
-    /* GetPropCompiler */
-    struct {
-        /* Offset from storeBack to beginning of 'mov dslots, addr' */
-        int32 dslotsLoadOffset : 8;
-
-        /* Offset from shapeGuard to end of shape comparison. */
-        int32 inlineShapeOffset : 8;
-    
-        /* Offset from storeBack to end of value load. */
-        int32 inlineValueOffset : 8;
-
-        /* Offset from lastStubStart to end of shape jump. */
-        // TODO: We can redefine the location of lastStubStart to be
-        // after the jump -- at which point this is always 0.
-        int32 stubShapeJump : 8;
-    } getprop;
-
-    /* BindNameCompiler */
-    struct {
-        /* Offset from shapeGuard to end of shape jump. */
-        int32 inlineJumpOffset : 8;
-    } bindname;
-};
-#endif
 
 enum LookupStatus {
     Lookup_Error = 0,
@@ -265,7 +157,7 @@ class BasePolyIC : public BaseIC {
     ~BasePolyIC() {
         releasePools();
         if (areMultiplePools())
-            delete multiplePools();
+            js_delete(multiplePools());
     }
 
     void reset() {
@@ -300,11 +192,11 @@ class BasePolyIC : public BaseIC {
         if (isOnePool()) {
             JSC::ExecutablePool *oldPool = u.execPool;
             JS_ASSERT(!isTagged(oldPool));
-            ExecPoolVector *execPools = new ExecPoolVector(SystemAllocPolicy()); 
+            ExecPoolVector *execPools = js_new<ExecPoolVector>(SystemAllocPolicy()); 
             if (!execPools)
                 return false;
             if (!execPools->append(oldPool) || !execPools->append(pool)) {
-                delete execPools;
+                js_delete(execPools);
                 return false;
             }
             u.taggedExecPools = tag(execPools);
@@ -386,7 +278,11 @@ struct GetElementIC : public BasePolyIC {
         return hasInlineTypeGuard() && !inlineTypeGuardPatched;
     }
     bool shouldPatchUnconditionalClaspGuard() {
-        return !hasInlineTypeGuard() && !inlineClaspGuardPatched;
+        // The clasp guard is only unconditional if the type is known to not
+        // be an int32.
+        if (idRemat.isTypeKnown() && idRemat.knownType() != JSVAL_TYPE_INT32)
+            return !inlineClaspGuardPatched;
+        return false;
     }
 
     void reset() {
@@ -400,6 +296,8 @@ struct GetElementIC : public BasePolyIC {
     LookupStatus update(JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp);
     LookupStatus attachGetProp(JSContext *cx, JSObject *obj, const Value &v, jsid id,
                                Value *vp);
+    LookupStatus attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsid id,
+                                  Value *vp);
     LookupStatus disable(JSContext *cx, const char *reason);
     LookupStatus error(JSContext *cx);
     bool shouldUpdate(JSContext *cx);
@@ -436,6 +334,10 @@ struct SetElementIC : public BaseIC {
     // True if this is from a strict-mode script.
     bool strictMode : 1;
 
+    // A bitmask of registers that are volatile and must be preserved across
+    // stub calls inside the IC.
+    uint32 volatileMask : 16;
+
     // If true, then keyValue contains a constant index value >= 0. Otherwise,
     // keyReg contains a dynamic integer index in any range.
     bool hasConstantKey : 1;
@@ -459,6 +361,7 @@ struct SetElementIC : public BaseIC {
         inlineHoleGuardPatched = false;
     }
     void purge(Repatcher &repatcher);
+    LookupStatus attachTypedArray(JSContext *cx, JSObject *obj, int32 key);
     LookupStatus attachHoleStub(JSContext *cx, JSObject *obj, int32 key);
     LookupStatus update(JSContext *cx, const Value &objval, const Value &idval);
     LookupStatus disable(JSContext *cx, const char *reason);
@@ -507,6 +410,15 @@ struct PICInfo : public BasePolyIC {
         return CodeLocationLabel(lastStubStart.start());
     }
 
+    CodeLocationLabel getFastShapeGuard() {
+        return fastPathStart.labelAtOffset(shapeGuard);
+    }
+
+    CodeLocationLabel getSlowTypeCheck() {
+        JS_ASSERT(isGet());
+        return slowPathStart.labelAtOffset(u.get.typeCheckOffset);
+    }
+
     // Return a JITCode block corresponding to the code memory to attach a
     // new stub to.
     JITCode lastCodeBlock(JITScript *jit) {
@@ -544,6 +456,12 @@ struct PICInfo : public BasePolyIC {
     inline bool isGet() const {
         return kind == GET || kind == CALL;
     }
+    inline bool isBind() const {
+        return kind == BIND;
+    }
+    inline bool isScopeName() const {
+        return kind == NAME || kind == XNAME;
+    }
     inline RegisterID typeReg() {
         JS_ASSERT(isGet());
         return u.get.typeReg;
@@ -560,10 +478,52 @@ struct PICInfo : public BasePolyIC {
         return !hasTypeCheck();
     }
 
-#if defined JS_CPU_X64
-    // Required labels for platform-specific patching.
-    PICLabels labels;
+#if !defined JS_HAS_IC_LABELS
+    static GetPropLabels getPropLabels_;
+    static SetPropLabels setPropLabels_;
+    static BindNameLabels bindNameLabels_;
+    static ScopeNameLabels scopeNameLabels_;
+#else
+    union {
+        GetPropLabels getPropLabels_;
+        SetPropLabels setPropLabels_;
+        BindNameLabels bindNameLabels_;
+        ScopeNameLabels scopeNameLabels_;
+    };
+    void setLabels(const ic::GetPropLabels &labels) {
+        JS_ASSERT(isGet());
+        getPropLabels_ = labels;
+    }
+    void setLabels(const ic::SetPropLabels &labels) {
+        JS_ASSERT(isSet());
+        setPropLabels_ = labels;
+    }
+    void setLabels(const ic::BindNameLabels &labels) {
+        JS_ASSERT(kind == BIND);
+        bindNameLabels_ = labels;
+    }
+    void setLabels(const ic::ScopeNameLabels &labels) {
+        JS_ASSERT(kind == NAME || kind == XNAME);
+        scopeNameLabels_ = labels;
+    }
 #endif
+
+    GetPropLabels &getPropLabels() {
+        JS_ASSERT(isGet());
+        return getPropLabels_;
+    }
+    SetPropLabels &setPropLabels() {
+        JS_ASSERT(isSet());
+        return setPropLabels_;
+    }
+    BindNameLabels &bindNameLabels() {
+        JS_ASSERT(kind == BIND);
+        return bindNameLabels_;
+    }
+    ScopeNameLabels &scopeNameLabels() {
+        JS_ASSERT(kind == NAME || kind == XNAME);
+        return scopeNameLabels_;
+    }
 
     // Where in the script did we generate this PIC?
     jsbytecode *pc;

@@ -42,10 +42,9 @@ let contentWindow;
 
 function test() {
   waitForExplicitFinish();
-  contentWindow = document.getElementById("tab-view").contentWindow;
 
   // create new tab
-  testTab = gBrowser.addTab("http://mochi.test:8888/");
+  testTab = gBrowser.addTab("about:blank");
 
   window.addEventListener("tabviewshown", onTabViewWindowLoaded, false);
   TabView.toggle();
@@ -55,17 +54,23 @@ function onTabViewWindowLoaded() {
   window.removeEventListener("tabviewshown", onTabViewWindowLoaded, false);
   ok(TabView.isVisible(), "Tab View is visible");
 
+  contentWindow = document.getElementById("tab-view").contentWindow;
+
   // create group
   let testGroupRect = new contentWindow.Rect(20, 20, 300, 300);
   testGroup = new contentWindow.GroupItem([], { bounds: testGroupRect });
   ok(testGroup.isEmpty(), "This group is empty");
   
+  ok(testTab._tabViewTabItem, "tab item exists");
+
   // place tab in group
-  let testTabItem = testTab.tabItem;
+  let testTabItem = testTab._tabViewTabItem;
 
   if (testTabItem.parent)
     testTabItem.parent.remove(testTabItem);
   testGroup.add(testTabItem);
+
+  ok(testTab._tabViewTabItem, "tab item exists after adding to group");
 
   // record last update time of tab canvas
   let initialUpdateTime = testTabItem._lastTabUpdateTime;
@@ -103,8 +108,8 @@ function onTabViewWindowLoaded() {
     ok((lastTime - initialUpdateTime) > hbTiming, "Tab has been updated:"+lastTime+"-"+initialUpdateTime+">"+hbTiming);
 
     // clean up
-    testGroup.remove(testTab.tabItem);
-    testTab.tabItem.close();
+    testGroup.remove(testTab._tabViewTabItem);
+    testTab._tabViewTabItem.close();
     testGroup.close();
 
     let currentTabs = contentWindow.TabItems.getItems();

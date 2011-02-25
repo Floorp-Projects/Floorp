@@ -1,0 +1,127 @@
+/* Copyright 1997-2003 W3C (MIT, ERCIM, Keio). All Rights Reserved.
+   The following software licensing rules apply:
+   http://www.w3.org/Consortium/Legal/copyright-software */
+
+/* $Id: activity-home.css,v 1.4 2003/01/17 22:44:17 slesch Exp $ */
+
+/*   Single style sheet for ALL activity Home pages please
+** Tim     
+**  We need consistency on our web site - Nov 99 AC meeting
+**  Please do NOT use in-line style.
+**  Discuss this style sheet with other users and me 
+**    before fixing it
+*/
+
+/* These bits from Dave's inline stylein the HTML home page 
+  tbl 19991115
+*/
+
+  body { 
+    margin-left: 10%; 
+    margin-right: 5%; 
+    font-family: sans-serif
+  }
+  h1 { margin-left: -8% }
+  h2 { margin-left: -4% }
+  h2 { color: #990066}
+  h3 { color: black }
+  pre { color: green; font-weight: bold }
+  em { font-style: italic; font-weight: bold }
+  strong { text-transform: uppercase; font-weight: bold }
+  b { color:#990066}
+
+  td { background: #FFBFBF }
+  th { background: #A0A0A4 }
+  caption { text-decoration: underline; margin-top: 1em }
+  .splash { color: #009966}
+  p.banner { margin-left: -4% }
+  b.black { color: black}
+  b.pink {color:#990066}     /* gimme a break -tbl */
+  p.pink {color:#990066}     /* sep of form and content?! */
+
+  blockquote { color: black; font-style:italic;
+               font-family: "Comic Sans MS", sans-serif;}
+  pre { font-family: monospace }
+  div.disclaimer {margin-left: -8%}
+  div.color {
+              background: rgb(255,204,255);
+              padding: 0.5em;
+              border: none
+            }
+ 
+
+ h3.c3 {text-align: center}
+ p.c2 {text-align: center}
+ h1.c1 {text-align: left}
+
+/* These bits from Chris L's inline style in the
+   Graphics home page
+  tbl 19991115
+*/
+
+body {
+	background: white; color: black;
+/*	font-family: serif;   WinIE 4 to 5.5 problem with generic serif 20010726 */
+}
+
+div.main { 
+	margin-left: 5%; margin-right: 2% 
+}
+h1, h2, h3 {
+	font-family: arial, helvetica, sans-serif 
+}
+h2 {
+	margin-left:-2%
+}
+.date {color: #000; background: #DFD;  font-style: italic; font-weight: bold; 
+vertical-align: top; border: none}
+.format {
+	color: #000; 
+	background: #DFD;  
+	font-style: italic; 
+	font-weight: bold; 
+	vertical-align: top; 
+	border: none
+}
+
+td {
+	margin: 6px 
+}
+
+.offsite:link {
+	color: #393 
+}
+
+.offsite:visited {
+	color: #666 
+}
+.newslist {
+	margin: 3px 8px
+}
+
+pre {  
+	font-family: Syntax, "Courier New", Courier, monospace 
+}
+
+.qdlogo { 
+	height: 48px; 
+	color: #903; 
+
+	/* border: thin solid #903; 
+	*/ font-weight: bold; font-family: Hattenschweiller, Impact, serif; vertical-align: middle
+
+}
+
+.filler { 
+	color: #777; 
+	font-style: italic 
+}
+
+
+
+
+
+
+
+
+

@@ -59,6 +59,7 @@ public:
   virtual ~ShadowLayerParent();
 
   void Bind(Layer* layer);
+  void Destroy();
 
   Layer* AsLayer() const { return mLayer; }
   ContainerLayer* AsContainer() const;

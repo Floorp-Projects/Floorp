@@ -213,6 +213,7 @@ SEC_ERROR_OCSP_BAD_SIGNATURE               =	(SEC_ERROR_BASE + 157),
 SEC_ERROR_OUT_OF_SEARCH_LIMITS             =	(SEC_ERROR_BASE + 158),
 SEC_ERROR_INVALID_POLICY_MAPPING           =	(SEC_ERROR_BASE + 159),
 SEC_ERROR_POLICY_VALIDATION_FAILED         =	(SEC_ERROR_BASE + 160),
+/* No longer used.  Unknown AIA location types are now silently ignored. */
 SEC_ERROR_UNKNOWN_AIA_LOCATION_TYPE        =	(SEC_ERROR_BASE + 161),
 SEC_ERROR_BAD_HTTP_RESPONSE                =	(SEC_ERROR_BASE + 162),
 SEC_ERROR_BAD_LDAP_RESPONSE                =	(SEC_ERROR_BASE + 163),
@@ -230,6 +231,10 @@ SEC_ERROR_CRL_IMPORT_FAILED                =    (SEC_ERROR_BASE + 171),
 
 SEC_ERROR_EXPIRED_PASSWORD                 =    (SEC_ERROR_BASE + 172),
 SEC_ERROR_LOCKED_PASSWORD                  =    (SEC_ERROR_BASE + 173),
+
+SEC_ERROR_UNKNOWN_PKCS11_ERROR             =	(SEC_ERROR_BASE + 174),
+
+SEC_ERROR_BAD_CRL_DP_URL                   =	(SEC_ERROR_BASE + 175),
 
 /* Add new error codes above here. */
 SEC_ERROR_END_OF_LIST 

@@ -72,7 +72,7 @@ function run_test()
   // open the result container
   queryRes.root.containerOpen = true;
   // debug queries
-  // dump_table("moz_places_view");
+  // dump_table("moz_places");
   do_check_eq(queryRes.root.childCount, 1);  
   // call the untested code path
   listener.onValueRemoved(null, uri.spec, true);

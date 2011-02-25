@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.33 $ $Date: 2008/06/06 01:19:30 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.33.40.1 $ $Date: 2010/12/17 20:14:38 $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -650,7 +650,11 @@ nssCertificateStore_AddTrust (
     entry = (certificate_hash_entry *)
                               nssHash_Lookup(store->issuer_and_serial, cert);
     if (entry) {
-	entry->trust = nssTrust_AddRef(trust);
+	NSSTrust* newTrust = nssTrust_AddRef(trust);
+	if (entry->trust) {
+	    nssTrust_Destroy(entry->trust);
+	}
+	entry->trust = newTrust;
     }
     PZ_Unlock(store->lock);
     return (entry) ? PR_SUCCESS : PR_FAILURE;
@@ -687,7 +691,11 @@ nssCertificateStore_AddSMIMEProfile (
     entry = (certificate_hash_entry *)
                               nssHash_Lookup(store->issuer_and_serial, cert);
     if (entry) {
-	entry->profile = nssSMIMEProfile_AddRef(profile);
+	nssSMIMEProfile* newProfile = nssSMIMEProfile_AddRef(profile);
+	if (entry->profile) {
+	    nssSMIMEProfile_Destroy(entry->profile);
+	}
+	entry->profile = newProfile;
     }
     PZ_Unlock(store->lock);
     return (entry) ? PR_SUCCESS : PR_FAILURE;

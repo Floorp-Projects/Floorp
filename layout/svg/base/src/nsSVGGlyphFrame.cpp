@@ -39,15 +39,15 @@
 #include "nsSVGTextFrame.h"
 #include "nsILookAndFeel.h"
 #include "nsTextFragment.h"
+#include "nsBidiPresUtils.h"
 #include "nsSVGUtils.h"
 #include "SVGLengthList.h"
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGRect.h"
-#include "nsIDOMSVGPoint.h"
+#include "DOMSVGPoint.h"
 #include "nsSVGGlyphFrame.h"
 #include "nsSVGTextPathFrame.h"
 #include "nsSVGPathElement.h"
-#include "nsSVGPoint.h"
 #include "nsSVGRect.h"
 #include "nsDOMError.h"
 #include "gfxContext.h"
@@ -62,10 +62,14 @@ struct CharacterPosition {
   gfxFloat angle;
   PRBool draw;
 };
-  
+
+static gfxContext* MakeTmpCtx() {
+  return new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
+}
+
 /**
  * This is a do-it-all helper class. It supports iterating through the
- * drawable characters of a string. For each character, it can set up
+ * drawable character clusters of a string. For each cluster, it can set up
  * a graphics context with a transform appropriate for drawing the
  * character, or a transform appropriate for emitting geometry in the
  * text metrics coordinate system (which differs from the drawing
@@ -84,7 +88,6 @@ struct CharacterPosition {
  * the element is in a <defs> section, then the CharacterIterator will
  * behave as if the frame has no drawable characters.
  *
- * XXX should make this iterate clusters instead
  * XXX needs RTL love
  * XXX might want to make AdvanceToCharacter constant time (e.g. by
  * caching advances and/or the CharacterPosition array across DOM
@@ -95,8 +98,8 @@ class CharacterIterator
 {
 public:
   /**
-   * Sets up the iterator so that NextChar will return the first drawable
-   * char.
+   * Sets up the iterator so that NextCluster will return the first drawable
+   * cluster.
    * @param aForceGlobalTransform passed on to EnsureTextRun (see below)
    */
   CharacterIterator(nsSVGGlyphFrame *aSource, PRBool aForceGlobalTransform);
@@ -140,12 +143,19 @@ public:
   }
 
   /**
-   * Returns the index of the next char in the string that should be
-   * drawn, or -1 if there is no such character.
+   * Returns the index of the next cluster in the string that should be
+   * drawn, or -1 if there is no such cluster.
    */
-  PRInt32 NextChar();
+  PRInt32 NextCluster();
+
   /**
-   * Repeated calls NextChar until it returns aIndex (i.e. aIndex is the
+   * Returns the length of the current cluster (usually 1, unless there
+   * are combining marks)
+   */
+  PRInt32 ClusterLength();
+
+  /**
+   * Repeated calls NextCluster until it returns aIndex (i.e. aIndex is the
    * current drawable character). Returns false if that never happens
    * (because aIndex is before or equal to the current character, or
    * out of bounds, or not drawable).
@@ -406,42 +416,50 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
 NS_IMETHODIMP_(nsIFrame*)
 nsSVGGlyphFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
-  if (!mRect.Contains(aPoint))
+  PRUint16 mask = GetHittestMask();
+  if (!mask) {
     return nsnull;
-
-  PRBool events = PR_FALSE;
-  switch (GetStyleVisibility()->mPointerEvents) {
-    case NS_STYLE_POINTER_EVENTS_NONE:
-      break;
-    case NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED:
-    case NS_STYLE_POINTER_EVENTS_AUTO:
-      if (GetStyleVisibility()->IsVisible() &&
-          (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None ||
-           GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None))
-        events = PR_TRUE;
-      break;
-    case NS_STYLE_POINTER_EVENTS_VISIBLEFILL:
-    case NS_STYLE_POINTER_EVENTS_VISIBLESTROKE:
-    case NS_STYLE_POINTER_EVENTS_VISIBLE:
-      if (GetStyleVisibility()->IsVisible())
-        events = PR_TRUE;
-      break;
-    case NS_STYLE_POINTER_EVENTS_PAINTED:
-      if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None ||
-          GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None)
-        events = PR_TRUE;
-      break;
-    case NS_STYLE_POINTER_EVENTS_FILL:
-    case NS_STYLE_POINTER_EVENTS_STROKE:
-    case NS_STYLE_POINTER_EVENTS_ALL:
-      events = PR_TRUE;
-      break;
-    default:
-      NS_ERROR("not reached");
-      break;
   }
 
-  if (events && ContainsPoint(aPoint))
+  nsRefPtr<gfxContext> context = MakeTmpCtx();
+  SetupGlobalTransform(context);
+  CharacterIterator iter(this, PR_TRUE);
+  iter.SetInitialMatrix(context);
+
+  // The SVG 1.1 spec says that text is hit tested against the character cells
+  // of the text, not the fill and stroke. See the section starting "For text
+  // elements..." here:
+  //
+  //   http://www.w3.org/TR/SVG11/interact.html#PointerEventsProperty
+  //
+  // Currently we just test the character cells if GetHittestMask says we're
+  // supposed to be testing either the fill OR the stroke:
+
+  PRInt32 i;
+  while ((i = iter.NextCluster()) >= 0) {
+    gfxTextRun::Metrics metrics =
+    mTextRun->MeasureText(i, iter.ClusterLength(),
+                          gfxFont::LOOSE_INK_EXTENTS, nsnull, nsnull);
+    iter.SetupForMetrics(context);
+    context->Rectangle(metrics.mBoundingBox);
+  }
+
+  gfxPoint userSpacePoint =
+    context->DeviceToUser(gfxPoint(PresContext()->AppUnitsToGfxUnits(aPoint.x),
+                                   PresContext()->AppUnitsToGfxUnits(aPoint.y)));
+
+  PRBool isHit = PR_FALSE;
+  if (mask & HITTEST_MASK_FILL || mask & HITTEST_MASK_STROKE) {
+    isHit = context->PointInFill(userSpacePoint);
+  }
+
+  // If isHit is false, we may also want to fill and stroke the text to check
+  // whether the pointer is over an area of fill or stroke that lies outside
+  // the character cells. (With a thick stroke, or with fonts like Zapfino, such
+  // areas may be very significant.) This is what Opera appears to do, but
+  // currently we do not.
+
+  if (isHit && nsSVGUtils::HitTestClip(this, aPoint))
     return this;
 
   return nsnull;
@@ -451,11 +469,6 @@ NS_IMETHODIMP_(nsRect)
 nsSVGGlyphFrame::GetCoveredRegion()
 {
   return mRect;
-}
-
-static gfxContext *
-MakeTmpCtx() {
-  return new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
 }
 
 NS_IMETHODIMP
@@ -570,9 +583,10 @@ nsSVGGlyphFrame::AddCharactersToPath(CharacterIterator *aIter,
   }
 
   PRInt32 i;
-  while ((i = aIter->NextChar()) >= 0) {
+  while ((i = aIter->NextCluster()) >= 0) {
     aIter->SetupForDrawing(aContext);
-    mTextRun->DrawToPath(aContext, gfxPoint(0, 0), i, 1, nsnull, nsnull);
+    mTextRun->DrawToPath(aContext, gfxPoint(0, 0), i, aIter->ClusterLength(),
+                         nsnull, nsnull);
   }
 }
 
@@ -589,10 +603,11 @@ nsSVGGlyphFrame::AddBoundingBoxesToPath(CharacterIterator *aIter,
   }
 
   PRInt32 i;
-  while ((i = aIter->NextChar()) >= 0) {
+  while ((i = aIter->NextCluster()) >= 0) {
     aIter->SetupForMetrics(aContext);
     gfxTextRun::Metrics metrics =
-      mTextRun->MeasureText(i, 1, gfxFont::LOOSE_INK_EXTENTS, nsnull, nsnull);
+      mTextRun->MeasureText(i, aIter->ClusterLength(),
+                            gfxFont::LOOSE_INK_EXTENTS, nsnull, nsnull);
     aContext->Rectangle(metrics.mBoundingBox);
   }
 }
@@ -603,14 +618,15 @@ nsSVGGlyphFrame::FillCharacters(CharacterIterator *aIter,
 {
   if (aIter->SetupForDirectTextRunDrawing(aContext)) {
     mTextRun->Draw(aContext, gfxPoint(0, 0), 0,
-                   mTextRun->GetLength(), nsnull, nsnull, nsnull);
+                   mTextRun->GetLength(), nsnull, nsnull);
     return;
   }
 
   PRInt32 i;
-  while ((i = aIter->NextChar()) >= 0) {
+  while ((i = aIter->NextCluster()) >= 0) {
     aIter->SetupForDrawing(aContext);
-    mTextRun->Draw(aContext, gfxPoint(0, 0), i, 1, nsnull, nsnull, nsnull);
+    mTextRun->Draw(aContext, gfxPoint(0, 0), i, aIter->ClusterLength(),
+                   nsnull, nsnull);
   }
 }
 
@@ -1099,7 +1115,8 @@ nsSVGGlyphFrame::GetStartPositionOfChar(PRUint32 charnum,
   if (!iter.AdvanceToCharacter(charnum))
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
-  return NS_NewSVGPoint(_retval, iter.GetPositionData().pos);
+  NS_ADDREF(*_retval = new DOMSVGPoint(iter.GetPositionData().pos));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1116,7 +1133,8 @@ nsSVGGlyphFrame::GetEndPositionOfChar(PRUint32 charnum,
   iter.SetupForMetrics(tmpCtx);
   tmpCtx->MoveTo(gfxPoint(mTextRun->GetAdvanceWidth(charnum, 1, nsnull), 0));
   tmpCtx->IdentityMatrix();
-  return NS_NewSVGPoint(_retval, tmpCtx->CurrentPoint());
+  NS_ADDREF(*_retval = new DOMSVGPoint(tmpCtx->CurrentPoint()));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1292,9 +1310,6 @@ nsSVGGlyphFrame::IsAbsolutelyPositioned()
        frame != nsnull;
        frame = frame->GetParent()) {
 
-    if (!frame)
-      break;
-
     // at the start of a 'text' element
     // at the start of each 'textPath' element
     if (frame->GetType() == nsGkAtoms::svgTextPathFrame) {
@@ -1362,14 +1377,8 @@ nsSVGGlyphFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
   PRInt32 i;
   PRInt32 last = -1;
   gfxPoint pt(xPos, yPos);
-  while ((i = iter.NextChar()) >= 0) {
-    // iter is the beginning of a cluster (or of the entire run);
-    // look ahead for the next cluster start, then measure the entire cluster
-    PRInt32 limit = i + 1;
-    while (limit < (PRInt32)mTextRun->GetLength() &&
-           !mTextRun->IsClusterStart(limit)) {
-      ++limit;
-    }
+  while ((i = iter.NextCluster()) >= 0) {
+    PRInt32 limit = i + iter.ClusterLength();
     gfxTextRun::Metrics metrics =
       mTextRun->MeasureText(i, limit - i, gfxFont::LOOSE_INK_EXTENTS,
                             nsnull, nsnull);
@@ -1403,11 +1412,6 @@ nsSVGGlyphFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
       }
       current += step;
       leftEdge += width;
-    }
-
-    // move iter past any trailing chars of the cluster
-    while (++i < limit) {
-      iter.NextChar();
     }
   }
 
@@ -1444,6 +1448,22 @@ nsSVGGlyphFrame::SetWhitespaceHandling(PRUint8 aWhitespaceHandling)
   mWhitespaceHandling = aWhitespaceHandling;
 }
 
+NS_IMETHODIMP_(PRBool)
+nsSVGGlyphFrame::IsAllWhitespace()
+{
+  const nsTextFragment* text = mContent->GetText();
+
+  if (text->Is2b())
+    return PR_FALSE;
+  PRInt32 len = text->GetLength();
+  const char* str = text->Get1b();
+  for (PRInt32 i = 0; i < len; ++i) {
+    if (!NS_IsAsciiWhitespace(str[i]))
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
 //----------------------------------------------------------------------
 //
 
@@ -1454,27 +1474,6 @@ nsSVGGlyphFrame::NotifyGlyphMetricsChange()
     static_cast<nsSVGTextContainerFrame *>(mParent);
   if (containerFrame)
     containerFrame->NotifyGlyphMetricsChange();
-}
-
-PRBool
-nsSVGGlyphFrame::ContainsPoint(const nsPoint &aPoint)
-{
-  nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
-  SetupGlobalTransform(tmpCtx);
-  CharacterIterator iter(this, PR_TRUE);
-  iter.SetInitialMatrix(tmpCtx);
-  
-  PRInt32 i;
-  while ((i = iter.NextChar()) >= 0) {
-    gfxTextRun::Metrics metrics =
-      mTextRun->MeasureText(i, 1, gfxFont::LOOSE_INK_EXTENTS, nsnull, nsnull);
-    iter.SetupForMetrics(tmpCtx);
-    tmpCtx->Rectangle(metrics.mBoundingBox);
-  }
-
-  tmpCtx->IdentityMatrix();
-  return tmpCtx->PointInFill(gfxPoint(PresContext()->AppUnitsToGfxUnits(aPoint.x),
-                                      PresContext()->AppUnitsToGfxUnits(aPoint.y)));
 }
 
 PRBool
@@ -1530,6 +1529,50 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
     nsAutoString text;
     if (!GetCharacterData(text))
       return PR_FALSE;
+
+    nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
+    if (bidiUtils) {
+      nsAutoString visualText;
+
+      /*
+       * XXXsmontagu: The SVG spec says:
+       *
+       * http://www.w3.org/TR/SVG11/text.html#DirectionProperty
+       *  "For the 'direction' property to have any effect, the 'unicode-bidi'
+       *   property's value must be embed or bidi-override."
+       *
+       * The SVGTiny spec, on the other hand, says 
+       *
+       * http://www.w3.org/TR/SVGTiny12/text.html#DirectionProperty
+       *  "For the 'direction' property to have any effect on an element that 
+       *   does not by itself establish a new text chunk (such as the 'tspan'
+       *   element in SVG 1.2 Tiny), the 'unicode-bidi' property's value must
+       *   be embed or bidi-override."
+       *
+       * Note that this is different from HTML/CSS, where setting the 'dir'
+       *  attribute on an inline element automatically sets unicode-bidi: embed
+       *
+       * Our current implementation of bidi in SVG does not distinguish between
+       * different text elements, but treats every text container frame as a
+       * new text chunk, so we always set the base direction according to the
+       * direction property
+       *
+       * See also XXXsmontagu comments in nsSVGTextFrame::UpdateGlyphPositioning
+       */
+        
+      // Get the unicodeBidi property from the parent, because it doesn't
+      // inherit
+      PRBool bidiOverride = (mParent->GetStyleTextReset()->mUnicodeBidi ==
+                             NS_STYLE_UNICODE_BIDI_OVERRIDE);
+      nsBidiLevel baseDirection =
+        GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL ?
+          NSBIDI_RTL : NSBIDI_LTR;
+      bidiUtils->CopyLogicalToVisual(text, visualText,
+                                     baseDirection, bidiOverride);
+      if (!visualText.IsEmpty()) {
+        text = visualText;
+      }
+    }
 
     gfxMatrix m;
     if (aForceGlobalTransform ||
@@ -1640,7 +1683,7 @@ CharacterIterator::SetupForDirectTextRun(gfxContext *aContext, float aScale)
 }
 
 PRInt32
-CharacterIterator::NextChar()
+CharacterIterator::NextCluster()
 {
   if (mInError) {
 #ifdef DEBUG
@@ -1665,15 +1708,33 @@ CharacterIterator::NextChar()
       return -1;
     }
 
-    if (mPositions.IsEmpty() || mPositions[mCurrentChar].draw)
+    if (mSource->mTextRun->IsClusterStart(mCurrentChar) &&
+        (mPositions.IsEmpty() || mPositions[mCurrentChar].draw)) {
       return mCurrentChar;
+    }
   }
+}
+
+PRInt32
+CharacterIterator::ClusterLength()
+{
+  if (mInError) {
+    return 0;
+  }
+
+  PRInt32 i = mCurrentChar;
+  while (++i < mSource->mTextRun->GetLength()) {
+    if (mSource->mTextRun->IsClusterStart(i)) {
+      break;
+    }
+  }
+  return i - mCurrentChar;
 }
 
 PRBool
 CharacterIterator::AdvanceToCharacter(PRInt32 aIndex)
 {
-  while (NextChar() != -1) {
+  while (NextCluster() != -1) {
     if (mCurrentChar == aIndex)
       return PR_TRUE;
   }

@@ -362,7 +362,7 @@ nsBaseAppShell::RunSyncSections()
   // add another synchronous section, so we don't remove elements from
   // mSyncSections until all sections have been run, else we'll screw up
   // our iteration.
-  for (PRUint32 i=0; i<mSyncSections.Count(); i++) {
+  for (PRInt32 i = 0; i < mSyncSections.Count(); i++) {
     mSyncSections[i]->Run();
   }
   mSyncSections.Clear();

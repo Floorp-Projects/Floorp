@@ -42,9 +42,18 @@
 
 #include "gfxPattern.h"
 #include "nsThreadUtils.h"
+#include "nsCoreAnimationSupport.h"
 
 namespace mozilla {
 namespace layers {
+
+enum StereoMode {
+  STEREO_MODE_MONO,
+  STEREO_MODE_LEFT_RIGHT,
+  STEREO_MODE_RIGHT_LEFT,
+  STEREO_MODE_BOTTOM_TOP,
+  STEREO_MODE_TOP_BOTTOM
+};
 
 /**
  * A class representing a buffer of pixel data. The data can be in one
@@ -87,7 +96,15 @@ public:
      * manipulated on the main thread, since the underlying cairo surface
      * is main-thread-only.
      */
-    CAIRO_SURFACE
+    CAIRO_SURFACE,
+
+    /**
+     * The MAC_IO_SURFACE format creates a MacIOSurfaceImage. This
+     * is only supported on Mac with OpenGL layers.
+     *
+     * It wraps an IOSurface object and binds it directly to a GL texture.
+     */
+    MAC_IO_SURFACE
   };
 
   Format GetFormat() { return mFormat; }
@@ -187,6 +204,13 @@ public:
    */
   virtual void SetScaleHint(const gfxIntSize& /* aScaleHint */) { }
 
+  /**
+   * Get the layer manager type this image container was created with,
+   * presumably its users might want to do something special if types do not
+   * match.
+   */
+  virtual LayerManager::LayersBackend GetBackendType() = 0;
+
 protected:
   LayerManager* mManager;
 
@@ -203,7 +227,12 @@ public:
    * Set the ImageContainer. aContainer must have the same layer manager
    * as this layer.
    */
-  void SetContainer(ImageContainer* aContainer) { mContainer = aContainer; }
+  void SetContainer(ImageContainer* aContainer) 
+  {
+    NS_ASSERTION(!aContainer->Manager() || aContainer->Manager() == Manager(), 
+                 "ImageContainer must have the same manager as the ImageLayer");
+    mContainer = aContainer;  
+  }
   /**
    * CONSTRUCTION PHASE ONLY
    * Set the filter used to resample this image if necessary.
@@ -277,6 +306,7 @@ public:
     PRUint32 mPicX;
     PRUint32 mPicY;
     gfxIntSize mPicSize;
+    StereoMode mStereoMode;
   };
 
   enum {
@@ -316,6 +346,33 @@ public:
 protected:
   CairoImage(void* aImplData) : Image(aImplData, CAIRO_SURFACE) {}
 };
+
+#ifdef XP_MACOSX
+class THEBES_API MacIOSurfaceImage : public Image {
+public:
+  struct Data {
+    nsIOSurface* mIOSurface;
+  };
+
+ /**
+  * This can only be called on the main thread. It may add a reference
+  * to the surface (which will eventually be released on the main thread).
+  * The surface must not be modified after this call!!!
+  */
+  virtual void SetData(const Data& aData) = 0;
+
+  /**
+   * Temporary hacks to force plugin drawing during an empty transaction.
+   * This should not be used for anything else, and will be removed
+   * when async plugin rendering is complete.
+   */
+  typedef void (*UpdateSurfaceCallback)(ImageContainer* aContainer, void* aInstanceOwner);
+  virtual void SetCallback(UpdateSurfaceCallback aCallback, void* aInstanceOwner) =0;
+
+protected:
+  MacIOSurfaceImage(void* aImplData) : Image(aImplData, MAC_IO_SURFACE) {}
+};
+#endif
 
 }
 }

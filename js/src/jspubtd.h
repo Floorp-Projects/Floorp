@@ -177,14 +177,24 @@ typedef class JSCrossCompartmentWrapper JSCrossCompartmentWrapper;
 /* JSClass (and js::ObjectOps where appropriate) function pointer typedefs. */
 
 /*
- * Add, delete, get or set a property named by id in obj.  Note the jsid id
+ * Add, delete, or get a property named by id in obj.  Note the jsid id
  * type -- id may be a string (Unicode property identifier) or an int (element
  * index).  The *vp out parameter, on success, is the new property value after
- * an add, get, or set.  After a successful delete, *vp is JSVAL_FALSE iff
+ * an add or get.  After a successful delete, *vp is JSVAL_FALSE iff
  * obj[id] can't be deleted (because it's permanent).
  */
 typedef JSBool
 (* JSPropertyOp)(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+
+/*
+ * Set a property named by id in obj, treating the assignment as strict
+ * mode code if strict is true. Note the jsid id type -- id may be a string
+ * (Unicode property identifier) or an int (element index). The *vp out
+ * parameter, on success, is the new property value after the
+ * set.
+ */
+typedef JSBool
+(* JSStrictPropertyOp)(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
 
 /*
  * This function type is used for callbacks that enumerate the properties of
@@ -531,7 +541,7 @@ typedef JSBool
                     jsval *rval);
 
 typedef JSBool
-(* JSLocaleToUnicode)(JSContext *cx, char *src, jsval *rval);
+(* JSLocaleToUnicode)(JSContext *cx, const char *src, jsval *rval);
 
 /*
  * Security protocol types.
@@ -597,10 +607,11 @@ typedef JSBool
  *
  * tag and data are the pair of uint32 values from the header. The callback may
  * use the JS_Read* APIs to read any other relevant parts of the object from
- * the reader r. Return the new object on success, NULL on error/exception.
+ * the reader r. closure is any value passed to the JS_ReadStructuredClone
+ * function. Return the new object on success, NULL on error/exception.
  */
 typedef JSObject *(*ReadStructuredCloneOp)(JSContext *cx, JSStructuredCloneReader *r,
-                                           uint32 tag, uint32 data);
+                                           uint32 tag, uint32 data, void *closure);
 
 /*
  * Structured data serialization hook. The engine can write primitive values,
@@ -609,11 +620,12 @@ typedef JSObject *(*ReadStructuredCloneOp)(JSContext *cx, JSStructuredCloneReade
  * the JS_WriteUint32Pair API to write an object header, passing a value
  * greater than JS_SCTAG_USER to the tag parameter. Then it can use the
  * JS_Write* APIs to write any other relevant parts of the value v to the
- * writer w.
+ * writer w. closure is any value passed to the JS_WriteStructuredCLone function.
  *
  * Return true on success, false on error/exception.
  */
-typedef JSBool (*WriteStructuredCloneOp)(JSContext *cx, JSStructuredCloneWriter *w, JSObject *obj);
+typedef JSBool (*WriteStructuredCloneOp)(JSContext *cx, JSStructuredCloneWriter *w,
+                                         JSObject *obj, void *closure);
 
 /*
  * This is called when JS_WriteStructuredClone finds that the object to be

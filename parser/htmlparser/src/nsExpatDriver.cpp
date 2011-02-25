@@ -375,7 +375,8 @@ nsExpatDriver::nsExpatDriver()
     mIsFinalChunk(PR_FALSE),
     mInternalState(NS_OK),
     mExpatBuffered(0),
-    mCatalogData(nsnull)
+    mCatalogData(nsnull),
+    mWindowID(0)
 {
 }
 
@@ -943,11 +944,13 @@ nsExpatDriver::HandleError()
   nsCOMPtr<nsIScriptError> serr(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
   nsresult rv = NS_ERROR_FAILURE;
   if (serr) {
-    rv = serr->Init(description.get(),
-                    mURISpec.get(),
-                    mLastLine.get(),
-                    lineNumber, colNumber,
-                    nsIScriptError::errorFlag, "malformed-xml");
+    nsCOMPtr<nsIScriptError2> serr2(do_QueryInterface(serr));
+    rv = serr2->InitWithWindowID(description.get(),
+                                 mURISpec.get(),
+                                 mLastLine.get(),
+                                 lineNumber, colNumber,
+                                 nsIScriptError::errorFlag, "malformed-xml",
+                                 mWindowID);
   }
 
   // If it didn't initialize, we can't do any logging.
@@ -1232,6 +1235,22 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
   mURISpec = aParserContext.mScanner->GetFilename();
 
   XML_SetBase(mExpatParser, mURISpec.get());
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mOriginalSink->GetTarget());
+  if (doc) {
+    nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
+    if (!win) {
+      PRBool aHasHadScriptHandlingObject;
+      nsIScriptGlobalObject *global =
+        doc->GetScriptHandlingObject(aHasHadScriptHandlingObject);
+      if (global) {
+        win = do_QueryInterface(global);
+      }
+    }
+    if (win) {
+      mWindowID = win->GetOuterWindow()->WindowID();
+    }
+  }
 
   // Set up the callbacks
   XML_SetXmlDeclHandler(mExpatParser, Driver_HandleXMLDeclaration); 

@@ -84,9 +84,6 @@ public:
 
     nsresult Init(nsIURI *uri);
 
-    // No-op event target method for releasing on main thread
-    void MainReleaseNoOp() {}
-
 protected:
     nsresult WriteToCacheEntryInternal(const nsAString& aData, const nsACString& spec);
     void SetCharsetAndSourceInternal();

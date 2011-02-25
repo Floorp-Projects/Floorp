@@ -58,15 +58,17 @@
 
 #include "nsIServiceManager.h"
 #include "nsIConsoleService.h"
-
-#include "nsIGfxInfo.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch2.h"
 
 namespace mozilla {
 namespace layers {
 
 using namespace mozilla::gl;
 
+#ifdef CHECK_CURRENT_PROGRAM
 int LayerManagerOGLProgram::sCurrentProgramKey = 0;
+#endif
 
 /**
  * LayerManagerOGL
@@ -146,43 +148,37 @@ LayerManagerOGL::CleanupResources()
   mGLContext = nsnull;
 }
 
-PRBool
-LayerManagerOGL::Initialize(GLContext *aExistingContext)
+already_AddRefed<mozilla::gl::GLContext>
+LayerManagerOGL::CreateContext()
 {
-  if (aExistingContext) {
-    mGLContext = aExistingContext;
-  } else {
-    if (mGLContext)
-      CleanupResources();
-
-    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
-    if (gfxInfo) {
-      PRInt32 status;
-      if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status))) {
-        if (status != nsIGfxInfo::FEATURE_NO_INFO) {
-          NS_WARNING("OpenGL-accelerated layers are not supported on this system.");
-          return PR_FALSE;
-        }
-      }
-    }
-
-    mGLContext = nsnull;
+  nsRefPtr<GLContext> context;
 
 #ifdef XP_WIN
-    if (PR_GetEnv("MOZ_LAYERS_PREFER_EGL")) {
-      printf_stderr("Trying GL layers...\n");
-      mGLContext = gl::GLContextProviderEGL::CreateForWindow(mWidget);
-    }
+  if (PR_GetEnv("MOZ_LAYERS_PREFER_EGL")) {
+    printf_stderr("Trying GL layers...\n");
+    context = gl::GLContextProviderEGL::CreateForWindow(mWidget);
+  }
 #endif
 
-    if (!mGLContext)
-      mGLContext = gl::GLContextProvider::CreateForWindow(mWidget);
+  if (!context)
+    context = gl::GLContextProvider::CreateForWindow(mWidget);
 
-    if (!mGLContext) {
-      NS_WARNING("Failed to create LayerManagerOGL context");
-      return PR_FALSE;
-    }
+  if (!context) {
+    NS_WARNING("Failed to create LayerManagerOGL context");
   }
+  return context.forget();
+}
+
+PRBool
+LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext)
+{
+  // Do not allow double intiailization
+  NS_ABORT_IF_FALSE(mGLContext == nsnull, "Don't reiniailize layer managers");
+
+  if (!aContext)
+    return PR_FALSE;
+
+  mGLContext = aContext;
 
   MakeCurrent();
 
@@ -231,6 +227,10 @@ LayerManagerOGL::Initialize(GLContext *aExistingContext)
                  sLayerVS, sSolidColorLayerFS);
   SHADER_PROGRAM(YCbCrLayerProgramType, YCbCrTextureLayerProgram,
                  sLayerVS, sYCbCrTextureLayerFS);
+  SHADER_PROGRAM(ComponentAlphaPass1ProgramType, ComponentAlphaTextureLayerProgram,
+                 sLayerVS, sComponentPass1FS);
+  SHADER_PROGRAM(ComponentAlphaPass2ProgramType, ComponentAlphaTextureLayerProgram,
+                 sLayerVS, sComponentPass2FS);
   /* Copy programs (used for final framebuffer blit) */
   SHADER_PROGRAM(Copy2DProgramType, CopyProgram,
                  sCopyVS, sCopy2DFS);
@@ -392,6 +392,16 @@ LayerManagerOGL::BeginTransactionWithTarget(gfxContext *aTarget)
   mTarget = aTarget;
 }
 
+bool
+LayerManagerOGL::EndEmptyTransaction()
+{
+  if (!mRoot)
+    return false;
+
+  EndTransaction(nsnull, nsnull);
+  return true;
+}
+
 void
 LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
                                 void* aCallbackData)
@@ -406,20 +416,19 @@ LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
     return;
   }
 
-  // The results of our drawing always go directly into a pixel buffer,
-  // so we don't need to pass any global transform here.
-  mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
+  if (mRoot) {
+    // The results of our drawing always go directly into a pixel buffer,
+    // so we don't need to pass any global transform here.
+    mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
 
-  mThebesLayerCallback = aCallback;
-  mThebesLayerCallbackData = aCallbackData;
+    mThebesLayerCallback = aCallback;
+    mThebesLayerCallbackData = aCallbackData;
 
-  // NULL callback means "non-painting transaction"
-  if (aCallback) {
     Render();
-  }
 
-  mThebesLayerCallback = nsnull;
-  mThebesLayerCallbackData = nsnull;
+    mThebesLayerCallback = nsnull;
+    mThebesLayerCallbackData = nsnull;
+  }
 
   mTarget = NULL;
 
@@ -543,6 +552,7 @@ LayerManagerOGL::Render()
 
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
+  WorldTransformRect(rect);
 
   GLint width = rect.width;
   GLint height = rect.height;
@@ -568,7 +578,7 @@ LayerManagerOGL::Render()
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
   SetupBackBuffer(width, height);
-  SetupPipeline(width, height);
+  SetupPipeline(width, height, ApplyWorldTransform);
 
   // Default blend function implements "OVER"
   mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
@@ -581,7 +591,8 @@ LayerManagerOGL::Render()
 
   if (clipRect) {
     nsIntRect r = *clipRect;
-    if (!mGLContext->IsDoubleBuffered() && !mTarget)
+    WorldTransformRect(r);
+    if (IsDrawingFlipped())
       mGLContext->FixWindowCoordinateRect(r, mWidgetSize.height);
     mGLContext->fScissor(r.x, r.y, r.width, r.height);
   } else {
@@ -598,6 +609,8 @@ LayerManagerOGL::Render()
   // Render our layers.
   RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() && !mTarget ? 0 : mBackBufferFBO,
                            nsIntPoint(0, 0));
+                           
+  static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(mWidget)->DrawOver(this, rect);
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
@@ -653,6 +666,8 @@ LayerManagerOGL::Render()
   nsIntRegionRectIterator iter(mClippingRegion);
 
   while ((r = iter.Next()) != nsnull) {
+    nsIntRect cRect = *r; r = &cRect;
+    WorldTransformRect(cRect);
     float left = (GLfloat)r->x / width;
     float right = (GLfloat)r->XMost() / width;
     float top = (GLfloat)r->y / height;
@@ -697,7 +712,32 @@ LayerManagerOGL::Render()
 }
 
 void
-LayerManagerOGL::SetupPipeline(int aWidth, int aHeight)
+LayerManagerOGL::SetWorldTransform(const gfxMatrix& aMatrix)
+{
+  NS_ASSERTION(aMatrix.PreservesAxisAlignedRectangles(),
+               "SetWorldTransform only accepts matrices that satisfy PreservesAxisAlignedRectangles");
+  NS_ASSERTION(!aMatrix.HasNonIntegerScale(),
+               "SetWorldTransform only accepts matrices with integer scale");
+
+  mWorldMatrix = aMatrix;
+}
+
+gfxMatrix&
+LayerManagerOGL::GetWorldTransform(void)
+{
+  return mWorldMatrix;
+}
+
+void
+LayerManagerOGL::WorldTransformRect(nsIntRect& aRect)
+{
+  gfxRect grect(aRect.x, aRect.y, aRect.width, aRect.height);
+  grect = mWorldMatrix.TransformBounds(grect);
+  aRect.SetRect(grect.pos.x, grect.pos.y, grect.size.width, grect.size.height);
+}
+
+void
+LayerManagerOGL::SetupPipeline(int aWidth, int aHeight, WorldTransforPolicy aTransformPolicy)
 {
   // Set the viewport correctly. 
   //
@@ -720,7 +760,7 @@ LayerManagerOGL::SetupPipeline(int aWidth, int aHeight)
   // XXX we keep track of whether the window size changed, so we can
   // skip this update if it hadn't since the last call.
   gfx3DMatrix viewMatrix;
-  if (mGLContext->IsDoubleBuffered() && !mTarget) {
+  if (IsDrawingFlipped()) {
     /* If it's double buffered, we don't have a frontbuffer FBO,
      * so put in a Y-flip in this transform.
      */
@@ -733,6 +773,10 @@ LayerManagerOGL::SetupPipeline(int aWidth, int aHeight)
     viewMatrix._22 = 2.0f / float(aHeight);
     viewMatrix._41 = -1.0f;
     viewMatrix._42 = -1.0f;
+  }
+
+  if (aTransformPolicy == ApplyWorldTransform) {
+    viewMatrix = gfx3DMatrix::From2D(mWorldMatrix) * viewMatrix;
   }
 
   SetLayerProgramProjectionMatrix(viewMatrix);
@@ -848,13 +892,15 @@ LayerManagerOGL::CopyToTarget()
 }
 
 LayerManagerOGL::ProgramType LayerManagerOGL::sLayerProgramTypes[] = {
-  LayerManagerOGL::RGBALayerProgramType,
-  LayerManagerOGL::BGRALayerProgramType,
-  LayerManagerOGL::RGBXLayerProgramType,
-  LayerManagerOGL::BGRXLayerProgramType,
-  LayerManagerOGL::RGBARectLayerProgramType,
-  LayerManagerOGL::ColorLayerProgramType,
-  LayerManagerOGL::YCbCrLayerProgramType
+  gl::RGBALayerProgramType,
+  gl::BGRALayerProgramType,
+  gl::RGBXLayerProgramType,
+  gl::BGRXLayerProgramType,
+  gl::RGBARectLayerProgramType,
+  gl::ColorLayerProgramType,
+  gl::YCbCrLayerProgramType,
+  gl::ComponentAlphaPass1ProgramType,
+  gl::ComponentAlphaPass2ProgramType
 };
 
 #define FOR_EACH_LAYER_PROGRAM(vname)                       \
@@ -880,7 +926,7 @@ LayerManagerOGL::SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix)
 }
 
 void
-LayerManagerOGL::CreateFBOWithTexture(int aWidth, int aHeight,
+LayerManagerOGL::CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
                                       GLuint *aFBO, GLuint *aTexture)
 {
   GLuint tex, fbo;
@@ -888,18 +934,31 @@ LayerManagerOGL::CreateFBOWithTexture(int aWidth, int aHeight,
   mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
   mGLContext->fGenTextures(1, &tex);
   mGLContext->fBindTexture(mFBOTextureTarget, tex);
-  mGLContext->fTexImage2D(mFBOTextureTarget,
-                          0,
-                          LOCAL_GL_RGBA,
-                          aWidth, aHeight,
-                          0,
-                          LOCAL_GL_RGBA,
-                          LOCAL_GL_UNSIGNED_BYTE,
-                          NULL);
+  if (aInit == InitModeCopy) {
+    mGLContext->fCopyTexImage2D(mFBOTextureTarget,
+                                0,
+                                LOCAL_GL_RGBA,
+                                aRect.x, aRect.y,
+                                aRect.width, aRect.height,
+                                0);
+  } else {
+    mGLContext->fTexImage2D(mFBOTextureTarget,
+                            0,
+                            LOCAL_GL_RGBA,
+                            aRect.width, aRect.height,
+                            0,
+                            LOCAL_GL_RGBA,
+                            LOCAL_GL_UNSIGNED_BYTE,
+                            NULL);
+  }
   mGLContext->fTexParameteri(mFBOTextureTarget, LOCAL_GL_TEXTURE_MIN_FILTER,
                              LOCAL_GL_LINEAR);
   mGLContext->fTexParameteri(mFBOTextureTarget, LOCAL_GL_TEXTURE_MAG_FILTER,
                              LOCAL_GL_LINEAR);
+  mGLContext->fTexParameteri(mFBOTextureTarget, LOCAL_GL_TEXTURE_WRAP_S, 
+                             LOCAL_GL_CLAMP_TO_EDGE);
+  mGLContext->fTexParameteri(mFBOTextureTarget, LOCAL_GL_TEXTURE_WRAP_T, 
+                             LOCAL_GL_CLAMP_TO_EDGE);
   mGLContext->fBindTexture(mFBOTextureTarget, 0);
 
   mGLContext->fGenFramebuffers(1, &fbo);
@@ -912,6 +971,11 @@ LayerManagerOGL::CreateFBOWithTexture(int aWidth, int aHeight,
 
   NS_ASSERTION(mGLContext->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) ==
                LOCAL_GL_FRAMEBUFFER_COMPLETE, "Error setting up framebuffer.");
+
+  if (aInit == InitModeClear) {
+    mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
+    mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
+  }
 
   *aFBO = fbo;
   *aTexture = tex;

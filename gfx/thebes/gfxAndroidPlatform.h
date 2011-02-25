@@ -91,6 +91,8 @@ public:
 
     FT_Library GetFTLibrary();
 
+    virtual gfxImageFormat GetOffscreenFormat() { return gfxASurface::ImageFormatRGB16_565; }
+
 protected:
     void AppendFacesFromFontFile(const char *aFileName);
 

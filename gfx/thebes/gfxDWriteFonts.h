@@ -69,20 +69,30 @@ public:
 
     virtual PRBool SetupCairoFont(gfxContext *aContext);
 
-    virtual PRBool IsValid() { return mFontFace != NULL; }
+    virtual PRBool IsValid();
 
-    gfxFloat GetAdjustedSize() const { return mAdjustedSize; }
+    gfxFloat GetAdjustedSize() {
+        return mAdjustedSize;
+    }
 
-    IDWriteFontFace *GetFontFace() { return mFontFace.get(); }
+    IDWriteFontFace *GetFontFace();
 
     // override gfxFont table access function to bypass gfxFontEntry cache,
     // use DWrite API to get direct access to system font data
     virtual hb_blob_t *GetFontTable(PRUint32 aTag);
 
+    virtual PRBool ProvidesGlyphWidths();
+
+    virtual PRInt32 GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID);
+
 protected:
+    friend class gfxDWriteShaper;
+
     virtual void CreatePlatformShaper();
 
     void ComputeMetrics();
+
+    PRBool HasBitmapStrikeForSize(PRUint32 aSize);
 
     cairo_font_face_t *CairoFontFace();
 
@@ -94,9 +104,15 @@ protected:
     cairo_font_face_t *mCairoFontFace;
     cairo_scaled_font_t *mCairoScaledFont;
 
-    gfxFont::Metrics mMetrics;
-    PRBool mNeedsOblique;
-    PRBool mNeedsBold;
+    gfxFont::Metrics          *mMetrics;
+
+    // cache of glyph widths in 16.16 fixed-point pixels
+    nsDataHashtable<nsUint32HashKey,PRInt32>    mGlyphWidths;
+
+    PRPackedBool mNeedsOblique;
+    PRPackedBool mNeedsBold;
+    PRPackedBool mUseSubpixelPositions;
+    PRPackedBool mAllowManualShowGlyphs;
 };
 
 #endif

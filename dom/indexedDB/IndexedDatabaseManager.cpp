@@ -196,11 +196,8 @@ public:
     // then fire the blocked event.
     for (PRUint32 index = 0; index < mWaitingDatabases.Length(); index++) {
       if (!mWaitingDatabases[index]->IsClosed()) {
-        nsISupports* source =
-          static_cast<nsPIDOMEventTarget*>(mRequestingDatabase);
-
         nsCOMPtr<nsIDOMEvent> event =
-          IDBVersionChangeEvent::CreateBlocked(source, mVersion);
+          IDBVersionChangeEvent::CreateBlocked(mVersion);
         NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
 
         PRBool dummy;
@@ -548,7 +545,7 @@ IndexedDatabaseManager::SetDatabaseVersion(IDBDatabase* aDatabase,
 }
 
 void
-IndexedDatabaseManager::CloseDatabasesForWindow(nsPIDOMWindow* aWindow)
+IndexedDatabaseManager::AbortCloseDatabasesForWindow(nsPIDOMWindow* aWindow)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aWindow, "Null pointer!");
@@ -556,12 +553,45 @@ IndexedDatabaseManager::CloseDatabasesForWindow(nsPIDOMWindow* aWindow)
   nsAutoTArray<IDBDatabase*, 50> liveDatabases;
   mLiveDatabases.EnumerateRead(EnumerateToTArray, &liveDatabases);
 
+  TransactionThreadPool* pool = TransactionThreadPool::Get();
+
   for (PRUint32 index = 0; index < liveDatabases.Length(); index++) {
     IDBDatabase*& database = liveDatabases[index];
-    if (database->Owner() == aWindow && NS_FAILED(database->Close())) {
-      NS_WARNING("Failed to close database for dying window!");
+    if (database->Owner() == aWindow) {
+      if (NS_FAILED(database->Close())) {
+        NS_WARNING("Failed to close database for dying window!");
+      }
+
+      if (pool) {
+        pool->AbortTransactionsForDatabase(database);
+      }
     }
   }
+}
+
+bool
+IndexedDatabaseManager::HasOpenTransactions(nsPIDOMWindow* aWindow)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aWindow, "Null pointer!");
+
+  nsAutoTArray<IDBDatabase*, 50> liveDatabases;
+  mLiveDatabases.EnumerateRead(EnumerateToTArray, &liveDatabases);
+
+  TransactionThreadPool* pool = TransactionThreadPool::Get();
+  if (!pool) {
+    return false;
+  }
+
+  for (PRUint32 index = 0; index < liveDatabases.Length(); index++) {
+    IDBDatabase*& database = liveDatabases[index];
+    if (database->Owner() == aWindow &&
+        pool->HasTransactionsForDatabase(database)) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 void
@@ -846,14 +876,15 @@ IndexedDatabaseManager::OriginClearRunnable::Run()
 
       mFirstCallback = false;
 
+      nsCOMPtr<nsIThread> thread;
+      mThread.swap(thread);
+
       // Dispatch to the IO thread.
-      if (NS_FAILED(mThread->Dispatch(this, NS_DISPATCH_NORMAL))) {
+      if (NS_FAILED(thread->Dispatch(this, NS_DISPATCH_NORMAL))) {
         NS_WARNING("Failed to dispatch to IO thread!");
         return NS_ERROR_FAILURE;
       }
 
-      // Don't need this any longer.
-      mThread = nsnull;
       return NS_OK;
     }
 

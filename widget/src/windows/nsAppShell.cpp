@@ -89,29 +89,35 @@ using mozilla::crashreporter::LSPAnnotate;
 
 //-------------------------------------------------------------------------
 
-static BOOL PeekKeyAndIMEMessage(LPMSG msg, HWND hwnd)
+static PRBool PeekUIMessage(MSG* aMsg)
 {
-  MSG msg1, msg2, *lpMsg;
-  BOOL b1, b2;
-  b1 = ::PeekMessageW(&msg1, NULL, WM_KEYFIRST, WM_IME_KEYLAST, PM_NOREMOVE);
-  b2 = ::PeekMessageW(&msg2, NULL, NS_WM_IMEFIRST, NS_WM_IMELAST, PM_NOREMOVE);
-  if (b1 || b2) {
-    if (b1 && b2) {
-      if (msg1.time < msg2.time)
-        lpMsg = &msg1;
-      else
-        lpMsg = &msg2;
-    } else if (b1)
-      lpMsg = &msg1;
-    else
-      lpMsg = &msg2;
-    if (!nsIMM32Handler::CanOptimizeKeyAndIMEMessages(lpMsg)) {
-      return false;
-    }
-    return ::PeekMessageW(msg, hwnd, lpMsg->message, lpMsg->message, PM_REMOVE);
+  MSG keyMsg, imeMsg, mouseMsg, *pMsg = 0;
+  PRBool haveKeyMsg, haveIMEMsg, haveMouseMsg;
+
+  haveKeyMsg = ::PeekMessageW(&keyMsg, NULL, WM_KEYFIRST, WM_IME_KEYLAST, PM_NOREMOVE);
+  haveIMEMsg = ::PeekMessageW(&imeMsg, NULL, NS_WM_IMEFIRST, NS_WM_IMELAST, PM_NOREMOVE);
+  haveMouseMsg = ::PeekMessageW(&mouseMsg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_NOREMOVE);
+
+  if (haveKeyMsg) {
+    pMsg = &keyMsg;
+  }
+  if (haveIMEMsg && (!pMsg || imeMsg.time < pMsg->time)) {
+    pMsg = &imeMsg;
   }
 
-  return false;
+  if (pMsg && !nsIMM32Handler::CanOptimizeKeyAndIMEMessages(pMsg)) {
+    return PR_FALSE;
+  }
+
+  if (haveMouseMsg && (!pMsg || mouseMsg.time < pMsg->time)) {
+    pMsg = &mouseMsg;
+  }
+
+  if (!pMsg) {
+    return PR_FALSE;
+  }
+
+  return ::PeekMessageW(aMsg, NULL, pMsg->message, pMsg->message, PM_REMOVE);
 }
 
 /*static*/ LRESULT CALLBACK
@@ -321,10 +327,8 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 
   do {
     MSG msg;
-    // Give priority to system messages (in particular keyboard, mouse, timer,
-    // and paint messages).
-    if (PeekKeyAndIMEMessage(&msg, NULL) ||
-        ::PeekMessageW(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
+    // Give priority to keyboard and mouse messages.
+    if (PeekUIMessage(&msg) ||
         ::PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
       gotMessage = PR_TRUE;
       if (msg.message == WM_QUIT) {

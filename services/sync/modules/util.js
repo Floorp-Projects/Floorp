@@ -49,6 +49,15 @@ Cu.import("resource://services-sync/ext/StringBundle.js");
 Cu.import("resource://services-sync/ext/Sync.js");
 Cu.import("resource://services-sync/log4moz.js");
 
+let NetUtil;
+try {
+  let ns = {};
+  Cu.import("resource://gre/modules/NetUtil.jsm", ns);
+  NetUtil = ns.NetUtil;
+} catch (ex) {
+  // Firefox 3.5 :(
+}
+
 /*
  * Utility functions
  */
@@ -89,8 +98,11 @@ let Utils = {
    *
    * @usage MyObj._catch = Utils.catch;
    *        MyObj.foo = function() { this._catch(func)(); }
+   *        
+   * Optionally pass a function which will be called if an
+   * exception occurs.
    */
-  catch: function Utils_catch(func) {
+  catch: function Utils_catch(func, exceptionCallback) {
     let thisArg = this;
     return function WrappedCatch() {
       try {
@@ -98,6 +110,10 @@ let Utils = {
       }
       catch(ex) {
         thisArg._log.debug("Exception: " + Utils.exceptionStr(ex));
+        if (exceptionCallback) {
+          return exceptionCallback.call(thisArg, ex);
+        }
+        return null;
       }
     };
   },
@@ -122,6 +138,10 @@ let Utils = {
         thisArg.unlock();
       }
     };
+  },
+  
+  isLockException: function isLockException(ex) {
+    return ex && ex.indexOf && ex.indexOf("Could not acquire lock.") == 0;
   },
 
   /**
@@ -178,7 +198,23 @@ let Utils = {
         throw batchEx;
     };
   },
-  
+
+  runInTransaction: function(db, callback, thisObj) {
+    let hasTransaction = false;
+    try {
+      db.beginTransaction();
+      hasTransaction = true;
+    } catch(e) { /* om nom nom exceptions */ }
+
+    try {
+      return callback.call(thisObj);
+    } finally {
+      if (hasTransaction) {
+        db.commitTransaction();
+      }
+    }
+  },
+
   createStatement: function createStatement(db, query) {
     // Gecko 2.0
     if (db.createAsyncStatement)
@@ -242,6 +278,11 @@ let Utils = {
    */
   makeGUID: function makeGUID() {
     return Utils.encodeBase64url(Utils.generateRandomBytes(9));
+  },
+
+  _base64url_regex: /^[-abcdefghijklmnopqrstuvwxyz0123456789_]{12}$/i,
+  checkGUID: function checkGUID(guid) {
+    return !!guid && this._base64url_regex.test(guid);
   },
 
   anno: function anno(id, anno, val, expire) {
@@ -524,7 +565,19 @@ let Utils = {
 
     return "No traceback available";
   },
-
+  
+  // Generator and discriminator for HMAC exceptions.
+  // Split these out in case we want to make them richer in future, and to 
+  // avoid inevitable confusion if the message changes.
+  throwHMACMismatch: function throwHMACMismatch(shouldBe, is) {
+    throw "Record SHA256 HMAC mismatch: should be " + shouldBe + ", is " + is;
+  },
+  
+  isHMACMismatch: function isHMACMismatch(ex) {
+    const hmacFail = "Record SHA256 HMAC mismatch: ";
+    return ex && ex.indexOf && (ex.indexOf(hmacFail) == 0);
+  },
+  
   checkStatus: function Weave_checkStatus(code, msg, ranges) {
     if (!ranges)
       ranges = [[200,300]];
@@ -660,6 +713,23 @@ let Utils = {
     let bytes = [b.charCodeAt() for each (b in message)];
     h.update(bytes, bytes.length);
     return h.finish(false);
+  },
+
+  /**
+   * HMAC-based Key Derivation Step 2 according to RFC 5869.
+   */
+  hkdfExpand: function hkdfExpand(prk, info, len) {
+    const BLOCKSIZE = 256 / 8;
+    let h = Utils.makeHMACHasher();
+    let T = "";
+    let Tn = "";
+    let iterations = Math.ceil(len/BLOCKSIZE);
+    for (let i = 0; i < iterations; i++) {
+      Tn = Utils.sha256HMACBytes(Tn + info + String.fromCharCode(i + 1),
+                                 Utils.makeHMACKey(prk), h);
+      T += Tn;
+    }
+    return T.slice(0, len);
   },
 
   byteArrayToString: function byteArrayToString(bytes) {
@@ -1022,19 +1092,45 @@ let Utils = {
       that._log.trace("Loading json from disk: " + filePath);
 
     let file = Utils.getProfileFile(filePath);
-    if (!file.exists())
+    if (!file.exists()) {
+      callback.call(that);
       return;
+    }
 
-    try {
-      let [is] = Utils.open(file, "<");
-      let json = Utils.readStream(is);
+    // Gecko < 2.0
+    if (!NetUtil || !NetUtil.newChannel) {
+      let json;
+      try {
+        let [is] = Utils.open(file, "<");
+        json = JSON.parse(Utils.readStream(is));
+        is.close();
+      } catch (ex) {
+        if (that._log)
+          that._log.debug("Failed to load json: " + Utils.exceptionStr(ex));
+      }
+      callback.call(that, json);
+      return;
+    }
+
+    let channel = NetUtil.newChannel(file);
+    channel.contentType = "application/json";
+
+    NetUtil.asyncFetch(channel, function (is, result) {
+      if (!Components.isSuccessCode(result)) {
+        callback.call(that);
+        return;
+      }
+      let string = NetUtil.readInputStreamToString(is, is.available());
       is.close();
-      callback.call(that, JSON.parse(json));
-    }
-    catch (ex) {
-      if (that._log)
-        that._log.debug("Failed to load json: " + Utils.exceptionStr(ex));
-    }
+      let json;
+      try {
+        json = JSON.parse(string);
+      } catch (ex) {
+        if (that._log)
+          that._log.debug("Failed to load json: " + Utils.exceptionStr(ex));
+      }
+      callback.call(that, json);
+    });
   },
 
   /**
@@ -1044,21 +1140,44 @@ let Utils = {
    *        Json file path save to weave/[filePath].json
    * @param that
    *        Object to use for logging and "this" for callback
-   * @param callback
+   * @param obj
    *        Function to provide json-able object to save. If this isn't a
    *        function, it'll be used as the object to make a json string.
+   * @param callback
+   *        Function called when the write has been performed. Optional.
    */
-  jsonSave: function Utils_jsonSave(filePath, that, callback) {
+  jsonSave: function Utils_jsonSave(filePath, that, obj, callback) {
     filePath = "weave/" + filePath + ".json";
     if (that._log)
       that._log.trace("Saving json to disk: " + filePath);
 
     let file = Utils.getProfileFile({ autoCreate: true, path: filePath });
-    let json = typeof callback == "function" ? callback.call(that) : callback;
+    let json = typeof obj == "function" ? obj.call(that) : obj;
     let out = JSON.stringify(json);
-    let [fos] = Utils.open(file, ">");
-    fos.writeString(out);
-    fos.close();
+
+    // Firefox 3.5
+    if (!NetUtil) {
+      let [fos] = Utils.open(file, ">");
+      fos.writeString(out);
+      fos.close();
+      if (typeof callback == "function") {
+        callback.call(that);
+      }
+      return;
+    }
+
+    let fos = Cc["@mozilla.org/network/safe-file-output-stream;1"]
+                .createInstance(Ci.nsIFileOutputStream);
+    fos.init(file, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, PERMS_FILE, 0);
+    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                      .createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+    let is = converter.convertToInputStream(out);
+    NetUtil.asyncCopy(is, fos, function (result) {
+      if (typeof callback == "function") {
+        callback.call(that);        
+      }
+    });
   },
 
   /**
@@ -1101,6 +1220,7 @@ let Utils = {
     return thisObj[name] = timer;
   },
 
+  // Gecko <2.0
   open: function open(pathOrFile, mode, perms) {
     let stream, file;
 
@@ -1173,6 +1293,7 @@ let Utils = {
     return Str.errors.get("error.reason.unknown");
   },
 
+  // Gecko <2.0
   // assumes an nsIConverterInputStream
   readStream: function Weave_readStream(is) {
     let ret = "", str = {};
@@ -1231,6 +1352,8 @@ let Utils = {
    *     take a presentable passphrase and reduce it to a normalized
    *     representation for storage. normalizePassphrase can safely be called
    *     on normalized input.
+   * * normalizeAccount:
+   *     take user input for account/username, cleaning up appropriately.
    */
 
   isPassphrase: function(s) {
@@ -1276,12 +1399,32 @@ let Utils = {
 
   normalizePassphrase: function normalizePassphrase(pp) {
     // Short var name... have you seen the lines below?!
-    pp = pp.toLowerCase();
-    if (pp.length == 31 && [1, 7, 13, 19, 25].every(function(i) pp[i] == '-'))
+    // Allow leading and trailing whitespace.
+    pp = pp.trim().toLowerCase();
+
+    // 20-char sync key.
+    if (pp.length == 23 &&
+        [5, 11, 17].every(function(i) pp[i] == '-')) {
+
+      return pp.slice(0, 5) + pp.slice(6, 11)
+             + pp.slice(12, 17) + pp.slice(18, 23);
+    }
+
+    // "Modern" 26-char key.
+    if (pp.length == 31 &&
+        [1, 7, 13, 19, 25].every(function(i) pp[i] == '-')) {
+
       return pp.slice(0, 1) + pp.slice(2, 7)
              + pp.slice(8, 13) + pp.slice(14, 19)
              + pp.slice(20, 25) + pp.slice(26, 31);
+    }
+
+    // Something else -- just return.
     return pp;
+  },
+  
+  normalizeAccount: function normalizeAccount(acc) {
+    return acc.trim();
   },
 
   // WeaveCrypto returns bad base64 strings. Truncate excess padding
@@ -1332,6 +1475,13 @@ let Utils = {
     return minuend.filter(function(i) subtrahend.indexOf(i) == -1);
   },
 
+  /**
+   * Build the union of two arrays.
+   */
+  arrayUnion: function arrayUnion(foo, bar) {
+    return foo.concat(Utils.arraySub(bar, foo));
+  },
+
   bind2: function Async_bind2(object, method) {
     return function innerBind() { return method.apply(object, arguments); };
   },
@@ -1354,6 +1504,18 @@ let Utils = {
     return true;
   },
 
+  // If Master Password is enabled and locked, present a dialog to unlock it.
+  // Return whether the system is unlocked.
+  ensureMPUnlocked: function ensureMPUnlocked() {
+    sdr = Cc["@mozilla.org/security/sdr;1"].getService(Ci.nsISecretDecoderRing);
+    var ok = false;
+    try {
+      sdr.encryptString("bacon");
+      ok = true;
+    } catch(e) {}
+    return ok;
+  },
+  
   __prefs: null,
   get prefs() {
     if (!this.__prefs) {

@@ -164,7 +164,8 @@ public:
   //
 
 //NS_IMETHOD              CaptureMouse(PRBool aCapture);
-  virtual LayerManager*     GetLayerManager(bool* aAllowRetaining = nsnull);
+  virtual LayerManager*     GetLayerManager(LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
+                                            bool* aAllowRetaining = nsnull);
 //  virtual nsIDeviceContext* GetDeviceContext();
   virtual gfxASurface*      GetThebesSurface();
 

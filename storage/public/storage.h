@@ -59,12 +59,14 @@
 #include "mozIStorageBindingParams.h"
 #include "mozIStorageServiceQuotaManagement.h"
 #include "mozIStorageVacuumParticipant.h"
+#include "mozIStorageCompletionCallback.h"
+#include "mozIStorageAsyncStatement.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Native Language Helpers
 
 #include "mozStorageHelper.h"
-
+#include "mozilla/storage/StatementCache.h"
 #include "mozilla/storage/Variant.h"
 
 #endif // mozilla_storage_h_

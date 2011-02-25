@@ -46,8 +46,12 @@
 #include "gfxContext.h"
 #include "nsIWidget.h"
 
+#include "ReadbackManagerD3D10.h"
+
 namespace mozilla {
 namespace layers {
+
+class Nv3DVUtils;
 
 /**
  * This structure is used to pass rectangles to our shader constant. We can use
@@ -95,17 +99,19 @@ public:
 
   virtual void SetRoot(Layer *aLayer);
 
-  void BeginTransaction();
+  virtual void BeginTransaction();
 
-  void BeginTransactionWithTarget(gfxContext* aTarget);
+  virtual void BeginTransactionWithTarget(gfxContext* aTarget);
+
+  virtual bool EndEmptyTransaction();
 
   struct CallbackInfo {
     DrawThebesLayerCallback Callback;
     void *CallbackData;
   };
 
-  void EndTransaction(DrawThebesLayerCallback aCallback,
-                      void* aCallbackData);
+  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+                              void* aCallbackData);
 
   const CallbackInfo &GetCallbackInfo() { return mCurrentCallbackInfo; }
 
@@ -119,6 +125,8 @@ public:
 
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
 
+  virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer();
+
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
 
   virtual already_AddRefed<gfxASurface>
@@ -129,7 +137,7 @@ public:
   virtual void GetBackendName(nsAString& name) { name.AssignLiteral("Direct3D 10"); }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual const char* Name() const { return "D3D9"; }
+  virtual const char* Name() const { return "D3D10"; }
 #endif // MOZ_LAYERS_HAVE_LOG
 
   // Public helpers
@@ -138,13 +146,23 @@ public:
 
   ID3D10Effect *effect() const { return mEffect; }
 
+  ReadbackManagerD3D10 *readbackManager();
+
   void SetViewport(const nsIntSize &aViewport);
   const nsIntSize &GetViewport() { return mViewport; }
+
+  /**
+   * Return pointer to the Nv3DVUtils instance
+   */
+  Nv3DVUtils *GetNv3DVUtils()  { return mNv3DVUtils; }
+
+  static void LayerManagerD3D10::ReportFailure(const nsACString &aMsg, HRESULT aCode);
 
 private:
   void SetupPipeline();
   void UpdateRenderTarget();
   void VerifyBufferSize();
+  void EnsureReadbackManager();
 
   void Render();
 
@@ -153,6 +171,7 @@ private:
   nsRefPtr<ID3D10Effect> mEffect;
   nsRefPtr<ID3D10InputLayout> mInputLayout;
   nsRefPtr<ID3D10Buffer> mVertexBuffer;
+  nsRefPtr<ReadbackManagerD3D10> mReadbackManager;
 
   nsRefPtr<ID3D10RenderTargetView> mRTView;
 
@@ -163,6 +182,9 @@ private:
   CallbackInfo mCurrentCallbackInfo;
 
   nsIntSize mViewport;
+
+  /* Nv3DVUtils instance */ 
+  nsAutoPtr<Nv3DVUtils> mNv3DVUtils; 
 
   /*
    * Context target, NULL when drawing directly to our swap chain.
@@ -201,6 +223,12 @@ public:
 
   /* Called by the layer manager when it's destroyed */
   virtual void LayerManagerDestroyed() {}
+
+  /**
+   * Return pointer to the Nv3DVUtils instance. Calls equivalent method in LayerManager.
+   */
+  Nv3DVUtils *GetNv3DVUtils()  { return mD3DManager->GetNv3DVUtils(); }
+
 
   void SetEffectTransformAndOpacity()
   {

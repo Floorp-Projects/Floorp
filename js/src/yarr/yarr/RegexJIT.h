@@ -74,7 +74,8 @@ public:
 
     int execute(const UChar* input, unsigned start, unsigned length, int* output)
     {
-        return JS_EXTENSION((reinterpret_cast<RegexJITCode>(m_ref.m_code.executableAddress()))(input, start, length, output));
+        void *code = m_ref.m_code.executableAddress();
+        return JS_EXTENSION((reinterpret_cast<RegexJITCode>(code))(input, start, length, output));
     }
 
 private:
@@ -90,8 +91,16 @@ void jitCompileRegex(ExecutableAllocator &allocator, RegexCodeBlock& jitObject, 
 
 inline int executeRegex(JSContext *cx, RegexCodeBlock& jitObject, const UChar* input, unsigned start, unsigned length, int* output, int outputArraySize)
 {
-    if (JSRegExp* fallback = jitObject.getFallback())
-        return (jsRegExpExecute(cx, fallback, input, length, start, output, outputArraySize) < 0 ? -1 : output[0]);
+    if (JSRegExp* fallback = jitObject.getFallback()) {
+        int result = jsRegExpExecute(cx, fallback, input, length, start, output, outputArraySize);
+
+        if (result == JSRegExpErrorHitLimit)
+            return HitRecursionLimit;
+
+        // -1 represents no-match for both PCRE and YARR.
+        JS_ASSERT(result >= -1);
+        return result;
+    }
 
     return jitObject.execute(input, start, length, output);
 }

@@ -44,6 +44,13 @@ VPATH            = @srcdir@
 relativesrcdir   = dom/src/threads/test
 
 include $(DEPTH)/config/autoconf.mk
+
+EXTRA_JS_MODULES = \
+  WorkerTest.jsm \
+  WorkerTest_worker.js \
+  WorkerTest_subworker.js \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
@@ -110,6 +117,9 @@ _TEST_FILES = \
   test_newError.html \
   newError_worker.js \
   test_chromeWorker.html \
+  WorkerTest_badworker.js \
+  test_xpcom.html \
+  xpcom_worker.js \
   $(NULL)
 
 _SUBDIR_TEST_FILES = \
@@ -121,6 +131,7 @@ _SUBDIR_TEST_FILES = \
 _CHROME_TEST_FILES = \
   test_chromeWorker.xul \
   test_chromeWorkerComponent.xul \
+  test_chromeWorkerJSM.xul \
   chromeWorker_worker.js \
   chromeWorker_subworker.js \
   $(NULL)

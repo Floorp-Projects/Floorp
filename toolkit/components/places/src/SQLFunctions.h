@@ -80,7 +80,7 @@ namespace places {
  *        Indicates if aURL is a bookmark or not.  Treated as a boolean.
  * @param aOpenPageCount
  *        The number of times aURL has been registered as being open.  (See
- *        nsIBrowserHistory.registerOpenPage.)
+ *        mozIPlacesAutoComplete::registerOpenPage.)
  * @param aMatchBehavior
  *        The match behavior to use for this search.
  * @param aSearchBehavior
@@ -183,6 +183,64 @@ private:
    *        An out parameter that is the fixed up string.
    */
   static void fixupURISpec(const nsCString &aURISpec, nsCString &_fixedSpec);
+};
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Frecency Calculation Function
+
+/**
+ * This function is used to calculate frecency for a page.
+ *
+ * In SQL, you'd use it in when setting frecency like:
+ * SET frecency = CALCULATE_FRECENCY(place_id).
+ * Optional parameters must be passed in if the page is not yet in the database,
+ * otherwise they will be fetched from it automatically.
+ *
+ * @param pageId
+ *        The id of the page.  Pass -1 if the page is being added right now.
+ * @param [optional] typed
+ *        Whether the page has been typed in.  Default is false.
+ * @param [optional] fullVisitCount
+ *        Count of all the visits (All types).  Default is 0.
+ * @param [optional] isBookmarked
+ *        Whether the page is bookmarked. Default is false.
+ */
+class CalculateFrecencyFunction : public mozIStorageFunction
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+
+  /**
+   * Registers the function with the specified database connection.
+   *
+   * @param aDBConn
+   *        The database connection to register with.
+   */
+  static nsresult create(mozIStorageConnection *aDBConn);
+};
+
+/**
+ * SQL function to generate a GUID for a place or bookmark item.  This is just
+ * a wrapper around GenerateGUID in Helpers.h.
+ *
+ * @return a guid for the item.
+ */
+class GenerateGUIDFunction : public mozIStorageFunction
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+
+  /**
+   * Registers the function with the specified database connection.
+   *
+   * @param aDBConn
+   *        The database connection to register with.
+   */
+  static nsresult create(mozIStorageConnection *aDBConn);
 };
 
 } // namespace places

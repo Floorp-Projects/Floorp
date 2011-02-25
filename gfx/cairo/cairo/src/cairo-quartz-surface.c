@@ -1916,10 +1916,11 @@ _cairo_quartz_surface_finish (void *abstract_surface)
     }
 
     if (surface->imageSurfaceEquiv) {
-	_cairo_image_surface_assume_ownership_of_data (surface->imageSurfaceEquiv);
+        if (surface->ownsData)
+            _cairo_image_surface_assume_ownership_of_data (surface->imageSurfaceEquiv);
 	cairo_surface_destroy (surface->imageSurfaceEquiv);
 	surface->imageSurfaceEquiv = NULL;
-    } else if (surface->imageData) {
+    } else if (surface->imageData && surface->ownsData) {
         free (surface->imageData);
     }
 
@@ -2477,6 +2478,7 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 
     cairo_bool_t isClipping = FALSE;
     cairo_bool_t didForceFontSmoothing = FALSE;
+    cairo_antialias_t effective_antialiasing;
 
     if (IS_EMPTY(surface))
 	return CAIRO_STATUS_SUCCESS;
@@ -2517,6 +2519,12 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     cgfref = _cairo_quartz_scaled_font_get_cg_font_ref (scaled_font);
     CGContextSetFont (state.context, cgfref);
     CGContextSetFontSize (state.context, 1.0);
+
+    effective_antialiasing = scaled_font->options.antialias;
+    if (effective_antialiasing == CAIRO_ANTIALIAS_SUBPIXEL &&
+        !surface->base.permit_subpixel_antialiasing) {
+        effective_antialiasing = CAIRO_ANTIALIAS_GRAY;
+    }
 
     switch (scaled_font->options.antialias) {
 	case CAIRO_ANTIALIAS_SUBPIXEL:
@@ -2927,6 +2935,7 @@ _cairo_quartz_surface_create_internal (CGContextRef cgContext,
     surface->imageSurfaceEquiv = NULL;
     surface->bitmapContextImage = NULL;
     surface->cgLayer = NULL;
+    surface->ownsData = TRUE;
 
     return surface;
 }
@@ -3071,13 +3080,93 @@ cairo_quartz_surface_create (cairo_format_t format,
 			     unsigned int width,
 			     unsigned int height)
 {
+    int stride;
+    unsigned char *data;
+
+    if (!_cairo_quartz_verify_surface_size(width, height))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+
+    if (width == 0 || height == 0) {
+	return (cairo_surface_t*) _cairo_quartz_surface_create_internal (NULL, _cairo_content_from_format (format),
+									 width, height);
+    }
+
+    if (format == CAIRO_FORMAT_ARGB32 ||
+	format == CAIRO_FORMAT_RGB24)
+    {
+	stride = width * 4;
+    } else if (format == CAIRO_FORMAT_A8) {
+	stride = width;
+    } else if (format == CAIRO_FORMAT_A1) {
+	/* I don't think we can usefully support this, as defined by
+	 * cairo_format_t -- these are 1-bit pixels stored in 32-bit
+	 * quantities.
+	 */
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
+    } else {
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
+    }
+
+    /* The Apple docs say that for best performance, the stride and the data
+     * pointer should be 16-byte aligned.  malloc already aligns to 16-bytes,
+     * so we don't have to anything special on allocation.
+     */
+    stride = (stride + 15) & ~15;
+
+    data = _cairo_malloc_ab (height, stride);
+    if (!data) {
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+    }
+
+    /* zero the memory to match the image surface behaviour */
+    memset (data, 0, height * stride);
+
+    cairo_quartz_surface_t *surf;
+    surf = (cairo_quartz_surface_t *) cairo_quartz_surface_create_for_data
+                                           (data, format, width, height, stride);
+    if (surf->base.status) {
+        free (data);
+        return (cairo_surface_t *) surf;
+    }
+
+    // We created this data, so we can delete it.
+    surf->ownsData = TRUE;
+
+    return (cairo_surface_t *) surf;
+}
+
+/**
+ * cairo_quartz_surface_create_for_data
+ * @data: a pointer to a buffer supplied by the application in which
+ *     to write contents. This pointer must be suitably aligned for any
+ *     kind of variable, (for example, a pointer returned by malloc).
+ * @format: format of pixels in the surface to create
+ * @width: width of the surface, in pixels
+ * @height: height of the surface, in pixels
+ *
+ * Creates a Quartz surface backed by a CGBitmap.  The surface is
+ * created using the Device RGB (or Device Gray, for A8) color space.
+ * All Cairo operations, including those that require software
+ * rendering, will succeed on this surface.
+ *
+ * Return value: the newly created surface.
+ *
+ * Since: 1.12
+ **/
+cairo_surface_t *
+cairo_quartz_surface_create_for_data (unsigned char *data,
+				      cairo_format_t format,
+				      unsigned int width,
+				      unsigned int height,
+				      unsigned int stride)
+{
     cairo_quartz_surface_t *surf;
     CGContextRef cgc;
     CGColorSpaceRef cgColorspace;
     CGBitmapInfo bitinfo;
-    void *imageData;
-    int stride;
+    void *imageData = data;
     int bitsPerComponent;
+    unsigned int i;
 
     // verify width and height of surface
     if (!_cairo_quartz_verify_surface_size(width, height))
@@ -3098,10 +3187,8 @@ cairo_quartz_surface_create (cairo_format_t format,
 	else
 	    bitinfo |= kCGImageAlphaNoneSkipFirst;
 	bitsPerComponent = 8;
-	stride = width * 4;
     } else if (format == CAIRO_FORMAT_A8) {
 	cgColorspace = NULL;
-	stride = width;
 	bitinfo = kCGImageAlphaOnly;
 	bitsPerComponent = 8;
     } else if (format == CAIRO_FORMAT_A1) {
@@ -3113,21 +3200,6 @@ cairo_quartz_surface_create (cairo_format_t format,
     } else {
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
     }
-
-    /* The Apple docs say that for best performance, the stride and the data
-     * pointer should be 16-byte aligned.  malloc already aligns to 16-bytes,
-     * so we don't have to anything special on allocation.
-     */
-    stride = (stride + 15) & ~15;
-
-    imageData = _cairo_malloc_ab (height, stride);
-    if (!imageData) {
-	CGColorSpaceRelease (cgColorspace);
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
-    }
-
-    /* zero the memory to match the image surface behaviour */
-    memset (imageData, 0, height * stride);
 
     cgc = CGBitmapContextCreate (imageData,
 				 width,
@@ -3168,6 +3240,7 @@ cairo_quartz_surface_create (cairo_format_t format,
         surf->imageSurfaceEquiv = NULL;
     } else {
         surf->imageSurfaceEquiv = tmpImageSurfaceEquiv;
+        surf->ownsData = FALSE;
     }
 
     return (cairo_surface_t *) surf;

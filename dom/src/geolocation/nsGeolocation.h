@@ -91,9 +91,14 @@ class nsGeolocationRequest
   nsGeolocationRequest(nsGeolocation* locator,
                        nsIDOMGeoPositionCallback* callback,
                        nsIDOMGeoPositionErrorCallback* errorCallback,
-                       nsIDOMGeoPositionOptions* options);
+                       nsIDOMGeoPositionOptions* options,
+                       PRBool watchPositionRequest = PR_FALSE);
   nsresult Init();
   void Shutdown();
+
+  // Called by the geolocation device to notify that a location has changed.
+  // isBetter: the accuracy is as good or better than the previous position. 
+  void Update(nsIDOMGeoPosition* aPosition, PRBool isBetter);
 
   void SendLocation(nsIDOMGeoPosition* location);
   void MarkCleared();
@@ -113,6 +118,8 @@ class nsGeolocationRequest
   void NotifyError(PRInt16 errorCode);
   PRPackedBool mAllowed;
   PRPackedBool mCleared;
+  PRPackedBool mIsFirstUpdate;
+  PRPackedBool mIsWatchPositionRequest;
 
   nsCOMPtr<nsITimer> mTimeoutTimer;
   nsCOMPtr<nsIDOMGeoPositionCallback> mCallback;
@@ -201,7 +208,8 @@ public:
   nsresult Init(nsIDOMWindow* contentDom=nsnull);
 
   // Called by the geolocation device to notify that a location has changed.
-  void Update(nsIDOMGeoPosition* aPosition);
+  // isBetter: the accuracy is as good or better than the previous position. 
+  void Update(nsIDOMGeoPosition* aPosition, PRBool isBetter);
 
   // Returns true if any of the callbacks are repeating
   PRBool HasActiveCallbacks();
@@ -225,7 +233,7 @@ private:
 
   ~nsGeolocation();
 
-  void RegisterRequestWithPrompt(nsGeolocationRequest* request);
+  bool RegisterRequestWithPrompt(nsGeolocationRequest* request);
 
   // Two callback arrays.  The first |mPendingCallbacks| holds objects for only
   // one callback and then they are released/removed from the array.  The second

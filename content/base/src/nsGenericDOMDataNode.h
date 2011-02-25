@@ -247,8 +247,6 @@ public:
 
   virtual nsIContent *GetBindingParent() const;
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-
-  virtual already_AddRefed<nsIURI> GetBaseURI() const;
   virtual PRBool IsLink(nsIURI** aURI) const;
 
   virtual nsIAtom* DoGetID() const;
@@ -485,7 +483,7 @@ private:
     return nsGenericDOMDataNode::IsSupported(aFeature, aVersion, aReturn);  \
   }                                                                         \
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn) {                \
-    return nsNodeUtils::CloneNodeImpl(this, aDeep, aReturn);                \
+    return nsNodeUtils::CloneNodeImpl(this, aDeep, PR_TRUE, aReturn);       \
   }                                                                         \
   virtual nsGenericDOMDataNode *CloneDataNode(nsINodeInfo *aNodeInfo,       \
                                               PRBool aCloneText) const;

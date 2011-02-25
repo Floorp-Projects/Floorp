@@ -47,13 +47,64 @@ panel {
   color: MenuText;
 }
 
+/* ::::: arrow panel ::::: */
+
 panel[type="arrow"] {
   -moz-transition: opacity 300ms;
+  -moz-appearance: none;
 }
 
-.panel-arrowbox {
-  /* the arrows don't display properly on Linux so disable for now */
-  display: none;
+panel[type="arrow"][side="top"],
+panel[type="arrow"][side="bottom"] {
+  margin-left: -23px;
+  margin-right: -23px;
+}
+
+panel[type="arrow"][side="left"],
+panel[type="arrow"][side="right"] {
+  margin-top: -23px;
+  margin-bottom: -23px;
+}
+
+.panel-arrowcontent {
+  padding: 10px;
+  color: -moz-DialogText;
+  background: -moz-Dialog;
+  border: 1px solid ThreeDShadow;
+}
+
+.panel-arrow[side="top"],
+.panel-arrow[side="bottom"] {
+  list-style-image: url("chrome://global/skin/icons/panelarrow-vertical.svg");
+  position: relative;
+  margin-left: 6px;
+  margin-right: 6px;
+}
+
+.panel-arrow[side="top"] {
+  margin-bottom: -1px;
+}
+
+.panel-arrow[side="bottom"] {
+  -moz-transform: scaleY(-1);
+  margin-top: -1px;
+}
+
+.panel-arrow[side="left"],
+.panel-arrow[side="right"] {
+  list-style-image: url("chrome://global/skin/icons/panelarrow-horizontal.svg");
+  position: relative;
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+.panel-arrow[side="left"] {
+  margin-right: -1px;
+}
+
+.panel-arrow[side="right"] {
+  -moz-transform: scaleX(-1);
+  margin-left: -1px;
 }
 
 /* ::::: tooltip ::::: */

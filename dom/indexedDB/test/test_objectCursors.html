@@ -22,16 +22,16 @@
       ];
 
       const indexes = [
-        { name: "a", unique: false },
-        { name: "b", unique: true }
+        { name: "a", options: { } },
+        { name: "b", options: { unique: true } }
       ];
 
-      let request = moz_indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
 
       for (let i in objectStores) {
         request = db.setVersion("1");
@@ -40,11 +40,12 @@
         let event = yield;
 
         let objectStore =
-          db.createObjectStore(objectStores[i].name, "id",
-                              objectStores[i].autoIncrement);
+          db.createObjectStore(objectStores[i].name,
+                               { keyPath: "id",
+                                 autoIncrement: objectStores[i].autoIncrement });
 
         for (let j in indexes) {
-          objectStore.createIndex(indexes[j].name, "name", indexes[j].unique);
+          objectStore.createIndex(indexes[j].name, "name", indexes[j].options);
         }
 
         let data = { name: "Ben" };
@@ -57,13 +58,13 @@
         request.onsuccess = grabEventAndContinueHandler;
         event = yield;
 
-        ok(event.result == 1 || event.result == 2, "Good id");
+        ok(event.target.result == 1 || event.target.result == 2, "Good id");
       }
 
       SimpleTest.executeSoon(function() { testGenerator.next(); });
       yield;
 
-      let objectStore = event.result;
+      let objectStore = event.target.result;
 
       for (let i in objectStores) {
         for (let j in indexes) {
@@ -71,10 +72,10 @@
                               .objectStore(objectStores[i].name);
           let index = objectStore.index(indexes[j].name);
 
-          request = index.openObjectCursor();
+          request = index.openCursor();
           request.onerror = errorHandler;
           request.onsuccess = function (event) {
-            is(event.result.value.name, "Ben", "Good object");
+            is(event.target.result.value.name, "Ben", "Good object");
             SimpleTest.executeSoon(function() { testGenerator.next(); });
           }
           yield;

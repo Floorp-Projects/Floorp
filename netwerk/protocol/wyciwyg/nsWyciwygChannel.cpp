@@ -49,23 +49,22 @@
 #include "nsICacheSession.h"
 #include "nsIParser.h"
 #include "nsThreadUtils.h"
+#include "nsProxyRelease.h"
 
-// Must delete nsWyciwygChannel on main thread (URI destructor not thread
-// safe), so Async IO events send event to Release channel on main thread
+// Must release mChannel on the main thread
 class nsWyciwygAsyncEvent : public nsRunnable {
 public:
   nsWyciwygAsyncEvent(nsWyciwygChannel *aChannel) : mChannel(aChannel) {}
 
-  ~nsWyciwygAsyncEvent() 
+  ~nsWyciwygAsyncEvent()
   {
-    // NS_NewRunnableMethod addrefs channel and will release it on main
-    // thread--which is the goal here--so target method is a no-op
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(mChannel, &nsWyciwygChannel::MainReleaseNoOp);
-
-    // ensure we free our ref before event gets released on main thread
-    mChannel = 0;
-    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIThread> thread = do_GetMainThread();
+    NS_WARN_IF_FALSE(thread, "Couldn't get the main thread!");
+    if (thread) {
+      nsIWyciwygChannel *chan = static_cast<nsIWyciwygChannel *>(mChannel);
+      mChannel.forget();
+      NS_ProxyRelease(thread, chan);
+    }
   }
 protected:
   nsRefPtr<nsWyciwygChannel> mChannel;

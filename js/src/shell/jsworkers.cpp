@@ -294,7 +294,8 @@ class Event
     }
 
     bool deserializeData(JSContext *cx, jsval *vp) {
-        return !!JS_ReadStructuredClone(cx, data, nbytes, JS_STRUCTURED_CLONE_VERSION, vp);
+        return !!JS_ReadStructuredClone(cx, data, nbytes, JS_STRUCTURED_CLONE_VERSION, vp,
+                                        NULL, NULL);
     }
 
     virtual Result process(JSContext *cx) = 0;
@@ -307,7 +308,7 @@ class Event
     {
         uint64 *data;
         size_t nbytes;
-        if (!JS_WriteStructuredClone(cx, v, &data, &nbytes))
+        if (!JS_WriteStructuredClone(cx, v, &data, &nbytes, NULL, NULL))
             return NULL;
 
         EventType *event = new EventType;
@@ -1236,7 +1237,7 @@ Event::trace(JSTracer *trc)
 
 JSClass ThreadPool::jsClass = {
     "ThreadPool", JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE,
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, jsFinalize,
     NULL, NULL, NULL, NULL,
     NULL, NULL, JS_CLASS_TRACE(jsTraceThreadPool), NULL
@@ -1244,7 +1245,7 @@ JSClass ThreadPool::jsClass = {
 
 JSClass Worker::jsWorkerClass = {
     "Worker", JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE,
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, jsFinalize,
     NULL, NULL, NULL, NULL,
     NULL, NULL, JS_CLASS_TRACE(jsTraceWorker), NULL

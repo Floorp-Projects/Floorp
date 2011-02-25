@@ -74,10 +74,6 @@
 #ifdef XP_WIN
 #include <windows.h>
 #include <shlobj.h>
-// This is not defined by VC6.
-#ifndef CSIDL_LOCAL_APPDATA
-#define CSIDL_LOCAL_APPDATA             0x001C
-#endif
 #endif
 #ifdef XP_MACOSX
 #include "nsILocalFileMac.h"
@@ -341,6 +337,11 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
 #endif
   else if (!strcmp(aProperty, XRE_USER_SYS_EXTENSION_DIR)) {
     return GetSysUserExtensionsDirectory((nsILocalFile**)(nsIFile**) aFile);
+  }
+  else if (!strcmp(aProperty, XRE_APP_DISTRIBUTION_DIR)) {
+    rv = GetAppDir()->Clone(getter_AddRefs(file));
+    if (NS_SUCCEEDED(rv))
+      rv = file->AppendNative(NS_LITERAL_CSTRING("distribution"));
   }
   else if (NS_SUCCEEDED(GetProfileStartupDir(getter_AddRefs(file)))) {
     // We need to allow component, xpt, and chrome registration to
@@ -1104,13 +1105,6 @@ nsXREDirProvider::GetUserDataDirectoryHome(nsILocalFile** aFile, PRBool aLocal)
   appDir[len+1] = '\0';
 
   rv = NS_NewNativeLocalFile(nsDependentCString(appDir), PR_TRUE,
-                             getter_AddRefs(localDir));
-#elif defined(ANDROID)
-  // used for setting the patch to our profile
-  // XXX: investigate putting the profile somewhere else
-  const char* homeDir = "/data/data/org.mozilla." MOZ_APP_NAME;
-
-  rv = NS_NewNativeLocalFile(nsDependentCString(homeDir), PR_TRUE,
                              getter_AddRefs(localDir));
 #elif defined(XP_UNIX)
   const char* homeDir = getenv("HOME");

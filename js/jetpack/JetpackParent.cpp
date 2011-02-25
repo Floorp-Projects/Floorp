@@ -105,9 +105,12 @@ JetpackParent::SendMessage(const nsAString& aMessageName)
   if (!ac.enter(cx, JS_GetGlobalObject(cx)))
     return false;
 
-  for (PRUint32 i = 1; i < argc; ++i)
-    if (!jsval_to_Variant(cx, argv[i], data.AppendElement()))
+  for (PRUint32 i = 1; i < argc; ++i) {
+    if (!JS_WrapValue(cx, &argv[i]) ||
+        !jsval_to_Variant(cx, argv[i], data.AppendElement())) {
       return NS_ERROR_INVALID_ARG;
+    }
+  }
 
   InfallibleTArray<Variant> dataForSend;
   dataForSend.SwapElements(data);
@@ -169,7 +172,6 @@ public:
 
 private:
   nsCOMPtr<nsIJSContextStack> mCXStack;
-  JSContext* mCX;
 };
 
 // We have to delete the JetpackProcessParent on the I/O thread after event

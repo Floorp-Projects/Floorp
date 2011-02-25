@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['FormEngine'];
+const EXPORTED_SYMBOLS = ['FormEngine', 'FormRec'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -42,12 +42,28 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/stores.js");
-Cu.import("resource://services-sync/trackers.js");
-Cu.import("resource://services-sync/type_records/forms.js");
+Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/log4moz.js");
+
+const FORMS_TTL = 5184000; // 60 days
+
+function FormRec(collection, id) {
+  CryptoWrapper.call(this, collection, id);
+}
+FormRec.prototype = {
+  __proto__: CryptoWrapper.prototype,
+  _logName: "Record.Form",
+  ttl: FORMS_TTL
+};
+
+Utils.deferGetSet(FormRec, "cleartext", ["name", "value"]);
+
 
 let FormWrapper = {
+  _log: Log4Moz.repository.getLogger('Engine.Forms'),
+    
   getAllEntries: function getAllEntries() {
     // Sort by (lastUsed - minLast) / (maxLast - minLast) * timesUsed / maxTimes
     let query = this.createStatement(
@@ -76,6 +92,16 @@ let FormWrapper = {
 
     // Give the guid if we found one
     let item = Utils.queryAsync(getQuery, "guid")[0];
+    
+    if (!item) {
+      // Shouldn't happen, but Bug 597400...
+      // Might as well just return.
+      this._log.warn("GUID query returned " + item + "; turn on Trace logging for details.");
+      this._log.trace("getGUID(" + JSON.stringify(name) + ", " +
+                      JSON.stringify(value) + ") => " + item);
+      return null;
+    }
+    
     if (item.guid != null)
       return item.guid;
 
@@ -134,6 +160,8 @@ FormEngine.prototype = {
   _storeObj: FormStore,
   _trackerObj: FormTracker,
   _recordObj: FormRec,
+  applyIncomingBatchSize: FORMS_STORE_BATCH_SIZE,
+
   get prefName() "history",
 
   _findDupe: function _findDupe(item) {
@@ -147,6 +175,12 @@ function FormStore(name) {
 }
 FormStore.prototype = {
   __proto__: Store.prototype,
+
+  applyIncomingBatch: function applyIncomingBatch(records) {
+    return Utils.runInTransaction(Svc.Form.DBConnection, function() {
+      return Store.prototype.applyIncomingBatch.call(this, records);
+    }, this);
+  },
 
   getAllIDs: function FormStore_getAllIDs() {
     let guids = {};

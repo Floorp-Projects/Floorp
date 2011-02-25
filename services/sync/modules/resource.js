@@ -36,20 +36,78 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ["Resource", "AsyncResource"];
+const EXPORTED_SYMBOLS = ["Resource", "AsyncResource",
+                          "Auth", "BrokenBasicAuthenticator",
+                          "BasicAuthenticator", "NoOpAuthenticator"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://services-sync/auth.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/ext/Sync.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/util.js");
+
+Utils.lazy(this, 'Auth', AuthMgr);
+
+// XXX: the authenticator api will probably need to be changed to support
+// other methods (digest, oauth, etc)
+
+function NoOpAuthenticator() {}
+NoOpAuthenticator.prototype = {
+  onRequest: function NoOpAuth_onRequest(headers) {
+    return headers;
+  }
+};
+
+// Warning: This will drop the high unicode bytes from passwords.
+// Use BasicAuthenticator to send non-ASCII passwords UTF8-encoded.
+function BrokenBasicAuthenticator(identity) {
+  this._id = identity;
+}
+BrokenBasicAuthenticator.prototype = {
+  onRequest: function BasicAuth_onRequest(headers) {
+    headers['Authorization'] = 'Basic ' +
+      btoa(this._id.username + ':' + this._id.password);
+    return headers;
+  }
+};
+
+function BasicAuthenticator(identity) {
+  this._id = identity;
+}
+BasicAuthenticator.prototype = {
+  onRequest: function onRequest(headers) {
+    headers['Authorization'] = 'Basic ' +
+      btoa(this._id.username + ':' + this._id.passwordUTF8);
+    return headers;
+  }
+};
+
+function AuthMgr() {
+  this._authenticators = {};
+  this.defaultAuthenticator = new NoOpAuthenticator();
+}
+AuthMgr.prototype = {
+  defaultAuthenticator: null,
+
+  registerAuthenticator: function AuthMgr_register(match, authenticator) {
+    this._authenticators[match] = authenticator;
+  },
+
+  lookupAuthenticator: function AuthMgr_lookup(uri) {
+    for (let match in this._authenticators) {
+      if (uri.match(match))
+        return this._authenticators[match];
+    }
+    return this.defaultAuthenticator;
+  }
+};
+
 
 /*
  * AsyncResource represents a remote network resource, identified by a URI.
@@ -83,6 +141,9 @@ function AsyncResource(uri) {
 }
 AsyncResource.prototype = {
   _logName: "Net.Resource",
+
+  // Wait 5 minutes before killing a request
+  ABORT_TIMEOUT: 300000,
 
   // ** {{{ Resource.authenticator }}} **
   //
@@ -212,7 +273,7 @@ AsyncResource.prototype = {
     // Setup a channel listener so that the actual network operation
     // is performed asynchronously.
     let listener = new ChannelListener(this._onComplete, this._onProgress,
-                                       this._log);
+                                       this._log, this.ABORT_TIMEOUT);
     channel.requestMethod = action;
     channel.asyncOpen(listener, null);
   },
@@ -230,7 +291,7 @@ AsyncResource.prototype = {
     // Set some default values in-case there's no response header
     let headers = {};
     let status = 0;
-    let success = true;
+    let success = false;
     try {
       // Read out the response headers if available
       channel.visitResponseHeaders({
@@ -353,8 +414,10 @@ Resource.prototype = {
     try {
       return doRequest(action, data, callback);
     } catch(ex) {
-      // Combine the channel stack with this request stack
+      // Combine the channel stack with this request stack.  Need to create
+      // a new error object for that.
       let error = Error(ex.message);
+      error.result = ex.result;
       let chanStack = [];
       if (ex.stack)
         chanStack = ex.stack.trim().split(/\n/).slice(1);
@@ -373,7 +436,13 @@ Resource.prototype = {
   //
   // Perform an asynchronous HTTP GET for this resource.
   get: function Res_get() {
-    return this._request("GET");
+    let response = this._request("GET");
+    if (response.status == 0) {
+      // This must be an erroneously cached response. Try again.
+      this._log.debug("Status 0 in Resource.get: retrying once.");
+      response = this._request("GET");
+    }
+    return response;
   },
 
   // ** {{{ Resource.put }}} **
@@ -402,15 +471,14 @@ Resource.prototype = {
 //
 // This object implements the {{{nsIStreamListener}}} interface
 // and is called as the network operation proceeds.
-function ChannelListener(onComplete, onProgress, logger) {
+function ChannelListener(onComplete, onProgress, logger, timeout) {
   this._onComplete = onComplete;
   this._onProgress = onProgress;
   this._log = logger;
+  this._timeout = timeout;
   this.delayAbort();
 }
 ChannelListener.prototype = {
-  // Wait 5 minutes before killing a request
-  ABORT_TIMEOUT: 300000,
 
   onStartRequest: function Channel_onStartRequest(channel) {
     channel.QueryInterface(Ci.nsIHttpChannel);
@@ -433,9 +501,13 @@ ChannelListener.prototype = {
     if (this._data == '')
       this._data = null;
 
-    // Throw the failure code name (and stop execution)
+    // Throw the failure code and stop execution.  Use Components.Exception()
+    // instead of Error() so the exception is QI-able and can be passed across
+    // XPCOM borders while preserving the status code.
     if (!Components.isSuccessCode(status)) {
-      this._onComplete(Error(Components.Exception("", status).name));
+      let message = Components.Exception("", status).name;
+      let error = Components.Exception(message, status);
+      this._onComplete(error);
       return;
     }
 
@@ -446,9 +518,24 @@ ChannelListener.prototype = {
     let siStream = Cc["@mozilla.org/scriptableinputstream;1"].
       createInstance(Ci.nsIScriptableInputStream);
     siStream.init(stream);
-
-    this._data += siStream.read(count);
-    this._onProgress();
+    try {
+      this._data += siStream.read(count);
+    } catch (ex) {
+      this._log.warn("Exception thrown reading " + count +
+                     " bytes from " + siStream + ".");
+      throw ex;
+    }
+    
+    try {
+      this._onProgress();
+    } catch (ex) {
+      this._log.warn("Got exception calling onProgress handler during fetch of "
+                     + req.URI.spec);
+      this._log.debug(Utils.exceptionStr(ex));
+      this._log.trace("Rethrowing; expect a failure code from the HTTP channel.");
+      throw ex;
+    }
+    
     this.delayAbort();
   },
 
@@ -456,14 +543,15 @@ ChannelListener.prototype = {
    * Create or push back the abort timer that kills this request
    */
   delayAbort: function delayAbort() {
-    Utils.delay(this.abortRequest, this.ABORT_TIMEOUT, this, "abortTimer");
+    Utils.delay(this.abortRequest, this._timeout, this, "abortTimer");
   },
 
   abortRequest: function abortRequest() {
     // Ignore any callbacks if we happen to get any now
     this.onStopRequest = function() {};
-    this.onDataAvailable = function() {};
-    this._onComplete(Error("Aborting due to channel inactivity."));
+    let error = Components.Exception("Aborting due to channel inactivity.",
+                                     Cr.NS_ERROR_NET_TIMEOUT);
+    this._onComplete(error);
   }
 };
 

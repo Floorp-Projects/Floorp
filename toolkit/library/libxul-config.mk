@@ -306,13 +306,7 @@ endif
 
 STATIC_LIBS += thebes ycbcr
 
-ifneq ($(OS_ARCH),Linux)
 STATIC_LIBS += angle
-else
-ifdef FORCE_BUILD_ANGLE
-STATIC_LIBS += angle
-endif
-endif
 
 COMPONENT_LIBS += gkgfxthebes
 
@@ -349,6 +343,8 @@ ifdef MOZ_ZIPWRITER
 DEFINES += -DMOZ_ZIPWRITER
 COMPONENT_LIBS += zipwriter
 endif
+
+COMPONENT_LIBS += services-crypto
 
 ifdef MOZ_DEBUG
 ifdef ENABLE_TESTS

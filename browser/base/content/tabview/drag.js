@@ -288,7 +288,7 @@ Drag.prototype = {
     Trenches.hideGuides();
     this.item.isDragging = false;
 
-    if (this.parent && !this.parent.locked.close && this.parent != this.item.parent &&
+    if (this.parent && this.parent != this.item.parent &&
        this.parent.isEmpty()) {
       this.parent.close();
     }
@@ -296,7 +296,10 @@ Drag.prototype = {
     if (this.parent && this.parent.expanded)
       this.parent.arrange();
 
-    if (this.item && !this.item.parent) {
+    if (this.item.parent)
+      this.item.parent.arrange();
+
+    if (!this.item.parent) {
       this.item.setZ(drag.zIndex);
       drag.zIndex++;
 

@@ -13,21 +13,21 @@
   <script type="text/javascript;version=1.7">
     function testSteps()
     {
-      let request = moz_indexedDB.open(window.location.pathname, "");
+      let request = mozIndexedDB.open(window.location.pathname, "");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
 
       request = db.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      let transaction = event.transaction;
+      let transaction = event.target.transaction;
 
-      let objectStore1 = db.createObjectStore("foo", "");
+      let objectStore1 = db.createObjectStore("foo");
       let objectStore2 = transaction.objectStore("foo");
       ok(objectStore1 === objectStore2, "Got same objectStores");
 

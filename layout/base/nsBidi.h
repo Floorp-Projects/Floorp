@@ -510,6 +510,17 @@ public:
    */
   nsresult SetPara(const PRUnichar *aText, PRInt32 aLength, nsBidiLevel aParaLevel, nsBidiLevel *aEmbeddingLevels);
 
+  /**
+   * Get the directionality of the text.
+   *
+   * @param aDirection receives a <code>NSBIDI_XXX</code> value that indicates if the entire text
+   *       represented by this object is unidirectional,
+   *       and which direction, or if it is mixed-directional.
+   *
+   * @see nsBidiDirection
+   */
+  nsresult GetDirection(nsBidiDirection* aDirection);
+
 #ifdef FULL_BIDI_ENGINE
   /**
    * <code>SetLine</code> sets an <code>nsBidi</code> to
@@ -545,17 +556,6 @@ public:
    * @see SetPara
    */
   nsresult SetLine(nsIBidi* aParaBidi, PRInt32 aStart, PRInt32 aLimit);  
-
-  /**
-   * Get the directionality of the text.
-   *
-   * @param aDirection receives a <code>NSBIDI_XXX</code> value that indicates if the entire text
-   *       represented by this object is unidirectional,
-   *       and which direction, or if it is mixed-directional.
-   *
-   * @see nsBidiDirection
-   */
-  nsresult GetDirection(nsBidiDirection* aDirection);
 
   /**
    * Get the length of the text.

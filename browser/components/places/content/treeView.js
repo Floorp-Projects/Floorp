@@ -336,8 +336,7 @@ PlacesTreeView.prototype = {
         if (isopen != curChild.containerOpen)
           aToOpen.push(curChild);
         else if (curChild.containerOpen && curChild.childCount > 0)
-          rowsInserted += this._buildVisibleSection(curChild, aToOpen,
-                                                    row + 1);
+          rowsInserted += this._buildVisibleSection(curChild, row + 1, aToOpen);
       }
     }
 
@@ -1014,19 +1013,14 @@ PlacesTreeView.prototype = {
 
   _inBatchMode: false,
   batching: function PTV__batching(aToggleMode) {
-    if (aToggleMode) {
-      this._inBatchMode = true;
-      if (this.selection) {
-        this.selection.selectEventsSuppressed = true;
+    if (this._inBatchMode != aToggleMode) {
+      this._inBatchMode = this.selection.selectEventsSuppressed = aToggleMode;
+      if (this._inBatchMode) {
+        this._tree.beginUpdateBatch();
       }
-      this._tree.beginUpdateBatch();
-    }
-    else if (this._inBatchMode){
-      this._inBatchMode = false;
-      if (this.selection) {
-        this.selection.selectEventsSuppressed = false;
+      else {
+        this._tree.endUpdateBatch();
       }
-      this._tree.endUpdateBatch();
     }
   },
 
@@ -1388,6 +1382,11 @@ PlacesTreeView.prototype = {
   },
 
   setTree: function PTV_setTree(aTree) {
+    // If we are replacing the tree during a batch, there is a concrete risk
+    // that the treeView goes out of sync, thus it's safer to end the batch now.
+    // This is a no-op if we are not batching.
+    this.batching(false);
+
     let hasOldTree = this._tree != null;
     this._tree = aTree;
 

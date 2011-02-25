@@ -50,14 +50,14 @@ var conn = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase).DBConnectio
  */
 function getColumn(table, column, fromColumnName, fromColumnValue)
 {
-  var stmt = conn.createStatement(
-    "SELECT " + column + " FROM " + table + "_temp WHERE " + fromColumnName + "=:val " +
-    "UNION ALL " +
-    "SELECT " + column + " FROM " + table + " WHERE " + fromColumnName + "=:val " +
-    "LIMIT 1");
+  let sql = "SELECT " + column + " " +
+            "FROM " + table + " " +
+            "WHERE " + fromColumnName + " = :val " +
+            "LIMIT 1";
+  let stmt = conn.createStatement(sql);
   try {
     stmt.params.val = fromColumnValue;
-    stmt.executeStep();
+    ok(stmt.executeStep(), "Expect to get a row");
     return stmt.row[column];
   }
   finally {

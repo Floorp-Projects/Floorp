@@ -1,0 +1,18 @@
+<html>
+<head>
+<style>
+div:first-letter { float: left; } 
+div { -moz-column-count: 2; width: 0; }
+</style>
+<script>
+function boom()
+{
+  var v = document.getElementById("v");
+  v.removeChild(v.firstChild);
+}
+</script>
+</head>
+<body onload="boom();">
+<div id="v">a b<span>c</span></div>
+</body>
+</html>

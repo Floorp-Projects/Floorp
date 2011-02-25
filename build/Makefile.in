@@ -90,6 +90,18 @@ _LEAKTEST_FILES =    \
 		leaktest.py \
 		bloatcycle.html \
 		$(topsrcdir)/build/pgo/server-locations.txt \
+		$(topsrcdir)/build/pgo/favicon.ico \
+		$(topsrcdir)/build/pgo/blueprint/sample.html \
+		$(topsrcdir)/build/pgo/blueprint/elements.html \
+		$(topsrcdir)/build/pgo/blueprint/forms.html \
+		$(topsrcdir)/build/pgo/blueprint/grid.html \
+		$(topsrcdir)/build/pgo/blueprint/test.jpg \
+		$(topsrcdir)/build/pgo/blueprint/test-small.jpg \
+		$(topsrcdir)/build/pgo/blueprint/valid.png \
+		$(topsrcdir)/build/pgo/blueprint/screen.css \
+		$(topsrcdir)/build/pgo/blueprint/print.css \
+		$(topsrcdir)/build/pgo/blueprint/grid.png \
+		$(topsrcdir)/build/pgo/blueprint/fancytype-screen.css \
 		$(NULL)
 
 leaktest.py: leaktest.py.in
@@ -100,17 +112,18 @@ GARBAGE += leaktest.py
 libs:: $(_LEAKTEST_FILES)
 	$(INSTALL) $^ $(_LEAKTEST_DIR)
 
+_VALGRIND_DIR = $(DEPTH)/_valgrind
+GARBAGE_DIRS += $(_VALGRIND_DIR)
+
+_VALGRIND_FILES = \
+		$(topsrcdir)/build/valgrind/i686-redhat-linux-gnu.sup \
+		$(topsrcdir)/build/valgrind/x86_64-redhat-linux-gnu.sup \
+		$(NULL)
+
+libs:: $(_VALGRIND_FILES)
+	$(INSTALL) $^ $(_VALGRIND_DIR)
+
 ifdef ENABLE_TESTS
-# Install bloaturls.txt file for tinderbox bloat test.
-libs:: bloaturls.txt
-	$(INSTALL) $< $(DIST)/bin
-
-# Install bloatcycle.html into dist/bin/res, for auto-cycling
-# of bloaturls.txt.  This is for browsers that can't do -f
-# autocycling of URLs.
-libs:: bloatcycle.html
-	$(INSTALL) $< $(DIST)/bin/res
-
 libs:: $(topsrcdir)/tools/rb/fix_stack_using_bpsyms.py
 	$(INSTALL) $< $(DIST)/bin
 

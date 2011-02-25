@@ -89,9 +89,9 @@ WebGLContext::SafeToCreateCanvas3DContext(nsHTMLCanvasElement *canvasElement)
     nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
-    PRBool allSites = PR_FALSE;
-    rv = prefService->GetBoolPref("webgl.enabled_for_all_sites", &allSites);
-    if (NS_SUCCEEDED(rv) && allSites) {
+    PRBool disabled = PR_FALSE;
+    rv = prefService->GetBoolPref("webgl.disabled", &disabled);
+    if (NS_SUCCEEDED(rv) && !disabled) {
         // the all-sites pref was set, we're good to go
         return PR_TRUE;
     }
@@ -230,13 +230,10 @@ WebGLContext::LogMessage(const char *fmt, va_list ap)
 void
 WebGLContext::LogMessageIfVerbose(const char *fmt, ...)
 {
-    if (!mVerbose)
-        return;
-
     va_list ap;
     va_start(ap, fmt);
 
-    LogMessage(fmt, ap);
+    LogMessageIfVerbose(fmt, ap);
 
     va_end(ap);
 }
@@ -244,10 +241,15 @@ WebGLContext::LogMessageIfVerbose(const char *fmt, ...)
 void
 WebGLContext::LogMessageIfVerbose(const char *fmt, va_list ap)
 {
-    if (!mVerbose)
-        return;
+    static PRBool firstTime = PR_TRUE;
 
-    LogMessage(fmt, ap);
+    if (mVerbose)
+        LogMessage(fmt, ap);
+    else if (firstTime)
+        LogMessage("There are WebGL warnings or messages in this page, but they are hidden. To see them, "
+                   "go to about:config, set the webgl.verbose preference, and reload this page.");
+
+    firstTime = PR_FALSE;
 }
 
 nsresult

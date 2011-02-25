@@ -87,6 +87,29 @@ gfxQuartzSurface::gfxQuartzSurface(cairo_surface_t *csurf,
     Init(csurf, PR_TRUE);
 }
 
+gfxQuartzSurface::gfxQuartzSurface(unsigned char *data,
+                                   const gfxSize& size,
+                                   long stride,
+                                   gfxImageFormat format,
+                                   PRBool aForPrinting)
+    : mCGContext(nsnull), mSize(size), mForPrinting(aForPrinting)
+{
+    unsigned int width = (unsigned int) floor(size.width);
+    unsigned int height = (unsigned int) floor(size.height);
+
+    if (!CheckSurfaceSize(gfxIntSize(width, height)))
+        return;
+
+    cairo_surface_t *surf = cairo_quartz_surface_create_for_data
+        (data, (cairo_format_t) format, width, height, stride);
+
+    mCGContext = cairo_quartz_surface_get_cg_context (surf);
+
+    CGContextRetain(mCGContext);
+
+    Init(surf);
+}
+
 already_AddRefed<gfxASurface>
 gfxQuartzSurface::CreateSimilarSurface(gfxContentType aType,
                                        const gfxIntSize& aSize)
@@ -113,7 +136,8 @@ gfxQuartzSurface::GetCGContextWithClip(gfxContext *ctx)
 PRInt32 gfxQuartzSurface::GetDefaultContextFlags() const
 {
     if (mForPrinting)
-        return gfxContext::FLAG_DISABLE_SNAPPING;
+        return gfxContext::FLAG_DISABLE_SNAPPING |
+               gfxContext::FLAG_DISABLE_COPY_BACKGROUND;
 
     return 0;
 }

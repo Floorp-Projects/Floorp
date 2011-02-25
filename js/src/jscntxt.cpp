@@ -301,11 +301,11 @@ StackSpace::popSegmentForInvoke(const InvokeArgsGuard &ag)
 }
 
 bool
-StackSpace::getSegmentAndFrame(JSContext *cx, uintN vplen, uintN nfixed,
+StackSpace::getSegmentAndFrame(JSContext *cx, uintN vplen, uintN nslots,
                                FrameGuard *fg) const
 {
     Value *start = firstUnused();
-    uintN nvals = VALUES_PER_STACK_SEGMENT + vplen + VALUES_PER_STACK_FRAME + nfixed;
+    uintN nvals = VALUES_PER_STACK_SEGMENT + vplen + VALUES_PER_STACK_FRAME + nslots;
     if (!ensureSpace(cx, start, nvals))
         return false;
 
@@ -316,20 +316,20 @@ StackSpace::getSegmentAndFrame(JSContext *cx, uintN vplen, uintN nfixed,
 }
 
 void
-StackSpace::pushSegmentAndFrame(JSContext *cx, JSObject *initialVarObj,
-                                JSFrameRegs *regs, FrameGuard *fg)
+StackSpace::pushSegmentAndFrame(JSContext *cx, JSFrameRegs *regs, FrameGuard *fg)
 {
     /* Caller should have already initialized regs. */
     JS_ASSERT(regs->fp == fg->fp());
-
-    /* Push segment. */
     StackSegment *seg = fg->segment();
+
+    /* Register new segment/frame with the context. */
+    cx->pushSegmentAndFrame(seg, *regs);
+
+    /* Officially push the segment/frame on the stack. */
     seg->setPreviousInMemory(currentSegment);
     currentSegment = seg;
 
-    /* Push frame. */
-    cx->pushSegmentAndFrame(seg, *regs);
-    seg->setInitialVarObj(initialVarObj);
+    /* Mark as 'pushed' in the guard. */
     fg->cx_ = cx;
 }
 
@@ -338,8 +338,17 @@ StackSpace::popSegmentAndFrame(JSContext *cx)
 {
     JS_ASSERT(isCurrentAndActive(cx));
     JS_ASSERT(cx->hasActiveSegment());
-    cx->popSegmentAndFrame();
+
+    /* Officially pop the segment/frame from the stack. */
     currentSegment = currentSegment->getPreviousInMemory();
+
+    /* Unregister pushed segment/frame from the context. */
+    cx->popSegmentAndFrame();
+
+    /*
+     * N.B. This StackSpace should be GC-able without any operations after
+     * cx->popSegmentAndFrame executes since it can trigger GC.
+     */
 }
 
 FrameGuard::~FrameGuard()
@@ -354,7 +363,7 @@ FrameGuard::~FrameGuard()
 bool
 StackSpace::getExecuteFrame(JSContext *cx, JSScript *script, ExecuteFrameGuard *fg) const
 {
-    return getSegmentAndFrame(cx, 2, script->nfixed, fg);
+    return getSegmentAndFrame(cx, 2, script->nslots, fg);
 }
 
 void
@@ -365,26 +374,27 @@ StackSpace::pushExecuteFrame(JSContext *cx, JSObject *initialVarObj, ExecuteFram
     fg->regs_.pc = script->code;
     fg->regs_.fp = fp;
     fg->regs_.sp = fp->base();
-    pushSegmentAndFrame(cx, initialVarObj, &fg->regs_, fg);
+    pushSegmentAndFrame(cx, &fg->regs_, fg);
+    fg->seg_->setInitialVarObj(initialVarObj);
 }
 
 bool
 StackSpace::pushDummyFrame(JSContext *cx, JSObject &scopeChain, DummyFrameGuard *fg)
 {
-    if (!getSegmentAndFrame(cx, 0 /*vplen*/, 0 /*nfixed*/, fg))
+    if (!getSegmentAndFrame(cx, 0 /*vplen*/, 0 /*nslots*/, fg))
         return false;
     fg->fp()->initDummyFrame(cx, scopeChain);
     fg->regs_.fp = fg->fp();
     fg->regs_.pc = NULL;
     fg->regs_.sp = fg->fp()->slots();
-    pushSegmentAndFrame(cx, NULL /*varobj*/, &fg->regs_, fg);
+    pushSegmentAndFrame(cx, &fg->regs_, fg);
     return true;
 }
 
 bool
-StackSpace::getGeneratorFrame(JSContext *cx, uintN vplen, uintN nfixed, GeneratorFrameGuard *fg)
+StackSpace::getGeneratorFrame(JSContext *cx, uintN vplen, uintN nslots, GeneratorFrameGuard *fg)
 {
-    return getSegmentAndFrame(cx, vplen, nfixed, fg);
+    return getSegmentAndFrame(cx, vplen, nslots, fg);
 }
 
 void
@@ -392,7 +402,7 @@ StackSpace::pushGeneratorFrame(JSContext *cx, JSFrameRegs *regs, GeneratorFrameG
 {
     JS_ASSERT(regs->fp == fg->fp());
     JS_ASSERT(regs->fp->prev() == cx->maybefp());
-    pushSegmentAndFrame(cx, NULL /*varobj*/, regs, fg);
+    pushSegmentAndFrame(cx, regs, fg);
 }
 
 bool
@@ -494,49 +504,30 @@ JSThreadData::init()
 #endif
     if (!stackSpace.init())
         return false;
-#ifdef JS_TRACER
-    if (!InitJIT(&traceMonitor)) {
-        finish();
-        return false;
-    }
-#endif
     dtoaState = js_NewDtoaState();
     if (!dtoaState) {
         finish();
         return false;
     }
     nativeStackBase = GetNativeStackBase();
-    return true;
-}
 
-MathCache *
-JSThreadData::allocMathCache(JSContext *cx)
-{
-    JS_ASSERT(!mathCache);
-    mathCache = new MathCache;
-    if (!mathCache)
-        js_ReportOutOfMemory(cx);
-    return mathCache;
+#ifdef JS_TRACER
+    /* Set the default size for the code cache to 16MB. */
+    maxCodeCacheBytes = 16 * 1024 * 1024;
+#endif
+
+    return true;
 }
 
 void
 JSThreadData::finish()
 {
-#ifdef DEBUG
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(scriptsToGC); ++i)
-        JS_ASSERT(!scriptsToGC[i]);
-#endif
-
     if (dtoaState)
         js_DestroyDtoaState(dtoaState);
 
     js_FinishGSNCache(&gsnCache);
     propertyCache.~PropertyCache();
-#if defined JS_TRACER
-    FinishJIT(&traceMonitor);
-#endif
     stackSpace.finish();
-    delete mathCache;
 }
 
 void
@@ -552,24 +543,6 @@ JSThreadData::purge(JSContext *cx)
 
     /* FIXME: bug 506341. */
     propertyCache.purge(cx);
-
-#ifdef JS_TRACER
-    /*
-     * If we are about to regenerate shapes, we have to flush the JIT cache,
-     * which will eventually abort any current recording.
-     */
-    if (cx->runtime->gcRegenShapes)
-        traceMonitor.needFlush = JS_TRUE;
-#endif
-
-    /* Destroy eval'ed scripts. */
-    js_DestroyScriptsToGC(cx, this);
-
-    /* Purge cached native iterators. */
-    memset(cachedNativeIterators, 0, sizeof(cachedNativeIterators));
-    lastNativeIterator = NULL;
-
-    dtoaCache.s = NULL;
 }
 
 #ifdef JS_THREADSAFE
@@ -736,7 +709,6 @@ js_PurgeThreads(JSContext *cx)
 
         if (JS_CLIST_IS_EMPTY(&thread->contextList)) {
             JS_ASSERT(cx->thread != thread);
-            js_DestroyScriptsToGC(cx, &thread->data);
 
             DestroyThread(thread);
             e.removeFront();
@@ -781,6 +753,11 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
                      &cx->scriptStackQuota);
 
     JS_ASSERT(cx->resolveFlags == 0);
+
+    if (!cx->busyArrays.init()) {
+        FreeContext(cx);
+        return NULL;
+    }
 
 #ifdef JS_THREADSAFE
     if (!js_InitContextThread(cx)) {
@@ -844,19 +821,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
             ok = js_InitRuntimeScriptState(rt);
         if (ok)
             ok = js_InitRuntimeNumberState(cx);
-        if (ok) {
-            /*
-             * Ensure that the empty scopes initialized by
-             * Shape::initRuntimeState get the desired special shapes.
-             * (The rt->state dance above guarantees that this abuse of
-             * rt->shapeGen is thread-safe.)
-             */
-            uint32 shapeGen = rt->shapeGen;
-            rt->shapeGen = 0;
-            ok = Shape::initRuntimeState(cx);
-            if (rt->shapeGen < shapeGen)
-                rt->shapeGen = shapeGen;
-        }
 
 #ifdef JS_THREADSAFE
         JS_EndRequest(cx);
@@ -874,12 +838,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     cxCallback = rt->cxCallback;
     if (cxCallback && !cxCallback(cx, JSCONTEXT_NEW)) {
         js_DestroyContext(cx, JSDCM_NEW_FAILED);
-        return NULL;
-    }
-
-    /* Using ContextAllocPolicy, so init after JSContext is ready. */
-    if (!cx->busyArrays.init()) {
-        FreeContext(cx);
         return NULL;
     }
 
@@ -921,7 +879,7 @@ DumpEvalCacheMeter(JSContext *cx)
             EVAL_CACHE_METER_LIST(frob)
 #undef frob
         };
-        JSEvalCacheMeter *ecm = &JS_THREAD_DATA(cx)->evalCacheMeter;
+        JSEvalCacheMeter *ecm = &cx->compartment->evalCacheMeter;
 
         static JSAutoFile fp;
         if (!fp && !fp.open(filename, "w"))
@@ -1100,7 +1058,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
             }
 #endif
 
-            Shape::finishRuntimeState(cx);
             js_FinishRuntimeNumberState(cx);
 
             /* Unpin all common atoms before final GC. */
@@ -1124,7 +1081,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 #endif
 
         if (last) {
-            js_GC(cx, GC_LAST_CONTEXT);
+            js_GC(cx, NULL, GC_LAST_CONTEXT);
             DUMP_EVAL_CACHE_METER(cx);
             DUMP_FUNCTION_METER(cx);
 
@@ -1134,7 +1091,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
             JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
         } else {
             if (mode == JSDCM_FORCE_GC)
-                js_GC(cx, GC_NORMAL);
+                js_GC(cx, NULL, GC_NORMAL);
             else if (mode == JSDCM_MAYBE_GC)
                 JS_MaybeGC(cx);
             JS_LOCK_GC(rt);
@@ -1385,7 +1342,7 @@ js_ReportOutOfMemory(JSContext *cx)
      * If we are in a builtin called directly from trace, don't report an
      * error. We will retry in the interpreter instead.
      */
-    if (JS_ON_TRACE(cx) && !cx->bailExit)
+    if (JS_ON_TRACE(cx) && !JS_TRACE_MONITOR_ON_TRACE(cx)->bailExit)
         return;
 #endif
 
@@ -1409,7 +1366,7 @@ js_ReportOutOfMemory(JSContext *cx)
      * exception if any now so the hooks can replace the out-of-memory error
      * by a script-catchable exception.
      */
-    cx->throwing = JS_FALSE;
+    cx->clearPendingException();
     if (onError) {
         JSDebugErrorHook hook = cx->debugHooks->debugErrorHook;
         if (hook &&
@@ -1459,18 +1416,18 @@ checkReportFlags(JSContext *cx, uintN *flags)
         JSStackFrame *fp = js_GetScriptedCaller(cx, NULL);
         if (fp && fp->script()->strictModeCode)
             *flags &= ~JSREPORT_WARNING;
-        else if (JS_HAS_STRICT_OPTION(cx))
+        else if (cx->hasStrictOption())
             *flags |= JSREPORT_WARNING;
         else
             return true;
     } else if (JSREPORT_IS_STRICT(*flags)) {
         /* Warning/error only when JSOPTION_STRICT is set. */
-        if (!JS_HAS_STRICT_OPTION(cx))
+        if (!cx->hasStrictOption())
             return true;
     }
 
     /* Warnings become errors when JSOPTION_WERROR is set. */
-    if (JSREPORT_IS_WARNING(*flags) && JS_HAS_WERROR_OPTION(cx))
+    if (JSREPORT_IS_WARNING(*flags) && cx->hasWErrorOption())
         *flags &= ~JSREPORT_WARNING;
 
     return false;
@@ -1873,7 +1830,7 @@ js_InvokeOperationCallback(JSContext *cx)
     JS_UNLOCK_GC(rt);
 
     if (rt->gcIsNeeded) {
-        js_GC(cx, GC_NORMAL);
+        js_GC(cx, rt->gcTriggerCompartment, GC_NORMAL);
 
         /*
          * On trace we can exceed the GC quota, see comments in NewGCArena. So
@@ -1973,8 +1930,8 @@ js_GetCurrentBytecodePC(JSContext* cx)
 
 #ifdef JS_TRACER
     if (JS_ON_TRACE(cx)) {
-        pc = cx->bailExit->pc;
-        imacpc = cx->bailExit->imacpc;
+        pc = JS_TRACE_MONITOR_ON_TRACE(cx)->bailExit->pc;
+        imacpc = JS_TRACE_MONITOR_ON_TRACE(cx)->bailExit->imacpc;
     } else
 #endif
     {
@@ -1999,7 +1956,7 @@ js_CurrentPCIsInImacro(JSContext *cx)
 #ifdef JS_TRACER
     VOUCH_DOES_NOT_REQUIRE_STACK();
     if (JS_ON_TRACE(cx))
-        return cx->bailExit->imacpc != NULL;
+        return JS_TRACE_MONITOR_ON_TRACE(cx)->bailExit->imacpc != NULL;
     return cx->fp()->hasImacropc();
 #else
     return false;
@@ -2043,10 +2000,11 @@ DSTOffsetCache::DSTOffsetCache()
 }
 
 JSContext::JSContext(JSRuntime *rt)
-  : runtime(rt),
-    compartment(rt->defaultCompartment),
+  : hasVersionOverride(false),
+    runtime(rt),
+    compartment(NULL),
     regs(NULL),
-    busyArrays(thisInInitializer())
+    busyArrays()
 {}
 
 void
@@ -2057,27 +2015,45 @@ JSContext::resetCompartment()
         scopeobj = &fp()->scopeChain();
     } else {
         scopeobj = globalObject;
-        if (!scopeobj) {
-            compartment = runtime->defaultCompartment;
-            return;
-        }
+        if (!scopeobj)
+            goto error;
 
         /*
          * Innerize. Assert, but check anyway, that this succeeds. (It
          * can only fail due to bugs in the engine or embedding.)
          */
         OBJ_TO_INNER_OBJECT(this, scopeobj);
-        if (!scopeobj) {
-            /*
-             * Bug. Return NULL, not defaultCompartment, to crash rather
-             * than open a security hole.
-             */
-            JS_ASSERT(0);
-            compartment = NULL;
-            return;
-        }
+        if (!scopeobj)
+            goto error;
     }
-    compartment = scopeobj->getCompartment();
+
+    compartment = scopeobj->compartment();
+
+    if (isExceptionPending())
+        wrapPendingException();
+    return;
+
+error:
+
+    /*
+     * If we try to use the context without a selected compartment,
+     * we will crash.
+     */
+    compartment = NULL;
+}
+
+/*
+ * Since this function is only called in the context of a pending exception,
+ * the caller must subsequently take an error path. If wrapping fails, it will
+ * set a new (uncatchable) exception to be used in place of the original.
+ */
+void
+JSContext::wrapPendingException()
+{
+    Value v = getPendingException();
+    clearPendingException();
+    if (compartment->wrap(this, &v))
+        setPendingException(v);
 }
 
 void
@@ -2095,6 +2071,11 @@ JSContext::pushSegmentAndFrame(js::StackSegment *newseg, JSFrameRegs &newregs)
 void
 JSContext::popSegmentAndFrame()
 {
+    /*
+     * NB: This function calls resetCompartment, which may GC, so the stack needs
+     * to be in a GC-able state by that point.
+     */
+
     JS_ASSERT(currentSegment->maybeContext() == this);
     JS_ASSERT(currentSegment->getInitialFrame() == regs->fp);
     currentSegment->leaveContext();
@@ -2102,6 +2083,7 @@ JSContext::popSegmentAndFrame()
     if (currentSegment) {
         if (currentSegment->isSaved()) {
             setCurrentRegs(NULL);
+            resetCompartment();
         } else {
             setCurrentRegs(currentSegment->getSuspendedRegs());
             currentSegment->resume();
@@ -2109,7 +2091,9 @@ JSContext::popSegmentAndFrame()
     } else {
         JS_ASSERT(regs->fp->prev() == NULL);
         setCurrentRegs(NULL);
+        resetCompartment();
     }
+    maybeMigrateVersionOverride();
 }
 
 void
@@ -2118,6 +2102,7 @@ JSContext::saveActiveSegment()
     JS_ASSERT(hasActiveSegment());
     currentSegment->save(regs);
     setCurrentRegs(NULL);
+    resetCompartment();
 }
 
 void
@@ -2126,6 +2111,7 @@ JSContext::restoreSegment()
     js::StackSegment *ccs = currentSegment;
     setCurrentRegs(ccs->getSuspendedRegs());
     ccs->restore();
+    resetCompartment();
 }
 
 JSGenerator *
@@ -2312,7 +2298,7 @@ JSContext::updateJITEnabled()
     /* :FIXME: Don't enable the trace JIT if inference is on, they are not compatible yet. */
 #ifndef JS_TYPE_INFERENCE
 #ifdef JS_TRACER
-    traceJitEnabled = ((options & JSOPTION_JIT) &&
+    traceJitEnabled = ((runOptions & JSOPTION_JIT) &&
                        !IsJITBrokenHere() &&
                        (debugHooks == &js_NullDebugHooks ||
                         (debugHooks == &runtime->globalDebugHooks &&
@@ -2320,7 +2306,7 @@ JSContext::updateJITEnabled()
 #endif
 #endif
 #ifdef JS_METHODJIT
-    methodJitEnabled = (options & JSOPTION_METHODJIT) &&
+    methodJitEnabled = (runOptions & JSOPTION_METHODJIT) &&
                        !IsJITBrokenHere()
 # if defined JS_CPU_X86 || defined JS_CPU_X64
                        && JSC::MacroAssemblerX86Common::getSSEState() >=
@@ -2328,18 +2314,20 @@ JSContext::updateJITEnabled()
 # endif
                         ;
 #ifdef JS_TRACER
-    profilingEnabled = (options & JSOPTION_PROFILING) && traceJitEnabled && methodJitEnabled;
+    profilingEnabled = (runOptions & JSOPTION_PROFILING) && traceJitEnabled && methodJitEnabled;
 #endif
 #endif
 }
 
 namespace js {
 
-void
-SetPendingException(JSContext *cx, const Value &v)
+JS_FORCES_STACK JS_FRIEND_API(void)
+LeaveTrace(JSContext *cx)
 {
-    cx->throwing = JS_TRUE;
-    cx->exception = v;
+#ifdef JS_TRACER
+    if (JS_ON_TRACE(cx))
+        DeepBail(cx);
+#endif
 }
 
 } /* namespace js */

@@ -64,6 +64,7 @@ menubar, toolbar[type="menubar"] {
   padding: 1px 0px;
 }
 
+menubar:-moz-lwtheme,
 toolbar:-moz-lwtheme {
   -moz-appearance: none;
 }

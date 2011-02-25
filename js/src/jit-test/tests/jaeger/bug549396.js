@@ -1,1 +1,1 @@
-x = __defineSetter__("x", function(z) function() { z })
+x = this.__defineSetter__("x", function(z) function() { z })

@@ -46,6 +46,7 @@
 #include "nsNPAPIPlugin.h"
 #include "nsPluginSafety.h"
 #include "nsPluginLogging.h"
+#include "nsPluginStreamListenerPeer.h"
 
 NS_IMPL_ISUPPORTS1(nsPluginStreamToFile, nsIOutputStream)
 
@@ -146,30 +147,32 @@ NS_IMPL_ISUPPORTS3(nsNPAPIPluginStreamListener, nsIPluginStreamListener,
 nsNPAPIPluginStreamListener::nsNPAPIPluginStreamListener(nsNPAPIPluginInstance* inst, 
                                                          void* notifyData,
                                                          const char* aURL)
-: mNotifyData(notifyData),
-mStreamBuffer(nsnull),
+: mStreamBuffer(nsnull),
 mNotifyURL(aURL ? PL_strdup(aURL) : nsnull),
 mInst(inst),
+mStreamListenerPeer(nsnull),
 mStreamBufferSize(0),
 mStreamBufferByteCount(0),
 mStreamType(NP_NORMAL),
 mStreamStarted(PR_FALSE),
 mStreamCleanedUp(PR_FALSE),
-mCallNotify(PR_FALSE),
+mCallNotify(notifyData ? PR_TRUE : PR_FALSE),
 mIsSuspended(PR_FALSE),
 mIsPluginInitJSStream(mInst->mInPluginInitCall &&
                       aURL && strncmp(aURL, "javascript:",
                                       sizeof("javascript:") - 1) == 0),
+mRedirectDenied(PR_FALSE),
 mResponseHeaderBuf(nsnull)
 {
   memset(&mNPStream, 0, sizeof(mNPStream));
+  mNPStream.notifyData = notifyData;
 }
 
 nsNPAPIPluginStreamListener::~nsNPAPIPluginStreamListener()
 {
   // remove this from the plugin instance's stream list
-  nsTArray<nsNPAPIPluginStreamListener*> *pStreamListeners = mInst->PStreamListeners();
-  pStreamListeners->RemoveElement(this);
+  nsTArray<nsNPAPIPluginStreamListener*> *streamListeners = mInst->StreamListeners();
+  streamListeners->RemoveElement(this);
 
   // For those cases when NewStream is never called, we still may need
   // to fire a notification callback. Return network error as fallback
@@ -201,7 +204,13 @@ nsNPAPIPluginStreamListener::CleanUpStream(NPReason reason)
   mStreamCleanedUp = PR_TRUE;
   
   StopDataPump();
-  
+
+  // Release any outstanding redirect callback.
+  if (mHTTPRedirectCallback) {
+    mHTTPRedirectCallback->OnRedirectVerifyCallback(NS_ERROR_FAILURE);
+    mHTTPRedirectCallback = nsnull;
+  }
+
   // Seekable streams have an extra addref when they are created which must
   // be matched here.
   if (NP_SEEK == mStreamType)
@@ -265,11 +274,11 @@ nsNPAPIPluginStreamListener::CallURLNotify(NPReason reason)
     NPP npp;
     mInst->GetNPP(&npp);
     
-    NS_TRY_SAFE_CALL_VOID((*pluginFunctions->urlnotify)(npp, mNotifyURL, reason, mNotifyData), mInst);
+    NS_TRY_SAFE_CALL_VOID((*pluginFunctions->urlnotify)(npp, mNotifyURL, reason, mNPStream.notifyData), mInst);
     
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                    ("NPP URLNotify called: this=%p, npp=%p, notify=%p, reason=%d, url=%s\n",
-                    this, npp, mNotifyData, reason, mNotifyURL));
+                    this, npp, mNPStream.notifyData, reason, mNotifyURL));
   }
 }
 
@@ -300,7 +309,6 @@ nsNPAPIPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
   
   mNPStream.ndata = (void*) this;
   pluginInfo->GetURL(&mNPStream.url);
-  mNPStream.notifyData = mNotifyData;
   
   pluginInfo->GetLength((PRUint32*)&(mNPStream.end));
   pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
@@ -421,9 +429,9 @@ nsNPAPIPluginStreamListener::PluginInitJSLoadInProgress()
   if (!mInst)
     return PR_FALSE;
 
-  nsTArray<nsNPAPIPluginStreamListener*> *pStreamListeners = mInst->PStreamListeners();
-  for (unsigned int i = 0; i < pStreamListeners->Length(); i++) {
-    if (pStreamListeners->ElementAt(i)->mIsPluginInitJSStream) {
+  nsTArray<nsNPAPIPluginStreamListener*> *streamListeners = mInst->StreamListeners();
+  for (unsigned int i = 0; i < streamListeners->Length(); i++) {
+    if (streamListeners->ElementAt(i)->mIsPluginInitJSStream) {
       return PR_TRUE;
     }
   }
@@ -758,16 +766,19 @@ nsNPAPIPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
   
   if (!mInst || !mInst->CanFireNotifications())
     return NS_ERROR_FAILURE;
-  
+
   // check if the stream is of seekable type and later its destruction
-  // see bug 91140    
+  // see bug 91140
   nsresult rv = NS_OK;
   NPReason reason = NS_FAILED(status) ? NPRES_NETWORK_ERR : NPRES_DONE;
+  if (mRedirectDenied) {
+    reason = NPRES_USER_BREAK;
+  }
   if (mStreamType != NP_SEEK ||
       (NP_SEEK == mStreamType && NS_BINDING_ABORTED == status)) {
     rv = CleanUpStream(reason);
   }
-  
+
   return rv;
 }
 
@@ -825,4 +836,67 @@ nsNPAPIPluginStreamListener::NewResponseHeader(const char* headerName,
   mResponseHeaders.Append(headerValue);
   mResponseHeaders.Append('\n');
   return NS_OK;
+}
+
+bool
+nsNPAPIPluginStreamListener::HandleRedirectNotification(nsIChannel *oldChannel, nsIChannel *newChannel,
+                                                        nsIAsyncVerifyRedirectCallback* callback)
+{
+  nsCOMPtr<nsIHttpChannel> oldHttpChannel = do_QueryInterface(oldChannel);
+  nsCOMPtr<nsIHttpChannel> newHttpChannel = do_QueryInterface(newChannel);
+  if (!oldHttpChannel || !newHttpChannel) {
+    return false;
+  }
+
+  if (!mInst || !mInst->CanFireNotifications()) {
+    return false;
+  }
+
+  nsNPAPIPlugin* plugin = mInst->GetPlugin();
+  if (!plugin || !plugin->GetLibrary()) {
+    return false;
+  }
+
+  NPPluginFuncs* pluginFunctions = plugin->PluginFuncs();
+  if (!pluginFunctions->urlredirectnotify) {
+    return false;
+  }
+
+  // A non-null closure is required for redirect handling support.
+  if (mNPStream.notifyData) {
+    PRUint32 status;
+    if (NS_SUCCEEDED(oldHttpChannel->GetResponseStatus(&status))) {
+      nsCOMPtr<nsIURI> uri;
+      if (NS_SUCCEEDED(newHttpChannel->GetURI(getter_AddRefs(uri))) && uri) {
+        nsCAutoString spec;
+        if (NS_SUCCEEDED(uri->GetAsciiSpec(spec))) {
+          // At this point the plugin will be responsible for making the callback
+          // so save the callback object.
+          mHTTPRedirectCallback = callback;
+
+          NPP npp;
+          mInst->GetNPP(&npp);
+#if defined(XP_WIN) || defined(XP_OS2)
+          NS_TRY_SAFE_CALL_VOID((*pluginFunctions->urlredirectnotify)(npp, spec.get(), static_cast<int32_t>(status), mNPStream.notifyData), mInst);
+#else
+          (*pluginFunctions->urlredirectnotify)(npp, spec.get(), static_cast<int32_t>(status), mNPStream.notifyData);
+#endif
+          return true;
+        }
+      }
+    }
+  }
+
+  callback->OnRedirectVerifyCallback(NS_ERROR_FAILURE);
+  return true;
+}
+
+void
+nsNPAPIPluginStreamListener::URLRedirectResponse(NPBool allow)
+{
+  if (mHTTPRedirectCallback) {
+    mHTTPRedirectCallback->OnRedirectVerifyCallback(allow ? NS_OK : NS_ERROR_FAILURE);
+    mRedirectDenied = allow ? PR_FALSE : PR_TRUE;
+    mHTTPRedirectCallback = nsnull;
+  }
 }

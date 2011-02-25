@@ -13,5 +13,5 @@
   <Param name="rls" value="{moz:distributionID}:{moz:locale}:{moz:official}"/>
   <MozParam name="client" condition="defaultEngine" trueValue="firefox-a" falseValue="firefox"/>
 </Url>
-<SearchForm>http://www.google.com/firefox</SearchForm>
+<SearchForm>http://www.google.com/</SearchForm>
 </SearchPlugin>

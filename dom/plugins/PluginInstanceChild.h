@@ -42,6 +42,7 @@
 #include "mozilla/plugins/PPluginInstanceChild.h"
 #include "mozilla/plugins/PluginScriptableObjectChild.h"
 #include "mozilla/plugins/StreamNotifyChild.h"
+#include "mozilla/plugins/PPluginSurfaceChild.h"
 #if defined(OS_WIN)
 #include "mozilla/gfx/SharedDIBWin.h"
 #elif defined(OS_MACOSX)
@@ -77,6 +78,10 @@ class PluginInstanceChild : public PPluginInstanceChild
                                              UINT message,
                                              WPARAM wParam,
                                              LPARAM lParam);
+    static LRESULT CALLBACK PluginWindowProcInternal(HWND hWnd,
+                                                     UINT message,
+                                                     WPARAM wParam,
+                                                     LPARAM lParam);
 #endif
 
 protected:
@@ -107,6 +112,16 @@ protected:
     DoAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
                      const NPRemoteWindow& aWindow,
                      bool aIsAsync);
+
+    virtual PPluginSurfaceChild* AllocPPluginSurface(const WindowsSharedMemoryHandle&,
+                                                     const gfxIntSize&, const bool&) {
+        return new PPluginSurfaceChild();
+    }
+
+    virtual bool DeallocPPluginSurface(PPluginSurfaceChild* s) {
+        delete s;
+        return true;
+    }
 
     NS_OVERRIDE
     virtual bool
@@ -183,7 +198,7 @@ protected:
     AnswerUpdateWindow();
 
 public:
-    PluginInstanceChild(const NPPluginFuncs* aPluginIface, const nsCString& aMimeType);
+    PluginInstanceChild(const NPPluginFuncs* aPluginIface);
 
     virtual ~PluginInstanceChild();
 
@@ -214,33 +229,32 @@ public:
 
     void AsyncCall(PluginThreadCallback aFunc, void* aUserData);
 
-    int GetQuirks() { return mQuirks; }
+    int GetQuirks();
 
-    // Quirks mode support for various plugin mime types
-    enum PluginQuirks {
-        // Silverlight assumes it is transparent in windowless mode. This quirk
-        // matches the logic in nsNPAPIPluginInstance::SetWindowless.
-        QUIRK_SILVERLIGHT_DEFAULT_TRANSPARENT           = 1 << 0,
-        // Win32: Hook TrackPopupMenu api so that we can swap out parent
-        // hwnds. The api will fail with parents not associated with our
-        // child ui thread. See WinlessHandleEvent for details.
-        QUIRK_WINLESS_TRACKPOPUP_HOOK                   = 1 << 1,
-        // Win32: Throttle flash WM_USER+1 heart beat messages to prevent
-        // flooding chromium's dispatch loop, which can cause ipc traffic
-        // processing lag.
-        QUIRK_FLASH_THROTTLE_WMUSER_EVENTS              = 1 << 2,
-        // Win32: Catch resets on our subclass by hooking SetWindowLong.
-        QUIRK_FLASH_HOOK_SETLONGPTR                     = 1 << 3,
-    };
+    void NPN_URLRedirectResponse(void* notifyData, NPBool allow);
 
 private:
     friend class PluginModuleChild;
 
-    void InitQuirksModes(const nsCString& aMimeType);
-
     NPError
     InternalGetNPObjectForValue(NPNVariable aValue,
                                 NPObject** aObject);
+
+    NS_OVERRIDE
+    virtual bool RecvUpdateBackground(const SurfaceDescriptor& aBackground,
+                                      const nsIntRect& aRect);
+
+    NS_OVERRIDE
+    virtual PPluginBackgroundDestroyerChild*
+    AllocPPluginBackgroundDestroyer();
+
+    NS_OVERRIDE
+    virtual bool
+    RecvPPluginBackgroundDestroyerConstructor(PPluginBackgroundDestroyerChild* aActor);
+
+    NS_OVERRIDE
+    virtual bool
+    DeallocPPluginBackgroundDestroyer(PPluginBackgroundDestroyerChild* aActor);
 
 #if defined(OS_WIN)
     static bool RegisterWindowClass();
@@ -334,7 +348,6 @@ private:
     const NPPluginFuncs* mPluginIface;
     NPP_t mData;
     NPWindow mWindow;
-    int mQuirks;
 
     // Cached scriptable actors to avoid IPC churn
     PluginScriptableObjectChild* mCachedWindowActor;
@@ -413,6 +426,8 @@ private:
     const NPCocoaEvent   *mCurrentEvent;
 #endif
 
+    bool CanPaintOnBackground();
+
     bool IsVisible() {
         return mWindow.clipRect.top != 0 ||
             mWindow.clipRect.left != 0 ||
@@ -474,6 +489,15 @@ private:
     // non null mCurrentInvalidateTask will call this function
     void InvalidateRectDelayed(void);
 
+    // Clear mCurrentSurface/mCurrentSurfaceActor/mHelperSurface
+    void ClearCurrentSurface();
+
+    // Swap mCurrentSurface/mBackSurface and their associated actors
+    void SwapSurfaces();
+
+    // Clear all surfaces in response to NPP_Destroy
+    void ClearAllSurfaces();
+
     // Set as true when SetupLayer called
     // and go with different path in InvalidateRect function
     bool mLayersRendering;
@@ -484,6 +508,19 @@ private:
     // Back surface, just keeping reference to
     // surface which is on ParentProcess side
     nsRefPtr<gfxASurface> mBackSurface;
+
+    // (Not to be confused with mBackSurface).  This is a recent copy
+    // of the opaque pixels under our object frame, if
+    // |mIsTransparent|.  We ask the plugin render directly onto a
+    // copy of the background pixels if available, and fall back on
+    // alpha recovery otherwise.
+    nsRefPtr<gfxASurface> mBackground;
+
+#ifdef XP_WIN
+    // These actors mirror mCurrentSurface/mBackSurface
+    PPluginSurfaceChild* mCurrentSurfaceActor;
+    PPluginSurfaceChild* mBackSurfaceActor;
+#endif
 
     // Accumulated invalidate rect, while back buffer is not accessible,
     // in plugin coordinates.
@@ -518,15 +555,16 @@ private:
     // supports NPPVpluginTransparentAlphaBool (which is not part of NPAPI yet)
     bool mDoAlphaExtraction;
 
+    // true when the plugin has painted at least once. We use this to ensure
+    // that we ask a plugin to paint at least once even if it's invisible;
+    // some plugin (instances) rely on this in order to work properly.
+    bool mHasPainted;
+
     // Cached rectangle rendered to previous surface(mBackSurface)
     // Used for reading back to current surface and syncing data,
     // in plugin coordinates.
     nsIntRect mSurfaceDifferenceRect;
 
-#ifdef MOZ_X11
-    // Used with windowless flash plugin only, see bug 574583
-    bool                  mFlash10Quirks;
-#endif
 #if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
     // Maemo5 Flash does not remember WindowlessLocal state
     // we should listen for NPP values negotiation and remember it

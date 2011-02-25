@@ -172,19 +172,28 @@ public:
   }
 
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion)
+                                   nsRegion* aVisibleRegion,
+                                   const nsRect& aAllowVisibleRegionExpansion,
+                                   PRBool& aContainsRootContentDocBG)
   {
-    return NS_GET_A(mExtraBackgroundColor) > 0 ||
-           nsDisplayBackground::ComputeVisibility(aBuilder, aVisibleRegion);
+    PRBool retval = NS_GET_A(mExtraBackgroundColor) > 0 ||
+           nsDisplayBackground::ComputeVisibility(aBuilder, aVisibleRegion,
+                                                  aAllowVisibleRegionExpansion,
+                                                  aContainsRootContentDocBG);
+    if (retval && mFrame->PresContext()->IsRootContentDocument()) {
+      aContainsRootContentDocBG = PR_TRUE;
+    }
+    return retval;
   }
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
-                          PRBool* aForceTransparentSurface = nsnull)
+  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                   PRBool* aForceTransparentSurface = nsnull)
   {
     if (aForceTransparentSurface) {
       *aForceTransparentSurface = PR_FALSE;
     }
-    return NS_GET_A(mExtraBackgroundColor) == 255 ||
-           nsDisplayBackground::IsOpaque(aBuilder);
+    if (NS_GET_A(mExtraBackgroundColor) == 255)
+      return nsRegion(GetBounds(aBuilder));
+    return nsDisplayBackground::GetOpaqueRegion(aBuilder);
   }
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor)
   {
@@ -200,7 +209,12 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder)
   {
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-    return frame->CanvasArea() + ToReferenceFrame();
+    nsRect r = frame->CanvasArea() + ToReferenceFrame();
+    if (mSnappingEnabled) {
+      nscoord appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
+      r = r.ToNearestPixels(appUnitsPerDevPixel).ToAppUnits(appUnitsPerDevPixel);
+    }
+    return r;
   }
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)

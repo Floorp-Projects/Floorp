@@ -46,6 +46,7 @@
 #include "nsIPrefService.h"
 
 #include "mozilla/Services.h"
+#include "mozilla/unused.h"
 #include "prenv.h"
 
 #include "AndroidBridge.h"
@@ -74,6 +75,8 @@ nsAccelerometerSystem *gAccel = nsnull;
 nsIGeolocationUpdate *gLocationCallback = nsnull;
 
 nsAppShell *nsAppShell::gAppShell = nsnull;
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsAppShell, nsBaseAppShell, nsIObserver)
 
 nsAppShell::nsAppShell()
     : mQueueLock(nsnull),
@@ -114,9 +117,27 @@ nsAppShell::Init()
     nsresult rv = nsBaseAppShell::Init();
     if (AndroidBridge::Bridge())
         AndroidBridge::Bridge()->NotifyAppShellReady();
+
+    nsCOMPtr<nsIObserverService> obsServ =
+            mozilla::services::GetObserverService();
+    if (obsServ) {
+        obsServ->AddObserver(this, "xpcom-shutdown", PR_FALSE);
+    }
     return rv;
 }
 
+NS_IMETHODIMP
+nsAppShell::Observe(nsISupports* aSubject,
+                    const char* aTopic,
+                    const PRUnichar* aData)
+{
+    if (!strcmp(aTopic, "xpcom-shutdown")) {
+        // We need to ensure no observers stick around after XPCOM shuts down
+        // or we'll see crashes, as the app shell outlives XPConnect.
+        mObserversHash.Clear();
+    }
+    return nsBaseAppShell::Observe(aSubject, aTopic, aData);
+}
 
 void
 nsAppShell::ScheduleNativeEventCallback()
@@ -212,8 +233,6 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 
     EVLOG("nsAppShell: event %p %d [ndraws %d]", (void*)curEvent.get(), curEvent->Type(), mNumDraws);
 
-    nsWindow *target = (nsWindow*) curEvent->NativeWindow();
-
     switch (curEvent->Type()) {
     case AndroidGeckoEvent::NATIVE_POKE:
         NativeEventCallback();
@@ -234,6 +253,15 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         break;
 
     case AndroidGeckoEvent::ACTIVITY_STOPPING: {
+        nsCOMPtr<nsIObserverService> obsServ =
+          mozilla::services::GetObserverService();
+        NS_NAMED_LITERAL_STRING(minimize, "heap-minimize");
+        obsServ->NotifyObservers(nsnull, "memory-pressure", minimize.get());
+
+        break;
+    }
+
+    case AndroidGeckoEvent::ACTIVITY_SHUTDOWN: {
         nsCOMPtr<nsIObserverService> obsServ =
           mozilla::services::GetObserverService();
         NS_NAMED_LITERAL_STRING(context, "shutdown-persist");
@@ -269,12 +297,12 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         if (!uri)
             break;
 
-        char* argv[3] = {
+        const char *argv[3] = {
             "dummyappname",
             "-remote",
             uri
         };
-        nsresult rv = cmdline->Init(3, argv, nsnull, nsICommandLine::STATE_REMOTE_AUTO);
+        nsresult rv = cmdline->Init(3, const_cast<char **>(argv), nsnull, nsICommandLine::STATE_REMOTE_AUTO);
         if (NS_SUCCEEDED(rv))
             cmdline->Run();
         nsMemory::Free(uri);
@@ -282,10 +310,7 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
     }
 
     default:
-        if (target)
-            target->OnAndroidEvent(curEvent);
-        else
-            nsWindow::OnGlobalAndroidEvent(curEvent);
+        nsWindow::OnGlobalAndroidEvent(curEvent);
     }
 
     EVLOG("nsAppShell: -- done event %p %d", (void*)curEvent.get(), curEvent->Type());
@@ -407,6 +432,7 @@ nsAppShell::CallObserver(const nsAString &aObserverKey, const nsAString &aTopic,
         nsCOMPtr<nsIRunnable> observerCaller = new ObserverCaller(observer, sTopic.get(), sData.get());
         nsresult rv = NS_DispatchToMainThread(observerCaller);
         ALOG("NS_DispatchToMainThread result: %d", rv);
+        unused << rv;
     }
 }
 
@@ -414,6 +440,40 @@ void
 nsAppShell::RemoveObserver(const nsAString &aObserverKey)
 {
     mObserversHash.Remove(aObserverKey);
+}
+
+// NotifyObservers support.  NotifyObservers only works on main thread.
+
+class NotifyObserversCaller : public nsRunnable {
+public:
+    NotifyObserversCaller(nsISupports *aSupports,
+                          const char *aTopic, const PRUnichar *aData) :
+         mSupports(aSupports), mTopic(aTopic), mData(aData) {
+    }
+
+    NS_IMETHOD Run() {
+        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+        if (os)
+            os->NotifyObservers(mSupports, mTopic.get(), mData.get());
+
+        return NS_OK;
+    }
+
+private:
+    nsCOMPtr<nsISupports> mSupports;
+    nsCString mTopic;
+    nsString mData;
+};
+
+void
+nsAppShell::NotifyObservers(nsISupports *aSupports,
+                            const char *aTopic,
+                            const PRUnichar *aData)
+{
+    // This isn't main thread, so post this to main thread
+    nsCOMPtr<nsIRunnable> caller =
+        new NotifyObserversCaller(aSupports, aTopic, aData);
+    NS_DispatchToMainThread(caller);
 }
 
 // Used by IPC code

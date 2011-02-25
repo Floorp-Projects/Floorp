@@ -71,6 +71,7 @@
 #include "nsReadableUtils.h"
 #include "nsITextToSubURI.h"
 #include "nsContentUtils.h"
+#include "nsJSUtils.h"
 
 static nsresult
 GetContextFromStack(nsIJSContextStack *aStack, JSContext **aContext)
@@ -171,30 +172,53 @@ nsLocation::GetDocShell()
   return docshell;
 }
 
+// Try to get the the document corresponding to the given JSStackFrame.
+static already_AddRefed<nsIDocument>
+GetFrameDocument(JSContext *cx, JSStackFrame *fp)
+{
+  if (!cx || !fp)
+    return nsnull;
+
+  JSObject* scope = JS_GetFrameScopeChain(cx, fp);
+  if (!scope)
+    return nsnull;
+
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(cx, scope))
+     return nsnull;
+
+  nsCOMPtr<nsIDOMWindow> window =
+    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, scope));
+  if (!window)
+    return nsnull;
+
+  // If it's a window, get its document.
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  window->GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  return doc.forget();
+}
+
 nsresult
 nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 {
   *aLoadInfo = nsnull;
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
-  if (!docShell) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
+  NS_ENSURE_TRUE(docShell, NS_ERROR_NOT_AVAILABLE);
 
-  nsresult result;
+  nsresult rv;
   // Get JSContext from stack.
   nsCOMPtr<nsIJSContextStack>
-    stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1", &result));
-
-  if (NS_FAILED(result))
-    return NS_ERROR_FAILURE;
+    stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   JSContext *cx;
 
-  if (NS_FAILED(GetContextFromStack(stack, &cx)))
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_SUCCESS(GetContextFromStack(stack, &cx), NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISupports> owner;
+  nsCOMPtr<nsIURI> sourceURI;
 
   if (cx) {
     // No cx means that there's no JS running, or at least no JS that
@@ -205,22 +229,48 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 
     // Get security manager.
     nsCOMPtr<nsIScriptSecurityManager>
-      secMan(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result));
-
-    if (NS_FAILED(result))
-      return NS_ERROR_FAILURE;
+      secMan(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Check to see if URI is allowed.
-    result = secMan->CheckLoadURIFromScript(cx, aURI);
-
-    if (NS_FAILED(result))
-      return result;
+    rv = secMan->CheckLoadURIFromScript(cx, aURI);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Now get the principal to use when loading the URI
-    nsCOMPtr<nsIPrincipal> principal;
-    if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))) ||
-        !principal)
-      return NS_ERROR_FAILURE;
+    // First, get the principal and frame.
+    JSStackFrame *fp;
+    nsIPrincipal* principal = secMan->GetCxSubjectPrincipalAndFrame(cx, &fp);
+    NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIURI> principalURI;
+    principal->GetURI(getter_AddRefs(principalURI));
+
+    // Make the load's referrer reflect changes to the document's URI caused by
+    // push/replaceState, if possible.  First, get the document corresponding to
+    // fp.  If the document's original URI (i.e. its URI before
+    // push/replaceState) matches the principal's URI, use the document's
+    // current URI as the referrer.  If they don't match, use the principal's
+    // URI.
+
+    nsCOMPtr<nsIDocument> frameDoc = GetFrameDocument(cx, fp);
+    nsCOMPtr<nsIURI> docOriginalURI, docCurrentURI;
+    if (frameDoc) {
+      docOriginalURI = frameDoc->GetOriginalURI();
+      docCurrentURI = frameDoc->GetDocumentURI();
+    }
+
+    PRBool urisEqual = PR_FALSE;
+    if (docOriginalURI && docCurrentURI && principalURI) {
+      principalURI->Equals(docOriginalURI, &urisEqual);
+    }
+
+    if (urisEqual) {
+      sourceURI = docCurrentURI;
+    }
+    else {
+      sourceURI = principalURI;
+    }
+
     owner = do_QueryInterface(principal);
   }
 
@@ -231,12 +281,9 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 
   loadInfo->SetOwner(owner);
 
-  // Now set the referrer on the loadinfo.  We need to do this in order to get
-  // the correct referrer URI from a document which was pushStated.
-  nsCOMPtr<nsIURI> sourceURI;
-  result = GetURI(getter_AddRefs(sourceURI));
-  if (NS_SUCCEEDED(result))
+  if (sourceURI) {
     loadInfo->SetReferrer(sourceURI);
+  }
 
   loadInfo.swap(*aLoadInfo);
 

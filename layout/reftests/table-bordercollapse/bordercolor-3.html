@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html >
+ <head>
+  <title>CSS Test: HTML bordercolor Attribute</title>
+  <link rel="author" title="Elika J. Etemad" href="http://fantasai.inkedblade.net/contact"/>
+  <link rel="help" href="RELEVANT_SPEC_SECTION"/>
+  <meta name="assert" content="Figure out which rules are ignored and how."/>
+  <style type="text/css">
+    html { color: lime; }
+    table { margin: 0.5em; }
+    td { color: blue; }
+  </style>
+ </head>
+ <body>
+  <table bordercolor=orange border>
+    <tr><td>A<td>A
+  </table>
+
+  <table bordercolor=orange frame=border>
+    <tr><td>B<td>B
+  </table>
+
+  <table bordercolor=orange rules=all>
+    <tr><td>C<td>C
+    <tr><td>C<td>C
+  </table>
+
+  <table bordercolor=orange rules=cols>
+    <tr><td>D<td>D
+    <tr><td>D<td>D
+  </table>
+
+  <table bordercolor=orange rules=none>
+    <tr><td>E<td>E
+    <tr><td>E<td>E
+  </table>
+
+  <table bordercolor=orange>
+    <tr><td>F<td>F
+  </table>
+
+  <table bordercolor=orange rules=all frame=none>
+    <tr><td>G<td>G
+    <tr><td>G<td>G
+  </table>
+
+  <table style="border-color: orange;" border>
+    <tr><td>H<td>H
+  </table>
+ </body>
+</html>

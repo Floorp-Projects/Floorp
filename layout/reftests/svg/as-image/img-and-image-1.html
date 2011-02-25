@@ -1,0 +1,24 @@
+<html>
+<head>
+  <style>
+    img { position: absolute; }
+  </style>
+</head>
+<body style="margin: 0">
+  <!-- Use the base images "a" and "b" first -->
+  <img src="img-and-image-1-helper-a.svg"
+       style="left: 0;      top: 0;      width: 60px;  height: 20px">
+  <img src="img-and-image-1-helper-b.svg"
+       style="left: 150px;  top: 0;      width: 60px;  height: 20px">
+
+  <!-- Now, use an SVG image "c", which itself uses both base images. -->
+  <img src="img-and-image-1-helper-c.svg"
+       style="left: 0;      top: 50px;   width: 300px; height: 200px">
+
+  <!-- And finally, use "a" and "b" again, but now with a different size. -->
+  <img src="img-and-image-1-helper-a.svg"
+       style="left: 0;     top: 250px;   width: 30px;  height: 50px">
+  <img src="img-and-image-1-helper-b.svg"
+       style="left: 150px; top: 250px;   width: 30px;  height: 50px">
+</body>
+</html>

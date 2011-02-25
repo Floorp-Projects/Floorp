@@ -317,7 +317,10 @@ nsresult os2FrameWindow::Move(PRInt32 aX, PRInt32 aY)
 nsresult os2FrameWindow::Resize(PRInt32 aWidth, PRInt32 aHeight,
                                 PRBool aRepaint)
 {
-  WinSetWindowPos(mFrameWnd, 0, 0, 0, aWidth, aHeight, SWP_SIZE);
+  // When resizing, the coordinates of the window's bottom-left corner have to
+  // be adjusted to ensure the position of the top-left corner doesn't change.
+  Resize(mFrameBounds.x, mFrameBounds.y, aWidth, aHeight, aRepaint);
+
   return NS_OK;
 }
 
@@ -360,9 +363,9 @@ void os2FrameWindow::ActivateTopLevelWidget()
 
 //-----------------------------------------------------------------------------
 // Maximize, minimize or restore the window.  When the frame has its
-// controls, this method is advisory because the min/max/restore has
-// already occurred.  Only when the frame is in kiosk/fullscreen mode
-// does it perform the minimize or restore
+// controls, this method is usually advisory because min/max/restore has
+// already occurred.  It only performs these actions when the frame is in
+// fullscreen mode or saved window positions are being restored at startup.
 
 nsresult os2FrameWindow::SetSizeMode(PRInt32 aMode)
 {
@@ -371,6 +374,9 @@ nsresult os2FrameWindow::SetSizeMode(PRInt32 aMode)
 
   // save the new state
   nsresult rv = mOwner->nsBaseWidget::SetSizeMode(aMode);
+  if (!NS_SUCCEEDED(rv)) {
+    return rv;
+  }
 
   // Minimized windows would get restored involuntarily if we fired an
   // NS_ACTIVATE when the user clicks on them.  Instead, we defer the
@@ -380,22 +386,35 @@ nsresult os2FrameWindow::SetSizeMode(PRInt32 aMode)
     ActivateTopLevelWidget();
   }
 
-  // nothing to do in these cases
-  if (!NS_SUCCEEDED(rv) || !mChromeHidden || aMode == nsSizeMode_Maximized) {
-    return rv;
-  }
-
   ULONG ulStyle = WinQueryWindowULong(mFrameWnd, QWL_STYLE);
 
-  // act on the request if the frame isn't already in the requested state
-  if (aMode == nsSizeMode_Minimized) {
-    if (!(ulStyle & WS_MINIMIZED)) {
-      WinSetWindowPos(mFrameWnd, HWND_BOTTOM, 0, 0, 0, 0,
-                      SWP_MINIMIZE | SWP_ZORDER | SWP_DEACTIVATE);
-    }
-  } else
-  if (ulStyle & (WS_MAXIMIZED | WS_MINIMIZED)) {
-    WinSetWindowPos(mFrameWnd, 0, 0, 0, 0, 0, SWP_RESTORE);
+  switch (aMode) {
+    case nsSizeMode_Normal:
+      if (ulStyle & (WS_MAXIMIZED | WS_MINIMIZED)) {
+        WinSetWindowPos(mFrameWnd, 0, 0, 0, 0, 0, SWP_RESTORE);
+      }
+      break;
+
+    case nsSizeMode_Minimized:
+      if (!(ulStyle & WS_MINIMIZED)) {
+        WinSetWindowPos(mFrameWnd, HWND_BOTTOM, 0, 0, 0, 0,
+                        SWP_MINIMIZE | SWP_ZORDER | SWP_DEACTIVATE);
+      }
+      break;
+
+    case nsSizeMode_Maximized:
+      // Don't permit the window to be maximized when in
+      // fullscreen mode because it won't be restored correctly.
+      if (!(ulStyle & WS_MAXIMIZED) && !mChromeHidden) {
+        WinSetWindowPos(mFrameWnd, HWND_TOP, 0, 0, 0, 0,
+                        SWP_MAXIMIZE | SWP_ZORDER);
+      }
+      break;
+
+    // 'nsSizeMode_Fullscreen' is defined but isn't used (as of v1.9.3)
+    case nsSizeMode_Fullscreen:
+    default:
+      break;
   }
 
   return NS_OK;
@@ -632,6 +651,8 @@ MRESULT os2FrameWindow::ProcessFrameMessage(ULONG msg, MPARAM mp1, MPARAM mp2)
     case WM_WINDOWPOSCHANGED: {
       PSWP pSwp = (PSWP)mp1;
 
+      // Don't save the new position or size of a minimized
+      // window, or else it won't be restored correctly.
       if (pSwp->fl & SWP_MOVE && !(pSwp->fl & SWP_MINIMIZE)) {
         POINTL ptl = { pSwp->x, pSwp->y + pSwp->cy };
         ptl.y = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN) - ptl.y;

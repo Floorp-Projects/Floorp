@@ -142,7 +142,7 @@ ifeq (,$(CYGWIN_WRAPPER))
 # this doesn't work with Cygwin Python
 MAKE_SYM_STORE_ARGS += --vcs-info
 endif
-DUMP_SYMS_BIN ?= $(topsrcdir)/toolkit/crashreporter/tools/win32/dump_syms.exe
+DUMP_SYMS_BIN ?= $(topsrcdir)/toolkit/crashreporter/tools/win32/dump_syms_vc$(_MSC_VER).exe
 # PDB files don't get moved to dist, so we need to scan the whole objdir
 MAKE_SYM_STORE_PATH := .
 endif
@@ -192,7 +192,10 @@ ifdef MOZ_CRASHREPORTER
 	cd $(DIST)/crashreporter-symbols && \
           zip -r9D "../$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip" .
 	cd $(DIST)/crashreporter-symbols && \
-          zip -r9D "../$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip" . -i "*.sym"
+	grep "sym" $(SYMBOL_INDEX_NAME) > $(SYMBOL_INDEX_NAME).tmp && \
+	  mv $(SYMBOL_INDEX_NAME).tmp $(SYMBOL_INDEX_NAME)
+	cd $(DIST)/crashreporter-symbols && \
+          zip -r9D "../$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip" . -i "*.sym" -i "*.txt"
 else
 ifdef WINCE
 ifdef SYMBOLSTORE_PATH

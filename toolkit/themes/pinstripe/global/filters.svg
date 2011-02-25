@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <filter id="iconPressed" color-interpolation-filters="sRGB">
+    <!-- Multiply all components with 0.55. -->
+    <feComponentTransfer>
+      <feFuncR type="linear" slope=".55"/>
+      <feFuncG type="linear" slope=".55"/>
+      <feFuncB type="linear" slope=".55"/>
+    </feComponentTransfer>
+  </filter>
+</svg>

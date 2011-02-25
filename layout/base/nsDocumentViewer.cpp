@@ -297,6 +297,7 @@ private:
 
 //-------------------------------------------------------------
 class DocumentViewerImpl : public nsIDocumentViewer,
+                           public nsIContentViewer_MOZILLA_2_0_BRANCH,
                            public nsIContentViewerEdit,
                            public nsIContentViewerFile,
                            public nsIMarkupDocumentViewer,
@@ -356,6 +357,8 @@ public:
   // nsIDocumentViewerPrint Printing Methods
   NS_DECL_NSIDOCUMENTVIEWERPRINT
 
+  // nsIContentViewer_MOZILLA_2_0_BRANCH interface...
+  NS_DECL_NSICONTENTVIEWER_MOZILLA_2_0_BRANCH
 protected:
   virtual ~DocumentViewerImpl();
 
@@ -377,12 +380,16 @@ private:
   /**
    * If aDoCreation is true, this creates the device context, creates a
    * prescontext if necessary, and calls MakeWindow.
+   *
+   * If aForceSetNewDocument is false, then SetNewDocument won't be
+   * called if the window's current document is already mDocument.
    */
   nsresult InitInternal(nsIWidget* aParentWidget,
                         nsISupports *aState,
                         const nsIntRect& aBounds,
                         PRBool aDoCreation,
-                        PRBool aNeedMakeCX = PR_TRUE);
+                        PRBool aNeedMakeCX = PR_TRUE,
+                        PRBool aForceSetNewDocument = PR_TRUE);
   /**
    * @param aDoInitialReflow set to true if you want to kick off the initial
    * reflow
@@ -400,6 +407,7 @@ private:
   nsresult GetDocumentSelection(nsISelection **aSelection);
 
   void DestroyPresShell();
+  void DestroyPresContext();
 
 #ifdef NS_PRINTING
   // Called when the DocViewer is notified that the state
@@ -408,6 +416,11 @@ private:
                                    PRBool               aIsPrintingOrPP, 
                                    PRBool               aStartAtTop);
 #endif // NS_PRINTING
+
+  // Whether we should attach to the top level widget. This is true if we
+  // are sharing/recycling a single base widget and not creating multiple
+  // child widgets.
+  PRBool ShouldAttachToTopLevel();
 
 protected:
   // These return the current shell/prescontext etc.
@@ -575,6 +588,7 @@ NS_INTERFACE_MAP_BEGIN(DocumentViewerImpl)
 #ifdef NS_PRINTING
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPrint)
 #endif
+    NS_INTERFACE_MAP_ENTRY(nsIContentViewer_MOZILLA_2_0_BRANCH)
 NS_INTERFACE_MAP_END
 
 DocumentViewerImpl::~DocumentViewerImpl()
@@ -832,8 +846,15 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
                                  nsISupports *aState,
                                  const nsIntRect& aBounds,
                                  PRBool aDoCreation,
-                                 PRBool aNeedMakeCX /*= PR_TRUE*/)
+                                 PRBool aNeedMakeCX /*= PR_TRUE*/,
+                                 PRBool aForceSetNewDocument /* = PR_TRUE*/)
 {
+  if (mIsPageMode) {
+    // XXXbz should the InitInternal in SetPageMode just pass PR_FALSE
+    // here itself?
+    aForceSetNewDocument = PR_FALSE;
+  }
+
   // We don't want any scripts to run here. That can cause flushing,
   // which can cause reentry into initialization of this document viewer,
   // which would be disastrous.
@@ -952,7 +973,7 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
     if (window) {
       nsCOMPtr<nsIDocument> curDoc =
         do_QueryInterface(window->GetExtantDocument());
-      if (!mIsPageMode || curDoc != mDocument) {
+      if (aForceSetNewDocument || curDoc != mDocument) {
         window->SetNewDocument(mDocument, aState, PR_FALSE);
         nsJSContext::LoadStart();
       }
@@ -997,7 +1018,6 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
     shell->FlushPendingNotifications(Flush_Layout);
   }
 
-  nsresult rv = NS_OK;
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
 
   // First, get the window from the document...
@@ -1093,11 +1113,7 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   }
 #endif
 
-  if (!mStopped && window) {
-    window->DispatchSyncPopState();
-  }
-
-  return rv;
+  return mStopped ? NS_SUCCESS_LOAD_STOPPED : NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1272,6 +1288,9 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
     window->PageHidden();
 
   if (aIsUnload) {
+    // Poke the GC. The window might be collectable garbage now.
+    nsJSContext::PokeGC();
+
     // if Destroy() was called during OnPageHide(), mDocument is nsnull.
     NS_ENSURE_STATE(mDocument);
 
@@ -1380,6 +1399,32 @@ DocumentViewerImpl::Open(nsISupports *aState, nsISHEntry *aSHEntry)
   // XXX re-enable image animations once that works correctly
 
   PrepareToStartLoad();
+
+  // When loading a page from the bfcache with puppet widgets, we do the
+  // widget attachment here (it is otherwise done in MakeWindow, which is
+  // called for non-bfcache pages in the history, but not bfcache pages).
+  // Attachment is necessary, since we get detached when another page
+  // is browsed to. That is, if we are one page A, then when we go to
+  // page B, we detach. So page A's view has no widget. If we then go
+  // back to it, and it is in the bfcache, we will use that view, which
+  // doesn't have a widget. The attach call here will properly attach us.
+  if (nsIWidget::UsePuppetWidgets() && mPresContext &&
+      ShouldAttachToTopLevel()) {
+    // If the old view is already attached to our parent, detach
+    DetachFromTopLevelWidget();
+
+    nsIViewManager *vm = GetViewManager();
+    NS_ABORT_IF_FALSE(vm, "no view manager");
+    nsIView *v;
+    nsresult rv = vm->GetRootView(v);
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "failed in getting the root view");
+    NS_ABORT_IF_FALSE(v, "no root view");
+    NS_ABORT_IF_FALSE(mParentWidget, "no mParentWidget to set");
+    v->AttachToTopLevelWidget(mParentWidget);
+
+    mAttachedToParent = PR_TRUE;
+  }
+
   return NS_OK;
 }
 
@@ -1521,6 +1566,13 @@ DocumentViewerImpl::Destroy()
         vm->GetRootView(rootView);
 
         if (rootView) {
+          // The invalidate that removing this view causes is dropped because
+          // the Freeze call above sets painting to be suppressed for our
+          // document. So we do it ourselves and make it happen.
+          vm->UpdateViewNoSuppression(rootView,
+            rootView->GetBounds() - rootView->GetPosition(),
+            NS_VMREFRESH_NO_SYNC);
+
           nsIView *rootViewParent = rootView->GetParent();
           if (rootViewParent) {
             nsIViewManager *parentVM = rootViewParent->GetViewManager();
@@ -1547,14 +1599,20 @@ DocumentViewerImpl::Destroy()
 
     // Reverse ownership. Do this *after* calling sanitize so that sanitize
     // doesn't cause mutations that make the SHEntry drop the presentation
-    if (savePresentation) {
-      mSHEntry->SetContentViewer(this);
-    }
-    else {
-      mSHEntry->SyncPresentationState();
-    }
+
+    // Grab a reference to mSHEntry before calling into things like
+    // SyncPresentationState that might mess with our members.
     nsCOMPtr<nsISHEntry> shEntry = mSHEntry; // we'll need this below
     mSHEntry = nsnull;
+
+    if (savePresentation) {
+      shEntry->SetContentViewer(this);
+    }
+
+    // Always sync the presentation state.  That way even if someone screws up
+    // and shEntry has no window state at this point we'll be ok; we just won't
+    // cache ourselves.
+    shEntry->SyncPresentationState();
 
     // Break the link from the document/presentation to the docshell, so that
     // link traversals cannot affect the currently-loaded document.
@@ -1623,9 +1681,7 @@ DocumentViewerImpl::Destroy()
   }
 
   if (mPresContext) {
-    mPresContext->SetContainer(nsnull);
-    mPresContext->SetLinkHandler(nsnull);
-    mPresContext = nsnull;
+    DestroyPresContext();
   }
 
   mWindow = nsnull;
@@ -1714,7 +1770,7 @@ DocumentViewerImpl::SetDocumentInternal(nsIDocument* aDocument,
       window->SetNewDocument(aDocument, nsnull, aForceReuseInnerWindow);
     }
 
-    // Clear the list of old child docshells. CChild docshells for the new
+    // Clear the list of old child docshells. Child docshells for the new
     // document will be constructed as frames are created.
     if (!aDocument->IsStaticDocument()) {
       nsCOMPtr<nsIDocShellTreeNode> node = do_QueryInterface(container);
@@ -1735,37 +1791,15 @@ DocumentViewerImpl::SetDocumentInternal(nsIDocument* aDocument,
 
   // Replace the current pres shell with a new shell for the new document
 
-  nsCOMPtr<nsILinkHandler> linkHandler;
   if (mPresShell) {
-    nsSize currentSize(0, 0);
-
-    if (mViewManager) {
-      mViewManager->GetWindowDimensions(&currentSize.width, &currentSize.height);
-    }
-
-    if (mPresContext) {
-      // Save the linkhandler (nsPresShell::Destroy removes it from
-      // mPresContext).
-      linkHandler = mPresContext->GetLinkHandler();
-    }
-
     DestroyPresShell();
-
-    nsIView* containerView = FindContainerView();
-
-    // This destroys the root view because it was associated with the root frame,
-    // which has been torn down. Recreate the viewmanager and root view.
-    MakeWindow(currentSize, containerView);
   }
 
-  // And if we're already given a prescontext...
   if (mPresContext) {
-    // If we had a linkHandler and it got removed, put it back.
-    if (linkHandler) {
-      mPresContext->SetLinkHandler(linkHandler);
-    }
+    DestroyPresContext();
 
-    rv = InitPresentationStuff(PR_FALSE);
+    mWindow = nsnull;
+    InitInternal(mParentWidget, nsnull, mBounds, PR_TRUE, PR_TRUE, PR_FALSE);
   }
 
   return rv;
@@ -2048,11 +2082,8 @@ DocumentViewerImpl::Hide(void)
 
   DestroyPresShell();
 
-  // Clear weak refs
-  mPresContext->SetContainer(nsnull);
-  mPresContext->SetLinkHandler(nsnull);                             
+  DestroyPresContext();
 
-  mPresContext   = nsnull;
   mViewManager   = nsnull;
   mWindow        = nsnull;
   mDeviceContext = nsnull;
@@ -2251,30 +2282,12 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
   if (GetIsPrintPreview())
     return NS_OK;
 
-  // Prior to creating a new widget, check to see if our parent is a base
-  // chrome ui window. If so, drop the content into that widget instead of
-  // creating a new child widget. This eliminates the main content child
-  // widget we've had forever. Also allows for the recycling of the base
-  // widget of each window, vs. creating/discarding child widgets for each
-  // MakeWindow call. (Currently only implemented in windows widgets.)
-#ifdef XP_WIN
-  nsCOMPtr<nsIDocShellTreeItem> containerItem = do_QueryReferent(mContainer);
-  if (mParentWidget && containerItem) {
-    PRInt32 docType;
-    nsWindowType winType;
-    containerItem->GetItemType(&docType);
-    mParentWidget->GetWindowType(winType);
-    if ((winType == eWindowType_toplevel ||
-         winType == eWindowType_dialog ||
-         winType == eWindowType_invisible) &&
-        docType == nsIDocShellTreeItem::typeChrome) {
-      // If the old view is already attached to our parent, detach
-      DetachFromTopLevelWidget();
-      // Use the parent widget
-      mAttachedToParent = PR_TRUE;
-    }
+  PRBool shouldAttach = ShouldAttachToTopLevel();
+
+  if (shouldAttach) {
+    // If the old view is already attached to our parent, detach
+    DetachFromTopLevelWidget();
   }
-#endif
 
   nsresult rv;
   mViewManager = do_CreateInstance(kViewManagerCID, &rv);
@@ -2313,9 +2326,10 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
       initDataPtr = nsnull;
     }
 
-    if (mAttachedToParent) {
+    if (shouldAttach) {
       // Reuse the top level parent widget.
       rv = view->AttachToTopLevelWidget(mParentWidget);
+      mAttachedToParent = PR_TRUE;
     }
     else if (!aContainerView && mParentWidget) {
       rv = view->CreateWidgetForParent(mParentWidget, initDataPtr,
@@ -4038,6 +4052,37 @@ DocumentViewerImpl::SetIsPrintingInDocShellTree(nsIDocShellTreeNode* aParentNode
 }
 #endif // NS_PRINTING
 
+PRBool
+DocumentViewerImpl::ShouldAttachToTopLevel()
+{
+  if (!mParentWidget)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDocShellTreeItem> containerItem = do_QueryReferent(mContainer);
+  if (!containerItem)
+    return PR_FALSE;
+
+  // We always attach when using puppet widgets
+  if (nsIWidget::UsePuppetWidgets())
+    return PR_TRUE;
+
+#ifdef XP_WIN
+  // On windows, in the parent process we also attach, but just to
+  // chrome items
+  PRInt32 docType;
+  nsWindowType winType;
+  containerItem->GetItemType(&docType);
+  mParentWidget->GetWindowType(winType);
+  if ((winType == eWindowType_toplevel ||
+       winType == eWindowType_dialog ||
+       winType == eWindowType_invisible) &&
+      docType == nsIDocShellTreeItem::typeChrome)
+    return PR_TRUE;
+#endif
+
+  return PR_FALSE;
+}
+
 //------------------------------------------------------------
 // XXX this always returns PR_FALSE for subdocuments
 PRBool
@@ -4230,12 +4275,9 @@ NS_IMETHODIMP DocumentViewerImpl::SetPageMode(PRBool aPageMode, nsIPrintSettings
   }
 
   if (mPresContext) {
-    mPresContext->SetContainer(nsnull);
-    mPresContext->SetLinkHandler(nsnull);
+    DestroyPresContext();
   }
 
-  mPresShell    = nsnull;
-  mPresContext  = nsnull;
   mViewManager  = nsnull;
   mWindow       = nsnull;
 
@@ -4263,6 +4305,13 @@ DocumentViewerImpl::GetHistoryEntry(nsISHEntry **aHistoryEntry)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+DocumentViewerImpl::GetIsTabModalPromptAllowed(PRBool *aAllowed)
+{
+  *aAllowed = !(mInPermitUnload || mHidden);
+  return NS_OK;
+}
+
 void
 DocumentViewerImpl::DestroyPresShell()
 {
@@ -4278,6 +4327,14 @@ DocumentViewerImpl::DestroyPresShell()
   nsAutoScriptBlocker scriptBlocker;
   mPresShell->Destroy();
   mPresShell = nsnull;
+}
+
+void
+DocumentViewerImpl::DestroyPresContext()
+{
+  mPresContext->SetContainer(nsnull);
+  mPresContext->SetLinkHandler(nsnull);
+  mPresContext = nsnull;
 }
 
 PRBool

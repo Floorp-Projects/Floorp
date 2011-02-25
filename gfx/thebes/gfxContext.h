@@ -130,6 +130,14 @@ public:
     void Fill();
 
     /**
+     * Fill the current path according to the current settings and
+     * with |aOpacity|.
+     *
+     * Does not consume the current path.
+     */
+    void FillWithOpacity(gfxFloat aOpacity);
+
+    /**
      * Forgets the current path.
      */
     void NewPath();
@@ -595,6 +603,18 @@ public:
      * Groups
      */
     void PushGroup(gfxASurface::gfxContentType content = gfxASurface::CONTENT_COLOR);
+    /**
+     * Like PushGroup, but if the current surface is CONTENT_COLOR and
+     * content is CONTENT_COLOR_ALPHA, makes the pushed surface CONTENT_COLOR
+     * instead and copies the contents of the current surface to the pushed
+     * surface. This is good for pushing opacity groups, since blending the
+     * group back to the current surface with some alpha applied will give
+     * the correct results and using an opaque pushed surface gives better
+     * quality and performance.
+     * This API really only makes sense if you do a PopGroupToSource and
+     * immediate Paint with OPERATOR_OVER.
+     */
+    void PushGroupAndCopyBackground(gfxASurface::gfxContentType content = gfxASurface::CONTENT_COLOR);
     already_AddRefed<gfxPattern> PopGroup();
     void PopGroupToSource();
 
@@ -637,7 +657,11 @@ public:
          * When this flag is set, snapping to device pixels is disabled.
          * It simply never does anything.
          */
-        FLAG_DISABLE_SNAPPING = (1 << 1)
+        FLAG_DISABLE_SNAPPING = (1 << 1),
+        /**
+         * Disable copying of backgrounds in PushGroupAndCopyBackground.
+         */
+        FLAG_DISABLE_COPY_BACKGROUND = (1 << 2)
     };
 
     void SetFlag(PRInt32 aFlag) { mFlags |= aFlag; }
@@ -777,6 +801,29 @@ public:
 private:
     gfxContext *mContext;
     gfxMatrix   mMatrix;
+};
+
+
+class THEBES_API gfxContextAutoDisableSubpixelAntialiasing {
+public:
+    gfxContextAutoDisableSubpixelAntialiasing(gfxContext *aContext, PRBool aDisable)
+    {
+        if (aDisable) {
+            mSurface = aContext->CurrentSurface();
+            mSubpixelAntialiasingEnabled = mSurface->GetSubpixelAntialiasingEnabled();
+            mSurface->SetSubpixelAntialiasingEnabled(PR_FALSE);
+        }
+    }
+    ~gfxContextAutoDisableSubpixelAntialiasing()
+    {
+        if (mSurface) {
+            mSurface->SetSubpixelAntialiasingEnabled(mSubpixelAntialiasingEnabled);
+        }
+    }
+
+private:
+    nsRefPtr<gfxASurface> mSurface;
+    PRPackedBool mSubpixelAntialiasingEnabled;
 };
 
 #endif /* GFX_CONTEXT_H */

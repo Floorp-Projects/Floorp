@@ -153,15 +153,19 @@ let gUsageTreeView = {
    * Process the quota information as returned by info/collection_usage.
    */
   displayUsageData: function displayUsageData(data) {
-    data = data || {};
     for each (let coll in this._collections) {
       coll.size = 0;
+      // If we couldn't retrieve any data, just blank out the label.
+      if (!data) {
+        coll.sizeLabel = "";
+        continue;
+      }
+
       for each (let engineName in coll.engines)
         coll.size += data[engineName] || 0;
       let sizeLabel = "";
-      if (coll.size)
-        sizeLabel = gSyncQuota.bundle.getFormattedString(
-          "quota.sizeValueUnit.label", gSyncQuota.convertKB(coll.size));
+      sizeLabel = gSyncQuota.bundle.getFormattedString(
+        "quota.sizeValueUnit.label", gSyncQuota.convertKB(coll.size));
       coll.sizeLabel = sizeLabel;
     }
     let sizeColumn = this.treeBox.columns.getNamedColumn("size");

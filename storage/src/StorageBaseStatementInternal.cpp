@@ -76,14 +76,65 @@ public:
 
   NS_IMETHOD Run()
   {
-    mStatement->internalAsyncFinalize();
+    if (mStatement->mAsyncStatement) {
+      (void)::sqlite3_finalize(mStatement->mAsyncStatement);
+      mStatement->mAsyncStatement = nsnull;
+    }
     (void)::NS_ProxyRelease(mConnection->threadOpenedOn, mStatement);
     return NS_OK;
   }
 private:
-  // It is vital that this remain an nsCOMPtr for NS_ProxyRelease's benefit.
-  nsCOMPtr<StorageBaseStatementInternal> mStatement;
+  nsRefPtr<StorageBaseStatementInternal> mStatement;
   nsRefPtr<Connection> mConnection;
+};
+
+/**
+ * Finalize a sqlite3_stmt on the background thread for a statement whose
+ * destructor was invoked and the statement was non-null.
+ */
+class LastDitchSqliteStatementFinalizer : public nsRunnable
+{
+public:
+  /**
+   * Event constructor.
+   *
+   * @param aConnection
+   *        Used to keep the connection alive.  If we failed to do this, it
+   *        is possible that the statement going out of scope invoking us
+   *        might have the last reference to the connection and so trigger
+   *        an attempt to close the connection which is doomed to fail
+   *        (because the asynchronous execution thread must exist which will
+   *        trigger the failure case).
+   * @param aStatement
+   *        The sqlite3_stmt to finalize.  This object takes ownership /
+   *        responsibility for the instance and all other references to it
+   *        should be forgotten.
+   */
+  LastDitchSqliteStatementFinalizer(nsRefPtr<Connection> &aConnection,
+                                    sqlite3_stmt *aStatement)
+  : mConnection(aConnection)
+  , mAsyncStatement(aStatement)
+  {
+    NS_PRECONDITION(aConnection, "You must provide a Connection");
+  }
+
+  NS_IMETHOD Run()
+  {
+    (void)::sqlite3_finalize(mAsyncStatement);
+    mAsyncStatement = nsnull;
+
+    // Because of our ambiguous nsISupports we cannot use the NS_ProxyRelease
+    // template helpers.
+    Connection *rawConnection = nsnull;
+    mConnection.swap(rawConnection);
+    (void)::NS_ProxyRelease(
+      rawConnection->threadOpenedOn,
+      NS_ISUPPORTS_CAST(mozIStorageConnection *, rawConnection));
+    return NS_OK;
+  }
+private:
+  nsRefPtr<Connection> mConnection;
+  sqlite3_stmt *mAsyncStatement;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,27 +153,37 @@ StorageBaseStatementInternal::asyncFinalize()
     // If we cannot get the background thread, we have to assume it has been
     // shutdown (or is in the process of doing so).  As a result, we should
     // just finalize it here and now.
-    internalAsyncFinalize();
+    destructorAsyncFinalize();
   }
   else {
     nsCOMPtr<nsIRunnable> event =
       new AsyncStatementFinalizer(this, mDBConnection);
 
     // If the dispatching did not go as planned, finalize now.
-    if (!event ||
-        NS_FAILED(target->Dispatch(event, NS_DISPATCH_NORMAL))) {
-      internalAsyncFinalize();
+    if (NS_FAILED(target->Dispatch(event, NS_DISPATCH_NORMAL))) {
+      destructorAsyncFinalize();
     }
   }
 }
 
 void
-StorageBaseStatementInternal::internalAsyncFinalize()
+StorageBaseStatementInternal::destructorAsyncFinalize()
 {
-  if (mAsyncStatement) {
-    (void)::sqlite3_finalize(mAsyncStatement);
-    mAsyncStatement = nsnull;
+  if (!mAsyncStatement)
+    return;
+
+  nsIEventTarget *target = mDBConnection->getAsyncExecutionTarget();
+  if (target) {
+    nsCOMPtr<nsIRunnable> event =
+      new LastDitchSqliteStatementFinalizer(mDBConnection, mAsyncStatement);
+    if (NS_SUCCEEDED(target->Dispatch(event, NS_DISPATCH_NORMAL))) {
+      mAsyncStatement = nsnull;
+      return;
+    }
   }
+  // (no async thread remains or we could not dispatch to it)
+  (void)::sqlite3_finalize(mAsyncStatement);
+  mAsyncStatement = nsnull;
 }
 
 NS_IMETHODIMP

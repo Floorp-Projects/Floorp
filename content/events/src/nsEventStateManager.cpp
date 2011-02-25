@@ -2672,12 +2672,18 @@ nsEventStateManager::DoScrollText(nsIFrame* aTargetFrame,
       scrollY = 0;
     }
     
-    PRBool noDefer = aMouseEvent->scrollFlags & nsMouseScrollEvent::kNoDefer;
+    nsIScrollableFrame::ScrollMode mode;
+    if (aMouseEvent->scrollFlags & nsMouseScrollEvent::kNoDefer) {
+      mode = nsIScrollableFrame::INSTANT;
+    } else if (aScrollQuantity != nsIScrollableFrame::DEVICE_PIXELS) {
+      mode = nsIScrollableFrame::SMOOTH;
+    } else {
+      mode = nsIScrollableFrame::NORMAL;
+    }
+
     nsIntPoint overflow;
     frameToScroll->ScrollBy(nsIntPoint(scrollX, scrollY), aScrollQuantity,
-                            noDefer ? nsIScrollableFrame::INSTANT
-                                    : nsIScrollableFrame::SMOOTH,
-                            &overflow);
+                            mode, &overflow);
     aMouseEvent->scrollOverflow = isHorizontal ? overflow.x : overflow.y;
     return NS_OK;
   }
@@ -2961,6 +2967,24 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         // if we're here, the event handler returned false, so stop
         // any of our own processing of a drag. Workaround for bug 43258.
         StopTrackingDragGesture();
+
+        // When the event was cancelled, there is currently a chrome document
+        // focused and a mousedown just occurred on a content document, ensure
+        // that the window that was clicked is focused.
+        EnsureDocument(mPresContext);
+        nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+        if (mDocument && fm) {
+          nsCOMPtr<nsIDOMWindow> currentWindow;
+          fm->GetFocusedWindow(getter_AddRefs(currentWindow));
+          if (currentWindow && currentWindow != mDocument->GetWindow() &&
+              !nsContentUtils::IsChromeDoc(mDocument)) {
+            nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(currentWindow);
+            nsCOMPtr<nsIDocument> currentDoc = do_QueryInterface(win->GetExtantDocument());
+            if (nsContentUtils::IsChromeDoc(currentDoc)) {
+              fm->SetFocusedWindow(mDocument->GetWindow());
+            }
+          }
+        }
       }
       SetActiveManager(this, activeContent);
     }

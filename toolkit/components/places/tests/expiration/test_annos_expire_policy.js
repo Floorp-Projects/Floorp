@@ -90,7 +90,7 @@ function add_old_anno(aIdentifier, aName, aValue, aExpirePolicy,
     // Update dateAdded for the last added annotation.
     sql = "UPDATE moz_annos SET dateAdded = :expire_date, lastModified = :last_modified " +
           "WHERE id = (SELECT a.id FROM moz_annos a " +
-                      "LEFT JOIN moz_places_view h on h.id = a.place_id " +
+                      "LEFT JOIN moz_places h on h.id = a.place_id " +
                       "WHERE h.url = :id " +
                       "ORDER BY a.dateAdded DESC LIMIT 1)";
   }
@@ -117,6 +117,7 @@ function run_test() {
   // Expire all expirable pages.
   setMaxPages(0);
 
+  let now = Date.now() * 1000;
   // Add some bookmarked page and timed annotations for each.
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://item_anno." + i + ".mozilla.org/");
@@ -146,7 +147,6 @@ function run_test() {
   }
 
   // Add some visited page and timed annotations for each.
-  let now = Date.now() * 1000;
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://page_anno." + i + ".mozilla.org/");
     hs.addVisit(pageURI, now++, null, hs.TRANSITION_TYPED, false, 0);

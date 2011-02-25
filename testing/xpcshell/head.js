@@ -67,6 +67,21 @@ let (ios = Components.classes["@mozilla.org/network/io-service;1"]
   ios.offline = false;
 }
 
+// Disable IPv6 lookups for 'localhost' on windows.
+try {
+  if ("@mozilla.org/windows-registry-key;1" in Components.classes) {
+    let processType = Components.classes["@mozilla.org/xre/runtime;1"].
+      getService(Components.interfaces.nsIXULRuntime).processType;
+    if (processType == Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+      let (prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                   .getService(Components.interfaces.nsIPrefBranch)) {
+        prefs.setCharPref("network.dns.ipv4OnlyDomains", "localhost");
+      }
+    }
+  }
+}
+catch (e) { }
+
 // Enable crash reporting, if possible
 // We rely on the Python harness to set MOZ_CRASHREPORTER_NO_REPORT
 // and handle checking for minidumps.

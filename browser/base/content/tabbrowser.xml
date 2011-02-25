@@ -105,9 +105,9 @@
         Components.classes["@mozilla.org/browser/favicon-service;1"]
                   .getService(Components.interfaces.nsIFaviconService);
       </field>
-      <field name="mBrowserHistory" readonly="true">
-        Components.classes["@mozilla.org/browser/nav-history-service;1"]
-                  .getService(Components.interfaces.nsIBrowserHistory);
+      <field name="_placesAutocomplete" readonly="true">
+         Components.classes["@mozilla.org/autocomplete/search;1?name=history"]
+                   .getService(Components.interfaces.mozIPlacesAutoComplete);
       </field>
       <field name="mTabBox" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "tabbox");
@@ -177,6 +177,55 @@
         ]]></getter>
       </property>
 
+      <method name="updateWindowResizers">
+        <body><![CDATA[
+          if (!window.gShowPageResizers)
+            return;
+
+          var show = document.getElementById("addon-bar").collapsed &&
+                     window.windowState == window.STATE_NORMAL;
+          for (let i = 0; i < this.browsers.length; i++) {
+            this.browsers[i].showWindowResizer = show;
+          }
+        ]]></body>
+      </method>
+
+      <method name="_setCloseKeyState">
+        <parameter name="aEnabled"/>
+        <body><![CDATA[
+          let keyClose = document.getElementById("key_close");
+          let closeKeyEnabled = keyClose.getAttribute("disabled") != "true";
+          if (closeKeyEnabled == aEnabled)
+            return;
+
+          if (aEnabled)
+            keyClose.removeAttribute("disabled");
+          else
+            keyClose.setAttribute("disabled", "true");
+
+          // We also want to remove the keyboard shortcut from the file menu
+          // when the shortcut is disabled, and bring it back when it's
+          // renabled.
+          //
+          // Fixing bug 630826 could make that happen automatically.
+          // Fixing bug 630830 could avoid the ugly hack below.
+          
+          let closeMenuItem = document.getElementById("menu_close");
+          let parentPopup = closeMenuItem.parentNode;
+          let nextItem = closeMenuItem.nextSibling;
+          let clonedItem = closeMenuItem.cloneNode(true);
+
+          parentPopup.removeChild(closeMenuItem);
+
+          if (aEnabled)
+            clonedItem.setAttribute("key", "key_close");
+          else
+            clonedItem.removeAttribute("key");
+
+          parentPopup.insertBefore(clonedItem, nextItem);
+        ]]></body>
+      </method>
+
       <method name="pinTab">
         <parameter name="aTab"/>
         <body><![CDATA[
@@ -192,6 +241,9 @@
           this.tabContainer.adjustTabstrip();
 
           this.getBrowserForTab(aTab).docShell.isAppTab = true;
+
+          if (aTab.selected)
+            this._setCloseKeyState(false);
 
           let event = document.createEvent("Events");
           event.initEvent("TabPinned", true, false);
@@ -213,6 +265,9 @@
           this.tabContainer.adjustTabstrip();
 
           this.getBrowserForTab(aTab).docShell.isAppTab = false;
+
+          if (aTab.selected)
+            this._setCloseKeyState(true);
 
           let event = document.createEvent("Events");
           event.initEvent("TabUnpinned", true, false);
@@ -571,13 +626,13 @@
                     !(this.mBrowser.docShell.loadType & Ci.nsIDocShell.LOAD_CMD_PUSHSTATE))
                   this.mBrowser.mIconURL = null;
 
-                let browserHistory = this.mTabBrowser.mBrowserHistory;
+                let autocomplete = this.mTabBrowser._placesAutocomplete;
                 if (this.mBrowser.registeredOpenURI) {
-                  browserHistory.unregisterOpenPage(this.mBrowser.registeredOpenURI);
+                  autocomplete.unregisterOpenPage(this.mBrowser.registeredOpenURI);
                   delete this.mBrowser.registeredOpenURI;
                 }
                 if (aLocation.spec != "about:blank") {
-                  browserHistory.registerOpenPage(aLocation);
+                  autocomplete.registerOpenPage(aLocation);
                   this.mBrowser.registeredOpenURI = aLocation;
                 }
               }
@@ -879,6 +934,9 @@
                                           true, false);
             }
 
+            if (this.mCurrentTab.selected)
+              this._setCloseKeyState(!this.mCurrentTab.pinned);
+
             // TabSelect events are suppressed during preview mode to avoid confusing extensions and other bits of code
             // that might rely upon the other changes suppressed.
             // Focus is suppressed in the event that the main browser window is minimized - focusing a tab would restore the window
@@ -906,12 +964,6 @@
                     break;
                   }
                 }
-
-                // If the find bar is focused, keep it focused.
-                if (gFindBarInitialized &&
-                    !gFindBar.hidden &&
-                    gFindBar.getElement("findbar-textbox").getAttribute("focused") == "true")
-                  break;
 
                 // Otherwise, focus the content area.
                 let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
@@ -1213,15 +1265,6 @@
 
             this.tabContainer.appendChild(t);
 
-            if (this.tabContainer.mTabstrip._isRTLScrollbox) {
-              /* In RTL UI, the tab is visually added to the left side of the
-               * tabstrip. This means the tabstip has to be scrolled back in
-               * order to make sure the same set of tabs is visible before and
-               * after the new tab is added.  See bug 508816. */
-
-              this.tabContainer.mTabstrip.scrollByPixels(t.clientWidth);
-            }
-
             // invalidate cache, because tabContainer is about to change
             this._browsers = null;
 
@@ -1236,6 +1279,12 @@
             b.setAttribute("message", "true");
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
+
+            if (window.gShowPageResizers && document.getElementById("addon-bar").collapsed &&
+                window.windowState == window.STATE_NORMAL) {
+              b.setAttribute("showresizer", "true");
+            }
+
             if (this.hasAttribute("autocompletepopup"))
               b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
             b.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
@@ -1455,6 +1504,14 @@
 
             this._blurTab(aTab);
             aTab.removeAttribute("fadein");
+
+            setTimeout(function (tab, tabbrowser) {
+              if (tab.parentNode &&
+                  window.getComputedStyle(tab).maxWidth == "0.1px") {
+                NS_ASSERT(false, "Giving up waiting for the tab closing animation to finish (bug 608589)");
+                tabbrowser._endRemoveTab(tab);
+              }
+            }, 3000, aTab, this);
           ]]>
         </body>
       </method>
@@ -1521,7 +1578,7 @@
             this.mTabListeners[aTab._tPos].destroy();
 
             if (browser.registeredOpenURI && !aTabWillBeMoved) {
-              this.mBrowserHistory.unregisterOpenPage(browser.registeredOpenURI);
+              this._placesAutocomplete.unregisterOpenPage(browser.registeredOpenURI);
               delete browser.registeredOpenURI;
             }
 
@@ -1665,6 +1722,7 @@
               return;
 
             if (aTab.owner &&
+                !aTab.owner.hidden &&
                 this._removingTabs.indexOf(aTab.owner) == -1 &&
                 Services.prefs.getBoolPref("browser.tabs.selectOwnerOnClose")) {
               this.selectedTab = aTab.owner;
@@ -1725,10 +1783,14 @@
             var otherBrowser = aOtherTab.linkedBrowser;
 
             // Restore current registered open URI.
-            if (ourBrowser.registeredOpenURI)
-              this.mBrowserHistory.unregisterOpenPage(ourBrowser.registeredOpenURI);
-            if (otherBrowser.registeredOpenURI)
+            if (ourBrowser.registeredOpenURI) {
+              this._placesAutocomplete.unregisterOpenPage(ourBrowser.registeredOpenURI);
+              delete ourBrowser.registeredOpenURI;
+            }
+            if (otherBrowser.registeredOpenURI) {
               ourBrowser.registeredOpenURI = otherBrowser.registeredOpenURI;
+              delete otherBrowser.registeredOpenURI;
+            }
 
             // Workarounds for bug 458697
             // Icon might have been set on DOMLinkAdded, don't override that.
@@ -2420,6 +2482,7 @@
           this.appendChild(this._autoScrollPopup);
           this.mCurrentBrowser.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
           this.mCurrentBrowser.droppedLinkHandler = handleDroppedLink;
+          this.updateWindowResizers();
         ]]>
       </constructor>
 
@@ -2428,7 +2491,7 @@
           for (var i = 0; i < this.mTabListeners.length; ++i) {
             let browser = this.getBrowserAtIndex(i);
             if (browser.registeredOpenURI) {
-              this.mBrowserHistory.unregisterOpenPage(browser.registeredOpenURI);
+              this._placesAutocomplete.unregisterOpenPage(browser.registeredOpenURI);
               delete browser.registeredOpenURI;
             }
             browser.webProgress.removeProgressListener(this.mTabFilters[i]);
@@ -2589,7 +2652,7 @@
     </resources>
 
     <content>
-      <xul:hbox align="start">
+      <xul:hbox align="end">
         <xul:image class="tab-drop-indicator" anonid="tab-drop-indicator" collapsed="true"/>
       </xul:hbox>
       <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1"
@@ -2628,6 +2691,9 @@
 
           Services.prefs.addObserver("browser.tabs.", this._prefObserver, false);
           window.addEventListener("resize", this, false);
+
+          if (window.TabsInTitlebar)
+            TabsInTitlebar.allowedBy("tabs-visible", this.visible);
         ]]>
       </constructor>
 
@@ -2690,6 +2756,9 @@
       <property name="visible"
                 onget="return !this._container.collapsed;">
         <setter><![CDATA[
+          if (val == this.visible)
+            return val;
+
           this._container.collapsed = !val;
 
           if (val)
@@ -2698,6 +2767,9 @@
           document.getElementById("menu_closeWindow").hidden = !val;
           document.getElementById("menu_close").setAttribute("label",
             this.tabbrowser.mStringBundle.getString(val ? "tabs.closeTab" : "tabs.close"));
+
+          if (window.TabsInTitlebar)
+            TabsInTitlebar.allowedBy("tabs-visible", val);
 
           return val;
         ]]></setter>
@@ -2716,21 +2788,21 @@
       <method name="adjustTabstrip">
         <body><![CDATA[
           // modes for tabstrip
-          // 0 - activetab  = close button on active tab only
-          // 1 - alltabs    = close buttons on all tabs
-          // 2 - noclose    = no close buttons at all
-          // 3 - closeatend = close button at the end of the tabstrip
+          // 0 - button on active tab only
+          // 1 - close buttons on all tabs
+          // 2 - no close buttons at all
+          // 3 - close button at the end of the tabstrip
           switch (this.mCloseButtons) {
           case 0:
             if (this.childNodes.length == 1 && this._closeWindowWithLastTab)
-              this.setAttribute("closebuttons", "noclose");
+              this.setAttribute("closebuttons", "hidden");
             else
               this.setAttribute("closebuttons", "activetab");
             break;
           case 1:
             if (this.childNodes.length == 1) {
               if (this._closeWindowWithLastTab)
-                this.setAttribute("closebuttons", "noclose");
+                this.setAttribute("closebuttons", "hidden");
               else
                 this.setAttribute("closebuttons", "alltabs");
             } else {
@@ -2743,7 +2815,7 @@
             break;
           case 2:
           case 3:
-            this.setAttribute("closebuttons", "noclose");
+            this.setAttribute("closebuttons", "never");
             break;
           }
           var tabstripClosebutton = document.getElementById("tabs-closebutton");
@@ -2775,30 +2847,37 @@
 
       <method name="_positionPinnedTabs">
         <body><![CDATA[
-          var width = 0;
-          var pinnedOnly = (this.tabbrowser._numPinnedTabs == this.tabbrowser.visibleTabs.length);
+          var numPinned = this.tabbrowser._numPinnedTabs;
+          var doPosition = this.getAttribute("overflow") == "true" &&
+                           numPinned > 0 &&
+                           numPinned < this.tabbrowser.visibleTabs.length;
 
-          if (pinnedOnly)
-            this.tabbrowser.tabContainer.setAttribute("pinnedonly", "true");
-          else
-            this.tabbrowser.tabContainer.removeAttribute("pinnedonly");
+          if (doPosition) {
+            this.setAttribute("positionpinnedtabs", "true");
 
-          var scrollButtonWidth = (this.getAttribute("overflow") != "true" || pinnedOnly) ? 0 :
-                                  this.mTabstrip._scrollButtonDown.scrollWidth;
-          var paddingStart = this.mTabstrip.scrollboxPaddingStart;
+            let scrollButtonWidth = this.mTabstrip._scrollButtonDown.scrollWidth;
+            let paddingStart = this.mTabstrip.scrollboxPaddingStart;
+            let width = 0;
 
-          for (var i = this.tabbrowser._numPinnedTabs - 1; i >= 0; i--) {
-            let tab = this.childNodes[i];
-            width += pinnedOnly ? 0 : tab.scrollWidth;
-            if (this.getAttribute("overflow") != "true")
-              tab.style.MozMarginStart = - (width + scrollButtonWidth) + "px";
-            else
+            for (let i = numPinned - 1; i >= 0; i--) {
+              let tab = this.childNodes[i];
+              width += tab.scrollWidth;
               tab.style.MozMarginStart = - (width + scrollButtonWidth + paddingStart) + "px";
-          }
-          if (width == 0 || this.getAttribute("overflow") != "true")
-            this.style.MozMarginStart = width + "px";
-          else
+            }
+
             this.style.MozMarginStart = width + paddingStart + "px";
+
+          } else {
+            this.removeAttribute("positionpinnedtabs");
+
+            for (let i = 0; i < numPinned; i++) {
+              let tab = this.childNodes[i];
+              tab.style.MozMarginStart = "";
+            }
+
+            this.style.MozMarginStart = "";
+          }
+
           this.mTabstrip.ensureElementIsVisible(this.selectedItem, false);
         ]]></body>
       </method>
@@ -2817,6 +2896,7 @@
                 this._handleTabSelect();
                 this.mTabstripWidth = width;
               }
+              this.tabbrowser.updateWindowResizers();
               break;
           }
         ]]></body>
@@ -3171,7 +3251,6 @@
 
         ind.style.MozTransform = "translate(" + Math.round(newMargin) + "px)";
         ind.style.MozMarginStart = (-ind.clientWidth) + "px";
-        ind.style.marginTop = (-ind.clientHeight) + "px";
       ]]></handler>
 
       <handler event="drop"><![CDATA[
@@ -3640,6 +3719,51 @@
         XULBrowserWindow.setOverLink("", null);
       ]]></handler>
 
+    </handlers>
+  </binding>
+
+  <binding id="statuspanel" display="xul:hbox">
+    <content>
+      <xul:hbox class="statuspanel-inner">
+        <xul:label class="statuspanel-label"
+                   role="status"
+                   xbl:inherits="value=label,mirror"
+                   flex="1"
+                   crop="end"/>
+      </xul:hbox>
+    </content>
+
+    <implementation>
+      <property name="label">
+        <setter><![CDATA[
+          if (!this.label)
+            this.removeAttribute("mirror");
+
+          this.style.minWidth = this.getAttribute("type") == "status" &&
+                                this.getAttribute("previoustype") == "status"
+                                  ? getComputedStyle(this).width : "";
+
+          this.setAttribute("label", val);
+          return val;
+        ]]></setter>
+        <getter>
+          return this.getAttribute("label");
+        </getter>
+      </property>
+
+      <method name="_mirror">
+        <body>
+          if (this.hasAttribute("mirror"))
+            this.removeAttribute("mirror");
+          else
+            this.setAttribute("mirror", "true");
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="mouseover" action="this._mirror();"/>
+      <handler event="dragover" action="this._mirror();"/>
     </handlers>
   </binding>
 

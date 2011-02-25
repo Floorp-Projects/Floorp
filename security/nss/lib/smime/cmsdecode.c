@@ -37,7 +37,7 @@
 /*
  * CMS decoding.
  *
- * $Id: cmsdecode.c,v 1.9 2006/08/05 01:19:23 julien.pierre.bugs%sun.com Exp $
+ * $Id: cmsdecode.c,v 1.9.66.1 2010/12/23 18:03:41 kaie%kuix.de Exp $
  */
 
 #include "cmslocal.h"
@@ -463,6 +463,11 @@ nss_cms_decoder_work_data(NSSCMSDecoderContext *p7dcx,
     PORT_Assert ((data != NULL && len) || final);
 
     cinfo = NSS_CMSContent_GetContentInfo(p7dcx->content.pointer, p7dcx->type);
+    if (!cinfo) {
+	/* The original programmer didn't expect this to happen */
+	p7dcx->error = SEC_ERROR_LIBRARY_FAILURE;
+	goto loser;
+    }
 
     if (cinfo->ciphcx != NULL) {
 	/*

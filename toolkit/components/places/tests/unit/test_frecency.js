@@ -108,6 +108,11 @@ AutoCompleteInput.prototype = {
 
 function ensure_results(uris, searchTerm)
 {
+  waitForAsyncUpdates(ensure_results_internal, this, arguments);
+}
+
+function ensure_results_internal(uris, searchTerm)
+{
   var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
                    getService(Components.interfaces.nsIAutoCompleteController);
 
@@ -154,8 +159,9 @@ try {
 function setCountDate(aURI, aCount, aDate)
 {
   // We need visits so that frecency can be computed over multiple visits
-  for (let i = 0; i < aCount; i++)
+  for (let i = 0; i < aCount; i++) {
     histsvc.addVisit(aURI, aDate, null, histsvc.TRANSITION_TYPED, false, 0);
+  }
 }
 
 function setBookmark(aURI)
@@ -185,28 +191,28 @@ var c2 = 1;
 var tests = [
 // test things without a search term
 function() {
-  print("Test 0: same count, different date");
+  print("TEST-INFO | Test 0: same count, different date");
   setCountDate(uri1, c1, d1);
   setCountDate(uri2, c1, d2);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "");
 },
 function() {
-  print("Test 1: same count, different date");
+  print("TEST-INFO | Test 1: same count, different date");
   setCountDate(uri1, c1, d2);
   setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "");
 },
 function() {
-  print("Test 2: different count, same date");
+  print("TEST-INFO | Test 2: different count, same date");
   setCountDate(uri1, c1, d1);
   setCountDate(uri2, c2, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "");
 },
 function() {
-  print("Test 3: different count, same date");
+  print("TEST-INFO | Test 3: different count, same date");
   setCountDate(uri1, c2, d1);
   setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
@@ -215,28 +221,28 @@ function() {
 
 // test things with a search term
 function() {
-  print("Test 4: same count, different date");
+  print("TEST-INFO | Test 4: same count, different date");
   setCountDate(uri1, c1, d1);
   setCountDate(uri2, c1, d2);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "site");
 },
 function() {
-  print("Test 5: same count, different date");
+  print("TEST-INFO | Test 5: same count, different date");
   setCountDate(uri1, c1, d2);
   setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "site");
 },
 function() {
-  print("Test 6: different count, same date");
+  print("TEST-INFO | Test 6: different count, same date");
   setCountDate(uri1, c1, d1);
   setCountDate(uri2, c2, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "site");
 },
 function() {
-  print("Test 7: different count, same date");
+  print("TEST-INFO | Test 7: different count, same date");
   setCountDate(uri1, c2, d1);
   setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
@@ -245,43 +251,43 @@ function() {
 // There are multiple tests for 8, hence the multiple functions
 // Bug 426166 section
 function() {
-  print("Test 8.1: same count, same date");  
+  print("TEST-INFO | Test 8.1a: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "a");
 },
 function() {
-  print("Test 8.1: same count, same date");  
+  print("TEST-INFO | Test 8.1b: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "aa");
 },
 function() {
-  print("Test 8.2: same count, same date");
+  print("TEST-INFO | Test 8.2: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "aaa");
 },
 function() {
-  print("Test 8.3: same count, same date");
+  print("TEST-INFO | Test 8.3: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "aaaa");
 },
 function() {
-  print("Test 8.4: same count, same date");
+  print("TEST-INFO | Test 8.4: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "aaa");
 },
 function() {
-  print("Test 8.5: same count, same date");
+  print("TEST-INFO | Test 8.5: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "aa");
 },
 function() {
-  print("Test 8.6: same count, same date");
+  print("TEST-INFO | Test 8.6: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "a");

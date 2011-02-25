@@ -53,7 +53,7 @@ class nsIRequest;
 class nsIDocumentViewer;
 class nsILoadGroup;
 class nsIFrame;
-class nsIntSize;
+struct nsIntSize;
 class nsSVGSVGElement;
 
 #define SVG_MIMETYPE     "image/svg+xml"
@@ -124,7 +124,7 @@ public:
    * Returns a PRBool indicating whether the wrapped document has been parsed
    * successfully.
    *
-   * @return PR_TRUE if the document has been parsed successfully, 
+   * @return PR_TRUE if the document has been parsed successfully,
    *         PR_FALSE otherwise (e.g. if there's a syntax error in the SVG).
    */
   inline PRBool    ParsedSuccessfully()  { return !!GetRootSVGElem(); }
@@ -138,6 +138,14 @@ public:
    */
   void UpdateViewportBounds(const nsIntSize& aViewportSize);
 
+  /**
+   * If an SVG image's helper document has a pending notification for an
+   * override on the root node's "preserveAspectRatio" attribute, then this
+   * method will flush that notification so that the image can paint correctly.
+   * (First, though, it sets the mIgnoreInvalidation flag so that we won't
+   * notify the image's observers and trigger unwanted repaint-requests.)
+   */
+  void FlushImageTransformInvalidation();
 
   /**
    * Returns a PRBool indicating whether the document has any SMIL animations.

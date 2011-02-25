@@ -347,14 +347,17 @@ If the plugin is instantiated as a full-page plugin, the following defaults
 are used:
   streammode="seek" frame="testframe" range="100,100"
 
-The .streamTest(url, doPost, postData, callback) function will test how
-NPN_GetURLNotify and NPN_PostURLNotify behave when they are called with
-arbitrary (malformed) URLs. The function will return `true` if NPN_GetURLNotify
-succeeds, and `false` if it fails.
+The streamTest(url, doPost, postData, writeCallback, notifyCallback, redirectCallback, allowRedirects)
+function will test how NPN_GetURLNotify and NPN_PostURLNotify behave when they are
+called with arbitrary (malformed) URLs. The function will return `true` if
+NPN_[Get/Post]URLNotify succeeds, and `false` if it fails.
+@url url to request
 @param doPost whether to call NPN_PostURLNotify
 @param postData null, or a string to send a postdata
-@callback which will be called when the urlnotify is received with the notify
-result
+@writeCallback will be called when data is received for the stream
+@notifyCallback will be called when the urlnotify is received with the notify result
+@redirectCallback will be called from urlredirectnotify if a redirect is attempted
+@allowRedirects boolean value indicating whether or not to allow redirects
 
 == Internal consistency ==
 

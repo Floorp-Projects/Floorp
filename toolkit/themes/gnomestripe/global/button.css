@@ -147,28 +147,20 @@ button[disabled="true"] > .button-box {
 /* ::::: menu/menu-button buttons ::::: */
 
 button[type="menu-button"] {
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  margin: 0;
-  border: none;
+  -moz-appearance: dualbutton;
 }
 
 .button-menubutton-button {
-  -moz-appearance: none;
-  background-color: transparent;
-  border: none;
+  margin: 0;
 }
 
 .button-menu-dropmarker,
 .button-menubutton-dropmarker {
   -moz-appearance: toolbarbutton-dropdown !important;
 }
-  
-.button-menubutton-dropmarker[open="true"] {
-  margin-top: 2px;
-  margin-bottom: 0px;
-  -moz-margin-start: 2px;
-  -moz-margin-end: 0px;
+
+.button-menubutton-dropmarker {
+  -moz-margin-end: 3px;
 }
 
 /* ::::: plain buttons ::::: */

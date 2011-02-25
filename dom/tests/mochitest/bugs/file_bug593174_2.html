@@ -1,0 +1,30 @@
+<html>
+<body>
+Page 2 has an iframe of its own.
+<iframe id='inner-iframe' onload='innerIframeLoaded()' src='data:text/html,
+      <html><body>
+        <script>function go() { window.location = "file_bug593174_1.html"; }</script>
+      </body></html>'>
+</iframe>
+
+<script>
+function innerIframeLoaded() {
+  if (parent.iframeLoaded) {
+    parent.iframeLoaded('inner');
+  }
+  else if(opener.iframeLoaded) {
+    opener.iframeLoaded('popup/inner');
+  }
+}
+
+function navigateInnerIframe() {
+  document.getElementById('inner-iframe').contentWindow.go();
+}
+
+function getInnerIframeReferrer() {
+  return document.getElementById('inner-iframe').contentWindow.document.referrer;
+}
+</script>
+
+</body>
+</html>

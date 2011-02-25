@@ -72,10 +72,11 @@ interface amIInstallTrigger : nsISupports
   const PRUint32 PACKAGE = 7;
 
   /**
-   * Tests if installation is enabled. This method is deprecated, please use
-   * "enabled" in the future.
+   * Tests if installation is enabled.
+   *
+   * @deprecated Use "enabled" in the future.
    */
-  boolean updateEnabled();
+  [deprecated] boolean updateEnabled();
 
   /**
    * Tests if installation is enabled.
@@ -114,8 +115,9 @@ interface amIInstallTrigger : nsISupports
   boolean installChrome(in PRUint32 aType, in AString aUrl, in AString aSkin);
 
   /**
-   * Starts installing a new add-on. This method is deprecated, please use
-   * "install" in the future.
+   * Starts installing a new add-on.
+   *
+   * @deprecated use "install" in the future.
    *
    * @param  aUrl
    *         The URL of the add-on
@@ -123,5 +125,5 @@ interface amIInstallTrigger : nsISupports
    *         Unused, retained for backwards compatibility
    * @return true if the installation was successfully started
    */
-  boolean startSoftwareUpdate(in AString aUrl, [optional] in PRInt32 aFlags);
+  [deprecated] boolean startSoftwareUpdate(in AString aUrl, [optional] in PRInt32 aFlags);
 };

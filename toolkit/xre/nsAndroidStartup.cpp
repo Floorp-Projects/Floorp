@@ -57,8 +57,6 @@
 
 #define LOG(args...) __android_log_print(ANDROID_LOG_INFO, MOZ_APP_NAME, args)
 
-static pthread_t gGeckoThread = 0;
-
 struct AutoAttachJavaThread {
     AutoAttachJavaThread() {
         attached = mozilla_AndroidBridge_SetMainThread((void*)pthread_self());
@@ -94,9 +92,14 @@ GeckoStart(void *data)
 
     nsresult rv;
     nsCOMPtr<nsILocalFile> appini;
-    rv = NS_NewLocalFile(NS_LITERAL_STRING("/data/data/org.mozilla." MOZ_APP_NAME "/application.ini"),
-                         PR_FALSE,
-                         getter_AddRefs(appini));
+    char* greHome = getenv("GRE_HOME");
+    if (!greHome) {
+        LOG("Failed to get GRE_HOME from the env vars");
+        return 0;
+    }
+    nsCAutoString appini_path(greHome);
+    appini_path.AppendLiteral("/application.ini");
+    rv = NS_NewNativeLocalFile(appini_path, PR_FALSE, getter_AddRefs(appini));
     if (NS_FAILED(rv)) {
         LOG("Failed to create nsILocalFile for appdata\n");
         return 0;
@@ -105,14 +108,12 @@ GeckoStart(void *data)
     nsXREAppData *appData;
     rv = XRE_CreateAppData(appini, &appData);
     if (NS_FAILED(rv)) {
-        LOG("Failed to load application.ini from /data/data/org.mozilla." MOZ_APP_NAME "/application.ini\n");
+        LOG("Failed to load application.ini from %s\n", appini_path.get());
         return 0;
     }
 
     nsCOMPtr<nsILocalFile> xreDir;
-    rv = NS_NewLocalFile(NS_LITERAL_STRING("/data/data/org.mozilla." MOZ_APP_NAME),
-                         PR_FALSE,
-                         getter_AddRefs(xreDir));
+    rv = NS_NewNativeLocalFile(nsDependentCString(greHome), PR_FALSE, getter_AddRefs(xreDir));
     if (NS_FAILED(rv)) {
         LOG("Failed to create nsIFile for xreDirectory");
         return 0;
@@ -159,8 +160,6 @@ Java_org_mozilla_gecko_GeckoAppShell_nativeRun(JNIEnv *jenv, jclass jc, jstring 
     jenv->GetStringRegion(jargs, 0, len, wargs.BeginWriting());
     char *args = ToNewUTF8String(wargs);
 
-    if (pthread_create(&gGeckoThread, NULL, GeckoStart, args) != 0) {
-        LOG("pthread_create failed!");
-    }
+    GeckoStart(args);
 }
 

@@ -42,6 +42,16 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# Definitions used by constants.js.
+WEAVE_VERSION=$(shell cat $(topsrcdir)/services/sync/version.txt)
+WEAVE_CHANNEL=rel
+WEAVE_ID={340c2bbc-ce74-4362-90b5-7c26312808ef}
+
+SYNC_PP_DEFINES = \
+ -Dweave_version=$(WEAVE_VERSION) \
+ -Dweave_channel=$(WEAVE_CHANNEL) \
+ -Dweave_id=$(WEAVE_ID)
+
 DIRS = locales
 
 EXTRA_COMPONENTS = \
@@ -51,8 +61,30 @@ EXTRA_COMPONENTS = \
 
 PREF_JS_EXPORTS = $(srcdir)/services-sync.js
 
+# Preprocess constants (by preprocessing everything).
+# The 'HERE' idiom avoids a dependency on pushd. We need to do this fiddling in
+# order to get relative paths, so we can process services/sync/modules/* into
+# modules/services-sync/*.
+# 
+# Note that we find candidates, make directories, then 'copy' files.
 libs::
-	$(PYTHON) $(topsrcdir)/config/nsinstall.py $(srcdir)/modules/* $(FINAL_TARGET)/modules/services-sync
+ifndef NO_DIST_INSTALL
+	$(EXIT_ON_ERROR) \
+	HERE=$(CURDIR); \
+	cd $(srcdir)/modules; \
+	dirs=$$(find * -type d); \
+	files=$$(find * -type f); \
+	cd $$HERE; \
+	for d in $$dirs; do \
+		$(PYTHON) $(topsrcdir)/config/nsinstall.py -D $(FINAL_TARGET)/modules/services-sync/$$d; \
+	done; \
+	for i in $$files; do \
+		src=$(srcdir)/modules/$$i; \
+		dest=$(FINAL_TARGET)/modules/services-sync/$$i; \
+		$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(SYNC_PP_DEFINES) $$src > $$dest ; \
+	done
+endif
+
 
 ifdef ENABLE_TESTS
 DIRS += tests

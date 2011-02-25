@@ -70,10 +70,11 @@ gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSr
              PRUint32 aWeight,
              PRUint32 aStretch,
              PRUint32 aItalicStyle,
-             const nsTArray<gfxFontFeature> *aFeatureSettings,
+             const nsTArray<gfxFontFeature>& aFeatureSettings,
              PRUint32 aLanguageOverride,
              gfxSparseBitSet *aUnicodeRanges)
-    : gfxFontEntry(NS_LITERAL_STRING("Proxy"), aFamily), mIsLoading(PR_FALSE)
+    : gfxFontEntry(NS_LITERAL_STRING("Proxy"), aFamily),
+      mLoadingState(NOT_LOADING)
 {
     mIsProxy = PR_TRUE;
     mSrcList = aFontFaceSrcList;
@@ -81,10 +82,7 @@ gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSr
     mWeight = aWeight;
     mStretch = aStretch;
     mItalic = (aItalicStyle & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
-    if (aFeatureSettings) {
-        mFeatureSettings = new nsTArray<gfxFontFeature>;
-        mFeatureSettings->AppendElements(*aFeatureSettings);
-    }
+    mFeatureSettings.AppendElements(aFeatureSettings);
     mLanguageOverride = aLanguageOverride;
     mIsUserFont = PR_TRUE;
 }
@@ -146,8 +144,7 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
         gfxProxyFontEntry *proxyEntry = 
             new gfxProxyFontEntry(aFontFaceSrcList, family, aWeight, aStretch, 
                                   aItalicStyle,
-                                  featureSettings.Length() > 0 ?
-                                      &featureSettings : nsnull,
+                                  featureSettings,
                                   languageOverride,
                                   aUnicodeRanges);
         family->AddFontEntry(proxyEntry);
@@ -166,35 +163,50 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
 gfxFontEntry*
 gfxUserFontSet::FindFontEntry(const nsAString& aName, 
                               const gfxFontStyle& aFontStyle, 
-                              PRBool& aNeedsBold)
+                              PRBool& aNeedsBold,
+                              PRBool& aWaitForUserFont)
 {
+    aWaitForUserFont = PR_FALSE;
     gfxMixedFontFamily *family = GetFamily(aName);
 
     // no user font defined for this name
-    if (!family)
+    if (!family) {
         return nsnull;
+    }
 
     gfxFontEntry* fe = family->FindFontForStyle(aFontStyle, aNeedsBold);
 
     // if not a proxy, font has already been loaded
-    if (!fe->mIsProxy)
+    if (!fe->mIsProxy) {
         return fe;
+    }
 
     gfxProxyFontEntry *proxyEntry = static_cast<gfxProxyFontEntry*> (fe);
 
     // if currently loading, return null for now
-    if (proxyEntry->mIsLoading)
+    if (proxyEntry->mLoadingState > gfxProxyFontEntry::NOT_LOADING) {
+        aWaitForUserFont =
+            (proxyEntry->mLoadingState < gfxProxyFontEntry::LOADING_SLOWLY);
         return nsnull;
+    }
 
     // hasn't been loaded yet, start the load process
     LoadStatus status;
 
+    // NOTE that if all sources in the entry fail, this will delete proxyEntry,
+    // so we cannot use it again if status==STATUS_END_OF_LIST
     status = LoadNext(proxyEntry);
 
     // if the load succeeded immediately, the font entry was replaced so
     // search again
-    if (status == STATUS_LOADED)
+    if (status == STATUS_LOADED) {
         return family->FindFontForStyle(aFontStyle, aNeedsBold);
+    }
+
+    // check whether we should wait for load to complete before painting
+    // a fallback font -- but not if all sources failed (bug 633500)
+    aWaitForUserFont = (status != STATUS_END_OF_LIST) &&
+        (proxyEntry->mLoadingState < gfxProxyFontEntry::LOADING_SLOWLY);
 
     // if either loading or an error occurred, return null
     return nsnull;
@@ -363,7 +375,7 @@ CacheLayoutTablesFromSFNT(const PRUint8* aFontData, PRUint32 aLength,
         case TRUETYPE_TAG('G','D','E','F'):
         case TRUETYPE_TAG('G','P','O','S'):
         case TRUETYPE_TAG('G','S','U','B'): {
-                nsTArray<PRUint8> buffer;
+                FallibleTArray<PRUint8> buffer;
                 if (!buffer.AppendElements(aFontData + dirEntry->offset,
                                            dirEntry->length)) {
                     NS_WARNING("failed to cache font table - out of memory?");
@@ -395,7 +407,7 @@ PreloadTableFromWOFF(const PRUint8* aFontData, PRUint32 aLength,
     PRUint32 status = eWOFF_ok;
     PRUint32 len = woffGetTableSize(aFontData, aLength, aTableTag, &status);
     if (WOFF_SUCCESS(status) && len > 0) {
-        nsTArray<PRUint8> buffer;
+        FallibleTArray<PRUint8> buffer;
         if (!buffer.AppendElements(len)) {
             NS_WARNING("failed to cache font table - out of memory?");
             return;
@@ -523,10 +535,7 @@ gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
         if (fe) {
             // copy OpenType feature/language settings from the proxy to the
             // newly-created font entry
-            if (pe->mFeatureSettings) {
-                fe->mFeatureSettings = new nsTArray<gfxFontFeature>;
-                fe->mFeatureSettings->AppendElements(*pe->mFeatureSettings);
-            }
+            fe->mFeatureSettings.AppendElements(pe->mFeatureSettings);
             fe->mLanguageOverride = pe->mLanguageOverride;
 
             static_cast<gfxMixedFontFamily*>(pe->mFamily)->ReplaceFontEntry(pe, fe);
@@ -575,14 +584,12 @@ gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
     LoadStatus status;
 
     status = LoadNext(pe);
-    if (status == STATUS_LOADED) {
-        // load may succeed if external font resource followed by
-        // local font, in this case need to bump generation
-        IncrementGeneration();
-        return PR_TRUE;
-    }
 
-    return PR_FALSE;
+    // Even if loading failed, we need to bump the font-set generation
+    // and return true in order to trigger reflow, so that fallback
+    // will be used where the text was "masked" by the pending download
+    IncrementGeneration();
+    return PR_TRUE;
 }
 
 
@@ -593,10 +600,13 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
 
     NS_ASSERTION(aProxyEntry->mSrcIndex < numSrc, "already at the end of the src list for user font");
 
-    if (aProxyEntry->mIsLoading) {
-        aProxyEntry->mSrcIndex++;
+    if (aProxyEntry->mLoadingState == gfxProxyFontEntry::NOT_LOADING) {
+        aProxyEntry->mLoadingState = gfxProxyFontEntry::LOADING_STARTED;
     } else {
-        aProxyEntry->mIsLoading = PR_TRUE;
+        // we were already loading; move to the next source,
+        // but don't reset state - if we've already timed out,
+        // that counts against the new download
+        aProxyEntry->mSrcIndex++;
     }
 
     // load each src entry in turn, until a local face is found or a download begins successfully
@@ -615,10 +625,7 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
                      NS_ConvertUTF16toUTF8(currSrc.mLocalName).get(), 
                      NS_ConvertUTF16toUTF8(aProxyEntry->mFamily->Name()).get(), 
                      PRUint32(mGeneration)));
-                if (aProxyEntry->mFeatureSettings) {
-                    fe->mFeatureSettings = new nsTArray<gfxFontFeature>;
-                    fe->mFeatureSettings->AppendElements(*aProxyEntry->mFeatureSettings);
-                }
+                fe->mFeatureSettings.AppendElements(aProxyEntry->mFeatureSettings);
                 fe->mLanguageOverride = aProxyEntry->mLanguageOverride;
                 static_cast<gfxMixedFontFamily*>(aProxyEntry->mFamily)->ReplaceFontEntry(aProxyEntry, fe);
                 return STATUS_LOADED;

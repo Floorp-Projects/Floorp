@@ -44,6 +44,7 @@
 #include "xpcprivate.h"
 #include "nsNetError.h"
 #include "mozStorage.h"
+#include "nsPluginError.h"
 
 /***************************************************************************/
 /* Quick and dirty mapping of well known result codes to strings. We only

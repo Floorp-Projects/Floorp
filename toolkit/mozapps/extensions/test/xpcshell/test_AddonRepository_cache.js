@@ -13,7 +13,9 @@ const PORT      = 4444;
 const BASE_URL  = "http://localhost:" + PORT;
 
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
+const PREF_GETADDONS_CACHE_TYPES   = "extensions.getAddons.cache.types";
 const PREF_GETADDONS_BYIDS         = "extensions.getAddons.get.url";
+const PREF_EM_AUTOUPDATE_DEFAULT   = "extensions.update.autoUpdateDefault";
 const GETADDONS_RESULTS            = BASE_URL + "/data/test_AddonRepository_cache.xml";
 const GETADDONS_EMPTY              = BASE_URL + "/data/test_AddonRepository_empty.xml";
 const GETADDONS_FAILED             = BASE_URL + "/data/test_AddonRepository_failed.xml";
@@ -25,6 +27,8 @@ const ADDON_NAMES = ["test_AddonRepository_1",
 const ADDON_IDS = ADDON_NAMES.map(function(aName) aName + "@tests.mozilla.org");
 const ADDON_FILES = ADDON_NAMES.map(do_get_addon);
 
+const PREF_ADDON0_CACHE_ENABLED = "extensions." + ADDON_IDS[0] + ".getAddons.cache.enabled";
+const PREF_ADDON1_CACHE_ENABLED = "extensions." + ADDON_IDS[1] + ".getAddons.cache.enabled";
 
 // Properties of an individual add-on that should be checked
 // Note: size and updateDate are checked separately
@@ -121,7 +125,7 @@ const REPOSITORY_ADDONS = [{
   homepageURL:            BASE_URL + "/repo/2/homepage.html",
   supportURL:             BASE_URL + "/repo/2/support.html",
   contributionURL:        BASE_URL + "/repo/2/meetDevelopers.html",
-  contributionAmount:     "$11.12",
+  contributionAmount:     null,
   averageRating:          2,
   reviewCount:            1112,
   reviewURL:              BASE_URL + "/repo/2/review.html",
@@ -253,7 +257,7 @@ const WITH_CACHE = [{
   homepageURL:            BASE_URL + "/repo/2/homepage.html",
   supportURL:             BASE_URL + "/repo/2/support.html",
   contributionURL:        BASE_URL + "/repo/2/meetDevelopers.html",
-  contributionAmount:     "$11.12",
+  contributionAmount:     null,
   averageRating:          2,
   reviewCount:            1112,
   reviewURL:              BASE_URL + "/repo/2/review.html",
@@ -279,6 +283,59 @@ const WITH_CACHE = [{
                             thumbnailURL: BASE_URL + "/repo/3/secondThumbnail.png",
                             caption:      "Repo Add-on 3 - Second Caption"
                           }],
+  sourceURI:              NetUtil.newURI(ADDON_FILES[2]).spec
+}];
+
+// Expected add-ons when using cache
+const WITH_EXTENSION_CACHE = [{
+  id:                     ADDON_IDS[0],
+  type:                   "extension",
+  name:                   "XPI Add-on 1",
+  version:                "1.1",
+  creator:                {
+                            name: "Repo Add-on 1 - Creator",
+                            url:  BASE_URL + "/repo/1/creator.html"
+                          },
+  developers:             [{ name: "XPI Add-on 1 - First Developer" },
+                           { name: "XPI Add-on 1 - Second Developer" }],
+  translators:            [{ name: "XPI Add-on 1 - First Translator" },
+                           { name: "XPI Add-on 1 - Second Translator" }],
+  contributors:           [{ name: "XPI Add-on 1 - First Contributor" },
+                           { name: "XPI Add-on 1 - Second Contributor" }],
+  description:            "XPI Add-on 1 - Description",
+  fullDescription:        "Repo Add-on 1 - Full Description & some extra",
+  developerComments:      "Repo Add-on 1\nDeveloper Comments",
+  eula:                   "Repo Add-on 1 - EULA",
+  iconURL:                BASE_URL + "/xpi/1/icon.png",
+  homepageURL:            BASE_URL + "/xpi/1/homepage.html",
+  supportURL:             BASE_URL + "/repo/1/support.html",
+  optionsURL:             BASE_URL + "/xpi/1/options.html",
+  aboutURL:               BASE_URL + "/xpi/1/about.html",
+  contributionURL:        BASE_URL + "/repo/1/meetDevelopers.html",
+  contributionAmount:     "$11.11",
+  averageRating:          1,
+  reviewCount:            1111,
+  reviewURL:              BASE_URL + "/repo/1/review.html",
+  totalDownloads:         2221,
+  weeklyDownloads:        3331,
+  dailyUsers:             4441,
+  sourceURI:              NetUtil.newURI(ADDON_FILES[0]).spec,
+  repositoryStatus:       4
+}, {
+  id:                     ADDON_IDS[1],
+  type:                   "theme",
+  name:                   "XPI Add-on 2",
+  version:                "1.2",
+  sourceURI:              NetUtil.newURI(ADDON_FILES[1]).spec
+}, {
+  id:                     ADDON_IDS[2],
+  type:                   "theme",
+  name:                   "XPI Add-on 3",
+  version:                "1.3",
+  get iconURL () {
+    return get_subfile_uri(ADDON_IDS[2], "icon.png");
+  },
+  screenshots:            [{ get url () { return get_subfile_uri(ADDON_IDS[2], "preview.png"); } }],
   sourceURI:              NetUtil.newURI(ADDON_FILES[2]).spec
 }];
 
@@ -465,7 +522,18 @@ function run_test_5() {
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, GETADDONS_RESULTS);
 
   AddonRepository.repopulateCache(ADDON_IDS, function() {
-    check_initialized_cache([true, true, true], run_test_6);
+    check_initialized_cache([true, true, true], run_test_5_1);
+  });
+}
+
+// Tests repopulateCache when caching is disabled for a single add-on
+function run_test_5_1() {
+  Services.prefs.setBoolPref(PREF_ADDON0_CACHE_ENABLED, false);
+
+  AddonRepository.repopulateCache(ADDON_IDS, function() {
+    // Reset pref for next test
+    Services.prefs.setBoolPref(PREF_ADDON0_CACHE_ENABLED, true);
+    check_initialized_cache([false, true, true], run_test_6);
   });
 }
 
@@ -507,7 +575,18 @@ function run_test_9() {
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, GETADDONS_RESULTS);
 
   AddonRepository.cacheAddons([ADDON_IDS[0]], function() {
-    check_initialized_cache([true, false, false], run_test_10);
+    check_initialized_cache([true, false, false], run_test_9_1);
+  });
+}
+
+// Tests cacheAddons when caching is disabled for a single add-on
+function run_test_9_1() {
+  Services.prefs.setBoolPref(PREF_ADDON1_CACHE_ENABLED, false);
+
+  AddonRepository.cacheAddons(ADDON_IDS, function() {
+    // Reset pref for next test
+    Services.prefs.setBoolPref(PREF_ADDON1_CACHE_ENABLED, true);
+    check_initialized_cache([true, false, true], run_test_10);
   });
 }
 
@@ -572,7 +651,49 @@ function run_test_14() {
 
     AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
       check_results(aAddons, WITHOUT_CACHE);
-      run_test_15();
+      run_test_14_1();
+    });
+  });
+}
+
+// Tests that the XPI add-ons have the correct properties if caching is
+// enabled but updates are disabled by default
+function run_test_14_1() {
+  Services.prefs.setBoolPref(PREF_EM_AUTOUPDATE_DEFAULT, false);
+  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, GETADDONS_RESULTS);
+
+  trigger_background_update(function() {
+    check_database_exists(true);
+
+    AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
+      check_results(aAddons, WITHOUT_CACHE);
+      run_test_14_2();
+    });
+  });
+}
+
+// Tests that the XPI add-ons have the correct properties if caching is
+// enabled but updates are disabled by individually
+function run_test_14_2() {
+  Services.prefs.setBoolPref(PREF_EM_AUTOUPDATE_DEFAULT, true);
+
+  AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
+    aAddons.forEach(function(aAddon) {
+      aAddon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
+    });
+
+    trigger_background_update(function() {
+      check_database_exists(true);
+
+      AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
+        check_results(aAddons, WITHOUT_CACHE);
+
+        aAddons.forEach(function(aAddon) {
+          aAddon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
+        });
+
+        run_test_15();
+      });
     });
   });
 }
@@ -580,8 +701,6 @@ function run_test_14() {
 // Tests that the XPI add-ons correctly use the repository properties when
 // caching is enabled and the repository information is available
 function run_test_15() {
-  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, GETADDONS_RESULTS);
-
   trigger_background_update(function() {
     AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
       check_results(aAddons, WITH_CACHE);
@@ -598,7 +717,19 @@ function run_test_16() {
 
   AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
     check_results(aAddons, WITH_CACHE);
-    end_test();
+    run_test_17();
+  });
+}
+
+// Tests that setting a list of types to cache works
+function run_test_17() {
+  Services.prefs.setCharPref(PREF_GETADDONS_CACHE_TYPES, "foo,bar,extension,baz");
+
+  trigger_background_update(function() {
+    AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
+      check_results(aAddons, WITH_EXTENSION_CACHE);
+      end_test();
+    });
   });
 }
 

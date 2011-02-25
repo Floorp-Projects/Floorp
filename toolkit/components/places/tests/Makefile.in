@@ -49,11 +49,11 @@ MODULE		= test_places
 XPCSHELL_TESTS = \
 	autocomplete \
 	expiration \
-	sync \
 	bookmarks \
 	queries \
 	unit \
 	network \
+	migration \
 	$(NULL)
 
 # Files in the main "tests" folder.

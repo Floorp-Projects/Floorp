@@ -37,7 +37,7 @@
 /*
  * CMS encoding.
  *
- * $Id: cmsencode.c,v 1.6 2006/06/08 22:01:02 nelson%bolyard.com Exp $
+ * $Id: cmsencode.c,v 1.6.66.1 2010/12/23 18:03:41 kaie%kuix.de Exp $
  */
 
 #include "cmslocal.h"
@@ -425,6 +425,11 @@ nss_cms_encoder_work_data(NSSCMSEncoderContext *p7ecx, SECItem *dest,
 
     /* we got data (either from the caller, or from a lower level encoder) */
     cinfo = NSS_CMSContent_GetContentInfo(p7ecx->content.pointer, p7ecx->type);
+    if (!cinfo) {
+	/* The original programmer didn't expect this to happen */
+	p7ecx->error = SEC_ERROR_LIBRARY_FAILURE;
+	return SECFailure;
+    }
 
     /* Update the running digest. */
     if (len && cinfo->digcx != NULL)
@@ -628,6 +633,12 @@ NSS_CMSEncoder_Update(NSSCMSEncoderContext *p7ecx, const char *data, unsigned lo
 	/* we are at innermost decoder */
 	/* find out about our inner content type - must be data */
 	cinfo = NSS_CMSContent_GetContentInfo(p7ecx->content.pointer, p7ecx->type);
+	if (!cinfo) {
+	    /* The original programmer didn't expect this to happen */
+	    p7ecx->error = SEC_ERROR_LIBRARY_FAILURE;
+	    return SECFailure;
+	}
+
 	childtype = NSS_CMSContentInfo_GetContentTypeTag(cinfo);
 	if (childtype != SEC_OID_PKCS7_DATA)
 	    return SECFailure;
@@ -728,6 +739,12 @@ NSS_CMSEncoder_Finish(NSSCMSEncoderContext *p7ecx)
 
     /* find out about our inner content type - must be data */
     cinfo = NSS_CMSContent_GetContentInfo(p7ecx->content.pointer, p7ecx->type);
+    if (!cinfo) {
+	/* The original programmer didn't expect this to happen */
+	p7ecx->error = SEC_ERROR_LIBRARY_FAILURE;
+	rv = SECFailure;
+	goto loser;
+    }
     childtype = NSS_CMSContentInfo_GetContentTypeTag(cinfo);
     if (childtype == SEC_OID_PKCS7_DATA && cinfo->content.data == NULL) {
 	SEC_ASN1EncoderClearTakeFromBuf(p7ecx->ecx);

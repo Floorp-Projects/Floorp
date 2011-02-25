@@ -17,15 +17,12 @@
  * in the application cache.
  */
 
-var gManifestUpdated = false;
 var gStep = 1;
 var gChildLoad = false;
 var gTopWindow = null;
-var gCompleteTimeout = null;
 
 function manifestUpdated()
 {
-  gManifestUpdated = true;
   fallbackFrame.location = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/non-existing.html";
   // Invokes load of fallback.html
 }
@@ -38,7 +35,6 @@ function onFallbackLoad(fallbackIdentification)
       OfflineTest.ok(!gChildLoad, "offline child not load before cache update");
       gChildLoad = true;
       // no break
-
     case 101:
       OfflineTest.is(fallbackIdentification, 1, "fallback for namespace1/ in step " + gStep);
 
@@ -68,13 +64,8 @@ function onFallbackLoad(fallbackIdentification)
 
       // Try opening a non-existing page as a top level document. It must
       // fall to fallbackTop.html that identifies it self as '100'.
-      gCompleteTimeout = window.setTimeout(function() {
-        OfflineTest.ok(false, "Fallback page displayed for top level document");
-        finalize();
-      }, 3000);
-
-      gTopWindow = window.open("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace2/non-existing.html");
       // Invokes load of fallbackTop.html
+      gTopWindow = window.open("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace2/non-existing.html");
 
       break;
 
@@ -82,23 +73,22 @@ function onFallbackLoad(fallbackIdentification)
       // Try all over again. This checks there are no entries for non-existing
       // pages created/leaked. That would prevent fallback load.
       gStep = 100;
+
       fallbackFrame.location = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/non-existing.html";
       // Invokes load of fallback1.html, again, from the start
       // no break
-
     case 105:
       OfflineTest.is(fallbackIdentification, 100, "fallback for namespace2/, invoked by a top level document " + gStep);
 
       gTopWindow.close();
       gTopWindow = null;
-      window.clearTimeout(gCompleteTimeout);
-      gCompleteTimeout = null;
 
       break;
   }
 
   if (gStep == 105) {
     finalize();
+    return;
   }
 
   ++gStep;

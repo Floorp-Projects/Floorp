@@ -40,6 +40,7 @@
  */
 
 #include "jsd.h"
+#include "jsfriendapi.h"
 
 #ifdef DEBUG
 void JSD_ASSERT_VALID_THREAD_STATE(JSDThreadState* jsdthreadstate)
@@ -357,9 +358,9 @@ jsd_GetThisForStackFrame(JSDContext* jsdc,
 }
 
 JSString*
-jsd_GetNameForStackFrame(JSDContext* jsdc, 
-                         JSDThreadState* jsdthreadstate,
-                         JSDStackFrameInfo* jsdframe)
+jsd_GetIdForStackFrame(JSDContext* jsdc, 
+                       JSDThreadState* jsdthreadstate,
+                       JSDStackFrameInfo* jsdframe)
 {
     JSString *rv = NULL;
     
@@ -369,8 +370,17 @@ jsd_GetNameForStackFrame(JSDContext* jsdc,
     {
         JSFunction *fun = JS_GetFrameFunction (jsdthreadstate->context,
                                                jsdframe->fp);
-        if (fun)
+        if( fun )
+        {
             rv = JS_GetFunctionId (fun);
+
+            /*
+             * For compatibility we return "anonymous", not an empty string
+             * here.
+             */
+            if( !rv )
+                rv = JS_GetAnonymousString(jsdc->jsrt);
+        }
     }
     
     JSD_UNLOCK_THREADSTATES(jsdc);

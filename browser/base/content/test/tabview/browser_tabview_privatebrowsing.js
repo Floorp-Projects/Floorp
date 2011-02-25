@@ -36,8 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+let contentWindow = null;
 let normalURLs = []; 
 let pbTabURL = "about:privatebrowsing";
+let groupTitles = [];
+let normalIteration = 0;
 
 let pb = Cc["@mozilla.org/privatebrowsing;1"].
          getService(Ci.nsIPrivateBrowsingService);
@@ -46,50 +49,74 @@ let pb = Cc["@mozilla.org/privatebrowsing;1"].
 function test() {
   waitForExplicitFinish();
 
-  // Establish initial state
-  is(gBrowser.tabs.length, 1, "we start with 1 tab");
-  
-  // Create a second tab
-  gBrowser.addTab("about:robots");
-  is(gBrowser.tabs.length, 2, "we now have 2 tabs");
-  
-  afterAllTabsLoaded(function() {
-    // Get normal tab urls
-    for (let a = 0; a < gBrowser.tabs.length; a++) {
-      normalURLs.push(gBrowser.tabs[a].linkedBrowser.currentURI.spec);
-    }
-  
-    // Go into Tab View
-    window.addEventListener("tabviewshown", onTabViewLoadedAndShown, false);
-    TabView.toggle();
-  });
+  showTabView(onTabViewLoadedAndShown);
 }
 
 // -----------
 function onTabViewLoadedAndShown() {
-  window.removeEventListener("tabviewshown", onTabViewLoadedAndShown, false);
   ok(TabView.isVisible(), "Tab View is visible");
 
-  // go into private browsing and make sure Tab View becomes hidden
-  togglePBAndThen(function() {
-    ok(!TabView.isVisible(), "Tab View is no longer visible");
-    verifyPB();
-    
-    // exit private browsing and make sure Tab View is shown again
+  // Establish initial state
+  contentWindow = document.getElementById("tab-view").contentWindow;  
+  verifyCleanState("start");
+  
+  // register a clean up for private browsing just in case
+  registerCleanupFunction(function() {
+    pb.privateBrowsingEnabled = false;
+  });
+  
+  // create a group
+  let box = new contentWindow.Rect(20, 20, 180, 180);
+  let groupItem = new contentWindow.GroupItem([], {bounds: box, title: "test1"});
+  let id = groupItem.id; 
+  is(contentWindow.GroupItems.groupItems.length, 2, "we now have two groups");
+  registerCleanupFunction(function() {
+    contentWindow.GroupItems.groupItem(id).close();
+  });
+  
+  // make it the active group so new tabs will be added to it
+  contentWindow.GroupItems.setActiveGroupItem(groupItem);
+  
+  // collect the group titles
+  let count = contentWindow.GroupItems.groupItems.length;
+  for (let a = 0; a < count; a++) {
+    let gi = contentWindow.GroupItems.groupItems[a];
+    groupTitles[a] = gi.getTitle();
+  }
+  
+  // Create a second tab
+  gBrowser.addTab("about:robots");
+  is(gBrowser.tabs.length, 2, "we now have 2 tabs");
+  registerCleanupFunction(function() {
+    gBrowser.removeTab(gBrowser.tabs[1]);
+  });
+
+  afterAllTabsLoaded(function() {
+    // Get normal tab urls
+    for (let a = 0; a < gBrowser.tabs.length; a++)
+      normalURLs.push(gBrowser.tabs[a].linkedBrowser.currentURI.spec);
+
+    // verify that we're all set up for our test
+    verifyNormal();
+
+    // go into private browsing and make sure Tab View becomes hidden
     togglePBAndThen(function() {
-      ok(TabView.isVisible(), "Tab View is visible again");
-      verifyNormal();
+      ok(!TabView.isVisible(), "Tab View is no longer visible");
+      verifyPB();
       
-      // exit Tab View
-      window.addEventListener("tabviewhidden", onTabViewHidden, false);
-      TabView.toggle();
-    });  
+      // exit private browsing and make sure Tab View is shown again
+      togglePBAndThen(function() {
+        ok(TabView.isVisible(), "Tab View is visible again");
+        verifyNormal();
+
+        hideTabView(onTabViewHidden);
+      });
+    });
   });
 }
 
 // -----------
 function onTabViewHidden() {
-  window.removeEventListener("tabviewhidden", onTabViewHidden, false);
   ok(!TabView.isVisible(), "Tab View is not visible");
   
   // go into private browsing and make sure Tab View remains hidden
@@ -101,22 +128,31 @@ function onTabViewHidden() {
     togglePBAndThen(function() {
       verifyNormal();
       
-      // clean up
-      gBrowser.removeTab(gBrowser.tabs[1]);
-      
-      is(gBrowser.tabs.length, 1, "we finish with one tab");
-      ok(!pb.privateBrowsingEnabled, "we finish with private browsing off");
+      // end game
       ok(!TabView.isVisible(), "we finish with Tab View not visible");
-    
+      registerCleanupFunction(verifyCleanState); // verify after all cleanups
       finish();
     });
   });
 }
 
 // ----------
+function verifyCleanState(mode) {
+  let prefix = "we " + (mode || "finish") + " with ";
+  is(gBrowser.tabs.length, 1, prefix + "one tab");
+  is(contentWindow.GroupItems.groupItems.length, 1, prefix + "1 group");
+  ok(gBrowser.tabs[0]._tabViewTabItem.parent == contentWindow.GroupItems.groupItems[0], 
+      "the tab is in the group");
+  ok(!pb.privateBrowsingEnabled, prefix + "private browsing off");
+}
+
+// ----------
 function verifyPB() {
   ok(pb.privateBrowsingEnabled == true, "private browsing is on");
   is(gBrowser.tabs.length, 1, "we have 1 tab in private browsing");
+  is(contentWindow.GroupItems.groupItems.length, 1, "we have 1 group in private browsing");
+  ok(gBrowser.tabs[0]._tabViewTabItem.parent == contentWindow.GroupItems.groupItems[0], 
+      "the tab is in the group");
 
   let browser = gBrowser.tabs[0].linkedBrowser;
   is(browser.currentURI.spec, pbTabURL, "correct URL for private browsing");
@@ -124,14 +160,26 @@ function verifyPB() {
 
 // ----------
 function verifyNormal() {
-  ok(pb.privateBrowsingEnabled == false, "private browsing is off");
+  let prefix = "verify normal " + normalIteration + ": "; 
+  normalIteration++;
+  
+  ok(pb.privateBrowsingEnabled == false, prefix + "private browsing is off");
+  
+  let tabCount = gBrowser.tabs.length;
+  let groupCount = contentWindow.GroupItems.groupItems.length;
+  is(tabCount, 2, prefix + "we have 2 tabs");
+  is(groupCount, 2, prefix + "we have 2 groups");
+  ok(tabCount == groupCount, prefix + "same number of tabs as groups"); 
+  for (let a = 0; a < tabCount; a++) {
+    let tab = gBrowser.tabs[a];
+    is(tab.linkedBrowser.currentURI.spec, normalURLs[a],
+        prefix + "correct URL");
 
-  let count = gBrowser.tabs.length;
-  is(count, 2, "we have 2 tabs in normal mode");
-
-  for (let a = 0; a < count; a++) {
-    let browser = gBrowser.tabs[a].linkedBrowser;
-    is(browser.currentURI.spec, normalURLs[a], "correct URL for normal mode");
+    let groupItem = contentWindow.GroupItems.groupItems[a];
+    is(groupItem.getTitle(), groupTitles[a], prefix + "correct group title");
+    
+    ok(tab._tabViewTabItem.parent == groupItem,
+        prefix + "tab " + a + " is in group " + a);
   }
 }
 
@@ -142,30 +190,9 @@ function togglePBAndThen(callback) {
       return;
 
     Services.obs.removeObserver(pbObserver, "private-browsing-transition-complete");
-    
     afterAllTabsLoaded(callback);
   }
 
   Services.obs.addObserver(pbObserver, "private-browsing-transition-complete", false);
   pb.privateBrowsingEnabled = !pb.privateBrowsingEnabled;
-}
-
-// ----------
-function afterAllTabsLoaded(callback) {
-  let stillToLoad = 0; 
-  function onLoad() {
-    this.removeEventListener("load", onLoad, true);
-    
-    stillToLoad--;
-    if (!stillToLoad)
-      callback();
-  }
-
-  for (let a = 0; a < gBrowser.tabs.length; a++) {
-    let browser = gBrowser.tabs[a].linkedBrowser;
-    if (browser.webProgress.isLoadingDocument) {
-      stillToLoad++;
-      browser.addEventListener("load", onLoad, true);
-    }
-  }
 }

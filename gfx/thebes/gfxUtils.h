@@ -44,7 +44,7 @@
 
 class gfxDrawable;
 class nsIntRegion;
-class nsIntRect;
+struct nsIntRect;
 
 class THEBES_API gfxUtils {
 public:
@@ -96,6 +96,16 @@ public:
      */
     static void ClipToRegionSnapped(gfxContext* aContext, const nsIntRegion& aRegion);
 
+    /**
+     * Create a path consisting of rectangles in |aRegion|.
+     */
+    static void PathFromRegion(gfxContext* aContext, const nsIntRegion& aRegion);
+
+    /**
+     * Create a path consisting of rectangles in |aRegion|, snapping the rectangles.
+     */
+    static void PathFromRegionSnapped(gfxContext* aContext, const nsIntRegion& aRegion);
+
     /*
      * Convert image format to depth value
      */
@@ -107,6 +117,11 @@ public:
      * set aOut to that rectangle, otherwise return failure.
     */
     static PRBool GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut);
+
+    /**
+     * Clamp aVal to a power of kScaleResolution.
+     */
+    static gfxFloat ClampToScaleFactor(gfxFloat aVal);
 };
 
 #endif

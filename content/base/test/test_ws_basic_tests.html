@@ -17,6 +17,8 @@
 <script class="testbody" type="text/javascript">
 
 var ws;
+var oldPrefVal;
+var domBranch;
 
 var params = ["protocol", "resource", "origin", "end"];
 var results = ["test", "/tests/content/base/test/file_ws_basic_tests", "http://mochi.test:8888", "end"];
@@ -29,7 +31,21 @@ function forcegc(){
   wu.garbageCollect();
 }
 
+function finishWSTest() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    domBranch.setBoolPref("override-security-block", oldPrefVal);
+    SimpleTest.finish();
+}
+
 function testWebSocket () {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefService =
+      Components.classes["@mozilla.org/preferences-service;1"]
+      .getService(Components.interfaces.nsIPrefService);
+  domBranch = prefService.getBranch("network.websocket.");
+  oldPrefVal = domBranch.getBoolPref("override-security-block");
+  domBranch.setBoolPref("override-security-block", true);
+
   var url = "ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests";
   ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests", "test");
   is(ws.url, url, "Wrong Websocket.url!");
@@ -41,11 +57,12 @@ function testWebSocket () {
   }
   ws.onclose = function(e) {
     is(results.length, 0, "All the messages should have been processed!");
+    ok(e.wasClean, "Connection closed cleanly");
     testWebSocket2();
   }
   ws.onerror = function(e) {
     ok(false, "onerror called!");
-    SimpleTest.finish();
+    finishWSTest();
   }
   ws.onmessage = function(e) {
     document.getElementById('log').textContent += "\n" + e.data;
@@ -67,11 +84,12 @@ function testWebSocket2() {
   }
   ws.onclose = function(e) {
     is(messageCount, testCount, "Didn't receive all the messages!");
+    ok(e.wasClean, "Connection closed cleanly");
     testWebSocket3();
   }
   ws.onerror = function(e) {
     ok(false, "onerror called!");
-    SimpleTest.finish();
+    finishWSTest();
   }
   ws.onmessage = function(e) {
     ++messageCount;
@@ -97,11 +115,12 @@ function testWebSocket3() {
   }
   ws.onclose = function(e) {
     is(messageCount, testCount, "Didn't receive all the messages!");
+    ok(e.wasClean, "Connection closed cleanly");
     testWebSocket4();
   }
   ws.onerror = function(e) {
     ok(false, "onerror called!");
-    SimpleTest.finish();
+    finishWSTest();
   }
   ws.onmessage = function(e) {
     forcegc(); // Do something evil, call cycle collector a lot.
@@ -116,6 +135,7 @@ function testWebSocket3() {
 
 function testWebSocket4() {
   ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests", "test");
+  // String length = (10,000 - 1) * 23 = 229,977 = almost 225 KiB.
   var longString = new Array(10000).join("-huge websocket message");
   ws.onopen = function(e) {
     is(this, ws, "'this' should point to the WebSocket. (1)");
@@ -123,16 +143,18 @@ function testWebSocket4() {
   }
   ws.onclose = function(e) {
     is(this, ws, "'this' should point to the WebSocket. (2)");
-    //ok(e.wasClean, "Connection should have closed cleanly.");
+    ok(e.wasClean, "Connection closed cleanly");
     testWebSocket5();
   }
   ws.onerror = function(e) {
     ok(false, "onerror called!");
-    SimpleTest.finish();
+    finishWSTest();
   }
   ws.onmessage = function(e) {
     is(this, ws, "'this' should point to the WebSocket. (3)");
-    is(e.data, longString, "Didn't get the huge message back!");
+    // Do not use |is(e.data, longString, "...");| that results in a _very_ long line.
+    is(e.data.length, longString.length, "Length of received message");
+    ok(e.data == longString, "Content of received message");
     document.getElementById('log').textContent += "\nReceived the huge message";
     this.close();
   }
@@ -144,16 +166,16 @@ function testWebSocket5() {
     this.close();
   }
   ws.onclose = function(e) {
-    //ok(e.wasClean, "Connection should have closed cleanly.");
+    ok(e.wasClean, "Connection closed cleanly");
     is(this.bufferedAmount, 0, "Shouldn't have anything buffered");
     var msg = "some data";
     this.send(msg);
-    ok(this.bufferedAmount, msg.length, "Should have some data buffered");
-    SimpleTest.finish();
+    is(this.bufferedAmount, msg.length, "Should have some data buffered");
+    finishWSTest();
   }
   ws.onerror = function(e) {
     ok(false, "onerror called!");
-    SimpleTest.finish();
+    finishWSTest();
   }
 }
 

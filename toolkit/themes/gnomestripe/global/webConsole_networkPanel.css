@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Joe Walker <jwalker@mozilla.com>
  *   Julian Viereck <jviereck@mozilla.com>
+ *   Mihai Șucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,19 +38,23 @@
  * ***** END LICENSE BLOCK ***** */
 
 body {
-  font-family: Lucida Grande, sans-serif;
+  font-family: sans-serif;
   font-size: 11px;
   background: #EEE;
+  color: #000;
 }
 
-div#header {
+#header {
   padding: 5px;
   overflow-x:auto;
+  display: block;
 }
 
 h1 {
   font-size: 13px;
-  padding: 2px 10px;
+  line-height: 15px;
+  padding: 3px 10px;
+  vertical-align: bottom;
   margin: 0px;
   background: -moz-linear-gradient(top, #BBB, #999);
   border-radius: 2px;
@@ -58,31 +63,38 @@ h1 {
 
 h1 .info {
   font-size: 11px;
+  line-height: 15px;
+  vertical-align: bottom;
   float: right;
   color: #333;
   padding-right: 3px;
 }
 
-div.property-header {
+.property-table {
   padding: 2px 5px;
   background: -moz-linear-gradient(top, #FFF, #F8F8F8);
   color: #333;
+  width: 100%;
   max-height: 330px;
-  overflow-y: auto;
-  overflow-x: auto;
-  white-space: pre-wrap;
+  overflow: auto;
+  display: block;
 }
 
-span.property-name {
+.property-name {
   font-size: 11px;
   font-weight: bold;
-  padding-right: 4px;
   color: #000;
+  white-space: nowrap;
+  text-align: right;
+  vertical-align: top;
+  width: 10%;
 }
 
-span.property-value {
+.property-value {
   padding-right: 5px;
   font-size: 11px;
+  word-wrap: break-word;
+  width: 90%;
 }
 
 div.group {
@@ -90,7 +102,7 @@ div.group {
 }
 
 div.group,
-div#header {
+#header {
   background: #FFF;
   border-color: #E1E1E1;
   border-style: solid;

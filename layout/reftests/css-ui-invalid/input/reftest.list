@@ -33,8 +33,13 @@
 == input-checkbox-required-invalid-default.html success-ref.html
 == input-radio-required-invalid-changed.html success-ref.html
 == input-radio-required-invalid-default.html success-ref.html
-== input-radio-required-invalid-changed-2.html success-ref.html
-== input-radio-required-invalid-default-2.html success-ref.html
 == input-file-required-invalid-changed.html input-file-ref.html
 == input-file-required-invalid-default.html input-file-ref.html
+== input-radio-required.html success-ref.html
+== input-radio-customerror.html success-ref.html
+== input-radio-dyn-valid-1.html success-ref.html
+== input-radio-dyn-valid-2.html success-ref.html
+== input-radio-nogroup-required-valid.html success-ref.html
+== input-radio-nogroup-required-invalid.html success-ref.html
+== input-novalidate.html input-ref.html
 # input type='hidden' shouldn't show

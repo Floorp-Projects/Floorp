@@ -65,6 +65,7 @@ _TEST_FILES = \
 		test_DOMWindowCreated.xul \
 		DOMWindowCreated_chrome.xul \
 		DOMWindowCreated_content.html \
+		test_sandbox_image.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

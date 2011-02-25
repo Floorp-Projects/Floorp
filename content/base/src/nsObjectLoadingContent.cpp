@@ -87,6 +87,7 @@
 #include "nsMimeTypes.h"
 #include "nsStyleUtil.h"
 #include "nsGUIEvent.h"
+#include "nsUnicharUtils.h"
 
 // Concrete classes
 #include "nsFrameLoader.h"
@@ -882,10 +883,7 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
       return NS_OK;
     }
 
-    nsCOMPtr<nsIPresShell> shell = doc->GetShell();
-    if (shell) {
-      shell->RecreateFramesFor(thisContent);
-    }
+    doc->FlushPendingNotifications(Flush_Frames);
 
     mInstantiating = PR_FALSE;
 
@@ -1524,7 +1522,7 @@ nsObjectLoadingContent::RemovedFromDocument()
 void
 nsObjectLoadingContent::Traverse(nsCycleCollectionTraversalCallback &cb)
 {
-  cb.NoteXPCOMChild(mFrameLoader);
+  cb.NoteXPCOMChild(static_cast<nsIFrameLoader*>(mFrameLoader));
 }
 
 // <private>
@@ -1734,7 +1732,7 @@ nsObjectLoadingContent::TypeForClassID(const nsAString& aClassID,
   }
 
   // If it starts with "clsid:", this is ActiveX content
-  if (StringBeginsWith(aClassID, NS_LITERAL_STRING("clsid:"))) {
+  if (StringBeginsWith(aClassID, NS_LITERAL_STRING("clsid:"), nsCaseInsensitiveStringComparator())) {
     // Check if we have a plugin for that
 
     if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForType("application/x-oleobject"))) {

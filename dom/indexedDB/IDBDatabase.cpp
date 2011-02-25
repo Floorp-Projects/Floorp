@@ -39,10 +39,12 @@
 
 #include "IDBDatabase.h"
 
+#include "jscntxt.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/storage.h"
 #include "nsDOMClassInfo.h"
 #include "nsEventDispatcher.h"
+#include "nsJSUtils.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
@@ -80,7 +82,8 @@ public:
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
-  nsresult GetSuccessResult(nsIWritableVariant* aResult);
+  nsresult GetSuccessResult(JSContext* aCx,
+                            jsval* aVal);
 
 private:
   // In-params
@@ -96,8 +99,16 @@ public:
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
-  nsresult OnSuccess(nsIDOMEventTarget* aTarget);
-  void OnError(nsIDOMEventTarget* aTarget, nsresult aErrorCode);
+
+  nsresult OnSuccess()
+  {
+    return NS_OK;
+  }
+
+  void OnError()
+  {
+    NS_ASSERTION(mTransaction->IsAborted(), "How else can this fail?!");
+  }
 
   void ReleaseMainThreadObjects()
   {
@@ -118,8 +129,16 @@ public:
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
-  nsresult OnSuccess(nsIDOMEventTarget* aTarget);
-  void OnError(nsIDOMEventTarget* aTarget, nsresult aErrorCode);
+
+  nsresult OnSuccess()
+  {
+    return NS_OK;
+  }
+
+  void OnError()
+  {
+    NS_ASSERTION(mTransaction->IsAborted(), "How else can this fail?!");
+  }
 
 private:
   // In-params.
@@ -523,8 +542,8 @@ IDBDatabase::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
 
 NS_IMETHODIMP
 IDBDatabase::CreateObjectStore(const nsAString& aName,
-                               const nsAString& aKeyPath,
-                               PRBool aAutoIncrement,
+                               const jsval& aOptions,
+                               JSContext* aCx,
                                nsIIDBObjectStore** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -532,12 +551,6 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
   if (aName.IsEmpty()) {
     // XXX Update spec for a real error code here.
     return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
-  }
-
-  // XPConnect makes "null" into a void string, we need an empty string.
-  nsString keyPath(aKeyPath);
-  if (keyPath.IsVoid()) {
-    keyPath.Truncate();
   }
 
   IDBTransaction* transaction = AsyncConnectionHelper::GetCurrentTransaction();
@@ -556,12 +569,71 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
     return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
   }
 
+  nsString keyPath;
+  bool autoIncrement = false;
+
+  if (!JSVAL_IS_VOID(aOptions) && !JSVAL_IS_NULL(aOptions)) {
+    if (JSVAL_IS_PRIMITIVE(aOptions)) {
+      // XXX Update spec for a real code here
+      return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
+    }
+
+    NS_ASSERTION(JSVAL_IS_OBJECT(aOptions), "Huh?!");
+    JSObject* options = JSVAL_TO_OBJECT(aOptions);
+
+    js::AutoIdArray ids(aCx, JS_Enumerate(aCx, options));
+    if (!ids) {
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    for (size_t index = 0; index < ids.length(); index++) {
+      jsid id = ids[index];
+
+      if (id != nsDOMClassInfo::sKeyPath_id &&
+          id != nsDOMClassInfo::sAutoIncrement_id) {
+        // XXX Update spec for a real code here
+        return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
+      }
+
+      jsval val;
+      if (!JS_GetPropertyById(aCx, options, id, &val)) {
+        NS_WARNING("JS_GetPropertyById failed!");
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      }
+
+      if (id == nsDOMClassInfo::sKeyPath_id) {
+        JSString* str = JS_ValueToString(aCx, val);
+        if (!str) {
+          NS_WARNING("JS_ValueToString failed!");
+          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+        }
+        nsDependentJSString dependentKeyPath;
+        if (!dependentKeyPath.init(aCx, str)) {
+          NS_WARNING("Initializing keyPath failed!");
+          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+        }
+        keyPath = dependentKeyPath;
+      }
+      else if (id == nsDOMClassInfo::sAutoIncrement_id) {
+        JSBool boolVal;
+        if (!JS_ValueToBoolean(aCx, val, &boolVal)) {
+          NS_WARNING("JS_ValueToBoolean failed!");
+          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+        }
+        autoIncrement = !!boolVal;
+      }
+      else {
+        NS_NOTREACHED("Shouldn't be able to get here!");
+      }
+    }
+  }
+
   nsAutoPtr<ObjectStoreInfo> newInfo(new ObjectStoreInfo());
 
   newInfo->name = aName;
   newInfo->id = databaseInfo->nextObjectStoreId++;
   newInfo->keyPath = keyPath;
-  newInfo->autoIncrement = aAutoIncrement;
+  newInfo->autoIncrement = autoIncrement;
   newInfo->databaseId = mDatabaseId;
 
   if (!ObjectStoreInfo::Put(newInfo)) {
@@ -677,13 +749,8 @@ IDBDatabase::Transaction(nsIVariant* aStoreNames,
 
   if (aOptionalArgCount) {
     if (aMode != nsIIDBTransaction::READ_WRITE &&
-        aMode != nsIIDBTransaction::READ_ONLY &&
-        aMode != nsIIDBTransaction::SNAPSHOT_READ) {
+        aMode != nsIIDBTransaction::READ_ONLY) {
       return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
-    }
-    if (aMode == nsIIDBTransaction::SNAPSHOT_READ) {
-      NS_NOTYETIMPLEMENTED("Implement me!");
-      return NS_ERROR_NOT_IMPLEMENTED;
     }
   }
   else {
@@ -723,7 +790,6 @@ IDBDatabase::Transaction(nsIVariant* aStoreNames,
       NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       if (!info->ContainsStoreName(name)) {
-        // XXX Update spec for a real error code here.
         return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
       }
 
@@ -847,15 +913,20 @@ IDBDatabase::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   NS_ENSURE_TRUE(aVisitor.mDOMEvent, NS_ERROR_UNEXPECTED);
 
   if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) {
-    nsCOMPtr<nsIDOMEvent> duplicateEvent =
-      IDBErrorEvent::MaybeDuplicate(aVisitor.mDOMEvent);
+    nsString type;
+    nsresult rv = aVisitor.mDOMEvent->GetType(type);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (duplicateEvent) {
+    if (type.EqualsLiteral(ERROR_EVT_STR)) {
+      nsRefPtr<nsDOMEvent> duplicateEvent = CreateGenericEvent(type);
+      NS_ENSURE_STATE(duplicateEvent);
+
       nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mOwner));
       NS_ASSERTION(target, "How can this happen?!");
 
       PRBool dummy;
-      target->DispatchEvent(duplicateEvent, &dummy);
+      rv = target->DispatchEvent(duplicateEvent, &dummy);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
@@ -885,7 +956,8 @@ SetVersionHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-SetVersionHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
+SetVersionHelper::GetSuccessResult(JSContext* aCx,
+                                   jsval* aVal)
 {
   DatabaseInfo* info;
   if (!DatabaseInfo::Get(mDatabase->Id(), &info)) {
@@ -893,6 +965,11 @@ SetVersionHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
   info->version = mVersion;
+
+  nsresult rv = WrapNative(aCx, NS_ISUPPORTS_CAST(nsPIDOMEventTarget*,
+                                                  mTransaction),
+                           aVal);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -931,20 +1008,6 @@ CreateObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-CreateObjectStoreHelper::OnSuccess(nsIDOMEventTarget* aTarget)
-{
-  NS_ASSERTION(!aTarget, "Huh?!");
-  return NS_OK;
-}
-
-void
-CreateObjectStoreHelper::OnError(nsIDOMEventTarget* aTarget,
-                                 nsresult aErrorCode)
-{
-  NS_ASSERTION(!aTarget, "Huh?!");
-}
-
-nsresult
 DeleteObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   nsCOMPtr<mozIStorageStatement> stmt =
@@ -963,19 +1026,4 @@ DeleteObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   return NS_OK;
-}
-
-nsresult
-DeleteObjectStoreHelper::OnSuccess(nsIDOMEventTarget* aTarget)
-{
-  NS_ASSERTION(!aTarget, "Huh?!");
-
-  return NS_OK;
-}
-
-void
-DeleteObjectStoreHelper::OnError(nsIDOMEventTarget* aTarget,
-                                 nsresult aErrorCode)
-{
-  NS_NOTREACHED("Removing an object store should never fail here!");
 }

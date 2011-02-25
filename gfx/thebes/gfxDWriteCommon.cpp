@@ -59,7 +59,7 @@ gfxDWriteFontFileLoader::CreateStreamFromKey(const void *fontFileReferenceKey,
     return S_OK;
 }
 
-gfxDWriteFontFileStream::gfxDWriteFontFileStream(nsTArray<PRUint8> *aData)
+gfxDWriteFontFileStream::gfxDWriteFontFileStream(FallibleTArray<PRUint8> *aData)
 {
     mData.SwapElements(*aData);
 }

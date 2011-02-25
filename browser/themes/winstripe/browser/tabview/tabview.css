@@ -1,11 +1,10 @@
 body {
-  font-family: Tahoma, sans-serif !important;
+  font: message-box;
   color: rgba(0, 0, 0, 0.6);
   font-size: 13px;
-  line-height: 16px;
 }
 
-#bg {
+#bg:not(:-moz-system-metric(windows-compositor)) {
   background: url("chrome://browser/skin/tabview/grain.png") repeat scroll center top,
               -moz-linear-gradient(center top , #CCD9EA, #C7D5E7) repeat scroll 0 0 transparent;
 }
@@ -27,7 +26,6 @@ body {
     -1px 0 1px rgba(255, 255, 255, 0.8) inset,
     0 1px 1.5px rgba(4, 38, 60, 0.4);
   cursor: pointer;
-  margin: 4px;
 }
 
 html[dir=rtl] .tab {
@@ -88,11 +86,15 @@ html[dir=rtl] .favicon {
   right: 6px;
   width: 16px;
   height: 16px;
-  background: url(chrome://global/skin/icons/Close.gif) no-repeat;
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 0.5s;
-  -moz-transition-timing-function: ease-out;
-  opacity: 0.2;
+  background-image: -moz-image-rect(url("chrome://browser/skin/tabview/close.png"), 0, 16, 16, 0);
+}
+
+.close:hover {
+  background-image: -moz-image-rect(url("chrome://browser/skin/tabview/close.png"), 0, 32, 16, 16);
+}
+
+.close:hover:active {
+  background-image: -moz-image-rect(url("chrome://browser/skin/tabview/close.png"), 0, 48, 16, 32);
 }
 
 html[dir=rtl] .close {
@@ -118,8 +120,8 @@ html[dir=rtl] .expander {
   -moz-transform: scaleX(-1);
 }
 
-.close:hover,
-.expander:hover {
+.expander:hover,
+.appTabIcon:hover {
   -moz-transition-property: opacity;
   -moz-transition-duration: 0.5s;
   -moz-transition-timing-function: ease-out;
@@ -211,6 +213,7 @@ html[dir=rtl] .tab.focus {
 .tabInGroupItem {
   box-shadow: none;
   background-color: #E0EAF5;
+  margin: 4px;
 }
 
 .tabInGroupItem .favicon {
@@ -240,12 +243,16 @@ html[dir=rtl] .groupItem {
 
 .groupItem.activeGroupItem {
   box-shadow:
-    rgba(0,0,0,0.6) 1px 1px 5.5px;
+    rgba(0,0,0,0.8) 2px 2px 8px;
 }
 
 html[dir=rtl] .groupItem.activeGroupItem {
   box-shadow:
-    rgba(0,0,0,0.6) -1px 1px 5.5px;
+    rgba(0,0,0,0.8) -2px 2px 8px;
+}
+
+.dragRegion {
+  background: rgba(224, 234, 245, 0.4);
 }
 
 .overlay {
@@ -258,20 +265,51 @@ html[dir=rtl] .overlay {
   box-shadow: -3px 3px 5.5px rgba(0,0,0,.5);
 }
 
-.appTabTray {
+.appTabTrayContainer {
   top: 34px;
   right: 1px;
+  -moz-border-start: 1px solid #E1E1E1;
+  padding: 0 5px;
+  overflow: -moz-hidden-unscrollable;
+  text-align: start;
+  line-height: 0;
 }
 
-html[dir=rtl] .appTabTray {
+html[dir=rtl] .appTabTrayContainer {
   right: auto;
   left: 1px;
+}
+
+.appTabTray {
+  display: inline-block;
+  -moz-column-width: 16px;
+  -moz-column-gap: 5px;
+}
+
+.appTabTrayContainerTruncated {
+  padding-bottom: 7px;
+}
+
+.appTabTrayContainerTruncated:after {
+  content: "…";
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 15px;
+  line-height: 15px;
+  text-align: center;
+  font-size: 15px;
 }
 
 .appTabIcon {
   width: 16px;
   height: 16px;
   cursor: pointer;
+  opacity: 0.8;
+  padding-bottom: 3px;
+  display: block;
 }
 
 .undo {
@@ -407,7 +445,6 @@ html[dir=rtl] .acceptsDrop {
 
 .titlebar {
   font-size: 12px;
-  line-height: 18px;
   height: 18px;
 }
 
@@ -420,15 +457,14 @@ input.name {
   margin-bottom: 0;
   -moz-margin-start: 3px;
   padding: 1px;
-  background-image: url(chrome://browser/skin/tabview/edit-light.png);
-  -moz-padding-start: 20px;
 }
 
 html[dir=rtl] input.name {
   background-position: right top;
 }
 
-.title-container:hover input.name {
+.title-container:hover input.name,
+.title-container input.name:focus {
   border: 1px solid #ddd;
 }
 
@@ -441,18 +477,16 @@ input.name:focus {
   color: #555;
 }
 
-input.defaultName {
+input.name:-moz-placeholder {
   font-style: italic !important;
-  background-image-opacity: .1;
   color: transparent;
+  background-image: url(chrome://browser/skin/tabview/edit-light.png);
+  background-repeat: no-repeat;
+  -moz-padding-start: 20px;
 }
 
-.title-container:hover input.defaultName {
+.title-container:hover input.name:-moz-placeholder {
   color: #CCC;
-}
-
-.title-container {
-  cursor: text;
 }
 
 .title-shield {
@@ -465,6 +499,7 @@ input.defaultName {
   top: 0;
   width: 100%;
   height: 100%;
+  cursor: text;
 }
 
 html[dir=rtl] .title-shield {
@@ -477,15 +512,15 @@ html[dir=rtl] .title-shield {
 }
 
 .stackExpander {
-  opacity: .4;
   cursor: pointer;
-  background-image: url(chrome://browser/skin/tabview/stack-expander.png);
+  bottom: 8px;
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/stack-expander.png), 0, 48, 24, 24);
   width: 24px;
   height: 24px;
 }
 
 .stackExpander:hover {
-  opacity: .7 !important;
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/stack-expander.png), 0, 24, 24, 0);
 }
 
 /* Resizable
@@ -513,8 +548,10 @@ html[dir=rtl] .resizer {
   cursor: se-resize;
   width: 12px;
   height: 12px;
-  right: 1px;
-  bottom: 1px;
+  padding-right: 3px;
+  padding-bottom: 3px;
+  right: -2px;
+  bottom: -2px;
 }
 
 html[dir=rtl] .iq-resizable-se {
@@ -526,16 +563,14 @@ html[dir=rtl] .iq-resizable-se {
 /* Exit button
 +----------------------------------*/
 #exit-button {
-  cursor: default;
-  top: 1px;
-  right: 0;
   width: 18px;
   height: 18px;
-  -moz-margin-end: 3px;
-  margin-top: 3px;
+  -moz-margin-end: 4px;
+  margin-top: 2px;
   background-image: -moz-image-rect(url(chrome://browser/skin/tabview/tabview.png), 0, 90, 18, 72);
   background-attachment: scroll;
   background-repeat: no-repeat;
+  border: none;
 }
 
 #exit-button[groups="0"] {
@@ -552,11 +587,6 @@ html[dir=rtl] .iq-resizable-se {
 
 #exit-button[groups="3"] {
   background-image: -moz-image-rect(url(chrome://browser/skin/tabview/tabview.png), 0, 72, 18, 54);
-}
-
-html[dir=rtl] #exit-button {
-  right: auto;
-  left: 0;
 }
 
 /* Search
@@ -586,10 +616,28 @@ html[dir=rtl] #exit-button {
 }
 
 #actions{
-  width: 26px;
-  height: 26px;
+  top: -3px;
+  padding-top: 3px;
+  width: 29px;
   border: none;
   text-align: center;
+  background-color: #E0EAF5;
+  border-radius: 0.4em;
+  box-shadow:
+    0 1px 0 #FFFFFF inset,
+    0 -1px 1px rgba(255, 255, 255, 0.8) inset,
+    1px 0 1px rgba(255, 255, 255, 0.8) inset,
+    -1px 0 1px rgba(255, 255, 255, 0.8) inset,
+    0 1px 3px rgba(4, 38, 60, 0.6);
+}
+
+html[dir=rtl] #actions {
+  box-shadow:
+    0 1px 0 #FFFFFF inset,
+    0 -1px 1px rgba(255, 255, 255, 0.8) inset,
+    -1px 0 1px rgba(255, 255, 255, 0.8) inset,
+    1px 0 1px rgba(255, 255, 255, 0.8) inset,
+    0 1px 3px rgba(4, 38, 60, 0.6);
 }
 
 #actions #searchbutton{
@@ -598,6 +646,7 @@ html[dir=rtl] #exit-button {
   width: 20px;
   height: 20px;
   margin-top: 3px;
+  -moz-margin-end: 1px;
 }
 
 .notMainMatch{

@@ -1,0 +1,100 @@
+<html>
+<head>
+  <title>Test for Bug 620145</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runtest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=620145">Mozilla Bug 620145</a>
+<pre id="test">
+</pre>
+
+<div id="text" style="max-width: 100px" onmouseup="openAlert()">
+  This is a short piece of text used for testing that mouse selecting is
+  stopped when an alert appears.
+</div>
+<div id="text2" style="max-width: 100px">
+  This is another short piece of text used for testing that mouse selecting is
+  stopped when an alert appears.
+</div>
+<button id="button" onmouseup="openAlert()">Button</button>
+
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var selectionTest = false;
+var testNum = 0;
+var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+              getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+function hasTabModalPrompts() {
+  var prefName = "prompts.tab_modal.enabled";
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  return Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
+         Services.prefs.getBoolPref(prefName);
+}
+
+function openAlert() {
+  ok(true, "opening alert...");
+  alert("hello!");
+  ok(true, "...alert done.");
+}
+
+function runtest()
+{
+  // The <button> in this test's HTML opens a prompt when clicked.
+  // Here we send the events to simulate clicking it.
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  ok(true, "starting test");
+  isTabModal = hasTabModalPrompts();
+  if (!isTabModal)
+    todo(false, "Test is run with tab modal prompts disabled.");
+  else
+    ok(true, "Test is run with tab modal prompts enabled.");
+  startCallbackTimer();
+
+  var button = $("button");
+  dispatchMouseEvent(button, "mousedown");
+  dispatchMouseEvent(button, "mouseup");
+
+  selectionTest = isTabModal;
+
+  startCallbackTimer();
+
+  var text = $("text");
+  dispatchMouseEvent(text, "mousedown");
+  dispatchMouseEvent(text, "mouseup");
+
+  SimpleTest.finish();
+}
+
+function dispatchMouseEvent(target, type)
+{
+  e = document.createEvent("MouseEvent");
+  e.initEvent(type, false, false, window, 0, 1, 1, 1, 1,
+              false, false, false, false, 0, null);
+  utils.dispatchDOMEventViaPresShell(target, e, true);
+  ok(true, type + " sent to " + target.id);
+}
+
+function handleDialog(ui, testNum)
+{
+  if (!selectionTest) {
+    todo(false, "Selection test is disabled when tab modal prompts are not enabled.");
+  } else {
+    synthesizeMouse($("text"), 25, 55, { type: "mousemove" });
+    is(window.getSelection().toString(), "", "selection not made");
+    synthesizeMouse(ui.button0, 5, 5, { }, ui.button0.ownerDocument.defaultView);
+  }
+
+  ok(true, "handleDialog sending mouseclick to dialog...");
+  synthesizeMouse(ui.button0, 5, 5, { }, ui.button0.ownerDocument.defaultView);
+}
+</script>
+
+</body>
+</html>

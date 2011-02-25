@@ -15,7 +15,7 @@ script regress-394709.js
 skip script regress-415721.js
 skip script regress-417131.js
 skip script regress-417817.js
-script regress-419091.js
+skip script regress-419091.js
 script regress-422269.js
 skip script regress-445818.js
 skip script regress-446169-01.js
@@ -32,8 +32,8 @@ script regress-472450-03.js
 script regress-472450-04.js
 script regress-473040.js
 skip script regress-475971.js
-skip-if(!xulRuntime.shell) script regress-476414-01.js # slow
-skip-if(!xulRuntime.shell) script regress-476414-02.js # slow
+skip-if(!xulRuntime.shell) slow script regress-476414-01.js
+skip-if(!xulRuntime.shell) slow script regress-476414-02.js
 fails-if(!xulRuntime.shell) script regress-476427.js # NS_ERROR_DOM_NOT_SUPPORTED_ERR
 script regress-476653.js
 script regress-476869.js

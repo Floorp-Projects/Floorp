@@ -46,6 +46,7 @@
 #include "nsIParser.h"
 #include "nsAutoPtr.h"
 #include "nsGkAtoms.h"
+#include "nsContentSink.h"
 
 using namespace mozilla::dom;
 
@@ -162,8 +163,20 @@ nsScriptElement::MaybeProcessScript()
 
   FreezeUriAsyncDefer();
 
-  nsRefPtr<nsScriptLoader> loader = cont->GetOwnerDoc()->ScriptLoader();
   mAlreadyStarted = PR_TRUE;
+
+  nsIDocument* ownerDoc = cont->GetOwnerDoc();
+  nsCOMPtr<nsIParser> parser = ((nsIScriptElement*)this)->GetCreatorParser();
+  if (parser) {
+    nsCOMPtr<nsIDocument> parserDoc =
+        do_QueryInterface(parser->GetContentSink()->GetTarget());
+    if (ownerDoc != parserDoc) {
+      // Willful violation of HTML5 as of 2010-12-01
+      return NS_OK;
+    }
+  }
+
+  nsRefPtr<nsScriptLoader> loader = ownerDoc->ScriptLoader();
   nsresult scriptresult = loader->ProcessScriptElement(this);
 
   // The only error we don't ignore is NS_ERROR_HTMLPARSER_BLOCK

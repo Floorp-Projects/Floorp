@@ -144,6 +144,7 @@ enum TokenKind {
                                            of definitions paired with a parse
                                            tree full of uses of those names */
     TOK_RESERVED,                       /* reserved keywords */
+    TOK_STRICT_RESERVED,                /* reserved keywords in strict mode */
     TOK_LIMIT                           /* domain size */
 };
 
@@ -300,6 +301,8 @@ class TokenStream
     static const uintN ntokensMask = ntokens - 1;
 
   public:
+    typedef Vector<jschar, 32> CharBuffer;
+
     /*
      * To construct a TokenStream, first call the constructor, which is
      * infallible, then call |init|, which can fail. To destroy a TokenStream,
@@ -316,8 +319,8 @@ class TokenStream
      * Create a new token stream from an input buffer.
      * Return false on memory-allocation failure.
      */
-    bool init(JSVersion version, const jschar *base, size_t length,
-              const char *filename, uintN lineno);
+    bool init(const jschar *base, size_t length, const char *filename, uintN lineno,
+              JSVersion version);
     void close();
     ~TokenStream() {}
 
@@ -325,9 +328,15 @@ class TokenStream
     JSContext *getContext() const { return cx; }
     bool onCurrentLine(const TokenPos &pos) const { return lineno == pos.end.lineno; }
     const Token &currentToken() const { return tokens[cursor]; }
-    const JSCharBuffer &getTokenbuf() const { return tokenbuf; }
+    const CharBuffer &getTokenbuf() const { return tokenbuf; }
     const char *getFilename() const { return filename; }
     uintN getLineno() const { return lineno; }
+    /* Note that the version and hasXML can get out of sync via setXML. */
+    JSVersion versionNumber() const { return VersionNumber(version); }
+    JSVersion versionWithFlags() const { return version; }
+    bool hasAnonFunFix() const { return VersionHasAnonFunFix(version); }
+    bool hasXML() const { return xml || VersionShouldParseXML(versionNumber()); }
+    void setXML(bool enabled) { xml = enabled; }
 
     /* Flag methods. */
     void setStrictMode(bool enabled = true) { setFlag(enabled, TSF_STRICT_MODE_CODE); }
@@ -354,6 +363,8 @@ class TokenStream
     }
 
   private:
+    static JSAtom *atomize(JSContext *cx, CharBuffer &cb);
+
     /*
      * Enables flags in the associated tokenstream for the object lifetime.
      * Useful for lexically-scoped flag toggles.
@@ -446,8 +457,6 @@ class TokenStream
         return JS_FALSE;
     }
 
-    void setVersion(JSVersion newVersion) { version = newVersion; }
-
   private:
     typedef struct TokenBuf {
         jschar              *base;      /* base of line or stream buffer */
@@ -501,10 +510,11 @@ class TokenStream
     JSSourceHandler     listener;       /* callback for source; eg debugger */
     void                *listenerData;  /* listener 'this' data */
     void                *listenerTSData;/* listener data for this TokenStream */
-    JSCharBuffer        tokenbuf;       /* current token string buffer */
+    CharBuffer          tokenbuf;       /* current token string buffer */
     bool                maybeEOL[256];  /* probabilistic EOL lookup table */
     bool                maybeStrSpecial[256];/* speeds up string scanning */
-    JSVersion           version;        /* cached version number for scan */
+    JSVersion           version;        /* (i.e. to identify keywords) */
+    bool                xml;            /* see JSOPTION_XML */
 };
 
 } /* namespace js */
@@ -519,12 +529,23 @@ js_CloseTokenStream(JSContext *cx, js::TokenStream *ts);
 extern JS_FRIEND_API(int)
 js_fgets(char *buf, int size, FILE *file);
 
+namespace js {
+
+struct KeywordInfo {
+    const char  *chars;         /* C string with keyword text */
+    TokenKind   tokentype;
+    JSOp        op;             /* JSOp */
+    JSVersion   version;        /* JSVersion */
+};
+
 /*
- * If the given char array forms JavaScript keyword, return corresponding
- * token. Otherwise return TOK_EOF.
+ * Returns a KeywordInfo for the specified characters, or NULL if the string is
+ * not a keyword.
  */
-extern js::TokenKind
-js_CheckKeyword(const jschar *chars, size_t length);
+extern const KeywordInfo *
+FindKeyword(const jschar *s, size_t length);
+
+} // namespace js
 
 /*
  * Friend-exported API entry point to call a mapping function on each reserved

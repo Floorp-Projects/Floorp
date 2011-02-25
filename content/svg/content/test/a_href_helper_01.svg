@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <a id="a" xlink:href="a_href_destination.svg">
+    <rect width="100%" height="100%"/>
+  </a>
+</svg>

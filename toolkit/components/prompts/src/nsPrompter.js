@@ -202,6 +202,16 @@ let PromptUtils = {
         return [buttonLabels[0], buttonLabels[1], buttonLabels[2], defaultButtonNum, isDelayEnabled];
     },
 
+    // Fire a dialog open/close event. Used by tabbrowser to focus the
+    // tab which is triggering a prompt.
+    //
+    // Bug 611553 - should make these notifications instead of events.
+    fireDialogEvent : function (domWin, eventName) {
+        let event = domWin.document.createEvent("Events");
+        event.initEvent(eventName, true, true);
+        domWin.dispatchEvent(event);
+    },
+
     getAuthInfo : function (authInfo) {
         let username, password;
 
@@ -407,9 +417,11 @@ function openModalWindow(domWin, uri, args) {
 }
 
 function openTabPrompt(domWin, tabPrompt, args) {
+    PromptUtils.fireDialogEvent(domWin, "DOMWillOpenModalDialog");
+
     let winUtils = domWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils);
-    winUtils.enterModalState();
+                         .getInterface(Ci.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
+    let callerWin = winUtils.enterModalStateWithWindow();
 
     // We provide a callback so the prompt can close itself. We don't want to
     // wait for this event loop to return... Otherwise the presence of other
@@ -422,7 +434,16 @@ function openTabPrompt(domWin, tabPrompt, args) {
         callbackInvoked = true;
         if (newPrompt)
             tabPrompt.removePrompt(newPrompt);
-        winUtils.leaveModalState();
+
+        winUtils.leaveModalStateWithWindow(callerWin);
+
+        PromptUtils.fireDialogEvent(domWin, "DOMModalDialogClosed");
+
+        // Restore focus to the previously focused element within tab.
+        let fm = Cc["@mozilla.org/focus-manager;1"].
+                 getService(Ci.nsIFocusManager);
+        let e = fm.getFocusedElementForWindow(domWin.top, false, {});
+        fm.setFocus(e, fm.FLAG_NOSCROLL);
     }
 
     let newPrompt;

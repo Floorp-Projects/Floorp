@@ -15,14 +15,15 @@
     {
       const name = window.location.pathname;
       const description = "My Test Database";
-      const objectStore =  { name: "Objects", keyPath: "id", autoIncr: true };
+      const objectStore =  { name: "Objects",
+                             options: { keyPath: "id", autoIncrement: true } };
 
-      let request = moz_indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db1 = event.result;
+      let db1 = event.target.result;
 
       request = db1.setVersion("1");
       request.onerror = errorHandler;
@@ -31,18 +32,17 @@
 
       is(db1.objectStoreNames.length, 0, "No objectStores in db1");
 
-      db1.createObjectStore(objectStore.name, objectStore.keyPath,
-                            objectStore.autoIncr);
+      db1.createObjectStore(objectStore.name, objectStore.options);
 
       continueToNextStep();
       yield;
 
-      request = moz_indexedDB.open(name, description);
+      request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      let db2 = event.result;
+      let db2 = event.target.result;
 
       ok(db1 !== db2, "Databases are not the same object");
 
@@ -55,9 +55,7 @@
       let objectStore1 = db1.transaction(objectStore.name)
                             .objectStore(objectStore.name);
       is(objectStore1.name, objectStore.name, "Same name");
-      is(objectStore1.keyPath, objectStore.keyPath, "Same keyPath");
-      is(objectStore1.autoIncrement, objectStore.autoIncrement,
-         "Same value for autoIncrement");
+      is(objectStore1.keyPath, objectStore.options.keyPath, "Same keyPath");
 
       let objectStore2 = db2.transaction(objectStore.name)
                             .objectStore(objectStore.name);
@@ -65,8 +63,6 @@
       ok(objectStore1 !== objectStore2, "Different objectStores");
       is(objectStore1.name, objectStore2.name, "Same name");
       is(objectStore1.keyPath, objectStore2.keyPath, "Same keyPath");
-      is(objectStore1.autoIncrement, objectStore2.autoIncrement,
-         "Same value for autoIncrement");
 
       finishTest();
       yield;

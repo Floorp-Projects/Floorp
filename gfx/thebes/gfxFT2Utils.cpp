@@ -49,6 +49,8 @@
 #include <fontconfig/fcfreetype.h>
 #endif
 
+#include "prlink.h"
+
 // aScale is intended for a 16.16 x/y_scale of an FT_Size_Metrics
 static inline FT_Long
 ScaleRoundDesignUnits(FT_Short aDesignMetric, FT_Fixed aScale)
@@ -323,6 +325,59 @@ gfxFT2LockedFace::GetGlyph(PRUint32 aCharCode)
 #endif
 }
 
+typedef FT_UInt (*GetCharVariantFunction)(FT_Face  face,
+                                          FT_ULong charcode,
+                                          FT_ULong variantSelector);
+
+PRUint32
+gfxFT2LockedFace::GetUVSGlyph(PRUint32 aCharCode, PRUint32 aVariantSelector)
+{
+    NS_PRECONDITION(aVariantSelector, "aVariantSelector should not be NULL");
+
+    if (NS_UNLIKELY(!mFace))
+        return 0;
+
+    // This function is available from FreeType 2.3.6 (June 2008).
+    static CharVariantFunction sGetCharVariantPtr = FindCharVariantFunction();
+    if (!sGetCharVariantPtr)
+        return 0;
+
+#ifdef HAVE_FONTCONFIG_FCFREETYPE_H
+    // FcFreeTypeCharIndex may have changed the selected charmap.
+    // FT_Face_GetCharVariantIndex needs a unicode charmap.
+    if (!mFace->charmap || mFace->charmap->encoding != FT_ENCODING_UNICODE) {
+        FT_Select_Charmap(mFace, FT_ENCODING_UNICODE);
+    }
+#endif
+
+    return (*sGetCharVariantPtr)(mFace, aCharCode, aVariantSelector);
+}
+
+PRBool
+gfxFT2LockedFace::GetFontTable(PRUint32 aTag, FallibleTArray<PRUint8>& aBuffer)
+{
+    if (!mFace || !FT_IS_SFNT(mFace))
+        return PR_FALSE;
+
+    FT_ULong length = 0;
+    // TRUETYPE_TAG is defined equivalent to FT_MAKE_TAG
+    FT_Error error = FT_Load_Sfnt_Table(mFace, aTag, 0, NULL, &length);
+    if (error != 0)
+        return PR_FALSE;
+
+    if (NS_UNLIKELY(length > static_cast<FallibleTArray<PRUint8>::size_type>(-1))
+        || NS_UNLIKELY(!aBuffer.SetLength(length)))
+        return PR_FALSE;
+        
+    error = FT_Load_Sfnt_Table(mFace, aTag, 0, aBuffer.Elements(), &length);
+    if (NS_UNLIKELY(error != 0)) {
+        aBuffer.Clear();
+        return PR_FALSE;
+    }
+
+    return PR_TRUE;
+}
+
 PRUint32
 gfxFT2LockedFace::GetCharExtents(char aChar, cairo_text_extents_t* aExtents)
 {
@@ -337,4 +392,36 @@ gfxFT2LockedFace::GetCharExtents(char aChar, cairo_text_extents_t* aExtents)
     }
 
     return gid;
+}
+
+gfxFT2LockedFace::CharVariantFunction
+gfxFT2LockedFace::FindCharVariantFunction()
+{
+    // This function is available from FreeType 2.3.6 (June 2008).
+    PRLibrary *lib = nsnull;
+    CharVariantFunction function =
+        reinterpret_cast<CharVariantFunction>
+        (PR_FindFunctionSymbolAndLibrary("FT_Face_GetCharVariantIndex", &lib));
+    if (!lib) {
+        return nsnull;
+    }
+
+    FT_Int major;
+    FT_Int minor;
+    FT_Int patch;
+    FT_Library_Version(mFace->glyph->library, &major, &minor, &patch);
+
+    // Versions 2.4.0 to 2.4.3 crash if configured with
+    // FT_CONFIG_OPTION_OLD_INTERNALS.  Presence of the symbol FT_Alloc
+    // indicates FT_CONFIG_OPTION_OLD_INTERNALS.
+    if (major == 2 && minor == 4 && patch < 4 &&
+        PR_FindFunctionSymbol(lib, "FT_Alloc")) {
+        function = nsnull;
+    }
+
+    // Decrement the reference count incremented in
+    // PR_FindFunctionSymbolAndLibrary.
+    PR_UnloadLibrary(lib);
+
+    return function;
 }

@@ -78,7 +78,7 @@ _interpreterTrace(JSDContext* jsdc, JSContext *cx, JSStackFrame *fp,
         jsdscript = jsd_FindOrCreateJSDScript(jsdc, cx, script, fp);
         JSD_UNLOCK_SCRIPTS(jsdc);
         if(jsdscript)
-            funName = JSD_GetScriptFunctionName(jsdc, jsdscript);
+            funName = JSD_GetScriptFunctionId(jsdc, jsdscript);
     }
 
     if(before)

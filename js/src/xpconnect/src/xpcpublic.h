@@ -41,13 +41,17 @@
 #define xpcpublic_h
 
 #include "jsapi.h"
-#include "nsISupports.h"
 #include "jsobj.h"
-#include "nsAString.h"
+#include "jsgc.h"
+
+#include "nsISupports.h"
 #include "nsIPrincipal.h"
 #include "nsWrapperCache.h"
 
 class nsIPrincipal;
+
+static const uint32 XPC_GC_COLOR_BLACK = 0;
+static const uint32 XPC_GC_COLOR_GRAY = 1;
 
 nsresult
 xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
@@ -59,6 +63,10 @@ nsresult
 xpc_CreateMTGlobalObject(JSContext *cx, JSClass *clasp,
                          nsISupports *ptr, JSObject **global,
                          JSCompartment **compartment);
+
+// XXX where should this live?
+NS_EXPORT_(void)
+xpc_LocalizeContext(JSContext *cx);
 
 nsresult
 xpc_MorphSlimWrapper(JSContext *cx, nsISupports *tomorph);
@@ -114,7 +122,7 @@ xpc_GetCachedSlimWrapper(nsWrapperCache *cache, JSObject *scope, jsval *vp)
         //        away
         if (wrapper &&
             IS_SLIM_WRAPPER_OBJECT(wrapper) &&
-            wrapper->getCompartment() == scope->getCompartment()) {
+            wrapper->compartment() == scope->getCompartment()) {
             *vp = OBJECT_TO_JSVAL(wrapper);
 
             return wrapper;
@@ -129,6 +137,36 @@ xpc_GetCachedSlimWrapper(nsWrapperCache *cache, JSObject *scope)
 {
     jsval dummy;
     return xpc_GetCachedSlimWrapper(cache, scope, &dummy);
+}
+
+// The JS GC marks objects gray that are held alive directly or indirectly
+// by an XPConnect root. The cycle collector explores only this subset
+// of the JS heap.
+inline JSBool
+xpc_IsGrayGCThing(void *thing)
+{
+    return js_GCThingIsMarked(thing, XPC_GC_COLOR_GRAY);
+}
+
+// Implemented in nsXPConnect.cpp.
+extern void
+xpc_UnmarkGrayObjectRecursive(JSObject* obj);
+
+// Remove the gray color from the given JSObject and any other objects that can
+// be reached through it.
+inline void
+xpc_UnmarkGrayObject(JSObject *obj)
+{
+    if(obj && xpc_IsGrayGCThing(obj))
+        xpc_UnmarkGrayObjectRecursive(obj);
+}
+
+inline JSObject*
+nsWrapperCache::GetWrapper() const
+{
+  JSObject* obj = GetWrapperPreserveColor();
+  xpc_UnmarkGrayObject(obj);
+  return obj;
 }
 
 #endif

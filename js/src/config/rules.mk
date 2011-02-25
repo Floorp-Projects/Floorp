@@ -76,7 +76,7 @@ ifdef SYSTEM_LIBXUL
 endif
 
 # ELOG prints out failed command when building silently (gmake -s).
-ifneq (,$(findstring -s,$(MAKEFLAGS)))
+ifneq (,$(findstring s, $(filter-out --%, $(MAKEFLAGS))))
   ELOG := $(EXEC) sh $(BUILD_TOOLS)/print-failed-commands.sh
 else
   ELOG :=
@@ -224,7 +224,7 @@ ifdef CPP_UNIT_TESTS
 CPPSRCS += $(CPP_UNIT_TESTS)
 SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
 INCLUDES += -I$(DIST)/include/testing
-LIBS += $(XPCOM_GLUE_LDOPTS) $(NSPR_LIBS)
+LIBS += $(XPCOM_GLUE_LDOPTS) $(NSPR_LIBS) -ljs_static
 
 # ...and run them the usual way
 check::
@@ -555,6 +555,9 @@ TAG_PROGRAM		= xargs etags -a
 #
 ifneq ($(CPPSRCS)$(CMMSRCS),)
 CPP_PROG_LINK		= 1
+endif
+ifneq ($(HOST_CPPSRCS)$(HOST_CMMSRCS),)
+HOST_CPP_PROG_LINK	= 1
 endif
 
 #
@@ -1085,11 +1088,11 @@ ifdef MSMANIFEST_TOOL
 	fi
 endif	# MSVC with manifest tool
 else
-ifeq ($(CPP_PROG_LINK),1)
+ifeq ($(HOST_CPP_PROG_LINK),1)
 	$(HOST_CXX) -o $@ $(HOST_CXXFLAGS) $(HOST_LDFLAGS) $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
 	$(HOST_CC) -o $@ $(HOST_CFLAGS) $(HOST_LDFLAGS) $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
-endif # CPP_PROG_LINK
+endif # HOST_CPP_PROG_LINK
 endif
 endif
 

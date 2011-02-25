@@ -54,7 +54,7 @@
 #include "nsFrameManager.h"
 #ifdef ACCESSIBILITY
 #include "nsIServiceManager.h"
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 #endif
 #include "nsDisplayList.h"
 
@@ -166,7 +166,8 @@ nsInlineFrame::IsEmpty()
 }
 
 PRBool
-nsInlineFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
+nsInlineFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset,
+                                   PRBool aRespectClusters)
 {
   // Override the implementation in nsFrame, to skip empty inline frames
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
@@ -391,17 +392,7 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
     }
   }
 
-  if (IsFrameTreeTooDeep(aReflowState, aMetrics)) {
-#ifdef DEBUG_kipp
-    {
-      extern char* nsPresShell_ReflowStackPointerTop;
-      char marker;
-      char* newsp = (char*) &marker;
-      printf("XXX: frame tree is too deep; approx stack size = %d\n",
-             nsPresShell_ReflowStackPointerTop - newsp);
-    }
-#endif
-    aStatus = NS_FRAME_COMPLETE;
+  if (IsFrameTreeTooDeep(aReflowState, aMetrics, aStatus)) {
     return NS_OK;
   }
 
@@ -941,7 +932,8 @@ nsInlineFrame::CreateAccessible()
   if ((tagAtom == nsGkAtoms::img || tagAtom == nsGkAtoms::input || 
        tagAtom == nsGkAtoms::label) && mContent->IsHTML()) {
     // Only get accessibility service if we're going to use it
-    nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
+
+    nsAccessibilityService* accService = nsIPresShell::AccService();
     if (!accService)
       return nsnull;
     if (tagAtom == nsGkAtoms::input)  // Broken <input type=image ... />

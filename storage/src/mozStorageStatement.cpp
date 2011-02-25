@@ -404,7 +404,7 @@ Statement::internalFinalize(bool aDestructing)
     // If the destructor called us, there are no pending async statements (they
     // hold a reference to us) and we can/must just kill the statement directly.
     if (aDestructing)
-      internalAsyncFinalize();
+      destructorAsyncFinalize();
     else
       asyncFinalize();
   }

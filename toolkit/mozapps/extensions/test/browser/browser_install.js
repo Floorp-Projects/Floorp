@@ -62,6 +62,9 @@ function installUpgrade(aCallback) {
         is(get_list_item_count(), 1, "Should be only one item in the list");
 
         aInstall.addListener({
+          onDownloadEnded: function() {
+            is(get_list_item_count(), 1, "Should be only one item in the list once the update has started");
+          },
           onInstallEnded: function() {
             executeSoon(aCallback);
           }

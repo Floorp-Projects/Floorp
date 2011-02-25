@@ -44,6 +44,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <list>
 
 #ifdef XP_WIN
 #include <process.h>
@@ -58,7 +59,10 @@
 using namespace std;
 
 #define PLUGIN_NAME        "Test Plug-in"
-#define PLUGIN_DESCRIPTION "Plug-in for testing purposes."
+#define PLUGIN_DESCRIPTION "Plug-in for testing purposes.\xE2\x84\xA2 "          \
+    "(\xe0\xa4\xb9\xe0\xa4\xbf\xe0\xa4\xa8\xe0\xa5\x8d\xe0\xa4\xa6\xe0\xa5\x80 " \
+    "\xe4\xb8\xad\xe6\x96\x87 "                                                  \
+    "\xd8\xa7\xd9\x84\xd8\xb9\xd8\xb1\xd8\xa8\xd9\x8a\xd8\xa9)"
 #define PLUGIN_VERSION     "1.0.0.0"
 
 #define ARRAY_LENGTH(a) (sizeof(a)/sizeof(a[0]))
@@ -96,9 +100,6 @@ IntentionalCrash()
 static NPNetscapeFuncs* sBrowserFuncs = NULL;
 static NPClass sNPClass;
 
-static void
-testplugin_URLNotify(NPP instance, const char* url, NPReason reason,
-                     void* notifyData);
 void
 asyncCallback(void* cookie);
 
@@ -162,6 +163,8 @@ static bool getReflector(NPObject* npobj, const NPVariant* args, uint32_t argCou
 static bool isVisible(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getWindowPosition(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool constructObject(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool setSitesWithData(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool setSitesWithDataCapabilities(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -216,7 +219,9 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getReflector",
   "isVisible",
   "getWindowPosition",
-  "constructObject"
+  "constructObject",
+  "setSitesWithData",
+  "setSitesWithDataCapabilities"
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[] = {
@@ -272,7 +277,9 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   getReflector,
   isVisible,
   getWindowPosition,
-  constructObject
+  constructObject,
+  setSitesWithData,
+  setSitesWithDataCapabilities
 };
 
 STATIC_ASSERT(ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
@@ -287,7 +294,10 @@ static NPVariant sPluginPropertyValues[ARRAY_LENGTH(sPluginPropertyIdentifierNam
 struct URLNotifyData
 {
   const char* cookie;
-  NPObject* callback;
+  NPObject* writeCallback;
+  NPObject* notifyCallback;
+  NPObject* redirectCallback;
+  bool allowRedirects;
   uint32_t size;
   char* data;
 };
@@ -295,6 +305,8 @@ struct URLNotifyData
 static URLNotifyData kNotifyData = {
   "static-cookie",
   NULL,
+  NULL,
+  false,
   0,
   NULL
 };
@@ -341,6 +353,18 @@ static int32_t sInstanceCount = 0;
  * stopWatchingInstanceCount.
  */
 static bool sWatchingInstanceCount = false;
+
+/**
+ * A list representing sites for which the plugin has stored data. See
+ * NPP_ClearSiteData and NPP_GetSitesWithData.
+ */
+struct siteData {
+  string site;
+  uint64_t flags;
+  uint64_t age;
+};
+static list<siteData>* sSitesWithData;
+static bool sClearByAgeSupported;
 
 static void initializeIdentifiers()
 {
@@ -586,9 +610,12 @@ static bool fillPluginFunctionTable(NPPluginFuncs* pFuncs)
   pFuncs->write = NPP_Write;
   pFuncs->print = NPP_Print;
   pFuncs->event = NPP_HandleEvent;
-  pFuncs->urlnotify = testplugin_URLNotify;
+  pFuncs->urlnotify = NPP_URLNotify;
   pFuncs->getvalue = NPP_GetValue;
   pFuncs->setvalue = NPP_SetValue;
+  pFuncs->urlredirectnotify = NPP_URLRedirectNotify;
+  pFuncs->clearsitedata = NPP_ClearSiteData;
+  pFuncs->getsiteswithdata = NPP_GetSitesWithData;
 
   return true;
 }
@@ -1118,6 +1145,16 @@ NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buf
   }
 
   URLNotifyData* nd = static_cast<URLNotifyData*>(stream->notifyData);
+
+  if (nd && nd->writeCallback) {
+    NPVariant args[1];
+    STRINGN_TO_NPVARIANT(stream->url, strlen(stream->url), args[0]);
+
+    NPVariant result;
+    NPN_InvokeDefault(instance, nd->writeCallback, args, 1, &result);
+    NPN_ReleaseVariantValue(&result);
+  }
+
   if (nd && nd != &kNotifyData) {
     uint32_t newsize = nd->size + len;
     nd->data = (char*) realloc(nd->data, newsize);
@@ -1234,7 +1271,7 @@ NPP_HandleEvent(NPP instance, void* event)
 }
 
 void
-testplugin_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
+NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
 {
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
   URLNotifyData* ndata = static_cast<URLNotifyData*>(notifyData);
@@ -1246,20 +1283,31 @@ testplugin_URLNotify(NPP instance, const char* url, NPReason reason, void* notif
     }
   }
   else if (!strcmp(ndata->cookie, "dynamic-cookie")) {
-    NPVariant args[2];
-    NPVariant result;
-    INT32_TO_NPVARIANT(reason, args[0]);
+    if (ndata->notifyCallback) {
+      NPVariant args[2];
+      INT32_TO_NPVARIANT(reason, args[0]);
+      if (ndata->data) {
+        STRINGN_TO_NPVARIANT(ndata->data, ndata->size, args[1]);
+      }
+      else {
+        STRINGN_TO_NPVARIANT("", 0, args[1]);
+      }
 
-    if (ndata->data)
-      STRINGN_TO_NPVARIANT(ndata->data, ndata->size, args[1]);
-    else
-      STRINGN_TO_NPVARIANT("", 0, args[1]);
-
-    NPN_InvokeDefault(instance, ndata->callback, args, 2, &result);
-    NPN_ReleaseVariantValue(&result);
+      NPVariant result;
+      NPN_InvokeDefault(instance, ndata->notifyCallback, args, 2, &result);
+      NPN_ReleaseVariantValue(&result);
+    }
 
     // clean up the URLNotifyData
-    NPN_ReleaseObject(ndata->callback);
+    if (ndata->writeCallback) {
+      NPN_ReleaseObject(ndata->writeCallback);
+    }
+    if (ndata->notifyCallback) {
+      NPN_ReleaseObject(ndata->notifyCallback);
+    }
+    if (ndata->redirectCallback) {
+      NPN_ReleaseObject(ndata->redirectCallback);
+    }
     free(ndata->data);
     delete ndata;
   }
@@ -1297,6 +1345,104 @@ NPP_SetValue(NPP instance, NPNVariable variable, void* value)
     return NPERR_NO_ERROR;
   }
   return NPERR_GENERIC_ERROR;
+}
+
+void
+NPP_URLRedirectNotify(NPP instance, const char* url, int32_t status, void* notifyData)
+{
+  if (notifyData) {
+    URLNotifyData* nd = static_cast<URLNotifyData*>(notifyData);
+    if (nd->redirectCallback) {
+      NPVariant args[2];
+      STRINGN_TO_NPVARIANT(url, strlen(url), args[0]);
+      INT32_TO_NPVARIANT(status, args[1]);
+
+      NPVariant result;
+      NPN_InvokeDefault(instance, nd->redirectCallback, args, 2, &result);
+      NPN_ReleaseVariantValue(&result);
+    }
+    NPN_URLRedirectResponse(instance, notifyData, nd->allowRedirects);
+    return;
+  }
+  NPN_URLRedirectResponse(instance, notifyData, true);
+}
+
+NPError
+NPP_ClearSiteData(const char* site, uint64_t flags, uint64_t maxAge)
+{
+  if (!sSitesWithData)
+    return NPERR_NO_ERROR;
+
+  // Error condition: no support for clear-by-age
+  if (!sClearByAgeSupported && maxAge != uint64_t(int64_t(-1)))
+    return NPERR_TIME_RANGE_NOT_SUPPORTED;
+
+  // Iterate over list and remove matches
+  list<siteData>::iterator iter = sSitesWithData->begin();
+  list<siteData>::iterator end = sSitesWithData->end();
+  while (iter != end) {
+    const siteData& data = *iter;
+    list<siteData>::iterator next = iter;
+    ++next;
+    if ((!site || data.site.compare(site) == 0) &&
+        (flags == NP_CLEAR_ALL || data.flags & flags) &&
+        data.age <= maxAge) {
+      sSitesWithData->erase(iter);
+    }
+    iter = next;
+  }
+
+  return NPERR_NO_ERROR;
+}
+
+char**
+NPP_GetSitesWithData()
+{
+  int length = 0;
+  char** result;
+
+  if (sSitesWithData)
+    length = sSitesWithData->size();
+
+  // Allocate the maximum possible size the list could be.
+  result = static_cast<char**>(NPN_MemAlloc((length + 1) * sizeof(char*)));
+  result[length] = NULL;
+
+  if (length == 0) {
+    // Represent the no site data case as an array of length 1 with a NULL
+    // entry.
+    return result;
+  }
+
+  // Iterate the list of stored data, and build a list of strings.
+  list<string> sites;
+  {
+    list<siteData>::iterator iter = sSitesWithData->begin();
+    list<siteData>::iterator end = sSitesWithData->end();
+    for (; iter != end; ++iter) {
+      const siteData& data = *iter;
+      sites.push_back(data.site);
+    }
+  }
+
+  // Remove duplicate strings.
+  sites.sort();
+  sites.unique();
+
+  // Add strings to the result array, and null terminate.
+  {
+    int i = 0;
+    list<string>::iterator iter = sites.begin();
+    list<string>::iterator end = sites.end();
+    for (; iter != end; ++iter, ++i) {
+      const string& site = *iter;
+      result[i] = static_cast<char*>(NPN_MemAlloc(site.length() + 1));
+      memcpy(result[i], site.c_str(), site.length() + 1);
+    }
+  }
+  result[sites.size()] = NULL;
+
+  return result;
 }
 
 //
@@ -1573,6 +1719,12 @@ void
 NPN_PluginThreadAsyncCall(NPP plugin, void (*func)(void*), void* userdata)
 {
   return sBrowserFuncs->pluginthreadasynccall(plugin, func, userdata);
+}
+
+void
+NPN_URLRedirectResponse(NPP instance, void* notifyData, NPBool allow)
+{
+  return sBrowserFuncs->urlredirectresponse(instance, notifyData, allow);
 }
 
 //
@@ -2284,8 +2436,8 @@ convertPointY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVaria
 static bool
 streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
-  // .streamTest(url, doPost, doNull, callback)
-  if (4 != argCount)
+  // .streamTest(url, doPost, doNull, writeCallback, notifyCallback, redirectCallback, allowRedirects)
+  if (7 != argCount)
     return false;
 
   NPP npp = static_cast<TestNPObject*>(npobj)->npp;
@@ -2299,24 +2451,57 @@ streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant*
   bool doPost = NPVARIANT_TO_BOOLEAN(args[1]);
 
   NPString postData = { NULL, 0 };
-  if (NPVARIANT_IS_NULL(args[2])) {
-  }
-  else if (NPVARIANT_IS_STRING(args[2])) {
+  if (NPVARIANT_IS_STRING(args[2])) {
     postData = NPVARIANT_TO_STRING(args[2]);
   }
   else {
-    return false;
+    if (!NPVARIANT_IS_NULL(args[2])) {
+      return false;
+    }
   }
 
-  if (!NPVARIANT_IS_OBJECT(args[3]))
+  NPObject* writeCallback = NULL;
+  if (NPVARIANT_IS_OBJECT(args[3])) {
+    writeCallback = NPVARIANT_TO_OBJECT(args[3]);
+  }
+  else {
+    if (!NPVARIANT_IS_NULL(args[3])) {
+      return false;
+    }
+  }
+
+  NPObject* notifyCallback = NULL;
+  if (NPVARIANT_IS_OBJECT(args[4])) {
+    notifyCallback = NPVARIANT_TO_OBJECT(args[4]);
+  }
+  else {
+    if (!NPVARIANT_IS_NULL(args[4])) {
+      return false;
+    }
+  }
+
+  NPObject* redirectCallback = NULL;
+  if (NPVARIANT_IS_OBJECT(args[5])) {
+    redirectCallback = NPVARIANT_TO_OBJECT(args[5]);
+  }
+  else {
+    if (!NPVARIANT_IS_NULL(args[5])) {
+      return false;
+    }
+  }
+
+  if (!NPVARIANT_IS_BOOLEAN(args[6]))
     return false;
-  NPObject* callback = NPVARIANT_TO_OBJECT(args[3]);
+  bool allowRedirects = NPVARIANT_TO_BOOLEAN(args[6]);
 
   URLNotifyData* ndata = new URLNotifyData;
   ndata->cookie = "dynamic-cookie";
-  ndata->callback = callback;
+  ndata->writeCallback = writeCallback;
+  ndata->notifyCallback = notifyCallback;
+  ndata->redirectCallback = redirectCallback;
   ndata->size = 0;
   ndata->data = NULL;
+  ndata->allowRedirects = allowRedirects;
 
   /* null-terminate "url" */
   char* urlstr = (char*) malloc(url.UTF8Length + 1);
@@ -2336,7 +2521,15 @@ streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant*
   free(urlstr);
 
   if (NPERR_NO_ERROR == err) {
-    NPN_RetainObject(ndata->callback);
+    if (ndata->writeCallback) {
+      NPN_RetainObject(ndata->writeCallback);
+    }
+    if (ndata->notifyCallback) {
+      NPN_RetainObject(ndata->notifyCallback);
+    }
+    if (ndata->redirectCallback) {
+      NPN_RetainObject(ndata->redirectCallback);
+    }
     BOOLEAN_TO_NPVARIANT(true, *result);
   }
   else {
@@ -3161,7 +3354,6 @@ bool getWindowPosition(NPObject* npobj, const NPVariant* args, uint32_t argCount
   INT32_TO_NPVARIANT(id->window.width, elements[2]);
   INT32_TO_NPVARIANT(id->window.height, elements[3]);
 
-  NPObject* resultArray = NULL;
   ok = NPN_InvokeDefault(npp, arrayFunction, elements, 4, result);
 
   NPN_ReleaseObject(arrayFunction);
@@ -3180,3 +3372,57 @@ bool constructObject(NPObject* npobj, const NPVariant* args, uint32_t argCount, 
 
   return NPN_Construct(npp, ctor, args + 1, argCount - 1, result);
 }
+
+bool setSitesWithData(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 1 || !NPVARIANT_IS_STRING(args[0]))
+    return false;
+
+  // Clear existing data.
+  delete sSitesWithData;
+
+  const NPString* str = &NPVARIANT_TO_STRING(args[0]);
+  if (str->UTF8Length == 0)
+    return true;
+
+  // Parse the comma-delimited string into a vector.
+  sSitesWithData = new list<siteData>;
+  const char* iterator = str->UTF8Characters;
+  const char* end = iterator + str->UTF8Length;
+  while (1) {
+    const char* next = strchr(iterator, ',');
+    if (!next)
+      next = end;
+
+    // Parse out the three tokens into a siteData struct.
+    const char* siteEnd = strchr(iterator, ':');
+    *((char*) siteEnd) = NULL;
+    const char* flagsEnd = strchr(siteEnd + 1, ':');
+    *((char*) flagsEnd) = NULL;
+    *((char*) next) = NULL;
+    
+    siteData data;
+    data.site = string(iterator);
+    data.flags = atoi(siteEnd + 1);
+    data.age = atoi(flagsEnd + 1);
+    
+    sSitesWithData->push_back(data);
+
+    if (next == end)
+      break;
+
+    iterator = next + 1;
+  }
+
+  return true;
+}
+
+bool setSitesWithDataCapabilities(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 1 || !NPVARIANT_IS_BOOLEAN(args[0]))
+    return false;
+
+  sClearByAgeSupported = NPVARIANT_TO_BOOLEAN(args[0]);
+  return true;
+}
+

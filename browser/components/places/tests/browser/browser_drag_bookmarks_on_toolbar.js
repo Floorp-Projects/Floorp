@@ -247,7 +247,7 @@ var gTests = [
                   synthesizeDragWithDirection(element, expectedData, dragDirections.DOWN,
                     function () {
                       // Cleanup.
-                      PlacesUtils.bookmarks.removeItem(folderId);
+                      PlacesUtils.bookmarks.removeItem(itemId);
                       nextTest();
                     });
                 });

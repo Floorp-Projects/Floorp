@@ -97,7 +97,7 @@
 #include "nsFrameManager.h"
 
 #ifdef ACCESSIBILITY
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 #endif
 
   #ifdef DEBUG
@@ -778,7 +778,7 @@ nsFrameManager::ReparentStyleContext(nsIFrame* aFrame)
     NS_ASSERTION(outOfFlow, "no out-of-flow frame");
     do {
       ReparentStyleContext(outOfFlow);
-    } while (outOfFlow = outOfFlow->GetNextContinuation());
+    } while ((outOfFlow = outOfFlow->GetNextContinuation()));
   }
 
   // DO NOT verify the style tree before reparenting.  The frame
@@ -984,7 +984,9 @@ CaptureChange(nsStyleContext* aOldContext, nsStyleContext* aNewContext,
 
   NS_UpdateHint(ourChange, aChangeToAssume);
   if (NS_UpdateHint(aMinChange, ourChange)) {
-    aChangeList->AppendChange(aFrame, aContent, ourChange);
+    if (!(ourChange & nsChangeHint_ReconstructFrame) || aContent) {
+      aChangeList->AppendChange(aFrame, aContent, ourChange);
+    }
   }
   return aMinChange;
 }
@@ -1496,7 +1498,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                                       aRestyleTracker,
                                       kidsDesiredA11yNotification,
                                       aVisibleKidsOfHiddenElement);
-              } while (outOfFlowFrame = outOfFlowFrame->GetNextContinuation());
+              } while ((outOfFlowFrame = outOfFlowFrame->GetNextContinuation()));
 
               // reresolve placeholder's context under the same parent
               // as the out-of-flow frame
@@ -1530,8 +1532,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
 #ifdef ACCESSIBILITY
       // Send notifications about visibility changes.
       if (ourA11yNotification == eNotifyShown) {
-        nsCOMPtr<nsIAccessibilityService> accService =
-          do_GetService("@mozilla.org/accessibilityService;1");
+        nsAccessibilityService* accService = nsIPresShell::AccService();
         if (accService) {
           nsIPresShell* presShell = aFrame->PresContext()->GetPresShell();
           nsIContent* content = aFrame->GetContent();
@@ -1541,8 +1542,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                                            content->GetNextSibling());
         }
       } else if (ourA11yNotification == eNotifyHidden) {
-        nsCOMPtr<nsIAccessibilityService> accService =
-          do_GetService("@mozilla.org/accessibilityService;1");
+        nsAccessibilityService* accService = nsIPresShell::AccService();
         if (accService) {
           nsIPresShell* presShell = aFrame->PresContext()->GetPresShell();
           nsIContent* content = aFrame->GetContent();

@@ -516,38 +516,25 @@ protected:
   void SetSelectionChanged(PRBool aValue, PRBool aNotify);
 
   /**
-   * Return whether an invalid element should have a specific UI for being invalid
-   * (with :-moz-ui-invalid pseudo-class).
+   * Return whether an element should have a validity UI.
+   * (with :-moz-ui-invalid and :-moz-ui-valid pseudo-classes).
    *
-   * @return Whether the invalid element should have a UI for being invalid.
-   * @note The caller has to be sure the element is invalid before calling.
+   * @return Whether the element should have a validity UI.
    */
-  bool ShouldShowInvalidUI() const {
-    NS_ASSERTION(!IsValid(), "You should not call ShouldShowInvalidUI if the "
-                             "element is valid!");
-
+  bool ShouldShowValidityUI() const {
     /**
-     * Always show the invalid UI if:
-     * - the form has already tried to be submitted but was invalid;
-     * - the element is suffering from a custom error;
+     * Always show the validity UI if the form has already tried to be submitted
+     * but was invalid.
      *
-     * Otherwise, show the invalid UI if the selection has been changed.
+     * Otherwise, show the validity UI if the selection has been changed.
      */
-    return mSelectionHasChanged ||
-           (mForm && mForm->HasEverTriedInvalidSubmit()) ||
-           GetValidityState(VALIDITY_STATE_CUSTOM_ERROR);
+    if (mForm && mForm->HasEverTriedInvalidSubmit()) {
+      return true;
+    }
+
+    return mSelectionHasChanged;
   }
 
-  /**
-   * Return whether an element should show the valid UI.
-   *
-   * @return Whether the valid UI should be shown.
-   * @note This doesn't take into account the validity of the element.
-   */
-  bool ShouldShowValidUI() const {
-    return mSelectionHasChanged ||
-           (mForm && mForm->HasEverTriedInvalidSubmit());
-  }
   /** The options[] array */
   nsRefPtr<nsHTMLOptionCollection> mOptions;
   /** false if the parser is in the middle of adding children. */

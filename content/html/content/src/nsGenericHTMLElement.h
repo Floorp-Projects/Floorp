@@ -924,6 +924,9 @@ public:
    */
   PRBool CanBeDisabled() const;
 
+  virtual PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool* aIsFocusable,
+                                 PRInt32* aTabIndex);
+
 protected:
   virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                  const nsAString* aValue, PRBool aNotify);

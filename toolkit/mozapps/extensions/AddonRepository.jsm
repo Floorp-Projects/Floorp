@@ -49,6 +49,8 @@ Components.utils.import("resource://gre/modules/AddonManager.jsm");
 var EXPORTED_SYMBOLS = [ "AddonRepository" ];
 
 const PREF_GETADDONS_CACHE_ENABLED       = "extensions.getAddons.cache.enabled";
+const PREF_GETADDONS_CACHE_TYPES         = "extensions.getAddons.cache.types";
+const PREF_GETADDONS_CACHE_ID_ENABLED    = "extensions.%ID%.getAddons.cache.enabled"
 const PREF_GETADDONS_BROWSEADDONS        = "extensions.getAddons.browseAddons";
 const PREF_GETADDONS_BYIDS               = "extensions.getAddons.get.url";
 const PREF_GETADDONS_BROWSERECOMMENDED   = "extensions.getAddons.recommended.browseURL";
@@ -59,6 +61,7 @@ const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
 const XMLURI_PARSE_ERROR  = "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 
 const API_VERSION = "1.5";
+const DEFAULT_CACHE_TYPES = "extension,theme,locale";
 
 const KEY_PROFILEDIR = "ProfD";
 const FILE_DATABASE  = "addons.sqlite";
@@ -131,6 +134,39 @@ function convertHTMLToPlainText(html) {
   if (output.value instanceof Ci.nsISupportsString)
     return output.value.data.replace("\r\n", "\n", "g");
   return html;
+}
+
+function getAddonsToCache(aIds, aCallback) {
+  try {
+    var types = Services.prefs.getCharPref(PREF_GETADDONS_CACHE_TYPES);
+  }
+  catch (e) { }
+  if (!types)
+    types = DEFAULT_CACHE_TYPES;
+
+  types = types.split(",");
+
+  AddonManager.getAddonsByIDs(aIds, function(aAddons) {
+    let enabledIds = [];
+    for (var i = 0; i < aIds.length; i++) {
+      var preference = PREF_GETADDONS_CACHE_ID_ENABLED.replace("%ID%", aIds[i]);
+      try {
+        if (!Services.prefs.getBoolPref(preference))
+          continue;
+      } catch(e) {
+        // If the preference doesn't exist caching is enabled by default
+      }
+
+      // The add-ons manager may not know about this ID yet if it is a pending
+      // install. In that case we'll just cache it regardless
+      if (aAddons[i] && (types.indexOf(aAddons[i].type) == -1))
+        continue;
+
+      enabledIds.push(aIds[i]);
+    }
+
+    aCallback(enabledIds);
+  });
 }
 
 function AddonSearchResult(aId) {
@@ -221,6 +257,22 @@ AddonSearchResult.prototype = {
   contributionAmount: null,
 
   /**
+   * The URL to visit in order to purchase the add-on
+   */
+  purchaseURL: null,
+
+  /**
+   * The numerical cost of the add-on in some currency, for sorting purposes
+   * only
+   */
+  purchaseAmount: null,
+
+  /**
+   * The display cost of the add-on, for display purposes only
+   */
+  purchaseDisplayAmount: null,
+
+  /**
    * The rating of the add-on, 0-5
    */
   averageRating: null,
@@ -278,9 +330,15 @@ AddonSearchResult.prototype = {
 
   /**
    * True or false depending on whether the add-on is compatible with the
-   * current version and platform of the application
+   * current version of the application
    */
   isCompatible: true,
+
+  /**
+   * True or false depending on whether the add-on is compatible with the
+   * current platform
+   */
+  isPlatformCompatible: true,
 
   /**
    * True if the add-on has a secure means of updating
@@ -523,8 +581,6 @@ var AddonRepository = {
    *         The optional callback to call once complete
    */
   repopulateCache: function(aIds, aCallback) {
-    let self = this;
-
     // Completely remove cache if caching is not enabled
     if (!this.cacheEnabled) {
       this._addons = null;
@@ -533,17 +589,28 @@ var AddonRepository = {
       return;
     }
 
-    this.getAddonsByIDs(aIds, {
-      searchSucceeded: function(aAddons) {
-        self._addons = {};
-        aAddons.forEach(function(aAddon) { self._addons[aAddon.id] = aAddon; });
-        AddonDatabase.repopulate(aAddons, aCallback);
-      },
-      searchFailed: function() {
-        WARN("Search failed when repopulating cache");
-        if (aCallback)
-          aCallback();
+    let self = this;
+    getAddonsToCache(aIds, function(aAddons) {
+      // Completely remove cache if there are no add-ons to cache
+      if (aAddons.length == 0) {
+        this._addons = null;
+        this._pendingCallbacks = null;
+        AddonDatabase.delete(aCallback);
+        return;
       }
+
+      self.getAddonsByIDs(aAddons, {
+        searchSucceeded: function(aAddons) {
+          self._addons = {};
+          aAddons.forEach(function(aAddon) { self._addons[aAddon.id] = aAddon; });
+          AddonDatabase.repopulate(aAddons, aCallback);
+        },
+        searchFailed: function() {
+          WARN("Search failed when repopulating cache");
+          if (aCallback)
+            aCallback();
+        }
+      });
     });
   },
 
@@ -565,16 +632,25 @@ var AddonRepository = {
     }
 
     let self = this;
-    this.getAddonsByIDs(aIds, {
-      searchSucceeded: function(aAddons) {
-        aAddons.forEach(function(aAddon) { self._addons[aAddon.id] = aAddon; });
-        AddonDatabase.insertAddons(aAddons, aCallback);
-      },
-      searchFailed: function() {
-        WARN("Search failed when adding add-ons to cache");
+    getAddonsToCache(aIds, function(aAddons) {
+      // If there are no add-ons to cache, act as if caching is disabled
+      if (aAddons.length == 0) {
         if (aCallback)
           aCallback();
+        return;
       }
+
+      self.getAddonsByIDs(aAddons, {
+        searchSucceeded: function(aAddons) {
+          aAddons.forEach(function(aAddon) { self._addons[aAddon.id] = aAddon; });
+          AddonDatabase.insertAddons(aAddons, aCallback);
+        },
+        searchFailed: function() {
+          WARN("Search failed when adding add-ons to cache");
+          if (aCallback)
+            aCallback();
+        }
+      });
     });
   },
 
@@ -642,11 +718,28 @@ var AddonRepository = {
    *         The callback to pass results to
    */
   getAddonsByIDs: function(aIDs, aCallback) {
+    let startupInfo = Cc["@mozilla.org/toolkit/app-startup;1"].
+                      getService(Ci.nsIAppStartup_MOZILLA_2_0).
+                      getStartupInfo();
+
     let ids = aIDs.slice(0);
-    let url = this._formatURLPref(PREF_GETADDONS_BYIDS, {
+
+    let params = {
       API_VERSION : API_VERSION,
       IDS : ids.map(encodeURIComponent).join(',')
-    });
+    };
+
+    if (startupInfo.process) {
+      if (startupInfo.main)
+        params.TIME_MAIN = startupInfo.main - startupInfo.process;
+      if (startupInfo.firstPaint)
+        params.TIME_FIRST_PAINT = startupInfo.firstPaint - startupInfo.process;
+      if (startupInfo.sessionRestored)
+        params.TIME_SESSION_RESTORED = startupInfo.sessionRestored -
+                                       startupInfo.process;
+    };
+
+    let url = this._formatURLPref(PREF_GETADDONS_BYIDS, params);
 
     let self = this;
     function handleResults(aElements, aTotalResults) {
@@ -886,9 +979,20 @@ var AddonRepository = {
         case "contribution_data":
           let meetDevelopers = this._getDescendantTextContent(node, "meet_developers");
           let suggestedAmount = this._getDescendantTextContent(node, "suggested_amount");
-          if (meetDevelopers != null && suggestedAmount != null) {
+          if (meetDevelopers != null) {
             addon.contributionURL = meetDevelopers;
             addon.contributionAmount = suggestedAmount;
+          }
+          break
+        case "payment_data":
+          let link = this._getDescendantTextContent(node, "link");
+          let amountTag = this._getUniqueDescendant(node, "amount");
+          let amount = parseFloat(amountTag.getAttribute("amount"));
+          let displayAmount = this._getTextContent(amountTag);
+          if (link != null && amount != null && displayAmount != null) {
+            addon.purchaseURL = link;
+            addon.purchaseAmount = amount;
+            addon.purchaseDisplayAmount = displayAmount;
           }
           break
         case "rating":
@@ -908,6 +1012,13 @@ var AddonRepository = {
           let repositoryStatus = parseInt(node.getAttribute("id"));
           if (!isNaN(repositoryStatus))
             addon.repositoryStatus = repositoryStatus;
+          break;
+        case "all_compatible_os":
+          let nodes = node.getElementsByTagName("os");
+          addon.isPlatformCompatible = Array.some(nodes, function(aNode) {
+            let text = aNode.textContent.toLowerCase().trim();
+            return text == "all" || text == Services.appinfo.OS.toLowerCase();
+          });
           break;
         case "install":
           // No os attribute means the xpi is compatible with any os
@@ -993,8 +1104,13 @@ var AddonRepository = {
       if (requiredAttributes.some(function(aAttribute) !result.addon[aAttribute]))
         continue;
 
-      // Add only if there was an xpi compatible with this OS
-      if (!result.xpiURL)
+      // Add only if the add-on is compatible with the platform
+      if (!result.addon.isPlatformCompatible)
+        continue;
+
+      // Add only if there was an xpi compatible with this OS or there was a
+      // way to purchase the add-on
+      if (!result.xpiURL && !result.addon.purchaseURL)
         continue;
 
       results.push(result);
@@ -1020,9 +1136,14 @@ var AddonRepository = {
           self._reportSuccess(results, aTotalResults);
       }
 
-      AddonManager.getInstallForURL(aResult.xpiURL, callback,
-                                    "application/x-xpinstall", aResult.xpiHash,
-                                    addon.name, addon.iconURL, addon.version);
+      if (aResult.xpiURL) {
+        AddonManager.getInstallForURL(aResult.xpiURL, callback,
+                                      "application/x-xpinstall", aResult.xpiHash,
+                                      addon.name, addon.iconURL, addon.version);
+      }
+      else {
+        callback(null);
+      }
     });
   },
 
@@ -1036,6 +1157,8 @@ var AddonRepository = {
     this._searching = true;
     this._callback = aCallback;
     this._maxResults = aMaxResults;
+
+    LOG("Requesting " + aURI);
 
     this._request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                     createInstance(Ci.nsIXMLHttpRequest);

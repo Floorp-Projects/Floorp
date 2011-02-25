@@ -172,12 +172,7 @@ _TEST_FILES = \
 		test_bug557620.html \
 		test_bug565538.html \
 		test_bug456229.html \
-		test_bug546995-1.html \
-		test_bug546995-2.html \
-		test_bug546995-3.html \
-		test_bug546995-4.html \
-		test_bug546995-5.html \
-		file_bug546995.html \
+		test_bug546995.html \
 		test_bug377624.html \
 		test_bug551846.html \
 		test_bug562932.html \
@@ -250,6 +245,15 @@ _TEST_FILES = \
 		test_bug605125-2.html \
 		test_bug612730.html \
 		test_bug613722.html \
+		test_bug613979.html \
+		test_bug615833.html \
+		test_bug601030.html \
+		test_bug610687.html \
+		test_bug618948.html \
+		test_bug623291.html \
+		test_bug619278.html \
+		test_bug622558.html \
+		test_bug622597.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

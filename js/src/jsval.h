@@ -110,8 +110,7 @@ JS_ENUM_HEADER(JSValueType, uint8)
     JSVAL_TYPE_STRORNULL           = 0x97,
     JSVAL_TYPE_OBJORNULL           = 0x98,
 
-    JSVAL_TYPE_BOXED               = 0x99,
-    JSVAL_TYPE_UNINITIALIZED       = 0xcd
+    JSVAL_TYPE_BOXED               = 0x99
 } JS_ENUM_FOOTER(JSValueType);
 
 JS_STATIC_ASSERT(sizeof(JSValueType) == 1);
@@ -297,7 +296,7 @@ typedef union jsval_layout
 typedef union jsval_layout
 {
     uint64 asBits;
-#ifndef _WIN64
+#if (!defined(_WIN64) && defined(__cplusplus))
     /* MSVC does not pack these correctly :-( */
     struct {
         uint64             payload47 : 47;
@@ -332,6 +331,24 @@ typedef union jsval_layout
             void           *ptr;
             JSWhyMagic     why;
             jsuword        word;
+        } payload;
+    } s;
+    double asDouble;
+    void *asPtr;
+} jsval_layout;
+# elif JS_BITS_PER_WORD == 64
+typedef union jsval_layout
+{
+    uint64 asBits;
+    struct {
+        JSValueTag         tag : 17;
+        uint64             payload47 : 47;
+    } debugView;
+    struct {
+        union {
+            int32          i32;
+            uint32         u32;
+            JSWhyMagic     why;
         } payload;
     } s;
     double asDouble;

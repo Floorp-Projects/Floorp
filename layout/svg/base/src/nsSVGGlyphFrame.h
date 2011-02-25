@@ -171,6 +171,7 @@ public:
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment();
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment();
   NS_IMETHOD_(void) SetWhitespaceHandling(PRUint8 aWhitespaceHandling);
+  NS_IMETHOD_(PRBool) IsAllWhitespace();
 
 protected:
   friend class CharacterIterator;
@@ -207,7 +208,6 @@ protected:
                       gfxContext *aContext);
 
   void NotifyGlyphMetricsChange();
-  PRBool ContainsPoint(const nsPoint &aPoint);
   PRBool GetGlobalTransform(gfxMatrix *aMatrix);
   void SetupGlobalTransform(gfxContext *aContext);
   nsresult GetHighlight(PRUint32 *charnum, PRUint32 *nchars,
