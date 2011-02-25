@@ -455,13 +455,13 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, js::TypedArray *tarray, T addr
 
             RegisterID newReg;
             if (!avail.empty()) {
-                newReg = avail.takeAnyReg();
+                newReg = avail.takeAnyReg().reg();
             } else {
                 // If no registers meet the ideal set, relax a constraint and spill.
                 avail = allowMask & ~pinned;
 
                 if (!avail.empty()) {
-                    newReg = avail.takeAnyReg();
+                    newReg = avail.takeAnyReg().reg();
                     saveRHS.preserve(Registers::maskReg(newReg));
                 } else {
                     // Oh no! *All* single byte registers are pinned. This
