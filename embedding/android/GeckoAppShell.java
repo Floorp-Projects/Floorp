@@ -377,7 +377,7 @@ public class GeckoAppShell
         GeckoAppShell.setSurfaceView(GeckoApp.surfaceView);
 
         // First argument is the .apk path
-        String combinedArgs = apkPath + " -omnijar " + apkPath;
+        String combinedArgs = apkPath + " -greomni " + apkPath;
         if (args != null)
             combinedArgs += " " + args;
         if (url != null)
