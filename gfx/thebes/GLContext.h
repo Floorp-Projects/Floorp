@@ -411,12 +411,12 @@ public:
         mIsGLES2(PR_FALSE),
 #endif
         mIsGlobalSharedContext(PR_FALSE),
-        mWindowOriginBottomLeft(PR_FALSE),
         mVendor(-1),
         mDebugMode(0),
         mCreationFormat(aFormat),
         mSharedContext(aSharedContext),
         mOffscreenTexture(0),
+        mFlipped(PR_FALSE),
         mBlitProgram(0),
         mBlitFramebuffer(0),
         mOffscreenFBO(0),
@@ -537,36 +537,6 @@ public:
 
     int Vendor() const {
         return mVendor;
-    }
-
-    /**
-     * Returns PR_TRUE if the window coordinate origin is the bottom
-     * left corener.  If PR_FALSE, it is the top left corner.
-     *
-     * This needs to be taken into account when calling glViewport
-     * and glScissor when drawing directly to a window.  If this is
-     * PR_FALSE, the y coordinate given to those functions should be
-     * (windowHeight - (desiredHeight + desiredY)).
-     *
-     * This should only be done when drawing directly to a window;
-     * when drawing to a FBO, the origin is always the bottom left.
-     *
-     * See FixWindowCoordinateRect().
-     */
-    PRBool IsWindowOriginBottomLeft() {
-        return mWindowOriginBottomLeft;
-    }
-
-    /**
-     * Fix up the rectangle given in aRect, taking into account
-     * window height aWindowHeight and whether windows have their
-     * natural origin in the bottom left or not.
-     */
-    nsIntRect& FixWindowCoordinateRect(nsIntRect& aRect, int aWindowHeight) {
-        if (!mWindowOriginBottomLeft) {
-            aRect.y = aWindowHeight - (aRect.height + aRect.y);
-        }
-        return aRect;
     }
 
     /**
@@ -872,13 +842,13 @@ public:
                                    const char *extension);
 
     GLint GetMaxTextureSize() { return mMaxTextureSize; }
+    void SetFlipped(PRBool aFlipped) { mFlipped = aFlipped; }
 
 protected:
     PRPackedBool mInitialized;
     PRPackedBool mIsOffscreen;
     PRPackedBool mIsGLES2;
     PRPackedBool mIsGlobalSharedContext;
-    PRPackedBool mWindowOriginBottomLeft;
 
     PRInt32 mVendor;
 
@@ -908,6 +878,7 @@ protected:
     gfxIntSize mOffscreenSize;
     gfxIntSize mOffscreenActualSize;
     GLuint mOffscreenTexture;
+    PRBool mFlipped;
 
     // lazy-initialized things
     GLuint mBlitProgram, mBlitFramebuffer;
@@ -1072,10 +1043,20 @@ public:
 
 protected:
 
+    GLint FixYValue(GLint y, GLint height)
+    {
+        return mFlipped ? ViewportRect().height - (height + y) : y;
+    }
+
     // only does the glScissor call, no ScissorRect business
     void raw_fScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
         BEFORE_GL_CALL;
-        mSymbols.fScissor(x, y, width, height);
+        // GL's coordinate system is flipped compared to ours (in the Y axis),
+        // so we may need to flip our rectangle.
+        mSymbols.fScissor(x, 
+                          FixYValue(y, height),
+                          width, 
+                          height);
         AFTER_GL_CALL;
     }
 
@@ -1122,6 +1103,11 @@ protected:
     // only does the glViewport call, no ViewportRect business
     void raw_fViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
         BEFORE_GL_CALL;
+        // XXX: Flipping should really happen using the destination height, but
+        // we use viewport instead and assume viewport size matches the
+        // destination. If we ever try use partial viewports for layers we need
+        // to fix this, and remove the assertion.
+        NS_ASSERTION(!mFlipped || (x == 0 && y == 0), "TODO: Need to flip the viewport rect"); 
         mSymbols.fViewport(x, y, width, height);
         AFTER_GL_CALL;
     }
@@ -1785,13 +1771,17 @@ public:
 
     void fCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border) {
         BEFORE_GL_CALL;
-        mSymbols.fCopyTexImage2D(target, level, internalformat, x, y, width, height, border);
+        mSymbols.fCopyTexImage2D(target, level, internalformat, 
+                                 x, FixYValue(y, height),
+                                 width, height, border);
         AFTER_GL_CALL;
     }
 
     void fCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height) {
         BEFORE_GL_CALL;
-        mSymbols.fCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
+        mSymbols.fCopyTexSubImage2D(target, level, xoffset, yoffset, 
+                                    x, FixYValue(y, height),
+                                    width, height);
         AFTER_GL_CALL;
     }
 
