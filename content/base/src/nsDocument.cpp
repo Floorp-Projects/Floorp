@@ -502,6 +502,7 @@ struct nsRadioGroupStruct
 {
   nsRadioGroupStruct()
     : mRequiredRadioCount(0)
+    , mGroupSuffersFromValueMissing(false)
   {}
 
   /**
@@ -510,6 +511,7 @@ struct nsRadioGroupStruct
   nsCOMPtr<nsIDOMHTMLInputElement> mSelectedRadioButton;
   nsCOMArray<nsIFormControl> mRadioButtons;
   PRUint32 mRequiredRadioCount;
+  bool mGroupSuffersFromValueMissing;
 };
 
 
@@ -6804,6 +6806,34 @@ nsDocument::RadioRequiredChanged(const nsAString& aName, nsIFormControl* aRadio)
     NS_ASSERTION(radioGroup->mRequiredRadioCount >= 0,
                  "mRequiredRadioCount shouldn't be negative!");
   }
+}
+
+bool
+nsDocument::GetValueMissingState(const nsAString& aName) const
+{
+  nsRadioGroupStruct* radioGroup = nsnull;
+  // TODO: we should call GetRadioGroup here (and make it const) but for that
+  // we would need to have an explicit CreateRadioGroup() instead of create
+  // one when GetRadioGroup is called. See bug 636123.
+  nsAutoString tmKey(aName);
+  if (IsHTML())
+     ToLowerCase(tmKey); //should case-insensitive.
+  mRadioGroups.Get(tmKey, &radioGroup);
+
+  return radioGroup && radioGroup->mGroupSuffersFromValueMissing;
+}
+
+void
+nsDocument::SetValueMissingState(const nsAString& aName, bool aValue)
+{
+  nsRadioGroupStruct* radioGroup = nsnull;
+  GetRadioGroup(aName, &radioGroup);
+
+  if (!radioGroup) {
+    return;
+  }
+
+  radioGroup->mGroupSuffersFromValueMissing = aValue;
 }
 
 void
