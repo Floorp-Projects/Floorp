@@ -143,6 +143,7 @@ private:
     virtual bool DeallocPStorage(PStorageParent* aActor);
 
     virtual bool RecvReadPrefsArray(InfallibleTArray<PrefTuple> *retValue);
+    virtual bool RecvReadFontList(InfallibleTArray<FontListEntry>* retValue);
 
     void EnsurePrefService();
 

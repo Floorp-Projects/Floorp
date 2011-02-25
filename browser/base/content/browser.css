@@ -472,7 +472,13 @@ statuspanel:-moz-locale-dir(rtl):not([mirror]) {
 }
 
 statuspanel[type=status] {
-  min-width: 25%;
+  min-width: 23em;
+}
+
+@media all and (max-width: 800px) {
+  statuspanel[type=status] {
+    min-width: 33%;
+  }
 }
 
 statuspanel[type=overLink] {

@@ -332,16 +332,10 @@ ContainerRender(Container* aContainer,
                       2, f);
     }
 
-    DEBUG_GL_ERROR_CHECK(aContainer->gl());
-
     aManager->BindAndDrawQuad(rgb, aManager->IsDrawingFlipped());
-
-    DEBUG_GL_ERROR_CHECK(aContainer->gl());
 
     // Clean up resources.  This also unbinds the texture.
     aContainer->gl()->fDeleteTextures(1, &containerSurface);
-
-    DEBUG_GL_ERROR_CHECK(aContainer->gl());
   }
 }
 

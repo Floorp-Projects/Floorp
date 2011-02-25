@@ -2067,22 +2067,6 @@ public:
 
 };
 
-inline void
-GLDebugPrintError(GLContext* aCx, const char* const aFile, int aLine)
-{
-    aCx->MakeCurrent();
-    GLenum err = aCx->fGetError();
-    if (err) {
-        printf_stderr("GL ERROR: 0x%04x at %s:%d\n", err, aFile, aLine);
-    }
-}
-
-#ifdef DEBUG
-#  define DEBUG_GL_ERROR_CHECK(cx) mozilla::gl::GLDebugPrintError(cx, __FILE__, __LINE__)
-#else
-#  define DEBUG_GL_ERROR_CHECK(cx) do { } while (0)
-#endif
-
 inline PRBool
 DoesVendorStringMatch(const char* aVendorString, const char *aWantedVendor)
 {

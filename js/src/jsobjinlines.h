@@ -49,6 +49,7 @@
 #include "jsobj.h"
 #include "jsprobes.h"
 #include "jspropertytree.h"
+#include "jsproxy.h"
 #include "jsscope.h"
 #include "jsstaticcheck.h"
 #include "jsxml.h"
@@ -60,6 +61,7 @@
 #include "jsscopeinlines.h"
 #include "jsstr.h"
 
+#include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsprobes.h"
 
@@ -915,7 +917,6 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
                        JSObject *parent, gc::FinalizeKind kind)
 {
     JS_ASSERT(proto);
-    JS_ASSERT(proto->isNative());
     JS_ASSERT(parent);
 
     /*

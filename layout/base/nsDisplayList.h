@@ -2049,6 +2049,11 @@ public:
                               const nsPoint &aOrigin,
                               const nsRect* aBoundsOverride = nsnull);
 
+  static nsRect TransformRectOut(const nsRect &aUntransformedBounds, 
+                                 const nsIFrame* aFrame,
+                                 const nsPoint &aOrigin,
+                                 const nsRect* aBoundsOverride = nsnull);
+
   /* UntransformRect is like TransformRect, except that it inverts the
    * transform.
    */

@@ -51,6 +51,7 @@
 #include "nsIURI.h"
 #include "nsPluginHost.h"
 #include "nsIByteRangeRequest.h"
+#include "nsIMultiPartChannel.h"
 #include "nsIInputStreamTee.h"
 #include "nsPrintfCString.h"
 #include "nsIContentUtils.h"
@@ -62,7 +63,10 @@
 
 // nsPluginByteRangeStreamListener
 
-class nsPluginByteRangeStreamListener : public nsIStreamListener {
+class nsPluginByteRangeStreamListener
+  : public nsIStreamListener
+  , public nsIInterfaceRequestor
+{
 public:
   nsPluginByteRangeStreamListener(nsIWeakReference* aWeakPtr);
   virtual ~nsPluginByteRangeStreamListener();
@@ -70,6 +74,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIINTERFACEREQUESTOR
   
 private:
   nsCOMPtr<nsIStreamListener> mStreamConverter;
@@ -77,7 +82,11 @@ private:
   PRBool mRemoveMagicNumber;
 };
 
-NS_IMPL_ISUPPORTS1(nsPluginByteRangeStreamListener, nsIStreamListener)
+NS_IMPL_ISUPPORTS3(nsPluginByteRangeStreamListener,
+                   nsIRequestObserver,
+                   nsIStreamListener,
+                   nsIInterfaceRequestor)
+
 nsPluginByteRangeStreamListener::nsPluginByteRangeStreamListener(nsIWeakReference* aWeakPtr)
 {
   mWeakPtrPluginStreamListenerPeer = aWeakPtr;
@@ -90,6 +99,22 @@ nsPluginByteRangeStreamListener::~nsPluginByteRangeStreamListener()
   mWeakPtrPluginStreamListenerPeer = 0;
 }
 
+/**
+ * Unwrap any byte-range requests so that we can check whether the base channel
+ * is being tracked properly.
+ */
+static nsCOMPtr<nsIRequest>
+GetBaseRequest(nsIRequest* r)
+{
+  nsCOMPtr<nsIMultiPartChannel> mp = do_QueryInterface(r);
+  if (!mp)
+    return r;
+
+  nsCOMPtr<nsIChannel> base;
+  mp->GetBaseChannel(getter_AddRefs(base));
+  return already_AddRefed<nsIRequest>(base.forget());
+}
+
 NS_IMETHODIMP
 nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
@@ -98,6 +123,12 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
   nsCOMPtr<nsIStreamListener> finalStreamListener = do_QueryReferent(mWeakPtrPluginStreamListenerPeer);
   if (!finalStreamListener)
     return NS_ERROR_FAILURE;
+  
+  nsPluginStreamListenerPeer *pslp =
+    static_cast<nsPluginStreamListenerPeer*>(finalStreamListener.get());
+
+  NS_ASSERTION(pslp->mRequests.IndexOfObject(GetBaseRequest(request)) != -1,
+               "Untracked byte-range request?");
   
   nsCOMPtr<nsIStreamConverterService> serv = do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
@@ -124,10 +155,6 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
   }
-  
-  // get nsPluginStreamListenerPeer* ptr from finalStreamListener
-  nsPluginStreamListenerPeer *pslp =
-  reinterpret_cast<nsPluginStreamListenerPeer*>(finalStreamListener.get());
   
   if (responseCode != 200) {
     PRBool bWantsAllNetworkStreams = PR_FALSE;
@@ -159,6 +186,13 @@ nsPluginByteRangeStreamListener::OnStopRequest(nsIRequest *request, nsISupports 
   if (!finalStreamListener)
     return NS_ERROR_FAILURE;
   
+  nsPluginStreamListenerPeer *pslp =
+    static_cast<nsPluginStreamListenerPeer*>(finalStreamListener.get());
+  PRBool found = pslp->mRequests.RemoveObject(request);
+  if (!found) {
+    NS_ERROR("OnStopRequest received for untracked byte-range request!");
+  }
+
   if (mRemoveMagicNumber) {
     // remove magic number from container
     nsCOMPtr<nsISupportsPRUint32> container = do_QueryInterface(ctxt);
@@ -221,6 +255,18 @@ nsPluginByteRangeStreamListener::OnDataAvailable(nsIRequest *request, nsISupport
   
   return mStreamConverter->OnDataAvailable(request, ctxt, inStr, sourceOffset, count);
 }
+
+NS_IMETHODIMP
+nsPluginByteRangeStreamListener::GetInterface(const nsIID& aIID, void** result)
+{
+  // Forward interface requests to our parent
+  nsCOMPtr<nsIInterfaceRequestor> finalStreamListener = do_QueryReferent(mWeakPtrPluginStreamListenerPeer);
+  if (!finalStreamListener)
+    return NS_ERROR_FAILURE;
+
+  return finalStreamListener->GetInterface(aIID, result);
+}
+    
 
 // nsPRUintKey
 
@@ -297,8 +343,7 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
 // Called as a result of GetURL and PostURL
 nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
                                                 nsNPAPIPluginInstance *aInstance,
-                                                nsIPluginStreamListener* aListener,
-                                                PRInt32 requestCount)
+                                                nsIPluginStreamListener* aListener)
 {
 #ifdef PLUGIN_LOGGING
   nsCAutoString urlSpec;
@@ -317,7 +362,7 @@ nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
   mPStreamListener = static_cast<nsNPAPIPluginStreamListener*>(aListener);
   mPStreamListener->SetStreamListenerPeer(this);
 
-  mPendingRequests = requestCount;
+  mPendingRequests = 1;
   
   mDataForwardToRequest = new nsHashtable(16, PR_FALSE);
   if (!mDataForwardToRequest)
@@ -471,6 +516,12 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
                                            nsISupports* aContext)
 {
   nsresult  rv = NS_OK;
+
+  if (mRequests.IndexOfObject(GetBaseRequest(request)) == -1) {
+    NS_ASSERTION(mRequests.Count() == 0,
+                 "Only our initial stream should be unknown!");
+    TrackRequest(request);
+  }
   
   if (mHaveFiredOnStartRequest) {
     return NS_OK;
@@ -549,8 +600,6 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
   else {
     mLength = length;
   }
-  
-  mRequest = request;
   
   nsCAutoString aContentType; // XXX but we already got the type above!
   rv = channel->GetContentType(aContentType);
@@ -775,7 +824,10 @@ nsPluginStreamListenerPeer::RequestRead(NPByteRange* rangeList)
   if (NS_FAILED(rv))
     return rv;
   
-  return channel->AsyncOpen(converter, container);
+  rv = channel->AsyncOpen(converter, container);
+  if (NS_SUCCEEDED(rv))
+    TrackRequest(channel);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -864,6 +916,9 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
                                                           PRUint32 sourceOffset,
                                                           PRUint32 aLength)
 {
+  NS_ASSERTION(mRequests.IndexOfObject(GetBaseRequest(request)) != -1,
+               "Received OnDataAvailable for untracked request.");
+  
   if (mRequestFailed)
     return NS_ERROR_FAILURE;
   
@@ -884,8 +939,6 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
   
   if (!mPStreamListener)
     return NS_ERROR_FAILURE;
-  
-  mRequest = request;
   
   const char * url = nsnull;
   GetURL(&url);
@@ -968,6 +1021,14 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
                                                         nsresult aStatus)
 {
   nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIMultiPartChannel> mp = do_QueryInterface(request);
+  if (!mp) {
+    PRBool found = mRequests.RemoveObject(request);
+    if (!found) {
+      NS_ERROR("Received OnStopRequest for untracked request.");
+    }
+  }
   
   PLUGIN_LOG(PLUGIN_LOG_NOISY,
              ("nsPluginStreamListenerPeer::OnStopRequest this=%p aStatus=%d request=%p\n",
@@ -1073,7 +1134,6 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   if (NS_SUCCEEDED(aStatus)) {
     mStreamComplete = PR_TRUE;
   }
-  mRequest = NULL;
   
   return NS_OK;
 }
@@ -1284,6 +1344,47 @@ nsPluginStreamListenerPeer::GetInterface(const nsIID& aIID, void** result)
   return GetInterfaceGlobal(aIID, result);
 }
 
+/**
+ * Proxy class which forwards async redirect notifications back to the necko
+ * callback, keeping nsPluginStreamListenerPeer::mRequests in sync with
+ * which channel is active.
+ */
+class ChannelRedirectProxyCallback : public nsIAsyncVerifyRedirectCallback
+{
+public:
+  ChannelRedirectProxyCallback(nsINPAPIPluginStreamInfo* listener,
+                               nsIAsyncVerifyRedirectCallback* parent,
+                               nsIChannel* oldChannel,
+                               nsIChannel* newChannel)
+    : mWeakListener(do_GetWeakReference(listener))
+    , mParent(parent)
+    , mOldChannel(oldChannel)
+    , mNewChannel(newChannel)
+  {
+  }
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHODIMP OnRedirectVerifyCallback(nsresult result)
+  {
+    if (NS_SUCCEEDED(result)) {
+      nsCOMPtr<nsINPAPIPluginStreamInfo> listener = do_QueryReferent(mWeakListener);
+      if (listener)
+        listener->ReplaceRequest(mOldChannel, mNewChannel);
+    }
+    return mParent->OnRedirectVerifyCallback(result);
+  }
+
+private:
+  nsWeakPtr mWeakListener;
+  nsCOMPtr<nsIAsyncVerifyRedirectCallback> mParent;
+  nsCOMPtr<nsIChannel> mOldChannel;
+  nsCOMPtr<nsIChannel> mNewChannel;
+};
+
+NS_IMPL_ISUPPORTS1(ChannelRedirectProxyCallback, nsIAsyncVerifyRedirectCallback)
+    
+
 NS_IMETHODIMP
 nsPluginStreamListenerPeer::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel,
                                                    PRUint32 flags, nsIAsyncVerifyRedirectCallback* callback)
@@ -1293,8 +1394,11 @@ nsPluginStreamListenerPeer::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsICh
     return NS_ERROR_FAILURE;
   }
 
+  nsCOMPtr<nsIAsyncVerifyRedirectCallback> proxyCallback =
+    new ChannelRedirectProxyCallback(this, callback, oldChannel, newChannel);
+
   // Give NPAPI a chance to control redirects.
-  bool notificationHandled = mPStreamListener->HandleRedirectNotification(oldChannel, newChannel, callback);
+  bool notificationHandled = mPStreamListener->HandleRedirectNotification(oldChannel, newChannel, proxyCallback);
   if (notificationHandled) {
     return NS_OK;
   }
@@ -1331,5 +1435,5 @@ nsPluginStreamListenerPeer::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsICh
     return rv;
   }
 
-  return channelEventSink->AsyncOnChannelRedirect(oldChannel, newChannel, flags, callback);
+  return channelEventSink->AsyncOnChannelRedirect(oldChannel, newChannel, flags, proxyCallback);
 }

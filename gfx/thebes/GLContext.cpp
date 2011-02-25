@@ -534,7 +534,6 @@ GLContext::CreateTextureImage(const nsIntSize& aSize,
     fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, texfilter);
     fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, aWrapMode);
     fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, aWrapMode);
-    DEBUG_GL_ERROR_CHECK(this);
 
     return CreateBasicTextureImage(texture, aSize, aWrapMode, aContentType, this);
 }
@@ -1176,11 +1175,7 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
 
     SetBlitFramebufferForDestTexture(aDst->Texture());
 
-    DEBUG_GL_ERROR_CHECK(this);
-
     UseBlitProgram();
-
-    DEBUG_GL_ERROR_CHECK(this);
 
     nsIntSize srcSize = aSrc->GetSize();
     nsIntSize dstSize = aDst->GetSize();
@@ -1225,11 +1220,7 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
     fEnableVertexAttribArray(0);
     fEnableVertexAttribArray(1);
 
-    DEBUG_GL_ERROR_CHECK(this);
-
     fDrawArrays(LOCAL_GL_TRIANGLES, 0, rects.numRects * 6);
-
-    DEBUG_GL_ERROR_CHECK(this);
 
     fDisableVertexAttribArray(0);
     fDisableVertexAttribArray(1);

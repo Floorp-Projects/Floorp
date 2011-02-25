@@ -1838,6 +1838,74 @@ MOZ_ARG_ENABLE_BOOL(profiling,
     MOZ_PROFILING= )
 
 dnl ========================================================
+dnl = Use Valgrind
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(valgrind,
+[  --enable-valgrind       Enable Valgrind integration hooks (default=no)],
+    MOZ_VALGRIND=1,
+    MOZ_VALGRIND= )
+if test -n "$MOZ_VALGRIND"; then
+    AC_CHECK_HEADER([valgrind/valgrind.h], [],
+        AC_MSG_ERROR(
+            [--enable-valgrind specified but Valgrind is not installed]))
+    AC_DEFINE(MOZ_VALGRIND)
+fi
+
+dnl ========================================================
+dnl jprof
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(jprof,
+[  --enable-jprof          Enable jprof profiling tool (needs mozilla/tools/jprof). Implies --enable-profiling.],
+    MOZ_JPROF=1,
+    MOZ_JPROF= )
+if test -n "$MOZ_JPROF"; then
+    MOZ_PROFILING=1
+    AC_DEFINE(MOZ_JPROF)
+fi
+
+dnl ========================================================
+dnl shark
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(shark,
+[  --enable-shark          Enable shark remote profiling. Implies --enable-profiling.],
+    MOZ_SHARK=1,
+    MOZ_SHARK= )
+if test -n "$MOZ_SHARK"; then
+    MOZ_PROFILING=1
+    AC_DEFINE(MOZ_SHARK)
+fi
+
+dnl ========================================================
+dnl callgrind
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(callgrind,
+[  --enable-callgrind      Enable callgrind profiling],
+    MOZ_CALLGRIND=1,
+    MOZ_CALLGRIND= )
+if test -n "$MOZ_CALLGRIND"; then
+    AC_DEFINE(MOZ_CALLGRIND)
+fi
+
+dnl ========================================================
+dnl vtune
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(vtune,
+[  --enable-vtune          Enable vtune profiling. Implies --enable-profiling.],
+    MOZ_VTUNE=1,
+    MOZ_VTUNE= )
+if test -n "$MOZ_VTUNE"; then
+    MOZ_PROFILING=1
+    AC_DEFINE(MOZ_VTUNE)
+fi
+
+dnl ========================================================
+dnl Profiling
+dnl ========================================================
+if test -n "$MOZ_PROFILING"; then
+    AC_DEFINE(MOZ_PROFILING)
+fi
+
+dnl ========================================================
 dnl System overrides of the defaults for host
 dnl ========================================================
 case "$host" in
@@ -7588,74 +7656,6 @@ MOZ_ARG_ENABLE_BOOL(gctimer,
     MOZ_GCTIMER= )
 if test -n "$MOZ_GCTIMER"; then
     AC_DEFINE(MOZ_GCTIMER)
-fi
-
-dnl ========================================================
-dnl = Use Valgrind
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(valgrind,
-[  --enable-valgrind       Enable Valgrind integration hooks (default=no)],
-    MOZ_VALGRIND=1,
-    MOZ_VALGRIND= )
-if test -n "$MOZ_VALGRIND"; then
-    AC_CHECK_HEADER([valgrind/valgrind.h], [],
-        AC_MSG_ERROR(
-            [--enable-valgrind specified but Valgrind is not installed]))
-    AC_DEFINE(MOZ_VALGRIND)
-fi
-
-dnl ========================================================
-dnl jprof
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(jprof,
-[  --enable-jprof          Enable jprof profiling tool (needs mozilla/tools/jprof). Implies --enable-profiling.],
-    MOZ_JPROF=1,
-    MOZ_JPROF= )
-if test -n "$MOZ_JPROF"; then
-    MOZ_PROFILING=1
-    AC_DEFINE(MOZ_JPROF)
-fi
-
-dnl ========================================================
-dnl shark
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(shark,
-[  --enable-shark          Enable shark remote profiling. Implies --enable-profiling.],
-    MOZ_SHARK=1,
-    MOZ_SHARK= )
-if test -n "$MOZ_SHARK"; then
-    MOZ_PROFILING=1
-    AC_DEFINE(MOZ_SHARK)
-fi
-
-dnl ========================================================
-dnl callgrind
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(callgrind,
-[  --enable-callgrind      Enable callgrind profiling],
-    MOZ_CALLGRIND=1,
-    MOZ_CALLGRIND= )
-if test -n "$MOZ_CALLGRIND"; then
-    AC_DEFINE(MOZ_CALLGRIND)
-fi
-
-dnl ========================================================
-dnl vtune
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(vtune,
-[  --enable-vtune          Enable vtune profiling. Implies --enable-profiling.],
-    MOZ_VTUNE=1,
-    MOZ_VTUNE= )
-if test -n "$MOZ_VTUNE"; then
-    MOZ_PROFILING=1
-    AC_DEFINE(MOZ_VTUNE)
-fi
-
-dnl ========================================================
-dnl Profiling
-dnl ========================================================
-if test -n "$MOZ_PROFILING"; then
-    AC_DEFINE(MOZ_PROFILING)
 fi
 
 dnl ========================================================

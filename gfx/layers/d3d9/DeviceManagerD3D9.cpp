@@ -332,6 +332,14 @@ DeviceManagerD3D9::Init()
     return false;
   }
 
+  /* Grab the associated HMONITOR so that we can find out
+   * if it changed later */
+  D3DDEVICE_CREATION_PARAMETERS parameters;
+  if (FAILED(mDevice->GetCreationParameters(&parameters)))
+    return false;
+  mDeviceMonitor = mD3D9->GetAdapterMonitor(parameters.AdapterOrdinal);
+
+
   /* 
    * Do some post device creation setup 
    */ 
@@ -560,7 +568,26 @@ DeviceManagerD3D9::VerifyReadyForRendering()
   ++mDeviceResetCount;
 
   if (hr == D3DERR_DEVICELOST) {
-    return false;
+    /* It is not unusual for Reset to return DEVICELOST
+     * we're supposed to continue trying until we get
+     * DEVICENOTRESET and then Reset is supposed to succeed.
+     * Unfortunately, it seems like when we dock or undock
+     * DEVICELOST happens and we never get DEVICENOTRESET. */
+
+    HMONITOR hMonitorWindow;
+    hMonitorWindow = MonitorFromWindow(mFocusWnd, MONITOR_DEFAULTTOPRIMARY);
+    if (hMonitorWindow == mDeviceMonitor) {
+      /* The monitor has not changed. So, let's assume that the
+       * DEVICENOTRESET will be comming. */
+
+      /* jrmuizel: I'm not sure how to trigger this case. Usually, we get
+       * DEVICENOTRESET right away and Reset() succeeds without going through a
+       * set of DEVICELOSTs. This is presumeably because we don't call
+       * VerifyReadyForRendering when we don't have any reason to paint.
+       * Hopefully comparing HMONITORs is not overly aggressive. */
+      return false;
+    }
+    /* otherwise fall through and recreate the device */
   }
 
   if (FAILED(hr) || !CreateVertexBuffer()) {

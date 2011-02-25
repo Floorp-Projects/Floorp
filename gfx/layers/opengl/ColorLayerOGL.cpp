@@ -71,8 +71,6 @@ RenderColorLayer(ColorLayer* aLayer, LayerManagerOGL *aManager,
   program->SetRenderColor(color);
 
   aManager->BindAndDrawQuad(program);
-
-  DEBUG_GL_ERROR_CHECK(aManager->gl());
 }
 
 void

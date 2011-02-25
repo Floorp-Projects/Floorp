@@ -174,7 +174,7 @@ function runServer()
   }
 
   if (typeof(_SERVER_PORT) != "undefined") {
-    if (parseInt(_SERVER_PORT) > 0 && parseInt(_SERVER_PORT) < 32000)
+    if (parseInt(_SERVER_PORT) > 0 && parseInt(_SERVER_PORT) < 65536)
       SERVER_PORT = _SERVER_PORT;
   } else {
     throw "please define _SERVER_PORT (as a port number) before running server.js";

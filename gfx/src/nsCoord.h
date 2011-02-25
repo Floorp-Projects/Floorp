@@ -449,6 +449,11 @@ inline double NSAppUnitsToDoublePixels(nscoord aAppUnits, nscoord aAppUnitsPerPi
   return (double(aAppUnits) / double(aAppUnitsPerPixel));
 }
 
+inline double NSAppUnitsToDoublePixels(nscoord aAppUnits, double aAppUnitsPerPixel)
+{
+  return (double(aAppUnits) / aAppUnitsPerPixel);
+}
+
 inline PRInt32 NSAppUnitsToIntPixels(nscoord aAppUnits, float aAppUnitsPerPixel)
 {
   return NSToIntRound(float(aAppUnits) / aAppUnitsPerPixel);
