@@ -503,6 +503,7 @@ let Content = {
           if (element) {
             rect = getBoundingContentRect(element);
             if (Services.prefs.getBoolPref("browser.ui.zoom.reflow")) {
+              sendAsyncMessage("Browser:ZoomToPoint:Return", { x: x, y: y, zoomTo: rect });
               this._setTextZoom(Math.max(1, rect.width / json.width));
 
               let oldRect = rect;
