@@ -78,7 +78,6 @@ LOCAL_INCLUDES = \
 
 LIBS = \
 	$(LIBS_DIR) \
-	$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(SQLITE_LIBS) \
 	$(NULL)
