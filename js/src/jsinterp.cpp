@@ -2180,6 +2180,15 @@ ScriptPrologue(JSContext *cx, JSStackFrame *fp)
 
 namespace js {
 
+#ifdef __APPLE__
+static JS_NEVER_INLINE bool
+NEVER_INLINE_ComputeImplicitThis(JSContext *cx, JSObject *obj, const Value &funval, Value *vp)
+{
+    return ComputeImplicitThis(cx, obj, funval, vp);
+}
+#define ComputeImplicitThis(cx, obj, funval, vp) NEVER_INLINE_ComputeImplicitThis(cx, obj, funval, vp)
+#endif
+
 JS_REQUIRES_STACK JS_NEVER_INLINE bool
 Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInterpMode interpMode)
 {
