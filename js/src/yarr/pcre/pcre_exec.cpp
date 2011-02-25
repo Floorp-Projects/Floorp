@@ -425,17 +425,6 @@ struct MatchStack {
         while (size)
             popCurrentFrame();
     }
-
-    /* Return true iff the instruction pointer is currently at an optional bracket,
-     i.e., a bracket that may be matched zero times. */
-    bool atOptionalBracket() const {
-        /* We don't need to include OP_BRAMINZERO: we try to match the group within
-         the BRAMINZERO only if we have already failed to match the rest of the 
-         regular expression. Thus, we will not be able to complete a successful
-         match by matching the group against the empty string anyway. */
-        unsigned char prevOp = currentFrame->args.instructionPtr[-1];
-        return prevOp == OP_BRAZERO;
-    }
 };
 
 static int matchError(int errorCode, MatchStack& stack)
@@ -476,6 +465,27 @@ static inline void repeatInformationFromInstructionOffset(short instructionOffse
     maximumRepeats = maximumRepeatsFromInstructionOffset[instructionOffset];
 }
 
+/* Helper class for passing a flag value from one op to the next that runs.
+ This allows us to set the flag in certain ops. When the flag is read, it
+ will be true only if the previous op set the flag, otherwise it is false. */
+class LinearFlag {
+public:
+    LinearFlag() : flag(false) {}
+    
+    bool readAndClear() {
+        bool rv = flag;
+        flag = false;
+        return rv;
+    }
+
+    void set() {
+        flag = true;
+    }
+
+private:
+    bool flag;
+};
+
 static int
 match(JSArenaPool *regExpPool, const UChar* subjectPtr, const unsigned char* instructionPtr, int offsetTop, MatchData& md)
 {
@@ -487,6 +497,7 @@ match(JSArenaPool *regExpPool, const UChar* subjectPtr, const unsigned char* ins
     bool minSatisfied;
     
     MatchStack stack(regExpPool);
+    LinearFlag minSatNextBracket;
 
     /* The opcode jump table. */
 #ifdef USE_COMPUTED_GOTO_FOR_MATCH_OPCODE_LOOP
@@ -552,8 +563,7 @@ RECURSE:
                  bracket data. */
                 stack.currentFrame->locals.skipBytes = 3;
                 /* We must compute this value at the top, before we move the instruction pointer. */
-                stack.currentFrame->locals.minSatisfied = instructionPtr != stack.currentFrame->args.instructionPtr &&
-                                                          stack.atOptionalBracket();
+                stack.currentFrame->locals.minSatisfied = minSatNextBracket.readAndClear();
                 do {
                     /* We need to extract this into a variable so we can correctly pass it by value
                      through RECURSIVE_MATCH_NEW_GROUP, which modifies currentFrame. */
@@ -658,6 +668,7 @@ RECURSE:
                 stack.currentFrame->locals.startOfRepeatingBracket = stack.currentFrame->args.instructionPtr + 1;
                 stack.currentFrame->extractBrackets(stack.currentFrame->args.instructionPtr + 1);
                 stack.currentFrame->saveOffsets(LOCALS(minBracket), LOCALS(limitBracket), md.offsetVector, md.offsetEnd);
+                minSatNextBracket.set();
                 RECURSIVE_MATCH_NEW_GROUP(14, stack.currentFrame->locals.startOfRepeatingBracket, stack.currentFrame->args.bracketChain, true);
                 if (isMatch)
                     RRETURN;
@@ -766,11 +777,13 @@ RECURSE:
                     else
                         stack.currentFrame->restoreOffsets(LOCALS(minBracket), LOCALS(limitBracket), md.offsetVector, md.offsetEnd);
                     DPRINTF(("recursively matching lazy group\n"));
+                    minSatNextBracket.set();
                     RECURSIVE_MATCH_NEW_GROUP(17, LOCALS(instructionPtrAtStartOfOnce), stack.currentFrame->args.bracketChain, true);
                 } else { /* OP_KETRMAX */
                     stack.currentFrame->saveOffsets(LOCALS(minBracket), LOCALS(limitBracket), md.offsetVector, md.offsetEnd);
                     stack.currentFrame->clobberOffsets(LOCALS(minBracket), LOCALS(limitBracket), md.offsetVector, md.offsetEnd);
                     DPRINTF(("recursively matching greedy group\n"));
+                    minSatNextBracket.set();
                     RECURSIVE_MATCH_NEW_GROUP(18, LOCALS(instructionPtrAtStartOfOnce), stack.currentFrame->args.bracketChain, true);
                     if (isMatch)
                         RRETURN;
@@ -1859,7 +1872,7 @@ RECURSE:
                     stack.currentFrame->locals.skipBytes = 3; /* For OP_BRAs. */
                     
                     /* We must compute this value at the top, before we move the instruction pointer. */
-                    stack.currentFrame->locals.minSatisfied = stack.atOptionalBracket();
+                    stack.currentFrame->locals.minSatisfied = minSatNextBracket.readAndClear();
                     do {
                         /* We need to extract this into a variable so we can correctly pass it by value
                          through RECURSIVE_MATCH_NEW_GROUP, which modifies currentFrame. */
