@@ -1122,6 +1122,11 @@ Browser.MainDragger.prototype = {
     let bcr = browser.getBoundingClientRect();
     this._contentView = browser.getViewAt(clientX - bcr.left, clientY - bcr.top);
     this._stopAtSidebar = 0;
+    this._hitSidebar = false;
+    if (this._sidebarTimeout) {
+      clearTimeout(this._sidebarTimeout);
+      this._sidebarTimeout = null;
+    }
   },
 
   dragStop: function dragStop(dx, dy, scroller) {
@@ -1130,15 +1135,20 @@ Browser.MainDragger.prototype = {
     Browser.tryUnfloatToolbar();
   },
 
-  dragMove: function dragMove(dx, dy, scroller) {
+  dragMove: function dragMove(dx, dy, scroller, aIsKinetic) {
     let doffset = new Point(dx, dy);
 
     // First calculate any panning to take sidebars out of view
     let panOffset = this._panControlsAwayOffset(doffset);
 
     // If we started at one sidebar, stop when we get to the other.
-    if (panOffset.x != 0 && !this._stopAtSidebar)
+    if (panOffset.x != 0 && !this._stopAtSidebar) {
       this._stopAtSidebar = panOffset.x; // negative: stop at left; positive: stop at right
+      this._sidebarTimeout = setTimeout(function(self) {
+        self._stopAtSidebar = 0;
+        self._sidebarTimeout = null;
+      }, 350, this);
+    }
 
     if (this._contentView && !this._contentView.isRoot()) {
       this._panContentView(this._contentView, doffset);
@@ -1149,14 +1159,19 @@ Browser.MainDragger.prototype = {
     // Do content panning
     this._panContentView(getBrowser().getRootView(), doffset);
 
+    if (this._hitSidebar && aIsKinetic)
+      return; // No kinetic panning after we've stopped at the sidebar.
+
     // Any leftover panning in doffset would bring controls into view. Add to sidebar
     // away panning for the total scroll offset.
-    if (this._stopAtSidebar > 0 && doffset.x > 0)
+    if ((this._stopAtSidebar > 0 && doffset.x > 0) ||
+        (this._stopAtSidebar < 0 && doffset.x < 0)) {
+      if (doffset.x != panOffset.x)
+        this._hitSidebar = true;
       doffset.x = panOffset.x;
-    else if (this._stopAtSidebar < 0 && doffset.x < 0)
-      doffset.x = panOffset.x;
-    else
+    } else {
       doffset.add(panOffset);
+    }
 
     Browser.tryFloatToolbar(doffset.x, 0);
     this._panScroller(Browser.controlsScrollboxScroller, doffset);
