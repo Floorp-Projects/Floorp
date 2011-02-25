@@ -61,7 +61,6 @@ Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
-Cu.import("resource://services-sync/ext/Sync.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/log4moz.js");
