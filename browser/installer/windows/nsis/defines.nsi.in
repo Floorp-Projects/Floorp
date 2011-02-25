@@ -26,10 +26,8 @@
 # LSP_CATEGORIES is the permitted LSP categories for the application. Each LSP
 # category value is ANDed together to set multiple permitted categories.
 # See http://msdn.microsoft.com/en-us/library/ms742253%28VS.85%29.aspx
-# The value below permits the LSP_INSPECTOR, LSP_REDIRECTOR, LSP_PROXY,
-# LSP_FIREWALL, LSP_INBOUND_MODIFY, LSP_OUTBOUND_MODIFY, LSP_CRYPTO_COMPRESS,
-# and LSP_LOCAL_CACHE LSP categories.
-!define LSP_CATEGORIES "0x000000ff"
+# The value below removes all LSP categories previously set.
+!define LSP_CATEGORIES "0x00000000"
 
 # NO_INSTDIR_FROM_REG is defined for pre-releases which have a PreReleaseSuffix
 # (e.g. Alpha X, Beta X, etc.) to prevent finding a non-default installation
