@@ -168,7 +168,7 @@ install::
 	$(SYSINSTALL) $(IFLAGS1) $(DEPTH)/mozilla-config.h $(DESTDIR)$(includedir)
 
 GARBAGE += \
-	$(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES) buildid $(srcdir)/*.pyc
+  $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES) buildid $(srcdir)/*.pyc *.pyc
 
 ifndef CROSS_COMPILE
 ifdef USE_ELF_DYNSTR_GC
@@ -191,6 +191,7 @@ PYUNITS := \
   unit-printprereleasesuffix.py \
   unit-JarMaker.py \
   unit-buildlist.py \
+  unit-expandlibs.py \
   $(NULL)
 
 check:: check-python-modules check-jar-mn

@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,19 +11,19 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is a build helper for libraries
 #
 # The Initial Developer of the Original Code is
-# the Mozilla Foundation <http://www.mozilla.org>.
-# Portions created by the Initial Developer are Copyright (C) 2006
+# the Mozilla Foundation
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Benjamin Smedberg <benjamin@smedbergs.us> (Original Code)
+# Mike Hommey <mh@glandium.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either of the GNU General Public License Version 2 or later (the "GPL"),
-# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,39 +35,23 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+'''Given a list of object files and library names, prints a library
+descriptor to standard output'''
 
-include $(DEPTH)/config/autoconf.mk
+import sys
+import os
+import expandlibs_config as conf
+from expandlibs import LibDescriptor
 
-# This makefile builds the version of unicharutils_s static library which uses
-# internal linkage. Components that use frozen (external) linkage should use
-# unicharutil_external_s.
+def generate(args):
+    desc = LibDescriptor()
+    for arg in args:
+        if os.path.splitext(arg)[1] == conf.OBJ_SUFFIX:
+            desc['OBJS'].append(os.path.abspath(arg))
+        elif os.path.splitext(arg)[1] == conf.LIB_SUFFIX and \
+             (os.path.exists(arg) or os.path.exists(arg + conf.LIBS_DESC_SUFFIX)):
+            desc['LIBS'].append(os.path.abspath(arg))
+    return desc
 
-MODULE=unicharutil
-LIBRARY_NAME=unicharutil_s
-DIST_INSTALL = 1
-EXPORT_LIBRARY = 1
-MOZILLA_INTERNAL_API = 1
-
-include $(srcdir)/../objs.mk
-
-EXTRA_DEPS += $(srcdir)/../objs.mk
-
-LOCAL_INCLUDES	+= -I$(srcdir)/.. \
-  -I$(srcdir)/../../src
-
-
-CPPSRCS	= $(INTL_UNICHARUTIL_UTIL_LCPPSRCS)
-
-FORCE_STATIC_LIB = 1
-FORCE_USE_PIC = 1
-
-include $(topsrcdir)/config/rules.mk
-
-$(INTL_UNICHARUTIL_UTIL_LCPPSRCS): %: $(srcdir)/../%
-	$(INSTALL) $^ .
-
-GARBAGE += $(INTL_UNICHARUTIL_UTIL_LCPPSRCS)
+if __name__ == '__main__':
+    print generate(sys.argv[1:])

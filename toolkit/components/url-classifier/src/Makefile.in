@@ -7,7 +7,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = url-classifier
 LIBRARY_NAME = urlclassifier_s
-SUPPRESS_FAKELIB = 1 # The urlclassifier test chokes on fakelibs
 XPIDL_MODULE = url-classifier
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
