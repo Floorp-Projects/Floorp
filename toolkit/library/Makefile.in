@@ -247,6 +247,9 @@ OS_LIBS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version winspool comdlg32 im
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 OS_LIBS += $(call EXPAND_LIBNAME,imagehlp)
 endif
+ifdef MOZ_CRASHREPORTER
+OS_LIBS += $(call EXPAND_LIBNAME,wininet)
+endif
 endif # WINNT
 ifeq ($(OS_ARCH),WINCE)
 OS_LIBS += $(call EXPAND_LIBNAME, aygshell uuid ole32 oleaut32 Ws2 ddraw)
