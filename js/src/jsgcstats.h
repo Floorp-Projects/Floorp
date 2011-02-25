@@ -148,6 +148,7 @@ struct GCTimer {
     uint64 startSweep;
     uint64 sweepObjectEnd;
     uint64 sweepStringEnd;
+    uint64 sweepShapeEnd;
     uint64 sweepDestroyEnd;
     uint64 end;
 

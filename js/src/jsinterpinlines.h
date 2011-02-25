@@ -479,7 +479,7 @@ JSStackFrame::callObj() const
     JS_ASSERT(hasCallObj());
     JSObject *pobj = &scopeChain();
     while (JS_UNLIKELY(pobj->getClass() != &js_CallClass)) {
-        JS_ASSERT(js_IsCacheableNonGlobalScope(pobj) || pobj->isWith());
+        JS_ASSERT(js::IsCacheableNonGlobalScope(pobj) || pobj->isWith());
         pobj = pobj->getParent();
     }
     return *pobj;
@@ -665,6 +665,83 @@ class PrimitiveBehavior<double> {
 };
 
 } // namespace detail
+
+/*
+ * Compute the implicit |this| parameter for a call expression where the callee
+ * is an unqualified name reference.
+ *
+ * We can avoid computing |this| eagerly and push the implicit callee-coerced
+ * |this| value, undefined, according to this decision tree:
+ *
+ * 1. If the called value, funval, is not an object, bind |this| to undefined.
+ *
+ * 2. The nominal |this|, obj, has one of Block, Call, or DeclEnv class (this
+ *    is what IsCacheableNonGlobalScope tests). Such objects-as-scopes must be
+ *    censored.
+ *
+ * 3. obj is a global. There are several sub-cases:
+ *
+ * a) obj is a proxy: we try unwrapping it (see jswrapper.cpp) in order to find
+ *    a function object inside. If the proxy is not a wrapper, or else it wraps
+ *    a non-function, then bind |this| to undefined per ES5-strict/Harmony.
+ *
+ *    [Else fall through with callee pointing to an unwrapped function object.]
+ *
+ * b) If callee is a function (after unwrapping if necessary), check whether it
+ *    is interpreted and in strict mode. If so, then bind |this| to undefined
+ *    per ES5 strict.
+ *
+ * c) Now check that callee is scoped by the same global object as the object
+ *    in which its unqualified name was bound as a property. ES1-3 bound |this|
+ *    to the name's "Reference base object", which in the context of multiple
+ *    global objects may not be the callee's global. If globals match, bind
+ *    |this| to undefined.
+ *
+ *    This is a backward compatibility measure; see bug 634590.
+ *
+ * 4. Finally, obj is neither a declarative scope object to be censored, nor a
+ *    global where the callee requires no backward-compatible special handling
+ *    or future-proofing based on (explicit or imputed by Harmony status in the
+ *    proxy case) strict mode opt-in. Bind |this| to obj->thisObject().
+ *
+ * We set *vp to undefined early to reduce code size and bias this code for the
+ * common and future-friendly cases.
+ */
+inline bool
+ComputeImplicitThis(JSContext *cx, JSObject *obj, const Value &funval, Value *vp)
+{
+    vp->setUndefined();
+
+    if (!funval.isObject())
+        return true;
+
+    if (!obj->isGlobal()) {
+        if (IsCacheableNonGlobalScope(obj))
+            return true;
+    } else {
+        JSObject *callee = &funval.toObject();
+
+        if (callee->isProxy()) {
+            callee = callee->unwrap();
+            if (!callee->isFunction())
+                return true; // treat any non-wrapped-function proxy as strict
+        }
+        if (callee->isFunction()) {
+            JSFunction *fun = callee->getFunctionPrivate();
+            if (fun->isInterpreted() && fun->inStrictMode())
+                return true;
+        }
+        if (callee->getGlobal() == cx->fp()->scopeChain().getGlobal())
+            return true;;
+    }
+
+    obj = obj->thisObject(cx);
+    if (!obj)
+        return false;
+
+    vp->setObject(*obj);
+    return true;
+}
 
 template <typename T>
 bool

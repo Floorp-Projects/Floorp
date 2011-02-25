@@ -2190,6 +2190,15 @@ ScriptPrologue(JSContext *cx, JSStackFrame *fp)
 
 namespace js {
 
+#ifdef __APPLE__
+static JS_NEVER_INLINE bool
+NEVER_INLINE_ComputeImplicitThis(JSContext *cx, JSObject *obj, const Value &funval, Value *vp)
+{
+    return ComputeImplicitThis(cx, obj, funval, vp);
+}
+#define ComputeImplicitThis(cx, obj, funval, vp) NEVER_INLINE_ComputeImplicitThis(cx, obj, funval, vp)
+#endif
+
 JS_REQUIRES_STACK JS_NEVER_INLINE bool
 Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInterpMode interpMode)
 {
@@ -2213,8 +2222,8 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
      * expect from looking at the code.  (We do omit POPs after SETs;
      * unfortunate, but not worth fixing.)
      */
-#  define LOG_OPCODE(OP)    JS_BEGIN_MACRO                                      \
-                                if (JS_UNLIKELY(cx->logfp != NULL) &&       \
+#  define LOG_OPCODE(OP)    JS_BEGIN_MACRO                                    \
+                                if (JS_UNLIKELY(cx->logfp != NULL) &&         \
                                     (OP) == *regs.pc)                         \
                                     js_LogOpcode(cx);                         \
                             JS_END_MACRO
@@ -2337,13 +2346,16 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
     (dbl = script->getConst(GET_FULL_INDEX(PCOFF)).toDouble())
 
-#ifdef JS_METHODJIT
-    bool useMethodJIT = cx->methodJitEnabled && interpMode == JSINTERP_NORMAL;
-#else
     bool useMethodJIT = false;
-#endif
-
+    
 #ifdef JS_METHODJIT
+
+#define RESET_USE_METHODJIT()                                                 \
+    JS_BEGIN_MACRO                                                            \
+        useMethodJIT = cx->methodJitEnabled &&                                \
+            interpMode == JSINTERP_NORMAL &&                                  \
+            script->getJITStatus(regs.fp->isConstructing()) != JITScript_Invalid; \
+    JS_END_MACRO
 
 #define MONITOR_BRANCH_METHODJIT()                                            \
     JS_BEGIN_MACRO                                                            \
@@ -2366,10 +2378,12 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 
 #else
 
+#define RESET_USE_METHODJIT() ((void) 0)
+
 #define MONITOR_BRANCH_METHODJIT() ((void) 0)
 
 #endif
-        
+
 #ifdef JS_TRACER
 
 #ifdef MOZ_TRACEVIS
@@ -2573,6 +2587,8 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
     }
 
     CHECK_INTERRUPT_HANDLER();
+
+    RESET_USE_METHODJIT();
 
     /* State communicated between non-local jumps: */
     JSBool interpReturnOK;
@@ -2894,6 +2910,7 @@ BEGIN_CASE(JSOP_STOP)
         atoms = FrameAtomBase(cx, regs.fp);
 
         /* Resume execution in the calling frame. */
+        RESET_USE_METHODJIT();
         JS_ASSERT(inlineCallCount);
         inlineCallCount--;
         if (JS_LIKELY(interpReturnOK)) {
@@ -4737,6 +4754,7 @@ BEGIN_CASE(JSOP_FUNCALL)
             if (newfun->isHeavyweight() && !js_GetCallObject(cx, regs.fp))
                 goto error;
 
+            RESET_USE_METHODJIT();
             inlineCallCount++;
             JS_RUNTIME_METER(rt, inlineCalls);
 
@@ -4802,26 +4820,13 @@ BEGIN_CASE(JSOP_SETCALL)
 }
 END_CASE(JSOP_SETCALL)
 
-#define SLOW_PUSH_THISV(cx, obj)                                            \
-    JS_BEGIN_MACRO                                                          \
-        Class *clasp;                                                       \
-        JSObject *thisp = obj;                                              \
-        if (!thisp->getParent() ||                                          \
-            (clasp = thisp->getClass()) == &js_CallClass ||                 \
-            clasp == &js_BlockClass ||                                      \
-            clasp == &js_DeclEnvClass) {                                    \
-            /* Push the ImplicitThisValue for the Environment Record */     \
-            /* associated with obj. See ES5 sections 10.2.1.1.6 and  */     \
-            /* 10.2.1.2.6 (ImplicitThisValue) and section 11.2.3     */     \
-            /* (Function Calls). */                                         \
-            PUSH_UNDEFINED();                                               \
-        } else {                                                            \
-            thisp = thisp->thisObject(cx);                                  \
-            if (!thisp)                                                     \
-                goto error;                                                 \
-            PUSH_OBJECT(*thisp);                                            \
-        }                                                                   \
-    JS_END_MACRO
+#define PUSH_IMPLICIT_THIS(cx, obj, funval)                                   \
+    JS_BEGIN_MACRO                                                            \
+        Value v;                                                              \
+        if (!ComputeImplicitThis(cx, obj, funval, &v))                        \
+            goto error;                                                       \
+        PUSH_COPY(v);                                                         \
+    JS_END_MACRO                                                              \
 
 BEGIN_CASE(JSOP_GETGNAME)
 BEGIN_CASE(JSOP_CALLGNAME)
@@ -4851,20 +4856,9 @@ BEGIN_CASE(JSOP_CALLNAME)
             PUSH_COPY(rval);
         }
 
-        /*
-         * Push results, the same as below, but with a prop$ hit there
-         * is no need to test for the unusual and uncacheable case where
-         * the caller determines |this|.
-         */
-#if DEBUG
-        Class *clasp;
-        JS_ASSERT(!obj->getParent() ||
-                  (clasp = obj->getClass()) == &js_CallClass ||
-                  clasp == &js_BlockClass ||
-                  clasp == &js_DeclEnvClass);
-#endif
+        JS_ASSERT(obj->isGlobal() || IsCacheableNonGlobalScope(obj));
         if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
-            PUSH_UNDEFINED();
+            PUSH_IMPLICIT_THIS(cx, obj, regs.sp[-1]);
         len = JSOP_NAME_LENGTH;
         DO_NEXT_OP(len);
     }
@@ -4902,7 +4896,7 @@ BEGIN_CASE(JSOP_CALLNAME)
 
     /* obj must be on the scope chain, thus not a function. */
     if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
-        SLOW_PUSH_THISV(cx, obj);
+        PUSH_IMPLICIT_THIS(cx, obj, rval);
 }
 END_CASE(JSOP_NAME)
 
@@ -6405,7 +6399,7 @@ BEGIN_CASE(JSOP_XMLNAME)
         goto error;
     regs.sp[-1] = rval;
     if (op == JSOP_CALLXMLNAME)
-        SLOW_PUSH_THISV(cx, obj);
+        PUSH_IMPLICIT_THIS(cx, obj, rval);
 }
 END_CASE(JSOP_XMLNAME)
 
