@@ -84,7 +84,7 @@ const kStateActive = 0x00000001;
  *     Signals the end of a drag.  The dx, dy parameters may be non-zero to
  *     indicate one last drag movement.
  *
- *   dragMove(dx, dy, scroller)
+ *   dragMove(dx, dy, scroller, isKinetic)
  *     Signals an input attempt to drag by dx, dy.
  *
  * There is a default dragger in case a scrollable element is dragged --- see
@@ -393,9 +393,9 @@ MouseModule.prototype = {
    * but then KineticController would be adding to its own data as it signals
    * the dragger of dragMove()s.
    */
-  _dragBy: function _dragBy(dX, dY) {
+  _dragBy: function _dragBy(dX, dY, aIsKinetic) {
     let dragData = this._dragData;
-    let dragged = this._dragger.dragMove(dX, dY, this._targetScrollInterface);
+    let dragged = this._dragger.dragMove(dX, dY, this._targetScrollInterface, aIsKinetic);
     if (dragged && !this._waitingForPaint) {
       this._waitingForPaint = true;
       mozRequestAnimationFrame(this);
@@ -901,7 +901,7 @@ KineticController.prototype = {
         }
 
         let panned = false;
-        try { panned = self._panBy(Math.round(-dx), Math.round(-dy)); } catch (e) {}
+        try { panned = self._panBy(Math.round(-dx), Math.round(-dy), true); } catch (e) {}
         if (!panned)
           self.end();
         else
