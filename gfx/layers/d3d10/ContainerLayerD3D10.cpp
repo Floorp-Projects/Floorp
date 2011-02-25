@@ -257,6 +257,16 @@ ContainerLayerD3D10::RenderLayer()
     PRBool is2d = GetEffectiveTransform().Is2D(&contTransform);
     NS_ASSERTION(is2d, "Transform must be 2D");
   }
+    
+  D3D10_RECT oldD3D10Scissor;
+  UINT numRects = 1;
+  device()->RSGetScissorRects(&numRects, &oldD3D10Scissor);
+  // Convert scissor to an nsIntRect. D3D10_RECT's are exclusive
+  // on the bottom and right values.
+  nsIntRect oldScissor(oldD3D10Scissor.left,
+                       oldD3D10Scissor.top,
+                       oldD3D10Scissor.right - oldD3D10Scissor.left,
+                       oldD3D10Scissor.bottom - oldD3D10Scissor.top);
 
   /*
    * Render this container's contents.
@@ -265,78 +275,31 @@ ContainerLayerD3D10::RenderLayer()
        layerToRender != nsnull;
        layerToRender = GetNextSiblingD3D10(layerToRender)) {
 
-    const nsIntRect* clipRect = layerToRender->GetLayer()->GetClipRect();
-    if ((clipRect && clipRect->IsEmpty()) ||
-        layerToRender->GetLayer()->GetEffectiveVisibleRegion().IsEmpty()) {
+    if (layerToRender->GetLayer()->GetEffectiveVisibleRegion().IsEmpty()) {
+      continue;
+    }
+    
+    nsIntRect scissorRect =
+      layerToRender->GetLayer()->CalculateScissorRect(useIntermediate,
+                                                      visibleRect,
+                                                      oldScissor,
+                                                      contTransform);
+
+    if (scissorRect.IsEmpty()) {
       continue;
     }
 
-    D3D10_RECT oldScissor;
-    if (clipRect || useIntermediate) {
-      UINT numRects = 1;
-      device()->RSGetScissorRects(&numRects, &oldScissor);
+    D3D10_RECT d3drect;
+    d3drect.left = scissorRect.x;
+    d3drect.top = scissorRect.y;
+    d3drect.bottom = scissorRect.x + scissorRect.width;
+    d3drect.right = scissorRect.y + scissorRect.height;
+    device()->RSSetScissorRects(1, &d3drect);
 
-      RECT r;
-      if (clipRect) {
-        r.left = (LONG)(clipRect->x - renderTargetOffset[0]);
-        r.top = (LONG)(clipRect->y - renderTargetOffset[1]);
-        r.right = (LONG)(clipRect->x - renderTargetOffset[0] + clipRect->width);
-        r.bottom = (LONG)(clipRect->y - renderTargetOffset[1] + clipRect->height);
-      } else {
-        // useIntermediate == true
-        r.left = 0;
-        r.top = 0;
-        r.right = visibleRect.width;
-        r.bottom = visibleRect.height;
-      }
-
-      D3D10_RECT d3drect;
-      if (!useIntermediate) {
-        if (clipRect) {
-          gfxRect cliprect(r.left, r.top, r.right - r.left, r.bottom - r.top);
-          gfxRect trScissor = contTransform.TransformBounds(cliprect);
-          trScissor.Round();
-          nsIntRect trIntScissor;
-          if (gfxUtils::GfxRectToIntRect(trScissor, &trIntScissor)) {
-            r.left = trIntScissor.x;
-            r.top = trIntScissor.y;
-            r.right = trIntScissor.XMost();
-            r.bottom = trIntScissor.YMost();
-          } else {
-            r.left = 0;
-            r.top = 0;
-            r.right = visibleRect.width;
-            r.bottom = visibleRect.height;
-            clipRect = nsnull;
-          }
-        }
-        // Scissor rect should be an intersection of the old and current scissor.
-        r.left = NS_MAX<PRInt32>(oldScissor.left, r.left);
-        r.right = NS_MIN<PRInt32>(oldScissor.right, r.right);
-        r.top = NS_MAX<PRInt32>(oldScissor.top, r.top);
-        r.bottom = NS_MIN<PRInt32>(oldScissor.bottom, r.bottom);
-      }
-
-      if (r.left >= r.right || r.top >= r.bottom) {
-        // Entire layer's clipped out, don't bother drawing.
-        continue;
-      }
-
-      d3drect.left = NS_MAX<PRInt32>(r.left, 0);
-      d3drect.top = NS_MAX<PRInt32>(r.top, 0);
-      d3drect.bottom = r.bottom;
-      d3drect.right = r.right;
-
-      device()->RSSetScissorRects(1, &d3drect);
-    }
-
-    // SetScissorRect
     layerToRender->RenderLayer();
-
-    if (clipRect || useIntermediate) {
-      device()->RSSetScissorRects(1, &oldScissor);
-    }
   }
+      
+  device()->RSSetScissorRects(1, &oldD3D10Scissor);
 
   if (useIntermediate) {
     mD3DManager->SetViewport(previousViewportSize);
