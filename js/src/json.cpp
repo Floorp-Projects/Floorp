@@ -406,7 +406,7 @@ JO(JSContext *cx, Value *vp, StringifyContext *scx)
         if (!s)
             return JS_FALSE;
 
-        Anchor<JSString *> anchor(s);
+        JS::Anchor<JSString *> anchor(s);
         size_t length = s->length();
         const jschar *chars = s->getChars(cx);
         if (!chars)
