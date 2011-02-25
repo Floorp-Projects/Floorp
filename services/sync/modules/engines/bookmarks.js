@@ -664,8 +664,14 @@ BookmarksStore.prototype = {
   },
 
   create: function BStore_create(record) {
-    // Default to unfiled if we don't have the parent yet
-    if (!record._parent) {
+    // Default to unfiled if we don't have the parent yet.
+    
+    // Valid parent IDs are all positive integers. Other values -- undefined,
+    // null, -1 -- all compare false for > 0, so this catches them all. We
+    // don't just use <= without the !, because undefined and null compare
+    // false for that, too!
+    if (!(record._parent > 0)) {
+      this._log.debug("Parent is " + record._parent + "; reparenting to unfiled.");
       record._parent = kSpecialIds.unfiled;
     }
 
@@ -723,14 +729,27 @@ BookmarksStore.prototype = {
       break;
     case "livemark":
       let siteURI = null;
+      if (!record.feedUri) {
+        this._log.debug("No feed URI: skipping livemark record " + record.id);
+        return;
+      }
+      if (this._ls.isLivemark(record._parent)) {
+        this._log.debug("Invalid parent: skipping livemark record " + record.id);
+        return;
+      }
+
       if (record.siteUri != null)
         siteURI = Utils.makeURI(record.siteUri);
 
-      newId = this._ls.createLivemark(record._parent, record.title, siteURI,
-                                      Utils.makeURI(record.feedUri),
-                                      Svc.Bookmark.DEFAULT_INDEX);
-      this._log.debug(["created livemark", newId, "under", record._parent, "as",
-                       record.title, record.siteUri, record.feedUri].join(" "));
+      // Use createLivemarkFolderOnly, not createLivemark, to avoid it
+      // automatically updating during a sync.
+      newId = this._ls.createLivemarkFolderOnly(record._parent, record.title,
+                                                siteURI,
+                                                Utils.makeURI(record.feedUri),
+                                                Svc.Bookmark.DEFAULT_INDEX);
+      this._log.debug("Created livemark " + newId + " under " + record._parent +
+                      " as " + record.title + ", " + record.siteUri + ", " + 
+                      record.feedUri + ", GUID " + record.id);
       break;
     case "separator":
       newId = this._bms.insertSeparator(record._parent,
@@ -1378,7 +1397,7 @@ BookmarksStore.prototype = {
       node.containerOpen = true;
 
       // Remember all the children GUIDs and recursively get more
-      for (var i = 0; i < node.childCount; i++) {
+      for (let i = 0; i < node.childCount; i++) {
         let child = node.getChild(i);
         items[this.GUIDForId(child.itemId)] = true;
         this._getChildren(child, items);
