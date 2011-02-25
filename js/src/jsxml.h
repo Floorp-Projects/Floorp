@@ -274,12 +274,6 @@ extern JSObject *
 js_InitQNameClass(JSContext *cx, JSObject *obj);
 
 extern JSObject *
-js_InitAttributeNameClass(JSContext *cx, JSObject *obj);
-
-extern JSObject *
-js_InitAnyNameClass(JSContext *cx, JSObject *obj);
-
-extern JSObject *
 js_InitXMLClass(JSContext *cx, JSObject *obj);
 
 extern JSObject *
@@ -312,14 +306,14 @@ js_IsXMLName(JSContext *cx, jsval v);
 extern JSBool
 js_ToAttributeName(JSContext *cx, js::Value *vp);
 
-extern JSLinearString *
+extern JSFlatString *
 js_EscapeAttributeValue(JSContext *cx, JSString *str, JSBool quote);
 
 extern JSString *
 js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str,
                     JSString *str2);
 
-extern JSString *
+extern JSFlatString *
 js_EscapeElementValue(JSContext *cx, JSString *str);
 
 extern JSString *

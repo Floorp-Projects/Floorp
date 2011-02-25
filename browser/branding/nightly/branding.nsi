@@ -44,4 +44,3 @@
 !define CompanyName           "mozilla.org"
 !define URLInfoAbout          "http://www.mozilla.org"
 !define URLUpdateInfo         "http://www.mozilla.org/projects/firefox"
-!define SurveyURL             "https://survey.mozilla.com/1/Mozilla%20Firefox/${AppVersion}/${AB_CD}/exit.html"

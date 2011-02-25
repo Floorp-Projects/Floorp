@@ -264,39 +264,6 @@ nsSMILTimedElement::BeginElementAt(double aOffsetSeconds)
   nsSMILTime currentTime = container->GetCurrentTime();
   AddInstanceTimeFromCurrentTime(currentTime, aOffsetSeconds, PR_TRUE);
 
-  // After we've added the instance time we must do a local resample.
-  //
-  // The reason for this can be explained by considering the following sequence
-  // of calls in a script block
-  //
-  //   BeginElementAt(0)
-  //   BeginElementAt(-1)
-  //   GetStartTime() <-- should return the time from the first call to
-  //                      BeginElementAt
-  //
-  // After BeginElementAt(0) is called a new begin instance time is added to the
-  // list. Depending on the restart mode this may generate a new interval,
-  // possiblying ending the current interval early.
-  //
-  // Intuitively this change should take effect before the subsequent call to
-  // BeginElementAt however to get this to take effect we need to drive the
-  // state engine through its sequence active-waiting-active by calling Sample.
-  //
-  // When we get the second call to BeginElementAt the element should be in the
-  // active state and hence the new begin instance time will be ignored because
-  // it is before the beginning of the (new) current interval. SMIL says we do
-  // not change the begin of a current interval once it is active.
-  //
-  // See also:
-  // http://www.w3.org/TR/SMIL3/smil-timing.html#Timing-BeginEnd-Restart
-
-  // If we haven't started yet, then there's no point in trying to force the
-  // sample. A series of calls to BeginElementAt before the document starts
-  // should probably just add a series of instance times.
-  if (mElementState != STATE_STARTUP) {
-    DoSampleAt(currentTime, PR_FALSE); // Regular sample, not end sample
-  }
-
   return NS_OK;
 }
 
@@ -309,9 +276,6 @@ nsSMILTimedElement::EndElementAt(double aOffsetSeconds)
 
   nsSMILTime currentTime = container->GetCurrentTime();
   AddInstanceTimeFromCurrentTime(currentTime, aOffsetSeconds, PR_FALSE);
-  if (mElementState != STATE_STARTUP) {
-    DoSampleAt(currentTime, PR_FALSE); // Regular sample, not end sample
-  }
 
   return NS_OK;
 }
@@ -501,9 +465,19 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly)
   if (GetTimeContainer()->IsPausedByType(nsSMILTimeContainer::PAUSE_BEGIN))
     return;
 
-  NS_ABORT_IF_FALSE(mElementState != STATE_STARTUP || aEndOnly,
-      "Got a regular sample during startup state, expected an end sample"
-      " instead");
+  // We use an end-sample to start animation since an end-sample lets us
+  // tentatively create an interval without committing to it (by transitioning
+  // to the ACTIVE state) and this is necessary because we might have
+  // dependencies on other animations that are yet to start. After these
+  // other animations start, it may be necessary to revise our initial interval.
+  //
+  // However, sometimes instead of an end-sample we can get a regular sample
+  // during STARTUP state. This can happen, for example, if we register
+  // a milestone before time t=0 and are then re-bound to the tree (which sends
+  // us back to the STARTUP state). In such a case we should just ignore the
+  // sample and wait for our real initial sample which will be an end-sample.
+  if (mElementState == STATE_STARTUP && !aEndOnly)
+    return;
 
   PRBool finishedSeek = PR_FALSE;
   if (GetTimeContainer()->IsSeeking() && mSeekState == SEEK_NOT_SEEKING) {

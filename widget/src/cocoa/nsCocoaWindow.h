@@ -183,15 +183,12 @@ struct UnifiedGradientInfo {
 {
   TitlebarAndBackgroundColor *mColor;
   float mUnifiedToolbarHeight;
-  BOOL mInUnifiedToolbarReset;
   NSColor *mBackgroundColor;
 }
 // Pass nil here to get the default appearance.
 - (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
-- (void)notifyToolbarAt:(float)aY height:(float)aHeight;
+- (void)setUnifiedToolbarHeight:(float)aHeight;
 - (float)unifiedToolbarHeight;
-- (float)beginMaybeResetUnifiedToolbar;
-- (void)endMaybeResetUnifiedToolbar:(float)aOldHeight;
 - (float)titlebarHeight;
 - (NSRect)titlebarRect;
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect sync:(BOOL)aSync;
@@ -247,9 +244,10 @@ public:
     NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
     NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
+    NS_IMETHOD              GetClientBounds(nsIntRect &aRect);
     NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
     void                    ReportMoveEvent();
-    void                    ReportSizeEvent(NSRect *overrideRect = nsnull);
+    void                    ReportSizeEvent();
     NS_IMETHOD              SetCursor(nsCursor aCursor);
     NS_IMETHOD              SetCursor(imgIContainer* aCursor, PRUint32 aHotspotX, PRUint32 aHotspotY);
 
@@ -258,7 +256,8 @@ public:
     NS_IMETHOD Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous);
     NS_IMETHOD Update();
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
-    virtual LayerManager* GetLayerManager(bool* aAllowRetaining = nsnull);
+    virtual LayerManager* GetLayerManager(LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
+                                          bool* aAllowRetaining = nsnull);
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, nsIMenuRollup * aMenuRollup,
                                    PRBool aDoCapture, PRBool aConsumeRollupEvent);
@@ -277,6 +276,7 @@ public:
     void DispatchSizeModeEvent();
 
     virtual gfxASurface* GetThebesSurface();
+    virtual void DrawOver(LayerManager* aManager, nsIntRect aRect);
 
     // be notified that a some form of drag event needs to go into Gecko
     virtual PRBool DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers);
@@ -315,6 +315,7 @@ protected:
   void                 AdjustWindowShadow();
   void                 SetUpWindowFilter();
   void                 CleanUpWindowFilter();
+  void                 UpdateBounds();
 
   virtual already_AddRefed<nsIWidget>
   AllocateChildPopupWidget()

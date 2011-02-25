@@ -7,9 +7,12 @@ let crashReporter =
     .getService(Components.interfaces.nsICrashReporter);
 crashReporter.enabled = true;
 crashReporter.minidumpPath = cwd;
-let cd = cwd.clone();
-cd.append("components");
-cd.append("testcrasher.manifest");
-Components.manager instanceof Components.interfaces.nsIComponentRegistrar;
-Components.manager.autoRegister(cd);
-let crashType = Components.interfaces.nsITestCrasher.CRASH_INVALID_POINTER_DEREF;
+
+let ios = Components.classes["@mozilla.org/network/io-service;1"]
+            .getService(Components.interfaces.nsIIOService);
+let protocolHandler = ios.getProtocolHandler("resource")
+                        .QueryInterface(Components.interfaces.nsIResProtocolHandler);
+let curDirURI = ios.newFileURI(cwd);
+protocolHandler.setSubstitution("test", curDirURI);
+Components.utils.import("resource://test/CrashTestUtils.jsm");
+let crashType = CrashTestUtils.CRASH_INVALID_POINTER_DEREF;

@@ -125,7 +125,7 @@ var TabUtils = {
     // of active Panoramas as well as for windows in which
     // Panorama has yet to be activated. We uses object sniffing to
     // determine the type of tab and then returns its name.     
-    return tab.label != undefined ? tab.label : tab.nameEl.innerHTML;
+    return tab.label != undefined ? tab.label : tab.$tabTitle[0].innerHTML;
   },
   
   // ---------
@@ -142,7 +142,7 @@ var TabUtils = {
   // Function: favURLOf
   // Given a <TabItem> or a <xul:tab> returns the URL of tab's favicon.
   faviconURLOf: function TabUtils_faviconURLOf(tab) {
-    return tab.image != undefined ? tab.image : tab.favImgEl.src;
+    return tab.image != undefined ? tab.image : tab.$favImage[0].src;
   },
   
   // ---------
@@ -196,7 +196,7 @@ TabMatcher.prototype = {
   _filterForUnmatches: function TabMatcher__filterForUnmatches(tabs) {
     var self = this;
     return tabs.filter(function(tab) {
-      var name = tab.nameEl.innerHTML;
+      var name = tab.$tabTitle[0].innerHTML;
       let url = TabUtils.URLOf(tab);
       return !name.match(self.term, "i") && !url.match(self.term, "i");
     });
@@ -224,7 +224,7 @@ TabMatcher.prototype = {
         // If TabView is around iterate over all tabs, else get the currently
         // shown tabs...
         
-        tvWindow = win.TabView.getContentWindow();
+        let tvWindow = win.TabView.getContentWindow();
         if (tvWindow)
           allTabs = allTabs.concat( tvWindow.TabItems.getItems() );
         else
@@ -335,39 +335,52 @@ SearchEventHandlerClass.prototype = {
     });
     
     iQ("#searchbutton").mousedown(function() {
-      ensureSearchShown(null);
+      self.initiatedBy = "buttonclick";
+      ensureSearchShown();
       self.switchToInMode();      
     });
     
+    this.initiatedBy = "";
     this.currentHandler = null;
     this.switchToBeforeMode();
   },
   
   // ----------
   // Function: beforeSearchKeyHandler
-  // Handles all keypresses before the search interface is brought up.
+  // Handles all keydown before the search interface is brought up.
   beforeSearchKeyHandler: function (event) {
     // Only match reasonable text-like characters for quick search.
-    // TODO: Also include funky chars. Bug 593904
-    if (!String.fromCharCode(event.which).match(/[a-zA-Z0-9]/) || event.altKey || 
-        event.ctrlKey || event.metaKey)
+    if (event.altKey || event.ctrlKey || event.metaKey)
       return;
+
+    if ((event.keyCode > 0 && event.keyCode <= event.DOM_VK_DELETE) ||
+        event.keyCode == event.DOM_VK_CONTEXT_MENU ||
+        event.keyCode == event.DOM_VK_SLEEP ||
+        (event.keyCode >= event.DOM_VK_F1 &&
+         event.keyCode <= event.DOM_VK_SCROLL_LOCK) ||
+        event.keyCode == event.DOM_VK_META ||
+        event.keyCode == 91 || // 91 = left windows key
+        event.keyCode == 92 || // 92 = right windows key
+        (!event.keyCode && !event.charCode)) {
+      return;
+    }
 
     // If we are already in an input field, allow typing as normal.
     if (event.target.nodeName == "INPUT")
       return;
 
     this.switchToInMode();
-    ensureSearchShown(event);
+    this.initiatedBy = "keydown";
+    ensureSearchShown(true);
   },
 
   // ----------
   // Function: inSearchKeyHandler
-  // Handles all keypresses while search mode.
+  // Handles all keydown while search mode.
   inSearchKeyHandler: function (event) {
     let term = iQ("#searchbox").val();
     if ((event.keyCode == event.DOM_VK_ESCAPE) || 
-        (event.keyCode == event.DOM_VK_BACK_SPACE && term.length <= 1)) {
+        (event.keyCode == event.DOM_VK_BACK_SPACE && term.length <= 1 && this.initiatedBy == "keydown")) {
       hideSearch(event);
       return;
     }
@@ -393,9 +406,9 @@ SearchEventHandlerClass.prototype = {
   switchToBeforeMode: function switchToBeforeMode() {
     let self = this;
     if (this.currentHandler)
-      iQ(window).unbind("keypress", this.currentHandler);
+      iQ(window).unbind("keydown", this.currentHandler);
     this.currentHandler = function(event) self.beforeSearchKeyHandler(event);
-    iQ(window).keypress(this.currentHandler);
+    iQ(window).keydown(this.currentHandler);
   },
   
   // ----------
@@ -405,9 +418,9 @@ SearchEventHandlerClass.prototype = {
   switchToInMode: function switchToInMode() {
     let self = this;
     if (this.currentHandler)
-      iQ(window).unbind("keypress", this.currentHandler);
+      iQ(window).unbind("keydown", this.currentHandler);
     this.currentHandler = function(event) self.inSearchKeyHandler(event);
-    iQ(window).keypress(this.currentHandler);
+    iQ(window).keydown(this.currentHandler);
   }
 };
 
@@ -419,22 +432,22 @@ var TabHandlers = {
     // Remove any existing handlers before adding the new ones.
     // If we don't do this, then we may add more handlers than
     // we remove.
-    iQ(tab.canvasEl)
-    .unbind("mousedown", TabHandlers._hideHandler)
-    .unbind("mouseup", TabHandlers._showHandler);
+    tab.$canvas
+      .unbind("mousedown", TabHandlers._hideHandler)
+      .unbind("mouseup", TabHandlers._showHandler);
 
-    iQ(tab.canvasEl)
-    .mousedown(TabHandlers._hideHandler)
-    .mouseup(TabHandlers._showHandler);
+    tab.$canvas
+      .mousedown(TabHandlers._hideHandler)
+      .mouseup(TabHandlers._showHandler);
   },
   
   onUnmatch: function(tab, index){
-    iQ(tab.container).removeClass("onTop");
+    tab.$container.removeClass("onTop");
     tab.removeClass("notMainMatch");
 
-    iQ(tab.canvasEl)
-     .unbind("mousedown", TabHandlers._hideHandler)
-     .unbind("mouseup", TabHandlers._showHandler);
+    tab.$canvas
+      .unbind("mousedown", TabHandlers._hideHandler)
+      .unbind("mouseup", TabHandlers._showHandler);
   },
   
   onOther: function(tab, index){
@@ -499,8 +512,9 @@ function hideSearch(event){
 
   iQ("#searchbutton").css({ opacity:.8 });
 
-  let mainWindow = gWindow.document.getElementById("main-window");
-  mainWindow.setAttribute("activetitlebarcolor", "#C4C4C4");
+#ifdef XP_MACOSX
+  UI.setTitlebarColors(true);
+#endif
 
   performSearch();
   SearchEventHandler.switchToBeforeMode();
@@ -531,7 +545,12 @@ function performSearch() {
   matcher.doSearch(TabHandlers.onMatch, TabHandlers.onUnmatch, TabHandlers.onOther);
 }
 
-function ensureSearchShown(event){
+// ----------
+// Function: ensureSearchShown
+// Ensure the search feature is displayed.  If not, display it.
+// Parameters:
+//  - a boolean indicates whether this is triggered by a keypress or not
+function ensureSearchShown(activatedByKeypress) {
   var $search = iQ("#search");
   var $searchShade = iQ("#searchshade");
   var $searchbox = iQ("#searchbox");
@@ -540,24 +559,32 @@ function ensureSearchShown(event){
   if (!isSearchEnabled()) {
     $searchShade.show();
     $search.show();
-    var mainWindow = gWindow.document.getElementById("main-window");
-    mainWindow.setAttribute("activetitlebarcolor", "#717171");       
 
-    // Marshal the focusing, otherwise you end up with
-    // a race condition where only sometimes would the
-    // first keystroke be registered by the search box.
-    // When you marshal it never gets registered, so we
-    // manually 
-    setTimeout(function focusSearch() {
-      $searchbox[0].focus();
-      $searchbox[0].val = '0';
-      if (event != null)
-        $searchbox.val(String.fromCharCode(event.charCode));        
+#ifdef XP_MACOSX
+    UI.setTitlebarColors({active: "#717171", inactive: "#EDEDED"});
+#endif
 
+    // NOTE: when this function is called by keydown handler, next keypress
+    // event or composition events of IME will be fired on the focused editor.
+
+    function dispatchTabViewSearchEnabledEvent() {
       let newEvent = document.createEvent("Events");
       newEvent.initEvent("tabviewsearchenabled", false, false);
       dispatchEvent(newEvent);
-    }, 0);
+    };
+
+    if (activatedByKeypress) {
+      // set the focus so key strokes are entered into the textbox.
+      $searchbox[0].focus();
+      dispatchTabViewSearchEnabledEvent(); 
+    } else {
+      // marshal the focusing, otherwise it ends up with searchbox[0].focus gets
+      // called before the search button gets the focus after being pressed.
+      setTimeout(function setFocusAndDispatchSearchEnabledEvent() {
+        $searchbox[0].focus();
+        dispatchTabViewSearchEnabledEvent();
+      }, 0);
+    }
   }
 }
 

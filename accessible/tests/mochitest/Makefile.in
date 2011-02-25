@@ -45,8 +45,10 @@ relativesrcdir  = accessible
 DIRS	= \
   actions \
   attributes \
+  editabletext \
   events \
   hyperlink \
+  hypertext \
   name \
   relations \
   selectable \
@@ -69,7 +71,6 @@ _TEST_FILES =\
 		actions.js \
 		attributes.js \
 		common.js \
-		editabletext.js \
 		events.js \
 		grid.js \
 		layout.js \
@@ -91,8 +92,6 @@ _TEST_FILES =\
 	$(warning   test_childAtPoint.html temporarily disabled) \
 	$(warning	test_childAtPoint.xul temporarily disabled) \
 		test_descr.html \
-		test_editabletext_1.html \
-		test_editabletext_2.html \
 		test_elm_landmarks.html \
 		test_elm_listbox.xul \
 	$(warning   test_elm_media.html temporarily disabled) \
@@ -103,7 +102,6 @@ _TEST_FILES =\
  		test_nsIAccessible_selects.html \
 		test_nsIAccessible_focus.html \
 		test_nsIAccessibleDocument.html \
-		test_nsIAccessibleHyperText.html \
 		test_nsIAccessibleImage.html \
 		test_nsIAccessNode_utils.html \
 		test_nsOuterDocAccessible.html \

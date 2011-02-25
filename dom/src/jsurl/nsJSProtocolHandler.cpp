@@ -197,16 +197,23 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     nsCOMPtr<nsIContentSecurityPolicy> csp;
     rv = principal->GetCsp(getter_AddRefs(csp));
     NS_ENSURE_SUCCESS(rv, rv);
-    if(csp) {
-      PRBool allowsInline;
-      // this call will send violation reports as warranted (and return true if
-      // reportOnly is set).
-      rv = csp->GetAllowsInlineScript(&allowsInline);
-      NS_ENSURE_SUCCESS(rv, rv);
+    if (csp) {
+		PRBool allowsInline;
+		rv = csp->GetAllowsInlineScript(&allowsInline);
+		NS_ENSURE_SUCCESS(rv, rv);
 
-      // TODO: log that we're blocking this javascript: uri
-      if (!allowsInline)
-        return NS_ERROR_DOM_RETVAL_UNDEFINED;
+      if (!allowsInline) {
+          // gather information to log with violation report
+          nsCOMPtr<nsIURI> uri;
+          principal->GetURI(getter_AddRefs(uri));
+          nsCAutoString asciiSpec;
+          uri->GetAsciiSpec(asciiSpec);
+		  csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_SCRIPT,
+								   NS_ConvertUTF8toUTF16(asciiSpec),
+								   NS_ConvertUTF8toUTF16(mURL),
+                                   nsnull);
+          return NS_ERROR_DOM_RETVAL_UNDEFINED;
+      }
     }
 
     // Get the global object we should be running on.
@@ -901,7 +908,12 @@ nsJSChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
         }
         bogusLoadBackground = !loadGroupIsBackground;
     }
-    
+
+    // Classifying a javascript: URI doesn't help us, and requires
+    // NSS to boot, which we don't have in content processes.  See
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=617838.
+    aLoadFlags &= ~LOAD_CLASSIFY_URI;
+
     // Since the javascript channel is never the actual channel that
     // any data is loaded through, don't ever set the
     // LOAD_DOCUMENT_URI flag on it, since that could lead to two

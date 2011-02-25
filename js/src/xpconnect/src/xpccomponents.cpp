@@ -53,6 +53,7 @@
 #include "WrapperFactory.h"
 #include "XrayWrapper.h"
 #include "nsNullPrincipal.h"
+#include "nsJSUtils.h"
 
 #ifdef MOZ_JSLOADER
 #include "mozJSComponentLoader.h"
@@ -2821,32 +2822,17 @@ nsXPCComponents_Utils::LookupMethod()
     jsval funval;
     JSFunction *oldfunction;
 
-    {
-        JSAutoEnterCompartment ac;
+    // get (and perhaps lazily create) the member's cloned function
+    if(!member->NewFunctionObject(inner_cc, iface,
+                                  JSVAL_TO_OBJECT(argv[0]),
+                                  &funval))
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-        if (!ac.enter(inner_cc, wrapper->GetFlatJSObjectAndMark())) {
-            return NS_ERROR_UNEXPECTED;
-        }
-
-        // get (and perhaps lazily create) the member's cloned function
-        if(!member->NewFunctionObject(inner_cc, iface,
-                                      wrapper->GetFlatJSObjectAndMark(),
-                                      &funval))
-            return NS_ERROR_XPC_BAD_CONVERT_JS;
-
-        oldfunction = JS_ValueToFunction(inner_cc, funval);
-        NS_ASSERTION(oldfunction, "Function is not a function");
-    }
+    oldfunction = JS_ValueToFunction(inner_cc, funval);
+    NS_ASSERTION(oldfunction, "Function is not a function");
 
     // Stick the function in the return value. This roots it.
     *retval = funval;
-
-    // Callers of this method are implicitly buying into
-    // XPCNativeWrapper-like protection. The easiest way to enforce
-    // this is to let the JS engine wrap the function.
-    if (!JS_WrapValue(inner_cc, retval)) {
-        return NS_ERROR_UNEXPECTED;
-    }
 
     // Tell XPConnect that we returned the function through the call context.
     cc->SetReturnValueWasSet(PR_TRUE);
@@ -2863,7 +2849,8 @@ nsXPCComponents_Utils::ReportError()
     nsCOMPtr<nsIConsoleService> console(
       do_GetService(NS_CONSOLESERVICE_CONTRACTID));
 
-    nsCOMPtr<nsIScriptError> scripterr(new nsScriptError());
+    nsCOMPtr<nsIScriptError2> scripterr(
+      do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
 
     nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
     if(!scripterr || !console || !xpc)
@@ -2912,6 +2899,8 @@ nsXPCComponents_Utils::ReportError()
     if(NS_FAILED(rv) || !argv)
         return NS_OK;
 
+    const PRUint64 windowID = nsJSUtils::GetCurrentlyRunningCodeWindowID(cx);
+
     JSErrorReport* err = JS_ErrorFromException(cx, argv[0]);
     if(err)
     {
@@ -2921,19 +2910,20 @@ nsXPCComponents_Utils::ReportError()
 
         PRUint32 column = err->uctokenptr - err->uclinebuf;
 
-        rv = scripterr->Init(reinterpret_cast<const PRUnichar*>
-                                             (err->ucmessage),
-                             fileUni.get(),
-                             reinterpret_cast<const PRUnichar*>
-                                             (err->uclinebuf),
-                             err->lineno,
-                             column,
-                             err->flags,
-                             "XPConnect JavaScript");
+        rv = scripterr->InitWithWindowID(reinterpret_cast<const PRUnichar*>
+                                                       (err->ucmessage),
+                                         fileUni.get(),
+                                         reinterpret_cast<const PRUnichar*>
+                                                         (err->uclinebuf),
+                                         err->lineno,
+                                         column,
+                                         err->flags,
+                                         "XPConnect JavaScript", windowID);
         if(NS_FAILED(rv))
             return NS_OK;
 
-        console->LogMessage(scripterr);
+        nsCOMPtr<nsIScriptError> logError = do_QueryInterface(scripterr);
+        console->LogMessage(logError);
         return NS_OK;
     }
 
@@ -2961,13 +2951,16 @@ nsXPCComponents_Utils::ReportError()
         if (!msgchars)
             return NS_OK;
 
-        rv = scripterr->Init(msgchars,
-                             NS_ConvertUTF8toUTF16(fileName).get(),
-                             nsnull,
-                             lineNo, 0,
-                             0, "XPConnect JavaScript");
+        rv = scripterr->InitWithWindowID(reinterpret_cast<const PRUnichar *>(msgchars),
+                                         NS_ConvertUTF8toUTF16(fileName).get(),
+                                         nsnull,
+                                         lineNo, 0,
+                                         0, "XPConnect JavaScript", windowID);
         if(NS_SUCCEEDED(rv))
-            console->LogMessage(scripterr);
+        {
+            nsCOMPtr<nsIScriptError> logError = do_QueryInterface(scripterr);
+            console->LogMessage(logError);
+        }
     }
 
     return NS_OK;
@@ -3123,7 +3116,7 @@ sandbox_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 static JSClass SandboxClass = {
     "Sandbox",
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_GLOBAL_FLAGS,
-    JS_PropertyStub,   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_PropertyStub,   JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     sandbox_enumerate, sandbox_resolve, sandbox_convert,  sandbox_finalize,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
@@ -3239,10 +3232,9 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSOb
                 return NS_ERROR_XPC_UNEXPECTED;
 
             if (xpc::WrapperFactory::IsXrayWrapper(proto) && !wantXrays) {
-                jsval v;
-                if (!JS_GetProperty(cx, proto, "wrappedJSObject", &v))
-                    return NS_ERROR_XPC_UNEXPECTED;
-
+                jsval v = OBJECT_TO_JSVAL(proto);
+                if (!xpc::WrapperFactory::WaiveXrayAndWrap(cx, &v))
+                    return NS_ERROR_FAILURE;
                 proto = JSVAL_TO_OBJECT(v);
             }
 
@@ -3711,13 +3703,12 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                     // exception into a string.
                     str = JS_ValueToString(sandcx->GetJSContext(), exn);
 
-                    JSAutoRequest req(cx);
                     if (str) {
                         // We converted the exception to a string. Use that
                         // as the value exception.
                         exn = STRING_TO_JSVAL(str);
                         if (JS_WrapValue(cx, &exn)) {
-                            JS_SetPendingException(cx, STRING_TO_JSVAL(str));
+                            JS_SetPendingException(cx, exn);
                         } else {
                             JS_ClearPendingException(cx);
                             rv = NS_ERROR_FAILURE;
@@ -3727,8 +3718,6 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                         rv = NS_ERROR_FAILURE;
                     }
                 } else {
-                    JSAutoRequest req(cx);
-
                     if (JS_WrapValue(cx, &exn)) {
                         JS_SetPendingException(cx, exn);
                     }
@@ -3750,7 +3739,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 
             xpc::CompartmentPrivate *sandboxdata =
                 static_cast<xpc::CompartmentPrivate *>
-                           (JS_GetCompartmentPrivate(cx, sandbox->getCompartment()));
+                           (JS_GetCompartmentPrivate(cx, sandbox->compartment()));
             if (!ac.enter(cx, callingScope) ||
                 !WrapForSandbox(cx, sandboxdata->wantXrays, &v)) {
                 rv = NS_ERROR_FAILURE;

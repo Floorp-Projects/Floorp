@@ -555,4 +555,15 @@ typedef PRUint32 nsrefcnt;
 # define NS_OVERRIDE
 #endif
 
+/*
+ * SEH exception macros.
+ */
+#ifdef HAVE_SEH_EXCEPTIONS
+#define MOZ_SEH_TRY           __try
+#define MOZ_SEH_EXCEPT(expr)  __except(expr)
+#else
+#define MOZ_SEH_TRY           if(PR_TRUE)
+#define MOZ_SEH_EXCEPT(expr)  else
+#endif
+
 #endif /* nscore_h___ */

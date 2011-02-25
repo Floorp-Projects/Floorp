@@ -191,6 +191,33 @@ _cairo_tee_surface_get_font_options (void                  *abstract_surface,
     _cairo_surface_wrapper_get_font_options (&surface->master, options);
 }
 
+static const cairo_pattern_t *
+_cairo_tee_surface_match_source (cairo_tee_surface_t *surface,
+                                 const cairo_pattern_t *source,
+                                 int index,
+                                 cairo_surface_wrapper_t *dest,
+                                 cairo_surface_pattern_t *temp)
+{
+    cairo_surface_t *s;
+    cairo_status_t status = cairo_pattern_get_surface ((cairo_pattern_t *)source, &s);
+    if (status == CAIRO_STATUS_SUCCESS &&
+        cairo_surface_get_type (s) == CAIRO_SURFACE_TYPE_TEE) {
+        cairo_surface_t *tee_surf = cairo_tee_surface_index (s, index);
+        if (tee_surf->status == CAIRO_STATUS_SUCCESS &&
+            tee_surf->backend == dest->target->backend) {
+            status = _cairo_pattern_init_copy (&temp->base, source);
+            if (status == CAIRO_STATUS_SUCCESS) {
+                cairo_surface_destroy (temp->surface);
+                temp->surface = tee_surf;
+                cairo_surface_reference (temp->surface);
+                return &temp->base;
+            }
+        }
+    }
+
+    return source;
+}
+
 static cairo_int_status_t
 _cairo_tee_surface_paint (void			*abstract_surface,
 			  cairo_operator_t	 op,
@@ -201,15 +228,25 @@ _cairo_tee_surface_paint (void			*abstract_surface,
     cairo_surface_wrapper_t *slaves;
     int n, num_slaves;
     cairo_status_t status;
+    const cairo_pattern_t *matched_source;
+    cairo_surface_pattern_t temp;
 
-    status = _cairo_surface_wrapper_paint (&surface->master, op, source, clip);
+    matched_source = _cairo_tee_surface_match_source (surface, source, 0, &surface->master, &temp);
+    status = _cairo_surface_wrapper_paint (&surface->master, op, matched_source, clip);
+    if (matched_source == &temp.base) {
+        _cairo_pattern_fini (&temp.base);
+    }
     if (unlikely (status))
 	return status;
 
     num_slaves = _cairo_array_num_elements (&surface->slaves);
     slaves = _cairo_array_index (&surface->slaves, 0);
     for (n = 0; n < num_slaves; n++) {
-	status = _cairo_surface_wrapper_paint (&slaves[n], op, source, clip);
+        matched_source = _cairo_tee_surface_match_source (surface, source, n + 1, &slaves[n], &temp);
+	status = _cairo_surface_wrapper_paint (&slaves[n], op, matched_source, clip);
+        if (matched_source == &temp.base) {
+            _cairo_pattern_fini (&temp.base);
+        }
 	if (unlikely (status))
 	    return status;
     }
@@ -228,17 +265,27 @@ _cairo_tee_surface_mask (void			*abstract_surface,
     cairo_surface_wrapper_t *slaves;
     int n, num_slaves;
     cairo_status_t status;
+    const cairo_pattern_t *matched_source;
+    cairo_surface_pattern_t temp;
 
+    matched_source = _cairo_tee_surface_match_source (surface, source, 0, &surface->master, &temp);
     status = _cairo_surface_wrapper_mask (&surface->master,
-					  op, source, mask, clip);
+					  op, matched_source, mask, clip);
+    if (matched_source == &temp.base) {
+        _cairo_pattern_fini (&temp.base);
+    }
     if (unlikely (status))
 	return status;
 
     num_slaves = _cairo_array_num_elements (&surface->slaves);
     slaves = _cairo_array_index (&surface->slaves, 0);
     for (n = 0; n < num_slaves; n++) {
+        matched_source = _cairo_tee_surface_match_source (surface, source, n + 1, &slaves[n], &temp);
 	status = _cairo_surface_wrapper_mask (&slaves[n],
-					      op, source, mask, clip);
+					      op, matched_source, mask, clip);
+        if (matched_source == &temp.base) {
+            _cairo_pattern_fini (&temp.base);
+        }
 	if (unlikely (status))
 	    return status;
     }
@@ -262,25 +309,35 @@ _cairo_tee_surface_stroke (void				*abstract_surface,
     cairo_surface_wrapper_t *slaves;
     int n, num_slaves;
     cairo_status_t status;
+    const cairo_pattern_t *matched_source;
+    cairo_surface_pattern_t temp;
 
+    matched_source = _cairo_tee_surface_match_source (surface, source, 0, &surface->master, &temp);
     status = _cairo_surface_wrapper_stroke (&surface->master,
-					    op, source,
+					    op, matched_source,
 					    path, style,
 					    ctm, ctm_inverse,
 					    tolerance, antialias,
 					    clip);
+    if (matched_source == &temp.base) {
+        _cairo_pattern_fini (&temp.base);
+    }
     if (unlikely (status))
 	return status;
 
     num_slaves = _cairo_array_num_elements (&surface->slaves);
     slaves = _cairo_array_index (&surface->slaves, 0);
     for (n = 0; n < num_slaves; n++) {
+        matched_source = _cairo_tee_surface_match_source (surface, source, n + 1, &slaves[n], &temp);
 	status = _cairo_surface_wrapper_stroke (&slaves[n],
-						op, source,
+						op, matched_source,
 						path, style,
 						ctm, ctm_inverse,
 						tolerance, antialias,
 						clip);
+        if (matched_source == &temp.base) {
+            _cairo_pattern_fini (&temp.base);
+        }
 	if (unlikely (status))
 	    return status;
     }
@@ -302,23 +359,33 @@ _cairo_tee_surface_fill (void				*abstract_surface,
     cairo_surface_wrapper_t *slaves;
     int n, num_slaves;
     cairo_status_t status;
+    const cairo_pattern_t *matched_source;
+    cairo_surface_pattern_t temp;
 
+    matched_source = _cairo_tee_surface_match_source (surface, source, 0, &surface->master, &temp);
     status = _cairo_surface_wrapper_fill (&surface->master,
-					  op, source,
+					  op, matched_source,
 					  path, fill_rule,
 					  tolerance, antialias,
 					  clip);
+    if (matched_source == &temp.base) {
+        _cairo_pattern_fini (&temp.base);
+    }
     if (unlikely (status))
 	return status;
 
     num_slaves = _cairo_array_num_elements (&surface->slaves);
     slaves = _cairo_array_index (&surface->slaves, 0);
     for (n = 0; n < num_slaves; n++) {
+        matched_source = _cairo_tee_surface_match_source (surface, source, n + 1, &slaves[n], &temp);
 	status = _cairo_surface_wrapper_fill (&slaves[n],
-					      op, source,
+					      op, matched_source,
 					      path, fill_rule,
 					      tolerance, antialias,
 					      clip);
+        if (matched_source == &temp.base) {
+            _cairo_pattern_fini (&temp.base);
+        }
 	if (unlikely (status))
 	    return status;
     }
@@ -351,6 +418,8 @@ _cairo_tee_surface_show_text_glyphs (void		    *abstract_surface,
     int n, num_slaves;
     cairo_status_t status;
     cairo_glyph_t *glyphs_copy;
+    const cairo_pattern_t *matched_source;
+    cairo_surface_pattern_t temp;
 
     /* XXX: This copying is ugly. */
     glyphs_copy = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
@@ -358,14 +427,18 @@ _cairo_tee_surface_show_text_glyphs (void		    *abstract_surface,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     memcpy (glyphs_copy, glyphs, sizeof (cairo_glyph_t) * num_glyphs);
+    matched_source = _cairo_tee_surface_match_source (surface, source, 0, &surface->master, &temp);
     status = _cairo_surface_wrapper_show_text_glyphs (&surface->master, op,
-						      source,
+                              matched_source,
 						      utf8, utf8_len,
 						      glyphs_copy, num_glyphs,
 						      clusters, num_clusters,
 						      cluster_flags,
 						      scaled_font,
 						      clip);
+    if (matched_source == &temp.base) {
+        _cairo_pattern_fini (&temp.base);
+    }
     if (unlikely (status))
 	goto CLEANUP;
 
@@ -373,14 +446,18 @@ _cairo_tee_surface_show_text_glyphs (void		    *abstract_surface,
     slaves = _cairo_array_index (&surface->slaves, 0);
     for (n = 0; n < num_slaves; n++) {
 	memcpy (glyphs_copy, glyphs, sizeof (cairo_glyph_t) * num_glyphs);
+      matched_source = _cairo_tee_surface_match_source (surface, source, n + 1, &slaves[n], &temp);
 	status = _cairo_surface_wrapper_show_text_glyphs (&slaves[n], op,
-							  source,
+	                          matched_source,
 							  utf8, utf8_len,
 							  glyphs_copy, num_glyphs,
 							  clusters, num_clusters,
 							  cluster_flags,
 							  scaled_font,
 							  clip);
+        if (matched_source == &temp.base) {
+            _cairo_pattern_fini (&temp.base);
+        }
 	if (unlikely (status))
 	    goto CLEANUP;
     }
@@ -388,6 +465,29 @@ _cairo_tee_surface_show_text_glyphs (void		    *abstract_surface,
   CLEANUP:
     free (glyphs_copy);
     return status;
+}
+
+static cairo_status_t
+_cairo_tee_surface_flush (void *abstract_surface)
+{
+    cairo_tee_surface_t *surface = abstract_surface;
+    cairo_surface_wrapper_t *slaves;
+    int n, num_slaves;
+    cairo_status_t status;
+
+    status = _cairo_surface_wrapper_flush(&surface->master);
+    if (unlikely (status))
+	return status;
+
+    num_slaves = _cairo_array_num_elements (&surface->slaves);
+    slaves = _cairo_array_index (&surface->slaves, 0);
+    for (n = 0; n < num_slaves; n++) {
+	status = _cairo_surface_wrapper_flush(&slaves[n]);
+	if (unlikely (status))
+	    return status;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static const cairo_surface_backend_t cairo_tee_surface_backend = {
@@ -408,7 +508,7 @@ static const cairo_surface_backend_t cairo_tee_surface_backend = {
     _cairo_tee_surface_get_extents,
     NULL, /* old_show_glyphs */
     _cairo_tee_surface_get_font_options,
-    NULL, /* flush */
+    _cairo_tee_surface_flush,
     NULL, /* mark_dirty_rectangle */
     NULL, /* scaled_font_fini */
     NULL, /* scaled_glyph_fini */

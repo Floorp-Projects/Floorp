@@ -79,13 +79,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 
-// Because the QPainter backend has some problems with glyphs rendering
-// it is better to use image or xlib cairo backends by default
-#if (MOZ_PLATFORM_MAEMO == 6)
-#define DEFAULT_RENDER_MODE RENDER_BUFFERED
-#else
 #define DEFAULT_RENDER_MODE RENDER_DIRECT
-#endif
 
 static QPaintEngine::Type sDefaultQtPaintEngineType = QPaintEngine::X11;
 gfxFontconfigUtils *gfxQtPlatform::sFontconfigUtils = nsnull;
@@ -203,9 +197,9 @@ gfxQtPlatform::CreateOffscreenSurface(const gfxIntSize& size,
 
     // try to optimize it for 16bpp screen
     gfxASurface::gfxImageFormat imageFormat = gfxASurface::FormatFromContent(contentType);
-    if (gfxASurface::CONTENT_COLOR == contentType
-        && 16 == QX11Info().depth())
-        imageFormat = gfxASurface::ImageFormatRGB16_565;
+    if (gfxASurface::CONTENT_COLOR == contentType) {
+      imageFormat = GetOffscreenFormat();
+    }
 
 #ifdef CAIRO_HAS_QT_SURFACE
     if (mRenderMode == RENDER_QPAINTER) {
@@ -589,4 +583,14 @@ gfxQtPlatform::GetDPI()
     QDesktopWidget* rootWindow = qApp->desktop();
     PRInt32 dpi = rootWindow->logicalDpiY(); // y-axis DPI for fonts
     return dpi <= 0 ? 96 : dpi;
+}
+
+gfxImageFormat
+gfxQtPlatform::GetOffscreenFormat()
+{
+    if (QX11Info::appDepth() == 16) {
+        return gfxASurface::ImageFormatRGB16_565;
+    }
+
+    return gfxASurface::ImageFormatRGB24;
 }

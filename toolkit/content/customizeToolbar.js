@@ -167,11 +167,11 @@ function notifyParentComplete()
   dispatchCustomizationEvent("aftercustomization");
 }
 
-function toolboxChanged(aEvent)
+function toolboxChanged(aType)
 {
   gToolboxChanged = true;
   if ("customizeChange" in gToolbox)
-    gToolbox.customizeChange(aEvent);
+    gToolbox.customizeChange(aType);
   dispatchCustomizationEvent("customizationchange");
 }
 
@@ -695,6 +695,8 @@ function updateToolboxProperty(aProp, aValue, aToolkitDefault) {
     toolbar.setAttribute(aProp, aValue || toolbarDefault);
     gToolboxDocument.persist(toolbar.id, aProp);
   });
+
+  toolboxChanged(aProp);
 
   return aValue || toolboxDefault;
 }

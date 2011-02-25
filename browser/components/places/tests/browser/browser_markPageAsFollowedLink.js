@@ -24,8 +24,8 @@ let observer = {
   {
     let url = aSubject.QueryInterface(Ci.nsIURI).spec;
     if (url == LEFT_URL ) {
-      is(getTransitionForUrl(url), PlacesUtils.history.TRANSITION_EMBED,
-         "Frames should get a EMBED transition.");
+      is(getTransitionForUrl(url), null,
+         "Embed visits should not get a database entry.");
       gLeftFrameVisited = true;
       maybeClickLink();
     }
@@ -70,11 +70,13 @@ function getTransitionForUrl(aUrl)
   let dbConn = PlacesUtils.history
                           .QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
   let stmt = dbConn.createStatement(
-    "SELECT visit_type FROM moz_historyvisits_view WHERE place_id = " +
-      "(SELECT id FROM moz_places_view WHERE url = :page_url)");
+    "SELECT visit_type FROM moz_historyvisits WHERE place_id = " +
+      "(SELECT id FROM moz_places WHERE url = :page_url)");
   stmt.params.page_url = aUrl;
   try {
-    ok(stmt.executeStep(), "Found the visit in the database");
+    if (!stmt.executeStep()) {
+      return null;
+    }
     return stmt.row.visit_type;
   }
   finally {

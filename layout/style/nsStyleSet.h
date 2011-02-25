@@ -217,9 +217,8 @@ class nsStyleSet
   // highest (for non-!important rules).
   enum sheetType {
     eAgentSheet, // CSS
-    ePresHintSheet,
     eUserSheet, // CSS
-    eHTMLPresHintSheet,
+    ePresHintSheet,
     eDocSheet, // CSS
     eStyleAttrSheet,
     eOverrideSheet, // CSS
@@ -238,7 +237,7 @@ class nsStyleSet
   nsresult ReplaceSheets(sheetType aType,
                          const nsCOMArray<nsIStyleSheet> &aNewSheets);
 
-  //Enable/Disable entire author style level (Doc & PresHint levels)
+  // Enable/Disable entire author style level (Doc & PresHint levels)
   PRBool GetAuthorStyleDisabled();
   nsresult SetAuthorStyleDisabled(PRBool aStyleDisabled);
 
@@ -322,7 +321,7 @@ class nsStyleSet
   
   // Just like AddImportantRules except it doesn't actually add anything; it
   // just asserts that there are no CSS rules between aCurrLevelNode and
-  // aLastPrevLevelNode.  Mostly useful for the preshint levels.
+  // aLastPrevLevelNode.  Mostly useful for the preshint level.
   void AssertNoCSSRules(nsRuleNode* aCurrLevelNode,
                         nsRuleNode* aLastPrevLevelNode);
 #endif

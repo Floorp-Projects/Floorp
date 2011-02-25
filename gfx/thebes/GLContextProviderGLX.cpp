@@ -49,6 +49,7 @@
 
 #include "mozilla/X11Util.h"
 
+#include "prenv.h"
 #include "GLContextProvider.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
@@ -163,20 +164,42 @@ GLXLibrary::EnsureInitialized()
 
     Display *display = DefaultXDisplay();
     int screen = DefaultScreen(display);
-    if (!xQueryVersion(display, &gGLXMajorVersion, &gGLXMinorVersion)) {
-        gGLXMajorVersion = 0;
-        gGLXMinorVersion = 0;
-        return PR_FALSE;
+    const char *vendor;
+    const char *serverVersionStr;
+    const char *extensionsStr;
+
+    // this scope is covered by a ScopedXErrorHandler to catch X errors in GLX calls,
+    // see bug 632867 comment 3: Mesa versions up to 7.10 cause a BadLength error during the first GLX call
+    // when the server GLX version < 1.3.
+    {
+        ScopedXErrorHandler xErrorHandler;
+
+        if (!xQueryVersion(display, &gGLXMajorVersion, &gGLXMinorVersion)) {
+            gGLXMajorVersion = 0;
+            gGLXMinorVersion = 0;
+            return PR_FALSE;
+        }
+
+        vendor = xQueryServerString(display, screen, GLX_VENDOR);
+        serverVersionStr = xQueryServerString(display, screen, GLX_VERSION);
+
+        if (strcmp(vendor, "NVIDIA Corporation") &&
+            !PR_GetEnv("MOZ_GLX_IGNORE_BLACKLIST"))
+        {
+          printf("[GLX] your GL driver is currently blocked. If you would like to bypass this, "
+                  "define the MOZ_GLX_IGNORE_BLACKLIST environment variable.\n");
+          return nsnull;
+        }
+
+        if (!GLXVersionCheck(1, 1))
+            // Not possible to query for extensions.
+            return PR_FALSE;
+
+        extensionsStr = xQueryExtensionsString(display, screen);
+
+        if (xErrorHandler.GetError())
+          return PR_FALSE;
     }
-
-    const char *vendor = xQueryServerString(display, screen, GLX_VENDOR);
-    const char *serverVersionStr = xQueryServerString(display, screen, GLX_VERSION);
-
-    if (!GLXVersionCheck(1, 1))
-        // Not possible to query for extensions.
-        return PR_FALSE;
-
-    const char *extensionsStr = xQueryExtensionsString(display, screen);
 
     LibrarySymbolLoader::SymLoadStruct *sym13;
     if (!GLXVersionCheck(1, 3)) {
@@ -220,14 +243,6 @@ GLXLibrary::EnsureInitialized()
 
 GLXLibrary sGLXLibrary;
 
-static bool ctxErrorOccurred = false;
-static int
-ctxErrorHandler(Display *dpy, XErrorEvent *ev)
-{
-    ctxErrorOccurred = true;
-    return 0;
-}
-
 class GLContextGLX : public GLContext
 {
 public:
@@ -250,12 +265,15 @@ public:
 #endif
         }
 
-        ctxErrorOccurred = false;
-        int (*oldHandler)(Display *, XErrorEvent *);
         GLXContext context;
+        nsRefPtr<GLContextGLX> glContext;
+        bool error;
+
+        ScopedXErrorHandler xErrorHandler;
 
 TRY_AGAIN_NO_SHARING:
-        oldHandler = XSetErrorHandler(&ctxErrorHandler);
+
+        error = false;
 
         context = sGLXLibrary.xCreateNewContext(display,
                                                 cfg,
@@ -263,28 +281,32 @@ TRY_AGAIN_NO_SHARING:
                                                 shareContext ? shareContext->mContext : NULL,
                                                 True);
 
-        XSync(display, False);
-        XSetErrorHandler(oldHandler);
+        if (context) {
+            glContext = new GLContextGLX(format,
+                                        shareContext,
+                                        display,
+                                        drawable,
+                                        context,
+                                        deleteDrawable,
+                                        db,
+                                        pixmap);
+            if (!glContext->Init())
+                error = true;
+        } else {
+            error = true;
+        }
 
-        if (!context || ctxErrorOccurred) {
+        error |= xErrorHandler.SyncAndGetError(display);
+
+        if (error) {
             if (shareContext) {
                 shareContext = nsnull;
                 goto TRY_AGAIN_NO_SHARING;
             }
-            NS_WARNING("Failed to create GLXContext!");
-            return nsnull;
-        }
 
-        nsRefPtr<GLContextGLX> glContext(new GLContextGLX(format,
-                                                          shareContext,
-                                                          display, 
-                                                          drawable, 
-                                                          context,
-                                                          deleteDrawable,
-                                                          db,
-                                                          pixmap));
-        if (!glContext->Init()) {
-            return nsnull;
+            NS_WARNING("Failed to create GLXContext!");
+            glContext = nsnull; // note: this must be done while the graceful X error handler is set,
+                                // because glxMakeCurrent can give a GLXBadDrawable error
         }
 
         return glContext.forget();
@@ -367,13 +389,6 @@ TRY_AGAIN_NO_SHARING:
         return PR_TRUE;
     }
 
-    virtual already_AddRefed<TextureImage>
-    CreateBasicTextureImage(GLuint aTexture,
-                            const nsIntSize& aSize,
-                            GLenum aWrapMode,
-                            TextureImage::ContentType aContentType,
-                            GLContext* aContext);
-
 private:
     friend class GLContextProviderGLX;
 
@@ -402,66 +417,6 @@ private:
 
     nsRefPtr<gfxXlibSurface> mPixmap;
 };
-
-// FIXME/bug 575505: this is a (very slow!) placeholder
-// implementation.  Much better would be to create a Pixmap, wrap that
-// in a GLXPixmap, and then glXBindTexImage() to our texture.
-class TextureImageGLX : public BasicTextureImage
-{
-    friend already_AddRefed<TextureImage>
-    GLContextGLX::CreateBasicTextureImage(GLuint,
-                                          const nsIntSize&,
-                                          GLenum,
-                                          TextureImage::ContentType,
-                                          GLContext*);
-
-protected:
-    virtual already_AddRefed<gfxASurface>
-    CreateUpdateSurface(const gfxIntSize& aSize, ImageFormat aFmt)
-    {
-        mUpdateFormat = aFmt;
-        return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFmt));
-    }
-
-    virtual already_AddRefed<gfxImageSurface>
-    GetImageForUpload(gfxASurface* aUpdateSurface)
-    {
-        nsRefPtr<gfxImageSurface> image =
-            new gfxImageSurface(gfxIntSize(mUpdateRect.width,
-                                           mUpdateRect.height),
-                                mUpdateFormat);
-        nsRefPtr<gfxContext> tmpContext = new gfxContext(image);
-
-        tmpContext->SetSource(aUpdateSurface);
-        tmpContext->SetOperator(gfxContext::OPERATOR_SOURCE);
-        tmpContext->Paint();
-
-        return image.forget();
-    }
-
-private:
-    TextureImageGLX(GLuint aTexture,
-                    const nsIntSize& aSize,
-                    GLenum aWrapMode,
-                    ContentType aContentType,
-                    GLContext* aContext)
-        : BasicTextureImage(aTexture, aSize, aWrapMode, aContentType, aContext)
-    {}
-
-    ImageFormat mUpdateFormat;
-};
-
-already_AddRefed<TextureImage>
-GLContextGLX::CreateBasicTextureImage(GLuint aTexture,
-                                      const nsIntSize& aSize,
-                                      GLenum aWrapMode,
-                                      TextureImage::ContentType aContentType,
-                                      GLContext* aContext)
-{
-    nsRefPtr<TextureImageGLX> teximage(
-        new TextureImageGLX(aTexture, aSize, aWrapMode, aContentType, aContext));
-    return teximage.forget();
-}
 
 static GLContextGLX *
 GetGlobalContextGLX()
@@ -665,15 +620,18 @@ CreateOffscreenPixmapContext(const gfxIntSize& aSize,
         return nsnull;
     }
 
+    ScopedXErrorHandler xErrorHandler;
+    GLXPixmap glxpixmap = 0;
+    bool error = false;
+
     nsRefPtr<gfxXlibSurface> xsurface = gfxXlibSurface::Create(DefaultScreenOfDisplay(display),
                                                                vinfo->visual,
                                                                gfxIntSize(16, 16));
     if (xsurface->CairoStatus() != 0) {
-        return nsnull;
+        error = true;
+        goto DONE_CREATING_PIXMAP;
     }
 
-
-    GLXPixmap glxpixmap;
     // Handle slightly different signature between glXCreatePixmap and
     // its pre-GLX-1.3 extension equivalent (though given the ABI, we
     // might not need to).
@@ -689,19 +647,27 @@ CreateOffscreenPixmapContext(const gfxIntSize& aSize,
                                                              XDrawable());
     }
     if (glxpixmap == 0) {
-        return nsnull;
+        error = true;
     }
 
-    GLContextGLX *shareContext = aShare ? GetGlobalContextGLX() : nsnull;
+DONE_CREATING_PIXMAP:
 
-    nsRefPtr<GLContextGLX> glContext = GLContextGLX::CreateGLContext(aFormat,
-                                                                     display,
-                                                                     glxpixmap,
-                                                                     cfgs[chosenIndex],
-                                                                     vinfo,
-                                                                     shareContext,
-                                                                     PR_TRUE,
-                                                                     xsurface);
+    nsRefPtr<GLContextGLX> glContext;
+    bool serverError = xErrorHandler.SyncAndGetError(display);
+
+    if (!error && // earlier recorded error
+        !serverError)
+    {
+        glContext = GLContextGLX::CreateGLContext(
+                        aFormat,
+                        display,
+                        glxpixmap,
+                        cfgs[chosenIndex],
+                        vinfo,
+                        aShare ? GetGlobalContextGLX() : nsnull,
+                        PR_TRUE,
+                        xsurface);
+    }
 
     return glContext.forget();
 }

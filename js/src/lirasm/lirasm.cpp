@@ -64,7 +64,7 @@ using namespace std;
 /* Allocator SPI implementation. */
 
 void*
-nanojit::Allocator::allocChunk(size_t nbytes)
+nanojit::Allocator::allocChunk(size_t nbytes, bool /*fallible*/)
 {
     void *p = malloc(nbytes);
     if (!p)
@@ -872,7 +872,7 @@ FragmentAssembler::endFragment()
     if (mParent.mAssm.error() != nanojit::None) {
         cerr << "error during assembly: ";
         switch (mParent.mAssm.error()) {
-          case nanojit::ConditionalBranchTooFar: cerr << "ConditionalBranchTooFar"; break;
+          case nanojit::BranchTooFar: cerr << "BranchTooFar"; break;
           case nanojit::StackFull: cerr << "StackFull"; break;
           case nanojit::UnknownBranch:  cerr << "UnknownBranch"; break;
           case nanojit::None: cerr << "None"; break;

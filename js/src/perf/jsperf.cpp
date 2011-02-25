@@ -63,7 +63,7 @@ pm_construct(JSContext* cx, uintN argc, jsval* vp)
     if (!JS_FreezeObject(cx, obj))
         return JS_FALSE;
 
-    PerfMeasurement* p = new PerfMeasurement(PerfMeasurement::EventMask(mask));
+    PerfMeasurement* p = js_new<PerfMeasurement>(PerfMeasurement::EventMask(mask));
     if (!p) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
@@ -77,7 +77,7 @@ pm_construct(JSContext* cx, uintN argc, jsval* vp)
 static void
 pm_finalize(JSContext* cx, JSObject* obj)
 {
-    delete (PerfMeasurement*) JS_GetPrivate(cx, obj);
+    js_delete((PerfMeasurement*) JS_GetPrivate(cx, obj));
 }
 
 // Property access
@@ -219,7 +219,7 @@ static const struct pm_const {
 
 static JSClass pm_class = {
     "PerfMeasurement", JSCLASS_HAS_PRIVATE,
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, pm_finalize,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
@@ -268,7 +268,7 @@ RegisterPerfMeasurement(JSContext *cx, JSObject *global)
 
     for (const pm_const *c = pm_consts; c->name; c++) {
         if (!JS_DefinePropertyWithType(cx, ctor, c->name, DOUBLE_TO_JSVAL(c->value),
-                                       JS_PropertyStub, JS_PropertyStub, PM_CATTRS))
+                                       JS_PropertyStub, JS_StrictPropertyStub, PM_CATTRS))
             return 0;
     }
 

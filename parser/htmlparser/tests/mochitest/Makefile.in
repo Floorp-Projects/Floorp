@@ -72,6 +72,16 @@ _TEST_FILES =	parser_datreader.js \
 		invalidchar.xml \
 		file_bug534293.sjs \
 		file_bug534293-slow.sjs \
+		test_bug594730.html \
+		file_bug594730-1.html \
+		file_bug594730-2.html \
+		file_bug594730-3.html \
+		file_bug594730-4.html \
+		file_bug594730-5.html \
+		file_bug594730-6.html \
+		file_bug594730-7.html \
+		file_bug594730-8.html \
+		file_bug594730-9.html \
 		test_bug599584.html \
 		iframe_bug599584.html \
 		$(NULL)

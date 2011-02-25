@@ -127,7 +127,12 @@ function checkInputEmail()
 
   synthesizeKey("VK_BACK_SPACE", {});
   for (var i=0; i<4; ++i) {
-    checkInvalidApplies(element);
+    if (i == 1) {
+      // a@b is a valid value.
+      checkValidApplies(element);
+    } else {
+      checkInvalidApplies(element);
+    }
     synthesizeKey("VK_BACK_SPACE", {});
   }
   checkValidApplies(element);

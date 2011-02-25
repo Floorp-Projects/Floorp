@@ -61,6 +61,8 @@
 #include "nsTObserverArray.h"
 #include "nsITimer.h"
 #include "nsPluginTags.h"
+#include "nsIEffectiveTLDService.h"
+#include "nsIIDNService.h"
 
 class nsNPAPIPlugin;
 class nsIComponentManager;
@@ -71,7 +73,24 @@ class nsIChannel;
 #define MAC_CARBON_PLUGINS
 #endif
 
+class nsInvalidPluginTag : public nsISupports
+{
+public:
+  nsInvalidPluginTag(const char* aFullPath, PRInt64 aLastModifiedTime = 0);
+  virtual ~nsInvalidPluginTag();
+  
+  NS_DECL_ISUPPORTS
+  
+  nsCString   mFullPath;
+  PRInt64     mLastModifiedTime;
+  bool        mSeen;
+  
+  nsRefPtr<nsInvalidPluginTag> mPrev;
+  nsRefPtr<nsInvalidPluginTag> mNext;
+};
+
 class nsPluginHost : public nsIPluginHost,
+                     public nsIPluginHost_MOZILLA_2_0_BRANCH,
                      public nsIObserver,
                      public nsITimerCallback,
                      public nsSupportsWeakReference
@@ -86,6 +105,7 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGINHOST
+  NS_DECL_NSIPLUGINHOST_MOZILLA_2_0_BRANCH
   NS_DECL_NSIOBSERVER
   NS_DECL_NSITIMERCALLBACK
 
@@ -255,6 +275,7 @@ private:
 
   nsRefPtr<nsPluginTag> mPlugins;
   nsRefPtr<nsPluginTag> mCachedPlugins;
+  nsRefPtr<nsInvalidPluginTag> mInvalidPlugins;
   PRPackedBool mPluginsLoaded;
   PRPackedBool mDontShowBadPluginMessage;
   PRPackedBool mIsDestroyed;
@@ -274,6 +295,17 @@ private:
 #ifdef XP_WIN
   nsRefPtr<nsPluginDirServiceProvider> mPrivateDirServiceProvider;
 #endif
+
+  nsCOMPtr<nsIEffectiveTLDService> mTLDService;
+  nsCOMPtr<nsIIDNService> mIDNService;
+
+  // Helpers for ClearSiteData and SiteHasData.
+  nsresult NormalizeHostname(nsCString& host);
+  nsresult EnumerateSiteData(const nsACString& domain,
+                             const nsTArray<nsCString>& sites,
+                             InfallibleTArray<nsCString>& result,
+                             bool firstMatchOnly);
+  nsPluginTag* EnsurePlugin(nsIPluginTag* plugin);
 
   nsWeakPtr mCurrentDocument; // weak reference, we use it to id document only
 

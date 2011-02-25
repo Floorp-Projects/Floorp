@@ -9,7 +9,8 @@
 #
 # Procedure:
 # Need to be in the top-level dir otherwise relic exclusions don't work.
-# Edit relic to set quiet to 1 on line 1471 or thereabouts
+# Edit relic to set quiet to 1 on line 1471 or thereabouts, in the def'n of
+# the "relicensing_error" sub
 # relic -I -f * > names.txt
 # Tidy up names.txt
 # and make one unified file if you ran relic over multiple trees.
@@ -45,6 +46,8 @@ my %equivalents = (
   "SeaMonkey project at mozilla.org" => "Mozilla Foundation",
   "Mozilla Calendar Squad" => "Mozilla Foundation",
   "mozilla.org code" => "Mozilla Foundation",
+  "Mozilla Fonudation" => "Mozilla Foundation",
+  "Mozilla Founation" => "Mozilla Foundation",
   
   "Mozilla Messaging Corporation" => "Mozilla Messaging",
   

@@ -38,7 +38,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://mozapps/content/update/updates.css"?>
 <?xml-stylesheet href="chrome://mozapps/skin/update/updates.css"?>
 
@@ -51,7 +51,7 @@
 
 <wizard id="updates"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&updateWizard.title;" 
+        title="&updateWizard.title;"
         windowtype="Update:Wizard"
         style="width: auto; height: auto"
         onwizardfinish="gUpdates.onWizardFinish();"
@@ -62,12 +62,12 @@
 
   <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/javascript" src="chrome://mozapps/content/update/updates.js"/>
-  
+
   <stringbundleset id="updateSet">
     <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="updateStrings" src="chrome://mozapps/locale/update/updates.properties"/>
   </stringbundleset>
-  
+
   <wizardpage id="dummy" pageid="dummy" firstpage="true"/>
 
   <wizardpage id="checking" pageid="checking" next="pluginupdatesfound"
@@ -142,8 +142,8 @@
       <separator id="upgradeEvangelismSep" flex="1"/>
       <vbox flex="1">
         <hbox id="moreInfoURL">
-          <label class="text-link" id="updateMoreInfoURL" 
-                 value="&clickHere.label;" onclick="openUpdateURL(event);"/> 
+          <label class="text-link" id="updateMoreInfoURL"
+                 value="&clickHere.label;" onclick="openUpdateURL(event);"/>
         </hbox>
       </vbox>
     </vbox>
@@ -159,7 +159,7 @@
                updateMoreInfoContentDownloading, etc.) -->
     <remotecontent id="updateMoreInfoContent" flex="1" remotetype="billboard"/>
   </wizardpage>
-  
+
   <wizardpage id="license" pageid="license" next="downloading"
               object="gLicensePage" onpageshow="gLicensePage.onPageShow();"
               onextra1="gLicensePage.onExtra1();">
@@ -173,9 +173,9 @@
       <separator class="thin"/>
       <radiogroup id="acceptDeclineLicense" align="start"
                   onselect="gLicensePage.onAcceptDeclineRadio();">
-        <radio id="accept" label="&license.accept;" 
+        <radio id="accept" label="&license.accept;"
                accesskey="&license.accept.accesskey;"/>
-        <radio id="decline" label="&license.decline;" 
+        <radio id="decline" label="&license.decline;"
                accesskey="&license.decline.accesskey;"
                selected="true"/>
       </radiogroup>
@@ -214,7 +214,7 @@
       </hbox>
     </vbox>
   </wizardpage>
-  
+
   <wizardpage id="errors" pageid="errors" object="gErrorsPage"
               onpageshow="gErrorsPage.onPageShow();">
     <updateheader label="&error.title;"/>
@@ -249,7 +249,7 @@
       </hbox>
     </vbox>
   </wizardpage>
-  
+
   <wizardpage id="errorpatching" pageid="errorpatching" next="downloading"
               object="gErrorPatchingPage"
               onpageshow="gErrorPatchingPage.onPageShow();">
@@ -258,7 +258,7 @@
       <label>&errorpatching.intro;</label>
     </vbox>
   </wizardpage>
-  
+
   <wizardpage id="finished" pageid="finished" object="gFinishedPage"
               onpageshow="gFinishedPage.onPageShow();"
               onextra1="gFinishedPage.onExtra1()">
@@ -267,7 +267,7 @@
       <label>&finishedPage.text;</label>
     </vbox>
   </wizardpage>
-  
+
   <wizardpage id="finishedBackground" pageid="finishedBackground"
               object="gFinishedPage" onextra1="gFinishedPage.onExtra1()"
               onpageshow="gFinishedPage.onPageShowBackground();">
@@ -285,7 +285,7 @@
       <label id="finishedBackgroundMore">&finishedBackground.more;</label>
     </vbox>
   </wizardpage>
-  
+
   <wizardpage id="installed" pageid="installed" object="gInstalledPage"
               onpageshow="gInstalledPage.onPageShow();">
     <updateheader label="&installed.title;"/>
@@ -298,5 +298,5 @@
       </hbox>
     </vbox>
   </wizardpage>
-  
+
 </wizard>

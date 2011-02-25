@@ -123,6 +123,9 @@ cairo_win32_scaled_font_get_device_to_logical (cairo_scaled_font_t *scaled_font,
 cairo_public cairo_font_face_t *
 cairo_dwrite_font_face_create_for_dwrite_fontface(void *dwrite_font, void *dwrite_font_face);
 
+void
+cairo_dwrite_scaled_font_allow_manual_show_glyphs(void *dwrite_scaled_font, cairo_bool_t allowed);
+
 #endif /* CAIRO_HAS_DWRITE_FONT */
 
 #if CAIRO_HAS_D2D_SURFACE

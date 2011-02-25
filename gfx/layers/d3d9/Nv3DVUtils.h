@@ -47,13 +47,14 @@ namespace layers {
 
 #define FIREFOX_3DV_APP_HANDLE    0xECB992B6
 
-typedef enum _Stereo_Mode {
-  STEREO_MODE_LEFT_RIGHT = 0,
-  STEREO_MODE_RIGHT_LEFT = 1,
-  STEREO_MODE_TOP_BOTTOM = 2,
-  STEREO_MODE_BOTTOM_TOP = 3,
-  STEREO_MODE_LAST       = 4 
-} Stereo_Mode;
+enum Nv_Stereo_Mode {
+  NV_STEREO_MODE_LEFT_RIGHT = 0,
+  NV_STEREO_MODE_RIGHT_LEFT = 1,
+  NV_STEREO_MODE_TOP_BOTTOM = 2,
+  NV_STEREO_MODE_BOTTOM_TOP = 3,
+  NV_STEREO_MODE_MONO       = 4,
+  NV_STEREO_MODE_LAST       = 5 
+};
 
 class INv3DVStreaming : public IUnknown {
 
@@ -61,7 +62,7 @@ public:
   virtual bool Nv3DVInitialize()                  = 0;
   virtual bool Nv3DVRelease()                     = 0;
   virtual bool Nv3DVSetDevice(IUnknown* pDevice)  = 0;
-  virtual bool Nv3DVControl(Stereo_Mode eStereoMode, bool bEnableStereo, DWORD dw3DVAppHandle) = 0;
+  virtual bool Nv3DVControl(Nv_Stereo_Mode eStereoMode, bool bEnableStereo, DWORD dw3DVAppHandle) = 0;
   virtual bool Nv3DVMetaData(DWORD dwWidth, DWORD dwHeight, HANDLE hSrcLuma, HANDLE hDst) = 0;
 };
 
@@ -95,7 +96,7 @@ public:
    * Send Stereo Control Information. Used mainly to re-route 
    * calls from ImageLayerD3D9 to the 3DV COM object
    */
-  void SendNv3DVControl(Stereo_Mode eStereoMode, bool bEnableStereo, DWORD dw3DVAppHandle);
+  void SendNv3DVControl(Nv_Stereo_Mode eStereoMode, bool bEnableStereo, DWORD dw3DVAppHandle);
 
   /*
    * Send Stereo Metadata. Used mainly to re-route calls 

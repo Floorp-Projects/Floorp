@@ -477,12 +477,6 @@ INCLUDES = \
 
 include $(topsrcdir)/config/static-checking-config.mk
 
-ifdef MOZ_SHARK
-OS_CFLAGS += -F/System/Library/PrivateFrameworks
-OS_CXXFLAGS += -F/System/Library/PrivateFrameworks
-OS_LDFLAGS += -F/System/Library/PrivateFrameworks -framework CHUD
-endif # ifdef MOZ_SHARK
-
 CFLAGS		= $(OS_CFLAGS)
 CXXFLAGS	= $(OS_CXXFLAGS)
 LDFLAGS		= $(OS_LDFLAGS) $(MOZ_FIX_LINK_PATHS)

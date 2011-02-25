@@ -82,6 +82,7 @@ _TEST_FILES1 = 	test_bug5141.html \
 		test_bug311681.xml \
 		test_bug322317.html \
 		test_bug330925.xhtml \
+		test_bug331959.html \
 		test_bug333673.html \
 		test_bug337631.html \
 		test_bug338541.xhtml \
@@ -421,10 +422,17 @@ _TEST_FILES2 = \
 		file_x-frame-options_main.html \
 		file_x-frame-options_page.sjs \
 		test_createHTMLDocument.html \
+		test_bug622088.html \
+		file_bug622088_inner.html \
+		file_bug622088.sjs \
 		test_bug564047.html \
 		test_bug567350.html \
 		test_bug574596.html \
 		test_bug578096.html \
+		test_bug592366.html \
+		test_bug597345.html \
+		script-1_bug597345.sjs \
+		script-2_bug597345.js \
 		test_bug598877.html \
 		test_bug599588.html \
 		test_bug600466.html \
@@ -435,6 +443,7 @@ _TEST_FILES2 = \
 		file_bug601803b.html \
 		test_bug602838.html \
 		script_bug602838.sjs \
+		test_bug614583.html \
 		test_bug604660.html \
 		file_bug604660-1.xml \
 		file_bug604660-2.xsl \
@@ -446,6 +455,19 @@ _TEST_FILES2 = \
 		test_bug606729.html \
 		test_treewalker_nextsibling.xml \
 		test_bug614058.html \
+		test_bug590771.html \
+		test_bug622117.html \
+		test_base.xhtml \
+		file_base_xbl.xml \
+		test_bug622246.html \
+		test_bug484396.html \
+		test_bug466080.html \
+		bug466080.sjs \
+		test_bug625722.html \
+		test_bug631615.html \
+		test_bug558431.html \
+		file_bug558431.html \
+		file_bug558431.html^headers^ \
 		$(NULL)
 
 # This test fails on the Mac for some reason

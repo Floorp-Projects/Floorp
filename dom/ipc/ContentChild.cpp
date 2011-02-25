@@ -88,14 +88,6 @@
 #include "nsPermissionManager.h"
 #endif
 
-#if defined(ANDROID) || defined(LINUX)
-#include <sys/time.h>
-#include <sys/resource.h>
-// TODO: For other platforms that support setpriority, figure out
-//       appropriate values of niceness
-static const int kRelativeNiceness = 10;
-#endif
-
 #include "nsAccelerometer.h"
 
 #if defined(ANDROID)
@@ -232,18 +224,6 @@ ContentChild::Init(MessageLoop* aIOLoop,
 #endif
 
     NS_ASSERTION(!sSingleton, "only one ContentChild per child");
-
-#if defined(ANDROID) || defined(LINUX)
-    // XXX We change the behavior of Linux child processes here. That
-    // means that, not just in Fennec, but also in Firefox, once it has
-    // child processes, those will be niced. IOW, Firefox with child processes
-    // will have different performance profiles on Linux than other
-    // platforms. This may alter Talos results and so forth.
-    char* relativeNicenessStr = getenv("MOZ_CHILD_PROCESS_RELATIVE_NICENESS");
-    setpriority(PRIO_PROCESS, 0, getpriority(PRIO_PROCESS, 0) +
-            (relativeNicenessStr ? atoi(relativeNicenessStr) :
-             kRelativeNiceness));
-#endif
 
     Open(aChannel, aParentHandle, aIOLoop);
     sSingleton = this;
@@ -398,12 +378,13 @@ ContentChild::DeallocPStorage(PStorageChild* aActor)
 bool
 ContentChild::RecvRegisterChrome(const InfallibleTArray<ChromePackage>& packages,
                                  const InfallibleTArray<ResourceMapping>& resources,
-                                 const InfallibleTArray<OverrideMapping>& overrides)
+                                 const InfallibleTArray<OverrideMapping>& overrides,
+                                 const nsCString& locale)
 {
     nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
     nsChromeRegistryContent* chromeRegistry =
         static_cast<nsChromeRegistryContent*>(registrySvc.get());
-    chromeRegistry->RegisterRemoteChrome(packages, resources, overrides);
+    chromeRegistry->RegisterRemoteChrome(packages, resources, overrides, locale);
     return true;
 }
 
@@ -414,7 +395,7 @@ ContentChild::RecvSetOffline(const PRBool& offline)
   NS_ASSERTION(io, "IO Service can not be null");
 
   io->SetOffline(offline);
-    
+
   return true;
 }
 
@@ -434,7 +415,7 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
 #endif
 
     mAlertObservers.Clear();
-    
+
     nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
     if (svc) {
         svc->UnregisterListener(mConsoleListener);
@@ -488,6 +469,18 @@ ContentChild::RecvPreferenceUpdate(const PrefTuple& aPref)
         return false;
 
     prefs->SetPreference(&aPref);
+
+    return true;
+}
+
+bool
+ContentChild::RecvClearUserPreference(const nsCString& aPrefName)
+{
+    nsCOMPtr<nsIPrefServiceInternal> prefs = do_GetService("@mozilla.org/preferences-service;1");
+    if (!prefs)
+        return false;
+
+    prefs->ClearContentPref(aPrefName);
 
     return true;
 }
@@ -583,6 +576,16 @@ ContentChild::RecvScreenSizeChanged(const gfxIntSize& size)
 #else
     NS_RUNTIMEABORT("Message currently only expected on android");
 #endif
+  return true;
+}
+
+bool
+ContentChild::RecvFlushMemory(const nsString& reason)
+{
+    nsCOMPtr<nsIObserverService> os =
+        mozilla::services::GetObserverService();
+    if (os)
+        os->NotifyObservers(nsnull, "memory-pressure", reason.get());
   return true;
 }
 

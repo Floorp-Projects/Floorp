@@ -58,16 +58,16 @@ function onTabViewWindowLoaded() {
   contentWindow = document.getElementById("tab-view").contentWindow;
   
   originalTab = gBrowser.selectedTab;
-  newTabs = [gBrowser.addTab("about:robots"), gBrowser.addTab("about:mozilla"), gBrowser.addTab("about:credits")];
+  newTabs = [gBrowser.addTab("about:robots"), gBrowser.addTab("about:mozilla"), gBrowser.addTab("about:license")];
 
   is(originalTab._tPos, 0, "Original tab is in position 0");
   is(newTabs[0]._tPos, 1, "Robots is in position 1");
   is(newTabs[1]._tPos, 2, "Mozilla is in position 2");
-  is(newTabs[2]._tPos, 3, "Credits is in position 3");
+  is(newTabs[2]._tPos, 3, "License is in position 3");
   
   gBrowser.tabContainer.addEventListener("TabMove", onTabMove, false);
     
-  groupItem = contentWindow.GroupItems.getActiveGroupItem();
+  let groupItem = contentWindow.GroupItems.getActiveGroupItem();
   
   // move 3 > 0 (and therefore 0 > 1, 1 > 2, 2 > 3)
   groupItem._children.splice(0, 0, groupItem._children.splice(3, 1)[0]);
@@ -83,10 +83,10 @@ function onTabViewWindowHidden() {
   
   is(moves, 1, "Only one move should be necessary for this basic move.");
 
-  is(originalTab._tPos, 1, "Original tab is in position 0");
-  is(newTabs[0]._tPos, 2, "Robots is in position 1");
-  is(newTabs[1]._tPos, 3, "Mozilla is in position 2");
-  is(newTabs[2]._tPos, 0, "Credits is in position 3");
+  is(newTabs[2]._tPos, 0, "License is in position 0");
+  is(originalTab._tPos, 1, "Original tab is in position 1");
+  is(newTabs[0]._tPos, 2, "Robots is in position 2");
+  is(newTabs[1]._tPos, 3, "Mozilla is in position 3");
   
   gBrowser.removeTab(newTabs[0]);
   gBrowser.removeTab(newTabs[1]);

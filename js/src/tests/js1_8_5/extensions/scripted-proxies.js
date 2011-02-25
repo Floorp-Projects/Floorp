@@ -129,7 +129,7 @@ function noopHandlerMaker(obj) {
 	    for (name in obj) { result.push(name); };
 	    return result;
 	},
-	enumerateOwn: function() { return Object.keys(obj); }
+	keys: function() { return Object.keys(obj); }
     };
 };
 

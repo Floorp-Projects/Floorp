@@ -70,7 +70,7 @@ SVGAnimatedNumberList::SetBaseValueString(const nsAString& aValue)
   // which takes care of notifying.
 
   rv = mBaseVal.CopyFrom(newBaseValue);
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv) && domWrapper) {
     // Attempting to increase mBaseVal's length failed - reduce domWrapper
     // back to the same length:
     domWrapper->InternalBaseValListWillChangeTo(mBaseVal);
@@ -85,7 +85,7 @@ SVGAnimatedNumberList::ClearBaseValue(PRUint32 aAttrEnum)
     DOMSVGAnimatedNumberList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
     // We must send this notification *before* changing mBaseVal! (See above.)
-    domWrapper->InternalAnimValListWillChangeTo(SVGNumberList());
+    domWrapper->InternalBaseValListWillChangeTo(SVGNumberList());
   }
   mBaseVal.Clear();
   // Caller notifies
@@ -171,6 +171,7 @@ SVGAnimatedNumberList::
     nlai->SetInfo(mElement);
     aValue.Swap(val);
   }
+  aPreventCachingOfSandwich = PR_FALSE;
   return rv;
 }
 

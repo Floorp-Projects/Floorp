@@ -14,77 +14,35 @@
           src="../common.js"></script>
   <script type="application/javascript"
           src="../states.js"></script>
-  <script type="application/javascript"
-          src="../events.js"></script>
 
   <script type="application/javascript">
-    function designModeOn()
+    function doTest()
     {
-      this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, document)
-      ];
+      var docAcc = getAccessible(document, [nsIAccessibleDocument]);
+      if (docAcc) {
+        testStates(docAcc, STATE_READONLY);
+        testStates("aria_article", STATE_READONLY);
+        testStates("editable_aria_article", 0, EXT_STATE_EDITABLE);
+        testStates("article", STATE_READONLY);
+        testStates("editable_article", 0, EXT_STATE_EDITABLE);
 
-      this.invoke = function designModeOn_invoke()
-      {
         document.designMode = "on";
-      }
 
-      this.finalCheck = function designModeOn_finalCheck()
-      {
-        testStates(document, 0, EXT_STATE_EDITABLE);
+        testStates(docAcc, 0, EXT_STATE_EDITABLE);
         testStates("aria_article", 0, EXT_STATE_EDITABLE);
         testStates("editable_aria_article", 0, EXT_STATE_EDITABLE);
         testStates("article", 0, EXT_STATE_EDITABLE);
         testStates("editable_article", 0, EXT_STATE_EDITABLE);
-      }
-
-      this.getID = function designModeOn_getID()
-      {
-        return "design mode on";
-      }
-    }
-
-    function designModeOff()
-    {
-      this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, document)
-      ];
-
-      this.invoke = function designModeOn_invoke()
-      {
+  
         document.designMode = "off";
-      }
 
-      this.finalCheck = function designModeOn_finalCheck()
-      {
-        testStates(document, STATE_READONLY);
+        testStates(docAcc, STATE_READONLY);
         testStates("aria_article", STATE_READONLY);
         testStates("editable_aria_article", 0, EXT_STATE_EDITABLE);
         testStates("article", STATE_READONLY);
         testStates("editable_article", 0, EXT_STATE_EDITABLE);
       }
-
-      this.getID = function designModeOn_getID()
-      {
-        return "design mode off";
-      }
-    }
-
-    var gQueue = null;
-
-    function doTest()
-    {
-      testStates(document, STATE_READONLY);
-      testStates("aria_article", STATE_READONLY);
-      testStates("editable_aria_article", 0, EXT_STATE_EDITABLE);
-      testStates("article", STATE_READONLY);
-      testStates("editable_article", 0, EXT_STATE_EDITABLE);
-
-      // Design mode on/off trigger document accessible subtree recreation.
-      gQueue = new eventQueue();
-      gQueue.push(new designModeOn());
-      gQueue.push(new designModeOff());
-      gQueue.invoke(); // Will call SimpleTest.finish();
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();

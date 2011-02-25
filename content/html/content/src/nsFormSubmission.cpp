@@ -78,11 +78,10 @@ SendJSWarning(nsIDocument* aDocument,
   nsContentUtils::ReportToConsole(nsContentUtils::eFORMS_PROPERTIES,
                                   aWarningName,
                                   aWarningArgs, aWarningArgsLen,
-                                  aDocument ? aDocument->GetDocumentURI() :
-                                              nsnull,
+                                  nsnull,
                                   EmptyString(), 0, 0,
                                   nsIScriptError::warningFlag,
-                                  "HTML");
+                                  "HTML", aDocument);
 }
 
 // --------------------------------------------------------------------------

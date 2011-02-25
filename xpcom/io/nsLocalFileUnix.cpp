@@ -75,7 +75,9 @@
 #if (MOZ_PLATFORM_MAEMO == 6)
 #include <QUrl>
 #include <QString>
+#if (MOZ_ENABLE_CONTENTACTION)
 #include <contentaction/contentaction.h>
+#endif
 #endif
 
 #include "nsDirectoryServiceDefs.h"
@@ -1266,8 +1268,8 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
      * a non-superuser, minus one as a fudge factor, multiplied by the size
      * of the aforementioned blocks.
      */
-#ifdef SOLARIS
-    /* On Solaris, unit is f_frsize. */
+#if defined(SOLARIS) || defined(XP_MACOSX)
+    /* On Solaris and Mac, unit is f_frsize. */
     *aDiskSpaceAvailable = (PRInt64)fs_buf.f_frsize * (fs_buf.f_bavail - 1);
 #else
     *aDiskSpaceAvailable = (PRInt64)fs_buf.f_bsize * (fs_buf.f_bavail - 1);
@@ -1899,7 +1901,7 @@ nsLocalFile::Launch()
     
     return NS_ERROR_FAILURE;
 #endif
-#elif (MOZ_PLATFORM_MAEMO == 6)
+#elif defined(MOZ_ENABLE_CONTENTACTION)
     QUrl uri = QUrl::fromLocalFile(QString::fromUtf8(mPath.get()));
     ContentAction::Action action =
       ContentAction::Action::defaultActionForFile(uri);

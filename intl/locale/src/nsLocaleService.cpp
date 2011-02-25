@@ -35,12 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_ENABLE_MEEGOTOUCH
-// It's necessary to include this before realloc gets macroed.
-#include <mgconfitem.h>
+#ifdef MOZ_WIDGET_QT
+#include <QString>
+#include <QtCore/QLocale>
 #endif
 
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsILocale.h"
 #include "nsILocaleService.h"
 #include "nsLocale.h"
@@ -97,18 +98,6 @@ static int posix_locale_category[LocaleListLength] =
   LC_CTYPE
 #endif
 };
-#endif
-
-#ifdef MOZ_ENABLE_MEEGOTOUCH
-static void CopyGConfToEnv(const char* gconf, const char* env)
-{
-    MGConfItem item(gconf);
-    QVariant value = item.value();
-    if (QVariant::String == value.type()) {
-        const QByteArray& array = value.toString().toAscii();
-        setenv(env, array.constData(), 1);
-    } // else it's an incompatible type or QVariant::Invalid (not set)
-}
 #endif
 
 //
@@ -184,26 +173,21 @@ nsLocaleService::nsLocaleService(void)
     nsAutoString xpLocale, platformLocale;
     if (posixConverter) {
         nsAutoString category, category_platform;
-        nsLocale* resultLocale;
         int i;
 
-        resultLocale = new nsLocale();
+        nsRefPtr<nsLocale> resultLocale(new nsLocale());
         if ( resultLocale == NULL ) { 
             return; 
         }
 
-#ifdef MOZ_ENABLE_MEEGOTOUCH
-        // Create a snapshot of the gconf locale values into the
-        // corresponding environment variables to obey system settings
-        // as accurately as possible.
-        CopyGConfToEnv("/meegotouch/i18n/language", "LANG");
-        CopyGConfToEnv("/meegotouch/i18n/lc_collate", NSILOCALE_COLLATE);
-        CopyGConfToEnv("/meegotouch/i18n/lc_monetary", NSILOCALE_MONETARY);
-        CopyGConfToEnv("/meegotouch/i18n/lc_numeric", NSILOCALE_NUMERIC);
-        CopyGConfToEnv("/meegotouch/i18n/lc_time", NSILOCALE_TIME);
-#endif
+
+#ifdef MOZ_WIDGET_QT
+        const char* lang = QLocale::languageToString(QLocale::system().language()).toAscii();
+#else
         // Get system configuration
         const char* lang = getenv("LANG");
+#endif
+
         for( i = 0; i < LocaleListLength; i++ ) {
             nsresult result;
             // setlocale( , "") evaluates LC_* and LANG
@@ -240,10 +224,9 @@ nsLocaleService::nsLocaleService(void)
     nsAutoString xpLocale;
     if (os2Converter) {
         nsAutoString category;
-        nsLocale* resultLocale;
         int i;
 
-        resultLocale = new nsLocale();
+        nsRefPtr<nsLocale> resultLocale(new nsLocale());
         if ( resultLocale == NULL ) { 
             return; 
         }
@@ -332,17 +315,17 @@ nsLocaleService::NewLocale(const nsAString &aLocale, nsILocale **_retval)
 
     *_retval = nsnull;
 
-    nsLocale* resultLocale = new nsLocale();
+    nsRefPtr<nsLocale> resultLocale(new nsLocale());
     if (!resultLocale) return NS_ERROR_OUT_OF_MEMORY;
 
     for (PRInt32 i = 0; i < LocaleListLength; i++) {
       nsString category; category.AssignWithConversion(LocaleList[i]);
       result = resultLocale->AddCategory(category, aLocale);
-      if (NS_FAILED(result)) { delete resultLocale; return result;}
+      if (NS_FAILED(result)) return result;
 #if (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_BEOS)
       category.AppendLiteral("##PLATFORM");
       result = resultLocale->AddCategory(category, aLocale);
-      if (NS_FAILED(result)) { delete resultLocale; return result;}
+      if (NS_FAILED(result)) return result;
 #endif
     }
 

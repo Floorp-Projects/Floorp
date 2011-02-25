@@ -42,14 +42,17 @@
 <?xml-stylesheet href="chrome://mozapps/skin/extensions/extensions.css"?>
 
 <!DOCTYPE page [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
 <!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd">
 %extensionsDTD;
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:xhtml="http://www.w3.org/1999/xhtml"
-      id="addons-page" title="&addons.windowTitle;" disablechrome="true"
+      id="addons-page" title="&addons.windowTitle;"
       role="application" windowtype="Addons:Manager"
+      disablefastfind="true"
       ondragenter="gDragDrop.onDragOver(event)"
       ondragover="gDragDrop.onDragOver(event)"
       ondrop="gDragDrop.onDrop(event)">
@@ -134,6 +137,7 @@
     <command id="cmd_enableItem"/>
     <command id="cmd_disableItem"/>
     <command id="cmd_installItem"/>
+    <command id="cmd_purchaseItem"/>
     <command id="cmd_uninstallItem"/>
     <command id="cmd_cancelUninstallItem"/>
     <command id="cmd_cancelOperation"/>
@@ -249,13 +253,37 @@
     <box id="view-port-container" flex="1">
 
       <!-- view port -->
-      <deck id="view-port" flex="1">
+      <deck id="view-port" flex="1" selectedIndex="0">
 
         <!-- discover view -->
-        <vbox id="discover-view" flex="1" class="view-pane">
+        <deck id="discover-view" flex="1" class="view-pane" selectedIndex="0">
+          <vbox id="discover-loading" align="center" pack="stretch" flex="1" class="alert-container">
+            <spacer class="alert-spacer-before"/>
+            <hbox class="alert loading" align="center">
+              <image/>
+              <label value="&loading.label;"/>
+            </hbox>
+            <spacer class="alert-spacer-after"/>
+          </vbox>
+          <vbox id="discover-error" align="center" pack="stretch" flex="1" class="alert-container">
+            <spacer class="alert-spacer-before"/>
+            <hbox>
+              <spacer class="discover-spacer-before"/>
+              <hbox class="alert" align="center">
+                <image class="discover-logo"/>
+                <vbox flex="1" align="stretch">
+                  <label class="discover-title">&discover.title;</label>
+                  <description class="discover-description">&discover.description2;</description>
+                  <description class="discover-footer">&discover.footer;</description>
+                </vbox>
+              </hbox>
+              <spacer class="discover-spacer-after"/>
+            </hbox>
+            <spacer class="alert-spacer-after"/>
+          </vbox>
           <browser id="discover-browser" type="content" flex="1"
                    disablehistory="true" homepage="about:blank"/>
-        </vbox>
+        </deck>
 
         <!-- search view -->
         <vbox id="search-view" flex="1" class="view-pane">
@@ -297,7 +325,7 @@
           <hbox id="search-filter" align="center">
             <label id="search-filter-label" value="&search.filter2.label;"/>
             <radiogroup id="search-filter-radiogroup" orient="horizontal"
-                        align="center" persist="value" value="local">
+                        align="center" persist="value" value="remote">
               <radio id="search-filter-local" class="search-filter-radio"
                      label="&search.filter2.installed.label;" value="local"
                      tooltiptext="&search.filter2.installed.tooltip;"/>
@@ -365,9 +393,6 @@
                       command="cmd_enableUpdateSecurity"/>
               <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
             </hbox>
-            <spacer flex="1"/>
-            <hbox id="list-sorters" class="sort-controls" sortby="name"
-                  ascending="true"/>
           </hbox>
           <vbox id="addon-list-empty" class="alert-container"
                 flex="1" hidden="true">
@@ -524,8 +549,13 @@
                     <label id="detail-creator" class="creator"/>
                   </vbox>
                   <hbox id="detail-desc-container" align="start">
-                    <image id="detail-screenshot" hidden="true"/>
-                    <description id="detail-desc" flex="1"/>
+                    <vbox pack="center"> <!-- Necessary to work around bug 394738 -->
+                      <image id="detail-screenshot" hidden="true"/>
+                    </vbox>
+                    <vbox flex="1">
+                      <description id="detail-desc"/>
+                      <description id="detail-fulldesc"/>
+                    </vbox>
                   </hbox>
                   <vbox id="detail-contributions">
                     <description id="detail-contrib-description">
@@ -547,7 +577,6 @@
                        <column flex="2"/>
                     </columns>
                     <rows>
-                      <row class="detail-row" id="detail-dateUpdated" label="&detail.lastupdated.label;"/>
                       <row class="detail-row-complex" id="detail-updates-row">
                         <label class="detail-row-label" value="&detail.updateType;"/>
                         <hbox align="center">
@@ -571,6 +600,7 @@
                                   command="cmd_findItemUpdates"/>
                         </hbox>
                       </row>
+                      <row class="detail-row" id="detail-dateUpdated" label="&detail.lastupdated.label;"/>
                       <row class="detail-row-complex" id="detail-homepage-row" label="&detail.home;">
                         <label class="detail-row-label" value="&detail.home;"/>
                         <label id="detail-homepage" class="detail-row-value text-link" crop="end"/>
@@ -604,10 +634,6 @@
 #endif
                             command="cmd_showItemPreferences"/>
                     <spacer flex="1"/>
-                    <button id="detail-uninstall-btn" class="addon-control remove"
-                            label="&cmd.uninstallAddon.label;"
-                            accesskey="&cmd.uninstallAddon.accesskey;"
-                            command="cmd_uninstallItem"/>
                     <button id="detail-enable-btn" class="addon-control enable"
                             label="&cmd.enableAddon.label;"
                             accesskey="&cmd.enableAddon.accesskey;"
@@ -616,6 +642,12 @@
                             label="&cmd.disableAddon.label;"
                             accesskey="&cmd.disableAddon.accesskey;"
                             command="cmd_disableItem"/>
+                    <button id="detail-uninstall-btn" class="addon-control remove"
+                            label="&cmd.uninstallAddon.label;"
+                            accesskey="&cmd.uninstallAddon.accesskey;"
+                            command="cmd_uninstallItem"/>
+                    <button id="detail-purchase-btn" class="addon-control purchase"
+                            command="cmd_purchaseItem"/>
                     <button id="detail-install-btn" class="addon-control install"
                             label="&cmd.installAddon.label;"
                             accesskey="&cmd.installAddon.accesskey;"

@@ -77,7 +77,7 @@
 #include "nsIServiceManager.h"
 #include "nsINodeInfo.h"
 #ifdef ACCESSIBILITY
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 #endif
 #include "nsISelectElement.h"
 #include "nsIPrivateDOMEvent.h"
@@ -406,8 +406,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsHTMLScrollFrame)
 already_AddRefed<nsAccessible>
 nsListControlFrame::CreateAccessible()
 {
-  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
-
+  nsAccessibilityService* accService = nsIPresShell::AccService();
   if (accService) {
     return accService->CreateHTMLListboxAccessible(mContent,
                                                    PresContext()->PresShell());
@@ -1628,14 +1627,10 @@ nsListControlFrame::FireOnChange()
       return;
   }
 
-  // Dispatch the NS_FORM_CHANGE event
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent event(PR_TRUE, NS_FORM_CHANGE);
-
-  nsCOMPtr<nsIPresShell> presShell = PresContext()->GetPresShell();
-  if (presShell) {
-    presShell->HandleEventWithTarget(&event, this, nsnull, &status);
-  }
+  // Dispatch the change event.
+  nsContentUtils::DispatchTrustedEvent(mContent->GetOwnerDoc(), mContent,
+                                       NS_LITERAL_STRING("change"), PR_TRUE,
+                                       PR_FALSE);
 }
 
 NS_IMETHODIMP

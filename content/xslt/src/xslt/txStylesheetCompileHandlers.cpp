@@ -998,7 +998,7 @@ txFnStartOutput(PRInt32 aNamespaceID,
     if (attr) {
         nsWhitespaceTokenizer tokens(attr->mValue);
         while (tokens.hasMoreTokens()) {
-            txExpandedName* qname = new txExpandedName();
+            nsAutoPtr<txExpandedName> qname(new txExpandedName());
             NS_ENSURE_TRUE(qname, NS_ERROR_OUT_OF_MEMORY);
 
             rv = qname->init(tokens.nextToken(),
@@ -1007,6 +1007,7 @@ txFnStartOutput(PRInt32 aNamespaceID,
 
             rv = item->mFormat.mCDATASectionElements.add(qname);
             NS_ENSURE_SUCCESS(rv, rv);
+            qname.forget();
         }
     }
 

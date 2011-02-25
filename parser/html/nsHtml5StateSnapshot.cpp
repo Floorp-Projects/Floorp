@@ -59,7 +59,7 @@
 #include "nsHtml5StateSnapshot.h"
 
 
-nsHtml5StateSnapshot::nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> stack, jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements, nsIContent** formPointer, nsIContent** headPointer, nsIContent** deepTreeSurrogateParent, PRInt32 mode, PRInt32 originalMode, PRBool framesetOk, PRBool inForeign, PRBool needToDropLF, PRBool quirks)
+nsHtml5StateSnapshot::nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> stack, jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements, nsIContent** formPointer, nsIContent** headPointer, nsIContent** deepTreeSurrogateParent, PRInt32 mode, PRInt32 originalMode, PRBool framesetOk, PRBool needToDropLF, PRBool quirks)
   : stack(stack),
     listOfActiveFormattingElements(listOfActiveFormattingElements),
     formPointer(formPointer),
@@ -68,7 +68,6 @@ nsHtml5StateSnapshot::nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> sta
     mode(mode),
     originalMode(originalMode),
     framesetOk(framesetOk),
-    inForeign(inForeign),
     needToDropLF(needToDropLF),
     quirks(quirks)
 {
@@ -124,12 +123,6 @@ nsHtml5StateSnapshot::isFramesetOk()
 }
 
 PRBool 
-nsHtml5StateSnapshot::isInForeign()
-{
-  return inForeign;
-}
-
-PRBool 
 nsHtml5StateSnapshot::isNeedToDropLF()
 {
   return needToDropLF;
@@ -165,7 +158,6 @@ nsHtml5StateSnapshot::~nsHtml5StateSnapshot()
       listOfActiveFormattingElements[i]->release();
     }
   }
-  ;
 }
 
 void

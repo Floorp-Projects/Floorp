@@ -243,6 +243,11 @@ AutoCompleteInput.prototype = {
 }
 
 function run_test() {
+  do_test_pending();
+  waitForAsyncUpdates(continue_test);
+}
+
+function continue_test() {
   var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
                    getService(Components.interfaces.nsIAutoCompleteController);
 
@@ -255,9 +260,6 @@ function run_test() {
   // always search in history + bookmarks, no matter what the default is
   prefs.setIntPref("browser.urlbar.search.sources", 3);
   prefs.setIntPref("browser.urlbar.default.behavior", 0);
-
-  // Search is asynchronous, so don't let the test finish immediately
-  do_test_pending();
 
   var numSearchesStarted = 0;
   input.onSearchBegin = function() {

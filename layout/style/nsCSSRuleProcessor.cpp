@@ -2573,6 +2573,14 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
       {
         data.change = nsRestyleHint(data.change | eRestyle_Subtree);
       }
+
+    // We don't know the namespace of the attribute, and xml:lang applies to
+    // all elements.  If the lang attribute changes, we need to restyle our
+    // whole subtree, since the :lang selector on our descendants can examine
+    // our lang attribute.
+    if (aData->mAttribute == nsGkAtoms::lang) {
+      data.change = nsRestyleHint(data.change | eRestyle_Subtree);
+    }
   }
 
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);

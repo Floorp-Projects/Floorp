@@ -70,7 +70,7 @@ SVGAnimatedLengthList::SetBaseValueString(const nsAString& aValue)
   // which takes care of notifying.
 
   rv = mBaseVal.CopyFrom(newBaseValue);
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv) && domWrapper) {
     // Attempting to increase mBaseVal's length failed - reduce domWrapper
     // back to the same length:
     domWrapper->InternalBaseValListWillChangeTo(mBaseVal);
@@ -85,7 +85,7 @@ SVGAnimatedLengthList::ClearBaseValue(PRUint32 aAttrEnum)
     DOMSVGAnimatedLengthList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
     // We must send this notification *before* changing mBaseVal! (See above.)
-    domWrapper->InternalAnimValListWillChangeTo(SVGLengthList());
+    domWrapper->InternalBaseValListWillChangeTo(SVGLengthList());
   }
   mBaseVal.Clear();
   // Caller notifies

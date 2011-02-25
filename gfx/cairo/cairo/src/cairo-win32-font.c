@@ -1385,6 +1385,7 @@ _cairo_win32_scaled_font_show_glyphs (void			*abstract_font,
 
     if (_cairo_surface_is_win32 (generic_surface) &&
 	surface->format == CAIRO_FORMAT_RGB24 &&
+	(generic_surface->permit_subpixel_antialiasing || scaled_font->quality != CLEARTYPE_QUALITY) &&
 	op == CAIRO_OPERATOR_OVER &&
 	_cairo_pattern_is_opaque_solid (pattern)) {
 
@@ -1416,6 +1417,8 @@ _cairo_win32_scaled_font_show_glyphs (void			*abstract_font,
 	cairo_win32_surface_t *tmp_surface;
 	cairo_surface_t *mask_surface;
 	cairo_surface_pattern_t mask;
+	cairo_bool_t use_subpixel_antialiasing =
+	    scaled_font->quality == CLEARTYPE_QUALITY && generic_surface->permit_subpixel_antialiasing;
 	RECT r;
 
 	tmp_surface = (cairo_win32_surface_t *)cairo_win32_surface_create_with_dib (CAIRO_FORMAT_ARGB32, width, height);
@@ -1437,7 +1440,7 @@ _cairo_win32_scaled_font_show_glyphs (void			*abstract_font,
 	    return status;
 	}
 
-	if (scaled_font->quality == CLEARTYPE_QUALITY) {
+	if (use_subpixel_antialiasing) {
 	    /* For ClearType, we need a 4-channel mask. If we are compositing on
 	     * a surface with alpha, we need to compute the alpha channel of
 	     * the mask (we just copy the green channel). But for a destination
@@ -1465,7 +1468,7 @@ _cairo_win32_scaled_font_show_glyphs (void			*abstract_font,
 	_cairo_pattern_init_for_surface (&mask, mask_surface);
 	cairo_surface_destroy (mask_surface);
 
-	if (scaled_font->quality == CLEARTYPE_QUALITY)
+	if (use_subpixel_antialiasing)
 	    mask.base.has_component_alpha = TRUE;
 
 	status = _cairo_surface_composite (op, pattern,

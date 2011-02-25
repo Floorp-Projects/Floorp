@@ -181,9 +181,19 @@ private:
                          const ByteRange& aRange,
                          PRUint32 aFuzz);
 
+  // Returns true if the serial number is for a stream we encountered
+  // while reading metadata. Call on the main thread only.
+  PRBool IsKnownStream(PRUint32 aSerial);
+
 private:
   // Maps Ogg serialnos to nsOggStreams.
   nsClassHashtable<nsUint32HashKey, nsOggCodecState> mCodecStates;
+
+  // Array of serial numbers of streams that were encountered during
+  // initial metadata load. Written on state machine thread during
+  // metadata loading and read on the main thread only after metadata
+  // is loaded.
+  nsAutoTArray<PRUint32,4> mKnownStreams;
 
   // Decode state of the Theora bitstream we're decoding, if we have video.
   nsTheoraState* mTheoraState;
@@ -196,6 +206,17 @@ private:
 
   // Ogg decoding state.
   ogg_sync_state mOggState;
+
+  // Vorbis/Theora data used to compute timestamps. This is written on the
+  // decoder thread and read on the main thread. All reading on the main
+  // thread must be done after metadataloaded. We can't use the existing
+  // data in the codec states due to threading issues. You must check the
+  // associated mTheoraState or mVorbisState pointer is non-null before
+  // using this codec data.
+  PRUint32 mVorbisSerial;
+  PRUint32 mTheoraSerial;
+  vorbis_info mVorbisInfo;
+  th_info mTheoraInfo;
 
   // The offset of the end of the last page we've read, or the start of
   // the page we're about to read.

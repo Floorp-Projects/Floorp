@@ -201,6 +201,9 @@ nsStringBuffer*
 nsStringBuffer::Alloc(size_t size)
   {
     NS_ASSERTION(size != 0, "zero capacity allocation not allowed");
+    NS_ASSERTION(sizeof(nsStringBuffer) + size <= size_t(PRUint32(-1)) &&
+                 sizeof(nsStringBuffer) + size > size,
+                 "mStorageSize will truncate");
 
     nsStringBuffer *hdr =
         (nsStringBuffer *) malloc(sizeof(nsStringBuffer) + size);
@@ -221,12 +224,15 @@ nsStringBuffer::Realloc(nsStringBuffer* hdr, size_t size)
     STRING_STAT_INCREMENT(Realloc);
 
     NS_ASSERTION(size != 0, "zero capacity allocation not allowed");
+    NS_ASSERTION(sizeof(nsStringBuffer) + size <= size_t(PRUint32(-1)) &&
+                 sizeof(nsStringBuffer) + size > size,
+                 "mStorageSize will truncate");
 
     // no point in trying to save ourselves if we hit this assertion
     NS_ASSERTION(!hdr->IsReadonly(), "|Realloc| attempted on readonly string");
 
     // Treat this as a release and addref for refcounting purposes, since we
-    // just asserted that the refcound is 1.  If we don't do that, refcount
+    // just asserted that the refcount is 1.  If we don't do that, refcount
     // logging will claim we've leaked all sorts of stuff.
     NS_LOG_RELEASE(hdr, 0, "nsStringBuffer");
     

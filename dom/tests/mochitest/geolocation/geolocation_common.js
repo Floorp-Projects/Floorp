@@ -50,6 +50,13 @@ function stop_geolocationProvider()
   sleep(1000);
 }
 
+function worse_geolocationProvider()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+  prefs.setCharPref("geo.wifi.uri", "http://mochi.test:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs?action=worse-accuracy");
+}
+
 function resume_geolocationProvider()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");

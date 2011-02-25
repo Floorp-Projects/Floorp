@@ -1519,8 +1519,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   }
 
   if (mPersistentAttributesDirty & PAD_MISC) {
-    if (sizeMode != nsSizeMode_Minimized &&
-        persistString.Find("sizemode") >= 0) {
+    if (sizeMode != nsSizeMode_Minimized) {
       if (sizeMode == nsSizeMode_Maximized)
         sizeString.Assign(SIZEMODE_MAXIMIZED);
       else if (sizeMode == nsSizeMode_Fullscreen)
@@ -1528,7 +1527,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       else
         sizeString.Assign(SIZEMODE_NORMAL);
       docShellElement->SetAttribute(MODE_ATTRIBUTE, sizeString);
-      if (ownerXULDoc)
+      if (ownerXULDoc && persistString.Find("sizemode") >= 0)
         ownerXULDoc->Persist(windowElementId, MODE_ATTRIBUTE);
     }
     if (persistString.Find("zlevel") >= 0) {

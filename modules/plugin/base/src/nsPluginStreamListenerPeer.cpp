@@ -278,7 +278,11 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
          ("nsPluginStreamListenerPeer::dtor this=%p, url=%s\n",this, mURLSpec.get()));
 #endif
-  
+
+  if (mPStreamListener) {
+    mPStreamListener->SetStreamListenerPeer(this);
+  }
+
   // close FD of mFileCacheOutputStream if it's still open
   // or we won't be able to remove the cache file
   if (mFileCacheOutputStream)
@@ -287,7 +291,7 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
   delete mDataForwardToRequest;
 
   if (mPluginInstance)
-    mPluginInstance->BStreamListeners()->RemoveElement(this);
+    mPluginInstance->FileCachedStreamListeners()->RemoveElement(this);
 }
 
 // Called as a result of GetURL and PostURL
@@ -309,8 +313,10 @@ nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
   mURL = aURL;
   
   mPluginInstance = aInstance;
-  mPStreamListener = aListener;
-  
+
+  mPStreamListener = static_cast<nsNPAPIPluginStreamListener*>(aListener);
+  mPStreamListener->SetStreamListenerPeer(this);
+
   mPendingRequests = requestCount;
   
   mDataForwardToRequest = new nsHashtable(16, PR_FALSE);
@@ -396,9 +402,9 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
   nsTArray< nsRefPtr<nsNPAPIPluginInstance> > *instances = pluginHost->InstanceArray();
   for (PRUint32 i = 0; i < instances->Length(); i++) {
     // most recent streams are at the end of list
-    nsTArray<nsPluginStreamListenerPeer*> *bStreamListeners = instances->ElementAt(i)->BStreamListeners();
-    for (PRInt32 i = bStreamListeners->Length() - 1; i >= 0; --i) {
-      nsPluginStreamListenerPeer *lp = bStreamListeners->ElementAt(i);
+    nsTArray<nsPluginStreamListenerPeer*> *streamListeners = instances->ElementAt(i)->FileCachedStreamListeners();
+    for (PRInt32 i = streamListeners->Length() - 1; i >= 0; --i) {
+      nsPluginStreamListenerPeer *lp = streamListeners->ElementAt(i);
       if (lp && lp->mLocalCachedFileHolder) {
         useExistingCacheFile = lp->UseExistingPluginCacheFile(this);
         if (useExistingCacheFile) {
@@ -455,7 +461,7 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
   }
 
   // add this listenerPeer to list of stream peers for this instance
-  mPluginInstance->BStreamListeners()->AppendElement(this);
+  mPluginInstance->FileCachedStreamListeners()->AppendElement(this);
 
   return rv;
 }
@@ -608,15 +614,9 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
           mPluginInstance->Start();
           mOwner->CreateWidget();
           // If we've got a native window, the let the plugin know about it.
-          if (window->window) {
-            ((nsPluginNativeWindow*)window)->CallSetWindow(pluginInstCOMPtr);
-          } else {
-            PRBool useAsyncPainting = PR_FALSE;
-            mPluginInstance->UseAsyncPainting(&useAsyncPainting);
-            if (useAsyncPainting) {
-              mPluginInstance->AsyncSetWindow(window);
-            }
-          }
+          nsCOMPtr<nsIPluginInstanceOwner_MOZILLA_2_0_BRANCH> owner = do_QueryInterface(mOwner);
+          if (owner)
+            owner->SetWindow();
         }
       }
     }
@@ -815,10 +815,9 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
       window->window = widget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
     }
 #endif
-    if (window->window) {
-      nsCOMPtr<nsIPluginInstance> pluginInstCOMPtr = mPluginInstance.get();
-      ((nsPluginNativeWindow*)window)->CallSetWindow(pluginInstCOMPtr);
-    }
+    nsCOMPtr<nsIPluginInstanceOwner_MOZILLA_2_0_BRANCH> owner = do_QueryInterface(mOwner);
+    if (owner)
+      owner->SetWindow();
   }
   
   mSeekable = PR_FALSE;
@@ -1089,15 +1088,23 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
   // NOTE: this should only happen when a stream was NOT created
   // with GetURL or PostURL (i.e. it's the initial stream we
   // send to the plugin as determined by the SRC or DATA attribute)
-  if (!mPStreamListener && mPluginInstance)
-    rv = mPluginInstance->NewStreamToPlugin(getter_AddRefs(mPStreamListener));
-  
-  if (NS_FAILED(rv))
-    return rv;
-  
-  if (!mPStreamListener)
-    return NS_ERROR_NULL_POINTER;
-  
+  if (!mPStreamListener) {
+    if (!mPluginInstance) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIPluginStreamListener> streamListener;
+    rv = mPluginInstance->NewStreamListener(nsnull, nsnull,
+                                            getter_AddRefs(streamListener));
+    if (NS_FAILED(rv) || !streamListener) {
+      return NS_ERROR_FAILURE;
+    }
+
+    mPStreamListener = static_cast<nsNPAPIPluginStreamListener*>(streamListener.get());
+  }
+
+  mPStreamListener->SetStreamListenerPeer(this);
+
   PRBool useLocalCache = PR_FALSE;
   
   // get httpChannel to retrieve some info we need for nsIPluginStreamInfo setup
@@ -1113,38 +1120,34 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
     // Reassemble the HTTP response status line and provide it to our
     // listener.  Would be nice if we could get the raw status line,
     // but nsIHttpChannel doesn't currently provide that.
-    nsCOMPtr<nsIHTTPHeaderListener> listener =
-    do_QueryInterface(mPStreamListener);
-    if (listener) {
-      // Status code: required; the status line isn't useful without it.
-      PRUint32 statusNum;
-      if (NS_SUCCEEDED(httpChannel->GetResponseStatus(&statusNum)) &&
-          statusNum < 1000) {
-        // HTTP version: provide if available.  Defaults to empty string.
-        nsCString ver;
-        nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
-        do_QueryInterface(channel);
-        if (httpChannelInternal) {
-          PRUint32 major, minor;
-          if (NS_SUCCEEDED(httpChannelInternal->GetResponseVersion(&major,
-                                                                   &minor))) {
-            ver = nsPrintfCString("/%lu.%lu", major, minor);
-          }
+    // Status code: required; the status line isn't useful without it.
+    PRUint32 statusNum;
+    if (NS_SUCCEEDED(httpChannel->GetResponseStatus(&statusNum)) &&
+        statusNum < 1000) {
+      // HTTP version: provide if available.  Defaults to empty string.
+      nsCString ver;
+      nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
+      do_QueryInterface(channel);
+      if (httpChannelInternal) {
+        PRUint32 major, minor;
+        if (NS_SUCCEEDED(httpChannelInternal->GetResponseVersion(&major,
+                                                                 &minor))) {
+          ver = nsPrintfCString("/%lu.%lu", major, minor);
         }
-        
-        // Status text: provide if available.  Defaults to "OK".
-        nsCString statusText;
-        if (NS_FAILED(httpChannel->GetResponseStatusText(statusText))) {
-          statusText = "OK";
-        }
-        
-        // Assemble everything and pass to listener.
-        nsPrintfCString status(100, "HTTP%s %lu %s", ver.get(), statusNum,
-                               statusText.get());
-        listener->StatusLine(status.get());
       }
+
+      // Status text: provide if available.  Defaults to "OK".
+      nsCString statusText;
+      if (NS_FAILED(httpChannel->GetResponseStatusText(statusText))) {
+        statusText = "OK";
+      }
+
+      // Assemble everything and pass to listener.
+      nsPrintfCString status(100, "HTTP%s %lu %s", ver.get(), statusNum,
+                             statusText.get());
+      static_cast<nsIHTTPHeaderListener*>(mPStreamListener)->StatusLine(status.get());
     }
-    
+
     // Also provide all HTTP response headers to our listener.
     httpChannel->VisitResponseHeaders(this);
     
@@ -1240,12 +1243,8 @@ nsPluginStreamListenerPeer::OnFileAvailable(nsIFile* aFile)
 NS_IMETHODIMP
 nsPluginStreamListenerPeer::VisitHeader(const nsACString &header, const nsACString &value)
 {
-  nsCOMPtr<nsIHTTPHeaderListener> listener = do_QueryInterface(mPStreamListener);
-  if (!listener)
-    return NS_ERROR_FAILURE;
-  
-  return listener->NewResponseHeader(PromiseFlatCString(header).get(),
-                                     PromiseFlatCString(value).get());
+  return mPStreamListener->NewResponseHeader(PromiseFlatCString(header).get(),
+                                             PromiseFlatCString(value).get());
 }
 
 nsresult
@@ -1289,8 +1288,18 @@ NS_IMETHODIMP
 nsPluginStreamListenerPeer::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel,
                                                    PRUint32 flags, nsIAsyncVerifyRedirectCallback* callback)
 {
-  // Don't allow cross-origin 307 POST redirects. Fall back to channel event sink for window.
+  // Disallow redirects if we don't have a stream listener.
+  if (!mPStreamListener) {
+    return NS_ERROR_FAILURE;
+  }
 
+  // Give NPAPI a chance to control redirects.
+  bool notificationHandled = mPStreamListener->HandleRedirectNotification(oldChannel, newChannel, callback);
+  if (notificationHandled) {
+    return NS_OK;
+  }
+
+  // Don't allow cross-origin 307 POST redirects.
   nsCOMPtr<nsIHttpChannel> oldHttpChannel(do_QueryInterface(oldChannel));
   if (oldHttpChannel) {
     PRUint32 responseStatus;
@@ -1315,10 +1324,11 @@ nsPluginStreamListenerPeer::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsICh
     }
   }
 
+  // Fall back to channel event sink for window.
   nsCOMPtr<nsIChannelEventSink> channelEventSink;
   nsresult rv = GetInterfaceGlobal(NS_GET_IID(nsIChannelEventSink), getter_AddRefs(channelEventSink));
   if (NS_FAILED(rv)) {
-    return NS_ERROR_FAILURE;
+    return rv;
   }
 
   return channelEventSink->AsyncOnChannelRedirect(oldChannel, newChannel, flags, callback);

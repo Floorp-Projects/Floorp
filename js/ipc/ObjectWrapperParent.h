@@ -98,7 +98,7 @@ private:
     CPOW_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
     
     static JSBool
-    CPOW_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+    CPOW_SetProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
 
     JSBool NewEnumerateInit(JSContext* cx, jsval* statep, jsid* idp);
     JSBool NewEnumerateNext(JSContext* cx, jsval* statep, jsid* idp);

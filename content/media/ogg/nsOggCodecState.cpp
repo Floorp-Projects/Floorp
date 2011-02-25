@@ -42,6 +42,7 @@
 #include <string.h>
 #include "nsTraceRefcnt.h"
 #include "VideoUtils.h"
+#include "nsBuiltinDecoderReader.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gBuiltinDecoderLog;
@@ -49,15 +50,6 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 #else
 #define LOG(type, msg)
 #endif
-
-/*
-   The maximum height and width of the video. Used for
-   sanitizing the memory allocation of the RGB buffer.
-   The maximum resolution we anticipate encountering in the
-   wild is 2160p - 3840x2160 pixels.
-*/
-#define MAX_VIDEO_WIDTH  4000
-#define MAX_VIDEO_HEIGHT 3000
 
 nsOggCodecState*
 nsOggCodecState::Create(ogg_page* aPage)
@@ -170,20 +162,11 @@ PRBool nsTheoraState::Init() {
   mPixelAspectRatio = (n == 0 || d == 0) ?
     1.0f : static_cast<float>(n) / static_cast<float>(d);
 
-  // Ensure the frame region isn't larger than our prescribed maximum.
-  PRUint32 pixels;
-  if (!MulOverflow32(mInfo.frame_width, mInfo.frame_height, pixels) ||
-      pixels > MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT ||
-      pixels == 0)
-  {
-    return mActive = PR_FALSE;
-  }
-
-  // Ensure the picture region isn't larger than our prescribed maximum.
-  if (!MulOverflow32(mInfo.pic_width, mInfo.pic_height, pixels) ||
-      pixels > MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT ||
-      pixels == 0)
-  {
+  // Ensure the frame and picture regions aren't larger than our prescribed
+  // maximum, or zero sized.
+  nsIntSize frame(mInfo.frame_width, mInfo.frame_height);
+  nsIntRect picture(mInfo.pic_x, mInfo.pic_y, mInfo.pic_width, mInfo.pic_height);
+  if (!nsVideoInfo::ValidateVideoRegion(frame, picture, frame)) {
     return mActive = PR_FALSE;
   }
 
@@ -233,18 +216,36 @@ nsTheoraState::DecodeHeader(ogg_packet* aPacket)
 
 PRInt64
 nsTheoraState::Time(PRInt64 granulepos) {
-  if (granulepos < 0 || !mActive || mInfo.fps_numerator == 0) {
+  if (!mActive) {
+    return -1;
+  }
+  return nsTheoraState::Time(&mInfo, granulepos);
+}
+
+# define TH_VERSION_CHECK(_info,_maj,_min,_sub) \
+ ((_info)->version_major>(_maj)||(_info)->version_major==(_maj)&& \
+ ((_info)->version_minor>(_min)||(_info)->version_minor==(_min)&& \
+ (_info)->version_subminor>=(_sub)))
+
+PRInt64 nsTheoraState::Time(th_info* aInfo, PRInt64 aGranulepos)
+{
+  if (aGranulepos < 0 || aInfo->fps_numerator == 0) {
     return -1;
   }
   PRInt64 t = 0;
-  PRInt64 frameno = th_granule_frame(mCtx, granulepos);
+  // Implementation of th_granule_frame inlined here to operate
+  // on the th_info structure instead of the theora_state.
+  int shift = aInfo->keyframe_granule_shift; 
+  ogg_int64_t iframe = aGranulepos >> shift;
+  ogg_int64_t pframe = aGranulepos - (iframe << shift);
+  PRInt64 frameno = iframe + pframe - TH_VERSION_CHECK(aInfo, 3, 2, 1);
   if (!AddOverflow(frameno, 1, t))
     return -1;
   if (!MulOverflow(t, 1000, t))
     return -1;
-  if (!MulOverflow(t, mInfo.fps_denominator, t))
+  if (!MulOverflow(t, aInfo->fps_denominator, t))
     return -1;
-  return t / mInfo.fps_numerator;
+  return t / aInfo->fps_numerator;
 }
 
 PRInt64 nsTheoraState::StartTime(PRInt64 granulepos) {
@@ -373,12 +374,21 @@ PRBool nsVorbisState::Init()
 
 PRInt64 nsVorbisState::Time(PRInt64 granulepos)
 {
-  if (granulepos == -1 || !mActive || mDsp.vi->rate == 0) {
+  if (!mActive) {
+    return -1;
+  }
+
+  return nsVorbisState::Time(&mInfo, granulepos);
+}
+
+PRInt64 nsVorbisState::Time(vorbis_info* aInfo, PRInt64 aGranulepos)
+{
+  if (aGranulepos == -1 || aInfo->rate == 0) {
     return -1;
   }
   PRInt64 t = 0;
-  MulOverflow(1000, granulepos, t);
-  return t / mDsp.vi->rate;
+  MulOverflow(1000, aGranulepos, t);
+  return t / aInfo->rate;
 }
 
 nsSkeletonState::nsSkeletonState(ogg_page* aBosPage)

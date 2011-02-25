@@ -127,6 +127,7 @@ extern "C" {
 #include "gfxPlatformGtk.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
+#include "gfxUtils.h"
 #include "Layers.h"
 #include "LayerManagerOGL.h"
 #include "GLContextProvider.h"
@@ -289,7 +290,7 @@ UpdateLastInputEventTime()
 }
 
 // this is the last window that had a drag event happen on it.
-nsWindow *nsWindow::mLastDragMotionWindow = NULL;
+nsWindow *nsWindow::sLastDragMotionWindow = NULL;
 PRBool nsWindow::sIsDraggingOutOf = PR_FALSE;
 
 // This is the time of the last button press event.  The drag service
@@ -392,7 +393,6 @@ nsWindow::nsWindow()
     mNeedsShow        = PR_FALSE;
     mEnabled          = PR_TRUE;
     mCreated          = PR_FALSE;
-    mPlaced           = PR_FALSE;
 
     mContainer           = nsnull;
     mGdkWindow           = nsnull;
@@ -401,7 +401,6 @@ nsWindow::nsWindow()
     mHasMappedToplevel   = PR_FALSE;
     mIsFullyObscured     = PR_FALSE;
     mRetryPointerGrab    = PR_FALSE;
-    mRetryKeyboardGrab   = PR_FALSE;
     mTransientParent     = nsnull;
     mWindowType          = eWindowType_child;
     mSizeState           = nsSizeMode_Normal;
@@ -419,14 +418,6 @@ nsWindow::nsWindow()
         initialize_prefs();
     }
 
-    if (mLastDragMotionWindow == this)
-        mLastDragMotionWindow = NULL;
-    mDragMotionWidget = 0;
-    mDragMotionContext = 0;
-    mDragMotionX = 0;
-    mDragMotionY = 0;
-    mDragMotionTime = 0;
-    mDragMotionTimerID = 0;
     mLastMotionPressure = 0;
 
 #ifdef ACCESSIBILITY
@@ -453,8 +444,8 @@ nsWindow::nsWindow()
 nsWindow::~nsWindow()
 {
     LOG(("nsWindow::~nsWindow() [%p]\n", (void *)this));
-    if (mLastDragMotionWindow == this) {
-        mLastDragMotionWindow = NULL;
+    if (sLastDragMotionWindow == this) {
+        sLastDragMotionWindow = NULL;
     }
 
     delete[] mTransparencyBitmap;
@@ -721,6 +712,8 @@ nsWindow::Destroy(void)
     }
     mLayerManager = nsnull;
 
+    ClearCachedResources();
+
     g_signal_handlers_disconnect_by_func(gtk_settings_get_default(),
                                          FuncToGpointer(theme_changed_cb),
                                          this);
@@ -762,11 +755,6 @@ nsWindow::Destroy(void)
     // Destroy thebes surface now. Badness can happen if we destroy
     // the surface after its X Window.
     mThebesSurface = nsnull;
-
-    if (mDragMotionTimerID) {
-        g_source_remove(mDragMotionTimerID);
-        mDragMotionTimerID = 0;
-    }
 
     if (mDragLeaveTimer) {
         mDragLeaveTimer->Cancel();
@@ -1038,6 +1026,11 @@ nsWindow::Show(PRBool aState)
     if (aState == mIsShown)
         return NS_OK;
 
+    // Clear our cached resources when the window is hidden.
+    if (mIsShown && !aState) {
+        ClearCachedResources();
+    }
+
     mIsShown = aState;
 
     LOG(("nsWindow::Show [%p] state %d\n", (void *)this, aState));
@@ -1096,11 +1089,11 @@ nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
             // Yep?  Resize the window
             //Maybe, the toplevel has moved
 
-            // Note that if the widget needs to be shown because it
-            // was previously insane in Resize(x,y,w,h), then we need
+            // Note that if the widget needs to be positioned because its
+            // size was previously insane in Resize(x,y,w,h), then we need
             // to set the x and y here too, because the widget wasn't
             // moved back then
-            if (mIsTopLevel || mNeedsShow)
+            if (mNeedsMove)
                 NativeResize(mBounds.x, mBounds.y,
                              mBounds.width, mBounds.height, aRepaint);
             else
@@ -1155,7 +1148,7 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
     mBounds.y = aY;
     mBounds.SizeTo(GetSafeWindowSize(nsIntSize(aWidth, aHeight)));
 
-    mPlaced = PR_TRUE;
+    mNeedsMove = PR_TRUE;
 
     if (!mCreated)
         return NS_OK;
@@ -1198,7 +1191,6 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
         }
         else {
             mNeedsResize = PR_TRUE;
-            mNeedsMove = PR_TRUE;
         }
     }
 
@@ -1241,8 +1233,6 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
         SetSizeMode(nsSizeMode_Normal);
     }
 
-    mPlaced = PR_TRUE;
-
     // Since a popup window's x/y coordinates are in relation to to
     // the parent, the parent might have moved so we always move a
     // popup window.
@@ -1257,6 +1247,8 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
 
     if (!mCreated)
         return NS_OK;
+
+    mNeedsMove = PR_FALSE;
 
     if (mIsTopLevel) {
         gtk_window_move(GTK_WINDOW(mShell), aX, aY);
@@ -1944,14 +1936,16 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
         if (!nsWindow::DragInProgress()) {
             gtk_grab_add(widget);
             GrabPointer();
-            GrabKeyboard();
         }
     }
     else {
         if (!nsWindow::DragInProgress()) {
             ReleaseGrabs();
-            gtk_grab_remove(widget);
         }
+        // There may not have been a drag in process when aDoCapture was set,
+        // so make sure to remove any added grab.  This is a no-op if the grab
+        // was not added to this widget.
+        gtk_grab_remove(widget);
         gRollupListener = nsnull;
         NS_IF_RELEASE(gMenuRollup);
         gRollupWindow = nsnull;
@@ -2087,6 +2081,14 @@ gdk_window_flash(GdkWindow *    aGdkWindow,
 #endif // DEBUG
 #endif
 
+static void
+DispatchDidPaint(nsIWidget* aWidget)
+{
+    nsEventStatus status;
+    nsPaintEvent didPaintEvent(PR_TRUE, NS_DID_PAINT, aWidget);
+    aWidget->DispatchEvent(&didPaintEvent, status);
+}
+
 gboolean
 nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 {
@@ -2099,6 +2101,15 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     // Windows that are not visible will be painted after they become visible.
     if (!mGdkWindow || mIsFullyObscured || !mHasMappedToplevel)
         return FALSE;
+
+    // Dispatch WILL_PAINT to allow scripts etc. to run before we
+    // dispatch PAINT
+    {
+        nsEventStatus status;
+        nsPaintEvent willPaintEvent(PR_TRUE, NS_WILL_PAINT, this);
+        willPaintEvent.willSendDidPaint = PR_TRUE;
+        DispatchEvent(&willPaintEvent, status);
+    }
 
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
     event.refPoint.x = aEvent->area.x;
@@ -2128,6 +2139,12 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         LOGDRAW(("\t%d %d %d %d\n", r->x, r->y, r->width, r->height));
     }
 
+    // Our bounds may have changed after dispatching WILL_PAINT.  Clip
+    // to the new bounds here.  The event region is relative to this
+    // window.
+    event.region.And(event.region,
+                     nsIntRect(0, 0, mBounds.width, mBounds.height));
+
     PRBool translucent = eTransparencyTransparent == GetTransparencyMode();
     if (!translucent) {
         GList *children =
@@ -2154,14 +2171,18 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         return TRUE;
     }
 
-    if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL)
+    if (GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_OPENGL)
     {
-        LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager());
+        LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager(nsnull));
         manager->SetClippingRegion(event.region);
 
         nsEventStatus status;
         DispatchEvent(&event, status);
+
         g_free(rects);
+
+        DispatchDidPaint(this);
+
         return TRUE;
     }
             
@@ -2172,11 +2193,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
                                    GDK_DRAWABLE(mGdkWindow));
 
     // clip to the update region
-    ctx->NewPath();
-    for (r = rects; r < r_end; ++r) {
-        ctx->Rectangle(gfxRect(r->x, r->y, r->width, r->height));
-    }
-    ctx->Clip();
+    gfxUtils::ClipToRegion(ctx, event.region);
 
     BasicLayerManager::BufferMode layerBuffering =
         BasicLayerManager::BUFFER_NONE;
@@ -2195,9 +2212,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         ctx->Rectangle(gfxRect(boundsRect.x, boundsRect.y,
                                boundsRect.width, boundsRect.height));
     } else {
-        for (r = rects; r < r_end; ++r) {
-            ctx->Rectangle(gfxRect(r->x, r->y, r->width, r->height));
-        }
+        gfxUtils::PathFromRegion(ctx, event.region);
     }
     ctx->Clip();
 
@@ -2223,7 +2238,8 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     // cairo inflates the update region, etc.  So don't paint flash
     // for cairo.
 #ifdef DEBUG
-    if (WANT_PAINT_FLASHING && aEvent->window)
+    // XXX aEvent->region may refer to a newly-invalid area.  FIXME
+    if (0 && WANT_PAINT_FLASHING && aEvent->window)
         gdk_window_flash(aEvent->window, 1, 100, aEvent->region);
 #endif
 #endif
@@ -2276,8 +2292,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 
     g_free(rects);
 
-    nsPaintEvent didPaintEvent(PR_TRUE, NS_DID_PAINT, this);
-    DispatchEvent(&didPaintEvent, status);
+    DispatchDidPaint(this);
 
     // Synchronously flush any new dirty areas
     GdkRegion* dirtyArea = gdk_window_get_update_area(mGdkWindow);
@@ -2311,7 +2326,6 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
     // by the layout engine.  Width and height are set elsewhere.
     nsIntPoint pnt(aEvent->x, aEvent->y);
     if (mIsTopLevel) {
-        mPlaced = PR_TRUE;
         // Need to translate this into the right coordinates
         mBounds.MoveTo(WidgetToScreenOffset());
         pnt = mBounds.TopLeft();
@@ -2894,7 +2908,24 @@ nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
     LOGFOCUS(("OnContainerFocusOutEvent [%p]\n", (void *)this));
 
     if (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) {
-        check_for_rollup(aEvent->window, 0, 0, PR_FALSE, PR_TRUE);
+        nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
+        nsCOMPtr<nsIDragSession> dragSession;
+        dragService->GetCurrentSession(getter_AddRefs(dragSession));
+
+        // Rollup popups when a window is focused out unless a drag is occurring.
+        // This check is because drags grab the keyboard and cause a focus out on
+        // versions of GTK before 2.18.
+        PRBool shouldRollup = !dragSession;
+        if (!shouldRollup) {
+            // we also roll up when a drag is from a different application
+            nsCOMPtr<nsIDOMNode> sourceNode;
+            dragSession->GetSourceNode(getter_AddRefs(sourceNode));
+            shouldRollup = (sourceNode == nsnull);
+        }
+
+        if (shouldRollup) {
+            check_for_rollup(aEvent->window, 0, 0, PR_FALSE, PR_TRUE);
+        }
     }
 
 #ifdef MOZ_X11
@@ -3000,8 +3031,12 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 
     // if we are in the middle of composing text, XIM gets to see it
     // before mozilla does.
-    if (mIMModule && mIMModule->OnKeyEvent(this, aEvent)) {
-        return TRUE;
+    PRBool IMEWasEnabled = PR_FALSE;
+    if (mIMModule) {
+        IMEWasEnabled = mIMModule->IsEnabled();
+        if (mIMModule->OnKeyEvent(this, aEvent)) {
+            return TRUE;
+        }
     }
 
     nsEventStatus status;
@@ -3023,6 +3058,17 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     if (DispatchKeyDownEvent(aEvent, &isKeyDownCancelled) &&
         NS_UNLIKELY(mIsDestroyed)) {
         return TRUE;
+    }
+
+    // If a keydown event handler causes to enable IME, i.e., it moves
+    // focus from IME unusable content to IME usable editor, we should
+    // send the native key event to IME for the first input on the editor.
+    if (!IMEWasEnabled && mIMModule && mIMModule->IsEnabled()) {
+        // Notice our keydown event was already dispatched.  This prevents
+        // unnecessary DOM keydown event in the editor.
+        if (mIMModule->OnKeyEvent(this, aEvent, PR_TRUE)) {
+            return TRUE;
+        }
     }
 
     // Don't pass modifiers as NS_KEY_PRESS events.
@@ -3392,16 +3438,16 @@ nsWindow::CheckNeedDragLeaveEnter(nsWindow* aInnerMostWidget,
                                   nscoord aX, nscoord aY)
 {
     // check to see if there was a drag motion window already in place
-    if (mLastDragMotionWindow) {
+    if (sLastDragMotionWindow) {
         // same as the last window so no need for dragenter and dragleave events
-        if (mLastDragMotionWindow == aInnerMostWidget) {
+        if (sLastDragMotionWindow == aInnerMostWidget) {
             UpdateDragStatus(aDragContext, aDragService);
             return;
         }
 
         // send a dragleave event to the last window that got a motion event
-        nsRefPtr<nsWindow> kungFuDeathGrip = mLastDragMotionWindow;
-        mLastDragMotionWindow->OnDragLeave();
+        nsRefPtr<nsWindow> kungFuDeathGrip = sLastDragMotionWindow;
+        sLastDragMotionWindow->OnDragLeave();
     }
 
     // Make sure that the drag service knows we're now dragging
@@ -3412,7 +3458,7 @@ nsWindow::CheckNeedDragLeaveEnter(nsWindow* aInnerMostWidget,
     aInnerMostWidget->OnDragEnter(aX, aY);
 
     // set the last window to the innerMostWidget
-    mLastDragMotionWindow = aInnerMostWidget;
+    sLastDragMotionWindow = aInnerMostWidget;
 }
 
 gboolean
@@ -3443,9 +3489,6 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
     }
 
     sIsDraggingOutOf = PR_FALSE;
-
-    // Reset out drag motion timer
-    ResetDragMotionTimer(aWidget, aDragContext, aX, aY, aTime);
 
     // get our drag context
     nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
@@ -3511,9 +3554,6 @@ nsWindow::OnDragLeaveEvent(GtkWidget *aWidget,
     LOGDRAG(("nsWindow::OnDragLeaveSignal(%p)\n", (void*)this));
 
     sIsDraggingOutOf = PR_TRUE;
-
-    // make sure to unset any drag motion timers here.
-    ResetDragMotionTimer(0, 0, 0, 0, 0);
 
     if (mDragLeaveTimer) {
         return;
@@ -3604,8 +3644,8 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     // event and and that case is handled in that handler.
     dragSessionGTK->TargetSetLastContext(0, 0, 0);
 
-    // clear the mLastDragMotion window
-    mLastDragMotionWindow = 0;
+    // clear the sLastDragMotion window
+    sLastDragMotionWindow = 0;
 
     // Make sure to end the drag session. If this drag started in a
     // different app, we won't get a drag_end signal to end it from.
@@ -3777,11 +3817,13 @@ nsWindow::Create(nsIWidget        *aParent,
     mBounds = aRect;
     if (mWindowType != eWindowType_child &&
         mWindowType != eWindowType_plugin) {
-        // The window manager might place us. Indicate that if we're
-        // shown, we want to go through
-        // nsWindow::NativeResize(x,y,w,h) to maybe set our own
-        // position.
-        mNeedsMove = PR_TRUE;
+        // We only move a toplevel window if someone has actually placed the
+        // window somewhere.  If no placement has taken place, we just let the
+        // window manager Do The Right Thing.
+        //
+        // Indicate that if we're shown, we at least need to have our size set.
+        // If we get explicitly moved, the position will also be set.
+        mNeedsResize = PR_TRUE;
     }
 
     // figure out our parent window
@@ -4311,13 +4353,7 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
     ResizeTransparencyBitmap(aWidth, aHeight);
 
     if (mIsTopLevel) {
-        // We only move the toplevel window if someone has
-        // actually placed the window somewhere.  If no placement
-        // has taken place, we just let the window manager Do The
-        // Right Thing.
-        if (mPlaced)
-            gtk_window_move(GTK_WINDOW(mShell), aX, aY);
-
+        gtk_window_move(GTK_WINDOW(mShell), aX, aY);
         gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
     }
     else if (mContainer) {
@@ -4445,8 +4481,6 @@ nsWindow::EnsureGrabs(void)
 {
     if (mRetryPointerGrab)
         GrabPointer();
-    if (mRetryKeyboardGrab)
-        GrabKeyboard();
 }
 
 void
@@ -4597,8 +4631,12 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
         pixman_region32_intersect(&intersectRegion,
                                   &newRegion, &existingRegion);
 
-        if (pixman_region32_equal(&intersectRegion, &existingRegion))
+        // If mClipRects is null we haven't set a clip rect yet, so we
+        // need to set the clip even if it is equal.
+        if (mClipRects &&
+            pixman_region32_equal(&intersectRegion, &existingRegion)) {
             return;
+        }
 
         if (!pixman_region32_equal(&intersectRegion, &newRegion)) {
             GetIntRects(intersectRegion, &intersectRects);
@@ -4818,53 +4856,12 @@ nsWindow::GrabPointer(void)
 }
 
 void
-nsWindow::GrabKeyboard(void)
-{
-    LOG(("GrabKeyboard %d\n", mRetryKeyboardGrab));
-
-    mRetryKeyboardGrab = PR_FALSE;
-
-    // If the window isn't visible, just set the flag to retry the
-    // grab.  When this window becomes visible, the grab will be
-    // retried.
-    if (!mHasMappedToplevel || mIsFullyObscured) {
-        LOG(("GrabKeyboard: window not visible\n"));
-        mRetryKeyboardGrab = PR_TRUE;
-        return;
-    }
-
-    // we need to grab the keyboard on the transient parent so that we
-    // don't end up with any focus events that end up on the parent
-    // window that will cause the popup to go away
-    GdkWindow *grabWindow;
-
-    if (mTransientParent)
-        grabWindow = GTK_WIDGET(mTransientParent)->window;
-    else if (mGdkWindow)
-        grabWindow = mGdkWindow;
-    else
-        return;
-
-    gint retval;
-    retval = gdk_keyboard_grab(grabWindow, TRUE, GDK_CURRENT_TIME);
-
-    if (retval != GDK_GRAB_SUCCESS) {
-        LOG(("GrabKeyboard: keyboard grab failed %d\n", retval));
-        gdk_pointer_ungrab(GDK_CURRENT_TIME);
-        mRetryKeyboardGrab = PR_TRUE;
-    }
-}
-
-void
 nsWindow::ReleaseGrabs(void)
 {
     LOG(("ReleaseGrabs\n"));
 
     mRetryPointerGrab = PR_FALSE;
-    mRetryKeyboardGrab = PR_FALSE;
-
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
-    gdk_keyboard_ungrab(GDK_CURRENT_TIME);
 }
 
 void
@@ -5259,10 +5256,10 @@ check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
 PRBool
 nsWindow::DragInProgress(void)
 {
-    // mLastDragMotionWindow means the drag arrow is over mozilla
+    // sLastDragMotionWindow means the drag arrow is over mozilla
     // sIsDraggingOutOf means the drag arrow is out of mozilla
     // both cases mean the dragging is happenning.
-    return (mLastDragMotionWindow || sIsDraggingOutOf);
+    return (sLastDragMotionWindow || sIsDraggingOutOf);
 }
 
 /* static */
@@ -6141,60 +6138,6 @@ initialize_prefs(void)
 }
 
 void
-nsWindow::ResetDragMotionTimer(GtkWidget *aWidget,
-                               GdkDragContext *aDragContext,
-                               gint aX, gint aY, guint aTime)
-{
-
-    // We have to be careful about ref ordering here.  if aWidget ==
-    // mDraMotionWidget be careful not to let the refcnt drop to zero.
-    // Same with the drag context.
-    if (aWidget)
-        g_object_ref(aWidget);
-    if (mDragMotionWidget)
-        g_object_unref(mDragMotionWidget);
-    mDragMotionWidget = aWidget;
-
-    if (aDragContext)
-        g_object_ref(aDragContext);
-    if (mDragMotionContext)
-        g_object_unref(mDragMotionContext);
-    mDragMotionContext = aDragContext;
-
-    mDragMotionX = aX;
-    mDragMotionY = aY;
-    mDragMotionTime = aTime;
-
-    // always clear the timer
-    if (mDragMotionTimerID) {
-        g_source_remove(mDragMotionTimerID);
-        mDragMotionTimerID = 0;
-        LOG(("*** canceled motion timer\n"));
-    }
-
-    // if no widget was passed in, just return instead of setting a new
-    // timer
-    if (!aWidget) {
-        return;
-    }
-
-    // otherwise we create a new timer
-    mDragMotionTimerID = g_timeout_add(100,
-                                       (GtkFunction)DragMotionTimerCallback,
-                                       this);
-}
-
-void
-nsWindow::FireDragMotionTimer(void)
-{
-    LOGDRAG(("nsWindow::FireDragMotionTimer(%p)\n", (void*)this));
-
-    OnDragMotionEvent(mDragMotionWidget, mDragMotionContext,
-                      mDragMotionX, mDragMotionY, mDragMotionTime,
-                      this);
-}
-
-void
 nsWindow::FireDragLeaveTimer(void)
 {
     LOGDRAG(("nsWindow::FireDragLeaveTimer(%p)\n", (void*)this));
@@ -6202,21 +6145,12 @@ nsWindow::FireDragLeaveTimer(void)
     mDragLeaveTimer = nsnull;
 
     // clean up any pending drag motion window info
-    if (mLastDragMotionWindow) {
-        nsRefPtr<nsWindow> kungFuDeathGrip = mLastDragMotionWindow;
+    if (sLastDragMotionWindow) {
+        nsRefPtr<nsWindow> kungFuDeathGrip = sLastDragMotionWindow;
         // send our leave signal
-        mLastDragMotionWindow->OnDragLeave();
-        mLastDragMotionWindow = 0;
+        sLastDragMotionWindow->OnDragLeave();
+        sLastDragMotionWindow = 0;
     }
-}
-
-/* static */
-guint
-nsWindow::DragMotionTimerCallback(gpointer aClosure)
-{
-    nsRefPtr<nsWindow> window = static_cast<nsWindow *>(aClosure);
-    window->FireDragMotionTimer();
-    return FALSE;
 }
 
 /* static */
@@ -6240,13 +6174,15 @@ get_inner_gdk_window (GdkWindow *aWindow,
         GList * child = g_list_nth(children, num - i - 1) ;
         if (child) {
             GdkWindow * childWindow = (GdkWindow *) child->data;
-            gdk_window_get_geometry (childWindow, &cx, &cy, &cw, &ch, &cd);
-            if ((cx < x) && (x < (cx + cw)) &&
-                (cy < y) && (y < (cy + ch)) &&
-                gdk_window_is_visible (childWindow)) {
-                return get_inner_gdk_window (childWindow,
-                                             x - cx, y - cy,
-                                             retx, rety);
+            if (get_window_for_gdk_window(childWindow)) {
+                gdk_window_get_geometry (childWindow, &cx, &cy, &cw, &ch, &cd);
+                if ((cx < x) && (x < (cx + cw)) &&
+                    (cy < y) && (y < (cy + ch)) &&
+                    gdk_window_is_visible (childWindow)) {
+                    return get_inner_gdk_window (childWindow,
+                                                 x - cx, y - cy,
+                                                 retx, rety);
+                }
             }
         }
     }
@@ -6714,4 +6650,22 @@ nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVert
                                  screenX, screenY, aEvent->time);
 
     return NS_OK;
+}
+
+void
+nsWindow::ClearCachedResources()
+{
+    if (mLayerManager &&
+        mLayerManager->GetBackendType() == LayerManager::LAYERS_BASIC) {
+        static_cast<BasicLayerManager*> (mLayerManager.get())->
+            ClearCachedResources();
+    }
+
+    GList* children = gdk_window_peek_children(mGdkWindow);
+    for (GList* list = children; list; list = list->next) {
+        nsWindow* window = get_window_for_gdk_window(GDK_WINDOW(list->data));
+        if (window) {
+            window->ClearCachedResources();
+        }
+    }
 }

@@ -69,8 +69,10 @@
 #include "jsautooplen.h"        // generated headers last
 #include "jsstaticcheck.h"
 
+#include "jsatominlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
+#include "jsscriptinlines.h"
 
 /* Allocation chunk counts, must be powers of two in general. */
 #define BYTECODE_CHUNK  256     /* code allocation increment */
@@ -94,6 +96,12 @@ EmitIndexOp(JSContext *cx, JSOp op, uintN index, JSCodeGenerator *cg);
 
 static JSBool
 EmitLeaveBlock(JSContext *cx, JSCodeGenerator *cg, JSOp op, JSObjectBox *box);
+
+void
+JSTreeContext::trace(JSTracer *trc)
+{
+    bindings.trace(trc);
+}
 
 JSCodeGenerator::JSCodeGenerator(Parser *parser,
                                  JSArenaPool *cpool, JSArenaPool *npool,
@@ -1322,10 +1330,10 @@ JSTreeContext::ensureSharpSlots()
         if (!sharpArrayAtom || !sharpDepthAtom)
             return false;
 
-        sharpSlotBase = fun()->u.i.nvars;
-        if (!fun()->addLocal(cx, sharpArrayAtom, JSLOCAL_VAR))
+        sharpSlotBase = bindings.countVars();
+        if (!bindings.addVariable(cx, sharpArrayAtom))
             return false;
-        if (!fun()->addLocal(cx, sharpDepthAtom, JSLOCAL_VAR))
+        if (!bindings.addVariable(cx, sharpDepthAtom))
             return false;
     } else {
         /*
@@ -1713,7 +1721,7 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
              * nor can prop be deleted.
              */
             if (cg->inFunction()) {
-                if (cg->fun()->lookupLocal(cx, atom, NULL) != JSLOCAL_NONE)
+                if (cg->bindings.hasBinding(cx, atom))
                     break;
             } else {
                 JS_ASSERT(cg->compileAndGo());
@@ -1896,7 +1904,7 @@ AdjustBlockSlot(JSContext *cx, JSCodeGenerator *cg, jsint slot)
 {
     JS_ASSERT((jsuint) slot < cg->maxStackDepth);
     if (cg->inFunction()) {
-        slot += cg->fun()->u.i.nvars;
+        slot += cg->bindings.countVars();
         if ((uintN) slot >= SLOTNO_LIMIT) {
             ReportCompileErrorNumber(cx, CG_TS(cg), NULL, JSREPORT_ERROR, JSMSG_TOO_MANY_LOCALS);
             slot = -1;
@@ -1967,110 +1975,32 @@ EmitLeaveBlock(JSContext *cx, JSCodeGenerator *cg, JSOp op,
 }
 
 /*
- * When eval is called from a function, the eval code or function code it
- * compiles may reference upvars that live in the eval-calling function. The
- * eval-invoked compiler does not have explicit definitions for these upvars
- * and we do not attempt to create them a-priori (by inspecting the function's
- * args and vars) -- we could, but we'd take an avoidable penalty for each
- * function local not referenced by any upvar. Instead, we map such upvars
- * lazily, growing upvarMap.vector by powers of two.
- *
- * This function knows that it is called with pn pointing to a PN_NAME-arity
- * node, and cg->parser->callerFrame having a non-null fun member, and the
- * static level of cg at least one greater than the eval-calling function's
- * static level.
- */
-static bool
-MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
-{
-    JSContext *cx = cg->parser->context;
-    JSFunction *fun = cg->parser->callerFrame->fun();
-    uintN upvarLevel = fun->u.i.script->staticLevel;
-
-    JSFunctionBox *funbox = cg->funbox;
-    if (funbox) {
-        /*
-         * Treat top-level function definitions as escaping (i.e., as funargs),
-         * required since we compile each such top level function or statement
-         * and throw away the AST, so we can't yet see all funarg uses of this
-         * function being compiled (cg->funbox->object). See bug 493177.
-         */
-        if (funbox->level == fun->u.i.script->staticLevel + 1U &&
-            !(((JSFunction *) funbox->object)->flags & JSFUN_LAMBDA)) {
-            JS_ASSERT_IF(cx->options & JSOPTION_ANONFUNFIX,
-                         ((JSFunction *) funbox->object)->atom);
-            return true;
-        }
-
-        while (funbox->level >= upvarLevel) {
-            if (funbox->node->pn_dflags & PND_FUNARG)
-                return true;
-            funbox = funbox->parent;
-            if (!funbox)
-                break;
-        }
-    }
-
-    JSAtom *atom = pn->pn_atom;
-
-    uintN index;
-    JSLocalKind localKind = fun->lookupLocal(cx, atom, &index);
-    if (localKind == JSLOCAL_NONE)
-        return true;
-
-    JS_ASSERT(cg->staticLevel > upvarLevel);
-    if (cg->staticLevel >= UpvarCookie::UPVAR_LEVEL_LIMIT)
-        return true;
-
-    JSAtomListElement *ale = cg->upvarList.lookup(atom);
-    if (!ale) {
-        if (cg->inFunction() && !cg->fun()->addLocal(cx, atom, JSLOCAL_UPVAR))
-            return false;
-
-        ale = cg->upvarList.add(cg->parser, atom);
-        if (!ale)
-            return false;
-        JS_ASSERT(ALE_INDEX(ale) == cg->upvarList.count - 1);
-
-        UpvarCookie *vector = cg->upvarMap.vector;
-        uint32 length = cg->upvarMap.length;
-
-        JS_ASSERT(ALE_INDEX(ale) <= length);
-        if (ALE_INDEX(ale) == length) {
-            length = 2 * JS_MAX(2, length);
-            vector = reinterpret_cast<UpvarCookie *>(cx->realloc(vector, length * sizeof *vector));
-            if (!vector)
-                return false;
-            cg->upvarMap.vector = vector;
-            cg->upvarMap.length = length;
-        }
-
-        if (localKind != JSLOCAL_ARG)
-            index += fun->nargs;
-        JS_ASSERT(index < JS_BIT(16));
-
-        uintN skip = cg->staticLevel - upvarLevel;
-        vector[ALE_INDEX(ale)].set(skip, index);
-    }
-
-    pn->pn_op = JSOP_GETUPVAR;
-    pn->pn_cookie.set(cg->staticLevel, uint16(ALE_INDEX(ale)));
-    pn->pn_dflags |= PND_BOUND;
-    return true;
-}
-
-/*
  * Try to convert a *NAME op to a *GNAME op, which optimizes access to
  * undeclared globals. Return true if a conversion was made.
  *
- * This conversion is not made if we are in strict mode, because the
- * access to an undeclared global would be an error.
+ * This conversion is not made if we are in strict mode.  In eval code nested
+ * within (strict mode) eval code, access to an undeclared "global" might
+ * merely be to a binding local to that outer eval:
+ *
+ *   "use strict";
+ *   var x = "global";
+ *   eval('var x = "eval"; eval("x");'); // 'eval', not 'global'
+ *
+ * Outside eval code, access to an undeclared global is a strict mode error:
+ *
+ *   "use strict";
+ *   function foo()
+ *   {
+ *     undeclared = 17; // throws ReferenceError
+ *   }
+ *   foo();
  */
 static bool
 TryConvertToGname(JSCodeGenerator *cg, JSParseNode *pn, JSOp *op)
 {
     if (cg->compileAndGo() && 
         cg->compiler()->globalScope->globalObj &&
+        !cg->mightAliasLocals() &&
         !pn->isDeoptimized() &&
         !(cg->flags & TCF_STRICT_MODE_CODE)) { 
         switch (*op) {
@@ -2080,9 +2010,9 @@ TryConvertToGname(JSCodeGenerator *cg, JSParseNode *pn, JSOp *op)
           case JSOP_NAMEINC:  *op = JSOP_GNAMEINC; break;
           case JSOP_DECNAME:  *op = JSOP_DECGNAME; break;
           case JSOP_NAMEDEC:  *op = JSOP_GNAMEDEC; break;
+          case JSOP_FORNAME:  *op = JSOP_FORGNAME; break;
           case JSOP_SETCONST:
           case JSOP_DELNAME:
-          case JSOP_FORNAME:
             /* Not supported. */
             return false;
           default: JS_NOT_REACHED("gname");
@@ -2090,6 +2020,73 @@ TryConvertToGname(JSCodeGenerator *cg, JSParseNode *pn, JSOp *op)
         return true;
     }
     return false;
+}
+
+// Binds a global, given a |dn| that is known to have the PND_GVAR bit, and a pn
+// that is |dn| or whose definition is |dn|. |pn->pn_cookie| is an outparam
+// that will be free (meaning no binding), or a slot number.
+static bool
+BindKnownGlobal(JSContext *cx, JSCodeGenerator *cg, JSParseNode *dn, JSParseNode *pn, JSAtom *atom)
+{
+    // Cookie is an outparam; make sure caller knew to clear it.
+    JS_ASSERT(pn->pn_cookie.isFree());
+
+    if (cg->mightAliasLocals())
+        return true;
+
+    GlobalScope *globalScope = cg->compiler()->globalScope;
+
+    uint32 index;
+    if (dn->pn_cookie.isFree()) {
+        // The definition wasn't bound, so find its atom's index in the
+        // mapping of defined globals.
+        JSAtomListElement *ale = globalScope->names.lookup(atom);
+        index = ALE_INDEX(ale);
+    } else {
+        JSCodeGenerator *globalcg = globalScope->cg;
+
+        // If the definition is bound, and we're in the same cg, we can re-use
+        // its cookie.
+        if (globalcg == cg) {
+            pn->pn_cookie = dn->pn_cookie;
+            pn->pn_dflags |= PND_BOUND;
+            return true;
+        }
+
+        // Otherwise, find the atom's index by using the originating cg's
+        // global use table.
+        index = globalcg->globalUses[dn->pn_cookie.asInteger()].slot;
+    }
+
+    if (!cg->addGlobalUse(atom, index, &pn->pn_cookie))
+        return false;
+
+    if (!pn->pn_cookie.isFree())
+        pn->pn_dflags |= PND_BOUND;
+
+    return true;
+}
+
+// See BindKnownGlobal()'s comment.
+static bool
+BindGlobal(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn, JSAtom *atom)
+{
+    pn->pn_cookie.makeFree();
+
+    JSDefinition *dn;
+    if (pn->pn_used) {
+        dn = pn->pn_lexdef;
+    } else {
+        if (!pn->pn_defn)
+            return true;
+        dn = (JSDefinition *)pn;
+    }
+
+    // Only optimize for defined globals.
+    if (!dn->isGlobal())
+        return true;
+
+    return BindKnownGlobal(cx, cg, dn, pn, atom);
 }
 
 /*
@@ -2182,6 +2179,30 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             pn->pn_op = op = JSOP_NAME;
     }
 
+    if (dn->isGlobal()) {
+        if (op == JSOP_NAME) {
+            /*
+             * If the definition is a defined global, not potentially aliased
+             * by a local variable, and not mutating the variable, try and
+             * optimize to a fast, unguarded global access.
+             */
+            if (!BindKnownGlobal(cx, cg, dn, pn, atom))
+                return JS_FALSE;
+            if (!pn->pn_cookie.isFree()) {
+                pn->pn_op = JSOP_GETGLOBAL;
+                return JS_TRUE;
+            }
+        }
+
+        /*
+         * The locally stored cookie here should really come from |pn|, not
+         * |dn|. For example, we could have a SETGNAME op's lexdef be a
+         * GETGLOBAL op, and their cookies have very different meanings. As
+         * a workaround, just make the cookie free.
+         */
+        cookie.makeFree();
+    }
+
     if (cookie.isFree()) {
         JSStackFrame *caller = cg->parser->callerFrame;
         if (caller) {
@@ -2210,67 +2231,15 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_TRUE;
             }
 
-            if (!caller->isFunctionFrame())
-                return JS_TRUE;
-
             /*
-             * Make sure the variable object used by the compiler to initialize
-             * parent links matches the caller's varobj. Compile-n-go compiler-
-             * created function objects have the top-level cg's scopeChain set
-             * as their parent by Parser::newFunction.
+             * Out of tricks, so we must rely on PICs to optimize named
+             * accesses from direct eval called from function code.
              */
-            JSObject *scopeobj = cg->inFunction()
-                                 ? FUN_OBJECT(cg->fun())->getParent()
-                                 : cg->scopeChain();
-            if (scopeobj != cg->parser->callerVarObj)
-                return JS_TRUE;
-
-            /*
-             * We are compiling eval or debug script inside a function frame
-             * and the scope chain matches the function's variable object.
-             * Optimize access to function's arguments and variable and the
-             * arguments object.
-             */
-            if (op != JSOP_NAME)
-                return JS_TRUE;
-
-            /*
-             * It is illegal to add upvars to heavyweight functions (and
-             * unnecessary, since the optimization avoids creating call
-             * objects). Take the following code as an eval string:
-             *
-             *   (function () {
-             *       $(init);
-             *       function init() {
-             *           $();
-             *       }
-             *    })();
-             *
-             * The first instance of "$" cannot be an upvar, because the
-             * outermost lambda is on "init"'s scope chain, which escapes.
-             *
-             * A similar restriction exists for upvars which do not cross
-             * eval (see the end of BindNameToSlot and bug 616762).
-             */
-            if (cg->flags & TCF_FUN_HEAVYWEIGHT)
-                return JS_TRUE;
-
-            /*
-             * Generator functions may be resumed from any call stack, which
-             * defeats the display optimization to static link searching used
-             * by JSOP_{GET,CALL}UPVAR.
-             */
-            JSFunction *fun = cg->parser->callerFrame->fun();
-            JS_ASSERT(cg->staticLevel >= fun->u.i.script->staticLevel);
-            unsigned skip = cg->staticLevel - fun->u.i.script->staticLevel;
-            if (cg->skipSpansGenerator(skip))
-                return JS_TRUE;
-
-            return MakeUpvarForEval(pn, cg);
+            return JS_TRUE;
         }
 
         /* Optimize accesses to undeclared globals. */
-        if (!TryConvertToGname(cg, pn, &op))
+        if (!cg->mightAliasLocals() && !TryConvertToGname(cg, pn, &op))
             return JS_TRUE;
 
         ale = cg->atomList.add(cg->parser, atom);
@@ -2283,92 +2252,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         return JS_TRUE;
     }
 
-    if (dn->pn_dflags & PND_GVAR) {
-        /*
-         * JSOP_DEFFUN could introduce a shadowing definition, so if it
-         * is present, we can't optimize to JSOP_GETGLOBAL.
-         */
-        if (cg->mightAliasLocals())
-            return JS_TRUE;
-
-        switch (op) {
-          case JSOP_NAME:     op = JSOP_GETGLOBAL; break;
-          case JSOP_SETNAME:  op = JSOP_SETGLOBAL; break;
-          case JSOP_INCNAME:  op = JSOP_INCGLOBAL; break;
-          case JSOP_NAMEINC:  op = JSOP_GLOBALINC; break;
-          case JSOP_DECNAME:  op = JSOP_DECGLOBAL; break;
-          case JSOP_NAMEDEC:  op = JSOP_GLOBALDEC; break;
-          case JSOP_FORNAME:  op = JSOP_FORGLOBAL; break;
-          case JSOP_SETCONST:
-          case JSOP_DELNAME:
-            /* Not supported. */
-            return JS_TRUE;
-          default: JS_NOT_REACHED("gvar");
-        }
-
-        JSCodeGenerator *globalCg = cg->compiler()->globalScope->cg;
-        if (globalCg != cg) {
-            uint32 slot = globalCg->globalUses[cookie.asInteger()].slot;
-
-            /* Fall back to NAME if we can't add a slot. */
-            if (!cg->addGlobalUse(atom, slot, &cookie))
-                return JS_FALSE;
-
-            if (cookie.isFree())
-                return JS_TRUE;
-        }
-        pn->pn_op = op;
-        pn->pn_cookie.set(cookie);
-        pn->pn_dflags |= PND_BOUND;
-        return JS_TRUE;
-    }
-
     uint16 level = cookie.level();
     JS_ASSERT(cg->staticLevel >= level);
-
-    /*
-     * A JSDefinition witnessed as a declaration by the parser cannot be an
-     * upvar, unless it is the degenerate kind of upvar selected above (in the
-     * code before the PND_GVAR test) for the special case of compile-and-go
-     * code generated from eval called from a function, where the eval code
-     * uses local vars defined in the function. We detect this upvar-for-eval
-     * case by checking dn's op.
-     */
-    if (PN_OP(dn) == JSOP_GETUPVAR) {
-        JS_ASSERT(cg->staticLevel >= level);
-        if (op != JSOP_NAME)
-            return JS_TRUE;
-
-#ifdef DEBUG
-        JSStackFrame *caller = cg->parser->callerFrame;
-#endif
-        JS_ASSERT(caller->isScriptFrame());
-
-        JSTreeContext *tc = cg;
-        while (tc->staticLevel != level)
-            tc = tc->parent;
-
-        JSCodeGenerator *evalcg = tc->asCodeGenerator();
-        JS_ASSERT(evalcg->compileAndGo());
-        JS_ASSERT(caller->isFunctionFrame());
-        JS_ASSERT(cg->parser->callerVarObj == evalcg->scopeChain());
-
-        /*
-         * Don't generate upvars on the left side of a for loop. See
-         * bug 470758 and bug 520513.
-         */
-        if (evalcg->flags & TCF_IN_FOR_INIT)
-            return JS_TRUE;
-
-        if (cg->staticLevel == level) {
-            pn->pn_op = JSOP_GETUPVAR;
-            pn->pn_cookie = cookie;
-            pn->pn_dflags |= PND_BOUND;
-            return JS_TRUE;
-        }
-
-        return MakeUpvarForEval(pn, cg);
-    }
 
     const uintN skip = cg->staticLevel - level;
     if (skip != 0) {
@@ -2388,35 +2273,14 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (cg->flags & TCF_FUN_HEAVYWEIGHT)
             return JS_TRUE;
 
-        if (cg->fun()->isFlatClosure()) {
-            op = JSOP_GETFCSLOT;
-        } else {
-            /*
-             * The function we're compiling may not be heavyweight, but if it
-             * escapes as a funarg, we can't use JSOP_GETUPVAR/JSOP_CALLUPVAR.
-             * Parser::analyzeFunctions has arranged for this function's
-             * enclosing functions to be heavyweight, so we can safely stick
-             * with JSOP_NAME/JSOP_CALLNAME.
-             */
-            if (cg->funbox->node->pn_dflags & PND_FUNARG)
-                return JS_TRUE;
-
-            /*
-             * Generator functions may be resumed from any call stack, which
-             * defeats the display optimization to static link searching used
-             * by JSOP_{GET,CALL}UPVAR.
-             */
-            if (cg->skipSpansGenerator(skip))
-                return JS_TRUE;
-
-            op = JSOP_GETUPVAR;
-        }
+        if (!cg->fun()->isFlatClosure())
+            return JS_TRUE;
 
         ale = cg->upvarList.lookup(atom);
         if (ale) {
             index = ALE_INDEX(ale);
         } else {
-            if (!cg->fun()->addLocal(cx, atom, JSLOCAL_UPVAR))
+            if (!cg->bindings.addUpvar(cx, atom))
                 return JS_FALSE;
 
             ale = cg->upvarList.add(cg->parser, atom);
@@ -2451,7 +2315,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             vector[index].set(skip, slot);
         }
 
-        pn->pn_op = op;
+        pn->pn_op = JSOP_GETFCSLOT;
         JS_ASSERT((index & JS_BITMASK(16)) == index);
         pn->pn_cookie.set(0, index);
         pn->pn_dflags |= PND_BOUND;
@@ -2500,15 +2364,28 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             JS_ASSERT((cg->fun()->flags & JSFUN_LAMBDA) && atom == cg->fun()->atom);
 
             /*
-             * Leave pn->pn_op == JSOP_NAME if cg->fun() is heavyweight, as we
-             * cannot be sure cg->fun() is not something of the form:
+             * Leave pn->pn_op == JSOP_NAME if cg->fun is heavyweight to
+             * address two cases: a new binding introduced by eval, and
+             * assignment to the name in strict mode.
              *
-             *   var ff = (function f(s) { eval(s); return f; });
+             *   var fun = (function f(s) { eval(s); return f; });
+             *   assertEq(fun("var f = 42"), 42);
              *
-             * where a caller invokes ff("var f = 42"). The result returned for
-             * such an invocation must be 42, since the callee name is
-             * lexically bound in an outer declarative environment from the
-             * function's activation. See jsfun.cpp:call_resolve.
+             * ECMAScript specifies that a function expression's name is bound
+             * in a lexical environment distinct from that used to bind its
+             * named parameters, the arguments object, and its variables.  The
+             * new binding for "var f = 42" shadows the binding for the
+             * function itself, so the name of the function will not refer to
+             * the function.
+             *
+             *    (function f() { "use strict"; f = 12; })();
+             *
+             * Outside strict mode, assignment to a function expression's name
+             * has no effect.  But in strict mode, this attempt to mutate an
+             * immutable binding must throw a TypeError.  We implement this by
+             * not optimizing such assignments and by marking such functions as
+             * heavyweight, ensuring that the function name is represented in
+             * the scope chain so that assignment will throw a TypeError.
              */
             JS_ASSERT(op != JSOP_DELNAME);
             if (!(cg->flags & TCF_FUN_HEAVYWEIGHT)) {
@@ -2816,9 +2693,6 @@ EmitNameOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             break;
           case JSOP_GETLOCAL:
             op = JSOP_CALLLOCAL;
-            break;
-          case JSOP_GETUPVAR:
-            op = JSOP_CALLUPVAR;
             break;
           case JSOP_GETFCSLOT:
             op = JSOP_CALLFCSLOT;
@@ -3755,6 +3629,13 @@ bad:
 JSBool
 js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
 {
+    /*
+     * The decompiler has assumptions about what may occur immediately after
+     * script->main (e.g., in the case of destructuring params). Thus, put the
+     * following ops into the range [script->code, script->main). Note:
+     * execution starts from script->code, so this has no semantic effect.
+     */
+
     if (cg->flags & TCF_FUN_IS_GENERATOR) {
         /* JSOP_GENERATOR must be the first instruction. */
         CG_SWITCH_TO_PROLOG(cg);
@@ -3764,6 +3645,13 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
         CG_SWITCH_TO_MAIN(cg);
     }
 
+    /*
+     * Strict mode functions' arguments objects copy initial parameter values.
+     * We create arguments objects lazily -- but that doesn't work for strict
+     * mode functions where a parameter might be modified and arguments might
+     * be accessed. For such functions we synthesize an access to arguments to
+     * initialize it with the original parameter values.
+     */
     if (cg->needsEagerArguments()) {
         CG_SWITCH_TO_PROLOG(cg);
         if (js_Emit1(cx, cg, JSOP_ARGUMENTS) < 0 || js_Emit1(cx, cg, JSOP_POP) < 0)
@@ -3772,8 +3660,10 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
     }
 
     if (cg->flags & TCF_FUN_UNBRAND_THIS) {
+        CG_SWITCH_TO_PROLOG(cg);
         if (js_Emit1(cx, cg, JSOP_UNBRANDTHIS) < 0)
             return false;
+        CG_SWITCH_TO_MAIN(cg);
     }
 
     return js_EmitTree(cx, cg, body) &&
@@ -3837,7 +3727,7 @@ MaybeEmitVarDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
 
     if (JOF_OPTYPE(pn->pn_op) == JOF_ATOM &&
         (!cg->inFunction() || (cg->flags & TCF_FUN_HEAVYWEIGHT)) &&
-        js_CodeSpec[pn->pn_op].type() != JOF_GLOBAL)
+        !(pn->pn_dflags & PND_GVAR))
     {
         CG_SWITCH_TO_PROLOG(cg);
         if (!UpdateLineNumberNotes(cx, cg, pn->pn_pos.begin.lineno))
@@ -3848,7 +3738,7 @@ MaybeEmitVarDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
 
     if (cg->inFunction() &&
         JOF_OPTYPE(pn->pn_op) == JOF_LOCAL &&
-        pn->pn_cookie.slot() < cg->fun()->u.i.nvars &&
+        pn->pn_cookie.slot() < cg->bindings.countVars() &&
         cg->shouldNoteClosedName(pn))
     {
         if (!cg->closedVars.append(pn->pn_cookie.slot()))
@@ -3959,7 +3849,6 @@ EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           }
 
           case JSOP_SETARG:
-          case JSOP_SETGLOBAL:
           {
             jsuint slot = pn->pn_cookie.asInteger();
             EMIT_UINT16_IMM_OP(PN_OP(pn), slot);
@@ -4520,6 +4409,113 @@ EmitEndInit(JSContext *cx, JSCodeGenerator *cg, uint32 count)
     return js_Emit1(cx, cg, JSOP_ENDINIT) >= 0;
 }
 
+bool
+JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
+{
+    switch (pn_type) {
+      case TOK_NUMBER:
+        vp->setNumber(pn_dval);
+        return true;
+      case TOK_STRING:
+        vp->setString(ATOM_TO_STRING(pn_atom));
+        return true;
+      case TOK_PRIMARY:
+        switch (pn_op) {
+          case JSOP_NULL:
+            vp->setNull();
+            return true;
+          case JSOP_FALSE:
+            vp->setBoolean(false);
+            return true;
+          case JSOP_TRUE:
+            vp->setBoolean(true);
+            return true;
+          default:
+            JS_NOT_REACHED("Unexpected node");
+            return false;
+        }
+      case TOK_RB: {
+        JS_ASSERT((pn_op == JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST));
+ 
+        JSObject *obj = NewDenseAllocatedArray(cx, pn_count);
+        if (!obj || !obj->ensureSlots(cx, pn_count))
+            return false;
+
+        /* Constant initializers do not have holes. */
+        obj->setDenseArrayInitializedLength(pn_count);
+
+        unsigned idx = 0;
+        for (JSParseNode *pn = pn_head; pn; idx++, pn = pn->pn_next) {
+            Value value;
+            if (!pn->getConstantValue(cx, strictChecks, &value))
+                return false;
+            obj->setDenseArrayElement(idx, value);
+        }
+        JS_ASSERT(idx == pn_count);
+
+        vp->setObject(*obj);
+        return true;
+      }
+      case TOK_RC: {
+        JS_ASSERT((pn_op == JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST));
+
+        gc::FinalizeKind kind = GuessObjectGCKind(pn_count, false);
+        JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+        if (!obj)
+            return false;
+
+        for (JSParseNode *pn = pn_head; pn; pn = pn->pn_next) {
+            Value value;
+            if (!pn->pn_right->getConstantValue(cx, strictChecks, &value))
+                return false;
+
+            JSParseNode *pnid = pn->pn_left;
+            if (pnid->pn_type == TOK_NUMBER) {
+                Value idvalue = NumberValue(pnid->pn_dval);
+                jsid id;
+                if (idvalue.isInt32() && INT_FITS_IN_JSID(idvalue.toInt32()))
+                    id = INT_TO_JSID(idvalue.toInt32());
+                else if (!js_InternNonIntElementId(cx, obj, idvalue, &id))
+                    return false;
+                if (!obj->defineProperty(cx, id, value, NULL, NULL, JSPROP_ENUMERATE))
+                    return false;
+            } else {
+                JS_ASSERT(pnid->pn_type == TOK_NAME ||
+                          pnid->pn_type == TOK_STRING);
+                jsid id = ATOM_TO_JSID(pnid->pn_atom);
+                if (!((pnid->pn_atom == cx->runtime->atomState.protoAtom)
+                      ? js_SetPropertyHelper(cx, obj, id, 0, &value, strictChecks)
+                      : js_DefineNativeProperty(cx, obj, id, value, NULL, NULL,
+                                                JSPROP_ENUMERATE, 0, 0, NULL, 0))) {
+                    return false;
+                }
+            }
+        }
+
+        vp->setObject(*obj);
+        return true;
+      }
+      default:
+        JS_NOT_REACHED("Unexpected node");
+    }
+    return false;
+}
+
+static bool
+EmitSingletonInitialiser(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+{
+    Value value;
+    if (!pn->getConstantValue(cx, cg->needStrictChecks(), &value))
+        return false;
+
+    JS_ASSERT(value.isObject());
+    JSObjectBox *objbox = cg->parser->newObjectBox(&value.toObject());
+    if (!objbox)
+        return false;
+
+    return EmitObjectOp(cx, objbox, JSOP_OBJECT, cg);
+}
+
 /* See the SRC_FOR source note offsetBias comments later in this file. */
 JS_STATIC_ASSERT(JSOP_NOP_LENGTH == 1);
 JS_STATIC_ASSERT(JSOP_POP_LENGTH == 1);
@@ -4613,10 +4609,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (!cg2->init())
             return JS_FALSE;
 
-        cg2->flags = pn->pn_funbox->tcflags | TCF_COMPILING | TCF_IN_FUNCTION;
+        cg2->flags = pn->pn_funbox->tcflags | TCF_COMPILING | TCF_IN_FUNCTION |
+                     (cg->flags & TCF_FUN_MIGHT_ALIAS_LOCALS);
+        cg2->bindings.transfer(cx, &pn->pn_funbox->bindings);
 #if JS_HAS_SHARP_VARS
         if (cg2->flags & TCF_HAS_SHARPS) {
-            cg2->sharpSlotBase = fun->sharpSlotBase(cx);
+            cg2->sharpSlotBase = cg2->bindings.sharpSlotBase(cx);
             if (cg2->sharpSlotBase < 0)
                 return JS_FALSE;
         }
@@ -4673,6 +4671,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         if (!cg->inFunction()) {
             JS_ASSERT(!cg->topStmt);
+            if (!BindGlobal(cx, cg, pn, fun->atom))
+                return false;
             if (pn->pn_cookie.isFree()) {
                 CG_SWITCH_TO_PROLOG(cg);
                 op = FUN_FLAT_CLOSURE(fun) ? JSOP_DEFFUN_FC : JSOP_DEFFUN;
@@ -4689,13 +4689,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
         } else {
 #ifdef DEBUG
-            JSLocalKind localKind =
+            BindingKind kind =
 #endif
-                cg->fun()->lookupLocal(cx, fun->atom, &slot);
-            JS_ASSERT(localKind == JSLOCAL_VAR || localKind == JSLOCAL_CONST);
+                cg->bindings.lookup(cx, fun->atom, &slot);
+            JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
             JS_ASSERT(index < JS_BIT(20));
             pn->pn_index = index;
-            op = FUN_FLAT_CLOSURE(fun) ? JSOP_DEFLOCALFUN_FC : JSOP_DEFLOCALFUN;
+            op = fun->isFlatClosure() ? JSOP_DEFLOCALFUN_FC : JSOP_DEFLOCALFUN;
             if (pn->isClosed() &&
                 !cg->callsEval() &&
                 !cg->closedVars.append(pn->pn_cookie.slot())) {
@@ -5038,6 +5038,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 /* FALL THROUGH */
 
               case TOK_NAME:
+              {
                 /*
                  * Always annotate JSOP_FORLOCAL if given input of the form
                  * 'for (let x in * o)' -- the decompiler must not hoist the
@@ -5057,36 +5058,46 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                                    : SRC_DECL_LET) < 0) {
                     return JS_FALSE;
                 }
-                if (!pn3->pn_cookie.isFree()) {
+                UpvarCookie cookie = pn3->pn_cookie;
+                if (!cookie.isFree()) {
                     op = PN_OP(pn3);
                     switch (op) {
-                      case JSOP_GETARG:   /* FALL THROUGH */
-                      case JSOP_SETARG:   op = JSOP_FORARG; break;
-                      case JSOP_GETLOCAL: /* FALL THROUGH */
-                      case JSOP_SETLOCAL: op = JSOP_FORLOCAL; break;
-                      case JSOP_GETGLOBAL: /* FALL THROUGH */
-                      case JSOP_SETGLOBAL: op = JSOP_FORGLOBAL; break;
-                      default:            JS_ASSERT(0);
+                      case JSOP_GETARG:
+                      case JSOP_SETARG:
+                        op = JSOP_FORARG;
+                        break;
+                      case JSOP_GETLOCAL:
+                      case JSOP_SETLOCAL:
+                        op = JSOP_FORLOCAL;
+                        break;
+                      case JSOP_GETGLOBAL:
+                        op = JSOP_FORGNAME;
+                        cookie.makeFree();
+                        break;
+                      default:
+                        JS_NOT_REACHED("unexpected opcode");
                     }
                 } else {
                     pn3->pn_op = JSOP_FORNAME;
                     if (!BindNameToSlot(cx, cg, pn3))
                         return JS_FALSE;
                     op = PN_OP(pn3);
+                    cookie = pn3->pn_cookie;
                 }
                 if (pn3->isConst()) {
                     ReportCompileErrorNumber(cx, CG_TS(cg), pn3, JSREPORT_ERROR,
                                              JSMSG_BAD_FOR_LEFTSIDE);
                     return JS_FALSE;
                 }
-                if (!pn3->pn_cookie.isFree()) {
-                    atomIndex = (jsatomid) pn3->pn_cookie.asInteger();
+                if (!cookie.isFree()) {
+                    atomIndex = (jsatomid) cookie.asInteger();
                     EMIT_UINT16_IMM_OP(op, atomIndex);
                 } else {
                     if (!EmitAtomOp(cx, pn3, op, cg))
                         return JS_FALSE;
                 }
                 break;
+              }
 
               case TOK_DOT:
                 /*
@@ -5914,6 +5925,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * calling JS_Compile* to suppress JSOP_POPV.
              */
             useful = wantval = !(cg->flags & (TCF_IN_FUNCTION | TCF_NO_SCRIPT_RVAL));
+
+            /* Don't eliminate expressions with side effects. */
             if (!useful) {
                 if (!CheckSideEffects(cx, cg, pn2, &useful))
                     return JS_FALSE;
@@ -5926,14 +5939,21 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * labeled compound statement.
              */
             if (!useful &&
-                (!cg->topStmt ||
-                 cg->topStmt->type != STMT_LABEL ||
-                 cg->topStmt->update < CG_OFFSET(cg))) {
-                CG_CURRENT_LINE(cg) = pn2->pn_pos.begin.lineno;
-                if (!ReportCompileErrorNumber(cx, CG_TS(cg), pn2,
-                                              JSREPORT_WARNING | JSREPORT_STRICT,
-                                              JSMSG_USELESS_EXPR)) {
-                    return JS_FALSE;
+                cg->topStmt &&
+                cg->topStmt->type == STMT_LABEL &&
+                cg->topStmt->update >= CG_OFFSET(cg)) {
+                useful = true;
+            }
+
+            if (!useful) {
+                /* Don't complain about directive prologue members; just don't emit their code. */
+                if (!pn->isDirectivePrologueMember()) {
+                    CG_CURRENT_LINE(cg) = pn2->pn_pos.begin.lineno;
+                    if (!ReportCompileErrorNumber(cx, CG_TS(cg), pn2,
+                                                  JSREPORT_WARNING | JSREPORT_STRICT,
+                                                  JSMSG_USELESS_EXPR)) {
+                        return JS_FALSE;
+                    }
                 }
             } else {
                 op = wantval ? JSOP_POPV : JSOP_POP;
@@ -6108,13 +6128,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     if (js_Emit1(cx, cg, JSOP_DUP) < 0)
                         return JS_FALSE;
                     EMIT_INDEX_OP(JSOP_GETXPROP, atomIndex);
+                } else if (PN_OP(pn2) == JSOP_SETGNAME) {
+                    if (!BindGlobal(cx, cg, pn2, pn2->pn_atom))
+                        return JS_FALSE;
+                    if (pn2->pn_cookie.isFree())
+                        EmitAtomOp(cx, pn2, JSOP_GETGNAME, cg);
+                    else
+                        EMIT_UINT16_IMM_OP(JSOP_GETGLOBAL, pn2->pn_cookie.asInteger());
                 } else {
-                    JS_ASSERT(PN_OP(pn2) != JSOP_GETUPVAR);
-                    EMIT_UINT16_IMM_OP((PN_OP(pn2) == JSOP_SETGNAME)
-                                       ? JSOP_GETGNAME
-                                       : (PN_OP(pn2) == JSOP_SETGLOBAL)
-                                       ? JSOP_GETGLOBAL
-                                       : (PN_OP(pn2) == JSOP_SETARG)
+                    EMIT_UINT16_IMM_OP((PN_OP(pn2) == JSOP_SETARG)
                                        ? JSOP_GETARG
                                        : JSOP_GETLOCAL,
                                        atomIndex);
@@ -6818,6 +6840,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 #endif /* JS_HAS_GENERATORS */
 
+        if (!cg->hasSharps() && !(pn->pn_xflags & PNX_NONCONST) && cg->checkSingletonContext()) {
+            if (!EmitSingletonInitialiser(cx, cg, pn))
+                return JS_FALSE;
+            break;
+        }
+
         /* Use the slower NEWINIT for arrays in scripts containing sharps. */
         if (cg->hasSharps()) {
             if (!EmitNewInit(cx, cg, JSProto_Array, pn, sharpnum))
@@ -6871,6 +6899,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
         }
 #endif
+
+        if (!cg->hasSharps() && !(pn->pn_xflags & PNX_NONCONST) && cg->checkSingletonContext()) {
+            if (!EmitSingletonInitialiser(cx, cg, pn))
+                return JS_FALSE;
+            break;
+        }
+
         /*
          * Emit code for {p:a, '%q':b, 2:c} that is equivalent to constructing
          * a new object and in source order evaluating each property value and
@@ -6952,10 +6987,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
                 if (obj) {
                     JS_ASSERT(!obj->inDictionaryMode());
-                    JSProperty *prop = NULL;
-                    if (!js_DefineNativeProperty(cx, obj,
-                                                 ATOM_TO_JSID(pn3->pn_atom), UndefinedValue(), NULL, NULL,
-                                                 JSPROP_ENUMERATE, 0, 0, &prop, 0)) {
+                    if (!js_DefineNativeProperty(cx, obj, ATOM_TO_JSID(pn3->pn_atom),
+                                                 UndefinedValue(), NULL, NULL,
+                                                 JSPROP_ENUMERATE, 0, 0, NULL)) {
                         return JS_FALSE;
                     }
                     if (obj->inDictionaryMode())
@@ -7043,29 +7077,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
 
       case TOK_REGEXP: {
-        /*
-         * If the regexp's script is one-shot and the regexp is not used in a
-         * loop, we can avoid the extra fork-on-exec costs of JSOP_REGEXP by
-         * selecting JSOP_OBJECT. Otherwise, to avoid incorrect proto, parent,
-         * and lastIndex sharing, select JSOP_REGEXP.
-         */
         JS_ASSERT(pn->pn_op == JSOP_REGEXP);
-        bool singleton = !(cg->inFunction() ? cg->fun() : cg->scopeChain()) && cg->compileAndGo();
-        if (singleton) {
-            for (JSStmtInfo *stmt = cg->topStmt; stmt; stmt = stmt->down) {
-                if (STMT_IS_LOOP(stmt)) {
-                    singleton = false;
-                    break;
-                }
-            }
-        }
-        if (singleton) {
-            ok = EmitObjectOp(cx, pn->pn_objbox, JSOP_OBJECT, cg);
-        } else {
-            ok = EmitIndexOp(cx, JSOP_REGEXP,
-                             cg->regexpList.index(pn->pn_objbox),
-                             cg);
-        }
+        ok = EmitIndexOp(cx, JSOP_REGEXP,
+                         cg->regexpList.index(pn->pn_objbox),
+                         cg);
         break;
       }
 
@@ -7077,12 +7092,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
         break;
 
-#if JS_HAS_DEBUGGER_KEYWORD
       case TOK_DEBUGGER:
         if (js_Emit1(cx, cg, JSOP_DEBUGGER) < 0)
             return JS_FALSE;
         break;
-#endif /* JS_HAS_DEBUGGER_KEYWORD */
 
 #if JS_HAS_XML_SUPPORT
       case TOK_XMLELEM:

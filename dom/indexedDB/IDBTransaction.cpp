@@ -134,6 +134,9 @@ IDBTransaction::IDBTransaction()
   mSavepointCount(0),
   mAborted(false),
   mCreating(false)
+#ifdef DEBUG
+  , mFiredCompleteOrAbort(false)
+#endif
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
@@ -145,6 +148,7 @@ IDBTransaction::~IDBTransaction()
   NS_ASSERTION(!mSavepointCount, "Should have released them all!");
   NS_ASSERTION(!mConnection, "Should have called CommitOrRollback!");
   NS_ASSERTION(!mCreating, "Should have been cleared already!");
+  NS_ASSERTION(mFiredCompleteOrAbort, "Should have fired event!");
 
   if (mListenerManager) {
     mListenerManager->Disconnect();
@@ -170,9 +174,9 @@ IDBTransaction::OnRequestFinished()
   NS_ASSERTION(mPendingRequests, "Mismatched calls!");
   --mPendingRequests;
   if (!mPendingRequests) {
-    if (!mAborted) {
-      NS_ASSERTION(mReadyState == nsIIDBTransaction::LOADING, "Bad state!");
-    }
+    NS_ASSERTION(mAborted || mReadyState == nsIIDBTransaction::LOADING,
+                 "Bad state!");
+    mReadyState = IDBTransaction::COMMITTING;
     CommitOrRollback();
   }
 }
@@ -181,10 +185,6 @@ nsresult
 IDBTransaction::CommitOrRollback()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (!mAborted) {
-    NS_ASSERTION(mReadyState == nsIIDBTransaction::LOADING, "Bad state!");
-  }
 
   TransactionThreadPool* pool = TransactionThreadPool::GetOrCreate();
   NS_ENSURE_STATE(pool);
@@ -278,8 +278,20 @@ IDBTransaction::GetOrCreateConnection(mozIStorageConnection** aResult)
       IDBFactory::GetConnection(mDatabase->FilePath());
     NS_ENSURE_TRUE(connection, NS_ERROR_FAILURE);
 
-    NS_NAMED_LITERAL_CSTRING(beginTransaction, "BEGIN TRANSACTION;");
-    nsresult rv = connection->ExecuteSimpleSQL(beginTransaction);
+    nsCString beginTransaction;
+    if (mMode == nsIIDBTransaction::READ_WRITE) {
+      beginTransaction.AssignLiteral("BEGIN IMMEDIATE TRANSACTION;");
+    }
+    else {
+      beginTransaction.AssignLiteral("BEGIN TRANSACTION;");
+    }
+
+    nsCOMPtr<mozIStorageStatement> stmt;
+    nsresult rv = connection->CreateStatement(beginTransaction,
+                                              getter_AddRefs(stmt));
+    NS_ENSURE_SUCCESS(rv, false);
+
+    rv = stmt->Execute();
     NS_ENSURE_SUCCESS(rv, false);
 
     connection.swap(mConnection);
@@ -553,7 +565,7 @@ IDBTransaction::GetCachedStatement(const nsACString& aQuery)
 }
 
 bool
-IDBTransaction::TransactionIsOpen() const
+IDBTransaction::IsOpen() const
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -723,7 +735,7 @@ IDBTransaction::ObjectStore(const nsAString& aName,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!TransactionIsOpen()) {
+  if (!IsOpen()) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
@@ -750,12 +762,24 @@ IDBTransaction::Abort()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!TransactionIsOpen()) {
+  // We can't use IsOpen here since we need it to be possible to call Abort()
+  // even from outside of transaction callbacks.
+  if (mReadyState != IDBTransaction::INITIAL &&
+      mReadyState != IDBTransaction::LOADING) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
+  bool needToCommitOrRollback = mReadyState == nsIIDBTransaction::INITIAL;
+
   mAborted = true;
   mReadyState = nsIIDBTransaction::DONE;
+
+  // Fire the abort event if there are no outstanding requests. Otherwise the
+  // abort event will be fired when all outdtanding requests finish.
+  if (needToCommitOrRollback) {
+    return CommitOrRollback();
+  }
+
   return NS_OK;
 }
 
@@ -868,6 +892,10 @@ IDBTransaction::AfterProcessNextEvent(nsIThreadInternal* aThread,
     // Maybe set the readyState to DONE if there were no requests generated.
     if (mReadyState == nsIIDBTransaction::INITIAL) {
       mReadyState = nsIIDBTransaction::DONE;
+
+      if (NS_FAILED(CommitOrRollback())) {
+        NS_WARNING("Failed to commit!");
+      }
     }
 
     // No longer need to observe thread events.
@@ -924,10 +952,10 @@ CommitHelper::Run()
         }
       }
 
-      event = IDBEvent::CreateGenericEvent(NS_LITERAL_STRING(ABORT_EVT_STR));
+      event = CreateGenericEvent(NS_LITERAL_STRING(ABORT_EVT_STR));
     }
     else {
-      event = IDBEvent::CreateGenericEvent(NS_LITERAL_STRING(COMPLETE_EVT_STR));
+      event = CreateGenericEvent(NS_LITERAL_STRING(COMPLETE_EVT_STR));
     }
     NS_ENSURE_TRUE(event, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -936,54 +964,57 @@ CommitHelper::Run()
       NS_WARNING("Dispatch failed!");
     }
 
+#ifdef DEBUG
+    mTransaction->mFiredCompleteOrAbort = true;
+#endif
     mTransaction = nsnull;
     return NS_OK;
   }
-
-  NS_ASSERTION(mConnection, "This had better not be null!");
 
   IDBDatabase* database = mTransaction->Database();
   if (database->IsInvalidated()) {
     mAborted = true;
   }
 
-  IDBFactory::SetCurrentDatabase(database);
+  if (mConnection) {
+    IDBFactory::SetCurrentDatabase(database);
 
-  if (!mAborted) {
-    NS_NAMED_LITERAL_CSTRING(release, "END TRANSACTION");
-    if (NS_FAILED(mConnection->ExecuteSimpleSQL(release))) {
-      mAborted = PR_TRUE;
-    }
-  }
-
-  if (mAborted) {
-    NS_ASSERTION(mConnection, "This had better not be null!");
-
-    NS_NAMED_LITERAL_CSTRING(rollback, "ROLLBACK TRANSACTION");
-    if (NS_FAILED(mConnection->ExecuteSimpleSQL(rollback))) {
-      NS_WARNING("Failed to rollback transaction!");
-    }
-
-    if (mTransaction->Mode() == nsIIDBTransaction::VERSION_CHANGE) {
-      nsresult rv =
-        IDBFactory::LoadDatabaseInformation(mConnection,
-                                            mTransaction->Database()->Id(),
-                                            mOldVersion, mOldObjectStores);
-      if (NS_SUCCEEDED(rv)) {
-        mHaveMetadata = true;
+    if (!mAborted) {
+      NS_NAMED_LITERAL_CSTRING(release, "END TRANSACTION");
+      if (NS_FAILED(mConnection->ExecuteSimpleSQL(release))) {
+        mAborted = true;
       }
-      else {
-        NS_WARNING("Failed to get database information!");
+    }
+
+    if (mAborted) {
+      NS_NAMED_LITERAL_CSTRING(rollback, "ROLLBACK TRANSACTION");
+      if (NS_FAILED(mConnection->ExecuteSimpleSQL(rollback))) {
+        NS_WARNING("Failed to rollback transaction!");
+      }
+
+      if (mTransaction->Mode() == nsIIDBTransaction::VERSION_CHANGE) {
+        nsresult rv =
+          IDBFactory::LoadDatabaseInformation(mConnection,
+                                              mTransaction->Database()->Id(),
+                                              mOldVersion, mOldObjectStores);
+        if (NS_SUCCEEDED(rv)) {
+          mHaveMetadata = true;
+        }
+        else {
+          NS_WARNING("Failed to get database information!");
+        }
       }
     }
   }
 
   mDoomedObjects.Clear();
 
-  mConnection->Close();
-  mConnection = nsnull;
+  if (mConnection) {
+    mConnection->Close();
+    mConnection = nsnull;
 
-  IDBFactory::SetCurrentDatabase(nsnull);
+    IDBFactory::SetCurrentDatabase(nsnull);
+  }
 
   return NS_OK;
 }

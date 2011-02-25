@@ -65,6 +65,8 @@ class nsClientRectList;
 #include "imgIContainer.h"
 #include "nsCSSPseudoElements.h"
 #include "nsHTMLReflowState.h"
+#include "nsIFrameLoader.h"
+#include "Layers.h"
 
 class nsBlockFrame;
 class gfxDrawable;
@@ -79,6 +81,18 @@ class nsLayoutUtils
   typedef gfxPattern::GraphicsFilter GraphicsFilter;
 
 public:
+  typedef mozilla::layers::FrameMetrics::ViewID ViewID;
+
+  /**
+   * Finds previously assigned or generates a unique ViewID for the given
+   * content element.
+   */
+  static ViewID FindIDFor(nsIContent* aContent);
+
+  /**
+   * Find content for given ID.
+   */
+  static nsIContent* FindContentFor(ViewID aId);
 
   /**
    * Use heuristics to figure out the name of the child list that
@@ -436,6 +450,23 @@ public:
   static gfxMatrix ChangeMatrixBasis(const gfxPoint &aOrigin, const gfxMatrix &aMatrix);
 
   /**
+   * Find IDs corresponding to a scrollable content element in the child process.
+   * In correspondence with the shadow layer tree, you can use this to perform a
+   * hit test that corresponds to a specific shadow layer that you can then perform
+   * transformations on to do parent-side scrolling.
+   *
+   * @param aFrame The root frame of a stack context
+   * @param aTarget The rect to hit test relative to the frame origin
+   * @param aOutIDs All found IDs are added here
+   * @param aIgnoreRootScrollFrame a boolean to control if the display list
+   *        builder should ignore the root scroll frame
+   */
+  static nsresult GetRemoteContentIds(nsIFrame* aFrame,
+                                     const nsRect& aTarget,
+                                     nsTArray<ViewID> &aOutIDs,
+                                     PRBool aIgnoreRootScrollFrame);
+
+  /**
    * Given aFrame, the root frame of a stacking context, find its descendant
    * frame under the point aPt that receives a mouse event at that location,
    * or nsnull if there is no such frame.
@@ -512,6 +543,15 @@ public:
    */
   static nsRect RoundGfxRectToAppRect(const gfxRect &aRect, float aFactor);
 
+  /**
+   * Returns a subrectangle of aContainedRect that is entirely inside the rounded
+   * rect. Complex cases are handled conservatively by returning a smaller
+   * rect than necessary.
+   */
+  static nsRegion RoundedRectIntersectRect(const nsRect& aRoundedRect,
+                                           const nscoord aRadii[8],
+                                           const nsRect& aContainedRect);
+
   enum {
     PAINT_IN_TRANSFORM = 0x01,
     PAINT_SYNC_DECODE_IMAGES = 0x02,
@@ -520,7 +560,8 @@ public:
     PAINT_DOCUMENT_RELATIVE = 0x10,
     PAINT_HIDE_CARET = 0x20,
     PAINT_ALL_CONTINUATIONS = 0x40,
-    PAINT_TO_WINDOW = 0x80
+    PAINT_TO_WINDOW = 0x80,
+    PAINT_EXISTING_TRANSACTION = 0x100
   };
 
   /**
@@ -548,6 +589,9 @@ public:
    * as being relative to the document.  (Normally it's relative to the CSS
    * viewport.) PAINT_TO_WINDOW sets painting to window to true on the display
    * list builder even if we can't tell that we are painting to the window.
+   * If PAINT_EXISTING_TRANSACTION is set, then BeginTransaction() has already
+   * been called on aFrame's widget's layer manager and should not be
+   * called again.
    *
    * So there are three possible behaviours:
    * 1) PAINT_WIDGET_LAYERS is set and aRenderingContext is null; we paint
@@ -651,13 +695,17 @@ public:
    */
   static nsRect GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo);
 
+  enum {
+    EXCLUDE_BLUR_SHADOWS = 0x01
+  };
   /**
    * Takes a text-shadow array from the style properties of a given nsIFrame and
    * computes the union of those shadows along with the given initial rect.
    * If there are no shadows, the initial rect is returned.
    */
   static nsRect GetTextShadowRectsUnion(const nsRect& aTextAndDecorationsRect,
-                                        nsIFrame* aFrame);
+                                        nsIFrame* aFrame,
+                                        PRUint32 aFlags = 0);
 
   /**
    * Get the font metrics corresponding to the frame's style data.
@@ -1196,7 +1244,13 @@ public:
     SFE_WANT_IMAGE_SURFACE = 1 << 1,
     /* Whether to extract the first frame (as opposed to the
        current frame) in the case that the element is an image. */
-    SFE_WANT_FIRST_FRAME = 1 << 2
+    SFE_WANT_FIRST_FRAME = 1 << 2,
+    /* Whether we should skip colorspace/gamma conversion */
+    SFE_NO_COLORSPACE_CONVERSION = 1 << 3,
+    /* Whether we should skip premultiplication -- the resulting
+       image will always be an image surface, and must not be given to
+       Thebes for compositing! */
+    SFE_NO_PREMULTIPLY_ALPHA = 1 << 4
   };
 
   struct SurfaceFromElementResult {
@@ -1250,6 +1304,26 @@ public:
       (aPresContext->Type() == nsPresContext::eContext_PrintPreview ||
        aPresContext->Type() == nsPresContext::eContext_PageLayout);
   }
+
+  static void Shutdown();
+
+#ifdef DEBUG
+  /**
+   * Assert that there are no duplicate continuations of the same frame
+   * within aFrameList.  Optimize the tests by assuming that all frames
+   * in aFrameList have parent aContainer.
+   */
+  static void
+  AssertNoDuplicateContinuations(nsIFrame* aContainer,
+                                 const nsFrameList& aFrameList);
+
+  /**
+   * Assert that the frame tree rooted at |aSubtreeRoot| is empty, i.e.,
+   * that it contains no first-in-flows.
+   */
+  static void
+  AssertTreeOnlyEmptyNextInFlows(nsIFrame *aSubtreeRoot);
+#endif
 };
 
 class nsSetAttrRunnable : public nsRunnable

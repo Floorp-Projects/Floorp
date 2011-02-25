@@ -716,6 +716,7 @@ nsAttributeCharacteristics nsARIAMap::gWAIUnivAttrMap[] = {
   {&nsAccessibilityAtoms::aria_flowto,            ATTR_BYPASSOBJ                 },  
   {&nsAccessibilityAtoms::aria_grabbed,                            ATTR_VALTOKEN },
   {&nsAccessibilityAtoms::aria_haspopup,          ATTR_BYPASSOBJ | ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_hidden,                             ATTR_VALTOKEN },/* always expose obj attr */
   {&nsAccessibilityAtoms::aria_invalid,           ATTR_BYPASSOBJ | ATTR_VALTOKEN },
   {&nsAccessibilityAtoms::aria_label,             ATTR_BYPASSOBJ                 },
   {&nsAccessibilityAtoms::aria_labelledby,        ATTR_BYPASSOBJ                 },

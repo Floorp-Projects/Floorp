@@ -468,16 +468,14 @@ static nsresult GetDownloadDirectory(nsIFile **_directory)
   // system, and don't save downloads to temp directories
 
   // On Android we only return something if we have and SD-card
-  char* sdcard = getenv("EXTERNAL_STORAGE");
+  char* downloadDir = getenv("DOWNLOADS_DIRECTORY");
   nsresult rv;
-  if (sdcard) {
+  if (downloadDir) {
     nsCOMPtr<nsILocalFile> ldir; 
-    rv = NS_NewNativeLocalFile(nsDependentCString(sdcard),
+    rv = NS_NewNativeLocalFile(nsDependentCString(downloadDir),
                                PR_TRUE, getter_AddRefs(ldir));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = ldir->Append(NS_LITERAL_STRING("downloads"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    dir = ldir;
+    dir = do_QueryInterface(ldir);
   }
   else {
     return NS_ERROR_FAILURE;
@@ -564,6 +562,7 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
 #endif
   { APPLICATION_GZIP2, "gz", "gzip" },
   { "application/x-arj", "arj", "ARJ file" },
+  { "application/rtf", "rtf", "Rich Text Format File" },
   { APPLICATION_XPINSTALL, "xpi", "XPInstall Install" },
   { APPLICATION_POSTSCRIPT, "ps,eps,ai", "Postscript File" },
   { APPLICATION_XJAVASCRIPT, "js", "Javascript Source File" },

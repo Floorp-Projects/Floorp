@@ -48,10 +48,6 @@ menulist {
   text-shadow: none;
 }
 
-listbox menulist:not([disabled]) {
-  color: -moz-DialogText;
-}
-
 .menulist-label-box {
   -moz-appearance: menulist-text;
   -moz-box-align: center;

@@ -141,6 +141,7 @@ static struct {
 /*
  * Random utilities and global functions.
  */
+const char js_AttributeName_str[] = "AttributeName";
 const char js_isXMLName_str[]     = "isXMLName";
 const char js_XMLList_str[]       = "XMLList";
 const char js_localName_str[]     = "localName";
@@ -178,15 +179,6 @@ xml_isXMLName(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-static inline bool
-AppendString(JSCharBuffer &cb, JSString *str)
-{
-    const jschar *chars = str->getChars(cb.allocPolicy().context());
-    if (!chars)
-        return false;
-    return cb.append(chars, str->length());
-}
-
 /*
  * This wrapper is needed because NewBuiltinClassInstance doesn't
  * call the constructor, and we need a place to set the
@@ -217,13 +209,6 @@ DEFINE_GETTER(NamePrefix_getter,
 DEFINE_GETTER(NameURI_getter,
               if (obj->getClass() == &js_NamespaceClass) *vp = obj->getNameURIVal())
 
-static void
-namespace_finalize(JSContext *cx, JSObject *obj)
-{
-    if (obj->compartment()->functionNamespaceObject == obj)
-        obj->compartment()->functionNamespaceObject = NULL;
-}
-
 static JSBool
 namespace_equality(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 {
@@ -242,27 +227,27 @@ JS_FRIEND_DATA(Class) js_NamespaceClass = {
     JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::NAMESPACE_CLASS_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Namespace),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
+    PropertyStub,         /* addProperty */
+    PropertyStub,         /* delProperty */
+    PropertyStub,         /* getProperty */
+    StrictPropertyStub,   /* setProperty */
     EnumerateStub,
     ResolveStub,
     ConvertStub,
-    namespace_finalize,
-    NULL,           /* reserved0   */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* xdrObject   */
-    NULL,           /* hasInstance */
-    NULL,           /* mark        */
+    FinalizeStub,
+    NULL,                 /* reserved0   */
+    NULL,                 /* checkAccess */
+    NULL,                 /* call        */
+    NULL,                 /* construct   */
+    NULL,                 /* xdrObject   */
+    NULL,                 /* hasInstance */
+    NULL,                 /* mark        */
     {
         namespace_equality,
-        NULL,       /* outerObject    */
-        NULL,       /* innerObject    */
-        NULL,       /* iteratorObject */
-        NULL,       /* wrappedObject  */
+        NULL,             /* outerObject    */
+        NULL,             /* innerObject    */
+        NULL,             /* iteratorObject */
+        NULL,             /* wrappedObject  */
     }
 };
 
@@ -278,9 +263,9 @@ static JSPropertySpec namespace_props[] = {
 static JSBool
 namespace_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj;
-
-    obj = ComputeThisFromVp(cx, vp);
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return JS_FALSE;
     if (!JS_InstanceOf(cx, obj, Jsvalify(&js_NamespaceClass), Jsvalify(vp + 2)))
         return JS_FALSE;
     *vp = Valueify(obj->getNameURIVal());
@@ -323,14 +308,6 @@ DEFINE_GETTER(QNameLocalName_getter,
               if (obj->getClass() == &js_QNameClass)
                   *vp = obj->getQNameLocalNameVal())
 
-static void
-anyname_finalize(JSContext* cx, JSObject* obj)
-{
-    /* Make sure the next call to js_GetAnyName doesn't try to use obj. */
-    if (obj->compartment()->anynameObject == obj)
-        obj->compartment()->anynameObject = NULL;
-}
-
 static JSBool
 qname_identity(JSObject *qna, JSObject *qnb)
 {
@@ -361,27 +338,27 @@ JS_FRIEND_DATA(Class) js_QNameClass = {
     JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_QName),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
+    PropertyStub,         /* addProperty */
+    PropertyStub,         /* delProperty */
+    PropertyStub,         /* getProperty */
+    StrictPropertyStub,   /* setProperty */
     EnumerateStub,
     ResolveStub,
     ConvertStub,
     FinalizeStub,
-    NULL,           /* reserved0   */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* xdrObject   */
-    NULL,           /* hasInstance */
-    NULL,           /* mark        */
+    NULL,                 /* reserved0   */
+    NULL,                 /* checkAccess */
+    NULL,                 /* call        */
+    NULL,                 /* construct   */
+    NULL,                 /* xdrObject   */
+    NULL,                 /* hasInstance */
+    NULL,                 /* mark        */
     {
         qname_equality,
-        NULL,       /* outerObject    */
-        NULL,       /* innerObject    */
-        NULL,       /* iteratorObject */
-        NULL,       /* wrappedObject  */
+        NULL,             /* outerObject    */
+        NULL,             /* innerObject    */
+        NULL,             /* iteratorObject */
+        NULL,             /* wrappedObject  */
     }
 };
 
@@ -395,29 +372,30 @@ JS_FRIEND_DATA(Class) js_AttributeNameClass = {
     js_AttributeName_str,
     JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_AttributeName),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
+    JSCLASS_MARK_IS_TRACE | JSCLASS_IS_ANONYMOUS,
+    PropertyStub,         /* addProperty */
+    PropertyStub,         /* delProperty */
+    PropertyStub,         /* getProperty */
+    StrictPropertyStub,   /* setProperty */
     EnumerateStub,
     ResolveStub,
-    ConvertStub
+    ConvertStub,
+    FinalizeStub
 };
 
 JS_FRIEND_DATA(Class) js_AnyNameClass = {
     js_AnyName_str,
     JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_AnyName),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
+    JSCLASS_MARK_IS_TRACE | JSCLASS_IS_ANONYMOUS,
+    PropertyStub,         /* addProperty */
+    PropertyStub,         /* delProperty */
+    PropertyStub,         /* getProperty */
+    StrictPropertyStub,   /* setProperty */
     EnumerateStub,
     ResolveStub,
     ConvertStub,
-    anyname_finalize
+    FinalizeStub
 };
 
 #define QNAME_ATTRS (JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED)
@@ -428,26 +406,12 @@ static JSPropertySpec qname_props[] = {
     {0,0,0,0,0}
 };
 
-static JSBool
-qname_toString(JSContext *cx, uintN argc, Value *vp)
+static JSString *
+ConvertQNameToString(JSContext *cx, JSObject *obj)
 {
-    JSObject *obj;
-    Class *clasp;
-    JSString *uri, *str, *qualstr;
-    size_t length;
-    jschar *chars;
-
-    obj = ComputeThisFromVp(cx, vp);
-    if (!obj)
-        return JS_FALSE;
-    clasp = obj->getClass();
-    if (clasp != &js_AttributeNameClass &&
-        clasp != &js_AnyNameClass &&
-        !JS_InstanceOf(cx, obj, Jsvalify(&js_QNameClass), Jsvalify(vp + 2))) {
-            return JS_FALSE;
-    }
-
-    uri = obj->getNameURI();
+    JS_ASSERT(obj->isQName());
+    JSString *uri = obj->getNameURI();
+    JSString *str;
     if (!uri) {
         /* No uri means wildcard qualifier. */
         str = ATOM_TO_STRING(cx->runtime->atomState.starQualifierAtom);
@@ -455,37 +419,53 @@ qname_toString(JSContext *cx, uintN argc, Value *vp)
         /* Empty string for uri means localName is in no namespace. */
         str = cx->runtime->emptyString;
     } else {
-        qualstr = ATOM_TO_STRING(cx->runtime->atomState.qualifierAtom);
+        JSString *qualstr = ATOM_TO_STRING(cx->runtime->atomState.qualifierAtom);
         str = js_ConcatStrings(cx, uri, qualstr);
         if (!str)
-            return JS_FALSE;
+            return NULL;
     }
     str = js_ConcatStrings(cx, str, obj->getQNameLocalName());
     if (!str)
-        return JS_FALSE;
+        return NULL;
 
-    if (str && clasp == &js_AttributeNameClass) {
-        length = str->length();
-        chars = (jschar *) cx->malloc((length + 2) * sizeof(jschar));
+    if (obj->getClass() == &js_AttributeNameClass) {
+        size_t length = str->length();
+        jschar *chars = (jschar *) cx->malloc((length + 2) * sizeof(jschar));
         if (!chars)
             return JS_FALSE;
         *chars = '@';
         const jschar *strChars = str->getChars(cx);
         if (!strChars) {
             cx->free(chars);
-            return JS_FALSE;
+            return NULL;
         }
         js_strncpy(chars + 1, strChars, length);
         chars[++length] = 0;
         str = js_NewString(cx, chars, length);
         if (!str) {
             cx->free(chars);
-            return JS_FALSE;
+            return NULL;
         }
     }
+    return str;
+}
+
+static JSBool
+qname_toString(JSContext *cx, uintN argc, Value *vp)
+{
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return false;
+
+    if (!InstanceOf(cx, obj, &js_QNameClass, vp + 2))
+        return false;
+
+    JSString *str = ConvertQNameToString(cx, obj);
+    if (!str)
+        return false;
 
     vp->setString(str);
-    return JS_TRUE;
+    return true;
 }
 
 static JSFunctionSpec qname_methods[] = {
@@ -498,6 +478,7 @@ static void
 InitXMLQName(JSObject *obj, JSLinearString *uri, JSLinearString *prefix,
              JSLinearString *localName)
 {
+    JS_ASSERT(obj->isQName());
     JS_ASSERT(JSVAL_IS_VOID(obj->getNamePrefixVal()));
     JS_ASSERT(JSVAL_IS_VOID(obj->getNameURIVal()));
     JS_ASSERT(JSVAL_IS_VOID(obj->getQNameLocalNameVal()));
@@ -511,9 +492,25 @@ InitXMLQName(JSObject *obj, JSLinearString *uri, JSLinearString *prefix,
 
 static JSObject *
 NewXMLQName(JSContext *cx, JSLinearString *uri, JSLinearString *prefix,
-            JSLinearString *localName, Class *clasp = &js_QNameClass)
+            JSLinearString *localName)
 {
-    JSObject *obj = NewBuiltinClassInstanceXML(cx, clasp);
+    JSObject *obj = NewBuiltinClassInstanceXML(cx, &js_QNameClass);
+    if (!obj)
+        return NULL;
+    InitXMLQName(obj, uri, prefix, localName);
+    METER(xml_stats.qname);
+    return obj;
+}
+
+static JSObject *
+NewXMLAttributeName(JSContext *cx, JSLinearString *uri, JSLinearString *prefix,
+                    JSLinearString *localName)
+{
+    /*
+     * AttributeName is an internal anonymous class which instances are not
+     * exposed to scripts.
+     */
+    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &js_AttributeNameClass, NULL, NULL);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isQName());
@@ -711,8 +708,7 @@ Namespace(JSContext *cx, uintN argc, Value *vp)
  * if argc is 1 and argv[0] is JSVAL_VOID.
  */
 static JSBool
-QNameHelper(JSContext *cx, JSObject *obj, Class *clasp, intN argc,
-            jsval *argv, jsval *rval)
+QNameHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv, jsval *rval)
 {
     jsval nameval, nsval;
     JSBool isQName, isNamespace;
@@ -720,8 +716,6 @@ QNameHelper(JSContext *cx, JSObject *obj, Class *clasp, intN argc,
     JSLinearString *uri, *prefix, *name;
     JSObject *obj2;
 
-    JS_ASSERT(clasp == &js_QNameClass ||
-              clasp == &js_AttributeNameClass);
     if (argc <= 0) {
         nameval = JSVAL_VOID;
         isQName = JS_FALSE;
@@ -740,11 +734,8 @@ QNameHelper(JSContext *cx, JSObject *obj, Class *clasp, intN argc,
             return JS_TRUE;
         }
 
-        /*
-         * Create and return a new QName or AttributeName object exactly as if
-         * constructed.
-         */
-        obj = NewBuiltinClassInstanceXML(cx, clasp);
+        /* Create and return a new QName object exactly as if constructed. */
+        obj = NewBuiltinClassInstanceXML(cx, &js_QNameClass);
         if (!obj)
             return JS_FALSE;
     }
@@ -805,9 +796,8 @@ QNameHelper(JSContext *cx, JSObject *obj, Class *clasp, intN argc,
         isNamespace = isQName = JS_FALSE;
         if (!JSVAL_IS_PRIMITIVE(nsval)) {
             obj2 = JSVAL_TO_OBJECT(nsval);
-            clasp = obj2->getClass();
-            isNamespace = (clasp == &js_NamespaceClass);
-            isQName = (clasp == &js_QNameClass);
+            isNamespace = (obj2->getClass() == &js_NamespaceClass);
+            isQName = (obj2->getClass() == &js_QNameClass);
         }
 #ifdef __GNUC__         /* suppress bogus gcc warnings */
         else obj2 = NULL;
@@ -844,15 +834,7 @@ QName(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *thisobj = NULL;
     (void)IsConstructing_PossiblyWithGivenThisObject(vp, &thisobj);
-    return QNameHelper(cx, thisobj, &js_QNameClass, argc, Jsvalify(vp + 2), Jsvalify(vp));
-}
-
-static JSBool
-AttributeName(JSContext *cx, uintN argc, Value *vp)
-{
-    JSObject *thisobj = NULL;
-    (void)IsConstructing_PossiblyWithGivenThisObject(vp, &thisobj);
-    return QNameHelper(cx, thisobj, &js_AttributeNameClass, argc, Jsvalify(vp + 2), Jsvalify(vp));
+    return QNameHelper(cx, thisobj, argc, Jsvalify(vp + 2), Jsvalify(vp));
 }
 
 /*
@@ -1775,7 +1757,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
 
     {
         Parser parser(cx);
-        if (parser.init(chars, length, filename, lineno)) {
+        if (parser.init(chars, length, filename, lineno, cx->findVersion())) {
             JSObject *scopeChain = GetScopeChain(cx);
             if (!scopeChain) {
                 cx->free(chars);
@@ -2000,58 +1982,58 @@ bad:
  * MakeXMLCommentString, and MakeXMLPIString are further factored into a common
  * MakeXMLSpecialString subroutine.
  *
- * These functions mutate cb, leaving it empty.
+ * These functions mutate sb, leaving it empty.
  */
-static JSString *
-MakeXMLSpecialString(JSContext *cx, JSCharBuffer &cb,
+static JSFlatString *
+MakeXMLSpecialString(JSContext *cx, StringBuffer &sb,
                      JSString *str, JSString *str2,
                      const jschar *prefix, size_t prefixlength,
                      const jschar *suffix, size_t suffixlength)
 {
-    if (!cb.append(prefix, prefixlength) || !AppendString(cb, str))
+    if (!sb.append(prefix, prefixlength) || !sb.append(str))
         return NULL;
     if (str2 && !str2->empty()) {
-        if (!cb.append(' ') || !AppendString(cb, str2))
+        if (!sb.append(' ') || !sb.append(str2))
             return NULL;
     }
-    if (!cb.append(suffix, suffixlength))
+    if (!sb.append(suffix, suffixlength))
         return NULL;
 
-    return js_NewStringFromCharBuffer(cx, cb);
+    return sb.finishString();
 }
 
-static JSString *
-MakeXMLCDATAString(JSContext *cx, JSCharBuffer &cb, JSString *str)
+static JSFlatString *
+MakeXMLCDATAString(JSContext *cx, StringBuffer &sb, JSString *str)
 {
     static const jschar cdata_prefix_ucNstr[] = {'<', '!', '[',
                                                  'C', 'D', 'A', 'T', 'A',
                                                  '['};
     static const jschar cdata_suffix_ucNstr[] = {']', ']', '>'};
 
-    return MakeXMLSpecialString(cx, cb, str, NULL,
+    return MakeXMLSpecialString(cx, sb, str, NULL,
                                 cdata_prefix_ucNstr, 9,
                                 cdata_suffix_ucNstr, 3);
 }
 
-static JSString *
-MakeXMLCommentString(JSContext *cx, JSCharBuffer &cb, JSString *str)
+static JSFlatString *
+MakeXMLCommentString(JSContext *cx, StringBuffer &sb, JSString *str)
 {
     static const jschar comment_prefix_ucNstr[] = {'<', '!', '-', '-'};
     static const jschar comment_suffix_ucNstr[] = {'-', '-', '>'};
 
-    return MakeXMLSpecialString(cx, cb, str, NULL,
+    return MakeXMLSpecialString(cx, sb, str, NULL,
                                 comment_prefix_ucNstr, 4,
                                 comment_suffix_ucNstr, 3);
 }
 
-static JSString *
-MakeXMLPIString(JSContext *cx, JSCharBuffer &cb, JSString *name,
+static JSFlatString *
+MakeXMLPIString(JSContext *cx, StringBuffer &sb, JSString *name,
                 JSString *value)
 {
     static const jschar pi_prefix_ucNstr[] = {'<', '?'};
     static const jschar pi_suffix_ucNstr[] = {'?', '>'};
 
-    return MakeXMLSpecialString(cx, cb, name, value,
+    return MakeXMLSpecialString(cx, sb, name, value,
                                 pi_prefix_ucNstr, 2,
                                 pi_suffix_ucNstr, 2);
 }
@@ -2061,21 +2043,21 @@ MakeXMLPIString(JSContext *cx, JSCharBuffer &cb, JSString *name,
  * equals, a double quote, an attribute value, and a closing double quote.
  */
 static bool
-AppendAttributeValue(JSContext *cx, JSCharBuffer &cb, JSString *valstr)
+AppendAttributeValue(JSContext *cx, StringBuffer &sb, JSString *valstr)
 {
-    if (!cb.append('='))
+    if (!sb.append('='))
         return false;
     valstr = js_EscapeAttributeValue(cx, valstr, JS_TRUE);
-    return valstr && AppendString(cb, valstr);
+    return valstr && sb.append(valstr);
 }
 
 /*
  * ECMA-357 10.2.1.1 EscapeElementValue helper method.
 
- * These functions mutate cb, leaving it empty.
+ * These functions mutate sb, leaving it empty.
  */
-static JSString *
-EscapeElementValue(JSContext *cx, JSCharBuffer &cb, JSString *str, uint32 toSourceFlag)
+static JSFlatString *
+EscapeElementValue(JSContext *cx, StringBuffer &sb, JSString *str, uint32 toSourceFlag)
 {
     size_t length = str->length();
     const jschar *start = str->getChars(cx);
@@ -2086,15 +2068,15 @@ EscapeElementValue(JSContext *cx, JSCharBuffer &cb, JSString *str, uint32 toSour
         jschar c = *cp;
         switch (*cp) {
           case '<':
-            if (!js_AppendLiteral(cb, js_lt_entity_str))
+            if (!sb.append(js_lt_entity_str))
                 return NULL;
             break;
           case '>':
-            if (!js_AppendLiteral(cb, js_gt_entity_str))
+            if (!sb.append(js_gt_entity_str))
                 return NULL;
             break;
           case '&':
-            if (!js_AppendLiteral(cb, js_amp_entity_str))
+            if (!sb.append(js_amp_entity_str))
                 return NULL;
             break;
           case '{':
@@ -2103,73 +2085,72 @@ EscapeElementValue(JSContext *cx, JSCharBuffer &cb, JSString *str, uint32 toSour
              * to escape '{'. See bug 463360.
              */
             if (toSourceFlag) {
-                if (!js_AppendLiteral(cb, js_leftcurly_entity_str))
+                if (!sb.append(js_leftcurly_entity_str))
                     return NULL;
                 break;
             }
             /* FALL THROUGH */
           default:
-            if (!cb.append(c))
+            if (!sb.append(c))
                 return NULL;
         }
     }
-    return js_NewStringFromCharBuffer(cx, cb);
+    return sb.finishString();
 }
 
 /*
  * ECMA-357 10.2.1.2 EscapeAttributeValue helper method.
  *
- * These functions mutate cb, leaving it empty.
+ * These functions mutate sb, leaving it empty.
  */
-static JSLinearString *
-EscapeAttributeValue(JSContext *cx, JSCharBuffer &cb, JSString *str,
-                     JSBool quote)
+static JSFlatString *
+EscapeAttributeValue(JSContext *cx, StringBuffer &sb, JSString *str, JSBool quote)
 {
     size_t length = str->length();
     const jschar *start = str->getChars(cx);
     if (!start)
         return NULL;
 
-    if (quote && !cb.append('"'))
+    if (quote && !sb.append('"'))
         return NULL;
 
     for (const jschar *cp = start, *end = start + length; cp != end; ++cp) {
         jschar c = *cp;
         switch (c) {
           case '"':
-            if (!js_AppendLiteral(cb, js_quot_entity_str))
+            if (!sb.append(js_quot_entity_str))
                 return NULL;
             break;
           case '<':
-            if (!js_AppendLiteral(cb, js_lt_entity_str))
+            if (!sb.append(js_lt_entity_str))
                 return NULL;
             break;
           case '&':
-            if (!js_AppendLiteral(cb, js_amp_entity_str))
+            if (!sb.append(js_amp_entity_str))
                 return NULL;
             break;
           case '\n':
-            if (!js_AppendLiteral(cb, "&#xA;"))
+            if (!sb.append("&#xA;"))
                 return NULL;
             break;
           case '\r':
-            if (!js_AppendLiteral(cb, "&#xD;"))
+            if (!sb.append("&#xD;"))
                 return NULL;
             break;
           case '\t':
-            if (!js_AppendLiteral(cb, "&#x9;"))
+            if (!sb.append("&#x9;"))
                 return NULL;
             break;
           default:
-            if (!cb.append(c))
+            if (!sb.append(c))
                 return NULL;
         }
     }
 
-    if (quote && !cb.append('"'))
+    if (quote && !sb.append('"'))
         return NULL;
 
-    return js_NewStringFromCharBuffer(cx, cb);
+    return sb.finishString();
 }
 
 /* 13.3.5.4 [[GetNamespace]]([InScopeNamespaces]) */
@@ -2393,7 +2374,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
                uint32 indentLevel)
 {
     JSBool pretty, indentKids;
-    JSCharBuffer cb(cx);
+    StringBuffer sb(cx);
     JSString *str;
     JSLinearString *prefix, *nsuri;
     uint32 i, n, nextIndentLevel;
@@ -2404,7 +2385,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
         return NULL;
 
     if (pretty) {
-        if (!cb.appendN(' ', indentLevel & ~TO_SOURCE_FLAG))
+        if (!sb.appendN(' ', indentLevel & ~TO_SOURCE_FLAG))
             return NULL;
     }
 
@@ -2420,20 +2401,20 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
         } else {
             str = xml->xml_value;
         }
-        return EscapeElementValue(cx, cb, str, indentLevel & TO_SOURCE_FLAG);
+        return EscapeElementValue(cx, sb, str, indentLevel & TO_SOURCE_FLAG);
 
       case JSXML_CLASS_ATTRIBUTE:
         /* Step 5. */
-        return EscapeAttributeValue(cx, cb, xml->xml_value,
+        return EscapeAttributeValue(cx, sb, xml->xml_value,
                                     (indentLevel & TO_SOURCE_FLAG) != 0);
 
       case JSXML_CLASS_COMMENT:
         /* Step 6. */
-        return MakeXMLCommentString(cx, cb, xml->xml_value);
+        return MakeXMLCommentString(cx, sb, xml->xml_value);
 
       case JSXML_CLASS_PROCESSING_INSTRUCTION:
         /* Step 7. */
-        return MakeXMLPIString(cx, cb, xml->name->getQNameLocalName(),
+        return MakeXMLPIString(cx, sb, xml->name->getQNameLocalName(),
                                xml->xml_value);
 
       case JSXML_CLASS_LIST:
@@ -2443,20 +2424,20 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
             i = 0;
             while (JSXML *kid = (JSXML *) cursor.getNext()) {
                 if (pretty && i != 0) {
-                    if (!cb.append('\n'))
+                    if (!sb.append('\n'))
                         return NULL;
                 }
 
                 JSString *kidstr = XMLToXMLString(cx, kid, ancestorNSes, indentLevel);
-                if (!kidstr || !AppendString(cb, kidstr))
+                if (!kidstr || !sb.append(kidstr))
                     return NULL;
                 ++i;
             }
         }
 
-        if (cb.empty())
+        if (sb.empty())
             return cx->runtime->emptyString;
-        return js_NewStringFromCharBuffer(cx, cb);
+        return sb.finishString();
 
       default:;
     }
@@ -2575,15 +2556,15 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
         }
     }
 
-    /* Format the element or point-tag into cb. */
-    if (!cb.append('<'))
+    /* Format the element or point-tag into sb. */
+    if (!sb.append('<'))
         goto out;
 
-    if (prefix && !prefix->empty()) {
-        if (!AppendString(cb, prefix) || !cb.append(':'))
+    if (!prefix->empty()) {
+        if (!sb.append(prefix) || !sb.append(':'))
             goto out;
     }
-    if (!AppendString(cb, xml->name->getQNameLocalName()))
+    if (!sb.append(xml->name->getQNameLocalName()))
         goto out;
 
     /*
@@ -2596,7 +2577,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
     {
         JSXMLArrayCursor cursor(&xml->xml_attrs);
         while (JSXML *attr = (JSXML *) cursor.getNext()) {
-            if (!cb.append(' '))
+            if (!sb.append(' '))
                 goto out;
             ns2 = GetNamespace(cx, attr->name, &ancdecls.array);
             if (!ns2)
@@ -2629,16 +2610,16 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
 
             /* 17(b)(iii). */
             if (!prefix->empty()) {
-                if (!AppendString(cb, prefix) || !cb.append(':'))
+                if (!sb.append(prefix) || !sb.append(':'))
                     goto out;
             }
 
             /* 17(b)(iv). */
-            if (!AppendString(cb, attr->name->getQNameLocalName()))
+            if (!sb.append(attr->name->getQNameLocalName()))
                 goto out;
 
             /* 17(d-g). */
-            if (!AppendAttributeValue(cx, cb, attr->xml_value))
+            if (!AppendAttributeValue(cx, sb, attr->xml_value))
                 goto out;
         }
     }
@@ -2649,7 +2630,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
         while (JSObject *ns3 = (JSObject *) cursor.getNext()) {
             JS_ASSERT(IsDeclared(ns3));
 
-            if (!js_AppendLiteral(cb, " xmlns"))
+            if (!sb.append(" xmlns"))
                 goto out;
 
             /* 17(c)(ii): NULL means *undefined* here. */
@@ -2663,12 +2644,12 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
 
             /* 17(c)(iii). */
             if (!prefix->empty()) {
-                if (!cb.append(':') || !AppendString(cb, prefix))
+                if (!sb.append(':') || !sb.append(prefix))
                     goto out;
             }
 
             /* 17(d-g). */
-            if (!AppendAttributeValue(cx, cb, ns3->getNameURI()))
+            if (!AppendAttributeValue(cx, sb, ns3->getNameURI()))
                 goto out;
         }
     }
@@ -2676,11 +2657,11 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
     /* Step 18: handle point tags. */
     n = xml->xml_kids.length;
     if (n == 0) {
-        if (!js_AppendLiteral(cb, "/>"))
+        if (!sb.append("/>"))
             goto out;
     } else {
         /* Steps 19 through 25: handle element content, and open the end-tag. */
-        if (!cb.append('>'))
+        if (!sb.append('>'))
             goto out;
         {
             JSXML *kid;
@@ -2702,7 +2683,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
             JSXMLArrayCursor cursor(&xml->xml_kids);
             while (JSXML *kid = (JSXML *) cursor.getNext()) {
                 if (pretty && indentKids) {
-                    if (!cb.append('\n'))
+                    if (!sb.append('\n'))
                         goto out;
                 }
 
@@ -2710,32 +2691,32 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
                 if (!kidstr)
                     goto out;
 
-                if (!AppendString(cb, kidstr))
+                if (!sb.append(kidstr))
                     goto out;
             }
         }
 
         if (pretty && indentKids) {
-            if (!cb.append('\n') ||
-                !cb.appendN(' ', indentLevel & ~TO_SOURCE_FLAG))
+            if (!sb.append('\n') ||
+                !sb.appendN(' ', indentLevel & ~TO_SOURCE_FLAG))
                 goto out;
         }
-        if (!js_AppendLiteral(cb, "</"))
+        if (!sb.append("</"))
             goto out;
 
         /* Step 26. */
         prefix = ns->getNamePrefix();
         if (prefix && !prefix->empty()) {
-            if (!AppendString(cb, prefix) || !cb.append(':'))
+            if (!sb.append(prefix) || !sb.append(':'))
                 goto out;
         }
 
         /* Step 27. */
-        if (!AppendString(cb, xml->name->getQNameLocalName()) || !cb.append('>'))
+        if (!sb.append(xml->name->getQNameLocalName()) || !sb.append('>'))
             goto out;
     }
 
-    str = js_NewStringFromCharBuffer(cx, cb);
+    str = sb.finishString();
 out:
     js_LeaveLocalRootScopeWithResult(cx, str);
     return str;
@@ -2760,8 +2741,8 @@ ToXMLString(JSContext *cx, jsval v, uint32 toSourceFlag)
         return js_ValueToString(cx, Valueify(v));
 
     if (JSVAL_IS_STRING(v)) {
-        JSCharBuffer cb(cx);
-        return EscapeElementValue(cx, cb, JSVAL_TO_STRING(v), toSourceFlag);
+        StringBuffer sb(cx);
+        return EscapeElementValue(cx, sb, JSVAL_TO_STRING(v), toSourceFlag);
     }
 
     obj = JSVAL_TO_OBJECT(v);
@@ -2771,8 +2752,8 @@ ToXMLString(JSContext *cx, jsval v, uint32 toSourceFlag)
         str = js_ValueToString(cx, Valueify(v));
         if (!str)
             return NULL;
-        JSCharBuffer cb(cx);
-        return EscapeElementValue(cx, cb, str, toSourceFlag);
+        StringBuffer sb(cx);
+        return EscapeElementValue(cx, sb, str, toSourceFlag);
     }
 
     /* Handle non-element cases in this switch, returning from each case. */
@@ -2825,7 +2806,7 @@ ToAttributeName(JSContext *cx, jsval v)
         }
     }
 
-    qn = NewXMLQName(cx, uri, prefix, name, &js_AttributeNameClass);
+    qn = NewXMLAttributeName(cx, uri, prefix, name);
     if (!qn)
         return NULL;
     return qn;
@@ -3860,7 +3841,7 @@ ResolveValue(JSContext *cx, JSXML *list, JSXML **result);
 
 /* ECMA-357 9.1.1.2 XML [[Put]] and 9.2.1.2 XMLList [[Put]]. */
 static JSBool
-PutProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+PutProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
     JSBool ok, primitiveAssign;
     enum { OBJ_ROOT, ID_ROOT, VAL_ROOT };
@@ -4063,9 +4044,8 @@ PutProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if (kid->xml_class == JSXML_CLASS_ATTRIBUTE) {
             nameobj = kid->name;
             if (nameobj->getClass() != &js_AttributeNameClass) {
-                nameobj = NewXMLQName(cx, nameobj->getNameURI(), nameobj->getNamePrefix(),
-                                      nameobj->getQNameLocalName(),
-                                      &js_AttributeNameClass);
+                nameobj = NewXMLAttributeName(cx, nameobj->getNameURI(), nameobj->getNamePrefix(),
+                                              nameobj->getQNameLocalName());
                 if (!nameobj)
                     goto bad;
             }
@@ -4076,7 +4056,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
                 parentobj = js_GetXMLObject(cx, parent);
                 if (!parentobj)
                     goto bad;
-                ok = PutProperty(cx, parentobj, id, vp);
+                ok = PutProperty(cx, parentobj, id, strict, vp);
                 if (!ok)
                     goto out;
 
@@ -4188,7 +4168,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             if (!kidobj)
                 goto bad;
             id = ATOM_TO_JSID(cx->runtime->atomState.starAtom);
-            ok = PutProperty(cx, kidobj, id, vp);
+            ok = PutProperty(cx, kidobj, id, strict, vp);
             if (!ok)
                 goto out;
         }
@@ -4548,7 +4528,7 @@ ResolveValue(JSContext *cx, JSXML *list, JSXML **result)
             return JS_TRUE;
         }
         tv = STRING_TO_JSVAL(cx->runtime->emptyString);
-        if (!PutProperty(cx, base->object, id, &tv))
+        if (!PutProperty(cx, base->object, id, false, &tv))
             return JS_FALSE;
         if (!GetProperty(cx, base->object, id, &tv))
             return JS_FALSE;
@@ -4762,7 +4742,7 @@ xml_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 
 static JSBool
 xml_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
-                   PropertyOp getter, PropertyOp setter, uintN attrs)
+                   PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
     if (IsFunctionObject(*v) || getter || setter ||
         (attrs & JSPROP_ENUMERATE) == 0 ||
@@ -4771,7 +4751,7 @@ xml_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
     }
 
     jsval tmp = Jsvalify(*v);
-    return PutProperty(cx, obj, id, &tmp);
+    return PutProperty(cx, obj, id, false, &tmp);
 }
 
 static JSBool
@@ -4788,7 +4768,7 @@ xml_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value
 static JSBool
 xml_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
-    return PutProperty(cx, obj, id, Jsvalify(vp));
+    return PutProperty(cx, obj, id, strict, Jsvalify(vp));
 }
 
 static JSBool
@@ -5138,19 +5118,19 @@ JS_FRIEND_DATA(Class) js_XMLClass = {
     js_XML_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_XML),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
+    PropertyStub,         /* addProperty */
+    PropertyStub,         /* delProperty */
+    PropertyStub,         /* getProperty */
+    StrictPropertyStub,   /* setProperty */
     EnumerateStub,
     ResolveStub,
     xml_convert,
     xml_finalize,
-    NULL,           /* reserved0   */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* xdrObject   */
+    NULL,                 /* reserved0   */
+    NULL,                 /* checkAccess */
+    NULL,                 /* call        */
+    NULL,                 /* construct   */
+    NULL,                 /* xdrObject   */
     xml_hasInstance,
     JS_CLASS_TRACE(xml_trace),
     JS_NULL_CLASS_EXT,
@@ -5180,7 +5160,9 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
 
     JS_ASSERT(VALUE_IS_FUNCTION(cx, *vp));
 
-    *objp = JS_THIS_OBJECT(cx, vp);
+    *objp = ToObject(cx, Valueify(&vp[1]));
+    if (!*objp)
+        return NULL;
     xml = (JSXML *) GetInstancePrivate(cx, *objp, &js_XMLClass, Valueify(vp + 2));
     if (!xml || xml->xml_class != JSXML_CLASS_LIST)
         return xml;
@@ -5208,7 +5190,9 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
 
 /* Beware: these two are not bracketed by JS_BEGIN/END_MACRO. */
 #define XML_METHOD_PROLOG                                                     \
-    JSObject *obj = JS_THIS_OBJECT(cx, vp);                                   \
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));                           \
+    if (!obj)                                                                 \
+        return JS_FALSE;                                                      \
     JSXML *xml = (JSXML *)GetInstancePrivate(cx, obj, &js_XMLClass, Valueify(vp+2)); \
     if (!xml)                                                                 \
         return JS_FALSE
@@ -5275,7 +5259,7 @@ xml_appendChild(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     *vp = (argc != 0) ? vp[2] : JSVAL_VOID;
 
-    if (!PutProperty(cx, JSVAL_TO_OBJECT(v), name, vp))
+    if (!PutProperty(cx, JSVAL_TO_OBJECT(v), name, false, vp))
         return JS_FALSE;
 
     *vp = OBJECT_TO_JSVAL(obj);
@@ -5299,7 +5283,10 @@ xml_attribute(JSContext *cx, uintN argc, jsval *vp)
     vp[2] = OBJECT_TO_JSVAL(qn);        /* local root */
 
     jsid id = OBJECT_TO_JSID(qn);
-    return GetProperty(cx, JS_THIS_OBJECT(cx, vp), id, vp);
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
+    if (!obj)
+        return JS_FALSE;
+    return GetProperty(cx, obj, id, vp);
 }
 
 /* XML and XMLList */
@@ -5313,7 +5300,10 @@ xml_attributes(JSContext *cx, uintN argc, jsval *vp)
 
     AutoObjectRooter tvr(cx, qn);
     jsid id = OBJECT_TO_JSID(qn);
-    return GetProperty(cx, JS_THIS_OBJECT(cx, vp), id, vp);
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
+    if (!obj)
+        return JS_FALSE;
+    return GetProperty(cx, obj, id, vp);
 }
 
 static JSXML *
@@ -5468,8 +5458,11 @@ xml_childIndex(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 xml_children(JSContext *cx, uintN argc, jsval *vp)
 {
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
+    if (!obj)
+        return false;
     jsid name = ATOM_TO_JSID(cx->runtime->atomState.starAtom);
-    return GetProperty(cx, JS_THIS_OBJECT(cx, vp), name, vp);
+    return GetProperty(cx, obj, name, vp);
 }
 
 /* XML and XMLList */
@@ -5666,7 +5659,6 @@ xml_elements(JSContext *cx, uintN argc, jsval *vp)
     nameqn = ToXMLName(cx, name, &funid);
     if (!nameqn)
         return JS_FALSE;
-    vp[2] = OBJECT_TO_JSVAL(nameqn);
 
     if (!JSID_IS_VOID(funid))
         return xml_list_helper(cx, xml, vp) != NULL;
@@ -5678,11 +5670,12 @@ xml_elements(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 xml_hasOwnProperty(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSObject *obj;
     jsval name;
     JSBool found;
 
-    obj = JS_THIS_OBJECT(cx, vp);
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
+    if (!obj)
+        return JS_FALSE;
     if (!InstanceOf(cx, obj, &js_XMLClass, Valueify(vp + 2)))
         return JS_FALSE;
 
@@ -6373,7 +6366,7 @@ xml_replace(JSContext *cx, uintN argc, jsval *vp)
 
     bool haveIndex;
     if (argc == 0) {
-        haveIndex = true;
+        haveIndex = false;
     } else {
         if (!js_IdValIsIndex(cx, vp[2], &index, &haveIndex))
             return JS_FALSE;
@@ -6384,10 +6377,8 @@ xml_replace(JSContext *cx, uintN argc, jsval *vp)
          * Call function QName per spec, not ToXMLName, to avoid attribute
          * names.
          */
-        if (!QNameHelper(cx, NULL, &js_QNameClass, argc == 0 ? -1 : 1,
-                         vp + 2, vp)) {
+        if (!QNameHelper(cx, NULL, argc == 0 ? -1 : 1, vp + 2, vp))
             return JS_FALSE;
-        }
         JS_ASSERT(!JSVAL_IS_PRIMITIVE(*vp));
         nameqn = JSVAL_TO_OBJECT(*vp);
 
@@ -6424,7 +6415,7 @@ xml_setChildren(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
 
     *vp = argc != 0 ? vp[2] : JSVAL_VOID;     /* local root */
-    if (!PutProperty(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.starAtom), vp))
+    if (!PutProperty(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.starAtom), false, vp))
         return JS_FALSE;
 
     *vp = OBJECT_TO_JSVAL(obj);
@@ -6724,13 +6715,10 @@ xml_toString_helper(JSContext *cx, JSXML *xml)
 static JSBool
 xml_toSource(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval thisv;
-    JSString *str;
-
-    thisv = JS_THIS(cx, vp);
-    if (JSVAL_IS_NULL(thisv))
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
+    if (!obj)
         return JS_FALSE;
-    str = ToXMLString(cx, thisv, TO_SOURCE_FLAG);
+    JSString *str = ToXMLString(cx, OBJECT_TO_JSVAL(obj), TO_SOURCE_FLAG);
     if (!str)
         return JS_FALSE;
     *vp = STRING_TO_JSVAL(str);
@@ -6754,13 +6742,10 @@ xml_toString(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 xml_toXMLString(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval thisv;
-    JSString *str;
-
-    thisv = JS_THIS(cx, vp);
-    if (JSVAL_IS_NULL(thisv))
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
+    if (!obj)
         return JS_FALSE;
-    str = ToXMLString(cx, thisv, 0);
+    JSString *str = ToXMLString(cx, OBJECT_TO_JSVAL(obj), 0);
     if (!str)
         return JS_FALSE;
     *vp = STRING_TO_JSVAL(str);
@@ -6771,8 +6756,11 @@ xml_toXMLString(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 xml_valueOf(JSContext *cx, uintN argc, jsval *vp)
 {
-    *vp = JS_THIS(cx, vp);
-    return !JSVAL_IS_NULL(*vp);
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
+    if (!obj)
+        return false;
+    *vp = OBJECT_TO_JSVAL(obj);
+    return true;
 }
 
 static JSFunctionSpec xml_methods[] = {
@@ -6865,25 +6853,24 @@ SetDefaultXMLSettings(JSContext *cx, JSObject *obj)
 static JSBool
 xml_settings(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSObject *settings;
-    JSObject *obj;
-
-    settings = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, NULL, NULL);
+    JSObject *settings = JS_NewObject(cx, NULL, NULL, NULL);
     if (!settings)
-        return JS_FALSE;
+        return false;
     *vp = OBJECT_TO_JSVAL(settings);
-    obj = JS_THIS_OBJECT(cx, vp);
-    return obj && CopyXMLSettings(cx, obj, settings);
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
+    if (!obj)
+        return false;
+    return CopyXMLSettings(cx, obj, settings);
 }
 
 static JSBool
 xml_setSettings(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSObject *obj, *settings;
+    JSObject *settings;
     jsval v;
     JSBool ok;
 
-    obj = JS_THIS_OBJECT(cx, vp);
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
     if (!obj)
         return JS_FALSE;
     v = (argc == 0) ? JSVAL_VOID : vp[2];
@@ -7131,23 +7118,6 @@ js_InitQNameClass(JSContext *cx, JSObject *obj)
 }
 
 JSObject *
-js_InitAttributeNameClass(JSContext *cx, JSObject *obj)
-{
-    return js_InitClass(cx, obj, NULL, &js_AttributeNameClass, AttributeName, 2, JS_TypeHandlerDynamic,
-                        qname_props, qname_methods, NULL, NULL);
-}
-
-JSObject *
-js_InitAnyNameClass(JSContext *cx, JSObject *obj)
-{
-    jsid id;
-
-    if (!js_GetAnyName(cx, &id))
-        return NULL;
-    return JSID_TO_OBJECT(id);
-}
-
-JSObject *
 js_InitXMLClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto, *pobj;
@@ -7225,25 +7195,20 @@ js_InitXMLClasses(JSContext *cx, JSObject *obj)
         return NULL;
     if (!js_InitQNameClass(cx, obj))
         return NULL;
-    if (!js_InitAttributeNameClass(cx, obj))
-        return NULL;
-    if (!js_InitAnyNameClass(cx, obj))
-        return NULL;
     return js_InitXMLClass(cx, obj);
 }
 
 JSBool
 js_GetFunctionNamespace(JSContext *cx, Value *vp)
 {
-    JSObject *obj;
-    JSLinearString *prefix, *uri;
+    JSObject *global = cx->hasfp() ? cx->fp()->scopeChain().getGlobal() : cx->globalObject;
 
-    obj = cx->compartment->functionNamespaceObject;
-    if (!obj) {
+    *vp = global->getReservedSlot(JSRESERVED_GLOBAL_FUNCTION_NS);
+    if (vp->isUndefined()) {
         JSRuntime *rt = cx->runtime;
-        prefix = rt->atomState.typeAtoms[JSTYPE_FUNCTION];
-        uri = rt->atomState.functionNamespaceURIAtom;
-        obj = NewXMLNamespace(cx, prefix, uri, JS_FALSE);
+        JSLinearString *prefix = rt->atomState.typeAtoms[JSTYPE_FUNCTION];
+        JSLinearString *uri = rt->atomState.functionNamespaceURIAtom;
+        JSObject *obj = NewXMLNamespace(cx, prefix, uri, JS_FALSE);
         if (!obj)
             return false;
 
@@ -7252,13 +7217,14 @@ js_GetFunctionNamespace(JSContext *cx, Value *vp)
          * Namespace.prototype is not detectable, as there is no way to
          * refer to this instance in scripts.  When used to qualify method
          * names, its prefix and uri references are copied to the QName.
+         * The parent remains set and links back to global.
          */
         obj->clearType(cx);
-        obj->clearParent();
 
-        cx->compartment->functionNamespaceObject = obj;
+        vp->setObject(*obj);
+        if (!js_SetReservedSlot(cx, global, JSRESERVED_GLOBAL_FUNCTION_NS, *vp))
+            return false;
     }
-    vp->setObject(*obj);
 
     return true;
 }
@@ -7305,7 +7271,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
         return JS_FALSE;
     v = OBJECT_TO_JSVAL(ns);
     if (!obj->defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, Valueify(v),
-                             PropertyStub, PropertyStub, JSPROP_PERMANENT)) {
+                             PropertyStub, StrictPropertyStub, JSPROP_PERMANENT)) {
         return JS_FALSE;
     }
     *vp = v;
@@ -7325,7 +7291,7 @@ js_SetDefaultXMLNamespace(JSContext *cx, const Value &v)
     JSStackFrame *fp = js_GetTopStackFrame(cx);
     JSObject &varobj = fp->varobj(cx);
     if (!varobj.defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, ObjectValue(*ns),
-                               PropertyStub, PropertyStub, JSPROP_PERMANENT)) {
+                               PropertyStub, StrictPropertyStub, JSPROP_PERMANENT)) {
         return JS_FALSE;
     }
     return JS_TRUE;
@@ -7343,11 +7309,11 @@ js_ToAttributeName(JSContext *cx, Value *vp)
     return JS_TRUE;
 }
 
-JSLinearString *
+JSFlatString *
 js_EscapeAttributeValue(JSContext *cx, JSString *str, JSBool quote)
 {
-    JSCharBuffer cb(cx);
-    return EscapeAttributeValue(cx, cb, str, quote);
+    StringBuffer sb(cx);
+    return EscapeAttributeValue(cx, sb, str, quote);
 }
 
 JSString *
@@ -7385,11 +7351,11 @@ js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str, JSString *str2)
     return js_NewString(cx, newchars - newlen, newlen);
 }
 
-JSString *
+JSFlatString *
 js_EscapeElementValue(JSContext *cx, JSString *str)
 {
-    JSCharBuffer cb(cx);
-    return EscapeElementValue(cx, cb, str, 0);
+    StringBuffer sb(cx);
+    return EscapeElementValue(cx, sb, str, 0);
 }
 
 JSString *
@@ -7398,48 +7364,28 @@ js_ValueToXMLString(JSContext *cx, const Value &v)
     return ToXMLString(cx, Jsvalify(v), 0);
 }
 
-static JSBool
-anyname_toString(JSContext *cx, uintN argc, jsval *vp)
-{
-    *vp = ATOM_TO_JSVAL(cx->runtime->atomState.starAtom);
-    return JS_TRUE;
-}
-
 JSBool
 js_GetAnyName(JSContext *cx, jsid *idp)
 {
-    JSObject *obj;
-
-    obj = cx->compartment->anynameObject;
-    if (!obj) {
-        JSRuntime *rt = cx->runtime;
-
-        obj = NewNonFunction<WithProto::Given>(cx, &js_AnyNameClass, NULL, NULL);
+    JSObject *global = cx->hasfp() ? cx->fp()->scopeChain().getGlobal() : cx->globalObject;
+    Value v = global->getReservedSlot(JSProto_AnyName);
+    if (v.isUndefined()) {
+        JSObject *obj = NewNonFunction<WithProto::Given>(cx, &js_AnyNameClass, NULL, global);
         if (!obj)
             return false;
 
+        JS_ASSERT(!obj->getProto());
+
+        JSRuntime *rt = cx->runtime;
         InitXMLQName(obj, rt->emptyString, rt->emptyString,
                      ATOM_TO_STRING(rt->atomState.starAtom));
         METER(xml_stats.qname);
 
-        /*
-         * Avoid entraining any Object.prototype found via cx's scope
-         * chain or global object.  This loses the default toString,
-         * but no big deal: we want to customize toString anyway for
-         * clearer diagnostics.
-         */
-        if (!JS_DefineFunctionWithType(cx, obj, js_toString_str,
-                                       anyname_toString, 0, 0,
-                                       JS_TypeHandlerString, "AnyName.toString"))
+        v.setObject(*obj);
+        if (!js_SetReservedSlot(cx, global, JSProto_AnyName, v))
             return false;
-
-        JS_ASSERT(!obj->getProto());
-        JS_ASSERT(!obj->getParent());
-
-        cx->compartment->anynameObject = obj;
     }
-
-    *idp = OBJECT_TO_JSID(obj);
+    *idp = OBJECT_TO_JSID(&v.toObject());
     return true;
 }
 
@@ -7508,7 +7454,8 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
     } while ((obj = obj->getParent()) != NULL);
 
     JSAutoByteString printable;
-    if (js_ValueToPrintable(cx, ObjectValue(*nameobj), &printable)) {
+    JSString *str = ConvertQNameToString(cx, nameobj);
+    if (str && js_ValueToPrintable(cx, StringValue(str), &printable)) {
         JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
                                      JSMSG_UNDEFINED_XML_NAME, printable.ptr());
     }
@@ -7638,20 +7585,20 @@ xmlfilter_finalize(JSContext *cx, JSObject *obj)
 Class js_XMLFilterClass = {
     "XMLFilter",
     JSCLASS_HAS_PRIVATE | JSCLASS_IS_ANONYMOUS | JSCLASS_MARK_IS_TRACE,
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
+    PropertyStub,         /* addProperty */
+    PropertyStub,         /* delProperty */
+    PropertyStub,         /* getProperty */
+    StrictPropertyStub,   /* setProperty */
     EnumerateStub,
     ResolveStub,
     ConvertStub,
     xmlfilter_finalize,
-    NULL,           /* reserved0   */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* xdrObject   */
-    NULL,           /* hasInstance */
+    NULL,                 /* reserved0   */
+    NULL,                 /* checkAccess */
+    NULL,                 /* call        */
+    NULL,                 /* construct   */
+    NULL,                 /* xdrObject   */
+    NULL,                 /* hasInstance */
     JS_CLASS_TRACE(xmlfilter_trace)
 };
 
@@ -7803,22 +7750,22 @@ js_NewXMLSpecialObject(JSContext *cx, JSXMLClass xml_class, JSString *name,
 JSString *
 js_MakeXMLCDATAString(JSContext *cx, JSString *str)
 {
-    JSCharBuffer cb(cx);
-    return MakeXMLCDATAString(cx, cb, str);
+    StringBuffer sb(cx);
+    return MakeXMLCDATAString(cx, sb, str);
 }
 
 JSString *
 js_MakeXMLCommentString(JSContext *cx, JSString *str)
 {
-    JSCharBuffer cb(cx);
-    return MakeXMLCommentString(cx, cb, str);
+    StringBuffer sb(cx);
+    return MakeXMLCommentString(cx, sb, str);
 }
 
 JSString *
 js_MakeXMLPIString(JSContext *cx, JSString *name, JSString *str)
 {
-    JSCharBuffer cb(cx);
-    return MakeXMLPIString(cx, cb, name, str);
+    StringBuffer sb(cx);
+    return MakeXMLPIString(cx, sb, name, str);
 }
 
 #endif /* JS_HAS_XML_SUPPORT */

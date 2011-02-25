@@ -57,6 +57,30 @@ Form History test: form field autocomplete
     <button type="submit">Submit</button>
   </form>
 
+  <!-- form with input type='email' -->
+  <form id="form8" onsubmit="return false;">
+    <input  type="email" name="field6">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with input type='tel' -->
+  <form id="form9" onsubmit="return false;">
+    <input  type="tel" name="field7">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with input type='url' -->
+  <form id="form10" onsubmit="return false;">
+    <input  type="url" name="field8">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with input type='search' -->
+  <form id="form11" onsubmit="return false;">
+    <input  type="search" name="field9">
+    <button type="submit">Submit</button>
+  </form>
+
 </div>
 
 <pre id="test">
@@ -94,6 +118,19 @@ fh.addEntry("field5", "1");
 fh.addEntry("field5", "12");
 fh.addEntry("field5", "123");
 fh.addEntry("field5", "1234");
+fh.addEntry("field6", "value");
+fh.addEntry("field7", "value");
+fh.addEntry("field8", "value");
+fh.addEntry("field9", "value");
+
+// All these non-implemeted types might need autocomplete tests in the future.
+var todoTypes = [ "datetime", "date", "month", "week", "time", "datetime-local",
+                  "number", "range", "color" ];
+var todoInput = document.createElement("input");
+for each (var type in todoTypes) {
+  todoInput.type = type;
+  todo_is(todoInput.type, type, type + " type shouldn't be implemented");
+}
 
 
 function setForm(value) {
@@ -630,8 +667,53 @@ function runTest(testNum) {
     case 310:
         checkMenuEntries([]);
 
+        input = $_(8, "field6");
+        testNum = 399;
+        restoreForm();
+        doKey("down");
+        break;
+
+    case 400:
+    case 401:
+    case 402:
+    case 403:
+        checkMenuEntries(["value"]);
+        doKey("down");
+        doKey("return");
+        checkForm("value");
+
+        if (testNum == 400) {
+          input = $_(9, "field7");
+        } else if (testNum == 401) {
+          input = $_(10, "field8");
+        } else if (testNum == 402) {
+          input = $_(11, "field9");
+        } else if (testNum == 403) {
+          // Go to test 500.
+          fh.addEntry("field1", "value1");
+          input = $_(1, "field1");
+          testNum = 499;
+        }
+
+        restoreForm();
+        doKey("down");
+        break;
+
+    // Check that the input event is fired.
+    case 500:
+      input.addEventListener("input", function(event) {
+        input.removeEventListener("input", arguments.callee, false);
+        ok(true, "oninput should have been received");
+        ok(event.bubbles, "input event should bubble");
+        ok(event.cancelable, "input event should be cancelable");
         SimpleTest.finish();
-        return;
+      }, false);
+
+      doKey("down");
+      checkForm("");
+      doKey("return");
+      checkForm("value1");
+      return;
 
     default:
         ok(false, "Unexpected invocation of test #" + testNum);

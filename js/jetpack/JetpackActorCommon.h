@@ -130,7 +130,7 @@ private:
    ~RecList();
     void add(jsval v);
     void remove(jsval v);
-    void copyTo(nsTArray<jsval>& dst) const;
+    bool copyTo(JSContext *cx, nsTArray<jsval>& dst) const;
   };
 
   nsClassHashtable<nsStringHashKey, RecList> mReceivers;

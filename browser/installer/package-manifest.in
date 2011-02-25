@@ -84,6 +84,7 @@
 
 [browser]
 ; [Base Browser Files]
+@BINPATH@/jsloader/
 #ifndef XP_UNIX
 @BINPATH@/@MOZ_APP_NAME@.exe
 #else
@@ -230,6 +231,7 @@
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/components/services-crypto.xpt
 #endif
+@BINPATH@/components/services-crypto-component.xpt
 @BINPATH@/components/shellservice.xpt
 @BINPATH@/components/shistory.xpt
 @BINPATH@/components/spellchecker.xpt
@@ -348,7 +350,6 @@
 @BINPATH@/components/toolkitplaces.manifest
 @BINPATH@/components/nsLivemarkService.js
 @BINPATH@/components/nsTaggingService.js
-@BINPATH@/components/nsPlacesDBFlush.js
 @BINPATH@/components/nsPlacesAutoComplete.manifest
 @BINPATH@/components/nsPlacesAutoComplete.js
 @BINPATH@/components/nsPlacesExpiration.js
@@ -405,12 +406,12 @@
 @BINPATH@/components/@DLL_PREFIX@mozgnome@DLL_SUFFIX@
 #endif
 
-; ANGLE on Win32
-#ifdef XP_WIN32
-#ifndef HAVE_64BIT_OS
+; ANGLE GLES-on-D3D rendering library
+#ifdef MOZ_ANGLE
 @BINPATH@/libEGL.dll
 @BINPATH@/libGLESv2.dll
-#endif
+@BINPATH@/@MOZ_D3DX9_DLL@
+@BINPATH@/@MOZ_D3DCOMPILER_DLL@
 #endif
 
 ; [Browser Chrome Files]
@@ -420,7 +421,7 @@
 @BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/icon.png
 @BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/preview.png
 #if MOZ_UPDATE_CHANNEL == beta
-@BINPATH@/extensions/testpilot@labs.mozilla.com/*
+@BINPATH@/distribution/extensions/testpilot@labs.mozilla.com.xpi
 #endif
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest

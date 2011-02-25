@@ -130,7 +130,7 @@ Canvas2D_GetStyleHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
 }
 
 static JSBool
-nsIDOMCanvasRenderingContext2D_SetStrokeStyle(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+nsIDOMCanvasRenderingContext2D_SetStrokeStyle(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
     return Canvas2D_SetStyleHelper(cx, obj, id, vp, &nsIDOMCanvasRenderingContext2D::SetStrokeStyle_multi);
 }
@@ -142,7 +142,7 @@ nsIDOMCanvasRenderingContext2D_GetStrokeStyle(JSContext *cx, JSObject *obj, jsid
 }
 
 static JSBool
-nsIDOMCanvasRenderingContext2D_SetFillStyle(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+nsIDOMCanvasRenderingContext2D_SetFillStyle(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
     return Canvas2D_SetStyleHelper(cx, obj, id, vp, &nsIDOMCanvasRenderingContext2D::SetFillStyle_multi);
 }
@@ -349,9 +349,12 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
         hasDirtyRect = PR_TRUE;
     }
 
-    if (!JS_GetProperty(cx, dataObject, "data", tv.jsval_addr()) ||
-        JSVAL_IS_PRIMITIVE(tv.jsval_value()))
+    if (!JS_GetProperty(cx, dataObject, "data", tv.jsval_addr()))
         return JS_FALSE;
+
+    if (JSVAL_IS_PRIMITIVE(tv.jsval_value()))
+        return xpc_qsThrow(cx, NS_ERROR_DOM_TYPE_MISMATCH_ERR);
+
     darray = JSVAL_TO_OBJECT(tv.jsval_value());
 
     js::AutoValueRooter tsrc_tvr(cx);

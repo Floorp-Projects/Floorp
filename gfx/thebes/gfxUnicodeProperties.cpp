@@ -145,6 +145,17 @@ gfxUnicodeProperties::GetScriptCode(PRUint32 aCh)
                         [aCh & ((1 << kScriptCharBits) - 1)];
 }
 
+gfxUnicodeProperties::HSType
+gfxUnicodeProperties::GetHangulSyllableType(PRUint32 aCh)
+{
+    // all Hangul chars are in plane 0
+    if (aCh < UNICODE_BMP_LIMIT) {
+        return HSType(sHangulValues[sHangulPages[0][aCh >> kHangulCharBits]]
+                                   [aCh & ((1 << kHangulCharBits) - 1)]);
+    }
+    return HST_NONE;
+}
+
 // TODO: replace this with a properties file or similar;
 // expect this to evolve as harfbuzz shaping support matures.
 //
@@ -178,6 +189,7 @@ gfxUnicodeProperties::ScriptShapingLevel(PRInt32 aScriptCode)
     case HB_SCRIPT_KANNADA:
     case HB_SCRIPT_MALAYALAM:
     case HB_SCRIPT_ORIYA:
+    case HB_SCRIPT_SINHALA:
     case HB_SCRIPT_TAMIL:
     case HB_SCRIPT_TELUGU:
     case HB_SCRIPT_KHMER:

@@ -103,6 +103,18 @@ CanvasLayerOGL::Initialize(const Data& aData)
   }
 
   mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
+      
+  // Check the maximum texture size supported by GL. glTexImage2D supports
+  // images of up to 2 + GL_MAX_TEXTURE_SIZE
+  GLint texSize = gl()->GetMaxTextureSize();
+  if (mBounds.width > (2 + texSize) || mBounds.height > (2 + texSize)) {
+    mDelayedUpdates = PR_TRUE;
+    MakeTexture();
+    // This should only ever occur with 2d canvas, WebGL can't already have a texture
+    // of this size can it?
+    NS_ABORT_IF_FALSE(mCanvasSurface, 
+                      "Invalid texture size when WebGL surface already exists at that size?");
+  }
 }
 
 void
@@ -125,7 +137,7 @@ CanvasLayerOGL::MakeTexture()
 void
 CanvasLayerOGL::Updated(const nsIntRect& aRect)
 {
-  if (mDestroyed) {
+  if (mDestroyed || mDelayedUpdates) {
     return;
   }
 
@@ -145,83 +157,30 @@ CanvasLayerOGL::Updated(const nsIntRect& aRect)
       MakeTexture();
     }
   } else {
-    PRBool newTexture = mTexture == 0;
-    if (newTexture) {
-      MakeTexture();
+    if (!mTexture) {
       mUpdatedRect = mBounds;
-    } else {
-      gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
-      gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
     }
 
-    nsRefPtr<gfxImageSurface> updatedAreaImageSurface;
+    nsRefPtr<gfxASurface> updatedAreaSurface;
     if (mCanvasSurface) {
-      nsRefPtr<gfxASurface> sourceSurface = mCanvasSurface;
-
-#ifdef XP_WIN
-      if (sourceSurface->GetType() == gfxASurface::SurfaceTypeWin32) {
-        sourceSurface = sourceSurface->GetAsImageSurface();
-        if (!sourceSurface)
-          sourceSurface = mCanvasSurface;
-      }
-#endif
-
-#if 0
-      // XXX don't copy, blah.
-      // but need to deal with stride on the gl side; do this later.
-      if (mCanvasSurface->GetType() == gfxASurface::SurfaceTypeImage) {
-        gfxImageSurface *s = static_cast<gfxImageSurface*>(mCanvasSurface.get());
-        if (s->Format() == gfxASurface::ImageFormatARGB32 ||
-            s->Format() == gfxASurface::ImageFormatRGB24)
-        {
-          updatedAreaImageSurface = ...;
-        } else {
-          NS_WARNING("surface with format that we can't handle");
-          return;
-        }
-      } else
-#endif
-      {
-        updatedAreaImageSurface =
-          new gfxImageSurface(gfxIntSize(mUpdatedRect.width, mUpdatedRect.height),
-                              gfxASurface::ImageFormatARGB32);
-        nsRefPtr<gfxContext> ctx = new gfxContext(updatedAreaImageSurface);
-        ctx->Translate(gfxPoint(-mUpdatedRect.x, -mUpdatedRect.y));
-        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-        ctx->SetSource(sourceSurface);
-        ctx->Paint();
-      }
+      updatedAreaSurface = mCanvasSurface;
     } else if (mCanvasGLContext) {
-      updatedAreaImageSurface =
+      nsRefPtr<gfxImageSurface> updatedAreaImageSurface =
         new gfxImageSurface(gfxIntSize(mUpdatedRect.width, mUpdatedRect.height),
                             gfxASurface::ImageFormatARGB32);
       mCanvasGLContext->ReadPixelsIntoImageSurface(mUpdatedRect.x, mUpdatedRect.y,
                                                    mUpdatedRect.width,
                                                    mUpdatedRect.height,
                                                    updatedAreaImageSurface);
+      updatedAreaSurface = updatedAreaImageSurface;
     }
 
-    if (newTexture) {
-      gl()->fTexImage2D(LOCAL_GL_TEXTURE_2D,
-                        0,
-                        LOCAL_GL_RGBA,
-                        mUpdatedRect.width,
-                        mUpdatedRect.height,
-                        0,
-                        LOCAL_GL_RGBA,
-                        LOCAL_GL_UNSIGNED_BYTE,
-                        updatedAreaImageSurface->Data());
-    } else {
-      gl()->fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
-                           0,
-                           mUpdatedRect.x,
-                           mUpdatedRect.y,
-                           mUpdatedRect.width,
-                           mUpdatedRect.height,
-                           LOCAL_GL_RGBA,
-                           LOCAL_GL_UNSIGNED_BYTE,
-                           updatedAreaImageSurface->Data());
-    }
+    mLayerProgram =
+      gl()->UploadSurfaceToTexture(updatedAreaSurface,
+                                   mUpdatedRect,
+                                   mTexture,
+                                   false,
+                                   mUpdatedRect.TopLeft());
   }
 
   // sanity
@@ -239,16 +198,18 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   // mGLBufferIsPremultiplied is TRUE or not.  The RGBLayerProgram
   // assumes that it's true.
 
-  ColorTextureLayerProgram *program = nsnull;
-
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 
   if (mTexture) {
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
   }
 
+  ColorTextureLayerProgram *program = nsnull;
+
   bool useGLContext = mCanvasGLContext &&
     mCanvasGLContext->GetContextType() == gl()->GetContextType();
+
+  nsIntRect drawRect = mBounds;
 
   if (useGLContext) {
     mCanvasGLContext->MakeCurrent();
@@ -257,15 +218,27 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     gl()->MakeCurrent();
     gl()->BindTex2DOffscreen(mCanvasGLContext);
     DEBUG_GL_ERROR_CHECK(gl());
+    program = mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(), PR_TRUE);
+  } else if (mDelayedUpdates) {
+    NS_ABORT_IF_FALSE(mCanvasSurface, "WebGL canvases should always be using full texture upload");
+    
+    drawRect.IntersectRect(drawRect, GetEffectiveVisibleRegion().GetBounds());
+
+    mLayerProgram =
+      gl()->UploadSurfaceToTexture(mCanvasSurface,
+                                   nsIntRect(0, 0, drawRect.width, drawRect.height),
+                                   mTexture,
+                                   true,
+                                   drawRect.TopLeft());
   }
-  program =
-    mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(),
-                                      useGLContext != 0);
+  if (!program) { 
+    program = mOGLManager->GetColorTextureLayerProgram(mLayerProgram);
+  }
 
   ApplyFilter(mFilter);
 
   program->Activate();
-  program->SetLayerQuadRect(mBounds);
+  program->SetLayerQuadRect(drawRect);
   program->SetLayerTransform(GetEffectiveTransform());
   program->SetLayerOpacity(GetEffectiveOpacity());
   program->SetRenderOffset(aOffset);
@@ -313,13 +286,7 @@ ShadowCanvasLayerOGL::Swap(gfxSharedImageSurface* aNewFront)
 
     gfxSize sz = aNewFront->GetSize();
     nsIntRegion updateRegion(nsIntRect(0, 0, sz.width, sz.height));
-    // NB: this gfxContext must not escape EndUpdate() below
-    nsRefPtr<gfxContext> dest = mTexImage->BeginUpdate(updateRegion);
-
-    dest->SetOperator(gfxContext::OPERATOR_SOURCE);
-    dest->DrawSurface(aNewFront, aNewFront->GetSize());
-
-    mTexImage->EndUpdate();
+    mTexImage->DirectUpdate(aNewFront, updateRegion);
   }
 
   return aNewFront;
@@ -333,6 +300,12 @@ ShadowCanvasLayerOGL::DestroyFrontBuffer()
     mOGLManager->DestroySharedSurface(mDeadweight, mAllocator);
     mDeadweight = nsnull;
   }
+}
+
+void
+ShadowCanvasLayerOGL::Disconnect()
+{
+  Destroy();
 }
 
 void
@@ -359,8 +332,7 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImage->Texture());
   ColorTextureLayerProgram *program =
-    mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(),
-                                      mTexImage->IsRGB());
+    mOGLManager->GetColorTextureLayerProgram(mTexImage->GetShaderProgramType());
 
   ApplyFilter(mFilter);
 

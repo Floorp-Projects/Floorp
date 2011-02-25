@@ -44,6 +44,7 @@
 #include "nsDiskCacheStreams.h"
 #include "nsCacheService.h"
 #include "mozilla/FileUtils.h"
+#include "nsIDiskCacheStreamInternal.h"
 
 
 
@@ -196,13 +197,16 @@ nsDiskCacheInputStream::IsNonBlocking(PRBool * nonBlocking)
 #pragma mark -
 #pragma mark nsDiskCacheOutputStream
 #endif
-class nsDiskCacheOutputStream : public nsIOutputStream {
+class nsDiskCacheOutputStream : public nsIOutputStream
+                              , public nsIDiskCacheStreamInternal
+{
 public:
     nsDiskCacheOutputStream( nsDiskCacheStreamIO * parent);
     virtual ~nsDiskCacheOutputStream();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOUTPUTSTREAM
+    NS_DECL_NSIDISKCACHESTREAMINTERNAL
 
     void ReleaseStreamIO() { NS_IF_RELEASE(mStreamIO); }
 
@@ -212,8 +216,9 @@ private:
 };
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDiskCacheOutputStream,
-                              nsIOutputStream)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsDiskCacheOutputStream,
+                              nsIOutputStream,
+                              nsIDiskCacheStreamInternal)
 
 nsDiskCacheOutputStream::nsDiskCacheOutputStream( nsDiskCacheStreamIO * parent)
     : mStreamIO(parent)
@@ -241,6 +246,16 @@ nsDiskCacheOutputStream::Close()
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDiskCacheOutputStream::CloseInternal()
+{
+    if (!mClosed) {
+        mClosed = PR_TRUE;
+        // tell parent streamIO we are closing
+        mStreamIO->CloseOutputStreamInternal(this);
+    }
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsDiskCacheOutputStream::Flush()
@@ -443,6 +458,13 @@ nsresult
 nsDiskCacheStreamIO::CloseOutputStream(nsDiskCacheOutputStream *  outputStream)
 {
     nsCacheServiceAutoLock lock; // grab service lock
+    return CloseOutputStreamInternal(outputStream);
+}
+
+nsresult
+nsDiskCacheStreamIO::CloseOutputStreamInternal(
+    nsDiskCacheOutputStream * outputStream)
+{
     nsresult   rv;
 
     if (outputStream != mOutStream) {
@@ -480,11 +502,40 @@ nsDiskCacheStreamIO::Flush()
     // write data to cache blocks, or flush mBuffer to file
     nsDiskCacheMap *cacheMap = mDevice->CacheMap();  // get map reference
     nsresult rv;
-    
-    if ((mStreamEnd > kMaxBufferSize) ||
-        (mBinding->mCacheEntry->StoragePolicy() == nsICache::STORE_ON_DISK_AS_FILE)) {
+
+    PRBool written = PR_FALSE;
+
+    if ((mStreamEnd <= kMaxBufferSize) &&
+        (mBinding->mCacheEntry->StoragePolicy() != nsICache::STORE_ON_DISK_AS_FILE)) {
+        // store data (if any) in cache block files
+
+        mBufDirty = PR_FALSE;
+
+        // delete existing storage
+        nsDiskCacheRecord * record = &mBinding->mRecord;
+        if (record->DataLocationInitialized()) {
+            rv = cacheMap->DeleteStorage(record, nsDiskCache::kData);
+            if (NS_FAILED(rv)) {
+                NS_WARNING("cacheMap->DeleteStorage() failed.");
+                cacheMap->DeleteRecord(record);
+                return rv;
+            }
+        }
+
+        // flush buffer to block files
+        written = PR_TRUE;
+        if (mStreamEnd > 0) {
+            rv = cacheMap->WriteDataCacheBlocks(mBinding, mBuffer, mBufEnd);
+            if (NS_FAILED(rv)) {
+                NS_WARNING("WriteDataCacheBlocks() failed.");
+                written = PR_FALSE;
+            }
+        }
+    }
+
+    if (!written) {
         // make sure we save as separate file
-        rv = FlushBufferToFile();       // will initialize DataFileLocation() if necessary
+        rv = FlushBufferToFile(); // initializes DataFileLocation() if necessary
 
         if (mFD) {
           // Update the file size of the disk file in the cache
@@ -507,32 +558,6 @@ nsDiskCacheStreamIO::Flush()
         // therefore, it's probably not worth optimizing for the subsequent
         // write, so we unconditionally delete mBuffer here.
         DeleteBuffer();
-
-    } else {
-        // store data (if any) in cache block files
-
-        mBufDirty = PR_FALSE;
-
-        // delete existing storage
-        nsDiskCacheRecord * record = &mBinding->mRecord;
-        if (record->DataLocationInitialized()) {
-            rv = cacheMap->DeleteStorage(record, nsDiskCache::kData);
-            if (NS_FAILED(rv)) {
-                NS_WARNING("cacheMap->DeleteStorage() failed.");
-                cacheMap->DeleteRecord(record);
-                return  rv;
-            }
-        }
-    
-        // flush buffer to block files
-        if (mStreamEnd > 0) {
-            rv = cacheMap->WriteDataCacheBlocks(mBinding, mBuffer, mBufEnd);
-            if (NS_FAILED(rv)) {
-                NS_WARNING("WriteDataCacheBlocks() failed.");
-                nsCacheService::DoomEntry(mBinding->mCacheEntry);
-                return rv;
-            }
-        }
     }
     
     // XXX do we need this here?  WriteDataCacheBlocks() calls UpdateRecord()
@@ -668,6 +693,7 @@ nsDiskCacheStreamIO::OpenCacheFile(PRIntn flags, PRFileDesc ** fd)
     
     rv = cacheMap->GetLocalFileForDiskCacheRecord(&mBinding->mRecord,
                                                   nsDiskCache::kData,
+                                                  !!(flags & PR_CREATE_FILE),
                                                   getter_AddRefs(mLocalFile));
     if (NS_FAILED(rv))  return rv;
     
@@ -732,8 +758,11 @@ nsDiskCacheStreamIO::FlushBufferToFile()
         if (NS_FAILED(rv))  return rv;
 
         PRInt64 dataSize = mBinding->mCacheEntry->PredictedDataSize();
+// Appears to cause bug 617123?  Disabled for now.
+#if 0
         if (dataSize != -1)
             mozilla::fallocate(mFD, PR_MIN(dataSize, kPreallocateLimit));
+#endif
     }
     
     // write buffer

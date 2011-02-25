@@ -175,24 +175,49 @@ trymoreglyphs:
             continue;
         }
 
-        hr = analyzer->GetGlyphPlacements(aString + range.start, 
-                                          clusters.Elements(),
-                                          textProperties.Elements(),
-                                          range.Length(),
-                                          indices.Elements(),
-                                          glyphProperties.Elements(),
-                                          actualGlyphs,
-                                          font->GetFontFace(),
-                                          font->GetAdjustedSize(),
-                                          FALSE,
-                                          FALSE,
-                                          &runHead->mScript,
-                                          NULL,
-                                          NULL,
-                                          NULL,
-                                          0,
-                                          advances.Elements(),
-                                          glyphOffsets.Elements());
+        if (!static_cast<gfxDWriteFont*>(mFont)->mUseSubpixelPositions) {
+            hr = analyzer->GetGdiCompatibleGlyphPlacements(
+                                              aString + range.start,
+                                              clusters.Elements(),
+                                              textProperties.Elements(),
+                                              range.Length(),
+                                              indices.Elements(),
+                                              glyphProperties.Elements(),
+                                              actualGlyphs,
+                                              font->GetFontFace(),
+                                              font->GetAdjustedSize(),
+                                              1.0,
+                                              nsnull,
+                                              FALSE,
+                                              FALSE,
+                                              FALSE,
+                                              &runHead->mScript,
+                                              NULL,
+                                              NULL,
+                                              NULL,
+                                              0,
+                                              advances.Elements(),
+                                              glyphOffsets.Elements());
+        } else {
+            hr = analyzer->GetGlyphPlacements(aString + range.start,
+                                              clusters.Elements(),
+                                              textProperties.Elements(),
+                                              range.Length(),
+                                              indices.Elements(),
+                                              glyphProperties.Elements(),
+                                              actualGlyphs,
+                                              font->GetFontFace(),
+                                              font->GetAdjustedSize(),
+                                              FALSE,
+                                              FALSE,
+                                              &runHead->mScript,
+                                              NULL,
+                                              NULL,
+                                              NULL,
+                                              0,
+                                              advances.Elements(),
+                                              glyphOffsets.Elements());
+        }
         if (FAILED(hr)) {
             NS_WARNING("Analyzer failed to get glyph placements.");
             result = PR_FALSE;

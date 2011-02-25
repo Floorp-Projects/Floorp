@@ -361,7 +361,7 @@ namespace test_observer_topic_dispatched_helpers {
       do_check_true(visited || notVisited);
 
       // Check to make sure we got the state we expected.
-      do_check_eq(mExpectVisit, visited);
+      do_check_eq(visited, mExpectVisit);
 
       // Indicate that we've been notified.
       mNotified = true;
@@ -447,7 +447,7 @@ test_visituri_inserts()
   do_check_true(place.id > 0);
   do_check_false(place.hidden);
   do_check_false(place.typed);
-  do_check_true(place.visitCount == 1);
+  do_check_eq(place.visitCount, 1);
 
   run_next_test();
 }
@@ -471,7 +471,7 @@ test_visituri_updates()
   PlaceRecord place;
   do_get_place(visitedURI, place);
 
-  do_check_true(place.visitCount == 2);
+  do_check_eq(place.visitCount, 2);
 
   run_next_test();
 }
@@ -515,8 +515,8 @@ test_visituri_creates_visit()
   do_get_lastVisit(place.id, visit);
 
   do_check_true(visit.id > 0);
-  do_check_true(visit.lastVisitId == 0);
-  do_check_true(visit.transitionType == nsINavHistoryService::TRANSITION_LINK);
+  do_check_eq(visit.lastVisitId, 0);
+  do_check_eq(visit.transitionType, nsINavHistoryService::TRANSITION_LINK);
 
   run_next_test();
 }
@@ -563,7 +563,29 @@ test_visituri_transition_embed()
   do_get_place(visitedURI, place);
   do_get_lastVisit(place.id, visit);
 
-  do_check_true(visit.transitionType == nsINavHistoryService::TRANSITION_EMBED);
+  do_check_eq(place.id, 0);
+  do_check_eq(visit.id, 0);
+
+  run_next_test();
+}
+
+void
+test_new_visit_adds_place_guid()
+{
+  // First, add a visit and wait.  This will also add a place.
+  nsCOMPtr<nsIURI> visitedURI(new_test_uri());
+  nsCOMPtr<IHistory> history(do_get_IHistory());
+  nsresult rv = history->VisitURI(visitedURI, NULL,
+                                  mozilla::IHistory::TOP_LEVEL);
+  do_check_success(rv);
+  nsCOMPtr<VisitURIObserver> finisher = new VisitURIObserver();
+  finisher->WaitForNotification();
+
+  // Check that we have a guid for our visit.
+  PlaceRecord place;
+  do_get_place(visitedURI, place);
+  do_check_eq(place.visitCount, 1);
+  do_check_eq(place.guid.Length(), 12);
 
   run_next_test();
 }
@@ -618,6 +640,7 @@ Test gTests[] = {
   TEST(test_visituri_creates_visit),
   TEST(test_visituri_transition_typed),
   TEST(test_visituri_transition_embed),
+  TEST(test_new_visit_adds_place_guid),
 
   // The rest of these tests are tests that are only run in IPC builds.
 #ifdef MOZ_IPC

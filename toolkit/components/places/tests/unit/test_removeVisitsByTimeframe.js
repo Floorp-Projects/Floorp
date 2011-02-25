@@ -36,18 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-const histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService);
-
-const dbConn = Cc["@mozilla.org/browser/nav-history-service;1"].
-               getService(Ci.nsPIPlacesDatabase).
-               DBConnection;
+const bmsvc = PlacesUtils.bookmarks;
+const histsvc = PlacesUtils.history;
 
 const NOW = Date.now() * 1000;
-const TEST_URI = uri("http://example.com/");
-const PLACE_URI = uri("place:queryType=0&sort=8&maxResults=10");
+const TEST_URL = "http://example.com/";
+const TEST_URI = uri(TEST_URL);
+const PLACE_URL = "place:queryType=0&sort=8&maxResults=10";
+const PLACE_URI = uri(PLACE_URL);
 
 var gTests = [
   {
@@ -62,16 +58,15 @@ var gTests = [
                          false,
                          0);
       }
-
-      print("Get frecency.");
-      var frecency = getFrecencyForURI(TEST_URI);
-
+      waitForAsyncUpdates(this.continue_run, this);
+    },
+    continue_run: function () {
       print("Remove visits using timerange outside the URI's visits.");
       histsvc.QueryInterface(Ci.nsIBrowserHistory).
         removeVisitsByTimeframe(NOW - 10, NOW);
 
       print("URI should still exist in moz_places.");
-      do_check_true(uriExistsInMozPlaces(TEST_URI));
+      do_check_true(page_in_database(TEST_URL));
 
       print("Run a history query and check that all visits still exist.");
       var query = histsvc.getNewQuery();
@@ -91,8 +86,11 @@ var gTests = [
       do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
                     isVisited(TEST_URI));
 
-      print("Frecency should be unchanged.");
-      do_check_eq(getFrecencyForURI(TEST_URI), frecency);
+      waitForAsyncUpdates(function () {
+        print("Frecency should be positive.")
+        do_check_true(frecencyForUrl(TEST_URI) > 0);
+        run_next_test();
+      });
     }
   },
 
@@ -115,15 +113,15 @@ var gTests = [
                            bmsvc.DEFAULT_INDEX,
                            "bookmark title");
 
-      print("Get frecency.");
-      var frecency = getFrecencyForURI(TEST_URI);
-
+      waitForAsyncUpdates(this.continue_run, this);
+    },
+    continue_run: function () {
       print("Remove visits using timerange outside the URI's visits.");
       histsvc.QueryInterface(Ci.nsIBrowserHistory).
         removeVisitsByTimeframe(NOW - 10, NOW);
 
       print("URI should still exist in moz_places.");
-      do_check_true(uriExistsInMozPlaces(TEST_URI));
+      do_check_true(page_in_database(TEST_URL));
 
       print("Run a history query and check that all visits still exist.");
       var query = histsvc.getNewQuery();
@@ -143,8 +141,11 @@ var gTests = [
       do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
                     isVisited(TEST_URI));
 
-      print("Frecency should be unchanged.");
-      do_check_eq(getFrecencyForURI(TEST_URI), frecency);
+      waitForAsyncUpdates(function () {
+        print("Frecency should be positive.")
+        do_check_true(frecencyForUrl(TEST_URI) > 0);
+        run_next_test();
+      });
     }
   },
 
@@ -160,16 +161,15 @@ var gTests = [
                          false,
                          0);
       }
-
-      print("Get frecency.");
-      var frecency = getFrecencyForURI(TEST_URI);
-
+      waitForAsyncUpdates(this.continue_run, this);
+    },
+    continue_run: function () {
       print("Remove the 5 most recent visits.");
       histsvc.QueryInterface(Ci.nsIBrowserHistory).
         removeVisitsByTimeframe(NOW - 4, NOW);
 
       print("URI should still exist in moz_places.");
-      do_check_true(uriExistsInMozPlaces(TEST_URI));
+      do_check_true(page_in_database(TEST_URL));
 
       print("Run a history query and check that only the older 5 visits " +
             "still exist.");
@@ -190,8 +190,11 @@ var gTests = [
       do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
                     isVisited(TEST_URI));
 
-      print("Frecency should be unchanged.");
-      do_check_eq(getFrecencyForURI(TEST_URI), frecency);
+      waitForAsyncUpdates(function () {
+        print("Frecency should be positive.")
+        do_check_true(frecencyForUrl(TEST_URI) > 0);
+        run_next_test();
+      });
     }
   },
 
@@ -213,16 +216,15 @@ var gTests = [
                            TEST_URI,
                            bmsvc.DEFAULT_INDEX,
                            "bookmark title");
-
-      print("Get frecency.");
-      var frecency = getFrecencyForURI(TEST_URI);
-
+      waitForAsyncUpdates(this.continue_run, this);
+    },
+    continue_run: function () {
       print("Remove the 5 most recent visits.");
       histsvc.QueryInterface(Ci.nsIBrowserHistory).
         removeVisitsByTimeframe(NOW - 4, NOW);
 
       print("URI should still exist in moz_places.");
-      do_check_true(uriExistsInMozPlaces(TEST_URI));
+      do_check_true(page_in_database(TEST_URL));
 
       print("Run a history query and check that only the older 5 visits " +
             "still exist.");
@@ -243,8 +245,11 @@ var gTests = [
       do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
                     isVisited(TEST_URI));
 
-      print("Frecency should be unchanged.");
-      do_check_eq(getFrecencyForURI(TEST_URI), frecency);
+      waitForAsyncUpdates(function () {
+        print("Frecency should be positive.")
+        do_check_true(frecencyForUrl(TEST_URI) > 0);
+        run_next_test();
+      });
     }
   },
 
@@ -260,13 +265,15 @@ var gTests = [
                          false,
                          0);
       }
-
+      waitForAsyncUpdates(this.continue_run, this);
+    },
+    continue_run: function () {
       print("Remove all visits.");
       histsvc.QueryInterface(Ci.nsIBrowserHistory).
         removeVisitsByTimeframe(NOW - 10, NOW);
 
       print("URI should no longer exist in moz_places.");
-      do_check_false(uriExistsInMozPlaces(TEST_URI));
+      do_check_false(page_in_database(TEST_URL));
 
       print("Run a history query and check that no visits exist.");
       var query = histsvc.getNewQuery();
@@ -281,6 +288,7 @@ var gTests = [
       print("nsIGlobalHistory2.isVisited should return false.");
       do_check_false(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
                        isVisited(TEST_URI));
+      run_next_test();
     }
   },
 
@@ -296,13 +304,15 @@ var gTests = [
                          false,
                          0);
       }
-
+      waitForAsyncUpdates(this.continue_run, this);
+    },
+    continue_run: function () {
       print("Remove all visits.");
       histsvc.QueryInterface(Ci.nsIBrowserHistory).
         removeVisitsByTimeframe(NOW - 10, NOW);
 
       print("URI should still exist in moz_places.");
-      do_check_true(uriExistsInMozPlaces(PLACE_URI));
+      do_check_true(page_in_database(PLACE_URL));
 
       print("Run a history query and check that no visits exist.");
       var query = histsvc.getNewQuery();
@@ -318,8 +328,11 @@ var gTests = [
       do_check_false(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
                        isVisited(PLACE_URI));
 
-      print("Frecency should be 0.");
-      do_check_eq(getFrecencyForURI(PLACE_URI), 0);
+      waitForAsyncUpdates(function () {
+        print("Frecency should be zero.")
+        do_check_eq(frecencyForUrl(PLACE_URL), 0);
+        run_next_test();
+      });
     }
   },
 
@@ -341,13 +354,15 @@ var gTests = [
                            TEST_URI,
                            bmsvc.DEFAULT_INDEX,
                            "bookmark title");
-
+      waitForAsyncUpdates(this.continue_run, this);
+    },
+    continue_run: function () {
       print("Remove all visits.");
       histsvc.QueryInterface(Ci.nsIBrowserHistory).
         removeVisitsByTimeframe(NOW - 10, NOW);
 
       print("URI should still exist in moz_places.");
-      do_check_true(uriExistsInMozPlaces(TEST_URI));
+      do_check_true(page_in_database(TEST_URL));
 
       print("Run a history query and check that no visits exist.");
       var query = histsvc.getNewQuery();
@@ -366,63 +381,34 @@ var gTests = [
       print("nsINavBookmarksService.isBookmarked should return true.");
       do_check_true(bmsvc.isBookmarked(TEST_URI));
 
-      print("Frecency should be -visit_count == -10.");
-      do_check_eq(getFrecencyForURI(TEST_URI), -10);
+      waitForAsyncUpdates(function () {
+        print("Frecency should be -visit_count.")
+        do_check_eq(frecencyForUrl(TEST_URI), -10);
+        run_next_test();
+      });
     }
   }
 ];
 
 ///////////////////////////////////////////////////////////////////////////////
 
-/**
- * Removes history and bookmarks.
- */
-function deleteAllHistoryAndBookmarks() {
-  histsvc.QueryInterface(Ci.nsIBrowserHistory).removeAllPages();
-  remove_all_bookmarks();
+function run_test()
+{
+  do_test_pending();
+  run_next_test();
 }
 
-/**
- * Returns the frecency of a URI.
- *
- * @param  aURI
- *         the URI of a place
- * @return the frecency of aURI
- */
-function getFrecencyForURI(aURI) {
-  let sql = "SELECT frecency FROM moz_places_view WHERE url = :url";
-  let stmt = dbConn.createStatement(sql);
-  stmt.params.url = aURI.spec;
-  do_check_true(stmt.executeStep());
-  let frecency = stmt.getInt32(0);
-  stmt.finalize();
-
-  return frecency;
-}
-
-/**
- * Returns true if the URI exists in moz_places and false otherwise.
- *
- * @param  aURI
- *         the URI of a place
- */
-function uriExistsInMozPlaces(aURI) {
-  let sql = "SELECT id FROM moz_places_view WHERE url = :url";
-  let stmt = dbConn.createStatement(sql);
-  stmt.params.url = aURI.spec;
-  var exists = stmt.executeStep();
-  stmt.finalize();
-
-  return exists;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-function run_test() {
-  gTests.forEach(function (t) {
-    deleteAllHistoryAndBookmarks();
-    print("------ RUNNING TEST: " + t.desc);
-    t.run();
-  });
-  deleteAllHistoryAndBookmarks();
+function run_next_test() {
+  if (gTests.length) {
+    let test = gTests.shift();
+    print("\n ***Test: " + test.desc);
+    waitForClearHistory(function() {
+      remove_all_bookmarks();
+      DBConn().executeSimpleSQL("DELETE FROM moz_places");
+      test.run.call(test);
+    });
+  }
+  else {
+    do_test_finished();
+  }
 }

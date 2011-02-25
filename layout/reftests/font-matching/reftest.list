@@ -43,6 +43,12 @@ random-if(cocoaWidget) != impact-bold.html impact.html # bug 539418
 == arial-variations-5.html arial-variations-5-ref.html
 == arial-variations-6.html arial-variations-6-ref.html
 
+# localized font family names should always match just as English names do
+== localized-family-names-001.html localized-family-names-001-ref.html
+== localized-family-names-002.html localized-family-names-002-ref.html
+== localized-family-names-003.html localized-family-names-003-ref.html
+== localized-family-names-004.html localized-family-names-004-ref.html
+
 # weight mapping tests
 HTTP(..) == normalmedium.html normalmedium-ref.html
 HTTP(..) != normalmedium.html normalmedium-notref.html

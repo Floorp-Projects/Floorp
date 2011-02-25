@@ -572,6 +572,42 @@ function test_cache_cleared()
   do_test_pending();
 }
 
+function test_storage_cleared()
+{
+  function getStorageForURI(aURI)
+  {
+    let principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"].
+                    getService(Components.interfaces.nsIScriptSecurityManager).
+                    getCodebasePrincipal(aURI);
+    let dsm = Components.classes["@mozilla.org/dom/storagemanager;1"].
+              getService(Components.interfaces.nsIDOMStorageManager);
+    return dsm.getLocalStorageForPrincipal(principal, "");
+  }
+
+  let s = [
+    getStorageForURI(uri("http://mozilla.org")),
+    getStorageForURI(uri("http://my.mozilla.org")),
+    getStorageForURI(uri("http://ilovemozilla.org")),
+  ];
+
+  for (let i = 0; i < s.length; ++i) {
+    let storage = s[i];
+    storage.setItem("test", "value" + i);
+    do_check_eq(storage.length, 1);
+    do_check_eq(storage.key(0), "test");
+    do_check_eq(storage.getItem("test"), "value" + i);
+  }
+
+  pb.removeDataFromDomain("mozilla.org");
+
+  do_check_eq(s[0].getItem("test"), null);
+  do_check_eq(s[0].length, 0);
+  do_check_eq(s[1].getItem("test"), null);
+  do_check_eq(s[1].length, 0);
+  do_check_eq(s[2].getItem("test"), "value2");
+  do_check_eq(s[2].length, 1);
+}
+
 let tests = [
   // History
   test_history_cleared_with_direct_match,
@@ -606,6 +642,9 @@ let tests = [
   test_content_preferences_cleared_with_direct_match,
   test_content_preferences_cleared_with_subdomain,
   test_content_preferecnes_not_cleared_with_uri_contains_domain,
+
+  // Storage
+  test_storage_cleared,
 
   // Cache
   test_cache_cleared,

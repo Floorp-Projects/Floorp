@@ -42,7 +42,7 @@
 #include "nsSVGElement.h"
 
 class gfxContext;
-class gfxMatrix;
+struct gfxMatrix;
 class gfxFlattenedPath;
 class nsSVGPathDataParserToInternal;
 struct nsSVGMark;

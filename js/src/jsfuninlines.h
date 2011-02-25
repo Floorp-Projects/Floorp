@@ -46,7 +46,7 @@
 inline bool
 JSFunction::inStrictMode() const
 {
-    return isInterpreted() && u.i.script->strictModeCode;
+    return script()->strictModeCode;
 }
 
 #endif /* jsfuninlines_h___ */

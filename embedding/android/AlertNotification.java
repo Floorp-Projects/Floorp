@@ -50,18 +50,21 @@ public class AlertNotification
     int mId;
     int mIcon;
     String mTitle;
+    String mText;
     boolean mProgressStyle;
     NotificationManager mNotificationManager;
     double mPrevPercent  = -1;
     String mPrevAlertText = "";
     static final double UPDATE_THRESHOLD = .01;
 
-    public AlertNotification(Context aContext, int aNotificationId, int aIcon, String aTitle, long aWhen) {
-        super(aIcon, aTitle, aWhen);
+    public AlertNotification(Context aContext, int aNotificationId, int aIcon,
+                             String aTitle, String aText, long aWhen) {
+        super(aIcon, (aText.length() > 0) ? aText : aTitle, aWhen);
 
         mContext = aContext;
         mIcon = aIcon;
         mTitle = aTitle;
+        mText = aText;
         mProgressStyle = false;
         mId = aNotificationId;
 
@@ -82,7 +85,7 @@ public class AlertNotification
             // Custom view
             int layout = aAlertText.length() > 0 ? R.layout.notification_progress_text : R.layout.notification_progress;
 
-            RemoteViews view = new RemoteViews("org.mozilla." + GeckoApp.mAppContext.getAppName(), layout);
+            RemoteViews view = new RemoteViews(GeckoApp.mAppContext.getPackageName(), layout);
             view.setImageViewResource(R.id.notificationImage, mIcon);
             view.setTextViewText(R.id.notificationTitle, mTitle);
             contentView = view;

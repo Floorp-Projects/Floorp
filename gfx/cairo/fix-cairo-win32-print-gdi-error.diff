@@ -1,0 +1,26 @@
+diff --git a/gfx/cairo/cairo/src/cairo-win32-surface.c b/gfx/cairo/cairo/src/cairo-win32-surface.c
+--- a/gfx/cairo/cairo/src/cairo-win32-surface.c
++++ b/gfx/cairo/cairo/src/cairo-win32-surface.c
+@@ -95,20 +95,21 @@ _cairo_win32_print_gdi_error (const char
+ 			 FORMAT_MESSAGE_FROM_SYSTEM,
+ 			 NULL,
+ 			 last_error,
+ 			 MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
+ 			 (LPSTR) &lpMsgBuf,
+ 			 0, NULL)) {
+ 	fprintf (stderr, "%s: Unknown GDI error", context);
+     } else {
+-	fwprintf (stderr, "%S: %s", context, (char *)lpMsgBuf);
++	fprintf (stderr, "%s: %S", context, (char *)lpMsgBuf);
+ 
+ 	LocalFree (lpMsgBuf);
+     }
++    fflush(stderr);
+ 
+     /* We should switch off of last_status, but we'd either return
+      * CAIRO_STATUS_NO_MEMORY or CAIRO_STATUS_UNKNOWN_ERROR and there
+      * is no CAIRO_STATUS_UNKNOWN_ERROR.
+      */
+ 
+     return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+ }

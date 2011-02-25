@@ -74,12 +74,14 @@ public:
     TabParent();
     virtual ~TabParent();
     nsIDOMElement* GetOwnerElement() { return mFrameElement; }
-    void SetOwnerElement(nsIDOMElement* aElement) { mFrameElement = aElement; }
+    void SetOwnerElement(nsIDOMElement* aElement);
     nsIBrowserDOMWindow *GetBrowserDOMWindow() { return mBrowserDOMWindow; }
     void SetBrowserDOMWindow(nsIBrowserDOMWindow* aBrowserDOMWindow) {
         mBrowserDOMWindow = aBrowserDOMWindow;
     }
  
+    void Destroy();
+
     virtual bool RecvMoveFocus(const bool& aForward);
     virtual bool RecvEvent(const RemoteDOMEvent& aEvent);
 
@@ -210,6 +212,8 @@ protected:
     nsAutoString mIMECompositionText;
     PRUint32 mIMECompositionStart;
     PRUint32 mIMESeqno;
+
+    float mDPI;
 
 private:
     already_AddRefed<nsFrameLoader> GetFrameLoader() const;

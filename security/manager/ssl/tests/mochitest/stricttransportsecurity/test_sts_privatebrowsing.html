@@ -1,0 +1,269 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Strict-Transport-Security.
+   -
+   - The Initial Developer of the Original Code is
+   - Mozilla Foundation.
+   - Portions created by the Initial Developer are Copyright (C) 2010
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Sid Stamm <sid@mozilla.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>opens additional content that should be converted to https</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  const STSPATH = "/tests/security/ssl/stricttransportsecurity";
+
+  const NUM_TEST_FRAMES = 4;
+  var testframes = {
+    'samedom':
+      {'url':     "http://example.com" + STSPATH + "/verify.sjs",
+        'expected': {'plain': 'SECURE',
+                     'subdom': 'SECURE',
+                     'nosts': 'INSECURE'}},
+    'subdom':
+      {'url':     "http://test1.example.com" + STSPATH + "/verify.sjs",
+        'expected': {'plain': 'INSECURE',
+                     'subdom': 'SECURE',
+                     'nosts': 'INSECURE'}},
+    'otherdom':
+      {'url':     "http://example.org" + STSPATH + "/verify.sjs",
+        'expected': {'plain': 'INSECURE',
+                     'subdom': 'INSECURE',
+                     'nosts': 'INSECURE'}},
+    'alreadysecure':
+      {'url':     "https://test2.example.com" + STSPATH + "/verify.sjs",
+        'expected': {'plain': 'SECURE',
+                     'subdom': 'SECURE',
+                     'nosts': 'SECURE'}},
+  };
+
+  // This is how many sub-tests (testframes) in each round.
+  // When the round begins, this will be initialized.
+  var testsleftinround = 0;
+  var currentround = "";
+
+  var _PBSvc = null;
+  var _PrefSvc = null;
+
+  function _getPBService() {
+    if (_PBSvc)
+      return _PBSvc;
+
+    // not all apps will have the private browsing service.
+    try {
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+      _PBSvc = Components.classes["@mozilla.org/privatebrowsing;1"]
+        .getService(Components.interfaces.nsIPrivateBrowsingService);
+      return _PBSvc;
+    } catch (e) {}
+    return null;
+  }
+  function _getPrefService() {
+    if (_PrefSvc)
+      return _PrefSvc;
+
+    // not all apps will have the private browsing service.
+    try {
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+      _PrefSvc = Components.classes["@mozilla.org/preferences-service;1"]
+        .getService(Components.interfaces.nsIPrefService)
+        .QueryInterface(Components.interfaces.nsIPrefBranch2);
+      return _PrefSvc;
+    } catch (e) {}
+    return null;
+  }
+
+  function startRound(round) {
+    currentround = round;
+    testsleftinround = NUM_TEST_FRAMES;
+    dump("TESTS LEFT IN ROUND: " + testsleftinround + "\n");
+    var frame = document.createElement("iframe");
+    frame.setAttribute('id', 'ifr_bootstrap');
+    frame.setAttribute('src', "https://example.com" + STSPATH +
+                              "/" + round + "_bootstrap.html");
+    document.body.appendChild(frame);
+  }
+
+  function loadVerifyFrames(round) {
+    for (var test in testframes) {
+      var frame = document.createElement("iframe");
+      frame.setAttribute('id', 'ifr_' + test);
+      frame.setAttribute('src', testframes[test].url + '?id=' + test);
+      document.body.appendChild(frame);
+    }
+  }
+
+  /* Messages received are in this format:
+   *  (BOOTSTRAP|SECURE|INSECURE) testid
+   * For example: "BOOTSTRAP subdom"
+   *          or: "INSECURE otherdom"
+   */
+  function onMessageReceived(event) {
+
+    // otherwise, it's a test result
+    var result = event.data.split(/\s+/);
+    if (result.length != 2) {
+      SimpleTest.ok(false, event.data);
+      return;
+    }
+
+    if (result[0] === "BOOTSTRAP") {
+      loadVerifyFrames(currentround);
+      return;
+    }
+
+    // check if the result (SECURE/INSECURE) is expected for this round/test
+    // combo
+    dump_STSState();
+    dump( "*** in ROUND " + currentround +
+          ", test " + result[1] +
+          " is " + result[0] + "\n");
+    SimpleTest.is(result[0], testframes[result[1]].expected[currentround],
+                             "in ROUND " + currentround +
+                             ", test " + result[1]);
+    testsleftinround--;
+
+    // if this round is complete...
+    if (testsleftinround < 1) {
+      dump("DONE WITH ROUND " + currentround + "\n");
+      // remove all the iframes in the document
+      document.body.removeChild(document.getElementById('ifr_bootstrap'));
+      for (var test in testframes)
+        document.body.removeChild(document.getElementById('ifr_' + test));
+      currentround = "";
+
+      // And advance to the next test.
+      // Defer this so it doesn't muck with the stack too much.
+      SimpleTest.executeSoon(nextTest);
+    }
+  }
+
+  function test_sts_before_private_mode() {
+    dump_STSState();
+    dump("*** not in private browsing mode\n");
+    startRound('plain');
+  }
+
+  function test_sts_in_private_mode() {
+    dump_STSState();
+    dump("*** Entering private browsing mode\n");
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    _getPrefService().setBoolPref("browser.privatebrowsing.keep_current_session",
+                               true);
+    _getPBService().privateBrowsingEnabled = true;
+    dump("*** ... done\n");
+    dump_STSState();
+    startRound('subdom');
+  }
+
+  function test_sts_after_exiting_private_mode() {
+    dump_STSState();
+    dump("*** Exiting private browsing mode\n");
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    _getPBService().privateBrowsingEnabled = false;
+    _getPrefService().clearUserPref("browser.privatebrowsing.keep_current_session");
+    dump("*** ... done\n");
+    dump_STSState();
+    startRound('nosts');
+  }
+
+  function clean_up_sts_state() {
+    // erase all signs that this test ran.
+    dump("*** Cleaning up STS data.\n");
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    const Cc = Components.classes;
+    const Ci = Components.interfaces;
+    var ios = Cc["@mozilla.org/network/io-service;1"]
+                .getService(Ci.nsIIOService);
+    var thehost = ios.newURI("http://example.com", null, null);
+    var stss = Cc["@mozilla.org/stsservice;1"]
+                 .getService(Ci.nsIStrictTransportSecurityService);
+    stss.removeStsState(thehost);
+    dump_STSState();
+    SimpleTest.executeSoon(nextTest);
+  }
+
+function dump_STSState() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var stss = Components.classes["@mozilla.org/stsservice;1"]
+          .getService(Components.interfaces.nsIStrictTransportSecurityService);
+    dump("*** State of example.com: " + stss.isStsHost("example.com") + "\n");
+}
+
+  // these are executed in the order presented.
+  // 0.  test that STS works before entering private browsing mode.
+  //     (load sts-bootstrapped "plain" tests)
+  //  ... clear any STS data ...
+  // 1.  test that STS works in private browsing mode
+  //     (load sts-bootstrapped "subdomain" tests)
+  // 2.  test that after exiting private browsing, STS data is forgotten
+  //     (verified with non-sts-bootstrapped pages)
+  var tests = [];
+  { // skip these tests if there's no private mode support
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    if ("@mozilla.org/privatebrowsing;1" in Components.classes) {
+      tests = [
+        test_sts_before_private_mode,
+        clean_up_sts_state,
+        test_sts_in_private_mode,
+        test_sts_after_exiting_private_mode,
+        clean_up_sts_state,
+      ];
+    }
+  }
+
+  function nextTest() {
+    if (tests.length)
+      SimpleTest.executeSoon(tests.shift());
+    else
+      SimpleTest.executeSoon(SimpleTest.finish);
+  }
+
+  // listen for calls back from the sts-setting iframe and then
+  // the verification frames.
+  window.addEventListener("message", onMessageReceived, false);
+  window.addEventListener('load', nextTest, false);
+
+  </script>
+</head>
+
+<body>
+  This test will load some iframes and do some tests.
+
+</body>
+</html>

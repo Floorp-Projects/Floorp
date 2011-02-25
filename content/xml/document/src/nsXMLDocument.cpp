@@ -325,10 +325,10 @@ ReportUseOfDeprecatedMethod(nsIDocument *aDoc, const char* aWarning)
   nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
                                   aWarning,
                                   nsnull, 0,
-                                  aDoc->GetDocumentURI(),
+                                  nsnull,
                                   EmptyString(), 0, 0,
                                   nsIScriptError::warningFlag,
-                                  "DOM3 Load");
+                                  "DOM3 Load", aDoc);
 }
 
 NS_IMETHODIMP
@@ -398,18 +398,24 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
       nsAutoString error;
       error.AssignLiteral("Cross site loading using document.load is no "
                           "longer supported. Use XMLHttpRequest instead.");
-      nsCOMPtr<nsIScriptError> errorObject =
+      nsCOMPtr<nsIScriptError2> errorObject =
           do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = errorObject->Init(error.get(), NS_ConvertUTF8toUTF16(spec).get(),
-                             nsnull, 0, 0, nsIScriptError::warningFlag,
-                             "DOM");
+
+      rv = errorObject->InitWithWindowID(error.get(), NS_ConvertUTF8toUTF16(spec).get(),
+                                         nsnull, 0, 0, nsIScriptError::warningFlag,
+                                         "DOM",
+                                         callingDoc ?
+                                           callingDoc->OuterWindowID() :
+                                           this->OuterWindowID());
+
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsCOMPtr<nsIConsoleService> consoleService =
         do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-      if (consoleService) {
-        consoleService->LogMessage(errorObject);
+      nsCOMPtr<nsIScriptError> logError = do_QueryInterface(errorObject);
+      if (consoleService && logError) {
+        consoleService->LogMessage(logError);
       }
 
       return NS_ERROR_DOM_SECURITY_ERR;

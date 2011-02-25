@@ -245,6 +245,32 @@ function runUpdate(aTestID) {
 }
 
 /**
+ * Gets the platform specific shell binary that is launched using nsIProcess and
+ * in turn launches the updater.
+ *
+ * @return  nsIFile for the shell binary to launch using nsIProcess.
+ * @throws  if the shell binary doesn't exist.
+ */
+function getLaunchBin() {
+  let launchBin;
+  if (IS_WIN) {
+    launchBin = Services.dirsvc.get("WinD", AUS_Ci.nsIFile);
+    launchBin.append("System32");
+    launchBin.append("cmd.exe");
+  }
+  else {
+    launchBin = AUS_Cc["@mozilla.org/file/local;1"].
+                createInstance(AUS_Ci.nsILocalFile);
+    launchBin.initWithPath("/bin/sh");
+  }
+
+  if (!launchBin.exists())
+    do_throw(launchBin.path + " must exist to run this test!");
+
+  return launchBin;
+}
+
+/**
  * Helper function for updater tests for setting up the files and directories
  * used by the updater tests.
  *
@@ -502,7 +528,7 @@ function checkCallbackAppLog(aTestID) {
   let appLaunchLog = do_get_file(aTestID + APPLY_TO_DIR_SUFFIX + "/" +
                                  CALLBACK_ARGS[0], true);
   if (!appLaunchLog.exists()) {
-    do_timeout(0, function() {
+    do_execute_soon(function() {
       checkCallbackAppLog(aTestID);
     });
     return;
@@ -515,7 +541,7 @@ function checkCallbackAppLog(aTestID) {
   // value. If the contents are never the expected value then the test will
   // fail by timing out.
   if (logContents != expectedLogContents) {
-    do_timeout(0, function() {
+    do_execute_soon(function() {
       checkCallbackAppLog(aTestID);
     });
     return;
@@ -609,7 +635,7 @@ xhr.prototype = {
   responseXML: null,
   responseText: null,
   send: function(body) {
-    do_timeout(0, gXHRCallback); // Use a timeout so the XHR completes
+    do_execute_soon(gXHRCallback); // Use a timeout so the XHR completes
   },
   _onprogress: null,
   set onprogress(val) { gXHR._onprogress = val; },
@@ -657,23 +683,23 @@ const updateCheckListener = {
     gRequestURL = request.channel.originalURI.spec;
     gUpdateCount = updateCount;
     gUpdates = updates;
-    logTestInfo("onError: url = " + gRequestURL + ", " +
+    logTestInfo("url = " + gRequestURL + ", " +
                 "request.status = " + request.status + ", " +
                 "update.statusText = " + request.statusText + ", " +
                 "updateCount = " + updateCount);
     // Use a timeout to allow the XHR to complete
-    do_timeout(0, gCheckFunc);
+    do_execute_soon(gCheckFunc);
   },
 
   onError: function UCL_onError(request, update) {
     gRequestURL = request.channel.originalURI.spec;
     gStatusCode = request.status;
     gStatusText = update.statusText;
-    logTestInfo("onError: url = " + gRequestURL + ", " +
+    logTestInfo("url = " + gRequestURL + ", " +
                 "request.status = " + gStatusCode + ", " +
                 "update.statusText = " + gStatusText);
     // Use a timeout to allow the XHR to complete
-    do_timeout(0, gCheckFunc);
+    do_execute_soon(gCheckFunc);
   },
 
   QueryInterface: function(aIID) {

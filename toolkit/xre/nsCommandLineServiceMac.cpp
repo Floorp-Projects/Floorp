@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCommandLineServiceMac.h"
+#include "MacApplicationDelegate.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <Carbon/Carbon.h>
@@ -50,6 +51,8 @@ static const int kArgsGrowSize = 20;
 static char** sArgs = NULL;
 static int sArgsAllocated = 0;
 static int sArgsUsed = 0;
+
+static PRBool sBuildingCommandLine = PR_FALSE;
 
 void AddToCommandLine(const char* inArgText)
 {
@@ -81,6 +84,8 @@ void SetupMacCommandLine(int& argc, char**& argv, PRBool forRestart)
   sArgs[0] = NULL;
   sArgsUsed = 0;
 
+  sBuildingCommandLine = PR_TRUE;
+
   // Copy args, stripping anything we don't want.
   for (int arg = 0; arg < argc; arg++) {
     char* flag = argv[arg];
@@ -89,10 +94,16 @@ void SetupMacCommandLine(int& argc, char**& argv, PRBool forRestart)
       AddToCommandLine(flag);
   }
 
+  // Force processing of any pending Apple GetURL Events while we're building
+  // the command line. The handlers will append to the command line rather than
+  // act directly so there is no chance we'll process them during a XUL window
+  // load and accidentally open unnecessary windows and home pages.
+  ProcessPendingGetURLAppleEvents();
+
+  // If the process will be relaunched, the child should be in the foreground
+  // if the parent is in the foreground.  This will be communicated in a
+  // command-line argument to the child.
   if (forRestart) {
-    // If the process will be relaunched, the child should be in the foreground
-    // if the parent is in the foreground.  This will be communicated in a
-    // command-line argument to the child.
     Boolean isForeground = false;
     ProcessSerialNumber psnSelf, psnFront;
     if (::GetCurrentProcess(&psnSelf) == noErr &&
@@ -103,8 +114,22 @@ void SetupMacCommandLine(int& argc, char**& argv, PRBool forRestart)
     }
   }
 
+  sBuildingCommandLine = PR_FALSE;
+
   argc = sArgsUsed;
   argv = sArgs;
+}
+
+PRBool AddURLToCurrentCommandLine(const char* aURL)
+{
+  if (!sBuildingCommandLine) {
+    return PR_FALSE;
+  }
+
+  AddToCommandLine("-url");
+  AddToCommandLine(aURL);
+
+  return PR_TRUE;
 }
 
 } // namespace CommandLineServiceMac

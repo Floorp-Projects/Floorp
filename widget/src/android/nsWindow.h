@@ -55,14 +55,15 @@ class nsWindow :
     public nsBaseWidget
 {
 public:
+    using nsBaseWidget::GetLayerManager;
+
     nsWindow();
     virtual ~nsWindow();
 
     NS_DECL_ISUPPORTS_INHERITED
 
     static void OnGlobalAndroidEvent(mozilla::AndroidGeckoEvent *ae);
-    static void SetInitialAndroidBounds(const gfxIntSize& sz);
-    static gfxIntSize GetAndroidBounds();
+    static gfxIntSize GetAndroidScreenBounds();
 
     nsWindow* FindWindowForPoint(const nsIntPoint& pt);
 
@@ -162,7 +163,8 @@ public:
     NS_IMETHOD OnIMESelectionChange(void);
     virtual nsIMEUpdatePreference GetIMEUpdatePreference();
 
-    LayerManager* GetLayerManager(bool* aAllowRetaining = nsnull);
+    LayerManager* GetLayerManager(LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
+                                  bool* aAllowRetaining = nsnull);
     gfxASurface* GetThebesSurface();
 
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent);
@@ -180,6 +182,7 @@ protected:
     PRPackedBool mIsVisible;
     nsTArray<nsWindow*> mChildren;
     nsWindow* mParent;
+    nsWindow* mFocus;
 
     bool mGestureFinished;
     double mStartDist;

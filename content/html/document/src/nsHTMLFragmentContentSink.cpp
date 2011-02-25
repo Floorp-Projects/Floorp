@@ -60,6 +60,7 @@
 #include "nsContentUtils.h"
 #include "nsEscape.h"
 #include "nsNodeInfoManager.h"
+#include "nsNullPrincipal.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsNetUtil.h"
 #include "nsIScriptSecurityManager.h"
@@ -821,6 +822,8 @@ protected:
   PRPackedBool mInStyle; // whether we're inside a style element
   PRPackedBool mProcessComments; // used when comments are allowed
 
+  nsCOMPtr<nsIPrincipal> mNullPrincipal;
+
   // Use nsTHashTable as a hash set for our whitelists
   static nsTHashtable<nsISupportsHashKey>* sAllowedTags;
   static nsTHashtable<nsISupportsHashKey>* sAllowedAttributes;
@@ -989,7 +992,12 @@ nsHTMLParanoidFragmentSink::AddAttributes(const nsIParserNode& aNode,
   nsresult rv;
   // use this to check for safe URIs in the few attributes that allow them
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  PRUint32 flags = nsIScriptSecurityManager::DISALLOW_INHERIT_PRINCIPAL;
   nsCOMPtr<nsIURI> baseURI;
+  if (!mNullPrincipal) {
+      mNullPrincipal = do_CreateInstance(NS_NULLPRINCIPAL_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   for (PRInt32 i = ac - 1; i >= 0; i--) {
     rv = NS_OK;
@@ -1023,9 +1031,7 @@ nsHTMLParanoidFragmentSink::AddAttributes(const nsIParserNode& aNode,
       rv = NS_NewURI(getter_AddRefs(attrURI), v, nsnull, baseURI);
       if (NS_SUCCEEDED(rv)) {
         rv = secMan->
-          CheckLoadURIWithPrincipal(mTargetDocument->NodePrincipal(),
-                attrURI,
-                nsIScriptSecurityManager::DISALLOW_INHERIT_PRINCIPAL);
+          CheckLoadURIWithPrincipal(mNullPrincipal, attrURI, flags);
       }
     }
     
@@ -1040,7 +1046,10 @@ nsHTMLParanoidFragmentSink::AddAttributes(const nsIParserNode& aNode,
       if (!baseURI) {
         baseURI = aContent->GetBaseURI();
       }
-      nsCSSParser parser;
+
+      // Pass the CSS Loader object to the parser, to allow parser error reports
+      // to include the outer window ID.
+      nsCSSParser parser(mTargetDocument->CSSLoader());
       nsCOMPtr<nsICSSStyleRule> rule;
       rv = parser.ParseStyleAttribute(aNode.GetValueAt(i),
                                       mTargetDocument->GetDocumentURI(),

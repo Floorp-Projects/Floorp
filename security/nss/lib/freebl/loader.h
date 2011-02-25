@@ -37,14 +37,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.h,v 1.26 2009/03/29 03:45:32 wtc%google.com Exp $ */
+/* $Id: loader.h,v 1.26.22.2 2010/12/04 18:59:01 rrelyea%redhat.com Exp $ */
 
 #ifndef _LOADER_H_
 #define _LOADER_H_ 1
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x030B
+#define FREEBL_VERSION 0x030C
 
 struct FREEBLVectorStr {
 
@@ -540,6 +540,37 @@ struct FREEBLVectorStr {
 
  SECStatus (* p_PRNGTEST_Uninstantiate)(void);
    /* Version 3.011 came to here */
+
+
+ SECStatus (*p_RSA_PopulatePrivateKey)(RSAPrivateKey *key);
+
+ SECStatus (*p_DSA_NewRandom)(PLArenaPool * arena, const SECItem * q,
+                              SECItem * seed);
+
+ SECStatus (*p_JPAKE_Sign)(PLArenaPool * arena, const PQGParams * pqg,
+                           HASH_HashType hashType, const SECItem * signerID,
+                           const SECItem * x, const SECItem * testRandom,
+                           const SECItem * gxIn, SECItem * gxOut,
+                           SECItem * gv, SECItem * r);
+
+ SECStatus (*p_JPAKE_Verify)(PLArenaPool * arena, const PQGParams * pqg,
+                             HASH_HashType hashType, const SECItem * signerID,
+                             const SECItem * peerID, const SECItem * gx,
+                             const SECItem * gv, const SECItem * r);
+
+ SECStatus (*p_JPAKE_Round2)(PLArenaPool * arena, const SECItem * p,
+                             const SECItem  *q, const SECItem * gx1,
+                             const SECItem * gx3, const SECItem * gx4,
+                             SECItem * base, const SECItem * x2,
+                             const SECItem * s, SECItem * x2s);
+
+ SECStatus (*p_JPAKE_Final)(PLArenaPool * arena, const SECItem * p,
+                            const SECItem  *q, const SECItem * x2,
+                            const SECItem * gx4, const SECItem * x2s,
+                            const SECItem * B, SECItem * K);
+ 
+   /* Version 3.012 came to here */
+
 };
 
 typedef struct FREEBLVectorStr FREEBLVector;

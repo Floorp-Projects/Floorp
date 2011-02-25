@@ -133,7 +133,7 @@ Nv3DVUtils::SetDeviceInfo(IUnknown *devUnknown)
   if (!rv)
       return;
 
-  rv = m3DVStreaming->Nv3DVControl(STEREO_MODE_RIGHT_LEFT, true, FIREFOX_3DV_APP_HANDLE);
+  rv = m3DVStreaming->Nv3DVControl(NV_STEREO_MODE_RIGHT_LEFT, true, FIREFOX_3DV_APP_HANDLE);
   NS_ASSERTION(rv, "Nv3DVStreaming Nv3DVControl failed!");
 }
 
@@ -142,7 +142,7 @@ Nv3DVUtils::SetDeviceInfo(IUnknown *devUnknown)
  * calls from ImageLayerD3D9 to the 3DV COM object
  */
 void 
-Nv3DVUtils::SendNv3DVControl(Stereo_Mode eStereoMode, bool bEnableStereo, DWORD dw3DVAppHandle)
+Nv3DVUtils::SendNv3DVControl(Nv_Stereo_Mode eStereoMode, bool bEnableStereo, DWORD dw3DVAppHandle)
 {
   if (!m3DVStreaming)
       return;

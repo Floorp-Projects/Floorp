@@ -1,4 +1,4 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,10 +38,12 @@
 package org.mozilla.gecko;
 
 import java.io.*;
+import java.lang.reflect.*;
+import java.nio.*;
+import java.nio.channels.*;
+import java.text.*;
 import java.util.*;
 import java.util.zip.*;
-import java.nio.*;
-import java.lang.reflect.*;
 
 import android.os.*;
 import android.app.*;
@@ -58,13 +60,16 @@ import android.location.*;
 
 import android.util.*;
 import android.net.Uri;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 class GeckoAppShell
 {
     // static members only
     private GeckoAppShell() { }
 
-    static private GeckoEvent gPendingResize = null;
+    static private LinkedList<GeckoEvent> gPendingEvents =
+        new LinkedList<GeckoEvent>();
 
     static private boolean gRestartScheduled = false;
 
@@ -76,6 +81,11 @@ class GeckoAppShell
     static private final int NOTIFY_IME_SETOPENSTATE = 1;
     static private final int NOTIFY_IME_CANCELCOMPOSITION = 2;
     static private final int NOTIFY_IME_FOCUSCHANGE = 3;
+
+    static public final long kFreeSpaceThreshold = 157286400L; // 150MB
+    static private final long kLibFreeSpaceBuffer = 20971520L; // 29MB
+    static private File sCacheFile = null;
+    static private int sFreeSpace = -1;
 
     /* The Android-side API: API methods that Android calls */
 
@@ -90,7 +100,100 @@ class GeckoAppShell
     public static native void onLowMemory();
     public static native void callObserver(String observerKey, String topic, String data);
     public static native void removeObserver(String observerKey);
-    public static native void loadLibs(String apkName);
+    public static native void loadLibs(String apkName, boolean shouldExtract);
+    public static native void onChangeNetworkLinkStatus(String status);
+
+    public static File getCacheDir() {
+        if (sCacheFile == null)
+            sCacheFile = GeckoApp.mAppContext.getCacheDir();
+        return sCacheFile;
+    }
+
+    public static long getFreeSpace() {
+        try {
+            if (sFreeSpace == -1) {
+                File cacheDir = getCacheDir();
+                if (cacheDir != null) {
+                    StatFs cacheStats = new StatFs(cacheDir.getPath());
+                    sFreeSpace = cacheStats.getFreeBlocks() * 
+                        cacheStats.getBlockSize();
+                } else {
+                    Log.i("GeckoAppShell", "Unable to get cache dir");
+                }
+            }
+        } catch (Exception e) {
+            Log.e("GeckoAppShell", "exception while stating cache dir: ", e);
+        }
+        return sFreeSpace;
+    }
+
+    static boolean moveFile(File inFile, File outFile)
+    {
+        Log.i("GeckoAppShell", "moving " + inFile + " to " + outFile);
+        if (outFile.isDirectory())
+            outFile = new File(outFile, inFile.getName());
+        try {
+            if (inFile.renameTo(outFile))
+                return true;
+        } catch (SecurityException se) {
+            Log.w("GeckoAppShell", "error trying to rename file", se);
+        }
+        try {
+            long lastModified = inFile.lastModified();
+            outFile.createNewFile();
+            // so copy it instead
+            FileChannel inChannel = new FileInputStream(inFile).getChannel();
+            FileChannel outChannel = new FileOutputStream(outFile).getChannel();
+            long size = inChannel.size();
+            long transferred = inChannel.transferTo(0, size, outChannel);
+            inChannel.close();
+            outChannel.close();
+            outFile.setLastModified(lastModified);
+            
+            if (transferred == size)
+                inFile.delete();
+            else
+                return false;
+        } catch (Exception e) {
+            Log.e("GeckoAppShell", "exception while moving file: ", e);
+            try {
+                outFile.delete();
+            } catch (SecurityException se) {
+                Log.w("GeckoAppShell", "error trying to delete file", se);
+            }
+            return false;
+        }
+        return true;
+    }
+
+    static boolean moveDir(File from, File to) {
+        try {
+            to.mkdirs();
+            if (from.renameTo(to))
+                return true;
+        } catch (SecurityException se) {
+            Log.w("GeckoAppShell", "error trying to rename file", se);
+        }
+        File[] files = from.listFiles();
+        boolean retVal = true;
+        if (files == null)
+            return false;
+        try {
+            Iterator fileIterator = Arrays.asList(files).iterator();
+            while (fileIterator.hasNext()) {
+                File file = (File)fileIterator.next();
+                File dest = new File(to, file.getName());
+                if (file.isDirectory())
+                    retVal = moveDir(file, dest) ? retVal : false;
+                else
+                retVal = moveFile(file, dest) ? retVal : false;
+            }
+            from.delete();
+        } catch(Exception e) {
+            Log.e("GeckoAppShell", "error trying to move file", e);
+        }
+        return retVal;
+    }
 
     // java-side stuff
     public static void loadGeckoLibs(String apkName) {
@@ -98,9 +201,42 @@ class GeckoAppShell
         // search path, so we have to manually load libraries that
         // libxul will depend on.  Not ideal.
         System.loadLibrary("mozutils");
+        GeckoApp geckoApp = GeckoApp.mAppContext;
+        String homeDir;
+        if (Build.VERSION.SDK_INT < 8 ||
+            geckoApp.getApplication().getPackageResourcePath().startsWith("/data")) {
+            File home = geckoApp.getFilesDir();
+            homeDir = home.getPath();
+            // handle the application being moved to phone from sdcard
+            File profileDir = new File(homeDir, "mozilla");
+            File oldHome = new File("/data/data/" + 
+                        GeckoApp.mAppContext.getPackageName() + "/mozilla");
+            if (oldHome.exists())
+                moveDir(oldHome, profileDir);
+            if (Build.VERSION.SDK_INT >= 8) {
+                File extHome =  geckoApp.getExternalFilesDir(null);
+                File extProf = new File (extHome, "mozilla");
+                if (extHome != null && extProf != null && extProf.exists())
+                    moveDir(extProf, profileDir);
+            }
+        } else {
+            File home = geckoApp.getExternalFilesDir(null);
+            homeDir = home.getPath();
+            // handle the application being moved to phone from sdcard
+            File profileDir = new File(homeDir, "mozilla");
+            File oldHome = new File("/data/data/" + 
+                        GeckoApp.mAppContext.getPackageName() + "/mozilla");
+            if (oldHome.exists())
+                moveDir(oldHome, profileDir);
 
-                
-        Intent i = GeckoApp.mAppContext.getIntent();
+            File intHome =  geckoApp.getFilesDir();
+            File intProf = new File(intHome, "mozilla");
+            if (intHome != null && intProf != null && intProf.exists())
+                moveDir(intProf, profileDir);
+        }
+        GeckoAppShell.putenv("HOME=" + homeDir);
+        GeckoAppShell.putenv("GRE_HOME=" + GeckoApp.sGREDir.getPath());
+        Intent i = geckoApp.getIntent();
         String env = i.getStringExtra("env0");
         Log.i("GeckoApp", "env0: "+ env);
         for (int c = 1; env != null; c++) {
@@ -109,19 +245,66 @@ class GeckoAppShell
             Log.i("GeckoApp", "env"+ c +": "+ env);
         }
 
-        File f = new File("/data/data/org.mozilla." + 
-                          GeckoApp.mAppContext.getAppName() +"/tmp");
+        File f = geckoApp.getDir("tmp", Context.MODE_WORLD_READABLE |
+                                 Context.MODE_WORLD_WRITEABLE );
+
         if (!f.exists())
             f.mkdirs();
 
         GeckoAppShell.putenv("TMPDIR=" + f.getPath());
 
         f = Environment.getDownloadCacheDirectory();
-        GeckoAppShell.putenv("EXTERNAL_STORAGE" + f.getPath());
+        GeckoAppShell.putenv("EXTERNAL_STORAGE=" + f.getPath());
 
+        File cacheFile = getCacheDir();
+        GeckoAppShell.putenv("CACHE_PATH=" + cacheFile.getPath());
+
+        // gingerbread introduces File.getUsableSpace(). We should use that.
+        long freeSpace = getFreeSpace();
+        try {
+            File downloadDir = null;
+            File updatesDir  = null;
+            if (Build.VERSION.SDK_INT >= 8) {
+                downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                updatesDir  = GeckoApp.mAppContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+            } else {
+                updatesDir = downloadDir = new File(Environment.getExternalStorageDirectory().getPath(), "download");
+            }
+            GeckoAppShell.putenv("DOWNLOADS_DIRECTORY=" + downloadDir.getPath());
+            GeckoAppShell.putenv("UPDATES_DIRECTORY="   + updatesDir.getPath());
+        }
+        catch (Exception e) {
+            Log.i("GeckoApp", "No download directory has been found: " + e);
+        }
+
+        putLocaleEnv();
+
+        if (freeSpace + kLibFreeSpaceBuffer < kFreeSpaceThreshold) {
+            // remove any previously extracted libs since we're apparently low
+            File[] files = cacheFile.listFiles();
+            if (files != null) {
+                Iterator cacheFiles = Arrays.asList(files).iterator();
+                while (cacheFiles.hasNext()) {
+                    File libFile = (File)cacheFiles.next();
+                    if (libFile.getName().endsWith(".so"))
+                        libFile.delete();
+                }
+            }
+        }
+        loadLibs(apkName, freeSpace > kFreeSpaceThreshold);
+    }
+
+    private static void putLocaleEnv() {
         GeckoAppShell.putenv("LANG=" + Locale.getDefault().toString());
+        NumberFormat nf = NumberFormat.getInstance();
+        if (nf instanceof DecimalFormat) {
+            DecimalFormat df = (DecimalFormat)nf;
+            DecimalFormatSymbols dfs = df.getDecimalFormatSymbols();
 
-        loadLibs(apkName);
+            GeckoAppShell.putenv("LOCALE_DECIMAL_POINT=" + dfs.getDecimalSeparator());
+            GeckoAppShell.putenv("LOCALE_THOUSANDS_SEP=" + dfs.getGroupingSeparator());
+            GeckoAppShell.putenv("LOCALE_GROUPING=" + (char)df.getGroupingSize());
+        }
     }
 
     public static void runGecko(String apkPath, String args, String url) {
@@ -143,16 +326,20 @@ class GeckoAppShell
 
     private static GeckoEvent mLastDrawEvent;
 
+    private static void sendPendingEventsToGecko() {
+        try {
+            while (!gPendingEvents.isEmpty()) {
+                GeckoEvent e = gPendingEvents.removeFirst();
+                notifyGeckoOfEvent(e);
+            }
+        } catch (NoSuchElementException e) {}
+    }
+ 
     public static void sendEventToGecko(GeckoEvent e) {
         if (GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning)) {
-            if (gPendingResize != null) {
-                notifyGeckoOfEvent(gPendingResize);
-                gPendingResize = null;
-            }
             notifyGeckoOfEvent(e);
         } else {
-            if (e.mType == GeckoEvent.SIZE_CHANGED)
-                gPendingResize = e;
+            gPendingEvents.addLast(e);
         }
     }
 
@@ -235,6 +422,7 @@ class GeckoAppShell
 
         switch (type) {
         case NOTIFY_IME_RESETINPUTSTATE:
+            GeckoApp.surfaceView.inputConnection.finishComposingText();
             IMEStateUpdater.resetIME();
             // keep current enabled state
             IMEStateUpdater.enableIME();
@@ -335,10 +523,7 @@ class GeckoAppShell
     {
         // mLaunchState can only be Launched at this point
         GeckoApp.setLaunchState(GeckoApp.LaunchState.GeckoRunning);
-        if (gPendingResize != null) {
-            notifyGeckoOfEvent(gPendingResize);
-            gPendingResize = null;
-        }
+        sendPendingEventsToGecko();
     }
 
     static void onXreExit() {
@@ -366,7 +551,7 @@ class GeckoAppShell
         // the intent to be launched by the shortcut
         Intent shortcutIntent = new Intent("org.mozilla.fennec.WEBAPP");
         shortcutIntent.setClassName(GeckoApp.mAppContext,
-                                    "org.mozilla." + GeckoApp.mAppContext.getAppName() + ".App");
+                                    GeckoApp.mAppContext.getPackageName() + ".App");
         shortcutIntent.putExtra("args", "--webapp=" + aURI);
         
         Intent intent = new Intent();
@@ -386,9 +571,10 @@ class GeckoAppShell
         return getHandlersForIntent(intent);
     }
 
-    static String[] getHandlersForProtocol(String aScheme, String aAction) {
+    static String[] getHandlersForURL(String aURL, String aAction) {
+        // aURL may contain the whole URL or just the protocol
+        Uri uri = aURL.indexOf(':') >= 0 ? Uri.parse(aURL) : new Uri.Builder().scheme(aURL).build();
         Intent intent = getIntentForActionString(aAction);
-        Uri uri = new Uri.Builder().scheme(aScheme).build();
         intent.setData(uri);
         return getHandlersForIntent(intent);
     }
@@ -516,28 +702,26 @@ class GeckoAppShell
         removeNotification(notificationID);
 
         AlertNotification notification = new AlertNotification(GeckoApp.mAppContext,
-            notificationID, icon, aAlertTitle, System.currentTimeMillis());
+            notificationID, icon, aAlertTitle, aAlertText, System.currentTimeMillis());
 
         // The intent to launch when the user clicks the expanded notification
         Intent notificationIntent = new Intent(GeckoApp.ACTION_ALERT_CLICK);
         notificationIntent.setClassName(GeckoApp.mAppContext,
-            "org.mozilla." + GeckoApp.mAppContext.getAppName() + ".NotificationHandler");
+            GeckoApp.mAppContext.getPackageName() + ".NotificationHandler");
 
         // Put the strings into the intent as an URI "alert:<name>#<cookie>"
         Uri dataUri = Uri.fromParts("alert", aAlertName, aAlertCookie);
         notificationIntent.setData(dataUri);
 
-        PendingIntent contentIntent = PendingIntent.getActivity(GeckoApp.mAppContext, 0, notificationIntent, 0);
+        PendingIntent contentIntent = PendingIntent.getBroadcast(GeckoApp.mAppContext, 0, notificationIntent, 0);
         notification.setLatestEventInfo(GeckoApp.mAppContext, aAlertTitle, aAlertText, contentIntent);
 
         // The intent to execute when the status entry is deleted by the user with the "Clear All Notifications" button
         Intent clearNotificationIntent = new Intent(GeckoApp.ACTION_ALERT_CLEAR);
         clearNotificationIntent.setClassName(GeckoApp.mAppContext,
-            "org.mozilla." + GeckoApp.mAppContext.getAppName() + ".NotificationHandler");
+            GeckoApp.mAppContext.getPackageName() + ".NotificationHandler");
         clearNotificationIntent.setData(dataUri);
-
-        PendingIntent pendingClearIntent = PendingIntent.getActivity(GeckoApp.mAppContext, 0, clearNotificationIntent, 0);
-        notification.deleteIntent = pendingClearIntent;
+        notification.deleteIntent = PendingIntent.getBroadcast(GeckoApp.mAppContext, 0, clearNotificationIntent, 0);
 
         mAlertNotifications.put(notificationID, notification);
 
@@ -634,9 +818,31 @@ class GeckoAppShell
     }
 
     public static void hideProgressDialog() {
-        if (GeckoApp.mAppContext.mProgressDialog != null) {
-            GeckoApp.mAppContext.mProgressDialog.dismiss();
-            GeckoApp.mAppContext.mProgressDialog = null;
-        }
+        GeckoApp.surfaceView.mShowingSplashScreen = false;
+    }
+
+    public static void setKeepScreenOn(final boolean on) {
+        GeckoApp.mAppContext.runOnUiThread(new Runnable() {
+            public void run() {
+                GeckoApp.surfaceView.setKeepScreenOn(on);
+            }
+        });
+    }
+
+    public static boolean isNetworkLinkUp() {
+        ConnectivityManager cm = (ConnectivityManager)
+            GeckoApp.mAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo info = cm.getActiveNetworkInfo();
+        if (info == null || !info.isConnected())
+            return false;
+        return true;
+    }
+
+    public static boolean isNetworkLinkKnown() {
+        ConnectivityManager cm = (ConnectivityManager)
+            GeckoApp.mAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm.getActiveNetworkInfo() == null)
+            return false;
+        return true;
     }
 }

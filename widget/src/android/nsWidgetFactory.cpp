@@ -77,6 +77,14 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecAndroid)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIMEPicker)
 
+#include "GfxInfo.h"
+namespace mozilla {
+namespace widget {
+// This constructor should really be shared with all platforms.
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GfxInfo, Init)
+}
+}
+
 static nsresult
 nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
                         void **aResult)
@@ -113,6 +121,7 @@ NS_DEFINE_NAMED_CID(NS_DEVICE_CONTEXT_SPEC_CID);
 NS_DEFINE_NAMED_CID(NS_FILEPICKER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLFORMATCONVERTER_CID);
 NS_DEFINE_NAMED_CID(NS_IMEPICKER_CID);
+NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
 
 static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_WINDOW_CID, false, NULL, nsWindowConstructor },
@@ -131,6 +140,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_FILEPICKER_CID, false, NULL, nsFilePickerConstructor },
   { &kNS_HTMLFORMATCONVERTER_CID, false, NULL, nsHTMLFormatConverterConstructor },
   { &kNS_IMEPICKER_CID, false, NULL, nsIMEPickerConstructor },
+  { &kNS_GFXINFO_CID, false, NULL, mozilla::widget::GfxInfoConstructor },
   { NULL }
 };
 
@@ -151,6 +161,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/filepicker;1", &kNS_FILEPICKER_CID },
   { "@mozilla.org/widget/htmlformatconverter;1", &kNS_HTMLFORMATCONVERTER_CID },
   { "@mozilla.org/imepicker;1", &kNS_IMEPICKER_CID },
+  { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID },
   { NULL }
 };
 

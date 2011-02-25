@@ -68,6 +68,12 @@
         worker.terminate();
         SimpleTest.finish();
       }
+
+      // Test passing a wrapped native to the worker.
+      var thread = Components.classes["@mozilla.org/thread-manager;1"]
+                             .getService().newThread(0);
+
+      worker.postMessage(thread);
     }
 
   ]]>

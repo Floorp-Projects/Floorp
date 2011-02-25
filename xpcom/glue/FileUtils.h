@@ -40,7 +40,7 @@
 #ifndef mozilla_FileUtils_h
 #define mozilla_FileUtils_h
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_OS2)
 # include <unistd.h>
 #elif defined(XP_WIN)
 # include <io.h>

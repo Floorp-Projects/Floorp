@@ -67,12 +67,11 @@
       {
         document.getElementById(this.ID).style.display = 'block';
         document.getElementById(this.ID).focus();
-        todo(false, "Enable show event handling when bug 422744 is fixed.");
       }
 
       this.eventSeq = [
-        new invokerChecker(EVENT_FOCUS, this.DOMNode),
-        // new invokerChecker(EVENT_SHOW, this.DOMNode)
+        new invokerChecker(EVENT_SHOW, this.DOMNode),
+        new invokerChecker(EVENT_FOCUS, this.DOMNode)
       ];
 
       this.getID = function showNFocusAlertDialog_getID()

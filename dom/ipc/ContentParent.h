@@ -202,7 +202,8 @@ private:
     nsCOMPtr<nsIThreadObserver> mOldObserver;
 
     bool mIsAlive;
-    nsCOMPtr<nsIPrefServiceInternal> mPrefService; 
+    nsCOMPtr<nsIPrefServiceInternal> mPrefService;
+    time_t mProcessStartTime;
 };
 
 } // namespace dom

@@ -392,8 +392,8 @@ public:
    * Callback for notifying a window about a modal dialog being
    * opened/closed with the window as a parent.
    */
-  virtual void EnterModalState() = 0;
-  virtual void LeaveModalState() = 0;
+  virtual nsIDOMWindow *EnterModalState() = 0;
+  virtual void LeaveModalState(nsIDOMWindow *) = 0;
 
   virtual PRBool CanClose() = 0;
   virtual nsresult ForceClose() = 0;
@@ -531,8 +531,10 @@ public:
 
   /**
    * Instructs this window to synchronously dispatch a popState event.
+   * aIsInitial should be true if the event corresponds to a popState fired
+   * immediately after onload and false otherwise.
    */
-  virtual nsresult DispatchSyncPopState() = 0;
+  virtual nsresult DispatchSyncPopState(PRBool aIsInitial) = 0;
 
   /**
    * Tell this window that there is an observer for orientation changes

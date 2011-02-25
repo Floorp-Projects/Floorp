@@ -19,12 +19,12 @@
       const description = "My Test Database";
       const indexName = "My Test Index";
 
-      let request = moz_indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
 
       request = db.setVersion("1");
@@ -32,7 +32,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      let objectStore = db.createObjectStore("test store", "foo");
+      let objectStore = db.createObjectStore("test store", { keyPath: "foo" });
       is(db.objectStoreNames.length, 1, "Correct objectStoreNames list");
       is(db.objectStoreNames.item(0), objectStore.name, "Correct name");
 
@@ -45,7 +45,6 @@
 
       objectStore.deleteIndex(indexName);
 
-      is(event.result, undefined, "Correct result");
       is(objectStore.indexNames.length, 0, "Correct indexNames list");
 
       finishTest();

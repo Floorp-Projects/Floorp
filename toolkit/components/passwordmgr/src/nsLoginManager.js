@@ -50,7 +50,16 @@ LoginManager.prototype = {
 
     classID: Components.ID("{cb9e0de8-3598-4ed7-857b-827f011ad5d8}"),
     QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManager,
-                                            Ci.nsISupportsWeakReference]),
+                                            Ci.nsISupportsWeakReference,
+                                            Ci.nsIInterfaceRequestor]),
+    getInterface : function(aIID) {
+      if (aIID.equals(Ci.mozIStorageConnection) && this._storage) {
+        let ir = this._storage.QueryInterface(Ci.nsIInterfaceRequestor);
+        return ir.getInterface(aIID);
+      }
+
+      throw Cr.NS_ERROR_NO_INTERFACE;
+    },
 
 
     /* ---------- private memebers ---------- */
@@ -711,8 +720,16 @@ LoginManager.prototype = {
         // username. We might not find a username field if the user is
         // already logged in to the site. 
         for (var i = pwFields[0].index - 1; i >= 0; i--) {
-            if (form.elements[i].type == "text") {
-                usernameField = form.elements[i];
+            var element = form.elements[i];
+            var fieldType = (element.hasAttribute("type") ?
+                             element.getAttribute("type").toLowerCase() :
+                             element.type);
+            if (fieldType == "text"  ||
+                fieldType == "email" ||
+                fieldType == "url"   ||
+                fieldType == "tel"   ||
+                fieldType == "number") {
+                usernameField = element;
                 break;
             }
         }

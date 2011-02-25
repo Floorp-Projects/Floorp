@@ -105,6 +105,8 @@ pref("dom.indexedDB.warningQuota", 50);
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
 
+pref("browser.sessionhistory.optimize_eviction", false);
+
 pref("ui.use_native_colors", true);
 pref("ui.use_native_popup_windows", false);
 pref("ui.click_hold_context_menus", false);
@@ -189,9 +191,8 @@ pref("gfx.color_management.mode", 2);
 pref("gfx.color_management.display_profile", "");
 pref("gfx.color_management.rendering_intent", 0);
 
-pref("gfx.3d_video.enabled", false);
-
 pref("gfx.downloadable_fonts.enabled", true);
+pref("gfx.downloadable_fonts.fallback_delay", 3000);
 pref("gfx.downloadable_fonts.sanitize", true);
 #ifdef XP_MACOSX
 pref("gfx.downloadable_fonts.sanitize.preserve_otl_tables", false);
@@ -204,6 +205,7 @@ pref("gfx.font_rendering.harfbuzz.level", 2);
 #ifdef XP_WIN
 #ifndef WINCE
 pref("gfx.font_rendering.directwrite.enabled", false);
+pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 #endif
 #endif
 
@@ -569,6 +571,11 @@ pref("dom.disable_open_click_delay", 1000);
 pref("dom.storage.enabled", true);
 pref("dom.storage.default_quota",      5120);
 
+pref("dom.send_after_paint_to_content", false);
+
+// Timeout clamp in ms for timeouts we clamp
+pref("dom.min_timeout_value", 10);
+
 // Parsing perf prefs. For now just mimic what the old code did.
 #ifndef XP_WIN
 pref("content.sink.pending_event_mode", 0);
@@ -579,6 +586,9 @@ pref("content.sink.pending_event_mode", 0);
 //   1 = openControlled
 //   2 = openAbused
 pref("privacy.popups.disable_from_plugins", 2);
+
+// "do not track" HTTP header, disabled by default
+pref("privacy.donottrackheader.enabled",    false);
 
 pref("dom.event.contextmenu.enabled",       true);
 
@@ -594,12 +604,16 @@ pref("javascript.options.methodjit.content", true);
 pref("javascript.options.methodjit.chrome",  false);
 pref("javascript.options.jitprofiling.content", true);
 pref("javascript.options.jitprofiling.chrome",  false);
+pref("javascript.options.methodjit_always", false);
 // This preference limits the memory usage of javascript.
 // If you want to change these values for your device,
 // please find Bug 417052 comment 17 and Bug 456721
-// Comment 32.
-pref("javascript.options.mem.high_water_mark", 32);
+// Comment 32 and Bug 613551.
+pref("javascript.options.mem.high_water_mark", 128);
+pref("javascript.options.mem.max", -1);
 pref("javascript.options.mem.gc_frequency",   300);
+pref("javascript.options.mem.gc_per_compartment", true);
+pref("javascript.options.mem.log", false);
 
 // advanced prefs
 pref("advanced.mailftp",                    false);
@@ -737,11 +751,6 @@ pref("network.http.prompt-temp-redirect", true);
 // Section 4.8 "High-Throughput Data Service Class"
 pref("network.http.qos", 0);
 
-// The number of milliseconds after sending a SYN for an HTTP connection,
-// to wait before trying a different connection. 0 means do not use a second
-// connection.
-pref("network.http.connection-retry-timeout", 250);
-
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
 // Section 4.8 "High-Throughput Data Service Class", and 80 (0x50, or AF22)
@@ -752,6 +761,11 @@ pref("network.ftp.control.qos", 0);
 // </http>
 
 // <ws>: WebSocket
+// The -76 websocket network protocol may be subject to HTTP cache poisoning
+// attacks. Until there is a secure open standard available and implemented
+// in necko the override-security-block preference must be set to true before
+// the normal enabled preference is considered. Bug 616733
+pref("network.websocket.override-security-block", false);
 pref("network.websocket.enabled", true);
 // </ws>
 
@@ -1330,11 +1344,9 @@ pref("dom.ipc.plugins.timeoutSecs", 0);
 pref("dom.ipc.plugins.processLaunchTimeoutSecs", 0);
 #endif
 
-#ifdef XP_WIN
-// Disable oopp for java on windows. They run their own
-// process isolation which conflicts with our implementation.
+// Disable oopp for standard java. They run their own process isolation (which
+// conflicts with our implementation, at least on Windows).
 pref("dom.ipc.plugins.java.enabled", false);
-#endif
 
 #ifndef ANDROID
 #ifndef XP_MACOSX
@@ -1346,7 +1358,6 @@ pref("dom.ipc.plugins.enabled.nppdf.so", false);
 #endif
 #endif
 
-pref("svg.enabled", true);
 pref("svg.smil.enabled", true);
 
 pref("font.minimum-size.ar", 0);
@@ -1804,6 +1815,11 @@ pref("ui.trackpoint_hack.enabled", -1);
 // for "normal" windows. Setting this to MozillaUIWindowClass might make
 // some trackpad drivers behave better.
 pref("ui.window_class_override", "");
+
+// Enables or disables the Elantech gesture hacks.  -1 is autodetect, 0 is off,
+// and 1 is on.  Set this to 1 if three-finger swipe gestures do not cause
+// page back/forward actions, or if pinch-to-zoom does not work.
+pref("ui.elantech_gesture_hacks.enabled", -1);
 
 # WINNT
 #endif
@@ -2561,9 +2577,6 @@ pref("autocomplete.ungrab_during_mode_switch", true);
 // toggling to use the XUL filepicker
 pref("ui.allow_platform_file_picker", true);
 
-// should NetworkManager be authoritative for online/offline status?
-pref("toolkit.networkmanager.disable", true);
-
 pref("helpers.global_mime_types_file", "/etc/mime.types");
 pref("helpers.global_mailcap_file", "/etc/mailcap");
 pref("helpers.private_mime_types_file", "~/.mime.types");
@@ -2834,9 +2847,6 @@ pref("autocomplete.ungrab_during_mode_switch", true);
 // Default to using the system filepicker if possible, but allow
 // toggling to use the XUL filepicker
 pref("ui.allow_platform_file_picker", true);
-
-// should NetworkManager be authoritative for online/offline status?
-pref("toolkit.networkmanager.disable", true);
 
 pref("helpers.global_mime_types_file", "/etc/mime.types");
 pref("helpers.global_mailcap_file", "/etc/mailcap");
@@ -3188,7 +3198,7 @@ pref("image.mem.decodeondraw", false);
 // Minimum timeout for image discarding (in milliseconds). The actual time in
 // which an image must inactive for it to be discarded will vary between this
 // value and twice this value.
-pref("image.mem.min_discard_timeout_ms", 10000);
+pref("image.mem.min_discard_timeout_ms", 120000);
 
 // Chunk size for calls to the image decoders
 pref("image.mem.decode_bytes_at_a_time", 200000);
@@ -3200,19 +3210,13 @@ pref("image.mem.max_ms_before_yield", 400);
 pref("image.mem.max_bytes_for_sync_decode", 150000);
 
 // WebGL prefs
-// keep disabled on linux until bug 578877 is fixed
-// This is not an ideal define, but it gets the right set of
-// build machines.
-#ifdef MOZ_WIDGET_GTK2
-pref("webgl.enabled_for_all_sites", false);
-#else
-pref("webgl.enabled_for_all_sites", true);
-#endif
+pref("webgl.force-enabled", false);
+pref("webgl.disabled", false);
 pref("webgl.shader_validator", true);
 pref("webgl.force_osmesa", false);
-pref("webgl.mochitest_native_gl", false);
 pref("webgl.osmesalib", "");
 pref("webgl.verbose", false);
+pref("webgl.prefer-native-gl", false);
 
 #ifdef XP_WIN
 #ifndef WINCE
@@ -3226,19 +3230,11 @@ pref("mozilla.widget.disable-native-theme", true);
 pref("gfx.color_management.mode", 0);
 #endif
 
-// Default value of acceleration for all widgets.
-#ifdef XP_WIN
-pref("layers.accelerate-all", true);
-#else
-#ifdef XP_MACOSX
-pref("layers.accelerate-all", true);
-#else
-pref("layers.accelerate-all", false);
-#endif
-#endif
+// Whether to disable acceleration for all widgets.
+pref("layers.acceleration.disabled", false);
 
-// Whether to allow acceleration on layers at all.
-pref("layers.accelerate-none", false);
+// Whether to force acceleration on, ignoring blacklists.
+pref("layers.acceleration.force-enabled", false);
 
 #ifdef XP_WIN
 #ifndef WINCE
@@ -3283,3 +3279,6 @@ pref("extensions.alwaysUnpack", false);
 
 pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  32768);
+
+// Desktop Notification
+pref("notification.feature.enabled", false);

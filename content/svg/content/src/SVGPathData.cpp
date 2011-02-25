@@ -51,6 +51,12 @@
 
 using namespace mozilla;
 
+static PRBool IsMoveto(PRUint16 aSegType)
+{
+  return aSegType == nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS ||
+         aSegType == nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL;
+}
+
 nsresult
 SVGPathData::CopyFrom(const SVGPathData& rhs)
 {
@@ -235,6 +241,10 @@ SVGPathData::GetPathSegAtLength(float aDistance) const
 void
 SVGPathData::ConstructPath(gfxContext *aCtx) const
 {
+  if (!mData.Length() || !IsMoveto(SVGPathSegUtils::DecodeType(mData[0]))) {
+    return; // paths without an initial moveto are invalid
+  }
+
   PRUint32 segType, prevSegType = nsIDOMSVGPathSeg::PATHSEG_UNKNOWN;
   gfxPoint pathStart(0.0, 0.0); // start point of [sub]path
   gfxPoint segEnd(0.0, 0.0);    // end point of previous/current segment
@@ -420,12 +430,6 @@ SVGPathData::ToFlattenedPath(const gfxMatrix& aMatrix) const
   return ctx->GetFlattenedPath();
 }
 
-static PRBool IsMoveto(PRUint16 aSegType)
-{
-  return aSegType == nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS ||
-         aSegType == nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL;
-}
-
 static float AngleOfVector(gfxPoint v)
 {
   // C99 says about atan2 "A domain error may occur if both arguments are
@@ -455,21 +459,25 @@ SVGPathData::GetMarkerPositioningData(nsTArray<nsSVGMark> *aMarks) const
   // It should also assume that segments such as M and Z can appear in weird
   // places, and repeat multiple times consecutively.
 
-  gfxPoint pathStart, segStart, segEnd;
-  gfxPoint cp1, cp2; // control points for current bezier curve
-  gfxPoint prevCP; // last control point of previous bezier curve
+  // info on current [sub]path (reset every M command):
+  gfxPoint pathStart(0.0, 0.0);
+  float pathStartAngle = 0.0f;
 
-  PRUint16 segType, prevSegType = nsIDOMSVGPathSeg::PATHSEG_UNKNOWN;
-
-  // info on the current [sub]path (reset every M command):
-  gfxPoint pathStartPoint(0, 0);
-  float pathStartAngle = 0;
-
-  float prevSegEndAngle = 0, segStartAngle = 0, segEndAngle = 0;
+  // info on previous segment:
+  PRUint16 prevSegType = nsIDOMSVGPathSeg::PATHSEG_UNKNOWN;
+  gfxPoint prevSegEnd(0.0, 0.0);
+  float prevSegEndAngle = 0.0f;
+  gfxPoint prevCP; // if prev seg was a bezier, this was its last control point
 
   PRUint32 i = 0;
   while (i < mData.Length()) {
-    segType = SVGPathSegUtils::DecodeType(mData[i++]); // advances i to args
+
+    // info on current segment:
+    PRUint16 segType =
+      SVGPathSegUtils::DecodeType(mData[i++]); // advances i to args
+    gfxPoint &segStart = prevSegEnd;
+    gfxPoint segEnd;
+    float segStartAngle, segEndAngle;
 
     switch (segType) // to find segStartAngle, segEnd and segEndAngle
     {
@@ -505,6 +513,8 @@ SVGPathData::GetMarkerPositioningData(nsTArray<nsSVGMark> *aMarks) const
 
     case nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_ABS:
     case nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_REL:
+    {
+      gfxPoint cp1, cp2; // control points
       if (segType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_ABS) {
         cp1 = gfxPoint(mData[i],   mData[i+1]);
         cp2 = gfxPoint(mData[i+2], mData[i+3]);
@@ -525,9 +535,12 @@ SVGPathData::GetMarkerPositioningData(nsTArray<nsSVGMark> *aMarks) const
       segEndAngle = AngleOfVector(segEnd - cp2);
       i += 6;
       break;
+    }
 
     case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS:
     case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_REL:
+    {
+      gfxPoint cp1, cp2; // control points
       if (segType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS) {
         cp1 = gfxPoint(mData[i],   mData[i+1]);
         segEnd = gfxPoint(mData[i+2], mData[i+3]);
@@ -540,13 +553,14 @@ SVGPathData::GetMarkerPositioningData(nsTArray<nsSVGMark> *aMarks) const
       segEndAngle = AngleOfVector(segEnd - cp1);
       i += 4;
       break;
+    }
 
     case nsIDOMSVGPathSeg::PATHSEG_ARC_ABS:
     case nsIDOMSVGPathSeg::PATHSEG_ARC_REL:
     {
-      float rx = mData[i];
-      float ry = mData[i+1];
-      float angle = mData[i+2];
+      double rx = mData[i];
+      double ry = mData[i+1];
+      double angle = mData[i+2];
       PRBool largeArcFlag = mData[i+3] != 0.0f;
       PRBool sweepFlag = mData[i+4] != 0.0f;
       if (segType == nsIDOMSVGPathSeg::PATHSEG_ARC_ABS) {
@@ -585,46 +599,47 @@ SVGPathData::GetMarkerPositioningData(nsTArray<nsSVGMark> *aMarks) const
 
       // F.6.5.1:
       angle = angle * M_PI/180.0;
-      float x1p = cos(angle) * (segStart.x - segEnd.x) / 2.0
-                + sin(angle) * (segStart.y - segEnd.y) / 2.0;
-      float y1p = -sin(angle) * (segStart.x - segEnd.x) / 2.0
-                 + cos(angle)  *(segStart.y - segEnd.y) / 2.0;
+      double x1p =  cos(angle) * (segStart.x - segEnd.x) / 2.0
+                  + sin(angle) * (segStart.y - segEnd.y) / 2.0;
+      double y1p = -sin(angle) * (segStart.x - segEnd.x) / 2.0
+                  + cos(angle) * (segStart.y - segEnd.y) / 2.0;
 
       // This is the root in F.6.5.2 and the numerator under that root:
-      float root;
-      float numerator = rx*rx*ry*ry - rx*rx*y1p*y1p - ry*ry*x1p*x1p;
+      double root;
+      double numerator = rx*rx*ry*ry - rx*rx*y1p*y1p - ry*ry*x1p*x1p;
 
-      if (numerator < 0.0) {
-        // F.6.6 step 3 - |numerator < 0.0| is equivalent to the result of
-        // F.6.6.2 (lamedh) being greater than one. What we have here is radii
-        // that do not reach between segStart and segEnd, so we need to correct
-        // them.
-        float lamedh = 1.0 - numerator/(rx*rx*ry*ry); // equiv to eqn F.6.6.2
-        float s = sqrt(lamedh);
+      if (numerator >= 0.0) {
+        root = sqrt(numerator/(rx*rx*y1p*y1p + ry*ry*x1p*x1p));
+        if (largeArcFlag == sweepFlag)
+          root = -root;
+      } else {
+        // F.6.6 step 3 - |numerator < 0.0|. This is equivalent to the result
+        // of F.6.6.2 (lamedh) being greater than one. What we have here is
+        // ellipse radii that are too small for the ellipse to reach between
+        // segStart and segEnd. We scale the radii up uniformly so that the
+        // ellipse is just big enough to fit (i.e. to the point where there is
+        // exactly one solution).
+
+        double lamedh = 1.0 - numerator/(rx*rx*ry*ry); // equiv to eqn F.6.6.2
+        double s = sqrt(lamedh);
         rx *= s;  // F.6.6.3
         ry *= s;
-        // rx and ry changed, so we have to recompute numerator
-        numerator = rx*rx*ry*ry - rx*rx*y1p*y1p - ry*ry*x1p*x1p;
-        NS_ABORT_IF_FALSE(numerator >= 0,
-                          "F.6.6.3 should prevent this. Will sqrt(-num)!");
+        root = 0.0;
       }
-      root = sqrt(numerator/(rx*rx*y1p*y1p + ry*ry*x1p*x1p));
-      if (largeArcFlag == sweepFlag)
-        root = -root;
 
-      float cxp =  root * rx * y1p / ry;  // F.6.5.2
-      float cyp = -root * ry * x1p / rx;
+      double cxp =  root * rx * y1p / ry;  // F.6.5.2
+      double cyp = -root * ry * x1p / rx;
 
-      float theta, delta;
-      theta = CalcVectorAngle(1.0, 0.0,  (x1p-cxp)/rx, (y1p-cyp)/ry); // F.6.5.5
-      delta  = CalcVectorAngle((x1p-cxp)/rx, (y1p-cyp)/ry,
-                               (-x1p-cxp)/rx, (-y1p-cyp)/ry);         // F.6.5.6
+      double theta, delta;
+      theta = CalcVectorAngle(1.0, 0.0, (x1p-cxp)/rx, (y1p-cyp)/ry); // F.6.5.5
+      delta = CalcVectorAngle((x1p-cxp)/rx, (y1p-cyp)/ry,
+                              (-x1p-cxp)/rx, (-y1p-cyp)/ry);         // F.6.5.6
       if (!sweepFlag && delta > 0)
         delta -= 2.0 * M_PI;
       else if (sweepFlag && delta < 0)
         delta += 2.0 * M_PI;
 
-      float tx1, ty1, tx2, ty2;
+      double tx1, ty1, tx2, ty2;
       tx1 = -cos(angle)*rx*sin(theta) - sin(angle)*ry*cos(theta);
       ty1 = -sin(angle)*rx*sin(theta) + cos(angle)*ry*cos(theta);
       tx2 = -cos(angle)*rx*sin(theta+delta) - sin(angle)*ry*cos(theta+delta);
@@ -665,7 +680,10 @@ SVGPathData::GetMarkerPositioningData(nsTArray<nsSVGMark> *aMarks) const
 
     case nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS:
     case nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_REL:
-      cp1 = SVGPathSegUtils::IsCubicType(prevSegType) ? segStart * 2 - prevCP : segStart;
+    {
+      gfxPoint cp1 = SVGPathSegUtils::IsCubicType(prevSegType) ?
+                       segStart * 2 - prevCP : segStart;
+      gfxPoint cp2;
       if (segType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS) {
         cp2 = gfxPoint(mData[i], mData[i+1]);
         segEnd = gfxPoint(mData[i+2], mData[i+3]);
@@ -684,11 +702,15 @@ SVGPathData::GetMarkerPositioningData(nsTArray<nsSVGMark> *aMarks) const
       segEndAngle = AngleOfVector(segEnd - cp2);
       i += 4;
       break;
+    }
 
     case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS:
     case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL:
-      cp1 = SVGPathSegUtils::IsQuadraticType(prevSegType) ? segStart * 2 - prevCP : segStart;
-      if (segType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS) {
+    {
+      gfxPoint cp1 = SVGPathSegUtils::IsQuadraticType(prevSegType) ?
+                       segStart * 2 - prevCP : segStart;
+      gfxPoint cp2;
+      if (segType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS) {
         segEnd = gfxPoint(mData[i], mData[i+1]);
       } else {
         segEnd = segStart + gfxPoint(mData[i], mData[i+1]);
@@ -698,6 +720,7 @@ SVGPathData::GetMarkerPositioningData(nsTArray<nsSVGMark> *aMarks) const
       segEndAngle = AngleOfVector(segEnd - cp1);
       i += 2;
       break;
+    }
 
     default:
       // Leave any existing marks in aMarks so we have a visual indication of
@@ -737,8 +760,8 @@ SVGPathData::GetMarkerPositioningData(nsTArray<nsSVGMark> *aMarks) const
     }
 
     prevSegType = segType;
+    prevSegEnd = segEnd;
     prevSegEndAngle = segEndAngle;
-    segStart = segEnd;
   }
 
   NS_ABORT_IF_FALSE(i == mData.Length(), "Very, very bad - mData corrupt");

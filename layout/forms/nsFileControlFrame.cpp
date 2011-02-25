@@ -75,7 +75,7 @@
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMHTMLInputElement.h"
 #ifdef ACCESSIBILITY
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 #endif
 
 #include "nsInterfaceHashtable.h"
@@ -97,7 +97,6 @@ namespace dom = mozilla::dom;
 
 #define SYNC_TEXT 0x1
 #define SYNC_BUTTON 0x2
-#define SYNC_BOTH 0x3
 
 nsIFrame*
 NS_NewFileControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -344,7 +343,7 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
                                       systemGroup);
 
   SyncAttr(kNameSpaceID_None, nsGkAtoms::size,     SYNC_TEXT);
-  SyncAttr(kNameSpaceID_None, nsGkAtoms::disabled, SYNC_BOTH);
+  SyncDisabledState();
 
   return NS_OK;
 }
@@ -589,17 +588,28 @@ nsFileControlFrame::SyncAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   }
 }
 
+void
+nsFileControlFrame::SyncDisabledState()
+{
+  nsEventStates eventStates = mContent->IntrinsicState();
+  if (eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
+    mTextContent->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, EmptyString(),
+                          PR_TRUE);
+    mBrowse->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, EmptyString(),
+                     PR_TRUE);
+  } else {
+    mTextContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, PR_TRUE);
+    mBrowse->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, PR_TRUE);
+  }
+}
+
 NS_IMETHODIMP
 nsFileControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aModType)
 {
-  // propagate disabled to text / button inputs
   if (aNameSpaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::disabled) {
-      SyncAttr(aNameSpaceID, aAttribute, SYNC_BOTH);
-    // propagate size to text
-    } else if (aAttribute == nsGkAtoms::size) {
+    if (aAttribute == nsGkAtoms::size) {
       SyncAttr(aNameSpaceID, aAttribute, SYNC_TEXT);
     } else if (aAttribute == nsGkAtoms::tabindex) {
       SyncAttr(aNameSpaceID, aAttribute, SYNC_BUTTON);
@@ -607,6 +617,14 @@ nsFileControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
   }
 
   return nsBlockFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
+}
+
+void
+nsFileControlFrame::ContentStatesChanged(nsEventStates aStates)
+{
+  if (aStates.HasState(NS_EVENT_STATE_DISABLED)) {
+    nsContentUtils::AddScriptRunner(new SyncDisabledStateEvent(this));
+  }
 }
 
 PRBool
@@ -702,7 +720,7 @@ already_AddRefed<nsAccessible>
 nsFileControlFrame::CreateAccessible()
 {
   // Accessible object exists just to hold onto its children, for later shutdown
-  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+  nsAccessibilityService* accService = nsIPresShell::AccService();
   if (!accService)
     return nsnull;
 

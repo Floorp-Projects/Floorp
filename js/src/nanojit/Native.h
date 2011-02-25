@@ -142,16 +142,47 @@ namespace nanojit {
         static void asm_output(const char *f, ...) {}
         #define gpn(r)                    regNames[(REGNUM(n))]
     #elif defined(NJ_VERBOSE)
+        inline char cvaltoa(unsigned char u) {
+            return u<10 ? u+'0' : u+'a'-10;
+        }
+
+        inline char* appendHexVals(char* str, char* valFrom, char* valTo) {
+            NanoAssert(valFrom <= valTo);
+            str += VMPI_strlen(str);
+            for(char* ch = valFrom; ch < valTo; ch++) {
+                unsigned char u = (unsigned char)*ch;
+                *str++ = cvaltoa(u >> 4);
+                *str++ = cvaltoa(u &  0xf);
+                *str++ = ' ';
+            }
+            *str = '\0';
+            return str;
+        }
+
+        inline char* padTo(char* str, int n, char c=' ') {
+            char* start = str + VMPI_strlen(str);
+            char* end = &str[n];
+            while(start < end)
+                *start++ = c;
+            *end = '\0';
+            return end;
+        }
+
         // Used for printing native instructions.  Like Assembler::outputf(),
         // but only outputs if LC_Native is set.  Also prepends the output
         // with the address of the current native instruction.
-        #define asm_output(...) do { \
-            if (_logc->lcbits & LC_Native) { \
-                outline[0]='\0'; \
-                VMPI_sprintf(outline, "%p   ", _nIns);  \
-                VMPI_sprintf(outline+VMPI_strlen(outline), ##__VA_ARGS__);   \
-                output();                               \
-            } \
+        #define asm_output(...) do {                                            \
+            if (_logc->lcbits & LC_Native) {                                    \
+                outline[0]='\0';                                                \
+                VMPI_sprintf(outline, "%p  ", _nIns);                           \
+                if (_logc->lcbits & LC_Bytes) {                                 \
+                    appendHexVals(outline, (char*)_nIns, (char*)_nInsAfter);    \
+                    padTo(outline, 3*15);                                       \
+                }                                                               \
+                VMPI_sprintf(outline + VMPI_strlen(outline), ##__VA_ARGS__);    \
+                output();                                                       \
+                _nInsAfter = _nIns;                                             \
+            }                                                                   \
         } while (0) /* no semi */
         #define gpn(r)                  regNames[(REGNUM(r))]
     #else

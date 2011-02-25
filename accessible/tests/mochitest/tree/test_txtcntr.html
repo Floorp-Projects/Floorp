@@ -172,6 +172,16 @@
 
       testAccessibleTree("c7", accTree);
 
+      // only whitespace between images should be exposed
+      accTree = {
+        SECTION: [
+          { GRAPHIC: [] },
+          { TEXT_LEAF: [] },
+          { GRAPHIC: [] }
+        ]
+      };
+      testAccessibleTree("c8", accTree);
+
       SimpleTest.finish();
     }
 
@@ -184,13 +194,16 @@
   <a target="_blank"
      title="overflowed content doesn't expose child text accessibles"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=489306">
-    Mozilla Bug 489306
-  </a><br>
+    Mozilla Bug 489306</a>
   <a target="_blank"
      title="Create child accessibles for text controls from native anonymous content"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=542824">
-    Mozilla Bug 542824
-  </a><br>
+    Mozilla Bug 542824</a>
+  <a target="_blank"
+     title="Update accessible tree on content insertion after layout"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=498015">
+    Mozilla Bug 498015</a>
+
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -216,5 +229,8 @@
   <div id="c5"><blockquote>Hello</blockquote></div>
   <div id="c6">This <abbr title="accessibility">a11y</abbr> test</div>
   <div id="c7">This <acronym title="personal computer">PC</acronym> is broken</div>
+
+  <!-- only whitespace between images should be exposed -->
+  <div id="c8">   <img src="../moz.png">   <img src="../moz.png">   </div>
 </body>
 </html>

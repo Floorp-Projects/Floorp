@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #filter substitution
-package org.mozilla.@MOZ_APP_NAME@;
+package @ANDROID_PACKAGE_NAME@;
 
 
 import android.app.*;
@@ -108,7 +108,7 @@ public class CrashReporter extends Activity
     String passedMinidumpPath = getIntent().getStringExtra("minidumpPath");
     File passedMinidumpFile = new File(passedMinidumpPath);
     File pendingDir =
-      new File("/data/data/org.mozilla.@MOZ_APP_NAME@/mozilla/Crash Reports/pending");
+      new File("/data/data/@ANDROID_PACKAGE_NAME@/mozilla/Crash Reports/pending");
     pendingDir.mkdirs();
     mPendingMinidumpFile = new File(pendingDir, passedMinidumpFile.getName());
     moveFile(passedMinidumpFile, mPendingMinidumpFile);
@@ -121,8 +121,14 @@ public class CrashReporter extends Activity
     readStringsFromFile(mPendingExtrasFile.getPath(), mExtrasStringMap);
   }
 
-  public void onCloseClick(View v)
+  void backgroundSendReport()
   {
+    final CheckBox sendReportCheckbox = (CheckBox) findViewById(R.id.send_report);
+    if (!sendReportCheckbox.isChecked()) {
+      finish();
+      return;
+    }
+
     mProgressDialog.show();
     new Thread(new Runnable() {
       public void run() {
@@ -130,14 +136,15 @@ public class CrashReporter extends Activity
       }}).start();
   }
 
+  public void onCloseClick(View v)
+  {
+    backgroundSendReport();
+  }
+
   public void onRestartClick(View v)
   {
     doRestart();
-    mProgressDialog.show();
-    new Thread(new Runnable() {
-      public void run() {
-        sendReport(mPendingMinidumpFile, mExtrasStringMap, mPendingExtrasFile);
-      }}).start();
+    backgroundSendReport();
   }
 
   boolean readStringsFromFile(String filePath, Map stringMap)
@@ -205,11 +212,7 @@ public class CrashReporter extends Activity
                   File extrasFile)
   {
     Log.i("GeckoCrashReport", "sendReport: " + minidumpFile.getPath());
-    final CheckBox sendReportCheckbox = (CheckBox) findViewById(R.id.send_report);
     final CheckBox includeURLCheckbox = (CheckBox) findViewById(R.id.include_url);
-
-    if (!sendReportCheckbox.isChecked())
-      finish();
 
     String spec = extras.get("ServerURL");
     if (spec == null)
@@ -272,7 +275,7 @@ public class CrashReporter extends Activity
 
       if (conn.getResponseCode() == conn.HTTP_OK) {
         File submittedDir = new File(
-          "/data/data/org.mozilla.@MOZ_APP_NAME@/mozilla/Crash Reports/submitted");
+          "/data/data/@ANDROID_PACKAGE_NAME@/mozilla/Crash Reports/submitted");
         submittedDir.mkdirs();
         minidumpFile.delete();
         extrasFile.delete();
@@ -295,8 +298,8 @@ public class CrashReporter extends Activity
     try {
       String action = "android.intent.action.MAIN";
       Intent intent = new Intent(action);
-      intent.setClassName("org.mozilla.@MOZ_APP_NAME@",
-                          "org.mozilla.@MOZ_APP_NAME@.App");
+      intent.setClassName("@ANDROID_PACKAGE_NAME@",
+                          "@ANDROID_PACKAGE_NAME@.App");
       Log.i("GeckoCrashReporter", intent.toString());
       startActivity(intent);
     } catch (Exception e) {

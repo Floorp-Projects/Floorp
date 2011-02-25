@@ -56,7 +56,7 @@ function onTabViewWindowLoaded() {
   ok(group1.isEmpty(), "This group is empty");
   contentWindow.GroupItems.setActiveGroupItem(group1);
   let tab1 = gBrowser.loadOneTab("about:blank#1", {inBackground: true});
-  let tab1Item = tab1.tabItem;
+  let tab1Item = tab1._tabViewTabItem;
   ok(group1.getChildren().some(function(child) child == tab1Item), "The tab was made in our new group");
   is(group1.getChildren().length, 1, "Only one tab in the first group");
 
@@ -75,7 +75,7 @@ function onTabViewWindowLoaded() {
     // the appropriate group would get selected when the key
     // combination is pressed
     executeSoon(function() { 
-      EventUtils.synthesizeKey("e", {accelKey : true}, contentWindow);
+      EventUtils.synthesizeKey("e", {accelKey : true, shiftKey: true}, contentWindow);
     });
   });
 

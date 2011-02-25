@@ -31,27 +31,46 @@ function invokeUsingStarButton(phase) {
 }
 
 var testURL = "data:text/plain,Content";
+var bookmarkId;
+
+function add_bookmark(aURI, aTitle) {
+  return PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
+                                              aURI, PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                              aTitle);
+}
 
 // test bug 432599
 function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", initTest, true);
+  gBrowser.selectedBrowser.addEventListener("load", function () {
+    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
+    waitForStarChange(false, initTest);
+  }, true);
 
   content.location = testURL;
 }
 
-let invokers = [invokeUsingStarButton, invokeUsingCtrlD];
-let currentInvoker = 0;
-
 function initTest() {
-  gBrowser.selectedBrowser.removeEventListener("load", initTest, true);
-  // first, bookmark the page
-  Application.bookmarks.toolbar.addBookmark("Bug 432599 Test", makeURI(testURL));
+  // First, bookmark the page.
+  bookmarkId = add_bookmark(makeURI(testURL), "Bug 432599 Test");
 
   checkBookmarksPanel(invokers[currentInvoker], 1);
 }
+
+function waitForStarChange(aValue, aCallback) {
+  let starButton = document.getElementById("star-button");
+  if (PlacesStarButton._pendingStmt || starButton.hasAttribute("starred") != aValue) {
+    info("Waiting for star button change.");
+    setTimeout(arguments.callee, 50, aValue, aCallback);
+    return;
+  }
+  aCallback();
+}
+
+let invokers = [invokeUsingStarButton, invokeUsingCtrlD];
+let currentInvoker = 0;
 
 let initialValue;
 let initialRemoveHidden;
@@ -64,12 +83,13 @@ function checkBookmarksPanel(invoker, phase)
 {
   let onPopupShown = function(aEvent) {
     if (aEvent.originalTarget == popupElement) {
+      popupElement.removeEventListener("popupshown", arguments.callee, false);
       checkBookmarksPanel(invoker, phase + 1);
-      popupElement.removeEventListener("popupshown", onPopupShown, false);
     }
   };
   let onPopupHidden = function(aEvent) {
     if (aEvent.originalTarget == popupElement) {
+      popupElement.removeEventListener("popuphidden", arguments.callee, false);
       if (phase < 4) {
         checkBookmarksPanel(invoker, phase + 1);
       } else {
@@ -78,10 +98,10 @@ function checkBookmarksPanel(invoker, phase)
           checkBookmarksPanel(invokers[currentInvoker], 1);
         } else {
           gBrowser.removeCurrentTab();
-          finish();
+          PlacesUtils.bookmarks.removeItem(bookmarkId);
+          executeSoon(finish);
         }
       }
-      popupElement.removeEventListener("popuphidden", onPopupHidden, false);
     }
   };
 

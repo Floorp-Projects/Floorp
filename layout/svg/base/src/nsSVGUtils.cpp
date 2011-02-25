@@ -57,12 +57,10 @@
 #include "nsContentUtils.h"
 #include "nsSVGFilterFrame.h"
 #include "nsINameSpaceManager.h"
-#include "nsIDOMSVGPoint.h"
-#include "nsSVGPoint.h"
 #include "nsDOMError.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGInnerSVGFrame.h"
-#include "nsSVGPreserveAspectRatio.h"
+#include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsSVGMatrix.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGMaskFrame.h"
@@ -93,9 +91,8 @@
 #include "mozilla/dom/Element.h"
 #include "gfxUtils.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
-
-gfxASurface *nsSVGUtils::gThebesComputationalSurface = nsnull;
 
 // c = n / 255
 // (c <= 0.0031308 ? c * 12.92 : 1.055 * pow(c, 1 / 2.4) - 0.055) * 255 + 0.5
@@ -171,40 +168,10 @@ static const PRUint8 gsRGBToLinearRGBMap[256] = {
 239, 242, 244, 246, 248, 250, 253, 255
 };
 
-static PRBool gSVGEnabled;
-static const char SVG_PREF_STR[] = "svg.enabled";
-
 #ifdef MOZ_SMIL
 static PRBool gSMILEnabled;
 static const char SMIL_PREF_STR[] = "svg.smil.enabled";
 #endif // MOZ_SMIL
-
-static int
-SVGPrefChanged(const char *aPref, void *aClosure)
-{
-  PRBool prefVal = nsContentUtils::GetBoolPref(SVG_PREF_STR);
-  if (prefVal == gSVGEnabled)
-    return 0;
-
-  gSVGEnabled = prefVal;
-  return 0;
-}
-
-PRBool
-NS_SVGEnabled()
-{
-  static PRBool sInitialized = PR_FALSE;
-  
-  if (!sInitialized) {
-    /* check and register ourselves with the pref */
-    gSVGEnabled = nsContentUtils::GetBoolPref(SVG_PREF_STR);
-    nsContentUtils::RegisterPrefCallback(SVG_PREF_STR, SVGPrefChanged, nsnull);
-
-    sInitialized = PR_TRUE;
-  }
-
-  return gSVGEnabled;
-}
 
 #ifdef MOZ_SMIL
 static int
@@ -439,10 +406,10 @@ nsSVGUtils::ReportToConsole(nsIDocument* doc,
   return nsContentUtils::ReportToConsole(nsContentUtils::eSVG_PROPERTIES,
                                          aWarning,
                                          aParams, aParamsLength,
-                                         doc ? doc->GetDocumentURI() : nsnull,
+                                         nsnull,
                                          EmptyString(), 0, 0,
                                          nsIScriptError::warningFlag,
-                                         "SVG");
+                                         "SVG", doc);
 }
 
 float
@@ -802,7 +769,8 @@ nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame, nsRect* aRect)
   nsISVGChildFrame* svg = do_QueryFrame(aFrame);
   if (!svg)
     return nsnull;
-  *aRect = svg->GetCoveredRegion();
+  *aRect = (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) ?
+             nsRect(0, 0, 0, 0) : svg->GetCoveredRegion();
   return GetOuterSVGFrame(aFrame);
 }
 
@@ -811,13 +779,29 @@ nsSVGUtils::GetViewBoxTransform(nsSVGElement* aElement,
                                 float aViewportWidth, float aViewportHeight,
                                 float aViewboxX, float aViewboxY,
                                 float aViewboxWidth, float aViewboxHeight,
-                                const nsSVGPreserveAspectRatio &aPreserveAspectRatio)
+                                const SVGAnimatedPreserveAspectRatio &aPreserveAspectRatio)
 {
-  NS_ASSERTION(aViewboxWidth > 0, "viewBox width must be greater than zero!");
+  return GetViewBoxTransform(aElement,
+                             aViewportWidth, aViewportHeight,
+                             aViewboxX, aViewboxY,
+                             aViewboxWidth, aViewboxHeight,
+                             aPreserveAspectRatio.GetAnimValue());
+}
+
+gfxMatrix
+nsSVGUtils::GetViewBoxTransform(nsSVGElement* aElement,
+                                float aViewportWidth, float aViewportHeight,
+                                float aViewboxX, float aViewboxY,
+                                float aViewboxWidth, float aViewboxHeight,
+                                const SVGPreserveAspectRatio &aPreserveAspectRatio)
+{
+  NS_ASSERTION(aViewportWidth  >= 0, "viewport width must be nonnegative!");
+  NS_ASSERTION(aViewportHeight >= 0, "viewport height must be nonnegative!");
+  NS_ASSERTION(aViewboxWidth  > 0, "viewBox width must be greater than zero!");
   NS_ASSERTION(aViewboxHeight > 0, "viewBox height must be greater than zero!");
 
-  PRUint16 align = aPreserveAspectRatio.GetAnimValue().GetAlign();
-  PRUint16 meetOrSlice = aPreserveAspectRatio.GetAnimValue().GetMeetOrSlice();
+  PRUint16 align = aPreserveAspectRatio.GetAlign();
+  PRUint16 meetOrSlice = aPreserveAspectRatio.GetMeetOrSlice();
 
   // default to the defaults
   if (align == nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_UNKNOWN)
@@ -1030,7 +1014,7 @@ nsSVGUtils::PaintFrameWithEffects(nsSVGRenderState *aContext,
   PRBool isTrivialClip = clipPathFrame ? clipPathFrame->IsTrivial() : PR_TRUE;
 
   if (!isOK) {
-    // Some resource is missing. We shouldn't paint anything.
+    // Some resource is invalid. We shouldn't paint anything.
     return;
   }
   

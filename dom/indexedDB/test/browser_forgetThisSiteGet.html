@@ -1,0 +1,36 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+  <head>
+    <title>Indexed Database Test</title>
+
+    <script type="text/javascript;version=1.7">
+      function testSteps()
+      {
+        let request = mozIndexedDB.open("browser_forgetThisSite.js");
+        request.onerror = grabEventAndContinueHandler;
+        request.onsuccess = grabEventAndContinueHandler;
+        let event = yield;
+
+        if (event.type == "error") {
+          testException = event.target.errorCode;
+        }
+        else {
+          let db = event.target.result;
+          testResult = db.version;
+        }
+
+        finishTest()
+        yield;
+      }
+    </script>
+
+    <script type="text/javascript;version=1.7" src="browserHelpers.js"></script>
+
+  </head>
+
+  <body onload="runTest();" onunload="finishTestNow();"></body>
+
+</html>

@@ -68,23 +68,23 @@ sync protocol PStorage
 parent:
   __delete__();
 
-  Init(bool useDB, bool canUseChromePersist, nsCString domain,
+  Init(bool useDB, bool canUseChromePersist, bool sessionOnly, nsCString domain,
        nsCString scopeDBKey, nsCString quotaDomainDBKey,
        nsCString quotaETLDplus1DomainDBKey, PRUint32 storageType);
   
   sync GetKeys(bool callerSecure)
       returns (nsString[] keys);
-  sync GetLength(bool callerSecure)
+  sync GetLength(bool callerSecure, bool sessionOnly)
       returns (PRUint32 length, nsresult rv);
-  sync GetKey(bool callerSecure, PRUint32 index)
+  sync GetKey(bool callerSecure, bool sessionOnly, PRUint32 index)
       returns (nsString key, nsresult rv);
-  sync GetValue(bool callerSecure, nsString key)
+  sync GetValue(bool callerSecure, bool sessionOnly, nsString key)
       returns (StorageItem item, nsresult rv);
-  sync SetValue(bool callerSecure, nsString key, nsString data)
+  sync SetValue(bool callerSecure, bool sessionOnly, nsString key, nsString data)
       returns (nsString oldValue, nsresult rv);
-  sync RemoveValue(bool callerSecure, nsString key)
+  sync RemoveValue(bool callerSecure, bool sessionOnly, nsString key)
       returns (nsString oldValue, nsresult rv);
-  sync Clear(bool callerSecure)
+  sync Clear(bool callerSecure, bool sessionOnly)
       returns (PRInt32 oldCount, nsresult rv);
 
   sync GetDBValue(nsString key)

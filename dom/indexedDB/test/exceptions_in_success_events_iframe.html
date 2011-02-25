@@ -1,0 +1,108 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    let testGenerator = testSteps();
+
+    function ok(val, message) {
+      val = val ? "true" : "false";
+      window.parent.postMessage("SimpleTest.ok(" + val + ", '" + message +
+                                "');", "*");
+    }
+
+    function is(a, b, message) {
+      ok(a == b, message);
+    }
+
+    function grabEventAndContinueHandler(event) {
+      testGenerator.send(event);
+    }
+
+    function errorHandler(event) {
+      ok(false, "indexedDB error, code " + event.target.errorCode);
+      finishTest();
+    }
+
+    function unexpectedSuccessHandler(event) {
+      ok(false, "got success when it was not expected!");
+      finishTest();
+    }
+
+    function finishTest() {
+      // Let window.onerror have a chance to fire
+      setTimeout(function() {
+        setTimeout(function() {
+          testGenerator.close();
+          window.parent.postMessage("SimpleTest.finish();", "*");
+        }, 0);
+      }, 0);
+    }
+
+    window.onerror = function(event) {
+      event.preventDefault();
+    };
+
+    function testSteps() {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+      let uri = window.document.documentURIObject;
+      Components.classes["@mozilla.org/permissionmanager;1"]
+                .getService(Components.interfaces.nsIPermissionManager)
+                .add(uri, "indexedDB",
+                     Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
+
+      let request = mozIndexedDB.open(window.location.pathname);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.target.result;
+      db.onerror = function(event) {
+        event.preventDefault();
+      };
+
+      is(db.version, "", "Correct version");
+      is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
+
+      db.setVersion("1").onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      event.target.transaction.oncomplete = unexpectedSuccessHandler;
+      event.target.transaction.onabort = grabEventAndContinueHandler;
+
+      is(db.version, "1", "Correct version");
+      is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
+
+      let objectStore = db.createObjectStore("foo");
+
+      is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
+      ok(db.objectStoreNames.contains("foo"), "Has correct objectStore");
+
+      request = objectStore.add({}, 1);
+      request.onsuccess = function(event) {
+        throw "foo";
+      };
+
+      event = yield;
+
+      is(event.type, "abort", "Got transaction abort event");
+
+      finishTest();
+      yield;
+    }
+  </script>
+
+</head>
+
+<body onload="testGenerator.next();"></body>
+
+</html>

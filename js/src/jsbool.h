@@ -45,6 +45,7 @@
 
 #include "jsapi.h"
 #include "jsobj.h"
+#include "jsstr.h"
 
 extern js::Class js_BooleanClass;
 
@@ -60,8 +61,12 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj);
 extern JSString *
 js_BooleanToString(JSContext *cx, JSBool b);
 
-extern JSBool
-js_BooleanToCharBuffer(JSContext *cx, JSBool b, JSCharBuffer &cb);
+namespace js {
+
+extern bool
+BooleanToStringBuffer(JSContext *cx, JSBool b, StringBuffer &sb);
+
+} /* namespace js */
 
 extern JSBool
 js_ValueToBoolean(const js::Value &v);

@@ -62,7 +62,7 @@
 
 #ifdef ACCESSIBILITY
 #include "nsIServiceManager.h"
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 #endif
 
 using namespace mozilla;
@@ -104,6 +104,12 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
     mPosterImage = NS_NewHTMLImageElement(nodeInfo.forget());
     NS_ENSURE_TRUE(mPosterImage, NS_ERROR_OUT_OF_MEMORY);
+
+    // Push a null JSContext on the stack so that code that runs
+    // within the below code doesn't think it's being called by
+    // JS. See bug 604262.
+    nsCxPusher pusher;
+    pusher.PushNull();
 
     // Set the nsImageLoadingContent::ImageState() to 0. This means that the
     // image will always report its state as 0, so it will never be reframed
@@ -193,11 +199,15 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     container->SetLayerManager(aManager);
   }
 
-  // If we have a container with the right layer manager already, we don't
-  // need to do anything here. Otherwise we need to set up a temporary
+  // If we have a container of the correct type already, we don't need
+  // to do anything here. Otherwise we need to set up a temporary
   // ImageContainer, capture the video data and store it in the temp
-  // container.
-  if (!container || container->Manager() != aManager) {
+  // container. For now we also check if the manager is equal since not all
+  // image containers are manager independent yet.
+  if (!container || 
+      (container->Manager() && container->Manager() != aManager) ||
+      container->GetBackendType() != aManager->GetBackendType())
+  {
     nsRefPtr<ImageContainer> tmpContainer = aManager->CreateImageContainer();
     if (!tmpContainer)
       return nsnull;
@@ -371,10 +381,10 @@ public:
   
   NS_DISPLAY_DECL_NAME("Video", TYPE_VIDEO)
 
-  // It would be great if we could override IsOpaque to return false here,
+  // It would be great if we could override GetOpaqueRegion to return nonempty here,
   // but it's probably not safe to do so in general. Video frames are
   // updated asynchronously from decoder threads, and it's possible that
-  // we might have an opaque video frame when IsOpaque is called, but
+  // we might have an opaque video frame when GetOpaqueRegion is called, but
   // when we come to paint, the video frame is transparent or has gone
   // away completely (e.g. because of a decoder error). The problem would
   // be especially acute if we have off-main-thread rendering.
@@ -464,8 +474,7 @@ nsVideoFrame::GetType() const
 already_AddRefed<nsAccessible>
 nsVideoFrame::CreateAccessible()
 {
-  nsCOMPtr<nsIAccessibilityService> accService =
-    do_GetService("@mozilla.org/accessibilityService;1");
+  nsAccessibilityService* accService = nsIPresShell::AccService();
   return accService ?
     accService->CreateHTMLMediaAccessible(mContent, PresContext()->PresShell()) :
     nsnull;

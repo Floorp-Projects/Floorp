@@ -19,6 +19,8 @@
  *
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>  (Original Author)
+ *  Ryan Flint <rflint@mozilla.com>
+ *  Rob Campbell <rcampbell@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,7 +62,7 @@ ConsoleAPI.prototype = {
     }
 
     let self = this;
-    return {
+    let chromeObject = {
       // window.console API
       log: function CA_log() {
         self.notifyObservers(id, "log", arguments);
@@ -74,9 +76,32 @@ ConsoleAPI.prototype = {
       error: function CA_error() {
         self.notifyObservers(id, "error", arguments);
       },
-      // TODO: remove this once bug 612405 is fixed
-      classID: self.classID
+      __exposedProps__: {
+        log: "r",
+        info: "r",
+        warn: "r",
+        error: "r"
+      }
     };
+
+    // We need to return an actual content object here, instead of a wrapped
+    // chrome object. This allows things like console.log.bind() to work.
+    let sandbox = Cu.Sandbox(aWindow);
+    let contentObject = Cu.evalInSandbox(
+        "(function(x) {\
+          var bind = Function.bind;\
+          var obj = {\
+            log: bind.call(x.log, x),\
+            info: bind.call(x.info, x),\
+            warn: bind.call(x.warn, x),\
+            error: bind.call(x.error, x),\
+            __noSuchMethod__: function() {}\
+          };\
+          Object.defineProperty(obj, '__mozillaConsole__', { value: true });\
+          return obj;\
+        })", sandbox)(chromeObject);
+
+      return contentObject;
   },
 
   /**

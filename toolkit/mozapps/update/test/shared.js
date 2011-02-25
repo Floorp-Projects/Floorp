@@ -44,6 +44,7 @@ const AUS_Ci = Components.interfaces;
 const AUS_Cr = Components.results;
 const AUS_Cu = Components.utils;
 
+const PREF_APP_UPDATE_AUTO                = "app.update.auto";
 const PREF_APP_UPDATE_BACKGROUNDERRORS    = "app.update.backgroundErrors";
 const PREF_APP_UPDATE_BACKGROUNDMAXERRORS = "app.update.backgroundMaxErrors";
 const PREF_APP_UPDATE_CERTS_BRANCH        = "app.update.certs.";
@@ -159,8 +160,9 @@ function reloadUpdateManagerData() {
 
 /**
  * Sets the app.update.channel preference.
- * @param   aChannel
- *          The update channel. If not specified 'test_channel' will be used.
+ *
+ * @param  aChannel
+ *         The update channel. If not specified 'test_channel' will be used.
  */
 function setUpdateChannel(aChannel) {
   let channel = aChannel ? aChannel : "test_channel";
@@ -170,9 +172,10 @@ function setUpdateChannel(aChannel) {
 
 /**
  * Sets the app.update.url.override preference.
- * @param   aURL
- *          The update url. If not specified 'URL_HOST + "update.xml"' will be
- *          used.
+ *
+ * @param  aURL
+ *         The update url. If not specified 'URL_HOST + "update.xml"' will be
+ *         used.
  */
 function setUpdateURLOverride(aURL) {
   let url = aURL ? aURL : URL_HOST + "update.xml";
@@ -183,11 +186,12 @@ function setUpdateURLOverride(aURL) {
 /**
  * Writes the updates specified to either the active-update.xml or the
  * updates.xml.
- * @param   updates
- *          The updates represented as a string to write to the XML file.
- * @param   isActiveUpdate
- *          If true this will write to the active-update.xml otherwise it will
- *          write to the updates.xml file.
+ *
+ * @param  aContent
+ *         The updates represented as a string to write to the XML file.
+ * @param  isActiveUpdate
+ *         If true this will write to the active-update.xml otherwise it will
+ *         write to the updates.xml file.
  */
 function writeUpdatesToXMLFile(aContent, aIsActiveUpdate) {
   var file = getCurrentProcessDir();
@@ -199,8 +203,9 @@ function writeUpdatesToXMLFile(aContent, aIsActiveUpdate) {
  * Writes the current update operation/state to a file in the patch
  * directory, indicating to the patching system that operations need
  * to be performed.
- * @param   aStatus
- *          The status value to write.
+ *
+ * @param  aStatus
+ *         The status value to write.
  */
 function writeStatusFile(aStatus) {
   var file = getUpdatesDir();
@@ -212,9 +217,10 @@ function writeStatusFile(aStatus) {
 
 /**
  * Writes the current update version to a file in the patch directory,
- & indicating to the patching system the version of the update.
- * @param   aVersion
- *          The version value to write.
+ * indicating to the patching system the version of the update.
+ *
+ * @param  aVersion
+ *         The version value to write.
  */
 function writeVersionFile(aVersion) {
   var file = getUpdatesDir();
@@ -226,7 +232,8 @@ function writeVersionFile(aVersion) {
 
 /**
  * Gets the updates directory.
- * @returns The updates directory.
+ *
+ * @return nsIFile for the updates directory.
  */
 function getUpdatesDir() {
   var dir = getCurrentProcessDir();
@@ -237,11 +244,12 @@ function getUpdatesDir() {
 /**
  * Writes text to a file. This will replace existing text if the file exists
  * and create the file if it doesn't exist.
- * @param   aFile
- *          The file to write to. Will be created if it doesn't exist.
- * @param   aText
- *          The text to write to the file. If there is existing text it will be
- *          replaced.
+ *
+ * @param  aFile
+ *         The file to write to. Will be created if it doesn't exist.
+ * @param  aText
+ *         The text to write to the file. If there is existing text it will be
+ *         replaced.
  */
 function writeFile(aFile, aText) {
   var fos = AUS_Cc["@mozilla.org/network/file-output-stream;1"].
@@ -256,10 +264,11 @@ function writeFile(aFile, aText) {
 /**
  * Reads the current update operation/state in a file in the patch
  * directory.
- * @param   aDir (optional)
- *          nsIFile to read the update status from. If not provided the
- *          application's update status file will be used.
- * @returns The status value.
+ *
+ * @param  aFile (optional)
+ *         nsIFile to read the update status from. If not provided the
+ *         application's update status file will be used.
+ * @return The status value.
  */
 function readStatusFile(aFile) {
   var file;
@@ -277,9 +286,10 @@ function readStatusFile(aFile) {
 
 /**
  * Reads text from a file and returns the string.
- * @param   aFile
- *          The file to read from.
- * @returns The string of text read from the file.
+ *
+ * @param  aFile
+ *         The file to read from.
+ * @return The string of text read from the file.
  */
 function readFile(aFile) {
   var fis = AUS_Cc["@mozilla.org/network/file-input-stream;1"].
@@ -297,9 +307,10 @@ function readFile(aFile) {
 
 /**
  * Reads the binary contents of a file and returns it as a string.
- * @param   aFile
- *          The file to read from.
- * @returns The contents of the file as a string.
+ *
+ * @param  aFile
+ *         The file to read from.
+ * @return The contents of the file as a string.
  */
 function readFileBytes(aFile) {
   var fis = AUS_Cc["@mozilla.org/network/file-input-stream;1"].
@@ -338,10 +349,11 @@ function getString(aName) {
 }
 
 /**
- * Gets the file extension for an nsIFile
- * @param   aFile
- *          The file to get the file extension for
- * @returns The file extension
+ * Gets the file extension for an nsIFile.
+ *
+ * @param  aFile
+ *         The file to get the file extension for.
+ * @return The file extension.
  */
 function getFileExtension(aFile) {
   return Services.io.newFileURI(aFile).QueryInterface(AUS_Ci.nsIURL).
@@ -393,8 +405,9 @@ function removeUpdateDirsAndFiles() {
 /**
  * Removes all files and sub-directories in the updates directory except for
  * the "0" sub-directory.
- * @param   dir
- *          A nsIFile for the directory to be deleted
+ *
+ * @param  aDir
+ *         nsIFile for the directory to be deleted.
  */
 function cleanUpdatesDir(aDir) {
   if (!aDir.exists())
@@ -433,8 +446,8 @@ function cleanUpdatesDir(aDir) {
  * If that fails it will fall back to recursing, setting the appropriate
  * permissions, and deleting the current entry.
  *
- * @param   aDir
- *          A nsIFile for the directory to be deleted
+ * @param  aDir
+ *         nsIFile for the directory to be deleted.
  */
 function removeDirRecursive(aDir) {
   if (!aDir.exists())
@@ -466,6 +479,8 @@ function removeDirRecursive(aDir) {
  * Returns the directory for the currently running process. This is used to
  * clean up after the tests and to locate the active-update.xml and updates.xml
  * files.
+ *
+ * @return nsIFile for the current process directory.
  */
 function getCurrentProcessDir() {
   return Services.dirsvc.get(NS_XPCOM_CURRENT_PROCESS_DIR, AUS_Ci.nsIFile);
@@ -476,6 +491,8 @@ function getCurrentProcessDir() {
  * updater binary (Windows and Linux) or updater package (Mac OS X). For
  * XULRunner applications this is different than the currently running process
  * directory.
+ *
+ * @return nsIFile for the Gecko Runtime Engine directory.
  */
 function getGREDir() {
   return Services.dirsvc.get(NS_GRE_DIR, AUS_Ci.nsIFile);
@@ -483,11 +500,12 @@ function getGREDir() {
 
 /**
  * Logs TEST-INFO messages.
- * @param   aText
- *          The text to log.
- * @param   aCaller (optional)
- *          An optional Components.stack.caller. If not specified
- *          Components.stack.caller will be used.
+ *
+ * @param  aText
+ *         The text to log.
+ * @param  aCaller (optional)
+ *         An optional Components.stack.caller. If not specified
+ *         Components.stack.caller will be used.
  */
 function logTestInfo(aText, aCaller) {
   let caller = (aCaller ? aCaller : Components.stack.caller);
@@ -497,11 +515,12 @@ function logTestInfo(aText, aCaller) {
 
 /**
  * Logs TEST-INFO messages when DEBUG_AUS_TEST evaluates to true.
- * @param   aText
- *          The text to log.
- * @param   aCaller (optional)
- *          An optional Components.stack.caller. If not specified
- *          Components.stack.caller will be used.
+ *
+ * @param  aText
+ *         The text to log.
+ * @param  aCaller (optional)
+ *         An optional Components.stack.caller. If not specified
+ *         Components.stack.caller will be used.
  */
 function debugDump(aText, aCaller) {
   if (DEBUG_AUS_TEST) {

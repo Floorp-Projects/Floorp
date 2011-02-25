@@ -49,6 +49,7 @@ include $(topsrcdir)/config/rules.mk
 # browser_526613.js is disabled because of frequent failures (bug 534489)
 
 _BROWSER_TEST_FILES = \
+	head.js \
 	browser_248970_a.js \
 	browser_248970_b.js \
 	browser_248970_b_sample.html \
@@ -111,6 +112,7 @@ _BROWSER_TEST_FILES = \
 	browser_495495.js \
 	browser_500328.js \
 	browser_514751.js \
+	browser_522375.js \
 	browser_522545.js \
 	browser_524745.js \
 	browser_528776.js \
@@ -118,11 +120,30 @@ _BROWSER_TEST_FILES = \
 	browser_579879.js \
 	browser_580512.js \
 	browser_581593.js \
+	browser_581937.js \
 	browser_586147.js \
 	browser_586068-cascaded_restore.js \
+	browser_588426.js \
 	browser_589246.js \
 	browser_590268.js \
+	browser_590563.js \
+	browser_597315.js \
+	browser_597315_index.html \
+	browser_597315_a.html \
+	browser_597315_b.html \
+	browser_597315_c.html \
+	browser_597315_c1.html \
+	browser_597315_c2.html \
+	browser_599909.js \
 	browser_600545.js \
+	browser_601955.js \
+	browser_607016.js \
+	browser_615394-SSWindowState_events.js \
+	browser_618151.js \
+	browser_623779.js \
+	browser_624727.js \
+	browser_625257.js \
+	browser_628270.js \
 	$(NULL)
 
 ifneq ($(OS_ARCH),Darwin)

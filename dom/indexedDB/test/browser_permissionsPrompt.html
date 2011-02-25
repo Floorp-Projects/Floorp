@@ -12,16 +12,16 @@
         const name = window.location.pathname;
         const description = "My Test Database";
 
-        let request = moz_indexedDB.open(name, description);
+        let request = mozIndexedDB.open(name, description);
         request.onerror = grabEventAndContinueHandler;
         request.onsuccess = grabEventAndContinueHandler;
         let event = yield;
 
-        if (event instanceof Components.interfaces.nsIIDBSuccessEvent) {
-          testResult = event.result;
+        if (event.type == "success") {
+          testResult = event.target.result;
         }
         else {
-          testException = event.code + ": " + event.message;
+          testException = event.target.errorCode;
         }
 
         finishTest()

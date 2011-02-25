@@ -19,12 +19,12 @@ function testSteps()
   const name = window.location.pathname;
   const description = "My Test Database";
 
-  var request = moz_indexedDB.open(name, description);
+  var request = mozIndexedDB.open(name, description);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   var event = yield;
 
-  var db = event.result;
+  var db = event.target.result;
 
   var data = [
     { name: "inline key; key generator",
@@ -42,13 +42,13 @@ function testSteps()
     { name: "out of line key; key generator",
       autoIncrement: true,
       storedObject: {name: "Lincoln"},
-      keyName: null,
+      keyName: undefined,
       keyValue: undefined,
     },
     { name: "out of line key; no key generator",
       autoIncrement: false,
       storedObject: {name: "Lincoln"},
-      keyName: null,
+      keyName: "",
       keyValue: 1,
     }
   ];
@@ -62,22 +62,23 @@ function testSteps()
     request.onsuccess = grabEventAndContinueHandler;
     event = yield;
 
-    let objectStore = db.createObjectStore(test.name, test.keyName,
-                                           test.autoIncrement);
+    let objectStore = db.createObjectStore(test.name,
+                                           { keyPath: test.keyName,
+                                             autoIncrement: test.autoIncrement });
 
     request = objectStore.add(test.storedObject, test.keyValue);
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
     event = yield;
 
-    let id = event.result;
+    let id = event.target.result;
     request = objectStore.get(id);
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
     event = yield;
 
     // Sanity check!
-    is(test.storedObject.name, event.result.name,
+    is(test.storedObject.name, event.target.result.name,
                   "The correct object was stored.");
 
     request = objectStore.delete(id);
@@ -87,9 +88,11 @@ function testSteps()
 
     // Make sure it was removed.
     request = objectStore.get(id);
-    request.onerror = new ExpectError(IDBDatabaseException.NOT_FOUND_ERR);
-    request.onsuccess = unexpectedSuccessHandler;
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
     event = yield;
+
+    ok(event.target.result === undefined, "Object was deleted");
   }
 
   finishTest();

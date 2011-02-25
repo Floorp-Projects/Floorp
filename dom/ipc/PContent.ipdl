@@ -97,13 +97,14 @@ child:
     PTestShell();
 
     RegisterChrome(ChromePackage[] packages, ResourceMapping[] resources,
-                   OverrideMapping[] overrides);
+                   OverrideMapping[] overrides, nsCString locale);
 
     async SetOffline(PRBool offline);
 
     async NotifyVisited(URI uri);
 
     PreferenceUpdate(PrefTuple pref);
+    ClearUserPreference(nsCString prefName);
 
     NotifyAlertsObserver(nsCString topic, nsString data);
 
@@ -115,6 +116,8 @@ child:
     AccelerationChanged(double x, double y, double z);
 
     ScreenSizeChanged(gfxIntSize size);
+
+    FlushMemory(nsString reason);
 
 parent:
     PNecko();

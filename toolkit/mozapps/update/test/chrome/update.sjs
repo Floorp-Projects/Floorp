@@ -123,13 +123,29 @@ function handleRequest(aRequest, aResponse) {
   var showPrompt = params.showPrompt ? "true" : null;
   var showNever = params.showNever ? "true" : null;
   var showSurvey = params.showSurvey ? "true" : null;
-  var extra1 = params.extra1 ? params.extra1 : null;
+
+  // For testing the deprecated update xml format
+  if (params.oldFormat) {
+    appVersion = null;
+    displayVersion = null;
+    billboardURL = null;
+    showPrompt = null;
+    showNever = null;
+    showSurvey = null;
+    detailsURL = URL_UPDATE + "?uiURL=BILLBOARD";
+    if (params.remoteNoTypeAttr)
+      detailsURL += "&amp;remoteNoTypeAttr=1";
+    var extensionVersion = params.appVersion ? params.appVersion : "99.9";
+    var version = params.displayVersion ? params.displayVersion
+                                        : "version " + extensionVersion;
+  }
+
   var updates = getRemoteUpdateString(patches, type, "App Update Test",
                                       displayVersion, appVersion,
-                                      platformVersion, buildID,
-                                      detailsURL, billboardURL,
-                                      licenseURL, showPrompt,
-                                      showNever, showSurvey, "test extra1");
+                                      platformVersion, buildID, detailsURL,
+                                      billboardURL, licenseURL, showPrompt,
+                                      showNever, showSurvey, version,
+                                      extensionVersion);
 
   aResponse.write(getRemoteUpdatesXMLString(updates));
 }

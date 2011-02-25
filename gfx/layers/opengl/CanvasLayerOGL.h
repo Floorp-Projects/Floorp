@@ -57,7 +57,8 @@ public:
   CanvasLayerOGL(LayerManagerOGL *aManager)
     : CanvasLayer(aManager, NULL),
       LayerOGL(aManager),
-      mTexture(0)
+      mTexture(0),
+      mDelayedUpdates(PR_FALSE)
   { 
       mImplData = static_cast<LayerOGL*>(this);
   }
@@ -76,12 +77,14 @@ public:
 protected:
   nsRefPtr<gfxASurface> mCanvasSurface;
   nsRefPtr<GLContext> mCanvasGLContext;
+  gl::ShaderProgramType mLayerProgram;
 
   void MakeTexture();
   GLuint mTexture;
 
   nsIntRect mUpdatedRect;
 
+  PRPackedBool mDelayedUpdates;
   PRPackedBool mGLBufferIsPremultiplied;
   PRPackedBool mNeedsYFlip;
 };
@@ -109,6 +112,8 @@ public:
   Swap(gfxSharedImageSurface* aNewFront);
 
   virtual void DestroyFrontBuffer();
+
+  virtual void Disconnect();
 
   // LayerOGL impl
   void Destroy();

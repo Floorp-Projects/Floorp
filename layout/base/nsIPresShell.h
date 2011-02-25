@@ -22,7 +22,7 @@
  * Contributor(s):
  *   Steve Clark <buster@netscape.com>
  *   Dan Rosen <dr@netscape.com>
- *   Mihai Șucan <mihai.sucan@gmail.com>
+ *   Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -104,6 +104,9 @@ struct nsIntPoint;
 struct nsIntRect;
 class nsRefreshDriver;
 class nsARefreshObserver;
+#ifdef ACCESSIBILITY
+class nsAccessibilityService;
+#endif
 
 typedef short SelectionType;
 typedef PRUint64 nsFrameState;
@@ -139,6 +142,14 @@ typedef struct CapturingContentInfo {
  { 0xd1978bee, 0x43b9, 0x40de, \
     { 0x95, 0x47, 0x85, 0x06, 0x5e, 0x02, 0xec, 0xb4 } }
 
+#define NS_IPRESSHELL_MOZILLA_2_0_BRANCH_IID     \
+ { 0x4abb9970, 0xd7ce, 0x4c02, \
+    { 0x8a, 0xdb, 0x42, 0xc6, 0xbd, 0xa8, 0x95, 0xb7 } }
+
+#define NS_IPRESSHELL_MOZILLA_2_0_BRANCH2_IID     \
+ { 0x5ff6fd00, 0x1ba9, 0x11e0, \
+    { 0xac, 0x64, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
+
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
 #define NS_PRESSHELL_SCROLL_BOTTOM   100
@@ -165,7 +176,50 @@ enum nsRectVisibility {
   nsRectVisibility_kBelowViewport, 
   nsRectVisibility_kLeftOfViewport, 
   nsRectVisibility_kRightOfViewport
-}; 
+};
+
+class nsIPresShell_MOZILLA_2_0_BRANCH : public nsISupports {
+public:  
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRESSHELL_MOZILLA_2_0_BRANCH_IID)
+
+  virtual PRBool GetIsViewportOverridden() = 0;
+
+  /**
+   * Add a solid color item to the bottom of aList with frame aFrame and bounds
+   * aBounds. Checks first if this needs to be done by checking if aFrame is a
+   * canvas frame (if the FORCE_DRAW flag is passed then this check is skipped).
+   * aBackstopColor is composed behind the background color of the canvas, it is
+   * transparent by default. The ROOT_CONTENT_DOC_BG flag indicates that this is
+   * the background for the root content document.
+   */
+  enum {
+    FORCE_DRAW = 0x01,
+    ROOT_CONTENT_DOC_BG = 0x02
+  };
+  virtual nsresult AddCanvasBackgroundColorItem2(nsDisplayListBuilder& aBuilder,
+                                                nsDisplayList& aList,
+                                                nsIFrame* aFrame,
+                                                const nsRect& aBounds,
+                                                nscolor aBackstopColor = NS_RGBA(0,0,0,0),
+                                                PRUint32 aFlags = 0) = 0;
+
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIPresShell_MOZILLA_2_0_BRANCH,
+                              NS_IPRESSHELL_MOZILLA_2_0_BRANCH_IID)
+
+class nsIPresShell_MOZILLA_2_0_BRANCH2 : public nsISupports {
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRESSHELL_MOZILLA_2_0_BRANCH2_IID)
+
+  /**
+   * Return true if the presshell expects layout flush.
+   */
+  virtual PRBool IsLayoutFlushObserver() = 0;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIPresShell_MOZILLA_2_0_BRANCH2,
+                              NS_IPRESSHELL_MOZILLA_2_0_BRANCH2_IID)
 
 /**
  * Presentation shell interface. Presentation shells are the
@@ -548,6 +602,9 @@ public:
    *                  direction even if overflow:hidden is specified in that
    *                  direction; otherwise we will not scroll in that direction
    *                  when overflow:hidden is set for that direction.
+   *                  If SCROLL_NO_PARENT_FRAMES is set then we only scroll
+   *                  nodes in this document, not in any parent documents which
+   *                  contain this document in a iframe or the like.
    */
   virtual NS_HIDDEN_(nsresult) ScrollContentIntoView(nsIContent* aContent,
                                                      PRIntn      aVPercent,
@@ -556,7 +613,8 @@ public:
 
   enum {
     SCROLL_FIRST_ANCESTOR_ONLY = 0x01,
-    SCROLL_OVERFLOW_HIDDEN = 0x02
+    SCROLL_OVERFLOW_HIDDEN = 0x02,
+    SCROLL_NO_PARENT_FRAMES = 0x04
   };
   /**
    * Scrolls the view of the document so that the given area of a frame
@@ -572,6 +630,9 @@ public:
    * even if overflow:hidden is specified in that direction; otherwise
    * we will not scroll in that direction when overflow:hidden is
    * set for that direction
+   * If SCROLL_NO_PARENT_FRAMES is set then we only scroll
+   * nodes in this document, not in any parent documents which
+   * contain this document in a iframe or the like.
    * @return true if any scrolling happened, false if no scrolling happened
    */
   virtual PRBool ScrollFrameRectIntoView(nsIFrame*     aFrame,
@@ -802,6 +863,13 @@ public:
 
   static PRBool gIsAccessibilityActive;
   static PRBool IsAccessibilityActive() { return gIsAccessibilityActive; }
+
+#ifdef ACCESSIBILITY
+  /**
+   * Return accessibility service if accessibility is active.
+   */
+  static nsAccessibilityService* AccService();
+#endif
 
   /**
    * Stop all active elements (plugins and the caret) in this presentation and

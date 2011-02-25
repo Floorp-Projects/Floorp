@@ -1,0 +1,9 @@
+<svg xmlns='http://www.w3.org/2000/svg'
+     xmlns:xlink='http://www.w3.org/1999/xlink'
+     width='16' height='16'>
+  <image id='i' xlink:href='a.png' width='16' height='16'/>
+	<filter id="f" x="0%" y="0%" width="100%" height="100%">
+	  <feImage xlink:href="#image1" />
+	</filter>
+  <rect filter="url(#f)" x="0" y="0" width="16" height="16"/>
+</svg>

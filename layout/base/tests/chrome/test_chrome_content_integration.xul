@@ -7,6 +7,8 @@
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"></script>
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
@@ -18,7 +20,8 @@
     SimpleTest.waitForExplicitFinish();
     // Run the test in a separate window so that the test runs as a chrome
     // window
-    window.open("chrome_content_integration_window.xul", "chrome_content_integration",
+    var root = getRootDirectory(window.location.href);
+    window.open(root + "chrome_content_integration_window.xul", "chrome_content_integration",
                 "chrome,width=200,height=300");
   ]]>
   </script>

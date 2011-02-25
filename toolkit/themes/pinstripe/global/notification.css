@@ -1,3 +1,4 @@
+%include shared.inc
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 notification {
@@ -60,24 +61,21 @@ notification[type="critical"] .messageImage {
   -moz-appearance: none;
   padding: 0;
   margin: 0 2px;
-  list-style-image: url("chrome://global/skin/icons/closetab.png");
+  list-style-image: url("chrome://global/skin/notification/close.png");
   border: none;
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 .messageCloseButton > .toolbarbutton-text {
   display: none;
 }
 
-.messageCloseButton > .toolbarbutton-icon {
-  padding: 0;
-}
-
 .messageCloseButton:hover {
-  list-style-image: url("chrome://global/skin/icons/closetab-hover.png");
+  -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
 .messageCloseButton:hover:active {
-  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 .messageCloseButton:-moz-focusring > .toolbarbutton-icon {
@@ -92,9 +90,18 @@ notification[type="critical"] .messageImage {
   max-width: 248px;
 }
 
+.popup-notification-button-container {
+  margin-top: 17px;
+}
+
 .popup-notification-menubutton {
   -moz-appearance: none;
-  margin-top: 17px;
+}
+
+.popup-notification-menubutton:-moz-focusring > .button-menubutton-dropmarker,
+.popup-notification-menubutton > .button-menubutton-button:-moz-focusring {
+  box-shadow: @focusRingShadow@;
+  position: relative;
 }
 
 .popup-notification-menubutton:not([type="menu-button"]),
@@ -118,6 +125,8 @@ notification[type="critical"] .messageImage {
 }
 
 .popup-notification-menubutton > .button-menubutton-button {
+  -moz-appearance: none;
+  margin: 0;
   padding-top: 2px;
   padding-bottom: 2px;
   -moz-padding-start: 8px;
@@ -130,6 +139,8 @@ notification[type="critical"] .messageImage {
   padding-bottom: 7px;
   -moz-padding-start: 5px;
   -moz-padding-end: 8px;
+  margin-top: 0;
+  margin-bottom: 0;
   -moz-margin-start: -1px;
   list-style-image: url("chrome://global/skin/arrow/arrow-dn-white.png");
 }
@@ -153,4 +164,13 @@ notification[type="critical"] .messageImage {
   box-shadow: inset 0 0 3px rgba(0,0,0,.2),
               inset 0 1px 7px rgba(0,0,0,.4),
               0 1px 0 rgba(255,255,255,.1);
+}
+
+.popup-notification-closebutton {
+  -moz-margin-end: -12px;
+  margin-top: -13px;
+}
+
+.popup-notification-closeitem > .menu-iconic-left {
+  display: none;
 }

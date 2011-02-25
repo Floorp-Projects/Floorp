@@ -61,7 +61,6 @@
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsWeakReference.h"
-#include "mozilla/TimeStamp.h"
 
 #define NS_DOMSTORAGE_FLUSH_TIMER_OBSERVER "domstorage-flush-timer"
 
@@ -76,9 +75,7 @@
 class nsDOMStorage;
 class nsIDOMStorage;
 class nsDOMStorageItem;
-
-using mozilla::TimeStamp;
-using mozilla::TimeDuration;
+class nsDOMStoragePersistentDB;
 
 namespace mozilla {
 namespace dom {
@@ -135,6 +132,11 @@ public:
   static nsresult Initialize();
   static nsDOMStorageManager* GetInstance();
   static void Shutdown();
+
+  /**
+   * Checks whether there is any data waiting to be flushed from a temp table.
+   */
+  PRBool UnflushedDataExists();
 
   static nsDOMStorageManager* gStorageManager;
 
@@ -239,27 +241,15 @@ protected:
 };
 
 class DOMStorageImpl : public DOMStorageBase
-                     , public nsIObserver
-                     , public nsSupportsWeakReference
 
 {
 public:
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(DOMStorageImpl, nsIObserver)
+  NS_DECL_CYCLE_COLLECTION_CLASS(DOMStorageImpl)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIOBSERVER
 
   DOMStorageImpl(nsDOMStorage*);
   DOMStorageImpl(nsDOMStorage*, DOMStorageImpl&);
   ~DOMStorageImpl();
-
-  // Cross-process storage implementations never have InitAs(Session|Local|Global)Storage
-  // called, so the appropriate initialization needs to happen from the child.
-  void InitFromChild(bool aUseDB, bool aCanUseChromePersist,
-                     const nsACString& aDomain,
-                     const nsACString& aScopeDBKey,
-                     const nsACString& aQuotaDomainDBKey,
-                     const nsACString& aQuotaETLDplus1DomainDBKey,
-                     PRUint32 aStorageType);
 
   virtual void InitAsSessionStorage(nsIURI* aDomainURI);
   virtual void InitAsLocalStorage(nsIURI* aDomainURI, bool aCanUseChromePersist);
@@ -318,12 +308,6 @@ public:
   virtual nsresult
   CloneFrom(bool aCallerSecure, DOMStorageBase* aThat);
 
-  nsresult RegisterObservers();
-  nsresult MaybeCommitTemporaryTable(bool force);
-
-  bool WasTemporaryTableLoaded();
-  void SetTemporaryTableLoaded(bool loaded);
-
   virtual bool CacheStoragePermissions();
 
 private:
@@ -331,9 +315,20 @@ private:
   static nsDOMStorageDBWrapper* gStorageDB;
 #endif
   friend class nsDOMStorageManager;
+  friend class nsDOMStoragePersistentDB;
   friend class StorageParent;
 
   void Init(nsDOMStorage*);
+
+  // Cross-process storage implementations never have InitAs(Session|Local|Global)Storage
+  // called, so the appropriate initialization needs to happen from the child.
+  void InitFromChild(bool aUseDB, bool aCanUseChromePersist, bool aSessionOnly,
+                     const nsACString& aDomain,
+                     const nsACString& aScopeDBKey,
+                     const nsACString& aQuotaDomainDBKey,
+                     const nsACString& aQuotaETLDplus1DomainDBKey,
+                     PRUint32 aStorageType);
+  void SetSessionOnly(bool aSessionOnly);
 
   static nsresult InitDB();
 
@@ -345,10 +340,6 @@ private:
 
   // Weak reference to the owning storage instance
   nsDOMStorage* mOwner;
-
-  bool mLoadedTemporaryTable;
-  TimeStamp mLastTemporaryTableAccessTime;
-  TimeStamp mTemporaryTableAge;
 };
 
 class nsDOMStorage : public nsIDOMStorageObsolete,

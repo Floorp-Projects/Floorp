@@ -377,18 +377,14 @@ nsHTMLSharedElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   return nsGenericHTMLElement::IsAttributeMapped(aAttribute);
 }
 
-void
-SetBaseURIUsingFirstBaseWithHref(nsIContent* aHead, nsIContent* aMustMatch)
+static void
+SetBaseURIUsingFirstBaseWithHref(nsIDocument* aDocument, nsIContent* aMustMatch)
 {
-  NS_PRECONDITION(aHead && aHead->GetOwnerDoc() &&
-                  aHead->GetOwnerDoc()->GetHeadElement() == aHead,
-                  "Bad head");
+  NS_PRECONDITION(aDocument, "Need a document!");
 
-  nsIDocument* doc = aHead->GetOwnerDoc();
-
-  for (nsINode::ChildIterator iter(aHead); !iter.IsDone(); iter.Next()) {
-    nsIContent* child = iter;
-    if (child->NodeInfo()->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
+  for (nsIContent* child = aDocument->GetFirstChild(); child;
+       child = child->GetNextNode()) {
+    if (child->IsHTML(nsGkAtoms::base) &&
         child->HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
       if (aMustMatch && child != aMustMatch) {
         return;
@@ -400,18 +396,43 @@ SetBaseURIUsingFirstBaseWithHref(nsIContent* aHead, nsIContent* aMustMatch)
 
       nsCOMPtr<nsIURI> newBaseURI;
       nsContentUtils::NewURIWithDocumentCharset(
-        getter_AddRefs(newBaseURI), href, doc, doc->GetDocumentURI());
+        getter_AddRefs(newBaseURI), href, aDocument,
+        aDocument->GetDocumentURI());
 
       // Try to set our base URI.  If that fails, try to set base URI to null
-      nsresult rv = doc->SetBaseURI(newBaseURI);
+      nsresult rv = aDocument->SetBaseURI(newBaseURI);
       if (NS_FAILED(rv)) {
-        doc->SetBaseURI(nsnull);
+        aDocument->SetBaseURI(nsnull);
       }
       return;
     }
   }
 
-  doc->SetBaseURI(nsnull);
+  aDocument->SetBaseURI(nsnull);
+}
+
+static void
+SetBaseTargetUsingFirstBaseWithTarget(nsIDocument* aDocument,
+                                      nsIContent* aMustMatch)
+{
+  NS_PRECONDITION(aDocument, "Need a document!");
+
+  for (nsIContent* child = aDocument->GetFirstChild(); child;
+       child = child->GetNextNode()) {
+    if (child->IsHTML(nsGkAtoms::base) &&
+        child->HasAttr(kNameSpaceID_None, nsGkAtoms::target)) {
+      if (aMustMatch && child != aMustMatch) {
+        return;
+      }
+
+      nsString target;
+      child->GetAttr(kNameSpaceID_None, nsGkAtoms::target, target);
+      aDocument->SetBaseTarget(target);
+      return;
+    }
+  }
+
+  aDocument->SetBaseTarget(EmptyString());
 }
 
 nsresult
@@ -425,15 +446,16 @@ nsHTMLSharedElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
   // If the href attribute of a <base> tag is changing, we may need to update
   // the document's base URI, which will cause all the links on the page to be
-  // re-resolved given the new base.
-  nsIContent* head;
-  if (mNodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
-      aName == nsGkAtoms::href &&
+  // re-resolved given the new base.  If the target attribute is changing, we
+  // similarly need to change the base target.
+  if (mNodeInfo->Equals(nsGkAtoms::base) &&
       aNameSpaceID == kNameSpaceID_None &&
-      IsInDoc() &&
-      (head = GetParent()) &&
-      head == GetOwnerDoc()->GetHeadElement()) {
-    SetBaseURIUsingFirstBaseWithHref(head, this);
+      IsInDoc()) {
+    if (aName == nsGkAtoms::href) {
+      SetBaseURIUsingFirstBaseWithHref(GetCurrentDoc(), this);
+    } else if (aName == nsGkAtoms::target) {
+      SetBaseTargetUsingFirstBaseWithTarget(GetCurrentDoc(), this);
+    }
   }
 
   return NS_OK;
@@ -448,15 +470,15 @@ nsHTMLSharedElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
   // If we're the first <base> with an href and our href attribute is being
   // unset, then we're no longer the first <base> with an href, and we need to
-  // find the new one.
-  nsIContent* head;
-  if (mNodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
-      aName == nsGkAtoms::href &&
+  // find the new one.  Similar for target.
+  if (mNodeInfo->Equals(nsGkAtoms::base) &&
       aNameSpaceID == kNameSpaceID_None &&
-      IsInDoc() &&
-      (head = GetParent()) &&
-      head == GetOwnerDoc()->GetHeadElement()) {
-    SetBaseURIUsingFirstBaseWithHref(head, nsnull);
+      IsInDoc()) {
+    if (aName == nsGkAtoms::href) {
+      SetBaseURIUsingFirstBaseWithHref(GetCurrentDoc(), nsnull);
+    } else if (aName == nsGkAtoms::target) {
+      SetBaseTargetUsingFirstBaseWithTarget(GetCurrentDoc(), nsnull);
+    }
   }
 
   return NS_OK;
@@ -472,14 +494,16 @@ nsHTMLSharedElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // The document stores a pointer to its first <base> element, which we may
+  // The document stores a pointer to its base URI and base target, which we may
   // need to update here.
-  if (mNodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
-      HasAttr(kNameSpaceID_None, nsGkAtoms::href) &&
-      aDocument && aParent &&
-      aDocument->GetHeadElement() == aParent) {
-
-    SetBaseURIUsingFirstBaseWithHref(aParent, this);
+  if (mNodeInfo->Equals(nsGkAtoms::base) &&
+      aDocument) {
+    if (HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
+      SetBaseURIUsingFirstBaseWithHref(aDocument, this);
+    }
+    if (HasAttr(kNameSpaceID_None, nsGkAtoms::target)) {
+      SetBaseTargetUsingFirstBaseWithTarget(aDocument, this);
+    }
   }
 
   return NS_OK;
@@ -488,27 +512,18 @@ nsHTMLSharedElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 void
 nsHTMLSharedElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  nsIDocument* doc;
-  nsIContent* parent;
-  PRBool inHeadBase = mNodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
-                      (doc = GetCurrentDoc()) &&
-                      (parent = GetParent()) &&
-                      parent->NodeInfo()->Equals(nsGkAtoms::head,
-                                                 kNameSpaceID_XHTML);
+  nsIDocument* doc = GetCurrentDoc();
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 
   // If we're removing a <base> from a document, we may need to update the
-  // document's record of the first base node.
-  if (inHeadBase) {
-    // We might have gotten here as a result of the <head> being removed
-    // from the document. In that case we need to call SetBaseURI(nsnull)
-    Element* head = doc->GetHeadElement();
-    if (head) {
-      SetBaseURIUsingFirstBaseWithHref(head, nsnull);
+  // document's base URI and base target
+  if (doc && mNodeInfo->Equals(nsGkAtoms::base)) {
+    if (HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
+      SetBaseURIUsingFirstBaseWithHref(doc, nsnull);
     }
-    else {
-      doc->SetBaseURI(nsnull);
+    if (HasAttr(kNameSpaceID_None, nsGkAtoms::target)) {
+      SetBaseTargetUsingFirstBaseWithTarget(doc, nsnull);
     }
   }
 }

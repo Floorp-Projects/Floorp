@@ -89,6 +89,7 @@ CSRCS = \
 	sftkpwd.c  \
 	softkver.c  \
 	tlsprf.c   \
+	jpakesftk.c \
 	$(NULL)
 
 ifdef SQLITE_UNSAFE_THREADS

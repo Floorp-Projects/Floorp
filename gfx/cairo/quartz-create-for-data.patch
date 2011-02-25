@@ -1,0 +1,309 @@
+diff --git a/gfx/cairo/README b/gfx/cairo/README
+--- a/gfx/cairo/README
++++ b/gfx/cairo/README
+@@ -71,16 +71,18 @@ quartz-cache-CGImageRef.patch: cache CGI
+ quartz-remove-snapshot.patch: remove broken implementation of backend snapshot
+ 
+ quartz-cglayers.patch: add support for cairo surfaces backed by CGLayers
+ 
+ quartz-cglayers-fix-fallback.patch: Bug 572912; fix bug in fallback code in previous patch
+ 
+ quartz-get-image.patch: Bug 575521; add a way to get the image surface associated with a surface
+ 
++quartz-create-for-data.patch: Bug 575521; add a way to create quartz surfaces backed with application-provided data
++
+ premultiply-alpha-solid-gradients.patch: bug 539165; multiply the solid color by the alpha component before using it for a solid surface
+ 
+ xlib-initialize-members.path: bug 548793; initialize XRender version if the server doesn't have the extension
+ 
+ remove-comma: remove a comma from enum
+ 
+ d2d.patch: add d2d support
+ 
+diff --git a/gfx/cairo/cairo/src/cairo-quartz-private.h b/gfx/cairo/cairo/src/cairo-quartz-private.h
+--- a/gfx/cairo/cairo/src/cairo-quartz-private.h
++++ b/gfx/cairo/cairo/src/cairo-quartz-private.h
+@@ -63,16 +63,18 @@ typedef struct cairo_quartz_surface {
+     CGImageRef bitmapContextImage;
+ 
+     /**
+      * If non-null, this is the CGLayer for the surface.
+      */
+     CGLayerRef cgLayer;
+ 
+     cairo_rectangle_int_t extents;
++
++    cairo_bool_t ownsData;
+ } cairo_quartz_surface_t;
+ 
+ typedef struct cairo_quartz_image_surface {
+     cairo_surface_t base;
+ 
+     cairo_rectangle_int_t extents;
+ 
+     CGImageRef image;
+diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+--- a/gfx/cairo/cairo/src/cairo-quartz-surface.c
++++ b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+@@ -1880,20 +1880,21 @@ _cairo_quartz_surface_finish (void *abst
+     surface->cgContext = NULL;
+ 
+     if (surface->bitmapContextImage) {
+         CGImageRelease (surface->bitmapContextImage);
+         surface->bitmapContextImage = NULL;
+     }
+ 
+     if (surface->imageSurfaceEquiv) {
+-	_cairo_image_surface_assume_ownership_of_data (surface->imageSurfaceEquiv);
++        if (surface->ownsData)
++            _cairo_image_surface_assume_ownership_of_data (surface->imageSurfaceEquiv);
+ 	cairo_surface_destroy (surface->imageSurfaceEquiv);
+ 	surface->imageSurfaceEquiv = NULL;
+-    } else if (surface->imageData) {
++    } else if (surface->imageData && surface->ownsData) {
+         free (surface->imageData);
+     }
+ 
+     surface->imageData = NULL;
+ 
+     if (surface->cgLayer) {
+         CGLayerRelease (surface->cgLayer);
+     }
+@@ -2888,16 +2889,17 @@ _cairo_quartz_surface_create_internal (C
+ 
+     surface->cgContext = cgContext;
+     surface->cgContextBaseCTM = CGContextGetCTM (cgContext);
+ 
+     surface->imageData = NULL;
+     surface->imageSurfaceEquiv = NULL;
+     surface->bitmapContextImage = NULL;
+     surface->cgLayer = NULL;
++    surface->ownsData = TRUE;
+ 
+     return surface;
+ }
+ 
+ /**
+  * cairo_quartz_surface_create_for_cg_context
+  * @cgContext: the existing CGContext for which to create the surface
+  * @width: width of the surface, in pixels
+@@ -3031,23 +3033,103 @@ cairo_quartz_surface_create_cg_layer (ca
+  *
+  * Since: 1.4
+  **/
+ cairo_surface_t *
+ cairo_quartz_surface_create (cairo_format_t format,
+ 			     unsigned int width,
+ 			     unsigned int height)
+ {
++    int stride;
++    unsigned char *data;
++
++    if (!_cairo_quartz_verify_surface_size(width, height))
++	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
++
++    if (width == 0 || height == 0) {
++	return (cairo_surface_t*) _cairo_quartz_surface_create_internal (NULL, _cairo_content_from_format (format),
++									 width, height);
++    }
++
++    if (format == CAIRO_FORMAT_ARGB32 ||
++	format == CAIRO_FORMAT_RGB24)
++    {
++	stride = width * 4;
++    } else if (format == CAIRO_FORMAT_A8) {
++	stride = width;
++    } else if (format == CAIRO_FORMAT_A1) {
++	/* I don't think we can usefully support this, as defined by
++	 * cairo_format_t -- these are 1-bit pixels stored in 32-bit
++	 * quantities.
++	 */
++	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
++    } else {
++	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
++    }
++
++    /* The Apple docs say that for best performance, the stride and the data
++     * pointer should be 16-byte aligned.  malloc already aligns to 16-bytes,
++     * so we don't have to anything special on allocation.
++     */
++    stride = (stride + 15) & ~15;
++
++    data = _cairo_malloc_ab (height, stride);
++    if (!data) {
++	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
++    }
++
++    /* zero the memory to match the image surface behaviour */
++    memset (data, 0, height * stride);
++
++    cairo_quartz_surface_t *surf;
++    surf = (cairo_quartz_surface_t *) cairo_quartz_surface_create_for_data
++                                           (data, format, width, height, stride);
++    if (surf->base.status) {
++        free (data);
++        return (cairo_surface_t *) surf;
++    }
++
++    // We created this data, so we can delete it.
++    surf->ownsData = TRUE;
++
++    return (cairo_surface_t *) surf;
++}
++
++/**
++ * cairo_quartz_surface_create_for_data
++ * @data: a pointer to a buffer supplied by the application in which
++ *     to write contents. This pointer must be suitably aligned for any
++ *     kind of variable, (for example, a pointer returned by malloc).
++ * @format: format of pixels in the surface to create
++ * @width: width of the surface, in pixels
++ * @height: height of the surface, in pixels
++ *
++ * Creates a Quartz surface backed by a CGBitmap.  The surface is
++ * created using the Device RGB (or Device Gray, for A8) color space.
++ * All Cairo operations, including those that require software
++ * rendering, will succeed on this surface.
++ *
++ * Return value: the newly created surface.
++ *
++ * Since: 1.12
++ **/
++cairo_surface_t *
++cairo_quartz_surface_create_for_data (unsigned char *data,
++				      cairo_format_t format,
++				      unsigned int width,
++				      unsigned int height,
++				      unsigned int stride)
++{
+     cairo_quartz_surface_t *surf;
+     CGContextRef cgc;
+     CGColorSpaceRef cgColorspace;
+     CGBitmapInfo bitinfo;
+-    void *imageData;
+-    int stride;
++    void *imageData = data;
+     int bitsPerComponent;
++    unsigned int i;
+ 
+     // verify width and height of surface
+     if (!_cairo_quartz_verify_surface_size(width, height))
+ 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+ 
+     if (width == 0 || height == 0) {
+ 	return (cairo_surface_t*) _cairo_quartz_surface_create_internal (NULL, _cairo_content_from_format (format),
+ 									 width, height);
+@@ -3058,47 +3140,30 @@ cairo_quartz_surface_create (cairo_forma
+     {
+ 	cgColorspace = CGColorSpaceCreateDeviceRGB();
+ 	bitinfo = kCGBitmapByteOrder32Host;
+ 	if (format == CAIRO_FORMAT_ARGB32)
+ 	    bitinfo |= kCGImageAlphaPremultipliedFirst;
+ 	else
+ 	    bitinfo |= kCGImageAlphaNoneSkipFirst;
+ 	bitsPerComponent = 8;
+-	stride = width * 4;
+     } else if (format == CAIRO_FORMAT_A8) {
+ 	cgColorspace = NULL;
+-	stride = width;
+ 	bitinfo = kCGImageAlphaOnly;
+ 	bitsPerComponent = 8;
+     } else if (format == CAIRO_FORMAT_A1) {
+ 	/* I don't think we can usefully support this, as defined by
+ 	 * cairo_format_t -- these are 1-bit pixels stored in 32-bit
+ 	 * quantities.
+ 	 */
+ 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
+     } else {
+ 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
+     }
+ 
+-    /* The Apple docs say that for best performance, the stride and the data
+-     * pointer should be 16-byte aligned.  malloc already aligns to 16-bytes,
+-     * so we don't have to anything special on allocation.
+-     */
+-    stride = (stride + 15) & ~15;
+-
+-    imageData = _cairo_malloc_ab (height, stride);
+-    if (!imageData) {
+-	CGColorSpaceRelease (cgColorspace);
+-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+-    }
+-
+-    /* zero the memory to match the image surface behaviour */
+-    memset (imageData, 0, height * stride);
+-
+     cgc = CGBitmapContextCreate (imageData,
+ 				 width,
+ 				 height,
+ 				 bitsPerComponent,
+ 				 stride,
+ 				 cgColorspace,
+ 				 bitinfo);
+     CGColorSpaceRelease (cgColorspace);
+@@ -3118,16 +3183,17 @@ cairo_quartz_surface_create (cairo_forma
+ 	CGContextRelease (cgc);
+ 	free (imageData);
+ 	// create_internal will have set an error
+ 	return (cairo_surface_t*) surf;
+     }
+ 
+     surf->imageData = imageData;
+     surf->imageSurfaceEquiv = cairo_image_surface_create_for_data (imageData, format, width, height, stride);
++    surf->ownsData = FALSE;
+ 
+     return (cairo_surface_t *) surf;
+ }
+ 
+ /**
+  * cairo_quartz_surface_get_cg_context
+  * @surface: the Cairo Quartz surface
+  *
+diff --git a/gfx/cairo/cairo/src/cairo-quartz.h b/gfx/cairo/cairo/src/cairo-quartz.h
+--- a/gfx/cairo/cairo/src/cairo-quartz.h
++++ b/gfx/cairo/cairo/src/cairo-quartz.h
+@@ -45,16 +45,23 @@
+ CAIRO_BEGIN_DECLS
+ 
+ cairo_public cairo_surface_t *
+ cairo_quartz_surface_create (cairo_format_t format,
+                              unsigned int width,
+                              unsigned int height);
+ 
+ cairo_public cairo_surface_t *
++cairo_quartz_surface_create_for_data (unsigned char *data,
++				      cairo_format_t format,
++				      unsigned int width,
++				      unsigned int height,
++				      unsigned int stride);
++
++cairo_public cairo_surface_t *
+ cairo_quartz_surface_create_cg_layer (cairo_surface_t *surface,
+                                       unsigned int width,
+                                       unsigned int height);
+ 
+ cairo_public cairo_surface_t *
+ cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
+                                             unsigned int width,
+                                             unsigned int height);
+diff --git a/gfx/cairo/cairo/src/cairo-rename.h b/gfx/cairo/cairo/src/cairo-rename.h
+--- a/gfx/cairo/cairo/src/cairo-rename.h
++++ b/gfx/cairo/cairo/src/cairo-rename.h
+@@ -176,16 +176,17 @@
+ #define cairo_qpainter_surface_get_image _moz_cairo_qpainter_surface_get_image
+ #define cairo_qpainter_surface_get_qimage _moz_cairo_qpainter_surface_get_qimage
+ #define cairo_qpainter_surface_get_qpainter _moz_cairo_qpainter_surface_get_qpainter
+ #define cairo_quartz_font_face_create_for_atsu_font_id _moz_cairo_quartz_font_face_create_for_atsu_font_id
+ #define cairo_quartz_font_face_create_for_cgfont _moz_cairo_quartz_font_face_create_for_cgfont
+ #define cairo_quartz_image_surface_create _moz_cairo_quartz_image_surface_create
+ #define cairo_quartz_image_surface_get_image _moz_cairo_quartz_image_surface_get_image
+ #define cairo_quartz_surface_create _moz_cairo_quartz_surface_create
++#define cairo_quartz_surface_create_for_data _moz_cairo_quartz_surface_create_for_data
+ #define cairo_quartz_surface_create_for_cg_context _moz_cairo_quartz_surface_create_for_cg_context
+ #define cairo_quartz_surface_get_cg_context _moz_cairo_quartz_surface_get_cg_context
+ #define cairo_quartz_surface_get_image _moz_cairo_quartz_surface_get_image
+ #define cairo_rectangle _moz_cairo_rectangle
+ #define cairo_rectangle_list_destroy _moz_cairo_rectangle_list_destroy
+ #define cairo_reference _moz_cairo_reference
+ #define cairo_rel_curve_to _moz_cairo_rel_curve_to
+ #define cairo_rel_line_to _moz_cairo_rel_line_to

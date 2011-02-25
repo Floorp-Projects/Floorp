@@ -60,7 +60,7 @@ var stringBundle;
 
   function uploadData() {
     Components.utils.import("resource://testpilot/modules/setup.js");
-    let eid = parseInt(getUrlParam("eid"));
+    let eid = getUrlParam("eid");
     let task = TestPilotSetup.getTaskById(eid);
 
     // If always-submit-checkbox is checked, set the pref
@@ -97,7 +97,7 @@ var stringBundle;
   function deleteData() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     Components.utils.import("resource://testpilot/modules/tasks.js");
-    let eid = parseInt(getUrlParam("eid"));
+    let eid = getUrlParam("eid");
     let task = TestPilotSetup.getTaskById(eid);
     task.dataStore.wipeAllData();
     // reload the URL after wiping all data.
@@ -150,7 +150,7 @@ var stringBundle;
     const nsIFilePicker = Components.interfaces.nsIFilePicker;
     let filePicker = Components.classes["@mozilla.org/filepicker;1"].
       createInstance(nsIFilePicker);
-    let eid = parseInt(getUrlParam("eid"));
+    let eid = getUrlParam("eid");
     let task = TestPilotSetup.getTaskById(eid);
 
     filePicker.init(window, null, nsIFilePicker.modeSave);
@@ -268,7 +268,7 @@ var stringBundle;
   function onQuitPageLoad() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     setStrings(PAGE_TYPE_QUIT);
-    let eid = parseInt(getUrlParam("eid"));
+    let eid = getUrlParam("eid");
     let task = TestPilotSetup.getTaskById(eid);
     let header = document.getElementById("about-quit-title");
     header.innerHTML =
@@ -285,7 +285,7 @@ var stringBundle;
   function quitExperiment() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     Components.utils.import("resource://testpilot/modules/tasks.js");
-    let eid = parseInt(getUrlParam("eid"));
+    let eid = getUrlParam("eid");
     let reason = document.getElementById("reason-for-quit").value;
     let task = TestPilotSetup.getTaskById(eid);
     task.optOut(reason, function(success) {
@@ -306,7 +306,7 @@ var stringBundle;
 
   function updateRecurSettings() {
     Components.utils.import("resource://testpilot/modules/setup.js");
-    let eid = parseInt(getUrlParam("eid"));
+    let eid = getUrlParam("eid");
     let experiment = TestPilotSetup.getTaskById(eid);
     let recurSelector = document.getElementById("recur-selector");
     let newValue = recurSelector.options[recurSelector.selectedIndex].value;
@@ -367,9 +367,7 @@ var stringBundle;
     var contentDiv = document.getElementById("experiment-specific-text");
     var dataPrivacyDiv = document.getElementById("data-privacy-text");
     // Get experimentID from the GET args of page
-    // TODO no reason actually to do parseInt here -- all it accomplishes
-    // is preventing us from using non-numeric study IDs.
-    var eid = parseInt(getUrlParam("eid"));
+    var eid = getUrlParam("eid");
     var experiment = TestPilotSetup.getTaskById(eid);
     if (!experiment) {
       // Possible that experiments aren't done loading yet.  Try again in

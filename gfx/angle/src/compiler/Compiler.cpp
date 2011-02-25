@@ -17,7 +17,7 @@ bool InitializeSymbolTable(
 {
     TIntermediate intermediate(infoSink);
     TExtensionBehavior extBehavior;
-    TParseContext parseContext(symbolTable, extBehavior, intermediate, type, spec, infoSink);
+    TParseContext parseContext(symbolTable, extBehavior, intermediate, type, spec, 0, NULL, infoSink);
 
     GlobalParseContext = &parseContext;
 
@@ -115,9 +115,19 @@ bool TCompiler::compile(const char* const shaderStrings[],
     if (shaderSpec == SH_WEBGL_SPEC)
         compileOptions |= SH_VALIDATE_LOOP_INDEXING;
 
+    // First string is path of source file if flag is set. The actual source follows.
+    const char* sourcePath = NULL;
+    int firstSource = 0;
+    if (compileOptions & SH_SOURCE_PATH)
+    {
+        sourcePath = shaderStrings[0];
+        ++firstSource;
+    }
+
     TIntermediate intermediate(infoSink);
     TParseContext parseContext(symbolTable, extensionBehavior, intermediate,
-                               shaderType, shaderSpec, infoSink);
+                               shaderType, shaderSpec, compileOptions,
+                               sourcePath, infoSink);
     GlobalParseContext = &parseContext;
 
     // We preserve symbols at the built-in level from compile-to-compile.
@@ -128,7 +138,7 @@ bool TCompiler::compile(const char* const shaderStrings[],
 
     // Parse shader.
     bool success =
-        (PaParseStrings(numStrings, shaderStrings, NULL, &parseContext) == 0) &&
+        (PaParseStrings(numStrings - firstSource, &shaderStrings[firstSource], NULL, &parseContext) == 0) &&
         (parseContext.treeRoot != NULL);
     if (success) {
         TIntermNode* root = parseContext.treeRoot;
@@ -187,4 +197,3 @@ void TCompiler::collectAttribsUniforms(TIntermNode* root)
     CollectAttribsUniforms collect(attribs, uniforms);
     root->traverse(&collect);
 }
-

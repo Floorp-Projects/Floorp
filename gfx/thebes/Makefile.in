@@ -20,6 +20,7 @@ EXPORTS	= \
 	gfxColor.h \
 	gfxContext.h \
 	gfxDrawable.h \
+	gfxFailure.h \
 	gfxFont.h \
 	gfxFontConstants.h \
 	gfxFontUtils.h \
@@ -32,9 +33,11 @@ EXPORTS	= \
 	gfxPoint.h \
 	gfxRect.h \
 	gfxSkipChars.h \
+	gfxTeeSurface.h \
 	gfxTypes.h \
 	gfxTextRunCache.h \
 	gfxTextRunWordCache.h \
+	gfxUnicodeProperties.h \
 	gfxUtils.h \
 	gfxUserFontSet.h \
 	GLDefs.h \
@@ -43,6 +46,7 @@ EXPORTS	= \
 	GLContextProvider.h \
 	GLContextProviderImpl.h \
 	nsCoreAnimationSupport.h \
+	EGLUtils.h \
 	$(NULL)
 
 ifdef MOZ_IPC
@@ -181,6 +185,7 @@ CPPSRCS	= \
 	gfxPlatformFontList.cpp \
 	gfxRect.cpp \
 	gfxSkipChars.cpp \
+	gfxTeeSurface.cpp \
 	gfxTextRunCache.cpp \
 	gfxTextRunWordCache.cpp \
 	gfxUserFontSet.cpp \
@@ -192,19 +197,26 @@ CPPSRCS	= \
 	GLContextProviderOSMesa.cpp \
 	$(NULL)
 
+# Are we targeting x86 or x64?  If so, build gfxAlphaRecoverySSE2.cpp.
+# The file uses SSE2 intrinsics, so it needs special compile flags on some
+# compilers.
+ifneq (,$(INTEL_ARCHITECTURE))
+CPPSRCS += gfxAlphaRecoverySSE2.cpp
+
+ifdef GNU_CC
+gfxAlphaRecoverySSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
+endif
+
+ifdef SOLARIS_SUNPRO_CXX
+gfxAlphaRecoverySSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
+endif
+
+endif
+
 ifdef MOZ_IPC
 CPPSRCS += \
 	gfxSharedImageSurface.cpp \
 	$(NULL)
-endif
-
-ifeq (86,$(findstring 86,$(OS_TEST)))
-ifdef __GNUC__
-gfxAlphaRecovery.$(OBJ_SUFFIX): MODULE_OPTIMIZE_FLAGS += -msse2
-endif
-ifdef SOLARIS_SUNPRO_CXX
-gfxAlphaRecovery.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
-endif
 endif
 
 SHARED_LIBRARY_LIBS += \
@@ -264,7 +276,7 @@ CPPSRCS	+= gfxGDIFont.cpp \
 	   gfxGDIShaper.cpp \
 	   gfxUniscribeShaper.cpp \
 	   $(NULL)
-_OS_LIBS = usp10 msimg32 ole32
+_OS_LIBS = usp10 msimg32 ole32 version advapi32 shlwapi shell32
 endif
 
 CPPSRCS +=	gfxPDFSurface.cpp

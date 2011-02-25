@@ -1,0 +1,15 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+function boom()
+{
+
+  var v = document.getElementById("v");
+  v.src = "data:text/plain,_";
+  document.documentElement.appendChild(v);
+
+}
+</script>
+</head>
+<body onload="boom();"><video id="v" src="data:video/ogg;codecs=&quot;theora,vorbis&quot;,1"></video></body>
+</html>

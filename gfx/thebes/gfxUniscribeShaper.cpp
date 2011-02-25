@@ -39,8 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//#define FORCE_PR_LOG
-
 #include "prtypes.h"
 #include "gfxTypes.h"
 
@@ -58,9 +56,7 @@
 
 #include "nsTArray.h"
 
-#include "prlog.h"
 #include "prinit.h"
-static PRLogModuleInfo *gFontLog = PR_NewLogModule("winfonts");
 
 /**********************************************************************
  *
@@ -85,7 +81,9 @@ public:
         mNumGlyphs(0), mMaxGlyphs(ESTIMATE_MAX_GLYPHS(aLength)),
         mFontSelected(PR_FALSE), mIVS(aIVS)
     {
-        NS_ASSERTION(mMaxGlyphs < 65535, "UniscribeItem is too big, ScriptShape() will fail!");
+        // See bug 394751 for details.
+        NS_ASSERTION(mMaxGlyphs < 65535,
+                     "UniscribeItem is too big, ScriptShape() will fail!");
     }
 
     ~UniscribeItem() {
@@ -269,8 +267,9 @@ public:
         const PRUint32 appUnitsPerDevUnit = aRun->GetAppUnitsPerDevUnit();
         while (offset < mItemLength) {
             PRUint32 runOffset = offsetInRun + offset;
+            PRBool atClusterStart = aRun->IsClusterStart(runOffset);
             if (offset > 0 && mClusters[offset] == mClusters[offset - 1]) {
-                g.SetComplex(aRun->IsClusterStart(runOffset), PR_FALSE, 0);
+                g.SetComplex(atClusterStart, PR_FALSE, 0);
                 aRun->SetGlyphs(runOffset, g, nsnull);
             } else {
                 // Count glyphs for this character
@@ -307,7 +306,9 @@ public:
                 } else if (glyphCount == 1 && advance >= 0 &&
                     mOffsets[k].dv == 0 && mOffsets[k].du == 0 &&
                     gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
-                    gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph)) {
+                    gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph) &&
+                    atClusterStart)
+                {
                     aRun->SetSimpleGlyph(runOffset, g.SetSimpleGlyph(advance, glyph));
                 } else {
                     if (detailedGlyphs.Length() < glyphCount) {
@@ -323,7 +324,9 @@ public:
                         details->mYOffset = - float(mOffsets[k + i].dv)*appUnitsPerDevUnit;
                     }
                     aRun->SetGlyphs(runOffset,
-                        g.SetComplex(PR_TRUE, PR_TRUE, glyphCount), detailedGlyphs.Elements());
+                                    g.SetComplex(atClusterStart, PR_TRUE,
+                                                 glyphCount),
+                                    detailedGlyphs.Elements());
                 }
             }
             ++offset;
@@ -394,8 +397,6 @@ private:
     PRPackedBool mFontSelected;
 };
 
-#define MAX_ITEM_LENGTH 16384
-
 class Uniscribe
 {
 public:
@@ -404,8 +405,6 @@ public:
               gfxTextRun *aTextRun):
         mString(aString), mLength(aLength), mTextRun(aTextRun)
     {
-    }
-    ~Uniscribe() {
     }
 
     void Init() {
@@ -417,77 +416,7 @@ public:
         mState.fOverrideDirection = PR_TRUE;
     }
 
-private:
-
-// We try to avoid calling Uniscribe with text runs that may generate
-// more than this many glyphs, because of the possibility of arithmetic
-// overflow of 16-bit variables. If long runs need to be split because
-// of this, we'll look for whitespace to break on so that shaping needed
-// (e.g. for complex scripts) should be unaffected.
-#define MAX_UNISCRIBE_GLYPHS 32767
-
-    // Append mItems[aIndex] to aDest, adding extra items to aDest to ensure
-    // that no item is too long for ScriptShape() to handle. See bug 366643.
-    nsresult CopyItemSplitOversize(int aIndex, nsTArray<SCRIPT_ITEM> &aDest) {
-        aDest.AppendElement(mItems[aIndex]);
-        const int itemLength =
-            mItems[aIndex+1].iCharPos - mItems[aIndex].iCharPos;
-        if (ESTIMATE_MAX_GLYPHS(itemLength) > MAX_UNISCRIBE_GLYPHS) {
-            // This item's length would cause ScriptShape() to fail.
-            // We need to add extra items here so that no item's length
-            // could cause the fail.
-
-            // We break on whitespace or cluster boundaries if possible.
-            const int nextItemStart = mItems[aIndex+1].iCharPos;
-            int start = FindNextItemStart(mItems[aIndex].iCharPos,
-                                          nextItemStart);
-
-            while (start < nextItemStart) {
-                SCRIPT_ITEM item = mItems[aIndex];
-                item.iCharPos = start;
-                aDest.AppendElement(item);
-                start = FindNextItemStart(start, nextItemStart);
-            }
-        } 
-        return NS_OK;
-    }
-
-    PRUint32 FindNextItemStart(int aOffset, int aLimit) {
-        if (aOffset + MAX_ITEM_LENGTH >= aLimit) {
-            // The item starting at aOffset can't be longer than max length,
-            // so starting the next item at aLimit won't cause ScriptShape()
-            // to fail.
-            return aLimit;
-        }
-        // Try to start the next item before or after a space, since spaces
-        // don't kern or ligate.
-        PRInt32 off;
-        int boundary = -1;
-        for (off = MAX_ITEM_LENGTH; off > 1; --off) {
-            if (mTextRun->IsClusterStart(off)) {
-                if (off > boundary) {
-                    boundary = off;
-                }
-                if (mString[aOffset+off] == ' ' ||
-                    mString[aOffset+off - 1] == ' ') {
-                    return aOffset+off;
-                }
-            }
-        }
-
-        // Try to start the next item at last cluster boundary in the range.
-        if (boundary > 0) {
-            return aOffset+boundary;
-        }
-
-        // No nice cluster boundaries inside MAX_ITEM_LENGTH characters, break
-        // on the size limit. It won't be visually pleasing, but at least it
-        // won't cause ScriptShape() to fail.
-        return aOffset + MAX_ITEM_LENGTH;
-    }
-
 public:
-
     int Itemize() {
         HRESULT rv;
 
@@ -509,25 +438,6 @@ public:
             Init();
         }
 
-        if (ESTIMATE_MAX_GLYPHS(mLength) > 65535) {
-            // Any item of length > 43680 will cause ScriptShape() to fail, as its
-            // mMaxGlyphs value will be greater than 65535 (43680*1.5+16>65535). So we
-            // need to break up items which are longer than that upon cluster boundaries.
-            // See bug 394751 for details.
-            nsTArray<SCRIPT_ITEM> items;
-            for (int i=0; i<mNumItems; i++) {
-                nsresult nrs = CopyItemSplitOversize(i, items);
-                NS_ASSERTION(NS_SUCCEEDED(nrs), "CopyItemSplitOversize() failed");
-            }
-            items.AppendElement(mItems[mNumItems]); // copy terminator.
-
-            mItems = items;
-            mNumItems = items.Length() - 1; // Don't count the terminator.
-        }
-        return mNumItems;
-    }
-
-    PRUint32 ItemsLength() {
         return mNumItems;
     }
 
@@ -609,7 +519,6 @@ gfxUniscribeShaper::InitTextRun(gfxContext *aContext,
 
         rv = item.Shape();
         if (FAILED(rv)) {
-            PR_LOG(gFontLog, PR_LOG_DEBUG, ("shaping failed"));
             // we know we have the glyphs to display this font already
             // so Uniscribe just doesn't know how to shape the script.
             // Render the glyphs without shaping.
@@ -635,7 +544,7 @@ gfxUniscribeShaper::InitTextRun(gfxContext *aContext,
         if (FAILED(rv)) {
             // Uniscribe doesn't like this font for some reason.
             // Returning FALSE will make the gfxGDIFont retry with the
-            // "dumb" GDI one, unless useUniscribeOnly was set.
+            // "dumb" GDI shaper, unless useUniscribeOnly was set.
             result = PR_FALSE;
             break;
         }

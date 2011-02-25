@@ -299,6 +299,81 @@ function synthesizeMouseScroll(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
   }
 }
 
+function _computeKeyCodeFromChar(aChar)
+{
+  if (aChar.length != 1) {
+    return 0;
+  }
+  const nsIDOMKeyEvent = Components.interfaces.nsIDOMKeyEvent;
+  if (aChar >= 'a' && aChar <= 'z') {
+    return nsIDOMKeyEvent.DOM_VK_A + aChar.charCodeAt(0) - 'a'.charCodeAt(0);
+  }
+  if (aChar >= 'A' && aChar <= 'Z') {
+    return nsIDOMKeyEvent.DOM_VK_A + aChar.charCodeAt(0) - 'A'.charCodeAt(0);
+  }
+  if (aChar >= '0' && aChar <= '9') {
+    return nsIDOMKeyEvent.DOM_VK_0 + aChar.charCodeAt(0) - '0'.charCodeAt(0);
+  }
+  // returns US keyboard layout's keycode
+  switch (aChar) {
+    case '~':
+    case '`':
+      return nsIDOMKeyEvent.DOM_VK_BACK_QUOTE;
+    case '!':
+      return nsIDOMKeyEvent.DOM_VK_1;
+    case '@':
+      return nsIDOMKeyEvent.DOM_VK_2;
+    case '#':
+      return nsIDOMKeyEvent.DOM_VK_3;
+    case '$':
+      return nsIDOMKeyEvent.DOM_VK_4;
+    case '%':
+      return nsIDOMKeyEvent.DOM_VK_5;
+    case '^':
+      return nsIDOMKeyEvent.DOM_VK_6;
+    case '&':
+      return nsIDOMKeyEvent.DOM_VK_7;
+    case '*':
+      return nsIDOMKeyEvent.DOM_VK_8;
+    case '(':
+      return nsIDOMKeyEvent.DOM_VK_9;
+    case ')':
+      return nsIDOMKeyEvent.DOM_VK_0;
+    case '-':
+    case '_':
+      return nsIDOMKeyEvent.DOM_VK_SUBTRACT;
+    case '+':
+    case '=':
+      return nsIDOMKeyEvent.DOM_VK_EQUALS;
+    case '{':
+    case '[':
+      return nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET;
+    case '}':
+    case ']':
+      return nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET;
+    case '|':
+    case '\\':
+      return nsIDOMKeyEvent.DOM_VK_BACK_SLASH;
+    case ':':
+    case ';':
+      return nsIDOMKeyEvent.DOM_VK_SEMICOLON;
+    case '\'':
+    case '"':
+      return nsIDOMKeyEvent.DOM_VK_QUOTE;
+    case '<':
+    case ',':
+      return nsIDOMKeyEvent.DOM_VK_COMMA;
+    case '>':
+    case '.':
+      return nsIDOMKeyEvent.DOM_VK_PERIOD;
+    case '?':
+    case '/':
+      return nsIDOMKeyEvent.DOM_VK_SLASH;
+    default:
+      return 0;
+  }
+}
+
 /**
  * Synthesize a key event. It is targeted at whatever would be targeted by an
  * actual keypress by the user, typically the focused element.
@@ -327,20 +402,24 @@ function synthesizeKey(aKey, aEvent, aWindow)
     var keyCode = 0, charCode = 0;
     if (aKey.indexOf("VK_") == 0)
       keyCode = KeyEvent["DOM_" + aKey];
-    else
+    else {
       charCode = aKey.charCodeAt(0);
+      keyCode = _computeKeyCodeFromChar(aKey.charAt(0));
+    }
 
     var modifiers = _parseModifiers(aEvent);
 
-    if (aEvent.type) {
-      utils.sendKeyEvent(aEvent.type, keyCode, charCode, modifiers);
-    }
-    else {
+    if (aEvent.type == "keypress") {
+      utils.sendKeyEvent(aEvent.type, charCode ? 0 : keyCode,
+                         charCode, modifiers);
+    } else if (aEvent.type) {
+      utils.sendKeyEvent(aEvent.type, keyCode, 0, modifiers);
+    } else {
       var keyDownDefaultHappened =
-          utils.sendKeyEvent("keydown", keyCode, charCode, modifiers);
-      utils.sendKeyEvent("keypress", keyCode, charCode, modifiers,
-                         !keyDownDefaultHappened);
-      utils.sendKeyEvent("keyup", keyCode, charCode, modifiers);
+          utils.sendKeyEvent("keydown", keyCode, 0, modifiers);
+      utils.sendKeyEvent("keypress", charCode ? 0 : keyCode, charCode,
+                         modifiers, !keyDownDefaultHappened);
+      utils.sendKeyEvent("keyup", keyCode, 0, modifiers);
     }
   }
 }
@@ -525,6 +604,14 @@ function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow)
   if (!aWindow)
     aWindow = window;
 
+  // For events to trigger the UA's default actions they need to be "trusted".
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var gWindowUtils  = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                             getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var ds = Components.classes["@mozilla.org/widget/dragservice;1"].
+           getService(Components.interfaces.nsIDragService);
+
   var dataTransfer;
   var trapDrag = function(event) {
     dataTransfer = event.dataTransfer;
@@ -539,32 +626,39 @@ function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow)
     event.stopPropagation();
   }
 
-  // need to use real mouse action
-  aWindow.addEventListener("dragstart", trapDrag, true);
-  synthesizeMouse(srcElement, 2, 2, { type: "mousedown" }, aWindow);
-  synthesizeMouse(srcElement, 11, 11, { type: "mousemove" }, aWindow);
-  synthesizeMouse(srcElement, 20, 20, { type: "mousemove" }, aWindow);
-  aWindow.removeEventListener("dragstart", trapDrag, true);
+  ds.startDragSession();
 
-  event = aWindow.document.createEvent("DragEvents");
-  event.initDragEvent("dragenter", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
-  destElement.dispatchEvent(event);
+  try {
+    // need to use real mouse action
+    aWindow.addEventListener("dragstart", trapDrag, true);
+    synthesizeMouse(srcElement, 2, 2, { type: "mousedown" }, aWindow);
+    synthesizeMouse(srcElement, 11, 11, { type: "mousemove" }, aWindow);
+    synthesizeMouse(srcElement, 20, 20, { type: "mousemove" }, aWindow);
+    aWindow.removeEventListener("dragstart", trapDrag, true);
 
-  var event = aWindow.document.createEvent("DragEvents");
-  event.initDragEvent("dragover", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
-  if (destElement.dispatchEvent(event)) {
-    synthesizeMouse(destElement, 20, 20, { type: "mouseup" }, aWindow);
-    return "none";
-  }
-
-  if (dataTransfer.dropEffect != "none") {
     event = aWindow.document.createEvent("DragEvents");
-    event.initDragEvent("drop", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
-    destElement.dispatchEvent(event);
-  }
-  synthesizeMouse(destElement, 20, 20, { type: "mouseup" }, aWindow);
+    event.initDragEvent("dragenter", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
+    gWindowUtils.dispatchDOMEventViaPresShell(destElement, event, true);
 
-  return dataTransfer.dropEffect;
+    var event = aWindow.document.createEvent("DragEvents");
+    event.initDragEvent("dragover", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
+    if (gWindowUtils.dispatchDOMEventViaPresShell(destElement, event, true)) {
+      synthesizeMouseAtCenter(destElement, { type: "mouseup" }, aWindow);
+      return "none";
+    }
+
+    if (dataTransfer.dropEffect != "none") {
+      event = aWindow.document.createEvent("DragEvents");
+      event.initDragEvent("drop", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
+      gWindowUtils.dispatchDOMEventViaPresShell(destElement, event, true);
+    }
+
+    synthesizeMouseAtCenter(destElement, { type: "mouseup" }, aWindow);
+
+    return dataTransfer.dropEffect;
+  } finally {
+    ds.endDragSession(true);
+  }
 }
 
 function disableNonTestMouseEvents(aDisable)

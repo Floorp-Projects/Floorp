@@ -196,7 +196,7 @@ namespace nanojit
          None = 0
         ,StackFull
         ,UnknownBranch
-        ,ConditionalBranchTooFar
+        ,BranchTooFar
     };
 
     typedef SeqBuilder<NIns*> NInsList;
@@ -361,7 +361,8 @@ namespace nanojit
             void        getBaseIndexScale(LIns* addp, LIns** base, LIns** index, int* scale);
 
             void        codeAlloc(NIns *&start, NIns *&end, NIns *&eip
-                                  verbose_only(, size_t &nBytes));
+                                  verbose_only(, size_t &nBytes)
+                                  , size_t byteLimit=0);
 
             // These instructions don't have to be saved & reloaded to spill,
             // they can just be recalculated cheaply.
@@ -407,6 +408,7 @@ namespace nanojit
             NIns*       _nExitIns;              // current instruction in current exit code chunk
                                                 // note: _nExitIns == NULL until the first side exit is seen.
         #ifdef NJ_VERBOSE
+            NIns*       _nInsAfter;             // next instruction (ascending) in current normal/exit code chunk (for verbose output)
             size_t      codeBytes;              // bytes allocated in normal code chunks
             size_t      exitBytes;              // bytes allocated in exit code chunks
         #endif
@@ -498,7 +500,7 @@ namespace nanojit
             void        nBeginAssembly();
             Register    nRegisterAllocFromSet(RegisterMask set);
             void        nRegisterResetAll(RegAlloc& a);
-            static void nPatchBranch(NIns* branch, NIns* location);
+            void        nPatchBranch(NIns* branch, NIns* location);
             void        nFragExit(LIns* guard);
 
             static RegisterMask nHints[LIR_sentinel+1];

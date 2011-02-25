@@ -899,6 +899,8 @@ typedef JSBool
 typedef JSBool
 (* PropertyOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp);
 typedef JSBool
+(* StrictPropertyOp)(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp);
+typedef JSBool
 (* ConvertOp)(JSContext *cx, JSObject *obj, JSType type, Value *vp);
 typedef JSBool
 (* NewEnumerateOp)(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
@@ -912,7 +914,7 @@ typedef JSBool
 (* EqualityOp)(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp);
 typedef JSBool
 (* DefinePropOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
-                 PropertyOp getter, PropertyOp setter, uintN attrs);
+                 PropertyOp getter, StrictPropertyOp setter, uintN attrs);
 typedef JSBool
 (* PropertyIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
 typedef JSBool
@@ -947,26 +949,29 @@ class AutoIdVector;
 typedef JSBool
 (* FixOp)(JSContext *cx, JSObject *obj, bool *fixed, AutoIdVector *props);
 
-static inline Native            Valueify(JSNative f)          { return (Native)f; }
-static inline JSNative          Jsvalify(Native f)            { return (JSNative)f; }
-static inline PropertyOp        Valueify(JSPropertyOp f)      { return (PropertyOp)f; }
-static inline JSPropertyOp      Jsvalify(PropertyOp f)        { return (JSPropertyOp)f; }
-static inline ConvertOp         Valueify(JSConvertOp f)       { return (ConvertOp)f; }
-static inline JSConvertOp       Jsvalify(ConvertOp f)         { return (JSConvertOp)f; }
-static inline NewEnumerateOp    Valueify(JSNewEnumerateOp f)  { return (NewEnumerateOp)f; }
-static inline JSNewEnumerateOp  Jsvalify(NewEnumerateOp f)    { return (JSNewEnumerateOp)f; }
-static inline HasInstanceOp     Valueify(JSHasInstanceOp f)   { return (HasInstanceOp)f; }
-static inline JSHasInstanceOp   Jsvalify(HasInstanceOp f)     { return (JSHasInstanceOp)f; }
-static inline CheckAccessOp     Valueify(JSCheckAccessOp f)   { return (CheckAccessOp)f; }
-static inline JSCheckAccessOp   Jsvalify(CheckAccessOp f)     { return (JSCheckAccessOp)f; }
-static inline EqualityOp        Valueify(JSEqualityOp f);     /* Same type as JSHasInstanceOp */
-static inline JSEqualityOp      Jsvalify(EqualityOp f);       /* Same type as HasInstanceOp */
+static inline Native             Valueify(JSNative f)           { return (Native)f; }
+static inline JSNative           Jsvalify(Native f)             { return (JSNative)f; }
+static inline PropertyOp         Valueify(JSPropertyOp f)       { return (PropertyOp)f; }
+static inline JSPropertyOp       Jsvalify(PropertyOp f)         { return (JSPropertyOp)f; }
+static inline StrictPropertyOp   Valueify(JSStrictPropertyOp f) { return (StrictPropertyOp)f; }
+static inline JSStrictPropertyOp Jsvalify(StrictPropertyOp f)   { return (JSStrictPropertyOp)f; }
+static inline ConvertOp          Valueify(JSConvertOp f)        { return (ConvertOp)f; }
+static inline JSConvertOp        Jsvalify(ConvertOp f)          { return (JSConvertOp)f; }
+static inline NewEnumerateOp     Valueify(JSNewEnumerateOp f)   { return (NewEnumerateOp)f; }
+static inline JSNewEnumerateOp   Jsvalify(NewEnumerateOp f)     { return (JSNewEnumerateOp)f; }
+static inline HasInstanceOp      Valueify(JSHasInstanceOp f)    { return (HasInstanceOp)f; }
+static inline JSHasInstanceOp    Jsvalify(HasInstanceOp f)      { return (JSHasInstanceOp)f; }
+static inline CheckAccessOp      Valueify(JSCheckAccessOp f)    { return (CheckAccessOp)f; }
+static inline JSCheckAccessOp    Jsvalify(CheckAccessOp f)      { return (JSCheckAccessOp)f; }
+static inline EqualityOp         Valueify(JSEqualityOp f);      /* Same type as JSHasInstanceOp */
+static inline JSEqualityOp       Jsvalify(EqualityOp f);        /* Same type as HasInstanceOp */
 
-static const PropertyOp    PropertyStub  = (PropertyOp)JS_PropertyStub;
-static const JSEnumerateOp EnumerateStub = JS_EnumerateStub;
-static const JSResolveOp   ResolveStub   = JS_ResolveStub;
-static const ConvertOp     ConvertStub   = (ConvertOp)JS_ConvertStub;
-static const JSFinalizeOp  FinalizeStub  = JS_FinalizeStub;
+static const PropertyOp       PropertyStub       = (PropertyOp)JS_PropertyStub;
+static const StrictPropertyOp StrictPropertyStub = (StrictPropertyOp)JS_StrictPropertyStub;
+static const JSEnumerateOp    EnumerateStub      = JS_EnumerateStub;
+static const JSResolveOp      ResolveStub        = JS_ResolveStub;
+static const ConvertOp        ConvertStub        = (ConvertOp)JS_ConvertStub;
+static const JSFinalizeOp     FinalizeStub       = JS_FinalizeStub;
 
 #define JS_CLASS_MEMBERS                                                      \
     const char          *name;                                                \
@@ -976,7 +981,7 @@ static const JSFinalizeOp  FinalizeStub  = JS_FinalizeStub;
     PropertyOp          addProperty;                                          \
     PropertyOp          delProperty;                                          \
     PropertyOp          getProperty;                                          \
-    PropertyOp          setProperty;                                          \
+    StrictPropertyOp    setProperty;                                          \
     JSEnumerateOp       enumerate;                                            \
     JSResolveOp         resolve;                                              \
     ConvertOp           convert;                                              \
@@ -1063,12 +1068,12 @@ JS_STATIC_ASSERT(offsetof(JSClass, mark) == offsetof(Class, mark));
 JS_STATIC_ASSERT(sizeof(JSClass) == sizeof(Class));
 
 struct PropertyDescriptor {
-    JSObject     *obj;
-    uintN        attrs;
-    PropertyOp   getter;
-    PropertyOp   setter;
-    Value        value;
-    uintN        shortid;
+    JSObject           *obj;
+    uintN              attrs;
+    PropertyOp         getter;
+    StrictPropertyOp   setter;
+    Value              value;
+    uintN              shortid;
 };
 JS_STATIC_ASSERT(offsetof(JSPropertyDescriptor, obj) == offsetof(PropertyDescriptor, obj));
 JS_STATIC_ASSERT(offsetof(JSPropertyDescriptor, attrs) == offsetof(PropertyDescriptor, attrs));
@@ -1151,28 +1156,40 @@ ValueArgToConstRef(const Value &v)
 /******************************************************************************/
 
 static JS_ALWAYS_INLINE void
-MakeValueRangeGCSafe(Value *vec, size_t len)
+MakeRangeGCSafe(Value *vec, size_t len)
 {
     PodZero(vec, len);
 }
 
 static JS_ALWAYS_INLINE void
-MakeValueRangeGCSafe(Value *beg, Value *end)
+MakeRangeGCSafe(Value *beg, Value *end)
 {
     PodZero(beg, end - beg);
 }
 
 static JS_ALWAYS_INLINE void
-MakeIdRangeGCSafe(jsid *beg, jsid *end)
+MakeRangeGCSafe(jsid *beg, jsid *end)
 {
     for (jsid *id = beg; id != end; ++id)
         *id = INT_TO_JSID(0);
 }
 
 static JS_ALWAYS_INLINE void
-MakeIdRangeGCSafe(jsid *vec, size_t len)
+MakeRangeGCSafe(jsid *vec, size_t len)
 {
-    MakeIdRangeGCSafe(vec, vec + len);
+    MakeRangeGCSafe(vec, vec + len);
+}
+
+static JS_ALWAYS_INLINE void
+MakeRangeGCSafe(const Shape **beg, const Shape **end)
+{
+    PodZero(beg, end - beg);
+}
+
+static JS_ALWAYS_INLINE void
+MakeRangeGCSafe(const Shape **vec, size_t len)
+{
+    PodZero(vec, len);
 }
 
 static JS_ALWAYS_INLINE void
@@ -1185,7 +1202,7 @@ SetValueRangeToUndefined(Value *beg, Value *end)
 static JS_ALWAYS_INLINE void
 SetValueRangeToUndefined(Value *vec, size_t len)
 {
-    return SetValueRangeToUndefined(vec, vec + len);
+    SetValueRangeToUndefined(vec, vec + len);
 }
 
 static JS_ALWAYS_INLINE void
@@ -1198,7 +1215,30 @@ SetValueRangeToNull(Value *beg, Value *end)
 static JS_ALWAYS_INLINE void
 SetValueRangeToNull(Value *vec, size_t len)
 {
-    return SetValueRangeToNull(vec, vec + len);
+    SetValueRangeToNull(vec, vec + len);
+}
+
+/*
+ * To really poison a set of values, using 'magic' or 'undefined' isn't good
+ * enough since often these will just be ignored by buggy code (see bug 629974)
+ * in debug builds and crash in release builds. Instead, we use a safe-for-crash
+ * pointer.
+ */
+static JS_ALWAYS_INLINE void
+Debug_SetValueRangeToCrashOnTouch(Value *beg, Value *end)
+{
+#ifdef DEBUG
+    for (Value *v = beg; v != end; ++v)
+        v->setObject(*reinterpret_cast<JSObject *>(0x42));
+#endif
+}
+
+static JS_ALWAYS_INLINE void
+Debug_SetValueRangeToCrashOnTouch(Value *vec, size_t len)
+{
+#ifdef DEBUG
+    Debug_SetValueRangeToCrashOnTouch(vec, vec + len);
+#endif
 }
 
 }      /* namespace js */

@@ -100,9 +100,13 @@ public:
                               const nsAString& aVersion,
                               AsyncConnectionHelper* aHelper);
 
-  // Called when a window is being purged from the bfcache in order to force any
-  // live database objects to close themselves.
-  void CloseDatabasesForWindow(nsPIDOMWindow* aWindow);
+  // Called when a window is being purged from the bfcache or the user leaves
+  // a page which isn't going into the bfcache. Forces any live database
+  // objects to close themselves and aborts any running transactions.
+  void AbortCloseDatabasesForWindow(nsPIDOMWindow* aWindow);
+
+  // Used to check if there are running transactions in a given window.
+  bool HasOpenTransactions(nsPIDOMWindow* aWindow);
 
 private:
   IndexedDatabaseManager();

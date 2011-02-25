@@ -108,6 +108,7 @@ protected:
     }
 
     // Implement the PPluginModuleChild interface
+    virtual bool AnswerNP_GetEntryPoints(NPError* rv);
     virtual bool AnswerNP_Initialize(NativeThreadId* tid, NPError* rv);
 
     virtual PPluginIdentifierChild*
@@ -137,8 +138,24 @@ protected:
     virtual bool
     AnswerNP_Shutdown(NPError *rv);
 
+    virtual bool
+    AnswerOptionalFunctionsSupported(bool *aURLRedirectNotify,
+                                     bool *aClearSiteData,
+                                     bool *aGetSitesWithData);
+
+    virtual bool
+    AnswerNPP_ClearSiteData(const nsCString& aSite,
+                            const uint64_t& aFlags,
+                            const uint64_t& aMaxAge,
+                            NPError* aResult);
+
+    virtual bool
+    AnswerNPP_GetSitesWithData(InfallibleTArray<nsCString>* aResult);
+
     virtual void
     ActorDestroy(ActorDestroyReason why);
+
+    NS_NORETURN void QuickExit();
 
 public:
     PluginModuleChild();
@@ -205,8 +222,46 @@ public:
     }
 #endif
 
+    // Quirks mode support for various plugin mime types
+    enum PluginQuirks {
+        QUIRKS_NOT_INITIALIZED                          = 0,
+        // Silverlight assumes it is transparent in windowless mode. This quirk
+        // matches the logic in nsNPAPIPluginInstance::SetWindowless.
+        QUIRK_SILVERLIGHT_DEFAULT_TRANSPARENT           = 1 << 0,
+        // Win32: Hook TrackPopupMenu api so that we can swap out parent
+        // hwnds. The api will fail with parents not associated with our
+        // child ui thread. See WinlessHandleEvent for details.
+        QUIRK_WINLESS_TRACKPOPUP_HOOK                   = 1 << 1,
+        // Win32: Throttle flash WM_USER+1 heart beat messages to prevent
+        // flooding chromium's dispatch loop, which can cause ipc traffic
+        // processing lag.
+        QUIRK_FLASH_THROTTLE_WMUSER_EVENTS              = 1 << 2,
+        // Win32: Catch resets on our subclass by hooking SetWindowLong.
+        QUIRK_FLASH_HOOK_SETLONGPTR                     = 1 << 3,
+        // X11: Work around a bug in Flash up to 10.1 d51 at least, where
+        // expose event top left coordinates within the plugin-rect and
+        // not at the drawable origin are misinterpreted.
+        QUIRK_FLASH_EXPOSE_COORD_TRANSLATION            = 1 << 4,
+        // Win32: Catch get window info calls on the browser and tweak the
+        // results so mouse input works when flash is displaying it's settings
+        // window.
+        QUIRK_FLASH_HOOK_GETWINDOWINFO                  = 1 << 5,
+        // Win: Addresses a flash bug with mouse capture and full screen
+        // windows.
+        QUIRK_FLASH_FIXUP_MOUSE_CAPTURE                 = 1 << 6,
+    };
+
+    int GetQuirks() { return mQuirks; }
+    void AddQuirk(PluginQuirks quirk) {
+      if (mQuirks == QUIRKS_NOT_INITIALIZED)
+        mQuirks = 0;
+      mQuirks |= quirk;
+    }
+
 private:
+    void InitQuirksModes(const nsCString& aMimeType);
     bool InitGraphics();
+    void DeinitGraphics();
 #if defined(MOZ_WIDGET_GTK2)
     static gboolean DetectNestedEventLoop(gpointer data);
     static gboolean ProcessBrowserEvents(gpointer data);
@@ -226,6 +281,7 @@ private:
     std::string mPluginFilename;
     PRLibrary* mLibrary;
     nsCString mUserAgent;
+    int mQuirks;
 
     // we get this from the plugin
     NP_PLUGINSHUTDOWN mShutdownFunc;

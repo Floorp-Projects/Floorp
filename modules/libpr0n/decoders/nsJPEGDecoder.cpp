@@ -115,6 +115,8 @@ nsJPEGDecoder::nsJPEGDecoder()
   mInProfile = nsnull;
   mTransform = nsnull;
 
+  mCMSMode = 0;
+
   PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
          ("nsJPEGDecoder::nsJPEGDecoder: Creating JPEG decoder %p",
           this));
@@ -141,6 +143,10 @@ nsJPEGDecoder::~nsJPEGDecoder()
 void
 nsJPEGDecoder::InitInternal()
 {
+  mCMSMode = gfxPlatform::GetCMSMode();
+  if ((mDecodeFlags & DECODER_NO_COLORSPACE_CONVERSION) != 0)
+    mCMSMode = eCMSMode_Off;
+
   /* We set up the normal JPEG error routines, then override error_exit. */
   mInfo.err = jpeg_std_error(&mErr.pub);
   /*   mInfo.err = jpeg_std_error(&mErr.pub); */
@@ -244,9 +250,8 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     /* We're doing a full decode. */
     JOCTET  *profile;
     PRUint32 profileLength;
-    eCMSMode cmsMode = gfxPlatform::GetCMSMode();
 
-    if ((cmsMode != eCMSMode_Off) &&
+    if ((mCMSMode != eCMSMode_Off) &&
         read_icc_profile(&mInfo, &profile, &profileLength) &&
         (mInProfile = qcms_profile_from_memory(profile, profileLength)) != NULL) {
       free(profile);
@@ -412,7 +417,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     }
 
     /* Force to use our YCbCr to Packed RGB converter when possible */
-    if (!mTransform && (gfxPlatform::GetCMSMode() != eCMSMode_All) &&
+    if (!mTransform && (mCMSMode != eCMSMode_All) &&
         mInfo.jpeg_color_space == JCS_YCbCr && mInfo.out_color_space == JCS_RGB) {
       /* Special case for the most common case: transform from YCbCr direct into packed ARGB */
       mInfo.out_color_components = 4; /* Packed ARGB pixels are always 4 bytes...*/
@@ -607,7 +612,7 @@ nsJPEGDecoder::OutputScanlines(PRBool* suspend)
           cmyk_convert_rgb((JSAMPROW)imageRow, mInfo.output_width);
           sampleRow += mInfo.output_width;
         }
-        if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
+        if (mCMSMode == eCMSMode_All) {
           /* No embedded ICC profile - treat as sRGB */
           qcms_transform *transform = gfxPlatform::GetCMSRGBTransform();
           if (transform) {

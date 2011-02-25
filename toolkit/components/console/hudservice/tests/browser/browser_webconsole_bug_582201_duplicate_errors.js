@@ -87,8 +87,7 @@ var consoleObserver = {
           "no duplicate for fooDuplicateError1");
       }
 
-      ok(text.indexOf("test-duplicate-error.html") > -1,
-        "found test-duplicate-error.html");
+      findLogEntry("test-duplicate-error.html");
 
       finishTest();
     });

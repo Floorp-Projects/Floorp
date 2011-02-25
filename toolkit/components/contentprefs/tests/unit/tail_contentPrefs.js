@@ -35,3 +35,4 @@
  * ***** END LICENSE BLOCK ***** */
 
 ContentPrefTest.deleteDatabase();
+ContentPrefTest.__dirSvc = null;

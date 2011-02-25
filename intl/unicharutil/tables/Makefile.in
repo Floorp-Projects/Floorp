@@ -56,6 +56,11 @@ ifdef MOZ_MATHML
 _PROP_TABLES += mathml20.properties
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT), qt)
+CFLAGS          += $(MOZ_QT_CFLAGS)
+CXXFLAGS        += $(MOZ_QT_CFLAGS)
+endif
+
 libs:: $(_PROP_TABLES)
 	$(INSTALL) $^ $(DIST)/bin/res/entityTables
 

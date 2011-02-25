@@ -51,7 +51,7 @@ interface nsIVariant;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBCursor for more
  * information.
  */
-[scriptable, uuid(7cb9820f-dd23-49e2-b1df-08543162cf40)]
+[scriptable, uuid(adee4085-68cd-4568-9d74-e3d32b6dc5c5)]
 interface nsIIDBCursor : nsISupports
 {
   const unsigned short NEXT = 0;
@@ -60,25 +60,23 @@ interface nsIIDBCursor : nsISupports
   const unsigned short PREV_NO_DUPLICATE = 3;
   readonly attribute unsigned short direction;
 
+  readonly attribute nsISupports source;
+
   readonly attribute nsIVariant key;
 
   [implicit_jscontext]
-  readonly attribute jsval value;
+  readonly attribute jsval primaryKey;
 
-  // Returns true always for non-preloaded cursors. Calling continue means that
-  // the same onsuccess function will be called again with the new key/value
-  // (or null if no more matches).
-  //
-  // For preloaded cursors returns true if key/value have been set to new
-  // values. If false then no more matches are available and getting the key,
-  // value property will throw, as will calling update() and remove().
-  [implicit_jscontext, optional_argc]
-  boolean continue([optional /* undefined */] in jsval key);
+  // Calling continue means that the same onsuccess function will be called
+  // again with the new key/value (or null if no more matches).
+  [implicit_jscontext]
+  void continue([optional /* undefined */] in jsval key);
 
   // Success fires IDBTransactionEvent, result == key
   [implicit_jscontext]
   nsIIDBRequest update(in jsval value);
 
   // Success fires IDBTransactionEvent, result == null
+  [implicit_jscontext]
   nsIIDBRequest delete();
 };

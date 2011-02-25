@@ -100,7 +100,7 @@ def run_setup(with_binary):
     )
 
 try:
-    run_setup(True)
+    run_setup(False)
 except BuildFailed:
     BUILD_EXT_WARNING = "WARNING: The C extension could not be compiled, speedups are not enabled."
     print '*' * 75

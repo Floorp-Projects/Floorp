@@ -398,7 +398,7 @@ CookieDatabaseConnection.prototype =
 {
   insertCookie: function(cookie)
   {
-    if (!cookie instanceof Cookie)
+    if (!(cookie instanceof Cookie))
       do_throw("not a cookie");
 
     switch (this.schema)
@@ -461,7 +461,7 @@ CookieDatabaseConnection.prototype =
 
   deleteCookie: function(cookie)
   {
-    if (!cookie instanceof Cookie)
+    if (!(cookie instanceof Cookie))
       do_throw("not a cookie");
 
     switch (this.db.schemaVersion)
@@ -487,7 +487,7 @@ CookieDatabaseConnection.prototype =
 
   updateCookie: function(cookie)
   {
-    if (!cookie instanceof Cookie)
+    if (!(cookie instanceof Cookie))
       do_throw("not a cookie");
 
     switch (this.db.schemaVersion)

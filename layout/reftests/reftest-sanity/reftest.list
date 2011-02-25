@@ -78,3 +78,10 @@ include urlprefixtests.list
 != page-height-2in.html page-height-2.1in.html
 == page-height-2in.html page-height-nobreak.html
 == page-height-2.1in.html page-height-forcebreak.html
+
+# Check that tests that need focus are skipped when it's not available
+needs-focus load needs-focus.html
+
+# Bug 632636
+fails == data:text/plain,HELLO about:blank
+needs-focus == data:text/plain, about:blank

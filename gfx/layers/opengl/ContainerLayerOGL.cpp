@@ -57,6 +57,7 @@ ContainerInsertAfter(Container* aContainer, Layer* aChild, Layer* aAfter)
       aContainer->mLastChild = aChild;
     }
     NS_ADDREF(aChild);
+    aContainer->DidInsertChild(aChild);
     return;
   }
   for (Layer *child = aContainer->GetFirstChild(); 
@@ -72,6 +73,7 @@ ContainerInsertAfter(Container* aContainer, Layer* aChild, Layer* aAfter)
       }
       aChild->SetPrevSibling(child);
       NS_ADDREF(aChild);
+      aContainer->DidInsertChild(aChild);
       return;
     }
   }
@@ -92,6 +94,7 @@ ContainerRemoveChild(Container* aContainer, Layer* aChild)
     aChild->SetNextSibling(nsnull);
     aChild->SetPrevSibling(nsnull);
     aChild->SetParent(nsnull);
+    aContainer->DidRemoveChild(aChild);
     NS_RELEASE(aChild);
     return;
   }
@@ -109,6 +112,7 @@ ContainerRemoveChild(Container* aContainer, Layer* aChild)
       child->SetNextSibling(nsnull);
       child->SetPrevSibling(nsnull);
       child->SetParent(nsnull);
+      aContainer->DidRemoveChild(aChild);
       NS_RELEASE(aChild);
       return;
     }
@@ -138,6 +142,16 @@ GetNextSibling(LayerOGL* aLayer)
                  : nsnull;
 }
 
+static PRBool
+HasOpaqueAncestorLayer(Layer* aLayer)
+{
+  for (Layer* l = aLayer->GetParent(); l; l = l->GetParent()) {
+    if (l->GetContentFlags() & Layer::CONTENT_OPAQUE)
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 template<class Container>
 static void
 ContainerRender(Container* aContainer,
@@ -156,26 +170,63 @@ ContainerRender(Container* aContainer,
 
   nsIntRect cachedScissor = aContainer->gl()->ScissorRect();
   aContainer->gl()->PushScissorRect();
+  aContainer->mSupportsComponentAlphaChildren = PR_FALSE;
 
   float opacity = aContainer->GetEffectiveOpacity();
   const gfx3DMatrix& transform = aContainer->GetEffectiveTransform();
   bool needsFramebuffer = aContainer->UseIntermediateSurface();
+  gfxMatrix contTransform;
   if (needsFramebuffer) {
-    aManager->CreateFBOWithTexture(visibleRect.width,
-                                   visibleRect.height,
+    LayerManagerOGL::InitMode mode = LayerManagerOGL::InitModeClear;
+    nsIntRect framebufferRect = visibleRect;
+    if (aContainer->GetEffectiveVisibleRegion().GetNumRects() == 1 && 
+        (aContainer->GetContentFlags() & Layer::CONTENT_OPAQUE))
+    {
+      // don't need a background, we're going to paint all opaque stuff
+      aContainer->mSupportsComponentAlphaChildren = PR_TRUE;
+      mode = LayerManagerOGL::InitModeNone;
+    } else {
+      const gfx3DMatrix& transform3D = aContainer->GetEffectiveTransform();
+      gfxMatrix transform;
+      // If we have an opaque ancestor layer, then we can be sure that
+      // all the pixels we draw into are either opaque already or will be
+      // covered by something opaque. Otherwise copying up the background is
+      // not safe.
+      if (HasOpaqueAncestorLayer(aContainer) &&
+          transform3D.Is2D(&transform) && !transform.HasNonIntegerTranslation()) {
+        mode = LayerManagerOGL::InitModeCopy;
+        framebufferRect.x += transform.x0;
+        framebufferRect.y += transform.y0;
+        aContainer->mSupportsComponentAlphaChildren = PR_TRUE;
+      }
+    }
+
+    aContainer->gl()->fScissor(0, 0, visibleRect.width, visibleRect.height);
+    framebufferRect -= childOffset; 
+    if (!aPreviousFrameBuffer) {
+      aContainer->gl()->FixWindowCoordinateRect(framebufferRect,
+                                                aManager->GetWigetSize().height);
+    }
+    aManager->CreateFBOWithTexture(framebufferRect,
+                                   mode,
                                    &frameBuffer,
                                    &containerSurface);
     childOffset.x = visibleRect.x;
     childOffset.y = visibleRect.y;
 
     aContainer->gl()->PushViewportRect();
-    aManager->SetupPipeline(visibleRect.width, visibleRect.height);
+    aManager->SetupPipeline(visibleRect.width, visibleRect.height,
+                            LayerManagerOGL::DontApplyWorldTransform);
 
-    aContainer->gl()->fScissor(0, 0, visibleRect.width, visibleRect.height);
-    aContainer->gl()->fClearColor(0.0, 0.0, 0.0, 0.0);
-    aContainer->gl()->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
   } else {
     frameBuffer = aPreviousFrameBuffer;
+    aContainer->mSupportsComponentAlphaChildren = (aContainer->GetContentFlags() & Layer::CONTENT_OPAQUE) ||
+      (aContainer->GetParent() && aContainer->GetParent()->SupportsComponentAlphaChildren());
+#ifdef DEBUG
+    PRBool is2d =
+#endif
+    transform.Is2D(&contTransform);
+    NS_ASSERTION(is2d, "Transform must be 2D");
   }
 
   /**
@@ -197,24 +248,34 @@ ContainerRender(Container* aContainer,
         continue;
       }
       scissorRect = *clipRect;
+      if (!needsFramebuffer) {
+        gfxRect r(scissorRect.x, scissorRect.y, scissorRect.width, scissorRect.height);
+        gfxRect trScissor = contTransform.TransformBounds(r);
+        trScissor.Round();
+        if (!gfxUtils::GfxRectToIntRect(trScissor, &scissorRect)) {
+          scissorRect = visibleRect;
+        }
+      }
     }
 
     if (needsFramebuffer) {
       scissorRect.MoveBy(- visibleRect.TopLeft());
-    } else {
-      if (!aPreviousFrameBuffer) {
-        /**
-         * glScissor coordinates are oriented with 0,0 being at the bottom left,
-         * the opposite to layout (0,0 at the top left).
-         * All rendering to an FBO is upside-down, making the coordinate systems
-         * match.
-         * When rendering directly to a window (No current or previous FBO),
-         * we need to flip the scissor rect.
-         */
-        aContainer->gl()->FixWindowCoordinateRect(scissorRect,
-                                                  aManager->GetWigetSize().height);
-      }
+    }
 
+    if (aManager->IsDrawingFlipped()) {
+      /**
+       * glScissor coordinates are oriented with 0,0 being at the bottom left,
+       * the opposite to layout (0,0 at the top left).
+       * All rendering to an FBO is upside-down, making the coordinate systems
+       * match.
+       * When rendering directly to a window (No current or previous FBO),
+       * we need to flip the scissor rect.
+       */
+      aContainer->gl()->FixWindowCoordinateRect(scissorRect,
+                                                aContainer->gl()->ViewportRect().height);
+    }
+    
+    if (clipRect && !needsFramebuffer) {
       scissorRect.IntersectRect(scissorRect, cachedScissor);
     }
 
@@ -234,6 +295,7 @@ ContainerRender(Container* aContainer,
     }
 
     layerToRender->RenderLayer(frameBuffer, childOffset);
+    aContainer->gl()->MakeCurrent();
   }
 
   aContainer->gl()->PopScissorRect();
@@ -244,7 +306,8 @@ ContainerRender(Container* aContainer,
     // Restore the viewport
     aContainer->gl()->PopViewportRect();
     nsIntRect viewport = aContainer->gl()->ViewportRect();
-    aManager->SetupPipeline(viewport.width, viewport.height);
+    aManager->SetupPipeline(viewport.width, viewport.height,
+                            LayerManagerOGL::ApplyWorldTransform);
 
     aContainer->gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
     aContainer->gl()->fDeleteFramebuffers(1, &frameBuffer);

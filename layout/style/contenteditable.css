@@ -38,10 +38,6 @@
 
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 
-[contenteditable=""], [contenteditable="true"] {
-  -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#editor");
-}
-
 *|*::-moz-canvas {
   cursor: text;
 }

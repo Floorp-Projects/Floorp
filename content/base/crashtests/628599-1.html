@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+var w;
+
+function b1()
+{
+  w = window.open("404.gif", "w2", "f");
+  setTimeout(b2, 1200);
+}
+
+function b2()
+{
+  w.close();
+  setTimeout(b3, 500);
+}
+
+function b3()
+{
+  w.location = "data:text/html,2";
+  document.body.appendChild(document.createTextNode("Done"));
+}
+
+</script>
+</head>
+<body>
+<div><button onclick="b1();">Start test</button></div>
+</body>
+</html>

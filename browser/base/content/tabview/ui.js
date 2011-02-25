@@ -25,6 +25,7 @@
  * Ehsan Akhgari <ehsan@mozilla.com>
  * Raymond Lee <raymond@appcoast.com>
  * Sean Dunn <seanedunn@yahoo.com>
+ * Tim Taubert <tim.taubert@gmx.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,40 +50,55 @@ let Keys = { meta: false };
 // Class: UI
 // Singleton top-level UI manager.
 let UI = {
+  // Constant: DBLCLICK_INTERVAL
+  // Defines the maximum time (in ms) between two clicks for it to count as
+  // a double click.
+  DBLCLICK_INTERVAL: 500,
+
+  // Constant: DBLCLICK_OFFSET
+  // Defines the maximum offset (in pixels) between two clicks for it to count as
+  // a double click.
+  DBLCLICK_OFFSET: 5,
+
   // Variable: _frameInitialized
   // True if the Tab View UI frame has been initialized.
   _frameInitialized: false,
 
   // Variable: _pageBounds
   // Stores the page bounds.
-  _pageBounds : null,
+  _pageBounds: null,
 
   // Variable: _closedLastVisibleTab
   // If true, the last visible tab has just been closed in the tab strip.
-  _closedLastVisibleTab : false,
+  _closedLastVisibleTab: false,
 
   // Variable: _closedSelectedTabInTabView
   // If true, a select tab has just been closed in TabView.
-  _closedSelectedTabInTabView : false,
+  _closedSelectedTabInTabView: false,
 
   // Variable: restoredClosedTab
   // If true, a closed tab has just been restored.
-  restoredClosedTab : false,
+  restoredClosedTab: false,
 
   // Variable: _reorderTabItemsOnShow
   // Keeps track of the <GroupItem>s which their tab items' tabs have been moved
   // and re-orders the tab items when switching to TabView.
-  _reorderTabItemsOnShow : [],
+  _reorderTabItemsOnShow: [],
 
   // Variable: _reorderTabsOnHide
   // Keeps track of the <GroupItem>s which their tab items have been moved in
   // TabView UI and re-orders the tabs when switcing back to main browser.
-  _reorderTabsOnHide : [],
+  _reorderTabsOnHide: [],
 
   // Variable: _currentTab
   // Keeps track of which xul:tab we are currently on.
   // Used to facilitate zooming down from a previous tab.
-  _currentTab : null,
+  _currentTab: null,
+
+  // Variable: _lastClick
+  // Keeps track of the time of last click event to detect double click.
+  // Used to create tabs on double-click since we cannot attach 'dblclick'
+  _lastClick: 0,
 
   // Variable: _eventListeners
   // Keeps track of event listeners added to the AllTabs object.
@@ -100,14 +116,16 @@ let UI = {
 
   // Variable: _privateBrowsing
   // Keeps track of info related to private browsing, including: 
-  //   transitionStage - what step we're on in entering/exiting PB
   //   transitionMode - whether we're entering or exiting PB
   //   wasInTabView - whether TabView was visible before we went into PB
   _privateBrowsing: {
-    transitionStage: 0,
     transitionMode: "",
     wasInTabView: false 
   },
+  
+  // Variable: _storageBusyCount
+  // Used to keep track of how many calls to storageBusy vs storageReady.
+  _storageBusyCount: 0,
 
   // ----------
   // Function: init
@@ -149,15 +167,41 @@ let UI = {
               element.blur();
           });
         }
-        if (e.originalTarget.id == "content")
-          self._createGroupItemOnDrag(e)
+        if (e.originalTarget.id == "content") {
+          // Create an orphan tab on double click
+          if (Date.now() - self._lastClick <= self.DBLCLICK_INTERVAL && 
+              (self._lastClickPositions.x - self.DBLCLICK_OFFSET) <= e.clientX &&
+              (self._lastClickPositions.x + self.DBLCLICK_OFFSET) >= e.clientX &&
+              (self._lastClickPositions.y - self.DBLCLICK_OFFSET) <= e.clientY &&
+              (self._lastClickPositions.y + self.DBLCLICK_OFFSET) >= e.clientY) {
+            GroupItems.setActiveGroupItem(null);
+            TabItems.creatingNewOrphanTab = true;
+
+            let newTab = 
+              gBrowser.loadOneTab("about:blank", { inBackground: true });
+
+            let box = 
+              new Rect(e.clientX - Math.floor(TabItems.tabWidth/2),
+                       e.clientY - Math.floor(TabItems.tabHeight/2),
+                       TabItems.tabWidth, TabItems.tabHeight);
+            newTab._tabViewTabItem.setBounds(box, true);
+            newTab._tabViewTabItem.pushAway(true);
+            GroupItems.setActiveOrphanTab(newTab._tabViewTabItem);
+
+            TabItems.creatingNewOrphanTab = false;
+            newTab._tabViewTabItem.zoomIn(true);
+
+            self._lastClick = 0;
+            self._lastClickPositions = null;
+            gTabView.firstUseExperienced = true;
+          } else {
+            self._lastClick = Date.now();
+            self._lastClickPositions = new Point(e.clientX, e.clientY);
+            self._createGroupItemOnDrag(e);
+          }
+        }
       });
 
-      iQ(window).bind("beforeunload", function() {
-        Array.forEach(gBrowser.tabs, function(tab) {
-          gBrowser.showTab(tab);
-        });
-      });
       iQ(window).bind("unload", function() {
         self.uninit();
       });
@@ -172,25 +216,17 @@ let UI = {
       // ___ add tab action handlers
       this._addTabActionHandlers();
 
-      // ___ Storage
-      GroupItems.pauseArrange();
+      // ___ groups
       GroupItems.init();
-
-      let firstTime = true;
-      if (gPrefBranch.prefHasUserValue("experienced_first_run"))
-        firstTime = !gPrefBranch.getBoolPref("experienced_first_run");
-      let groupItemsData = Storage.readGroupItemsData(gWindow);
-      let groupItemData = Storage.readGroupItemData(gWindow);
-      GroupItems.reconstitute(groupItemsData, groupItemData);
-      GroupItems.killNewTabGroup(); // temporary?
+      GroupItems.pauseArrange();
+      let hasGroupItemsData = GroupItems.load();
 
       // ___ tabs
       TabItems.init();
       TabItems.pausePainting();
 
-      // if first time in Panorama or no group data:
-      if (firstTime || !groupItemsData || Utils.isEmptyObject(groupItemsData))
-        this.reset(firstTime);
+      if (!hasGroupItemsData)
+        this.reset();
 
       // ___ resizing
       if (this._pageBounds)
@@ -203,18 +239,19 @@ let UI = {
       });
 
       // ___ setup observer to save canvas images
-      var observer = {
-        observe : function(subject, topic, data) {
-          if (topic == "quit-application-requested") {
-            if (self.isTabViewVisible()) {
-              GroupItems.removeHiddenGroups();
-              TabItems.saveAll(true);
-            }
-            self._save();
-          }
+      function domWinClosedObserver(subject, topic, data) {
+        if (topic == "domwindowclosed" && subject == gWindow) {
+          if (self.isTabViewVisible())
+            GroupItems.removeHiddenGroups();
+          TabItems.saveAll(true);
+          self._save();
         }
-      };
-      Services.obs.addObserver(observer, "quit-application-requested", false);
+      }
+      Services.obs.addObserver(
+        domWinClosedObserver, "domwindowclosed", false);
+      this._cleanupFunctions.push(function() {
+        Services.obs.removeObserver(domWinClosedObserver, "domwindowclosed");
+      });
 
       // ___ Done
       this._frameInitialized = true;
@@ -237,7 +274,6 @@ let UI = {
     this._cleanupFunctions.forEach(function(func) {
       func();
     });
-
     this._cleanupFunctions = [];
 
     // additional clean up
@@ -259,8 +295,7 @@ let UI = {
 
   // Function: reset
   // Resets the Panorama view to have just one group with all tabs
-  // and, if firstTime == true, add the welcome video/tab
-  reset: function UI_reset(firstTime) {
+  reset: function UI_reset() {
     let padding = Trenches.defaultRadius;
     let welcomeWidth = 300;
     let pageBounds = Items.getPageBounds();
@@ -295,25 +330,9 @@ let UI = {
     items.forEach(function(item) {
       if (item.parent)
         item.parent.remove(item);
-      groupItem.add(item, null, {immediately: true});
+      groupItem.add(item, {immediately: true});
     });
-    
-    if (firstTime) {
-      gPrefBranch.setBoolPref("experienced_first_run", true);
-
-      let url = gPrefBranch.getCharPref("welcome_url");
-      let newTab = gBrowser.loadOneTab(url, {inBackground: true});
-      let newTabItem = newTab.tabItem;
-      let parent = newTabItem.parent;
-      Utils.assert(parent, "should have a parent");
-
-      newTabItem.parent.remove(newTabItem);
-      let aspect = TabItems.tabHeight / TabItems.tabWidth;
-      let welcomeBounds = new Rect(UI.rtl ? pageBounds.left : box.right, box.top,
-                                   welcomeWidth, welcomeWidth * aspect);
-      newTabItem.setBounds(welcomeBounds, true);
-      GroupItems.setActiveGroupItem(groupItem);
-    }
+    GroupItems.setActiveGroupItem(groupItem);
   },
 
   // Function: blurAll
@@ -354,20 +373,21 @@ let UI = {
   //
   // Parameters:
   //  - Takes a <TabItem>
-  setActiveTab: function UI_setActiveTab(tab) {
-    if (tab == this._activeTab)
+  setActiveTab: function UI_setActiveTab(tabItem) {
+    if (tabItem == this._activeTab)
       return;
 
     if (this._activeTab) {
       this._activeTab.makeDeactive();
       this._activeTab.removeSubscriber(this, "close");
     }
-    this._activeTab = tab;
+    this._activeTab = tabItem;
 
     if (this._activeTab) {
-      var self = this;
-      this._activeTab.addSubscriber(this, "close", function() {
-        self._activeTab = null;
+      let self = this;
+      this._activeTab.addSubscriber(this, "close", function(closedTabItem) {
+        if (self._activeTab == closedTabItem)
+          self.setActiveTab(null);
       });
 
       this._activeTab.makeActive();
@@ -418,46 +438,62 @@ let UI = {
     gTabViewFrame.style.marginTop = "";
 #endif
     gTabViewDeck.selectedIndex = 1;
+    gWindow.TabsInTitlebar.allowedBy("tabview-open", false);
     gTabViewFrame.contentWindow.focus();
 
     gBrowser.updateTitlebar();
 #ifdef XP_MACOSX
-    this._setActiveTitleColor(true);
+    this.setTitlebarColors(true);
 #endif
     let event = document.createEvent("Events");
     event.initEvent("tabviewshown", true, false);
 
-    if (zoomOut && currentTab && currentTab.tabItem) {
-      item = currentTab.tabItem;
+    Storage.saveVisibilityData(gWindow, "true");
+
+    // Close the active group if it was empty. This will happen when the
+    // user returns to Panorama after looking at an app tab, having
+    // closed all other tabs. (If the user is looking at an orphan tab, then
+    // there is no active group for the purposes of this check.)
+    let activeGroupItem = null;
+    if (!GroupItems.getActiveOrphanTab()) {
+      activeGroupItem = GroupItems.getActiveGroupItem();
+      if (activeGroupItem && activeGroupItem.closeIfEmpty())
+        activeGroupItem = null;
+    }
+
+    if (zoomOut && currentTab && currentTab._tabViewTabItem) {
+      item = currentTab._tabViewTabItem;
       // If there was a previous currentTab we want to animate
       // its thumbnail (canvas) for the zoom out.
       // Note that we start the animation on the chrome thread.
 
       // Zoom out!
       item.zoomOut(function() {
-        if (!currentTab.tabItem) // if the tab's been destroyed
+        if (!currentTab._tabViewTabItem) // if the tab's been destroyed
           item = null;
 
         self.setActiveTab(item);
 
-        if (item.parent) {
-          var activeGroupItem = GroupItems.getActiveGroupItem();
-          if (activeGroupItem)
-            activeGroupItem.setTopChild(item);
-        }
+        if (activeGroupItem && item.parent)
+          activeGroupItem.setTopChild(item);
 
         self._resize(true);
         dispatchEvent(event);
+
+        // Flush pending updates
+        GroupItems.flushAppTabUpdates();
+
+        TabItems.resumePainting();
       });
     } else {
-      if (currentTab && currentTab.tabItem)
-        currentTab.tabItem.setZoomPrep(false);
-
       self.setActiveTab(null);
       dispatchEvent(event);
-    }
 
-    TabItems.resumePainting();
+      // Flush pending updates
+      GroupItems.flushAppTabUpdates();
+
+      TabItems.resumePainting();
+    }
   },
 
   // ----------
@@ -484,12 +520,15 @@ let UI = {
     gTabViewFrame.style.marginTop = gBrowser.boxObject.y + "px";
 #endif
     gTabViewDeck.selectedIndex = 0;
+    gWindow.TabsInTitlebar.allowedBy("tabview-open", true);
     gBrowser.contentWindow.focus();
 
     gBrowser.updateTitlebar();
 #ifdef XP_MACOSX
-    this._setActiveTitleColor(false);
+    this.setTitlebarColors(false);
 #endif
+    Storage.saveVisibilityData(gWindow, "false");
+
     let event = document.createEvent("Events");
     event.initEvent("tabviewhidden", true, false);
     dispatchEvent(event);
@@ -497,21 +536,59 @@ let UI = {
 
 #ifdef XP_MACOSX
   // ----------
-  // Function: _setActiveTitleColor
+  // Function: setTitlebarColors
   // Used on the Mac to make the title bar match the gradient in the rest of the
   // TabView UI.
   //
   // Parameters:
-  //   set - true for the special TabView color, false for the normal color.
-  _setActiveTitleColor: function UI__setActiveTitleColor(set) {
+  //   colors - (bool or object) true for the special TabView color, false for
+  //         the normal color, and an object with "active" and "inactive"
+  //         properties to specify directly.
+  setTitlebarColors: function UI_setTitlebarColors(colors) {
     // Mac Only
     var mainWindow = gWindow.document.getElementById("main-window");
-    if (set)
+    if (colors === true) {
       mainWindow.setAttribute("activetitlebarcolor", "#C4C4C4");
-    else
+      mainWindow.setAttribute("inactivetitlebarcolor", "#EDEDED");
+    } else if (colors && "active" in colors && "inactive" in colors) {
+      mainWindow.setAttribute("activetitlebarcolor", colors.active);
+      mainWindow.setAttribute("inactivetitlebarcolor", colors.inactive);
+    } else {
       mainWindow.removeAttribute("activetitlebarcolor");
+      mainWindow.removeAttribute("inactivetitlebarcolor");
+    }
   },
 #endif
+
+  // ----------
+  // Function: storageBusy
+  // Pauses the storage activity that conflicts with sessionstore updates and 
+  // private browsing mode switches. Calls can be nested. 
+  storageBusy: function UI_storageBusy() {
+    if (!this._storageBusyCount) {
+      TabItems.pauseReconnecting();
+      GroupItems.pauseAutoclose();
+    }
+    
+    this._storageBusyCount++;
+  },
+  
+  // ----------
+  // Function: storageReady
+  // Resumes the activity paused by storageBusy, and updates for any new group
+  // information in sessionstore. Calls can be nested. 
+  storageReady: function UI_storageReady() {
+    this._storageBusyCount--;
+    if (!this._storageBusyCount) {
+      let hasGroupItemsData = GroupItems.load();
+      if (!hasGroupItemsData)
+        this.reset();
+  
+      TabItems.resumeReconnecting();
+      GroupItems._updateTabBar();
+      GroupItems.resumeAutoclose();
+    }
+  },
 
   // ----------
   // Function: _addTabActionHandlers
@@ -519,45 +596,33 @@ let UI = {
   _addTabActionHandlers: function UI__addTabActionHandlers() {
     var self = this;
 
-    // session restore
-    function srObserver(aSubject, aTopic, aData) {
-      if (aTopic != "sessionstore-browser-state-restored")
-        return;
-        
-      // if we're transitioning into/out of private browsing, update appropriately
-      if (self._privateBrowsing.transitionStage == 1)
-        self._privateBrowsing.transitionStage = 2;
-      else if (self._privateBrowsing.transitionStage == 3) {
-        if (self._privateBrowsing.transitionMode == "exit" &&
-            self._privateBrowsing.wasInTabView)
-          self.showTabView(false);
-
-        self._privateBrowsing.transitionStage = 0;
-        self._privateBrowsing.transitionMode = "";
-      }
+    // session restore events
+    function handleSSWindowStateBusy() {
+      self.storageBusy();
     }
-
-    Services.obs.addObserver(srObserver, "sessionstore-browser-state-restored", false);
+    
+    function handleSSWindowStateReady() {
+      self.storageReady();
+    }
+    
+    gWindow.addEventListener("SSWindowStateBusy", handleSSWindowStateBusy, false);
+    gWindow.addEventListener("SSWindowStateReady", handleSSWindowStateReady, false);
 
     this._cleanupFunctions.push(function() {
-      Services.obs.removeObserver(srObserver, "sessionstore-browser-state-restored");
+      gWindow.removeEventListener("SSWindowStateBusy", handleSSWindowStateBusy, false);
+      gWindow.removeEventListener("SSWindowStateReady", handleSSWindowStateReady, false);
     });
 
     // Private Browsing:
-    // We keep track of the transition to/from PB with the transitionStage
-    // and transitionMode properties of _privateBrowsing. The stage is 0 if
-    // not transitioning, 1 if just started ("change-granted"), 2 after the
-    // first sessionrestore, 3 after the "private-browsing" notification, and
-    // then back to 0 after the second sessionrestore. The mode is "" if not
-    // transitioning, otherwise it's "enter" or "exit" as appropriate. When
-    // transitioning to PB, we exit Panorama if necessary (making note of the
+    // When transitioning to PB, we exit Panorama if necessary (making note of the
     // fact that we were there so we can return after PB) and make sure we
     // don't reenter Panorama due to all of the session restore tab
     // manipulation (which otherwise we might). When transitioning away from
     // PB, we reenter Panorama if we had been there directly before PB.
     function pbObserver(aSubject, aTopic, aData) {
       if (aTopic == "private-browsing") {
-        self._privateBrowsing.transitionStage = 3;
+        // We could probably do this in private-browsing-change-granted, but
+        // this seems like a nicer spot, right in the middle of the process.
         if (aData == "enter") {
           // If we are in Tab View, exit. 
           self._privateBrowsing.wasInTabView = self.isTabViewVisible();
@@ -566,18 +631,28 @@ let UI = {
         }
       } else if (aTopic == "private-browsing-change-granted") {
         if (aData == "enter" || aData == "exit") {
-          self._privateBrowsing.transitionStage = 1;
           self._privateBrowsing.transitionMode = aData;
+          self.storageBusy();
         }
+      } else if (aTopic == "private-browsing-transition-complete") {
+        // We use .transitionMode here, as aData is empty.
+        if (self._privateBrowsing.transitionMode == "exit" &&
+            self._privateBrowsing.wasInTabView)
+          self.showTabView(false);
+
+        self._privateBrowsing.transitionMode = "";
+        self.storageReady();
       }
     }
 
     Services.obs.addObserver(pbObserver, "private-browsing", false);
     Services.obs.addObserver(pbObserver, "private-browsing-change-granted", false);
+    Services.obs.addObserver(pbObserver, "private-browsing-transition-complete", false);
 
     this._cleanupFunctions.push(function() {
       Services.obs.removeObserver(pbObserver, "private-browsing");
       Services.obs.removeObserver(pbObserver, "private-browsing-change-granted");
+      Services.obs.removeObserver(pbObserver, "private-browsing-transition-complete");
     });
 
     // TabOpen
@@ -606,7 +681,7 @@ let UI = {
       } else {
         // If we're currently in the process of entering private browsing,
         // we don't want to go to the Tab View UI. 
-        if (self._privateBrowsing.transitionStage > 0)
+        if (self._privateBrowsing.transitionMode)
           return; 
           
         // if not closing the last tab
@@ -625,19 +700,23 @@ let UI = {
           let closingLastOfGroup = (groupItem && 
               groupItem._children.length == 1 && 
               groupItem._children[0].tab == tab);
-          
+
           // 2) Take care of the case where you've closed the last tab in
           // an un-named groupItem, which means that the groupItem is gone (null) and
           // there are no visible tabs. 
           let closingUnnamedGroup = (groupItem == null &&
               gBrowser.visibleTabs.length <= 1); 
-              
-          if (closingLastOfGroup || closingUnnamedGroup) {
+
+          // 3) When a blank tab is active while restoring a closed tab the
+          // blank tab gets removed. The active group is not closed as this is
+          // where the restored tab goes. So do not show the TabView.
+          let closingBlankTabAfterRestore =
+            (tab && tab._tabViewTabIsRemovedAfterRestore);
+
+          if ((closingLastOfGroup || closingUnnamedGroup) &&
+              !closingBlankTabAfterRestore) {
             // for the tab focus event to pick up.
             self._closedLastVisibleTab = true;
-            // remove the zoom prep.
-            if (tab && tab.tabItem)
-              tab.tabItem.setZoomPrep(false);
             self.showTabView();
           }
         }
@@ -678,6 +757,10 @@ let UI = {
 
       TabItems.handleTabUnpin(tab);
       GroupItems.removeAppTab(tab);
+
+      let groupItem = tab._tabViewTabItem.parent;
+      if (groupItem)
+        self.setReorderTabItemsOnShow(groupItem);
     };
 
     // Actually register the above handlers
@@ -746,13 +829,15 @@ let UI = {
     let oldItem = null;
     let newItem = null;
 
-    if (currentTab && currentTab.tabItem)
-      oldItem = currentTab.tabItem;
+    if (currentTab && currentTab._tabViewTabItem)
+      oldItem = currentTab._tabViewTabItem;
 
     // update the tab bar for the new tab's group
-    if (tab && tab.tabItem) {
-      newItem = tab.tabItem;
-      GroupItems.updateActiveGroupItemAndTabBar(newItem);
+    if (tab && tab._tabViewTabItem) {
+      if (!TabItems.reconnectingPaused()) {
+        newItem = tab._tabViewTabItem;
+        GroupItems.updateActiveGroupItemAndTabBar(newItem);
+      }
     } else {
       // No tabItem; must be an app tab. Base the tab bar on the current group.
       // If no current group or orphan tab, figure it out based on what's
@@ -761,7 +846,7 @@ let UI = {
         for (let a = 0; a < gBrowser.tabs.length; a++) {
           let theTab = gBrowser.tabs[a]; 
           if (!theTab.pinned) {
-            let tabItem = theTab.tabItem; 
+            let tabItem = theTab._tabViewTabItem; 
             if (tabItem.parent) 
               GroupItems.setActiveGroupItem(tabItem.parent);
             else 
@@ -775,15 +860,6 @@ let UI = {
       if (GroupItems.getActiveGroupItem() || GroupItems.getActiveOrphanTab())
         GroupItems._updateTabBar();
     }
-
-    // ___ prepare for when we return to TabView
-    if (newItem != oldItem) {
-      if (oldItem)
-        oldItem.setZoomPrep(false);
-      if (newItem)
-        newItem.setZoomPrep(true);
-    } else if (oldItem)
-      oldItem.setZoomPrep(true);
   },
 
   // ----------
@@ -830,16 +906,15 @@ let UI = {
   getClosestTab: function UI_getClosestTab(tabCenter) {
     let cl = null;
     let clDist;
-    for each(item in TabItems.getItems()) {
-      if (item.parent && item.parent.hidden) {
-        continue;
-      }
+    TabItems.getItems().forEach(function (item) {
+      if (item.parent && item.parent.hidden)
+        return;
       let testDist = tabCenter.distance(item.bounds.center());
       if (cl==null || testDist < clDist) {
         cl = item;
         clDist = testDist;
       }
-    }
+    });
     return cl;
   },
 
@@ -898,7 +973,7 @@ let UI = {
       if (norm != null) {
         var nextTab = getClosestTabBy(norm);
         if (nextTab) {
-          if (nextTab.inStack() && !nextTab.parent.expanded)
+          if (nextTab.isStacked && !nextTab.parent.expanded)
             nextTab = nextTab.parent.getChild(0);
           self.setActiveTab(nextTab);
         }
@@ -962,7 +1037,7 @@ let UI = {
   //   event - the event triggers this action.
   enableSearch: function UI_enableSearch(event) {
     if (!isSearchEnabled()) {
-      ensureSearchShown(null);
+      ensureSearchShown();
       SearchEventHandler.switchToInMode();
       
       if (event) {
@@ -985,10 +1060,9 @@ let UI = {
 
     var startPos = { x: e.clientX, y: e.clientY };
     var phantom = iQ("<div>")
-      .addClass("groupItem phantom activeGroupItem")
+      .addClass("groupItem phantom activeGroupItem dragRegion")
       .css({
         position: "absolute",
-        opacity: .7,
         zIndex: -1,
         cursor: "default"
       })
@@ -1005,7 +1079,7 @@ let UI = {
         this.container.css(bounds);
       },
       setZ: function FauxItem_setZ(z) {
-        this.container.css("z-index", z);
+        // don't set a z-index because we want to force it to be low.
       },
       setOpacity: function FauxItem_setOpacity(opacity) {
         this.container.css("opacity", opacity);
@@ -1069,17 +1143,18 @@ let UI = {
 
     function finalize(e) {
       iQ(window).unbind("mousemove", updateSize);
+      item.container.removeClass("dragRegion");
       dragOutInfo.stop();
-      if (phantom.css("opacity") != 1)
-        collapse();
-      else {
+      let box = item.getBounds();
+      if (box.width > minMinSize && box.height > minMinSize &&
+         (box.width > minSize || box.height > minSize)) {
         var bounds = item.getBounds();
 
         // Add all of the orphaned tabs that are contained inside the new groupItem
         // to that groupItem.
         var tabs = GroupItems.getOrphanedTabs();
         var insideTabs = [];
-        for each(tab in tabs) {
+        for each(let tab in tabs) {
           if (bounds.contains(tab.bounds))
             insideTabs.push(tab);
         }
@@ -1088,6 +1163,9 @@ let UI = {
         GroupItems.setActiveGroupItem(groupItem);
         phantom.remove();
         dragOutInfo = null;
+        gTabView.firstUseExperienced = true;
+      } else {
+        collapse();
       }
     }
 
@@ -1104,20 +1182,22 @@ let UI = {
   // Parameters:
   //   force - true to update even when "unnecessary"; default false
   _resize: function UI__resize(force) {
-    if (typeof force == "undefined")
-      force = false;
-
     if (!this._pageBounds)
       return;
 
-    // If TabView isn't focused and is not showing, don't perform a resize.
-    // This resize really slows things down.
+    // Here are reasons why we *won't* resize:
+    // 1. Panorama isn't visible (in which case we will resize when we do display)
+    // 2. the screen dimensions haven't changed
+    // 3. everything on the screen fits and nothing feels cramped
     if (!force && !this.isTabViewVisible())
       return;
 
-    var oldPageBounds = new Rect(this._pageBounds);
-    var newPageBounds = Items.getPageBounds();
+    let oldPageBounds = new Rect(this._pageBounds);
+    let newPageBounds = Items.getPageBounds();
     if (newPageBounds.equals(oldPageBounds))
+      return;
+
+    if (!this.shouldResizeItems())
       return;
 
     var items = Items.getTopLevelItems();
@@ -1129,9 +1209,6 @@ let UI = {
     itemBounds.width = 1;
     itemBounds.height = 1;
     items.forEach(function(item) {
-      if (item.locked.bounds)
-        return;
-
       var bounds = item.getBounds();
       itemBounds = (itemBounds ? itemBounds.union(bounds) : new Rect(bounds));
     });
@@ -1159,9 +1236,6 @@ let UI = {
     var self = this;
     var pairs = [];
     items.forEach(function(item) {
-      if (item.locked.bounds)
-        return;
-
       var bounds = item.getBounds();
       bounds.left += (UI.rtl ? -1 : 1) * (newPageBounds.left - self._pageBounds.left);
       bounds.left *= scale;
@@ -1187,6 +1261,58 @@ let UI = {
     this._pageBounds = Items.getPageBounds();
     this._save();
   },
+  
+  // ----------
+  // Function: shouldResizeItems
+  // Returns whether we should resize the items on the screen, based on whether
+  // the top-level items fit in the screen or not and whether they feel
+  // "cramped" or not.
+  // These computations may be done using cached values. The cache can be
+  // cleared with UI.clearShouldResizeItems().
+  shouldResizeItems: function UI_shouldResizeItems() {
+
+    let newPageBounds = Items.getPageBounds();
+    
+    // If we don't have cached cached values...
+    if (this._minimalRect === undefined || this._feelsCramped === undefined) {
+
+      // Loop through every top-level Item for two operations:
+      // 1. check if it is feeling "cramped" due to squishing (a technical term),
+      // 2. union its bounds with the minimalRect
+      let feelsCramped = false;
+      let minimalRect = new Rect(0, 0, 1, 1);
+      
+      Items.getTopLevelItems()
+        .forEach(function UI_shouldResizeItems_checkItem(item) {
+          let bounds = new Rect(item.getBounds());
+          feelsCramped = feelsCramped || (item.userSize &&
+            (item.userSize.x > bounds.width || item.userSize.y > bounds.height));
+          bounds.inset(-Trenches.defaultRadius, -Trenches.defaultRadius);
+          minimalRect = minimalRect.union(bounds);
+        });
+      
+      // ensure the minimalRect extends to, but not beyond, the origin
+      minimalRect.left = 0;
+      minimalRect.top  = 0;
+  
+      this._minimalRect = minimalRect;
+      this._feelsCramped = feelsCramped;
+    }
+
+    return this._minimalRect.width > newPageBounds.width ||
+      this._minimalRect.height > newPageBounds.height ||
+      this._feelsCramped;
+  },
+  
+  // ----------
+  // Function: clearShouldResizeItems
+  // Clear the cache of whether we should resize the items on the Panorama
+  // screen, forcing a recomputation on the next UI.shouldResizeItems()
+  // call.
+  clearShouldResizeItems: function UI_clearShouldResizeItems() {
+    delete this._minimalRect;
+    delete this._feelsCramped;
+  },
 
   // ----------
   // Function: exit
@@ -1210,21 +1336,24 @@ let UI = {
       let unhiddenGroups = GroupItems.groupItems.filter(function(groupItem) {
         return (!groupItem.hidden && groupItem.getChildren().length > 0);
       });
-      // no visible groups, no orphaned tabs and no apps tabs, open a new group
-      // with a blank tab
-      if (unhiddenGroups.length == 0 && GroupItems.getOrphanedTabs().length == 0 &&
-          gBrowser._numPinnedTabs == 0) {
-        let box = new Rect(20, 20, 250, 200);
-        let groupItem = new GroupItem([], { bounds: box, immediately: true });
-        groupItem.newTab();
-        return;
+      // no pinned tabs, no visible groups and no orphaned tabs: open a new
+      // group. open a blank tab and return
+      if (!unhiddenGroups.length && !GroupItems.getOrphanedTabs().length) {
+        let emptyGroups = GroupItems.groupItems.filter(function (groupItem) {
+          return (!groupItem.hidden && !groupItem.getChildren().length);
+        });
+        let group = (emptyGroups.length ? emptyGroups[0] : GroupItems.newGroup());
+        if (!gBrowser._numPinnedTabs) {
+          group.newTab();
+          return;
+        }
       }
 
       // If there's an active TabItem, zoom into it. If not (for instance when the
       // selected tab is an app tab), just go there.
       let activeTabItem = this.getActiveTab();
       if (!activeTabItem) {
-        let tabItem = gBrowser.selectedTab.tabItem;
+        let tabItem = gBrowser.selectedTab._tabViewTabItem;
         if (tabItem) {
           if (!tabItem.parent || !tabItem.parent.hidden) {
             activeTabItem = tabItem;
@@ -1294,7 +1423,7 @@ let UI = {
     this._save();
     GroupItems.saveAll();
     TabItems.saveAll();
-  },
+  }
 };
 
 // ----------

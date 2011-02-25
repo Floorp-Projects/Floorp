@@ -15,12 +15,13 @@
  *
  * The Original Code is Mozilla code.
  *
- * The Initial Developer of the Original Code is the Mozilla Corporation.
+ * The Initial Developer of the Original Code is
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Chris Double <chris.double@double.co.nz>
+ *   Chris Double <chris.double@double.co.nz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -62,6 +63,12 @@ extern "C" {
 #define SA_PER_STREAM_VOLUME 1
 #endif
 
+// Android's audio backend is not available in content processes, so audio must
+// be remoted to the parent chrome process.
+#if defined(ANDROID) && defined(MOZ_IPC)
+#define REMOTE_AUDIO 1
+#endif
+
 using mozilla::TimeStamp;
 
 #ifdef PR_LOGGING
@@ -78,18 +85,19 @@ class nsAudioStreamLocal : public nsAudioStream
 
   ~nsAudioStreamLocal();
   nsAudioStreamLocal();
-  
+
   nsresult Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat);
   void Shutdown();
   nsresult Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking);
   PRUint32 Available();
-  void SetVolume(float aVolume);
+  void SetVolume(double aVolume);
   void Drain();
   void Pause();
   void Resume();
   PRInt64 GetPosition();
   PRInt64 GetSampleOffset();
   PRBool IsPaused();
+  PRInt32 GetMinWriteSamples();
 
  private:
 
@@ -122,18 +130,19 @@ class nsAudioStreamRemote : public nsAudioStream
 
   nsAudioStreamRemote();
   ~nsAudioStreamRemote();
-  
+
   nsresult Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat);
   void Shutdown();
   nsresult Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking);
   PRUint32 Available();
-  void SetVolume(float aVolume);
+  void SetVolume(double aVolume);
   void Drain();
   void Pause();
   void Resume();
   PRInt64 GetPosition();
   PRInt64 GetSampleOffset();
   PRBool IsPaused();
+  PRInt32 GetMinWriteSamples();
 
   nsRefPtr<AudioChild> mAudioChild;
 
@@ -201,10 +210,10 @@ class AudioWriteEvent : public nsRunnable
 class AudioSetVolumeEvent : public nsRunnable
 {
  public:
-  AudioSetVolumeEvent(AudioChild* aChild, float volume)
+  AudioSetVolumeEvent(AudioChild* aChild, double aVolume)
   {
     mAudioChild = aChild;
-    mVolume = volume;
+    mVolume = aVolume;
   }
 
   NS_IMETHOD Run()
@@ -217,7 +226,7 @@ class AudioSetVolumeEvent : public nsRunnable
   }
   
   nsRefPtr<AudioChild> mAudioChild;
-  float mVolume;
+  double mVolume;
 };
 
 class AudioDrainEvent : public nsRunnable
@@ -279,7 +288,7 @@ class AudioShutdownEvent : public nsRunnable
   NS_IMETHOD Run()
   {
     if (mAudioChild->IsIPCOpen())
-      PAudioChild::Send__delete__(mAudioChild);
+      mAudioChild->SendShutdown();
     return NS_OK;
   }
   
@@ -299,21 +308,40 @@ void nsAudioStream::ShutdownLibrary()
 {
 }
 
-
 nsIThread *
 nsAudioStream::GetThread()
 {
+  if (!mAudioPlaybackThread) {
+    NS_NewThread(getter_AddRefs(mAudioPlaybackThread));
+  }
   return mAudioPlaybackThread;
 }
 
 nsAudioStream* nsAudioStream::AllocateStream()
 {
-#ifdef MOZ_IPC
+#if defined(REMOTE_AUDIO)
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     return new nsAudioStreamRemote();
   }
 #endif
   return new nsAudioStreamLocal();
+}
+
+class AsyncShutdownPlaybackThread : public nsRunnable
+{
+public:
+  AsyncShutdownPlaybackThread(nsIThread* aThread) : mThread(aThread) {}
+  NS_IMETHODIMP Run() { return mThread->Shutdown(); }
+private:
+  nsCOMPtr<nsIThread> mThread;
+};
+
+nsAudioStream::~nsAudioStream()
+{
+  if (mAudioPlaybackThread) {
+    nsCOMPtr<nsIRunnable> event = new AsyncShutdownPlaybackThread(mAudioPlaybackThread);
+    NS_DispatchToMainThread(event);
+  }
 }
 
 nsAudioStreamLocal::nsAudioStreamLocal() :
@@ -325,12 +353,6 @@ nsAudioStreamLocal::nsAudioStreamLocal() :
   mPaused(PR_FALSE),
   mInError(PR_FALSE)
 {
-#ifdef MOZ_IPC
-  // We only need this thread in the main process.
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    NS_NewThread(getter_AddRefs(mAudioPlaybackThread));
-  }
-#endif
 }
 
 nsAudioStreamLocal::~nsAudioStreamLocal()
@@ -476,7 +498,7 @@ PRUint32 nsAudioStreamLocal::Available()
   return s / sizeof(short);
 }
 
-void nsAudioStreamLocal::SetVolume(float aVolume)
+void nsAudioStreamLocal::SetVolume(double aVolume)
 {
   NS_ASSERTION(aVolume >= 0.0 && aVolume <= 1.0, "Invalid volume");
 #if defined(SA_PER_STREAM_VOLUME)
@@ -491,6 +513,8 @@ void nsAudioStreamLocal::SetVolume(float aVolume)
 
 void nsAudioStreamLocal::Drain()
 {
+  NS_ASSERTION(!mPaused, "Don't drain audio when paused, it won't finish!");
+
   if (mInError)
     return;
 
@@ -560,6 +584,19 @@ PRBool nsAudioStreamLocal::IsPaused()
   return mPaused;
 }
 
+PRInt32 nsAudioStreamLocal::GetMinWriteSamples()
+{
+  size_t samples;
+  int r = sa_stream_get_min_write(static_cast<sa_stream_t*>(mAudioHandle),
+                                  &samples);
+  if (r == SA_ERROR_NOT_SUPPORTED)
+    return 1;
+  else if (r != SA_SUCCESS || samples > PR_INT32_MAX)
+    return -1;
+
+  return static_cast<PRInt32>(samples);
+}
+
 #ifdef MOZ_IPC
 
 nsAudioStreamRemote::nsAudioStreamRemote()
@@ -567,8 +604,8 @@ nsAudioStreamRemote::nsAudioStreamRemote()
    mFormat(FORMAT_S16_LE),
    mRate(0),
    mChannels(0),
-   mPaused(PR_FALSE),
-   mBytesPerSample(1)
+   mBytesPerSample(1),
+   mPaused(PR_FALSE)
 {}
 
 nsAudioStreamRemote::~nsAudioStreamRemote()
@@ -637,8 +674,15 @@ nsAudioStreamRemote::Available()
   return FAKE_BUFFER_SIZE;
 }
 
+PRInt32 nsAudioStreamRemote::GetMinWriteSamples()
+{
+  /** TODO: Implement this function for remoting. We could potentially remote
+            to a backend which has a start threshold... */
+  return 1;
+}
+
 void
-nsAudioStreamRemote::SetVolume(float aVolume)
+nsAudioStreamRemote::SetVolume(double aVolume)
 {
   if (!mAudioChild)
     return;

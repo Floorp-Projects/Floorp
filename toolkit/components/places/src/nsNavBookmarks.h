@@ -54,7 +54,28 @@ namespace places {
 
   enum BookmarkStatementId {
     DB_FIND_REDIRECTED_BOOKMARK = 0
+  , DB_GET_BOOKMARKS_FOR_URI
   };
+
+  struct ItemVisitData {
+    PRInt64 itemId;
+    nsCOMPtr<nsIURI> uri;
+    PRInt64 visitId;
+    PRTime time;
+  };
+
+  struct ItemChangeData {
+    PRInt64 itemId;
+    nsCOMPtr<nsIURI> uri;
+    nsCString property;
+    PRBool isAnnotation;
+    nsCString newValue;
+    PRTime lastModified;
+    PRUint16 itemType;
+  };
+
+  typedef void (nsNavBookmarks::*ItemVisitMethod)(const ItemVisitData&);
+  typedef void (nsNavBookmarks::*ItemChangeMethod)(const ItemChangeData&);
 
 } // namespace places
 } // namespace mozilla
@@ -176,22 +197,69 @@ public:
     switch(aStatementId) {
       case DB_FIND_REDIRECTED_BOOKMARK:
         return GetStatement(mDBFindRedirectedBookmark);
+      case DB_GET_BOOKMARKS_FOR_URI:
+        return GetStatement(mDBFindURIBookmarks);
     }
     return nsnull;
   }
+
+  /**
+   * Notifies that a bookmark has been visited.
+   *
+   * @param aItemId
+   *        The visited item id.
+   * @param aData
+   *        Details about the new visit.
+   */
+  void NotifyItemVisited(const mozilla::places::ItemVisitData& aData);
+
+  /**
+   * Notifies that a bookmark has changed.
+   *
+   * @param aItemId
+   *        The changed item id.
+   * @param aData
+   *        Details about the change.
+   */
+  void NotifyItemChanged(const mozilla::places::ItemChangeData& aData);
 
 private:
   static nsNavBookmarks* gBookmarksService;
 
   ~nsNavBookmarks();
 
-  nsresult InitRoots();
-  nsresult InitDefaults();
-  nsresult CreateRoot(mozIStorageStatement* aGetRootStatement,
-                      const nsCString& name,
-                      PRInt64* aID,
-                      PRInt64 aParentID,
-                      PRBool* aWasCreated);
+  /**
+   * Locates the root items in the bookmarks folder hierarchy assigning folder
+   * ids to the root properties that are exposed through the service interface.
+   * 
+   * @param aForceCreate
+   *        Whether the method should try creating the roots.  It should be set
+   *        to true if the database has just been created or upgraded.
+   *
+   * @note The creation of roots skips already existing entries.
+   */
+  nsresult InitRoots(bool aForceCreate);
+
+  /**
+   * Tries to create a root folder with the given name.
+   *
+   * @param name
+   *        Name associated to the root.
+   * @param _itemId
+   *        if set CreateRoot will skip creation, otherwise will return the
+   *        newly created folder id.
+   * @param aParentId
+   *        Id of the parent that should cotain this root.
+   * @param aBundle
+   *        Stringbundle used to get the visible title of the root.
+   * @param aTitleStringId
+   *        Id of the title string in the stringbundle.
+   */
+  nsresult CreateRoot(const nsCString& name,
+                      PRInt64* _itemId,
+                      PRInt64 aParentId,
+                      nsIStringBundle* aBundle,
+                      const PRUnichar* aTitleStringId);
 
   nsresult AdjustIndices(PRInt64 aFolder,
                          PRInt32 aStartIndex,
@@ -215,7 +283,15 @@ private:
 
   nsresult GetLastChildId(PRInt64 aFolder, PRInt64* aItemId);
 
+  /**
+   * This is the basic Places read-write connection, obtained from history.
+   */
   nsCOMPtr<mozIStorageConnection> mDBConn;
+  /**
+   * Cloned read-only connection.  Can be used to read from the database
+   * without being locked out by writers.
+   */
+  nsCOMPtr<mozIStorageConnection> mDBReadOnlyConn;
 
   nsString mGUIDBase;
   nsresult GetGUIDBase(nsAString& aGUIDBase);
@@ -223,13 +299,12 @@ private:
   PRInt32 mItemCount;
 
   nsMaybeWeakPtrArray<nsINavBookmarkObserver> mObservers;
-  PRInt64 mRoot;
-  PRInt64 mBookmarksRoot;
-  PRInt64 mTagRoot;
-  PRInt64 mUnfiledRoot;
 
-  // personal toolbar folder
-  PRInt64 mToolbarFolder;
+  PRInt64 mRoot;
+  PRInt64 mMenuRoot;
+  PRInt64 mTagsRoot;
+  PRInt64 mUnfiledRoot;
+  PRInt64 mToolbarRoot;
 
   nsresult GetParentAndIndexOfFolder(PRInt64 aFolder,
                                      PRInt64* aParent,
@@ -440,6 +515,10 @@ private:
   nsCategoryCache<nsINavBookmarkObserver> mCacheObservers;
 
   bool mShuttingDown;
+
+  // Tracks whether we are in batch mode.
+  // Note: this is only tracking bookmarks batches, not history ones.
+  bool mBatching;
 
   /**
    * Always call EnsureKeywordsHash() and check it for errors before actually

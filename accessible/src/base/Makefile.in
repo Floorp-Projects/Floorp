@@ -53,6 +53,7 @@ CPPSRCS = \
   AccGroupInfo.cpp \
   AccIterator.cpp \
   filters.cpp \
+  NotificationController.cpp \
   nsAccDocManager.cpp \
   nsAccessNode.cpp \
   nsARIAGridAccessible.cpp \
@@ -76,10 +77,13 @@ CPPSRCS = \
   nsTextAccessible.cpp \
   nsTextEquivUtils.cpp \
   nsTextAttrs.cpp \
+  TextUpdater.cpp \
   $(NULL)
 
 EXPORTS = \
   a11yGeneric.h \
+  nsAccDocManager.h \
+  nsAccessibilityService.h \
   nsAccessible.h \
   nsAccessNode.h \
   nsARIAMap.h \

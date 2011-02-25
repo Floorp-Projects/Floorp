@@ -581,6 +581,7 @@ CachedScriptUnrooter(const nsAString& aKey,
 {
   JSContext* cx = static_cast<JSContext*>(aUserArg);
   JS_RemoveObjectRoot(cx, &(aData->mObject));
+  delete aData;
   return PL_DHASH_REMOVE;
 }
 
@@ -713,6 +714,16 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
     JSContext* unused;
     nsContentUtils::ThreadJSContextStack()->Pop(&unused);
   }
+}
+
+// static
+void
+nsFrameScriptExecutor::Traverse(nsFrameScriptExecutor *tmp,
+                                nsCycleCollectionTraversalCallback &cb)
+{
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobal)
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCx");
+  nsContentUtils::XPConnect()->NoteJSContext(tmp->mCx, cb);
 }
 
 NS_IMPL_ISUPPORTS1(nsScriptCacheCleaner, nsIObserver)

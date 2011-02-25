@@ -139,7 +139,7 @@ SetVMFrameRegs(VMFrame &f)
     f.cx->setCurrentRegs(&f.regs);
 }
 
-#if defined(__APPLE__) || defined(XP_WIN) || defined(XP_OS2)
+#if defined(__APPLE__) || (defined(XP_WIN) && !defined(JS_CPU_X64)) || defined(XP_OS2)
 # define SYMBOL_STRING(name) "_" #name
 #else
 # define SYMBOL_STRING(name) #name
@@ -713,7 +713,7 @@ void
 JaegerCompartment::Finish()
 {
     TrampolineCompiler::release(&trampolines);
-    delete execAlloc;
+    js_delete(execAlloc);
 #ifdef JS_METHODJIT_PROFILE_STUBS
     FILE *fp = fopen("/tmp/stub-profiling", "wt");
 # define OPDEF(op,val,name,image,length,nuses,ndefs,prec,format) \
@@ -742,8 +742,12 @@ mjit::EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code, Value *stackLi
     JS_ASSERT(cx->regs->fp  == fp);
     JSFrameRegs *oldRegs = cx->regs;
 
-    JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
-    JSBool ok = JaegerTrampoline(cx, fp, code, stackLimit);
+    JSBool ok;
+    {
+        AssertCompartmentUnchanged pcc(cx);
+        JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
+        ok = JaegerTrampoline(cx, fp, code, stackLimit);
+    }
 
     cx->setCurrentRegs(oldRegs);
     JS_ASSERT(fp == cx->fp());
@@ -798,6 +802,102 @@ js::mjit::JaegerShotAtSafePoint(JSContext *cx, void *safePoint)
     return CheckStackAndEnterMethodJIT(cx, cx->fp(), safePoint);
 }
 
+NativeMapEntry *
+JITScript::nmap() const
+{
+    return (NativeMapEntry *)((char*)this + sizeof(JITScript));
+}
+
+char *
+JITScript::nmapSectionLimit() const
+{
+    return (char *)nmap() + sizeof(NativeMapEntry) * nNmapPairs;
+}
+
+#ifdef JS_MONOIC
+ic::GetGlobalNameIC *
+JITScript::getGlobalNames() const
+{
+    return (ic::GetGlobalNameIC *)nmapSectionLimit();
+}
+
+ic::SetGlobalNameIC *
+JITScript::setGlobalNames() const
+{
+    return (ic::SetGlobalNameIC *)((char *)nmapSectionLimit() +
+            sizeof(ic::GetGlobalNameIC) * nGetGlobalNames);
+}
+
+ic::CallICInfo *
+JITScript::callICs() const
+{
+    return (ic::CallICInfo *)((char *)setGlobalNames() +
+            sizeof(ic::SetGlobalNameIC) * nSetGlobalNames);
+}
+
+ic::EqualityICInfo *
+JITScript::equalityICs() const
+{
+    return (ic::EqualityICInfo *)((char *)callICs() + sizeof(ic::CallICInfo) * nCallICs);
+}
+
+ic::TraceICInfo *
+JITScript::traceICs() const
+{
+    return (ic::TraceICInfo *)((char *)equalityICs() + sizeof(ic::EqualityICInfo) * nEqualityICs);
+}
+
+char *
+JITScript::monoICSectionsLimit() const
+{
+    return (char *)traceICs() + sizeof(ic::TraceICInfo) * nTraceICs;
+}
+#else   // JS_MONOIC
+char *
+JITScript::monoICSectionsLimit() const
+{
+    return nmapSectionsLimit();
+}
+#endif  // JS_MONOIC
+
+#ifdef JS_POLYIC
+ic::GetElementIC *
+JITScript::getElems() const
+{
+    return (ic::GetElementIC *)monoICSectionsLimit();
+}
+
+ic::SetElementIC *
+JITScript::setElems() const
+{
+    return (ic::SetElementIC *)((char *)getElems() + sizeof(ic::GetElementIC) * nGetElems);
+}
+
+ic::PICInfo *
+JITScript::pics() const
+{
+    return (ic::PICInfo *)((char *)setElems() + sizeof(ic::SetElementIC) * nSetElems);
+}
+
+char *
+JITScript::polyICSectionsLimit() const
+{
+    return (char *)pics() + sizeof(ic::PICInfo) * nPICs;
+}
+#else   // JS_POLYIC
+char *
+JITScript::polyICSectionsLimit() const
+{
+    return monoICSectionsLimit();
+}
+#endif  // JS_POLYIC
+
+js::mjit::CallSite *
+JITScript::callSites() const
+{
+    return (js::mjit::CallSite *)polyICSectionsLimit();
+}
+
 template <typename T>
 static inline void Destroy(T &t)
 {
@@ -814,12 +914,15 @@ mjit::JITScript::~JITScript()
     code.m_executablePool->release();
 
 #if defined JS_POLYIC
-    for (uint32 i = 0; i < nPICs; i++)
-        Destroy(pics[i]);
+    ic::GetElementIC *getElems_ = getElems();
+    ic::SetElementIC *setElems_ = setElems();
+    ic::PICInfo *pics_ = pics();
     for (uint32 i = 0; i < nGetElems; i++)
-        Destroy(getElems[i]);
+        Destroy(getElems_[i]);
     for (uint32 i = 0; i < nSetElems; i++)
-        Destroy(setElems[i]);
+        Destroy(setElems_[i]);
+    for (uint32 i = 0; i < nPICs; i++)
+        Destroy(pics_[i]);
 #endif
 
 #if defined JS_MONOIC
@@ -829,11 +932,12 @@ mjit::JITScript::~JITScript()
     {
         (*pExecPool)->release();
     }
-    
+
+    ic::CallICInfo *callICs_ = callICs();
     for (uint32 i = 0; i < nCallICs; i++) {
-        if (callICs[i].fastGuardedObject)
-            callICs[i].purgeGuardedObject();
-        callICs[i].releasePools();
+        callICs_[i].releasePools();
+        if (callICs_[i].fastGuardedObject)
+            callICs_[i].purgeGuardedObject();
     }
 
     // Fixup any ICs still referring to this JIT.
@@ -842,7 +946,7 @@ mjit::JITScript::~JITScript()
         ic::CallICInfo *ic = (ic::CallICInfo *) callers.next;
 
         uint8 *start = (uint8 *)ic->funGuard.executableAddress();
-        Repatcher repatch(JSC::JITCode(start - 32, 64));
+        JSC::RepatchBuffer repatch(JSC::JITCode(start - 32, 64));
 
         repatch.repatch(ic->funGuard, NULL);
         repatch.relink(ic->funJump, ic->slowPathStart);
@@ -851,23 +955,49 @@ mjit::JITScript::~JITScript()
 #endif
 }
 
+/* Please keep in sync with Compiler::finishThisUp! */
+size_t
+mjit::JITScript::scriptDataSize()
+{
+    return sizeof(JITScript) +
+        sizeof(NativeMapEntry) * nNmapPairs +
+#if defined JS_MONOIC
+        sizeof(ic::GetGlobalNameIC) * nGetGlobalNames +
+        sizeof(ic::SetGlobalNameIC) * nSetGlobalNames +
+        sizeof(ic::CallICInfo) * nCallICs +
+        sizeof(ic::EqualityICInfo) * nEqualityICs +
+        sizeof(ic::TraceICInfo) * nTraceICs +
+#endif
+#if defined JS_POLYIC
+        sizeof(ic::PICInfo) * nPICs +
+        sizeof(ic::GetElementIC) * nGetElems +
+        sizeof(ic::SetElementIC) * nSetElems +
+#endif
+        sizeof(CallSite) * nCallSites;
+}
+
 void
 mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
 {
     // NB: The recompiler may call ReleaseScriptCode, in which case it
     // will get called again when the script is destroyed, so we
     // must protect against calling ReleaseScriptCode twice.
+    JITScript *jscr;
 
-    if (script->jitNormal) {
-        script->jitNormal->~JITScript();
-        cx->free(script->jitNormal);
+    if ((jscr = script->jitNormal)) {
+        cx->runtime->mjitMemoryUsed -= jscr->scriptDataSize() + jscr->mainCodeSize();
+
+        jscr->~JITScript();
+        cx->free(jscr);
         script->jitNormal = NULL;
         script->jitArityCheckNormal = NULL;
     }
 
-    if (script->jitCtor) {
-        script->jitCtor->~JITScript();
-        cx->free(script->jitCtor);
+    if ((jscr = script->jitCtor)) {
+        cx->runtime->mjitMemoryUsed -= jscr->scriptDataSize() + jscr->mainCodeSize();
+
+        jscr->~JITScript();
+        cx->free(jscr);
         script->jitCtor = NULL;
         script->jitArityCheckCtor = NULL;
     }
@@ -912,15 +1042,14 @@ mjit::GetCallTargetCount(JSScript *script, jsbytecode *pc)
     ic::PICInfo *pic;
     
     if (mjit::JITScript *jit = script->getJIT(false)) {
-        pic = (ic::PICInfo *)bsearch(pc, jit->pics, jit->nPICs, sizeof(jit->pics[0]),
+        pic = (ic::PICInfo *)bsearch(pc, jit->pics(), jit->nPICs, sizeof(ic::PICInfo),
                                      PICPCComparator);
         if (pic)
             return pic->stubsGenerated + 1; /* Add 1 for the inline path. */
     }
     
     if (mjit::JITScript *jit = script->getJIT(true)) {
-        pic = (ic::PICInfo *)bsearch(pc, jit->pics,
-                                     jit->nPICs, sizeof(jit->pics[0]),
+        pic = (ic::PICInfo *)bsearch(pc, jit->pics(), jit->nPICs, sizeof(ic::PICInfo),
                                      PICPCComparator);
         if (pic)
             return pic->stubsGenerated + 1; /* Add 1 for the inline path. */
@@ -935,3 +1064,31 @@ mjit::GetCallTargetCount(JSScript *script, jsbytecode *pc)
     return 1;
 }
 #endif
+
+jsbytecode *
+JITScript::nativeToPC(void *returnAddress) const
+{
+    size_t low = 0;
+    size_t high = nCallICs;
+    js::mjit::ic::CallICInfo *callICs_ = callICs();
+    while (high > low + 1) {
+        /* Could overflow here on a script with 2 billion calls. Oh well. */
+        size_t mid = (high + low) / 2;
+        void *entry = callICs_[mid].funGuard.executableAddress();
+
+        /*
+         * Use >= here as the return address of the call is likely to be
+         * the start address of the next (possibly IC'ed) operation.
+         */
+        if (entry >= returnAddress)
+            high = mid;
+        else
+            low = mid;
+    }
+
+    js::mjit::ic::CallICInfo &ic = callICs_[low];
+
+    JS_ASSERT((uint8*)ic.funGuard.executableAddress() + ic.joinPointOffset == returnAddress);
+    return ic.pc;
+}
+

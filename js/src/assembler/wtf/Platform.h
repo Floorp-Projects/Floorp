@@ -362,6 +362,13 @@
 #define WTF_PLATFORM_SOLARIS 1
 #endif
 
+/* PLATFORM(OS2) */
+/* Operating system level dependencies for OS/2 that should be used */
+/* regardless of operating environment */
+#if defined(OS2) || defined(__OS2__)
+#define WTF_PLATFORM_OS2 1
+#endif
+
 #if defined (__SYMBIAN32__)
 /* we are cross-compiling, it is not really windows */
 #undef WTF_PLATFORM_WIN_OS
@@ -491,7 +498,7 @@
 #   include <ce_time.h>
 #endif
 
-#if (WTF_PLATFORM_IPHONE || WTF_PLATFORM_MAC || WTF_PLATFORM_WIN || (WTF_PLATFORM_QT && WTF_PLATFORM_DARWIN && !ENABLE_SINGLE_THREADED)) && !defined(ENABLE_JSC_MULTIPLE_THREADS)
+#if (WTF_PLATFORM_IPHONE || WTF_PLATFORM_MAC || WTF_PLATFORM_WIN || WTF_PLATFORM_OS2 || (WTF_PLATFORM_QT && WTF_PLATFORM_DARWIN && !ENABLE_SINGLE_THREADED)) && !defined(ENABLE_JSC_MULTIPLE_THREADS)
 #define ENABLE_JSC_MULTIPLE_THREADS 1
 #endif
 
@@ -632,7 +639,7 @@
 
 #if !WTF_PLATFORM_WIN_OS && !WTF_PLATFORM_SOLARIS && !WTF_PLATFORM_QNX \
     && !WTF_PLATFORM_SYMBIAN && !WTF_PLATFORM_HAIKU && !WTF_COMPILER_RVCT \
-    && !WTF_PLATFORM_ANDROID
+    && !WTF_PLATFORM_ANDROID && !WTF_PLATFORM_OS2
 #define HAVE_TM_GMTOFF 1
 #define HAVE_TM_ZONE 1
 #define HAVE_TIMEGM 1
@@ -700,6 +707,16 @@
 #define HAVE_STRINGS_H 1
 #define HAVE_SYS_PARAM_H 1
 #define HAVE_SYS_TIME_H 1
+
+#elif WTF_PLATFORM_OS2
+
+#define HAVE_MMAP 1
+#define ENABLE_ASSEMBLER 1
+#define HAVE_ERRNO_H 1
+#define HAVE_STRINGS_H 1
+#define HAVE_SYS_PARAM_H 1
+#define HAVE_SYS_TIME_H 1
+#define HAVE_SYS_TIMEB_H 1
 
 #else
 
@@ -833,6 +850,9 @@ on MinGW. See https://bugs.webkit.org/show_bug.cgi?id=29268 */
     #define ENABLE_JIT 1
     #define WTF_USE_JIT_STUB_ARGUMENT_VA_LIST 1
 #elif WTF_CPU_ARM_THUMB2 && WTF_PLATFORM_IPHONE
+    #define ENABLE_JIT 1
+/* The JIT is tested & working on x86 OS/2 */
+#elif WTF_CPU_X86 && WTF_PLATFORM_OS2
     #define ENABLE_JIT 1
 /* The JIT is tested & working on x86 Windows */
 #elif WTF_CPU_X86 && WTF_PLATFORM_WIN

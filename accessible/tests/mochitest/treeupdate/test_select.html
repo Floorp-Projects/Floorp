@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add select options test</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    function addOptions(aID)
+    {
+      this.selectNode = getNode(aID);
+      this.select = getAccessible(this.selectNode);
+
+      this.invoke = function addOptions_invoke()
+      {
+        for (i = 0; i < 2; i++) {
+          var opt = document.createElement("option");
+          opt.value = i;
+          opt.text = "Option: Value " + i;
+
+          this.selectNode.add(opt, null);
+        }
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.select)
+      ];
+
+      this.finalCheck = function addOptions_finalCheck()
+      {
+        var tree =
+          { COMBOBOX: [
+            { COMBOBOX_LIST: [
+              { COMBOBOX_OPTION: [
+                { TEXT_LEAF: [] }
+              ] },
+              { COMBOBOX_OPTION: [
+                { TEXT_LEAF: [] }
+              ] }
+            ] }
+          ] };
+        testAccessibleTree(this.select, tree);
+      }
+
+      this.getID = function addOptions_getID()
+      {
+        return "test elements insertion into a select";
+      }
+    }
+
+    function removeOptions(aID)
+    {
+      this.selectNode = getNode(aID);
+      this.select = getAccessible(this.selectNode);
+
+      this.invoke = function removeOptions_invoke()
+      {
+        while (this.selectNode.length)
+          this.selectNode.remove(0);
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.select)
+      ];
+
+      this.finalCheck = function removeOptions_finalCheck()
+      {
+        var tree =
+          { COMBOBOX: [
+            { COMBOBOX_LIST: [] }
+          ] };
+        testAccessibleTree(this.select, tree);
+      }
+
+      this.getID = function removeptions_getID()
+      {
+        return "test elements removal from a select";
+      }
+    }
+
+    //gA11yEventDumpID = "debug";
+
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new addOptions("select"));
+      gQueue.push(new removeOptions("select"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=616452"
+     title="Bug 616452 - Dynamically inserted select options aren't reflected in accessible tree">
+    Mozilla Bug 616452</a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=616940"
+     title="Removed select option accessibles aren't removed until hide event is fired">
+    Mozilla Bug 616940</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <select id="select"></select>
+
+  <div id="debug"/>
+</body>
+</html>

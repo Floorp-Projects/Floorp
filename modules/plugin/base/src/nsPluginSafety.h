@@ -69,11 +69,11 @@ PR_BEGIN_MACRO                                     \
     ret = fun;                                     \
   else                                             \
   {                                                \
-    try                                            \
+    MOZ_SEH_TRY                                    \
     {                                              \
       ret = fun;                                   \
     }                                              \
-    catch(...)                                     \
+    MOZ_SEH_EXCEPT(PR_TRUE)                        \
     {                                              \
       nsresult res;                                \
       nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &res));\
@@ -92,11 +92,11 @@ PR_BEGIN_MACRO                              \
     fun;                                    \
   else                                      \
   {                                         \
-    try                                     \
+    MOZ_SEH_TRY                             \
     {                                       \
       fun;                                  \
     }                                       \
-    catch(...)                              \
+    MOZ_SEH_EXCEPT(PR_TRUE)                 \
     {                                       \
       nsresult res;                         \
       nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &res));\

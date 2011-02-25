@@ -100,7 +100,7 @@
 #include "nsIDOMRange.h" //for selection setting helper func
 #include "nsPIDOMWindow.h" //needed for notify selection changed to update the menus ect.
 #ifdef ACCESSIBILITY
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 #endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
@@ -119,6 +119,7 @@
 #include "nsTextEditRules.h"
 #include "nsIFontMetrics.h"
 #include "nsIDOMNSHTMLElement.h"
+#include "nsPresState.h"
 
 #include "mozilla/FunctionTimer.h"
 
@@ -139,14 +140,14 @@ NS_QUERYFRAME_HEAD(nsTextControlFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
   NS_QUERYFRAME_ENTRY(nsITextControlFrame)
+  NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 #ifdef ACCESSIBILITY
 already_AddRefed<nsAccessible>
 nsTextControlFrame::CreateAccessible()
 {
-  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
-
+  nsAccessibilityService* accService = nsIPresShell::AccService();
   if (accService) {
     return accService->CreateHTMLTextFieldAccessible(mContent,
                                                      PresContext()->PresShell());
@@ -187,7 +188,6 @@ nsTextControlFrame::nsTextControlFrame(nsIPresShell* aShell, nsStyleContext* aCo
   , mIsProcessing(PR_FALSE)
   , mNotifyOnInput(PR_TRUE)
   , mFireChangeEventState(PR_FALSE)
-  , mInSecureKeyboardInputMode(PR_FALSE)
 #ifdef DEBUG
   , mInEditorInitialization(PR_FALSE)
 #endif
@@ -201,10 +201,6 @@ nsTextControlFrame::~nsTextControlFrame()
 void
 nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  if (mInSecureKeyboardInputMode) {
-    MaybeEndSecureKeyboardInput();
-  }
-
   mScrollEvent.Revoke();
 
   // Unbind the text editor state object from the frame.  The editor will live
@@ -222,29 +218,6 @@ nsIAtom*
 nsTextControlFrame::GetType() const 
 { 
   return nsGkAtoms::textInputFrame;
-} 
-
-nsresult nsTextControlFrame::MaybeBeginSecureKeyboardInput()
-{
-  nsresult rv = NS_OK;
-  if (IsPasswordTextControl() && !mInSecureKeyboardInputMode) {
-    nsIWidget* window = GetNearestWidget();
-    NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-    rv = window->BeginSecureKeyboardInput();
-    mInSecureKeyboardInputMode = NS_SUCCEEDED(rv);
-  }
-  return rv;
-}
-
-void nsTextControlFrame::MaybeEndSecureKeyboardInput()
-{
-  if (mInSecureKeyboardInputMode) {
-    nsIWidget* window = GetNearestWidget();
-    if (!window)
-      return;
-    window->EndSecureKeyboardInput();
-    mInSecureKeyboardInputMode = PR_FALSE;
-  }
 }
 
 nsresult
@@ -686,7 +659,6 @@ void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
       }
     }
 
-    MaybeEndSecureKeyboardInput();
     return;
   }
 
@@ -704,8 +676,7 @@ void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
     }
   }
 
-  if (NS_SUCCEEDED(InitFocusedValue()))
-    MaybeBeginSecureKeyboardInput();
+  InitFocusedValue();
 
   nsCOMPtr<nsISelection> ourSel;
   selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, 
@@ -772,7 +743,11 @@ nsresult nsTextControlFrame::SetFormProperty(nsIAtom* aName, const nsAString& aV
       //      of select all which merely builds a range that selects
       //      all of the content and adds that to the selection.
 
-      SelectAllOrCollapseToEndOfText(PR_TRUE);
+      nsWeakFrame weakThis = this;
+      SelectAllOrCollapseToEndOfText(PR_TRUE);  // NOTE: can destroy the world
+      if (!weakThis.IsAlive()) {
+        return NS_OK;
+      }
     }
     mIsProcessing = PR_FALSE;
   }
@@ -846,17 +821,27 @@ nsTextControlFrame::SetSelectionInternal(nsIDOMNode *aStartNode,
   selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));  
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-  rv = selection->RemoveAllRanges();  
-
+  rv = selection->RemoveAllRanges();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = selection->AddRange(range);
-  NS_ENSURE_SUCCESS(rv, rv);
+  rv = selection->AddRange(range);  // NOTE: can destroy the world
+  return rv;
+}
 
-  // Scroll the selection into view (see bug 231389)
-  return selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
-                                         nsISelectionController::SELECTION_FOCUS_REGION,
-                                         nsISelectionController::SCROLL_FIRST_ANCESTOR_ONLY);
+nsresult
+nsTextControlFrame::ScrollSelectionIntoView()
+{
+  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
+  NS_ASSERTION(txtCtrl, "Content not a text control element");
+  nsISelectionController* selCon = txtCtrl->GetSelectionController();
+  if (selCon) {
+    // Scroll the selection into view (see bug 231389).
+    return selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
+                                           nsISelectionController::SELECTION_FOCUS_REGION,
+                                           nsISelectionController::SCROLL_FIRST_ANCESTOR_ONLY);
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -904,8 +889,11 @@ nsTextControlFrame::SelectAllOrCollapseToEndOfText(PRBool aSelect)
     }
   }
 
-  return SetSelectionInternal(rootNode, aSelect ? 0 : numChildren,
-                              rootNode, numChildren);
+  rv = SetSelectionInternal(rootNode, aSelect ? 0 : numChildren,
+                            rootNode, numChildren);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return ScrollSelectionIntoView();
 }
 
 nsresult
@@ -1092,8 +1080,18 @@ nsTextControlFrame::OffsetToDOMPoint(PRInt32 aOffset,
     NS_IF_ADDREF(*aResult = rootNode);
     *aPosition = 0;
   } else if (textNode) {
-    NS_IF_ADDREF(*aResult = firstNode);
-    *aPosition = aOffset;
+    PRUint32 textLength = 0;
+    textNode->GetLength(&textLength);
+    if (length == 2 && PRUint32(aOffset) == textLength) {
+      // If we're at the end of the text node and we have a trailing BR node,
+      // set the selection on the BR node.
+      NS_IF_ADDREF(*aResult = rootNode);
+      *aPosition = 1;
+    } else {
+      // Otherwise, set the selection on the textnode itself.
+      NS_IF_ADDREF(*aResult = firstNode);
+      *aPosition = NS_MIN(aOffset, PRInt32(textLength));
+    }
   } else {
     NS_IF_ADDREF(*aResult = rootNode);
     *aPosition = 0;
@@ -1320,14 +1318,14 @@ nsTextControlFrame::GetMaxLength(PRInt32* aSize)
 
 // this is where we propagate a content changed event
 void
-nsTextControlFrame::FireOnInput()
+nsTextControlFrame::FireOnInput(PRBool aTrusted)
 {
   if (!mNotifyOnInput)
     return; // if notification is turned off, do nothing
   
   // Dispatch the "input" event
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsUIEvent event(PR_TRUE, NS_FORM_INPUT, 0);
+  nsUIEvent event(aTrusted, NS_FORM_INPUT, 0);
 
   // Have the content handle the event, propagating it according to normal
   // DOM rules.
@@ -1349,11 +1347,10 @@ nsTextControlFrame::CheckFireOnChange()
   if (!mFocusedValue.Equals(value))
   {
     mFocusedValue = value;
-    // Dispatch the change event
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsInputEvent event(PR_TRUE, NS_FORM_CHANGE, nsnull);
-    nsCOMPtr<nsIPresShell> shell = PresContext()->PresShell();
-    shell->HandleEventWithTarget(&event, nsnull, mContent, &status);
+    // Dispatch the change event.
+    nsContentUtils::DispatchTrustedEvent(mContent->GetOwnerDoc(), mContent,
+                                         NS_LITERAL_STRING("change"), PR_TRUE,
+                                         PR_FALSE);
   }
   return NS_OK;
 }
@@ -1377,6 +1374,20 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
     nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
     NS_ASSERTION(txtCtrl, "Content not a text control element");
     txtCtrl->InitializeKeyboardEventListeners();
+
+    nsPoint* contentScrollPos = static_cast<nsPoint*>
+      (Properties().Get(ContentScrollPos()));
+    if (contentScrollPos) {
+      // If we have a scroll pos stored to be passed to our anonymous
+      // div, do it here!
+      nsIStatefulFrame* statefulFrame = do_QueryFrame(first);
+      NS_ASSERTION(statefulFrame, "unexpected type of frame for the anonymous div");
+      nsPresState fakePresState;
+      fakePresState.SetScrollState(*contentScrollPos);
+      statefulFrame->RestoreState(&fakePresState);
+      Properties().Remove(ContentScrollPos());
+      delete contentScrollPos;
+    }
   }
   return rv;
 }
@@ -1392,6 +1403,20 @@ nsTextControlFrame::SetValueChanged(PRBool aValueChanged)
 {
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
   NS_ASSERTION(txtCtrl, "Content not a text control element");
+
+  if (mUsePlaceholder && !nsContentUtils::IsFocusedContent(mContent)) {
+    // If the content is focused, we don't care about the changes because
+    // the placeholder is going to be hidden/shown on blur.
+    PRInt32 textLength;
+    GetTextLength(&textLength);
+
+    nsWeakFrame weakFrame(this);
+    txtCtrl->SetPlaceholderClass(!textLength, PR_TRUE);
+    if (!weakFrame.IsAlive()) {
+      return;
+    }
+  }
+
   txtCtrl->SetValueChanged(aValueChanged);
 }
 
@@ -1480,5 +1505,51 @@ nsTextControlFrame::GetOwnedFrameSelection()
   NS_ASSERTION(txtCtrl, "Content not a text control element");
 
   return txtCtrl->GetConstFrameSelection();
+}
+
+NS_IMETHODIMP
+nsTextControlFrame::SaveState(nsIStatefulFrame::SpecialStateID aStateID, nsPresState** aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  *aState = nsnull;
+
+  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
+  NS_ASSERTION(txtCtrl, "Content not a text control element");
+
+  nsIContent* rootNode = txtCtrl->GetRootEditorNode();
+  if (rootNode) {
+    // Query the nsIStatefulFrame from the HTMLScrollFrame
+    nsIStatefulFrame* scrollStateFrame = do_QueryFrame(rootNode->GetPrimaryFrame());
+    if (scrollStateFrame) {
+      return scrollStateFrame->SaveState(aStateID, aState);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextControlFrame::RestoreState(nsPresState* aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
+  NS_ASSERTION(txtCtrl, "Content not a text control element");
+
+  nsIContent* rootNode = txtCtrl->GetRootEditorNode();
+  if (rootNode) {
+    // Query the nsIStatefulFrame from the HTMLScrollFrame
+    nsIStatefulFrame* scrollStateFrame = do_QueryFrame(rootNode->GetPrimaryFrame());
+    if (scrollStateFrame) {
+      return scrollStateFrame->RestoreState(aState);
+    }
+  }
+
+  // Most likely, we don't have our anonymous content constructed yet, which
+  // would cause us to end up here.  In this case, we'll just store the scroll
+  // pos ourselves, and forward it to the scroll frame later when it's created.
+  Properties().Set(ContentScrollPos(), new nsPoint(aState->GetScrollState()));
+  return NS_OK;
 }
 

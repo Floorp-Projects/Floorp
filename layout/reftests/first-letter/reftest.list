@@ -35,8 +35,10 @@ random-if(d2d) == dynamic-2.html dynamic-2-ref.html
 != 229764-1.html 229764-ref.html
 == 229764-2.html 229764-ref.html
 == 329069-1.html 329069-1-ref.html
-fails-if(!gtk2Widget) == 329069-2.html 329069-2-ref.html # bug 553981
-fails-if(!gtk2Widget) == 329069-3.html 329069-3-ref.html # bug 614468
+== 329069-2.html 329069-2-ref.html
+== 329069-3.html 329069-3-ref.html
+== 329069-4.html 329069-4-ref.html
+fails-if(!cocoaWidget) == 329069-5.html 329069-5-ref.html # bug 603710
 == 342120-1.xhtml 342120-1-ref.xhtml
 == 379799-1.html 379799-1-ref.html
 == 399941-1.html 399941-1-ref.html
@@ -57,3 +59,4 @@ fails-if(!gtk2Widget) == 329069-3.html 329069-3-ref.html # bug 614468
 == 469227-1.html 469227-1-ref.html
 == 484400-1.html 484400-1-ref.html
 == 594303-1.html 594303-1-ref.html
+fails-if(!gtk2Widget) == 617869-1.html 617869-1-ref.html 

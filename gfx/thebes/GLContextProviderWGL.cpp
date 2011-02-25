@@ -103,7 +103,9 @@ CreateDummyWindow(HDC *aWindowDC = nsnull)
         gSharedWindowPixelFormat = ChoosePixelFormat(dc, &pfd);
     }
 
-    if (!SetPixelFormat(dc, gSharedWindowPixelFormat, NULL)) {
+    if (!gSharedWindowPixelFormat ||
+        !SetPixelFormat(dc, gSharedWindowPixelFormat, NULL))
+    {
         NS_WARNING("SetPixelFormat failed!");
         DestroyWindow(win);
         return NULL;
@@ -327,13 +329,6 @@ public:
 
     HGLRC Context() { return mContext; }
 
-    virtual already_AddRefed<TextureImage>
-    CreateBasicTextureImage(GLuint aTexture,
-                            const nsIntSize& aSize,
-                            GLenum aWrapMode,
-                            TextureImage::ContentType aContentType,
-                            GLContext* aContext);
-
 protected:
     friend class GLContextProviderWGL;
 
@@ -443,68 +438,6 @@ static GLContextWGL *
 GetGlobalContextWGL()
 {
     return static_cast<GLContextWGL*>(GLContextProviderWGL::GetGlobalContext());
-}
-
-class TextureImageWGL : public BasicTextureImage
-{
-    friend already_AddRefed<TextureImage>
-    GLContextWGL::CreateBasicTextureImage(GLuint,
-                                          const nsIntSize&,
-                                          GLenum,
-                                          TextureImage::ContentType,
-                                          GLContext*);
-
-protected:
-    virtual already_AddRefed<gfxASurface>
-    CreateUpdateSurface(const gfxIntSize& aSize, ImageFormat aFmt)
-    {
-        mUpdateSize = aSize;
-        mUpdateFormat = aFmt;
-
-        return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFmt));
-    }
-
-    virtual already_AddRefed<gfxImageSurface>
-    GetImageForUpload(gfxASurface* aUpdateSurface)
-    {
-        nsRefPtr<gfxImageSurface> uploadImage;
-
-        if (aUpdateSurface->GetType() == gfxASurface::SurfaceTypeWin32) {
-            uploadImage = aUpdateSurface->GetAsImageSurface();
-        } else {
-            uploadImage = new gfxImageSurface(mUpdateSize, mUpdateFormat);
-            nsRefPtr<gfxContext> cx(new gfxContext(uploadImage));
-            cx->SetSource(aUpdateSurface);
-            cx->SetOperator(gfxContext::OPERATOR_SOURCE);
-            cx->Paint();
-        }
-
-        return uploadImage.forget();
-    }
-
-private:
-    TextureImageWGL(GLuint aTexture,
-                    const nsIntSize& aSize,
-                    GLenum aWrapMode,
-                    ContentType aContentType,
-                    GLContext* aContext)
-        : BasicTextureImage(aTexture, aSize, aWrapMode, aContentType, aContext)
-    {}
-
-    gfxIntSize mUpdateSize;
-    ImageFormat mUpdateFormat;
-};
-
-already_AddRefed<TextureImage>
-GLContextWGL::CreateBasicTextureImage(GLuint aTexture,
-                                      const nsIntSize& aSize,
-                                      GLenum aWrapMode,
-                                      TextureImage::ContentType aContentType,
-                                      GLContext* aContext)
-{
-    nsRefPtr<TextureImageWGL> teximage
-        (new TextureImageWGL(aTexture, aSize, aWrapMode, aContentType, aContext));
-    return teximage.forget();
 }
 
 already_AddRefed<GLContext>

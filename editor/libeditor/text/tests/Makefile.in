@@ -46,6 +46,7 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
 		test_bug471722.html \
+		test_bug527935.html \
 		test_bug569988.html \
 		test_bug590554.html \
 		test_bug596001.html \
@@ -56,6 +57,8 @@ _TEST_FILES = \
 		test_bug602130.html \
 		test_bug603556.html \
 		test_bug604532.html \
+		test_bug625452.html \
+		test_bug629172.html \
 		$(NULL)
 
 # disables the key handling test on gtk2 because gtk2 overrides some key events

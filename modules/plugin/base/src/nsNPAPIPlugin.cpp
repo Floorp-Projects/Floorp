@@ -183,7 +183,7 @@ static NPNetscapeFuncs sBrowserFuncs = {
   _convertpoint,
   NULL, // handleevent, unimplemented
   NULL, // unfocusinstance, unimplemented
-  NULL  // urlredirectresponse, unimplemented
+  _urlredirectresponse
 };
 
 static PRLock *sPluginThreadAsyncCallLock = nsnull;
@@ -288,6 +288,7 @@ static PRInt32 OSXVersion()
   return gOSXVersion;
 }
 
+#if defined(__i386__)
 // Detects machines with Intel GMA9xx GPUs.
 // kCGLRendererIDMatchingMask and kCGLRendererIntel900ID are only defined in the 10.6 SDK.
 #define CGLRendererIDMatchingMask 0x00FE7F00
@@ -311,6 +312,7 @@ static PRBool GMA9XXGraphics()
   }
   return hasIntelGMA9XX;
 }
+#endif
 #endif
 
 PRBool
@@ -345,11 +347,14 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
         return PR_FALSE;
       }
     }
+
+#if defined(__i386__)
     // At this point we have Flash 10.1+ but now we also need to blacklist
     // if the machine has a Intel GMA9XX GPU.
     if (GMA9XXGraphics()) {
       return PR_FALSE;
     }
+#endif
   }
 #endif
 
@@ -474,7 +479,7 @@ GetNewPluginLibrary(nsPluginTag *aPluginTag)
 
 // Creates an nsNPAPIPlugin object. One nsNPAPIPlugin object exists per plugin (not instance).
 nsresult
-nsNPAPIPlugin::CreatePlugin(nsPluginTag *aPluginTag, nsIPlugin** aResult)
+nsNPAPIPlugin::CreatePlugin(nsPluginTag *aPluginTag, nsNPAPIPlugin** aResult)
 {
   *aResult = nsnull;
 
@@ -612,12 +617,15 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
   // Set aCallNotify here to false.  If pluginHost->GetURL or PostURL fail,
   // the listener's destructor will do the notification while we are about to
   // return a failure code.
-  // Call SetCallNotify(true) bellow after we are sure we cannot return a failure 
+  // Call SetCallNotify(true) below after we are sure we cannot return a failure 
   // code.
-  if (!target)
-    ((nsNPAPIPluginInstance*)inst)->NewNotifyStream(getter_AddRefs(listener),
-                                                    notifyData,
-                                                    PR_FALSE, relativeURL);
+  if (!target) {
+    inst->NewStreamListener(relativeURL, notifyData,
+                            getter_AddRefs(listener));
+    if (listener) {
+      static_cast<nsNPAPIPluginStreamListener*>(listener.get())->SetCallNotify(PR_FALSE);
+    }
+  }
 
   switch (type) {
   case eNPPStreamTypeInternal_Get:
@@ -628,8 +636,7 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
     }
   case eNPPStreamTypeInternal_Post:
     {
-      if (NS_FAILED(pluginHost->PostURL(inst, relativeURL, len, buf, file, target,
-                                listener)))
+      if (NS_FAILED(pluginHost->PostURL(inst, relativeURL, len, buf, file, target, listener)))
         return NPERR_GENERIC_ERROR;
       break;
     }
@@ -639,11 +646,7 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
 
   if (listener) {
     // SetCallNotify(bDoNotify) here, see comment above.
-    // XXX Not sure of this cast here, we should probably have an interface API
-    // for this.
-    nsNPAPIPluginStreamListener* npAPIPluginStreamListener = 
-      static_cast<nsNPAPIPluginStreamListener*>(listener.get());
-    npAPIPluginStreamListener->SetCallNotify(bDoNotify);
+    static_cast<nsNPAPIPluginStreamListener*>(listener.get())->SetCallNotify(bDoNotify);
   }
 
   return NPERR_NO_ERROR;
@@ -1519,7 +1522,10 @@ _retainobject(NPObject* npobj)
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_retainobject called from the wrong thread\n"));
   }
   if (npobj) {
-    int32_t refCnt = PR_AtomicIncrement((PRInt32*)&npobj->referenceCount);
+#ifdef NS_BUILD_REFCNT_LOGGING
+    int32_t refCnt =
+#endif
+      PR_AtomicIncrement((PRInt32*)&npobj->referenceCount);
     NS_LOG_ADDREF(npobj, refCnt, "BrowserNPObject", sizeof(NPObject));
   }
 
@@ -1614,10 +1620,10 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
   JSContext *cx = GetJSContextFromDoc(doc);
   NS_ENSURE_TRUE(cx, false);
 
-  JSAutoRequest req(cx);
-
   nsCOMPtr<nsIScriptContext> scx = GetScriptContextFromJSContext(cx);
   NS_ENSURE_TRUE(scx, false);
+
+  JSAutoRequest req(cx);
 
   JSObject *obj =
     nsNPObjWrapper::GetNewOrUsed(npp, cx, npobj);
@@ -2236,6 +2242,11 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
     return NPERR_NO_ERROR;
   }
+
+  case NPNVsupportsUpdatedCocoaTextInputBool: {
+    *(NPBool*)result = true;
+    return NPERR_NO_ERROR;
+  }
 #endif
 
   // we no longer hand out any XPCOM objects, except on WINCE,
@@ -2722,6 +2733,17 @@ _convertpoint(NPP instance, double sourceX, double sourceY, NPCoordinateSpace so
     return PR_FALSE;
 
   return inst->ConvertPoint(sourceX, sourceY, sourceSpace, destX, destY, destSpace);
+}
+
+void NP_CALLBACK
+_urlredirectresponse(NPP instance, void* notifyData, NPBool allow)
+{
+  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
+  if (!inst) {
+    return;
+  }
+
+  inst->URLRedirectResponse(notifyData, allow);
 }
 
 } /* namespace parent */

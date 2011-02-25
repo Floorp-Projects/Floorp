@@ -1,3 +1,4 @@
+// |jit-test| debug
 setDebug(true);
 function main() {
   return 1;

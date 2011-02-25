@@ -28,29 +28,40 @@ function isnot(aLeft, aRight, aMessage)
   window.opener.wrappedJSObject.SimpleTest.isnot(aLeft, aRight, aMessage);
 }
 
+function executeSoon(aFct)
+{
+  window.opener.wrappedJSObject.SimpleTest.executeSoon(aFct);
+}
+
 function start() {
   window.onfocus = function () {
     window.onfocus = null;
     var oldOuterWidth = window.outerWidth, oldOuterHeight = window.outerHeight;
     var oldInnerWidth = window.innerWidth, oldInnerHeight = window.innerHeight;
     document.documentElement.setAttribute("drawintitlebar", "true");
-    is(window.outerWidth, oldOuterWidth, "drawintitlebar shouldn't change the window's outerWidth");
-    is(window.outerHeight, oldOuterHeight, "drawintitlebar shouldn't change the window's outerHeight");
-    is(window.innerWidth, oldOuterWidth, "if drawintitlebar is set, innerWidth and outerWidth should be the same");
-    is(window.innerHeight, oldOuterHeight, "if drawintitlebar is set, innerHeight and outerHeight should be the same");
-    window.fullScreen = true;
-    window.fullScreen = false;
-    is(window.outerWidth, oldOuterWidth, "wrong outerWidth after fullscreen mode");
-    is(window.outerHeight, oldOuterHeight, "wrong outerHeight after fullscreen mode");
-    is(window.innerWidth, oldOuterWidth, "wrong innerWidth after fullscreen mode");
-    is(window.innerHeight, oldOuterHeight, "wrong innerHeight after fullscreen mode");
-    document.documentElement.removeAttribute("drawintitlebar");
-    is(window.outerWidth, oldOuterWidth, "wrong outerWidth after removing drawintitlebar");
-    is(window.outerHeight, oldOuterHeight, "wrong outerHeight after removing drawintitlebar");
-    is(window.innerWidth, oldInnerWidth, "wrong innerWidth after removing drawintitlebar");
-    is(window.innerHeight, oldInnerHeight, "wrong innerHeight after removing drawintitlebar");
-    window.opener.wrappedJSObject.SimpleTest.finish();
-    window.close();
+
+    executeSoon(function() {
+      is(window.outerWidth, oldOuterWidth, "drawintitlebar shouldn't change the window's outerWidth");
+      is(window.outerHeight, oldOuterHeight, "drawintitlebar shouldn't change the window's outerHeight");
+      is(window.innerWidth, oldOuterWidth, "if drawintitlebar is set, innerWidth and outerWidth should be the same");
+      is(window.innerHeight, oldOuterHeight, "if drawintitlebar is set, innerHeight and outerHeight should be the same");
+      window.fullScreen = true;
+      window.fullScreen = false;
+      is(window.outerWidth, oldOuterWidth, "wrong outerWidth after fullscreen mode");
+      is(window.outerHeight, oldOuterHeight, "wrong outerHeight after fullscreen mode");
+      is(window.innerWidth, oldOuterWidth, "wrong innerWidth after fullscreen mode");
+      is(window.innerHeight, oldOuterHeight, "wrong innerHeight after fullscreen mode");
+      document.documentElement.removeAttribute("drawintitlebar");
+
+      executeSoon(function() {
+        is(window.outerWidth, oldOuterWidth, "wrong outerWidth after removing drawintitlebar");
+        is(window.outerHeight, oldOuterHeight, "wrong outerHeight after removing drawintitlebar");
+        is(window.innerWidth, oldInnerWidth, "wrong innerWidth after removing drawintitlebar");
+        is(window.innerHeight, oldInnerHeight, "wrong innerHeight after removing drawintitlebar");
+        window.opener.wrappedJSObject.SimpleTest.finish();
+        window.close();
+      });
+    });
   }
 }
 

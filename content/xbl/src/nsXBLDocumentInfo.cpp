@@ -138,7 +138,7 @@ nsXBLDocGlobalObject_getProperty(JSContext *cx, JSObject *obj,
 
 static JSBool
 nsXBLDocGlobalObject_setProperty(JSContext *cx, JSObject *obj,
-                                 jsid id, jsval *vp)
+                                 jsid id, JSBool strict, jsval *vp)
 {
   return nsXBLDocGlobalObject::
     doCheckAccess(cx, obj, id, nsIXPCSecurityManager::ACCESS_SET_PROPERTY);

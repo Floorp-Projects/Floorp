@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=620906
+-->
+<head>
+  <title>Test for Bug 620906</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=620906">Mozilla Bug 620906</a>
+<p id="display"></p>
+<div id="content">
+  <iframe src="data:text/html,
+    <body contenteditable
+          onmousedown='
+            document.designMode=&quot;on&quot;;
+            document.designMode=&quot;off&quot;;
+          '
+    >
+      <div style='height: 1000px;'></div>
+    </body>">
+    </iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 620906 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var iframe = document.querySelector("iframe");
+  is(iframe.contentWindow.scrollY, 0, "Sanity check");
+  var rect = iframe.getBoundingClientRect();
+  setTimeout(function() {
+    synthesizeMouse(iframe, rect.width - 5, rect.height / 2, {});
+    setTimeout(function() {
+      isnot(iframe.contentWindow.scrollY, 0, "The scrollbar should work");
+      SimpleTest.finish();
+    }, 0);
+  }, 0);
+});
+
+</script>
+</pre>
+</body>
+</html>

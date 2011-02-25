@@ -109,7 +109,8 @@ public:
 
     virtual bool RecvRegisterChrome(const InfallibleTArray<ChromePackage>& packages,
                                     const InfallibleTArray<ResourceMapping>& resources,
-                                    const InfallibleTArray<OverrideMapping>& overrides);
+                                    const InfallibleTArray<OverrideMapping>& overrides,
+                                    const nsCString& locale);
 
     virtual bool RecvSetOffline(const PRBool& offline);
 
@@ -118,6 +119,7 @@ public:
     nsresult AddRemoteAlertObserver(const nsString& aData, nsIObserver* aObserver);
 
     virtual bool RecvPreferenceUpdate(const PrefTuple& aPref);
+    virtual bool RecvClearUserPreference(const nsCString& aPrefName);
 
     virtual bool RecvNotifyAlertsObserver(const nsCString& aType, const nsString& aData);
 
@@ -131,6 +133,9 @@ public:
                                          const double& z);
 
     virtual bool RecvScreenSizeChanged(const gfxIntSize &size);
+
+    virtual bool RecvFlushMemory(const nsString& reason);
+
 #ifdef ANDROID
     gfxIntSize GetScreenSize() { return mScreenSize; }
 #endif

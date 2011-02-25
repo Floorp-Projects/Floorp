@@ -74,7 +74,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     PRInt32 mode;
     PRInt32 originalMode;
     PRBool framesetOk;
-    PRBool inForeign;
   protected:
     nsHtml5Tokenizer* tokenizer;
   private:
@@ -121,7 +120,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     PRInt32 findLastInScope(nsIAtom* name);
     PRInt32 findLastInListScope(nsIAtom* name);
     PRInt32 findLastInScopeHn();
-    PRBool hasForeignInScope();
     void generateImpliedEndTagsExceptFor(nsIAtom* name);
     void generateImpliedEndTags();
     PRBool isSecondOnStackBody();
@@ -175,16 +173,18 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void appendToCurrentNodeAndPushBodyElement(nsHtml5HtmlAttributes* attributes);
     void appendToCurrentNodeAndPushBodyElement();
     void appendToCurrentNodeAndPushFormElementMayFoster(nsHtml5HtmlAttributes* attributes);
-    void appendToCurrentNodeAndPushFormattingElementMayFoster(PRInt32 ns, nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
-    void appendToCurrentNodeAndPushElement(PRInt32 ns, nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
-    void appendToCurrentNodeAndPushElementMayFoster(PRInt32 ns, nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
-    void appendToCurrentNodeAndPushElementMayFosterNoScoping(PRInt32 ns, nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
-    void appendToCurrentNodeAndPushElementMayFosterCamelCase(PRInt32 ns, nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
-    void appendToCurrentNodeAndPushElementMayFoster(PRInt32 ns, nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes, nsIContent** form);
-    void appendVoidElementToCurrentMayFoster(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContent** form);
-    void appendVoidElementToCurrentMayFoster(PRInt32 ns, nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
-    void appendVoidElementToCurrentMayFosterCamelCase(PRInt32 ns, nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
-    void appendVoidElementToCurrent(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContent** form);
+    void appendToCurrentNodeAndPushFormattingElementMayFoster(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
+    void appendToCurrentNodeAndPushElement(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
+    void appendToCurrentNodeAndPushElementMayFoster(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
+    void appendToCurrentNodeAndPushElementMayFosterMathML(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
+    PRBool annotationXmlEncodingPermitsHtml(nsHtml5HtmlAttributes* attributes);
+    void appendToCurrentNodeAndPushElementMayFosterSVG(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
+    void appendToCurrentNodeAndPushElementMayFoster(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes, nsIContent** form);
+    void appendVoidElementToCurrentMayFoster(nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContent** form);
+    void appendVoidElementToCurrentMayFoster(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
+    void appendVoidElementToCurrentMayFosterSVG(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
+    void appendVoidElementToCurrentMayFosterMathML(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
+    void appendVoidElementToCurrent(nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContent** form);
     void appendVoidFormToCurrent(nsHtml5HtmlAttributes* attributes);
   protected:
     void accumulateCharacters(const PRUnichar* buf, PRInt32 start, PRInt32 length);
@@ -210,7 +210,14 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void elementPushed(PRInt32 ns, nsIAtom* name, nsIContent** node);
     void elementPopped(PRInt32 ns, nsIAtom* name, nsIContent** node);
   public:
-    PRBool cdataSectionAllowed();
+    inline PRBool cdataSectionAllowed()
+    {
+      return isInForeign();
+    }
+
+  private:
+    PRBool isInForeign();
+  public:
     void setFragmentContext(nsIAtom* context, PRInt32 ns, nsIContent** node, PRBool quirks);
   protected:
     nsIContent** currentNode();
@@ -235,7 +242,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     PRInt32 getMode();
     PRInt32 getOriginalMode();
     PRBool isFramesetOk();
-    PRBool isInForeign();
     PRBool isNeedToDropLF();
     PRBool isQuirks();
     PRInt32 getListOfActiveFormattingElementsLength();
@@ -300,7 +306,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 #define NS_HTML5TREE_BUILDER_RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR 52
 #define NS_HTML5TREE_BUILDER_RT_OR_RP 53
 #define NS_HTML5TREE_BUILDER_COMMAND 54
-#define NS_HTML5TREE_BUILDER_PARAM_OR_SOURCE 55
+#define NS_HTML5TREE_BUILDER_PARAM_OR_SOURCE_OR_TRACK 55
 #define NS_HTML5TREE_BUILDER_MGLYPH_OR_MALIGNMARK 56
 #define NS_HTML5TREE_BUILDER_MI_MO_MN_MS_MTEXT 57
 #define NS_HTML5TREE_BUILDER_ANNOTATION_XML 58

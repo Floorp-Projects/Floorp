@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementsByTagName("td")[0].contentEditable = "true";
+  document.getElementsByTagName("td")[0].focus();
+  document.documentElement.contentEditable = "true";
+  document.documentElement.focus();
+  document.execCommand("indent", false, null);
+  document.execCommand("insertParagraph", false, null);
+}
+
+</script>
+</head>
+
+<body onload="boom();" contenteditable="false"><td></td></body>
+
+</html>

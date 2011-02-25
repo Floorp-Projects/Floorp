@@ -57,7 +57,7 @@ def digest_file(filename, digest, chunk_size=1024):
     if hashlib is not None:
         logger.debug('Creating new %s object' % digest)
         h = hashlib.new(digest)
-        f = open(filename)
+        f = open(filename, "rb")
         while True:
             data = f.read(chunk_size)
             if not data:

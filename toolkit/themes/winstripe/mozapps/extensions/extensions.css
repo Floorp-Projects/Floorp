@@ -60,8 +60,6 @@
 }
 @media all and (-moz-windows-compositor) {
   #addons-page {
-    border: 1px solid rgb(40%, 40%, 40%);
-    border-top: none;
     color: #000;
     /* Blame shorlander for this monstrosity. */
     background-image: /* Fade-out texture and light beams at the top */
@@ -165,6 +163,15 @@
   }
 }
 
+/* Plugins aren't yet disabled by safemode (bug 342333),
+   so don't show that warning when viewing plugins. */
+#addons-page[warning="safemode"] .view-pane[type="plugin"] .global-warning-container,
+#addons-page[warning="safemode"] #detail-view[loading="true"] .global-warning-container {
+  background-color: inherit;
+  background-image: none;
+}
+
+
 /*** notification icons ***/
 
 .warning-icon {
@@ -219,6 +226,7 @@
   border: 1px solid #A8B8D1;
   border-radius: 8px;
   background-image: -moz-linear-gradient(top, #FFF, #ECF1F7);
+  background-clip: padding-box;
   box-shadow: 2px 2px 4px #999; 
 }
 
@@ -274,6 +282,8 @@
 }
 
 .category[disabled] {
+  border-top: 0;
+  border-bottom: 0;
   height: 0;
   opacity: 0;
   -moz-transition-property: height, opacity;
@@ -289,7 +299,6 @@
 .category[selected] {
   background-color: rgba(255, 255, 255, 0.4);
   color: #252F3B;
-  font-weight: bold;
   border-color: #C3CEDF;
   -moz-border-end-color: #E2E9F2;
 }
@@ -438,6 +447,40 @@
 }
 
 
+/*** discover view ***/
+
+.discover-spacer-before,
+.discover-spacer-after {
+  -moz-box-flex: 1;
+}
+
+#discover-error .alert {
+  max-width: 45em;
+  -moz-box-flex: 1;
+}
+
+.discover-logo {
+  list-style-image: url("chrome://mozapps/skin/extensions/discover-logo.png");
+  -moz-margin-end: 15px;
+}
+
+.discover-title {
+  font-weight: bold;
+  font-size: 24px;
+  font-family: MetaWebPro-Book, "Trebuchet MS", sans-serif;
+  margin: 0 0 15px 0;
+}
+
+.discover-description {
+  text-align: justify;
+  margin: 0 0 15px 0;
+}
+
+.discover-footer {
+  text-align: justify;
+}
+
+
 /*** list ***/
 
 .list {
@@ -469,10 +512,6 @@
   -moz-border-bottom-colors: rgba(0, 0, 0, 0.1) rgba(255, 255, 255, 0.1);
 }
 
-.addon[status="installing"] {
-  -moz-box-align: center;
-}
-
 .details {
   cursor: pointer;
   margin: 0;
@@ -482,7 +521,7 @@
 .icon-container {
   width: 48px;
   height: 48px;
-  margin: 22px 7px 7px 7px;
+  margin: 3px 7px;
 }
 
 .icon {
@@ -508,8 +547,7 @@
   list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
 }
 
-.name-container,
-.addon[status="installing"] .name {
+.name-container {
   font-size: 150%;
   font-weight: bold;
   color: #3F3F3F;
@@ -719,10 +757,6 @@
   opacity: 0;
 }
 
-#detail-view:not([loading]) .alert-container {
-  visibility: collapse;
-}
-
 #detail-view[loading-extended] .loading {
   opacity: 1;
   -moz-transition-property: opacity;
@@ -762,19 +796,25 @@
 
 #detail-screenshot {
   -moz-margin-end: 2em;
+  max-width: 300px;
+  max-height: 300px;
 }
 
 #detail-desc-container {
   margin-bottom: 2em;
 }
 
-#detail-desc {
+#detail-desc, #detail-fulldesc {
   -moz-margin-start: 6px;
   /* This is necessary to fix layout issues with multi-line descriptions, see
      bug 592712*/
   outline: solid transparent;
   white-space: pre-wrap;
-  min-width: 8em;
+  min-width: 10em;
+}
+
+#detail-fulldesc {
+  margin-top: 1em;
 }
 
 #detail-contributions {
@@ -910,10 +950,17 @@
   margin: 0 8px;
 }
 
+.download-progress[mode="undetermined"] {
+  border-color: #358942 #317F3D #2E773A;
+}
 
+.download-progress[mode="undetermined"] .status-container {
+  padding: 0 2px;
+}
 
 .download-progress .start-cap,
 .download-progress[complete] .end-cap,
+.download-progress[mode="undetermined"] .end-cap,
 .download-progress .progress .progress-bar {
   -moz-appearance: none;
   background-image: -moz-linear-gradient(#71CA83, #54B06C 49%, #43A05D 51%, #60BB76);
@@ -936,6 +983,7 @@
 .download-progress .progress .progress-bar  {
   border-left-width: 0;
   border-right-width: 0;
+  min-height: 21px;
 }
 
 .download-progress .progress {
@@ -961,7 +1009,6 @@
   border-radius: 0 3px 3px 0;
 }
 
-.download-progress .pause,
 .download-progress .cancel {
   -moz-appearance: none;
   background-color: rgba(255, 255, 255, 0.4);
@@ -972,35 +1019,26 @@
   margin: 3px;
 }
 
-.download-progress .pause:hover,
 .download-progress .cancel:hover {
   background-color: rgba(255, 255, 255, 0.6);
   border: 1px solid rgba(0, 0, 0, 0.8);
 }
 
-.download-progress .pause:active:hover,
 .download-progress .cancel:active:hover {
   box-shadow: inset rgba(0, 0, 0, 0.5) 1px 1px 2px;
 }
 
-.download-progress .pause .button-box,
 .download-progress .cancel .button-box {
   padding: 0;
   border: none;
 }
 
-.download-progress .pause .button-text,
 .download-progress .cancel .button-text {
   display: none;
 }
 
-.download-progress .pause .button-icon,
 .download-progress .cancel .button-icon {
   -moz-margin-start: 0;
-}
-
-.download-progress .pause {
-  list-style-image: url('chrome://mozapps/skin/extensions/pause.png');
 }
 
 .download-progress .cancel {

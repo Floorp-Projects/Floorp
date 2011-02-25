@@ -186,6 +186,12 @@
           showSecuritySection();
         }
 
+        if (err == "remoteXUL") {
+          // Remove the "Try again" button for remote XUL errors given that
+          // it is useless.
+          document.getElementById("errorTryAgain").style.display = "none";
+        }
+
         if (err == "cspFrameAncestorBlocked") {
           // Remove the "Try again" button for CSP frame ancestors violation, since it's
           // almost certainly useless. (Bug 553180)
@@ -322,6 +328,7 @@
         <h1 id="et_nssBadCert">&nssBadCert.title;</h1>
         <h1 id="et_malwareBlocked">&malwareBlocked.title;</h1>
         <h1 id="et_cspFrameAncestorBlocked">&cspFrameAncestorBlocked.title;</h1>
+        <h1 id="et_remoteXUL">Remote XUL</h1>
       </div>
       <div id="errorDescriptionsContainer">
         <div id="ed_generic">&generic.longDesc;</div>
@@ -345,6 +352,7 @@
         <div id="ed_nssBadCert">&nssBadCert.longDesc2;</div>
         <div id="ed_malwareBlocked">&malwareBlocked.longDesc;</div>
         <div id="ed_cspFrameAncestorBlocked">&cspFrameAncestorBlocked.longDesc;</div>
+        <div id="ed_remoteXUL"><ul><li>Please contact the website owners to inform them of this problem.</li></ul></div>
       </div>
     </div>
 

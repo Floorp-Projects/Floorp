@@ -800,7 +800,6 @@ var InspectorUI = {
       this.domPanel.hidePopup();
       this.domBox = null;
       this.domTreeView = null;
-      this.propertyPanel.destroy();
     }
     this.inspectCmd.setAttribute("checked", false);
     this.browser = this.win = null; // null out references to browser and window
@@ -1425,13 +1424,13 @@ XPCOMUtils.defineLazyGetter(InspectorUI, "strings", function () {
 
 XPCOMUtils.defineLazyGetter(InspectorUI, "PropertyTreeView", function () {
   var obj = {};
-  Cu.import("resource://gre/modules/PropertyPanel.jsm", obj);
+  Cu.import("resource:///modules/PropertyPanel.jsm", obj);
   return obj.PropertyTreeView;
 });
 
 XPCOMUtils.defineLazyGetter(InspectorUI, "PropertyPanel", function () {
   var obj = {};
-  Cu.import("resource://gre/modules/PropertyPanel.jsm", obj);
+  Cu.import("resource:///modules/PropertyPanel.jsm", obj);
   return obj.PropertyPanel;
 });
 

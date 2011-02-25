@@ -55,7 +55,7 @@ function test()
 
 // Assertion failure: afunbox->parent, at ../jsparse.cpp:1912
 
-  watch("x", Function);
+  this.watch("x", Function);
   NaN = uneval({ get \u3056 (){ return undefined } });
   x+=NaN;
 

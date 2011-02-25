@@ -71,12 +71,17 @@
 #include "gfxPlatform.h"
 #include "qcms.h"
 
+#include "GLContext.h"
+#include "LayerManagerOGL.h"
+#include "gfxQuartzSurface.h"
+
 namespace mozilla {
 namespace layers {
 class LayerManager;
 }
 }
 using namespace mozilla::layers;
+using namespace mozilla::gl;
 
 // defined in nsAppShell.mm
 extern nsCocoaAppModalWindowList *gCocoaAppModalWindowList;
@@ -165,10 +170,6 @@ void nsCocoaWindow::DestroyNativeWindow()
 nsCocoaWindow::~nsCocoaWindow()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (mFullScreen) {
-    nsCocoaUtils::HideOSChromeOnScreen(PR_FALSE, [mWindow screen]);
-  }
 
   // Notify the children that we're gone.  Popup windows (e.g. tooltips) can
   // have nsChildView children.  'kid' is an nsChildView object if and only if
@@ -424,6 +425,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
     // This can happen when the window is not on the primary screen.
     [mWindow setFrame:wantedFrame display:NO];
   }
+  UpdateBounds();
 
   if (mWindowType == eWindowType_invisible) {
     [mWindow setLevel:kCGDesktopWindowLevelKey];
@@ -482,6 +484,10 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
 
   nsBaseWidget::Destroy();
   nsBaseWidget::OnDestroy();
+
+  if (mFullScreen) {
+    nsCocoaUtils::HideOSChromeOnScreen(PR_FALSE, [mWindow screen]);
+  }
 
   return NS_OK;
 }
@@ -932,12 +938,85 @@ nsCocoaWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 }
 
 LayerManager*
-nsCocoaWindow::GetLayerManager(bool* aAllowRetaining)
+nsCocoaWindow::GetLayerManager(LayerManagerPersistence, bool* aAllowRetaining)
 {
   if (mPopupContentView) {
     return mPopupContentView->GetLayerManager(aAllowRetaining);
   }
   return nsnull;
+}
+
+void
+nsCocoaWindow::DrawOver(LayerManager* aManager, nsIntRect aRect)
+{
+  if (!([mWindow styleMask] & NSResizableWindowMask)) {
+    return;
+  }
+
+  nsRefPtr<LayerManagerOGL> manager(static_cast<LayerManagerOGL*>(aManager));
+  if (!manager) {
+    return;
+  }
+  
+  float bottomX = aRect.x + aRect.width;
+  float bottomY = aRect.y + aRect.height;
+
+  nsRefPtr<gfxQuartzSurface> image =
+    new gfxQuartzSurface(gfxIntSize(15, 15), gfxASurface::ImageFormatARGB32);
+  CGContextRef ctx = image->GetCGContext();
+
+  CGContextSetShouldAntialias(ctx, false);
+  CGPoint points[6];
+  points[0] = CGPointMake(13.0f, 4.0f);
+  points[1] = CGPointMake(3.0f, 14.0f);
+  points[2] = CGPointMake(13.0f, 8.0f);
+  points[3] = CGPointMake(7.0f, 14.0f);
+  points[4] = CGPointMake(13.0f, 12.0f);
+  points[5] = CGPointMake(11.0f, 14.0f);
+  CGContextSetRGBStrokeColor(ctx, 0.00f, 0.00f, 0.00f, 0.15f);
+  CGContextStrokeLineSegments(ctx, points, 6);
+
+  points[0] = CGPointMake(13.0f, 5.0f);
+  points[1] = CGPointMake(4.0f, 14.0f);
+  points[2] = CGPointMake(13.0f, 9.0f);
+  points[3] = CGPointMake(8.0f, 14.0f);
+  points[4] = CGPointMake(13.0f, 13.0f);
+  points[5] = CGPointMake(12.0f, 14.0f);
+  CGContextSetRGBStrokeColor(ctx, 0.13f, 0.13f, 0.13f, 0.54f);
+  CGContextStrokeLineSegments(ctx, points, 6);
+
+  points[0] = CGPointMake(13.0f, 6.0f);
+  points[1] = CGPointMake(5.0f, 14.0f);
+  points[2] = CGPointMake(13.0f, 10.0f);
+  points[3] = CGPointMake(9.0f, 14.0f);
+  points[5] = CGPointMake(13.0f, 13.9f);
+  points[4] = CGPointMake(13.0f, 14.0f);
+  CGContextSetRGBStrokeColor(ctx, 0.84f, 0.84f, 0.84f, 0.55f);
+  CGContextStrokeLineSegments(ctx, points, 6);
+
+  GLuint tex = 0;
+
+  ShaderProgramType shader = 
+#ifdef MOZ_ENABLE_LIBXUL
+    manager->gl()->UploadSurfaceToTexture(image, nsIntRect(0, 0, 15, 15), tex);
+#else
+    manager->gl()->UploadSurfaceToTextureExternal(image, nsIntRect(0, 0, 15, 15), tex);
+#endif
+
+  ColorTextureLayerProgram *program =
+    manager->GetColorTextureLayerProgram(shader);
+  program->Activate();
+  program->SetLayerQuadRect(nsIntRect(bottomX - 15,
+                                      bottomY - 15,
+                                      15,
+                                      15));
+  program->SetLayerTransform(gfx3DMatrix());
+  program->SetLayerOpacity(1.0);
+  program->SetRenderOffset(nsIntPoint(0,0));
+  program->SetTextureUnit(0);
+
+  manager->BindAndDrawQuad(program);
+  manager->gl()->fDeleteTextures(1, &tex);
 }
 
 nsTransparencyMode nsCocoaWindow::GetTransparencyMode()
@@ -987,8 +1066,6 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
 {
   if (!mWindow || (mBounds.x == aX && mBounds.y == aY))
     return NS_OK;
-
-  mBounds.MoveTo(aX, aY);
 
   // The point we have is in Gecko coordinates (origin top-left). Convert
   // it to Cocoa ones (origin bottom-left).
@@ -1129,15 +1206,13 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
   nsIntRect newBounds = nsIntRect(aX, aY, aWidth, aHeight);
   FitRectToVisibleAreaForScreen(newBounds, [mWindow screen]);
 
-  nsIntRect windowBounds(nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]));
-  BOOL isMoving = (windowBounds.x != newBounds.x || windowBounds.y != newBounds.y);
-  BOOL isResizing = (windowBounds.width != newBounds.width || windowBounds.height != newBounds.height);
+  BOOL isMoving = (mBounds.x != newBounds.x || mBounds.y != newBounds.y);
+  BOOL isResizing = (mBounds.width != newBounds.width || mBounds.height != newBounds.height);
 
   if (!mWindow || (!isMoving && !isResizing))
     return NS_OK;
-  
-  mBounds = newBounds;
-  NSRect newFrame = nsCocoaUtils::GeckoRectToCocoaRect(mBounds);
+
+  NSRect newFrame = nsCocoaUtils::GeckoRectToCocoaRect(newBounds);
 
   // We ignore aRepaint -- we have to call display:YES, otherwise the
   // title bar doesn't immediately get repainted and is displayed in
@@ -1153,18 +1228,42 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
   
-  nsIntRect windowBounds(nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]));
-  return Resize(windowBounds.x, windowBounds.y, aWidth, aHeight, aRepaint);
+  return Resize(mBounds.x, mBounds.y, aWidth, aHeight, aRepaint);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP nsCocoaWindow::GetClientBounds(nsIntRect &aRect)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  if ([mWindow isKindOfClass:[ToolbarWindow class]] &&
+      [(ToolbarWindow*)mWindow drawsContentsIntoWindowFrame]) {
+    aRect = nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]);
+  } else {
+    NSRect contentRect = [mWindow contentRectForFrameRect:[mWindow frame]];
+    aRect = nsCocoaUtils::CocoaRectToGeckoRect(contentRect);
+  }
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+void
+nsCocoaWindow::UpdateBounds()
+{
+  mBounds = nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]);
 }
 
 NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(nsIntRect &aRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  aRect = nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]);
-  // printf("GetScreenBounds: output: %d,%d,%d,%d\n", aRect.x, aRect.y, aRect.width, aRect.height);
+  NS_ASSERTION(mBounds == nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]),
+               "mBounds out of sync!");
+
+  aRect = mBounds;
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -1319,16 +1418,19 @@ GetWindowSizeMode(NSWindow* aWindow) {
 void
 nsCocoaWindow::ReportMoveEvent()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  UpdateBounds();
+
   // Dispatch the move event to Gecko
   nsGUIEvent guiEvent(PR_TRUE, NS_MOVE, this);
-  nsIntRect rect;
-  GetScreenBounds(rect);
-  mBounds.MoveTo(rect.TopLeft());
-  guiEvent.refPoint.x = rect.x;
-  guiEvent.refPoint.y = rect.y;
+  guiEvent.refPoint.x = mBounds.x;
+  guiEvent.refPoint.y = mBounds.y;
   guiEvent.time = PR_IntervalNow();
   nsEventStatus status = nsEventStatus_eIgnore;
   DispatchEvent(&guiEvent, status);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void
@@ -1343,32 +1445,18 @@ nsCocoaWindow::DispatchSizeModeEvent()
 }
 
 void
-nsCocoaWindow::ReportSizeEvent(NSRect *r)
+nsCocoaWindow::ReportSizeEvent()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSRect windowFrame = [mWindow frame];
-  if (!r)
-    r = &windowFrame;
-
-  mBounds.width  = nscoord(r->size.width);
-  mBounds.height = nscoord(r->size.height);
-
-  if ([mWindow isKindOfClass:[ToolbarWindow class]] &&
-      [(ToolbarWindow*)mWindow drawsContentsIntoWindowFrame]) {
-    // Report the frame rect instead of the content rect. This will make our
-    // root widget NSView bigger than the window's content view, and since it's
-    // anchored at the bottom, it will extend upwards into the titlebar.
-    windowFrame = *r;
-  } else {
-    windowFrame = [mWindow contentRectForFrameRect:(*r)];
-  }
+  UpdateBounds();
 
   nsSizeEvent sizeEvent(PR_TRUE, NS_SIZE, this);
   sizeEvent.time = PR_IntervalNow();
 
-  nsIntRect rect = nsCocoaUtils::CocoaRectToGeckoRect(windowFrame);
-  sizeEvent.windowSize = &rect;
+  nsIntRect innerBounds;
+  GetClientBounds(innerBounds);
+  sizeEvent.windowSize = &innerBounds;
   sizeEvent.mWinWidth  = mBounds.width;
   sizeEvent.mWinHeight = mBounds.height;
 
@@ -1423,11 +1511,10 @@ nsIntPoint nsCocoaWindow::GetClientOffset()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  NSSize windowSize = [mWindow frame].size;
-  NSRect contentRect = [mWindow contentRectForFrameRect:[mWindow frame]];
+  nsIntRect clientRect;
+  GetClientBounds(clientRect);
 
-  return nsIntPoint(NSToIntRound(windowSize.width - contentRect.size.width),
-                    NSToIntRound(windowSize.height - contentRect.size.height));
+  return clientRect.TopLeft() - mBounds.TopLeft();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsIntPoint(0, 0));
 }
@@ -1612,8 +1699,9 @@ NS_IMETHODIMP nsCocoaWindow::BeginSecureKeyboardInput()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsresult rv = nsBaseWidget::BeginSecureKeyboardInput();
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
     ::EnableSecureEventInput();
+  }
   return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -1624,8 +1712,9 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsresult rv = nsBaseWidget::EndSecureKeyboardInput();
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
     ::DisableSecureEventInput();
+  }
   return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -2079,6 +2168,17 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   return mDPI;
 }
 
+- (BOOL)respondsToSelector:(SEL)aSelector
+{
+  // Claim the window doesn't respond to this so that the system
+  // doesn't steal keyboard equivalents for it. Bug 613710.
+  if (aSelector == @selector(cancelOperation:)) {
+    return NO;
+  }
+
+  return [super respondsToSelector:aSelector];
+}
+
 - (void) doCommandBySelector:(SEL)aSelector
 {
   // We override this so that it won't beep if it can't act.
@@ -2106,15 +2206,15 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 // Drawing the unified gradient in the titlebar and the toolbar works like this:
 // 1) In the style sheet we set the toolbar's -moz-appearance to -moz-mac-unified-toolbar.
 // 2) When the toolbar is visible and we paint the application chrome
-//    window in nsChildView::drawRect, Gecko calls
-//    nsNativeThemeCocoa::RegisterWidgetGeometry for the widget type
+//    window, the array that Gecko passes nsChildView::UpdateThemeGeometries
+//    will contain an entry for the widget type NS_THEME_TOOLBAR or
 //    NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR.
-// 3) This finds the toolbar frame's ToolbarWindow and passes the toolbar
-//    frame's height to setUnifiedToolbarHeight.
-// 4) If the toolbar height has changed, a titlebar redraw is triggered by
-//    [self display] and the upper part of the unified gradient is drawn in the
-//    titlebar.
-// 5) DrawUnifiedToolbar draws the lower part of the unified gradient in the toolbar.
+// 3) nsChildView::UpdateThemeGeometries finds the toolbar frame's ToolbarWindow
+//    and passes the toolbar frame's height to setUnifiedToolbarHeight.
+// 4) If the toolbar height has changed, a titlebar redraw is triggered and the
+//    upper part of the unified gradient is drawn in the titlebar.
+// 5) The lower part of the unified gradient in the toolbar is drawn during
+//    normal window content painting in nsNativeThemeCocoa::DrawUnifiedToolbar.
 //
 // Whenever the unified gradient is drawn in the titlebar or the toolbar, both
 // titlebar height and toolbar height must be known in order to construct the
@@ -2137,7 +2237,6 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     mBackgroundColor = [NSColor whiteColor];
 
     mUnifiedToolbarHeight = 0.0f;
-    mInUnifiedToolbarReset = NO;
 
     // setBottomCornerRounded: is a private API call, so we check to make sure
     // we respond to it just in case.
@@ -2181,20 +2280,6 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   return mBackgroundColor;
 }
 
-// This is called by nsNativeThemeCocoa.mm's RegisterWidgetGeometry.
-// We need to know the toolbar's height in order to draw the correct
-// unified gradient in the titlebar.
-- (void)notifyToolbarAt:(float)aY height:(float)aHeight
-{
-  // Ignore unexpected notifications about the toolbar height
-  if (!mInUnifiedToolbarReset)
-    return;
-
-  if (aY <= 0.0 && aY + aHeight > mUnifiedToolbarHeight) {
-    mUnifiedToolbarHeight = aY + aHeight;
-  }
-}
-
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect
 {
   [self setTitlebarNeedsDisplayInRect:aRect sync:NO];
@@ -2235,27 +2320,20 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   return frameRect.size.height - [self contentRectForFrameRect:frameRect].size.height;
 }
 
-- (float)beginMaybeResetUnifiedToolbar
+- (void)setUnifiedToolbarHeight:(float)aHeight
 {
-  mInUnifiedToolbarReset = YES;
-  float old = mUnifiedToolbarHeight;
-  mUnifiedToolbarHeight = 0.0;
-  return old;
-}
+  if ([self drawsContentsIntoWindowFrame] || aHeight == mUnifiedToolbarHeight)
+    return;
 
-- (void)endMaybeResetUnifiedToolbar:(float)aOldHeight
-{
-  if (mInUnifiedToolbarReset) {
-    mInUnifiedToolbarReset = NO;
-    if (mUnifiedToolbarHeight == aOldHeight)
-      return;
+  mUnifiedToolbarHeight = aHeight;
 
-    [self setContentBorderThickness:mUnifiedToolbarHeight forEdge:NSMaxYEdge];
+  // Update sheet positioning hint.
+  [self setContentBorderThickness:mUnifiedToolbarHeight forEdge:NSMaxYEdge];
 
-    // Since this function is only called inside painting, the repaint needs to
-    // be synchronous.
-    [self setTitlebarNeedsDisplayInRect:[self titlebarRect] sync:YES];
-  }
+  // Redraw the title bar. If we're inside painting, we'll do it right now,
+  // otherwise we'll just invalidate it.
+  BOOL needSyncRedraw = ([NSView focusView] != nil);
+  [self setTitlebarNeedsDisplayInRect:[self titlebarRect] sync:needSyncRedraw];
 }
 
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState

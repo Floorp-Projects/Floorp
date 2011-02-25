@@ -76,6 +76,8 @@ quartz-cglayers-fix-fallback.patch: Bug 572912; fix bug in fallback code in prev
 
 quartz-get-image.patch: Bug 575521; add a way to get the image surface associated with a surface
 
+quartz-create-for-data.patch: Bug 575521; add a way to create quartz surfaces backed with application-provided data
+
 premultiply-alpha-solid-gradients.patch: bug 539165; multiply the solid color by the alpha component before using it for a solid surface
 
 xlib-initialize-members.path: bug 548793; initialize XRender version if the server doesn't have the extension
@@ -153,6 +155,16 @@ quartz-layers-content.patch: Store cairo content type in CGLayer surfaces
 quartz-optimize-OVER.patch: Optimize OVER to SOURCE for opaque patterns
 
 quartz-check-imageSurfaceEquiv.patch: Drop cairo_quartz_surface_t's "imageSurfaceEquiv" member variable if we have problems creating it
+
+disable-subpixel-antialiasing.patch: Add API to disable subpixel antialiasing completely for a target surface
+
+tee-surfaces-pointwise.patch: Composite tee subsurfaces pointwise if possible
+
+pattern_get_surface-no-error.patch: Don't put a pattern into error if cairo_pattern_get_surface fails
+
+missing-cairo-clip-init.diff: Missing cairo_clip_init call in cairo_gstate_show_text_glyphs lead to crash
+
+fix-cairo-win32-print-gdi-error.diff: Don't use fwprintf with char* format.  Flush stderr so that all error messages appears before exit.
 
 ==== pixman patches ====
 

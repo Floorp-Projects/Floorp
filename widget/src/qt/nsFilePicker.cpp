@@ -38,13 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <qfile.h>
-#include <qstringlist.h>
-#include <qapplication.h>
-#include <qgraphicsproxywidget.h>
-#include <qgraphicswidget.h>
-#include <qgraphicsscene.h>
-
 #include "nsFilePicker.h"
 
 #include "nsILocalFile.h"
@@ -55,6 +48,8 @@
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
 #include "nsIWidget.h"
+#include "mozqwidget.h"
+#include "nsWindow.h"
 #include "prlog.h"
 
 #ifdef PR_LOGGING
@@ -76,7 +71,6 @@ nsFilePicker::nsFilePicker()
 
 nsFilePicker::~nsFilePicker()
 {
-    delete mDialog;
 }
 
 NS_IMETHODIMP
@@ -286,13 +280,16 @@ void nsFilePicker::InitNative(nsIWidget *parent, const nsAString &title, PRInt16
 {
     PR_LOG(sFilePickerLog, PR_LOG_DEBUG, ("nsFilePicker::InitNative"));
 
-    nsAutoString str(title);
-    mDialog = new QFileDialog(0, QString::fromUtf16(str.get()));
-
-    QGraphicsWidget *parentWidget = static_cast<QGraphicsWidget*>(parent->GetNativeData(NS_NATIVE_WIDGET));
-    if (parentWidget && parentWidget->scene()) {
-        parentWidget->scene()->addWidget(mDialog);
+    MozQWidget *parentMozWidget = (parent) ?
+        static_cast<MozQWidget*>(parent->GetNativeData(NS_NATIVE_WIDGET)) : nsnull;
+    QWidget *parentWidget = (parentMozWidget) ?
+        parentMozWidget->getReceiver()->GetViewWidget() : nsnull;
+    if (!parentWidget) {
+        NS_WARNING("Can't find parent for QFileDialog");
     }
+
+    nsAutoString str(title);
+    mDialog = new QFileDialog(parentWidget, QString::fromUtf16(str.get()));
 
     mMode = mode;
 }

@@ -99,6 +99,7 @@ WebGLContext::WebGLContext()
     mSynthesizedGLError = LOCAL_GL_NO_ERROR;
     mPixelStoreFlipY = PR_FALSE;
     mPixelStorePremultiplyAlpha = PR_FALSE;
+    mPixelStoreColorspaceConversion = BROWSER_DEFAULT_WEBGL;
 
     mShaderValidation = PR_TRUE;
 
@@ -401,10 +402,11 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     PRBool forceOSMesa = PR_FALSE;
     PRBool preferEGL = PR_FALSE;
     PRBool preferOpenGL = PR_FALSE;
+    PRBool forceEnabled = PR_FALSE;
     prefService->GetBoolPref("webgl.force_osmesa", &forceOSMesa);
-    prefService->GetBoolPref("webgl.prefer_egl", &preferEGL);
-    prefService->GetBoolPref("webgl.prefer_gl", &preferOpenGL);
-
+    prefService->GetBoolPref("webgl.prefer-egl", &preferEGL);
+    prefService->GetBoolPref("webgl.prefer-native-gl", &preferOpenGL);
+    prefService->GetBoolPref("webgl.force-enabled", &forceEnabled);
     if (PR_GetEnv("MOZ_WEBGL_PREFER_EGL")) {
         preferEGL = PR_TRUE;
     }
@@ -414,19 +416,15 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     PRBool useANGLE = PR_TRUE;
 
     nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
-    if (gfxInfo) {
+    if (gfxInfo && !forceEnabled) {
         PRInt32 status;
         if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_OPENGL, &status))) {
-            if (status == nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION ||
-                status == nsIGfxInfo::FEATURE_BLOCKED_DEVICE)
-            {
+            if (status != nsIGfxInfo::FEATURE_NO_INFO) {
                 useOpenGL = PR_FALSE;
             }
         }
         if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_ANGLE, &status))) {
-            if (status == nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION ||
-                status == nsIGfxInfo::FEATURE_BLOCKED_DEVICE)
-            {
+            if (status != nsIGfxInfo::FEATURE_NO_INFO) {
                 useANGLE = PR_FALSE;
             }
         }
@@ -576,9 +574,12 @@ WebGLContext::GetInputStream(const char* aMimeType,
     if (surf->CairoStatus() != 0)
         return NS_ERROR_FAILURE;
 
-    gl->ReadPixelsIntoImageSurface(0, 0, mWidth, mHeight, surf);
+    nsRefPtr<gfxContext> tmpcx = new gfxContext(surf);
+    // Use Render() to make sure that appropriate y-flip gets applied
+    nsresult rv = Render(tmpcx, gfxPattern::FILTER_NEAREST);
+    if (NS_FAILED(rv))
+        return rv;
 
-    nsresult rv;
     const char encoderPrefix[] = "@mozilla.org/image/encoder;2?type=";
     nsAutoArrayPtr<char> conid(new char[strlen(encoderPrefix) + strlen(aMimeType) + 1]);
 
@@ -621,6 +622,7 @@ WebGLContext::GetCanvasLayer(CanvasLayer *aOldLayer,
         if (mInvalidated) {
             aOldLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
             mInvalidated = PR_FALSE;
+            HTMLCanvasElement()->GetPrimaryCanvasFrame()->MarkLayersActive();
         }
         return aOldLayer;
     }
@@ -694,6 +696,33 @@ WebGLContext::GetContextAttributes(jsval *aResult)
     return NS_OK;
 }
 
+/* [noscript] DOMString mozGetUnderlyingParamString(in WebGLenum pname); */
+NS_IMETHODIMP
+WebGLContext::MozGetUnderlyingParamString(PRUint32 pname, nsAString& retval)
+{
+    retval.SetIsVoid(PR_TRUE);
+
+    MakeContextCurrent();
+
+    switch (pname) {
+    case LOCAL_GL_VENDOR:
+    case LOCAL_GL_RENDERER:
+    case LOCAL_GL_VERSION:
+    case LOCAL_GL_SHADING_LANGUAGE_VERSION:
+    case LOCAL_GL_EXTENSIONS: {
+        const char *s = (const char *) gl->fGetString(pname);
+        retval.Assign(NS_ConvertASCIItoUTF16(nsDependentCString(s)));
+    }
+        break;
+
+    default:
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    return NS_OK;
+}
+
+
 //
 // XPCOM goop
 //
@@ -709,14 +738,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WebGLContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCanvasElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-DOMCI_DATA(CanvasRenderingContextWebGL, WebGLContext)
+DOMCI_DATA(WebGLRenderingContext, WebGLContext)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebGLContext)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWebGLRenderingContext)
   NS_INTERFACE_MAP_ENTRY(nsICanvasRenderingContextInternal)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMWebGLRenderingContext)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CanvasRenderingContextWebGL)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLRenderingContext)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(WebGLBuffer)
@@ -829,31 +858,37 @@ NAME_NOT_SUPPORTED(WebGLFramebuffer)
 NAME_NOT_SUPPORTED(WebGLRenderbuffer)
 
 /* [noscript] attribute WebGLint location; */
-NS_IMETHODIMP WebGLUniformLocation::GetLocation(WebGLint *aLocation)
+NS_IMETHODIMP
+WebGLUniformLocation::GetLocation(WebGLint *aLocation)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-NS_IMETHODIMP WebGLUniformLocation::SetLocation(WebGLint aLocation)
+
+NS_IMETHODIMP
+WebGLUniformLocation::SetLocation(WebGLint aLocation)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* readonly attribute WebGLint size; */
-NS_IMETHODIMP WebGLActiveInfo::GetSize(WebGLint *aSize)
+NS_IMETHODIMP
+WebGLActiveInfo::GetSize(WebGLint *aSize)
 {
     *aSize = mSize;
     return NS_OK;
 }
 
 /* readonly attribute WebGLenum type; */
-NS_IMETHODIMP WebGLActiveInfo::GetType(WebGLenum *aType)
+NS_IMETHODIMP
+WebGLActiveInfo::GetType(WebGLenum *aType)
 {
     *aType = mType;
     return NS_OK;
 }
 
 /* readonly attribute DOMString name; */
-NS_IMETHODIMP WebGLActiveInfo::GetName(nsAString & aName)
+NS_IMETHODIMP
+WebGLActiveInfo::GetName(nsAString & aName)
 {
     aName = mName;
     return NS_OK;

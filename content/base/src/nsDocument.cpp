@@ -185,6 +185,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 #include "mozAutoDocUpdate.h"
 #include "nsGlobalWindow.h"
+#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 
 #ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
@@ -202,6 +203,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 #include "mozilla/dom/Link.h"
 #include "nsIHTMLDocument.h"
+#include "nsXULAppAPI.h"
 
 using namespace mozilla::dom;
 
@@ -855,6 +857,44 @@ nsExternalResourceMap::ShowViewers()
   mMap.EnumerateRead(ExternalResourceShower, nsnull);
 }
 
+void
+TransferZoomLevels(nsIDocument* aFromDoc,
+                   nsIDocument* aToDoc)
+{
+  NS_ABORT_IF_FALSE(aFromDoc && aToDoc,
+                    "transferring zoom levels from/to null doc");
+
+  nsIPresShell* fromShell = aFromDoc->GetShell();
+  if (!fromShell)
+    return;
+
+  nsPresContext* fromCtxt = fromShell->GetPresContext();
+  if (!fromCtxt)
+    return;
+
+  nsIPresShell* toShell = aToDoc->GetShell();
+  if (!toShell)
+    return;
+
+  nsPresContext* toCtxt = toShell->GetPresContext();
+  if (!toCtxt)
+    return;
+
+  toCtxt->SetFullZoom(fromCtxt->GetFullZoom());
+  toCtxt->SetTextZoom(fromCtxt->TextZoom());
+}
+
+void
+TransferShowingState(nsIDocument* aFromDoc, nsIDocument* aToDoc)
+{
+  NS_ABORT_IF_FALSE(aFromDoc && aToDoc,
+                    "transferring showing state from/to null doc");
+
+  if (aFromDoc->IsShowing()) {
+    aToDoc->OnPageShow(PR_TRUE, nsnull);
+  }
+}
+
 nsresult
 nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
                                            nsIDocumentViewer* aViewer,
@@ -912,6 +952,10 @@ nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
     newResource->mDocument = doc;
     newResource->mViewer = aViewer;
     newResource->mLoadGroup = aLoadGroup;
+    if (doc) {
+      TransferZoomLevels(aDisplayDocument, doc);
+      TransferShowingState(aDisplayDocument, doc);
+    }
   }
 
   const nsTArray< nsCOMPtr<nsIObserver> > & obs = load->Observers();
@@ -1934,6 +1978,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   // manually.
 
   tmp->mInUnlinkOrDeletion = PR_FALSE;
+
+  tmp->mIdentifierMap.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
@@ -2128,6 +2174,9 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   // Release the stylesheets list.
   mDOMStyleSheets = nsnull;
 
+  // Clear the original URI so SetDocumentURI sets it.
+  mOriginalURI = nsnull;
+
   SetDocumentURI(aURI);
   // If mDocumentBaseURI is null, nsIDocument::GetBaseURI() returns
   // mDocumentURI.
@@ -2215,12 +2264,12 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
 
   // Now reset our inline style and attribute sheets.
   nsresult rv = NS_OK;
-  nsStyleSet::sheetType attrSheetType = GetAttrSheetType();
   if (mAttrStyleSheet) {
     // Remove this sheet from all style sets
     nsCOMPtr<nsIPresShell> shell = GetShell();
     if (shell) {
-      shell->StyleSet()->RemoveStyleSheet(attrSheetType, mAttrStyleSheet);
+      shell->StyleSet()->RemoveStyleSheet(nsStyleSet::ePresHintSheet,
+                                          mAttrStyleSheet);
     }
     mAttrStyleSheet->Reset(aURI);
   } else {
@@ -2260,20 +2309,12 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   return rv;
 }
 
-nsStyleSet::sheetType
-nsDocument::GetAttrSheetType()
-{
-  return nsStyleSet::ePresHintSheet;
-}
-
 void
 nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
 {
   NS_PRECONDITION(aStyleSet, "Must have a style set");
   NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::ePresHintSheet) == 0,
                   "Style set already has a preshint sheet?");
-  NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::eHTMLPresHintSheet) == 0,
-                  "Style set already has a HTML preshint sheet?");
   NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::eDocSheet) == 0,
                   "Style set already has document sheets?");
   NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::eStyleAttrSheet) == 0,
@@ -2281,7 +2322,7 @@ nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
   NS_PRECONDITION(mStyleAttrStyleSheet, "No style attr stylesheet?");
   NS_PRECONDITION(mAttrStyleSheet, "No attr stylesheet?");
   
-  aStyleSet->AppendStyleSheet(GetAttrSheetType(), mAttrStyleSheet);
+  aStyleSet->AppendStyleSheet(nsStyleSet::ePresHintSheet, mAttrStyleSheet);
 
   aStyleSet->AppendStyleSheet(nsStyleSet::eStyleAttrSheet,
                               mStyleAttrStyleSheet);
@@ -2509,6 +2550,11 @@ nsDocument::SetDocumentURI(nsIURI* aURI)
   else {
     equalBases = !oldBase && !newBase;
   }
+
+  // If this is the first time we're setting the document's URI, set the
+  // document's original URI.
+  if (!mOriginalURI)
+    mOriginalURI = mDocumentURI;
 
   // If changing the document's URI changed the base URI of the document, we
   // need to refresh the hrefs of all the links on the page.
@@ -2956,19 +3002,7 @@ nsDocument::SetBaseURI(nsIURI* aURI)
 void
 nsDocument::GetBaseTarget(nsAString &aBaseTarget)
 {
-  aBaseTarget.Truncate();
-  Element* head = GetHeadElement();
-  if (!head) {
-    return;
-  }
-  
-  for (ChildIterator iter(head); !iter.IsDone(); iter.Next()) {
-    nsIContent* child = iter;
-    if (child->NodeInfo()->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
-        child->GetAttr(kNameSpaceID_None, nsGkAtoms::target, aBaseTarget)) {
-      return;
-    }
-  }
+  aBaseTarget = mBaseTarget;
 }
 
 void
@@ -3769,7 +3803,7 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     if (!mWillReparent) {
       // We really shouldn't have a wrapper here but if we do we need to make sure
       // it has the correct parent.
-      JSObject *obj = GetWrapper();
+      JSObject *obj = GetWrapperPreserveColor();
       if (obj) {
         JSObject *newScope = aScriptGlobalObject->GetGlobalJSObject();
         nsIScriptContext *scx = aScriptGlobalObject->GetContext();
@@ -3982,7 +4016,6 @@ nsDocument::BeginLoad()
   NS_DOCUMENT_NOTIFY_OBSERVERS(BeginLoad, (this));
 }
 
-// static
 void
 nsDocument::ReportEmptyGetElementByIdArg()
 {
@@ -3992,7 +4025,7 @@ nsDocument::ReportEmptyGetElementByIdArg()
                                   nsnull,
                                   EmptyString(), 0, 0,
                                   nsIScriptError::warningFlag,
-                                  "DOM");
+                                  "DOM", this);
 }
 
 Element*
@@ -4337,8 +4370,7 @@ nsDocument::CreateElement(const nsAString& aTagName,
     ToLowerCase(aTagName, lcTagName);
   }
 
-  rv = CreateElem(needsLowercase ? static_cast<const nsAString&>(lcTagName)
-                                 : aTagName,
+  rv = CreateElem(needsLowercase ? lcTagName : aTagName,
                   nsnull,
                   IsHTML() ? kNameSpaceID_XHTML : GetDefaultNamespaceID(),
                   PR_TRUE, aReturn);
@@ -5288,11 +5320,10 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
     nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
                                     "UseOfGetBoxObjectForWarning",
                                     nsnull, 0,
-                                    static_cast<nsIDocument*>(this)->
-                                      GetDocumentURI(),
+                                    nsnull,
                                     EmptyString(), 0, 0,
                                     nsIScriptError::warningFlag,
-                                    "BoxObjects");
+                                    "BoxObjects", this);
   }
 
   *aResult = nsnull;
@@ -5778,7 +5809,7 @@ nsDocument::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  return nsNodeUtils::CloneNodeImpl(this, aDeep, aReturn);
+  return nsNodeUtils::CloneNodeImpl(this, aDeep, !mCreatingStaticClone, aReturn);
 }
 
 NS_IMETHODIMP
@@ -7012,6 +7043,7 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
     }
   }
 
+  // Check if we have pending network requests
   nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
   if (loadGroup) {
     nsCOMPtr<nsISimpleEnumerator> requests;
@@ -7037,6 +7069,13 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
         return PR_FALSE;
       }
     }
+  }
+
+  // Check if we have running IndexedDB transactions
+  indexedDB::IndexedDatabaseManager* idbManager =
+    indexedDB::IndexedDatabaseManager::Get();
+  if (idbManager && idbManager->HasOpenTransactions(win)) {
+    return PR_FALSE;
   }
 
   PRBool canCache = PR_TRUE;
@@ -7076,10 +7115,6 @@ nsDocument::Destroy()
   // XXX We really should let cycle collection do this, but that currently still
   //     leaks (see https://bugzilla.mozilla.org/show_bug.cgi?id=406684).
   nsContentUtils::ReleaseWrapper(static_cast<nsINode*>(this), this);
-
-  // Try really really hard to make sure we don't leak things through
-  // mIdentifierMap
-  mIdentifierMap.Clear();
 }
 
 void
@@ -8101,22 +8136,24 @@ nsDocument::AddImage(imgIRequest* aImage)
   if (!success)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  nsresult rv = NS_OK;
+
   // If this is the first insertion and we're locking images, lock this image
   // too.
-  if ((oldCount == 0) && mLockingImages) {
-    nsresult rv = aImage->LockImage();
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = aImage->RequestDecode();
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (oldCount == 0 && mLockingImages) {
+    rv = aImage->LockImage();
+    if (NS_SUCCEEDED(rv))
+      rv = aImage->RequestDecode();
   }
 
   // If this is the first insertion and we're animating images, request
   // that this image be animated too.
   if (oldCount == 0 && mAnimatingImages) {
-    return aImage->IncrementAnimationConsumers();
+    nsresult rv2 = aImage->IncrementAnimationConsumers();
+    rv = NS_SUCCEEDED(rv) ? rv2 : rv;
   }
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult
@@ -8141,17 +8178,21 @@ nsDocument::RemoveImage(imgIRequest* aImage)
     mImageTracker.Put(aImage, count);
   }
 
+  nsresult rv = NS_OK;
+
   // If we removed the image from the tracker and we're locking images, unlock
   // this image.
-  if ((count == 0) && mLockingImages)
-    return aImage->UnlockImage();
+  if (count == 0 && mLockingImages)
+    rv = aImage->UnlockImage();
 
   // If we removed the image from the tracker and we're animating images,
   // remove our request to animate this image.
-  if (count == 0 && mAnimatingImages)
-    return aImage->DecrementAnimationConsumers();
+  if (count == 0 && mAnimatingImages) {
+    nsresult rv2 = aImage->DecrementAnimationConsumers();
+    rv = NS_SUCCEEDED(rv) ? rv2 : rv;
+  }
 
-  return NS_OK;
+  return rv;
 }
 
 PLDHashOperator LockEnumerator(imgIRequest* aKey,
@@ -8175,6 +8216,13 @@ PLDHashOperator UnlockEnumerator(imgIRequest* aKey,
 nsresult
 nsDocument::SetImageLockingState(PRBool aLocked)
 {
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content &&
+      !nsContentUtils::GetBoolPref("content.image.allow_locking", PR_TRUE)) {
+    return NS_OK;
+  }
+#endif // MOZ_IPC
+
   // If there's no change, there's nothing to do.
   if (mLockingImages == aLocked)
     return NS_OK;

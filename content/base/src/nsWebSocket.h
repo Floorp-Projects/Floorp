@@ -103,6 +103,13 @@ public:
 
   static void ReleaseGlobals();
 
+  // Determine if preferences allow WebSocket
+  static PRBool PrefEnabled();
+
+  const PRUint64 WindowID() const { return mWindowID; }
+  const nsCString& GetScriptFile() const { return mScriptFile; }
+  const PRUint32 GetScriptLine() const { return mScriptLine; }
+
 protected:
   nsresult ParseURL(const nsString& aURL);
   nsresult SetProtocol(const nsString& aProtocol);
@@ -152,6 +159,16 @@ protected:
   PRUint32 mOutgoingBufferedAmount; // actually, we get this value from
                                     // mConnection when we are connected,
                                     // but we need this one after disconnecting.
+
+  // Web Socket owner information:
+  // - the script file name, UTF8 encoded.
+  // - source code line number where the Web Socket object was constructed.
+  // - the window ID of the outer window where the script lives. Note that this 
+  // may not be the same as the Web Socket owner window.
+  // These attributes are used for error reporting.
+  nsCString mScriptFile;
+  PRUint32 mScriptLine;
+  PRUint64 mWindowID;
 
 private:
   nsWebSocket(const nsWebSocket& x);   // prevent bad usage

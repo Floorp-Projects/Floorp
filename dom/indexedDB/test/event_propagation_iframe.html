@@ -21,7 +21,7 @@
     }
 
     function errorHandler(event) {
-      ok(false, "indexedDB error (" + event.code + "): " + event.message);
+      ok(false, "indexedDB error, code " + event.target.errorCode);
       finishTest();
     }
 
@@ -53,7 +53,7 @@
     };
 
     function errorEventCounter(event) {
-      ok(event instanceof IDBErrorEvent, "Got an error event");
+      ok(event.type == "error", "Got an error event");
       ok(event.target instanceof window[eventChain[0]],
          "Correct event.target");
 
@@ -95,12 +95,12 @@
                 .add(uri, "indexedDB",
                      Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
 
-      let request = moz_indexedDB.open(window.location.pathname);
+      let request = mozIndexedDB.open(window.location.pathname);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
       db.onerror = errorEventCounter;
       db.addEventListener("error", errorEventCounter, true);
 
@@ -109,9 +109,9 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      event.transaction.oncomplete = grabEventAndContinueHandler;
+      event.target.transaction.oncomplete = grabEventAndContinueHandler;
 
-      db.createObjectStore("foo", "", true);
+      db.createObjectStore("foo", { autoIncrement: true });
       yield;
 
       let transaction = db.transaction("foo", IDBTransaction.READ_WRITE);
@@ -139,8 +139,13 @@
       objectStore = transaction.objectStore("foo");
 
       request = objectStore.add({}, 1);
+      request.onsuccess = grabEventAndContinueHandler;
+      request.onerror = errorHandler;
+      event = yield;
+
+      request = objectStore.add({}, 1);
       request.onsuccess = function(event) {
-        ok(false, "Did not expect third add to succeed.");
+        ok(false, "Did not expect second add to succeed.");
       };
       request.onerror = errorEventCounter;
       yield;

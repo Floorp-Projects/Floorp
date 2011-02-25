@@ -52,7 +52,6 @@ public:
     // want it in another format.
     virtual nsresult GetWidth(const char* aString, PRUint32 aLength,
                               nscoord& aWidth, nsThebesRenderingContext *aContext) = 0;
-    // aCachedOffset will be updated with a new offset.
     virtual nsresult GetWidth(const PRUnichar* aString, PRUint32 aLength,
                               nscoord& aWidth, PRInt32 *aFontID,
                               nsThebesRenderingContext *aContext) = 0;
@@ -86,12 +85,15 @@ public:
                                 nscoord aX, nscoord aY,
                                 const nscoord* aSpacing,
                                 nsThebesRenderingContext *aContext) = 0;
-    // aCachedOffset will be updated with a new offset.
     virtual nsresult DrawString(const PRUnichar* aString, PRUint32 aLength,
                                 nscoord aX, nscoord aY,
                                 PRInt32 aFontID,
                                 const nscoord* aSpacing,
                                 nsThebesRenderingContext *aContext) = 0;
+    virtual nsresult DrawString(const PRUnichar* aString, PRUint32 aLength,
+                                nscoord aX, nscoord aY,
+                                nsIRenderingContext *aContext,
+                                nsIRenderingContext *aTextRunConstructionContext) = 0;
 
 #ifdef MOZ_MATHML
     // These two functions get the bounding metrics for this handle,

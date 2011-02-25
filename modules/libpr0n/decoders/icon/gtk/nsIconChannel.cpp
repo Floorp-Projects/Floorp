@@ -163,35 +163,22 @@ static GtkWidget *gStockImageWidget = nsnull;
 static GnomeIconTheme *gIconTheme = nsnull;
 #endif
 
-#if GTK_CHECK_VERSION(2,4,0)
-static GtkIconFactory *gIconFactory = nsnull;
-#endif
-
 static void
 ensure_stock_image_widget()
 {
+  // Only the style of the GtkImage needs to be used, but the widget is kept
+  // to track dynamic style changes.
   if (!gProtoWindow) {
     gProtoWindow = gtk_window_new(GTK_WINDOW_POPUP);
-    gtk_widget_realize(gProtoWindow);
     GtkWidget* protoLayout = gtk_fixed_new();
     gtk_container_add(GTK_CONTAINER(gProtoWindow), protoLayout);
 
     gStockImageWidget = gtk_image_new();
     gtk_container_add(GTK_CONTAINER(protoLayout), gStockImageWidget);
-    gtk_widget_realize(gStockImageWidget);
-  }
-}
 
-#if GTK_CHECK_VERSION(2,4,0)
-static void
-ensure_icon_factory()
-{
-  if (!gIconFactory) {
-    gIconFactory = gtk_icon_factory_new();
-    gtk_icon_factory_add_default(gIconFactory);
+    gtk_widget_ensure_style(gStockImageWidget);
   }
 }
-#endif
 
 #ifdef MOZ_ENABLE_GNOMEUI
 static nsresult
@@ -295,7 +282,6 @@ moz_gtk_icon_size(const char *name)
 nsresult
 nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
 {
-#if GTK_CHECK_VERSION(2,4,0)
   nsresult rv;
 
   if (NS_FAILED(ensure_libgnomeui()) || NS_FAILED(ensure_libgnome()) || NS_FAILED(ensure_libgnomevfs())) {
@@ -443,9 +429,6 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
                                  getter_AddRefs(mRealChannel));
   g_object_unref(scaled);
   return rv;
-#else // GTK_CHECK_VERSION(2,4,0)
-  return NS_ERROR_NOT_AVAILABLE;
-#endif // GTK_CHECK_VERSION(2,4,0)
 }
 #endif
 
@@ -472,32 +455,84 @@ nsIconChannel::Init(nsIURI* aURI)
   iconURI->GetIconState(iconStateString);
 
   GtkIconSize icon_size = moz_gtk_icon_size(iconSizeString.get());
-   
+  GtkStateType state = iconStateString.EqualsLiteral("disabled") ?
+    GTK_STATE_INSENSITIVE : GTK_STATE_NORMAL;
+
+  // First lookup the icon by stock id and text direction.
+  GtkTextDirection direction = GTK_TEXT_DIR_NONE;
+  if (StringEndsWith(stockIcon, NS_LITERAL_CSTRING("-ltr"))) {
+    direction = GTK_TEXT_DIR_LTR;
+  } else if (StringEndsWith(stockIcon, NS_LITERAL_CSTRING("-rtl"))) {
+    direction = GTK_TEXT_DIR_RTL;
+  }
+
+  PRBool forceDirection = direction != GTK_TEXT_DIR_NONE;
+  nsCAutoString stockID;
+  PRBool useIconName = PR_FALSE;
+  if (!forceDirection) {
+    direction = gtk_widget_get_default_direction();
+    stockID = stockIcon;
+  } else {
+    // GTK versions < 2.22 use icon names from concatenating stock id with
+    // -(rtl|ltr), which is how the moz-icon stock name is interpreted here.
+    stockID = Substring(stockIcon, 0, stockIcon.Length() - 4);
+    // However, if we lookup bidi icons by the stock name, then GTK versions
+    // >= 2.22 will use a bidi lookup convention that most icon themes do not
+    // yet follow.  Therefore, we first check to see if the theme supports the
+    // old icon name as this will have bidi support (if found).
+    GtkIconTheme *icon_theme = gtk_icon_theme_get_default();
+    // Micking what gtk_icon_set_render_icon does with sizes, though it's not
+    // critical as icons will be scaled to suit size.  It just means we follow
+    // the same pathes and so share caches.
+    gint width, height;
+    if (gtk_icon_size_lookup(icon_size, &width, &height)) {
+      gint size = NS_MIN(width, height);
+      // We use gtk_icon_theme_lookup_icon() without
+      // GTK_ICON_LOOKUP_USE_BUILTIN instead of gtk_icon_theme_has_icon() so
+      // we don't pick up fallback icons added by distributions for backward
+      // compatibility.
+      GtkIconInfo *icon =
+        gtk_icon_theme_lookup_icon(icon_theme, stockIcon.get(),
+                                   size, (GtkIconLookupFlags)0);
+      if (icon) {
+        useIconName = PR_TRUE;
+        gtk_icon_info_free(icon);
+      }
+    }
+  }
+
   ensure_stock_image_widget();
+  GtkStyle *style = gtk_widget_get_style(gStockImageWidget);
+  GtkIconSet *icon_set = NULL;
+  if (!useIconName) {
+    icon_set = gtk_style_lookup_icon_set(style, stockID.get());
+  }
 
-  gboolean sensitive = strcmp(iconStateString.get(), "disabled");
-  gtk_widget_set_sensitive (gStockImageWidget, sensitive);
-
-  GdkPixbuf *icon = gtk_widget_render_icon(gStockImageWidget, stockIcon.get(),
-                                           icon_size, NULL);
-#if GTK_CHECK_VERSION(2,4,0)
-  if (!icon) {
-    ensure_icon_factory();
-      
-    GtkIconSet *icon_set = gtk_icon_set_new();
+  if (!icon_set) {
+    // Either we have choosen icon-name lookup for a bidi icon, or stockIcon is
+    // not a stock id so we assume it is an icon name.
+    useIconName = PR_TRUE;
+    // Creating a GtkIconSet is a convenient way to allow the style to
+    // render the icon, possibly with variations suitable for insensitive
+    // states.
+    icon_set = gtk_icon_set_new();
     GtkIconSource *icon_source = gtk_icon_source_new();
     
     gtk_icon_source_set_icon_name(icon_source, stockIcon.get());
     gtk_icon_set_add_source(icon_set, icon_source);
-    gtk_icon_factory_add(gIconFactory, stockIcon.get(), icon_set);
-    gtk_icon_set_unref(icon_set);
     gtk_icon_source_free(icon_source);
-
-    icon = gtk_widget_render_icon(gStockImageWidget, stockIcon.get(),
-                                  icon_size, NULL);
   }
-#endif
 
+  GdkPixbuf *icon =
+    gtk_icon_set_render_icon (icon_set, style, direction, state,
+                              icon_size, gStockImageWidget, NULL);
+  if (useIconName) {
+    gtk_icon_set_unref(icon_set);
+  }
+
+  // According to documentation, gtk_icon_set_render_icon() never returns
+  // NULL, but it does return NULL when we have the problem reported here:
+  // https://bugzilla.gnome.org/show_bug.cgi?id=629878#c13
   if (!icon)
     return NS_ERROR_NOT_AVAILABLE;
   
@@ -516,13 +551,6 @@ nsIconChannel::Shutdown() {
     gProtoWindow = nsnull;
     gStockImageWidget = nsnull;
   }
-#if GTK_CHECK_VERSION(2,4,0)
-  if (gIconFactory) {
-    gtk_icon_factory_remove_default(gIconFactory);
-    g_object_unref(gIconFactory);
-    gIconFactory = nsnull;
-  }
-#endif
 #ifdef MOZ_ENABLE_GNOMEUI
   if (gIconTheme) {
     g_object_unref(G_OBJECT(gIconTheme));

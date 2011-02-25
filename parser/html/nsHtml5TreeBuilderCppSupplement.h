@@ -149,9 +149,7 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
           if (url) {
             mSpeculativeLoadQueue.AppendElement()->InitManifest(*url);
           }
-        } else if (nsHtml5Atoms::base == aName &&
-            (mode == NS_HTML5TREE_BUILDER_IN_HEAD ||
-             mode == NS_HTML5TREE_BUILDER_AFTER_HEAD)) {
+        } else if (nsHtml5Atoms::base == aName) {
           nsString* url =
               aAttributes->getValue(nsHtml5AttributeName::ATTR_HREF);
           if (url) {
@@ -649,11 +647,12 @@ nsHtml5TreeBuilder::StreamEnded()
 }
 
 void
-nsHtml5TreeBuilder::NeedsCharsetSwitchTo(const nsACString& aCharset)
+nsHtml5TreeBuilder::NeedsCharsetSwitchTo(const nsACString& aCharset,
+                                         PRInt32 aCharsetSource)
 {
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(eTreeOpNeedsCharsetSwitchTo, aCharset);  
+  treeOp->Init(eTreeOpNeedsCharsetSwitchTo, aCharset, aCharsetSource);
 }
 
 void
@@ -669,7 +668,7 @@ nsHtml5TreeBuilder::IsDiscretionaryFlushSafe()
 {
   return !(charBufferLen && 
            currentPtr >= 0 && 
-           stack[currentPtr]->fosterParenting);
+           stack[currentPtr]->isFosterParenting());
 }
 
 void

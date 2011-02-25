@@ -15,7 +15,7 @@
  * The Original Code is Places code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -43,7 +43,11 @@
 #include "nsEscape.h"
 #include "mozIPlacesAutoComplete.h"
 #include "SQLFunctions.h"
+#include "nsMathUtils.h"
 #include "nsUTF8Utils.h"
+#include "nsINavHistoryService.h"
+#include "nsPrintfCString.h"
+#include "nsNavHistory.h"
 
 using namespace mozilla::storage;
 
@@ -211,8 +215,8 @@ namespace places {
   nsresult
   MatchAutoCompleteFunction::create(mozIStorageConnection *aDBConn)
   {
-    nsRefPtr<MatchAutoCompleteFunction> function(new MatchAutoCompleteFunction);
-    NS_ENSURE_TRUE(function, NS_ERROR_OUT_OF_MEMORY);
+    nsRefPtr<MatchAutoCompleteFunction> function =
+      new MatchAutoCompleteFunction();
 
     nsresult rv = aDBConn->CreateFunction(
       NS_LITERAL_CSTRING("autocomplete_match"), kArgIndexLength, function
@@ -349,8 +353,7 @@ namespace places {
     if (!HAS_BEHAVIOR(JAVASCRIPT) &&
         !StringBeginsWith(searchString, NS_LITERAL_CSTRING("javascript:")) &&
         StringBeginsWith(url, NS_LITERAL_CSTRING("javascript:"))) {
-      NS_IF_ADDREF(*_result = new IntegerVariant(0));
-      NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
+      NS_ADDREF(*_result = new IntegerVariant(0));
       return NS_OK;
     }
 
@@ -371,8 +374,7 @@ namespace places {
       (HAS_BEHAVIOR(OPENPAGE) && openPageCount == 0)
     );
     if (!matches) {
-      NS_IF_ADDREF(*_result = new IntegerVariant(0));
-      NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
+      NS_ADDREF(*_result = new IntegerVariant(0));
       return NS_OK;
     }
 
@@ -393,27 +395,234 @@ namespace places {
     while (matches && tokenizer.hasMoreTokens()) {
       const nsDependentCSubstring &token = tokenizer.nextToken();
 
-      bool matchTags = searchFunction(token, tags);
-      bool matchTitle = searchFunction(token, title);
-
-      // Make sure we match something in the title or tags if we have to.
-      matches = matchTags || matchTitle;
-      if (HAS_BEHAVIOR(TITLE) && !matches)
-        break;
-
-      bool matchURL = searchFunction(token, fixedURI);
-      // If we do not match the URL when we have to, reset matches to false.
-      // Otherwise, keep track that we did match the current search.
-      if (HAS_BEHAVIOR(URL) && !matchURL)
-        matches = false;
-      else
-        matches = matches || matchURL;
+      if (HAS_BEHAVIOR(TITLE) && HAS_BEHAVIOR(URL)) {
+        matches = (searchFunction(token, title) || searchFunction(token, tags)) &&
+                  searchFunction(token, fixedURI);
+      }
+      else if (HAS_BEHAVIOR(TITLE)) {
+        matches = searchFunction(token, title) || searchFunction(token, tags);
+      }
+      else if (HAS_BEHAVIOR(URL)) {
+        matches = searchFunction(token, fixedURI);
+      }
+      else {
+        matches = searchFunction(token, title) ||
+                  searchFunction(token, tags) ||
+                  searchFunction(token, fixedURI);
+      }
     }
 
-    NS_IF_ADDREF(*_result = new IntegerVariant(matches ? 1 : 0));
-    NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
+    NS_ADDREF(*_result = new IntegerVariant(matches ? 1 : 0));
     return NS_OK;
     #undef HAS_BEHAVIOR
+  }
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Frecency Calculation Function
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// CalculateFrecencyFunction
+
+  /* static */
+  nsresult
+  CalculateFrecencyFunction::create(mozIStorageConnection *aDBConn)
+  {
+    nsCOMPtr<CalculateFrecencyFunction> function =
+      new CalculateFrecencyFunction();
+
+    nsresult rv = aDBConn->CreateFunction(
+      NS_LITERAL_CSTRING("calculate_frecency"), 1, function
+    );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  NS_IMPL_THREADSAFE_ISUPPORTS1(
+    CalculateFrecencyFunction,
+    mozIStorageFunction
+  )
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// mozIStorageFunction
+
+  NS_IMETHODIMP
+  CalculateFrecencyFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
+                                            nsIVariant **_result)
+  {
+    // Fetch arguments.  Use default values if they were omitted.
+    PRUint32 numEntries;
+    nsresult rv = aArguments->GetNumEntries(&numEntries);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ASSERTION(numEntries > 0, "unexpected number of arguments");
+
+    PRInt64 pageId = aArguments->AsInt64(0);
+    PRInt32 typed = numEntries > 1 ? aArguments->AsInt32(1) : 0;
+    PRInt32 fullVisitCount = numEntries > 2 ? aArguments->AsInt32(2) : 0;
+    PRInt64 bookmarkId = numEntries > 3 ? aArguments->AsInt64(3) : 0;
+    PRInt32 visitCount = 0;
+    PRInt32 hidden = 0;
+    PRInt32 isQuery = 0;
+    float pointsForSampledVisits = 0.0;
+
+    // This is a const version of the history object for thread-safety.
+    const nsNavHistory* history = nsNavHistory::GetConstHistoryService();
+    NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
+
+    if (pageId > 0) {
+      // The page is already in the database, and we can fetch current
+      // params from the database.
+      nsCOMPtr<mozIStorageStatement> getPageInfo =
+        history->GetStatementByStoragePool(DB_PAGE_INFO_FOR_FRECENCY);
+      NS_ENSURE_STATE(getPageInfo);
+      mozStorageStatementScoper infoScoper(getPageInfo);
+
+      rv = getPageInfo->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), pageId);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = getPageInfo->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"),
+                                             NS_LITERAL_CSTRING("livemark/feedURI"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRBool hasResult;
+      rv = getPageInfo->ExecuteStep(&hasResult);
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_TRUE(hasResult, NS_ERROR_UNEXPECTED);
+      rv = getPageInfo->GetInt32(0, &typed);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = getPageInfo->GetInt32(1, &hidden);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = getPageInfo->GetInt32(2, &visitCount);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = getPageInfo->GetInt32(3, &fullVisitCount);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = getPageInfo->GetInt64(4, &bookmarkId);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = getPageInfo->GetInt32(5, &isQuery);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Get a sample of the last visits to the page, to calculate its weight.
+      nsCOMPtr<mozIStorageStatement> getVisits =
+        history->GetStatementByStoragePool(DB_VISITS_FOR_FRECENCY);
+      NS_ENSURE_STATE(getVisits);
+      mozStorageStatementScoper visitsScoper(getVisits);
+
+      rv = getVisits->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), pageId);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRInt32 numSampledVisits = 0;
+      // The visits query is already limited to the last N visits.
+      while (NS_SUCCEEDED(getVisits->ExecuteStep(&hasResult)) && hasResult) {
+        numSampledVisits++;
+
+        PRInt32 visitType;
+        rv = getVisits->GetInt32(1, &visitType);
+        NS_ENSURE_SUCCESS(rv, rv);
+        PRInt32 bonus = history->GetFrecencyTransitionBonus(visitType, true);
+
+        // Always add the bookmark visit bonus.
+        if (bookmarkId) {
+          bonus += history->GetFrecencyTransitionBonus(nsINavHistoryService::TRANSITION_BOOKMARK, true);
+        }
+
+        // If bonus was zero, we can skip the work to determine the weight.
+        if (bonus) {
+          PRInt32 ageInDays = getVisits->AsInt32(0);
+          PRInt32 weight = history->GetFrecencyAgedWeight(ageInDays);
+          pointsForSampledVisits += (float)(weight * (bonus / 100.0));
+        }
+      }
+
+      // If we found some visits for this page, use the calculated weight.
+      if (numSampledVisits) {
+        // fix for bug #412219
+        if (!pointsForSampledVisits) {
+          // For URIs with zero points in the sampled recent visits
+          // but "browsing" type visits outside the sampling range, set
+          // frecency to -visit_count, so they're still shown in autocomplete.
+          NS_ADDREF(*_result = new IntegerVariant(-visitCount));
+        }
+        else {
+          // Estimate frecency using the last few visits.
+          // Use NS_ceilf() so that we don't round down to 0, which
+          // would cause us to completely ignore the place during autocomplete.
+          NS_ADDREF(*_result = new IntegerVariant((PRInt32) NS_ceilf(fullVisitCount * NS_ceilf(pointsForSampledVisits) / numSampledVisits)));
+        }
+
+        return NS_OK;
+      }
+    }
+
+    // This page is unknown or has no visits.  It could have just been added, so
+    // use passed in or default values.
+
+    // The code below works well for guessing the frecency on import, and we'll
+    // correct later once we have visits.
+    // TODO: What if we don't have visits and we never visit?  We could end up
+    // with a really high value that keeps coming up in ac results? Should we
+    // only do this on import?  Have to figure it out.
+    PRInt32 bonus = 0;
+
+    // Make it so something bookmarked and typed will have a higher frecency
+    // than something just typed or just bookmarked.
+    if (bookmarkId && !isQuery) {
+      bonus += history->GetFrecencyTransitionBonus(nsINavHistoryService::TRANSITION_BOOKMARK, false);;
+      // For unvisited bookmarks, produce a non-zero frecency, so that they show
+      // up in URL bar autocomplete.
+      fullVisitCount = 1;
+    }
+
+    if (typed) {
+      bonus += history->GetFrecencyTransitionBonus(nsINavHistoryService::TRANSITION_TYPED, false);
+    }
+
+    // Assume "now" as our ageInDays, so use the first bucket.
+    pointsForSampledVisits = history->GetFrecencyBucketWeight(1) * (bonus / (float)100.0); 
+
+    // use NS_ceilf() so that we don't round down to 0, which
+    // would cause us to completely ignore the place during autocomplete
+    NS_ADDREF(*_result = new IntegerVariant((PRInt32) NS_ceilf(fullVisitCount * NS_ceilf(pointsForSampledVisits))));
+
+    return NS_OK;
+  }
+
+////////////////////////////////////////////////////////////////////////////////
+//// GUID Creation Function
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// GenerateGUIDFunction
+
+  /* static */
+  nsresult
+  GenerateGUIDFunction::create(mozIStorageConnection *aDBConn)
+  {
+    nsCOMPtr<GenerateGUIDFunction> function = new GenerateGUIDFunction();
+    nsresult rv = aDBConn->CreateFunction(
+      NS_LITERAL_CSTRING("generate_guid"), 0, function
+    );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  NS_IMPL_THREADSAFE_ISUPPORTS1(
+    GenerateGUIDFunction,
+    mozIStorageFunction
+  )
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// mozIStorageFunction
+
+  NS_IMETHODIMP
+  GenerateGUIDFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
+                                       nsIVariant **_result)
+  {
+    nsCAutoString guid;
+    nsresult rv = GenerateGUID(guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ADDREF(*_result = new UTF8TextVariant(guid));
+    return NS_OK;
   }
 
 } // namespace places

@@ -1,0 +1,49 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Leaving Page Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body onload="runTest();">
+  <iframe id="inner"></iframe>
+  <a id="a" href="leaving_page_iframe.html"></a>
+
+  <script type="text/javascript;version=1.7">
+    onmessage = function(e) {
+      ok(false, "gotmessage: " + e.data);
+    }
+    function testSteps()
+    {
+      var iframe = $("inner");
+      iframe.src = "leaving_page_iframe.html";
+      iframe.onload = continueToNextStep;
+      yield;
+      is(iframe.contentWindow.location.href, $("a").href,
+         "should navigate to iframe page");
+      yield;
+      is(iframe.contentWindow.location.href, "about:blank",
+         "should nagivate to about:blank");
+         
+      let request = mozIndexedDB.open(location);
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.target.result;
+      db.transaction(["mystore"]).objectStore("mystore").get(42).onsuccess =
+        grabEventAndContinueHandler;
+      event = yield;
+      is(event.target.result.hello, "world", "second modification rolled back");
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+</html>

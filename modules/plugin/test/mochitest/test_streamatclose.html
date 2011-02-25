@@ -22,11 +22,11 @@
   var p = document.getElementById('embedtest');
 
   function startTest() {
-    ok(p.streamTest("neverending.sjs", false, null,
+    ok(p.streamTest("neverending.sjs", false, null, null,
                     function(r, t) {
                       is(r, 2, "Stream should have failed");
                       urlnotified = true;
-                    }), "neverending.sjs started successfully");
+                    }, null, true), "neverending.sjs started successfully");
 
     setTimeout(removePlugin, 500);
   }

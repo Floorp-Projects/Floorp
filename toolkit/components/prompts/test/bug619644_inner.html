@@ -1,0 +1,7 @@
+<head></head><body><p>Original content</p>
+<script>
+    window.opener.postMessage("", "*");
+    confirm ("Message");
+    document.write ("Extra content");
+    window.opener.postMessage(document.documentElement.innerHTML, "*");
+</script></body>

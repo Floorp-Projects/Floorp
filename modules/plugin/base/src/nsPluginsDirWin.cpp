@@ -59,21 +59,32 @@
 
 /* Local helper functions */
 
-static char* GetKeyValue(WCHAR* verbuf, WCHAR* key)
+static char* GetKeyValue(void* verbuf, const WCHAR* key,
+                         UINT language, UINT codepage)
 {
+  WCHAR keybuf[64]; // plenty for the template below, with the longest key
+                    // we use (currently "FileDescription")
+  const WCHAR keyFormat[] = L"\\StringFileInfo\\%04X%04X\\%s";
   WCHAR *buf = NULL;
   UINT blen;
 
-  ::VerQueryValueW(verbuf, key, (void **)&buf, &blen);
-
-  if (buf) {
-    return PL_strdup(NS_ConvertUTF16toUTF8(buf).get());
+  if (_snwprintf_s(keybuf, NS_ARRAY_LENGTH(keybuf), _TRUNCATE,
+                   keyFormat, language, codepage, key) < 0)
+  {
+    NS_NOTREACHED("plugin info key too long for buffer!");
+    return nsnull;
   }
 
-  return nsnull;
+  if (::VerQueryValueW(verbuf, keybuf, (void **)&buf, &blen) == 0 ||
+      buf == nsnull || blen == 0)
+  {
+    return nsnull;
+  }
+
+  return PL_strdup(NS_ConvertUTF16toUTF8(buf, blen).get());
 }
 
-static char* GetVersion(WCHAR* verbuf)
+static char* GetVersion(void* verbuf)
 {
   VS_FIXEDFILEINFO *fileInfo;
   UINT fileInfoLen;
@@ -160,18 +171,14 @@ static void FreeStringArray(PRUint32 variants, char ** array)
   PR_Free(array);
 }
 
-PRBool CanLoadPlugin(const char* binaryPath)
+static PRBool CanLoadPlugin(const PRUnichar* aBinaryPath)
 {
 #if defined(_M_IX86) || defined(_M_X64) || defined(_M_IA64)
   PRBool canLoad = PR_FALSE;
 
-  int len = MultiByteToWideChar(CP_UTF8, 0, binaryPath, -1, NULL, 0);
-  WCHAR *wBinaryPath = new WCHAR[len];
-  MultiByteToWideChar(CP_UTF8, 0, binaryPath, -1, wBinaryPath, len);
-  HANDLE file = CreateFileW(wBinaryPath, GENERIC_READ,
+  HANDLE file = CreateFileW(aBinaryPath, GENERIC_READ,
                             FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
                             OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-  delete[] wBinaryPath;
   if (file != INVALID_HANDLE_VALUE) {
     HANDLE map = CreateFileMappingW(file, NULL, PAGE_READONLY, 0,
                                     GetFileSize(file, NULL), NULL);
@@ -235,9 +242,7 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
       if (!PL_strncasecmp(filename, "npoji", 5) ||
           !PL_strncasecmp(filename, "npjava", 6))
         return PR_FALSE;
-
-      // Check this last since it involves opening the file.
-      return CanLoadPlugin(cPath);
+      return PR_TRUE;
     }
   }
 
@@ -326,7 +331,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
 
   nsresult rv = NS_OK;
   DWORD zerome, versionsize;
-  WCHAR* verbuf = nsnull;
+  void* verbuf = nsnull;
 
   if (!mPlugin)
     return NS_ERROR_NULL_POINTER;
@@ -334,6 +339,9 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
   nsAutoString fullPath;
   if (NS_FAILED(rv = mPlugin->GetPath(fullPath)))
     return rv;
+
+  if (!CanLoadPlugin(fullPath.get()))
+    return NS_ERROR_FAILURE;
 
   nsAutoString fileName;
   if (NS_FAILED(rv = mPlugin->GetLeafName(fileName)))
@@ -349,18 +357,21 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
   versionsize = ::GetFileVersionInfoSizeW(lpFilepath, &zerome);
 
   if (versionsize > 0)
-    verbuf = (WCHAR*)PR_Malloc(versionsize);
+    verbuf = PR_Malloc(versionsize);
   if (!verbuf)
     return NS_ERROR_OUT_OF_MEMORY;
 
   if (::GetFileVersionInfoW(lpFilepath, NULL, versionsize, verbuf))
   {
-    info.fName = GetKeyValue(verbuf, L"\\StringFileInfo\\040904E4\\ProductName");
-    info.fDescription = GetKeyValue(verbuf, L"\\StringFileInfo\\040904E4\\FileDescription");
-
-    char *mimeType = GetKeyValue(verbuf, L"\\StringFileInfo\\040904E4\\MIMEType");
-    char *mimeDescription = GetKeyValue(verbuf, L"\\StringFileInfo\\040904E4\\FileOpenName");
-    char *extensions = GetKeyValue(verbuf, L"\\StringFileInfo\\040904E4\\FileExtents");
+    // TODO: get appropriately-localized info from plugin file
+    UINT lang = 1033; // language = English
+    UINT cp = 1252;   // codepage = Western
+    info.fName = GetKeyValue(verbuf, L"ProductName", lang, cp);
+    info.fDescription = GetKeyValue(verbuf, L"FileDescription", lang, cp);
+ 
+    char *mimeType = GetKeyValue(verbuf, L"MIMEType", lang, cp);
+    char *mimeDescription = GetKeyValue(verbuf, L"FileOpenName", lang, cp);
+    char *extensions = GetKeyValue(verbuf, L"FileExtents", lang, cp);
 
     info.fVariantCount = CalculateVariantCount(mimeType);
     info.fMimeTypeArray = MakeStringArray(info.fVariantCount, mimeType);

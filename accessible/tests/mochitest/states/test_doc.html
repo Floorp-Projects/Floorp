@@ -14,60 +14,8 @@
           src="../common.js"></script>
   <script type="application/javascript"
           src="../states.js"></script>
-  <script type="application/javascript"
-          src="../events.js"></script>
 
   <script type="application/javascript">
-    function designModeOn()
-    {
-      this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, document)
-      ];
-
-      this.invoke = function designModeOn_invoke()
-      {
-        document.designMode = "on";
-      }
-
-      this.finalCheck = function designModeOn_finalCheck()
-      {
-        testStates(document, 0, EXT_STATE_EDITABLE);
-        testStates("p", 0, EXT_STATE_EDITABLE);
-        testStates("document", 0, EXT_STATE_EDITABLE);
-        testStates("editable_document", 0, EXT_STATE_EDITABLE);
-      }
-
-      this.getID = function designModeOn_getID()
-      {
-        return "design mode on";
-      }
-    }
-
-    function designModeOff()
-    {
-      this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, document)
-      ];
-
-      this.invoke = function designModeOn_invoke()
-      {
-        document.designMode = "off";
-      }
-
-      this.finalCheck = function designModeOn_finalCheck()
-      {
-        testStates(document, STATE_READONLY);
-        testStates("document", STATE_READONLY);
-        testStates("editable_document", 0, EXT_STATE_EDITABLE);
-      }
-
-      this.getID = function designModeOn_getID()
-      {
-        return "design mode off";
-      }
-    }
-
-    var gQueue = null;
     function doTest()
     {
       // Bug 566542: root accesible should expose active state when focused.
@@ -88,11 +36,20 @@
       testStates("document", STATE_READONLY);
       testStates("editable_document", 0, EXT_STATE_EDITABLE);
 
-      // Design mode on/off trigger document accessible subtree recreation.
-      gQueue = new eventQueue();
-      gQueue.push(new designModeOn());
-      gQueue.push(new designModeOff());
-      gQueue.invoke(); // Will call SimpleTest.finish();
+      document.designMode = "on";
+
+      testStates(document, 0, EXT_STATE_EDITABLE);
+      testStates("p", 0, EXT_STATE_EDITABLE);
+      testStates("document", 0, EXT_STATE_EDITABLE);
+      testStates("editable_document", 0, EXT_STATE_EDITABLE);
+
+      document.designMode = "off";
+
+      testStates(document, STATE_READONLY);
+      testStates("document", STATE_READONLY);
+      testStates("editable_document", 0, EXT_STATE_EDITABLE);
+
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();

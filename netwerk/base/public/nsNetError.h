@@ -240,6 +240,14 @@
 #define NS_ERROR_UNSAFE_CONTENT_TYPE \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 74)
 
+/**
+ * The request failed because the user tried to access to a remote XUL document
+ * from a website that is not in its white-list.
+ */
+#define NS_ERROR_REMOTE_XUL \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 75)
+
+
 /******************************************************************************
  * FTP specific error codes:
  *

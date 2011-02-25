@@ -1289,7 +1289,7 @@ PRBool
 nsHTMLSelectElement::IsHTMLFocusable(PRBool aWithMouse,
                                      PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
-  if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
+  if (nsGenericHTMLFormElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
     return PR_TRUE;
   }
 
@@ -1572,11 +1572,11 @@ nsHTMLSelectElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   if (aVisitor.mEvent->message == NS_FOCUS_CONTENT) {
     // If the invalid UI is shown, we should show it while focused and
     // update the invalid/valid UI.
-    mCanShowInvalidUI = !IsValid() && ShouldShowInvalidUI();
+    mCanShowInvalidUI = !IsValid() && ShouldShowValidityUI();
 
     // If neither invalid UI nor valid UI is shown, we shouldn't show the valid
     // UI while focused.
-    mCanShowValidUI = ShouldShowValidUI();
+    mCanShowValidUI = ShouldShowValidityUI();
 
     // We don't have to update NS_EVENT_STATE_MOZ_UI_INVALID nor
     // NS_EVENT_STATE_MOZ_UI_VALID given that the states should not change.
@@ -1606,7 +1606,9 @@ nsHTMLSelectElement::IntrinsicState() const
     } else {
       state |= NS_EVENT_STATE_INVALID;
 
-      if (mCanShowInvalidUI && ShouldShowInvalidUI()) {
+      if ((!mForm || !mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) &&
+          (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
+           (mCanShowInvalidUI && ShouldShowValidityUI()))) {
         state |= NS_EVENT_STATE_MOZ_UI_INVALID;
       }
     }
@@ -1616,11 +1618,14 @@ nsHTMLSelectElement::IntrinsicState() const
     //    :-moz-ui-invalid applying before it was focused ;
     // 2. The element is either valid or isn't allowed to have
     //    :-moz-ui-invalid applying ;
-    // 3. The rules to have :-moz-ui-valid applying are fulfilled
-    //    (see ShouldShowValidUI()).
-    if (mCanShowValidUI &&
-        (IsValid() || !mCanShowInvalidUI) &&
-        ShouldShowValidUI()) {
+    // 3. The element has no form owner or its form owner doesn't have the
+    //    novalidate attribute set ;
+    // 4. The element has already been modified or the user tried to submit the
+    //    form owner while invalid.
+    if ((!mForm || !mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) &&
+        (mCanShowValidUI && ShouldShowValidityUI() &&
+         (IsValid() || (state.HasState(NS_EVENT_STATE_MOZ_UI_INVALID) &&
+                        !mCanShowInvalidUI)))) {
       state |= NS_EVENT_STATE_MOZ_UI_VALID;
     }
   }

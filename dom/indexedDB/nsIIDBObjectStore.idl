@@ -42,6 +42,7 @@
 interface nsIIDBIndex;
 interface nsIIDBKeyRange;
 interface nsIIDBRequest;
+interface nsIIDBTransaction;
 interface nsIVariant;
 interface nsIDOMDOMStringList;
 
@@ -54,7 +55,7 @@ interface nsIDOMDOMStringList;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-nsIIDBObjectStore
  * for more information.
  */
-[scriptable, uuid(83c3fa8f-b061-4cb7-adb2-d1aec62f134c)]
+[scriptable, uuid(6a65dc92-66e3-407a-a370-590a6c54664a)]
 interface nsIIDBObjectStore : nsISupports
 {
   readonly attribute DOMString name;
@@ -62,6 +63,8 @@ interface nsIIDBObjectStore : nsISupports
   readonly attribute DOMString keyPath;
 
   readonly attribute nsIDOMDOMStringList indexNames;
+
+  readonly attribute nsIIDBTransaction transaction;
 
   // Success fires IDBTransactionEvent, result == value for key
   nsIIDBRequest
@@ -86,8 +89,9 @@ interface nsIIDBObjectStore : nsISupports
       [optional /* undefined */] in jsval key);
 
   // Success fires IDBTransactionEvent, result == null
+  [implicit_jscontext]
   nsIIDBRequest
-  delete(in nsIVariant key);
+  delete(in jsval key);
 
   // Success fires IDBTransactionEvent, result == null
   nsIIDBRequest
@@ -100,11 +104,17 @@ interface nsIIDBObjectStore : nsISupports
   openCursor([optional /* null */] in nsIIDBKeyRange range,
              [optional /* NEXT */] in unsigned short direction);
 
-  // Returns object immediately
+  /**
+   * Optional arguments:
+   *   - unique (boolean):
+   *       Specifies whether values in the index must be unique. Defaults to
+   *       false.
+   */
+  [implicit_jscontext]
   nsIIDBIndex
   createIndex(in AString name,
               in AString keyPath,
-              [optional /* false */] in boolean unique);
+              [optional /* none */] in jsval options);
 
   // Returns object immediately
   nsIIDBIndex

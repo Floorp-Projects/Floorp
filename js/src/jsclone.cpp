@@ -49,18 +49,20 @@ namespace js
 {
 
 bool
-WriteStructuredClone(JSContext *cx, const Value &v, uint64 **bufp, size_t *nbytesp)
+WriteStructuredClone(JSContext *cx, const Value &v, uint64 **bufp, size_t *nbytesp,
+                     const JSStructuredCloneCallbacks *cb, void *cbClosure)
 {
     SCOutput out(cx);
-    JSStructuredCloneWriter w(out);
+    JSStructuredCloneWriter w(out, cb, cbClosure);
     return w.init() && w.write(v) && out.extractBuffer(bufp, nbytesp);
 }
 
 bool
-ReadStructuredClone(JSContext *cx, const uint64_t *data, size_t nbytes, Value *vp)
+ReadStructuredClone(JSContext *cx, const uint64_t *data, size_t nbytes, Value *vp,
+                    const JSStructuredCloneCallbacks *cb, void *cbClosure)
 {
     SCInput in(cx, data, nbytes);
-    JSStructuredCloneReader r(in);
+    JSStructuredCloneReader r(in, cb, cbClosure);
     return r.read(vp);
 }
 
@@ -171,6 +173,16 @@ SCInput::readPair(uint32_t *tagp, uint32_t *datap)
     return ok;
 }
 
+/*
+ * The purpose of this never-inlined function is to avoid a strange g++ build
+ * error on OS X 10.5 (see bug 624080).  :-(
+ */
+static JS_NEVER_INLINE double
+CanonicalizeNan(double d)
+{
+    return JS_CANONICALIZE_NAN(d);
+}
+
 bool
 SCInput::readDouble(jsdouble *p)
 {
@@ -180,7 +192,7 @@ SCInput::readDouble(jsdouble *p)
     } pun;
     if (!read(&pun.u))
         return false;
-    *p = JS_CANONICALIZE_NAN(pun.d);
+    *p = CanonicalizeNan(pun.d);
     return true;
 }
 
@@ -280,17 +292,10 @@ ReinterpretPairAsDouble(uint32_t tag, uint32_t data)
     return ReinterpretUInt64AsDouble(PairToUInt64(tag, data));
 }
 
-static inline bool
-IsNonCanonicalizedNaN(jsdouble d)
-{
-    return ReinterpretDoubleAsUInt64(d) != ReinterpretDoubleAsUInt64(JS_CANONICALIZE_NAN(d));
-}
-
 bool
 SCOutput::writeDouble(jsdouble d)
 {
-    JS_ASSERT(!IsNonCanonicalizedNaN(d));
-    return write(ReinterpretDoubleAsUInt64(d));
+    return write(ReinterpretDoubleAsUInt64(CanonicalizeNan(d)));
 }
 
 template <class T>
@@ -466,9 +471,8 @@ JSStructuredCloneWriter::startObject(JSObject *obj)
     HashSet<JSObject *>::AddPtr p = memory.lookupForAdd(obj);
     if (p) {
         JSContext *cx = context();
-        const JSStructuredCloneCallbacks *cb = cx->runtime->structuredCloneCallbacks;
-        if (cb)
-            cb->reportError(cx, JS_SCERR_RECURSION);
+        if (callbacks && callbacks->reportError)
+            callbacks->reportError(cx, JS_SCERR_RECURSION);
         else
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_SC_RECURSION);
         return false;
@@ -533,9 +537,8 @@ JSStructuredCloneWriter::startWrite(const js::Value &v)
             return writeString(SCTAG_STRING_OBJECT, obj->getPrimitiveThis().toString());
         }
 
-        const JSStructuredCloneCallbacks *cb = context()->runtime->structuredCloneCallbacks;
-        if (cb)
-            return cb->write(context(), this, obj);
+        if (callbacks && callbacks->write)
+            return callbacks->write(context(), this, obj, closure);
         /* else fall through */
     }
 
@@ -588,7 +591,9 @@ JSStructuredCloneWriter::write(const Value &v)
 bool
 JSStructuredCloneReader::checkDouble(jsdouble d)
 {
-    if (IsNonCanonicalizedNaN(d)) {
+    jsval_layout l;
+    l.asDouble = d;
+    if (!JSVAL_IS_DOUBLE(JSVAL_FROM_LAYOUT(l))) {
         JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL,
                              JSMSG_SC_BAD_SERIALIZED_DATA, "unrecognized NaN");
         return false;
@@ -788,13 +793,12 @@ JSStructuredCloneReader::startRead(Value *vp)
         if (SCTAG_TYPED_ARRAY_MIN <= tag && tag <= SCTAG_TYPED_ARRAY_MAX)
             return readTypedArray(tag, data, vp);
 
-        const JSStructuredCloneCallbacks *cb = context()->runtime->structuredCloneCallbacks;
-        if (!cb) {
+        if (!callbacks || !callbacks->read) {
             JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL, JSMSG_SC_BAD_SERIALIZED_DATA,
                                  "unsupported type");
             return false;
         }
-        JSObject *obj = cb->read(context(), this, tag, data);
+        JSObject *obj = callbacks->read(context(), this, tag, data, closure);
         if (!obj)
             return false;
         vp->setObject(*obj);

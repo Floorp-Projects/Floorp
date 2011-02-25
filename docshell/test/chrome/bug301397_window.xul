@@ -8,11 +8,8 @@
         onload="setTimeout(nextTest,0);"
         title="bug 301397 test">
 
-  <script type="application/javascript"
-    src=
-  "docshell_helpers.js">
-  </script>
-
+  <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
+  <script type="application/javascript" src="docshell_helpers.js" />
   <script type="application/javascript"><![CDATA[
   
     // Define the generator-iterator for the tests.

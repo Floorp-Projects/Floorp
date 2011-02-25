@@ -160,14 +160,15 @@
   <binding id="statusbar-drag"
            extends="chrome://global/content/bindings/general.xml#statusbar">
     <implementation>
-      <field name="_alive">true</field>
+      <field name="_dragBindingAlive">true</field>
       <constructor>
         if (!this._draggableStarted) {
           this._draggableStarted = true;
           try {
             let tmp = {};
             Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
-            new tmp.WindowDraggingElement(this, window);
+            let draghandle = new tmp.WindowDraggingElement(this, window);
+            draghandle.mouseDownCheck = function () this._dragBindingAlive;
           } catch (e) {}
         }
       </constructor>
@@ -266,14 +267,15 @@
 
   <binding id="windowdragbox">
     <implementation>
-      <field name="_alive">true</field>
+      <field name="_dragBindingAlive">true</field>
       <constructor>
         if (!this._draggableStarted) {
           this._draggableStarted = true;
           try {
             let tmp = {};
             Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
-            new tmp.WindowDraggingElement(this, window);
+            let draghandle = new tmp.WindowDraggingElement(this, window);
+            draghandle.mouseDownCheck = function () this._dragBindingAlive;
           } catch (e) {}
         }
       </constructor>

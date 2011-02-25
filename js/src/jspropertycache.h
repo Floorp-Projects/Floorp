@@ -269,7 +269,7 @@ class PropertyCache
                                                const js::Shape *shape, JSBool adding = false);
 
     void purge(JSContext *cx);
-    void purgeForScript(JSScript *script);
+    void purgeForScript(JSContext *cx, JSScript *script);
 };
 
 } /* namespace js */

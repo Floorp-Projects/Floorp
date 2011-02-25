@@ -163,14 +163,14 @@ SVGDrawingCallback::operator()(gfxContext* aContext,
   }
   NS_ABORT_IF_FALSE(presShell, "GetPresShell succeeded but returned null");
 
-  aContext->Save();
+  gfxContextAutoSaveRestore contextRestorer(aContext);
 
   // Clip to aFillRect so that we don't paint outside.
   aContext->NewPath();
   aContext->Rectangle(aFillRect);
   aContext->Clip();
-  gfxMatrix savedMatrix(aContext->CurrentMatrix());
 
+  gfxContextMatrixAutoSaveRestore contextMatrixRestorer(aContext);
   aContext->Multiply(gfxMatrix(aTransform).Invert());
 
 
@@ -190,9 +190,6 @@ SVGDrawingCallback::operator()(gfxContext* aContext,
   presShell->RenderDocument(svgRect, renderDocFlags,
                             NS_RGBA(0, 0, 0, 0), // transparent
                             aContext);
-
-  aContext->SetMatrix(savedMatrix);
-  aContext->Restore();
 
   return PR_TRUE;
 }
@@ -346,8 +343,18 @@ VectorImage::GetHeight(PRInt32* aHeight)
 NS_IMETHODIMP
 VectorImage::GetType(PRUint16* aType)
 {
-  *aType = imgIContainer::TYPE_VECTOR;
+  NS_ENSURE_ARG_POINTER(aType);
+
+  *aType = GetType();
   return NS_OK;
+}
+
+//******************************************************************************
+/* [noscript, notxpcom] PRUint16 GetType(); */
+NS_IMETHODIMP_(PRUint16)
+VectorImage::GetType()
+{
+  return imgIContainer::TYPE_VECTOR;
 }
 
 //******************************************************************************
@@ -529,6 +536,7 @@ VectorImage::Draw(gfxContext* aContext,
     mSVGDocumentWrapper->UpdateViewportBounds(aViewportSize);
     mLastRenderedSize = aViewportSize;
   }
+  mSVGDocumentWrapper->FlushImageTransformInvalidation();
 
   nsIntSize imageSize = mHaveRestrictedRegion ?
     mRestrictedRegion.Size() : aViewportSize;
@@ -610,7 +618,7 @@ VectorImage::ResetAnimation()
   }
 
   mSVGDocumentWrapper->ResetAnimation();
-  
+
   return NS_OK;
 }
 
@@ -676,6 +684,7 @@ VectorImage::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
     observer->OnStopFrame(nsnull, 0);
     observer->OnStopDecode(nsnull, NS_OK, nsnull);
   }
+  EvaluateAnimation();
 
   return rv;
 }

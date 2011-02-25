@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <iframe src="data:text/html,<body>xx</body>"></iframe>
+    <script>
+      onload = function() {
+        var i = document.querySelector("iframe");
+        var d = i.contentDocument;
+        var w = i.contentWindow;
+        d.designMode = "on";
+        i.focus();
+        d.body.focus();
+        w.getSelection().collapse(d.body.firstChild, 2);
+      };
+    </script>
+  </body>
+</html>

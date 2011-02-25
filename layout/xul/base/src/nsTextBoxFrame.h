@@ -88,6 +88,8 @@ public:
                   const nsRect&        aDirtyRect,
                   nsPoint              aPt);
 
+  nsRect GetComponentAlphaBounds();
+
   virtual PRBool ComputesOwnOverflowArea();
 
 protected:
@@ -107,13 +109,13 @@ protected:
 
   void CalcTextSize(nsBoxLayoutState& aBoxLayoutState);
 
-  nsRect CalcTextRect(nsIRenderingContext &aRenderingContext, const nsPoint &aTextOrigin);
+  void CalcDrawRect(nsIRenderingContext &aRenderingContext);
 
   nsTextBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext);
 
-  void CalculateTitleForWidth(nsPresContext*      aPresContext,
-                              nsIRenderingContext& aRenderingContext,
-                              nscoord              aWidth);
+  nscoord CalculateTitleForWidth(nsPresContext*      aPresContext,
+                                 nsIRenderingContext& aRenderingContext,
+                                 nscoord              aWidth);
 
   void GetTextSize(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -142,10 +144,10 @@ private:
   nsString mCroppedTitle;
   nsString mAccessKey;
   nsSize mTextSize;
+  nsRect mTextDrawRect;
   nsAccessKeyInfo* mAccessKeyInfo;
 
   CroppingStyle mCropType;
-  nscoord mTitleWidth;
   nscoord mAscent;
   PRPackedBool mNeedsRecalc;
   PRPackedBool mNeedsReflowCallback;

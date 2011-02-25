@@ -75,9 +75,6 @@ nsDOMStorageDBWrapper::nsDOMStorageDBWrapper()
 
 nsDOMStorageDBWrapper::~nsDOMStorageDBWrapper()
 {
-  if (mFlushTimer) {
-    mFlushTimer->Cancel();
-  }
 }
 
 nsresult
@@ -97,40 +94,22 @@ nsDOMStorageDBWrapper::Init()
   rv = mPrivateBrowsingDB.Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mFlushTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mFlushTimer->Init(nsDOMStorageManager::gStorageManager, 5000,
-                         nsITimer::TYPE_REPEATING_SLACK);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   return NS_OK;
 }
 
 nsresult
-nsDOMStorageDBWrapper::EnsureLoadTemporaryTableForStorage(DOMStorageImpl* aStorage)
+nsDOMStorageDBWrapper::FlushAndDeleteTemporaryTables(bool force)
 {
-  if (aStorage->CanUseChromePersist())
-    return mChromePersistentDB.EnsureLoadTemporaryTableForStorage(aStorage);
-  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
-    return NS_OK;
-  if (aStorage->SessionOnly())
-    return NS_OK;
+  nsresult rv1, rv2;
+  rv1 = mChromePersistentDB.FlushTemporaryTables(force);
+  rv2 = mPersistentDB.FlushTemporaryTables(force);
 
-  return mPersistentDB.EnsureLoadTemporaryTableForStorage(aStorage);
-}
+  // Everything flushed?  Then no need for a timer.
+  if (!mChromePersistentDB.mTempTableLoads.Count() && 
+      !mPersistentDB.mTempTableLoads.Count())
+    StopTempTableFlushTimer();
 
-nsresult
-nsDOMStorageDBWrapper::FlushAndDeleteTemporaryTableForStorage(DOMStorageImpl* aStorage)
-{
-  if (aStorage->CanUseChromePersist())
-    return mChromePersistentDB.FlushAndDeleteTemporaryTableForStorage(aStorage);
-  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
-    return NS_OK;
-  if (aStorage->SessionOnly())
-    return NS_OK;
-
-  return mPersistentDB.FlushAndDeleteTemporaryTableForStorage(aStorage);
+  return NS_FAILED(rv1) ? rv1 : rv2;
 }
 
 nsresult
@@ -380,6 +359,9 @@ nsDOMStorageDBWrapper::CreateDomainScopeDBKey(nsIURI* aUri, nsACString& aKey)
         (NS_SUCCEEDED(aUri->SchemeIs("moz-safe-about", &isAboutUrl)) && isAboutUrl)) {
       rv = aUri->GetPath(domainScope);
       NS_ENSURE_SUCCESS(rv, rv);
+      // While the host is always canonicalized to lowercase, the path is not,
+      // thus need to force the casing.
+      ToLowerCase(domainScope);
     }
   }
 
@@ -452,3 +434,30 @@ nsDOMStorageDBWrapper::GetDomainFromScopeKey(const nsACString& aScope,
   ReverseString(reverseDomain, aDomain);
   return NS_OK;
 }
+
+void
+nsDOMStorageDBWrapper::EnsureTempTableFlushTimer()
+{
+  if (!mTempTableFlushTimer) {
+    nsresult rv;
+    mTempTableFlushTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+
+    if (!NS_SUCCEEDED(rv)) {
+      mTempTableFlushTimer = nsnull;
+      return;
+    }
+
+    mTempTableFlushTimer->Init(nsDOMStorageManager::gStorageManager, 5000,
+                               nsITimer::TYPE_REPEATING_SLACK);
+  }
+}
+
+void
+nsDOMStorageDBWrapper::StopTempTableFlushTimer()
+{
+  if (mTempTableFlushTimer) {
+    mTempTableFlushTimer->Cancel();
+    mTempTableFlushTimer = nsnull;
+  }
+}
+

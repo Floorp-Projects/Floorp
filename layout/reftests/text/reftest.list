@@ -41,9 +41,8 @@ skip-if(!(d2d||cocoaWidget)) != subpixel-glyphs-x-2a.html subpixel-glyphs-x-2b.h
 == subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html
 == subpixel-lineheight-1a.html subpixel-lineheight-1b.html
 == swash-1.html swash-1-ref.html
-# Test for bug 593564, synthetic bold should cause glyph metrics to increase
-# Random on Windows - fails on tinderbox Opt reftest, passes elsewhere - see bug 597300
-random-if(winWidget) HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
+HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
+== variation-selector-unsupported-1.html variation-selector-unsupported-1-ref.html
 == white-space-1a.html white-space-1-ref.html
 == white-space-1b.html white-space-1-ref.html
 == white-space-2.html white-space-2-ref.html
@@ -69,7 +68,7 @@ HTTP(..) == zwnj-02.xhtml zwnj-02-ref.xhtml # HTTP(..) for ../filters.svg
 == 449555-1.html 449555-1-ref.html
 == 467722.html 467722-ref.html
 HTTP(..) == 475092-sub.html 475092-ref.html
-random HTTP(..) == 475092-pos.html 475092-sub.html # bug 482596
+fails-if(!winWidget) HTTP(..) == 475092-pos.html 475092-sub.html # bug 482596
 == 476378-soft-hyphen-fallback.html 476378-soft-hyphen-fallback-ref.html
 # Test for bug 484954
 == rgba-text.html rgba-text-ref.html

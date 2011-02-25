@@ -68,7 +68,7 @@ public:
 
     PRBool RequiresAATLayout() const { return mRequiresAAT; }
 
-    virtual nsresult GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer);
+    virtual nsresult GetFontTable(PRUint32 aTableTag, FallibleTArray<PRUint8>& aBuffer);
 
     PRBool IsCFF();
 

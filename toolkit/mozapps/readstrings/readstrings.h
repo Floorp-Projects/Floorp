@@ -40,7 +40,7 @@
 #ifndef READSTRINGS_H__
 #define READSTRINGS_H__
 
-#define MAX_TEXT_LEN 200
+#define MAX_TEXT_LEN 400
 
 #ifdef XP_WIN
 # include <windows.h>

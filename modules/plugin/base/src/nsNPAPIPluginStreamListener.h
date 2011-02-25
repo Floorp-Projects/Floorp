@@ -50,12 +50,13 @@
 #include "nsIPluginInstanceOwner.h"
 #include "nsString.h"
 #include "nsNPAPIPluginInstance.h"
-
+#include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/PluginLibrary.h"
 
 #define MAX_PLUGIN_NECKO_BUFFER 16384
 
 class nsINPAPIPluginStreamInfo;
+class nsPluginStreamListenerPeer;
 
 // nsINPAPIPluginStreamInfo is an internal helper interface that exposes
 // the underlying necko request to consumers of nsIPluginStreamInfo's.
@@ -112,29 +113,34 @@ public:
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIHTTPHEADERLISTENER
 
-  // nsNPAPIPluginStreamListener specific methods:
   nsNPAPIPluginStreamListener(nsNPAPIPluginInstance* inst, void* notifyData,
                               const char* aURL);
   virtual ~nsNPAPIPluginStreamListener();
+
   PRBool IsStarted();
   nsresult CleanUpStream(NPReason reason);
   void CallURLNotify(NPReason reason);
-  void SetCallNotify(PRBool aCallNotify)
-  {
-    mCallNotify = aCallNotify;
-  }
+  void SetCallNotify(PRBool aCallNotify) { mCallNotify = aCallNotify; }
   nsresult SuspendRequest();
   void ResumeRequest();
   nsresult StartDataPump();
   void StopDataPump();
-
   PRBool PluginInitJSLoadInProgress();
 
+  void* GetNotifyData() { return mNPStream.notifyData; }
+  nsPluginStreamListenerPeer* GetStreamListenerPeer() { return mStreamListenerPeer; }
+  void SetStreamListenerPeer(nsPluginStreamListenerPeer* aPeer) { mStreamListenerPeer = aPeer; }
+
+  // Returns true if the redirect will be handled by NPAPI, false otherwise.
+  bool HandleRedirectNotification(nsIChannel *oldChannel, nsIChannel *newChannel,
+                                  nsIAsyncVerifyRedirectCallback* callback);
+  void URLRedirectResponse(NPBool allow);
+
 protected:
-  void* mNotifyData;
   char* mStreamBuffer;
   char* mNotifyURL;
   nsRefPtr<nsNPAPIPluginInstance> mInst;
+  nsPluginStreamListenerPeer* mStreamListenerPeer;
   NPStream mNPStream;
   PRUint32 mStreamBufferSize;
   PRInt32 mStreamBufferByteCount;
@@ -144,10 +150,11 @@ protected:
   PRPackedBool mCallNotify;
   PRPackedBool mIsSuspended;
   PRPackedBool mIsPluginInitJSStream;
+  PRPackedBool mRedirectDenied;
   nsCString mResponseHeaders;
   char* mResponseHeaderBuf;
-
   nsCOMPtr<nsITimer> mDataPumpTimer;
+  nsCOMPtr<nsIAsyncVerifyRedirectCallback> mHTTPRedirectCallback;
 
 public:
   nsCOMPtr<nsIPluginStreamInfo> mStreamInfo;

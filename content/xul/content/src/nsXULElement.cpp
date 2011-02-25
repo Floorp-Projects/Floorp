@@ -1848,9 +1848,7 @@ NS_IMETHODIMP
 nsXULElement::GetControllers(nsIControllers** aResult)
 {
     if (! Controllers()) {
-        nsDOMSlots* slots = GetDOMSlots();
-        if (!slots)
-          return NS_ERROR_OUT_OF_MEMORY;
+        nsDOMSlots* slots = DOMSlots();
 
         nsresult rv;
         rv = NS_NewXULControllers(nsnull, NS_GET_IID(nsIControllers),
@@ -2416,12 +2414,32 @@ nsXULElement::SetTitlebarColor(nscolor aColor, PRBool aActive)
     }
 }
 
+class SetDrawInTitleBarEvent : public nsRunnable
+{
+public:
+  SetDrawInTitleBarEvent(nsIWidget* aWidget, PRBool aState)
+    : mWidget(aWidget)
+    , mState(aState)
+  {}
+
+  NS_IMETHOD Run() {
+    NS_ASSERTION(mWidget, "You shouldn't call this runnable with a null widget!");
+
+    mWidget->SetDrawsInTitlebar(mState);
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIWidget> mWidget;
+  PRBool mState;
+};
+
 void
 nsXULElement::SetDrawsInTitlebar(PRBool aState)
 {
     nsIWidget* mainWidget = GetWindowWidget();
     if (mainWidget) {
-        mainWidget->SetDrawsInTitlebar(aState);
+        nsContentUtils::AddScriptRunner(new SetDrawInTitleBarEvent(mainWidget, aState));
     }
 }
 

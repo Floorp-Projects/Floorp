@@ -70,12 +70,18 @@ JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug);
 extern JS_PUBLIC_API(JSBool)
 JS_GetDebugMode(JSContext *cx);
 
-/* Turn on debugging mode, ignoring the presence of live frames. */
-extern JS_FRIEND_API(JSBool)
-js_SetDebugMode(JSContext *cx, JSBool debug);
+/*
+ * Turn on/off debugging mode for a single compartment. This must be
+ * called from the main thread and the compartment must be associated
+ * with the main thread.
+ */
+JS_FRIEND_API(JSBool)
+JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug);
 
-/* Turn on debugging mode. */
-extern JS_PUBLIC_API(JSBool)
+/*
+ * Turn on/off debugging mode for a context's compartment.
+ */
+JS_FRIEND_API(JSBool)
 JS_SetDebugMode(JSContext *cx, JSBool debug);
 
 /* Turn on single step mode. Requires debug mode. */
@@ -151,7 +157,14 @@ js_SweepWatchPoints(JSContext *cx);
 #ifdef __cplusplus
 
 extern JSBool
-js_watch_set(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
+js_watch_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, js::Value *vp);
+
+namespace js {
+
+bool
+IsWatchedProperty(JSContext *cx, const Shape *shape);
+
+}
 
 #endif
 
@@ -487,6 +500,11 @@ JS_MakeSystemObject(JSContext *cx, JSObject *obj);
 
 /************************************************************************/
 
+extern JS_PUBLIC_API(JSObject *)
+JS_UnwrapObject(JSContext *cx, JSObject *obj);
+
+/************************************************************************/
+
 extern JS_FRIEND_API(void)
 js_RevertVersion(JSContext *cx);
 
@@ -500,33 +518,14 @@ JS_SetContextDebugHooks(JSContext *cx, const JSDebugHooks *hooks);
 extern JS_PUBLIC_API(JSDebugHooks *)
 JS_ClearContextDebugHooks(JSContext *cx);
 
-#ifdef MOZ_SHARK
+extern JS_PUBLIC_API(JSBool)
+JS_StartProfiling();
+
+extern JS_PUBLIC_API(void)
+JS_StopProfiling();
 
 extern JS_PUBLIC_API(JSBool)
-JS_StartChudRemote();
-
-extern JS_PUBLIC_API(JSBool)
-JS_StopChudRemote();
-
-extern JS_PUBLIC_API(JSBool)
-JS_ConnectShark();
-
-extern JS_PUBLIC_API(JSBool)
-JS_DisconnectShark();
-
-extern JS_FRIEND_API(JSBool)
-js_StopShark(JSContext *cx, uintN argc, jsval *vp);
-
-extern JS_FRIEND_API(JSBool)
-js_StartShark(JSContext *cx, uintN argc, jsval *vp);
-
-extern JS_FRIEND_API(JSBool)
-js_ConnectShark(JSContext *cx, uintN argc, jsval *vp);
-
-extern JS_FRIEND_API(JSBool)
-js_DisconnectShark(JSContext *cx, uintN argc, jsval *vp);
-
-#endif /* MOZ_SHARK */
+JS_DefineProfilingFunctions(JSContext *cx, JSObject *obj);
 
 #ifdef MOZ_CALLGRIND
 

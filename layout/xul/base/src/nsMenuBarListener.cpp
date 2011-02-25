@@ -179,6 +179,9 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
     {
       // The access key was down and is now up, and no other
       // keys were pressed in between.
+      if (!mMenuBarFrame->IsActive()) {
+        mMenuBarFrame->SetActiveByKeyboard();
+      }
       ToggleMenuActiveState();
     }
     mAccessKeyDown = PR_FALSE;
@@ -257,8 +260,14 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
         // so, we'll know the menu got activated.
         nsMenuFrame* result = mMenuBarFrame->FindMenuWithShortcut(keyEvent);
         if (result) {
+          mMenuBarFrame->SetActiveByKeyboard();
           mMenuBarFrame->SetActive(PR_TRUE);
           result->OpenMenu(PR_TRUE);
+
+          // The opened menu will listen next keyup event.
+          // Therefore, we should clear the keydown flags here.
+          mAccessKeyDown = mAccessKeyDownCanceled = PR_FALSE;
+
           aKeyEvent->StopPropagation();
           aKeyEvent->PreventDefault();
           retVal = NS_OK;       // I am consuming event
@@ -270,6 +279,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
         if ((GetModifiers(keyEvent) & ~MODIFIER_CONTROL) == 0) {
           // The F10 key just went down by itself or with ctrl pressed.
           // In Windows, both of these activate the menu bar.
+          mMenuBarFrame->SetActiveByKeyboard();
           ToggleMenuActiveState();
 
           aKeyEvent->StopPropagation();

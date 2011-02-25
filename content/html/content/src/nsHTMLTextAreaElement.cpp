@@ -276,36 +276,24 @@ protected:
                                 const nsAString* aValue, PRBool aNotify);
 
   /**
-   * Return if an invalid element should have a specific UI for being invalid
-   * (with :-moz-ui-invalid pseudo-class.
+   * Return if an element should have a specific validity UI
+   * (with :-moz-ui-invalid and :-moz-ui-valid pseudo-classes).
    *
-   * @return Whether the invalid elemnet should have a UI for being invalid.
-   * @note The caller has to be sure the element is invalid before calling.
+   * @return Whether the elemnet should have a validity UI.
    */
-  bool ShouldShowInvalidUI() const {
-    NS_ASSERTION(!IsValid(), "You should not call ShouldShowInvalidUI if the "
-                             "element is valid!");
-
+  bool ShouldShowValidityUI() const {
     /**
-     * Always show the invalid UI if:
-     * - the form has already tried to be submitted but was invalid;
-     * - the element is suffering from a custom error;
+     * Always show the validity UI if the form has already tried to be submitted
+     * but was invalid.
      *
-     * Otherwise, show the invalid UI if the element's value has been changed.
+     * Otherwise, show the validity UI if the element's value has been changed.
      */
 
-    return (mForm && mForm->HasEverTriedInvalidSubmit()) ||
-           mValueChanged || GetValidityState(VALIDITY_STATE_CUSTOM_ERROR);
-  }
+    if (mForm && mForm->HasEverTriedInvalidSubmit()) {
+      return true;
+    }
 
-  /**
-   * Return whether an element should show the valid UI.
-   *
-   * @return Whether the valid UI should be shown.
-   * @note This doesn't take into account the validity of the element.
-   */
-  bool ShouldShowValidUI() const {
-    return (mForm && mForm->HasEverTriedInvalidSubmit()) || mValueChanged;
+    return mValueChanged;
   }
 
   /**
@@ -457,7 +445,7 @@ PRBool
 nsHTMLTextAreaElement::IsHTMLFocusable(PRBool aWithMouse,
                                        PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
-  if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
+  if (nsGenericHTMLFormElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
     return PR_TRUE;
   }
 
@@ -778,11 +766,11 @@ nsHTMLTextAreaElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     if (aVisitor.mEvent->message == NS_FOCUS_CONTENT) {
       // If the invalid UI is shown, we should show it while focusing (and
       // update). Otherwise, we should not.
-      mCanShowInvalidUI = !IsValid() && ShouldShowInvalidUI();
+      mCanShowInvalidUI = !IsValid() && ShouldShowValidityUI();
 
       // If neither invalid UI nor valid UI is shown, we shouldn't show the valid
       // UI while typing.
-      mCanShowValidUI = ShouldShowValidUI();
+      mCanShowValidUI = ShouldShowValidityUI();
 
       // We don't have to update NS_EVENT_STATE_MOZ_UI_INVALID nor
       // NS_EVENT_STATE_MOZ_UI_VALID given that the states should not change.
@@ -891,8 +879,12 @@ nsHTMLTextAreaElement::SetSelectionStart(PRInt32 aSelectionStart)
 
   if (formControlFrame){
     nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
-    if (textControlFrame)
+    if (textControlFrame) {
       rv = textControlFrame->SetSelectionStart(aSelectionStart);
+      if (NS_SUCCEEDED(rv)) {
+        rv = textControlFrame->ScrollSelectionIntoView();
+      }
+    }
   }
 
   return rv;
@@ -915,8 +907,12 @@ nsHTMLTextAreaElement::SetSelectionEnd(PRInt32 aSelectionEnd)
 
   if (formControlFrame) {
     nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
-    if (textControlFrame)
+    if (textControlFrame) {
       rv = textControlFrame->SetSelectionEnd(aSelectionEnd);
+      if (NS_SUCCEEDED(rv)) {
+        rv = textControlFrame->ScrollSelectionIntoView();
+      }
+    }
   }
 
   return rv;
@@ -946,8 +942,12 @@ nsHTMLTextAreaElement::SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelec
 
   if (formControlFrame) {
     nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
-    if (textControlFrame)
+    if (textControlFrame) {
       rv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd);
+      if (NS_SUCCEEDED(rv)) {
+        rv = textControlFrame->ScrollSelectionIntoView();
+      }
+    }
   }
 
   return rv;
@@ -1080,12 +1080,11 @@ nsHTMLTextAreaElement::IntrinsicState() const
       state |= NS_EVENT_STATE_VALID;
     } else {
       state |= NS_EVENT_STATE_INVALID;
-      // NS_EVENT_STATE_MOZ_UI_INVALID always apply if the element suffers from
-      // VALIDITY_STATE_CUSTOM_ERROR.
-      // Otherwise, it applies if the value has been modified.
-      // NS_EVENT_STATE_MOZ_UI_INVALID always applies if the form submission has
-      // been tried while invalid.
-      if (mCanShowInvalidUI && ShouldShowInvalidUI()) {
+      // :-moz-ui-invalid always apply if the element suffers from a custom
+      // error and never applies if novalidate is set on the form owner.
+      if ((!mForm || !mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) &&
+          (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
+           mCanShowInvalidUI && ShouldShowValidityUI())) {
         state |= NS_EVENT_STATE_MOZ_UI_INVALID;
       }
     }
@@ -1095,11 +1094,14 @@ nsHTMLTextAreaElement::IntrinsicState() const
     //    :-moz-ui-invalid applying before it was focused ;
     // 2. The element is either valid or isn't allowed to have
     //    :-moz-ui-invalid applying ;
-    // 3. The rules to have :-moz-ui-valid applying are fulfilled
-    //    (see ShouldShowValidUI()).
-    if (mCanShowValidUI &&
-        (IsValid() || !mCanShowInvalidUI) &&
-        ShouldShowValidUI()) {
+    // 3. The element has no form owner or its form owner doesn't have the
+    //    novalidate attribute set ;
+    // 4. The element has already been modified or the user tried to submit the
+    //    form owner while invalid.
+    if ((!mForm || !mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) &&
+        (mCanShowValidUI && ShouldShowValidityUI() &&
+         (IsValid() || (state.HasState(NS_EVENT_STATE_MOZ_UI_INVALID) &&
+                        !mCanShowInvalidUI)))) {
       state |= NS_EVENT_STATE_MOZ_UI_VALID;
     }
   }

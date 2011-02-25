@@ -7,11 +7,6 @@
 ]>
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<script src="chrome://testpilot/content/browser.js"
-  type="application/x-javascript" />
-<script src="chrome://testpilot/content/window-utils.js"
-  type="application/x-javascript" />
-
 <menupopup id="menu_ToolsPopup">
   <menu id="pilot-menu" insertafter="menu_openAddons" />
 </menupopup>
@@ -90,6 +85,5 @@
       </hbox>
     </vbox>
   </panel>
-
 </statusbar>
 </overlay>

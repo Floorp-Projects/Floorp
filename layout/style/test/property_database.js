@@ -62,6 +62,18 @@ const CSS_TYPE_SHORTHAND_AND_LONGHAND = 2;
 //	 invalid_values: Things that are not values for the property and
 //	   should be rejected.
 
+// Helper functions used to construct gCSSProperties.
+
+function initial_font_family_is_sans_serif()
+{
+	// The initial value of 'font-family' might be 'serif' or
+	// 'sans-serif'.
+	var div = document.createElement("div");
+	div.setAttribute("style", "font: -moz-initial");
+	return getComputedStyle(div, "").fontFamily == "sans-serif";
+}
+var gInitialFontFamilyIsSansSerif = initial_font_family_is_sans_serif();
+
 var gCSSProperties = {
 	"-moz-appearance": {
 		domProp: "MozAppearance",
@@ -134,7 +146,7 @@ var gCSSProperties = {
 			"-moz-calc(2px)",
 			"-moz-calc(-2px)",
 			"-moz-calc(0em)",
-			"-moz-calc(0)",
+			"-moz-calc(0px)",
 			"-moz-calc(5em)",
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
@@ -312,7 +324,7 @@ var gCSSProperties = {
 			"-moz-calc(2px)",
 			"-moz-calc(-2px)",
 			"-moz-calc(0em)",
-			"-moz-calc(0)",
+			"-moz-calc(0px)",
 			"-moz-calc(5em)",
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
@@ -401,7 +413,7 @@ var gCSSProperties = {
 		other_values: [ "2px", "4em",
 			"-moz-calc(2px)",
 			"-moz-calc(-2px)",
-			"-moz-calc(0)",
+			"-moz-calc(0px)",
 			"-moz-calc(0pt)",
 			"-moz-calc(5em)",
 			"-moz-calc(3*25px)",
@@ -517,6 +529,22 @@ var gCSSProperties = {
 			"-moz-calc(2em / (4 / 3))",
 			"-moz-calc(4 * (2em / 3))",
 
+			// Valid cases with unitless zero (which is never
+			// a length).
+			"-moz-calc(0 * 2em)",
+			"-moz-calc(2em * 0)",
+			"-moz-calc(3em + 0 * 2em)",
+			"-moz-calc(3em + 2em * 0)",
+			"-moz-calc((0 + 2) * 2em)",
+			"-moz-calc((2 + 0) * 2em)",
+			// And test zero lengths while we're here.
+			"-moz-calc(2 * 0px)",
+			"-moz-calc(0 * 0px)",
+			"-moz-calc(2 * 0em)",
+			"-moz-calc(0 * 0em)",
+			"-moz-calc(0px * 0)",
+			"-moz-calc(0px * 2)",
+
 		],
 		invalid_values: [ "20", "-1px", "red", "50%",
 			/* invalid calc() values */
@@ -548,6 +576,20 @@ var gCSSProperties = {
 			"-moz-calc((4 * 3) / 2em)",
 			"-moz-calc(4 * (3 / 2em))",
 			"-moz-calc(4 / (3 * 2em))",
+
+			// Tests for handling of unitless zero, which cannot
+			// be a length inside calc().
+			"-moz-calc(0)",
+			"-moz-calc(0 + 2em)",
+			"-moz-calc(2em + 0)",
+			"-moz-calc(0 * 2)",
+			"-moz-calc(2 * 0)",
+			"-moz-calc(1 * (2em + 0))",
+			"-moz-calc((2em + 0))",
+			"-moz-calc((2em + 0) * 1)",
+			"-moz-calc(1 * (0 + 2em))",
+			"-moz-calc((0 + 2em))",
+			"-moz-calc((0 + 2em) * 1)",
 		]
 	},
 	"-moz-column-rule-style": {
@@ -1342,7 +1384,7 @@ var gCSSProperties = {
 			"-moz-calc(2px)",
 			"-moz-calc(-2px)",
 			"-moz-calc(0em)",
-			"-moz-calc(0)",
+			"-moz-calc(0px)",
 			"-moz-calc(5em)",
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
@@ -1404,7 +1446,7 @@ var gCSSProperties = {
 			"-moz-calc(2px)",
 			"-moz-calc(-2px)",
 			"-moz-calc(0em)",
-			"-moz-calc(0)",
+			"-moz-calc(0px)",
 			"-moz-calc(5em)",
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
@@ -1449,7 +1491,7 @@ var gCSSProperties = {
 			"-moz-calc(2px)",
 			"-moz-calc(-2px)",
 			"-moz-calc(0em)",
-			"-moz-calc(0)",
+			"-moz-calc(0px)",
 			"-moz-calc(5em)",
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
@@ -1512,7 +1554,7 @@ var gCSSProperties = {
 			"-moz-calc(2px)",
 			"-moz-calc(-2px)",
 			"-moz-calc(0em)",
-			"-moz-calc(0)",
+			"-moz-calc(0px)",
 			"-moz-calc(5em)",
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
@@ -1712,8 +1754,7 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "font-style", "font-variant", "font-weight", "font-size", "line-height", "font-family", "font-stretch", "font-size-adjust", "-moz-font-feature-settings", "-moz-font-language-override" ],
-		/* XXX could be sans-serif */
-		initial_values: [ "medium serif" ],
+		initial_values: [ (gInitialFontFamilyIsSansSerif ? "medium sans-serif" : "medium serif") ],
 		other_values: [ "large serif", "9px fantasy", "bold italic small-caps 24px/1.4 Times New Roman, serif", "caption", "icon", "menu", "message-box", "small-caption", "status-bar" ],
 		invalid_values: []
 	},
@@ -1721,8 +1762,8 @@ var gCSSProperties = {
 		domProp: "fontFamily",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "serif" ],
-		other_values: [ "sans-serif", "Times New Roman, serif", "'Times New Roman', serif", "cursive", "fantasy", "\"Times New Roman", "Times, \"Times New Roman" ],
+		initial_values: [ (gInitialFontFamilyIsSansSerif ? "sans-serif" : "serif") ],
+		other_values: [ (gInitialFontFamilyIsSansSerif ? "serif" : "sans-serif"), "Times New Roman, serif", "'Times New Roman', serif", "cursive", "fantasy", "\"Times New Roman", "Times, \"Times New Roman" ],
 		invalid_values: [ "\"Times New\" Roman" ]
 	},
 	"-moz-font-feature-settings": {
@@ -2028,7 +2069,7 @@ var gCSSProperties = {
 		other_values: [ "30px", "50%", "0",
 			"-moz-calc(2px)",
 			"-moz-calc(-2px)",
-			"-moz-calc(0)",
+			"-moz-calc(0px)",
 			"-moz-calc(50%)",
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
@@ -2045,7 +2086,7 @@ var gCSSProperties = {
 		other_values: [ "30px", "50%", "0", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
 			"-moz-calc(2px)",
 			"-moz-calc(-2px)",
-			"-moz-calc(0)",
+			"-moz-calc(0px)",
 			"-moz-calc(50%)",
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
@@ -2150,7 +2191,7 @@ var gCSSProperties = {
 		other_values: [ "thin", "thick", "1px", "2em",
 			"-moz-calc(2px)",
 			"-moz-calc(-2px)",
-			"-moz-calc(0)",
+			"-moz-calc(0px)",
 			"-moz-calc(0px)",
 			"-moz-calc(5em)",
 			"-moz-calc(3*25px)",
@@ -2192,7 +2233,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "padding-top", "padding-right", "padding-bottom", "padding-left" ],
-		initial_values: [ "0", "0px 0 0em", "0% 0px 0em 0pt", "-moz-calc(0) -moz-calc(0em) -moz-calc(-2px) -moz-calc(-1%)" ],
+		initial_values: [ "0", "0px 0 0em", "0% 0px 0em 0pt", "-moz-calc(0px) -moz-calc(0em) -moz-calc(-2px) -moz-calc(-1%)" ],
 		other_values: [ "3px 0", "2em 4px 2pt", "1em 2em 3px 4px" ],
 		invalid_values: []
 	},

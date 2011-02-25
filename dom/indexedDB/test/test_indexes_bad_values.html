@@ -38,7 +38,7 @@
       ];
 
       const indexData = [
-        { name: "weight", keyPath: "weight", unique: false }
+        { name: "weight", keyPath: "weight", options: { unique: false } }
       ];
 
       const objectStoreDataWeightSort = [
@@ -49,19 +49,19 @@
         { key: "237-23-7734", value: { name: "Ron", height: 73, weight: 180 } }
       ];
 
-      let request = moz_indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
 
       request = db.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      let objectStore = db.createObjectStore(objectStoreName, "");
+      let objectStore = db.createObjectStore(objectStoreName, { } );
 
       let addedData = 0;
       for (let i in objectStoreData) {
@@ -78,7 +78,7 @@
 
       for (let i in indexData) {
         objectStore.createIndex(indexData[i].name, indexData[i].keyPath,
-                                indexData[i].unique);
+                                indexData[i].options);
       }
 
       addedData = 0;
@@ -99,14 +99,14 @@
 
       let keyIndex = 0;
 
-      request = objectStore.index("weight").openCursor();
+      request = objectStore.index("weight").openKeyCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, objectStoreDataWeightSort[keyIndex].value.weight,
              "Correct key");
-          is(cursor.value, objectStoreDataWeightSort[keyIndex].key,
+          is(cursor.primaryKey, objectStoreDataWeightSort[keyIndex].key,
              "Correct value");
           keyIndex++;
 
@@ -125,7 +125,7 @@
       request = objectStore.openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           keyIndex++;
           cursor.continue();

@@ -1,14 +1,17 @@
 function run_test()
 {
-  var isOSX = ("nsILocalFileMac" in Components.interfaces);
-  if (isOSX) {
-    dump("INFO | test_crashreporter.js | Skipping test on mac, bug 599475")
-    return;
-  }
-
   if (!("@mozilla.org/toolkit/crash-reporter;1" in Components.classes)) {
     dump("INFO | test_crashreporter.js | Can't test crashreporter in a non-libxul build.\n");
     return;
+  }
+
+  var is_win7_or_newer = false;
+  var ph = Components.classes["@mozilla.org/network/protocol;1?name=http"]
+             .getService(Components.interfaces.nsIHttpProtocolHandler);
+  var match = ph.userAgent.match(/Windows NT (\d+).(\d+)/);
+  if (match && (parseInt(match[1]) > 6 ||
+                parseInt(match[1]) == 6 && parseInt(match[2]) >= 1)) {
+      is_win7_or_newer = true;
   }
 
   // try a basic crash
@@ -17,6 +20,10 @@ function run_test()
              do_check_true(mdump.fileSize > 0);
              do_check_true('StartupTime' in extra);
              do_check_true('CrashTime' in extra);
+             do_check_true(CrashTestUtils.dumpHasStream(mdump.path, CrashTestUtils.MD_THREAD_LIST_STREAM));
+             do_check_true(CrashTestUtils.dumpHasInstructionPointerMemory(mdump.path));
+             if (is_win7_or_newer)
+               do_check_true(CrashTestUtils.dumpHasStream(mdump.path, CrashTestUtils.MD_MEMORY_INFO_LIST_STREAM));
            });
 
   // check setting some basic data

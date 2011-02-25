@@ -51,6 +51,7 @@
 #include "nsIFrame.h"
 #include "nsFrameManager.h"
 #include "mozilla/AutoRestore.h"
+#include "FrameLayerBuilder.h"
 
 #include "nsINameSpaceManager.h"
 
@@ -856,9 +857,13 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // Position the float and make sure and views are properly
   // positioned. We need to explicitly position its child views as
   // well, since we're moving the float after flowing it.
-  aFloat->SetPosition(origin);
-  nsContainerFrame::PositionFrameView(aFloat);
-  nsContainerFrame::PositionChildViews(aFloat);
+  PRBool moved = aFloat->GetPosition() != origin;
+  if (moved) {
+    aFloat->SetPosition(origin);
+    nsContainerFrame::PositionFrameView(aFloat);
+    nsContainerFrame::PositionChildViews(aFloat);
+    FrameLayerBuilder::InvalidateThebesLayersInSubtree(aFloat);
+  }
 
   // Update the float combined area state
   // XXX Floats should really just get invalidated here if necessary

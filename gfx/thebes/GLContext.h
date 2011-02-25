@@ -117,6 +117,21 @@ protected:
     PlatformLookupFunction mLookupFunc;
 };
 
+enum ShaderProgramType {
+    RGBALayerProgramType,
+    BGRALayerProgramType,
+    RGBXLayerProgramType,
+    BGRXLayerProgramType,
+    RGBARectLayerProgramType,
+    ColorLayerProgramType,
+    YCbCrLayerProgramType,
+    ComponentAlphaPass1ProgramType,
+    ComponentAlphaPass2ProgramType,
+    Copy2DProgramType,
+    Copy2DRectProgramType,
+    NumProgramTypes
+};
+
 
 /**
  * A TextureImage encapsulates a surface that can be drawn to by a
@@ -143,10 +158,10 @@ public:
     virtual ~TextureImage() {}
 
     /**
-     * Return a gfxContext for updating |aRegion| of the client's
+     * Returns a gfxASurface for updating |aRegion| of the client's
      * image if successul, NULL if not.  |aRegion|'s bounds must fit
      * within Size(); its coordinate space (if any) is ignored.  If
-     * the update begins successfully, the returned gfxContext is
+     * the update begins successfully, the returned gfxASurface is
      * owned by this.  Otherwise, NULL is returned.
      *
      * |aRegion| is an inout param: the returned region is what the
@@ -154,9 +169,8 @@ public:
      * efficiently handle repaints to "scattered" regions, while (2)
      * can only efficiently handle repaints to rects.
      *
-     * The returned context is neither translated nor clipped: it's a
-     * context for rect(<0,0>, Size()).  Painting the returned context
-     * outside of |aRegion| results in undefined behavior.
+     * Painting the returned surface outside of |aRegion| results 
+     * in undefined behavior.
      *
      * BeginUpdate() calls cannot be "nested", and each successful
      * BeginUpdate() must be followed by exactly one EndUpdate() (see
@@ -164,15 +178,15 @@ public:
      * inconsistent state.  Unsuccessful BeginUpdate()s must not be
      * followed by EndUpdate().
      */
-    virtual gfxContext* BeginUpdate(nsIntRegion& aRegion) = 0;
+    virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion) = 0;
     /**
      * Finish the active update and synchronize with the server, if
-     * necessary.  Return PR_TRUE iff this's texture is already bound.
+     * necessary.
      *
      * BeginUpdate() must have been called exactly once before
      * EndUpdate().
      */
-    virtual PRBool EndUpdate() = 0;
+    virtual void EndUpdate() = 0;
 
     /**
      * Set this TextureImage's size, and ensure a texture has been
@@ -189,6 +203,8 @@ public:
         EndUpdate();
     }
 
+    virtual bool DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion) =0;
+
     /**
      * Return this TextureImage's texture ID for use with GL APIs.
      * Callers are responsible for properly binding the texture etc.
@@ -199,6 +215,16 @@ public:
      * may not be texture complete.
      */
     GLuint Texture() { return mTexture; }
+
+    /**
+     * Returns the shader program type that should be used to render
+     * this texture. Only valid after a matching BeginUpdate/EndUpdate
+     * pair have been called.
+     */
+    virtual ShaderProgramType GetShaderProgramType()
+    {
+         return mShaderType;
+    }
 
     /** Can be called safely at any time. */
 
@@ -240,6 +266,7 @@ protected:
     GLenum mWrapMode;
     ContentType mContentType;
     PRPackedBool mIsRGBFormat;
+    ShaderProgramType mShaderType;
 };
 
 /**
@@ -255,16 +282,8 @@ class BasicTextureImage
     : public TextureImage
 {
 public:
-    virtual ~BasicTextureImage();
-
-    virtual gfxContext* BeginUpdate(nsIntRegion& aRegion);
-    virtual PRBool EndUpdate();
-
-    virtual PRBool InUpdate() const { return !!mUpdateContext; }
-
-    virtual void Resize(const nsIntSize& aSize);
-protected:
     typedef gfxASurface::gfxImageFormat ImageFormat;
+    virtual ~BasicTextureImage();
 
     BasicTextureImage(GLuint aTexture,
                       const nsIntSize& aSize,
@@ -277,17 +296,31 @@ protected:
         , mUpdateOffset(0, 0)
     {}
 
-    virtual already_AddRefed<gfxASurface>
-    CreateUpdateSurface(const gfxIntSize& aSize, ImageFormat aFmt) = 0;
+    virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);
+    virtual void EndUpdate();
+    virtual bool DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion);
 
-    virtual already_AddRefed<gfxImageSurface>
-    GetImageForUpload(gfxASurface* aUpdateSurface) = 0;
+    // Returns a surface to draw into
+    virtual already_AddRefed<gfxASurface>
+      GetSurfaceForUpdate(const gfxIntSize& aSize, ImageFormat aFmt);
+
+    // Call when drawing into the update surface is complete.
+    // Returns true if textures should be upload with a relative 
+    // offset - See UploadSurfaceToTexture.
+    virtual bool FinishedSurfaceUpdate();
+
+    // Call after surface data has been uploaded to a texture.
+    virtual void FinishedSurfaceUpload();
+
+    virtual PRBool InUpdate() const { return !!mUpdateSurface; }
+
+    virtual void Resize(const nsIntSize& aSize);
+protected:
 
     PRBool mTextureInited;
     GLContext* mGLContext;
-    nsRefPtr<gfxImageSurface> mBackingSurface;
-    nsRefPtr<gfxContext> mUpdateContext;
-    nsIntRect mUpdateRect;
+    nsRefPtr<gfxASurface> mUpdateSurface;
+    nsIntRegion mUpdateRegion;
 
     // The offset into the update surface at which the update rect is located.
     nsIntPoint mUpdateOffset;
@@ -462,6 +495,11 @@ public:
     const ContextFormat& ActualFormat() { return mActualFormat; }
 
     /**
+     * If this GL context has a D3D texture share handle, returns non-null.
+     */
+    virtual void *GetD3DShareHandle() { return nsnull; }
+
+    /**
      * If this context is double-buffered, returns TRUE.
      */
     virtual PRBool IsDoubleBuffered() { return PR_FALSE; }
@@ -471,8 +509,15 @@ public:
      * This means that various GLES2 restrictions might be in effect (modulo
      * extensions).
      */
-    PRBool IsGLES2() {
+    PRBool IsGLES2() const {
         return mIsGLES2;
+    }
+    
+    /**
+     * Returns PR_TRUE if either this is the GLES2 API, or had the GL_ARB_ES2_compatibility extension
+     */
+    PRBool HasES2Compatibility() const {
+        return mIsGLES2 || IsExtensionSupported(ARB_ES2_compatibility);
     }
 
     enum {
@@ -633,6 +678,8 @@ public:
         return PR_FALSE;
     }
 
+    virtual PRBool RenewSurface() { return PR_FALSE; }
+
     /**`
      * Return a valid, allocated TextureImage of |aSize| with
      * |aContentType|.  The TextureImage's texture is configured to
@@ -703,6 +750,53 @@ public:
     void BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
                           TextureImage *aDst, const nsIntRect& aDstRect);
 
+    /**
+     * Creates a RGB/RGBA texture (or uses one provided) and uploads the surface
+     * contents to it within aSrcRect.
+     *
+     * aSrcRect.x/y will be uploaded to 0/0 in the texture, and the size
+     * of the texture with be aSrcRect.width/height.
+     *
+     * If an existing texture is passed through aTexture, it is assumed it
+     * has already been initialised with glTexImage2D (or this function),
+     * and that its size is equal to or greater than aSrcRect + aDstPoint.
+     * You can alternatively set the overwrite flag to true and have a new
+     * texture memory block allocated.
+     *
+     * The aDstPoint parameter is ignored if no texture was provided
+     * or aOverwrite is true.
+     *
+     * \param aSurface Surface to upload. 
+     * \param aDstRegion Region of texture to upload to.
+     * \param aTexture Texture to use, or 0 to have one created for you.
+     * \param aOverwrite Over an existing texture with a new one.
+     * \param aSrcPoint Offset into aSrc where the region's bound's 
+     *  TopLeft() sits.
+     * \param aPixelBuffer Pass true to upload texture data with an
+     *  offset from the base data (generally for pixel buffer objects), 
+     *  otherwise textures are upload with an absolute pointer to the data.
+     * \return Shader program needed to render this texture.
+     */
+    ShaderProgramType UploadSurfaceToTexture(gfxASurface *aSurface, 
+                                             const nsIntRegion& aDstRegion,
+                                             GLuint& aTexture,
+                                             bool aOverwrite = false,
+                                             const nsIntPoint& aSrcPoint = nsIntPoint(0, 0),
+                                             bool aPixelBuffer = PR_FALSE);
+
+#ifndef MOZ_ENABLE_LIBXUL
+    virtual ShaderProgramType UploadSurfaceToTextureExternal(gfxASurface *aSurface, 
+                                                             const nsIntRect& aSrcRect,
+                                                             GLuint& aTexture,
+                                                             bool aOverwrite = false,
+                                                             const nsIntPoint& aDstPoint = nsIntPoint(0, 0),
+                                                             bool aPixelBuffer = PR_FALSE)
+    {
+      return UploadSurfaceToTexture(aSurface, aSrcRect, aTexture, aOverwrite,
+                                    aDstPoint, aPixelBuffer);
+    }
+#endif
+
     /** Helper for DecomposeIntoNoRepeatTriangles
      */
     struct RectTriangles {
@@ -757,16 +851,20 @@ public:
         EXT_read_format_bgra,
         APPLE_client_storage,
         ARB_texture_non_power_of_two,
+        ARB_pixel_buffer_object,
+        ARB_ES2_compatibility,
         Extensions_Max
     };
 
-    PRBool IsExtensionSupported(GLExtensions aKnownExtension) {
+    PRBool IsExtensionSupported(GLExtensions aKnownExtension) const {
         return mAvailableExtensions[aKnownExtension];
     }
 
     // Shared code for GL extensions and GLX extensions.
     static PRBool ListHasExtension(const GLubyte *extensions,
                                    const char *extension);
+
+    GLint GetMaxTextureSize() { return mMaxTextureSize; }
 
 protected:
     PRPackedBool mInitialized;
@@ -832,6 +930,10 @@ protected:
             return values[index];
         }
 
+        const bool& operator[](size_t index) const {
+            return const_cast<ExtensionBitset*>(this)->operator[](index);
+        }
+
         bool values[setlen];
     };
     ExtensionBitset<Extensions_Max> mAvailableExtensions;
@@ -859,11 +961,17 @@ protected:
                             GLenum aWrapMode,
                             TextureImage::ContentType aContentType,
                             GLContext* aContext)
-    { return NULL; }
+    {
+        nsRefPtr<BasicTextureImage> teximage(
+            new BasicTextureImage(aTexture, aSize, aWrapMode, aContentType, aContext));
+        return teximage.forget();
+    }
 
 protected:
     nsTArray<nsIntRect> mViewportStack;
     nsTArray<nsIntRect> mScissorStack;
+
+    GLint mMaxTextureSize;
 
 public:
 
@@ -1787,56 +1895,22 @@ public:
         AFTER_GL_CALL;
     }
 
+    void* fMapBuffer(GLenum target, GLenum access) {
+        BEFORE_GL_CALL;
+        void *ret = mSymbols.fMapBuffer(target, access);
+        AFTER_GL_CALL;
+        return ret;
+    }
 
- #ifndef DEBUG
-     GLuint GLAPIENTRY fCreateProgram() {
-         return mSymbols.fCreateProgram();
-     }
+    realGLboolean fUnmapBuffer(GLenum target) {
+        BEFORE_GL_CALL;
+        realGLboolean ret = mSymbols.fUnmapBuffer(target);
+        AFTER_GL_CALL;
+        return ret;
+    }
 
-     GLuint GLAPIENTRY fCreateShader(GLenum t) {
-         return mSymbols.fCreateShader(t);
-     }
 
-     void GLAPIENTRY fGenBuffers(GLsizei n, GLuint* names) {
-         mSymbols.fGenBuffers(n, names);
-     }
-
-     void GLAPIENTRY fGenTextures(GLsizei n, GLuint* names) {
-         mSymbols.fGenTextures(n, names);
-     }
-
-     void GLAPIENTRY fGenFramebuffers(GLsizei n, GLuint* names) {
-         mSymbols.fGenFramebuffers(n, names);
-     }
-
-     void GLAPIENTRY fGenRenderbuffers(GLsizei n, GLuint* names) {
-         mSymbols.fGenRenderbuffers(n, names);
-     }
-
-     void GLAPIENTRY fDeleteProgram(GLuint program) {
-         mSymbols.fDeleteProgram(program);
-     }
-
-     void GLAPIENTRY fDeleteShader(GLuint shader) {
-         mSymbols.fDeleteShader(shader);
-     }
-
-     void GLAPIENTRY fDeleteBuffers(GLsizei n, GLuint *names) {
-         mSymbols.fDeleteBuffers(n, names);
-     }
-
-     void GLAPIENTRY fDeleteTextures(GLsizei n, GLuint *names) {
-         mSymbols.fDeleteTextures(n, names);
-     }
-
-     void GLAPIENTRY fDeleteFramebuffers(GLsizei n, GLuint *names) {
-         mSymbols.fDeleteFramebuffers(n, names);
-     }
-
-     void GLAPIENTRY fDeleteRenderbuffers(GLsizei n, GLuint *names) {
-         mSymbols.fDeleteRenderbuffers(n, names);
-     }
- #else
+#ifdef DEBUG
      GLContext *TrackingContext() {
          GLContext *tip = this;
          while (tip->mSharedContext)
@@ -1844,11 +1918,16 @@ public:
          return tip;
      }
 
+#define TRACKING_CONTEXT(a) do { TrackingContext()->a; } while (0)
+#else
+#define TRACKING_CONTEXT(a) do {} while (0)
+#endif
+
      GLuint GLAPIENTRY fCreateProgram() {
          BEFORE_GL_CALL;
          GLuint ret = mSymbols.fCreateProgram();
          AFTER_GL_CALL;
-         TrackingContext()->CreatedProgram(this, ret);
+         TRACKING_CONTEXT(CreatedProgram(this, ret));
          return ret;
      }
 
@@ -1856,7 +1935,7 @@ public:
          BEFORE_GL_CALL;
          GLuint ret = mSymbols.fCreateShader(t);
          AFTER_GL_CALL;
-         TrackingContext()->CreatedShader(this, ret);
+         TRACKING_CONTEXT(CreatedShader(this, ret));
          return ret;
      }
 
@@ -1864,72 +1943,76 @@ public:
          BEFORE_GL_CALL;
          mSymbols.fGenBuffers(n, names);
          AFTER_GL_CALL;
-         TrackingContext()->CreatedBuffers(this, n, names);
+         TRACKING_CONTEXT(CreatedBuffers(this, n, names));
      }
 
      void GLAPIENTRY fGenTextures(GLsizei n, GLuint* names) {
          BEFORE_GL_CALL;
          mSymbols.fGenTextures(n, names);
          AFTER_GL_CALL;
-         TrackingContext()->CreatedTextures(this, n, names);
+         TRACKING_CONTEXT(CreatedTextures(this, n, names));
      }
 
      void GLAPIENTRY fGenFramebuffers(GLsizei n, GLuint* names) {
          BEFORE_GL_CALL;
          mSymbols.fGenFramebuffers(n, names);
          AFTER_GL_CALL;
-         TrackingContext()->CreatedFramebuffers(this, n, names);
+         TRACKING_CONTEXT(CreatedFramebuffers(this, n, names));
      }
 
      void GLAPIENTRY fGenRenderbuffers(GLsizei n, GLuint* names) {
          BEFORE_GL_CALL;
          mSymbols.fGenRenderbuffers(n, names);
          AFTER_GL_CALL;
-         TrackingContext()->CreatedRenderbuffers(this, n, names);
+         TRACKING_CONTEXT(CreatedRenderbuffers(this, n, names));
      }
 
      void GLAPIENTRY fDeleteProgram(GLuint program) {
          BEFORE_GL_CALL;
          mSymbols.fDeleteProgram(program);
          AFTER_GL_CALL;
-         TrackingContext()->DeletedProgram(this, program);
+         TRACKING_CONTEXT(DeletedProgram(this, program));
      }
 
      void GLAPIENTRY fDeleteShader(GLuint shader) {
          BEFORE_GL_CALL;
          mSymbols.fDeleteShader(shader);
          AFTER_GL_CALL;
-         TrackingContext()->DeletedShader(this, shader);
+         TRACKING_CONTEXT(DeletedShader(this, shader));
      }
 
      void GLAPIENTRY fDeleteBuffers(GLsizei n, GLuint *names) {
          BEFORE_GL_CALL;
          mSymbols.fDeleteBuffers(n, names);
          AFTER_GL_CALL;
-         TrackingContext()->DeletedBuffers(this, n, names);
+         TRACKING_CONTEXT(DeletedBuffers(this, n, names));
      }
 
      void GLAPIENTRY fDeleteTextures(GLsizei n, GLuint *names) {
          BEFORE_GL_CALL;
          mSymbols.fDeleteTextures(n, names);
          AFTER_GL_CALL;
-         TrackingContext()->DeletedTextures(this, n, names);
+         TRACKING_CONTEXT(DeletedTextures(this, n, names));
      }
 
      void GLAPIENTRY fDeleteFramebuffers(GLsizei n, GLuint *names) {
          BEFORE_GL_CALL;
-         mSymbols.fDeleteFramebuffers(n, names);
+         if (n == 1 && *names == 0) {
+            /* Deleting framebuffer 0 causes hangs on the DROID. See bug 623228 */
+         } else {
+            mSymbols.fDeleteFramebuffers(n, names);
+         }
          AFTER_GL_CALL;
-         TrackingContext()->DeletedFramebuffers(this, n, names);
+         TRACKING_CONTEXT(DeletedFramebuffers(this, n, names));
      }
 
      void GLAPIENTRY fDeleteRenderbuffers(GLsizei n, GLuint *names) {
          BEFORE_GL_CALL;
          mSymbols.fDeleteRenderbuffers(n, names);
          AFTER_GL_CALL;
-         TrackingContext()->DeletedRenderbuffers(this, n, names);
+         TRACKING_CONTEXT(DeletedRenderbuffers(this, n, names));
      }
-
+#ifdef DEBUG
     void THEBES_API CreatedProgram(GLContext *aOrigin, GLuint aName);
     void THEBES_API CreatedShader(GLContext *aOrigin, GLuint aName);
     void THEBES_API CreatedBuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);

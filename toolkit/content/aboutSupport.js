@@ -1,3 +1,4 @@
+# -*- Mode: js2; indent-tabs-mode: nil; js2-basic-offset: 2; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -232,15 +233,39 @@ function populateGraphicsSection() {
     ]));
 
     var dwEnabled = false;
+    var dwriteEnabledStr = dwEnabled.toString();
+    var dwriteVersion;
     try {
       dwEnabled = gfxInfo.DWriteEnabled;
+      dwriteVersion = gfxInfo.DWriteVersion;
+      dwriteEnabledStr = dwEnabled.toString() + " (" + dwriteVersion + ")";
     } catch(e) {}
     trGraphics.push(createParentElement("tr", [
       createHeader(bundle.GetStringFromName("directWriteEnabled")),
-      createElement("td", dwEnabled),
+      createElement("td", dwriteEnabledStr),
+    ]));
+
+    var webglrenderer;
+    try {
+      webglrenderer = gfxInfo.getWebGLParameter("full-renderer");
+    } catch (e) {
+      webglrenderer = "(WebGL unavailable)";
+    }
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("webglRenderer")),
+      createElement("td", webglrenderer)
     ]));
 
     appendChildren(graphics_tbody, trGraphics);
+   
+    // display any failures that have occurred
+    let graphics_failures_tbody = document.getElementById("graphics-failures-tbody");
+    let trGraphicsFailures = gfxInfo.getFailures().map(function (value)
+        createParentElement("tr", [
+            createElement("td", value)
+        ])
+    );
+    appendChildren(graphics_failures_tbody, trGraphicsFailures);
 
   } // end if (gfxInfo)
 
@@ -263,9 +288,12 @@ function populateGraphicsSection() {
   if (acceleratedWindows)
     msg += " " + mgrType;
 
-  let header = createHeader(bundle.GetStringFromName("acceleratedWindows"));
-
-  appendChildren(graphics_tbody, [ header, createElement("td", msg) ]);
+  appendChildren(graphics_tbody, [
+    createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("acceleratedWindows")),
+      createElement("td", msg),
+    ])
+  ]);
 }
 
 function getPrefValue(aName) {
