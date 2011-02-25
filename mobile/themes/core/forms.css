@@ -193,6 +193,11 @@
   -moz-user-focus: ignore;
 }
 
+/* menulist popup ---------------------------------------------------------- */
+#menulist-commands {
+  display: -moz-box;
+}
+
 /* Common style for Select & Menulist -------------------------------------- */
 .options-title {
   padding: @padding_xxnormal@ @padding_small@ @padding_small@ @padding_small@;

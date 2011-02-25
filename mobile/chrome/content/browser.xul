@@ -659,8 +659,7 @@
 
     <hbox id="menulist-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">
       <vbox id="menulist-popup" class="dialog-dark">
-        <label id="menulist-title" crop="center" flex="1"/>
-        <label id="menulist-title" class="options-title" crop="center" flex="0"/>
+        <label id="menulist-title" class="options-title" crop="center" flex="1"/>
         <richlistbox id="menulist-commands" class="prompt-buttons" onclick="if (event.target != this) MenuListHelperUI.selectByIndex(this.selectedIndex);" flex="1"/>
       </vbox>
     </hbox>
