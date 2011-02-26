@@ -334,6 +334,12 @@
   -moz-margin-end: 18px;
 }
 
+#header-utils-btn > .toolbarbutton-menu-dropmarker {
+  list-style-image: url("chrome://mozapps/skin/extensions/toolbarbutton-dropmarker.png");
+  padding: 0;
+  -moz-margin-start: 2px;
+}
+
 #header-search {
   margin: 0;
   -moz-appearance: none;
