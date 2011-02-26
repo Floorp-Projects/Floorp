@@ -132,28 +132,4 @@
     </versionRange>
   </pluginItem>
 </pluginItems>
-<gfxItems>
-  <gfxBlacklistEntry>
-    <os>WINNT 6.1</os>
-    <vendor>0x10de</vendor>
-    <devices>
-      <device>0x0a6c</device>
-    </devices>
-    <feature>DIRECT2D</feature>
-    <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>
-    <driverVersion>8.17.12.5896</driverVersion>
-    <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator>
-  </gfxBlacklistEntry>
-  <gfxBlacklistEntry>
-    <os>WINNT 6.1</os>
-    <vendor>0x10de</vendor>
-    <devices>
-      <device>0x0a6c</device>
-    </devices>
-    <feature>DIRECT3D_9_LAYERS</feature>
-    <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>
-    <driverVersion>8.17.12.5896</driverVersion>
-    <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator>
-  </gfxBlacklistEntry>
-</gfxItems>
 </blocklist>
