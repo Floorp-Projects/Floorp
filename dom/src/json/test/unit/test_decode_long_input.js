@@ -1,4 +1,8 @@
 // This tests breaking long input across parser buffers
+var Ci = Components.interfaces;
+var Cc = Components.classes;
+
+var nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
 
 var x = {"Lorem ipsum his ponderum delicatissimi ne, at noster dolores urbanitas pro, cibo elaboraret no his. Ea dicunt maiorum usu. Ad appareat facilisis mediocritatem eos. Tale graeci mentitum in eos, hinc insolens at nam. Graecis nominavi aliquyam eu vix.":"Id solet assentior sadipscing pro. Et per atqui graecis, usu quot viris repudiandae ei, mollis evertitur an nam. At nam dolor ignota, liber labore omnesque ea mei, has movet voluptaria in. Vel an impetus omittantur. Vim movet option salutandi ex, ne mei ignota corrumpit. Mucius comprehensam id per. Est ea putant maiestatis.",
 "2Lorem ipsum his ponderum delicatissimi ne, at noster dolores urbanitas pro, cibo elaboraret no his. Ea dicunt maiorum usu. Ad appareat facilisis mediocritatem eos. Tale graeci mentitum in eos, hinc insolens at nam. Graecis nominavi aliquyam eu vix.":"Id solet assentior sadipscing pro. Et per atqui graecis, usu quot viris repudiandae ei, mollis evertitur an nam. At nam dolor ignota, liber labore omnesque ea mei, has movet voluptaria in. Vel an impetus omittantur. Vim movet option salutandi ex, ne mei ignota corrumpit. Mucius comprehensam id per. Est ea putant maiestatis.",
@@ -21,8 +25,8 @@ var x = {"Lorem ipsum his ponderum delicatissimi ne, at noster dolores urbanitas
 var y = nativeJSON.encode(x);
 var z = nativeJSON.decode(y);
 
-function run_test() {
-  for (var i in x) {
-   do_check_eq(x[i], z[i]);
-  }
+function run_test()
+{
+  for (var i in x)
+    do_check_eq(x[i], z[i]);
 }
