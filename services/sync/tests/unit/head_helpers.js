@@ -103,7 +103,8 @@ function initTestLogging(level) {
   log.level = Log4Moz.Level.Trace;
   appender.level = Log4Moz.Level.Trace;
   // Overwrite any other appenders (e.g. from previous incarnations)
-  log._appenders = [appender];
+  log.ownAppenders = [appender];
+  log.updateAppenders();
 
   return logStats;
 }

@@ -278,6 +278,91 @@ function test_restorePromptsReupload() {
   }
 }
 
+// Bug 632287.
+function test_mismatched_types() {
+  _("Ensure that handling a record that changes type causes deletion " +
+    "then re-adding.");
+
+  function FakeRecord(constructor, r) {
+    constructor.call(this, "bookmarks", r.id);
+    for (let x in r) {
+      this[x] = r[x];
+    }
+  }
+
+  let oldRecord = {
+    "id": "l1nZZXfB8nC7",
+    "type":"folder",
+    "parentName":"Bookmarks Toolbar",
+    "title":"Innerst i Sneglehode",
+    "description":null,
+    "parentid": "toolbar"
+  };
+
+  let newRecord = {
+    "id": "l1nZZXfB8nC7",
+    "type":"livemark",
+    "siteUri":"http://sneglehode.wordpress.com/",
+    "feedUri":"http://sneglehode.wordpress.com/feed/",
+    "parentName":"Bookmarks Toolbar",
+    "title":"Innerst i Sneglehode",
+    "description":null,
+    "children":
+      ["HCRq40Rnxhrd", "YeyWCV1RVsYw", "GCceVZMhvMbP", "sYi2hevdArlF",
+       "vjbZlPlSyGY8", "UtjUhVyrpeG6", "rVq8WMG2wfZI", "Lx0tcy43ZKhZ",
+       "oT74WwV8_j4P", "IztsItWVSo3-"],
+    "parentid": "toolbar"
+  };
+
+  do_test_pending();
+  Svc.Prefs.set("username", "foo");
+  Service.serverURL = "http://localhost:8080/";
+  Service.clusterURL = "http://localhost:8080/";
+
+  let collection = new ServerCollection({}, true);
+
+  let engine = new BookmarksEngine();
+  let store = engine._store;
+  let global = new ServerWBO('global',
+                             {engines: {bookmarks: {version: engine.version,
+                                                    syncID: engine.syncID}}});
+  _("GUID: " + store.GUIDForId(6, true));
+  let server = httpd_setup({
+    "/1.0/foo/storage/meta/global": global.handler(),
+    "/1.0/foo/storage/bookmarks": collection.handler()
+  });
+
+  try {
+    let bms = store._bms;
+    let oldR = new FakeRecord(BookmarkFolder, oldRecord);
+    let newR = new FakeRecord(Livemark, newRecord);
+    oldR._parent = Svc.Bookmark.toolbarFolder;
+    newR._parent = Svc.Bookmark.toolbarFolder;
+
+    store.applyIncoming(oldR);
+    _("Applied old. It's a folder.");
+    let oldID = store.idForGUID(oldR.id);
+    _("Old ID: " + oldID);
+    do_check_eq(bms.getItemType(oldID), bms.TYPE_FOLDER);
+    do_check_false(store._ls.isLivemark(oldID));
+
+    store.applyIncoming(newR);
+    let newID = store.idForGUID(newR.id);
+    _("New ID: " + newID);
+
+    _("Applied new. It's a livemark.");
+    do_check_eq(bms.getItemType(newID), bms.TYPE_FOLDER);
+    do_check_true(store._ls.isLivemark(newID));
+
+  } finally {
+    store.wipe();
+    server.stop(do_test_finished);
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+    syncTesting = new SyncTestingInfrastructure(makeEngine);
+  }
+}
+
 function run_test() {
   initTestLogging("Trace");
   Log4Moz.repository.getLogger("Engine.Bookmarks").level = Log4Moz.Level.Trace;
@@ -286,5 +371,6 @@ function run_test() {
 
   test_processIncoming_error_orderChildren();
   test_ID_caching();
+  test_mismatched_types();
   test_restorePromptsReupload();
 }

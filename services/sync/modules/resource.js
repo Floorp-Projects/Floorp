@@ -48,7 +48,6 @@ const Cu = Components.utils;
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
-Cu.import("resource://services-sync/ext/Sync.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/util.js");
 
@@ -403,7 +402,7 @@ Resource.prototype = {
   // is never called directly, but is used by the high-level
   // {{{get}}}, {{{put}}}, {{{post}}} and {{delete}} methods.
   _request: function Res__request(action, data) {
-    let [doRequest, cb] = Sync.withCb(this._doRequest, this);
+    let cb = Utils.makeSyncCallback();
     function callback(error, ret) {
       if (error)
         cb.throw(error);
@@ -412,7 +411,8 @@ Resource.prototype = {
 
     // The channel listener might get a failure code
     try {
-      return doRequest(action, data, callback);
+      this._doRequest(action, data, callback);
+      return Utils.waitForSyncCallback(cb);
     } catch(ex) {
       // Combine the channel stack with this request stack.  Need to create
       // a new error object for that.
