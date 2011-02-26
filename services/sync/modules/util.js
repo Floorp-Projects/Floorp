@@ -46,7 +46,6 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/ext/StringBundle.js");
-Cu.import("resource://services-sync/ext/Sync.js");
 Cu.import("resource://services-sync/log4moz.js");
 
 let NetUtil;
@@ -57,6 +56,12 @@ try {
 } catch (ex) {
   // Firefox 3.5 :(
 }
+
+// Constants for makeSyncCallback, waitForSyncCallback
+const CB_READY = {};
+const CB_COMPLETE = {};
+const CB_FAIL = {};
+
 
 /*
  * Utility functions
@@ -230,8 +235,8 @@ let Utils = {
       names = names == null ? [] : [names];
 
     // Synchronously asyncExecute fetching all results by name
-    let [exec, execCb] = Sync.withCb(query.executeAsync, query);
-    return exec({
+    let execCb = Utils.makeSyncCallback();
+    query.executeAsync({
       items: [],
       handleResult: function handleResult(results) {
         let row;
@@ -249,6 +254,7 @@ let Utils = {
         execCb(this.items);
       }
     });
+    return Utils.waitForSyncCallback(execCb);
   },
 
   byteArrayToString: function byteArrayToString(bytes) {
@@ -361,7 +367,7 @@ let Utils = {
    * @param obj
    *        Object to add properties to defer in its prototype
    * @param defer
-   *        Hash property of obj to defer to (dot split each level)
+   *        Property of obj to defer to
    * @param prop
    *        Property name to defer (or an array of property names)
    */
@@ -369,44 +375,22 @@ let Utils = {
     if (Utils.isArray(prop))
       return prop.map(function(prop) Utils.deferGetSet(obj, defer, prop));
 
-    // Split the defer into each dot part for each level to dereference
-    let parts = defer.split(".");
-    let deref = function(base) Utils.deref(base, parts);
-
     let prot = obj.prototype;
 
     // Create a getter if it doesn't exist yet
     if (!prot.__lookupGetter__(prop)) {
-      // Yes, this should be a one-liner, but there are errors if it's not
-      // broken out. *sigh*
-      // Errors are these:
-      // JavaScript strict warning: resource://services-sync/util.js, line 304: reference to undefined property deref(this)[prop]
-      // JavaScript strict warning: resource://services-sync/util.js, line 304: reference to undefined property deref(this)[prop]
-      let f = function() {
-        let d = deref(this);
-        if (!d)
-          return undefined;
-        let out = d[prop];
-        return out;
-      }
-      prot.__defineGetter__(prop, f);
+      prot.__defineGetter__(prop, function () {
+        return this[defer][prop];
+      });
     }
 
     // Create a setter if it doesn't exist yet
-    if (!prot.__lookupSetter__(prop))
-      prot.__defineSetter__(prop, function(val) deref(this)[prop] = val);
+    if (!prot.__lookupSetter__(prop)) {
+      prot.__defineSetter__(prop, function (val) {
+        this[defer][prop] = val;
+      });
+    }
   },
-
-  /**
-   * Dereference an array of properties starting from a base object
-   *
-   * @param base
-   *        Base object to start dereferencing
-   * @param props
-   *        Array of properties to dereference (one for each level)
-   */
-  deref: function Utils_deref(base, props) props.reduce(function(curr, prop)
-    curr[prop], base),
 
   /**
    * Determine if some value is an array
@@ -1487,8 +1471,8 @@ let Utils = {
   },
 
   mpLocked: function mpLocked() {
-    let modules = Cc["@mozilla.org/security/pkcs11moduledb;1"].
-                  getService(Ci.nsIPKCS11ModuleDB);
+    let modules = Cc["@mozilla.org/security/pkcs11moduledb;1"]
+                    .getService(Ci.nsIPKCS11ModuleDB);
     let sdrSlot = modules.findSlotByName("");
     let status  = sdrSlot.status;
     let slots = Ci.nsIPKCS11Slot;
@@ -1507,13 +1491,13 @@ let Utils = {
   // If Master Password is enabled and locked, present a dialog to unlock it.
   // Return whether the system is unlocked.
   ensureMPUnlocked: function ensureMPUnlocked() {
-    sdr = Cc["@mozilla.org/security/sdr;1"].getService(Ci.nsISecretDecoderRing);
-    var ok = false;
+    let sdr = Cc["@mozilla.org/security/sdr;1"]
+                .getService(Ci.nsISecretDecoderRing);
     try {
       sdr.encryptString("bacon");
-      ok = true;
+      return true;
     } catch(e) {}
-    return ok;
+    return false;
   },
   
   __prefs: null,
@@ -1525,6 +1509,77 @@ let Utils = {
       this.__prefs.QueryInterface(Ci.nsIPrefBranch2);
     }
     return this.__prefs;
+  },
+
+  /**
+   * Helpers for making asynchronous calls within a synchronous API possible.
+   * 
+   * If you value your sanity, do not look closely at the following functions.
+   */
+
+  /**
+   * Check if the app is ready (not quitting)
+   */
+  checkAppReady: function checkAppReady() {
+    // Watch for app-quit notification to stop any sync calls
+    Svc.Obs.add("quit-application", function() {
+      Utils.checkAppReady = function() {
+        throw Components.Exception("App. Quitting", Cr.NS_ERROR_ABORT);
+      };
+    });
+    // In the common case, checkAppReady just returns true
+    return (Utils.checkAppReady = function() true)();
+  },
+
+  /**
+   * Create a sync callback that remembers state like whether it's been called
+   */
+  makeSyncCallback: function makeSyncCallback() {
+    // The main callback remembers the value it's passed and that it got data
+    let onComplete = function onComplete(data) {
+      onComplete.state = CB_COMPLETE;
+      onComplete.value = data;
+    };
+
+    // Initialize private callback data to prepare to be called
+    onComplete.state = CB_READY;
+    onComplete.value = null;
+
+    // Allow an alternate callback to trigger an exception to be thrown
+    onComplete.throw = function onComplete_throw(data) {
+      onComplete.state = CB_FAIL;
+      onComplete.value = data;
+
+      // Cause the caller to get an exception and stop execution
+      throw data;
+    };
+
+    return onComplete;
+  },
+
+  /**
+   * Wait for a sync callback to finish
+   */
+  waitForSyncCallback: function waitForSyncCallback(callback) {
+    // Grab the current thread so we can make it give up priority
+    let thread = Cc["@mozilla.org/thread-manager;1"].getService().currentThread;
+
+    // Keep waiting until our callback is triggered unless the app is quitting
+    while (Utils.checkAppReady() && callback.state == CB_READY) {
+      thread.processNextEvent(true);
+    }
+
+    // Reset the state of the callback to prepare for another call
+    let state = callback.state;
+    callback.state = CB_READY;
+
+    // Throw the value the callback decided to fail with
+    if (state == CB_FAIL) {
+      throw callback.value;
+    }
+
+    // Return the value passed to the callback
+    return callback.value;
   }
 };
 
