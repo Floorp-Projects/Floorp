@@ -1889,7 +1889,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_CALLGNAME)
             jsop_getgname(fullAtomIndex(PC));
             if (op == JSOP_CALLGNAME)
-                frame.push(UndefinedValue());
+                jsop_callgname_epilogue();
           END_CASE(JSOP_GETGNAME)
 
           BEGIN_CASE(JSOP_SETGNAME)
@@ -4366,6 +4366,77 @@ mjit::Compiler::jsop_getgname(uint32 index)
 #else
     jsop_getgname_slow(index);
 #endif
+}
+
+/*
+ * Generate just the epilogue code that is specific to callgname. The rest
+ * is shared with getgname.
+ */
+void
+mjit::Compiler::jsop_callgname_epilogue()
+{
+    /*
+     * This slow path does the same thing as the interpreter.
+     */
+    if (!script->compileAndGo) {
+        prepareStubCall(Uses(1));
+        INLINE_STUBCALL(stubs::PushImplicitThisForGlobal);
+        frame.pushSynced();
+        return;
+    }
+
+    /* Fast path for known-not-an-object callee. */
+    FrameEntry *fval = frame.peek(-1);
+    if (fval->isNotType(JSVAL_TYPE_OBJECT)) {
+        frame.push(UndefinedValue());
+        return;
+    }
+
+    /*
+     * Optimized version. This inlines the common case, calling a
+     * (non-proxied) function that has the same global as the current
+     * script. To make the code simpler, we:
+     *      1. test the stronger property that the callee's parent is
+     *         equal to the global of the current script, and
+     *      2. bake in the global of the current script, which is why
+     *         this optimized path requires compile-and-go.
+     */
+
+    /* If the callee is not an object, jump to the inline fast path. */
+    MaybeRegisterID typeReg = frame.maybePinType(fval);
+    RegisterID objReg = frame.copyDataIntoReg(fval);
+
+    MaybeJump isNotObj;
+    if (!fval->isType(JSVAL_TYPE_OBJECT)) {
+        isNotObj = frame.testObject(Assembler::NotEqual, fval);
+        frame.maybeUnpinReg(typeReg);
+    }
+
+    /*
+     * If the callee is not a function, jump to OOL slow path.
+     */
+    Jump notFunction = masm.testFunction(Assembler::NotEqual, objReg);
+    stubcc.linkExit(notFunction, Uses(1));
+
+    /*
+     * If the callee's parent is not equal to the global, jump to
+     * OOL slow path.
+     */
+    masm.loadPtr(Address(objReg, offsetof(JSObject, parent)), objReg);
+    Jump globalMismatch = masm.branchPtr(Assembler::NotEqual, objReg, ImmPtr(globalObj));
+    stubcc.linkExit(globalMismatch, Uses(1));
+    frame.freeReg(objReg);
+
+    /* OOL stub call path. */
+    stubcc.leave();
+    OOL_STUBCALL(stubs::PushImplicitThisForGlobal);
+
+    /* Fast path. */
+    if (isNotObj.isSet())
+        isNotObj.getJump().linkTo(masm.label(), &masm);
+    frame.pushUntypedValue(UndefinedValue());
+
+    stubcc.rejoin(Changes(1));
 }
 
 void
