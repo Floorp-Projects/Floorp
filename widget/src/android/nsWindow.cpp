@@ -523,7 +523,6 @@ NS_IMETHODIMP
 nsWindow::Invalidate(const nsIntRect &aRect,
                      PRBool aIsSynchronous)
 {
-    ALOG("nsWindow::Invalidate %p [%d %d %d %d]", (void*) this, aRect.x, aRect.y, aRect.width, aRect.height);
     nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
     return NS_OK;
 }
@@ -901,8 +900,6 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
 
     // If we have no covering child, then we need to render this.
     if (coveringChildIndex == -1) {
-        ALOG("nsWindow[%p]::DrawTo no covering child, drawing this", (void*) this);
-
         nsPaintEvent event(PR_TRUE, NS_PAINT, this);
         event.region = boundsRect;
         switch (GetLayerManager(nsnull)->GetBackendType()) {
@@ -950,7 +947,6 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
         offset = targetSurface->GetDeviceOffset();
 
     for (PRUint32 i = coveringChildIndex; i < mChildren.Length(); ++i) {
-        ALOG("nsWindow[%p]::DrawTo child[%d]", (void*) this, i);
         if (mChildren[i]->mBounds.IsEmpty() ||
             !mChildren[i]->mBounds.Intersects(boundsRect)) {
             continue;
@@ -970,16 +966,12 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
     if (targetSurface)
         targetSurface->SetDeviceOffset(offset);
 
-    ALOG("nsWindow[%p]::DrawTo done", (void*) this);
-
     return PR_TRUE;
 }
 
 void
 nsWindow::OnDraw(AndroidGeckoEvent *ae)
 {
-    ALOG(">> OnDraw");
-
     if (!IsTopLevel()) {
         ALOG("##### redraw for window %p, which is not a toplevel window -- sending to toplevel!", (void*) this);
         DumpWindows();
