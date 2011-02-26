@@ -221,17 +221,29 @@ body[dir="rtl"] {
 
 #feedback {
   display: inline-block;
-  padding: 8px;
   margin: 0;
-  border-radius: 8px 0 0 8px;
 }
 
 #support {
   display: inline-block;
-  padding: 8px;
   margin: 0;
-  border-left: none;
-  border-radius: 0 8px 8px 0;
+}
+
+@media (max-width: 399px) {
+  #support {
+    margin-top: 8px;
+  }
+}
+
+@media (min-width: 400px) {
+  #feedback {
+    border-radius: 8px 0 0 8px;
+  }
+
+  #support {
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+  }
 }
 
 #promo {
@@ -265,4 +277,10 @@ body[dir="ltr"] #promo-button {
 body[dir="rtl"] #promo-button {
   float: left;
   background: rgb(254,210,13) url("images/arrowleft-16.png") 1% center no-repeat;
+}
+
+@media (max-width: 399px) {
+  #promo-button {
+    display: none;
+  }
 }
