@@ -446,6 +446,7 @@ class Compiler : public BaseCompiler
     void jsop_eleminc(JSOp op, VoidStub);
     void jsop_getgname(uint32 index);
     void jsop_getgname_slow(uint32 index);
+    void jsop_callgname_epilogue();
     void jsop_setgname(JSAtom *atom, bool usePropertyCache);
     void jsop_setgname_slow(JSAtom *atom, bool usePropertyCache);
     void jsop_bindgname();
