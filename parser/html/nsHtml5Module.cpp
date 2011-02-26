@@ -53,6 +53,7 @@
 // static
 PRBool nsHtml5Module::sEnabled = PR_FALSE;
 PRBool nsHtml5Module::sOffMainThread = PR_TRUE;
+PRBool nsHtml5Module::sHotmailWorkaround = PR_TRUE;
 nsIThread* nsHtml5Module::sStreamParserThread = nsnull;
 nsIThread* nsHtml5Module::sMainThread = nsnull;
 
@@ -62,6 +63,8 @@ nsHtml5Module::InitializeStatics()
 {
   nsContentUtils::AddBoolPrefVarCache("html5.enable", &sEnabled);
   nsContentUtils::AddBoolPrefVarCache("html5.offmainthread", &sOffMainThread);
+  nsContentUtils::AddBoolPrefVarCache("html5.hotmailworkaround",
+                                      &sHotmailWorkaround);
   nsHtml5Atoms::AddRefAtoms();
   nsHtml5AttributeName::initializeStatics();
   nsHtml5ElementName::initializeStatics();
