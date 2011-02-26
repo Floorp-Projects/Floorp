@@ -143,6 +143,7 @@ toolbarbutton.urlbar-button {
   -moz-box-align: center;
   -moz-box-pack: center;
   background-image: url("chrome://browser/skin/images/endcap-default-bg.png");
+  background-position: bottom;
 }
 
 .urlbar-cap-button[open="true"],
