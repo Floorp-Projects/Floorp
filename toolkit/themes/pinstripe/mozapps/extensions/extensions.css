@@ -70,7 +70,7 @@
 
 .global-warning,
 .global-warning .button-link {
-  text-shadow: #FFFFFF 1px 1px 1px;
+  text-shadow: @loweredShadow@;
 }
 
 #addons-page[warning] .global-warning-container {
@@ -368,13 +368,13 @@
 .sorter[checkState="1"],
 .sorter[checkState="2"],
 .sorter:active:hover {
-  text-shadow: #FFF 0 1px 1px;
+  text-shadow: @loweredShadow@;
   background-color: #C0C3CB;
-  box-shadow: inset #A3A6AC 0 1px 1px, #FFF 0 1px 1px;
+  box-shadow: inset #A3A6AC 0 1px 1px, @loweredShadow@;
 }
 
 .sorter:hover {
-  text-shadow: #FFF 0 1px 1px;
+  text-shadow: @loweredShadow@;
   background-color: #C0C3CB;
 }
 
@@ -481,7 +481,7 @@
   margin-bottom: 0;
   font-weight: bold;
   color: #000;
-  text-shadow: 1px 1px 1px #FFF;
+  text-shadow: @loweredShadow@;
   -moz-box-align: end;
 }
 
@@ -508,7 +508,7 @@
 .error {
   -moz-margin-start: 48px;
   font-weight: bold;
-  text-shadow: 1px 1px 1px #FFF;
+  text-shadow: @loweredShadow@;
   -moz-box-align: center;
 }
 
@@ -675,7 +675,7 @@
 }
 
 .addon[selected] .name-container {
-  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.7);
+  text-shadow: @loweredShadow@;
 }
 
 .addon[active="false"][selected] .name-container {
@@ -705,13 +705,13 @@
 }
 
 .search-filter-radio[selected] {
-  text-shadow: #FFF 0 1px 1px;
+  text-shadow: @loweredShadow@;
   background-color: #C0C3CB;
-  box-shadow: inset #A3A6AC 0 1px 1px, #FFF 0 1px 1px;
+  box-shadow: inset #A3A6AC 0 1px 1px, @loweredShadow@;
 }
 
 .search-filter-radio:hover {
-  text-shadow: #FFF 0 1px 1px;
+  text-shadow: @loweredShadow@;
   background-color: #C0C3CB;
 }
 
@@ -916,7 +916,7 @@
   background-image: -moz-linear-gradient(top, #DCDEE3, #CBCED6);
   border: 1px solid #858898;
   border-radius: 3px;
-  box-shadow: inset #E3E8EC 0 1px 1px, rgba(227, 232, 236, 0.4) 0 1px 1px;
+  box-shadow: inset #E3E8EC 0 1px 1px, @loweredShadow@;
   width: 200px;
   height: 21px;
   margin: 0 8px;
@@ -1011,7 +1011,7 @@
 }
 
 .download-progress .status {
-  text-shadow: #FFF 0 0 2px;
+  text-shadow: @loweredShadow@;
 }
 
 
@@ -1047,7 +1047,7 @@
   border: 1px solid #858898;
   border-radius: 3px;
   background-image: -moz-linear-gradient(top, #DCDEE3, #CBCED6);
-  box-shadow: inset #E3E8EC 0 1px 1px, rgba(227, 232, 236, 0.4) 0 1px 1px;
+  box-shadow: inset #E3E8EC 0 1px 1px, @loweredShadow@;
 }
 
 .addon-control[disabled="true"] {
@@ -1096,7 +1096,7 @@
   height: 22px;
   border: 1px solid @toolbarbuttonBorderColor@;
   border-radius: @toolbarbuttonCornerRadius@;
-  box-shadow: 0 1px rgba(255, 255, 255, 0.2);
+  box-shadow: @loweredShadow@;
   background: @toolbarbuttonBackground@;
   background-origin: border-box;
   opacity: 0.8;
