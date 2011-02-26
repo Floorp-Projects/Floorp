@@ -855,6 +855,13 @@ Item.prototype = {
 // Keeps track of all Items.
 let Items = {
   // ----------
+  // Function: toString
+  // Prints [Items] for debug use
+  toString: function Items_toString() {
+    return "[Items]";
+  },
+
+  // ----------
   // Variable: defaultGutter
   // How far apart Items should be from each other and from bounds
   defaultGutter: 15,

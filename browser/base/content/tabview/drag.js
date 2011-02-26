@@ -102,6 +102,13 @@ function Drag(item, event, isFauxDrag) {
 
 Drag.prototype = {
   // ----------
+  // Function: toString
+  // Prints [Drag (item)] for debug use
+  toString: function Drag_toString() {
+    return "[Drag (" + this.item + ")]";
+  },
+
+  // ----------
   // Function: snapBounds
   // Adjusts the given bounds according to the currently active trenches. Used by <Drag.snap>
   //

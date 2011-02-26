@@ -213,6 +213,13 @@ function TabItem(tab, options) {
 
 TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // ----------
+  // Function: toString
+  // Prints [TabItem (tab)] for debug use
+  toString: function TabItem_toString() {
+    return "[TabItem (" + this.tab + ")]";
+  },
+
+  // ----------
   // Function: forceCanvasSize
   // Repaints the thumbnail with the given resolution, and forces it
   // to stay that resolution until unforceCanvasSize is called.
@@ -815,6 +822,13 @@ let TabItems = {
   tabItemPadding: {},
 
   // ----------
+  // Function: toString
+  // Prints [TabItems count=count] for debug use
+  toString: function TabItems_toString() {
+    return "[TabItems count=" + this.items.length + "]";
+  },
+
+  // ----------
   // Function: init
   // Set up the necessary tracking to maintain the <TabItems>s.
   init: function TabItems_init() {
@@ -1343,6 +1357,13 @@ TabPriorityQueue.prototype = {
   _high: [], // high priority queue
 
   // ----------
+  // Function: toString
+  // Prints [TabPriorityQueue count=count] for debug use
+  toString: function TabPriorityQueue_toString() {
+    return "[TabPriorityQueue count=" + (this._low.length + this._high.length) + "]";
+  },
+
+  // ----------
   // Function: clear
   // Empty the update queue
   clear: function TabPriorityQueue_clear() {
@@ -1443,6 +1464,13 @@ function TabCanvas(tab, canvas) {
 };
 
 TabCanvas.prototype = {
+  // ----------
+  // Function: toString
+  // Prints [TabCanvas (tab)] for debug use
+  toString: function TabCanvas_toString() {
+    return "[TabCanvas (" + this.tab + ")]";
+  },
+
   // ----------
   // Function: paint
   paint: function TabCanvas_paint(evt) {

@@ -110,6 +110,15 @@ function Trench(element, xory, type, edge) {
 };
 
 Trench.prototype = {
+  // ----------
+  // Function: toString
+  // Prints [Trench edge type (parentItem)] for debug use
+  toString: function Trench_toString() {
+    return "[Trench " + this.edge + " " + this.type +
+           (this.parentItem ? " (" + this.parentItem + ")" : "") +
+           "]";
+  },
+
   //----------
   // Variable: radius
   // (integer) radius is how far away we should snap from
@@ -480,6 +489,13 @@ var Trenches = {
   get preferLeft() { return !UI.rtl; },
 
   trenches: [],
+
+  // ----------
+  // Function: toString
+  // Prints [Trenches count=count] for debug use
+  toString: function Trenches_toString() {
+    return "[Trenches count=" + this.trenches.length + "]";
+  },
 
   // ---------
   // Function: getById
