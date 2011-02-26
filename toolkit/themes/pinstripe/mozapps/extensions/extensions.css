@@ -37,6 +37,9 @@
 
 %include ../../global/shared.inc
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
 #addons-page {
   -moz-appearance: none;
   padding: 18px;
@@ -333,10 +336,31 @@
 
 #header-search {
   margin: 0;
+  -moz-appearance: none;
+  padding: 3px 5px 2px;
+  border: 1px solid rgba(60,73,97,0.5);
+  border-radius: 10000px;
+  box-shadow: inset 0 1px 1px rgba(0,0,0,0.15), 0 1px rgba(255,255,255,0.25);
+  background: -moz-linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.3));
+  background-clip: padding-box;
 }
 
-#header-search:not([focused]) {
-  opacity: 0.7;
+#header-search[focused] {
+  box-shadow: @focusRingShadow@, inset 0 1px 1px rgba(0,0,0,0.15);
+  border-color: -moz-mac-focusring;
+}
+
+#header-search > .textbox-input-box {
+  -moz-padding-start: 15px;
+  background: url("chrome://mozapps/skin/extensions/search.png") left no-repeat;
+}
+
+#header-search > .textbox-input-box:-moz-locale-dir(rtl) {
+  background-position: right;
+}
+
+#header-search > .textbox-input-box > html|*.textbox-input:-moz-placeholder {
+  color: #5C6470;
 }
 
 .view-header {
