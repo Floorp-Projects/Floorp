@@ -1068,29 +1068,25 @@
 
 .addon-control {
   -moz-appearance: none;
-  padding: 2px 5px;
-  border: 1px solid #858898;
+  padding: 1px 4px;
+  min-width: 60px;
   border-radius: 3px;
-  background-image: -moz-linear-gradient(top, #DCDEE3, #CBCED6);
-  box-shadow: inset #E3E8EC 0 1px 1px, @loweredShadow@;
+  border: 1px solid rgba(60,73,97,0.5);
+  box-shadow: inset 0 1px rgba(255,255,255,0.25), 0 1px rgba(255,255,255,0.25);
+  background-image: -moz-linear-gradient(rgba(255,255,255,0.45), rgba(255,255,255,0.2));
+  background-clip: padding-box;
+  color: #252F3B;
+  text-shadow: @loweredShadow@;
 }
 
 .addon-control[disabled="true"] {
   display: none;
 }
 
-.addon-control:hover {
-  border-color: @toolbarbuttonBorderColor@;
-}
-
 .addon-control:active:hover {
-  box-shadow: inset rgba(0, 0, 0, 0.5) 1px 1px 4px;
-  background-image: -moz-linear-gradient(top, #949599, #A8A9AD);
-  border-color: #50525B;
-}
-
-.addon-control:-moz-window-inactive {
-  border-color: @toolbarbuttonInactiveBorderColor@;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.2), 0 1px rgba(255,255,255,0.25);
+  background-image: -moz-linear-gradient(rgba(45,54,71,0.3), rgba(45,54,71,0.1));
+  border-color: rgba(60,73,97,0.7);
 }
 
 .button-link {
