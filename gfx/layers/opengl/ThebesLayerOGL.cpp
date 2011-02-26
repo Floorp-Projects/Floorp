@@ -137,6 +137,18 @@ BindAndDrawQuadWithTextureRect(GLContext* aGl,
   }
 }
 
+static void
+SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget)
+{
+  nsRefPtr<gfxASurface> surface = aTarget->CurrentSurface();
+  if (surface->GetContentType() != gfxASurface::CONTENT_COLOR_ALPHA) {
+    // Destination doesn't have alpha channel; no need to set any special flags
+    return;
+  }
+
+  surface->SetSubpixelAntialiasingEnabled(
+      !(aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA));
+}
 
 class ThebesLayerBufferOGL
 {
@@ -731,6 +743,7 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
       NS_ERROR("GL should never need to update ThebesLayers in an empty transaction");
     } else {
       void* callbackData = mOGLManager->GetThebesLayerCallbackData();
+      SetAntialiasingFlags(this, state.mContext);
       callback(this, state.mContext, state.mRegionToDraw,
                state.mRegionToInvalidate, callbackData);
       // Everything that's visible has been validated. Do this instead of
