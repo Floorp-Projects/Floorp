@@ -73,6 +73,7 @@ TEST_HARNESS_EXTRAS = \
   
 TEST_HARNESS_FILES = \
   fb_run.py \
+  fb-test-runner.config \
   $(NULL)
 
 stage-package: PKG_STAGE = $(DIST)/test-package-stage
