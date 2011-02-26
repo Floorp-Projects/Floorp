@@ -133,6 +133,13 @@ let UI = {
   isDOMWindowClosing: false,
 
   // ----------
+  // Function: toString
+  // Prints [UI] for debug use
+  toString: function UI_toString() {
+    return "[UI]";
+  },
+
+  // ----------
   // Function: init
   // Must be called after the object is created.
   init: function UI_init() {
