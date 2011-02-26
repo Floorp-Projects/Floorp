@@ -377,10 +377,13 @@ def main():
     # Hack in a symbolic link for jsreftest
     os.system("ln -s ../jsreftest jsreftest")
 
-    # Dynamically build the reftest URL if possible
+    # Dynamically build the reftest URL if possible, beware that args[0] should exist 'inside' the webroot
     manifest = args[0]
-    if os.path.exists(args[0]):
+    if os.path.exists(os.path.join(SCRIPT_DIRECTORY, args[0])):
         manifest = "http://" + str(options.remoteWebServer) + ":" + str(options.httpPort) + "/" + args[0]
+    elif os.path.exists(args[0]):
+        manifestPath = os.path.abspath(args[0]).split(SCRIPT_DIRECTORY)[1].strip('/')
+        manifest = "http://" + str(options.remoteWebServer) + ":" + str(options.httpPort) + "/" + manifestPath
 
     procName = options.app.split('/')[-1]
     if (dm.processExist(procName)):
