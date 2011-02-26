@@ -223,6 +223,24 @@ nsSVGUtils::GetParentElement(nsIContent *aContent)
   return parent && parent->IsElement() ? parent->AsElement() : nsnull;
 }
 
+nsSVGSVGElement*
+nsSVGUtils::GetOuterSVGElement(nsSVGElement *aSVGElement)
+{
+  nsIContent *element = nsnull;
+  nsIContent *ancestor = GetParentElement(aSVGElement);
+
+  while (ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG &&
+                     ancestor->Tag() != nsGkAtoms::foreignObject) {
+    element = ancestor;
+    ancestor = GetParentElement(element);
+  }
+
+  if (element && element->Tag() == nsGkAtoms::svg) {
+    return static_cast<nsSVGSVGElement*>(element);
+  }
+  return nsnull;
+}
+
 float
 nsSVGUtils::GetFontSize(Element *aElement)
 {
@@ -457,24 +475,6 @@ nsSVGUtils::GetNearestViewportElement(nsIContent *aContent)
       return nsCOMPtr<nsIDOMSVGElement>(do_QueryInterface(element)).forget();
     }
     element = GetParentElement(element);
-  }
-  return nsnull;
-}
-
-already_AddRefed<nsIDOMSVGElement>
-nsSVGUtils::GetFarthestViewportElement(nsIContent *aContent)
-{
-  nsIContent *element = nsnull;
-  nsIContent *ancestor = GetParentElement(aContent);
-
-  while (ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG &&
-                     ancestor->Tag() != nsGkAtoms::foreignObject) {
-    element = ancestor;
-    ancestor = GetParentElement(element);
-  }
-
-  if (element && element->Tag() == nsGkAtoms::svg) {
-    return nsCOMPtr<nsIDOMSVGElement>(do_QueryInterface(element)).forget();
   }
   return nsnull;
 }
@@ -1466,17 +1466,6 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
   gfxRect strokeExtents = aPathExtents;
   strokeExtents.Outset(dy, dx, dy, dx);
   return strokeExtents;
-}
-
-/* static */ PRBool
-nsSVGUtils::IsInnerSVG(nsIContent* aContent)
-{
-  if (!aContent->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG)) {
-    return PR_FALSE;
-  }
-  nsIContent *ancestor = GetParentElement(aContent);
-  return ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG &&
-                     ancestor->Tag() != nsGkAtoms::foreignObject;
 }
 
 // ----------------------------------------------------------------------
