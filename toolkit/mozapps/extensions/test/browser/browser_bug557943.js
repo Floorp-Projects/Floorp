@@ -45,7 +45,7 @@ function perform_search(aQuery, aCallback) {
     var searchBox = gManagerWindow.document.getElementById("header-search");
     searchBox.value = aQuery;
 
-    EventUtils.synthesizeMouse(searchBox, 2, 2, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
     EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
     wait_for_view_load(gManagerWindow, function() {
       var list = gManagerWindow.document.getElementById("search-list");
