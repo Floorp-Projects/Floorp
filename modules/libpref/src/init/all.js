@@ -3262,6 +3262,8 @@ pref("accelerometer.enabled", true);
 pref("html5.enable", true);
 // Toggle which thread the HTML5 parser uses for stream parsing
 pref("html5.offmainthread", true);
+// Toggle old parser use for document.open() on Hotmail (bug 627729)
+pref("html5.hotmailworkaround", true);
 // Time in milliseconds between the time a network buffer is seen and the 
 // timer firing when the timer hasn't fired previously in this parse in the 
 // off-the-main-thread HTML5 parser.

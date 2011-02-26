@@ -1626,6 +1626,9 @@ protected:
   PRPackedBool mIsRegularHTML;
   PRPackedBool mIsXUL;
 
+  // Sync document.close behavior with document.open() (bug 627729)
+  PRPackedBool mForceOldParserForHotmail;
+
   enum {
     eTriUnset = 0,
     eTriFalse,
