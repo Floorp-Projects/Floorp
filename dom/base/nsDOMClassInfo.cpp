@@ -9421,11 +9421,13 @@ nsHTMLSelectElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext 
         *objp = obj;
         *_retval = JS_DefineElement(cx, obj, n, JSVAL_VOID, nsnull, nsnull,
                                     JSPROP_ENUMERATE | JSPROP_SHARED);
+
+        return NS_OK;
       }
     }
   }
 
-  return NS_OK;
+  return nsElementSH::NewResolve(wrapper, cx, obj, id, flags, objp, _retval);
 }
 
 NS_IMETHODIMP
