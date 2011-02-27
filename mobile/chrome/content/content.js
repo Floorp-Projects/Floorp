@@ -1,3 +1,4 @@
+// -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 // This stays here because otherwise it's hard to tell if there's a parsing error
 dump("###################################### content loaded\n");
 
@@ -267,6 +268,7 @@ let Content = {
     addMessageListener("Browser:ZoomToPoint", this);
     addMessageListener("Browser:MozApplicationCache:Fetch", this);
     addMessageListener("Browser:SetCharset", this);
+    addMessageListener("Browser:ContextCommand", this);
 
     if (Util.isParentProcess())
       addEventListener("DOMActivate", this, true);
@@ -370,6 +372,25 @@ let Content = {
     let modifiers = json.modifiers;
 
     switch (aMessage.name) {
+      case "Browser:ContextCommand": {
+        let wrappedTarget = elementFromPoint(x, y);
+        if (!wrappedTarget)
+          break;
+        let target = wrappedTarget.QueryInterface(Ci.nsIDOMNSEditableElement);
+        if (!target)
+          break;
+        switch (json.command) {
+          case "select-all":
+            target.editor.selectAll();
+            break;
+          case "paste":
+            target.editor.paste(Ci.nsIClipboard.kGlobalClipboard);
+            break;
+        }
+        target.focus();
+        break;
+      }
+
       case "Browser:Blur":
         gFocusManager.clearFocus(content);
         break;
@@ -423,6 +444,8 @@ let Content = {
 
         let event = content.document.createEvent("PopupEvents");
         event.initEvent("contextmenu", true, true);
+        event.x = x;
+        event.y = y;
         element.dispatchEvent(event);
         break;
       }
@@ -530,7 +553,7 @@ let Content = {
       case "Browser:SetCharset": {
         let docCharset = docShell.QueryInterface(Ci.nsIDocCharset);
         docCharset.charset = json.charset;
-    
+
         let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
         webNav.reload(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
         break;
@@ -762,7 +785,9 @@ var ContextHandler = {
       linkURL: "",
       linkTitle: "",
       linkProtocol: null,
-      mediaURL: ""
+      mediaURL: "",
+      x: aEvent.x,
+      y: aEvent.y
     };
 
     let popupNode = this.popupNode = aEvent.originalTarget;
@@ -795,6 +820,29 @@ var ContextHandler = {
           state.label = state.linkURL = this._getLinkURL(elem);
           state.linkTitle = popupNode.textContent || popupNode.title;
           state.linkProtocol = this._getProtocol(this._getURI(state.linkURL));
+          break;
+        } else if (elem instanceof Ci.nsIDOMHTMLInputElement && elem.type === "text") {
+          let selectionStart = elem.selectionStart;
+          let selectionEnd = elem.selectionEnd;
+
+          state.types.push("input-text");
+          if (selectionStart != selectionEnd) {
+            state.types.push("copy");
+            state.string = elem.value.slice(selectionStart, selectionEnd);
+          } else if (elem.value) {
+            state.types.push("copy-all");
+            state.string = elem.value;
+          }
+
+          if (selectionStart > 0 || selectionEnd < elem.textLength)
+            state.types.push("select-all");
+
+          let clipboard = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
+          let flavors = ["text/unicode"];
+          let hasData = clipboard.hasDataMatchingFlavors(flavors, flavors.length, Ci.nsIClipboard.kGlobalClipboard);
+
+          if (hasData && !elem.readOnly)
+            state.types.push("paste");
           break;
         }
       }
@@ -874,6 +922,10 @@ ContextHandler.registerType("link-openable", function(aState, aElement) {
 
 ContextHandler.registerType("link-shareable", function(aState, aElement) {
   return Util.isShareableScheme(aState.linkProtocol);
+});
+
+ContextHandler.registerType("input-text", function(aState, aElement) {
+    return aElement instanceof Ci.nsIDOMHTMLInputElement;
 });
 
 ["image", "video"].forEach(function(aType) {
