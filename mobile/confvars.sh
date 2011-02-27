@@ -56,3 +56,7 @@ MOZ_XULRUNNER=
 MOZ_MORK=
 MOZ_PLACES=1
 fi
+
+# Needed for building our components as part of libxul
+MOZ_APP_COMPONENT_LIBS="browsercomps"
+MOZ_APP_COMPONENT_INCLUDE=nsBrowserComponents.h

@@ -81,9 +81,4 @@ ifdef MOZ_UPDATER
 EXTRA_COMPONENTS += UpdatePrompt.js
 endif
 
-ifneq (Android,$(OS_TARGET))
-DIRS =  phone \
-        $(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk

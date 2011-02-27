@@ -43,12 +43,15 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE_NAME     = mozphone
-MODULE          = mozphone
-LIBRARY_NAME    = mozphone
+MODULE_NAME     = nsBrowserCompsModule
+MODULE          = browsercomps
+LIBRARY_NAME    = browsercomps
+LIBXUL_LIBRARY  = 1
 
 IS_COMPONENT	= 1
 EXPORT_LIBRARY  = 1
+
+EXPORTS = nsBrowserComponents.h
 
 REQUIRES	= \
 		  xpcom \
@@ -56,9 +59,15 @@ REQUIRES	= \
 		  pref \
 		  $(NULL)
 
-CPPSRCS   = nsPhoneSupport.cpp
-XPIDLSRCS = nsIPhoneSupport.idl
+CPPSRCS = \
+	nsSSLCertErrorDialog.cpp \
+	nsBrowserModule.cpp \
+	$(NULL)
 
+ifndef ANDROID
+CPPSRCS += nsPhoneSupport.cpp
+XPIDLSRCS = nsIPhoneSupport.idl
+endif
 
 EXTRA_DSO_LDOPTS += \
 	$(XPCOM_GLUE_LDOPTS) \
