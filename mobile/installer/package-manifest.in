@@ -637,8 +637,5 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/UpdatePrompt.js
 #endif
 @BINPATH@/components/XPIDialogService.js
-#ifndef ANDROID
-@BINPATH@/components/@DLL_PREFIX@mozphone@DLL_SUFFIX@
-@BINPATH@/components/mozphone.xpt
-#endif
+@BINPATH@/components/browsercomps.xpt
 @BINPATH@/extensions/feedback@mobile.mozilla.org.xpi

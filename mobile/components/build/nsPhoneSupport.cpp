@@ -53,21 +53,8 @@
 #include <QtGui/QWidget>
 #endif
 
-#include "nsStringAPI.h"
-#include "nsIPhoneSupport.h"
-#include "mozilla/ModuleUtils.h"
-
-class nsPhoneSupport : public nsIPhoneSupport
-{
-public:
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPHONESUPPORT
-
-  nsPhoneSupport() {};
-  ~nsPhoneSupport(){};
-
-};
+#include "nsPhoneSupport.h"
+#include "nsString.h"
 
 NS_IMPL_ISUPPORTS1(nsPhoneSupport, nsIPhoneSupport)
 
@@ -429,34 +416,3 @@ nsPhoneSupport::RestoreDefaultBrowser()
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 }
-
-//------------------------------------------------------------------------------
-//  XPCOM REGISTRATION BELOW
-//------------------------------------------------------------------------------
-
-#define nsPhoneSupport_CID                          \
-{ 0x2a08c9e4, 0xf853, 0x4f02,                       \
-{0x88, 0xd8, 0xd6, 0x2f, 0x27, 0xca, 0x06, 0x85} }
-
-#define nsPhoneSupport_ContractID "@mozilla.org/phone/support;1"
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPhoneSupport)
-NS_DEFINE_NAMED_CID(nsPhoneSupport_CID);
-
-static const mozilla::Module::CIDEntry kPhoneCIDs[] = {
-  { &knsPhoneSupport_CID, false, NULL, nsPhoneSupportConstructor },
-  { NULL }
-};
-
-static const mozilla::Module::ContractIDEntry kPhoneContracts[] = {
-  { nsPhoneSupport_ContractID, &knsPhoneSupport_CID },
-  { NULL }
-};
-
-static const mozilla::Module kPhoneModule = {
-  mozilla::Module::kVersion,
-  kPhoneCIDs,
-  kPhoneContracts
-};
-
-NSMODULE_DEFN(nsPhoneSupportModule) = &kPhoneModule;

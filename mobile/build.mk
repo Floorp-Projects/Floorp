@@ -36,6 +36,9 @@
 # ***** END LICENSE BLOCK *****
 
 ifndef LIBXUL_SDK
+# Needed for building our components as part of libxul
+APP_LIBXUL_DIRS += mobile/components/build
+
 include $(topsrcdir)/toolkit/toolkit-tiers.mk
 else
 ifdef ENABLE_TESTS
