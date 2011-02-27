@@ -426,7 +426,7 @@ AsyncExecuteStatements::notifyComplete()
   // canceling and have statements that think they have pending work, the
   // rollback will fail.
   for (PRUint32 i = 0; i < mStatements.Length(); i++)
-    mStatements[i].finalize(mCallingThread);
+    mStatements[i].finalize();
 
   // Handle our transaction, if we have one
   if (mTransactionManager) {
