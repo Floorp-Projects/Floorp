@@ -717,6 +717,11 @@ Exception(JSContext *cx, uintN argc, Value *vp)
     if (!callee.getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &protov))
         return JS_FALSE;
 
+    if (!protov.isObject()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_PROTOTYPE, "Error");
+        return JS_FALSE;
+    }
+
     JSObject *errProto = &protov.toObject();
     JSObject *obj = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent());
     if (!obj)
