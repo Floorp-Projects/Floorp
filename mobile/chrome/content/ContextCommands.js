@@ -1,3 +1,4 @@
+// -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 var ContextCommands = {
   copy: function cc_copy() {
     let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
@@ -16,16 +17,29 @@ var ContextCommands = {
 #endif
 
   paste: function cc_paste() {
-    let data = ContextHelper.popupState.data;
     let target = ContextHelper.popupState.target;
-    target.editor.paste(Ci.nsIClipboard.kGlobalClipboard);
-    target.focus();
+    if (target.localName == "browser") {
+      let x = ContextHelper.popupState.x;
+      let y = ContextHelper.popupState.y;
+      let json = {x: x, y: y, command: "paste" };
+      messageManager.sendAsyncMessage("Browser:ContextCommand", json);
+    } else {
+      target.editor.paste(Ci.nsIClipboard.kGlobalClipboard);
+      target.focus();
+    }
   },
 
   selectAll: function cc_selectAll() {
     let target = ContextHelper.popupState.target;
-    target.editor.selectAll();
-    target.focus();
+    if (target.localName == "browser") {
+      let x = ContextHelper.popupState.x;
+      let y = ContextHelper.popupState.y;
+      let json = {x: x, y: y, command: "select-all" };
+      messageManager.sendAsyncMessage("Browser:ContextCommand", json);
+    } else {
+      target.editor.selectAll();
+      target.focus();
+    }
   },
 
   openInNewTab: function cc_openInNewTab() {
