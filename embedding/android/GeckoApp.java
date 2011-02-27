@@ -52,6 +52,7 @@ import android.text.*;
 import android.view.*;
 import android.view.inputmethod.*;
 import android.content.*;
+import android.content.res.*;
 import android.graphics.*;
 import android.widget.*;
 import android.hardware.*;
@@ -77,13 +78,13 @@ abstract public class GeckoApp
                       Launched, GeckoRunning, GeckoExiting};
     private static LaunchState sLaunchState = LaunchState.PreLaunch;
 
-    
+
     static boolean checkLaunchState(LaunchState checkState) {
         synchronized(sLaunchState) {
             return sLaunchState == checkState;
         }
     }
-    
+
     static void setLaunchState(LaunchState setState) {
         synchronized(sLaunchState) {
             sLaunchState = setState;
@@ -126,14 +127,14 @@ abstract public class GeckoApp
         if (intent == null)
             intent = getIntent();
         final Intent i = intent;
-        new Thread() { 
+        new Thread() {
             public void run() {
                 long startup_time = System.currentTimeMillis();
                 try {
                     if (mLibLoadThread != null)
                         mLibLoadThread.join();
                 } catch (InterruptedException ie) {}
-                surfaceView.mSplashStatusMsg = 
+                surfaceView.mSplashStatusMsg =
                     getResources().getString(R.string.splash_screen_label);
                 surfaceView.drawSplashScreen();
                 // unpack files in the components directory
@@ -156,7 +157,7 @@ abstract public class GeckoApp
                     Looper.loop();
                     return;
                 }
-        
+
                 // and then fire us up
                 String env = i.getStringExtra("env0");
                 if (GeckoApp.mStartedEarly) {
@@ -174,13 +175,18 @@ abstract public class GeckoApp
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
+        mAppContext = this;
+
+        SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
+        String localeCode = settings.getString(getPackageName() + ".locale", "");
+        if (localeCode != null && localeCode.length() > 0)
+            GeckoAppShell.setSelectedLocale(localeCode);
+
         Log.i("GeckoApp", "create");
         super.onCreate(savedInstanceState);
 
         if (sGREDir == null)
             sGREDir = new File(this.getApplicationInfo().dataDir);
-
-        mAppContext = this;
 
         getWindow().setFlags(mFullscreen ?
                              WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
@@ -205,16 +211,26 @@ abstract public class GeckoApp
             return;
 
         checkAndLaunchUpdate();
-        mLibLoadThread = new Thread(new Runnable() { 
+        mLibLoadThread = new Thread(new Runnable() {
             public void run() {
+                // At some point while loading the gecko libs our default locale gets set
+                // so just save it to locale here and reset it as default after the join
+                Locale locale = Locale.getDefault();
                 GeckoAppShell.loadGeckoLibs(
                     getApplication().getPackageResourcePath());
+                Locale.setDefault(locale);
+                Resources res = getBaseContext().getResources();
+                Configuration config = res.getConfiguration();
+                config.locale = locale;
+                res.updateConfiguration(config, res.getDisplayMetrics());
+
+
             }});
         File cacheFile = GeckoAppShell.getCacheDir();
         File libxulFile = new File(cacheFile, "libxul.so");
 
         if (GeckoAppShell.getFreeSpace() > GeckoAppShell.kFreeSpaceThreshold &&
-            (!libxulFile.exists() || 
+            (!libxulFile.exists() ||
              new File(getApplication().getPackageResourcePath()).lastModified()
              >= libxulFile.lastModified()))
             surfaceView.mSplashStatusMsg =
@@ -238,7 +254,7 @@ abstract public class GeckoApp
                                        }
                                    })
                 .show();
-        }        
+        }
     }
 
     boolean IsNewInstall() {
@@ -249,7 +265,7 @@ abstract public class GeckoApp
     boolean IsUnsupportedDevice() {
         // We don't currently support devices with less than 256Mb of RAM, warn on first run
         File meminfo = new File("/proc/meminfo");
-        try { 
+        try {
             BufferedReader br = new BufferedReader(new FileReader(meminfo));
             String totalMem = "";
             while(!totalMem.contains("MemTotal:") && totalMem != null)
@@ -257,12 +273,12 @@ abstract public class GeckoApp
             StringTokenizer st = new StringTokenizer(totalMem, " ");
             st.nextToken(); // "MemInfo:"
             totalMem = st.nextToken();
-                
+
             Log.i("GeckoMemory", "MemTotal: " + Integer.parseInt(totalMem));
             return Integer.parseInt(totalMem) <= 262144L;
         } catch (Exception ex) {
             // Will catch  NullPointerException if totalMem isn't found,
-            // a NumberFormatException if the token isn't parsible 
+            // a NumberFormatException if the token isn't parsible
             // IOException from the file reading or NoSuchElementException
             // if totalMem doesn't have 2 tokens. None of these are fatal,
             // so log it and move on.
@@ -285,13 +301,13 @@ abstract public class GeckoApp
             final Button launchButton = new Button(this);
             launchButton.setText("Launch"); // don't need to localize
             launchButton.setOnClickListener(new Button.OnClickListener() {
-                    public void onClick (View v) {
-                        // hide the button so we can't be launched again
-                        mainLayout.removeView(launchButton);
-                        setLaunchState(LaunchState.Launching);
-                        launch(null);
-                    }
-                });
+                public void onClick (View v) {
+                    // hide the button so we can't be launched again
+                    mainLayout.removeView(launchButton);
+                    setLaunchState(LaunchState.Launching);
+                    launch(null);
+                }
+            });
             mainLayout.addView(launchButton, 300, 200);
             return;
         }
@@ -505,7 +521,7 @@ abstract public class GeckoApp
         int c = 0;
         while (envIter.hasNext()) {
             Map.Entry<String,String> entry = envIter.next();
-            intent.putExtra("env" + c, entry.getKey() + "=" 
+            intent.putExtra("env" + c, entry.getKey() + "="
                             + entry.getValue());
             c++;
         }
@@ -619,12 +635,12 @@ abstract public class GeckoApp
         } catch (InterruptedException e) {
             Log.i("GeckoApp", "showing file picker ",  e);
         }
-        
+
         return filePickerResult;
     }
-    
+
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, 
+    protected void onActivityResult(int requestCode, int resultCode,
                                     Intent data) {
         String filePickerResult = "";
         if (data != null && resultCode == RESULT_OK) {
@@ -632,13 +648,13 @@ abstract public class GeckoApp
                 ContentResolver cr = getContentResolver();
                 Uri uri = data.getData();
                 String mimeType = cr.getType(uri);
-                String fileExt = "." + 
+                String fileExt = "." +
                     mimeType.substring(mimeType.lastIndexOf('/') + 1);
-                File file = 
-                    File.createTempFile("tmp_" + 
-                                        (int)Math.floor(1000 * Math.random()), 
+                File file =
+                    File.createTempFile("tmp_" +
+                                        (int)Math.floor(1000 * Math.random()),
                                         fileExt, sGREDir);
-                
+
                 FileOutputStream fos = new FileOutputStream(file);
                 InputStream is = cr.openInputStream(uri);
                 byte[] buf = new byte[4096];
