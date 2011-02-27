@@ -53,6 +53,8 @@
 #include "nsAccelerometerSystem.h"
 #include <android/log.h>
 #include <pthread.h>
+#include "nsIPrefBranch2.h"
+#include <wchar.h>
 
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG
@@ -115,14 +117,31 @@ nsAppShell::Init()
     mObserversHash.Init();
 
     nsresult rv = nsBaseAppShell::Init();
-    if (AndroidBridge::Bridge())
-        AndroidBridge::Bridge()->NotifyAppShellReady();
+    AndroidBridge* bridge = AndroidBridge::Bridge();
+    if (bridge)
+        bridge->NotifyAppShellReady();
 
     nsCOMPtr<nsIObserverService> obsServ =
-            mozilla::services::GetObserverService();
+        mozilla::services::GetObserverService();
     if (obsServ) {
         obsServ->AddObserver(this, "xpcom-shutdown", PR_FALSE);
     }
+
+    if (!bridge)
+        return rv;
+
+    nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    branch->AddObserver("intl.locale.matchOS", this, PR_FALSE);
+    branch->AddObserver("general.useragent.locale", this, PR_FALSE);
+    PRBool match = PR_FALSE;
+    nsCString locale;
+    branch->GetBoolPref("intl.locale.matchOS", &match);
+    if (!match ||
+        NS_FAILED(branch->GetCharPref("general.useragent.locale", getter_Copies(locale))))
+        bridge->SetSelectedLocale(EmptyCString());
+    else
+        bridge->SetSelectedLocale(locale);
     return rv;
 }
 
@@ -135,7 +154,24 @@ nsAppShell::Observe(nsISupports* aSubject,
         // We need to ensure no observers stick around after XPCOM shuts down
         // or we'll see crashes, as the app shell outlives XPConnect.
         mObserversHash.Clear();
+    } else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) && (
+                   !wcscmp((const wchar_t*)aData, L"intl.locale.matchOS") ||
+                   !wcscmp((const wchar_t*)aData, L"general.useragent.locale"))) {
+        AndroidBridge* bridge = AndroidBridge::Bridge();
+        nsCOMPtr<nsIPrefBranch> prefs = do_QueryInterface(aSubject);
+        if (!prefs || !bridge)
+            return NS_OK;
+        PRBool match = PR_FALSE;
+        nsXPIDLCString locale;
+
+        if (!match && NS_SUCCEEDED(prefs->GetCharPref("general.useragent.locale",
+                                                      getter_Copies(locale))))
+            bridge->SetSelectedLocale(locale);
+        else
+            bridge->SetSelectedLocale(EmptyCString());
+        return NS_OK;
     }
+
     return nsBaseAppShell::Observe(aSubject, aTopic, aData);
 }
 
@@ -254,7 +290,7 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 
     case AndroidGeckoEvent::ACTIVITY_STOPPING: {
         nsCOMPtr<nsIObserverService> obsServ =
-          mozilla::services::GetObserverService();
+            mozilla::services::GetObserverService();
         NS_NAMED_LITERAL_STRING(minimize, "heap-minimize");
         obsServ->NotifyObservers(nsnull, "memory-pressure", minimize.get());
 
@@ -263,7 +299,7 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 
     case AndroidGeckoEvent::ACTIVITY_SHUTDOWN: {
         nsCOMPtr<nsIObserverService> obsServ =
-          mozilla::services::GetObserverService();
+            mozilla::services::GetObserverService();
         NS_NAMED_LITERAL_STRING(context, "shutdown-persist");
         obsServ->NotifyObservers(nsnull, "quit-application-granted", nsnull);
         obsServ->NotifyObservers(nsnull, "quit-application-forced", nsnull);
@@ -423,7 +459,7 @@ nsAppShell::CallObserver(const nsAString &aObserverKey, const nsAString &aTopic,
 
     const NS_ConvertUTF16toUTF8 sTopic(aTopic);
     const nsPromiseFlatString& sData = PromiseFlatString(aData);
-    
+
     if (NS_IsMainThread()) {
         // This branch will unlikely be hit, have it just in case
         observer->Observe(nsnull, sTopic.get(), sData.get());
@@ -448,7 +484,7 @@ class NotifyObserversCaller : public nsRunnable {
 public:
     NotifyObserversCaller(nsISupports *aSupports,
                           const char *aTopic, const PRUnichar *aData) :
-         mSupports(aSupports), mTopic(aTopic), mData(aData) {
+        mSupports(aSupports), mTopic(aTopic), mData(aData) {
     }
 
     NS_IMETHOD Run() {

@@ -184,6 +184,8 @@ public:
 
     bool IsNetworkLinkKnown();
 
+    void SetSelectedLocale(const nsACString&);
+
     struct AutoLocalJNIFrame {
         AutoLocalJNIFrame(int nEntries = 128) : mEntries(nEntries) {
             // Make sure there is enough space to store a local ref to the
@@ -268,6 +270,7 @@ protected:
     jmethodID jSetKeepScreenOn;
     jmethodID jIsNetworkLinkUp;
     jmethodID jIsNetworkLinkKnown;
+    jmethodID jSetSelectedLocale;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;
