@@ -136,7 +136,6 @@ void JS_FASTCALL CallElem(VMFrame &f);
 template<JSBool strict> void JS_FASTCALL SetElem(VMFrame &f);
 void JS_FASTCALL Length(VMFrame &f);
 void JS_FASTCALL CallName(VMFrame &f);
-void JS_FASTCALL PushImplicitThisForGlobal(VMFrame &f);
 void JS_FASTCALL GetUpvar(VMFrame &f, uint32 index);
 void JS_FASTCALL GetGlobalName(VMFrame &f);
 
