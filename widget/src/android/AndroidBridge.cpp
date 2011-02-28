@@ -643,6 +643,23 @@ AndroidBridge::CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoS
 }
 
 bool
+AndroidBridge::GetStaticIntField(const char *className, const char *fieldName, PRInt32* aInt)
+{
+    AutoLocalJNIFrame jniFrame(3);
+    jclass cls = mJNIEnv->FindClass(className);
+    if (!cls)
+        return false;
+
+    jfieldID field = mJNIEnv->GetStaticFieldID(cls, fieldName, "I");
+    if (!field)
+        return false;
+
+    *aInt = static_cast<PRInt32>(mJNIEnv->GetStaticIntField(cls, field));
+
+    return true;
+}
+
+bool
 AndroidBridge::GetStaticStringField(const char *className, const char *fieldName, nsAString &result)
 {
     AutoLocalJNIFrame jniFrame(3);
