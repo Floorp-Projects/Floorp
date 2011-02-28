@@ -289,13 +289,6 @@ class FrameState
     inline void pushUntypedPayload(JSValueType type, RegisterID payload);
 
     /*
-     * Pushes a value onto the operation stack. This must be used when the
-     * value is known, but its type cannot be propagated because it is not
-     * known to be correct at a slow-path merge point.
-     */
-    inline void pushUntypedValue(Value &value);
-
-    /*
      * Pushes a number onto the operation stack.
      *
      * If asInt32 is set to true, then the FS will attempt to optimize
