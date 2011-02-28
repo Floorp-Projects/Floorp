@@ -8363,7 +8363,7 @@ MOZ_ARG_ENABLE_BOOL(libxul,
     MOZ_ENABLE_LIBXUL=)
 
 # split JS out by default to avoid VS2005 PGO crash (bug 591836).
-if test "$OS_ARCH" = "WINNT"; then
+if test "$OS_ARCH" = "WINNT" -a "$CPU_ARCH" != "x86_64" ; then
   ENABLE_SHARED_JS=1
 fi
 
