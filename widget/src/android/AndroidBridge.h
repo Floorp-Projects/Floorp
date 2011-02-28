@@ -217,6 +217,8 @@ public:
 
     bool GetStaticStringField(const char *classID, const char *field, nsAString &result);
 
+    bool GetStaticIntField(const char *className, const char *fieldName, PRInt32* aInt);
+
     void SetKeepScreenOn(bool on);
 
 protected:
