@@ -489,6 +489,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
     BackEdgeMap                  backEdgeTable;
 
+    JSCompartment *thisForCtor() { return this; }
   public:
     js::MathCache *getMathCache(JSContext *cx) {
         return mathCache ? mathCache : allocMathCache(cx);

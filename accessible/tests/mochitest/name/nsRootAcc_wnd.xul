@@ -88,7 +88,7 @@
     function doTest()
     {
       var tabBrowser = document.getElementById("content");
-      tabBrowser.loadURI("about:robots");
+      tabBrowser.loadURI("about:");
       tabBrowser.addTab("about:mozilla");
 
       gQueue = new gOpenerWnd.eventQueue();

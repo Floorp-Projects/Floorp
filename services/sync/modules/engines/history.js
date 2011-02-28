@@ -54,7 +54,6 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/log4moz.js");
-Cu.import("resource://services-sync/ext/Sync.js");
 
 function HistoryRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
@@ -459,8 +458,7 @@ HistoryStore.prototype = {
       return failed;
     }
 
-    let [updatePlaces, cb] = Sync.withCb(this._asyncHistory.updatePlaces,
-                                         this._asyncHistory);
+    let cb = Utils.makeSyncCallback();
     let onPlace = function onPlace(result, placeInfo) {
       if (!Components.isSuccessCode(result)) {
         failed.push(placeInfo.guid);
@@ -471,7 +469,8 @@ HistoryStore.prototype = {
       cb();
     };
     Svc.Obs.add(TOPIC_UPDATEPLACES_COMPLETE, onComplete);
-    updatePlaces(placeInfos, onPlace);
+    this._asyncHistory.updatePlaces(placeInfos, onPlace);
+    Utils.waitForSyncCallback(cb);
     return failed;
   },
 

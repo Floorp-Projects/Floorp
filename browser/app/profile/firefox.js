@@ -1012,7 +1012,6 @@ pref("services.sync.prefs.sync.dom.disable_window_move_resize", true);
 pref("services.sync.prefs.sync.dom.event.contextmenu.enabled", true);
 pref("services.sync.prefs.sync.extensions.personas.current", true);
 pref("services.sync.prefs.sync.extensions.update.enabled", true);
-pref("services.sync.prefs.sync.general.autoScroll", true);
 pref("services.sync.prefs.sync.general.smoothScroll", true);
 pref("services.sync.prefs.sync.intl.accept_languages", true);
 pref("services.sync.prefs.sync.javascript.enabled", true);
