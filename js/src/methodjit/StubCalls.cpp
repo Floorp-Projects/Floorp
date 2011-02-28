@@ -319,16 +319,6 @@ stubs::SetGlobalName(VMFrame &f, JSAtom *atom)
 template void JS_FASTCALL stubs::SetGlobalName<true>(VMFrame &f, JSAtom *atom);
 template void JS_FASTCALL stubs::SetGlobalName<false>(VMFrame &f, JSAtom *atom);
 
-static inline void
-PushImplicitThis(VMFrame &f, JSObject *obj, Value &rval)
-{
-    Value thisv;
-
-    if (!ComputeImplicitThis(f.cx, obj, rval, &thisv))
-        return;
-    *f.regs.sp++ = thisv;
-}
-
 static JSObject *
 NameOp(VMFrame &f, JSObject *obj, bool callname = false)
 {
@@ -387,9 +377,13 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
 
     *f.regs.sp++ = rval;
 
-    if (callname)
-        PushImplicitThis(f, obj, rval);
+    if (callname) {
+        Value thisv;
 
+        if (!ComputeImplicitThis(cx, obj, rval, &thisv))
+            return NULL;
+        *f.regs.sp++ = thisv;
+    }
     return obj;
 }
 
@@ -583,17 +577,6 @@ stubs::CallName(VMFrame &f)
     JSObject *obj = NameOp(f, &f.fp()->scopeChain(), true);
     if (!obj)
         THROW();
-}
-
-/*
- * Push the implicit this value, with the assumption that the callee
- * (which is on top of the stack) was read as a property from the
- * global object.
- */
-void JS_FASTCALL
-stubs::PushImplicitThisForGlobal(VMFrame &f)
-{
-    return PushImplicitThis(f, f.fp()->scopeChain().getGlobal(), f.regs.sp[-1]);
 }
 
 void JS_FASTCALL

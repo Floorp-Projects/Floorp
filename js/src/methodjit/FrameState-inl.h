@@ -375,26 +375,6 @@ FrameState::pushUntypedPayload(JSValueType type, RegisterID payload)
     regstate[payload].associate(fe, RematInfo::DATA);
 }
 
-inline void
-FrameState::pushUntypedValue(Value &v)
-{
-    FrameEntry *fe = rawPush();
-
-    fe->clear();
-
-    masm.storeValue(v, addressOf(fe));
-
-    /* The forceful type sync will assert otherwise. */
-#ifdef DEBUG
-    fe->type.unsync();
-#endif
-    fe->type.setMemory();
-    fe->data.unsync();
-    fe->data.setMemory();
-    fe->setNotCopied();
-    fe->setCopyOf(NULL);
-}
-
 inline JSC::MacroAssembler::RegisterID
 FrameState::tempRegForType(FrameEntry *fe, RegisterID fallback)
 {
