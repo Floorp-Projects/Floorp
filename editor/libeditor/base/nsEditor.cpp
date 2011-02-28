@@ -440,6 +440,7 @@ nsEditor::PreDestroy(PRBool aDestroyingFrames)
   mEditorObservers.Clear();
   mDocStateListeners.Clear();
   mInlineSpellChecker = nsnull;
+  mRootElement = nsnull;
 
   mDidPreDestroy = PR_TRUE;
   return NS_OK;
