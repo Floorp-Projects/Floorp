@@ -12,18 +12,39 @@
     <hbox id="left-top" left="10" top="12" width="20" height="24"
                         expectedleft="10" expectedtop="12" expectedright="30" expectedbottom="36"
                         stackwidth="30" stackheight="36"/>
+    <hbox id="start-top" start="10" top="12" width="20" height="24"
+                         expectedleft="10" expectedtop="12" expectedright="30" expectedbottom="36"
+                         stackwidth="30" stackheight="36"/>
     <hbox id="right-bottom" right="10" bottom="12" width="20" height="24"
                             expectedleft="*30" expectedtop="*36" expectedright="*10" expectedbottom="*12"
                             stackwidth="30" stackheight="36"/>
+    <hbox id="end-bottom" end="10" bottom="12" width="20" height="24"
+                          expectedleft="*30" expectedtop="*36" expectedright="*10" expectedbottom="*12"
+                          stackwidth="30" stackheight="36"/>
     <hbox id="left-bottom" left="18" bottom="15" width="16" height="19"
                            expectedleft="18" expectedtop="*34" expectedright="34" expectedbottom="*15"
                            stackwidth="34" stackheight="34"/>
+    <hbox id="start-bottom" start="18" bottom="15" width="16" height="19"
+                            expectedleft="18" expectedtop="*34" expectedright="34" expectedbottom="*15"
+                            stackwidth="34" stackheight="34"/>
     <hbox id="right-top" right="5" top="8" width="10" height="11"
                          expectedleft="*15" expectedtop="8" expectedright="*5" expectedbottom="19"
                          stackwidth="15" stackheight="19"/>
+    <hbox id="end-top" end="5" top="8" width="10" height="11"
+                       expectedleft="*15" expectedtop="8" expectedright="*5" expectedbottom="19"
+                       stackwidth="15" stackheight="19"/>
     <hbox id="left-right" left="12" right="9" width="15" height="6"
                           expectedleft="12" expectedtop="0" expectedright="*9" expectedbottom="*0"
                           stackwidth="36" stackheight="6"/>
+    <hbox id="start-right" start="12" right="9" width="15" height="6"
+                           expectedleft="12" expectedtop="0" expectedright="*9" expectedbottom="*0"
+                           stackwidth="36" stackheight="6"/>
+    <hbox id="left-end" start="12" end="9" width="15" height="6"
+                        expectedleft="12" expectedtop="0" expectedright="*9" expectedbottom="*0"
+                        stackwidth="36" stackheight="6"/>
+    <hbox id="start-end" start="12" end="9" width="15" height="6"
+                         expectedleft="12" expectedtop="0" expectedright="*9" expectedbottom="*0"
+                         stackwidth="36" stackheight="6"/>
     <hbox id="top-bottom" top="20" bottom="39" width="15" height="6"
                           expectedleft="0" expectedtop="20" expectedright="*0" expectedbottom="*39"
                           stackwidth="15" stackheight="65"/>
@@ -31,9 +52,30 @@
                                      left="16" top="20" right="20" bottom="35" width="7" height="8"
                                      expectedleft="16" expectedtop="20" expectedright="*20" expectedbottom="*35"
                                      stackwidth="43" stackheight="63"/>
+    <hbox id="start-right-top-bottom" style="left: 5px; top: 5px; right: 8px; bottom: 8px;"
+                                      start="16" top="20" right="20" bottom="35" width="7" height="8"
+                                      expectedleft="16" expectedtop="20" expectedright="*20" expectedbottom="*35"
+                                      stackwidth="43" stackheight="63"/>
+    <hbox id="left-end-top-bottom" style="left: 5px; top: 5px; right: 8px; bottom: 8px;"
+                                   left="16" top="20" end="20" bottom="35" width="7" height="8"
+                                   expectedleft="16" expectedtop="20" expectedright="*20" expectedbottom="*35"
+                                   stackwidth="43" stackheight="63"/>
+    <hbox id="start-end-top-bottom" style="left: 5px; top: 5px; right: 8px; bottom: 8px;"
+                                    start="16" top="20" end="20" bottom="35" width="7" height="8"
+                                    expectedleft="16" expectedtop="20" expectedright="*20" expectedbottom="*35"
+                                    stackwidth="43" stackheight="63"/>
     <hbox id="left-right-top-bottom-nosize" left="16" top="20" right="20" bottom="35"
                                             expectedleft="16" expectedtop="20" expectedright="*20" expectedbottom="*35"
                                             stackwidth="36" stackheight="55"/>
+    <hbox id="start-right-top-bottom-nosize" start="16" top="20" right="20" bottom="35"
+                                             expectedleft="16" expectedtop="20" expectedright="*20" expectedbottom="*35"
+                                             stackwidth="36" stackheight="55"/>
+    <hbox id="left-end-top-bottom-nosize" left="16" top="20" end="20" bottom="35"
+                                          expectedleft="16" expectedtop="20" expectedright="*20" expectedbottom="*35"
+                                          stackwidth="36" stackheight="55"/>
+    <hbox id="start-end-top-bottom-nosize" start="16" top="20" end="20" bottom="35"
+                                           expectedleft="16" expectedtop="20" expectedright="*20" expectedbottom="*35"
+                                           stackwidth="36" stackheight="55"/>
     <hbox id="none" width="10" height="12" expectedleft="0" expectedtop="0" expectedright="*0" expectedbottom="*0"
                     stackwidth="10" stackheight="12"/>
     <hbox id="none-nosize" expectedleft="0" expectedtop="0" expectedright="*0" expectedbottom="*0"
@@ -72,13 +114,32 @@
                                         expectedleft="10" expectedtop="12" expectedright="30" expectedbottom="36"/>
   </stack>
 
+  <stack id="stack-with-start-end" width="30">
+    <hbox id="start-with-start-end" start="10" top="12" width="20" height="24"
+                                    expectedstart="10" expectedend="30"/>
+    <hbox id="end-width-start-end" end="5" top="12" width="20" height="24"
+                                   expectedstart="5" expectedend="25"/>
+    <hbox id="start-end-width-start-end" start="12" end="9" width="20" top="12" height="24"
+                                         expectedstart="12" expectedend="21"/>
+  </stack>
+
   <stack id="stack-with-border"
          style="border-left: 4px solid black; border-top: 2px solid black; border-right: 1px solid black; border-bottom: 3px solid black;">
     <hbox id="left-top-with-border" left="10" top="14" width="20" height="24"
                                     expectedleft="14" expectedtop="16" expectedright="34" expectedbottom="40"/>
+    <hbox id="start-top-with-border" start="10" top="14" width="20" height="24"
+                                     expectedleft="14" expectedtop="16" expectedright="34" expectedbottom="40"/>
     <hbox id="right-bottom-with-border" right="5" bottom="8" width="6" height="10"
                                         expectedleft="*12" expectedtop="*21" expectedright="*6" expectedbottom="*11"/>
+    <hbox id="end-bottom-with-border" end="5" bottom="8" width="6" height="10"
+                                      expectedleft="*12" expectedtop="*21" expectedright="*6" expectedbottom="*11"/>
     <hbox id="left-top-right-bottom-with-border" left="12" right="5" top="18" bottom="8"
+          expectedleft="16" expectedtop="20" expectedright="*6" expectedbottom="*11"/>
+    <hbox id="start-top-right-bottom-with-border" start="12" right="5" top="18" bottom="8"
+          expectedleft="16" expectedtop="20" expectedright="*6" expectedbottom="*11"/>
+    <hbox id="left-top-end-bottom-with-border" left="12" end="5" top="18" bottom="8"
+          expectedleft="16" expectedtop="20" expectedright="*6" expectedbottom="*11"/>
+    <hbox id="start-top-end-bottom-with-border" start="12" end="5" top="18" bottom="8"
           expectedleft="16" expectedtop="20" expectedright="*6" expectedbottom="*11"/>
     <hbox id="none-with-with-border"
           expectedleft="4" expectedtop="2" expectedright="*1" expectedbottom="*3"/>
@@ -95,12 +156,15 @@
     var stackRect;
     var dynStack;
 
-    function compareSide(child, actual, side, dyn)
+    function compareSide(child, actual, side, dyn, direction)
     {
+      var clientRect = child.getBoundingClientRect();
       var vertical = (side == "top" || side == "bottom");
       var expectedval = child.getAttribute("expected" + side);
       if (expectedval.indexOf("*") == 0)
         expectedval = (vertical ? stackRect.bottom : stackRect.right) - Number(expectedval.substring(1));
+      else if (direction == "rtl")
+        expectedval = (vertical ? stackRect.top : -stackRect.width + clientRect.right + clientRect.left) + Number(expectedval);
       else
         expectedval = (vertical ? stackRect.top : stackRect.left) + Number(expectedval);
 
@@ -111,6 +175,8 @@
     {
       runTestForStack("stack", false);
       runTestForStack("stack-with-size", false);
+      runTestForStartEndAttributes("stack-with-start-end", "ltr");
+      runTestForStartEndAttributes("stack-with-start-end", "rtl");
 
       var stackWithSize = $("stack-with-size");
 
@@ -140,6 +206,31 @@
       runTestForStack("stack", true);
 
       SimpleTest.finish();
+    }
+
+    function runTestForStartEndAttributes(stackid, aDirection)
+    {
+      // Change the direction of the layout to RTL to ensure start/end are
+      // working as expected
+      var stack = $(stackid);
+      stack.style.direction = aDirection;
+
+      var stackRect = stack.getBoundingClientRect();
+      var children = stack.childNodes;
+      for (var c = children.length - 1; c >= 0; c--) {
+        var child = children[c];
+      
+        // do tests only for elements that have a rtl-enabled mode
+        if (!child.hasAttribute("start") && !child.hasAttribute("end"))
+          continue;
+
+        var childrect = child.getBoundingClientRect();
+        compareSide(child, childrect.right, "end", false, aDirection);
+        compareSide(child, childrect.left, "start", false, aDirection);
+      }
+
+      // Reset the direction
+      stack.style.direction = "ltr";
     }
 
     function runTestForStack(stackid, dyn)
@@ -173,11 +264,18 @@
     {
       var add = ignoreStackSizing ? " ignore stack sizing" : "";
 
-      // ensure that changing left/top/right/bottom works
+      // ensure that changing left/top/right/bottom/start/end works
       var stackchild = document.getElementById("left-top-with-stack-size");
       stackchild.left = 18;
       is(stackchild.getBoundingClientRect().left, stack.getBoundingClientRect().left + 18, "left changed" + add);
       is(stack.getBoundingClientRect().width, ignoreStackSizing ? 12 : 38, "left changed stack width" + add);
+
+      stackchild.left = "";
+      stackchild.setAttribute("start", "19");
+      is(stackchild.getBoundingClientRect().left, stack.getBoundingClientRect().left + 19, "left changed" + add);
+      is(stack.getBoundingClientRect().width, ignoreStackSizing ? 12 : 39, "left changed stack width" + add);
+      stackchild.removeAttribute("start");
+      stackchild.left = 18;
 
       stackchild.top = 22;
       is(stackchild.getBoundingClientRect().top, stack.getBoundingClientRect().top + 22, "top changed" + add);
@@ -191,6 +289,18 @@
         is(stackchild.getBoundingClientRect().right, stack.getBoundingClientRect().right - 6,
            "right changed from right edge" + add);
       is(stack.getBoundingClientRect().width, ignoreStackSizing ? 12 : 24, "right changed stack width" + add);
+
+      stackchild.removeAttribute("right");
+      stackchild.setAttribute("end", "7");
+      is(stackchild.getBoundingClientRect().right, stack.getBoundingClientRect().left + 18, "right changed" + add);
+      // the width is only 12 pixels in ignoreStackSizing mode, so don't check the offset
+      // from the right edge in this case
+      if (!ignoreStackSizing)
+        is(stackchild.getBoundingClientRect().right, stack.getBoundingClientRect().right - 7,
+           "right changed from right edge" + add);
+      is(stack.getBoundingClientRect().width, ignoreStackSizing ? 12 : 25, "right changed stack width" + add);
+      stackchild.removeAttribute("end");
+      stackchild.setAttribute("right", "6");
 
       stackchild.setAttribute("bottom", "9");
       is(stackchild.getBoundingClientRect().bottom, stack.getBoundingClientRect().top + 22, "bottom changed" + add);
