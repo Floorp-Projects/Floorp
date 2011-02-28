@@ -1761,6 +1761,9 @@ HUD_SERVICE.prototype =
 
     this.unregisterActiveContext(id);
 
+    let id = ConsoleUtils.supString(id);
+    Services.obs.notifyObservers(id, "web-console-destroyed", null);
+
     if (Object.keys(this.hudReferences).length == 0) {
       this.suspend();
     }
@@ -3187,9 +3190,9 @@ HeadsUpDisplay.prototype = {
 
     this.jsTermParentNode = outerWrap;
     this.HUDBox.appendChild(outerWrap);
+
     return this.HUDBox;
   },
-
 
   /**
    * sets the click events for all binary toggle filter buttons
@@ -3453,6 +3456,9 @@ HeadsUpDisplay.prototype = {
 
       let nodes = this.notificationBox.insertBefore(this.HUDBox,
         this.notificationBox.childNodes[0]);
+
+      let id = ConsoleUtils.supString(this.hudId);
+      Services.obs.notifyObservers(id, "web-console-created", null);
 
       return this.HUDBox;
     }
@@ -4307,7 +4313,7 @@ JSTerm.prototype = {
 
     return output;
   },
-  
+
   /**
    * Format a string for output.
    *
@@ -4885,6 +4891,13 @@ FirefoxApplicationHooks.prototype = {
  */
 
 ConsoleUtils = {
+  supString: function ConsoleUtils_supString(aString)
+  {
+    let str = Cc["@mozilla.org/supports-string;1"].
+      createInstance(Ci.nsISupportsString);
+    str.data = aString;
+    return str;
+  },
 
   /**
    * Generates a millisecond resolution timestamp.
@@ -5283,6 +5296,10 @@ ConsoleUtils = {
     if (!isFiltered && !isRepeated && (scrolledToBottom || isInputOutput)) {
       ConsoleUtils.scrollToVisible(aNode);
     }
+
+    let id = ConsoleUtils.supString(aHUDId);
+    let nodeID = aNode.getAttribute("id");
+    Services.obs.notifyObservers(id, "web-console-message-created", nodeID);
   },
 
   /**
