@@ -786,9 +786,11 @@ qcms_profile* qcms_profile_from_file(FILE *file)
 	be32 length_be;
 	void *data;
 
-	fread(&length_be, sizeof(length), 1, file);
+	if (fread(&length_be, 1, sizeof(length_be), file) != sizeof(length_be))
+		return BAD_VALUE_PROFILE;
+
 	length = be32_to_cpu(length_be);
-	if (length > MAX_PROFILE_SIZE)
+	if (length > MAX_PROFILE_SIZE || length < sizeof(length_be))
 		return BAD_VALUE_PROFILE;
 
 	/* allocate room for the entire profile */
