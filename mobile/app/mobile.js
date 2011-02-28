@@ -454,7 +454,7 @@ pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/faq/");
 
 pref("app.promo.spark.baseURL", "http://spark.mozilla.org");
 #ifdef MOZ_OFFICIAL_BRANDING
-pref("app.promo.spark.endDate", "2011-04-31");
+pref("app.promo.spark.endDate", "2011-05-01");
 #else
 pref("app.promo.spark.endDate", "2011-01-01");
 #endif
