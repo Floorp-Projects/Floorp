@@ -31,13 +31,6 @@ function run_test() {
   do_check_eq(src.p2, "v2");
   do_check_eq(src.dst.p2, "v2");
 
-  _("handle dotted properties");
-  src.dst.nest = {};
-  Utils.deferGetSet(base, "dst.nest", "prop");
-  src.prop = "val";
-  do_check_eq(src.prop, "val");
-  do_check_eq(src.dst.nest.prop, "val");
-
   _("make sure existing getter keeps its functionality");
   Utils.deferGetSet(base, "dst", "a");
   src.a = "not a";

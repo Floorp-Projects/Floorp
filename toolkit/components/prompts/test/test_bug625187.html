@@ -46,7 +46,13 @@ function runtest()
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
   isTabModal = hasTabModalPrompts();
-  ok(isTabModal, "Test must run with tab modal prompts enabled.");
+
+  // This test depends on tab modal prompts being enabled.
+  if (!isTabModal) {
+    todo(false, "Test disabled when tab modal prompts are not enabled.");
+    SimpleTest.finish();
+    return;
+  }
 
   startCallbackTimer();
 
