@@ -7824,7 +7824,7 @@ dnl ========================================================
 dnl = --disable-elf-hack
 dnl ========================================================
 
-USE_ELF_HACK=1
+USE_ELF_HACK=
 MOZ_ARG_DISABLE_BOOL(elf-hack,
 [  --disable-elf-hack      Disable elf hacks],
     USE_ELF_HACK=,
