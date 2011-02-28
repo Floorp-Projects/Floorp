@@ -226,7 +226,7 @@
       gTabBrowser = document.getElementById("content");
 
       gQueue = new gOpenerWnd.eventQueue();
-      gQueue.push(new loadURIInvoker("about:robots"));
+      gQueue.push(new loadURIInvoker("about:"));
       gQueue.push(new clickReloadBtnInvoker());
       gQueue.push(new loadURIInvoker("about:mozilla"));
       gQueue.push(new reloadInvoker());

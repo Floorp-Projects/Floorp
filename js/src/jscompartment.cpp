@@ -71,7 +71,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 #ifdef JS_METHODJIT
     jaegerCompartment(NULL),
 #endif
-    propertyTree(this),
+    propertyTree(thisForCtor()),
     debugMode(rt->debugMode),
 #if ENABLE_YARR_JIT
     regExpAllocator(NULL),

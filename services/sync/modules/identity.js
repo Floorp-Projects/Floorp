@@ -42,7 +42,6 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/ext/Sync.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/util.js");
 

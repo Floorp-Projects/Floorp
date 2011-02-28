@@ -90,3 +90,26 @@ for codepoint in range(ord("A"), ord("A") + 1):
             f.generate("mark" + mark + charname + "-" + uposname +
                        "underline.ttf")
     
+f = fontforge.font()
+n = "MarkAB-spaceliga"
+f.fontname = n
+f.familyname = n
+f.fullname = n
+f.copyright = "Copyright (c) 2008-2011 Mozilla Corporation"
+
+g = f.createChar(ord(" "), "space")
+g.width = 1000
+for charname in ["A", "B"]:
+    g = f.createChar(ord(charname), charname)
+    g.importOutlines("mark-glyph.svg")
+    g.width = 1500
+
+f.addLookup("liga-table", "gsub_ligature", (), (("liga",(("latn",("dflt")),)),))
+f.addLookupSubtable("liga-table", "liga-subtable")
+g = f.createChar(-1, "spaceA")
+g.glyphclass = "baseligature";
+g.addPosSub("liga-subtable", ("space", "A"))
+g.importOutlines("mark2-glyph.svg")
+g.width = 1800
+
+f.generate("markAB-spaceliga.otf")
