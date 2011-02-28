@@ -207,8 +207,37 @@ nsStackLayout::GetOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsMargin& aOf
   PRUint8 offsetSpecified = 0;
   nsIContent* content = aChild->GetContent();
   if (content) {
+    PRBool ltr = aChild->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
     nsAutoString value;
     PRInt32 error;
+
+    content->GetAttr(kNameSpaceID_None, nsGkAtoms::start, value);
+    if (!value.IsEmpty()) {
+      value.Trim("%");
+      if (ltr) {
+        aOffset.left =
+          nsPresContext::CSSPixelsToAppUnits(value.ToInteger(&error));
+        offsetSpecified |= SPECIFIED_LEFT;
+      } else {
+        aOffset.right =
+          nsPresContext::CSSPixelsToAppUnits(value.ToInteger(&error));
+        offsetSpecified |= SPECIFIED_RIGHT;
+      }
+    }
+
+    content->GetAttr(kNameSpaceID_None, nsGkAtoms::end, value);
+    if (!value.IsEmpty()) {
+      value.Trim("%");
+      if (ltr) {
+        aOffset.right =
+          nsPresContext::CSSPixelsToAppUnits(value.ToInteger(&error));
+        offsetSpecified |= SPECIFIED_RIGHT;
+      } else {
+        aOffset.left =
+          nsPresContext::CSSPixelsToAppUnits(value.ToInteger(&error));
+        offsetSpecified |= SPECIFIED_LEFT;
+      }
+    }
 
     content->GetAttr(kNameSpaceID_None, nsGkAtoms::left, value);
     if (!value.IsEmpty()) {
