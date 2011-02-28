@@ -831,6 +831,8 @@ pref("network.IDN.whitelist.xn--mgbaam7a8h", true);
 // cn, China, .<China> with variants
 pref("network.IDN.whitelist.xn--fiqz9s", true); // Traditional
 pref("network.IDN.whitelist.xn--fiqs8s", true); // Simplified
+// eg, Egypt, .<Masr>
+pref("network.IDN.whitelist.xn--wgbh1c", true);
 // hk, Hong Kong, .<Hong Kong>
 pref("network.IDN.whitelist.xn--j6w193g", true);
 // ir, Iran, <.Iran> with variants
