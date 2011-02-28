@@ -138,11 +138,20 @@
           if (!url)
             return;
 
+          let types = [];
+          try { // In case makeURI fails.
+            let uri = Util.makeURI(url);
+            if (Util.isOpenableScheme(uri.scheme))
+              types.push("link-openable");
+            if (Util.isShareableScheme(uri.scheme))
+              types.push("link-shareable");
+          } catch (ex) { Util.dumpLn(ex); }
+
           let value = this.getAttribute("value");
           let data = {
             target: this,
             json: {
-              types: ["link-shareable", "link-openable"],
+              types: types,
               label: value,
               linkTitle: value,
               linkURL: url
@@ -597,10 +606,18 @@
           if (!this.uri || this._isEditing)
             return;
 
+          let types = ["edit-bookmark"];
+          try { // In case makeURI fails.
+            if (Util.isOpenableScheme(this.uri.scheme))
+              types.push("link-openable");
+            if (Util.isShareableScheme(this.uri.scheme))
+              types.push("link-shareable");
+          } catch (ex) { Util.dumpLn(ex); }
+
           let data = {
             target: this,
             json: {
-              types: ["edit-bookmark", "link-shareable", "link-openable"],
+              types: types,
               label: this.name,
               linkTitle: this.name,
               linkURL: this.spec
