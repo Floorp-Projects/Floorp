@@ -916,8 +916,7 @@ ContextHandler.registerType("link-saveable", function(aState, aElement) {
 });
 
 ContextHandler.registerType("link-openable", function(aState, aElement) {
-  let protocol = aState.linkProtocol;
-  return (protocol && protocol != "mailto" && protocol != "javascript" && protocol != "news" && protocol != "snews");
+  return Util.isOpenableScheme(aState.linkProtocol);
 });
 
 ContextHandler.registerType("link-shareable", function(aState, aElement) {

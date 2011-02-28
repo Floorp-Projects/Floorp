@@ -111,6 +111,11 @@ let Util = {
     return (aURL.indexOf("about:") == 0 && aURL != "about:blank" && aURL != "about:empty") || aURL.indexOf("chrome:") == 0;
   },
 
+  isOpenableScheme: function isShareableScheme(aProtocol) {
+    let dontOpen = /^(mailto|javascript|news|snews)$/;
+    return (aProtocol && !dontOpen.test(aProtocol));
+  },
+
   isShareableScheme: function isShareableScheme(aProtocol) {
     let dontShare = /^(chrome|about|file|javascript|resource)$/;
     return (aProtocol && !dontShare.test(aProtocol));
