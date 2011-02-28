@@ -4178,6 +4178,7 @@ var XULBrowserWindow = {
       field.setAttribute("previoustype", field.getAttribute("type"));
       field.setAttribute("type", type);
       field.label = text;
+      field.setAttribute("crop", type == "overLink" ? "center" : "end");
       this.statusText = text;
     }
   },

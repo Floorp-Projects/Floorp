@@ -3738,7 +3738,7 @@
       <xul:hbox class="statuspanel-inner">
         <xul:label class="statuspanel-label"
                    role="status"
-                   xbl:inherits="value=label,mirror"
+                   xbl:inherits="value=label,crop,mirror"
                    flex="1"
                    crop="end"/>
       </xul:hbox>
