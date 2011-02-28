@@ -450,7 +450,7 @@ toolbarbutton.choice-remotetabs {
 }
 
 /* preferences panel UI -----------------------------------------------------*/
-#menulist-container[for="prefs-homepage-options"] .menulist-command.selected {
+#menulist-container[for="prefs-homepage-options"] .options-command.selected {
   pointer-events: none;
 }
 

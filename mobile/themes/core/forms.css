@@ -209,13 +209,13 @@
   display: none;
 }
 
-.option-command image {
+.option-command > image {
   width: 30px;
   height: 30px;
   margin: @margin_tiny@;
 }
 
-.option-command[selected="true"] image {
+.option-command.selected {
   list-style-image: url("chrome://browser/skin/images/check-30.png");
 }
 

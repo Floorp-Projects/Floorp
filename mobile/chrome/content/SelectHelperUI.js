@@ -49,8 +49,8 @@ var SelectHelperUI = {
       item.setAttribute("crop", "center");
       item.setAttribute("label", choice.text);
 
-      choice.selected ? item.setAttribute("selected", "true")
-                      : item.removeAttribute("selected");
+      choice.selected ? item.classList.add("selected")
+                      : item.classList.remove("selected");
 
       choice.disabled ? item.setAttribute("disabled", "true")
                       : item.removeAttribute("disabled");
@@ -68,7 +68,7 @@ var SelectHelperUI = {
         item.classList.add("in-optgroup");
 
       if (choice.selected) {
-        item.setAttribute("selected", "true");
+        item.classList.add("selected");
         firstSelected = firstSelected || item;
       }
     }
