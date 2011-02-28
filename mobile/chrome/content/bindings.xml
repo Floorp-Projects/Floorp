@@ -565,6 +565,16 @@
           let target = event.originalTarget;
           if (target._empty == false) {
             this._selectedIndex = target._index;
+
+            // If textbox has composition string, setValue for input element
+            // doesn't work well.  So, before calling handleEnter,
+            // we need commit composition string.
+            // More detail is bug 632744.
+            try {
+              let imeEditor = this.input.controller.input.editor.QueryInterface(Ci.nsIEditorIMESupport);
+              if (imeEditor.composing)
+                imeEditor.forceCompositionEnd();
+            } catch(e) { }
             this.input.controller.handleEnter(true);
           }
         ]]>
