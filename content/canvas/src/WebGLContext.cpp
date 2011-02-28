@@ -473,14 +473,6 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
             gl = nsnull;
         }
     }
-
-    // if that failed, and we weren't already preferring EGL, try it now.
-    if (!gl && !(preferEGL || useANGLE)) {
-        gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
-        if (gl && !InitAndValidateGL()) {
-            gl = nsnull;
-        }
-    }
 #else
     // other platforms just use whatever the default is
     if (!gl && useOpenGL) {
