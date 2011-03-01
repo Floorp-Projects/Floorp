@@ -672,6 +672,8 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       let transform = this.getZoomTransform();
       TabItems.pausePainting();
 
+      if (this.parent && this.parent.expanded)
+        $tabEl.removeClass("stack-trayed");
       $tabEl.addClass("front");
       $canvas
         .css({ '-moz-transform-origin': transform.transformOrigin })
