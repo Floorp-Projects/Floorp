@@ -52,15 +52,15 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
+  actual = "no exception";
   try
   {
-    expect = 'TypeError: trap __iterator__ for y returned a primitive value';
+    expect = 'TypeError';
     var obj = {a: 5}; obj.__iterator__ = /x/g; for(x in y = let (z) obj) { }
-    expect = 'No Error';
   }
   catch(ex)
   {
-    actual = ex + '';
+    actual = ex instanceof TypeError ? 'TypeError' : "" + ex;
   }
 
   reportCompare(expect, actual, summary);
