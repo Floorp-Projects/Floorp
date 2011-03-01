@@ -128,10 +128,10 @@ Nv3DVUtils::SetDeviceInfo(IUnknown *devUnknown)
 
   bool rv = false;
   rv = m3DVStreaming->Nv3DVSetDevice(devUnknown);
-  NS_ASSERTION(rv, "Nv3DVStreaming Nv3DVControl failed!");
-
-  if (!rv)
+  if (!rv) {
+      NS_WARNING("Nv3DVStreaming Nv3DVControl failed!");
       return;
+  }
 
   rv = m3DVStreaming->Nv3DVControl(NV_STEREO_MODE_RIGHT_LEFT, true, FIREFOX_3DV_APP_HANDLE);
   NS_ASSERTION(rv, "Nv3DVStreaming Nv3DVControl failed!");
