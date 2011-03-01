@@ -535,6 +535,9 @@ namespace nanojit
     // Array holding the 'retType' field from LIRopcode.tbl.
     extern const LTy retTypes[];
 
+    // Array holding the size in bytes of each LIns from LIRopcode.tbl.
+    extern const uint8_t insSizes[];
+
     inline RegisterMask rmask(Register r)
     {
         return RegisterMask(1) << REGNUM(r);
@@ -1040,6 +1043,8 @@ namespace nanojit
             return (void*)immI();
         #endif
         }
+
+        void overwriteWithSkip(LIns* skipTo);
     };
 
     typedef SeqBuilder<LIns*> InsList;
@@ -1583,6 +1588,9 @@ namespace nanojit
         }
         virtual LIns* insComment(const char* str) {
             return out->insComment(str);
+        }
+        virtual LIns* insSkip(LIns* skipTo) {
+            return out->insSkip(skipTo);
         }
 
         // convenience functions
@@ -2175,6 +2183,7 @@ namespace nanojit
             LIns*   insAlloc(int32_t size);
             LIns*   insJtbl(LIns* index, uint32_t size);
             LIns*   insComment(const char* str);
+            LIns*   insSkip(LIns* skipTo);
     };
 
     class LirFilter
@@ -2217,7 +2226,45 @@ namespace nanojit
 
         // Returns next instruction and advances to the prior instruction.
         // Invariant: never returns a skip.
-        LIns* read();
+        LIns* read()
+        {
+            const uint8_t insReadSizes[] = {
+            // LIR_start is treated specially -- see below.  We intentionally
+            // do not use the global insSizes[] because of this customization.
+        #define OP___(op, number, repKind, retType, isCse) \
+                ((number) == LIR_start ? 0 : sizeof(LIns##repKind)),
+        #include "LIRopcode.tbl"
+        #undef OP___
+                0
+            };
+
+            // Check the invariant: _ins never points to a skip.
+            NanoAssert(_ins && !_ins->isop(LIR_skip));
+
+            // Step back one instruction.  Use a table lookup rather than a switch
+            // to avoid branch mispredictions.  LIR_start is given a special size
+            // of zero so that we don't step back past the start of the block.
+            // (Callers of this function should stop once they see a LIR_start.)
+            LIns* ret = _ins;
+            _ins = (LIns*)(uintptr_t(_ins) - insReadSizes[_ins->opcode()]);
+
+            // Ensure _ins doesn't end up pointing to a skip.
+            while (_ins->isop(LIR_skip)) {
+                NanoAssert(_ins->prevLIns() != _ins);
+                _ins = _ins->prevLIns();
+            }
+
+            return ret;
+        }
+
+        // Returns the instruction that read() will return on the next call.
+        // Invariant: never returns a skip.
+        LIns* peek()
+        {
+            // Check the invariant: _ins never points to a skip.
+            NanoAssert(_ins && !_ins->isop(LIR_skip));
+            return _ins;
+        }
 
         LIns* finalIns() {
             return _finalIns;
