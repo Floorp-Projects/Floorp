@@ -440,6 +440,7 @@ nsEditor::PreDestroy(PRBool aDestroyingFrames)
   mEditorObservers.Clear();
   mDocStateListeners.Clear();
   mInlineSpellChecker = nsnull;
+  mSpellcheckCheckboxState = eTriUnset;
   mRootElement = nsnull;
 
   mDidPreDestroy = PR_TRUE;
