@@ -304,7 +304,8 @@ public:
     return ThebesLayerBuffer::BeginPaint(mLayer, 
                                          aContentType, 
                                          aXResolution, 
-                                         aYResolution);
+                                         aYResolution,
+                                         0);
   }
 
   // ThebesLayerBuffer interface
@@ -747,11 +748,13 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
       SetAntialiasingFlags(this, state.mContext);
       callback(this, state.mContext, state.mRegionToDraw,
                state.mRegionToInvalidate, callbackData);
-      // Everything that's visible has been validated. Do this instead of
+      // Everything that's visible has been validated. Do this instead of just
       // OR-ing with aRegionToDraw, since that can lead to a very complex region
       // here (OR doesn't automatically simplify to the simplest possible
       // representation of a region.)
-      mValidRegion.Or(mValidRegion, mVisibleRegion);
+      nsIntRegion tmp;
+      tmp.Or(mVisibleRegion, state.mRegionToDraw);
+      mValidRegion.Or(mValidRegion, tmp);
     }
   }
 
