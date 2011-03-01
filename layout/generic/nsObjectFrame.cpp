@@ -3521,16 +3521,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
    }
  }
  rect.MoveBy(mObjectFrame->GetUsedBorderAndPadding().TopLeft());
-#ifndef XP_MACOSX
-  mObjectFrame->InvalidateLayer(rect, nsDisplayItem::TYPE_PLUGIN);
-#else
-  if (mozilla::FrameLayerBuilder::HasDedicatedLayer(mObjectFrame, nsDisplayItem::TYPE_PLUGIN)) {
-    mObjectFrame->InvalidateWithFlags(rect, nsIFrame::INVALIDATE_NO_UPDATE_LAYER_TREE);
-  } else {
-    mObjectFrame->Invalidate(rect);
-  }
-#endif
-  return NS_OK;
+ mObjectFrame->InvalidateLayer(rect, nsDisplayItem::TYPE_PLUGIN);
+ return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRegion(NPRegion invalidRegion)
