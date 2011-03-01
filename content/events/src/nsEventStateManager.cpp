@@ -1394,6 +1394,13 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       handler.OnQueryCharacterAtPoint(static_cast<nsQueryContentEvent*>(aEvent));
     }
     break;
+  case NS_QUERY_DOM_WIDGET_HITTEST:
+    {
+      // XXX remote event
+      nsContentEventHandler handler(mPresContext);
+      handler.OnQueryDOMWidgetHittest(static_cast<nsQueryContentEvent*>(aEvent));
+    }
+    break;
   case NS_SELECTION_SET:
     {
 #ifdef MOZ_IPC
