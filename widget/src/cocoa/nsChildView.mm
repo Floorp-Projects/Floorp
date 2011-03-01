@@ -5881,9 +5881,36 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   return !mGeckoChild->DispatchWindowEvent(geckoEvent);
 }
 
+// Don't focus a plugin if the user has clicked on a DOM element above it.
+// In this case the user has actually clicked on the plugin's ChildView
+// (underneath the non-plugin DOM element).  But we shouldn't allow the
+// ChildView to be focused.  See bug 627649.
+- (BOOL)currentEventShouldFocusPlugin
+{
+  if (!mGeckoChild)
+    return NO;
+
+  NSEvent* currentEvent = [NSApp currentEvent];
+  if ([currentEvent type] != NSLeftMouseDown)
+    return YES;
+
+  NSPoint eventLoc = nsCocoaUtils::ScreenLocationForEvent(currentEvent);
+  eventLoc.y = nsCocoaUtils::FlippedScreenY(eventLoc.y);
+  nsIntPoint widgetLoc(NSToIntRound(eventLoc.x), NSToIntRound(eventLoc.y));
+  widgetLoc -= mGeckoChild->WidgetToScreenOffset();
+
+  nsQueryContentEvent hitTest(PR_TRUE, NS_QUERY_DOM_WIDGET_HITTEST, mGeckoChild);
+  hitTest.InitForQueryDOMWidgetHittest(widgetLoc);
+  mGeckoChild->DispatchWindowEvent(hitTest);
+  if (hitTest.mSucceeded && !hitTest.mReply.mWidgetIsHit)
+    return NO;
+
+  return YES;
+}
+
 // Don't focus a plugin if we're in a left click-through that will fail (see
 // [ChildView isInFailingLeftClickThrough] above).
-- (BOOL)shouldFocusPlugin
+- (BOOL)shouldFocusPlugin:(BOOL)getFocus
 {
   if (!mGeckoChild)
     return NO;
@@ -5892,28 +5919,33 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   if (windowWidget && !windowWidget->ShouldFocusPlugin())
     return NO;
 
+  if (getFocus && ![self currentEventShouldFocusPlugin])
+    return NO;
+
   return YES;
 }
 
 // Returns NO if the plugin shouldn't be focused/unfocused.
-- (BOOL)updateCocoaPluginFocusStatus:(BOOL)hasFocus
+- (BOOL)updatePluginFocusStatus:(BOOL)getFocus
 {
   if (!mGeckoChild)
     return NO;
 
-  if (![self shouldFocusPlugin])
+  if (![self shouldFocusPlugin:getFocus])
     return NO;
 
-  nsGUIEvent pluginEvent(PR_TRUE, NS_NON_RETARGETED_PLUGIN_EVENT, mGeckoChild);
-  NPCocoaEvent cocoaEvent;
-  InitNPCocoaEvent(&cocoaEvent);
-  cocoaEvent.type = NPCocoaEventFocusChanged;
-  cocoaEvent.data.focus.hasFocus = hasFocus;
-  pluginEvent.pluginEvent = &cocoaEvent;
-  mGeckoChild->DispatchWindowEvent(pluginEvent);
+  if (mPluginEventModel == NPEventModelCocoa) {
+    nsGUIEvent pluginEvent(PR_TRUE, NS_NON_RETARGETED_PLUGIN_EVENT, mGeckoChild);
+    NPCocoaEvent cocoaEvent;
+    InitNPCocoaEvent(&cocoaEvent);
+    cocoaEvent.type = NPCocoaEventFocusChanged;
+    cocoaEvent.data.focus.hasFocus = getFocus;
+    pluginEvent.pluginEvent = &cocoaEvent;
+    mGeckoChild->DispatchWindowEvent(pluginEvent);
 
-  if (hasFocus)
-    [self sendFocusEvent:NS_PLUGIN_FOCUS];
+    if (getFocus)
+      [self sendFocusEvent:NS_PLUGIN_FOCUS];
+  }
 
   return YES;
 }
@@ -5924,8 +5956,8 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  if (mIsPluginView && mPluginEventModel == NPEventModelCocoa) {
-    if (![self updateCocoaPluginFocusStatus:YES])
+  if (mIsPluginView) {
+    if (![self updatePluginFocusStatus:YES])
       return NO;
   }
 
@@ -5940,8 +5972,8 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  if (mIsPluginView && mPluginEventModel == NPEventModelCocoa) {
-    if (![self updateCocoaPluginFocusStatus:NO])
+  if (mIsPluginView) {
+    if (![self updatePluginFocusStatus:NO])
       return NO;
   }
 
