@@ -2620,7 +2620,7 @@ pref("font.name.sans-serif.he", "Droid Sans");
 pref("font.name.monospace.he", "Droid Sans Mono");
 
 pref("font.name.serif.ja", "Droid Serif");
-pref("font.name.sans-serif.ja", "Droid Sans");
+pref("font.name.sans-serif.ja", "Droid Sans Japanese");
 pref("font.name.monospace.ja", "Droid Sans Mono");
 
 pref("font.name.serif.ko", "Droid Serif");
