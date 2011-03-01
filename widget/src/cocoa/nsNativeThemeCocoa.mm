@@ -1759,13 +1759,13 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
         NS_WARNING("Unable to animate progressbar!");
       }
-      DrawProgress(cgContext, macRect, IsIndeterminateProgress(aFrame),
+      DrawProgress(cgContext, macRect, IsIndeterminateProgress(aFrame, eventState),
                    PR_TRUE, GetProgressValue(aFrame),
                    GetProgressMaxValue(aFrame), aFrame);
       break;
 
     case NS_THEME_PROGRESSBAR_VERTICAL:
-      DrawProgress(cgContext, macRect, IsIndeterminateProgress(aFrame),
+      DrawProgress(cgContext, macRect, IsIndeterminateProgress(aFrame, eventState),
                    PR_FALSE, GetProgressValue(aFrame),
                    GetProgressMaxValue(aFrame), aFrame);
       break;
