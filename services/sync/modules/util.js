@@ -229,32 +229,51 @@ let Utils = {
     return db.createStatement(query);
   },
 
-  queryAsync: function(query, names) {
-    // Allow array of names, single name, and no name
-    if (!Utils.isArray(names))
-      names = names == null ? [] : [names];
+  // Prototype for mozIStorageCallback, used in queryAsync below.
+  // This allows us to define the handle* functions just once rather
+  // than on every queryAsync invocation.
+  _storageCallbackPrototype: {
+    results: null,
+    // These are set by queryAsync
+    names: null,
+    syncCb: null,
 
-    // Synchronously asyncExecute fetching all results by name
-    let execCb = Utils.makeSyncCallback();
-    query.executeAsync({
-      items: [],
-      handleResult: function handleResult(results) {
-        let row;
-        while ((row = results.getNextRow()) != null) {
-          this.items.push(names.reduce(function(item, name) {
-            item[name] = row.getResultByName(name);
-            return item;
-          }, {}));
-        }
-      },
-      handleError: function handleError(error) {
-        execCb.throw(error);
-      },
-      handleCompletion: function handleCompletion(reason) {
-        execCb(this.items);
+    handleResult: function handleResult(results) {
+      if (!this.names) {
+        return;
       }
-    });
-    return Utils.waitForSyncCallback(execCb);
+      if (!this.results) {
+        this.results = [];
+      }
+      let row;
+      while ((row = results.getNextRow()) != null) {
+        let item = {};
+        for each (name in this.names) {
+          item[name] = row.getResultByName(name);
+        }
+        this.results.push(item);
+      }
+    },
+    handleError: function handleError(error) {
+      this.syncCb.throw(error);
+    },
+    handleCompletion: function handleCompletion(reason) {
+      // If we were called with column names but didn't find any results,
+      // the calling code probably still expects an array as a return value.
+      if (this.names && !this.results) {
+        this.results = [];
+      }
+      this.syncCb(this.results);
+    }
+  },
+
+  queryAsync: function(query, names) {
+    // Synchronously asyncExecute fetching all results by name
+    let storageCallback = {names: names,
+                           syncCb: Utils.makeSyncCallback()};
+    storageCallback.__proto__ = Utils._storageCallbackPrototype;
+    query.executeAsync(storageCallback);
+    return Utils.waitForSyncCallback(storageCallback.syncCb);
   },
 
   byteArrayToString: function byteArrayToString(bytes) {

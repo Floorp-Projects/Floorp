@@ -138,12 +138,14 @@ HistoryStore.prototype = {
       "SELECT name FROM sqlite_temp_master " +
       "WHERE name IN ('moz_places_temp', 'moz_historyvisits_temp')");
   },
+  _haveTempTablesCols: ["name"],
 
   __haveTempTables: null,
   get _haveTempTables() {
-    if (this.__haveTempTables === null)
-      this.__haveTempTables = !!Utils.queryAsync(this._haveTempTablesStm,
-                                                 ["name"]).length;
+    if (this.__haveTempTables === null) {
+      this.__haveTempTables = !!Utils.queryAsync(
+        this._haveTempTablesStm, this._haveTempTablesCols).length;
+    }
     return this.__haveTempTables;
   },
 
@@ -184,6 +186,8 @@ HistoryStore.prototype = {
     stmt.params.anno_name = GUID_ANNO;
     return stmt;
   },
+  _checkGUIDPageAnnotationCols: ["place_id", "name_id", "anno_id",
+                                 "anno_date"],
 
   get _addPageAnnotationStm() {
     // Gecko <2.0 only
@@ -237,8 +241,7 @@ HistoryStore.prototype = {
 
     let stmt = this._checkGUIDPageAnnotationStm;
     stmt.params.page_url = uri;
-    let result = Utils.queryAsync(stmt, ["place_id", "name_id", "anno_id",
-                                         "anno_date"])[0];
+    let result = Utils.queryAsync(stmt, this._checkGUIDPageAnnotationCols)[0];
     if (!result) {
       let log = Log4Moz.repository.getLogger("Engine.History");
       log.warn("Couldn't annotate URI " + uri);
@@ -295,13 +298,14 @@ HistoryStore.prototype = {
 
     return this.__guidStmt = stmt;
   },
+  _guidCols: ["guid"],
 
   GUIDForUri: function GUIDForUri(uri, create) {
     let stm = this._guidStm;
     stm.params.page_url = uri.spec ? uri.spec : uri;
 
     // Use the existing GUID if it exists
-    let result = Utils.queryAsync(stm, ["guid"])[0];
+    let result = Utils.queryAsync(stm, this._guidCols)[0];
     if (result && result.guid)
       return result.guid;
 
@@ -332,6 +336,7 @@ HistoryStore.prototype = {
       "WHERE place_id = (SELECT id FROM moz_places WHERE url = :url) " +
       "ORDER BY date DESC LIMIT 10");
   },
+  _visitCols: ["date", "type"],
 
   __urlStmt: null,
   get _urlStm() {
@@ -365,6 +370,7 @@ HistoryStore.prototype = {
 
     return this.__urlStmt = stmt;
   },
+  _urlCols: ["url", "title", "frecency"],
 
   get _allUrlStm() {
     // Gecko <2.0
@@ -386,17 +392,18 @@ HistoryStore.prototype = {
       "ORDER BY frecency DESC " +
       "LIMIT :max_results");
   },
+  _allUrlCols: ["url"],
 
   // See bug 320831 for why we use SQL here
   _getVisits: function HistStore__getVisits(uri) {
     this._visitStm.params.url = uri;
-    return Utils.queryAsync(this._visitStm, ["date", "type"]);
+    return Utils.queryAsync(this._visitStm, this._visitCols);
   },
 
   // See bug 468732 for why we use SQL here
   _findURLByGUID: function HistStore__findURLByGUID(guid) {
     this._urlStm.params.guid = guid;
-    return Utils.queryAsync(this._urlStm, ["url", "title", "frecency"])[0];
+    return Utils.queryAsync(this._urlStm, this._urlCols)[0];
   },
 
   changeItemID: function HStore_changeItemID(oldID, newID) {
@@ -409,7 +416,7 @@ HistoryStore.prototype = {
     this._allUrlStm.params.cutoff_date = (Date.now() - 2592000000) * 1000;
     this._allUrlStm.params.max_results = MAX_HISTORY_UPLOAD;
 
-    let urls = Utils.queryAsync(this._allUrlStm, "url");
+    let urls = Utils.queryAsync(this._allUrlStm, this._allUrlCols);
     let self = this;
     return urls.reduce(function(ids, item) {
       ids[self.GUIDForUri(item.url, true)] = item.url;
