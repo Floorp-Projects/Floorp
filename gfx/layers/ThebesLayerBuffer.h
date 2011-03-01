@@ -118,6 +118,9 @@ public:
     nsIntRegion mRegionToInvalidate;
   };
 
+  enum {
+    PAINT_WILL_RESAMPLE = 0x01
+  };
   /**
    * Start a drawing operation. This returns a PaintState describing what
    * needs to be drawn to bring the buffer up to date in the visible region.
@@ -125,9 +128,18 @@ public:
    * The returned mContext may be null if mRegionToDraw is empty.
    * Otherwise it must not be null.
    * mRegionToInvalidate will contain mRegionToDraw.
+   * @param aFlags when PAINT_WILL_RESAMPLE is passed, this indicates that
+   * buffer will be resampled when rendering (i.e the effective transform
+   * combined with the scale for the resolution is not just an integer
+   * translation). This will disable buffer rotation (since we don't want
+   * to resample across the rotation boundary) and will ensure that we
+   * make the entire buffer contents valid (since we don't want to sample
+   * invalid pixels outside the visible region, if the visible region doesn't
+   * fill the buffer bounds).
    */
   PaintState BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
-                        float aXResolution, float aYResolution);
+                        float aXResolution, float aYResolution,
+                        PRUint32 aFlags);
 
   /**
    * Return a new surface of |aSize| and |aType|.
