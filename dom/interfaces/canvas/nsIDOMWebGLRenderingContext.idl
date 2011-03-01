@@ -843,4 +843,5 @@ interface nsIDOMWebGLRenderingContext : nsISupports
 interface nsIDOMWebGLRenderingContext_MOZILLA_2_0_BRANCH : nsISupports
 {
   nsIVariant getSupportedExtensions();
+  WebGLboolean isContextLost();
 };
