@@ -133,7 +133,7 @@ interface nsIWebGLUniformLocation : nsISupports
 };
 
 
-[scriptable, uuid(2f21ca21-9720-4eee-ad94-27eefe4f72dc)]
+[scriptable, uuid(7cb54577-df8d-40bf-b7bb-2ddec3600a2c)]
 interface nsIDOMWebGLRenderingContext : nsISupports
 {
   //
@@ -836,5 +836,6 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   [noscript] DOMString mozGetUnderlyingParamString(in WebGLenum pname);
 
   // extensions
+  nsIVariant getSupportedExtensions();
   nsISupports getExtension(in DOMString name);
 };
