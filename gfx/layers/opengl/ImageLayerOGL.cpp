@@ -474,6 +474,7 @@ ImageLayerOGL::RenderLayer(int,
        ioImage = static_cast<MacIOSurfaceImageOGL*>(image.get());
      }
      
+     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
      gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, ioImage->mTexture.GetTextureID());
 
      ColorTextureLayerProgram *program = 

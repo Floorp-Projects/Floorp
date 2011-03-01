@@ -208,6 +208,7 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
   if (mTexImageOnWhite) {
     gl()->fActiveTexture(LOCAL_GL_TEXTURE1);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImageOnWhite->Texture());
+    gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   }
 
   float xres = mLayer->GetXResolution();
