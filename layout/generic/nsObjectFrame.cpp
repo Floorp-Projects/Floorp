@@ -3510,19 +3510,19 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
               presContext->DevPixelsToAppUnits(invalidRect->top),
               presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
               presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
- if (container) {
-   gfxIntSize newSize = container->GetCurrentSize();
-   if (newSize != oldSize) {
-     // The image size has changed - invalidate the old area too, bug 635405.
-     nsRect oldRect = nsRect(0, 0,
-                             presContext->DevPixelsToAppUnits(oldSize.width),
-                             presContext->DevPixelsToAppUnits(oldSize.height));
-     rect.UnionRect(rect, oldRect);
-   }
- }
- rect.MoveBy(mObjectFrame->GetUsedBorderAndPadding().TopLeft());
- mObjectFrame->InvalidateLayer(rect, nsDisplayItem::TYPE_PLUGIN);
- return NS_OK;
+  if (container) {
+    gfxIntSize newSize = container->GetCurrentSize();
+    if (newSize != oldSize) {
+      // The image size has changed - invalidate the old area too, bug 635405.
+      nsRect oldRect = nsRect(0, 0,
+                              presContext->DevPixelsToAppUnits(oldSize.width),
+                              presContext->DevPixelsToAppUnits(oldSize.height));
+      rect.UnionRect(rect, oldRect);
+    }
+  }
+  rect.MoveBy(mObjectFrame->GetUsedBorderAndPadding().TopLeft());
+  mObjectFrame->InvalidateLayer(rect, nsDisplayItem::TYPE_PLUGIN);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRegion(NPRegion invalidRegion)
