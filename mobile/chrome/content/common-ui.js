@@ -740,6 +740,20 @@ var FormHelperUI = {
       case "keydown":
       case "keypress":
       case "keyup":
+        // Ignore event that doesn't have a view, like generated keypress event
+        // from browser.js
+        if (!aEvent.view) {
+          aEvent.preventDefault();
+          aEvent.stopPropagation();
+          return;
+        }
+
+        // If the focus is not on the browser element, the key will not be sent
+        // to the content so do it ourself
+        let focusedElement = gFocusManager.getFocusedElementForWindow(window, true, {});
+        if (focusedElement.localName == "browser")
+          return;
+
         Browser.keySender.handleEvent(aEvent);
         break;
 
