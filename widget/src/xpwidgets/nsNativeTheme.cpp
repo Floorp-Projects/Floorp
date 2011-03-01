@@ -457,10 +457,15 @@ nsNativeTheme::IsNextToSelectedTab(nsIFrame* aFrame, PRInt32 aOffset)
 
 // progressbar:
 PRBool
-nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame)
+nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame,
+                                       nsEventStates aEventStates)
 {
   if (!aFrame)
     return PR_FALSE;
+
+  if (aFrame->GetContent()->IsHTML(nsWidgetAtoms::progress)) {
+    return aEventStates.HasState(NS_EVENT_STATE_INDETERMINATE);
+  }
 
   return aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::mode,
                                            NS_LITERAL_STRING("undetermined"),
