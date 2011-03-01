@@ -1437,6 +1437,13 @@ var XPIProvider = {
       // Init this, so it will get the notification.
       let xulPrototypeCache = Cc["@mozilla.org/xul/xul-prototype-cache;1"].getService(Ci.nsISupports);
       Services.obs.notifyObservers(null, "startupcache-invalidate", null);
+
+      // UI displayed early in startup (like the compatibility UI) may have
+      // caused us to cache parts of the skin or locale in memory. These must
+      // be flushed to allow extension provided skins and locales to take full
+      // effect
+      Services.obs.notifyObservers(null, "chrome-flush-skin-caches", null);
+      Services.obs.notifyObservers(null, "chrome-flush-caches", null);
     }
 
     this.enabledAddons = Prefs.getCharPref(PREF_EM_ENABLED_ADDONS, "");
