@@ -273,7 +273,7 @@
               <stack>
                 <deck id="browsers" flex="1"/>
                 <!-- vertical scrollbar -->
-                <box id="vertical-scroller" class="scroller" orient="vertical" right="2" top="0"/>
+                <box id="vertical-scroller" class="scroller" orient="vertical" end="2" top="0"/>
               </stack>
             </vbox>
           </vbox>
@@ -577,7 +577,7 @@
       <hbox id="search-engines-list" class="prompt-buttons" flex="1"/>
     </arrowbox>
 
-    <vbox id="newtab-popup" hidden="true" class="dialog-dark" onclick="NewTabPopup.selectTab()" align="center" left="21">
+    <vbox id="newtab-popup" hidden="true" class="dialog-dark" onclick="NewTabPopup.selectTab()" align="center" start="21">
       <label/>
     </vbox>
 
