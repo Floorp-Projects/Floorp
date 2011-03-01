@@ -114,6 +114,10 @@
   background: rgb(255,200,200);
 }
 
+#find-helper-textbox:hover:active {
+  background: #8db8d8;
+}
+
 /* Form Helper Autofill ---------------------------------------------------- */
 #form-helper-suggestions-container .panel-arrowcontent {
   border-radius: @border_radius_normal@;
