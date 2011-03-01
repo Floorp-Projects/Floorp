@@ -306,6 +306,11 @@
       </vbox>
     </scrollbox>
 
+    <!-- Form Helper suggestions helper popup -->
+    <arrowbox id="form-helper-suggestions-container" flex="1" hidden="true" offset="0" top="0" left="0">
+      <arrowscrollbox id="form-helper-suggestions" align="center" flex="1" orient="horizontal" onclick="FormHelperUI.doAutoComplete(event.target);"/>
+    </arrowbox>
+
     <!-- popup for site identity information -->
     <arrowbox id="identity-container" hidden="true" class="window-width" mode="unknownIdentity" offset="18" flex="1">
       <hbox id="identity-popup-container" flex="1" align="top">
@@ -345,11 +350,6 @@
         <pageaction id="pageaction-search" title="&pageactions.search.addNew;"/>
         <pageaction id="pageaction-charset" title="&pageactions.charEncoding;" onclick="CharsetMenu.show();"/>
       </hbox>
-    </arrowbox>
-
-    <!-- Form Helper suggestions helper popup -->
-    <arrowbox id="form-helper-suggestions-container" flex="1" hidden="true" offset="0" top="0" left="0">
-      <arrowscrollbox id="form-helper-suggestions" align="center" flex="1" orient="horizontal" onclick="FormHelperUI.doAutoComplete(event.target);"/>
     </arrowbox>
 
     <arrowbox id="bookmark-popup" hidden="true" align="center" offset="12">
