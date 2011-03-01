@@ -2376,6 +2376,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
             interpReturnOK = mjit::JaegerShotAtSafePoint(cx, ncode);          \
             if (inlineCallCount)                                              \
                 goto jit_return;                                              \
+            regs.fp->setFinishedInInterpreter();                              \
             goto leave_on_safe_point;                                         \
         }                                                                     \
         if (status == mjit::Compile_Abort) {                                  \
