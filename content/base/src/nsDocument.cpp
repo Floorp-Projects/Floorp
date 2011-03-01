@@ -2622,10 +2622,6 @@ nsDocument::RemoveFromNameTable(Element *aElement, nsIAtom* aName)
 void
 nsDocument::AddToIdTable(Element *aElement, nsIAtom* aId)
 {
-  // Make sure that id listeners are not notified synchronously while we're
-  // processing the addition on the hashtable.
-  nsAutoScriptBlocker scriptBlocker;
-
   nsIdentifierMapEntry *entry =
     mIdentifierMap.PutEntry(nsDependentAtomString(aId));
 
@@ -2648,10 +2644,6 @@ nsDocument::RemoveFromIdTable(Element *aElement, nsIAtom* aId)
     mIdentifierMap.GetEntry(nsDependentAtomString(aId));
   if (!entry) // Can be null for XML elements with changing ids.
     return;
-
-  // Make sure that id listeners are not notified synchronously while we're
-  // processing the removal on the hashtable.
-  nsAutoScriptBlocker scriptBlocker;
 
   entry->RemoveIdElement(aElement);
   if (entry->IsEmpty()) {
@@ -4111,10 +4103,6 @@ nsDocument::MozSetImageElement(const nsAString& aImageElementId,
   if (aImageElementId.IsEmpty())
     return NS_OK;
 
-  // Make sure that id listeners are not notified synchronously while we're
-  // processing the addition on the hashtable.
-  nsAutoScriptBlocker scriptBlocker;
-
   nsCOMPtr<nsIContent> content = do_QueryInterface(aImageElement);
   nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(aImageElementId);
   if (entry) {
@@ -4131,10 +4119,6 @@ nsDocument::LookupImageElement(const nsAString& aId)
 {
   if (aId.IsEmpty())
     return nsnull;
-
-  // Make sure that id listeners are not notified synchronously while we're
-  // processing the addition on the hashtable.
-  nsAutoScriptBlocker scriptBlocker;
 
   nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(aId);
   return entry ? entry->GetImageIdElement() : nsnull;
