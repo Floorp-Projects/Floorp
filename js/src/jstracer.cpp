@@ -15269,8 +15269,10 @@ TraceRecorder::record_JSOP_BINDNAME()
         JSStackFrame *fp2 = fp;
 #endif
 
-        // In global code, fp->scopeChain can only contain blocks whose values
-        // are still on the stack.  We never use BINDNAME to refer to these.
+        /*
+         * In global code, fp->scopeChain can only contain blocks whose values
+         * are still on the stack.  We never use BINDNAME to refer to these.
+         */
         while (obj->isBlock()) {
             // The block's values are still on the stack.
 #ifdef DEBUG
@@ -15287,17 +15289,23 @@ TraceRecorder::record_JSOP_BINDNAME()
             JS_ASSERT(obj);
         }
 
-        // If anything other than Block, Call, DeclEnv, and the global object
-        // is on the scope chain, we shouldn't be recording. Of those, only
-        // Block and global can be present in global code.
-        JS_ASSERT(obj == globalObj);
+        /*
+         * If this is a strict mode eval frame, we will have a Call object for
+         * it. For now just don't trace this case.
+         */
+        if (obj != globalObj) {
+            JS_ASSERT(obj->isCall());
+            JS_ASSERT(obj->callIsForEval());
+            RETURN_STOP_A("BINDNAME within strict eval code");
+        }
 
         /*
-         * The trace is specialized to this global object. Furthermore, we know it
-         * is the sole 'global' object on the scope chain: we set globalObj to the
-         * scope chain element with no parent, and we reached it starting from the
-         * function closure or the current scopeChain, so there is nothing inner to
-         * it. Therefore this must be the right base object.
+         * The trace is specialized to this global object. Furthermore, we know
+         * it is the sole 'global' object on the scope chain: we set globalObj
+         * to the scope chain element with no parent, and we reached it
+         * starting from the function closure or the current scopeChain, so
+         * there is nothing inner to it. Therefore this must be the right base
+         * object.
          */
         stack(0, w.immpObjGC(obj));
         return ARECORD_CONTINUE;
