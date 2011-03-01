@@ -34,13 +34,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/dom/ContentChild.h"
 #include "nsClipboard.h"
 #include "nsISupportsPrimitives.h"
 #include "AndroidBridge.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsXULAppAPI.h"
 
 using namespace mozilla;
+using mozilla::dom::ContentChild;
 
 NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
 
@@ -60,8 +63,6 @@ nsClipboard::SetData(nsITransferable *aTransferable,
 {
   if (aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
-  if (!AndroidBridge::Bridge())
-    return NS_ERROR_NOT_IMPLEMENTED;
 
   nsCOMPtr<nsISupports> tmp;
   PRUint32 len;
@@ -73,7 +74,17 @@ nsClipboard::SetData(nsITransferable *aTransferable,
   NS_ENSURE_TRUE(supportsString, NS_ERROR_NOT_IMPLEMENTED);
   nsAutoString buffer;
   supportsString->GetData(buffer);
-  AndroidBridge::Bridge()->SetClipboardText(buffer);
+
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    if (AndroidBridge::Bridge())
+      AndroidBridge::Bridge()->SetClipboardText(buffer);
+    else
+      return NS_ERROR_NOT_IMPLEMENTED;
+
+  } else {
+    ContentChild::GetSingleton()->SendSetClipboardText(buffer, aWhichClipboard);
+  }
+
   return NS_OK;
 }
 
@@ -82,12 +93,16 @@ nsClipboard::GetData(nsITransferable *aTransferable, PRInt32 aWhichClipboard)
 {
   if (aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
-  if (!AndroidBridge::Bridge())
-    return NS_ERROR_NOT_IMPLEMENTED;
 
   nsAutoString buffer;
-  if (!AndroidBridge::Bridge()->GetClipboardText(buffer))
-    return NS_ERROR_UNEXPECTED;
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    if (!AndroidBridge::Bridge())
+      return NS_ERROR_NOT_IMPLEMENTED;
+    if (!AndroidBridge::Bridge()->GetClipboardText(buffer))
+      return NS_ERROR_UNEXPECTED;
+  } else {
+    ContentChild::GetSingleton()->SendGetClipboardText(aWhichClipboard, &buffer);
+  }
 
   nsresult rv;
   nsCOMPtr<nsISupportsString> dataWrapper =
@@ -114,8 +129,13 @@ nsClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
 {
   if (aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
-  if (AndroidBridge::Bridge())
-    AndroidBridge::Bridge()->EmptyClipboard();
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    if (AndroidBridge::Bridge())
+      AndroidBridge::Bridge()->EmptyClipboard();
+  } else {
+    ContentChild::GetSingleton()->SendEmptyClipboard();
+  }
+
   return NS_OK;
 }
 
@@ -127,8 +147,12 @@ nsClipboard::HasDataMatchingFlavors(const char **aFlavorList,
   *aHasText = PR_FALSE;
   if (aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
-  if (AndroidBridge::Bridge())
-    *aHasText = AndroidBridge::Bridge()->ClipboardHasText();
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    if (AndroidBridge::Bridge())
+      *aHasText = AndroidBridge::Bridge()->ClipboardHasText();
+  } else {
+    ContentChild::GetSingleton()->SendClipboardHasText(aHasText);
+  }
   return NS_OK;
 }
 
