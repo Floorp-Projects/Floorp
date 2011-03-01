@@ -54,6 +54,12 @@ let WebProgressListener = {
     // Keep track of hash changes
     this.hashChanged = (location == this._lastLocation);
     this._lastLocation = location;
+
+    // When a new page is loaded fire a message for the first paint
+    addEventListener("MozAfterPaint", function(aEvent) {
+      removeEventListener("MozAfterPaint", arguments.callee, true);
+      sendAsyncMessage("Browser:FirstPaint", {});
+    }, true);
   },
 
   onStatusChange: function onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
