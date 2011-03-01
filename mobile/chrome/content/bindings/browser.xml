@@ -755,12 +755,24 @@
               case "scroll":
                 if (!self.scrollSync)
                   return;
-
-                // Use floor so that we always guarantee top-left corner of content is visible.
-                let view = self.getRootView();
-                view.scrollTo(Math.floor(json.x * self.scale), Math.floor(json.y * self.scale));
+                this.doScroll(json.x, json.y, 0);
                 break;
            }
+         },
+
+         doScroll: function doScroll(aX, aY, aCount) {
+            let self = this.self;
+
+            // Use floor so that we always guarantee top-left corner of content is visible.
+            let view = self.getRootView();
+            view.scrollTo(Math.floor(aX * self.scale), Math.floor(aY * self.scale));
+
+            let position = view.getPosition();
+            if ((position.x != aX * self.scale || position.y != aY * self.scale) && aCount < 3) {
+              setTimeout((function() {
+                 this.doScroll(aX, aY, ++aCount);
+              }).bind(this), 0);
+            }
          }
        })
       ]]></field>
