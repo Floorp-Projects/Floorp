@@ -906,6 +906,11 @@ var FormHelperUI = {
     if (results.matchCount > 0) {
       for (let i = 0; i < results.matchCount; i++) {
         let value = results.getValueAt(i);
+
+        // Do not show the value if it is the current one in the input field
+        if (value == aElement.value)
+          continue;
+
         suggestions.push(value);
       }
     }
