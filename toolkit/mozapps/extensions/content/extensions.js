@@ -111,6 +111,9 @@ function initialize() {
   gEventManager.initialize();
   Services.obs.addObserver(sendEMPong, "EM-ping", false);
   Services.obs.notifyObservers(window, "EM-loaded", "");
+  // Send this after the above notifications to give observers of them a chance
+  // to initialize us to a different view.
+  gViewController.updateState(window.history.state);
 }
 
 function notifyInitialized() {
@@ -219,7 +222,7 @@ var FakeHistory = {
       throw new Error("Cannot go back from this point");
 
     this.pos--;
-    gViewController.statePopped({ state: this.states[this.pos] });
+    gViewController.updateState(this.states[this.pos]);
     gViewController.updateCommand("cmd_back");
     gViewController.updateCommand("cmd_forward");
   },
@@ -229,7 +232,7 @@ var FakeHistory = {
       throw new Error("Cannot go forward from this point");
 
     this.pos++;
-    gViewController.statePopped({ state: this.states[this.pos] });
+    gViewController.updateState(this.states[this.pos]);
     gViewController.updateCommand("cmd_back");
     gViewController.updateCommand("cmd_forward");
   },
@@ -251,7 +254,7 @@ var FakeHistory = {
     this.states.splice(this.pos);
     this.pos--;
 
-    gViewController.statePopped({ state: this.states[this.pos] });
+    gViewController.updateState(this.states[this.pos]);
     gViewController.updateCommand("cmd_back");
     gViewController.updateCommand("cmd_forward");
   }
@@ -486,7 +489,9 @@ var gViewController = {
     window.controllers.appendController(this);
 
     window.addEventListener("popstate",
-                            gViewController.statePopped.bind(gViewController),
+                            function (e) {
+                              gViewController.updateState(e.state);
+                            },
                             false);
   },
 
@@ -509,10 +514,10 @@ var gViewController = {
     window.controllers.removeController(this);
   },
 
-  statePopped: function(e) {
+  updateState: function(state) {
     // If this is a navigation to a previous state then load that state
-    if (e.state) {
-      this.loadViewInternal(e.state.view, e.state.previousView, e.state);
+    if (state) {
+      this.loadViewInternal(state.view, state.previousView, state);
       return;
     }
 
@@ -1797,10 +1802,8 @@ var gDiscoverView = {
     if (!(aStateFlags & (Ci.nsIWebProgressListener.STATE_STOP)))
       return;
 
-    var location = this._browser.currentURI;
-
     // Consider the successful load of about:blank as still loading
-    if (Components.isSuccessCode(aStatus) && location && location.spec == "about:blank")
+    if (aRequest instanceof Ci.nsIChannel && aRequest.URI.spec == "about:blank")
       return;
 
     // If there was an error loading the page or the new hostname is not the
