@@ -54,10 +54,6 @@ DEFINES         += -DEXPORT_JS_API
 
 LIBS      = $(NSPR_LIBS) $(EDITLINE_LIBS) $(DEPTH)/$(LIB_PREFIX)js_static.$(LIB_SUFFIX)
 
-ifdef JS_TYPE_INFERENCE
-LIBS += -lz
-endif
-
 LOCAL_INCLUDES += -I$(topsrcdir) -I..
 
 ifdef _MSC_VER

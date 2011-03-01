@@ -1488,6 +1488,10 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     if (script->compileAndGo) {
         GlobalScope *globalScope = cg->compiler()->globalScope;
         script->global = globalScope->globalObj;
+        if (!script->global) {
+            JS_ASSERT(cx->globalObject);
+            script->global = cx->globalObject;
+        }
     }
 #endif
 
@@ -1656,6 +1660,26 @@ DestroyScript(JSContext *cx, JSScript *script)
     PurgeScriptFragments(&script->compartment->traceMonitor, script);
 #endif
 
+#ifdef JS_TYPE_INFERENCE
+    JS_ASSERT(!script->types);
+
+    /* Migrate any type objects associated with this script to the compartment. */
+    types::TypeObject *obj = script->typeObjects;
+    while (obj) {
+        types::TypeObject *next = obj->next;
+        obj->next = cx->compartment->types.objects;
+        cx->compartment->types.objects = obj;
+        obj = next;
+    }
+
+    types::TypeResult *result = script->typeResults;
+    while (result) {
+        types::TypeResult *next = result->next;
+        cx->free(result);
+        result = next;
+    }
+#endif
+
 #if defined(JS_METHODJIT)
     mjit::ReleaseScriptCode(cx, script);
 #endif
@@ -1734,17 +1758,16 @@ js_TraceScript(JSTracer *trc, JSScript *script)
     script->bindings.trace(trc);
 
 #ifdef JS_TYPE_INFERENCE
-    if (script->types)
-        script->types->trace(trc);
+    types::TypeObject *obj = script->typeObjects;
+    while (obj) {
+        if (!obj->marked)
+            obj->trace(trc);
+        obj = obj->next;
+    }
 
     if (script->fun) {
         JS_SET_TRACING_NAME(trc, "script_fun");
         Mark(trc, script->fun);
-    }
-
-    if (script->parent) {
-        JS_SET_TRACING_NAME(trc, "script_parent");
-        js_TraceScript(trc, script->parent);
     }
 #endif
 }

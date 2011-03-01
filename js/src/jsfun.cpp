@@ -1235,7 +1235,7 @@ SetCallArg(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     JSScript *script = fun->script();
     if (script->types) {
         jstype type = GetValueType(cx, *vp);
-        TypeSet *types = script->types->argTypes(i);
+        TypeSet *types = script->argTypes(i);
         if (types && !types->hasType(type)) {
             InferSpew(ISpewDynamic, "AddCallProperty: #%u arg%u: %s",
                       script->id(), i, TypeString(type));
@@ -1329,7 +1329,7 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     JSScript *script = fun->script();
     if (script->types) {
         jstype type = GetValueType(cx, *vp);
-        TypeSet *types = script->types->localTypes(i);
+        TypeSet *types = script->localTypes(i);
         if (types && !types->hasType(type)) {
             InferSpew(ISpewDynamic, "AddCallProperty: #%u local%u: %s",
                       script->id(), i, TypeString(type));
@@ -2693,11 +2693,8 @@ Function(JSContext *cx, uintN argc, Value *vp)
     if (!chars)
         return JS_FALSE;
 
-    JSBool res = Compiler::compileFunctionBody(cx, fun, principals, &bindings,
-                                               chars, length, filename, lineno, cx->findVersion());
-    if (res && fun->u.i.script->compileAndGo)
-        fun->u.i.script->setTypeNesting(caller->script(), caller->pc(cx));
-    return res;
+    return Compiler::compileFunctionBody(cx, fun, principals, &bindings,
+                                         chars, length, filename, lineno, cx->findVersion());
 }
 
 namespace js {
@@ -2966,8 +2963,10 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
     uintN level = fun->u.i.script->staticLevel;
     JSUpvarArray *uva = fun->script()->upvars();
 
-    for (uint32 i = 0, n = uva->length; i < n; i++)
+    for (uint32 i = 0, n = uva->length; i < n; i++) {
         upvars[i] = GetUpvar(cx, level, uva->vector[i]);
+        fun->script()->typeSetUpvar(cx, i, upvars[i]);
+    }
 
     return closure;
 }

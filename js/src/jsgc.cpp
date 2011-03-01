@@ -1849,11 +1849,6 @@ js_DestroyScriptsToGC(JSContext *cx, JSCompartment *comp)
             *listp = script->u.nextToGC;
             script->u.nextToGC = NULL;
 
-#ifdef JS_TYPE_INFERENCE
-            // :FIXME: bug 613221
-            continue;
-#endif
-
             js_DestroyCachedScript(cx, script);
         }
     }

@@ -1313,10 +1313,6 @@ Print(JSContext *cx, uintN argc, jsval *vp)
     fputc('\n', gOutFile);
     fflush(gOutFile);
 
-    static int count = 0;
-    printf("COUNT %d\n", ++count);
-    fflush(stdout);
-
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }
