@@ -2140,10 +2140,15 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
       // This will destroy any old background sink and notify us that the
       // background is now unknown
       readback->SetSink(nsnull);
-      NS_ASSERTION(!mBackgroundSink, "Should have been cleared");
-
       readback->SetSize(nsIntSize(size.width, size.height));
 
+      if (mBackgroundSink) {
+        // Maybe we still have a background sink associated with another
+        // readback layer that wasn't recycled for some reason? Unhook it
+        // now so that if this frame goes away, it doesn't have a dangling
+        // reference to us.
+        mBackgroundSink->Destroy();
+      }
       mBackgroundSink =
         new PluginBackgroundSink(this,
                                  readback->AllocateSequenceNumber());
