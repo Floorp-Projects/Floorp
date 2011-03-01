@@ -5242,6 +5242,7 @@ ConsoleUtils = {
     if (lastMessage &&
         aNode.childNodes[2].textContent ==
         lastMessage.childNodes[2].textContent) {
+      this.mergeFilteredMessageNode(lastMessage, aNode);
       return true;
     }
 
