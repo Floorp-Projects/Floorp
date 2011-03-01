@@ -72,8 +72,8 @@ ifndef NO_DIST_INSTALL
 	$(EXIT_ON_ERROR) \
 	HERE=$(CURDIR); \
 	cd $(srcdir)/modules; \
-	dirs=$$(find * -type d); \
-	files=$$(find * -type f); \
+	dirs=`find * -type d`; \
+	files=`find * -type f`; \
 	cd $$HERE; \
 	for d in $$dirs; do \
 		$(PYTHON) $(topsrcdir)/config/nsinstall.py -D $(FINAL_TARGET)/modules/services-sync/$$d; \
