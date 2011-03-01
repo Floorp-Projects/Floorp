@@ -4281,9 +4281,6 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     if (!FUN_FLAT_CLOSURE(fun))
         return CloneFunctionObject(cx, fun, parent);
 
-    /* Throw away all inferred types about upvars in this script and its children. */
-    fun->script()->nukeUpvarTypes(cx);
-
     /*
      * A flat closure carries its own environment, so why clone it? In case
      * someone wants to mutate its fixed slots or add ad-hoc properties. API
@@ -4315,9 +4312,11 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
             }
             obj = obj->getParent();
         }
-
-        if (!obj->getProperty(cx, r.front().id, clone->getFlatClosureUpvars() + i))
+        Value v;
+        if (!obj->getProperty(cx, r.front().id, &v))
             return NULL;
+        fun->script()->typeSetUpvar(cx, i, v);
+        clone->getFlatClosureUpvars()[i] = v;
     }
 
     return clone;
@@ -4413,7 +4412,7 @@ JS_TypeHandlerNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 
     TypeSet *prototypeTypes =
         fun->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), true);
-    prototypeTypes->addNewObject(cx, fun, site->returnTypes);
+    prototypeTypes->addNewObject(cx, site->script, fun, site->returnTypes);
 #endif
 }
 
@@ -4427,7 +4426,7 @@ JS_TypeHandlerThis(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
         if (site->isNew)
             site->returnTypes->addType(cx, TYPE_UNKNOWN);
         if (site->thisTypes)
-            site->thisTypes->addSubset(cx, site->pool(), site->returnTypes);
+            site->thisTypes->addSubset(cx, site->script, site->returnTypes);
         else
             site->returnTypes->addType(cx, site->thisType);
     }
@@ -5173,14 +5172,11 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
         LAST_FRAME_CHECKS(cx, script);
         return false;
     }
+    script->isUncachedEval = true;
+
     JS_ASSERT(script->getVersion() == compileVersion);
     bool ok = Execute(cx, obj, script, NULL, 0, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
-
-#ifdef JS_TYPE_INFERENCE
-    // Don't destroy the script yet :FIXME: bug 613221
-    return ok;
-#endif
 
     js_DestroyScript(cx, script);
     return ok;

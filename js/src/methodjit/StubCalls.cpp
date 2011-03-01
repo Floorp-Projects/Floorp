@@ -408,7 +408,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
     f.regs.sp[-1] = rval;
 
     if (rval.isUndefined())
-        f.script()->typeMonitorUndefined(cx, f.regs.pc, 0);
+        f.script()->typeMonitorUndefined(cx, f.regs.pc);
 
     if (callname) {
         Class *clasp;
@@ -516,10 +516,12 @@ stubs::GetElem(VMFrame &f)
 
   end_getelem:
     f.regs.sp[-2] = *copyFrom;
-    if (copyFrom->isUndefined() || !rref.isInt32()) {
-        if (rref.isInt32())
-            cx->addTypeProperty(obj->getType(), NULL, TYPE_UNDEFINED);
-        f.script()->typeMonitorResult(cx, regs.pc, 0, *copyFrom);
+
+    if (!rref.isInt32()) {
+        f.script()->typeMonitorUnknown(cx, regs.pc);
+    } else if (copyFrom->isUndefined()) {
+        cx->addTypeProperty(obj->getType(), NULL, TYPE_UNDEFINED);
+        f.script()->typeMonitorUndefined(cx, regs.pc);
     }
 }
 
@@ -567,7 +569,7 @@ stubs::CallElem(VMFrame &f)
         regs.sp[-1] = thisv;
     }
     if (regs.sp[-2].isUndefined() || !JSID_IS_INT(id))
-        f.script()->typeMonitorResult(cx, regs.pc, 0, regs.sp[-2]);
+        f.script()->typeMonitorUnknown(cx, regs.pc);
 }
 
 template<JSBool strict>
@@ -717,7 +719,7 @@ stubs::Ursh(VMFrame &f)
     u >>= (j & 31);
 
 	if (!f.regs.sp[-2].setNumber(uint32(u)))
-        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
+        f.script()->typeMonitorOverflow(f.cx, f.regs.pc);
 }
 
 template<JSBool strict>
@@ -1046,7 +1048,7 @@ MonitorArithmeticOverflow(VMFrame &f, const Value &v)
     JSContext *cx = f.cx;
 
     JS_ASSERT(v.isDouble());
-    f.script()->typeMonitorOverflow(cx, f.regs.pc, 0);
+    f.script()->typeMonitorOverflow(cx, f.regs.pc);
 
     /*
      * Monitoring the overflow is not enough for fused INC operations on NAME/PROP,
@@ -1192,7 +1194,7 @@ stubs::Mul(VMFrame &f)
     }
     double d = d1 * d2;
     if (!regs.sp[-2].setNumber(d))
-        f.script()->typeMonitorOverflow(cx, f.regs.pc, 0);
+        f.script()->typeMonitorOverflow(cx, f.regs.pc);
 }
 
 void JS_FASTCALL
@@ -1222,11 +1224,11 @@ stubs::Div(VMFrame &f)
         else
             vp = &rt->positiveInfinityValue;
         regs.sp[-2] = *vp;
-        f.script()->typeMonitorOverflow(cx, f.regs.pc, 0);
+        f.script()->typeMonitorOverflow(cx, f.regs.pc);
     } else {
         d1 /= d2;
         if (!regs.sp[-2].setNumber(d1))
-            f.script()->typeMonitorOverflow(cx, f.regs.pc, 0);
+            f.script()->typeMonitorOverflow(cx, f.regs.pc);
     }
 }
 
@@ -1255,7 +1257,7 @@ stubs::Mod(VMFrame &f)
             d1 = js_fmod(d1, d2);
             regs.sp[-2].setDouble(d1);
         }
-        f.script()->typeMonitorOverflow(cx, f.regs.pc, 0);
+        f.script()->typeMonitorOverflow(cx, f.regs.pc);
     }
 }
 
@@ -1368,7 +1370,7 @@ stubs::Neg(VMFrame &f)
         THROW();
     d = -d;
     if (!f.regs.sp[-1].setNumber(d))
-        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
+        f.script()->typeMonitorOverflow(f.cx, f.regs.pc);
 }
 
 JSObject * JS_FASTCALL
@@ -1458,7 +1460,7 @@ stubs::GetUpvar(VMFrame &f, uint32 ck)
     f.regs.sp[0] = GetUpvar(f.cx, staticLevel, cookie);
 
     if (f.regs.sp[0].isUndefined())
-        f.script()->typeMonitorUndefined(f.cx, f.regs.pc, 0);
+        f.script()->typeMonitorUndefined(f.cx, f.regs.pc);
 }
 
 JSObject * JS_FASTCALL
@@ -1672,7 +1674,7 @@ ObjIncOp(VMFrame &f, JSObject *obj, jsid id)
             ref.setNumber(d);
         }
         if (!v.setNumber(d)) {
-            f.script()->typeMonitorOverflow(cx, f.regs.pc, 0);
+            f.script()->typeMonitorOverflow(cx, f.regs.pc);
             cx->addTypePropertyId(obj->getType(), id, TYPE_DOUBLE);
         }
         f.script()->typeMonitorAssign(cx, f.regs.pc, obj, id, v);
@@ -2005,7 +2007,7 @@ InlineGetProp(VMFrame &f)
     } while(0);
 
     if (rval.isUndefined())
-        f.script()->typeMonitorUndefined(cx, regs.pc, 0);
+        f.script()->typeMonitorUndefined(cx, regs.pc);
 
     regs.sp[-1] = rval;
     return true;
@@ -2126,7 +2128,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
     }
 #endif
     if (rval.isUndefined())
-        f.script()->typeMonitorUndefined(cx, regs.pc, 0);
+        f.script()->typeMonitorUndefined(cx, regs.pc);
 }
 
 void JS_FASTCALL
@@ -2607,7 +2609,7 @@ stubs::Pos(VMFrame &f)
     if (!ValueToNumber(f.cx, &f.regs.sp[-1]))
         THROW();
     if (!f.regs.sp[-1].isInt32())
-        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
+        f.script()->typeMonitorOverflow(f.cx, f.regs.pc);
 }
 
 void JS_FASTCALL
@@ -2770,14 +2772,14 @@ template void JS_FASTCALL stubs::DelElem<false>(VMFrame &f);
 void JS_FASTCALL
 stubs::UndefinedHelper(VMFrame &f)
 {
-    f.script()->typeMonitorUndefined(f.cx, f.regs.pc, 0);
+    f.script()->typeMonitorUndefined(f.cx, f.regs.pc);
     f.regs.sp[-1].setUndefined();
 }
 
 void JS_FASTCALL
 stubs::NegZeroHelper(VMFrame &f)
 {
-    f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
+    f.script()->typeMonitorOverflow(f.cx, f.regs.pc);
     f.regs.sp[-1].setDouble(-0.0);
 }
 

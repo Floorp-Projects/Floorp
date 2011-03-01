@@ -3113,7 +3113,7 @@ static void array_TypeSort(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite 
     if (site->returnTypes) {
         if (site->isNew)
             site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        site->thisTypes->addSubset(cx, site->pool(), site->returnTypes);
+        site->thisTypes->addSubset(cx, site->script, site->returnTypes);
     }
 #endif
 }
@@ -3167,7 +3167,7 @@ static void array_TypeSplice(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
         /* Treat the returned array the same as the 'this' array. */
         if (site->isNew)
             site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        site->thisTypes->addSubset(cx, site->pool(), site->returnTypes);
+        site->thisTypes->addSubset(cx, site->script, site->returnTypes);
     }
 
     /* All arguments beyond the first two are new array elements. */
@@ -3399,7 +3399,7 @@ static void array_TypeNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *
     // in the Array native itself.
     if (site->argumentCount > 1) {
         for (size_t ind = 0; ind < site->argumentCount; ind++)
-            site->argumentTypes[ind]->addSubset(cx, site->pool(), indexTypes);
+            site->argumentTypes[ind]->addSubset(cx, site->script, indexTypes);
     }
 #endif
 }

@@ -1284,11 +1284,8 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
                                          linearStr, staticLevel);
         if (!script)
             return false;
+        script->isCachedEval = true;
     }
-
-    /* set where this script is nested, if there is a caller frame. */
-    if (callerFrame)
-        script->setTypeNesting(callerFrame->script(), callerFrame->pc(cx));
 
     assertSameCompartment(cx, scopeobj, script);
 

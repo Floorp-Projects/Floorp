@@ -129,6 +129,31 @@ TypeIsObject(jstype type)
 inline jstype GetValueType(JSContext *cx, const Value &val);
 
 /*
+ * Type inference memory management overview.
+ *
+ * Inference constructs a global web of constraints relating the contents of
+ * type sets particular to various scripts and type objects within a compartment.
+ * There are two issues at hand to manage inference memory: collecting
+ * the constraints, and collecting type sets (on TypeObject destruction).
+ *
+ * The constraints and types generated during analysis of a script depend entirely on
+ * that script's input type sets --- the types of its arguments, upvar locals,
+ * callee return values, object properties, and dynamic types (overflows, undefined
+ * reads, etc.). On a GC, we collect the analysis information for all scripts
+ * which have been analyzed, destroying the type constraints and intermediate
+ * type sets associated with stack values, and add new condensed constraints to
+ * the script's inputs which will trigger reanalysis and recompilation should
+ * that input change in the future.
+ *
+ * TypeObjects are collected when either the script they are associated with is
+ * destroyed or their prototype JSObject is destroyed.
+ *
+ * If a GC happens while we are in the middle of analysis or working with a TypeScript
+ * or TypeObject, we do not destroy/condense analysis information or collect any
+ * TypeObjects or JSScripts. This is controlled with AutoEnterTypeInference.
+ */
+
+/*
  * A constraint which listens to additions to a type set and propagates those
  * changes to other type sets.
  */
@@ -136,24 +161,27 @@ class TypeConstraint
 {
 public:
 #ifdef DEBUG
-    static unsigned constraintCount;
-    unsigned id_;
     const char *kind_;
-
-    unsigned id() const { return id_; }
     const char *kind() const { return kind_; }
 #else
-    unsigned id() const { return 0; }
     const char *kind() const { return NULL; }
 #endif
 
     /* Next constraint listening to the same type set. */
     TypeConstraint *next;
 
-    TypeConstraint(const char *kind) : next(NULL)
+    /*
+     * Script this constraint indicates an input for. If this constraint
+     * is not on an intermediate (script-local) type set, then during
+     * GC this will be replaced with a condensed input type constraint.
+     */
+    JSScript *script;
+
+    TypeConstraint(const char *kind, JSScript *script)
+        : next(NULL), script(script)
     {
+        JS_ASSERT(script);
 #ifdef DEBUG
-        this->id_ = ++constraintCount;
         this->kind_ = kind;
 #endif
     }
@@ -164,8 +192,25 @@ public:
     /*
      * Mark the object containing the set this constraint is listening to
      * as not a packed array and, possibly, not a dense array.
+     * This is only used for constraints attached to the index type set
+     * (JSID_VOID) of a TypeObject.
      */
     virtual void arrayNotPacked(JSContext *cx, bool notDense) {}
+
+    /*
+     * Whether this is an input type constraint condensed from the original
+     * constraints generated during analysis of the associated script.
+     * If this type set changes then the script will be reanalyzed/recompiled
+     * should the type set change at all in the future.
+     */
+    virtual bool condensed() { return false; }
+
+    /*
+     * If this is a persistent subset constraint, the object being propagated
+     * into. Such constraints describe relationships between TypeObject
+     * properties which are independent of the analysis of any script.
+     */
+    virtual TypeObject * baseSubset() { return NULL; }
 };
 
 /*
@@ -193,18 +238,6 @@ enum ObjectKind {
 /* Information about the set of types associated with an lvalue. */
 struct TypeSet
 {
-#ifdef DEBUG
-    static unsigned typesetCount;
-    unsigned id_;
-
-    /* Pool containing this type set.  All constraints must also be in this pool. */
-    JSArenaPool *pool;
-
-    unsigned id() const { return id_; }
-#else
-    unsigned id() const { return 0; }
-#endif
-
     /* Flags for the possible coarse types in this set. */
     TypeFlags typeFlags;
 
@@ -215,19 +248,9 @@ struct TypeSet
     /* Chain of constraints which propagate changes out from this type set. */
     TypeConstraint *constraintList;
 
-    TypeSet(JSArenaPool *pool)
+    TypeSet()
         : typeFlags(0), objectSet(NULL), objectCount(0), constraintList(NULL)
-    {
-        setPool(pool);
-    }
-
-    void setPool(JSArenaPool *pool)
-    {
-#if defined DEBUG && defined JS_TYPE_INFERENCE
-        this->id_ = ++typesetCount;
-        this->pool = pool;
-#endif
-    }
+    {}
 
     void print(JSContext *cx);
 
@@ -244,7 +267,7 @@ struct TypeSet
 
     /* Add specific kinds of constraints to this set. */
     inline void add(JSContext *cx, TypeConstraint *constraint, bool callExisting = true);
-    void addSubset(JSContext *cx, JSArenaPool &pool, TypeSet *target);
+    void addSubset(JSContext *cx, JSScript *script, TypeSet *target);
     void addGetProperty(JSContext *cx, JSScript *script, const jsbytecode *pc,
                         TypeSet *target, jsid id);
     void addSetProperty(JSContext *cx, JSScript *script, const jsbytecode *pc,
@@ -253,14 +276,17 @@ struct TypeSet
                     TypeSet *object, TypeSet *target);
     void addSetElem(JSContext *cx, JSScript *script, const jsbytecode *pc,
                     TypeSet *object, TypeSet *target);
-    void addNewObject(JSContext *cx, TypeFunction *fun, TypeSet *target);
+    void addNewObject(JSContext *cx, JSScript *script, TypeFunction *fun, TypeSet *target);
     void addCall(JSContext *cx, TypeCallsite *site);
-    void addArith(JSContext *cx, JSArenaPool &pool,
+    void addArith(JSContext *cx, JSScript *script,
                   TypeSet *target, TypeSet *other = NULL);
     void addTransformThis(JSContext *cx, JSScript *script, TypeSet *target);
-    void addFilterPrimitives(JSContext *cx, JSArenaPool &pool,
+    void addFilterPrimitives(JSContext *cx, JSScript *script,
                              TypeSet *target, bool onlyNullVoid);
-    void addMonitorRead(JSContext *cx, JSArenaPool &pool, TypeSet *target);
+    void addMonitorRead(JSContext *cx, JSScript *script, TypeSet *target);
+
+    void addBaseSubset(JSContext *cx, TypeObject *object, TypeSet *target);
+    void addCondensed(JSContext *cx, JSScript *script);
 
     /*
      * Make an intermediate type set with the specified debugging name,
@@ -296,8 +322,8 @@ struct Property
     /* Types for this property resulting from direct sets on the object. */
     TypeSet ownTypes;
 
-    Property(JSArenaPool *pool, jsid id)
-        : id(id), types(pool), ownTypes(pool)
+    Property(jsid id)
+        : id(id)
     {}
 
     static uint32 keyBits(jsid id) { return (uint32) JSID_BITS(id); }
@@ -347,10 +373,9 @@ struct TypeObject
     TypeObject *instanceNext;
 
     /*
-     * Pool in which this object was allocated, and link in the list of objects
-     * for that pool.
+     * Link in the list of objects associated with a script or global object.
+     * For printing and tracking initializer objects (remove?).
      */
-    JSArenaPool *pool;
     TypeObject *next;
 
     /* Whether all the properties of this object are unknown. */
@@ -365,7 +390,7 @@ struct TypeObject
     TypeObject() {}
 
     /* Make an object with the specified name. */
-    inline TypeObject(JSArenaPool *pool, jsid id, JSObject *proto);
+    inline TypeObject(jsid id, JSObject *proto);
 
     /* Coerce this object to a function. */
     TypeFunction* asFunction()
@@ -424,19 +449,13 @@ struct TypeFunction : public TypeObject
     JSScript *script;
 
     /*
-     * For interpreted functions and functions with dynamic handlers, the possible
-     * return types of the function.
-     */
-    TypeSet returnTypes;
-
-    /*
      * Whether this is a generic native handler, and treats its first parameter
      * the way it normally would its 'this' variable, e.g. Array.reverse(arr)
      * instead of arr.reverse().
      */
     bool isGeneric;
 
-    inline TypeFunction(JSArenaPool *pool, jsid id, JSObject *proto);
+    inline TypeFunction(jsid id, JSObject *proto);
 };
 
 /*
@@ -475,10 +494,27 @@ struct TypeCallsite
     /* Get the new object at this callsite. */
     inline TypeObject* getInitObject(JSContext *cx, bool isArray);
 
-    /* Pool which handlers on this call site should use. */
-    inline JSArenaPool & pool();
-
     inline bool compileAndGo();
+};
+
+/*
+ * Type information about a dynamic value pushed by a script's opcode.
+ * These are associated with each JSScript and persist after the
+ * TypeScript is destroyed by GCs.
+ */
+struct TypeResult
+{
+    /*
+     * Offset pushing the value. TypeResults are only generated for
+     * the first stack slot actually pushed by a bytecode.
+     */
+    uint32 offset;
+
+    /* Type which was pushed. */
+    jstype type;
+
+    /* Next dynamic result for the script. */
+    TypeResult *next;
 };
 
 /* Type information for a script, result of AnalyzeTypes. */
@@ -489,24 +525,16 @@ struct TypeScript
 #endif
 
     /*
-     * Pool into which type sets, constraints, and type objects associated with this
-     * script are allocated.
+     * Pool into which intermediate type sets and all type constraints are allocated
+     * during analysis of the script.
      */
     JSArenaPool pool;
-    TypeObject *objects;
 
     /*
      * Stack values pushed by all bytecodes in the script. Low bit is set for
      * bytecodes which are monitored (side effects were not determined statically).
      */
     TypeSet **pushedArray;
-
-    /* Types of the 'this' variable, arguments and locals in this script. */
-    TypeSet thisTypes;
-    TypeSet *argTypes_;
-    TypeSet *localTypes_;
-
-    void nukeUpvarTypes(JSContext *cx, JSScript *script);
 
     /* Gather statistics off this script and print it if necessary. */
     void finish(JSContext *cx, JSScript *script);
@@ -518,26 +546,22 @@ struct TypeScript
     inline TypeSet *pushed(uint32 offset, uint32 index);
 
     inline void addType(JSContext *cx, uint32 offset, uint32 index, jstype type);
-
-    inline TypeSet *argTypes(uint32 arg);
-    inline TypeSet *localTypes(uint32 local);
-
-    void trace(JSTracer *trc);
-    void sweep(JSContext *cx);
 };
 
 /* Analyzes all types in script, constructing its TypeScript. */
-void AnalyzeTypes(JSContext *cx, JSScript *script);
+void AnalyzeScriptTypes(JSContext *cx, JSScript *script);
+
+/* Destroy the TypeScript associated with a script. */
+void DestroyScriptTypes(JSContext *cx, JSScript *script);
 
 /* Type information for a compartment. */
 struct TypeCompartment
 {
-    /*
-     * Pool for compartment-wide objects and their variables and constraints.
-     * These aren't collected until the compartment is destroyed.
-     */
-    JSArenaPool pool;
+    /* List of objects not associated with a script. */
     TypeObject *objects;
+
+    /* Number of active instances of AutoEnterTypeInference. */
+    unsigned inferenceDepth;
 
     /* Number of scripts in this compartment. */
     unsigned scriptCount;
@@ -592,7 +616,6 @@ struct TypeCompartment
     unsigned recompilations;
 
     void init();
-    ~TypeCompartment();
 
     uint64 currentTime()
     {
@@ -608,7 +631,7 @@ struct TypeCompartment
 
     /* Add a type to register with a list of constraints. */
     inline void addPending(JSContext *cx, TypeConstraint *constraint, TypeSet *source, jstype type);
-    void growPendingArray();
+    void growPendingArray(JSContext *cx);
 
     /* Resolve pending type registrations, excluding delayed ones. */
     inline void resolvePending(JSContext *cx);
@@ -617,7 +640,7 @@ struct TypeCompartment
     void finish(JSContext *cx, JSCompartment *compartment);
 
     /* Make a function or non-function object associated with an optional script. */
-    TypeObject *newTypeObject(JSContext *cx, TypeScript *script,
+    TypeObject *newTypeObject(JSContext *cx, JSScript *script,
                               const char *name, bool isFunction, JSObject *proto);
 
 #ifdef JS_TYPE_INFERENCE
@@ -631,8 +654,7 @@ struct TypeCompartment
      * stemming from the change and recompile any affected scripts.
      */
     void addDynamicType(JSContext *cx, TypeSet *types, jstype type);
-    void addDynamicPush(JSContext *cx, JSScript *script, uint32 offset,
-                        unsigned index, jstype type);
+    void addDynamicPush(JSContext *cx, JSScript *script, uint32 offset, jstype type);
     void dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Value &rval);
 
     inline bool hasPendingRecompiles() { return pendingRecompiles != NULL; }
@@ -641,9 +663,10 @@ struct TypeCompartment
 
     /* Monitor future effects on a bytecode. */
     void monitorBytecode(JSContext *cx, JSScript *script, uint32 offset);
-
-    void sweep(JSContext *cx);
 };
+
+void CondenseTypeObjectList(JSContext *cx, TypeObject *objects);
+void SweepTypeObjectList(JSContext *cx, TypeObject *&objects);
 
 enum SpewChannel {
     ISpewDynamic,  /* dynamic: Dynamic type changes and inference entry points. */
