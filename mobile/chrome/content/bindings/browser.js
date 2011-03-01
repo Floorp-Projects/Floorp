@@ -194,6 +194,8 @@ let DOMEvents =  {
         break;
 
       case "pageshow":
+        if (aEvent.persisted)
+          ContentScroll.sendScroll();
       case "pagehide": {
         if (aEvent.target.defaultView != content)
           break;
@@ -353,12 +355,7 @@ let ContentScroll =  {
         if (doc != content.document)
           break;
 
-        let scrollOffset = this.getScrollOffset(content);
-        if (this._scrollOffset.x == scrollOffset.x && this._scrollOffset.y == scrollOffset.y)
-          break;
-
-        this._scrollOffset = scrollOffset;
-        sendAsyncMessage("scroll", scrollOffset);
+        this.sendScroll();
         break;
       }
 
@@ -384,6 +381,15 @@ let ContentScroll =  {
         break;
       }
     }
+  },
+
+  sendScroll: function sendScroll() {
+    let scrollOffset = this.getScrollOffset(content);
+    if (this._scrollOffset.x == scrollOffset.x && this._scrollOffset.y == scrollOffset.y)
+      return;
+
+    this._scrollOffset = scrollOffset;
+    sendAsyncMessage("scroll", scrollOffset);
   }
 };
 
