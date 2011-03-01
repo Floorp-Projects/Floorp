@@ -179,6 +179,15 @@ parent:
     // nsIPermissionManager messages
     sync ReadPermissions() returns (Permission[] permissions);
 
+    // These clipboard methods are only really used on Android since
+    // the clipboard is not available in the content process.
+    SetClipboardText(nsString text, PRInt32 whichClipboard);
+    sync GetClipboardText(PRInt32 whichClipboard)
+        returns (nsString text);
+    EmptyClipboard();
+    sync ClipboardHasText()
+        returns (PRBool hasText);
+
 both:
      AsyncMessage(nsString aMessage, nsString aJSON);
 
