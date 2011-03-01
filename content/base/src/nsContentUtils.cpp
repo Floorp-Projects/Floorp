@@ -183,6 +183,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIPluginHost.h"
 #include "nsICategoryManager.h"
 #include "nsAHtml5FragmentParser.h"
+#include "nsIViewManager.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -6337,6 +6338,21 @@ nsContentUtils::PlatformToDOMLineBreaks(nsString &aString)
   }
 }
 
+static nsIView* GetDisplayRootFor(nsIView* aView)
+{
+  nsIView *displayRoot = aView;
+  for (;;) {
+    nsIView *displayParent = displayRoot->GetParent();
+    if (!displayParent)
+      return displayRoot;
+
+    if (displayRoot->GetFloating() && !displayParent->GetFloating())
+      return displayRoot;
+    displayRoot = displayParent;
+  }
+  return nsnull;
+}
+
 static already_AddRefed<LayerManager>
 LayerManagerForDocumentInternal(nsIDocument *aDoc, bool aRequirePersistent)
 {
@@ -6367,22 +6383,26 @@ LayerManagerForDocumentInternal(nsIDocument *aDoc, bool aRequirePersistent)
   }
 
   if (shell) {
-    nsIFrame* rootFrame = shell->FrameManager()->GetRootFrame();
-    if (rootFrame) {
-      nsIWidget* widget =
-        nsLayoutUtils::GetDisplayRootFrame(rootFrame)->GetNearestWidget();
-      if (widget) {
-        nsRefPtr<LayerManager> manager =
-          static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget)->
-            GetLayerManager(aRequirePersistent ? nsIWidget_MOZILLA_2_0_BRANCH::LAYER_MANAGER_PERSISTENT : 
-                                                 nsIWidget_MOZILLA_2_0_BRANCH::LAYER_MANAGER_CURRENT);
-        return manager.forget();
+    nsIViewManager* VM = shell->GetViewManager();
+    if (VM) {
+      nsIView* rootView = nsnull;
+      if (NS_SUCCEEDED(VM->GetRootView(rootView)) && rootView) {
+        nsIView* displayRoot = GetDisplayRootFor(rootView);
+        if (displayRoot) {
+          nsIWidget* widget = displayRoot->GetNearestWidget(nsnull);
+          if (widget) {
+            nsRefPtr<LayerManager> manager =
+              static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget)->
+                GetLayerManager(aRequirePersistent ? nsIWidget_MOZILLA_2_0_BRANCH::LAYER_MANAGER_PERSISTENT : 
+                                                     nsIWidget_MOZILLA_2_0_BRANCH::LAYER_MANAGER_CURRENT);
+            return manager.forget();
+          }
+        }
       }
     }
   }
 
-  nsRefPtr<LayerManager> manager = new BasicLayerManager();
-  return manager.forget();
+  return nsnull;
 }
 
 already_AddRefed<LayerManager>
