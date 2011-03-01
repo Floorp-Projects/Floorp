@@ -180,55 +180,96 @@ WrapRotationAxis(PRInt32* aRotationPoint, PRInt32 aSize)
 
 ThebesLayerBuffer::PaintState
 ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
-                              float aXResolution, float aYResolution)
+                              float aXResolution, float aYResolution,
+                              PRUint32 aFlags)
 {
   PaintState result;
-
-  result.mRegionToDraw.Sub(aLayer->GetVisibleRegion(), aLayer->GetValidRegion());
-
   float curXRes = aLayer->GetXResolution();
   float curYRes = aLayer->GetYResolution();
-  if (mBuffer &&
-      (aContentType != mBuffer->GetContentType() ||
-       aXResolution != curXRes || aYResolution != curYRes)) {
-    // We're effectively clearing the valid region, so we need to draw
-    // the entire visible region now.
-    //
-    // XXX/cjones: a possibly worthwhile optimization to keep in mind
-    // is to re-use buffers when the resolution and visible region
-    // have changed in such a way that the buffer size stays the same.
-    // It might make even more sense to allocate buffers from a
-    // recyclable pool, so that we could keep this logic simple and
-    // still get back the same buffer.
-    result.mRegionToDraw = aLayer->GetVisibleRegion();
-    result.mRegionToInvalidate = aLayer->GetValidRegion();
-    Clear();
+
+  nsIntRegion validRegion = aLayer->GetValidRegion();
+
+  ContentType contentType;
+  nsIntRegion neededRegion;
+  nsIntSize destBufferDims;
+  PRBool canReuseBuffer;
+  nsIntRect destBufferRect;
+
+  while (PR_TRUE) {
+    contentType = aContentType;
+    neededRegion = aLayer->GetVisibleRegion();
+    destBufferDims = ScaledSize(neededRegion.GetBounds().Size(),
+                                aXResolution, aYResolution);
+    canReuseBuffer = BufferSizeOkFor(destBufferDims);
+
+    if (canReuseBuffer) {
+      if (mBufferRect.Contains(neededRegion.GetBounds())) {
+        // We don't need to adjust mBufferRect.
+        destBufferRect = mBufferRect;
+      } else {
+        // The buffer's big enough but doesn't contain everything that's
+        // going to be visible. We'll move it.
+        destBufferRect = nsIntRect(neededRegion.GetBounds().TopLeft(), mBufferRect.Size());
+      }
+    } else {
+      destBufferRect = neededRegion.GetBounds();
+    }
+
+    if ((aFlags & PAINT_WILL_RESAMPLE) &&
+        (neededRegion.GetBounds() != destBufferRect ||
+         neededRegion.GetNumRects() > 1)) {
+      // The area we add to neededRegion might not be painted opaquely
+      contentType = gfxASurface::CONTENT_COLOR_ALPHA;
+
+      // We need to validate the entire buffer, to make sure that only valid
+      // pixels are sampled
+      neededRegion = destBufferRect;
+      destBufferDims = ScaledSize(neededRegion.GetBounds().Size(),
+                                  aXResolution, aYResolution);
+    }
+
+    if (mBuffer &&
+        (contentType != mBuffer->GetContentType() ||
+         aXResolution != curXRes || aYResolution != curYRes)) {
+      // We're effectively clearing the valid region, so we need to draw
+      // the entire needed region now.
+      //
+      // XXX/cjones: a possibly worthwhile optimization to keep in mind
+      // is to re-use buffers when the resolution and visible region
+      // have changed in such a way that the buffer size stays the same.
+      // It might make even more sense to allocate buffers from a
+      // recyclable pool, so that we could keep this logic simple and
+      // still get back the same buffer.
+      result.mRegionToInvalidate = aLayer->GetValidRegion();
+      validRegion.SetEmpty();
+      Clear();
+      // Restart decision process with the cleared buffer. We can only go
+      // around the loop one more iteration, since mBuffer is null now.
+      continue;
+    }
+
+    break;
   }
 
+  result.mRegionToDraw.Sub(neededRegion, validRegion);
   if (result.mRegionToDraw.IsEmpty())
     return result;
+
+  // If we have non-identity resolution then mBufferRotation might not fall
+  // on a buffer pixel boundary, in which case that row of pixels will contain
+  // a mix of two completely different rows of the layer, which would be
+  // a catastrophe. So disable rotation in that case.
+  // We also need to disable rotation if we're going to be resampled when
+  // drawing, because we might sample across the rotation boundary.
+  PRBool canHaveRotation =
+    !(aFlags & PAINT_WILL_RESAMPLE) && aXResolution == 1.0 && aYResolution == 1.0;
   nsIntRect drawBounds = result.mRegionToDraw.GetBounds();
-
-  nsIntRect visibleBounds = aLayer->GetVisibleRegion().GetBounds();
-  nsIntSize destBufferDims = ScaledSize(visibleBounds.Size(),
-                                        aXResolution, aYResolution);
   nsRefPtr<gfxASurface> destBuffer;
-  nsIntRect destBufferRect;
   PRBool bufferDimsChanged = PR_FALSE;
-
-  if (BufferSizeOkFor(destBufferDims)) {
+  if (canReuseBuffer) {
     NS_ASSERTION(curXRes == aXResolution && curYRes == aYResolution,
                  "resolution changes must Clear()!");
 
-    // The current buffer is big enough to hold the visible area.
-    if (mBufferRect.Contains(visibleBounds)) {
-      // We don't need to adjust mBufferRect.
-      destBufferRect = mBufferRect;
-    } else {
-      // The buffer's big enough but doesn't contain everything that's
-      // going to be visible. We'll move it.
-      destBufferRect = nsIntRect(visibleBounds.TopLeft(), mBufferRect.Size());
-    }
     nsIntRect keepArea;
     if (keepArea.IntersectRect(destBufferRect, mBufferRect)) {
       // Set mBufferRotation so that the pixels currently in mBuffer
@@ -243,7 +284,8 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
       PRInt32 xBoundary = destBufferRect.XMost() - newRotation.x;
       PRInt32 yBoundary = destBufferRect.YMost() - newRotation.y;
       if ((drawBounds.x < xBoundary && xBoundary < drawBounds.XMost()) ||
-          (drawBounds.y < yBoundary && yBoundary < drawBounds.YMost())) {
+          (drawBounds.y < yBoundary && yBoundary < drawBounds.YMost()) ||
+          (newRotation != nsIntPoint(0,0) && !canHaveRotation)) {
         // The stuff we need to redraw will wrap around an edge of the
         // buffer, so we will need to do a self-copy
         if (mBuffer->SupportsSelfCopy() && mBufferRotation == nsIntPoint(0,0)) {
@@ -251,11 +293,9 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
         } else {
           // We can't do a real self-copy because the buffer is rotated.
           // So allocate a new buffer for the destination.
-          destBufferRect = visibleBounds;
-          destBufferDims = ScaledSize(destBufferRect.Size(),
-                                      aXResolution, aYResolution);
+          destBufferRect = neededRegion.GetBounds();
           bufferDimsChanged = PR_TRUE;
-          destBuffer = CreateBuffer(aContentType, destBufferDims);
+          destBuffer = CreateBuffer(contentType, destBufferDims);
           if (!destBuffer)
             return result;
         }
@@ -272,14 +312,14 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
     }
   } else {
     // The buffer's not big enough, so allocate a new one
-    destBufferRect = visibleBounds;
-    destBufferDims = ScaledSize(destBufferRect.Size(),
-                                aXResolution, aYResolution);
+    destBufferRect = neededRegion.GetBounds();
     bufferDimsChanged = PR_TRUE;
-    destBuffer = CreateBuffer(aContentType, destBufferDims);
+    destBuffer = CreateBuffer(contentType, destBufferDims);
     if (!destBuffer)
       return result;
   }
+  NS_ASSERTION(!(aFlags & PAINT_WILL_RESAMPLE) || destBufferRect == neededRegion.GetBounds(),
+               "If we're resampling, we need to validate the entire buffer");
 
   // If we have no buffered data already, then destBuffer will be a fresh buffer
   // and we do not need to clear it below.
@@ -305,6 +345,8 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
   if (bufferDimsChanged) {
     mBufferDims = destBufferDims;
   }
+  NS_ASSERTION(canHaveRotation || mBufferRotation == nsIntPoint(0,0),
+               "Rotation disabled, but we have nonzero rotation?");
 
   nsIntRegion invalidate;
   invalidate.Sub(aLayer->GetValidRegion(), destBufferRect);
@@ -314,7 +356,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
                                                 aXResolution, aYResolution);
 
   gfxUtils::ClipToRegionSnapped(result.mContext, result.mRegionToDraw);
-  if (aContentType == gfxASurface::CONTENT_COLOR_ALPHA && !isClear) {
+  if (contentType == gfxASurface::CONTENT_COLOR_ALPHA && !isClear) {
     result.mContext->SetOperator(gfxContext::OPERATOR_CLEAR);
     result.mContext->Paint();
     result.mContext->SetOperator(gfxContext::OPERATOR_OVER);
