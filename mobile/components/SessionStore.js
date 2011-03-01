@@ -199,7 +199,8 @@ SessionStore.prototype = {
         this._loadState = STATE_QUITTING;
 
         // No need for this back up, we are shutting down just fine
-        this._sessionFileBackup.remove(false);
+        if (this._sessionFileBackup.exists())
+          this._sessionFileBackup.remove(false);
 
         observerService.removeObserver(this, "domwindowopened");
         observerService.removeObserver(this, "domwindowclosed");
@@ -644,6 +645,8 @@ SessionStore.prototype = {
     let dirService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
     let session = dirService.get("ProfD", Ci.nsILocalFile);
     session.append("sessionstore.bak");
+    if (!session.exists())
+      return;
 
     let data = JSON.parse(this._readFile(session));
     if (!data || data.windows.length == 0) {
