@@ -661,11 +661,6 @@ ifeq (,$(filter BeOS HP-UX WINNT WINCE OpenVMS OS2,$(OS_ARCH)))
 EXTRA_LIBS	+= -lm
 endif
 
-# zlib is needed for recording executions in type inference
-ifdef JS_TYPE_INFERENCE
-EXTRA_LIBS      += -lz
-endif
-
 # Prevent floating point errors caused by VC++ optimizations
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 ifeq (,$(filter-out 1200 1300 1310,$(_MSC_VER)))

@@ -1125,6 +1125,8 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
     script = JSScript::NewScriptFromCG(cx, &cg);
     if (script && funbox)
         script->savedCallerFun = true;
+    if (script && cg.compilingForEval())
+        script->isCachedEval = true;
 
 #ifdef JS_SCOPE_DEPTH_METER
     if (script) {
@@ -1159,9 +1161,6 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
 bool
 Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script)
 {
-    if (!globalScope.defs.length())
-        return true;
-
     JSObject *globalObj = globalScope.globalObj;
 
     /* Define and update global properties. */
@@ -1183,6 +1182,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
              * optimizations only take place if the property is not defined.
              */
             rval.setObject(*fun);
+            cx->addTypePropertyId(globalObj->getType(), id, rval);
         } else {
             rval.setUndefined();
         }
@@ -1192,15 +1192,6 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
         if (!js_DefineNativeProperty(cx, globalObj, id, rval, PropertyStub, StrictPropertyStub,
                                      JSPROP_ENUMERATE | JSPROP_PERMANENT, 0, 0, &prop)) {
             return false;
-        }
-
-        if (!rval.isUndefined()) {
-            cx->addTypePropertyId(globalObj->getType(), id, rval);
-            if (rval.isObject() && rval.toObject().isFunction()) {
-                JSFunction *fun = rval.toObject().getFunctionPrivate();
-                if (fun->isInterpreted())
-                    fun->u.i.script->setTypeNesting(script, script->code);
-            }
         }
 
         JS_ASSERT(prop);
@@ -1224,7 +1215,11 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
 
         if (JSScript::isValidOffset(inner->objectsOffset)) {
             JSObjectArray *arr = inner->objects();
-            for (size_t i = 0; i < arr->length; i++) {
+
+            /* Skip any caller function entrained in the first object. */
+            size_t start = inner->savedCallerFun ? 1 : 0;
+
+            for (size_t i = start; i < arr->length; i++) {
                 JSObject *obj = arr->vector[i];
                 if (!obj->isFunction())
                     continue;

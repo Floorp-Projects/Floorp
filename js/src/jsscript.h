@@ -403,9 +403,12 @@ struct JSScript {
     bool            warnedAboutTwoArgumentEval:1; /* have warned about use of
                                                      obsolete eval(s, o) in
                                                      this script */
-    bool            dynamicScoping:1; /* script is dynamically scoped: uses
-                                       * 'with', 'let', DEFFUN or DEFVAR. */
     bool            hasSingletons:1;  /* script has singleton objects */
+    bool            isCachedEval:1;   /* script came from eval() */
+    bool            isUncachedEval:1; /* script came from EvaluateScript */
+#ifdef JS_TYPE_INFERENCE
+    bool            analyzed:1;       /* script has previously been analyzed */
+#endif
 #ifdef JS_METHODJIT
     bool            debugMode:1;      /* script was compiled in debug mode */
     bool            singleStepMode:1; /* compile script in single-step mode */
@@ -467,20 +470,36 @@ struct JSScript {
     /* Global object for this script, if compileAndGo. */
     JSObject *global;
 
-    /*
-     * Location where the definition of this script occurs, representing any
-     * nesting for scope lookups. NULL for global scripts.
-     */
-    JSScript *parent;
+    /* Lazily constructed types of rval/this/args/vars/upvars for this script. */
+    js::types::TypeSet *varTypes;
 
-    /* Type inference information for this script. */
+    /* Any type objects associated with this script, including initializer objects. */
+    js::types::TypeObject *typeObjects;
+
+    /* Any possibly unexpected values pushed by opcodes in this script. */
+    js::types::TypeResult *typeResults;
+
+    /* Results of type inference analysis for this script. Destroyed on GC. */
     js::types::TypeScript *types;
 
     inline JSObject *getGlobal();
     inline js::types::TypeObject *getGlobalType();
 
-    /* Whether this code is global or is in an eval called at global scope. */
-    bool isGlobal() { return !parent || (!fun && !parent->parent); }
+    /*
+     * Make sure there are type sets for variables in this script.
+     * After it has been called or executed, the script will have such sets.
+     */
+    inline bool ensureVarTypes(JSContext *cx);
+
+    inline js::types::TypeSet *returnTypes();
+    inline js::types::TypeSet *thisTypes();
+    inline js::types::TypeSet *argTypes(unsigned i);
+    inline js::types::TypeSet *localTypes(unsigned i);
+    inline js::types::TypeSet *upvarTypes(unsigned i);
+
+  private:
+    bool makeVarTypes(JSContext *cx);
+  public:
 
     /* Check that correct types were inferred for the values pushed by this bytecode. */
     void typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value *sp);
@@ -489,26 +508,19 @@ struct JSScript {
     inline js::types::TypeObject *getTypeNewObject(JSContext *cx, JSProtoKey key);
 #endif
 
-    /* Mark this script as having been created at the specified script/pc. */
-    inline void setTypeNesting(JSScript *parent, const jsbytecode *pc);
-
-    /*
-     * Throw away all upvar information in this script and its children, and detach from
-     * any parent it is nested in. For reparenting functions to arbitrary objects.
-     */
-    inline void nukeUpvarTypes(JSContext *cx);
+    void condenseTypes(JSContext *cx);
+    void sweepTypes(JSContext *cx);
 
     /* Get a type object for an allocation site in this script. */
     inline js::types::TypeObject *
     getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray);
 
     /* Monitor a bytecode pushing an unexpected value. */
-    inline void typeMonitorResult(JSContext *cx, const jsbytecode *pc, unsigned index,
-                                  js::types::jstype type);
-    inline void typeMonitorResult(JSContext *cx, const jsbytecode *pc, unsigned index,
-                                  const js::Value &rval);
-    inline void typeMonitorOverflow(JSContext *cx, const jsbytecode *pc, unsigned index);
-    inline void typeMonitorUndefined(JSContext *cx, const jsbytecode *pc, unsigned index);
+    inline void typeMonitorResult(JSContext *cx, const jsbytecode *pc, js::types::jstype type);
+    inline void typeMonitorResult(JSContext *cx, const jsbytecode *pc, const js::Value &val);
+    inline void typeMonitorUndefined(JSContext *cx, const jsbytecode *pc);
+    inline void typeMonitorOverflow(JSContext *cx, const jsbytecode *pc);
+    inline void typeMonitorUnknown(JSContext *cx, const jsbytecode *pc);
 
     /* Monitor a bytecode assigning to an object's property, if necessary. */
     inline void typeMonitorAssign(JSContext *cx, const jsbytecode *pc,
@@ -516,6 +528,9 @@ struct JSScript {
 
     /* Override the value of an argument to this script by assigning to arguments[...]. */
     inline void typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value);
+
+    /* Mark the value of a flat closure upvar in this script. */
+    inline void typeSetUpvar(JSContext *cx, unsigned upvar, const js::Value &value);
 
 #ifdef JS_METHODJIT
     // Fast-cached pointers to make calls faster. These are also used to

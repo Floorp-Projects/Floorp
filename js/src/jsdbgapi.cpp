@@ -1577,7 +1577,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
     if (!script)
         return false;
 
-    script->setTypeNesting(fp->script(), fp->pc(cx));
+    script->isUncachedEval = true;
     bool ok = Execute(cx, scobj, script, fp, JSFRAME_DEBUGGER | JSFRAME_EVAL, Valueify(rval));
 
     js_DestroyScript(cx, script);

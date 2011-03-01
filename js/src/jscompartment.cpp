@@ -484,6 +484,23 @@ JSCompartment::mark(JSTracer *trc)
         emptyEnumeratorShape->trace(trc);
     if (emptyWithShape)
         emptyWithShape->trace(trc);
+
+    if (types.inferenceDepth) {
+        /* Mark all scripts and type objects in the compartment. */ 
+
+        /* :FIXME: can this list contain scriptsToGC? */
+        for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
+            JSScript *script = reinterpret_cast<JSScript *>(cursor);
+            js_TraceScript(trc, script);
+        }
+
+        types::TypeObject *obj = types.objects;
+        while (obj) {
+            if (!obj->marked)
+                obj->trace(trc);
+            obj = obj->next;
+        }
+    }
 }
 
 void
@@ -505,13 +522,29 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
     traceMonitor.sweep(cx);
 #endif
 
+    if (!types.inferenceDepth) {
 #ifdef JS_TYPE_INFERENCE
-    for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
-        JSScript *script = reinterpret_cast<JSScript *>(cursor);
-        if (script->types)
-            script->types->sweep(cx);
-    }
+        for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
+            JSScript *script = reinterpret_cast<JSScript *>(cursor);
+            script->condenseTypes(cx);
+        }
+
+        types::CondenseTypeObjectList(cx, types.objects);
+
+        for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
+            JSScript *script = reinterpret_cast<JSScript *>(cursor);
+            script->sweepTypes(cx);
+        }
 #endif
+
+        types::SweepTypeObjectList(cx, types.objects);
+
+        /*
+         * Destroy eval'ed scripts, now that any type inference information referring
+         * to eval scripts has been removed.
+         */
+        js_DestroyScriptsToGC(cx, this);
+    }
 
 #if defined JS_METHODJIT && defined JS_MONOIC
 
@@ -546,7 +579,6 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 
 #endif
 
-    types.sweep(cx);
     active = false;
 }
 
@@ -555,9 +587,6 @@ JSCompartment::purge(JSContext *cx)
 {
     freeLists.purge();
     dtoaCache.purge();
-
-    /* Destroy eval'ed scripts. */
-    js_DestroyScriptsToGC(cx, this);
 
     nativeIterCache.purge();
     toSourceCache.clear();

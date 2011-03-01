@@ -61,26 +61,17 @@ void
 TypeCompartment::init()
 {
     PodZero(this);
-    JS_InitArenaPool(&pool, "typeinfer", 512, 8, NULL);
 
 #ifdef DEBUG
     emptyObject.name_ = JSID_VOID;
 #endif
     emptyObject.unknownProperties = true;
-    emptyObject.pool = &pool;
-}
-
-TypeCompartment::~TypeCompartment()
-{
-    JS_FinishArenaPool(&pool);
 }
 
 types::TypeObject *
-TypeCompartment::newTypeObject(JSContext *cx, types::TypeScript *script, const char *name,
+TypeCompartment::newTypeObject(JSContext *cx, JSScript *script, const char *name,
                                bool isFunction, JSObject *proto)
 {
-    JSArenaPool &pool = script ? script->pool : this->pool;
-
 #ifdef DEBUG
 #if 1 /* Define to get unique printed names, including when there are multiple globals. */
     static unsigned nameCount = 0;
@@ -95,13 +86,16 @@ TypeCompartment::newTypeObject(JSContext *cx, types::TypeScript *script, const c
 #endif
 
     TypeObject *object;
-    if (isFunction)
-        object = ArenaNew<TypeFunction>(pool, &pool, id, proto);
-    else
-        object = ArenaNew<TypeObject>(pool, &pool, id, proto);
+    if (isFunction) {
+        object = (TypeFunction *) cx->calloc(sizeof(TypeFunction));
+        new(object) TypeFunction(id, proto);
+    } else {
+        object = (TypeObject *) cx->calloc(sizeof(TypeObject));
+        new(object) TypeObject(id, proto);
+    }
 
 #ifdef JS_TYPE_INFERENCE
-    TypeObject *&objects = script ? script->objects : this->objects;
+    TypeObject *&objects = script ? script->typeObjects : this->objects;
     object->next = objects;
     objects = object;
 #else
@@ -128,7 +122,7 @@ TypeCompartment::newInitializerTypeObject(JSContext *cx, JSScript *script,
     if (!js_GetClassPrototype(cx, script->getGlobal(), key, &proto, NULL))
         return NULL;
 
-    TypeObject *res = newTypeObject(cx, script->types, name, false, proto);
+    TypeObject *res = newTypeObject(cx, script, name, false, proto);
     if (isArray)
         res->initializerArray = true;
     else
@@ -229,6 +223,7 @@ JSObject::makeNewType(JSContext *cx)
 /////////////////////////////////////////////////////////////////////
 
 namespace js {
+namespace types {
 
 void
 types::TypeObject::trace(JSTracer *trc)
@@ -254,53 +249,219 @@ types::TypeObject::trace(JSTracer *trc)
         gc::MarkObject(trc, *proto, "type_proto");
 }
 
-void
-types::TypeScript::trace(JSTracer *trc)
-{
 #ifdef JS_TYPE_INFERENCE
-    /* If a script is live, so are all type objects within it. */
-    types::TypeObject *object = objects;
-    while (object) {
-        if (!object->marked)
-            object->trace(trc);
-        object = object->next;
+
+/*
+ * Condense any constraints on a type set which were generated during analysis
+ * of a script, and sweep all type objects and references to type objects
+ * which no longer exist.
+ */
+void
+CondenseSweepTypeSet(JSContext *cx, HashSet<JSScript*> &condensed, TypeSet *types)
+{
+    if (types->objectCount >= 2) {
+        bool removed = false;
+        unsigned objectCapacity = HashSetCapacity(types->objectCount);
+        for (unsigned i = 0; i < objectCapacity; i++) {
+            TypeObject *object = types->objectSet[i];
+            if (object && !object->marked) {
+                removed = true;
+                types->objectSet[i] = NULL;
+            }
+        }
+        if (removed) {
+            /* Reconstruct the type set to re-resolve hash collisions. */
+            TypeObject **oldArray = types->objectSet;
+            types->objectSet = NULL;
+            types->objectCount = 0;
+            for (unsigned i = 0; i < objectCapacity; i++) {
+                TypeObject *object = oldArray[i];
+                if (object) {
+                    TypeObject *&entry = HashSetInsert<TypeObject *,TypeObject,TypeObjectKey>
+                        (cx, types->objectSet, types->objectCount, object);
+                    entry = object;
+                }
+            }
+            cx->free(oldArray);
+        }
+    } else if (types->objectCount == 1) {
+        TypeObject *object = (TypeObject*) types->objectSet;
+        if (!object->marked) {
+            types->objectSet = NULL;
+            types->objectCount = 0;
+        }
     }
-#endif
+
+    TypeConstraint *constraint = types->constraintList;
+    types->constraintList = NULL;
+
+    /*
+     * Keep track of all the scripts we have found or generated
+     * condensed constraints for, in the condensed table. We reuse the
+     * same table for each type set to avoid extra initialization cost,
+     * but the table is emptied after each set is processed.
+     */
+
+    while (constraint) {
+        TypeConstraint *next = constraint->next;
+
+        TypeObject *object = constraint->baseSubset();
+        if (object) {
+            /*
+             * Constraint propagating data between objects. If the target
+             * is not being collected (these are weak references) then
+             * keep the constraint.
+             */
+            if (object->marked) {
+                constraint->next = types->constraintList;
+                types->constraintList = constraint;
+            } else {
+                cx->free(constraint);
+            }
+            constraint = next;
+            continue;
+        }
+
+        /*
+         * Throw away constraints propagating types into scripts which
+         * are about to be destroyed. :FIXME: not handling eval-cache
+         * scripts right, which have already been destroyed and can
+         * lead to use of garbage pointers here.
+         */
+        JSScript *script = constraint->script;
+        if (script->isCachedEval ||
+            (script->u.object && IsAboutToBeFinalized(cx, script->u.object)) ||
+            (script->fun && IsAboutToBeFinalized(cx, script->fun))) {
+            if (constraint->condensed())
+                cx->free(constraint);
+            constraint = next;
+            continue;
+        }
+
+        HashSet<JSScript*>::AddPtr p =
+            condensed.lookupForAdd(script);
+        if (!p) {
+            if (!condensed.add(p, script))
+                JS_NOT_REACHED("FIXME");
+            types->addCondensed(cx, script);
+        }
+
+        if (constraint->condensed())
+            cx->free(constraint);
+        constraint = next;
+    }
+
+    condensed.clear();
 }
 
-static inline void
-SweepObjectList(JSContext *cx, types::TypeObject *objects)
+void
+CondenseTypeObjectList(JSContext *cx, TypeObject *objects)
 {
-    types::TypeObject *object = objects;
+    HashSet<JSScript *> condensed(cx);
+    if (!condensed.init())
+        JS_NOT_REACHED("FIXME");
+
+    TypeObject *object = objects;
     while (object) {
-        if (object->marked) {
-            object->marked = false;
-        } else {
-            object->proto = NULL;
-            if (object->emptyShapes) {
-                cx->free(object->emptyShapes);
-                object->emptyShapes = NULL;
+        if (object->propertyCount >= 2) {
+            unsigned capacity = HashSetCapacity(object->propertyCount);
+            for (unsigned i = 0; i < capacity; i++) {
+                Property *prop = object->propertySet[i];
+                if (prop) {
+                    CondenseSweepTypeSet(cx, condensed, &prop->types);
+                    CondenseSweepTypeSet(cx, condensed, &prop->ownTypes);
+                }
             }
+        } else if (object->propertyCount == 1) {
+            Property *prop = (Property *) object->propertySet;
+            CondenseSweepTypeSet(cx, condensed, &prop->types);
+            CondenseSweepTypeSet(cx, condensed, &prop->ownTypes);
         }
         object = object->next;
     }
 }
 
+static void
+DestroyTypeSet(JSContext *cx, const TypeSet &types)
+{
+    if (types.objectCount >= 2)
+        cx->free(types.objectSet);
+}
+
+static void
+DestroyProperty(JSContext *cx, Property *prop)
+{
+    DestroyTypeSet(cx, prop->types);
+    DestroyTypeSet(cx, prop->ownTypes);
+    cx->free(prop);
+}
+
+#endif /* JS_TYPE_INFERENCE */
+
 void
-types::TypeScript::sweep(JSContext *cx)
+SweepTypeObjectList(JSContext *cx, TypeObject *&objects)
+{
+    TypeObject **pobject = &objects;
+    while (*pobject) {
+        TypeObject *object = *pobject;
+        if (object->marked) {
+            object->marked = false;
+            pobject = &object->next;
+        } else {
+            if (object->emptyShapes)
+                cx->free(object->emptyShapes);
+            *pobject = object->next;
+
+#ifdef JS_TYPE_INFERENCE
+            if (object->propertyCount >= 2) {
+                unsigned capacity = HashSetCapacity(object->propertyCount);
+                for (unsigned i = 0; i < capacity; i++) {
+                    Property *prop = object->propertySet[i];
+                    if (prop)
+                        DestroyProperty(cx, prop);
+                }
+                cx->free(object->propertySet);
+            } else if (object->propertyCount == 1) {
+                Property *prop = (Property *) object->propertySet;
+                DestroyProperty(cx, prop);
+            }
+#endif
+
+            cx->free(object);
+        }
+    }
+}
+
+} } /* namespace js::types */
+
+void
+JSScript::condenseTypes(JSContext *cx)
 {
 #ifdef JS_TYPE_INFERENCE
-    SweepObjectList(cx, objects);
+    js::types::CondenseTypeObjectList(cx, typeObjects);
+
+    if (varTypes) {
+        js::HashSet<JSScript *> condensed(cx);
+        if (!condensed.init())
+            JS_NOT_REACHED("FIXME");
+
+        unsigned num = 2 + nfixed + (fun ? fun->nargs : 0) + bindings.countUpvars();
+        for (unsigned i = 0; i < num; i++)
+            js::types::CondenseSweepTypeSet(cx, condensed, &varTypes[i]);
+    }
 #endif
 }
 
 void
-types::TypeCompartment::sweep(JSContext *cx)
+JSScript::sweepTypes(JSContext *cx)
 {
-    SweepObjectList(cx, objects);
-}
+#ifdef JS_TYPE_INFERENCE
+    SweepTypeObjectList(cx, typeObjects);
 
-} /* namespace js */
+    if (types)
+        js::types::DestroyScriptTypes(cx, this);
+#endif
+}
 
 namespace js {
 namespace analyze {

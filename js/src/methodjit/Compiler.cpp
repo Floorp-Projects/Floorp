@@ -194,6 +194,8 @@ mjit::Compiler::performCompilation(JITScript **jitp, const Vector<JSStackFrame*>
     }
 
 #ifdef JS_TYPE_INFERENCE
+    types::AutoEnterTypeInference enter(cx);
+
     /*
      * Fill in known types of arguments and locals, and patch up doubles for
      * arguments and locals in existing frames. Any value assumed to be a double
@@ -201,7 +203,14 @@ mjit::Compiler::performCompilation(JITScript **jitp, const Vector<JSStackFrame*>
      * frames. We handle this by patching up all hold stack frames to ensure that
      * arguments, locals, and stack values we treat as doubles actually are doubles.
      */
-    JS_ASSERT(script->types);
+    if (!script->types) {
+        /* Uncached eval scripts are never analyzed or compiled. */
+        if (script->isUncachedEval)
+            return Compile_Abort;
+        types::AnalyzeScriptTypes(cx, script);
+        if (!script->types)
+            return Compile_Error;
+    }
 
     uint32 nargs = fun ? fun->nargs : 0;
     if (!argumentTypes.reserve(nargs))
@@ -209,7 +218,7 @@ mjit::Compiler::performCompilation(JITScript **jitp, const Vector<JSStackFrame*>
     for (unsigned i = 0; i < nargs; i++) {
         JSValueType type = JSVAL_TYPE_UNKNOWN;
         if (!analysis->argEscapes(i))
-            type = script->types->argTypes(i)->getKnownTypeTag(cx, script);
+            type = script->argTypes(i)->getKnownTypeTag(cx, script);
         argumentTypes.append(type);
         if (type == JSVAL_TYPE_DOUBLE && frames) {
             for (unsigned j = 0; j < frames->length(); j++) {
@@ -225,7 +234,7 @@ mjit::Compiler::performCompilation(JITScript **jitp, const Vector<JSStackFrame*>
     for (unsigned i = 0; i < script->nfixed; i++) {
         JSValueType type = JSVAL_TYPE_UNKNOWN;
         if (!analysis->localHasUseBeforeDef(i))
-            type = script->types->localTypes(i)->getKnownTypeTag(cx, script);
+            type = script->localTypes(i)->getKnownTypeTag(cx, script);
         localTypes.append(type);
         if (type == JSVAL_TYPE_DOUBLE && frames) {
             for (unsigned j = 0; j < frames->length(); j++) {
@@ -5480,7 +5489,7 @@ mjit::Compiler::knownThisType()
     if (hasThisType)
         return thisType;
     hasThisType = true;
-    thisType = script->types->thisTypes.getKnownTypeTag(cx, script);
+    thisType = script->thisTypes()->getKnownTypeTag(cx, script);
     return thisType;
 #endif
     return JSVAL_TYPE_UNKNOWN;
@@ -5500,7 +5509,7 @@ void
 mjit::Compiler::markArgumentOverflow(uint32 arg)
 {
 #ifdef JS_TYPE_INFERENCE
-    types::TypeSet *types = script->types->argTypes(arg);
+    types::TypeSet *types = script->argTypes(arg);
     JS_ASSERT(!types->hasType(types::TYPE_DOUBLE));
     types::InferSpew(types::ISpewDynamic, "StaticOverflow: #%u", script->id());
     cx->compartment->types.addDynamicType(cx, types, types::TYPE_DOUBLE);
@@ -5522,7 +5531,7 @@ void
 mjit::Compiler::markLocalOverflow(uint32 local)
 {
 #ifdef JS_TYPE_INFERENCE
-    types::TypeSet *types = script->types->localTypes(local);
+    types::TypeSet *types = script->localTypes(local);
     JS_ASSERT(!types->hasType(types::TYPE_DOUBLE));
     types::InferSpew(types::ISpewDynamic, "StaticOverflow: #%u", script->id());
     cx->compartment->types.addDynamicType(cx, types, types::TYPE_DOUBLE);
@@ -5561,7 +5570,7 @@ types::TypeSet *
 mjit::Compiler::argTypeSet(uint32 arg)
 {
 #ifdef JS_TYPE_INFERENCE
-    return script->types->argTypes(arg);
+    return script->argTypes(arg);
 #endif
     return NULL;
 }
@@ -5572,7 +5581,7 @@ mjit::Compiler::localTypeSet(uint32 local)
 #ifdef JS_TYPE_INFERENCE
     if (local >= script->nfixed)
         return NULL;
-    return script->types->localTypes(local);
+    return script->localTypes(local);
 #endif
     return NULL;
 }
