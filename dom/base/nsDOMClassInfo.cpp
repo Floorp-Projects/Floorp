@@ -2192,8 +2192,7 @@ nsDOMClassInfo::WrapNativeParent(JSContext *cx, JSObject *scope,
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Document)                                  \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)                                      \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXPathEvaluator)                             \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)                               \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument_MOZILLA_2_0_BRANCH)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
 
 
 #define DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES                                \
@@ -2328,6 +2327,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(History, nsIDOMHistory)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHistory)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHistory_MOZILLA_2_0_BRANCH)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Screen, nsIDOMScreen)
@@ -10039,7 +10039,7 @@ NS_IMETHODIMP
 nsHistorySH::PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj)
 {
-  nsHistory *history = (nsHistory *)nativeObj;
+  nsHistory *history = (nsHistory *)((nsIDOMHistory*)nativeObj);
   nsCOMPtr<nsPIDOMWindow> innerWindow;
   history->GetWindow(getter_AddRefs(innerWindow));
   if (!innerWindow) {

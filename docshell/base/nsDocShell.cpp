@@ -5782,6 +5782,9 @@ nsDocShell::Embed(nsIContentViewer * aContentViewer,
         if (mLSHE->HasDetachedEditor()) {
             ReattachEditorToWindow(mLSHE);
         }
+        // Set history.state
+        SetDocCurrentStateObj(mLSHE);
+
         SetHistoryEntry(&mOSHE, mLSHE);
     }
 
@@ -6072,10 +6075,6 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
     // Notify the ContentViewer that the Document has finished loading.  This
     // will cause any OnLoad(...) and PopState(...) handlers to fire.
     if (!mEODForCurrentDocument && mContentViewer) {
-        // Set the pending state object which will be returned to the page in
-        // the popstate event.
-        SetDocCurrentStateObj(mLSHE);
-
         mIsExecutingOnLoadHandler = PR_TRUE;
         mContentViewer->LoadComplete(aStatus);
         mIsExecutingOnLoadHandler = PR_FALSE;
@@ -8429,7 +8428,12 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             // Dispatch the popstate and hashchange events, as appropriate.
             nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mScriptGlobal);
             if (window) {
-                window->DispatchSyncPopState();
+                // Need the doHashchange check here since sameDocIdent is
+                // false if we're navigating to a new shentry (i.e. a aSHEntry
+                // is null), such as when clicking a <a href="#foo">.
+                if (sameDocIdent || doHashchange) {
+                  window->DispatchSyncPopState();
+                }
 
                 if (doHashchange)
                   window->DispatchAsyncHashchange();
@@ -9828,6 +9832,7 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     else {
         FireDummyOnLocationChange();
     }
+    document->SetCurrentStateObject(dataStr);
 
     return NS_OK;
 }
