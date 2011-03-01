@@ -61,6 +61,7 @@
 #include "nsLayoutUtils.h"
 #include "nsISelection2.h"
 #include "nsIMEStateManager.h"
+#include "nsIObjectFrame.h"
 
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 
@@ -820,6 +821,52 @@ nsContentEventHandler::OnQueryCharacterAtPoint(nsQueryContentEvent* aEvent)
   // currently, we don't need to get the actual text.
   aEvent->mReply.mOffset = nativeOffset;
   aEvent->mReply.mRect = textRect.mReply.mRect;
+  aEvent->mSucceeded = PR_TRUE;
+  return NS_OK;
+}
+
+nsresult
+nsContentEventHandler::OnQueryDOMWidgetHittest(nsQueryContentEvent* aEvent)
+{
+  nsresult rv = Init(aEvent);
+  if (NS_FAILED(rv))
+    return rv;
+
+  aEvent->mReply.mWidgetIsHit = PR_FALSE;
+
+  NS_ENSURE_TRUE(aEvent->widget, NS_ERROR_FAILURE);
+
+  nsIDocument* doc = mPresShell->GetDocument();
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+  nsIFrame* docFrame = mPresShell->GetRootFrame();
+  NS_ENSURE_TRUE(docFrame, NS_ERROR_FAILURE);
+
+  nsIntPoint eventLoc =
+    aEvent->refPoint + aEvent->widget->WidgetToScreenOffset();
+  nsIntRect docFrameRect = docFrame->GetScreenRect(); // Returns CSS pixels
+  eventLoc.x = mPresContext->DevPixelsToIntCSSPixels(eventLoc.x);
+  eventLoc.y = mPresContext->DevPixelsToIntCSSPixels(eventLoc.y);
+  eventLoc.x -= docFrameRect.x;
+  eventLoc.y -= docFrameRect.y;
+
+  nsCOMPtr<nsIDOMElement> elementUnderMouse;
+  doc->ElementFromPointHelper(eventLoc.x, eventLoc.y, PR_FALSE, PR_FALSE,
+                              getter_AddRefs(elementUnderMouse));
+  nsCOMPtr<nsIContent> contentUnderMouse = do_QueryInterface(elementUnderMouse);
+  if (contentUnderMouse) {
+    nsIWidget* targetWidget = nsnull;
+    nsIFrame* targetFrame = contentUnderMouse->GetPrimaryFrame();
+    nsIObjectFrame* pluginFrame = do_QueryFrame(targetFrame);
+    if (pluginFrame) {
+      targetWidget = pluginFrame->GetWidget();
+    } else if (targetFrame) {
+      targetWidget = targetFrame->GetNearestWidget();
+    }
+    if (aEvent->widget == targetWidget)
+      aEvent->mReply.mWidgetIsHit = PR_TRUE;
+    nsIWidget* pEventWidget = aEvent->widget.get();
+  }
+
   aEvent->mSucceeded = PR_TRUE;
   return NS_OK;
 }
