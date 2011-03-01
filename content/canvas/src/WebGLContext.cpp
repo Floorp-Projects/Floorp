@@ -922,6 +922,13 @@ WebGLContext::GetSupportedExtensions(nsIVariant **retval)
 }
 
 NS_IMETHODIMP
+WebGLContext::IsContextLost(WebGLboolean *retval)
+{
+    *retval = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 WebGLContext::GetExtension(const nsAString& aName, nsISupports **retval)
 {
     *retval = nsnull;
