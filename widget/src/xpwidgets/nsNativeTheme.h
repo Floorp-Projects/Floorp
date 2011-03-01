@@ -160,7 +160,7 @@ class nsNativeTheme : public nsITimerCallback
   PRBool IsHorizontal(nsIFrame* aFrame);
 
   // progressbar:
-  PRBool IsIndeterminateProgress(nsIFrame* aFrame);
+  PRBool IsIndeterminateProgress(nsIFrame* aFrame, nsEventStates aEventStates);
 
   PRInt32 GetProgressValue(nsIFrame* aFrame) {
     return CheckIntAttr(aFrame, nsWidgetAtoms::value, 0);
