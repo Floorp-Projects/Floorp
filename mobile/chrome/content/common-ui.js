@@ -379,17 +379,7 @@ var NewTabPopup = {
 
   get box() {
     delete this.box;
-    let box = document.getElementById("newtab-popup");
-
-    // Move the popup on the other side if we are in RTL
-    let [leftSidebar, rightSidebar] = [Elements.tabs.getBoundingClientRect(), Elements.controls.getBoundingClientRect()];
-    if (leftSidebar.left > rightSidebar.left) {
-      let margin = box.getAttribute("left");
-      box.removeAttribute("left");
-      box.setAttribute("right", margin);
-    }
-
-    return this.box = box;
+    return this.box = document.getElementById("newtab-popup");
   },
 
   _updateLabel: function nt_updateLabel() {
