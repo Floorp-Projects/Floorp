@@ -1345,15 +1345,8 @@ Browser.WebProgress.prototype = {
           if (CrashReporter.enabled)
             CrashReporter.annotateCrashReport("URL", spec);
 #endif
-          if (tab == Browser.selectedTab) {
-            // We're about to have new page content, so scroll the content area
-            // to the top so the new paints will draw correctly.
-            // (background tabs are delayed scrolled to top in _documentStop)
-            Browser.scrollContentToTop({ x: 0 });
-          }
-
+          this._waitForLoad(tab);
           tab.useFallbackWidth = false;
-          tab.updateViewportSize();
         }
 
         let event = document.createEvent("UIEvents");
@@ -1402,8 +1395,28 @@ Browser.WebProgress.prototype = {
 
   _documentStop: function _documentStop(aTab) {
     // Make sure the URLbar is in view. If this were the selected tab,
-    // onLocationChange would scroll to top.
+    // _waitForLoad would scroll to top.
     aTab.pageScrollOffset = { x: 0, y: 0 };
+  },
+
+  _waitForLoad: function _waitForLoad(aTab) {
+    let browser = aTab.browser;
+    browser.messageManager.removeMessageListener("MozScrolledAreaChanged", aTab.scrolledAreaChanged);
+
+    browser.messageManager.addMessageListener("Browser:FirstPaint", function(aMessage) {
+      browser.messageManager.removeMessageListener(aMessage.name, arguments.callee);
+
+      // We're about to have new page content, so scroll the content area
+      // to the top so the new paints will draw correctly.
+      // Background tabs are delayed scrolled to top in _documentStop
+      if (getBrowser() == browser) {
+        browser.getRootView().scrollTo(0, 0);
+        Browser.pageScrollboxScroller.scrollTo(0, 0);
+      }
+
+      aTab.scrolledAreaChanged();
+      browser.messageManager.addMessageListener("MozScrolledAreaChanged", aTab.scrolledAreaChanged);
+    });
   }
 };
 
@@ -2354,6 +2367,8 @@ function Tab(aURI, aParams) {
 
   // default tabs to inactive (i.e. no display port)
   this.active = false;
+
+  this.scrolledAreaChanged = this.scrolledAreaChanged.bind(this);
 }
 
 Tab.prototype = {
@@ -2551,11 +2566,6 @@ Tab.prototype = {
     let enabler = fl.QueryInterface(i);
     enabler.renderMode = i.RENDER_MODE_ASYNC_SCROLL;
 
-    browser.messageManager.addMessageListener("MozScrolledAreaChanged", (function() {
-      // ensure that the browser's contentDocumentWidth property adjusts first
-      setTimeout(this.scrolledAreaChanged.bind(this), 0);
-    }).bind(this));
-
     return browser;
   },
 
@@ -2617,8 +2627,20 @@ Tab.prototype = {
 
     let isDefault = this.isDefaultZoomLevel();
     this._defaultZoomLevel = this.getDefaultZoomLevel();
-    if (isDefault)
-      browser.scale = this._defaultZoomLevel;
+    if (isDefault) {
+      if (browser.scale != this._defaultZoomLevel) {
+        browser.scale = this._defaultZoomLevel;
+      }
+      else {
+        // If the scale level has not changed we want to be sure the content
+        // render correctly since the page refresh process could have been
+        // stalled during page load. In this case if the page has the exact
+        // same width (like the same page, so by doing 'refresh') and the 
+        // page was scrolled the content is just checkerboard at this point
+        // and this call ensure we render it correctly.
+        browser.getRootView()._updateCacheViewport();
+      }
+    }
   },
 
   isDefaultZoomLevel: function isDefaultZoomLevel() {
