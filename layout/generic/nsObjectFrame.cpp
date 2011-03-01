@@ -1968,6 +1968,10 @@ static void DrawPlugin(ImageContainer* aContainer, void* aObjectFrame)
 void
 nsObjectFrame::UpdateImageLayer(ImageContainer* aContainer, const gfxRect& aRect)
 {
+  if (!mInstanceOwner) {
+    return;
+  }
+
 #ifdef XP_MACOSX
   mInstanceOwner->DoCocoaEventDrawRect(aRect, nsnull);
 #endif
@@ -1984,7 +1988,7 @@ nsPluginInstanceOwner::SetCurrentImage(ImageContainer* aContainer)
     inst->GetImage(aContainer, getter_AddRefs(image));
     if (image) {
 #ifdef XP_MACOSX
-      if (image->GetFormat() == Image::MAC_IO_SURFACE) {
+      if (image->GetFormat() == Image::MAC_IO_SURFACE && mObjectFrame) {
         MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image.get());
         oglImage->SetCallback(&DrawPlugin, mObjectFrame);
       }
