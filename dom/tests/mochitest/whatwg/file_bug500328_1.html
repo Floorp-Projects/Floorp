@@ -11,13 +11,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500328
     a:visited   { fill:purple; }
   </style>
 </head>
-<body onload="load();" onpopstate="popstate(event);">
+<body onload="load(event);" onpopstate="popstate(event);" onpageshow="pageshow(event);">
 <script type="application/javascript">
-  function load() {
+  if (parent && parent.onChildScript)
+    parent.onChildScript(history.state);
+  if (opener && opener.onChildScript)
+    opener.onChildScript(history.state);
+
+  function load(e) {
     if(parent && parent.onChildLoad)
-      parent.onChildLoad();
+      parent.onChildLoad(e);
     if(opener && opener.onChildLoad)
-      opener.onChildLoad();
+      opener.onChildLoad(e);
+  }
+
+  function pageshow(e) {
+    if(parent && parent.onChildPageShow)
+      parent.onChildPageShow(e);
+    if(opener && opener.onChildPageShow)
+      opener.onChildPageShow(e);
   }
 
   function popstate(e) {
@@ -30,6 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500328
   function navigateTo(loc) {
     location = loc;
   }
+
 </script>
 
 <a id="link-anchor1", href="#1">Link Anchor1</a>
