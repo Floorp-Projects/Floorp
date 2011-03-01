@@ -175,3 +175,7 @@ xhtml|link {
 richlistitem:not([selected]) * {
   -moz-user-focus: ignore;
 }
+
+#header-search {
+  width: 22em;
+}
