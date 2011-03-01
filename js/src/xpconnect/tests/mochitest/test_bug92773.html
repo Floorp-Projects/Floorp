@@ -25,7 +25,7 @@ function go() {
         $('ifr').contentWindow.foo;
         ok(false, "able to access cross-origin getter");
     } catch (e) {
-        ok(/Permission denied/(e), "unable to access cross-origin getter");
+        ok(/Permission denied/.exec(e), "unable to access cross-origin getter");
     }
 
     SimpleTest.finish();

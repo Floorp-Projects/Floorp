@@ -477,12 +477,6 @@ regexp_finalize(JSContext *cx, JSObject *obj)
 static JSBool
 regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool test, Value *rval);
 
-static JSBool
-regexp_call(JSContext *cx, uintN argc, Value *vp)
-{
-    return regexp_exec_sub(cx, &JS_CALLEE(cx, vp).toObject(), argc, JS_ARGV(cx, vp), false, vp);
-}
-
 #if JS_HAS_XDR
 
 #include "jsxdrapi.h"
@@ -567,7 +561,7 @@ js::Class js_RegExpClass = {
     regexp_finalize,
     NULL,                 /* reserved0 */
     NULL,                 /* checkAccess */
-    regexp_call,
+    NULL,                 /* call */
     NULL,                 /* construct */
     js_XDRRegExpObject,
     NULL,                 /* hasInstance */

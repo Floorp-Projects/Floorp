@@ -14,6 +14,6 @@ var expect = 'No Crash';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-/[\cA]/('\x01');
+/[\cA]/.exec('\x01');
  
 reportCompare(expect, actual, summary);

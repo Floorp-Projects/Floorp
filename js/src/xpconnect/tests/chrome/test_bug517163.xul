@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=517163
       /** Test for Bug 517163 **/
       var rval = Components.utils.lookupMethod($("ifr").contentDocument,
                                                "getElementsByTagName")("body");
-      ok(/XrayWrapper/(rval.toString()), "got an XPCNativeWrapper back");
+      ok(/XrayWrapper/.exec(rval.toString()), "got an XPCNativeWrapper back");
 
       // Overwrite one of our own functions and make sure we can still
       // reach the underlying function through lookupMethod.

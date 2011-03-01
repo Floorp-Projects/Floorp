@@ -174,42 +174,40 @@ var A = 1, C=2, Y=3, T=4, I=5;
 testThis('(((C/A-0.3)/0.2)+((Y/A-3)/4)+((T/A)/0.05)+((0.095-I/A)/0.4))(100/6)');
 
 
+status = inSection(28);
+x = /a()/;
+testThis('x("abc")');
+
+status = inSection(29);
+x = /a()/gi;
+testThis('x("abc")');
+
+status = inSection(30);
+x = RegExp('a()');
+testThis('x("abc")');
+
+status = inSection(31);
+x = new RegExp('a()', 'gi');
+testThis('x("")');
+
 
 /*
- * Functions and RegExps both have |typeof| == 'function'.
- * See http://bugzilla.mozilla.org/show_bug.cgi?id=61911.
+ * Functions have |typeof| == 'function'.
  *
  * Therefore these expressions should not cause any errors.
  * Note we use checkThis() instead of testThis()
  *
  */
-status = inSection(28);
+status = inSection(32);
 x = function (y) {return y+1;};
 checkThis('x("abc")');
 
-status = inSection(29);
+status = inSection(33);
 checkThis('(function (y) {return y+1;})("abc")');
 
-status = inSection(30);
+status = inSection(34);
 function f(y) { function g() {return y;}; return g();};
 checkThis('f("abc")');
-
-status = inSection(31);
-x = /a()/;
-checkThis('x("abc")');
-
-status = inSection(32);
-x = /a()/gi;
-checkThis('x("abc")');
-
-status = inSection(33);
-x = RegExp('a()');
-checkThis('x("abc")');
-
-status = inSection(34);
-x = new RegExp('a()', 'gi');
-checkThis('x("")');
-
 
 
 

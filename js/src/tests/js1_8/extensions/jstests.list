@@ -37,7 +37,6 @@ skip-if(!xulRuntime.shell) slow script regress-476414-02.js
 fails-if(!xulRuntime.shell) script regress-476427.js # NS_ERROR_DOM_NOT_SUPPORTED_ERR
 script regress-476653.js
 script regress-476869.js
-script regress-476871-01.js
 script regress-476871-02.js
 skip script regress-479252.js
 skip script regress-479381.js
