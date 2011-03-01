@@ -49,7 +49,8 @@
 class nsIDocShell;
 
 // Script "History" object
-class nsHistory : public nsIDOMHistory
+class nsHistory : public nsIDOMHistory,
+                  public nsIDOMHistory_MOZILLA_2_0_BRANCH
 {
 public:
   nsHistory(nsPIDOMWindow* aInnerWindow);
@@ -60,6 +61,7 @@ public:
 
   // nsIDOMHistory
   NS_DECL_NSIDOMHISTORY
+  NS_DECL_NSIDOMHISTORY_MOZILLA_2_0_BRANCH
 
   nsIDocShell *GetDocShell() {
     nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
