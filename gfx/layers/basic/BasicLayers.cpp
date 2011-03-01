@@ -491,8 +491,11 @@ SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget)
     return;
   }
 
+  const nsIntRect& bounds = aLayer->GetVisibleRegion().GetBounds();
   surface->SetSubpixelAntialiasingEnabled(
-      !(aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA));
+      !(aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA) ||
+      surface->GetOpaqueRect().Contains(
+        aTarget->UserToDevice(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height))));
 }
 
 static PRBool
