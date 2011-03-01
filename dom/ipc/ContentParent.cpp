@@ -92,6 +92,12 @@
 #include "gfxAndroidPlatform.h"
 #endif
 
+#include "nsIClipboard.h"
+#include "nsWidgetsCID.h"
+#include "nsISupportsPrimitives.h"
+static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
+static const char* sClipboardTextFlavors[] = { kUnicodeMime };
+
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
@@ -387,6 +393,84 @@ ContentParent::RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissio
     permissionManager->ChildRequestPermissions();
 #endif
 
+    return true;
+}
+
+bool
+ContentParent::RecvSetClipboardText(const nsString& text, const PRInt32& whichClipboard)
+{
+    nsresult rv;
+    nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
+    NS_ENSURE_SUCCESS(rv, true);
+
+    nsCOMPtr<nsISupportsString> dataWrapper =
+        do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, true);
+    
+    rv = dataWrapper->SetData(text);
+    NS_ENSURE_SUCCESS(rv, true);
+    
+    nsCOMPtr<nsITransferable> trans = do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
+    NS_ENSURE_SUCCESS(rv, true);
+    
+    // If our data flavor has already been added, this will fail. But we don't care
+    trans->AddDataFlavor(kUnicodeMime);
+    
+    nsCOMPtr<nsISupports> nsisupportsDataWrapper =
+        do_QueryInterface(dataWrapper);
+    
+    rv = trans->SetTransferData(kUnicodeMime, nsisupportsDataWrapper,
+                                text.Length() * sizeof(PRUnichar));
+    NS_ENSURE_SUCCESS(rv, true);
+    
+    clipboard->SetData(trans, NULL, whichClipboard);
+    return true;
+}
+
+bool
+ContentParent::RecvGetClipboardText(const PRInt32& whichClipboard, nsString* text)
+{
+    nsresult rv;
+    nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
+    NS_ENSURE_SUCCESS(rv, true);
+
+    nsCOMPtr<nsITransferable> trans = do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
+    NS_ENSURE_SUCCESS(rv, true);
+    
+    clipboard->GetData(trans, whichClipboard);
+    nsCOMPtr<nsISupports> tmp;
+    PRUint32 len;
+    rv  = trans->GetTransferData(kUnicodeMime, getter_AddRefs(tmp), &len);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISupportsString> supportsString = do_QueryInterface(tmp);
+    // No support for non-text data
+    NS_ENSURE_TRUE(supportsString, NS_ERROR_NOT_IMPLEMENTED);
+    supportsString->GetData(*text);
+    return true;
+}
+
+bool
+ContentParent::RecvEmptyClipboard()
+{
+    nsresult rv;
+    nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
+    NS_ENSURE_SUCCESS(rv, true);
+
+    clipboard->EmptyClipboard(nsIClipboard::kGlobalClipboard);
+
+    return true;
+}
+
+bool
+ContentParent::RecvClipboardHasText(PRBool* hasText)
+{
+    nsresult rv;
+    nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
+    NS_ENSURE_SUCCESS(rv, true);
+
+    clipboard->HasDataMatchingFlavors(sClipboardTextFlavors, 1, 
+                                      nsIClipboard::kGlobalClipboard, hasText);
     return true;
 }
 
