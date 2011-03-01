@@ -745,7 +745,7 @@ case "$target" in
         # Identify which version of the SDK we're building with
         # Windows Server 2008 and newer SDKs have WinSDKVer.h, get the version
         # from there
-        AC_CHECK_HEADERS([winsdkver.h])
+        MOZ_CHECK_HEADERS([winsdkver.h])
         if test "$ac_cv_header_winsdkver_h" = "yes"; then
             # Get the highest _WIN32_WINNT and NTDDI versions supported
             # Take the higher of the two
@@ -772,7 +772,7 @@ EOF
         else
             # The Vista SDK is the only one to have sdkddkver.h but not
             # WinSDKVer.h
-            AC_CHECK_HEADERS([sdkddkver.h])
+            MOZ_CHECK_HEADERS([sdkddkver.h])
             if test "$ac_cv_header_sdkddkver_h" = "yes"; then
                 MOZ_WINSDK_MAXVER=0x06000000
             else
@@ -1137,7 +1137,7 @@ tools are selected during the Xcode/Developer Tools installation.])
     CFLAGS="$CFLAGS -isysroot ${MACOS_SDK_DIR}"
     CXXFLAGS="$CXXFLAGS -isysroot ${MACOS_SDK_DIR}"
 
-    dnl CPP/CXXCPP needs to be set for AC_CHECK_HEADER.
+    dnl CPP/CXXCPP needs to be set for MOZ_CHECK_HEADER.
     CPP="$CPP -isysroot ${MACOS_SDK_DIR}"
     CXXCPP="$CXXCPP -isysroot ${MACOS_SDK_DIR}"
 
@@ -1845,7 +1845,7 @@ MOZ_ARG_ENABLE_BOOL(valgrind,
     MOZ_VALGRIND=1,
     MOZ_VALGRIND= )
 if test -n "$MOZ_VALGRIND"; then
-    AC_CHECK_HEADER([valgrind/valgrind.h], [],
+    MOZ_CHECK_HEADER([valgrind/valgrind.h], [],
         AC_MSG_ERROR(
             [--enable-valgrind specified but Valgrind is not installed]))
     AC_DEFINE(MOZ_VALGRIND)
@@ -2046,7 +2046,7 @@ case "$target" in
         ;;
     esac
     if test "$COMPILE_ENVIRONMENT"; then
-        AC_CHECK_HEADERS(sys/inttypes.h)
+        MOZ_CHECK_HEADERS(sys/inttypes.h)
     fi
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     ;;
@@ -2358,7 +2358,7 @@ ia64*-hpux*)
     # Sanity check for WINCE_WINDOWS_MOBILE
     # XXX disabled until we can fix the mobile tinderbox
     ##if test "$WINCE_WINDOWS_MOBILE"; then
-    ##   AC_CHECK_HEADER(tpcshell.h, [],
+    ##   MOZ_CHECK_HEADER(tpcshell.h, [],
     ##        AC_MSG_ERROR([Can't find tpcshell.h in your SDK; are you sure you don't need --disable-windows-mobile-components?]))
     ##fi
 ;;
@@ -2514,7 +2514,7 @@ ia64*-hpux*)
         AC_CHECK_HEADERS(oleacc.idl)
         AC_LANG_SAVE
         AC_LANG_CPLUSPLUS
-        AC_CHECK_HEADERS(atlbase.h)
+        MOZ_CHECK_HEADERS(atlbase.h)
         AC_LANG_RESTORE
         ;;
     esac
@@ -2534,7 +2534,7 @@ ia64*-hpux*)
             CXXFLAGS="$CXXFLAGS -mstackrealign"
         fi
 
-        AC_CHECK_HEADERS(mmintrin.h)
+        MOZ_CHECK_HEADERS(mmintrin.h)
     	AC_DEFINE(_X86_)
 	;;
     alpha-*)
@@ -3355,30 +3355,30 @@ freebsd*)
     CPPFLAGS="${CPPFLAGS} ${X_CFLAGS}"
     ;;
 esac
-AC_CHECK_HEADERS(sys/byteorder.h compat.h getopt.h)
-AC_CHECK_HEADERS(sys/bitypes.h memory.h unistd.h)
-AC_CHECK_HEADERS(gnu/libc-version.h nl_types.h)
-AC_CHECK_HEADERS(malloc.h)
-AC_CHECK_HEADERS(X11/XKBlib.h)
-AC_CHECK_HEADERS(io.h)
+MOZ_CHECK_HEADERS(sys/byteorder.h compat.h getopt.h)
+MOZ_CHECK_HEADERS(sys/bitypes.h memory.h unistd.h)
+MOZ_CHECK_HEADERS(gnu/libc-version.h nl_types.h)
+MOZ_CHECK_HEADERS(malloc.h)
+MOZ_CHECK_HEADERS(X11/XKBlib.h)
+MOZ_CHECK_HEADERS(io.h)
 
 dnl These are all the places some variant of statfs can be hiding.
-AC_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
+MOZ_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
 
 dnl Quota support
-AC_CHECK_HEADERS(sys/quota.h)
-AC_CHECK_HEADERS(linux/quota.h)
+MOZ_CHECK_HEADERS(sys/quota.h)
+MOZ_CHECK_HEADERS(linux/quota.h)
 
 dnl Try for MMX support
 dnl NB - later gcc versions require -mmmx for this header to be successfully
 dnl included (or another option which implies it, such as -march=pentium-mmx)
-AC_CHECK_HEADERS(mmintrin.h)
+MOZ_CHECK_HEADERS(mmintrin.h)
 
 dnl Check whether the compiler supports the new-style C++ standard
 dnl library headers (i.e. <new>) or needs the old "new.h"
 AC_LANG_CPLUSPLUS
 NEW_H=new.h
-AC_CHECK_HEADER(new, [NEW_H=new])
+MOZ_CHECK_HEADER(new, [NEW_H=new])
 AC_DEFINE_UNQUOTED(NEW_H, <$NEW_H>)
 AC_LANG_C
 
@@ -3386,7 +3386,7 @@ AC_ARG_ENABLE(dtrace,
               [  --enable-dtrace         build with dtrace support if available (default=no)],
               [enable_dtrace="yes"],)
 if test "x$enable_dtrace" = "xyes"; then
-  AC_CHECK_HEADER(sys/sdt.h, HAVE_DTRACE=1)
+  MOZ_CHECK_HEADER(sys/sdt.h, HAVE_DTRACE=1)
   if test -n "$HAVE_DTRACE"; then
       AC_DEFINE(INCLUDE_MOZILLA_DTRACE)
   else
@@ -3399,7 +3399,7 @@ case $target in
 *-aix4.3*|*-aix5*)
 	;;
 *)
-	AC_CHECK_HEADERS(sys/cdefs.h)
+	MOZ_CHECK_HEADERS(sys/cdefs.h)
 	;;
 esac
 
@@ -3426,7 +3426,7 @@ case $target in
     ;;
 *)
     AC_SEARCH_LIBS(dlopen, dl, 
-        AC_CHECK_HEADER(dlfcn.h, 
+        MOZ_CHECK_HEADER(dlfcn.h, 
         AC_DEFINE(HAVE_DLOPEN)))
     ;;
 esac
@@ -3516,7 +3516,7 @@ else
     dnl ========================================================
     AC_CHECK_LIB(Xext, XShmCreateImage, _HAVE_XSHM_XEXT=1,,
         $XLIBS $XEXT_LIBS)
-    AC_CHECK_HEADER(X11/extensions/XShm.h)
+    MOZ_CHECK_HEADER(X11/extensions/XShm.h)
     if test "$ac_cv_header_X11_extensions_XShm_h" = "yes" &&
         test -n "$_HAVE_XSHM_XEXT"; then
         AC_DEFINE(HAVE_XSHM)
@@ -3525,7 +3525,7 @@ else
     dnl ========================================================
     dnl = Check for Xss
     dnl ========================================================
-    AC_CHECK_HEADER(X11/extensions/scrnsaver.h,
+    MOZ_CHECK_HEADER(X11/extensions/scrnsaver.h,
         AC_CHECK_LIB(Xss, XScreenSaverQueryInfo,
             [XSS_LIBS="-lXss $XEXT_LIBS $XLIBS"
              AC_DEFINE(HAVE_LIBXSS)],, $XEXT_LIBS $XLIBS))
@@ -3535,7 +3535,7 @@ else
     dnl ========================================================
     AC_CHECK_LIB(XIE, XieFloGeometry, [MOZ_XIE_LIBS="-lXIE"],,
         $XLIBS $XEXT_LIBS)
-    AC_CHECK_HEADER(X11/extensions/XIElib.h)
+    MOZ_CHECK_HEADER(X11/extensions/XIElib.h)
 
     if test "$MOZ_XIE_LIBS"; then
 	dnl ====================================================
@@ -4466,11 +4466,11 @@ fi
 dnl Check for the existence of various allocation headers/functions
 
 MALLOC_H=
-AC_CHECK_HEADER(malloc.h,        [MALLOC_H=malloc.h])
+MOZ_CHECK_HEADER(malloc.h,        [MALLOC_H=malloc.h])
 if test "$MALLOC_H" = ""; then
-  AC_CHECK_HEADER(malloc/malloc.h, [MALLOC_H=malloc/malloc.h])
+  MOZ_CHECK_HEADER(malloc/malloc.h, [MALLOC_H=malloc/malloc.h])
   if test "$MALLOC_H" = ""; then
-    AC_CHECK_HEADER(sys/malloc.h,    [MALLOC_H=sys/malloc.h])
+    MOZ_CHECK_HEADER(sys/malloc.h,    [MALLOC_H=sys/malloc.h])
   fi
 fi
 if test "$MALLOC_H" != ""; then
@@ -4682,11 +4682,11 @@ else
     fi
     CFLAGS="-I${LIBEVENT_DIR}/include $CFLAGS"
     LDFLAGS="-L${LIBEVENT_DIR}/lib $LDFLAGS"
-    AC_CHECK_HEADER(event.h,
-                    [if test ! -f "${LIBEVENT_DIR}/include/event.h"; then
-                         AC_MSG_ERROR([event.h found, but is not in ${LIBEVENT_DIR}/include])
-                     fi],
-                    AC_MSG_ERROR([--with-system-libevent requested but event.h not found]))
+    MOZ_CHECK_HEADER(event.h,
+        [if test ! -f "${LIBEVENT_DIR}/include/event.h"; then
+             AC_MSG_ERROR([event.h found, but is not in ${LIBEVENT_DIR}/include])
+         fi],
+        AC_MSG_ERROR([--with-system-libevent requested but event.h not found]))
     AC_CHECK_LIB(event, event_init,
                  [MOZ_NATIVE_LIBEVENT=1
                   MOZ_LIBEVENT_INCLUDES="${LIBEVENT_DIR}/include"
@@ -6043,11 +6043,11 @@ if test -n "$MOZ_WEBM"; then
         fi
         CFLAGS="-I${LIBVPX_DIR}/include $CFLAGS"
         LDFLAGS="-L${LIBVPX_DIR}/lib $LDFLAGS"
-        AC_CHECK_HEADER(vpx/vpx_decoder.h,
-                        [if test ! -f "${LIBVPX_DIR}/include/vpx/vpx_decoder.h"; then
-                             AC_MSG_ERROR([vpx/vpx_decoder.h found, but is not in ${LIBVPX_DIR}/include])
-                         fi],
-                        AC_MSG_ERROR([--with-system-libvpx requested but vpx/vpx_decoder.h not found]))
+        MOZ_CHECK_HEADER(vpx/vpx_decoder.h,
+            [if test ! -f "${LIBVPX_DIR}/include/vpx/vpx_decoder.h"; then
+             AC_MSG_ERROR([vpx/vpx_decoder.h found, but is not in ${LIBVPX_DIR}/include])
+            fi],
+            AC_MSG_ERROR([--with-system-libvpx requested but vpx/vpx_decoder.h not found]))
         AC_CHECK_LIB(vpx, vpx_codec_dec_init_ver,
                      [MOZ_NATIVE_LIBVPX=1
                       MOZ_LIBVPX_INCLUDES="-I${LIBVPX_DIR}/include"
@@ -6448,7 +6448,7 @@ if test -n "$MOZ_CRASHREPORTER"; then
     AC_SUBST(MOZ_GTHREAD_CFLAGS)
     AC_SUBST(MOZ_GTHREAD_LIBS)
 
-    AC_CHECK_HEADERS([curl/curl.h], [], [AC_MSG_ERROR([Couldn't find curl/curl.h which is required for the crash reporter.  Use --disable-crashreporter to disable the crash reporter.])])
+    MOZ_CHECK_HEADERS([curl/curl.h], [], [AC_MSG_ERROR([Couldn't find curl/curl.h which is required for the crash reporter.  Use --disable-crashreporter to disable the crash reporter.])])
   fi
 fi
 
@@ -7098,8 +7098,8 @@ if test $MOZ_PLATFORM_MAEMO; then
 
    if test $MOZ_PLATFORM_MAEMO = 5; then
       dnl if we have Xcomposite we should also have Xdamage and Xfixes
-      AC_CHECK_HEADERS([X11/extensions/Xdamage.h], [],
-                       [AC_MSG_ERROR([Couldn't find X11/extensions/Xdamage.h which is required for composited plugins.])])
+      MOZ_CHECK_HEADERS([X11/extensions/Xdamage.h], [],
+          [AC_MSG_ERROR([Couldn't find X11/extensions/Xdamage.h which is required for composited plugins.])])
       AC_CHECK_LIB(Xcomposite, XCompositeRedirectWindow, [XCOMPOSITE_LIBS="-lXcomposite -lXdamage -lXfixes"],
                    [MISSING_X="$MISSING_X -lXcomposite"], $XLIBS)
 
@@ -7837,7 +7837,7 @@ dnl ========================================================
 dnl = Support for gcc stack unwinding (from gcc 3.3)
 dnl ========================================================
 if test "$HAVE_GCC3_ABI" -a -z "$SKIP_LIBRARY_CHECKS"; then
-    AC_CHECK_HEADER(unwind.h, AC_CHECK_FUNCS(_Unwind_Backtrace))
+    MOZ_CHECK_HEADER(unwind.h, AC_CHECK_FUNCS(_Unwind_Backtrace))
 fi
 
 dnl ========================================================
@@ -8616,7 +8616,7 @@ MOZ_TREE_PIXMAN=,
 MOZ_TREE_PIXMAN=1 )
 
 # Check for headers defining standard int types.
-AC_CHECK_HEADERS(stdint.h inttypes.h sys/int_types.h)
+MOZ_CHECK_HEADERS(stdint.h inttypes.h sys/int_types.h)
 
 if test "$MOZ_TREE_CAIRO"; then
     AC_DEFINE(MOZ_TREE_CAIRO)
@@ -8661,11 +8661,11 @@ if test "$MOZ_TREE_CAIRO"; then
             WIN32_D2D_SURFACE_FEATURE=
         fi
 
-        AC_CHECK_HEADER(d3d9.h, MOZ_ENABLE_D3D9_LAYER=1)
+        MOZ_CHECK_HEADER(d3d9.h, MOZ_ENABLE_D3D9_LAYER=1)
 
         dnl D3D10 Layers depend on D2D Surfaces.
         if test -n "$WIN32_D2D_SURFACE_FEATURE"; then
-          AC_CHECK_HEADER(d3d10.h, MOZ_ENABLE_D3D10_LAYER=1)
+          MOZ_CHECK_HEADER(d3d10.h, MOZ_ENABLE_D3D10_LAYER=1)
         fi
 
     fi
@@ -8878,7 +8878,7 @@ fi
 
 if test -z "$SKIP_LIBRARY_CHECKS" -a "$NECKO_WIFI" -a "$OS_ARCH" = "Linux"
 then
-  AC_CHECK_HEADER([iwlib.h])
+  MOZ_CHECK_HEADER([iwlib.h])
   if test "$ac_cv_header_iwlib_h" != "yes"; then
     AC_MSG_ERROR([Can't find header iwlib.h for Necko WiFi scanning (might be in package libiw-dev (Ubuntu) or wireless-tools-devel (Fedora)); use --disable-necko-wifi to disable])
   fi
@@ -9297,7 +9297,7 @@ fi # MOZ_X11
 
 dnl Check for headers, etc. needed by WebGL.
 if test -n "$MOZ_WEBGL_GLX"; then
-    AC_CHECK_HEADER(GL/glx.h)
+    MOZ_CHECK_HEADER(GL/glx.h)
     if test "$ac_cv_header_GL_glx_h" != "yes"; then
         AC_MSG_ERROR([Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Mesa (SuSE))])
     fi
@@ -9308,7 +9308,7 @@ if test "$USE_FC_FREETYPE"; then
     if test "$COMPILE_ENVIRONMENT"; then
     	_SAVE_CPPFLAGS="$CPPFLAGS"
     	CPPFLAGS="$CPPFLAGS $FT2_CFLAGS $XCFLAGS"
-        AC_CHECK_HEADERS(fontconfig/fcfreetype.h, , 
+        MOZ_CHECK_HEADERS(fontconfig/fcfreetype.h, , 
             [AC_MSG_ERROR(Can't find header fontconfig/fcfreetype.h.)])
     	CPPFLAGS="$_SAVE_CPPFLAGS"
     else
