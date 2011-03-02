@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="reftest-wait">
+
+<script>
+<![CDATA[
+
+window.addEventListener("load", function () {
+    document.documentElement.appendChild(document.getElementById("a"));
+    setTimeout(function () {
+        document.getElementById("x").setAttribute("id", "m1");
+        document.documentElement.removeAttribute("class");
+    }, 0);
+}, false);
+
+]]>
+</script>
+
+<g id="a">
+  <path id="x"/>
+  <text>
+    <textPath xlink:href="#m1">Text</textPath>
+    <textPath xlink:href="#m1">Text</textPath>
+
+  </text>
+</g>
+
+</svg>
