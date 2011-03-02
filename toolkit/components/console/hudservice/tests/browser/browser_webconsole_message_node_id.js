@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is DevTools test code.
  *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ms2ger <ms2ger@gmail.com>
+ *  David Dahl <ddahl@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,20 +35,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMPopStateEvent.idl"
+const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
 
-[scriptable, uuid(a0273086-e5da-4da6-a219-930235f9bfef)]
-interface nsIDOMPopStateEvent_MOZILLA_2_BRANCH : nsISupports
-{
-  /**
-   * initial is true if the event is being fired due to an onload, and false
-   * otherwise.
-   */
-  readonly attribute boolean initial;
+function test() {
+  addTab(TEST_URI);
+  browser.addEventListener("DOMContentLoaded", onLoad, false);
+}
 
-  void initPopStateEvent(in DOMString typeArg,
-                         in boolean canBubbleArg,
-                         in boolean cancelableArg,
-                         in nsIVariant stateArg,
-                         [optional] in boolean isInitial);
-};
+function onLoad() {
+  browser.removeEventListener("DOMContentLoaded", onLoad, false);
+  openConsole();
+
+  let hudId = HUDService.displaysIndex()[0];
+  let console = browser.contentWindow.wrappedJSObject.console;
+  let hudBox = HUDService.getHeadsUpDisplay(hudId);
+  let outputNode = hudBox.querySelector(".hud-output-node");
+
+  console.log("a log message");
+
+  let node = outputNode.querySelectorAll(".hud-msg-node");
+
+  ok(node[0].getAttribute("id") && node[0].getAttribute != "", "we have a node id");
+  closeConsole();
+  finishTest();
+}

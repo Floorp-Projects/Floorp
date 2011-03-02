@@ -202,18 +202,13 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
     }
   }
 
-  // We don't attempt to detect if large text nodes can be stored compactly,
-  // because that wastes too much time.
-  const PRInt32 LARGE_STRING_THRESHOLD = 10240; // 10KB
-  PRBool need2 = aLength >= LARGE_STRING_THRESHOLD;
-  if (!need2) {
-    // See if we need to store the data in ucs2 or not
-    while (ucp < uend) {
-      PRUnichar ch = *ucp++;
-      if (ch >= 256) {
-        need2 = PR_TRUE;
-        break;
-      }
+  // See if we need to store the data in ucs2 or not
+  PRBool need2 = PR_FALSE;
+  while (ucp < uend) {
+    PRUnichar ch = *ucp++;
+    if (ch >= 256) {
+      need2 = PR_TRUE;
+      break;
     }
   }
 

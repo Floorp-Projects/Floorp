@@ -200,7 +200,7 @@
                   command="cmd_resetAddonAutoUpdate"/>
       </menupopup>
     </toolbarbutton>
-    <textbox id="header-search" type="search" searchbutton="true" size="35"
+    <textbox id="header-search" type="search" searchbutton="true"
              placeholder="&search.placeholder;"/>
   </hbox>
 

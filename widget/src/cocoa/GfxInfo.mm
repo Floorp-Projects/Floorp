@@ -42,6 +42,7 @@
 #include "GfxInfo.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/FunctionTimer.h"
+#include "nsToolkit.h"
 
 #if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
 #include "nsExceptionHandler.h"
@@ -201,6 +202,15 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32* aStatus,
   // For now, we don't implement the downloaded blacklist.
   if (aDriverInfo)
     return NS_OK;
+
+  // Many WebGL issues on 10.5, especially:
+  //   * bug 631258: WebGL shader paints using textures belonging to other processes on Mac OS 10.5
+  //   * bug 618848: Post process shaders and texture mapping crash OS X 10.5
+  if (aFeature == nsIGfxInfo::FEATURE_WEBGL_OPENGL &&
+      !nsToolkit::OnSnowLeopardOrLater())
+  {
+    status = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
+  }
 
   if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS) {
     // CGL reports a list of renderers, some renderers are slow (e.g. software)

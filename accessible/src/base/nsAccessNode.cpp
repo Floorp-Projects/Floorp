@@ -285,7 +285,8 @@ nsAccessNode::GetDocAccessible() const
     GetAccService()->GetDocAccessible(mContent->GetOwnerDoc()) : nsnull;
 }
 
-already_AddRefed<nsRootAccessible> nsAccessNode::GetRootAccessible()
+nsRootAccessible*
+nsAccessNode::RootAccessible() const
 {
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
     nsCoreUtils::GetDocShellTreeItemFor(mContent);
@@ -300,9 +301,8 @@ already_AddRefed<nsRootAccessible> nsAccessNode::GetRootAccessible()
     return nsnull;
   }
 
-  nsDocAccessible *docAcc = nsAccUtils::GetDocAccessibleFor(root);
-  nsRefPtr<nsRootAccessible> rootAcc = do_QueryObject(docAcc);
-  return rootAcc.forget();
+  nsDocAccessible* docAcc = nsAccUtils::GetDocAccessibleFor(root);
+  return docAcc ? docAcc->AsRoot() : nsnull;
 }
 
 nsIFrame*
@@ -347,8 +347,8 @@ nsAccessNode::GetRootDocument(nsIAccessibleDocument **aRootDocument)
 {
   NS_ENSURE_ARG_POINTER(aRootDocument);
 
-  nsRefPtr<nsRootAccessible> rootDocument = GetRootAccessible();
-  NS_IF_ADDREF(*aRootDocument = rootDocument.get());
+  nsRootAccessible* rootDocument = RootAccessible();
+  NS_IF_ADDREF(*aRootDocument = rootDocument);
   return NS_OK;
 }
 

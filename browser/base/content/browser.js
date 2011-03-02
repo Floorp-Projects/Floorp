@@ -4178,6 +4178,7 @@ var XULBrowserWindow = {
       field.setAttribute("previoustype", field.getAttribute("type"));
       field.setAttribute("type", type);
       field.label = text;
+      field.setAttribute("crop", type == "overLink" ? "center" : "end");
       this.statusText = text;
     }
   },
@@ -4438,7 +4439,10 @@ var XULBrowserWindow = {
       });
 
       if (gFindBarInitialized) {
-        gFindBar.close();
+        if (gFindBar.findMode != gFindBar.FIND_NORMAL) {
+          // Close the Find toolbar if we're in old-style TAF mode
+          gFindBar.close();
+        }
 
         // fix bug 253793 - turn off highlight when page changes
         gFindBar.getElement("highlight").checked = false;

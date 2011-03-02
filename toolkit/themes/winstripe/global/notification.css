@@ -119,7 +119,7 @@ XXX: apply styles to all themes until bug 509642 is fixed
     list-style-image: url("chrome://global/skin/arrow/arrow-dn-sharp.gif");
   }
 
-  .popup-notification-menubutton > .button-menubutton-dropmarker {
+  .popup-notification-menubutton:-moz-focusring > .button-menubutton-dropmarker {
     outline: 1px dotted ThreeDDarkShadow;
     outline-offset: -3px;
   }

@@ -150,7 +150,7 @@ abstract public class GeckoApp
                     Log.e("GeckoApp", "error unpacking components", ie);
                     String msg = ie.getMessage();
                     Looper.prepare();
-                    if (msg.equalsIgnoreCase("No space left on device"))
+                    if (msg != null && msg.equalsIgnoreCase("No space left on device"))
                         showErrorDialog(getString(R.string.no_space_to_start_error));
                     else
                         showErrorDialog(getString(R.string.error_loading_file));
@@ -542,6 +542,10 @@ abstract public class GeckoApp
             Log.i("GeckoAppJava", "error doing restart", e);
         }
         finish();
+        // Give the restart process time to start before we die
+        try {
+            Thread.currentThread().sleep(1000);
+        } catch (InterruptedException ie) {}
     }
 
     public void handleNotification(String action, String alertName, String alertCookie) {
