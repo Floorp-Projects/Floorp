@@ -58,6 +58,8 @@
 
 #include "nsIGfxInfo.h"
 
+#include "gfxCrashReporterUtils.h"
+
 #ifdef MOZ_FT2_FONTS
 #include "ft2build.h"
 #include FT_FREETYPE_H
@@ -326,6 +328,7 @@ gfxWindowsPlatform::UpdateRenderMode()
     // Enable when it's preffed on -and- we're using Vista or higher. Or when
     // we're going to use D2D.
     if (!mDWriteFactory && (mUseDirectWrite && isVistaOrHigher)) {
+        mozilla::ScopedGfxFeatureReporter reporter("DWrite");
         DWriteCreateFactoryFunc createDWriteFactory = (DWriteCreateFactoryFunc)
             GetProcAddress(LoadLibraryW(L"dwrite.dll"), "DWriteCreateFactory");
 
@@ -342,6 +345,9 @@ gfxWindowsPlatform::UpdateRenderMode()
                 reinterpret_cast<IUnknown**>(&factory));
             mDWriteFactory = factory;
             factory->Release();
+
+            if (hr == S_OK)
+              reporter.SetSuccessful();
         }
     }
 #endif
@@ -359,6 +365,8 @@ gfxWindowsPlatform::VerifyD2DDevice(PRBool aAttemptForce)
         }
         mD2DDevice = nsnull;
     }
+
+    mozilla::ScopedGfxFeatureReporter reporter("D2D");
 
     HMODULE d3d10module = LoadLibraryA("d3d10_1.dll");
     D3D10CreateDevice1Func createD3DDevice = (D3D10CreateDevice1Func)
@@ -405,6 +413,9 @@ gfxWindowsPlatform::VerifyD2DDevice(PRBool aAttemptForce)
     if (!mD2DDevice && aAttemptForce) {
         mD2DDevice = cairo_d2d_create_device();
     }
+
+    if (mD2DDevice)
+        reporter.SetSuccessful();
 #endif
 }
 
