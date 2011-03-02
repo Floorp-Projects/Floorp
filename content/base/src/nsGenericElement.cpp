@@ -2236,6 +2236,8 @@ nsGenericElement::SetPrefix(const nsAString& aPrefix)
     return NS_ERROR_DOM_NAMESPACE_ERR;
   }
 
+  nsAutoScriptBlocker scriptBlocker;
+
   nsCOMPtr<nsINodeInfo> newNodeInfo;
   nsresult rv = nsContentUtils::PrefixChanged(mNodeInfo, prefix,
                                               getter_AddRefs(newNodeInfo));
@@ -4657,14 +4659,20 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     nsNodeUtils::AttributeWillChange(this, aNamespaceID, aName, modType);
   }
 
+  // Hold a script blocker while calling ParseAttribute since that can call
+  // out to id-observers
+  nsContentUtils::AddRemovableScriptBlocker();
+
   nsAttrValue attrValue;
   if (!ParseAttribute(aNamespaceID, aName, aValue, attrValue)) {
     attrValue.SetTo(aValue);
   }
 
-  return SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue,
-                          attrValue, modType, hasListeners, aNotify,
-                          &aValue);
+  rv = SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue,
+                        attrValue, modType, hasListeners, aNotify,
+                        &aValue);
+  nsContentUtils::RemoveRemovableScriptBlocker();
+  return rv;
 }
 
 nsresult
