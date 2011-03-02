@@ -1612,6 +1612,16 @@ nsGlobalWindow::SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal)
     nsCOMPtr<nsIDocShell_MOZILLA_2_0_BRANCH> ds(do_QueryInterface(GetDocShell()));
     ds->CreateAboutBlankContentViewer(aPrincipal);
     mDoc->SetIsInitialDocument(PR_TRUE);
+
+    nsCOMPtr<nsIPresShell> shell;
+    GetDocShell()->GetPresShell(getter_AddRefs(shell));
+
+    if (shell && !shell->DidInitialReflow()) {
+      // Ensure that if someone plays with this document they will get
+      // layout happening.
+      nsRect r = shell->GetPresContext()->GetVisibleArea();
+      shell->InitialReflow(r.width, r.height);
+    }
   }
 }
 
