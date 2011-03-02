@@ -992,11 +992,12 @@ BookmarksStore.prototype = {
     }
     return this.__childGUIDsStm = stmt;
   },
+  _childGUIDsCols: ["item_id", "guid"],
 
   _getChildGUIDsForId: function _getChildGUIDsForId(itemid) {
     let stmt = this._childGUIDsStm;
     stmt.params.parent = itemid;
-    let rows = Utils.queryAsync(stmt, ["item_id", "guid"]);
+    let rows = Utils.queryAsync(stmt, this._childGUIDsCols);
     return rows.map(function (row) {
       if (row.guid) {
         return row.guid;
@@ -1144,6 +1145,7 @@ BookmarksStore.prototype = {
         "WHERE url = :url " +
         "LIMIT 1");
   },
+  _frecencyCols: ["frecency"],
 
   get _addGUIDAnnotationNameStm() {
     let stmt = this._getStmt(
@@ -1165,6 +1167,7 @@ BookmarksStore.prototype = {
     stmt.params.anno_name = GUID_ANNO;
     return stmt;
   },
+  _checkGUIDItemAnnotationCols: ["item_id", "name_id", "anno_id", "anno_date"],
 
   get _addItemAnnotationStm() {
     return this._getStmt(
@@ -1214,8 +1217,7 @@ BookmarksStore.prototype = {
 
     let stmt = this._checkGUIDItemAnnotationStm;
     stmt.params.item_id = id;
-    let result = Utils.queryAsync(stmt, ["item_id", "name_id", "anno_id",
-                                         "anno_date"])[0];
+    let result = Utils.queryAsync(stmt, this._checkGUIDItemAnnotationCols)[0];
     if (!result) {
       this._log.warn("Couldn't annotate bookmark id " + id);
       return guid;
@@ -1268,6 +1270,7 @@ BookmarksStore.prototype = {
 
     return this.__guidForIdStm = stmt;
   },
+  _guidForIdCols: ["guid"],
 
   GUIDForId: function GUIDForId(id) {
     let special = kSpecialIds.specialGUIDForId(id);
@@ -1278,7 +1281,7 @@ BookmarksStore.prototype = {
     stmt.params.item_id = id;
 
     // Use the existing GUID if it exists
-    let result = Utils.queryAsync(stmt, ["guid"])[0];
+    let result = Utils.queryAsync(stmt, this._guidForIdCols)[0];
     if (result && result.guid)
       return result.guid;
 
@@ -1318,6 +1321,7 @@ BookmarksStore.prototype = {
 
     return this.__idForGUIDStm = stmt;
   },
+  _idForGUIDCols: ["item_id"],
 
   // noCreate is provided as an optional argument to prevent the creation of
   // non-existent special records, such as "mobile".
@@ -1329,7 +1333,7 @@ BookmarksStore.prototype = {
     // guid might be a String object rather than a string.
     stmt.params.guid = guid.toString();
 
-    let results = Utils.queryAsync(stmt, ["item_id"]);
+    let results = Utils.queryAsync(stmt, this._idForGUIDCols);
     this._log.trace("Rows matching GUID " + guid + ": " +
                     results.map(function(x) x.item_id));
     
@@ -1372,7 +1376,7 @@ BookmarksStore.prototype = {
     // Add in the bookmark's frecency if we have something
     if (record.bmkUri != null) {
       this._frecencyStm.params.url = record.bmkUri;
-      let result = Utils.queryAsync(this._frecencyStm, ["frecency"]);
+      let result = Utils.queryAsync(this._frecencyStm, this._frecencyCols);
       if (result.length)
         index += result[0].frecency;
     }
