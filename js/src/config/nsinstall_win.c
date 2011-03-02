@@ -26,16 +26,30 @@ typedef BOOL (*sh_FileFcn)(
         wchar_t *pathName,
         WIN32_FIND_DATA *fileData,
         void *arg);
+typedef BOOL (*sh_DoFcn)(
+        wchar_t *srcFileName,
+        DWORD srcFileAttributes,
+        wchar_t *dstFileName,
+        DWORD dstFileAttributes,
+        int force,
+        int recursive);
 
-static int shellCp (wchar_t **pArgv); 
+static int shellDo (wchar_t **pArgv, sh_FileFcn, sh_DoFcn);
 static int shellNsinstall (wchar_t **pArgv);
 static int shellMkdir (wchar_t **pArgv); 
 static BOOL sh_EnumerateFiles(const wchar_t *pattern, const wchar_t *where,
         sh_FileFcn fileFcn, void *arg, int *nFiles);
 static const char *sh_GetLastErrorMessage(void);
+static BOOL sh_DoLnk(wchar_t *srcFileName, DWORD srcFileAttributes,
+        wchar_t *dstFileName, DWORD dstFileAttributes,
+        int force, int recursive);
 static BOOL sh_DoCopy(wchar_t *srcFileName, DWORD srcFileAttributes,
         wchar_t *dstFileName, DWORD dstFileAttributes,
         int force, int recursive);
+static BOOL sh_LnkFileCmd(wchar_t *pathName, WIN32_FIND_DATA *findData,
+                          void *cpArg);
+static BOOL sh_CpFileCmd(wchar_t *pathName, WIN32_FIND_DATA *findData,
+                         void *cpArg);
 
 #define LONGPATH_PREFIX L"\\\\?\\"
 #define ARRAY_LEN(a) (sizeof(a) / sizeof(a[0]))
@@ -64,12 +78,13 @@ shellNsinstall (wchar_t **pArgv)
 {
     int retVal = 0;     /* exit status */
     int dirOnly = 0;    /* 1 if and only if -D is specified */
+    int linkFiles = 0;  /* 1 iff -R is specified */
     wchar_t **pSrc;
     wchar_t **pDst;
 
     /*
      * Process the command-line options.  We ignore the
-     * options except for -D.  Some options, such as -m,
+     * options except for -D and -R.  Some options, such as -m,
      * are followed by an argument.  We need to skip the
      * argument too.
      */
@@ -78,6 +93,8 @@ shellNsinstall (wchar_t **pArgv)
 
         if ( c == 'D' ) {
             dirOnly = 1;
+        } else if ( c == 'R' ) {
+            linkFiles = 1;
         } else if ( c == 'm' ) {
             pArgv++;  /* skip the next argument */
         }
@@ -111,8 +128,13 @@ shellNsinstall (wchar_t **pArgv)
     retVal = shellMkdir ( pDst );
     if ( retVal )
         return retVal;
-    if ( !dirOnly )
-        retVal = shellCp ( pSrc );
+    if ( !dirOnly ) {
+        if ( linkFiles) {
+            retVal = shellDo ( pSrc, sh_LnkFileCmd, sh_DoLnk );
+        } else {
+            retVal = shellDo ( pSrc, sh_CpFileCmd, sh_DoCopy );
+        }
+    }
     return retVal;
 }
 
@@ -226,6 +248,53 @@ sh_RecordFileData(wchar_t *pathName, WIN32_FIND_DATA *findData, void *arg)
 }
 
 static BOOL
+sh_DoLnk(wchar_t *srcFileName,
+         DWORD srcFileAttributes,
+         wchar_t *dstFileName,
+         DWORD dstFileAttributes,
+         int force,
+         int recursive
+)
+{
+    BOOL willDeleteFile = (dstFileAttributes != 0xFFFFFFFF) ? TRUE : FALSE;
+
+    if (srcFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+        fprintf(stderr, "nsinstall: %ls is a directory\n",
+                srcFileName);
+        return FALSE;
+    } else {
+        DWORD r;
+        wchar_t longSrc[1004] = LONGPATH_PREFIX;
+        wchar_t longDst[1004] = LONGPATH_PREFIX;
+        r = GetFullPathName(srcFileName, 1000, longSrc + STR_LEN(LONGPATH_PREFIX), NULL);
+        if (!r) {
+            fprintf(stderr, "nsinstall: couldn't get full path of %ls: %s\n",
+                    srcFileName, sh_GetLastErrorMessage());
+            return FALSE;
+        }
+        r = GetFullPathName(dstFileName, 1000, longDst + ARRAY_LEN(LONGPATH_PREFIX) - 1, NULL);
+        if (!r) {
+            fprintf(stderr, "nsinstall: couldn't get full path of %ls: %s\n",
+                    dstFileName, sh_GetLastErrorMessage());
+            return FALSE;
+        }
+
+        if (willDeleteFile) {
+            DeleteFile(dstFileName);
+        }
+
+        if (!CreateHardLink(longDst, longSrc, NULL)) {
+            fprintf(stderr, "nsinstall: warning! cannot link %ls to %ls: %s\n",
+                    srcFileName, dstFileName, sh_GetLastErrorMessage());
+            return sh_DoCopy(srcFileName, srcFileAttributes,
+                             dstFileName, dstFileAttributes,
+                             force, recursive);
+        }
+    }
+    return TRUE;
+}
+
+static BOOL
 sh_DoCopy(wchar_t *srcFileName,
           DWORD srcFileAttributes,
           wchar_t *dstFileName,
@@ -316,8 +385,20 @@ sh_CpFileCmd(wchar_t *pathName, WIN32_FIND_DATA *findData, void *cpArg)
             arg->force, arg->recursive);
 }
 
+static BOOL
+sh_LnkFileCmd(wchar_t *pathName, WIN32_FIND_DATA *findData, void *cpArg)
+{
+    BOOL retVal = TRUE;
+    struct sh_CpCmdArg *arg = (struct sh_CpCmdArg *) cpArg;
+
+    wcscpy(arg->dstFileNameMarker, findData->cFileName);
+    return sh_DoLnk(pathName, findData->dwFileAttributes,
+            arg->dstFileName, GetFileAttributes(arg->dstFileName),
+            arg->force, arg->recursive);
+}
+
 static int
-shellCp (wchar_t **pArgv) 
+shellDo (wchar_t **pArgv, sh_FileFcn doFooCmd, sh_DoFcn doFoo)
 {
     int retVal = 0;
     wchar_t **pSrc;
@@ -453,7 +534,7 @@ shellCp (wchar_t **pArgv)
             retVal = 3;
         } else {
             assert(n == 1);
-            if (sh_DoCopy(srcData.pathName, srcData.dwFileAttributes,
+            if ((*doFoo)(srcData.pathName, srcData.dwFileAttributes,
                     dstData.pathName, dstData.dwFileAttributes,
                     arg.force, arg.recursive) == FALSE) {
                 retVal = 3;
@@ -466,7 +547,7 @@ shellCp (wchar_t **pArgv)
         BOOL rv;
 
         changeForwardSlashesToBackSlashes(*pSrc);
-        rv = sh_EnumerateFiles(*pSrc, *pSrc, sh_CpFileCmd, &arg, &n);
+        rv = sh_EnumerateFiles(*pSrc, *pSrc, doFooCmd, &arg, &n);
         if (rv == FALSE) {
             retVal = 3;
         } else {
