@@ -51,7 +51,7 @@ VISIBILITY_FLAGS =
 HOST_PROGRAM	= nsinstall$(HOST_BIN_SUFFIX)
 
 ifeq (WINNT,$(HOST_OS_ARCH))
-HOST_CSRCS	= nsinstall_win.c
+HOST_CSRCS = nsinstall_win.c
 HOST_EXTRA_LIBS = $(call EXPAND_LIBNAME,shlwapi)
 else
 HOST_CSRCS	= nsinstall.c pathsub.c
