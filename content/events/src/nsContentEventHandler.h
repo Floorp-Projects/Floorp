@@ -83,6 +83,8 @@ public:
   nsresult OnQuerySelectionAsTransferable(nsQueryContentEvent* aEvent);
   // NS_QUERY_CHARACTER_AT_POINT event handler
   nsresult OnQueryCharacterAtPoint(nsQueryContentEvent* aEvent);
+  // NS_QUERY_DOM_WIDGET_HITTEST event handler
+  nsresult OnQueryDOMWidgetHittest(nsQueryContentEvent* aEvent);
 
   // NS_SELECTION_* event
   nsresult OnSelectionEvent(nsSelectionEvent* aEvent);

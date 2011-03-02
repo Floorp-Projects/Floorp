@@ -42,4 +42,5 @@ IPDLSRCS = \
   PCrashReporter.ipdl \
   PDocumentRenderer.ipdl \
   PContentPermissionRequest.ipdl \
+  PMemoryReportRequest.ipdl \
   $(NULL)

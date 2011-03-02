@@ -52,6 +52,7 @@
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsIInputStream.h"
+#include "nsIIPCSerializable.h"
 #include "nsIMIMEService.h"
 #include "nsIPlatformCharset.h"
 #include "nsISeekableStream.h"
@@ -68,6 +69,74 @@
 #include "prmem.h"
 
 using namespace mozilla;
+
+// XXXkhuey the input stream that we pass out of a DOMFile
+// can outlive the actual DOMFile object.  Thus, we must
+// ensure that the buffer underlying the stream we get
+// from NS_NewByteInputStream is held alive as long as the
+// stream is.  We do that by passing back this class instead.
+class DataOwnerAdapter : public nsIInputStream,
+                         public nsISeekableStream,
+                         public nsIIPCSerializable
+{
+  typedef nsDOMMemoryFile::DataOwner DataOwner;
+public:
+  static nsresult Create(DataOwner* aDataOwner,
+                         PRUint32 aStart,
+                         PRUint32 aLength,
+                         nsIInputStream** _retval);
+
+  NS_DECL_ISUPPORTS
+
+  NS_FORWARD_NSIINPUTSTREAM(mStream->)
+
+  NS_FORWARD_NSISEEKABLESTREAM(mSeekableStream->)
+
+  NS_FORWARD_NSIIPCSERIALIZABLE(mSerializableStream->)
+
+private:
+  DataOwnerAdapter(DataOwner* aDataOwner,
+                   nsIInputStream* aStream)
+    : mDataOwner(aDataOwner), mStream(aStream),
+      mSeekableStream(do_QueryInterface(aStream)),
+      mSerializableStream(do_QueryInterface(aStream))
+  {
+    NS_ASSERTION(mSeekableStream, "Somebody gave us the wrong stream!");
+    NS_ASSERTION(mSerializableStream, "Somebody gave us the wrong stream!");
+  }
+
+  nsRefPtr<DataOwner> mDataOwner;
+  nsCOMPtr<nsIInputStream> mStream;
+  nsCOMPtr<nsISeekableStream> mSeekableStream;
+  nsCOMPtr<nsIIPCSerializable> mSerializableStream;
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS3(DataOwnerAdapter,
+                              nsIInputStream,
+                              nsISeekableStream,
+                              nsIIPCSerializable)
+
+nsresult DataOwnerAdapter::Create(DataOwner* aDataOwner,
+                                  PRUint32 aStart,
+                                  PRUint32 aLength,
+                                  nsIInputStream** _retval)
+{
+  nsresult rv;
+  NS_ASSERTION(aDataOwner, "Uh ...");
+
+  nsCOMPtr<nsIInputStream> stream;
+
+  rv = NS_NewByteInputStream(getter_AddRefs(stream),
+                             static_cast<const char*>(aDataOwner->mData) +
+                             aStart,
+                             (PRInt32)aLength,
+                             NS_ASSIGNMENT_DEPEND);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ADDREF(*_retval = new DataOwnerAdapter(aDataOwner, stream));
+
+  return NS_OK;
+}
 
 // nsDOMFile implementation
 
@@ -585,10 +654,7 @@ nsDOMMemoryFile::GetInternalStream(nsIInputStream **aStream)
   if (mLength > PR_INT32_MAX)
     return NS_ERROR_FAILURE;
 
-  return NS_NewByteInputStream(aStream,
-                               static_cast<const char*>(mDataOwner->mData) +
-                               mStart,
-                               (PRInt32)mLength);
+  return DataOwnerAdapter::Create(mDataOwner, mStart, mLength, aStream);
 }
 
 NS_IMETHODIMP

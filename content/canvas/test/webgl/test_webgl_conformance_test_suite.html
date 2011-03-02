@@ -300,23 +300,16 @@ function start() {
   else if (navigator.platform.indexOf("Mac") == 0)
     kIsMac = true;
 
+  var kIsWindowsVistaOrHigher = false;
   // we currently disable this test on versions of Windows older than Windows Vista,
   // due to failure to load ANGLE on win 2003 test slaves, see bug 582053.
   if (kIsWindows) {
     // code borrowed from browser/components/wintaskbar/test/browser_taskbar_preview.js
-    var isWinVistaOrHigher = false;
-    try {
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-      var version = Components.classes["@mozilla.org/system-info;1"]
-                              .getService(Components.interfaces.nsIPropertyBag2)
-                              .getProperty("version");
-      isWinVistaOrHigher = (parseFloat(version) >= 6.0);
-    } catch (ex) {}
-    if (!isWinVistaOrHigher) {
-      dump("WebGL mochitest disabled on Windows versions older than Vista");
-      SimpleTest.finish();
-      return;
-    }
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var version = Components.classes["@mozilla.org/system-info;1"]
+                            .getService(Components.interfaces.nsIPropertyBag2)
+                            .getProperty("version");
+    kIsWindowsVistaOrHigher = (parseFloat(version) >= 6.0);
   }
 
   // we currently disable this test on version of Mac OSX older than 10.6,
@@ -325,18 +318,16 @@ function start() {
   if (kIsMac) {
     // code borrowed from browser/components/wintaskbar/test/browser_taskbar_preview.js
     var is106orHigher = false;
-    try {
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-      var version = Components.classes["@mozilla.org/system-info;1"]
-                              .getService(Components.interfaces.nsIPropertyBag2)
-                              .getProperty("version");
-      // the next line is correct: Mac OS 10.6 corresponds to Darwin version 10 !
-      // Mac OS 10.5 would be Darwin version 9. the |version| string we've got here
-      // is the Darwin version.
-      is106orHigher = (parseFloat(version) >= 10.0);
-    } catch (ex) { }
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var version = Components.classes["@mozilla.org/system-info;1"]
+                            .getService(Components.interfaces.nsIPropertyBag2)
+                            .getProperty("version");
+    // the next line is correct: Mac OS 10.6 corresponds to Darwin version 10 !
+    // Mac OS 10.5 would be Darwin version 9. the |version| string we've got here
+    // is the Darwin version.
+    is106orHigher = (parseFloat(version) >= 10.0);
     if (!is106orHigher) {
-      dump("WebGL mochitest disabled on Mac OSX versions older than 10.6");
+      dump("WebGL mochitest disabled on Mac OSX versions older than 10.6\n");
       SimpleTest.finish();
       return;
     }
@@ -365,6 +356,10 @@ function start() {
   var testsExpectedToFail = loadTextFileSynchronous(failingTestsFilename)
                             .replace(/\r/g, '') // convert to unix line breaks
                             .split('\n');
+
+  // canvas-test.html is currently failing on Windows XP test slaves
+  if (kIsWindows && !kIsWindowsVistaOrHigher)
+      testsExpectedToFail.push('conformance/canvas-test.html');
 
   var testsSuccessful = [];
 

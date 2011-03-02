@@ -4103,6 +4103,10 @@ nsDocument::MozSetImageElement(const nsAString& aImageElementId,
   if (aImageElementId.IsEmpty())
     return NS_OK;
 
+  // Hold a script blocker while calling SetImageElement since that can call
+  // out to id-observers
+  nsAutoScriptBlocker scriptBlocker;
+
   nsCOMPtr<nsIContent> content = do_QueryInterface(aImageElement);
   nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(aImageElementId);
   if (entry) {

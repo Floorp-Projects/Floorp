@@ -160,7 +160,7 @@ html[dir=rtl] .stacked .thumb {
 
 .stack-trayed .tab-title {
   text-shadow: rgba(0,0,0,1) 1px 1px 1.5px;
-  color: WindowText;
+  color: #EEE;
   font-size: 11px;
 }
 

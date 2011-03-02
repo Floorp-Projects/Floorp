@@ -97,7 +97,7 @@ static const PRUint32 LOW_VIDEO_FRAMES = 1;
 static const PRUint32 AMPLE_VIDEO_FRAMES = 10;
 
 // Arbitrary "frame duration" when playing only audio.
-static const int AUDIO_DURATION_MS = 150;
+static const int AUDIO_DURATION_MS = 40;
 
 // If we increase our "low audio threshold" (see LOW_AUDIO_MS above), we
 // use this as a factor in all our calculations. Increasing this will cause

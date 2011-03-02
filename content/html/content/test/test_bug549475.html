@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549475
 // And it has no sanitizing algorithm.
 var inputTypes =
 [
-  "text", "password", "search", "telephone", "hidden", "checkbox", "radio",
+  "text", "password", "search", "tel", "hidden", "checkbox", "radio",
   "submit", "image", "reset", "button", "email", "url"
 ];
 
@@ -37,7 +37,7 @@ var todoTypes =
 
 var valueModeValue =
 [
-  "text", "search", "url", "telephone", "email", "password", "date", "datetime",
+  "text", "search", "url", "tel", "email", "password", "date", "datetime",
   "month", "week", "time", "datetime-local", "number", "range", "color",
 ];
 
@@ -47,7 +47,7 @@ function sanitizeValue(aType, aValue)
     case "text":
     case "password":
     case "search":
-    case "telephone":
+    case "tel":
     case "email":
       return aValue.replace(/[\n\r]/g, "");
     case "url":

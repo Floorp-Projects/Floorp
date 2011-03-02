@@ -1062,6 +1062,21 @@ gTmpD.append("temp");
 gTmpD.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 registerDirectory("TmpD", gTmpD);
 
+// Write out an empty blocklist.xml file to the profile to ensure nothing
+// is blocklisted by default
+var blockFile = gProfD.clone();
+blockFile.append("blocklist.xml");
+var stream = AM_Cc["@mozilla.org/network/file-output-stream;1"].
+             createInstance(AM_Ci.nsIFileOutputStream);
+stream.init(blockFile, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE,
+            FileUtils.PERMS_FILE, 0);
+
+var data = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+           "<blocklist xmlns=\"http://www.mozilla.org/2006/addons-blocklist\">\n" +
+           "</blocklist>\n";
+stream.write(data, data.length);
+stream.close();
+
 do_register_cleanup(function() {
   // Check that the temporary directory is empty
   var dirEntries = gTmpD.directoryEntries

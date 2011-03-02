@@ -72,7 +72,7 @@ function runTest() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
     .getService(Components.interfaces.nsIPrefBranch);
-  var html5enabled = prefs.getBoolPref("html5.enable");
+  var html5enabled = prefs.getBoolPref("html5.parser.enable");
 
   var doc = $("f1").contentDocument;
   is(doc.characterSet, "UTF-8",

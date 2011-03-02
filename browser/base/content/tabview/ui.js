@@ -1032,6 +1032,10 @@ let UI = {
         // the / event handler for find bar is defined in the findbar.xml
         // binding.  To keep things in its own module, we handle our slash here.
         self.enableSearch(event);
+      } else if (event.keyCode == KeyEvent.DOM_VK_BACK_SPACE) {
+        // prevent navigating backward in the selected tab's history
+        event.stopPropagation();
+        event.preventDefault();
       }
     });
   },

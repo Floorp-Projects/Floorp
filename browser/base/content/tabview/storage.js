@@ -292,7 +292,7 @@ let Storage = {
           // Notify subscribers
           tab._tabViewTabItem._sendToSubscribers("loadedCachedImageData");
         } else {
-          Utils.log("Error while loading thumbnail: " + e);
+          Utils.log("Error while loading thumbnail");
         }
       });
     }
