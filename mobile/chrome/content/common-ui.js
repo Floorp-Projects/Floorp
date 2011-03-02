@@ -751,7 +751,7 @@ var FormHelperUI = {
         // If the focus is not on the browser element, the key will not be sent
         // to the content so do it ourself
         let focusedElement = gFocusManager.getFocusedElementForWindow(window, true, {});
-        if (focusedElement.localName == "browser")
+        if (focusedElement && focusedElement.localName == "browser")
           return;
 
         Browser.keySender.handleEvent(aEvent);
