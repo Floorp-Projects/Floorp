@@ -759,16 +759,23 @@ PartialInterpret(VMFrame &f)
 
 JS_STATIC_ASSERT(JSOP_NOP == 0);
 
-/* Returns whether the current PC would return, popping the frame. */
-static inline JSOp
+/*
+ * Returns whether the current PC would return, or if the frame has already
+ * been completed. This distinction avoids re-entering the interpreter or JIT
+ * to complete a JSOP_RETURN. Instead, that edge case is handled in
+ * HandleFinishedFrame. We could consider reducing complexity, and making this
+ * function return only "finishedInInterpreter", and always using the full VM
+ * machinery to fully finish frames.
+ */
+static inline bool
 FrameIsFinished(JSContext *cx)
 {
     JSOp op = JSOp(*cx->regs->pc);
     return (op == JSOP_RETURN ||
             op == JSOP_RETRVAL ||
             op == JSOP_STOP)
-        ? op
-        : JSOP_NOP;
+        ? true
+        : cx->fp()->finishedInInterpreter();
 }
 
 
@@ -818,9 +825,9 @@ HandleFinishedFrame(VMFrame &f, JSStackFrame *entryFrame)
      *  4. No: Somewhere in the RunTracer call tree, we removed a frame,
      *         and we returned to a JSOP_RETURN opcode. Note carefully
      *         that in this situation, FrameIsFinished() returns true!
-     *  5. Yes: The function exited in the method JIT. However, in this
-     *         case, we'll never enter HandleFinishedFrame(): we always
-     *         immediately pop JIT'd frames.
+     *  5. Yes: The function exited in the method JIT, during
+     *         FinishExcessFrames() However, in this case, we'll never enter
+     *         HandleFinishedFrame(): we always immediately pop JIT'd frames.
      *
      * Since the only scenario where this fixup is NOT needed is a normal exit
      * from the interpreter, we can cleanly check for this scenario by checking
