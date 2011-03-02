@@ -2157,6 +2157,20 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
         else
             id = GetAtomId(cx, script, pc, 0);
 
+        /*
+         * This might be a lazily loaded property of the global object. Resolve
+         * it now. Subtract this from the total analysis time. This is
+         * generally not needed if we ran the interpreter on this code first,
+         * but avoids recompilation if we are using JSOPTION_METHODJIT_ALWAYS.
+         */
+        uint64_t startTime = cx->compartment->types.currentTime();
+        JSObject *obj;
+        JSProperty *prop;
+        js_LookupPropertyWithFlags(cx, script->getGlobal(), id,
+                                   JSRESOLVE_QUALIFIED, &obj, &prop);
+        uint64_t endTime = cx->compartment->types.currentTime();
+        cx->compartment->types.analysisTime -= (endTime - startTime);
+
         /* Handle as a property access. */
         PropertyAccess(cx, script, pc, script->getGlobalType(),
                        false, &pushed[0], id);
