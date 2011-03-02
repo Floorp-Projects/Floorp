@@ -116,10 +116,8 @@ JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug)
 static bool
 CompartmentHasLiveScripts(JSCompartment *comp)
 {
-#ifdef JS_METHODJIT
-# ifdef JS_THREADSAFE
+#if defined(JS_METHODJIT) && defined(JS_THREADSAFE)
     jsword currentThreadId = reinterpret_cast<jsword>(js_CurrentThreadId());
-# endif
 #endif
 
     // Unsynchronized context iteration is technically a race; but this is only
@@ -127,7 +125,7 @@ CompartmentHasLiveScripts(JSCompartment *comp)
     JSContext *iter = NULL;
     JSContext *icx;
     while ((icx = JS_ContextIterator(comp->rt, &iter))) {
-#ifdef JS_THREADSAFE
+#if defined(JS_METHODJIT) && defined(JS_THREADSAFE)
         if (JS_GetContextThread(icx) != currentThreadId)
             continue;
 #endif
