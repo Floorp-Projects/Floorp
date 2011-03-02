@@ -75,6 +75,7 @@ EXPORTS	= \
 	nsIRegion.h \
 	nsITheme.h \
 	nsThemeConstants.h \
+	gfxCrashReporterUtils.h \
 	$(NULL)
 
 ifdef MOZ_X11
@@ -89,7 +90,8 @@ CPPSRCS = \
         nsRegion.cpp \
         nsTransform2D.cpp \
         nsScriptableRegion.cpp \
-        $(NULL)
+        gfxCrashReporterUtils.cpp \
+       $(NULL)
 
 EXTRA_DSO_LDOPTS = \
         $(MOZ_UNICHARUTIL_LIBS) \

@@ -50,6 +50,8 @@
 #include "nsIPrefBranch2.h"
 #include "gfxFailure.h"
 
+#include "gfxCrashReporterUtils.h"
+
 namespace mozilla {
 namespace layers {
 
@@ -71,6 +73,8 @@ LayerManagerD3D9::~LayerManagerD3D9()
 PRBool
 LayerManagerD3D9::Initialize()
 {
+  ScopedGfxFeatureReporter reporter("D3D9 Layers");
+
   nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
   /* XXX: this preference and blacklist code should move out of the layer manager */
@@ -113,6 +117,7 @@ LayerManagerD3D9::Initialize()
     return PR_FALSE;
   }
 
+  reporter.SetSuccessful();
   return PR_TRUE;
 }
 
