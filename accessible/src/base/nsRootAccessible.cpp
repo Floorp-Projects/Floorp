@@ -112,6 +112,7 @@ nsRootAccessible::
                    nsIWeakReference *aShell) :
   nsDocAccessibleWrap(aDocument, aRootContent, aShell)
 {
+  mFlags |= eRootAccessible;
 }
 
 nsRootAccessible::~nsRootAccessible()
