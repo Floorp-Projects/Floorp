@@ -155,7 +155,7 @@ nsSystemInfo::Init()
         if (version >= 8 && mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str))
             SetPropertyAsAString(NS_LITERAL_STRING("hardware"), str);
         SetPropertyAsAString(NS_LITERAL_STRING("shellName"), NS_LITERAL_STRING("Android"));
-        if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "CODENAME", str)) {
+        if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build$VERSION", "CODENAME", str)) {
             if (version) {
                 str.Append(NS_LITERAL_STRING(" ("));
                 str.AppendInt(version);
