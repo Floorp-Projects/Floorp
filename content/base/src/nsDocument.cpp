@@ -346,9 +346,6 @@ nsIdentifierMapEntry::FireChangeCallbacks(Element* aOldElement,
                                           Element* aNewElement,
                                           PRBool aImageOnly)
 {
-  NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
-               "Missing script blockers around code that modifies id-hash");
-
   if (!mChangeCallbacks)
     return;
 
@@ -2625,9 +2622,6 @@ nsDocument::RemoveFromNameTable(Element *aElement, nsIAtom* aName)
 void
 nsDocument::AddToIdTable(Element *aElement, nsIAtom* aId)
 {
-  NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
-               "Scripts should be blocked when manipulating the ID table");
-
   nsIdentifierMapEntry *entry =
     mIdentifierMap.PutEntry(nsDependentAtomString(aId));
 
@@ -2640,8 +2634,6 @@ void
 nsDocument::RemoveFromIdTable(Element *aElement, nsIAtom* aId)
 {
   NS_ASSERTION(aId, "huhwhatnow?");
-  NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
-               "Scripts should be blocked when manipulating the ID table");
 
   // Speed up document teardown
   if (mIdentifierMap.Count() == 0) {
