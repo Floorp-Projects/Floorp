@@ -51,7 +51,9 @@
 
 #view-port-container {
   /* Needed to allow the radius to clip the inner content, see bug 595656 */
+  /* Disabled because of bug 623615
   overflow: hidden;
+  */
   background-image: -moz-linear-gradient(top, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.05));
   border: 1px solid rgba(50, 65, 92, 0.4);
   border-radius: 5px;
