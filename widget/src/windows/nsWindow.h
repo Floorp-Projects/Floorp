@@ -546,6 +546,11 @@ protected:
   static const char*    sDefaultMainWindowClass;
   static PRBool         sUseElantechGestureHacks;
   static bool           sAllowD3D9;
+
+  // Always use the helper method to read this property.  See bug 603793.
+  static TriStateBool   sHasBogusPopupsDropShadowOnMultiMonitor;
+  static bool           HasBogusPopupsDropShadowOnMultiMonitor();
+
 #ifdef MOZ_IPC
   static PRUint32       sOOPPPluginFocusEvent;
 #endif

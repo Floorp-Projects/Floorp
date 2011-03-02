@@ -302,6 +302,8 @@ PRBool          nsWindow::sUseElantechGestureHacks = PR_FALSE;
 // If we're using D3D9, this will not be allowed during initial 5 seconds.
 bool            nsWindow::sAllowD3D9              = false;
 
+TriStateBool nsWindow::sHasBogusPopupsDropShadowOnMultiMonitor = TRI_UNKNOWN;
+
 #ifdef ACCESSIBILITY
 BOOL            nsWindow::sIsAccessibilityOn      = FALSE;
 // Accessibility wm_getobject handler
@@ -1226,13 +1228,12 @@ NS_METHOD nsWindow::Show(PRBool bState)
 #endif
 
   if (mWindowType == eWindowType_popup) {
-    // See bug 603793. When we try to draw D3D10 windows with a drop shadow
+    // See bug 603793. When we try to draw D3D9/10 windows with a drop shadow
     // without the DWM on a secondary monitor, windows fails to composite
     // our windows correctly. We therefor switch off the drop shadow for
     // pop-up windows when the DWM is disabled and two monitors are
     // connected.
-    if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
-        gfxWindowsPlatform::RENDER_DIRECT2D &&
+    if (HasBogusPopupsDropShadowOnMultiMonitor() &&
         GetMonitorCount() > 1 &&
         !nsUXThemeData::CheckForCompositor())
     {
@@ -8101,6 +8102,36 @@ nsWindow::StartAllowingD3D9(bool aReinitialize)
   } else {
     EnumAllWindows(AllowD3D9Callback);
   }
+}
+
+bool
+nsWindow::HasBogusPopupsDropShadowOnMultiMonitor() {
+  if (sHasBogusPopupsDropShadowOnMultiMonitor == TRI_UNKNOWN) {
+    // Since any change in the preferences requires a restart, this can be
+    // done just once.
+    // Check for Direct2D first.
+    sHasBogusPopupsDropShadowOnMultiMonitor =
+      gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
+        gfxWindowsPlatform::RENDER_DIRECT2D ? TRI_TRUE : TRI_FALSE;
+    if (!sHasBogusPopupsDropShadowOnMultiMonitor) {
+      // Otherwise check if Direct3D 9 may be used.
+      LayerManagerPrefs prefs;
+      GetLayerManagerPrefs(&prefs);
+      if (!prefs.mDisableAcceleration && !prefs.mPreferOpenGL) {
+        nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+        if (gfxInfo) {
+          PRInt32 status;
+          if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &status))) {
+            if (status == nsIGfxInfo::FEATURE_NO_INFO || prefs.mForceAcceleration)
+            {
+              sHasBogusPopupsDropShadowOnMultiMonitor = TRI_TRUE;
+            }
+          }
+        }
+      }
+    }
+  }
+  return !!sHasBogusPopupsDropShadowOnMultiMonitor;
 }
 
 /**************************************************************
