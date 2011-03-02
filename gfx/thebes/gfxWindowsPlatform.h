@@ -255,6 +255,8 @@ public:
     FT_Library GetFTLibrary();
 #endif
 
+    static bool IsOptimus();
+
 protected:
     RenderMode mRenderMode;
 
