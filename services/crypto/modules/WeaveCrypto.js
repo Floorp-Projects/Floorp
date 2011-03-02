@@ -165,9 +165,6 @@ WeaveCrypto.prototype = {
         // security/nss/lib/softoken/secmodt.h#201
         // typedef PRUint32 PK11AttrFlags;
         this.nss_t.PK11AttrFlags = ctypes.unsigned_int;
-        // security/nss/lib/util/secoidt.h#454
-        // typedef enum
-        this.nss_t.SECOidTag = ctypes.int;
         // security/nss/lib/util/seccomon.h#83
         // typedef struct SECItemStr SECItem; --> SECItemStr defined right below it
         this.nss_t.SECItem = ctypes.StructType(

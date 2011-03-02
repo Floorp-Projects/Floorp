@@ -192,6 +192,20 @@ ClientEngine.prototype = {
   _wipeClient: function _wipeClient() {
     SyncEngine.prototype._resetClient.call(this);
     this._store.wipe();
+  },
+  
+  // Override the default behavior to delete bad records from the server.
+  handleHMACMismatch: function handleHMACMismatch(item) {
+    this._log.debug("Handling HMAC mismatch for " + item.id);
+    if (SyncEngine.prototype.handleHMACMismatch.call(this, item))
+      return true;
+
+    // It's a bad client record. Save it to be deleted at the end of the sync.
+    this._log.debug("Bad client record detected. Scheduling for deletion.");
+    this._deleteId(item.id);
+
+    // Don't try again.
+    return false;
   }
 };
 
