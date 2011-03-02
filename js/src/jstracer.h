@@ -331,14 +331,6 @@ public:
      * primary trace's outcome.                                                 \
      */                                                                         \
     _(BRANCH)                                                                   \
-    /*                                                                          \
-     * Exit at a tableswitch via a numbered case.                               \
-     */                                                                         \
-    _(CASE)                                                                     \
-    /*                                                                          \
-     * Exit at a tableswitch via the default case.                              \
-     */                                                                         \
-    _(DEFAULT)                                                                  \
     _(LOOP)                                                                     \
     _(NESTED)                                                                   \
     /*                                                                          \
@@ -1298,9 +1290,6 @@ class TraceRecorder
 
     JS_REQUIRES_STACK AbortableRecordingStatus ifop();
     JS_REQUIRES_STACK RecordingStatus switchop();
-#ifdef NANOJIT_IA32
-    JS_REQUIRES_STACK AbortableRecordingStatus tableswitch();
-#endif
     JS_REQUIRES_STACK RecordingStatus inc(Value& v, jsint incr, bool pre = true);
     JS_REQUIRES_STACK RecordingStatus inc(const Value &v, nanojit::LIns*& v_ins,
                                           Value &v_out, jsint incr,
