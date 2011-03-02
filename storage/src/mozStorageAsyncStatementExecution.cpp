@@ -97,8 +97,14 @@ public:
   {
     NS_ASSERTION(mCallback, "Trying to notify about results without a callback!");
 
-    if (mEventStatus->shouldNotify())
+    if (mEventStatus->shouldNotify()) {
+      // Hold a strong reference to the callback while notifying it, so that if
+      // it spins the event loop, the callback won't be released and freed out
+      // from under us.
+      nsCOMPtr<mozIStorageStatementCallback> callback = mCallback;
+
       (void)mCallback->HandleResult(mResults);
+    }
 
     return NS_OK;
   }
@@ -126,8 +132,14 @@ public:
 
   NS_IMETHOD Run()
   {
-    if (mEventStatus->shouldNotify() && mCallback)
+    if (mEventStatus->shouldNotify() && mCallback) {
+      // Hold a strong reference to the callback while notifying it, so that if
+      // it spins the event loop, the callback won't be released and freed out
+      // from under us.
+      nsCOMPtr<mozIStorageStatementCallback> callback = mCallback;
+
       (void)mCallback->HandleError(mErrorObj);
+    }
 
     return NS_OK;
   }
