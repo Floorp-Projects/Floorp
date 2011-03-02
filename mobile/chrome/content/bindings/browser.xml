@@ -1007,8 +1007,8 @@
             let scrollRangeX = contentSize.width - viewportSize.width;
             let scrollRangeY = contentSize.height - viewportSize.height;
 
-            x = Math.floor(Math.max(0, Math.min(scrollRangeX, contentView.scrollX + x)) - contentView.scrollX);
-            y = Math.floor(Math.max(0, Math.min(scrollRangeY, contentView.scrollY + y)) - contentView.scrollY);
+            x = Math.floor(Math.max(0, Math.min(scrollRangeX, contentView.scrollX + x))) - contentView.scrollX;
+            y = Math.floor(Math.max(0, Math.min(scrollRangeY, contentView.scrollY + y))) - contentView.scrollY;
 
             if (x == 0 && y == 0)
               return;
