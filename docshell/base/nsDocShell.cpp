@@ -6539,6 +6539,14 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
 
         SetCurrentURI(blankDoc->GetDocumentURI(), nsnull, PR_TRUE);
         rv = mIsBeingDestroyed ? NS_ERROR_NOT_AVAILABLE : NS_OK;
+
+        if (NS_SUCCEEDED(rv)) {
+          nsCOMPtr<nsIPresShell> shell = blankDoc->GetShell();
+          if (shell && !shell->DidInitialReflow()) {
+            nsRect r = shell->GetPresContext()->GetVisibleArea();
+            shell->InitialReflow(r.width, r.height);
+          }
+        }
       }
     }
   }
