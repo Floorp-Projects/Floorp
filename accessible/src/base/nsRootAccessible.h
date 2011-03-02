@@ -164,4 +164,11 @@ protected:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsRootAccessible, NS_ROOTACCESSIBLE_IMPL_CID)
 
+inline nsRootAccessible*
+nsAccessible::AsRoot()
+{
+  return mFlags & eRootAccessible ?
+    static_cast<nsRootAccessible*>(this) : nsnull;
+}
+
 #endif
