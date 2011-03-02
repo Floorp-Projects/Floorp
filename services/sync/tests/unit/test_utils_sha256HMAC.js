@@ -2,8 +2,8 @@ _("Make sure sha256 hmac works with various messages and keys");
 Cu.import("resource://services-sync/util.js");
 
 function run_test() {
-  let key1 = Svc.KeyFactory.keyFromString(Ci.nsIKeyObject.HMAC, "key1");
-  let key2 = Svc.KeyFactory.keyFromString(Ci.nsIKeyObject.HMAC, "key2");
+  let key1 = Utils.makeHMACKey("key1");
+  let key2 = Utils.makeHMACKey("key2");
 
   let mes1 = "message 1";
   let mes2 = "message 2";
