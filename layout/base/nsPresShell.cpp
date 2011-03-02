@@ -9404,7 +9404,14 @@ PresShell::SetIsActive(PRBool aIsActive)
   // Propagate state-change to my resource documents' PresShells
   mDocument->EnumerateExternalResources(SetExternalResourceIsActive,
                                         &aIsActive);
-  return UpdateImageLockingState();
+  nsresult rv = UpdateImageLockingState();
+#ifdef ACCESSIBILITY
+  nsAccessibilityService* accService = AccService();
+  if (accService) {
+    accService->PresShellActivated(this);
+  }
+#endif
+  return rv;
 }
 
 /*
