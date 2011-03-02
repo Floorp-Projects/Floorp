@@ -346,9 +346,6 @@ nsIdentifierMapEntry::FireChangeCallbacks(Element* aOldElement,
                                           Element* aNewElement,
                                           PRBool aImageOnly)
 {
-  NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
-               "Missing script blockers around code that modifies id-hash");
-
   if (!mChangeCallbacks)
     return;
 
