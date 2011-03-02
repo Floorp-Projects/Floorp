@@ -44,6 +44,7 @@ import java.nio.channels.*;
 import java.text.*;
 import java.util.*;
 import java.util.zip.*;
+import java.util.concurrent.locks.*;
 
 import android.os.*;
 import android.app.*;
@@ -343,6 +344,11 @@ public class GeckoAppShell
         }
     }
 
+    public static void sendEventToGeckoSync(GeckoEvent e) {
+        sendEventToGecko(e);
+        geckoEventSync();
+    }
+
     // Tell the Gecko event loop that an event is available.
     public static native void notifyGeckoOfEvent(GeckoEvent event);
 
@@ -469,6 +475,37 @@ public class GeckoAppShell
         else
             GeckoApp.surfaceView.inputConnection.notifyTextChange(
                 imm, text, start, end, newEnd);
+    }
+
+    private static final ReentrantLock mGeckoSyncLock = new ReentrantLock();
+    private static final Condition     mGeckoSyncCond = mGeckoSyncLock.newCondition();
+    private static boolean mGeckoSyncAcked;
+
+    // Block the current thread until the Gecko event loop is caught up
+    public static void geckoEventSync() {
+        GeckoAppShell.sendEventToGecko(
+            new GeckoEvent(GeckoEvent.GECKO_EVENT_SYNC));
+        mGeckoSyncLock.lock();
+        mGeckoSyncAcked = false;
+        while (!mGeckoSyncAcked) {
+            try {
+              mGeckoSyncCond.await();
+            } catch (InterruptedException e) {
+              break;
+            }
+        }
+        mGeckoSyncLock.unlock();
+    }
+
+    // Signal the Java thread that it's time to wake up
+    public static void acknowledgeEventSync() {
+        mGeckoSyncLock.lock();
+        mGeckoSyncAcked = true;
+        try {
+            mGeckoSyncCond.signal();
+        } finally {
+            mGeckoSyncLock.unlock();
+        }
     }
 
     public static void enableAccelerometer(boolean enable) {
