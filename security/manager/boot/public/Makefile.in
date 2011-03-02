@@ -50,6 +50,7 @@ SDK_XPIDLSRCS = \
     $(NULL)
 
 XPIDLSRCS = \
+    nsISSLStatusProvider.idl \
     nsIBufEntropyCollector.idl \
     $(NULL)
 
