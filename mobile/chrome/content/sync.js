@@ -261,6 +261,13 @@ let WeaveGlue = {
       if (this.setupData) {
         if (this.setupData.serverURL && this.setupData.serverURL.length)
           Weave.Service.serverURL = this.setupData.serverURL;
+
+        // We might still be in the middle of a sync from before Sync was disabled, so
+        // let's force the UI into a state that the Sync code feels comfortable
+        this.observe(null, "", "");
+
+        // Now try to re-connect. If successful, this will reset the UI into the
+        // correct state automatically.
         Weave.Service.login(Weave.Service.username, this.setupData.password, this.setupData.synckey);
       } else {
         // We can't just go back online. We need to be setup again.
