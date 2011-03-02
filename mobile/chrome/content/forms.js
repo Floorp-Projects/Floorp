@@ -329,6 +329,11 @@ FormAssistant.prototype = {
       // key processing inside a select element are done during the keypress
       // handler, preventing this one to be fired cancel the selection change
       case "keypress":
+        // There is no need to handle keys if there is not element currently
+        // used by the form assistant
+        if (!currentElement)
+          return;
+
         let formExceptions = { button: true, checkbox: true, file: true, image: true, radio: true, reset: true, submit: true };
         if (this._isSelectElement(currentElement) || formExceptions[currentElement.type] ||
             currentElement instanceof HTMLButtonElement || (currentElement.getAttribute("role") == "button" && currentElement.hasAttribute("tabindex"))) {
@@ -353,6 +358,11 @@ FormAssistant.prototype = {
         break;
 
       case "keyup":
+        // There is no need to handle keys if there is not element currently
+        // used by the form assistant
+        if (!currentElement)
+          return;
+
         switch (aEvent.keyCode) {
           case aEvent.DOM_VK_DOWN:
             if (currentElement instanceof HTMLInputElement && !this._isAutocomplete(currentElement)) {
@@ -396,7 +406,7 @@ FormAssistant.prototype = {
           default:
             if (this._isAutocomplete(aEvent.target))
               sendAsyncMessage("FormAssist:AutoComplete", this._getJSON());
-            else if (this._isSelectElement(currentElement))
+            else if (currentElement && this._isSelectElement(currentElement))
               this.currentIndex = this.currentIndex;
             break;
         }
