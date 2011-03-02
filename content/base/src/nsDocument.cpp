@@ -4124,7 +4124,7 @@ nsDocument::LookupImageElement(const nsAString& aId)
   if (aId.IsEmpty())
     return nsnull;
 
-  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(aId);
+  nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aId);
   return entry ? entry->GetImageIdElement() : nsnull;
 }
 
