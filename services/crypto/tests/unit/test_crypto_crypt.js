@@ -19,6 +19,7 @@ function run_test() {
   }
   test_bug_617650();
   test_encrypt_decrypt();
+  test_SECItem_byteCompressInts();
   if (this.gczeal)
     gczeal(0);
 }
@@ -58,6 +59,24 @@ function test_makeSECItem() {
   let intData = ctypes.cast(item1.contents.data, ctypes.uint8_t.array(8).ptr).contents;
   for (let i = 0; i < 8; ++i)
     do_check_eq(intData[i], "abcdefghi".charCodeAt(i));
+}
+
+function test_SECItem_byteCompressInts() {
+  Components.utils.import("resource://gre/modules/ctypes.jsm");
+  
+  let item1 = cryptoSvc.makeSECItem("abcdefghi", false);
+  do_check_true(!item1.isNull());
+  let intData = ctypes.cast(item1.contents.data, ctypes.uint8_t.array(8).ptr).contents;
+  
+  // Fill it too short.
+  cryptoSvc.byteCompressInts("MMM", intData, 8);
+  for (let i = 0; i < 8; ++i)
+    do_check_eq(intData[i], [77, 77, 77, 0, 0, 0, 0, 0, 0][i]);
+  
+  // Fill it too much. Doesn't buffer overrun.
+  cryptoSvc.byteCompressInts("NNNNNNNNNNNNNNNN", intData, 8);
+  for (let i = 0; i < 8; ++i)
+    do_check_eq(intData[i], "NNNNNNNNNNNNNNNN".charCodeAt(i));
 }
 
 function test_encrypt_decrypt() {
@@ -205,5 +224,4 @@ function test_encrypt_decrypt() {
     failure = true;
   }
   do_check_true(failure);
-
 }
