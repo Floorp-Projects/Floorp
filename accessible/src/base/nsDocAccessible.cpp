@@ -1501,6 +1501,11 @@ nsDocAccessible::CacheChildren()
 // Protected members
 
 void
+nsDocAccessible::NotifyOfInitialUpdate()
+{
+}
+
+void
 nsDocAccessible::AddDependentIDsFor(nsAccessible* aRelProvider,
                                     nsIAtom* aRelAttr)
 {
