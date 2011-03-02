@@ -88,7 +88,8 @@ function test_livemark_descriptions(next) {
   
   // Attempt to provoke an error by adding a bad description anno.
   let id = store.idForGUID(record.id);
-  Utils.anno(id, DESCRIPTION_ANNO, "");
+  Svc.Annos.setItemAnnotation(id, DESCRIPTION_ANNO, "", 0,
+                              Svc.Annos.EXPIRE_NEVER);
 
   next();
 }
