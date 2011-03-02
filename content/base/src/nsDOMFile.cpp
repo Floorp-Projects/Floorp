@@ -52,6 +52,7 @@
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsIInputStream.h"
+#include "nsIIPCSerializable.h"
 #include "nsIMIMEService.h"
 #include "nsIPlatformCharset.h"
 #include "nsISeekableStream.h"
@@ -75,7 +76,9 @@ using namespace mozilla;
 // from NS_NewByteInputStream is held alive as long as the
 // stream is.  We do that by passing back this class instead.
 class DataOwnerAdapter : public nsIInputStream,
-                         public nsISeekableStream {
+                         public nsISeekableStream,
+                         public nsIIPCSerializable
+{
   typedef nsDOMMemoryFile::DataOwner DataOwner;
 public:
   static nsresult Create(DataOwner* aDataOwner,
@@ -89,21 +92,29 @@ public:
 
   NS_FORWARD_NSISEEKABLESTREAM(mSeekableStream->)
 
+  NS_FORWARD_NSIIPCSERIALIZABLE(mSerializableStream->)
+
 private:
   DataOwnerAdapter(DataOwner* aDataOwner,
                    nsIInputStream* aStream)
     : mDataOwner(aDataOwner), mStream(aStream),
-      mSeekableStream(do_QueryInterface(aStream))
+      mSeekableStream(do_QueryInterface(aStream)),
+      mSerializableStream(do_QueryInterface(aStream))
   {
     NS_ASSERTION(mSeekableStream, "Somebody gave us the wrong stream!");
+    NS_ASSERTION(mSerializableStream, "Somebody gave us the wrong stream!");
   }
 
   nsRefPtr<DataOwner> mDataOwner;
   nsCOMPtr<nsIInputStream> mStream;
   nsCOMPtr<nsISeekableStream> mSeekableStream;
+  nsCOMPtr<nsIIPCSerializable> mSerializableStream;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(DataOwnerAdapter, nsIInputStream, nsISeekableStream)
+NS_IMPL_THREADSAFE_ISUPPORTS3(DataOwnerAdapter,
+                              nsIInputStream,
+                              nsISeekableStream,
+                              nsIIPCSerializable)
 
 nsresult DataOwnerAdapter::Create(DataOwner* aDataOwner,
                                   PRUint32 aStart,
