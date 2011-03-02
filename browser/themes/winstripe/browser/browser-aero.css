@@ -375,6 +375,7 @@
 
   .splitmenu-menuitem[_moz-menuactive],
   .splitmenu-menu[_moz-menuactive] {
+    background-color: transparent;
     background-image: -moz-linear-gradient(#fafbfd, #ebf3fd);
     border-color: #aeccf1;
   }
@@ -383,5 +384,9 @@
   .splitmenu-menu[disabled][_moz-menuactive] {
     background-image: -moz-linear-gradient(#f8f9f9, #eaeaea);
     border-color: #d8d7d7;
+  }
+
+  .splitmenu-menu[_moz-menuactive]:not(:hover):not([open]) {
+    background-image: none;
   }
 }
