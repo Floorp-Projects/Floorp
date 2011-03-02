@@ -5586,10 +5586,8 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                 if (!JSProxy::getPropertyDescriptor(cx, pobj, id, true, &pd))
                     return false;
 
-                if ((pd.attrs & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {
-                    return !pd.setter ||
-                           CallSetter(cx, obj, id, pd.setter, pd.attrs, pd.shortid, strict, vp);
-                }
+                if (pd.attrs & JSPROP_SHARED)
+                    return CallSetter(cx, obj, id, pd.setter, pd.attrs, pd.shortid, strict, vp);
 
                 if (pd.attrs & JSPROP_READONLY) {
                     if (strict)
