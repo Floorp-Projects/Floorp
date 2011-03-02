@@ -83,7 +83,6 @@ function test_encrypt_decrypt() {
 
 
   // Do some more tests with a fixed key/iv, to check for reproducable results.
-  cryptoSvc.algorithm = Ci.IWeaveCrypto.AES_128_CBC;
   key = "St1tFCor7vQEJNug/465dQ==";
   iv  = "oLjkfrLIOnK2bDRvW4kXYA==";
 
@@ -146,8 +145,6 @@ function test_encrypt_decrypt() {
   do_check_eq(clearText, mySecret);
 
 
-  // Test with 192 bit key.
-  cryptoSvc.algorithm = Ci.IWeaveCrypto.AES_192_CBC;
   key = "iz35tuIMq4/H+IYw2KTgow==";
   iv  = "TJYrvva2KxvkM8hvOIvWp3xgjTXgq5Ss";
   mySecret = "i like pie";
@@ -157,8 +154,6 @@ function test_encrypt_decrypt() {
   do_check_eq(cipherText, "DLGx8BWqSCLGG7i/xwvvxg==");
   do_check_eq(clearText, mySecret);
 
-  // Test with 256 bit key.
-  cryptoSvc.algorithm = Ci.IWeaveCrypto.AES_256_CBC;
   key = "c5hG3YG+NC61FFy8NOHQak1ZhMEWO79bwiAfar2euzI=";
   iv  = "gsgLRDaxWvIfKt75RjuvFWERt83FFsY2A0TW+0b2iVk=";
   mySecret = "i like pie";
@@ -168,9 +163,6 @@ function test_encrypt_decrypt() {
   do_check_eq(cipherText, "o+ADtdMd8ubzNWurS6jt0Q==");
   do_check_eq(clearText, mySecret);
 
-
-  // Test with bogus inputs
-  cryptoSvc.algorithm = Ci.IWeaveCrypto.AES_128_CBC;
   key = "St1tFCor7vQEJNug/465dQ==";
   iv  = "oLjkfrLIOnK2bDRvW4kXYA==";
   mySecret = "does thunder read testcases?";

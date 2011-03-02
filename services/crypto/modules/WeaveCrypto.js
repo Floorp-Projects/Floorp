@@ -45,6 +45,10 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/ctypes.jsm");
 
+const ALGORITHM                 = Ci.IWeaveCrypto.AES_256_CBC;
+const KEYSIZE_AES_256           = 32;
+const KEY_DERIVATION_ITERATIONS = 4096;   // PKCS#5 recommends at least 1000.
+ 
 function WeaveCrypto() {
     this.init();
 }
@@ -82,10 +86,35 @@ WeaveCrypto.prototype = {
             this.debug = this.prefBranch.getBoolPref("cryptoDebug");
 
             this.initNSS();
+            this.initAlgorithmSettings();   // Depends on NSS.
         } catch (e) {
             this.log("init failed: " + e);
             throw e;
         }
+    },
+
+    /**
+     * Set a bunch of NSS values once, at init-time. These are:
+     *   - .blockSize
+     *   - .mechanism
+     *   - .keygenMechanism
+     *   - .padMechanism
+     *   - .keySize
+     *
+     * See also the constant ALGORITHM.
+     */
+    initAlgorithmSettings: function() {
+        this.mechanism = this.nss.PK11_AlgtagToMechanism(ALGORITHM);
+        this.blockSize = this.nss.PK11_GetBlockSize(this.mechanism, null);
+        this.ivLength  = this.nss.PK11_GetIVLength(this.mechanism);
+        this.keySize   = KEYSIZE_AES_256;
+        this.keygenMechanism = this.nss.CKM_AES_KEY_GEN;  // Always the same!
+
+        // Determine which (padded) PKCS#11 mechanism to use.
+        // E.g., AES_256_CBC --> CKM_AES_CBC --> CKM_AES_CBC_PAD
+        this.padMechanism = this.nss.PK11_GetPadMechanism(this.mechanism);
+        if (this.padMechanism == this.nss.CKM_INVALID_MECHANISM)
+            throw Components.Exception("invalid algorithm (can't pad)", Cr.NS_ERROR_FAILURE);
     },
 
     log : function (message) {
@@ -336,9 +365,6 @@ WeaveCrypto.prototype = {
     // IWeaveCrypto interfaces
     //
 
-
-    algorithm : Ci.IWeaveCrypto.AES_256_CBC,
-
     encrypt : function(clearTextUCS2, symmetricKey, iv) {
         this.log("encrypt() called");
 
@@ -350,9 +376,7 @@ WeaveCrypto.prototype = {
         // When using CBC padding, the output size is the input size rounded
         // up to the nearest block. If the input size is exactly on a block
         // boundary, the output is 1 extra block long.
-        let mech = this.nss.PK11_AlgtagToMechanism(this.algorithm);
-        let blockSize = this.nss.PK11_GetBlockSize(mech, null);
-        let outputBufferSize = inputBuffer.length + blockSize;
+        let outputBufferSize = inputBuffer.length + this.blockSize;
         let outputBuffer = new ctypes.ArrayType(ctypes.unsigned_char, outputBufferSize)();
 
         outputBuffer = this._commonCrypt(inputBuffer, outputBuffer, symmetricKey, iv, this.nss.CKA_ENCRYPT);
@@ -391,16 +415,9 @@ WeaveCrypto.prototype = {
         let keyItem = this.makeSECItem(symmetricKey, true);
         let ivItem  = this.makeSECItem(iv, true);
 
-        // Determine which (padded) PKCS#11 mechanism to use.
-        // EG: AES_128_CBC --> CKM_AES_CBC --> CKM_AES_CBC_PAD
-        let mechanism = this.nss.PK11_AlgtagToMechanism(this.algorithm);
-        mechanism = this.nss.PK11_GetPadMechanism(mechanism);
-        if (mechanism == this.nss.CKM_INVALID_MECHANISM)
-            throw Components.Exception("invalid algorithm (can't pad)", Cr.NS_ERROR_FAILURE);
-
         let ctx, symKey, slot, ivParam;
         try {
-            ivParam = this.nss.PK11_ParamFromIV(mechanism, ivItem);
+            ivParam = this.nss.PK11_ParamFromIV(this.padMechanism, ivItem);
             if (ivParam.isNull())
                 throw Components.Exception("can't convert IV to param", Cr.NS_ERROR_FAILURE);
 
@@ -408,11 +425,11 @@ WeaveCrypto.prototype = {
             if (slot.isNull())
                 throw Components.Exception("can't get internal key slot", Cr.NS_ERROR_FAILURE);
 
-            symKey = this.nss.PK11_ImportSymKey(slot, mechanism, this.nss.PK11_OriginUnwrap, operation, keyItem, null);
+            symKey = this.nss.PK11_ImportSymKey(slot, this.padMechanism, this.nss.PK11_OriginUnwrap, operation, keyItem, null);
             if (symKey.isNull())
                 throw Components.Exception("symkey import failed", Cr.NS_ERROR_FAILURE);
 
-            ctx = this.nss.PK11_CreateContextBySymKey(mechanism, operation, symKey, ivParam);
+            ctx = this.nss.PK11_CreateContextBySymKey(this.padMechanism, operation, symKey, ivParam);
             if (ctx.isNull())
                 throw Components.Exception("couldn't create context for symkey", Cr.NS_ERROR_FAILURE);
 
@@ -456,36 +473,13 @@ WeaveCrypto.prototype = {
 
     generateRandomKey : function() {
         this.log("generateRandomKey() called");
-        let encodedKey, keygenMech, keySize;
-
-        // Doesn't NSS have a lookup function to do this?
-        switch(this.algorithm) {
-          case Ci.IWeaveCrypto.AES_128_CBC:
-            keygenMech = this.nss.CKM_AES_KEY_GEN;
-            keySize = 16;
-            break;
-
-          case Ci.IWeaveCrypto.AES_192_CBC:
-            keygenMech = this.nss.CKM_AES_KEY_GEN;
-            keySize = 24;
-            break;
-
-          case Ci.IWeaveCrypto.AES_256_CBC:
-            keygenMech = this.nss.CKM_AES_KEY_GEN;
-            keySize = 32;
-            break;
-
-          default:
-            throw Components.Exception("unknown algorithm", Cr.NS_ERROR_FAILURE);
-        }
-
         let slot, randKey, keydata;
         try {
             slot = this.nss.PK11_GetInternalSlot();
             if (slot.isNull())
                 throw Components.Exception("couldn't get internal slot", Cr.NS_ERROR_FAILURE);
 
-            randKey = this.nss.PK11_KeyGen(slot, keygenMech, null, keySize, null);
+            randKey = this.nss.PK11_KeyGen(slot, this.keygenMechanism, null, this.keySize, null);
             if (randKey.isNull())
                 throw Components.Exception("PK11_KeyGen failed.", Cr.NS_ERROR_FAILURE);
 
@@ -510,16 +504,7 @@ WeaveCrypto.prototype = {
         }
     },
 
-
-    generateRandomIV : function() {
-        this.log("generateRandomIV() called");
-
-        let mech = this.nss.PK11_AlgtagToMechanism(this.algorithm);
-        let size = this.nss.PK11_GetIVLength(mech);
-
-        return this.generateRandomBytes(size);
-    },
-
+    generateRandomIV : function() this.generateRandomBytes(this.ivLength),
 
     generateRandomBytes : function(byteCount) {
         this.log("generateRandomBytes() called");
@@ -602,12 +587,14 @@ WeaveCrypto.prototype = {
         let passItem = this.makeSECItem(passphrase, false);
         let saltItem = this.makeSECItem(salt, true);
 
-        let pbeAlg = this.algorithm;
-        let cipherAlg = this.algorithm; // ignored by callee when pbeAlg != a pkcs5 mech.
-        let prfAlg = this.nss.SEC_OID_HMAC_SHA1; // callee picks if SEC_OID_UNKNOWN, but only SHA1 is supported
+        let pbeAlg    = ALGORITHM;
+        let cipherAlg = ALGORITHM;   // Ignored by callee when pbeAlg != a pkcs5 mech.
+
+        // Callee picks if SEC_OID_UNKNOWN, but only SHA1 is supported.
+        let prfAlg    = this.nss.SEC_OID_HMAC_SHA1;
 
         let keyLength  = keyLength || 0;    // 0 = Callee will pick.
-        let iterations = 4096; // PKCS#5 recommends at least 1000.
+        let iterations = KEY_DERIVATION_ITERATIONS;
 
         let algid, slot, symKey, keyData;
         try {
