@@ -91,7 +91,7 @@ let FormWrapper = {
     getQuery.params.value = value;
 
     // Give the guid if we found one
-    let item = Utils.queryAsync(getQuery, "guid")[0];
+    let item = Utils.queryAsync(getQuery, ["guid"])[0];
     
     if (!item) {
       // Shouldn't happen, but Bug 597400...
@@ -120,9 +120,9 @@ let FormWrapper = {
 
   hasGUID: function hasGUID(guid) {
     let query = this.createStatement(
-      "SELECT 1 FROM moz_formhistory WHERE guid = :guid");
+      "SELECT guid FROM moz_formhistory WHERE guid = :guid LIMIT 1");
     query.params.guid = guid;
-    return Utils.queryAsync(query).length == 1;
+    return Utils.queryAsync(query, ["guid"]).length == 1;
   },
 
   replaceGUID: function replaceGUID(oldGUID, newGUID) {
