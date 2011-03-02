@@ -87,6 +87,7 @@ WeaveCrypto.prototype = {
 
             this.initNSS();
             this.initAlgorithmSettings();   // Depends on NSS.
+            this.initIVSECItem();
         } catch (e) {
             this.log("init failed: " + e);
             throw e;
@@ -395,8 +396,12 @@ WeaveCrypto.prototype = {
         // We can't have js-ctypes create the buffer directly from the string
         // (as in encrypt()), because we do _not_ want it to do UTF8
         // conversion... We've got random binary data in the input's low byte.
-        let input = new ctypes.ArrayType(ctypes.unsigned_char, inputUCS2.length)();
-        this.byteCompress(inputUCS2, input);
+        // 
+        // Compress a JS string (2-byte chars) into a normal C string (1-byte chars).
+        let len   = inputUCS2.length;
+        let input = new ctypes.ArrayType(ctypes.unsigned_char, len)();
+        let ints  = ctypes.cast(input, ctypes.uint8_t.array(len));
+        this.byteCompressInts(inputUCS2, ints, len);
 
         let outputBuffer = new ctypes.ArrayType(ctypes.unsigned_char, input.length)();
 
@@ -411,13 +416,20 @@ WeaveCrypto.prototype = {
 
     _commonCrypt : function (input, output, symmetricKey, iv, operation) {
         this.log("_commonCrypt() called");
-        // Get rid of the base64 encoding and convert to SECItems.
-        let keyItem = this.makeSECItem(symmetricKey, true);
-        let ivItem  = this.makeSECItem(iv, true);
+        iv = atob(iv);
 
+        // We never want an IV longer than the block size, which is 16 bytes
+        // for AES.
+        if (iv.length > this.blockSize)
+            iv = iv.slice(0, this.blockSize);
+        
+        // We use a single IV SECItem for the sake of efficiency. Fill it here.
+        this.byteCompressInts(iv, this._ivSECItemContents, iv.length);
+
+        let keyItem = this.makeSECItem(symmetricKey, true);
         let ctx, symKey, slot, ivParam;
         try {
-            ivParam = this.nss.PK11_ParamFromIV(this.padMechanism, ivItem);
+            ivParam = this.nss.PK11_ParamFromIV(this.padMechanism, this._ivSECItem);
             if (ivParam.isNull())
                 throw Components.Exception("can't convert IV to param", Cr.NS_ERROR_FAILURE);
 
@@ -466,7 +478,8 @@ WeaveCrypto.prototype = {
             if (ivParam && !ivParam.isNull())
                 this.nss.SECITEM_FreeItem(ivParam, true);
             this.freeSECItem(keyItem);
-            this.freeSECItem(ivItem);
+            
+            // Note that we do not free the IV SECItem; we reuse it.
         }
     },
 
@@ -522,13 +535,22 @@ WeaveCrypto.prototype = {
     // Utility functions
     //
 
+    /**
+     * Compress a JS string into a C uint8 array. count is the number of
+     * elements in the destination array. If the array is smaller than the
+     * string, the string is effectively truncated. If the string is smaller
+     * than the array, the array is 0-padded.
+     */
+    byteCompressInts : function byteCompressInts (jsString, intArray, count) {
+        let len = jsString.length;
+        let end = Math.min(len, count);
 
-    // Compress a JS string (2-byte chars) into a normal C string (1-byte chars)
-    // EG, for "ABC",  0x0041, 0x0042, 0x0043 --> 0x41, 0x42, 0x43
-    byteCompress : function (jsString, charArray) {
-        let intArray = ctypes.cast(charArray, ctypes.uint8_t.array(charArray.length));
-        for (let i = 0; i < jsString.length; i++)
+        for (let i = 0; i < end; i++)
             intArray[i] = jsString.charCodeAt(i) % 256; // convert to bytes
+
+        // Must zero-pad.
+        for (let i = len; i < count; i++)
+            intArray[i] = 0;
     },
 
     // Expand a normal C string (1-byte chars) into a JS string (2-byte chars)
@@ -567,16 +589,42 @@ WeaveCrypto.prototype = {
         let len = input.length;
         let item = this.nss.SECITEM_AllocItem(null, null, len);
         if (item.isNull())
-          throw "SECITEM_AllocItem failed.";
+            throw "SECITEM_AllocItem failed.";
         
-        let dest = ctypes.cast(item.contents.data, ctypes.unsigned_char.array(len).ptr);
-        this.byteCompress(input, dest.contents);
+        let ptr  = ctypes.cast(item.contents.data,
+                               ctypes.unsigned_char.array(len).ptr);
+        let dest = ctypes.cast(ptr.contents, ctypes.uint8_t.array(len));
+        this.byteCompressInts(input, dest, len);
         return item;
     },
     
     freeSECItem : function(zap) {
         if (zap && !zap.isNull())
             this.nss.SECITEM_ZfreeItem(zap, true);
+    },
+
+    // We only ever handle one IV at a time, and they're always different.
+    // Consequently, we maintain a single SECItem, and a handy pointer into its
+    // contents to avoid repetitive and expensive casts.
+    _ivSECItem: null,
+    _ivSECItemContents: null,
+    
+    initIVSECItem: function initIVSECItem() {
+        if (this._ivSECItem) {
+            this._ivSECItemContents = null;
+            this.freeSECItem(this._ivSECItem);
+        }
+
+        let item = this.nss.SECITEM_AllocItem(null, null, this.blockSize);
+        if (item.isNull())
+            throw "SECITEM_AllocItem failed.";
+
+        let ptr = ctypes.cast(item.contents.data,
+                              ctypes.unsigned_char.array(this.blockSize).ptr);
+        let contents = ctypes.cast(ptr.contents,
+                                   ctypes.uint8_t.array(this.blockSize));
+        this._ivSECItem = item;
+        this._ivSECItemContents = contents;
     },
 
     /**
