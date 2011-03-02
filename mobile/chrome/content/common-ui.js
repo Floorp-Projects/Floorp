@@ -923,7 +923,7 @@ var FormHelperUI = {
     this._hasSuggestions = false;
   },
 
-  /** 
+  /**
    * This method positionned the list of suggestions on the screen using
    * a 'virtual' element as referrer that match the real content element
    * This method called element.getBoundingClientRect() many times and can be
@@ -951,6 +951,14 @@ var FormHelperUI = {
       top: Math.ceil(rect.top - scroll.y + topOffset),
       bottom: Math.floor(rect.top + rect.height - scroll.y + topOffset)
     };
+
+    // Translate the virtual rect inside the bounds of the viewable area if it
+    // overflow
+    if (virtualContentRect.left + virtualContentRect.width > window.innerWidth) {
+      let offsetX = window.innerWidth - (virtualContentRect.left + virtualContentRect.width);
+      virtualContentRect.width += offsetX;
+      virtualContentRect.right -= offsetX;
+    }
 
     // If the suggestions are out of view there is no need to display it
     let browserRect = Rect.fromRect(browser.getBoundingClientRect());
@@ -982,7 +990,7 @@ var FormHelperUI = {
     if (top + arrowboxRect.height >= window.innerHeight - buttonsHeight)
       top -= (rect.height + arrowboxRect.height);
     container.top = top;
-  
+
     // Create a virtual element to point to
     let virtualContentElement = {
       getBoundingClientRect: function() {
