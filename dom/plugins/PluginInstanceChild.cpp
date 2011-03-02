@@ -3421,6 +3421,13 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
         static_cast<BrowserStreamChild*>(streams[i])->FinishDelivery();
 
     mTimers.Clear();
+
+    // NPP_Destroy() should be a synchronization point for plugin threads
+    // calling NPN_AsyncCall: after this function returns, they are no longer
+    // allowed to make async calls on this instance.
+    PluginModuleChild::current()->NPP_Destroy(this);
+    mData.ndata = 0;
+
     if (mCurrentInvalidateTask) {
         mCurrentInvalidateTask->Cancel();
         mCurrentInvalidateTask = nsnull;
@@ -3429,12 +3436,6 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
         mCurrentAsyncSetWindowTask->Cancel();
         mCurrentAsyncSetWindowTask = nsnull;
     }
-
-    // NPP_Destroy() should be a synchronization point for plugin threads
-    // calling NPN_AsyncCall: after this function returns, they are no longer
-    // allowed to make async calls on this instance.
-    PluginModuleChild::current()->NPP_Destroy(this);
-    mData.ndata = 0;
 
     ClearAllSurfaces();
 
