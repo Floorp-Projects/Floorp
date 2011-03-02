@@ -4564,7 +4564,7 @@ TraceRecorder::compile()
         Blacklist((jsbytecode*)tree->ip);
         return ARECORD_STOP;
     }
-    if (anchor && anchor->exitType != CASE_EXIT)
+    if (anchor)
         ++tree->branchCount;
     if (outOfMemory())
         return ARECORD_STOP;
@@ -4597,14 +4597,8 @@ TraceRecorder::compile()
         return ARECORD_STOP;
     ResetRecordingAttempts(traceMonitor, (jsbytecode*)fragment->ip);
     ResetRecordingAttempts(traceMonitor, (jsbytecode*)tree->ip);
-    if (anchor) {
-#ifdef NANOJIT_IA32
-        if (anchor->exitType == CASE_EXIT)
-            assm->patch(anchor, anchor->switchInfo);
-        else
-#endif
-            assm->patch(anchor);
-    }
+    if (anchor)
+        assm->patch(anchor);
     JS_ASSERT(fragment->code());
     JS_ASSERT_IF(fragment == fragment->root, fragment->root == tree);
 
@@ -5976,8 +5970,6 @@ AttemptToExtendTree(JSContext* cx, TraceMonitor* tm, VMSideExit* anchor, VMSideE
 
     int32_t& hits = c->hits();
     int32_t maxHits = HOTEXIT + MAXEXIT;
-    if (anchor->exitType == CASE_EXIT)
-        maxHits *= anchor->switchInfo->count;
     if (outerPC || (hits++ >= HOTEXIT && hits <= maxHits)) {
         /* start tracing secondary trace from this point */
         unsigned stackSlots;
@@ -6194,7 +6186,6 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
             traceMonitor->oracle->markInstructionUndemotable(cx->regs->pc);
         /* FALL THROUGH */
       case BRANCH_EXIT:
-      case CASE_EXIT:
         /* Abort recording the outer tree, extend the inner tree. */
         if (AbortRecording(cx, "Inner tree is trying to grow, "
                                "abort outer recording") == JIT_RESET) {
@@ -7253,7 +7244,6 @@ RecordLoopEdge(JSContext* cx, TraceMonitor* tm, uintN& inlineCallCount)
             tm->oracle->markInstructionUndemotable(cx->regs->pc);
         /* FALL THROUGH */
       case BRANCH_EXIT:
-      case CASE_EXIT:
         rv = AttemptToExtendTree(cx, tm, lr, NULL, NULL, NULL
 #ifdef MOZ_TRACEVIS
                                                    , &tvso
@@ -8766,82 +8756,6 @@ TraceRecorder::ifop()
     emitIf(pc, cond, x);
     return checkTraceEnd(pc);
 }
-
-#ifdef NANOJIT_IA32
-/*
- * Record LIR for a tableswitch or tableswitchx op. We record LIR only the
- * "first" time we hit the op. Later, when we start traces after exiting that
- * trace, we just patch.
- */
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::tableswitch()
-{
-    Value& v = stackval(-1);
-
-    /* No need to guard if the condition can't match any of the cases. */
-    if (!v.isNumber())
-        return ARECORD_CONTINUE;
-
-    /* No need to guard if the condition is constant. */
-    LIns* v_ins = d2i(get(&v));
-    if (v_ins->isImmI())
-        return ARECORD_CONTINUE;
-
-    jsbytecode* pc = cx->regs->pc;
-    /* Starting a new trace after exiting a trace via switch. */
-    if (anchor &&
-        (anchor->exitType == CASE_EXIT || anchor->exitType == DEFAULT_EXIT) &&
-        fragment->ip == pc) {
-        return ARECORD_CONTINUE;
-    }
-
-    /* Decode jsop. */
-    jsint low, high;
-    if (*pc == JSOP_TABLESWITCH) {
-        pc += JUMP_OFFSET_LEN;
-        low = GET_JUMP_OFFSET(pc);
-        pc += JUMP_OFFSET_LEN;
-        high = GET_JUMP_OFFSET(pc);
-    } else {
-        pc += JUMPX_OFFSET_LEN;
-        low = GET_JUMP_OFFSET(pc);
-        pc += JUMP_OFFSET_LEN;
-        high = GET_JUMP_OFFSET(pc);
-    }
-
-    /* 
-     * If there are no cases, this is a no-op. The default case immediately
-     * follows in the bytecode and is always taken, so we need no special
-     * action to handle it.
-     */
-    int count = high + 1 - low;
-    JS_ASSERT(count >= 0);
-    if (count == 0)
-        return ARECORD_CONTINUE;
-
-    /* Cap maximum table-switch size for modesty. */
-    if (count > MAX_TABLE_SWITCH)
-        return InjectStatus(switchop());
-
-    /* Generate switch LIR. */
-    SwitchInfo* si = new (traceAlloc()) SwitchInfo();
-    si->count = count;
-    si->table = 0;
-    si->index = (uint32) -1;
-    LIns* diff = w.subi(v_ins, w.immi(low));
-    LIns* cmp = w.ltui(diff, w.immi(si->count));
-    guard(true, cmp, DEFAULT_EXIT);
-    // We use AnyAddress;  it's imprecise but this case is rare and not worth its
-    // own access region.
-    w.st(diff, AnyAddress(w.immpNonGC(&si->index)));
-    VMSideExit* exit = snapshot(CASE_EXIT);
-    exit->switchInfo = si;
-    LIns* guardIns = w.xtbl(diff, createGuardRecord(exit));
-    fragment->lastIns = guardIns;
-    CHECK_STATUS_A(compile());
-    return finishSuccessfully();
-}
-#endif
 
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::switchop()
@@ -14608,12 +14522,7 @@ TraceRecorder::record_JSOP_AND()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_TABLESWITCH()
 {
-#ifdef NANOJIT_IA32
-    /* Handle tableswitches specially -- prepare a jump table if needed. */
-    return tableswitch();
-#else
     return InjectStatus(switchop());
-#endif
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -16907,7 +16816,6 @@ RecordTracePoint(JSContext* cx, TraceMonitor* tm,
                     tm->oracle->markInstructionUndemotable(cx->regs->pc);
                 /* FALL THROUGH */
               case BRANCH_EXIT:
-              case CASE_EXIT:
                 if (!AttemptToExtendTree(cx, tm, lr, NULL, NULL, NULL))
                     return TPA_RanStuff;
                 break;
