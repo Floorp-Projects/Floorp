@@ -49,7 +49,7 @@
 //               viewport height is 500
 //               => display port height will be 500 * 1.5 = 750
 //
-pref("toolkit.browser.cacheRatioWidth", 1100);
+pref("toolkit.browser.cacheRatioWidth", 2000);
 pref("toolkit.browser.cacheRatioHeight", 2000);
 
 // How long before a content view (a handle to a remote scrollable object)
