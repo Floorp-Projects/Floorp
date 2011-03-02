@@ -3958,7 +3958,7 @@ nsIFrame::InvalidateLayer(const nsRect& aDamageRect, PRUint32 aDisplayItemKey)
   PRUint32 flags = INVALIDATE_NO_THEBES_LAYERS;
   if (aDisplayItemKey == nsDisplayItem::TYPE_VIDEO ||
       aDisplayItemKey == nsDisplayItem::TYPE_PLUGIN) {
-    flags = INVALIDATE_NO_UPDATE_LAYER_TREE;
+    flags |= INVALIDATE_NO_UPDATE_LAYER_TREE;
   }
 
   InvalidateWithFlags(aDamageRect, flags);

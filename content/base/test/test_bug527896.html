@@ -23,8 +23,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=527896
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var prefs = Components.classes["@mozilla.org/preferences-service;1"]
           .getService(Components.interfaces.nsIPrefBranch);
-var gOriginalHtml5Pref = prefs.getBoolPref("html5.enable");
-prefs.setBoolPref("html5.enable", true);
+var gOriginalHtml5Pref = prefs.getBoolPref("html5.parser.enable");
+prefs.setBoolPref("html5.parser.enable", true);
 
 SimpleTest.waitForExplicitFinish();
 
@@ -61,7 +61,7 @@ function done() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
             .getService(Components.interfaces.nsIPrefBranch);
-  prefs.setBoolPref("html5.enable", gOriginalHtml5Pref);
+  prefs.setBoolPref("html5.parser.enable", gOriginalHtml5Pref);
 
   SimpleTest.finish();
 }

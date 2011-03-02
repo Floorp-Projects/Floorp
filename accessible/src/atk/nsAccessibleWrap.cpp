@@ -1081,7 +1081,7 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
     case nsIAccessibleEvent::EVENT_FOCUS:
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_FOCUS\n"));
-        nsRefPtr<nsRootAccessible> rootAccWrap = accWrap->GetRootAccessible();
+        nsRootAccessible* rootAccWrap = accWrap->RootAccessible();
         if (rootAccWrap && rootAccWrap->mActivated) {
             atk_focus_tracker_notify(atkObj);
             // Fire state change event for focus

@@ -48,6 +48,12 @@
 #include "nsAppShell.h"
 #include "nsOSHelperAppService.h"
 
+#ifdef DEBUG
+#define ALOG_BRIDGE(args...) ALOG(args)
+#else
+#define ALOG_BRIDGE(args...)
+#endif
+
 using namespace mozilla;
 
 static PRUintn sJavaEnvThreadIndex = 0;
@@ -90,6 +96,7 @@ PRBool
 AndroidBridge::Init(JNIEnv *jEnv,
                     jclass jGeckoAppShellClass)
 {
+    ALOG_BRIDGE("AndroidBridge::Init");
     jEnv->GetJavaVM(&mJavaVM);
 
     mJNIEnv = nsnull;
@@ -146,6 +153,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
 JNIEnv *
 AndroidBridge::AttachThread(PRBool asDaemon)
 {
+    ALOG_BRIDGE("AndroidBridge::AttachThread");
     JNIEnv *jEnv = (JNIEnv*) PR_GetThreadPrivate(sJavaEnvThreadIndex);
     if (jEnv)
         return jEnv;
@@ -165,7 +173,7 @@ AndroidBridge::AttachThread(PRBool asDaemon)
     }
 
     if (res != 0) {
-        ALOG("AttachCurrentThread failed!");
+        ALOG_BRIDGE("AttachCurrentThread failed!");
         return nsnull;
     }
 
@@ -177,6 +185,7 @@ AndroidBridge::AttachThread(PRBool asDaemon)
 PRBool
 AndroidBridge::SetMainThread(void *thr)
 {
+    ALOG_BRIDGE("AndroidBridge::SetMainThread");
     if (thr) {
         mJNIEnv = AttachThread(PR_FALSE);
         if (!mJNIEnv)
@@ -196,12 +205,12 @@ AndroidBridge::EnsureJNIThread()
 {
     JNIEnv *env;
     if (mJavaVM->AttachCurrentThread(&env, NULL) != 0) {
-        ALOG("EnsureJNIThread: test Attach failed!");
+        ALOG_BRIDGE("EnsureJNIThread: test Attach failed!");
         return;
     }
 
     if ((void*)pthread_self() != mThread) {
-        ALOG("###!!!!!!! Something's grabbing the JNIEnv from the wrong thread! (thr %p should be %p)",
+        ALOG_BRIDGE("###!!!!!!! Something's grabbing the JNIEnv from the wrong thread! (thr %p should be %p)",
              (void*)pthread_self(), (void*)mThread);
     }
 }
@@ -209,6 +218,7 @@ AndroidBridge::EnsureJNIThread()
 void
 AndroidBridge::NotifyIME(int aType, int aState)
 {
+    ALOG_BRIDGE("AndroidBridge::NotifyIME");
     if (sBridge)
         JNI()->CallStaticVoidMethod(sBridge->mGeckoAppShellClass, 
                                     sBridge->jNotifyIME,  aType, aState);
@@ -218,6 +228,7 @@ void
 AndroidBridge::NotifyIMEEnabled(int aState, const nsAString& aTypeHint,
                                 const nsAString& aActionHint)
 {
+    ALOG_BRIDGE("AndroidBridge::NotifyIMEEnabled");
     if (!sBridge)
         return;
 
@@ -237,6 +248,7 @@ void
 AndroidBridge::NotifyIMEChange(const PRUnichar *aText, PRUint32 aTextLen,
                                int aStart, int aEnd, int aNewEnd)
 {
+    ALOG_BRIDGE("AndroidBridge::NotifyIMEChange");
     if (!sBridge) {
         return;
     }
@@ -254,12 +266,14 @@ AndroidBridge::NotifyIMEChange(const PRUnichar *aText, PRUint32 aTextLen,
 void
 AndroidBridge::EnableAccelerometer(bool aEnable)
 {
+    ALOG_BRIDGE("AndroidBridge::EnableAccelerometer");
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEnableAccelerometer, aEnable);
 }
 
 void
 AndroidBridge::EnableLocation(bool aEnable)
 {
+    ALOG_BRIDGE("AndroidBridge::EnableLocation");
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEnableLocation, aEnable);
 }
 
@@ -267,6 +281,7 @@ void
 AndroidBridge::ReturnIMEQueryResult(const PRUnichar *aResult, PRUint32 aLen,
                                     int aSelStart, int aSelLen)
 {
+    ALOG_BRIDGE("AndroidBridge::ReturnIMEQueryResult");
     jvalue args[3];
     AutoLocalJNIFrame jniFrame(1);
     args[0].l = mJNIEnv->NewString(aResult, aLen);
@@ -279,20 +294,21 @@ AndroidBridge::ReturnIMEQueryResult(const PRUnichar *aResult, PRUint32 aLen,
 void
 AndroidBridge::NotifyAppShellReady()
 {
+    ALOG_BRIDGE("AndroidBridge::NotifyAppShellReady");
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jNotifyAppShellReady);
 }
 
 void
 AndroidBridge::ScheduleRestart()
 {
-    ALOG("scheduling reboot");
+    ALOG_BRIDGE("scheduling reboot");
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jScheduleRestart);
 }
 
 void
 AndroidBridge::NotifyXreExit()
 {
-    ALOG("xre exiting");
+    ALOG_BRIDGE("xre exiting");
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jNotifyXreExit);
 }
 
@@ -329,6 +345,8 @@ AndroidBridge::GetHandlersForMimeType(const char *aMimeType,
                                       nsIHandlerApp **aDefaultApp,
                                       const nsAString& aAction)
 {
+    ALOG_BRIDGE("AndroidBridge::GetHandlersForMimeType");
+
     AutoLocalJNIFrame jniFrame;
     NS_ConvertUTF8toUTF16 wMimeType(aMimeType);
     jstring jstrMimeType =
@@ -361,6 +379,8 @@ AndroidBridge::GetHandlersForURL(const char *aURL,
                                       nsIHandlerApp **aDefaultApp,
                                       const nsAString& aAction)
 {
+    ALOG_BRIDGE("AndroidBridge::GetHandlersForURL");
+
     AutoLocalJNIFrame jniFrame;
     NS_ConvertUTF8toUTF16 wScheme(aURL);
     jstring jstrScheme = mJNIEnv->NewString(wScheme.get(), wScheme.Length());
@@ -390,6 +410,8 @@ AndroidBridge::OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMi
                                const nsAString& aPackageName, const nsAString& aClassName,
                                const nsAString& aAction, const nsAString& aTitle)
 {
+    ALOG_BRIDGE("AndroidBridge::OpenUriExternal");
+
     AutoLocalJNIFrame jniFrame;
     NS_ConvertUTF8toUTF16 wUriSpec(aUriSpec);
     NS_ConvertUTF8toUTF16 wMimeType(aMimeType);
@@ -416,7 +438,10 @@ AndroidBridge::OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMi
 }
 
 void
-AndroidBridge::GetMimeTypeFromExtensions(const nsACString& aFileExt, nsCString& aMimeType) {
+AndroidBridge::GetMimeTypeFromExtensions(const nsACString& aFileExt, nsCString& aMimeType)
+{
+    ALOG_BRIDGE("AndroidBridge::GetMimeTypeFromExtensions");
+
     AutoLocalJNIFrame jniFrame;
     NS_ConvertUTF8toUTF16 wFileExt(aFileExt);
     jstring jstrExt = mJNIEnv->NewString(wFileExt.get(), wFileExt.Length());
@@ -430,12 +455,15 @@ AndroidBridge::GetMimeTypeFromExtensions(const nsACString& aFileExt, nsCString& 
 void
 AndroidBridge::MoveTaskToBack()
 {
+    ALOG_BRIDGE("AndroidBridge::MoveTaskToBack");
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jMoveTaskToBack);
 }
 
 bool
 AndroidBridge::GetClipboardText(nsAString& aText)
 {
+    ALOG_BRIDGE("AndroidBridge::GetClipboardText");
+
     jstring jstrType =  
         static_cast<jstring>(mJNIEnv->
                              CallStaticObjectMethod(mGeckoAppShellClass,
@@ -450,6 +478,8 @@ AndroidBridge::GetClipboardText(nsAString& aText)
 void
 AndroidBridge::SetClipboardText(const nsAString& aText)
 {
+    ALOG_BRIDGE("AndroidBridge::SetClipboardText");
+
     const PRUnichar* wText;
     PRUint32 wTextLen = NS_StringGetData(aText, &wText);
     jstring jstr = mJNIEnv->NewString(wText, wTextLen);
@@ -459,6 +489,8 @@ AndroidBridge::SetClipboardText(const nsAString& aText)
 bool
 AndroidBridge::ClipboardHasText()
 {
+    ALOG_BRIDGE("AndroidBridge::ClipboardHasText");
+
     jstring jstrType =  
         static_cast<jstring>(mJNIEnv->
                              CallStaticObjectMethod(mGeckoAppShellClass,
@@ -471,6 +503,7 @@ AndroidBridge::ClipboardHasText()
 void
 AndroidBridge::EmptyClipboard()
 {
+    ALOG_BRIDGE("AndroidBridge::EmptyClipboard");
     mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, jSetClipboardText, nsnull);
 }
 
@@ -482,8 +515,7 @@ AndroidBridge::ShowAlertNotification(const nsAString& aImageUrl,
                                      nsIObserver *aAlertListener,
                                      const nsAString& aAlertName)
 {
-    ALOG("ShowAlertNotification");
-
+    ALOG_BRIDGE("ShowAlertNotification");
     AutoLocalJNIFrame jniFrame;
 
     if (nsAppShell::gAppShell && aAlertListener)
@@ -504,8 +536,7 @@ AndroidBridge::AlertsProgressListener_OnProgress(const nsAString& aAlertName,
                                                  PRInt64 aProgressMax,
                                                  const nsAString& aAlertText)
 {
-    ALOG("AlertsProgressListener_OnProgress");
-
+    ALOG_BRIDGE("AlertsProgressListener_OnProgress");
     AutoLocalJNIFrame jniFrame;
 
     jstring jstrName = mJNIEnv->NewString(nsPromiseFlatString(aAlertName).get(), aAlertName.Length());
@@ -517,8 +548,7 @@ AndroidBridge::AlertsProgressListener_OnProgress(const nsAString& aAlertName,
 void
 AndroidBridge::AlertsProgressListener_OnCancel(const nsAString& aAlertName)
 {
-    ALOG("AlertsProgressListener_OnCancel");
-
+    ALOG_BRIDGE("AlertsProgressListener_OnCancel");
     AutoLocalJNIFrame jniFrame;
 
     jstring jstrName = mJNIEnv->NewString(nsPromiseFlatString(aAlertName).get(), aAlertName.Length());
@@ -529,12 +559,15 @@ AndroidBridge::AlertsProgressListener_OnCancel(const nsAString& aAlertName)
 int
 AndroidBridge::GetDPI()
 {
+    ALOG_BRIDGE("AndroidBridge::GetDPI");
     return (int) mJNIEnv->CallStaticIntMethod(mGeckoAppShellClass, jGetDpi);
 }
 
 void
 AndroidBridge::ShowFilePicker(nsAString& aFilePath, nsAString& aFilters)
 {
+    ALOG_BRIDGE("AndroidBridge::ShowFilePicker");
+
     AutoLocalJNIFrame jniFrame;
     jstring jstrFilers = mJNIEnv->NewString(nsPromiseFlatString(aFilters).get(),
                                             aFilters.Length());
@@ -547,12 +580,14 @@ AndroidBridge::ShowFilePicker(nsAString& aFilePath, nsAString& aFilters)
 void
 AndroidBridge::SetFullScreen(PRBool aFullScreen)
 {
+    ALOG_BRIDGE("AndroidBridge::SetFullScreen");
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jSetFullScreen, aFullScreen);
 }
 
 void
 AndroidBridge::HideProgressDialogOnce()
 {
+    ALOG_BRIDGE("AndroidBridge::HideProgressDialogOnce");
     static bool once = false;
     if (!once) {
         mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jHideProgressDialog);
@@ -563,6 +598,7 @@ AndroidBridge::HideProgressDialogOnce()
 void
 AndroidBridge::PerformHapticFeedback(PRBool aIsLongPress)
 {
+    ALOG_BRIDGE("AndroidBridge::PerformHapticFeedback");
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass,
                                     jPerformHapticFeedback, aIsLongPress);
 }
@@ -570,17 +606,21 @@ AndroidBridge::PerformHapticFeedback(PRBool aIsLongPress)
 bool
 AndroidBridge::IsNetworkLinkUp()
 {
+    ALOG_BRIDGE("AndroidBridge::IsNetworkLinkUp");
     return !!mJNIEnv->CallStaticBooleanMethod(mGeckoAppShellClass, jIsNetworkLinkUp);
 }
 
 bool
 AndroidBridge::IsNetworkLinkKnown()
 {
+    ALOG_BRIDGE("AndroidBridge::IsNetworkLinkKnown");
     return !!mJNIEnv->CallStaticBooleanMethod(mGeckoAppShellClass, jIsNetworkLinkKnown);
 }
 
 void
-AndroidBridge::SetSelectedLocale(const nsACString& aLocale) {
+AndroidBridge::SetSelectedLocale(const nsACString& aLocale)
+{
+    ALOG_BRIDGE("AndroidBridge::SetSelectedLocale");
     NS_ConvertUTF8toUTF16 wLocale(aLocale);
     jstring jLocale = GetJNIForThread()->NewString(wLocale.get(), wLocale.Length());
     GetJNIForThread()->CallStaticVoidMethod(mGeckoAppShellClass, jSetSelectedLocale, jLocale);
@@ -595,12 +635,14 @@ AndroidBridge::SetSurfaceView(jobject obj)
 void
 AndroidBridge::ShowInputMethodPicker()
 {
+    ALOG_BRIDGE("AndroidBridge::ShowInputMethodPicker");
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jShowInputMethodPicker);
 }
 
 void *
 AndroidBridge::CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoSurfaceView &sview)
 {
+    ALOG_BRIDGE("AndroidBridge::CallEglCreateWindowSurface");
     AutoLocalJNIFrame jniFrame;
 
     /*
@@ -643,8 +685,28 @@ AndroidBridge::CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoS
 }
 
 bool
+AndroidBridge::GetStaticIntField(const char *className, const char *fieldName, PRInt32* aInt)
+{
+    ALOG_BRIDGE("AndroidBridge::GetStaticIntField %s", fieldName);
+    AutoLocalJNIFrame jniFrame(3);
+    jclass cls = mJNIEnv->FindClass(className);
+    if (!cls)
+        return false;
+
+    jfieldID field = mJNIEnv->GetStaticFieldID(cls, fieldName, "I");
+    if (!field)
+        return false;
+
+    *aInt = static_cast<PRInt32>(mJNIEnv->GetStaticIntField(cls, field));
+
+    return true;
+}
+
+bool
 AndroidBridge::GetStaticStringField(const char *className, const char *fieldName, nsAString &result)
 {
+    ALOG_BRIDGE("AndroidBridge::GetStaticIntField %s", fieldName);
+
     AutoLocalJNIFrame jniFrame(3);
     jclass cls = mJNIEnv->FindClass(className);
     if (!cls)
@@ -665,6 +727,7 @@ AndroidBridge::GetStaticStringField(const char *className, const char *fieldName
 void
 AndroidBridge::SetKeepScreenOn(bool on)
 {
+    ALOG_BRIDGE("AndroidBridge::SetKeepScreenOn");
     JNI()->CallStaticVoidMethod(sBridge->mGeckoAppShellClass,
                                 sBridge->jSetKeepScreenOn, on);
 }

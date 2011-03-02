@@ -65,6 +65,7 @@ const PREFS_WHITELIST = [
   "font.",
   "general.useragent.",
   "gfx.",
+  "html5.",
   "mozilla.widget.render-mode",
   "layers.",
   "javascript.",

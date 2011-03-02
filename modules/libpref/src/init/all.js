@@ -2524,7 +2524,7 @@ pref("font.name.sans-serif.he", "Droid Sans");
 pref("font.name.monospace.he", "Droid Sans Mono");
 
 pref("font.name.serif.ja", "Droid Serif");
-pref("font.name.sans-serif.ja", "Droid Sans");
+pref("font.name.sans-serif.ja", "Droid Sans Japanese");
 pref("font.name.monospace.ja", "Droid Sans Mono");
 
 pref("font.name.serif.ko", "Droid Serif");
@@ -3163,9 +3163,11 @@ pref("geo.enabled", true);
 pref("accelerometer.enabled", true);
 
 // Enable/Disable HTML5 parser
-pref("html5.enable", true);
+pref("html5.parser.enable", true);
 // Toggle which thread the HTML5 parser uses for stream parsing
 pref("html5.offmainthread", true);
+// Toggle old parser use for document.open() on Hotmail (bug 627729)
+pref("html5.hotmailworkaround", true);
 // Time in milliseconds between the time a network buffer is seen and the 
 // timer firing when the timer hasn't fired previously in this parse in the 
 // off-the-main-thread HTML5 parser.

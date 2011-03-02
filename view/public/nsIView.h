@@ -267,8 +267,9 @@ public:
   /**
    * Get the nearest widget in this view or a parent of this view and
    * the offset from the widget's origin to this view's origin
-   * @param aOffset the offset from this view's origin to the widget's origin
-   * (usually positive) expressed in appunits of this.
+   * @param aOffset - if non-null the offset from this view's origin to the
+   * widget's origin (usually positive) expressed in appunits of this will be
+   * returned in aOffset.
    * @return the widget closest to this view; can be null because some view trees
    * don't have widgets at all (e.g., printing), but if any view in the view tree
    * has a widget, then it's safe to assume this will not return null
