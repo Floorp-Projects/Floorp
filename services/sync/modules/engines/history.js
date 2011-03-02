@@ -427,41 +427,42 @@ HistoryStore.prototype = {
   applyIncomingBatch: function applyIncomingBatch(records) {
     // Gecko <2.0
     if (!this._asyncHistory) {
-      return Store.prototype.applyIncomingBatch.apply(this, arguments);
+      return Store.prototype.applyIncomingBatch.call(this, records);
     }
 
     // Gecko 2.0
     let failed = [];
 
-    // Convert incoming records to mozIPlaceInfo objects.
-    let placeInfos = records.map(function (record) {
+    // Convert incoming records to mozIPlaceInfo objects. Some records can be
+    // ignored or handled directly, so we're rewriting the array in-place.
+    let i, k;
+    for (i = 0, k = 0; i < records.length; i++) {
+      let record = records[k] = records[i];
+      let shouldApply;
+
       // This is still synchronous I/O for now.
-      if (record.deleted) {
-        try {
+      try {
+        if (record.deleted) {
           // Consider using nsIBrowserHistory::removePages() here.
           this.remove(record);
-        } catch (ex) {
-          this._log.warn("Failed to delete record " + record.id);
-          failed.push(record.id);
+          // No further processing needed. Remove it from the list.
+          shouldApply = false;
+        } else {
+          shouldApply = this._recordToPlaceInfo(record);
         }
-        return null;
-      }
-      try {
-        return this._recordToPlaceInfo(record);
       } catch(ex) {
         failed.push(record.id);
-        return null;
+        shouldApply = false;
       }
-    }, this);
 
-    // Filter out the places that can't be added (they're null)
-    function identity(obj) {
-      return obj;
+      if (shouldApply) {
+        k += 1;
+      }
     }
-    placeInfos = placeInfos.filter(identity);
+    records.length = k; // truncate array
 
     // Nothing to do.
-    if (!placeInfos.length) {
+    if (!records.length) {
       return failed;
     }
 
@@ -476,7 +477,7 @@ HistoryStore.prototype = {
       cb();
     };
     Svc.Obs.add(TOPIC_UPDATEPLACES_COMPLETE, onComplete);
-    this._asyncHistory.updatePlaces(placeInfos, onPlace);
+    this._asyncHistory.updatePlaces(records, onPlace);
     Utils.waitForSyncCallback(cb);
     return failed;
   },
@@ -484,35 +485,45 @@ HistoryStore.prototype = {
   /**
    * Converts a Sync history record to a mozIPlaceInfo.
    * 
-   * Throws if an invalid record is encountered (invalid URI, etc.)
-   * and returns null if the record is to be ignored (no visits to add, etc.)
+   * Throws if an invalid record is encountered (invalid URI, etc.),
+   * returns true if the record is to be applied, false otherwise
+   * (no visits to add, etc.),
    */
   _recordToPlaceInfo: function _recordToPlaceInfo(record) {
     // Sort out invalid URIs and ones Places just simply doesn't want.
-    let uri = Utils.makeURI(record.histUri);
-    if (!uri) {
+    record.uri = Utils.makeURI(record.histUri);
+    if (!record.uri) {
       this._log.warn("Attempted to process invalid URI, skipping.");
       throw "Invalid URI in record";
     }
 
     if (!Utils.checkGUID(record.id)) {
       this._log.warn("Encountered record with invalid GUID: " + record.id);
-      return null;
+      return false;
     }
+    record.guid = record.id;
 
-    if (!this._hsvc.canAddURI(uri)) {
-      this._log.trace("Ignoring record " + record.id +
-                      " with URI " + uri.spec + ": can't add this URI.");
-      return null;
+    if (!this._hsvc.canAddURI(record.uri)) {
+      this._log.trace("Ignoring record " + record.id + " with URI "
+                      + record.uri.spec + ": can't add this URI.");
+      return false;
     }
 
     // We dupe visits by date and type. So an incoming visit that has
     // the same timestamp and type as a local one won't get applied.
-    let curVisitsByDate = {};
-    for each (let {date, type} in this._getVisits(record.histUri)) {
-      curVisitsByDate[date] = type;
+    // To avoid creating new objects, we rewrite the query result so we
+    // can simply check for containment below.
+    let curVisits = this._getVisits(record.histUri);
+    for (let i = 0; i < curVisits.length; i++) {
+      curVisits[i] = curVisits[i].date + "," + curVisits[i].type;
     }
-    let visits = record.visits.filter(function (visit) {
+
+    // Walk through the visits, make sure we have sound data, and eliminate
+    // dupes. The latter is done by rewriting the array in-place.
+    let k;
+    for (i = 0, k = 0; i < record.visits.length; i++) {
+      let visit = record.visits[k] = record.visits[i];
+
       if (!visit.date || typeof visit.date != "number") {
         this._log.warn("Encountered record with invalid visit date: "
                        + visit.date);
@@ -527,24 +538,29 @@ HistoryStore.prototype = {
       }
       // Dates need to be integers
       visit.date = Math.round(visit.date);
-      return curVisitsByDate[visit.date] != visit.type;
-    });
+
+      if (curVisits.indexOf(visit.date + "," + visit.type) != -1) {
+        // Visit is a dupe, don't increment 'k' so the element will be
+        // overwritten.
+        continue;
+      }
+      visit.visitDate = visit.date;
+      visit.transitionType = visit.type;
+      k += 1;
+    }
+    record.visits.length = k; // truncate array
 
     // No update if there aren't any visits to apply.
     // mozIAsyncHistory::updatePlaces() wants at least one visit.
     // In any case, the only thing we could change would be the title
     // and that shouldn't change without a visit.
-    if (!visits.length) {
-      this._log.trace("Ignoring record " + record.id +
-                      " with URI " + uri.spec + ": no visits to add.");
-      return null;
+    if (!record.visits.length) {
+      this._log.trace("Ignoring record " + record.id + " with URI "
+                      + record.uri.spec + ": no visits to add.");
+      return false;
     }
 
-    return {uri: uri,
-            guid: record.id,
-            title: record.title,
-            visits: [{visitDate: visit.date, transitionType: visit.type}
-                      for each (visit in visits)]};
+    return true;
   },
 
   create: function HistStore_create(record) {
@@ -568,19 +584,18 @@ HistoryStore.prototype = {
   update: function HistStore_update(record) {
     this._log.trace("  -> processing history entry: " + record.histUri);
 
-    let placeInfo = this._recordToPlaceInfo(record);
-    if (!placeInfo) {
+    if (!this._recordToPlaceInfo(record)) {
       return;
     }
 
-    for each (let {visitDate, transitionType} in placeInfo.visits) {
-      Svc.History.addVisit(placeInfo.uri, visitDate, null, transitionType,
+    for each (let {visitDate, transitionType} in record.visits) {
+      Svc.History.addVisit(record.uri, visitDate, null, transitionType,
                            transitionType == 5 || transitionType == 6, 0);
     }
 
     if (record.title) {
       try {
-        this._hsvc.setPageTitle(placeInfo.uri, record.title);
+        this._hsvc.setPageTitle(record.uri, record.title);
       } catch (ex if ex.result == Cr.NS_ERROR_NOT_AVAILABLE) {
         // There's no entry for the given URI, either because it's a
         // URI that Places ignores (e.g. javascript:) or there were no
