@@ -1341,6 +1341,8 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
+    nsAutoRemovableScriptBlocker scriptBlocker;
+
     PRBool isId = PR_FALSE;
     if (aName == nsGkAtoms::id && aNameSpaceID == kNameSpaceID_None) {
       // Have to do this before clearing flag. See RemoveFromIdTable
