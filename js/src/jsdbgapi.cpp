@@ -718,15 +718,26 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
             wp->flags |= JSWP_HELD;
             DBG_UNLOCK(rt);
 
+            bool ok;
             jsid propid = shape->id;
             shape = obj->nativeLookup(propid);
+            if (!shape) {
+                /*
+                 * This happens if the watched property has been deleted, but a
+                 * prototype has a watched accessor property with the same
+                 * name. See bug 636697.
+                 */
+                ok = true;
+                goto out;
+            }
             JS_ASSERT(IsWatchedProperty(cx, shape));
-            jsid userid = SHAPE_USERID(shape);
+            jsid userid;
+            userid = SHAPE_USERID(shape);
 
             /* Determine the property's old value. */
-            bool ok;
             uint32 slot = shape->slot;
-            Value old = obj->containsSlot(slot) ? obj->nativeGetSlot(slot) : UndefinedValue();
+            Value old;
+            old = obj->containsSlot(slot) ? obj->nativeGetSlot(slot) : UndefinedValue();
             const Shape *needMethodSlotWrite = NULL;
             if (shape->isMethod()) {
                 /*
