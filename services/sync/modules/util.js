@@ -229,32 +229,51 @@ let Utils = {
     return db.createStatement(query);
   },
 
-  queryAsync: function(query, names) {
-    // Allow array of names, single name, and no name
-    if (!Utils.isArray(names))
-      names = names == null ? [] : [names];
+  // Prototype for mozIStorageCallback, used in queryAsync below.
+  // This allows us to define the handle* functions just once rather
+  // than on every queryAsync invocation.
+  _storageCallbackPrototype: {
+    results: null,
+    // These are set by queryAsync
+    names: null,
+    syncCb: null,
 
-    // Synchronously asyncExecute fetching all results by name
-    let execCb = Utils.makeSyncCallback();
-    query.executeAsync({
-      items: [],
-      handleResult: function handleResult(results) {
-        let row;
-        while ((row = results.getNextRow()) != null) {
-          this.items.push(names.reduce(function(item, name) {
-            item[name] = row.getResultByName(name);
-            return item;
-          }, {}));
-        }
-      },
-      handleError: function handleError(error) {
-        execCb.throw(error);
-      },
-      handleCompletion: function handleCompletion(reason) {
-        execCb(this.items);
+    handleResult: function handleResult(results) {
+      if (!this.names) {
+        return;
       }
-    });
-    return Utils.waitForSyncCallback(execCb);
+      if (!this.results) {
+        this.results = [];
+      }
+      let row;
+      while ((row = results.getNextRow()) != null) {
+        let item = {};
+        for each (name in this.names) {
+          item[name] = row.getResultByName(name);
+        }
+        this.results.push(item);
+      }
+    },
+    handleError: function handleError(error) {
+      this.syncCb.throw(error);
+    },
+    handleCompletion: function handleCompletion(reason) {
+      // If we were called with column names but didn't find any results,
+      // the calling code probably still expects an array as a return value.
+      if (this.names && !this.results) {
+        this.results = [];
+      }
+      this.syncCb(this.results);
+    }
+  },
+
+  queryAsync: function(query, names) {
+    // Synchronously asyncExecute fetching all results by name
+    let storageCallback = {names: names,
+                           syncCb: Utils.makeSyncCallback()};
+    storageCallback.__proto__ = Utils._storageCallbackPrototype;
+    query.executeAsync(storageCallback);
+    return Utils.waitForSyncCallback(storageCallback.syncCb);
   },
 
   byteArrayToString: function byteArrayToString(bytes) {
@@ -588,27 +607,49 @@ let Utils = {
       throw 'checkStatus failed';
   },
 
-  digest: function digest(message, hasher) {
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-      createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-
-    let data = converter.convertToByteArray(message, {});
+  /**
+   * UTF8-encode a message and hash it with the given hasher. Returns a
+   * string containing bytes. The hasher is reset if it's an HMAC hasher.
+   */
+  digestUTF8: function digestUTF8(message, hasher) {
+    let data = this._utf8Converter.convertToByteArray(message, {});
     hasher.update(data, data.length);
-    return hasher.finish(false);
+    let result = hasher.finish(false);
+    if (hasher instanceof Ci.nsICryptoHMAC) {
+      hasher.reset();
+    }
+    return result;
+  },
+
+  /**
+   * Treat the given message as a bytes string and hash it with the given
+   * hasher. Returns a string containing bytes. The hasher is reset if it's
+   * an HMAC hasher.
+   */
+  digestBytes: function digestBytes(message, hasher) {
+    // No UTF-8 encoding for you, sunshine.
+    let bytes = [b.charCodeAt() for each (b in message)];
+    hasher.update(bytes, bytes.length);
+    let result = hasher.finish(false);
+    if (hasher instanceof Ci.nsICryptoHMAC) {
+      hasher.reset();
+    }
+    return result;
   },
 
   bytesAsHex: function bytesAsHex(bytes) {
-    // Convert each hashed byte into 2-hex strings then combine them
-    return [("0" + byte.charCodeAt().toString(16)).slice(-2)
-            for each (byte in bytes)].join("");
+    let hex = "";
+    for (let i = 0; i < bytes.length; i++) {
+      hex += ("0" + bytes[i].charCodeAt().toString(16)).slice(-2);
+    }
+    return hex;
   },
 
   _sha256: function _sha256(message) {
     let hasher = Cc["@mozilla.org/security/hash;1"].
       createInstance(Ci.nsICryptoHash);
     hasher.init(hasher.SHA256);
-    return Utils.digest(message, hasher);
+    return Utils.digestUTF8(message, hasher);
   },
 
   sha256: function sha256(message) {
@@ -623,7 +664,7 @@ let Utils = {
     let hasher = Cc["@mozilla.org/security/hash;1"].
       createInstance(Ci.nsICryptoHash);
     hasher.init(hasher.SHA1);
-    return Utils.digest(message, hasher);
+    return Utils.digestUTF8(message, hasher);
   },
 
   sha1: function sha1(message) {
@@ -634,6 +675,10 @@ let Utils = {
     return Utils.encodeBase32(Utils._sha1(message));
   },
   
+  sha1Base64: function (message) {
+    return btoa(Utils._sha1(message));
+  },
+
   /**
    * Produce an HMAC key object from a key string.
    */
@@ -642,61 +687,33 @@ let Utils = {
   },
     
   /**
-   * Produce an HMAC hasher.
+   * Produce an HMAC hasher and initialize it with the given HMAC key.
    */
-  makeHMACHasher: function makeHMACHasher() {
-    return Cc["@mozilla.org/security/hmac;1"]
-             .createInstance(Ci.nsICryptoHMAC);
-  },
-
-  sha1Base64: function (message) {
-    return btoa(Utils._sha1(message));
+  makeHMACHasher: function makeHMACHasher(type, key) {
+    let hasher = Cc["@mozilla.org/security/hmac;1"]
+                   .createInstance(Ci.nsICryptoHMAC);
+    hasher.init(type, key);
+    return hasher;
   },
 
   /**
-   * Generate a sha1 HMAC for a message, not UTF-8 encoded,
-   * and a given nsIKeyObject.
-   * Optionally provide an existing hasher, which will be 
-   * initialized and reused.
+   * Some HMAC convenience functions for tests and backwards compatibility:
+   * 
+   *   sha1HMACBytes: hashes byte string, returns bytes string
+   *   sha256HMAC: hashes UTF-8 encoded string, returns hex string
+   *   sha256HMACBytes: hashes byte string, returns bytes string
    */
-  sha1HMACBytes: function sha1HMACBytes(message, key, hasher) {
-    let h = hasher || this.makeHMACHasher();
-    h.init(h.SHA1, key);
-    
-    // No UTF-8 encoding for you, sunshine.
-    let bytes = [b.charCodeAt() for each (b in message)];
-    h.update(bytes, bytes.length);
-    return h.finish(false);
+  sha1HMACBytes: function sha1HMACBytes(message, key) {
+    let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA1, key);
+    return Utils.digestBytes(message, h);
   },
-  
-  /**
-   * Generate a sha256 HMAC for a string message and a given nsIKeyObject.
-   * Optionally provide an existing hasher, which will be
-   * initialized and reused.
-   *
-   * Returns hex output.
-   */
-  sha256HMAC: function sha256HMAC(message, key, hasher) {
-    let h = hasher || this.makeHMACHasher();
-    h.init(h.SHA256, key);
-    return Utils.bytesAsHex(Utils.digest(message, h));
+  sha256HMAC: function sha256HMAC(message, key) {
+    let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256, key);
+    return Utils.bytesAsHex(Utils.digestUTF8(message, h));
   },
-  
-  
-  /**
-   * Generate a sha256 HMAC for a string message, not UTF-8 encoded,
-   * and a given nsIKeyObject.
-   * Optionally provide an existing hasher, which will be
-   * initialized and reused.
-   */
-  sha256HMACBytes: function sha256HMACBytes(message, key, hasher) {
-    let h = hasher || this.makeHMACHasher();
-    h.init(h.SHA256, key);
-
-    // No UTF-8 encoding for you, sunshine.
-    let bytes = [b.charCodeAt() for each (b in message)];
-    h.update(bytes, bytes.length);
-    return h.finish(false);
+  sha256HMACBytes: function sha256HMACBytes(message, key) {
+    let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256, key);
+    return Utils.digestBytes(message, h);
   },
 
   /**
@@ -704,13 +721,13 @@ let Utils = {
    */
   hkdfExpand: function hkdfExpand(prk, info, len) {
     const BLOCKSIZE = 256 / 8;
-    let h = Utils.makeHMACHasher();
+    let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256,
+                                 Utils.makeHMACKey(prk));
     let T = "";
     let Tn = "";
     let iterations = Math.ceil(len/BLOCKSIZE);
     for (let i = 0; i < iterations; i++) {
-      Tn = Utils.sha256HMACBytes(Tn + info + String.fromCharCode(i + 1),
-                                 Utils.makeHMACKey(prk), h);
+      Tn = Utils.digestBytes(Tn + info + String.fromCharCode(i + 1), h);
       T += Tn;
     }
     return T.slice(0, len);
@@ -736,7 +753,6 @@ let Utils = {
    * can encode as you wish.
    */
   pbkdf2Generate : function pbkdf2Generate(P, S, c, dkLen) {
-    
     // We don't have a default in the algo itself, as NSS does.
     // Use the constant.
     if (!dkLen)
@@ -745,7 +761,7 @@ let Utils = {
     /* For HMAC-SHA-1 */
     const HLEN = 20;
     
-    function F(PK, S, c, i, h) {
+    function F(S, c, i, h) {
     
       function XOR(a, b, isA) {
         if (a.length != b.length) {
@@ -774,9 +790,9 @@ let Utils = {
       I[2] = String.fromCharCode((i >> 8) & 0xff);
       I[3] = String.fromCharCode(i & 0xff);
 
-      U[0] = Utils.sha1HMACBytes(S + I.join(''), PK, h);
+      U[0] = Utils.digestBytes(S + I.join(''), h);
       for (let j = 1; j < c; j++) {
-        U[j] = Utils.sha1HMACBytes(U[j - 1], PK, h);
+        U[j] = Utils.digestBytes(U[j - 1], h);
       }
 
       ret = U[0];
@@ -791,12 +807,11 @@ let Utils = {
     let r = dkLen - ((l - 1) * HLEN);
 
     // Reuse the key and the hasher. Remaking them 4096 times is 'spensive.
-    let PK = Utils.makeHMACKey(P);
-    let h = Utils.makeHMACHasher();
+    let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA1, Utils.makeHMACKey(P));
     
     T = [];
     for (let i = 0; i < l;) {
-      T[i] = F(PK, S, c, ++i, h);
+      T[i] = F(S, c, ++i, h);
     }
 
     let ret = '';
@@ -1153,10 +1168,7 @@ let Utils = {
     let fos = Cc["@mozilla.org/network/safe-file-output-stream;1"]
                 .createInstance(Ci.nsIFileOutputStream);
     fos.init(file, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, PERMS_FILE, 0);
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                      .createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-    let is = converter.convertToInputStream(out);
+    let is = this._utf8Converter.convertToInputStream(out);
     NetUtil.asyncCopy(is, fos, function (result) {
       if (typeof callback == "function") {
         callback.call(that);        
@@ -1289,11 +1301,8 @@ let Utils = {
 
   encodeUTF8: function(str) {
     try {
-      var unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                             .createInstance(Ci.nsIScriptableUnicodeConverter);
-      unicodeConverter.charset = "UTF-8";
-      str = unicodeConverter.ConvertFromUnicode(str);
-      return str + unicodeConverter.Finish();
+      str = this._utf8Converter.ConvertFromUnicode(str);
+      return str + this._utf8Converter.Finish();
     } catch(ex) {
       return null;
     }
@@ -1301,11 +1310,8 @@ let Utils = {
 
   decodeUTF8: function(str) {
     try {
-      var unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                             .createInstance(Ci.nsIScriptableUnicodeConverter);
-      unicodeConverter.charset = "UTF-8";
-      str = unicodeConverter.ConvertToUnicode(str);
-      return str + unicodeConverter.Finish();
+      str = this._utf8Converter.ConvertToUnicode(str);
+      return str + this._utf8Converter.Finish();
     } catch(ex) {
       return null;
     }
@@ -1645,6 +1651,12 @@ let FakeSvc = {
     isFake: true
   }
 };
+Utils.lazy2(Utils, "_utf8Converter", function() {
+  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  converter.charset = "UTF-8";
+  return converter;
+});
 
 /*
  * Commonly-used services
