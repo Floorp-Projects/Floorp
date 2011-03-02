@@ -1688,6 +1688,9 @@ HUD_SERVICE.prototype =
   function HS_registerHUDReference(aHUD)
   {
     this.hudReferences[aHUD.hudId] = aHUD;
+
+    let id = ConsoleUtils.supString(aHUD.hudId);
+    Services.obs.notifyObservers(id, "web-console-created", null);
   },
 
   /**
@@ -3456,9 +3459,6 @@ HeadsUpDisplay.prototype = {
 
       let nodes = this.notificationBox.insertBefore(this.HUDBox,
         this.notificationBox.childNodes[0]);
-
-      let id = ConsoleUtils.supString(this.hudId);
-      Services.obs.notifyObservers(id, "web-console-created", null);
 
       return this.HUDBox;
     }
