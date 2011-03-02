@@ -363,6 +363,7 @@ var Browser = {
     messageManager.addMessageListener("Browser:FormSubmit", this);
     messageManager.addMessageListener("Browser:KeyPress", this);
     messageManager.addMessageListener("Browser:ZoomToPoint:Return", this);
+    messageManager.addMessageListener("Browser:CanUnload:Return", this);
     messageManager.addMessageListener("scroll", this);
     messageManager.addMessageListener("Browser:CertException", this);
 
@@ -526,7 +527,7 @@ var Browser = {
       Browser.addTab(aURI, true, oldTab, aParams);
       if (/^about:(blank|empty)$/.test(currentURI) && !browser.canGoBack && !browser.canGoForward) {
         oldTab.chromeTab.ignoreUndo = true;
-        this.closeTab(oldTab);
+        this.closeTab(oldTab, { forceClose: true });
         oldTab = null;
       }
     }
@@ -663,50 +664,63 @@ var Browser = {
     return newTab;
   },
 
-  closeTab: function(aTab) {
-    let tab = aTab;
-    if (aTab instanceof XULElement)
-      tab = this.getTabFromChrome(aTab);
-
-    // checking the length is a workaround for bug 615404
-    if (!tab || this._tabs.length < 2)
+  closeTab: function closeTab(aTab, aOptions) {
+    let tab = aTab instanceof XULElement ? this.getTabFromChrome(aTab) : aTab;
+    if (!tab || !this._getNextTab(tab))
       return;
 
-    // Make sure we leave the toolbar in an unlocked state
-    if (tab == this._selectedTab && tab.isLoading())
-      BrowserUI.unlockToolbar();
-
-    let tabIndex = this._tabs.indexOf(tab);
-    if (tabIndex == -1)
+    if (aOptions && "forceClose" in aOptions && aOptions.forceClose) {
+      this._doCloseTab(aTab);
       return;
-
-    let nextTab = this._selectedTab;
-    if (nextTab == tab) {
-      nextTab = tab.owner || this.getTabAtIndex(tabIndex + 1) || this.getTabAtIndex(tabIndex - 1);
-      if (!nextTab)
-        return;
     }
 
+    tab.browser.messageManager.sendAsyncMessage("Browser:CanUnload", {});
+  },
+
+  _doCloseTab: function _docloseTab(aTab) {
+    let nextTab = this._getNextTab(aTab);
+    if (!nextTab)
+       return;
+
+    // Make sure we leave the toolbar in an unlocked state
+    if (aTab == this._selectedTab && aTab.isLoading())
+      BrowserUI.unlockToolbar();
+
     // Tabs owned by the closed tab are now orphaned.
-    this._tabs.forEach(function(aTab, aIndex, aArray) {
-      if (aTab.owner == tab)
-        aTab.owner = null;
+    this._tabs.forEach(function(item, index, array) {
+      if (item.owner == aTab)
+        item.owner = null;
     });
 
     let event = document.createEvent("Events");
     event.initEvent("TabClose", true, false);
-    tab.chromeTab.dispatchEvent(event);
-    tab.browser.messageManager.sendAsyncMessage("Browser:TabClose");
+    aTab.chromeTab.dispatchEvent(event);
+    aTab.browser.messageManager.sendAsyncMessage("Browser:TabClose");
 
-    let container = tab.chromeTab.parentNode;
-    tab.destroy();
-    this._tabs.splice(tabIndex, 1);
+    let container = aTab.chromeTab.parentNode;
+    aTab.destroy();
+    this._tabs.splice(this._tabs.indexOf(aTab), 1);
 
     this.selectedTab = nextTab;
 
     event = document.createEvent("Events");
     event.initEvent("TabRemove", true, false);
     container.dispatchEvent(event);
+  },
+
+  _getNextTab: function _getNextTab(aTab) {
+    let tabIndex = this._tabs.indexOf(aTab);
+    if (tabIndex == -1)
+      return null;
+
+    let nextTab = this._selectedTab;
+    if (nextTab == aTab) {
+      nextTab = aTab.owner || this.getTabAtIndex(tabIndex + 1) || this.getTabAtIndex(tabIndex - 1);
+      if (!nextTab)
+        return null;
+    }
+
+    return nextTab;
   },
 
   get selectedTab() {
@@ -1066,6 +1080,19 @@ var Browser = {
       case "Browser:FormSubmit":
         browser.lastLocation = null;
         break;
+
+      case "Browser:CanUnload:Return": {
+        if (!json.permit)
+          return;
+
+        // Allow a little delay to not close the target tab while processing
+        // a message for this particular tab
+        setTimeout(function(self) {
+          let tab = self.getTabForBrowser(browser);
+          self._doCloseTab(tab);
+        }, 0, this);
+        break;
+      }
 
       case "Browser:KeyPress":
         let event = document.createEvent("KeyEvents");
@@ -2261,7 +2288,7 @@ var ContentCrashObserver = {
 
         // Close this tab, it could be the reason we crashed. The undo-close-tab
         // system will pick it up.
-        Browser.closeTab(Browser.selectedTab);
+        Browser.closeTab(Browser.selectedTab, { forceClose: true });
       }
 
       // Submit the report, if we have one and the user wants to submit it
@@ -2314,7 +2341,7 @@ function importDialog(aParent, aSrc, aArguments) {
 
   let doc = xhr.responseXML.documentElement;
 
-  var dialog  = null;
+  let dialog  = null;
 
   // we need to insert before menulist-container if we want it to show correctly
   // for prompt.select for instance

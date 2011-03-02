@@ -269,6 +269,7 @@ let Content = {
     addMessageListener("Browser:MozApplicationCache:Fetch", this);
     addMessageListener("Browser:SetCharset", this);
     addMessageListener("Browser:ContextCommand", this);
+    addMessageListener("Browser:CanUnload", this);
 
     if (Util.isParentProcess())
       addEventListener("DOMActivate", this, true);
@@ -393,6 +394,11 @@ let Content = {
 
       case "Browser:Blur":
         gFocusManager.clearFocus(content);
+        break;
+
+      case "Browser:CanUnload":
+        let canUnload = docShell.contentViewer.permitUnload();
+        sendSyncMessage("Browser:CanUnload:Return", { permit: canUnload });
         break;
 
       case "Browser:MouseOver": {
