@@ -831,7 +831,6 @@ nsThebesDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
     aFont->style = fontStyle.style;
     aFont->systemFont = fontStyle.systemFont;
     aFont->variant = NS_FONT_VARIANT_NORMAL;
-    aFont->familyNameQuirks = fontStyle.familyNameQuirks;
     aFont->weight = fontStyle.weight;
     aFont->stretch = fontStyle.stretch;
     aFont->decorations = NS_FONT_DECORATION_NONE;
