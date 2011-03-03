@@ -2044,18 +2044,28 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
     if (!fun)
         return NULL;
 
-    if (!indent) {
-        ToSourceCache::Ptr p = cx->compartment->toSourceCache.lookup(fun);
+    if (!indent && !cx->compartment->toSourceCache.empty()) {
+        ToSourceCache::Ptr p = cx->compartment->toSourceCache.ref().lookup(fun);
         if (p)
             return p->value;
     }
 
     JSString *str = JS_DecompileFunction(cx, fun, indent);
     if (!str)
-        return false;
+        return NULL;
 
-    if (!indent)
-        cx->compartment->toSourceCache.put(fun, str);
+    if (!indent) {
+        LazilyConstructed<ToSourceCache> &lazy = cx->compartment->toSourceCache;
+
+        if (lazy.empty()) {
+            lazy.construct();
+            if (!lazy.ref().init())
+                return NULL;
+        }
+
+        if (!lazy.ref().put(fun, str))
+            return NULL;
+    }
 
     return str;
 }
