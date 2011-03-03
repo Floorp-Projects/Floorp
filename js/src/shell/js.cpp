@@ -1985,7 +1985,7 @@ SrcNotes(JSContext *cx, JSScript *script)
     JSString *str;
 
     fprintf(gOutFile, "\nSource notes:\n");
-    fprintf(gOutFile, "% 4s  %4s %5s %6s %-8s %s\n",
+    fprintf(gOutFile, "%4s %4s %5s %6s %-8s %s\n",
             "ofs", "line", "pc", "delta", "desc", "args");
     fprintf(gOutFile, "---- ---- ----- ------ -------- ------\n");
     offset = 0;
