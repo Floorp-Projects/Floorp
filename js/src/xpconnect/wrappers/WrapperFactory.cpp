@@ -274,7 +274,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
     } else if (AccessCheck::isChrome(origin)) {
         if (obj->isFunction()) {
             JSFunction *fun = obj->getFunctionPrivate();
-            if (js::IsBuiltinEvalFunction(fun) || js::IsBuiltinFunctionConstructor(fun)) {
+            if (JS_IsBuiltinEvalFunction(fun) || JS_IsBuiltinFunctionConstructor(fun)) {
                 JS_ReportError(cx, "Not allowed to access chrome eval or Function from content");
                 return nsnull;
             }
