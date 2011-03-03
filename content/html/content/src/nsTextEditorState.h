@@ -112,7 +112,7 @@ struct SelectionState;
  *
  *  * The editor's cached value.  This value is stored in the mCachedValue member.
  *    It is used to improve the performance of append operations to the text
- *    control.  A mutation observer stored in the mAnonDivObserver has the job of
+ *    control.  A mutation observer stored in the mMutationObserver has the job of
  *    invalidating this cache when the anonymous contect containing the value is
  *    changed.
  *

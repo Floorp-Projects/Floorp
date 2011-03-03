@@ -110,9 +110,8 @@ function runTest() {
     ];
 
     if (isNullOrigin) {
-      passTests = ["*", "\t \t* \t "];
+      passTests = ["*", "\t \t* \t ", "null"];
       failTests = failTests.filter(function(v) { return v != origin });
-      failTests.push("null");
     }
     
     for each(allowOrigin in passTests) {

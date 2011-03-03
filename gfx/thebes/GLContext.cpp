@@ -51,6 +51,8 @@
 #include "GLContext.h"
 #include "GLContextProvider.h"
 
+#include "gfxCrashReporterUtils.h"
+
 namespace mozilla {
 namespace gl {
 
@@ -162,7 +164,10 @@ LibrarySymbolLoader::LoadSymbols(PRLibrary *lib,
 PRBool
 GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
 {
+    ScopedGfxFeatureReporter reporter("GL Context");
+
     if (mInitialized) {
+        reporter.SetSuccessful();
         return PR_TRUE;
     }
 
@@ -396,9 +401,12 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         mDebugMode |= DebugAbortOnError;
 #endif
 
-    // if initialization fails, ensure all symbols are zero, to avoid hard-to-understand bugs
-    if (!mInitialized)
-      mSymbols.Zero();
+    if (mInitialized)
+        reporter.SetSuccessful();
+    else {
+        // if initialization fails, ensure all symbols are zero, to avoid hard-to-understand bugs
+        mSymbols.Zero();
+    }
 
     return mInitialized;
 }

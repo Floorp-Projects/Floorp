@@ -8152,7 +8152,8 @@ JS_DEFINE_CALLINFO_4(extern, UINT32, GetClosureArg, CONTEXT, OBJECT, CVIPTR, DOU
  *     NameResult   describes how to look up name; see comment for NameResult in jstracer.h
  */
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::scopeChainProp(JSObject* chainHead, Value*& vp, LIns*& ins, NameResult& nr)
+TraceRecorder::scopeChainProp(JSObject* chainHead, Value*& vp, LIns*& ins, NameResult& nr,
+                              JSObject** scopeObjp)
 {
     JS_ASSERT(chainHead == &cx->fp()->scopeChain());
     JS_ASSERT(chainHead != globalObj);
@@ -8172,6 +8173,9 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, Value*& vp, LIns*& ins, NameR
 
     if (!prop)
         RETURN_STOP_A("failed to find name in non-global scope chain");
+
+    if (scopeObjp)
+        *scopeObjp = obj;
 
     if (obj == globalObj) {
         // Even if the property is on the global object, we must guard against
@@ -13513,30 +13517,66 @@ TraceRecorder::record_JSOP_SETELEM()
     return setElem(-3, -2, -1);
 }
 
+static JSBool FASTCALL
+CheckSameGlobal(JSObject *obj, JSObject *globalObj)
+{
+    return obj->getGlobal() == globalObj;
+}
+JS_DEFINE_CALLINFO_2(static, BOOL, CheckSameGlobal, OBJECT, OBJECT, 0, ACCSET_STORE_ANY)
+
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_CALLNAME()
 {
-    JSObject* obj = &cx->fp()->scopeChain();
-    if (obj != globalObj) {
+    JSObject* scopeObj = &cx->fp()->scopeChain();
+    LIns *funobj_ins;
+    JSObject *funobj;
+    if (scopeObj != globalObj) {
         Value* vp;
-        LIns* ins;
         NameResult nr;
-        CHECK_STATUS_A(scopeChainProp(obj, vp, ins, nr));
-        stack(0, ins);
-        stack(1, w.immiUndefined());
-        return ARECORD_CONTINUE;
+        CHECK_STATUS_A(scopeChainProp(scopeObj, vp, funobj_ins, nr, &scopeObj));
+        if (!nr.tracked)
+            vp = &nr.v;
+        if (!vp->isObject())
+            RETURN_STOP_A("callee is not an object");
+        funobj = &vp->toObject();
+        if (!funobj->isFunction())
+            RETURN_STOP_A("callee is not a function");
+    } else {
+        LIns* obj_ins = w.immpObjGC(globalObj);
+        JSObject* obj2;
+        PCVal pcval;
+
+        CHECK_STATUS_A(test_property_cache(scopeObj, obj_ins, obj2, pcval));
+
+        if (pcval.isNull() || !pcval.isFunObj())
+            RETURN_STOP_A("callee is not a function");
+
+        funobj = &pcval.toFunObj();
+        funobj_ins = w.immpObjGC(funobj);
     }
 
-    LIns* obj_ins = w.immpObjGC(globalObj);
-    JSObject* obj2;
-    PCVal pcval;
+    // Detect crossed globals early. The interpreter could decide to compute
+    // a non-Undefined |this| value, and we want to make sure that we'll (1)
+    // abort in this case, and (2) bail out early if a callee will need special
+    // |this| computation. Note that if (scopeObj != globalObj),
+    // scopeChainProp() guarantees that scopeObj is a cacheable scope.
+    if (scopeObj == globalObj) {
+        JSFunction *fun = funobj->getFunctionPrivate();
+        if (!fun->isInterpreted() || !fun->inStrictMode()) {
+            if (funobj->getGlobal() != globalObj)
+                RETURN_STOP_A("callee crosses globals");
 
-    CHECK_STATUS_A(test_property_cache(obj, obj_ins, obj2, pcval));
+            // If the funobj is not constant, we need may a guard that the
+            // callee will not cross globals. This is only the case for non-
+            // compile-and-go trees.
+            if (!funobj_ins->isImmP() && !tree->script->compileAndGo) {
+                LIns* args[] = { w.immpObjGC(globalObj), funobj_ins };
+                guard(false, w.eqi0(w.call(&CheckSameGlobal_ci, args)), MISMATCH_EXIT);
+            }
+        }
+    }
 
-    if (pcval.isNull() || !pcval.isFunObj())
-        RETURN_STOP_A("callee is not an object");
-
-    stack(0, w.immpObjGC(&pcval.toFunObj()));
+    stack(0, funobj_ins);
     stack(1, w.immiUndefined());
     return ARECORD_CONTINUE;
 }
@@ -15229,8 +15269,10 @@ TraceRecorder::record_JSOP_BINDNAME()
         JSStackFrame *fp2 = fp;
 #endif
 
-        // In global code, fp->scopeChain can only contain blocks whose values
-        // are still on the stack.  We never use BINDNAME to refer to these.
+        /*
+         * In global code, fp->scopeChain can only contain blocks whose values
+         * are still on the stack.  We never use BINDNAME to refer to these.
+         */
         while (obj->isBlock()) {
             // The block's values are still on the stack.
 #ifdef DEBUG
@@ -15247,17 +15289,23 @@ TraceRecorder::record_JSOP_BINDNAME()
             JS_ASSERT(obj);
         }
 
-        // If anything other than Block, Call, DeclEnv, and the global object
-        // is on the scope chain, we shouldn't be recording. Of those, only
-        // Block and global can be present in global code.
-        JS_ASSERT(obj == globalObj);
+        /*
+         * If this is a strict mode eval frame, we will have a Call object for
+         * it. For now just don't trace this case.
+         */
+        if (obj != globalObj) {
+            JS_ASSERT(obj->isCall());
+            JS_ASSERT(obj->callIsForEval());
+            RETURN_STOP_A("BINDNAME within strict eval code");
+        }
 
         /*
-         * The trace is specialized to this global object. Furthermore, we know it
-         * is the sole 'global' object on the scope chain: we set globalObj to the
-         * scope chain element with no parent, and we reached it starting from the
-         * function closure or the current scopeChain, so there is nothing inner to
-         * it. Therefore this must be the right base object.
+         * The trace is specialized to this global object. Furthermore, we know
+         * it is the sole 'global' object on the scope chain: we set globalObj
+         * to the scope chain element with no parent, and we reached it
+         * starting from the function closure or the current scopeChain, so
+         * there is nothing inner to it. Therefore this must be the right base
+         * object.
          */
         stack(0, w.immpObjGC(obj));
         return ARECORD_CONTINUE;

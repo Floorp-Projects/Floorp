@@ -12,16 +12,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Corporation code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Aaron Leventhal <aaronl@netscape.com> (original author)
- *   Alexander Surkov <surkov.alexander@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,20 +32,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsRootAccessibleWrap_H_
-#define _nsRootAccessibleWrap_H_
+#ifndef gfxCrashReporterUtils_h__
+#define gfxCrashReporterUtils_h__
 
-#include "nsRootAccessible.h"
+#include "gfxCore.h"
 
-class nsRootAccessibleWrap : public nsRootAccessible
+namespace mozilla {
+
+/** \class ScopedGfxFeatureReporter
+  *
+  * On creation, adds "FeatureName?" to AppNotes
+  * On destruction, adds "FeatureName-", or "FeatureName+" if you called SetSuccessful().
+  *
+  * Any such string is added at most once to AppNotes, and is subsequently skipped.
+  *
+  * This ScopedGfxFeatureReporter class is designed to be fool-proof to use in functions that
+  * have many exit points. We don't want to encourage having function with many exit points.
+  * It just happens that our graphics features initialization functions are like that.
+  */
+class NS_GFX ScopedGfxFeatureReporter
 {
 public:
-  nsRootAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
-                       nsIWeakReference* aShell);
-  virtual ~nsRootAccessibleWrap();
+  ScopedGfxFeatureReporter(const char *aFeature) : mFeature(aFeature), mStatusChar('-')
+  {
+    WriteAppNote('?');
+  }
+  ~ScopedGfxFeatureReporter() {
+    WriteAppNote(mStatusChar);
+  }
+  void SetSuccessful() { mStatusChar = '+'; }
 
-  // nsRootAccessible
-  virtual void DocumentActivated(nsDocAccessible* aDocument);
+protected:
+  const char *mFeature;
+  char mStatusChar;
+
+private:
+  void WriteAppNote(char statusChar);
 };
 
-#endif
+} // end namespace mozilla
+
+#endif // gfxCrashReporterUtils_h__

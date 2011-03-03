@@ -560,6 +560,21 @@ nsAccessibilityService::PresShellDestroyed(nsIPresShell *aPresShell)
 }
 
 void
+nsAccessibilityService::PresShellActivated(nsIPresShell* aPresShell)
+{
+  nsIDocument* DOMDoc = aPresShell->GetDocument();
+  if (DOMDoc) {
+    nsDocAccessible* document = GetDocAccessibleFromCache(DOMDoc);
+    if (document) {
+      nsRootAccessible* rootDocument = document->RootAccessible();
+      NS_ASSERTION(rootDocument, "Entirely broken tree: no root document!");
+      if (rootDocument)
+        rootDocument->DocumentActivated(document);
+    }
+  }
+}
+
+void
 nsAccessibilityService::RecreateAccessible(nsIPresShell* aPresShell,
                                            nsIContent* aContent)
 {

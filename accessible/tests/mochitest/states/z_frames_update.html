@@ -1,0 +1,22 @@
+<html>
+<head>
+<script>
+function replaceBody()
+{
+  var accRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
+    getService(Components.interfaces.nsIAccessibleRetrieval);
+  accRetrieval.getAccessibleFor(document);
+
+  var newBody = document.createElement("body");
+  newBody.setAttribute("contentEditable", "true");
+  newBody.textContent = "New Hello";
+  document.documentElement.replaceChild(newBody, document.body);
+  getComputedStyle(newBody, "").color;
+}
+</script>
+</head>
+<body onload="replaceBody();">
+OLD hello
+</body>
+</html>
+

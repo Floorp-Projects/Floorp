@@ -59,7 +59,6 @@ IPDLDIRS =  \
   dom/ipc  \
   dom/src/storage \
   gfx/layers/ipc \
-  ipc/ipdl/test/cxx  \
   ipc/testshell  \
   js/ipc  \
   js/jetpack \
@@ -71,6 +70,10 @@ IPDLDIRS =  \
   netwerk/cookie  \
   uriloader/prefetch  \
   $(NULL)
+
+ifdef MOZ_IPDL_TESTS #{
+IPDLDIRS += ipc/ipdl/test/cxx
+endif #}
 ##-----------------------------------------------------------------------------
 
 ifdef MOZ_IPDL_TESTS

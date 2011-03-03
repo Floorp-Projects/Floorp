@@ -185,12 +185,15 @@ public class CrashReporter extends Activity
   }
 
   void sendPart(OutputStream os, String boundary, String name, String data)
-    throws IOException
   {
-    os.write(("--" + boundary + "\r\n" +
-              "Content-Disposition: form-data; name=\"" +
-              name + "\"\r\n\r\n" +
-              data + "\r\n").getBytes());
+    try {
+      os.write(("--" + boundary + "\r\n" +
+                "Content-Disposition: form-data; name=\"" +
+                name + "\"\r\n\r\n" +
+                data + "\r\n").getBytes());
+    } catch (Exception ex) {
+      Log.e("GeckoCrashReporter", "Exception when sending \"" + name + "\"", ex);
+    }
   }
 
   void sendFile(OutputStream os, String boundary, String name, File file)
@@ -255,13 +258,18 @@ public class CrashReporter extends Activity
       sendPart(os, boundary, "Android_Model", Build.MODEL);
       sendPart(os, boundary, "Android_Board", Build.BOARD);
       sendPart(os, boundary, "Android_Brand", Build.BRAND);
-      sendPart(os, boundary, "Android_CPU_ABI", Build.CPU_ABI); 
-      sendPart(os, boundary, "Android_CPU_ABI2", Build.CPU_ABI2);
       sendPart(os, boundary, "Android_Device", Build.DEVICE);
       sendPart(os, boundary, "Android_Display", Build.DISPLAY);
       sendPart(os, boundary, "Android_Fingerprint", Build.FINGERPRINT);
-      if (Build.VERSION.SDK_INT >= 8)
-        sendPart(os, boundary, "Android_Hardware", Build.HARDWARE);
+      sendPart(os, boundary, "Android_CPU_ABI", Build.CPU_ABI); 
+      if (Build.VERSION.SDK_INT >= 8) {
+        try {
+          sendPart(os, boundary, "Android_CPU_ABI2", Build.CPU_ABI2);
+          sendPart(os, boundary, "Android_Hardware", Build.HARDWARE);
+        } catch (Exception ex) {
+          Log.e("GeckoCrashReporter", "Exception while sending SDK version 8 keys", ex);
+        }
+      }
       sendPart(os, boundary, "Android_Version",  Build.VERSION.SDK_INT + " (" + Build.VERSION.CODENAME + ")");
 
       sendFile(os, boundary, kMiniDumpPathKey, minidumpFile);
