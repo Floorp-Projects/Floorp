@@ -115,7 +115,7 @@ JSCompartment::~JSCompartment()
 }
 
 bool
-JSCompartment::init()
+JSCompartment::init(JSContext *cx)
 {
     chunk = NULL;
     for (unsigned i = 0; i < FINALIZE_LIMIT; i++)
@@ -125,7 +125,7 @@ JSCompartment::init()
 #ifdef JS_GCMETER
     memset(&compartmentStats, 0, sizeof(JSGCArenaStats) * FINALIZE_LIMIT);
 #endif
-    types.init();
+    types.init(cx);
     if (!crossCompartmentWrappers.init())
         return false;
 
@@ -523,27 +523,34 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 #endif
 
     if (!types.inferenceDepth) {
-#ifdef JS_TYPE_INFERENCE
-        for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
-            JSScript *script = reinterpret_cast<JSScript *>(cursor);
-            script->condenseTypes(cx);
-        }
+        if (types.inferenceEnabled) {
+            for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
+                JSScript *script = reinterpret_cast<JSScript *>(cursor);
+                script->condenseTypes(cx);
+            }
 
-        types::CondenseTypeObjectList(cx, types.objects);
+            types::CondenseTypeObjectList(cx, &types, types.objects);
 
-        for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
-            JSScript *script = reinterpret_cast<JSScript *>(cursor);
-            script->sweepTypes(cx);
+            for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
+                JSScript *script = reinterpret_cast<JSScript *>(cursor);
+                script->sweepTypes(cx);
+            }
         }
-#endif
 
         types::SweepTypeObjectList(cx, types.objects);
+
+        /* Reset the inference pool, releasing all intermediate type data. */
+        JS_FinishArenaPool(&types.pool);
 
         /*
          * Destroy eval'ed scripts, now that any type inference information referring
          * to eval scripts has been removed.
          */
         js_DestroyScriptsToGC(cx, this);
+
+        /* Nuke types if there was an OOM while condensing type information. */
+        if (types.pendingNukeTypes)
+            types.nukeTypes(cx);
     }
 
 #if defined JS_METHODJIT && defined JS_MONOIC

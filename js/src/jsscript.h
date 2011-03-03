@@ -406,9 +406,7 @@ struct JSScript {
     bool            hasSingletons:1;  /* script has singleton objects */
     bool            isCachedEval:1;   /* script came from eval() */
     bool            isUncachedEval:1; /* script came from EvaluateScript */
-#ifdef JS_TYPE_INFERENCE
-    bool            analyzed:1;       /* script has previously been analyzed */
-#endif
+    bool            analyzed:1;       /* script has been analyzed by type inference */
 #ifdef JS_METHODJIT
     bool            debugMode:1;      /* script was compiled in debug mode */
     bool            singleStepMode:1; /* compile script in single-step mode */
@@ -455,7 +453,6 @@ struct JSScript {
 
   public:
 
-#ifdef JS_TYPE_INFERENCE
 #ifdef DEBUG
     /* Unique identifier within the compartment for this script. */
     unsigned id_;
@@ -506,7 +503,6 @@ struct JSScript {
 
     /* Get the default 'new' object for a given standard class, per the script's global. */
     inline js::types::TypeObject *getTypeNewObject(JSContext *cx, JSProtoKey key);
-#endif
 
     void condenseTypes(JSContext *cx);
     void sweepTypes(JSContext *cx);
@@ -516,21 +512,18 @@ struct JSScript {
     getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray);
 
     /* Monitor a bytecode pushing an unexpected value. */
-    inline void typeMonitorResult(JSContext *cx, const jsbytecode *pc, js::types::jstype type);
-    inline void typeMonitorResult(JSContext *cx, const jsbytecode *pc, const js::Value &val);
-    inline void typeMonitorUndefined(JSContext *cx, const jsbytecode *pc);
-    inline void typeMonitorOverflow(JSContext *cx, const jsbytecode *pc);
-    inline void typeMonitorUnknown(JSContext *cx, const jsbytecode *pc);
+    inline bool typeMonitorResult(JSContext *cx, const jsbytecode *pc, js::types::jstype type);
+    inline bool typeMonitorResult(JSContext *cx, const jsbytecode *pc, const js::Value &val);
+    inline bool typeMonitorUndefined(JSContext *cx, const jsbytecode *pc);
+    inline bool typeMonitorOverflow(JSContext *cx, const jsbytecode *pc);
+    inline bool typeMonitorUnknown(JSContext *cx, const jsbytecode *pc);
 
-    /* Monitor a bytecode assigning to an object's property, if necessary. */
-    inline void typeMonitorAssign(JSContext *cx, const jsbytecode *pc,
-                                  JSObject *obj, jsid id, const js::Value &rval, bool force = false);
-
-    /* Override the value of an argument to this script by assigning to arguments[...]. */
-    inline void typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value);
-
-    /* Mark the value of a flat closure upvar in this script. */
-    inline void typeSetUpvar(JSContext *cx, unsigned upvar, const js::Value &value);
+    /* Add a type for a variable in this script. */
+    inline bool typeSetThis(JSContext *cx, js::types::jstype type);
+    inline bool typeSetLocal(JSContext *cx, unsigned local, const js::Value &value);
+    inline bool typeSetArgument(JSContext *cx, unsigned arg, js::types::jstype type);
+    inline bool typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value);
+    inline bool typeSetUpvar(JSContext *cx, unsigned upvar, const js::Value &value);
 
 #ifdef JS_METHODJIT
     // Fast-cached pointers to make calls faster. These are also used to

@@ -10,5 +10,5 @@ script regress-352742-01.js
 script regress-352742-02.js
 script regress-386030.js
 script regress-415451.js
-skip script regress-415540.js # :FIXME: bug 599159
+script regress-415540.js
 script regress-566651.js

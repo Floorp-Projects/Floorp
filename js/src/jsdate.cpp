@@ -1444,8 +1444,8 @@ date_getYear(JSContext *cx, uintN argc, Value *vp)
         vp->setInt32(year);
     } else {
         *vp = yearVal;
-        if (!vp->isInt32())
-            cx->markTypeCallerOverflow();
+        if (!vp->isInt32() && !cx->markTypeCallerOverflow())
+            return false;
     }
 
     return true;
@@ -1462,8 +1462,8 @@ date_getFullYear(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_YEAR);
-    if (!vp->isInt32())
-        cx->markTypeCallerOverflow();
+    if (!vp->isInt32() && !cx->markTypeCallerOverflow())
+        return false;
     return JS_TRUE;
 }
 
@@ -1476,8 +1476,8 @@ date_getUTCFullYear(JSContext *cx, uintN argc, Value *vp)
 
     if (JSDOUBLE_IS_FINITE(result))
         result = YearFromTime(result);
-    else
-        cx->markTypeCallerOverflow();
+    else if (!cx->markTypeCallerOverflow())
+        return false;
 
     vp->setNumber(result);
     return true;
@@ -1494,8 +1494,8 @@ date_getMonth(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_MONTH);
-    if (!vp->isInt32())
-        cx->markTypeCallerOverflow();
+    if (!vp->isInt32() && !cx->markTypeCallerOverflow())
+        return false;
     return true;
 }
 
@@ -1508,8 +1508,8 @@ date_getUTCMonth(JSContext *cx, uintN argc, Value *vp)
 
     if (JSDOUBLE_IS_FINITE(result))
         result = MonthFromTime(result);
-    else
-        cx->markTypeCallerOverflow();
+    else if (!cx->markTypeCallerOverflow())
+        return false;
 
     vp->setNumber(result);
     return true;
@@ -1526,8 +1526,8 @@ date_getDate(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_DATE);
-    if (!vp->isInt32())
-        cx->markTypeCallerOverflow();
+    if (!vp->isInt32() && !cx->markTypeCallerOverflow())
+        return false;
     return true;
 }
 
@@ -1540,8 +1540,8 @@ date_getUTCDate(JSContext *cx, uintN argc, Value *vp)
 
     if (JSDOUBLE_IS_FINITE(result))
         result = DateFromTime(result);
-    else
-        cx->markTypeCallerOverflow();
+    else if (!cx->markTypeCallerOverflow())
+        return false;
 
     vp->setNumber(result);
     return true;
@@ -1558,8 +1558,8 @@ date_getDay(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_DAY);
-    if (!vp->isInt32())
-        cx->markTypeCallerOverflow();
+    if (!vp->isInt32() && !cx->markTypeCallerOverflow())
+        return false;
     return true;
 }
 
@@ -1572,8 +1572,8 @@ date_getUTCDay(JSContext *cx, uintN argc, Value *vp)
 
     if (JSDOUBLE_IS_FINITE(result))
         result = WeekDay(result);
-    else
-        cx->markTypeCallerOverflow();
+    else if (!cx->markTypeCallerOverflow())
+        return false;
 
     vp->setNumber(result);
     return true;
@@ -1590,8 +1590,8 @@ date_getHours(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_HOURS);
-    if (!vp->isInt32())
-        cx->markTypeCallerOverflow();
+    if (!vp->isInt32() && !cx->markTypeCallerOverflow())
+        return false;
     return true;
 }
 
@@ -1604,8 +1604,8 @@ date_getUTCHours(JSContext *cx, uintN argc, Value *vp)
 
     if (JSDOUBLE_IS_FINITE(result))
         result = HourFromTime(result);
-    else
-        cx->markTypeCallerOverflow();
+    else if (!cx->markTypeCallerOverflow())
+        return false;
 
     vp->setNumber(result);
     return JS_TRUE;
@@ -1622,8 +1622,8 @@ date_getMinutes(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_MINUTES);
-    if (!vp->isInt32())
-        cx->markTypeCallerOverflow();
+    if (!vp->isInt32() && !cx->markTypeCallerOverflow())
+        return false;
     return true;
 }
 
@@ -1636,8 +1636,8 @@ date_getUTCMinutes(JSContext *cx, uintN argc, Value *vp)
 
     if (JSDOUBLE_IS_FINITE(result))
         result = MinFromTime(result);
-    else
-        cx->markTypeCallerOverflow();
+    else if (!cx->markTypeCallerOverflow())
+        return false;
 
     vp->setNumber(result);
     return true;
@@ -1656,8 +1656,8 @@ date_getUTCSeconds(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_SECONDS);
-    if (!vp->isInt32())
-        cx->markTypeCallerOverflow();
+    if (!vp->isInt32() && !cx->markTypeCallerOverflow())
+        return false;
     return true;
 }
 
@@ -1672,8 +1672,8 @@ date_getUTCMilliseconds(JSContext *cx, uintN argc, Value *vp)
 
     if (JSDOUBLE_IS_FINITE(result))
         result = msFromTime(result);
-    else
-        cx->markTypeCallerOverflow();
+    else if (!cx->markTypeCallerOverflow())
+        return false;
 
     vp->setNumber(result);
     return true;
@@ -1700,8 +1700,8 @@ date_getTimezoneOffset(JSContext *cx, uintN argc, Value *vp)
      * daylight savings time.
      */
     jsdouble result = (utctime - localtime) / msPerMinute;
-    if (!JSDOUBLE_IS_FINITE(result))
-        cx->markTypeCallerOverflow();
+    if (!JSDOUBLE_IS_FINITE(result) && !cx->markTypeCallerOverflow())
+        return false;
 
     vp->setNumber(result);
     return true;
@@ -2610,12 +2610,10 @@ js_Date(JSContext *cx, uintN argc, Value *vp)
 
 static void type_NewDate(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
-#ifdef JS_TYPE_INFERENCE
     if (Valueify(jssite)->isNew)
         JS_TypeHandlerNew(cx, jsfun, jssite);
     else
         JS_TypeHandlerString(cx, jsfun, jssite);
-#endif
 }
 
 JSObject *
@@ -2643,11 +2641,11 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
     jsid toUTCStringId = ATOM_TO_JSID(cx->runtime->atomState.toUTCStringAtom);
     jsid toGMTStringId = ATOM_TO_JSID(cx->runtime->atomState.toGMTStringAtom);
     if (!js_GetProperty(cx, proto, toUTCStringId, toUTCStringFun.addr()) ||
+        !cx->addTypePropertyId(proto->getType(), toGMTStringId, toUTCStringFun.value()) ||
         !js_DefineProperty(cx, proto, toGMTStringId, toUTCStringFun.addr(),
                            PropertyStub, StrictPropertyStub, 0)) {
         return NULL;
     }
-    cx->addTypePropertyId(proto->getType(), toGMTStringId, toUTCStringFun.value());
 
     return proto;
 }

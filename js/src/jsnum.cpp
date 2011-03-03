@@ -424,8 +424,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
     /* Fast paths and exceptional cases. */
     if (argc == 0) {
         vp->setDouble(js_NaN);
-        cx->markTypeCallerOverflow();
-        return true;
+        return cx->markTypeCallerOverflow();
     }
 
     if (argc == 1 || (vp[3].isInt32() && (vp[3].toInt32() == 0 || vp[3].toInt32() == 10))) {
@@ -435,8 +434,8 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
         }
         if (vp[2].isDouble()) {
             vp->setNumber(ParseIntDoubleHelper(vp[2].toDouble()));
-            if (!vp->isInt32())
-                cx->markTypeCallerOverflow();
+            if (!vp->isInt32() && !cx->markTypeCallerOverflow())
+                return false;
             return true;
         }
     }
@@ -456,8 +455,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
         if (radix != 0) {
             if (radix < 2 || radix > 36) {
                 vp->setDouble(js_NaN);
-                cx->markTypeCallerOverflow();
-                return true;
+                return cx->markTypeCallerOverflow();
             }
             if (radix != 16)
                 stripPrefix = false;
@@ -476,8 +474,8 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
 
     /* Step 15. */
     vp->setNumber(number);
-    if (!vp->isInt32())
-        cx->markTypeCallerOverflow();
+    if (!vp->isInt32() && !cx->markTypeCallerOverflow())
+        return false;
     return true;
 }
 

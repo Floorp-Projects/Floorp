@@ -796,10 +796,11 @@ struct JSObject : js::gc::Cell {
      */
 
     inline uint32 getArrayLength() const;
-    inline void setArrayLength(JSContext *cx, uint32 length);
+    inline bool setArrayLength(JSContext *cx, uint32 length);
 
     inline uint32 getDenseArrayCapacity();
     inline uint32 getDenseArrayInitializedLength();
+    inline void setDenseArrayLength(uint32 length);
     inline void setDenseArrayInitializedLength(uint32 length);
     inline js::Value* getDenseArrayElements();
     inline const js::Value &getDenseArrayElement(uintN idx);
@@ -808,7 +809,7 @@ struct JSObject : js::gc::Cell {
     inline void shrinkDenseArrayElements(JSContext *cx, uintN cap);
 
     inline bool isPackedDenseArray();
-    inline void setDenseArrayNotPacked(JSContext *cx);
+    inline bool setDenseArrayNotPacked(JSContext *cx);
 
     /*
      * ensureDenseArrayElements ensures that the dense array can hold at least
@@ -1644,8 +1645,8 @@ js_DefineNativePropertyWithType(JSContext *cx, JSObject *obj, jsid id, const js:
                                 uintN flags, intN shortid, JSProperty **propp,
                                 uintN defineHow = 0)
 {
-    JS_AddTypePropertyById(cx, obj, id, Jsvalify(value));
-    return js_DefineNativeProperty(cx, obj, id, value, getter, setter,
+    return JS_AddTypePropertyById(cx, obj, id, Jsvalify(value)) &&
+           js_DefineNativeProperty(cx, obj, id, value, getter, setter,
                                    attrs, flags, shortid, propp, defineHow);
 }
 

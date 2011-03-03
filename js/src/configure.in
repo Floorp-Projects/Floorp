@@ -5012,18 +5012,6 @@ if test -n "$MOZ_TRACE_JSCALLS"; then
 fi
 
 dnl ========================================================
-dnl = Enable type inference
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(type-inference,
-[  --enable-type-inference Enable JS type inference (default=no)],
-    JS_TYPE_INFERENCE=1,
-    JS_TYPE_INFERENCE= )
-if test -n "$JS_TYPE_INFERENCE"; then
-    AC_DEFINE(JS_TYPE_INFERENCE)
-fi
-AC_SUBST(JS_TYPE_INFERENCE)
-
-dnl ========================================================
 dnl = Use TraceVis
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(tracevis,

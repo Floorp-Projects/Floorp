@@ -375,6 +375,21 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
         return true;
     }
 
+    /*
+     * Notify type inference of the custom iterator.  This only needs to be done
+     * if this is coming from a 'for in' loop, not a call to Iterator itself.
+     * If an Iterator object is used in a for loop then the values fetched in
+     * that loop are unknown, whether there is a custom __iterator__ or not.
+     */
+    if (!(flags & JSITER_OWNONLY)) {
+        JS_ASSERT(JSOp(*cx->regs->pc) == JSOP_ITER);
+        TypeObject *getset = cx->getTypeGetSet();
+        if (!getset)
+            return false;
+        if (!cx->fp()->script()->typeMonitorResult(cx, cx->regs->pc, (jstype) getset))
+            return false;
+    }
+
     /* Otherwise call it and return that object. */
     LeaveTrace(cx);
     Value arg = BooleanValue((flags & JSITER_FOREACH) == 0);
@@ -392,16 +407,7 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
                              -1, ObjectValue(*obj), NULL, bytes.ptr());
         return false;
     }
-    /*
-     * Notify type inference of the custom iterator.  This only needs to be done
-     * if this is coming from a 'for in' loop, not a call to Iterator itself.
-     * If an Iterator object is used in a for loop then the values fetched in
-     * that loop are unknown, whether there is a custom __iterator__ or not.
-     */
-    if (!(flags & JSITER_OWNONLY)) {
-        JS_ASSERT(JSOp(*cx->regs->pc) == JSOP_ITER);
-        cx->fp()->script()->typeMonitorResult(cx, cx->regs->pc, (jstype) cx->getTypeGetSet());
-    }
+
     return true;
 }
 
@@ -1241,17 +1247,19 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
       case JSGENOP_NEXT:
       case JSGENOP_SEND:
         if (gen->state == JSGEN_OPEN) {
+            JSScript *script = gen->floatingFrame()->script();
+
+            jsbytecode *yieldpc = gen->regs.pc - JSOP_YIELD_LENGTH;
+            JS_ASSERT(JSOp(*yieldpc) == JSOP_YIELD);
+
+            if (!script->typeMonitorUnknown(cx, yieldpc))
+                return JS_FALSE;
+
             /*
              * Store the argument to send as the result of the yield
              * expression.
              */
             gen->regs.sp[-1] = arg;
-
-            jsbytecode *yieldpc = gen->regs.pc - JSOP_YIELD_LENGTH;
-            JS_ASSERT(JSOp(*yieldpc) == JSOP_YIELD);
-
-            JSScript *script = gen->floatingFrame()->script();
-            script->typeMonitorUnknown(cx, yieldpc);
         }
         gen->state = JSGEN_RUNNING;
         break;
@@ -1486,7 +1494,8 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
     if (!proto)
         return NULL;
 
-    cx->addTypeProperty(obj->getType(), js_StopIteration_str, ObjectValue(*proto));
+    if (!cx->addTypeProperty(obj->getType(), js_StopIteration_str, ObjectValue(*proto)))
+        return NULL;
 
     return proto;
 }

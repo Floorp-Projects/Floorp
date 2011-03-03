@@ -51,9 +51,9 @@
 #include <sys/time.h>
 #endif
 
-/* Define to get detailed output of inference actions. */
-
-namespace js { namespace analyze {
+namespace js {
+    struct CallArgs;
+namespace analyze {
     struct Bytecode;
     class Script;
 } }
@@ -88,23 +88,6 @@ const jstype TYPE_STRING    = 6;
  * becomes polymorphic, or when accessing an object with unknown properties.
  */
 const jstype TYPE_UNKNOWN = 7;
-
-/* Coarse flags for the type of a value. */
-enum {
-    TYPE_FLAG_UNDEFINED = 1 << TYPE_UNDEFINED,
-    TYPE_FLAG_NULL      = 1 << TYPE_NULL,
-    TYPE_FLAG_BOOLEAN   = 1 << TYPE_BOOLEAN,
-    TYPE_FLAG_INT32     = 1 << TYPE_INT32,
-    TYPE_FLAG_DOUBLE    = 1 << TYPE_DOUBLE,
-    TYPE_FLAG_STRING    = 1 << TYPE_STRING,
-
-    TYPE_FLAG_UNKNOWN   = 1 << TYPE_UNKNOWN,
-
-    TYPE_FLAG_OBJECT   = 0x1000
-};
-
-/* Vector of the above flags. */
-typedef uint32 TypeFlags;
 
 /*
  * Test whether a type is an primitive or an object.  Object types can be
@@ -235,13 +218,31 @@ enum ObjectKind {
     OBJECT_NATIVE_FUNCTION
 };
 
+/* Coarse flags for the contents of a type set. */
+enum {
+    TYPE_FLAG_UNDEFINED = 1 << TYPE_UNDEFINED,
+    TYPE_FLAG_NULL      = 1 << TYPE_NULL,
+    TYPE_FLAG_BOOLEAN   = 1 << TYPE_BOOLEAN,
+    TYPE_FLAG_INT32     = 1 << TYPE_INT32,
+    TYPE_FLAG_DOUBLE    = 1 << TYPE_DOUBLE,
+    TYPE_FLAG_STRING    = 1 << TYPE_STRING,
+
+    TYPE_FLAG_UNKNOWN   = 1 << TYPE_UNKNOWN,
+
+    /* Flag for type sets which are cleared on GC. */
+    TYPE_FLAG_INTERMEDIATE_SET = 0x1000
+};
+
+/* Vector of the above flags. */
+typedef uint32 TypeFlags;
+
 /* Information about the set of types associated with an lvalue. */
 struct TypeSet
 {
     /* Flags for the possible coarse types in this set. */
     TypeFlags typeFlags;
 
-    /* If TYPE_FLAG_OBJECT, the possible objects this this type can represent. */
+    /* Possible objects this type set can represent. */
     TypeObject **objectSet;
     unsigned objectCount;
 
@@ -253,6 +254,10 @@ struct TypeSet
     {}
 
     void print(JSContext *cx);
+
+    void setIntermediate() { typeFlags |= TYPE_FLAG_INTERMEDIATE_SET; }
+
+    inline void destroy(JSContext *cx);
 
     /* Whether this set contains a specific type. */
     inline bool hasType(jstype type);
@@ -292,7 +297,7 @@ struct TypeSet
      * Make an intermediate type set with the specified debugging name,
      * not embedded in another structure.
      */
-    static inline TypeSet* make(JSContext *cx, JSArenaPool &pool, const char *name);
+    static inline TypeSet* make(JSContext *cx, const char *name);
 
     /* Methods for JIT compilation. */
 
@@ -425,8 +430,9 @@ struct TypeObject
 
     /* Helpers */
 
+    bool addProperty(JSContext *cx, jsid id, Property **pprop);
     void addPrototype(JSContext *cx, TypeObject *proto);
-    void addProperty(JSContext *cx, jsid id, Property *&prop);
+    void markNotPacked(JSContext *cx, bool notDense);
     void markUnknown(JSContext *cx);
     void storeToInstances(JSContext *cx, Property *base);
     void getFromPrototypes(JSContext *cx, Property *base);
@@ -484,12 +490,11 @@ struct TypeCallsite
     /* Type set receiving the return value of this call. */
     TypeSet *returnTypes;
 
-    inline TypeCallsite(JSScript *script, const jsbytecode *pc,
+    inline TypeCallsite(JSContext *cx, JSScript *script, const jsbytecode *pc,
                         bool isNew, unsigned argumentCount);
 
-    /* Force creation of thisTypes or returnTypes. */
-    inline void forceThisTypes(JSContext *cx);
-    inline void forceReturnTypes(JSContext *cx);
+    /* Force creation of thisTypes. */
+    inline bool forceThisTypes(JSContext *cx);
 
     /* Get the new object at this callsite. */
     inline TypeObject* getInitObject(JSContext *cx, bool isArray);
@@ -525,12 +530,6 @@ struct TypeScript
 #endif
 
     /*
-     * Pool into which intermediate type sets and all type constraints are allocated
-     * during analysis of the script.
-     */
-    JSArenaPool pool;
-
-    /*
      * Stack values pushed by all bytecodes in the script. Low bit is set for
      * bytecodes which are monitored (side effects were not determined statically).
      */
@@ -560,20 +559,37 @@ struct TypeCompartment
     /* List of objects not associated with a script. */
     TypeObject *objects;
 
-    /* Number of active instances of AutoEnterTypeInference. */
+    /* Whether type inference is enabled in this compartment. */
+    bool inferenceEnabled;
+
+    /* Whether type inference is active, see AutoEnterTypeInference. */
     unsigned inferenceDepth;
+    uint64_t inferenceStartTime;
+
+    /* Pool for all intermediate type information in this compartment. Cleared on every GC. */
+    JSArenaPool pool;
 
     /* Number of scripts in this compartment. */
     unsigned scriptCount;
-
-    /* Whether the interpreter is currently active (we are not inferring types). */
-    bool interpreting;
 
     /* Object to use throughout the compartment as the default type of objects with no prototype. */
     TypeObject emptyObject;
 
     /* Dummy object added to properties which can have scripted getters/setters. */
     TypeObject *typeGetSet;
+
+    /*
+     * Bit set if all current types must be marked as unknown, and all scripts
+     * recompiled. Caused by OOM failure within inference operations.
+     */
+    bool pendingNukeTypes;
+
+    /*
+     * Whether type sets have been nuked, and all future type sets should be as well.
+     * This is not strictly necessary to do, but avoids thrashing from repeated
+     * redundant type nuking.
+     */
+    bool typesNuked;
 
     /* Pending recompilations to perform before execution of JIT code can resume. */
     Vector<JSScript*> *pendingRecompiles;
@@ -615,7 +631,7 @@ struct TypeCompartment
     /* Number of recompilations triggered. */
     unsigned recompilations;
 
-    void init();
+    void init(JSContext *cx);
 
     uint64 currentTime()
     {
@@ -643,29 +659,34 @@ struct TypeCompartment
     TypeObject *newTypeObject(JSContext *cx, JSScript *script,
                               const char *name, bool isFunction, JSObject *proto);
 
-#ifdef JS_TYPE_INFERENCE
     /* Make an initializer object. */
     TypeObject *newInitializerTypeObject(JSContext *cx, JSScript *script,
                                          uint32 offset, bool isArray);
-#endif
 
     /*
      * Add the specified type to the specified set, do any necessary reanalysis
      * stemming from the change and recompile any affected scripts.
      */
-    void addDynamicType(JSContext *cx, TypeSet *types, jstype type);
-    void addDynamicPush(JSContext *cx, JSScript *script, uint32 offset, jstype type);
-    void dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Value &rval);
+    bool dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jstype type);
+    bool dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Value &rval);
+    bool dynamicCall(JSContext *cx, JSObject *callee, const CallArgs &args, bool constructing);
 
-    inline bool hasPendingRecompiles() { return pendingRecompiles != NULL; }
-    void processPendingRecompiles(JSContext *cx);
+    inline bool checkPendingRecompiles(JSContext *cx);
+
+    bool nukeTypes(JSContext *cx);
+    bool processPendingRecompiles(JSContext *cx);
+
+    /* Mark all types as needing destruction once inference has 'finished'. */
+    void setPendingNukeTypes(JSContext *cx);
+
+    /* Mark a script as needing recompilation once inference has finished. */
     void addPendingRecompile(JSContext *cx, JSScript *script);
 
     /* Monitor future effects on a bytecode. */
     void monitorBytecode(JSContext *cx, JSScript *script, uint32 offset);
 };
 
-void CondenseTypeObjectList(JSContext *cx, TypeObject *objects);
+void CondenseTypeObjectList(JSContext *cx, TypeCompartment *compartment, TypeObject *objects);
 void SweepTypeObjectList(JSContext *cx, TypeObject *&objects);
 
 enum SpewChannel {

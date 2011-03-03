@@ -959,10 +959,12 @@ JS_StringToVersion(const char *string);
                                 JS_BIT(16)      /* Always whole-method JIT,
                                                    don't tune at run-time. */
 
+#define JSOPTION_TYPE_INFERENCE JS_BIT(17)      /* Perform type inference. */
+
 /* Options which reflect compile-time properties of scripts. */
 #define JSCOMPILEOPTION_MASK    (JSOPTION_XML | JSOPTION_ANONFUNFIX)
 
-#define JSRUNOPTION_MASK        (JS_BITMASK(17) & ~JSCOMPILEOPTION_MASK)
+#define JSRUNOPTION_MASK        (JS_BITMASK(18) & ~JSCOMPILEOPTION_MASK)
 #define JSALLOPTION_MASK        (JSCOMPILEOPTION_MASK | JSRUNOPTION_MASK)
 
 extern JS_PUBLIC_API(uint32)
@@ -2246,10 +2248,10 @@ JS_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, jsval descriptor, JS
 
 /* Add properties to the type information for obj. */
 
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API(JSBool)
 JS_AddTypeProperty(JSContext *cx, JSObject *obj, const char *name, jsval value);
 
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API(JSBool)
 JS_AddTypePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value);
 
 static JS_ALWAYS_INLINE JSBool

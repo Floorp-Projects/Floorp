@@ -554,6 +554,9 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
     AutoValueRooter tvr(cx);
     if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, tvr.addr()))
         return false;
+    if (!cx->fp()->script()->typeMonitorUnknown(cx, cx->regs->pc))
+        return false;
+
     if (tvr.value().isPrimitive()) {
         vp[0] = tvr.value();
     } else {
@@ -583,7 +586,6 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
         obj->setSlot(JSSLOT_SAVED_ID, vp[0]);
         vp[0].setObject(*obj);
     }
-    cx->fp()->script()->typeMonitorUnknown(cx, cx->regs->pc);
     return true;
 }
 
@@ -709,7 +711,8 @@ Invoke(JSContext *cx, const CallArgs &argsRef, uint32 flags)
         return true;
     }
 
-    cx->typeMonitorCall(NULL, NULL, args, flags & JSFRAME_CONSTRUCTING, true);
+    if (!cx->typeMonitorCall(args, flags & JSFRAME_CONSTRUCTING))
+        return false;
 
     /* Get pointer to new frame/slots, prepare arguments. */
     InvokeFrameGuard frame;
@@ -777,30 +780,26 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
         uint32 flags = 0;
         if (!stack.getInvokeFrame(cx, args_, fun, script_, &flags, &frame_))
             return false;
+
         JSStackFrame *fp = frame_.fp();
         fp->initCallFrame(cx, calleev.toObject(), fun, argc, flags);
         stack.pushInvokeFrame(cx, args_, &frame_);
 
-#ifdef JS_TYPE_INFERENCE
-        cx->typeMonitorEntry(script_);
-
-        /* Mark the shared 'this' type. */
-        jstype type = GetValueType(cx, thisv);
-        if (!script_->thisTypes()->hasType(type)) {
-            InferSpew(ISpewDynamic, "AddThis: #%u: %s",
-                      script_->id(), TypeString(type));
-            cx->compartment->types.addDynamicType(cx, script_->thisTypes(), type);
-        }
-
-        /* Mark all formal arguments as unknown. */
-        for (unsigned arg = 0; arg < fun->nargs; arg++) {
-            TypeSet *types = script_->argTypes(arg);
-            if (!types->unknown()) {
-                InferSpew(ISpewDynamic, "AddArgUnknown: #%u %u", script_->id(), arg);
-                cx->compartment->types.addDynamicType(cx, types, TYPE_UNKNOWN);
+        JS_ASSERT(!(flags & JSFRAME_CONSTRUCTING));
+        if (cx->typeInferenceEnabled()) {
+            /*
+             * Set the 'this' type according to the value given, but mark the types
+             * of all arguments as unknown. We don't want to keep track of the
+             * possible values the InvokeSession's client could pass in.
+             */
+            jstype type = GetValueType(cx, thisv);
+            if (!script_->typeSetThis(cx, type))
+                return false;
+            for (unsigned i = 0; i < fun->nargs; i++) {
+                if (!script_->typeSetArgument(cx, i, TYPE_UNKNOWN))
+                    return false;
             }
         }
-#endif
 
 #ifdef JS_METHODJIT
         /* Hoist dynamic checks from RunScript. */
@@ -1032,7 +1031,11 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
 
     Probes::startExecution(cx, script);
 
-    cx->typeMonitorEntry(script, frame.fp()->thisValue());
+    if (cx->typeInferenceEnabled()) {
+        jstype type = GetValueType(cx, frame.fp()->thisValue());
+        if (!script->typeSetThis(cx, type))
+            return false;
+    }
 
     /* Run script until JSOP_STOP or error. */
     AutoPreserveEnumerators preserve(cx);
@@ -2215,9 +2218,12 @@ ScriptPrologue(JSContext *cx, JSStackFrame *fp)
 static inline void
 TypeCheckNextBytecode(JSContext *cx, JSScript *script, unsigned n, const JSFrameRegs &regs)
 {
-#if defined JS_TYPE_INFERENCE && DEBUG
-    if (*regs.pc != JSOP_TRAP && n == analyze::GetBytecodeLength(regs.pc))
+#ifdef DEBUG
+    if (cx->typeInferenceEnabled() &&
+        *regs.pc != JSOP_TRAP &&
+        n == analyze::GetBytecodeLength(regs.pc)) {
         script->typeCheckBytecode(cx, regs.pc, regs.sp);
+    }
 #endif
 }
 
@@ -2697,12 +2703,6 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
       advance_pc:
         regs.pc += len;
         op = (JSOp) *regs.pc;
-
-#ifdef JS_TYPE_INFERENCE
-        // record types seen by every opcode.
-        script->typeScript->checkByteCode(regs.pc, regs.sp);
-#endif
-
       do_op:
         CHECK_RECORDER();
         LOG_OPCODE(op);
@@ -3228,7 +3228,8 @@ BEGIN_CASE(JSOP_FORGNAME)
         JS_ASSERT(regs.sp[-1].isObject());
         if (!IteratorNext(cx, &regs.sp[-1].toObject(), tvr.addr()))
             goto error;
-        script->typeMonitorAssign(cx, regs.pc, obj, id, tvr.value());
+        if (!cx->typeMonitorAssign(obj, id, tvr.value()))
+            goto error;
         if (!obj->setProperty(cx, id, tvr.addr(), script->strictModeCode))
             goto error;
     }
@@ -3248,7 +3249,8 @@ BEGIN_CASE(JSOP_FORPROP)
         JS_ASSERT(regs.sp[-2].isObject());
         if (!IteratorNext(cx, &regs.sp[-2].toObject(), tvr.addr()))
             goto error;
-        script->typeMonitorAssign(cx, regs.pc, obj, id, tvr.value());
+        if (!cx->typeMonitorAssign(obj, id, tvr.value()))
+            goto error;
         if (!obj->setProperty(cx, id, tvr.addr(), script->strictModeCode))
             goto error;
     }
@@ -3375,7 +3377,8 @@ BEGIN_CASE(JSOP_SETCONST)
     JSObject &obj = regs.fp->varobj(cx);
     const Value &ref = regs.sp[-1];
 
-    script->typeMonitorAssign(cx, regs.pc, &obj, ATOM_TO_JSID(atom), ref);
+    if (!cx->typeMonitorAssign(&obj, ATOM_TO_JSID(atom), ref))
+        goto error;
 
     if (!obj.defineProperty(cx, ATOM_TO_JSID(atom), ref,
                             PropertyStub, StrictPropertyStub,
@@ -3707,8 +3710,8 @@ BEGIN_CASE(JSOP_URSH)
     u >>= (j & 31);
 
     regs.sp--;
-    if (!regs.sp[-1].setNumber(uint32(u)))
-        script->typeMonitorOverflow(cx, regs.pc);
+    if (!regs.sp[-1].setNumber(uint32(u)) && !script->typeMonitorOverflow(cx, regs.pc))
+        goto error;
 }
 END_CASE(JSOP_URSH)
 
@@ -3723,7 +3726,8 @@ BEGIN_CASE(JSOP_ADD)
         regs.sp--;
         if (JS_UNLIKELY(bool((l ^ sum) & (r ^ sum) & 0x80000000))) {
             regs.sp[-1].setDouble(double(l) + double(r));
-            script->typeMonitorOverflow(cx, regs.pc);
+            if (!script->typeMonitorOverflow(cx, regs.pc))
+                goto error;
         } else {
             regs.sp[-1].setInt32(sum);
         }
@@ -3771,8 +3775,11 @@ BEGIN_CASE(JSOP_ADD)
                 goto error;
             l += r;
             regs.sp--;
-            if (!regs.sp[-1].setNumber(l) && !(lval.isDouble() || rval.isDouble()))
-                script->typeMonitorOverflow(cx, regs.pc);
+            if (!regs.sp[-1].setNumber(l) &&
+                !(lval.isDouble() || rval.isDouble()) &&
+                !script->typeMonitorOverflow(cx, regs.pc)) {
+                goto error;
+            }
         }
     }
 }
@@ -3790,8 +3797,9 @@ END_CASE(JSOP_ADD)
         double d = d1 OP d2;                                                  \
         regs.sp--;                                                            \
         if (!regs.sp[-1].setNumber(d) &&                                      \
-            !(lval.isDouble() || rval.isDouble())) {                          \
-            script->typeMonitorOverflow(cx, regs.pc);                         \
+            !(lval.isDouble() || rval.isDouble()) &&                          \
+            !script->typeMonitorOverflow(cx, regs.pc)) {                      \
+            goto error;                                                       \
         }                                                                     \
     JS_END_MACRO
 
@@ -3830,11 +3838,15 @@ BEGIN_CASE(JSOP_DIV)
         else
             vp = &rt->positiveInfinityValue;
         regs.sp[-1] = *vp;
-        script->typeMonitorOverflow(cx, regs.pc);
+        if (!script->typeMonitorOverflow(cx, regs.pc))
+            goto error;
     } else {
         d1 /= d2;
-        if (!regs.sp[-1].setNumber(d1) && !(lval.isDouble() || rval.isDouble()))
-            script->typeMonitorOverflow(cx, regs.pc);
+        if (!regs.sp[-1].setNumber(d1) &&
+            !(lval.isDouble() || rval.isDouble()) &&
+            !script->typeMonitorOverflow(cx, regs.pc)) {
+            goto error;
+        }
     }
 }
 END_CASE(JSOP_DIV)
@@ -3862,7 +3874,8 @@ BEGIN_CASE(JSOP_MOD)
             d1 = js_fmod(d1, d2);
             regs.sp[-1].setDouble(d1);
         }
-        script->typeMonitorOverflow(cx, regs.pc);
+        if (!script->typeMonitorOverflow(cx, regs.pc))
+            goto error;
     }
 }
 END_CASE(JSOP_MOD)
@@ -3903,8 +3916,10 @@ BEGIN_CASE(JSOP_NEG)
         if (!ValueToNumber(cx, regs.sp[-1], &d))
             goto error;
         d = -d;
-        if (!regs.sp[-1].setNumber(d) && !ref.isDouble())
-            script->typeMonitorOverflow(cx, regs.pc);
+        if (!regs.sp[-1].setNumber(d) && !ref.isDouble() &&
+            !script->typeMonitorOverflow(cx, regs.pc)) {
+            goto error;
+        }
     }
 }
 END_CASE(JSOP_NEG)
@@ -3912,8 +3927,8 @@ END_CASE(JSOP_NEG)
 BEGIN_CASE(JSOP_POS)
     if (!ValueToNumber(cx, &regs.sp[-1]))
         goto error;
-    if (!regs.sp[-1].isInt32())
-        script->typeMonitorOverflow(cx, regs.pc);
+    if (!regs.sp[-1].isInt32() && !script->typeMonitorOverflow(cx, regs.pc))
+        goto error;
 END_CASE(JSOP_POS)
 
 BEGIN_CASE(JSOP_DELNAME)
@@ -4102,9 +4117,10 @@ do_incop:
         PUSH_NULL();
         if (!js_DoIncDec(cx, cs, &regs.sp[-2], &regs.sp[-1]))
             goto error;
+        if (!cx->typeMonitorAssign(obj, id, regs.sp[-1]))
+            goto error;
         regs.fp->setAssigning();
         JSBool ok = obj->setProperty(cx, id, &regs.sp[-1], script->strictModeCode);
-        script->typeMonitorAssign(cx, regs.pc, obj, id, regs.sp[-1], !regs.sp[-1].isInt32());
         regs.fp->clearAssigning();
         if (!ok)
             goto error;
@@ -4175,8 +4191,8 @@ BEGIN_CASE(JSOP_LOCALINC)
         PUSH_COPY(*vp);
         if (!js_DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-1], vp))
             goto error;
-        if (!vp->isInt32())
-            script->typeMonitorOverflow(cx, regs.pc);
+        if (!vp->isInt32() && !script->typeMonitorOverflow(cx, regs.pc))
+            goto error;
     }
     len = JSOP_INCARG_LENGTH;
     JS_ASSERT(len == js_CodeSpec[op].length);
@@ -4286,8 +4302,8 @@ BEGIN_CASE(JSOP_GETXPROP)
             }
         } while (0);
 
-        if (rval.isUndefined())
-            script->typeMonitorUndefined(cx, regs.pc);
+        if (rval.isUndefined() && !script->typeMonitorUndefined(cx, regs.pc))
+            goto error;
 
         regs.sp[-1] = rval;
         assertSameCompartment(cx, regs.sp[-1]);
@@ -4409,8 +4425,8 @@ BEGIN_CASE(JSOP_CALLPROP)
             goto error;
     }
 #endif
-    if (rval.isUndefined())
-        script->typeMonitorUndefined(cx, regs.pc);
+    if (rval.isUndefined() && !script->typeMonitorUndefined(cx, regs.pc))
+        goto error;
 }
 END_CASE(JSOP_CALLPROP)
 
@@ -4434,7 +4450,8 @@ BEGIN_CASE(JSOP_SETMETHOD)
     JS_ASSERT_IF(op == JSOP_SETGNAME, obj == regs.fp->scopeChain().getGlobal());
 
     jsid id = ATOM_TO_JSID(atoms[GET_INDEX(regs.pc)]);
-    script->typeMonitorAssign(cx, regs.pc, obj, id, rval);
+    if (!cx->typeMonitorAssign(obj, id, rval))
+        goto error;
 
     do {
         PropertyCache *cache = &JS_PROPERTY_CACHE(cx);
@@ -4647,10 +4664,12 @@ BEGIN_CASE(JSOP_GETELEM)
     regs.sp[-1] = *copyFrom;
     assertSameCompartment(cx, regs.sp[-1]);
     if (!rref.isInt32()) {
-        script->typeMonitorUnknown(cx, regs.pc);
+        if (!script->typeMonitorUnknown(cx, regs.pc))
+            goto error;
     } else if (copyFrom->isUndefined()) {
         cx->addTypeProperty(obj->getType(), NULL, TYPE_UNDEFINED);
-        script->typeMonitorUndefined(cx, regs.pc);
+        if (!script->typeMonitorUndefined(cx, regs.pc))
+            goto error;
     }
 }
 END_CASE(JSOP_GETELEM)
@@ -4684,8 +4703,10 @@ BEGIN_CASE(JSOP_CALLELEM)
         regs.sp[-1] = thisv;
     }
 
-    if (regs.sp[-2].isUndefined() || !JSID_IS_INT(id))
-        script->typeMonitorUnknown(cx, regs.pc);
+    if ((regs.sp[-2].isUndefined() || !JSID_IS_INT(id)) &&
+        !script->typeMonitorUnknown(cx, regs.pc)) {
+        goto error;
+    }
 }
 END_CASE(JSOP_CALLELEM)
 
@@ -4696,7 +4717,8 @@ BEGIN_CASE(JSOP_SETELEM)
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
     Value rval;
-    script->typeMonitorAssign(cx, regs.pc, obj, id, regs.sp[-1], !JSID_IS_INT(id));
+    if (!cx->typeMonitorAssign(obj, id, regs.sp[-1]))
+        goto error;
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
             jsuint length = obj->getDenseArrayInitializedLength();
@@ -4705,8 +4727,8 @@ BEGIN_CASE(JSOP_SETELEM)
                 if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
                     if (js_PrototypeHasIndexedProperties(cx, obj))
                         break;
-                    if ((jsuint)i >= obj->getArrayLength())
-                        obj->setArrayLength(cx, i + 1);
+                    if ((jsuint)i >= obj->getArrayLength() && !obj->setArrayLength(cx, i + 1))
+                        goto error;
                 }
                 obj->setDenseArrayElement(i, regs.sp[-1]);
                 goto end_setelem;
@@ -4728,7 +4750,8 @@ BEGIN_CASE(JSOP_ENUMELEM)
     jsid id;
     FETCH_ELEMENT_ID(obj, -1, id);
     Value rval = regs.sp[-3];
-    script->typeMonitorAssign(cx, regs.pc, obj, id, rval);
+    if (!cx->typeMonitorAssign(obj, id, rval))
+        goto error;
     if (!obj->setProperty(cx, id, &rval, script->strictModeCode))
         goto error;
     regs.sp -= 3;
@@ -4825,8 +4848,8 @@ BEGIN_CASE(JSOP_FUNCALL)
                 goto error;
             }
 
-            cx->typeMonitorCall(script, regs.pc, CallArgs(vp + 2, argc),
-                                flags & JSFRAME_CONSTRUCTING, false);
+            if (!cx->typeMonitorCall(CallArgs(vp + 2, argc), flags & JSFRAME_CONSTRUCTING))
+                goto error;
 
             /* Get pointer to new frame/slots, prepare arguments. */
             StackSpace &stack = cx->stack();
@@ -4990,8 +5013,8 @@ BEGIN_CASE(JSOP_CALLNAME)
     }
 
     PUSH_COPY(rval);
-    if (rval.isUndefined())
-        script->typeMonitorUndefined(cx, regs.pc);
+    if (rval.isUndefined() && !script->typeMonitorUndefined(cx, regs.pc))
+        goto error;
 
     /* obj must be on the scope chain, thus not a function. */
     if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
@@ -5416,8 +5439,8 @@ BEGIN_CASE(JSOP_CALLGLOBAL)
     JSObject *obj = regs.fp->scopeChain().getGlobal();
     JS_ASSERT(obj->containsSlot(slot));
     PUSH_COPY(obj->getSlot(slot));
-    if (regs.sp[-1].isUndefined())
-        script->typeMonitorUndefined(cx, regs.pc);
+    if (regs.sp[-1].isUndefined() && !script->typeMonitorUndefined(cx, regs.pc))
+        goto error;
     if (op == JSOP_CALLGLOBAL)
         PUSH_UNDEFINED();
 }
@@ -5537,7 +5560,8 @@ BEGIN_CASE(JSOP_DEFFUN)
 
     Value rval = ObjectValue(*obj);
 
-    script->typeMonitorAssign(cx, regs.pc, parent, id, rval);
+    if (!cx->typeMonitorAssign(parent, id, rval))
+        goto error;
 
     do {
         /* Steps 5d, 5f. */
@@ -5605,13 +5629,14 @@ BEGIN_CASE(JSOP_DEFFUN_DBGFC)
     if (!CheckRedeclaration(cx, &parent, id, attrs))
         goto error;
 
+    if (!cx->typeMonitorAssign(&parent, id, rval))
+        goto error;
+
     if ((attrs == JSPROP_ENUMERATE)
         ? !parent.setProperty(cx, id, &rval, script->strictModeCode)
         : !parent.defineProperty(cx, id, rval, PropertyStub, StrictPropertyStub, attrs)) {
         goto error;
     }
-
-    script->typeMonitorAssign(cx, regs.pc, &parent, id, rval);
 }
 END_CASE(JSOP_DEFFUN_FC)
 
@@ -6015,8 +6040,10 @@ BEGIN_CASE(JSOP_NEWOBJECT)
     LOAD_OBJECT(0, baseobj);
 
     TypeObject *type = script->getTypeInitObject(cx, regs.pc, false);
-    JSObject *obj = CopyInitializerObject(cx, baseobj, type);
+    if (!type)
+        goto error;
 
+    JSObject *obj = CopyInitializerObject(cx, baseobj, type);
     if (!obj)
         goto error;
 
@@ -6070,12 +6097,13 @@ BEGIN_CASE(JSOP_INITMETHOD)
             JS_ASSERT(slot == shape->slot);
         }
 
+        if (!cx->typeMonitorAssign(obj, shape->id, rval))
+            goto error;
+
         /* A new object, or one we just extended in a recent initprop op. */
         JS_ASSERT(!obj->lastProperty() ||
                   obj->shape() == obj->lastProperty()->shape);
         obj->extend(cx, shape);
-
-        script->typeMonitorAssign(cx, regs.pc, obj, shape->id, rval);
 
         /*
          * No method change check here because here we are adding a new
@@ -6092,7 +6120,8 @@ BEGIN_CASE(JSOP_INITMETHOD)
         LOAD_ATOM(0, atom);
         jsid id = ATOM_TO_JSID(atom);
 
-        script->typeMonitorAssign(cx, regs.pc, obj, id, rval);
+        if (!cx->typeMonitorAssign(obj, id, rval))
+            goto error;
 
         uintN defineHow = (op == JSOP_INITMETHOD)
                           ? JSDNP_CACHE_RESULT | JSDNP_SET_METHOD
@@ -6140,6 +6169,8 @@ BEGIN_CASE(JSOP_INITELEM)
             goto error;
         }
     } else {
+        if (!cx->typeMonitorAssign(obj, id, rref))
+            goto error;
         if (!obj->defineProperty(cx, id, rref, NULL, NULL, JSPROP_ENUMERATE))
             goto error;
     }
@@ -6499,7 +6530,8 @@ BEGIN_CASE(JSOP_SETXMLNAME)
     Value rval = regs.sp[-1];
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
-    script->typeMonitorAssign(cx, regs.pc, obj, id, rval);
+    if (!cx->typeMonitorAssign(obj, id, rval))
+        goto error;
     if (!obj->setProperty(cx, id, &rval, script->strictModeCode))
         goto error;
     rval = regs.sp[-1];
@@ -6788,7 +6820,8 @@ BEGIN_CASE(JSOP_ARRAYPUSH)
     JS_ASSERT(script->nfixed <= slot);
     JS_ASSERT(slot < script->nslots);
     JSObject *obj = &regs.fp->slots()[slot].toObject();
-    script->typeMonitorAssign(cx, regs.pc, obj, JSID_VOID, regs.sp[-1]);
+    if (!cx->typeMonitorAssign(obj, JSID_VOID, regs.sp[-1]))
+        goto error;
     if (!js_ArrayCompPush(cx, obj, regs.sp[-1]))
         goto error;
     regs.sp--;

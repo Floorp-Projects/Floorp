@@ -66,13 +66,10 @@
 #endif
 #include "methodjit/MethodJIT.h"
 
+#include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
-
-#ifdef JS_TYPE_INFERENCE
-#include "jsinferinlines.h"
-#endif
 
 using namespace js;
 using namespace js::gc;
@@ -1383,7 +1380,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
     script->owner = cx->thread;
 #endif
 
-#if defined JS_TYPE_INFERENCE && DEBUG
+#ifdef DEBUG
     script->id_ = ++cx->compartment->types.scriptCount;
 #endif
 
@@ -1483,7 +1480,6 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         cg->upvarMap.vector = NULL;
     }
 
-#ifdef JS_TYPE_INFERENCE
     /* Set global for compileAndGo scripts. */
     if (script->compileAndGo) {
         GlobalScope *globalScope = cg->compiler()->globalScope;
@@ -1493,7 +1489,6 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
             script->global = cx->globalObject;
         }
     }
-#endif
 
     if (cg->globalUses.length()) {
         memcpy(script->globals()->vector, &cg->globalUses[0],
@@ -1527,22 +1522,25 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 #endif
         fun->u.i.script = script;
 
-#ifdef JS_TYPE_INFERENCE
-        char *name = NULL;
-#ifdef DEBUG
-        name = (char *) alloca(10);
-        JS_snprintf(name, 10, "#%u", script->id());
-#endif
-        types::TypeObject *type = cx->newTypeFunction(name, fun->getProto());
-        fun->setType(type);
-        cx->setTypeFunctionScript(fun, script);
-#endif
-
 #ifdef CHECK_SCRIPT_OWNER
         script->owner = NULL;
 #endif
         if (cg->flags & TCF_FUN_HEAVYWEIGHT)
             fun->flags |= JSFUN_HEAVYWEIGHT;
+
+        if (cx->typeInferenceEnabled()) {
+            char *name = NULL;
+#ifdef DEBUG
+            name = (char *) alloca(10);
+            JS_snprintf(name, 10, "#%u", script->id());
+#endif
+            types::TypeObject *type = cx->newTypeFunction(name, fun->getProto());
+            if (!type)
+                goto bad;
+
+            fun->setType(type);
+            cx->setTypeFunctionScript(fun, script);
+        }
     }
 
     /* Tell the debugger about this compiled script. */
@@ -1660,7 +1658,6 @@ DestroyScript(JSContext *cx, JSScript *script)
     PurgeScriptFragments(&script->compartment->traceMonitor, script);
 #endif
 
-#ifdef JS_TYPE_INFERENCE
     JS_ASSERT(!script->types);
 
     /* Migrate any type objects associated with this script to the compartment. */
@@ -1678,7 +1675,6 @@ DestroyScript(JSContext *cx, JSScript *script)
         cx->free(result);
         result = next;
     }
-#endif
 
 #if defined(JS_METHODJIT)
     mjit::ReleaseScriptCode(cx, script);
@@ -1757,7 +1753,10 @@ js_TraceScript(JSTracer *trc, JSScript *script)
 
     script->bindings.trace(trc);
 
-#ifdef JS_TYPE_INFERENCE
+    /*
+     * Trace all type objects associated with the script, these can be freely
+     * referenced from JIT code without needing to be pinned against GC.
+     */
     types::TypeObject *obj = script->typeObjects;
     while (obj) {
         if (!obj->marked)
@@ -1769,7 +1768,6 @@ js_TraceScript(JSTracer *trc, JSScript *script)
         JS_SET_TRACING_NAME(trc, "script_fun");
         Mark(trc, script->fun);
     }
-#endif
 }
 
 JSBool

@@ -1567,11 +1567,16 @@ do {                                                                           \
                          NULL, NULL);                                          \
     if (!proto)                                                                \
         return NULL;                                                           \
-    cx->addTypeProperty(proto->getType(), NULL, types::TYPE_INT32);            \
-    if (_typedArray::ArrayElementTypeMayBeDouble())                            \
-        cx->addTypeProperty(proto->getType(), NULL, types::TYPE_DOUBLE);       \
-    cx->addTypeProperty(proto->getType(), "buffer",                            \
-                        (types::jstype) bufferType);                           \
+    if (!cx->addTypeProperty(proto->getType(), NULL, types::TYPE_INT32))       \
+        return NULL;                                                           \
+    if (_typedArray::ArrayElementTypeMayBeDouble() &&                          \
+        !cx->addTypeProperty(proto->getType(), NULL, types::TYPE_DOUBLE)) {    \
+        return NULL;                                                           \
+    }                                                                          \
+    if (!cx->addTypeProperty(proto->getType(), "buffer",                       \
+                             (types::jstype) bufferType)) {                    \
+        return NULL;                                                           \
+    }                                                                          \
     JSObject *ctor = JS_GetConstructor(cx, proto);                             \
     if (!ctor ||                                                               \
         !JS_DefinePropertyWithType(cx, ctor, "BYTES_PER_ELEMENT",              \
@@ -1641,6 +1646,8 @@ js_InitTypedArrayClasses(JSContext *cx, JSObject *obj)
         return NULL;
 
     TypeObject *bufferType = proto->getNewType(cx);
+    if (!bufferType)
+        return NULL;
 
     INIT_TYPED_ARRAY_CLASS(Int8Array,TYPE_INT8);
     INIT_TYPED_ARRAY_CLASS(Uint8Array,TYPE_UINT8);
