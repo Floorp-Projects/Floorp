@@ -437,19 +437,14 @@ stubs::Eval(VMFrame &f, uint32 argc)
 {
     Value *vp = f.regs.sp - (argc + 2);
 
-    JSObject *callee;
-    JSFunction *fun;
-
-    if (!IsFunctionObject(*vp, &callee) ||
-        !IsBuiltinEvalFunction((fun = callee->getFunctionPrivate())))
-    {
+    if (!IsBuiltinEvalForScope(&f.regs.fp->scopeChain(), *vp)) {
         if (!Invoke(f.cx, InvokeArgsAlreadyOnTheStack(vp, argc), 0))
             THROW();
         return;
     }
 
     JS_ASSERT(f.regs.fp == f.cx->fp());
-    if (!DirectEval(f.cx, fun, argc, vp))
+    if (!DirectEval(f.cx, argc, vp))
         THROW();
 }
 
