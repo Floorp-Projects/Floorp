@@ -194,7 +194,6 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       if (value && value->Type() == nsAttrValue::eString &&
           !value->IsEmptyString()) {
         font.mFamily.SetStringValue(value->GetStringValue(), eCSSUnit_Families);
-        font.mFamilyFromHTML = PR_TRUE;
       }
     }
 
