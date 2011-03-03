@@ -1038,7 +1038,7 @@ interface jsdIScript : jsdIEphemeral
      */
     void getExecutableLines(in unsigned long pcmap,
                             in unsigned long startLine, in unsigned long maxLines,
-                            out unsigned long count,
+                            [optional] out unsigned long count,
                             [array, size_is(count), retval] out unsigned long executableLines);
  
     /**
