@@ -1154,8 +1154,7 @@ tools are selected during the Xcode/Developer Tools installation.])
   AC_LANG_SAVE
   AC_MSG_CHECKING([for valid compiler/Mac OS X SDK combination])
   AC_LANG_CPLUSPLUS
-  AC_TRY_COMPILE([#include <new>
-                 int main() { return 0; }],
+  AC_TRY_COMPILE([#include <new>],[],
    result=yes,
    result=no)
   AC_LANG_RESTORE
