@@ -1410,9 +1410,6 @@ namespace nanojit
         Fragment *target = guard->record()->exit->target;
         GuardRecord *guard_record = NULL;
 
-        // Jump tables are not yet supported.
-        NanoAssert(!guard->isop(LIR_xtbl));
-
         // 3. Jump to the target fragment.
         if (target && target->fragEntry)
             JMP(target->fragEntry);

@@ -280,15 +280,6 @@ namespace nanojit
     inline void Assembler::CMPi(R r, I32 i)    { count_alu(); ALUi(0x3d, r, i); asm_output("cmp %s,%d", gpn(r), i); }
 
     inline void Assembler::LEA(R r, I32 d, R b)    { count_alu(); ALUm(0x8d, REGNUM(r), d, b);  asm_output("lea %s,%d(%s)", gpn(r), d, gpn(b)); }
-    // This addressing mode is not supported by the MODRMsib function.
-    inline void Assembler::LEAmi4(R r, I32 d, R i) {
-        count_alu();
-        IMM32(int32_t(d));
-        SIB(2, REGNUM(i), 5);
-        MODRM(0, REGNUM(r), 4);             // amode == d(i*4)
-        *(--_nIns) = 0x8d;
-        asm_output("lea %s, %p(%s*4)", gpn(r), (void*)d, gpn(i));
-    }
 
     inline void Assembler::CDQ()       { SARi(rEDX, 31); MR(rEDX, rEAX); }
 
@@ -606,13 +597,6 @@ namespace nanojit
         *(--_nIns) = JMP32;
         asm_output("jmp %p", t);
         verbose_only( verbose_outputf("%p:", (void*)_nIns); )
-    }
-
-    inline void Assembler::JMP_indirect(R r) {
-        underrunProtect(2);
-        MODRMm(4, 0, r);
-        *(--_nIns) = 0xff;
-        asm_output("jmp   *(%s)", gpn(r));
     }
 
     inline void Assembler::JMP_indexed(Register x, I32 ss, NIns** addr) {
@@ -969,28 +953,16 @@ namespace nanojit
         bool destKnown = (frag && frag->fragEntry);
 
         // Generate jump to epilog and initialize lr.
-        // If the guard is LIR_xtbl, use a jump table with epilog in every entry
-        if (guard->isop(LIR_xtbl)) {
-            lr = guard->record();
-            Register r = rEDX;
-            SwitchInfo* si = guard->record()->exit->switchInfo;
+        // If the guard already exists, use a simple jump.
+        if (destKnown) {
+            JMP(frag->fragEntry);
+            lr = 0;
+        } else {  // Target doesn't exist. Jump to an epilogue for now. This can be patched later.
             if (!_epilogue)
                 _epilogue = genEpilogue();
-            emitJumpTable(si, _epilogue);
-            JMP_indirect(r);
-            LEAmi4(r, int32_t(si->table), r);
-        } else {
-            // If the guard already exists, use a simple jump.
-            if (destKnown) {
-                JMP(frag->fragEntry);
-                lr = 0;
-            } else {  // Target doesn't exist. Jump to an epilogue for now. This can be patched later.
-                if (!_epilogue)
-                    _epilogue = genEpilogue();
-                lr = guard->record();
-                JMP_long(_epilogue);
-                lr->jmp = _nIns;
-            }
+            lr = guard->record();
+            JMP_long(_epilogue);
+            lr->jmp = _nIns;
         }
 
         // profiling for the exit
@@ -1569,13 +1541,6 @@ namespace nanojit
     {
         JO(target);
         return _nIns;
-    }
-
-    void Assembler::asm_switch(LIns* ins, NIns* exit)
-    {
-        LIns* diff = ins->oprnd1();
-        findSpecificRegFor(diff, rEDX);
-        JMP(exit);
     }
 
     void Assembler::asm_jtbl(LIns* ins, NIns** table)

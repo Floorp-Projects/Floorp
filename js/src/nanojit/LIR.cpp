@@ -1471,7 +1471,6 @@ namespace nanojit
                 case LIR_lived:
                 case LIR_xt:
                 case LIR_xf:
-                case LIR_xtbl:
                 case LIR_jt:
                 case LIR_jf:
                 case LIR_jtbl:
@@ -1932,7 +1931,6 @@ namespace nanojit
             case LIR_xt:
             case LIR_xf:
             case LIR_xbarrier:
-            case LIR_xtbl:
                 formatGuard(buf, i);
                 break;
 
@@ -3683,12 +3681,6 @@ namespace nanojit
             checkLInsIsACondOrConst(op, 1, cond);
             nArgs = 1;
             formals[0] = LTy_I;
-            args[0] = cond;
-            break;
-
-        case LIR_xtbl:
-            nArgs = 1;
-            formals[0] = LTy_I;   // unlike xt/xf/jt/jf, this is an index, not a condition
             args[0] = cond;
             break;
 

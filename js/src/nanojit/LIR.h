@@ -410,19 +410,6 @@ namespace nanojit
         }
     };
 
-    /*
-     * Record for extra data used to compile switches as jump tables.
-     */
-    struct SwitchInfo
-    {
-        NIns**      table;       // Jump table; a jump address is NIns*
-        uint32_t    count;       // Number of table entries
-        // Index value at last execution of the switch. The index value
-        // is the offset into the jump table. Thus it is computed as
-        // (switch expression) - (lowest case value).
-        uint32_t    index;
-    };
-
     // Array holding the 'isCse' field from LIRopcode.tbl.
     extern const int8_t isCses[];       // cannot be uint8_t, some values are negative
 
@@ -947,8 +934,7 @@ namespace nanojit
             return isLInsLd();
         }
         bool isGuard() const {
-            return isop(LIR_x) || isop(LIR_xf) || isop(LIR_xt) ||
-                   isop(LIR_xbarrier) || isop(LIR_xtbl) ||
+            return isop(LIR_x) || isop(LIR_xf) || isop(LIR_xt) || isop(LIR_xbarrier) ||
                    isop(LIR_addxovi) || isop(LIR_subxovi) || isop(LIR_mulxovi);
         }
         bool isJov() const {
@@ -1402,7 +1388,6 @@ namespace nanojit
         case LIR_x:
         case LIR_xt:
         case LIR_xf:
-        case LIR_xtbl:
         case LIR_xbarrier:
             return (GuardRecord*)oprnd2();
 
