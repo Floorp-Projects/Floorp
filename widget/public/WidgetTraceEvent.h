@@ -52,6 +52,9 @@ void CleanUpWidgetTracing();
 // a thread that's not the UI thread.
 bool FireAndWaitForTracerEvent();
 
+// Signal that the event has been received by the event loop.
+void SignalTracerThread();
+
 }
 
 #endif  // WIDGET_PUBLIC_WIDGETTRACEEVENT_H_
