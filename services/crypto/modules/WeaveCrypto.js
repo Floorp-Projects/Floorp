@@ -388,6 +388,9 @@ WeaveCrypto.prototype = {
     _sharedInputBufferSize:  0,
     _sharedOutputBuffer:     null,
     _sharedOutputBufferSize: 0,
+    _randomByteBuffer:       null,
+    _randomByteBufferAddr:   null,
+    _randomByteBufferSize:   0,
 
     _getInputBuffer: function _getInputBuffer(size) {
       if (size > this._sharedInputBufferSize) {
@@ -408,9 +411,21 @@ WeaveCrypto.prototype = {
       return this._sharedOutputBuffer;
     },
 
+    _getRandomByteBuffer: function _getRandomByteBuffer(size) {
+        if (size > this._randomByteBufferSize) {
+          let b = new ctypes.ArrayType(ctypes.unsigned_char, size)();
+          this._randomByteBuffer     = b;
+          this._randomByteBufferAddr = b.address();
+          this._randomByteBufferSize = size;
+        }
+        return this._randomByteBuffer;
+    },
+
     initBuffers: function initBuffers(initialSize) {
         this._getInputBuffer(initialSize);
         this._getOutputBuffer(initialSize);
+
+        this._getRandomByteBuffer(this.ivLength);
     },
 
     encrypt : function(clearTextUCS2, symmetricKey, iv) {
@@ -555,11 +570,11 @@ WeaveCrypto.prototype = {
         this.log("generateRandomBytes() called");
 
         // Temporary buffer to hold the generated data.
-        let scratch = new ctypes.ArrayType(ctypes.unsigned_char, byteCount)();
+        let scratch = this._getRandomByteBuffer(byteCount);
         if (this.nss.PK11_GenerateRandom(scratch, byteCount))
             throw Components.Exception("PK11_GenrateRandom failed", Cr.NS_ERROR_FAILURE);
 
-        return this.encodeBase64(scratch.address(), scratch.length);
+        return this.encodeBase64(this._randomByteBufferAddr, byteCount);
     },
 
     //
