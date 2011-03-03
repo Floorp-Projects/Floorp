@@ -2944,9 +2944,6 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
       // defaultVariableFont.name should always be "serif" or "sans-serif".
       aFont->mFont.name.Append(defaultVariableFont->name);
     }
-    aFont->mFont.familyNameQuirks =
-        (aPresContext->CompatibilityMode() == eCompatibility_NavQuirks &&
-         aFontData.mFamilyFromHTML);
     aFont->mFont.systemFont = PR_FALSE;
     // Technically this is redundant with the code below, but it's good
     // to have since we'll still want it once we get rid of
@@ -2955,20 +2952,17 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   }
   else if (eCSSUnit_System_Font == aFontData.mFamily.GetUnit()) {
     aFont->mFont.name = systemFont.name;
-    aFont->mFont.familyNameQuirks = PR_FALSE;
     aFont->mFont.systemFont = PR_TRUE;
     aFont->mGenericID = kGenericFont_NONE;
   }
   else if (eCSSUnit_Inherit == aFontData.mFamily.GetUnit()) {
     aCanStoreInRuleTree = PR_FALSE;
     aFont->mFont.name = aParentFont->mFont.name;
-    aFont->mFont.familyNameQuirks = aParentFont->mFont.familyNameQuirks;
     aFont->mFont.systemFont = aParentFont->mFont.systemFont;
     aFont->mGenericID = aParentFont->mGenericID;
   }
   else if (eCSSUnit_Initial == aFontData.mFamily.GetUnit()) {
     aFont->mFont.name = defaultVariableFont->name;
-    aFont->mFont.familyNameQuirks = PR_FALSE;
     aFont->mFont.systemFont = defaultVariableFont->systemFont;
     aFont->mGenericID = kGenericFont_NONE;
   }
