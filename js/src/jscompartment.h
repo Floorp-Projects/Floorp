@@ -450,7 +450,7 @@ struct JS_FRIEND_API(JSCompartment) {
     JSCompartment(JSRuntime *rt);
     ~JSCompartment();
 
-    bool init();
+    bool init(JSContext *cx);
 
     /* Mark cross-compartment wrappers. */
     void markCrossCompartment(JSTracer *trc);

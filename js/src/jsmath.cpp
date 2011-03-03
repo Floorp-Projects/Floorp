@@ -126,15 +126,14 @@ js_math_abs(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_NaN);
-        cx->markTypeCallerOverflow();
-        return JS_TRUE;
+        return cx->markTypeCallerOverflow();
     }
     if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = fabs(x);
     vp->setNumber(z);
-    if (!vp[2].isDouble() && vp->isDouble())
-        cx->markTypeCallerOverflow();
+    if (!vp[2].isDouble() && vp->isDouble() && !cx->markTypeCallerOverflow())
+        return false;
     return JS_TRUE;
 }
 
@@ -272,15 +271,14 @@ js_math_ceil(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_NaN);
-        cx->markTypeCallerOverflow();
-        return JS_TRUE;
+        return cx->markTypeCallerOverflow();
     }
     if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = js_math_ceil_impl(x);
     vp->setNumber(z);
-    if (!vp->isInt32())
-        cx->markTypeCallerOverflow();
+    if (!vp->isInt32() && !cx->markTypeCallerOverflow())
+        return false;
     return JS_TRUE;
 }
 
@@ -349,15 +347,14 @@ js_math_floor(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_NaN);
-        cx->markTypeCallerOverflow();
-        return JS_TRUE;
+        return cx->markTypeCallerOverflow();
     }
     if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = js_math_floor_impl(x);
     vp->setNumber(z);
-    if (!vp->isInt32())
-        cx->markTypeCallerOverflow();
+    if (!vp->isInt32() && !cx->markTypeCallerOverflow())
+        return false;
     return JS_TRUE;
 }
 
@@ -395,8 +392,7 @@ js_math_max(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_NegativeInfinity);
-        cx->markTypeCallerOverflow();
-        return JS_TRUE;
+        return cx->markTypeCallerOverflow();
     }
     argv = vp + 2;
     for (i = 0; i < argc; i++) {
@@ -404,8 +400,7 @@ js_math_max(JSContext *cx, uintN argc, Value *vp)
             return JS_FALSE;
         if (JSDOUBLE_IS_NaN(x)) {
             vp->setDouble(js_NaN);
-            cx->markTypeCallerOverflow();
-            return JS_TRUE;
+            return cx->markTypeCallerOverflow();
         }
         if (x == 0 && x == z) {
             if (js_copysign(1.0, z) == -1)
@@ -427,8 +422,7 @@ js_math_min(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_PositiveInfinity);
-        cx->markTypeCallerOverflow();
-        return JS_TRUE;
+        return cx->markTypeCallerOverflow();
     }
     argv = vp + 2;
     for (i = 0; i < argc; i++) {
@@ -436,8 +430,7 @@ js_math_min(JSContext *cx, uintN argc, Value *vp)
             return JS_FALSE;
         if (JSDOUBLE_IS_NaN(x)) {
             vp->setDouble(js_NaN);
-            cx->markTypeCallerOverflow();
-            return JS_TRUE;
+            return cx->markTypeCallerOverflow();
         }
         if (x == 0 && x == z) {
             if (js_copysign(1.0, x) == -1)
@@ -485,8 +478,7 @@ math_pow(JSContext *cx, uintN argc, Value *vp)
 
     if (argc <= 1) {
         vp->setDouble(js_NaN);
-        cx->markTypeCallerOverflow();
-        return JS_TRUE;
+        return cx->markTypeCallerOverflow();
     }
     if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
@@ -526,8 +518,8 @@ math_pow(JSContext *cx, uintN argc, Value *vp)
         z = pow(x, y);
 
     vp->setNumber(z);
-    if (vp->isDouble() && !(vp[2].isDouble() || vp[3].isDouble()))
-        cx->markTypeCallerOverflow();
+    if (vp->isDouble() && !(vp[2].isDouble() || vp[3].isDouble()) && !cx->markTypeCallerOverflow())
+        return false;
 
     return JS_TRUE;
 }
@@ -613,15 +605,14 @@ js_math_round(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_NaN);
-        cx->markTypeCallerOverflow();
-        return JS_TRUE;
+        return cx->markTypeCallerOverflow();
     }
     if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = js_copysign(floor(x + 0.5), x);
     vp->setNumber(z);
-    if (!vp->isInt32())
-        cx->markTypeCallerOverflow();
+    if (!vp->isInt32() && !cx->markTypeCallerOverflow())
+        return false;
     return JS_TRUE;
 }
 
@@ -854,7 +845,6 @@ JS_DEFINE_TRCINFO_1(js_math_ceil,
 
 static void math_TypeArith(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
-#ifdef JS_TYPE_INFERENCE
     types::TypeCallsite *site = Valueify(jssite);
 
     if (!site->returnTypes)
@@ -863,10 +853,9 @@ static void math_TypeArith(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite 
     if (site->isNew)
         site->returnTypes->addType(cx, types::TYPE_UNKNOWN);
 
-    // the zero-argument case will be handled as an overflow in the actual natives.
+    /* The zero-argument case will be handled as an overflow in the actual natives. */
     for (size_t ind = 0; ind < site->argumentCount; ind++)
         site->argumentTypes[ind]->addArith(cx, site->script, site->returnTypes);
-#endif
 }
 
 static JSFunctionSpec math_static_methods[] = {

@@ -306,7 +306,7 @@ ArenaNew(JSArenaPool &pool)
 {
     void *v;
     JS_ARENA_ALLOCATE(v, &pool, sizeof(T));
-    return new (v) T();
+    return v ? new (v) T() : NULL;
 }
 
 template <typename T, typename A>
@@ -315,7 +315,7 @@ ArenaNew(JSArenaPool &pool, const A &a)
 {
     void *v;
     JS_ARENA_ALLOCATE(v, &pool, sizeof(T));
-    return new (v) T(a);
+    return v ? new (v) T(a) : NULL;
 }
 
 template <typename T, typename A, typename B>
@@ -324,7 +324,7 @@ ArenaNew(JSArenaPool &pool, const A &a, const B &b)
 {
     void *v;
     JS_ARENA_ALLOCATE(v, &pool, sizeof(T));
-    return new (v) T(a, b);
+    return v ? new (v) T(a, b) : NULL;
 }
 
 template <typename T, typename A, typename B, typename C>
@@ -333,7 +333,7 @@ ArenaNew(JSArenaPool &pool, const A &a, const B &b, const C &c)
 {
     void *v;
     JS_ARENA_ALLOCATE(v, &pool, sizeof(T));
-    return new (v) T(a, b, c);
+    return v ? new (v) T(a, b, c) : NULL;
 }
 
 template <typename T, typename A, typename B, typename C, typename D>
@@ -342,7 +342,7 @@ ArenaNew(JSArenaPool &pool, const A &a, const B &b, const C &c, const D &d)
 {
     void *v;
     JS_ARENA_ALLOCATE(v, &pool, sizeof(T));
-    return new (v) T(a, b, c, d);
+    return v ? new (v) T(a, b, c, d) : NULL;
 }
 
 template <typename T, typename A, typename B, typename C, typename D, typename E>
@@ -351,7 +351,7 @@ ArenaNew(JSArenaPool &pool, const A &a, const B &b, const C &c, const D &d, cons
 {
     void *v;
     JS_ARENA_ALLOCATE(v, &pool, sizeof(T));
-    return new (v) T(a, b, c, d, e);
+    return v ? new (v) T(a, b, c, d, e) : NULL;
 }
 
 } /* namespace js */

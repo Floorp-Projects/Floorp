@@ -121,12 +121,10 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
     addTraceHints(false),
 #endif
     recompiling(false),
-#if defined JS_TYPE_INFERENCE
     hasThisType(false),
     thisType(JSVAL_TYPE_UNKNOWN),
     argumentTypes(ContextAllocPolicy(cx)),
     localTypes(ContextAllocPolicy(cx)),
-#endif
     oomInVector(false),
     applyTricks(NoApplyTricks)
 {
@@ -165,6 +163,8 @@ mjit::Compiler::compile(const Vector<JSStackFrame*> *frames)
         if (status_ != Compile_Okay) {                               \
             if (oomInVector || masm.oom() || stubcc.masm.oom())      \
                 js_ReportOutOfMemory(cx);                            \
+            if (!cx->compartment->types.checkPendingRecompiles(cx))  \
+                return Compile_Error;                                \
             return status_;                                          \
         }                                                            \
     JS_END_MACRO
@@ -193,8 +193,108 @@ mjit::Compiler::performCompilation(JITScript **jitp, const Vector<JSStackFrame*>
         return Compile_Error;
     }
 
-#ifdef JS_TYPE_INFERENCE
-    types::AutoEnterTypeInference enter(cx);
+#ifdef JS_METHODJIT_SPEW
+    if (IsJaegerSpewChannelActive(JSpew_Regalloc)) {
+        for (unsigned i = 0; i < script->nfixed; i++) {
+            if (!analysis->localEscapes(i)) {
+                JaegerSpew(JSpew_Regalloc, "Local %u:", i);
+                liveness.dumpLocal(i);
+            }
+        }
+        for (unsigned i = 0; fun && i < fun->nargs; i++) {
+            if (!analysis->argEscapes(i)) {
+                JaegerSpew(JSpew_Regalloc, "Argument %u:", i);
+                liveness.dumpArg(i);
+            }
+        }
+    }
+#endif
+
+    if (!frame.init()) {
+        js_ReportOutOfMemory(cx);
+        return Compile_Error;
+    }
+
+    jumpMap = (Label *)cx->malloc(sizeof(Label) * script->length);
+    if (!jumpMap) {
+        js_ReportOutOfMemory(cx);
+        return Compile_Error;
+    }
+#ifdef DEBUG
+    for (uint32 i = 0; i < script->length; i++)
+        jumpMap[i] = Label();
+#endif
+
+#ifdef JS_METHODJIT_SPEW
+    Profiler prof;
+    prof.start();
+#endif
+
+    /* Initialize PC early so stub calls in the prologue can be fallible. */
+    PC = script->code;
+
+#ifdef JS_METHODJIT
+    script->debugMode = debugMode();
+#endif
+
+    for (uint32 i = 0; i < script->nClosedVars; i++)
+        frame.setClosedVar(script->getClosedVar(i));
+    for (uint32 i = 0; i < script->nClosedArgs; i++)
+        frame.setClosedArg(script->getClosedArg(i));
+
+    types::AutoEnterTypeInference enter(cx, true);
+
+    if (cx->typeInferenceEnabled()) {
+        CompileStatus status = prepareInferenceTypes(frames);
+        if (status != Compile_Okay) {
+            if (!cx->compartment->types.checkPendingRecompiles(cx))
+                return Compile_Error;
+            return status;
+        }
+    }
+
+    CHECK_STATUS(generatePrologue());
+    CHECK_STATUS(generateMethod());
+    CHECK_STATUS(generateEpilogue());
+    CHECK_STATUS(finishThisUp(jitp));
+
+#ifdef JS_METHODJIT_SPEW
+    prof.stop();
+    JaegerSpew(JSpew_Prof, "compilation took %d us\n", prof.time_us());
+#endif
+
+    JaegerSpew(JSpew_Scripts, "successfully compiled (code \"%p\") (size \"%ld\")\n",
+               (*jitp)->code.m_code.executableAddress(), (*jitp)->code.m_size);
+
+    if (!cx->compartment->types.checkPendingRecompiles(cx))
+        return Compile_Error;
+
+    if (!*jitp)
+        return Compile_Abort;
+
+    return Compile_Okay;
+}
+
+#undef CHECK_STATUS
+
+mjit::Compiler::~Compiler()
+{
+    cx->free(jumpMap);
+    cx->free(savedTraps);
+}
+
+CompileStatus
+mjit::Compiler::prepareInferenceTypes(const Vector<JSStackFrame*> *frames)
+{
+    /* Analyze the script if we have not already done so. */
+    if (!script->types) {
+        /* Uncached eval scripts are not analyzed or compiled. */
+        if (script->isUncachedEval)
+            return Compile_Abort;
+        types::AnalyzeScriptTypes(cx, script);
+        if (!script->types)
+            return Compile_Error;
+    }
 
     /*
      * Fill in known types of arguments and locals, and patch up doubles for
@@ -203,14 +303,6 @@ mjit::Compiler::performCompilation(JITScript **jitp, const Vector<JSStackFrame*>
      * frames. We handle this by patching up all hold stack frames to ensure that
      * arguments, locals, and stack values we treat as doubles actually are doubles.
      */
-    if (!script->types) {
-        /* Uncached eval scripts are never analyzed or compiled. */
-        if (script->isUncachedEval)
-            return Compile_Abort;
-        types::AnalyzeScriptTypes(cx, script);
-        if (!script->types)
-            return Compile_Error;
-    }
 
     uint32 nargs = fun ? fun->nargs : 0;
     if (!argumentTypes.reserve(nargs))
@@ -283,79 +375,8 @@ mjit::Compiler::performCompilation(JITScript **jitp, const Vector<JSStackFrame*>
                 break;
         }
     }
-#endif
-
-#ifdef JS_METHODJIT_SPEW
-    if (IsJaegerSpewChannelActive(JSpew_Regalloc)) {
-        for (unsigned i = 0; i < script->nfixed; i++) {
-            if (!analysis->localEscapes(i)) {
-                JaegerSpew(JSpew_Regalloc, "Local %u:", i);
-                liveness.dumpLocal(i);
-            }
-        }
-        for (unsigned i = 0; fun && i < fun->nargs; i++) {
-            if (!analysis->argEscapes(i)) {
-                JaegerSpew(JSpew_Regalloc, "Argument %u:", i);
-                liveness.dumpArg(i);
-            }
-        }
-    }
-#endif
-
-    if (!frame.init()) {
-        js_ReportOutOfMemory(cx);
-        return Compile_Error;
-    }
-
-    jumpMap = (Label *)cx->malloc(sizeof(Label) * script->length);
-    if (!jumpMap) {
-        js_ReportOutOfMemory(cx);
-        return Compile_Error;
-    }
-#ifdef DEBUG
-    for (uint32 i = 0; i < script->length; i++)
-        jumpMap[i] = Label();
-#endif
-
-#ifdef JS_METHODJIT_SPEW
-    Profiler prof;
-    prof.start();
-#endif
-
-    /* Initialize PC early so stub calls in the prologue can be fallible. */
-    PC = script->code;
-
-#ifdef JS_METHODJIT
-    script->debugMode = debugMode();
-#endif
-
-    for (uint32 i = 0; i < script->nClosedVars; i++)
-        frame.setClosedVar(script->getClosedVar(i));
-    for (uint32 i = 0; i < script->nClosedArgs; i++)
-        frame.setClosedArg(script->getClosedArg(i));
-
-    CHECK_STATUS(generatePrologue());
-    CHECK_STATUS(generateMethod());
-    CHECK_STATUS(generateEpilogue());
-    CHECK_STATUS(finishThisUp(jitp));
-
-#ifdef JS_METHODJIT_SPEW
-    prof.stop();
-    JaegerSpew(JSpew_Prof, "compilation took %d us\n", prof.time_us());
-#endif
-
-    JaegerSpew(JSpew_Scripts, "successfully compiled (code \"%p\") (size \"%ld\")\n",
-               (*jitp)->code.m_code.executableAddress(), (*jitp)->code.m_size);
 
     return Compile_Okay;
-}
-
-#undef CHECK_STATUS
-
-mjit::Compiler::~Compiler()
-{
-    cx->free(jumpMap);
-    cx->free(savedTraps);
 }
 
 CompileStatus JS_NEVER_INLINE
@@ -1388,28 +1409,28 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_ADD)
             if (!jsop_binary(op, stubs::Add, knownPushedType(0))) {
-                markPushedOverflow(0);
+                markPushedOverflow();
                 return Compile_Overflow;
             }
           END_CASE(JSOP_ADD)
 
           BEGIN_CASE(JSOP_SUB)
             if (!jsop_binary(op, stubs::Sub, knownPushedType(0))) {
-                markPushedOverflow(0);
+                markPushedOverflow();
                 return Compile_Overflow;
             }
           END_CASE(JSOP_SUB)
 
           BEGIN_CASE(JSOP_MUL)
             if (!jsop_binary(op, stubs::Mul, knownPushedType(0))) {
-                markPushedOverflow(0);
+                markPushedOverflow();
                 return Compile_Overflow;
             }
           END_CASE(JSOP_MUL)
 
           BEGIN_CASE(JSOP_DIV)
             if (!jsop_binary(op, stubs::Div, knownPushedType(0))) {
-                markPushedOverflow(0);
+                markPushedOverflow();
                 return Compile_Overflow;
             }
           END_CASE(JSOP_DIV)
@@ -1450,7 +1471,7 @@ mjit::Compiler::generateMethod()
                 /* Watch for overflow in constant propagation. */
                 if (!v.isInt32() && knownPushedType(0) == JSVAL_TYPE_INT32) {
                     JaegerSpew(JSpew_Abort, "overflow in negation (%u)\n", PC - script->code);
-                    markPushedOverflow(0);
+                    markPushedOverflow();
                     return Compile_Overflow;
                 }
 
@@ -1863,15 +1884,18 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_UINT16)
 
           BEGIN_CASE(JSOP_NEWINIT)
-            jsop_newinit();
+            if (!jsop_newinit())
+                return Compile_Error;
           END_CASE(JSOP_NEWINIT)
 
           BEGIN_CASE(JSOP_NEWARRAY)
-            jsop_newinit();
+            if (!jsop_newinit())
+                return Compile_Error;
           END_CASE(JSOP_NEWARRAY)
 
           BEGIN_CASE(JSOP_NEWOBJECT)
-            jsop_newinit();
+            if (!jsop_newinit())
+                return Compile_Error;
           END_CASE(JSOP_NEWOBJECT)
 
           BEGIN_CASE(JSOP_ENDINIT)
@@ -2677,11 +2701,6 @@ mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
 static bool
 IsLowerableFunCallOrApply(jsbytecode *pc)
 {
-#ifdef JS_TYPE_INFERENCE
-    /* :FIXME: see canUseApplyTricks */
-    return false;
-#endif
-
 #ifdef JS_MONOIC
     return (*pc == JSOP_FUNCALL && GET_ARGC(pc) >= 1) ||
            (*pc == JSOP_FUNAPPLY && GET_ARGC(pc) == 2);
@@ -2779,17 +2798,19 @@ mjit::Compiler::checkCallApplySpeculation(uint32 callImmArgc, uint32 speculatedA
 bool
 mjit::Compiler::canUseApplyTricks()
 {
-#ifdef JS_TYPE_INFERENCE
-    /*
-     * :FIXME: Inference currently assumes that arguments passed via call and apply
-     * are monitored, and that short circuiting these doesn't happen.
-     */
-    return false;
-#endif
+    if (cx->typeInferenceEnabled()) {
+        /*
+         * :FIXME: bug 619428 inference currently assumes that arguments passed
+         * via call and apply are monitored, and that short circuiting these
+         * doesn't happen.
+         */
+        return false;
+    }
 
     JS_ASSERT(*PC == JSOP_ARGUMENTS);
     jsbytecode *nextpc = PC + JSOP_ARGUMENTS_LENGTH;
     return *nextpc == JSOP_FUNAPPLY &&
+           !cx->typeInferenceEnabled() /* :FIXME: bug 619428 */ && 
            IsLowerableFunCallOrApply(nextpc) &&
            !analysis->jumpTarget(nextpc) &&
            !debugMode();
@@ -2824,7 +2845,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
      * the callIC cache and call 'this' directly. However, if it turns out that
      * we are not actually calling js_fun_call, the callIC must act as normal.
      */
-    bool lowerFunCallOrApply = IsLowerableFunCallOrApply(PC);
+    bool lowerFunCallOrApply = !cx->typeInferenceEnabled() /* :FIXME: bug 619428 */ && IsLowerableFunCallOrApply(PC);
 
     /*
      * Currently, constant values are not functions, so don't even try to
@@ -4941,7 +4962,7 @@ mjit::Compiler::jsop_arguments()
     INLINE_STUBCALL(stubs::Arguments);
 }
 
-void
+bool
 mjit::Compiler::jsop_newinit()
 {
     bool isArray;
@@ -4961,15 +4982,18 @@ mjit::Compiler::jsop_newinit()
         break;
       default:
         JS_NOT_REACHED("Bad op");
-        return;
+        return false;
     }
 
     prepareStubCall(Uses(0));
 
     /* Don't bake in types for non-compileAndGo scripts. */
     types::TypeObject *type = NULL;
-    if (script->compileAndGo)
+    if (script->compileAndGo) {
         type = script->getTypeInitObject(cx, PC, isArray);
+        if (!type)
+            return false;
+    }
     masm.storePtr(ImmPtr(type), FrameAddress(offsetof(VMFrame, scratch)));
 
     if (isArray) {
@@ -4981,6 +5005,8 @@ mjit::Compiler::jsop_newinit()
     }
     frame.takeReg(Registers::ReturnReg);
     frame.pushInitializerObject(Registers::ReturnReg, *PC == JSOP_NEWARRAY, baseobj);
+
+    return true;
 }
 
 bool
@@ -5029,8 +5055,6 @@ mjit::Compiler::finishLoop(jsbytecode *head)
 bool
 mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *trampoline)
 {
-    bool consistent = frame.consistentRegisters(target);
-
     if (trampoline)
         *trampoline = false;
 
@@ -5043,8 +5067,9 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
         lvtarget = ArenaNew<RegisterAllocation>(liveness.pool, false);
         if (!lvtarget)
             return false;
-        JS_ASSERT(consistent);
     }
+
+    bool consistent = frame.consistentRegisters(target);
 
     if (!addTraceHints || target >= PC ||
         (JSOp(*target) != JSOP_TRACE && JSOp(*target) != JSOP_NOTRACE)
@@ -5437,7 +5462,9 @@ mjit::Compiler::jsop_forgname(JSAtom *atom)
 void
 mjit::Compiler::fixDoubleTypes(Uses uses)
 {
-#ifdef JS_TYPE_INFERENCE
+    if (!cx->typeInferenceEnabled())
+        return;
+
     for (uint32 i = 0; fun && i < fun->nargs; i++) {
         JSValueType type = knownArgumentType(i);
         if (type == JSVAL_TYPE_DOUBLE) {
@@ -5455,13 +5482,14 @@ mjit::Compiler::fixDoubleTypes(Uses uses)
                 frame.ensureDouble(fe);
         }
     }
-#endif
 }
 
 void
 mjit::Compiler::restoreAnalysisTypes(uint32 stackDepth)
 {
-#ifdef JS_TYPE_INFERENCE
+    if (!cx->typeInferenceEnabled())
+        return;
+
     /* Restore known types of locals/args, for join points or after forgetting everything. */
     for (uint32 i = 0; i < script->nfixed; i++) {
         JSValueType type = knownLocalType(i);
@@ -5479,79 +5507,63 @@ mjit::Compiler::restoreAnalysisTypes(uint32 stackDepth)
             frame.learnType(fe, type, false);
         }
     }
-#endif
 }
 
 JSValueType
 mjit::Compiler::knownThisType()
 {
-#ifdef JS_TYPE_INFERENCE
+    if (!cx->typeInferenceEnabled())
+        return JSVAL_TYPE_UNKNOWN;
     if (hasThisType)
         return thisType;
     hasThisType = true;
     thisType = script->thisTypes()->getKnownTypeTag(cx, script);
     return thisType;
-#endif
-    return JSVAL_TYPE_UNKNOWN;
 }
 
 JSValueType
 mjit::Compiler::knownArgumentType(uint32 arg)
 {
-#ifdef JS_TYPE_INFERENCE
+    if (!cx->typeInferenceEnabled())
+        return JSVAL_TYPE_UNKNOWN;
     JS_ASSERT(fun && arg < fun->nargs);
     return argumentTypes[arg];
-#endif
-    return JSVAL_TYPE_UNKNOWN;
 }
 
 void
 mjit::Compiler::markArgumentOverflow(uint32 arg)
 {
-#ifdef JS_TYPE_INFERENCE
-    types::TypeSet *types = script->argTypes(arg);
-    JS_ASSERT(!types->hasType(types::TYPE_DOUBLE));
-    types::InferSpew(types::ISpewDynamic, "StaticOverflow: #%u", script->id());
-    cx->compartment->types.addDynamicType(cx, types, types::TYPE_DOUBLE);
-#endif
+    script->typeSetArgument(cx, arg, DoubleValue(0.0));
 }
 
 JSValueType
 mjit::Compiler::knownLocalType(uint32 local)
 {
-#ifdef JS_TYPE_INFERENCE
-    if (local >= script->nfixed)
+    if (!cx->typeInferenceEnabled() || local >= script->nfixed)
         return JSVAL_TYPE_UNKNOWN;
     return localTypes[local];
-#endif
-    return JSVAL_TYPE_UNKNOWN;
 }
 
 void
 mjit::Compiler::markLocalOverflow(uint32 local)
 {
-#ifdef JS_TYPE_INFERENCE
-    types::TypeSet *types = script->localTypes(local);
-    JS_ASSERT(!types->hasType(types::TYPE_DOUBLE));
-    types::InferSpew(types::ISpewDynamic, "StaticOverflow: #%u", script->id());
-    cx->compartment->types.addDynamicType(cx, types, types::TYPE_DOUBLE);
-#endif
+    script->typeSetLocal(cx, local, DoubleValue(0.0));
 }
 
 JSValueType
 mjit::Compiler::knownPushedType(uint32 pushed)
 {
-#ifdef JS_TYPE_INFERENCE
+    if (!cx->typeInferenceEnabled())
+        return JSVAL_TYPE_UNKNOWN;
     types::TypeSet *types = script->types->pushed(PC - script->code, pushed);
     return types->getKnownTypeTag(cx, script);
-#endif
-    return JSVAL_TYPE_UNKNOWN;
 }
 
 bool
 mjit::Compiler::mayPushUndefined(uint32 pushed)
 {
-#ifdef JS_TYPE_INFERENCE
+    JS_ASSERT(cx->typeInferenceEnabled());
+
     /*
      * This should only be used when the compiler is checking if it is OK to push
      * undefined without going to a stub that can trigger recompilation.
@@ -5560,48 +5572,32 @@ mjit::Compiler::mayPushUndefined(uint32 pushed)
      */
     types::TypeSet *types = script->types->pushed(PC - script->code, pushed);
     return types->hasType(types::TYPE_UNDEFINED);
-#else
-    JS_NOT_REACHED("mayPushUndefined without JS_TYPE_INFERENCE");
-    return false;
-#endif
 }
 
 types::TypeSet *
 mjit::Compiler::argTypeSet(uint32 arg)
 {
-#ifdef JS_TYPE_INFERENCE
-    return script->argTypes(arg);
-#endif
-    return NULL;
+    return cx->typeInferenceEnabled() ? script->argTypes(arg) : NULL;
 }
 
 types::TypeSet *
 mjit::Compiler::localTypeSet(uint32 local)
 {
-#ifdef JS_TYPE_INFERENCE
-    if (local >= script->nfixed)
+    if (!cx->typeInferenceEnabled() || local >= script->nfixed)
         return NULL;
     return script->localTypes(local);
-#endif
-    return NULL;
 }
 
 types::TypeSet *
 mjit::Compiler::pushedTypeSet(uint32 pushed)
 {
-#ifdef JS_TYPE_INFERENCE
-    return script->types->pushed(PC - script->code, pushed);
-#endif
-    return NULL;
+    return cx->typeInferenceEnabled() ? script->types->pushed(PC - script->code, pushed) : NULL;
 }
 
 bool
 mjit::Compiler::monitored(jsbytecode *pc)
 {
-#ifdef JS_TYPE_INFERENCE
-    return script->types->monitored(pc - script->code);
-#endif
-    return false;
+    return cx->typeInferenceEnabled() && script->types->monitored(pc - script->code);
 }
 
 void
@@ -5611,20 +5607,18 @@ mjit::Compiler::pushSyncedEntry(uint32 pushed)
 }
 
 void
-mjit::Compiler::markPushedOverflow(uint32 pushed)
+mjit::Compiler::markPushedOverflow()
 {
-#ifdef JS_TYPE_INFERENCE
-    types::TypeSet *types = script->types->pushed(PC - script->code, pushed);
-    JS_ASSERT(!types->hasType(types::TYPE_DOUBLE));
-    types::InferSpew(types::ISpewDynamic, "StaticOverflow: #%u", script->id());
-    cx->compartment->types.addDynamicType(cx, types, types::TYPE_DOUBLE);
-#endif
+    /* OK to ignore failure here, we aren't performing the operation itself. */
+    script->typeMonitorResult(cx, PC, types::TYPE_DOUBLE);
 }
 
 bool
 mjit::Compiler::arrayPrototypeHasIndexedProperty()
 {
-#ifdef JS_TYPE_INFERENCE
+    if (!cx->typeInferenceEnabled())
+        return true;
+
     /*
      * Get the types of Array.prototype and Object.prototype to use. :XXX: This is broken
      * in the presence of multiple global objects, we should figure out the possible
@@ -5637,6 +5631,4 @@ mjit::Compiler::arrayPrototypeHasIndexedProperty()
     types::TypeSet *objectTypes = proto->getProto()->getType()->getProperty(cx, JSID_VOID, false);
     return arrayTypes->knownNonEmpty(cx, script)
         || objectTypes->knownNonEmpty(cx, script);
-#endif
-    return true;
 }

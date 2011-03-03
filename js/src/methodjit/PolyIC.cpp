@@ -1702,8 +1702,8 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
      * :FIXME: looking under the usePropCache abstraction, which is only unset for
      * reads of the prototype.
      */
-    if (v.isUndefined() && usePropCache)
-        f.script()->typeMonitorUndefined(f.cx, f.regs.pc);
+    if (v.isUndefined() && usePropCache && !f.script()->typeMonitorUndefined(f.cx, f.regs.pc))
+        THROW();
 
     f.regs.sp[-1] = v;
 }
@@ -1857,8 +1857,8 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
     }
 #endif
 
-    if (regs.sp[-2].isUndefined())
-        f.script()->typeMonitorUndefined(cx, regs.pc);
+    if (regs.sp[-2].isUndefined() && !f.script()->typeMonitorUndefined(cx, regs.pc))
+        THROW();
 
     if (f.jit()->recompilations != recompilations)
         return;
@@ -1910,8 +1910,8 @@ ic::XName(VMFrame &f, ic::PICInfo *pic)
         THROW();
     f.regs.sp[-1] = rval;
 
-    if (rval.isUndefined())
-        script->typeMonitorUndefined(f.cx, f.regs.pc);
+    if (rval.isUndefined() && !script->typeMonitorUndefined(f.cx, f.regs.pc))
+        THROW();
 }
 
 void JS_FASTCALL
@@ -1930,8 +1930,8 @@ ic::Name(VMFrame &f, ic::PICInfo *pic)
         THROW();
     f.regs.sp[0] = rval;
 
-    if (rval.isUndefined())
-        script->typeMonitorUndefined(f.cx, f.regs.pc);
+    if (rval.isUndefined() && !script->typeMonitorUndefined(f.cx, f.regs.pc))
+        THROW();
 }
 
 static void JS_FASTCALL
@@ -2411,8 +2411,8 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
     {
         f.regs.sp[-1] = thisv;
     }
-    if (f.regs.sp[-2].isUndefined())
-        f.script()->typeMonitorUndefined(cx, f.regs.pc);
+    if (f.regs.sp[-2].isUndefined() && !f.script()->typeMonitorUndefined(cx, f.regs.pc))
+        THROW();
 }
 
 void JS_FASTCALL
@@ -2461,7 +2461,8 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
     if (f.regs.sp[-2].isUndefined()) {
         if (idval.isInt32())
             cx->addTypeProperty(obj->getType(), NULL, types::TYPE_UNDEFINED);
-        f.script()->typeMonitorUndefined(cx, f.regs.pc);
+        if (!f.script()->typeMonitorUndefined(cx, f.regs.pc))
+            THROW();
     }
 }
 

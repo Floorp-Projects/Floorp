@@ -367,12 +367,10 @@ class Compiler : public BaseCompiler
     bool debugMode_;
     bool addTraceHints;
     bool recompiling;
-#ifdef JS_TYPE_INFERENCE
     bool hasThisType;
     JSValueType thisType;
     js::Vector<JSValueType, 16> argumentTypes;
     js::Vector<JSValueType, 16> localTypes;
-#endif
     bool oomInVector;       // True if we have OOM'd appending to a vector. 
     enum { NoApplyTricks, LazyArgsObj } applyTricks;
 
@@ -408,6 +406,7 @@ class Compiler : public BaseCompiler
     CompileStatus finishThisUp(JITScript **jitp);
 
     /* Analysis helpers. */
+    CompileStatus prepareInferenceTypes(const Vector<JSStackFrame*> *frames);
     void fixDoubleTypes(Uses uses);
     void restoreAnalysisTypes(uint32 stackDepth);
     JSValueType knownThisType();
@@ -420,7 +419,7 @@ class Compiler : public BaseCompiler
     types::TypeSet *localTypeSet(uint32 local);
     types::TypeSet *pushedTypeSet(uint32 pushed);
     bool monitored(jsbytecode *pc);
-    void markPushedOverflow(uint32 pushed);
+    void markPushedOverflow();
     void markLocalOverflow(uint32 local);
     void markArgumentOverflow(uint32 arg);
 
@@ -566,7 +565,7 @@ class Compiler : public BaseCompiler
     bool jsop_andor(JSOp op, jsbytecode *target);
     bool jsop_arginc(JSOp op, uint32 slot, bool popped);
     bool jsop_localinc(JSOp op, uint32 slot, bool popped);
-    void jsop_newinit();
+    bool jsop_newinit();
     void jsop_initmethod();
     void jsop_initprop();
     void jsop_initelem();

@@ -1325,6 +1325,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'p':
             JS_ToggleOptions(cx, JSOPTION_PROFILING);
             break;
+        case 'n':
+            JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
+            break;
         default:
             return usage();
         }

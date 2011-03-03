@@ -2885,7 +2885,7 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
 {
     JSRuntime *rt = cx->runtime;
     JSCompartment *compartment = js_new<JSCompartment>(rt);
-    if (!compartment || !compartment->init()) {
+    if (!compartment || !compartment->init(cx)) {
         js_delete(compartment);
         JS_ReportOutOfMemory(cx);
         return NULL;

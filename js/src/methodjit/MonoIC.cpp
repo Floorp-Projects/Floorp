@@ -900,19 +900,19 @@ class CallCompiler : public BaseCompiler
             masm.storeValue(v, Address(vpReg, sizeof(Value)));
         }
 
-#ifdef JS_TYPE_INFERENCE
-        /*
-         * Look under the ABI abstraction and NULL out the slot used for the
-         * return address in a FASTCALL. This is seriously nasty but we need it
-         * to distinguish fast calls from native calls should we trigger a
-         * recompilation inside the native.
-         */
+        if (cx->typeInferenceEnabled()) {
+            /*
+             * Look under the ABI abstraction and NULL out the slot used for the
+             * return address in a FASTCALL. This is seriously nasty but we need it
+             * to distinguish fast calls from native calls should we trigger a
+             * recompilation inside the native.
+             */
 #if defined(JS_CPU_X86) && !defined(JS_NO_FASTCALL)
-        masm.storePtr(ImmPtr(NULL), FrameAddress(-4));
+            masm.storePtr(ImmPtr(NULL), FrameAddress(-4));
 #else
-        JS_NOT_REACHED("FIXME");
+            JS_NOT_REACHED("FIXME");
 #endif
-#endif
+        }
 
         masm.setupABICall(Registers::NormalCall, 3);
         masm.storeArg(2, vpReg);

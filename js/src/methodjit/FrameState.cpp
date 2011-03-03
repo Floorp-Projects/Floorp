@@ -762,10 +762,7 @@ FrameState::consistentRegisters(jsbytecode *target)
      * been synced, and no stores will need to be issued by prepareForJump.
      */
     RegisterAllocation *alloc = liveness.getCode(target).allocation;
-    if (!alloc) {
-        alloc = ArenaNew<RegisterAllocation>(liveness.pool, false);  /* :XXX: set OOM on failure */
-        return true;
-    }
+    JS_ASSERT(alloc);
 
     Registers regs(Registers::AvailAnyRegs);
     while (!regs.empty()) {

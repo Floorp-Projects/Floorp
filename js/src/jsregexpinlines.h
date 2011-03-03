@@ -278,10 +278,12 @@ GetRegExpMatchType(JSContext *cx)
     if (!type)
         return NULL;
 
-    cx->addTypeProperty(type, NULL, types::TYPE_STRING);
-    cx->addTypeProperty(type, "index", types::TYPE_INT32);
-    cx->addTypeProperty(type, "input", types::TYPE_STRING);
-    cx->markTypeArrayNotPacked(type, true);
+    if (!cx->addTypeProperty(type, NULL, types::TYPE_STRING) ||
+        !cx->addTypeProperty(type, "index", types::TYPE_INT32) ||
+        !cx->addTypeProperty(type, "input", types::TYPE_STRING) ||
+        !cx->markTypeArrayNotPacked(type, true)) {
+        return NULL;
+    }
 
     return type;
 }
@@ -301,7 +303,6 @@ RegExp::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemC
     if (!type)
         return NULL;
     array->setType(type);
-    cx->markTypeArrayNotPacked(type, true);
 
     RegExpMatchBuilder builder(cx, array);
     for (size_t i = 0; i < matchItemCount; i += 2) {

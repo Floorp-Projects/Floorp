@@ -653,7 +653,7 @@ JSRuntime::init(uint32 maxbytes)
 #endif
 
     if (!(atomsCompartment = js_new<JSCompartment>(this)) ||
-        !atomsCompartment->init() ||
+        !atomsCompartment->init(NULL) ||
         !compartments.append(atomsCompartment)) {
         return false;
     }
@@ -2985,7 +2985,8 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp)
         return NULL;
     }
 
-    cx->addTypeProperty(obj->getType(), js_undefined_str, UndefinedValue());
+    if (!cx->addTypeProperty(obj->getType(), js_undefined_str, UndefinedValue()))
+        return NULL;
 
     return obj;
 }
@@ -3023,7 +3024,8 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
     JSObject *obj = NewNonFunction<WithProto::Class>(cx, clasp, proto, parent);
     if (obj) {
         obj->syncSpecialEquality();
-        cx->markTypeObjectUnknownProperties(obj->getType());
+        if (!cx->markTypeObjectUnknownProperties(obj->getType()))
+            return NULL;
     }
 
     JS_ASSERT_IF(obj, obj->getParent());
@@ -3047,7 +3049,8 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSO
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
     if (obj) {
         obj->syncSpecialEquality();
-        cx->markTypeObjectUnknownProperties(obj->getType());
+        if (!cx->markTypeObjectUnknownProperties(obj->getType()))
+            return NULL;
     }
     return obj;
 }
@@ -3124,16 +3127,16 @@ JS_ConstructObjectWithArguments(JSContext *cx, JSClass *jsclasp, JSObject *proto
     return js_ConstructObject(cx, clasp, proto, parent, argc, Valueify(argv));
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API(JSBool)
 JS_AddTypeProperty(JSContext *cx, JSObject *obj, const char *name, jsval value)
 {
-    cx->addTypeProperty(obj->getType(), name, Valueify(value));
+    return cx->addTypeProperty(obj->getType(), name, Valueify(value));
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API(JSBool)
 JS_AddTypePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value)
 {
-    cx->addTypePropertyId(obj->getType(), id, Valueify(value));
+    return cx->addTypePropertyId(obj->getType(), id, Valueify(value));
 }
 
 static JSBool
@@ -3401,9 +3404,10 @@ DefineUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namele
                  uintN flags, intN tinyid)
 {
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
-    cx->addTypePropertyId(obj->getType(), ATOM_TO_JSID(atom), value);
-    return atom && DefinePropertyById(cx, obj, ATOM_TO_JSID(atom), value, getter, setter, attrs,
-                                      flags, tinyid);
+    if (!atom || !cx->addTypePropertyId(obj->getType(), ATOM_TO_JSID(atom), value))
+        return false;
+    return DefinePropertyById(cx, obj, ATOM_TO_JSID(atom), value, getter, setter, attrs,
+                              flags, tinyid);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3446,7 +3450,8 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *jsclasp
     if (!nobj)
         return NULL;
 
-    cx->addTypeProperty(obj->getType(), name, ObjectValue(*nobj));
+    if (!cx->addTypeProperty(obj->getType(), name, ObjectValue(*nobj)))
+        return NULL;
     nobj->syncSpecialEquality();
 
     if (!DefineProperty(cx, obj, name, ObjectValue(*nobj), NULL, NULL, attrs, 0, 0))
@@ -3463,11 +3468,12 @@ JS_DefineConstDoubles(JSContext *cx, JSObject *obj, JSConstDoubleSpec *cds)
 
     CHECK_REQUEST(cx);
     for (ok = JS_TRUE; cds->name; cds++) {
+        if (!cx->addTypeProperty(obj->getType(), cds->name, TYPE_DOUBLE))
+            return false;
         Value value = DoubleValue(cds->dval);
         attrs = cds->flags;
         if (!attrs)
             attrs = JSPROP_READONLY | JSPROP_PERMANENT;
-        cx->addTypeProperty(obj->getType(), cds->name, value);
         ok = DefineProperty(cx, obj, cds->name, value, NULL, NULL, attrs, 0, 0);
         if (!ok)
             break;
@@ -3481,14 +3487,7 @@ JS_DefineProperties(JSContext *cx, JSObject *obj, JSPropertySpec *ps)
     JSBool ok;
 
     for (ok = true; ps->name; ps++) {
-        ok = DefineProperty(cx, obj, ps->name, UndefinedValue(),
-                            Valueify(ps->getter), Valueify(ps->setter),
-                            ps->flags, Shape::HAS_SHORTID, ps->tinyid);
-        if (!ok)
-            break;
-
-#ifdef JS_TYPE_INFERENCE
-        if (ps->handler) {
+        if (cx->typeInferenceEnabled() && ps->handler) {
             jstype type = 0;
             if (ps->handler == JS_TypeHandlerBool)
                 type = TYPE_BOOLEAN;
@@ -3500,9 +3499,16 @@ JS_DefineProperties(JSContext *cx, JSObject *obj, JSPropertySpec *ps)
                 type = TYPE_STRING;
             JS_ASSERT(type);
 
-            cx->addTypeProperty(obj->getType(), ps->name, type);
+            ok = cx->addTypeProperty(obj->getType(), ps->name, type);
+            if (!ok)
+                break;
         }
-#endif
+
+        ok = DefineProperty(cx, obj, ps->name, UndefinedValue(),
+                            Valueify(ps->getter), Valueify(ps->setter),
+                            ps->flags, Shape::HAS_SHORTID, ps->tinyid);
+        if (!ok)
+            break;
     }
     return ok;
 }
@@ -3527,6 +3533,7 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name, const char *ali
         js_ReportIsNotDefined(cx, name);
         return JS_FALSE;
     }
+
     if (obj2 != obj || !obj->isNative()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_ALIAS,
                              alias, name, obj2->getClass()->name);
@@ -3536,6 +3543,10 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name, const char *ali
     if (!aliasAtom) {
         ok = JS_FALSE;
     } else {
+        /* Alias the properties within the type information for the object. */
+        if (!cx->aliasTypeProperties(obj->getType(), ATOM_TO_JSID(nameAtom), ATOM_TO_JSID(aliasAtom)))
+            return JS_FALSE;
+
         shape = (Shape *)prop;
         ok = (js_AddNativeProperty(cx, obj, ATOM_TO_JSID(aliasAtom),
                                    shape->getter(), shape->setter(), shape->slot,
@@ -3543,9 +3554,6 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name, const char *ali
                                    shape->shortid)
               != NULL);
     }
-
-    /* Alias the properties within the type information for the object. */
-    cx->aliasTypeProperties(obj->getType(), ATOM_TO_JSID(nameAtom), ATOM_TO_JSID(aliasAtom));
 
     return ok;
 }
@@ -3811,7 +3819,8 @@ JS_SetPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     assertSameCompartment(cx, obj, id);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
 
-    cx->addTypePropertyId(obj->getType(), id, Valueify(*vp));
+    if (!cx->addTypePropertyId(obj->getType(), id, Valueify(*vp)))
+        return false;
     return obj->setProperty(cx, id, Valueify(vp), false);
 }
 
@@ -4315,7 +4324,8 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         Value v;
         if (!obj->getProperty(cx, r.front().id, &v))
             return NULL;
-        fun->script()->typeSetUpvar(cx, i, v);
+        if (!fun->script()->typeSetUpvar(cx, i, v))
+            return NULL;
         clone->getFlatClosureUpvars()[i] = v;
     }
 
@@ -4330,80 +4340,67 @@ JS_TypeHandlerDynamic(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssi
 
 JS_PUBLIC_API(void) JS_TypeHandlerVoid(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
-#ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
     if (site->returnTypes) {
         if (site->isNew)
             site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->returnTypes->addType(cx, TYPE_UNDEFINED);
     }
-#endif
 }
 
 JS_PUBLIC_API(void) JS_TypeHandlerNull(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
-#ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
     if (site->returnTypes) {
         if (site->isNew)
             site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->returnTypes->addType(cx, TYPE_NULL);
     }
-#endif
 }
 
 JS_PUBLIC_API(void) JS_TypeHandlerBool(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
-#ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
     if (site->returnTypes) {
         if (site->isNew)
             site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->returnTypes->addType(cx, TYPE_BOOLEAN);
     }
-#endif
 }
 
 JS_PUBLIC_API(void) JS_TypeHandlerInt(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
-#ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
     if (site->returnTypes) {
         if (site->isNew)
             site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->returnTypes->addType(cx, TYPE_INT32);
     }
-#endif
 }
 
 JS_PUBLIC_API(void) JS_TypeHandlerFloat(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
-#ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
     if (site->returnTypes) {
         if (site->isNew)
             site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->returnTypes->addType(cx, TYPE_DOUBLE);
     }
-#endif
 }
 
 JS_PUBLIC_API(void) JS_TypeHandlerString(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
-#ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
     if (site->returnTypes) {
         if (site->isNew)
             site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->returnTypes->addType(cx, TYPE_STRING);
     }
-#endif
 }
 
 JS_PUBLIC_API(void)
 JS_TypeHandlerNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
-#ifdef JS_TYPE_INFERENCE
     TypeFunction *fun = Valueify(jsfun);
     TypeCallsite *site = Valueify(jssite);
 
@@ -4412,14 +4409,14 @@ JS_TypeHandlerNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 
     TypeSet *prototypeTypes =
         fun->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), true);
+    if (!prototypeTypes)
+        return;
     prototypeTypes->addNewObject(cx, site->script, fun, site->returnTypes);
-#endif
 }
 
 JS_PUBLIC_API(void)
 JS_TypeHandlerThis(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
-#ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
 
     if (site->returnTypes) {
@@ -4430,7 +4427,6 @@ JS_TypeHandlerThis(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
         else
             site->returnTypes->addType(cx, site->thisType);
     }
-#endif
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -4541,10 +4537,10 @@ JS_DefineFunctionsWithPrefix(JSContext *cx, JSObject *obj, JSFunctionSpec *fs,
             if (!fun)
                 return JS_FALSE;
 
-#ifdef JS_TYPE_INFERENCE
-            /* Mark the type handler for this function as generic. */
-            fun->getType()->asFunction()->isGeneric = true;
-#endif
+            if (cx->typeInferenceEnabled()) {
+                /* Mark the type handler for this function as generic. */
+                fun->getType()->asFunction()->isGeneric = true;
+            }
 
             /*
              * As jsapi.h notes, fs must point to storage that lives as long

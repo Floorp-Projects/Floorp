@@ -1102,9 +1102,8 @@ js_str_charCodeAt(JSContext *cx, uintN argc, Value *vp)
     return true;
 
 out_of_range:
-    cx->markTypeCallerOverflow();
     vp->setDouble(js_NaN);
-    return true;
+    return cx->markTypeCallerOverflow();
 }
 
 jsint
@@ -1828,7 +1827,6 @@ BuildFlatMatchArray(JSContext *cx, JSString *textstr, const FlatMatch &fm, Value
     if (!type)
         return false;
     obj->setType(type);
-    cx->markTypeArrayNotPacked(type, true);
 
     vp->setObject(*obj);
 
@@ -2661,9 +2659,8 @@ str_split(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     TypeObject *type = cx->getTypeCallerInitObject(true);
-    if (!type)
+    if (!type || !cx->addTypeProperty(type, NULL, types::TYPE_STRING))
         return false;
-    cx->addTypeProperty(type, NULL, types::TYPE_STRING);
 
     if (argc == 0) {
         Value v = StringValue(str);
@@ -3087,7 +3084,6 @@ JS_DEFINE_TRCINFO_1(str_concat,
 
 static void type_StringMatch(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
-#ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
 
     if (!site->returnTypes)
@@ -3102,18 +3098,15 @@ static void type_StringMatch(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
         site->returnTypes->addType(cx, TYPE_UNKNOWN);
 
     TypeObject *type = site->getInitObject(cx, true);
-    cx->addTypeProperty(type, NULL, TYPE_STRING);
-    cx->addTypeProperty(type, "index", TYPE_INT32);
-    cx->addTypeProperty(type, "input", TYPE_STRING);
+    if (!type)
+        return;
 
     site->returnTypes->addType(cx, TYPE_NULL);
     site->returnTypes->addType(cx, (jstype) type);
-#endif
 }
 
 static void type_StringSplit(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
-#ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
 
     if (!site->returnTypes)
@@ -3128,10 +3121,10 @@ static void type_StringSplit(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
         site->returnTypes->addType(cx, TYPE_UNKNOWN);
 
     TypeObject *type = site->getInitObject(cx, true);
-    cx->addTypeProperty(type, NULL, TYPE_STRING);
+    if (!type)
+        return;
 
     site->returnTypes->addType(cx, (jstype) type);
-#endif
 }
 
 static JSFunctionSpec string_methods[] = {
@@ -3453,12 +3446,10 @@ static JSFunctionSpec string_static_methods[] = {
 
 static void type_NewString(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
-#ifdef JS_TYPE_INFERENCE
     if (Valueify(jssite)->isNew)
         JS_TypeHandlerNew(cx, jsfun, jssite);
     else
         JS_TypeHandlerString(cx, jsfun, jssite);
-#endif
 }
 
 JSObject *
@@ -3485,8 +3476,12 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
         return JS_FALSE;
     }
 
-    cx->addTypePropertyId(proto->getType(), lengthId, TYPE_INT32);
-    cx->addTypeProperty(proto->getNewType(cx), NULL, TYPE_STRING);
+    if (!cx->addTypePropertyId(proto->getType(), lengthId, TYPE_INT32))
+        return NULL;
+
+    TypeObject *objectType = proto->getNewType(cx);
+    if (!objectType || !cx->addTypeProperty(objectType, NULL, TYPE_STRING))
+        return NULL;
 
     return proto;
 }

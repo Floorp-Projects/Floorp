@@ -1204,18 +1204,18 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
         return true;
     }
 
-#ifdef JS_TYPE_INFERENCE
-    types::TypeSet *types = obj->getTypeSet();
-    types::ObjectKind kind = types ? types->getKnownObjectKind(cx, script) : types::OBJECT_UNKNOWN;
-    if (id->mightBeType(JSVAL_TYPE_INT32) &&
-        (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
-        !arrayPrototypeHasIndexedProperty()) {
-        // this is definitely a dense array, generate code directly without
-        // using an inline cache.
-        jsop_setelem_dense();
-        return true;
+    if (cx->typeInferenceEnabled()) {
+        types::TypeSet *types = obj->getTypeSet();
+        types::ObjectKind kind = types ? types->getKnownObjectKind(cx, script) : types::OBJECT_UNKNOWN;
+        if (id->mightBeType(JSVAL_TYPE_INT32) &&
+            (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
+            !arrayPrototypeHasIndexedProperty()) {
+            // This is definitely a dense array, generate code directly without
+            // using an inline cache.
+            jsop_setelem_dense();
+            return true;
+        }
     }
-#endif
 
     SetElementICInfo ic = SetElementICInfo(JSOp(*PC));
 
@@ -1516,19 +1516,19 @@ mjit::Compiler::jsop_getelem(bool isCall)
         return true;
     }
 
-#ifdef JS_TYPE_INFERENCE
-    types::TypeSet *types = obj->getTypeSet();
-    types::ObjectKind kind = types ? types->getKnownObjectKind(cx, script) : types::OBJECT_UNKNOWN;
+    if (cx->typeInferenceEnabled()) {
+        types::TypeSet *types = obj->getTypeSet();
+        types::ObjectKind kind = types ? types->getKnownObjectKind(cx, script) : types::OBJECT_UNKNOWN;
 
-    if (!isCall && id->mightBeType(JSVAL_TYPE_INT32) &&
-        (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
-        !arrayPrototypeHasIndexedProperty()) {
-        // this is definitely a dense array, generate code directly without
-        // using an inline cache.
-        jsop_getelem_dense(kind == types::OBJECT_PACKED_ARRAY);
-        return true;
+        if (!isCall && id->mightBeType(JSVAL_TYPE_INT32) &&
+            (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
+            !arrayPrototypeHasIndexedProperty()) {
+            // this is definitely a dense array, generate code directly without
+            // using an inline cache.
+            jsop_getelem_dense(kind == types::OBJECT_PACKED_ARRAY);
+            return true;
+        }
     }
-#endif
 
     GetElementICInfo ic = GetElementICInfo(JSOp(*PC));
 

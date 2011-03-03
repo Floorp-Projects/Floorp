@@ -220,7 +220,8 @@ bool
 JSWrapper::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, bool strict,
                Value *vp)
 {
-    cx->addTypePropertyId(wrappedObject(wrapper)->getType(), id, *vp);
+    if (!cx->addTypePropertyId(wrappedObject(wrapper)->getType(), id, *vp))
+        return false;
 
     // FIXME (bug 596351): Need deal with strict mode.
     SET(wrappedObject(wrapper)->setProperty(cx, id, vp, false));
