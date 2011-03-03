@@ -1299,6 +1299,59 @@ JS_EndPC(JSContext *cx, JSScript *script)
     return script->code + script->length;
 }
 
+JS_PUBLIC_API(JSBool)
+JS_GetLinePCs(JSContext *cx, JSScript *script,
+              uintN startLine, uintN maxLines,
+              uintN* count, uintN** retLines, jsbytecode*** retPCs)
+{
+    uintN* lines;
+    jsbytecode** pcs;
+    size_t len = (script->length > maxLines ? maxLines : script->length);
+    lines = (uintN*) cx->malloc_(len * sizeof(uintN));
+    if (!lines)
+        return JS_FALSE;
+
+    pcs = (jsbytecode**) cx->malloc_(len * sizeof(jsbytecode*));
+    if (!pcs) {
+        cx->free_(lines);
+        return JS_FALSE;
+    }
+
+    uintN lineno = script->lineno;
+    uintN offset = 0;
+    uintN i = 0;
+    for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
+        offset += SN_DELTA(sn);
+        JSSrcNoteType type = (JSSrcNoteType) SN_TYPE(sn);
+        if (type == SRC_SETLINE || type == SRC_NEWLINE) {
+            if (type == SRC_SETLINE)
+                lineno = (uintN) js_GetSrcNoteOffset(sn, 0);
+            else
+                lineno++;
+
+            if (lineno >= startLine) {
+                lines[i] = lineno;
+                pcs[i] = script->code + offset;
+                if (++i >= maxLines)
+                    break;
+            }
+        }
+    }
+
+    *count = i;
+    if (retLines)
+        *retLines = lines;
+    else
+        cx->free_(lines);
+
+    if (retPCs)
+        *retPCs = pcs;
+    else
+        cx->free_(pcs);
+
+    return JS_TRUE;
+}
+
 JS_PUBLIC_API(uintN)
 JS_GetFunctionArgumentCount(JSContext *cx, JSFunction *fun)
 {
