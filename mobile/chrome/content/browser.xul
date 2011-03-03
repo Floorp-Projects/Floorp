@@ -259,9 +259,7 @@
                     </hbox>
                   </hbox>
 #ifndef ANDROID
-#if MOZ_PLATFORM_MAEMO != 6
                   <toolbarbutton id="tool-app-close" class="urlbar-button" command="cmd_close"/>
-#endif
 #endif
                 </toolbar>
               </box>

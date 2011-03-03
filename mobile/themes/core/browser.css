@@ -106,9 +106,11 @@ toolbarbutton.urlbar-button {
   -moz-border-radius-bottomright: @border_radius_small@;
 }
 
+%if MOZ_PLATFORM_MAEMO != 6
 #toolbar-main[fullscreen="true"] #tool-app-close {
   visibility: visible;
 }
+%endif
 
 #toolbar-main[dialog="true"] #tool-app-close {
   visibility: visible;
