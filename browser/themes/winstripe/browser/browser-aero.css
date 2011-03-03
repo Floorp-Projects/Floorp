@@ -186,9 +186,14 @@
     background-image: -moz-linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
   }
 
-  #main-window[sizemode="normal"] #TabsToolbar[tabsontop="true"]:not([inFullscreen="true"]):not(:-moz-lwtheme) {
+  #main-window[sizemode=normal] #TabsToolbar[tabsontop=true]:not([inFullscreen]) {
     padding-left: 4px;
     padding-right: 4px;
+  }
+
+  #main-window[sizemode=normal] #TabsToolbar[tabsontop=false]:not([inFullscreen]) {
+    padding-left: 2px;
+    padding-right: 2px;
   }
 
   /* Make the window draggable by glassed toolbars (bug 555081) */
