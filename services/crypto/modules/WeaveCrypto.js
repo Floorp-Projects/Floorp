@@ -48,6 +48,7 @@ Components.utils.import("resource://gre/modules/ctypes.jsm");
 const ALGORITHM                 = Ci.IWeaveCrypto.AES_256_CBC;
 const KEYSIZE_AES_256           = 32;
 const KEY_DERIVATION_ITERATIONS = 4096;   // PKCS#5 recommends at least 1000.
+const INITIAL_BUFFER_SIZE       = 1024;
 
 function WeaveCrypto() {
     this.init();
@@ -88,10 +89,27 @@ WeaveCrypto.prototype = {
             this.initNSS();
             this.initAlgorithmSettings();   // Depends on NSS.
             this.initIVSECItem();
+            this.initSharedInts();
+            this.initBuffers(INITIAL_BUFFER_SIZE);
         } catch (e) {
             this.log("init failed: " + e);
             throw e;
         }
+    },
+
+    // Avoid allocating new temporary ints on every run of _commonCrypt.
+    _commonCryptSignedOutputSize:       null,
+    _commonCryptSignedOutputSizeAddr:   null,
+    _commonCryptUnsignedOutputSize:     null,
+    _commonCryptUnsignedOutputSizeAddr: null,
+
+    initSharedInts: function initSharedInts() {
+        let signed   = new ctypes.int();
+        let unsigned = new ctypes.unsigned_int();
+        this._commonCryptSignedOutputSize       = signed;
+        this._commonCryptUnsignedOutputSize     = unsigned;
+        this._commonCryptSignedOutputSizeAddr   = signed.address();
+        this._commonCryptUnsignedOutputSizeAddr = unsigned.address();
     },
 
     /**
@@ -365,21 +383,68 @@ WeaveCrypto.prototype = {
     // IWeaveCrypto interfaces
     //
 
+    _sharedInputBuffer:      null,
+    _sharedInputBufferInts:  null,
+    _sharedInputBufferSize:  0,
+    _sharedOutputBuffer:     null,
+    _sharedOutputBufferSize: 0,
+    _randomByteBuffer:       null,
+    _randomByteBufferAddr:   null,
+    _randomByteBufferSize:   0,
+
+    _getInputBuffer: function _getInputBuffer(size) {
+      if (size > this._sharedInputBufferSize) {
+        let b = new ctypes.ArrayType(ctypes.unsigned_char, size)();
+        this._sharedInputBuffer     = b;
+        this._sharedInputBufferInts = ctypes.cast(b, ctypes.uint8_t.array(size));
+        this._sharedInputBufferSize = size;
+      }
+      return this._sharedInputBuffer;
+    },
+
+    _getOutputBuffer: function _getOutputBuffer(size) {
+      if (size > this._sharedOutputBufferSize) {
+        let b = new ctypes.ArrayType(ctypes.unsigned_char, size)();
+        this._sharedOutputBuffer     = b;
+        this._sharedOutputBufferSize = size;
+      }
+      return this._sharedOutputBuffer;
+    },
+
+    _getRandomByteBuffer: function _getRandomByteBuffer(size) {
+        if (size > this._randomByteBufferSize) {
+          let b = new ctypes.ArrayType(ctypes.unsigned_char, size)();
+          this._randomByteBuffer     = b;
+          this._randomByteBufferAddr = b.address();
+          this._randomByteBufferSize = size;
+        }
+        return this._randomByteBuffer;
+    },
+
+    initBuffers: function initBuffers(initialSize) {
+        this._getInputBuffer(initialSize);
+        this._getOutputBuffer(initialSize);
+
+        this._getRandomByteBuffer(this.ivLength);
+    },
+
     encrypt : function(clearTextUCS2, symmetricKey, iv) {
         this.log("encrypt() called");
 
         // js-ctypes autoconverts to a UTF8 buffer, but also includes a null
-        // at the end which we don't want. Cast to make the length 1 byte shorter.
+        // at the end which we don't want. Decrement length to skip it.
         let inputBuffer = new ctypes.ArrayType(ctypes.unsigned_char)(clearTextUCS2);
-        inputBuffer = ctypes.cast(inputBuffer, ctypes.unsigned_char.array(inputBuffer.length - 1));
+        let inputBufferSize = inputBuffer.length - 1;
 
         // When using CBC padding, the output size is the input size rounded
         // up to the nearest block. If the input size is exactly on a block
         // boundary, the output is 1 extra block long.
-        let outputBufferSize = inputBuffer.length + this.blockSize;
-        let outputBuffer = new ctypes.ArrayType(ctypes.unsigned_char, outputBufferSize)();
+        let outputBufferSize = inputBufferSize + this.blockSize;
+        let outputBuffer = this._getOutputBuffer(outputBufferSize);
 
-        outputBuffer = this._commonCrypt(inputBuffer, outputBuffer, symmetricKey, iv, this.nss.CKA_ENCRYPT);
+        outputBuffer = this._commonCrypt(inputBuffer, inputBufferSize,
+                                         outputBuffer, outputBufferSize,
+                                         symmetricKey, iv, this.nss.CKA_ENCRYPT);
 
         return this.encodeBase64(outputBuffer.address(), outputBuffer.length);
     },
@@ -395,16 +460,15 @@ WeaveCrypto.prototype = {
         // We can't have js-ctypes create the buffer directly from the string
         // (as in encrypt()), because we do _not_ want it to do UTF8
         // conversion... We've got random binary data in the input's low byte.
-        // 
+        //
         // Compress a JS string (2-byte chars) into a normal C string (1-byte chars).
         let len   = inputUCS2.length;
-        let input = new ctypes.ArrayType(ctypes.unsigned_char, len)();
-        let ints  = ctypes.cast(input, ctypes.uint8_t.array(len));
-        this.byteCompressInts(inputUCS2, ints, len);
+        let input = this._getInputBuffer(len);
+        this.byteCompressInts(inputUCS2, this._sharedInputBufferInts, len);
 
-        let outputBuffer = new ctypes.ArrayType(ctypes.unsigned_char, input.length)();
-
-        outputBuffer = this._commonCrypt(input, outputBuffer, symmetricKey, iv, this.nss.CKA_DECRYPT);
+        let outputBuffer = this._commonCrypt(input, len,
+                                             this._getOutputBuffer(len), len,
+                                             symmetricKey, iv, this.nss.CKA_DECRYPT);
 
         // outputBuffer contains UTF-8 data, let js-ctypes autoconvert that to a JS string.
         // XXX Bug 573842: wrap the string from ctypes to get a new string, so
@@ -412,8 +476,7 @@ WeaveCrypto.prototype = {
         return "" + outputBuffer.readString() + "";
     },
 
-
-    _commonCrypt : function (input, output, symmetricKey, iv, operation) {
+    _commonCrypt : function (input, inputLength, output, outputLength, symmetricKey, iv, operation) {
         this.log("_commonCrypt() called");
         iv = atob(iv);
 
@@ -436,24 +499,21 @@ WeaveCrypto.prototype = {
             if (ctx.isNull())
                 throw Components.Exception("couldn't create context for symkey", Cr.NS_ERROR_FAILURE);
 
-            let maxOutputSize = output.length;
-            let tmpOutputSize = new ctypes.int(); // Note 1: NSS uses a signed int here...
-
-            if (this.nss.PK11_CipherOp(ctx, output, tmpOutputSize.address(), maxOutputSize, input, input.length))
+            let maxOutputSize = outputLength;
+            if (this.nss.PK11_CipherOp(ctx, output, this._commonCryptSignedOutputSize.address(), maxOutputSize, input, inputLength))
                 throw Components.Exception("cipher operation failed", Cr.NS_ERROR_FAILURE);
 
-            let actualOutputSize = tmpOutputSize.value;
+            let actualOutputSize = this._commonCryptSignedOutputSize.value;
             let finalOutput = output.addressOfElement(actualOutputSize);
             maxOutputSize -= actualOutputSize;
 
             // PK11_DigestFinal sure sounds like the last step for *hashing*, but it
             // just seems to be an odd name -- NSS uses this to finish the current
             // cipher operation. You'd think it would be called PK11_CipherOpFinal...
-            let tmpOutputSize2 = new ctypes.unsigned_int(); // Note 2: ...but an unsigned here!
-            if (this.nss.PK11_DigestFinal(ctx, finalOutput, tmpOutputSize2.address(), maxOutputSize))
+            if (this.nss.PK11_DigestFinal(ctx, finalOutput, this._commonCryptUnsignedOutputSizeAddr, maxOutputSize))
                 throw Components.Exception("cipher finalize failed", Cr.NS_ERROR_FAILURE);
 
-            actualOutputSize += tmpOutputSize2.value;
+            actualOutputSize += this._commonCryptUnsignedOutputSize.value;
             let newOutput = ctypes.cast(output, ctypes.unsigned_char.array(actualOutputSize));
             return newOutput;
         } catch (e) {
@@ -510,11 +570,11 @@ WeaveCrypto.prototype = {
         this.log("generateRandomBytes() called");
 
         // Temporary buffer to hold the generated data.
-        let scratch = new ctypes.ArrayType(ctypes.unsigned_char, byteCount)();
+        let scratch = this._getRandomByteBuffer(byteCount);
         if (this.nss.PK11_GenerateRandom(scratch, byteCount))
             throw Components.Exception("PK11_GenrateRandom failed", Cr.NS_ERROR_FAILURE);
 
-        return this.encodeBase64(scratch.address(), scratch.length);
+        return this.encodeBase64(this._randomByteBufferAddr, byteCount);
     },
 
     //
