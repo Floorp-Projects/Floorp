@@ -59,22 +59,6 @@ function run_test() {
   iv = cryptoSvc.generateRandomIV();
   do_check_eq(iv.length, 24);
 
-  cryptoSvc.algorithm = Ci.IWeaveCrypto.AES_192_CBC;
-  keydata  = cryptoSvc.generateRandomKey();
-  do_check_eq(keydata.length, 32);
-  keydata2 = cryptoSvc.generateRandomKey();
-  do_check_neq(keydata, keydata2); // sanity check for randomness
-  iv = cryptoSvc.generateRandomIV();
-  do_check_eq(iv.length, 24);
-
-  cryptoSvc.algorithm = Ci.IWeaveCrypto.AES_128_CBC;
-  keydata  = cryptoSvc.generateRandomKey();
-  do_check_eq(keydata.length, 24);
-  keydata2 = cryptoSvc.generateRandomKey();
-  do_check_neq(keydata, keydata2); // sanity check for randomness
-  iv = cryptoSvc.generateRandomIV();
-  do_check_eq(iv.length, 24);
-
   if (this.gczeal)
     gczeal(0);
 }
