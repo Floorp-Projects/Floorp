@@ -1191,10 +1191,10 @@ Browser.MainDragger.prototype = {
 
     // Any leftover panning in doffset would bring controls into view. Add to sidebar
     // away panning for the total scroll offset.
-    let dx = Math.round(doffset.x);
-    if ((this._stopAtSidebar > 0 && dx > 0) ||
-        (this._stopAtSidebar < 0 && dx < 0)) {
-      if (dx != Math.round(panOffset.x))
+    let offsetX = Math.round(doffset.x);
+    if ((this._stopAtSidebar > 0 && offsetX > 0) ||
+        (this._stopAtSidebar < 0 && offsetX < 0)) {
+      if (offsetX != Math.round(panOffset.x))
         this._hitSidebar = true;
       doffset.x = panOffset.x;
     } else {
