@@ -429,7 +429,7 @@ GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
     return js_anonymous_str;
 }
 
-extern JS_FRIEND_API(bool)
+extern bool
 IsBuiltinFunctionConstructor(JSFunction *fun);
 
 /*

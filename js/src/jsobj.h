@@ -1940,7 +1940,7 @@ extern bool
 EvalKernel(JSContext *cx, uintN argc, js::Value *vp, EvalType evalType, JSStackFrame *caller,
            JSObject *scopeobj);
 
-extern JS_FRIEND_API(bool)
+extern bool
 IsBuiltinEvalFunction(JSFunction *fun);
 
 }
