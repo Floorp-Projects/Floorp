@@ -5281,6 +5281,7 @@ cairo-cocoa)
     LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) $(LIBXUL_DIST)/bin/XUL'
     MOZ_FS_LAYOUT=bundle
     MOZ_WEBGL=1
+    MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
 cairo-android)
