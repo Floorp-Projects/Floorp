@@ -592,7 +592,7 @@ class NodeBuilder
 
     bool xmlFilterExpression(Value left, Value right, TokenPos *pos, Value *dst);
 
-    bool xmlAttributeSelector(Value expr, TokenPos *pos, Value *dst);
+    bool xmlAttributeSelector(Value expr, bool computed, TokenPos *pos, Value *dst);
 
     bool xmlQualifiedIdentifier(Value left, Value right, bool computed, TokenPos *pos, Value *dst);
 
@@ -1454,13 +1454,16 @@ NodeBuilder::xmlDefaultNamespace(Value ns, TokenPos *pos, Value *dst)
 }
 
 bool
-NodeBuilder::xmlAttributeSelector(Value expr, TokenPos *pos, Value *dst)
+NodeBuilder::xmlAttributeSelector(Value expr, bool computed, TokenPos *pos, Value *dst)
 {
     Value cb = callbacks[AST_XMLATTR_SEL];
     if (!cb.isNull())
-        return callback(cb, expr, pos, dst);
+        return callback(cb, expr, BooleanValue(computed), pos, dst);
 
-    return newNode(AST_XMLATTR_SEL, pos, "attribute", expr, dst);
+    return newNode(AST_XMLATTR_SEL, pos,
+                   "attribute", expr,
+                   "computed", BooleanValue(computed),
+                   dst);
 }
 
 bool
@@ -2594,9 +2597,15 @@ ASTSerializer::expression(JSParseNode *pn, Value *dst)
       case TOK_LB:
       {
         Value left, right;
+        bool computed = true;
+#ifdef JS_HAS_XML_SUPPORT
+        computed = (PN_TYPE(pn->pn_right) != TOK_DBLCOLON &&
+                    PN_TYPE(pn->pn_right) != TOK_ANYNAME &&
+                    PN_TYPE(pn->pn_right) != TOK_AT);
+#endif
         return expression(pn->pn_left, &left) &&
                expression(pn->pn_right, &right) &&
-               builder.memberExpression(true, left, right, &pn->pn_pos, dst);
+               builder.memberExpression(computed, left, right, &pn->pn_pos, dst);
       }
 
       case TOK_RB:
@@ -2717,8 +2726,12 @@ ASTSerializer::expression(JSParseNode *pn, Value *dst)
       case TOK_AT:
       {
         Value expr;
-        return expression(pn->pn_kid, &expr) &&
-               builder.xmlAttributeSelector(expr, &pn->pn_pos, dst);
+        JSParseNode *kid = pn->pn_kid;
+        bool computed = ((PN_TYPE(kid) != TOK_NAME || PN_OP(kid) != JSOP_QNAMEPART) &&
+                         PN_TYPE(kid) != TOK_DBLCOLON &&
+                         PN_TYPE(kid) != TOK_ANYNAME);
+        return expression(kid, &expr) &&
+            builder.xmlAttributeSelector(expr, computed, &pn->pn_pos, dst);
       }
 
       case TOK_FILTER:
