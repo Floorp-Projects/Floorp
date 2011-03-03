@@ -1229,7 +1229,6 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
 
           case LIR_file:
           case LIR_line:
-          case LIR_xtbl:
           case LIR_jtbl:
             nyi(op);
             break;
@@ -1388,7 +1387,7 @@ const CallInfo ci_V_IQF = CI(f_V_IQF, CallInfo::typeSig3(ARGTYPE_V, ARGTYPE_I, A
 //   prologues)
 // - LIR_livei/LIR_liveq/LIR_lived
 // - LIR_hcalli
-// - LIR_x/LIR_xt/LIR_xf/LIR_xtbl/LIR_addxovi/LIR_subxovi/LIR_mulxovi (hard to
+// - LIR_x/LIR_xt/LIR_xf/LIR_addxovi/LIR_subxovi/LIR_mulxovi (hard to
 //   test without having multiple fragments;  when we only have one fragment
 //   we don't really want to leave it early)
 // - LIR_reti/LIR_retq/LIR_retd (hard to test without having multiple fragments)
