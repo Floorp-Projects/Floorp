@@ -251,8 +251,9 @@ assertExpr("(x << y)", binExpr("<<", ident("x"), ident("y")));
 assertExpr("(x >> y)", binExpr(">>", ident("x"), ident("y")));
 assertExpr("(x >>> y)", binExpr(">>>", ident("x"), ident("y")));
 assertExpr("(x + y)", binExpr("+", ident("x"), ident("y")));
-assertExpr("(w + x + y + z)", binExpr("+", ident("w"), binExpr("+", ident("x", binExpr("+", ident("y"), ident("z"))))))
+assertExpr("(w + x + y + z)", binExpr("+", binExpr("+", binExpr("+", ident("w"), ident("x")), ident("y")), ident("z")));
 assertExpr("(x - y)", binExpr("-", ident("x"), ident("y")));
+assertExpr("(w - x - y - z)", binExpr("-", binExpr("-", binExpr("-", ident("w"), ident("x")), ident("y")), ident("z")));
 assertExpr("(x * y)", binExpr("*", ident("x"), ident("y")));
 assertExpr("(x / y)", binExpr("/", ident("x"), ident("y")));
 assertExpr("(x % y)", binExpr("%", ident("x"), ident("y")));
@@ -275,7 +276,7 @@ assertExpr("(x ^= y)", aExpr("^=", ident("x"), ident("y")));
 assertExpr("(x &= y)", aExpr("&=", ident("x"), ident("y")));
 assertExpr("(x || y)", logExpr("||", ident("x"), ident("y")));
 assertExpr("(x && y)", logExpr("&&", ident("x"), ident("y")));
-assertExpr("(w || x || y || z)", logExpr("||", ident("w"), logExpr("||", ident("x", logExpr("||", ident("y"), ident("z"))))))
+assertExpr("(w || x || y || z)", logExpr("||", logExpr("||", logExpr("||", ident("w"), ident("x")), ident("y")), ident("z")))
 assertExpr("(x ? y : z)", condExpr(ident("x"), ident("y"), ident("z")));
 assertExpr("(x,y)", seqExpr([ident("x"),ident("y")]))
 assertExpr("(x,y,z)", seqExpr([ident("x"),ident("y"),ident("z")]))

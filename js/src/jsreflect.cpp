@@ -2320,53 +2320,34 @@ ASTSerializer::leftAssociate(JSParseNode *pn, Value *dst)
     const size_t len = pn->pn_count;
     JS_ASSERT(len >= 1);
 
-    if (len == 1)
-        return expression(pn->pn_head, dst);
-
-    JS_ASSERT(len >= 2);
-
-    Vector<JSParseNode *, 8> list(cx);
-    if (!list.reserve(len))
-        return false;
-
-    for (JSParseNode *next = pn->pn_head; next; next = next->pn_next) {
-        JS_ALWAYS_TRUE(list.append(next)); /* space check above */
-    }
-
     TokenKind tk = PN_TYPE(pn);
-
     bool lor = tk == TOK_OR;
     bool logop = lor || (tk == TOK_AND);
 
-    Value right;
-
-    if (!expression(list[len - 1], &right))
+    JSParseNode *head = pn->pn_head;
+    Value left;
+    if (!expression(head, &left))
         return false;
-
-    size_t i = len - 2;
-
-    do {
-        JSParseNode *next = list[i];
-
-        Value left;
-        if (!expression(next, &left))
+    for (JSParseNode *next = head->pn_next; next; next = next->pn_next) {
+        Value right;
+        if (!expression(next, &right))
             return false;
 
-        TokenPos subpos = { next->pn_pos.begin, pn->pn_pos.end };
+        TokenPos subpos = { pn->pn_pos.begin, next->pn_pos.end };
 
         if (logop) {
-            if (!builder.logicalExpression(lor, left, right, &subpos, &right))
+            if (!builder.logicalExpression(lor, left, right, &subpos, &left))
                 return false;
         } else {
             BinaryOperator op = binop(PN_TYPE(pn), PN_OP(pn));
             LOCAL_ASSERT(op > BINOP_ERR && op < BINOP_LIMIT);
 
-            if (!builder.binaryExpression(op, left, right, &subpos, &right))
+            if (!builder.binaryExpression(op, left, right, &subpos, &left))
                 return false;
         }
-    } while (i-- != 0);
+    }
 
-    *dst = right;
+    *dst = left;
     return true;
 }
 
