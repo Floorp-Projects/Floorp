@@ -924,12 +924,12 @@
 
             let rootScale = self.scale;
             self.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
-              scrollX: scrollX / rootScale,
-              scrollY: scrollY / rootScale,
-              x: displayport.x / rootScale,
-              y: displayport.y / rootScale,
-              w: displayport.width / rootScale,
-              h: displayport.height / rootScale,
+              scrollX: Math.round(scrollX) / rootScale,
+              scrollY: Math.round(scrollY) / rootScale,
+              x: Math.round(displayport.x) / rootScale,
+              y: Math.round(displayport.y) / rootScale,
+              w: Math.round(displayport.width) / rootScale,
+              h: Math.round(displayport.height) / rootScale,
               scale: rootScale,
               id: contentView.id
             });
