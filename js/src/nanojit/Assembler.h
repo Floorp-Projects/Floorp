@@ -298,9 +298,6 @@ namespace nanojit
             void        releaseRegisters();
             void        patch(GuardRecord *lr);
             void        patch(SideExit *exit);
-#ifdef NANOJIT_IA32
-            void        patch(SideExit *exit, SwitchInfo* si);
-#endif
             AssmError   error()               { return _err; }
             void        setError(AssmError e) { _err = e; }
             void        cleanupAfterError();
@@ -486,10 +483,8 @@ namespace nanojit
             Register    asm_binop_rhs_reg(LIns* ins);
             NIns*       asm_branch(bool branchOnFalse, LIns* cond, NIns* targ);
             NIns*       asm_branch_ov(LOpcode op, NIns* targ);
-            void        asm_switch(LIns* ins, NIns* target);
             void        asm_jtbl(LIns* ins, NIns** table);
             void        asm_insert_random_nop();
-            void        emitJumpTable(SwitchInfo* si, NIns* target);
             void        assignSavedRegs();
             void        reserveSavedRegs();
             void        assignParamRegs();

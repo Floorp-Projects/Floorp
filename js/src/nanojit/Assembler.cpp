@@ -815,17 +815,6 @@ namespace nanojit
         }
     }
 
-#ifdef NANOJIT_IA32
-    void Assembler::patch(SideExit* exit, SwitchInfo* si)
-    {
-        for (GuardRecord* lr = exit->guards; lr; lr = lr->next) {
-            Fragment *frag = lr->exit->target;
-            NanoAssert(frag->fragEntry != 0);
-            si->table[si->index] = frag->fragEntry;
-        }
-    }
-#endif
-
     NIns* Assembler::asm_exit(LIns* guard)
     {
         SideExit *exit = guard->record()->exit;
@@ -1468,7 +1457,6 @@ namespace nanojit
 
         // The trace must end with one of these opcodes.  Mark it as live.
         NanoAssert(reader->finalIns()->isop(LIR_x)    ||
-                   reader->finalIns()->isop(LIR_xtbl) ||
                    reader->finalIns()->isRet()        ||
                    isLiveOpcode(reader->finalIns()->opcode()));
 
@@ -1932,17 +1920,6 @@ namespace nanojit
                 case LIR_xbarrier:
                     break;
 
-                case LIR_xtbl: {
-                    ins->oprnd1()->setResultLive();
-#ifdef NANOJIT_IA32
-                    NIns* exit = asm_exit(ins); // does intersectRegisterState()
-                    asm_switch(ins, exit);
-#else
-                    NanoAssertMsg(0, "Not supported for this architecture");
-#endif
-                    break;
-                }
-
                 case LIR_xt:
                 case LIR_xf:
                     ins->oprnd1()->setResultLive();
@@ -2108,18 +2085,6 @@ namespace nanojit
             debug_only( pageValidate(); )
             debug_only( resourceConsistencyCheck();  )
         }
-    }
-
-    /*
-     * Write a jump table for the given SwitchInfo and store the table
-     * address in the SwitchInfo. Every entry will initially point to
-     * target.
-     */
-    void Assembler::emitJumpTable(SwitchInfo* si, NIns* target)
-    {
-        si->table = (NIns **) alloc.alloc(si->count * sizeof(NIns*));
-        for (uint32_t i = 0; i < si->count; ++i)
-            si->table[i] = target;
     }
 
     void Assembler::assignSavedRegs()

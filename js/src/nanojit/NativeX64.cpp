@@ -2053,21 +2053,16 @@ namespace nanojit
         GuardRecord *lr = 0;
         bool destKnown = (frag && frag->fragEntry);
         // Generate jump to epilog and initialize lr.
-        // If the guard is LIR_xtbl, use a jump table with epilog in every entry
-        if (guard->isop(LIR_xtbl)) {
-            NanoAssert(!guard->isop(LIR_xtbl));
-        } else {
-            // If the guard already exists, use a simple jump.
-            if (destKnown) {
-                JMP(frag->fragEntry);
-                lr = 0;
-            } else {  // target doesn't exist. Use 0 jump offset and patch later
-                if (!_epilogue)
-                    _epilogue = genEpilogue();
-                lr = guard->record();
-                JMPl(_epilogue);
-                lr->jmp = _nIns;
-            }
+        // If the guard already exists, use a simple jump.
+        if (destKnown) {
+            JMP(frag->fragEntry);
+            lr = 0;
+        } else {  // target doesn't exist. Use 0 jump offset and patch later
+            if (!_epilogue)
+                _epilogue = genEpilogue();
+            lr = guard->record();
+            JMPl(_epilogue);
+            lr->jmp = _nIns;
         }
 
         // profiling for the exit
