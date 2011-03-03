@@ -1005,14 +1005,14 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
     origobj = obj;
     OBJ_TO_INNER_OBJECT(cx, obj);
     if (!obj)
-        return JS_FALSE;
+        return false;
 
     AutoValueRooter idroot(cx);
     if (JSID_IS_INT(id)) {
         propid = id;
     } else {
         if (!js_ValueToStringId(cx, IdToValue(id), &propid))
-            return JS_FALSE;
+            return false;
         propid = js_CheckForStringIndex(propid);
         idroot.set(IdToValue(propid));
     }
@@ -1022,18 +1022,18 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
      * again to make sure that we're allowed to set a watch point.
      */
     if (origobj != obj && !CheckAccess(cx, obj, propid, JSACC_WATCH, &v, &attrs))
-        return JS_FALSE;
+        return false;
 
     if (!obj->isNative()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH,
                              obj->getClass()->name);
-        return JS_FALSE;
+        return false;
     }
 
     JSObject *pobj;
     JSProperty *prop;
     if (!js_LookupProperty(cx, obj, propid, &pobj, &prop))
-        return JS_FALSE;
+        return false;
     const Shape *shape = (Shape *) prop;
     JSRuntime *rt = cx->runtime;
     if (!shape) {
@@ -1043,7 +1043,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
             /* Make a new property in obj so we can watch for the first set. */
             if (!js_DefineNativeProperty(cx, obj, propid, UndefinedValue(), NULL, NULL,
                                          JSPROP_ENUMERATE, 0, 0, &prop)) {
-                return JS_FALSE;
+                return false;
             }
             shape = (Shape *) prop;
         }
@@ -1056,6 +1056,13 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         intN shortid;
 
         if (pobj->isNative()) {
+            if (shape->isMethod()) {
+                Value method = ObjectValue(shape->methodObject());
+                shape = pobj->methodReadBarrier(cx, *shape, &method);
+                if (!shape)
+                    return false;
+            }
+
             valroot.set(pobj->containsSlot(shape->slot)
                         ? pobj->nativeGetSlot(shape->slot)
                         : UndefinedValue());
@@ -1067,7 +1074,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         } else {
             if (!pobj->getProperty(cx, propid, valroot.addr()) ||
                 !pobj->getAttributes(cx, propid, &attrs)) {
-                return JS_FALSE;
+                return false;
             }
             getter = NULL;
             setter = NULL;
@@ -1079,7 +1086,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         if (!js_DefineNativeProperty(cx, obj, propid, valroot.value(),
                                      getter, setter, attrs, flags,
                                      shortid, &prop)) {
-            return JS_FALSE;
+            return false;
         }
         shape = (Shape *) prop;
     }
@@ -1094,7 +1101,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         DBG_UNLOCK(rt);
         wp = (JSWatchPoint *) cx->malloc(sizeof *wp);
         if (!wp)
-            return JS_FALSE;
+            return false;
         wp->handler = NULL;
         wp->closure = NULL;
         wp->object = obj;
@@ -1107,7 +1114,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
             JS_INIT_CLIST(&wp->links);
             DBG_LOCK(rt);
             DropWatchPointAndUnlock(cx, wp, JSWP_LIVE);
-            return JS_FALSE;
+            return false;
         }
 
         /*
@@ -1130,7 +1137,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
     wp->handler = handler;
     wp->closure = reinterpret_cast<JSObject*>(closure);
     DBG_UNLOCK(rt);
-    return JS_TRUE;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
