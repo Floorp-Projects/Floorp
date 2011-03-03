@@ -323,8 +323,8 @@ protected:
   PRBool ParseImportRule(RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool GatherURL(nsString& aURL);
   PRBool GatherMedia(nsMediaList* aMedia,
-                     PRUnichar aStopSymbol);
-  PRBool ParseMediaQuery(PRUnichar aStopSymbol, nsMediaQuery **aQuery,
+                     PRBool aInAtRule);
+  PRBool ParseMediaQuery(PRBool aInAtRule, nsMediaQuery **aQuery,
                          PRBool *aParsedSomething, PRBool *aHitStop);
   PRBool ParseMediaQueryExpression(nsMediaQuery* aQuery);
   void ProcessImport(const nsString& aURLSpec,
@@ -1178,7 +1178,7 @@ CSSParserImpl::ParseMediaList(const nsSubstring& aBuffer,
   // to a media query.  (The main substative difference is the relative
   // precedence of commas and paretheses.)
 
-  if (!GatherMedia(aMediaList, PRUnichar(0))) {
+  if (!GatherMedia(aMediaList, PR_FALSE)) {
     aMediaList->Clear();
     aMediaList->SetNonEmpty(); // don't match anything
     if (!mHTMLMediaMode) {
@@ -1568,7 +1568,7 @@ CSSParserImpl::GatherURL(nsString& aURL)
 }
 
 PRBool
-CSSParserImpl::ParseMediaQuery(PRUnichar aStopSymbol,
+CSSParserImpl::ParseMediaQuery(PRBool aInAtRule,
                                nsMediaQuery **aQuery,
                                PRBool *aParsedSomething,
                                PRBool *aHitStop)
@@ -1583,7 +1583,7 @@ CSSParserImpl::ParseMediaQuery(PRUnichar aStopSymbol,
   if (!GetToken(PR_TRUE)) {
     *aHitStop = PR_TRUE;
     // expected termination by EOF
-    if (aStopSymbol == PRUnichar(0))
+    if (!aInAtRule)
       return PR_TRUE;
 
     // unexpected termination by EOF
@@ -1591,8 +1591,8 @@ CSSParserImpl::ParseMediaQuery(PRUnichar aStopSymbol,
     return PR_TRUE;
   }
 
-  if (eCSSToken_Symbol == mToken.mType &&
-      mToken.mSymbol == aStopSymbol) {
+  if (eCSSToken_Symbol == mToken.mType && aInAtRule &&
+      (mToken.mSymbol == ';' || mToken.mSymbol == '{')) {
     *aHitStop = PR_TRUE;
     UngetToken();
     return PR_TRUE;
@@ -1649,7 +1649,7 @@ CSSParserImpl::ParseMediaQuery(PRUnichar aStopSymbol,
     if (!GetToken(PR_TRUE)) {
       *aHitStop = PR_TRUE;
       // expected termination by EOF
-      if (aStopSymbol == PRUnichar(0))
+      if (!aInAtRule)
         break;
 
       // unexpected termination by EOF
@@ -1657,8 +1657,8 @@ CSSParserImpl::ParseMediaQuery(PRUnichar aStopSymbol,
       break;
     }
 
-    if (eCSSToken_Symbol == mToken.mType &&
-        mToken.mSymbol == aStopSymbol) {
+    if (eCSSToken_Symbol == mToken.mType && aInAtRule &&
+        (mToken.mSymbol == ';' || mToken.mSymbol == '{')) {
       *aHitStop = PR_TRUE;
       UngetToken();
       break;
@@ -1686,22 +1686,27 @@ CSSParserImpl::ParseMediaQuery(PRUnichar aStopSymbol,
 // (out-of-memory).
 PRBool
 CSSParserImpl::GatherMedia(nsMediaList* aMedia,
-                           PRUnichar aStopSymbol)
+                           PRBool aInAtRule)
 {
   for (;;) {
     nsAutoPtr<nsMediaQuery> query;
     PRBool parsedSomething, hitStop;
-    if (!ParseMediaQuery(aStopSymbol, getter_Transfers(query),
+    if (!ParseMediaQuery(aInAtRule, getter_Transfers(query),
                          &parsedSomething, &hitStop)) {
       NS_ASSERTION(!hitStop, "should return true when hit stop");
       if (NS_FAILED(mScanner.GetLowLevelError())) {
         return PR_FALSE;
       }
-      const PRUnichar stopChars[] =
-        { PRUnichar(','), aStopSymbol /* may be null */, PRUnichar(0) };
-      SkipUntilOneOf(stopChars);
+      if (aInAtRule) {
+        const PRUnichar stopChars[] =
+          { PRUnichar(','), PRUnichar('{'), PRUnichar(';'), PRUnichar(0) };
+        SkipUntilOneOf(stopChars);
+      } else {
+        SkipUntil(',');
+      }
       // Rely on SkipUntilOneOf leaving mToken around as the last token read.
-      if (mToken.mType == eCSSToken_Symbol && mToken.mSymbol == aStopSymbol) {
+      if (mToken.mType == eCSSToken_Symbol && aInAtRule &&
+          (mToken.mSymbol == '{' || mToken.mSymbol == ';')) {
         UngetToken();
         hitStop = PR_TRUE;
       }
@@ -1884,7 +1889,7 @@ CSSParserImpl::ParseImportRule(RuleAppendFunc aAppendFunc, void* aData)
   }
 
   if (!ExpectSymbol(';', PR_TRUE)) {
-    if (!GatherMedia(media, ';') ||
+    if (!GatherMedia(media, PR_TRUE) ||
         !ExpectSymbol(';', PR_TRUE)) {
       REPORT_UNEXPECTED_TOKEN(PEImportUnexpected);
       // don't advance section, simply ignore invalid @import
@@ -1993,7 +1998,7 @@ CSSParserImpl::ParseMediaRule(RuleAppendFunc aAppendFunc, void* aData)
     return PR_FALSE;
   }
 
-  if (GatherMedia(media, '{')) {
+  if (GatherMedia(media, PR_TRUE)) {
     // XXXbz this could use better error reporting throughout the method
     nsRefPtr<nsCSSMediaRule> rule(new nsCSSMediaRule());
     // Append first, so when we do SetMedia() the rule
