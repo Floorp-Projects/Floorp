@@ -600,6 +600,18 @@ JS_SameValue(JSContext *cx, jsval v1, jsval v2, JSBool *same)
     return SameValue(cx, Valueify(v1), Valueify(v2), same);
 }
 
+JS_PUBLIC_API(JSBool)
+JS_IsBuiltinEvalFunction(JSFunction *fun)
+{
+    return IsBuiltinEvalFunction(fun);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_IsBuiltinFunctionConstructor(JSFunction *fun)
+{
+    return IsBuiltinFunctionConstructor(fun);
+}
+
 /************************************************************************/
 
 /*

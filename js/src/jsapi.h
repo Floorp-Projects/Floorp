@@ -707,6 +707,14 @@ JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2, JSBool *equal);
 extern JS_PUBLIC_API(JSBool)
 JS_SameValue(JSContext *cx, jsval v1, jsval v2, JSBool *same);
 
+/* True iff fun is the global eval function. */
+extern JS_PUBLIC_API(JSBool)
+JS_IsBuiltinEvalFunction(JSFunction *fun);
+
+/* True iff fun is the Function constructor. */
+extern JS_PUBLIC_API(JSBool)
+JS_IsBuiltinFunctionConstructor(JSFunction *fun);
+
 /************************************************************************/
 
 /*

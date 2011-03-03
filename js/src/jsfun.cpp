@@ -2638,7 +2638,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
 
 namespace js {
 
-JS_FRIEND_API(bool)
+bool
 IsBuiltinFunctionConstructor(JSFunction *fun)
 {
     return fun->maybeNative() == Function;

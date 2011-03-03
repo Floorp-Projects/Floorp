@@ -1306,7 +1306,7 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
     return ok;
 }
 
-JS_FRIEND_API(bool)
+bool
 IsBuiltinEvalFunction(JSFunction *fun)
 {
     return fun->maybeNative() == eval;
