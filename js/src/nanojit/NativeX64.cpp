@@ -2083,7 +2083,7 @@ namespace nanojit
         asm_immq(RAX, uintptr_t(lr), /*canClobberCCs*/true);
     }
 
-    void Assembler::nInit(AvmCore*) {
+    void Assembler::nInit() {
         nHints[LIR_calli]  = rmask(retRegs[0]);
         nHints[LIR_calld]  = rmask(XMM0);
         nHints[LIR_paramp] = PREFER_SPECIAL;
