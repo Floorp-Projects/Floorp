@@ -69,7 +69,7 @@ namespace nanojit
      *
      *    - merging paths ( build a graph? ), possibly use external rep to drive codegen
      */
-    Assembler::Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, AvmCore* core, LogControl* logc, const Config& config)
+    Assembler::Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, LogControl* logc, const Config& config)
         : alloc(alloc)
         , _codeAlloc(codeAlloc)
         , _dataAlloc(dataAlloc)
@@ -92,7 +92,7 @@ namespace nanojit
     #endif
         , _config(config)
     {
-        nInit(core);
+        nInit();
         (void)logc;
         verbose_only( _logc = logc; )
         verbose_only( _outputCache = 0; )

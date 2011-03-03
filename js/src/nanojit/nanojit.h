@@ -101,8 +101,6 @@ namespace nanojit
      * START AVM bridging definitions
      * -------------------------------------------
      */
-    typedef avmplus::AvmCore AvmCore;
-
     const uint32_t MAXARGS = 8;
 
     #if defined(_DEBUG)
