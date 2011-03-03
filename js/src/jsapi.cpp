@@ -603,7 +603,7 @@ JS_SameValue(JSContext *cx, jsval v1, jsval v2, JSBool *same)
 JS_PUBLIC_API(JSBool)
 JS_IsBuiltinEvalFunction(JSFunction *fun)
 {
-    return IsBuiltinEvalFunction(fun);
+    return IsAnyBuiltinEval(fun);
 }
 
 JS_PUBLIC_API(JSBool)

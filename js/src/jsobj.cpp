@@ -1187,7 +1187,7 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
 
     /* ES5 15.1.2.1 steps 2-8. */
     JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, Jsvalify(vp)));
-    JS_ASSERT(IsBuiltinEvalFunction(callee->getFunctionPrivate()));
+    JS_ASSERT(IsAnyBuiltinEval(callee->getFunctionPrivate()));
     JSPrincipals *principals = js_EvalFramePrincipals(cx, callee, caller);
 
     /*
@@ -1307,7 +1307,15 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
 }
 
 bool
-IsBuiltinEvalFunction(JSFunction *fun)
+IsBuiltinEvalForScope(JSObject *scopeChain, const Value &v)
+{
+    JSObject *global = scopeChain->getGlobal();
+    JS_ASSERT((global->getClass()->flags & JSCLASS_GLOBAL_FLAGS) == JSCLASS_GLOBAL_FLAGS);
+    return global->getReservedSlot(JSRESERVED_GLOBAL_EVAL) == v;
+}
+
+bool
+IsAnyBuiltinEval(JSFunction *fun)
 {
     return fun->maybeNative() == eval;
 }
@@ -3777,8 +3785,13 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
 
     /* ECMA (15.1.2.1) says 'eval' is a property of the global object. */
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.evalAtom);
-    if (!js_DefineFunction(cx, obj, id, eval, 1, JSFUN_STUB_GSOPS))
+    JSObject *evalobj = js_DefineFunction(cx, obj, id, eval, 1, JSFUN_STUB_GSOPS);
+    if (!evalobj)
         return NULL;
+    if (obj->isGlobal()) {
+        if (!js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_EVAL, ObjectValue(*evalobj)))
+            return NULL;
+    }
 
     return proto;
 }

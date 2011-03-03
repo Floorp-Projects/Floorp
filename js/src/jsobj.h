@@ -1940,8 +1940,16 @@ extern bool
 EvalKernel(JSContext *cx, uintN argc, js::Value *vp, EvalType evalType, JSStackFrame *caller,
            JSObject *scopeobj);
 
+/*
+ * True iff |v| is the built-in eval function for the global object that
+ * corresponds to |scopeChain|.
+ */
 extern bool
-IsBuiltinEvalFunction(JSFunction *fun);
+IsBuiltinEvalForScope(JSObject *scopeChain, const js::Value &v);
+
+/* True iff fun is a built-in eval function. */
+extern bool
+IsAnyBuiltinEval(JSFunction *fun);
 
 }
 
