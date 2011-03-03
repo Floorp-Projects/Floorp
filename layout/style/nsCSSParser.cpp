@@ -310,7 +310,7 @@ protected:
   void SkipUntil(PRUnichar aStopSymbol);
   void SkipUntilOneOf(const PRUnichar* aStopSymbolChars);
   void SkipRuleSet(PRBool aInsideBraces);
-  PRBool SkipAtRule();
+  PRBool SkipAtRule(PRBool aInsideBlock);
   PRBool SkipDeclaration(PRBool aCheckForBraces);
 
   PRBool PushGroup(nsICSSGroupRule* aRule);
@@ -1434,7 +1434,7 @@ CSSParserImpl::NextIdent()
 }
 
 PRBool
-CSSParserImpl::SkipAtRule()
+CSSParserImpl::SkipAtRule(PRBool aInsideBlock)
 {
   for (;;) {
     if (!GetToken(PR_TRUE)) {
@@ -1444,6 +1444,11 @@ CSSParserImpl::SkipAtRule()
     if (eCSSToken_Symbol == mToken.mType) {
       PRUnichar symbol = mToken.mSymbol;
       if (symbol == ';') {
+        break;
+      }
+      if (aInsideBlock && symbol == '}') {
+        // The closing } doesn't belong to us.
+        UngetToken();
         break;
       }
       if (symbol == '{') {
@@ -1465,6 +1470,12 @@ PRBool
 CSSParserImpl::ParseAtRule(RuleAppendFunc aAppendFunc,
                            void* aData)
 {
+  // If we ever allow nested at-rules, we need to be very careful about
+  // the error handling rules in the CSS spec.  In particular, we need
+  // to pass in to ParseAtRule whether we're inside a block, we need to
+  // ensure that all the individual at-rule parsing functions terminate
+  // immediately when they hit a '}', and then we need to pass whether
+  // we're inside a block to SkipAtRule below.
   nsCSSSection newSection;
   PRBool (CSSParserImpl::*parseFunc)(RuleAppendFunc, void*);
 
@@ -1505,13 +1516,13 @@ CSSParserImpl::ParseAtRule(RuleAppendFunc aAppendFunc,
       OUTPUT_ERROR();
     }
     // Skip over unsupported at rule, don't advance section
-    return SkipAtRule();
+    return SkipAtRule(PR_FALSE);
   }
 
   if (!(this->*parseFunc)(aAppendFunc, aData)) {
     // Skip over invalid at rule, don't advance section
     OUTPUT_ERROR();
-    return SkipAtRule();
+    return SkipAtRule(PR_FALSE);
   }
 
   mSection = newSection;
@@ -1972,7 +1983,7 @@ CSSParserImpl::ParseGroupRule(nsICSSGroupRule* aRule,
       break;
     }
     if (eCSSToken_AtKeyword == mToken.mType) {
-      SkipAtRule(); // group rules cannot contain @rules
+      SkipAtRule(PR_TRUE); // group rules cannot contain @rules
       continue;
     }
     UngetToken();
