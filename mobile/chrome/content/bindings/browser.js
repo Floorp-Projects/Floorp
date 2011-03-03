@@ -337,11 +337,17 @@ let ContentScroll =  {
         // Set displayport. We want to set this after setting the scroll offset, because
         // it is calculated based on the scroll offset.
         let scrollOffset = this.getScrollOffsetForElement(element);
+        let x = displayport.x - scrollOffset.x;
+        let y = displayport.y - scrollOffset.y;
+
+        if (json.id == 1) {
+          x = Math.round(x * json.scale) / json.scale;
+          y = Math.round(y * json.scale) / json.scale;
+        }
+
         let win = element.ownerDocument.defaultView;
         let winCwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-        winCwu.setDisplayPort(
-          displayport.x - scrollOffset.x, displayport.y - scrollOffset.y,
-          displayport.width, displayport.height);
+        winCwu.setDisplayPort(x, y, displayport.width, displayport.height);
 
         break;
       }
