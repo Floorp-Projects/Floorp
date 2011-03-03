@@ -556,9 +556,6 @@ InitJITStatsClass(JSContext *cx, JSObject *glob)
 #define AUDIT(x) ((void)0)
 #endif /* JS_JIT_SPEW */
 
-static avmplus::AvmCore s_core = avmplus::AvmCore();
-static avmplus::AvmCore* core = &s_core;
-
 #ifdef JS_JIT_SPEW
 static void
 DumpPeerStability(TraceMonitor* tm, const void* ip, JSObject* globalObj, uint32 globalShape, uint32 argc);
@@ -572,6 +569,8 @@ DumpPeerStability(TraceMonitor* tm, const void* ip, JSObject* globalObj, uint32 
  * I think it's harmless tho.
  */
 static bool did_we_check_processor_features = false;
+
+nanojit::Config NJConfig;
 
 /* ------ Debug logging control ------ */
 
@@ -2365,7 +2364,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, TraceMonitor *tm,
 #endif
 
     /* This creates the LIR writer pipeline. */
-    w.init(&LogController);
+    w.init(&LogController, &NJConfig);
 
     w.start();
 
@@ -2855,8 +2854,8 @@ TraceMonitor::flush()
         globalStates[i].globalSlots = new (*dataAlloc) SlotList(dataAlloc);
     }
 
-    assembler = new (*dataAlloc) Assembler(*codeAlloc, *dataAlloc, *dataAlloc, core,
-                                           &LogController, avmplus::AvmCore::config);
+    assembler = new (*dataAlloc) Assembler(*codeAlloc, *dataAlloc, *dataAlloc,
+                                           &LogController, NJConfig);
     verbose_only( branches = NULL; )
 
     PodArrayZero(vmfragments);
@@ -7704,9 +7703,8 @@ InitJIT(TraceMonitor *tm)
 
     if (!did_we_check_processor_features) {
 #if defined NANOJIT_IA32
-        avmplus::AvmCore::config.i386_use_cmov =
-            avmplus::AvmCore::config.i386_sse2 = CheckForSSE2();
-        avmplus::AvmCore::config.i386_fixed_esp = true;
+        NJConfig.i386_use_cmov = NJConfig.i386_sse2 = CheckForSSE2();
+        NJConfig.i386_fixed_esp = true;
 #endif
 #if defined NANOJIT_ARM
 
@@ -7717,9 +7715,9 @@ InitJIT(TraceMonitor *tm)
 
         enable_debugger_exceptions();
 
-        avmplus::AvmCore::config.arm_vfp        = arm_vfp;
-        avmplus::AvmCore::config.soft_float     = !arm_vfp;
-        avmplus::AvmCore::config.arm_arch       = arm_arch;
+        NJConfig.arm_vfp            = arm_vfp;
+        NJConfig.soft_float         = !arm_vfp;
+        NJConfig.arm_arch           = arm_arch;
 
         // Sanity-check the configuration detection.
         //  * We don't understand architectures prior to ARMv4.
