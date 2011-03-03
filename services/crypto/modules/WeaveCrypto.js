@@ -88,10 +88,26 @@ WeaveCrypto.prototype = {
             this.initNSS();
             this.initAlgorithmSettings();   // Depends on NSS.
             this.initIVSECItem();
+            this.initSharedInts();
         } catch (e) {
             this.log("init failed: " + e);
             throw e;
         }
+    },
+
+    // Avoid allocating new temporary ints on every run of _commonCrypt.
+    _commonCryptSignedOutputSize:       null,
+    _commonCryptSignedOutputSizeAddr:   null,
+    _commonCryptUnsignedOutputSize:     null,
+    _commonCryptUnsignedOutputSizeAddr: null,
+
+    initSharedInts: function initSharedInts() {
+        let signed   = new ctypes.int();
+        let unsigned = new ctypes.unsigned_int();
+        this._commonCryptSignedOutputSize       = signed;
+        this._commonCryptUnsignedOutputSize     = unsigned;
+        this._commonCryptSignedOutputSizeAddr   = signed.address();
+        this._commonCryptUnsignedOutputSizeAddr = unsigned.address();
     },
 
     /**
@@ -411,8 +427,7 @@ WeaveCrypto.prototype = {
         // we don't hit bug 573841.
         return "" + outputBuffer.readString() + "";
     },
-
-
+        
     _commonCrypt : function (input, output, symmetricKey, iv, operation) {
         this.log("_commonCrypt() called");
         iv = atob(iv);
@@ -437,23 +452,20 @@ WeaveCrypto.prototype = {
                 throw Components.Exception("couldn't create context for symkey", Cr.NS_ERROR_FAILURE);
 
             let maxOutputSize = output.length;
-            let tmpOutputSize = new ctypes.int(); // Note 1: NSS uses a signed int here...
-
-            if (this.nss.PK11_CipherOp(ctx, output, tmpOutputSize.address(), maxOutputSize, input, input.length))
+            if (this.nss.PK11_CipherOp(ctx, output, this._commonCryptSignedOutputSizeAddr, maxOutputSize, input, input.length))
                 throw Components.Exception("cipher operation failed", Cr.NS_ERROR_FAILURE);
 
-            let actualOutputSize = tmpOutputSize.value;
+            let actualOutputSize = this._commonCryptSignedOutputSize.value;
             let finalOutput = output.addressOfElement(actualOutputSize);
             maxOutputSize -= actualOutputSize;
 
             // PK11_DigestFinal sure sounds like the last step for *hashing*, but it
             // just seems to be an odd name -- NSS uses this to finish the current
             // cipher operation. You'd think it would be called PK11_CipherOpFinal...
-            let tmpOutputSize2 = new ctypes.unsigned_int(); // Note 2: ...but an unsigned here!
-            if (this.nss.PK11_DigestFinal(ctx, finalOutput, tmpOutputSize2.address(), maxOutputSize))
+            if (this.nss.PK11_DigestFinal(ctx, finalOutput, this._commonCryptUnsignedOutputSizeAddr, maxOutputSize))
                 throw Components.Exception("cipher finalize failed", Cr.NS_ERROR_FAILURE);
 
-            actualOutputSize += tmpOutputSize2.value;
+            actualOutputSize += this._commonCryptUnsignedOutputSize.value;
             let newOutput = ctypes.cast(output, ctypes.unsigned_char.array(actualOutputSize));
             return newOutput;
         } catch (e) {
