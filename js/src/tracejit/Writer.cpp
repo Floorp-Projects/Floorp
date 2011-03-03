@@ -99,7 +99,7 @@ Writer::init(LogControl *logc_, Config *njConfig_)
 
     LirWriter *&lir = InitConst(this->lir);
     CseFilter *&cse = InitConst(this->cse);
-    lir = new (alloc) LirBufWriter(lirbuf);
+    lir = new (alloc) LirBufWriter(lirbuf, *njConfig);
 #ifdef DEBUG
     ValidateWriter *validate2;
     lir = validate2 =
