@@ -5694,7 +5694,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBoxPackKTable);
   case eCSSProperty_box_ordinal_group:
-    return ParseNonNegativeVariant(aValue, VARIANT_HI, nsnull);
+    return ParsePositiveNonZeroVariant(aValue, VARIANT_HI, nsnull);
 #ifdef MOZ_SVG
   case eCSSProperty_clip_path:
     return ParseVariant(aValue, VARIANT_HUO, nsnull);
