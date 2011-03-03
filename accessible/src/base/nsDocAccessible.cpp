@@ -1503,6 +1503,15 @@ nsDocAccessible::CacheChildren()
 void
 nsDocAccessible::NotifyOfInitialUpdate()
 {
+  // The content element may be changed before the initial update and then we
+  // miss the notification (since content tree change notifications are ignored
+  // prior to initial update). Make sure the content element is valid.
+  nsIContent* contentElm = nsCoreUtils::GetRoleContent(mDocument);
+  if (contentElm && mContent != contentElm)
+    mContent = contentElm;
+
+  // Build initial tree.
+  CacheChildrenInSubtree(this);
 }
 
 void
