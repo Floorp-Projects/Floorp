@@ -5203,6 +5203,7 @@ cairo-windows)
         ;;
     esac
     MOZ_PDF_PRINTING=1
+    MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
 cairo-gtk2|cairo-gtk2-x11)
