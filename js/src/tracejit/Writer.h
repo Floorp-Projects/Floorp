@@ -802,10 +802,6 @@ class Writer
         return lir->insGuard(nj::LIR_xt, cond, gr);
     }
 
-    nj::LIns *xtbl(nj::LIns *index, nj::GuardRecord *gr) const {
-        return lir->insGuard(nj::LIR_xtbl, index, gr);
-    }
-
     nj::LIns *xbarrier(nj::GuardRecord *gr) const {
         return lir->insGuard(nj::LIR_xbarrier, /* cond = */NULL, gr);
     }
