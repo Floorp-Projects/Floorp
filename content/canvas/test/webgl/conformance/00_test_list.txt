@@ -4,9 +4,12 @@ array-unit-tests.html
 bad-arguments-test.html
 buffer-bind-test.html
 buffer-data-array-buffer.html
+buffer-preserve-test.html
 canvas-test.html
 constants.html
 context-attributes-alpha-depth-stencil-antialias.html
+context-lost-restored.html
+context-lost.html
 context-type-test.html
 copy-tex-image-and-sub-image-2d.html
 draw-arrays-out-of-bounds.html
@@ -24,7 +27,11 @@ gl-enum-tests.html
 gl-get-active-attribute.html
 gl-get-active-uniform.html
 gl-get-calls.html
+gl-getshadersource.html
 gl-getstring.html
+gl-min-attribs.html
+# gl-min-textures.html
+gl-min-uniforms.html
 gl-object-get-calls.html
 gl-pixelstorei.html
 gl-scissor-test.html
@@ -35,8 +42,9 @@ gl-uniform-bool.html
 gl-uniformmatrix4fv.html
 gl-unknown-uniform.html
 gl-vertex-attrib.html
+gl-vertex-attrib-zero-issues.html
 gl-vertexattribpointer.html
-glsl-2types-of-textures-on-same-unit.html
+#glsl-2types-of-textures-on-same-unit.html
 glsl-conformance.html
 incorrect-context-object-behaviour.html
 index-validation-copies-indices.html
@@ -44,6 +52,7 @@ index-validation-crash-with-buffer-sub-data.html
 index-validation-verifies-too-many-indices.html
 index-validation-with-resized-buffer.html
 index-validation.html
+instanceof-test.html
 invalid-UTF-16.html
 invalid-passed-params.html
 is-object.html
@@ -52,6 +61,9 @@ more-than-65536-points.html
 null-object-behaviour.html
 null-uniform-location.html
 object-deletion-behaviour.html
+oes-standard-derivatives.html
+oes-texture-float.html
+oes-vertex-array-object.html
 origin-clean-conformance.html
 point-size.html
 program-test.html
@@ -67,6 +79,7 @@ tex-image-and-uniform-binding-bugs.html
 tex-image-with-format-and-type.html
 tex-image-with-invalid-data.html
 tex-input-validation.html
+tex-sub-image-2d-bad-args.html
 tex-sub-image-2d.html
 texparameter-test.html
 texture-active-bind-2.html
@@ -82,3 +95,5 @@ uniform-samplers-test.html
 uninitialized-test.html
 viewport-unchanged-upon-resize.html
 webgl-specific.html
+more/00_test_list.txt
+

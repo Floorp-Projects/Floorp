@@ -100,6 +100,17 @@ void main()
   foo
 #endif
 </script>
+<script id="fshaderWithUndefinedPreprocessorSymbol" type="text/something-not-javascript">
+#if UNDEFINED_FOO
+  // according to ES GLSL spec 3.4 undefined symbols should fail.
+#else
+  precision mediump float;
+  void main()
+  {
+      gl_FragColor = vec4(0.0,0.0,0.0,1.0);
+  }
+#endif
+</script>
 <script id="fshaderWithFragDepth" type="text/something-not-javascript">
 precision mediump float;
 void main()
@@ -223,6 +234,16 @@ foo
 <script id="vshaderWith__FILE__" type="text/something-not-javascript">
 __FILE__
 </script>
+<script id="vshaderWithIncludeDirective" type="text/something-not-javascript">
+// Sadly I can not force the current path so this could fail beacuse include.vs
+// does not exist, not because #include is disallowed.
+#include "include.vs"
+attribute vec4 vPosition;
+void main()
+{
+    gl_Position = vPosition;
+}
+</script>
 <script id="fshaderWithdFdx" type="text/something-not-javascript">
 #extension GL_OES_standard_derivatives:enable
 precision mediump float;
@@ -240,7 +261,7 @@ void main()
 </script>
 <script id="fshaderWith256CharacterIdentifier" type="text/something-not-javascript">
 precision mediump float;
-uniform float a123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345 = 2.0;
+uniform float a123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345;
 void main()
 {
   gl_FragColor = vec4(a123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345,0.0,0.0,1.0);
@@ -248,10 +269,42 @@ void main()
 </script>
 <script id="fshaderWith257CharacterIdentifier" type="text/something-not-javascript">
 precision mediump float;
-uniform float a1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456 = 2.0;
+uniform float a1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456;
 void main()
 {
   gl_FragColor = vec4(a1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456,0.0,0.0,1.0);
+}
+</script>
+<script id="fshaderWithLongLine" type="text/something-not-javascript">
+precision mediump float;
+uniform float fooo;
+#if defined(someSymbolNotDefined)
+#error long
+#endif
+void main()
+{
+    gl_FragColor = vec4(fooo+fooo+fooo+fooo, fooo+fooo+fooo+fooo, fooo+fooo+fooo+fooo, 1.0);
+}
+</script>
+<script id="fshaderWithErrorDirective" type="text/something-not-javascript">
+#error testing123 testing123
+void main()
+{
+    gl_FragColor = vec4(0,0,0,0);
+}
+</script>
+<script id="fshaderWithQuotedErrorDirective" type="text/something-not-javascript">
+#error "testing123 testing123" // will return INVALID_VALUE. See WebGL 6.18
+void main()
+{
+    gl_FragColor = vec4(0,0,0,0);
+}
+</script>
+<script id="fshaderWithNonASCIIErrorDirective" type="text/something-not-javascript">
+#error ‚±‚ê‚Í‚`‚r‚b‚h‚h‚Å‚Í‚È‚¢ // will return INVALID_VALUE. See WebGL 6.18
+void main()
+{
+    gl_FragColor = vec4(0,0,0,0);
 }
 </script>
 <canvas id="canvas" width="2" height="2"> </canvas>
@@ -333,6 +386,13 @@ if (!gl) {
       fShaderSuccess: true,
       linkSuccess: true,
       passMsg: 'fragment shader that uses __VERSION__==100 should succeed',
+    },
+    { vShaderId: 'vshader',
+      vShaderSuccess: true,
+      fShaderId: 'fshaderWithUndefinedPreprocessorSymbol',
+      fShaderSuccess: false,
+      linkSuccess: false,
+      passMsg: 'fragment shader undefined preprocessor symbol should fail (3.4)',
     },
     { vShaderId: 'vshader',
       vShaderSuccess: true,
@@ -461,23 +521,72 @@ if (!gl) {
       linkSuccess: false,
       passMsg: 'vertex shader uses #line directive should report correct line',
     },
-// TODO(zmo): adding these tests back once the limit is added to WebGL spec.
-/*
+    { vShaderId: 'vshaderWithIncludeDirective',
+      vShaderSuccess: false,
+      fShaderId: 'fshader',
+      fShaderSuccess: true,
+      linkSuccess: false,
+      passMsg: 'vertex shader uses #include should fail',
+    },
+    //{ vShaderId: 'vshader',
+    //  vShaderSuccess: true,
+    //  fShaderId: 'fshaderWith257CharacterIdentifier',
+    //  fShaderSuccess: false,
+    //  linkSuccess: false,
+    //  passMsg: 'shader that uses 257 character identifier should fail',
+    //},
     { vShaderId: 'vshader',
       vShaderSuccess: true,
       fShaderId: 'fshaderWith256CharacterIdentifier',
       fShaderSuccess: true,
       linkSuccess: true,
-      passMsg: 'shared that uses 256 character identifier should succeed',
+      passMsg: 'shader that uses 256 character identifier should succeed',
     },
     { vShaderId: 'vshader',
       vShaderSuccess: true,
-      fShaderId: 'fshaderWith257CharacterIdentifier',
+      fShaderId: 'fshaderWithLongLine',
+      fShaderSuccess: true,
+      fShaderPrep: function(str) {
+        function expand(str, re, replacement, count) {
+          for (var ii = 0; ii < count; ++ii) {
+            str = str.replace(re, replacement);
+          }
+          return str;
+        }
+        str = expand(str, new RegExp(" ", 'g'), "  ", 12);
+        str = expand(str, new RegExp("0", 'g'), "00", 8);
+        str = expand(str, new RegExp("fooo", 'g'), "fooofooo", 6);
+        str = expand(str, new RegExp("long", 'g'), "longlong", 6);
+        //debug("len:" + str.length);
+        //debug(str);
+        return str;
+      },
+      linkSuccess: true,
+      passMsg: 'shader that uses long lines should succeed',
+    },
+    { vShaderId: 'vshader',
+      vShaderSuccess: true,
+      fShaderId: 'fshaderWithErrorDirective',
+      fShaderSuccess: false,
+      fShaderTest: (function() {
+        return wtu.getLastError().indexOf("testing123 testing123") >= 0; }),
+      linkSuccess: false,
+      passMsg: "error directive returns error user's error message",
+    },
+    { vShaderId: 'vshader',
+      vShaderSuccess: true,
+      fShaderId: 'fshaderWithQuotedErrorDirective',
       fShaderSuccess: false,
       linkSuccess: false,
-      passMsg: 'shared that uses 257 character identifier should fail',
+      passMsg: "error directive using quotes fails",
     },
-*/
+    { vShaderId: 'vshader',
+      vShaderSuccess: true,
+      fShaderId: 'fshaderWithNonASCIIErrorDirective',
+      fShaderSuccess: false,
+      linkSuccess: false,
+      passMsg: "error directive using characters outside of allowed set fails",
+    }
   ];
 
   // Read in all the shader source.
@@ -548,7 +657,9 @@ if (!gl) {
                   info.passMsg
     log(passMsg);
     //debug(info.fShaderId);
-    var vShader = wtu.loadShader(gl, info.vShaderSource, gl.VERTEX_SHADER);
+    var vSource = info.vShaderPrep ? info.vShaderPrep(info.vShaderSource) :
+      info.vShaderSource;
+    var vShader = wtu.loadShader(gl, vSource, gl.VERTEX_SHADER);
     if (info.vShaderTest) {
       if (!info.vShaderTest(vShader)) {
         testFailed(passMsg);
@@ -559,7 +670,15 @@ if (!gl) {
       testFailed(passMsg);
       continue;
     }
-    var fShader = wtu.loadShader(gl, info.fShaderSource, gl.FRAGMENT_SHADER);
+    var fSource = info.fShaderPrep ? info.fShaderPrep(info.fShaderSource) :
+      info.fShaderSource;
+    var fShader = wtu.loadShader(gl, fSource, gl.FRAGMENT_SHADER);
+    if (info.fShaderTest) {
+      if (!info.fShaderTest(fShader)) {
+        testFailed(passMsg);
+        continue;
+      }
+    }
     //debug(fShader == null ? "fail" : "succeed");
     if ((fShader != null) != info.fShaderSuccess) {
       testFailed(passMsg);
@@ -573,7 +692,7 @@ if (!gl) {
       gl.linkProgram(program);
       var linked = (gl.getProgramParameter(program, gl.LINK_STATUS) != 0);
       if (!linked) {
-        var error = gl.getProgramInfoLog(shader);
+        var error = gl.getProgramInfoLog(program);
         log("*** Error linking program '"+program+"':"+error);
       }
       if (linked != info.linkSuccess) {

@@ -1,0 +1,38 @@
+# HG changeset patch
+# Parent cabbf6f041cd51f04c31b5f4467a49ecea0f052a
+diff --git a/content/canvas/test/webgl/test_webgl_conformance_test_suite.html b/content/canvas/test/webgl/test_webgl_conformance_test_suite.html
+--- a/content/canvas/test/webgl/test_webgl_conformance_test_suite.html
++++ b/content/canvas/test/webgl/test_webgl_conformance_test_suite.html
+@@ -270,30 +270,30 @@ function start() {
+     if (ctx) {
+         var iframe = document.getElementById("testframe");
+         var testHarness = new WebGLTestHarnessModule.TestHarness(
+             iframe,
+             '00_test_list.txt',
+             function(type, msg, success) {
+                 return reporter.reportFunc(type, msg, success);
+             });
+-        testHarness.setTimeoutDelay(10000); // and make it much higher when running under valgrind.
++        testHarness.setTimeoutDelay(20000); // and make it much higher when running under valgrind.
+         window.webglTestHarness = testHarness;
+         testHarness.runTests();
+     } else {
+         var errmsg = "Can't create a WebGL context";
+         reporter.fullResultsNode.textContent = errmsg;
+         ok(false, errmsg);
+         dump("WebGL mochitest failed: " + errmsg + "\n");
+         reporter.finishedTestSuite();
+     }
+   };
+ 
+   SimpleTest.waitForExplicitFinish();
+-  SimpleTest.requestLongerTimeout(2);
++  SimpleTest.requestLongerTimeout(3);
+ 
+   var kIsWindows = false;
+   var kIsMac = false;
+   var kIsLinux = false;
+   if (navigator.platform.indexOf("Win") == 0)
+     kIsWindows = true;
+   else if (navigator.platform.indexOf("Linux") == 0)
+     kIsLinux = true;
