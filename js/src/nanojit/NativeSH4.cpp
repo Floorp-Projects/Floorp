@@ -1447,7 +1447,7 @@ namespace nanojit
         asm_immi((int)guard_record, R0);
     }
 
-    void Assembler::nInit(avmplus::AvmCore*) {
+    void Assembler::nInit() {
         int fpscr = 0;
 
         __asm__ __volatile__ ("sts fpscr, %0": "=r" (fpscr));

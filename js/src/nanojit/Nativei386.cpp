@@ -917,7 +917,7 @@ namespace nanojit
         debug_only(if (ci->returnType()==ARGTYPE_D) fpu_push();) (void)ci;
     }
 
-    void Assembler::nInit(AvmCore*)
+    void Assembler::nInit()
     {
         nHints[LIR_calli]  = rmask(retRegs[0]);
         nHints[LIR_calld]  = rmask(FST0);

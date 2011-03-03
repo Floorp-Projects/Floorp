@@ -600,9 +600,7 @@ namespace nanojit
         ORI(rs, 0, rd);
     }
 
-    void Assembler::nInit(AvmCore* core)
-    {
-        has_cmov = true;
+    void Assembler::nInit() {
     }
 
     void Assembler::nBeginAssembly() {

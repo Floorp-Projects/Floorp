@@ -284,7 +284,7 @@ namespace nanojit
             void* vtuneHandle;
             #endif
 
-            Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, AvmCore* core, LogControl* logc, const Config& config);
+            Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, LogControl* logc, const Config& config);
 
             void        compile(Fragment *frag, Allocator& alloc, bool optimize
                                 verbose_only(, LInsPrinter*));
@@ -496,7 +496,7 @@ namespace nanojit
             void        handleLoopCarriedExprs(InsList& pending_lives);
 
             // platform specific implementation (see NativeXXX.cpp file)
-            void        nInit(AvmCore *);
+            void        nInit();
             void        nBeginAssembly();
             Register    nRegisterAllocFromSet(RegisterMask set);
             void        nRegisterResetAll(RegAlloc& a);
