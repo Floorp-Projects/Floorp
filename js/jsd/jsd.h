@@ -481,6 +481,11 @@ jsd_GetClosestPC(JSDContext* jsdc, JSDScript* jsdscript, uintN line);
 extern uintN
 jsd_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, jsuword pc);
 
+extern JSBool
+jsd_GetLinePCs(JSDContext* jsdc, JSDScript* jsdscript,
+               uintN startLine, uintN maxLines,
+               uintN* count, uintN** lines, jsuword** pcs);
+
 extern void
 jsd_NewScriptHookProc(
                 JSContext   *cx,
