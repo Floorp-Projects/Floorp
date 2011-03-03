@@ -551,7 +551,7 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName,
     mFragment->lirbuf = mParent.mLirbuf;
     mParent.mFragments[mFragName].fragptr = mFragment;
 
-    mLir = mBufWriter  = new LirBufWriter(mParent.mLirbuf);
+    mLir = mBufWriter  = new LirBufWriter(mParent.mLirbuf, mParent.mConfig);
 #ifdef DEBUG
     if (optimize) {     // don't re-validate if no optimization has taken place
         mLir = mValidateWriter2 =
