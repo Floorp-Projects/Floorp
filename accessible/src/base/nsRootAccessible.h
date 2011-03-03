@@ -124,6 +124,11 @@ public:
 
     nsCaretAccessible *GetCaretAccessible();
 
+  /**
+   * Notify that the sub document presshell was activated.
+   */
+  virtual void DocumentActivated(nsDocAccessible* aDocument);
+
 protected:
   NS_DECL_RUNNABLEMETHOD(nsRootAccessible, FireCurrentFocusEvent)
 

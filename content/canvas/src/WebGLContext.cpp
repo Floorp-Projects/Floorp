@@ -61,6 +61,8 @@
 
 #include "GLContextProvider.h"
 
+#include "gfxCrashReporterUtils.h"
+
 #ifdef MOZ_SVG
 #include "nsSVGEffects.h"
 #endif
@@ -349,6 +351,8 @@ WebGLContext::SetContextOptions(nsIPropertyBag *aOptions)
 NS_IMETHODIMP
 WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 {
+    ScopedGfxFeatureReporter reporter("WebGL");
+
     if (mWidth == width && mHeight == height)
         return NS_OK;
 
@@ -527,6 +531,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     gl->fClearStencil(0);
     gl->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT | LOCAL_GL_STENCIL_BUFFER_BIT);
 
+    reporter.SetSuccessful();
     return NS_OK;
 }
 

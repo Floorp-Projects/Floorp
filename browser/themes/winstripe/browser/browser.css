@@ -1533,6 +1533,15 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
     -moz-linear-gradient(bottom, @toolbarShadowColor@ 1px, rgba(0,0,0,.05) 1px, transparent 50%);
 }
 
+%ifndef WINSTRIPE_AERO
+@media all and (-moz-windows-default-theme) {
+  #main-window[sizemode=normal] #TabsToolbar:not([inFullscreen]) {
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+}
+%endif
+
 .tabbrowser-tab,
 .tabs-newtab-button {
   -moz-appearance: none;
@@ -1540,12 +1549,12 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
               -moz-linear-gradient(-moz-dialog, -moz-dialog);
   background-origin: border-box;
   background-position: 1px 2px;
-  background-size: 100% -moz-calc(100% - 2px);
+  background-size: -moz-calc(100% - 2px) -moz-calc(100% - 2px);
   background-repeat: no-repeat;
   margin: 0;
   padding: 0;
-  -moz-border-image: url(tabbrowser/tab.png) 4 5 3 6 / 4px 5px 3px 6px repeat stretch;
-  border-radius: 10px 8px 0 0;
+  -moz-border-image: url(tabbrowser/tab.png) 6 3 4 / 6px 3px 4px repeat stretch;
+  border-radius: 7px 7px 0 0;
 }
 
 .tabbrowser-tab:hover,
@@ -1623,6 +1632,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   height: 16px;
   list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
+  -moz-margin-start: 2px;
   -moz-margin-end: 3px;
 }
 
@@ -1640,8 +1650,8 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 .tab-throbber[pinned],
 .tab-icon-image[pinned] {
-  -moz-margin-start: 2px;
-  -moz-margin-end: 2px;
+  -moz-margin-start: 5px;
+  -moz-margin-end: 5px;
 }
 
 /* tabbrowser-tab focus ring */
@@ -1756,7 +1766,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 .tabs-newtab-button {
-  width: 31px;
+  width: 30px;
 }
 
 .tabs-newtab-button:hover:active,

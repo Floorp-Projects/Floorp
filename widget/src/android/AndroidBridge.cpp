@@ -587,9 +587,9 @@ AndroidBridge::SetFullScreen(PRBool aFullScreen)
 void
 AndroidBridge::HideProgressDialogOnce()
 {
-    ALOG_BRIDGE("AndroidBridge::HideProgressDialogOnce");
     static bool once = false;
     if (!once) {
+        ALOG_BRIDGE("AndroidBridge::HideProgressDialogOnce");
         mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jHideProgressDialog);
         once = true;
     }
