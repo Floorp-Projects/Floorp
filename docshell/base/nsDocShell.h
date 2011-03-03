@@ -338,7 +338,8 @@ protected:
 
     // Tries to stringify a given variant by converting it to JSON.  This only
     // works if the variant is backed by a JSVal.
-    nsresult StringifyJSValVariant(nsIVariant *aData, nsAString &aResult);
+    nsresult StringifyJSValVariant(JSContext *aCx, nsIVariant *aData,
+                                   nsAString &aResult);
 
     // Returns PR_TRUE if would have called FireOnLocationChange,
     // but did not because aFireOnLocationChange was false on entry.
