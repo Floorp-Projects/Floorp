@@ -45,6 +45,10 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/ctypes.jsm");
 
+const ALGORITHM                 = Ci.IWeaveCrypto.AES_256_CBC;
+const KEYSIZE_AES_256           = 32;
+const KEY_DERIVATION_ITERATIONS = 4096;   // PKCS#5 recommends at least 1000.
+
 function WeaveCrypto() {
     this.init();
 }
@@ -82,10 +86,36 @@ WeaveCrypto.prototype = {
             this.debug = this.prefBranch.getBoolPref("cryptoDebug");
 
             this.initNSS();
+            this.initAlgorithmSettings();   // Depends on NSS.
+            this.initIVSECItem();
         } catch (e) {
             this.log("init failed: " + e);
             throw e;
         }
+    },
+
+    /**
+     * Set a bunch of NSS values once, at init-time. These are:
+     *   - .blockSize
+     *   - .mechanism
+     *   - .keygenMechanism
+     *   - .padMechanism
+     *   - .keySize
+     *
+     * See also the constant ALGORITHM.
+     */
+    initAlgorithmSettings: function() {
+        this.mechanism = this.nss.PK11_AlgtagToMechanism(ALGORITHM);
+        this.blockSize = this.nss.PK11_GetBlockSize(this.mechanism, null);
+        this.ivLength  = this.nss.PK11_GetIVLength(this.mechanism);
+        this.keySize   = KEYSIZE_AES_256;
+        this.keygenMechanism = this.nss.CKM_AES_KEY_GEN;  // Always the same!
+
+        // Determine which (padded) PKCS#11 mechanism to use.
+        // E.g., AES_256_CBC --> CKM_AES_CBC --> CKM_AES_CBC_PAD
+        this.padMechanism = this.nss.PK11_GetPadMechanism(this.mechanism);
+        if (this.padMechanism == this.nss.CKM_INVALID_MECHANISM)
+            throw Components.Exception("invalid algorithm (can't pad)", Cr.NS_ERROR_FAILURE);
     },
 
     log : function (message) {
@@ -171,52 +201,11 @@ WeaveCrypto.prototype = {
             "SECItem", [{ type: this.nss_t.SECItemType },
                         { data: ctypes.unsigned_char.ptr },
                         { len : ctypes.int }]);
-        // security/nss/lib/softoken/secmodt.h#65
-        // typedef struct PK11RSAGenParamsStr --> def'n on line 139
-        this.nss_t.PK11RSAGenParams = ctypes.StructType(
-            "PK11RSAGenParams", [{ keySizeInBits: ctypes.int },
-                                 { pe : ctypes.unsigned_long }]);
-        // security/nss/lib/cryptohi/keythi.h#233
-        // typedef struct SECKEYPrivateKeyStr SECKEYPrivateKey; --> def'n right above it
-        this.nss_t.SECKEYPrivateKey = ctypes.StructType(
-            "SECKEYPrivateKey", [{ arena:        this.nss_t.PLArenaPool.ptr  },
-                                 { keyType:      this.nss_t.KeyType          },
-                                 { pkcs11Slot:   this.nss_t.PK11SlotInfo.ptr },
-                                 { pkcs11ID:     this.nss_t.CK_OBJECT_HANDLE },
-                                 { pkcs11IsTemp: this.nss_t.PRBool           },
-                                 { wincx:        ctypes.voidptr_t            },
-                                 { staticflags:  ctypes.unsigned_int         }]);
-        // security/nss/lib/cryptohi/keythi.h#78
-        // typedef struct SECKEYRSAPublicKeyStr --> def'n right above it
-        this.nss_t.SECKEYRSAPublicKey = ctypes.StructType(
-            "SECKEYRSAPublicKey", [{ arena:          this.nss_t.PLArenaPool.ptr },
-                                   { modulus:        this.nss_t.SECItem         },
-                                   { publicExponent: this.nss_t.SECItem         }]);
-        // security/nss/lib/cryptohi/keythi.h#189
-        // typedef struct SECKEYPublicKeyStr SECKEYPublicKey; --> def'n right above it
-        this.nss_t.SECKEYPublicKey = ctypes.StructType(
-            "SECKEYPublicKey", [{ arena:      this.nss_t.PLArenaPool.ptr    },
-                                { keyType:    this.nss_t.KeyType            },
-                                { pkcs11Slot: this.nss_t.PK11SlotInfo.ptr   },
-                                { pkcs11ID:   this.nss_t.CK_OBJECT_HANDLE   },
-                                { rsa:        this.nss_t.SECKEYRSAPublicKey } ]);
-                                // XXX: "rsa" et al into a union here!
-                                // { dsa: SECKEYDSAPublicKey },
-                                // { dh:  SECKEYDHPublicKey },
-                                // { kea: SECKEYKEAPublicKey },
-                                // { fortezza: SECKEYFortezzaPublicKey },
-                                // { ec:  SECKEYECPublicKey } ]);
         // security/nss/lib/util/secoidt.h#52
         // typedef struct SECAlgorithmIDStr --> def'n right below it
         this.nss_t.SECAlgorithmID = ctypes.StructType(
             "SECAlgorithmID", [{ algorithm:  this.nss_t.SECItem },
                                { parameters: this.nss_t.SECItem }]);
-        // security/nss/lib/certdb/certt.h#98
-        // typedef struct CERTSubjectPublicKeyInfoStrA --> def'n on line 160
-        this.nss_t.CERTSubjectPublicKeyInfo = ctypes.StructType(
-            "CERTSubjectPublicKeyInfo", [{ arena:            this.nss_t.PLArenaPool.ptr },
-                                         { algorithm:        this.nss_t.SECAlgorithmID  },
-                                         { subjectPublicKey: this.nss_t.SECItem         }]);
 
 
         // security/nss/lib/util/pkcs11t.h
@@ -225,7 +214,6 @@ WeaveCrypto.prototype = {
         this.nss.CKM_AES_KEY_GEN           = 0x1080; 
         this.nss.CKA_ENCRYPT = 0x104;
         this.nss.CKA_DECRYPT = 0x105;
-        this.nss.CKA_UNWRAP  = 0x107;
 
         // security/nss/lib/softoken/secmodt.h
         this.nss.PK11_ATTR_SESSION   = 0x02;
@@ -320,19 +308,6 @@ WeaveCrypto.prototype = {
                                                    ctypes.default_abi, this.nss_t.SECStatus,
                                                    this.nss_t.PK11Context.ptr, ctypes.unsigned_char.ptr,
                                                    ctypes.unsigned_int.ptr, ctypes.unsigned_int);
-        // security/nss/lib/pk11wrap/pk11pub.h#507
-        // SECKEYPrivateKey *PK11_GenerateKeyPairWithFlags(PK11SlotInfo *slot,
-        //                                                 CK_MECHANISM_TYPE type, void *param, SECKEYPublicKey **pubk,
-        //                                                 PK11AttrFlags attrFlags, void *wincx);
-        this.nss.PK11_GenerateKeyPairWithFlags = nsslib.declare("PK11_GenerateKeyPairWithFlags",
-                                                   ctypes.default_abi, this.nss_t.SECKEYPrivateKey.ptr,
-                                                   this.nss_t.PK11SlotInfo.ptr, this.nss_t.CK_MECHANISM_TYPE, ctypes.voidptr_t,
-                                                   this.nss_t.SECKEYPublicKey.ptr.ptr, this.nss_t.PK11AttrFlags, ctypes.voidptr_t);
-        // security/nss/lib/pk11wrap/pk11pub.h#466
-        // SECStatus PK11_SetPrivateKeyNickname(SECKEYPrivateKey *privKey, const char *nickname);
-        this.nss.PK11_SetPrivateKeyNickname = nsslib.declare("PK11_SetPrivateKeyNickname",
-                                                             ctypes.default_abi, this.nss_t.SECStatus,
-                                                             this.nss_t.SECKEYPrivateKey.ptr, ctypes.char.ptr);
         // security/nss/lib/pk11wrap/pk11pub.h#731
         // SECAlgorithmID * PK11_CreatePBEV2AlgorithmID(SECOidTag pbeAlgTag, SECOidTag cipherAlgTag,
         //                                              SECOidTag prfAlgTag, int keyLength, int iteration,
@@ -347,60 +322,6 @@ WeaveCrypto.prototype = {
                                                  ctypes.default_abi, this.nss_t.PK11SymKey.ptr,
                                                  this.nss_t.PK11SlotInfo.ptr, this.nss_t.SECAlgorithmID.ptr,
                                                  this.nss_t.SECItem.ptr, this.nss_t.PRBool, ctypes.voidptr_t);
-        // security/nss/lib/pk11wrap/pk11pub.h#574
-        // SECStatus PK11_WrapPrivKey(PK11SlotInfo *slot, PK11SymKey *wrappingKey,
-        //                            SECKEYPrivateKey *privKey, CK_MECHANISM_TYPE wrapType,
-        //                            SECItem *param, SECItem *wrappedKey, void *wincx);
-        this.nss.PK11_WrapPrivKey = nsslib.declare("PK11_WrapPrivKey",
-                                                   ctypes.default_abi, this.nss_t.SECStatus,
-                                                   this.nss_t.PK11SlotInfo.ptr, this.nss_t.PK11SymKey.ptr,
-                                                   this.nss_t.SECKEYPrivateKey.ptr, this.nss_t.CK_MECHANISM_TYPE,
-                                                   this.nss_t.SECItem.ptr, this.nss_t.SECItem.ptr, ctypes.voidptr_t);
-        // security/nss/lib/cryptohi/keyhi.h#159
-        // SECItem* SECKEY_EncodeDERSubjectPublicKeyInfo(SECKEYPublicKey *pubk);
-        this.nss.SECKEY_EncodeDERSubjectPublicKeyInfo = nsslib.declare("SECKEY_EncodeDERSubjectPublicKeyInfo",
-                                                                       ctypes.default_abi, this.nss_t.SECItem.ptr,
-                                                                       this.nss_t.SECKEYPublicKey.ptr);
-        // security/nss/lib/cryptohi/keyhi.h#165
-        // CERTSubjectPublicKeyInfo * SECKEY_DecodeDERSubjectPublicKeyInfo(SECItem *spkider);
-        this.nss.SECKEY_DecodeDERSubjectPublicKeyInfo = nsslib.declare("SECKEY_DecodeDERSubjectPublicKeyInfo",
-                                                                       ctypes.default_abi, this.nss_t.CERTSubjectPublicKeyInfo.ptr,
-                                                                       this.nss_t.SECItem.ptr);
-        // security/nss/lib/cryptohi/keyhi.h#179
-        // SECKEYPublicKey * SECKEY_ExtractPublicKey(CERTSubjectPublicKeyInfo *);
-        this.nss.SECKEY_ExtractPublicKey = nsslib.declare("SECKEY_ExtractPublicKey",
-                                                          ctypes.default_abi, this.nss_t.SECKEYPublicKey.ptr,
-                                                          this.nss_t.CERTSubjectPublicKeyInfo.ptr);
-        // security/nss/lib/pk11wrap/pk11pub.h#377
-        // SECStatus PK11_PubWrapSymKey(CK_MECHANISM_TYPE type, SECKEYPublicKey *pubKey,
-        //                              PK11SymKey *symKey, SECItem *wrappedKey);
-        this.nss.PK11_PubWrapSymKey = nsslib.declare("PK11_PubWrapSymKey",
-                                                     ctypes.default_abi, this.nss_t.SECStatus,
-                                                     this.nss_t.CK_MECHANISM_TYPE, this.nss_t.SECKEYPublicKey.ptr,
-                                                     this.nss_t.PK11SymKey.ptr, this.nss_t.SECItem.ptr);
-        // security/nss/lib/pk11wrap/pk11pub.h#568
-        // SECKEYPrivateKey *PK11_UnwrapPrivKey(PK11SlotInfo *slot, 
-        //                 PK11SymKey *wrappingKey, CK_MECHANISM_TYPE wrapType,
-        //                 SECItem *param, SECItem *wrappedKey, SECItem *label, 
-        //                 SECItem *publicValue, PRBool token, PRBool sensitive,
-        //                 CK_KEY_TYPE keyType, CK_ATTRIBUTE_TYPE *usage, int usageCount,
-        //                 void *wincx);
-        this.nss.PK11_UnwrapPrivKey = nsslib.declare("PK11_UnwrapPrivKey",
-                                                     ctypes.default_abi, this.nss_t.SECKEYPrivateKey.ptr,
-                                                     this.nss_t.PK11SlotInfo.ptr, this.nss_t.PK11SymKey.ptr,
-                                                     this.nss_t.CK_MECHANISM_TYPE, this.nss_t.SECItem.ptr,
-                                                     this.nss_t.SECItem.ptr, this.nss_t.SECItem.ptr,
-                                                     this.nss_t.SECItem.ptr, this.nss_t.PRBool,
-                                                     this.nss_t.PRBool, this.nss_t.CK_KEY_TYPE,
-                                                     this.nss_t.CK_ATTRIBUTE_TYPE.ptr, ctypes.int,
-                                                     ctypes.voidptr_t);
-        // security/nss/lib/pk11wrap/pk11pub.h#447
-        // PK11SymKey *PK11_PubUnwrapSymKey(SECKEYPrivateKey *key, SECItem *wrapppedKey,
-        //         CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, int keySize);
-        this.nss.PK11_PubUnwrapSymKey = nsslib.declare("PK11_PubUnwrapSymKey",
-                                                       ctypes.default_abi, this.nss_t.PK11SymKey.ptr,
-                                                       this.nss_t.SECKEYPrivateKey.ptr, this.nss_t.SECItem.ptr,
-                                                       this.nss_t.CK_MECHANISM_TYPE, this.nss_t.CK_ATTRIBUTE_TYPE, ctypes.int);
         // security/nss/lib/pk11wrap/pk11pub.h#675
         // void PK11_DestroyContext(PK11Context *context, PRBool freeit);
         this.nss.PK11_DestroyContext = nsslib.declare("PK11_DestroyContext",
@@ -432,35 +353,17 @@ WeaveCrypto.prototype = {
         this.nss.SECITEM_FreeItem = nsslib.declare("SECITEM_FreeItem",
                                                    ctypes.default_abi, ctypes.void_t,
                                                    this.nss_t.SECItem.ptr, this.nss_t.PRBool);
-        // security/nss/lib/cryptohi/keyhi.h#193
-        // extern void SECKEY_DestroyPublicKey(SECKEYPublicKey *key);
-        this.nss.SECKEY_DestroyPublicKey = nsslib.declare("SECKEY_DestroyPublicKey",
-                                                          ctypes.default_abi, ctypes.void_t,
-                                                          this.nss_t.SECKEYPublicKey.ptr);
-        // security/nss/lib/cryptohi/keyhi.h#186
-        // extern void SECKEY_DestroyPrivateKey(SECKEYPrivateKey *key);
-        this.nss.SECKEY_DestroyPrivateKey = nsslib.declare("SECKEY_DestroyPrivateKey",
-                                                           ctypes.default_abi, ctypes.void_t,
-                                                           this.nss_t.SECKEYPrivateKey.ptr);
         // security/nss/lib/util/secoid.h#103
         // extern void SECOID_DestroyAlgorithmID(SECAlgorithmID *aid, PRBool freeit);
         this.nss.SECOID_DestroyAlgorithmID = nsslib.declare("SECOID_DestroyAlgorithmID",
                                                             ctypes.default_abi, ctypes.void_t,
                                                             this.nss_t.SECAlgorithmID.ptr, this.nss_t.PRBool);
-        // security/nss/lib/cryptohi/keyhi.h#58
-        // extern void SECKEY_DestroySubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki);
-        this.nss.SECKEY_DestroySubjectPublicKeyInfo = nsslib.declare("SECKEY_DestroySubjectPublicKeyInfo",
-                                                                     ctypes.default_abi, ctypes.void_t,
-                                                                     this.nss_t.CERTSubjectPublicKeyInfo.ptr);
     },
 
 
     //
     // IWeaveCrypto interfaces
     //
-
-
-    algorithm : Ci.IWeaveCrypto.AES_256_CBC,
 
     encrypt : function(clearTextUCS2, symmetricKey, iv) {
         this.log("encrypt() called");
@@ -473,9 +376,7 @@ WeaveCrypto.prototype = {
         // When using CBC padding, the output size is the input size rounded
         // up to the nearest block. If the input size is exactly on a block
         // boundary, the output is 1 extra block long.
-        let mech = this.nss.PK11_AlgtagToMechanism(this.algorithm);
-        let blockSize = this.nss.PK11_GetBlockSize(mech, null);
-        let outputBufferSize = inputBuffer.length + blockSize;
+        let outputBufferSize = inputBuffer.length + this.blockSize;
         let outputBuffer = new ctypes.ArrayType(ctypes.unsigned_char, outputBufferSize)();
 
         outputBuffer = this._commonCrypt(inputBuffer, outputBuffer, symmetricKey, iv, this.nss.CKA_ENCRYPT);
@@ -494,8 +395,12 @@ WeaveCrypto.prototype = {
         // We can't have js-ctypes create the buffer directly from the string
         // (as in encrypt()), because we do _not_ want it to do UTF8
         // conversion... We've got random binary data in the input's low byte.
-        let input = new ctypes.ArrayType(ctypes.unsigned_char, inputUCS2.length)();
-        this.byteCompress(inputUCS2, input);
+        // 
+        // Compress a JS string (2-byte chars) into a normal C string (1-byte chars).
+        let len   = inputUCS2.length;
+        let input = new ctypes.ArrayType(ctypes.unsigned_char, len)();
+        let ints  = ctypes.cast(input, ctypes.uint8_t.array(len));
+        this.byteCompressInts(inputUCS2, ints, len);
 
         let outputBuffer = new ctypes.ArrayType(ctypes.unsigned_char, input.length)();
 
@@ -510,32 +415,24 @@ WeaveCrypto.prototype = {
 
     _commonCrypt : function (input, output, symmetricKey, iv, operation) {
         this.log("_commonCrypt() called");
-        // Get rid of the base64 encoding and convert to SECItems.
-        let keyItem = this.makeSECItem(symmetricKey, true);
-        let ivItem  = this.makeSECItem(iv, true);
+        iv = atob(iv);
 
-        // Determine which (padded) PKCS#11 mechanism to use.
-        // EG: AES_128_CBC --> CKM_AES_CBC --> CKM_AES_CBC_PAD
-        let mechanism = this.nss.PK11_AlgtagToMechanism(this.algorithm);
-        mechanism = this.nss.PK11_GetPadMechanism(mechanism);
-        if (mechanism == this.nss.CKM_INVALID_MECHANISM)
-            throw Components.Exception("invalid algorithm (can't pad)", Cr.NS_ERROR_FAILURE);
+        // We never want an IV longer than the block size, which is 16 bytes
+        // for AES.
+        if (iv.length > this.blockSize)
+            iv = iv.slice(0, this.blockSize);
 
-        let ctx, symKey, slot, ivParam;
+        // We use a single IV SECItem for the sake of efficiency. Fill it here.
+        this.byteCompressInts(iv, this._ivSECItemContents, iv.length);
+
+        let ctx, symKey, ivParam;
         try {
-            ivParam = this.nss.PK11_ParamFromIV(mechanism, ivItem);
+            ivParam = this.nss.PK11_ParamFromIV(this.padMechanism, this._ivSECItem);
             if (ivParam.isNull())
                 throw Components.Exception("can't convert IV to param", Cr.NS_ERROR_FAILURE);
 
-            slot = this.nss.PK11_GetInternalKeySlot();
-            if (slot.isNull())
-                throw Components.Exception("can't get internal key slot", Cr.NS_ERROR_FAILURE);
-
-            symKey = this.nss.PK11_ImportSymKey(slot, mechanism, this.nss.PK11_OriginUnwrap, operation, keyItem, null);
-            if (symKey.isNull())
-                throw Components.Exception("symkey import failed", Cr.NS_ERROR_FAILURE);
-
-            ctx = this.nss.PK11_CreateContextBySymKey(mechanism, operation, symKey, ivParam);
+            symKey = this.importSymKey(symmetricKey, operation);
+            ctx = this.nss.PK11_CreateContextBySymKey(this.padMechanism, operation, symKey, ivParam);
             if (ctx.isNull())
                 throw Components.Exception("couldn't create context for symkey", Cr.NS_ERROR_FAILURE);
 
@@ -565,50 +462,24 @@ WeaveCrypto.prototype = {
         } finally {
             if (ctx && !ctx.isNull())
                 this.nss.PK11_DestroyContext(ctx, true);
-            if (symKey && !symKey.isNull())
-                this.nss.PK11_FreeSymKey(symKey);
-            if (slot && !slot.isNull())
-                this.nss.PK11_FreeSlot(slot);
             if (ivParam && !ivParam.isNull())
                 this.nss.SECITEM_FreeItem(ivParam, true);
-            this.freeSECItem(keyItem);
-            this.freeSECItem(ivItem);
+
+            // Note that we do not free the IV SECItem; we reuse it.
+            // Neither do we free the symKey, because that's memoized.
         }
     },
 
 
     generateRandomKey : function() {
         this.log("generateRandomKey() called");
-        let encodedKey, keygenMech, keySize;
-
-        // Doesn't NSS have a lookup function to do this?
-        switch(this.algorithm) {
-          case Ci.IWeaveCrypto.AES_128_CBC:
-            keygenMech = this.nss.CKM_AES_KEY_GEN;
-            keySize = 16;
-            break;
-
-          case Ci.IWeaveCrypto.AES_192_CBC:
-            keygenMech = this.nss.CKM_AES_KEY_GEN;
-            keySize = 24;
-            break;
-
-          case Ci.IWeaveCrypto.AES_256_CBC:
-            keygenMech = this.nss.CKM_AES_KEY_GEN;
-            keySize = 32;
-            break;
-
-          default:
-            throw Components.Exception("unknown algorithm", Cr.NS_ERROR_FAILURE);
-        }
-
         let slot, randKey, keydata;
         try {
             slot = this.nss.PK11_GetInternalSlot();
             if (slot.isNull())
                 throw Components.Exception("couldn't get internal slot", Cr.NS_ERROR_FAILURE);
 
-            randKey = this.nss.PK11_KeyGen(slot, keygenMech, null, keySize, null);
+            randKey = this.nss.PK11_KeyGen(slot, this.keygenMechanism, null, this.keySize, null);
             if (randKey.isNull())
                 throw Components.Exception("PK11_KeyGen failed.", Cr.NS_ERROR_FAILURE);
 
@@ -633,16 +504,7 @@ WeaveCrypto.prototype = {
         }
     },
 
-
-    generateRandomIV : function() {
-        this.log("generateRandomIV() called");
-
-        let mech = this.nss.PK11_AlgtagToMechanism(this.algorithm);
-        let size = this.nss.PK11_GetIVLength(mech);
-
-        return this.generateRandomBytes(size);
-    },
-
+    generateRandomIV : function() this.generateRandomBytes(this.ivLength),
 
     generateRandomBytes : function(byteCount) {
         this.log("generateRandomBytes() called");
@@ -655,18 +517,78 @@ WeaveCrypto.prototype = {
         return this.encodeBase64(scratch.address(), scratch.length);
     },
 
+    //
+    // PK11SymKey memoization.
+    //
+
+    // Memoize the lookup of symmetric keys. We do this by using the base64
+    // string itself as a key -- the overhead of SECItem creation during the
+    // initial population is negligible, so that phase is not memoized.
+    _encryptionSymKeyMemo: {},
+    _decryptionSymKeyMemo: {},
+    importSymKey: function importSymKey(encodedKeyString, operation) {
+        let memo;
+
+        // We use two separate memos for thoroughness: operation is an input to
+        // key import.
+        switch (operation) {
+            case this.nss.CKA_ENCRYPT:
+                memo = this._encryptionSymKeyMemo;
+                break;
+            case this.nss.CKA_DECRYPT:
+                memo = this._decryptionSymKeyMemo;
+                break;
+            default:
+                throw "Unsupported operation in importSymKey.";
+        }
+
+        if (encodedKeyString in memo)
+            return memo[encodedKeyString];
+
+        let keyItem, slot;
+        try {
+            keyItem = this.makeSECItem(encodedKeyString, true);
+            slot    = this.nss.PK11_GetInternalKeySlot();
+            if (slot.isNull())
+                throw Components.Exception("can't get internal key slot",
+                                           Cr.NS_ERROR_FAILURE);
+
+            let symKey = this.nss.PK11_ImportSymKey(slot, this.padMechanism,
+                                                    this.nss.PK11_OriginUnwrap,
+                                                    operation, keyItem, null);
+            if (!symKey || symKey.isNull())
+                throw Components.Exception("symkey import failed",
+                                           Cr.NS_ERROR_FAILURE);
+
+            return memo[encodedKeyString] = symKey;
+        } finally {
+            if (slot && !slot.isNull())
+                this.nss.PK11_FreeSlot(slot);
+            this.freeSECItem(keyItem);
+        }
+    },
+
 
     //
     // Utility functions
     //
 
+    /**
+     * Compress a JS string into a C uint8 array. count is the number of
+     * elements in the destination array. If the array is smaller than the
+     * string, the string is effectively truncated. If the string is smaller
+     * than the array, the array is 0-padded.
+     */
+    byteCompressInts : function byteCompressInts (jsString, intArray, count) {
+        let len = jsString.length;
+        let end = Math.min(len, count);
 
-    // Compress a JS string (2-byte chars) into a normal C string (1-byte chars)
-    // EG, for "ABC",  0x0041, 0x0042, 0x0043 --> 0x41, 0x42, 0x43
-    byteCompress : function (jsString, charArray) {
-        let intArray = ctypes.cast(charArray, ctypes.uint8_t.array(charArray.length));
-        for (let i = 0; i < jsString.length; i++)
+        for (let i = 0; i < end; i++)
             intArray[i] = jsString.charCodeAt(i) % 256; // convert to bytes
+
+        // Must zero-pad.
+        for (let i = len; i < count; i++)
+            intArray[i] = 0;
     },
 
     // Expand a normal C string (1-byte chars) into a JS string (2-byte chars)
@@ -695,26 +617,52 @@ WeaveCrypto.prototype = {
     },
 
     // Returns a filled SECItem *, as returned by SECITEM_AllocItem.
-    // 
+    //
     // Note that this must be released with freeSECItem, which will also
     // deallocate the internal buffer.
     makeSECItem : function(input, isEncoded) {
         if (isEncoded)
             input = atob(input);
-        
+
         let len = input.length;
         let item = this.nss.SECITEM_AllocItem(null, null, len);
         if (item.isNull())
-          throw "SECITEM_AllocItem failed.";
-        
-        let dest = ctypes.cast(item.contents.data, ctypes.unsigned_char.array(len).ptr);
-        this.byteCompress(input, dest.contents);
+            throw "SECITEM_AllocItem failed.";
+
+        let ptr  = ctypes.cast(item.contents.data,
+                               ctypes.unsigned_char.array(len).ptr);
+        let dest = ctypes.cast(ptr.contents, ctypes.uint8_t.array(len));
+        this.byteCompressInts(input, dest, len);
         return item;
     },
-    
+
     freeSECItem : function(zap) {
         if (zap && !zap.isNull())
             this.nss.SECITEM_ZfreeItem(zap, true);
+    },
+
+    // We only ever handle one IV at a time, and they're always different.
+    // Consequently, we maintain a single SECItem, and a handy pointer into its
+    // contents to avoid repetitive and expensive casts.
+    _ivSECItem: null,
+    _ivSECItemContents: null,
+
+    initIVSECItem: function initIVSECItem() {
+        if (this._ivSECItem) {
+            this._ivSECItemContents = null;
+            this.freeSECItem(this._ivSECItem);
+        }
+
+        let item = this.nss.SECITEM_AllocItem(null, null, this.blockSize);
+        if (item.isNull())
+            throw "SECITEM_AllocItem failed.";
+
+        let ptr = ctypes.cast(item.contents.data,
+                              ctypes.unsigned_char.array(this.blockSize).ptr);
+        let contents = ctypes.cast(ptr.contents,
+                                   ctypes.uint8_t.array(this.blockSize));
+        this._ivSECItem = item;
+        this._ivSECItemContents = contents;
     },
 
     /**
@@ -725,17 +673,19 @@ WeaveCrypto.prototype = {
         let passItem = this.makeSECItem(passphrase, false);
         let saltItem = this.makeSECItem(salt, true);
 
-        let pbeAlg = this.algorithm;
-        let cipherAlg = this.algorithm; // ignored by callee when pbeAlg != a pkcs5 mech.
-        let prfAlg = this.nss.SEC_OID_HMAC_SHA1; // callee picks if SEC_OID_UNKNOWN, but only SHA1 is supported
+        let pbeAlg    = ALGORITHM;
+        let cipherAlg = ALGORITHM;   // Ignored by callee when pbeAlg != a pkcs5 mech.
+
+        // Callee picks if SEC_OID_UNKNOWN, but only SHA1 is supported.
+        let prfAlg    = this.nss.SEC_OID_HMAC_SHA1;
 
         let keyLength  = keyLength || 0;    // 0 = Callee will pick.
-        let iterations = 4096; // PKCS#5 recommends at least 1000.
+        let iterations = KEY_DERIVATION_ITERATIONS;
 
         let algid, slot, symKey, keyData;
         try {
             algid = this.nss.PK11_CreatePBEV2AlgorithmID(pbeAlg, cipherAlg, prfAlg,
-                                                         keyLength, iterations, 
+                                                         keyLength, iterations,
                                                          saltItem);
             if (algid.isNull())
                 throw Components.Exception("PK11_CreatePBEV2AlgorithmID failed", Cr.NS_ERROR_FAILURE);
@@ -772,7 +722,7 @@ WeaveCrypto.prototype = {
                 this.nss.PK11_FreeSlot(slot);
             if (symKey && !symKey.isNull())
                 this.nss.PK11_FreeSymKey(symKey);
-            
+
             this.freeSECItem(passItem);
             this.freeSECItem(saltItem);
         }
