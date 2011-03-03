@@ -11,7 +11,7 @@ script regress-322135-02.js
 skip script regress-322135-03.js # slow
 skip script regress-322135-04.js # slow
 script regress-387501.js
-skip script regress-390598.js # :FIXME: bug 599159
+script regress-390598.js
 script regress-421325.js
 script regress-430717.js
 script regress-488989.js

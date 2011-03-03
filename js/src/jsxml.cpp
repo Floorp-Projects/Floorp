@@ -6826,9 +6826,8 @@ CopyXMLSettings(JSContext *cx, JSObject *from, JSObject *to)
             if (!JSVAL_IS_BOOLEAN(v))
                 continue;
         }
-        if (!JS_SetProperty(cx, to, name, &v))
+        if (!JS_AddTypeProperty(cx, to, name, v) || !JS_SetProperty(cx, to, name, &v))
             return false;
-        JS_AddTypeProperty(cx, to, name, v);
     }
 
     return true;
@@ -7141,9 +7140,8 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
 
     /* Properties of XML objects are not modeled by type inference. */
     TypeObject *type = proto->getNewType(cx);
-    if (!type)
+    if (!type || !cx->markTypeObjectUnknownProperties(type))
         return NULL;
-    cx->markTypeObjectUnknownProperties(type);
 
     xml = js_NewXML(cx, JSXML_CLASS_TEXT);
     if (!xml)

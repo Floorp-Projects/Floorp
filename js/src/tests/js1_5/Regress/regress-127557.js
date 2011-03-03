@@ -61,10 +61,19 @@ var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
 
-var f = Function("x","y","\
-  function h() { return h_peer(); } \
-  function h_peer() { return (x + cnCOMMA + y); } \
-  return h");
+
+function f(x,y)
+{
+  function h()
+  {
+    return h_peer();
+  }
+  function h_peer()
+  {
+    return (x + cnCOMMA + y);
+  }
+  return h;
+}
 
 if (typeof clone == 'function')
 {

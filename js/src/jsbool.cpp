@@ -151,12 +151,10 @@ Boolean(JSContext *cx, uintN argc, Value *vp)
 
 static void type_NewBoolean(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
-#ifdef JS_TYPE_INFERENCE
     if (Valueify(jssite)->isNew)
         JS_TypeHandlerNew(cx, jsfun, jssite);
     else
         JS_TypeHandlerBool(cx, jsfun, jssite);
-#endif
 }
 
 JSObject *

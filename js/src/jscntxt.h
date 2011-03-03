@@ -2134,6 +2134,8 @@ struct JSContext
 
 public:
 
+    inline bool typeInferenceEnabled();
+
     /* Make a type function or object with the specified name. */
     js::types::TypeFunction *newTypeFunction(const char *name, JSObject *proto);
     js::types::TypeObject   *newTypeObject(const char *name, JSObject *proto);
@@ -2161,37 +2163,36 @@ public:
     inline bool isTypeCallerMonitored();
 
     /* Mark the immediate allocation site as having produced an unexpected value. */
-    inline void markTypeCallerUnexpected(js::types::jstype type);
-    inline void markTypeCallerUnexpected(const js::Value &value);
-    inline void markTypeCallerOverflow();
+    inline bool markTypeCallerUnexpected(js::types::jstype type);
+    inline bool markTypeCallerUnexpected(const js::Value &value);
+    inline bool markTypeCallerOverflow();
 
     /*
      * Monitor a javascript call, either on entry to the interpreter or made
      * from within the interpreter.
      */
-    inline void typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
-                                const js::CallArgs &args, bool constructing, bool force);
-    inline void typeMonitorEntry(JSScript *script);
-    inline void typeMonitorEntry(JSScript *script, const js::Value &thisv);
+    inline bool typeMonitorCall(const js::CallArgs &args, bool constructing);
+
+    /* Monitor an assignment made to a property by a script. */
+    inline bool typeMonitorAssign(JSObject *obj, jsid id, const js::Value &value);
 
     /* Add a possible value for the named property of obj. */
-    inline void addTypeProperty(js::types::TypeObject *obj, const char *name, js::types::jstype type);
-    inline void addTypeProperty(js::types::TypeObject *obj, const char *name, const js::Value &value);
-    inline void addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jstype type);
-    inline void addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Value &value);
-    inline void markTypePropertyUnknown(js::types::TypeObject *obj, jsid id);
+    inline bool addTypeProperty(js::types::TypeObject *obj, const char *name, js::types::jstype type);
+    inline bool addTypeProperty(js::types::TypeObject *obj, const char *name, const js::Value &value);
+    inline bool addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jstype type);
+    inline bool addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Value &value);
 
     /* Get the type to add for properties which can be scripted getters/setters. */
     inline js::types::TypeObject *getTypeGetSet();
 
     /* Alias two properties in the type information for obj. */
-    inline void aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid second);
+    inline bool aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid second);
 
     /* Mark an array type as being not packed and, possibly, not dense. */
-    inline void markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense, bool dynamic = true);
+    inline bool markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense);
 
     /* Monitor all properties of a type object as unknown. */
-    inline void markTypeObjectUnknownProperties(js::types::TypeObject *obj);
+    inline bool markTypeObjectUnknownProperties(js::types::TypeObject *obj);
 }; /* struct JSContext */
 
 #ifdef JS_THREADSAFE

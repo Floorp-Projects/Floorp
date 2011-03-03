@@ -573,8 +573,8 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
             if (fp) {
                 JSScript *script = fp->functionScript();
                 if (script->usesArguments) {
-                    if (arg < fp->numFormalArgs())
-                        script->typeSetArgument(cx, arg, *vp);
+                    if (arg < fp->numFormalArgs() && !script->typeSetArgument(cx, arg, *vp))
+                        return false;
                     fp->canonicalActualArg(arg) = *vp;
                 }
                 return true;
@@ -1230,19 +1230,9 @@ SetCallArg(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     else
         argp = &obj->callObjArg(i);
 
-#ifdef JS_TYPE_INFERENCE
-    JSFunction *fun = obj->getCallObjCalleeFunction();
-    JSScript *script = fun->script();
-    if (script->types) {
-        jstype type = GetValueType(cx, *vp);
-        TypeSet *types = script->argTypes(i);
-        if (types && !types->hasType(type)) {
-            InferSpew(ISpewDynamic, "AddCallProperty: #%u arg%u: %s",
-                      script->id(), i, TypeString(type));
-            cx->compartment->types.addDynamicType(cx, types, type);
-        }
-    }
-#endif
+    JSScript *script = obj->getCallObjCalleeFunction()->script();
+    if (!script->typeSetArgument(cx, i, *vp))
+        return false;
 
     GC_POKE(cx, *argp);
     *argp = *vp;
@@ -1324,19 +1314,9 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     else
         varp = &obj->callObjVar(i);
 
-#ifdef JS_TYPE_INFERENCE
-    JSFunction *fun = obj->getCallObjCalleeFunction();
-    JSScript *script = fun->script();
-    if (script->types) {
-        jstype type = GetValueType(cx, *vp);
-        TypeSet *types = script->localTypes(i);
-        if (types && !types->hasType(type)) {
-            InferSpew(ISpewDynamic, "AddCallProperty: #%u local%u: %s",
-                      script->id(), i, TypeString(type));
-            cx->compartment->types.addDynamicType(cx, types, type);
-        }
-    }
-#endif
+    JSScript *script = obj->getCallObjCalleeFunction()->script();
+    if (!script->typeSetLocal(cx, i, *vp))
+        return false;
 
     GC_POKE(cx, *varp);
     *varp = *vp;
@@ -1691,9 +1671,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     }
 
     jsid nameid = atom ? ATOM_TO_JSID(atom) : JSID_VOID;
-    cx->addTypePropertyId(obj->getType(), nameid, *vp);
-
-    return true;
+    return cx->addTypePropertyId(obj->getType(), nameid, *vp);
 }
 
 struct LazyFunctionDataProp {
@@ -1838,8 +1816,8 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         JS_ASSERT(!IsInternalFunctionObject(obj));
-        cx->addTypePropertyId(obj->getType(), id, types::TYPE_INT32);
-        if (!js_DefineNativeProperty(cx, obj, id, Int32Value(fun->nargs),
+        if (!cx->addTypePropertyId(obj->getType(), id, types::TYPE_INT32) ||
+            !js_DefineNativeProperty(cx, obj, id, Int32Value(fun->nargs),
                                      PropertyStub, StrictPropertyStub,
                                      JSPROP_PERMANENT | JSPROP_READONLY, 0, 0, NULL)) {
             return false;
@@ -2843,6 +2821,16 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
     JS_ASSERT(parent);
     JS_ASSERT(proto);
 
+    /*
+     * In COMPILE_N_GO code the existing prototype will be correct, so we can
+     * reuse the type. In non-COMPILE_N_GO code the proto is NULL, but since
+     * we don't run type inference on such code we can use the default new
+     * Function type.
+     */
+    TypeObject *type = (fun->getProto() == proto) ? fun->getType() : proto->getNewType(cx);
+    if (!type)
+        return NULL;
+
     JSObject *clone;
     if (cx->compartment == fun->compartment()) {
         /*
@@ -2853,17 +2841,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
         if (!clone)
             return NULL;
         clone->setPrivate(fun);
-
-        /*
-         * In COMPILE_N_GO code the existing prototype will be correct, so we can
-         * reuse the type. In non-COMPILE_N_GO code the proto is NULL, but since
-         * we don't run type inference on such code we can use the default new
-         * Function type.
-         */
-        if (fun->getProto() == proto)
-            clone->setType(fun->getType());
-        else
-            clone->setType(proto->getNewType(cx));
+        clone->setType(type);
     } else {
         /*
          * Across compartments we have to deep copy JSFunction and clone the
@@ -2872,11 +2850,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
         clone = NewFunction(cx, parent);
         if (!clone)
             return NULL;
-
-        if (fun->getProto() == proto)
-            clone->setType(fun->getType());
-        else
-            clone->setType(proto->getNewType(cx));
+        clone->setType(type);
 
         JSFunction *cfun = (JSFunction *) clone;
         cfun->nargs = fun->nargs;
@@ -2963,10 +2937,13 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
     uintN level = fun->u.i.script->staticLevel;
     JSUpvarArray *uva = fun->script()->upvars();
 
+    bool ok = true;
     for (uint32 i = 0, n = uva->length; i < n; i++) {
         upvars[i] = GetUpvar(cx, level, uva->vector[i]);
-        fun->script()->typeSetUpvar(cx, i, upvars[i]);
+        ok &= fun->script()->typeSetUpvar(cx, i, upvars[i]);
     }
+    if (!ok)
+        return NULL;
 
     return closure;
 }
@@ -3065,10 +3042,12 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
     if (!wasDelegate && obj->isDelegate())
         obj->clearDelegate();
 
+    if (!cx->addTypePropertyId(obj->getType(), id, ObjectValue(*fun)))
+        return NULL;
+
     if (!obj->defineProperty(cx, id, ObjectValue(*fun), gop, sop, attrs & ~JSFUN_FLAGS_MASK))
         return NULL;
 
-    cx->addTypePropertyId(obj->getType(), id, ObjectValue(*fun));
     return fun;
 }
 

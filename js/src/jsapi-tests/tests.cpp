@@ -47,19 +47,13 @@ int main(int argc, char *argv[])
 {
     int total = 0;
     int failures = 0;
+    const char *filter = (argc == 2) ? argv[1] : NULL;
 
     JS_SetCStringsAreUTF8();
 
     for (JSAPITest *test = JSAPITest::list; test; test = test->next) {
         const char *name = test->name();
-        bool run = (argc <= 1); // if no params, run everything
-        for (int i = 1; i < argc; i++)
-        {
-            const char *filter = argv[i];
-            if (filter && strstr(name, filter) != NULL)
-                run = true;
-        }
-        if (!run)
+        if (filter && strstr(name, filter) == NULL)
             continue;
 
         total += 1;

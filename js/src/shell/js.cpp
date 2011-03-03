@@ -154,6 +154,7 @@ static volatile bool gCanceled = false;
 static bool enableTraceJit = false;
 static bool enableMethodJit = false;
 static bool enableProfiling = false;
+static bool enableTypeInference = false;
 
 static bool printTiming = false;
 
@@ -600,6 +601,7 @@ usage(void)
                       "                  methodjit:   JSOPTION_METHODJIT\n"
                       "                  relimit:     JSOPTION_RELIMIT\n"
                       "                  strict:      JSOPTION_STRICT\n"
+                      "                  typeinfer:   JSOPTION_TYPE_INFERENCE\n"
                       "                  werror:      JSOPTION_WERROR\n"
                       "                  xml:         JSOPTION_XML\n"
                       "  -v <version>  Set the JavaScript language version\n"
@@ -643,6 +645,7 @@ static const struct {
     {"methodjit_always",JSOPTION_METHODJIT_ALWAYS},
     {"relimit",         JSOPTION_RELIMIT},
     {"strict",          JSOPTION_STRICT},
+    {"typeinfer",       JSOPTION_TYPE_INFERENCE},
     {"werror",          JSOPTION_WERROR},
     {"xml",             JSOPTION_XML},
 };
@@ -819,6 +822,10 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'p':
             enableProfiling = !enableProfiling;
             JS_ToggleOptions(cx, JSOPTION_PROFILING);
+            break;
+
+        case 'n':
+            /* Inference argument already handled. */
             break;
            
         case 'o':
@@ -3127,7 +3134,7 @@ split_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **obj
 {
     ComplexObject *cpx;
 
-    cx->markTypePropertyUnknown(obj->getType(), id);
+    cx->addTypePropertyId(obj->getType(), id, types::TYPE_UNKNOWN);
 
     if (JSID_IS_ATOM(id) && JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), "isInner")) {
         *objp = obj;
@@ -5548,6 +5555,8 @@ NewContext(JSRuntime *rt)
         JS_ToggleOptions(cx, JSOPTION_JIT);
     if (enableMethodJit)
         JS_ToggleOptions(cx, JSOPTION_METHODJIT);
+    if (enableTypeInference)
+        JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
     return cx;
 }
 
@@ -5610,6 +5619,37 @@ int
 Shell(JSContext *cx, int argc, char **argv, char **envp)
 {
     JSAutoRequest ar(cx);
+
+    /*
+     * First check to see if type inference is enabled. This flag must be set
+     * on the compartment when it is constructed.
+     */
+    for (int i = 0; i < argc; i++) {
+        switch (argv[i][1]) {
+          case 'c':
+          case 'f':
+          case 'e':
+          case 'v':
+          case 'S':
+          case 't':
+#ifdef JS_GC_ZEAL
+          case 'Z':
+#endif
+#ifdef MOZ_TRACEVIS
+          case 'T':
+#endif
+          case 'g':
+            ++i;
+            break;
+
+          case 'n':
+            enableTypeInference = !enableTypeInference;
+            JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
+            break;
+
+          default:;
+        }
+    }
 
     JSObject *glob = NewGlobalObject(cx);
     if (!glob)

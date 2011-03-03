@@ -352,7 +352,8 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
     JSScript *newscript = newfun->script();
 
     CallArgs args(vp + 2, argc);
-    cx->typeMonitorCall(NULL, NULL, args, flags & JSFRAME_CONSTRUCTING, true);
+    if (!cx->typeMonitorCall(args, flags & JSFRAME_CONSTRUCTING))
+        return false;
 
     /* Get pointer to new frame/slots, prepare arguments. */
     StackSpace &stack = cx->stack();

@@ -1633,9 +1633,8 @@ js_obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     TypeObject *type = cx->getTypeGetSet();
-    if (!type)
+    if (!type || !cx->addTypePropertyId(obj->getType(), id, (jstype) type))
         return JS_FALSE;
-    cx->addTypePropertyId(obj->getType(), id, (jstype) type);
 
     vp->setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), getter, StrictPropertyStub,
@@ -1672,9 +1671,8 @@ js_obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     TypeObject *type = cx->getTypeGetSet();
-    if (!type)
+    if (!type || !cx->addTypePropertyId(obj->getType(), id, (jstype) type))
         return JS_FALSE;
-    cx->addTypePropertyId(obj->getType(), id, (jstype) type);
 
     vp->setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), PropertyStub, setter,
@@ -2451,7 +2449,8 @@ DefinePropertyOnArray(JSContext *cx, JSObject *obj, const PropDesc &desc,
 
         if (index >= oldLen) {
             JS_ASSERT(index != UINT32_MAX);
-            obj->setArrayLength(cx, index + 1);
+            if (!obj->setArrayLength(cx, index + 1))
+                return JS_FALSE;
         }
 
         *rval = true;
@@ -2465,9 +2464,8 @@ static JSBool
 DefineProperty(JSContext *cx, JSObject *obj, const PropDesc &desc, bool throwError,
                bool *rval)
 {
-    /* Add this to the type information for the object.
-     * TODO: handle getters and setters. */
-    cx->addTypePropertyId(obj->getType(), desc.id, desc.value);
+    if (!cx->addTypePropertyId(obj->getType(), desc.id, desc.value))
+        return false;
 
     if (obj->isArray())
         return DefinePropertyOnArray(cx, obj, desc, throwError, rval);
@@ -2614,7 +2612,8 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
     vp->setObject(*obj); /* Root and prepare for eventual return. */
 
     /* Don't track types or array-ness for objects created here. */
-    cx->markTypeObjectUnknownProperties(obj->getType());
+    if (!cx->markTypeObjectUnknownProperties(obj->getType()))
+        return false;
 
     /* 15.2.3.5 step 4. */
     if (argc > 1 && !vp[3].isUndefined()) {
@@ -2946,7 +2945,8 @@ js_CreateThis(JSContext *cx, JSObject *callee)
     JSObject *obj = NewObject<WithProto::Class>(cx, newclasp, proto, parent, kind);
     if (obj) {
         obj->syncSpecialEquality();
-        cx->markTypeArrayNotPacked(obj->getType(), true, true);
+        if (!cx->markTypeArrayNotPacked(obj->getType(), true))
+            return NULL;
     }
     return obj;
 }
@@ -2972,9 +2972,8 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee)
     if (protov.isObject()) {
         proto = &protov.toObject();
         TypeObject *type = proto->getNewType(cx);
-        if (!type)
+        if (!type || !cx->markTypeArrayNotPacked(type, true))
             return NULL;
-        cx->markTypeArrayNotPacked(type, true, true);
     } else {
         proto = NULL;
     }
@@ -3022,8 +3021,10 @@ js_InitializerObject(JSContext* cx, JSObject *proto, JSObject *baseobj)
         return NewObjectWithClassProto(cx, &js_ObjectClass, proto, kind);
     }
 
-    /* :FIXME: new Objects do not have the right type when created on trace. */
+    /* :FIXME: bug 637856 new Objects do not have the right type when created on trace. */
     TypeObject *type = proto->getNewType(cx);
+    if (!type)
+        return NULL;
 
     return CopyInitializerObject(cx, baseobj, type);
 }
@@ -3063,9 +3064,8 @@ js_CreateThisFromTrace(JSContext *cx, JSObject *ctor, uintN protoSlot)
     if (protov.isObject()) {
         proto = &protov.toObject();
         TypeObject *type = proto->getNewType(cx);
-        if (!type)
+        if (!type || !cx->markTypeArrayNotPacked(type, true))
             return NULL;
-        cx->markTypeArrayNotPacked(type, true, true);
     } else {
         /*
          * GetInterpretedFunctionPrototype found that ctor.prototype is
@@ -3832,11 +3832,12 @@ Class js_BlockClass = {
 
 static void object_TypeNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
-#ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
 
     if (site->argumentCount == 0) {
         TypeObject *object = site->getInitObject(cx, false);
+        if (!object)
+            return;
         if (site->returnTypes)
             site->returnTypes->addType(cx, (jstype) object);
     } else {
@@ -3844,7 +3845,6 @@ static void object_TypeNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite 
         if (site->returnTypes)
             site->returnTypes->addType(cx, TYPE_UNKNOWN);
     }
-#endif
 }
 
 JSObject *
@@ -3862,7 +3862,9 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* The default 'new' object for Object.prototype has unknown properties. */
-    cx->markTypeObjectUnknownProperties(proto->getNewType(cx));
+    TypeObject *newType = proto->getNewType(cx);
+    if (!newType || !cx->markTypeObjectUnknownProperties(newType))
+        return NULL;
 
     return proto;
 }
@@ -3978,10 +3980,8 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
 
         JSFunction *fun = js_NewFunction(cx, NULL, constructor, nargs, JSFUN_CONSTRUCTOR, obj, atom,
                                          ctorHandler, clasp->name);
-        if (!fun)
-            return NULL;
-
-        cx->addTypePropertyId(obj->getType(), ATOM_TO_JSID(atom), ObjectValue(*fun));
+        if (!fun || !cx->addTypePropertyId(obj->getType(), ATOM_TO_JSID(atom), ObjectValue(*fun)))
+            goto bad;
 
         AutoValueRooter tvr2(cx, ObjectValue(*fun));
         if (!DefineStandardSlot(cx, obj, key, atom, tvr2.value(), 0, named))
@@ -4290,8 +4290,10 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
      * Setting __proto__ on an object that has escaped and may be referenced by
      * other heap objects can only be done if the properties of both objects are unknown.
      */
-    cx->markTypeObjectUnknownProperties(obj->getType());
-    cx->markTypeObjectUnknownProperties(type);
+    if (!cx->markTypeObjectUnknownProperties(obj->getType()) ||
+        !cx->markTypeObjectUnknownProperties(type)) {
+        return false;
+    }
 
     if (!proto || !checkForCycles) {
         obj->setType(type);
@@ -4480,7 +4482,8 @@ js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *paren
         return NULL;
 
     obj->syncSpecialEquality();
-    cx->markTypeObjectUnknownProperties(obj->getType());
+    if (!cx->markTypeObjectUnknownProperties(obj->getType()))
+        return NULL;
 
     Value rval;
     if (!InvokeConstructorWithGivenThis(cx, obj, cval, argc, argv, &rval))
@@ -6345,8 +6348,10 @@ js_GetClassPrototype(JSContext *cx, JSObject *scopeobj, JSProtoKey protoKey,
 JSBool
 js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto, uintN attrs)
 {
-    cx->addTypePropertyId(ctor->getType(), ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
-                          ObjectOrNullValue(proto));
+    if (!cx->addTypePropertyId(ctor->getType(), ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
+                               ObjectOrNullValue(proto))) {
+        return JS_FALSE;
+    }
 
     /*
      * Use the given attributes for the prototype property of the constructor,

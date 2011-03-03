@@ -95,7 +95,7 @@ struct Bytecode
     uint32 defineCount;
     uint32 *defineArray;
 
-    Bytecode(Script *script, unsigned offset)
+    Bytecode()
     {
         PodZero(this);
     }
@@ -108,8 +108,8 @@ struct Bytecode
     bool isDefined(uint32 slot)
     {
         JS_ASSERT(analyzed);
-        for (unsigned ind = 0; ind < defineCount; ind++) {
-            if (defineArray[ind] == slot)
+        for (unsigned i = 0; i < defineCount; i++) {
+            if (defineArray[i] == slot)
                 return true;
         }
         return false;

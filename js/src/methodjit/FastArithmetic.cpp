@@ -883,7 +883,7 @@ mjit::Compiler::jsop_mod()
     if (tryBinaryConstantFold(cx, frame, JSOP_MOD, lhs, rhs, &v)) {
         if (type == JSVAL_TYPE_INT32 && !v.isInt32()) {
             JaegerSpew(JSpew_Abort, "overflow in mod (%u)\n", PC - script->code);
-            markPushedOverflow(0);
+            markPushedOverflow();
             return false;
         }
         frame.popn(2);
