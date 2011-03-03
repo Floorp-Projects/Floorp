@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<script>
+
+function K(v) { return function() { return v; } }
+
+var errorProxy = Proxy.create({get: function() { throw new Error(); }});
+
+function boom()
+{
+  var focused = document.createElementNS("http://www.w3.org/1999/xhtml", "input");
+  document.body.appendChild(focused);
+  var otherWin = window.open("data:text/html,1", "_blank", "width=200,height=200");
+  try { otherWin.history.replaceState(errorProxy, "title", "replaceState.html"); } catch(e) {}
+  focused.focus();
+  focused.addEventListener("foo", K(otherWin.applicationCache), false);
+  otherWin.close();
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+<button onclick="boom();">If you have popups blocked, click here to start the leak test</button>
+</body>
+
+</html>
