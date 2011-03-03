@@ -1528,6 +1528,7 @@ CSSParserImpl::ParseCharsetRule(RuleAppendFunc aAppendFunc,
   }
 
   if (eCSSToken_String != mToken.mType) {
+    UngetToken();
     REPORT_UNEXPECTED_TOKEN(PECharsetRuleNotString);
     return PR_FALSE;
   }
