@@ -139,6 +139,17 @@ ServerCollection.prototype = {
            && (!options.newer || (wbo.modified > options.newer));
   },
 
+  count: function(options) {
+    options = options || {};
+    let c = 0;
+    for (let [id, wbo] in Iterator(this.wbos)) {
+      if (wbo.modified && this._inResultSet(wbo, options)) {
+        c++;
+      }
+    }
+    return c;
+  },
+
   get: function(options) {
     let result;
     if (options.full) {

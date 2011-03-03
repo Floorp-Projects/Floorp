@@ -12,18 +12,18 @@ function run_test() {
 
   _("Empty out the formhistory table");
   let r0 = Utils.queryAsync(c("DELETE FROM moz_formhistory"));
-  do_check_eq(r0.length, 0);
+  do_check_eq(r0, null);
 
   _("Make sure there's nothing there");
   let r1 = Utils.queryAsync(c("SELECT 1 FROM moz_formhistory"));
-  do_check_eq(r1.length, 0);
+  do_check_eq(r1, null);
 
   _("Insert a row");
   let r2 = Utils.queryAsync(c("INSERT INTO moz_formhistory (fieldname, value) VALUES ('foo', 'bar')"));
-  do_check_eq(r2.length, 0);
+  do_check_eq(r2, null);
 
   _("Request a known value for the one row");
-  let r3 = Utils.queryAsync(c("SELECT 42 num FROM moz_formhistory"), "num");
+  let r3 = Utils.queryAsync(c("SELECT 42 num FROM moz_formhistory"), ["num"]);
   do_check_eq(r3.length, 1);
   do_check_eq(r3[0].num, 42);
 
@@ -41,7 +41,7 @@ function run_test() {
 
   _("Add multiple entries (sqlite doesn't support multiple VALUES)");
   let r6 = Utils.queryAsync(c("INSERT INTO moz_formhistory (fieldname, value) SELECT 'foo', 'baz' UNION SELECT 'more', 'values'"));
-  do_check_eq(r6.length, 0);
+  do_check_eq(r6, null);
 
   _("Get multiple rows");
   let r7 = Utils.queryAsync(c("SELECT fieldname, value FROM moz_formhistory WHERE fieldname = 'foo'"), ["fieldname", "value"]);
@@ -51,7 +51,7 @@ function run_test() {
 
   _("Make sure updates work");
   let r8 = Utils.queryAsync(c("UPDATE moz_formhistory SET value = 'updated' WHERE fieldname = 'more'"));
-  do_check_eq(r8.length, 0);
+  do_check_eq(r8, null);
 
   _("Get the updated");
   let r9 = Utils.queryAsync(c("SELECT value, fieldname FROM moz_formhistory WHERE fieldname = 'more'"), ["fieldname", "value"]);
@@ -60,7 +60,7 @@ function run_test() {
   do_check_eq(r9[0].value, "updated");
 
   _("Grabbing fewer fields than queried is fine");
-  let r10 = Utils.queryAsync(c("SELECT value, fieldname FROM moz_formhistory"), "fieldname");
+  let r10 = Utils.queryAsync(c("SELECT value, fieldname FROM moz_formhistory"), ["fieldname"]);
   do_check_eq(r10.length, 3);
 
   _("Generate an execution error");

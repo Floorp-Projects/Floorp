@@ -19,15 +19,49 @@ function run_test() {
   }
   test_bug_617650();
   test_encrypt_decrypt();
+  test_SECItem_byteCompressInts();
+  test_key_memoization();
   if (this.gczeal)
     gczeal(0);
+}
+
+function test_key_memoization() {
+  let oldImport = cryptoSvc.nss && cryptoSvc.nss.PK11_ImportSymKey;
+  if (!oldImport) {
+    _("Couldn't swizzle PK11_ImportSymKey; returning.");
+    return;
+  }
+
+  let iv  = cryptoSvc.generateRandomIV();
+  let key = cryptoSvc.generateRandomKey();
+  let c   = 0;
+  cryptoSvc.nss.PK11_ImportSymKey = function(slot, type, origin, operation, key, wincx) {
+    c++;
+    return oldImport(slot, type, origin, operation, key, wincx);
+  }
+
+  // Encryption should cause a single counter increment.
+  do_check_eq(c, 0);
+  let cipherText = cryptoSvc.encrypt("Hello, world.", key, iv);
+  do_check_eq(c, 1);
+  let cipherText = cryptoSvc.encrypt("Hello, world.", key, iv);
+  do_check_eq(c, 1);
+
+  // ... as should decryption.
+  cryptoSvc.decrypt(cipherText, key, iv);
+  cryptoSvc.decrypt(cipherText, key, iv);
+  cryptoSvc.decrypt(cipherText, key, iv);
+  do_check_eq(c, 2);
+
+  // Un-swizzle.
+  cryptoSvc.nss.PK11_ImportSymKey = oldImport;
 }
 
 function multiple_decrypts(iterations) {
   let iv = cryptoSvc.generateRandomIV();
   let key = cryptoSvc.generateRandomKey();
   let cipherText = cryptoSvc.encrypt("Hello, world.", key, iv);
-  
+
   for (let i = 0; i < iterations; ++i) {
     let clearText = cryptoSvc.decrypt(cipherText, key, iv);
     do_check_eq(clearText + " " + i, "Hello, world. " + i);
@@ -52,12 +86,30 @@ function test_bug_617650() {
 // Just verify that it gets populated with the correct bytes.
 function test_makeSECItem() {
   Components.utils.import("resource://gre/modules/ctypes.jsm");
-  
+
   let item1 = cryptoSvc.makeSECItem("abcdefghi", false);
   do_check_true(!item1.isNull());
   let intData = ctypes.cast(item1.contents.data, ctypes.uint8_t.array(8).ptr).contents;
   for (let i = 0; i < 8; ++i)
     do_check_eq(intData[i], "abcdefghi".charCodeAt(i));
+}
+
+function test_SECItem_byteCompressInts() {
+  Components.utils.import("resource://gre/modules/ctypes.jsm");
+
+  let item1 = cryptoSvc.makeSECItem("abcdefghi", false);
+  do_check_true(!item1.isNull());
+  let intData = ctypes.cast(item1.contents.data, ctypes.uint8_t.array(8).ptr).contents;
+
+  // Fill it too short.
+  cryptoSvc.byteCompressInts("MMM", intData, 8);
+  for (let i = 0; i < 8; ++i)
+    do_check_eq(intData[i], [77, 77, 77, 0, 0, 0, 0, 0, 0][i]);
+
+  // Fill it too much. Doesn't buffer overrun.
+  cryptoSvc.byteCompressInts("NNNNNNNNNNNNNNNN", intData, 8);
+  for (let i = 0; i < 8; ++i)
+    do_check_eq(intData[i], "NNNNNNNNNNNNNNNN".charCodeAt(i));
 }
 
 function test_encrypt_decrypt() {
@@ -83,7 +135,6 @@ function test_encrypt_decrypt() {
 
 
   // Do some more tests with a fixed key/iv, to check for reproducable results.
-  cryptoSvc.algorithm = Ci.IWeaveCrypto.AES_128_CBC;
   key = "St1tFCor7vQEJNug/465dQ==";
   iv  = "oLjkfrLIOnK2bDRvW4kXYA==";
 
@@ -146,8 +197,6 @@ function test_encrypt_decrypt() {
   do_check_eq(clearText, mySecret);
 
 
-  // Test with 192 bit key.
-  cryptoSvc.algorithm = Ci.IWeaveCrypto.AES_192_CBC;
   key = "iz35tuIMq4/H+IYw2KTgow==";
   iv  = "TJYrvva2KxvkM8hvOIvWp3xgjTXgq5Ss";
   mySecret = "i like pie";
@@ -157,8 +206,6 @@ function test_encrypt_decrypt() {
   do_check_eq(cipherText, "DLGx8BWqSCLGG7i/xwvvxg==");
   do_check_eq(clearText, mySecret);
 
-  // Test with 256 bit key.
-  cryptoSvc.algorithm = Ci.IWeaveCrypto.AES_256_CBC;
   key = "c5hG3YG+NC61FFy8NOHQak1ZhMEWO79bwiAfar2euzI=";
   iv  = "gsgLRDaxWvIfKt75RjuvFWERt83FFsY2A0TW+0b2iVk=";
   mySecret = "i like pie";
@@ -168,9 +215,6 @@ function test_encrypt_decrypt() {
   do_check_eq(cipherText, "o+ADtdMd8ubzNWurS6jt0Q==");
   do_check_eq(clearText, mySecret);
 
-
-  // Test with bogus inputs
-  cryptoSvc.algorithm = Ci.IWeaveCrypto.AES_128_CBC;
   key = "St1tFCor7vQEJNug/465dQ==";
   iv  = "oLjkfrLIOnK2bDRvW4kXYA==";
   mySecret = "does thunder read testcases?";
@@ -213,5 +257,4 @@ function test_encrypt_decrypt() {
     failure = true;
   }
   do_check_true(failure);
-
 }

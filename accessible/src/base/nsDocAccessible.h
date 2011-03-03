@@ -345,6 +345,13 @@ protected:
     virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
     virtual nsresult AddEventListeners();
     virtual nsresult RemoveEventListeners();
+
+  /**
+   * Notify this document that was bound to the accessible document tree.
+   * Can be overridden by wrappers to prepare initialization work.
+   */
+  virtual void NotifyOfInitialUpdate();
+
     void AddScrollListener();
     void RemoveScrollListener();
 

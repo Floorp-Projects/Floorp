@@ -1085,7 +1085,17 @@
       </xul:menu>
     </content>
 
-    <implementation>
+    <implementation implements="nsIDOMEventListener">
+      <constructor><![CDATA[
+        this._parentMenupopup.addEventListener("DOMMenuItemActive", this, false);
+        this._parentMenupopup.addEventListener("popuphidden", this, false);
+      ]]></constructor>
+
+      <destructor><![CDATA[
+        this._parentMenupopup.removeEventListener("DOMMenuItemActive", this, false);
+        this._parentMenupopup.removeEventListener("popuphidden", this, false);
+      ]]></destructor>
+
       <field name="menuitem" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "menuitem");
       </field>
@@ -1096,14 +1106,39 @@
       <field name="_menuDelay">600</field>
 
       <field name="_parentMenupopup"><![CDATA[
-        let node = this.parentNode;
-        while (node) {
-          if (node.localName == "menupopup")
-            break;
-          node = node.parentNode;
-        }
-        node;
+        this._getParentMenupopup(this);
       ]]></field>
+
+      <method name="_getParentMenupopup">
+        <parameter name="aNode"/>
+        <body><![CDATA[
+          let node = aNode.parentNode;
+          while (node) {
+            if (node.localName == "menupopup")
+              break;
+            node = node.parentNode;
+          }
+          return node;
+        ]]></body>
+      </method>
+
+      <method name="handleEvent">
+        <parameter name="event"/>
+        <body><![CDATA[
+          switch (event.type) {
+            case "DOMMenuItemActive":
+              if (this.getAttribute("active") == "true" &&
+                  event.target != this &&
+                  this._getParentMenupopup(event.target) == this._parentMenupopup)
+                this.removeAttribute("active");
+              break;
+            case "popuphidden":
+              if (event.target == this._parentMenupopup)
+                this.removeAttribute("active");
+              break;
+          }
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
@@ -1112,30 +1147,16 @@
             this.getAttribute("disabled") != "true") {
           this.setAttribute("active", "true");
 
+          let event = document.createEvent("Events");
+          event.initEvent("DOMMenuItemActive", true, false);
+          this.dispatchEvent(event);
+
           let self = this;
           setTimeout(function () {
             if (self.getAttribute("active") == "true")
               self.menu.open = true;
           }, this._menuDelay);
         }
-      ]]></handler>
-
-      <handler event="mouseout"><![CDATA[
-        if (this.menu.open)
-          return;
-
-        let node = event.relatedTarget;
-        while (node) {
-          if (node == this)
-            return;
-          node = node.parentNode;
-        }
-        this.removeAttribute("active");
-      ]]></handler>
-
-      <handler event="popuphidden"><![CDATA[
-        if (event.target == this.firstChild)
-          this.removeAttribute("active");
       ]]></handler>
 
       <handler event="popupshowing"><![CDATA[

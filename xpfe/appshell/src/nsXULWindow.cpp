@@ -1816,6 +1816,8 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
     NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
   }
 
+  NS_ENSURE_STATE(xulWin->mPrimaryContentShell);
+
   *_retval = newWindow;
   NS_ADDREF(*_retval);
 

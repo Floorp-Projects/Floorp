@@ -162,7 +162,7 @@ CSPPolicyURIListener.prototype = {
     }
     else {
       // problem fetching policy so fail closed
-      this._csp.refinePolicy("allow 'none'", null, this._docURI, this._docRequest);
+      this._csp.refinePolicy("allow 'none'", this._docURI, this._docRequest);
     }
     // resume the parent document request
     this._docRequest.resume();

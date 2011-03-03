@@ -1142,6 +1142,11 @@
             this.hidden = false;
 
             this._updateStatusUI(this.nsITypeAheadFind.FIND_FOUND);
+
+            let event = document.createEvent("Events");
+            event.initEvent("findbaropen", true, false);
+            this.dispatchEvent(event);
+
             return true;
           }
           return false;

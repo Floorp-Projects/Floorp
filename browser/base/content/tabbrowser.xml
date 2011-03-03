@@ -3750,11 +3750,23 @@
       </xul:hbox>
     </content>
 
-    <implementation>
+    <implementation implements="nsIDOMEventListener">
+      <constructor><![CDATA[
+        window.addEventListener("findbaropen", this, false);
+      ]]></constructor>
+
+      <destructor><![CDATA[
+        window.removeEventListener("findbaropen", this, false);
+      ]]></destructor>
+
       <property name="label">
         <setter><![CDATA[
-          if (!this.label)
-            this.removeAttribute("mirror");
+          if (!this.label) {
+            if (window.gFindBarInitialized && !window.gFindBar.hidden)
+              this.setAttribute("mirror", "true");
+            else
+              this.removeAttribute("mirror");
+          }
 
           this.style.minWidth = this.getAttribute("type") == "status" &&
                                 this.getAttribute("previoustype") == "status"
@@ -3767,6 +3779,15 @@
           return this.getAttribute("label");
         </getter>
       </property>
+
+      <method name="handleEvent">
+        <parameter name="event"/>
+        <body><![CDATA[
+          if (event.type == "findbaropen" &&
+              this.label)
+            this.setAttribute("mirror", "true");
+        ]]></body>
+      </method>
 
       <method name="_mirror">
         <body>
