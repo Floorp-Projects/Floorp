@@ -5023,6 +5023,7 @@ cairo-windows)
     MOZ_WIDGET_TOOLKIT=windows
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
+    MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
 cairo-gtk2|cairo-gtk2-x11)
