@@ -788,9 +788,13 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     jit->nEqualityICs = equalityICs.length();
     cursor += sizeof(ic::EqualityICInfo) * jit->nEqualityICs;
     for (size_t i = 0; i < jit->nEqualityICs; i++) {
-        uint32 offs = uint32(equalityICs[i].jumpTarget - script->code);
-        JS_ASSERT(jumpMap[offs].isValid());
-        jitEqualityICs[i].target = fullCode.locationOf(jumpMap[offs]);
+        if (equalityICs[i].trampoline) {
+            jitEqualityICs[i].target = stubCode.locationOf(equalityICs[i].trampolineStart);
+        } else {
+            uint32 offs = uint32(equalityICs[i].jumpTarget - script->code);
+            JS_ASSERT(jumpMap[offs].isValid());
+            jitEqualityICs[i].target = fullCode.locationOf(jumpMap[offs]);
+        }
         jitEqualityICs[i].stubEntry = stubCode.locationOf(equalityICs[i].stubEntry);
         jitEqualityICs[i].stubCall = stubCode.locationOf(equalityICs[i].stubCall);
         jitEqualityICs[i].stub = equalityICs[i].stub;

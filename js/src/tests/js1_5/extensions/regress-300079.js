@@ -59,7 +59,7 @@ function test()
   else {
     expect = 'PASSED';
 
-    f = eval("(function (a) {return (function () { return a * a;}); })()");
+    f = Function("a", "return (function () { return a * a;});")();
     g = clone(f, {a: 3});
     f = null;
     gc();
