@@ -1491,11 +1491,6 @@ TypeCompartment::init(JSContext *cx)
         inferenceEnabled = true;
 
     JS_InitArenaPool(&pool, "typeinfer", 512, 8, NULL);
-
-#ifdef DEBUG
-    emptyObject.name_ = JSID_VOID;
-#endif
-    emptyObject.unknownProperties = true;
 }
 
 TypeObject *
@@ -1689,8 +1684,8 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
 
     AutoEnterTypeInference enter(cx);
 
-    InferSpew(ISpewDynamic, "MonitorResult: #%u:%05u %u: %s",
-              script->id(), offset, index, TypeString(type));
+    InferSpew(ISpewDynamic, "MonitorResult: #%u:%05u: %s",
+              script->id(), offset, TypeString(type));
 
     TypeResult *result = (TypeResult *) cx->calloc(sizeof(TypeResult));
     if (!result)
@@ -3988,6 +3983,6 @@ JSScript::sweepTypes(JSContext *cx)
 {
     SweepTypeObjectList(cx, typeObjects);
 
-    if (types)
+    if (types && !compartment->types.inferenceDepth)
         js::types::DestroyScriptTypes(cx, this);
 }

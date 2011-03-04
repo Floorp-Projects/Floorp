@@ -3333,7 +3333,11 @@ js_NewBlockObject(JSContext *cx)
     if (!blockObj)
         return NULL;
 
-    blockObj->init(cx, &js_BlockClass, cx->emptyTypeObject(), NULL, NULL, false);
+    TypeObject *type = cx->getTypeEmpty();
+    if (!type)
+        return false;
+
+    blockObj->init(cx, &js_BlockClass, type, NULL, NULL, false);
     blockObj->setMap(cx->compartment->emptyBlockShape);
     return blockObj;
 }
@@ -4277,14 +4281,9 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
         oldproto = oldproto->getProto();
     }
 
-    TypeObject *type;
-    if (proto) {
-        type = proto->getNewType(cx);
-        if (!type)
-            return false;
-    } else {
-        type = cx->emptyTypeObject();
-    }
+    TypeObject *type = proto ? proto->getNewType(cx) : cx->getTypeEmpty();
+    if (!type)
+        return false;
 
     /*
      * Setting __proto__ on an object that has escaped and may be referenced by

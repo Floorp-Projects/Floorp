@@ -967,8 +967,12 @@ NewCallObject(JSContext *cx, Bindings *bindings, JSObject &scopeChain, JSObject 
     if (!callobj)
         return NULL;
 
+    TypeObject *type = cx->getTypeEmpty();
+    if (!type)
+        return NULL;
+
     /* Init immediately to avoid GC seeing a half-init'ed object. */
-    callobj->init(cx, &js_CallClass, cx->emptyTypeObject(), &scopeChain, NULL, false);
+    callobj->init(cx, &js_CallClass, type, &scopeChain, NULL, false);
     callobj->setMap(bindings->lastShape());
 
     /* This must come after callobj->lastProp has been set. */
@@ -998,7 +1002,11 @@ NewDeclEnvObject(JSContext *cx, JSStackFrame *fp)
     if (!envobj)
         return NULL;
 
-    envobj->init(cx, &js_DeclEnvClass, cx->emptyTypeObject(), &fp->scopeChain(), fp, false);
+    TypeObject *type = cx->getTypeEmpty();
+    if (!type)
+        return NULL;
+
+    envobj->init(cx, &js_DeclEnvClass, type, &fp->scopeChain(), fp, false);
     envobj->setMap(cx->compartment->emptyDeclEnvShape);
     return envobj;
 }
@@ -1915,7 +1923,8 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         if (!fun)
             return false;
         FUN_OBJECT(fun)->clearParent();
-        FUN_OBJECT(fun)->clearType(cx);
+        if (!FUN_OBJECT(fun)->clearType(cx))
+            return false;
     }
 
     AutoObjectRooter tvr(cx, FUN_OBJECT(fun));

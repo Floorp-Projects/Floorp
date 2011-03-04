@@ -739,10 +739,14 @@ JSObject::getNewType(JSContext *cx)
     return newType;
 }
 
-inline void
+inline bool
 JSObject::clearType(JSContext *cx)
 {
-    type = cx->emptyTypeObject();
+    js::types::TypeObject *newType = cx->getTypeEmpty();
+    if (!newType)
+        return false;
+    type = newType;
+    return true;
 }
 
 inline void
@@ -1141,14 +1145,9 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
           return NULL;
     }
 
-    types::TypeObject *type;
-    if (proto) {
-        type = proto->getNewType(cx);
-        if (!type)
-            return NULL;
-    } else {
-        type = cx->emptyTypeObject();
-    }
+    types::TypeObject *type = proto ? proto->getNewType(cx) : cx->getTypeEmpty();
+    if (!type)
+        return NULL;
 
     /*
      * Allocate an object from the GC heap and initialize all its fields before
