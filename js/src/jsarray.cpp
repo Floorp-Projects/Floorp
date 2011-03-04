@@ -2059,6 +2059,7 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
         if (!JS_CHECK_OPERATION_LIMIT(cx) || DeleteArrayElement(cx, obj, --len, true) < 0)
             return false;
     }
+    vp->setObject(*obj);
     return true;
 }
 
