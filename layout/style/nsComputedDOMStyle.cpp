@@ -1372,7 +1372,7 @@ AppendCSSGradientLength(const nsStyleCoord& aValue,
   aString.Append(tokenString);
 }
 
-nsresult
+void
 nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
                                          nsAString& aString)
 {
@@ -1456,11 +1456,10 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
 
   delete tmpVal;
   aString.AppendLiteral(")");
-  return NS_OK;
 }
 
 // -moz-image-rect(<uri>, <top>, <right>, <bottom>, <left>)
-nsresult
+void
 nsComputedDOMStyle::GetImageRectString(nsIURI* aURI,
                                        const nsStyleSides& aCropRect,
                                        nsString& aString)
@@ -1486,10 +1485,9 @@ nsComputedDOMStyle::GetImageRectString(nsIURI* aURI,
   aString = NS_LITERAL_STRING("-moz-image-rect(") +
             argumentString +
             NS_LITERAL_STRING(")");
-  return NS_OK;
 }
 
-nsresult
+void
 nsComputedDOMStyle::SetValueToStyleImage(const nsStyleImage& aStyleImage,
                                          nsROCSSPrimitiveValue* aValue)
 {
@@ -1503,8 +1501,7 @@ nsComputedDOMStyle::SetValueToStyleImage(const nsStyleImage& aStyleImage,
       const nsStyleSides* cropRect = aStyleImage.GetCropRect();
       if (cropRect) {
         nsAutoString imageRectString;
-        nsresult rv = GetImageRectString(uri, *cropRect, imageRectString);
-        NS_ENSURE_SUCCESS(rv, rv);
+        GetImageRectString(uri, *cropRect, imageRectString);
         aValue->SetString(imageRectString);
       } else {
         aValue->SetURI(uri);
@@ -1514,9 +1511,8 @@ nsComputedDOMStyle::SetValueToStyleImage(const nsStyleImage& aStyleImage,
     case eStyleImageType_Gradient:
     {
       nsAutoString gradientString;
-      nsresult rv = GetCSSGradientString(aStyleImage.GetGradientData(),
-                                         gradientString);
-      NS_ENSURE_SUCCESS(rv, rv);
+      GetCSSGradientString(aStyleImage.GetGradientData(),
+                           gradientString);
       aValue->SetString(gradientString);
       break;
     }
@@ -1536,10 +1532,8 @@ nsComputedDOMStyle::SetValueToStyleImage(const nsStyleImage& aStyleImage,
       break;
     default:
       NS_NOTREACHED("unexpected image type");
-      return NS_ERROR_UNEXPECTED;
+      break;
   }
-
-  return NS_OK;
 }
 
 nsresult
@@ -1554,11 +1548,7 @@ nsComputedDOMStyle::DoGetBackgroundImage(nsIDOMCSSValue** aValue)
     valueList->AppendCSSValue(val);
 
     const nsStyleImage& image = bg->mLayers[i].mImage;
-    nsresult rv = SetValueToStyleImage(image, val);
-    if (NS_FAILED(rv)) {
-      delete valueList;
-      return rv;
-    }
+    SetValueToStyleImage(image, val);
   }
 
   NS_ADDREF(*aValue = valueList);
