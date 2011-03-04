@@ -63,7 +63,7 @@ import android.net.Uri;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-class GeckoAppShell
+public class GeckoAppShell
 {
     // static members only
     private GeckoAppShell() { }
@@ -867,5 +867,48 @@ class GeckoAppShell
         Configuration config = res.getConfiguration();
         config.locale = locale;
         res.updateConfiguration(config, res.getDisplayMetrics());
+    }
+
+    public static void killAnyZombies() {
+        File proc = new File("/proc");
+        File[] files = proc.listFiles();
+        for (int i = 0; i < files.length; i++) {
+            File p = files[i];
+            File pEnv = new File(p, "environ");
+            if (pEnv.canRead() && !p.getName().equals("self")) {
+                int pid = Integer.parseInt(p.getName());
+                if (pid != android.os.Process.myPid()) {
+                    Log.i("GeckoProcs", "gonna kill pid: " + p.getName());
+                    android.os.Process.killProcess(pid);
+                }
+            }
+        }
+    }
+
+    public static boolean checkForGeckoProcs() {
+        File proc = new File("/proc");
+        File[] files = proc.listFiles();
+        for (int i = 0; i < files.length; i++) {
+            File p = files[i];
+            File pEnv = new File(p, "environ");
+            if (pEnv.canRead() && !p.getName().equals("self")) {
+                int pid = Integer.parseInt(p.getName());
+                if (pid != android.os.Process.myPid()) {
+                    Log.i("GeckoProcs", "found pid: " + p.getName());
+                    return true;
+                }
+            }
+        }
+        Log.i("GeckoProcs", "didn't find any other procs");
+        return false;
+    }
+
+    public static void waitForAnotherGeckoProc(){
+        int countdown = 40;
+        while (!checkForGeckoProcs() &&  --countdown > 0) {
+            try {
+                Thread.currentThread().sleep(100);
+            } catch (InterruptedException ie) {}
+        }
     }
 }
