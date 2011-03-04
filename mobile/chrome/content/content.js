@@ -804,6 +804,20 @@ var ContextHandler = {
       if (popupNode instanceof Ci.nsIImageLoadingContent && popupNode.currentURI) {
         state.types.push("image");
         state.label = state.mediaURL = popupNode.currentURI.spec;
+
+        // Retrieve the type of image from the cache since the url can fail to
+        // provide valuable informations
+        try {
+          let imageCache = Cc["@mozilla.org/image/cache;1"].getService(Ci.imgICache);
+          let props = imageCache.findEntryProperties(popupNode.currentURI, content.document.characterSet);
+          if (props) {
+            state.contentType = String(props.get("type", Ci.nsISupportsCString));
+            state.contentDisposition = String(props.get("content-disposition", Ci.nsISupportsCString));
+          }
+        } catch (e) {
+          // Failure to get type and content-disposition off the image is non-fatal
+        }
+
       } else if (popupNode instanceof Ci.nsIDOMHTMLMediaElement) {
         state.label = state.mediaURL = (popupNode.currentSrc || popupNode.src);
         state.types.push((popupNode.paused || popupNode.ended) ? "media-paused" : "media-playing");
