@@ -8278,14 +8278,20 @@ dnl ========================================================
 MOZ_ARG_HEADER(Static build options)
 
 MOZ_ARG_ENABLE_BOOL(static,
-[  --enable-static         Enable building of internal static libs],
+[  --enable-static         Enable building internal static libs],
     BUILD_STATIC_LIBS=1,
     BUILD_STATIC_LIBS=)
 
-MOZ_ARG_ENABLE_BOOL(libxul,
-[  --enable-libxul         Enable building of libxul],
-    MOZ_ENABLE_LIBXUL=1,
-    MOZ_ENABLE_LIBXUL=)
+MOZ_ENABLE_LIBXUL=1
+
+MOZ_ARG_DISABLE_BOOL(libxul,
+[  --disable-libxul        Disable building libxul (not supported)],
+    MOZ_ENABLE_LIBXUL=,
+    MOZ_ENABLE_LIBXUL=1)
+
+if test -z "$MOZ_ENABLE_LIBXUL"; then
+  AC_MSG_ERROR([--disable-libxul is no longer supported.])
+fi
 
 # split JS out by default to avoid VS2005 PGO crash (bug 591836).
 if test "$OS_ARCH" = "WINNT" -a "$CPU_ARCH" != "x86_64" ; then
@@ -8298,11 +8304,6 @@ MOZ_ARG_ENABLE_BOOL(shared-js,
     ENABLE_SHARED_JS=1,
     ENABLE_SHARED_JS=)
 
-if test -z "$MOZ_ENABLE_LIBXUL"; then
-  dnl --disable-libxul implies shared js
-  ENABLE_SHARED_JS=1
-fi
-
 if test -n "$ENABLE_SHARED_JS"; then
   JS_SHARED_LIBRARY=1
   MOZ_JS_LIBS=$MOZ_JS_SHARED_LIBS
@@ -8313,32 +8314,16 @@ fi
 AC_SUBST(JS_SHARED_LIBRARY)
 
 if test -n "$MOZ_STATIC_BUILD_UNSUPPORTED" -a -n "$BUILD_STATIC_LIBS"; then
-	AC_MSG_ERROR([--enable-static is not supported for building $MOZ_APP_NAME. You probably want --enable-libxul.])
+  AC_MSG_ERROR([--enable-static is not supported for building $MOZ_APP_NAME.])
 fi
 
 if test -n "$MOZ_ENABLE_LIBXUL" -a -n "$BUILD_STATIC_LIBS"; then
-	AC_MSG_ERROR([--enable-libxul is not compatible with --enable-static])
-fi
-
-if test -n "$MOZ_IPC" -a -z "$MOZ_ENABLE_LIBXUL"; then
-    AC_MSG_ERROR([--enable-ipc requires --enable-libxul])
-fi
-
-if test -z "$MOZ_ENABLE_LIBXUL" -a -n "$MOZ_OMNIJAR"; then
-    AC_MSG_ERROR([Omnijar packaging is incompatible with --disable-libxul. Please either --enable-libxul or --enable-chrome-format=jar|flat|symlink]);
+  AC_MSG_ERROR([--enable-libxul is not compatible with --enable-static])
 fi
 
 AC_SUBST(LIBXUL_LIBS)
-
-if test -n "$MOZ_ENABLE_LIBXUL"; then
-    XPCOM_LIBS="$LIBXUL_LIBS"
-    AC_DEFINE(MOZ_ENABLE_LIBXUL)
-else
-    if test -n "$BUILD_STATIC_LIBS"; then
-        AC_DEFINE(MOZ_STATIC_BUILD)
-    fi
-    XPCOM_LIBS="$DYNAMIC_XPCOM_LIBS"
-fi
+XPCOM_LIBS="$LIBXUL_LIBS"
+AC_DEFINE(MOZ_ENABLE_LIBXUL)
 
 dnl ========================================================
 dnl =
