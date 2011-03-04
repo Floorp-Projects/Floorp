@@ -71,6 +71,7 @@ PARALLEL_DIRS += \
   urlformatter \
   viewconfig \
   viewsource \
+  webapps \
   $(NULL)
 
 ifdef BUILD_CTYPES
