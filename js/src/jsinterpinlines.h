@@ -587,13 +587,23 @@ InvokeSessionGuard::invoke(JSContext *cx) const
     formals_[-2] = savedCallee_;
     formals_[-1] = savedThis_;
 
-#ifdef JS_METHODJIT
-    void *code;
-    if (!optimized() || !(code = script_->getJIT(false /* !constructing */)->invokeEntry))
-#else
     if (!optimized())
-#endif
         return Invoke(cx, args_, 0);
+
+#ifdef JS_METHODJIT
+    mjit::JITScript *jit = script_->getJIT(false /* !constructing */);
+    if (!jit) {
+        /* Watch in case the code was thrown away due a recompile. */
+        mjit::CompileStatus status = mjit::TryCompile(cx, frame_.fp());
+        if (status == mjit::Compile_Error)
+            return false;
+        JS_ASSERT(status == mjit::Compile_Okay);
+        jit = script_->getJIT(false);
+    }
+    void *code;
+    if (!(code = jit->invokeEntry))
+        return Invoke(cx, args_, 0);
+#endif
 
     /* Clear any garbage left from the last Invoke. */
     JSStackFrame *fp = frame_.fp();
