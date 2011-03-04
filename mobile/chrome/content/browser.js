@@ -1431,14 +1431,16 @@ Browser.WebProgress.prototype = {
     let browser = aTab.browser;
     browser.messageManager.removeMessageListener("MozScrolledAreaChanged", aTab.scrolledAreaChanged);
 
-    browser.messageManager.addMessageListener("Browser:FirstPaint", function(aMessage) {
+    browser.messageManager.addMessageListener("Browser:FirstPaint", function firstPaintListener(aMessage) {
       browser.messageManager.removeMessageListener(aMessage.name, arguments.callee);
 
       // We're about to have new page content, so scroll the content area
-      // to the top so the new paints will draw correctly.
+      // so the new paints will draw correctly.
       // Background tabs are delayed scrolled to top in _documentStop
       if (getBrowser() == browser) {
-        browser.getRootView().scrollTo(0, 0);
+        let json = aMessage.json;
+        browser.getRootView().scrollTo(Math.floor(json.x * browser.scale),
+                                       Math.floor(json.y * browser.scale));
         Browser.pageScrollboxScroller.scrollTo(0, 0);
       }
 
