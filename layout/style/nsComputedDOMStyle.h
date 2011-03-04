@@ -162,11 +162,11 @@ private:
                              const PRInt32 aTable[],
                              nsIDOMCSSValue** aResult);
 
-  nsresult GetCSSGradientString(const nsStyleGradient* aGradient,
-                                nsAString& aString);
-  nsresult GetImageRectString(nsIURI* aURI,
-                              const nsStyleSides& aCropRect,
-                              nsString& aString);
+  void GetCSSGradientString(const nsStyleGradient* aGradient,
+                            nsAString& aString);
+  void GetImageRectString(nsIURI* aURI,
+                          const nsStyleSides& aCropRect,
+                          nsString& aString);
 
   /* Properties queryable as CSSValues.
    * To avoid a name conflict with nsIDOM*CSS2Properties, these are all
@@ -404,8 +404,8 @@ private:
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
   nsDOMCSSValueList* GetROCSSValueList(PRBool aCommaDelimited);
   void SetToRGBAColor(nsROCSSPrimitiveValue* aValue, nscolor aColor);
-  nsresult SetValueToStyleImage(const nsStyleImage& aStyleImage,
-                                nsROCSSPrimitiveValue* aValue);
+  void SetValueToStyleImage(const nsStyleImage& aStyleImage,
+                            nsROCSSPrimitiveValue* aValue);
 
   /**
    * A method to get a percentage base for a percentage value.  Returns PR_TRUE
