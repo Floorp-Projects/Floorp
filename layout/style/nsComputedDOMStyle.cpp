@@ -673,13 +673,13 @@ nsComputedDOMStyle::DoGetStackSizing(nsIDOMCSSValue** aValue)
   return NS_OK;
 }
 
-nsresult
+void
 nsComputedDOMStyle::SetToRGBAColor(nsROCSSPrimitiveValue* aValue,
                                    nscolor aColor)
 {
   if (NS_GET_A(aColor) == 0) {
     aValue->SetIdent(eCSSKeyword_transparent);
-    return NS_OK;
+    return;
   }
 
   nsROCSSPrimitiveValue *red   = GetROCSSPrimitiveValue();
@@ -697,7 +697,6 @@ nsComputedDOMStyle::SetToRGBAColor(nsROCSSPrimitiveValue* aValue,
   alpha->SetNumber(nsStyleUtil::ColorComponentToFloat(a));
 
   aValue->SetColor(rgbColor);
-  return NS_OK;
 }
 
 nsresult
@@ -707,12 +706,7 @@ nsComputedDOMStyle::DoGetColor(nsIDOMCSSValue** aValue)
 
   const nsStyleColor* color = GetStyleColor();
 
-  nsresult rv = SetToRGBAColor(val, color->mColor);
-  if (NS_FAILED(rv)) {
-    delete val;
-    return rv;
-  }
-
+  SetToRGBAColor(val, color->mColor);
   NS_ADDREF(*aValue = val);
   return NS_OK;
 }
@@ -1365,12 +1359,7 @@ nsComputedDOMStyle::DoGetBackgroundColor(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
 
   const nsStyleBackground* color = GetStyleBackground();
-  nsresult rv = SetToRGBAColor(val, color->mBackgroundColor);
-  if (NS_FAILED(rv)) {
-    delete val;
-    return rv;
-  }
-
+  SetToRGBAColor(val, color->mBackgroundColor);
   NS_ADDREF(*aValue = val);
   return NS_OK;
 }
@@ -1488,11 +1477,7 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
     if (needSep) {
       aString.AppendLiteral(", ");
     }
-    nsresult rv = SetToRGBAColor(tmpVal, aGradient->mStops[i].mColor);
-    if (NS_FAILED(rv)) {
-      delete tmpVal;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    SetToRGBAColor(tmpVal, aGradient->mStops[i].mColor);
     tmpVal->GetCssText(tokenString);
     aString.Append(tokenString);
 
@@ -2216,12 +2201,7 @@ nsComputedDOMStyle::DoGetOutlineColor(nsIDOMCSSValue** aValue)
     color = GetStyleColor()->mColor;
 #endif
 
-  nsresult rv = SetToRGBAColor(val, color);
-  if (NS_FAILED(rv)) {
-    delete val;
-    return rv;
-  }
-
+  SetToRGBAColor(val, color);
   NS_ADDREF(*aValue = val);
   return NS_OK;
 }
@@ -3587,12 +3567,7 @@ nsComputedDOMStyle::GetBorderColorsFor(mozilla::css::Side aSide,
       do {
         nsROCSSPrimitiveValue *primitive = GetROCSSPrimitiveValue();
 
-        nsresult rv = SetToRGBAColor(primitive, borderColors->mColor);
-        if (NS_FAILED(rv)) {
-          delete valueList;
-          delete primitive;
-          return rv;
-        }
+        SetToRGBAColor(primitive, borderColors->mColor);
 
         PRBool success = valueList->AppendCSSValue(primitive);
         if (!success) {
@@ -3647,12 +3622,7 @@ nsComputedDOMStyle::GetBorderColorFor(mozilla::css::Side aSide, nsIDOMCSSValue**
     color = GetStyleColor()->mColor;
   }
 
-  nsresult rv = SetToRGBAColor(val, color);
-  if (NS_FAILED(rv)) {
-    delete val;
-    return rv;
-  }
-
+  SetToRGBAColor(val, color);
   NS_ADDREF(*aValue = val);
   return NS_OK;
 }
@@ -3927,11 +3897,7 @@ nsComputedDOMStyle::GetSVGPaintFor(PRBool aFill,
   }
   case eStyleSVGPaintType_Color:
   {
-    nsresult rv = SetToRGBAColor(val, paint->mPaint.mColor);
-    if (NS_FAILED(rv)) {
-      delete val;
-      return rv;
-    }
+    SetToRGBAColor(val, paint->mPaint.mColor);
     break;
   }
   case eStyleSVGPaintType_Server:
@@ -3952,11 +3918,7 @@ nsComputedDOMStyle::GetSVGPaintFor(PRBool aFill,
     }
 
     val->SetURI(paint->mPaint.mPaintServer);
-    nsresult rv = SetToRGBAColor(fallback, paint->mFallbackColor);
-    if (NS_FAILED(rv)) {
-      delete valueList;
-      return rv;
-    }
+    SetToRGBAColor(fallback, paint->mFallbackColor);
 
     NS_ADDREF(*aValue = valueList);
     return NS_OK;
@@ -4279,12 +4241,7 @@ nsComputedDOMStyle::DoGetFloodColor(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
 
-  nsresult rv = SetToRGBAColor(val, GetStyleSVGReset()->mFloodColor);
-  if (NS_FAILED(rv)) {
-    delete val;
-    return rv;
-  }
-
+  SetToRGBAColor(val, GetStyleSVGReset()->mFloodColor);
   NS_ADDREF(*aValue = val);
   return NS_OK;
 }
@@ -4294,12 +4251,7 @@ nsComputedDOMStyle::DoGetLightingColor(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
 
-  nsresult rv = SetToRGBAColor(val, GetStyleSVGReset()->mLightingColor);
-  if (NS_FAILED(rv)) {
-    delete val;
-    return rv;
-  }
-
+  SetToRGBAColor(val, GetStyleSVGReset()->mLightingColor);
   NS_ADDREF(*aValue = val);
   return NS_OK;
 }
@@ -4309,12 +4261,7 @@ nsComputedDOMStyle::DoGetStopColor(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
 
-  nsresult rv = SetToRGBAColor(val, GetStyleSVGReset()->mStopColor);
-  if (NS_FAILED(rv)) {
-    delete val;
-    return rv;
-  }
-
+  SetToRGBAColor(val, GetStyleSVGReset()->mStopColor);
   NS_ADDREF(*aValue = val);
   return NS_OK;
 }
