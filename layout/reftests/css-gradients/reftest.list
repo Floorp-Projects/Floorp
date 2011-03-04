@@ -91,6 +91,6 @@ fails-if(cocoaWidget) == height-dependence-2.html height-dependence-2-ref.html #
 
 == linear-onestopposition-1.html linear-onestopposition-1-ref.html
 == linear-onestopposition-1.html linear-onestopposition-1-ref2.html
-== radial-onestopposition-1.html radial-onestopposition-1-ref.html
+fails-if(cocoaWidget) == radial-onestopposition-1.html radial-onestopposition-1-ref.html # bug 638664
 == repeating-linear-onestopposition-1.html orange-square.html
 == repeating-radial-onestopposition-1.html orange-square.html
