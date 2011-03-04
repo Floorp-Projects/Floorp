@@ -58,6 +58,7 @@ public class CrashReporter extends Activity
   static final String kMiniDumpPathKey = "upload_file_minidump";
   static final String kPageURLKey = "URL";
   static final String kNotesKey = "Notes";
+  Handler mHandler = null;
   ProgressDialog mProgressDialog;
   File mPendingMinidumpFile;
   File mPendingExtrasFile;
@@ -88,6 +89,15 @@ public class CrashReporter extends Activity
     return true;
   }
 
+  void doFinish() {
+    if (mHandler != null) {
+      mHandler.post(new Runnable(){
+        public void run() {
+          finish();
+        }});
+    }
+  }
+
   @Override
   public void finish()
   {
@@ -99,6 +109,8 @@ public class CrashReporter extends Activity
   public void onCreate(Bundle savedInstanceState)
   {
     super.onCreate(savedInstanceState);
+    // mHandler is created here so runnables can be run on the main thread
+    mHandler = new Handler();
     setContentView(R.layout.crash_reporter);
     mProgressDialog = new ProgressDialog(CrashReporter.this);
     mProgressDialog.setMessage(getString(R.string.sending_crash_report));
@@ -125,7 +137,7 @@ public class CrashReporter extends Activity
   {
     final CheckBox sendReportCheckbox = (CheckBox) findViewById(R.id.send_report);
     if (!sendReportCheckbox.isChecked()) {
-      finish();
+      doFinish();
       return;
     }
 
@@ -219,7 +231,7 @@ public class CrashReporter extends Activity
 
     String spec = extras.get("ServerURL");
     if (spec == null)
-      finish();
+      doFinish();
 
     Log.i("GeckoCrashReport", "server url: " + spec);
     try {
@@ -298,7 +310,7 @@ public class CrashReporter extends Activity
       Log.e("GeckoCrashReporter", "exception during send: ", e);
     }
 
-    finish();
+    doFinish();
   }
 
   void doRestart()
