@@ -70,14 +70,20 @@ function afterAllTabItemsUpdated(callback, win) {
 }
 
 // ---------
-function newWindowWithTabView(callback) {
-  let win = window.openDialog(getBrowserURL(), "_blank", 
-                              "chrome,all,dialog=no,height=800,width=800");
+function newWindowWithTabView(shownCallback, loadCallback, width, height) {
+  let winWidth = width || 800;
+  let winHeight = height || 800;
+  let win = window.openDialog(getBrowserURL(), "_blank",
+                              "chrome,all,dialog=no,height=" + winHeight +
+                              ",width=" + winWidth);
   let onLoad = function() {
     win.removeEventListener("load", onLoad, false);
+    if (typeof loadCallback == "function")
+      loadCallback(win);
+
     let onShown = function() {
       win.removeEventListener("tabviewshown", onShown, false);
-      callback(win);
+      shownCallback(win);
     };
     win.addEventListener("tabviewshown", onShown, false);
     win.TabView.toggle();
