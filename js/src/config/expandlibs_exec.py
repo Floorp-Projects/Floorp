@@ -131,6 +131,8 @@ def main():
         help="when a library has no descriptor file, extract it first, when possible")
     parser.add_option("--uselist", action="store_true", dest="uselist",
         help="use a list file for objects when executing a command")
+    parser.add_option("--verbose", action="store_true", dest="verbose",
+        help="display executed command and temporary files content")
 
     (options, args) = parser.parse_args()
 
@@ -140,12 +142,13 @@ def main():
         if options.uselist:
             args.makelist()
 
-        print >>sys.stderr, "Executing: " + " ".join(args)
-        for tmp in [f for f in args.tmp if os.path.isfile(f)]:
-            print >>sys.stderr, tmp + ":"
-            with open(tmp) as file:
-                print >>sys.stderr, "".join(["    " + l for l in file.readlines()])
-        sys.stderr.flush()
+        if options.verbose:
+            print >>sys.stderr, "Executing: " + " ".join(args)
+            for tmp in [f for f in args.tmp if os.path.isfile(f)]:
+                print >>sys.stderr, tmp + ":"
+                with open(tmp) as file:
+                    print >>sys.stderr, "".join(["    " + l for l in file.readlines()])
+            sys.stderr.flush()
         exit(subprocess.call(args))
 
 if __name__ == '__main__':
