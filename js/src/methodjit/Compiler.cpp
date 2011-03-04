@@ -128,6 +128,9 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
     oomInVector(false),
     applyTricks(NoApplyTricks)
 {
+    /* :FIXME: bug 637856 disabling traceJit if inference is enabled */
+    if (cx->typeInferenceEnabled())
+        addTraceHints = false;
 }
 
 CompileStatus
