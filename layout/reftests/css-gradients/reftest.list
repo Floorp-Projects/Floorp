@@ -89,8 +89,8 @@ fails == aja-linear-6b.html aja-linear-6-ref.html # bug 522607
 fails-if(cocoaWidget) == height-dependence-2.html height-dependence-2-ref.html # bug 535007
 == height-dependence-3.html height-dependence-3-ref.html
 
-fails-if(winWidget) == linear-onestopposition-1.html linear-onestopposition-1-ref.html # bug 638664
+fails-if(d2d) == linear-onestopposition-1.html linear-onestopposition-1-ref.html # bug 638664
 == linear-onestopposition-1.html linear-onestopposition-1-ref2.html
-fails-if(winWidget) fails-if(cocoaWidget) == radial-onestopposition-1.html radial-onestopposition-1-ref.html # bug 638664
+fails-if(d2d) fails-if(cocoaWidget) == radial-onestopposition-1.html radial-onestopposition-1-ref.html # bug 638664
 == repeating-linear-onestopposition-1.html orange-square.html
 == repeating-radial-onestopposition-1.html orange-square.html
