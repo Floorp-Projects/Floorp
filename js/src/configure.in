@@ -4770,17 +4770,6 @@ AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
 AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
 
 dnl ========================================================
-dnl = (Deprecated) generation of debugger info for specific modules
-dnl ========================================================
-MOZ_ARG_ENABLE_STRING(debugger-info-modules,
-[  --enable-debugger-info-modules
-                          Enable/disable debugger info for specific modules],
-[ if test "$enableval" != "no"; then
-    AC_MSG_WARN([--enable-debugger-info-modules is deprecated, use --enable-debug-symbols instead])
-    MOZ_DEBUG_SYMBOLS=1
-  fi ])
-
-dnl ========================================================
 dnl = Enable generation of debug symbols
 dnl ========================================================
 MOZ_ARG_ENABLE_STRING(debug-symbols,
@@ -4795,7 +4784,10 @@ MOZ_ARG_ENABLE_STRING(debug-symbols,
               AC_MSG_ERROR([--enable-debug-symbols flags cannot be used with --enable-debug flags])
           fi
       fi
-  fi ])
+  else
+      MOZ_DEBUG_SYMBOLS=
+  fi ],
+  MOZ_DEBUG_SYMBOLS=1)
 
 if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
     AC_DEFINE(MOZ_DEBUG_SYMBOLS)
