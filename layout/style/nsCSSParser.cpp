@@ -3232,6 +3232,10 @@ CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&       aDataMask,
   }
   else if (mToken.IsSymbol('[')) {    // [attribute
     parsingStatus = ParseAttributeSelector(aDataMask, *newSel);
+    if (eSelectorParsingStatus_Error == parsingStatus) {
+      // Skip forward to the matching ']'
+      SkipUntil(']');
+    }
   }
   else {
     // then it should be a type element or universal selector
@@ -3490,6 +3494,9 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
     }
     else if (mToken.IsSymbol('[')) {    // [attribute
       parsingStatus = ParseAttributeSelector(dataMask, *selector);
+      if (eSelectorParsingStatus_Error == parsingStatus) {
+        SkipUntil(']');
+      }
     }
     else {  // not a selector token, we're done
       parsingStatus = eSelectorParsingStatus_Done;
