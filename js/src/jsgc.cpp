@@ -78,7 +78,6 @@
 #include "jsscript.h"
 #include "jsstaticcheck.h"
 #include "jsstr.h"
-#include "jstracer.h"
 #include "methodjit/MethodJIT.h"
 
 #if JS_HAS_XML_SUPPORT

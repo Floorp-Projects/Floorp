@@ -2269,7 +2269,6 @@ js_ResumeVtune(JSContext *cx, uintN argc, jsval *vp)
 #else
 #include <sys/time.h>
 #endif
-#include "jstracer.h"
 
 #define ETHOGRAM_BUF_SIZE 65536
 
