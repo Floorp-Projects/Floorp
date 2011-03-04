@@ -403,7 +403,7 @@ private:
 
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
   nsDOMCSSValueList* GetROCSSValueList(PRBool aCommaDelimited);
-  nsresult SetToRGBAColor(nsROCSSPrimitiveValue* aValue, nscolor aColor);
+  void SetToRGBAColor(nsROCSSPrimitiveValue* aValue, nscolor aColor);
   nsresult SetValueToStyleImage(const nsStyleImage& aStyleImage,
                                 nsROCSSPrimitiveValue* aValue);
 
