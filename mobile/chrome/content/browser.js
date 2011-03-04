@@ -491,6 +491,7 @@ var Browser = {
 
     this.contentScrollboxScroller.scrollTo(x.value, Number.MAX_VALUE);
     this.pageScrollboxScroller.scrollTo(0, Number.MAX_VALUE);
+    this.hideTitlebar();
   },
 
   hideSidebars: function scrollSidebarsOffscreen() {
