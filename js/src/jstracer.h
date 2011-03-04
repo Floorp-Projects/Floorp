@@ -1662,7 +1662,8 @@ class TraceRecorder
 #endif
 };
 
-#define TRACING_ENABLED(cx)       ((cx)->traceJitEnabled)
+/* :FIXME: bug 637856 disabling traceJit if inference is enabled */
+#define TRACING_ENABLED(cx)       ((cx)->traceJitEnabled && !(cx)->typeInferenceEnabled())
 #define REGEX_JIT_ENABLED(cx)     ((cx)->traceJitEnabled || (cx)->methodJitEnabled)
 
 #define JSOP_IN_RANGE(op,lo,hi)   (uintN((op) - (lo)) <= uintN((hi) - (lo)))
