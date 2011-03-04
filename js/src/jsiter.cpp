@@ -68,7 +68,6 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstaticcheck.h"
-#include "jstracer.h"
 #include "jsvector.h"
 
 #if JS_HAS_XML_SUPPORT

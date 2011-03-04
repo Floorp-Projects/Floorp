@@ -62,7 +62,6 @@
 
 #ifdef JS_TRACER
 #include "jstracer.h"
-using namespace avmplus;
 using namespace nanojit;
 #endif
 
