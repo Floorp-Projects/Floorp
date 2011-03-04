@@ -2017,7 +2017,8 @@ Parser::newFunction(JSTreeContext *tc, JSAtom *atom, uintN lambda)
     fun = js_NewFunction(context, NULL, NULL, 0, JSFUN_INTERPRETED | lambda, parent, atom, NULL, NULL);
     if (fun && !tc->compileAndGo()) {
         FUN_OBJECT(fun)->clearParent();
-        FUN_OBJECT(fun)->clearType(context);
+        if (!FUN_OBJECT(fun)->clearType(context))
+            return NULL;
     }
     return fun;
 }
@@ -8973,7 +8974,8 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             return NULL;
         if (!tc->compileAndGo()) {
             obj->clearParent();
-            obj->clearType(context);
+            if (!obj->clearType(context))
+                return NULL;
         }
 
         pn->pn_objbox = tc->parser->newObjectBox(obj);

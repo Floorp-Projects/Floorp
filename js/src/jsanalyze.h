@@ -42,6 +42,7 @@
 #define jsanalyze_h___
 
 #include "jsarena.h"
+#include "jscompartment.h"
 #include "jscntxt.h"
 #include "jsinfer.h"
 #include "jsscript.h"
@@ -203,6 +204,8 @@ class Script
 
     bool argEscapes(unsigned arg)
     {
+        if (script->usesEval || script->usesArguments || script->compartment->debugMode)
+            return true;
         for (unsigned i = 0; i < script->nClosedArgs; i++) {
             if (arg == script->getClosedArg(i))
                 return true;
@@ -212,6 +215,8 @@ class Script
 
     bool localEscapes(unsigned local)
     {
+        if (script->usesEval || script->usesArguments || script->compartment->debugMode)
+            return true;
         if (local >= localCount())
             return true;
         for (unsigned i = 0; i < script->nClosedVars; i++) {

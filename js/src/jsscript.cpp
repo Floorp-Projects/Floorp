@@ -1787,7 +1787,8 @@ js_NewScriptObject(JSContext *cx, JSScript *script)
      * Clear the object's type/proto, to avoid entraining stuff. Once we no longer use the parent
      * for security checks, then we can clear the parent, too.
      */
-    obj->clearType(cx);
+    if (!obj->clearType(cx))
+        return JS_FALSE;
 
 #ifdef CHECK_SCRIPT_OWNER
     script->owner = NULL;

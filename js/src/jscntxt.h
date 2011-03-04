@@ -2149,9 +2149,6 @@ public:
      */
     inline js::types::TypeObject *getTypeNewObject(JSProtoKey key);
 
-    /* Get a singleton type object to use for objects with no prototype. */
-    inline js::types::TypeObject *emptyTypeObject();
-
     /* Set the type information for fun to the specified script. */
     inline void setTypeFunctionScript(JSFunction *fun, JSScript *script);
 
@@ -2181,6 +2178,9 @@ public:
     inline bool addTypeProperty(js::types::TypeObject *obj, const char *name, const js::Value &value);
     inline bool addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jstype type);
     inline bool addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Value &value);
+
+    /* Get the type to use for objects with no prototype. */
+    inline js::types::TypeObject *getTypeEmpty();
 
     /* Get the type to add for properties which can be scripted getters/setters. */
     inline js::types::TypeObject *getTypeGetSet();
