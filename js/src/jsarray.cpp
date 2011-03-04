@@ -87,7 +87,6 @@
 #include "jsatom.h"
 #include "jsbit.h"
 #include "jsbool.h"
-#include "jstracer.h"
 #include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
@@ -101,6 +100,7 @@
 #include "jsscope.h"
 #include "jsstr.h"
 #include "jsstaticcheck.h"
+#include "jstracer.h"
 #include "jsvector.h"
 #include "jswrapper.h"
 
