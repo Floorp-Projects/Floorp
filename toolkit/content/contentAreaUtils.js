@@ -929,7 +929,41 @@ function validateFileName(aFileName)
   }
   else if (navigator.appVersion.indexOf("Macintosh") != -1)
     re = /[\:\/]+/g;
-  
+  else if (navigator.appVersion.indexOf("Android") != -1 ||
+           navigator.appVersion.indexOf("Maemo") != -1) {
+    // On mobile devices, the filesystem may be very limited in what
+    // it considers valid characters. To avoid errors, we sanitize
+    // conservatively.
+    const dangerousChars = "*?<>|\":/\\[];,+=";
+    var processed = "";
+    for (var i = 0; i < aFileName.length; i++)
+      processed += aFileName.charCodeAt(i) >= 32 &&
+                   !(dangerousChars.indexOf(aFileName[i]) >= 0) ? aFileName[i]
+                                                                : "_";
+
+    // Last character should not be a space
+    processed = processed.trim();
+
+    // If a large part of the filename has been sanitized, then we
+    // will use a default filename instead
+    if (processed.replace(/_/g, "").length <= processed.length/2) {
+      // We purposefully do not use a localized default filename,
+      // which we could have done using
+      // ContentAreaUtils.stringBundle.GetStringFromName("DefaultSaveFileName")
+      // since it may contain invalid characters.
+      var original = processed;
+      processed = "download";
+
+      // Preserve a suffix, if there is one
+      if (original.indexOf(".") >= 0) {
+        var suffix = original.split(".").slice(-1)[0];
+        if (suffix && suffix.indexOf("_") < 0)
+          processed += "." + suffix;
+      }
+    }
+    return processed;
+  }
+
   return aFileName.replace(re, "_");
 }
 
