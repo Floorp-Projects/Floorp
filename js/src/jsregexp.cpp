@@ -511,7 +511,8 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
         if (!obj)
             return false;
         obj->clearParent();
-        obj->clearType(xdr->cx);
+        if (!obj->clearType(xdr->cx))
+            return false;
         AlreadyIncRefed<RegExp> re = RegExp::create(xdr->cx, source, flagsword);
         if (!re)
             return false;

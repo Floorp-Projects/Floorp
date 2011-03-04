@@ -2295,7 +2295,7 @@ JSContext::updateJITEnabled()
     traceJitEnabled = ((runOptions & JSOPTION_JIT) &&
                        !IsJITBrokenHere() &&
                        /* :FIXME: bug 637856 allow traceJit if inference is enabled */
-                       !(runOptions & JSOPTION_TYPE_INFERENCE) &&
+                       !compartment->types.inferenceEnabled &&
                        (debugHooks == &js_NullDebugHooks ||
                         (debugHooks == &runtime->globalDebugHooks &&
                          !runtime->debuggerInhibitsJIT())));

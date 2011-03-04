@@ -126,6 +126,7 @@ JSCompartment::init(JSContext *cx)
     memset(&compartmentStats, 0, sizeof(JSGCArenaStats) * FINALIZE_LIMIT);
 #endif
     types.init(cx);
+
     if (!crossCompartmentWrappers.init())
         return false;
 
@@ -485,6 +486,11 @@ JSCompartment::mark(JSTracer *trc)
     if (emptyWithShape)
         emptyWithShape->trace(trc);
 
+    if (types.typeEmpty && !types.typeEmpty->marked)
+        types.typeEmpty->trace(trc);
+    if (types.typeGetSet && !types.typeGetSet->marked)
+        types.typeGetSet->trace(trc);
+
     if (types.inferenceDepth) {
         /* Mark all scripts and type objects in the compartment. */ 
 
@@ -522,23 +528,23 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
     traceMonitor.sweep(cx);
 #endif
 
-    if (!types.inferenceDepth) {
-        if (types.inferenceEnabled) {
-            for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
-                JSScript *script = reinterpret_cast<JSScript *>(cursor);
-                script->condenseTypes(cx);
-            }
-
-            types::CondenseTypeObjectList(cx, &types, types.objects);
-
-            for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
-                JSScript *script = reinterpret_cast<JSScript *>(cursor);
-                script->sweepTypes(cx);
-            }
+    if (!types.inferenceDepth && types.inferenceEnabled) {
+        for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
+            JSScript *script = reinterpret_cast<JSScript *>(cursor);
+            script->condenseTypes(cx);
         }
 
-        types::SweepTypeObjectList(cx, types.objects);
+        types::CondenseTypeObjectList(cx, &types, types.objects);
+    }
 
+    for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
+        JSScript *script = reinterpret_cast<JSScript *>(cursor);
+        script->sweepTypes(cx);
+    }
+
+    types::SweepTypeObjectList(cx, types.objects);
+
+    if (!types.inferenceDepth) {
         /* Reset the inference pool, releasing all intermediate type data. */
         JS_FinishArenaPool(&types.pool);
 

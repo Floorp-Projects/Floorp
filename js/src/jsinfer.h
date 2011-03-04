@@ -573,7 +573,7 @@ struct TypeCompartment
     unsigned scriptCount;
 
     /* Object to use throughout the compartment as the default type of objects with no prototype. */
-    TypeObject emptyObject;
+    TypeObject *typeEmpty;
 
     /* Dummy object added to properties which can have scripted getters/setters. */
     TypeObject *typeGetSet;

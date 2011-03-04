@@ -216,12 +216,6 @@ JSContext::getTypeNewObject(JSProtoKey key)
     return proto->getNewType(this);
 }
 
-inline js::types::TypeObject *
-JSContext::emptyTypeObject()
-{
-    return &compartment->types.emptyObject;
-}
-
 inline void
 JSContext::setTypeFunctionScript(JSFunction *fun, JSScript *script)
 {
@@ -330,6 +324,14 @@ JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Valu
     if (typeInferenceEnabled())
         return addTypePropertyId(obj, id, js::types::GetValueType(this, value));
     return true;
+}
+
+inline js::types::TypeObject *
+JSContext::getTypeEmpty()
+{
+    if (!compartment->types.typeEmpty)
+        compartment->types.typeEmpty = newTypeObject("Empty", NULL);
+    return compartment->types.typeEmpty;
 }
 
 inline js::types::TypeObject *

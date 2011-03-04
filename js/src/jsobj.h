@@ -713,7 +713,7 @@ struct JSObject : js::gc::Cell {
 
     js::types::TypeObject* getType() const { return type; }
 
-    inline void clearType(JSContext *cx);
+    inline bool clearType(JSContext *cx);
     inline void setType(js::types::TypeObject *newType);
 
     inline js::types::TypeObject *getNewType(JSContext *cx);

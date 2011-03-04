@@ -302,6 +302,9 @@ mjit::Compiler::prepareInferenceTypes(const Vector<JSStackFrame*> *frames)
      * in this compilation may instead be an int in earlier compilation and stack
      * frames. We handle this by patching up all hold stack frames to ensure that
      * arguments, locals, and stack values we treat as doubles actually are doubles.
+     *
+     * Skip this for closed arguments and locals, which could be assigned an
+     * integer value at any time elsewhere in the VM.
      */
 
     uint32 nargs = fun ? fun->nargs : 0;
@@ -551,10 +554,12 @@ mjit::Compiler::generatePrologue()
     for (uint32 i = 0; fun && i < fun->nargs; i++) {
         JSValueType type = knownArgumentType(i);
         if (type != JSVAL_TYPE_UNKNOWN) {
-            if (type == JSVAL_TYPE_DOUBLE)
-                frame.ensureDouble(frame.getArg(i));
-            else
+            if (type == JSVAL_TYPE_DOUBLE) {
+                if (!analysis->argEscapes(i))
+                    frame.ensureDouble(frame.getArg(i));
+            } else {
                 frame.learnType(frame.getArg(i), type, false);
+            }
         }
     }
 
@@ -5471,7 +5476,7 @@ mjit::Compiler::fixDoubleTypes(Uses uses)
 
     for (uint32 i = 0; fun && i < fun->nargs; i++) {
         JSValueType type = knownArgumentType(i);
-        if (type == JSVAL_TYPE_DOUBLE) {
+        if (type == JSVAL_TYPE_DOUBLE && !analysis->argEscapes(i)) {
             FrameEntry *fe = frame.getArg(i);
             if (!fe->isType(JSVAL_TYPE_DOUBLE))
                 frame.ensureDouble(fe);
@@ -5480,7 +5485,7 @@ mjit::Compiler::fixDoubleTypes(Uses uses)
 
     for (uint32 i = 0; i < script->nfixed; i++) {
         JSValueType type = knownLocalType(i);
-        if (type == JSVAL_TYPE_DOUBLE) {
+        if (type == JSVAL_TYPE_DOUBLE && !analysis->localEscapes(i)) {
             FrameEntry *fe = frame.getLocal(i);
             if (!fe->isType(JSVAL_TYPE_DOUBLE))
                 frame.ensureDouble(fe);
@@ -5497,7 +5502,7 @@ mjit::Compiler::restoreAnalysisTypes(uint32 stackDepth)
     /* Restore known types of locals/args, for join points or after forgetting everything. */
     for (uint32 i = 0; i < script->nfixed; i++) {
         JSValueType type = knownLocalType(i);
-        if (type != JSVAL_TYPE_UNKNOWN) {
+        if (type != JSVAL_TYPE_UNKNOWN && (type != JSVAL_TYPE_DOUBLE || !analysis->localEscapes(i))) {
             FrameEntry *fe = frame.getLocal(i);
             JS_ASSERT(!fe->isTypeKnown());
             frame.learnType(fe, type, false);
@@ -5505,7 +5510,7 @@ mjit::Compiler::restoreAnalysisTypes(uint32 stackDepth)
     }
     for (uint32 i = 0; fun && i < fun->nargs; i++) {
         JSValueType type = knownArgumentType(i);
-        if (type != JSVAL_TYPE_UNKNOWN) {
+        if (type != JSVAL_TYPE_UNKNOWN && (type != JSVAL_TYPE_DOUBLE || !analysis->argEscapes(i))) {
             FrameEntry *fe = frame.getArg(i);
             JS_ASSERT(!fe->isTypeKnown());
             frame.learnType(fe, type, false);

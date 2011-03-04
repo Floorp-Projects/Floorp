@@ -7217,7 +7217,8 @@ js_GetFunctionNamespace(JSContext *cx, Value *vp)
          * names, its prefix and uri references are copied to the QName.
          * The parent remains set and links back to global.
          */
-        obj->clearType(cx);
+        if (!obj->clearType(cx))
+            return false;
 
         vp->setObject(*obj);
         if (!js_SetReservedSlot(cx, global, JSRESERVED_GLOBAL_FUNCTION_NS, *vp))

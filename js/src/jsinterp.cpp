@@ -137,7 +137,16 @@ JSStackFrame::pc(JSContext *cx, JSStackFrame *next)
 
 #if defined(JS_METHODJIT) && defined(JS_MONOIC)
     js::mjit::JITScript *jit = script()->getJIT(isConstructing());
-    return jit->nativeToPC(next->ncode_);
+    jsbytecode *pc = jit->nativeToPC(next->ncode_);
+
+    /*
+     * Remember the PC in the next frame. This is needed during recompilation,
+     * which fills in frame PCs as the JIT script may become unavailable.
+     */
+    next->flags_ |= JSFRAME_HAS_PREVPC;
+    next->prevpc_ = pc;
+
+    return pc;
 #else
     JS_NOT_REACHED("Unknown PC for frame");
     return NULL;
@@ -574,6 +583,10 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
         if (!obj)
             return false;
 
+        TypeObject *type = cx->getTypeEmpty();
+        if (!type)
+            return false;
+
         /*
          * Null map to cause prompt and safe crash if this object were to
          * escape due to a bug. This will make the object appear to be a
@@ -581,7 +594,7 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
          * NoSuchMethod helper objects own no manually allocated resources.
          */
         obj->map = NULL;
-        obj->init(cx, &js_NoSuchMethodClass, cx->emptyTypeObject(), NULL, NULL, false);
+        obj->init(cx, &js_NoSuchMethodClass, type, NULL, NULL, false);
         obj->setSlot(JSSLOT_FOUND_FUNCTION, tvr.value());
         obj->setSlot(JSSLOT_SAVED_ID, vp[0]);
         vp[0].setObject(*obj);
