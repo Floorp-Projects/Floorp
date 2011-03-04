@@ -250,36 +250,16 @@ var PageActions = {
     let fileName = ContentAreaUtils.getDefaultFileName(browser.contentTitle, browser.documentURI, null, null);
     fileName = fileName.trim() + ".pdf";
     let displayName = fileName;
-#ifdef MOZ_PLATFORM_MAEMO
-    fileName = fileName.replace(/[\*\:\?]+/g, " ");
-#endif
 
     let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
     let downloadsDir = dm.defaultDownloadsDirectory;
 
 #ifdef ANDROID
     // Create the final destination file location
-    // Try the intended filename, and if that doesn't work, try a safer one
-    // (the intended one may have special characters)
-    let file = null;
-    [fileName, 'download.pdf'].forEach(function(potentialName, i) {
-      if (file) return;
-      let attemptedFile = downloadsDir.clone();
-      attemptedFile.append(potentialName);
-      // The filename is used below to save the file to a temp location in 
-      // the content process. Make sure it's up to date.
-      try {
-        attemptedFile.createUnique(attemptedFile.NORMAL_FILE_TYPE, 0666);
-      } catch (e) {
-        // The first try may fail if the filename has special characters. If so
-        // we will try with a safer name.
-        if (i != 0)
-          throw e;
-        return;
-      }
-      file = attemptedFile;
-      fileName = file.leafName;
-    });
+    let file = downloadsDir.clone();
+    file.append(fileName);
+    file.createUnique(file.NORMAL_FILE_TYPE, 0666);
+    fileName = file.leafName;
 #else
     let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     picker.init(window, Strings.browser.GetStringFromName("pageactions.saveas.pdf"), Ci.nsIFilePicker.modeSave);
