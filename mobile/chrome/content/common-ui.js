@@ -718,8 +718,14 @@ var FormHelperUI = {
       case "AnimatedZoomBegin":
         // Changing the hidden attribute here create bugs with the scrollbox
         // arrows because the binding will miss some underflow events
-        if (this._hasSuggestions)
+        if (this._hasSuggestions) {
+          // Because the suggestions container could be big in terms of width
+          // (but never bigger than the screen) it's position needs to be
+          // resetted to the left to ensure it does not push the content to
+          // the right and misplaced sidebars as a result
+          this._suggestionsContainer.left = 0;
           this._suggestionsContainer.style.visibility = "hidden";
+        }
         break;
 
       case "PanFinished":
@@ -862,8 +868,10 @@ var FormHelperUI = {
     }
     // Keeps the suggestions element hidden while is it not positionned to the
     // correct place
-    this._suggestionsContainer.style.visibility = "hidden";
-    this._suggestionsContainer.hidden = false;
+    let suggestionsContainer = this._suggestionsContainer;
+    suggestionsContainer.style.visibility = "hidden";
+    suggestionsContainer.hidden = false;
+    suggestionsContainer.left = 0;
 
     // the scrollX/scrollY position can change because of the animated zoom so
     // delay the suggestions positioning
@@ -876,7 +884,7 @@ var FormHelperUI = {
       return;
     }
 
-    let container = this._suggestionsContainer.firstChild;
+    let container = suggestionsContainer.firstChild;
     while (container.hasChildNodes())
       container.removeChild(container.lastChild);
 
@@ -931,7 +939,14 @@ var FormHelperUI = {
    */
   _ensureSuggestionsVisible: function _formHelperEnsureSuggestionsVisible() {
     let container = this._suggestionsContainer;
-    container.firstChild.style.maxWidth = (window.innerWidth * 0.75) + "px";
+
+    // Calculate the maximum size of the arrowpanel by allowing it to live only
+    // on the visible browser area
+    let [leftVis, rightVis, leftW, rightW] = Browser.computeSidebarVisibility();
+    let leftOffset = leftVis * leftW;
+    let rightOffset = rightVis * rightW;
+    let visibleAreaWidth = window.innerWidth - leftOffset - rightOffset;
+    container.firstChild.style.maxWidth = (visibleAreaWidth * 0.75) + "px";
 
     let browser = getBrowser();
     let rect = this._currentElementRect.clone().scale(browser.scale, browser.scale);
@@ -939,9 +954,6 @@ var FormHelperUI = {
 
     // The sidebars scroll needs to be taken into account, otherwise the arrows
     // can be misplaced if the sidebars are open
-    let [leftVis, rightVis, leftW, rightW] = Browser.computeSidebarVisibility();
-    let leftOffset = leftVis * leftW;
-    let rightOffset = rightVis * rightW;
     let topOffset = (BrowserUI.toolbarH - Browser.getScrollboxPosition(Browser.pageScrollboxScroller).y);
     let virtualContentRect = {
       width: rect.width,
@@ -954,8 +966,8 @@ var FormHelperUI = {
 
     // Translate the virtual rect inside the bounds of the viewable area if it
     // overflow
-    if (virtualContentRect.left + virtualContentRect.width > window.innerWidth) {
-      let offsetX = window.innerWidth - (virtualContentRect.left + virtualContentRect.width);
+    if (virtualContentRect.left + virtualContentRect.width > visibleAreaWidth) {
+      let offsetX = visibleAreaWidth - (virtualContentRect.left + virtualContentRect.width);
       virtualContentRect.width += offsetX;
       virtualContentRect.right -= offsetX;
     }
@@ -965,8 +977,9 @@ var FormHelperUI = {
     if (BrowserUI.isToolbarLocked()) {
       // If the toolbar is locked, it can appear over the field in such a way
       // that the field is hidden
-      browserRect = new Rect(browserRect.left + leftOffset - rightOffset, browserRect.top + BrowserUI.toolbarH,
-                             browserRect.width + leftOffset - rightOffset, browserRect.height - BrowserUI.toolbarH);
+      let toolbarH = BrowserUI.toolbarH;
+      browserRect = new Rect(leftOffset - rightOffset, Math.max(0, browserRect.top - toolbarH) + toolbarH,
+                             browserRect.width + leftOffset - rightOffset, browserRect.height - toolbarH);
     }
 
     if (browserRect.intersect(Rect.fromRect(virtualContentRect)).isEmpty()) {
