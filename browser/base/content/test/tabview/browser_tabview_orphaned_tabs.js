@@ -7,18 +7,10 @@ let newWin;
 function test() {
   waitForExplicitFinish();
 
-  newWin = 
-    window.openDialog(getBrowserURL(), "_blank", "all,dialog=no", "about:blank");
-
-  let onLoad = function() {
-    newWin.removeEventListener("load", onLoad, false);
-
+  newWindowWithTabView(onTabViewWindowLoaded, function(win) {
+    newWin = win;
     tabOne = newWin.gBrowser.addTab();
-
-    newWin.addEventListener("tabviewshown", onTabViewWindowLoaded, false);
-    newWin.TabView.toggle();
-  }
-  newWin.addEventListener("load", onLoad, false);
+  });
 }
 
 function onTabViewWindowLoaded() {
