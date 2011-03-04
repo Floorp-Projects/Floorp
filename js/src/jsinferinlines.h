@@ -549,15 +549,23 @@ JSScript::typeSetThis(JSContext *cx, js::types::jstype type)
     JS_ASSERT(cx->typeInferenceEnabled());
     if (!ensureVarTypes(cx))
         return false;
-    if (!thisTypes()->hasType(type)) {
+
+    /* Analyze the script regardless if -a was used. */
+    bool analyze = !types && cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) && !isUncachedEval;
+
+    if (!thisTypes()->hasType(type) || analyze) {
         js::types::AutoEnterTypeInference enter(cx);
 
         js::types::InferSpew(js::types::ISpewDynamic, "AddThis: #%u: %s",
                              id(), js::types::TypeString(type));
         thisTypes()->addType(cx, type);
 
+        if (analyze)
+            js::types::AnalyzeScriptTypes(cx, this);
+
         return cx->compartment->types.checkPendingRecompiles(cx);
     }
+
     return true;
 }
 
