@@ -52,8 +52,16 @@ var ContextCommands = {
   },
 
   saveImage: function cc_saveImage() {
-    let browser = ContextHelper.popupState.target;
-    ContentAreaUtils.saveImageURL(ContextHelper.popupState.mediaURL, null, "SaveImageTitle", false, true, browser.documentURI);
+    let popupState = ContextHelper.popupState;
+    let browser = popupState.target;
+
+    // Bug 638523
+    // Using directly SaveImageURL fails here since checking the cache for a
+    // remote page seems to not work (could it be nsICacheSession prohibition)?
+    ContentAreaUtils.internalSave(popupState.mediaURL, null, null,
+                                  popupState.contentDisposition,
+                                  popupState.contentType, false, "SaveImageTitle",
+                                  null, browser.documentURI, false, null);
   },
 
   shareLink: function cc_shareLink() {
