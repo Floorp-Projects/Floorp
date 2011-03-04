@@ -1058,7 +1058,11 @@
       <!-- After fuzzy zoom, sync the displayport with the new viewport. -->
       <method name="finishFuzzyZoom">
         <body><![CDATA[
-          this.getRootView()._updateCacheViewport();
+          let view = this.getRootView();
+
+          // ensure that we are scrolled within the page's viewable area
+          view.scrollBy(0,0);
+          view._updateCacheViewport();
 
           let event = document.createEvent("Events");
           event.initEvent("ZoomChanged", true, false);
