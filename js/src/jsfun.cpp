@@ -1923,8 +1923,12 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         if (!fun)
             return false;
         FUN_OBJECT(fun)->clearParent();
-        if (!FUN_OBJECT(fun)->clearType(cx))
-            return false;
+
+        /* Make a new type with a NULL prototype. */
+        types::TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, "XDRFunction", true, NULL);
+        if (!type)
+            return NULL;
+        fun->setType(type);
     }
 
     AutoObjectRooter tvr(cx, FUN_OBJECT(fun));
