@@ -61,7 +61,7 @@ var ContextCommands = {
     ContentAreaUtils.internalSave(popupState.mediaURL, null, null,
                                   popupState.contentDisposition,
                                   popupState.contentType, false, "SaveImageTitle",
-                                  null, browser.documentURI, false, null);
+                                  null, browser.documentURI, true, null);
   },
 
   shareLink: function cc_shareLink() {
