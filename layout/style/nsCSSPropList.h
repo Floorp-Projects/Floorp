@@ -373,7 +373,8 @@ CSS_PROP_BACKENDONLY(
     azimuth,
     azimuth,
     Azimuth,
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION,
     Aural,
     mAzimuth,
     kAzimuthKTable)
@@ -1403,6 +1404,7 @@ CSS_PROP_FONT(
     font_family,
     FontFamily,
     CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Font,
     mFamily,
@@ -1493,6 +1495,7 @@ CSS_PROP_FONT(
     font_weight,
     FontWeight,
     CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Font,
     mWeight,
@@ -1778,7 +1781,8 @@ CSS_PROP_BACKENDONLY(
     marks,
     marks,
     Marks,
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION,
     Page,
     mMarks,
     kPageMarksKTable)
@@ -2283,6 +2287,7 @@ CSS_PROP_TEXTRESET(
     text_decoration,
     TextDecoration,
     CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Text,
     mDecoration,
@@ -2484,7 +2489,8 @@ CSS_PROP_BACKENDONLY(
     voice-family,
     voice_family,
     VoiceFamily,
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION,
     Aural,
     mVoiceFamily,
     nsnull)
