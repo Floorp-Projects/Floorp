@@ -6064,7 +6064,8 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
       column->mColumnRuleColor = parent->mColumnRuleColor;
     }
   }
-  else if (eCSSUnit_Initial == colorValue.GetUnit()) {
+  else if (eCSSUnit_Initial == colorValue.GetUnit() ||
+           eCSSUnit_Enumerated == colorValue.GetUnit()) {
     column->mColumnRuleColorIsForeground = PR_TRUE;
   }
   else if (SetColor(colorValue, 0, mPresContext, aContext,

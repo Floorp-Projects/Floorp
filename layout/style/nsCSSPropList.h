@@ -1319,7 +1319,7 @@ CSS_PROP_COLUMN(
     Column,
     mColumnRuleColor,
     0,
-    nsnull,
+    kBorderColorKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
 CSS_PROP_COLUMN(
@@ -1996,7 +1996,7 @@ CSS_PROP_OUTLINE(
     Margin,
     mOutlineStyle,
     0,
-    kBorderStyleKTable,
+    kOutlineStyleKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_OUTLINE(
