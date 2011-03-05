@@ -50,10 +50,11 @@ struct PropertyOffsetInfo {
 
 const PropertyOffsetInfo kOffsetTable[eCSSProperty_COUNT_no_shorthands] = {
   #define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, datastruct_,     \
-                               member_, kwtable_)                            \
+                               member_, parsevariant_, kwtable_)             \
       { size_t(-1), size_t(-1) },
   #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,        \
-                   kwtable_, stylestruct_, stylestructoffset_, animtype_)    \
+                   parsevariant_, kwtable_, stylestruct_, stylestructoffset_,\
+                   animtype_)                                                \
       { offsetof(nsRuleData, m##datastruct_##Data),                          \
         offsetof(nsRuleData##datastruct_, member_) },
   #include "nsCSSPropList.h"
