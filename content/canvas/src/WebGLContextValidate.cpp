@@ -378,9 +378,9 @@ PRBool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type,
 
 PRBool WebGLContext::ValidateAttribIndex(WebGLuint index, const char *info)
 {
-    if (index > mAttribBuffers.Length()) {
+    if (index >= mAttribBuffers.Length()) {
         if (index == WebGLuint(-1)) {
-             ErrorInvalidValue("%s: index -1 is invalid. That probably comes from a getAttribLication() call, "
+             ErrorInvalidValue("%s: index -1 is invalid. That probably comes from a getAttribLocation() call, "
                                "where this return value -1 means that the passed name didn't correspond to an active attribute in "
                                "the specified program.", info);
         } else {

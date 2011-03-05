@@ -358,11 +358,7 @@ function maybeRunTests()
     for (var i = 0; i < testCases.length; ++i)
         runOneTest(testCases[i]);
 
-    successfullyParsed = true;
-    var epilogue = document.createElement("script");
-    epilogue.onload = finish;
-    epilogue.src = "../resources/js-test-post.js";
-    document.body.appendChild(epilogue);
+    finishTest();
 }
 
 function testCaseToString(testCase)
@@ -432,12 +428,6 @@ function runOneTest(testCase)
         testPassed(testCase.description);
     else
         testFailed(testCase.description);
-}
-
-function finish() {
-    if (window.nonKhronosFrameworkNotifyDone) {
-        window.nonKhronosFrameworkNotifyDone();
-    }
 }
 
 //----------------------------------------------------------------------

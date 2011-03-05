@@ -212,18 +212,9 @@ function runTest()
     testAntialias(true);
     testAntialias(false);
 
-    successfullyParsed = true;
-    var epilogue = document.createElement("script");
-    epilogue.onload = finish;
-    epilogue.src = "../resources/js-test-post.js";
-    document.body.appendChild(epilogue);
+    finishTest()
 }
 
-function finish() {
-    if (window.nonKhronosFrameworkNotifyDone) {
-        window.nonKhronosFrameworkNotifyDone();
-    }
-}
 </script>
 </head>
 <body onload="init()">

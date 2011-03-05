@@ -1,24 +1,13 @@
-This is a local copy of the WebGL conformance suite.
-
-  SVN revision: 13113
+This is a local copy of the WebGL conformance suite, version 1.0.0.
 
 The canonical location for this testsuite is:
 
-  https://cvs.khronos.org/svn/repos/registry/trunk/public/webgl/sdk/tests/
+  https://cvs.khronos.org/svn/repos/registry/trunk/public/webgl/conformance-suites/1.0.0/webgl-conformance-tests.html
 
 All files and directories in this directory, with the exceptions listed below, come from
 upstream and should not be modified without corresponding upstream fixes and/or a
-patch file in the "patches" directory. The exceptions (the Mozilla-specific files) are:
+patch file in this directory. The exceptions (the Mozilla-specific files) are:
  * README.mozilla (this file)
- * failing_tests.txt
+ * failing_tests_*.txt
  * Makefile.in
- * the "mozilla" directory, if any
- * the "patches" directory, if any
-
-Moreover, the files named 00_test_list.txt are temporarily renamed to 00_testFIXME_list.txt to work around bug 584611, quote:
-> In mochitest, we tell people that mochitests should start with test_.  The
-> actual truth is that we match anything with a test_ in it.
-
-The "mozilla" directory contains integration of this test suite into Mozilla's
-testing system.
-
+ * *.patch files, if any

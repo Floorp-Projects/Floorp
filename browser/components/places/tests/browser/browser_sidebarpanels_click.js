@@ -39,44 +39,41 @@
 // panels are clickable in both LTR and RTL modes.
 
 function test() {
+  waitForExplicitFinish();
+
   const BOOKMARKS_SIDEBAR_ID = "viewBookmarksSidebar";
   const BOOKMARKS_SIDEBAR_TREE_ID = "bookmarks-view";
   const HISTORY_SIDEBAR_ID = "viewHistorySidebar";
   const HISTORY_SIDEBAR_TREE_ID = "historyTree";
-
-  // Initialization.
-  let os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-  let bs = PlacesUtils.bookmarks;
-  let hs = PlacesUtils.history;
-  let sidebarBox = document.getElementById("sidebar-box");
-  let sidebar = document.getElementById("sidebar");
-  waitForExplicitFinish();
+  const TEST_URL = "http://mochi.test:8888/browser/browser/components/places/tests/browser/sidebarpanels_click_test_page.html";
 
   // If a sidebar is already open, close it.
-  if (!sidebarBox.hidden) {
+  if (!document.getElementById("sidebar-box").hidden) {
     info("Unexpected sidebar found - a previous test failed to cleanup correctly");
     toggleSidebar();
   }
 
-  const TEST_URL = "http://mochi.test:8888/browser/browser/components/places/tests/browser/sidebarpanels_click_test_page.html";
-
+  let sidebar = document.getElementById("sidebar");
   let tests = [];
+  let currentTest;
+
   tests.push({
     _itemID: null,
     init: function() {
       // Add a bookmark to the Unfiled Bookmarks folder.
-      this._itemID = bs.insertBookmark(bs.unfiledBookmarksFolder,
-                                       PlacesUtils._uri(TEST_URL),
-                                       bs.DEFAULT_INDEX, "test");
+      this._itemID = PlacesUtils.bookmarks.insertBookmark(
+        PlacesUtils.unfiledBookmarksFolderId, PlacesUtils._uri(TEST_URL),
+        PlacesUtils.bookmarks.DEFAULT_INDEX, "test"
+      );
     },
     prepare: function() {
     },
     selectNode: function(tree) {
       tree.selectItems([this._itemID]);
     },
-    cleanup: function() {
-      bs.removeFolderChildren(bs.unfiledBookmarksFolder);
+    cleanup: function(aCallback) {
+      PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
+      executeSoon(aCallback);
     },
     sidebarName: BOOKMARKS_SIDEBAR_ID,
     treeName: BOOKMARKS_SIDEBAR_TREE_ID,
@@ -86,11 +83,11 @@ function test() {
   tests.push({
     init: function() {
       // Add a history entry.
-      this.cleanup();
       let uri = PlacesUtils._uri(TEST_URL);
-      hs.addVisit(uri, Date.now() * 1000, null, hs.TRANSITION_TYPED, false, 0);
-      let gh = hs.QueryInterface(Ci.nsIGlobalHistory2);
-      ok(gh.isVisited(uri), "Item is visited");
+      PlacesUtils.history.addVisit(uri, Date.now() * 1000, null,
+                                   PlacesUtils.history.TRANSITION_TYPED,
+                                   false, 0);
+      ok(PlacesUtils.ghistory2.isVisited(uri), "Item is visited");
     },
     prepare: function() {
       sidebar.contentDocument.getElementById("byvisited").doCommand();
@@ -100,66 +97,46 @@ function test() {
       is(tree.selectedNode.uri, TEST_URL, "The correct visit has been selected");
       is(tree.selectedNode.itemId, -1, "The selected node is not bookmarked");
     },
-    cleanup: function() {
-      hs.QueryInterface(Ci.nsIBrowserHistory)
-        .removeAllPages();
+    cleanup: function(aCallback) {
+      waitForClearHistory(aCallback);
     },
     sidebarName: HISTORY_SIDEBAR_ID,
     treeName: HISTORY_SIDEBAR_TREE_ID,
     desc: "History sidebar test"
   });
 
-  let currentTest;
-
   function testPlacesPanel(preFunc, postFunc) {
     currentTest.init();
 
     sidebar.addEventListener("load", function() {
       sidebar.removeEventListener("load", arguments.callee, true);
-
-      let doc = sidebar.contentDocument;
-      let tree = doc.getElementById(currentTest.treeName);
-      let tbo = tree.treeBoxObject;
-
       executeSoon(function() {
         currentTest.prepare();
+
         if (preFunc)
           preFunc();
 
         function observer(aSubject, aTopic, aData) {
           info("alert dialog observed as expected");
-          os.removeObserver(observer, "common-dialog-loaded");
-          os.removeObserver(observer, "tabmodal-dialog-loaded");
+          Services.obs.removeObserver(observer, "common-dialog-loaded");
+          Services.obs.removeObserver(observer, "tabmodal-dialog-loaded");
 
           aSubject.Dialog.ui.button0.click();
 
           executeSoon(function () {
               toggleSidebar(currentTest.sidebarName);
-              currentTest.cleanup();
-              postFunc();
+              currentTest.cleanup(postFunc);
             });
         }
-        os.addObserver(observer, "common-dialog-loaded", false);
-        os.addObserver(observer, "tabmodal-dialog-loaded", false);
+        Services.obs.addObserver(observer, "common-dialog-loaded", false);
+        Services.obs.addObserver(observer, "tabmodal-dialog-loaded", false);
+
+        let tree = sidebar.contentDocument.getElementById(currentTest.treeName);
 
         // Select the inserted places item.
         currentTest.selectNode(tree);
-        is(tbo.view.selection.count, 1,
-           "The test node should be successfully selected");
-        // Get its row ID.
-        let min = {}, max = {};
-        tbo.view.selection.getRangeAt(0, min, max);
-        let rowID = min.value;
-        tbo.ensureRowIsVisible(rowID);
 
-        // Calculate the click coordinates.
-        let x = {}, y = {}, width = {}, height = {};
-        tbo.getCoordsForCellItem(rowID, tree.columns[0], "text",
-                                 x, y, width, height);
-        x = x.value + width.value / 2;
-        y = y.value + height.value / 2;
-        // Simulate the click.
-        EventUtils.synthesizeMouse(tree.body, x, y, {}, doc.defaultView);
+        synthesizeClickOnSelectedTreeCell(tree);
         // Now, wait for the observer to catch the alert dialog.
         // If something goes wrong, the test will time out at this stage.
         // Note that for the history sidebar, the URL itself is not opened,
@@ -171,45 +148,69 @@ function test() {
     toggleSidebar(currentTest.sidebarName);
   }
 
+  function synthesizeClickOnSelectedTreeCell(aTree) {
+    let tbo = aTree.treeBoxObject;
+    is(tbo.view.selection.count, 1,
+       "The test node should be successfully selected");
+    // Get selection rowID.
+    let min = {}, max = {};
+    tbo.view.selection.getRangeAt(0, min, max);
+    let rowID = min.value;
+    tbo.ensureRowIsVisible(rowID);
+
+    // Calculate the click coordinates.
+    let x = {}, y = {}, width = {}, height = {};
+    tbo.getCoordsForCellItem(rowID, aTree.columns[0], "text",
+                             x, y, width, height);
+    x = x.value + width.value / 2;
+    y = y.value + height.value / 2;
+    // Simulate the click.
+    EventUtils.synthesizeMouse(aTree.body, x, y, {},
+                               aTree.ownerDocument.defaultView);
+  }
+
   function changeSidebarDirection(aDirection) {
-    document.getElementById("sidebar")
-            .contentDocument
-            .documentElement
-            .style.direction = aDirection;
+    sidebar.contentDocument.documentElement.style.direction = aDirection;
+  }
+
+  function waitForClearHistory(aCallback) {
+    Services.obs.addObserver(function(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(arguments.callee, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+      aCallback(aSubject, aTopic, aData);
+    }, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
+    PlacesUtils.bhistory.removeAllPages();
   }
 
   function runNextTest() {
-    // Remove any extraneous tabs.
-    for (let tabCount = gBrowser.tabContainer.childNodes.length;
-         tabCount > 1; tabCount--) {
-      gBrowser.selectedTab = gBrowser.tabContainer.childNodes[tabCount - 1];
-      gBrowser.removeCurrentTab();
+    // Remove eventual tabs created by previous sub-tests.
+    while (gBrowser.tabs.length > 1) {
+      gBrowser.removeTab(gBrowser.tabContainer.lastChild);
     }
 
-    if (tests.length == 0)
+    if (tests.length == 0) {
       finish();
+    }
     else {
-      // Create a new tab for our test to use.
+      // Create a new tab and run the test.
       gBrowser.selectedTab = gBrowser.addTab();
-
-      // Now we can run our test.
       currentTest = tests.shift();
       testPlacesPanel(function() {
-        changeSidebarDirection("ltr");
-        info("Running " + currentTest.desc + " in LTR mode");
-      }, function() {
-        executeSoon(function() {
-          testPlacesPanel(function() {
-            // Run the test in RTL mode.
-            changeSidebarDirection("rtl");
-            info("Running " + currentTest.desc + " in RTL mode");
-          }, function() {
-            executeSoon(runNextTest);
-          });
-        });
-      });
+                        changeSidebarDirection("ltr");
+                        info("Running " + currentTest.desc + " in LTR mode");
+                      },
+                      function() {
+                        testPlacesPanel(function() {
+                          // Run the test in RTL mode.
+                          changeSidebarDirection("rtl");
+                          info("Running " + currentTest.desc + " in RTL mode");
+                        },
+                        function() {
+                          runNextTest();
+                        });
+                      });
     }
   }
 
-  runNextTest();
+  // Ensure history is clean before starting the test.
+  waitForClearHistory(runNextTest);
 }
