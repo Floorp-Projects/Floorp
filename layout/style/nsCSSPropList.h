@@ -2598,7 +2598,7 @@ CSS_PROP_DISPLAY(
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Display,
     mTransitionProperty,
-    0,
+    VARIANT_IDENTIFIER | VARIANT_NONE | VARIANT_ALL, // used only in shorthand
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)

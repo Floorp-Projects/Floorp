@@ -8098,22 +8098,7 @@ CSSParserImpl::ParseTransition()
           // if we haven't found this property yet, try to parse it
           PRInt32 variantMask;
           const PRInt32* table = nsnull;
-          switch (kTransitionProperties[i]) {
-            case eCSSProperty_transition_property:
-              variantMask = VARIANT_IDENTIFIER | VARIANT_NONE | VARIANT_ALL;
-              break;
-            case eCSSProperty_transition_duration:
-            case eCSSProperty_transition_delay:
-              variantMask = VARIANT_TIME;
-              break;
-            case eCSSProperty_transition_timing_function:
-              variantMask = VARIANT_TIMING_FUNCTION;
-              table = nsCSSProps::kTransitionTimingFunctionKTable;
-              break;
-            default:
-              NS_ABORT_IF_FALSE(PR_FALSE, "Invalid transition property");
-          }
-          if (ParseVariant(tempValue, variantMask, table)) {
+          if (ParseSingleValueProperty(tempValue, kTransitionProperties[i])) {
             parsedProperty[i] = PR_TRUE;
             cur[i] = AppendValueToList(values[i], cur[i], tempValue);
             foundProperty = PR_TRUE;
