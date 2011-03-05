@@ -35,6 +35,32 @@ function go() {
     gl.clearColor(0.0, 0.0, 0.0, 0.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+    function doArraysHaveSameContents(a, b) {
+        var flags = [];
+        function hasUnusedValue(a, value) {
+            for (var ii = 0; ii < a.length; ++ii) {
+                if (a[ii] === value && !flags[ii]) {
+                    flags[ii] = true;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        try {
+            if (a.length !== b.length) {
+                return false;
+            }
+            for (var ii = 0; ii < a.length; ii++) {
+                if (!hasUnusedValue(b, a[ii])) {
+                    return false;
+                }
+            }
+        } catch (ex) {
+            return false;
+        }
+        return true;
+    }
 
 /////// Check compileShader() /////////////////////////////
 
@@ -136,7 +162,7 @@ function go() {
             gl.detachShader(prog, shaders_to_detach[i]);
         if(gl.getError() != gl.NO_ERROR)
             assertMsg(false, "unexpected error in detachShader()");
-        assertMsg(areArraysEqual(gl.getAttachedShaders(prog), expected_shaders), errmsg);
+        assertMsg(doArraysHaveSameContents(gl.getAttachedShaders(prog), expected_shaders), errmsg);
     }
     checkGetAttachedShaders([], [], [], "getAttachedShaders should return an empty list by default");
     checkGetAttachedShaders([fs], [], [fs], "attaching a single shader should give the expected list");

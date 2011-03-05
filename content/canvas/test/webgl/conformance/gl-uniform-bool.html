@@ -45,7 +45,7 @@ gl = initWebGL("example", "vshader", "fshader", [ "vPosition"], [ 0, 0, 0, 1 ], 
 var loc = gl.getUniformLocation(gl.program, "color");
 gl.uniform1f(loc, 1);
 glErrorShouldBe(gl, gl.NO_ERROR,
-          "should be able to set bool with gl.uniform1f");
+                "should be able to set bool with gl.uniform1f");
 
 debug("");
 successfullyParsed = true;

@@ -57,6 +57,7 @@ function runOneIteration(image, useTexSubImage2D, flipY, topColor, bottomColor)
     // Set up pixel store parameters
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
     // Upload the image into the texture
     if (useTexSubImage2D) {
         // Initialize the texture to black first
@@ -90,18 +91,9 @@ function runTest(image)
     runOneIteration(image, true, true, red, green);
     runOneIteration(image, true, false, green, red);
 
-    successfullyParsed = true;
-    var epilogue = document.createElement("script");
-    epilogue.onload = finish;
-    epilogue.src = "../resources/js-test-post.js";
-    document.body.appendChild(epilogue);
+    finishTest();
 }
 
-function finish() {
-    if (window.nonKhronosFrameworkNotifyDone) {
-        window.nonKhronosFrameworkNotifyDone();
-    }
-}
 </script>
 </head>
 <body onload="init()">
