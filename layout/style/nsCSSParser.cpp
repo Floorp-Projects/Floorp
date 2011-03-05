@@ -410,6 +410,7 @@ protected:
                           PRBool* aChanged);
 
   PRBool ParseProperty(nsCSSProperty aPropID);
+  PRBool ParsePropertyByFunction(nsCSSProperty aPropID);
   PRBool ParseSingleValueProperty(nsCSSValue& aValue,
                                   nsCSSProperty aPropID);
 
@@ -5237,7 +5238,37 @@ PRBool
 CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
 {
   NS_ASSERTION(aPropID < eCSSProperty_COUNT, "index out of range");
+  switch (nsCSSProps::PropertyParseType(aPropID)) {
+    case CSS_PROPERTY_PARSE_INACCESSIBLE: {
+      // The user can't use these
+      REPORT_UNEXPECTED(PEInaccessibleProperty2);
+      return PR_FALSE;
+    }
+    case CSS_PROPERTY_PARSE_FUNCTION: {
+      return ParsePropertyByFunction(aPropID);
+    }
+    case CSS_PROPERTY_PARSE_VALUE: {
+      nsCSSValue value;
+      if (ParseSingleValueProperty(value, aPropID)) {
+        if (ExpectEndProperty()) {
+          AppendValue(aPropID, value);
+          return PR_TRUE;
+        }
+        // XXX Report errors?
+      }
+      // XXX Report errors?
+      return PR_FALSE;
+    }
+  }
+  NS_ABORT_IF_FALSE(PR_FALSE,
+                    "Property's flags field in nsCSSPropList.h is missing "
+                    "one of the CSS_PROPERTY_PARSE_* constants");
+  return PR_FALSE;
+}
 
+PRBool
+CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
+{
   switch (aPropID) {  // handle shorthand or multiple properties
   case eCSSProperty_background:
     return ParseBackground();
@@ -5420,65 +5451,10 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
     return ParseMarker();
 #endif
 
-  // Strip out properties we use internally.
-  case eCSSProperty__x_system_font:
-  case eCSSProperty_margin_end_value:
-  case eCSSProperty_margin_left_value:
-  case eCSSProperty_margin_right_value:
-  case eCSSProperty_margin_start_value:
-  case eCSSProperty_margin_left_ltr_source:
-  case eCSSProperty_margin_left_rtl_source:
-  case eCSSProperty_margin_right_ltr_source:
-  case eCSSProperty_margin_right_rtl_source:
-  case eCSSProperty_padding_end_value:
-  case eCSSProperty_padding_left_value:
-  case eCSSProperty_padding_right_value:
-  case eCSSProperty_padding_start_value:
-  case eCSSProperty_padding_left_ltr_source:
-  case eCSSProperty_padding_left_rtl_source:
-  case eCSSProperty_padding_right_ltr_source:
-  case eCSSProperty_padding_right_rtl_source:
-  case eCSSProperty_border_end_color_value:
-  case eCSSProperty_border_left_color_value:
-  case eCSSProperty_border_right_color_value:
-  case eCSSProperty_border_start_color_value:
-  case eCSSProperty_border_left_color_ltr_source:
-  case eCSSProperty_border_left_color_rtl_source:
-  case eCSSProperty_border_right_color_ltr_source:
-  case eCSSProperty_border_right_color_rtl_source:
-  case eCSSProperty_border_end_style_value:
-  case eCSSProperty_border_left_style_value:
-  case eCSSProperty_border_right_style_value:
-  case eCSSProperty_border_start_style_value:
-  case eCSSProperty_border_left_style_ltr_source:
-  case eCSSProperty_border_left_style_rtl_source:
-  case eCSSProperty_border_right_style_ltr_source:
-  case eCSSProperty_border_right_style_rtl_source:
-  case eCSSProperty_border_end_width_value:
-  case eCSSProperty_border_left_width_value:
-  case eCSSProperty_border_right_width_value:
-  case eCSSProperty_border_start_width_value:
-  case eCSSProperty_border_left_width_ltr_source:
-  case eCSSProperty_border_left_width_rtl_source:
-  case eCSSProperty_border_right_width_ltr_source:
-  case eCSSProperty_border_right_width_rtl_source:
-    // The user can't use these
-    REPORT_UNEXPECTED(PEInaccessibleProperty2);
+  default:
+    NS_ABORT_IF_FALSE(PR_FALSE, "should not be called");
     return PR_FALSE;
-  default:  // must be single property
-    {
-      nsCSSValue value;
-      if (ParseSingleValueProperty(value, aPropID)) {
-        if (ExpectEndProperty()) {
-          AppendValue(aPropID, value);
-          return PR_TRUE;
-        }
-        // XXX Report errors?
-      }
-      // XXX Report errors?
-    }
   }
-  return PR_FALSE;
 }
 
 // Bits used in determining which background position info we have
