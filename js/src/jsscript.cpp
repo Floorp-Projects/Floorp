@@ -775,7 +775,7 @@ script_trace(JSTracer *trc, JSObject *obj)
 Class js_ScriptClass = {
     "Script",
     JSCLASS_HAS_PRIVATE |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -790,7 +790,7 @@ Class js_ScriptClass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    JS_CLASS_TRACE(script_trace)
+    script_trace
 };
 
 /*
