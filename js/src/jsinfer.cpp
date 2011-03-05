@@ -1773,13 +1773,13 @@ TypeCompartment::processPendingRecompiles(JSContext *cx)
         mjit::Recompiler recompiler(cx, script);
         if (!recompiler.recompile()) {
             pendingNukeTypes = true;
-            delete pending;
+            cx->free(pending);
             return nukeTypes(cx);
         }
 #endif
     }
 
-    delete pending;
+    cx->free(pending);
     return true;
 }
 
@@ -1808,7 +1808,7 @@ TypeCompartment::nukeTypes(JSContext *cx)
      */
     JS_ASSERT(pendingNukeTypes);
     if (pendingRecompiles) {
-        delete pendingRecompiles;
+        cx->free(pendingRecompiles);
         pendingRecompiles = NULL;
     }
 
@@ -1826,8 +1826,14 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
         return;
     }
 
-    if (!pendingRecompiles)
-        pendingRecompiles = new Vector<JSScript*>(ContextAllocPolicy(cx));
+    if (!pendingRecompiles) {
+        pendingRecompiles = (Vector<JSScript*>*) cx->calloc(sizeof(Vector<JSScript*>));
+        if (!pendingRecompiles) {
+            cx->compartment->types.setPendingNukeTypes(cx);
+            return;
+        }
+        new(pendingRecompiles) Vector<JSScript*>(cx);
+    }
 
     for (unsigned i = 0; i < pendingRecompiles->length(); i++) {
         if (script == (*pendingRecompiles)[i])
