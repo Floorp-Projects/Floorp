@@ -209,14 +209,14 @@ void TypeFailure(JSContext *cx, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    fprintf(stdout, "[infer failure] ");
-    vfprintf(stdout, fmt, ap);
-    fprintf(stdout, "\n");
+    fprintf(stderr, "[infer failure] ");
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, "\n");
     va_end(ap);
 
     cx->compartment->types.finish(cx, cx->compartment);
 
-    fflush(stdout);
+    fflush(stderr);
     *((int*)NULL) = 0;  /* Type warnings */
 }
 
