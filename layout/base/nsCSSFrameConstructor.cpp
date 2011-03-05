@@ -4380,9 +4380,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
   }
 
   // Handle various non-scrollable blocks
-  if (aDisplay->IsBlockInside() ||
-      NS_STYLE_DISPLAY_RUN_IN == aDisplay->mDisplay ||
-      NS_STYLE_DISPLAY_COMPACT == aDisplay->mDisplay) {  
+  if (aDisplay->IsBlockInside()) {
     static const FrameConstructionData sNonScrollableBlockData =
       FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructNonScrollableBlock);
     return &sNonScrollableBlockData;
@@ -4394,9 +4392,6 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
     // find them if we need to.
     // XXXbz the "quickly" part is a bald-faced lie!
     { NS_STYLE_DISPLAY_INLINE,
-      FULL_CTOR_FCDATA(FCDATA_IS_INLINE | FCDATA_IS_LINE_PARTICIPANT,
-                       &nsCSSFrameConstructor::ConstructInline) },
-    { NS_STYLE_DISPLAY_MARKER,
       FULL_CTOR_FCDATA(FCDATA_IS_INLINE | FCDATA_IS_LINE_PARTICIPANT,
                        &nsCSSFrameConstructor::ConstructInline) },
     { NS_STYLE_DISPLAY_TABLE,
