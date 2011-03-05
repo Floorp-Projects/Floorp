@@ -5474,6 +5474,25 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_NONE | VARIANT_INHERIT, nsnull);
   }
 
+  if (nsCSSProps::PropHasFlags(aPropID, CSS_PROPERTY_VALUE_PARSER_FUNCTION)) {
+    switch (aPropID) {
+      case eCSSProperty_azimuth:
+        return ParseAzimuth(aValue);
+      case eCSSProperty_font_family:
+      case eCSSProperty_voice_family:
+        return ParseFamily(aValue);
+      case eCSSProperty_font_weight:
+        return ParseFontWeight(aValue);
+      case eCSSProperty_marks:
+        return ParseMarks(aValue);
+      case eCSSProperty_text_decoration:
+        return ParseTextDecoration(aValue);
+      default:
+        NS_ABORT_IF_FALSE(PR_FALSE, "should not reach here");
+        return PR_FALSE;
+    }
+  }
+
   switch (aPropID) {
   case eCSSProperty_UNKNOWN:
   case eCSSProperty_background:
@@ -5594,8 +5613,6 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_appearance:
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kAppearanceKTable);
-  case eCSSProperty_azimuth:
-    return ParseAzimuth(aValue);
   case eCSSProperty_background_attachment:
     // Used only internally.
     return ParseVariant(aValue, VARIANT_KEYWORD,
@@ -5792,8 +5809,6 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_float_edge:
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kFloatEdgeKTable);
-  case eCSSProperty_font_family:
-    return ParseFamily(aValue);
   case eCSSProperty_font_feature_settings:
   case eCSSProperty_font_language_override:
     return ParseVariant(aValue, VARIANT_NORMAL | VARIANT_INHERIT |
@@ -5815,8 +5830,6 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_font_variant:
     return ParseVariant(aValue, VARIANT_HK | VARIANT_SYSFONT,
                         nsCSSProps::kFontVariantKTable);
-  case eCSSProperty_font_weight:
-    return ParseFontWeight(aValue);
   case eCSSProperty_ime_mode:
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kIMEModeKTable);
@@ -5843,8 +5856,6 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_AHLP | VARIANT_CALC, nsnull);
   case eCSSProperty_marker_offset:
     return ParseVariant(aValue, VARIANT_AHL | VARIANT_CALC, nsnull);
-  case eCSSProperty_marks:
-    return ParseMarks(aValue);
   case eCSSProperty_max_height:
     return ParseNonNegativeVariant(aValue, VARIANT_HLPO | VARIANT_CALC,
                                    nsnull);
@@ -5948,8 +5959,6 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     // as a string....
     return ParseVariant(aValue, VARIANT_HK /* | VARIANT_STRING */,
                         nsCSSProps::kTextAlignKTable);
-  case eCSSProperty_text_decoration:
-    return ParseTextDecoration(aValue);
   case eCSSProperty_text_indent:
     return ParseVariant(aValue, VARIANT_HLP | VARIANT_CALC, nsnull);
   case eCSSProperty_text_transform:
@@ -5976,8 +5985,6 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_visibility:
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kVisibilityKTable);
-  case eCSSProperty_voice_family:
-    return ParseFamily(aValue);
   case eCSSProperty_volume:
     return ParseVariant(aValue, VARIANT_HPN | VARIANT_KEYWORD,
                         nsCSSProps::kVolumeKTable);
