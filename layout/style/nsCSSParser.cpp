@@ -5470,6 +5470,10 @@ PRBool
 CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
                                         nsCSSProperty aPropID)
 {
+  if (aPropID == eCSSPropertyExtra_x_none_value) {
+    return ParseVariant(aValue, VARIANT_NONE | VARIANT_INHERIT, nsnull);
+  }
+
   switch (aPropID) {
   case eCSSProperty_UNKNOWN:
   case eCSSProperty_background:
@@ -5988,8 +5992,6 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
                         nsCSSProps::kWordwrapKTable);
   case eCSSProperty_z_index:
     return ParseVariant(aValue, VARIANT_AHI, nsnull);
-  case eCSSPropertyExtra_x_none_value:
-    return ParseVariant(aValue, VARIANT_NONE | VARIANT_INHERIT, nsnull);
   }
   // explicitly do NOT have a default case to let the compiler
   // help find missing properties
