@@ -162,6 +162,17 @@ namespace css = mozilla::css;
 #define VARIANT_IMAGE (VARIANT_URL | VARIANT_NONE | VARIANT_GRADIENT | \
                        VARIANT_IMAGE_RECT | VARIANT_ELEMENT)
 
+// This lives here because it depends on the above macros.
+const PRUint32
+nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
+#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,            \
+                 parsevariant_, kwtable_, stylestruct_, stylestructoffset_,    \
+                 animtype_)                                                    \
+  parsevariant_,
+#include "nsCSSPropList.h"
+#undef CSS_PROP
+};
+
 //----------------------------------------------------------------------
 
 namespace {
@@ -5474,6 +5485,11 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_NONE | VARIANT_INHERIT, nsnull);
   }
 
+  if (aPropID < 0 || aPropID >= eCSSProperty_COUNT_no_shorthands) {
+    NS_ABORT_IF_FALSE(PR_FALSE, "not a single value property");
+    return PR_FALSE;
+  }
+
   if (nsCSSProps::PropHasFlags(aPropID, CSS_PROPERTY_VALUE_PARSER_FUNCTION)) {
     switch (aPropID) {
       case eCSSProperty_azimuth:
@@ -5493,516 +5509,40 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     }
   }
 
-  switch (aPropID) {
-  case eCSSProperty_UNKNOWN:
-  case eCSSProperty_background:
-  case eCSSProperty_background_position:
-  case eCSSProperty_border:
-  case eCSSProperty_border_color:
-  case eCSSProperty_border_bottom_colors:
-  case eCSSProperty_border_image:
-  case eCSSProperty_border_left_colors:
-  case eCSSProperty_border_right_colors:
-  case eCSSProperty_border_end_color:
-  case eCSSProperty_border_left_color:
-  case eCSSProperty_border_right_color:
-  case eCSSProperty_border_start_color:
-  case eCSSProperty_border_end_style:
-  case eCSSProperty_border_left_style:
-  case eCSSProperty_border_right_style:
-  case eCSSProperty_border_start_style:
-  case eCSSProperty_border_end_width:
-  case eCSSProperty_border_left_width:
-  case eCSSProperty_border_right_width:
-  case eCSSProperty_border_start_width:
-  case eCSSProperty_border_top_colors:
-  case eCSSProperty_border_spacing:
-  case eCSSProperty_border_style:
-  case eCSSProperty_border_bottom:
-  case eCSSProperty_border_end:
-  case eCSSProperty_border_left:
-  case eCSSProperty_border_right:
-  case eCSSProperty_border_start:
-  case eCSSProperty_border_top:
-  case eCSSProperty_border_width:
-  case eCSSProperty_background_size:
-  case eCSSProperty_border_radius:
-  case eCSSProperty_border_top_left_radius:
-  case eCSSProperty_border_top_right_radius:
-  case eCSSProperty_border_bottom_right_radius:
-  case eCSSProperty_border_bottom_left_radius:
-  case eCSSProperty_box_shadow:
-  case eCSSProperty_clip:
-  case eCSSProperty__moz_column_rule:
-  case eCSSProperty_content:
-  case eCSSProperty_counter_increment:
-  case eCSSProperty_counter_reset:
-  case eCSSProperty_cue:
-  case eCSSProperty_cursor:
-  case eCSSProperty_font:
-  case eCSSProperty_image_region:
-  case eCSSProperty_list_style:
-  case eCSSProperty_margin:
-  case eCSSProperty_margin_end:
-  case eCSSProperty_margin_left:
-  case eCSSProperty_margin_right:
-  case eCSSProperty_margin_start:
-  case eCSSProperty_outline:
-  case eCSSProperty__moz_outline_radius:
-  case eCSSProperty__moz_outline_radius_topLeft:
-  case eCSSProperty__moz_outline_radius_topRight:
-  case eCSSProperty__moz_outline_radius_bottomRight:
-  case eCSSProperty__moz_outline_radius_bottomLeft:
-  case eCSSProperty_overflow:
-  case eCSSProperty_padding:
-  case eCSSProperty_padding_end:
-  case eCSSProperty_padding_left:
-  case eCSSProperty_padding_right:
-  case eCSSProperty_padding_start:
-  case eCSSProperty_pause:
-  case eCSSProperty_quotes:
-  case eCSSProperty_size:
-  case eCSSProperty_text_shadow:
-  case eCSSProperty__moz_transform:
-  case eCSSProperty__moz_transform_origin:
-  case eCSSProperty_transition:
-  case eCSSProperty_transition_property:
-  case eCSSProperty_transition_timing_function:
-  case eCSSProperty_transition_duration:
-  case eCSSProperty_transition_delay:
-  case eCSSProperty_COUNT:
-#ifdef MOZ_SVG
-  case eCSSProperty_fill:
-  case eCSSProperty_stroke:
-  case eCSSProperty_stroke_dasharray:
-  case eCSSProperty_marker:
-#endif
-  case eCSSPropertyExtra_no_properties:
-  case eCSSPropertyExtra_all_properties:
-    NS_ERROR("not a single value property");
+  PRUint32 variant = nsCSSProps::ParserVariant(aPropID);
+  if (variant == 0) {
+    NS_ABORT_IF_FALSE(PR_FALSE, "not a single value property");
     return PR_FALSE;
-
-  case eCSSProperty__x_system_font:
-  case eCSSProperty_margin_left_ltr_source:
-  case eCSSProperty_margin_left_rtl_source:
-  case eCSSProperty_margin_right_ltr_source:
-  case eCSSProperty_margin_right_rtl_source:
-  case eCSSProperty_padding_left_ltr_source:
-  case eCSSProperty_padding_left_rtl_source:
-  case eCSSProperty_padding_right_ltr_source:
-  case eCSSProperty_padding_right_rtl_source:
-  case eCSSProperty_border_left_color_ltr_source:
-  case eCSSProperty_border_left_color_rtl_source:
-  case eCSSProperty_border_right_color_ltr_source:
-  case eCSSProperty_border_right_color_rtl_source:
-  case eCSSProperty_border_left_style_ltr_source:
-  case eCSSProperty_border_left_style_rtl_source:
-  case eCSSProperty_border_right_style_ltr_source:
-  case eCSSProperty_border_right_style_rtl_source:
-  case eCSSProperty_border_left_width_ltr_source:
-  case eCSSProperty_border_left_width_rtl_source:
-  case eCSSProperty_border_right_width_ltr_source:
-  case eCSSProperty_border_right_width_rtl_source:
-#ifdef MOZ_MATHML
-  case eCSSProperty_script_size_multiplier:
-  case eCSSProperty_script_min_size:
-#endif
-    NS_ERROR("not currently parsed here");
-    return PR_FALSE;
-
-  case eCSSProperty_appearance:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kAppearanceKTable);
-  case eCSSProperty_background_attachment:
-    // Used only internally.
-    return ParseVariant(aValue, VARIANT_KEYWORD,
-                        nsCSSProps::kBackgroundAttachmentKTable);
-  case eCSSProperty_background_clip:
-    // Used only internally.
-    return ParseVariant(aValue, VARIANT_KEYWORD,
-                        nsCSSProps::kBackgroundOriginKTable);
-  case eCSSProperty_background_color:
-    return ParseVariant(aValue, VARIANT_HC, nsnull);
-  case eCSSProperty_background_image:
-    // Used only internally.
-    return ParseVariant(aValue, VARIANT_IMAGE, nsnull);
-  case eCSSProperty__moz_background_inline_policy:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kBackgroundInlinePolicyKTable);
-  case eCSSProperty_background_origin:
-    // Used only internally.
-    return ParseVariant(aValue, VARIANT_KEYWORD,
-                        nsCSSProps::kBackgroundOriginKTable);
-  case eCSSProperty_background_repeat:
-    // Used only internally.
-    return ParseVariant(aValue, VARIANT_KEYWORD,
-                        nsCSSProps::kBackgroundRepeatKTable);
-  case eCSSProperty_binding:
-    return ParseVariant(aValue, VARIANT_HUO, nsnull);
-  case eCSSProperty_border_collapse:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kBorderCollapseKTable);
-  case eCSSProperty_border_bottom_color:
-  case eCSSProperty_border_end_color_value: // for internal use
-  case eCSSProperty_border_left_color_value: // for internal use
-  case eCSSProperty_border_right_color_value: // for internal use
-  case eCSSProperty_border_start_color_value: // for internal use
-  case eCSSProperty_border_top_color:
-  case eCSSProperty__moz_column_rule_color:
-    return ParseVariant(aValue, VARIANT_HCK,
-                        nsCSSProps::kBorderColorKTable);
-  case eCSSProperty_border_bottom_style:
-  case eCSSProperty_border_end_style_value: // for internal use
-  case eCSSProperty_border_left_style_value: // for internal use
-  case eCSSProperty_border_right_style_value: // for internal use
-  case eCSSProperty_border_start_style_value: // for internal use
-  case eCSSProperty_border_top_style:
-  case eCSSProperty__moz_column_rule_style:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kBorderStyleKTable);
-  case eCSSProperty_border_bottom_width:
-  case eCSSProperty_border_end_width_value: // for internal use
-  case eCSSProperty_border_left_width_value: // for internal use
-  case eCSSProperty_border_right_width_value: // for internal use
-  case eCSSProperty_border_start_width_value: // for internal use
-  case eCSSProperty_border_top_width:
-  case eCSSProperty__moz_column_rule_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_HKL | VARIANT_CALC,
-                                   nsCSSProps::kBorderWidthKTable);
-  case eCSSProperty__moz_column_count:
-    // Need to reject 0 in addition to negatives.  If we accept 0, we
-    // need to change NS_STYLE_COLUMN_COUNT_AUTO to something else.
-    return ParsePositiveNonZeroVariant(aValue, VARIANT_AHI, nsnull);
-  case eCSSProperty__moz_column_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_AHL | VARIANT_CALC, nsnull);
-  case eCSSProperty__moz_column_gap:
-    return ParseNonNegativeVariant(aValue, VARIANT_HL | VARIANT_NORMAL |
-                                   VARIANT_CALC, nsnull);
-  case eCSSProperty_bottom:
-  case eCSSProperty_top:
-  case eCSSProperty_left:
-  case eCSSProperty_right:
-    return ParseVariant(aValue, VARIANT_AHLP | VARIANT_CALC, nsnull);
-  case eCSSProperty_box_align:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kBoxAlignKTable);
-  case eCSSProperty_box_direction:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kBoxDirectionKTable);
-  case eCSSProperty_box_flex:
-    return ParseNonNegativeVariant(aValue, VARIANT_HN, nsnull);
-  case eCSSProperty_box_orient:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kBoxOrientKTable);
-  case eCSSProperty_box_pack:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kBoxPackKTable);
-  case eCSSProperty_box_ordinal_group:
-    return ParsePositiveNonZeroVariant(aValue, VARIANT_HI, nsnull);
-#ifdef MOZ_SVG
-  case eCSSProperty_clip_path:
-    return ParseVariant(aValue, VARIANT_HUO, nsnull);
-  case eCSSProperty_clip_rule:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kFillRuleKTable);
-  case eCSSProperty_color_interpolation:
-  case eCSSProperty_color_interpolation_filters:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kColorInterpolationKTable);
-  case eCSSProperty_dominant_baseline:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kDominantBaselineKTable);
-  case eCSSProperty_fill_opacity:
-    return ParseVariant(aValue, VARIANT_HN,
-                        nsnull);
-  case eCSSProperty_fill_rule:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kFillRuleKTable);
-  case eCSSProperty_filter:
-    return ParseVariant(aValue, VARIANT_HUO, nsnull);
-  case eCSSProperty_flood_color:
-    return ParseVariant(aValue, VARIANT_HC, nsnull);
-  case eCSSProperty_flood_opacity:
-    return ParseVariant(aValue, VARIANT_HN, nsnull);
-  case eCSSProperty_image_rendering:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kImageRenderingKTable);
-  case eCSSProperty_lighting_color:
-    return ParseVariant(aValue, VARIANT_HC, nsnull);
-  case eCSSProperty_marker_end:
-  case eCSSProperty_marker_mid:
-  case eCSSProperty_marker_start:
-    return ParseVariant(aValue, VARIANT_HUO, nsnull);
-  case eCSSProperty_mask:
-    return ParseVariant(aValue, VARIANT_HUO, nsnull);
-  case eCSSProperty_shape_rendering:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kShapeRenderingKTable);
-  case eCSSProperty_stop_color:
-    return ParseVariant(aValue, VARIANT_HC,
-                        nsnull);
-  case eCSSProperty_stop_opacity:
-    return ParseVariant(aValue, VARIANT_HN,
-                        nsnull);
-  case eCSSProperty_stroke_dashoffset:
-    return ParseVariant(aValue, VARIANT_HLPN,
-                        nsnull);
-  case eCSSProperty_stroke_linecap:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kStrokeLinecapKTable);
-  case eCSSProperty_stroke_linejoin:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kStrokeLinejoinKTable);
-  case eCSSProperty_stroke_miterlimit:
-    return ParseVariant(aValue, VARIANT_HN, nsnull) &&
-           // Enforce the restriction that the value is greater than 1.
-           (aValue.GetUnit() != eCSSUnit_Number || 
-            aValue.GetFloatValue() >= 1.0f);
-  case eCSSProperty_stroke_opacity:
-    return ParseVariant(aValue, VARIANT_HN,
-                        nsnull);
-  case eCSSProperty_stroke_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_HLPN, nsnull);
-  case eCSSProperty_text_anchor:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kTextAnchorKTable);
-  case eCSSProperty_text_rendering:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kTextRenderingKTable);
-#endif
-  case eCSSProperty_box_sizing:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kBoxSizingKTable);
-  case eCSSProperty_height:
-    return ParseNonNegativeVariant(aValue, VARIANT_AHLP | VARIANT_CALC,
-                                   nsnull);
-  case eCSSProperty_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_AHKLP | VARIANT_CALC,
-                                   nsCSSProps::kWidthKTable);
-  case eCSSProperty_force_broken_image_icon:
-    return ParseNonNegativeVariant(aValue, VARIANT_HI, nsnull);
-  case eCSSProperty_caption_side:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kCaptionSideKTable);
-  case eCSSProperty_clear:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kClearKTable);
-  case eCSSProperty_color:
-    return ParseVariant(aValue, VARIANT_HC, nsnull);
-  case eCSSProperty_cue_after:
-  case eCSSProperty_cue_before:
-    return ParseVariant(aValue, VARIANT_HUO, nsnull);
-  case eCSSProperty_direction:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kDirectionKTable);
-  case eCSSProperty_display:
-    return ParseVariant(aValue, VARIANT_HK, nsCSSProps::kDisplayKTable);
-  case eCSSProperty_elevation:
-    return ParseVariant(aValue, VARIANT_HK | VARIANT_ANGLE,
-                        nsCSSProps::kElevationKTable);
-  case eCSSProperty_empty_cells:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kEmptyCellsKTable);
-  case eCSSProperty_float:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kFloatKTable);
-  case eCSSProperty_float_edge:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kFloatEdgeKTable);
-  case eCSSProperty_font_feature_settings:
-  case eCSSProperty_font_language_override:
-    return ParseVariant(aValue, VARIANT_NORMAL | VARIANT_INHERIT |
-                                VARIANT_STRING, nsnull);
-  case eCSSProperty_font_size:
-    return ParseNonNegativeVariant(aValue,
-                                   VARIANT_HKLP | VARIANT_SYSFONT |
-                                     VARIANT_CALC,
-                                   nsCSSProps::kFontSizeKTable);
-  case eCSSProperty_font_size_adjust:
-    return ParseVariant(aValue, VARIANT_HON | VARIANT_SYSFONT,
-                        nsnull);
-  case eCSSProperty_font_stretch:
-    return ParseVariant(aValue, VARIANT_HK | VARIANT_SYSFONT,
-                        nsCSSProps::kFontStretchKTable);
-  case eCSSProperty_font_style:
-    return ParseVariant(aValue, VARIANT_HK | VARIANT_SYSFONT,
-                        nsCSSProps::kFontStyleKTable);
-  case eCSSProperty_font_variant:
-    return ParseVariant(aValue, VARIANT_HK | VARIANT_SYSFONT,
-                        nsCSSProps::kFontVariantKTable);
-  case eCSSProperty_ime_mode:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kIMEModeKTable);
-  case eCSSProperty__moz_tab_size:
-    return ParseNonNegativeVariant(aValue, VARIANT_HI, nsnull);
-  case eCSSProperty_letter_spacing:
-  case eCSSProperty_word_spacing:
-    return ParseVariant(aValue, VARIANT_HL | VARIANT_NORMAL | VARIANT_CALC,
-                        nsnull);
-  case eCSSProperty_line_height:
-    return ParseNonNegativeVariant(aValue, VARIANT_HLPN | VARIANT_KEYWORD | VARIANT_NORMAL | VARIANT_SYSFONT, nsCSSProps::kLineHeightKTable);
-  case eCSSProperty_list_style_image:
-    return ParseVariant(aValue, VARIANT_HUO, nsnull);
-  case eCSSProperty_list_style_position:
-    return ParseVariant(aValue, VARIANT_HK, nsCSSProps::kListStylePositionKTable);
-  case eCSSProperty_list_style_type:
-    return ParseVariant(aValue, VARIANT_HK, nsCSSProps::kListStyleKTable);
-  case eCSSProperty_margin_bottom:
-  case eCSSProperty_margin_end_value: // for internal use
-  case eCSSProperty_margin_left_value: // for internal use
-  case eCSSProperty_margin_right_value: // for internal use
-  case eCSSProperty_margin_start_value: // for internal use
-  case eCSSProperty_margin_top:
-    return ParseVariant(aValue, VARIANT_AHLP | VARIANT_CALC, nsnull);
-  case eCSSProperty_marker_offset:
-    return ParseVariant(aValue, VARIANT_AHL | VARIANT_CALC, nsnull);
-  case eCSSProperty_max_height:
-    return ParseNonNegativeVariant(aValue, VARIANT_HLPO | VARIANT_CALC,
-                                   nsnull);
-  case eCSSProperty_max_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_HKLPO | VARIANT_CALC,
-                                   nsCSSProps::kWidthKTable);
-  case eCSSProperty_min_height:
-    return ParseNonNegativeVariant(aValue, VARIANT_HLP | VARIANT_CALC,
-                                   nsnull);
-  case eCSSProperty_min_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_HKLP | VARIANT_CALC,
-                                   nsCSSProps::kWidthKTable);
-  case eCSSProperty_opacity:
-    return ParseVariant(aValue, VARIANT_HN, nsnull);
-  case eCSSProperty_orphans:
-  case eCSSProperty_widows:
-    return ParsePositiveNonZeroVariant(aValue, VARIANT_HI, nsnull);
-  case eCSSProperty_outline_color:
-    return ParseVariant(aValue, VARIANT_HCK,
-                        nsCSSProps::kOutlineColorKTable);
-  case eCSSProperty_outline_style:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kOutlineStyleKTable);
-  case eCSSProperty_outline_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_HKL | VARIANT_CALC,
-                                   nsCSSProps::kBorderWidthKTable);
-  case eCSSProperty_outline_offset:
-    return ParseVariant(aValue, VARIANT_HL | VARIANT_CALC, nsnull);
-  case eCSSProperty_overflow_x:
-  case eCSSProperty_overflow_y:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kOverflowSubKTable);
-  case eCSSProperty_padding_bottom:
-  case eCSSProperty_padding_end_value: // for internal use
-  case eCSSProperty_padding_left_value: // for internal use
-  case eCSSProperty_padding_right_value: // for internal use
-  case eCSSProperty_padding_start_value: // for internal use
-  case eCSSProperty_padding_top:
-    return ParseNonNegativeVariant(aValue, VARIANT_HLP | VARIANT_CALC, nsnull);
-  case eCSSProperty_page:
-    return ParseVariant(aValue, VARIANT_AUTO | VARIANT_IDENTIFIER, nsnull);
-  case eCSSProperty_page_break_after:
-  case eCSSProperty_page_break_before:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kPageBreakKTable);
-  case eCSSProperty_page_break_inside:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kPageBreakInsideKTable);
-  case eCSSProperty_pause_after:
-  case eCSSProperty_pause_before:
-    return ParseVariant(aValue, VARIANT_HTP, nsnull);
-  case eCSSProperty_pitch:
-    return ParseVariant(aValue, VARIANT_HKF, nsCSSProps::kPitchKTable);
-  case eCSSProperty_pitch_range:
-    return ParseVariant(aValue, VARIANT_HN, nsnull);
-  case eCSSProperty_pointer_events:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kPointerEventsKTable);
-  case eCSSProperty_position:
-    return ParseVariant(aValue, VARIANT_HK, nsCSSProps::kPositionKTable);
-  case eCSSProperty_resize:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kResizeKTable);
-  case eCSSProperty_richness:
-    return ParseVariant(aValue, VARIANT_HN, nsnull);
-#ifdef MOZ_MATHML
-  // script-level can take Integer or Number values, but only Integer ("relative")
-  // values can be specified in a style sheet. Also we only allow this property
-  // when unsafe rules are enabled, because otherwise it could interfere
-  // with rulenode optimizations if used in a non-MathML-enabled document.
-  case eCSSProperty_script_level:
-    if (!mUnsafeRulesEnabled)
-      return PR_FALSE;
-    return ParseVariant(aValue, VARIANT_HI, nsnull);
-#endif
-  case eCSSProperty_speak:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kSpeakKTable);
-  case eCSSProperty_speak_header:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kSpeakHeaderKTable);
-  case eCSSProperty_speak_numeral:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kSpeakNumeralKTable);
-  case eCSSProperty_speak_punctuation:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kSpeakPunctuationKTable);
-  case eCSSProperty_speech_rate:
-    return ParseVariant(aValue, VARIANT_HN | VARIANT_KEYWORD,
-                        nsCSSProps::kSpeechRateKTable);
-  case eCSSProperty_stack_sizing:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kStackSizingKTable);
-  case eCSSProperty_stress:
-    return ParseVariant(aValue, VARIANT_HN, nsnull);
-  case eCSSProperty_table_layout:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kTableLayoutKTable);
-  case eCSSProperty_text_align:
-    // When we support aligning on a string, we can parse text-align
-    // as a string....
-    return ParseVariant(aValue, VARIANT_HK /* | VARIANT_STRING */,
-                        nsCSSProps::kTextAlignKTable);
-  case eCSSProperty_text_indent:
-    return ParseVariant(aValue, VARIANT_HLP | VARIANT_CALC, nsnull);
-  case eCSSProperty_text_transform:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kTextTransformKTable);
-  case eCSSProperty_unicode_bidi:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kUnicodeBidiKTable);
-  case eCSSProperty_user_focus:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kUserFocusKTable);
-  case eCSSProperty_user_input:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kUserInputKTable);
-  case eCSSProperty_user_modify:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kUserModifyKTable);
-  case eCSSProperty_user_select:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kUserSelectKTable);
-  case eCSSProperty_vertical_align:
-    return ParseVariant(aValue, VARIANT_HKLP | VARIANT_CALC,
-                        nsCSSProps::kVerticalAlignKTable);
-  case eCSSProperty_visibility:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kVisibilityKTable);
-  case eCSSProperty_volume:
-    return ParseVariant(aValue, VARIANT_HPN | VARIANT_KEYWORD,
-                        nsCSSProps::kVolumeKTable);
-  case eCSSProperty_white_space:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kWhitespaceKTable);
-  case eCSSProperty__moz_window_shadow:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kWindowShadowKTable);
-  case eCSSProperty_word_wrap:
-    return ParseVariant(aValue, VARIANT_HK,
-                        nsCSSProps::kWordwrapKTable);
-  case eCSSProperty_z_index:
-    return ParseVariant(aValue, VARIANT_AHI, nsnull);
   }
-  // explicitly do NOT have a default case to let the compiler
-  // help find missing properties
-  return PR_FALSE;
+
+#ifdef MOZ_MATHML
+  // We only allow 'script-level' when unsafe rules are enabled, because
+  // otherwise it could interfere with rulenode optimizations if used in
+  // a non-MathML-enabled document.
+  if (aPropID == eCSSProperty_script_level && !mUnsafeRulesEnabled)
+    return PR_FALSE;
+#endif
+
+  const PRInt32 *kwtable = nsCSSProps::kKeywordTableTable[aPropID];
+  switch (nsCSSProps::ValueRestrictions(aPropID)) {
+    default:
+      NS_ABORT_IF_FALSE(PR_FALSE, "should not be reached");
+    case 0:
+      return ParseVariant(aValue, variant, kwtable);
+    case CSS_PROPERTY_VALUE_NONNEGATIVE:
+      return ParseNonNegativeVariant(aValue, variant, kwtable);
+    case CSS_PROPERTY_VALUE_POSITIVE_NONZERO:
+      return ParsePositiveNonZeroVariant(aValue, variant, kwtable);
+    case CSS_PROPERTY_VALUE_AT_LEAST_ONE:
+      NS_ABORT_IF_FALSE((variant &
+                         ~(VARIANT_ALL_NONNUMERIC | VARIANT_NUMBER)) == 0,
+                        "need to update code to handle additional variants");
+      if (!ParseVariant(aValue, variant, kwtable))
+        return PR_FALSE;
+      // Enforce the restriction that the value is greater than 1.
+      return aValue.GetUnit() != eCSSUnit_Number || 
+             aValue.GetFloatValue() >= 1.0f;
+  }
 }
 
 // nsFont::EnumerateFamilies callback for ParseFontDescriptorValue
