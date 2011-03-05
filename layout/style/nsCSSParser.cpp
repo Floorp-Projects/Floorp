@@ -463,7 +463,7 @@ protected:
 
   PRBool ParseBackgroundItem(BackgroundParseState& aState);
 
-  PRBool ParseBackgroundList(nsCSSProperty aPropID); // a single value prop-id
+  PRBool ParseValueList(nsCSSProperty aPropID); // a single value prop-id
   PRBool ParseBackgroundPosition();
   PRBool ParseBoxPositionValues(nsCSSValuePair& aOut, PRBool aAcceptsInherit);
   PRBool ParseBackgroundSize();
@@ -515,10 +515,8 @@ protected:
 
   PRBool ParseShadowItem(nsCSSValue& aValue, PRBool aIsBoxShadow);
   PRBool ParseShadowList(nsCSSProperty aProperty);
-  PRBool ParseTransitionTime(nsCSSProperty aPropID);
   PRBool ParseTransitionProperty();
   PRBool ParseTransition();
-  PRBool ParseTransitionTimingFunction();
   PRBool ParseTransitionTimingFunctionValues(nsCSSValue& aValue);
   PRBool ParseTransitionTimingFunctionValueComponent(float& aComponent,
                                                      char aStop,
@@ -5270,6 +5268,9 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
       // XXX Report errors?
       return PR_FALSE;
     }
+    case CSS_PROPERTY_PARSE_VALUE_LIST: {
+      return ParseValueList(aPropID);
+    }
   }
   NS_ABORT_IF_FALSE(PR_FALSE,
                     "Property's flags field in nsCSSPropList.h is missing "
@@ -5285,12 +5286,6 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseBackground();
   case eCSSProperty_background_position:
     return ParseBackgroundPosition();
-  case eCSSProperty_background_attachment:
-  case eCSSProperty_background_clip:
-  case eCSSProperty_background_image:
-  case eCSSProperty_background_origin:
-  case eCSSProperty_background_repeat:
-    return ParseBackgroundList(aPropID);
   case eCSSProperty_background_size:
     return ParseBackgroundSize();
   case eCSSProperty_border:
@@ -5446,11 +5441,6 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
       return ParseTransition();
   case eCSSProperty_transition_property:
     return ParseTransitionProperty();
-  case eCSSProperty_transition_timing_function:
-    return ParseTransitionTimingFunction();
-  case eCSSProperty_transition_duration:
-  case eCSSProperty_transition_delay:
-    return ParseTransitionTime(aPropID);
 
 #ifdef MOZ_SVG
   case eCSSProperty_fill:
@@ -5934,7 +5924,7 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundParseState& aState)
 // This function is very similar to ParseBackgroundPosition and
 // ParseBackgroundSize.
 PRBool
-CSSParserImpl::ParseBackgroundList(nsCSSProperty aPropID)
+CSSParserImpl::ParseValueList(nsCSSProperty aPropID)
 {
   // aPropID is a single value prop-id
   nsCSSValue value;
@@ -7937,35 +7927,6 @@ CSSParserImpl::ParseTextDecoration(nsCSSValue& aValue)
 
 
 PRBool
-CSSParserImpl::ParseTransitionTime(nsCSSProperty aPropID)
-{
-  nsCSSValue value;
-  if (ParseVariant(value, VARIANT_INHERIT, nsnull)) {
-    // 'inherit' and 'initial' must be alone
-    if (!ExpectEndProperty()) {
-      return PR_FALSE;
-    }
-  } else {
-    nsCSSValueList* cur = value.SetListValue();
-    for (;;) {
-      if (!ParseVariant(cur->mValue, VARIANT_TIME, nsnull)) {
-        return PR_FALSE;
-      }
-      if (CheckEndProperty()) {
-        break;
-      }
-      if (!ExpectSymbol(',', PR_TRUE)) {
-        return PR_FALSE;
-      }
-      cur->mNext = new nsCSSValueList;
-      cur = cur->mNext;
-    }
-  }
-  AppendValue(aPropID, value);
-  return PR_TRUE;
-}
-
-PRBool
 CSSParserImpl::ParseTransitionProperty()
 {
   nsCSSValue value;
@@ -8008,36 +7969,6 @@ CSSParserImpl::ParseTransitionProperty()
     }
   }
   AppendValue(eCSSProperty_transition_property, value);
-  return PR_TRUE;
-}
-
-PRBool
-CSSParserImpl::ParseTransitionTimingFunction()
-{
-  nsCSSValue value;
-  if (ParseVariant(value, VARIANT_INHERIT, nsnull)) {
-    // 'inherit' and 'initial' must be alone
-    if (!ExpectEndProperty()) {
-      return PR_FALSE;
-    }
-  } else {
-    nsCSSValueList* cur = value.SetListValue();
-    for (;;) {
-      if (!ParseVariant(cur->mValue, VARIANT_TIMING_FUNCTION,
-                        nsCSSProps::kTransitionTimingFunctionKTable)) {
-        return PR_FALSE;
-      }
-      if (CheckEndProperty()) {
-        break;
-      }
-      if (!ExpectSymbol(',', PR_TRUE)) {
-        return PR_FALSE;
-      }
-      cur->mNext = new nsCSSValueList;
-      cur = cur->mNext;
-    }
-  }
-  AppendValue(eCSSProperty_transition_timing_function, value);
   return PR_TRUE;
 }
 
