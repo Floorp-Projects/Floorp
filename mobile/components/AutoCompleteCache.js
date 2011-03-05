@@ -179,7 +179,7 @@ var AutoCompleteUtils = {
     let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
 
     try {
-      ostream.init(this.cacheFile, (MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE), PERMS_FILE, 0);
+      ostream.init(this.cacheFile, (MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE), PERMS_FILE, ostream.DEFER_OPEN);
       converter.charset = "UTF-8";
       let data = converter.convertToInputStream(JSON.stringify(cache));
 
