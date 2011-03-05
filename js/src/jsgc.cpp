@@ -1543,7 +1543,6 @@ AutoGCRooter::trace(JSTracer *trc)
             MarkValue(trc, desc.value, "PropDesc::value");
             MarkValue(trc, desc.get, "PropDesc::get");
             MarkValue(trc, desc.set, "PropDesc::set");
-            MarkId(trc, desc.id, "PropDesc::id");
         }
         return;
       }

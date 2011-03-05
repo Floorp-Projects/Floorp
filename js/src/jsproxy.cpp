@@ -376,7 +376,7 @@ ParsePropertyDescriptorObject(JSContext *cx, JSObject *obj, jsid id, const Value
 {
     AutoPropDescArrayRooter descs(cx);
     PropDesc *d = descs.append();
-    if (!d || !d->initialize(cx, id, v))
+    if (!d || !d->initialize(cx, v))
         return false;
     desc->obj = obj;
     desc->value = d->value;
