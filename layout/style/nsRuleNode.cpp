@@ -1429,7 +1429,9 @@ CheckTextCallback(const nsRuleDataStruct& aData,
 // structs but not nsCSS*
 #define CSS_PROP_INCLUDE_NOT_CSS
 
-#define CHECK_DATA_FOR_PROPERTY(name_, id_, method_, flags_, datastruct_, member_, kwtable_, stylestructoffset_, animtype_) \
+#define CHECK_DATA_FOR_PROPERTY(name_, id_, method_, flags_, datastruct_,     \
+                                member_, parsevariant_, kwtable_,             \
+                                stylestructoffset_, animtype_)                \
   { offsetof(nsRuleData##datastruct_, member_), flags_ },
 
 static const PropertyCheckData FontCheckProperties[] = {
