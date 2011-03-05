@@ -2648,23 +2648,6 @@ JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, uint32 startKind,
 
 #endif /* DEBUG */
 
-JS_PUBLIC_API(void)
-JS_MarkGCThing(JSContext *cx, jsval v, const char *name, void *arg)
-{
-    JSTracer *trc;
-
-    trc = (JSTracer *)arg;
-    if (!trc)
-        trc = cx->runtime->gcMarkingTracer;
-    else
-        JS_ASSERT(trc == cx->runtime->gcMarkingTracer);
-
-#ifdef JS_THREADSAFE
-    JS_ASSERT(cx->runtime->gcThread == trc->context->thread);
-#endif
-    MarkValue(trc, Valueify(v), name ? name : "unknown");
-}
-
 extern JS_PUBLIC_API(JSBool)
 JS_IsGCMarkingTracer(JSTracer *trc)
 {
@@ -4045,8 +4028,7 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
 
 static Class prop_iter_class = {
     "PropertyIterator",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) |
-    JSCLASS_MARK_IS_TRACE,
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -4061,7 +4043,7 @@ static Class prop_iter_class = {
     NULL,           /* construct   */
     NULL,           /* xdrObject   */
     NULL,           /* hasInstance */
-    JS_CLASS_TRACE(prop_iter_trace)
+    prop_iter_trace
 };
 
 JS_PUBLIC_API(JSObject *)

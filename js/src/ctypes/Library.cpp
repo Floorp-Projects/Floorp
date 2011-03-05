@@ -64,7 +64,7 @@ namespace Library
 
 static JSClass sLibraryClass = {
   "Library",
-  JSCLASS_HAS_RESERVED_SLOTS(LIBRARY_SLOTS) | JSCLASS_MARK_IS_TRACE,
+  JSCLASS_HAS_RESERVED_SLOTS(LIBRARY_SLOTS),
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub,JS_ResolveStub, JS_ConvertStub, Library::Finalize,
   JSCLASS_NO_OPTIONAL_MEMBERS

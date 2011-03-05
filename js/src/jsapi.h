@@ -1562,13 +1562,6 @@ extern JS_PUBLIC_API(void)
 JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
 
 /*
- * For implementors of JSMarkOp. All new code should implement JSTraceOp
- * instead.
- */
-extern JS_PUBLIC_API(void)
-JS_MarkGCThing(JSContext *cx, jsval v, const char *name, void *arg);
-
-/*
  * JS_CallTracer API and related macros for implementors of JSTraceOp, to
  * enumerate all references to traceable things reachable via a property or
  * other strong ref identified for debugging purposes by name or index or
@@ -1941,7 +1934,7 @@ struct JSClass {
     JSNative            construct;
     JSXDRObjectOp       xdrObject;
     JSHasInstanceOp     hasInstance;
-    JSMarkOp            mark;
+    JSTraceOp           trace;
 
     JSClassInternal     reserved1;
     void                *reserved[19];
@@ -1979,10 +1972,8 @@ struct JSClass {
 #define JSCLASS_INTERNAL_FLAG1          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+0))
 #define JSCLASS_IS_ANONYMOUS            (1<<(JSCLASS_HIGH_FLAGS_SHIFT+1))
 #define JSCLASS_IS_GLOBAL               (1<<(JSCLASS_HIGH_FLAGS_SHIFT+2))
-
-/* Indicates that JSClass.mark is a tracer with JSTraceOp type. */
-#define JSCLASS_MARK_IS_TRACE           (1<<(JSCLASS_HIGH_FLAGS_SHIFT+3))
-#define JSCLASS_INTERNAL_FLAG2          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
+#define JSCLASS_INTERNAL_FLAG2          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+3))
+#define JSCLASS_INTERNAL_FLAG3          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
 
 /* Indicate whether the proto or ctor should be frozen. */
 #define JSCLASS_FREEZE_PROTO            (1<<(JSCLASS_HIGH_FLAGS_SHIFT+5))
