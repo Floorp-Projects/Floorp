@@ -291,7 +291,7 @@ CSS_PROP_DISPLAY(
     -moz-appearance,
     appearance,
     MozAppearance,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Display,
     mAppearance,
     kAppearanceKTable,
@@ -301,12 +301,13 @@ CSS_PROP_SHORTHAND(
     -moz-outline-radius,
     _moz_outline_radius,
     MozOutlineRadius,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_OUTLINE(
     -moz-outline-radius-topleft,
     _moz_outline_radius_topLeft,
     MozOutlineRadiusTopleft,
-    CSS_PROPERTY_STORES_CALC,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_STORES_CALC,
     Margin,
     mOutlineRadius.mTopLeft,
     nsnull,
@@ -316,7 +317,8 @@ CSS_PROP_OUTLINE(
     -moz-outline-radius-topright,
     _moz_outline_radius_topRight,
     MozOutlineRadiusTopright,
-    CSS_PROPERTY_STORES_CALC,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_STORES_CALC,
     Margin,
     mOutlineRadius.mTopRight,
     nsnull,
@@ -326,7 +328,8 @@ CSS_PROP_OUTLINE(
     -moz-outline-radius-bottomright,
     _moz_outline_radius_bottomRight,
     MozOutlineRadiusBottomright,
-    CSS_PROPERTY_STORES_CALC,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_STORES_CALC,
     Margin,
     mOutlineRadius.mBottomRight,
     nsnull,
@@ -336,7 +339,8 @@ CSS_PROP_OUTLINE(
     -moz-outline-radius-bottomleft,
     _moz_outline_radius_bottomLeft,
     MozOutlineRadiusBottomleft,
-    CSS_PROPERTY_STORES_CALC,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_STORES_CALC,
     Margin,
     mOutlineRadius.mBottomLeft,
     nsnull,
@@ -346,7 +350,7 @@ CSS_PROP_TEXT(
     -moz-tab-size,
     _moz_tab_size,
     MozTabSize,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Text,
     mTabSize,
     nsnull,
@@ -357,7 +361,8 @@ CSS_PROP_FONT(
     -x-system-font,
     _x_system_font,
     MozSystemFont,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Font,
     mSystemFont,
     kFontKTable,
@@ -368,7 +373,7 @@ CSS_PROP_BACKENDONLY(
     azimuth,
     azimuth,
     Azimuth,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Aural,
     mAzimuth,
     kAzimuthKTable)
@@ -376,12 +381,13 @@ CSS_PROP_SHORTHAND(
     background,
     background,
     Background,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_BACKGROUND(
     background-attachment,
     background_attachment,
     BackgroundAttachment,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Color,
     mBackAttachment,
@@ -392,7 +398,8 @@ CSS_PROP_BACKGROUND(
     background-clip,
     background_clip,
     BackgroundClip,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Color,
     mBackClip,
@@ -403,7 +410,8 @@ CSS_PROP_BACKGROUND(
     background-color,
     background_color,
     BackgroundColor,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Color,
     mBackColor,
@@ -414,7 +422,8 @@ CSS_PROP_BACKGROUND(
     background-image,
     background_image,
     BackgroundImage,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED |
         CSS_PROPERTY_START_IMAGE_LOADS,
@@ -427,7 +436,8 @@ CSS_PROP_BACKGROUND(
     -moz-background-inline-policy,
     _moz_background_inline_policy,
     MozBackgroundInlinePolicy,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Color,
     mBackInlinePolicy,
     kBackgroundInlinePolicyKTable,
@@ -437,7 +447,8 @@ CSS_PROP_BACKGROUND(
     background-origin,
     background_origin,
     BackgroundOrigin,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Color,
     mBackOrigin,
@@ -448,7 +459,8 @@ CSS_PROP_BACKGROUND(
     background-position,
     background_position,
     BackgroundPosition,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
         CSS_PROPERTY_STORES_CALC,
     Color,
@@ -460,7 +472,8 @@ CSS_PROP_BACKGROUND(
     background-repeat,
     background_repeat,
     BackgroundRepeat,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Color,
     mBackRepeat,
@@ -471,7 +484,8 @@ CSS_PROP_BACKGROUND(
     background-size,
     background_size,
     BackgroundSize,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
         CSS_PROPERTY_STORES_CALC,
     Color,
@@ -483,7 +497,7 @@ CSS_PROP_DISPLAY(
     -moz-binding,
     binding,
     MozBinding,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Display,
     mBinding,
     nsnull,
@@ -493,17 +507,18 @@ CSS_PROP_SHORTHAND(
     border,
     border,
     Border,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_SHORTHAND(
     border-bottom,
     border_bottom,
     BorderBottom,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_BORDER(
     border-bottom-color,
     border_bottom_color,
     BorderBottomColor,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Margin,
     mBorderColor.mBottom,
@@ -514,7 +529,8 @@ CSS_PROP_BORDER(
     -moz-border-bottom-colors,
     border_bottom_colors,
     MozBorderBottomColors,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Margin,
     mBorderColors.mBottom,
@@ -525,7 +541,8 @@ CSS_PROP_BORDER(
     border-bottom-style,
     border_bottom_style,
     BorderBottomStyle,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,
     mBorderStyle.mBottom,
     kBorderStyleKTable,
@@ -535,7 +552,8 @@ CSS_PROP_BORDER(
     border-bottom-width,
     border_bottom_width,
     BorderBottomWidth,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,
     mBorderWidth.mBottom,
     kBorderWidthKTable,
@@ -545,7 +563,7 @@ CSS_PROP_TABLEBORDER(
     border-collapse,
     border_collapse,
     BorderCollapse,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Table,
     mBorderCollapse,
     kBorderCollapseKTable,
@@ -555,23 +573,24 @@ CSS_PROP_SHORTHAND(
     border-color,
     border_color,
     BorderColor,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_SHORTHAND(
     -moz-border-end,
     border_end,
     MozBorderEnd,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_SHORTHAND(
     -moz-border-end-color,
     border_end_color,
     MozBorderEndColor,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(
     border-end-color-value,
     border_end_color_value,
     BorderEndColorValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,
     mBorderEndColor,
     kBorderColorKTable,
@@ -582,13 +601,14 @@ CSS_PROP_SHORTHAND(
     -moz-border-end-style,
     border_end_style,
     MozBorderEndStyle,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(
     border-end-style-value,
     border_end_style_value,
     BorderEndStyleValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,
     mBorderEndStyle,
     kBorderStyleKTable,
@@ -599,13 +619,14 @@ CSS_PROP_SHORTHAND(
     -moz-border-end-width,
     border_end_width,
     MozBorderEndWidth,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(
     border-end-width-value,
     border_end_width_value,
     BorderEndWidthValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,
     mBorderEndWidth,
     kBorderWidthKTable,
@@ -616,7 +637,8 @@ CSS_PROP_BORDER(
     -moz-border-image,
     border_image,
     MozBorderImage,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_START_IMAGE_LOADS |
         CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0,
     Margin,
@@ -628,18 +650,19 @@ CSS_PROP_SHORTHAND(
     border-left,
     border_left,
     BorderLeft,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_SHORTHAND(
     border-left-color,
     border_left_color,
     BorderLeftColor,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(
     border-left-color-value,
     border_left_color_value,
     BorderLeftColorValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED |
         CSS_PROPERTY_REPORT_OTHER_NAME,
     Margin,
@@ -651,7 +674,8 @@ CSS_PROP_BORDER(
     border-left-color-ltr-source,
     border_left_color_ltr_source,
     BorderLeftColorLTRSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Margin,
@@ -663,7 +687,8 @@ CSS_PROP_BORDER(
     border-left-color-rtl-source,
     border_left_color_rtl_source,
     BorderLeftColorRTLSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Margin,
@@ -676,7 +701,8 @@ CSS_PROP_BORDER(
     -moz-border-left-colors,
     border_left_colors,
     MozBorderLeftColors,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Margin,
     mBorderColors.mLeft,
@@ -687,13 +713,14 @@ CSS_PROP_SHORTHAND(
     border-left-style,
     border_left_style,
     BorderLeftStyle,
-    0) // on/off will need reflow
+    CSS_PROPERTY_PARSE_FUNCTION) // on/off will need reflow
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(
     border-left-style-value,
     border_left_style_value,
     BorderLeftStyleValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_REPORT_OTHER_NAME,
     Margin,
     mBorderStyle.mLeft,
@@ -704,7 +731,8 @@ CSS_PROP_BORDER(
     border-left-style-ltr-source,
     border_left_style_ltr_source,
     BorderLeftStyleLTRSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE,
     Margin,
     mBorderLeftStyleLTRSource,
@@ -715,7 +743,8 @@ CSS_PROP_BORDER(
     border-left-style-rtl-source,
     border_left_style_rtl_source,
     BorderLeftStyleRTLSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE,
     Margin,
     mBorderLeftStyleRTLSource,
@@ -727,13 +756,14 @@ CSS_PROP_SHORTHAND(
     border-left-width,
     border_left_width,
     BorderLeftWidth,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(
     border-left-width-value,
     border_left_width_value,
     BorderLeftWidthValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_REPORT_OTHER_NAME,
     Margin,
     mBorderWidth.mLeft,
@@ -744,7 +774,8 @@ CSS_PROP_BORDER(
     border-left-width-ltr-source,
     border_left_width_ltr_source,
     BorderLeftWidthLTRSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE,
     Margin,
     mBorderLeftWidthLTRSource,
@@ -755,7 +786,8 @@ CSS_PROP_BORDER(
     border-left-width-rtl-source,
     border_left_width_rtl_source,
     BorderLeftWidthRTLSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE,
     Margin,
     mBorderLeftWidthRTLSource,
@@ -767,18 +799,19 @@ CSS_PROP_SHORTHAND(
     border-right,
     border_right,
     BorderRight,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_SHORTHAND(
     border-right-color,
     border_right_color,
     BorderRightColor,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(
     border-right-color-value,
     border_right_color_value,
     BorderRightColorValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED |
         CSS_PROPERTY_REPORT_OTHER_NAME,
     Margin,
@@ -790,7 +823,8 @@ CSS_PROP_BORDER(
     border-right-color-ltr-source,
     border_right_color_ltr_source,
     BorderRightColorLTRSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Margin,
@@ -802,7 +836,8 @@ CSS_PROP_BORDER(
     border-right-color-rtl-source,
     border_right_color_rtl_source,
     BorderRightColorRTLSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Margin,
@@ -815,7 +850,8 @@ CSS_PROP_BORDER(
     -moz-border-right-colors,
     border_right_colors,
     MozBorderRightColors,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Margin,
     mBorderColors.mRight,
@@ -826,13 +862,14 @@ CSS_PROP_SHORTHAND(
     border-right-style,
     border_right_style,
     BorderRightStyle,
-    0) // on/off will need reflow
+    CSS_PROPERTY_PARSE_FUNCTION) // on/off will need reflow
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(
     border-right-style-value,
     border_right_style_value,
     BorderRightStyleValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_REPORT_OTHER_NAME,
     Margin,
     mBorderStyle.mRight,
@@ -843,7 +880,8 @@ CSS_PROP_BORDER(
     border-right-style-ltr-source,
     border_right_style_ltr_source,
     BorderRightStyleLTRSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE,
     Margin,
     mBorderRightStyleLTRSource,
@@ -854,7 +892,8 @@ CSS_PROP_BORDER(
     border-right-style-rtl-source,
     border_right_style_rtl_source,
     BorderRightStyleRTLSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE,
     Margin,
     mBorderRightStyleRTLSource,
@@ -866,13 +905,14 @@ CSS_PROP_SHORTHAND(
     border-right-width,
     border_right_width,
     BorderRightWidth,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(
     border-right-width-value,
     border_right_width_value,
     BorderRightWidthValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_REPORT_OTHER_NAME,
     Margin,
     mBorderWidth.mRight,
@@ -883,7 +923,8 @@ CSS_PROP_BORDER(
     border-right-width-ltr-source,
     border_right_width_ltr_source,
     BorderRightWidthLTRSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE,
     Margin,
     mBorderRightWidthLTRSource,
@@ -894,7 +935,8 @@ CSS_PROP_BORDER(
     border-right-width-rtl-source,
     border_right_width_rtl_source,
     BorderRightWidthRTLSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE,
     Margin,
     mBorderRightWidthRTLSource,
@@ -906,7 +948,7 @@ CSS_PROP_TABLEBORDER(
     border-spacing,
     border_spacing,
     BorderSpacing,
-    0,
+    CSS_PROPERTY_PARSE_FUNCTION,
     Table,
     mBorderSpacing,
     nsnull,
@@ -916,18 +958,19 @@ CSS_PROP_SHORTHAND(
     -moz-border-start,
     border_start,
     MozBorderStart,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_SHORTHAND(
     -moz-border-start-color,
     border_start_color,
     MozBorderStartColor,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(
     border-start-color-value,
     border_start_color_value,
     BorderStartColorValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,
     mBorderStartColor,
     kBorderColorKTable,
@@ -938,13 +981,14 @@ CSS_PROP_SHORTHAND(
     -moz-border-start-style,
     border_start_style,
     MozBorderStartStyle,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(
     border-start-style-value,
     border_start_style_value,
     BorderStartStyleValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,
     mBorderStartStyle,
     kBorderStyleKTable,
@@ -955,13 +999,14 @@ CSS_PROP_SHORTHAND(
     -moz-border-start-width,
     border_start_width,
     MozBorderStartWidth,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(
     border-start-width-value,
     border_start_width_value,
     BorderStartWidthValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,
     mBorderStartWidth,
     kBorderWidthKTable,
@@ -972,17 +1017,18 @@ CSS_PROP_SHORTHAND(
     border-style,
     border_style,
     BorderStyle,
-    0)  // on/off will need reflow
+    CSS_PROPERTY_PARSE_FUNCTION)  // on/off will need reflow
 CSS_PROP_SHORTHAND(
     border-top,
     border_top,
     BorderTop,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_BORDER(
     border-top-color,
     border_top_color,
     BorderTopColor,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Margin,
     mBorderColor.mTop,
@@ -993,7 +1039,8 @@ CSS_PROP_BORDER(
     -moz-border-top-colors,
     border_top_colors,
     MozBorderTopColors,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Margin,
     mBorderColors.mTop,
@@ -1004,7 +1051,8 @@ CSS_PROP_BORDER(
     border-top-style,
     border_top_style,
     BorderTopStyle,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,
     mBorderStyle.mTop,
     kBorderStyleKTable,
@@ -1014,7 +1062,8 @@ CSS_PROP_BORDER(
     border-top-width,
     border_top_width,
     BorderTopWidth,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,
     mBorderWidth.mTop,
     kBorderWidthKTable,
@@ -1024,17 +1073,18 @@ CSS_PROP_SHORTHAND(
     border-width,
     border_width,
     BorderWidth,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_SHORTHAND(
     border-radius,
     border_radius,
     BorderRadius,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_BORDER(
     border-top-left-radius,
     border_top_left_radius,
     BorderTopLeftRadius,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_STORES_CALC,
     Margin,
     mBorderRadius.mTopLeft,
@@ -1045,7 +1095,8 @@ CSS_PROP_BORDER(
     border-top-right-radius,
     border_top_right_radius,
     BorderTopRightRadius,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_STORES_CALC,
     Margin,
     mBorderRadius.mTopRight,
@@ -1056,7 +1107,8 @@ CSS_PROP_BORDER(
     border-bottom-right-radius,
     border_bottom_right_radius,
     BorderBottomRightRadius,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_STORES_CALC,
     Margin,
     mBorderRadius.mBottomRight,
@@ -1067,7 +1119,8 @@ CSS_PROP_BORDER(
     border-bottom-left-radius,
     border_bottom_left_radius,
     BorderBottomLeftRadius,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_STORES_CALC,
     Margin,
     mBorderRadius.mBottomLeft,
@@ -1078,7 +1131,8 @@ CSS_PROP_POSITION(
     bottom,
     bottom,
     Bottom,
-    CSS_PROPERTY_STORES_CALC,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_STORES_CALC,
     Position,
     mOffset.mBottom,
     nsnull,
@@ -1088,7 +1142,8 @@ CSS_PROP_BORDER(
     box-shadow,
     box_shadow,
     BoxShadow,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Margin,
@@ -1100,7 +1155,7 @@ CSS_PROP_POSITION(
     -moz-box-sizing,
     box_sizing,
     MozBoxSizing,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Position,
     mBoxSizing,
     kBoxSizingKTable,
@@ -1110,7 +1165,7 @@ CSS_PROP_TABLEBORDER(
     caption-side,
     caption_side,
     CaptionSide,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Table,
     mCaptionSide,
     kCaptionSideKTable,
@@ -1120,7 +1175,7 @@ CSS_PROP_DISPLAY(
     clear,
     clear,
     Clear,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Display,
     mClear,
     kClearKTable,
@@ -1130,7 +1185,7 @@ CSS_PROP_DISPLAY(
     clip,
     clip,
     Clip,
-    0,
+    CSS_PROPERTY_PARSE_FUNCTION,
     Display,
     mClip,
     nsnull,
@@ -1140,7 +1195,8 @@ CSS_PROP_COLOR(
     color,
     color,
     Color,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Color,
     mColor,
@@ -1151,7 +1207,7 @@ CSS_PROP_COLUMN(
     -moz-column-count,
     _moz_column_count,
     MozColumnCount,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Column,
     mColumnCount,
     nsnull,
@@ -1161,7 +1217,7 @@ CSS_PROP_COLUMN(
     -moz-column-width,
     _moz_column_width,
     MozColumnWidth,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Column,
     mColumnWidth,
     nsnull,
@@ -1171,7 +1227,7 @@ CSS_PROP_COLUMN(
     -moz-column-gap,
     _moz_column_gap,
     MozColumnGap,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Column,
     mColumnGap,
     nsnull,
@@ -1181,12 +1237,13 @@ CSS_PROP_SHORTHAND(
     -moz-column-rule,
     _moz_column_rule,
     MozColumnRule,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_COLUMN(
     -moz-column-rule-color,
     _moz_column_rule_color,
     MozColumnRuleColor,
-    CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Column,
     mColumnRuleColor,
     nsnull,
@@ -1196,7 +1253,7 @@ CSS_PROP_COLUMN(
     -moz-column-rule-style,
     _moz_column_rule_style,
     MozColumnRuleStyle,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Column,
     mColumnRuleStyle,
     kBorderStyleKTable,
@@ -1206,7 +1263,7 @@ CSS_PROP_COLUMN(
     -moz-column-rule-width,
     _moz_column_rule_width,
     MozColumnRuleWidth,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Column,
     mColumnRuleWidth,
     kBorderWidthKTable,
@@ -1216,7 +1273,8 @@ CSS_PROP_CONTENT(
     content,
     content,
     Content,
-    CSS_PROPERTY_START_IMAGE_LOADS,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_START_IMAGE_LOADS,
     Content,
     mContent,
     kContentKTable,
@@ -1226,7 +1284,7 @@ CSS_PROP_CONTENT(
     counter-increment,
     counter_increment,
     CounterIncrement,
-    0,
+    CSS_PROPERTY_PARSE_FUNCTION,
     Content,
     mCounterIncrement,
     nsnull,
@@ -1236,7 +1294,7 @@ CSS_PROP_CONTENT(
     counter-reset,
     counter_reset,
     CounterReset,
-    0,
+    CSS_PROPERTY_PARSE_FUNCTION,
     Content,
     mCounterReset,
     nsnull,
@@ -1246,12 +1304,12 @@ CSS_PROP_SHORTHAND(
     cue,
     cue,
     Cue,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_BACKENDONLY(
     cue-after,
     cue_after,
     CueAfter,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Aural,
     mCueAfter,
     nsnull)
@@ -1259,7 +1317,7 @@ CSS_PROP_BACKENDONLY(
     cue-before,
     cue_before,
     CueBefore,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Aural,
     mCueBefore,
     nsnull)
@@ -1267,7 +1325,8 @@ CSS_PROP_USERINTERFACE(
     cursor,
     cursor,
     Cursor,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
         CSS_PROPERTY_START_IMAGE_LOADS |
         CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0,
     UserInterface,
@@ -1279,7 +1338,7 @@ CSS_PROP_VISIBILITY(
     direction,
     direction,
     Direction,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Display,
     mDirection,
     kDirectionKTable,
@@ -1289,7 +1348,7 @@ CSS_PROP_DISPLAY(
     display,
     display,
     Display,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Display,
     mDisplay,
     kDisplayKTable,
@@ -1299,7 +1358,7 @@ CSS_PROP_BACKENDONLY(
     elevation,
     elevation,
     Elevation,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Aural,
     mElevation,
     kElevationKTable)
@@ -1307,7 +1366,7 @@ CSS_PROP_TABLEBORDER(
     empty-cells,
     empty_cells,
     EmptyCells,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Table,
     mEmptyCells,
     kEmptyCellsKTable,
@@ -1317,7 +1376,8 @@ CSS_PROP_DISPLAY(
     float,
     float,
     CssFloat,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Display,
     mFloat,
     kFloatKTable,
@@ -1327,7 +1387,7 @@ CSS_PROP_BORDER(
     -moz-float-edge,
     float_edge,
     MozFloatEdge,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Margin,
     mFloatEdge,
     kFloatEdgeKTable,
@@ -1337,12 +1397,13 @@ CSS_PROP_SHORTHAND(
     font,
     font,
     Font,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_FONT(
     font-family,
     font_family,
     FontFamily,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Font,
     mFamily,
     nsnull,
@@ -1352,7 +1413,8 @@ CSS_PROP_FONT(
     -moz-font-feature-settings,
     font_feature_settings,
     MozFontFeatureSettings,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Font,
     mFontFeatureSettings,
     nsnull,
@@ -1362,7 +1424,8 @@ CSS_PROP_FONT(
     -moz-font-language-override,
     font_language_override,
     MozFontLanguageOverride,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Font,
     mFontLanguageOverride,
     nsnull,
@@ -1372,7 +1435,8 @@ CSS_PROP_FONT(
     font-size,
     font_size,
     FontSize,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Font,
     mSize,
     kFontSizeKTable,
@@ -1384,7 +1448,8 @@ CSS_PROP_FONT(
     font-size-adjust,
     font_size_adjust,
     FontSizeAdjust,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Font,
     mSizeAdjust,
     nsnull,
@@ -1394,7 +1459,8 @@ CSS_PROP_FONT(
     font-stretch,
     font_stretch,
     FontStretch,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Font,
     mStretch,
     kFontStretchKTable,
@@ -1404,7 +1470,8 @@ CSS_PROP_FONT(
     font-style,
     font_style,
     FontStyle,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Font,
     mStyle,
     kFontStyleKTable,
@@ -1414,7 +1481,8 @@ CSS_PROP_FONT(
     font-variant,
     font_variant,
     FontVariant,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Font,
     mVariant,
     kFontVariantKTable,
@@ -1424,7 +1492,8 @@ CSS_PROP_FONT(
     font-weight,
     font_weight,
     FontWeight,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Font,
     mWeight,
     kFontWeightKTable,
@@ -1434,7 +1503,7 @@ CSS_PROP_UIRESET(
     -moz-force-broken-image-icon,
     force_broken_image_icon,
     MozForceBrokenImageIcon,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     UserInterface,
     mForceBrokenImageIcon,
     nsnull,
@@ -1444,7 +1513,8 @@ CSS_PROP_POSITION(
     height,
     height,
     Height,
-    CSS_PROPERTY_STORES_CALC,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_STORES_CALC,
     Position,
     mHeight,
     nsnull,
@@ -1454,7 +1524,7 @@ CSS_PROP_LIST(
     -moz-image-region,
     image_region,
     MozImageRegion,
-    0,
+    CSS_PROPERTY_PARSE_FUNCTION,
     List,
     mImageRegion,
     nsnull,
@@ -1464,7 +1534,7 @@ CSS_PROP_UIRESET(
     ime-mode,
     ime_mode,
     ImeMode,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     UserInterface,
     mIMEMode,
     kIMEModeKTable,
@@ -1474,7 +1544,8 @@ CSS_PROP_POSITION(
     left,
     left,
     Left,
-    CSS_PROPERTY_STORES_CALC,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_STORES_CALC,
     Position,
     mOffset.mLeft,
     nsnull,
@@ -1484,7 +1555,8 @@ CSS_PROP_TEXT(
     letter-spacing,
     letter_spacing,
     LetterSpacing,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Text,
     mLetterSpacing,
     nsnull,
@@ -1494,7 +1566,8 @@ CSS_PROP_TEXT(
     line-height,
     line_height,
     LineHeight,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Text,
     mLineHeight,
     kLineHeightKTable,
@@ -1504,12 +1577,13 @@ CSS_PROP_SHORTHAND(
     list-style,
     list_style,
     ListStyle,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_LIST(
     list-style-image,
     list_style_image,
     ListStyleImage,
-    CSS_PROPERTY_START_IMAGE_LOADS,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_START_IMAGE_LOADS,
     List,
     mImage,
     nsnull,
@@ -1519,7 +1593,7 @@ CSS_PROP_LIST(
     list-style-position,
     list_style_position,
     ListStylePosition,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     List,
     mPosition,
     kListStylePositionKTable,
@@ -1529,7 +1603,7 @@ CSS_PROP_LIST(
     list-style-type,
     list_style_type,
     ListStyleType,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     List,
     mType,
     kListStyleKTable,
@@ -1539,12 +1613,13 @@ CSS_PROP_SHORTHAND(
     margin,
     margin,
     Margin,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_MARGIN(
     margin-bottom,
     margin_bottom,
     MarginBottom,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_STORES_CALC,
     Margin,
     mMargin.mBottom,
@@ -1555,13 +1630,14 @@ CSS_PROP_SHORTHAND(
     -moz-margin-end,
     margin_end,
     MozMarginEnd,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_MARGIN(
     margin-end-value,
     margin_end_value,
     MarginEndValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_STORES_CALC,
     Margin,
     mMarginEnd,
@@ -1573,13 +1649,14 @@ CSS_PROP_SHORTHAND(
     margin-left,
     margin_left,
     MarginLeft,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_MARGIN(
     margin-left-value,
     margin_left_value,
     MarginLeftValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_REPORT_OTHER_NAME |
         CSS_PROPERTY_STORES_CALC,
     Margin,
@@ -1591,7 +1668,8 @@ CSS_PROP_MARGIN(
     margin-left-ltr-source,
     margin_left_ltr_source,
     MarginLeftLTRSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE,
     Margin,
     mMarginLeftLTRSource,
@@ -1602,7 +1680,8 @@ CSS_PROP_MARGIN(
     margin-left-rtl-source,
     margin_left_rtl_source,
     MarginLeftRTLSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE,
     Margin,
     mMarginLeftRTLSource,
@@ -1614,13 +1693,14 @@ CSS_PROP_SHORTHAND(
     margin-right,
     margin_right,
     MarginRight,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_MARGIN(
     margin-right-value,
     margin_right_value,
     MarginRightValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_REPORT_OTHER_NAME |
         CSS_PROPERTY_STORES_CALC,
     Margin,
@@ -1632,7 +1712,8 @@ CSS_PROP_MARGIN(
     margin-right-ltr-source,
     margin_right_ltr_source,
     MarginRightLTRSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE,
     Margin,
     mMarginRightLTRSource,
@@ -1643,7 +1724,8 @@ CSS_PROP_MARGIN(
     margin-right-rtl-source,
     margin_right_rtl_source,
     MarginRightRTLSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE,
     Margin,
     mMarginRightRTLSource,
@@ -1655,13 +1737,14 @@ CSS_PROP_SHORTHAND(
     -moz-margin-start,
     margin_start,
     MozMarginStart,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_MARGIN(
     margin-start-value,
     margin_start_value,
     MarginStartValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_STORES_CALC,
     Margin,
     mMarginStart,
@@ -1673,7 +1756,8 @@ CSS_PROP_MARGIN(
     margin-top,
     margin_top,
     MarginTop,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_STORES_CALC,
     Margin,
     mMargin.mTop,
@@ -1684,7 +1768,7 @@ CSS_PROP_CONTENT(
     marker-offset,
     marker_offset,
     MarkerOffset,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Content,
     mMarkerOffset,
     nsnull,
@@ -1694,7 +1778,7 @@ CSS_PROP_BACKENDONLY(
     marks,
     marks,
     Marks,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Page,
     mMarks,
     kPageMarksKTable)
@@ -1702,7 +1786,8 @@ CSS_PROP_POSITION(
     max-height,
     max_height,
     MaxHeight,
-    CSS_PROPERTY_STORES_CALC,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_STORES_CALC,
     Position,
     mMaxHeight,
     nsnull,
@@ -1712,7 +1797,8 @@ CSS_PROP_POSITION(
     max-width,
     max_width,
     MaxWidth,
-    CSS_PROPERTY_STORES_CALC,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_STORES_CALC,
     Position,
     mMaxWidth,
     kWidthKTable,
@@ -1722,7 +1808,8 @@ CSS_PROP_POSITION(
     min-height,
     min_height,
     MinHeight,
-    CSS_PROPERTY_STORES_CALC,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_STORES_CALC,
     Position,
     mMinHeight,
     nsnull,
@@ -1732,7 +1819,8 @@ CSS_PROP_POSITION(
     min-width,
     min_width,
     MinWidth,
-    CSS_PROPERTY_STORES_CALC,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_STORES_CALC,
     Position,
     mMinWidth,
     kWidthKTable,
@@ -1742,7 +1830,7 @@ CSS_PROP_DISPLAY(
     opacity,
     opacity,
     Opacity,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Display,
     mOpacity,
     nsnull,
@@ -1752,7 +1840,7 @@ CSS_PROP_BACKENDONLY(
     orphans,
     orphans,
     Orphans,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Breaks,
     mOrphans,
     nsnull)
@@ -1760,12 +1848,13 @@ CSS_PROP_SHORTHAND(
     outline,
     outline,
     Outline,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_OUTLINE(
     outline-color,
     outline_color,
     OutlineColor,
-    CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Margin,
     mOutlineColor,
     kOutlineColorKTable,
@@ -1775,7 +1864,7 @@ CSS_PROP_OUTLINE(
     outline-style,
     outline_style,
     OutlineStyle,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Margin,
     mOutlineStyle,
     kBorderStyleKTable,
@@ -1785,7 +1874,7 @@ CSS_PROP_OUTLINE(
     outline-width,
     outline_width,
     OutlineWidth,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Margin,
     mOutlineWidth,
     kBorderWidthKTable,
@@ -1795,7 +1884,7 @@ CSS_PROP_OUTLINE(
     outline-offset,
     outline_offset,
     OutlineOffset,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Margin,
     mOutlineOffset,
     nsnull,
@@ -1805,12 +1894,12 @@ CSS_PROP_SHORTHAND(
     overflow,
     overflow,
     Overflow,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_DISPLAY(
     overflow-x,
     overflow_x,
     OverflowX,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Display,
     mOverflowX,
     kOverflowSubKTable,
@@ -1820,7 +1909,7 @@ CSS_PROP_DISPLAY(
     overflow-y,
     overflow_y,
     OverflowY,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Display,
     mOverflowY,
     kOverflowSubKTable,
@@ -1830,12 +1919,13 @@ CSS_PROP_SHORTHAND(
     padding,
     padding,
     Padding,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_PADDING(
     padding-bottom,
     padding_bottom,
     PaddingBottom,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_STORES_CALC,
     Margin,
     mPadding.mBottom,
@@ -1846,13 +1936,14 @@ CSS_PROP_SHORTHAND(
     -moz-padding-end,
     padding_end,
     MozPaddingEnd,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_PADDING(
     padding-end-value,
     padding_end_value,
     PaddingEndValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_STORES_CALC,
     Margin,
     mPaddingEnd,
@@ -1864,13 +1955,14 @@ CSS_PROP_SHORTHAND(
     padding-left,
     padding_left,
     PaddingLeft,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_PADDING(
     padding-left-value,
     padding_left_value,
     PaddingLeftValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_REPORT_OTHER_NAME |
         CSS_PROPERTY_STORES_CALC,
     Margin,
@@ -1882,7 +1974,8 @@ CSS_PROP_PADDING(
     padding-left-ltr-source,
     padding_left_ltr_source,
     PaddingLeftLTRSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE,
     Margin,
     mPaddingLeftLTRSource,
@@ -1893,7 +1986,8 @@ CSS_PROP_PADDING(
     padding-left-rtl-source,
     padding_left_rtl_source,
     PaddingLeftRTLSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE,
     Margin,
     mPaddingLeftRTLSource,
@@ -1905,13 +1999,14 @@ CSS_PROP_SHORTHAND(
     padding-right,
     padding_right,
     PaddingRight,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_PADDING(
     padding-right-value,
     padding_right_value,
     PaddingRightValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_REPORT_OTHER_NAME |
         CSS_PROPERTY_STORES_CALC,
     Margin,
@@ -1923,7 +2018,8 @@ CSS_PROP_PADDING(
     padding-right-ltr-source,
     padding_right_ltr_source,
     PaddingRightLTRSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE,
     Margin,
     mPaddingRightLTRSource,
@@ -1934,7 +2030,8 @@ CSS_PROP_PADDING(
     padding-right-rtl-source,
     padding_right_rtl_source,
     PaddingRightRTLSource,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_DIRECTIONAL_SOURCE,
     Margin,
     mPaddingRightRTLSource,
@@ -1946,13 +2043,14 @@ CSS_PROP_SHORTHAND(
     -moz-padding-start,
     padding_start,
     MozPaddingStart,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_PADDING(
     padding-start-value,
     padding_start_value,
     PaddingStartValue,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_INACCESSIBLE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_STORES_CALC,
     Margin,
     mPaddingStart,
@@ -1964,7 +2062,8 @@ CSS_PROP_PADDING(
     padding-top,
     padding_top,
     PaddingTop,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_STORES_CALC,
     Margin,
     mPadding.mTop,
@@ -1975,7 +2074,7 @@ CSS_PROP_BACKENDONLY(
     page,
     page,
     Page,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Breaks,
     mPage,
     nsnull)
@@ -1983,7 +2082,7 @@ CSS_PROP_DISPLAY(
     page-break-after,
     page_break_after,
     PageBreakAfter,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Display,
     mBreakAfter,
     kPageBreakKTable,
@@ -1993,7 +2092,7 @@ CSS_PROP_DISPLAY(
     page-break-before,
     page_break_before,
     PageBreakBefore,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Display,
     mBreakBefore,
     kPageBreakKTable,
@@ -2003,7 +2102,7 @@ CSS_PROP_BACKENDONLY(
     page-break-inside,
     page_break_inside,
     PageBreakInside,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Breaks,
     mPageBreakInside,
     kPageBreakInsideKTable)
@@ -2011,12 +2110,12 @@ CSS_PROP_SHORTHAND(
     pause,
     pause,
     Pause,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_BACKENDONLY(
     pause-after,
     pause_after,
     PauseAfter,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Aural,
     mPauseAfter,
     nsnull)
@@ -2024,7 +2123,7 @@ CSS_PROP_BACKENDONLY(
     pause-before,
     pause_before,
     PauseBefore,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Aural,
     mPauseBefore,
     nsnull)
@@ -2032,7 +2131,7 @@ CSS_PROP_BACKENDONLY(
     pitch,
     pitch,
     Pitch,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Aural,
     mPitch,
     kPitchKTable)
@@ -2040,7 +2139,7 @@ CSS_PROP_BACKENDONLY(
     pitch-range,
     pitch_range,
     PitchRange,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Aural,
     mPitchRange,
     nsnull)
@@ -2048,7 +2147,7 @@ CSS_PROP_VISIBILITY(
     pointer-events,
     pointer_events,
     PointerEvents,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Display,
     mPointerEvents,
     kPointerEventsKTable,
@@ -2058,7 +2157,7 @@ CSS_PROP_DISPLAY(
     position,
     position,
     Position,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Display,
     mPosition,
     kPositionKTable,
@@ -2068,7 +2167,7 @@ CSS_PROP_QUOTES(
     quotes,
     quotes,
     Quotes,
-    0,
+    CSS_PROPERTY_PARSE_FUNCTION,
     Content,
     mQuotes,
     nsnull,
@@ -2078,7 +2177,7 @@ CSS_PROP_DISPLAY(
     resize,
     resize,
     Resize,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Display,
     mResize,
     kResizeKTable,
@@ -2088,7 +2187,7 @@ CSS_PROP_BACKENDONLY(
     richness,
     richness,
     Richness,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Aural,
     mRichness,
     nsnull)
@@ -2096,7 +2195,8 @@ CSS_PROP_POSITION(
     right,
     right,
     Right,
-    CSS_PROPERTY_STORES_CALC,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_STORES_CALC,
     Position,
     mOffset.mRight,
     nsnull,
@@ -2106,7 +2206,7 @@ CSS_PROP_BACKENDONLY(
     size,
     size,
     Size,
-    0,
+    CSS_PROPERTY_PARSE_FUNCTION,
     Page,
     mSize,
     kPageSizeKTable)
@@ -2114,7 +2214,7 @@ CSS_PROP_BACKENDONLY(
     speak,
     speak,
     Speak,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Aural,
     mSpeak,
     kSpeakKTable)
@@ -2122,7 +2222,7 @@ CSS_PROP_BACKENDONLY(
     speak-header,
     speak_header,
     SpeakHeader,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Aural,
     mSpeakHeader,
     kSpeakHeaderKTable)
@@ -2130,7 +2230,7 @@ CSS_PROP_BACKENDONLY(
     speak-numeral,
     speak_numeral,
     SpeakNumeral,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Aural,
     mSpeakNumeral,
     kSpeakNumeralKTable)
@@ -2138,7 +2238,7 @@ CSS_PROP_BACKENDONLY(
     speak-punctuation,
     speak_punctuation,
     SpeakPunctuation,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Aural,
     mSpeakPunctuation,
     kSpeakPunctuationKTable)
@@ -2146,7 +2246,7 @@ CSS_PROP_BACKENDONLY(
     speech-rate,
     speech_rate,
     SpeechRate,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Aural,
     mSpeechRate,
     kSpeechRateKTable)
@@ -2154,7 +2254,7 @@ CSS_PROP_BACKENDONLY(
     stress,
     stress,
     Stress,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Aural,
     mStress,
     nsnull)
@@ -2162,7 +2262,7 @@ CSS_PROP_TABLE(
     table-layout,
     table_layout,
     TableLayout,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Table,
     mLayout,
     kTableLayoutKTable,
@@ -2172,7 +2272,7 @@ CSS_PROP_TEXT(
     text-align,
     text_align,
     TextAlign,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Text,
     mTextAlign,
     kTextAlignKTable,
@@ -2182,7 +2282,8 @@ CSS_PROP_TEXTRESET(
     text-decoration,
     text_decoration,
     TextDecoration,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Text,
     mDecoration,
     kTextDecorationKTable,
@@ -2192,7 +2293,8 @@ CSS_PROP_TEXT(
     text-indent,
     text_indent,
     TextIndent,
-    CSS_PROPERTY_STORES_CALC,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_STORES_CALC,
     Text,
     mTextIndent,
     nsnull,
@@ -2202,7 +2304,8 @@ CSS_PROP_TEXT(
     text-shadow,
     text_shadow,
     TextShadow,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Text,
@@ -2214,7 +2317,8 @@ CSS_PROP_TEXT(
     text-transform,
     text_transform,
     TextTransform,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Text,
     mTextTransform,
     kTextTransformKTable,
@@ -2224,7 +2328,7 @@ CSS_PROP_DISPLAY(
     -moz-transform,
     _moz_transform,
     MozTransform,
-    0,
+    CSS_PROPERTY_PARSE_FUNCTION,
     Display,
     mTransform,
     kDisplayKTable,
@@ -2234,7 +2338,8 @@ CSS_PROP_DISPLAY(
     -moz-transform-origin,
     _moz_transform_origin,
     MozTransformOrigin,
-    CSS_PROPERTY_STORES_CALC,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_STORES_CALC,
     Display,
     mTransformOrigin,
     kBackgroundPositionKTable,
@@ -2244,7 +2349,8 @@ CSS_PROP_POSITION(
     top,
     top,
     Top,
-    CSS_PROPERTY_STORES_CALC,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_STORES_CALC,
     Position,
     mOffset.mTop,
     nsnull,
@@ -2254,12 +2360,13 @@ CSS_PROP_SHORTHAND(
     -moz-transition,
     transition,
     MozTransition,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_DISPLAY(
     -moz-transition-delay,
     transition_delay,
     MozTransitionDelay,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Display,
     mTransitionDelay,
     nsnull,
@@ -2269,7 +2376,8 @@ CSS_PROP_DISPLAY(
     -moz-transition-duration,
     transition_duration,
     MozTransitionDuration,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Display,
     mTransitionDuration,
     nsnull,
@@ -2279,7 +2387,8 @@ CSS_PROP_DISPLAY(
     -moz-transition-property,
     transition_property,
     MozTransitionProperty,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Display,
     mTransitionProperty,
     nsnull,
@@ -2289,7 +2398,8 @@ CSS_PROP_DISPLAY(
     -moz-transition-timing-function,
     transition_timing_function,
     MozTransitionTimingFunction,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Display,
     mTransitionTimingFunction,
     kTransitionTimingFunctionKTable,
@@ -2299,7 +2409,7 @@ CSS_PROP_TEXTRESET(
     unicode-bidi,
     unicode_bidi,
     UnicodeBidi,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Text,
     mUnicodeBidi,
     kUnicodeBidiKTable,
@@ -2309,7 +2419,7 @@ CSS_PROP_USERINTERFACE(
     -moz-user-focus,
     user_focus,
     MozUserFocus,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     UserInterface,
     mUserFocus,
     kUserFocusKTable,
@@ -2319,7 +2429,7 @@ CSS_PROP_USERINTERFACE(
     -moz-user-input,
     user_input,
     MozUserInput,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     UserInterface,
     mUserInput,
     kUserInputKTable,
@@ -2329,7 +2439,7 @@ CSS_PROP_USERINTERFACE(
     -moz-user-modify,
     user_modify,
     MozUserModify,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     UserInterface,
     mUserModify,
     kUserModifyKTable,
@@ -2339,7 +2449,7 @@ CSS_PROP_UIRESET(
     -moz-user-select,
     user_select,
     MozUserSelect,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     UserInterface,
     mUserSelect,
     kUserSelectKTable,
@@ -2352,7 +2462,8 @@ CSS_PROP_TEXTRESET(
     vertical-align,
     vertical_align,
     VerticalAlign,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_STORES_CALC,
     Text,
     mVerticalAlign,
@@ -2363,7 +2474,7 @@ CSS_PROP_VISIBILITY(
     visibility,
     visibility,
     Visibility,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Display,
     mVisibility,
     kVisibilityKTable,
@@ -2373,7 +2484,7 @@ CSS_PROP_BACKENDONLY(
     voice-family,
     voice_family,
     VoiceFamily,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Aural,
     mVoiceFamily,
     nsnull)
@@ -2381,7 +2492,7 @@ CSS_PROP_BACKENDONLY(
     volume,
     volume,
     Volume,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Aural,
     mVolume,
     kVolumeKTable)
@@ -2389,7 +2500,7 @@ CSS_PROP_TEXT(
     white-space,
     white_space,
     WhiteSpace,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Text,
     mWhiteSpace,
     kWhitespaceKTable,
@@ -2399,7 +2510,7 @@ CSS_PROP_BACKENDONLY(
     widows,
     widows,
     Widows,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Breaks,
     mWidows,
     nsnull)
@@ -2407,7 +2518,8 @@ CSS_PROP_POSITION(
     width,
     width,
     Width,
-    CSS_PROPERTY_STORES_CALC,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_STORES_CALC,
     Position,
     mWidth,
     kWidthKTable,
@@ -2417,7 +2529,7 @@ CSS_PROP_UIRESET(
     -moz-window-shadow,
     _moz_window_shadow,
     MozWindowShadow,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     UserInterface,
     mWindowShadow,
     kWindowShadowKTable,
@@ -2427,7 +2539,8 @@ CSS_PROP_TEXT(
     word-spacing,
     word_spacing,
     WordSpacing,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     Text,
     mWordSpacing,
     nsnull,
@@ -2437,7 +2550,7 @@ CSS_PROP_TEXT(
     word-wrap,
     word_wrap,
     WordWrap,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Text,
     mWordWrap,
     kWordwrapKTable,
@@ -2447,7 +2560,7 @@ CSS_PROP_POSITION(
     z-index,
     z_index,
     ZIndex,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Position,
     mZIndex,
     nsnull,
@@ -2457,7 +2570,7 @@ CSS_PROP_XUL(
     -moz-box-align,
     box_align,
     MozBoxAlign,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     XUL,
     mBoxAlign,
     kBoxAlignKTable,
@@ -2467,7 +2580,7 @@ CSS_PROP_XUL(
     -moz-box-direction,
     box_direction,
     MozBoxDirection,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     XUL,
     mBoxDirection,
     kBoxDirectionKTable,
@@ -2477,7 +2590,7 @@ CSS_PROP_XUL(
     -moz-box-flex,
     box_flex,
     MozBoxFlex,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     XUL,
     mBoxFlex,
     nsnull,
@@ -2487,7 +2600,7 @@ CSS_PROP_XUL(
     -moz-box-orient,
     box_orient,
     MozBoxOrient,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     XUL,
     mBoxOrient,
     kBoxOrientKTable,
@@ -2497,7 +2610,7 @@ CSS_PROP_XUL(
     -moz-box-pack,
     box_pack,
     MozBoxPack,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     XUL,
     mBoxPack,
     kBoxPackKTable,
@@ -2507,7 +2620,7 @@ CSS_PROP_XUL(
     -moz-box-ordinal-group,
     box_ordinal_group,
     MozBoxOrdinalGroup,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     XUL,
     mBoxOrdinal,
     nsnull,
@@ -2517,7 +2630,7 @@ CSS_PROP_XUL(
     -moz-stack-sizing,
     stack_sizing,
     MozStackSizing,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     XUL,
     mStackSizing,
     kStackSizingKTable,
@@ -2530,7 +2643,7 @@ CSS_PROP_FONT(
     -moz-script-level,
     script_level,
     ScriptLevel,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Font,
     mScriptLevel,
     nsnull,
@@ -2540,7 +2653,7 @@ CSS_PROP_FONT(
     -moz-script-size-multiplier,
     script_size_multiplier,
     ScriptSizeMultiplier,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Font,
     mScriptSizeMultiplier,
     nsnull,
@@ -2550,7 +2663,7 @@ CSS_PROP_FONT(
     -moz-script-min-size,
     script_min_size,
     ScriptMinSize,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Font,
     mScriptMinSize,
     nsnull,
@@ -2563,7 +2676,7 @@ CSS_PROP_SVGRESET(
     clip-path,
     clip_path,
     ClipPath,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mClipPath,
     nsnull,
@@ -2573,7 +2686,7 @@ CSS_PROP_SVG(
     clip-rule,
     clip_rule,
     ClipRule,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mClipRule,
     kFillRuleKTable,
@@ -2583,7 +2696,7 @@ CSS_PROP_SVG(
     color-interpolation,
     color_interpolation,
     ColorInterpolation,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mColorInterpolation,
     kColorInterpolationKTable,
@@ -2593,7 +2706,7 @@ CSS_PROP_SVG(
     color-interpolation-filters,
     color_interpolation_filters,
     ColorInterpolationFilters,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mColorInterpolationFilters,
     kColorInterpolationKTable,
@@ -2603,7 +2716,7 @@ CSS_PROP_SVGRESET(
     dominant-baseline,
     dominant_baseline,
     DominantBaseline,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mDominantBaseline,
     kDominantBaselineKTable,
@@ -2613,7 +2726,7 @@ CSS_PROP_SVG(
     fill,
     fill,
     Fill,
-    0,
+    CSS_PROPERTY_PARSE_FUNCTION,
     SVG,
     mFill,
     nsnull,
@@ -2623,7 +2736,7 @@ CSS_PROP_SVG(
     fill-opacity,
     fill_opacity,
     FillOpacity,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mFillOpacity,
     nsnull,
@@ -2633,7 +2746,7 @@ CSS_PROP_SVG(
     fill-rule,
     fill_rule,
     FillRule,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mFillRule,
     kFillRuleKTable,
@@ -2643,7 +2756,7 @@ CSS_PROP_SVGRESET(
     filter,
     filter,
     Filter,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mFilter,
     nsnull,
@@ -2653,7 +2766,7 @@ CSS_PROP_SVGRESET(
     flood-color,
     flood_color,
     FloodColor,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mFloodColor,
     nsnull,
@@ -2663,7 +2776,7 @@ CSS_PROP_SVGRESET(
     flood-opacity,
     flood_opacity,
     FloodOpacity,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mFloodOpacity,
     nsnull,
@@ -2673,7 +2786,7 @@ CSS_PROP_SVG(
     image-rendering,
     image_rendering,
     ImageRendering,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mImageRendering,
     kImageRenderingKTable,
@@ -2683,7 +2796,7 @@ CSS_PROP_SVGRESET(
     lighting-color,
     lighting_color,
     LightingColor,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mLightingColor,
     nsnull,
@@ -2693,12 +2806,12 @@ CSS_PROP_SHORTHAND(
     marker,
     marker,
     Marker,
-    0)
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_SVG(
     marker-end,
     marker_end,
     MarkerEnd,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mMarkerEnd,
     nsnull,
@@ -2708,7 +2821,7 @@ CSS_PROP_SVG(
     marker-mid,
     marker_mid,
     MarkerMid,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mMarkerMid,
     nsnull,
@@ -2718,7 +2831,7 @@ CSS_PROP_SVG(
     marker-start,
     marker_start,
     MarkerStart,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mMarkerStart,
     nsnull,
@@ -2728,7 +2841,7 @@ CSS_PROP_SVGRESET(
     mask,
     mask,
     Mask,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mMask,
     nsnull,
@@ -2738,7 +2851,7 @@ CSS_PROP_SVG(
     shape-rendering,
     shape_rendering,
     ShapeRendering,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mShapeRendering,
     kShapeRenderingKTable,
@@ -2748,7 +2861,7 @@ CSS_PROP_SVGRESET(
     stop-color,
     stop_color,
     StopColor,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mStopColor,
     nsnull,
@@ -2758,7 +2871,7 @@ CSS_PROP_SVGRESET(
     stop-opacity,
     stop_opacity,
     StopOpacity,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mStopOpacity,
     nsnull,
@@ -2768,7 +2881,7 @@ CSS_PROP_SVG(
     stroke,
     stroke,
     Stroke,
-    0,
+    CSS_PROPERTY_PARSE_FUNCTION,
     SVG,
     mStroke,
     nsnull,
@@ -2778,7 +2891,8 @@ CSS_PROP_SVG(
     stroke-dasharray,
     stroke_dasharray,
     StrokeDasharray,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     SVG,
     mStrokeDasharray,
     nsnull,
@@ -2788,7 +2902,7 @@ CSS_PROP_SVG(
     stroke-dashoffset,
     stroke_dashoffset,
     StrokeDashoffset,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mStrokeDashoffset,
     nsnull,
@@ -2798,7 +2912,7 @@ CSS_PROP_SVG(
     stroke-linecap,
     stroke_linecap,
     StrokeLinecap,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mStrokeLinecap,
     kStrokeLinecapKTable,
@@ -2808,7 +2922,7 @@ CSS_PROP_SVG(
     stroke-linejoin,
     stroke_linejoin,
     StrokeLinejoin,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mStrokeLinejoin,
     kStrokeLinejoinKTable,
@@ -2818,7 +2932,7 @@ CSS_PROP_SVG(
     stroke-miterlimit,
     stroke_miterlimit,
     StrokeMiterlimit,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mStrokeMiterlimit,
     nsnull,
@@ -2828,7 +2942,7 @@ CSS_PROP_SVG(
     stroke-opacity,
     stroke_opacity,
     StrokeOpacity,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mStrokeOpacity,
     nsnull,
@@ -2838,7 +2952,7 @@ CSS_PROP_SVG(
     stroke-width,
     stroke_width,
     StrokeWidth,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mStrokeWidth,
     nsnull,
@@ -2848,7 +2962,7 @@ CSS_PROP_SVG(
     text-anchor,
     text_anchor,
     TextAnchor,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mTextAnchor,
     kTextAnchorKTable,
@@ -2858,7 +2972,7 @@ CSS_PROP_SVG(
     text-rendering,
     text_rendering,
     TextRendering,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     SVG,
     mTextRendering,
     kTextRenderingKTable,
@@ -2876,7 +2990,7 @@ CSS_PROP_VISIBILITY(
     X,
     X,
     Lang,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Display,
     mLang,
     nsnull,
@@ -2886,7 +3000,7 @@ CSS_PROP_TABLE(
     X,
     X,
     Cols,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Table,
     mCols,
     nsnull,
@@ -2896,7 +3010,7 @@ CSS_PROP_TABLE(
     X,
     X,
     Span,
-    0,
+    CSS_PROPERTY_PARSE_VALUE,
     Table,
     mSpan,
     nsnull,

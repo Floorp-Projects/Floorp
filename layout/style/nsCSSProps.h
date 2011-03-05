@@ -94,6 +94,14 @@
 // and 'background-size').
 #define CSS_PROPERTY_STORES_CALC                  (1<<8)
 
+// Define what mechanism the CSS parser uses for parsing the property.
+// See CSSParserImpl::ParseProperty(nsCSSProperty).  Don't use 0 so that
+// we can verify that every property sets one of the values.
+#define CSS_PROPERTY_PARSE_PROPERTY_MASK          (7<<9)
+#define CSS_PROPERTY_PARSE_INACCESSIBLE           (1<<9)
+#define CSS_PROPERTY_PARSE_FUNCTION               (2<<9)
+#define CSS_PROPERTY_PARSE_VALUE                  (3<<9)
+
 /**
  * Types of animatable values.
  */
@@ -205,6 +213,14 @@ public:
     NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                       "out of range");
     return (nsCSSProps::kFlagsTable[aProperty] & aFlags) == aFlags;
+  }
+
+  static inline PRUint32 PropertyParseType(nsCSSProperty aProperty)
+  {
+    NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
+                      "out of range");
+    return nsCSSProps::kFlagsTable[aProperty] &
+           CSS_PROPERTY_PARSE_PROPERTY_MASK;
   }
 
 private:
