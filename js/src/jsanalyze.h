@@ -215,7 +215,7 @@ class Script
 
     bool localEscapes(unsigned local)
     {
-        if (script->usesEval || script->usesArguments || script->compartment->debugMode)
+        if (script->usesEval || script->compartment->debugMode)
             return true;
         if (local >= localCount())
             return true;
