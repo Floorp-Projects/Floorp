@@ -1923,7 +1923,6 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id, Value* vp, bool *foundp)
 
 PropDesc::PropDesc()
   : pd(UndefinedValue()),
-    id(INT_TO_JSID(0)),
     value(UndefinedValue()),
     get(UndefinedValue()),
     set(UndefinedValue()),
@@ -1938,10 +1937,9 @@ PropDesc::PropDesc()
 }
 
 bool
-PropDesc::initialize(JSContext* cx, jsid id, const Value &origval)
+PropDesc::initialize(JSContext* cx, const Value &origval)
 {
     Value v = origval;
-    this->id = id;
 
     /* 8.10.5 step 1 */
     if (v.isPrimitive()) {
@@ -2071,14 +2069,14 @@ Reject(JSContext *cx, JSObject *obj, uintN errorNumber, bool throwError, bool *r
 }
 
 static JSBool
-DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
+DefinePropertyOnObject(JSContext *cx, JSObject *obj, const jsid &id, const PropDesc &desc,
                        bool throwError, bool *rval)
 {
     /* 8.12.9 step 1. */
     JSProperty *current;
     JSObject *obj2;
     JS_ASSERT(!obj->getOps()->lookupProperty);
-    if (!js_HasOwnProperty(cx, NULL, obj, desc.id, &obj2, &current))
+    if (!js_HasOwnProperty(cx, NULL, obj, id, &obj2, &current))
         return JS_FALSE;
 
     JS_ASSERT(!obj->getOps()->defineProperty);
@@ -2109,7 +2107,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
 
         if (desc.isGenericDescriptor() || desc.isDataDescriptor()) {
             JS_ASSERT(!obj->getOps()->defineProperty);
-            return js_DefineProperty(cx, obj, desc.id, &desc.value,
+            return js_DefineProperty(cx, obj, id, &desc.value,
                                      PropertyStub, StrictPropertyStub, desc.attrs);
         }
 
@@ -2121,11 +2119,11 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
          */
         Value dummy;
         uintN dummyAttrs;
-        if (!CheckAccess(cx, obj, desc.id, JSACC_WATCH, &dummy, &dummyAttrs))
+        if (!CheckAccess(cx, obj, id, JSACC_WATCH, &dummy, &dummyAttrs))
             return JS_FALSE;
 
         Value tmp = UndefinedValue();
-        return js_DefineProperty(cx, obj, desc.id, &tmp,
+        return js_DefineProperty(cx, obj, id, &tmp,
                                  desc.getter(), desc.setter(), desc.attrs);
     }
 
@@ -2187,7 +2185,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
                     desc.isDataDescriptor() &&
                     (desc.hasWritable ? desc.writable() : shape->writable()))
                 {
-                    return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, desc.id, rval);
+                    return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
                 }
 
                 if (!js_NativeGet(cx, obj, obj2, shape, JSGET_NO_METHOD_BARRIER, &v))
@@ -2222,7 +2220,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
                         if (!shape->configurable() &&
                             (!shape->hasDefaultGetter() || !shape->hasDefaultSetter()))
                         {
-                            return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, desc.id, rval);
+                            return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
                         }
                         break;
                     }
@@ -2257,7 +2255,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
         JS_ASSERT_IF(!desc.hasConfigurable, !desc.configurable());
         if (desc.configurable() ||
             (desc.hasEnumerable && desc.enumerable() != shape->enumerable())) {
-            return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, desc.id, rval);
+            return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
         }
     }
 
@@ -2268,19 +2266,19 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
     } else if (desc.isDataDescriptor() != shape->isDataDescriptor()) {
         /* 8.12.9 step 9. */
         if (!shape->configurable())
-            return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, desc.id, rval);
+            return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
     } else if (desc.isDataDescriptor()) {
         /* 8.12.9 step 10. */
         JS_ASSERT(shape->isDataDescriptor());
         if (!shape->configurable() && !shape->writable()) {
             if (desc.hasWritable && desc.writable())
-                return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, desc.id, rval);
+                return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
             if (desc.hasValue) {
                 JSBool same;
                 if (!SameValue(cx, desc.value, v, &same))
                     return JS_FALSE;
                 if (!same)
-                    return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, desc.id, rval);
+                    return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
             }
         }
 
@@ -2294,7 +2292,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
                 if (!SameValue(cx, desc.setterValue(), shape->setterOrUndefined(), &same))
                     return JS_FALSE;
                 if (!same)
-                    return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, desc.id, rval);
+                    return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
             }
 
             if (desc.hasGet) {
@@ -2302,7 +2300,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
                 if (!SameValue(cx, desc.getterValue(), shape->getterOrUndefined(), &same))
                     return JS_FALSE;
                 if (!same)
-                    return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, desc.id, rval);
+                    return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
             }
         }
     }
@@ -2349,7 +2347,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
          * control point of view.
          */
         Value dummy;
-        if (!CheckAccess(cx, obj2, desc.id, JSACC_WATCH, &dummy, &attrs))
+        if (!CheckAccess(cx, obj2, id, JSACC_WATCH, &dummy, &attrs))
              return JS_FALSE;
 
         JS_ASSERT_IF(shape->isMethod(), !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
@@ -2395,15 +2393,15 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
      */
     if (callDelProperty) {
         Value dummy = UndefinedValue();
-        if (!CallJSPropertyOp(cx, obj2->getClass()->delProperty, obj2, desc.id, &dummy))
+        if (!CallJSPropertyOp(cx, obj2->getClass()->delProperty, obj2, id, &dummy))
             return false;
     }
 
-    return js_DefineProperty(cx, obj, desc.id, &v, getter, setter, attrs);
+    return js_DefineProperty(cx, obj, id, &v, getter, setter, attrs);
 }
 
 static JSBool
-DefinePropertyOnArray(JSContext *cx, JSObject *obj, const PropDesc &desc,
+DefinePropertyOnArray(JSContext *cx, JSObject *obj, const jsid &id, const PropDesc &desc,
                       bool throwError, bool *rval)
 {
     /*
@@ -2418,7 +2416,7 @@ DefinePropertyOnArray(JSContext *cx, JSObject *obj, const PropDesc &desc,
 
     jsuint oldLen = obj->getArrayLength();
 
-    if (JSID_IS_ATOM(desc.id, cx->runtime->atomState.lengthAtom)) {
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         /*
          * Our optimization of storage of the length property of arrays makes
          * it very difficult to properly implement defining the property.  For
@@ -2431,13 +2429,13 @@ DefinePropertyOnArray(JSContext *cx, JSObject *obj, const PropDesc &desc,
     }
 
     uint32 index;
-    if (js_IdIsIndex(desc.id, &index)) {
+    if (js_IdIsIndex(id, &index)) {
         /*
         // Disabled until we support defining "length":
         if (index >= oldLen && lengthPropertyNotWritable())
             return ThrowTypeError(cx, JSMSG_CANT_APPEND_TO_ARRAY);
          */
-        if (!DefinePropertyOnObject(cx, obj, desc, false, rval))
+        if (!DefinePropertyOnObject(cx, obj, id, desc, false, rval))
             return JS_FALSE;
         if (!*rval)
             return Reject(cx, obj, JSMSG_CANT_DEFINE_ARRAY_INDEX, throwError, rval);
@@ -2451,36 +2449,35 @@ DefinePropertyOnArray(JSContext *cx, JSObject *obj, const PropDesc &desc,
         return JS_TRUE;
     }
 
-    return DefinePropertyOnObject(cx, obj, desc, throwError, rval);
+    return DefinePropertyOnObject(cx, obj, id, desc, throwError, rval);
 }
 
 static JSBool
-DefineProperty(JSContext *cx, JSObject *obj, const PropDesc &desc, bool throwError,
+DefineProperty(JSContext *cx, JSObject *obj, const jsid &id, const PropDesc &desc, bool throwError,
                bool *rval)
 {
     if (obj->isArray())
-        return DefinePropertyOnArray(cx, obj, desc, throwError, rval);
+        return DefinePropertyOnArray(cx, obj, id, desc, throwError, rval);
 
     if (obj->getOps()->lookupProperty) {
         if (obj->isProxy())
-            return JSProxy::defineProperty(cx, obj, desc.id, desc.pd);
+            return JSProxy::defineProperty(cx, obj, id, desc.pd);
         return Reject(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE, throwError, rval);
     }
 
-    return DefinePropertyOnObject(cx, obj, desc, throwError, rval);
+    return DefinePropertyOnObject(cx, obj, id, desc, throwError, rval);
 }
 
 JSBool
-js_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id,
-                     const Value &descriptor, JSBool *bp)
+js_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, const Value &descriptor, JSBool *bp)
 {
     AutoPropDescArrayRooter descs(cx);
     PropDesc *desc = descs.append();
-    if (!desc || !desc->initialize(cx, id, descriptor))
+    if (!desc || !desc->initialize(cx, descriptor))
         return false;
 
     bool rval;
-    if (!DefineProperty(cx, obj, *desc, true, &rval))
+    if (!DefineProperty(cx, obj, id, *desc, true, &rval))
         return false;
     *bp = !!rval;
     return true;
@@ -2512,26 +2509,23 @@ obj_defineProperty(JSContext* cx, uintN argc, Value* vp)
 static bool
 DefineProperties(JSContext *cx, JSObject *obj, JSObject *props)
 {
-    AutoIdArray ida(cx, JS_Enumerate(cx, props));
-    if (!ida)
+    AutoIdVector ids(cx);
+    if (!GetPropertyNames(cx, props, JSITER_OWNONLY, &ids))
         return false;
 
      AutoPropDescArrayRooter descs(cx);
-     size_t len = ida.length();
+     size_t len = ids.length();
      for (size_t i = 0; i < len; i++) {
-         jsid id = ida[i];
+         jsid id = ids[i];
          PropDesc* desc = descs.append();
-         AutoValueRooter tvr(cx);
-         if (!desc ||
-             !JS_GetPropertyById(cx, props, id, tvr.jsval_addr()) ||
-             !desc->initialize(cx, id, tvr.value())) {
+         Value v;
+         if (!desc || !props->getProperty(cx, id, &v) || !desc->initialize(cx, v))
              return false;
-         }
      }
 
      bool dummy;
      for (size_t i = 0; i < len; i++) {
-         if (!DefineProperty(cx, obj, descs[i], true, &dummy))
+         if (!DefineProperty(cx, obj, ids[i], descs[i], true, &dummy))
              return false;
      }
 
@@ -2548,23 +2542,23 @@ js_PopulateObject(JSContext *cx, JSObject *newborn, JSObject *props)
 static JSBool
 obj_defineProperties(JSContext* cx, uintN argc, Value* vp)
 {
-    /* 15.2.3.6 steps 1 and 5. */
+    /* Steps 1 and 7. */
     JSObject *obj;
     if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.defineProperties", &obj))
         return false;
     vp->setObject(*obj);
 
+    /* Step 2. */
     if (argc < 2) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "Object.defineProperties", "0", "s");
         return false;
     }
-
-    JSObject* props = js_ValueToNonNullObject(cx, vp[3]);
+    JSObject* props = ToObject(cx, &vp[3]);
     if (!props)
         return false;
-    vp[3].setObject(*props);
 
+    /* Steps 3-6. */
     return DefineProperties(cx, obj, props);
 }
 
@@ -2606,27 +2600,8 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
             return JS_FALSE;
         }
 
-        JSObject *props = &vp[3].toObject();
-        AutoIdArray ida(cx, JS_Enumerate(cx, props));
-        if (!ida)
+        if (!DefineProperties(cx, obj, &vp[3].toObject()))
             return JS_FALSE;
-
-        AutoPropDescArrayRooter descs(cx);
-        size_t len = ida.length();
-        for (size_t i = 0; i < len; i++) {
-            jsid id = ida[i];
-            PropDesc *desc = descs.append();
-            if (!desc || !JS_GetPropertyById(cx, props, id, Jsvalify(&vp[1])) ||
-                !desc->initialize(cx, id, vp[1])) {
-                return JS_FALSE;
-            }
-        }
-
-        bool dummy;
-        for (size_t i = 0; i < len; i++) {
-            if (!DefineProperty(cx, obj, descs[i], true, &dummy))
-                return JS_FALSE;
-        }
     }
 
     /* 5. Return obj. */
