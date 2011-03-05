@@ -1166,6 +1166,12 @@
       ]]></handler>
 
       <handler event="click" phase="capturing"><![CDATA[
+        if (this.getAttribute("disabled") == "true") {
+          // Prevent the command from being carried out
+          event.stopPropagation();
+          return;
+        }
+
         let node = event.originalTarget;
         while (true) {
           if (node == this.menuitem)

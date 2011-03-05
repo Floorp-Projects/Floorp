@@ -1121,7 +1121,11 @@ class TypedArrayTemplate
             double d = v.toDouble();
             if (!ArrayTypeIsFloatingPoint() && JS_UNLIKELY(JSDOUBLE_IS_NaN(d)))
                 return NativeType(int32(0));
-            return NativeType(d);
+            if (TypeIsFloatingPoint<NativeType>())
+                return NativeType(d);
+            if (TypeIsUnsigned<NativeType>())
+                return NativeType(js_DoubleToECMAUint32(d));
+            return NativeType(js_DoubleToECMAInt32(d));
         }
 
         if (v.isPrimitive() && !v.isMagic()) {

@@ -12,7 +12,7 @@
         <link>http://localhost:4444/creator1.html</link>
       </author>
     </authors>
-    <status id="4">Public</status>
+    <status id="8">Preliminarily Reviewed</status>
     <compatible_applications>
       <application>
         <appID>xpcshell@tests.mozilla.org</appID>
@@ -133,7 +133,7 @@
     <developer_comments>   Test Developer Comments 3   </developer_comments>
     <eula>   Test EULA 3   </eula>
     <icon>   http://localhost:4444/icon3.png   </icon>
-    <status id="   4   ">Public</status>
+    <status id="   8   ">Preliminarily Reviewed</status>
     <!-- Test that an incompatible + compatible application list passes -->
     <compatible_applications>
       <application>

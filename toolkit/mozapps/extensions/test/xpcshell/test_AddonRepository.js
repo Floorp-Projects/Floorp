@@ -76,7 +76,7 @@ var GET_RESULTS = [{
   weeklyDownloads:        3333,
   dailyUsers:             4444,
   sourceURI:              BASE_URL + INSTALL_URL2,
-  repositoryStatus:       4,
+  repositoryStatus:       8,
   size:                   5555,
   updateDate:             new Date(1265033045000)
 }, {
@@ -94,7 +94,7 @@ var SEARCH_RESULTS = [{
                             name: "Test Creator 1",
                             url:  BASE_URL + "/creator1.html"
                           },
-  repositoryStatus:       4,
+  repositoryStatus:       8,
   sourceURI:              BASE_URL + "/test1.xpi"
 }, {
   id:                     "test2@tests.mozilla.org",
@@ -170,7 +170,7 @@ var SEARCH_RESULTS = [{
   weeklyDownloads:        3333,
   dailyUsers:             4444,
   sourceURI:              BASE_URL + "/test3.xpi",
-  repositoryStatus:       4,
+  repositoryStatus:       8,
   size:                   5555,
   updateDate:             new Date(1265033045000)
 }, {

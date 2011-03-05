@@ -44,6 +44,7 @@ import java.nio.channels.*;
 import java.text.*;
 import java.util.*;
 import java.util.zip.*;
+import java.util.concurrent.locks.*;
 
 import android.os.*;
 import android.app.*;
@@ -63,7 +64,7 @@ import android.net.Uri;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-class GeckoAppShell
+public class GeckoAppShell
 {
     // static members only
     private GeckoAppShell() { }
@@ -343,6 +344,11 @@ class GeckoAppShell
         }
     }
 
+    public static void sendEventToGeckoSync(GeckoEvent e) {
+        sendEventToGecko(e);
+        geckoEventSync();
+    }
+
     // Tell the Gecko event loop that an event is available.
     public static native void notifyGeckoOfEvent(GeckoEvent event);
 
@@ -469,6 +475,37 @@ class GeckoAppShell
         else
             GeckoApp.surfaceView.inputConnection.notifyTextChange(
                 imm, text, start, end, newEnd);
+    }
+
+    private static final ReentrantLock mGeckoSyncLock = new ReentrantLock();
+    private static final Condition     mGeckoSyncCond = mGeckoSyncLock.newCondition();
+    private static boolean mGeckoSyncAcked;
+
+    // Block the current thread until the Gecko event loop is caught up
+    public static void geckoEventSync() {
+        GeckoAppShell.sendEventToGecko(
+            new GeckoEvent(GeckoEvent.GECKO_EVENT_SYNC));
+        mGeckoSyncLock.lock();
+        mGeckoSyncAcked = false;
+        while (!mGeckoSyncAcked) {
+            try {
+              mGeckoSyncCond.await();
+            } catch (InterruptedException e) {
+              break;
+            }
+        }
+        mGeckoSyncLock.unlock();
+    }
+
+    // Signal the Java thread that it's time to wake up
+    public static void acknowledgeEventSync() {
+        mGeckoSyncLock.lock();
+        mGeckoSyncAcked = true;
+        try {
+            mGeckoSyncCond.signal();
+        } finally {
+            mGeckoSyncLock.unlock();
+        }
     }
 
     public static void enableAccelerometer(boolean enable) {
@@ -867,5 +904,48 @@ class GeckoAppShell
         Configuration config = res.getConfiguration();
         config.locale = locale;
         res.updateConfiguration(config, res.getDisplayMetrics());
+    }
+
+    public static void killAnyZombies() {
+        File proc = new File("/proc");
+        File[] files = proc.listFiles();
+        for (int i = 0; i < files.length; i++) {
+            File p = files[i];
+            File pEnv = new File(p, "environ");
+            if (pEnv.canRead() && !p.getName().equals("self")) {
+                int pid = Integer.parseInt(p.getName());
+                if (pid != android.os.Process.myPid()) {
+                    Log.i("GeckoProcs", "gonna kill pid: " + p.getName());
+                    android.os.Process.killProcess(pid);
+                }
+            }
+        }
+    }
+
+    public static boolean checkForGeckoProcs() {
+        File proc = new File("/proc");
+        File[] files = proc.listFiles();
+        for (int i = 0; i < files.length; i++) {
+            File p = files[i];
+            File pEnv = new File(p, "environ");
+            if (pEnv.canRead() && !p.getName().equals("self")) {
+                int pid = Integer.parseInt(p.getName());
+                if (pid != android.os.Process.myPid()) {
+                    Log.i("GeckoProcs", "found pid: " + p.getName());
+                    return true;
+                }
+            }
+        }
+        Log.i("GeckoProcs", "didn't find any other procs");
+        return false;
+    }
+
+    public static void waitForAnotherGeckoProc(){
+        int countdown = 40;
+        while (!checkForGeckoProcs() &&  --countdown > 0) {
+            try {
+                Thread.currentThread().sleep(100);
+            } catch (InterruptedException ie) {}
+        }
     }
 }

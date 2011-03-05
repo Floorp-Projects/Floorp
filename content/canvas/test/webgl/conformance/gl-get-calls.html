@@ -122,10 +122,23 @@ else {
     shouldBe('context.getParameter(context.UNPACK_FLIP_Y_WEBGL)', 'false');
     shouldBe('context.getParameter(context.UNPACK_PREMULTIPLY_ALPHA_WEBGL)', 'false');
     shouldBe('context.getParameter(context.VIEWPORT)', '[0, 0, 2, 2]');
-    shouldBeTrue('context.getParameter(context.MAX_FRAGMENT_UNIFORM_VECTORS) >= 16');
-    shouldBeTrue('context.getParameter(context.MAX_VERTEX_UNIFORM_VECTORS) >= 128');
-    shouldBeTrue('context.getParameter(context.MAX_VARYING_VECTORS) >= 8');
     shouldBe('context.getParameter(context.NUM_COMPRESSED_TEXTURE_FORMATS)', '0');
+
+    shouldBeTrue('context.getParameter(context.MAX_COMBINED_TEXTURE_IMAGE_UNITS) >= 8');
+    shouldBeTrue('context.getParameter(context.MAX_CUBE_MAP_TEXTURE_SIZE) >= 16');
+    shouldBeTrue('context.getParameter(context.MAX_FRAGMENT_UNIFORM_VECTORS) >= 16');
+    shouldBeTrue('context.getParameter(context.MAX_RENDERBUFFER_SIZE) >= 1');
+    shouldBeTrue('context.getParameter(context.MAX_TEXTURE_IMAGE_UNITS) >= 8');
+    shouldBeTrue('context.getParameter(context.MAX_TEXTURE_SIZE) >= 64');
+    shouldBeTrue('context.getParameter(context.MAX_VARYING_VECTORS) >= 8');
+    shouldBeTrue('context.getParameter(context.MAX_VERTEX_ATTRIBS) >= 8');
+    shouldBeTrue('context.getParameter(context.MAX_VERTEX_TEXTURE_IMAGE_UNITS) >= 0');
+    shouldBeTrue('context.getParameter(context.MAX_VERTEX_UNIFORM_VECTORS) >= 128');
+    // Note: This requirement should be removed from the spec IMO. Many impelementations
+    // will be based on FBOs and FBOs might have a restriction smaller than the current screen size.
+    // especially if there are multiple screens.
+    shouldBeTrue('context.getParameter(context.MAX_VIEWPORT_DIMS)[0] >= window.screen.width');
+    shouldBeTrue('context.getParameter(context.MAX_VIEWPORT_DIMS)[1] >= window.screen.height');
 }
 
 debug("");
