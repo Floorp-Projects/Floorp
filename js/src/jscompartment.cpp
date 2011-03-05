@@ -80,6 +80,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     emptyDeclEnvShape(NULL),
     emptyEnumeratorShape(NULL),
     emptyWithShape(NULL),
+    initialRegExpShape(NULL),
     debugMode(rt->debugMode),
 #if ENABLE_YARR_JIT
     regExpAllocator(NULL),
@@ -484,6 +485,9 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
         emptyEnumeratorShape = NULL;
     if (emptyWithShape && IsAboutToBeFinalized(cx, emptyWithShape))
         emptyWithShape = NULL;
+
+    if (initialRegExpShape && IsAboutToBeFinalized(cx, initialRegExpShape))
+        initialRegExpShape = NULL;
 
 #ifdef JS_TRACER
     traceMonitor.sweep(cx);
