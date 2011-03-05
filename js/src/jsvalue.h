@@ -988,7 +988,7 @@ static const JSFinalizeOp     FinalizeStub       = JS_FinalizeStub;
     Native              construct;                                            \
     JSXDRObjectOp       xdrObject;                                            \
     HasInstanceOp       hasInstance;                                          \
-    JSTraceOp           trace;
+    JSTraceOp           trace
 
 /*
  * The helper struct to measure the size of JS_CLASS_MEMBERS to know how much
