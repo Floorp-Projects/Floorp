@@ -437,6 +437,17 @@ struct JS_FRIEND_API(JSCompartment) {
 
     EmptyShapeSet                emptyShapes;
 
+    /*
+     * Initial shape given to RegExp objects, encoding the initial set of
+     * built-in instance properties and the fixed slots where they must be
+     * stored (see JSObject::JSSLOT_REGEXP_*). Later property additions may
+     * cause this shape to not be used by a regular expression (even along the
+     * entire shape parent chain, should the object go into dictionary mode).
+     * But because all the initial properties are non-configurable, they will
+     * always map to fixed slots.
+     */
+    const js::Shape              *initialRegExpShape;
+
     bool                         debugMode;  // true iff debug mode on
     JSCList                      scripts;    // scripts in this compartment
 

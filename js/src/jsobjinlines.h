@@ -1294,6 +1294,27 @@ ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *clasp, jsid methodid,
            HasNativeMethod(pobj, methodid, native);
 }
 
+inline bool
+DefineConstructorAndPrototype(JSContext *cx, JSObject *global,
+                              JSProtoKey key, JSFunction *ctor, JSObject *proto)
+{
+    JS_ASSERT(global->isGlobal());
+    JS_ASSERT(!global->nativeEmpty()); /* reserved slots already allocated */
+    JS_ASSERT(ctor);
+    JS_ASSERT(proto);
+
+    jsid id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[key]);
+    JS_ASSERT(!global->nativeLookup(id));
+
+    if (!global->addDataProperty(cx, id, key + JSProto_LIMIT * 2, 0))
+        return false;
+
+    global->setSlot(key, ObjectValue(*ctor));
+    global->setSlot(key + JSProto_LIMIT, ObjectValue(*proto));
+    global->setSlot(key + JSProto_LIMIT * 2, ObjectValue(*ctor));
+    return true;
+}
+
 } /* namespace js */
 
 #endif /* jsobjinlines_h___ */

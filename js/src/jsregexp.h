@@ -353,7 +353,37 @@ inline void
 JSObject::zeroRegExpLastIndex()
 {
     JS_ASSERT(isRegExp());
-    getSlotRef(JSSLOT_REGEXP_LAST_INDEX).setInt32(0);
+    setSlot(JSSLOT_REGEXP_LAST_INDEX, js::Int32Value(0));
+}
+
+inline void
+JSObject::setRegExpSource(JSString *source)
+{
+    setSlot(JSSLOT_REGEXP_SOURCE, js::StringValue(source));
+}
+
+inline void
+JSObject::setRegExpGlobal(bool global)
+{
+    setSlot(JSSLOT_REGEXP_GLOBAL, js::BooleanValue(global));
+}
+
+inline void
+JSObject::setRegExpIgnoreCase(bool ignoreCase)
+{
+    setSlot(JSSLOT_REGEXP_IGNORE_CASE, js::BooleanValue(ignoreCase));
+}
+
+inline void
+JSObject::setRegExpMultiline(bool multiline)
+{
+    setSlot(JSSLOT_REGEXP_MULTILINE, js::BooleanValue(multiline));
+}
+
+inline void
+JSObject::setRegExpSticky(bool sticky)
+{
+    setSlot(JSSLOT_REGEXP_STICKY, js::BooleanValue(sticky));
 }
 
 namespace js { class AutoStringRooter; }
