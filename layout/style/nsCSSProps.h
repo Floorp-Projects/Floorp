@@ -107,6 +107,19 @@
 PR_STATIC_ASSERT((CSS_PROPERTY_PARSE_PROPERTY_MASK &
                   CSS_PROPERTY_VALUE_PARSER_FUNCTION) == 0);
 
+#define CSS_PROPERTY_VALUE_RESTRICTION_MASK       (3<<13)
+// The parser (in particular, CSSParserImpl::ParseSingleValueProperty)
+// should enforce that the value of this property must be 0 or larger.
+#define CSS_PROPERTY_VALUE_NONNEGATIVE            (1<<13)
+// The parser (in particular, CSSParserImpl::ParseSingleValueProperty)
+// should enforce that the value of this property must be greater than 0.
+#define CSS_PROPERTY_VALUE_POSITIVE_NONZERO       (2<<13)
+// The parser (in particular, CSSParserImpl::ParseSingleValueProperty)
+// should enforce that the value of this property must be 1 or larger.
+#define CSS_PROPERTY_VALUE_AT_LEAST_ONE           (3<<13)
+
+// NOTE: next free bit is (1<<15)
+
 /**
  * Types of animatable values.
  */
@@ -226,6 +239,26 @@ public:
                       "out of range");
     return nsCSSProps::kFlagsTable[aProperty] &
            CSS_PROPERTY_PARSE_PROPERTY_MASK;
+  }
+
+  static inline PRUint32 ValueRestrictions(nsCSSProperty aProperty)
+  {
+    NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
+                      "out of range");
+    return nsCSSProps::kFlagsTable[aProperty] &
+           CSS_PROPERTY_VALUE_RESTRICTION_MASK;
+  }
+
+private:
+  // Lives in nsCSSParser.cpp for the macros it depends on.
+  static const PRUint32 kParserVariantTable[eCSSProperty_COUNT_no_shorthands];
+
+public:
+  static inline PRUint32 ParserVariant(nsCSSProperty aProperty) {
+    NS_ABORT_IF_FALSE(0 <= aProperty &&
+                      aProperty < eCSSProperty_COUNT_no_shorthands,
+                      "out of range");
+    return nsCSSProps::kParserVariantTable[aProperty];
   }
 
 private:
