@@ -93,7 +93,7 @@ resc_trace(JSTracer *trc, JSObject *obj)
 
 Class js::regexp_statics_class = {
     "RegExpStatics", 
-    JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE,
+    JSCLASS_HAS_PRIVATE,
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -108,7 +108,7 @@ Class js::regexp_statics_class = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    JS_CLASS_TRACE(resc_trace)
+    resc_trace
 };
 
 /*
@@ -549,7 +549,7 @@ js::Class js_RegExpClass = {
     js_RegExp_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::REGEXP_CLASS_RESERVED_SLOTS) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -564,7 +564,7 @@ js::Class js_RegExpClass = {
     NULL,                 /* construct */
     js_XDRRegExpObject,
     NULL,                 /* hasInstance */
-    JS_CLASS_TRACE(regexp_trace)
+    regexp_trace
 };
 
 /*

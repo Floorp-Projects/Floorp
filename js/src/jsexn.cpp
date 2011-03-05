@@ -88,7 +88,7 @@ exn_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
 Class js_ErrorClass = {
     js_Error_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_MARK_IS_TRACE |
+    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Error),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
@@ -104,7 +104,7 @@ Class js_ErrorClass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    JS_CLASS_TRACE(exn_trace)
+    exn_trace
 };
 
 typedef struct JSStackTraceElem {

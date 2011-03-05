@@ -6518,12 +6518,8 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
 
     /* No one runs while the GC is running, so we can use LOCKED_... here. */
     Class *clasp = obj->getClass();
-    if (clasp->mark) {
-        if (clasp->flags & JSCLASS_MARK_IS_TRACE)
-            ((JSTraceOp) clasp->mark)(trc, obj);
-        else if (IS_GC_MARKING_TRACER(trc))
-            (void) clasp->mark(cx, obj, trc);
-    }
+    if (clasp->trace)
+        clasp->trace(trc, obj);
     if (clasp->flags & JSCLASS_IS_GLOBAL) {
         JSCompartment *compartment = obj->getCompartment();
         compartment->mark(trc);

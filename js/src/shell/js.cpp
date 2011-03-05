@@ -3154,24 +3154,22 @@ split_finalize(JSContext *cx, JSObject *obj)
     JS_free(cx, JS_GetPrivate(cx, obj));
 }
 
-static uint32
-split_mark(JSContext *cx, JSObject *obj, void *arg)
+static void
+split_trace(JSTracer *trc, JSObject *obj)
 {
     ComplexObject *cpx;
 
-    cpx = (ComplexObject *) JS_GetPrivate(cx, obj);
+    cpx = (ComplexObject *) JS_GetPrivate(trc->context, obj);
 
     if (!cpx->isInner && cpx->inner) {
         /* Mark the inner object. */
-        JS_MarkGCThing(cx, OBJECT_TO_JSVAL(cpx->inner), "ComplexObject.inner", arg);
+        JS_CALL_TRACER(trc, cpx->inner, JSTRACE_OBJECT, "ComplexObject.inner");
     }
 
     if (cpx->isInner && cpx->outer) {
         /* Mark the inner object. */
-        JS_MarkGCThing(cx, OBJECT_TO_JSVAL(cpx->outer), "ComplexObject.outer", arg);
+        JS_CALL_TRACER(trc, cpx->outer, JSTRACE_OBJECT, "ComplexObject.outer");
     }
-
-    return 0;
 }
 
 static JSObject *
@@ -3226,7 +3224,7 @@ static Class split_global_class = {
     NULL,           /* construct   */
     NULL,           /* xdrObject   */
     NULL,           /* hasInstance */
-    split_mark,
+    split_trace,
     {
         Valueify(split_equality),
         split_outerObject,

@@ -988,8 +988,7 @@ static const JSFinalizeOp     FinalizeStub       = JS_FinalizeStub;
     Native              construct;                                            \
     JSXDRObjectOp       xdrObject;                                            \
     HasInstanceOp       hasInstance;                                          \
-    JSMarkOp            mark
-
+    JSTraceOp           trace;
 
 /*
  * The helper struct to measure the size of JS_CLASS_MEMBERS to know how much
@@ -1058,7 +1057,7 @@ JS_STATIC_ASSERT(offsetof(JSClass, call) == offsetof(Class, call));
 JS_STATIC_ASSERT(offsetof(JSClass, construct) == offsetof(Class, construct));
 JS_STATIC_ASSERT(offsetof(JSClass, xdrObject) == offsetof(Class, xdrObject));
 JS_STATIC_ASSERT(offsetof(JSClass, hasInstance) == offsetof(Class, hasInstance));
-JS_STATIC_ASSERT(offsetof(JSClass, mark) == offsetof(Class, mark));
+JS_STATIC_ASSERT(offsetof(JSClass, trace) == offsetof(Class, trace));
 JS_STATIC_ASSERT(sizeof(JSClass) == sizeof(Class));
 
 struct PropertyDescriptor {
