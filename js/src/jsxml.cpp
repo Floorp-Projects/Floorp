@@ -7140,8 +7140,11 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
 
     /* Properties of XML objects are not modeled by type inference. */
     TypeObject *type = proto->getNewType(cx);
-    if (!type || !cx->markTypeObjectUnknownProperties(type))
+    if (!type ||
+        !cx->markTypeObjectUnknownProperties(type) ||
+        !cx->markTypeObjectUnknownProperties(proto->getType())) {
         return NULL;
+    }
 
     xml = js_NewXML(cx, JSXML_CLASS_TEXT);
     if (!xml)
