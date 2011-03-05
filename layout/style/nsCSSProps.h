@@ -101,6 +101,7 @@
 #define CSS_PROPERTY_PARSE_INACCESSIBLE           (1<<9)
 #define CSS_PROPERTY_PARSE_FUNCTION               (2<<9)
 #define CSS_PROPERTY_PARSE_VALUE                  (3<<9)
+#define CSS_PROPERTY_PARSE_VALUE_LIST             (4<<9)
 
 // See CSSParserImpl::ParseSingleValueProperty
 #define CSS_PROPERTY_VALUE_PARSER_FUNCTION        (1<<12)
