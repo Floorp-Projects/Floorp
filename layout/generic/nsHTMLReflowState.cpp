@@ -559,18 +559,11 @@ nsHTMLReflowState::InitFrameType()
 
     case NS_STYLE_DISPLAY_INLINE:
     case NS_STYLE_DISPLAY_INLINE_BLOCK:
-    case NS_STYLE_DISPLAY_MARKER:
     case NS_STYLE_DISPLAY_INLINE_TABLE:
     case NS_STYLE_DISPLAY_INLINE_BOX:
     case NS_STYLE_DISPLAY_INLINE_GRID:
     case NS_STYLE_DISPLAY_INLINE_STACK:
       frameType = NS_CSS_FRAME_TYPE_INLINE;
-      break;
-
-    case NS_STYLE_DISPLAY_RUN_IN:
-    case NS_STYLE_DISPLAY_COMPACT:
-      // XXX need to look ahead at the frame's sibling
-      frameType = NS_CSS_FRAME_TYPE_BLOCK;
       break;
 
     case NS_STYLE_DISPLAY_TABLE_CELL:

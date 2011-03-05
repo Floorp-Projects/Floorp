@@ -5775,18 +5775,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kDirectionKTable);
   case eCSSProperty_display:
-    if (ParseVariant(aValue, VARIANT_HK, nsCSSProps::kDisplayKTable)) {
-      if (aValue.GetUnit() == eCSSUnit_Enumerated) {
-        switch (aValue.GetIntValue()) {
-          case NS_STYLE_DISPLAY_MARKER:        // bug 2055
-          case NS_STYLE_DISPLAY_RUN_IN:        // bug 2056
-          case NS_STYLE_DISPLAY_COMPACT:       // bug 14983
-            return PR_FALSE;
-        }
-      }
-      return PR_TRUE;
-    }
-    return PR_FALSE;
+    return ParseVariant(aValue, VARIANT_HK, nsCSSProps::kDisplayKTable);
   case eCSSProperty_elevation:
     return ParseVariant(aValue, VARIANT_HK | VARIANT_ANGLE,
                         nsCSSProps::kElevationKTable);
