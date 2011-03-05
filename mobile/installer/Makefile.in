@@ -235,7 +235,7 @@ installer: deb
 	@echo Installer DEB created!
 
 # relative to $(DIST)
-UPLOAD_EXTRA_FILES += ../mobile/$(DEB_PKG_NAME)
+UPLOAD_EXTRA_FILES += ../mobile/$(DEB_PKG_NAME) deb_name.txt
 endif
 
 ifeq ($(OS_ARCH),WINCE)
