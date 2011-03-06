@@ -458,6 +458,7 @@ public:
     {}
 
     void newType(JSContext *cx, TypeSet *source, jstype type);
+    void arrayNotPacked(JSContext *cx, bool notDense);
 
     bool condensed() { return true; }
 };
@@ -1215,6 +1216,14 @@ TypeConstraintCondensed::newType(JSContext *cx, TypeSet *source, jstype type)
         return;
     }
 
+    AnalyzeScriptTypes(cx, script);
+}
+
+void
+TypeConstraintCondensed::arrayNotPacked(JSContext *cx, bool notDense)
+{
+    if (script->types)
+        return;
     AnalyzeScriptTypes(cx, script);
 }
 

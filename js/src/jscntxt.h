@@ -2156,9 +2156,6 @@ public:
     inline js::types::TypeObject *
     getTypeCallerInitObject(bool isArray);
 
-    /* Whether the immediate caller is being monitored for side effects. */
-    inline bool isTypeCallerMonitored();
-
     /* Mark the immediate allocation site as having produced an unexpected value. */
     inline bool markTypeCallerUnexpected(js::types::jstype type);
     inline bool markTypeCallerUnexpected(const js::Value &value);
