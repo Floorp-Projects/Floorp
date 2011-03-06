@@ -935,7 +935,7 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, jstype type)
     TypeFunction *function = NULL;
     if (TypeIsObject(type)) {
         TypeObject *object = (TypeObject*) type;
-        if (object->isFunction) {
+        if (object->isFunction && !object->unknownProperties) {
             function = (TypeFunction*) object;
         } else {
             /* Unknown return value for calls on non-function objects. */
@@ -1302,6 +1302,14 @@ TypeSet::getKnownTypeTag(JSContext *cx, JSScript *script)
 static inline ObjectKind
 CombineObjectKind(TypeObject *object, ObjectKind kind)
 {
+    /*
+     * All type objects with unknown properties are considered interchangeable
+     * with one another, as they can be freely exchanged in type sets to handle
+     * objects whose __proto__ has been changed.
+     */
+    if (object->unknownProperties)
+        return OBJECT_UNKNOWN;
+
     ObjectKind nkind;
     if (object->isFunction)
         nkind = object->asFunction()->script ? OBJECT_SCRIPTED_FUNCTION : OBJECT_NATIVE_FUNCTION;
@@ -3796,8 +3804,22 @@ CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
         for (unsigned i = 0; i < objectCapacity; i++) {
             TypeObject *object = types->objectSet[i];
             if (object && !object->marked) {
+                /*
+                 * If the object has unknown properties, instead of removing it
+                 * replace it with the compartment's empty type object. This is
+                 * needed to handle mutable __proto__ --- the type object in
+                 * the set may no longer be used but there could be a JSObject
+                 * which originally had the type and was changed to a different
+                 * type object with unknown properties.
+                 */
+                if (object->unknownProperties) {
+                    types->objectSet[i] = cx->getTypeEmpty();
+                    if (!types->objectSet[i])
+                        compartment->setPendingNukeTypes(cx);
+                } else {
+                    types->objectSet[i] = NULL;
+                }
                 removed = true;
-                types->objectSet[i] = NULL;
             }
         }
         if (removed) {
@@ -3819,8 +3841,14 @@ CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
     } else if (types->objectCount == 1) {
         TypeObject *object = (TypeObject*) types->objectSet;
         if (!object->marked) {
-            types->objectSet = NULL;
-            types->objectCount = 0;
+            if (object->unknownProperties) {
+                types->objectSet = (TypeObject**) cx->getTypeEmpty();
+                if (!types->objectSet)
+                    compartment->setPendingNukeTypes(cx);
+            } else {
+                types->objectSet = NULL;
+                types->objectCount = 0;
+            }
         }
     }
 

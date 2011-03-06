@@ -316,8 +316,11 @@ JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Valu
 inline js::types::TypeObject *
 JSContext::getTypeEmpty()
 {
-    if (!compartment->types.typeEmpty)
+    if (!compartment->types.typeEmpty) {
         compartment->types.typeEmpty = newTypeObject("Empty", NULL);
+        if (compartment->types.typeEmpty)
+            compartment->types.typeEmpty->unknownProperties = true;
+    }
     return compartment->types.typeEmpty;
 }
 
