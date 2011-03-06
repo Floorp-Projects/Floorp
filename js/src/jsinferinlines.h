@@ -236,19 +236,6 @@ JSContext::getTypeCallerInitObject(bool isArray)
 }
 
 inline bool
-JSContext::isTypeCallerMonitored()
-{
-    if (typeInferenceEnabled()) {
-        JSStackFrame *caller = js_GetScriptedCaller(this, NULL);
-        if (!caller)
-            return true;
-        JSScript *script = caller->script();
-        return !script->types || script->types->monitored(caller->pc(this) - script->code);
-    }
-    return false;
-}
-
-inline bool
 JSContext::markTypeCallerUnexpected(js::types::jstype type)
 {
     if (!typeInferenceEnabled())
@@ -274,7 +261,7 @@ JSContext::markTypeCallerOverflow()
 inline bool
 JSContext::addTypeProperty(js::types::TypeObject *obj, const char *name, js::types::jstype type)
 {
-    if (typeInferenceEnabled()) {
+    if (typeInferenceEnabled() && !obj->unknownProperties) {
         jsid id = JSID_VOID;
         if (name) {
             JSAtom *atom = js_Atomize(this, name, strlen(name), 0);
@@ -290,7 +277,7 @@ JSContext::addTypeProperty(js::types::TypeObject *obj, const char *name, js::typ
 inline bool
 JSContext::addTypeProperty(js::types::TypeObject *obj, const char *name, const js::Value &value)
 {
-    if (typeInferenceEnabled())
+    if (typeInferenceEnabled() && !obj->unknownProperties)
         return addTypeProperty(obj, name, js::types::GetValueType(this, value));
     return true;
 }
@@ -298,7 +285,7 @@ JSContext::addTypeProperty(js::types::TypeObject *obj, const char *name, const j
 inline bool
 JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jstype type)
 {
-    if (!typeInferenceEnabled())
+    if (!typeInferenceEnabled() || obj->unknownProperties)
         return true;
 
     /* Convert string index properties into the common index property. */
@@ -321,7 +308,7 @@ JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jst
 inline bool
 JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Value &value)
 {
-    if (typeInferenceEnabled())
+    if (typeInferenceEnabled() && !obj->unknownProperties)
         return addTypePropertyId(obj, id, js::types::GetValueType(this, value));
     return true;
 }

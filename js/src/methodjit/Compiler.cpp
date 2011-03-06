@@ -2705,6 +2705,11 @@ mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
     frame.takeReg(JSReturnReg_Data);
     frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data, knownPushedType(0), pushedTypeSet(0));
 
+    if (recompiling) {
+        /* Native call case for recompilation. */
+        OOL_STUBCALL(JS_FUNC_TO_DATA_PTR(void *, callingNew ? ic::NativeNew : ic::NativeCall));
+    }
+
     stubcc.linkExitDirect(notCompiled, stubcc.masm.label());
     stubcc.rejoin(Changes(1));
     callPatches.append(callPatch);
