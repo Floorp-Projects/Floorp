@@ -383,7 +383,13 @@ struct TypeObject
      */
     TypeObject *next;
 
-    /* Whether all the properties of this object are unknown. */
+    /*
+     * Whether all the properties of this object are unknown. When this object
+     * appears in a type set, nothing can be assumed about its contents, including
+     * whether the .proto field is correct. This is needed to handle mutable
+     * __proto__, which requires us to unify all type objects with unknown
+     * properties in type sets (see SetProto).
+     */
     bool unknownProperties;
 
     /* Whether all objects this represents are dense arrays. */
