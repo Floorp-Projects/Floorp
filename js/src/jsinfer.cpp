@@ -3926,6 +3926,28 @@ CondenseTypeObjectList(JSContext *cx, TypeCompartment *compartment, TypeObject *
 
     TypeObject *object = objects;
     while (object) {
+        if (!object->marked) {
+            /*
+             * Leave all constraints and references to to-be-destroyed objects in.
+             * We will release all memory when sweeping the object.
+             */
+            object = object->next;
+            continue;
+        }
+
+        /*
+         * Remove to-be-destroyed objects from the list of instances of this
+         * type object. These are weak references.
+         */
+        TypeObject **pinstance = &object->instanceList;
+        while (*pinstance) {
+            if ((*pinstance)->marked)
+                pinstance = &(*pinstance)->instanceNext;
+            else
+                *pinstance = (*pinstance)->instanceNext;
+        }
+
+        /* Condense type sets for all properties of the object. */
         if (object->propertyCount >= 2) {
             unsigned capacity = HashSetCapacity(object->propertyCount);
             for (unsigned i = 0; i < capacity; i++) {
@@ -3940,6 +3962,7 @@ CondenseTypeObjectList(JSContext *cx, TypeCompartment *compartment, TypeObject *
             CondenseSweepTypeSet(cx, compartment, pcondensed, &prop->types);
             CondenseSweepTypeSet(cx, compartment, pcondensed, &prop->ownTypes);
         }
+
         object = object->next;
     }
 }
@@ -3961,15 +3984,6 @@ SweepTypeObjectList(JSContext *cx, TypeObject *&objects)
         if (object->marked) {
             object->marked = false;
             pobject = &object->next;
-
-            /* Sweep the list of instances of the type object. */
-            TypeObject **pinstance = &object->instanceList;
-            while (*pinstance) {
-                if ((*pinstance)->marked)
-                    pinstance = &(*pinstance)->instanceNext;
-                else
-                    *pinstance = (*pinstance)->instanceNext;
-            }
         } else {
             if (object->emptyShapes)
                 cx->free(object->emptyShapes);
@@ -4008,8 +4022,6 @@ JSScript::condenseTypes(JSContext *cx)
         }
 
         unsigned num = 2 + nfixed + (fun ? fun->nargs : 0) + bindings.countUpvars();
-        for (unsigned i = 0; i < num; i++)
-            js::types::CondenseSweepTypeSet(cx, &compartment->types, pcondensed, &varTypes[i]);
 
         if (isCachedEval ||
             (u.object && IsAboutToBeFinalized(cx, u.object)) ||
@@ -4017,6 +4029,9 @@ JSScript::condenseTypes(JSContext *cx)
             for (unsigned i = 0; i < num; i++)
                 varTypes[i].destroy(cx);
             varTypes = NULL;
+        } else {
+            for (unsigned i = 0; i < num; i++)
+                js::types::CondenseSweepTypeSet(cx, &compartment->types, pcondensed, &varTypes[i]);
         }
     }
 }
