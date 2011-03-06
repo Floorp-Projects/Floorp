@@ -5986,6 +5986,10 @@ BEGIN_CASE(JSOP_SETTER)
     if (!CheckRedeclaration(cx, obj, id, attrs))
         goto error;
 
+    TypeObject *type = cx->getTypeGetSet();
+    if (!type || !cx->addTypePropertyId(obj->getType(), id, (jstype) type))
+        goto error;
+
     if (!obj->defineProperty(cx, id, UndefinedValue(), getter, setter, attrs))
         goto error;
 

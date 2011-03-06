@@ -928,16 +928,14 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
         return NULL;
     }
 
-    TypeObject *regexpType = proto->getNewType(cx);
-    if (!regexpType)
-        return NULL;
+    TypeObject *protoType = proto->getType();
 
-    if (!cx->addTypeProperty(regexpType, "source", TYPE_STRING) ||
-        !cx->addTypeProperty(regexpType, "global", TYPE_BOOLEAN) ||
-        !cx->addTypeProperty(regexpType, "ignoreCase", TYPE_BOOLEAN) ||
-        !cx->addTypeProperty(regexpType, "multiline", TYPE_BOOLEAN) ||
-        !cx->addTypeProperty(regexpType, "sticky", TYPE_BOOLEAN) ||
-        !cx->addTypeProperty(regexpType, "lastIndex", TYPE_INT32)) {
+    if (!cx->addTypeProperty(protoType, "source", TYPE_STRING) ||
+        !cx->addTypeProperty(protoType, "global", TYPE_BOOLEAN) ||
+        !cx->addTypeProperty(protoType, "ignoreCase", TYPE_BOOLEAN) ||
+        !cx->addTypeProperty(protoType, "multiline", TYPE_BOOLEAN) ||
+        !cx->addTypeProperty(protoType, "sticky", TYPE_BOOLEAN) ||
+        !cx->addTypeProperty(protoType, "lastIndex", TYPE_INT32)) {
         return NULL;
     }
 
