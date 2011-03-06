@@ -865,6 +865,12 @@ TypeSet::destroy(JSContext *cx)
     JS_ASSERT(!(typeFlags & TYPE_FLAG_INTERMEDIATE_SET));
     if (objectCount >= 2)
         cx->free(objectSet);
+    while (constraintList) {
+        TypeConstraint *next = constraintList->next;
+        if (constraintList->condensed() || constraintList->baseSubset())
+            cx->free(constraintList);
+        constraintList = next;
+    }
 }
 
 inline bool
