@@ -1930,11 +1930,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEventRTTearoff)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
 NS_INTERFACE_MAP_END_AGGREGATED(mNode)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMEventRTTearoff,
-                                          nsIDOMEventTarget)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(nsDOMEventRTTearoff,
-                                                        nsIDOMEventTarget,
-                                                        LastRelease())
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMEventRTTearoff)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsDOMEventRTTearoff,
+                                              LastRelease())
 
 nsDOMEventRTTearoff *
 nsDOMEventRTTearoff::Create(nsINode *aNode)
@@ -4500,10 +4498,9 @@ NS_INTERFACE_MAP_BEGIN(nsGenericElement)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsGenericElement, nsIContent)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(nsGenericElement,
-                                                        nsIContent,
-                                                        nsNodeUtils::LastRelease(this))
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsGenericElement)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsGenericElement,
+                                              nsNodeUtils::LastRelease(this))
 
 nsresult
 nsGenericElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)

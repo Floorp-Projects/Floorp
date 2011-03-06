@@ -2091,10 +2091,8 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLOptionCollection)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsHTMLOptionCollection,
-                                          nsIHTMLCollection)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsHTMLOptionCollection,
-                                           nsIHTMLCollection)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsHTMLOptionCollection)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsHTMLOptionCollection)
 
 
 // nsIDOMNSHTMLOptionCollection interface

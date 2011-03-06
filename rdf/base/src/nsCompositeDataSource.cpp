@@ -654,10 +654,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CompositeDataSourceImpl)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(CompositeDataSourceImpl,
-                                          nsIRDFCompositeDataSource)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(CompositeDataSourceImpl,
-                                           nsIRDFCompositeDataSource)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(CompositeDataSourceImpl)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(CompositeDataSourceImpl)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CompositeDataSourceImpl)
     NS_INTERFACE_MAP_ENTRY(nsIRDFCompositeDataSource)

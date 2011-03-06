@@ -101,9 +101,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsAccessNode)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAccessNode)
 NS_INTERFACE_MAP_END
  
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsAccessNode, nsIAccessNode)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(nsAccessNode, nsIAccessNode,
-                                      LastRelease())
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsAccessNode)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsAccessNode, LastRelease())
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessNode construction/desctruction

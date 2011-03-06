@@ -87,10 +87,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTransactionManager)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITransactionManager)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsTransactionManager,
-                                          nsITransactionManager)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsTransactionManager,
-                                           nsITransactionManager)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTransactionManager)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTransactionManager)
 
 NS_IMETHODIMP
 nsTransactionManager::DoTransaction(nsITransaction *aTransaction)

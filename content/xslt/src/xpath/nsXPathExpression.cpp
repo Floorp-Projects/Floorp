@@ -51,10 +51,8 @@
 
 NS_IMPL_CYCLE_COLLECTION_1(nsXPathExpression, mDocument)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXPathExpression,
-                                          nsIDOMXPathExpression)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXPathExpression,
-                                           nsIDOMXPathExpression)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXPathExpression)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXPathExpression)
 
 DOMCI_DATA(XPathExpression, nsXPathExpression)
 
