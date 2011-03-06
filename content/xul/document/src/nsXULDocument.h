@@ -202,7 +202,8 @@ public:
                    nsIAtom* aAttrName,
                    void* aData);
 
-    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULDocument, nsXMLDocument)
+    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsXULDocument,
+                                                       nsXMLDocument)
 
     virtual nsXPCClassInfo* GetClassInfo();
 protected:

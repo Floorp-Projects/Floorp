@@ -228,8 +228,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNavHistoryResultNode)
   NS_INTERFACE_MAP_ENTRY(nsINavHistoryResultNode)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsNavHistoryResultNode, nsINavHistoryResultNode)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsNavHistoryResultNode, nsINavHistoryResultNode)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsNavHistoryResultNode)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsNavHistoryResultNode)
 
 nsNavHistoryResultNode::nsNavHistoryResultNode(
     const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount,
