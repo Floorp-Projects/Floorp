@@ -233,10 +233,8 @@ nsHTMLFragmentContentSink::~nsHTMLFragmentContentSink()
   }
 }
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsHTMLFragmentContentSink,
-                                          nsIContentSink)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsHTMLFragmentContentSink,
-                                           nsIContentSink)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsHTMLFragmentContentSink)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsHTMLFragmentContentSink)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsHTMLFragmentContentSink)
   NS_INTERFACE_MAP_ENTRY(nsIFragmentContentSink)

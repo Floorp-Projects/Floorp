@@ -101,10 +101,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameMessageManager)
                                      mChrome && !mIsProcessManager)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsFrameMessageManager,
-                                          nsIContentFrameMessageManager)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsFrameMessageManager,
-                                           nsIContentFrameMessageManager)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameMessageManager)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameMessageManager)
 
 NS_IMETHODIMP
 nsFrameMessageManager::AddMessageListener(const nsAString& aMessage,
