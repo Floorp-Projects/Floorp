@@ -912,6 +912,9 @@ UpdateWatchpointShape(JSContext *cx, JSWatchPoint *wp, const Shape *newShape)
      */
     StrictPropertyOp originalSetter = newShape->setter();
 
+    if (!cx->addTypePropertyId(wp->object->getType(), newShape->id, types::TYPE_UNKNOWN))
+        return NULL;
+
     /*
      * Drop the watching setter into the object, in place of newShape. Note that a single
      * watchpoint-wrapped shape may correspond to more than one non-watchpoint shape: we

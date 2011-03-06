@@ -7112,8 +7112,18 @@ js_InitNamespaceClass(JSContext *cx, JSObject *obj)
 JSObject *
 js_InitQNameClass(JSContext *cx, JSObject *obj)
 {
-    return js_InitClass(cx, obj, NULL, &js_QNameClass, QName, 2, JS_TypeHandlerDynamic,
-                        qname_props, qname_methods, NULL, NULL);
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_QNameClass, QName, 2, JS_TypeHandlerDynamic,
+                                   qname_props, qname_methods, NULL, NULL);
+
+    /* Properties of QName objects are not modeled by type inference. */
+    TypeObject *type = proto->getNewType(cx);
+    if (!type ||
+        !cx->markTypeObjectUnknownProperties(type) ||
+        !cx->markTypeObjectUnknownProperties(proto->getType())) {
+        return NULL;
+    }
+
+    return proto;
 }
 
 JSObject *

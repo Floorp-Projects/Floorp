@@ -2614,7 +2614,7 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
         nobj->setType(ntype);
         if (!nobj->setArrayLength(cx, length))
             return JS_FALSE;
-        if (!InitArrayTypes(cx, ntype, vector, length))
+        if (!InitArrayTypes(cx, ntype, vector, initlen))
             return JS_FALSE;
         if (!aobj->isPackedDenseArray() && !nobj->setDenseArrayNotPacked(cx))
             return JS_FALSE;
