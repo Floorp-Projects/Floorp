@@ -4288,6 +4288,9 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
     /*
      * Setting __proto__ on an object that has escaped and may be referenced by
      * other heap objects can only be done if the properties of both objects are unknown.
+     * Type sets containing this object will contain the original type but not the
+     * new type of the object, which is OK since we treat objects in type sets with
+     * unknown properties as interchangeable.
      */
     if (!cx->markTypeObjectUnknownProperties(obj->getType()) ||
         !cx->markTypeObjectUnknownProperties(type)) {
