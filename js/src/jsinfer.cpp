@@ -203,6 +203,88 @@ void InferSpew(SpewChannel channel, const char *fmt, ...)
     va_end(ap);
 }
 
+/* Whether types can be considered to contain type or an equivalent, for checking results. */
+static inline bool
+TypeSetMatches(JSContext *cx, TypeSet *types, jstype type)
+{
+    if (types->hasType(type))
+        return true;
+
+    /*
+     * If this is a type for an object with unknown properties, match any object
+     * in the type set which also has unknown properties. This avoids failure
+     * on objects whose prototype (and thus type) changes dynamically, which will
+     * mark the old and new type objects as unknown.
+     *
+     * Similarly, when checking the correctness of property accesses let the
+     * GetSet property match against any type. All accesses on getters/setters
+     * go through Invoke, which will record the property's behavior.
+     */
+    bool unknown =
+        (js::types::TypeIsObject(type) && ((js::types::TypeObject*)type)->unknownProperties);
+
+    if (types->objectCount >= 2) {
+        unsigned objectCapacity = HashSetCapacity(types->objectCount);
+        for (unsigned i = 0; i < objectCapacity; i++) {
+            TypeObject *object = types->objectSet[i];
+            if (object) {
+                if (object == cx->compartment->types.typeGetSet)
+                    return true;
+                if (unknown && object->unknownProperties)
+                    return true;
+            }
+        }
+    } else if (types->objectCount == 1) {
+        TypeObject *object = (TypeObject *) types->objectSet;
+        if (object == cx->compartment->types.typeGetSet)
+            return true;
+        if (unknown && object->unknownProperties)
+            return true;
+    }
+
+    return false;
+}
+
+bool
+TypeHasProperty(JSContext *cx, TypeObject *obj, jsid id, const Value &value)
+{
+    /*
+     * Check the correctness of the type information in the object's property
+     * against an actual value. Note that we are only checking the .types set,
+     * not the .ownTypes set, and could miss cases where a type set is missing
+     * entries from its ownTypes set when they are shadowed by a prototype property.
+     */
+    if (cx->typeInferenceEnabled() && !obj->unknownProperties && !value.isUndefined() &&
+        !JSID_IS_DEFAULT_XML_NAMESPACE(id)) {
+        id = MakeTypeId(cx, id);
+
+        /* Watch for properties which inference does not monitor. */
+        if (id == id___proto__(cx) || id == id_constructor(cx) || id == id_caller(cx))
+            return true;
+
+        /*
+         * If we called in here while resolving a type constraint, we may be in the
+         * middle of resolving a standard class and the type sets will not be updated
+         * until the outer TypeSet::add finishes.
+         */
+        if (cx->compartment->types.pendingCount)
+            return true;
+
+        jstype type = GetValueType(cx, value);
+
+        AutoEnterTypeInference enter(cx);
+
+        TypeSet *types = obj->getProperty(cx, id, false);
+        if (types && !TypeSetMatches(cx, types, type)) {
+            TypeFailure(cx, "Missing type in object %s %s: %s",
+                        obj->name(), TypeIdString(id), TypeString(type));
+        }
+
+        cx->compartment->types.checkPendingRecompiles(cx);
+    }
+    return true;
+}
+
 #endif
 
 void TypeFailure(JSContext *cx, const char *fmt, ...)
@@ -1479,22 +1561,6 @@ TypeSet::knownNonEmpty(JSContext *cx, JSScript *script)
     return false;
 }
 
-static bool
-HasUnknownObject(TypeSet *types)
-{
-    if (types->objectCount >= 2) {
-        unsigned objectCapacity = HashSetCapacity(types->objectCount);
-        for (unsigned i = 0; i < objectCapacity; i++) {
-            TypeObject *object = types->objectSet[i];
-            if (object && object->unknownProperties)
-                return true;
-        }
-    } else if (types->objectCount == 1 && ((TypeObject*)types->objectSet)->unknownProperties) {
-        return true;
-    }
-    return false;
-}
-
 /////////////////////////////////////////////////////////////////////
 // TypeCompartment
 /////////////////////////////////////////////////////////////////////
@@ -1979,6 +2045,11 @@ TypeCompartment::finish(JSContext *cx, JSCompartment *compartment)
          script = (JSScript *)script->links.next) {
         if (script->types)
             script->types->finish(cx, script);
+        TypeObject *object = script->typeObjects;
+        while (object) {
+            object->print(cx);
+            object = object->next;
+        }
     }
 
 #ifdef DEBUG
@@ -3517,12 +3588,6 @@ TypeScript::finish(JSContext *cx, JSScript *script)
 
     printf("\n");
 
-    TypeObject *object = script->typeObjects;
-    while (object) {
-        object->print(cx);
-        object = object->next;
-    }
-
 #endif /* DEBUG */
 
 }
@@ -3671,18 +3736,7 @@ JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value
 
         js::types::jstype type = js::types::GetValueType(cx, val);
 
-        /*
-         * If this is a type for an object with unknown properties, match any object
-         * in the type set which also has unknown properties. This avoids failure
-         * on objects whose prototype (and thus type) changes dynamically, which will
-         * mark the old and new type objects as unknown.
-         */
-        if (js::types::TypeIsObject(type) && ((js::types::TypeObject*)type)->unknownProperties &&
-            js::types::HasUnknownObject(types)) {
-            continue;
-        }
-
-        if (!types->hasType(type)) {
+        if (!js::types::TypeSetMatches(cx, types, type)) {
             js::types::TypeFailure(cx, "Missing type at #%u:%05u pushed %u: %s",
                                    id(), pc - code, i, js::types::TypeString(type));
         }

@@ -72,7 +72,6 @@ class JSProxyHandler;
 class AutoPropDescArrayRooter;
 
 namespace mjit { class Compiler; }
-namespace types { struct TypeObject; }
 
 static inline PropertyOp
 CastAsPropertyOp(JSObject *object)
@@ -1216,13 +1215,17 @@ struct JSObject : js::gc::Cell {
                           js::PropertyOp getter = js::PropertyStub,
                           js::StrictPropertyOp setter = js::StrictPropertyStub,
                           uintN attrs = JSPROP_ENUMERATE) {
+        JS_ASSERT_IF(getter == js::PropertyStub && setter == js::StrictPropertyStub,
+                     js::types::TypeHasProperty(cx, getType(), id, value));
         js::DefinePropOp op = getOps()->defineProperty;
         return (op ? op : js_DefineProperty)(cx, this, id, &value, getter, setter, attrs);
     }
 
     JSBool getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp) {
         js::PropertyIdOp op = getOps()->getProperty;
-        return (op ? op : (js::PropertyIdOp)js_GetProperty)(cx, this, receiver, id, vp);
+        JSBool res = (op ? op : (js::PropertyIdOp)js_GetProperty)(cx, this, receiver, id, vp);
+        JS_ASSERT_IF(res, js::types::TypeHasProperty(cx, getType(), id, *vp));
+        return res;
     }
 
     JSBool getProperty(JSContext *cx, jsid id, js::Value *vp) {
@@ -1230,6 +1233,7 @@ struct JSObject : js::gc::Cell {
     }
 
     JSBool setProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict) {
+        JS_ASSERT(js::types::TypeHasProperty(cx, getType(), id, *vp));
         js::StrictPropertyIdOp op = getOps()->setProperty;
         return (op ? op : js_SetProperty)(cx, this, id, vp, strict);
     }

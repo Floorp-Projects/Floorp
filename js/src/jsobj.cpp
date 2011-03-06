@@ -2466,6 +2466,11 @@ DefineProperty(JSContext *cx, JSObject *obj, const PropDesc &desc, bool throwErr
 {
     if (!cx->addTypePropertyId(obj->getType(), desc.id, desc.value))
         return false;
+    if (!desc.get.isUndefined() || !desc.set.isUndefined()) {
+        TypeObject *type = cx->getTypeGetSet();
+        if (!type || !cx->addTypePropertyId(obj->getType(), desc.id, (jstype) type))
+            return JS_FALSE;
+    }
 
     if (obj->isArray())
         return DefinePropertyOnArray(cx, obj, desc, throwError, rval);
@@ -4793,6 +4798,8 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
     JS_ASSERT((defineHow & ~(JSDNP_CACHE_RESULT | JSDNP_DONT_PURGE | JSDNP_SET_METHOD)) == 0);
     LeaveTraceIfGlobalObject(cx, obj);
 
+    JS_ASSERT(TypeHasProperty(cx, obj->getType(), id, value));
+
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);
 
@@ -5395,6 +5402,7 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
         pobj->nativeSetSlot(slot, *vp);
     }
 
+    JS_ASSERT(TypeHasProperty(cx, obj->getType(), shape->id, *vp));
     return true;
 }
 
@@ -5409,6 +5417,8 @@ JSBool
 js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, bool strict, Value *vp)
 {
     LeaveTraceIfGlobalObject(cx, obj);
+
+    JS_ASSERT(TypeHasProperty(cx, obj->getType(), shape->id, *vp));
 
     uint32 slot;
     int32 sample;
