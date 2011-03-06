@@ -547,7 +547,7 @@ JSScript::typeSetThis(JSContext *cx, js::types::jstype type)
                              id(), js::types::TypeString(type));
         thisTypes()->addType(cx, type);
 
-        if (analyze)
+        if (analyze && !types)
             js::types::AnalyzeScriptTypes(cx, this);
 
         return cx->compartment->types.checkPendingRecompiles(cx);
