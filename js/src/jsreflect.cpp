@@ -2319,9 +2319,7 @@ bool
 ASTSerializer::leftAssociate(JSParseNode *pn, Value *dst)
 {
     JS_ASSERT(pn->pn_arity == PN_LIST);
-
-    const size_t len = pn->pn_count;
-    JS_ASSERT(len >= 1);
+    JS_ASSERT(pn->pn_count >= 1);
 
     TokenKind tk = PN_TYPE(pn);
     bool lor = tk == TOK_OR;
