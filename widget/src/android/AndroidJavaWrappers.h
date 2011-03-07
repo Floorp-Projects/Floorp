@@ -451,6 +451,7 @@ public:
         LOAD_URI = 11,
         SURFACE_CREATED = 12,
         SURFACE_DESTROYED = 13,
+        GECKO_EVENT_SYNC = 14,
         dummy_java_enum_list_end
     };
 

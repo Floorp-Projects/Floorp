@@ -2560,7 +2560,7 @@ SearchService.prototype = {
 
     try {
       LOG("_buildCache: Writing to cache file.");
-      ostream.init(cacheFile, (MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE), PERMS_FILE, 0);
+      ostream.init(cacheFile, (MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE), PERMS_FILE, ostream.DEFER_OPEN);
       converter.charset = "UTF-8";
       let data = converter.convertToInputStream(JSON.stringify(cache));
 

@@ -111,6 +111,8 @@ public:
 
     static void NotifyIMEChange(const PRUnichar *aText, PRUint32 aTextLen, int aStart, int aEnd, int aNewEnd);
 
+    void AcknowledgeEventSync();
+
     void EnableAccelerometer(bool aEnable);
 
     void EnableLocation(bool aEnable);
@@ -246,6 +248,7 @@ protected:
     jmethodID jNotifyIME;
     jmethodID jNotifyIMEEnabled;
     jmethodID jNotifyIMEChange;
+    jmethodID jAcknowledgeEventSync;
     jmethodID jEnableAccelerometer;
     jmethodID jEnableLocation;
     jmethodID jReturnIMEQueryResult;

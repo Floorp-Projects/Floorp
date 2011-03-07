@@ -455,8 +455,8 @@ static void * mozload(const char * path, void *zip,
 
 #ifdef DEBUG_EXTRACT_LIBS
   if (extractLibs) {
-    char fullpath[256];
-    snprintf(fullpath, 256, "%s/%s", getenv("CACHE_PATH"), path + 4);
+    char fullpath[PATH_MAX];
+    snprintf(fullpath, PATH_MAX, "%s/%s", getenv("CACHE_PATH"), path + 4);
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "resolved %s to %s", path, fullpath);
     extractFile(fullpath, entry, data);
     handle = __wrap_dlopen(fullpath, RTLD_LAZY);
@@ -474,7 +474,7 @@ static void * mozload(const char * path, void *zip,
   }
 #endif
   size_t offset = letoh32(entry->offset) + sizeof(*file) + letoh16(file->filename_size) + letoh16(file->extra_field_size);
-
+  bool skipLibCache = false;
   int fd = zip_fd;
   void * buf = NULL;
   uint32_t lib_size = letoh32(entry->uncompressed_size);
@@ -483,8 +483,8 @@ static void * mozload(const char * path, void *zip,
     cache_fd = lookupLibCacheFd(path + 4);
     fd = cache_fd;
     if (fd < 0) {
-      char fullpath[256];
-      snprintf(fullpath, 256, "%s/%s", getenv("CACHE_PATH"), path + 4);
+      char fullpath[PATH_MAX];
+      snprintf(fullpath, PATH_MAX, "%s/%s", getenv("CACHE_PATH"), path + 4);
       fd = open(fullpath, O_RDWR);
       struct stat status;
       if (stat(fullpath, &status) ||
@@ -504,8 +504,25 @@ static void * mozload(const char * path, void *zip,
       __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loading %s from cache", path + 4);
 #endif
     if (fd < 0) {
-      __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't open " ASHMEM_NAME_DEF ", Error %d, %s", errno, strerror(errno));
-      return NULL;
+      __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't open " ASHMEM_NAME_DEF ", Error %d, %s, using a file", errno, strerror(errno));
+      char fullpath[PATH_MAX];
+      snprintf(fullpath, PATH_MAX, "%s/%s", getenv("CACHE_PATH"), path + 4);
+      fd = open(fullpath, O_RDWR | O_CREAT);
+      if (fd < 0) {
+        __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't create a file either, giving up");
+        return NULL;
+      }
+      // we'd like to use fallocate here, but it doesn't exist currently?
+      if (lseek(fd, lib_size - 1, SEEK_SET) == (off_t) - 1) {
+         __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "seeking file failed");
+        return NULL;
+      }
+      if (write(fd, "", 1) != 1) {
+        __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "writting one byte to the file failed");
+        return NULL;
+      }
+      skipLibCache = true;
+      addLibCacheFd(path + 4, fd);
     }
     buf = mmap(NULL, lib_size,
                PROT_READ | PROT_WRITE,
@@ -520,8 +537,10 @@ static void * mozload(const char * path, void *zip,
 
     if (cache_fd < 0) {
       extractLib(entry, data, buf);
-      addLibCacheFd(path + 4, fd, lib_size, buf);
+      if (!skipLibCache)
+        addLibCacheFd(path + 4, fd, lib_size, buf);
     }
+
     // preload libxul, to avoid slowly demand-paging it
     if (!strcmp(path, "lib/libxul.so"))
       madvise(buf, entry->uncompressed_size, MADV_WILLNEED);
@@ -719,9 +738,9 @@ Java_org_mozilla_gecko_GeckoAppShell_loadLibs(JNIEnv *jenv, jclass jGeckoAppShel
         if (!info->buffer)
           continue;
 
-        char fullpath[256];
-        snprintf(fullpath, 256, "%s/%s", getenv("CACHE_PATH"), info->name);
-        char tmp_path[256];
+        char fullpath[PATH_MAX];
+        snprintf(fullpath, PATH_MAX, "%s/%s", getenv("CACHE_PATH"), info->name);
+        char tmp_path[PATH_MAX];
         sprintf(tmp_path, "%s.tmp", fullpath);
         int file_fd = open(tmp_path, O_CREAT | O_WRONLY);
         // using sendfile would be preferable, but it doesn't seem to work

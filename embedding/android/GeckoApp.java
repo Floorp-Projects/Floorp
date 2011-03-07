@@ -455,6 +455,8 @@ abstract public class GeckoApp
         }
     }
 
+    boolean haveKilledZombies = false;
+
     private void unpackFile(ZipFile zip, byte[] buf, ZipEntry fileEntry,
                             String name)
         throws IOException, FileNotFoundException
@@ -471,7 +473,10 @@ abstract public class GeckoApp
             outFile.length() == fileEntry.getSize())
             return;
 
-        killAnyZombies();
+        if (!haveKilledZombies) {
+            haveKilledZombies = true;
+            GeckoAppShell.killAnyZombies();
+        }
 
         File dir = outFile.getParentFile();
         if (!outFile.exists())
@@ -490,27 +495,6 @@ abstract public class GeckoApp
         fileStream.close();
         outStream.close();
         outFile.setLastModified(fileEntry.getTime());
-    }
-
-    boolean haveKilledZombies = false;
-
-    void killAnyZombies() {
-        if (haveKilledZombies)
-            return;
-        haveKilledZombies = true;
-        File proc = new File("/proc");
-        File[] files = proc.listFiles();
-        for (int i = 0; i < files.length; i++) {
-            File p = files[i];
-            File pEnv = new File(p, "environ");
-            if (pEnv.canRead() && !p.getName().equals("self")) {
-                int pid = Integer.parseInt(p.getName());
-                if (pid != android.os.Process.myPid()) {
-                    Log.i("GeckoProcs", "gonna kill pid: " + p.getName());
-                    android.os.Process.killProcess(pid);
-                }
-            }
-        }
     }
 
     public void addEnvToIntent(Intent intent) {
@@ -537,15 +521,14 @@ abstract public class GeckoApp
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
                             Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
             Log.i("GeckoAppJava", intent.toString());
+            GeckoAppShell.killAnyZombies();
             startActivity(intent);
         } catch (Exception e) {
             Log.i("GeckoAppJava", "error doing restart", e);
         }
         finish();
         // Give the restart process time to start before we die
-        try {
-            Thread.currentThread().sleep(1000);
-        } catch (InterruptedException ie) {}
+        GeckoAppShell.waitForAnotherGeckoProc();
     }
 
     public void handleNotification(String action, String alertName, String alertCookie) {

@@ -2237,6 +2237,7 @@ ComputeIsJITBroken()
     do {
         if (0 == line.find("Hardware")) {
             const char* blacklist[] = {
+                "SCH-I400",     // Samsung Continuum
                 "SGH-T959",     // Samsung i9000, Vibrant device
                 "SGH-I897",     // Samsung i9000, Captivate device
                 "SCH-I500",     // Samsung i9000, Fascinate device
