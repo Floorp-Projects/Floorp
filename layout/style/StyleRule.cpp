@@ -1279,7 +1279,7 @@ namespace css {
 
 StyleRule::StyleRule(nsCSSSelectorList* aSelector,
                      Declaration* aDeclaration)
-  : nsCSSRule(),
+  : Rule(),
     mSelector(aSelector),
     mDeclaration(aDeclaration),
     mImportantRule(nsnull),
@@ -1291,7 +1291,7 @@ StyleRule::StyleRule(nsCSSSelectorList* aSelector,
 
 // for |Clone|
 StyleRule::StyleRule(const StyleRule& aCopy)
-  : nsCSSRule(aCopy),
+  : Rule(aCopy),
     mSelector(aCopy.mSelector ? aCopy.mSelector->Clone() : nsnull),
     mDeclaration(new Declaration(*aCopy.mDeclaration)),
     mImportantRule(nsnull),
@@ -1305,7 +1305,7 @@ StyleRule::StyleRule(const StyleRule& aCopy)
 // for |SetCSSDeclaration|
 StyleRule::StyleRule(StyleRule& aCopy,
                      Declaration* aDeclaration)
-  : nsCSSRule(aCopy),
+  : Rule(aCopy),
     mSelector(aCopy.mSelector),
     mDeclaration(aDeclaration),
     mImportantRule(nsnull),

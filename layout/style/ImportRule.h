@@ -40,7 +40,7 @@
 #ifndef mozilla_css_ImportRule_h__
 #define mozilla_css_ImportRule_h__
 
-#include "nsCSSRule.h"
+#include "Rule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsCSSRules.h"
 
@@ -50,7 +50,7 @@ class nsString;
 namespace mozilla {
 namespace css {
 
-class NS_FINAL_CLASS ImportRule : public nsCSSRule,
+class NS_FINAL_CLASS ImportRule : public Rule,
                                   public nsIDOMCSSImportRule
 {
 public:
@@ -65,7 +65,7 @@ public:
   DECL_STYLE_RULE_INHERIT
 
 #ifdef HAVE_CPP_AMBIGUITY_RESOLVING_USING
-  using nsCSSRule::GetStyleSheet; // unhide since nsIDOMCSSImportRule has its own GetStyleSheet
+  using Rule::GetStyleSheet; // unhide since nsIDOMCSSImportRule has its own GetStyleSheet
 #endif
 
   // nsIStyleRule methods
