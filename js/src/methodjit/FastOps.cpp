@@ -1708,6 +1708,20 @@ mjit::Compiler::jsop_stricteq(JSOp op)
             return;
         }
 
+        if (lhs->isType(JSVAL_TYPE_DOUBLE)) {
+            FPRegisterID reg = frame.tempFPRegForData(lhs);
+
+            bool equalValue = (op == JSOP_STRICTEQ);
+            masm.move(Imm32(equalValue), result);
+            Jump j = masm.branchDouble(Assembler::DoubleEqual, reg, reg);
+            masm.move(Imm32(!equalValue), result);
+            j.linkTo(masm.label(), &masm);
+
+            frame.popn(2);
+            frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
+            return;
+        }
+
         /* Assume NaN is in canonical form. */
         RegisterID treg = frame.tempRegForType(lhs);
 
