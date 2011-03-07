@@ -79,6 +79,8 @@ public:
   nsRefreshDriver(nsPresContext *aPresContext);
   ~nsRefreshDriver();
 
+  static void InitializeStatics();
+
   // nsISupports implementation
   NS_DECL_ISUPPORTS
 
@@ -221,6 +223,10 @@ private:
   PRInt32 GetRefreshTimerInterval() const;
   PRInt32 GetRefreshTimerType() const;
 
+  bool HaveAnimationFrameListeners() const {
+    return mAnimationFrameListenerDocs.Length() != 0;
+  }
+
   nsCOMPtr<nsITimer> mTimer;
   mozilla::TimeStamp mMostRecentRefresh; // only valid when mTimer non-null
   PRInt64 mMostRecentRefreshEpochTime;   // same thing as mMostRecentRefresh,
@@ -231,6 +237,10 @@ private:
 
   bool mFrozen;
   bool mThrottled;
+  /* If mTimer is non-null, this boolean indicates whether the timer is
+     a precise timer.  If mTimer is null, this boolean's value can be
+     anything.  */
+  bool mTimerIsPrecise;
 
   // separate arrays for each flush type we support
   ObserverArray mObservers[3];
