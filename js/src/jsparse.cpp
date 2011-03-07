@@ -3897,15 +3897,14 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     if (!CheckStrictBinding(cx, tc, atom, pn))
         return false;
 
-    JSStmtInfo *stmt = js_LexicalLookup(tc, atom, NULL);
-
-    if (stmt && stmt->type == STMT_WITH) {
+    if (tc->innermostWith) {
         data->fresh = false;
         pn->pn_dflags |= PND_DEOPTIMIZED;
         tc->noteMightAliasLocals();
         return true;
     }
 
+    JSStmtInfo *stmt = js_LexicalLookup(tc, atom, NULL);
     JSAtomListElement *ale = tc->decls.lookup(atom);
     JSOp op = data->op;
 
@@ -7550,9 +7549,18 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 return NULL;
 #if JS_HAS_XML_SUPPORT
             tt = tokenStream.getToken(TSF_OPERAND | TSF_KEYWORD_IS_NAME);
+
+            /* Treat filters as 'with' statements for name access deoptimization. */
+            JSParseNode *oldWith = tc->innermostWith;
+            if (tt == TOK_LP)
+                tc->innermostWith = pn;
+
             pn3 = primaryExpr(tt, JS_TRUE);
             if (!pn3)
                 return NULL;
+
+            if (tt == TOK_LP)
+                tc->innermostWith = oldWith;
 
             /* Check both tt and pn_type, to distinguish |x.(y)| and |x.y::z| from |x.y|. */
             if (tt == TOK_NAME && pn3->pn_type == TOK_NAME) {
@@ -8835,7 +8843,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
              * Bind early to JSOP_ARGUMENTS to relieve later code from having
              * to do this work (new rule for the emitter to count on).
              */
-            if (!afterDot && !(tc->flags & TCF_DECL_DESTRUCTURING) && !tc->inStatement(STMT_WITH)) {
+            if (!afterDot && !(tc->flags & TCF_DECL_DESTRUCTURING) && !tc->innermostWith) {
                 pn->pn_op = JSOP_ARGUMENTS;
                 pn->pn_dflags |= PND_BOUND;
             }
@@ -8914,7 +8922,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                 dn->pn_dflags |= PND_FUNARG;
 
             pn->pn_dflags |= (dn->pn_dflags & PND_FUNARG);
-            if (stmt && stmt->type == STMT_WITH)
+            if (tc->innermostWith)
                 pn->pn_dflags |= PND_DEOPTIMIZED;
         }
 
