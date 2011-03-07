@@ -182,6 +182,11 @@ FormStore.prototype = {
     }, this);
   },
 
+  applyIncoming: function applyIncoming(record) {
+    Store.prototype.applyIncoming.call(this, record);
+    this._sleep(0); // Yield back to main thread after synchronous operation.
+  },
+
   getAllIDs: function FormStore_getAllIDs() {
     let guids = {};
     for each (let {name, value} in FormWrapper.getAllEntries())
@@ -202,7 +207,7 @@ FormStore.prototype = {
     let entry = FormWrapper.getEntry(id);
     if (entry != null) {
       record.name = entry.name;
-      record.value = entry.value
+      record.value = entry.value;
     }
     else
       record.deleted = true;
