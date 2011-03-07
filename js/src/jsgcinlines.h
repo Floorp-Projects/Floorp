@@ -284,9 +284,8 @@ MarkChildren(JSTracer *trc, JSObject *obj)
         }
     }
 
-    /* Delegate to ops or the native marking op. */
-    TraceOp op = obj->getOps()->trace;
-    (op ? op : js_TraceObject)(trc, obj);
+    if (obj->isNative())
+        js_TraceObject(trc, obj);
 }
 
 static inline void
