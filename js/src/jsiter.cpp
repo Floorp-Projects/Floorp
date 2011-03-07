@@ -1376,6 +1376,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
           default:
             JS_ASSERT(op == JSGENOP_CLOSE);
             gen->state = JSGEN_CLOSED;
+            JS_SET_RVAL(cx, vp, UndefinedValue());
             return JS_TRUE;
         }
     } else if (gen->state == JSGEN_CLOSED) {
@@ -1389,6 +1390,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
             return JS_FALSE;
           default:
             JS_ASSERT(op == JSGENOP_CLOSE);
+            JS_SET_RVAL(cx, vp, UndefinedValue());
             return JS_TRUE;
         }
     }
@@ -1396,7 +1398,8 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
     bool undef = ((op == JSGENOP_SEND || op == JSGENOP_THROW) && argc != 0);
     if (!SendToGenerator(cx, op, obj, gen, undef ? vp[2] : UndefinedValue()))
         return JS_FALSE;
-    *vp = gen->floatingFrame()->returnValue();
+
+    JS_SET_RVAL(cx, vp, gen->floatingFrame()->returnValue());
     return JS_TRUE;
 }
 
