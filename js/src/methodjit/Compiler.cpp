@@ -981,6 +981,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_RETURN)
 
           BEGIN_CASE(JSOP_GOTO)
+          BEGIN_CASE(JSOP_DEFAULT)
           {
             /* :XXX: this isn't really necessary if we follow the branch. */
             frame.syncAndForgetEverything();
@@ -1481,6 +1482,19 @@ mjit::Compiler::generateMethod()
             PC += js_GetVariableBytecodeLength(PC);
             break;
           END_CASE(JSOP_LOOKUPSWITCH)
+
+          BEGIN_CASE(JSOP_CASE)
+            // X Y
+
+            frame.dupAt(-2);
+            // X Y X
+
+            jsop_stricteq(JSOP_STRICTEQ);
+            // X cond
+
+            if (!jsop_ifneq(JSOP_IFNE, PC + GET_JUMP_OFFSET(PC)))
+                return Compile_Error;
+          END_CASE(JSOP_CASE)
 
           BEGIN_CASE(JSOP_STRICTEQ)
             jsop_stricteq(op);
