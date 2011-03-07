@@ -924,6 +924,8 @@ typedef JSBool
 (* AttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 typedef JSType
 (* TypeOfOp)(JSContext *cx, JSObject *obj);
+typedef void
+(* TraceOp)(JSTracer *trc, JSObject *obj);
 typedef JSObject *
 (* ObjectOp)(JSContext *cx, JSObject *obj);
 typedef void
@@ -1016,6 +1018,7 @@ struct ObjectOps {
     js::DeleteIdOp          deleteProperty;
     js::NewEnumerateOp      enumerate;
     js::TypeOfOp            typeOf;
+    js::TraceOp             trace;
     js::FixOp               fix;
     js::ObjectOp            thisObject;
     js::FinalizeOp          clear;
