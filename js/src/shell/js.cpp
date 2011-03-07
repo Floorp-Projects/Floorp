@@ -3242,7 +3242,6 @@ static Class split_global_class = {
         NULL, /* deleteProperty */
         NULL, /* enumerate      */
         NULL, /* typeOf         */
-        NULL, /* trace          */
         NULL, /* fix            */
         split_thisObject,
         NULL, /* clear          */

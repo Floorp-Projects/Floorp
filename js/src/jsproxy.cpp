@@ -973,6 +973,14 @@ proxy_TraceObject(JSTracer *trc, JSObject *obj)
 }
 
 static void
+proxy_TraceFunction(JSTracer *trc, JSObject *obj)
+{
+    proxy_TraceObject(trc, obj);
+    MarkValue(trc, GetCall(obj), "call");
+    MarkValue(trc, GetConstruct(obj), "construct");
+}
+
+static void
 proxy_Finalize(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isProxy());
@@ -1015,7 +1023,7 @@ JS_FRIEND_API(Class) ObjectProxyClass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     proxy_HasInstance,    /* hasInstance */
-    NULL,                 /* mark        */
+    proxy_TraceObject,    /* trace       */
     JS_NULL_CLASS_EXT,
     {
         proxy_LookupProperty,
@@ -1027,7 +1035,6 @@ JS_FRIEND_API(Class) ObjectProxyClass = {
         proxy_DeleteProperty,
         NULL,             /* enumerate       */
         proxy_TypeOf,
-        proxy_TraceObject,
         NULL,             /* fix             */
         NULL,             /* thisObject      */
         NULL,             /* clear           */
@@ -1051,7 +1058,7 @@ JS_FRIEND_API(Class) OuterWindowProxyClass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    NULL,                 /* mark        */
+    proxy_TraceObject,    /* trace       */
     {
         NULL,             /* equality    */
         NULL,             /* outerObject */
@@ -1068,7 +1075,6 @@ JS_FRIEND_API(Class) OuterWindowProxyClass = {
         proxy_DeleteProperty,
         NULL,             /* enumerate       */
         NULL,             /* typeof          */
-        proxy_TraceObject,
         NULL,             /* fix             */
         NULL,             /* thisObject      */
         NULL,             /* clear           */
@@ -1111,7 +1117,7 @@ JS_FRIEND_API(Class) FunctionProxyClass = {
     proxy_Construct,
     NULL,                 /* xdrObject   */
     js_FunctionClass.hasInstance,
-    NULL,                 /* mark */
+    proxy_TraceFunction,  /* trace       */
     JS_NULL_CLASS_EXT,
     {
         proxy_LookupProperty,
@@ -1123,7 +1129,6 @@ JS_FRIEND_API(Class) FunctionProxyClass = {
         proxy_DeleteProperty,
         NULL,             /* enumerate       */
         proxy_TypeOf,
-        proxy_TraceObject,
         NULL,             /* fix             */
         NULL,             /* thisObject      */
         NULL,             /* clear           */
