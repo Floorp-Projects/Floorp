@@ -2319,6 +2319,11 @@ var MemoryObserver = {
     window.QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIDOMWindowUtils).garbageCollect();
     Cu.forceGC();
+    // Bug 637582 - The low memory condition throws out some stuff that we still
+    // need, re-selecting the active tab gets us back to where we need to be.
+    let sTab = Browser.selectedTab;
+    Browser._selectedTab = null;
+    Browser.selectedTab = sTab;
   }
 };
 
