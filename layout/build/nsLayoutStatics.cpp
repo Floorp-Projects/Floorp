@@ -128,6 +128,7 @@
 #include "nsJSEnvironment.h"
 #include "nsContentSink.h"
 #include "nsFrameMessageManager.h"
+#include "nsRefreshDriver.h"
 
 extern void NS_ShutdownChainItemPool();
 
@@ -273,6 +274,7 @@ nsLayoutStatics::Initialize()
   nsContentSink::InitializeStatics();
   nsHtml5Module::InitializeStatics();
   nsIPresShell::InitializeStatics();
+  nsRefreshDriver::InitializeStatics();
 
   nsCrossSiteListenerProxy::Startup();
 
