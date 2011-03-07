@@ -3337,6 +3337,9 @@ DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, const Value &value,
                             ? JS_FUNC_TO_DATA_PTR(JSObject *, setter)
                             : NULL);
 
+    if (!getter || getter == PropertyStub)
+        cx->addTypePropertyId(obj->getType(), id, value);
+
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
     if (flags != 0 && obj->isNative()) {
         return !!js_DefineNativeProperty(cx, obj, id, value, getter, setter,

@@ -1263,8 +1263,8 @@ js_InitJSONClass(JSContext *cx, JSObject *obj)
         return NULL;
     JSON->setType(type);
 
-    if (!JS_DefinePropertyWithType(cx, obj, js_JSON_str, OBJECT_TO_JSVAL(JSON),
-                                   JS_PropertyStub, JS_StrictPropertyStub, 0))
+    if (!JS_DefineProperty(cx, obj, js_JSON_str, OBJECT_TO_JSVAL(JSON),
+                           JS_PropertyStub, JS_StrictPropertyStub, 0))
         return NULL;
 
     if (!JS_DefineFunctionsWithPrefix(cx, JSON, json_static_methods, js_JSON_str))

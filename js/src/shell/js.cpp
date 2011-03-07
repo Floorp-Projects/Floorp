@@ -737,8 +737,8 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
     if (!argsObj)
         return 1;
 
-    if (!JS_DefinePropertyWithType(cx, obj, "arguments", OBJECT_TO_JSVAL(argsObj),
-                                   NULL, NULL, 0)) {
+    if (!JS_DefineProperty(cx, obj, "arguments", OBJECT_TO_JSVAL(argsObj),
+                           NULL, NULL, 0)) {
         return 1;
     }
 
@@ -4837,9 +4837,8 @@ split_setup(JSContext *cx, JSBool evalcx)
         /* Create a dummy arguments object. */
         arguments = JS_NewArrayObject(cx, 0, NULL);
         if (!arguments ||
-            !JS_DefinePropertyWithType(cx, inner, "arguments",
-                                       OBJECT_TO_JSVAL(arguments),
-                                       NULL, NULL, 0)) {
+            !JS_DefineProperty(cx, inner, "arguments", OBJECT_TO_JSVAL(arguments),
+                               NULL, NULL, 0)) {
             return NULL;
         }
     }
