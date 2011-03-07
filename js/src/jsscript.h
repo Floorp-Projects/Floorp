@@ -498,8 +498,10 @@ struct JSScript {
     bool makeVarTypes(JSContext *cx);
   public:
 
+#ifdef DEBUG
     /* Check that correct types were inferred for the values pushed by this bytecode. */
     void typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value *sp);
+#endif
 
     /* Get the default 'new' object for a given standard class, per the script's global. */
     inline js::types::TypeObject *getTypeNewObject(JSContext *cx, JSProtoKey key);
