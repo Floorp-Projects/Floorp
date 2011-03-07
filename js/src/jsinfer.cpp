@@ -3719,6 +3719,8 @@ JSScript::makeVarTypes(JSContext *cx)
     return true;
 }
 
+#ifdef DEBUG
+
 void
 JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value *sp)
 {
@@ -3764,6 +3766,8 @@ JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value
         }
     }
 }
+
+#endif
 
 /////////////////////////////////////////////////////////////////////
 // JSObject
