@@ -483,15 +483,15 @@ public class GeckoAppShell
 
     // Block the current thread until the Gecko event loop is caught up
     public static void geckoEventSync() {
-        GeckoAppShell.sendEventToGecko(
-            new GeckoEvent(GeckoEvent.GECKO_EVENT_SYNC));
         mGeckoSyncLock.lock();
         mGeckoSyncAcked = false;
+        GeckoAppShell.sendEventToGecko(
+            new GeckoEvent(GeckoEvent.GECKO_EVENT_SYNC));
         while (!mGeckoSyncAcked) {
             try {
-              mGeckoSyncCond.await();
+                mGeckoSyncCond.await();
             } catch (InterruptedException e) {
-              break;
+                break;
             }
         }
         mGeckoSyncLock.unlock();
