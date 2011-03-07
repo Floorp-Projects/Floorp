@@ -3719,6 +3719,27 @@ JSScript::makeVarTypes(JSContext *cx)
     return true;
 }
 
+bool
+JSScript::typeSetFunction(JSContext *cx, JSFunction *fun)
+{
+    JS_ASSERT(cx->typeInferenceEnabled());
+
+    char *name = NULL;
+#ifdef DEBUG
+    name = (char *) alloca(10);
+    JS_snprintf(name, 10, "#%u", id());
+#endif
+    js::types::TypeFunction *type = cx->newTypeFunction(name, fun->getProto())->asFunction();
+    if (!type)
+        return false;
+
+    fun->setType(type);
+    type->script = this;
+    this->fun = fun;
+
+    return true;
+}
+
 #ifdef DEBUG
 
 void

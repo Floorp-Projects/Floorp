@@ -3978,6 +3978,8 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
             uint32 attrs = (clasp->flags & JSCLASS_IS_ANONYMOUS)
                            ? JSPROP_READONLY | JSPROP_PERMANENT
                            : 0;
+            if (!cx->addTypePropertyId(obj->getType(), ATOM_TO_JSID(atom), ObjectValue(*proto)))
+                goto bad;
             if (!DefineStandardSlot(cx, obj, key, atom, ObjectValue(*proto), attrs, named))
                 goto bad;
         }

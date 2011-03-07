@@ -2149,9 +2149,6 @@ public:
      */
     inline js::types::TypeObject *getTypeNewObject(JSProtoKey key);
 
-    /* Set the type information for fun to the specified script. */
-    inline void setTypeFunctionScript(JSFunction *fun, JSScript *script);
-
     /* Get a type object for the immediate allocation site in this context. */
     inline js::types::TypeObject *
     getTypeCallerInitObject(bool isArray);
