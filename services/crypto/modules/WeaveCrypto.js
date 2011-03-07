@@ -481,7 +481,9 @@ WeaveCrypto.prototype = {
         iv = atob(iv);
 
         // We never want an IV longer than the block size, which is 16 bytes
-        // for AES.
+        // for AES. Neither do we want one smaller; throw in that case.
+        if (iv.length < this.blockSize)
+            throw "IV too short; must be " + this.blockSize + " bytes.";
         if (iv.length > this.blockSize)
             iv = iv.slice(0, this.blockSize);
 
@@ -637,18 +639,13 @@ WeaveCrypto.prototype = {
      * Compress a JS string into a C uint8 array. count is the number of
      * elements in the destination array. If the array is smaller than the
      * string, the string is effectively truncated. If the string is smaller
-     * than the array, the array is 0-padded.
+     * than the array, the array is not 0-padded.
      */
     byteCompressInts : function byteCompressInts (jsString, intArray, count) {
         let len = jsString.length;
         let end = Math.min(len, count);
-
         for (let i = 0; i < end; i++)
-            intArray[i] = jsString.charCodeAt(i) % 256; // convert to bytes
-
-        // Must zero-pad.
-        for (let i = len; i < count; i++)
-            intArray[i] = 0;
+            intArray[i] = jsString.charCodeAt(i) & 0xFF;  // convert to bytes.
     },
 
     // Expand a normal C string (1-byte chars) into a JS string (2-byte chars)
