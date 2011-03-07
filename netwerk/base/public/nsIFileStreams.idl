@@ -81,6 +81,28 @@ interface nsIFileInputStream : nsIInputStream
      * (The file will only be reopened if it is closed for some reason.)
      */
     const long REOPEN_ON_REWIND = 1<<3;
+
+    /**
+     * If this is set, the file will be opened (i.e., a call to
+     * PR_Open done) only when we do an actual operation on the stream,
+     * or more specifically, when one of the following is called:
+     *   - Seek
+     *   - Tell
+     *   - Available
+     *   - Read
+     *   - ReadLine
+     *
+     * DEFER_OPEN is useful if we use the stream on a background
+     * thread, so that the opening and possible |stat|ing of the file
+     * happens there as well.
+     *
+     * @note Using this flag results in the file not being opened
+     *       during the call to Init.  This means that any errors that might
+     *       happen when this flag is not set would happen during the
+     *       first read.  Also, the file is not locked when Init is called,
+     *       so it might be deleted before we try to read from it.
+     */
+    const long DEFER_OPEN = 1<<4;
 };
 
 /**
@@ -102,6 +124,22 @@ interface nsIFileOutputStream : nsIOutputStream
      */
     void init(in nsIFile file, in long ioFlags, in long perm,
               in long behaviorFlags);
+
+    /**
+     * See the same constant in nsIFileInputStream. The deferred open will
+     * be performed when one of the following is called:
+     *   - Seek
+     *   - Tell
+     *   - Write
+     *   - Flush
+     *
+     * @note Using this flag results in the file not being opened
+     *       during the call to Init.  This means that any errors that might
+     *       happen when this flag is not set would happen during the
+     *       first write, and if the file is to be created, then it will not
+     *       appear on the disk until the first write.
+     */
+    const long DEFER_OPEN = 1<<0;
 };
 
 /**

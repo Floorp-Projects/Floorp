@@ -363,7 +363,7 @@ nsWindow::Show(PRBool aState)
             BringToFront();
         } else if (TopWindow() == this) {
             // find the next visible window to show
-            int i;
+            unsigned int i;
             for (i = 1; i < gTopLevelWindows.Length(); i++) {
                 nsWindow *win = gTopLevelWindows[i];
                 if (!win->mIsVisible)
@@ -846,12 +846,16 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             }
             break;
 
-	case AndroidGeckoEvent::SURFACE_CREATED:
-	    break;
+        case AndroidGeckoEvent::SURFACE_CREATED:
+            break;
 
-	case AndroidGeckoEvent::SURFACE_DESTROYED:
-	    sValidSurface = false;
-	    break;
+        case AndroidGeckoEvent::SURFACE_DESTROYED:
+            sValidSurface = false;
+            break;
+
+        case AndroidGeckoEvent::GECKO_EVENT_SYNC:
+            AndroidBridge::Bridge()->AcknowledgeEventSync();
+            break;
 
         default:
             break;
