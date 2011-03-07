@@ -1527,20 +1527,8 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 #endif
         if (cg->flags & TCF_FUN_HEAVYWEIGHT)
             fun->flags |= JSFUN_HEAVYWEIGHT;
-
-        if (cx->typeInferenceEnabled()) {
-            char *name = NULL;
-#ifdef DEBUG
-            name = (char *) alloca(10);
-            JS_snprintf(name, 10, "#%u", script->id());
-#endif
-            types::TypeObject *type = cx->newTypeFunction(name, fun->getProto());
-            if (!type)
-                goto bad;
-
-            fun->setType(type);
-            cx->setTypeFunctionScript(fun, script);
-        }
+        if (cx->typeInferenceEnabled() && !script->typeSetFunction(cx, fun))
+            goto bad;
     }
 
     /* Tell the debugger about this compiled script. */
