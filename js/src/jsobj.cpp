@@ -3221,7 +3221,7 @@ Class js_WithClass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    NULL,                 /* mark        */
+    NULL,                 /* trace       */
     JS_NULL_CLASS_EXT,
     {
         with_LookupProperty,
@@ -3233,7 +3233,6 @@ Class js_WithClass = {
         with_DeleteProperty,
         with_Enumerate,
         with_TypeOf,
-        NULL,             /* trace */
         NULL,             /* fix   */
         with_ThisObject,
         NULL,             /* clear */
@@ -6516,11 +6515,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
     if (!JS_CLIST_IS_EMPTY(&cx->runtime->watchPointList))
         js_TraceWatchPoints(trc, obj);
 
-    /* No one runs while the GC is running, so we can use LOCKED_... here. */
-    Class *clasp = obj->getClass();
-    if (clasp->trace)
-        clasp->trace(trc, obj);
-    if (clasp->flags & JSCLASS_IS_GLOBAL) {
+    if (obj->getClass()->flags & JSCLASS_IS_GLOBAL) {
         JSCompartment *compartment = obj->getCompartment();
         compartment->mark(trc);
     }
