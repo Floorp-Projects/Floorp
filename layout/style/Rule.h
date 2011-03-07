@@ -37,8 +37,8 @@
 
 /* base class for all rule types in a CSS style sheet */
 
-#ifndef nsCSSRule_h___
-#define nsCSSRule_h___
+#ifndef mozilla_css_Rule_h___
+#define mozilla_css_Rule_h___
 
 #include "nsICSSRule.h"
 
@@ -50,8 +50,6 @@ template<class T> struct already_AddRefed;
 namespace mozilla {
 namespace css {
 class GroupRule;
-}
-}
 
 #define DECL_STYLE_RULE_INHERIT_NO_DOMRULE  \
 virtual void MapRuleInfoInto(nsRuleData* aRuleData);
@@ -60,15 +58,15 @@ virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 DECL_STYLE_RULE_INHERIT_NO_DOMRULE \
 virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
 
-class nsCSSRule : public nsICSSRule {
+class Rule : public nsICSSRule {
 protected:
-  nsCSSRule()
+  Rule()
     : mSheet(nsnull),
       mParentRule(nsnull)
   {
   }
 
-  nsCSSRule(const nsCSSRule& aCopy)
+  Rule(const Rule& aCopy)
     : mSheet(aCopy.mSheet),
       mParentRule(aCopy.mParentRule)
   {
@@ -79,11 +77,14 @@ public:
   virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const;
   virtual void SetStyleSheet(nsCSSStyleSheet* aSheet);
 
-  virtual void SetParentRule(mozilla::css::GroupRule* aRule);
+  virtual void SetParentRule(GroupRule* aRule);
 
 protected:
-  nsCSSStyleSheet*         mSheet;
-  mozilla::css::GroupRule* mParentRule;
+  nsCSSStyleSheet*  mSheet;
+  GroupRule*        mParentRule;
 };
 
-#endif /* nsCSSRule_h___ */
+} // namespace css
+} // namespace mozilla
+
+#endif /* mozilla_css_Rule_h___ */

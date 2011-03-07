@@ -43,7 +43,7 @@
 #ifndef mozilla_css_GroupRule_h__
 #define mozilla_css_GroupRule_h__
 
-#include "nsCSSRule.h"
+#include "Rule.h"
 #include "nsCOMArray.h"
 #include "nsAutoPtr.h"
 
@@ -55,9 +55,9 @@ namespace css {
 
 class GroupRuleRuleList;
 
-// inherits from nsCSSRule so it can be shared between
+// inherits from Rule so it can be shared between
 // MediaRule and DocumentRule
-class GroupRule : public nsCSSRule
+class GroupRule : public Rule
 {
 protected:
   GroupRule();
