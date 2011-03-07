@@ -78,13 +78,6 @@ FORCE_USE_PIC	= 1
 
 include $(topsrcdir)/config/config.mk
 
-ifeq ($(CPU),ALPHA)
-CPPSRCS 	:= xptcinvoke_alpha.cpp xptcstubs_alpha.cpp
-ASFILES		:= xptcinvoke_asm_alpha.s xptcstubs_asm_alpha.s
-AS		:= asaxp
-ASFLAGS		+= /I../../..public
-endif
-
 ifeq ($(TARGET_CPU),x86_64)
 ifndef GNU_CXX
 CPPSRCS 	:= xptcinvoke_x86_64.cpp xptcstubs_x86_64.cpp
