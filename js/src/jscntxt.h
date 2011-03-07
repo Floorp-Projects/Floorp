@@ -419,6 +419,8 @@ class StackSegment
 #ifdef DEBUG
     JS_REQUIRES_STACK bool contains(const JSStackFrame *fp) const;
 #endif
+
+    JSStackFrame *computeNextFrame(JSStackFrame *fp) const;
 };
 
 static const size_t VALUES_PER_STACK_SEGMENT = sizeof(StackSegment) / sizeof(Value);
@@ -1783,9 +1785,6 @@ struct JSContext
 
     /* Undoes calls to suspendActiveSegment. */
     void restoreSegment();
-
-    /* Get the frame whose prev() is fp, which may be in any segment. */
-    inline JSStackFrame *computeNextFrame(JSStackFrame *fp);
 
     /*
      * Perform a linear search of all frames in all segments in the given context
