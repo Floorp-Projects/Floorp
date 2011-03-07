@@ -2457,12 +2457,6 @@ ia64*-hpux*)
     	AC_CHECK_HEADERS(mmintrin.h)
     	AC_DEFINE(_X86_)
 	;;
-    alpha-*)
-    	AC_DEFINE(_ALPHA_)
-	;;
-    mips-*)
-    	AC_DEFINE(_MIPS_)
-	;;
     x86_64-*)
         AC_DEFINE(_AMD64_)
         ;;
