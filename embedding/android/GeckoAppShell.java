@@ -44,7 +44,7 @@ import java.nio.channels.*;
 import java.text.*;
 import java.util.*;
 import java.util.zip.*;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.*;
 
 import android.os.*;
 import android.app.*;
@@ -477,35 +477,26 @@ public class GeckoAppShell
                 imm, text, start, end, newEnd);
     }
 
-    private static final ReentrantLock mGeckoSyncLock = new ReentrantLock();
-    private static final Condition     mGeckoSyncCond = mGeckoSyncLock.newCondition();
-    private static boolean mGeckoSyncAcked;
+    private static CountDownLatch sGeckoPendingAcks = null;
 
     // Block the current thread until the Gecko event loop is caught up
-    public static void geckoEventSync() {
-        mGeckoSyncLock.lock();
-        mGeckoSyncAcked = false;
+    synchronized public static void geckoEventSync() {
+        sGeckoPendingAcks = new CountDownLatch(1);
         GeckoAppShell.sendEventToGecko(
             new GeckoEvent(GeckoEvent.GECKO_EVENT_SYNC));
-        while (!mGeckoSyncAcked) {
+        while (sGeckoPendingAcks.getCount() != 0) {
             try {
-                mGeckoSyncCond.await();
-            } catch (InterruptedException e) {
-                break;
-            }
+                sGeckoPendingAcks.await();
+            } catch (InterruptedException e) {}
         }
-        mGeckoSyncLock.unlock();
+        sGeckoPendingAcks = null;
     }
 
     // Signal the Java thread that it's time to wake up
     public static void acknowledgeEventSync() {
-        mGeckoSyncLock.lock();
-        mGeckoSyncAcked = true;
-        try {
-            mGeckoSyncCond.signal();
-        } finally {
-            mGeckoSyncLock.unlock();
-        }
+        CountDownLatch tmp = sGeckoPendingAcks;
+        if (tmp != null)
+            tmp.countDown();
     }
 
     public static void enableAccelerometer(boolean enable) {
