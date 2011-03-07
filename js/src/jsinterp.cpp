@@ -114,21 +114,14 @@ jsbytecode *
 JSStackFrame::pc(JSContext *cx, JSStackFrame *next)
 {
     JS_ASSERT_IF(next, next->prev_ == this);
-    JS_ASSERT(cx->containingSegment(this) != NULL);
 
-    JSFrameRegs *regs;
-    if (cx->regs) {
-        regs = cx->regs;
-    } else {
-        StackSegment *segment = cx->getCurrentSegment();
-        regs = segment->getSuspendedRegs();
-    }
-
-    if (this == regs->fp)
+    StackSegment *seg = cx->containingSegment(this);
+    JSFrameRegs *regs = seg->getCurrentRegs();
+    if (regs->fp == this)
         return regs->pc;
 
     if (!next)
-        next = cx->computeNextFrame(this);
+        next = seg->computeNextFrame(this);
 
     if (next->flags_ & JSFRAME_HAS_PREVPC)
         return next->prevpc_;
