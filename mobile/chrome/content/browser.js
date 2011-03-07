@@ -1417,9 +1417,6 @@ Browser.WebProgress.prototype = {
 
     if (aTab == Browser.selectedTab)
       BrowserUI.update(TOOLBARSTATE_LOADED);
-
-    if (aTab.browser.currentURI.spec != "about:blank")
-      aTab.updateThumbnail();
   },
 
   _documentStop: function _documentStop(aTab) {
@@ -1446,6 +1443,8 @@ Browser.WebProgress.prototype = {
       }
 
       aTab.scrolledAreaChanged();
+      if (browser.currentURI.spec != "about:blank")
+        aTab.updateThumbnail();
       browser.messageManager.addMessageListener("MozScrolledAreaChanged", aTab.scrolledAreaChanged);
     });
   }
@@ -2519,6 +2518,10 @@ Tab.prototype = {
   endLoading: function endLoading() {
     if (!this._loading) throw "Not Loading!";
     this._loading = false;
+    if (this._drawThumb) {
+      this._drawThumb = false;
+      this.updateThumbnail();
+    }
   },
 
   isLoading: function isLoading() {
@@ -2713,6 +2716,11 @@ Tab.prototype = {
 
   updateThumbnail: function updateThumbnail() {
     let browser = this._browser;
+
+    if (this._loading) {
+      this._drawThumb = true;
+      return;
+    }
 
     // Do not repaint thumbnail if we already painted for this load. Bad things
     // happen when we do async canvas draws in quick succession.
