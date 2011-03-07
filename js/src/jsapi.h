@@ -2254,24 +2254,6 @@ JS_AddTypeProperty(JSContext *cx, JSObject *obj, const char *name, jsval value);
 extern JS_PUBLIC_API(JSBool)
 JS_AddTypePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value);
 
-static JS_ALWAYS_INLINE JSBool
-JS_DefinePropertyWithType(JSContext *cx, JSObject *obj,
-                          const char *name, jsval value,
-                          JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs)
-{
-    JS_AddTypeProperty(cx, obj, name, value);
-    return JS_DefineProperty(cx, obj, name, value, getter, setter, attrs);
-}
-
-static JS_ALWAYS_INLINE JSBool
-JS_DefinePropertyWithTypeById(JSContext *cx, JSObject *obj,
-                              jsid id, jsval value,
-                              JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs)
-{
-    JS_AddTypePropertyById(cx, obj, id, value);
-    return JS_DefinePropertyById(cx, obj, id, value, getter, setter, attrs);
-}
-
 /*
  * Determine the attributes (JSPROP_* flags) of a property on a given object.
  *

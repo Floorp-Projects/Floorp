@@ -1579,11 +1579,11 @@ do {                                                                           \
     }                                                                          \
     JSObject *ctor = JS_GetConstructor(cx, proto);                             \
     if (!ctor ||                                                               \
-        !JS_DefinePropertyWithType(cx, ctor, "BYTES_PER_ELEMENT",              \
+        !JS_DefineProperty(cx, ctor, "BYTES_PER_ELEMENT",                      \
                            INT_TO_JSVAL(sizeof(_typedArray::ThisType)),        \
                            JS_PropertyStub, JS_StrictPropertyStub,             \
                            JSPROP_PERMANENT | JSPROP_READONLY) ||              \
-        !JS_DefinePropertyWithType(cx, proto, "BYTES_PER_ELEMENT",             \
+        !JS_DefineProperty(cx, proto, "BYTES_PER_ELEMENT",                     \
                            INT_TO_JSVAL(sizeof(_typedArray::ThisType)),        \
                            JS_PropertyStub, JS_StrictPropertyStub,             \
                            JSPROP_PERMANENT | JSPROP_READONLY))                \
