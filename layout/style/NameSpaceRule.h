@@ -40,7 +40,7 @@
 #ifndef mozilla_css_NameSpaceRule_h__
 #define mozilla_css_NameSpaceRule_h__
 
-#include "nsCSSRule.h"
+#include "Rule.h"
 #include "nsIDOMCSSRule.h"
 
 class nsIAtom;
@@ -53,7 +53,7 @@ class nsIAtom;
 namespace mozilla {
 namespace css {
 
-class NS_FINAL_CLASS NameSpaceRule : public nsCSSRule,
+class NS_FINAL_CLASS NameSpaceRule : public Rule,
                                      public nsIDOMCSSRule
 {
 public:

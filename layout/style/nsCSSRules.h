@@ -43,7 +43,7 @@
 #ifndef nsCSSRules_h_
 #define nsCSSRules_h_
 
-#include "nsCSSRule.h"
+#include "Rule.h"
 #include "mozilla/css/GroupRule.h"
 #include "nsIDOMCSSMediaRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
@@ -201,7 +201,7 @@ private:
   void* operator new(size_t size) CPP_THROW_NEW;
 };
 
-class NS_FINAL_CLASS nsCSSFontFaceRule : public nsCSSRule,
+class NS_FINAL_CLASS nsCSSFontFaceRule : public mozilla::css::Rule,
                                          public nsIDOMCSSFontFaceRule
 {
 public:
@@ -209,7 +209,7 @@ public:
 
   nsCSSFontFaceRule(const nsCSSFontFaceRule& aCopy)
     // copy everything except our reference count
-    : nsCSSRule(aCopy), mDecl(aCopy.mDecl) {}
+    : mozilla::css::Rule(aCopy), mDecl(aCopy.mDecl) {}
 
   NS_DECL_ISUPPORTS
 

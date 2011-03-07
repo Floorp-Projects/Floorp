@@ -80,15 +80,18 @@ nsIDOMCSSRule* _class::GetDOMRuleWeak(nsresult *aResult) { *aResult = NS_OK; ret
 
 // base class for all rule types in a CSS style sheet
 
+namespace mozilla {
+namespace css {
+
 /* virtual */ already_AddRefed<nsIStyleSheet>
-nsCSSRule::GetStyleSheet() const
+Rule::GetStyleSheet() const
 {
   NS_IF_ADDREF(mSheet);
   return mSheet;
 }
 
 /* virtual */ void
-nsCSSRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
+Rule::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   // We don't reference count this up reference. The style sheet
   // will tell us when it's going away or when we're detached from
@@ -97,13 +100,16 @@ nsCSSRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
 }
 
 /* virtual */ void
-nsCSSRule::SetParentRule(css::GroupRule* aRule)
+Rule::SetParentRule(css::GroupRule* aRule)
 {
   // We don't reference count this up reference. The group rule
   // will tell us when it's going away or when we're detached from
   // it.
   mParentRule = aRule;
 }
+
+} // namespace css
+} // namespace mozilla
 
 
 // -------------------------------
@@ -206,7 +212,7 @@ DOMCI_DATA(CSSGroupRuleRuleList, css::GroupRuleRuleList)
 // -------------------------------------------
 // CharsetRule
 //
-class NS_FINAL_CLASS CSSCharsetRuleImpl : public nsCSSRule,
+class NS_FINAL_CLASS CSSCharsetRuleImpl : public css::Rule,
                                           public nsIDOMCSSCharsetRule
 {
 public:
@@ -240,13 +246,13 @@ protected:
 };
 
 CSSCharsetRuleImpl::CSSCharsetRuleImpl(const nsAString& aEncoding)
-  : nsCSSRule(),
+  : css::Rule(),
     mEncoding(aEncoding)
 {
 }
 
 CSSCharsetRuleImpl::CSSCharsetRuleImpl(const CSSCharsetRuleImpl& aCopy)
-  : nsCSSRule(aCopy),
+  : css::Rule(aCopy),
     mEncoding(aCopy.mEncoding)
 {
 }
@@ -266,7 +272,7 @@ NS_INTERFACE_MAP_BEGIN(CSSCharsetRuleImpl)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSCharsetRule)
 NS_INTERFACE_MAP_END
 
-IMPL_STYLE_RULE_INHERIT(CSSCharsetRuleImpl, nsCSSRule)
+IMPL_STYLE_RULE_INHERIT(CSSCharsetRuleImpl, css::Rule)
 
 #ifdef DEBUG
 /* virtual */ void
@@ -377,7 +383,7 @@ namespace mozilla {
 namespace css {
 
 ImportRule::ImportRule(nsMediaList* aMedia)
-  : nsCSSRule()
+  : Rule()
   , mURLSpec()
   , mMedia(aMedia)
 {
@@ -387,7 +393,7 @@ ImportRule::ImportRule(nsMediaList* aMedia)
 }
 
 ImportRule::ImportRule(const ImportRule& aCopy)
-  : nsCSSRule(aCopy),
+  : Rule(aCopy),
     mURLSpec(aCopy.mURLSpec)
 {
   // Whether or not an @import rule has a null sheet is a permanent
@@ -421,7 +427,7 @@ NS_INTERFACE_MAP_BEGIN(ImportRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSImportRule)
 NS_INTERFACE_MAP_END
 
-IMPL_STYLE_RULE_INHERIT(ImportRule, nsCSSRule)
+IMPL_STYLE_RULE_INHERIT(ImportRule, Rule)
 
 #ifdef DEBUG
 /* virtual */ void
@@ -602,7 +608,7 @@ namespace mozilla {
 namespace css {
 
 GroupRule::GroupRule()
-  : nsCSSRule()
+  : Rule()
 {
 }
 
@@ -615,7 +621,7 @@ SetParentRuleReference(nsICSSRule* aRule, void* aParentRule)
 }
 
 GroupRule::GroupRule(const GroupRule& aCopy)
-  : nsCSSRule(aCopy)
+  : Rule(aCopy)
 {
   const_cast<GroupRule&>(aCopy).mRules.EnumerateForwards(CloneRuleInto, &mRules);
   mRules.EnumerateForwards(SetParentRuleReference, this);
@@ -632,7 +638,7 @@ GroupRule::~GroupRule()
 NS_IMPL_ADDREF(GroupRule)
 NS_IMPL_RELEASE(GroupRule)
 
-IMPL_STYLE_RULE_INHERIT2(GroupRule, nsCSSRule)
+IMPL_STYLE_RULE_INHERIT2(GroupRule, Rule)
 
 static PRBool
 SetStyleSheetReference(nsICSSRule* aRule, void* aSheet)
@@ -646,7 +652,7 @@ SetStyleSheetReference(nsICSSRule* aRule, void* aSheet)
 GroupRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   mRules.EnumerateForwards(SetStyleSheetReference, aSheet);
-  nsCSSRule::SetStyleSheet(aSheet);
+  Rule::SetStyleSheet(aSheet);
 }
 
 #ifdef DEBUG
@@ -1189,14 +1195,14 @@ namespace mozilla {
 namespace css {
 
 NameSpaceRule::NameSpaceRule()
-  : nsCSSRule(),
+  : Rule(),
     mPrefix(nsnull),
     mURLSpec()
 {
 }
 
 NameSpaceRule::NameSpaceRule(const NameSpaceRule& aCopy)
-  : nsCSSRule(aCopy),
+  : Rule(aCopy),
     mPrefix(aCopy.mPrefix),
     mURLSpec(aCopy.mURLSpec)
 {
@@ -1224,7 +1230,7 @@ NS_INTERFACE_MAP_BEGIN(NameSpaceRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSNameSpaceRule)
 NS_INTERFACE_MAP_END
 
-IMPL_STYLE_RULE_INHERIT(NameSpaceRule, nsCSSRule)
+IMPL_STYLE_RULE_INHERIT(NameSpaceRule, Rule)
 
 #ifdef DEBUG
 /* virtual */ void
@@ -1686,7 +1692,7 @@ NS_INTERFACE_MAP_BEGIN(nsCSSFontFaceRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSFontFaceRule)
 NS_INTERFACE_MAP_END
 
-IMPL_STYLE_RULE_INHERIT(nsCSSFontFaceRule, nsCSSRule)
+IMPL_STYLE_RULE_INHERIT(nsCSSFontFaceRule, Rule)
 
 #ifdef DEBUG
 void
