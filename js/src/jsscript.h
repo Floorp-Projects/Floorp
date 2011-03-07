@@ -527,6 +527,12 @@ struct JSScript {
     inline bool typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value);
     inline bool typeSetUpvar(JSContext *cx, unsigned upvar, const js::Value &value);
 
+    /*
+     * Associates this script with a specific function, constructing a new type
+     * object for the function.
+     */
+    bool typeSetFunction(JSContext *cx, JSFunction *fun);
+
 #ifdef JS_METHODJIT
     // Fast-cached pointers to make calls faster. These are also used to
     // quickly test whether there is JIT code; a NULL value means no

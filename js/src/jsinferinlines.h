@@ -216,14 +216,6 @@ JSContext::getTypeNewObject(JSProtoKey key)
     return proto->getNewType(this);
 }
 
-inline void
-JSContext::setTypeFunctionScript(JSFunction *fun, JSScript *script)
-{
-    js::types::TypeFunction *typeFun = fun->getType()->asFunction();
-    typeFun->script = script;
-    script->fun = fun;
-}
-
 inline js::types::TypeObject *
 JSContext::getTypeCallerInitObject(bool isArray)
 {
