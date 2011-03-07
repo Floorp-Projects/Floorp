@@ -5143,6 +5143,7 @@ JS_FRIEND_DATA(Class) js_XMLClass = {
         xml_deleteProperty,
         xml_enumerate,
         xml_typeOf,
+        NULL,       /* trace */
         xml_fix,
         NULL,       /* thisObject     */
         xml_clear

@@ -893,7 +893,7 @@ js::Class XPC_WN_NoHelper_JSClass = {
     nsnull,                         // construct
     nsnull,                         // xdrObject;
     nsnull,                         // hasInstance
-    XPC_WN_Shared_Trace,            // trace
+    XPC_WN_Shared_Trace,            // mark/trace
 
     // ClassExtension
     {
@@ -915,6 +915,7 @@ js::Class XPC_WN_NoHelper_JSClass = {
         nsnull, // deleteProperty
         JS_VALUEIFY(js::NewEnumerateOp, XPC_WN_JSOp_Enumerate),
         XPC_WN_JSOp_TypeOf_Object,
+        nsnull, // trace
         nsnull, // fix
         XPC_WN_JSOp_ThisObject,
         XPC_WN_JSOp_Clear
@@ -1811,7 +1812,7 @@ js::Class XPC_WN_ModsAllowed_NoCall_Proto_JSClass = {
     nsnull,                         // construct;
     nsnull,                         // xdrObject;
     nsnull,                         // hasInstance;
-    XPC_WN_Shared_Proto_Trace,      // trace;
+    XPC_WN_Shared_Proto_Trace,      // mark/trace;
 
     JS_NULL_CLASS_EXT,
     XPC_WN_NoCall_ObjectOps
