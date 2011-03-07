@@ -1131,11 +1131,7 @@ FreeContext(JSContext *cx)
         cx->free(temp);
     }
 
-    /* Destroy the resolve recursion damper. */
-    if (cx->resolvingTable) {
-        JS_DHashTableDestroy(cx->resolvingTable);
-        cx->resolvingTable = NULL;
-    }
+    JS_ASSERT(!cx->resolvingList);
 
     /* Finally, free cx itself. */
     cx->~JSContext();
@@ -1170,107 +1166,22 @@ js_NextActiveContext(JSRuntime *rt, JSContext *cx)
 #endif
 }
 
-static JSDHashNumber
-resolving_HashKey(JSDHashTable *table, const void *ptr)
-{
-    const JSResolvingKey *key = (const JSResolvingKey *)ptr;
+namespace js {
 
-    return (JSDHashNumber(uintptr_t(key->obj)) >> JS_GCTHING_ALIGN) ^ JSID_BITS(key->id);
+bool
+AutoResolving::alreadyStartedSlow() const
+{
+    JS_ASSERT(link);
+    AutoResolving *cursor = link;
+    do {
+        JS_ASSERT(this != cursor);
+        if (object == cursor->object && id == cursor->id && kind == cursor->kind)
+            return true;
+    } while (!!(cursor = cursor->link));
+    return false;
 }
 
-static JSBool
-resolving_MatchEntry(JSDHashTable *table,
-                     const JSDHashEntryHdr *hdr,
-                     const void *ptr)
-{
-    const JSResolvingEntry *entry = (const JSResolvingEntry *)hdr;
-    const JSResolvingKey *key = (const JSResolvingKey *)ptr;
-
-    return entry->key.obj == key->obj && entry->key.id == key->id;
-}
-
-static const JSDHashTableOps resolving_dhash_ops = {
-    JS_DHashAllocTable,
-    JS_DHashFreeTable,
-    resolving_HashKey,
-    resolving_MatchEntry,
-    JS_DHashMoveEntryStub,
-    JS_DHashClearEntryStub,
-    JS_DHashFinalizeStub,
-    NULL
-};
-
-JSBool
-js_StartResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
-                  JSResolvingEntry **entryp)
-{
-    JSDHashTable *table;
-    JSResolvingEntry *entry;
-
-    table = cx->resolvingTable;
-    if (!table) {
-        table = JS_NewDHashTable(&resolving_dhash_ops, NULL,
-                                 sizeof(JSResolvingEntry),
-                                 JS_DHASH_MIN_SIZE);
-        if (!table)
-            goto outofmem;
-        cx->resolvingTable = table;
-    }
-
-    entry = (JSResolvingEntry *)
-            JS_DHashTableOperate(table, key, JS_DHASH_ADD);
-    if (!entry)
-        goto outofmem;
-
-    if (entry->flags & flag) {
-        /* An entry for (key, flag) exists already -- dampen recursion. */
-        entry = NULL;
-    } else {
-        /* Fill in key if we were the first to add entry, then set flag. */
-        if (!entry->key.obj)
-            entry->key = *key;
-        entry->flags |= flag;
-    }
-    *entryp = entry;
-    return JS_TRUE;
-
-outofmem:
-    JS_ReportOutOfMemory(cx);
-    return JS_FALSE;
-}
-
-void
-js_StopResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
-                 JSResolvingEntry *entry, uint32 generation)
-{
-    JSDHashTable *table;
-
-    /*
-     * Clear flag from entry->flags and return early if other flags remain.
-     * We must take care to re-lookup entry if the table has changed since
-     * it was found by js_StartResolving.
-     */
-    table = cx->resolvingTable;
-    if (!entry || table->generation != generation) {
-        entry = (JSResolvingEntry *)
-                JS_DHashTableOperate(table, key, JS_DHASH_LOOKUP);
-    }
-    JS_ASSERT(JS_DHASH_ENTRY_IS_BUSY(&entry->hdr));
-    entry->flags &= ~flag;
-    if (entry->flags)
-        return;
-
-    /*
-     * Do a raw remove only if fewer entries were removed than would cause
-     * alpha to be less than .5 (alpha is at most .75).  Otherwise, we just
-     * call JS_DHashTableOperate to re-lookup the key and remove its entry,
-     * compressing or shrinking the table as needed.
-     */
-    if (table->removedCount < JS_DHASH_TABLE_SIZE(table) >> 2)
-        JS_DHashTableRawRemove(table, &entry->hdr);
-    else
-        JS_DHashTableOperate(table, key, JS_DHASH_REMOVE);
-}
+} /* namespace js */
 
 static void
 ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,

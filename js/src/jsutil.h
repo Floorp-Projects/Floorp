@@ -399,6 +399,8 @@ public:
     JSGuardObjectNotificationReceiver _mCheckNotUsedAsTemporary;
 #define JS_GUARD_OBJECT_NOTIFIER_PARAM \
     , const JSGuardObjectNotifier& _notifier = JSGuardObjectNotifier()
+#define JS_GUARD_OBJECT_NOTIFIER_PARAM_NO_INIT \
+    , const JSGuardObjectNotifier& _notifier
 #define JS_GUARD_OBJECT_NOTIFIER_PARAM0 \
     const JSGuardObjectNotifier& _notifier = JSGuardObjectNotifier()
 #define JS_GUARD_OBJECT_NOTIFIER_INIT \
@@ -408,6 +410,7 @@ public:
 
 #define JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 #define JS_GUARD_OBJECT_NOTIFIER_PARAM
+#define JS_GUARD_OBJECT_NOTIFIER_PARAM_NO_INIT
 #define JS_GUARD_OBJECT_NOTIFIER_PARAM0
 #define JS_GUARD_OBJECT_NOTIFIER_INIT JS_BEGIN_MACRO JS_END_MACRO
 

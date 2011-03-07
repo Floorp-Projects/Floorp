@@ -1466,32 +1466,12 @@ struct JSArgumentFormatMap {
 };
 #endif
 
-/*
- * Key and entry types for the JSContext.resolvingTable hash table, typedef'd
- * here because all consumers need to see these declarations (and not just the
- * typedef names, as would be the case for an opaque pointer-to-typedef'd-type
- * declaration), along with cx->resolvingTable.
- */
-typedef struct JSResolvingKey {
-    JSObject            *obj;
-    jsid                id;
-} JSResolvingKey;
-
-typedef struct JSResolvingEntry {
-    JSDHashEntryHdr     hdr;
-    JSResolvingKey      key;
-    uint32              flags;
-} JSResolvingEntry;
-
-#define JSRESFLAG_LOOKUP        0x1     /* resolving id from lookup */
-#define JSRESFLAG_WATCH         0x2     /* resolving id from watch */
-#define JSRESOLVE_INFER         0xffff  /* infer bits from current bytecode */
-
 extern const JSDebugHooks js_NullDebugHooks;  /* defined in jsdbgapi.cpp */
 
 namespace js {
 
 class AutoGCRooter;
+struct AutoResolving;
 
 static inline bool
 OptionsHasXML(uint32 options)
@@ -1641,13 +1621,7 @@ struct JSContext
     /* Locale specific callbacks for string conversion. */
     JSLocaleCallbacks   *localeCallbacks;
 
-    /*
-     * cx->resolvingTable is non-null and non-empty if we are initializing
-     * standard classes lazily, or if we are otherwise recursing indirectly
-     * from js_LookupProperty through a Class.resolve hook.  It is used to
-     * limit runaway recursion (see jsapi.c and jsobj.c).
-     */
-    JSDHashTable        *resolvingTable;
+    js::AutoResolving   *resolvingList;
 
     /*
      * True if generating an error, to prevent runaway recursion.
@@ -2180,6 +2154,42 @@ FrameAtomBase(JSContext *cx, JSStackFrame *fp)
 }
 
 namespace js {
+
+struct AutoResolving {
+  public:
+    enum Kind {
+        LOOKUP,
+        WATCH
+    };
+
+    AutoResolving(JSContext *cx, JSObject *obj, jsid id, Kind kind = LOOKUP
+                  JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : context(cx), object(obj), id(id), kind(kind), link(cx->resolvingList)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_ASSERT(obj);
+        cx->resolvingList = this;
+    }
+
+    ~AutoResolving() {
+        JS_ASSERT(context->resolvingList == this);
+        context->resolvingList = link;
+    }
+
+    bool alreadyStarted() const {
+        return link && alreadyStartedSlow();
+    }
+
+  private:
+    bool alreadyStartedSlow() const;
+
+    JSContext           *const context;
+    JSObject            *const object;
+    jsid                const id;
+    Kind                const kind;
+    AutoResolving       *const link;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
 
 class AutoGCRooter {
   public:
@@ -2976,17 +2986,6 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp);
  */
 extern JS_FRIEND_API(JSContext *)
 js_NextActiveContext(JSRuntime *, JSContext *);
-
-/*
- * Class.resolve and watchpoint recursion damping machinery.
- */
-extern JSBool
-js_StartResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
-                  JSResolvingEntry **entryp);
-
-extern void
-js_StopResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
-                 JSResolvingEntry *entry, uint32 generation);
 
 /*
  * Report an exception, which is currently realized as a printf-style format
