@@ -377,11 +377,6 @@ static const PLDHashTableOps RuleHash_NameSpaceTable_Ops = {
 #define RULE_HASH_STAT_INCREMENT(var_) PR_BEGIN_MACRO PR_END_MACRO
 #endif
 
-// Enumerator callback function.
-typedef void (*RuleEnumFunc)(nsICSSStyleRule* aRule,
-                             nsCSSSelector* aSelector,
-                             void *aData);
-
 class RuleHash {
 public:
   RuleHash(PRBool aQuirksMode);
@@ -389,7 +384,7 @@ public:
   void AppendRule(const RuleSelectorPair &aRuleInfo);
   void EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag, nsIAtom* aID,
                          const nsAttrValue* aClassList,
-                         RuleEnumFunc aFunc, RuleProcessorData* aData);
+                         RuleProcessorData* aData);
   PLArenaPool& Arena() { return mArena; }
 
 protected:
@@ -594,9 +589,13 @@ void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
   PR_BEGIN_MACRO PR_END_MACRO
 #endif
 
+static inline
+void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
+                     RuleProcessorData* data);
+
 void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
                                  nsIAtom* aID, const nsAttrValue* aClassList,
-                                 RuleEnumFunc aFunc, RuleProcessorData* aData)
+                                 RuleProcessorData* aData)
 {
   PRInt32 classCount = aClassList ? aClassList->GetAtomCount() : 0;
 
@@ -669,7 +668,7 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
         }
       }
       const RuleValue *cur = mEnumList[valueIndex].mCurValue;
-      (*aFunc)(cur->mRule, cur->mSelector, aData);
+      ContentEnumFunc(cur->mRule, cur->mSelector, aData);
       cur++;
       if (cur == mEnumList[valueIndex].mEnd) {
         mEnumList[valueIndex] = mEnumList[--valueCount];
@@ -682,7 +681,7 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
     for (const RuleValue *value = mEnumList[0].mCurValue,
                          *end = mEnumList[0].mEnd;
          value != end; ++value) {
-      (*aFunc)(value->mRule, value->mSelector, aData);
+      ContentEnumFunc(value->mRule, value->mSelector, aData);
     }
   }
 }
@@ -2347,11 +2346,10 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
   return PR_TRUE; // all the selectors matched.
 }
 
-static void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
-                            void* aData)
+static inline
+void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
+                     RuleProcessorData* data)
 {
-  RuleProcessorData* data = (RuleProcessorData*)aData;
-
   TreeMatchContext treeContext(PR_TRUE, data->mRuleWalker->VisitedHandling());
   NodeMatchContext nodeContext(nsEventStates(), data->IsLink());
   if (nodeContext.mIsRelevantLink) {
@@ -2390,7 +2388,6 @@ nsCSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData)
                                          aData->mContentTag,
                                          aData->mContentID,
                                          aData->mClasses,
-                                         ContentEnumFunc,
                                          aData);
   }
 }
@@ -2407,7 +2404,6 @@ nsCSSRuleProcessor::RulesMatching(PseudoElementRuleProcessorData* aData)
                                   aData->mContentTag,
                                   aData->mContentID,
                                   aData->mClasses,
-                                  ContentEnumFunc,
                                   aData);
     }
   }
@@ -2456,8 +2452,7 @@ nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
       for (RuleValue *value = rules.Elements(), *end = value + rules.Length();
            value != end; ++value) {
         if (aData->mComparator->PseudoMatches(value->mSelector)) {
-          ContentEnumFunc(value->mRule, value->mSelector->mNext,
-                          static_cast<RuleProcessorData*>(aData));
+          ContentEnumFunc(value->mRule, value->mSelector->mNext, aData);
         }
       }
     }
