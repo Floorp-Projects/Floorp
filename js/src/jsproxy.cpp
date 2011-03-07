@@ -1459,8 +1459,8 @@ js_InitProxyClass(JSContext *cx, JSObject *obj)
         return NULL;
     module->setType(type);
 
-    if (!JS_DefinePropertyWithType(cx, obj, "Proxy", OBJECT_TO_JSVAL(module),
-                                   JS_PropertyStub, JS_StrictPropertyStub, 0)) {
+    if (!JS_DefineProperty(cx, obj, "Proxy", OBJECT_TO_JSVAL(module),
+                           JS_PropertyStub, JS_StrictPropertyStub, 0)) {
         return NULL;
     }
     if (!JS_DefineFunctionsWithPrefix(cx, module, static_methods, "Proxy"))

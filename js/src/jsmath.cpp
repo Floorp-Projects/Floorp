@@ -905,8 +905,8 @@ js_InitMathClass(JSContext *cx, JSObject *obj)
         return NULL;
     Math->setType(type);
 
-    if (!JS_DefinePropertyWithType(cx, obj, js_Math_str, OBJECT_TO_JSVAL(Math),
-                                   JS_PropertyStub, JS_StrictPropertyStub, 0)) {
+    if (!JS_DefineProperty(cx, obj, js_Math_str, OBJECT_TO_JSVAL(Math),
+                           JS_PropertyStub, JS_StrictPropertyStub, 0)) {
         return NULL;
     }
 

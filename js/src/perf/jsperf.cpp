@@ -267,8 +267,8 @@ RegisterPerfMeasurement(JSContext *cx, JSObject *global)
         return 0;
 
     for (const pm_const *c = pm_consts; c->name; c++) {
-        if (!JS_DefinePropertyWithType(cx, ctor, c->name, DOUBLE_TO_JSVAL(c->value),
-                                       JS_PropertyStub, JS_StrictPropertyStub, PM_CATTRS))
+        if (!JS_DefineProperty(cx, ctor, c->name, DOUBLE_TO_JSVAL(c->value),
+                               JS_PropertyStub, JS_StrictPropertyStub, PM_CATTRS))
             return 0;
     }
 

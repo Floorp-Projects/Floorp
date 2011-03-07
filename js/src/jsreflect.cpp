@@ -3320,8 +3320,8 @@ js_InitReflectClass(JSContext *cx, JSObject *obj)
         return NULL;
     Reflect->setType(type);
 
-    if (!JS_DefinePropertyWithType(cx, obj, js_Reflect_str, OBJECT_TO_JSVAL(Reflect),
-                                   JS_PropertyStub, JS_StrictPropertyStub, 0)) {
+    if (!JS_DefineProperty(cx, obj, js_Reflect_str, OBJECT_TO_JSVAL(Reflect),
+                           JS_PropertyStub, JS_StrictPropertyStub, 0)) {
         return NULL;
     }
 
