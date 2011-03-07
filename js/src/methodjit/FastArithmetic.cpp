@@ -358,13 +358,15 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
           !(lhs->isConstant() && lhs->isType(JSVAL_TYPE_INT32) &&
             abs(lhs->getValue().toInt32()) == 1)))) {
         RegisterID reg = frame.allocReg();
+        FPRegisterID fpReg = frame.allocFPReg();
         JumpList isDouble;
-        masm.branchConvertDoubleToInt32(fpLeft, reg, isDouble, fpRight);
+        masm.branchConvertDoubleToInt32(fpLeft, reg, isDouble, fpReg);
         
         masm.storeValueFromComponents(ImmType(JSVAL_TYPE_INT32), reg,
                                       frame.addressOf(lhs));
         
         frame.freeReg(reg);
+        frame.freeReg(fpReg);
         done.setJump(masm.jump());
 
         isDouble.linkTo(masm.label(), &masm);
