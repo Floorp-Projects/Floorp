@@ -1328,53 +1328,33 @@ static JSBool
 obj_watch_handler(JSContext *cx, JSObject *obj, jsid id, jsval old,
                   jsval *nvp, void *closure)
 {
-    JSObject *callable;
-    JSSecurityCallbacks *callbacks;
-    JSStackFrame *caller;
-    JSPrincipals *subject, *watcher;
-    JSResolvingKey key;
-    JSResolvingEntry *entry;
-    uint32 generation;
-    Value argv[3];
-    JSBool ok;
-
-    callable = (JSObject *) closure;
-
-    callbacks = JS_GetSecurityCallbacks(cx);
+    JSObject *callable = (JSObject *) closure;
+    JSSecurityCallbacks *callbacks = JS_GetSecurityCallbacks(cx);
     if (callbacks && callbacks->findObjectPrincipals) {
         /* Skip over any obj_watch_* frames between us and the real subject. */
-        caller = js_GetScriptedCaller(cx, NULL);
-        if (caller) {
+        if (JSStackFrame *caller = js_GetScriptedCaller(cx, NULL)) {
             /*
              * Only call the watch handler if the watcher is allowed to watch
              * the currently executing script.
              */
-            watcher = callbacks->findObjectPrincipals(cx, callable);
-            subject = js_StackFramePrincipals(cx, caller);
+            JSPrincipals *watcher = callbacks->findObjectPrincipals(cx, callable);
+            JSPrincipals *subject = js_StackFramePrincipals(cx, caller);
 
             if (watcher && subject && !watcher->subsume(watcher, subject)) {
                 /* Silently don't call the watch handler. */
-                return JS_TRUE;
+                return true;
             }
         }
     }
 
     /* Avoid recursion on (obj, id) already being watched on cx. */
-    key.obj = obj;
-    key.id = id;
-    if (!js_StartResolving(cx, &key, JSRESFLAG_WATCH, &entry))
-        return JS_FALSE;
-    if (!entry)
-        return JS_TRUE;
-    generation = cx->resolvingTable->generation;
+    AutoResolving resolving(cx, obj, id, AutoResolving::WATCH);
+    if (resolving.alreadyStarted())
+        return true;
 
-    argv[0] = IdToValue(id);
-    argv[1] = Valueify(old);
-    argv[2] = Valueify(*nvp);
-    ok = ExternalInvoke(cx, ObjectValue(*obj), ObjectOrNullValue(callable), 3, argv,
-                        Valueify(nvp));
-    js_StopResolving(cx, &key, JSRESFLAG_WATCH, entry, generation);
-    return ok;
+    Value argv[] = { IdToValue(id), Valueify(old), Valueify(*nvp) };
+    return ExternalInvoke(cx, ObjectValue(*obj), ObjectOrNullValue(callable),
+                          JS_ARRAY_LENGTH(argv), argv, Valueify(nvp));
 }
 
 static JSBool
@@ -4174,52 +4154,36 @@ JSBool
 js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
                   JSObject **objp)
 {
-    JSObject *cobj;
-    JSResolvingKey rkey;
-    JSResolvingEntry *rentry;
-    uint32 generation;
-    JSObjectOp init;
-    Value v;
-
     obj = obj->getGlobal();
     if (!obj->isGlobal()) {
         *objp = NULL;
-        return JS_TRUE;
+        return true;
     }
 
-    v = obj->getReservedSlot(key);
+    Value v = obj->getReservedSlot(key);
     if (v.isObject()) {
         *objp = &v.toObject();
-        return JS_TRUE;
+        return true;
     }
 
-    rkey.obj = obj;
-    rkey.id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[key]);
-    if (!js_StartResolving(cx, &rkey, JSRESFLAG_LOOKUP, &rentry))
-        return JS_FALSE;
-    if (!rentry) {
-        /* Already caching key in obj -- suppress recursion. */
+    AutoResolving resolving(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.classAtoms[key]));
+    if (resolving.alreadyStarted()) {
+        /* Already caching id in obj -- suppress recursion. */
         *objp = NULL;
-        return JS_TRUE;
-    }
-    generation = cx->resolvingTable->generation;
-
-    JSBool ok = true;
-    cobj = NULL;
-    init = lazy_prototype_init[key];
-    if (init) {
-        if (!init(cx, obj)) {
-            ok = JS_FALSE;
-        } else {
-            v = obj->getReservedSlot(key);
-            if (v.isObject())
-                cobj = &v.toObject();
-        }
+        return true;
     }
 
-    js_StopResolving(cx, &rkey, JSRESFLAG_LOOKUP, rentry, generation);
+    JSObject *cobj = NULL;
+    if (JSObjectOp init = lazy_prototype_init[key]) {
+        if (!init(cx, obj))
+            return false;
+        v = obj->getReservedSlot(key);
+        if (v.isObject())
+            cobj = &v.toObject();
+    }
+
     *objp = cobj;
-    return ok;
+    return true;
 }
 
 JSBool
@@ -4863,29 +4827,23 @@ CallResolveOp(JSContext *cx, JSObject *start, JSObject *obj, jsid id, uintN flag
      * returning.  But note that JS_DHASH_ADD may find an existing
      * entry, in which case we bail to suppress runaway recursion.
      */
-    JSResolvingKey key = {obj, id};
-    JSResolvingEntry *entry;
-    if (!js_StartResolving(cx, &key, JSRESFLAG_LOOKUP, &entry))
-        return false;
-    if (!entry) {
+    AutoResolving resolving(cx, obj, id);
+    if (resolving.alreadyStarted()) {
         /* Already resolving id in obj -- suppress recursion. */
         *recursedp = true;
         return true;
     }
-    uint32 generation = cx->resolvingTable->generation;
     *recursedp = false;
 
     *propp = NULL;
 
-    JSBool ok;
     if (clasp->flags & JSCLASS_NEW_RESOLVE) {
         JSNewResolveOp newresolve = reinterpret_cast<JSNewResolveOp>(resolve);
         if (flags == JSRESOLVE_INFER)
             flags = js_InferFlags(cx, 0);
         JSObject *obj2 = (clasp->flags & JSCLASS_NEW_RESOLVE_GETS_START) ? start : NULL;
-        ok = newresolve(cx, obj, id, flags, &obj2);
-        if (!ok)
-            goto cleanup;
+        if (!newresolve(cx, obj, id, flags, &obj2))
+            return false;
 
         /*
          * We trust the new style resolve hook to set obj2 to NULL when
@@ -4894,19 +4852,17 @@ CallResolveOp(JSContext *cx, JSObject *start, JSObject *obj, jsid id, uintN flag
          * compatibility.
          */
         if (!obj2)
-            goto cleanup;
+            return true;
 
         if (!obj2->isNative()) {
             /* Whoops, newresolve handed back a foreign obj2. */
             JS_ASSERT(obj2 != obj);
-            ok = obj2->lookupProperty(cx, id, objp, propp);
-            goto cleanup;
+            return obj2->lookupProperty(cx, id, objp, propp);
         }
         obj = obj2;
     } else {
-        ok = resolve(cx, obj, id);
-        if (!ok)
-            goto cleanup;
+        if (!resolve(cx, obj, id))
+            return false;
     }
 
     if (!obj->nativeEmpty()) {
@@ -4916,9 +4872,7 @@ CallResolveOp(JSContext *cx, JSObject *start, JSObject *obj, jsid id, uintN flag
         }
     }
 
-  cleanup:
-    js_StopResolving(cx, &key, JSRESFLAG_LOOKUP, entry, generation);
-    return ok;
+    return true;
 }
 
 static JS_ALWAYS_INLINE int

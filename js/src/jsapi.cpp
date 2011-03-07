@@ -1498,37 +1498,6 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
         cx->resetCompartment();
 }
 
-class AutoResolvingEntry {
-public:
-    AutoResolvingEntry() : entry(NULL) {}
-
-    /*
-     * Returns false on error. But N.B. if obj[id] was already being resolved,
-     * this is a no-op, and we silently treat that as success.
-     */
-    bool start(JSContext *cx, JSObject *obj, jsid id, uint32 flag) {
-        JS_ASSERT(!entry);
-        this->cx = cx;
-        key.obj = obj;
-        key.id = id;
-        this->flag = flag;
-        bool ok = !!js_StartResolving(cx, &key, flag, &entry);
-        JS_ASSERT_IF(!ok, !entry);
-        return ok;
-    }
-
-    ~AutoResolvingEntry() {
-        if (entry)
-            js_StopResolving(cx, &key, flag, NULL, 0);
-    }
-
-private:
-    JSContext *cx;
-    JSResolvingKey key;
-    uint32 flag;
-    JSResolvingEntry *entry;
-};
-
 JSObject *
 js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
 {
@@ -1539,13 +1508,10 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
     if (!cx->globalObject)
         JS_SetGlobalObject(cx, obj);
 
-    /* Record Function and Object in cx->resolvingTable. */
-    AutoResolvingEntry e1, e2;
+    /* Record Function and Object in cx->resolvingList. */
     JSAtom **classAtoms = cx->runtime->atomState.classAtoms;
-    if (!e1.start(cx, obj, ATOM_TO_JSID(classAtoms[JSProto_Function]), JSRESFLAG_LOOKUP) ||
-        !e2.start(cx, obj, ATOM_TO_JSID(classAtoms[JSProto_Object]), JSRESFLAG_LOOKUP)) {
-        return NULL;
-    }
+    AutoResolving resolving1(cx, obj, ATOM_TO_JSID(classAtoms[JSProto_Function]));
+    AutoResolving resolving2(cx, obj, ATOM_TO_JSID(classAtoms[JSProto_Object]));
 
     /* Initialize the function class first so constructors can be made. */
     if (!js_GetClassPrototype(cx, obj, JSProto_Function, &fun_proto))

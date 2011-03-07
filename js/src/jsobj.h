@@ -1675,6 +1675,11 @@ extern int
 js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                            JSObject **objp, JSProperty **propp);
 
+/*
+ * Constant to pass to js_LookupPropertyWithFlags to infer bits from current
+ * bytecode.
+ */
+static const uintN JSRESOLVE_INFER = 0xffff;
 
 extern JS_FRIEND_DATA(js::Class) js_CallClass;
 extern JS_FRIEND_DATA(js::Class) js_DeclEnvClass;
