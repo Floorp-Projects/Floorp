@@ -984,7 +984,7 @@ Class js_ArrayClass = {
     NULL,           /* construct   */
     NULL,           /* xdrObject   */
     NULL,           /* hasInstance */
-    array_trace,    /* trace       */
+    NULL,           /* mark        */
     JS_NULL_CLASS_EXT,
     {
         array_lookupProperty,
@@ -996,6 +996,7 @@ Class js_ArrayClass = {
         array_deleteProperty,
         NULL,       /* enumerate      */
         array_typeOf,
+        array_trace,
         array_fix,
         NULL,       /* thisObject     */
         NULL,       /* clear          */

@@ -3221,7 +3221,7 @@ Class js_WithClass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    NULL,                 /* trace       */
+    NULL,                 /* mark        */
     JS_NULL_CLASS_EXT,
     {
         with_LookupProperty,
@@ -3233,6 +3233,7 @@ Class js_WithClass = {
         with_DeleteProperty,
         with_Enumerate,
         with_TypeOf,
+        NULL,             /* trace */
         NULL,             /* fix   */
         with_ThisObject,
         NULL,             /* clear */
