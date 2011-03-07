@@ -139,6 +139,20 @@ StackSegment::contains(const JSStackFrame *fp) const
 }
 #endif
 
+JSStackFrame *
+StackSegment::computeNextFrame(JSStackFrame *fp) const
+{
+    JS_ASSERT(contains(fp));
+    JS_ASSERT(fp != getCurrentFrame());
+
+    JSStackFrame *next = getCurrentFrame();
+    JSStackFrame *end = getInitialFrame()->prev();
+    JSStackFrame *prev;
+    while ((prev = next->prev()) != fp)
+        next = prev;
+    return next;
+}
+
 bool
 StackSpace::init()
 {
