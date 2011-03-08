@@ -2515,7 +2515,7 @@ TraceRecorder::finishSuccessfully()
     TraceMonitor* localtm = traceMonitor;
 
     localtm->recorder = NULL;
-    /* We can't (easily) use js_delete() here because the constructor is private. */
+    /* We can't (easily) use js_delete() here because the destructor is private. */
     this->~TraceRecorder();
     js_free(this);
 
@@ -2569,7 +2569,7 @@ TraceRecorder::finishAbort(const char* reason)
     TraceMonitor* localtm = traceMonitor;
 
     localtm->recorder = NULL;
-    /* We can't (easily) use js_delete() here because the constructor is private. */
+    /* We can't (easily) use js_delete() here because the destructor is private. */
     this->~TraceRecorder();
     js_free(this);
 
