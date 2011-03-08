@@ -616,74 +616,42 @@ MAKEFILES_xulapp="
   toolkit/crashreporter/google-breakpad/src/tools/solaris/dump_syms/Makefile
   toolkit/content/Makefile
   toolkit/components/alerts/Makefile
-  toolkit/components/alerts/public/Makefile
-  toolkit/components/alerts/src/Makefile
-  toolkit/components/alerts/src/mac/Makefile
-  toolkit/components/alerts/src/mac/growl/Makefile
+  toolkit/components/alerts/mac/Makefile
+  toolkit/components/alerts/mac/growl/Makefile
   toolkit/components/apppicker/Makefile
   toolkit/components/autocomplete/Makefile
-  toolkit/components/autocomplete/public/Makefile
-  toolkit/components/autocomplete/src/Makefile
   toolkit/components/Makefile
   toolkit/components/build/Makefile
   toolkit/components/commandlines/Makefile
-  toolkit/components/commandlines/public/Makefile
-  toolkit/components/commandlines/src/Makefile
   toolkit/components/console/Makefile
   toolkit/components/contentprefs/Makefile
-  toolkit/components/contentprefs/src/Makefile
   toolkit/components/cookie/Makefile
-  toolkit/components/downloads/public/Makefile
   toolkit/components/downloads/Makefile
-  toolkit/components/downloads/src/Makefile
   toolkit/components/exthelper/Makefile
   toolkit/components/feeds/Makefile
-  toolkit/components/feeds/public/Makefile
-  toolkit/components/feeds/src/Makefile
   toolkit/components/filepicker/Makefile
-  toolkit/components/filepicker/public/Makefile
-  toolkit/components/filepicker/src/Makefile
   toolkit/components/find/Makefile
-  toolkit/components/find/public/Makefile
-  toolkit/components/find/src/Makefile
   toolkit/components/help/Makefile
   toolkit/components/intl/Makefile
   toolkit/components/microformats/Makefile
-  toolkit/components/microformats/src/Makefile
   toolkit/components/parentalcontrols/Makefile
-  toolkit/components/parentalcontrols/public/Makefile
-  toolkit/components/parentalcontrols/src/Makefile
   toolkit/components/passwordmgr/Makefile
-  toolkit/components/passwordmgr/public/Makefile
-  toolkit/components/passwordmgr/src/Makefile
   toolkit/components/passwordmgr/content/Makefile
   toolkit/components/passwordmgr/test/Makefile
   toolkit/components/places/Makefile
-  toolkit/components/places/public/Makefile
-  toolkit/components/places/src/Makefile
   toolkit/components/printing/Makefile
   toolkit/components/satchel/Makefile
-  toolkit/components/satchel/public/Makefile
-  toolkit/components/satchel/src/Makefile
   toolkit/components/search/Makefile
   toolkit/spatial-navigation/Makefile
   toolkit/components/startup/Makefile
   toolkit/components/startup/public/Makefile
-  toolkit/components/startup/src/Makefile
   toolkit/components/statusfilter/Makefile
   toolkit/components/typeaheadfind/Makefile
-  toolkit/components/typeaheadfind/public/Makefile
-  toolkit/components/typeaheadfind/src/Makefile
   toolkit/components/url-classifier/Makefile
-  toolkit/components/url-classifier/public/Makefile
-  toolkit/components/url-classifier/src/Makefile
   toolkit/components/urlformatter/Makefile
-  toolkit/components/urlformatter/public/Makefile
-  toolkit/components/urlformatter/src/Makefile
   toolkit/components/viewconfig/Makefile
   toolkit/components/viewsource/Makefile
   toolkit/locales/Makefile
-  toolkit/mozapps/Makefile
   toolkit/mozapps/downloads/Makefile
   toolkit/mozapps/extensions/Makefile
   toolkit/mozapps/handling/Makefile
@@ -693,8 +661,6 @@ MAKEFILES_xulapp="
   toolkit/mozapps/update/updater/Makefile
   toolkit/mozapps/xpinstall/Makefile
   toolkit/profile/Makefile
-  toolkit/profile/public/Makefile
-  toolkit/profile/src/Makefile
   toolkit/system/dbus/Makefile
   toolkit/system/gnome/Makefile
   toolkit/system/unixproxy/Makefile

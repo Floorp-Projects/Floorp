@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,15 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org Code.
+# The Original Code is Growl implementation of nsIAlertsService.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+#   Shawn Wilsher <me@shawnwilsher.com>.
+# Portions created by the Initial Developer are Copyright (C) 2006-2007
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Joe Hewitt <hewitt@netscape.com> (Original Author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,29 +34,47 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH=../../../..
-topsrcdir=@top_srcdir@
-srcdir=@srcdir@
-VPATH=@srcdir@
+DEPTH = ../../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = autocomplete
-MODULE_NAME = tkAutoCompleteModule
-LIBRARY_NAME = tkautocomplete
-SHORT_LIBNAME = tkautoc
+MODULE = alerts
+LIBRARY_NAME = alerts_s
 IS_COMPONENT = 1
-EXPORT_LIBRARY = 1
-LIBXUL_LIBRARY = 1
+FORCE_SHARED_LIB = 1
 
+CMMSRCS = \
+  nsAlertsService.mm \
+  mozGrowlDelegate.mm \
+  nsAlertsImageLoadListener.mm \
+  nsNotificationsList.mm \
+  $(NULL)
 
-CPPSRCS = nsAutoCompleteController.cpp \
-          nsAutoCompleteSimpleResult.cpp \
-          $(NULL)
+CPPSRCS = \
+  nsAlertsServiceModule.cpp \
+  $(NULL)
+
+LOCAL_INCLUDES += \
+  -I$(srcdir)/growl/ \
+  -I$(topsrcdir)/toolkit/components/build/ \
+  $(NULL)
+
+EXPORTS = \
+  nsAlertsService.h \
+  $(NULL)
+
+SHARED_LIBRARY_LIBS = \
+  growl/$(LIB_PREFIX)growl_s.$(LIB_SUFFIX) \
+  $(NULL)
 
 EXTRA_DSO_LDOPTS += \
-	$(MOZ_UNICHARUTIL_LIBS) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(NULL)
+  -framework Carbon \
+  $(XPCOM_GLUE_LDOPTS) \
+  $(NSPR_LIBS) \
+  $(MOZ_JS_LIBS) \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
