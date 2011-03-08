@@ -632,6 +632,7 @@ TypeCompartment::addPending(JSContext *cx, TypeConstraint *constraint, TypeSet *
 {
     JS_ASSERT(this == &cx->compartment->types);
     JS_ASSERT(type);
+    JS_ASSERT(!cx->runtime->gcRunning);
 
     InferSpew(ISpewOps, "pending: C%p %s", constraint, TypeString(type));
 
@@ -740,7 +741,7 @@ HashSetInsertTry(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
 
     U **newValues = pool
         ? ArenaArray<U*>(cx->compartment->types.pool, newCapacity)
-        : (U **) cx->malloc(newCapacity * sizeof(U*));
+        : (U **) ::js_malloc(newCapacity * sizeof(U*));
     if (!newValues) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return NULL;
@@ -757,7 +758,7 @@ HashSetInsertTry(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
     }
 
     if (values && !pool)
-        cx->free(values);
+        ::js_free(values);
     values = newValues;
 
     insertpos = HashKey<T,KEY>(key) & (newCapacity - 1);
@@ -787,7 +788,7 @@ HashSetInsert(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
 
         values = pool
             ? ArenaArray<U*>(cx->compartment->types.pool, SET_ARRAY_SIZE)
-            : (U **) cx->calloc(SET_ARRAY_SIZE * sizeof(U*));
+            : (U **) ::js_malloc(SET_ARRAY_SIZE * sizeof(U*));
         if (!values) {
             values = (U **) oldData;
             cx->compartment->types.setPendingNukeTypes(cx);
@@ -856,11 +857,11 @@ TypeSet::destroy(JSContext *cx)
 {
     JS_ASSERT(!(typeFlags & TYPE_FLAG_INTERMEDIATE_SET));
     if (objectCount >= 2)
-        cx->free(objectSet);
+        ::js_free(objectSet);
     while (constraintList) {
         TypeConstraint *next = constraintList->next;
         if (constraintList->condensed() || constraintList->baseSubset())
-            cx->free(constraintList);
+            ::js_free(constraintList);
         constraintList = next;
     }
 }
