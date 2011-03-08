@@ -1984,6 +1984,7 @@ TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32 offset)
       case JSOP_SETNAME:
       case JSOP_SETGNAME:
       case JSOP_SETXMLNAME:
+      case JSOP_SETCONST:
       case JSOP_SETELEM:
       case JSOP_SETPROP:
       case JSOP_SETMETHOD:
@@ -2621,6 +2622,7 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
       }
 
       case JSOP_SETNAME:
+      case JSOP_SETCONST:
         cx->compartment->types.monitorBytecode(cx, script, offset);
         state.popped(0).types->addSubset(cx, script, &pushed[0]);
         break;
@@ -2645,16 +2647,6 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
       case JSOP_NAMEDEC:
         cx->compartment->types.monitorBytecode(cx, script, offset);
         break;
-
-      case JSOP_SETCONST: {
-        jsid id = GetAtomId(cx, script, pc, 0);
-        TypeSet *types = script->getGlobalType()->getProperty(cx, id, true);
-        if (!types)
-            return false;
-        state.popped(0).types->addSubset(cx, script, types);
-        state.popped(0).types->addSubset(cx, script, &pushed[0]);
-        break;
-      }
 
       case JSOP_GETFCSLOT:
       case JSOP_CALLFCSLOT: {

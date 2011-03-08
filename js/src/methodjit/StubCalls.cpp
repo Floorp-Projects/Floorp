@@ -2753,6 +2753,10 @@ stubs::SetConst(VMFrame &f, JSAtom *atom)
 
     JSObject *obj = &fp->varobj(cx);
     const Value &ref = f.regs.sp[-1];
+
+    if (!cx->typeMonitorAssign(obj, ATOM_TO_JSID(atom), ref))
+        THROW();
+
     if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), ref,
                              PropertyStub, StrictPropertyStub,
                              JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
