@@ -776,14 +776,23 @@ mjit::Compiler::jsop_neg()
 
     JS_ASSERT(!fe->isConstant());
 
-    if (type == JSVAL_TYPE_DOUBLE)
-        frame.ensureDouble(fe);
+    /* Handle negation of a known double, or of a known integer which has previously overflowed. */
+    if (fe->isType(JSVAL_TYPE_DOUBLE) ||
+        (fe->isType(JSVAL_TYPE_INT32) && type == JSVAL_TYPE_DOUBLE)) {
+        FPRegisterID fpreg;
+        if (fe->isType(JSVAL_TYPE_DOUBLE)) {
+            fpreg = frame.tempFPRegForData(fe);
+        } else {
+            fpreg = frame.allocFPReg();
+            frame.convertInt32ToDouble(masm, fe, fpreg);
+        }
 
-    if (fe->isType(JSVAL_TYPE_DOUBLE)) {
-        FPRegisterID fpreg = frame.tempFPRegForData(fe);
         FPRegisterID res = frame.allocFPReg();
         masm.moveDouble(fpreg, res);
         masm.negateDouble(res);
+
+        if (!fe->isType(JSVAL_TYPE_DOUBLE))
+            frame.freeReg(fpreg);
 
         frame.pop();
         frame.pushDouble(res);
