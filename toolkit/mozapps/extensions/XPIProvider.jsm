@@ -2270,7 +2270,7 @@ var XPIProvider = {
       // Update the AddonInternal properties.
       newAddon._installLocation = aInstallLocation;
       newAddon.visible = !(newAddon.id in visibleAddons);
-      newAddon.installDate = Date.now();
+      newAddon.installDate = aAddonState.mtime;
       newAddon.updateDate = aAddonState.mtime;
 
       // If there is migration data then apply it.
@@ -5895,7 +5895,7 @@ AddonInstall.prototype = {
                                           file.persistentDescriptor);
         }
         else {
-          this.addon.installDate = Date.now();
+          this.addon.installDate = this.addon.updateDate;
           this.addon.active = (this.addon.visible && !this.addon.userDisabled &&
                                !this.addon.appDisabled)
           XPIDatabase.addAddonMetadata(this.addon, file.persistentDescriptor);
