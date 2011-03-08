@@ -536,7 +536,7 @@ let WeaveGlue = {
 
     let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
     let url = formatter.formatURLPref("app.sync.tutorialURL");
-    BrowserUI.newTab(url, null);
+    BrowserUI.newTab(url, Browser.selectedTab);
   },
 
   loadSetupData: function _loadSetupData() {

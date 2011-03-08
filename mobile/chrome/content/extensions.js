@@ -625,7 +625,7 @@ var ExtensionsView = {
     whatare.setAttribute("description", desc);
 
     whatare.setAttribute("button", strings.GetStringFromName("addonsWhatAre.button"));
-    whatare.setAttribute("onbuttoncommand", "BrowserUI.newTab('" + browseURL + "');");
+    whatare.setAttribute("onbuttoncommand", "BrowserUI.newTab('" + browseURL + "', Browser.selectedTab);");
     this.addItem(whatare, "repo");
 
     if (aRecommendedAddons.length == 0 && aBrowseAddons.length == 0) {
@@ -715,7 +715,7 @@ var ExtensionsView = {
   showPage: function ev_showPage(aItem) {
     let uri = aItem.getAttribute("homepageURL");
     if (uri)
-      BrowserUI.newTab(uri);
+      BrowserUI.newTab(uri, Browser.selectedTab);
   },
 
   get searchBox() {
@@ -735,7 +735,7 @@ var ExtensionsView = {
 
   showMoreResults: function ev_showMoreResults(aURL) {
     if (aURL)
-      BrowserUI.newTab(aURL);
+      BrowserUI.newTab(aURL, Browser.selectedTab);
   },
 
   updateAll: function ev_updateAll() {
