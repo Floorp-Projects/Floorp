@@ -958,8 +958,6 @@ proxy_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool 
 static void
 proxy_TraceObject(JSTracer *trc, JSObject *obj)
 {
-    JSContext *cx = trc->context;
-
     obj->getProxyHandler()->trace(trc, obj);
     MarkValue(trc, obj->getProxyPrivate(), "private");
     MarkValue(trc, obj->getProxyExtra(), "extra");

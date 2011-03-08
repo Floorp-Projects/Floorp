@@ -175,7 +175,7 @@ class Bindings {
     uint16 nupvars;
 
   public:
-    inline Bindings(JSContext *cx);
+    inline Bindings(JSContext *cx, EmptyShape *emptyCallShape);
 
     /*
      * Transfers ownership of bindings data from bindings into this fresh

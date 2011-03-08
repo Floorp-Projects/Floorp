@@ -3258,8 +3258,12 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 
     JSStackFrame *priv = js_FloatingFrameIfGenerator(cx, cx->fp());
 
+    EmptyShape *emptyWithShape = EmptyShape::getEmptyWithShape(cx);
+    if (!emptyWithShape)
+        return NULL;
+
     obj->init(cx, &js_WithClass, proto, parent, priv, false);
-    obj->setMap(cx->compartment->emptyWithShape);
+    obj->setMap(emptyWithShape);
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
 
     AutoObjectRooter tvr(cx, obj);
@@ -3284,8 +3288,12 @@ js_NewBlockObject(JSContext *cx)
     if (!blockObj)
         return NULL;
 
+    EmptyShape *emptyBlockShape = EmptyShape::getEmptyBlockShape(cx);
+    if (!emptyBlockShape)
+        return NULL;
+
     blockObj->init(cx, &js_BlockClass, NULL, NULL, NULL, false);
-    blockObj->setMap(cx->compartment->emptyBlockShape);
+    blockObj->setMap(emptyBlockShape);
     return blockObj;
 }
 

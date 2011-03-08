@@ -72,6 +72,12 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     jaegerCompartment(NULL),
 #endif
     propertyTree(thisForCtor()),
+    emptyArgumentsShape(NULL),
+    emptyBlockShape(NULL),
+    emptyCallShape(NULL),
+    emptyDeclEnvShape(NULL),
+    emptyEnumeratorShape(NULL),
+    emptyWithShape(NULL),
     debugMode(rt->debugMode),
 #if ENABLE_YARR_JIT
     regExpAllocator(NULL),
@@ -91,7 +97,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 
 JSCompartment::~JSCompartment()
 {
-    Shape::finishEmptyShapes(this);
     propertyTree.finish();
 
 #if ENABLE_YARR_JIT
@@ -137,9 +142,6 @@ JSCompartment::init()
             return false;
     }
 #endif
-
-    if (!Shape::initEmptyShapes(this))
-        return false;
 
 #ifdef JS_TRACER
     if (!InitJIT(&traceMonitor))
@@ -468,19 +470,6 @@ JSCompartment::mark(JSTracer *trc)
             return;
         marked = true;
     }
-
-    if (emptyArgumentsShape)
-        emptyArgumentsShape->trace(trc);
-    if (emptyBlockShape)
-        emptyBlockShape->trace(trc);
-    if (emptyCallShape)
-        emptyCallShape->trace(trc);
-    if (emptyDeclEnvShape)
-        emptyDeclEnvShape->trace(trc);
-    if (emptyEnumeratorShape)
-        emptyEnumeratorShape->trace(trc);
-    if (emptyWithShape)
-        emptyWithShape->trace(trc);
 }
 
 void
@@ -497,6 +486,20 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
             e.removeFront();
         }
     }
+
+    /* Remove dead empty shapes. */
+    if (emptyArgumentsShape && !emptyArgumentsShape->marked())
+        emptyArgumentsShape = NULL;
+    if (emptyBlockShape && !emptyBlockShape->marked())
+        emptyBlockShape = NULL;
+    if (emptyCallShape && !emptyCallShape->marked())
+        emptyCallShape = NULL;
+    if (emptyDeclEnvShape && !emptyDeclEnvShape->marked())
+        emptyDeclEnvShape = NULL;
+    if (emptyEnumeratorShape && !emptyEnumeratorShape->marked())
+        emptyEnumeratorShape = NULL;
+    if (emptyWithShape && !emptyWithShape->marked())
+        emptyWithShape = NULL;
 
 #ifdef JS_TRACER
     traceMonitor.sweep(cx);
