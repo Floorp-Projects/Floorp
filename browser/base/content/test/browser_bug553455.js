@@ -705,6 +705,88 @@ function test_renotify_installed() {
 },
 
 function test_cancel_restart() {
+  // If the XPI is already cached then the HTTP observer won't see the request
+  var cacheService = Cc["@mozilla.org/network/cache-service;1"].
+                     getService(Ci.nsICacheService);
+  try {
+    cacheService.evictEntries(Components.interfaces.nsICache.STORE_ANYWHERE);
+  } catch(ex) {}
+
+  // Must be registered before any request starts
+  var observerService = Cc["@mozilla.org/network/http-activity-distributor;1"].
+                        getService(Ci.nsIHttpActivityDistributor);
+  observerService.addObserver({
+    observeActivity: function(aChannel, aType, aSubtype, aTimestamp, aSizeData,
+                              aStringData) {
+      aChannel.QueryInterface(Ci.nsIChannel);
+
+      // Wait for the first event for the download
+      if (aChannel.URI.spec != TESTROOT + "unsigned.xpi" ||
+        aType != Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION ||
+        aSubtype != Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_REQUEST_HEADER)
+        return;
+
+      observerService.removeObserver(this);
+
+      info("Replacing channel");
+      aChannel.QueryInterface(Ci.nsITraceableChannel);
+      var listener = aChannel.setNewListener({
+        onStartRequest: function(aRequest, aContext) {
+          listener.onStartRequest(aRequest, aContext);
+        },
+
+        onDataAvailable: function(aRequest, aContext, aInputStream, aOffset, aCount) {
+          listener.onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount);
+        },
+
+        onStopRequest: function(aRequest, aContext, aStatusCode) {
+          listener.onStopRequest(aRequest, aContext, aStatusCode);
+
+          // Request should have been cancelled
+          is(aStatusCode, Components.results.NS_BINDING_ABORTED, "Should have seen a cancelled request");
+
+          // Notification should have changed to cancelled
+          let notification = PopupNotifications.panel.childNodes[0];
+          is(notification.id, "addon-install-cancelled-notification", "Should have seen the cancelled notification");
+
+          // Wait for the install confirmation dialog
+          wait_for_install_dialog(function(aWindow) {
+            // Wait for the complete notification
+            wait_for_notification(function(aPanel) {
+              let notification = aPanel.childNodes[0];
+              is(notification.id, "addon-install-complete-notification", "Should have seen the install complete");
+              is(notification.button.label, "Restart Now", "Should have seen the right button");
+              is(notification.getAttribute("label"),
+                 "XPI Test will be installed after you restart " + gApp + ".",
+                 "Should have seen the right message");
+
+              AddonManager.getAllInstalls(function(aInstalls) {
+                is(aInstalls.length, 1, "Should be one pending install");
+                aInstalls[0].cancel();
+
+                Services.perms.remove("example.com", "install");
+                wait_for_notification_close(runNextTest);
+                gBrowser.removeTab(gBrowser.selectedTab);
+              });
+            });
+
+            aWindow.document.documentElement.acceptDialog();
+          });
+
+          // Restart the download
+          info("Restarting download");
+          EventUtils.synthesizeMouse(notification.button, 20, 10, {});
+
+          // Should be back to a progress notification
+          ok(PopupNotifications.isPanelOpen, "Notification should still be open");
+          is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
+          notification = PopupNotifications.panel.childNodes[0];
+          is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
+        }
+      });
+    }
+  });
+
   // Wait for the progress notification
   wait_for_notification(function(aPanel) {
     let notification = aPanel.childNodes[0];
@@ -724,48 +806,8 @@ function test_cancel_restart() {
     let button = document.getAnonymousElementByAttribute(notification, "anonid", "cancel");
 
     // Cancel the download
+    info("Cancelling download");
     EventUtils.synthesizeMouse(button, 2, 2, {});
-
-    // Downloads cannot be restarted synchronously, bug 611755
-    executeSoon(function() {
-      // Notification should have changed to cancelled
-      notification = aPanel.childNodes[0];
-      is(notification.id, "addon-install-cancelled-notification", "Should have seen the cancelled notification");
-
-      // Wait for the install confirmation dialog
-      wait_for_install_dialog(function(aWindow) {
-        // Wait for the complete notification
-        wait_for_notification(function(aPanel) {
-          let notification = aPanel.childNodes[0];
-          is(notification.id, "addon-install-complete-notification", "Should have seen the install complete");
-          is(notification.button.label, "Restart Now", "Should have seen the right button");
-          is(notification.getAttribute("label"),
-             "XPI Test will be installed after you restart " + gApp + ".",
-             "Should have seen the right message");
-
-          AddonManager.getAllInstalls(function(aInstalls) {
-            is(aInstalls.length, 1, "Should be one pending install");
-            aInstalls[0].cancel();
-
-            Services.perms.remove("example.com", "install");
-            wait_for_notification_close(runNextTest);
-            gBrowser.removeTab(gBrowser.selectedTab);
-          });
-        });
-
-        aWindow.document.documentElement.acceptDialog();
-      });
-
-      // Restart the download
-      EventUtils.synthesizeMouse(notification.button, 20, 10, {});
-
-      // Should be back to a progress notification
-      ok(PopupNotifications.isPanelOpen, "Notification should still be open");
-      is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
-      notification = aPanel.childNodes[0];
-      is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
-
-    });
   });
 
   var pm = Services.perms;
