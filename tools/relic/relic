@@ -197,7 +197,6 @@ _g_skip_files = [
     "netwerk/streamconv/public/mozITXTToHTMLConv.idl",
     
     # GPLed build tools
-    "config/preprocessor.pl",
     "intl/uconv/tools/parse-mozilla-encoding-table.pl",
     "intl/uconv/tools/gen-big5hkscs-2001-mozilla.pl",
     "js2/missing",
