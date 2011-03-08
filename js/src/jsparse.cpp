@@ -7550,9 +7550,23 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 return NULL;
 #if JS_HAS_XML_SUPPORT
             tt = tokenStream.getToken(TSF_OPERAND | TSF_KEYWORD_IS_NAME);
+
+            /* Treat filters as 'with' statements for name deoptimization. */
+            JSParseNode *oldWith = tc->innermostWith;
+            JSStmtInfo stmtInfo;
+            if (tt == TOK_LP) {
+                tc->innermostWith = pn;
+                js_PushStatement(tc, &stmtInfo, STMT_WITH, -1);
+            }
+
             pn3 = primaryExpr(tt, JS_TRUE);
             if (!pn3)
                 return NULL;
+
+            if (tt == TOK_LP) {
+                tc->innermostWith = oldWith;
+                PopStatement(tc);
+            }
 
             /* Check both tt and pn_type, to distinguish |x.(y)| and |x.y::z| from |x.y|. */
             if (tt == TOK_NAME && pn3->pn_type == TOK_NAME) {
