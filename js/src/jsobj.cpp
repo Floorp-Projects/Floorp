@@ -3728,13 +3728,12 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
          */
         for (uintN i = 0; i < count; i++) {
             JSAtom *atom;
-            uint16 shortid;
 
-            /* XDR the real id, then the shortid. */
-            if (!js_XDRAtom(xdr, &atom) || !JS_XDRUint16(xdr, &shortid))
+            /* XDR the real id. */
+            if (!js_XDRAtom(xdr, &atom))
                 return false;
 
-            if (!obj->defineBlockVariable(cx, ATOM_TO_JSID(atom), shortid))
+            if (!obj->defineBlockVariable(cx, ATOM_TO_JSID(atom), i))
                 return false;
         }
     } else {
@@ -3758,11 +3757,13 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
             JS_ASSERT(JSID_IS_ATOM(propid));
             JSAtom *atom = JSID_TO_ATOM(propid);
 
+#ifdef DEBUG
             uint16 shortid = uint16(shape->shortid);
             JS_ASSERT(shortid == i);
+#endif
 
-            /* XDR the real id, then the shortid. */
-            if (!js_XDRAtom(xdr, &atom) || !JS_XDRUint16(xdr, &shortid))
+            /* XDR the real id. */
+            if (!js_XDRAtom(xdr, &atom))
                 return false;
         }
     }
