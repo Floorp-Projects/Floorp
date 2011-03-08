@@ -40,14 +40,14 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= profile
+DIRS = profile
 
 PREF_JS_EXPORTS = $(srcdir)/xulrunner.js
 GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/,xulrunner.js)
@@ -88,10 +88,10 @@ endif
 endif
 
 LOCAL_INCLUDES += \
-        -I$(topsrcdir)/toolkit/xre \
-        -I$(topsrcdir)/toolkit/profile/src \
-        -I$(topsrcdir)/xpcom/base \
-        $(NULL)
+  -I$(topsrcdir)/toolkit/xre \
+  -I$(topsrcdir)/toolkit/profile \
+  -I$(topsrcdir)/xpcom/base \
+  $(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 TK_LIBS := -framework Cocoa $(TK_LIBS)
@@ -106,11 +106,11 @@ endif
 endif
 
 LIBS += \
-	$(EXTRA_DSO_LIBS) \
-	$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
-	$(XPCOM_LIBS) \
-	$(NSPR_LIBS) \
-	$(NULL)
+  $(EXTRA_DSO_LIBS) \
+  $(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+  $(XPCOM_LIBS) \
+  $(NSPR_LIBS) \
+  $(NULL)
 
 ifdef MOZ_JPROF
 LIBS += -ljprof
@@ -214,9 +214,9 @@ endif
 
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 
-ICON_FILES	= \
-		$(DIST)/branding/document.png \
-		$(NULL)
+ICON_FILES = \
+  $(DIST)/branding/document.png \
+  $(NULL)
 
 libs:: $(ICON_FILES)
 	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin/icons

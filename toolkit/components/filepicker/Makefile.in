@@ -20,6 +20,8 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Brian Ryner <bryner@brianryner.com>
+#   Stuart Parmenter <pavlov@pavlov.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,8 +47,28 @@ include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_XUL
 ifeq (,$(filter android qt os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
-DIRS = public src
+MODULE = filepicker
+LIBRARY_NAME = fileview
+SHORT_LIBNAME = fileview
+EXPORT_LIBRARY = 1
+IS_COMPONENT = 1
+MODULE_NAME = nsFileViewModule
+LIBXUL_LIBRARY = 1
+XPIDLSRCS = \
+  nsIFileView.idl \
+  $(NULL)
+CPPSRCS = \
+  nsFileView.cpp \
+  $(NULL)
+EXTRA_COMPONENTS = nsFilePicker.js
+EXTRA_PP_COMPONENTS = nsFilePicker.manifest
 endif
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifdef MOZ_XUL
+ifeq (,$(filter android qt os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+endif
+endif
