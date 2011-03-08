@@ -2297,6 +2297,15 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
      */
     gcmarker.markDelayedChildren();
 
+    /*
+     * Mark weak roots.
+     */
+    while (true) {
+        if (!js_TraceWatchPoints(&gcmarker))
+            break;
+        gcmarker.markDelayedChildren();
+    }
+
     rt->gcMarkingTracer = NULL;
 
     if (rt->gcCallback)
@@ -2415,6 +2424,15 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
      * tracing.
      */
     gcmarker.markDelayedChildren();
+
+    /*
+     * Mark weak roots.
+     */
+    while (true) {
+        if (!js_TraceWatchPoints(&gcmarker))
+            break;
+        gcmarker.markDelayedChildren();
+    }
 
     rt->gcMarkingTracer = NULL;
 

@@ -960,9 +960,6 @@ proxy_TraceObject(JSTracer *trc, JSObject *obj)
 {
     JSContext *cx = trc->context;
 
-    if (!JS_CLIST_IS_EMPTY(&cx->runtime->watchPointList))
-        js_TraceWatchPoints(trc, obj);
-
     obj->getProxyHandler()->trace(trc, obj);
     MarkValue(trc, obj->getProxyPrivate(), "private");
     MarkValue(trc, obj->getProxyExtra(), "extra");

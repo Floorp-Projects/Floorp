@@ -520,7 +520,10 @@ struct Shape : public JSObjectMap
     /* Used by EmptyShape (see jsscopeinlines.h). */
     Shape(JSCompartment *comp, Class *aclasp);
 
+  public:
     bool marked() const         { return (flags & MARK) != 0; }
+
+  protected:
     void mark() const           { flags |= MARK; }
     void clearMark()            { flags &= ~MARK; }
 

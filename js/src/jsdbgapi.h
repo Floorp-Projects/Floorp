@@ -184,8 +184,8 @@ JS_ClearAllWatchPoints(JSContext *cx);
  * Hide these non-API function prototypes by testing whether the internal
  * header file "jsversion.h" has been included.
  */
-extern void
-js_TraceWatchPoints(JSTracer *trc, JSObject *obj);
+extern bool
+js_TraceWatchPoints(JSTracer *trc);
 
 extern void
 js_SweepWatchPoints(JSContext *cx);
