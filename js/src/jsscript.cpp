@@ -1731,7 +1731,7 @@ js_TraceScript(JSTracer *trc, JSScript *script)
         MarkValueRange(trc, constarray->length, constarray->vector, "consts");
     }
 
-    if (script->u.object) {
+    if (!script->isCachedEval && !script->isUncachedEval && script->u.object) {
         JS_SET_TRACING_NAME(trc, "object");
         Mark(trc, script->u.object);
     }
