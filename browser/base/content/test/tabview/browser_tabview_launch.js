@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 let tabViewShownCount = 0;
+let timerId;
 
 // ----------
 function test() {
@@ -12,8 +13,14 @@ function test() {
 
   // launch tab view for the first time
   window.addEventListener("tabviewshown", onTabViewLoadedAndShown, false);
-  let tabViewCommand = document.getElementById("Browser:ToggleTabView");
-  tabViewCommand.doCommand();
+  TabView.toggle();
+
+  registerCleanupFunction(function () {
+    window.removeEventListener("tabviewshown", onTabViewLoadedAndShown, false);
+    if (timerId) 
+      clearTimeout(timerId);
+    TabView.hide()
+  });
 }
 
 // ----------
@@ -27,21 +34,29 @@ function onTabViewLoadedAndShown() {
   // longer than expected.
   // See bug 594909.
   let deck = document.getElementById("tab-view-deck");
+  let iframe = document.getElementById("tab-view");
+  ok(iframe, "The tab view iframe exists");
+  
   function waitForSwitch() {
-    if (deck.selectedIndex == 1) {
+    if (deck.selectedPanel == iframe) {
       ok(TabView.isVisible(), "Tab View is visible. Count: " + tabViewShownCount);
       tabViewShownCount++;
 
       // kick off the series
       window.addEventListener("tabviewshown", onTabViewShown, false);
       window.addEventListener("tabviewhidden", onTabViewHidden, false);
+
+      registerCleanupFunction(function () {
+        window.removeEventListener("tabviewshown", onTabViewShown, false);
+        window.removeEventListener("tabviewhidden", onTabViewHidden, false);
+      });
       TabView.toggle();
     } else {
-      setTimeout(waitForSwitch, 10);
+      timerId = setTimeout(waitForSwitch, 10);
     }
   }
 
-  setTimeout(waitForSwitch, 1);
+  timerId = setTimeout(waitForSwitch, 1);
 }
 
 // ----------
