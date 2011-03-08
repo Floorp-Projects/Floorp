@@ -428,8 +428,24 @@ public class GeckoAppShell
 
         switch (type) {
         case NOTIFY_IME_RESETINPUTSTATE:
-            GeckoApp.surfaceView.inputConnection.finishComposingText();
-            IMEStateUpdater.resetIME();
+            // Composition event is already fired from widget.
+            // So reset IME flags.
+            GeckoApp.surfaceView.inputConnection.reset();
+            
+            // Don't use IMEStateUpdater for reset.
+            // Because IME may not work showSoftInput()
+            // after calling restartInput() immediately.
+            // So we have to call showSoftInput() delay.
+            InputMethodManager imm = (InputMethodManager) 
+                GeckoApp.surfaceView.getContext().getSystemService(
+                    Context.INPUT_METHOD_SERVICE);
+            if (imm == null) {
+                // no way to reset IME status directly
+                IMEStateUpdater.resetIME();
+            } else {
+                imm.restartInput(GeckoApp.surfaceView);
+            }
+
             // keep current enabled state
             IMEStateUpdater.enableIME();
             break;
@@ -439,7 +455,6 @@ public class GeckoAppShell
             break;
 
         case NOTIFY_IME_FOCUSCHANGE:
-            GeckoApp.surfaceView.mIMEFocus = state != 0;
             IMEStateUpdater.resetIME();
             break;
         }
