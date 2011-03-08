@@ -137,10 +137,7 @@ mjit::Compiler::ensureInteger(FrameEntry *fe, Uses uses)
     } else if (!fe->isType(JSVAL_TYPE_INT32)) {
         RegisterID typeReg = frame.tempRegForType(fe);
         frame.pinReg(typeReg);
-        RegisterID dataReg = frame.tempRegForData(fe);
-        frame.pinReg(dataReg);
-        RegisterID scratchReg = frame.allocReg();
-        frame.unpinReg(dataReg);
+        RegisterID dataReg = frame.copyDataIntoReg(fe);
         frame.unpinReg(typeReg);
 
         Jump intGuard = masm.testInt32(Assembler::Equal, typeReg);
@@ -149,14 +146,12 @@ mjit::Compiler::ensureInteger(FrameEntry *fe, Uses uses)
 
         FPRegisterID fpreg = frame.allocFPReg();
         frame.loadDouble(fe, fpreg, masm);
-        Jump truncateGuard = masm.branchTruncateDoubleToInt32(fpreg, scratchReg);
+        Jump truncateGuard = masm.branchTruncateDoubleToInt32(fpreg, dataReg);
         stubcc.linkExit(truncateGuard, uses);
-        masm.move(scratchReg, dataReg);
         intGuard.linkTo(masm.label(), &masm);
 
         frame.freeReg(fpreg);
-        frame.freeReg(scratchReg);
-        frame.learnType(fe, JSVAL_TYPE_INT32);
+        frame.learnType(fe, JSVAL_TYPE_INT32, dataReg);
     }
 }
 
