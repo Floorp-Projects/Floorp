@@ -15,6 +15,10 @@ var BookmarkHelper = {
     if (itemId == -1)
       return;
 
+    // When opening the bookmark helper dialog be sure there is not others
+    // popup opened like the bookmakr popup
+    BookmarkPopup.hide();
+
     let title = PlacesUtils.bookmarks.getItemTitle(itemId);
     let tags = PlacesUtils.tagging.getTagsForURI(aURI, {});
 
@@ -28,11 +32,11 @@ var BookmarkHelper = {
     this._editor.setAttribute("uri", aURI.spec);
     this._editor.setAttribute("itemid", itemId);
     this._editor.setAttribute("tags", tags.join(", "));
-    this._editor.setAttribute("onclose", "BookmarkHelper.hide()");
+    this._editor.setAttribute("onclose", "BookmarkHelper.close()");
     document.getElementById("bookmark-form").appendChild(this._editor);
 
     this.box.hidden = false;
-    BrowserUI.pushPopup(this, this.box);
+    BrowserUI.pushDialog(this);
 
     function waitForWidget(self) {
       try {
@@ -48,7 +52,7 @@ var BookmarkHelper = {
     this._editor.stopEditing(true);
   },
 
-  hide: function BH_hide() {
+  close: function BH_close() {
     BrowserUI.updateStar();
 
     // Note: the _editor will have already saved the data, if needed, by the time
@@ -56,8 +60,8 @@ var BookmarkHelper = {
     this._editor.parentNode.removeChild(this._editor);
     this._editor = null;
 
+    BrowserUI.popDialog();
     this.box.hidden = true;
-    BrowserUI.popPopup(this);
   },
 
   removeBookmarksForURI: function BH_removeBookmarksForURI(aURI) {
