@@ -78,6 +78,13 @@ struct VMFrame
     Value        *stackLimit;
     JSStackFrame *entryfp;
 
+/*
+ * Value stored in the 'scratch' field when making a native call. This is used
+ * by the recompiler and this value must not be written in other cases
+ * (i.e. scratch must be used to store a pointer, not an integer.
+ */
+#define NATIVE_CALL_SCRATCH_VALUE (void *) 0x1
+
 #if defined(JS_CPU_X86)
     void *savedEBX;
     void *savedEDI;

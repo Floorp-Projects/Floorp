@@ -288,20 +288,8 @@ Recompiler::recompile()
             next = fp;
         }
 
-        // These return address checks will not pass when we were called from a native.
-        // Native calls are not through the FASTCALL ABI, and use a different return
-        // address from f->returnAddressLocation(). We make sure when calling a native that
-        // the FASTCALL return address is overwritten with NULL, and that it won't
-        // be used by the native itself. Otherwise we will read an uninitialized
-        // value here (probably the return address for a previous FASTCALL).
         void **addr = f->returnAddressLocation();
-        if (script->jitCtor && script->jitCtor->isValidCode(*addr)) {
-            if (!ctorPatches.append(findPatch(script->jitCtor, addr)))
-                return false;
-        } else if (script->jitNormal && script->jitNormal->isValidCode(*addr)) {
-            if (!normalPatches.append(findPatch(script->jitNormal, addr)))
-                return false;
-        } else if (f->fp()->script() == script) {
+        if (f->fp()->script() == script && f->scratch == NATIVE_CALL_SCRATCH_VALUE) {
             // Native call.
             if (f->fp()->isConstructing()) {
                 if (!ctorNatives.append(stealNative(script->jitCtor, f->fp()->pc(cx, NULL))))
@@ -310,6 +298,12 @@ Recompiler::recompile()
                 if (!normalNatives.append(stealNative(script->jitNormal, f->fp()->pc(cx, NULL))))
                     return false;
             }
+        } else if (script->jitCtor && script->jitCtor->isValidCode(*addr)) {
+            if (!ctorPatches.append(findPatch(script->jitCtor, addr)))
+                return false;
+        } else if (script->jitNormal && script->jitNormal->isValidCode(*addr)) {
+            if (!normalPatches.append(findPatch(script->jitNormal, addr)))
+                return false;
         }
     }
 
