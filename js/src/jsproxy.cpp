@@ -154,6 +154,8 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != StrictPropertyStub)) {
             if (!CallSetter(cx, receiver, id, desc.setter, desc.attrs, desc.shortid, strict, vp))
                 return false;
+            if (!proxy->isProxy() || proxy->getProxyHandler() != this)
+                return true;
             if (desc.attrs & JSPROP_SHARED)
                 return true;
         }
@@ -172,6 +174,8 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != StrictPropertyStub)) {
             if (!CallSetter(cx, receiver, id, desc.setter, desc.attrs, desc.shortid, strict, vp))
                 return false;
+            if (!proxy->isProxy() || proxy->getProxyHandler() != this)
+                return true;
             if (desc.attrs & JSPROP_SHARED)
                 return true;
         }
