@@ -424,8 +424,13 @@ NewIteratorObject(JSContext *cx, uintN flags)
         JSObject *obj = js_NewGCObject(cx, FINALIZE_OBJECT0);
         if (!obj)
             return false;
+
+        EmptyShape *emptyEnumeratorShape = EmptyShape::getEmptyEnumeratorShape(cx);
+        if (!emptyEnumeratorShape)
+            return NULL;
+
         obj->init(cx, &js_IteratorClass, NULL, NULL, NULL, false);
-        obj->setMap(cx->compartment->emptyEnumeratorShape);
+        obj->setMap(emptyEnumeratorShape);
         return obj;
     }
 

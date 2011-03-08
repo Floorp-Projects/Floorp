@@ -188,6 +188,11 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee)
     if (!argsobj)
         return NULL;
 
+    EmptyShape *emptyArgumentsShape = EmptyShape::getEmptyArgumentsShape(cx);
+    if (!emptyArgumentsShape)
+        return NULL;
+    AutoShapeRooter shapeRoot(cx, emptyArgumentsShape);
+
     ArgumentsData *data = (ArgumentsData *)
         cx->malloc(offsetof(ArgumentsData, slots) + argc * sizeof(Value));
     if (!data)
@@ -200,7 +205,7 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee)
                   : &js_ArgumentsClass,
                   proto, parent, NULL, false);
 
-    argsobj->setMap(cx->compartment->emptyArgumentsShape);
+    argsobj->setMap(emptyArgumentsShape);
 
     argsobj->setArgsLength(argc);
     argsobj->setArgsData(data);
@@ -989,8 +994,12 @@ NewDeclEnvObject(JSContext *cx, JSStackFrame *fp)
     if (!envobj)
         return NULL;
 
+    EmptyShape *emptyDeclEnvShape = EmptyShape::getEmptyDeclEnvShape(cx);
+    if (!emptyDeclEnvShape)
+        return NULL;
+
     envobj->init(cx, &js_DeclEnvClass, NULL, &fp->scopeChain(), fp, false);
-    envobj->setMap(cx->compartment->emptyDeclEnvShape);
+    envobj->setMap(emptyDeclEnvShape);
     return envobj;
 }
 
@@ -2471,7 +2480,12 @@ Function(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
     }
 
-    Bindings bindings(cx);
+    EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
+    if (!emptyCallShape)
+        return JS_FALSE;
+    AutoShapeRooter shapeRoot(cx, emptyCallShape);
+
+    Bindings bindings(cx, emptyCallShape);
     AutoBindingsRooter root(cx, bindings);
 
     Value *argv = vp + 2;

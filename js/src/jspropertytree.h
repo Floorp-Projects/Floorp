@@ -122,7 +122,6 @@ class PropertyTree
     bool init();
     void finish();
 
-    js::Shape *newShapeUnchecked();
     js::Shape *newShape(JSContext *cx);
     js::Shape *getChild(JSContext *cx, js::Shape *parent, const js::Shape &child);
 

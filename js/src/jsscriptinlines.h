@@ -51,8 +51,8 @@
 namespace js {
 
 inline
-Bindings::Bindings(JSContext *cx)
-  : lastBinding(cx->compartment->emptyCallShape), nargs(0), nvars(0), nupvars(0)
+Bindings::Bindings(JSContext *cx, EmptyShape *emptyCallShape)
+  : lastBinding(emptyCallShape), nargs(0), nvars(0), nupvars(0)
 {
 }
 
