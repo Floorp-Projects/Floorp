@@ -796,7 +796,7 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
         /* Cannot also cache the raw code pointer; it can change. */
 
         /* Hoist dynamic checks from CheckStackAndEnterMethodJIT. */
-        JS_CHECK_RECURSION(cx, return JS_FALSE);
+        JS_CHECK_RECURSION(cx, return false);
         stackLimit_ = stack.getStackLimit(cx);
         if (!stackLimit_)
             return false;
@@ -891,7 +891,7 @@ ExternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, const Value &fval,
      * ExternalInvoke could result in another try to get or set the same id
      * again, see bug 355497.
      */
-    JS_CHECK_RECURSION(cx, return JS_FALSE);
+    JS_CHECK_RECURSION(cx, return false);
 
     return ExternalInvoke(cx, ObjectValue(*obj), fval, argc, argv, rval);
 }
@@ -2622,7 +2622,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
         } while (0););
 #endif
 #else
-    JS_CHECK_RECURSION(cx, return JS_FALSE);
+    JS_CHECK_RECURSION(cx, goto error);
 #endif
 
 #if JS_THREADED_INTERP
