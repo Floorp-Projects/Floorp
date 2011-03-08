@@ -69,7 +69,7 @@
             var control = this.control;
             if (control)
               control.removeNotification(this);
-            
+
             // Fire an event when closing a notification
             let event = document.createEvent("Events");
             event.initEvent("AlertClose", true, true);
@@ -93,9 +93,9 @@
           <xul:label anonid="learnMore"
                      class="text-link"
                      value="&geolocation.learnMore;"
-                     onclick="BrowserUI.newTab(this.href); return false;"/>
+                     onclick="BrowserUI.newTab(this.href, Browser.selectedTab); return false;"/>
         </xul:hbox>
-        
+
         <xul:hbox pack="center"
                   oncommand="document.getBindingParent(this)._doButtonCommand(event);">
           <children/>

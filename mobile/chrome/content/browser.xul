@@ -420,9 +420,9 @@
 #ifdef MOZ_OFFICIAL_BRANDING
 # these two point to the same page, this just matters for what shows up in the
 # URL bar
-                          oncommand="BrowserUI.newTab('about:firefox');"/>
+                          oncommand="BrowserUI.newTab('about:firefox', Browser.selectedTab);"/>
 #else
-                          oncommand="BrowserUI.newTab('about:fennec');"/>
+                          oncommand="BrowserUI.newTab('about:fennec', Browser.selectedTab);"/>
 #endif
                 </setting>
                 <setting id="prefs-uilanguage" title="&language.title;" type="control">
