@@ -408,18 +408,14 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                        doubleList.length() * sizeof(double) +
                        jumpTableOffsets.length() * sizeof(void *);
 
-    JSC::ExecutablePool *execPool = getExecPool(script, totalSize);
-    if (!execPool) {
-        js_ReportOutOfMemory(cx);
-        return Compile_Error;
-    }
-
-    uint8 *result = (uint8 *)execPool->alloc(totalSize);
+    JSC::ExecutablePool *execPool;
+    uint8 *result =
+        (uint8 *)script->compartment->jaegerCompartment->execAlloc()->alloc(totalSize, &execPool);
     if (!result) {
-        execPool->release();
         js_ReportOutOfMemory(cx);
         return Compile_Error;
     }
+    JS_ASSERT(execPool);
     JSC::ExecutableAllocator::makeWritable(result, totalSize);
     masm.executableCopy(result);
     stubcc.masm.executableCopy(result + masm.size());
