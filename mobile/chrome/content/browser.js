@@ -840,7 +840,10 @@ var Browser = {
     if (tab)
       tab.active = true;
 
-    if (!isFirstTab) {
+    if (isFirstTab) {
+      // Don't waste time at startup updating the whole UI; just display the URL.
+      BrowserUI._titleChanged(browser);
+    } else {
       // Update all of our UI to reflect the new tab's location
       BrowserUI.updateURI();
       getIdentityHandler().checkIdentity();
