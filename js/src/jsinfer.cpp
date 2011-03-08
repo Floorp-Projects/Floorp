@@ -2037,6 +2037,9 @@ TypeCompartment::finish(JSContext *cx, JSCompartment *compartment)
 {
     JS_ASSERT(this == &compartment->types);
 
+    if (pendingArray)
+        cx->free(pendingArray);
+
     if (!InferSpewActive(ISpewResult) || JS_CLIST_IS_EMPTY(&compartment->scripts))
         return;
 
@@ -4118,6 +4121,7 @@ JSScript::condenseTypes(JSContext *cx)
             (fun && IsAboutToBeFinalized(cx, fun))) {
             for (unsigned i = 0; i < num; i++)
                 varTypes[i].destroy(cx);
+            cx->free(varTypes);
             varTypes = NULL;
         } else {
             for (unsigned i = 0; i < num; i++)
