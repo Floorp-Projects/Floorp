@@ -629,26 +629,43 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
 /*
  * NB: js_TraceWatchPoints does not acquire cx->runtime->debuggerLock, since
  * the debugger should never be racing with the GC (i.e., the debugger must
- * respect the request model).
+ * respect the request model). If any unmarked objects were marked, this
+ * function returns true and the GC will iteratively call this function again
+ * until no more unmarked heap objects are found. This is necessary because
+ * watch points have a weak pointer semantics.
  */
-void
-js_TraceWatchPoints(JSTracer *trc, JSObject *obj)
+bool
+js_TraceWatchPoints(JSTracer *trc)
 {
     JSRuntime *rt;
     JSWatchPoint *wp;
 
     rt = trc->context->runtime;
 
+    bool modified = false;
+
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
          &wp->links != &rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
-        if (wp->object == obj) {
-            wp->shape->trace(trc);
-            if (wp->shape->hasSetterValue() && wp->setter)
-                MarkObject(trc, *CastAsObject(wp->setter), "wp->setter");
-            MarkObject(trc, *wp->closure, "wp->closure");
+        if (wp->object->isMarked()) {
+            if (!wp->shape->marked()) {
+                modified = true;
+                wp->shape->trace(trc);
+            }
+            if (wp->shape->hasSetterValue() && wp->setter) {
+                if (!CastAsObject(wp->setter)->isMarked()) {
+                    modified = true;
+                    MarkObject(trc, *CastAsObject(wp->setter), "wp->setter");
+                }
+            }
+            if (!wp->closure->isMarked()) {
+                modified = true;
+                MarkObject(trc, *wp->closure, "wp->closure");
+            }
         }
     }
+
+    return modified;
 }
 
 void

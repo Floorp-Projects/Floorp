@@ -6525,9 +6525,6 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
 
     obj->trace(trc);
 
-    if (!JS_CLIST_IS_EMPTY(&cx->runtime->watchPointList))
-        js_TraceWatchPoints(trc, obj);
-
     if (obj->getClass()->flags & JSCLASS_IS_GLOBAL) {
         JSCompartment *compartment = obj->getCompartment();
         compartment->mark(trc);
