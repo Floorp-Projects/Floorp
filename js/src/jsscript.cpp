@@ -1652,8 +1652,8 @@ DestroyScript(JSContext *cx, JSScript *script)
     types::TypeObject *obj = script->typeObjects;
     while (obj) {
         types::TypeObject *next = obj->next;
-        obj->next = cx->compartment->types.objects;
-        cx->compartment->types.objects = obj;
+        obj->next = script->compartment->types.objects;
+        script->compartment->types.objects = obj;
         obj = next;
     }
 
