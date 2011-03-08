@@ -494,7 +494,6 @@ JSCompartment::mark(JSTracer *trc)
     if (types.inferenceDepth) {
         /* Mark all scripts and type objects in the compartment. */ 
 
-        /* :FIXME: can this list contain scriptsToGC? */
         for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
             JSScript *script = reinterpret_cast<JSScript *>(cursor);
             js_TraceScript(trc, script);
