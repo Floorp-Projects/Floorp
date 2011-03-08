@@ -48,6 +48,7 @@
 #include "cairo.h"
 
 #include "yuv_convert.h"
+#include "ycbcr_to_rgb565.h"
 
 #include "gfxPlatform.h"
 
@@ -146,14 +147,13 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
   // YCbCr to RGB conversion rather than on the RGB data when rendered.
   PRBool prescale = mScaleHint.width > 0 && mScaleHint.height > 0;
   if (format == gfxASurface::ImageFormatRGB16_565) {
-#ifndef HAVE_SCALE_YCBCR_TO_RGB565
-    // yuv2rgb16 with scale function not yet available
-    prescale = PR_FALSE;
-#endif
-#ifndef HAVE_YCBCR_TO_RGB565
-    // yuv2rgb16 function not yet available for non-arm
-    format = gfxASurface::ImageFormatRGB24;
-#endif
+    if (have_ycbcr_to_rgb565()) {
+      // yuv2rgb16 with scale function not yet available for NEON
+      prescale = PR_FALSE;
+    } else {
+      // yuv2rgb16 function not yet available for non-NEON
+      format = gfxASurface::ImageFormatRGB24;
+    }
   }
   gfxIntSize size(prescale ? mScaleHint.width : aData.mPicSize.width,
                   prescale ? mScaleHint.height : aData.mPicSize.height);
@@ -204,6 +204,7 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
     }
   } else { // no prescale
     if (format == gfxASurface::ImageFormatRGB16_565) {
+      NS_ASSERTION(have_ycbcr_to_rgb565(), "Cannot convert YCbCr to RGB565");
       gfx::ConvertYCbCrToRGB565(aData.mYChannel,
                                 aData.mCbChannel,
                                 aData.mCrChannel,
