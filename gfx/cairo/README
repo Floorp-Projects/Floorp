@@ -166,6 +166,8 @@ missing-cairo-clip-init.diff: Missing cairo_clip_init call in cairo_gstate_show_
 
 fix-cairo-win32-print-gdi-error.diff: Don't use fwprintf with char* format.  Flush stderr so that all error messages appears before exit.
 
+pixman-image-transform.patch: Reset the transform on pixman images when using them as destinations.
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.

@@ -1143,6 +1143,17 @@ _cairo_image_surface_composite (cairo_operator_t	 op,
     if (unlikely (status))
 	goto CLEANUP_SURFACES;
 
+    /* we sometimes get destinations with transforms.
+     * we're not equiped to deal with this */
+    {
+        static const pixman_transform_t id = {
+           {{ pixman_fixed_1, 0, 0 },
+            { 0, pixman_fixed_1, 0 },
+            { 0, 0, pixman_fixed_1 }}
+        };
+        pixman_image_set_transform (dst->pixman_image, &id);
+    }
+
     if (mask) {
 	status = _cairo_image_surface_set_attributes (mask, &mask_attr,
 						      dst_x + width / 2.,
