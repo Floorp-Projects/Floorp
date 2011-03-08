@@ -396,9 +396,6 @@ JS_XDRCString(JSXDRState *xdr, char **sp)
     }
     if (xdr->mode == JSXDR_DECODE) {
         (*sp)[len] = '\0';
-    } else if (xdr->mode == JSXDR_FREE) {
-        xdr->cx->free(*sp);
-        *sp = NULL;
     }
     return JS_TRUE;
 }
