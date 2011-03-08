@@ -525,7 +525,7 @@ void
 TypeSet::addBaseSubset(JSContext *cx, TypeObject *obj, TypeSet *target)
 {
     TypeConstraintBaseSubset *constraint =
-        (TypeConstraintBaseSubset *) cx->calloc(sizeof(TypeConstraintBaseSubset));
+        (TypeConstraintBaseSubset *) ::js_calloc(sizeof(TypeConstraintBaseSubset));
     if (constraint)
         new(constraint) TypeConstraintBaseSubset(obj, target);
     add(cx, constraint);
@@ -549,7 +549,7 @@ void
 TypeSet::addCondensed(JSContext *cx, JSScript *script)
 {
     TypeConstraintCondensed *constraint =
-        (TypeConstraintCondensed *) cx->calloc(sizeof(TypeConstraintCondensed));
+        (TypeConstraintCondensed *) ::js_calloc(sizeof(TypeConstraintCondensed));
 
     if (!constraint) {
         /*
@@ -3889,6 +3889,13 @@ void
 CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
                      HashSet<JSScript*> *pcondensed, TypeSet *types)
 {
+    /*
+     * This function is called from GC, and cannot malloc any data that could
+     * trigger a reentrant GC. The only allocation that can happen here is
+     * the construction of condensed constraints and tables for hash sets.
+     * Both of these use js_malloc rather than cx->malloc, and thus do not
+     * contribute towards the runtime's overall malloc bytes.
+     */
     JS_ASSERT(!(types->typeFlags & TYPE_FLAG_INTERMEDIATE_SET));
 
     if (types->objectCount >= 2) {
@@ -3929,7 +3936,7 @@ CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
                         *pentry = object;
                 }
             }
-            cx->free(oldArray);
+            ::js_free(oldArray);
         }
     } else if (types->objectCount == 1) {
         TypeObject *object = (TypeObject*) types->objectSet;
@@ -3969,7 +3976,7 @@ CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
                 constraint->next = types->constraintList;
                 types->constraintList = constraint;
             } else {
-                cx->free(constraint);
+                ::js_free(constraint);
             }
             constraint = next;
             continue;
@@ -3984,7 +3991,7 @@ CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
             (script->u.object && IsAboutToBeFinalized(cx, script->u.object)) ||
             (script->fun && IsAboutToBeFinalized(cx, script->fun))) {
             if (constraint->condensed())
-                cx->free(constraint);
+                ::js_free(constraint);
             constraint = next;
             continue;
         }
@@ -4000,7 +4007,7 @@ CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
         }
 
         if (constraint->condensed())
-            cx->free(constraint);
+            ::js_free(constraint);
         constraint = next;
     }
 
@@ -4089,7 +4096,7 @@ SweepTypeObjectList(JSContext *cx, TypeObject *&objects)
                     if (prop)
                         DestroyProperty(cx, prop);
                 }
-                cx->free(object->propertySet);
+                ::js_free(object->propertySet);
             } else if (object->propertyCount == 1) {
                 Property *prop = (Property *) object->propertySet;
                 DestroyProperty(cx, prop);
