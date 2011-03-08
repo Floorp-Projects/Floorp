@@ -636,7 +636,7 @@ abstract public class GeckoApp
                 Uri uri = data.getData();
                 String mimeType = cr.getType(uri);
                 String fileExt = "." +
-                    mimeType.substring(mimeType.lastIndexOf('/') + 1);
+                    GeckoAppShell.getExtensionFromMimeType(mimeType);
                 File file =
                     File.createTempFile("tmp_" +
                                         (int)Math.floor(1000 * Math.random()),
