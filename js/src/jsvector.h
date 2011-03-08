@@ -272,6 +272,12 @@ class Vector : AllocPolicy
     }
 #endif
 
+    /* Append operations guaranteed to succeed due to pre-reserved space. */
+    void internalAppend(const T &t);
+    void internalAppendN(const T &t, size_t n);
+    template <class U> void internalAppend(const U *begin, size_t length);
+    template <class U, size_t O, class BP> void internalAppend(const Vector<U,O,BP> &other);
+
   public:
     typedef T ElementType;
 
@@ -369,24 +375,19 @@ class Vector : AllocPolicy
      * memory has been pre-reserved.
      */
     void infallibleAppend(const T &t) {
-        JS_ASSERT(mLength + 1 <= reserved());
-        JS_ALWAYS_TRUE(append(t));
+        internalAppend(t);
     }
     void infallibleAppendN(const T &t, size_t n) {
-        JS_ASSERT(mLength + n <= reserved());
-        JS_ALWAYS_TRUE(appendN(t, n));
+        internalAppendN(t, n);
     }
     template <class U> void infallibleAppend(const U *begin, const U *end) {
-        JS_ASSERT(mLength + PointerRangeSize(begin, end) <= reserved());
-        JS_ALWAYS_TRUE(append(begin, end));
+        internalAppend(begin, PointerRangeSize(begin, end));
     }
     template <class U> void infallibleAppend(const U *begin, size_t length) {
-        JS_ASSERT(mLength + length <= reserved());
-        JS_ALWAYS_TRUE(append(begin, length));
+        internalAppend(begin, length);
     }
     template <class U, size_t O, class BP> void infallibleAppend(const Vector<U,O,BP> &other) {
-        JS_ASSERT(mLength + other.length() <= reserved());
-        JS_ALWAYS_TRUE(append(other));
+        internalAppend(other);
     }
 
     void popBack();
@@ -645,14 +646,22 @@ Vector<T,N,AP>::append(const T &t)
     if (mLength == mCapacity && !growStorageBy(1))
         return false;
 
-    JS_ASSERT(mLength < mCapacity);
+#ifdef DEBUG
+    if (mLength + 1 > mReserved)
+        mReserved = mLength + 1;
+#endif
+    internalAppend(t);
+    return true;
+}
+
+template <class T, size_t N, class AP>
+JS_ALWAYS_INLINE void
+Vector<T,N,AP>::internalAppend(const T &t)
+{
+    JS_ASSERT(mLength + 1 <= mReserved);
+    JS_ASSERT(mReserved <= mCapacity);
     new(endNoCheck()) T(t);
     ++mLength;
-#ifdef DEBUG
-    if (mLength > mReserved)
-        mReserved = mLength;
-#endif
-    return true;
 }
 
 template <class T, size_t N, class AP>
@@ -663,14 +672,22 @@ Vector<T,N,AP>::appendN(const T &t, size_t needed)
     if (mLength + needed > mCapacity && !growStorageBy(needed))
         return false;
 
-    JS_ASSERT(mLength + needed <= mCapacity);
+#ifdef DEBUG
+    if (mLength + needed > mReserved)
+        mReserved = mLength + needed;
+#endif
+    internalAppendN(t, needed);
+    return true;
+}
+
+template <class T, size_t N, class AP>
+JS_ALWAYS_INLINE void
+Vector<T,N,AP>::internalAppendN(const T &t, size_t needed)
+{
+    JS_ASSERT(mLength + needed <= mReserved);
+    JS_ASSERT(mReserved <= mCapacity);
     Impl::copyConstructN(endNoCheck(), needed, t);
     mLength += needed;
-#ifdef DEBUG
-    if (mLength > mReserved)
-        mReserved = mLength;
-#endif
-    return true;
 }
 
 template <class T, size_t N, class AP>
@@ -716,14 +733,23 @@ Vector<T,N,AP>::append(const U *insBegin, const U *insEnd)
     if (mLength + needed > mCapacity && !growStorageBy(needed))
         return false;
 
-    JS_ASSERT(mLength + needed <= mCapacity);
-    Impl::copyConstruct(endNoCheck(), insBegin, insEnd);
-    mLength += needed;
 #ifdef DEBUG
-    if (mLength > mReserved)
-        mReserved = mLength;
+    if (mLength + needed > mReserved)
+        mReserved = mLength + needed;
 #endif
+    internalAppend(insBegin, needed);
     return true;
+}
+
+template <class T, size_t N, class AP>
+template <class U>
+JS_ALWAYS_INLINE void
+Vector<T,N,AP>::internalAppend(const U *insBegin, size_t length)
+{
+    JS_ASSERT(mLength + length <= mReserved);
+    JS_ASSERT(mReserved <= mCapacity);
+    Impl::copyConstruct(endNoCheck(), insBegin, insBegin + length);
+    mLength += length;
 }
 
 template <class T, size_t N, class AP>
@@ -732,6 +758,14 @@ inline bool
 Vector<T,N,AP>::append(const Vector<U,O,BP> &other)
 {
     return append(other.begin(), other.end());
+}
+
+template <class T, size_t N, class AP>
+template <class U, size_t O, class BP>
+inline void
+Vector<T,N,AP>::internalAppend(const Vector<U,O,BP> &other)
+{
+    internalAppend(other.begin(), other.length());
 }
 
 template <class T, size_t N, class AP>
