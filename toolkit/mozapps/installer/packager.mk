@@ -501,7 +501,7 @@ ifndef UNIVERSAL_BINARY
 # If UNIVERSAL_BINARY, the package will be made from an already-prepared
 # STAGEPATH
 ifdef MOZ_PKG_MANIFEST
-	$(RM) -rf $(DIST)/xpt $(RM) -rf $(DIST)/manifests
+	$(RM) -rf $(DIST)/xpt $(DIST)/manifests
 	$(call PACKAGER_COPY, "$(call core_abspath,$(DIST))",\
 	  "$(call core_abspath,$(DIST)/$(MOZ_PKG_DIR))", \
 	  "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1)
