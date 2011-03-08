@@ -58,6 +58,7 @@ import android.graphics.*;
 import android.widget.*;
 import android.hardware.*;
 import android.location.*;
+import android.webkit.MimeTypeMap;
 
 import android.util.*;
 import android.net.Uri;
@@ -649,9 +650,12 @@ public class GeckoAppShell
             return new Intent(Intent.ACTION_VIEW);
     }
 
+    static String getExtensionFromMimeType(String aMimeType) {
+        return MimeTypeMap.getSingleton().getExtensionFromMimeType(aMimeType);
+    }
+
     static String getMimeTypeFromExtensions(String aFileExt) {
-        android.webkit.MimeTypeMap mtm =
-            android.webkit.MimeTypeMap.getSingleton();
+        MimeTypeMap mtm = MimeTypeMap.getSingleton();
         StringTokenizer st = new StringTokenizer(aFileExt, "., ");
         String type = null;
         String subType = null;
