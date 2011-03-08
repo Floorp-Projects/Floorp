@@ -88,6 +88,10 @@ nsMIMEInfoAndroid::GetMimeInfoForMimeType(const nsACString& aMimeType,
   if (systemDefault)
     info->mPrefApp = systemDefault;
 
+  nsCAutoString fileExt;
+  bridge->GetExtensionFromMimeType(nsDependentCString(aMimeType), fileExt);
+  info->SetPrimaryExtension(fileExt);
+  
   PRUint32 len;
   info->mHandlerApps->GetLength(&len);
   if (len == 1) {
@@ -107,8 +111,10 @@ nsMIMEInfoAndroid::GetMimeInfoForFileExt(const nsACString& aFileExt,
   if (mozilla::AndroidBridge::Bridge())
     mozilla::AndroidBridge::Bridge()->
       GetMimeTypeFromExtensions(aFileExt, mimeType);
-
-  return GetMimeInfoForMimeType(mimeType, aMimeInfo);
+  
+  nsresult rv = GetMimeInfoForMimeType(mimeType, aMimeInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return (*aMimeInfo)->SetPrimaryExtension(aFileExt);
 }
 
 /**
@@ -138,6 +144,12 @@ nsMIMEInfoAndroid::GetMimeInfoForURL(const nsACString &aURL,
     mimeinfo->mPrefApp = systemDefault;
 
 
+  nsCAutoString fileExt;
+  nsCAutoString mimeType;
+  mimeinfo->GetType(mimeType);
+  bridge->GetExtensionFromMimeType(mimeType, fileExt);
+  mimeinfo->SetPrimaryExtension(fileExt);
+  
   PRUint32 len;
   mimeinfo->mHandlerApps->GetLength(&len);
   if (len == 1) {

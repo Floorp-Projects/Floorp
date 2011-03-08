@@ -119,6 +119,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jGetHandlersForURL = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForURL", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
     jOpenUriExternal = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "openUriExternal", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
     jGetMimeTypeFromExtensions = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMimeTypeFromExtensions", "(Ljava/lang/String;)Ljava/lang/String;");
+    jGetExtensionFromMimeType = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getExtensionFromMimeType", "(Ljava/lang/String;)Ljava/lang/String;");
     jMoveTaskToBack = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "moveTaskToBack", "()V");
     jGetClipboardText = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getClipboardText", "()Ljava/lang/String;");
     jSetClipboardText = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setClipboardText", "(Ljava/lang/String;)V");
@@ -454,11 +455,28 @@ AndroidBridge::GetMimeTypeFromExtensions(const nsACString& aFileExt, nsCString& 
     AutoLocalJNIFrame jniFrame;
     NS_ConvertUTF8toUTF16 wFileExt(aFileExt);
     jstring jstrExt = mJNIEnv->NewString(wFileExt.get(), wFileExt.Length());
-    jstring jstrType =  static_cast<jstring>(mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass,
-                                                                             jGetMimeTypeFromExtensions,
-                                                                             jstrExt));
+    jstring jstrType =  static_cast<jstring>(
+        mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass,
+                                        jGetMimeTypeFromExtensions,
+                                        jstrExt));
     nsJNIString jniStr(jstrType);
     aMimeType.Assign(NS_ConvertUTF16toUTF8(jniStr.get()));
+}
+
+void
+AndroidBridge::GetExtensionFromMimeType(const nsCString& aMimeType, nsACString& aFileExt)
+{
+    ALOG_BRIDGE("AndroidBridge::GetExtensionFromMimeType");
+
+    AutoLocalJNIFrame jniFrame;
+    NS_ConvertUTF8toUTF16 wMimeType(aMimeType);
+    jstring jstrType = mJNIEnv->NewString(wMimeType.get(), wMimeType.Length());
+    jstring jstrExt = static_cast<jstring>(
+        mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass,
+                                        jGetExtensionFromMimeType,
+                                        jstrType));
+    nsJNIString jniStr(jstrExt);
+    aFileExt.Assign(NS_ConvertUTF16toUTF8(jniStr.get()));
 }
 
 void
