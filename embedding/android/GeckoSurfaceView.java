@@ -582,7 +582,6 @@ class GeckoSurfaceView
     KeyListener mKeyListener;
     Editable mEditable;
     Editable.Factory mEditableFactory;
-    boolean mIMEFocus;
     int mIMEState;
     String mIMETypeHint;
     String mIMEActionHint;
