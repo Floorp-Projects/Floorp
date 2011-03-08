@@ -902,16 +902,14 @@ class CallCompiler : public BaseCompiler
 
         if (cx->typeInferenceEnabled()) {
             /*
-             * Look under the ABI abstraction and NULL out the slot used for the
-             * return address in a FASTCALL. This is seriously nasty but we need it
-             * to distinguish fast calls from native calls should we trigger a
-             * recompilation inside the native.
+             * Write the NATIVE_SCRATCH_VALUE to the 'scratch' field of the
+             * VMFrame, so the recompiler can tell this was a native call.
+             * Natives use a different stack address to store the return
+             * value than FASTCALLs, and without additional information we
+             * cannot tell which one is active on a VMFrame.
              */
-#if defined(JS_CPU_X86) && !defined(JS_NO_FASTCALL)
-            masm.storePtr(ImmPtr(NULL), FrameAddress(-4));
-#else
-            JS_NOT_REACHED("FIXME");
-#endif
+            masm.storePtr(ImmPtr(NATIVE_CALL_SCRATCH_VALUE),
+                          FrameAddress(offsetof(VMFrame, scratch)));
         }
 
         masm.setupABICall(Registers::NormalCall, 3);
@@ -922,6 +920,9 @@ class CallCompiler : public BaseCompiler
             masm.storeArg(1, argcReg.reg());
         masm.storeArg(0, cxReg);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, fun->u.n.native), false);
+
+        if (cx->typeInferenceEnabled())
+            masm.storePtr(ImmPtr(NULL), FrameAddress(offsetof(VMFrame, scratch)));
 
         Jump hasException = masm.branchTest32(Assembler::Zero, Registers::ReturnReg,
                                               Registers::ReturnReg);
