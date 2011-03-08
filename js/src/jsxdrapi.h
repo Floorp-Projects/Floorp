@@ -85,8 +85,7 @@ JS_BEGIN_EXTERN_C
 
 typedef enum JSXDRMode {
     JSXDR_ENCODE,
-    JSXDR_DECODE,
-    JSXDR_FREE
+    JSXDR_DECODE
 } JSXDRMode;
 
 typedef enum JSXDRWhence {
