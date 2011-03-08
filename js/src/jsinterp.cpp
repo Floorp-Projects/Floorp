@@ -3409,6 +3409,8 @@ BEGIN_CASE(JSOP_ENUMCONSTELEM)
     FETCH_OBJECT(cx, -2, obj);
     jsid id;
     FETCH_ELEMENT_ID(obj, -1, id);
+    if (!cx->typeMonitorAssign(obj, id, ref))
+        goto error;
     if (!obj->defineProperty(cx, id, ref,
                              PropertyStub, StrictPropertyStub,
                              JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {

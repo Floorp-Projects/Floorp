@@ -1994,6 +1994,7 @@ TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32 offset)
       case JSOP_FORNAME:
       case JSOP_FORGNAME:
       case JSOP_ENUMELEM:
+      case JSOP_ENUMCONSTELEM:
       case JSOP_DEFFUN:
       case JSOP_DEFFUN_FC:
       case JSOP_ARRAYPUSH:
@@ -3072,6 +3073,7 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
 
       case JSOP_FORPROP:
       case JSOP_ENUMELEM:
+      case JSOP_ENUMCONSTELEM:
         cx->compartment->types.monitorBytecode(cx, script, offset);
         break;
 
