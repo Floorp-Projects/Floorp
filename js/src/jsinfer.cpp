@@ -3866,6 +3866,17 @@ types::TypeObject::trace(JSTracer *trc)
         gc::MarkObject(trc, *proto, "type_proto");
 }
 
+static inline TypeObject *
+GetTypeEmpty(JSContext *cx, TypeCompartment *compartment)
+{
+    if (!compartment->typeEmpty) {
+        compartment->typeEmpty = compartment->newTypeObject(cx, NULL, "Empty", false, NULL);
+        if (compartment->typeEmpty)
+            compartment->typeEmpty->unknownProperties = true;
+    }
+    return compartment->typeEmpty;
+}
+
 /*
  * Condense any constraints on a type set which were generated during analysis
  * of a script, and sweep all type objects and references to type objects
@@ -3892,7 +3903,7 @@ CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
                  * type object with unknown properties.
                  */
                 if (object->unknownProperties) {
-                    types->objectSet[i] = cx->getTypeEmpty();
+                    types->objectSet[i] = GetTypeEmpty(cx, compartment);
                     if (!types->objectSet[i])
                         compartment->setPendingNukeTypes(cx);
                 } else {
@@ -3921,7 +3932,7 @@ CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
         TypeObject *object = (TypeObject*) types->objectSet;
         if (!object->marked) {
             if (object->unknownProperties) {
-                types->objectSet = (TypeObject**) cx->getTypeEmpty();
+                types->objectSet = (TypeObject**) GetTypeEmpty(cx, compartment);
                 if (!types->objectSet)
                     compartment->setPendingNukeTypes(cx);
             } else {
