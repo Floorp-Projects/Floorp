@@ -53,23 +53,27 @@
 
 #content-navigator > .previous-button,
 #content-navigator > .next-button {
-  opacity: 0.9;
+  border: @border_width_tiny@ solid rgba(0,0,0,0.2) !important;
+  border-bottom: @border_width_large@ solid #53565a !important;
+  background-color: #5e6166;
+  background-image: none !important;
+  box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@;
   pointer-events: auto;
   -moz-user-focus: ignore !important;
 }
 
-#content-navigator > .previous-button[disabled="true"],
+#content-navigator > .previous-button[disabled="true"] {
+  list-style-image: url("chrome://browser/skin/images/previous-disabled-hdpi.png");
+}
+
 #content-navigator > .next-button[disabled="true"] {
-  opacity: 0.4;
+  list-style-image: url("chrome://browser/skin/images/next-disabled-hdpi.png");
 }
 
 #content-navigator > .previous-button {
   -moz-margin-end: 0;
-  border: @border_width_small@ solid white !important;
-  background-color: rgba(41,41,41,0.8);
-  background-image: none !important;
+  -moz-border-end: @border_width_tiny@ solid rgba(0,0,0,0.2) !important;
   list-style-image: url("chrome://browser/skin/images/previous-hdpi.png");
-  box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@;
 }
 
 #content-navigator:-moz-locale-dir(ltr) > .previous-button {
@@ -84,11 +88,8 @@
 
 #content-navigator > .next-button {
   -moz-margin-start: 0;
-  border: @border_width_small@ solid white !important;
-  background-color: rgba(41,41,41,0.8);
-  background-image: none !important;
+  -moz-border-start: @border_width_tiny@ solid rgba(255,255,255,0.2) !important;
   list-style-image: url("chrome://browser/skin/images/next-hdpi.png");
-  box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@;
 }
 
 #content-navigator:-moz-locale-dir(ltr) > .next-button {
@@ -103,9 +104,8 @@
 
 /* Find Helper ------------------------------------------------------------- */
 #content-navigator[type="find"] > .previous-button {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  -moz-margin-start: 0;
+  /* previous button overlap the textbox */
+  -moz-margin-start: -@margin_normal@;
 }
 
 #content-navigator:not([type="find"]) > #find-helper-textbox {
@@ -113,7 +113,6 @@
 }
 
 #find-helper-textbox {
-  opacity: 0.9;
   pointer-events: auto;
   margin: @margin_normal@;
   -moz-margin-end: 0;
@@ -121,8 +120,7 @@
   border-radius: @border_radius_normal@;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
-  border: @border_width_small@ solid white !important;
-  box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@;
+  border: @border_width_tiny@ solid rgba(0,0,0,0.2) !important;
   width: 10em;
 }
 
