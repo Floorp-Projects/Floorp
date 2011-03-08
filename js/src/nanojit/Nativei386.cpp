@@ -85,7 +85,7 @@ namespace nanojit
             SIB(s, REGNUM(i), REGNUM(b));
             MODRM(0, r, 4);                 // amode == (b + i<<s)
         } else if (isS8(d)) {
-            *(--_nIns) = uint8_t(d);
+            IMM8(d);
             SIB(s, REGNUM(i), REGNUM(b));
             MODRM(1, r, 4);                 // amode == d8(b + i<<s)
         } else {
@@ -105,7 +105,7 @@ namespace nanojit
         } else if (d == 0 && b != rEBP) {
             MODRM(0, r, REGNUM(b));         // amode == (r)
         } else if (isS8(d)) {
-            *(--_nIns) = uint8_t(d);
+            IMM8(d);
             MODRM(1, r, REGNUM(b));         // amode == d8(b)
         } else {
             IMM32(d);
@@ -119,101 +119,97 @@ namespace nanojit
         MODRM(0, r, 5);                     // amode == d32(r)
     }
 
-    inline void Assembler::ALU0(I32 o) {
+    inline void Assembler::ALU0(I32 opc) {
         underrunProtect(1);
-        *(--_nIns) = uint8_t(o);
+        OPCODE(opc);
     }
 
-    inline void Assembler::ALUm(I32 c, I32 r, I32 d, R b) {
+    inline void Assembler::ALUm(I32 opc, I32 r, I32 d, R b) {
         underrunProtect(8);
         MODRMm(r, d, b);
-        *(--_nIns) = uint8_t(c);
+        OPCODE(opc);
     }
 
-    inline void Assembler::ALUdm(I32 c, R r, I32 addr) {
+    inline void Assembler::ALUdm(I32 opc, R r, I32 addr) {
         underrunProtect(6);
         MODRMdm(REGNUM(r), addr);
-        *(--_nIns) = uint8_t(c);
+        OPCODE(opc);
     }
 
-    inline void Assembler::ALUsib(I32 c, R r, R base, R index, I32 scale, I32 disp) {
+    inline void Assembler::ALUsib(I32 opc, R r, R base, R index, I32 scale, I32 disp) {
         underrunProtect(7);
         MODRMsib(REGNUM(r), base, index, scale, disp);
-        *(--_nIns) = uint8_t(c);
+        OPCODE(opc);
     }
 
-    inline void Assembler::ALUsib16(I32 c, R r, R base, R index, I32 scale, I32 disp) {
+    inline void Assembler::ALUsib16(I32 opc, R r, R base, R index, I32 scale, I32 disp) {
         underrunProtect(8);
         MODRMsib(REGNUM(r), base, index, scale, disp);
-        *(--_nIns) = uint8_t(c);
-        *(--_nIns) = 0x66;
+        OPCODE(opc);
+        OPCODE(0x66);
     }
 
-    inline void Assembler::ALUm16(I32 c, I32 r, I32 d, R b) {
+    inline void Assembler::ALUm16(I32 opc, I32 r, I32 d, R b) {
         underrunProtect(9);
         MODRMm(r, d, b);
-        *(--_nIns) = uint8_t(c);
-        *(--_nIns) = 0x66;
+        OPCODE(opc);
+        OPCODE(0x66);
     }
 
-    inline void Assembler::ALU2dm(I32 c, R r, I32 addr) {
+    inline void Assembler::ALU2dm(I32 opc2, R r, I32 addr) {
         underrunProtect(7);
         MODRMdm(REGNUM(r), addr);
-        *(--_nIns) = uint8_t(c);
-        *(--_nIns) = uint8_t(c>>8);
+        OPCODE2(opc2);
     }
 
-    inline void Assembler::ALU2m(I32 c, R r, I32 d, R b) {
+    inline void Assembler::ALU2m(I32 opc2, R r, I32 d, R b) {
         underrunProtect(9);
         MODRMm(REGNUM(r), d, b);
-        *(--_nIns) = uint8_t(c);
-        *(--_nIns) = uint8_t(c>>8);
+        OPCODE2(opc2);
     }
 
-    inline void Assembler::ALU2sib(I32 c, Register r, R base, R index, I32 scale, I32 disp) {
+    inline void Assembler::ALU2sib(I32 opc2, Register r, R base, R index, I32 scale, I32 disp) {
         underrunProtect(8);
         MODRMsib(REGNUM(r), base, index, scale, disp);
-        *(--_nIns) = uint8_t(c);
-        *(--_nIns) = uint8_t(c>>8);
+        OPCODE2(opc2);
     }
 
-    inline void Assembler::ALUi(I32 c, R r, I32 i) {
+    inline void Assembler::ALUi(I32 opc, R r, I32 i) {
         underrunProtect(6);
         NanoAssert(REGNUM(r) < 8);
         if (isS8(i)) {
-            *(--_nIns) = uint8_t(i);
-            MODRMr(c>>3, REGNUM(r));
-            *(--_nIns) = uint8_t(0x83);
+            IMM8(i);
+            MODRMr(opc >> 3, REGNUM(r));
+            OPCODE(0x83);
         } else {
             IMM32(i);
             if ( r == rEAX) {
-                *(--_nIns) = uint8_t(c);
+                OPCODE(opc);
             } else {
-                MODRMr(c >> 3, REGNUM(r));
-                *(--_nIns) = uint8_t(0x81);
+                MODRMr(opc >> 3, REGNUM(r));
+                OPCODE(0x81);
             }
         }
     }
 
-    inline void Assembler::ALUmi(I32 c, I32 d, Register b, I32 i) {
+    inline void Assembler::ALUmi(I32 opc, I32 d, Register b, I32 i) {
         underrunProtect(10);
         NanoAssert(REGNUM(b) < 8);
         if (isS8(i)) {
-            *(--_nIns) = uint8_t(i);
-            MODRMm(c>>3, d, b);
-            *(--_nIns) = uint8_t(0x83);
+            IMM8(i);
+            MODRMm(opc >> 3, d, b);
+            OPCODE(0x83);
         } else {
             IMM32(i);
-            MODRMm(c>>3, d, b);
-            *(--_nIns) = uint8_t(0x81);
+            MODRMm(opc >> 3, d, b);
+            OPCODE(0x81);
         }
     }
 
-    inline void Assembler::ALU2(I32 c, R d, R s) {
+    inline void Assembler::ALU2(I32 opc2, R d, R s) {
         underrunProtect(3);
         MODRMr(REGNUM(d), REGNUM(s));
-        *(--_nIns) = uint8_t(c);
-        *(--_nIns) = uint8_t(c>>8);
+        OPCODE2(opc2);
     }
 
     inline Register Assembler::AL2AHReg(R r) {
@@ -254,16 +250,16 @@ namespace nanojit
         asm_output("shl %s,%s", gpn(r), gpn(s));
     }
 
-    inline void Assembler::SHIFT(I32 c, R r, I32 i) {
+    inline void Assembler::SHIFTi(I32 c, R r, I32 i) {
         underrunProtect(3);
-        *--_nIns = uint8_t(i);
+        IMM8(i);
         MODRMr(c, REGNUM(r));
-        *--_nIns = 0xc1;
+        OPCODE(0xc1);
     }
 
-    inline void Assembler::SHLi(R r, I32 i)   { count_alu(); SHIFT(4, r, i); asm_output("shl %s,%d", gpn(r), i); }
-    inline void Assembler::SHRi(R r, I32 i)   { count_alu(); SHIFT(5, r, i); asm_output("shr %s,%d", gpn(r), i); }
-    inline void Assembler::SARi(R r, I32 i)   { count_alu(); SHIFT(7, r, i); asm_output("sar %s,%d", gpn(r), i); }
+    inline void Assembler::SHLi(R r, I32 i)   { count_alu(); SHIFTi(4, r, i); asm_output("shl %s,%d", gpn(r), i); }
+    inline void Assembler::SHRi(R r, I32 i)   { count_alu(); SHIFTi(5, r, i); asm_output("shr %s,%d", gpn(r), i); }
+    inline void Assembler::SARi(R r, I32 i)   { count_alu(); SHIFTi(7, r, i); asm_output("sar %s,%d", gpn(r), i); }
 
     inline void Assembler::MOVZX8(R d, R s)   { count_alu(); ALU2(0x0fb6, d, s); asm_output("movzx %s,%s", gpn(d), gpn(s)); }
 
@@ -286,7 +282,9 @@ namespace nanojit
     inline void Assembler::INCLi(I32 p) {
         count_alu();
         underrunProtect(6);
-        IMM32((uint32_t)(ptrdiff_t)p); *(--_nIns) = 0x05; *(--_nIns) = 0xFF;
+        IMM32((uint32_t)(ptrdiff_t)p);
+        OPCODE(0x05);
+        OPCODE(0xFF);
         asm_output("incl  (%p)", (void*)p);
     }
 
@@ -426,7 +424,7 @@ namespace nanojit
         underrunProtect(5);
         IMM32(i);
         NanoAssert(REGNUM(r) < 8);
-        *(--_nIns) = uint8_t(0xb8 | REGNUM(r));
+        OPCODE(0xb8 | REGNUM(r));
         asm_output("mov %s,%d", gpn(r), i);
     }
 
@@ -478,7 +476,7 @@ namespace nanojit
         underrunProtect(8);
         IMM8(imm);
         MODRMm(0, disp, base);
-        *(--_nIns) = 0xc6;
+        OPCODE(0xc6);
         asm_output("mov8 %d(%s),%d", disp, gpn(base), imm);
     }
 
@@ -487,7 +485,7 @@ namespace nanojit
         underrunProtect(8);
         IMM8(imm);
         MODRMsib(0, base, index, scale, disp);
-        *(--_nIns) = 0xc6;
+        OPCODE(0xc6);
         asm_output("mov8 %d(%s+%s*%c),%d", disp, gpn(base), gpn(index), SIBIDX(scale), imm);
     }
 
@@ -496,8 +494,8 @@ namespace nanojit
         underrunProtect(10);
         IMM16(imm);
         MODRMm(0, disp, base);
-        *(--_nIns) = 0xc7;
-        *(--_nIns) = 0x66;
+        OPCODE(0xc7);
+        OPCODE(0x66);
         asm_output("mov16 %d(%s),%d", disp, gpn(base), imm);
     }
 
@@ -506,8 +504,8 @@ namespace nanojit
         underrunProtect(10);
         IMM16(imm);
         MODRMsib(0, base, index, scale, disp);
-        *(--_nIns) = 0xc7;
-        *(--_nIns) = 0x66;
+        OPCODE(0xc7);
+        OPCODE(0x66);
         asm_output("mov16 %d(%s+%s*%c),%d", disp, gpn(base), gpn(index), SIBIDX(scale), imm);
     }
 
@@ -516,7 +514,7 @@ namespace nanojit
         underrunProtect(11);
         IMM32(imm);
         MODRMm(0, disp, base);
-        *(--_nIns) = 0xc7;
+        OPCODE(0xc7);
         asm_output("mov %d(%s),%d", disp, gpn(base), imm);
     }
 
@@ -525,7 +523,7 @@ namespace nanojit
         underrunProtect(11);
         IMM32(imm);
         MODRMsib(0, base, index, scale, disp);
-        *(--_nIns) = 0xc7;
+        OPCODE(0xc7);
         asm_output("mov %d(%s+%s*%c),%d", disp, gpn(base), gpn(index), SIBIDX(scale), imm);
     }
 
@@ -539,13 +537,13 @@ namespace nanojit
         count_push();
         if (isS8(i)) {
             underrunProtect(2);
-            *(--_nIns) = uint8_t(i);
-            *(--_nIns) = 0x6a;
+            IMM8(i);
+            OPCODE(0x6a);
             asm_output("push %d", i);
         } else {
             underrunProtect(5);
             IMM32(i);
-            *(--_nIns) = 0x68;
+            OPCODE(0x68);
             asm_output("push %d", i);
         }
     }
@@ -554,7 +552,7 @@ namespace nanojit
         count_push();
         underrunProtect(1);
         NanoAssert(REGNUM(r) < 8);
-        *(--_nIns) = uint8_t(0x50 | REGNUM(r));
+        OPCODE(0x50 | REGNUM(r));
         asm_output("push %s", gpn(r));
     }
 
@@ -568,7 +566,7 @@ namespace nanojit
         count_pop();
         underrunProtect(1);
         NanoAssert(REGNUM(r) < 8);
-        *(--_nIns) = uint8_t(0x58 | REGNUM(r));
+        OPCODE(0x58 | REGNUM(r));
         asm_output("pop %s", gpn(r));
     }
 
@@ -577,12 +575,12 @@ namespace nanojit
         underrunProtect(6);
         intptr_t tt = (intptr_t)t - (intptr_t)_nIns;
         if (t && isS8(tt)) {
-            *(--_nIns) = uint8_t(tt);
-            *(--_nIns) = uint8_t(0x70 | o);
+            IMM8(tt);
+            OPCODE(0x70 | o);
         } else {
             IMM32(tt);
-            *(--_nIns) = uint8_t(0x80 | o);
-            *(--_nIns) = JCC32;
+            OPCODE(0x80 | o);
+            OPCODE(JCC32);
         }
         asm_output("%-5s %p", n, t);
         (void) n;
@@ -594,7 +592,7 @@ namespace nanojit
         NanoAssert(t);
         intptr_t tt = (intptr_t)t - (intptr_t)_nIns;
         IMM32(tt);
-        *(--_nIns) = JMP32;
+        OPCODE(JMP32);
         asm_output("jmp %p", t);
         verbose_only( verbose_outputf("%p:", (void*)_nIns); )
     }
@@ -604,7 +602,7 @@ namespace nanojit
         IMM32(int32_t(addr));
         SIB(ss, REGNUM(x), 5);
         MODRM(0, 4, 4);                 // amode == addr(table + x<<ss)
-        *(--_nIns) = uint8_t(0xff);     // jmp
+        OPCODE(0xff);                   // jmp
         asm_output("jmp   *(%s*%d+%p)", gpn(x), 1 << ss, (void*)addr);
     }
 
@@ -637,28 +635,22 @@ namespace nanojit
     inline void Assembler::JNO(NIns* t)  { JCC(0x01, t, "jno"); }
 
     // sse instructions
-    inline void Assembler::SSE(I32 c, R d, R s) {
+    inline void Assembler::SSE(I32 opc3, R d, R s) {
         underrunProtect(9);
         MODRMr(REGNUM(d)&7, REGNUM(s)&7);
-        *(--_nIns) = uint8_t(c & 0xff);
-        *(--_nIns) = uint8_t((c >>  8) & 0xff);
-        *(--_nIns) = uint8_t((c >> 16) & 0xff);
+        OPCODE3(opc3);
     }
 
-    inline void Assembler::SSEm(I32 c, R r, I32 d, R b) {
+    inline void Assembler::SSEm(I32 opc3, R r, I32 d, R b) {
         underrunProtect(9);
         MODRMm(REGNUM(r)&7, d, b);
-        *(--_nIns) = uint8_t(c & 0xff);
-        *(--_nIns) = uint8_t((c >>  8) & 0xff);
-        *(--_nIns) = uint8_t((c >> 16) & 0xff);
+        OPCODE3(opc3);
     }
 
-    inline void Assembler::SSEsib(I32 c, R rr, I32 d, R rb, R ri, I32 scale) {
+    inline void Assembler::SSEsib(I32 opc3, R rr, I32 d, R rb, R ri, I32 scale) {
         underrunProtect(9);
         MODRMsib(REGNUM(rr)&7, rb, ri, scale, d);
-        *(--_nIns) = uint8_t(c & 0xff);
-        *(--_nIns) = uint8_t((c >>  8) & 0xff);
-        *(--_nIns) = uint8_t((c >> 16) & 0xff);
+        OPCODE3(opc3);
     }
 
     inline void Assembler::LDSDm(R r, const double* addr) {
@@ -666,9 +658,9 @@ namespace nanojit
         underrunProtect(8);
         IMM32(int32_t(addr));
         MODRM(0, REGNUM(r) & 7, 5);     // amode == addr(r)
-        *(--_nIns) = 0x10;
-        *(--_nIns) = 0x0f;
-        *(--_nIns) = 0xf2;
+        OPCODE(0x10);
+        OPCODE(0x0f);
+        OPCODE(0xf2);
         // *addr is a constant, so we can print it here.
         asm_output("movsd %s,(%p) // =%f", gpn(r), (void*)addr, *addr);
     }
@@ -742,9 +734,9 @@ namespace nanojit
         const double* daddr = addr;
         IMM32(int32_t(daddr));
         MODRM(0, REGNUM(r) & 7, 5);     // amode == daddr(r)
-        *(--_nIns) = 0x58;
-        *(--_nIns) = 0x0f;
-        *(--_nIns) = 0xf2;
+        OPCODE(0x58);
+        OPCODE(0x0f);
+        OPCODE(0xf2);
         // *daddr is a constant, so we can print it here.
         asm_output("addsd %s,(%p) // =%f", gpn(r), (void*)daddr, *daddr);
     }
@@ -782,9 +774,9 @@ namespace nanojit
         underrunProtect(8);
         IMM32(int32_t(maskaddr));
         MODRM(0, REGNUM(r) & 7, 5);     // amode == maskaddr(r)
-        *(--_nIns) = 0x57;
-        *(--_nIns) = 0x0f;
-        *(--_nIns) = 0x66;
+        OPCODE(0x57);
+        OPCODE(0x0f);
+        OPCODE(0x66);
         asm_output("xorpd %s,(%p)", gpn(r), (void*)maskaddr);
     }
 
@@ -795,42 +787,30 @@ namespace nanojit
     }
 
     // floating point unit
-    inline void Assembler::FPUc(I32 o) {
+    inline void Assembler::FPUc(I32 opc2) {
         underrunProtect(2);
-        *(--_nIns) = uint8_t(o & 0xff);
-        *(--_nIns) = uint8_t((o >> 8) & 0xff);
+        OPCODE2(opc2);
     }
 
     inline void Assembler::FPUm(I32 o, I32 d, R b) {
         underrunProtect(7);
         MODRMm(uint8_t(o), d, b);
-        *(--_nIns) = uint8_t(o >> 8);
+        OPCODE(o >> 8);
     }
 
     inline void Assembler::FPUdm(I32 o, const double* const m) {
         underrunProtect(6);
         MODRMdm(uint8_t(o), int32_t(m));
-        *(--_nIns) = uint8_t(o >> 8);
+        OPCODE(o >> 8);
     }
 
     inline void Assembler::TEST_AH(I32 i) {
         count_alu();
         underrunProtect(3);
-        *(--_nIns) = uint8_t(i);
-        *(--_nIns) = 0xc4;
-        *(--_nIns) = 0xf6;
+        OPCODE(i);
+        OPCODE(0xc4);
+        OPCODE(0xf6);
         asm_output("test ah, %d", i);
-    }
-
-    inline void Assembler::TEST_AX(I32 i) {
-        count_fpu();
-        underrunProtect(5);
-        *(--_nIns) = 0;
-        *(--_nIns) = uint8_t(i);
-        *(--_nIns) = uint8_t(i >> 8);
-        *(--_nIns) = 0;
-        *(--_nIns) = 0xa9;
-        asm_output("test ax, %d", i);
     }
 
     inline void Assembler::FNSTSW_AX() { count_fpu(); FPUc(0xdfe0);    asm_output("fnstsw_ax"); }
@@ -887,7 +867,7 @@ namespace nanojit
         underrunProtect(5);
         int offset = (ci->_address) - ((int)_nIns);
         IMM32((uint32_t)offset);
-        *(--_nIns) = 0xE8;
+        OPCODE(0xE8);
         verbose_only(asm_output("call %s", (ci->_name));)
         debug_only(if (ci->returnType()==ARGTYPE_D) fpu_push();)
     }
@@ -2336,21 +2316,14 @@ namespace nanojit
     void Assembler::asm_pusharg(LIns* ins)
     {
         // arg goes on stack
-        if (!ins->isExtant() && ins->isImmI())
-        {
+        if (!ins->isExtant() && ins->isImmI()) {
             PUSHi(ins->immI());    // small const we push directly
-        }
-        else if (!ins->isExtant() || ins->isop(LIR_allocp))
-        {
+        } else if (!ins->isExtant() || ins->isop(LIR_allocp)) {
             Register ra = findRegFor(ins, GpRegs);
             PUSHr(ra);
-        }
-        else if (ins->isInReg())
-        {
+        } else if (ins->isInReg()) {
             PUSHr(ins->getReg());
-        }
-        else
-        {
+        } else {
             NanoAssert(ins->isInAr());
             PUSHm(arDisp(ins), FP);
         }
