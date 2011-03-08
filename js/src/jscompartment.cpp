@@ -552,10 +552,6 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
          * to eval scripts has been removed.
          */
         js_DestroyScriptsToGC(cx, this);
-
-        /* Nuke types if there was an OOM while condensing type information. */
-        if (types.pendingNukeTypes)
-            types.nukeTypes(cx);
     }
 
 #if defined JS_METHODJIT && defined JS_MONOIC
