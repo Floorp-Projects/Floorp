@@ -376,7 +376,12 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     JS_ASSERT(nvars != Bindings::BINDING_COUNT_LIMIT);
     JS_ASSERT(nupvars != Bindings::BINDING_COUNT_LIMIT);
 
-    Bindings bindings(cx);
+    EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
+    if (!emptyCallShape)
+        return false;
+    AutoShapeRooter shapeRoot(cx, emptyCallShape);
+
+    Bindings bindings(cx, emptyCallShape);
     AutoBindingsRooter rooter(cx, bindings);
     uint32 nameCount = nargs + nvars + nupvars;
     if (nameCount > 0) {
@@ -1200,6 +1205,11 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
                     uint32 ntrynotes, uint32 nconsts, uint32 nglobals,
                     uint16 nClosedArgs, uint16 nClosedVars, JSVersion version)
 {
+    EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
+    if (!emptyCallShape)
+        return NULL;
+    AutoShapeRooter shapeRoot(cx, emptyCallShape);
+
     size_t size, vectorSize;
     JSScript *script;
     uint8 *cursor;
@@ -1243,7 +1253,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
     PodZero(script);
     script->length = length;
     script->version = version;
-    new (&script->bindings) Bindings(cx);
+    new (&script->bindings) Bindings(cx, emptyCallShape);
 
     uint8 *scriptEnd = reinterpret_cast<uint8 *>(script + 1);
 

@@ -195,6 +195,7 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSStackFrame *cfp)
     functionCount(0),
     traceListHead(NULL),
     tc(NULL),
+    emptyCallShape(NULL),
     keepAtoms(cx->runtime)
 {
     js::PodArrayZero(tempFreeList);
@@ -207,6 +208,9 @@ Parser::init(const jschar *base, size_t length, const char *filename, uintN line
              JSVersion version)
 {
     JSContext *cx = context;
+    emptyCallShape = EmptyShape::getEmptyCallShape(cx);
+    if (!emptyCallShape)
+        return false;
     tempPoolMark = JS_ARENA_MARK(&cx->tempPool);
     if (!tokenStream.init(base, length, filename, lineno, version)) {
         JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
@@ -289,7 +293,7 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
     funbox->kids = NULL;
     funbox->parent = tc->funbox;
     funbox->methods = NULL;
-    new (&funbox->bindings) Bindings(context);
+    new (&funbox->bindings) Bindings(context, emptyCallShape);
     funbox->queued = false;
     funbox->inLoop = false;
     for (JSStmtInfo *stmt = tc->topStmt; stmt; stmt = stmt->down) {
@@ -1821,14 +1825,14 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
 
     JSCodeGenerator funcg(&parser, &codePool, &notePool, tokenStream.getLineno());
     if (!funcg.init())
-        return NULL;
+        return false;
 
     funcg.flags |= TCF_IN_FUNCTION;
     funcg.setFunction(fun);
     funcg.bindings.transfer(cx, bindings);
     fun->setArgCount(funcg.bindings.countArgs());
     if (!GenerateBlockId(&funcg, funcg.bodyid))
-        return NULL;
+        return false;
 
     /* FIXME: make Function format the source for a function definition. */
     tokenStream.mungeCurrentToken(TOK_NAME);
