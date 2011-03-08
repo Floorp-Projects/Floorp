@@ -634,7 +634,7 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
  * until no more unmarked heap objects are found. This is necessary because
  * watch points have a weak pointer semantics.
  */
-bool
+JSBool
 js_TraceWatchPoints(JSTracer *trc)
 {
     JSRuntime *rt;
