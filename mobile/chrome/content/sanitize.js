@@ -290,8 +290,7 @@ Sanitizer.prototype = {
 
       get canClear()
       {
-        let autoconnect = Services.prefs.getBoolPref("services.sync.autoconnect");
-        return autoconnect || Weave.Service.isLoggedIn;
+        return (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED);
       }
     }
   }
