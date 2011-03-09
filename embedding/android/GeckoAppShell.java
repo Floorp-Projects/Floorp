@@ -105,6 +105,34 @@ public class GeckoAppShell
     public static native void loadLibs(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status);
 
+    // A looper thread, accessed by GeckoAppShell.getHandler
+    private static class LooperThread extends Thread {
+        public SynchronousQueue<Handler> mHandlerQueue =
+            new SynchronousQueue<Handler>();
+        
+        public void run() {
+            Looper.prepare();
+            try {
+                mHandlerQueue.put(new Handler());
+            } catch (InterruptedException ie) {}
+            Looper.loop();
+        }
+    }
+
+    private static Handler sHandler = null;
+
+    // Get a Handler for a looper thread, or create one if it doesn't exist yet
+    public static Handler getHandler() {
+        if (sHandler == null) {
+            LooperThread lt = new LooperThread();
+            lt.start();
+            try {
+                sHandler = lt.mHandlerQueue.take();
+            } catch (InterruptedException ie) {}
+        }
+        return sHandler;
+    }
+
     public static File getCacheDir() {
         if (sCacheFile == null)
             sCacheFile = GeckoApp.mAppContext.getCacheDir();
@@ -704,20 +732,38 @@ public class GeckoAppShell
         }
     }
 
+    static SynchronousQueue<String> sClipboardQueue =
+        new SynchronousQueue<String>();
+
+    // On some devices, access to the clipboard service needs to happen
+    // on a thread with a looper, so dispatch this to our looper thread
+    // Note: the main looper won't work because it may be blocked on the
+    // gecko thread, which is most likely this thread
     static String getClipboardText() {
-        Context context = GeckoApp.surfaceView.getContext();
-        ClipboardManager cm = (ClipboardManager)
-            context.getSystemService(Context.CLIPBOARD_SERVICE);
-        if (!cm.hasText())
-            return null;
-        return cm.getText().toString();
+        getHandler().post(new Runnable() { 
+            public void run() {
+                Context context = GeckoApp.surfaceView.getContext();
+                ClipboardManager cm = (ClipboardManager)
+                    context.getSystemService(Context.CLIPBOARD_SERVICE);
+                try {
+                    sClipboardQueue.put(cm.hasText() ?
+                                        cm.getText().toString() : null);
+                } catch (InterruptedException ie) {}
+            }});
+        try {
+            return sClipboardQueue.take();
+        } catch (InterruptedException ie) {}
+        return null;
     }
 
-    static void setClipboardText(String text) {
-        Context context = GeckoApp.surfaceView.getContext();
-        ClipboardManager cm = (ClipboardManager)
-            context.getSystemService(Context.CLIPBOARD_SERVICE);
-        cm.setText(text);
+    static void setClipboardText(final String text) {
+        getHandler().post(new Runnable() { 
+            public void run() {
+                Context context = GeckoApp.surfaceView.getContext();
+                ClipboardManager cm = (ClipboardManager)
+                    context.getSystemService(Context.CLIPBOARD_SERVICE);
+                cm.setText(text);
+            }});
     }
 
     public static void showAlertNotification(String aImageUrl, String aAlertTitle, String aAlertText,
