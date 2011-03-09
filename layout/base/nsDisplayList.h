@@ -1790,12 +1790,9 @@ public:
    * @param aForFrame This will determine what the displayport is. It should be
    *                  the root content frame of the scrolled area.
    * @param aViewportFrame The viewport frame you see this content through.
-   * @param aDisplayPort Overrides the visibility of the child items if it
-   *                     is not equal to the visible area.
    */
   nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
-                       nsIFrame* aForFrame, nsIFrame* aViewportFrame,
-                       const nsRect& aDisplayPort);
+                       nsIFrame* aForFrame, nsIFrame* aViewportFrame);
   NS_DISPLAY_DECL_NAME("ScrollLayer", TYPE_SCROLL_LAYER)
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1819,7 +1816,6 @@ public:
   }
 private:
   nsIFrame* mViewportFrame;
-  nsRect mDisplayPort;
 };
 #endif
 

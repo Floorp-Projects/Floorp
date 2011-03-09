@@ -315,31 +315,27 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
   nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
   if (rootScrollFrame) {
     if (content == rootScrollFrame->GetContent()) {
-      // We are setting the root displayport. The pres context needs a special
-      // flag to be set.
+      // We are setting a root displayport for a document.
+      // The pres shell needs a special flag set.
       presShell->SetIgnoreViewportScrolling(PR_TRUE);
+
+      // The root document currently has a widget, but we might end up
+      // painting content inside the displayport but outside the widget
+      // bounds. This ensures the document's view honors invalidations
+      // within the displayport.
+      nsPresContext* presContext = GetPresContext();
+      if (presContext && presContext->IsRoot()) {
+        nsIFrame* rootFrame = presShell->GetRootFrame();
+        nsIView* view = rootFrame->GetView();
+        if (view) {
+          view->SetInvalidationDimensions(&displayport);
+        }
+      }
     }
   }
 
-  // FIXME (Bug 593243 should fix this.)
-  //
-  // Invalidated content does not pay any attention to the displayport, so
-  // invalidating the subdocument's root frame could end up not repainting
-  // visible content.
-  //
-  // For instance, imagine the iframe is located at y=1000. Even though the
-  // displayport may intersect the iframe's viewport, the visual overflow
-  // rect of the root content could be (0, 0, 800, 500). Since the dirty region
-  // does not intersect the visible overflow rect, the display list for the
-  // iframe will not even be generated.
-  //
-  // Here, we find the very top presShell and use its root frame for
-  // invalidation instead.
-  //
-  nsPresContext* rootPresContext = GetPresContext()->GetRootPresContext();
-  if (rootPresContext) {
-    nsIPresShell* rootPresShell = rootPresContext->GetPresShell();
-    nsIFrame* rootFrame = rootPresShell->FrameManager()->GetRootFrame();
+  if (presShell) {
+    nsIFrame* rootFrame = presShell->FrameManager()->GetRootFrame();
     if (rootFrame) {
       rootFrame->InvalidateWithFlags(rootFrame->GetVisualOverflowRectRelativeToSelf(),
                                      nsIFrame::INVALIDATE_NO_THEBES_LAYERS);

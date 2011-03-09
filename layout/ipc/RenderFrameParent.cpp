@@ -181,7 +181,11 @@ ComputeShadowTreeTransform(nsIFrame* aContainerFrame,
     aConfig.mScrollOffset.ToNearestPixels(auPerDevPixel);
   nsIntPoint metricsScrollOffset = aMetrics->mViewportScrollOffset;
 
-  if (aRootFrameLoader->AsyncScrollEnabled()) {
+  if (aRootFrameLoader->AsyncScrollEnabled() && !aMetrics->mDisplayPort.IsEmpty()) {
+    // Only use asynchronous scrolling if it is enabled and there is a
+    // displayport defined. It is useful to have a scroll layer that is
+    // synchronously scrolled for identifying a scroll area before it is
+    // being actively scrolled.
     nsIntPoint scrollCompensation(
       scrollOffset.x * aInverseScaleX - metricsScrollOffset.x * aConfig.mXScale,
       scrollOffset.y * aInverseScaleY - metricsScrollOffset.y * aConfig.mYScale);

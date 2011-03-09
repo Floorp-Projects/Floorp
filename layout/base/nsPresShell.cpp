@@ -6046,11 +6046,6 @@ void PresShell::SetRenderingState(const RenderingState& aState)
   mRenderFlags = aState.mRenderFlags;
   mXResolution = aState.mXResolution;
   mYResolution = aState.mYResolution;
-
-  nsIView* rootView;
-  if (NS_SUCCEEDED(mViewManager->GetRootView(rootView)) && rootView) {
-    rootView->SetInvalidationDimensions(&mDisplayPort);
-  }
 }
 
 void PresShell::SynthesizeMouseMove(PRBool aFromScroll)
