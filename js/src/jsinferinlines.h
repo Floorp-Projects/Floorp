@@ -862,18 +862,27 @@ TypeSet::hasType(jstype type)
 }
 
 inline void
+TypeSet::markUnknown(JSContext *cx)
+{
+    typeFlags = TYPE_FLAG_UNKNOWN | (typeFlags & TYPE_FLAG_INTERMEDIATE_SET);
+    if (objectCount >= 2 && !(typeFlags & TYPE_FLAG_INTERMEDIATE_SET))
+        cx->free(objectSet);
+    objectCount = 0;
+    objectSet = NULL;
+}
+
+inline void
 TypeSet::addType(JSContext *cx, jstype type)
 {
     JS_ASSERT(type);
     JS_ASSERT(cx->compartment->types.inferenceDepth);
-    JS_ASSERT_IF(unknown(), typeFlags == TYPE_FLAG_UNKNOWN);
     InferSpew(ISpewOps, "addType: T%p %s", this, TypeString(type));
 
     if (unknown())
         return;
 
     if (type == TYPE_UNKNOWN) {
-        typeFlags = TYPE_FLAG_UNKNOWN;
+        markUnknown(cx);
     } else if (TypeIsPrimitive(type)) {
         TypeFlags flag = 1 << type;
         if (typeFlags & flag)
@@ -892,6 +901,13 @@ TypeSet::addType(JSContext *cx, jstype type)
         if (!pentry || *pentry)
             return;
         *pentry = object;
+
+        object->contribution += objectCount;
+        if (object->contribution >= TypeObject::CONTRIBUTION_LIMIT) {
+            InferSpew(ISpewOps, "limitUnknown: T%p", this);
+            type = TYPE_UNKNOWN;
+            markUnknown(cx);
+        }
     }
 
     /* Propagate the type to all constraints. */
@@ -1035,7 +1051,7 @@ TypeObject::name()
 inline TypeObject::TypeObject(jsid name, JSObject *proto)
     : proto(proto), emptyShapes(NULL), isFunction(false), marked(false),
       initializerObject(false), initializerArray(false), initializerOffset(0),
-      propertySet(NULL), propertyCount(0),
+      contribution(0), propertySet(NULL), propertyCount(0),
       instanceList(NULL), instanceNext(NULL), next(NULL), unknownProperties(false),
       isDenseArray(false), isPackedArray(false)
 {

@@ -313,6 +313,9 @@ struct TypeSet
 
     /* Get whether this type set is non-empty. */
     bool knownNonEmpty(JSContext *cx, JSScript *script);
+
+  private:
+    inline void markUnknown(JSContext *cx);
 };
 
 /* Type information about a property. */
@@ -362,6 +365,20 @@ struct TypeObject
     bool initializerObject;
     bool initializerArray;
     uint32 initializerOffset;
+
+    /*
+     * Estimate of the contribution of this object to the type sets it appears in.
+     * This is the sum of the sizes of those sets at the point when the object
+     * was added.
+     *
+     * When the contribution exceeds the CONTRIBUTION_LIMIT, any type sets the
+     * object is added to are instead marked as unknown. If we get to this point
+     * we are probably not adding types which will let us do meaningful optimization
+     * later, and we want to ensure in such cases that our time/space complexity
+     * is linear, not worst-case cubic as it would otherwise be.
+     */
+    uint32 contribution;
+    static const uint32 CONTRIBUTION_LIMIT = 20000;
 
     /*
      * Properties of this object. This may contain JSID_VOID, representing the types
