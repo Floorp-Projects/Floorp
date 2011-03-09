@@ -234,7 +234,7 @@ endif
 
 # XXX applications would need to supply this file
 #export:: brand.dtd.in
-#	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > brand.dtd
+#	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $^ > brand.dtd
 
 export::
 	$(NSINSTALL) -D $(DIST)/branding
