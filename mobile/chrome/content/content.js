@@ -841,7 +841,8 @@ var ContextHandler = {
           state.linkTitle = popupNode.textContent || popupNode.title;
           state.linkProtocol = this._getProtocol(this._getURI(state.linkURL));
           break;
-        } else if (elem instanceof Ci.nsIDOMHTMLInputElement && elem.type === "text") {
+        } else if ((elem instanceof Ci.nsIDOMHTMLInputElement &&
+                    elem.mozIsTextField(true)) || elem instanceof Ci.nsIDOMHTMLTextAreaElement) {
           let selectionStart = elem.selectionStart;
           let selectionEnd = elem.selectionEnd;
 
