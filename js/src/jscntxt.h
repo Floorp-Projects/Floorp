@@ -988,7 +988,7 @@ typedef void
 
 namespace js {
 
-typedef js::Vector<JSCompartment *, 0, js::SystemAllocPolicy> WrapperVector;
+typedef js::Vector<JSCompartment *, 0, js::SystemAllocPolicy> CompartmentVector;
 
 }
 
@@ -1000,7 +1000,7 @@ struct JSRuntime {
 #endif
 
     /* List of compartments (protected by the GC lock). */
-    js::WrapperVector compartments;
+    js::CompartmentVector compartments;
 
     /* Runtime state, synchronized by the stateChange/gcLock condvar/lock. */
     JSRuntimeState      state;
