@@ -349,6 +349,12 @@ let ContentScroll =  {
         let winCwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         winCwu.setDisplayPort(x, y, displayport.width, displayport.height);
 
+        // XXX If we scrolled during this displayport update, then it is the
+        //     end of a pan. Due to bug 637852, there may be seaming issues
+        //     with the visible content, so we need to redraw.
+        if (json.id == 1 && json.scrollX >= 0 && json.scrollY >= 0)
+          winCwu.redraw();
+
         break;
       }
 
