@@ -426,6 +426,7 @@ protected:
   virtual void
   PaintBuffer(gfxContext* aContext,
               const nsIntRegion& aRegionToDraw,
+              const nsIntRegion& aExtendedRegionToDraw,
               const nsIntRegion& aRegionToInvalidate,
               LayerManager::DrawThebesLayerCallback aCallback,
               void* aCallbackData)
@@ -434,14 +435,14 @@ protected:
       BasicManager()->SetTransactionIncomplete();
       return;
     }
-    aCallback(this, aContext, aRegionToDraw, aRegionToInvalidate,
+    aCallback(this, aContext, aExtendedRegionToDraw, aRegionToInvalidate,
               aCallbackData);
     // Everything that's visible has been validated. Do this instead of just
     // OR-ing with aRegionToDraw, since that can lead to a very complex region
     // here (OR doesn't automatically simplify to the simplest possible
     // representation of a region.)
     nsIntRegion tmp;
-    tmp.Or(mVisibleRegion, aRegionToDraw);
+    tmp.Or(mVisibleRegion, aExtendedRegionToDraw);
     mValidRegion.Or(mValidRegion, tmp);
   }
 
@@ -599,12 +600,13 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       // from RGB to RGBA, because we might need to repaint with
       // subpixel AA)
       state.mRegionToInvalidate.And(state.mRegionToInvalidate, mVisibleRegion);
-      state.mRegionToDraw.ExtendForScaling(paintXRes, paintYRes);
+      nsIntRegion extendedDrawRegion = state.mRegionToDraw;
+      extendedDrawRegion.ExtendForScaling(paintXRes, paintYRes);
       mXResolution = paintXRes;
       mYResolution = paintYRes;
       SetAntialiasingFlags(this, state.mContext);
       PaintBuffer(state.mContext,
-                  state.mRegionToDraw, state.mRegionToInvalidate,
+                  state.mRegionToDraw, extendedDrawRegion, state.mRegionToInvalidate,
                   aCallback, aCallbackData);
       Mutated();
     } else {
@@ -1795,6 +1797,7 @@ private:
   NS_OVERRIDE virtual void
   PaintBuffer(gfxContext* aContext,
               const nsIntRegion& aRegionToDraw,
+              const nsIntRegion& aExtendedRegionToDraw,
               const nsIntRegion& aRegionToInvalidate,
               LayerManager::DrawThebesLayerCallback aCallback,
               void* aCallbackData);
@@ -1854,11 +1857,13 @@ BasicShadowableThebesLayer::SetBackBufferAndAttrs(const ThebesBuffer& aBuffer,
 void
 BasicShadowableThebesLayer::PaintBuffer(gfxContext* aContext,
                                         const nsIntRegion& aRegionToDraw,
+                                        const nsIntRegion& aExtendedRegionToDraw,
                                         const nsIntRegion& aRegionToInvalidate,
                                         LayerManager::DrawThebesLayerCallback aCallback,
                                         void* aCallbackData)
 {
-  Base::PaintBuffer(aContext, aRegionToDraw, aRegionToInvalidate,
+  Base::PaintBuffer(aContext,
+                    aRegionToDraw, aExtendedRegionToDraw, aRegionToInvalidate,
                     aCallback, aCallbackData);
   if (!HasShadow()) {
     return;
@@ -1875,7 +1880,8 @@ BasicShadowableThebesLayer::PaintBuffer(gfxContext* aContext,
     updatedRegion = aRegionToDraw;
   }
 
-
+  NS_ASSERTION(mBuffer.BufferRect().Contains(aRegionToDraw.GetBounds()),
+               "Update outside of buffer rect!");
   NS_ABORT_IF_FALSE(IsSurfaceDescriptorValid(mBackBuffer),
                     "should have a back buffer by now");
   BasicManager()->PaintedThebesBuffer(BasicManager()->Hold(this),
