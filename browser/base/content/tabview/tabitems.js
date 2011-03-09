@@ -721,6 +721,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         complete();
     };
 
+    UI.setActiveTab(this);
     TabItems._update(this.tab, {force: true});
 
     $tab.addClass("front");
