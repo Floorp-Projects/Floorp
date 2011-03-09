@@ -745,12 +745,12 @@ public class GeckoAppShell
                 ClipboardManager cm = (ClipboardManager)
                     context.getSystemService(Context.CLIPBOARD_SERVICE);
                 try {
-                    sClipboardQueue.put(cm.hasText() ?
-                                        cm.getText().toString() : null);
+                    sClipboardQueue.put(cm.hasText() ? cm.getText().toString() : "");
                 } catch (InterruptedException ie) {}
             }});
         try {
-            return sClipboardQueue.take();
+            String ret = sClipboardQueue.take();
+            return ret == "" ? null : ret;
         } catch (InterruptedException ie) {}
         return null;
     }
