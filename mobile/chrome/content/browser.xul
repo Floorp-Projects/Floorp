@@ -350,7 +350,7 @@
       </hbox>
     </arrowbox>
 
-    <arrowbox id="bookmark-popup" hidden="true" align="center" offset="12">
+    <arrowbox id="bookmark-popup" class="arrowbox-dark" hidden="true" align="center" offset="12">
       <label value="&bookmarkPopup.label;"/>
       <separator class="thin"/>
       <vbox>
@@ -575,9 +575,9 @@
       <hbox id="search-engines-list" class="prompt-buttons" flex="1"/>
     </arrowbox>
 
-    <vbox id="newtab-popup" hidden="true" class="dialog-dark" onclick="NewTabPopup.selectTab()" align="center" start="21">
+    <arrowbox id="newtab-popup" class="arrowbox-dark" hidden="true" onclick="NewTabPopup.selectTab()" align="center" start="0">
       <label/>
-    </vbox>
+    </arrowbox>
 
     <!-- options dialog for select form field -->
     <vbox id="select-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">

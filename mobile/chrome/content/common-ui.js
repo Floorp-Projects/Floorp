@@ -386,8 +386,16 @@ var NewTabPopup = {
     this._tabs.push(aTab);
     this._updateLabel();
 
-    this.box.top = aTab.getBoundingClientRect().top + (aTab.getBoundingClientRect().height / 3);
     this.box.hidden = false;
+    let tabRect = aTab.getBoundingClientRect();
+    this.box.top = tabRect.top + (tabRect.height / 2);
+
+    // wait for layout to resolve the real size of the box
+    setTimeout((function() {
+      let boxRect = this.box.getBoundingClientRect();
+      this.box.top = tabRect.top + (tabRect.height / 2) - (boxRect.height / 2);
+      this.box.anchorTo(aTab);
+    }).bind(this), 0);
 
     if (this._timeout)
       clearTimeout(this._timeout);
