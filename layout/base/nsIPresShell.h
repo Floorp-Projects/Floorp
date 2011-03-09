@@ -1154,19 +1154,21 @@ public:
    * Set up a "displayport", which overrides what everything else thinks
    * is the visible region of this document with the specified
    * displayport rect.
+   * @DEPRECATED Use nsLayoutUtils displayport methods
    */
   virtual void SetDisplayPort(const nsRect& aDisplayPort) = 0;
   PRBool UsingDisplayPort() const
-  { return mRenderFlags & STATE_USING_DISPLAYPORT; }
+  { NS_ABORT_IF_FALSE(false, "UsingDisplayPort is deprecated"); return false; }
 
   /**
    * Return the displayport being used.  |UsingDisplayPort()| must be
    * true.
+   * @DEPRECATED Use nsLayoutUtils displayport methods
    */
   nsRect GetDisplayPort()
   {
-    NS_ABORT_IF_FALSE(UsingDisplayPort(), "no displayport defined!");
-    return mDisplayPort;
+    NS_ABORT_IF_FALSE(false, "GetDisplayPort is deprecated");
+    return nsRect();
   }
 
    /**
