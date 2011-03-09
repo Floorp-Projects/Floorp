@@ -1252,7 +1252,8 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       item->GetLayerState(mBuilder, mManager);
 
     // Assign the item to a layer
-    if (layerState == LAYER_ACTIVE && (aClip.mRoundedClipRects.IsEmpty() ||
+    if (layerState == LAYER_ACTIVE_FORCE ||
+        layerState == LAYER_ACTIVE && (aClip.mRoundedClipRects.IsEmpty() ||
         // We can use the visible rect here only because the item has its own
         // layer, like the comment below.
         !aClip.IsRectClippedByRoundedCorner(item->GetVisibleRect()))) {
