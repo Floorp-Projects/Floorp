@@ -214,9 +214,8 @@ public:
   NS_IMETHOD_(void) InitializeKeyboardEventListeners();
   NS_IMETHOD_(void) OnValueChanged(PRBool aNotify);
 
-  // nsIFileControlElement
   void GetDisplayFileName(nsAString& aFileName) const;
-  const nsCOMArray<nsIDOMFile>& GetFiles();
+  const nsCOMArray<nsIDOMFile>& GetFiles() const;
   void SetFiles(const nsCOMArray<nsIDOMFile>& aFiles, bool aSetValueChanged);
 
   void SetCheckedChangedInternal(PRBool aCheckedChanged);
@@ -271,9 +270,9 @@ public:
 
   // nsIConstraintValidation
   PRBool   IsTooLong();
-  PRBool   IsValueMissing();
-  PRBool   HasTypeMismatch();
-  PRBool   HasPatternMismatch();
+  PRBool   IsValueMissing() const;
+  PRBool   HasTypeMismatch() const;
+  PRBool   HasPatternMismatch() const;
   void     UpdateTooLongValidityState();
   void     UpdateValueMissingValidityState();
   void     UpdateTypeMismatchValidityState();
@@ -389,6 +388,8 @@ protected:
   nsresult SetValueInternal(const nsAString& aValue,
                             PRBool aUserInput,
                             PRBool aSetValueChanged);
+
+  nsresult GetValueInternal(nsAString& aValue) const;
 
   void ClearFiles(bool aSetValueChanged) {
     nsCOMArray<nsIDOMFile> files;
