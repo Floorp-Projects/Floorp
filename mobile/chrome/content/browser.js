@@ -662,9 +662,6 @@ var Browser = {
     newTab.chromeTab.dispatchEvent(event);
     newTab.browser.messageManager.sendAsyncMessage("Browser:TabOpen");
 
-    // Display the URL in the titlebar while the page starts loading.
-    BrowserUI._titleChanged(newTab.browser);
-
     return newTab;
   },
 
