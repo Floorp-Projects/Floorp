@@ -633,6 +633,14 @@ var Browser = {
     return null;
   },
 
+  getBrowserForWindowId: function getBrowserForWindowId(aWindowId) {
+    for (let i = 0; i < this.browsers.length; i++) {
+      if (this.browsers[i].contentWindowId == aWindowId)
+        return this.browsers[i];
+    }
+    return null;
+  },
+
   getTabAtIndex: function getTabAtIndex(index) {
     if (index > this._tabs.length || index < 0)
       return null;

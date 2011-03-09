@@ -54,11 +54,13 @@ ContentPermissionPrompt.prototype = {
     if (request.window) {
       let requestingWindow = request.window.top;
       let chromeWin = this.getChromeWindow(requestingWindow).wrappedJSObject;
-      return chromeWin.getNotificationBox(requestingWindow);
+      let windowID = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+      let browser = chromeWin.Browser.getBrowserForWindowId(windowID);
+      return chromeWin.getNotificationBox(browser);
     }
 
     let chromeWin = request.element.ownerDocument.defaultView;
-    return chromeWin.Browser.getNotificationBox();
+    return chromeWin.Browser.getNotificationBox(request.element);
   },
 
   handleExistingPermission: function handleExistingPermission(request) {
