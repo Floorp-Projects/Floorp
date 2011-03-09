@@ -810,6 +810,35 @@ js::mjit::JaegerShotAtSafePoint(JSContext *cx, void *safePoint)
     JS_ASSERT(!TRACE_RECORDER(cx));
 #endif
 
+    JSScript *script = cx->fp()->script();
+    if (cx->typeInferenceEnabled() && script->varTypes) {
+        /*
+         * Convert integer locals/args to doubles as required. The code we are
+         * jumping to may assume that non-escaping locals and args have double
+         * values if they were inferred as 'int or double'. The interpreter cannot
+         * guarantee this holds, so we check and fixup the args/locals here.
+         */
+
+        if (cx->fp()->hasArgs()) {
+            JSFunction *fun = cx->fp()->fun();
+            Value *formals = cx->fp()->formalArgs();
+            for (uint32 i = 0; i < fun->nargs; i++) {
+                if (formals[i].isInt32() &&
+                    script->argTypes(i)->getKnownTypeTag(cx, NULL) == JSVAL_TYPE_DOUBLE) {
+                    formals[i].setDouble((double)formals[i].toInt32());
+                }
+            }
+        }
+
+        Value *fixed = cx->fp()->slots();
+        for (uint32 i = 0; i < script->nfixed; i++) {
+            if (fixed[i].isInt32() &&
+                script->localTypes(i)->getKnownTypeTag(cx, NULL) == JSVAL_TYPE_DOUBLE) {
+                fixed[i].setDouble((double)fixed[i].toInt32());
+            }
+        }
+    }
+
     return CheckStackAndEnterMethodJIT(cx, cx->fp(), safePoint);
 }
 
