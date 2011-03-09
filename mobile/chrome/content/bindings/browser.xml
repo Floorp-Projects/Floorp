@@ -950,13 +950,7 @@
            */
           _updateCacheViewport: function() {
             // Do not update scroll values for content.
-            if (this.isRoot())
-              this._sendDisplayportUpdate(-1, -1);
-            else {
-              let contentView = this._contentView;
-              this._sendDisplayportUpdate(contentView.scrollX,
-                                          contentView.scrollY);
-            }
+            this._sendDisplayportUpdate(-1, -1);
           },
 
           _getContentSize: function() {
