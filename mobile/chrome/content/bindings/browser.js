@@ -301,11 +301,18 @@ let ContentScroll =  {
   },
 
   getScrollOffsetForElement: function(aElement) {
-    return this.getScrollOffset(aElement.ownerDocument.defaultView);
+    if (aElement.parentNode == aElement.ownerDocument)
+      return this.getScrollOffset(aElement.ownerDocument.defaultView);
+    return { x: aElement.scrollLeft, y: aElement.scrollTop };
   },
 
   setScrollOffsetForElement: function(aElement, aLeft, aTop) {
-    aElement.ownerDocument.defaultView.scrollTo(aLeft, aTop);
+    if (aElement.parentNode == aElement.ownerDocument) {
+      aElement.ownerDocument.defaultView.scrollTo(aLeft, aTop);
+    } else {
+      aElement.scrollLeft = aLeft;
+      aElement.scrollTop = aTop;
+    }
   },
 
   receiveMessage: function(aMessage) {
@@ -347,7 +354,8 @@ let ContentScroll =  {
 
         let win = element.ownerDocument.defaultView;
         let winCwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-        winCwu.setDisplayPort(x, y, displayport.width, displayport.height);
+        let winCwu20 = winCwu.QueryInterface(Ci.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
+        winCwu20.setDisplayPortForElement(x, y, displayport.width, displayport.height, element);
 
         break;
       }
@@ -419,7 +427,8 @@ let ContentActive =  {
       case "Content:Deactivate":
         docShell.isActive = false;
         let cwu = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-        cwu.setDisplayPort(0,0,0,0);
+        let cwu20 = cwu.QueryInterface(Ci.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
+        cwu20.setDisplayPortForElement(0,0,0,0,content.document.documentElement);
         break;
 
       case "Content:Activate":
