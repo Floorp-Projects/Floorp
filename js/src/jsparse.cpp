@@ -6224,7 +6224,6 @@ Parser::statement()
         return pn;
       }
 
-      case TOK_EOL:
       case TOK_SEMI:
         pn = UnaryNode::create(tc);
         if (!pn)

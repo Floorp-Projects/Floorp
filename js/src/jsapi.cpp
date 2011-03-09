@@ -77,7 +77,6 @@
 #include "jsparse.h"
 #include "jsproxy.h"
 #include "jsregexp.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
