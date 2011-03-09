@@ -129,7 +129,30 @@ interface nsIDOMWindowUtils : nsISupports {
   void setCSSViewport(in float aWidthPx, in float aHeightPx);
 
   /**
-   * @DEPRECATED See nsIDOMWindowUtils_MOZILLA_2_0_BRANCH.
+   * Set the "displayport" to be <xPx, yPx, widthPx, heightPx> in
+   * units of CSS pixels, regardless of the size of the enclosing
+   * widget/view.  This will *not* trigger reflow.
+   *
+   * <x, y> is relative to the top-left of the CSS viewport.  This
+   * means that the pixels rendered to the displayport take scrolling
+   * into account, for example.
+   *
+   * The displayport will be used as the window's visible region for
+   * the purposes of invalidation and painting.  The displayport can
+   * approximately be thought of as a "persistent" drawWindow()
+   * (albeit with coordinates relative to the CSS viewport): the
+   * bounds are remembered by the platform, and layer pixels are
+   * retained and updated inside the viewport bounds.
+   *
+   * It's legal to set a displayport that extends beyond the CSS
+   * viewport in any direction (left/right/top/bottom).
+   * 
+   * It's also legal to set a displayport that extends beyond the
+   * document's bounds.  The value of the pixels rendered outside the
+   * document bounds is not yet defined.
+   *
+   * The caller of this method must have UniversalXPConnect
+   * privileges.
    */
   void setDisplayPort(in float aXPx, in float aYPx,
                       in float aWidthPx, in float aHeightPx);
@@ -801,7 +824,7 @@ interface nsIDOMWindowUtils : nsISupports {
 
 typedef unsigned long long nsViewID;
 
-[scriptable, uuid(7ad49829-e631-4cdd-a237-95847d9bcbe6)]
+[scriptable, uuid(be2e28c8-64f8-4100-906d-8a451ddd6835)]
 interface nsIDOMWindowUtils_MOZILLA_2_0_BRANCH : nsISupports {
   /**
    * Get the type of the currently focused html input, if any.
@@ -814,36 +837,6 @@ interface nsIDOMWindowUtils_MOZILLA_2_0_BRANCH : nsISupports {
    * element of the document is returned.
    */
   nsIDOMElement findElementWithViewId(in nsViewID aId);
-
-  /**
-   * For any scrollable element, this allows you to override the
-   * visible region and draw more than what is visible, which is
-   * useful for asynchronous drawing. The "displayport" will be
-   * <xPx, yPx, widthPx, heightPx> in units of CSS pixels,
-   * regardless of the size of the enclosing container.  This
-   * will *not* trigger reflow.
-   *
-   * For the root scroll area, pass in the root document element.
-   * For scrollable elements, pass in the container element (for
-   * instance, the element with overflow: scroll).
-   *
-   * <x, y> is relative to the top-left of what would normally be
-   * the visible area of the element. This means that the pixels
-   * rendered to the displayport take scrolling into account,
-   * for example.
-   *
-   * It's legal to set a displayport that extends beyond the overflow
-   * area in any direction (left/right/top/bottom).
-   * 
-   * It's also legal to set a displayport that extends beyond the
-   * area's bounds.  No pixels are rendered outside the area bounds.
-   *
-   * The caller of this method must have UniversalXPConnect
-   * privileges.
-   */
-  void setDisplayPortForElement(in float aXPx, in float aYPx,
-                                in float aWidthPx, in float aHeightPx,
-                                in nsIDOMElement aElement);
 
   /**
    * Same as enterModalState, but returns the window associated with the

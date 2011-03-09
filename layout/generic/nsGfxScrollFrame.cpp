@@ -1863,12 +1863,9 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                         scrollParts, createLayersForScrollbars);
   }
 
-  nsRect displayport;
-  PRBool usingDisplayPort = nsLayoutUtils::GetDisplayPort(mOuter->GetContent(),
-                                                        &displayport);
-  if (!usingDisplayPort) {
-    displayport = mScrollPort;
-  }
+  nsIPresShell* presShell = mOuter->PresContext()->GetPresShell();
+  nsRect scrollPort = (mIsRoot && presShell->UsingDisplayPort()) ?
+                      (presShell->GetDisplayPort()) : mScrollPort;
 
   // Overflow clipping can never clip frames outside our subtree, so there
   // is no need to worry about whether we are a moving frame that might clip
@@ -1879,69 +1876,18 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // had dirty rects saved for them by their parent frames calling
   // MarkOutOfFlowChildrenForDisplayList, so it's safe to restrict our
   // dirty rect here.
-  dirtyRect.IntersectRect(aDirtyRect, mScrollPort);
-
-  if (usingDisplayPort) {
-    dirtyRect = displayport;
-  }
+  dirtyRect.IntersectRect(aDirtyRect, scrollPort);
 
   nsDisplayListCollection set;
-
-  nsPresContext* presContext = mOuter->PresContext();
-  PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
-
-#ifdef MOZ_IPC
-  // Since making new layers is expensive, only use nsDisplayScrollLayer
-  // if the area is scrollable.
-  //
-  // Scroll frames can be generated with a scroll range that is 0, 0.
-  // Furthermore, it is not worth the memory tradeoff to allow asynchronous
-  // scrolling of small scroll frames. We use an arbitrary minimum scroll
-  // range of 20 pixels to eliminate many gfx scroll frames from becoming a
-  // layer.
-  //
-  nsRect scrollRange = GetScrollRange();
-  PRBool buildingLayer =
-     (XRE_GetProcessType() == GeckoProcessType_Content &&
-     (scrollRange.width >= NSIntPixelsToAppUnits(20, appUnitsPerDevPixel) ||
-     scrollRange.height >= NSIntPixelsToAppUnits(20, appUnitsPerDevPixel))) &&
-     (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument());
-
-#else
-  PRBool buildingLayer = false;
-#endif
-
-  if (buildingLayer) {
-    // Note that using StackingContext breaks z order, so the resulting
-    // rendering can be incorrect for weird edge cases!
-
-    rv = mScrolledFrame->BuildDisplayListForStackingContext(
-      aBuilder,
-      dirtyRect + mOuter->GetOffsetTo(mScrolledFrame),
-      set.Content()
-    );
-
-    nsDisplayScrollLayer* layerItem = new (aBuilder) nsDisplayScrollLayer(
-      aBuilder,
-      set.Content(),
-      mScrolledFrame,
-      mOuter,
-      displayport
-    );
-    set.Content()->AppendNewToTop(layerItem);
-  } else {
-    rv = mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
-  }
-
+  rv = mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
   NS_ENSURE_SUCCESS(rv, rv);
   nsRect clip;
-  clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
+  clip = scrollPort + aBuilder->ToReferenceFrame(mOuter);
 
   nscoord radii[8];
   // Our override of GetBorderRadii ensures we never have a radius at
   // the corners where we have a scrollbar.
   mOuter->GetPaddingBoxBorderRadii(radii);
-
   // mScrolledFrame may have given us a background, e.g., the scrolled canvas
   // frame below the viewport. If so, we want it to be clipped. We also want
   // to end up on our BorderBackground list.
