@@ -119,7 +119,7 @@ class RemoteAutomation(Automation):
         return nettools.getLanIp()
 
     def Process(self, cmd, stdout = None, stderr = None, env = None, cwd = '.'):
-        if stdout == None or stdout == -1:
+        if stdout == None or stdout == -1 or stdout == subprocess.PIPE:
           stdout = self._remoteLog
 
         return self.RProcess(self._devicemanager, cmd, stdout, stderr, env, cwd)
@@ -130,7 +130,10 @@ class RemoteAutomation(Automation):
         dm = None
         def __init__(self, dm, cmd, stdout = None, stderr = None, env = None, cwd = '.'):
             self.dm = dm
-            self.proc = dm.launchProcess(cmd, stdout, cwd, env)
+            self.stdoutlen = 0
+            self.proc = dm.launchProcess(cmd, stdout, cwd, env, True)
+            if (self.proc is None):
+              raise Exception("unable to launch process")
             exepath = cmd[0]
             name = exepath.split('/')[-1]
             self.procName = name
@@ -148,7 +151,12 @@ class RemoteAutomation(Automation):
     
         @property
         def stdout(self):
-            return self.dm.getFile(self.proc)
+            t = self.dm.getFile(self.proc)
+            if t == None: return ''
+            tlen = len(t)
+            retVal = t[self.stdoutlen:]
+            self.stdoutlen = tlen
+            return retVal.strip('\n').strip()
  
         def wait(self, timeout = None):
             timer = 0
@@ -158,6 +166,8 @@ class RemoteAutomation(Automation):
                 timeout = self.timeout
 
             while (self.dm.processExist(self.procName)):
+                t = self.stdout
+                if t != '': print t
                 time.sleep(interval)
                 timer += interval
                 if (timer > timeout):

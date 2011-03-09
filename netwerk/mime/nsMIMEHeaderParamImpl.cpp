@@ -165,8 +165,8 @@ nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue,
       if (str == start)
         return NS_ERROR_UNEXPECTED;
       *aResult = (char *) nsMemory::Clone(start, (str - start) + 1);
-      (*aResult)[str - start] = '\0';  // null-terminate
       NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+      (*aResult)[str - start] = '\0';  // null-terminate
       return NS_OK;
     }
 

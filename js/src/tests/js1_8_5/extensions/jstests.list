@@ -9,6 +9,7 @@ skip-if(!xulRuntime.shell) script worker-simple.js
 skip-if(!xulRuntime.shell) script worker-terminate.js
 skip-if(!xulRuntime.shell) script worker-timeout.js
 script scripted-proxies.js
+script watch-undefined-setter.js
 script array-length-protochange.js
 script parseInt-octal.js
 script proxy-enumerateOwn-duplicates.js
@@ -34,3 +35,5 @@ script regress-627984-6.js
 script regress-627984-7.js
 script regress-630377.js
 script regress-631723.js
+skip-if(!xulRuntime.shell) script regress-636818.js
+script regress-636697.js

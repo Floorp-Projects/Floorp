@@ -51,6 +51,7 @@ class nsHtml5Module
     static nsIThread* GetStreamParserThread();
     static PRBool sEnabled;
     static PRBool sOffMainThread;
+    static PRBool sHotmailWorkaround;
   private:
 #ifdef DEBUG
     static PRBool sNsHtml5ModuleInitialized;

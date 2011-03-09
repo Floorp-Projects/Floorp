@@ -88,6 +88,20 @@
 #include "mozilla/dom/StorageParent.h"
 #include "nsAccelerometer.h"
 
+#include "nsIMemoryReporter.h"
+#include "nsMemoryReporterManager.h"
+#include "mozilla/dom/PMemoryReportRequestParent.h"
+
+#ifdef ANDROID
+#include "gfxAndroidPlatform.h"
+#endif
+
+#include "nsIClipboard.h"
+#include "nsWidgetsCID.h"
+#include "nsISupportsPrimitives.h"
+static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
+static const char* sClipboardTextFlavors[] = { kUnicodeMime };
+
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
@@ -98,6 +112,38 @@ namespace mozilla {
 namespace dom {
 
 #define NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC "ipc:network:set-offline"
+
+class MemoryReportRequestParent : public PMemoryReportRequestParent
+{
+public:
+    MemoryReportRequestParent();
+    virtual ~MemoryReportRequestParent();
+
+    virtual bool    Recv__delete__(const InfallibleTArray<MemoryReport>& report);
+private:
+    ContentParent* Owner()
+    {
+        return static_cast<ContentParent*>(Manager());
+    }
+};
+    
+
+MemoryReportRequestParent::MemoryReportRequestParent()
+{
+    MOZ_COUNT_CTOR(MemoryReportRequestParent);
+}
+
+bool
+MemoryReportRequestParent::Recv__delete__(const InfallibleTArray<MemoryReport>& report)
+{
+    Owner()->SetChildMemoryReporters(report);
+    return true;
+}
+
+MemoryReportRequestParent::~MemoryReportRequestParent()
+{
+    MOZ_COUNT_DTOR(MemoryReportRequestParent);
+}
 
 ContentParent* ContentParent::gSingleton;
 
@@ -125,6 +171,7 @@ ContentParent::GetSingleton(PRBool aForceNew)
                 obs->AddObserver(
                   parent, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, PR_FALSE);
 
+                obs->AddObserver(parent, "child-memory-reporter-request", PR_FALSE);
                 obs->AddObserver(parent, "memory-pressure", PR_FALSE); 
             }
             nsCOMPtr<nsIThreadInternal>
@@ -193,9 +240,13 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
     if (obs) {
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "xpcom-shutdown");
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "memory-pressure");
-        obs->RemoveObserver(static_cast<nsIObserver*>(this),
-                           NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC);
+        obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-memory-reporter-request");
+        obs->RemoveObserver(static_cast<nsIObserver*>(this), NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC);
     }
+
+    // clear the child memory reporters
+    InfallibleTArray<MemoryReport> empty;
+    SetChildMemoryReporters(empty);
 
     // remove the global remote preferences observers
     nsCOMPtr<nsIPrefBranch2> prefs 
@@ -321,6 +372,16 @@ ContentParent::RecvReadPrefsArray(InfallibleTArray<PrefTuple> *prefs)
     return true;
 }
 
+bool
+ContentParent::RecvReadFontList(InfallibleTArray<FontListEntry>* retValue)
+{
+#ifdef ANDROID
+    gfxAndroidPlatform::GetPlatform()->GetFontList(retValue);
+#endif
+    return true;
+}
+
+
 void
 ContentParent::EnsurePrefService()
 {
@@ -373,6 +434,84 @@ ContentParent::RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissio
     permissionManager->ChildRequestPermissions();
 #endif
 
+    return true;
+}
+
+bool
+ContentParent::RecvSetClipboardText(const nsString& text, const PRInt32& whichClipboard)
+{
+    nsresult rv;
+    nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
+    NS_ENSURE_SUCCESS(rv, true);
+
+    nsCOMPtr<nsISupportsString> dataWrapper =
+        do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, true);
+    
+    rv = dataWrapper->SetData(text);
+    NS_ENSURE_SUCCESS(rv, true);
+    
+    nsCOMPtr<nsITransferable> trans = do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
+    NS_ENSURE_SUCCESS(rv, true);
+    
+    // If our data flavor has already been added, this will fail. But we don't care
+    trans->AddDataFlavor(kUnicodeMime);
+    
+    nsCOMPtr<nsISupports> nsisupportsDataWrapper =
+        do_QueryInterface(dataWrapper);
+    
+    rv = trans->SetTransferData(kUnicodeMime, nsisupportsDataWrapper,
+                                text.Length() * sizeof(PRUnichar));
+    NS_ENSURE_SUCCESS(rv, true);
+    
+    clipboard->SetData(trans, NULL, whichClipboard);
+    return true;
+}
+
+bool
+ContentParent::RecvGetClipboardText(const PRInt32& whichClipboard, nsString* text)
+{
+    nsresult rv;
+    nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
+    NS_ENSURE_SUCCESS(rv, true);
+
+    nsCOMPtr<nsITransferable> trans = do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
+    NS_ENSURE_SUCCESS(rv, true);
+    
+    clipboard->GetData(trans, whichClipboard);
+    nsCOMPtr<nsISupports> tmp;
+    PRUint32 len;
+    rv  = trans->GetTransferData(kUnicodeMime, getter_AddRefs(tmp), &len);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISupportsString> supportsString = do_QueryInterface(tmp);
+    // No support for non-text data
+    NS_ENSURE_TRUE(supportsString, NS_ERROR_NOT_IMPLEMENTED);
+    supportsString->GetData(*text);
+    return true;
+}
+
+bool
+ContentParent::RecvEmptyClipboard()
+{
+    nsresult rv;
+    nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
+    NS_ENSURE_SUCCESS(rv, true);
+
+    clipboard->EmptyClipboard(nsIClipboard::kGlobalClipboard);
+
+    return true;
+}
+
+bool
+ContentParent::RecvClipboardHasText(PRBool* hasText)
+{
+    nsresult rv;
+    nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
+    NS_ENSURE_SUCCESS(rv, true);
+
+    clipboard->HasDataMatchingFlavors(sClipboardTextFlavors, 1, 
+                                      nsIClipboard::kGlobalClipboard, hasText);
     return true;
 }
 
@@ -450,6 +589,10 @@ ContentParent::Observe(nsISupports* aSubject,
                                       nsDependentString(aData)))
             return NS_ERROR_NOT_AVAILABLE;
     }
+    else if (!strcmp(aTopic, "child-memory-reporter-request")) {
+        SendPMemoryReportRequestConstructor();
+    }
+
     return NS_OK;
 }
 
@@ -482,6 +625,48 @@ ContentParent::DeallocPCrashReporter(PCrashReporterParent* crashreporter)
 {
   delete crashreporter;
   return true;
+}
+
+PMemoryReportRequestParent*
+ContentParent::AllocPMemoryReportRequest()
+{
+  MemoryReportRequestParent* parent = new MemoryReportRequestParent();
+  return parent;
+}
+
+bool
+ContentParent::DeallocPMemoryReportRequest(PMemoryReportRequestParent* actor)
+{
+  delete actor;
+  return true;
+}
+
+void
+ContentParent::SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& report)
+{
+    nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
+    for (PRUint32 i = 0; i < mMemoryReporters.Count(); i++)
+        mgr->UnregisterReporter(mMemoryReporters[i]);
+
+    for (PRUint32 i = 0; i < report.Length(); i++) {
+
+        nsCString prefix = report[i].prefix();
+        nsCString path   = report[i].path();
+        nsCString desc   = report[i].desc();
+        PRInt64 memoryUsed = report[i].memoryUsed();
+        
+        nsRefPtr<nsMemoryReporter> r = new nsMemoryReporter(prefix,
+                                                            path,
+                                                            desc,
+                                                            memoryUsed);
+      mMemoryReporters.AppendObject(r);
+      mgr->RegisterReporter(r);
+    }
+
+    nsCOMPtr<nsIObserverService> obs =
+        do_GetService("@mozilla.org/observer-service;1");
+    if (obs)
+        obs->NotifyObservers(nsnull, "child-memory-reporter-update", nsnull);
 }
 
 PTestShellParent*

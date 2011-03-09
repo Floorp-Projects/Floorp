@@ -43,8 +43,6 @@
 
 using namespace avmplus;
 
-nanojit::Config AvmCore::config;
-
 void
 avmplus::AvmLog(char const *msg, ...) {
     va_list ap;

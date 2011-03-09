@@ -429,7 +429,7 @@ GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
     return js_anonymous_str;
 }
 
-extern JS_FRIEND_API(bool)
+extern bool
 IsBuiltinFunctionConstructor(JSFunction *fun);
 
 /*
@@ -610,12 +610,5 @@ js_fun_apply(JSContext *cx, uintN argc, js::Value *vp);
 
 extern JSBool
 js_fun_call(JSContext *cx, uintN argc, js::Value *vp);
-
-namespace js {
-
-bool
-IsSafeForLazyThisCoercion(JSContext *cx, JSObject *callee);
-
-}
 
 #endif /* jsfun_h___ */

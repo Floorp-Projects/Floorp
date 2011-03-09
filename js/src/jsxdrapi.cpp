@@ -396,9 +396,6 @@ JS_XDRCString(JSXDRState *xdr, char **sp)
     }
     if (xdr->mode == JSXDR_DECODE) {
         (*sp)[len] = '\0';
-    } else if (xdr->mode == JSXDR_FREE) {
-        xdr->cx->free(*sp);
-        *sp = NULL;
     }
     return JS_TRUE;
 }
@@ -666,21 +663,29 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_XDRScript(JSXDRState *xdr, JSScript **scriptp)
+JS_XDRScriptObject(JSXDRState *xdr, JSObject **scriptObjp)
 {
-    if (!js_XDRScript(xdr, scriptp, NULL))
-        return JS_FALSE;
+    JSScript *script;
+    if (xdr->mode == JSXDR_DECODE) {
+        script = NULL;
+        *scriptObjp = NULL;
+    } else {
+        script = (*scriptObjp)->getScript();
+    }
+    
+    if (!js_XDRScript(xdr, &script, NULL))
+        return false;
 
     if (xdr->mode == JSXDR_DECODE) {
-        js_CallNewScriptHook(xdr->cx, *scriptp, NULL);
-        if (!js_NewScriptObject(xdr->cx, *scriptp)) {
-            js_DestroyScript(xdr->cx, *scriptp);
-            *scriptp = NULL;
-            return JS_FALSE;
+        js_CallNewScriptHook(xdr->cx, script, NULL);
+        *scriptObjp = js_NewScriptObject(xdr->cx, script);
+        if (!*scriptObjp) {
+            js_DestroyScript(xdr->cx, script);
+            return false;
         }
     }
 
-    return JS_TRUE;
+    return true;
 }
 
 #define CLASS_REGISTRY_MIN      8

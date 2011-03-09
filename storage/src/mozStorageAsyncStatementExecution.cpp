@@ -16,7 +16,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation. 
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
@@ -76,6 +76,7 @@ namespace storage {
 namespace {
 
 typedef AsyncExecuteStatements::ExecutionState ExecutionState;
+typedef AsyncExecuteStatements::StatementDataArray StatementDataArray;
 
 /**
  * Notifies a callback with a result set.
@@ -138,24 +139,24 @@ private:
 };
 
 /**
- * Notifies the calling thread that the statement has finished executing.  Keeps
- * the AsyncExecuteStatements instance alive long enough so that it does not
- * get destroyed on the async thread if there are no other references alive.
+ * Notifies the calling thread that the statement has finished executing.  Takes
+ * ownership of the StatementData so it is released on the proper thread.
  */
 class CompletionNotifier : public nsRunnable
 {
 public:
   /**
-   * This takes ownership of the callback.  It is released on the thread this is
-   * dispatched to (which should always be the calling thread).
+   * This takes ownership of the callback and the StatementData.  They are
+   * released on the thread this is dispatched to (which should always be the
+   * calling thread).
    */
   CompletionNotifier(mozIStorageStatementCallback *aCallback,
                      ExecutionState aReason,
-                     AsyncExecuteStatements *aKeepAsyncAlive)
-    : mKeepAsyncAlive(aKeepAsyncAlive)
-    , mCallback(aCallback)
+                     StatementDataArray &aStatementData)
+    : mCallback(aCallback)
     , mReason(aReason)
   {
+    mStatementData.SwapElements(aStatementData);
   }
 
   NS_IMETHOD Run()
@@ -165,11 +166,16 @@ public:
       NS_RELEASE(mCallback);
     }
 
+    // The async thread could still hold onto a reference to us, so we need to
+    // make sure we release our reference to the StatementData now in case our
+    // destructor happens in a different thread.
+    mStatementData.Clear();
+
     return NS_OK;
   }
 
 private:
-  nsRefPtr<AsyncExecuteStatements> mKeepAsyncAlive;
+  StatementDataArray mStatementData;
   mozIStorageStatementCallback *mCallback;
   ExecutionState mReason;
 };
@@ -448,8 +454,9 @@ AsyncExecuteStatements::notifyComplete()
   // Always generate a completion notification; it is what guarantees that our
   // destruction does not happen here on the async thread.
   nsRefPtr<CompletionNotifier> completionEvent =
-    new CompletionNotifier(mCallback, mState, this);
-  NS_ENSURE_TRUE(completionEvent, NS_ERROR_OUT_OF_MEMORY);
+    new CompletionNotifier(mCallback, mState, mStatements);
+  NS_ASSERTION(mStatements.IsEmpty(),
+               "Should have given up ownership of mStatements!");
 
   // We no longer own mCallback (the CompletionNotifier takes ownership).
   mCallback = nsnull;

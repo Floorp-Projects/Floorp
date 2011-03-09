@@ -549,6 +549,16 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
     else
         *prevSurface = null_t();
 
+    if (surface) {
+        // Notify the cairo backend that this surface has changed behind
+        // its back.
+        gfxRect ur(updatedRect.left, updatedRect.top,
+                   updatedRect.right - updatedRect.left,
+                   updatedRect.bottom - updatedRect.top);
+        surface->MarkDirty(ur);
+        surface->Flush();
+    }
+
     mFrontSurface = surface;
     RecvNPN_InvalidateRect(updatedRect);
 
@@ -630,6 +640,25 @@ PluginInstanceParent::GetImage(ImageContainer* aContainer, Image** aImage)
 
     *aImage = image.forget().get();
     return NS_OK;
+}
+
+nsresult
+PluginInstanceParent::GetImageSize(nsIntSize* aSize)
+{
+    if (mFrontSurface) {
+        gfxIntSize size = mFrontSurface->GetSize();
+        *aSize = nsIntSize(size.width, size.height);
+        return NS_OK;
+    }
+
+#ifdef XP_MACOSX
+    if (mIOSurface) {
+        *aSize = nsIntSize(mIOSurface->GetWidth(), mIOSurface->GetHeight());
+        return NS_OK;
+    }
+#endif
+
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 #ifdef XP_MACOSX

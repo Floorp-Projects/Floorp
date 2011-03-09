@@ -992,7 +992,12 @@ var PlacesStarButton = {
         return;
       }
 
-      this._itemIds = aItemIds;
+      // It's possible that onItemAdded gets called before the async statement
+      // calls back.  For such an edge case, retain all unique entries from both
+      // arrays.
+      this._itemIds = this._itemIds.filter(
+        function (id) aItemIds.indexOf(id) == -1
+      ).concat(aItemIds);
       this._updateStateInternal();
 
       // Start observing bookmarks if needed.
@@ -1043,7 +1048,7 @@ var PlacesStarButton = {
       return;
     }
 
-    if (aURI.equals(this._uri)) {
+    if (aURI && aURI.equals(this._uri)) {
       // If a new bookmark has been added to the tracked uri, register it.
       if (this._itemIds.indexOf(aItemId) == -1) {
         this._itemIds.push(aItemId);

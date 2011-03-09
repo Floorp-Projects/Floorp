@@ -306,7 +306,7 @@ already_AddRefed<nsRootAccessible> nsAccessNode::GetRootAccessible()
 }
 
 nsIFrame*
-nsAccessNode::GetFrame()
+nsAccessNode::GetFrame() const
 {
   return mContent ? mContent->GetPrimaryFrame() : nsnull;
 }

@@ -432,8 +432,6 @@ ImageLayerOGL::RenderLayer(int,
     program->SetRenderOffset(aOffset);
     program->SetYCbCrTextureUnits(0, 1, 2);
 
-    DEBUG_GL_ERROR_CHECK(gl());
-
     mOGLManager->BindAndDrawQuad(program);
 
     // We shouldn't need to do this, but do it anyway just in case
@@ -476,6 +474,7 @@ ImageLayerOGL::RenderLayer(int,
        ioImage = static_cast<MacIOSurfaceImageOGL*>(image.get());
      }
      
+     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
      gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, ioImage->mTexture.GetTextureID());
 
      ColorTextureLayerProgram *program = 
@@ -503,8 +502,6 @@ ImageLayerOGL::RenderLayer(int,
      gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
 #endif
   }
-
-  DEBUG_GL_ERROR_CHECK(gl());
 }
 
 static void
@@ -743,15 +740,6 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
   InitTexture(gl, tex, LOCAL_GL_RGBA, aData.mSize);
   mSize = aData.mSize;
 
-  if (!mASurfaceAsGLContext) {
-    mASurfaceAsGLContext = GLContextProvider::CreateForNativePixmapSurface(aData.mSurface);
-    if (mASurfaceAsGLContext)
-      mASurfaceAsGLContext->BindTexImage();
-  }
-
-  if (mASurfaceAsGLContext)
-    return;
-
   mLayerProgram =
     gl->UploadSurfaceToTexture(aData.mSurface,
                                nsIntRect(0,0, mSize.width, mSize.height),
@@ -848,8 +836,6 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   program->SetTextureUnit(0);
 
   mOGLManager->BindAndDrawQuad(program);
-
-  DEBUG_GL_ERROR_CHECK(gl());
 }
 
 #endif  // MOZ_IPC

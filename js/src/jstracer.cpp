@@ -557,9 +557,6 @@ InitJITStatsClass(JSContext *cx, JSObject *glob)
 #define AUDIT(x) ((void)0)
 #endif /* JS_JIT_SPEW */
 
-static avmplus::AvmCore s_core = avmplus::AvmCore();
-static avmplus::AvmCore* core = &s_core;
-
 #ifdef JS_JIT_SPEW
 static void
 DumpPeerStability(TraceMonitor* tm, const void* ip, JSObject* globalObj, uint32 globalShape, uint32 argc);
@@ -573,6 +570,8 @@ DumpPeerStability(TraceMonitor* tm, const void* ip, JSObject* globalObj, uint32 
  * I think it's harmless tho.
  */
 static bool did_we_check_processor_features = false;
+
+nanojit::Config NJConfig;
 
 /* ------ Debug logging control ------ */
 
@@ -2366,7 +2365,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, TraceMonitor *tm,
 #endif
 
     /* This creates the LIR writer pipeline. */
-    w.init(&LogController);
+    w.init(&LogController, &NJConfig);
 
     w.start();
 
@@ -2517,7 +2516,7 @@ TraceRecorder::finishSuccessfully()
     TraceMonitor* localtm = traceMonitor;
 
     localtm->recorder = NULL;
-    /* We can't (easily) use js_delete() here because the constructor is private. */
+    /* We can't (easily) use js_delete() here because the destructor is private. */
     this->~TraceRecorder();
     js_free(this);
 
@@ -2571,7 +2570,7 @@ TraceRecorder::finishAbort(const char* reason)
     TraceMonitor* localtm = traceMonitor;
 
     localtm->recorder = NULL;
-    /* We can't (easily) use js_delete() here because the constructor is private. */
+    /* We can't (easily) use js_delete() here because the destructor is private. */
     this->~TraceRecorder();
     js_free(this);
 
@@ -2856,8 +2855,8 @@ TraceMonitor::flush()
         globalStates[i].globalSlots = new (*dataAlloc) SlotList(dataAlloc);
     }
 
-    assembler = new (*dataAlloc) Assembler(*codeAlloc, *dataAlloc, *dataAlloc, core,
-                                           &LogController, avmplus::AvmCore::config);
+    assembler = new (*dataAlloc) Assembler(*codeAlloc, *dataAlloc, *dataAlloc,
+                                           &LogController, NJConfig);
     verbose_only( branches = NULL; )
 
     PodArrayZero(vmfragments);
@@ -4565,7 +4564,7 @@ TraceRecorder::compile()
         Blacklist((jsbytecode*)tree->ip);
         return ARECORD_STOP;
     }
-    if (anchor && anchor->exitType != CASE_EXIT)
+    if (anchor)
         ++tree->branchCount;
     if (outOfMemory())
         return ARECORD_STOP;
@@ -4598,14 +4597,8 @@ TraceRecorder::compile()
         return ARECORD_STOP;
     ResetRecordingAttempts(traceMonitor, (jsbytecode*)fragment->ip);
     ResetRecordingAttempts(traceMonitor, (jsbytecode*)tree->ip);
-    if (anchor) {
-#ifdef NANOJIT_IA32
-        if (anchor->exitType == CASE_EXIT)
-            assm->patch(anchor, anchor->switchInfo);
-        else
-#endif
-            assm->patch(anchor);
-    }
+    if (anchor)
+        assm->patch(anchor);
     JS_ASSERT(fragment->code());
     JS_ASSERT_IF(fragment == fragment->root, fragment->root == tree);
 
@@ -5977,8 +5970,6 @@ AttemptToExtendTree(JSContext* cx, TraceMonitor* tm, VMSideExit* anchor, VMSideE
 
     int32_t& hits = c->hits();
     int32_t maxHits = HOTEXIT + MAXEXIT;
-    if (anchor->exitType == CASE_EXIT)
-        maxHits *= anchor->switchInfo->count;
     if (outerPC || (hits++ >= HOTEXIT && hits <= maxHits)) {
         /* start tracing secondary trace from this point */
         unsigned stackSlots;
@@ -6195,7 +6186,6 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
             traceMonitor->oracle->markInstructionUndemotable(cx->regs->pc);
         /* FALL THROUGH */
       case BRANCH_EXIT:
-      case CASE_EXIT:
         /* Abort recording the outer tree, extend the inner tree. */
         if (AbortRecording(cx, "Inner tree is trying to grow, "
                                "abort outer recording") == JIT_RESET) {
@@ -7254,7 +7244,6 @@ RecordLoopEdge(JSContext* cx, TraceMonitor* tm, uintN& inlineCallCount)
             tm->oracle->markInstructionUndemotable(cx->regs->pc);
         /* FALL THROUGH */
       case BRANCH_EXIT:
-      case CASE_EXIT:
         rv = AttemptToExtendTree(cx, tm, lr, NULL, NULL, NULL
 #ifdef MOZ_TRACEVIS
                                                    , &tvso
@@ -7715,9 +7704,8 @@ InitJIT(TraceMonitor *tm)
 
     if (!did_we_check_processor_features) {
 #if defined NANOJIT_IA32
-        avmplus::AvmCore::config.i386_use_cmov =
-            avmplus::AvmCore::config.i386_sse2 = CheckForSSE2();
-        avmplus::AvmCore::config.i386_fixed_esp = true;
+        NJConfig.i386_use_cmov = NJConfig.i386_sse2 = CheckForSSE2();
+        NJConfig.i386_fixed_esp = true;
 #endif
 #if defined NANOJIT_ARM
 
@@ -7728,9 +7716,9 @@ InitJIT(TraceMonitor *tm)
 
         enable_debugger_exceptions();
 
-        avmplus::AvmCore::config.arm_vfp        = arm_vfp;
-        avmplus::AvmCore::config.soft_float     = !arm_vfp;
-        avmplus::AvmCore::config.arm_arch       = arm_arch;
+        NJConfig.arm_vfp            = arm_vfp;
+        NJConfig.soft_float         = !arm_vfp;
+        NJConfig.arm_arch           = arm_arch;
 
         // Sanity-check the configuration detection.
         //  * We don't understand architectures prior to ARMv4.
@@ -8153,7 +8141,8 @@ JS_DEFINE_CALLINFO_4(extern, UINT32, GetClosureArg, CONTEXT, OBJECT, CVIPTR, DOU
  *     NameResult   describes how to look up name; see comment for NameResult in jstracer.h
  */
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::scopeChainProp(JSObject* chainHead, Value*& vp, LIns*& ins, NameResult& nr)
+TraceRecorder::scopeChainProp(JSObject* chainHead, Value*& vp, LIns*& ins, NameResult& nr,
+                              JSObject** scopeObjp)
 {
     JS_ASSERT(chainHead == &cx->fp()->scopeChain());
     JS_ASSERT(chainHead != globalObj);
@@ -8173,6 +8162,9 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, Value*& vp, LIns*& ins, NameR
 
     if (!prop)
         RETURN_STOP_A("failed to find name in non-global scope chain");
+
+    if (scopeObjp)
+        *scopeObjp = obj;
 
     if (obj == globalObj) {
         // Even if the property is on the global object, we must guard against
@@ -8763,82 +8755,6 @@ TraceRecorder::ifop()
     emitIf(pc, cond, x);
     return checkTraceEnd(pc);
 }
-
-#ifdef NANOJIT_IA32
-/*
- * Record LIR for a tableswitch or tableswitchx op. We record LIR only the
- * "first" time we hit the op. Later, when we start traces after exiting that
- * trace, we just patch.
- */
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::tableswitch()
-{
-    Value& v = stackval(-1);
-
-    /* No need to guard if the condition can't match any of the cases. */
-    if (!v.isNumber())
-        return ARECORD_CONTINUE;
-
-    /* No need to guard if the condition is constant. */
-    LIns* v_ins = d2i(get(&v));
-    if (v_ins->isImmI())
-        return ARECORD_CONTINUE;
-
-    jsbytecode* pc = cx->regs->pc;
-    /* Starting a new trace after exiting a trace via switch. */
-    if (anchor &&
-        (anchor->exitType == CASE_EXIT || anchor->exitType == DEFAULT_EXIT) &&
-        fragment->ip == pc) {
-        return ARECORD_CONTINUE;
-    }
-
-    /* Decode jsop. */
-    jsint low, high;
-    if (*pc == JSOP_TABLESWITCH) {
-        pc += JUMP_OFFSET_LEN;
-        low = GET_JUMP_OFFSET(pc);
-        pc += JUMP_OFFSET_LEN;
-        high = GET_JUMP_OFFSET(pc);
-    } else {
-        pc += JUMPX_OFFSET_LEN;
-        low = GET_JUMP_OFFSET(pc);
-        pc += JUMP_OFFSET_LEN;
-        high = GET_JUMP_OFFSET(pc);
-    }
-
-    /* 
-     * If there are no cases, this is a no-op. The default case immediately
-     * follows in the bytecode and is always taken, so we need no special
-     * action to handle it.
-     */
-    int count = high + 1 - low;
-    JS_ASSERT(count >= 0);
-    if (count == 0)
-        return ARECORD_CONTINUE;
-
-    /* Cap maximum table-switch size for modesty. */
-    if (count > MAX_TABLE_SWITCH)
-        return InjectStatus(switchop());
-
-    /* Generate switch LIR. */
-    SwitchInfo* si = new (traceAlloc()) SwitchInfo();
-    si->count = count;
-    si->table = 0;
-    si->index = (uint32) -1;
-    LIns* diff = w.subi(v_ins, w.immi(low));
-    LIns* cmp = w.ltui(diff, w.immi(si->count));
-    guard(true, cmp, DEFAULT_EXIT);
-    // We use AnyAddress;  it's imprecise but this case is rare and not worth its
-    // own access region.
-    w.st(diff, AnyAddress(w.immpNonGC(&si->index)));
-    VMSideExit* exit = snapshot(CASE_EXIT);
-    exit->switchInfo = si;
-    LIns* guardIns = w.xtbl(diff, createGuardRecord(exit));
-    fragment->lastIns = guardIns;
-    CHECK_STATUS_A(compile());
-    return finishSuccessfully();
-}
-#endif
 
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::switchop()
@@ -13520,30 +13436,66 @@ TraceRecorder::record_JSOP_SETELEM()
     return setElem(-3, -2, -1);
 }
 
+static JSBool FASTCALL
+CheckSameGlobal(JSObject *obj, JSObject *globalObj)
+{
+    return obj->getGlobal() == globalObj;
+}
+JS_DEFINE_CALLINFO_2(static, BOOL, CheckSameGlobal, OBJECT, OBJECT, 0, ACCSET_STORE_ANY)
+
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_CALLNAME()
 {
-    JSObject* obj = &cx->fp()->scopeChain();
-    if (obj != globalObj) {
+    JSObject* scopeObj = &cx->fp()->scopeChain();
+    LIns *funobj_ins;
+    JSObject *funobj;
+    if (scopeObj != globalObj) {
         Value* vp;
-        LIns* ins;
         NameResult nr;
-        CHECK_STATUS_A(scopeChainProp(obj, vp, ins, nr));
-        stack(0, ins);
-        stack(1, w.immiUndefined());
-        return ARECORD_CONTINUE;
+        CHECK_STATUS_A(scopeChainProp(scopeObj, vp, funobj_ins, nr, &scopeObj));
+        if (!nr.tracked)
+            vp = &nr.v;
+        if (!vp->isObject())
+            RETURN_STOP_A("callee is not an object");
+        funobj = &vp->toObject();
+        if (!funobj->isFunction())
+            RETURN_STOP_A("callee is not a function");
+    } else {
+        LIns* obj_ins = w.immpObjGC(globalObj);
+        JSObject* obj2;
+        PCVal pcval;
+
+        CHECK_STATUS_A(test_property_cache(scopeObj, obj_ins, obj2, pcval));
+
+        if (pcval.isNull() || !pcval.isFunObj())
+            RETURN_STOP_A("callee is not a function");
+
+        funobj = &pcval.toFunObj();
+        funobj_ins = w.immpObjGC(funobj);
     }
 
-    LIns* obj_ins = w.immpObjGC(globalObj);
-    JSObject* obj2;
-    PCVal pcval;
+    // Detect crossed globals early. The interpreter could decide to compute
+    // a non-Undefined |this| value, and we want to make sure that we'll (1)
+    // abort in this case, and (2) bail out early if a callee will need special
+    // |this| computation. Note that if (scopeObj != globalObj),
+    // scopeChainProp() guarantees that scopeObj is a cacheable scope.
+    if (scopeObj == globalObj) {
+        JSFunction *fun = funobj->getFunctionPrivate();
+        if (!fun->isInterpreted() || !fun->inStrictMode()) {
+            if (funobj->getGlobal() != globalObj)
+                RETURN_STOP_A("callee crosses globals");
 
-    CHECK_STATUS_A(test_property_cache(obj, obj_ins, obj2, pcval));
+            // If the funobj is not constant, we need may a guard that the
+            // callee will not cross globals. This is only the case for non-
+            // compile-and-go trees.
+            if (!funobj_ins->isImmP() && !tree->script->compileAndGo) {
+                LIns* args[] = { w.immpObjGC(globalObj), funobj_ins };
+                guard(false, w.eqi0(w.call(&CheckSameGlobal_ci, args)), MISMATCH_EXIT);
+            }
+        }
+    }
 
-    if (pcval.isNull() || !pcval.isFunObj())
-        RETURN_STOP_A("callee is not an object");
-
-    stack(0, w.immpObjGC(&pcval.toFunObj()));
+    stack(0, funobj_ins);
     stack(1, w.immiUndefined());
     return ARECORD_CONTINUE;
 }
@@ -14569,12 +14521,7 @@ TraceRecorder::record_JSOP_AND()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_TABLESWITCH()
 {
-#ifdef NANOJIT_IA32
-    /* Handle tableswitches specially -- prepare a jump table if needed. */
-    return tableswitch();
-#else
     return InjectStatus(switchop());
-#endif
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -15230,8 +15177,10 @@ TraceRecorder::record_JSOP_BINDNAME()
         JSStackFrame *fp2 = fp;
 #endif
 
-        // In global code, fp->scopeChain can only contain blocks whose values
-        // are still on the stack.  We never use BINDNAME to refer to these.
+        /*
+         * In global code, fp->scopeChain can only contain blocks whose values
+         * are still on the stack.  We never use BINDNAME to refer to these.
+         */
         while (obj->isBlock()) {
             // The block's values are still on the stack.
 #ifdef DEBUG
@@ -15248,17 +15197,23 @@ TraceRecorder::record_JSOP_BINDNAME()
             JS_ASSERT(obj);
         }
 
-        // If anything other than Block, Call, DeclEnv, and the global object
-        // is on the scope chain, we shouldn't be recording. Of those, only
-        // Block and global can be present in global code.
-        JS_ASSERT(obj == globalObj);
+        /*
+         * If this is a strict mode eval frame, we will have a Call object for
+         * it. For now just don't trace this case.
+         */
+        if (obj != globalObj) {
+            JS_ASSERT(obj->isCall());
+            JS_ASSERT(obj->callIsForEval());
+            RETURN_STOP_A("BINDNAME within strict eval code");
+        }
 
         /*
-         * The trace is specialized to this global object. Furthermore, we know it
-         * is the sole 'global' object on the scope chain: we set globalObj to the
-         * scope chain element with no parent, and we reached it starting from the
-         * function closure or the current scopeChain, so there is nothing inner to
-         * it. Therefore this must be the right base object.
+         * The trace is specialized to this global object. Furthermore, we know
+         * it is the sole 'global' object on the scope chain: we set globalObj
+         * to the scope chain element with no parent, and we reached it
+         * starting from the function closure or the current scopeChain, so
+         * there is nothing inner to it. Therefore this must be the right base
+         * object.
          */
         stack(0, w.immpObjGC(obj));
         return ARECORD_CONTINUE;
@@ -16859,7 +16814,6 @@ RecordTracePoint(JSContext* cx, TraceMonitor* tm,
                     tm->oracle->markInstructionUndemotable(cx->regs->pc);
                 /* FALL THROUGH */
               case BRANCH_EXIT:
-              case CASE_EXIT:
                 if (!AttemptToExtendTree(cx, tm, lr, NULL, NULL, NULL))
                     return TPA_RanStuff;
                 break;

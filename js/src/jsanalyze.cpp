@@ -378,8 +378,8 @@ Script::analyze(JSContext *cx, JSScript *script)
                 if (locals[local] == LOCAL_CONDITIONALLY_DEFINED)
                     setLocal(local, offset);
             }
-            defineArray = NULL;
-            defineCount = 0;
+            defineArray = code->defineArray = NULL;
+            defineCount = code->defineCount = 0;
         }
 
         unsigned nuses = GetUseCount(script, offset);

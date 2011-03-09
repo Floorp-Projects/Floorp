@@ -22,6 +22,7 @@
  *   David Dahl <ddahl@mozilla.com>
  *   Patrick Walton <pcwalton@mozilla.com>
  *   Mihai Șucan <mihai.sucan@gmail.com>
+ *   Rob Campbell <rcampbell@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -94,6 +95,25 @@
 
 .webconsole-msg-url {
   margin: 0 6px;
+}
+
+/* Repeated messages */
+.webconsole-msg-repeat {
+  margin: 2px 0;
+  padding-left: 4px;
+  padding-right: 4px;
+  width: 1em;
+  color: white;
+  background-color: red;
+  border-radius: 40px;
+  font: message-box;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* TODO move this and other functional rules to content - bug 635359 */
+.webconsole-msg-repeat[value="1"] {
+  display: none;
 }
 
 .webconsole-location {

@@ -295,7 +295,7 @@ Bindings::trace(JSTracer *trc)
         shape->trace(trc);
 }
 
-} // namespace js
+} /* namespace js */
 
 #if JS_HAS_XDR
 
@@ -377,7 +377,12 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     JS_ASSERT(nvars != Bindings::BINDING_COUNT_LIMIT);
     JS_ASSERT(nupvars != Bindings::BINDING_COUNT_LIMIT);
 
-    Bindings bindings(cx);
+    EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
+    if (!emptyCallShape)
+        return false;
+    AutoShapeRooter shapeRoot(cx, emptyCallShape);
+
+    Bindings bindings(cx, emptyCallShape);
     AutoBindingsRooter rooter(cx, bindings);
     uint32 nameCount = nargs + nvars + nupvars;
     if (nameCount > 0) {
@@ -776,7 +781,7 @@ script_trace(JSTracer *trc, JSObject *obj)
 Class js_ScriptClass = {
     "Script",
     JSCLASS_HAS_PRIVATE |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -791,7 +796,7 @@ Class js_ScriptClass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    JS_CLASS_TRACE(script_trace)
+    script_trace
 };
 
 /*
@@ -1201,6 +1206,11 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
                     uint32 ntrynotes, uint32 nconsts, uint32 nglobals,
                     uint16 nClosedArgs, uint16 nClosedVars, JSVersion version)
 {
+    EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
+    if (!emptyCallShape)
+        return NULL;
+    AutoShapeRooter shapeRoot(cx, emptyCallShape);
+
     size_t size, vectorSize;
     JSScript *script;
     uint8 *cursor;
@@ -1244,7 +1254,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
     PodZero(script);
     script->length = length;
     script->version = version;
-    new (&script->bindings) Bindings(cx);
+    new (&script->bindings) Bindings(cx, emptyCallShape);
 
     uint8 *scriptEnd = reinterpret_cast<uint8 *>(script + 1);
 
@@ -1758,7 +1768,7 @@ js_TraceScript(JSTracer *trc, JSScript *script)
     }
 }
 
-JSBool
+JSObject *
 js_NewScriptObject(JSContext *cx, JSScript *script)
 {
     AutoScriptRooter root(cx, script);
@@ -1767,7 +1777,7 @@ js_NewScriptObject(JSContext *cx, JSScript *script)
 
     JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_ScriptClass, NULL, NULL);
     if (!obj)
-        return JS_FALSE;
+        return NULL;
     obj->setPrivate(script);
     script->u.object = obj;
 
@@ -1782,7 +1792,7 @@ js_NewScriptObject(JSContext *cx, JSScript *script)
     script->owner = NULL;
 #endif
 
-    return JS_TRUE;
+    return obj;
 }
 
 typedef struct GSNCacheEntry {
@@ -2027,7 +2037,7 @@ js_CloneScript(JSContext *cx, JSScript *script)
     // we don't want gecko to transcribe our principals for us
     DisablePrincipalsTranscoding disable(cx);
 
-    if (!JS_XDRScript(w, &script)) {
+    if (!js_XDRScript(w, &script, NULL)) {
         JS_XDRDestroy(w);
         return NULL;
     }
@@ -2051,7 +2061,6 @@ js_CloneScript(JSContext *cx, JSScript *script)
     JS_XDRMemSetData(r, p, nbytes);
     JS_XDRMemSetData(w, NULL, 0);
 
-    // We can't use the public API because it makes a script object.
     if (!js_XDRScript(r, &script, NULL))
         return NULL;
 

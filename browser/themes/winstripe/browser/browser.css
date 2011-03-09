@@ -115,12 +115,6 @@
 }
 %endif
 
-#navigator-toolbox[iconsize="small"] > #nav-bar,
-#navigator-toolbox > toolbar:not(#nav-bar):not(#toolbar-menubar):not(#TabsToolbar)[iconsize="small"] {
-  padding-top: 1px;
-  padding-bottom: 1px;
-}
-
 #navigator-toolbox[tabsontop="true"] > #nav-bar,
 #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar,
 #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar {
@@ -222,6 +216,9 @@
 
 .splitmenu-menuitem {
   -moz-margin-end: 1px;
+%ifdef WINSTRIPE_AERO
+  -moz-padding-end: 0.5em;
+%endif
 }
 
 .splitmenu-menu {
@@ -589,6 +586,16 @@ menuitem.bookmark-item {
   counter-reset: smallicons;
 }
 
+#navigator-toolbox[iconsize=small] > #nav-bar {
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+#navigator-toolbox[iconsize=large][mode=icons] > #nav-bar {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
 #nav-bar .toolbarbutton-1 {
@@ -875,8 +882,12 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 /* tabview button */
 
-#tabview-button {
+#tabview-button,
+#menu_tabview {
   list-style-image: url(chrome://browser/skin/tabview/tabview.png);
+}
+
+#tabview-button {
   -moz-image-region: rect(0, 90px, 18px, 72px);
 }
 
@@ -894,6 +905,26 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 #tabview-button[groups="3"] {
   -moz-image-region: rect(0, 72px, 18px, 54px);
+}
+
+#menu_tabview {
+  -moz-image-region: rect(1px, 89px, 17px, 73px);
+}
+
+#menu_tabview[groups="0"] {
+  -moz-image-region: rect(1px, 17px, 17px, 1px);
+}
+
+#menu_tabview[groups="1"] {
+  -moz-image-region: rect(1px, 35px, 17px, 19px);
+}
+
+#menu_tabview[groups="2"] {
+  -moz-image-region: rect(1px, 53px, 17px, 37px);
+}
+
+#menu_tabview[groups="3"] {
+  -moz-image-region: rect(1px, 71px, 17px, 55px);
 }
 
 /* download manager button */

@@ -348,8 +348,9 @@ struct JSTreeContext {              /* tree context for semantic checks */
 
     JSTreeContext(js::Parser *prs)
       : flags(0), bodyid(0), blockidGen(0), topStmt(NULL), topScopeStmt(NULL),
-        blockChainBox(NULL), blockNode(NULL), parser(prs), scopeChain_(NULL), parent(prs->tc),
-        staticLevel(0), funbox(NULL), functionList(NULL), innermostWith(NULL), bindings(prs->context),
+        blockChainBox(NULL), blockNode(NULL), parser(prs), scopeChain_(NULL),
+        parent(prs->tc), staticLevel(0), funbox(NULL), functionList(NULL),
+        innermostWith(NULL), bindings(prs->context, prs->emptyCallShape),
         sharpSlotBase(-1)
     {
         prs->tc = this;

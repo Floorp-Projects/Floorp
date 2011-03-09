@@ -371,10 +371,6 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
     stack.pushInlineFrame(cx, newscript, newfp, &f.regs);
     JS_ASSERT(newfp == f.regs.fp);
 
-    /* Scope with a call object parented by callee's parent. */
-    if (newfun->isHeavyweight() && !js_GetCallObject(cx, newfp))
-        return false;
-
     /* Try to compile if not already compiled. */
     if (newscript->getJITStatus(newfp->isConstructing()) == JITScript_None) {
         CompileStatus status = CanMethodJIT(cx, newscript, newfp, CompileRequest_Interpreter);
@@ -386,6 +382,10 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
         if (status == Compile_Abort)
             *unjittable = true;
     }
+
+    /* Create call object now that we can't fail entering callee. */
+    if (newfun->isHeavyweight() && !js_GetCallObject(cx, newfp))
+        return false;
 
     /* If newscript was successfully compiled, run it. */
     if (JITScript *jit = newscript->getJIT(newfp->isConstructing())) {
@@ -441,19 +441,14 @@ stubs::Eval(VMFrame &f, uint32 argc)
 {
     Value *vp = f.regs.sp - (argc + 2);
 
-    JSObject *callee;
-    JSFunction *fun;
-
-    if (!IsFunctionObject(*vp, &callee) ||
-        !IsBuiltinEvalFunction((fun = callee->getFunctionPrivate())))
-    {
+    if (!IsBuiltinEvalForScope(&f.regs.fp->scopeChain(), *vp)) {
         if (!Invoke(f.cx, InvokeArgsAlreadyOnTheStack(vp, argc), 0))
             THROW();
         return;
     }
 
     JS_ASSERT(f.regs.fp == f.cx->fp());
-    if (!DirectEval(f.cx, fun, argc, vp))
+    if (!DirectEval(f.cx, argc, vp))
         THROW();
 }
 
@@ -763,16 +758,23 @@ PartialInterpret(VMFrame &f)
 
 JS_STATIC_ASSERT(JSOP_NOP == 0);
 
-/* Returns whether the current PC would return, popping the frame. */
-static inline JSOp
+/*
+ * Returns whether the current PC would return, or if the frame has already
+ * been completed. This distinction avoids re-entering the interpreter or JIT
+ * to complete a JSOP_RETURN. Instead, that edge case is handled in
+ * HandleFinishedFrame. We could consider reducing complexity, and making this
+ * function return only "finishedInInterpreter", and always using the full VM
+ * machinery to fully finish frames.
+ */
+static inline bool
 FrameIsFinished(JSContext *cx)
 {
     JSOp op = JSOp(*cx->regs->pc);
     return (op == JSOP_RETURN ||
             op == JSOP_RETRVAL ||
             op == JSOP_STOP)
-        ? op
-        : JSOP_NOP;
+        ? true
+        : cx->fp()->finishedInInterpreter();
 }
 
 
@@ -822,9 +824,9 @@ HandleFinishedFrame(VMFrame &f, JSStackFrame *entryFrame)
      *  4. No: Somewhere in the RunTracer call tree, we removed a frame,
      *         and we returned to a JSOP_RETURN opcode. Note carefully
      *         that in this situation, FrameIsFinished() returns true!
-     *  5. Yes: The function exited in the method JIT. However, in this
-     *         case, we'll never enter HandleFinishedFrame(): we always
-     *         immediately pop JIT'd frames.
+     *  5. Yes: The function exited in the method JIT, during
+     *         FinishExcessFrames() However, in this case, we'll never enter
+     *         HandleFinishedFrame(): we always immediately pop JIT'd frames.
      *
      * Since the only scenario where this fixup is NOT needed is a normal exit
      * from the interpreter, we can cleanly check for this scenario by checking

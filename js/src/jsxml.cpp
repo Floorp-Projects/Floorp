@@ -226,7 +226,7 @@ JS_FRIEND_DATA(Class) js_NamespaceClass = {
     js_Namespace_str,
     JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::NAMESPACE_CLASS_RESERVED_SLOTS) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Namespace),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Namespace),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -337,7 +337,7 @@ JS_FRIEND_DATA(Class) js_QNameClass = {
     js_QName_str,
     JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_QName),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_QName),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -372,7 +372,7 @@ JS_FRIEND_DATA(Class) js_AttributeNameClass = {
     js_AttributeName_str,
     JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_IS_ANONYMOUS,
+    JSCLASS_IS_ANONYMOUS,
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -387,7 +387,7 @@ JS_FRIEND_DATA(Class) js_AnyNameClass = {
     js_AnyName_str,
     JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_IS_ANONYMOUS,
+    JSCLASS_IS_ANONYMOUS,
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -429,6 +429,7 @@ ConvertQNameToString(JSContext *cx, JSObject *obj)
         return NULL;
 
     if (obj->getClass() == &js_AttributeNameClass) {
+        JS::Anchor<JSString *> anchor(str);
         size_t length = str->length();
         jschar *chars = (jschar *) cx->malloc((length + 2) * sizeof(jschar));
         if (!chars)
@@ -5116,7 +5117,7 @@ out:
 
 JS_FRIEND_DATA(Class) js_XMLClass = {
     js_XML_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE |
+    JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_XML),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
@@ -5132,7 +5133,7 @@ JS_FRIEND_DATA(Class) js_XMLClass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     xml_hasInstance,
-    JS_CLASS_TRACE(xml_trace),
+    xml_trace,
     JS_NULL_CLASS_EXT,
     {
         xml_lookupProperty,
@@ -5144,7 +5145,6 @@ JS_FRIEND_DATA(Class) js_XMLClass = {
         xml_deleteProperty,
         xml_enumerate,
         xml_typeOf,
-        NULL,       /* trace */
         xml_fix,
         NULL,       /* thisObject     */
         xml_clear
@@ -7599,7 +7599,7 @@ xmlfilter_finalize(JSContext *cx, JSObject *obj)
 
 Class js_XMLFilterClass = {
     "XMLFilter",
-    JSCLASS_HAS_PRIVATE | JSCLASS_IS_ANONYMOUS | JSCLASS_MARK_IS_TRACE,
+    JSCLASS_HAS_PRIVATE | JSCLASS_IS_ANONYMOUS,
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -7614,7 +7614,7 @@ Class js_XMLFilterClass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    JS_CLASS_TRACE(xmlfilter_trace)
+    xmlfilter_trace
 };
 
 JSBool

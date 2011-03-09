@@ -49,6 +49,16 @@ typedef struct FT_LibraryRec_ *FT_Library;
 
 class FontFamily;
 class FontEntry;
+namespace mozilla {
+    namespace dom {
+        class FontListEntry;
+    };
+};
+
+using namespace mozilla;
+using namespace dom;
+
+class FontNameCache;
 
 class THEBES_API gfxAndroidPlatform : public gfxPlatform {
 public:
@@ -58,6 +68,8 @@ public:
     static gfxAndroidPlatform *GetPlatform() {
         return (gfxAndroidPlatform*) gfxPlatform::GetPlatform();
     }
+
+    void GetFontList(InfallibleTArray<FontListEntry>* retValue);
 
     already_AddRefed<gfxASurface> CreateOffscreenSurface(const gfxIntSize& size,
                                                          gfxASurface::gfxContentType contentType);
@@ -94,13 +106,14 @@ public:
     virtual gfxImageFormat GetOffscreenFormat() { return gfxASurface::ImageFormatRGB16_565; }
 
 protected:
-    void AppendFacesFromFontFile(const char *aFileName);
+    void AppendFacesFromFontFile(const char *aFileName, FontNameCache* aFontCache, InfallibleTArray<FontListEntry>* retValue);
 
     typedef nsDataHashtable<nsStringHashKey, nsRefPtr<FontFamily> > FontTable;
 
     FontTable mFonts;
     FontTable mFontAliases;
     FontTable mFontSubstitutes;
+    InfallibleTArray<FontListEntry> mFontList;
 
     // when system-wide font lookup fails for a character, cache it to skip future searches
     gfxSparseBitSet mCodepointsWithNoFonts;

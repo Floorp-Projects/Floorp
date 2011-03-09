@@ -2606,8 +2606,10 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
 #endif
 
 #ifdef MOZ_X11
-        XSetWindowBackgroundPixmap(QX11Info::display(),
-                                   newView->effectiveWinId(), None);
+        if (newView->effectiveWinId()) {
+            XSetWindowBackgroundPixmap(QX11Info::display(),
+                                       newView->effectiveWinId(), None);
+        }
 #endif
     }
 

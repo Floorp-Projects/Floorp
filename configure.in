@@ -1844,6 +1844,74 @@ MOZ_ARG_ENABLE_BOOL(profiling,
     MOZ_PROFILING= )
 
 dnl ========================================================
+dnl = Use Valgrind
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(valgrind,
+[  --enable-valgrind       Enable Valgrind integration hooks (default=no)],
+    MOZ_VALGRIND=1,
+    MOZ_VALGRIND= )
+if test -n "$MOZ_VALGRIND"; then
+    AC_CHECK_HEADER([valgrind/valgrind.h], [],
+        AC_MSG_ERROR(
+            [--enable-valgrind specified but Valgrind is not installed]))
+    AC_DEFINE(MOZ_VALGRIND)
+fi
+
+dnl ========================================================
+dnl jprof
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(jprof,
+[  --enable-jprof          Enable jprof profiling tool (needs mozilla/tools/jprof). Implies --enable-profiling.],
+    MOZ_JPROF=1,
+    MOZ_JPROF= )
+if test -n "$MOZ_JPROF"; then
+    MOZ_PROFILING=1
+    AC_DEFINE(MOZ_JPROF)
+fi
+
+dnl ========================================================
+dnl shark
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(shark,
+[  --enable-shark          Enable shark remote profiling. Implies --enable-profiling.],
+    MOZ_SHARK=1,
+    MOZ_SHARK= )
+if test -n "$MOZ_SHARK"; then
+    MOZ_PROFILING=1
+    AC_DEFINE(MOZ_SHARK)
+fi
+
+dnl ========================================================
+dnl callgrind
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(callgrind,
+[  --enable-callgrind      Enable callgrind profiling],
+    MOZ_CALLGRIND=1,
+    MOZ_CALLGRIND= )
+if test -n "$MOZ_CALLGRIND"; then
+    AC_DEFINE(MOZ_CALLGRIND)
+fi
+
+dnl ========================================================
+dnl vtune
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(vtune,
+[  --enable-vtune          Enable vtune profiling. Implies --enable-profiling.],
+    MOZ_VTUNE=1,
+    MOZ_VTUNE= )
+if test -n "$MOZ_VTUNE"; then
+    MOZ_PROFILING=1
+    AC_DEFINE(MOZ_VTUNE)
+fi
+
+dnl ========================================================
+dnl Profiling
+dnl ========================================================
+if test -n "$MOZ_PROFILING"; then
+    AC_DEFINE(MOZ_PROFILING)
+fi
+
+dnl ========================================================
 dnl System overrides of the defaults for host
 dnl ========================================================
 case "$host" in
@@ -3595,7 +3663,9 @@ AC_SUBST(XT_LIBS)
 AC_SUBST(XSS_LIBS)
 
 AC_MSG_CHECKING(for ARM SIMD support in compiler)
-AC_TRY_COMPILE([],
+# We try to link so that this also fails when
+# building with LTO.
+AC_TRY_LINK([],
                [asm("uqadd8 r1, r1, r2");],
                result="yes", result="no")
 AC_MSG_RESULT("$result")
@@ -3611,7 +3681,9 @@ if test "$GNU_CC"; then
   # gcc needs -mfpu=neon to recognize NEON instructions
   CFLAGS="$CFLAGS -mfpu=neon -mfloat-abi=softfp"
 fi
-AC_TRY_COMPILE([],
+# We try to link so that this also fails when
+# building with LTO.
+AC_TRY_LINK([],
                [asm("vadd.i8 d0, d0, d0");],
                result="yes", result="no")
 AC_MSG_RESULT("$result")
@@ -7669,74 +7741,6 @@ if test -n "$MOZ_GCTIMER"; then
 fi
 
 dnl ========================================================
-dnl = Use Valgrind
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(valgrind,
-[  --enable-valgrind       Enable Valgrind integration hooks (default=no)],
-    MOZ_VALGRIND=1,
-    MOZ_VALGRIND= )
-if test -n "$MOZ_VALGRIND"; then
-    AC_CHECK_HEADER([valgrind/valgrind.h], [],
-        AC_MSG_ERROR(
-            [--enable-valgrind specified but Valgrind is not installed]))
-    AC_DEFINE(MOZ_VALGRIND)
-fi
-
-dnl ========================================================
-dnl jprof
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(jprof,
-[  --enable-jprof          Enable jprof profiling tool (needs mozilla/tools/jprof). Implies --enable-profiling.],
-    MOZ_JPROF=1,
-    MOZ_JPROF= )
-if test -n "$MOZ_JPROF"; then
-    MOZ_PROFILING=1
-    AC_DEFINE(MOZ_JPROF)
-fi
-
-dnl ========================================================
-dnl shark
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(shark,
-[  --enable-shark          Enable shark remote profiling. Implies --enable-profiling.],
-    MOZ_SHARK=1,
-    MOZ_SHARK= )
-if test -n "$MOZ_SHARK"; then
-    MOZ_PROFILING=1
-    AC_DEFINE(MOZ_SHARK)
-fi
-
-dnl ========================================================
-dnl callgrind
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(callgrind,
-[  --enable-callgrind      Enable callgrind profiling],
-    MOZ_CALLGRIND=1,
-    MOZ_CALLGRIND= )
-if test -n "$MOZ_CALLGRIND"; then
-    AC_DEFINE(MOZ_CALLGRIND)
-fi
-
-dnl ========================================================
-dnl vtune
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(vtune,
-[  --enable-vtune          Enable vtune profiling. Implies --enable-profiling.],
-    MOZ_VTUNE=1,
-    MOZ_VTUNE= )
-if test -n "$MOZ_VTUNE"; then
-    MOZ_PROFILING=1
-    AC_DEFINE(MOZ_VTUNE)
-fi
-
-dnl ========================================================
-dnl Profiling
-dnl ========================================================
-if test -n "$MOZ_PROFILING"; then
-    AC_DEFINE(MOZ_PROFILING)
-fi
-
-dnl ========================================================
 dnl Zealous JavaScript GC
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(gczeal,
@@ -7820,7 +7824,7 @@ dnl ========================================================
 dnl = --disable-elf-hack
 dnl ========================================================
 
-USE_ELF_HACK=1
+USE_ELF_HACK=
 MOZ_ARG_DISABLE_BOOL(elf-hack,
 [  --disable-elf-hack      Disable elf hacks],
     USE_ELF_HACK=,
@@ -8359,7 +8363,7 @@ MOZ_ARG_ENABLE_BOOL(libxul,
     MOZ_ENABLE_LIBXUL=)
 
 # split JS out by default to avoid VS2005 PGO crash (bug 591836).
-if test "$OS_ARCH" = "WINNT"; then
+if test "$OS_ARCH" = "WINNT" -a "$CPU_ARCH" != "x86_64" ; then
   ENABLE_SHARED_JS=1
 fi
 
@@ -9675,3 +9679,4 @@ if cmp -s config/autoconf.mk config/autoconf.mk.orig; then
 else
   rm -f config/autoconf.mk.orig 2> /dev/null
 fi
+

@@ -55,6 +55,7 @@
 #include "nsHashKeys.h"
 #include "nsNodeInfoManager.h"
 #include "nsIStreamListener.h"
+#include "nsIVariant.h"
 #include "nsIObserver.h"
 #include "nsGkAtoms.h"
 #include "nsAutoPtr.h"
@@ -1423,25 +1424,12 @@ public:
   };
 
   /**
-   * Returns the document's pending state object (serialized to JSON), or the
-   * empty string if one doesn't exist.
-   *
-   * This field serves as a waiting place for the history entry's state object:
-   * We set the field's value to the history entry's state object early on in
-   * the load, then after we fire onload we deserialize the field's value and
-   * fire a popstate event containing the resulting object.
-   */
-  nsAString& GetPendingStateObject()
-  {
-    return mPendingStateObject;
-  }
-
-  /**
    * Set the document's pending state object (as serialized to JSON).
    */
-  void SetPendingStateObject(nsAString &obj)
+  void SetCurrentStateObject(nsAString &obj)
   {
-    mPendingStateObject.Assign(obj);
+    mCurrentStateObject.Assign(obj);
+    mCurrentStateObjectCached = nsnull;
   }
 
   /**
@@ -1638,6 +1626,9 @@ protected:
   PRPackedBool mIsRegularHTML;
   PRPackedBool mIsXUL;
 
+  // Sync document.close behavior with document.open() (bug 627729)
+  PRPackedBool mForceOldParserForHotmail;
+
   enum {
     eTriUnset = 0,
     eTriFalse,
@@ -1736,7 +1727,7 @@ protected:
    */
   PRUint32 mExternalScriptsBeingEvaluated;
 
-  nsString mPendingStateObject;
+  nsString mCurrentStateObject;
 
   // Weak reference to mScriptGlobalObject QI:d to nsPIDOMWindow,
   // updated on every set of mSecriptGlobalObject.
@@ -1752,6 +1743,8 @@ protected:
 
   // Our base target.
   nsString mBaseTarget;
+
+  nsCOMPtr<nsIVariant> mCurrentStateObjectCached;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)

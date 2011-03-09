@@ -77,12 +77,10 @@
 #include "jsparse.h"
 #include "jsproxy.h"
 #include "jsregexp.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jstracer.h"
-#include "jsdbgapi.h"
 #include "prmjtime.h"
 #include "jsstaticcheck.h"
 #include "jsvector.h"
@@ -113,16 +111,6 @@
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
-
-static JSClass dummy_class = {
-    "jdummy",
-    JSCLASS_GLOBAL_FLAGS,
-    JS_PropertyStub,  JS_PropertyStub,
-    JS_PropertyStub,  JS_StrictPropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,
-    JS_ConvertStub,   NULL,
-    JSCLASS_NO_OPTIONAL_MEMBERS
-};
 
 /*
  * This class is a version-establising barrier at the head of a VM entry or
@@ -611,6 +599,18 @@ JS_SameValue(JSContext *cx, jsval v1, jsval v2, JSBool *same)
 {
     assertSameCompartment(cx, v1, v2);
     return SameValue(cx, Valueify(v1), Valueify(v2), same);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_IsBuiltinEvalFunction(JSFunction *fun)
+{
+    return IsAnyBuiltinEval(fun);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_IsBuiltinFunctionConstructor(JSFunction *fun)
+{
+    return IsBuiltinFunctionConstructor(fun);
 }
 
 /************************************************************************/
@@ -1194,6 +1194,16 @@ JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target)
 JS_PUBLIC_API(JSCrossCompartmentCall *)
 JS_EnterCrossCompartmentCallScript(JSContext *cx, JSScript *target)
 {
+    static JSClass dummy_class = {
+        "jdummy",
+        JSCLASS_GLOBAL_FLAGS,
+        JS_PropertyStub,  JS_PropertyStub,
+        JS_PropertyStub,  JS_StrictPropertyStub,
+        JS_EnumerateStub, JS_ResolveStub,
+        JS_ConvertStub,   NULL,
+        JSCLASS_NO_OPTIONAL_MEMBERS
+    };
+
     CHECK_REQUEST(cx);
 
     JS_ASSERT(target);
@@ -1228,8 +1238,16 @@ JSAutoEnterCompartment::enter(JSContext *cx, JSObject *target)
     return call != NULL;
 }
 
+void
+JSAutoEnterCompartment::enterAndIgnoreErrors(JSContext *cx, JSObject *target)
+{
+    (void) enter(cx, target);
+}
+
+namespace JS {
+
 bool
-JSAutoEnterCompartment::enter(JSContext *cx, JSScript *target)
+AutoEnterScriptCompartment::enter(JSContext *cx, JSScript *target)
 {
     JS_ASSERT(!call);
     if (cx->compartment == target->compartment) {
@@ -1240,11 +1258,7 @@ JSAutoEnterCompartment::enter(JSContext *cx, JSScript *target)
     return call != NULL;    
 }
 
-void
-JSAutoEnterCompartment::enterAndIgnoreErrors(JSContext *cx, JSObject *target)
-{
-    (void) enter(cx, target);
-}
+} /* namespace JS */
 
 JS_PUBLIC_API(void *)
 JS_SetCompartmentPrivate(JSContext *cx, JSCompartment *compartment, void *data)
@@ -1321,15 +1335,16 @@ JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target)
     // types of security wrappers based on whether the new compartment
     // is same origin with them.
     Value targetv = ObjectValue(*obj);
-    WrapperVector &vector = cx->runtime->compartments;
+    CompartmentVector &vector = cx->runtime->compartments;
     AutoValueVector toTransplant(cx);
-    toTransplant.reserve(vector.length());
+    if (!toTransplant.reserve(vector.length()))
+        return NULL;
 
     for (JSCompartment **p = vector.begin(), **end = vector.end(); p != end; ++p) {
         WrapperMap &pmap = (*p)->crossCompartmentWrappers;
         if (WrapperMap::Ptr wp = pmap.lookup(origv)) {
             // We found a wrapper. Remember and root it.
-            toTransplant.append(wp->value);
+            toTransplant.infallibleAppend(wp->value);
         }
     }
 
@@ -1366,6 +1381,104 @@ JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target)
         if (!origobj->swap(cx, tobj))
             return NULL;
         origobj->getCompartment()->crossCompartmentWrappers.put(targetv, origv);
+    }
+
+    return obj;
+}
+
+/*
+ * The location object is special. There is the location object itself and
+ * then the location object wrapper. Because there are no direct references to
+ * the location object itself, we don't want the old obj (|origobj| here) to
+ * become the new wrapper but the wrapper itself instead. This leads to very
+ * subtle differences between js_TransplantObjectWithWrapper and
+ * JS_TransplantObject.
+ */
+JS_FRIEND_API(JSObject *)
+js_TransplantObjectWithWrapper(JSContext *cx,
+                               JSObject *origobj,
+                               JSObject *origwrapper,
+                               JSObject *targetobj,
+                               JSObject *targetwrapper)
+{
+    JSObject *obj;
+    JSCompartment *destination = targetobj->getCompartment();
+    WrapperMap &map = destination->crossCompartmentWrappers;
+
+    // |origv| is the map entry we're looking up. The map entries are going to
+    // be for the location object itself.
+    Value origv = ObjectValue(*origobj);
+
+    // There might already be a wrapper for the original object in the new
+    // compartment.
+    if (WrapperMap::Ptr p = map.lookup(origv)) {
+        // There is. Make the existing wrapper a same compartment location
+        // wrapper (swapping it with the given new wrapper).
+        obj = &p->value.toObject();
+        map.remove(p);
+        if (!obj->swap(cx, targetwrapper))
+            return NULL;
+    } else {
+        // Otherwise, use the passed-in wrapper as the same compartment
+        // location wrapper.
+        obj = targetwrapper;
+    }
+
+    // Now, iterate through other scopes looking for references to the old
+    // location object. Note that the entries in the maps are for |origobj|
+    // and not |origwrapper|. They need to be updated to point at the new
+    // location object.
+    Value targetv = ObjectValue(*targetobj);
+    CompartmentVector &vector = cx->runtime->compartments;
+    AutoValueVector toTransplant(cx);
+    if (!toTransplant.reserve(vector.length()))
+        return NULL;
+
+    for (JSCompartment **p = vector.begin(), **end = vector.end(); p != end; ++p) {
+        WrapperMap &pmap = (*p)->crossCompartmentWrappers;
+        if (WrapperMap::Ptr wp = pmap.lookup(origv)) {
+            // We found a wrapper. Remember and root it.
+            toTransplant.infallibleAppend(wp->value);
+        }
+    }
+
+    for (Value *begin = toTransplant.begin(), *end = toTransplant.end(); begin != end; ++begin) {
+        JSObject *wobj = &begin->toObject();
+        JSCompartment *wcompartment = wobj->compartment();
+        WrapperMap &pmap = wcompartment->crossCompartmentWrappers;
+        JS_ASSERT(pmap.lookup(origv));
+        pmap.remove(origv);
+
+        // First, we wrap it in the new compartment. This will return a
+        // new wrapper.
+        AutoCompartment ac(cx, wobj);
+
+        JSObject *tobj = targetobj;
+        if (!ac.enter() || !wcompartment->wrap(cx, &tobj))
+            return NULL;
+
+        // Now, because we need to maintain object identity, we do a brain
+        // transplant on the old object. At the same time, we update the
+        // entry in the compartment's wrapper map to point to the old
+        // wrapper.
+        JS_ASSERT(tobj != wobj);
+        if (!wobj->swap(cx, tobj))
+            return NULL;
+        pmap.put(targetv, ObjectValue(*wobj));
+    }
+
+    // Lastly, update the original object to point to the new one. However, as
+    // mentioned above, we do the transplant on the wrapper, not the object
+    // itself, since all of the references are to the object itself.
+    {
+        AutoCompartment ac(cx, origobj);
+        JSObject *tobj = obj;
+        if (!ac.enter() || !JS_WrapObject(cx, &tobj))
+            return NULL;
+        if (!origwrapper->swap(cx, tobj))
+            return NULL;
+        origwrapper->getCompartment()->crossCompartmentWrappers.put(targetv,
+                                                                    ObjectValue(*origwrapper));
     }
 
     return obj;
@@ -2092,6 +2205,11 @@ JS_RemoveGCThingRoot(JSContext *cx, void **rp)
     return js_RemoveRoot(cx->runtime, (void *)rp);
 }
 
+JS_NEVER_INLINE JS_PUBLIC_API(void)
+JS_AnchorPtr(void *p)
+{
+}
+
 #ifdef DEBUG
 
 JS_PUBLIC_API(void)
@@ -2534,23 +2652,6 @@ JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, uint32 startKind,
 
 #endif /* DEBUG */
 
-JS_PUBLIC_API(void)
-JS_MarkGCThing(JSContext *cx, jsval v, const char *name, void *arg)
-{
-    JSTracer *trc;
-
-    trc = (JSTracer *)arg;
-    if (!trc)
-        trc = cx->runtime->gcMarkingTracer;
-    else
-        JS_ASSERT(trc == cx->runtime->gcMarkingTracer);
-
-#ifdef JS_THREADSAFE
-    JS_ASSERT(cx->runtime->gcThread == trc->context->thread);
-#endif
-    MarkValue(trc, Valueify(v), name ? name : "unknown");
-}
-
 extern JS_PUBLIC_API(JSBool)
 JS_IsGCMarkingTracer(JSTracer *trc)
 {
@@ -2992,6 +3093,23 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp)
     return obj;
 }
 
+class AutoHoldCompartment {
+  public:
+    explicit AutoHoldCompartment(JSCompartment *compartment JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : holdp(&compartment->hold)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        *holdp = true;
+    }
+
+    ~AutoHoldCompartment() {
+        *holdp = false;
+    }
+  private:
+    bool *holdp;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 JS_PUBLIC_API(JSObject *)
 JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals)
 {
@@ -2999,6 +3117,8 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *pr
     JSCompartment *compartment = NewCompartment(cx, principals);
     if (!compartment)
         return NULL;
+
+    AutoHoldCompartment hold(compartment);
 
     JSCompartment *saved = cx->compartment;
     cx->compartment = compartment;
@@ -3994,8 +4114,7 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
 
 static Class prop_iter_class = {
     "PropertyIterator",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) |
-    JSCLASS_MARK_IS_TRACE,
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -4010,7 +4129,7 @@ static Class prop_iter_class = {
     NULL,           /* construct   */
     NULL,           /* xdrObject   */
     NULL,           /* hasInstance */
-    JS_CLASS_TRACE(prop_iter_trace)
+    prop_iter_trace
 };
 
 JS_PUBLIC_API(JSObject *)
@@ -4632,7 +4751,7 @@ JS_OPTIONS_TO_TCFLAGS(JSContext *cx)
            (cx->hasRunOption(JSOPTION_NO_SCRIPT_RVAL) ? TCF_NO_SCRIPT_RVAL : 0);
 }
 
-static JSScript *
+static JSObject *
 CompileUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj, JSPrincipals *principals,
                                       const jschar *chars, size_t length,
                                       const char *filename, uintN lineno, JSVersion version)
@@ -4644,15 +4763,17 @@ CompileUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj, JSPrincipals *p
     uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
     JSScript *script = Compiler::compileScript(cx, obj, NULL, principals, tcflags,
                                                chars, length, filename, lineno, version);
-    if (script && !js_NewScriptObject(cx, script)) {
-        js_DestroyScript(cx, script);
-        script = NULL;
+    JSObject *scriptObj = NULL;
+    if (script) {
+        scriptObj = js_NewScriptObject(cx, script);
+        if (!scriptObj)
+            js_DestroyScript(cx, script);
     }
-    LAST_FRAME_CHECKS(cx, script);
-    return script;
+    LAST_FRAME_CHECKS(cx, scriptObj);
+    return scriptObj;
 }
 
-extern JS_PUBLIC_API(JSScript *)
+extern JS_PUBLIC_API(JSObject *)
 JS_CompileUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                        JSPrincipals *principals,
                                        const jschar *chars, size_t length,
@@ -4664,7 +4785,7 @@ JS_CompileUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                               avi.version());
 }
 
-JS_PUBLIC_API(JSScript *)
+JS_PUBLIC_API(JSObject *)
 JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj, JSPrincipals *principals,
                                 const jschar *chars, size_t length,
                                 const char *filename, uintN lineno)
@@ -4673,7 +4794,7 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj, JSPrincipals *prin
                                               cx->findVersion());
 }
 
-JS_PUBLIC_API(JSScript *)
+JS_PUBLIC_API(JSObject *)
 JS_CompileUCScript(JSContext *cx, JSObject *obj, const jschar *chars, size_t length,
                    const char *filename, uintN lineno)
 {
@@ -4681,7 +4802,7 @@ JS_CompileUCScript(JSContext *cx, JSObject *obj, const jschar *chars, size_t len
     return JS_CompileUCScriptForPrincipals(cx, obj, NULL, chars, length, filename, lineno);
 }
 
-JS_PUBLIC_API(JSScript *)
+JS_PUBLIC_API(JSObject *)
 JS_CompileScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                      JSPrincipals *principals,
                                      const char *bytes, size_t length,
@@ -4692,7 +4813,7 @@ JS_CompileScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
     return JS_CompileScriptForPrincipals(cx, obj, principals, bytes, length, filename, lineno);
 }
 
-JS_PUBLIC_API(JSScript *)
+JS_PUBLIC_API(JSObject *)
 JS_CompileScriptForPrincipals(JSContext *cx, JSObject *obj,
                               JSPrincipals *principals,
                               const char *bytes, size_t length,
@@ -4704,12 +4825,13 @@ JS_CompileScriptForPrincipals(JSContext *cx, JSObject *obj,
     jschar *chars = js_InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
-    JSScript *script = JS_CompileUCScriptForPrincipals(cx, obj, principals, chars, length, filename, lineno);
+    JSObject *scriptObj =
+        JS_CompileUCScriptForPrincipals(cx, obj, principals, chars, length, filename, lineno);
     cx->free(chars);
-    return script;
+    return scriptObj;
 }
 
-JS_PUBLIC_API(JSScript *)
+JS_PUBLIC_API(JSObject *)
 JS_CompileScript(JSContext *cx, JSObject *obj, const char *bytes, size_t length,
                  const char *filename, uintN lineno)
 {
@@ -4767,8 +4889,8 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj, const char *bytes, size_
 # define fast_getc getc
 #endif
 
-static JSScript *
-CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals, uint32 tcflags,
+static JSObject *
+CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
                   const char* filename, FILE *fp)
 {
     struct stat st;
@@ -4789,7 +4911,7 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals, uint32
         bool hitEOF = false;
         while (!hitEOF) {
             len *= 2;
-            jschar* tmpbuf = (jschar *) cx->realloc(buf, len * sizeof(jschar));
+            jschar* tmpbuf = (jschar *) js_realloc(buf, len * sizeof(jschar));
             if (!tmpbuf) {
                 cx->free(buf);
                 return NULL;
@@ -4806,7 +4928,7 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals, uint32
             }
         }
     } else {
-        buf = (jschar *) cx->malloc(len * sizeof(jschar));
+        buf = (jschar *) js_malloc(len * sizeof(jschar));
         if (!buf)
             return NULL;
 
@@ -4817,68 +4939,64 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals, uint32
 
     JS_ASSERT(i <= len);
     len = i;
+    uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
     script = Compiler::compileScript(cx, obj, NULL, principals, tcflags, buf, len, filename, 1,
                                      cx->findVersion());
-    cx->free(buf);
-    return script;
+    js_free(buf);
+    if (!script)
+        return NULL;
+
+    JSObject *scriptObj = js_NewScriptObject(cx, script);
+    if (!scriptObj)
+        js_DestroyScript(cx, script);
+    
+    return scriptObj;
 }
 
-JS_PUBLIC_API(JSScript *)
+JS_PUBLIC_API(JSObject *)
 JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
-    FILE *fp;
-    uint32 tcflags;
-    JSScript *script;
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    if (!filename || strcmp(filename, "-") == 0) {
-        fp = stdin;
-    } else {
-        fp = fopen(filename, "r");
-        if (!fp) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_OPEN,
-                                 filename, "No such file or directory");
-            return NULL;
+    JSObject *scriptObj = NULL;
+    do {
+        FILE *fp;
+        if (!filename || strcmp(filename, "-") == 0) {
+            fp = stdin;
+        } else {
+            fp = fopen(filename, "r");
+            if (!fp) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_OPEN,
+                                     filename, "No such file or directory");
+                break;
+            }
         }
-    }
 
-    tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
-    script = CompileFileHelper(cx, obj, NULL, tcflags, filename, fp);
-
-    if (fp != stdin)
-        fclose(fp);
-    if (script && !js_NewScriptObject(cx, script)) {
-        js_DestroyScript(cx, script);
-        script = NULL;
-    }
-    LAST_FRAME_CHECKS(cx, script);
-    return script;
+        scriptObj = CompileFileHelper(cx, obj, NULL, filename, fp);
+        if (fp != stdin)
+            fclose(fp);
+    } while (false);
+    
+    LAST_FRAME_CHECKS(cx, scriptObj);
+    return scriptObj;
 }
 
-JS_PUBLIC_API(JSScript *)
-JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
-                                  JSPrincipals *principals)
+JS_PUBLIC_API(JSObject *)
+JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj, const char *filename,
+                                  FILE *file, JSPrincipals *principals)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
-    uint32 tcflags;
-    JSScript *script;
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, principals);
-    tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
-    script = CompileFileHelper(cx, obj, principals, tcflags, filename, file);
-
-    if (script && !js_NewScriptObject(cx, script)) {
-        js_DestroyScript(cx, script);
-        script = NULL;
-    }
-    LAST_FRAME_CHECKS(cx, script);
-    return script;
+    JSObject *scriptObj = CompileFileHelper(cx, obj, principals, filename, file);
+    LAST_FRAME_CHECKS(cx, scriptObj);
+    return scriptObj;
 }
 
-JS_PUBLIC_API(JSScript *)
+JS_PUBLIC_API(JSObject *)
 JS_CompileFileHandleForPrincipalsVersion(JSContext *cx, JSObject *obj, const char *filename,
                                          FILE *file, JSPrincipals *principals, JSVersion version)
 {
@@ -4886,58 +5004,19 @@ JS_CompileFileHandleForPrincipalsVersion(JSContext *cx, JSObject *obj, const cha
     return JS_CompileFileHandleForPrincipals(cx, obj, filename, file, principals);
 }
 
-JS_PUBLIC_API(JSScript *)
+JS_PUBLIC_API(JSObject *)
 JS_CompileFileHandle(JSContext *cx, JSObject *obj, const char *filename, FILE *file)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     return JS_CompileFileHandleForPrincipals(cx, obj, filename, file, NULL);
 }
 
-JS_PUBLIC_API(JSObject *)
-JS_NewScriptObject(JSContext *cx, JSScript *script)
+JS_PUBLIC_API(JSScript *)
+JS_GetScriptFromObject(JSObject *scriptObj)
 {
-    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, script);
-    if (!script)
-        return NewNonFunction<WithProto::Class>(cx, &js_ScriptClass, NULL, NULL);
+    JS_ASSERT(scriptObj->isScript());
 
-    /*
-     * This function should only ever be applied to JSScripts that had
-     * script objects allocated for them when they were created, as
-     * described in the comment for JSScript::u.object.
-     */
-    JS_ASSERT(script->u.object);
-    return script->u.object;
-}
-
-JS_PUBLIC_API(JSObject *)
-JS_GetScriptObject(JSScript *script)
-{
-    /*
-     * This function should only ever be applied to JSScripts that had
-     * script objects allocated for them when they were created, as
-     * described in the comment for JSScript::u.object.
-     */
-    JS_ASSERT(script->u.object);
-    return script->u.object;
-}
-
-JS_PUBLIC_API(void)
-JS_DestroyScript(JSContext *cx, JSScript *script)
-{
-    CHECK_REQUEST(cx);
-
-    /*
-     * Originally, JSScript lifetimes were managed explicitly, and this function
-     * was used to free a JSScript. Now, this function does nothing, and the
-     * garbage collector manages JSScripts; you must root the JSScript's script
-     * object (obtained via JS_GetScriptObject) to keep it alive.
-     *
-     * However, since the script objects have taken over this responsibility, it
-     * follows that every script passed here must have a script object.
-     */
-    JS_ASSERT(script->u.object);
+    return (JSScript *) scriptObj->getPrivate();
 }
 
 static JSFunction *
@@ -4969,10 +5048,17 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
         goto out2;
 
     {
+        EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
+        if (!emptyCallShape) {
+            fun = NULL;
+            goto out2;
+        }
+        AutoShapeRooter shapeRoot(cx, emptyCallShape);
+
         AutoObjectRooter tvr(cx, FUN_OBJECT(fun));
         MUST_FLOW_THROUGH("out");
 
-        Bindings bindings(cx);
+        Bindings bindings(cx, emptyCallShape);
         AutoBindingsRooter root(cx, bindings);
         for (i = 0; i < nargs; i++) {
             argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]), 0);
@@ -5107,6 +5193,12 @@ JS_DecompileScript(JSContext *cx, JSScript *script, const char *name, uintN inde
 }
 
 JS_PUBLIC_API(JSString *)
+JS_DecompileScriptObject(JSContext *cx, JSObject *scriptObj, const char *name, uintN indent)
+{
+    return JS_DecompileScript(cx, scriptObj->getScript(), name, indent);
+}
+
+JS_PUBLIC_API(JSString *)
 JS_DecompileFunction(JSContext *cx, JSFunction *fun, uintN indent)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
@@ -5131,26 +5223,24 @@ JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval)
+JS_ExecuteScript(JSContext *cx, JSObject *obj, JSObject *scriptObj, jsval *rval)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
-    JSBool ok;
 
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, script);
-    /* This should receive only scripts handed out via the JSAPI. */
-    JS_ASSERT(script->u.object);
-    ok = Execute(cx, obj, script, NULL, 0, Valueify(rval));
+    assertSameCompartment(cx, obj, scriptObj);
+
+    JSBool ok = Execute(cx, obj, scriptObj->getScript(), NULL, 0, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ExecuteScriptVersion(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval,
+JS_ExecuteScriptVersion(JSContext *cx, JSObject *obj, JSObject *scriptObj, jsval *rval,
                         JSVersion version)
 {
     AutoVersionAPI ava(cx, version);
-    return JS_ExecuteScript(cx, obj, script, rval);
+    return JS_ExecuteScript(cx, obj, scriptObj, rval);
 }
 
 bool
@@ -6307,20 +6397,6 @@ JS_ClearContextThread(JSContext *cx)
     return 0;
 #endif
 }
-
-#ifdef MOZ_TRACE_JSCALLS
-JS_PUBLIC_API(void)
-JS_SetFunctionCallback(JSContext *cx, JSFunctionCallback fcb)
-{
-    cx->functionCallback = fcb;
-}
-
-JS_PUBLIC_API(JSFunctionCallback)
-JS_GetFunctionCallback(JSContext *cx)
-{
-    return cx->functionCallback;
-}
-#endif
 
 #ifdef JS_GC_ZEAL
 JS_PUBLIC_API(void)

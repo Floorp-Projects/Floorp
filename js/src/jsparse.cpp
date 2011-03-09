@@ -196,6 +196,7 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSStackFrame *cfp)
     functionCount(0),
     traceListHead(NULL),
     tc(NULL),
+    emptyCallShape(NULL),
     keepAtoms(cx->runtime)
 {
     js::PodArrayZero(tempFreeList);
@@ -208,6 +209,9 @@ Parser::init(const jschar *base, size_t length, const char *filename, uintN line
              JSVersion version)
 {
     JSContext *cx = context;
+    emptyCallShape = EmptyShape::getEmptyCallShape(cx);
+    if (!emptyCallShape)
+        return false;
     tempPoolMark = JS_ARENA_MARK(&cx->tempPool);
     if (!tokenStream.init(base, length, filename, lineno, version)) {
         JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
@@ -290,7 +294,7 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
     funbox->kids = NULL;
     funbox->parent = tc->funbox;
     funbox->methods = NULL;
-    new (&funbox->bindings) Bindings(context);
+    new (&funbox->bindings) Bindings(context, emptyCallShape);
     funbox->queued = false;
     funbox->inLoop = false;
     for (JSStmtInfo *stmt = tc->topStmt; stmt; stmt = stmt->down) {
@@ -1379,7 +1383,7 @@ HasFinalReturn(JSParseNode *pn)
 }
 
 static JSBool
-ReportBadReturn(JSContext *cx, JSTreeContext *tc, uintN flags, uintN errnum,
+ReportBadReturn(JSContext *cx, JSTreeContext *tc, JSParseNode *pn, uintN flags, uintN errnum,
                 uintN anonerrnum)
 {
     JSAutoByteString name;
@@ -1389,7 +1393,7 @@ ReportBadReturn(JSContext *cx, JSTreeContext *tc, uintN flags, uintN errnum,
     } else {
         errnum = anonerrnum;
     }
-    return ReportCompileErrorNumber(cx, TS(tc->parser), NULL, flags, errnum, name.ptr());
+    return ReportCompileErrorNumber(cx, TS(tc->parser), pn, flags, errnum, name.ptr());
 }
 
 static JSBool
@@ -1397,7 +1401,7 @@ CheckFinalReturn(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
 {
     JS_ASSERT(tc->inFunction());
     return HasFinalReturn(pn) == ENDS_IN_RETURN ||
-           ReportBadReturn(cx, tc, JSREPORT_WARNING | JSREPORT_STRICT,
+           ReportBadReturn(cx, tc, pn, JSREPORT_WARNING | JSREPORT_STRICT,
                            JSMSG_NO_RETURN_VALUE, JSMSG_ANON_NO_RETURN_VALUE);
 }
 
@@ -1550,7 +1554,7 @@ Parser::functionBody()
                 pn = NULL;
             } else {
                 if (tc->flags & TCF_FUN_IS_GENERATOR) {
-                    ReportBadReturn(context, tc, JSREPORT_ERROR,
+                    ReportBadReturn(context, tc, pn, JSREPORT_ERROR,
                                     JSMSG_BAD_GENERATOR_RETURN,
                                     JSMSG_BAD_ANON_GENERATOR_RETURN);
                     pn = NULL;
@@ -1827,14 +1831,14 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
 
     JSCodeGenerator funcg(&parser, &codePool, &notePool, tokenStream.getLineno());
     if (!funcg.init())
-        return NULL;
+        return false;
 
     funcg.flags |= TCF_IN_FUNCTION;
     funcg.setFunction(fun);
     funcg.bindings.transfer(cx, bindings);
     fun->setArgCount(funcg.bindings.countArgs());
     if (!GenerateBlockId(&funcg, funcg.bodyid))
-        return NULL;
+        return false;
 
     /* FIXME: make Function format the source for a function definition. */
     tokenStream.mungeCurrentToken(TOK_NAME);
@@ -4827,7 +4831,7 @@ Parser::returnOrYield(bool useAssignExpr)
 
     if ((~tc->flags & (TCF_RETURN_EXPR | TCF_FUN_IS_GENERATOR)) == 0) {
         /* As in Python (see PEP-255), disallow return v; in generators. */
-        ReportBadReturn(context, tc, JSREPORT_ERROR,
+        ReportBadReturn(context, tc, pn, JSREPORT_ERROR,
                         JSMSG_BAD_GENERATOR_RETURN,
                         JSMSG_BAD_ANON_GENERATOR_RETURN);
         return NULL;
@@ -4835,7 +4839,7 @@ Parser::returnOrYield(bool useAssignExpr)
 
     if (context->hasStrictOption() &&
         (~tc->flags & (TCF_RETURN_EXPR | TCF_RETURN_VOID)) == 0 &&
-        !ReportBadReturn(context, tc, JSREPORT_WARNING | JSREPORT_STRICT,
+        !ReportBadReturn(context, tc, pn, JSREPORT_WARNING | JSREPORT_STRICT,
                          JSMSG_NO_RETURN_VALUE,
                          JSMSG_ANON_NO_RETURN_VALUE)) {
         return NULL;
@@ -6227,7 +6231,6 @@ Parser::statement()
         return pn;
       }
 
-      case TOK_EOL:
       case TOK_SEMI:
         pn = UnaryNode::create(tc);
         if (!pn)
@@ -7557,9 +7560,23 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 return NULL;
 #if JS_HAS_XML_SUPPORT
             tt = tokenStream.getToken(TSF_OPERAND | TSF_KEYWORD_IS_NAME);
+
+            /* Treat filters as 'with' statements for name deoptimization. */
+            JSParseNode *oldWith = tc->innermostWith;
+            JSStmtInfo stmtInfo;
+            if (tt == TOK_LP) {
+                tc->innermostWith = pn;
+                js_PushStatement(tc, &stmtInfo, STMT_WITH, -1);
+            }
+
             pn3 = primaryExpr(tt, JS_TRUE);
             if (!pn3)
                 return NULL;
+
+            if (tt == TOK_LP) {
+                tc->innermostWith = oldWith;
+                PopStatement(tc);
+            }
 
             /* Check both tt and pn_type, to distinguish |x.(y)| and |x.y::z| from |x.y|. */
             if (tt == TOK_NAME && pn3->pn_type == TOK_NAME) {

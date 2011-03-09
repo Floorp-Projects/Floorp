@@ -1383,8 +1383,21 @@ nsGtkIMModule::GetCurrentParagraph(nsAString& aText, PRUint32& aCursorPos)
     mLastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
     NS_ENSURE_TRUE(querySelectedTextEvent.mSucceeded, NS_ERROR_FAILURE);
 
-    aCursorPos = querySelectedTextEvent.mReply.mOffset;
+    PRUint32 selOffset = querySelectedTextEvent.mReply.mOffset;
     PRUint32 selLength = querySelectedTextEvent.mReply.mString.Length();
+
+    // XXX nsString::Find and nsString::RFind take PRInt32 for offset, so,
+    //     we cannot support this request when the current offset is larger
+    //     than PR_INT32_MAX.
+    if (selOffset > PR_INT32_MAX || selLength > PR_INT32_MAX ||
+        selOffset + selLength > PR_INT32_MAX) {
+        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+            ("    FAILED, The selection is out of range"));
+        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+            ("        selOffset=%u, selLength=%u",
+             selOffset, selLength));
+        return NS_ERROR_FAILURE;
+    }
 
     // Get all text contents of the focused editor
     nsQueryContentEvent queryTextContentEvent(PR_TRUE,
@@ -1395,21 +1408,27 @@ nsGtkIMModule::GetCurrentParagraph(nsAString& aText, PRUint32& aCursorPos)
     NS_ENSURE_TRUE(queryTextContentEvent.mSucceeded, NS_ERROR_FAILURE);
 
     nsAutoString textContent(queryTextContentEvent.mReply.mString);
-    if (aCursorPos > textContent.Length()) {
+    if (selOffset + selLength > textContent.Length()) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-          ("GtkIMModule(%p): GetCurrentParagraph, FAILED (The caret offset is invalid)\n",
-           this));
+            ("    FAILED, The selection is invalid"));
+        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+            ("        selOffset=%u, selLength=%u, textContent.Length()=%u",
+             selOffset, selLength, textContent.Length()));
         return NS_ERROR_FAILURE;
     }
 
     // Get only the focused paragraph, by looking for newlines
-    PRInt32 parStart = textContent.RFind("\n", PR_FALSE, aCursorPos, -1) + 1;
-    PRInt32 parEnd = textContent.Find("\n", PR_FALSE, aCursorPos + selLength, -1);
+    PRInt32 parStart = (selOffset == 0) ? 0 :
+        textContent.RFind("\n", PR_FALSE, selOffset - 1, -1) + 1;
+    PRInt32 parEnd = textContent.Find("\n", PR_FALSE, selOffset + selLength, -1);
     if (parEnd < 0) {
         parEnd = textContent.Length();
     }
     aText = nsDependentSubstring(textContent, parStart, parEnd - parStart);
-    aCursorPos -= parStart;
+    aCursorPos = selOffset - PRUint32(parStart);
+
+    PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+        ("    aText.Length()=%u, aCursorPos=%u", aText.Length(), aCursorPos));
 
     return NS_OK;
 }

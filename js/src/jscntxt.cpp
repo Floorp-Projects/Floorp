@@ -73,7 +73,6 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jspubtd.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstaticcheck.h"
@@ -138,6 +137,19 @@ StackSegment::contains(const JSStackFrame *fp) const
     return false;
 }
 #endif
+
+JSStackFrame *
+StackSegment::computeNextFrame(JSStackFrame *fp) const
+{
+    JS_ASSERT(contains(fp));
+    JS_ASSERT(fp != getCurrentFrame());
+
+    JSStackFrame *next = getCurrentFrame();
+    JSStackFrame *prev;
+    while ((prev = next->prev()) != fp)
+        next = prev;
+    return next;
+}
 
 bool
 StackSpace::init()

@@ -235,27 +235,39 @@ function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
     ok(aManagerWindow != null, "Should have an add-ons manager window");
     is(aManagerWindow.location, MANAGER_URI, "Should be displaying the correct UI");
 
-    wait_for_manager_load(aManagerWindow, function() {
-      wait_for_view_load(aManagerWindow, aCallback, null, aLongerTimeout);
-    });
+    waitForFocus(function() {
+      wait_for_manager_load(aManagerWindow, function() {
+        wait_for_view_load(aManagerWindow, function() {
+          // Some functions like synthesizeMouse don't like to be called during
+          // the load event so ensure that has completed
+          executeSoon(function() {
+            log_exceptions(aCallback, aManagerWindow);
+          });
+        }, null, aLongerTimeout);
+      });
+    }, aManagerWindow);
   }
 
   if (gUseInContentUI) {
     gBrowser.selectedTab = gBrowser.addTab();
     switchToTabHavingURI(MANAGER_URI, true);
-    gBrowser.selectedBrowser.addEventListener("pageshow", function (event) {
-      if (event.target.location.href != MANAGER_URI)
+    
+    // This must be a new load, else the ping/pong would have
+    // found the window above.
+    Services.obs.addObserver(function (aSubject, aTopic, aData) {
+      Services.obs.removeObserver(arguments.callee, aTopic);
+      if (aSubject.location.href != MANAGER_URI)
         return;
-      gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, true);
-      setup_manager(gBrowser.contentWindow.wrappedJSObject);
-    }, true);
+      setup_manager(aSubject);
+    }, "EM-loaded", false);
     return;
   }
 
-  openDialog(MANAGER_URI).addEventListener("pageshow", function() {
-    this.removeEventListener("pageshow", arguments.callee, true);
-    setup_manager(this);
-  }, true);
+  openDialog(MANAGER_URI);
+  Services.obs.addObserver(function (aSubject, aTopic, aData) {
+    Services.obs.removeObserver(arguments.callee, aTopic);
+    setup_manager(aSubject);
+  }, "EM-loaded", false);
 }
 
 function close_manager(aManagerWindow, aCallback, aLongerTimeout) {

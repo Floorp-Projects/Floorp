@@ -66,6 +66,10 @@ notification[type="critical"] .messageImage {
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
+notification[type="warning"] .messageCloseButton {
+  list-style-image: url("chrome://global/skin/icons/close.png");
+}
+
 .messageCloseButton > .toolbarbutton-text {
   display: none;
 }

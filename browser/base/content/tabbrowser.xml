@@ -965,6 +965,12 @@
                   }
                 }
 
+                // If the find bar is focused, keep it focused.
+                if (gFindBarInitialized &&
+                    !gFindBar.hidden &&
+                    gFindBar.getElement("findbar-textbox").getAttribute("focused") == "true")
+                  break;
+
                 // Otherwise, focus the content area.
                 let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
                 let newFocusedElement = fm.getFocusedElementForWindow(window.content, true, {});
@@ -3086,7 +3092,16 @@
       ]]></handler>
 
       <handler event="dblclick"><![CDATA[
-        // See hack note in the tabbrowser-close-button binding
+#ifdef MOZ_WIDGET_GTK2
+        // Disable this on GTK2 when the menubar is draggable, since (a)
+        // the menubar and tabbbar have unified appearance and should
+        // thus not have different behavior (though this condition alone
+        // applies to more cases) and (b) it interacts badly with the
+        // drag handling that we use for dragging either one.
+        if (this.parentNode._dragBindingAlive)
+          return;
+#endif
+        // See hack note in the tabbrowser-close-tab-button binding
         if (!this._blockDblClick && event.button == 0 &&
             event.originalTarget.localName == "box")
           BrowserOpenTab();
@@ -3690,11 +3705,13 @@
       <handler event="popuphidden">
       <![CDATA[
         // clear out the menu popup and remove the listeners
-        while (this.hasChildNodes()) {
-          var menuItem = this.lastChild;
-          menuItem.removeEventListener("command", this, false);
-          menuItem.tab.mCorrespondingMenuitem = null;
-          this.removeChild(menuItem);
+        for (let i = this.childNodes.length - 1; i > 0; i--) {
+          let menuItem = this.childNodes[i];
+          if (!menuItem.hasAttribute("keepme")) {
+            menuItem.removeEventListener("command", this, false);
+            menuItem.tab.mCorrespondingMenuitem = null;
+            this.removeChild(menuItem);
+          }
         }
         var tabcontainer = gBrowser.tabContainer;
         tabcontainer.mTabstrip.removeEventListener("scroll", this, false);
@@ -3727,7 +3744,7 @@
       <xul:hbox class="statuspanel-inner">
         <xul:label class="statuspanel-label"
                    role="status"
-                   xbl:inherits="value=label,mirror"
+                   xbl:inherits="value=label,crop,mirror"
                    flex="1"
                    crop="end"/>
       </xul:hbox>
