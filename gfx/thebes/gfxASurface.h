@@ -220,8 +220,6 @@ public:
         return empty;
     }
 
-    virtual PRBool SupportsSelfCopy() { return PR_TRUE; }
-
     /**
      * Move the pixels in |aSourceRect| to |aDestTopLeft|.  Like with
      * memmove(), |aSourceRect| and the rectangle defined by
