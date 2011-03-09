@@ -878,8 +878,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.$undoContainer = iQ("<div/>")
       .addClass("undo")
       .attr("type", "button")
-      .text(tabviewString("groupItem.undoCloseGroup"))
       .appendTo("body");
+    iQ("<span/>")
+      .text(tabviewString("groupItem.undoCloseGroup"))
+      .appendTo(this.$undoContainer);
     let undoClose = iQ("<span/>")
       .addClass("close")
       .appendTo(this.$undoContainer);
