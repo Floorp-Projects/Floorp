@@ -1459,6 +1459,8 @@ stubs::InitElem(VMFrame &f, uint32 last)
         if (last && !js_SetLengthProperty(cx, obj, (jsuint) (JSID_TO_INT(id) + 1)))
             THROW();
     } else {
+        if (!cx->typeMonitorAssign(obj, id, rref))
+            THROW();
         if (!obj->defineProperty(cx, id, rref, NULL, NULL, JSPROP_ENUMERATE))
             THROW();
     }
