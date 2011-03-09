@@ -2421,18 +2421,13 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
         if (status == mjit::Compile_Error)                                    \
             goto error;                                                       \
         if (status == mjit::Compile_Okay) {                                   \
-            /* :FIXME: bug 636598 there should always be an nmap for this PC. */   \
-            void *ncode =                                                          \
-                script->maybeNativeCodeForPC(regs.fp->isConstructing(), regs.pc);  \
-            if (ncode) {                                                      \
-                interpReturnOK = mjit::JaegerShotAtSafePoint(cx, ncode);      \
-                if (inlineCallCount)                                          \
-                    goto jit_return;                                          \
-                regs.fp->setFinishedInInterpreter();                          \
-                goto leave_on_safe_point;                                     \
-            } else {                                                          \
-                useMethodJIT = false;                                         \
-            }                                                                 \
+            void *ncode =                                                     \
+                script->nativeCodeForPC(regs.fp->isConstructing(), regs.pc);  \
+            interpReturnOK = mjit::JaegerShotAtSafePoint(cx, ncode);          \
+            if (inlineCallCount)                                              \
+                goto jit_return;                                              \
+            regs.fp->setFinishedInInterpreter();                              \
+            goto leave_on_safe_point;                                         \
         }                                                                     \
         if (status == mjit::Compile_Abort) {                                  \
             useMethodJIT = false;                                             \

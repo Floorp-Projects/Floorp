@@ -330,6 +330,11 @@ class Compiler : public BaseCompiler
         size_t offsetIndex;
     };
 
+    struct LoopEntry {
+        uint32 pcOffset;
+        Label label;
+    };
+
     JSStackFrame *fp;
     JSScript *script;
     JSObject *scopeChain;
@@ -361,6 +366,7 @@ class Compiler : public BaseCompiler
     js::Vector<DoublePatch, 16, CompilerAllocPolicy> doubleList;
     js::Vector<JumpTable, 16> jumpTables;
     js::Vector<uint32, 16> jumpTableOffsets;
+    js::Vector<LoopEntry, 16> loopEntries;
     StubCompiler stubcc;
     Label invokeLabel;
     Label arityLabel;

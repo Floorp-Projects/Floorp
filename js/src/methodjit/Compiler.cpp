@@ -113,6 +113,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
     doubleList(CompilerAllocPolicy(cx, *thisFromCtor())),
     jumpTables(CompilerAllocPolicy(cx, *thisFromCtor())),
     jumpTableOffsets(CompilerAllocPolicy(cx, *thisFromCtor())),
+    loopEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
     stubcc(cx, *thisFromCtor(), frame, script),
     debugMode_(cx->compartment->debugMode),
 #if defined JS_TRACER
@@ -612,10 +613,10 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     JSC::LinkBuffer fullCode(result, totalSize);
     JSC::LinkBuffer stubCode(result + masm.size(), stubcc.size());
 
-    size_t nNmapLive = 0;
+    size_t nNmapLive = loopEntries.length();
     for (size_t i = 0; i < script->length; i++) {
         analyze::Bytecode *opinfo = analysis->maybeCode(i);
-        if (opinfo && opinfo->safePoint)
+        if (opinfo && opinfo->safePoint && !liveness.getCode(i).loopBackedge)
             nNmapLive++;
     }
 
@@ -674,6 +675,20 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                 jitNmap[ix].ncode = (uint8 *)(result + masm.distanceOf(L));
                 ix++;
             }
+        }
+        for (size_t i = 0; i < loopEntries.length(); i++) {
+            /* Insert the entry at the right position. */
+            const LoopEntry &entry = loopEntries[i];
+            size_t j;
+            for (j = 0; j < ix; j++) {
+                if (jitNmap[j].bcOff > entry.pcOffset) {
+                    memmove(jitNmap + j + 1, jitNmap + j, (ix - j) * sizeof(NativeMapEntry));
+                    break;
+                }
+            }
+            jitNmap[j].bcOff = entry.pcOffset;
+            jitNmap[j].ncode = (uint8 *) stubCode.locationOf(entry.label).executableAddress();
+            ix++;
         }
     }
     JS_ASSERT(ix == jit->nNmapPairs);
@@ -5132,6 +5147,21 @@ mjit::Compiler::finishLoop(jsbytecode *head)
 
     fallthrough.linkTo(masm.label(), &masm);
 
+    if (!analysis->getCode(head).safePoint) {
+        /*
+         * Emit a stub into the OOL path which loads registers from a synced state
+         * and jumps to the loop head, for rejoining from the interpreter.
+         */
+        LoopEntry entry;
+        entry.pcOffset = head - script->code;
+        entry.label = stubcc.masm.label();
+        loopEntries.append(entry);
+
+        frame.prepareForJump(head, stubcc.masm, true);
+        if (!stubcc.jumpInScript(stubcc.masm.jump(), head))
+            return false;
+    }
+
     return true;
 }
 
@@ -5207,8 +5237,8 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
             }
         }
 
-        if (target < PC && !finishLoop(target))
-            return false;
+        if (target < PC)
+            return finishLoop(target);
         return true;
     }
 
@@ -5295,9 +5325,7 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
         return false;
 #endif
 
-    if (!finishLoop(target))
-        return false;
-    return true;
+    return finishLoop(target);
 }
 
 void
