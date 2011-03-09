@@ -6509,6 +6509,11 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
 
     obj->trace(trc);
 
+    if (obj->getClass()->flags & JSCLASS_IS_GLOBAL) {
+        JSCompartment *compartment = obj->getCompartment();
+        compartment->mark(trc);
+    }
+
     /*
      * NB: clasp->mark could mutate something (which would be a bug, but we are
      * defensive), so don't hoist this above calling clasp->mark.
