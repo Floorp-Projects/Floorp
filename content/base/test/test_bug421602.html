@@ -22,9 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=421602
 SimpleTest.waitForExplicitFinish();
 
 var img1loaded = false;
-var img2loaded = false;
 var img1errored = false;
-var img2errored = false;
 
 function gc() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -36,10 +34,13 @@ function gc() {
 // Our test image
 function loadTestImage() {
   var img1 = new Image();
-  img1.onload = function() { img1loaded = true; }
+  img1.onload = function() {
+    img1loaded = true;
+    finishTest();
+  }
   img1.onerror = function() {
-    is(img2errored, false, "Image 2 should not error before image 1");
     img1errored = true;
+    finishTest();
   }
   img1.src = window.location.href + "?image1=true";
 }
@@ -48,17 +49,9 @@ loadTestImage();
 // Probably overkill to gc() more than once, but let's be safe
 gc(); gc(); gc();
 
-// And now our "wrap the test up" image.
-var img2 = new Image();
-img2.onload = function() { img2loaded = true; }
-img2.onerror = function() { img2errored = true; finishTest(); }
-img2.src = window.location.href + "?image2=true";
-
 function finishTest() {
   is(img1errored, true, "Image 1 should error");
-  is(img2errored, true, "Image 2 should error");
   is(img1loaded, false, "Image 1 should not load");
-  is(img2loaded, false, "Image 2 should not load");
   SimpleTest.finish();
 }
 </script>
