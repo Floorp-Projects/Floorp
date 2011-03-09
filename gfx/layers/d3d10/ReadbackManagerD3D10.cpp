@@ -157,7 +157,7 @@ ReadbackManagerD3D10::~ReadbackManagerD3D10()
     ::CloseHandle(mTaskSemaphore);
     ::CloseHandle(mTaskThread);
   } else {
-    NS_WARNING("ReadbackManager: Task thread did not shutdown in 5 seconds. Leaking.");
+    NS_RUNTIMEABORT("ReadbackManager: Task thread did not shutdown in 5 seconds.");
   }
 }
 
@@ -227,6 +227,9 @@ ReadbackManagerD3D10::ProcessTasks()
     }
 
     ::EnterCriticalSection(&mTaskMutex);
+    if (mPendingReadbackTasks.Length() == 0) {
+      NS_RUNTIMEABORT("Trying to read from an empty array, bad bad bad");
+    }
     ReadbackTask *nextReadbackTask = mPendingReadbackTasks[0].forget();
     mPendingReadbackTasks.RemoveElementAt(0);
     ::LeaveCriticalSection(&mTaskMutex);
