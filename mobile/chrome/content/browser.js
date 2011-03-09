@@ -2682,6 +2682,10 @@ Tab.prototype = {
         // and this call ensure we render it correctly.
         browser.getRootView()._updateCacheViewport();
       }
+    } else {
+      // if we are reloading, the page will retain its scale. if it is zoomed
+      // we need to refresh the viewport so that we do not show checkerboard
+      browser.getRootView()._updateCacheViewport();
     }
   },
 
