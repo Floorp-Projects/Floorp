@@ -636,6 +636,13 @@ var FormHelperUI = {
     // Update the next/previous commands
     this._cmdPrevious.setAttribute("disabled", !aHasPrevious);
     this._cmdNext.setAttribute("disabled", !aHasNext);
+
+    // If both next and previous are disabled don't bother showing arrows
+    if (!aHasNext && !aHasPrevious)
+      this._container.setAttribute("disabled", "true");
+    else
+      this._container.removeAttribute("disabled");
+
     this._hasSuggestions = false;
     this._open = true;
 
@@ -840,6 +847,8 @@ var FormHelperUI = {
       this._zoomFinish();
       this._currentElement = null;
       this._container.hide(this);
+
+      this._container.removeAttribute("disabled");
 
       // Since the style is overrided when a popup is shown, it needs to be
       // resetted here to let the default CSS works

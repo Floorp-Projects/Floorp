@@ -47,7 +47,7 @@
 }
 
 #content-navigator[type="find"],
-#content-navigator[type="form"] {
+#content-navigator[type="form"]:not([disabled="true"]) {
   display: -moz-box;
 }
 
@@ -220,14 +220,13 @@
 .options-title {
   padding: @padding_xxnormal@ @padding_small@ @padding_small@ @padding_small@;
   font-size: @font_small@;
-  text-align: center;
 }
 
 .options-title[value=""] {
   display: none;
 }
 
-.option-command > image {
+.option-command image {
   width: 30px;
   height: 30px;
   margin: @margin_tiny@;
