@@ -2926,25 +2926,26 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
         break;
 
       case JSOP_INITELEM:
-        if (script->compileAndGo && !state.popped(2).initializer->unknownProperties) {
-            initializer = state.popped(2).initializer;
+        initializer = state.popped(2).initializer;
+        JS_ASSERT((initializer != NULL) == script->compileAndGo);
+        if (initializer) {
             pushed[0].addType(cx, (jstype) initializer);
-
-            /*
-             * Assume the initialized element is an integer. INITELEM can be used
-             * for doubles which don't map to the JSID_VOID property, which must
-             * be caught with dynamic monitoring.
-             */
-            TypeSet *types = initializer->getProperty(cx, JSID_VOID, true);
-            if (!types)
-                return false;
-
-            if (state.hasGetSet)
-                types->addType(cx, TYPE_UNKNOWN);
-            else if (state.hasHole)
-                initializer->markNotPacked(cx, false);
-            else
-                state.popped(0).types->addSubset(cx, script, types);
+            if (!initializer->unknownProperties) {
+                /*
+                 * Assume the initialized element is an integer. INITELEM can be used
+                 * for doubles which don't map to the JSID_VOID property, which must
+                 * be caught with dynamic monitoring.
+                 */
+                TypeSet *types = initializer->getProperty(cx, JSID_VOID, true);
+                if (!types)
+                    return false;
+                if (state.hasGetSet)
+                    types->addType(cx, TYPE_UNKNOWN);
+                else if (state.hasHole)
+                    initializer->markNotPacked(cx, false);
+                else
+                    state.popped(0).types->addSubset(cx, script, types);
+            }
         } else {
             pushed[0].addType(cx, TYPE_UNKNOWN);
         }
@@ -2963,21 +2964,22 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
 
       case JSOP_INITPROP:
       case JSOP_INITMETHOD:
-        if (script->compileAndGo && !state.popped(1).initializer->unknownProperties) {
-            initializer = state.popped(1).initializer;
+        initializer = state.popped(1).initializer;
+        JS_ASSERT((initializer != NULL) == script->compileAndGo);
+        if (initializer) {
             pushed[0].addType(cx, (jstype) initializer);
-
-            jsid id = GetAtomId(cx, script, pc, 0);
-            TypeSet *types = initializer->getProperty(cx, id, true);
-            if (!types)
-                return false;
-
-            if (id == id___proto__(cx) || id == id_prototype(cx))
-                cx->compartment->types.monitorBytecode(cx, script, offset);
-            else if (state.hasGetSet)
-                types->addType(cx, TYPE_UNKNOWN);
-            else
-                state.popped(0).types->addSubset(cx, script, types);
+            if (!initializer->unknownProperties) {
+                jsid id = GetAtomId(cx, script, pc, 0);
+                TypeSet *types = initializer->getProperty(cx, id, true);
+                if (!types)
+                    return false;
+                if (id == id___proto__(cx) || id == id_prototype(cx))
+                    cx->compartment->types.monitorBytecode(cx, script, offset);
+                else if (state.hasGetSet)
+                    types->addType(cx, TYPE_UNKNOWN);
+                else
+                    state.popped(0).types->addSubset(cx, script, types);
+            }
         } else {
             pushed[0].addType(cx, TYPE_UNKNOWN);
         }
