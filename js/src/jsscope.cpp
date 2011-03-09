@@ -1220,6 +1220,13 @@ JSObject::removeProperty(JSContext *cx, jsid id)
         }
     }
 
+    /* Also, consider shrinking object slots if 25% or more are unused. */
+    if (hasSlotsArray()) {
+        JS_ASSERT(slotSpan() <= numSlots());
+        if ((slotSpan() + (slotSpan() >> 2)) < numSlots())
+            shrinkSlots(cx, slotSpan());
+    }
+
     CHECK_SHAPE_CONSISTENCY(this);
     LIVE_SCOPE_METER(cx, --cx->runtime->liveObjectProps);
     METER(removes);
