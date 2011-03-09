@@ -206,10 +206,12 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
       if (mBufferRect.Contains(neededRegion.GetBounds())) {
         // We don't need to adjust mBufferRect.
         destBufferRect = mBufferRect;
-      } else {
+      } else if (neededRegion.GetBounds().Size() <= mBufferRect.Size()) {
         // The buffer's big enough but doesn't contain everything that's
         // going to be visible. We'll move it.
         destBufferRect = nsIntRect(neededRegion.GetBounds().TopLeft(), mBufferRect.Size());
+      } else {
+        destBufferRect = neededRegion.GetBounds();
       }
     } else {
       destBufferRect = neededRegion.GetBounds();
@@ -250,6 +252,9 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
 
     break;
   }
+
+  NS_ASSERTION(destBufferRect.Contains(neededRegion.GetBounds()),
+               "Destination rect doesn't contain what we need to paint");
 
   result.mRegionToDraw.Sub(neededRegion, validRegion);
   if (result.mRegionToDraw.IsEmpty())
