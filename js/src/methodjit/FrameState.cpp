@@ -2111,15 +2111,22 @@ FrameState::storeTop(FrameEntry *target, JSValueType type, types::TypeSet *typeS
                 target->type.setRegister(reg);
                 regstate(reg).reassociate(target);
             }
-        } else if (type == JSVAL_TYPE_DOUBLE) {
+        } else if (type != JSVAL_TYPE_DOUBLE || backing->isType(JSVAL_TYPE_INT32)) {
+            /*
+             * Treat the stored entry as an int even if inference has marked it
+             * as a float (we will fixDoubles on it before branching), to avoid
+             * demoting the backing.
+             */
+            if (type == JSVAL_TYPE_DOUBLE)
+                type = JSVAL_TYPE_INT32;
+            JS_ASSERT_IF(backing->isTypeKnown(), backing->isType(type));
+            if (!backing->isTypeKnown())
+                learnType(backing, type);
+            target->setType(type, typeSet);
+        } else {
             FPRegisterID fpreg = allocFPReg();
-            if (backing->isTypeKnown()) {
-                JS_ASSERT(backing->isType(JSVAL_TYPE_INT32));
-                masm.convertInt32ToDouble(reg, fpreg);
-            } else {
-                syncFe(backing);
-                masm.moveInt32OrDouble(addressOf(backing), fpreg);
-            }
+            syncFe(backing);
+            masm.moveInt32OrDouble(addressOf(backing), fpreg);
 
             forgetAllRegs(backing);
 
@@ -2127,15 +2134,6 @@ FrameState::storeTop(FrameEntry *target, JSValueType type, types::TypeSet *typeS
             target->setType(JSVAL_TYPE_DOUBLE, NULL);
             target->data.setFPRegister(fpreg);
             regstate(fpreg).associate(target, RematInfo::DATA);
-        } else {
-            /*
-             * The backing should normally already be the type we are storing.  However,
-             * we do not always keep track of the type in fused opcodes like GETTHISPROP.
-             */
-            JS_ASSERT_IF(backing->isTypeKnown(), backing->isType(type));
-            if (!backing->isTypeKnown())
-                learnType(backing, type);
-            target->setType(type, typeSet);
         }
     }
 
