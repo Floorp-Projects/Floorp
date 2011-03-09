@@ -151,7 +151,9 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
     if (desc.obj) {
         if (desc.attrs & JSPROP_READONLY)
             return true;
-        if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != StrictPropertyStub)) {
+        if (!desc.setter) {
+            desc.setter = StrictPropertyStub;
+        } else if ((desc.attrs & JSPROP_SETTER) || desc.setter != StrictPropertyStub) {
             if (!CallSetter(cx, receiver, id, desc.setter, desc.attrs, desc.shortid, strict, vp))
                 return false;
             if (!proxy->isProxy() || proxy->getProxyHandler() != this)
@@ -161,8 +163,6 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         }
         if (!desc.getter)
             desc.getter = PropertyStub;
-        if (!desc.setter)
-            desc.setter = StrictPropertyStub;
         desc.value = *vp;
         return defineProperty(cx, receiver, id, &desc);
     }
@@ -171,7 +171,9 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
     if (desc.obj) {
         if (desc.attrs & JSPROP_READONLY)
             return true;
-        if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != StrictPropertyStub)) {
+        if (!desc.setter) {
+            desc.setter = StrictPropertyStub;
+        } else if ((desc.attrs & JSPROP_SETTER) || desc.setter != StrictPropertyStub) {
             if (!CallSetter(cx, receiver, id, desc.setter, desc.attrs, desc.shortid, strict, vp))
                 return false;
             if (!proxy->isProxy() || proxy->getProxyHandler() != this)
@@ -181,8 +183,6 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         }
         if (!desc.getter)
             desc.getter = PropertyStub;
-        if (!desc.setter)
-            desc.setter = StrictPropertyStub;
         return defineProperty(cx, receiver, id, &desc);
     }
 
