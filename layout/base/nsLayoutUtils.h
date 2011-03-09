@@ -95,11 +95,6 @@ public:
   static nsIContent* FindContentFor(ViewID aId);
 
   /**
-   * Get display port for the given element.
-   */
-  static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult);
-
-  /**
    * Use heuristics to figure out the name of the child list that
    * aChildFrame is currently in.
    */
