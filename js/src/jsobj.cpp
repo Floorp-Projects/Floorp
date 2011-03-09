@@ -6490,19 +6490,6 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    JSContext *cx = trc->context;
-    if (obj->hasSlotsArray() && !obj->nativeEmpty() && IS_GC_MARKING_TRACER(trc)) {
-        /*
-         * Trim overlong dslots allocations from the GC, to avoid thrashing in
-         * case of delete-happy code that settles down at a given population.
-         * The !obj->nativeEmpty() guard above is due to the bug described by
-         * the FIXME comment below.
-         */
-        size_t slots = obj->slotSpan();
-        if (obj->numSlots() != slots)
-            obj->shrinkSlots(cx, slots);
-    }
-
 #ifdef JS_DUMP_SCOPE_METERS
     MeterEntryCount(obj->propertyCount);
 #endif
