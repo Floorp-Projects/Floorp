@@ -607,9 +607,8 @@ public class GeckoAppShell
         } else {
             Log.i("GeckoAppJava", "we're done, good bye");
             GeckoApp.mAppContext.finish();
-            System.exit(0);
         }
-
+        System.exit(0);
     }
     static void scheduleRestart() {
         Log.i("GeckoAppJava", "scheduling restart");
