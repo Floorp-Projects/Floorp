@@ -560,9 +560,16 @@ arrowbox {
   border: none;
 }
 
+.arrowbox-dark .panel-arrowcontent,
 .panel-dark {
   color: white;
   background: rgb(94,97,102);
+}
+ 
+.arrowbox-dark .panel-arrowcontent {
+  border: @border_width_large@ solid white;
+  border-radius: @border_radius_normal@;
+  box-shadow: black 0 @shadow_width_small@ @shadow_width_small@;
 }
 
 .panel-arrow[side="top"] {
