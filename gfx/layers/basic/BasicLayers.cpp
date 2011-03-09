@@ -587,7 +587,8 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
     PRUint32 flags = 0;
     gfxMatrix transform;
     if (!GetEffectiveTransform().Is2D(&transform) ||
-        transform.HasNonIntegerTranslation()) {
+        transform.HasNonIntegerTranslation() ||
+        MustRetainContent() /*<=> has shadow layer*/) {
       flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
     }
     Buffer::PaintState state =
