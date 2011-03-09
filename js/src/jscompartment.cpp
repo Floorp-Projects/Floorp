@@ -66,6 +66,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcBytes(0),
     gcTriggerBytes(0),
     gcLastBytes(0),
+    hold(false),
     data(NULL),
     active(false),
 #ifdef JS_METHODJIT
@@ -82,8 +83,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 #if ENABLE_YARR_JIT
     regExpAllocator(NULL),
 #endif
-    mathCache(NULL),
-    marked(false)
+    mathCache(NULL)
 {
     JS_INIT_CLIST(&scripts);
 
@@ -447,35 +447,23 @@ ScriptPoolDestroyed(JSContext *cx, mjit::JITScript *jit,
 
 /*
  * This method marks pointers that cross compartment boundaries. It should be
- * called only by per-compartment GCs, since full GCs naturally follow pointers
+ * called only for per-compartment GCs, since full GCs naturally follow pointers
  * across compartments.
  */
 void
-JSCompartment::markCrossCompartment(JSTracer *trc)
+JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
 {
+    JS_ASSERT(trc->context->runtime->gcCurrentCompartment);
+
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront())
         MarkValue(trc, e.front().key, "cross-compartment wrapper");
-}
-
-void
-JSCompartment::mark(JSTracer *trc)
-{
-    if (IS_GC_MARKING_TRACER(trc)) {
-        JSRuntime *rt = trc->context->runtime;
-
-        if (rt->gcCurrentCompartment && rt->gcCurrentCompartment != this)
-            return;
-
-        if (marked)
-            return;
-        marked = true;
-    }
 }
 
 void
 JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 {
     chunk = NULL;
+
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
         JS_ASSERT_IF(IsAboutToBeFinalized(cx, e.front().key.toGCThing()) &&
