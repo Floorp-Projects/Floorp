@@ -1037,12 +1037,10 @@ protected:
   struct RenderingState {
     RenderingState(PresShell* aPresShell) 
       : mRenderFlags(aPresShell->mRenderFlags)
-      , mDisplayPort(aPresShell->mDisplayPort)
       , mXResolution(aPresShell->mXResolution)
       , mYResolution(aPresShell->mYResolution)
     { }
     PRUint32 mRenderFlags;
-    nsRect mDisplayPort;
     float mXResolution;
     float mYResolution;
   };
@@ -1056,7 +1054,6 @@ protected:
     ~AutoSaveRestoreRenderingState()
     {
       mPresShell->mRenderFlags = mOldState.mRenderFlags;
-      mPresShell->mDisplayPort = mOldState.mDisplayPort;
       mPresShell->mXResolution = mOldState.mXResolution;
       mPresShell->mYResolution = mOldState.mYResolution;
     }
@@ -6017,14 +6014,7 @@ void PresShell::SetIgnoreViewportScrolling(PRBool aIgnore)
 
 void PresShell::SetDisplayPort(const nsRect& aDisplayPort)
 {
-  if (UsingDisplayPort() && mDisplayPort == aDisplayPort) {
-    return;
-  }
-  RenderingState state(this);
-  state.mRenderFlags = ChangeFlag(mRenderFlags, PR_TRUE,
-                                  STATE_USING_DISPLAYPORT);
-  state.mDisplayPort = aDisplayPort;
-  SetRenderingState(state);
+  NS_ABORT_IF_FALSE(false, "SetDisplayPort is deprecated");
 }
 
 nsresult PresShell::SetResolution(float aXResolution, float aYResolution)
@@ -6054,37 +6044,8 @@ void PresShell::SetRenderingState(const RenderingState& aState)
   }
 
   mRenderFlags = aState.mRenderFlags;
-  if (UsingDisplayPort()) {
-    mDisplayPort = aState.mDisplayPort;
-  } else {
-    mDisplayPort = nsRect();
-  }
   mXResolution = aState.mXResolution;
   mYResolution = aState.mYResolution;
-
-  // FIXME (Bug 593243 should fix this.)
-  //
-  // Invalidated content does not pay any attention to the displayport, so
-  // invalidating the subdocument's root frame could end up not repainting
-  // visible content.
-  //
-  // For instance, imagine the iframe is located at y=1000. Even though the
-  // displayport may intersect the iframe's viewport, the visual overflow
-  // rect of the root content could be (0, 0, 800, 500). Since the dirty region
-  // does not intersect the visible overflow rect, the display list for the
-  // iframe will not even be generated.
-  //
-  // Here, we find the very top presShell and use its root frame for
-  // invalidation instead.
-  //
-  nsPresContext* rootPresContext = mPresContext->GetRootPresContext();
-  if (rootPresContext) {
-    nsIPresShell* rootPresShell = rootPresContext->GetPresShell();
-    nsIFrame* rootFrame = rootPresShell->FrameManager()->GetRootFrame();
-    if (rootFrame) {
-      rootFrame->InvalidateFrameSubtree();
-    }
-  }
 }
 
 void PresShell::SynthesizeMouseMove(PRBool aFromScroll)
