@@ -254,8 +254,7 @@ TypeHasProperty(JSContext *cx, TypeObject *obj, jsid id, const Value &value)
      * not the .ownTypes set, and could miss cases where a type set is missing
      * entries from its ownTypes set when they are shadowed by a prototype property.
      */
-    if (cx->typeInferenceEnabled() && !obj->unknownProperties && !value.isUndefined() &&
-        !JSID_IS_DEFAULT_XML_NAMESPACE(id)) {
+    if (cx->typeInferenceEnabled() && !obj->unknownProperties && !value.isUndefined()) {
         id = MakeTypeId(cx, id);
 
         /* Watch for properties which inference does not monitor. */
