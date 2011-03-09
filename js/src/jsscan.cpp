@@ -175,11 +175,8 @@ TokenStream::init(const jschar *base, size_t length, const char *fn, uintN ln, J
     version = v;
     xml = VersionHasXML(v);
 
-    userbuf.base = (jschar *)base;
-    userbuf.limit = (jschar *)base + length;
-    userbuf.ptr = (jschar *)base;
-
-    linebase = userbuf.base;
+    userbuf.init(base, length);
+    linebase = base;
     prevLinebase = NULL;
 
     listener = cx->debugHooks->sourceHandler;
@@ -254,8 +251,8 @@ int32
 TokenStream::getChar()
 {
     int32 c;
-    if (JS_LIKELY(userbuf.ptr < userbuf.limit)) {
-        c = *userbuf.ptr++;
+    if (JS_LIKELY(userbuf.hasRawChars())) {
+        c = userbuf.getRawChar();
 
         /*
          * Normalize the jschar if it was a newline.  We need to detect any of
@@ -276,10 +273,9 @@ TokenStream::getChar()
             if (c == '\n')
                 goto eol;
             if (c == '\r') {
-                if (userbuf.ptr < userbuf.limit && *userbuf.ptr == '\n') {
-                    /* a \r\n sequence: treat as a single EOL, skip over the \n */
-                    userbuf.ptr++;
-                }
+                /* if it's a \r\n sequence: treat as a single EOL, skip over the \n */
+                if (userbuf.hasRawChars())
+                    userbuf.matchRawChar('\n');
                 goto eol;
             }
             if (c == LINE_SEPARATOR || c == PARA_SEPARATOR)
@@ -293,7 +289,7 @@ TokenStream::getChar()
 
   eol:
     prevLinebase = linebase;
-    linebase = userbuf.ptr;
+    linebase = userbuf.addressOfNextRawChar();
     lineno++;
     return '\n';
 }
@@ -305,8 +301,8 @@ TokenStream::getChar()
 int32
 TokenStream::getCharIgnoreEOL()
 {
-    if (JS_LIKELY(userbuf.ptr < userbuf.limit))
-        return *userbuf.ptr++;
+    if (JS_LIKELY(userbuf.hasRawChars()))
+        return userbuf.getRawChar();
 
     flags |= TSF_EOF;
     return EOF;
@@ -317,32 +313,35 @@ TokenStream::ungetChar(int32 c)
 {
     if (c == EOF)
         return;
-    JS_ASSERT(userbuf.ptr > userbuf.base);
-    userbuf.ptr--;
+    JS_ASSERT(!userbuf.atStart());
+    userbuf.ungetRawChar();
     if (c == '\n') {
 #ifdef DEBUG
-        int32 c2 = *userbuf.ptr;
-        JS_ASSERT(c2 == '\n' || c2 == '\r' || c2 == LINE_SEPARATOR || c2 == PARA_SEPARATOR);
+        int32 c2 = userbuf.peekRawChar();
+        JS_ASSERT(TokenBuf::isRawEOLChar(c2));
 #endif
-        if (userbuf.ptr > userbuf.base && *(userbuf.ptr - 1) == '\r')
-            userbuf.ptr--;          /* also unget the \r in a \r\n sequence */
+
+        /* if it's a \r\n sequence, also unget the \r */
+        if (!userbuf.atStart())
+            userbuf.matchRawCharBackwards('\r');
+
         JS_ASSERT(prevLinebase);    /* we should never get more than one EOL char */
         linebase = prevLinebase;
         prevLinebase = NULL;
         lineno--;
     } else {
-        JS_ASSERT(*userbuf.ptr == c);
+        JS_ASSERT(userbuf.peekRawChar() == c);
     }
 }
 
 void
 TokenStream::ungetCharIgnoreEOL(int32 c)
 {
-    JS_ASSERT(c == '\n' || c == '\r' || c == LINE_SEPARATOR || c == PARA_SEPARATOR || c == EOF);
     if (c == EOF)
         return;
-    JS_ASSERT(userbuf.ptr > userbuf.base);
-    userbuf.ptr--;
+    JS_ASSERT(TokenBuf::isRawEOLChar(c));
+    JS_ASSERT(!userbuf.atStart());
+    userbuf.ungetRawChar();
 }
 
 /*
@@ -371,30 +370,27 @@ TokenStream::peekChars(intN n, jschar *cp)
     return i == n;
 }
 
-jschar *
-TokenStream::findEOL()
+const jschar *
+TokenStream::TokenBuf::findEOL()
 {
-    TokenBuf tmpUserbuf = userbuf;
-    jschar *tmpLinebase = linebase;
-    jschar *tmpPrevLinebase = prevLinebase;
-    uintN tmpFlags = flags;
-    uintN tmpLineno = lineno;
+    const jschar *tmp = ptr;
+#ifdef DEBUG
+    /*
+     * This is the one exception to the "TokenBuf isn't accessed after
+     * poisoning" rule -- we may end up calling findEOL() in order to set up
+     * an error.
+     */
+    if (!tmp)
+        tmp = ptrWhenPoisoned;
+#endif
 
     while (true) {
-        int32 c = getChar();
-        if (c == '\n' || c == EOF)
+        if (tmp >= limit)
+            break;
+        if (TokenBuf::isRawEOLChar(*tmp++))
             break;
     }
-    jschar *linelimit = userbuf.ptr;
-
-    /* Need to restore everything changed by getChar(). */
-    userbuf = tmpUserbuf;
-    linebase = tmpLinebase;
-    prevLinebase = tmpPrevLinebase;
-    flags = tmpFlags;
-    lineno = tmpLineno;
-
-    return linelimit;
+    return tmp;
 }
 
 bool
@@ -405,12 +401,12 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
     char *message;
     size_t linelength;
     jschar *linechars;
-    jschar *linelimit;
+    const jschar *linelimit;
     char *linebytes;
     bool warning;
     JSBool ok;
-    TokenPos *tp;
-    uintN index, i;
+    const TokenPos *tp;
+    uintN i;
     JSErrorReporter onError;
 
     if (JSREPORT_IS_STRICT(flags) && !cx->hasStrictOption())
@@ -440,18 +436,22 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
 
     report.filename = filename;
 
-    if (pn) {
-        report.lineno = pn->pn_pos.begin.lineno;
-        if (report.lineno != lineno)
-            goto report;
-        tp = &pn->pn_pos;
-    } else {
-        /* Point to the current token, not the next one to get. */
-        tp = &tokens[cursor].pos;
-    }
-    report.lineno = lineno;
+    tp = pn ? &pn->pn_pos : &currentToken().pos;
+    report.lineno = tp->begin.lineno;
 
-    linelimit = findEOL();
+    /*
+     * Given a token, T, that we want to complain about: if T's (starting)
+     * lineno doesn't match TokenStream's lineno, that means we've scanned
+     * past the line that T starts on, which makes it hard to print some or
+     * all of T's (starting) line for context.  So we don't even try, leaving
+     * report.linebuf and friends zeroed.  This means that any error involving
+     * a multi-line token (eg. an unterminated multi-line string literal)
+     * won't have a context printed.
+     */
+    if (report.lineno != lineno)
+        goto report;
+
+    linelimit = userbuf.findEOL();
     linelength = linelimit - linebase;
 
     linechars = (jschar *)cx->malloc((linelength + 1) * sizeof(jschar));
@@ -466,15 +466,14 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
         warning = false;
         goto out;
     }
-    report.linebuf = linebytes;     /* the offending source line, without final \n */
-
-    index = (tp->begin.lineno == tp->end.lineno) 
-            ? tp->begin.index         /* the column number of the start of the bad token */
-            : 0;
-
-    report.tokenptr = report.linebuf + index;
+    /* Unicode and char versions of the offending source line, without final \n */
+    report.linebuf = linebytes;
     report.uclinebuf = linechars;
-    report.uctokenptr = report.uclinebuf + index;
+
+    /* The lineno check above means we should only see single-line tokens here. */
+    JS_ASSERT(tp->begin.lineno == tp->end.lineno);
+    report.tokenptr = report.linebuf + tp->begin.index;
+    report.uctokenptr = report.uclinebuf + tp->begin.index;
 
     /*
      * If there's a runtime exception type associated with this error
@@ -771,7 +770,7 @@ TokenStream::newToken(ptrdiff_t adjust)
 {
     cursor = (cursor + 1) & ntokensMask;
     Token *tp = &tokens[cursor];
-    tp->ptr = userbuf.ptr + adjust;
+    tp->ptr = userbuf.addressOfNextRawChar() + adjust;
     tp->pos.begin.index = tp->ptr - linebase;
     tp->pos.begin.lineno = tp->pos.end.lineno = lineno;
     return tp;
@@ -791,6 +790,38 @@ TokenStream::atomize(JSContext *cx, CharBuffer &cb)
 {
     return js_AtomizeChars(cx, cb.begin(), cb.length(), 0);
 }
+
+#ifdef DEBUG
+bool
+IsTokenSane(Token *tp)
+{
+    /*
+     * Nb: TOK_EOL should never be used in an actual Token;  it should only be
+     * returned as a TokenKind from peekTokenSameLine().
+     */
+    if (tp->type < TOK_ERROR || tp->type >= TOK_LIMIT || tp->type == TOK_EOL)
+        return false;
+
+    if (tp->pos.begin.lineno == tp->pos.end.lineno) {
+        if (tp->pos.begin.index > tp->pos.end.index)
+            return false;
+    } else {
+        /* Only certain token kinds can be multi-line. */
+        switch (tp->type) {
+          case TOK_STRING:
+          case TOK_XMLSPACE:
+          case TOK_XMLTEXT:
+          case TOK_XMLCOMMENT:
+          case TOK_XMLCDATA:
+          case TOK_XMLPI:
+            break;
+          default:
+            return false;
+        }
+    }
+    return true;
+}
+#endif
 
 TokenKind
 TokenStream::getTokenInternal()
@@ -982,16 +1013,17 @@ TokenStream::getTokenInternal()
         c = getChar();
         if (c == '\n') {
             flags &= ~TSF_DIRTYLINE;
-            if (flags & TSF_NEWLINES)
-                break;
+            flags |= TSF_EOL;
+            continue;
         }
     } while (ScanAsSpace((jschar)c));
 
-    tp = newToken(-1);
     if (c == EOF) {
+        tp = newToken(0);   /* no -1 here because userbuf.ptr isn't incremented for EOF */
         tt = TOK_EOF;
         goto out;
     }
+    tp = newToken(-1);
 
     /*
      * Look for an identifier.
@@ -1084,6 +1116,7 @@ TokenStream::getTokenInternal()
                 radix = 16;
                 c = getChar();
                 if (!JS7_ISHEX(c)) {
+                    ungetChar(c);
                     ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
                                              JSMSG_MISSING_HEXDIGITS);
                     goto error;
@@ -1140,6 +1173,7 @@ TokenStream::getTokenInternal()
                     c = getChar();
                 }
                 if (!JS7_ISDEC(c)) {
+                    ungetChar(c);
                     ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
                                              JSMSG_MISSING_EXPONENT);
                     goto error;
@@ -1256,9 +1290,7 @@ TokenStream::getTokenInternal()
                         }
                         break;
                     }
-                } else if (c == '\n' || c == '\r' || c == LINE_SEPARATOR || c == PARA_SEPARATOR ||
-                           c == EOF)
-                {
+                } else if (TokenBuf::isRawEOLChar(c) || c == EOF) {
                     ungetCharIgnoreEOL(c);
                     ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
                                              JSMSG_UNTERMINATED_STRING);
@@ -1283,7 +1315,6 @@ TokenStream::getTokenInternal()
      */
 
     switch (c) {
-      case '\n': tt = TOK_EOL; goto eol_out;
       case ';':  tt = TOK_SEMI; break;
       case '[':  tt = TOK_LB; break;
       case ']':  tt = TOK_RB; break;
@@ -1650,10 +1681,9 @@ TokenStream::getTokenInternal()
                                          JSMSG_UNTERMINATED_COMMENT);
                 goto error;
             }
-            if ((flags & TSF_NEWLINES) && linenoBefore != lineno) {
+            if (linenoBefore != lineno) {
                 flags &= ~TSF_DIRTYLINE;
-                tt = TOK_EOL;
-                goto eol_out;
+                flags |= TSF_EOL;
             }
             cursor = (cursor - 1) & ntokensMask;
             goto retry;
@@ -1809,18 +1839,36 @@ TokenStream::getTokenInternal()
     }
 
   out:
-    JS_ASSERT(tt != TOK_EOL);
     flags |= TSF_DIRTYLINE;
-
-  eol_out:
-    JS_ASSERT(tt < TOK_LIMIT);
-    tp->pos.end.index = userbuf.ptr - linebase;
+    tp->pos.end.index = userbuf.addressOfNextRawChar() - linebase;
     tp->type = tt;
+    JS_ASSERT(IsTokenSane(tp));
     return tt;
 
   error:
-    tt = TOK_ERROR;
+    /*
+     * For erroneous multi-line tokens we won't have changed end.lineno (it'll
+     * still be equal to begin.lineno) so we revert end.index to be equal to
+     * begin.index + 1 (as if it's a 1-char token) to avoid having inconsistent
+     * begin/end positions.  end.index isn't used in error messages anyway.
+     */
     flags |= TSF_ERROR;
-    goto out;
+    flags |= TSF_DIRTYLINE;
+    tp->pos.end.index = tp->pos.begin.index + 1;
+    tp->type = TOK_ERROR;
+    JS_ASSERT(IsTokenSane(tp));
+#ifdef DEBUG
+    /*
+     * Poisoning userbuf on error establishes an invariant: once an erroneous
+     * token has been seen, userbuf will not be consulted again.  This is true
+     * because the parser will either (a) deal with the TOK_ERROR token by
+     * aborting parsing immediately; or (b) if the TOK_ERROR token doesn't
+     * match what it expected, it will unget the token, and the next getToken()
+     * call will immediately return the just-gotten TOK_ERROR token again
+     * without consulting userbuf, thanks to the lookahead buffer.
+     */
+    userbuf.poison();
+#endif
+    return TOK_ERROR;
 }
 
