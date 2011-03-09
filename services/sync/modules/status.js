@@ -42,6 +42,8 @@ const Cu = Components.utils;
 Cu.import("resource://services-sync/constants.js");
 
 let Status = {
+  ready: false,
+
   get login() this._login,
   set login(code) {
     this._login = code;

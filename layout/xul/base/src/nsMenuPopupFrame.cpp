@@ -320,8 +320,11 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
       baseWindow->GetMainWidget(getter_AddRefs(parentWidget));
   }
 
-  aView->CreateWidgetForPopup(&widgetData, parentWidget,
-                              PR_TRUE, PR_TRUE);
+  nsresult rv = aView->CreateWidgetForPopup(&widgetData, parentWidget,
+                                            PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   nsIWidget* widget = aView->GetWidget();
   widget->SetTransparencyMode(mode);
@@ -1281,6 +1284,11 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
   // determine the x and y position of the view by subtracting the desired
   // screen position from the screen position of the root frame.
   nsPoint viewPoint = screenPoint - rootScreenRect.TopLeft();
+
+  // snap the view's position to device pixels, see bug 622507
+  viewPoint.x = presContext->RoundAppUnitsToNearestDevPixels(viewPoint.x);
+  viewPoint.y = presContext->RoundAppUnitsToNearestDevPixels(viewPoint.y);
+
   nsIView* view = GetView();
   NS_ASSERTION(view, "popup with no view");
   presContext->GetPresShell()->GetViewManager()->

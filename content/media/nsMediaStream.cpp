@@ -235,6 +235,9 @@ nsMediaChannelStream::OnStartRequest(nsIRequest* aRequest)
       // it's getting data for the start of the stream.
       mCacheStream.NotifyDataStarted(0);
       mOffset = 0;
+
+      // The server claimed it supported range requests.  It lied.
+      acceptsRanges = PR_FALSE;
     } else if (mOffset == 0 &&
                (responseStatus == HTTP_OK_CODE ||
                 responseStatus == HTTP_PARTIAL_RESPONSE_CODE)) {

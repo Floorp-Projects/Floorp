@@ -1201,11 +1201,17 @@ function pruneConsoleOutputIfNecessary(aConsoleNode)
   let scrollBox = aConsoleNode.scrollBoxObject.element;
   let oldScrollHeight = scrollBox.scrollHeight;
   let scrolledToBottom = ConsoleUtils.isOutputScrolledToBottom(aConsoleNode);
+  let hudRef = HUDService.getHudReferenceForOutputNode(aConsoleNode);
 
   // Prune the nodes.
   let messageNodes = aConsoleNode.querySelectorAll(".hud-msg-node");
   let removeNodes = messageNodes.length - logLimit;
   for (let i = 0; i < removeNodes; i++) {
+    if (messageNodes[i].classList.contains("webconsole-msg-cssparser")) {
+      let desc = messageNodes[i].childNodes[2].textContent;
+      let location = messageNodes[i].childNodes[4].getAttribute("title");
+      delete hudRef.cssNodes[desc + location];
+    }
     messageNodes[i].parentNode.removeChild(messageNodes[i]);
   }
 
@@ -1458,6 +1464,12 @@ HUD_SERVICE.prototype =
       aHUD = this.getOutputNodeById(aHUD);
     }
 
+    let hudRef = HUDService.getHudReferenceForOutputNode(aHUD);
+
+    if (hudRef) {
+      hudRef.cssNodes = {};
+    }
+
     var outputNode = aHUD.querySelector(".hud-output-node");
 
     while (outputNode.firstChild) {
@@ -1606,36 +1618,25 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Returns the source code of the XPath contains() function necessary to
-   * match the given query string.
+   * Check that the passed string matches the filter arguments.
    *
-   * @param string The query string to convert.
-   * @returns string
+   * @param String aString
+   *        to search for filter words in.
+   * @param String aFilter
+   *        is a string containing all of the words to filter on.
+   * @returns boolean
    */
-  buildXPathFunctionForString: function HS_buildXPathFunctionForString(aStr)
+  stringMatchesFilters: function stringMatchesFilters(aString, aFilter)
   {
-    let words = aStr.split(/\s+/), results = [];
-    for (let i = 0; i < words.length; i++) {
-      let word = words[i];
-      if (word === "") {
-        continue;
-      }
-
-      let result;
-      if (word.indexOf('"') === -1) {
-        result = '"' + word + '"';
-      }
-      else if (word.indexOf("'") === -1) {
-        result = "'" + word + "'";
-      }
-      else {
-        result = 'concat("' + word.replace(/"/g, "\", '\"', \"") + '")';
-      }
-
-      results.push("contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), " + result.toLowerCase() + ")");
+    if (!aFilter || !aString) {
+      return true;
     }
 
-    return (results.length === 0) ? "true()" : results.join(" and ");
+    let searchStr = aString.toLowerCase();
+    let filterStrings = aFilter.toLowerCase().split(/\s+/);
+    return !filterStrings.some(function (f) {
+      return searchStr.indexOf(f) == -1;
+    });
   },
 
   /**
@@ -1651,31 +1652,25 @@ HUD_SERVICE.prototype =
   adjustVisibilityOnSearchStringChange:
   function HS_adjustVisibilityOnSearchStringChange(aHUDId, aSearchString)
   {
-    let fn = this.buildXPathFunctionForString(aSearchString);
     let displayNode = this.getOutputNodeById(aHUDId);
     let outputNode = displayNode.querySelector(".hud-output-node");
     let doc = outputNode.ownerDocument;
 
-    // Look for message nodes ("hud-msg-node") that *aren't* filtered and
-    // that don't contain the string, and hide them.
-    let xpath = './/*[contains(@class, "hud-msg-node") and ' +
-      'not(contains(@class, "hud-filtered-by-string")) and not(' + fn + ')]';
-    let result = doc.evaluate(xpath, outputNode, null,
-      Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-    for (let i = 0; i < result.snapshotLength; i++) {
-      let node = result.snapshotItem(i);
-      node.classList.add("hud-filtered-by-string");
-    }
+    let nodes = outputNode.querySelectorAll(".hud-msg-node");
 
-    // Look for message nodes ("hud-msg-node") that *are* filtered and that
-    // *do* contain the string, and unhide them.
-    xpath = './/*[contains(@class, "hud-msg-node") and contains(@class, ' +
-      '"hud-filtered-by-string") and ' + fn + ']';
-    result = doc.evaluate(xpath, outputNode, null,
-      Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-    for (let i = 0; i < result.snapshotLength; i++) {
-      let node = result.snapshotItem(i);
-      node.classList.remove("hud-filtered-by-string");
+    for (let i = 0; i < nodes.length; ++i) {
+      let node = nodes[i];
+
+      // hide nodes that match the strings
+      let text = node.clipboardText;
+
+      // if the text matches the words in aSearchString...
+      if (this.stringMatchesFilters(text, aSearchString)) {
+        node.classList.remove("hud-filtered-by-string");
+      }
+      else {
+        node.classList.add("hud-filtered-by-string");
+      }
     }
 
     this.regroupOutput(outputNode);
@@ -1751,6 +1746,9 @@ HUD_SERVICE.prototype =
     parent.removeChild(outputNode);
 
     // remove the HeadsUpDisplay object from memory
+    if ("cssNodes" in this.hudReferences[id]) {
+      delete this.hudReferences[id].cssNodes;
+    }
     delete this.hudReferences[id];
     // remove the related storage object
     this.storage.removeDisplay(id);
@@ -1762,6 +1760,9 @@ HUD_SERVICE.prototype =
     }
 
     this.unregisterActiveContext(id);
+
+    let id = ConsoleUtils.supString(id);
+    Services.obs.notifyObservers(id, "web-console-destroyed", null);
 
     if (Object.keys(this.hudReferences).length == 0) {
       this.suspend();
@@ -1845,6 +1846,39 @@ HUD_SERVICE.prototype =
   },
 
   /**
+   * Returns the hudReference for a given output node.
+   *
+   * @param nsIDOMNode aNode
+   *        an output node (as returned by getOutputNodeById()).
+   * @returns a HUD | null
+   */
+  getHudReferenceForOutputNode: function HS_getHudReferenceForOutputNode(aNode)
+  {
+    let node = aNode;
+    while (!node.classList.contains("hudbox-animated")) {
+      if (node.parent) {
+        node = node.parent;
+      }
+      else {
+        return null;
+      }
+    }
+    let id = node.id;
+    return id in this.hudReferences ? this.hudReferences[id] : null;
+  },
+
+  /**
+   * Returns the hudReference for a given id.
+   *
+   * @param string aId
+   * @returns Object
+   */
+  getHudReferenceById: function HS_getHudReferenceById(aId)
+  {
+    return aId in this.hudReferences ? this.hudReferences[aId] : null;
+  },
+
+  /**
    * Gets the Web Console DOM node, the .hud-box.
    *
    * @param string id
@@ -1889,7 +1923,7 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * get the current filter string for the HeadsUpDisplay
+   * Get the current filter string for the HeadsUpDisplay
    *
    * @param string aHUDId
    * @returns string
@@ -3004,6 +3038,9 @@ function HeadsUpDisplay(aConfig)
   catch (ex) {
     Cu.reportError(ex);
   }
+
+  // A cache for tracking repeated CSS Nodes.
+  this.cssNodes = {};
 }
 
 HeadsUpDisplay.prototype = {
@@ -3153,9 +3190,9 @@ HeadsUpDisplay.prototype = {
 
     this.jsTermParentNode = outerWrap;
     this.HUDBox.appendChild(outerWrap);
+
     return this.HUDBox;
   },
-
 
   /**
    * sets the click events for all binary toggle filter buttons
@@ -3419,6 +3456,9 @@ HeadsUpDisplay.prototype = {
 
       let nodes = this.notificationBox.insertBefore(this.HUDBox,
         this.notificationBox.childNodes[0]);
+
+      let id = ConsoleUtils.supString(this.hudId);
+      Services.obs.notifyObservers(id, "web-console-created", null);
 
       return this.HUDBox;
     }
@@ -4032,7 +4072,31 @@ JSTerm.prototype = {
     if (aString.trim() === "help" || aString.trim() === "?") {
       aString = "help()";
     }
-    return Cu.evalInSandbox(aString, this.sandbox, "1.8", "Web Console", 1);
+
+    let window = unwrap(this.sandbox.window);
+    let $ = null, $$ = null;
+
+    // We prefer to execute the page-provided implementations for the $() and
+    // $$() functions.
+    if (typeof window.$ == "function") {
+      $ = this.sandbox.$;
+      delete this.sandbox.$;
+    }
+    if (typeof window.$$ == "function") {
+      $$ = this.sandbox.$$;
+      delete this.sandbox.$$;
+    }
+
+    let result = Cu.evalInSandbox(aString, this.sandbox, "1.8", "Web Console", 1);
+
+    if ($) {
+      this.sandbox.$ = $;
+    }
+    if ($$) {
+      this.sandbox.$$ = $$;
+    }
+
+    return result;
   },
 
 
@@ -4249,7 +4313,7 @@ JSTerm.prototype = {
 
     return output;
   },
-  
+
   /**
    * Format a string for output.
    *
@@ -4322,6 +4386,11 @@ JSTerm.prototype = {
   clearOutput: function JST_clearOutput()
   {
     let outputNode = this.outputNode;
+    let hudRef = HUDService.getHudReferenceForOutputNode(outputNode);
+
+    if (hudRef) {
+      hudRef.cssNodes = {};
+    }
 
     while (outputNode.firstChild) {
       outputNode.removeChild(outputNode.firstChild);
@@ -4822,6 +4891,13 @@ FirefoxApplicationHooks.prototype = {
  */
 
 ConsoleUtils = {
+  supString: function ConsoleUtils_supString(aString)
+  {
+    let str = Cc["@mozilla.org/supports-string;1"].
+      createInstance(Ci.nsISupportsString);
+    str.data = aString;
+    return str;
+  },
 
   /**
    * Generates a millisecond resolution timestamp.
@@ -4936,6 +5012,10 @@ ConsoleUtils = {
 
     bodyNode.appendChild(aBody);
 
+    let repeatNode = aDocument.createElementNS(XUL_NS, "xul:label");
+    repeatNode.setAttribute("value", "1");
+    repeatNode.classList.add("webconsole-msg-repeat");
+
     // Create the timestamp.
     let timestampNode = aDocument.createElementNS(XUL_NS, "xul:label");
     timestampNode.classList.add("webconsole-timestamp");
@@ -4959,12 +5039,15 @@ ConsoleUtils = {
     node.timestamp = timestamp;
     ConsoleUtils.setMessageType(node, aCategory, aSeverity);
 
-    node.appendChild(timestampNode);
-    node.appendChild(iconContainer);
-    node.appendChild(bodyNode);
+    node.appendChild(timestampNode);  // childNode[0]
+    node.appendChild(iconContainer);  // childNode[1]
+    node.appendChild(bodyNode);       // childNode[2]
+    node.appendChild(repeatNode);     // childNode[3]
     if (locationNode) {
-      node.appendChild(locationNode);
+      node.appendChild(locationNode); // childNode[4]
     }
+
+    node.setAttribute("id", "console-msg-" + HUDService.sequenceId());
 
     return node;
   },
@@ -5058,28 +5141,115 @@ ConsoleUtils = {
    * @param string aHUDId
    *        The ID of the HUD which this node is to be inserted into.
    */
-  filterMessageNode: function(aNode, aHUDId) {
-    // Filter on the search string.
-    let search = HUDService.getFilterStringByHUDId(aHUDId);
-    let xpath = ".[" + HUDService.buildXPathFunctionForString(search) + "]";
-    let doc = aNode.ownerDocument;
-    let result = doc.evaluate(xpath, aNode, null,
-      Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-    if (result.snapshotLength == 0) {
-      // The string filter didn't match, so the node is filtered.
-      aNode.classList.add("hud-filtered-by-string");
-    }
-
+  filterMessageNode: function ConsoleUtils_filterMessageNode(aNode, aHUDId) {
     // Filter by the message type.
     let prefKey = MESSAGE_PREFERENCE_KEYS[aNode.category][aNode.severity];
     if (prefKey && !HUDService.getFilterState(aHUDId, prefKey)) {
       // The node is filtered by type.
       aNode.classList.add("hud-filtered-by-type");
     }
+
+    // Filter on the search string.
+    let search = HUDService.getFilterStringByHUDId(aHUDId);
+    let text = aNode.clipboardText;
+
+    // if string matches the filter text
+    if (!HUDService.stringMatchesFilters(text, search)) {
+      aNode.classList.add("hud-filtered-by-string");
+    }
   },
 
   /**
-   * Filters a node appropriately, then sends it to the output, regrouping and
+   * Merge the attributes of the two nodes that are about to be filtered.
+   * Increment the number of repeats of aOriginal.
+   *
+   * @param nsIDOMNode aOriginal
+   *        The Original Node. The one being merged into.
+   * @param nsIDOMNode aFiltered
+   *        The node being filtered out because it is repeated.
+   */
+  mergeFilteredMessageNode:
+  function ConsoleUtils_mergeFilteredMessageNode(aOriginal, aFiltered) {
+    // childNodes[3] is the node containing the number of repetitions of a node.
+    let repeatNode = aOriginal.childNodes[3];
+    if (!repeatNode) {
+      return aOriginal; // no repeat node, return early.
+    }
+
+    let occurrences = parseInt(repeatNode.getAttribute("value")) + 1;
+    repeatNode.setAttribute("value", occurrences);
+  },
+
+  /**
+   * Filter the css node from the output node if it is a repeat. CSS messages
+   * are merged with previous messages if they occurred in the past.
+   *
+   * @param nsIDOMNode aNode
+   *        The message node to be filtered or not.
+   * @param nsIDOMNode aOutput
+   *        The outputNode of the HUD.
+   * @returns boolean
+   *         true if the message is filtered, false otherwise.
+   */
+  filterRepeatedCSS:
+  function ConsoleUtils_filterRepeatedCSS(aNode, aOutput, aHUDId) {
+    let hud = HUDService.getHudReferenceById(aHUDId);
+
+    // childNodes[2] is the description node containing the text of the message.
+    let description = aNode.childNodes[2].textContent;
+    let location;
+
+    // childNodes[4] represents the location (source URL) of the error message.
+    // The full source URL is stored in the title attribute.
+    if (aNode.childNodes[4]) {
+      // browser_webconsole_bug_595934_message_categories.js
+      location = aNode.childNodes[4].getAttribute("title");
+    }
+    else {
+      location = "";
+    }
+
+    let dupe = hud.cssNodes[description + location];
+    if (!dupe) {
+      // no matching nodes
+      hud.cssNodes[description + location] = aNode;
+      return false;
+    }
+
+    this.mergeFilteredMessageNode(dupe, aNode);
+
+    return true;
+  },
+
+  /**
+   * Filter the console node from the output node if it is a repeat. Console
+   * messages are filtered from the output if and only if they match the
+   * immediately preceding message. The output node's last occurrence should
+   * have its timestamp updated.
+   *
+   * @param nsIDOMNode aNode
+   *        The message node to be filtered or not.
+   * @param nsIDOMNode aOutput
+   *        The outputNode of the HUD.
+   * @return boolean
+   *         true if the message is filtered, false otherwise.
+   */
+  filterRepeatedConsole:
+  function ConsoleUtils_filterRepeatedConsole(aNode, aOutput) {
+    let lastMessage = aOutput.lastChild;
+
+    // childNodes[2] is the xul:description element
+    if (lastMessage &&
+        aNode.childNodes[2].textContent ==
+        lastMessage.childNodes[2].textContent) {
+      this.mergeFilteredMessageNode(lastMessage, aNode);
+      return true;
+    }
+
+    return false;
+  },
+
+  /**   * Filters a node appropriately, then sends it to the output, regrouping and
    * pruning output as necessary.
    *
    * @param nsIDOMNode aNode
@@ -5094,7 +5264,22 @@ ConsoleUtils = {
 
     let scrolledToBottom = ConsoleUtils.isOutputScrolledToBottom(outputNode);
 
-    outputNode.appendChild(aNode);
+    let isRepeated = false;
+    if (aNode.classList.contains("webconsole-msg-cssparser")) {
+      isRepeated = this.filterRepeatedCSS(aNode, outputNode, aHUDId);
+    }
+
+    if (!isRepeated &&
+        (aNode.classList.contains("webconsole-msg-console") ||
+         aNode.classList.contains("webconsole-msg-exception") ||
+         aNode.classList.contains("webconsole-msg-error"))) {
+      isRepeated = this.filterRepeatedConsole(aNode, outputNode, aHUDId);
+    }
+
+    if (!isRepeated) {
+      outputNode.appendChild(aNode);
+    }
+
     HUDService.regroupOutput(outputNode);
 
     if (pruneConsoleOutputIfNecessary(outputNode) == 0) {
@@ -5111,9 +5296,13 @@ ConsoleUtils = {
     // Scroll to the new node if it is not filtered, and if the output node is
     // scrolled at the bottom or if the new node is a jsterm input/output
     // message.
-    if (!isFiltered && (scrolledToBottom || isInputOutput)) {
+    if (!isFiltered && !isRepeated && (scrolledToBottom || isInputOutput)) {
       ConsoleUtils.scrollToVisible(aNode);
     }
+
+    let id = ConsoleUtils.supString(aHUDId);
+    let nodeID = aNode.getAttribute("id");
+    Services.obs.notifyObservers(id, "web-console-message-created", nodeID);
   },
 
   /**

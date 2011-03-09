@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+body {
+  font-family: serif;
+  padding: 2px;
+}
+span {
+  padding: 2px;
+}
+</style>
+<script type="text/javascript">
+function do_test() {
+  var elems = ["one","two","three","four","five","six","seven","eight","nine","ten"];
+  for (key in elems) {
+    var e = document.getElementById(elems[key]);
+    e.innerHTML = elems[key];
+  }
+  document.documentElement.removeAttribute('class');
+};
+document.addEventListener("MozReftestInvalidate", do_test, false);
+</script>
+</head>
+<!-- Test for modification of text with preformatted tabs, see
+     https://bugzilla.mozilla.org/show_bug.cgi?id=631035#c38.
+     In the first line, the tabs remain at the same offsets but widths will change;
+     in the second line, their offsets will also change. -->
+<body>
+<div style="white-space: pre">
+<span id="one">iii</span>&#9;<span id="two">iii</span>&#9;<span id="three">mmmmm</span>&#9;<span id="four">mmmm</span>&#9;<span id="five">mmmm</span>
+<span id="six">x</span>&#9;<span id="seven">x</span>&#9;<span id="eight">x</span>&#9;<span id="nine">x</span>&#9;<span id="ten">x</span>
+</div>
+</body>
+</html>

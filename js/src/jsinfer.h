@@ -377,10 +377,7 @@ struct TypeObject
     /* Chain for objects sharing the same prototype. */
     TypeObject *instanceNext;
 
-    /*
-     * Link in the list of objects associated with a script or global object.
-     * For printing and tracking initializer objects (remove?).
-     */
+    /* Link in the list of objects associated with a script or global object. */
     TypeObject *next;
 
     /*
@@ -579,10 +576,7 @@ struct TypeCompartment
     unsigned scriptCount;
 
     /* Object to use throughout the compartment as the default type of objects with no prototype. */
-    TypeObject *typeEmpty;
-
-    /* Dummy object added to properties which can have scripted getters/setters. */
-    TypeObject *typeGetSet;
+    TypeObject typeEmpty;
 
     /*
      * Bit set if all current types must be marked as unknown, and all scripts
@@ -690,10 +684,10 @@ struct TypeCompartment
 
     /* Monitor future effects on a bytecode. */
     void monitorBytecode(JSContext *cx, JSScript *script, uint32 offset);
-};
 
-void CondenseTypeObjectList(JSContext *cx, TypeCompartment *compartment, TypeObject *objects);
-void SweepTypeObjectList(JSContext *cx, TypeObject *&objects);
+    void condense(JSContext *cx);
+    void sweep(JSContext *cx);
+};
 
 enum SpewChannel {
     ISpewDynamic,  /* dynamic: Dynamic type changes and inference entry points. */

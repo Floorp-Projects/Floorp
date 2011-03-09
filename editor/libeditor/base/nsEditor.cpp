@@ -440,6 +440,8 @@ nsEditor::PreDestroy(PRBool aDestroyingFrames)
   mEditorObservers.Clear();
   mDocStateListeners.Clear();
   mInlineSpellChecker = nsnull;
+  mSpellcheckCheckboxState = eTriUnset;
+  mRootElement = nsnull;
 
   mDidPreDestroy = PR_TRUE;
   return NS_OK;
@@ -673,7 +675,7 @@ nsEditor::DoTransaction(nsITransaction *aTxn)
     selPrivate->EndBatchChanges(); // no need to check result here, don't lose result of operation
   }
  
-  NS_POSTCONDITION((NS_SUCCEEDED(result)), "transaction did not execute properly");
+  NS_ENSURE_SUCCESS(result, result);
 
   return result;
 }
@@ -2655,13 +2657,16 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsAString & aStringToInsert
                                                InsertTextTxn ** aTxn)
 {
   NS_ENSURE_TRUE(aTextNode && aTxn, NS_ERROR_NULL_POINTER);
-  nsresult result;
+  nsresult rv;
 
-  *aTxn = new InsertTextTxn();
-  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aTxn);
-  result = (*aTxn)->Init(aTextNode, aOffset, aStringToInsert, this);
-  return result;
+  nsRefPtr<InsertTextTxn> txn = new InsertTextTxn();
+  rv = txn->Init(aTextNode, aOffset, aStringToInsert, this);
+  if (NS_SUCCEEDED(rv))
+  {
+    txn.forget(aTxn);
+  }
+
+  return rv;
 }
 
 
@@ -2697,10 +2702,15 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
 {
   NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
 
-  *aTxn = new DeleteTextTxn();
-  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aTxn);
-  return (*aTxn)->Init(this, aElement, aOffset, aLength, &mRangeUpdater);
+  nsRefPtr<DeleteTextTxn> txn = new DeleteTextTxn();
+
+  nsresult rv = txn->Init(this, aElement, aOffset, aLength, &mRangeUpdater);
+  if (NS_SUCCEEDED(rv))
+  {
+    txn.forget(aTxn);
+  }
+
+  return rv;
 }
 
 
@@ -2712,11 +2722,15 @@ NS_IMETHODIMP nsEditor::CreateTxnForSplitNode(nsIDOMNode *aNode,
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
 
-  *aTxn = new SplitElementTxn();
-  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aTxn);
+  nsRefPtr<SplitElementTxn> txn = new SplitElementTxn();
 
-  return (*aTxn)->Init(this, aNode, aOffset);
+  nsresult rv = txn->Init(this, aNode, aOffset);
+  if (NS_SUCCEEDED(rv))
+  {
+    txn.forget(aTxn);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP nsEditor::CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
@@ -2725,11 +2739,15 @@ NS_IMETHODIMP nsEditor::CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
 {
   NS_ENSURE_TRUE(aLeftNode && aRightNode, NS_ERROR_NULL_POINTER);
 
-  *aTxn = new JoinElementTxn();
-  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aTxn);
+  nsRefPtr<JoinElementTxn> txn = new JoinElementTxn();
 
-  return (*aTxn)->Init(this, aLeftNode, aRightNode);
+  nsresult rv = txn->Init(this, aLeftNode, aRightNode);
+  if (NS_SUCCEEDED(rv))
+  {
+    txn.forget(aTxn);
+  }
+
+  return rv;
 }
 
 
@@ -4511,10 +4529,15 @@ nsEditor::CreateTxnForSetAttribute(nsIDOMElement *aElement,
 {
   NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
 
-  *aTxn = new ChangeAttributeTxn();
-  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aTxn);
-  return (*aTxn)->Init(this, aElement, aAttribute, aValue, PR_FALSE);
+  nsRefPtr<ChangeAttributeTxn> txn = new ChangeAttributeTxn();
+
+  nsresult rv = txn->Init(this, aElement, aAttribute, aValue, PR_FALSE);
+  if (NS_SUCCEEDED(rv))
+  {
+    txn.forget(aTxn);
+  }
+
+  return rv;
 }
 
 
@@ -4525,11 +4548,15 @@ nsEditor::CreateTxnForRemoveAttribute(nsIDOMElement *aElement,
 {
   NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
 
-  *aTxn = new ChangeAttributeTxn();
-  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aTxn);
+  nsRefPtr<ChangeAttributeTxn> txn = new ChangeAttributeTxn();
 
-  return (*aTxn)->Init(this, aElement, aAttribute, EmptyString(), PR_TRUE);
+  nsresult rv = txn->Init(this, aElement, aAttribute, EmptyString(), PR_TRUE);
+  if (NS_SUCCEEDED(rv))
+  {
+    txn.forget(aTxn);
+  }
+
+  return rv;
 }
 
 
@@ -4540,11 +4567,15 @@ NS_IMETHODIMP nsEditor::CreateTxnForCreateElement(const nsAString& aTag,
 {
   NS_ENSURE_TRUE(aParent, NS_ERROR_NULL_POINTER);
 
-  *aTxn = new CreateElementTxn();
-  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aTxn);
+  nsRefPtr<CreateElementTxn> txn = new CreateElementTxn();
 
-  return (*aTxn)->Init(this, aTag, aParent, aPosition);
+  nsresult rv = txn->Init(this, aTag, aParent, aPosition);
+  if (NS_SUCCEEDED(rv))
+  {
+    txn.forget(aTxn);
+  }
+
+  return rv;
 }
 
 
@@ -4555,11 +4586,15 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertElement(nsIDOMNode * aNode,
 {
   NS_ENSURE_TRUE(aNode && aParent, NS_ERROR_NULL_POINTER);
 
-  *aTxn = new InsertElementTxn();
-  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aTxn);
+  nsRefPtr<InsertElementTxn> txn = new InsertElementTxn();
 
-  return (*aTxn)->Init(aNode, aParent, aPosition, this);
+  nsresult rv = txn->Init(aNode, aParent, aPosition, this);
+  if (NS_SUCCEEDED(rv))
+  {
+    txn.forget(aTxn);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
@@ -4567,11 +4602,15 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
 {
   NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
 
-  *aTxn = new DeleteElementTxn();
-  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aTxn);
+  nsRefPtr<DeleteElementTxn> txn = new DeleteElementTxn();
 
-  return (*aTxn)->Init(this, aElement, &mRangeUpdater);
+  nsresult rv = txn->Init(this, aElement, &mRangeUpdater);
+  if (NS_SUCCEEDED(rv))
+  {
+    txn.forget(aTxn);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -4580,23 +4619,31 @@ nsEditor::CreateTxnForIMEText(const nsAString& aStringToInsert,
 {
   NS_ASSERTION(aTxn, "illegal value- null ptr- aTxn");
      
-  *aTxn = new IMETextTxn();
-  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aTxn);
+  nsRefPtr<IMETextTxn> txn = new IMETextTxn();
 
-  return (*aTxn)->Init(mIMETextNode, mIMETextOffset, mIMEBufferLength,
-                       mIMETextRangeList, aStringToInsert, mSelConWeak);
+  nsresult rv = txn->Init(mIMETextNode, mIMETextOffset, mIMEBufferLength,
+                          mIMETextRangeList, aStringToInsert, mSelConWeak);
+  if (NS_SUCCEEDED(rv))
+  {
+    txn.forget(aTxn);
+  }
+
+  return rv;
 }
 
 
 NS_IMETHODIMP 
 nsEditor::CreateTxnForAddStyleSheet(nsCSSStyleSheet* aSheet, AddStyleSheetTxn* *aTxn)
 {
-  *aTxn = new AddStyleSheetTxn();
-  NS_ENSURE_TRUE( *aTxn, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aTxn);
+  nsRefPtr<AddStyleSheetTxn> txn = new AddStyleSheetTxn();
 
-  return (*aTxn)->Init(this, aSheet);
+  nsresult rv = txn->Init(this, aSheet);
+  if (NS_SUCCEEDED(rv))
+  {
+    txn.forget(aTxn);
+  }
+
+  return rv;
 }
 
 
@@ -4604,11 +4651,15 @@ nsEditor::CreateTxnForAddStyleSheet(nsCSSStyleSheet* aSheet, AddStyleSheetTxn* *
 NS_IMETHODIMP 
 nsEditor::CreateTxnForRemoveStyleSheet(nsCSSStyleSheet* aSheet, RemoveStyleSheetTxn* *aTxn)
 {
-  *aTxn = new RemoveStyleSheetTxn();
-  NS_ENSURE_TRUE( *aTxn, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aTxn);
+  nsRefPtr<RemoveStyleSheetTxn> txn = new RemoveStyleSheetTxn();
 
-  return (*aTxn)->Init(this, aSheet);
+  nsresult rv = txn->Init(this, aSheet);
+  if (NS_SUCCEEDED(rv))
+  {
+    txn.forget(aTxn);
+  }
+
+  return rv;
 }
 
 
@@ -4622,6 +4673,7 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
   NS_ENSURE_TRUE(aTxn, NS_ERROR_NULL_POINTER);
   *aTxn = nsnull;
 
+  nsRefPtr<EditAggregateTxn> aggTxn;
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
   NS_ENSURE_TRUE(selCon, NS_ERROR_NOT_INITIALIZED);
   nsCOMPtr<nsISelection> selection;
@@ -4636,11 +4688,7 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
       return NS_OK;
 
     // allocate the out-param transaction
-    *aTxn = new EditAggregateTxn();
-    if (!*aTxn) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_ADDREF(*aTxn);
+    aggTxn = new EditAggregateTxn();
 
     nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
     nsCOMPtr<nsIEnumerator> enumerator;
@@ -4661,7 +4709,7 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
             if (txn)
             {
               txn->Init(this, range, &mRangeUpdater);
-              (*aTxn)->AppendChild(txn);
+              aggTxn->AppendChild(txn);
             }
             else
               result = NS_ERROR_OUT_OF_MEMORY;
@@ -4670,17 +4718,18 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
           // is eNone, do nothing.
           else if (aAction != eNone)
           { // we have an insertion point.  delete the thing in front of it or behind it, depending on aAction
-            result = CreateTxnForDeleteInsertionPoint(range, aAction, *aTxn, aNode, aOffset, aLength);
+            result = CreateTxnForDeleteInsertionPoint(range, aAction, aggTxn, aNode, aOffset, aLength);
           }
         }
       }
     }
   }
 
-  // if we didn't build the transaction correctly, destroy the out-param transaction so we don't leak it.
-  if (NS_FAILED(result))
+  // Only set the outparam if building the txn was a success, otherwise
+  // we let the aggregation txn be destroyed when the refptr goes out of scope
+  if (NS_SUCCEEDED(result))
   {
-    NS_IF_RELEASE(*aTxn);
+    aggTxn.forget(aTxn);
   }
 
   return result;
@@ -4775,15 +4824,14 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
         priorNodeAsText->GetLength(&length);
         if (0<length)
         {
-          DeleteTextTxn *txn;
+          nsRefPtr<DeleteTextTxn> txn;
           result = CreateTxnForDeleteCharacter(priorNodeAsText, length,
-                                               ePrevious, &txn);
+                                               ePrevious, getter_AddRefs(txn));
           if (NS_SUCCEEDED(result)) {
             aTxn->AppendChild(txn);
             NS_ADDREF(*aNode = priorNode);
             *aOffset = txn->GetOffset();
             *aLength = txn->GetNumCharsToDelete();
-            NS_RELEASE(txn);
           }
         }
         else
@@ -4794,11 +4842,10 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
       }
       else
       { // priorNode is not text, so tell it's parent to delete it
-        DeleteElementTxn *txn;
-        result = CreateTxnForDeleteElement(priorNode, &txn);
+        nsRefPtr<DeleteElementTxn> txn;
+        result = CreateTxnForDeleteElement(priorNode, getter_AddRefs(txn));
         if (NS_SUCCEEDED(result)) {
           aTxn->AppendChild(txn);
-          NS_RELEASE(txn);
           NS_ADDREF(*aNode = priorNode);
         }
       }
@@ -4818,14 +4865,14 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
         nextNodeAsText->GetLength(&length);
         if (0<length)
         {
-          DeleteTextTxn *txn;
-          result = CreateTxnForDeleteCharacter(nextNodeAsText, 0, eNext, &txn);
+          nsRefPtr<DeleteTextTxn> txn;
+          result = CreateTxnForDeleteCharacter(nextNodeAsText, 0, eNext,
+                                               getter_AddRefs(txn));
           if (NS_SUCCEEDED(result)) {
             aTxn->AppendChild(txn);
             NS_ADDREF(*aNode = nextNode);
             *aOffset = txn->GetOffset();
             *aLength = txn->GetNumCharsToDelete();
-            NS_RELEASE(txn);
           }
         }
         else
@@ -4836,11 +4883,10 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
       }
       else
       { // nextNode is not text, so tell it's parent to delete it
-        DeleteElementTxn *txn;
-        result = CreateTxnForDeleteElement(nextNode, &txn);
+        nsRefPtr<DeleteElementTxn> txn;
+        result = CreateTxnForDeleteElement(nextNode, getter_AddRefs(txn));
         if (NS_SUCCEEDED(result)) {
           aTxn->AppendChild(txn);
-          NS_RELEASE(txn);
           NS_ADDREF(*aNode = nextNode);
         }
       }

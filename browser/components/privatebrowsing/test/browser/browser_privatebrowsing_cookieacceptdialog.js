@@ -92,13 +92,13 @@ function test() {
       expiry: time,
       isHttpOnly: true,
       QueryInterface: function(iid) {
-        const validIIDs = [Components.interfaces.nsISupports,
-                           Components.interfaces.nsICookie,
-                           Components.interfaces.nsICookie2];
+        const validIIDs = [Ci.nsISupports,
+                           Ci.nsICookie,
+                           Ci.nsICookie2];
         for (var i = 0; i < validIIDs.length; ++i)
           if (iid == validIIDs[i])
             return this;
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+        throw Cr.NS_ERROR_NO_INTERFACE;
       }
     };
     cp.cookieDialog(window, cookie, "mozilla.org", 10, false, remember);

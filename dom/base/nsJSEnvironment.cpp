@@ -159,6 +159,7 @@ static bool sGCHasRun;
 static PRUint32 sPendingLoadCount;
 static PRBool sLoadingInProgress;
 
+static PRUint32 sCCollectedWaitingForGC;
 static PRBool sPostGCEventsToConsole;
 
 nsScriptNameSpaceManager *gNameSpaceManager;
@@ -1549,7 +1550,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
   if (ok && ((JSVersion)aVersion) != JSVERSION_UNKNOWN) {
     JSAutoRequest ar(mContext);
 
-    JSScript* script =
+    JSObject* scriptObj =
         ::JS_CompileUCScriptForPrincipalsVersion(mContext,
                                                  (JSObject *)aScopeObject,
                                                  jsprin,
@@ -1558,16 +1559,10 @@ nsJSContext::CompileScript(const PRUnichar* aText,
                                                  aURL,
                                                  aLineNo,
                                                  JSVersion(aVersion));
-    if (script) {
-      JSObject *scriptObject = ::JS_NewScriptObject(mContext, script);
-      if (scriptObject) {
-        NS_ASSERTION(aScriptObject.getScriptTypeID()==JAVASCRIPT,
-                     "Expecting JS script object holder");
-        rv = aScriptObject.set(scriptObject);
-      } else {
-        ::JS_DestroyScript(mContext, script);
-        script = nsnull;
-      }
+    if (scriptObj) {
+      NS_ASSERTION(aScriptObject.getScriptTypeID()==JAVASCRIPT,
+                   "Expecting JS script object holder");
+      rv = aScriptObject.set(scriptObj);
     } else {
       rv = NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1629,10 +1624,7 @@ nsJSContext::ExecuteScript(void *aScriptObject,
   nsJSContext::TerminationFuncHolder holder(this);
   JSAutoRequest ar(mContext);
   ++mExecuteDepth;
-  ok = ::JS_ExecuteScript(mContext,
-                          (JSObject *)aScopeObject,
-                          (JSScript*)::JS_GetPrivate(mContext, scriptObj),
-                          &val);
+  ok = ::JS_ExecuteScript(mContext, (JSObject *)aScopeObject, scriptObj, &val);
 
   if (ok) {
     // If all went well, convert val to a string (XXXbe unless undefined?).
@@ -2075,9 +2067,7 @@ nsJSContext::Serialize(nsIObjectOutputStream* aStream, void *aScriptObject)
     xdr->userdata = (void*) aStream;
 
     JSAutoRequest ar(cx);
-    JSScript *script = reinterpret_cast<JSScript*>
-                                       (::JS_GetPrivate(cx, mJSObject));
-    if (! ::JS_XDRScript(xdr, &script)) {
+    if (! ::JS_XDRScriptObject(xdr, &mJSObject)) {
         rv = NS_ERROR_FAILURE;  // likely to be a principals serialization error
     } else {
         // Get the encoded JSXDRState data and write it.  The JSXDRState owns
@@ -2139,15 +2129,8 @@ nsJSContext::Deserialize(nsIObjectInputStream* aStream,
         JSAutoRequest ar(cx);
         ::JS_XDRMemSetData(xdr, data, size);
 
-        JSScript *script = nsnull;
-        if (! ::JS_XDRScript(xdr, &script)) {
+        if (! ::JS_XDRScriptObject(xdr, &result)) {
             rv = NS_ERROR_FAILURE;  // principals deserialization error?
-        } else {
-            result = ::JS_NewScriptObject(cx, script);
-            if (! result) {
-                rv = NS_ERROR_OUT_OF_MEMORY;    // certain error
-                ::JS_DestroyScript(cx, script);
-            }
         }
 
         // Update data in case ::JS_XDRScript called back into C++ code to
@@ -3295,19 +3278,21 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener)
 
   PRUint32 suspected = nsCycleCollector_suspectedCount();
   PRUint32 collected = nsCycleCollector_collect(aListener);
+  sCCollectedWaitingForGC += collected;
 
-  // If we collected cycles, poke the GC since more objects might be unreachable now.
-  if (collected > 0) {
+  // If we collected a substantial amount of cycles, poke the GC since more objects
+  // might be unreachable now.
+  if (sCCollectedWaitingForGC > 250) {
     PokeGC();
   }
 
   if (sPostGCEventsToConsole) {
     PRTime now = PR_Now();
     NS_NAMED_LITERAL_STRING(kFmt,
-                            "CC timestamp: %lld, collected: %lu, suspected: %lu, duration: %llu ms.");
+                            "CC timestamp: %lld, collected: %lu (%lu waiting for GC), suspected: %lu, duration: %llu ms.");
     nsString msg;
     msg.Adopt(nsTextFormatter::smprintf(kFmt.get(), now,
-                                        collected, suspected,
+                                        collected, sCCollectedWaitingForGC, suspected,
                                         (now - start) / PR_USEC_PER_MSEC));
     nsCOMPtr<nsIConsoleService> cs =
       do_GetService(NS_CONSOLESERVICE_CONTRACTID);
@@ -3457,9 +3442,11 @@ DOMGCCallback(JSContext *cx, JSGCStatus status)
       start = PR_Now();
     } else if (status == JSGC_END) {
       PRTime now = PR_Now();
-      NS_NAMED_LITERAL_STRING(kFmt, "GC timestamp: %lld, duration: %llu ms.");
+      NS_NAMED_LITERAL_STRING(kFmt, "GC mode: %s, timestamp: %lld, duration: %llu ms.");
       nsString msg;
-      msg.Adopt(nsTextFormatter::smprintf(kFmt.get(), now,
+      msg.Adopt(nsTextFormatter::smprintf(kFmt.get(),
+                cx->runtime->gcTriggerCompartment ? "compartment" : "full",
+                now,
                 (now - start) / PR_USEC_PER_MSEC));
       nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
       if (cs) {
@@ -3469,6 +3456,7 @@ DOMGCCallback(JSContext *cx, JSGCStatus status)
   }
 
   if (status == JSGC_END) {
+    sCCollectedWaitingForGC = 0;
     if (sGCTimer) {
       // If we were waiting for a GC to happen, kill the timer.
       nsJSContext::KillGCTimer();
@@ -3603,6 +3591,7 @@ nsJSRuntime::Startup()
   sGCHasRun = false;
   sPendingLoadCount = 0;
   sLoadingInProgress = PR_FALSE;
+  sCCollectedWaitingForGC = 0;
   sPostGCEventsToConsole = PR_FALSE;
   gNameSpaceManager = nsnull;
   sRuntimeService = nsnull;

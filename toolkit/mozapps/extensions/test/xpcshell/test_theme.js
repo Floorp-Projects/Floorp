@@ -273,7 +273,7 @@ function run_test_3() {
     do_check_eq(p1.blocklistState, 0);
     do_check_true(p1.isActive);
     do_check_eq(p1.pendingOperations, 0);
-    do_check_eq(p1.permissions, AddonManager.PERM_CAN_UNINSTALL);
+    do_check_eq(p1.permissions, AddonManager.PERM_CAN_UNINSTALL | AddonManager.PERM_CAN_DISABLE);
     do_check_eq(p1.scope, AddonManager.SCOPE_PROFILE);
     do_check_true("isCompatibleWith" in p1);
     do_check_true("findUpdates" in p1);
@@ -347,7 +347,7 @@ function run_test_4() {
     do_check_false(p2.userDisabled);
     do_check_true(p2.isActive);
     do_check_eq(p2.pendingOperations, 0);
-    do_check_eq(p2.permissions, AddonManager.PERM_CAN_UNINSTALL);
+    do_check_eq(p2.permissions, AddonManager.PERM_CAN_UNINSTALL | AddonManager.PERM_CAN_DISABLE);
     do_check_eq(p2.installDate.getTime(), p2.updateDate.getTime());
 
     // Should have been installed sometime in the last few seconds.
@@ -362,7 +362,7 @@ function run_test_4() {
     do_check_true(p1.userDisabled);
     do_check_false(p1.isActive);
     do_check_eq(p1.pendingOperations, 0);
-    do_check_eq(p1.permissions, AddonManager.PERM_CAN_UNINSTALL + AddonManager.PERM_CAN_ENABLE);
+    do_check_eq(p1.permissions, AddonManager.PERM_CAN_UNINSTALL | AddonManager.PERM_CAN_ENABLE);
 
     AddonManager.getAddonsByTypes(["theme"], function(addons) {
       let seen = false;

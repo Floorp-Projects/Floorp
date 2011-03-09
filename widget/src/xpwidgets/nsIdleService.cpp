@@ -99,9 +99,7 @@ nsIdleServiceDaily::Observe(nsISupports *,
   }
 
   // Stop observing idle for today.
-  if (NS_SUCCEEDED(mIdleService->RemoveIdleObserver(this, MAX_IDLE_POLL_INTERVAL))) {
-    mObservesIdle = false;
-  }
+  (void)mIdleService->RemoveIdleObserver(this, MAX_IDLE_POLL_INTERVAL);
 
   // Set the last idle-daily time pref.
   nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -117,11 +115,15 @@ nsIdleServiceDaily::Observe(nsISupports *,
   return NS_OK;
 }
 
-nsIdleServiceDaily::nsIdleServiceDaily(nsIdleService* aIdleService)
+nsIdleServiceDaily::nsIdleServiceDaily(nsIIdleService* aIdleService)
   : mIdleService(aIdleService)
-  , mObservesIdle(false)
   , mTimer(do_CreateInstance(NS_TIMER_CONTRACTID))
   , mCategoryObservers(OBSERVER_TOPIC_IDLE_DAILY)
+{
+}
+
+void
+nsIdleServiceDaily::Init()
 {
   // Check time of the last idle-daily notification.  If it was more than 24
   // hours ago listen for idle, otherwise set a timer for 24 hours from now.
@@ -148,18 +150,11 @@ nsIdleServiceDaily::nsIdleServiceDaily(nsIdleService* aIdleService)
   }
 }
 
-void
-nsIdleServiceDaily::Shutdown()
+nsIdleServiceDaily::~nsIdleServiceDaily()
 {
   if (mTimer) {
     mTimer->Cancel();
     mTimer = nsnull;
-  }
-  if (mIdleService && mObservesIdle) {
-    if (NS_SUCCEEDED(mIdleService->RemoveIdleObserver(this, MAX_IDLE_POLL_INTERVAL))) {
-      mObservesIdle = false;
-    }
-    mIdleService = nsnull;
   }
 }
 
@@ -171,9 +166,7 @@ nsIdleServiceDaily::DailyCallback(nsITimer* aTimer, void* aClosure)
 
   // The one thing we do every day is to start waiting for the user to "have
   // a significant idle time".
-  if (NS_SUCCEEDED(me->mIdleService->AddIdleObserver(me, MAX_IDLE_POLL_INTERVAL))) {
-    me->mObservesIdle = true;
-  }
+  (void)me->mIdleService->AddIdleObserver(me, MAX_IDLE_POLL_INTERVAL);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -184,12 +177,12 @@ nsIdleService::nsIdleService() : mLastIdleReset(0)
                                , mPolledIdleTimeIsValid(false)
 {
   mDailyIdle = new nsIdleServiceDaily(this);
+  mDailyIdle->Init();
 }
 
 nsIdleService::~nsIdleService()
 {
   StopTimer();
-  mDailyIdle->Shutdown();
 }
 
 NS_IMETHODIMP

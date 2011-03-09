@@ -1,0 +1,105 @@
+<html>
+<head>
+  <title>Test for Bug 625187</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<!--
+   - Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/
+   -
+   - Contributor(s):
+   -   Mihai Sucan <mihai.sucan@gmail.com>
+   -->
+</head>
+<body onload="runtest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=625187">Mozilla Bug 625187</a>
+
+<p><button onclick="alert('hello world')">Button</button></p>
+
+<iframe id="iframe_diff_origin" src="http://example.com/tests/toolkit/components/prompts/test/bug625187_iframe.html"></iframe>
+
+<iframe id="iframe_same_origin" src="bug625187_iframe.html"></iframe>
+
+<pre id="test"></pre>
+
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var testNum = 0;
+var dialogNum = 0;
+var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+              getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+function hasTabModalPrompts() {
+  var prefName = "prompts.tab_modal.enabled";
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  return Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
+         Services.prefs.getBoolPref(prefName);
+}
+
+function runtest()
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  isTabModal = hasTabModalPrompts();
+
+  // This test depends on tab modal prompts being enabled.
+  if (!isTabModal) {
+    todo(false, "Test disabled when tab modal prompts are not enabled.");
+    SimpleTest.finish();
+    return;
+  }
+
+  startCallbackTimer();
+
+  var button = document.querySelector("button");
+  dispatchMouseEvent(button, "click");
+
+  startCallbackTimer();
+
+  var iframe = document.getElementById("iframe_diff_origin");
+  button = iframe.contentWindow.document.getElementById("btn1");
+  dispatchMouseEvent(button, "click");
+
+  startCallbackTimer();
+
+  iframe = document.getElementById("iframe_same_origin");
+  button = iframe.contentWindow.document.getElementById("btn1");
+  dispatchMouseEvent(button, "click");
+
+  startCallbackTimer();
+
+  button = iframe.contentWindow.document.getElementById("btn2");
+  dispatchMouseEvent(button, "click");
+
+  SimpleTest.finish();
+}
+
+function handleDialog(ui)
+{
+  dialogNum++;
+  if (dialogNum == 1 || dialogNum == 3 || dialogNum == 4)
+    is(ui.infoTitle.getAttribute("hidden"), "true",
+       "dialog #" + dialogNum + ": the tabprompt infoTitle element is hidden");
+  else if (dialogNum == 2)
+    ok(!ui.infoTitle.hasAttribute("hidden"),
+       "dialog #" + dialogNum + ": the tabprompt infoTitle element is not hidden");
+
+  synthesizeMouse(ui.button0, 2, 2, {}, ui.button0.ownerDocument.defaultView);
+}
+
+function dispatchMouseEvent(target, type)
+{
+  var win = target.ownerDocument.defaultView;
+  var e = document.createEvent("MouseEvent");
+  e.initEvent(type, false, false, win, 0, 1, 1, 1, 1,
+              false, false, false, false, 0, null);
+  utils.dispatchDOMEventViaPresShell(target, e, true);
+}
+</script>
+</body>
+</html>

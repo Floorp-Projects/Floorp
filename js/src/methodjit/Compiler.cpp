@@ -597,18 +597,14 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                        (stubcc.masm.numDoubles() * sizeof(double)) +
                        jumpTableOffsets.length() * sizeof(void *);
 
-    JSC::ExecutablePool *execPool = getExecPool(script, totalSize);
-    if (!execPool) {
-        js_ReportOutOfMemory(cx);
-        return Compile_Error;
-    }
-
-    uint8 *result = (uint8 *)execPool->alloc(totalSize);
+    JSC::ExecutablePool *execPool;
+    uint8 *result =
+        (uint8 *)script->compartment->jaegerCompartment->execAlloc()->alloc(totalSize, &execPool);
     if (!result) {
-        execPool->release();
         js_ReportOutOfMemory(cx);
         return Compile_Error;
     }
+    JS_ASSERT(execPool);
     JSC::ExecutableAllocator::makeWritable(result, totalSize);
     masm.executableCopy(result);
     stubcc.masm.executableCopy(result + masm.size());
@@ -1205,6 +1201,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_RETURN)
 
           BEGIN_CASE(JSOP_GOTO)
+          BEGIN_CASE(JSOP_DEFAULT)
           {
             jsbytecode *target = PC + GET_JUMP_OFFSET(PC);
             fixDoubleTypes(Uses(0));
@@ -1798,6 +1795,19 @@ mjit::Compiler::generateMethod()
             break;
           END_CASE(JSOP_LOOKUPSWITCH)
 
+          BEGIN_CASE(JSOP_CASE)
+            // X Y
+
+            frame.dupAt(-2);
+            // X Y X
+
+            jsop_stricteq(JSOP_STRICTEQ);
+            // X cond
+
+            if (!jsop_ifneq(JSOP_IFNE, PC + GET_JUMP_OFFSET(PC)))
+                return Compile_Error;
+          END_CASE(JSOP_CASE)
+
           BEGIN_CASE(JSOP_STRICTEQ)
             jsop_stricteq(op);
           END_CASE(JSOP_STRICTEQ)
@@ -2217,7 +2227,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_CALLGNAME)
             jsop_getgname(fullAtomIndex(PC), knownPushedType(0), pushedTypeSet(0));
             if (op == JSOP_CALLGNAME)
-                frame.push(UndefinedValue());
+                jsop_callgname_epilogue();
           END_CASE(JSOP_GETGNAME)
 
           BEGIN_CASE(JSOP_SETGNAME)
@@ -4745,6 +4755,77 @@ mjit::Compiler::jsop_getgname(uint32 index, JSValueType type, types::TypeSet *ty
      * 'var', so cannot be undefined without triggering an error or having been a pre-existing
      * global whose value is undefined (which type inference will know about).
      */
+}
+
+/*
+ * Generate just the epilogue code that is specific to callgname. The rest
+ * is shared with getgname.
+ */
+void
+mjit::Compiler::jsop_callgname_epilogue()
+{
+    /*
+     * This slow path does the same thing as the interpreter.
+     */
+    if (!script->compileAndGo) {
+        prepareStubCall(Uses(1));
+        INLINE_STUBCALL(stubs::PushImplicitThisForGlobal);
+        frame.pushSynced(JSVAL_TYPE_UNKNOWN);
+        return;
+    }
+
+    /* Fast path for known-not-an-object callee. */
+    FrameEntry *fval = frame.peek(-1);
+    if (fval->isNotType(JSVAL_TYPE_OBJECT)) {
+        frame.push(UndefinedValue());
+        return;
+    }
+
+    /*
+     * Optimized version. This inlines the common case, calling a
+     * (non-proxied) function that has the same global as the current
+     * script. To make the code simpler, we:
+     *      1. test the stronger property that the callee's parent is
+     *         equal to the global of the current script, and
+     *      2. bake in the global of the current script, which is why
+     *         this optimized path requires compile-and-go.
+     */
+
+    /* If the callee is not an object, jump to the inline fast path. */
+    MaybeRegisterID typeReg = frame.maybePinType(fval);
+    RegisterID objReg = frame.copyDataIntoReg(fval);
+
+    MaybeJump isNotObj;
+    if (!fval->isType(JSVAL_TYPE_OBJECT)) {
+        isNotObj = frame.testObject(Assembler::NotEqual, fval);
+        frame.maybeUnpinReg(typeReg);
+    }
+
+    /*
+     * If the callee is not a function, jump to OOL slow path.
+     */
+    Jump notFunction = masm.testFunction(Assembler::NotEqual, objReg);
+    stubcc.linkExit(notFunction, Uses(1));
+
+    /*
+     * If the callee's parent is not equal to the global, jump to
+     * OOL slow path.
+     */
+    masm.loadPtr(Address(objReg, offsetof(JSObject, parent)), objReg);
+    Jump globalMismatch = masm.branchPtr(Assembler::NotEqual, objReg, ImmPtr(globalObj));
+    stubcc.linkExit(globalMismatch, Uses(1));
+    frame.freeReg(objReg);
+
+    /* OOL stub call path. */
+    stubcc.leave();
+    OOL_STUBCALL(stubs::PushImplicitThisForGlobal);
+
+    /* Fast path. */
+    if (isNotObj.isSet())
+        isNotObj.getJump().linkTo(masm.label(), &masm);
+    frame.pushUntypedValue(UndefinedValue());
+
+    stubcc.rejoin(Changes(1));
 }
 
 void

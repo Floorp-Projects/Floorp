@@ -152,6 +152,8 @@ public:
    */
   void Finish(PRUint32 *aTextContentFlags);
 
+  nsRect GetChildrenBounds() { return mBounds; }
+
 protected:
   /**
    * We keep a stack of these to represent the ThebesLayers that are
@@ -344,6 +346,7 @@ protected:
    * we recycle one.
    */
   nsIntRegion                      mInvalidThebesContent;
+  nsRect                           mBounds;
   nsAutoTArray<nsAutoPtr<ThebesLayerData>,1>  mThebesLayerDataStack;
   /**
    * We collect the list of children in here. During ProcessDisplayItems,
@@ -802,29 +805,36 @@ AppUnitsPerDevPixel(nsDisplayItem* aItem)
 }
 
 /**
- * Set the visible rect of aLayer. aLayer is in the coordinate system
- * *after* aLayer's transform has been applied, so we need to
- * apply the inverse of that transform before calling SetVisibleRegion.
+ * Restrict the visible region of aLayer to the region that is actually visible.
+ * Because we only reduce the visible region here, we don't need to worry
+ * about whether CONTENT_OPAQUE is set; if layer was opauqe in the old
+ * visible region, it will still be opaque in the new one.
+ * @param aItemVisible the visible region of the display item (that is,
+ * after any layer transform has been applied)
  */
 static void
-SetVisibleRectForLayer(Layer* aLayer, const nsIntRect& aRect)
+RestrictVisibleRegionForLayer(Layer* aLayer, const nsIntRect& aItemVisible)
 {
   gfxMatrix transform;
-  if (aLayer->GetTransform().Is2D(&transform)) {
-    // if 'transform' is not invertible, then nothing will be displayed
-    // for the layer, so it doesn't really matter what we do here
-    transform.Invert();
-    gfxRect layerVisible = transform.TransformBounds(
-        gfxRect(aRect.x, aRect.y, aRect.width, aRect.height));
-    layerVisible.RoundOut();
-    nsIntRect visibleRect;
-    if (!gfxUtils::GfxRectToIntRect(layerVisible, &visibleRect)) {
-      visibleRect = nsIntRect(0, 0, 0, 0);
-      NS_WARNING("Visible rect transformed out of bounds");
-    }
-    aLayer->SetVisibleRegion(visibleRect);
-  } else {
-    NS_ERROR("Only 2D transformations currently supported");
+  if (!aLayer->GetTransform().Is2D(&transform))
+    return;
+
+  // if 'transform' is not invertible, then nothing will be displayed
+  // for the layer, so it doesn't really matter what we do here
+  gfxMatrix inverse = transform;
+  inverse.Invert();
+  gfxRect itemVisible(aItemVisible.x, aItemVisible.y, aItemVisible.width, aItemVisible.height);
+  gfxRect layerVisible = inverse.TransformBounds(itemVisible);
+  layerVisible.RoundOut();
+
+  nsIntRect visibleRect;
+  if (!gfxUtils::GfxRectToIntRect(layerVisible, &visibleRect))
+    return;
+
+  nsIntRegion rgn = aLayer->GetVisibleRegion();
+  if (!visibleRect.Contains(rgn.GetBounds())) {
+    rgn.And(rgn, visibleRect);
+    aLayer->SetVisibleRegion(rgn);
   }
 }
 
@@ -1188,10 +1198,12 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
   PRInt32 appUnitsPerDevPixel = AppUnitsPerDevPixel(aItem);
   nsIntRect itemVisibleRect =
     aItem->GetVisibleRect().ToOutsidePixels(appUnitsPerDevPixel);
-  SetVisibleRectForLayer(layer, itemVisibleRect);
+  RestrictVisibleRegionForLayer(layer, itemVisibleRect);
 
   tempManager->SetRoot(layer);
+  aBuilder->LayerBuilder()->WillEndTransaction(tempManager);
   tempManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, aBuilder);
+  aBuilder->LayerBuilder()->DidEndTransaction(tempManager);
 }
 
 /*
@@ -1234,6 +1246,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     if (aClip.mHaveClipRect) {
       itemContent.IntersectRect(aClip.mClipRect, itemContent);
     }
+    mBounds.UnionRect(mBounds, itemContent);
     nsIntRect itemDrawRect = itemContent.ToOutsidePixels(appUnitsPerDevPixel);
     nsDisplayItem::LayerState layerState =
       item->GetLayerState(mBuilder, mManager);
@@ -1279,7 +1292,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         // in a ThebesLayer below the item!
         data->mDrawAboveRegion.Or(data->mDrawAboveRegion, itemDrawRect);
       }
-      SetVisibleRectForLayer(ownLayer, itemVisibleRect);
+      RestrictVisibleRegionForLayer(ownLayer, itemVisibleRect);
       ContainerLayer* oldContainer = ownLayer->GetParent();
       if (oldContainer && oldContainer != mContainerLayer) {
         oldContainer->RemoveChild(ownLayer);
@@ -1544,6 +1557,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   }
 
   ContainerState state(aBuilder, aManager, aContainerFrame, containerLayer);
+  nscoord appUnitsPerDevPixel = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
 
   if (aManager == mRetainingManager) {
     DisplayItemDataEntry* entry = mNewDisplayItemData.PutEntry(aContainerFrame);
@@ -1558,7 +1572,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
       nsPoint offset = aBuilder->ToReferenceFrame(aContainerFrame);
       invalidThebesContent->MoveBy(offset);
       state.SetInvalidThebesContent(invalidThebesContent->
-        ToOutsidePixels(aContainerFrame->PresContext()->AppUnitsPerDevPixel()));
+        ToOutsidePixels(appUnitsPerDevPixel));
       // We have to preserve the current contents of invalidThebesContent
       // because there might be multiple container layers for the same
       // frame and we need to invalidate the ThebesLayer children of all
@@ -1581,7 +1595,14 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   PRUint32 flags;
   state.Finish(&flags);
 
-  if (aChildren.IsOpaque() && !aChildren.NeedsTransparentSurface()) {
+  nsRect bounds = state.GetChildrenBounds();
+  NS_ASSERTION(bounds == aChildren.GetBounds(aBuilder), "Wrong bounds");
+  nsIntRect pixBounds = bounds.ToOutsidePixels(appUnitsPerDevPixel);
+  containerLayer->SetVisibleRegion(pixBounds);
+  // Make sure that rounding the visible region out didn't add any area
+  // we won't paint
+  if (aChildren.IsOpaque() && !aChildren.NeedsTransparentSurface() &&
+      bounds.Contains(pixBounds.ToAppUnits(appUnitsPerDevPixel))) {
     // Clear CONTENT_COMPONENT_ALPHA
     flags = Layer::CONTENT_OPAQUE;
   }

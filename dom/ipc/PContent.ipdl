@@ -43,6 +43,7 @@ include protocol PTestShell;
 include protocol PNecko;
 include protocol PExternalHelperApp;
 include protocol PStorage;
+include protocol PMemoryReportRequest;
 
 include "mozilla/chrome/RegistryMessageUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
@@ -81,6 +82,12 @@ union StorageConstructData
     StorageClone;
 };
 
+struct FontListEntry {
+    nsCString familyName;
+    nsCString filepath;
+    PRUint32  index;
+};
+
 rpc protocol PContent
 {
     manages PAudio;
@@ -90,9 +97,12 @@ rpc protocol PContent
     manages PNecko;
     manages PExternalHelperApp;
     manages PStorage;
+    manages PMemoryReportRequest;
 
 child:
     PBrowser(PRUint32 chromeFlags);
+
+    PMemoryReportRequest();
 
     PTestShell();
 
@@ -144,6 +154,8 @@ parent:
     // PrefService message
     sync ReadPrefsArray() returns (PrefTuple[] retValue);
 
+    sync ReadFontList() returns (FontListEntry[] retValue);
+
     sync SyncMessage(nsString aMessage, nsString aJSON)
       returns (nsString[] retval);
 
@@ -170,6 +182,15 @@ parent:
 
     // nsIPermissionManager messages
     sync ReadPermissions() returns (Permission[] permissions);
+
+    // These clipboard methods are only really used on Android since
+    // the clipboard is not available in the content process.
+    SetClipboardText(nsString text, PRInt32 whichClipboard);
+    sync GetClipboardText(PRInt32 whichClipboard)
+        returns (nsString text);
+    EmptyClipboard();
+    sync ClipboardHasText()
+        returns (PRBool hasText);
 
 both:
      AsyncMessage(nsString aMessage, nsString aJSON);

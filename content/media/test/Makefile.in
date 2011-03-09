@@ -91,6 +91,7 @@ _TEST_FILES = \
 		seek11.js \
 		seek12.js \
 		seek13.js \
+		seekLies.sjs \
 		test_access_control.html \
 		test_audio1.html \
 		test_audio2.html \
@@ -135,6 +136,7 @@ _TEST_FILES = \
 		test_replay_metadata.html \
 		test_seek.html \
 		test_seek2.html \
+		test_seekLies.html \
 		test_seek_out_of_range.html \
 		test_source.html \
 		test_source_write.html \
@@ -177,6 +179,7 @@ _TEST_FILES += \
 		bug495794.ogg \
 		bug461281.ogg \
 		bug482461.ogv \
+		bug482461-theora.ogv \
 		bug498380.ogv \
 		bug498855-1.ogv \
 		bug498855-2.ogv \

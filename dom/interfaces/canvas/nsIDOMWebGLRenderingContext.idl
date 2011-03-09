@@ -838,3 +838,10 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   // extensions
   nsISupports getExtension(in DOMString name);
 };
+
+[scriptable, uuid(23182042-3d92-407d-9b9b-37c9886398f7)]
+interface nsIDOMWebGLRenderingContext_MOZILLA_2_0_BRANCH : nsISupports
+{
+  nsIVariant getSupportedExtensions();
+  WebGLboolean isContextLost();
+};

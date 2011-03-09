@@ -84,14 +84,14 @@ function testConsoleLoggingAPI(aMethod) {
   setStringFilter(hudId, "");
   HUDService.setFilterState(hudId, aMethod, false);
   console[aMethod]("foo-bar-baz");
-  nodes = outputNode.querySelectorAll("label");
+  nodes = outputNode.querySelectorAll("description");
 
   is(nodes.length, 1,  aMethod + " logging turned off, 1 message hidden");
 
   HUDService.clearDisplay(hudId);
   HUDService.setFilterState(hudId, aMethod, true);
   console[aMethod]("foo-bar-baz");
-  nodes = outputNode.querySelectorAll("label");
+  nodes = outputNode.querySelectorAll("description");
 
   is(nodes.length, 1, aMethod + " logging turned on, 1 message shown");
 

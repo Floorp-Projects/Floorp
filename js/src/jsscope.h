@@ -52,6 +52,7 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jshashtable.h"
+#include "jsiter.h"
 #include "jsobj.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
@@ -314,9 +315,6 @@ struct Shape : public JSObjectMap
   public:
     inline void freeTable(JSContext *cx);
 
-    static bool initEmptyShapes(JSCompartment *comp);
-    static void finishEmptyShapes(JSCompartment *comp);
-
     jsid                id;
 
 #ifdef DEBUG
@@ -520,7 +518,10 @@ struct Shape : public JSObjectMap
     /* Used by EmptyShape (see jsscopeinlines.h). */
     Shape(JSCompartment *comp, Class *aclasp);
 
+  public:
     bool marked() const         { return (flags & MARK) != 0; }
+
+  protected:
     void mark() const           { flags |= MARK; }
     void clearMark()            { flags &= ~MARK; }
 
@@ -650,18 +651,45 @@ struct EmptyShape : public js::Shape
 
     js::Class *getClass() const { return clasp; };
 
-    static EmptyShape *create(JSCompartment *comp, js::Class *clasp) {
-        js::Shape *eprop = comp->propertyTree.newShapeUnchecked();
-        if (!eprop)
-            return NULL;
-        return new (eprop) EmptyShape(comp, clasp);
-    }
-
     static EmptyShape *create(JSContext *cx, js::Class *clasp) {
         js::Shape *eprop = JS_PROPERTY_TREE(cx).newShape(cx);
         if (!eprop)
             return NULL;
         return new (eprop) EmptyShape(cx->compartment, clasp);
+    }
+
+    static EmptyShape *ensure(JSContext *cx, js::Class *clasp, EmptyShape **shapep) {
+        EmptyShape *shape = *shapep;
+        if (!shape) {
+            if (!(shape = create(cx, clasp)))
+                return NULL;
+            return *shapep = shape;
+        }
+        return shape;
+    }
+
+    static EmptyShape *getEmptyArgumentsShape(JSContext *cx) {
+        return ensure(cx, &js_ArgumentsClass, &cx->compartment->emptyArgumentsShape);
+    }
+
+    static EmptyShape *getEmptyBlockShape(JSContext *cx) {
+        return ensure(cx, &js_BlockClass, &cx->compartment->emptyBlockShape);
+    }
+
+    static EmptyShape *getEmptyCallShape(JSContext *cx) {
+        return ensure(cx, &js_CallClass, &cx->compartment->emptyCallShape);
+    }
+
+    static EmptyShape *getEmptyDeclEnvShape(JSContext *cx) {
+        return ensure(cx, &js_DeclEnvClass, &cx->compartment->emptyDeclEnvShape);
+    }
+
+    static EmptyShape *getEmptyEnumeratorShape(JSContext *cx) {
+        return ensure(cx, &js_IteratorClass, &cx->compartment->emptyEnumeratorShape);
+    }
+
+    static EmptyShape *getEmptyWithShape(JSContext *cx) {
+        return ensure(cx, &js_WithClass, &cx->compartment->emptyWithShape);
     }
 };
 

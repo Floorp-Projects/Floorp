@@ -2406,6 +2406,22 @@ nsRect nsDisplayTransform::TransformRect(const nsRect &aUntransformedBounds,
      factor);
 }
 
+nsRect nsDisplayTransform::TransformRectOut(const nsRect &aUntransformedBounds,
+                                            const nsIFrame* aFrame,
+                                            const nsPoint &aOrigin,
+                                            const nsRect* aBoundsOverride)
+{
+  NS_PRECONDITION(aFrame, "Can't take the transform based on a null frame!");
+  NS_PRECONDITION(aFrame->GetStyleDisplay()->HasTransform(),
+                  "Cannot transform a rectangle if there's no transformation!");
+
+  float factor = nsPresContext::AppUnitsPerCSSPixel();
+  return nsLayoutUtils::MatrixTransformRectOut
+    (aUntransformedBounds,
+     GetResultingTransformMatrix(aFrame, aOrigin, factor, aBoundsOverride),
+     factor);
+}
+
 nsRect nsDisplayTransform::UntransformRect(const nsRect &aUntransformedBounds,
                                            const nsIFrame* aFrame,
                                            const nsPoint &aOrigin)

@@ -265,7 +265,6 @@ gfxGDIFont::SetupCairoFont(gfxContext *aContext)
         return PR_FALSE;
     }
     cairo_set_scaled_font(aContext->GetCairo(), mScaledFont);
-    cairo_win32_scaled_font_select_font(mScaledFont, DCFromContext(aContext));
     return PR_TRUE;
 }
 

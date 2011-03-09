@@ -160,7 +160,7 @@ html[dir=rtl] .stacked .thumb {
 
 .stack-trayed .tab-title {
   text-shadow: rgba(0,0,0,1) 1px 1px 1.5px;
-  color: WindowText;
+  color: #EEE;
   font-size: 11px;
 }
 
@@ -226,6 +226,10 @@ html[dir=rtl] .groupItem {
 html[dir=rtl] .groupItem.activeGroupItem {
   box-shadow:
     rgba(0,0,0,0.8) -2px 2px 8px;
+}
+
+.groupItem .close {
+  z-index: 10;
 }
 
 .phantom {

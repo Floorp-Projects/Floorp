@@ -102,14 +102,9 @@ JSStackFrame::resetInvokeCallFrame()
 {
     /* Undo changes to frame made during execution; see initCallFrame */
 
-    if (hasArgsObj())
-        args.nactual = argsObj().getArgsInitialLength();
-
     JS_ASSERT(!(flags_ & ~(JSFRAME_FUNCTION |
                            JSFRAME_OVERFLOW_ARGS |
                            JSFRAME_UNDERFLOW_ARGS |
-                           JSFRAME_HAS_CALL_OBJ |
-                           JSFRAME_HAS_ARGS_OBJ |
                            JSFRAME_OVERRIDE_ARGS |
                            JSFRAME_HAS_PREVPC |
                            JSFRAME_HAS_RVAL |
@@ -121,16 +116,8 @@ JSStackFrame::resetInvokeCallFrame()
               JSFRAME_HAS_PREVPC |
               JSFRAME_UNDERFLOW_ARGS;
 
-    JS_ASSERT_IF(!hasCallObj(), scopeChain_ == calleeValue().toObject().getParent());
-    JS_ASSERT_IF(hasCallObj(), scopeChain_ == callObj().getParent());
-    if (hasCallObj())
-        scopeChain_ = callObj().getParent();
-
-    JS_ASSERT(exec.fun == calleeValue().toObject().getFunctionPrivate());
-    JS_ASSERT(!hasImacropc());
-    JS_ASSERT(!hasHookData());
-    JS_ASSERT(annotation() == NULL);
-    JS_ASSERT(!hasCallObj());
+    JS_ASSERT(exec.fun == callee().getFunctionPrivate());
+    scopeChain_ = callee().getParent();
 }
 
 inline void
@@ -527,7 +514,8 @@ struct AutoInterpPreparer  {
 inline void
 PutActivationObjects(JSContext *cx, JSStackFrame *fp)
 {
-    JS_ASSERT(fp->isFunctionFrame() && !fp->isEvalFrame());
+    JS_ASSERT(!fp->isYielding());
+    JS_ASSERT(!fp->isEvalFrame() || fp->script()->strictModeCode);
 
     /* The order is important as js_PutCallObject needs to access argsObj. */
     if (fp->hasCallObj()) {
@@ -535,6 +523,19 @@ PutActivationObjects(JSContext *cx, JSStackFrame *fp)
     } else if (fp->hasArgsObj()) {
         js_PutArgsObject(cx, fp);
     }
+}
+
+/*
+ * FIXME Remove with bug 635811
+ *
+ * NB: a non-strict eval frame aliases its non-eval-parent's call/args object.
+ */
+inline void
+PutOwnedActivationObjects(JSContext *cx, JSStackFrame *fp)
+{
+    JS_ASSERT(!fp->isYielding());
+    if (!fp->isEvalFrame() || fp->script()->strictModeCode)
+        PutActivationObjects(cx, fp);
 }
 
 class InvokeSessionGuard
@@ -552,7 +553,7 @@ class InvokeSessionGuard
 
   public:
     InvokeSessionGuard() : args_(), frame_() {}
-    ~InvokeSessionGuard() {}
+    inline ~InvokeSessionGuard();
 
     bool start(JSContext *cx, const Value &callee, const Value &thisv, uintN argc);
     bool invoke(JSContext *cx) const;
@@ -577,6 +578,13 @@ class InvokeSessionGuard
         return optimized() ? frame_.fp()->returnValue() : args_.rval();
     }
 };
+
+inline
+InvokeSessionGuard::~InvokeSessionGuard()
+{
+    if (frame_.pushed())
+        PutActivationObjects(frame_.pushedFrameContext(), frame_.fp());
+}
 
 inline bool
 InvokeSessionGuard::invoke(JSContext *cx) const
@@ -608,6 +616,7 @@ InvokeSessionGuard::invoke(JSContext *cx) const
     /* Clear any garbage left from the last Invoke. */
     JSStackFrame *fp = frame_.fp();
     fp->clearMissingArgs();
+    PutActivationObjects(cx, frame_.fp());
     fp->resetInvokeCallFrame();
     SetValueRangeToUndefined(fp->slots(), script_->nfixed);
 
@@ -625,8 +634,6 @@ InvokeSessionGuard::invoke(JSContext *cx) const
 #endif
         Probes::exitJSFun(cx, fp->fun(), script_);
     }
-
-    PutActivationObjects(cx, fp);
 
     /* Don't clobber callee with rval; rval gets read from fp->rval. */
     return ok;
@@ -661,6 +668,83 @@ class PrimitiveBehavior<double> {
 };
 
 } // namespace detail
+
+/*
+ * Compute the implicit |this| parameter for a call expression where the callee
+ * is an unqualified name reference.
+ *
+ * We can avoid computing |this| eagerly and push the implicit callee-coerced
+ * |this| value, undefined, according to this decision tree:
+ *
+ * 1. If the called value, funval, is not an object, bind |this| to undefined.
+ *
+ * 2. The nominal |this|, obj, has one of Block, Call, or DeclEnv class (this
+ *    is what IsCacheableNonGlobalScope tests). Such objects-as-scopes must be
+ *    censored.
+ *
+ * 3. obj is a global. There are several sub-cases:
+ *
+ * a) obj is a proxy: we try unwrapping it (see jswrapper.cpp) in order to find
+ *    a function object inside. If the proxy is not a wrapper, or else it wraps
+ *    a non-function, then bind |this| to undefined per ES5-strict/Harmony.
+ *
+ *    [Else fall through with callee pointing to an unwrapped function object.]
+ *
+ * b) If callee is a function (after unwrapping if necessary), check whether it
+ *    is interpreted and in strict mode. If so, then bind |this| to undefined
+ *    per ES5 strict.
+ *
+ * c) Now check that callee is scoped by the same global object as the object
+ *    in which its unqualified name was bound as a property. ES1-3 bound |this|
+ *    to the name's "Reference base object", which in the context of multiple
+ *    global objects may not be the callee's global. If globals match, bind
+ *    |this| to undefined.
+ *
+ *    This is a backward compatibility measure; see bug 634590.
+ *
+ * 4. Finally, obj is neither a declarative scope object to be censored, nor a
+ *    global where the callee requires no backward-compatible special handling
+ *    or future-proofing based on (explicit or imputed by Harmony status in the
+ *    proxy case) strict mode opt-in. Bind |this| to obj->thisObject().
+ *
+ * We set *vp to undefined early to reduce code size and bias this code for the
+ * common and future-friendly cases.
+ */
+inline bool
+ComputeImplicitThis(JSContext *cx, JSObject *obj, const Value &funval, Value *vp)
+{
+    vp->setUndefined();
+
+    if (!funval.isObject())
+        return true;
+
+    if (!obj->isGlobal()) {
+        if (IsCacheableNonGlobalScope(obj))
+            return true;
+    } else {
+        JSObject *callee = &funval.toObject();
+
+        if (callee->isProxy()) {
+            callee = callee->unwrap();
+            if (!callee->isFunction())
+                return true; // treat any non-wrapped-function proxy as strict
+        }
+        if (callee->isFunction()) {
+            JSFunction *fun = callee->getFunctionPrivate();
+            if (fun->isInterpreted() && fun->inStrictMode())
+                return true;
+        }
+        if (callee->getGlobal() == cx->fp()->scopeChain().getGlobal())
+            return true;;
+    }
+
+    obj = obj->thisObject(cx);
+    if (!obj)
+        return false;
+
+    vp->setObject(*obj);
+    return true;
+}
 
 template <typename T>
 bool

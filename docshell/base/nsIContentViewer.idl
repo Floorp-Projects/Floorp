@@ -25,11 +25,6 @@ interface nsIContentViewer : nsISupports
   attribute nsISupports container;
 
   void loadStart(in nsISupports aDoc);
-
-  /**
-   * On success, returns NS_SUCCESS_LOAD_STOPPED if the load was stopped by the
-   * end of the method, and NS_OK otherwise.
-   */
   void loadComplete(in unsigned long aStatus);
 
   /**

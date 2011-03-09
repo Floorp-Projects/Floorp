@@ -58,7 +58,6 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsdbgapi.h"
 #include "jsemit.h"
 #include "jsfun.h"
 #include "jsiter.h"
@@ -71,7 +70,6 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsstaticcheck.h"
-#include "jstracer.h"
 #include "jsvector.h"
 
 #include "jsinterpinlines.h"
@@ -5542,8 +5540,7 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
     }
     LOCAL_ASSERT(pc == target);
     return pcdepth;
-
-#undef LOCAL_ASSERT
 }
 
+#undef LOCAL_ASSERT
 #undef LOCAL_ASSERT_RV

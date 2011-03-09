@@ -101,12 +101,14 @@ inline nscoord NSToCoordRoundWithClamp(float aValue)
 {
 #ifndef NS_COORD_IS_FLOAT
   // Bounds-check before converting out of float, to avoid overflow
+  NS_WARN_IF_FALSE(aValue <= nscoord_MAX,
+                   "Overflowed nscoord_MAX in conversion to nscoord");
   if (aValue >= nscoord_MAX) {
-    NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord");
     return nscoord_MAX;
   }
+  NS_WARN_IF_FALSE(aValue >= nscoord_MIN,
+                   "Overflowed nscoord_MIN in conversion to nscoord");
   if (aValue <= nscoord_MIN) {
-    NS_WARNING("Overflowed nscoord_MIN in conversion to nscoord");
     return nscoord_MIN;
   }
 #endif
@@ -355,12 +357,14 @@ inline nscoord NSToCoordFloorClamped(float aValue)
 {
 #ifndef NS_COORD_IS_FLOAT
   // Bounds-check before converting out of float, to avoid overflow
+  NS_WARN_IF_FALSE(aValue <= nscoord_MAX,
+                   "Overflowed nscoord_MAX in conversion to nscoord");
   if (aValue >= nscoord_MAX) {
-    NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord");
     return nscoord_MAX;
   }
+  NS_WARN_IF_FALSE(aValue >= nscoord_MIN,
+                   "Overflowed nscoord_MIN in conversion to nscoord");
   if (aValue <= nscoord_MIN) {
-    NS_WARNING("Overflowed nscoord_MIN in conversion to nscoord");
     return nscoord_MIN;
   }
 #endif
@@ -376,12 +380,14 @@ inline nscoord NSToCoordCeilClamped(float aValue)
 {
 #ifndef NS_COORD_IS_FLOAT
   // Bounds-check before converting out of float, to avoid overflow
+  NS_WARN_IF_FALSE(aValue <= nscoord_MAX,
+                   "Overflowed nscoord_MAX in conversion to nscoord");
   if (aValue >= nscoord_MAX) {
-    NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord");
     return nscoord_MAX;
   }
+  NS_WARN_IF_FALSE(aValue >= nscoord_MIN,
+                   "Overflowed nscoord_MIN in conversion to nscoord");
   if (aValue <= nscoord_MIN) {
-    NS_WARNING("Overflowed nscoord_MIN in conversion to nscoord");
     return nscoord_MIN;
   }
 #endif
@@ -441,6 +447,11 @@ inline float NSAppUnitsToFloatPixels(nscoord aAppUnits, float aAppUnitsPerPixel)
 inline double NSAppUnitsToDoublePixels(nscoord aAppUnits, nscoord aAppUnitsPerPixel)
 {
   return (double(aAppUnits) / double(aAppUnitsPerPixel));
+}
+
+inline double NSAppUnitsToDoublePixels(nscoord aAppUnits, double aAppUnitsPerPixel)
+{
+  return (double(aAppUnits) / aAppUnitsPerPixel);
 }
 
 inline PRInt32 NSAppUnitsToIntPixels(nscoord aAppUnits, float aAppUnitsPerPixel)

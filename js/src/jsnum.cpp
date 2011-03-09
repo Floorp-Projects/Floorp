@@ -950,7 +950,6 @@ static JSFunctionSpec number_methods[] = {
     JS_TN(js_toString_str,            num_toString,       1, 0, &num_toString_trcinfo, JS_TypeHandlerString),
     JS_FN_TYPE(js_toLocaleString_str, num_toLocaleString, 0, 0, JS_TypeHandlerString),
     JS_FN_TYPE(js_valueOf_str,        js_num_valueOf,     0, 0, JS_TypeHandlerFloat),
-    JS_FN_TYPE(js_toJSON_str,         js_num_valueOf,     0, 0, JS_TypeHandlerThis),
     JS_FN_TYPE("toFixed",             num_toFixed,        1, 0, JS_TypeHandlerString),
     JS_FN_TYPE("toExponential",       num_toExponential,  1, 0, JS_TypeHandlerString),
     JS_FN_TYPE("toPrecision",         num_toPrecision,    1, 0, JS_TypeHandlerString),

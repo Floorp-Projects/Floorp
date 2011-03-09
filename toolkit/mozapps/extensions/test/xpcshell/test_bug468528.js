@@ -71,6 +71,10 @@ function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
   // We cannot force the blocklist to update so just copy our test list to the profile
+  var blocklistFile = gProfD.clone();
+  blocklistFile.append("blocklist.xml");
+  if (blocklistFile.exists())
+    blocklistFile.remove(false);
   var source = do_get_file("data/test_bug468528.xml");
   source.copyTo(gProfD, "blocklist.xml");
 

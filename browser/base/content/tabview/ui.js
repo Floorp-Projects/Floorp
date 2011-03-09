@@ -127,6 +127,11 @@ let UI = {
   // Used to keep track of how many calls to storageBusy vs storageReady.
   _storageBusyCount: 0,
 
+  // Variable: isDOMWindowClosing
+  // Tells wether we already received the "domwindowclosed" event and the parent
+  // windows is about to close.
+  isDOMWindowClosing: false,
+
   // ----------
   // Function: init
   // Must be called after the object is created.
@@ -241,6 +246,7 @@ let UI = {
       // ___ setup observer to save canvas images
       function domWinClosedObserver(subject, topic, data) {
         if (topic == "domwindowclosed" && subject == gWindow) {
+          self.isDOMWindowClosing = true;
           if (self.isTabViewVisible())
             GroupItems.removeHiddenGroups();
           TabItems.saveAll(true);
@@ -1026,6 +1032,10 @@ let UI = {
         // the / event handler for find bar is defined in the findbar.xml
         // binding.  To keep things in its own module, we handle our slash here.
         self.enableSearch(event);
+      } else if (event.keyCode == KeyEvent.DOM_VK_BACK_SPACE) {
+        // prevent navigating backward in the selected tab's history
+        event.stopPropagation();
+        event.preventDefault();
       }
     });
   },

@@ -88,7 +88,6 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMPopStateEvent.h"
-#include "nsIDOMPopStateEvent_MOZILLA_2_BRANCH.h"
 #include "nsContentUtils.h"
 #include "nsDOMWindowUtils.h"
 #include "nsIDOMGlobalPropertyInitializer.h"
@@ -2328,6 +2327,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(History, nsIDOMHistory)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHistory)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHistory_MOZILLA_2_0_BRANCH)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Screen, nsIDOMScreen)
@@ -2496,9 +2496,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(PopStateEvent, nsIDOMPopStateEvent_MOZILLA_2_BRANCH)
+  DOM_CLASSINFO_MAP_BEGIN(PopStateEvent, nsIDOMPopStateEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMPopStateEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPopStateEvent_MOZILLA_2_BRANCH)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -4013,6 +4012,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(WebGLRenderingContext, nsIDOMWebGLRenderingContext)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWebGLRenderingContext)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWebGLRenderingContext_MOZILLA_2_0_BRANCH)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(WebGLBuffer, nsIWebGLBuffer)
@@ -8124,6 +8124,62 @@ nsDOMTokenListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
 // Named Array helper
 
 NS_IMETHODIMP
+nsNamedArraySH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                           JSObject *obj, jsid id, PRUint32 flags,
+                           JSObject **objp, PRBool *_retval)
+{
+  if ((!(JSRESOLVE_ASSIGNING & flags)) && JSID_IS_STRING(id) &&
+      !ObjectIsNativeWrapper(cx, obj)) {
+
+    {
+      JSObject *realObj;
+
+      if (wrapper) {
+        wrapper->GetJSObject(&realObj);
+      } else {
+        realObj = obj;
+      }
+
+      JSAutoEnterCompartment ac;
+
+      if (!ac.enter(cx, realObj)) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_FAILURE;
+      }
+
+      JSObject *proto = ::JS_GetPrototype(cx, realObj);
+      JSBool hasProp;
+
+      if (proto && ::JS_HasPropertyById(cx, proto, id, &hasProp) && hasProp) {
+        // We found the property we're resolving on the prototype,
+        // nothing left to do here then.
+        return NS_OK;
+      }
+    }
+
+    // Make sure rv == NS_OK here, so GetNamedItem implementations
+    // that never fail don't have to set rv.
+    nsresult rv = NS_OK;
+    nsWrapperCache *cache;
+
+    nsISupports* item = GetNamedItem(GetNative(wrapper, obj),
+                                     nsDependentJSString(id), &cache, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (item) {
+      *_retval = ::JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, nsnull,
+                                         nsnull, JSPROP_ENUMERATE | JSPROP_SHARED);
+
+      *objp = obj;
+
+      return *_retval ? NS_OK : NS_ERROR_FAILURE;
+    }
+  }
+
+  return nsArraySH::NewResolve(wrapper, cx, obj, id, flags, objp, _retval);
+}
+
+NS_IMETHODIMP
 nsNamedArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                             JSObject *obj, jsid id, jsval *vp,
                             PRBool *_retval)
@@ -9347,6 +9403,33 @@ nsHTMLFormElementSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
 // HTMLSelectElement helper
 
 NS_IMETHODIMP
+nsHTMLSelectElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                                  JSObject *obj, jsid id, PRUint32 flags,
+                                  JSObject **objp, PRBool *_retval)
+{
+  PRInt32 n = GetArrayIndexFromId(cx, id);
+  if (n >= 0) {
+    nsHTMLSelectElement *s =
+      nsHTMLSelectElement::FromSupports(GetNative(wrapper, obj));
+
+    nsHTMLOptionCollection *options = s->GetOptions();
+    if (options) {
+      nsresult rv;
+      nsISupports *node = options->GetNodeAt(n, &rv);
+      if (node) {
+        *objp = obj;
+        *_retval = JS_DefineElement(cx, obj, n, JSVAL_VOID, nsnull, nsnull,
+                                    JSPROP_ENUMERATE | JSPROP_SHARED);
+
+        return NS_OK;
+      }
+    }
+  }
+
+  return nsElementSH::NewResolve(wrapper, cx, obj, id, flags, objp, _retval);
+}
+
+NS_IMETHODIMP
 nsHTMLSelectElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
                                    JSContext *cx, JSObject *obj, jsid id,
                                    jsval *vp, PRBool *_retval)
@@ -9957,7 +10040,7 @@ NS_IMETHODIMP
 nsHistorySH::PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj)
 {
-  nsHistory *history = (nsHistory *)nativeObj;
+  nsHistory *history = (nsHistory *)((nsIDOMHistory*)nativeObj);
   nsCOMPtr<nsPIDOMWindow> innerWindow;
   history->GetWindow(getter_AddRefs(innerWindow));
   if (!innerWindow) {

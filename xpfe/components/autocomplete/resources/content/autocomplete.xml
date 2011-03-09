@@ -23,7 +23,7 @@
           <children/>
           <html:input anonid="input" class="autocomplete-textbox textbox-input"
                       flex="1" allowevents="true"
-                      xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
+                      xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,mozactionhint,userAction"/>
         </xul:hbox>
         <children includes="hbox"/>
       </xul:hbox>
@@ -1482,6 +1482,11 @@
         if (this.textbox && this.textbox.view)
           this.initialize();
       ]]></constructor>
+
+      <destructor><![CDATA[
+        if (this.view)
+          this.tree.view = null;
+      ]]></destructor>
 
       <field name="textbox">
         document.getBindingParent(this);

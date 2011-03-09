@@ -91,11 +91,9 @@
 #include "jsatom.h"
 #include "jsbit.h"
 #include "jsbool.h"
-#include "jstracer.h"
 #include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsdbgapi.h" /* for js_TraceWatchPoints */
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
@@ -106,6 +104,7 @@
 #include "jsscope.h"
 #include "jsstr.h"
 #include "jsstaticcheck.h"
+#include "jstracer.h"
 #include "jsvector.h"
 #include "jswrapper.h"
 
@@ -1011,7 +1010,7 @@ Class js_ArrayClass = {
     NULL,           /* construct   */
     NULL,           /* xdrObject   */
     NULL,           /* hasInstance */
-    NULL,           /* mark        */
+    array_trace,    /* trace       */
     JS_NULL_CLASS_EXT,
     {
         array_lookupProperty,
@@ -1023,7 +1022,6 @@ Class js_ArrayClass = {
         array_deleteProperty,
         NULL,       /* enumerate      */
         array_typeOf,
-        array_trace,
         array_fix,
         NULL,       /* thisObject     */
         NULL,       /* clear          */
@@ -3227,6 +3225,9 @@ array_TypeConcat(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
         site->returnTypes->addType(cx, (jstype) object);
     }
 
+    if (object->unknownProperties)
+        return;
+
     /* Propagate elements of the 'this' array to the result. */
     TypeSet *indexTypes = object->getProperty(cx, JSID_VOID, false);
     if (!indexTypes)
@@ -3428,6 +3429,9 @@ array_TypeNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
         return;
     if (site->returnTypes)
         site->returnTypes->addType(cx, (jstype) object);
+
+    if (object->unknownProperties)
+        return;
 
     TypeSet *indexTypes = object->getProperty(cx, JSID_VOID, true);
     if (!indexTypes)
@@ -3690,7 +3694,7 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone)
     jsuint length = obj->getArrayLength();
     jsuint initlen = obj->getDenseArrayInitializedLength();
 
-    js::AutoValueVector vector(cx);
+    AutoValueVector vector(cx);
     if (!vector.reserve(initlen))
         return JS_FALSE;
 
@@ -3710,7 +3714,7 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone)
             return JS_TRUE;
         }
 
-        vector.append(val);
+        vector.infallibleAppend(val);
     }
 
     *clone = NewDenseCopiedArray(cx, initlen, vector.begin());

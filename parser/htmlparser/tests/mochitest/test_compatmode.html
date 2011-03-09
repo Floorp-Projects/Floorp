@@ -54,14 +54,14 @@ var doctypes = [
 ];
 
 ////
-// Restore the original value of the html5.enable pref,
+// Restore the original value of the html5.parser.enable pref,
 // and finish.
 //
 function finishTest() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
             .getService(Components.interfaces.nsIPrefBranch);
-  prefs.setBoolPref("html5.enable", gOriginalHtml5Pref);
+  prefs.setBoolPref("html5.parser.enable", gOriginalHtml5Pref);
   SimpleTest.finish();  
 }
 
@@ -70,7 +70,7 @@ function finishTest() {
 // the expected value.  This function is called from the
 // test iframe's onload handler.  When verifying the
 // last test in the group, if there is no original
-// value for the html5.enable pref stored in the
+// value for the html5.parser.enable pref stored in the
 // 'gOriginalHtml5Pref' variable, then run the tests
 // again in HTML5 mode.  Otherwise, finish the test.
 //
@@ -94,8 +94,8 @@ function doTestHtml5() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
             .getService(Components.interfaces.nsIPrefBranch);
-  gOriginalHtml5Pref = prefs.getBoolPref("html5.enable");
-  prefs.setBoolPref("html5.enable", true);
+  gOriginalHtml5Pref = prefs.getBoolPref("html5.parser.enable");
+  prefs.setBoolPref("html5.parser.enable", true);
   
   doTest();
 }

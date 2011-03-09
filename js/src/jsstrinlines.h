@@ -84,6 +84,21 @@ class StringBuffer
     bool append(JSAtom *atom);
     bool appendN(const jschar c, size_t n);
     bool appendInflated(const char *cstr, size_t len);
+
+    /* Infallible variants usable when the corresponding space is reserved. */
+    void infallibleAppend(const jschar c) {
+        cb.infallibleAppend(c);
+    }
+    void infallibleAppend(const jschar *chars, size_t len) {
+        cb.infallibleAppend(chars, len);
+    }
+    void infallibleAppend(const jschar *begin, const jschar *end) {
+        cb.infallibleAppend(begin, end);
+    }
+    void infallibleAppendN(const jschar c, size_t n) {
+        cb.infallibleAppendN(c, n);
+    }
+
     JSAtom *atomize(uintN flags = 0);
     static JSAtom *atomize(JSContext *cx, const CharBuffer &cb, uintN flags = 0);
     static JSAtom *atomize(JSContext *cx, const jschar *begin, size_t length, uintN flags = 0);

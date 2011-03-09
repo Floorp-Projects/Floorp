@@ -16,7 +16,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -44,6 +44,7 @@
 
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
+#include "nsIEventTarget.h"
 
 #include "mozStorageBindingParamsArray.h"
 #include "mozIStorageBaseStatement.h"
@@ -65,12 +66,14 @@ public:
   , mParamsArray(aParamsArray)
   , mStatementOwner(aStatementOwner)
   {
+    NS_PRECONDITION(mStatementOwner, "Must have a statement owner!");
   }
   StatementData(const StatementData &aSource)
   : mStatement(aSource.mStatement)
   , mParamsArray(aSource.mParamsArray)
   , mStatementOwner(aSource.mStatementOwner)
   {
+    NS_PRECONDITION(mStatementOwner, "Must have a statement owner!");
   }
   StatementData()
   {
@@ -104,14 +107,23 @@ public:
   /**
    * NULLs out our sqlite3_stmt (it is held by the owner) after reseting it and
    * clear all bindings to it.  This is expected to occur on the async thread.
-   *
-   * We do not clear mParamsArray out because we only want to release
-   * mParamsArray on the calling thread because of XPCVariant addref/release
-   * thread-safety issues.  The same holds for mStatementOwner which can be
-   * holding such a reference chain as well.
    */
   inline void finalize()
   {
+    NS_PRECONDITION(mStatementOwner, "Must have a statement owner!");
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsIEventTarget> asyncThread =
+        mStatementOwner->getOwner()->getAsyncExecutionTarget();
+      // It's possible that we are shutting down the async thread, and this
+      // method would return NULL as a result.
+      if (asyncThread) {
+        PRBool onAsyncThread;
+        NS_ASSERTION(NS_SUCCEEDED(asyncThread->IsOnCurrentThread(&onAsyncThread)) && onAsyncThread,
+                     "This should only be running on the async thread!");
+      }
+    }
+#endif
     // In the AsyncStatement case we may never have populated mStatement if the
     // AsyncExecuteStatements got canceled or a failure occurred in constructing
     // the statement.

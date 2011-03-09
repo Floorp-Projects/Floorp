@@ -51,6 +51,7 @@
 #include "nsContentUtils.h"
 #include "nsIContent.h"
 #include "nsCRT.h"
+#include "nsIScriptObjectPrincipal.h"
 
 NS_IMPL_CYCLE_COLLECTION_2(nsDOMDataTransfer, mDragTarget, mDragImage)
 
@@ -459,8 +460,28 @@ nsDOMDataTransfer::MozGetDataAt(const nsAString& aFormat,
           (NS_FAILED(principal->Subsumes(formatitem.mPrincipal, &subsumes)) || !subsumes))
         return NS_ERROR_DOM_SECURITY_ERR;
 
-      if (!formatitem.mData)
+      if (!formatitem.mData) {
         FillInExternalDragData(formatitem, aIndex);
+      } else {
+        nsCOMPtr<nsISupports> data;
+        formatitem.mData->GetAsISupports(getter_AddRefs(data));
+        // Make sure the code that is calling us is same-origin with the data.
+        nsCOMPtr<nsPIDOMEventTarget> pt = do_QueryInterface(data);
+        if (pt) {
+          nsresult rv = NS_OK;
+          nsIScriptContext* c = pt->GetContextForEventHandlers(&rv);
+          NS_ENSURE_TRUE(c && NS_SUCCEEDED(rv), NS_ERROR_DOM_SECURITY_ERR);
+          nsIScriptObjectPrincipal* sp = c->GetObjectPrincipal();
+          NS_ENSURE_TRUE(sp, NS_ERROR_DOM_SECURITY_ERR);
+          nsIPrincipal* dataPrincipal = sp->GetPrincipal();
+          NS_ENSURE_TRUE(dataPrincipal, NS_ERROR_DOM_SECURITY_ERR);
+          NS_ENSURE_TRUE(principal || (principal = GetCurrentPrincipal()),
+                         NS_ERROR_DOM_SECURITY_ERR);
+          PRBool equals = PR_FALSE;
+          NS_ENSURE_TRUE(NS_SUCCEEDED(principal->Equals(dataPrincipal, &equals)) && equals,
+                         NS_ERROR_DOM_SECURITY_ERR);
+        }
+      }
       *aData = formatitem.mData;
       NS_IF_ADDREF(*aData);
       return NS_OK;

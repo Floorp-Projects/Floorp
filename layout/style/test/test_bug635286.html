@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=635286
+-->
+<head>
+  <title>Test for Bug 635286</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+    div { background: transparent; }
+    :-moz-any(#case1.before)      { background: gray; }
+    #case2:not(.after)            { background: gray; }
+    :-moz-any(#case3:not(.after)) { background: gray; }
+    #case4:not(:-moz-any(.after)) { background: gray; }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=635286">Mozilla Bug 635286</a>
+<div id="case1" class="before">case1, :-moz-any()</div>
+<div id="case2" class="before">case2, :not()</div>
+<div id="case3" class="before">case3, :not() in :-moz-any()</div>
+<div id="case4" class="before">case4, :-moz-any() in :not()</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 635286 **/
+
+window.addEventListener("load", function() {
+  var cases = Array.slice(document.getElementsByTagName("div"));
+  cases.forEach(function(aCase, aIndex) {
+    aCase.className = "after";
+  });
+  window.setTimeout(function() {
+    cases.forEach(function(aCase, aIndex) {
+      is(window.getComputedStyle(aCase, null)
+           .getPropertyValue("background-color"),
+         "transparent",
+         aCase.textContent);
+    });
+    SimpleTest.finish();
+  }, 1);
+}, false);
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

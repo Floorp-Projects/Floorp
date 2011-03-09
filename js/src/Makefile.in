@@ -584,16 +584,15 @@ check::
 	$(srcdir)/config/find_vanilla_new_calls $(LIBRARY)
 endif
 
-ifdef ENABLE_TRACEJIT
 ifndef WINCE
+JITFLAGS = ,m,j,mj,mjp,am,amj,amjp,amd
 check::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
-	        --no-slow --no-progress --tinderbox --jitflags=m,j,mj,mjp,mjd $(DIST)/bin/js$(BIN_SUFFIX)
+	        --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(DIST)/bin/js$(BIN_SUFFIX)
 
 check-valgrind::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
-	        --valgrind --no-slow --no-progress --tinderbox --jitflags=m,j,mj,mjp,mjd $(DIST)/bin/js$(BIN_SUFFIX)
-endif
+	        --valgrind --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(DIST)/bin/js$(BIN_SUFFIX)
 endif
 
 DIST_GARBAGE = config.cache config.log config.status \

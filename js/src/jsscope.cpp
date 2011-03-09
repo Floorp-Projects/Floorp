@@ -201,71 +201,6 @@ Shape::hashify(JSRuntime *rt)
 # define LIVE_SCOPE_METER(cx,expr) /* nothing */
 #endif
 
-static inline bool
-InitField(JSCompartment *comp, EmptyShape *JSCompartment:: *field, Class *clasp)
-{
-    if (EmptyShape *emptyShape = EmptyShape::create(comp, clasp)) {
-        comp->*field = emptyShape;
-        return true;
-    }
-    return false;
-}
-
-/* static */
-bool
-Shape::initEmptyShapes(JSCompartment *comp)
-{
-    /*
-     * NewArguments allocates dslots to have enough room for the argc of the
-     * particular arguments object being created.
-     * never mutated, it's safe to pretend to have all the slots possible.
-     *
-     * Note how the fast paths in jsinterp.cpp for JSOP_LENGTH and JSOP_GETELEM
-     * bypass resolution of scope properties for length and element indices on
-     * arguments objects. This helps ensure that any arguments object needing
-     * its own mutable scope (with unique shape) is a rare event.
-     */
-    if (!InitField(comp, &JSCompartment::emptyArgumentsShape, &js_ArgumentsClass))
-        return false;
-
-    if (!InitField(comp, &JSCompartment::emptyBlockShape, &js_BlockClass))
-        return false;
-
-    /*
-     * Initialize the shared scope for all empty Call objects so gets for args
-     * and vars do not force the creation of a mutable scope for the particular
-     * call object being accessed.
-     */
-    if (!InitField(comp, &JSCompartment::emptyCallShape, &js_CallClass))
-        return false;
-
-    /* A DeclEnv object holds the name binding for a named function expression. */
-    if (!InitField(comp, &JSCompartment::emptyDeclEnvShape, &js_DeclEnvClass))
-        return false;
-
-    /* Non-escaping native enumerator objects share this empty scope. */
-    if (!InitField(comp, &JSCompartment::emptyEnumeratorShape, &js_IteratorClass))
-        return false;
-
-    /* Same drill for With objects. */
-    if (!InitField(comp, &JSCompartment::emptyWithShape, &js_WithClass))
-        return false;
-
-    return true;
-}
-
-/* static */
-void
-Shape::finishEmptyShapes(JSCompartment *comp)
-{
-    comp->emptyArgumentsShape = NULL;
-    comp->emptyBlockShape = NULL;
-    comp->emptyCallShape = NULL;
-    comp->emptyDeclEnvShape = NULL;
-    comp->emptyEnumeratorShape = NULL;
-    comp->emptyWithShape = NULL;
-}
-
 JS_STATIC_ASSERT(sizeof(JSHashNumber) == 4);
 JS_STATIC_ASSERT(sizeof(jsid) == JS_BYTES_PER_WORD);
 
@@ -1283,6 +1218,13 @@ JSObject::removeProperty(JSContext *cx, jsid id)
             METER(shrinks);
             (void) table->change(-1, cx);
         }
+    }
+
+    /* Also, consider shrinking object slots if 25% or more are unused. */
+    if (hasSlotsArray()) {
+        JS_ASSERT(slotSpan() <= numSlots());
+        if ((slotSpan() + (slotSpan() >> 2)) < numSlots())
+            shrinkSlots(cx, slotSpan());
     }
 
     CHECK_SHAPE_CONSISTENCY(this);

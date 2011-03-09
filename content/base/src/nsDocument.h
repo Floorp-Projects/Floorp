@@ -515,9 +515,10 @@ class nsDocument : public nsIDocument,
                    public nsIDOM3EventTarget,
                    public nsIDOMNSEventTarget,
                    public nsIScriptObjectPrincipal,
-                   public nsIRadioGroupContainer,
+                   public nsIRadioGroupContainer_MOZILLA_2_0_BRANCH,
                    public nsIApplicationCacheContainer,
-                   public nsStubMutationObserver
+                   public nsStubMutationObserver,
+                   public nsIDOMNSDocument_MOZILLA_2_0_BRANCH
 {
 public:
   typedef mozilla::dom::Element Element;
@@ -789,6 +790,11 @@ public:
                              nsIFormControl* aRadio);
   NS_IMETHOD RemoveFromRadioGroup(const nsAString& aName,
                                   nsIFormControl* aRadio);
+  virtual PRUint32 GetRequiredRadioCount(const nsAString& aName) const;
+  virtual void RadioRequiredChanged(const nsAString& aName,
+                                    nsIFormControl* aRadio);
+  virtual bool GetValueMissingState(const nsAString& aName) const;
+  virtual void SetValueMissingState(const nsAString& aName, bool aValue);
 
   // for radio group
   nsresult GetRadioGroup(const nsAString& aName,
@@ -808,6 +814,7 @@ public:
 
   // nsIDOMNSDocument
   NS_DECL_NSIDOMNSDOCUMENT
+  NS_DECL_NSIDOMNSDOCUMENT_MOZILLA_2_0_BRANCH
 
   // nsIDOMDocumentEvent
   NS_DECL_NSIDOMDOCUMENTEVENT

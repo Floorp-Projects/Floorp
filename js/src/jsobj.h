@@ -121,20 +121,37 @@ CastAsObjectJsval(StrictPropertyOp op)
     return ObjectOrNullValue(CastAsObject(op));
 }
 
-} /* namespace js */
-
 /*
- * A representation of ECMA-262 ed. 5's internal property descriptor data
+ * A representation of ECMA-262 ed. 5's internal Property Descriptor data
  * structure.
  */
 struct PropDesc {
+    /*
+     * Original object from which this descriptor derives, passed through for
+     * the benefit of proxies.
+     */
+    js::Value pd;
+
+    js::Value value, get, set;
+
+    /* Property descriptor boolean fields. */
+    uint8 attrs;
+
+    /* Bits indicating which values are set. */
+    bool hasGet : 1;
+    bool hasSet : 1;
+    bool hasValue : 1;
+    bool hasWritable : 1;
+    bool hasEnumerable : 1;
+    bool hasConfigurable : 1;
+
     friend class js::AutoPropDescArrayRooter;
 
     PropDesc();
 
   public:
     /* 8.10.5 ToPropertyDescriptor(Obj) */
-    bool initialize(JSContext* cx, jsid id, const js::Value &v);
+    bool initialize(JSContext* cx, const js::Value &v);
 
     /* 8.10.1 IsAccessorDescriptor(desc) */
     bool isAccessorDescriptor() const {
@@ -183,24 +200,7 @@ struct PropDesc {
     js::StrictPropertyOp setter() const {
         return js::CastAsStrictPropertyOp(setterObject());
     }
-
-    js::Value pd;
-    jsid id;
-    js::Value value, get, set;
-
-    /* Property descriptor boolean fields. */
-    uint8 attrs;
-
-    /* Bits indicating which values are set. */
-    bool hasGet : 1;
-    bool hasSet : 1;
-    bool hasValue : 1;
-    bool hasWritable : 1;
-    bool hasEnumerable : 1;
-    bool hasConfigurable : 1;
 };
-
-namespace js {
 
 typedef Vector<PropDesc, 1> PropDescArray;
 
@@ -1055,6 +1055,12 @@ struct JSObject : js::gc::Cell {
     inline void setNativeIterator(js::NativeIterator *);
 
     /*
+     * Script-related getters.
+     */
+
+    inline JSScript *getScript() const;
+
+    /*
      * XML-related getters and setters.
      */
 
@@ -1302,6 +1308,7 @@ struct JSObject : js::gc::Cell {
     inline bool isClonedBlock() const;
     inline bool isCall() const;
     inline bool isRegExp() const;
+    inline bool isScript() const;
     inline bool isXML() const;
     inline bool isXMLId() const;
     inline bool isNamespace() const;
@@ -1936,8 +1943,16 @@ extern bool
 EvalKernel(JSContext *cx, uintN argc, js::Value *vp, EvalType evalType, JSStackFrame *caller,
            JSObject *scopeobj);
 
-extern JS_FRIEND_API(bool)
-IsBuiltinEvalFunction(JSFunction *fun);
+/*
+ * True iff |v| is the built-in eval function for the global object that
+ * corresponds to |scopeChain|.
+ */
+extern bool
+IsBuiltinEvalForScope(JSObject *scopeChain, const js::Value &v);
+
+/* True iff fun is a built-in eval function. */
+extern bool
+IsAnyBuiltinEval(JSFunction *fun);
 
 }
 
