@@ -145,7 +145,6 @@ StackSegment::computeNextFrame(JSStackFrame *fp) const
     JS_ASSERT(fp != getCurrentFrame());
 
     JSStackFrame *next = getCurrentFrame();
-    JSStackFrame *end = getInitialFrame()->prev();
     JSStackFrame *prev;
     while ((prev = next->prev()) != fp)
         next = prev;
