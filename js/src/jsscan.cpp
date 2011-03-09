@@ -399,9 +399,7 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
 {
     JSErrorReport report;
     char *message;
-    size_t linelength;
     jschar *linechars;
-    const jschar *linelimit;
     char *linebytes;
     bool warning;
     JSBool ok;
@@ -441,39 +439,39 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
 
     /*
      * Given a token, T, that we want to complain about: if T's (starting)
-     * lineno doesn't match TokenStream's lineno, that means we've scanned
-     * past the line that T starts on, which makes it hard to print some or
-     * all of T's (starting) line for context.  So we don't even try, leaving
-     * report.linebuf and friends zeroed.  This means that any error involving
-     * a multi-line token (eg. an unterminated multi-line string literal)
-     * won't have a context printed.
+     * lineno doesn't match TokenStream's lineno, that means we've scanned past
+     * the line that T starts on, which makes it hard to print some or all of
+     * T's (starting) line for context.
+     *
+     * So we don't even try, leaving report.linebuf and friends zeroed.  This
+     * means that any error involving a multi-line token (eg. an unterminated
+     * multi-line string literal) won't have a context printed.
      */
-    if (report.lineno != lineno)
-        goto report;
+    if (report.lineno == lineno) {
+        size_t linelength = userbuf.findEOL() - linebase;
 
-    linelimit = userbuf.findEOL();
-    linelength = linelimit - linebase;
+        linechars = (jschar *)cx->malloc((linelength + 1) * sizeof(jschar));
+        if (!linechars) {
+            warning = false;
+            goto out;
+        }
+        memcpy(linechars, linebase, linelength * sizeof(jschar));
+        linechars[linelength] = 0;
+        linebytes = js_DeflateString(cx, linechars, linelength);
+        if (!linebytes) {
+            warning = false;
+            goto out;
+        }
 
-    linechars = (jschar *)cx->malloc((linelength + 1) * sizeof(jschar));
-    if (!linechars) {
-        warning = false;
-        goto out;
+        /* Unicode and char versions of the offending source line, without final \n */
+        report.linebuf = linebytes;
+        report.uclinebuf = linechars;
+
+        /* The lineno check above means we should only see single-line tokens here. */
+        JS_ASSERT(tp->begin.lineno == tp->end.lineno);
+        report.tokenptr = report.linebuf + tp->begin.index;
+        report.uctokenptr = report.uclinebuf + tp->begin.index;
     }
-    memcpy(linechars, linebase, linelength * sizeof(jschar));
-    linechars[linelength] = 0;
-    linebytes = js_DeflateString(cx, linechars, linelength);
-    if (!linebytes) {
-        warning = false;
-        goto out;
-    }
-    /* Unicode and char versions of the offending source line, without final \n */
-    report.linebuf = linebytes;
-    report.uclinebuf = linechars;
-
-    /* The lineno check above means we should only see single-line tokens here. */
-    JS_ASSERT(tp->begin.lineno == tp->end.lineno);
-    report.tokenptr = report.linebuf + tp->begin.index;
-    report.uctokenptr = report.uclinebuf + tp->begin.index;
 
     /*
      * If there's a runtime exception type associated with this error
@@ -491,7 +489,6 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
      * XXX it'd probably be best if there was only one call to this
      * function, but there seem to be two error reporter call points.
      */
-  report:
     onError = cx->errorReporter;
 
     /*
