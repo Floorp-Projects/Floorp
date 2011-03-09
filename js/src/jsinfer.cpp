@@ -313,10 +313,6 @@ struct AnalyzeStateStack {
     /* Whether this node is the iterator for a 'for each' loop. */
     bool isForEach;
 
-    /* Any value pushed by a JSOP_DOUBLE. */
-    bool hasDouble;
-    double doubleValue;
-
     /* Any active initializer. */
     TypeObject *initializer;
 };
@@ -2945,16 +2941,12 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
             initializer = state.popped(2).initializer;
             pushed[0].addType(cx, (jstype) initializer);
 
-            TypeSet *types;
-            if (state.popped(1).hasDouble) {
-                Value val = DoubleValue(state.popped(1).doubleValue);
-                jsid id;
-                if (!js_InternNonIntElementId(cx, NULL, val, &id))
-                    JS_NOT_REACHED("Bad");
-                types = initializer->getProperty(cx, id, true);
-            } else {
-                types = initializer->getProperty(cx, JSID_VOID, true);
-            }
+            /*
+             * Assume the initialized element is an integer. INITELEM can be used
+             * for doubles which don't map to the JSID_VOID property, which must
+             * be caught with dynamic monitoring.
+             */
+            TypeSet *types = initializer->getProperty(cx, JSID_VOID, true);
             if (!types)
                 return false;
 
@@ -3265,13 +3257,6 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
         uintN flags = pc[1];
         if (flags & JSITER_FOREACH)
             state.popped(0).isForEach = true;
-        break;
-      }
-
-      case JSOP_DOUBLE: {
-        AnalyzeStateStack &stack = state.popped(0);
-        stack.hasDouble = true;
-        stack.doubleValue = GetScriptConst(cx, script, pc).toDouble();
         break;
       }
 
