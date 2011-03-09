@@ -806,6 +806,7 @@ IsTokenSane(Token *tp)
         /* Only certain token kinds can be multi-line. */
         switch (tp->type) {
           case TOK_STRING:
+          case TOK_XMLATTR:
           case TOK_XMLSPACE:
           case TOK_XMLTEXT:
           case TOK_XMLCOMMENT:
