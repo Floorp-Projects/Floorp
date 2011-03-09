@@ -90,18 +90,11 @@ GetValueType(JSContext *cx, const Value &val)
 inline jsid
 MakeTypeId(JSContext *cx, jsid id)
 {
-    if (JSID_IS_VOID(id))
-        return JSID_VOID;
-
     /*
      * All integers must map to the aggregate property for index types, including
      * negative integers.
      */
     if (JSID_IS_INT(id))
-        return JSID_VOID;
-
-    /* :FIXME: What are object jsids for? Only XML seems to do this. */
-    if (JSID_IS_OBJECT(id))
         return JSID_VOID;
 
     /*
@@ -121,7 +114,6 @@ MakeTypeId(JSContext *cx, jsid id)
         return id;
     }
 
-    JS_NOT_REACHED("Unknown id");
     return JSID_VOID;
 }
 

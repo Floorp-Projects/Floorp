@@ -7278,6 +7278,9 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
         obj = tmp;
     }
 
+    if (!cx->addTypePropertyId(obj->getType(), JS_DEFAULT_XML_NAMESPACE_ID, types::TYPE_UNKNOWN))
+        return JS_FALSE;
+
     ns = js_ConstructObject(cx, &js_NamespaceClass, NULL, obj, 0, NULL);
     if (!ns)
         return JS_FALSE;
