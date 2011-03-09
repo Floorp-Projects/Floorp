@@ -55,7 +55,6 @@
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsparse.h"
-#include "jsscan.h"
 #include "jsstr.h"
 #include "jsversion.h"
 #include "jsxml.h"

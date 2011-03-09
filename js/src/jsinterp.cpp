@@ -66,7 +66,6 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jspropertycache.h"
-#include "jsscan.h"
 #include "jsemit.h"
 #include "jsscope.h"
 #include "jsscript.h"
