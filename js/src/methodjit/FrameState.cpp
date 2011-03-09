@@ -1664,32 +1664,33 @@ FrameState::ensureDouble(FrameEntry *fe)
         return;
     }
 
-    if (fe->isCopy())
-        fe = fe->copyOf();
-
     if (fe->isType(JSVAL_TYPE_DOUBLE))
         return;
 
-    if (fe->isCopied()) {
-        /* Find and fixup the type for any copies of this entry. */
+    FrameEntry *backing = fe;
+    if (fe->isCopy()) {
+        /* Forget this entry is a copy.  We are converting this entry, not the backing. */
+        backing = fe->copyOf();
+        fe->clear();
+    } else if (fe->isCopied()) {
+        /* Sync and forget any copies of this entry. */
         for (uint32 i = fe->trackerIndex() + 1; i < tracker.nentries; i++) {
             FrameEntry *nfe = tracker[i];
             if (nfe->isCopy() && nfe->copyOf() == fe) {
-                nfe->setType(JSVAL_TYPE_DOUBLE, NULL);
-                nfe->data.unsync();
-                nfe->type.unsync();
+                syncFe(nfe);
+                nfe->resetSynced();
             }
         }
     }
 
     FPRegisterID fpreg = allocFPReg();
 
-    if (fe->isType(JSVAL_TYPE_INT32)) {
-        RegisterID data = tempRegForData(fe);
+    if (backing->isType(JSVAL_TYPE_INT32)) {
+        RegisterID data = tempRegForData(backing);
         masm.convertInt32ToDouble(data, fpreg);
     } else {
-        syncFe(fe);
-        masm.moveInt32OrDouble(addressOf(fe), fpreg);
+        syncFe(backing);
+        masm.moveInt32OrDouble(addressOf(backing), fpreg);
     }
 
     forgetAllRegs(fe);
@@ -1700,8 +1701,6 @@ FrameState::ensureDouble(FrameEntry *fe)
 
     fe->data.unsync();
     fe->type.unsync();
-
-    return;
 }
 
 void
