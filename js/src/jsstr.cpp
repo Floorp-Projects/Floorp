@@ -783,6 +783,7 @@ str_toSource(JSContext *cx, uintN argc, Value *vp)
     char buf[16];
     size_t j = JS_snprintf(buf, sizeof buf, "(new String(");
 
+    JS::Anchor<JSString *> anchor(str);
     size_t k = str->length();
     const jschar *s = str->getChars(cx);
     if (!s)
@@ -2158,14 +2159,14 @@ DoReplace(JSContext *cx, RegExpStatics *res, ReplaceData &rdata)
     for (; dp; dp = js_strchr_limit(dp, '$', ep)) {
         /* Move one of the constant portions of the replacement value. */
         size_t len = dp - cp;
-        JS_ALWAYS_TRUE(rdata.sb.append(cp, len));
+        rdata.sb.infallibleAppend(cp, len);
         cp = dp;
 
         JSSubString sub;
         size_t skip;
         if (InterpretDollar(cx, res, dp, ep, rdata, &sub, &skip)) {
             len = sub.length;
-            JS_ALWAYS_TRUE(rdata.sb.append(sub.chars, len));
+            rdata.sb.infallibleAppend(sub.chars, len);
             cp += skip;
             dp += skip;
         } else {
@@ -2194,7 +2195,7 @@ ReplaceRegExpCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
     size_t growth = leftlen + replen;
     if (!rdata.sb.reserve(rdata.sb.length() + growth))
         return false;
-    JS_ALWAYS_TRUE(rdata.sb.append(left, leftlen)); /* skipped-over portion of the search value */
+    rdata.sb.infallibleAppend(left, leftlen); /* skipped-over portion of the search value */
     DoReplace(cx, res, rdata);
     return true;
 }
@@ -2306,7 +2307,7 @@ BuildDollarReplacement(JSContext *cx, JSString *textstrArg, JSLinearString *reps
         return false;
 
     /* Move the pre-dollar chunk in bulk. */
-    JS_ALWAYS_TRUE(newReplaceChars.append(repstr->chars(), firstDollar));
+    newReplaceChars.infallibleAppend(repstr->chars(), firstDollar);
 
     /* Move the rest char-by-char, interpreting dollars as we encounter them. */
 #define ENSURE(__cond) if (!(__cond)) return false;
@@ -3136,7 +3137,6 @@ static JSFunctionSpec string_methods[] = {
     /* Java-like methods. */
     JS_FN_TYPE(js_toString_str,     js_str_toString,       0,0, JS_TypeHandlerString),
     JS_FN_TYPE(js_valueOf_str,      js_str_toString,       0,0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_toJSON_str,       js_str_toString,       0,0, JS_TypeHandlerString),
     JS_FN_TYPE("substring",         str_substring,         2,JSFUN_GENERIC_NATIVE, JS_TypeHandlerString),
     JS_FN_TYPE("toLowerCase",       str_toLowerCase,       0,JSFUN_GENERIC_NATIVE, JS_TypeHandlerString),
     JS_FN_TYPE("toUpperCase",       str_toUpperCase,       0,JSFUN_GENERIC_NATIVE, JS_TypeHandlerString),

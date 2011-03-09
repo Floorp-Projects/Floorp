@@ -266,21 +266,29 @@ MarkObject(JSTracer *trc, JSObject &obj, const char *name)
 static inline void
 MarkChildren(JSTracer *trc, JSObject *obj)
 {
+    /*
+     * If obj either has no map or no type, it must be a newborn. The type is
+     * set first, and must be marked in case constructing the map triggered GC.
+     */
+    if (obj->type && !obj->type->marked)
+        obj->type->trace(trc);
+
     /* If obj has no map, it must be a newborn. */
     if (!obj->map)
         return;
 
     /* Trace universal (ops-independent) members. */
-    if (!obj->type->marked)
-        obj->type->trace(trc);
     if (!obj->isDenseArray() && obj->newType && !obj->newType->marked)
         obj->newType->trace(trc);
     if (JSObject *parent = obj->getParent())
         MarkObject(trc, *parent, "parent");
 
-    /* Delegate to ops or the native marking op. */
-    TraceOp op = obj->getOps()->trace;
-    (op ? op : js_TraceObject)(trc, obj);
+    Class *clasp = obj->getClass();
+    if (clasp->trace)
+        clasp->trace(trc, obj);
+
+    if (obj->isNative())
+        js_TraceObject(trc, obj);
 }
 
 static inline void

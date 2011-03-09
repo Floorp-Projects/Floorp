@@ -531,10 +531,8 @@ public:
 
   /**
    * Instructs this window to synchronously dispatch a popState event.
-   * aIsInitial should be true if the event corresponds to a popState fired
-   * immediately after onload and false otherwise.
    */
-  virtual nsresult DispatchSyncPopState(PRBool aIsInitial) = 0;
+  virtual nsresult DispatchSyncPopState() = 0;
 
   /**
    * Tell this window that there is an observer for orientation changes

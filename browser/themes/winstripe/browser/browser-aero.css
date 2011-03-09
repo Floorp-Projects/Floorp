@@ -170,19 +170,15 @@
     border-top-right-radius: 3.5px;
     background-clip: padding-box;
   }
-  #main-window[sizemode=normal]:not([inFullscreen=true])[disablechrome] #navigator-toolbox::after {
-    visibility: visible;
-    background-color: @toolbarShadowColor@;
-  }
-  #main-window[sizemode=normal]:not([inFullscreen=true]) #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme),
-  #main-window[sizemode=normal]:not([inFullscreen=true])[disablechrome] #TabsToolbar {
+  #main-window[sizemode=normal]:not([inFullscreen]):not([disablechrome]) #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme) {
     margin-bottom: -1px;
-    position: relative;
     background-image: none !important;
+  }
+  #main-window[sizemode=normal]:not([inFullscreen]):not([disablechrome]) #tabbrowser-tabs[tabsontop=true] > .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox > .scrollbox-innerbox:not(:-moz-lwtheme) {
+    position: relative;
   }
 
   #navigator-toolbox[tabsontop=false] > #PersonalToolbar {
-    padding-top: 0 !important;
     margin-top: 2px;
     border-top: 1px solid @toolbarShadowColor@;
   }
@@ -289,7 +285,7 @@
   }
 
   #toolbar-menubar:not([autohide=true]):not(:-moz-lwtheme):-moz-system-metric(windows-default-theme),
-  #main-window:not([tabsintitlebar]) #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme):-moz-system-metric(windows-default-theme),
+  #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme):-moz-system-metric(windows-default-theme),
   #navigator-toolbox[tabsontop=false] > toolbar:not(#toolbar-menubar):not(:-moz-lwtheme):-moz-system-metric(windows-default-theme) {
     -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
     background-color: transparent;

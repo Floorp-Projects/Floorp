@@ -873,7 +873,7 @@ nsXULAppInfo::GetUserCanElevate(PRBool *aUserCanElevate)
     //      be elevated again)
     //   TokenElevationTypeLimited: The token is linked to a limited token 
     //     (e.g. UAC is enabled and the user is not elevated, so they can be
-    //	    elevated)
+    //      elevated)
     *aUserCanElevate = (elevationType == VistaTokenElevationTypeLimited);
   }
 
@@ -2762,19 +2762,24 @@ static DWORD InitDwriteBG(LPVOID lpdwThreadParam)
   SetThreadPriority(GetCurrentThread(), THREAD_MODE_BACKGROUND_BEGIN);
   LOGREGISTRY(L"loading dwrite.dll");
   HMODULE dwdll = LoadLibraryW(L"dwrite.dll");
-  DWriteCreateFactoryFunc createDWriteFactory = (DWriteCreateFactoryFunc)
-    GetProcAddress(dwdll, "DWriteCreateFactory");
-  if (createDWriteFactory) {
-    LOGREGISTRY(L"creating dwrite factory");
-    IDWriteFactory *factory;
-    HRESULT hr = createDWriteFactory(
-      DWRITE_FACTORY_TYPE_SHARED,
-      __uuidof(IDWriteFactory),
-      reinterpret_cast<IUnknown**>(&factory));
-    
-    LOGREGISTRY(L"dwrite factory done");
-    factory->Release();
-    LOGREGISTRY(L"freed factory");
+  if (dwdll) {
+    DWriteCreateFactoryFunc createDWriteFactory = (DWriteCreateFactoryFunc)
+      GetProcAddress(dwdll, "DWriteCreateFactory");
+    if (createDWriteFactory) {
+      LOGREGISTRY(L"creating dwrite factory");
+      IDWriteFactory *factory;
+      HRESULT hr = createDWriteFactory(
+        DWRITE_FACTORY_TYPE_SHARED,
+        __uuidof(IDWriteFactory),
+        reinterpret_cast<IUnknown**>(&factory));
+      if (SUCCEEDED(hr)) {
+        LOGREGISTRY(L"dwrite factory done");
+        factory->Release();
+        LOGREGISTRY(L"freed factory");
+      } else {
+        LOGREGISTRY(L"failed to create factory");
+      }
+    }
   }
   SetThreadPriority(GetCurrentThread(), THREAD_MODE_BACKGROUND_END);
   return 0;
@@ -3361,6 +3366,18 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       return 1;
     }
 
+#if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
+    // DESKTOP_STARTUP_ID is cleared now,
+    // we recover it in case we need a restart.
+    if (!desktopStartupID.IsEmpty()) {
+      nsCAutoString desktopStartupEnv;
+      desktopStartupEnv.AssignLiteral("DESKTOP_STARTUP_ID=");
+      desktopStartupEnv.Append(desktopStartupID);
+      // Leak it with extreme prejudice!
+      PR_SetEnv(ToNewCString(desktopStartupEnv));
+    }
+#endif
+
 #if defined(MOZ_UPDATER) && !defined(ANDROID)
     // Check for and process any available updates
     nsCOMPtr<nsIFile> updRoot;
@@ -3702,6 +3719,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           if (toolkit && !desktopStartupID.IsEmpty()) {
             toolkit->SetDesktopStartupID(desktopStartupID);
           }
+          // Clear the environment variable so it won't be inherited by
+          // child processes and confuse things.
+          g_unsetenv ("DESKTOP_STARTUP_ID");
 #endif
 
 #ifdef XP_MACOSX
@@ -3816,16 +3836,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         static char kEnvVar[MAXPATHLEN];
         sprintf(kEnvVar, "XRE_BINARY_PATH=%s", gBinaryPath);
         PR_SetEnv(kEnvVar);
-      }
-#endif
-
-#if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
-      if (!desktopStartupID.IsEmpty()) {
-        nsCAutoString desktopStartupEnv;
-        desktopStartupEnv.AssignLiteral("DESKTOP_STARTUP_ID=");
-        desktopStartupEnv.Append(desktopStartupID);
-        // Leak it with extreme prejudice!
-        PR_SetEnv(ToNewCString(desktopStartupEnv));
       }
 #endif
 

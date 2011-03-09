@@ -38,7 +38,6 @@
 // Mirrors WINDOW_ATTRIBUTES IN nsSessionStore.js
 const WINDOW_ATTRIBUTES = ["width", "height", "screenX", "screenY", "sizemode"];
 
-Cu.import("resource://gre/modules/Services.jsm");
 let ss = Cc["@mozilla.org/browser/sessionstore;1"].
          getService(Ci.nsISessionStore);
 
@@ -273,4 +272,3 @@ function afterTestCleanup(aNewWin) {
     runNextTestOrFinish();
   });
 }
-

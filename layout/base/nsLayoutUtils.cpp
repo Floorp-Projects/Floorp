@@ -1010,13 +1010,26 @@ nsLayoutUtils::RoundedRectIntersectRect(const nsRect& aRoundedRect,
 }
 
 nsRect
+nsLayoutUtils::MatrixTransformRectOut(const nsRect &aBounds,
+                                      const gfxMatrix &aMatrix, float aFactor)
+{
+  nsRect outside = aBounds;
+  outside.ScaleRoundOut(1/aFactor);
+  gfxRect image = aMatrix.TransformBounds(gfxRect(outside.x,
+                                                  outside.y,
+                                                  outside.width,
+                                                  outside.height));
+  return RoundGfxRectToAppRect(image, aFactor);
+}
+
+nsRect
 nsLayoutUtils::MatrixTransformRect(const nsRect &aBounds,
                                    const gfxMatrix &aMatrix, float aFactor)
 {
-  gfxRect image = aMatrix.TransformBounds(gfxRect(NSAppUnitsToFloatPixels(aBounds.x, aFactor),
-                                                  NSAppUnitsToFloatPixels(aBounds.y, aFactor),
-                                                  NSAppUnitsToFloatPixels(aBounds.width, aFactor),
-                                                  NSAppUnitsToFloatPixels(aBounds.height, aFactor)));
+  gfxRect image = aMatrix.TransformBounds(gfxRect(NSAppUnitsToDoublePixels(aBounds.x, aFactor),
+                                                  NSAppUnitsToDoublePixels(aBounds.y, aFactor),
+                                                  NSAppUnitsToDoublePixels(aBounds.width, aFactor),
+                                                  NSAppUnitsToDoublePixels(aBounds.height, aFactor)));
 
   return RoundGfxRectToAppRect(image, aFactor);
 }
@@ -1398,8 +1411,19 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     builder.SetSnappingEnabled(PR_FALSE);
   }
   nsRect canvasArea(nsPoint(0, 0), aFrame->GetSize());
+
+#ifdef DEBUG
   if (ignoreViewportScrolling) {
-    NS_ASSERTION(!aFrame->GetParent(), "must have root frame");
+    nsIDocument* doc = aFrame->GetContent() ?
+      aFrame->GetContent()->GetCurrentDoc() : nsnull;
+    NS_ASSERTION(!aFrame->GetParent() ||
+                 (doc && doc->IsBeingUsedAsImage()),
+                 "Only expecting ignoreViewportScrolling for root frames and "
+                 "for image documents.");
+  }
+#endif
+
+  if (ignoreViewportScrolling && !aFrame->GetParent()) {
     nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
     if (rootScrollFrame) {
       nsIScrollableFrame* rootScrollableFrame =
@@ -1526,8 +1550,6 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   PRUint32 flags = nsDisplayList::PAINT_DEFAULT;
   if (aFlags & PAINT_WIDGET_LAYERS) {
     flags |= nsDisplayList::PAINT_USE_WIDGET_LAYERS;
-
-    nsIWidget *widget = aFrame->GetNearestWidget();
     if (willFlushRetainedLayers) {
       // The caller wanted to paint from retained layers, but set up
       // the paint in such a way that we can't use them.  We're going
@@ -1537,17 +1559,15 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
       // not do this.
       NS_WARNING("Flushing retained layers!");
       flags |= nsDisplayList::PAINT_FLUSH_LAYERS;
-    } else if (widget && !(aFlags & PAINT_DOCUMENT_RELATIVE)) {
-      nsIWidget_MOZILLA_2_0_BRANCH* widget2 =
-        static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget);
-      PRInt32 pixelRatio = presContext->AppUnitsPerDevPixel();
-      nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(pixelRatio));
-      builder.SetFinalTransparentRegion(visibleRegion);
-      widget2->UpdateTransparentRegion(visibleWindowRegion);
-
-      // If we're finished building display list items for painting of the outermost
-      // pres shell, notify the widget about any toolbars we've encountered.
-      widget2->UpdateThemeGeometries(builder.GetThemeGeometries());
+    } else if (!(aFlags & PAINT_DOCUMENT_RELATIVE)) {
+      nsIWidget_MOZILLA_2_0_BRANCH *widget2 =
+        static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(aFrame->GetNearestWidget());
+      if (widget2) {
+        builder.SetFinalTransparentRegion(visibleRegion);
+        // If we're finished building display list items for painting of the outermost
+        // pres shell, notify the widget about any toolbars we've encountered.
+        widget2->UpdateThemeGeometries(builder.GetThemeGeometries());
+      }
     }
   }
   if (aFlags & PAINT_EXISTING_TRANSACTION) {
@@ -1555,6 +1575,20 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   }
 
   list.PaintRoot(&builder, aRenderingContext, flags);
+
+  // Update the widget's transparent region information. This sets
+  // glass boundaries on Windows.
+  if ((aFlags & PAINT_WIDGET_LAYERS) &&
+      !willFlushRetainedLayers &&
+      !(aFlags & PAINT_DOCUMENT_RELATIVE)) {
+    nsIWidget_MOZILLA_2_0_BRANCH *widget2 =
+      static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(aFrame->GetNearestWidget());
+    if (widget2) {
+      PRInt32 pixelRatio = presContext->AppUnitsPerDevPixel();
+      nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(presContext->AppUnitsPerDevPixel()));
+      widget2->UpdateTransparentRegion(visibleWindowRegion);
+    }
+  }
 
 #ifdef DEBUG
   if (gDumpPaintList) {

@@ -807,6 +807,10 @@ protected:
   {
   }
 
+  NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                        JSObject *obj, jsid id, PRUint32 flags,
+                        JSObject **objp, PRBool *_retval);
+
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
                                     const nsAString& aName,
                                     nsWrapperCache **cache,
@@ -1075,6 +1079,9 @@ protected:
   }
 
 public:
+  NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                        JSObject *obj, jsid id, PRUint32 flags,
+                        JSObject **objp, PRBool *_retval);
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsid id, jsval *vp,
                          PRBool *_retval);

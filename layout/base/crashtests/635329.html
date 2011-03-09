@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html style="margin-left: 100%">
+<head>
+<script>
+
+function boom()
+{
+  document.documentElement.offsetHeight;
+  document.body.lastChild.data = "\u062A"; // ARABIC LETTER TEH
+  document.body.lastChild.data += "Y";
+  document.documentElement.offsetHeight;
+}
+
+</script>
+</head>
+
+<body onload="boom();"><span>A</span> B C</body>
+</html>

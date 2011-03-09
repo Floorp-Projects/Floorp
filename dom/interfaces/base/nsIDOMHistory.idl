@@ -61,3 +61,9 @@ interface nsIDOMHistory : nsISupports
                                           in DOMString aTitle,
                                           [optional] in DOMString aURL);
 };
+
+[scriptable, uuid(949fcdc1-664b-4a4b-939a-7144c94b48ac)]
+interface nsIDOMHistory_MOZILLA_2_0_BRANCH : nsISupports
+{
+  readonly attribute nsIVariant state;
+};

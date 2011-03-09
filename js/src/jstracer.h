@@ -236,6 +236,9 @@ static void debug_only_printf(int mask, const char *fmt, ...) JS_BEGIN_MACRO JS_
 
 #elif defined(JS_JIT_SPEW)
 
+// Top level Nanojit config object.
+extern nanojit::Config NJConfig;
+
 // Top level logging controller object.
 extern nanojit::LogControl LogController;
 
@@ -331,14 +334,6 @@ public:
      * primary trace's outcome.                                                 \
      */                                                                         \
     _(BRANCH)                                                                   \
-    /*                                                                          \
-     * Exit at a tableswitch via a numbered case.                               \
-     */                                                                         \
-    _(CASE)                                                                     \
-    /*                                                                          \
-     * Exit at a tableswitch via the default case.                              \
-     */                                                                         \
-    _(DEFAULT)                                                                  \
     _(LOOP)                                                                     \
     _(NESTED)                                                                   \
     /*                                                                          \
@@ -1268,7 +1263,7 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* entryFrameIns() const;
     JS_REQUIRES_STACK JSStackFrame* frameIfInRange(JSObject* obj, unsigned* depthp = NULL) const;
     JS_REQUIRES_STACK RecordingStatus traverseScopeChain(JSObject *obj, nanojit::LIns *obj_ins, JSObject *obj2, nanojit::LIns *&obj2_ins);
-    JS_REQUIRES_STACK AbortableRecordingStatus scopeChainProp(JSObject* obj, Value*& vp, nanojit::LIns*& ins, NameResult& nr);
+    JS_REQUIRES_STACK AbortableRecordingStatus scopeChainProp(JSObject* obj, Value*& vp, nanojit::LIns*& ins, NameResult& nr, JSObject **scopeObjp = NULL);
     JS_REQUIRES_STACK RecordingStatus callProp(JSObject* obj, JSProperty* shape, jsid id, Value*& vp, nanojit::LIns*& ins, NameResult& nr);
 
     JS_REQUIRES_STACK nanojit::LIns* arg(unsigned n);
@@ -1298,9 +1293,6 @@ class TraceRecorder
 
     JS_REQUIRES_STACK AbortableRecordingStatus ifop();
     JS_REQUIRES_STACK RecordingStatus switchop();
-#ifdef NANOJIT_IA32
-    JS_REQUIRES_STACK AbortableRecordingStatus tableswitch();
-#endif
     JS_REQUIRES_STACK RecordingStatus inc(Value& v, jsint incr, bool pre = true);
     JS_REQUIRES_STACK RecordingStatus inc(const Value &v, nanojit::LIns*& v_ins,
                                           Value &v_out, jsint incr,
@@ -1571,18 +1563,34 @@ class TraceRecorder
     enum AbortResult { NORMAL_ABORT, JIT_RESET };
     JS_REQUIRES_STACK AbortResult finishAbort(const char* reason);
 
+#ifdef DEBUG
+    /* Debug printing functionality to emit printf() on trace. */
+    JS_REQUIRES_STACK void tprint(const char *format, int count, nanojit::LIns *insa[]);
+    JS_REQUIRES_STACK void tprint(const char *format);
+    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins);
+    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
+                                  nanojit::LIns *ins2);
+    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
+                                  nanojit::LIns *ins2, nanojit::LIns *ins3);
+    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
+                                  nanojit::LIns *ins2, nanojit::LIns *ins3,
+                                  nanojit::LIns *ins4);
+    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
+                                  nanojit::LIns *ins2, nanojit::LIns *ins3,
+                                  nanojit::LIns *ins4, nanojit::LIns *ins5);
+    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
+                                  nanojit::LIns *ins2, nanojit::LIns *ins3,
+                                  nanojit::LIns *ins4, nanojit::LIns *ins5,
+                                  nanojit::LIns *ins6);
+#endif
+
     friend class ImportBoxedStackSlotVisitor;
-    friend class ImportUnboxedStackSlotVisitor;
-    friend class ImportGlobalSlotVisitor;
     friend class AdjustCallerGlobalTypesVisitor;
     friend class AdjustCallerStackTypesVisitor;
     friend class TypeCompatibilityVisitor;
-    friend class ImportFrameSlotsVisitor;
     friend class SlotMap;
     friend class DefaultSlotMap;
     friend class DetermineTypesVisitor;
-    friend class RecursiveSlotMap;
-    friend class UpRecursiveSlotMap;
     friend MonitorResult RecordLoopEdge(JSContext*, TraceMonitor*, uintN&);
     friend TracePointAction RecordTracePoint(JSContext*, TraceMonitor*, uintN &inlineCallCount,
                                              bool *blacklist);
@@ -1639,27 +1647,6 @@ class TraceRecorder
         pendingGlobalSlotsToSet.erase(pi);
         return true;
     }
-
-#ifdef DEBUG
-    /* Debug printing functionality to emit printf() on trace. */
-    JS_REQUIRES_STACK void tprint(const char *format, int count, nanojit::LIns *insa[]);
-    JS_REQUIRES_STACK void tprint(const char *format);
-    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins);
-    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
-                                  nanojit::LIns *ins2);
-    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
-                                  nanojit::LIns *ins2, nanojit::LIns *ins3);
-    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
-                                  nanojit::LIns *ins2, nanojit::LIns *ins3,
-                                  nanojit::LIns *ins4);
-    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
-                                  nanojit::LIns *ins2, nanojit::LIns *ins3,
-                                  nanojit::LIns *ins4, nanojit::LIns *ins5);
-    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
-                                  nanojit::LIns *ins2, nanojit::LIns *ins3,
-                                  nanojit::LIns *ins4, nanojit::LIns *ins5,
-                                  nanojit::LIns *ins6);
-#endif
 };
 
 /* :FIXME: bug 637856 disabling traceJit if inference is enabled */

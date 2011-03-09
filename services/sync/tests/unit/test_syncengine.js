@@ -1,6 +1,5 @@
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/ext/Sync.js");
 
 function makeSteamEngine() {
   return new SyncEngine('Steam');
@@ -83,7 +82,7 @@ function test_toFetch() {
     engine.toFetch = toFetch;
     do_check_eq(engine.toFetch, toFetch);
     // toFetch is written asynchronously
-    Sync.sleep(0);
+    engine._sleep(0);
     let fakefile = syncTesting.fakeFilesystem.fakeContents[filename];
     do_check_eq(fakefile, JSON.stringify(toFetch));
 

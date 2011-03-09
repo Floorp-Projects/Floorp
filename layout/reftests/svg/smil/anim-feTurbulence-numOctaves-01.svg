@@ -49,7 +49,7 @@
   -->
 
 
-  <!-- Some calcMode="linear" tests animating *up* to higer values. -->
+  <!-- Some calcMode="linear" tests animating *up* to higher values. -->
 
   <!-- At 5s the animated value should be 3. -->
   <filter id="filter_1" x="0%" y="0%" width="100%" height="100%">
@@ -157,7 +157,7 @@
   <rect x="20" y="60" width="20" height="20" filter="url(#filter_8)"/>
 
 
-  <!-- Some calcMode="discrete" tests animating *up* to higer values. -->
+  <!-- Some calcMode="discrete" tests animating *up* to higher values. -->
 
   <!-- At 5s the animated value should be 1. -->
   <filter id="filter_9" x="0%" y="0%" width="100%" height="100%">

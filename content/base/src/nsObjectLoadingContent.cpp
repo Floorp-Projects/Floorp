@@ -934,10 +934,10 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
   nsIDocument* doc = thisContent->GetOwnerDoc();
-  if (!doc || doc->IsStaticDocument()) {
+  if (!doc || doc->IsStaticDocument() || doc->IsBeingUsedAsImage()) {
     return NS_OK;
   }
-  
+
   // "revoke" any existing instantiate event as it likely has out of
   // date data (frame pointer etc).
   mPendingInstantiateEvent = nsnull;
@@ -1030,8 +1030,9 @@ nsObjectLoadingContent::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
                                                PRUint32 aFlags,
                                                nsIAsyncVerifyRedirectCallback *cb)
 {
-  // If we're already busy with a new load, cancel the redirect
-  if (aOldChannel != mChannel) {
+  // If we're already busy with a new load, or have no load at all,
+  // cancel the redirect.
+  if (!mChannel || aOldChannel != mChannel) {
     return NS_BINDING_ABORTED;
   }
 
@@ -1194,7 +1195,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   NS_ASSERTION(thisContent, "must be a content");
 
   nsIDocument* doc = thisContent->GetOwnerDoc();
-  if (!doc) {
+  if (!doc || doc->IsBeingUsedAsImage()) {
     return NS_OK;
   }
 

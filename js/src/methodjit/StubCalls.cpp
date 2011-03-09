@@ -52,7 +52,6 @@
 #include "jstypes.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
-#include "jstracer.h"
 
 #include "jsinterpinlines.h"
 #include "jspropertycache.h"
@@ -331,6 +330,16 @@ stubs::SetGlobalName(VMFrame &f, JSAtom *atom)
 template void JS_FASTCALL stubs::SetGlobalName<true>(VMFrame &f, JSAtom *atom);
 template void JS_FASTCALL stubs::SetGlobalName<false>(VMFrame &f, JSAtom *atom);
 
+static inline void
+PushImplicitThis(VMFrame &f, JSObject *obj, Value &rval)
+{
+    Value thisv;
+
+    if (!ComputeImplicitThis(f.cx, obj, rval, &thisv))
+        return;
+    *f.regs.sp++ = thisv;
+}
+
 static JSObject *
 NameOp(VMFrame &f, JSObject *obj, bool callname = false)
 {
@@ -345,91 +354,56 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
     JS_PROPERTY_CACHE(cx).test(cx, f.regs.pc, obj, obj2, entry, atom);
     if (!atom) {
         if (entry->vword.isFunObj()) {
-            f.regs.sp++;
-            f.regs.sp[-1].setObject(entry->vword.toFunObj());
+            rval.setObject(entry->vword.toFunObj());
         } else if (entry->vword.isSlot()) {
             uintN slot = entry->vword.toSlot();
-            f.regs.sp++;
-            f.regs.sp[-1] = obj2->nativeGetSlot(slot);
+            rval = obj2->nativeGetSlot(slot);
         } else {
             JS_ASSERT(entry->vword.isShape());
             shape = entry->vword.toShape();
             NATIVE_GET(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, &rval, return NULL);
-            f.regs.sp++;
-            f.regs.sp[-1] = rval;
         }
 
-        /*
-         * Push results, the same as below, but with a prop$ hit there
-         * is no need to test for the unusual and uncacheable case where
-         * the caller determines |this|.
-         */
-#if DEBUG
-        Class *clasp;
-        JS_ASSERT(!obj->getParent() ||
-                  (clasp = obj->getClass()) == &js_CallClass ||
-                  clasp == &js_BlockClass ||
-                  clasp == &js_DeclEnvClass);
-#endif
-        if (callname) {
-            f.regs.sp++;
-            f.regs.sp[-1].setUndefined();
-        }
-        return obj;
-    }
-
-    jsid id;
-    id = ATOM_TO_JSID(atom);
-    JSProperty *prop;
-    if (!js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop))
-        return NULL;
-    if (!prop) {
-        /* Kludge to allow (typeof foo == "undefined") tests. */
-        JSOp op2 = js_GetOpcode(cx, f.fp()->script(), f.regs.pc + JSOP_NAME_LENGTH);
-        if (op2 == JSOP_TYPEOF) {
-            f.regs.sp++;
-            f.regs.sp[-1].setUndefined();
-            return obj;
-        }
-        ReportAtomNotDefined(cx, atom);
-        return NULL;
-    }
-
-    /* Take the slow path if prop was not found in a native object. */
-    if (!obj->isNative() || !obj2->isNative()) {
-        if (!obj->getProperty(cx, id, &rval))
-            return NULL;
+        JS_ASSERT(obj->isGlobal() || IsCacheableNonGlobalScope(obj));
     } else {
-        shape = (Shape *)prop;
-        JSObject *normalized = obj;
-        if (normalized->getClass() == &js_WithClass && !shape->hasDefaultGetter())
-            normalized = js_UnwrapWithObject(cx, normalized);
-        NATIVE_GET(cx, normalized, obj2, shape, JSGET_METHOD_BARRIER, &rval, return NULL);
-    }
+        jsid id;
+        id = ATOM_TO_JSID(atom);
+        JSProperty *prop;
+        if (!js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop))
+            return NULL;
+        if (!prop) {
+            /* Kludge to allow (typeof foo == "undefined") tests. */
+            JSOp op2 = js_GetOpcode(cx, f.fp()->script(), f.regs.pc + JSOP_NAME_LENGTH);
+            if (op2 == JSOP_TYPEOF) {
+                f.regs.sp++;
+                f.regs.sp[-1].setUndefined();
+                return obj;
+            }
+            ReportAtomNotDefined(cx, atom);
+            return NULL;
+        }
 
-    f.regs.sp++;
-    f.regs.sp[-1] = rval;
+        /* Take the slow path if prop was not found in a native object. */
+        if (!obj->isNative() || !obj2->isNative()) {
+            if (!obj->getProperty(cx, id, &rval))
+                return NULL;
+        } else {
+            shape = (Shape *)prop;
+            JSObject *normalized = obj;
+            if (normalized->getClass() == &js_WithClass && !shape->hasDefaultGetter())
+                normalized = js_UnwrapWithObject(cx, normalized);
+            NATIVE_GET(cx, normalized, obj2, shape, JSGET_METHOD_BARRIER, &rval, return NULL);
+        }
+    }
 
     if (rval.isUndefined() && !f.script()->typeMonitorUndefined(cx, f.regs.pc))
         return NULL;
 
-    if (callname) {
-        Class *clasp;
-        JSObject *thisp = obj;
-        if (!thisp->getParent() ||
-            (clasp = thisp->getClass()) == &js_CallClass ||
-            clasp == &js_BlockClass ||
-            clasp == &js_DeclEnvClass) {
-            f.regs.sp++;
-            f.regs.sp[-1].setUndefined();
-        } else {
-            thisp = thisp->thisObject(cx);
-            if (!thisp)
-                return NULL;
-            f.regs.sp++;
-            f.regs.sp[-1].setObject(*thisp);
-        }
-    }
+    *f.regs.sp++ = rval;
+
+    if (callname)
+        PushImplicitThis(f, obj, rval);
+
     return obj;
 }
 
@@ -638,6 +612,17 @@ stubs::CallName(VMFrame &f)
     JSObject *obj = NameOp(f, &f.fp()->scopeChain(), true);
     if (!obj)
         THROW();
+}
+
+/*
+ * Push the implicit this value, with the assumption that the callee
+ * (which is on top of the stack) was read as a property from the
+ * global object.
+ */
+void JS_FASTCALL
+stubs::PushImplicitThisForGlobal(VMFrame &f)
+{
+    return PushImplicitThis(f, f.fp()->scopeChain().getGlobal(), f.regs.sp[-1]);
 }
 
 void JS_FASTCALL

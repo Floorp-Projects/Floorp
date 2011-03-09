@@ -389,7 +389,6 @@ nsresult nsTreeWalker::FirstChildInternal(PRBool aReversed, nsIDOMNode **_retval
  * @returns         Errorcode
  */
 nsresult nsTreeWalker::NextSiblingInternal(PRBool aReversed, nsIDOMNode **_retval)
-
 {
     nsresult rv;
     PRInt16 filtered;
@@ -402,46 +401,39 @@ nsresult nsTreeWalker::NextSiblingInternal(PRBool aReversed, nsIDOMNode **_retva
         return NS_OK;
 
     while (1) {
-        nsCOMPtr<nsINode> sibling = aReversed ? node->GetPreviousSibling()
-                                              : node->GetNextSibling();
+        nsINode* sibling = aReversed ? node->GetPreviousSibling()
+                                     : node->GetNextSibling();
 
         while (sibling) {
-            rv = TestNode(sibling, &filtered);
+            node = sibling;
+
+            rv = TestNode(node, &filtered);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            switch (filtered) {
-                case nsIDOMNodeFilter::FILTER_ACCEPT:
-                    // Node found
-                    mCurrentNode = sibling;
-                    return CallQueryInterface(sibling, _retval);
-                case nsIDOMNodeFilter::FILTER_SKIP: {
-                        nsINode *firstChild = aReversed ? sibling->GetLastChild()
-                                                        : sibling->GetFirstChild();
-                        if (firstChild) {
-                            sibling = firstChild;
-                            continue;
-                        }
-                    }
-                    break;
-                case nsIDOMNodeFilter::FILTER_REJECT:
-                    // Keep searching
-                    break;
+            if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT) {
+                // Node found
+                mCurrentNode.swap(node);
+                return CallQueryInterface(mCurrentNode, _retval);
             }
-            sibling = aReversed ? sibling->GetPreviousSibling()
-                                : sibling->GetNextSibling();
+
+            // If rejected or no children, try a sibling
+            if (filtered == nsIDOMNodeFilter::FILTER_REJECT ||
+                !(sibling = aReversed ? node->GetLastChild()
+                                      : node->GetFirstChild())) {
+                sibling = aReversed ? node->GetPreviousSibling()
+                                    : node->GetNextSibling();
+            }
         }
 
         node = node->GetNodeParent();
 
         if (!node || node == mRoot)
-            break;
+            return NS_OK;
 
         // Is parent transparent in filtered view?
         rv = TestNode(node, &filtered);
         NS_ENSURE_SUCCESS(rv, rv);
         if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT)
-            break;
+            return NS_OK;
     }
-
-    return NS_OK;
 }

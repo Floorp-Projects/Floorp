@@ -83,7 +83,7 @@
 #define __inline__ inline
 #endif
 
-#if defined(DEBUG) || defined(NJ_NO_VARIADIC_MACROS)
+#if defined(DEBUG)
 #if !defined _DEBUG
 #define _DEBUG
 #endif
@@ -179,8 +179,6 @@ static __inline__ unsigned long long rdtsc(void)
 # define AVMPLUS_HAS_RDTSC 0
 #endif
 
-struct JSContext;
-
 #ifdef PERFM
 # define PERFM_NVPROF(n,v) _nvprof(n,v)
 # define PERFM_NTPROF(n) _ntprof(n)
@@ -193,71 +191,7 @@ struct JSContext;
 
 namespace avmplus {
 
-    typedef int FunctionID;
-
     extern void AvmLog(char const *msg, ...);
-
-    static const int kstrconst_emptyString = 0;
-
-    class AvmInterpreter
-    {
-        class Labels {
-        public:
-            const char* format(const void* ip)
-            {
-                static char buf[33];
-                sprintf(buf, "%p", ip);
-                return buf;
-            }
-        };
-
-        Labels _labels;
-    public:
-        Labels* labels;
-
-        AvmInterpreter()
-        {
-            labels = &_labels;
-        }
-
-    };
-
-    class AvmConsole
-    {
-    public:
-        AvmConsole& operator<<(const char* s)
-        {
-            fprintf(stdout, "%s", s);
-            return *this;
-        }
-    };
-
-    class AvmCore
-    {
-    public:
-        AvmInterpreter interp;
-        AvmConsole console;
-
-        static nanojit::Config config;
-
-#ifdef AVMPLUS_IA32
-        static inline bool
-        use_sse2()
-        {
-            return config.i386_sse2;
-        }
-#endif
-
-        static inline bool
-        use_cmov()
-        {
-#ifdef AVMPLUS_IA32
-            return config.i386_use_cmov;
-#else
-        return true;
-#endif
-        }
-    };
 
     /**
      * Bit vectors are an efficent method of keeping True/False information

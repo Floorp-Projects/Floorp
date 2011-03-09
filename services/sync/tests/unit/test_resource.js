@@ -3,7 +3,6 @@ Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/ext/Sync.js");
 
 let logger;
 

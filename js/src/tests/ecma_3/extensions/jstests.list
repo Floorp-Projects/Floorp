@@ -11,5 +11,5 @@ script regress-320854.js
 script regress-327170.js
 script regress-368516.js
 script regress-385393-03.js
-script regress-429248.js
+skip script regress-429248.js
 script regress-430740.js

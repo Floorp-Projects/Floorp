@@ -844,7 +844,16 @@
                      tooltiptext="&listAllTabs.label;"
                      removable="true">
         <menupopup id="alltabs-popup"
-                   position="after_end"/>
+                   position="after_end">
+          <menuitem id="menu_tabview"
+                    class="menuitem-iconic"
+                    key="key_tabview"
+                    label="&viewTabGroups.label;"
+                    command="Browser:ToggleTabView"
+                    observes="tabviewGroupsNumber"
+                    keepme="true"/>
+          <menuseparator id="alltabs-popup-separator" keepme="true"/>
+        </menupopup>
       </toolbarbutton>
 
       <toolbarbutton id="tabs-closebutton"

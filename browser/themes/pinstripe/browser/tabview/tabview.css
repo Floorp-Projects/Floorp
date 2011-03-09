@@ -196,12 +196,12 @@ html[dir=rtl] .stack-trayed .tab-title {
 .tabInGroupItem {
   box-shadow: none;
   border-color: transparent;
-  background-color: transparent;
+  background-color: rgb(240,240,240);
   margin: 8px;
 }
 
 .tabInGroupItem .favicon {
-  background-color: #EBEBEB;
+  background-color: rgb(240,240,240);
 }
 
 .groupItem {
@@ -220,6 +220,10 @@ html[dir=rtl] .stack-trayed .tab-title {
 html[dir=rtl] .groupItem.activeGroupItem {
   box-shadow:
     rgba(0,0,0,0.8) -2px 2px 8px;
+}
+
+.groupItem .close {
+  z-index: 10;
 }
 
 .phantom {

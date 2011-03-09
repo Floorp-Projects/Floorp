@@ -92,14 +92,15 @@ public:
 };
 
 void
-Writer::init(LogControl *logc_)
+Writer::init(LogControl *logc_, Config *njConfig_)
 {
-    JS_ASSERT(logc_);
+    JS_ASSERT(logc_ && njConfig_);
     logc = logc_;
+    njConfig = njConfig_;
 
     LirWriter *&lir = InitConst(this->lir);
     CseFilter *&cse = InitConst(this->cse);
-    lir = new (alloc) LirBufWriter(lirbuf, AvmCore::config);
+    lir = new (alloc) LirBufWriter(lirbuf, *njConfig);
 #ifdef DEBUG
     ValidateWriter *validate2;
     lir = validate2 =
@@ -109,11 +110,11 @@ Writer::init(LogControl *logc_)
     if (logc->lcbits & LC_TMRecorder)
        lir = new (alloc) VerboseWriter(*alloc, lir, lirbuf->printer, logc);
 #endif
-    if (avmplus::AvmCore::config.cseopt) {
+    // CseFilter must be downstream of SoftFloatFilter (see bug 527754 for why).
+    if (njConfig->cseopt)
         cse = new (alloc) CseFilter(lir, TM_NUM_USED_ACCS, *alloc);
         if (!cse->initOOM)
             lir = cse;      // Skip CseFilter if we OOM'd when creating it.
-    }
     lir = new (alloc) ExprFilter(lir);
     lir = new (alloc) FuncFilter(lir);
 #ifdef DEBUG
@@ -223,8 +224,7 @@ couldBeObjectOrString(LIns *ins)
         ret = couldBeObjectOrString(ins->oprnd2()) &&
               couldBeObjectOrString(ins->oprnd3());
 
-    } else if (!avmplus::AvmCore::use_cmov() &&
-               ins->isop(LIR_ori) &&
+    } else if (ins->isop(LIR_ori) &&
                ins->oprnd1()->isop(LIR_andi) &&
                ins->oprnd2()->isop(LIR_andi))
     {

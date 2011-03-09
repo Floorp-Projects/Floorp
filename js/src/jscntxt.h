@@ -419,6 +419,8 @@ class StackSegment
 #ifdef DEBUG
     JS_REQUIRES_STACK bool contains(const JSStackFrame *fp) const;
 #endif
+
+    JSStackFrame *computeNextFrame(JSStackFrame *fp) const;
 };
 
 static const size_t VALUES_PER_STACK_SEGMENT = sizeof(StackSegment) / sizeof(Value);
@@ -461,6 +463,7 @@ class InvokeFrameGuard
     InvokeFrameGuard() : cx_(NULL) {}
     ~InvokeFrameGuard() { if (pushed()) pop(); }
     bool pushed() const { return cx_ != NULL; }
+    JSContext *pushedFrameContext() const { JS_ASSERT(pushed()); return cx_; }
     void pop();
     JSStackFrame *fp() const { return regs_.fp; }
 };
@@ -985,7 +988,7 @@ typedef void
 
 namespace js {
 
-typedef js::Vector<JSCompartment *, 0, js::SystemAllocPolicy> WrapperVector;
+typedef js::Vector<JSCompartment *, 0, js::SystemAllocPolicy> CompartmentVector;
 
 }
 
@@ -997,7 +1000,7 @@ struct JSRuntime {
 #endif
 
     /* List of compartments (protected by the GC lock). */
-    js::WrapperVector compartments;
+    js::CompartmentVector compartments;
 
     /* Runtime state, synchronized by the stateChange/gcLock condvar/lock. */
     JSRuntimeState      state;
@@ -1058,7 +1061,7 @@ struct JSRuntime {
 
     /*
      * Compartment that triggered GC. If more than one Compatment need GC,
-     * gcTriggerCompartment is reset to NULL and a global GC is performed. 
+     * gcTriggerCompartment is reset to NULL and a global GC is performed.
      */
     JSCompartment       *gcTriggerCompartment;
 
@@ -1783,9 +1786,6 @@ struct JSContext
     /* Undoes calls to suspendActiveSegment. */
     void restoreSegment();
 
-    /* Get the frame whose prev() is fp, which may be in any segment. */
-    inline JSStackFrame *computeNextFrame(JSStackFrame *fp);
-
     /*
      * Perform a linear search of all frames in all segments in the given context
      * for the given frame, returning the segment, if found, and null otherwise.
@@ -1867,7 +1867,7 @@ struct JSContext
     /*
      * Return:
      * - The override version, if there is an override version.
-     * - The newest scripted frame's version, if there is such a frame. 
+     * - The newest scripted frame's version, if there is such a frame.
      * - The default verion.
      *
      * Note: if this ever shows up in a profile, just add caching!
@@ -2175,9 +2175,6 @@ public:
 
     /* Get the type to use for objects with no prototype. */
     inline js::types::TypeObject *getTypeEmpty();
-
-    /* Get the type to add for properties which can be scripted getters/setters. */
-    inline js::types::TypeObject *getTypeGetSet();
 
     /* Alias two properties in the type information for obj. */
     inline bool aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid second);
@@ -3296,6 +3293,9 @@ class AutoVectorRooter : protected AutoGCRooter
     size_t length() const { return vector.length(); }
 
     bool append(const T &v) { return vector.append(v); }
+
+    /* For use when space has already been reserved. */
+    void infallibleAppend(const T &v) { vector.infallibleAppend(v); }
 
     void popBack() { vector.popBack(); }
 

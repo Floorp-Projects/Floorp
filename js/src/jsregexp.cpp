@@ -63,7 +63,6 @@
 
 #ifdef JS_TRACER
 #include "jstracer.h"
-using namespace avmplus;
 using namespace nanojit;
 #endif
 
@@ -96,7 +95,7 @@ resc_trace(JSTracer *trc, JSObject *obj)
 
 Class js::regexp_statics_class = {
     "RegExpStatics", 
-    JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE,
+    JSCLASS_HAS_PRIVATE,
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -111,7 +110,7 @@ Class js::regexp_statics_class = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    JS_CLASS_TRACE(resc_trace)
+    resc_trace
 };
 
 /*
@@ -480,12 +479,6 @@ regexp_finalize(JSContext *cx, JSObject *obj)
 static JSBool
 regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool test, Value *rval);
 
-static JSBool
-regexp_call(JSContext *cx, uintN argc, Value *vp)
-{
-    return regexp_exec_sub(cx, &JS_CALLEE(cx, vp).toObject(), argc, JS_ARGV(cx, vp), false, vp);
-}
-
 #if JS_HAS_XDR
 
 #include "jsxdrapi.h"
@@ -560,7 +553,7 @@ js::Class js_RegExpClass = {
     js_RegExp_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::REGEXP_CLASS_RESERVED_SLOTS) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -571,11 +564,11 @@ js::Class js_RegExpClass = {
     regexp_finalize,
     NULL,                 /* reserved0 */
     NULL,                 /* checkAccess */
-    regexp_call,
+    NULL,                 /* call */
     NULL,                 /* construct */
     js_XDRRegExpObject,
     NULL,                 /* hasInstance */
-    JS_CLASS_TRACE(regexp_trace)
+    regexp_trace
 };
 
 /*
@@ -599,9 +592,9 @@ js_regexp_toString(JSContext *cx, JSObject *obj, Value *vp)
     if (size_t len = src->length()) {
         if (!sb.reserve(len + 2))
             return false;
-        JS_ALWAYS_TRUE(sb.append('/'));
-        JS_ALWAYS_TRUE(sb.append(src->chars(), len));
-        JS_ALWAYS_TRUE(sb.append('/'));
+        sb.infallibleAppend('/');
+        sb.infallibleAppend(src->chars(), len);
+        sb.infallibleAppend('/');
     } else {
         if (!sb.append("/(?:)/"))
             return false;
@@ -644,6 +637,7 @@ EscapeNakedForwardSlashes(JSContext *cx, JSString *unescaped)
     const jschar *oldChars = unescaped->getChars(cx);
     if (!oldChars)
         return NULL;
+    JS::Anchor<JSString *> anchor(unescaped);
 
     js::Vector<jschar, 128> newChars(cx);
     for (const jschar *it = oldChars; it < oldChars + oldLen; ++it) {
@@ -651,26 +645,27 @@ EscapeNakedForwardSlashes(JSContext *cx, JSString *unescaped)
             if (!newChars.length()) {
                 if (!newChars.reserve(oldLen + 1))
                     return NULL;
-                newChars.append(oldChars, size_t(it - oldChars));
+                newChars.infallibleAppend(oldChars, size_t(it - oldChars));
             }
-            newChars.append('\\');
+            if (!newChars.append('\\'))
+                return NULL;
         }
 
-        if (newChars.length())
-            newChars.append(*it);
+        if (!newChars.empty() && !newChars.append(*it))
+            return NULL;
     }
 
-    if (newChars.length()) {
-        size_t len = newChars.length();
-        if (!newChars.append('\0'))
-            return NULL;
-        jschar *chars = newChars.extractRawBuffer();
-        JSString *escaped = js_NewString(cx, chars, len);
-        if (!escaped)
-            cx->free(chars);
-        return escaped;
-    }
-    return unescaped;
+    if (newChars.empty())
+        return unescaped;
+
+    size_t len = newChars.length();
+    if (!newChars.append('\0'))
+        return NULL;
+    jschar *chars = newChars.extractRawBuffer();
+    JSString *escaped = js_NewString(cx, chars, len);
+    if (!escaped)
+        cx->free(chars);
+    return escaped;
 }
 
 static bool
@@ -825,10 +820,15 @@ CompileRegExpAndSwap(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Valu
         return true;
     }
 
-    /* Coerce to string and compile. */
-    JSString *sourceStr = js_ValueToString(cx, sourceValue);
-    if (!sourceStr)
-        return false;
+    JSString *sourceStr;
+    if (sourceValue.isUndefined()) {
+        sourceStr = cx->runtime->emptyString;
+    } else {
+        /* Coerce to string and compile. */
+        sourceStr = js_ValueToString(cx, sourceValue);
+        if (!sourceStr)
+            return false;
+    }  
 
     uintN flags = 0;
     if (argc > 1 && !argv[1].isUndefined()) {

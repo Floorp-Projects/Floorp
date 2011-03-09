@@ -300,26 +300,13 @@ JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Valu
 inline js::types::TypeObject *
 JSContext::getTypeEmpty()
 {
-    if (!compartment->types.typeEmpty) {
-        compartment->types.typeEmpty = newTypeObject("Empty", NULL);
-        if (compartment->types.typeEmpty)
-            compartment->types.typeEmpty->unknownProperties = true;
-    }
-    return compartment->types.typeEmpty;
-}
-
-inline js::types::TypeObject *
-JSContext::getTypeGetSet()
-{
-    if (!compartment->types.typeGetSet)
-        compartment->types.typeGetSet = newTypeObject("GetSet", NULL);
-    return compartment->types.typeGetSet;
+    return &compartment->types.typeEmpty;
 }
 
 inline bool
 JSContext::aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid second)
 {
-    if (!typeInferenceEnabled())
+    if (!typeInferenceEnabled() || obj->unknownProperties)
         return true;
 
     js::types::AutoEnterTypeInference enter(this);
@@ -984,6 +971,7 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
     JS_ASSERT(cx->compartment->types.inferenceDepth);
     JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
     JS_ASSERT_IF(JSID_IS_STRING(id), JSID_TO_STRING(id) != NULL);
+    JS_ASSERT(!unknownProperties);
 
     Property **pprop = HashSetInsert<jsid,Property,Property>
                            (cx, propertySet, propertyCount, id, false);

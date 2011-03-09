@@ -110,6 +110,7 @@ PluginModuleChild::PluginModuleChild() :
     mQuirks(QUIRKS_NOT_INITIALIZED),
     mShutdownFunc(0),
     mInitializeFunc(0)
+  , mPluginFilename("")
 #if defined(OS_WIN) || defined(OS_MACOSX)
   , mGetEntryPointsFunc(0)
 #elif defined(MOZ_WIDGET_GTK2)
@@ -183,10 +184,9 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
     if (!InitGraphics())
         return false;
 
-    nsCString filename;
-    filename = aPluginFilename.c_str();
+    mPluginFilename = aPluginFilename.c_str();
     nsCOMPtr<nsILocalFile> pluginFile;
-    NS_NewNativeLocalFile(filename,
+    NS_NewNativeLocalFile(mPluginFilename,
                           PR_TRUE,
                           getter_AddRefs(pluginFile));
 
@@ -1877,6 +1877,12 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
         mQuirks |= QUIRK_FLASH_HOOK_SETLONGPTR;
         mQuirks |= QUIRK_FLASH_HOOK_GETWINDOWINFO;
         mQuirks |= QUIRK_FLASH_FIXUP_MOUSE_CAPTURE;
+    }
+
+    // QuickTime plugin usually loaded with audio/mpeg mimetype
+    NS_NAMED_LITERAL_CSTRING(quicktime, "npqtplugin");
+    if (FindInReadable(quicktime, mPluginFilename)) {
+      mQuirks |= QUIRK_QUICKTIME_AVOID_SETWINDOW;
     }
 #endif
 }

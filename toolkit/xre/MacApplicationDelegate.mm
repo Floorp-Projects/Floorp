@@ -170,6 +170,11 @@ ProcessPendingGetURLAppleEvents()
              forEventClass:'WWW!'
                 andEventID:'OURL'];
 
+    [aeMgr setEventHandler:self
+               andSelector:@selector(handleAppleEvent:withReplyEvent:)
+             forEventClass:kCoreEventClass
+                andEventID:kAEOpenDocuments];
+
     if (![NSApp windowsMenu]) {
       // If the application has a windows menu, it will keep it up to date and
       // prepend the window list to the Dock menu automatically.
@@ -190,6 +195,7 @@ ProcessPendingGetURLAppleEvents()
   NSAppleEventManager *aeMgr = [NSAppleEventManager sharedAppleEventManager];
   [aeMgr removeEventHandlerForEventClass:kInternetEventClass andEventID:kAEGetURL];
   [aeMgr removeEventHandlerForEventClass:'WWW!' andEventID:'OURL'];
+  [aeMgr removeEventHandlerForEventClass:kCoreEventClass andEventID:kAEOpenDocuments];
   [super dealloc];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -397,6 +403,26 @@ ProcessPendingGetURLAppleEvents()
     if (NS_FAILED(rv))
       return;
     rv = cmdLine->Run();
+  }
+  else if ([event eventClass] == kCoreEventClass && [event eventID] == kAEOpenDocuments) {
+    NSAppleEventDescriptor* fileListDescriptor = [event paramDescriptorForKeyword:keyDirectObject];
+    if (!fileListDescriptor)
+      return;
+
+    // Descriptor list indexing is one-based...
+    NSInteger numberOfFiles = [fileListDescriptor numberOfItems];
+    for (NSInteger i = 1; i <= numberOfFiles; i++) {
+      NSString* urlString = [[fileListDescriptor descriptorAtIndex:i] stringValue];
+      if (!urlString)
+        continue;
+
+      // We need a path, not a URL
+      NSURL* url = [NSURL URLWithString:urlString];
+      if (!url)
+        continue;
+
+      [self application:NSApp openFile:[url path]];
+    }
   }
 }
 

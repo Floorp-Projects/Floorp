@@ -39,9 +39,6 @@
  * Tests the bookmarks Properties dialog.
  */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 // DOM ids of Places sidebar trees.
 const SIDEBAR_HISTORY_TREE_ID = "historyTree";
 const SIDEBAR_BOOKMARKS_TREE_ID = "bookmarks-view";

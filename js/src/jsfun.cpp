@@ -53,7 +53,6 @@
 #include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsdbgapi.h"
 #include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
@@ -195,6 +194,11 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee)
     if (!argsobj)
         return NULL;
 
+    EmptyShape *emptyArgumentsShape = EmptyShape::getEmptyArgumentsShape(cx);
+    if (!emptyArgumentsShape)
+        return NULL;
+    AutoShapeRooter shapeRoot(cx, emptyArgumentsShape);
+
     ArgumentsData *data = (ArgumentsData *)
         cx->malloc(offsetof(ArgumentsData, slots) + argc * sizeof(Value));
     if (!data)
@@ -207,7 +211,7 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee)
                   : &js_ArgumentsClass,
                   type, parent, NULL, false);
 
-    argsobj->setMap(cx->compartment->emptyArgumentsShape);
+    argsobj->setMap(emptyArgumentsShape);
 
     argsobj->setArgsLength(argc);
     argsobj->setArgsData(data);
@@ -504,6 +508,7 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
     wfun->u.i.script = wscript;
     if (cx->typeInferenceEnabled() && !wscript->typeSetFunction(cx, wfun))
         return NULL;
+    js_CallNewScriptHook(cx, wscript, wfun);
     return wfunobj;
 }
 
@@ -844,7 +849,7 @@ Class js_ArgumentsClass = {
     "Arguments",
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::ARGS_CLASS_RESERVED_SLOTS) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     PropertyStub,         /* addProperty */
     args_delProperty,
     PropertyStub,         /* getProperty */
@@ -859,7 +864,7 @@ Class js_ArgumentsClass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    JS_CLASS_TRACE(args_trace)
+    args_trace
 };
 
 namespace js {
@@ -873,7 +878,7 @@ Class StrictArgumentsClass = {
     "Arguments",
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::ARGS_CLASS_RESERVED_SLOTS) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     PropertyStub,         /* addProperty */
     args_delProperty,
     PropertyStub,         /* getProperty */
@@ -888,7 +893,7 @@ Class StrictArgumentsClass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    JS_CLASS_TRACE(args_trace)
+    args_trace
 };
 
 }
@@ -969,12 +974,8 @@ NewCallObject(JSContext *cx, Bindings *bindings, JSObject &scopeChain, JSObject 
     if (!callobj)
         return NULL;
 
-    TypeObject *type = cx->getTypeEmpty();
-    if (!type)
-        return NULL;
-
     /* Init immediately to avoid GC seeing a half-init'ed object. */
-    callobj->init(cx, &js_CallClass, type, &scopeChain, NULL, false);
+    callobj->init(cx, &js_CallClass, cx->getTypeEmpty(), &scopeChain, NULL, false);
     callobj->setMap(bindings->lastShape());
 
     /* This must come after callobj->lastProp has been set. */
@@ -1004,12 +1005,12 @@ NewDeclEnvObject(JSContext *cx, JSStackFrame *fp)
     if (!envobj)
         return NULL;
 
-    TypeObject *type = cx->getTypeEmpty();
-    if (!type)
+    EmptyShape *emptyDeclEnvShape = EmptyShape::getEmptyDeclEnvShape(cx);
+    if (!emptyDeclEnvShape)
         return NULL;
+    envobj->init(cx, &js_DeclEnvClass, cx->getTypeEmpty(), &fp->scopeChain(), fp, false);
+    envobj->setMap(emptyDeclEnvShape);
 
-    envobj->init(cx, &js_DeclEnvClass, type, &fp->scopeChain(), fp, false);
-    envobj->setMap(cx->compartment->emptyDeclEnvShape);
     return envobj;
 }
 
@@ -1422,7 +1423,7 @@ JS_PUBLIC_DATA(Class) js_CallClass = {
     "Call",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::CALL_RESERVED_SLOTS) |
-    JSCLASS_NEW_RESOLVE | JSCLASS_IS_ANONYMOUS | JSCLASS_MARK_IS_TRACE,
+    JSCLASS_NEW_RESOLVE | JSCLASS_IS_ANONYMOUS,
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -1437,7 +1438,7 @@ JS_PUBLIC_DATA(Class) js_CallClass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    JS_CLASS_TRACE(call_trace)
+    call_trace
 };
 
 bool
@@ -1673,11 +1674,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         break;
 
       default:
-        /* XXX fun[0] and fun.arguments[0] are equivalent. */
-        if (fp && fp->isFunctionFrame() && uint16(slot) < fp->numFormalArgs())
-            *vp = fp->formalArg(slot);
-        atom = NULL;
-        break;
+        JS_NOT_REACHED("fun_getProperty");
     }
 
     jsid nameid = atom ? ATOM_TO_JSID(atom) : JSID_VOID;
@@ -2059,7 +2056,7 @@ JS_PUBLIC_DATA(Class) js_FunctionClass = {
     js_Function_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSFunction::CLASS_RESERVED_SLOTS) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -2074,7 +2071,7 @@ JS_PUBLIC_DATA(Class) js_FunctionClass = {
     NULL,                 /* construct   */
     js_XDRFunctionObject,
     fun_hasInstance,
-    JS_CLASS_TRACE(fun_trace)
+    fun_trace
 };
 
 JSString *
@@ -2094,18 +2091,28 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
     if (!fun)
         return NULL;
 
-    if (!indent) {
-        ToSourceCache::Ptr p = cx->compartment->toSourceCache.lookup(fun);
+    if (!indent && !cx->compartment->toSourceCache.empty()) {
+        ToSourceCache::Ptr p = cx->compartment->toSourceCache.ref().lookup(fun);
         if (p)
             return p->value;
     }
 
     JSString *str = JS_DecompileFunction(cx, fun, indent);
     if (!str)
-        return false;
+        return NULL;
 
-    if (!indent)
-        cx->compartment->toSourceCache.put(fun, str);
+    if (!indent) {
+        LazilyConstructed<ToSourceCache> &lazy = cx->compartment->toSourceCache;
+
+        if (lazy.empty()) {
+            lazy.construct();
+            if (!lazy.ref().init())
+                return NULL;
+        }
+
+        if (!lazy.ref().put(fun, str))
+            return NULL;
+    }
 
     return str;
 }
@@ -2512,7 +2519,12 @@ Function(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
     }
 
-    Bindings bindings(cx);
+    EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
+    if (!emptyCallShape)
+        return JS_FALSE;
+    AutoShapeRooter shapeRoot(cx, emptyCallShape);
+
+    Bindings bindings(cx, emptyCallShape);
     AutoBindingsRooter root(cx, bindings);
 
     Value *argv = vp + 2;
@@ -2689,7 +2701,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
 
 namespace js {
 
-JS_FRIEND_API(bool)
+bool
 IsBuiltinFunctionConstructor(JSFunction *fun)
 {
     return fun->maybeNative() == Function;
@@ -2719,7 +2731,7 @@ LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj)
     return shape;
 }
 
-}
+} /* namespace js */
 
 static JSBool
 ThrowTypeError(JSContext *cx, uintN argc, Value *vp)
@@ -2752,6 +2764,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     script->owner = NULL;
 #endif
     fun->u.i.script = script;
+    js_CallNewScriptHook(cx, script, fun);
 
     if (obj->isGlobal()) {
         /* ES5 13.2.3: Construct the unique [[ThrowTypeError]] function object. */
@@ -3143,35 +3156,4 @@ js_ReportIsNotFunction(JSContext *cx, const Value *vp, uintN flags)
         spindex = ((flags & JSV2F_SEARCH_STACK) ? JSDVG_SEARCH_STACK : JSDVG_IGNORE_STACK);
 
     js_ReportValueError3(cx, error, spindex, *vp, NULL, name, source);
-}
-
-namespace js {
-
-bool
-IsSafeForLazyThisCoercion(JSContext *cx, JSObject *callee)
-{
-    /*
-     * Look past any function wrappers. If the callee is a wrapped strict-mode
-     * function, lazy 'this' coercion is vacuously safe because strict-mode
-     * functions don't coerce 'this' at all. Otherwise, the callee is safe to
-     * transform into the lazy 'this' cookie (the undefined value) only if it
-     * is in the current scope.
-     *
-     * Without this restriction, lazy 'this' coercion would pick up the "wrong"
-     * global at the end of the callee function object's scope, rather than the
-     * "right" (backward compatible since 1995) global that was the "Reference
-     * base object" in the callee expression.
-     */
-    if (callee->isProxy()) {
-        callee = callee->unwrap();
-        if (!callee->isFunction())
-            return true; // treat any non-wrapped-function proxy as strict
-
-        JSFunction *fun = callee->getFunctionPrivate();
-        if (fun->isInterpreted() && fun->inStrictMode())
-            return true;
-    }
-    return callee->getGlobal() == cx->fp()->scopeChain().getGlobal();
-}
-
 }

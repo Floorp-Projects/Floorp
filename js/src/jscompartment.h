@@ -381,6 +381,8 @@ struct JS_FRIEND_API(JSCompartment) {
     size_t                       gcTriggerBytes;
     size_t                       gcLastBytes;
 
+    bool                         hold;
+
 #ifdef JS_GCMETER
     js::gc::JSGCArenaStats       compartmentStats[js::gc::FINALIZE_LIMIT];
 #endif
@@ -445,7 +447,8 @@ struct JS_FRIEND_API(JSCompartment) {
 
     js::NativeIterCache          nativeIterCache;
 
-    js::ToSourceCache            toSourceCache;
+    typedef js::LazilyConstructed<js::ToSourceCache> LazyToSourceCache;
+    LazyToSourceCache            toSourceCache;
 
     JSCompartment(JSRuntime *rt);
     ~JSCompartment();
@@ -453,10 +456,7 @@ struct JS_FRIEND_API(JSCompartment) {
     bool init(JSContext *cx);
 
     /* Mark cross-compartment wrappers. */
-    void markCrossCompartment(JSTracer *trc);
-
-    /* Mark this compartment's local roots. */
-    void mark(JSTracer *trc);
+    void markCrossCompartmentWrappers(JSTracer *trc);
 
     bool wrap(JSContext *cx, js::Value *vp);
     bool wrap(JSContext *cx, JSString **strp);
@@ -467,6 +467,7 @@ struct JS_FRIEND_API(JSCompartment) {
     bool wrap(JSContext *cx, js::PropertyDescriptor *desc);
     bool wrap(JSContext *cx, js::AutoIdVector &props);
 
+    void markTypes(JSTracer *trc);
     void sweep(JSContext *cx, uint32 releaseInterval);
     void purge(JSContext *cx);
     void finishArenaLists();
@@ -483,8 +484,6 @@ struct JS_FRIEND_API(JSCompartment) {
 
     js::MathCache *allocMathCache(JSContext *cx);
 
-    bool                         marked;
-    
     typedef js::HashMap<jsbytecode*,
                         size_t,
                         js::DefaultHasher<jsbytecode*>,
@@ -492,13 +491,11 @@ struct JS_FRIEND_API(JSCompartment) {
 
     BackEdgeMap                  backEdgeTable;
 
+    JSCompartment *thisForCtor() { return this; }
   public:
     js::MathCache *getMathCache(JSContext *cx) {
         return mathCache ? mathCache : allocMathCache(cx);
     }
-
-    bool isMarked() { return marked; }
-    void clearMark() { marked = false; }
 
     size_t backEdgeCount(jsbytecode *pc) const;
     size_t incBackEdgeCount(jsbytecode *pc);

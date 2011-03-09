@@ -542,9 +542,9 @@ RegExp::compile(JSContext *cx)
     StringBuffer sb(cx);
     if (!sb.reserve(JS_ARRAY_LENGTH(prefix) + source->length() + JS_ARRAY_LENGTH(postfix)))
         return false;
-    JS_ALWAYS_TRUE(sb.append(prefix, JS_ARRAY_LENGTH(prefix)));
-    JS_ALWAYS_TRUE(sb.append(source->chars(), source->length()));
-    JS_ALWAYS_TRUE(sb.append(postfix, JS_ARRAY_LENGTH(postfix)));
+    sb.infallibleAppend(prefix, JS_ARRAY_LENGTH(prefix));
+    sb.infallibleAppend(source->chars(), source->length());
+    sb.infallibleAppend(postfix, JS_ARRAY_LENGTH(postfix));
 
     JSLinearString *fakeySource = sb.finishString();
     if (!fakeySource)

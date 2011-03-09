@@ -65,8 +65,8 @@ public:
 
   CreateElementTxn();
 
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CreateElementTxn, EditTxn)
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   NS_DECL_EDITTXN
 

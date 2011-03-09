@@ -74,7 +74,6 @@
 #include "jsreflect.h"
 #include "jsscope.h"
 #include "jsscript.h"
-#include "jstracer.h"
 #include "jstypedarray.h"
 #include "jsxml.h"
 #include "jsperf.h"
@@ -399,7 +398,7 @@ static void
 Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY, JSBool last)
 {
     JSBool ok, hitEOF;
-    JSScript *script;
+    JSObject *scriptObj;
     jsval result;
     JSString *str;
     char *buffer;
@@ -448,10 +447,10 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY, JSBool la
         int64 t1 = PRMJ_Now();
         oldopts = JS_GetOptions(cx);
         JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-        script = JS_CompileFileHandle(cx, obj, filename, file);
+        scriptObj = JS_CompileFileHandle(cx, obj, filename, file);
         JS_SetOptions(cx, oldopts);
-        if (script && !compileOnly) {
-            (void)JS_ExecuteScript(cx, obj, script, NULL);
+        if (scriptObj && !compileOnly) {
+            (void) JS_ExecuteScript(cx, obj, scriptObj, NULL);
             int64 t2 = PRMJ_Now() - t1;
             if (printTiming)
                 printf("runtime = %.3f ms\n", double(t2) / PRMJ_USEC_PER_MSEC);
@@ -537,13 +536,13 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY, JSBool la
         oldopts = JS_GetOptions(cx);
         if (!compileOnly)
             JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
-        script = JS_CompileScript(cx, obj, buffer, len, "typein",
-                                  startline);
+        scriptObj = JS_CompileScript(cx, obj, buffer, len, "typein",
+                                     startline);
         if (!compileOnly)
             JS_SetOptions(cx, oldopts);
 
-        if (script && !compileOnly) {
-            ok = JS_ExecuteScript(cx, obj, script, &result);
+        if (scriptObj && !compileOnly) {
+            ok = JS_ExecuteScript(cx, obj, scriptObj, &result);
             if (ok && !JSVAL_IS_VOID(result)) {
                 str = JS_ValueToSource(cx, result);
                 ok = !!str;
@@ -919,6 +918,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             break;
 
         case 'd':
+            JS_SetRuntimeDebugMode(JS_GetRuntime(cx), JS_TRUE);
             JS_SetDebugMode(cx, JS_TRUE);
             break;
 
@@ -1026,37 +1026,33 @@ Options(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 Load(JSContext *cx, uintN argc, jsval *vp)
 {
-    uintN i;
-    JSString *str;
-    JSScript *script;
-    uint32 oldopts;
-
     JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
     if (!thisobj)
         return JS_FALSE;
 
     jsval *argv = JS_ARGV(cx, vp);
-    for (i = 0; i < argc; i++) {
-        str = JS_ValueToString(cx, argv[i]);
+    for (uintN i = 0; i < argc; i++) {
+        JSString *str = JS_ValueToString(cx, argv[i]);
         if (!str)
-            return JS_FALSE;
+            return false;
         argv[i] = STRING_TO_JSVAL(str);
         JSAutoByteString filename(cx, str);
         if (!filename)
             return JS_FALSE;
         errno = 0;
-        oldopts = JS_GetOptions(cx);
+        uint32 oldopts = JS_GetOptions(cx);
         JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-        script = JS_CompileFile(cx, thisobj, filename.ptr());
-        if (!script)
-            return JS_FALSE;
+        JSObject *scriptObj = JS_CompileFile(cx, thisobj, filename.ptr());
         JS_SetOptions(cx, oldopts);
-        if (!compileOnly && !JS_ExecuteScript(cx, thisobj, script, NULL))
-            return JS_FALSE;
+        if (!scriptObj)
+            return false;
+
+        if (!compileOnly && !JS_ExecuteScript(cx, thisobj, scriptObj, NULL))
+            return false;
     }
 
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -1169,17 +1165,12 @@ Run(JSContext *cx, uintN argc, jsval *vp)
     JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
 
     int64 startClock = PRMJ_Now();
-    JSScript *script = JS_CompileUCScript(cx, thisobj, ucbuf, buflen, filename.ptr(), 1);
+    JSObject *scriptObj = JS_CompileUCScript(cx, thisobj, ucbuf, buflen, filename.ptr(), 1);
     JS_SetOptions(cx, oldopts);
-    if (!script)
+    if (!scriptObj || !JS_ExecuteScript(cx, thisobj, scriptObj, NULL))
         return false;
 
-    JSBool ok = JS_ExecuteScript(cx, thisobj, script, NULL);
     int64 endClock = PRMJ_Now();
-    JS_DestroyScript(cx, script);
-    if (!ok)
-        return false;
-
     JS_SET_RVAL(cx, vp, DOUBLE_TO_JSVAL((endClock - startClock) / double(PRMJ_USEC_PER_MSEC)));
     return true;
 }
@@ -1994,7 +1985,7 @@ UpdateSwitchTableBounds(JSContext *cx, JSScript *script, uintN offset,
 static void
 SrcNotes(JSContext *cx, JSScript *script)
 {
-    uintN offset, delta, caseOff, switchTableStart, switchTableEnd;
+    uintN offset, lineno, delta, caseOff, switchTableStart, switchTableEnd;
     jssrcnote *notes, *sn;
     JSSrcNoteType type;
     const char *name;
@@ -2003,7 +1994,11 @@ SrcNotes(JSContext *cx, JSScript *script)
     JSString *str;
 
     fprintf(gOutFile, "\nSource notes:\n");
+    fprintf(gOutFile, "%4s %4s %5s %6s %-8s %s\n",
+            "ofs", "line", "pc", "delta", "desc", "args");
+    fprintf(gOutFile, "---- ---- ----- ------ -------- ------\n");
     offset = 0;
+    lineno = script->lineno;
     notes = script->notes();
     switchTableEnd = switchTableStart = 0;
     for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
@@ -2019,11 +2014,15 @@ SrcNotes(JSContext *cx, JSScript *script)
                 JS_ASSERT(js_GetOpcode(cx, script, script->code + offset) == JSOP_NOP);
             }
         }
-        fprintf(gOutFile, "%3u: %5u [%4u] %-8s",
-                (uintN) (sn - notes), offset, delta, name);
+        fprintf(gOutFile, "%3u: %4u %5u [%4u] %-8s",
+                (uintN) (sn - notes), lineno, offset, delta, name);
         switch (type) {
           case SRC_SETLINE:
-            fprintf(gOutFile, " lineno %u", (uintN) js_GetSrcNoteOffset(sn, 0));
+            lineno = js_GetSrcNoteOffset(sn, 0);
+            fprintf(gOutFile, " lineno %u", lineno);
+            break;
+          case SRC_NEWLINE:
+            ++lineno;
             break;
           case SRC_FOR:
             fprintf(gOutFile, " cond %u update %u tail %u",
@@ -2266,7 +2265,6 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
     argv += argc-1;
     argc = 1;
 
-
     JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
     if (!thisobj)
         return JS_FALSE;
@@ -2280,16 +2278,12 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
 
     uint32 oldopts = JS_GetOptions(cx);
     JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-    JSScript *script = JS_CompileFile(cx, thisobj, filename.ptr());
+    JSObject *scriptObj = JS_CompileFile(cx, thisobj, filename.ptr());
     JS_SetOptions(cx, oldopts);
-    if (!script)
-        return JS_FALSE;
+    if (!scriptObj)
+        return false;
 
-    JSObject *obj = JS_NewScriptObject(cx, script);
-    if (!obj)
-        return JS_FALSE;
-
-    argv[0] = OBJECT_TO_JSVAL(obj); /* I like to root it, root it. */
+    argv[0] = OBJECT_TO_JSVAL(scriptObj);
     JSBool ok = Disassemble(cx, _argc, vp); /* gross, but works! */
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return ok;
@@ -3173,31 +3167,29 @@ split_finalize(JSContext *cx, JSObject *obj)
     JS_free(cx, JS_GetPrivate(cx, obj));
 }
 
-static uint32
-split_mark(JSContext *cx, JSObject *obj, void *arg)
+static void
+split_trace(JSTracer *trc, JSObject *obj)
 {
     ComplexObject *cpx;
 
-    cpx = (ComplexObject *) JS_GetPrivate(cx, obj);
+    cpx = (ComplexObject *) JS_GetPrivate(trc->context, obj);
 
     /*
      * :FIXME: is JS_NewGlobalObject allowed to GC after creating
      * the global and before returning? see split_create_outer.
      */
     if (!cpx)
-        return 0;
+        return;
 
     if (!cpx->isInner && cpx->inner) {
         /* Mark the inner object. */
-        JS_MarkGCThing(cx, OBJECT_TO_JSVAL(cpx->inner), "ComplexObject.inner", arg);
+        JS_CALL_TRACER(trc, cpx->inner, JSTRACE_OBJECT, "ComplexObject.inner");
     }
 
     if (cpx->isInner && cpx->outer) {
         /* Mark the inner object. */
-        JS_MarkGCThing(cx, OBJECT_TO_JSVAL(cpx->outer), "ComplexObject.outer", arg);
+        JS_CALL_TRACER(trc, cpx->outer, JSTRACE_OBJECT, "ComplexObject.outer");
     }
-
-    return 0;
 }
 
 static JSObject *
@@ -3252,7 +3244,7 @@ static Class split_global_class = {
     NULL,           /* construct   */
     NULL,           /* xdrObject   */
     NULL,           /* hasInstance */
-    split_mark,
+    split_trace,
     {
         Valueify(split_equality),
         split_outerObject,
@@ -3270,7 +3262,6 @@ static Class split_global_class = {
         NULL, /* deleteProperty */
         NULL, /* enumerate      */
         NULL, /* typeOf         */
-        NULL, /* trace          */
         NULL, /* fix            */
         split_thisObject,
         NULL, /* clear          */
@@ -4337,10 +4328,10 @@ Compile(JSContext *cx, uintN argc, jsval *vp)
     }
 
     JSString *scriptContents = JSVAL_TO_STRING(arg0);
-    JSScript *result = JS_CompileUCScript(cx, NULL, JS_GetStringCharsZ(cx, scriptContents),
-                                          JS_GetStringLength(scriptContents), "<string>", 0);
-    if (!result)
-        return JS_FALSE;
+    if (!JS_CompileUCScript(cx, NULL, JS_GetStringCharsZ(cx, scriptContents),
+                            JS_GetStringLength(scriptContents), "<string>", 0)) {
+        return false;
+    }
 
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
@@ -4496,6 +4487,40 @@ StringStats(JSContext *cx, uintN argc, jsval *vp)
     return true;
 }
 
+enum CompartmentKind { SAME_COMPARTMENT, NEW_COMPARTMENT };
+
+static JSObject *
+NewGlobalObject(JSContext *cx, CompartmentKind compartment);
+
+JSBool
+NewGlobal(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc != 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "newGlobal");
+        return false;
+    }
+
+    JSString *str = JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]);
+
+    JSBool equalSame = JS_FALSE, equalNew = JS_FALSE;
+    if (!JS_StringEqualsAscii(cx, str, "same-compartment", &equalSame) ||
+        !JS_StringEqualsAscii(cx, str, "new-compartment", &equalNew)) {
+        return false;
+    }
+
+    if (!equalSame && !equalNew) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "newGlobal");
+        return false;
+    }
+
+    JSObject *global = NewGlobalObject(cx, equalSame ? SAME_COMPARTMENT : NEW_COMPARTMENT);
+    if (!global)
+        return false;
+
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(global));
+    return true;
+}
+
 static JSFunctionSpec shell_functions[] = {
     JS_FN_TYPE("version",        Version,        0,0, JS_TypeHandlerInt),
     JS_FN_TYPE("revertVersion",  RevertVersion,  0,0, JS_TypeHandlerVoid),
@@ -4593,6 +4618,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN_TYPE("mjitstats",      MJitStats,      0,0, JS_TypeHandlerDynamic),
 #endif
     JS_FN_TYPE("stringstats",    StringStats,    0,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("newGlobal",      NewGlobal,      1,0, JS_TypeHandlerDynamic),
     JS_FS_END
 };
 
@@ -4618,7 +4644,7 @@ static const char *const shell_help_messages[] = {
 "assertEq(actual, expected[, msg])\n"
 "  Throw if the first two arguments are not the same (both +0 or both -0,\n"
 "  both NaN, or non-zero and ===)",
-"assertJit()              Throw if the calling function failed to JIT\n",
+"assertJit()              Throw if the calling function failed to JIT",
 "gc()                     Run the garbage collector",
 #ifdef JS_GCMETER
 "gcstats()                Print garbage collector statistics",
@@ -4663,7 +4689,7 @@ static const char *const shell_help_messages[] = {
 "dumpObject()             Dump an internal representation of an object",
 "notes([fun])             Show source notes for functions",
 "tracing([true|false|filename]) Turn bytecode execution tracing on/off.\n"
-"                         With filename, send to file.\n",
+"                         With filename, send to file.",
 "stats([string ...])      Dump 'arena', 'atom', 'global' stats",
 #endif
 #ifdef TEST_CVTARGS
@@ -4716,24 +4742,37 @@ static const char *const shell_help_messages[] = {
 "  Get/Set the limit in seconds for the execution time for the current context.\n"
 "  A negative value (default) means that the execution time is unlimited.",
 "elapsed()                Execution time elapsed for the current context.",
-"parent(obj)              Returns the parent of obj.\n",
-"wrap(obj)                Wrap an object into a noop wrapper.\n",
-"serialize(sd)            Serialize sd using JS_WriteStructuredClone. Returns a TypedArray.\n",
-"deserialize(a)           Deserialize data generated by serialize.\n",
+"parent(obj)              Returns the parent of obj.",
+"wrap(obj)                Wrap an object into a noop wrapper.",
+"serialize(sd)            Serialize sd using JS_WriteStructuredClone. Returns a TypedArray.",
+"deserialize(a)           Deserialize data generated by serialize.",
 #ifdef JS_METHODJIT
-"mjitstats()              Return stats on mjit memory usage.\n",
+"mjitstats()              Return stats on mjit memory usage.",
 #endif
-"stringstats()            Return stats on string memory usage.\n"
+"stringstats()            Return stats on string memory usage.",
+"newGlobal(kind)          Return a new global object, in the current\n"
+"                         compartment if kind === 'same-compartment' or in a\n"
+"                         new compartment if kind === 'new-compartment'",
+
+/* Keep these last: see the static assertion below. */
 #ifdef MOZ_PROFILING
 "startProfiling()         Start a profiling session.\n"
-"                         Profiler must be running with programatic sampling\n"
-"stopProfiling()          Stop a running profiling session"
+"                         Profiler must be running with programatic sampling",
+"stopProfiling()          Stop a running profiling session\n"
 #endif
 };
 
+#ifdef MOZ_PROFILING
+#define PROFILING_FUNCTION_COUNT 2
+#else
+#define PROFILING_FUNCTION_COUNT 0
+#endif
+
 /* Help messages must match shell functions. */
-JS_STATIC_ASSERT(JS_ARRAY_LENGTH(shell_help_messages) + 1 ==
-                 JS_ARRAY_LENGTH(shell_functions));
+JS_STATIC_ASSERT(JS_ARRAY_LENGTH(shell_help_messages) - PROFILING_FUNCTION_COUNT ==
+                 JS_ARRAY_LENGTH(shell_functions) - 1 /* JS_FS_END */);
+
+#undef PROFILING_FUNCTION_COUNT
 
 #ifdef DEBUG
 static void
@@ -4742,12 +4781,13 @@ CheckHelpMessages()
     const char *const *m;
     const char *lp;
 
-    /* Each message must begin with "function_name(" prefix. */
+    /* Messages begin with "function_name(" prefix and don't end with \n. */
     for (m = shell_help_messages; m != JS_ARRAY_END(shell_help_messages); ++m) {
         lp = strchr(*m, '(');
         JS_ASSERT(lp);
         JS_ASSERT(memcmp(shell_functions[m - shell_help_messages].name,
                          *m, lp - *m) == 0);
+        JS_ASSERT((*m)[strlen(*m) - 1] != '\n');
     }
 }
 #else
@@ -5569,46 +5609,52 @@ DestroyContext(JSContext *cx, bool withGC)
 }
 
 static JSObject *
-NewGlobalObject(JSContext *cx)
+NewGlobalObject(JSContext *cx, CompartmentKind compartment)
 {
-    JSObject *glob = JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL);
+    JSObject *glob = (compartment == NEW_COMPARTMENT)
+                     ? JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL)
+                     : JS_NewGlobalObject(cx, &global_class);
     if (!glob)
         return NULL;
 
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, glob))
-        return NULL;
+    {
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, glob))
+            return NULL;
 
-#ifdef LAZY_STANDARD_CLASSES
-    JS_SetGlobalObject(cx, glob);
-#else
-    if (!JS_InitStandardClasses(cx, glob))
-        return NULL;
+#ifndef LAZY_STANDARD_CLASSES
+        if (!JS_InitStandardClasses(cx, glob))
+            return NULL;
 #endif
+
 #ifdef JS_HAS_CTYPES
-    if (!JS_InitCTypesClass(cx, glob))
-        return NULL;
+        if (!JS_InitCTypesClass(cx, glob))
+            return NULL;
 #endif
-    if (!JS::RegisterPerfMeasurement(cx, glob))
-        return NULL;
-    if (!JS_DefineFunctionsWithPrefix(cx, glob, shell_functions, "Shell") ||
-        !JS_DefineProfilingFunctions(cx, glob)) {
-        return NULL;
+        if (!JS::RegisterPerfMeasurement(cx, glob))
+            return NULL;
+        if (!JS_DefineFunctionsWithPrefix(cx, glob, shell_functions, "Shell") ||
+            !JS_DefineProfilingFunctions(cx, glob)) {
+            return NULL;
+        }
+
+        JSObject *it = JS_DefineObject(cx, glob, "it", &its_class, NULL, 0);
+        if (!it)
+            return NULL;
+        if (!JS_DefineProperties(cx, it, its_props))
+            return NULL;
+        if (!JS_DefineFunctionsWithPrefix(cx, it, its_methods, "Shell"))
+            return NULL;
+
+        if (!JS_DefineProperty(cx, glob, "custom", JSVAL_VOID, its_getter,
+                               its_setter, 0))
+            return NULL;
+        if (!JS_DefineProperty(cx, glob, "customRdOnly", JSVAL_VOID, its_getter,
+                               its_setter, JSPROP_READONLY))
+            return NULL;
     }
 
-    JSObject *it = JS_DefineObject(cx, glob, "it", &its_class, NULL, 0);
-    if (!it)
-        return NULL;
-    if (!JS_DefineProperties(cx, it, its_props))
-        return NULL;
-    if (!JS_DefineFunctionsWithPrefix(cx, it, its_methods, "Shell"))
-        return NULL;
-
-    if (!JS_DefineProperty(cx, glob, "custom", JSVAL_VOID, its_getter,
-                           its_setter, 0))
-        return NULL;
-    if (!JS_DefineProperty(cx, glob, "customRdOnly", JSVAL_VOID, its_getter,
-                           its_setter, JSPROP_READONLY))
+    if (compartment == NEW_COMPARTMENT && !JS_WrapObject(cx, &glob))
         return NULL;
 
     return glob;
@@ -5650,13 +5696,15 @@ Shell(JSContext *cx, int argc, char **argv, char **envp)
         }
     }
 
-    JSObject *glob = NewGlobalObject(cx);
+    JSObject *glob = NewGlobalObject(cx, NEW_COMPARTMENT);
     if (!glob)
         return 1;
 
     JSAutoEnterCompartment ac;
     if (!ac.enter(cx, glob))
         return 1;
+
+    JS_SetGlobalObject(cx, glob);
 
     JSObject *envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
     if (!envobj || !JS_SetPrivate(cx, envobj, envp))
@@ -5694,7 +5742,7 @@ Shell(JSContext *cx, int argc, char **argv, char **envp)
     class ShellWorkerHooks : public js::workers::WorkerHooks {
     public:
         JSObject *newGlobalObject(JSContext *cx) {
-            return NewGlobalObject(cx);
+            return NewGlobalObject(cx, NEW_COMPARTMENT);
         }
     };
     ShellWorkerHooks hooks;

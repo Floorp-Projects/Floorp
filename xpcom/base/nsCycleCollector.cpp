@@ -3285,6 +3285,7 @@ class nsCycleCollectorRunner : public nsRunnable
     CondVar mRequest;
     CondVar mReply;
     PRBool mRunning;
+    PRBool mShutdown;
     PRBool mCollected;
 
 public:
@@ -3303,6 +3304,9 @@ public:
                      "Wrong thread!");
 
         MutexAutoLock autoLock(mLock);
+
+        if (mShutdown)
+            return NS_OK;
 
         mRunning = PR_TRUE;
 
@@ -3329,6 +3333,7 @@ public:
           mRequest(mLock, "cycle collector request condvar"),
           mReply(mLock, "cycle collector reply condvar"),
           mRunning(PR_FALSE),
+          mShutdown(PR_FALSE),
           mCollected(PR_FALSE)
     {
         NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -3371,6 +3376,8 @@ public:
         NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
         MutexAutoLock autoLock(mLock);
+
+        mShutdown = PR_TRUE;
 
         if (!mRunning)
             return;

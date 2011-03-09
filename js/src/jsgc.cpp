@@ -78,7 +78,6 @@
 #include "jsscript.h"
 #include "jsstaticcheck.h"
 #include "jsstr.h"
-#include "jstracer.h"
 #include "methodjit/MethodJIT.h"
 
 #if JS_HAS_XML_SUPPORT
@@ -1544,7 +1543,6 @@ AutoGCRooter::trace(JSTracer *trc)
             MarkValue(trc, desc.value, "PropDesc::value");
             MarkValue(trc, desc.get, "PropDesc::get");
             MarkValue(trc, desc.set, "PropDesc::set");
-            MarkId(trc, desc.id, "PropDesc::id");
         }
         return;
       }
@@ -1635,9 +1633,6 @@ MarkContext(JSTracer *trc, JSContext *acx)
         js_TraceSharpMap(trc, &acx->sharpObjectMap);
 
     MarkValue(trc, acx->iterValue, "iterValue");
-
-    if (acx->compartment)
-        acx->compartment->mark(trc);
 }
 
 JS_REQUIRES_STACK void
@@ -1726,12 +1721,13 @@ MarkRuntime(JSTracer *trc)
     while (JSContext *acx = js_ContextIterator(rt, JS_TRUE, &iter))
         MarkContext(trc, acx);
 
-    rt->atomsCompartment->mark(trc);
-
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
+        if ((*c)->types.inferenceDepth)
+            (*c)->markTypes(trc);
 #ifdef JS_TRACER
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
         (*c)->traceMonitor.mark(trc);
 #endif
+    }
 
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
         i.threadData()->mark(trc);
@@ -2190,13 +2186,8 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
     while (read < end) {
         JSCompartment *compartment = *read++;
 
-        /*
-         * Unmarked compartments containing marked objects don't get deleted,
-         * except when LAST_CONTEXT GC is performed.
-         */
-        if ((!compartment->isMarked() && compartment->arenaListsAreEmpty()) ||
-            gckind == GC_LAST_CONTEXT)
-        {
+        if (!compartment->hold &&
+            (compartment->arenaListsAreEmpty() || gckind == GC_LAST_CONTEXT)) {
             JS_ASSERT(compartment->freeLists.isEmpty());
             if (callback)
                 (void) callback(cx, compartment, JSCOMPARTMENT_DESTROY);
@@ -2271,7 +2262,6 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
     JS_ASSERT(!rt->gcRegenShapes);
     JS_ASSERT(gckind != GC_LAST_CONTEXT);
     JS_ASSERT(comp != rt->atomsCompartment);
-    JS_ASSERT(!comp->isMarked());
     JS_ASSERT(comp->rt->gcMode == JSGC_MODE_COMPARTMENT);
 
     /*
@@ -2287,9 +2277,7 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
          r.front()->clearMarkBitmap();
 
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        (*c)->markCrossCompartment(&gcmarker);
-
-    comp->mark(&gcmarker);
+        (*c)->markCrossCompartmentWrappers(&gcmarker);
 
     MarkRuntime(&gcmarker);
 
@@ -2298,6 +2286,15 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
      * tracing.
      */
     gcmarker.markDelayedChildren();
+
+    /*
+     * Mark weak roots.
+     */
+    while (true) {
+        if (!js_TraceWatchPoints(&gcmarker))
+            break;
+        gcmarker.markDelayedChildren();
+    }
 
     rt->gcMarkingTracer = NULL;
 
@@ -2378,8 +2375,6 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
     ExpireGCChunks(rt);
     TIMESTAMP(sweepDestroyEnd);
 
-    comp->clearMark();
-
     if (rt->gcCallback)
         (void) rt->gcCallback(cx, JSGC_FINALIZE_END);
 }
@@ -2417,6 +2412,15 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
      * tracing.
      */
     gcmarker.markDelayedChildren();
+
+    /*
+     * Mark weak roots.
+     */
+    while (true) {
+        if (!js_TraceWatchPoints(&gcmarker))
+            break;
+        gcmarker.markDelayedChildren();
+    }
 
     rt->gcMarkingTracer = NULL;
 
@@ -2507,9 +2511,6 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
      */
     ExpireGCChunks(rt);
     TIMESTAMP(sweepDestroyEnd);
-
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        (*c)->clearMark();
 
     if (rt->gcCallback)
         (void) rt->gcCallback(cx, JSGC_FINALIZE_END);
@@ -2720,9 +2721,6 @@ GCUntilDone(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIM
     }
 
     AutoGCSession gcsession(cx);
-
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        JS_ASSERT(!(*c)->isMarked());
 
     /*
      * We should not be depending on cx->compartment in the GC, so set it to

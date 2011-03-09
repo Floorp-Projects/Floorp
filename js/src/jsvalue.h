@@ -930,8 +930,6 @@ typedef JSBool
 (* AttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 typedef JSType
 (* TypeOfOp)(JSContext *cx, JSObject *obj);
-typedef void
-(* TraceOp)(JSTracer *trc, JSObject *obj);
 typedef JSObject *
 (* ObjectOp)(JSContext *cx, JSObject *obj);
 typedef void
@@ -994,8 +992,7 @@ static const JSFinalizeOp     FinalizeStub       = JS_FinalizeStub;
     Native              construct;                                            \
     JSXDRObjectOp       xdrObject;                                            \
     HasInstanceOp       hasInstance;                                          \
-    JSMarkOp            mark
-
+    JSTraceOp           trace
 
 /*
  * The helper struct to measure the size of JS_CLASS_MEMBERS to know how much
@@ -1025,7 +1022,6 @@ struct ObjectOps {
     js::DeleteIdOp          deleteProperty;
     js::NewEnumerateOp      enumerate;
     js::TypeOfOp            typeOf;
-    js::TraceOp             trace;
     js::FixOp               fix;
     js::ObjectOp            thisObject;
     js::FinalizeOp          clear;
@@ -1064,7 +1060,7 @@ JS_STATIC_ASSERT(offsetof(JSClass, call) == offsetof(Class, call));
 JS_STATIC_ASSERT(offsetof(JSClass, construct) == offsetof(Class, construct));
 JS_STATIC_ASSERT(offsetof(JSClass, xdrObject) == offsetof(Class, xdrObject));
 JS_STATIC_ASSERT(offsetof(JSClass, hasInstance) == offsetof(Class, hasInstance));
-JS_STATIC_ASSERT(offsetof(JSClass, mark) == offsetof(Class, mark));
+JS_STATIC_ASSERT(offsetof(JSClass, trace) == offsetof(Class, trace));
 JS_STATIC_ASSERT(sizeof(JSClass) == sizeof(Class));
 
 struct PropertyDescriptor {

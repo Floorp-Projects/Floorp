@@ -34,7 +34,7 @@
 
                     <rows>
                         <vbox anonid="infoContainer" align="center" pack="center" flex="1">
-                            <description anonid="info.title" hidden="true"/>
+                            <description anonid="info.title" class="info.title" hidden="true" />
                             <description anonid="info.body" class="info.body"/>
                         </vbox>
 
@@ -158,6 +158,13 @@
                 Components.utils.import("resource://gre/modules/CommonDialog.jsm", tmp);
                 this.Dialog = new tmp.CommonDialog(args, this.ui);
                 this.Dialog.onLoad(null);
+
+                // Display the tabprompt title that shows the prompt origin when
+                // the prompt origin is not the same as that of the top window.
+                let topPrincipal = this.args.domWindow.top.document.nodePrincipal;
+                let promptPrincipal = this.args.domWindow.document.nodePrincipal;
+                if (!topPrincipal.equals(promptPrincipal))
+                  this.ui.infoTitle.removeAttribute("hidden");
 
                 // TODO: should unhide buttonSpacer on Windows when there are 4 buttons.
                 //       Better yet, just drop support for 4-button dialogs. (bug 609510)
