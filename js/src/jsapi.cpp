@@ -1333,7 +1333,7 @@ JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target)
     // types of security wrappers based on whether the new compartment
     // is same origin with them.
     Value targetv = ObjectValue(*obj);
-    WrapperVector &vector = cx->runtime->compartments;
+    CompartmentVector &vector = cx->runtime->compartments;
     AutoValueVector toTransplant(cx);
     if (!toTransplant.reserve(vector.length()))
         return NULL;
@@ -1427,7 +1427,7 @@ js_TransplantObjectWithWrapper(JSContext *cx,
     // and not |origwrapper|. They need to be updated to point at the new
     // location object.
     Value targetv = ObjectValue(*targetobj);
-    WrapperVector &vector = cx->runtime->compartments;
+    CompartmentVector &vector = cx->runtime->compartments;
     AutoValueVector toTransplant(cx);
     if (!toTransplant.reserve(vector.length()))
         return NULL;
@@ -3081,6 +3081,21 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp)
     return obj;
 }
 
+class AutoHoldCompartment {
+  public:
+    AutoHoldCompartment(JSCompartment *compartment JS_GUARD_OBJECT_NOTIFIER_PARAM) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        *(holdp = &compartment->hold) = true;
+    }
+
+    ~AutoHoldCompartment() {
+        *holdp = false;
+    }
+  private:
+    bool *holdp;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 JS_PUBLIC_API(JSObject *)
 JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals)
 {
@@ -3088,6 +3103,8 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *pr
     JSCompartment *compartment = NewCompartment(cx, principals);
     if (!compartment)
         return NULL;
+
+    AutoHoldCompartment hold(compartment);
 
     JSCompartment *saved = cx->compartment;
     cx->compartment = compartment;
