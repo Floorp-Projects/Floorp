@@ -1710,7 +1710,7 @@
                                              .QueryInterface(Ci.nsIEditorIMESupport);
               if (imeEditor.composing)
                 imeEditor.forceCompositionEnd();
-            } catch(e) { alert(e); }
+            } catch(e) {}
           }, 0, this);
         }
       ]]></handler>
