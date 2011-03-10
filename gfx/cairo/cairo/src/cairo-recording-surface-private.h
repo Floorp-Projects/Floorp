@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -132,7 +132,6 @@ typedef struct _cairo_recording_surface {
     cairo_clip_t clip;
 
     cairo_array_t commands;
-    cairo_surface_t *commands_owner;
 
     int replay_start_idx;
 } cairo_recording_surface_t;
@@ -157,6 +156,7 @@ _cairo_recording_surface_replay_and_create_regions (cairo_surface_t *surface,
 						    cairo_surface_t *target);
 cairo_private cairo_status_t
 _cairo_recording_surface_replay_region (cairo_surface_t			*surface,
+					const cairo_rectangle_int_t *surface_extents,
 					cairo_surface_t			*target,
 					cairo_recording_region_type_t	region);
 

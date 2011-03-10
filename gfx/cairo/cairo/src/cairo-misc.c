@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -39,9 +39,30 @@
  */
 
 #include "cairoint.h"
+#include "cairo-error-private.h"
 
 COMPILE_TIME_ASSERT (CAIRO_STATUS_LAST_STATUS < CAIRO_INT_STATUS_UNSUPPORTED);
 COMPILE_TIME_ASSERT (CAIRO_INT_STATUS_LAST_STATUS <= 127);
+
+/**
+ * SECTION:cairo-status
+ * @Title: Error handling
+ * @Short_Description: Decoding cairo's status
+ * @See_Also: cairo_status(), cairo_surface_status(), cairo_pattern_status(),
+ *            cairo_font_face_status(), cairo_scaled_font_status(), 
+ *            cairo_region_status()
+ *
+ * Cairo uses a single status type to represent all kinds of errors.  A status
+ * value of %CAIRO_STATUS_SUCCESS represents no error and has an integer value
+ * of zero.  All other status values represent an error.
+ *
+ * Cairo's error handling is designed to be easy to use and safe.  All major
+ * cairo objects <firstterm>retain</firstterm> an error status internally which
+ * can be queried anytime by the users using cairo*_status() calls.  In
+ * the mean time, it is safe to call all cairo functions normally even if the
+ * underlying object is in an error status.  This means that no error handling
+ * code is required before or after each individual cairo function call.
+ */
 
 /* Public stuff */
 
@@ -125,6 +146,10 @@ cairo_status_to_string (cairo_status_t status)
 	return "invalid value (typically too big) for the size of the input (surface, pattern, etc.)";
     case CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED:
 	return "user-font method not implemented";
+    case CAIRO_STATUS_DEVICE_TYPE_MISMATCH:
+	return "the device type is not appropriate for the operation";
+    case CAIRO_STATUS_DEVICE_ERROR:
+	return "an operation to the device caused an unspecified error";
     default:
     case CAIRO_STATUS_LAST_STATUS:
 	return "<unknown error status>";
@@ -416,7 +441,49 @@ _cairo_operator_bounded_by_source (cairo_operator_t op)
     return FALSE;
 }
 
+uint32_t
+_cairo_operator_bounded_by_either (cairo_operator_t op)
+{
+    switch (op) {
+    default:
+	ASSERT_NOT_REACHED;
+    case CAIRO_OPERATOR_OVER:
+    case CAIRO_OPERATOR_ATOP:
+    case CAIRO_OPERATOR_DEST:
+    case CAIRO_OPERATOR_DEST_OVER:
+    case CAIRO_OPERATOR_DEST_OUT:
+    case CAIRO_OPERATOR_XOR:
+    case CAIRO_OPERATOR_ADD:
+    case CAIRO_OPERATOR_SATURATE:
+    case CAIRO_OPERATOR_MULTIPLY:
+    case CAIRO_OPERATOR_SCREEN:
+    case CAIRO_OPERATOR_OVERLAY:
+    case CAIRO_OPERATOR_DARKEN:
+    case CAIRO_OPERATOR_LIGHTEN:
+    case CAIRO_OPERATOR_COLOR_DODGE:
+    case CAIRO_OPERATOR_COLOR_BURN:
+    case CAIRO_OPERATOR_HARD_LIGHT:
+    case CAIRO_OPERATOR_SOFT_LIGHT:
+    case CAIRO_OPERATOR_DIFFERENCE:
+    case CAIRO_OPERATOR_EXCLUSION:
+    case CAIRO_OPERATOR_HSL_HUE:
+    case CAIRO_OPERATOR_HSL_SATURATION:
+    case CAIRO_OPERATOR_HSL_COLOR:
+    case CAIRO_OPERATOR_HSL_LUMINOSITY:
+	return CAIRO_OPERATOR_BOUND_BY_MASK | CAIRO_OPERATOR_BOUND_BY_SOURCE;
+    case CAIRO_OPERATOR_CLEAR:
+    case CAIRO_OPERATOR_SOURCE:
+	return CAIRO_OPERATOR_BOUND_BY_MASK;
+    case CAIRO_OPERATOR_OUT:
+    case CAIRO_OPERATOR_IN:
+    case CAIRO_OPERATOR_DEST_IN:
+    case CAIRO_OPERATOR_DEST_ATOP:
+	return 0;
+    }
 
+}
+
+#if DISABLE_SOME_FLOATING_POINT
 /* This function is identical to the C99 function lround(), except that it
  * performs arithmetic rounding (floor(d + .5) instead of away-from-zero rounding) and
  * has a valid input range of (INT_MIN, INT_MAX] instead of
@@ -626,6 +693,64 @@ _cairo_lround (double d)
     return output;
 #undef MSW
 #undef LSW
+}
+#endif
+
+/* Convert a 32-bit IEEE single precision floating point number to a
+ * 'half' representation (s10.5)
+ */
+uint16_t
+_cairo_half_from_float (float f)
+{
+    union {
+	uint32_t ui;
+	float f;
+    } u;
+    int s, e, m;
+
+    u.f = f;
+    s =  (u.ui >> 16) & 0x00008000;
+    e = ((u.ui >> 23) & 0x000000ff) - (127 - 15);
+    m =   u.ui        & 0x007fffff;
+    if (e <= 0) {
+	if (e < -10) {
+	    /* underflow */
+	    return 0;
+	}
+
+	m = (m | 0x00800000) >> (1 - e);
+
+	/* round to nearest, round 0.5 up. */
+	if (m &  0x00001000)
+	    m += 0x00002000;
+	return s | (m >> 13);
+    } else if (e == 0xff - (127 - 15)) {
+	if (m == 0) {
+	    /* infinity */
+	    return s | 0x7c00;
+	} else {
+	    /* nan */
+	    m >>= 13;
+	    return s | 0x7c00 | m | (m == 0);
+	}
+    } else {
+	/* round to nearest, round 0.5 up. */
+	if (m &  0x00001000) {
+	    m += 0x00002000;
+
+	    if (m & 0x00800000) {
+		m =  0;
+		e += 1;
+	    }
+	}
+
+	if (e > 30) {
+	    /* overflow -> infinity */
+	    return s | 0x7c00;
+	}
+
+	return s | (e << 10) | (m >> 13);
+    }
 }
 
 

@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2007 Chris Wilson
+ * Copyright © 2010 Andrea Canciani
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -12,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -32,6 +33,7 @@
  *
  * Contributor(s):
  *	Chris Wilson <chris@chris-wilson.co.uk>
+ *	Andrea Canciani <ranma42@gmail.com>
  */
 
 #ifndef CAIRO_ATOMIC_PRIVATE_H
@@ -57,12 +59,29 @@ CAIRO_BEGIN_DECLS
 
 typedef int cairo_atomic_int_t;
 
+#ifdef ATOMIC_OP_NEEDS_MEMORY_BARRIER
+static cairo_always_inline cairo_atomic_int_t
+_cairo_atomic_int_get (cairo_atomic_int_t *x)
+{
+    __sync_synchronize ();
+    return *x;
+}
+
+static cairo_always_inline void *
+_cairo_atomic_ptr_get (void **x)
+{
+    __sync_synchronize ();
+    return *x;
+}
+#else
 # define _cairo_atomic_int_get(x) (*x)
-# define _cairo_atomic_int_set(x, value) ((*x) = value)
+# define _cairo_atomic_ptr_get(x) (*x)
+#endif
 
 # define _cairo_atomic_int_inc(x) ((void) __sync_fetch_and_add(x, 1))
 # define _cairo_atomic_int_dec_and_test(x) (__sync_fetch_and_add(x, -1) == 1)
-# define _cairo_atomic_int_cmpxchg(x, oldv, newv) __sync_val_compare_and_swap (x, oldv, newv)
+# define _cairo_atomic_int_cmpxchg(x, oldv, newv) __sync_bool_compare_and_swap (x, oldv, newv)
+# define _cairo_atomic_int_cmpxchg_return_old(x, oldv, newv) __sync_val_compare_and_swap (x, oldv, newv)
 
 #if SIZEOF_VOID_P==SIZEOF_INT
 typedef int cairo_atomic_intptr_t;
@@ -75,7 +94,10 @@ typedef long long cairo_atomic_intptr_t;
 #endif
 
 # define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) \
-    (void*)__sync_val_compare_and_swap ((cairo_atomic_intptr_t*)x, (cairo_atomic_intptr_t)oldv, (cairo_atomic_intptr_t)newv)
+    __sync_bool_compare_and_swap ((cairo_atomic_intptr_t*)x, (cairo_atomic_intptr_t)oldv, (cairo_atomic_intptr_t)newv)
+
+# define _cairo_atomic_ptr_cmpxchg_return_old(x, oldv, newv) \
+    _cairo_atomic_intptr_to_voidptr (__sync_val_compare_and_swap ((cairo_atomic_intptr_t*)x, (cairo_atomic_intptr_t)oldv, (cairo_atomic_intptr_t)newv))
 
 #endif
 
@@ -87,11 +109,10 @@ typedef long long cairo_atomic_intptr_t;
 typedef  AO_t cairo_atomic_int_t;
 
 # define _cairo_atomic_int_get(x) (AO_load_full (x))
-# define _cairo_atomic_int_set(x, value) (AO_store_full (x))
 
 # define _cairo_atomic_int_inc(x) ((void) AO_fetch_and_add1_full(x))
 # define _cairo_atomic_int_dec_and_test(x) (AO_fetch_and_sub1_full(x) == 1)
-# define _cairo_atomic_int_cmpxchg(x, oldv, newv) ((cairo_atomic_int_t) AO_compare_and_swap_full(x, oldv, newv) ? oldv : *x)
+# define _cairo_atomic_int_cmpxchg(x, oldv, newv) AO_compare_and_swap_full(x, oldv, newv)
 
 #if SIZEOF_VOID_P==SIZEOF_INT
 typedef unsigned int cairo_atomic_intptr_t;
@@ -103,45 +124,129 @@ typedef unsigned long long cairo_atomic_intptr_t;
 #error No matching integer pointer type
 #endif
 
+# define _cairo_atomic_ptr_get(x) _cairo_atomic_intptr_to_voidptr (AO_load_full (x))
 # define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) \
-    (void*) (cairo_atomic_intptr_t) _cairo_atomic_int_cmpxchg ((cairo_atomic_intptr_t*)(x), (cairo_atomic_intptr_t)oldv, (cairo_atomic_intptr_t)newv)
+    _cairo_atomic_int_cmpxchg ((cairo_atomic_intptr_t*)(x), (cairo_atomic_intptr_t)oldv, (cairo_atomic_intptr_t)newv)
 
 #endif
 
+#if HAVE_OS_ATOMIC_OPS
+#include <libkern/OSAtomic.h>
+
+#define HAS_ATOMIC_OPS 1
+
+typedef int32_t cairo_atomic_int_t;
+
+# define _cairo_atomic_int_get(x) (OSMemoryBarrier(), *(x))
+
+# define _cairo_atomic_int_inc(x) ((void) OSAtomicIncrement32Barrier (x))
+# define _cairo_atomic_int_dec_and_test(x) (OSAtomicDecrement32Barrier (x) == 0)
+# define _cairo_atomic_int_cmpxchg(x, oldv, newv) OSAtomicCompareAndSwap32Barrier(oldv, newv, x)
+
+#if SIZEOF_VOID_P==4
+typedef int32_t cairo_atomic_intptr_t;
+# define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) \
+    OSAtomicCompareAndSwap32Barrier((cairo_atomic_intptr_t)oldv, (cairo_atomic_intptr_t)newv, (cairo_atomic_intptr_t *)x)
+
+#elif SIZEOF_VOID_P==8
+typedef int64_t cairo_atomic_intptr_t;
+# define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) \
+    OSAtomicCompareAndSwap64Barrier((cairo_atomic_intptr_t)oldv, (cairo_atomic_intptr_t)newv, (cairo_atomic_intptr_t *)x)
+
+#else
+#error No matching integer pointer type
+#endif
+
+# define _cairo_atomic_ptr_get(x) (OSMemoryBarrier(), *(x))
+
+#endif
 
 #ifndef HAS_ATOMIC_OPS
 
-typedef int cairo_atomic_int_t;
+#if SIZEOF_VOID_P==SIZEOF_INT
+typedef unsigned int cairo_atomic_intptr_t;
+#elif SIZEOF_VOID_P==SIZEOF_LONG
+typedef unsigned long cairo_atomic_intptr_t;
+#elif SIZEOF_VOID_P==SIZEOF_LONG_LONG
+typedef unsigned long long cairo_atomic_intptr_t;
+#else
+#error No matching integer pointer type
+#endif
+
+typedef cairo_atomic_intptr_t cairo_atomic_int_t;
 
 cairo_private void
-_cairo_atomic_int_inc (int *x);
+_cairo_atomic_int_inc (cairo_atomic_int_t *x);
 
 cairo_private cairo_bool_t
-_cairo_atomic_int_dec_and_test (int *x);
+_cairo_atomic_int_dec_and_test (cairo_atomic_int_t *x);
 
-cairo_private int
-_cairo_atomic_int_cmpxchg (int *x, int oldv, int newv);
+cairo_private cairo_atomic_int_t
+_cairo_atomic_int_cmpxchg_return_old_impl (cairo_atomic_int_t *x, cairo_atomic_int_t oldv, cairo_atomic_int_t newv);
 
 cairo_private void *
-_cairo_atomic_ptr_cmpxchg (void **x, void *oldv, void *newv);
+_cairo_atomic_ptr_cmpxchg_return_old_impl (void **x, void *oldv, void *newv);
+
+#define _cairo_atomic_int_cmpxchg_return_old(x, oldv, newv) _cairo_atomic_int_cmpxchg_return_old_impl (x, oldv, newv)
+#define _cairo_atomic_ptr_cmpxchg_return_old(x, oldv, newv) _cairo_atomic_ptr_cmpxchg_return_old_impl (x, oldv, newv)
 
 #ifdef ATOMIC_OP_NEEDS_MEMORY_BARRIER
-
-# include "cairo-compiler-private.h"
-
-cairo_private int
-_cairo_atomic_int_get (int *x);
-
-cairo_private void
-_cairo_atomic_int_set (int *x, int value);
+cairo_private cairo_atomic_int_t
+_cairo_atomic_int_get (cairo_atomic_int_t *x);
+# define _cairo_atomic_ptr_get(x) (void *) _cairo_atomic_int_get((cairo_atomic_int_t *) x)
+#else
+# define _cairo_atomic_int_get(x) (*x)
+# define _cairo_atomic_ptr_get(x) (*x)
+#endif
 
 #else
 
-# define _cairo_atomic_int_get(x) (*x)
-# define _cairo_atomic_int_set(x, value) ((*x) = value)
+/* Workaround GCC complaining about casts */
+static cairo_always_inline void *
+_cairo_atomic_intptr_to_voidptr (cairo_atomic_intptr_t x)
+{
+  return (void *) x;
+}
 
+static cairo_always_inline cairo_atomic_int_t
+_cairo_atomic_int_cmpxchg_return_old_fallback(cairo_atomic_int_t *x, cairo_atomic_int_t oldv, cairo_atomic_int_t newv)
+{
+    cairo_atomic_int_t curr;
+
+    do {
+        curr = _cairo_atomic_int_get (x);
+    } while (curr == oldv && !_cairo_atomic_int_cmpxchg (x, oldv, newv));
+
+    return curr;
+}
+
+static cairo_always_inline void *
+_cairo_atomic_ptr_cmpxchg_return_old_fallback(void **x, void *oldv, void *newv)
+{
+    void *curr;
+
+    do {
+        curr = _cairo_atomic_ptr_get (x);
+    } while (curr == oldv && !_cairo_atomic_ptr_cmpxchg (x, oldv, newv));
+
+    return curr;
+}
 #endif
 
+#ifndef _cairo_atomic_int_cmpxchg_return_old
+#define _cairo_atomic_int_cmpxchg_return_old(x, oldv, newv) _cairo_atomic_int_cmpxchg_return_old_fallback (x, oldv, newv)
+#endif
+
+#ifndef _cairo_atomic_ptr_cmpxchg_return_old
+#define _cairo_atomic_ptr_cmpxchg_return_old(x, oldv, newv) _cairo_atomic_ptr_cmpxchg_return_old_fallback (x, oldv, newv)
+#endif
+
+#ifndef _cairo_atomic_int_cmpxchg
+#define _cairo_atomic_int_cmpxchg(x, oldv, newv) (_cairo_atomic_int_cmpxchg_return_old (x, oldv, newv) == oldv)
+#endif
+
+#ifndef _cairo_atomic_ptr_cmpxchg
+#define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) (_cairo_atomic_ptr_cmpxchg_return_old (x, oldv, newv) == oldv)
 #endif
 
 #define _cairo_atomic_uint_get(x) _cairo_atomic_int_get(x)
