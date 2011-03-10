@@ -3110,6 +3110,13 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
                 fn->pn_type = TOK_FUNCTION;
                 fn->pn_arity = PN_FUNC;
                 fn->pn_pos.begin = pn->pn_pos.begin;
+
+                /*
+                 * Set fn->pn_pos.end too, in case of error before we parse the
+                 * closing brace.  See bug 640075.
+                 */
+                fn->pn_pos.end = pn->pn_pos.end;
+
                 fn->pn_body = NULL;
                 fn->pn_cookie.makeFree();
 
