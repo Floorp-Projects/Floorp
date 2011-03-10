@@ -319,8 +319,9 @@ JSObject::willBeSparseDenseArray(uintN requiredCapacity, uintN newElementsHint)
     if (minimalDenseCount > cap)
         return true;
     
+    uintN len = getDenseArrayInitializedLength();
     Value *elems = getDenseArrayElements();
-    for (uintN i = 0; i < cap; i++) {
+    for (uintN i = 0; i < len; i++) {
         if (!elems[i].isMagic(JS_ARRAY_HOLE) && !--minimalDenseCount)
             return false;
     }
@@ -410,7 +411,7 @@ namespace js {
 bool
 GetElements(JSContext *cx, JSObject *aobj, jsuint length, Value *vp)
 {
-    if (aobj->isDenseArray() && length <= aobj->getDenseArrayCapacity() &&
+    if (aobj->isDenseArray() && length <= aobj->getDenseArrayInitializedLength() &&
         !js_PrototypeHasIndexedProperties(cx, aobj)) {
         /* The prototype does not have indexed properties so hole = undefined */
         Value *srcbeg = aobj->getDenseArrayElements();
@@ -2480,7 +2481,7 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
     /* If there are elements to remove, put them into the return value. */
     if (count > 0) {
         if (obj->isDenseArray() && !js_PrototypeHasIndexedProperties(cx, obj) &&
-            end <= obj->getDenseArrayCapacity()) {
+            end <= obj->getDenseArrayInitializedLength()) {
             if (!InitArrayObject(cx, obj2, count, obj->getDenseArrayElements() + begin))
                 return JS_FALSE;
         } else {
@@ -2748,7 +2749,7 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
             return false;
     }
 
-    if (obj->isDenseArray() && end <= obj->getDenseArrayCapacity() &&
+    if (obj->isDenseArray() && end <= obj->getDenseArrayInitializedLength() &&
         !js_PrototypeHasIndexedProperties(cx, obj)) {
         nobj = NewDenseCopiedArray(cx, end - begin, obj->getDenseArrayElements() + begin);
         if (!nobj)
@@ -2773,8 +2774,6 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
             !GetElement(cx, obj, slot, &hole, tvr.addr())) {
             return JS_FALSE;
         }
-        if (!hole && !cx->addTypePropertyId(nobj->getType(), JSID_VOID, tvr.value()))
-            return false;
         if (!hole && !SetArrayElement(cx, nobj, slot - begin, tvr.value()))
             return JS_FALSE;
     }
