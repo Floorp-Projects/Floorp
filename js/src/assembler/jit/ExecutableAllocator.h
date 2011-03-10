@@ -168,7 +168,7 @@ public:
     ExecutableAllocator()
     {
         if (!pageSize)
-            intializePageSize();
+            pageSize = determinePageSize();
         JS_ASSERT(m_smallAllocationPools.empty());
     }
 
@@ -410,7 +410,7 @@ private:
     static const size_t maxSmallPools = 4;
     typedef js::Vector<ExecutablePool *, maxSmallPools, js::SystemAllocPolicy > SmallExecPoolVector;
     SmallExecPoolVector m_smallAllocationPools;
-    static void intializePageSize();
+    static size_t determinePageSize();
 };
 
 }
