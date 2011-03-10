@@ -216,7 +216,7 @@ FrameState::isEntryCopied(FrameEntry *fe) const
 
     for (uint32 i = fe->trackerIndex() + 1; i < tracker.nentries; i++) {
         FrameEntry *nfe = tracker[i];
-        if (nfe->isCopy() && nfe->copyOf() == fe)
+        if (nfe < sp && nfe->isCopy() && nfe->copyOf() == fe)
             return true;
     }
 
