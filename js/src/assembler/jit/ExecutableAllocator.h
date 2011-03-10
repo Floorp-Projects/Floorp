@@ -95,7 +95,18 @@ public:
     // remember whether m_destroy was computed for the currently active GC.
     size_t m_gcNumber;
 
-public:
+    void release(bool willDestroy = false)
+    { 
+        JS_ASSERT(m_refCount != 0);
+        JS_ASSERT_IF(willDestroy, m_refCount = 1);
+        if (--m_refCount == 0) {
+            /* We can't (easily) use js_delete() here because the destructor is private. */
+            this->~ExecutablePool();
+            js_free(this);
+        }
+    }
+
+private:
     // It should be impossible for us to roll over, because only small
     // pools have multiple holders, and they have one holder per chunk
     // of generated code, and they only hold 16KB or so of code.
@@ -103,13 +114,6 @@ public:
     {
         JS_ASSERT(m_refCount);
         ++m_refCount;
-    }
-
-    void release()
-    { 
-        JS_ASSERT(m_refCount != 0);
-        if (--m_refCount == 0)
-            this->destroy();
     }
 
 private:
@@ -132,13 +136,6 @@ private:
         return result;
     }
     
-    void destroy()
-    {
-        /* We can't (easily) use js_delete() here because the destructor is private. */
-        this->~ExecutablePool();
-        js_free(this);
-    }
-
     size_t available() const { 
         JS_ASSERT(m_end >= m_freePtr);
         return m_end - m_freePtr;
@@ -174,7 +171,7 @@ public:
     ~ExecutableAllocator()
     {
         for (size_t i = 0; i < m_smallAllocationPools.length(); i++)
-            m_smallAllocationPools[i]->destroy();
+            m_smallAllocationPools[i]->release(/* willDestroy = */true);
     }
 
     // alloc() returns a pointer to some memory, and also (by reference) a
