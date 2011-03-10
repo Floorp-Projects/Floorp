@@ -69,7 +69,7 @@
 #ifdef MOZ_PLATFORM_MAEMO
         sizemode="fullscreen"
 #else
-        width="500"
+        width="480"
         height="800"
 #endif
         onkeypress="onDebugKeyPress(event);"
