@@ -4772,8 +4772,6 @@ static const char *const shell_help_messages[] = {
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(shell_help_messages) - PROFILING_FUNCTION_COUNT ==
                  JS_ARRAY_LENGTH(shell_functions) - 1 /* JS_FS_END */);
 
-#undef PROFILING_FUNCTION_COUNT
-
 #ifdef DEBUG
 static void
 CheckHelpMessages()
@@ -4782,7 +4780,7 @@ CheckHelpMessages()
     const char *lp;
 
     /* Messages begin with "function_name(" prefix and don't end with \n. */
-    for (m = shell_help_messages; m != JS_ARRAY_END(shell_help_messages); ++m) {
+    for (m = shell_help_messages; m != JS_ARRAY_END(shell_help_messages) - PROFILING_FUNCTION_COUNT; ++m) {
         lp = strchr(*m, '(');
         JS_ASSERT(lp);
         JS_ASSERT(memcmp(shell_functions[m - shell_help_messages].name,
@@ -4793,6 +4791,8 @@ CheckHelpMessages()
 #else
 # define CheckHelpMessages() ((void) 0)
 #endif
+
+#undef PROFILING_FUNCTION_COUNT
 
 static JSBool
 Help(JSContext *cx, uintN argc, jsval *vp)

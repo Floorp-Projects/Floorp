@@ -510,7 +510,7 @@ JSScript::nativeCodeForPC(bool constructing, jsbytecode *pc)
     return native;
 }
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(_WIN64)
 extern "C" void *JaegerThrowpoline(js::VMFrame *vmFrame);
 #else
 extern "C" void JaegerThrowpoline();

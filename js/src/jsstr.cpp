@@ -2550,111 +2550,218 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
     return BuildFlatReplacement(cx, rdata.str, rdata.repstr, *fm, vp);
 }
 
-/*
- * Subroutine used by str_split to find the next split point in str, starting
- * at offset *ip and looking either for the separator substring given by sep, or
- * for the next re match.  In the re case, return the matched separator in *sep,
- * and the possibly updated offset in *ip.
- *
- * Return -2 on error, -1 on end of string, >= 0 for a valid index of the next
- * separator occurrence if found, or str->length if no separator is found.
- */
-static jsint
-find_split(JSContext *cx, RegExpStatics *res, JSString *str, js::RegExp *re, jsint *ip,
-           JSSubString *sep)
+class SplitMatchResult {
+    size_t endIndex_;
+    size_t length_;
+
+  public:
+    void setFailure() {
+        JS_STATIC_ASSERT(SIZE_MAX > JSString::MAX_LENGTH);
+        endIndex_ = SIZE_MAX;
+    }
+    bool isFailure() const {
+        return (endIndex_ == SIZE_MAX);
+    }
+    size_t endIndex() const {
+        JS_ASSERT(!isFailure());
+        return endIndex_;
+    }
+    size_t length() const {
+        JS_ASSERT(!isFailure());
+        return length_;
+    }
+    void setResult(size_t length, size_t endIndex) {
+        length_ = length;
+        endIndex_ = endIndex;
+    }
+};
+
+template<class Matcher>
+static JSObject *
+SplitHelper(JSContext *cx, JSLinearString *str, uint32 limit, Matcher splitMatch)
 {
-    /*
-     * Stop if past end of string.  If at end of string, we will compare the
-     * null char stored there (by js_NewString*) to sep->chars[j] in the while
-     * loop at the end of this function, so that
-     *
-     *  "ab,".split(',') => ["ab", ""]
-     *
-     * and the resulting array converts back to the string "ab," for symmetry.
-     * However, we ape Perl and do this only if there is a sufficiently large
-     * limit argument (see str_split).
-     */
-    jsint i = *ip;
-    size_t length = str->length();
-    if ((size_t)i > length)
-        return -1;
+    size_t strLength = str->length();
+    SplitMatchResult result;
 
-    const jschar *chars = str->getChars(cx);
-    if (!chars)
-        return -2;
+    /* Step 11. */
+    if (strLength == 0) {
+        if (!splitMatch(cx, str, 0, &result))
+            return NULL;
 
-    /*
-     * Match a regular expression against the separator at or above index i.
-     * Call js_ExecuteRegExp with true for the test argument.  On successful
-     * match, get the separator from cx->regExpStatics.lastMatch.
-     */
-    if (re) {
-        size_t index;
-        Value rval;
+        /*
+         * NB: Unlike in the non-empty string case, it's perfectly fine
+         *     (indeed the spec requires it) if we match at the end of the
+         *     string.  Thus these cases should hold:
+         *
+         *   var a = "".split("");
+         *   assertEq(a.length, 0);
+         *   var b = "".split(/.?/);
+         *   assertEq(b.length, 0);
+         */
+        if (!result.isFailure())
+            return NewDenseEmptyArray(cx);
 
-      again:
-        /* JS1.2 deviated from Perl by never matching at end of string. */
-        index = (size_t)i;
-        if (!re->execute(cx, res, str, &index, true, &rval))
-            return -2;
-        if (!rval.isTrue()) {
-            /* Mismatch: ensure our caller advances i past end of string. */
-            sep->length = 1;
-            return length;
-        }
-        i = (jsint)index;
-        JS_ASSERT(sep);
-        res->getLastMatch(sep);
-        if (sep->length == 0) {
-            /*
-             * Empty string match: never split on an empty match at the start
-             * of a find_split cycle.  Same rule as for an empty global match
-             * in DoMatch.
-             */
-            if (i == *ip) {
-                /*
-                 * "Bump-along" to avoid sticking at an empty match, but don't
-                 * bump past end of string -- our caller must do that by adding
-                 * sep->length to our return value.
-                 */
-                if ((size_t)i == length)
-                    return -1;
-                i++;
-                goto again;
-            }
-            if ((size_t)i == length) {
-                /*
-                 * If there was a trivial zero-length match at the end of the
-                 * split, then we shouldn't output the matched string at the end
-                 * of the split array. See ECMA-262 Ed. 3, 15.5.4.14, Step 15.
-                 */
-                sep->chars = NULL;
-            }
-        }
-        JS_ASSERT((size_t)i >= sep->length);
-        return i - sep->length;
+        Value v = StringValue(str);
+        return NewDenseCopiedArray(cx, 1, &v);
     }
 
-    /*
-     * Special case: if sep is the empty string, split str into one character
-     * substrings.  Let our caller worry about whether to split once at end of
-     * string into an empty substring.
-     */
-    if (sep->length == 0)
-        return ((size_t)i == length) ? -1 : i + 1;
+    /* Step 12. */
+    size_t lastEndIndex = 0;
+    size_t index = 0;
 
-    /*
-     * Now that we know sep is non-empty, search starting at i in str for an
-     * occurrence of all of sep's chars.  If we find them, return the index of
-     * the first separator char.  Otherwise, return length.
-     */
-    jsint match = StringMatch(chars + i, length - i, sep->chars, sep->length);
-    return match == -1 ? length : match + i;
+    /* Step 13. */
+    AutoValueVector splits(cx);
+
+    while (index < strLength) {
+        /* Step 13(a). */
+        if (!splitMatch(cx, str, index, &result))
+            return NULL;
+
+        /*
+         * Step 13(b).
+         *
+         * Our match algorithm differs from the spec in that it returns the
+         * next index at which a match happens.  If no match happens we're
+         * done.
+         *
+         * But what if the match is at the end of the string (and the string is
+         * not empty)?  Per 13(c)(ii) this shouldn't be a match, so we have to
+         * specially exclude it.  Thus this case should hold:
+         *
+         *   var a = "abc".split(/\b/);
+         *   assertEq(a.length, 1);
+         *   assertEq(a[0], "abc");
+         */
+        if (result.isFailure())
+            break;
+
+        /* Step 13(c)(i). */
+        size_t sepLength = result.length();
+        size_t endIndex = result.endIndex();
+        if (sepLength == 0 && endIndex == strLength)
+            break;
+
+        /* Step 13(c)(ii). */
+        if (endIndex == lastEndIndex) {
+            index++;
+            continue;
+        }
+
+        /* Step 13(c)(iii). */
+        JS_ASSERT(lastEndIndex < endIndex);
+        JS_ASSERT(sepLength <= strLength);
+        JS_ASSERT(lastEndIndex + sepLength <= endIndex);
+
+        /* Steps 13(c)(iii)(1-3). */
+        size_t subLength = size_t(endIndex - sepLength - lastEndIndex);
+        JSString *sub = js_NewDependentString(cx, str, lastEndIndex, subLength);
+        if (!sub || !splits.append(StringValue(sub)))
+            return NULL;
+
+        /* Step 13(c)(iii)(4). */
+        if (splits.length() == limit)
+            return NewDenseCopiedArray(cx, splits.length(), splits.begin());
+
+        /* Step 13(c)(iii)(5). */
+        lastEndIndex = endIndex;
+
+        /* Step 13(c)(iii)(6-7). */
+        if (Matcher::returnsCaptures) {
+            RegExpStatics *res = cx->regExpStatics();
+            for (size_t i = 0; i < res->parenCount(); i++) {
+                /* Steps 13(c)(iii)(7)(a-c). */
+                if (res->pairIsPresent(i + 1)) {
+                    JSSubString parsub;
+                    res->getParen(i + 1, &parsub);
+                    sub = js_NewStringCopyN(cx, parsub.chars, parsub.length);
+                    if (!sub || !splits.append(StringValue(sub)))
+                        return NULL;
+                } else {
+                    if (!splits.append(UndefinedValue()))
+                        return NULL;
+                }
+
+                /* Step 13(c)(iii)(7)(d). */
+                if (splits.length() == limit)
+                    return NewDenseCopiedArray(cx, splits.length(), splits.begin());
+            }
+        }
+
+        /* Step 13(c)(iii)(8). */
+        index = lastEndIndex;
+    }
+
+    /* Steps 14-15. */
+    JSString *sub = js_NewDependentString(cx, str, lastEndIndex, strLength - lastEndIndex);
+    if (!sub || !splits.append(StringValue(sub)))
+        return NULL;
+
+    /* Step 16. */
+    return NewDenseCopiedArray(cx, splits.length(), splits.begin());
 }
 
+/*
+ * The SplitMatch operation from ES5 15.5.4.14 is implemented using different
+ * matchers for regular expression and string separators.
+ *
+ * The algorithm differs from the spec in that the matchers return the next
+ * index at which a match happens.
+ */
+class SplitRegExpMatcher {
+    RegExpStatics *res;
+    RegExp *re;
+
+  public:
+    static const bool returnsCaptures = true;
+    SplitRegExpMatcher(RegExp *re, RegExpStatics *res) : res(res), re(re) {
+    }
+
+    inline bool operator()(JSContext *cx, JSLinearString *str, size_t index,
+                           SplitMatchResult *result) {
+        Value rval;
+        if (!re->execute(cx, res, str, &index, true, &rval))
+            return false;
+        if (!rval.isTrue()) {
+            result->setFailure();
+            return true;
+        }
+        JSSubString sep;
+        res->getLastMatch(&sep);
+
+        result->setResult(sep.length, index);
+        return true;
+    }
+};
+
+class SplitStringMatcher {
+    const jschar *sepChars;
+    size_t sepLength;
+
+  public:
+    static const bool returnsCaptures = false;
+    SplitStringMatcher(JSLinearString *sep) {
+        sepChars = sep->chars();
+        sepLength = sep->length();
+    }
+
+    inline bool operator()(JSContext *cx, JSLinearString *str, size_t index,
+                           SplitMatchResult *res) {
+        JS_ASSERT(index == 0 || index < str->length());
+        const jschar *chars = str->chars();
+        jsint match = StringMatch(chars + index, str->length() - index, sepChars, sepLength);
+        if (match == -1)
+            res->setFailure();
+        else
+            res->setResult(sepLength, index + match + sepLength);
+        return true;
+    }
+};
+
+/* ES5 15.5.4.14 */
 static JSBool
 str_split(JSContext *cx, uintN argc, Value *vp)
 {
+    /* Steps 1-2. */
     JSString *str = ThisToStringForStringProto(cx, vp);
     if (!str)
         return false;
@@ -2663,7 +2770,48 @@ str_split(JSContext *cx, uintN argc, Value *vp)
     if (!type || !cx->addTypeProperty(type, NULL, types::TYPE_STRING))
         return false;
 
-    if (argc == 0) {
+    /* Step 5: Use the second argument as the split limit, if given. */
+    uint32 limit;
+    if (argc > 1 && !vp[3].isUndefined()) {
+        jsdouble d;
+        if (!ValueToNumber(cx, vp[3], &d))
+            return false;
+        limit = js_DoubleToECMAUint32(d);
+    } else {
+        limit = UINT32_MAX;
+    }
+
+    /* Step 8. */
+    RegExp *re = NULL;
+    JSLinearString *sepstr = NULL;
+    bool sepUndefined = (argc == 0 || vp[2].isUndefined());
+    if (!sepUndefined) {
+        if (VALUE_IS_REGEXP(cx, vp[2])) {
+            re = static_cast<RegExp *>(vp[2].toObject().getPrivate());
+        } else {
+            JSString *sep = js_ValueToString(cx, vp[2]);
+            if (!sep)
+                return false;
+            vp[2].setString(sep);
+
+            sepstr = sep->ensureLinear(cx);
+            if (!sepstr)
+                return false;
+        }
+    }
+
+    /* Step 9. */
+    if (limit == 0) {
+        JSObject *aobj = NewDenseEmptyArray(cx);
+        if (!aobj)
+            return false;
+        aobj->setType(type);
+        vp->setObject(*aobj);
+        return true;
+    }
+
+    /* Step 10. */
+    if (sepUndefined) {
         Value v = StringValue(str);
         JSObject *aobj = NewDenseCopiedArray(cx, 1, &v);
         if (!aobj)
@@ -2672,89 +2820,22 @@ str_split(JSContext *cx, uintN argc, Value *vp)
         vp->setObject(*aobj);
         return true;
     }
-
-    RegExp *re;
-    JSSubString *sep, tmp;
-    if (VALUE_IS_REGEXP(cx, vp[2])) {
-        re = static_cast<RegExp *>(vp[2].toObject().getPrivate());
-        sep = &tmp;
-
-        /* Set a magic value so we can detect a successful re match. */
-        sep->chars = NULL;
-        sep->length = 0;
-    } else {
-        JSString *sepstr = js_ValueToString(cx, vp[2]);
-        if (!sepstr)
-            return false;
-        vp[2].setString(sepstr);
-
-        /*
-         * Point sep at a local copy of sepstr's header because find_split
-         * will modify sep->length.
-         */
-        tmp.length = sepstr->length();
-        tmp.chars = sepstr->getChars(cx);
-        if (!tmp.chars)
-            return false;
-        re = NULL;
-        sep = &tmp;
-    }
-
-    /* Use the second argument as the split limit, if given. */
-    uint32 limit = 0; /* Avoid warning. */
-    bool limited = (argc > 1) && !vp[3].isUndefined();
-    if (limited) {
-        jsdouble d;
-        if (!ValueToNumber(cx, vp[3], &d))
-            return false;
-
-        /* Clamp limit between 0 and 1 + string length. */
-        limit = js_DoubleToECMAUint32(d);
-        if (limit > str->length())
-            limit = 1 + str->length();
-    }
-
-    AutoValueVector splits(cx);
-
-    RegExpStatics *res = cx->regExpStatics();
-    jsint i, j;
-    uint32 len = i = 0;
-    while ((j = find_split(cx, res, str, re, &i, sep)) >= 0) {
-        if (limited && len >= limit)
-            break;
-
-        JSString *sub = js_NewDependentString(cx, str, i, size_t(j - i));
-        if (!sub || !splits.append(StringValue(sub)))
-            return false;
-        len++;
-
-        /*
-         * Imitate perl's feature of including parenthesized substrings that
-         * matched part of the delimiter in the new array, after the split
-         * substring that was delimited.
-         */
-        if (re && sep->chars) {
-            for (uintN num = 0; num < res->parenCount(); num++) {
-                if (limited && len >= limit)
-                    break;
-                JSSubString parsub;
-                res->getParen(num + 1, &parsub);
-                sub = js_NewStringCopyN(cx, parsub.chars, parsub.length);
-                if (!sub || !splits.append(StringValue(sub)))
-                    return false;
-                len++;
-            }
-            sep->chars = NULL;
-        }
-        i = j + sep->length;
-    }
-
-    if (j == -2)
+    JSLinearString *strlin = str->ensureLinear(cx);
+    if (!strlin)
         return false;
 
-    JSObject *aobj = NewDenseCopiedArray(cx, splits.length(), splits.begin());
+    /* Steps 11-15. */
+    JSObject *aobj;
+    if (re) {
+        aobj = SplitHelper(cx, strlin, limit, SplitRegExpMatcher(re, cx->regExpStatics()));
+    } else {
+        // NB: sepstr is anchored through its storage in vp[2].
+        aobj = SplitHelper(cx, strlin, limit, SplitStringMatcher(sepstr));
+    }
     if (!aobj)
         return false;
+
+    /* Step 16. */
     aobj->setType(type);
     vp->setObject(*aobj);
     return true;
