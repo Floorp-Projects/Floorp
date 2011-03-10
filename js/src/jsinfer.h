@@ -570,8 +570,8 @@ struct TypeScript
 /* Analyzes all types in script, constructing its TypeScript. */
 void AnalyzeScriptTypes(JSContext *cx, JSScript *script);
 
-/* Destroy the TypeScript associated with a script. */
-void DestroyScriptTypes(JSContext *cx, JSScript *script);
+/* Analyze the effect of invoking 'new' on script. */
+void AnalyzeScriptNew(JSContext *cx, JSScript *script);
 
 /* Type information for a compartment. */
 struct TypeCompartment
