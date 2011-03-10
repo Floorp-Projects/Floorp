@@ -200,6 +200,7 @@ class JaegerCompartment {
 
     void pushActiveFrame(VMFrame *f) {
         f->previous = activeFrame_;
+        f->scratch = NULL;
         activeFrame_ = f;
     }
 
