@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -38,6 +38,8 @@
 
 #include "cairo-quartz-image.h"
 #include "cairo-quartz-private.h"
+
+#include "cairo-error-private.h"
 
 #define SURFACE_ERROR_NO_MEMORY (_cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_NO_MEMORY)))
 #define SURFACE_ERROR_TYPE_MISMATCH (_cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_SURFACE_TYPE_MISMATCH)))
@@ -260,6 +262,7 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
 
     _cairo_surface_init (&qisurf->base,
 			 &cairo_quartz_image_surface_backend,
+			 NULL, /* device */
 			 _cairo_content_from_format (format));
 
     qisurf->extents.x = qisurf->extents.y = 0;

@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -265,25 +265,4 @@ _cairo_box_contains_point (cairo_box_t *box, const cairo_point_t *point)
 	point->y < box->p1.y || point->y > box->p2.y)
 	return FALSE;
     return TRUE;
-}
-
-void
-_cairo_composite_rectangles_init(
-        cairo_composite_rectangles_t	*rects,
-        int				 all_x,
-        int				 all_y,
-        int				 width,
-        int				 height)
-{
-        rects->src.x = all_x;
-        rects->src.y = all_y;
-        rects->mask.x = all_x;
-        rects->mask.y = all_y;
-        rects->clip.x = all_x;
-        rects->clip.y = all_y;
-        rects->dst.x = all_x;
-        rects->dst.y = all_y;
-
-        rects->width = width;
-        rects->height = height;
 }

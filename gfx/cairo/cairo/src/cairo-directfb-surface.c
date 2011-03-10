@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -39,6 +39,7 @@
 #include "cairo-directfb.h"
 
 #include "cairo-clip-private.h"
+#include "cairo-error-private.h"
 
 #include <pixman.h>
 
@@ -564,6 +565,7 @@ _cairo_directfb_surface_create_internal (IDirectFB *dfb,
 
     _cairo_surface_init (&surface->base,
 			 &_cairo_directfb_surface_backend,
+			 NULL, /* device */
 			 content);
     surface->pixman_format = _directfb_to_pixman_format (format);
     surface->supported_destination = pixman_format_supported_destination (surface->pixman_format);
@@ -762,14 +764,14 @@ _cairo_directfb_surface_clone_similar (void             *abstract_surface,
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
 
-	pixman_image_composite (PIXMAN_OP_SRC,
-				image_src->pixman_image,
-				NULL,
-				pixman_image,
-				src_x, src_y,
-				0, 0,
-				0, 0,
-				width, height);
+	pixman_image_composite32 (PIXMAN_OP_SRC,
+                                  image_src->pixman_image,
+                                  NULL,
+                                  pixman_image,
+                                  src_x, src_y,
+                                  0, 0,
+                                  0, 0,
+                                  width, height);
 
 	pixman_image_unref (pixman_image);
 
@@ -1814,7 +1816,7 @@ _cairo_directfb_surface_show_glyphs (void		    *abstract_dst,
 
 
 static cairo_bool_t
-_cairo_directfb_surface_is_similar (void *surface_a, void *surface_b, cairo_content_t content)
+_cairo_directfb_surface_is_similar (void *surface_a, void *surface_b)
 {
     cairo_directfb_surface_t *a = (cairo_directfb_surface_t *) surface_a;
     cairo_directfb_surface_t *b = (cairo_directfb_surface_t *) surface_b;
@@ -1955,6 +1957,7 @@ cairo_directfb_surface_create (IDirectFB *dfb, IDirectFBSurface *dfbsurface)
 
     _cairo_surface_init (&surface->base,
                          &_cairo_directfb_surface_backend,
+			 NULL, /* device */
 			 _directfb_format_to_content (format));
 
     return &surface->base;

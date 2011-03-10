@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -43,6 +43,12 @@
 #if CAIRO_HAS_QUARTZ_SURFACE
 #include "cairo-quartz.h"
 #include "cairo-surface-clipper-private.h"
+
+#ifdef CGFLOAT_DEFINED
+typedef CGFloat cairo_quartz_float_t;
+#else
+typedef float cairo_quartz_float_t;
+#endif
 
 typedef struct cairo_quartz_surface {
     cairo_surface_t base;
