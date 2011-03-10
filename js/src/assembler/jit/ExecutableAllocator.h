@@ -102,8 +102,7 @@ inline size_t roundUpAllocationSize(size_t request, size_t granularity)
 
 namespace JSC {
 
-  // These are reference-counted. A new one (from the constructor or create)
-  // starts with a count of 1. 
+  // These are reference-counted. A new one starts with a count of 1. 
   class ExecutablePool {
     friend class ExecutableAllocator;
 private:
@@ -148,16 +147,15 @@ public:
     }
 
 private:
-    static ExecutablePool* create(size_t n)
+    ExecutablePool(Allocation a)
+      : m_freePtr(a.pages), m_end(m_freePtr + a.size), m_allocation(a), m_refCount(1),
+        m_destroy(false), m_gcNumber(0)
+    { }
+
+    ~ExecutablePool()
     {
-        /* We can't (easily) use js_new() here because the constructor is private. */
-        void *memory = js_malloc(sizeof(ExecutablePool));
-        ExecutablePool *pool = memory ? new(memory) ExecutablePool(n) : NULL;
-        if (!pool || !pool->m_freePtr) {
-            pool->destroy();
-            return NULL;
-        }
-        return pool;
+        if (m_allocation.pages)
+            ExecutablePool::systemRelease(m_allocation);
     }
 
     void* alloc(size_t n)
@@ -176,12 +174,6 @@ private:
         js_free(this);
     }
 
-    ~ExecutablePool()
-    {
-        if (m_allocation.pages)
-            ExecutablePool::systemRelease(m_allocation);
-    }
-
     size_t available() const { 
         JS_ASSERT(m_end >= m_freePtr);
         return m_end - m_freePtr;
@@ -190,8 +182,6 @@ private:
     // On OOM, this will return an Allocation where pages is NULL.
     static Allocation systemAlloc(size_t n);
     static void systemRelease(const Allocation& alloc);
-
-    ExecutablePool(size_t n);
 };
 
 class ExecutableAllocator {
@@ -239,6 +229,24 @@ public:
     }
 
 private:
+    ExecutablePool* createPool(size_t n)
+    {
+        size_t allocSize = roundUpAllocationSize(n, JIT_ALLOCATOR_PAGE_SIZE);
+        if (allocSize == OVERSIZE_ALLOCATION)
+            return NULL;
+#ifdef DEBUG_STRESS_JSC_ALLOCATOR
+        ExecutablePool::Allocation a = ExecutablePool::systemAlloc(size_t(4294967291));
+#else
+        ExecutablePool::Allocation a = ExecutablePool::systemAlloc(allocSize);
+#endif
+        if (!a.pages)
+            return NULL;
+
+        /* We can't (easily) use js_new() here because the constructor is private. */
+        void *memory = js_malloc(sizeof(ExecutablePool));
+        return memory ? new(memory) ExecutablePool(a) : NULL;
+    }
+
     ExecutablePool* poolForSize(size_t n)
     {
 #ifndef DEBUG_STRESS_JSC_ALLOCATOR
@@ -261,10 +269,10 @@ private:
 
         // If the request is large, we just provide a unshared allocator
         if (n > JIT_ALLOCATOR_LARGE_ALLOC_SIZE)
-            return ExecutablePool::create(n);
+            return createPool(n);
 
         // Create a new allocator
-        ExecutablePool* pool = ExecutablePool::create(JIT_ALLOCATOR_LARGE_ALLOC_SIZE);
+        ExecutablePool* pool = createPool(JIT_ALLOCATOR_LARGE_ALLOC_SIZE);
         if (!pool)
             return NULL;
   	    // At this point, local |pool| is the owner.
@@ -409,29 +417,6 @@ private:
     SmallExecPoolVector m_smallAllocationPools;
     static void intializePageSize();
 };
-
-// This constructor can fail due to OOM. If it does, m_freePtr will be
-// set to NULL. 
-inline ExecutablePool::ExecutablePool(size_t n) : m_refCount(1), m_destroy(false), m_gcNumber(0)
-{
-    size_t allocSize = roundUpAllocationSize(n, JIT_ALLOCATOR_PAGE_SIZE);
-    if (allocSize == OVERSIZE_ALLOCATION) {
-        m_freePtr = NULL;
-        return;
-    }
-#ifdef DEBUG_STRESS_JSC_ALLOCATOR
-    Allocation mem = systemAlloc(size_t(4294967291));
-#else
-    Allocation mem = systemAlloc(allocSize);
-#endif
-    if (!mem.pages) {
-        m_freePtr = NULL;
-        return;
-    }
-    m_allocation = mem;
-    m_freePtr = mem.pages;
-    m_end = m_freePtr + allocSize;
-}
 
 }
 
