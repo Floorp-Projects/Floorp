@@ -72,30 +72,6 @@ extern "C" __declspec(dllimport) void CacheRangeFlush(LPVOID pAddr, DWORD dwLeng
 #define INITIAL_PROTECTION_FLAGS (PROT_READ | PROT_WRITE | PROT_EXEC)
 #endif
 
-namespace JSC {
-
-// Something included via windows.h defines a macro with this name,
-// which causes the function below to fail to compile.
-#ifdef _MSC_VER
-# undef max
-#endif
-
-const size_t OVERSIZE_ALLOCATION = size_t(-1);
-
-inline size_t roundUpAllocationSize(size_t request, size_t granularity)
-{
-    if ((std::numeric_limits<size_t>::max() - granularity) <= request)
-        return OVERSIZE_ALLOCATION;
-    
-    // Round up to next page boundary
-    size_t size = request + (granularity - 1);
-    size = size & ~(granularity - 1);
-    JS_ASSERT(size >= request);
-    return size;
-}
-
-}
-
 #if ENABLE_ASSEMBLER
 
 //#define DEBUG_STRESS_JSC_ALLOCATOR
@@ -160,7 +136,6 @@ private:
 
     void* alloc(size_t n)
     {
-        JS_ASSERT(n != OVERSIZE_ALLOCATION);
         JS_ASSERT(n <= available());
         void *result = m_freePtr;
         m_freePtr += n;
@@ -229,6 +204,26 @@ public:
     }
 
 private:
+    static const size_t OVERSIZE_ALLOCATION = size_t(-1);
+
+    static size_t roundUpAllocationSize(size_t request, size_t granularity)
+    {
+        // Something included via windows.h defines a macro with this name,
+        // which causes the function below to fail to compile.
+        #ifdef _MSC_VER
+        # undef max
+        #endif
+
+        if ((std::numeric_limits<size_t>::max() - granularity) <= request)
+            return OVERSIZE_ALLOCATION;
+        
+        // Round up to next page boundary
+        size_t size = request + (granularity - 1);
+        size = size & ~(granularity - 1);
+        JS_ASSERT(size >= request);
+        return size;
+    }
+
     ExecutablePool* createPool(size_t n)
     {
         size_t allocSize = roundUpAllocationSize(n, JIT_ALLOCATOR_PAGE_SIZE);
