@@ -531,6 +531,30 @@ JSScript::typeSetThis(JSContext *cx, js::types::jstype type)
 }
 
 inline bool
+JSScript::typeSetNewCalled(JSContext *cx)
+{
+    if (!cx->typeInferenceEnabled() || calledWithNew)
+        return true;
+    calledWithNew = true;
+
+    /*
+     * Determining the 'this' type used when the script is invoked with 'new'
+     * happens during the script's prologue, so we don't try to pick it up from
+     * dynamic calls. Instead, generate constraints modeling the construction
+     * of 'this' when the script is analyzed or reanalyzed after an invoke with 'new',
+     * and if 'new' is first invoked after the script has already been analyzed.
+     */
+    if (analyzed) {
+        /* Regenerate types for the function. */
+        js::types::AutoEnterTypeInference enter(cx);
+        js::types::AnalyzeScriptNew(cx, this);
+        if (!cx->compartment->types.checkPendingRecompiles(cx))
+            return false;
+    }
+    return true;
+}
+
+inline bool
 JSScript::typeSetLocal(JSContext *cx, unsigned local, const js::Value &value)
 {
     if (!cx->typeInferenceEnabled())

@@ -2764,6 +2764,8 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     script->owner = NULL;
 #endif
     fun->u.i.script = script;
+    fun->getType()->asFunction()->script = script;
+    script->fun = fun;
     js_CallNewScriptHook(cx, script, fun);
 
     if (obj->isGlobal()) {

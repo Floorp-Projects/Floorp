@@ -974,8 +974,9 @@ TypeConstraintNewObject::newType(JSContext *cx, TypeSet *source, jstype type)
         }
     } else if (!fun->script) {
         /*
-         * This constraint should only be used for native constructors with
-         * immutable non-primitive prototypes. Disregard primitives here.
+         * This constraint should only be used for scripted functions and for
+         * native constructors with immutable non-primitive prototypes.
+         * Disregard primitives here.
          */
     } else if (!fun->script->compileAndGo) {
         target->addType(cx, TYPE_UNKNOWN);
@@ -1083,15 +1084,7 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, jstype type)
 
     /* Add a binding for the receiver object of the call. */
     if (callsite->isNew) {
-        /* The receiver object is the 'new' object for the function's prototype. */
-        if (function->unknownProperties) {
-            script->thisTypes()->addType(cx, TYPE_UNKNOWN);
-        } else {
-            TypeSet *prototypeTypes = function->getProperty(cx, id_prototype(cx), false);
-            if (!prototypeTypes)
-                return;
-            prototypeTypes->addNewObject(cx, script, function, callee->thisTypes());
-        }
+        callee->typeSetNewCalled(cx);
 
         /*
          * If the script does not return a value then the pushed value is the new
@@ -1687,24 +1680,13 @@ TypeCompartment::dynamicCall(JSContext *cx, JSObject *callee,
     unsigned nargs = callee->getFunctionPrivate()->nargs;
     JSScript *script = callee->getFunctionPrivate()->script();
 
-    jstype type;
     if (constructing) {
-        Value protov;
-        jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
-        if (!callee->getProperty(cx, id, &protov))
-            return false;
-        TypeObject *otype = protov.isObject()
-            ? protov.toObject().getNewType(cx)
-            : cx->getTypeNewObject(JSProto_Object);
-        if (!otype)
-            return false;
-        type = (jstype) otype;
+        script->typeSetNewCalled(cx);
     } else {
-        type = GetValueType(cx, args.thisv());
+        jstype type = GetValueType(cx, args.thisv());
+        if (!script->typeSetThis(cx, type))
+            return false;
     }
-
-    if (!script->typeSetThis(cx, type))
-        return false;
 
     /*
      * Add constraints going up to the minimum of the actual and formal count.
@@ -3306,6 +3288,9 @@ AnalyzeScriptTypes(JSContext *cx, JSScript *script)
     cursor += sizeof(TypeScript);
     types->pushedArray = (TypeSet **) cursor;
 
+    if (script->calledWithNew)
+        AnalyzeScriptNew(cx, script);
+
     unsigned offset = 0;
     while (offset < script->length) {
         analyze::Bytecode *code = analysis.maybeCode(offset);
@@ -3335,11 +3320,23 @@ AnalyzeScriptTypes(JSContext *cx, JSScript *script)
 }
 
 void
-DestroyScriptTypes(JSContext *cx, JSScript *script)
+AnalyzeScriptNew(JSContext *cx, JSScript *script)
 {
-    JS_ASSERT(script->types);
-    cx->free(script->types);
-    script->types = NULL;
+    JS_ASSERT(script->calledWithNew && script->fun);
+
+    /*
+     * Compute the 'this' type when called with 'new'. We do not distinguish regular
+     * from 'new' calls to the function.
+     */
+    TypeFunction *funType = script->fun->getType()->asFunction();
+    if (funType->unknownProperties) {
+        script->thisTypes()->addType(cx, TYPE_UNKNOWN);
+    } else {
+        TypeSet *prototypeTypes = funType->getProperty(cx, id_prototype(cx), false);
+        if (!prototypeTypes)
+            return;
+        prototypeTypes->addNewObject(cx, script, funType, script->thisTypes());
+    }
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -3576,7 +3573,7 @@ JSContext::newTypeObject(const char *name, JSObject *proto)
 }
 
 js::types::TypeObject *
-JSContext::newTypeObject(const char *base, const char *postfix, JSObject *proto)
+JSContext::newTypeObject(const char *base, const char *postfix, JSObject *proto, bool isFunction)
 {
     char *name = NULL;
 #ifdef DEBUG
@@ -3584,7 +3581,7 @@ JSContext::newTypeObject(const char *base, const char *postfix, JSObject *proto)
     name = (char *)alloca(len);
     JS_snprintf(name, len, "%s:%s", base, postfix);
 #endif
-    return compartment->types.newTypeObject(this, NULL, name, false, proto);
+    return compartment->types.newTypeObject(this, NULL, name, isFunction, proto);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -4117,6 +4114,8 @@ JSScript::sweepTypes(JSContext *cx)
 {
     SweepTypeObjectList(cx, typeObjects);
 
-    if (types && !compartment->types.inferenceDepth)
-        js::types::DestroyScriptTypes(cx, this);
+    if (types && !compartment->types.inferenceDepth) {
+        cx->free(types);
+        types = NULL;
+    }
 }

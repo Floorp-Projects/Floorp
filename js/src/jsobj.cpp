@@ -3940,7 +3940,8 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
     if (!proto)
         return NULL;
 
-    TypeObject *protoType = cx->newTypeObject(clasp->name, "prototype", proto->getProto());
+    TypeObject *protoType = cx->newTypeObject(clasp->name, "prototype", proto->getProto(),
+                                              clasp == &js_FunctionClass);
     if (!protoType)
         return NULL;
     proto->setType(protoType);

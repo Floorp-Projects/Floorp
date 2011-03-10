@@ -2141,7 +2141,8 @@ public:
     js::types::TypeObject   *newTypeObject(const char *name, JSObject *proto);
 
     /* Make a type object whose name is that of base followed by postfix. */
-    js::types::TypeObject *newTypeObject(const char *base, const char *postfix, JSObject *proto);
+    js::types::TypeObject *newTypeObject(const char *base, const char *postfix,
+                                         JSObject *proto, bool isFunction = false);
 
     /*
      * Get the default 'new' object for a given standard class, per the currently

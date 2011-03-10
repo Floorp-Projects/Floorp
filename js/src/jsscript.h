@@ -406,6 +406,7 @@ struct JSScript {
     bool            hasSingletons:1;  /* script has singleton objects */
     bool            isCachedEval:1;   /* script came from eval() */
     bool            isUncachedEval:1; /* script came from EvaluateScript */
+    bool            calledWithNew:1;  /* script has been called using 'new' */
     bool            analyzed:1;       /* script has been analyzed by type inference */
 #ifdef JS_METHODJIT
     bool            debugMode:1;      /* script was compiled in debug mode */
@@ -522,6 +523,7 @@ struct JSScript {
 
     /* Add a type for a variable in this script. */
     inline bool typeSetThis(JSContext *cx, js::types::jstype type);
+    inline bool typeSetNewCalled(JSContext *cx);
     inline bool typeSetLocal(JSContext *cx, unsigned local, const js::Value &value);
     inline bool typeSetArgument(JSContext *cx, unsigned arg, js::types::jstype type);
     inline bool typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value);
