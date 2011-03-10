@@ -336,6 +336,11 @@ ifeq (x86_64, $(TARGET_CPU))
 ifdef _MSC_VER
 ASFILES +=	TrampolineMasmX64.asm
 endif
+ifeq ($(OS_ARCH),WINNT)
+ifdef GNU_CC
+ASFILES +=	TrampolineMingwX64.s
+endif
+endif
 ifdef SOLARIS_SUNPRO_CXX
 ASFILES +=	TrampolineSUNWX64.s
 endif
