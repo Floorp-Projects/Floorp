@@ -98,6 +98,7 @@ public:
         SurfaceTypeTee,
         SurfaceTypeXML,
         SurfaceTypeSkia,
+        SurfaceTypeSubsurface,
         SurfaceTypeD2D,
         SurfaceTypeMax
     } gfxSurfaceType;

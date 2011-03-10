@@ -103,6 +103,54 @@ _cairo_tor_scan_converter_create (int			xmin,
 				  int			ymax,
 				  cairo_fill_rule_t	fill_rule);
 
+typedef struct _cairo_rectangular_scan_converter {
+    cairo_scan_converter_t base;
+
+    int xmin, xmax;
+    int ymin, ymax;
+
+    struct _cairo_rectangular_scan_converter_chunk {
+	struct _cairo_rectangular_scan_converter_chunk *next;
+	void *base;
+	int count;
+	int size;
+    } chunks, *tail;
+    char buf[CAIRO_STACK_BUFFER_SIZE];
+    int num_rectangles;
+} cairo_rectangular_scan_converter_t;
+
+cairo_private void
+_cairo_rectangular_scan_converter_init (cairo_rectangular_scan_converter_t *self,
+					const cairo_rectangle_int_t *extents);
+
+cairo_private cairo_status_t
+_cairo_rectangular_scan_converter_add_box (cairo_rectangular_scan_converter_t *self,
+					   const cairo_box_t *box,
+					   int dir);
+
+typedef struct _cairo_botor_scan_converter {
+    cairo_scan_converter_t base;
+
+    cairo_box_t extents;
+    cairo_fill_rule_t fill_rule;
+
+    int xmin, xmax;
+
+    struct _cairo_botor_scan_converter_chunk {
+	struct _cairo_botor_scan_converter_chunk *next;
+	void *base;
+	int count;
+	int size;
+    } chunks, *tail;
+    char buf[CAIRO_STACK_BUFFER_SIZE];
+    int num_edges;
+} cairo_botor_scan_converter_t;
+
+cairo_private void
+_cairo_botor_scan_converter_init (cairo_botor_scan_converter_t *self,
+				  const cairo_box_t *extents,
+				  cairo_fill_rule_t fill_rule);
+
 /* cairo-spans.c: */
 
 cairo_private cairo_scan_converter_t *
@@ -137,17 +185,5 @@ _cairo_surface_composite_polygon (cairo_surface_t	*surface,
 				  const cairo_composite_rectangles_t *rects,
 				  cairo_polygon_t	*polygon,
 				  cairo_region_t	*clip_region);
-
-cairo_private cairo_status_t
-_cairo_surface_composite_trapezoids_as_polygon (cairo_surface_t	*surface,
-						cairo_operator_t	 op,
-						const cairo_pattern_t	*pattern,
-						cairo_antialias_t	antialias,
-						int src_x, int src_y,
-						int dst_x, int dst_y,
-						int width, int height,
-						cairo_trapezoid_t	*traps,
-						int num_traps,
-						cairo_region_t	*clip_region);
 
 #endif /* CAIRO_SPANS_PRIVATE_H */

@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -36,6 +36,7 @@
 
 #include "cairoint.h"
 
+#include "cairo-error-private.h"
 #include "cairo-rtree-private.h"
 
 cairo_rtree_node_t *
@@ -79,8 +80,6 @@ _cairo_rtree_node_destroy (cairo_rtree_t *rtree, cairo_rtree_node_t *node)
     if (node->state == CAIRO_RTREE_NODE_OCCUPIED) {
 	if (node->owner != NULL)
 	    *node->owner = NULL;
-	if (rtree->evict != NULL)
-	    rtree->evict (node);
     } else {
 	for (i = 0; i < 4 && node->children[i] != NULL; i++)
 	    _cairo_rtree_node_destroy (rtree, node->children[i]);
@@ -93,8 +92,6 @@ void
 _cairo_rtree_node_collapse (cairo_rtree_t *rtree, cairo_rtree_node_t *node)
 {
     int i;
-
-    assert (node->pinned == FALSE);
 
     do {
 	assert (node->state == CAIRO_RTREE_NODE_DIVIDED);
@@ -109,9 +106,7 @@ _cairo_rtree_node_collapse (cairo_rtree_t *rtree, cairo_rtree_node_t *node)
 	node->children[0] = NULL;
 	node->state = CAIRO_RTREE_NODE_AVAILABLE;
 	cairo_list_move (&node->link, &rtree->available);
-
-	node = node->parent;
-    } while (node != NULL && ! node->pinned);
+    } while ((node = node->parent) != NULL);
 }
 
 cairo_status_t
@@ -194,8 +189,7 @@ _cairo_rtree_node_remove (cairo_rtree_t *rtree, cairo_rtree_node_t *node)
     node->state = CAIRO_RTREE_NODE_AVAILABLE;
     cairo_list_move (&node->link, &rtree->available);
 
-    if (! node->parent->pinned)
-	_cairo_rtree_node_collapse (rtree, node->parent);
+    _cairo_rtree_node_collapse (rtree, node->parent);
 }
 
 cairo_int_status_t
@@ -231,8 +225,16 @@ _cairo_rtree_evict_random (cairo_rtree_t	 *rtree,
 		           int			  height,
 		           cairo_rtree_node_t		**out)
 {
-    cairo_rtree_node_t *node;
+    cairo_rtree_node_t *node, *next;
     int i, cnt;
+
+    /* propagate pinned from children to root */
+    cairo_list_foreach_entry_safe (node, next, cairo_rtree_node_t,
+				   &rtree->pinned, link)
+    {
+	if (node->parent != NULL)
+	    _cairo_rtree_pin (rtree, node->parent);
+    }
 
     cnt = 0;
     cairo_list_foreach_entry (node, cairo_rtree_node_t,
@@ -253,8 +255,6 @@ _cairo_rtree_evict_random (cairo_rtree_t	 *rtree,
 	    if (node->state == CAIRO_RTREE_NODE_OCCUPIED) {
 		if (node->owner != NULL)
 		    *node->owner = NULL;
-		if (rtree->evict != NULL)
-		    rtree->evict (node);
 	    } else {
 		for (i = 0; i < 4 && node->children[i] != NULL; i++)
 		    _cairo_rtree_node_destroy (rtree, node->children[i]);
@@ -270,22 +270,6 @@ _cairo_rtree_evict_random (cairo_rtree_t	 *rtree,
     }
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-void *
-_cairo_rtree_pin (cairo_rtree_t *rtree, cairo_rtree_node_t *node)
-{
-    void *ptr = node;
-
-    while (node->pinned == FALSE) {
-	cairo_list_move (&node->link, &rtree->pinned);
-	node->pinned = TRUE;
-	node = node->parent;
-	if (node == NULL)
-	    break;
-    }
-
-    return ptr;
 }
 
 void
@@ -343,11 +327,8 @@ _cairo_rtree_init (cairo_rtree_t	*rtree,
 	           int			 width,
 		   int			 height,
 		   int			 min_size,
-		   int			 node_size,
-		   void			 (*evict) (void *node))
+		   int			 node_size)
 {
-    rtree->evict = evict;
-
     assert (node_size >= (int) sizeof (cairo_rtree_node_t));
     _cairo_freepool_init (&rtree->node_freepool, node_size);
 
@@ -372,8 +353,6 @@ _cairo_rtree_reset (cairo_rtree_t *rtree)
     if (rtree->root.state == CAIRO_RTREE_NODE_OCCUPIED) {
 	if (rtree->root.owner != NULL)
 	    *rtree->root.owner = NULL;
-	if (rtree->evict != NULL)
-	    rtree->evict (&rtree->root);
     } else {
 	for (i = 0; i < 4 && rtree->root.children[i] != NULL; i++)
 	    _cairo_rtree_node_destroy (rtree, rtree->root.children[i]);
@@ -397,8 +376,6 @@ _cairo_rtree_fini (cairo_rtree_t *rtree)
     if (rtree->root.state == CAIRO_RTREE_NODE_OCCUPIED) {
 	if (rtree->root.owner != NULL)
 	    *rtree->root.owner = NULL;
-	if (rtree->evict != NULL)
-	    rtree->evict (&rtree->root);
     } else {
 	for (i = 0; i < 4 && rtree->root.children[i] != NULL; i++)
 	    _cairo_rtree_node_destroy (rtree, rtree->root.children[i]);

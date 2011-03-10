@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -38,6 +38,29 @@
 #include "cairo-user-font-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-analysis-surface-private.h"
+#include "cairo-error-private.h"
+
+/**
+ * SECTION:cairo-user-fonts
+ * @Title:User Fonts
+ * @Short_Description: Font support with font data provided by the user
+ * 
+ * The user-font feature allows the cairo user to provide drawings for glyphs
+ * in a font.  This is most useful in implementing fonts in non-standard
+ * formats, like SVG fonts and Flash fonts, but can also be used by games and
+ * other application to draw "funky" fonts.
+ */
+
+/**
+ * CAIRO_HAS_USER_FONT:
+ *
+ * Defined if the user font backend is available.
+ * This macro can be used to conditionally compile backend-specific code.
+ * The user font backend is always built in versions of cairo that support
+ * this feature (1.8 and later).
+ *
+ * @Since: 1.8
+ */
 
 typedef struct _cairo_user_scaled_font_methods {
     cairo_user_scaled_font_init_func_t			init;
@@ -74,22 +97,34 @@ typedef struct _cairo_user_scaled_font {
 
 /* #cairo_user_scaled_font_t */
 
-static cairo_t *
-_cairo_user_scaled_font_create_recording_context (cairo_user_scaled_font_t *scaled_font)
+static cairo_surface_t *
+_cairo_user_scaled_font_create_recording_surface (const cairo_user_scaled_font_t *scaled_font)
 {
     cairo_content_t content;
-    cairo_surface_t *recording_surface;
-    cairo_t *cr;
 
     content = scaled_font->base.options.antialias == CAIRO_ANTIALIAS_SUBPIXEL ?
 						     CAIRO_CONTENT_COLOR_ALPHA :
 						     CAIRO_CONTENT_ALPHA;
 
-    recording_surface = cairo_recording_surface_create (content, NULL);
-    cr = cairo_create (recording_surface);
-    cairo_surface_destroy (recording_surface);
+    return cairo_recording_surface_create (content, NULL);
+}
 
-    cairo_set_matrix (cr, &scaled_font->base.scale);
+
+static cairo_t *
+_cairo_user_scaled_font_create_recording_context (const cairo_user_scaled_font_t *scaled_font,
+						  cairo_surface_t                *recording_surface)
+{
+    cairo_t *cr;
+
+    cr = cairo_create (recording_surface);
+
+    if (!_cairo_matrix_is_scale_0 (&scaled_font->base.scale)) {
+        cairo_matrix_t scale;
+	scale = scaled_font->base.scale;
+	scale.x0 = scale.y0 = 0.;
+	cairo_set_matrix (cr, &scale);
+    }
+
     cairo_set_font_size (cr, 1.0);
     cairo_set_font_options (cr, &scaled_font->base.options);
     cairo_set_source_rgb (cr, 1., 1., 1.);
@@ -112,25 +147,26 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	cairo_text_extents_t extents = scaled_font->default_glyph_extents;
 	cairo_t *cr;
 
-	cr = _cairo_user_scaled_font_create_recording_context (scaled_font);
+	if (!face->scaled_font_methods.render_glyph)
+	    return CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED;
 
-	if (face->scaled_font_methods.render_glyph) {
+	recording_surface = _cairo_user_scaled_font_create_recording_surface (scaled_font);
+
+	/* special case for 0 rank matrix (as in _cairo_scaled_font_init): empty surface */
+        if (!_cairo_matrix_is_scale_0 (&scaled_font->base.scale)) {
+	    cr = _cairo_user_scaled_font_create_recording_context (scaled_font, recording_surface);
 	    status = face->scaled_font_methods.render_glyph ((cairo_scaled_font_t *)scaled_font,
 							     _cairo_scaled_glyph_index(scaled_glyph),
 							     cr, &extents);
-	} else
-	    status = CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED;
+	    if (status == CAIRO_STATUS_SUCCESS)
+	        status = cairo_status (cr);
 
-	if (status == CAIRO_STATUS_SUCCESS)
-	    status = cairo_status (cr);
+	    cairo_destroy (cr);
 
-	recording_surface = cairo_surface_reference (cairo_get_target (cr));
-
-	cairo_destroy (cr);
-
-	if (unlikely (status)) {
-	    cairo_surface_destroy (recording_surface);
-	    return status;
+	    if (unlikely (status)) {
+	        cairo_surface_destroy (recording_surface);
+	        return status;
+	    }
 	}
 
 	_cairo_scaled_glyph_set_recording_surface (scaled_glyph,
@@ -419,9 +455,12 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 	/* Give away fontmap lock such that user-font can use other fonts */
 	status = _cairo_scaled_font_register_placeholder_and_unlock_font_map (&user_scaled_font->base);
 	if (status == CAIRO_STATUS_SUCCESS) {
+	    cairo_surface_t *recording_surface;
 	    cairo_t *cr;
 
-	    cr = _cairo_user_scaled_font_create_recording_context (user_scaled_font);
+	    recording_surface = _cairo_user_scaled_font_create_recording_surface (user_scaled_font);
+	    cr = _cairo_user_scaled_font_create_recording_context (user_scaled_font, recording_surface);
+	    cairo_surface_destroy (recording_surface);
 
 	    status = font_face->scaled_font_methods.init (&user_scaled_font->base,
 							  cr,
