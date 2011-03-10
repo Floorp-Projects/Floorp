@@ -168,7 +168,7 @@ JS_STATIC_ASSERT(offsetof(JSFrameRegs, sp) == 0);
 # define HIDE_SYMBOL(name)
 #endif
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(_WIN64)
 
 /* If this assert fails, you need to realign VMFrame to 16 bytes. */
 #ifdef JS_CPU_ARM
@@ -559,9 +559,7 @@ SYMBOL_STRING(JaegerStubVeneer) ":"         "\n"
 # else
 #  error "Unsupported CPU!"
 # endif
-#elif defined(_MSC_VER)
-
-#if defined(JS_CPU_X86)
+#elif defined(_MSC_VER) && defined(JS_CPU_X86)
 
 /*
  *    *** DANGER ***
@@ -667,7 +665,9 @@ extern "C" {
     }
 }
 
-#elif defined(JS_CPU_X64)
+// Windows x64 uses assembler version since compiler doesn't support
+// inline assembler
+#elif defined(_WIN64)
 
 /*
  *    *** DANGER ***
@@ -679,18 +679,12 @@ JS_STATIC_ASSERT(offsetof(VMFrame, regs.fp) == 0x38);
 JS_STATIC_ASSERT(JSVAL_TAG_MASK == 0xFFFF800000000000LL);
 JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
 
-// Windows x64 uses assembler version since compiler doesn't support
-// inline assembler
-#else
-#  error "Unsupported CPU!"
-#endif
-
-#endif                   /* _MSC_VER */
+#endif                   /* _WIN64 */
 
 bool
 JaegerCompartment::Initialize()
 {
-    execAlloc_ = JSC::ExecutableAllocator::create();
+    execAlloc_ = js_new<JSC::ExecutableAllocator>();
     if (!execAlloc_)
         return false;
     

@@ -138,10 +138,6 @@ class RegExpStatics
         JS_ASSERT(pairNum < pairCount());
     }
 
-    bool pairIsPresent(size_t pairNum) const {
-        return get(pairNum, 0) >= 0;
-    }
-
     /* Precondition: paren is present. */
     size_t getParenLength(size_t pairNum) const {
         checkParenNum(pairNum);
@@ -271,6 +267,10 @@ class RegExpStatics
             JS_CALL_STRING_TRACER(trc, pendingInput, "res->pendingInput");
         if (matchPairsInput)
             JS_CALL_STRING_TRACER(trc, matchPairsInput, "res->matchPairsInput");
+    }
+
+    bool pairIsPresent(size_t pairNum) const {
+        return get(pairNum, 0) >= 0;
     }
 
     /* Value creators. */
