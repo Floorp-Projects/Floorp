@@ -689,7 +689,7 @@ JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
 bool
 JaegerCompartment::Initialize()
 {
-    execAlloc_ = JSC::ExecutableAllocator::create();
+    execAlloc_ = js_new<JSC::ExecutableAllocator>();
     if (!execAlloc_)
         return false;
     
