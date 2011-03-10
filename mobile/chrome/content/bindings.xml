@@ -1701,11 +1701,16 @@
 
       <handler event="click" phase="bubbling"><![CDATA[
         // bug 629661. To reset the autosuggestions mechanism of Android, the
-        // textfield need to reset the the IME
+        // textfield need to reset the IME state
         if (event.originalTarget == this._searchClear) {
           setTimeout(function(self) {
-            self.inputField.readOnly = true;
-            self.inputField.readOnly = false;
+            try {
+              let imeEditor = self.inputField.QueryInterface(Ci.nsIDOMNSEditableElement)
+                                             .editor
+                                             .QueryInterface(Ci.nsIEditorIMESupport);
+              if (imeEditor.composing)
+                imeEditor.forceCompositionEnd();
+            } catch(e) { alert(e); }
           }, 0, this);
         }
       ]]></handler>
