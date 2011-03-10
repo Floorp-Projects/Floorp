@@ -345,18 +345,6 @@ var gMainPane = {
     var downloadFolder = document.getElementById("downloadFolder");
     var currentDirPref = document.getElementById("browser.download.dir");
 
-    // The user's download folder is based on the preferences listed above.
-    // However, if the system does not support a download folder, the
-    // actual path returned will be the system's desktop or home folder.
-    // If this is the case, skip off displaying the Download label and
-    // display Desktop, even though folderList might be 1.
-    var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
-                                .getService(Components.interfaces.nsIProperties);
-    var desk = fileLocator.get("Desk", Components.interfaces.nsILocalFile);
-    var dnldMgr = Components.classes["@mozilla.org/download-manager;1"]
-                            .getService(Components.interfaces.nsIDownloadManager);
-    var supportDownloadLabel = !dnldMgr.defaultDownloadsDirectory.equals(desk);
-
     // Used in defining the correct path to the folder icon.
     var ios = Components.classes["@mozilla.org/network/io-service;1"]
                         .getService(Components.interfaces.nsIIOService);
@@ -369,7 +357,7 @@ var gMainPane = {
       // Custom path selected and is configured
       downloadFolder.label = this._getDisplayNameOfFile(currentDirPref.value);
       iconUrlSpec = fph.getURLSpecFromFile(currentDirPref.value);
-    } else if (folderListPref.value == 1 && supportDownloadLabel) {
+    } else if (folderListPref.value == 1) {
       // 'Downloads'
       // In 1.5, this pointed to a folder we created called 'My Downloads'
       // and was available as an option in the 1.5 drop down. On XP this
