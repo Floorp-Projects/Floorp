@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -41,6 +41,7 @@
 #include "cairo.h"
 
 #include "cairo-types-private.h"
+#include "cairo-list-private.h"
 #include "cairo-mutex-type-private.h"
 #include "cairo-reference-count-private.h"
 
@@ -107,7 +108,7 @@ struct _cairo_scaled_font {
     cairo_mutex_t mutex;
 
     cairo_hash_table_t *glyphs;
-    cairo_scaled_glyph_page_t *glyph_pages;
+    cairo_list_t glyph_pages;
     cairo_bool_t cache_frozen;
     cairo_bool_t global_cache_frozen;
 
@@ -121,6 +122,7 @@ struct _cairo_scaled_font {
 
     /* font backend managing this scaled font */
     const cairo_scaled_font_backend_t *backend;
+    cairo_list_t link;
 };
 
 cairo_private void

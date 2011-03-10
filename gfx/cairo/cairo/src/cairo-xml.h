@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -42,25 +42,20 @@
 
 CAIRO_BEGIN_DECLS
 
-typedef struct _cairo_xml cairo_xml_t;
-
-cairo_public cairo_xml_t *
+cairo_public cairo_device_t *
 cairo_xml_create (const char *filename);
 
-cairo_public cairo_xml_t *
+cairo_public cairo_device_t *
 cairo_xml_create_for_stream (cairo_write_func_t	 write_func,
 			     void		*closure);
 
-cairo_public void
-cairo_xml_destroy (cairo_xml_t *context);
-
 cairo_public cairo_surface_t *
-cairo_xml_surface_create (cairo_xml_t *xml,
+cairo_xml_surface_create (cairo_device_t *xml,
 			  cairo_content_t content,
 			  double width, double height);
 
 cairo_public cairo_status_t
-cairo_xml_for_recording_surface (cairo_xml_t *context,
+cairo_xml_for_recording_surface (cairo_device_t *xml,
 				 cairo_surface_t *surface);
 
 CAIRO_END_DECLS
