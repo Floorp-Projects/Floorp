@@ -32,11 +32,11 @@
 
 namespace JSC {
 
-void ExecutableAllocator::intializePageSize()
+size_t ExecutableAllocator::determinePageSize()
 {
     SYSTEM_INFO system_info;
     GetSystemInfo(&system_info);
-    ExecutableAllocator::pageSize = system_info.dwPageSize;
+    return system_info.dwPageSize;
 }
 
 ExecutablePool::Allocation ExecutablePool::systemAlloc(size_t n)
