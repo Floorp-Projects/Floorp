@@ -197,30 +197,14 @@ private:
 class ExecutableAllocator {
     enum ProtectionSeting { Writable, Executable };
 
-    // Initialization can fail so we use a create method instead.
-    ExecutableAllocator() {}
 public:
     static size_t pageSize;
 
-    // Returns NULL on OOM.
-    static ExecutableAllocator *create()
+    ExecutableAllocator()
     {
-        /* We can't (easily) use js_new() here because the constructor is private. */
-        void *memory = js_malloc(sizeof(ExecutableAllocator));
-        ExecutableAllocator *allocator = memory ? new(memory) ExecutableAllocator() : NULL;
-        if (!allocator)
-            return allocator;
-
         if (!pageSize)
             intializePageSize();
-        ExecutablePool *pool = ExecutablePool::create(JIT_ALLOCATOR_LARGE_ALLOC_SIZE);
-        if (!pool) {
-            js_delete(allocator);
-            return NULL;
-        }
-        JS_ASSERT(allocator->m_smallAllocationPools.empty());
-        allocator->m_smallAllocationPools.append(pool);
-        return allocator;
+        JS_ASSERT(m_smallAllocationPools.empty());
     }
 
     ~ExecutableAllocator()
