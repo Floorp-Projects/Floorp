@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -38,6 +38,9 @@
 
 CAIRO_MUTEX_DECLARE (_cairo_pattern_solid_surface_cache_lock)
 
+CAIRO_MUTEX_DECLARE (_cairo_image_solid_cache_mutex)
+
+CAIRO_MUTEX_DECLARE (_cairo_error_mutex)
 CAIRO_MUTEX_DECLARE (_cairo_toy_font_face_mutex)
 CAIRO_MUTEX_DECLARE (_cairo_intern_string_mutex)
 CAIRO_MUTEX_DECLARE (_cairo_scaled_font_map_mutex)
@@ -50,6 +53,10 @@ CAIRO_MUTEX_DECLARE (_cairo_ft_unscaled_font_map_mutex)
 
 #if CAIRO_HAS_XLIB_SURFACE
 CAIRO_MUTEX_DECLARE (_cairo_xlib_display_mutex)
+#endif
+
+#if CAIRO_HAS_XCB_SURFACE
+CAIRO_MUTEX_DECLARE (_cairo_xcb_connections_mutex)
 #endif
 
 #if CAIRO_HAS_GL_SURFACE

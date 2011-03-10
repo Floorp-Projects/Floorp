@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -77,9 +77,13 @@ cairo_debug_reset_static_data (void)
 
     _cairo_clip_reset_static_data ();
 
+    _cairo_image_reset_static_data ();
+
 #if CAIRO_HAS_DRM_SURFACE
     _cairo_drm_device_reset_static_data ();
 #endif
+
+    _cairo_reset_static_data ();
 
     CAIRO_MUTEX_FINALIZE ();
 }
@@ -106,10 +110,14 @@ _cairo_debug_check_image_surface_is_defined (const cairo_surface_t *surface)
     case CAIRO_FORMAT_A8:
 	width = image->width;
 	break;
+    case CAIRO_FORMAT_RGB16_565:
+	width = image->width*2;
+	break;
     case CAIRO_FORMAT_RGB24:
     case CAIRO_FORMAT_ARGB32:
 	width = image->width*4;
 	break;
+    case CAIRO_FORMAT_INVALID:
     default:
 	/* XXX compute width from pixman bpp */
 	return;
@@ -220,6 +228,12 @@ void
 _cairo_debug_print_path (FILE *stream, cairo_path_fixed_t *path)
 {
     cairo_status_t status;
+
+    printf ("path: extents=(%f, %f), (%f, %f)\n",
+	    _cairo_fixed_to_double (path->extents.p1.x),
+	    _cairo_fixed_to_double (path->extents.p1.y),
+	    _cairo_fixed_to_double (path->extents.p2.x),
+	    _cairo_fixed_to_double (path->extents.p2.y));
 
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,

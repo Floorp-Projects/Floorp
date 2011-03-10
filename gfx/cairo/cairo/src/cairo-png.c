@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -37,11 +37,31 @@
  */
 
 #include "cairoint.h"
+
+#include "cairo-error-private.h"
 #include "cairo-output-stream-private.h"
 
 #include <stdio.h>
 #include <errno.h>
 #include <png.h>
+
+/**
+ * SECTION:cairo-png
+ * @Title: PNG Support
+ * @Short_Description: Reading and writing PNG images
+ * @See_Also: #cairo_surface_t
+ *
+ * The PNG functions allow reading PNG images into image surfaces, and writing
+ * any surface to a PNG file.
+ */
+
+/**
+ * CAIRO_HAS_PNG_FUNCTIONS:
+ *
+ * Defined if the PNG functions are available.
+ * This macro can be used to conditionally compile code using the cairo
+ * PNG functions.
+ */
 
 struct png_read_closure_t {
     cairo_read_func_t		 read_func;
@@ -170,14 +190,10 @@ write_png (cairo_surface_t	*surface,
     /* Handle the various fallback formats (e.g. low bit-depth XServers)
      * by coercing them to a simpler format using pixman.
      */
-    if (image->format == CAIRO_FORMAT_INVALID) {
-	clone = _cairo_image_surface_coerce (image,
-					     _cairo_format_from_content (image->base.content));
-	status = clone->base.status;
-	if (unlikely (status))
-	    goto BAIL1;
-    } else
-	clone = image;
+    clone = _cairo_image_surface_coerce (image);
+    status = clone->base.status;
+    if (unlikely (status))
+        goto BAIL1;
 
     rows = _cairo_malloc_ab (clone->height, sizeof (png_byte*));
     if (unlikely (rows == NULL)) {
@@ -232,6 +248,8 @@ write_png (cairo_surface_t	*surface,
 	png_set_packswap (png);
 #endif
 	break;
+    case CAIRO_FORMAT_INVALID:
+    case CAIRO_FORMAT_RGB16_565:
     default:
 	status = _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
 	goto BAIL4;
@@ -277,8 +295,7 @@ BAIL4:
 BAIL3:
     free (rows);
 BAIL2:
-    if (clone != image)
-	cairo_surface_destroy (&clone->base);
+    cairo_surface_destroy (&clone->base);
 BAIL1:
     _cairo_surface_release_source_image (surface, image, image_extra);
 
@@ -512,7 +529,7 @@ read_png (struct png_read_closure_t *png_closure)
     cairo_format_t format;
     cairo_status_t status;
     unsigned char *mime_data;
-    unsigned int mime_data_length;
+    unsigned long mime_data_length;
 
     png_closure->png_data = _cairo_memory_stream_create ();
 

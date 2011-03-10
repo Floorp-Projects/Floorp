@@ -566,6 +566,7 @@ static const char *sSurfaceNamesForSurfaceType[] = {
     "explicit/gfx/surface/tee",
     "explicit/gfx/surface/xml",
     "explicit/gfx/surface/skia",
+    "explicit/gfx/surface/subsurface",
     "explicit/gfx/surface/d2d"
 };
 
