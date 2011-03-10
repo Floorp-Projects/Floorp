@@ -1676,7 +1676,7 @@ FrameState::ensureDouble(FrameEntry *fe)
         /* Sync and forget any copies of this entry. */
         for (uint32 i = fe->trackerIndex() + 1; i < tracker.nentries; i++) {
             FrameEntry *nfe = tracker[i];
-            if (nfe->isCopy() && nfe->copyOf() == fe) {
+            if (nfe < sp && nfe->isCopy() && nfe->copyOf() == fe) {
                 syncFe(nfe);
                 nfe->resetSynced();
             }
@@ -1913,7 +1913,7 @@ FrameState::hasOnlyCopy(FrameEntry *backing, FrameEntry *fe)
 
     for (uint32 i = backing->trackerIndex() + 1; i < tracker.nentries; i++) {
         FrameEntry *nfe = tracker[i];
-        if (nfe != fe && nfe->isCopy() && nfe->copyOf() == backing)
+        if (nfe != fe && nfe < sp && nfe->isCopy() && nfe->copyOf() == backing)
             return false;
     }
 
