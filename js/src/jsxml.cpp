@@ -7114,6 +7114,8 @@ js_InitQNameClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto = js_InitClass(cx, obj, NULL, &js_QNameClass, QName, 2, JS_TypeHandlerDynamic,
                                    qname_props, qname_methods, NULL, NULL);
+    if (!proto)
+        return NULL;
 
     /* Properties of QName objects are not modeled by type inference. */
     TypeObject *type = proto->getNewType(cx);
@@ -7305,6 +7307,10 @@ js_SetDefaultXMLNamespace(JSContext *cx, const Value &v)
 
     JSStackFrame *fp = js_GetTopStackFrame(cx);
     JSObject &varobj = fp->varobj(cx);
+
+    if (!cx->addTypePropertyId(varobj.getType(), JS_DEFAULT_XML_NAMESPACE_ID, types::TYPE_UNKNOWN))
+        return JS_FALSE;
+
     if (!varobj.defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, ObjectValue(*ns),
                                PropertyStub, StrictPropertyStub, JSPROP_PERMANENT)) {
         return JS_FALSE;
