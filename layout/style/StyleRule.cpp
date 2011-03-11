@@ -1208,18 +1208,19 @@ DOMCSSStyleRule::GetCssText(nsAString& aCssText)
 {
   if (!Rule()) {
     aCssText.Truncate();
-    return NS_OK;
+  } else {
+    Rule()->GetCssText(aCssText);
   }
-  return Rule()->GetCssText(aCssText);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 DOMCSSStyleRule::SetCssText(const nsAString& aCssText)
 {
-  if (!Rule()) {
-    return NS_OK;
+  if (Rule()) {
+    Rule()->SetCssText(aCssText);
   }
-  return Rule()->SetCssText(aCssText);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1229,9 +1230,8 @@ DOMCSSStyleRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
     *aSheet = nsnull;
     return NS_OK;
   }
-  nsRefPtr<nsCSSStyleSheet> sheet;
-  Rule()->GetParentStyleSheet(getter_AddRefs(sheet));
-  NS_IF_ADDREF(*aSheet = sheet);
+  nsRefPtr<nsCSSStyleSheet> sheet = Rule()->GetParentStyleSheet();
+  sheet.forget(aSheet);
   return NS_OK;
 }
 
@@ -1242,8 +1242,7 @@ DOMCSSStyleRule::GetParentRule(nsIDOMCSSRule** aParentRule)
     *aParentRule = nsnull;
     return NS_OK;
   }
-  nsCOMPtr<nsICSSGroupRule> rule;
-  Rule()->GetParentRule(getter_AddRefs(rule));
+  nsICSSGroupRule* rule = Rule()->GetParentRule();
   if (!rule) {
     *aParentRule = nsnull;
     return NS_OK;
@@ -1256,18 +1255,19 @@ DOMCSSStyleRule::GetSelectorText(nsAString& aSelectorText)
 {
   if (!Rule()) {
     aSelectorText.Truncate();
-    return NS_OK;
+  } else {
+    Rule()->GetSelectorText(aSelectorText);
   }
-  return Rule()->GetSelectorText(aSelectorText);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 DOMCSSStyleRule::SetSelectorText(const nsAString& aSelectorText)
 {
-  if (!Rule()) {
-    return NS_OK;
+  if (Rule()) {
+    Rule()->SetSelectorText(aSelectorText);
   }
-  return Rule()->SetSelectorText(aSelectorText);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1499,7 +1499,7 @@ StyleRule::List(FILE* out, PRInt32 aIndent) const
 }
 #endif
 
-nsresult
+void
 StyleRule::GetCssText(nsAString& aCssText)
 {
   if (mSelector) {
@@ -1516,49 +1516,29 @@ StyleRule::GetCssText(nsAString& aCssText)
   }
   aCssText.Append(PRUnichar(' '));
   aCssText.Append(PRUnichar('}'));
-  return NS_OK;
 }
 
-nsresult
+void
 StyleRule::SetCssText(const nsAString& aCssText)
 {
   // XXX TBI - need to re-parse rule & declaration
-  return NS_OK;
 }
 
-nsresult
-StyleRule::GetParentStyleSheet(nsCSSStyleSheet** aSheet)
-{
-  *aSheet = mSheet;
-  NS_IF_ADDREF(*aSheet);
-  return NS_OK;
-}
-
-nsresult
-StyleRule::GetParentRule(nsICSSGroupRule** aParentRule)
-{
-  *aParentRule = mParentRule;
-  NS_IF_ADDREF(*aParentRule);
-  return NS_OK;
-}
-
-nsresult
+void
 StyleRule::GetSelectorText(nsAString& aSelectorText)
 {
   if (mSelector)
     mSelector->ToString(aSelectorText, mSheet);
   else
     aSelectorText.Truncate();
-  return NS_OK;
 }
 
-nsresult
+void
 StyleRule::SetSelectorText(const nsAString& aSelectorText)
 {
-  // XXX TBI - get a parser and re-parse the selectors, 
+  // XXX TBI - get a parser and re-parse the selectors,
   // XXX then need to re-compute the cascade
   // XXX and dirty sheet
-  return NS_OK;
 }
 
 } // namespace css
