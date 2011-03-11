@@ -317,12 +317,12 @@ public:
   NS_DECL_ISUPPORTS
 
   // null for style attribute
-  virtual nsCSSSelectorList* Selector();
+  nsCSSSelectorList* Selector() { return mSelector; }
 
-  virtual PRUint32 GetLineNumber() const;
-  virtual void SetLineNumber(PRUint32 aLineNumber);
+  PRUint32 GetLineNumber() const { return mLineNumber; }
+  void SetLineNumber(PRUint32 aLineNumber) { mLineNumber = aLineNumber; }
 
-  virtual Declaration* GetDeclaration() const;
+  Declaration* GetDeclaration() const { return mDeclaration; }
 
   /**
    * Return a new |nsIStyleRule| instance that replaces the current
@@ -333,24 +333,24 @@ public:
    * |DeclarationChanged| handles replacing the object in the container
    * sheet or group rule if |aHandleContainer| is true.
    */
-  virtual already_AddRefed<StyleRule>
+  already_AddRefed<StyleRule>
   DeclarationChanged(Declaration* aDecl, PRBool aHandleContainer);
 
-  virtual nsIStyleRule* GetImportantRule();
+  nsIStyleRule* GetImportantRule();
 
   /**
    * The rule processor must call this method before calling
    * nsRuleWalker::Forward on this rule during rule matching.
    */
-  virtual void RuleMatched();
+  void RuleMatched();
 
   // hooks for DOM rule
-  virtual nsresult GetCssText(nsAString& aCssText);
-  virtual nsresult SetCssText(const nsAString& aCssText);
-  virtual nsresult GetParentStyleSheet(nsCSSStyleSheet** aSheet);
-  virtual nsresult GetParentRule(nsICSSGroupRule** aParentRule);
-  virtual nsresult GetSelectorText(nsAString& aSelectorText);
-  virtual nsresult SetSelectorText(const nsAString& aSelectorText);
+  nsresult GetCssText(nsAString& aCssText);
+  nsresult SetCssText(const nsAString& aCssText);
+  nsresult GetParentStyleSheet(nsCSSStyleSheet** aSheet);
+  nsresult GetParentRule(nsICSSGroupRule** aParentRule);
+  nsresult GetSelectorText(nsAString& aSelectorText);
+  nsresult SetSelectorText(const nsAString& aSelectorText);
 
   virtual PRInt32 GetType() const;
 
