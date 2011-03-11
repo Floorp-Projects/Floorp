@@ -91,7 +91,7 @@ enum nsCSSTokenType {
   eCSSToken_Function,       // mIdent
 
   eCSSToken_URL,            // mIdent
-  eCSSToken_InvalidURL,     // doesn't matter
+  eCSSToken_Bad_URL,        // doesn't matter
 
   eCSSToken_HTMLComment,    // "<!--" or "-->"
 
@@ -106,9 +106,8 @@ enum nsCSSTokenType {
                             // valid range; mIdent preserves the textual
                             // form of the token for error reporting
 
-  // A special token indicating that there was an error in tokenization.
-  // It's always an unterminated string.
-  eCSSToken_Error           // mSymbol + mIdent
+  // An unterminated string, which is always an error.
+  eCSSToken_Bad_String      // mSymbol + mIdent
 };
 
 struct nsCSSToken {
