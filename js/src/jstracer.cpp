@@ -4596,27 +4596,34 @@ TraceRecorder::compile()
         return ARECORD_STOP;
     ResetRecordingAttempts(traceMonitor, (jsbytecode*)fragment->ip);
     ResetRecordingAttempts(traceMonitor, (jsbytecode*)tree->ip);
+    JS_ASSERT(!assm->error());
     if (anchor)
         assm->patch(anchor);
+    if (assm->error())
+        return ARECORD_STOP;
     JS_ASSERT(fragment->code());
     JS_ASSERT_IF(fragment == fragment->root, fragment->root == tree);
 
     return ARECORD_CONTINUE;
 }
 
-static void
+static bool
 JoinPeers(Assembler* assm, VMSideExit* exit, TreeFragment* target)
 {
     exit->target = target;
+    JS_ASSERT(!assm->error());
     assm->patch(exit);
+    if (assm->error())
+        return false;
 
     debug_only_printf(LC_TMTreeVis, "TREEVIS JOIN ANCHOR=%p FRAG=%p\n", (void*)exit, (void*)target);
 
     if (exit->root() == target)
-        return;
+        return true;
 
     target->dependentTrees.addUnique(exit->root());
     exit->root()->linkedTrees.addUnique(target);
+    return true;
 }
 
 /* Results of trying to connect an arbitrary type A with arbitrary type B */
@@ -5025,7 +5032,8 @@ TraceRecorder::closeLoop()
     JS_ASSERT(tree->first);
 
     peer = tree->first;
-    joinEdgesToEntry(peer);
+    if (!joinEdgesToEntry(peer))
+        return ARECORD_STOP;
 
     debug_only_stmt(DumpPeerStability(traceMonitor, peer->ip, peer->globalObj,
                                       peer->globalShape, peer->argc);)
@@ -5104,11 +5112,11 @@ TraceRecorder::findUndemotesInTypemaps(const TypeMap& typeMap, LinkableFragment*
     return undemotes.length();
 }
 
-JS_REQUIRES_STACK void
+JS_REQUIRES_STACK bool
 TraceRecorder::joinEdgesToEntry(TreeFragment* peer_root)
 {
     if (fragment->root != fragment)
-        return;
+        return true;
 
     TypeMap typeMap(NULL, traceMonitor->oracle);
     Queue<unsigned> undemotes(NULL);
@@ -5140,7 +5148,8 @@ TraceRecorder::joinEdgesToEntry(TreeFragment* peer_root)
 
                 /* It's okay! Link together and remove the unstable exit. */
                 JS_ASSERT(tree == fragment);
-                JoinPeers(traceMonitor->assembler, uexit->exit, tree);
+                if (!JoinPeers(traceMonitor->assembler, uexit->exit, tree))
+                    return false;
                 uexit = peer->removeUnstableExit(uexit->exit);
             } else {
                 /* Check for int32->double slots that suggest trashing. */
@@ -5156,6 +5165,7 @@ TraceRecorder::joinEdgesToEntry(TreeFragment* peer_root)
             }
         }
     }
+    return true;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -5186,7 +5196,8 @@ TraceRecorder::endLoop(VMSideExit* exit)
     JS_ASSERT(LookupLoop(traceMonitor, tree->ip, tree->globalObj, tree->globalShape, tree->argc) ==
               tree->first);
 
-    joinEdgesToEntry(tree->first);
+    if (!joinEdgesToEntry(tree->first))
+        return ARECORD_STOP;
 
     debug_only_stmt(DumpPeerStability(traceMonitor, tree->ip, tree->globalObj,
                                       tree->globalShape, tree->argc);)
@@ -5861,7 +5872,8 @@ AttemptToStabilizeTree(JSContext* cx, TraceMonitor* tm, JSObject* globalObj, VMS
                      from->nStackTypes == peer->nStackTypes);
         JS_ASSERT(exit->numStackSlots == peer->nStackTypes);
         /* Patch this exit to its peer */
-        JoinPeers(tm->assembler, exit, peer);
+        if (!JoinPeers(tm->assembler, exit, peer))
+            return false;
         /*
          * Update peer global types. The |from| fragment should already be updated because it on
          * the execution path, and somehow connected to the entry trace.
