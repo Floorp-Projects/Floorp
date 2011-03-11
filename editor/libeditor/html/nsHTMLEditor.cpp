@@ -300,7 +300,7 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
                    nsIContent *aRoot, nsISelectionController *aSelCon,
                    PRUint32 aFlags)
 {
-  NS_PRECONDITION(aDoc && aPresShell, "bad arg");
+  NS_PRECONDITION(aDoc && aPresShell && !aSelCon, "bad arg");
   NS_ENSURE_TRUE(aDoc && aPresShell, NS_ERROR_NULL_POINTER);
 
   nsresult result = NS_OK, rulesRes = NS_OK;
@@ -318,7 +318,7 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
     nsAutoEditInitRulesTrigger rulesTrigger(static_cast<nsPlaintextEditor*>(this), rulesRes);
 
     // Init the plaintext editor
-    result = nsPlaintextEditor::Init(aDoc, aPresShell, aRoot, aSelCon, aFlags);
+    result = nsPlaintextEditor::Init(aDoc, aPresShell, aRoot, nsnull, aFlags);
     if (NS_FAILED(result)) { return result; }
 
     // Init mutation observer
