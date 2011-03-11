@@ -944,8 +944,8 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
       break;
     } else if (IsWhitespace(ch)) {
       // Whitespace is allowed at the end of the URL
-        EatWhiteSpace();
-        if (LookAhead(')')) {
+      EatWhiteSpace();
+      if (LookAhead(')')) {
         Pushback(')');  // leave the closing symbol
         // done!
         break;
