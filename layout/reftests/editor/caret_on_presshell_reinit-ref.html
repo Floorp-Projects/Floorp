@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <div style="position: absolute">
+      <iframe src="data:text/html,<body contenteditable>foo</body>"></iframe>
+    </div>
+    <script type="text/javascript">
+      onload = function() {
+        var iframe = document.querySelector("iframe");
+        var win = iframe.contentWindow;
+        var body = win.document.body;
+        iframe.focus();
+        body.focus();
+        var sel = win.getSelection();
+        sel.collapse(body.firstChild, 0);
+      };
+    </script>
+  </body>
+</html>
