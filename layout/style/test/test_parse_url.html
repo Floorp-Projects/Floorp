@@ -176,6 +176,10 @@ is(div.style.listStyleImage, 'url("goo\\D ")', "URL allowed");
 div.style.listStyleImage = 'url(go\\o)';
 is(div.style.listStyleImage, 'url("goo")', "URL allowed");
 
+div.setAttribute("style", "color: url(/*); color: green");
+is(div.style.color, 'green',
+   "URL tokenized correctly outside properties taking URLs");
+
 </script>
 </pre>
 </body>
