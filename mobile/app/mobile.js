@@ -566,7 +566,9 @@ pref("services.sync.prefs.sync.signon.rememberSignons", true);
 #endif
 
 // threshold where a tap becomes a drag, in 1/240" reference pixels
-pref("ui.dragThreshold", 24);
+// The names of the preferences are to be in sync with nsEventStateManager.cpp
+pref("ui.dragThresholdX", 25);
+pref("ui.dragThresholdY", 25);
 
 #if MOZ_PLATFORM_MAEMO == 6
 pref("layers.acceleration.disabled", false);
