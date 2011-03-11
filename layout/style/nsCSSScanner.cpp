@@ -203,6 +203,7 @@ nsCSSToken::AppendToString(nsString& aBuffer)
       break;
     case eCSSToken_URL:
     case eCSSToken_Bad_URL:
+      aBuffer.AppendLiteral("url(");
       if (mSymbol != PRUnichar(0)) {
         aBuffer.Append(mSymbol);
       }
@@ -1148,6 +1149,11 @@ nsCSSScanner::ParseIdent(PRInt32 aChar, nsCSSToken& aToken)
   if (Peek() == PRUnichar('(')) {
     Read();
     tokenType = eCSSToken_Function;
+
+    if (ident.LowerCaseEqualsLiteral("url")) {
+      NextURL(aToken); // ignore return value, since *we* read something
+      return PR_TRUE;
+    }
   }
 
   aToken.mType = tokenType;
