@@ -211,6 +211,11 @@
   -moz-user-focus: ignore;
 }
 
+/* listcell elements doesn't have flex="1" so we need to force it */
+#select-commands .option-command > listcell {
+  -moz-box-flex: 1 !important;
+}
+
 /* menulist popup ---------------------------------------------------------- */
 #menulist-commands {
   display: -moz-box;
@@ -239,6 +244,7 @@
 .option-command.optgroup {
   font-weight: bold;
   font-style: italic;
+  pointer-events: none;
 }
 
 .option-command .in-optgroup {
