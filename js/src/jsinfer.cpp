@@ -4369,8 +4369,11 @@ TypeCompartment::sweep(JSContext *cx)
             if (!entry.object->marked || !entry.newShape->marked())
                 remove = true;
             for (unsigned i = 0; !remove && i < key.nslots; i++) {
-                if (JSID_IS_STRING(key.ids[i]) && !JSID_TO_STRING(key.ids[i])->asCell()->isMarked())
-                    remove = true;
+                if (JSID_IS_STRING(key.ids[i])) {
+                    JSString *str = JSID_TO_STRING(key.ids[i]);
+                    if (!JSString::isStatic(str) && !str->asCell()->isMarked())
+                        remove = true;
+                }
                 if (TypeIsObject(entry.types[i]) && !((TypeObject *)entry.types[i])->marked)
                     remove = true;
             }
