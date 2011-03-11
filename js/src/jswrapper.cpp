@@ -140,6 +140,14 @@ bool
 JSWrapper::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                           PropertyDescriptor *desc)
 {
+    if (desc->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
+        if (!cx->addTypePropertyId(wrappedObject(wrapper)->getType(), id, types::TYPE_UNKNOWN))
+            return false;
+    } else {
+        if (!cx->addTypePropertyId(wrappedObject(wrapper)->getType(), id, desc->value))
+            return false;
+    }
+
     SET(JS_DefinePropertyById(cx, wrappedObject(wrapper), id, Jsvalify(desc->value),
                               Jsvalify(desc->getter), Jsvalify(desc->setter), desc->attrs));
 }
