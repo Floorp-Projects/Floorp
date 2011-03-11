@@ -1339,17 +1339,14 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
                                         const nsACString& aCharset,
                                         nsIDocumentEncoder** encoder)
 {
-  nsCOMPtr<nsIPresShell> presShell;
-  nsresult rv = GetPresShell(getter_AddRefs(presShell));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+  nsresult rv = NS_OK;
 
   nsCAutoString formatType(NS_DOC_ENCODER_CONTRACTID_BASE);
   formatType.AppendWithConversion(aFormatType);
   nsCOMPtr<nsIDocumentEncoder> docEncoder (do_CreateInstance(formatType.get(), &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIDocument *doc = presShell->GetDocument();
+  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
   NS_ASSERTION(domDoc, "Need a document");
 

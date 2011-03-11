@@ -1138,39 +1138,23 @@ nsEditor::GetDocumentModified(PRBool *outDocModified)
 NS_IMETHODIMP
 nsEditor::GetDocumentCharacterSet(nsACString &characterSet)
 {
-  nsCOMPtr<nsIPresShell> presShell;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
+  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
-  nsresult rv = GetPresShell(getter_AddRefs(presShell));
-  if (NS_SUCCEEDED(rv))
-  {
-    nsIDocument *doc = presShell->GetDocument();
-    if (doc) {
-      characterSet = doc->GetDocumentCharacterSet();
-      return NS_OK;
-    }
-    rv = NS_ERROR_NULL_POINTER;
-  }
-
-  return rv;
-
+  characterSet = doc->GetDocumentCharacterSet();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsEditor::SetDocumentCharacterSet(const nsACString& characterSet)
 {
-  nsCOMPtr<nsIPresShell> presShell;
-  nsresult rv = GetPresShell(getter_AddRefs(presShell));
-  if (NS_SUCCEEDED(rv))
-  {
-    nsIDocument *doc = presShell->GetDocument();
-    if (doc) {
-      doc->SetDocumentCharacterSet(characterSet);
-      return NS_OK;
-    }
-    rv = NS_ERROR_NULL_POINTER;
-  }
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
+  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
-  return rv;
+  doc->SetDocumentCharacterSet(characterSet);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
