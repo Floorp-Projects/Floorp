@@ -4252,7 +4252,8 @@ nsHTMLEditor::SelectAll()
   ForceCompositionEnd();
 
   nsresult rv;
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak, &rv);
+  nsCOMPtr<nsISelectionController> selCon;
+  rv = GetSelectionController(getter_AddRefs(selCon));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISelection> selection;
