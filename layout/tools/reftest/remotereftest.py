@@ -302,7 +302,7 @@ class RemoteReftest(RefTest):
         self.server.stop()
 
     def createReftestProfile(self, options, profileDir):
-        RefTest.createReftestProfile(self, options, profileDir)
+        RefTest.createReftestProfile(self, options, profileDir, server=options.remoteWebServer)
 
         if (self._devicemanager.pushDir(profileDir, options.remoteProfile) == None):
             raise devicemanager.FileError("Failed to copy profiledir to device")
