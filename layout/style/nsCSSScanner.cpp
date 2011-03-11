@@ -936,12 +936,6 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
     if (ch < 0) break;
     if (ch == CSS_ESCAPE) {
       ParseAndAppendEscape(ident);
-    } else if ((ch == '"') || (ch == '\'') || (ch == '(')) {
-      // This is an invalid URL spec
-      ok = PR_FALSE;
-      Pushback(ch); // push it back so the parser can match tokens and
-                    // then closing parenthesis
-      break;
     } else if (IsWhitespace(ch)) {
       // Whitespace is allowed at the end of the URL
       EatWhiteSpace();
@@ -953,6 +947,12 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
       // Whitespace is followed by something other than a
       // ")". This is an invalid url spec.
       ok = PR_FALSE;
+      break;
+    } else if (ch == '"' || ch == '\'' || ch == '(' || ch < PRUnichar(' ')) {
+      // This is an invalid URL spec
+      ok = PR_FALSE;
+      Pushback(ch); // push it back so the parser can match tokens and
+                    // then closing parenthesis
       break;
     } else if (ch == ')') {
       Pushback(ch);
