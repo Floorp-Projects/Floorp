@@ -358,10 +358,8 @@ let Content = {
       }
 
       case "pagehide":
-        if (aEvent.target == content.document) {
-          this._isZoomedToElement = false;
-          this._setTextZoom(1);
-        }
+        if (aEvent.target == content.document)
+          this._resetFontSize();          
         break;
     }
   },
@@ -521,8 +519,7 @@ let Content = {
       case "Browser:ZoomToPoint": {
         let rect = null;
         if (this._isZoomedToElement) {
-          this._isZoomedToElement = false;
-          this._setTextZoom(1);
+          this._resetFontSize();
         } else {
           this._isZoomedToElement = true;
           let element = elementFromPoint(x, y);
@@ -533,7 +530,9 @@ let Content = {
             rect = getBoundingContentRect(element);
             if (Services.prefs.getBoolPref("browser.ui.zoom.reflow")) {
               sendAsyncMessage("Browser:ZoomToPoint:Return", { x: x, y: y, zoomTo: rect });
-              this._setTextZoom(Math.max(1, rect.width / json.width));
+
+              let fontSize = Services.prefs.getIntPref("browser.ui.zoom.reflow.fontSize");
+              this._setMinFontSize(Math.max(1, rect.width / json.width) * fontSize);
 
               let oldRect = rect;
               rect = getBoundingContentRect(element);
@@ -565,6 +564,11 @@ let Content = {
         break;
       }
     }
+  },
+
+  _resetFontSize: function _resetFontSize() {
+    this._isZoomedToElement = false;
+    this._setMinFontSize(0);
   },
 
   _highlightElement: null,
@@ -607,9 +611,10 @@ let Content = {
     windowUtils.sendMouseEventToWindow(aName, aX - scrollOffset.x, aY - scrollOffset.y, aButton, 1, 0, true);
   },
 
-  _setTextZoom: function _setTextZoom(aZoom) {
-    let viewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
-    viewer.textZoom = aZoom;
+  _setMinFontSize: function _setMinFontSize(aSize) {
+    let viewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH);
+    if (viewer)
+      viewer.minFontSize = aSize;
   }
 };
 
