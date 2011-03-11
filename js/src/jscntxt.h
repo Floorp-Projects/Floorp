@@ -2185,6 +2185,14 @@ public:
 
     /* Monitor all properties of a type object as unknown. */
     inline bool markTypeObjectUnknownProperties(js::types::TypeObject *obj);
+
+    /*
+     * For an array or object which has not yet escaped and been referenced elsewhere,
+     * pick a new type based on the object's current contents.
+     */
+    inline bool fixArrayType(JSObject *obj);
+    inline bool fixObjectType(JSObject *obj);
+
 }; /* struct JSContext */
 
 #ifdef JS_THREADSAFE

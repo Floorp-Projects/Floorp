@@ -900,6 +900,15 @@ CloseObject(JSContext *cx, JSONParser *jp)
     jsuint len;
     if (!js_GetLengthProperty(cx, jp->objectStack, &len))
         return JS_FALSE;
+
+    Value p;
+    if (!jp->objectStack->getProperty(cx, INT_TO_JSID(len - 1), &p))
+        return JS_FALSE;
+
+    JSObject *obj = &p.toObject();
+    if (obj->isArray() ? !cx->fixArrayType(obj) : !cx->fixObjectType(obj))
+        return JS_FALSE;
+
     if (!js_SetLengthProperty(cx, jp->objectStack, len - 1))
         return JS_FALSE;
 

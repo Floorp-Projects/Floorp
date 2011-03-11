@@ -1062,7 +1062,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
             JSCompartment **compartment = rt->compartments.begin();
             JSCompartment **end = rt->compartments.end();
             while (compartment < end) {
-                (*compartment)->types.finish(cx, *compartment);
+                (*compartment)->types.print(cx, *compartment);
                 compartment++;
             }
 
