@@ -559,7 +559,6 @@ protected:
   PRBool ParseCounter(nsCSSValue& aValue);
   PRBool ParseAttr(nsCSSValue& aValue);
   PRBool SetValueToURL(nsCSSValue& aValue, const nsString& aURL);
-  PRBool ParseURL(nsCSSValue& aValue);
   PRBool TranslateDimension(nsCSSValue& aValue, PRInt32 aVariantMask,
                             float aNumber, const nsString& aUnit);
   PRBool ParseImageRect(nsCSSValue& aImage);
@@ -1470,7 +1469,8 @@ CSSParserImpl::SkipAtRule(PRBool aInsideBlock)
       } else if (symbol == '[') {
         SkipUntil(']');
       }
-    } else if (eCSSToken_Function == mToken.mType) {
+    } else if (eCSSToken_Function == mToken.mType ||
+               eCSSToken_Bad_URL == mToken.mType) {
       SkipUntil(')');
     }
   }
@@ -1577,13 +1577,8 @@ CSSParserImpl::ParseURLOrString(nsString& aURL)
   if (!GetToken(PR_TRUE)) {
     return PR_FALSE;
   }
-  if (eCSSToken_String == mToken.mType) {
+  if (eCSSToken_String == mToken.mType || eCSSToken_URL == mToken.mType) {
     aURL = mToken.mIdent;
-    return PR_TRUE;
-  }
-  else if (eCSSToken_Function == mToken.mType &&
-           mToken.mIdent.LowerCaseEqualsLiteral("url") &&
-           GetURLInParens(aURL)) {
     return PR_TRUE;
   }
   UngetToken();
@@ -2045,10 +2040,10 @@ CSSParserImpl::ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aData)
   nsCSSDocumentRule::URL **next = &urls;
   do {
     if (!GetToken(PR_TRUE) ||
-        eCSSToken_Function != mToken.mType ||
-        !(mToken.mIdent.LowerCaseEqualsLiteral("url") ||
-          mToken.mIdent.LowerCaseEqualsLiteral("url-prefix") ||
-          mToken.mIdent.LowerCaseEqualsLiteral("domain"))) {
+        !(eCSSToken_URL == mToken.mType ||
+          (eCSSToken_Function == mToken.mType &&
+           (mToken.mIdent.LowerCaseEqualsLiteral("url-prefix") ||
+            mToken.mIdent.LowerCaseEqualsLiteral("domain"))))) {
       REPORT_UNEXPECTED_TOKEN(PEMozDocRuleBadFunc);
       delete urls;
       return PR_FALSE;
@@ -2060,25 +2055,28 @@ CSSParserImpl::ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aData)
       return PR_FALSE;
     }
     next = &cur->next;
-    if (mToken.mIdent.LowerCaseEqualsLiteral("url")) {
+    if (mToken.mType == eCSSToken_URL) {
       cur->func = nsCSSDocumentRule::eURL;
-    } else if (mToken.mIdent.LowerCaseEqualsLiteral("url-prefix")) {
-      cur->func = nsCSSDocumentRule::eURLPrefix;
-    } else if (mToken.mIdent.LowerCaseEqualsLiteral("domain")) {
-      cur->func = nsCSSDocumentRule::eDomain;
-    }
+      CopyUTF16toUTF8(mToken.mIdent, cur->url);
+    } else {
+      if (mToken.mIdent.LowerCaseEqualsLiteral("url-prefix")) {
+        cur->func = nsCSSDocumentRule::eURLPrefix;
+      } else if (mToken.mIdent.LowerCaseEqualsLiteral("domain")) {
+        cur->func = nsCSSDocumentRule::eDomain;
+      }
 
-    nsAutoString url;
-    if (!GetURLInParens(url)) {
-      REPORT_UNEXPECTED_TOKEN(PEMozDocRuleNotURI);
-      delete urls;
-      return PR_FALSE;
-    }
+      nsAutoString url;
+      if (!GetURLInParens(url)) {
+        REPORT_UNEXPECTED_TOKEN(PEMozDocRuleNotURI);
+        delete urls;
+        return PR_FALSE;
+      }
 
-    // We could try to make the URL (as long as it's not domain())
-    // canonical and absolute with NS_NewURI and GetSpec, but I'm
-    // inclined to think we shouldn't.
-    CopyUTF16toUTF8(url, cur->url);
+      // We could try to make the URL (as long as it's not domain())
+      // canonical and absolute with NS_NewURI and GetSpec, but I'm
+      // inclined to think we shouldn't.
+      CopyUTF16toUTF8(url, cur->url);
+    }
   } while (ExpectSymbol(',', PR_TRUE));
 
   nsRefPtr<nsCSSDocumentRule> rule(new nsCSSDocumentRule());
@@ -2290,7 +2288,8 @@ CSSParserImpl::SkipUntil(PRUnichar aStopSymbol)
       } else if ('(' == symbol) {
         stack.AppendElement(')');
       }
-    } else if (eCSSToken_Function == tk->mType) {
+    } else if (eCSSToken_Function == tk->mType ||
+               eCSSToken_Bad_URL == tk->mType) {
       stack.AppendElement(')');
     }
   }
@@ -2316,7 +2315,8 @@ CSSParserImpl::SkipUntilOneOf(const PRUnichar* aStopSymbolChars)
       } else if ('(' == symbol) {
         SkipUntil(')');
       }
-    } else if (eCSSToken_Function == tk->mType) {
+    } else if (eCSSToken_Function == tk->mType ||
+               eCSSToken_Bad_URL == tk->mType) {
       SkipUntil(')');
     }
   }
@@ -2351,7 +2351,8 @@ CSSParserImpl::SkipDeclaration(PRBool aCheckForBraces)
       } else if ('[' == symbol) {
         SkipUntil(']');
       }
-    } else if (eCSSToken_Function == tk->mType) {
+    } else if (eCSSToken_Function == tk->mType ||
+               eCSSToken_Bad_URL == tk->mType) {
       SkipUntil(')');
     }
   }
@@ -2381,7 +2382,8 @@ CSSParserImpl::SkipRuleSet(PRBool aInsideBraces)
       } else if ('[' == symbol) {
         SkipUntil(']');
       }
-    } else if (eCSSToken_Function == tk->mType) {
+    } else if (eCSSToken_Function == tk->mType ||
+               eCSSToken_Bad_URL == tk->mType) {
       SkipUntil(')');
     }
   } 
@@ -4442,12 +4444,9 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
 #endif
 
   if (((aVariantMask & VARIANT_URL) != 0) &&
-      (eCSSToken_Function == tk->mType) &&
-      tk->mIdent.LowerCaseEqualsLiteral("url")) {
-    if (ParseURL(aValue)) {
-      return PR_TRUE;
-    }
-    return PR_FALSE;
+      eCSSToken_URL == tk->mType) {
+    SetValueToURL(aValue, tk->mIdent);
+    return PR_TRUE;
   }
   if ((aVariantMask & VARIANT_GRADIENT) != 0 &&
       eCSSToken_Function == tk->mType) {
@@ -4707,16 +4706,6 @@ CSSParserImpl::SetValueToURL(nsCSSValue& aValue, const nsString& aURL)
   return PR_TRUE;
 }
 
-PRBool
-CSSParserImpl::ParseURL(nsCSSValue& aValue)
-{
-  nsAutoString url;
-  if (!GetURLInParens(url))
-    return PR_FALSE;
-
-  return SetValueToURL(aValue, url);
-}
-
 /**
  * Parse the arguments of -moz-image-rect() function.
  * -moz-image-rect(<uri>, <top>, <right>, <bottom>, <left>)
@@ -4744,7 +4733,7 @@ CSSParserImpl::ParseImageRect(nsCSSValue& aImage)
 
     nsAutoString urlString;
     if (!ParseURLOrString(urlString) ||
-        !SetValuetoURL(url, urlString) ||
+        !SetValueToURL(url, urlString) ||
         !ExpectSymbol(',', PR_TRUE)) {
       break;
     }
@@ -5856,14 +5845,14 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundParseState& aState)
           return PR_FALSE;
         }
       }
-    } else if (tt == eCSSToken_Function &&
-               (mToken.mIdent.LowerCaseEqualsLiteral("url") ||
-                mToken.mIdent.LowerCaseEqualsLiteral("-moz-linear-gradient") ||
-                mToken.mIdent.LowerCaseEqualsLiteral("-moz-radial-gradient") ||
-                mToken.mIdent.LowerCaseEqualsLiteral("-moz-repeating-linear-gradient") ||
-                mToken.mIdent.LowerCaseEqualsLiteral("-moz-repeating-radial-gradient") ||
-                mToken.mIdent.LowerCaseEqualsLiteral("-moz-image-rect") ||
-                mToken.mIdent.LowerCaseEqualsLiteral("-moz-element"))) {
+    } else if (tt == eCSSToken_URL ||
+               (tt == eCSSToken_Function &&
+                (mToken.mIdent.LowerCaseEqualsLiteral("-moz-linear-gradient") ||
+                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-radial-gradient") ||
+                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-repeating-linear-gradient") ||
+                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-repeating-radial-gradient") ||
+                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-image-rect") ||
+                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-element")))) {
       if (haveImage)
         return PR_FALSE;
       haveImage = PR_TRUE;
@@ -7450,10 +7439,8 @@ CSSParserImpl::ParseFontSrc(nsCSSValue& aValue)
     if (!GetToken(PR_TRUE))
       break;
 
-    if (mToken.mType == eCSSToken_Function &&
-        mToken.mIdent.LowerCaseEqualsLiteral("url")) {
-      if (!ParseURL(cur))
-        return PR_FALSE;
+    if (mToken.mType == eCSSToken_URL) {
+      SetValueToURL(cur, mToken.mIdent);
       values.AppendElement(cur);
       if (!ParseFontSrcFormat(values))
         return PR_FALSE;
