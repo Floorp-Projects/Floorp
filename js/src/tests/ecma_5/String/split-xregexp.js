@@ -1,5 +1,5 @@
 /*
- * Tests from http://stevenlevithan.com/demo/split.cfm
+ * Tests from http://xregexp.com/tests/split.html
  *
  * Copyright (C) 2007 by Steven Levithan <stevenlevithan.com>
  *
