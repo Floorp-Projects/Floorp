@@ -574,11 +574,11 @@ void AnalyzeScriptTypes(JSContext *cx, JSScript *script);
 void AnalyzeScriptNew(JSContext *cx, JSScript *script);
 
 struct ArrayTableKey;
-typedef HashMap<ArrayTableKey,TypeObject*,ArrayTableKey> ArrayTypeTable;
+typedef HashMap<ArrayTableKey,TypeObject*,ArrayTableKey,SystemAllocPolicy> ArrayTypeTable;
 
 struct ObjectTableKey;
 struct ObjectTableEntry;
-typedef HashMap<ObjectTableKey,ObjectTableEntry,ObjectTableKey> ObjectTypeTable;
+typedef HashMap<ObjectTableKey,ObjectTableEntry,ObjectTableKey,SystemAllocPolicy> ObjectTypeTable;
 
 /* Type information for a compartment. */
 struct TypeCompartment
