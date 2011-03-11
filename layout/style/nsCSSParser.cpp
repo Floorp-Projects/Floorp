@@ -332,7 +332,7 @@ protected:
   PRBool ParseAtRule(RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ParseCharsetRule(RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ParseImportRule(RuleAppendFunc aAppendFunc, void* aProcessData);
-  PRBool GatherURL(nsString& aURL);
+  PRBool ParseURLOrString(nsString& aURL);
   PRBool GatherMedia(nsMediaList* aMedia,
                      PRBool aInAtRule);
   PRBool ParseMediaQuery(PRBool aInAtRule, nsMediaQuery **aQuery,
@@ -1571,7 +1571,7 @@ CSSParserImpl::ParseCharsetRule(RuleAppendFunc aAppendFunc,
 }
 
 PRBool
-CSSParserImpl::GatherURL(nsString& aURL)
+CSSParserImpl::ParseURLOrString(nsString& aURL)
 {
   if (!GetToken(PR_TRUE)) {
     return PR_FALSE;
@@ -1585,6 +1585,7 @@ CSSParserImpl::GatherURL(nsString& aURL)
            GetURLInParens(aURL)) {
     return PR_TRUE;
   }
+  UngetToken();
   return PR_FALSE;
 }
 
@@ -1904,7 +1905,7 @@ CSSParserImpl::ParseImportRule(RuleAppendFunc aAppendFunc, void* aData)
   }
 
   nsAutoString url;
-  if (!GatherURL(url)) {
+  if (!ParseURLOrString(url)) {
     REPORT_UNEXPECTED_TOKEN(PEImportNotURI);
     return PR_FALSE;
   }
@@ -2105,33 +2106,21 @@ CSSParserImpl::ParseNameSpaceRule(RuleAppendFunc aAppendFunc, void* aData)
   if (eCSSToken_Ident == mToken.mType) {
     prefix = mToken.mIdent;
     // user-specified identifiers are case-sensitive (bug 416106)
-    if (! GetToken(PR_TRUE)) {
-      REPORT_UNEXPECTED_EOF(PEAtNSURIEOF);
-      return PR_FALSE;
-    }
-  }
-
-  if (eCSSToken_String == mToken.mType) {
-    url = mToken.mIdent;
-    if (ExpectSymbol(';', PR_TRUE)) {
-      ProcessNameSpace(prefix, url, aAppendFunc, aData);
-      return PR_TRUE;
-    }
-  }
-  else if ((eCSSToken_Function == mToken.mType) &&
-           (mToken.mIdent.LowerCaseEqualsLiteral("url"))) {
-    if (GetURLInParens(url) &&
-        ExpectSymbol(';', PR_TRUE)) {
-      ProcessNameSpace(prefix, url, aAppendFunc, aData);
-      return PR_TRUE;
-    }
-  }
-  else {
+  } else {
     UngetToken();
   }
-  REPORT_UNEXPECTED_TOKEN(PEAtNSUnexpected);
 
-  return PR_FALSE;
+  if (!ParseURLOrString(url) || !ExpectSymbol(';', PR_TRUE)) {
+    if (mHavePushBack) {
+      REPORT_UNEXPECTED_TOKEN(PEAtNSUnexpected);
+    } else {
+      REPORT_UNEXPECTED_EOF(PEAtNSURIEOF);
+    }
+    return PR_FALSE;
+  }
+
+  ProcessNameSpace(prefix, url, aAppendFunc, aData);
+  return PR_TRUE;
 }
 
 void
@@ -4752,21 +4741,12 @@ CSSParserImpl::ParseImageRect(nsCSSValue& aImage)
     nsCSSValue& bottom = func->Item(4);
     nsCSSValue& left   = func->Item(5);
 
-    if (!GetToken(PR_TRUE))
-      break;
-    if (mToken.mType == eCSSToken_String) {
-      if (!SetValueToURL(url, mToken.mIdent))
-        break;
-    } else if (mToken.mType == eCSSToken_Function &&
-               mToken.mIdent.LowerCaseEqualsLiteral("url")) {
-      if (!ParseURL(url))
-        break;
-    } else {
-      UngetToken();
+    nsAutoString urlString;
+    if (!ParseURLOrString(urlString) ||
+        !SetValuetoURL(url, urlString) ||
+        !ExpectSymbol(',', PR_TRUE)) {
       break;
     }
-    if (!ExpectSymbol(',', PR_TRUE))
-      break;
 
     static const PRInt32 VARIANT_SIDE = VARIANT_NUMBER | VARIANT_PERCENT;
     if (!ParseNonNegativeVariant(top, VARIANT_SIDE, nsnull) ||
