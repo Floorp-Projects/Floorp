@@ -1156,9 +1156,7 @@ FrameState::sync(Assembler &masm, Uses uses) const
     Registers avail(freeRegs.freeMask & Registers::AvailRegs);
     Registers temp(Registers::TempAnyRegs);
 
-    FrameEntry *bottom = sp - uses.nuses;
-
-    for (FrameEntry *fe = sp - 1; fe >= bottom; fe--) {
+    for (FrameEntry *fe = sp - 1; fe >= entries; fe--) {
         if (!fe->isTracked())
             continue;
 
@@ -1207,7 +1205,7 @@ FrameState::sync(Assembler &masm, Uses uses) const
             /* Fall back to a slower sync algorithm if load required. */
             if ((!fe->type.synced() && backing->type.inMemory()) ||
                 (!fe->data.synced() && backing->data.inMemory())) {
-                syncFancy(masm, avail, fe, bottom);
+                syncFancy(masm, avail, fe, entries);
                 return;
             }
 #endif
@@ -1226,18 +1224,6 @@ FrameState::sync(Assembler &masm, Uses uses) const
             ensureTypeSynced(fe, masm);
 #endif
     }
-
-    /*
-     * Additionally make sure any known integers on the stack have synced types.
-     * During recompilation we may need to convert these into doubles, and need
-     * to know whether we currently think this slot is an integer.
-     */
-    for (FrameEntry *fe = bottom - 1; fe >= spBase; fe--) {
-        if (!fe->isTracked())
-            continue;
-        if (fe->isType(JSVAL_TYPE_INT32) && !fe->isConstant())
-            ensureTypeSynced(fe, masm);
-    }
 }
 
 void
@@ -1246,9 +1232,7 @@ FrameState::syncAndKill(Registers kill, Uses uses, Uses ignore)
     if (activeLoop) {
         /*
          * Drop any remaining loop registers so we don't do any more after-the-fact
-         * allocation of the initial register state. :TODO: we do not go back and
-         * fix up previous sync/restore calls when adding loop registers, breaking
-         * slow paths.
+         * allocation of the initial register state.
          */
         activeLoop->alloc->clearLoops();
         loopRegs = 0;
@@ -1302,9 +1286,8 @@ FrameState::syncAndKill(Registers kill, Uses uses, Uses ignore)
     }
 
     uint32 maxvisits = tracker.nentries;
-    FrameEntry *bottom = sp - uses.nuses;
 
-    for (FrameEntry *fe = sp - 1; fe >= bottom && maxvisits; fe--) {
+    for (FrameEntry *fe = sp - 1; fe >= entries && maxvisits; fe--) {
         if (!fe->isTracked())
             continue;
 
@@ -1316,13 +1299,15 @@ FrameState::syncAndKill(Registers kill, Uses uses, Uses ignore)
         syncFe(fe);
 
         /* Forget registers. */
-        if (fe->data.inRegister() && kill.hasReg(fe->data.reg()) &&
-            !regstate(fe->data.reg()).isPinned()) {
+        if (fe->data.inRegister() && !regstate(fe->data.reg()).isPinned()) {
             forgetReg(fe->data.reg());
             fe->data.setMemory();
         }
-        if (fe->type.inRegister() && kill.hasReg(fe->type.reg()) &&
-            !regstate(fe->type.reg()).isPinned()) {
+        if (fe->data.inFPRegister() && !regstate(fe->data.fpreg()).isPinned()) {
+            forgetReg(fe->data.fpreg());
+            fe->data.setMemory();
+        }
+        if (fe->type.inRegister() && !regstate(fe->type.reg()).isPinned()) {
             forgetReg(fe->type.reg());
             fe->type.setMemory();
         }
@@ -1339,12 +1324,9 @@ FrameState::syncAndKill(Registers kill, Uses uses, Uses ignore)
         if (!fe || fe >= spStop)
             continue;
 
-        JS_ASSERT(fe->isTracked());
+        JS_ASSERT(fe->isTracked() && !fe->isType(JSVAL_TYPE_DOUBLE));
 
-        if (fe->isType(JSVAL_TYPE_DOUBLE)) {
-            JS_ASSERT(fe->data.fpreg() == reg.fpreg());
-            fe->data.setMemory();
-        } else if (regstate(reg).type() == RematInfo::DATA) {
+        if (regstate(reg).type() == RematInfo::DATA) {
             JS_ASSERT(fe->data.reg() == reg.reg());
             JS_ASSERT(fe->data.synced());
             fe->data.setMemory();
