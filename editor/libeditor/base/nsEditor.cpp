@@ -307,8 +307,10 @@ nsEditor::PostCreate()
   // update nsTextStateManager and caret if we have focus
   nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
   if (focusedContent) {
-    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+    nsCOMPtr<nsIPresShell> ps;
+    GetPresShell(getter_AddRefs(ps));
     NS_ASSERTION(ps, "no pres shell even though we have focus");
+    NS_ENSURE_TRUE(ps, NS_ERROR_UNEXPECTED);
     nsPresContext* pc = ps->GetPresContext(); 
 
     nsIMEStateManager::OnTextStateBlur(pc, nsnull);
@@ -337,7 +339,7 @@ nsEditor::CreateEventListeners()
 nsresult
 nsEditor::InstallEventListeners()
 {
-  NS_ENSURE_TRUE(mDocWeak && mPresShellWeak && mEventListener,
+  NS_ENSURE_TRUE(mDocWeak && mEventListener,
                  NS_ERROR_NOT_INITIALIZED);
 
   // Initialize the event target.
@@ -464,7 +466,7 @@ nsEditor::SetFlags(PRUint32 aFlags)
   PRBool spellcheckerWasEnabled = CanEnableSpellCheck();
   mFlags = aFlags;
 
-  if (!mDocWeak || !mPresShellWeak) {
+  if (!mDocWeak) {
     // If we're initializing, we shouldn't do anything now.
     // SetFlags() will be called by PostCreate(),
     // we should synchronize some stuff for the flags at that time.
@@ -1006,7 +1008,7 @@ nsEditor::GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)
 // XXX: the rule system should tell us which node to select all on (ie, the root, or the body)
 NS_IMETHODIMP nsEditor::SelectAll()
 {
-  if (!mDocWeak || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; }
+  if (!mDocWeak) { return NS_ERROR_NOT_INITIALIZED; }
   ForceCompositionEnd();
 
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
@@ -1022,7 +1024,7 @@ NS_IMETHODIMP nsEditor::SelectAll()
 
 NS_IMETHODIMP nsEditor::BeginningOfDocument()
 {
-  if (!mDocWeak || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; }
+  if (!mDocWeak) { return NS_ERROR_NOT_INITIALIZED; }
 
   // get the selection
   nsCOMPtr<nsISelection> selection;
@@ -1067,7 +1069,7 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
 NS_IMETHODIMP
 nsEditor::EndOfDocument() 
 { 
-  if (!mDocWeak || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; } 
+  if (!mDocWeak) { return NS_ERROR_NOT_INITIALIZED; } 
   nsresult res; 
 
   // get selection 
@@ -2845,7 +2847,8 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
           }        
         }
         // handle selection
-        nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+        nsCOMPtr<nsIPresShell> ps;
+        GetPresShell(getter_AddRefs(ps));
         if (ps)
           ps->FlushPendingNotifications(Flush_Frames);
 
@@ -3973,7 +3976,8 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
   
   NS_ENSURE_TRUE(aResult && content, NS_ERROR_NULL_POINTER);
   
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  nsCOMPtr<nsIPresShell> ps;
+  GetPresShell(getter_AddRefs(ps));
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   // Look at the node (and its parent if it's not an element), and grab its style context
