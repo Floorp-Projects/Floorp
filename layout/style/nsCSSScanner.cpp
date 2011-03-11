@@ -195,13 +195,24 @@ nsCSSToken::AppendToString(nsString& aBuffer)
     case eCSSToken_Ident:
     case eCSSToken_WhiteSpace:
     case eCSSToken_Function:
-    case eCSSToken_URL:
-    case eCSSToken_Bad_URL:
     case eCSSToken_HTMLComment:
     case eCSSToken_URange:
       aBuffer.Append(mIdent);
       if (mType == eCSSToken_Function)
         aBuffer.Append(PRUnichar('('));
+      break;
+    case eCSSToken_URL:
+    case eCSSToken_Bad_URL:
+      if (mSymbol != PRUnichar(0)) {
+        aBuffer.Append(mSymbol);
+      }
+      aBuffer.Append(mIdent);
+      if (mSymbol != PRUnichar(0)) {
+        aBuffer.Append(mSymbol);
+      }
+      if (mType == eCSSToken_URL) {
+        aBuffer.Append(PRUnichar(')'));
+      }
       break;
     case eCSSToken_Number:
       if (mIntegerValid) {
@@ -732,6 +743,20 @@ nsCSSScanner::LookAhead(PRUnichar aChar)
   return PR_FALSE;
 }
 
+PRBool
+nsCSSScanner::LookAheadOrEOF(PRUnichar aChar)
+{
+  PRInt32 ch = Read();
+  if (ch < 0) {
+    return PR_TRUE;
+  }
+  if (ch == aChar) {
+    return PR_TRUE;
+  }
+  Pushback(ch);
+  return PR_FALSE;
+}
+
 void
 nsCSSScanner::EatWhiteSpace()
 {
@@ -909,6 +934,13 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
                       "unexpected token type");
     if (NS_LIKELY(aToken.mType == eCSSToken_String)) {
       EatWhiteSpace();
+      if (LookAheadOrEOF(')')) {
+        aToken.mType = eCSSToken_URL;
+      } else {
+        aToken.mType = eCSSToken_Bad_URL;
+      }
+    } else {
+      aToken.mType = eCSSToken_Bad_URL;
     }
     return PR_TRUE;
   }
@@ -924,6 +956,7 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
   // tokens until a matching parenthesis.
 
   aToken.mType = eCSSToken_Bad_URL;
+  aToken.mSymbol = PRUnichar(0);
   nsString& ident = aToken.mIdent;
   ident.SetLength(0);
 
@@ -939,14 +972,8 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
     } else if (IsWhitespace(ch)) {
       // Whitespace is allowed at the end of the URL
       EatWhiteSpace();
-      if (LookAhead(')')) {
-        Pushback(')');  // leave the closing symbol
-        // done!
-        break;
-      }
-      // Whitespace is followed by something other than a
-      // ")". This is an invalid url spec.
-      ok = PR_FALSE;
+      // Consume the close paren if we have it; if not we're an invalid URL.
+      ok = LookAheadOrEOF(')');
       break;
     } else if (ch == '"' || ch == '\'' || ch == '(' || ch < PRUnichar(' ')) {
       // This is an invalid URL spec
@@ -955,7 +982,6 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
                     // then closing parenthesis
       break;
     } else if (ch == ')') {
-      Pushback(ch);
       // All done
       break;
     } else {

@@ -90,8 +90,8 @@ enum nsCSSTokenType {
 
   eCSSToken_Function,       // mIdent
 
-  eCSSToken_URL,            // mIdent
-  eCSSToken_Bad_URL,        // doesn't matter
+  eCSSToken_URL,            // mIdent + mSymbol
+  eCSSToken_Bad_URL,        // mIdent + mSymbol
 
   eCSSToken_HTMLComment,    // "<!--" or "-->"
 
@@ -212,6 +212,7 @@ protected:
   PRInt32 Read();
   PRInt32 Peek();
   PRBool LookAhead(PRUnichar aChar);
+  PRBool LookAheadOrEOF(PRUnichar aChar); // expect either aChar or EOF
   void EatWhiteSpace();
   
   void ParseAndAppendEscape(nsString& aOutput);
