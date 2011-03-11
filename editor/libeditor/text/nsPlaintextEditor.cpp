@@ -139,12 +139,14 @@ NS_INTERFACE_MAP_END_INHERITING(nsEditor)
 
 
 NS_IMETHODIMP nsPlaintextEditor::Init(nsIDOMDocument *aDoc, 
-                                 nsIPresShell   *aPresShell, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags)
+                                      nsIContent *aRoot,
+                                      nsISelectionController *aSelCon,
+                                      PRUint32 aFlags)
 {
   NS_TIME_FUNCTION;
 
-  NS_PRECONDITION(aDoc && aPresShell, "bad arg");
-  NS_ENSURE_TRUE(aDoc && aPresShell, NS_ERROR_NULL_POINTER);
+  NS_PRECONDITION(aDoc, "bad arg");
+  NS_ENSURE_TRUE(aDoc, NS_ERROR_NULL_POINTER);
   
   nsresult res = NS_OK, rulesRes = NS_OK;
   
@@ -154,7 +156,7 @@ NS_IMETHODIMP nsPlaintextEditor::Init(nsIDOMDocument *aDoc,
     nsAutoEditInitRulesTrigger rulesTrigger(this, rulesRes);
   
     // Init the base editor
-    res = nsEditor::Init(aDoc, aPresShell, aRoot, aSelCon, aFlags);
+    res = nsEditor::Init(aDoc, aRoot, aSelCon, aFlags);
   }
 
   // check the "single line editor newline handling"

@@ -296,12 +296,13 @@ NS_INTERFACE_MAP_END_INHERITING(nsPlaintextEditor)
 
 
 NS_IMETHODIMP
-nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
-                   nsIContent *aRoot, nsISelectionController *aSelCon,
+nsHTMLEditor::Init(nsIDOMDocument *aDoc,
+                   nsIContent *aRoot,
+                   nsISelectionController *aSelCon,
                    PRUint32 aFlags)
 {
-  NS_PRECONDITION(aDoc && aPresShell && !aSelCon, "bad arg");
-  NS_ENSURE_TRUE(aDoc && aPresShell, NS_ERROR_NULL_POINTER);
+  NS_PRECONDITION(aDoc && !aSelCon, "bad arg");
+  NS_ENSURE_TRUE(aDoc, NS_ERROR_NULL_POINTER);
 
   nsresult result = NS_OK, rulesRes = NS_OK;
 
@@ -318,7 +319,7 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
     nsAutoEditInitRulesTrigger rulesTrigger(static_cast<nsPlaintextEditor*>(this), rulesRes);
 
     // Init the plaintext editor
-    result = nsPlaintextEditor::Init(aDoc, aPresShell, aRoot, nsnull, aFlags);
+    result = nsPlaintextEditor::Init(aDoc, aRoot, nsnull, aFlags);
     if (NS_FAILED(result)) { return result; }
 
     // Init mutation observer
@@ -338,7 +339,10 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
     mHTMLCSSUtils->Init(this);
 
     // disable links
-    nsPresContext *context = aPresShell->GetPresContext();
+    nsCOMPtr<nsIPresShell> presShell;
+    GetPresShell(getter_AddRefs(presShell));
+    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+    nsPresContext *context = presShell->GetPresContext();
     NS_ENSURE_TRUE(context, NS_ERROR_NULL_POINTER);
     if (!IsPlaintextEditor() && !IsInteractionAllowed()) {
       mLinkHandler = context->GetLinkHandler();
