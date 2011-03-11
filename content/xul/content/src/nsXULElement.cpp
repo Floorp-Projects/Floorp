@@ -100,7 +100,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIServiceManager.h"
-#include "nsICSSStyleRule.h"
+#include "mozilla/css/StyleRule.h"
 #include "nsIStyleSheet.h"
 #include "nsIURL.h"
 #include "nsIViewManager.h"
@@ -152,6 +152,8 @@
 #include "nsIDOMXULCommandEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsCCUncollectableMarker.h"
+
+namespace css = mozilla::css;
 
 // Global object maintenance
 nsIXBLService * nsXULElement::gXBLService = nsnull;
@@ -1804,7 +1806,7 @@ nsXULElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
     return NS_OK;
 }
 
-nsICSSStyleRule*
+css::StyleRule*
 nsXULElement::GetInlineStyleRule()
 {
     if (!HasFlag(NODE_MAY_HAVE_STYLE)) {
@@ -1969,7 +1971,7 @@ nsXULElement::EnsureLocalStyle()
             protoattr->mValue.ToString(stringValue);
 
             nsAttrValue value;
-            nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(ruleClone);
+            nsRefPtr<css::StyleRule> styleRule = do_QueryObject(ruleClone);
             value.SetTo(styleRule, &stringValue);
 
             nsresult rv =
@@ -2347,7 +2349,7 @@ nsresult nsXULElement::MakeHeavyweight()
             nsString stringValue;
             protoattr->mValue.ToString(stringValue);
 
-            nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(ruleClone);
+            nsRefPtr<css::StyleRule> styleRule = do_QueryObject(ruleClone);
             attrValue.SetTo(styleRule, &stringValue);
         }
         else {
@@ -2878,7 +2880,7 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
     else if (mAttributes[aPos].mName.Equals(nsGkAtoms::style)) {
         mHasStyleAttribute = PR_TRUE;
         // Parse the element's 'style' attribute
-        nsCOMPtr<nsICSSStyleRule> rule;
+        nsRefPtr<css::StyleRule> rule;
 
         nsCSSParser parser;
         NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);

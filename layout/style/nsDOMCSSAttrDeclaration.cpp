@@ -42,8 +42,8 @@
 
 #include "mozilla/css/Declaration.h"
 #include "mozilla/css/Loader.h"
+#include "mozilla/css/StyleRule.h"
 #include "mozilla/dom/Element.h"
-#include "nsICSSStyleRule.h"
 #include "nsIDocument.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsIPrincipal.h"
@@ -87,14 +87,14 @@ nsresult
 nsDOMCSSAttributeDeclaration::SetCSSDeclaration(css::Declaration* aDecl)
 {
   NS_ASSERTION(mElement, "Must have Element to set the declaration!");
-  nsICSSStyleRule* oldRule =
+  css::StyleRule* oldRule =
 #ifdef MOZ_SMIL
     mIsSMILOverride ? mElement->GetSMILOverrideStyleRule() :
 #endif // MOZ_SMIL
     mElement->GetInlineStyleRule();
   NS_ASSERTION(oldRule, "Element must have rule");
 
-  nsCOMPtr<nsICSSStyleRule> newRule =
+  nsRefPtr<css::StyleRule> newRule =
     oldRule->DeclarationChanged(aDecl, PR_FALSE);
   if (!newRule) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -134,7 +134,7 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(PRBool aAllocate)
   if (!mElement)
     return nsnull;
 
-  nsICSSStyleRule* cssRule;
+  css::StyleRule* cssRule;
 #ifdef MOZ_SMIL
   if (mIsSMILOverride)
     cssRule = mElement->GetSMILOverrideStyleRule();
@@ -152,7 +152,7 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(PRBool aAllocate)
   // cannot fail
   css::Declaration *decl = new css::Declaration();
   decl->InitializeEmpty();
-  nsCOMPtr<nsICSSStyleRule> newRule = NS_NewCSSStyleRule(nsnull, decl);
+  nsRefPtr<css::StyleRule> newRule = NS_NewCSSStyleRule(nsnull, decl);
 
   // this *can* fail (inside SetAttrAndNotify, at least).
   nsresult rv;

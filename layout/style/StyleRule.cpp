@@ -44,9 +44,7 @@
  * declarations
  */
 
-#include "nsCOMPtr.h"
-#include "nsCSSRule.h"
-#include "nsICSSStyleRule.h"
+#include "mozilla/css/StyleRule.h"
 #include "nsICSSGroupRule.h"
 #include "mozilla/css/Declaration.h"
 #include "nsCSSStyleSheet.h"
@@ -967,7 +965,7 @@ class DOMCSSStyleRule;
 class DOMCSSDeclarationImpl : public nsDOMCSSDeclaration
 {
 public:
-  DOMCSSDeclarationImpl(nsICSSStyleRule *aRule);
+  DOMCSSDeclarationImpl(css::StyleRule *aRule);
   virtual ~DOMCSSDeclarationImpl(void);
 
   NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent);
@@ -977,7 +975,7 @@ public:
   virtual nsresult GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                             nsIURI** aBaseURI,
                                             nsIPrincipal** aSheetPrincipal,
-                                            mozilla::css::Loader** aCSSLoader);
+                                            css::Loader** aCSSLoader);
   virtual nsIDocument* DocToUpdate();
 
   // Override |AddRef| and |Release| for being a member of
@@ -995,7 +993,7 @@ public:
 protected:
   // This reference is not reference-counted. The rule object tells us
   // when it's about to go away.
-  nsICSSStyleRule *mRule;
+  css::StyleRule *mRule;
 
   inline css::DOMCSSStyleRule* DomRule();
 
@@ -1012,7 +1010,7 @@ namespace css {
 class DOMCSSStyleRule : public nsICSSStyleRuleDOMWrapper
 {
 public:
-  DOMCSSStyleRule(nsICSSStyleRule *aRule);
+  DOMCSSStyleRule(StyleRule *aRule);
   virtual ~DOMCSSStyleRule();
 
   NS_DECL_ISUPPORTS
@@ -1020,7 +1018,7 @@ public:
   NS_DECL_NSIDOMCSSSTYLERULE
 
   // nsICSSStyleRuleDOMWrapper
-  NS_IMETHOD GetCSSStyleRule(nsICSSStyleRule **aResult);
+  NS_IMETHOD GetCSSStyleRule(StyleRule **aResult);
 
   DOMCSSDeclarationImpl* DOMDeclaration() { return &mDOMDeclaration; }
 
@@ -1029,7 +1027,7 @@ public:
 protected:
   DOMCSSDeclarationImpl mDOMDeclaration;
 
-  nsICSSStyleRule* Rule() {
+  StyleRule* Rule() {
     return mDOMDeclaration.mRule;
   }
 };
@@ -1037,7 +1035,7 @@ protected:
 } // namespace css
 } // namespace mozilla
 
-DOMCSSDeclarationImpl::DOMCSSDeclarationImpl(nsICSSStyleRule *aRule)
+DOMCSSDeclarationImpl::DOMCSSDeclarationImpl(css::StyleRule *aRule)
   : mRule(aRule)
 {
   MOZ_COUNT_CTOR(DOMCSSDeclarationImpl);
@@ -1085,7 +1083,7 @@ nsresult
 DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                                 nsIURI** aBaseURI,
                                                 nsIPrincipal** aSheetPrincipal,
-                                                mozilla::css::Loader** aCSSLoader)
+                                                css::Loader** aCSSLoader)
 {
   // null out the out params since some of them may not get initialized below
   *aSheetURI = nsnull;
@@ -1148,7 +1146,7 @@ DOMCSSDeclarationImpl::SetCSSDeclaration(css::Declaration* aDecl)
 
   mozAutoDocUpdate updateBatch(owningDoc, UPDATE_STYLE, PR_TRUE);
 
-  nsCOMPtr<nsICSSStyleRule> oldRule = mRule;
+  nsRefPtr<css::StyleRule> oldRule = mRule;
   mRule = oldRule->DeclarationChanged(aDecl, PR_TRUE).get();
   if (!mRule)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1177,7 +1175,7 @@ DOMCI_DATA(CSSStyleRule, css::DOMCSSStyleRule)
 namespace mozilla {
 namespace css {
 
-DOMCSSStyleRule::DOMCSSStyleRule(nsICSSStyleRule* aRule)
+DOMCSSStyleRule::DOMCSSStyleRule(StyleRule* aRule)
   : mDOMDeclaration(aRule)
 {
 }
@@ -1281,7 +1279,7 @@ DOMCSSStyleRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 }
 
 NS_IMETHODIMP
-DOMCSSStyleRule::GetCSSStyleRule(nsICSSStyleRule **aResult)
+DOMCSSStyleRule::GetCSSStyleRule(StyleRule **aResult)
 {
   *aResult = Rule();
   NS_IF_ADDREF(*aResult);
@@ -1295,76 +1293,6 @@ DOMCSSStyleRule::GetCSSStyleRule(nsICSSStyleRule **aResult)
 
 namespace mozilla {
 namespace css {
-
-class NS_FINAL_CLASS StyleRule : public nsCSSRule,
-                                 public nsICSSStyleRule
-{
-public:
-  StyleRule(nsCSSSelectorList* aSelector,
-            Declaration *aDeclaration);
-private:
-  // for |Clone|
-  StyleRule(const StyleRule& aCopy);
-  // for |DeclarationChanged|
-  StyleRule(StyleRule& aCopy,
-            Declaration *aDeclaration);
-public:
-
-  NS_DECL_ISUPPORTS
-
-  virtual nsCSSSelectorList* Selector(void);
-
-  virtual PRUint32 GetLineNumber(void) const;
-  virtual void SetLineNumber(PRUint32 aLineNumber);
-
-  virtual Declaration* GetDeclaration(void) const;
-
-  virtual nsIStyleRule* GetImportantRule(void);
-  virtual void RuleMatched();
-
-  virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const;
-  virtual void SetStyleSheet(nsCSSStyleSheet* aSheet);
-
-  virtual void SetParentRule(nsICSSGroupRule* aRule);
-
-  virtual nsresult GetCssText(nsAString& aCssText);
-  virtual nsresult SetCssText(const nsAString& aCssText);
-  virtual nsresult GetParentStyleSheet(nsCSSStyleSheet** aSheet);
-  virtual nsresult GetParentRule(nsICSSGroupRule** aParentRule);
-  virtual nsresult GetSelectorText(nsAString& aSelectorText);
-  virtual nsresult SetSelectorText(const nsAString& aSelectorText);
-
-  virtual PRInt32 GetType() const;
-  virtual already_AddRefed<nsICSSRule> Clone() const;
-
-  nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
-
-  virtual already_AddRefed<nsICSSStyleRule>
-  DeclarationChanged(Declaration* aDecl, PRBool aHandleContainer);
-
-  // The new mapping function.
-  virtual void MapRuleInfoInto(nsRuleData* aRuleData);
-
-#ifdef DEBUG
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-
-private:
-  // These are not supported and are not implemented!
-  StyleRule& operator=(const StyleRule& aCopy);
-
-private:
-  ~StyleRule();
-
-protected:
-  nsCSSSelectorList*      mSelector; // null for style attribute
-  Declaration*            mDeclaration;
-  ImportantRule*          mImportantRule; // initialized by RuleMatched
-  DOMCSSStyleRule*        mDOMRule;
-  // Keep the same type so that MSVC packs them.
-  PRUint32                mLineNumber : 31;
-  PRUint32                mWasMatched : 1;
-};
 
 StyleRule::StyleRule(nsCSSSelectorList* aSelector,
                      Declaration* aDeclaration)
@@ -1432,10 +1360,15 @@ StyleRule::~StyleRule()
 
 // QueryInterface implementation for StyleRule
 NS_INTERFACE_MAP_BEGIN(StyleRule)
-  NS_INTERFACE_MAP_ENTRY(nsICSSStyleRule)
+  if (aIID.Equals(NS_GET_IID(mozilla::css::StyleRule))) {
+    *aInstancePtr = this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else
   NS_INTERFACE_MAP_ENTRY(nsICSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSStyleRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSRule)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(StyleRule)
@@ -1532,7 +1465,7 @@ StyleRule::GetDOMRuleWeak(nsresult *aResult)
   return mDOMRule;
 }
 
-/* virtual */ already_AddRefed<nsICSSStyleRule>
+/* virtual */ already_AddRefed<StyleRule>
 StyleRule::DeclarationChanged(Declaration* aDecl,
                               PRBool aHandleContainer)
 {
@@ -1559,7 +1492,7 @@ StyleRule::DeclarationChanged(Declaration* aDecl,
 StyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   NS_ABORT_IF_FALSE(mWasMatched,
-                    "somebody forgot to call nsICSSStyleRule::RuleMatched");
+                    "somebody forgot to call css::StyleRule::RuleMatched");
   mDeclaration->MapNormalRuleInfoInto(aRuleData);
 }
 
@@ -1651,7 +1584,7 @@ StyleRule::SetSelectorText(const nsAString& aSelectorText)
 } // namespace css
 } // namespace mozilla
 
-already_AddRefed<nsICSSStyleRule>
+already_AddRefed<css::StyleRule>
 NS_NewCSSStyleRule(nsCSSSelectorList* aSelector,
                    css::Declaration* aDeclaration)
 {

@@ -51,7 +51,7 @@
 #include "nsCSSKeywords.h"
 #include "nsCSSScanner.h"
 #include "mozilla/css/Loader.h"
-#include "nsICSSStyleRule.h"
+#include "mozilla/css/StyleRule.h"
 #include "nsICSSImportRule.h"
 #include "nsCSSRules.h"
 #include "nsICSSNameSpaceRule.h"
@@ -214,7 +214,7 @@ public:
                                nsIURI*           aDocURL,
                                nsIURI*           aBaseURL,
                                nsIPrincipal*     aNodePrincipal,
-                               nsICSSStyleRule** aResult);
+                               css::StyleRule**  aResult);
 
   nsresult ParseDeclarations(const nsAString&  aBuffer,
                              nsIURI*           aSheetURL,
@@ -962,10 +962,10 @@ NonMozillaVendorIdentifier(const nsAString& ident)
 
 nsresult
 CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
-                                   nsIURI*                  aDocURI,
-                                   nsIURI*                  aBaseURI,
-                                   nsIPrincipal*            aNodePrincipal,
-                                   nsICSSStyleRule**        aResult)
+                                   nsIURI*          aDocURI,
+                                   nsIURI*          aBaseURI,
+                                   nsIPrincipal*    aNodePrincipal,
+                                   css::StyleRule** aResult)
 {
   NS_PRECONDITION(aNodePrincipal, "Must have principal here!");
   AssertInitialState();
@@ -2460,7 +2460,7 @@ CSSParserImpl::ParseRuleSet(RuleAppendFunc aAppendFunc, void* aData,
 
   // Translate the selector list and declaration block into style data
 
-  nsCOMPtr<nsICSSStyleRule> rule = NS_NewCSSStyleRule(slist, declaration);
+  nsRefPtr<css::StyleRule> rule = NS_NewCSSStyleRule(slist, declaration);
   rule->SetLineNumber(linenum);
   (*aAppendFunc)(rule, aData);
 
@@ -8504,7 +8504,7 @@ nsCSSParser::ParseStyleAttribute(const nsAString&  aAttributeValue,
                                  nsIURI*           aDocURI,
                                  nsIURI*           aBaseURI,
                                  nsIPrincipal*     aNodePrincipal,
-                                 nsICSSStyleRule** aResult)
+                                 css::StyleRule**  aResult)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     ParseStyleAttribute(aAttributeValue, aDocURI, aBaseURI,

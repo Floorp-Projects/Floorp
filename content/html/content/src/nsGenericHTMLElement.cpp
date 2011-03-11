@@ -41,7 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsIContentViewer.h"
-#include "nsICSSStyleRule.h"
+#include "mozilla/css/StyleRule.h"
 #include "nsCSSStruct.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
@@ -320,7 +320,7 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst) const
       // to reparse the string into style data until the node is
       // inserted into the document.  Clone the nsICSSRule instead.
       nsCOMPtr<nsICSSRule> ruleClone = value->GetCSSStyleRuleValue()->Clone();
-      nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(ruleClone);
+      nsRefPtr<mozilla::css::StyleRule> styleRule = do_QueryObject(ruleClone);
       NS_ENSURE_TRUE(styleRule, NS_ERROR_UNEXPECTED);
 
       rv = aDst->SetInlineStyleRule(styleRule, PR_FALSE);
