@@ -888,6 +888,8 @@ nsCSSScanner::Next(nsCSSToken& aToken)
 PRBool
 nsCSSScanner::NextURL(nsCSSToken& aToken)
 {
+  EatWhiteSpace();
+
   PRInt32 ch = Read();
   if (ch < 0) {
     return PR_FALSE;
@@ -895,14 +897,19 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
 
   // STRING
   if ((ch == '"') || (ch == '\'')) {
-    return ParseString(ch, aToken);
-  }
+#ifdef DEBUG
+    PRBool ok =
+#endif
+      ParseString(ch, aToken);
+    NS_ABORT_IF_FALSE(ok, "ParseString should never fail, "
+                          "since there's always something read");
 
-  // WS
-  if (IsWhitespace(ch)) {
-    aToken.mType = eCSSToken_WhiteSpace;
-    aToken.mIdent.Assign(PRUnichar(ch));
-    EatWhiteSpace();
+    NS_ABORT_IF_FALSE(aToken.mType == eCSSToken_String ||
+                      aToken.mType == eCSSToken_Bad_String,
+                      "unexpected token type");
+    if (NS_LIKELY(aToken.mType == eCSSToken_String)) {
+      EatWhiteSpace();
+    }
     return PR_TRUE;
   }
 
