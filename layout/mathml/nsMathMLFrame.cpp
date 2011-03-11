@@ -47,7 +47,6 @@
 #include "nsIStyleSheet.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsICSSRule.h"
-#include "nsICSSStyleRule.h"
 #include "nsStyleChangeList.h"
 #include "nsFrameManager.h"
 #include "nsNetUtil.h"

@@ -58,7 +58,7 @@
 #include "nsHashtable.h"
 #include "nsICSSPseudoComparator.h"
 #include "nsCSSRuleProcessor.h"
-#include "nsICSSStyleRule.h"
+#include "mozilla/css/StyleRule.h"
 #include "nsICSSGroupRule.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
@@ -95,6 +95,7 @@
 #include "nsGenericElement.h"
 
 using namespace mozilla::dom;
+namespace css = mozilla::css;
 
 #define VISITED_PSEUDO_PREF "layout.css.visited_links_enabled"
 
@@ -112,10 +113,10 @@ PRUint8 nsCSSRuleProcessor::sWinThemeId = nsILookAndFeel::eWindowsTheme_Generic;
  * from that rule's selector list.
  */
 struct RuleSelectorPair {
-  RuleSelectorPair(nsICSSStyleRule* aRule, nsCSSSelector* aSelector)
+  RuleSelectorPair(css::StyleRule* aRule, nsCSSSelector* aSelector)
     : mRule(aRule), mSelector(aSelector) {}
 
-  nsICSSStyleRule*  mRule;
+  css::StyleRule*   mRule;
   nsCSSSelector*    mSelector; // which of |mRule|'s selectors
 };
 
@@ -590,7 +591,7 @@ void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
 #endif
 
 static inline
-void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
+void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
                      RuleProcessorData* data);
 
 void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
@@ -2347,7 +2348,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
 }
 
 static inline
-void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
+void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
                      RuleProcessorData* data)
 {
   TreeMatchContext treeContext(PR_TRUE, data->mRuleWalker->VisitedHandling());
@@ -2359,14 +2360,6 @@ void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
     nsCSSSelector *next = aSelector->mNext;
     if (!next || SelectorMatchesTree(*data, next, treeContext,
                                      !nodeContext.mIsRelevantLink)) {
-      // for performance, require that every implementation of
-      // nsICSSStyleRule return the same pointer for nsIStyleRule (why
-      // would anything multiply inherit nsIStyleRule anyway?)
-#ifdef DEBUG
-      nsCOMPtr<nsIStyleRule> iRule = do_QueryInterface(aRule);
-      NS_ASSERTION(static_cast<nsIStyleRule*>(aRule) == iRule.get(),
-                   "Please fix QI so this performance optimization is valid");
-#endif
       aRule->RuleMatched();
       data->mRuleWalker->Forward(static_cast<nsIStyleRule*>(aRule));
       // nsStyleSet will deal with the !important rule
@@ -2422,14 +2415,6 @@ nsCSSRuleProcessor::RulesMatching(AnonBoxRuleProcessorData* aData)
       nsTArray<RuleValue>& rules = entry->mRules;
       for (RuleValue *value = rules.Elements(), *end = value + rules.Length();
            value != end; ++value) {
-        // for performance, require that every implementation of
-        // nsICSSStyleRule return the same pointer for nsIStyleRule (why
-        // would anything multiply inherit nsIStyleRule anyway?)
-#ifdef DEBUG
-        nsCOMPtr<nsIStyleRule> iRule = do_QueryInterface(value->mRule);
-        NS_ASSERTION(static_cast<nsIStyleRule*>(value->mRule) == iRule.get(),
-                     "Please fix QI so this performance optimization is valid");
-#endif
         value->mRule->RuleMatched();
         aData->mRuleWalker->Forward(static_cast<nsIStyleRule*>(value->mRule));
       }
@@ -2981,7 +2966,7 @@ CascadeRuleEnumFunc(nsICSSRule* aRule, void* aData)
   PRInt32 type = aRule->GetType();
 
   if (nsICSSRule::STYLE_RULE == type) {
-    nsICSSStyleRule* styleRule = (nsICSSStyleRule*)aRule;
+    css::StyleRule* styleRule = static_cast<css::StyleRule*>(aRule);
 
     for (nsCSSSelectorList *sel = styleRule->Selector();
          sel; sel = sel->mNext) {

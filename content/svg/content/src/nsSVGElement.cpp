@@ -56,7 +56,7 @@
 #include "nsIServiceManager.h"
 #include "nsIXBLService.h"
 #include "nsGkAtoms.h"
-#include "nsICSSStyleRule.h"
+#include "mozilla/css/StyleRule.h"
 #include "nsRuleWalker.h"
 #include "mozilla/css/Declaration.h"
 #include "nsCSSProps.h"
@@ -870,7 +870,7 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
     } else {
       // Ok, this is an animation restyle -- go ahead and update/walk the
       // animated content style rule.
-      nsICSSStyleRule* animContentStyleRule = GetAnimatedContentStyleRule();
+      css::StyleRule* animContentStyleRule = GetAnimatedContentStyleRule();
       if (!animContentStyleRule) {
         UpdateAnimatedContentStyleRule();
         animContentStyleRule = GetAnimatedContentStyleRule();
@@ -1183,9 +1183,9 @@ public:
                             nsAString& aMappedAttrValue);
 
   // If we've parsed any values for mapped attributes, this method returns
-  // a new already_AddRefed nsICSSStyleRule that incorporates the parsed
+  // a new already_AddRefed css::StyleRule that incorporates the parsed
   // values. Otherwise, this method returns null.
-  already_AddRefed<nsICSSStyleRule> CreateStyleRule();
+  already_AddRefed<css::StyleRule> CreateStyleRule();
 
 private:
   // MEMBER DATA
@@ -1246,14 +1246,14 @@ MappedAttrParser::ParseMappedAttrValue(nsIAtom* aMappedAttrName,
                         mNodePrincipal, mDecl, &changed, PR_FALSE);
 }
 
-already_AddRefed<nsICSSStyleRule>
+already_AddRefed<css::StyleRule>
 MappedAttrParser::CreateStyleRule()
 {
   if (!mDecl) {
     return nsnull; // No mapped attributes were parsed
   }
 
-  nsCOMPtr<nsICSSStyleRule> rule = NS_NewCSSStyleRule(nsnull, mDecl);
+  nsRefPtr<css::StyleRule> rule = NS_NewCSSStyleRule(nsnull, mDecl);
   mDecl = nsnull; // We no longer own the declaration -- drop our pointer to it
   return rule.forget();
 }
@@ -1333,7 +1333,7 @@ ReleaseStyleRule(void*    aObject,       /* unused */
   NS_ABORT_IF_FALSE(aPropertyName == SMIL_MAPPED_ATTR_STYLERULE_ATOM,
                     "unexpected property name, for "
                     "animated content style rule");
-  nsICSSStyleRule* styleRule = static_cast<nsICSSStyleRule*>(aPropertyValue);
+  css::StyleRule* styleRule = static_cast<css::StyleRule*>(aPropertyValue);
   NS_ABORT_IF_FALSE(styleRule, "unexpected null style rule");
   styleRule->Release();
 }
@@ -1355,7 +1355,7 @@ nsSVGElement::UpdateAnimatedContentStyleRule()
   doc->PropertyTable(SMIL_MAPPED_ATTR_ANIMVAL)->
     Enumerate(this, ParseMappedAttrAnimValueCallback, &mappedAttrParser);
  
-  nsRefPtr<nsICSSStyleRule>
+  nsRefPtr<css::StyleRule>
     animContentStyleRule(mappedAttrParser.CreateStyleRule());
 
   if (animContentStyleRule) {
@@ -1372,13 +1372,13 @@ nsSVGElement::UpdateAnimatedContentStyleRule()
   }
 }
 
-nsICSSStyleRule*
+css::StyleRule*
 nsSVGElement::GetAnimatedContentStyleRule()
 {
   return
-    static_cast<nsICSSStyleRule*>(GetProperty(SMIL_MAPPED_ATTR_ANIMVAL,
-                                              SMIL_MAPPED_ATTR_STYLERULE_ATOM,
-                                              nsnull));
+    static_cast<css::StyleRule*>(GetProperty(SMIL_MAPPED_ATTR_ANIMVAL,
+                                             SMIL_MAPPED_ATTR_STYLERULE_ATOM,
+                                             nsnull));
 }
 #endif // MOZ_SMIL
 

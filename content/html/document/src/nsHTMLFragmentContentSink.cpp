@@ -70,7 +70,7 @@
 #include "nsCSSParser.h"
 #include "nsCSSProperty.h"
 #include "mozilla/css/Declaration.h"
-#include "nsICSSStyleRule.h"
+#include "mozilla/css/StyleRule.h"
 #include "nsUnicharInputStream.h"
 #include "nsCSSStyleSheet.h"
 #include "nsICSSRuleList.h"
@@ -815,7 +815,7 @@ protected:
                         nsIAtom **aResult);
 
   // The return value will be true if we have sanitized the rule
-  PRBool SanitizeStyleRule(nsICSSStyleRule *aRule, nsAutoString &aRuleText);
+  PRBool SanitizeStyleRule(css::StyleRule *aRule, nsAutoString &aRuleText);
 
   PRPackedBool mSkip; // used when we descend into <style> or <script>
   PRPackedBool mProcessStyle; // used when style is explicitly white-listed
@@ -1050,7 +1050,7 @@ nsHTMLParanoidFragmentSink::AddAttributes(const nsIParserNode& aNode,
       // Pass the CSS Loader object to the parser, to allow parser error reports
       // to include the outer window ID.
       nsCSSParser parser(mTargetDocument->CSSLoader());
-      nsCOMPtr<nsICSSStyleRule> rule;
+      nsRefPtr<css::StyleRule> rule;
       rv = parser.ParseStyleAttribute(aNode.GetValueAt(i),
                                       mTargetDocument->GetDocumentURI(),
                                       baseURI,
@@ -1213,7 +1213,7 @@ nsHTMLParanoidFragmentSink::CloseContainer(const nsHTMLTag aTag)
                 case nsICSSRule::STYLE_RULE: {
                   // For style rules, we will just look for and remove the
                   // -moz-binding properties.
-                  nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(rule);
+                  nsRefPtr<css::StyleRule> styleRule = do_QueryObject(rule);
                   NS_ASSERTION(styleRule, "Must be a style rule");
                   nsAutoString decl;
                   didSanitize = SanitizeStyleRule(styleRule, decl) || didSanitize;
@@ -1239,7 +1239,7 @@ nsHTMLParanoidFragmentSink::CloseContainer(const nsHTMLTag aTag)
 }
 
 PRBool
-nsHTMLParanoidFragmentSink::SanitizeStyleRule(nsICSSStyleRule *aRule, nsAutoString &aRuleText)
+nsHTMLParanoidFragmentSink::SanitizeStyleRule(css::StyleRule *aRule, nsAutoString &aRuleText)
 {
   PRBool didSanitize = PR_FALSE;
   aRuleText.Truncate();
