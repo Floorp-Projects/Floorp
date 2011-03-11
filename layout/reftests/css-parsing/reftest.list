@@ -2,3 +2,5 @@
 == invalid-url-handling.xhtml invalid-url-handling-ref.xhtml
 == pseudo-elements-1.html pseudo-elements-1-ref.html
 == invalid-attr-1.html invalid-attr-1-ref.html
+== at-rule-error-handling-import-1.html at-rule-error-handling-ref.html
+== at-rule-error-handling-media-1.html at-rule-error-handling-ref.html
