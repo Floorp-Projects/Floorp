@@ -5,6 +5,6 @@ load 468763-1.html
 load 474744-1.html
 HTTP load 481136-1.html # needs to be HTTP to recognize the ogg as an audio file?
 load 493915-1.html
-load 495794-1.html
+skip-if(Android) load 495794-1.html
 load 492286-1.xhtml
 load 576612-1.html
