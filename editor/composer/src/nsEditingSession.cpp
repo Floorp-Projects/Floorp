@@ -499,9 +499,8 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(presShell);
   rv = editor->Init(domDoc, presShell, nsnull /* root content */,
-                    selCon, mEditorFlags);
+                    nsnull, mEditorFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISelection> selection;
