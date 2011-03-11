@@ -6082,7 +6082,8 @@ void PresShell::SetRenderingState(const RenderingState& aState)
     nsIPresShell* rootPresShell = rootPresContext->GetPresShell();
     nsIFrame* rootFrame = rootPresShell->FrameManager()->GetRootFrame();
     if (rootFrame) {
-      rootFrame->InvalidateFrameSubtree();
+      rootFrame->InvalidateWithFlags(rootFrame->GetVisualOverflowRectRelativeToSelf(),
+                                     nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
     }
   }
 }

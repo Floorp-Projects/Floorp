@@ -82,7 +82,7 @@ function test_toFetch() {
     engine.toFetch = toFetch;
     do_check_eq(engine.toFetch, toFetch);
     // toFetch is written asynchronously
-    engine._sleep(0);
+    engine._store._sleep(0);
     let fakefile = syncTesting.fakeFilesystem.fakeContents[filename];
     do_check_eq(fakefile, JSON.stringify(toFetch));
 

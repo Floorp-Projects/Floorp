@@ -44,7 +44,7 @@ import java.nio.channels.*;
 import java.text.*;
 import java.util.*;
 import java.util.zip.*;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.*;
 
 import android.os.*;
 import android.app.*;
@@ -58,6 +58,7 @@ import android.graphics.*;
 import android.widget.*;
 import android.hardware.*;
 import android.location.*;
+import android.webkit.MimeTypeMap;
 
 import android.util.*;
 import android.net.Uri;
@@ -103,6 +104,34 @@ public class GeckoAppShell
     public static native void removeObserver(String observerKey);
     public static native void loadLibs(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status);
+
+    // A looper thread, accessed by GeckoAppShell.getHandler
+    private static class LooperThread extends Thread {
+        public SynchronousQueue<Handler> mHandlerQueue =
+            new SynchronousQueue<Handler>();
+        
+        public void run() {
+            Looper.prepare();
+            try {
+                mHandlerQueue.put(new Handler());
+            } catch (InterruptedException ie) {}
+            Looper.loop();
+        }
+    }
+
+    private static Handler sHandler = null;
+
+    // Get a Handler for a looper thread, or create one if it doesn't exist yet
+    public static Handler getHandler() {
+        if (sHandler == null) {
+            LooperThread lt = new LooperThread();
+            lt.start();
+            try {
+                sHandler = lt.mHandlerQueue.take();
+            } catch (InterruptedException ie) {}
+        }
+        return sHandler;
+    }
 
     public static File getCacheDir() {
         if (sCacheFile == null)
@@ -428,8 +457,24 @@ public class GeckoAppShell
 
         switch (type) {
         case NOTIFY_IME_RESETINPUTSTATE:
-            GeckoApp.surfaceView.inputConnection.finishComposingText();
-            IMEStateUpdater.resetIME();
+            // Composition event is already fired from widget.
+            // So reset IME flags.
+            GeckoApp.surfaceView.inputConnection.reset();
+            
+            // Don't use IMEStateUpdater for reset.
+            // Because IME may not work showSoftInput()
+            // after calling restartInput() immediately.
+            // So we have to call showSoftInput() delay.
+            InputMethodManager imm = (InputMethodManager) 
+                GeckoApp.surfaceView.getContext().getSystemService(
+                    Context.INPUT_METHOD_SERVICE);
+            if (imm == null) {
+                // no way to reset IME status directly
+                IMEStateUpdater.resetIME();
+            } else {
+                imm.restartInput(GeckoApp.surfaceView);
+            }
+
             // keep current enabled state
             IMEStateUpdater.enableIME();
             break;
@@ -439,7 +484,6 @@ public class GeckoAppShell
             break;
 
         case NOTIFY_IME_FOCUSCHANGE:
-            GeckoApp.surfaceView.mIMEFocus = state != 0;
             IMEStateUpdater.resetIME();
             break;
         }
@@ -477,35 +521,26 @@ public class GeckoAppShell
                 imm, text, start, end, newEnd);
     }
 
-    private static final ReentrantLock mGeckoSyncLock = new ReentrantLock();
-    private static final Condition     mGeckoSyncCond = mGeckoSyncLock.newCondition();
-    private static boolean mGeckoSyncAcked;
+    private static CountDownLatch sGeckoPendingAcks = null;
 
     // Block the current thread until the Gecko event loop is caught up
-    public static void geckoEventSync() {
+    synchronized public static void geckoEventSync() {
+        sGeckoPendingAcks = new CountDownLatch(1);
         GeckoAppShell.sendEventToGecko(
             new GeckoEvent(GeckoEvent.GECKO_EVENT_SYNC));
-        mGeckoSyncLock.lock();
-        mGeckoSyncAcked = false;
-        while (!mGeckoSyncAcked) {
+        while (sGeckoPendingAcks.getCount() != 0) {
             try {
-              mGeckoSyncCond.await();
-            } catch (InterruptedException e) {
-              break;
-            }
+                sGeckoPendingAcks.await();
+            } catch (InterruptedException e) {}
         }
-        mGeckoSyncLock.unlock();
+        sGeckoPendingAcks = null;
     }
 
     // Signal the Java thread that it's time to wake up
     public static void acknowledgeEventSync() {
-        mGeckoSyncLock.lock();
-        mGeckoSyncAcked = true;
-        try {
-            mGeckoSyncCond.signal();
-        } finally {
-            mGeckoSyncLock.unlock();
-        }
+        CountDownLatch tmp = sGeckoPendingAcks;
+        if (tmp != null)
+            tmp.countDown();
     }
 
     public static void enableAccelerometer(boolean enable) {
@@ -572,9 +607,8 @@ public class GeckoAppShell
         } else {
             Log.i("GeckoAppJava", "we're done, good bye");
             GeckoApp.mAppContext.finish();
-            System.exit(0);
         }
-
+        System.exit(0);
     }
     static void scheduleRestart() {
         Log.i("GeckoAppJava", "scheduling restart");
@@ -643,9 +677,12 @@ public class GeckoAppShell
             return new Intent(Intent.ACTION_VIEW);
     }
 
+    static String getExtensionFromMimeType(String aMimeType) {
+        return MimeTypeMap.getSingleton().getExtensionFromMimeType(aMimeType);
+    }
+
     static String getMimeTypeFromExtensions(String aFileExt) {
-        android.webkit.MimeTypeMap mtm =
-            android.webkit.MimeTypeMap.getSingleton();
+        MimeTypeMap mtm = MimeTypeMap.getSingleton();
         StringTokenizer st = new StringTokenizer(aFileExt, "., ");
         String type = null;
         String subType = null;
@@ -694,20 +731,38 @@ public class GeckoAppShell
         }
     }
 
+    static SynchronousQueue<String> sClipboardQueue =
+        new SynchronousQueue<String>();
+
+    // On some devices, access to the clipboard service needs to happen
+    // on a thread with a looper, so dispatch this to our looper thread
+    // Note: the main looper won't work because it may be blocked on the
+    // gecko thread, which is most likely this thread
     static String getClipboardText() {
-        Context context = GeckoApp.surfaceView.getContext();
-        ClipboardManager cm = (ClipboardManager)
-            context.getSystemService(Context.CLIPBOARD_SERVICE);
-        if (!cm.hasText())
-            return null;
-        return cm.getText().toString();
+        getHandler().post(new Runnable() { 
+            public void run() {
+                Context context = GeckoApp.surfaceView.getContext();
+                ClipboardManager cm = (ClipboardManager)
+                    context.getSystemService(Context.CLIPBOARD_SERVICE);
+                try {
+                    sClipboardQueue.put(cm.hasText() ? cm.getText().toString() : "");
+                } catch (InterruptedException ie) {}
+            }});
+        try {
+            String ret = sClipboardQueue.take();
+            return ret == "" ? null : ret;
+        } catch (InterruptedException ie) {}
+        return null;
     }
 
-    static void setClipboardText(String text) {
-        Context context = GeckoApp.surfaceView.getContext();
-        ClipboardManager cm = (ClipboardManager)
-            context.getSystemService(Context.CLIPBOARD_SERVICE);
-        cm.setText(text);
+    static void setClipboardText(final String text) {
+        getHandler().post(new Runnable() { 
+            public void run() {
+                Context context = GeckoApp.surfaceView.getContext();
+                ClipboardManager cm = (ClipboardManager)
+                    context.getSystemService(Context.CLIPBOARD_SERVICE);
+                cm.setText(text);
+            }});
     }
 
     public static void showAlertNotification(String aImageUrl, String aAlertTitle, String aAlertText,
