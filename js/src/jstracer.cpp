@@ -504,12 +504,16 @@ jitstats_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             return JS_TRUE;
         }
 
+        if (StringEqualsAscii(str, "adaptive")) {
 #ifdef JS_METHODJIT
-        if (StringEqualsAscii(str, "profiler")) {
-            *vp = BOOLEAN_TO_JSVAL(cx->profilingEnabled);
+            *vp = BOOLEAN_TO_JSVAL(cx->profilingEnabled ||
+                                   (cx->methodJitEnabled &&
+                                    !cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS)));
+#else
+            *vp = BOOLEAN_TO_JSVAL(false);
+#endif
             return JS_TRUE;
         }
-#endif
     }
 
     if (JSID_IS_INT(id))
