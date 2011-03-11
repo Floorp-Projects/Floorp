@@ -345,12 +345,12 @@ public:
   void RuleMatched();
 
   // hooks for DOM rule
-  nsresult GetCssText(nsAString& aCssText);
-  nsresult SetCssText(const nsAString& aCssText);
-  nsresult GetParentStyleSheet(nsCSSStyleSheet** aSheet);
-  nsresult GetParentRule(nsICSSGroupRule** aParentRule);
-  nsresult GetSelectorText(nsAString& aSelectorText);
-  nsresult SetSelectorText(const nsAString& aSelectorText);
+  void GetCssText(nsAString& aCssText);
+  void SetCssText(const nsAString& aCssText);
+  nsCSSStyleSheet* GetParentStyleSheet() { return mSheet; }
+  nsICSSGroupRule* GetParentRule() { return mParentRule; }
+  void GetSelectorText(nsAString& aSelectorText);
+  void SetSelectorText(const nsAString& aSelectorText);
 
   virtual PRInt32 GetType() const;
 

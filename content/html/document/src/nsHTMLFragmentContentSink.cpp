@@ -1217,11 +1217,8 @@ nsHTMLParanoidFragmentSink::CloseContainer(const nsHTMLTag aTag)
                   NS_ASSERTION(styleRule, "Must be a style rule");
                   nsAutoString decl;
                   didSanitize = SanitizeStyleRule(styleRule, decl) || didSanitize;
-                  rv = styleRule->GetCssText(decl);
-                  // Only add the rule when sanitized.
-                  if (NS_SUCCEEDED(rv)) {
-                    sanitizedStyleText.Append(decl);
-                  }
+                  styleRule->GetCssText(decl);
+                  sanitizedStyleText.Append(decl);
                 }
               }
             }
