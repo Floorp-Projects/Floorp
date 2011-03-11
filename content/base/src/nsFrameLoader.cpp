@@ -854,6 +854,20 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
 
         doc->SetDesignMode(NS_LITERAL_STRING("off"));
         doc->SetDesignMode(NS_LITERAL_STRING("on"));
+      } else {
+        // Re-initialie the presentation for contenteditable documents
+        nsCOMPtr<nsIEditorDocShell> editorDocshell = do_QueryInterface(mDocShell);
+        if (editorDocshell) {
+          PRBool editable = PR_FALSE,
+                 hasEditingSession = PR_FALSE;
+          editorDocshell->GetEditable(&editable);
+          editorDocshell->GetHasEditingSession(&hasEditingSession);
+          nsCOMPtr<nsIEditor> editor;
+          editorDocshell->GetEditor(getter_AddRefs(editor));
+          if (editable && hasEditingSession && editor) {
+            editor->PostCreate();
+          }
+        }
       }
     }
   }
