@@ -1526,7 +1526,7 @@ class TraceRecorder
     JS_REQUIRES_STACK AbortableRecordingStatus closeLoop();
     JS_REQUIRES_STACK AbortableRecordingStatus endLoop();
     JS_REQUIRES_STACK AbortableRecordingStatus endLoop(VMSideExit* exit);
-    JS_REQUIRES_STACK void joinEdgesToEntry(TreeFragment* peer_root);
+    JS_REQUIRES_STACK bool joinEdgesToEntry(TreeFragment* peer_root);
     JS_REQUIRES_STACK void adjustCallerTypes(TreeFragment* f);
     JS_REQUIRES_STACK void prepareTreeCall(TreeFragment* inner);
     JS_REQUIRES_STACK void emitTreeCall(TreeFragment* inner, VMSideExit* exit);
