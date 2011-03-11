@@ -724,8 +724,7 @@ protected:
 
   PRUint32        mModCount;		// number of modifications (for undo/redo stack)
   PRUint32        mFlags;		// behavior flags. See nsIPlaintextEditor.idl for the flags we use.
-  
-  nsWeakPtr       mPresShellWeak;   // weak reference to the nsIPresShell
+
   nsWeakPtr       mSelConWeak;   // weak reference to the nsISelectionController
   PRInt32         mUpdateCount;
   nsIViewManager::UpdateViewBatch mBatch;
