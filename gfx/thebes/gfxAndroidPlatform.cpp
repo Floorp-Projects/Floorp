@@ -418,7 +418,7 @@ gfxAndroidPlatform::AppendFacesFromFontFile(const char *aFileName, FontNameCache
 }
 
 void
-gfxAndroidPlatform::FindFontsInDirectory(nsCString aFontsDir,
+gfxAndroidPlatform::FindFontsInDirectory(const nsCString& aFontsDir,
                                          FontNameCache* aFontCache)
 {
     DIR *d = opendir(aFontsDir.get());
