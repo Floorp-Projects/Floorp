@@ -107,7 +107,7 @@ public:
 
 protected:
     void AppendFacesFromFontFile(const char *aFileName, FontNameCache* aFontCache, InfallibleTArray<FontListEntry>* retValue);
-    void FindFontsInDirectory(nsCString aFontsDir, FontNameCache* aFontCache);
+    void FindFontsInDirectory(const nsCString& aFontsDir, FontNameCache* aFontCache);
 
     typedef nsDataHashtable<nsStringHashKey, nsRefPtr<FontFamily> > FontTable;
 
