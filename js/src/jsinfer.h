@@ -556,7 +556,7 @@ struct TypeScript
     TypeSet **pushedArray;
 
     /* Gather statistics off this script and print it if necessary. */
-    void finish(JSContext *cx, JSScript *script);
+    void print(JSContext *cx, JSScript *script);
 
     inline bool monitored(uint32 offset);
     inline void setMonitored(uint32 offset);
@@ -572,6 +572,13 @@ void AnalyzeScriptTypes(JSContext *cx, JSScript *script);
 
 /* Analyze the effect of invoking 'new' on script. */
 void AnalyzeScriptNew(JSContext *cx, JSScript *script);
+
+struct ArrayTableKey;
+typedef HashMap<ArrayTableKey,TypeObject*,ArrayTableKey> ArrayTypeTable;
+
+struct ObjectTableKey;
+struct ObjectTableEntry;
+typedef HashMap<ObjectTableKey,ObjectTableEntry,ObjectTableKey> ObjectTypeTable;
 
 /* Type information for a compartment. */
 struct TypeCompartment
@@ -611,6 +618,14 @@ struct TypeCompartment
     /* Pending recompilations to perform before execution of JIT code can resume. */
     Vector<JSScript*> *pendingRecompiles;
 
+    /* Tables for determining types of singleton/JSON objects. */
+
+    ArrayTypeTable *arrayTypeTable;
+    ObjectTypeTable *objectTypeTable;
+
+    bool fixArrayType(JSContext *cx, JSObject *obj);
+    bool fixObjectType(JSContext *cx, JSObject *obj);
+
     /* Constraint solving worklist structures. */
 
     /* A type that needs to be registered with a constraint. */
@@ -649,6 +664,7 @@ struct TypeCompartment
     unsigned recompilations;
 
     void init(JSContext *cx);
+    ~TypeCompartment();
 
     uint64 currentTime()
     {
@@ -670,7 +686,7 @@ struct TypeCompartment
     inline void resolvePending(JSContext *cx);
 
     /* Prints results of this compartment if spew is enabled, checks for warnings. */
-    void finish(JSContext *cx, JSCompartment *compartment);
+    void print(JSContext *cx, JSCompartment *compartment);
 
     /* Make a function or non-function object associated with an optional script. */
     TypeObject *newTypeObject(JSContext *cx, JSScript *script,

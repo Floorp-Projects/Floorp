@@ -284,7 +284,7 @@ void TypeFailure(JSContext *cx, const char *fmt, ...)
     fprintf(stderr, "\n");
     va_end(ap);
 
-    cx->compartment->types.finish(cx, cx->compartment);
+    cx->compartment->types.print(cx, cx->compartment);
 
     fflush(stderr);
     *((int*)NULL) = 0;  /* Type warnings */
@@ -1559,6 +1559,18 @@ TypeCompartment::init(JSContext *cx)
     JS_InitArenaPool(&pool, "typeinfer", 512, 8, NULL);
 }
 
+TypeCompartment::~TypeCompartment()
+{
+    if (pendingArray)
+        js_free(pendingArray);
+
+    if (arrayTypeTable)
+        js_delete<ArrayTypeTable>(arrayTypeTable);
+
+    if (objectTypeTable)
+        js_delete<ObjectTypeTable>(objectTypeTable);
+}
+
 TypeObject *
 TypeCompartment::newTypeObject(JSContext *cx, JSScript *script, const char *name,
                                bool isFunction, JSObject *proto)
@@ -1660,14 +1672,14 @@ void
 TypeCompartment::growPendingArray(JSContext *cx)
 {
     unsigned newCapacity = js::Max(unsigned(100), pendingCapacity * 2);
-    PendingWork *newArray = (PendingWork *) cx->calloc(newCapacity * sizeof(PendingWork));
+    PendingWork *newArray = (PendingWork *) js_calloc(newCapacity * sizeof(PendingWork));
     if (!newArray) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return;
     }
 
     memcpy(newArray, pendingArray, pendingCount * sizeof(PendingWork));
-    cx->free(pendingArray);
+    js_free(pendingArray);
 
     pendingArray = newArray;
     pendingCapacity = newCapacity;
@@ -2010,12 +2022,9 @@ TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32 offset)
 }
 
 void
-TypeCompartment::finish(JSContext *cx, JSCompartment *compartment)
+TypeCompartment::print(JSContext *cx, JSCompartment *compartment)
 {
     JS_ASSERT(this == &compartment->types);
-
-    if (pendingArray)
-        cx->free(pendingArray);
 
     if (!InferSpewActive(ISpewResult) || JS_CLIST_IS_EMPTY(&compartment->scripts))
         return;
@@ -2024,7 +2033,7 @@ TypeCompartment::finish(JSContext *cx, JSCompartment *compartment)
          &script->links != &compartment->scripts;
          script = (JSScript *)script->links.next) {
         if (script->types)
-            script->types->finish(cx, script);
+            script->types->print(cx, script);
         TypeObject *object = script->typeObjects;
         while (object) {
             object->print(cx);
@@ -2052,6 +2061,270 @@ TypeCompartment::finish(JSContext *cx, JSCompartment *compartment)
 
     printf("Recompilations: %u\n", recompilations);
     printf("Time: %.2f ms\n", millis);
+}
+
+/////////////////////////////////////////////////////////////////////
+// TypeCompartment tables
+/////////////////////////////////////////////////////////////////////
+
+/*
+ * The arrayTypeTable and objectTypeTable are per-compartment tables for making
+ * common type objects to model the contents of large script singletons and
+ * JSON objects. These are vanilla Arrays and native Objects, so we distinguish
+ * the types of different ones by looking at the types of their properties.
+ *
+ * All singleton/JSON arrays which have the same prototype, are homogenous and
+ * of the same type will share a type object. All singleton/JSON objects which
+ * have the same shape and property types will also share a type object. We
+ * don't try to collate arrays or objects that have type mismatches.
+ */
+
+static inline bool
+NumberTypes(jstype a, jstype b)
+{
+    return (a == TYPE_INT32 || a == TYPE_DOUBLE) && (b == TYPE_INT32 || b == TYPE_DOUBLE);
+}
+
+struct ArrayTableKey
+{
+    jstype type;
+    JSObject *proto;
+
+    typedef ArrayTableKey Lookup;
+
+    static inline uint32 hash(const ArrayTableKey &v) {
+        return (uint32) (v.type ^ ((uint32)v.proto >> 2));
+    }
+
+    static inline bool match(const ArrayTableKey &v1, const ArrayTableKey &v2) {
+        return v1.type == v2.type && v1.proto == v2.proto;
+    }
+};
+
+bool
+TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
+{
+    if (!arrayTypeTable) {
+        arrayTypeTable = js_new<ArrayTypeTable>(cx);
+        if (!arrayTypeTable || !arrayTypeTable->init()) {
+            arrayTypeTable = NULL;
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+    }
+
+    /*
+     * If the array is of homogenous type, pick a type object which will be
+     * shared with all other singleton/JSON arrays of the same type.
+     * If the array is heterogenous, keep the existing type object, which has
+     * unknown properties.
+     */
+    JS_ASSERT(obj->isPackedDenseArray());
+
+    unsigned len = obj->getDenseArrayInitializedLength();
+    if (len == 0)
+        return true;
+
+    jstype type = GetValueType(cx, obj->getDenseArrayElement(0));
+
+    for (unsigned i = 1; i < len; i++) {
+        jstype ntype = GetValueType(cx, obj->getDenseArrayElement(i));
+        if (ntype != type) {
+            if (NumberTypes(type, ntype))
+                type = TYPE_DOUBLE;
+            else
+                return true;
+        }
+    }
+
+    ArrayTableKey key;
+    key.type = type;
+    key.proto = obj->getProto();
+    ArrayTypeTable::AddPtr p = arrayTypeTable->lookupForAdd(key);
+
+    if (p) {
+        obj->setType(p->value);
+    } else {
+        TypeObject *objType = newTypeObject(cx, NULL, "TableArray", false, obj->getProto());
+        if (!objType) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+        obj->setType(objType);
+
+        if (!cx->addTypePropertyId(objType, JSID_VOID, type))
+            return false;
+
+        if (!arrayTypeTable->relookupOrAdd(p, key, objType)) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/*
+ * N.B. We could also use the initial shape of the object (before its type is
+ * fixed) as the key in the object table, but since all references in the table
+ * are weak the hash entries would usually be collected on GC even if objects
+ * with the new type/shape are still live.
+ */
+struct ObjectTableKey
+{
+    jsid *ids;
+    uint32 nslots;
+    JSObject *proto;
+
+    typedef JSObject * Lookup;
+
+    static inline uint32 hash(JSObject *obj) {
+        return (uint32) (JSID_BITS(obj->lastProperty()->id) ^
+                         obj->slotSpan() ^
+                         ((uint32)obj->getProto() >> 2));
+    }
+
+    static inline bool match(const ObjectTableKey &v, JSObject *obj) {
+        if (obj->slotSpan() != v.nslots || obj->getProto() != v.proto)
+            return false;
+        const Shape *shape = obj->lastProperty();
+        while (!JSID_IS_EMPTY(shape->id)) {
+            if (shape->id != v.ids[shape->slot])
+                return false;
+            shape = shape->previous();
+        }
+        return true;
+    }
+};
+
+struct ObjectTableEntry
+{
+    TypeObject *object;
+    Shape *newShape;
+    jstype *types;
+};
+
+bool
+TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
+{
+    if (!objectTypeTable) {
+        objectTypeTable = js_new<ObjectTypeTable>(cx);
+        if (!objectTypeTable || !objectTypeTable->init()) {
+            objectTypeTable = NULL;
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+    }
+
+    /*
+     * Use the same type object for all singleton/JSON arrays with the same
+     * base shape, i.e. the same fields written in the same order. If there
+     * is a type mismatch with previous objects of the same shape, use the
+     * generic unknown type.
+     */
+    JS_ASSERT(obj->isObject());
+
+    if (obj->slotSpan() == 0 || obj->inDictionaryMode())
+        return true;
+
+    ObjectTypeTable::AddPtr p = objectTypeTable->lookupForAdd(obj);
+    const Shape *baseShape = obj->lastProperty();
+
+    if (p) {
+        /* The lookup ensures the shape matches, now check that the types match. */
+        jstype *types = p->value.types;
+        for (unsigned i = 0; i < obj->slotSpan(); i++) {
+            jstype ntype = GetValueType(cx, obj->getSlot(i));
+            if (ntype != types[i]) {
+                if (NumberTypes(ntype, types[i])) {
+                    if (types[i] == TYPE_INT32) {
+                        types[i] = TYPE_DOUBLE;
+                        const Shape *shape = baseShape;
+                        while (!JSID_IS_EMPTY(shape->id)) {
+                            if (shape->slot == i) {
+                                if (!cx->addTypePropertyId(p->value.object, shape->id, TYPE_DOUBLE))
+                                    return false;
+                                break;
+                            }
+                            shape = shape->previous();
+                        }
+                    }
+                } else {
+                    return true;
+                }
+            }
+        }
+
+        obj->setTypeAndShape(p->value.object, p->value.newShape);
+    } else {
+        /*
+         * Make a new type to use, and regenerate a new shape to go with it.
+         * Shapes are rooted at the empty shape for the object's type, so we
+         * can't change the type without changing the shape.
+         */
+        JSObject *xobj = NewBuiltinClassInstance(cx, &js_ObjectClass,
+                                                 (gc::FinalizeKind) obj->finalizeKind());
+        if (!xobj) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+        AutoObjectRooter xvr(cx, xobj);
+
+        TypeObject *objType = newTypeObject(cx, NULL, "TableObject", false, obj->getProto());
+        if (!objType) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+        xobj->setType(objType);
+
+        jsid *ids = (jsid *) cx->calloc(obj->slotSpan() * sizeof(jsid));
+        if (!ids)
+            return false;
+
+        jstype *types = (jstype *) cx->calloc(obj->slotSpan() * sizeof(jstype));
+        if (!types)
+            return false;
+
+        const Shape *shape = baseShape;
+        while (!JSID_IS_EMPTY(shape->id)) {
+            ids[shape->slot] = shape->id;
+            types[shape->slot] = GetValueType(cx, obj->getSlot(shape->slot));
+            if (!cx->addTypePropertyId(objType, shape->id, types[shape->slot]))
+                return false;
+            shape = shape->previous();
+        }
+
+        /* Construct the new shape. */
+        for (unsigned i = 0; i < obj->slotSpan(); i++) {
+            if (!js_DefineNativeProperty(cx, xobj, ids[i], UndefinedValue(), NULL, NULL,
+                                         JSPROP_ENUMERATE, 0, 0, NULL, 0)) {
+                return false;
+            }
+        }
+        JS_ASSERT(!xobj->inDictionaryMode());
+        const Shape *newShape = xobj->lastProperty();
+
+        ObjectTableKey key;
+        key.ids = ids;
+        key.nslots = obj->slotSpan();
+        key.proto = obj->getProto();
+        JS_ASSERT(ObjectTableKey::match(key, obj));
+
+        ObjectTableEntry entry;
+        entry.object = objType;
+        entry.newShape = (Shape *) newShape;
+        entry.types = types;
+
+        p = objectTypeTable->lookupForAdd(obj);
+        if (!objectTypeTable->add(p, key, entry)) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+
+        obj->setTypeAndShape(objType, newShape);
+    }
+
+    return true;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -3450,7 +3723,7 @@ PrintBytecode(JSContext *cx, JSScript *script, jsbytecode *pc)
 #endif
 
 void
-TypeScript::finish(JSContext *cx, JSScript *script)
+TypeScript::print(JSContext *cx, JSScript *script)
 {
     TypeCompartment *compartment = &script->compartment->types;
 
@@ -4074,6 +4347,52 @@ TypeCompartment::sweep(JSContext *cx)
     } else if (typeEmpty.emptyShapes) {
         cx->free(typeEmpty.emptyShapes);
         typeEmpty.emptyShapes = NULL;
+    }
+
+    /*
+     * Iterate through the array/object type tables and remove all entries
+     * referencing collected data. These tables only hold weak references.
+     */
+
+    if (arrayTypeTable) {
+        for (ArrayTypeTable::Enum e(*arrayTypeTable); !e.empty(); e.popFront()) {
+            const ArrayTableKey &key = e.front().key;
+            TypeObject *obj = e.front().value;
+            JS_ASSERT(obj->proto == key.proto);
+
+            bool remove = false;
+            if (TypeIsObject(key.type) && !((TypeObject *)key.type)->marked)
+                remove = true;
+            if (!obj->marked)
+                remove = true;
+
+            if (remove)
+                e.removeFront();
+        }
+    }
+
+    if (objectTypeTable) {
+        for (ObjectTypeTable::Enum e(*objectTypeTable); !e.empty(); e.popFront()) {
+            const ObjectTableKey &key = e.front().key;
+            const ObjectTableEntry &entry = e.front().value;
+            JS_ASSERT(entry.object->proto == key.proto);
+
+            bool remove = false;
+            if (!entry.object->marked || !entry.newShape->marked())
+                remove = true;
+            for (unsigned i = 0; !remove && i < key.nslots; i++) {
+                if (JSID_IS_STRING(key.ids[i]) && !JSID_TO_STRING(key.ids[i])->asCell()->isMarked())
+                    remove = true;
+                if (TypeIsObject(entry.types[i]) && !((TypeObject *)entry.types[i])->marked)
+                    remove = true;
+            }
+
+            if (remove) {
+                cx->free(key.ids);
+                cx->free(entry.types);
+                e.removeFront();
+            }
+        }
     }
 
     SweepTypeObjectList(cx, objects);

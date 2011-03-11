@@ -761,6 +761,14 @@ JSObject::setType(js::types::TypeObject *newType)
 }
 
 inline void
+JSObject::setTypeAndShape(js::types::TypeObject *newType, const js::Shape *newShape)
+{
+    JS_ASSERT(newShape->slot == lastProperty()->slot);
+    setType(newType);
+    setLastProperty(newShape);
+}
+
+inline void
 JSObject::init(JSContext *cx, js::Class *aclasp, js::types::TypeObject *type,
                JSObject *parent, void *priv, bool useHoles)
 {
