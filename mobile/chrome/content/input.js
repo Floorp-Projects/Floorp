@@ -540,7 +540,7 @@ var ScrollUtils = {
     let dpi = Util.getWindowUtils(window).displayDPI;
 
     delete this.tapRadius;
-    return this.tapRadius = Services.prefs.getIntPref("ui.dragThreshold") / 240 * dpi;
+    return this.tapRadius = Services.prefs.getIntPref("ui.dragThresholdX") / 240 * dpi;
   },
 
   /**
