@@ -571,7 +571,7 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
 
   // If the bounds don't overlap at all, there's nothing to do
   nsRegion intersection;
-  intersection.And(aWidgetView->GetDimensions(), aDamagedRegion);
+  intersection.And(aWidgetView->GetInvalidationDimensions(), aDamagedRegion);
   if (intersection.IsEmpty()) {
     return;
   }
@@ -1623,7 +1623,7 @@ nsIntRect nsViewManager::ViewToWidget(nsView *aView, const nsRect &aRect) const
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
 
   // intersect aRect with bounds of aView, to prevent generating any illegal rectangles.
-  nsRect bounds = aView->GetDimensions();
+  nsRect bounds = aView->GetInvalidationDimensions();
   nsRect rect;
   rect.IntersectRect(aRect, bounds);
 

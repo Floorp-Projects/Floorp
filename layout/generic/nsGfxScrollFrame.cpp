@@ -195,7 +195,15 @@ nsHTMLScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
       nsRect damage = aDamageRect + nsPoint(aX, aY);
       // This is the damage rect that we're going to pass up to our parent.
       nsRect parentDamage;
-      parentDamage.IntersectRect(damage, mInner.mScrollPort);
+      nsIPresShell* presShell = PresContext()->PresShell();
+      // If we're using a displayport, we might be displaying an area
+      // different than our scroll port and the damage needs to be
+      // clipped to that instead.
+      if (mInner.mIsRoot && presShell->UsingDisplayPort()) {
+        parentDamage.IntersectRect(damage, presShell->GetDisplayPort());
+      } else {
+        parentDamage.IntersectRect(damage, mInner.mScrollPort);
+      }
 
       if (IsScrollingActive()) {
         // This is the damage rect that we're going to pass up and
@@ -1104,7 +1112,15 @@ nsXULScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
     nsRect damage = aDamageRect + nsPoint(aX, aY);
     // This is the damage rect that we're going to pass up to our parent.
     nsRect parentDamage;
-    parentDamage.IntersectRect(damage, mInner.mScrollPort);
+    nsIPresShell* presShell = PresContext()->PresShell();
+    // If we're using a displayport, we might be displaying an area
+    // different than our scroll port and the damage needs to be
+    // clipped to that instead.
+    if (mInner.mIsRoot && presShell->UsingDisplayPort()) {
+      parentDamage.IntersectRect(damage, presShell->GetDisplayPort());
+    } else {
+      parentDamage.IntersectRect(damage, mInner.mScrollPort);
+    }
 
     if (IsScrollingActive()) {
       // This is the damage rect that we're going to pass up and
