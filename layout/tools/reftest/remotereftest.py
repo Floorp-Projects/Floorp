@@ -375,7 +375,7 @@ def main():
     reftest.startWebServer(options)
 
     # Hack in a symbolic link for jsreftest
-    os.system("ln -s ../jsreftest jsreftest")
+    os.system("ln -s ../jsreftest " + str(os.path.join(SCRIPT_DIRECTORY, "jsreftest")))
 
     # Dynamically build the reftest URL if possible, beware that args[0] should exist 'inside' the webroot
     manifest = args[0]
