@@ -158,6 +158,7 @@ nsEditor::nsEditor()
 ,  mIsIMEComposing(PR_FALSE)
 ,  mShouldTxnSetSelection(PR_TRUE)
 ,  mDidPreDestroy(PR_FALSE)
+,  mDidPostCreate(PR_FALSE)
 ,  mDocDirtyState(-1)
 ,  mDocWeak(nsnull)
 ,  mPhonetic(nsnull)
@@ -275,6 +276,8 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIContent *aRoot, nsISelectionController *
 
   // Make sure that the editor will be destroyed properly
   mDidPreDestroy = PR_FALSE;
+  // Make sure that the ediotr will be created properly
+  mDidPostCreate = PR_FALSE;
 
   return NS_OK;
 }
@@ -291,26 +294,31 @@ nsEditor::PostCreate()
   nsresult rv = SetFlags(~mFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Set up listeners
-  rv = CreateEventListeners();
-  if (NS_FAILED(rv))
-  {
-    RemoveEventListeners();
+  // These operations only need to happen on the first PostCreate call
+  if (!mDidPostCreate) {
+    mDidPostCreate = PR_TRUE;
 
-    return rv;
+    // Set up listeners
+    rv = CreateEventListeners();
+    if (NS_FAILED(rv))
+    {
+      RemoveEventListeners();
+
+      return rv;
+    }
+
+    rv = InstallEventListeners();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // nuke the modification count, so the doc appears unmodified
+    // do this before we notify listeners
+    ResetModificationCount();
+
+    // update the UI with our state
+    NotifyDocumentListeners(eDocumentCreated);
+    NotifyDocumentListeners(eDocumentStateChanged);
   }
 
-  rv = InstallEventListeners();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // nuke the modification count, so the doc appears unmodified
-  // do this before we notify listeners
-  ResetModificationCount();
-  
-  // update the UI with our state
-  NotifyDocumentListeners(eDocumentCreated);
-  NotifyDocumentListeners(eDocumentStateChanged);
-  
   // update nsTextStateManager and caret if we have focus
   nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
   if (focusedContent) {
