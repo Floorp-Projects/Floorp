@@ -6951,12 +6951,16 @@ nsDocShell::RestoreFromHistory()
         mSavingOldViewer = CanSavePresentation(mLoadType, request, doc);
     }
 
-    nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV(do_QueryInterface(mContentViewer));
-    nsCOMPtr<nsIMarkupDocumentViewer> newMUDV(do_QueryInterface(viewer));
+    nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> oldMUDV(
+        do_QueryInterface(mContentViewer));
+    nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> newMUDV(
+        do_QueryInterface(viewer));
+    PRInt32 minFontSize = 0;
     float textZoom = 1.0f;
     float pageZoom = 1.0f;
     PRBool styleDisabled = PR_FALSE;
     if (oldMUDV && newMUDV) {
+        oldMUDV->GetMinFontSize(&minFontSize);
         oldMUDV->GetTextZoom(&textZoom);
         oldMUDV->GetFullZoom(&pageZoom);
         oldMUDV->GetAuthorStyleDisabled(&styleDisabled);
@@ -7156,6 +7160,7 @@ nsDocShell::RestoreFromHistory()
 
 
     if (oldMUDV && newMUDV) {
+        newMUDV->SetMinFontSize(minFontSize);
         newMUDV->SetTextZoom(textZoom);
         newMUDV->SetFullZoom(pageZoom);
         newMUDV->SetAuthorStyleDisabled(styleDisabled);
@@ -7600,14 +7605,15 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     nsCAutoString hintCharset;
     PRInt32 hintCharsetSource;
     nsCAutoString prevDocCharset;
+    PRInt32 minFontSize;
     float textZoom;
     float pageZoom;
     PRBool styleDisabled;
     // |newMUDV| also serves as a flag to set the data from the above vars
-    nsCOMPtr<nsIMarkupDocumentViewer> newMUDV;
+    nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> newMUDV;
 
     if (mContentViewer || parent) {
-        nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV;
+        nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> oldMUDV;
         if (mContentViewer) {
             // Get any interesting state from old content viewer
             // XXX: it would be far better to just reuse the document viewer ,
@@ -7647,6 +7653,9 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
                                   NS_ERROR_FAILURE);
                 NS_ENSURE_SUCCESS(oldMUDV->
                                   GetHintCharacterSetSource(&hintCharsetSource),
+                                  NS_ERROR_FAILURE);
+                NS_ENSURE_SUCCESS(oldMUDV->
+                                  GetMinFontSize(&minFontSize),
                                   NS_ERROR_FAILURE);
                 NS_ENSURE_SUCCESS(oldMUDV->
                                   GetTextZoom(&textZoom),
@@ -7727,6 +7736,8 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
                           SetHintCharacterSetSource(hintCharsetSource),
                           NS_ERROR_FAILURE);
         NS_ENSURE_SUCCESS(newMUDV->SetPrevDocCharacterSet(prevDocCharset),
+                          NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(newMUDV->SetMinFontSize(minFontSize),
                           NS_ERROR_FAILURE);
         NS_ENSURE_SUCCESS(newMUDV->SetTextZoom(textZoom),
                           NS_ERROR_FAILURE);
