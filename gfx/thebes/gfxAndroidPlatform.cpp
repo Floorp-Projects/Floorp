@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -418,6 +418,26 @@ gfxAndroidPlatform::AppendFacesFromFontFile(const char *aFileName, FontNameCache
 }
 
 void
+gfxAndroidPlatform::FindFontsInDirectory(const char *aDirectory, FontNameCache* aFontCache)
+{
+    DIR *d = opendir(aDirectory);
+    struct dirent *ent = NULL;
+    while(d && (ent = readdir(d)) != NULL) {
+        int namelen = strlen(ent->d_name);
+        if (namelen > 4 &&
+            strcasecmp(ent->d_name + namelen - 4, ".ttf") == 0)
+        {
+            nsCString s(aDirectory);
+            s.Append("/fonts/");
+            s.Append(nsDependentCString(ent->d_name));
+
+            AppendFacesFromFontFile(nsPromiseFlatCString(s).get(),
+                                    aFontCache, &mFontList);
+        }
+    }
+}
+
+void
 gfxAndroidPlatform::GetFontList(InfallibleTArray<FontListEntry>* retValue)
 {
 #ifdef MOZ_IPC
@@ -431,22 +451,15 @@ gfxAndroidPlatform::GetFontList(InfallibleTArray<FontListEntry>* retValue)
         *retValue = mFontList;
         return;
     }
-    FontNameCache fnc;
-    DIR *d = opendir("/system/fonts");
-    struct dirent *ent = NULL;
-    while(d && (ent = readdir(d)) != NULL) {
-        int namelen = strlen(ent->d_name);
-        if (namelen > 4 &&
-            strcasecmp(ent->d_name + namelen - 4, ".ttf") == 0)
-        {
-            nsCString s("/system/fonts");
-            s.Append("/");
-            s.Append(nsDependentCString(ent->d_name));
 
-            AppendFacesFromFontFile(nsPromiseFlatCString(s).get(),
-                                    &fnc, &mFontList);
-        }
-    }
+    // Check in both /system and $ANDROID_ROOT
+    FontNameCache fnc;
+    const char *systemDirectory = "/system";
+    FindFontsInDirectory(systemDirectory, &fnc);
+    char *androidRoot = PR_GetEnv("ANDROID_ROOT");
+    if (androidRoot && strcmp(androidRoot, systemDirectory))
+        FindFontsInDirectory(androidRoot, &fnc);
+
     *retValue = mFontList;
 }
 

@@ -217,7 +217,7 @@ private:
   void ChangeState(State aState);
 
   // Create and initialize audio stream using current audio parameters.
-  void OpenAudioStream();
+  void OpenAudioStream(nsAutoMonitor& aMonitor);
 
   // Shut down and dispose audio stream.
   void CloseAudioStream();
@@ -598,7 +598,7 @@ nsWaveStateMachine::Run()
 
     case STATE_PLAYING: {
       if (!mAudioStream) {
-        OpenAudioStream();
+        OpenAudioStream(monitor);
         if (!mAudioStream) {
           ChangeState(STATE_ERROR);
           break;
@@ -907,17 +907,27 @@ nsWaveStateMachine::ChangeState(State aState)
 }
 
 void
-nsWaveStateMachine::OpenAudioStream()
+nsWaveStateMachine::OpenAudioStream(nsAutoMonitor& aMonitor)
 {
-  mAudioStream = nsAudioStream::AllocateStream();
-  if (!mAudioStream) {
+  NS_ABORT_IF_FALSE(mMetadataValid,
+                    "Attempting to initialize audio stream with invalid metadata");
+
+  nsRefPtr<nsAudioStream> audioStream = nsAudioStream::AllocateStream();
+  if (!audioStream) {
     LOG(PR_LOG_ERROR, ("Could not create audio stream"));
-  } else {
-    NS_ABORT_IF_FALSE(mMetadataValid,
-                      "Attempting to initialize audio stream with invalid metadata");
-    mAudioStream->Init(mChannels, mSampleRate, mSampleFormat);
-    mAudioStream->SetVolume(mInitialVolume);
+    return;
   }
+
+  // Drop the monitor while initializing the stream because remote
+  // audio streams wait on a synchronous event running on the main
+  // thread, and holding the decoder monitor while waiting for this
+  // can result in deadlocks.
+  aMonitor.Exit();
+  audioStream->Init(mChannels, mSampleRate, mSampleFormat);
+  aMonitor.Enter();
+
+  mAudioStream = audioStream;
+  mAudioStream->SetVolume(mInitialVolume);
 }
 
 void

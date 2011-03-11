@@ -87,6 +87,22 @@ gfxRect::Contains(const gfxPoint& aPoint) const
          aPoint.y >= Y() && aPoint.y <= YMost();
 }
 
+static PRBool
+WithinEpsilonOfInteger(gfxFloat aX, gfxFloat aEpsilon)
+{
+    return fabs(NS_round(aX) - aX) <= fabs(aEpsilon);
+}
+
+PRBool
+gfxRect::WithinEpsilonOfIntegerPixels(gfxFloat aEpsilon) const
+{
+    NS_ASSERTION(-0.5 < aEpsilon && aEpsilon < 0.5, "Nonsense epsilon value");
+    return (WithinEpsilonOfInteger(pos.x, aEpsilon) &&
+            WithinEpsilonOfInteger(pos.y, aEpsilon) &&
+            WithinEpsilonOfInteger(size.width, aEpsilon) &&
+            WithinEpsilonOfInteger(size.height, aEpsilon));
+}
+
 void
 gfxRect::Round()
 {
