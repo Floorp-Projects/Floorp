@@ -221,10 +221,8 @@ namespace nanojit
         // but from the following instruction.  Eg. 'jmp $0' will jump to the
         // next instruction.
         int64_t offset = target ? target - _nIns : 0;
-        if (!isS32(offset)) {
+        if (!isS32(offset))
             setError(BranchTooFar);
-            NanoAssert(0);  // assert because we'd like to know if this ever happens
-        }
         emit(op | uint64_t(uint32_t(offset))<<32);
     }
 
@@ -2014,7 +2012,7 @@ namespace nanojit
         // that the old value is poison.
         if (!isS32(target - next)) {
             setError(BranchTooFar);
-            NanoAssert(0);  // assert because we'd like to know if this ever happens
+            return;         // don't patch
         }
         ((int32_t*)next)[-1] = int32_t(target - next);
         if (next[0] == 0x0F && next[1] == 0x8A) {
@@ -2022,7 +2020,10 @@ namespace nanojit
             // we just patched the jne, now patch the jp.
             next += 6;
             NanoAssert(((int32_t*)next)[-1] == 0);
-            NanoAssert(isS32(target - next));
+            if (!isS32(target - next)) {
+                setError(BranchTooFar);
+                return;     // don't patch
+            }
             ((int32_t*)next)[-1] = int32_t(target - next);
         }
     }
