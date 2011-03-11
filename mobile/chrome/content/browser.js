@@ -1305,7 +1305,7 @@ Browser.MainDragger.prototype = {
         if (leftSidebar.left > rightSidebar.left)
           x = Math.round(Math.max(0, rightW * rightVis));
         else
-          x = Math.round(Math.max(0, leftW * leftVis));
+          x = Math.round(Math.max(0, leftW * leftVis)) * -1.0;
       }
 
       this._verticalScrollbar.style.MozTransform = "translate(" + x + "px," + y + "px)";
