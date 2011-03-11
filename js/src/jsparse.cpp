@@ -351,6 +351,9 @@ Parser::trace(JSTracer *trc)
         objbox = objbox->traceLink;
     }
 
+    if (emptyCallShape)
+        emptyCallShape->trace(trc);
+
     for (JSTreeContext *tc = this->tc; tc; tc = tc->parent)
         tc->trace(trc);
 }
