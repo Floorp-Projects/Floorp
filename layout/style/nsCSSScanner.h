@@ -191,7 +191,7 @@ class nsCSSScanner {
   // is filled in with the data for the token.
   PRBool Next(nsCSSToken& aTokenResult);
 
-  // Get the next token that may be a string or unquoted URL or whitespace
+  // Get the next token that may be a string or unquoted URL
   PRBool NextURL(nsCSSToken& aTokenResult);
 
   // It's really ugly that we have to expose this, but it's the easiest

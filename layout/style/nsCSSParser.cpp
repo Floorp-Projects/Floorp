@@ -1316,12 +1316,10 @@ PRBool
 CSSParserImpl::GetURLInParens(nsString& aURL)
 {
   NS_ASSERTION(!mHavePushBack, "mustn't have pushback at this point");
-  do {
-    if (! mScanner.NextURL(mToken)) {
-      // EOF
-      return PR_FALSE;
-    }
-  } while (eCSSToken_WhiteSpace == mToken.mType);
+  if (! mScanner.NextURL(mToken)) {
+    // EOF
+    return PR_FALSE;
+  }
 
   aURL = mToken.mIdent;
 
