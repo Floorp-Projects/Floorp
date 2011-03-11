@@ -894,17 +894,16 @@ nsCSSSelectorList::Clone(PRBool aDeep) const
   return result;
 }
 
-// -- CSSImportantRule -------------------------------
+// -- ImportantRule ----------------------------------
 
 namespace mozilla {
 namespace css {
-class StyleRule;
-}
-}
 
-class CSSImportantRule : public nsIStyleRule {
+class StyleRule;
+
+class ImportantRule : public nsIStyleRule {
 public:
-  CSSImportantRule(css::Declaration *aDeclaration);
+  ImportantRule(Declaration *aDeclaration);
 
   NS_DECL_ISUPPORTS
 
@@ -915,36 +914,36 @@ public:
 #endif
 
 protected:
-  virtual ~CSSImportantRule(void);
+  virtual ~ImportantRule();
 
   // Not an owning reference; the StyleRule that owns this
-  // CSSImportantRule also owns the mDeclaration, and any rule node
+  // ImportantRule also owns the mDeclaration, and any rule node
   // pointing to this rule keeps that StyleRule alive as well.
-  css::Declaration* mDeclaration;
+  Declaration* mDeclaration;
 
   friend class css::StyleRule;
 };
 
-CSSImportantRule::CSSImportantRule(css::Declaration* aDeclaration)
+ImportantRule::ImportantRule(Declaration* aDeclaration)
   : mDeclaration(aDeclaration)
 {
 }
 
-CSSImportantRule::~CSSImportantRule(void)
+ImportantRule::~ImportantRule()
 {
 }
 
-NS_IMPL_ISUPPORTS1(CSSImportantRule, nsIStyleRule)
+NS_IMPL_ISUPPORTS1(ImportantRule, nsIStyleRule)
 
 /* virtual */ void
-CSSImportantRule::MapRuleInfoInto(nsRuleData* aRuleData)
+ImportantRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   mDeclaration->MapImportantRuleInfoInto(aRuleData);
 }
 
 #ifdef DEBUG
 /* virtual */ void
-CSSImportantRule::List(FILE* out, PRInt32 aIndent) const
+ImportantRule::List(FILE* out, PRInt32 aIndent) const
 {
   // Indent
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -953,6 +952,9 @@ CSSImportantRule::List(FILE* out, PRInt32 aIndent) const
           static_cast<void*>(mDeclaration));
 }
 #endif
+
+} // namespace css
+} // namespace mozilla
 
 // --------------------------------------------------------
 
@@ -1357,7 +1359,7 @@ private:
 protected:
   nsCSSSelectorList*      mSelector; // null for style attribute
   Declaration*            mDeclaration;
-  CSSImportantRule*       mImportantRule; // initialized by RuleMatched
+  ImportantRule*          mImportantRule; // initialized by RuleMatched
   DOMCSSStyleRule*        mDOMRule;
   // Keep the same type so that MSVC packs them.
   PRUint32                mLineNumber : 31;
@@ -1473,7 +1475,7 @@ StyleRule::RuleMatched()
     mWasMatched = PR_TRUE;
     mDeclaration->SetImmutable();
     if (mDeclaration->HasImportantData()) {
-      NS_ADDREF(mImportantRule = new CSSImportantRule(mDeclaration));
+      NS_ADDREF(mImportantRule = new ImportantRule(mDeclaration));
     }
   }
 }
