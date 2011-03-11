@@ -639,6 +639,7 @@ public:
         OP_RECURSIVE, // Recursive calls
         OP_ARRAY_READ, // Reads from dense arrays
         OP_TYPED_ARRAY, // Accesses to typed arrays
+        OP_SCRIPTED_GETTER, // Getters defined in JS
         OP_LIMIT
     };
 
