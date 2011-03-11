@@ -35,10 +35,10 @@ function run_test() {
   do_check_eq(salt2.length, 12);
   do_check_neq(salt, salt2);
 
-  salt = cryptoSvc.generateRandomBytes(16);
-  do_check_eq(salt.length, 24);
   salt = cryptoSvc.generateRandomBytes(1024);
   do_check_eq(salt.length, 1368);
+  salt = cryptoSvc.generateRandomBytes(16);
+  do_check_eq(salt.length, 24);
 
 
   // Test random key generation

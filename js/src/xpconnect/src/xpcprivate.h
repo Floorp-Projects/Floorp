@@ -1254,23 +1254,18 @@ private:
 
     // String wrapper entry, holds a string, and a boolean that tells
     // whether the string is in use or not.
+    //
+    // NB: The string is not stored by value so that we avoid the cost of
+    // construction/destruction.
     struct StringWrapperEntry
     {
-        StringWrapperEntry()
-            : mInUse(PR_FALSE)
-        {
-        }
+        StringWrapperEntry() : mInUse(PR_FALSE) { }
 
-        XPCReadableJSStringWrapper mString;
+        js::AlignedStorage2<XPCReadableJSStringWrapper> mString;
         PRBool mInUse;
     };
 
-    // Reserve space for XPCCCX_STRING_CACHE_SIZE string wrapper
-    // entries for use on demand. It's important to not make this be
-    // string class members since we don't want to pay the cost of
-    // calling the constructors and destructors when the strings
-    // aren't being used.
-    char mStringWrapperData[sizeof(StringWrapperEntry) * XPCCCX_STRING_CACHE_SIZE];
+    StringWrapperEntry mScratchStrings[XPCCCX_STRING_CACHE_SIZE];
 };
 
 class XPCLazyCallContext
