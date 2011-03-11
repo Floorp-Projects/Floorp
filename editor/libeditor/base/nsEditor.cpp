@@ -223,10 +223,10 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsEditor, nsIEditor)
 
 
 NS_IMETHODIMP
-nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags)
+nsEditor::Init(nsIDOMDocument *aDoc, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags)
 {
-  NS_PRECONDITION(aDoc && aPresShell, "bad arg");
-  if (!aDoc || !aPresShell)
+  NS_PRECONDITION(aDoc, "bad arg");
+  if (!aDoc)
     return NS_ERROR_NULL_POINTER;
 
   // First only set flags, but other stuff shouldn't be initialized now.
@@ -248,7 +248,9 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
     mSelConWeak = do_GetWeakReference(aSelCon);   // weak reference to selectioncontroller
     selCon = aSelCon;
   } else {
-    selCon = do_QueryInterface(aPresShell);
+    nsCOMPtr<nsIPresShell> presShell;
+    GetPresShell(getter_AddRefs(presShell));
+    selCon = do_QueryInterface(presShell);
   }
   NS_ASSERTION(selCon, "Selection controller should be available at this point");
 
