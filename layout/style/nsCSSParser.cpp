@@ -1323,10 +1323,13 @@ CSSParserImpl::GetURLInParens(nsString& aURL)
 
   aURL = mToken.mIdent;
 
-  if ((eCSSToken_String != mToken.mType && eCSSToken_URL != mToken.mType) ||
-      !ExpectSymbol(')', PR_TRUE)) {
-    // in the failure case, we do not have to match parentheses, since
-    // this is now an invalid URL token.
+  if (eCSSToken_URL != mToken.mType) {
+    // In the failure case (which gives a token of type
+    // eCSSToken_Bad_URL), we do not have to match parentheses *inside*
+    // the Bad_URL token, since this is now an invalid URL token.  But
+    // we do need to match the closing parenthesis to match the 'url('.
+    NS_ABORT_IF_FALSE(mToken.mType == eCSSToken_Bad_URL,
+                      "unexpected token type");
     SkipUntil(')');
     return PR_FALSE;
   }
