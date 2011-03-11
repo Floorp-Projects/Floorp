@@ -369,6 +369,18 @@ JSContext::typeMonitorCall(const js::CallArgs &args, bool constructing)
     return compartment->types.dynamicCall(this, callee, args, constructing);
 }
 
+inline bool
+JSContext::fixArrayType(JSObject *obj)
+{
+    return !typeInferenceEnabled() || compartment->types.fixArrayType(this, obj);
+}
+
+inline bool
+JSContext::fixObjectType(JSObject *obj)
+{
+    return !typeInferenceEnabled() || compartment->types.fixObjectType(this, obj);
+}
+
 /////////////////////////////////////////////////////////////////////
 // JSScript
 /////////////////////////////////////////////////////////////////////
