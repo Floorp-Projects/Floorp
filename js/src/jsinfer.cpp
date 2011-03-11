@@ -1559,18 +1559,6 @@ TypeCompartment::init(JSContext *cx)
     JS_InitArenaPool(&pool, "typeinfer", 512, 8, NULL);
 }
 
-TypeCompartment::~TypeCompartment()
-{
-    if (pendingArray)
-        js_free(pendingArray);
-
-    if (arrayTypeTable)
-        js_delete<ArrayTypeTable>(arrayTypeTable);
-
-    if (objectTypeTable)
-        js_delete<ObjectTypeTable>(objectTypeTable);
-}
-
 TypeObject *
 TypeCompartment::newTypeObject(JSContext *cx, JSScript *script, const char *name,
                                bool isFunction, JSObject *proto)
@@ -2093,7 +2081,7 @@ struct ArrayTableKey
     typedef ArrayTableKey Lookup;
 
     static inline uint32 hash(const ArrayTableKey &v) {
-        return (uint32) (v.type ^ ((uint32)v.proto >> 2));
+        return (uint32) (v.type ^ ((uint32)(size_t)v.proto >> 2));
     }
 
     static inline bool match(const ArrayTableKey &v1, const ArrayTableKey &v2) {
@@ -2105,7 +2093,7 @@ bool
 TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
 {
     if (!arrayTypeTable) {
-        arrayTypeTable = js_new<ArrayTypeTable>(cx);
+        arrayTypeTable = js_new<ArrayTypeTable>();
         if (!arrayTypeTable || !arrayTypeTable->init()) {
             arrayTypeTable = NULL;
             js_ReportOutOfMemory(cx);
@@ -2181,7 +2169,7 @@ struct ObjectTableKey
     static inline uint32 hash(JSObject *obj) {
         return (uint32) (JSID_BITS(obj->lastProperty()->id) ^
                          obj->slotSpan() ^
-                         ((uint32)obj->getProto() >> 2));
+                         ((uint32)(size_t)obj->getProto() >> 2));
     }
 
     static inline bool match(const ObjectTableKey &v, JSObject *obj) {
@@ -2208,7 +2196,7 @@ bool
 TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
 {
     if (!objectTypeTable) {
-        objectTypeTable = js_new<ObjectTypeTable>(cx);
+        objectTypeTable = js_new<ObjectTypeTable>();
         if (!objectTypeTable || !objectTypeTable->init()) {
             objectTypeTable = NULL;
             js_ReportOutOfMemory(cx);
@@ -4396,6 +4384,18 @@ TypeCompartment::sweep(JSContext *cx)
     }
 
     SweepTypeObjectList(cx, objects);
+}
+
+TypeCompartment::~TypeCompartment()
+{
+    if (pendingArray)
+        js_free(pendingArray);
+
+    if (arrayTypeTable)
+        js_delete<ArrayTypeTable>(arrayTypeTable);
+
+    if (objectTypeTable)
+        js_delete<ObjectTypeTable>(objectTypeTable);
 }
 
 } } /* namespace js::types */
