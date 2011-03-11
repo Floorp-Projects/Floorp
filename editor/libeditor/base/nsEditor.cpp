@@ -576,7 +576,8 @@ nsEditor::GetSelection(nsISelection **aSelection)
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   *aSelection = nsnull;
-  nsCOMPtr<nsISelectionController> selcon = do_QueryReferent(mSelConWeak);
+  nsCOMPtr<nsISelectionController> selcon;
+  GetSelectionController(getter_AddRefs(selcon));
   NS_ENSURE_TRUE(selcon, NS_ERROR_NOT_INITIALIZED);
   return selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSelection);  // does an addref
 }
@@ -1011,7 +1012,8 @@ NS_IMETHODIMP nsEditor::SelectAll()
   if (!mDocWeak) { return NS_ERROR_NOT_INITIALIZED; }
   ForceCompositionEnd();
 
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
+  nsCOMPtr<nsISelectionController> selCon;
+  GetSelectionController(getter_AddRefs(selCon));
   NS_ENSURE_TRUE(selCon, NS_ERROR_NOT_INITIALIZED);
   nsCOMPtr<nsISelection> selection;
   nsresult result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
@@ -4626,7 +4628,7 @@ nsEditor::CreateTxnForIMEText(const nsAString& aStringToInsert,
   nsRefPtr<IMETextTxn> txn = new IMETextTxn();
 
   nsresult rv = txn->Init(mIMETextNode, mIMETextOffset, mIMEBufferLength,
-                          mIMETextRangeList, aStringToInsert, mSelConWeak);
+                          mIMETextRangeList, aStringToInsert, this);
   if (NS_SUCCEEDED(rv))
   {
     txn.forget(aTxn);
@@ -4678,7 +4680,8 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
   *aTxn = nsnull;
 
   nsRefPtr<EditAggregateTxn> aggTxn;
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
+  nsCOMPtr<nsISelectionController> selCon;
+  GetSelectionController(getter_AddRefs(selCon));
   NS_ENSURE_TRUE(selCon, NS_ERROR_NOT_INITIALIZED);
   nsCOMPtr<nsISelection> selection;
   nsresult result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,

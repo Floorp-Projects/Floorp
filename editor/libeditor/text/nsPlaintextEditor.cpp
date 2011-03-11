@@ -671,7 +671,8 @@ nsPlaintextEditor::ExtendSelectionForDelete(nsISelection *aSelection,
       || (*aAction == ePrevious && bCollapsed)
       || *aAction == eToBeginningOfLine || *aAction == eToEndOfLine)
   {
-    nsCOMPtr<nsISelectionController> selCont (do_QueryReferent(mSelConWeak));
+    nsCOMPtr<nsISelectionController> selCont;
+    GetSelectionController(getter_AddRefs(selCont));
     NS_ENSURE_TRUE(selCont, NS_ERROR_NO_INTERFACE);
 
     switch (*aAction)
