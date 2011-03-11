@@ -956,7 +956,8 @@ nsPlaintextEditor::UpdateIMEComposition(const nsAString& aCompositionString,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  nsCOMPtr<nsIPresShell> ps;
+  GetPresShell(getter_AddRefs(ps));
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsISelection> selection;
@@ -1285,7 +1286,8 @@ nsPlaintextEditor::FireClipboardEvent(PRInt32 aType)
   if (aType == NS_PASTE)
     ForceCompositionEnd();
 
-  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
+  nsCOMPtr<nsIPresShell> presShell;
+  GetPresShell(getter_AddRefs(presShell));
   NS_ENSURE_TRUE(presShell, PR_FALSE);
 
   nsCOMPtr<nsISelection> selection;

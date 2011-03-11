@@ -156,7 +156,8 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
   NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
 
   // Get the pres shell
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  nsCOMPtr<nsIPresShell> ps;
+  GetPresShell(getter_AddRefs(ps));
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   // Create a new node through the element factory

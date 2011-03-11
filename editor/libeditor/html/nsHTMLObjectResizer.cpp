@@ -432,7 +432,8 @@ nsHTMLEditor::HideResizers(void)
   NS_ENSURE_TRUE(mResizedObject, NS_OK);
 
   // get the presshell's document observer interface.
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  nsCOMPtr<nsIPresShell> ps;
+  GetPresShell(getter_AddRefs(ps));
   // We allow the pres shell to be null; when it is, we presume there
   // are no document observers to notify, but we still want to
   // UnbindFromTree.
