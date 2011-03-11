@@ -242,7 +242,17 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
 
   mDocWeak = do_GetWeakReference(aDoc);  // weak reference to doc
   mPresShellWeak = do_GetWeakReference(aPresShell);   // weak reference to pres shell
-  mSelConWeak = do_GetWeakReference(aSelCon);   // weak reference to selectioncontroller
+  // HTML editors currently don't have their own selection controller,
+  // so they'll pass null as aSelCon, and we'll get the selection controller
+  // off of the presshell.
+  nsCOMPtr<nsISelectionController> selCon;
+  if (aSelCon) {
+    mSelConWeak = do_GetWeakReference(aSelCon);   // weak reference to selectioncontroller
+    selCon = aSelCon;
+  } else {
+    selCon = do_QueryInterface(aPresShell);
+  }
+  NS_ASSERTION(selCon, "Selection controller should be available at this point");
 
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
@@ -259,10 +269,10 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
   mIMEBufferLength = 0;
   
   /* Show the caret */
-  aSelCon->SetCaretReadOnly(PR_FALSE);
-  aSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
-  
-  aSelCon->SetSelectionFlags(nsISelectionDisplay::DISPLAY_ALL);//we want to see all the selection reflected to user
+  selCon->SetCaretReadOnly(PR_FALSE);
+  selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+
+  selCon->SetSelectionFlags(nsISelectionDisplay::DISPLAY_ALL);//we want to see all the selection reflected to user
 
   NS_POSTCONDITION(mDocWeak && mPresShellWeak, "bad state");
 
@@ -555,8 +565,14 @@ nsEditor::GetSelectionController(nsISelectionController **aSel)
 {
   NS_ENSURE_TRUE(aSel, NS_ERROR_NULL_POINTER);
   *aSel = nsnull; // init out param
-  NS_PRECONDITION(mSelConWeak, "bad state, null mSelConWeak");
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
+  nsCOMPtr<nsISelectionController> selCon;
+  if (mSelConWeak) {
+    selCon = do_QueryReferent(mSelConWeak);
+  } else {
+    nsCOMPtr<nsIPresShell> presShell;
+    GetPresShell(getter_AddRefs(presShell));
+    selCon = do_QueryInterface(presShell);
+  }
   NS_ENSURE_TRUE(selCon, NS_ERROR_NOT_INITIALIZED);
   NS_ADDREF(*aSel = selCon);
   return NS_OK;
