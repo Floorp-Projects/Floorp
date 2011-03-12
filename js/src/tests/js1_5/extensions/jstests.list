@@ -108,7 +108,7 @@ random script regress-363258.js # bug 524788
 script regress-363988.js
 slow script regress-365527.js
 script regress-365692.js
-script regress-365869.js
+fails-if(Android) script regress-365869.js
 script regress-366288.js
 script regress-366292.js
 script regress-366396.js
@@ -125,7 +125,7 @@ script regress-367501-03.js
 script regress-367501-04.js
 skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) slow script regress-367589.js
 script regress-367630.js
-script regress-367923.js
+fails-if(Android) script regress-367923.js
 script regress-368859.js
 script regress-369404.js
 script regress-369696-01.js
@@ -220,6 +220,6 @@ script regress-90596-002.js
 script regress-96284-001.js
 script regress-96284-002.js
 script scope-001.js
-script toLocaleFormat-01.js
+fails-if(Android) script toLocaleFormat-01.js
 fails-if(xulRuntime.OS=="WINNT") script toLocaleFormat-02.js
 script regress-543839.js

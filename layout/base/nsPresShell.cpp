@@ -6062,21 +6062,11 @@ void PresShell::SetRenderingState(const RenderingState& aState)
   mXResolution = aState.mXResolution;
   mYResolution = aState.mYResolution;
 
-  // FIXME (Bug 593243 should fix this.)
-  //
-  // Invalidated content does not pay any attention to the displayport, so
-  // invalidating the subdocument's root frame could end up not repainting
-  // visible content.
-  //
-  // For instance, imagine the iframe is located at y=1000. Even though the
-  // displayport may intersect the iframe's viewport, the visual overflow
-  // rect of the root content could be (0, 0, 800, 500). Since the dirty region
-  // does not intersect the visible overflow rect, the display list for the
-  // iframe will not even be generated.
-  //
-  // Here, we find the very top presShell and use its root frame for
-  // invalidation instead.
-  //
+  nsIView* rootView;
+  if (NS_SUCCEEDED(mViewManager->GetRootView(rootView)) && rootView) {
+    rootView->SetInvalidationDimensions(&mDisplayPort);
+  }
+
   nsPresContext* rootPresContext = mPresContext->GetRootPresContext();
   if (rootPresContext) {
     nsIPresShell* rootPresShell = rootPresContext->GetPresShell();
