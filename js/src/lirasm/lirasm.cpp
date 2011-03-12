@@ -569,7 +569,7 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName,
         mLir = mCseFilter = new CseFilter(mLir, LIRASM_NUM_USED_ACCS, mParent.mAlloc);
     }
 #if NJ_SOFTFLOAT_SUPPORTED
-    if (mConfig.soft_float) {
+    if (mParent.mConfig.soft_float) {
         mLir = new SoftFloatFilter(mLir);
     }
 #endif
@@ -1510,7 +1510,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     D_I_ops.push_back(LIR_ui2d);
 #elif defined(NANOJIT_ARM)
     // The ARM back-end can detect FP support at run-time.
-    if (mConfig.arm_vfp) {
+    if (mParent.mConfig.arm_vfp) {
         D_I_ops.push_back(LIR_i2d);
         D_I_ops.push_back(LIR_ui2d);
     }
@@ -1526,7 +1526,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     I_D_ops.push_back(LIR_d2i);
 #elif defined(NANOJIT_ARM)
     // The ARM back-end can detect FP support at run-time.
-    if (avmplus::AvmCore::config.arm_vfp) {
+    if (mParent.mConfig.arm_vfp) {
         I_D_ops.push_back(LIR_d2i);
     }
 #endif
