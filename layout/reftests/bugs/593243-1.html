@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait"
+      reftest-viewport-w="600" reftest-viewport-h="400"
+      reftest-displayport-w="800" reftest-displayport-h="1000"
+      reftest-no-sync-layers>
+<head>
+  <title></title>
+<script type="text/javascript">
+function initialPaint() {
+  window.removeEventListener("MozAfterPaint", initialPaint, false);
+  setTimeout(moveBox, 0);
+}
+
+function moveBox() {
+  var box = document.getElementById("box");
+  box.style.left = "300px";
+  window.addEventListener("MozAfterPaint", repaint, false);
+}
+
+function repaint() {
+  window.removeEventListener("MozAfterPaint", repaint, false);
+  setTimeout(finish, 0);
+}
+
+function finish() {
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("MozAfterPaint", initialPaint, false);
+</script>
+</head>
+
+<body style="width: 600px; height: 400px;">
+  <div style="position: absolute; left: 0px; top: 0px;
+              width=600px height=600px">
+    <div style="position: absolute; left: 0px; top: 0px;
+                width: 600px; height: 400px;
+                background-color: green;"></div>
+    <div id="box"
+         style="position: absolute; left: 0px; top: 400px;
+                width: 100px; height: 100px;
+                background-color: red;"></div>
+    <div style="position: absolute; left: 0px; top: 500px;
+                width: 600px; height: 100px;
+                background-color: yellow;"></div>
+  </div>
+</body>
+</html>

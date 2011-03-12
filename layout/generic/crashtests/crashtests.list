@@ -282,7 +282,7 @@ load 478170-1.html
 load 478185-1.html
 asserts(1) load 479938-1.html # Bug 575011
 load 480345-1.html
-load 481921.html
+skip-if(Android) load 481921.html
 load 489462-1.html
 load 489480-1.xhtml
 load 493111-1.html

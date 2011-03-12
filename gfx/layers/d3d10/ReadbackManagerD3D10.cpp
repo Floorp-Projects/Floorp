@@ -139,8 +139,8 @@ ReadbackManagerD3D10::ReadbackManagerD3D10()
   : mRefCnt(0)
 {
   ::InitializeCriticalSection(&mTaskMutex);
-  mShutdownEvent = ::CreateEventA(NULL, FALSE, FALSE, "ReadbackShutdownEvent");
-  mTaskSemaphore = ::CreateSemaphoreA(NULL, 0, 1000000, "ReadbackTaskSemaphore");
+  mShutdownEvent = ::CreateEventA(NULL, FALSE, FALSE, NULL);
+  mTaskSemaphore = ::CreateSemaphoreA(NULL, 0, 1000000, NULL);
   mTaskThread = ::CreateThread(NULL, 0, StartTaskThread, this, 0, 0);
 }
 
