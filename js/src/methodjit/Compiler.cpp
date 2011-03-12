@@ -3758,7 +3758,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
     FrameEntry *rhs = frame.peek(-1);
 
     /* If the incoming type will never PIC, take slow path. */
-    if (monitored(PC) || (lhs->isTypeKnown() && lhs->getKnownType() != JSVAL_TYPE_OBJECT)) {
+    if (lhs->isTypeKnown() && lhs->getKnownType() != JSVAL_TYPE_OBJECT) {
         jsop_setprop_slow(atom, usePropCache);
         return true;
     }
@@ -3770,6 +3770,15 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
                              : ic::PICInfo::SET;
     PICGenInfo pic(kind, op, usePropCache);
     pic.atom = atom;
+
+    if (monitored(PC)) {
+        types::TypeSet *types = rhs->getTypeSet();
+        pic.typeMonitored = true;
+        pic.knownType = types ? types->getSingleType(cx, script) : types::TYPE_UNKNOWN;
+    } else {
+        pic.typeMonitored = false;
+        pic.knownType = types::TYPE_UNKNOWN;
+    }
 
     RESERVE_IC_SPACE(masm);
     RESERVE_OOL_SPACE(stubcc.masm);
@@ -4860,6 +4869,7 @@ void
 mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache)
 {
     if (monitored(PC)) {
+        /* Global accesses are monitored only for a few names like __proto__. */
         jsop_setgname_slow(atom, usePropertyCache);
         return;
     }

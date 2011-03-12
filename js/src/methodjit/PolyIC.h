@@ -447,8 +447,14 @@ struct PICInfo : public BasePolyIC {
     RegisterID shapeReg : 5;        // also the out type reg
     RegisterID objReg   : 5;        // also the out data reg
 
+    // Whether type properties need to be updated to reflect generated stubs.
+    bool typeMonitored : 1;
+
     // Offset from start of fast path to initial shape guard.
     uint32 shapeGuard;
+
+    // Exact known type of the RHS, for monitored PICs.
+    types::jstype knownType;
     
     inline bool isSet() const {
         return kind == SET || kind == SETMETHOD;
