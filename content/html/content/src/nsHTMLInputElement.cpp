@@ -1082,6 +1082,15 @@ nsHTMLInputElement::GetValueInternal(nsAString& aValue) const
   return NS_OK;
 }
 
+bool
+nsHTMLInputElement::IsValueEmpty() const
+{
+  nsAutoString value;
+  GetValueInternal(value);
+
+  return value.IsEmpty();
+}
+
 NS_IMETHODIMP 
 nsHTMLInputElement::SetValue(const nsAString& aValue)
 {
@@ -3371,13 +3380,9 @@ nsHTMLInputElement::IntrinsicState() const
   }
 
   if (PlaceholderApplies() && HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder) &&
-      !nsContentUtils::IsFocusedContent((nsIContent*)(this))) {
-    nsAutoString value;
-    GetValueInternal(value);
-
-    if (value.IsEmpty()) {
-      state |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
-    }
+      !nsContentUtils::IsFocusedContent((nsIContent*)(this)) &&
+      IsValueEmpty()) {
+    state |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
   }
 
   if (mForm && !mForm->GetValidity() && IsSubmitControl()) {
@@ -3825,10 +3830,7 @@ nsHTMLInputElement::IsValueMissing() const
       return PR_FALSE;
     }
 
-    nsAutoString value;
-    NS_ENSURE_SUCCESS(GetValueInternal(value), PR_FALSE);
-
-    return value.IsEmpty();
+    return IsValueEmpty();
   }
 
   switch (mType)
