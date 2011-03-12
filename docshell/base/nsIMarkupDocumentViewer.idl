@@ -154,3 +154,11 @@ interface nsIMarkupDocumentViewer : nsISupports
    */
   attribute PRUint32 bidiOptions;
 };
+
+[scriptable, uuid(cadfcad1-5570-4dac-b5a2-cd1ea751fe29)]
+interface nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH : nsIMarkupDocumentViewer
+{
+	/** The minimum font size  */
+	attribute long minFontSize;
+
+};

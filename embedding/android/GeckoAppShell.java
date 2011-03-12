@@ -962,37 +962,86 @@ public class GeckoAppShell
     }
 
     public static void killAnyZombies() {
-        File proc = new File("/proc");
-        File[] files = proc.listFiles();
-        for (int i = 0; i < files.length; i++) {
-            File p = files[i];
-            File pEnv = new File(p, "environ");
-            if (pEnv.canRead() && !p.getName().equals("self")) {
-                int pid = Integer.parseInt(p.getName());
-                if (pid != android.os.Process.myPid()) {
-                    Log.i("GeckoProcs", "gonna kill pid: " + p.getName());
+        GeckoProcessesVisitor visitor = new GeckoProcessesVisitor() {
+            public boolean callback(int pid) {
+                if (pid != android.os.Process.myPid())
                     android.os.Process.killProcess(pid);
-                }
+                return true;
             }
-        }
+        };
+            
+        EnumerateGeckoProcesses(visitor);
     }
 
     public static boolean checkForGeckoProcs() {
-        File proc = new File("/proc");
-        File[] files = proc.listFiles();
-        for (int i = 0; i < files.length; i++) {
-            File p = files[i];
-            File pEnv = new File(p, "environ");
-            if (pEnv.canRead() && !p.getName().equals("self")) {
-                int pid = Integer.parseInt(p.getName());
+
+        class GeckoPidCallback implements GeckoProcessesVisitor {
+            public boolean otherPidExist = false;
+            public boolean callback(int pid) {
                 if (pid != android.os.Process.myPid()) {
-                    Log.i("GeckoProcs", "found pid: " + p.getName());
-                    return true;
+                    otherPidExist = true;
+                    return false;
+                }
+                return true;
+            }            
+        }
+        GeckoPidCallback visitor = new GeckoPidCallback();            
+        EnumerateGeckoProcesses(visitor);
+        return visitor.otherPidExist;
+    }
+
+    interface GeckoProcessesVisitor{
+        boolean callback(int pid);
+    }
+
+    static int sPidColumn = -1;
+    static int sUserColumn = -1;
+    private static void EnumerateGeckoProcesses(GeckoProcessesVisitor visiter) {
+
+        try {
+
+            // run ps and parse its output
+            java.lang.Process ps = Runtime.getRuntime().exec("ps");
+            BufferedReader in = new BufferedReader(new InputStreamReader(ps.getInputStream()),
+                                                   2048);
+
+            String headerOutput = in.readLine();
+
+            // figure out the column offsets.  We only care about the pid and user fields
+            if (sPidColumn == -1 || sUserColumn == -1) {
+                StringTokenizer st = new StringTokenizer(headerOutput);
+                
+                int tokenSoFar = 0;
+                while(st.hasMoreTokens()) {
+                    String next = st.nextToken();
+                    if (next.equalsIgnoreCase("PID"))
+                        sPidColumn = tokenSoFar;
+                    else if (next.equalsIgnoreCase("USER"))
+                        sUserColumn = tokenSoFar;
+                    tokenSoFar++;
                 }
             }
+
+            // alright, the rest are process entries.
+            String psOutput = null;
+            while ((psOutput = in.readLine()) != null) {
+                String[] split = psOutput.split("\\s+");
+                if (split.length <= sPidColumn || split.length <= sUserColumn)
+                    continue;
+                int uid = android.os.Process.getUidForName(split[sUserColumn]);
+                if (uid == android.os.Process.myUid() &&
+                    !split[split.length - 1].equalsIgnoreCase("ps")) {
+                    int pid = Integer.parseInt(split[sPidColumn]);
+                    boolean keepGoing = visiter.callback(pid);
+                    if (keepGoing == false)
+                        break;
+                }
+            }
+            in.close();
         }
-        Log.i("GeckoProcs", "didn't find any other procs");
-        return false;
+        catch (Exception e) {
+            Log.i("GeckoAppShell", "finding procs throws ",  e);
+        }
     }
 
     public static void waitForAnotherGeckoProc(){

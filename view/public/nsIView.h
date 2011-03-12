@@ -174,6 +174,17 @@ public:
   nsRect GetBounds() const { return mDimBounds; }
 
   /**
+   * Set the dimensions at which invalidations are clipped, which can
+   * be different than |GetDimensions()|.  |aRect| is relative to
+   * |this|.  It can be null, in which case invalidations return to
+   * being clipped to the view dimensions.
+   *
+   * The caller is responsible for invalidating the area that may lie
+   * outside the view dimensions but inside |aRect| after this call.
+   */
+  void SetInvalidationDimensions(const nsRect* aRect);
+
+  /**
    * Get the offset between the coordinate systems of |this| and aOther.
    * Adding the return value to a point in the coordinate system of |this|
    * will transform the point to the coordinate system of aOther.

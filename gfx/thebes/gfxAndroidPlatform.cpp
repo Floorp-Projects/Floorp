@@ -418,23 +418,24 @@ gfxAndroidPlatform::AppendFacesFromFontFile(const char *aFileName, FontNameCache
 }
 
 void
-gfxAndroidPlatform::FindFontsInDirectory(const char *aDirectory, FontNameCache* aFontCache)
+gfxAndroidPlatform::FindFontsInDirectory(const nsCString& aFontsDir,
+                                         FontNameCache* aFontCache)
 {
-    DIR *d = opendir(aDirectory);
+    DIR *d = opendir(aFontsDir.get());
     struct dirent *ent = NULL;
     while(d && (ent = readdir(d)) != NULL) {
         int namelen = strlen(ent->d_name);
         if (namelen > 4 &&
             strcasecmp(ent->d_name + namelen - 4, ".ttf") == 0)
         {
-            nsCString s(aDirectory);
-            s.Append("/fonts/");
+            nsCString s(aFontsDir);
             s.Append(nsDependentCString(ent->d_name));
 
             AppendFacesFromFontFile(nsPromiseFlatCString(s).get(),
                                     aFontCache, &mFontList);
         }
     }
+    closedir(d);
 }
 
 void
@@ -452,13 +453,16 @@ gfxAndroidPlatform::GetFontList(InfallibleTArray<FontListEntry>* retValue)
         return;
     }
 
-    // Check in both /system and $ANDROID_ROOT
+    // ANDROID_ROOT is the root of the android system, typically /system
+    // font files are in /$ANDROID_ROOT/fonts/
     FontNameCache fnc;
-    const char *systemDirectory = "/system";
-    FindFontsInDirectory(systemDirectory, &fnc);
+    FindFontsInDirectory(NS_LITERAL_CSTRING("/system/fonts/"), &fnc);
     char *androidRoot = PR_GetEnv("ANDROID_ROOT");
-    if (androidRoot && strcmp(androidRoot, systemDirectory))
-        FindFontsInDirectory(androidRoot, &fnc);
+    if (androidRoot && strcmp(androidRoot, "/system")) {
+        nsCString root(androidRoot);
+        root.Append("/fonts/");
+        FindFontsInDirectory(root, &fnc);
+    }
 
     *retValue = mFontList;
 }
