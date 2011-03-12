@@ -2499,7 +2499,9 @@ Tab.prototype = {
         viewportH = Math.max(viewportH, screenH * (browser.contentDocumentWidth / screenW));
       }
     }
-    browser.setWindowSize(viewportW, viewportH);
+
+    if (browser.contentWindowWidth != viewportW || browser.contentWindowHeight != viewportH)
+      browser.setWindowSize(viewportW, viewportH);
   },
 
   restoreViewportPosition: function restoreViewportPosition(aOldWidth, aNewWidth) {
