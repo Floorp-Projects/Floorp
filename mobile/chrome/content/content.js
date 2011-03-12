@@ -847,17 +847,21 @@ var ContextHandler = {
           state.linkProtocol = this._getProtocol(this._getURI(state.linkURL));
           break;
         } else if ((elem instanceof Ci.nsIDOMHTMLInputElement &&
-                    elem.mozIsTextField(true)) || elem instanceof Ci.nsIDOMHTMLTextAreaElement) {
+                    elem.mozIsTextField(false)) || elem instanceof Ci.nsIDOMHTMLTextAreaElement) {
           let selectionStart = elem.selectionStart;
           let selectionEnd = elem.selectionEnd;
 
           state.types.push("input-text");
-          if (selectionStart != selectionEnd) {
-            state.types.push("copy");
-            state.string = elem.value.slice(selectionStart, selectionEnd);
-          } else if (elem.value) {
-            state.types.push("copy-all");
-            state.string = elem.value;
+
+          // Don't include "copy" for password fields.
+          if (elem.mozIsTextField(true)) {
+            if (selectionStart != selectionEnd) {
+              state.types.push("copy");
+              state.string = elem.value.slice(selectionStart, selectionEnd);
+            } else if (elem.value) {
+              state.types.push("copy-all");
+              state.string = elem.value;
+            }
           }
 
           if (selectionStart > 0 || selectionEnd < elem.textLength)
