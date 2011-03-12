@@ -51,15 +51,15 @@
 namespace js {
 
 inline
-Bindings::Bindings(JSContext *cx, EmptyShape *emptyCallShape)
-  : lastBinding(emptyCallShape), nargs(0), nvars(0), nupvars(0)
+Bindings::Bindings(JSContext *cx)
+  : lastBinding(NULL), nargs(0), nvars(0), nupvars(0)
 {
 }
 
 inline void
 Bindings::transfer(JSContext *cx, Bindings *bindings)
 {
-    JS_ASSERT(lastBinding == cx->compartment->emptyCallShape);
+    JS_ASSERT(!lastBinding);
 
     *this = *bindings;
 #ifdef DEBUG
@@ -67,20 +67,22 @@ Bindings::transfer(JSContext *cx, Bindings *bindings)
 #endif
 
     /* Preserve back-pointer invariants across the lastBinding transfer. */
-    if (lastBinding->inDictionary())
+    if (lastBinding && lastBinding->inDictionary())
         lastBinding->listp = &this->lastBinding;
 }
 
 inline void
 Bindings::clone(JSContext *cx, Bindings *bindings)
 {
-    JS_ASSERT(lastBinding == cx->compartment->emptyCallShape);
+    JS_ASSERT(!lastBinding);
 
     /*
      * Non-dictionary bindings are fine to share, as are dictionary bindings if
      * they're copy-on-modification.
      */
-    JS_ASSERT(!bindings->lastBinding->inDictionary() || bindings->lastBinding->frozen());
+    JS_ASSERT(!bindings->lastBinding ||
+              !bindings->lastBinding->inDictionary() ||
+              bindings->lastBinding->frozen());
 
     *this = *bindings;
 }
@@ -91,6 +93,19 @@ Bindings::lastShape() const
     JS_ASSERT(lastBinding);
     JS_ASSERT_IF(lastBinding->inDictionary(), lastBinding->frozen());
     return lastBinding;
+}
+
+bool
+Bindings::ensureShape(JSContext *cx)
+{
+    if (!lastBinding) {
+        lastBinding = EmptyShape::create(cx, &js_CallClass);
+        if (!lastBinding) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+    }
+    return true;
 }
 
 } // namespace js

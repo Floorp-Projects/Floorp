@@ -676,10 +676,6 @@ struct EmptyShape : public js::Shape
         return ensure(cx, &js_BlockClass, &cx->compartment->emptyBlockShape);
     }
 
-    static EmptyShape *getEmptyCallShape(JSContext *cx) {
-        return ensure(cx, &js_CallClass, &cx->compartment->emptyCallShape);
-    }
-
     static EmptyShape *getEmptyDeclEnvShape(JSContext *cx) {
         return ensure(cx, &js_DeclEnvClass, &cx->compartment->emptyDeclEnvShape);
     }

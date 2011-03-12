@@ -97,14 +97,14 @@ const jstype TYPE_UNKNOWN = 7;
 static inline bool
 TypeIsPrimitive(jstype type)
 {
-    JS_ASSERT(type && type != TYPE_UNKNOWN);
+    JS_ASSERT(type);
     return type < TYPE_UNKNOWN;
 }
 
 static inline bool
 TypeIsObject(jstype type)
 {
-    JS_ASSERT(type && type != TYPE_UNKNOWN);
+    JS_ASSERT(type);
     return type > TYPE_UNKNOWN;
 }
 
@@ -299,13 +299,17 @@ struct TypeSet
      */
     static inline TypeSet* make(JSContext *cx, const char *name);
 
-    /* Methods for JIT compilation. */
-
     /*
-     * Get any type tag which all values in this set must have.  Should this type
-     * set change in the future so that another type tag is possible, mark script
-     * for recompilation.
+     * Methods for JIT compilation. Each of these takes a script argument indicating
+     * which compiled code depends on the return value of these calls. Should that
+     * returned value change in the future due to new type information, the script
+     * will be marked for recompilation.
      */
+
+    /* Get the single type representing all values in this set, TYPE_UNKNOWN otherwise. */
+    jstype getSingleType(JSContext *cx, JSScript *script);
+
+    /* Get any type tag which all values in this set must have. */
     JSValueType getKnownTypeTag(JSContext *cx, JSScript *script);
 
     /* Get information about the kinds of objects in this type set. */

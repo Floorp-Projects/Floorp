@@ -200,6 +200,9 @@ class SetPropCompiler : public PICStubCompiler
 
     static void reset(Repatcher &repatcher, ic::PICInfo &pic)
     {
+        if (types::TypeIsObject(pic.knownType) && !((types::TypeObject*)pic.knownType)->marked)
+            pic.knownType = types::TYPE_UNKNOWN;
+
         SetPropLabels &labels = pic.setPropLabels();
         repatcher.repatchLEAToLoadPtr(labels.getDslotsLoad(pic.fastPathRejoin, pic.u.vr));
         repatcher.repatch(labels.getInlineShapeData(pic.fastPathStart, pic.shapeGuard),
@@ -597,6 +600,14 @@ class SetPropCompiler : public PICStubCompiler
             if (obj->numSlots() != slots)
                 return disable("insufficient slot capacity");
 
+            if (pic.typeMonitored) {
+                uint32 recompilations = f.jit()->recompilations;
+                if (!cx->addTypePropertyId(obj->getType(), shape->id, pic.knownType))
+                    return error();
+                if (f.jit()->recompilations != recompilations)
+                    return Lookup_Uncacheable;
+            }
+
             return generateStub(initialShape, shape, true, !obj->hasSlotsArray());
         }
 
@@ -609,12 +620,35 @@ class SetPropCompiler : public PICStubCompiler
         if (shape->hasDefaultSetter()) {
             if (!shape->hasSlot())
                 return disable("invalid slot");
+            if (pic.typeMonitored) {
+                uint32 recompilations = f.jit()->recompilations;
+                if (!cx->addTypePropertyId(obj->getType(), shape->id, pic.knownType))
+                    return error();
+                if (f.jit()->recompilations != recompilations)
+                    return Lookup_Uncacheable;
+            }
         } else {
             if (shape->hasSetterValue())
                 return disable("scripted setter");
             if (shape->setterOp() != SetCallArg &&
                 shape->setterOp() != SetCallVar) {
                 return disable("setter");
+            }
+            if (pic.typeMonitored) {
+                uint32 recompilations = f.jit()->recompilations;
+                JSScript *script = obj->getCallObjCalleeFunction()->script();
+                uint16 slot = uint16(shape->shortid);
+                if (!script->ensureVarTypes(cx))
+                    return error();
+                if (shape->setterOp() == SetCallArg) {
+                    if (!script->typeSetArgument(cx, slot, pic.knownType))
+                        return error();
+                } else {
+                    if (!script->typeSetLocal(cx, slot, pic.knownType))
+                        return error();
+                }
+                if (f.jit()->recompilations != recompilations)
+                    return Lookup_Uncacheable;
             }
         }
 
@@ -1736,6 +1770,12 @@ ic::SetProp(VMFrame &f, ic::PICInfo *pic)
                        ? STRICT_VARIANT(DisabledSetPropIC)
                        : STRICT_VARIANT(DisabledSetPropICNoCache);
 
+    // Save this in case the compiler triggers a recompilation of this script.
+    JSAtom *atom = pic->atom;
+    VoidStubAtom nstub = pic->usePropCache
+                         ? STRICT_VARIANT(stubs::SetName)
+                         : STRICT_VARIANT(stubs::SetPropNoCache);
+
     //
     // Important: We update the PIC before looking up the property so that the
     // PIC is updated only if the property already exists. The PIC doesn't try
@@ -1745,14 +1785,14 @@ ic::SetProp(VMFrame &f, ic::PICInfo *pic)
     // cache can't handle a GET and SET from the same scripted PC.
     if (pic->shouldUpdate(f.cx)) {
 
-        SetPropCompiler cc(f, script, obj, *pic, pic->atom, stub);
+        SetPropCompiler cc(f, script, obj, *pic, atom, stub);
         LookupStatus status = cc.update();
         if (status == Lookup_Error)
             THROW();
     }
     
     Value rval = f.regs.sp[-1];
-    stub(f, pic);
+    nstub(f, atom);
 }
 
 static void JS_FASTCALL

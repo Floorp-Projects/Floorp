@@ -567,13 +567,12 @@ JSScript::typeSetNewCalled(JSContext *cx)
 }
 
 inline bool
-JSScript::typeSetLocal(JSContext *cx, unsigned local, const js::Value &value)
+JSScript::typeSetLocal(JSContext *cx, unsigned local, js::types::jstype type)
 {
     if (!cx->typeInferenceEnabled())
         return true;
     if (!ensureVarTypes(cx))
         return false;
-    js::types::jstype type = js::types::GetValueType(cx, value);
     if (!localTypes(local)->hasType(type)) {
         js::types::AutoEnterTypeInference enter(cx);
 
@@ -582,6 +581,16 @@ JSScript::typeSetLocal(JSContext *cx, unsigned local, const js::Value &value)
         localTypes(local)->addType(cx, type);
 
         return compartment->types.checkPendingRecompiles(cx);
+    }
+    return true;
+}
+
+inline bool
+JSScript::typeSetLocal(JSContext *cx, unsigned local, const js::Value &value)
+{
+    if (cx->typeInferenceEnabled()) {
+        js::types::jstype type = js::types::GetValueType(cx, value);
+        return typeSetLocal(cx, local, type);
     }
     return true;
 }
