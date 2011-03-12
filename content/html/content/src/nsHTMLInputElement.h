@@ -391,6 +391,13 @@ protected:
 
   nsresult GetValueInternal(nsAString& aValue) const;
 
+  /**
+   * Returns whether the current value is the empty string.
+   *
+   * @return whether the current value is the empty string.
+   */
+  bool IsValueEmpty() const;
+
   void ClearFiles(bool aSetValueChanged) {
     nsCOMArray<nsIDOMFile> files;
     SetFiles(files, aSetValueChanged);
