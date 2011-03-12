@@ -1282,6 +1282,67 @@ TypeConstraintCondensed::arrayNotPacked(JSContext *cx, bool notDense)
     AnalyzeScriptTypes(cx, script);
 }
 
+/* Constraint which triggers recompilation of a script if any type is added to a type set. */
+class TypeConstraintFreezeSingleType : public TypeConstraint
+{
+public:
+    /* Whether a second type has already been added, triggering recompilation. */
+    bool typeAdded;
+
+    TypeConstraintFreezeSingleType(JSScript *script)
+        : TypeConstraint("freezeSingleType", script), typeAdded(false)
+    {}
+
+    void newType(JSContext *cx, TypeSet *source, jstype type)
+    {
+        if (typeAdded)
+            return;
+
+        typeAdded = true;
+        cx->compartment->types.addPendingRecompile(cx, script);
+    }
+};
+
+static inline jstype
+GetSingleTypeFromTypeFlags(TypeFlags flags)
+{
+    switch (flags) {
+      case TYPE_FLAG_UNDEFINED:
+        return TYPE_UNDEFINED;
+      case TYPE_FLAG_NULL:
+        return TYPE_NULL;
+      case TYPE_FLAG_BOOLEAN:
+        return TYPE_BOOLEAN;
+      case TYPE_FLAG_INT32:
+        return TYPE_INT32;
+      case (TYPE_FLAG_INT32 | TYPE_FLAG_DOUBLE):
+        return TYPE_DOUBLE;
+      case TYPE_FLAG_STRING:
+        return TYPE_STRING;
+      default:
+        return TYPE_UNKNOWN;
+    }
+}
+
+jstype
+TypeSet::getSingleType(JSContext *cx, JSScript *script)
+{
+    TypeFlags flags = typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET;
+    jstype type;
+
+    if (objectCount >= 2)
+        type = TYPE_UNKNOWN;
+    else if (objectCount == 1)
+        type = flags ? TYPE_UNKNOWN : (jstype) objectSet;
+    else
+        type = GetSingleTypeFromTypeFlags(flags);
+
+    if (script && type != TYPE_UNKNOWN)
+        add(cx, ArenaNew<TypeConstraintFreezeSingleType>(cx->compartment->types.pool, script), false);
+
+    return type;
+}
+
 /*
  * Constraint which triggers recompilation of a script if a possible new JSValueType
  * tag is realized for a type set.

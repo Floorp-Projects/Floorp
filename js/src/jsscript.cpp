@@ -79,7 +79,8 @@ namespace js {
 BindingKind
 Bindings::lookup(JSContext *cx, JSAtom *name, uintN *indexp) const
 {
-    JS_ASSERT(lastBinding);
+    if (!lastBinding)
+        return NONE;
 
     Shape *shape =
         SHAPE_FETCH(Shape::search(cx->runtime, const_cast<Shape **>(&lastBinding),
@@ -101,7 +102,8 @@ Bindings::lookup(JSContext *cx, JSAtom *name, uintN *indexp) const
 bool
 Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
 {
-    JS_ASSERT(lastBinding);
+    if (!ensureShape(cx))
+        return false;
 
     /*
      * We still follow 10.2.3 of ES3 and make argument and variable properties
@@ -377,12 +379,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     JS_ASSERT(nvars != Bindings::BINDING_COUNT_LIMIT);
     JS_ASSERT(nupvars != Bindings::BINDING_COUNT_LIMIT);
 
-    EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
-    if (!emptyCallShape)
-        return false;
-    AutoShapeRooter shapeRoot(cx, emptyCallShape);
-
-    Bindings bindings(cx, emptyCallShape);
+    Bindings bindings(cx);
     AutoBindingsRooter rooter(cx, bindings);
     uint32 nameCount = nargs + nvars + nupvars;
     if (nameCount > 0) {
@@ -470,8 +467,11 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
             }
         }
 
-        if (xdr->mode == JSXDR_DECODE)
+        if (xdr->mode == JSXDR_DECODE) {
+            if (!bindings.ensureShape(cx))
+                return false;
             bindings.makeImmutable();
+        }
     }
 
     if (xdr->mode == JSXDR_ENCODE)
@@ -1206,11 +1206,6 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
                     uint32 ntrynotes, uint32 nconsts, uint32 nglobals,
                     uint16 nClosedArgs, uint16 nClosedVars, JSVersion version)
 {
-    EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
-    if (!emptyCallShape)
-        return NULL;
-    AutoShapeRooter shapeRoot(cx, emptyCallShape);
-
     size_t size, vectorSize;
     JSScript *script;
     uint8 *cursor;
@@ -1254,7 +1249,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
     PodZero(script);
     script->length = length;
     script->version = version;
-    new (&script->bindings) Bindings(cx, emptyCallShape);
+    new (&script->bindings) Bindings(cx);
 
     uint8 *scriptEnd = reinterpret_cast<uint8 *>(script + 1);
 
@@ -1512,6 +1507,8 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
                script->nClosedVars * sizeof(uint32));
     }
 
+    if (!cg->bindings.ensureShape(cx))
+        goto bad;
     cg->bindings.makeImmutable();
     script->bindings.transfer(cx, &cg->bindings);
 

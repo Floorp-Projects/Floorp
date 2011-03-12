@@ -2519,12 +2519,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
     }
 
-    EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
-    if (!emptyCallShape)
-        return JS_FALSE;
-    AutoShapeRooter shapeRoot(cx, emptyCallShape);
-
-    Bindings bindings(cx, emptyCallShape);
+    Bindings bindings(cx);
     AutoBindingsRooter root(cx, bindings);
 
     Value *argv = vp + 2;

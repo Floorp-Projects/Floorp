@@ -229,6 +229,8 @@ class Compiler : public BaseCompiler
         jsbytecode *pc;
         JSAtom *atom;
         bool hasTypeCheck;
+        bool typeMonitored;
+        types::jstype knownType;
         ValueRemat vr;
 #ifdef JS_HAS_IC_LABELS
         union {
@@ -285,6 +287,8 @@ class Compiler : public BaseCompiler
                 ic.u.get.typeReg = typeReg;
                 ic.u.get.hasTypeCheck = hasTypeCheck;
             }
+            ic.typeMonitored = typeMonitored;
+            ic.knownType = knownType;
 #ifdef JS_HAS_IC_LABELS
             if (ic.isGet())
                 ic.setLabels(getPropLabels());

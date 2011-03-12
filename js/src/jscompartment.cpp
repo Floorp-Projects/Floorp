@@ -75,7 +75,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     propertyTree(thisForCtor()),
     emptyArgumentsShape(NULL),
     emptyBlockShape(NULL),
-    emptyCallShape(NULL),
     emptyDeclEnvShape(NULL),
     emptyEnumeratorShape(NULL),
     emptyWithShape(NULL),
@@ -500,8 +499,6 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
         emptyArgumentsShape = NULL;
     if (emptyBlockShape && !emptyBlockShape->marked())
         emptyBlockShape = NULL;
-    if (emptyCallShape && !emptyCallShape->marked())
-        emptyCallShape = NULL;
     if (emptyDeclEnvShape && !emptyDeclEnvShape->marked())
         emptyDeclEnvShape = NULL;
     if (emptyEnumeratorShape && !emptyEnumeratorShape->marked())
@@ -512,6 +509,18 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 #ifdef JS_TRACER
     traceMonitor.sweep(cx);
 #endif
+
+# if defined JS_POLYIC
+    /*
+     * Purge all PICs in the compartment. These can reference type data and
+     * need to know which types are pending collection.
+     */
+    for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
+        JSScript *script = reinterpret_cast<JSScript *>(cursor);
+        if (script->hasJITCode())
+            mjit::ic::PurgePICs(cx, script);
+    }
+# endif
 
     if (!types.inferenceDepth && types.inferenceEnabled) {
         for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
@@ -599,9 +608,6 @@ JSCompartment::purge(JSContext *cx)
          &script->links != &scripts;
          script = (JSScript *)script->links.next) {
         if (script->hasJITCode()) {
-# if defined JS_POLYIC
-            mjit::ic::PurgePICs(cx, script);
-# endif
 # if defined JS_MONOIC
             /*
              * MICs do not refer to data which can be GC'ed and do not generate stubs
