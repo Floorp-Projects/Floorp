@@ -672,7 +672,7 @@ struct TypeCompartment
 
     uint64 currentTime()
     {
-#ifndef _MSC_VER
+#if 0
         timeval current;
         gettimeofday(&current, NULL);
         return current.tv_sec * (uint64_t) 1000000 + current.tv_usec;

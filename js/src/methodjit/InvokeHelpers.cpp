@@ -343,7 +343,7 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
 }
 
 static inline bool
-UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint32 argc)
+UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint32 argc, types::jstype *argTypes)
 {
     JSContext *cx = f.cx;
     Value *vp = f.regs.sp - (argc + 2);
@@ -351,9 +351,18 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
     JSFunction *newfun = callee.getFunctionPrivate();
     JSScript *newscript = newfun->script();
 
-    CallArgs args(vp + 2, argc);
-    if (!cx->typeMonitorCall(args, flags & JSFRAME_CONSTRUCTING))
-        return false;
+    if (argTypes) {
+        if (!(flags & JSFRAME_CONSTRUCTING) && !newscript->typeSetThis(cx, argTypes[0]))
+            return false;
+        for (unsigned i = 0; i < newfun->nargs; i++) {
+            if (!newscript->typeSetArgument(cx, i, argTypes[1 + i]))
+                return false;
+        }
+    } else {
+        CallArgs args(vp + 2, argc);
+        if (!cx->typeMonitorCall(args, flags & JSFRAME_CONSTRUCTING))
+            return false;
+    }
 
     /* Get pointer to new frame/slots, prepare arguments. */
     StackSpace &stack = cx->stack();
@@ -405,12 +414,12 @@ void * JS_FASTCALL
 stubs::UncachedNew(VMFrame &f, uint32 argc)
 {
     UncachedCallResult ucr;
-    UncachedNewHelper(f, argc, &ucr);
+    UncachedNewHelper(f, argc, NULL, &ucr);
     return ucr.codeAddr;
 }
 
 void
-stubs::UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
+stubs::UncachedNewHelper(VMFrame &f, uint32 argc, types::jstype *argTypes, UncachedCallResult *ucr)
 {
     ucr->init();
 
@@ -420,7 +429,7 @@ stubs::UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
     /* Try to do a fast inline call before the general Invoke path. */
     if (IsFunctionObject(*vp, &ucr->fun) && ucr->fun->isInterpreted()) {
         ucr->callee = &vp->toObject();
-        if (!UncachedInlineCall(f, JSFRAME_CONSTRUCTING, &ucr->codeAddr, &ucr->unjittable, argc))
+        if (!UncachedInlineCall(f, JSFRAME_CONSTRUCTING, &ucr->codeAddr, &ucr->unjittable, argc, argTypes))
             THROW();
     } else {
         if (!InvokeConstructor(cx, InvokeArgsAlreadyOnTheStack(vp, argc)))
@@ -432,7 +441,7 @@ void * JS_FASTCALL
 stubs::UncachedCall(VMFrame &f, uint32 argc)
 {
     UncachedCallResult ucr;
-    UncachedCallHelper(f, argc, &ucr);
+    UncachedCallHelper(f, argc, NULL, &ucr);
     return ucr.codeAddr;
 }
 
@@ -453,7 +462,7 @@ stubs::Eval(VMFrame &f, uint32 argc)
 }
 
 void
-stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
+stubs::UncachedCallHelper(VMFrame &f, uint32 argc, types::jstype *argTypes, UncachedCallResult *ucr)
 {
     ucr->init();
 
@@ -465,7 +474,7 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
         ucr->fun = GET_FUNCTION_PRIVATE(cx, ucr->callee);
 
         if (ucr->fun->isInterpreted()) {
-            if (!UncachedInlineCall(f, 0, &ucr->codeAddr, &ucr->unjittable, argc))
+            if (!UncachedInlineCall(f, 0, &ucr->codeAddr, &ucr->unjittable, argc, argTypes))
                 THROW();
             return;
         }

@@ -460,9 +460,9 @@ mjit::Compiler::generatePrologue()
              * This loops back to entry point #2.
              */
             arityLabel = stubcc.masm.label();
+
             Jump argMatch = stubcc.masm.branch32(Assembler::Equal, JSParamReg_Argc,
                                                  Imm32(fun->nargs));
-            stubcc.crossJump(argMatch, fastPath);
 
             if (JSParamReg_Argc != Registers::ArgReg1)
                 stubcc.masm.move(JSParamReg_Argc, Registers::ArgReg1);
@@ -472,6 +472,26 @@ mjit::Compiler::generatePrologue()
             stubcc.masm.storePtr(JSFrameReg, FrameAddress(offsetof(VMFrame, regs.fp)));
             OOL_STUBCALL(stubs::FixupArity);
             stubcc.masm.move(Registers::ReturnReg, JSFrameReg);
+            argMatch.linkTo(stubcc.masm.label(), &stubcc.masm);
+
+            if (cx->typeInferenceEnabled()) {
+                /* Make sure 'this' and all arguments are marked as undefined. */
+                bool emitCall = false;
+                if (!isConstructing && !script->thisTypes()->unknown())
+                    emitCall = true;
+                for (unsigned i = 0; i < fun->nargs; i++) {
+                    if (!isConstructing && !script->argTypes(i)->unknown())
+                        emitCall = true;
+                }
+                if (emitCall) {
+                    stubcc.masm.storePtr(ImmPtr(fun), Address(JSFrameReg, JSStackFrame::offsetOfExec()));
+                    OOL_STUBCALL(stubs::ClearArgumentTypes);
+                } else if (recompiling) {
+                    stubcc.crossJump(stubcc.masm.jump(), fastPath);
+                    OOL_STUBCALL(stubs::ClearArgumentTypes);
+                }
+            }
+
             stubcc.crossJump(stubcc.masm.jump(), fastPath);
         }
 
@@ -752,6 +772,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         jitCallICs[i].funGuard = fullCode.locationOf(callICs[i].funGuard);
         jitCallICs[i].funJump = fullCode.locationOf(callICs[i].funJump);
         jitCallICs[i].slowPathStart = stubCode.locationOf(callICs[i].slowPathStart);
+        jitCallICs[i].typeMonitored = callICs[i].typeMonitored;
+        jitCallICs[i].argTypes = callICs[i].argTypes;
 
         /* Compute the hot call offset. */
         uint32 offset = fullCode.locationOf(callICs[i].hotJump) -
@@ -2810,9 +2832,6 @@ mjit::Compiler::checkCallApplySpeculation(uint32 callImmArgc, uint32 speculatedA
         stubcc.masm.jump(r0);
         notCompiled.linkTo(stubcc.masm.label(), &stubcc.masm);
 
-        /* :FIXME: not handling call/apply speculation that results in a double. */
-        JS_ASSERT(knownPushedType(0) != JSVAL_TYPE_DOUBLE);
-
         /*
          * inlineCallHelper will link uncachedCallSlowRejoin to the join point
          * at the end of the ic. At that join point, the return value of the
@@ -2820,6 +2839,8 @@ mjit::Compiler::checkCallApplySpeculation(uint32 callImmArgc, uint32 speculatedA
          */
         JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW RESTORE CODE ---- \n");
         Address rval = frame.addressOf(origCallee);  /* vp[0] == rval */
+        if (knownPushedType(0) == JSVAL_TYPE_DOUBLE)
+            stubcc.masm.ensureInMemoryDouble(rval);
         stubcc.masm.loadValueAsComponents(rval, JSReturnReg_Type, JSReturnReg_Data);
         *uncachedCallSlowRejoin = stubcc.masm.jump();
         JaegerSpew(JSpew_Insns, " ---- END SLOW RESTORE CODE ---- \n");
@@ -2840,26 +2861,16 @@ mjit::Compiler::checkCallApplySpeculation(uint32 callImmArgc, uint32 speculatedA
 bool
 mjit::Compiler::canUseApplyTricks()
 {
-    if (cx->typeInferenceEnabled()) {
-        /*
-         * :FIXME: bug 619428 inference currently assumes that arguments passed
-         * via call and apply are monitored, and that short circuiting these
-         * doesn't happen.
-         */
-        return false;
-    }
-
     JS_ASSERT(*PC == JSOP_ARGUMENTS);
     jsbytecode *nextpc = PC + JSOP_ARGUMENTS_LENGTH;
     return *nextpc == JSOP_FUNAPPLY &&
-           !cx->typeInferenceEnabled() /* :FIXME: bug 619428 */ && 
            IsLowerableFunCallOrApply(nextpc) &&
            !analysis->jumpTarget(nextpc) &&
            !debugMode();
 }
 
 /* See MonoIC.cpp, CallCompiler for more information on call ICs. */
-void
+bool
 mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
 {
     /* Check for interrupts on function call */
@@ -2887,14 +2898,14 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
      * the callIC cache and call 'this' directly. However, if it turns out that
      * we are not actually calling js_fun_call, the callIC must act as normal.
      */
-    bool lowerFunCallOrApply = !cx->typeInferenceEnabled() /* :FIXME: bug 619428 */ && IsLowerableFunCallOrApply(PC);
+    bool lowerFunCallOrApply = IsLowerableFunCallOrApply(PC);
 
     /*
      * Currently, constant values are not functions, so don't even try to
      * optimize. This lets us assume that callee/this have regs below.
      */
 #ifdef JS_MONOIC
-    if (debugMode() || monitored(PC) ||
+    if (debugMode() ||
         origCallee->isConstant() || origCallee->isNotType(JSVAL_TYPE_OBJECT) ||
         (lowerFunCallOrApply &&
          (origThis->isConstant() || origThis->isNotType(JSVAL_TYPE_OBJECT)))) {
@@ -2905,7 +2916,8 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
             frame.pushSynced(JSVAL_TYPE_UNKNOWN, NULL);
         }
         emitUncachedCall(callImmArgc, callingNew);
-        return;
+        applyTricks = NoApplyTricks;
+        return true;
 #ifdef JS_MONOIC
     }
 
@@ -2985,6 +2997,20 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
             icCalleeData = origCalleeData;
             icRvalAddr = frame.addressOf(origCallee);
             callIC.frameSize.initStatic(frame.localSlots(), speculatedArgc);
+        }
+    }
+
+    callIC.argTypes = NULL;
+    callIC.typeMonitored = monitored(PC);
+    if (callIC.typeMonitored && callIC.frameSize.isStatic()) {
+        callIC.argTypes = (types::jstype *) js_calloc((1 + callImmArgc) * sizeof(types::jstype));
+        if (!callIC.argTypes)
+            return false;
+        types::TypeSet *types = origThis->getTypeSet();
+        callIC.argTypes[0] = types ? types->getSingleType(cx, script) : types::TYPE_UNKNOWN;
+        for (unsigned i = 0; i < callImmArgc; i++) {
+            types::TypeSet *types = frame.peek(-(callImmArgc - i))->getTypeSet();
+            callIC.argTypes[i + 1] = types ? types->getSingleType(cx, script) : types::TYPE_UNKNOWN;
         }
     }
 
@@ -3172,6 +3198,8 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
         callPatches.append(uncachedCallPatch);
 
     applyTricks = NoApplyTricks;
+
+    return true;
 #endif
 }
 

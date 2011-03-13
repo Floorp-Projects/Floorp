@@ -2795,6 +2795,29 @@ stubs::NegZeroHelper(VMFrame &f)
 }
 
 void JS_FASTCALL
+stubs::ClearArgumentTypes(VMFrame &f)
+{
+    JSFunction *fun = f.fp()->fun();
+    JSScript *script = fun->script();
+
+    /* Postpone recompilations until all args have been updated. */
+    types::AutoEnterTypeInference enter(f.cx);
+
+    if (!f.fp()->isConstructing()) {
+        if (!script->typeSetThis(f.cx, types::TYPE_UNKNOWN))
+            THROW();
+    }
+
+    for (unsigned i = 0; i < fun->nargs; i++) {
+        if (!script->typeSetArgument(f.cx, i, types::TYPE_UNKNOWN))
+            THROW();
+    }
+
+    if (!f.cx->compartment->types.checkPendingRecompiles(f.cx))
+        THROW();
+}
+
+void JS_FASTCALL
 stubs::Exception(VMFrame &f)
 {
     f.regs.sp[0] = f.cx->getPendingException();
