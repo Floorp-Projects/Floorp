@@ -220,8 +220,6 @@
                 if (this._browser.updateWindowId(json.contentWindowId)) {
                   this._browser._documentURI = json.documentURI;
                   this._browser._searchEngines = [];
-                  this._browser._contentWindowWidth = json.contentWindowWidth;
-                  this._browser._contentWindowHeight = json.contentWindowHeight;
                 }
                 break;
 
