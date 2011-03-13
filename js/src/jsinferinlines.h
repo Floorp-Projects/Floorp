@@ -1133,6 +1133,13 @@ inline TypeFunction::TypeFunction(jsid name, JSObject *proto)
     isFunction = true;
 }
 
+inline void
+SweepType(jstype *ptype)
+{
+    if (TypeIsObject(*ptype) && !((TypeObject*)*ptype)->marked)
+        *ptype = TYPE_UNKNOWN;
+}
+
 } } /* namespace js::types */
 
 #endif // jsinferinlines_h___

@@ -104,8 +104,8 @@ struct UncachedCallResult {
  * These functions either execute the function, return a native code
  * pointer that can be used to call the function, or throw.
  */
-void UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr);
-void UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr);
+void UncachedCallHelper(VMFrame &f, uint32 argc, types::jstype *argTypes, UncachedCallResult *ucr);
+void UncachedNewHelper(VMFrame &f, uint32 argc, types::jstype *argTypes, UncachedCallResult *ucr);
 
 void JS_FASTCALL CreateThis(VMFrame &f, JSObject *proto);
 void JS_FASTCALL Throw(VMFrame &f);
@@ -219,6 +219,8 @@ void JS_FASTCALL Unbrand(VMFrame &f);
 /* Helper for triggering recompilation should a name read produce an undefined value or -0. */
 void JS_FASTCALL UndefinedHelper(VMFrame &f);
 void JS_FASTCALL NegZeroHelper(VMFrame &f);
+
+void JS_FASTCALL ClearArgumentTypes(VMFrame &f);
 
 template <bool strict> int32 JS_FASTCALL ConvertToTypedInt(JSContext *cx, Value *vp);
 void JS_FASTCALL ConvertToTypedFloat(JSContext *cx, Value *vp);

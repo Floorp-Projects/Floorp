@@ -250,6 +250,10 @@ struct CallICInfo {
     RegisterID funPtrReg : 5;
     bool hit : 1;
     bool hasJsFunCheck : 1;
+    bool typeMonitored : 1;
+
+    /* For monitored calls with static argc, the types of 'this' and arguments. */
+    types::jstype *argTypes;
 
     inline void reset() {
         fastGuardedObject = NULL;
@@ -263,6 +267,10 @@ struct CallICInfo {
         releasePool(Pool_ScriptStub);
         releasePool(Pool_ClosureStub);
         releasePool(Pool_NativeStub);
+        if (argTypes) {
+            js_free(argTypes);
+            argTypes = NULL;
+        }
     }
 
     inline void releasePool(PoolIndex index) {

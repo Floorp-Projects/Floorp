@@ -968,9 +968,9 @@ class CallCompiler : public BaseCompiler
 
         stubs::UncachedCallResult ucr;
         if (callingNew)
-            stubs::UncachedNewHelper(f, ic.frameSize.staticArgc(), &ucr);
+            stubs::UncachedNewHelper(f, ic.frameSize.staticArgc(), ic.argTypes, &ucr);
         else
-            stubs::UncachedCallHelper(f, ic.frameSize.getArgc(f), &ucr);
+            stubs::UncachedCallHelper(f, ic.frameSize.getArgc(f), ic.argTypes, &ucr);
 
         // Watch out in case the IC was invalidated by a recompilation on the calling
         // script. This can happen either if the callee is executed or if it compiles
@@ -1278,6 +1278,11 @@ JITScript::sweepCallICs(JSContext *cx, bool purgeAll)
     ic::CallICInfo *callICs_ = callICs();
     for (uint32 i = 0; i < nCallICs; i++) {
         ic::CallICInfo &ic = callICs_[i];
+
+        if (ic.argTypes) {
+            for (unsigned i = 0; i < ic.frameSize.staticArgc(); i++)
+                types::SweepType(&ic.argTypes[i]);
+        }
 
         /*
          * If the object is unreachable, we're guaranteed not to be currently
