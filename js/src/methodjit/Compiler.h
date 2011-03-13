@@ -154,6 +154,8 @@ class Compiler : public BaseCompiler
         RegisterID   funObjReg;
         RegisterID   funPtrReg;
         FrameSize    frameSize;
+        bool         typeMonitored;
+        types::jstype *argTypes;
     };
 
   private:
@@ -488,7 +490,7 @@ class Compiler : public BaseCompiler
                                    MaybeRegisterID origCalleeType, RegisterID origCalleeData,
                                    MaybeRegisterID origThisType, RegisterID origThisData,
                                    Jump *uncachedCallSlowRejoin, CallPatchInfo *uncachedCallPatch);
-    void inlineCallHelper(uint32 argc, bool callingNew);
+    bool inlineCallHelper(uint32 argc, bool callingNew);
     void fixPrimitiveReturn(Assembler *masm, FrameEntry *fe);
     void jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index);
     bool jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index);

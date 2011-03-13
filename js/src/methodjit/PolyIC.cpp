@@ -200,8 +200,7 @@ class SetPropCompiler : public PICStubCompiler
 
     static void reset(Repatcher &repatcher, ic::PICInfo &pic)
     {
-        if (types::TypeIsObject(pic.knownType) && !((types::TypeObject*)pic.knownType)->marked)
-            pic.knownType = types::TYPE_UNKNOWN;
+        types::SweepType(&pic.knownType);
 
         SetPropLabels &labels = pic.setPropLabels();
         repatcher.repatchLEAToLoadPtr(labels.getDslotsLoad(pic.fastPathRejoin, pic.u.vr));
