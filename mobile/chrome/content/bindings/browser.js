@@ -42,8 +42,6 @@ let WebProgressListener = {
 
     let json = {
       contentWindowId: content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
-      contentWindowWidth: content.innerWidth,
-      contentWindowHeight: content.innerHeight,
       documentURI:     aWebProgress.DOMWindow.document.documentURIObject.spec,
       location:        spec,
       canGoBack:       docShell.canGoBack,
