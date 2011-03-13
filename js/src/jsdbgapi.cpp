@@ -325,7 +325,7 @@ js_UntrapScriptCode(JSContext *cx, JSScript *script)
                 if (!code)
                     break;
                 memcpy(code, script->code, nbytes);
-                JS_PURGE_GSN_CACHE(cx);
+                GetGSNCache(cx)->purge();
             }
             code[trap->pc - script->code] = trap->op;
         }
@@ -2030,14 +2030,6 @@ JS_MakeSystemObject(JSContext *cx, JSObject *obj)
 {
     obj->setSystem();
     return true;
-}
-
-/************************************************************************/
-
-JS_PUBLIC_API(JSObject *)
-JS_UnwrapObject(JSContext *cx, JSObject *obj)
-{
-    return obj->unwrap();
 }
 
 /************************************************************************/
