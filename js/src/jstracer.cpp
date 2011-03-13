@@ -2382,9 +2382,10 @@ TraceRecorder::TraceRecorder(JSContext* cx, TraceMonitor *tm,
 
     if (fragment == fragment->root) {
         /*
-         * We poll the operation callback request flag. It is updated asynchronously whenever
-         * the callback is to be invoked. We can use w.nameImmpNonGC here as JIT-ed code is per
-         * thread and cannot outlive the corresponding JSThreadData.
+         * We poll the operation callback request flag. It is updated
+         * asynchronously whenever the callback is to be invoked. We can use
+         * w.nameImmpNonGC here as JIT-ed code is per thread and cannot
+         * outlive the corresponding ThreadData.
          */
         w.comment("begin-interruptFlags-check");
         /* FIXME: See bug 621140 for moving interruptCounter to the compartment. */

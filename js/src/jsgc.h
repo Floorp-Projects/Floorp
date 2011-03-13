@@ -520,7 +520,7 @@ GetArena(Cell *cell)
 const size_t GC_ARENA_ALLOCATION_TRIGGER = 30 * js::GC_CHUNK_SIZE;
 
 /*
- * A GC is triggered once the number of newly allocated arenas 
+ * A GC is triggered once the number of newly allocated arenas
  * is GC_HEAP_GROWTH_FACTOR times the number of live arenas after
  * the last GC starting after the lower limit of
  * GC_ARENA_ALLOCATION_TRIGGER.
@@ -697,7 +697,7 @@ typedef js::HashMap<void *,
 
 /* If HashNumber grows, need to change WrapperHasher. */
 JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
-    
+
 struct WrapperHasher
 {
     typedef Value Lookup;
@@ -915,16 +915,16 @@ class GCHelperThread {
         sweeping(false),
         freeCursor(NULL),
         freeCursorEnd(NULL) { }
-    
+
     bool init(JSRuntime *rt);
     void finish(JSRuntime *rt);
-    
+
     /* Must be called with GC lock taken. */
     void startBackgroundSweep(JSRuntime *rt);
-    
+
     /* Must be called outside the GC lock. */
     void waitBackgroundSweepEnd(JSRuntime *rt);
-    
+
     void freeLater(void *ptr) {
         JS_ASSERT(!sweeping);
         if (freeCursor != freeCursorEnd)
@@ -960,7 +960,7 @@ typedef HashSet<js::gc::Chunk *, GCChunkHasher, SystemAllocPolicy> GCChunkSet;
 struct ConservativeGCThreadData {
 
     /*
-     * The GC scans conservatively between JSThreadData::nativeStackBase and
+     * The GC scans conservatively between ThreadData::nativeStackBase and
      * nativeStackTop unless the latter is NULL.
      */
     jsuword             *nativeStackTop;
@@ -976,6 +976,21 @@ struct ConservativeGCThreadData {
      * threshold of requests.
      */
     unsigned requestThreshold;
+
+    ConservativeGCThreadData()
+      : nativeStackTop(NULL), requestThreshold(NULL)
+    {
+    }
+
+    ~ConservativeGCThreadData() {
+#ifdef JS_THREADSAFE
+        /*
+         * The conservative GC scanner should be disabled when the thread leaves
+         * the last request.
+         */
+        JS_ASSERT(!hasStackToScan());
+#endif
+    }
 
     JS_NEVER_INLINE void recordStackTop();
 
