@@ -252,7 +252,10 @@ struct CallICInfo {
     bool hasJsFunCheck : 1;
     bool typeMonitored : 1;
 
-    /* For monitored calls with static argc, the types of 'this' and arguments. */
+    /*
+     * For monitored calls with static argc, the types of 'this' and arguments.
+     * For calls through Function.prototype.call, this refers to the inner this/arguments.
+     */
     types::jstype *argTypes;
 
     inline void reset() {

@@ -3003,13 +3003,14 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
     callIC.argTypes = NULL;
     callIC.typeMonitored = monitored(PC);
     if (callIC.typeMonitored && callIC.frameSize.isStatic()) {
-        callIC.argTypes = (types::jstype *) js_calloc((1 + callImmArgc) * sizeof(types::jstype));
+        unsigned argc = callIC.frameSize.staticArgc();
+        callIC.argTypes = (types::jstype *) js_calloc((1 + argc) * sizeof(types::jstype));
         if (!callIC.argTypes)
             return false;
-        types::TypeSet *types = origThis->getTypeSet();
+        types::TypeSet *types = frame.peek(-(argc + 1))->getTypeSet();
         callIC.argTypes[0] = types ? types->getSingleType(cx, script) : types::TYPE_UNKNOWN;
-        for (unsigned i = 0; i < callImmArgc; i++) {
-            types::TypeSet *types = frame.peek(-(callImmArgc - i))->getTypeSet();
+        for (unsigned i = 0; i < argc; i++) {
+            types::TypeSet *types = frame.peek(-(argc - i))->getTypeSet();
             callIC.argTypes[i + 1] = types ? types->getSingleType(cx, script) : types::TYPE_UNKNOWN;
         }
     }

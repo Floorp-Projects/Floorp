@@ -4458,10 +4458,13 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
 JS_PUBLIC_API(void)
 JS_TypeHandlerDynamic(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
-    JS_NOT_REACHED("Call to dynamic type handler");
+    TypeCallsite *site = Valueify(jssite);
+    if (site->returnTypes)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
 }
 
-JS_PUBLIC_API(void) JS_TypeHandlerVoid(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+JS_PUBLIC_API(void)
+JS_TypeHandlerVoid(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
     if (site->returnTypes) {
@@ -4471,7 +4474,8 @@ JS_PUBLIC_API(void) JS_TypeHandlerVoid(JSContext *cx, JSTypeFunction *jsfun, JST
     }
 }
 
-JS_PUBLIC_API(void) JS_TypeHandlerNull(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+JS_PUBLIC_API(void)
+JS_TypeHandlerNull(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
     if (site->returnTypes) {
@@ -4481,7 +4485,8 @@ JS_PUBLIC_API(void) JS_TypeHandlerNull(JSContext *cx, JSTypeFunction *jsfun, JST
     }
 }
 
-JS_PUBLIC_API(void) JS_TypeHandlerBool(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+JS_PUBLIC_API(void)
+JS_TypeHandlerBool(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
     if (site->returnTypes) {
@@ -4491,7 +4496,8 @@ JS_PUBLIC_API(void) JS_TypeHandlerBool(JSContext *cx, JSTypeFunction *jsfun, JST
     }
 }
 
-JS_PUBLIC_API(void) JS_TypeHandlerInt(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+JS_PUBLIC_API(void)
+JS_TypeHandlerInt(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
     if (site->returnTypes) {
@@ -4501,7 +4507,8 @@ JS_PUBLIC_API(void) JS_TypeHandlerInt(JSContext *cx, JSTypeFunction *jsfun, JSTy
     }
 }
 
-JS_PUBLIC_API(void) JS_TypeHandlerFloat(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+JS_PUBLIC_API(void)
+JS_TypeHandlerFloat(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
     if (site->returnTypes) {
@@ -4511,7 +4518,8 @@ JS_PUBLIC_API(void) JS_TypeHandlerFloat(JSContext *cx, JSTypeFunction *jsfun, JS
     }
 }
 
-JS_PUBLIC_API(void) JS_TypeHandlerString(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+JS_PUBLIC_API(void)
+JS_TypeHandlerString(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
     if (site->returnTypes) {
