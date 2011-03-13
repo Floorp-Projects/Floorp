@@ -351,10 +351,16 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
     JSFunction *newfun = callee.getFunctionPrivate();
     JSScript *newscript = newfun->script();
 
-    if (argTypes) {
+    if (argTypes && argc == newfun->nargs) {
+        /*
+         * Use the space of all possible types being passed at this callsite if there
+         * is a match between argc and nargs, so that the fastEntry can be subsequently
+         * used without further type checking. If there is an argument count mismatch,
+         * the callee's args will end up getting marked as unknown.
+         */
         if (!(flags & JSFRAME_CONSTRUCTING) && !newscript->typeSetThis(cx, argTypes[0]))
             return false;
-        for (unsigned i = 0; i < newfun->nargs; i++) {
+        for (unsigned i = 0; i < argc; i++) {
             if (!newscript->typeSetArgument(cx, i, argTypes[1 + i]))
                 return false;
         }

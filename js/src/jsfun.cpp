@@ -2445,13 +2445,26 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
+static void
+type_HandlerMonitored(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+    /*
+     * Mark all calls to Function.prototype.call and Function.prototype.apply
+     * as monitored, so the compiler knows to keep track of all passed arguments.
+     */
+    TypeCallsite *site = Valueify(jssite);
+    cx->compartment->types.monitorBytecode(cx, site->script, site->pc - site->script->code);
+    if (site->returnTypes)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
+}
+
 static JSFunctionSpec function_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN_TYPE(js_toSource_str,   fun_toSource,   0,0, JS_TypeHandlerString),
 #endif
     JS_FN_TYPE(js_toString_str,   fun_toString,   0,0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_apply_str,      js_fun_apply,   2,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE(js_call_str,       js_fun_call,    1,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE(js_apply_str,      js_fun_apply,   2,0, type_HandlerMonitored),
+    JS_FN_TYPE(js_call_str,       js_fun_call,    1,0, type_HandlerMonitored),
     JS_FN_TYPE("bind",            fun_bind,       1,0, JS_TypeHandlerDynamic),
     JS_FS_END
 };
