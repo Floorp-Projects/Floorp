@@ -1019,11 +1019,7 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, jstype type)
     if (!function->script) {
         JS_ASSERT(function->handler);
 
-        if (function->handler == JS_TypeHandlerDynamic) {
-            /* Unknown result. */
-            if (callsite->returnTypes)
-                callsite->returnTypes->addType(cx, TYPE_UNKNOWN);
-        } else if (function->isGeneric) {
+        if (function->isGeneric) {
             if (callsite->argumentCount == 0) {
                 /* Generic methods called with zero arguments generate runtime errors. */
                 return;
