@@ -753,7 +753,7 @@ MarkRangeConservatively(JSTracer *trc, const jsuword *begin, const jsuword *end)
 }
 
 static void
-MarkThreadDataConservatively(JSTracer *trc, JSThreadData *td)
+MarkThreadDataConservatively(JSTracer *trc, ThreadData *td)
 {
     ConservativeGCThreadData *ctd = &td->conservativeGC;
     JS_ASSERT(ctd->hasStackToScan());

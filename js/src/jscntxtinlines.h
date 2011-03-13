@@ -496,6 +496,12 @@ FrameRegsIter::operator++()
     return *this;
 }
 
+inline GSNCache *
+GetGSNCache(JSContext *cx)
+{
+    return &JS_THREAD_DATA(cx)->gsnCache;
+}
+
 class AutoNamespaceArray : protected AutoGCRooter {
   public:
     AutoNamespaceArray(JSContext *cx) : AutoGCRooter(cx, NAMESPACES) {

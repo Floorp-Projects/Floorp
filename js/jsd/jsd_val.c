@@ -680,7 +680,7 @@ jsd_GetValueFunction(JSDContext* jsdc, JSDValue* jsdval)
         return NULL;
     if(!(obj = JSVAL_TO_OBJECT(jsdval->val)))
         return NULL;
-    obj = JS_UnwrapObject(jsdc->dumbContext, obj);
+    obj = JS_UnwrapObject(obj);
 
     call = JS_EnterCrossCompartmentCall(jsdc->dumbContext, obj);
     if (!call)
