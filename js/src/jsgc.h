@@ -83,10 +83,7 @@ struct Shape;
 
 namespace gc {
 
-/*
- * The kind of GC thing with a finalizer. The external strings follow the
- * ordinary string to simplify js_GetExternalStringGCType.
- */
+/* The kind of GC thing with a finalizer. */
 enum FinalizeKind {
     FINALIZE_OBJECT0,
     FINALIZE_OBJECT2,
@@ -535,28 +532,6 @@ GetFinalizableTraceKind(size_t thingKind)
     return map[thingKind];
 }
 
-static inline bool
-IsFinalizableStringKind(unsigned thingKind)
-{
-    return unsigned(FINALIZE_SHORT_STRING) <= thingKind &&
-           thingKind <= unsigned(FINALIZE_EXTERNAL_STRING);
-}
-
-/*
- * Get the type of the external string or -1 if the string was not created
- * with JS_NewExternalString.
- */
-static inline intN
-GetExternalStringGCType(JSExternalString *str)
-{
-    JS_STATIC_ASSERT(FINALIZE_STRING + 1 == FINALIZE_EXTERNAL_STRING);
-    JS_ASSERT(!JSString::isStatic(str));
-
-    unsigned thingKind = str->externalStringType;
-    JS_ASSERT(IsFinalizableStringKind(thingKind));
-    return intN(thingKind);
-}
-
 static inline uint32
 GetGCThingTraceKind(void *thing)
 {
@@ -747,13 +722,6 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind);
 extern bool
 CheckAllocation(JSContext *cx);
 #endif
-
-/*
- * Get the type of the external string or -1 if the string was not created
- * with JS_NewExternalString.
- */
-extern intN
-js_GetExternalStringGCType(JSString *str);
 
 extern JS_FRIEND_API(uint32)
 js_GetGCThingTraceKind(void *thing);

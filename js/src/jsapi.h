@@ -1870,13 +1870,6 @@ extern JS_PUBLIC_API(JSString *)
 JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type);
 
 /*
- * Returns the external-string finalizer index for this string, or -1 if it is
- * an "internal" (native to JS engine) string.
- */
-extern JS_PUBLIC_API(intN)
-JS_GetExternalStringGCType(JSRuntime *rt, JSString *str);
-
-/*
  * Deprecated. Use JS_SetNativeStackQuoata instead.
  */
 extern JS_PUBLIC_API(void)
