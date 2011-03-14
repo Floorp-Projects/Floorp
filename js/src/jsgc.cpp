@@ -2842,6 +2842,18 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 namespace js {
 namespace gc {
 
+void
+MarkObjectSlots(JSTracer *trc, JSObject *obj)
+{
+    JS_ASSERT(obj->slotSpan() <= obj->numSlots());
+    uint32 nslots = obj->slotSpan();
+    for (uint32 i = 0; i != nslots; ++i) {
+        const Value &v = obj->getSlot(i);
+        JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
+        MarkValueRaw(trc, v);
+    }
+}
+
 bool
 SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto)
 {

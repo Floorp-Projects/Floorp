@@ -263,6 +263,9 @@ MarkObject(JSTracer *trc, JSObject &obj, const char *name)
     Mark(trc, &obj);
 }
 
+void
+MarkObjectSlots(JSTracer *trc, JSObject *obj);
+
 static inline void
 MarkChildren(JSTracer *trc, JSObject *obj)
 {
@@ -288,8 +291,16 @@ MarkChildren(JSTracer *trc, JSObject *obj)
     if (clasp->trace)
         clasp->trace(trc, obj);
 
-    if (obj->isNative())
-        js_TraceObject(trc, obj);
+    if (obj->isNative()) {
+#ifdef JS_DUMP_SCOPE_METERS
+        js::MeterEntryCount(obj->propertyCount);
+#endif
+
+        obj->trace(trc);
+
+        if (obj->slotSpan() > 0)
+            MarkObjectSlots(trc, obj);
+    }
 }
 
 static inline void
