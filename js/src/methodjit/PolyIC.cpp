@@ -1741,6 +1741,17 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
     f.regs.sp[-1] = v;
 }
 
+void JS_FASTCALL
+ic::GetPropNoCache(VMFrame &f, ic::PICInfo *pic)
+{
+    /*
+     * The PIC stores whether to use the property cache or not. We use two different
+     * stub calls so we can distinguish uncached calls made to construct this from
+     * any cached calls at the first opcode in a script.
+     */
+    GetProp(f, pic);
+}
+
 template <JSBool strict>
 static void JS_FASTCALL
 DisabledSetPropIC(VMFrame &f, ic::PICInfo *pic)
