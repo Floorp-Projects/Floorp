@@ -491,7 +491,17 @@ ifdef MOZ_OPTIONAL_PKG_LIST
 	@cd $(DEPTH)/installer-stage/optional/extensions; find -maxdepth 1 -mindepth 1 -exec rm -r ../../core/extensions/{} \;
 endif
 
-stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
+elfhack:
+ifdef USE_ELF_HACK
+	@echo ===
+	@echo === If you get failures below, please file a bug describing the error
+	@echo === and your environment \(compiler and linker versions\), and use
+	@echo === --disable-elf-hack until this is fixed.
+	@echo ===
+	cd $(DIST)/bin; find . -name "*$(DLL_SUFFIX)" | xargs $(DEPTH)/build/unix/elfhack/elfhack
+endif
+
+stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN) elfhack
 	@rm -rf $(DIST)/$(MOZ_PKG_DIR) $(DIST)/$(PKG_PATH)$(PKG_BASENAME).tar $(DIST)/$(PKG_PATH)$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
 # NOTE: this must be a tar now that dist links into the tree so that we
 # do not strip the binaries actually in the tree.
@@ -537,16 +547,6 @@ endif # DMG
 endif # MOZ_PKG_MANIFEST
 endif # UNIVERSAL_BINARY
 	$(OPTIMIZE_JARS_CMD) --optimize $(DIST)/jarlog/ $(DIST)/bin/chrome $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/chrome
-ifeq ($(USE_ELF_HACK)$(HOST_OS_ARCH)$(OS_ARCH),1LinuxLinux)
-ifneq (,$(filter %86 x86_64 arm,$(OS_TEST)))
-	@echo ===
-	@echo === If you get failures below, please file a bug describing the error
-	@echo === and your environment \(compiler and linker versions\), and use
-	@echo === --disable-elf-hack until this is fixed.
-	@echo ===
-	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR); find . -name "*$(DLL_SUFFIX)" | xargs $(DEPTH)/build/unix/elfhack/elfhack
-endif
-endif
 ifndef PKG_SKIP_STRIP
 	@echo "Stripping package directory..."
 	@cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR); find . ! -type d \
