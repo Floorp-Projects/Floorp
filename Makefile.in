@@ -172,6 +172,9 @@ export SYMBOL_INDEX_NAME = \
 
 buildsymbols:
 ifdef MOZ_CRASHREPORTER
+ifdef USE_ELF_HACK
+	$(MAKE) -C $(MOZ_BUILD_APP)/installer elfhack
+endif
 	echo building symbol store
 	$(RM) -rf $(DIST)/crashreporter-symbols
 	$(RM) -f "$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip"
