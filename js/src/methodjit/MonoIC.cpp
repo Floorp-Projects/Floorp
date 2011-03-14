@@ -392,12 +392,15 @@ class EqualityCompiler : public BaseCompiler
         const ValueRemat &lvr = ic.lvr;
         const ValueRemat &rvr = ic.rvr;
 
-        if (!lvr.isConstant() && !lvr.isType(JSVAL_TYPE_STRING)) {
+        JS_ASSERT_IF(lvr.isConstant(), lvr.isType(JSVAL_TYPE_STRING));
+        JS_ASSERT_IF(rvr.isConstant(), rvr.isType(JSVAL_TYPE_STRING));
+
+        if (!lvr.isType(JSVAL_TYPE_STRING)) {
             Jump lhsFail = masm.testString(Assembler::NotEqual, lvr.typeReg());
             linkToStub(lhsFail);
         }
         
-        if (!rvr.isConstant() && !rvr.isType(JSVAL_TYPE_STRING)) {
+        if (!rvr.isType(JSVAL_TYPE_STRING)) {
             Jump rhsFail = masm.testString(Assembler::NotEqual, rvr.typeReg());
             linkToStub(rhsFail);
         }
