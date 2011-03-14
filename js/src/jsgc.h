@@ -532,15 +532,8 @@ GetFinalizableTraceKind(size_t thingKind)
     return map[thingKind];
 }
 
-static inline uint32
-GetGCThingTraceKind(void *thing)
-{
-    JS_ASSERT(thing);
-    if (JSString::isGCThingStatic(thing))
-        return JSTRACE_STRING;
-    Cell *cell = reinterpret_cast<Cell *>(thing);
-    return GetFinalizableTraceKind(cell->arena()->header()->thingKind);
-}
+inline uint32
+GetGCThingTraceKind(void *thing);
 
 static inline JSRuntime *
 GetGCThingRuntime(void *thing)

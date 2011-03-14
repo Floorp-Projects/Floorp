@@ -556,7 +556,7 @@ class CompartmentChecker
 
     void check(JSString *str) {
         if (!str->isAtom())
-            check(str->asCell()->compartment());
+            check(str->compartment());
     }
 
     void check(const js::Value &v) {

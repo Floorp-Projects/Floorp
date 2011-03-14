@@ -205,12 +205,12 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
             return true;
 
         /* If the string is already in this compartment, we are done. */
-        if (str->asCell()->compartment() == this)
+        if (str->compartment() == this)
             return true;
 
         /* If the string is an atom, we don't have to copy. */
         if (str->isAtom()) {
-            JS_ASSERT(str->asCell()->compartment() == cx->runtime->atomsCompartment);
+            JS_ASSERT(str->compartment() == cx->runtime->atomsCompartment);
             return true;
         }
     }

@@ -670,7 +670,7 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
         }
     } else {
         if (idx == uint32(-1)) {
-            JSString *str = ATOM_TO_STRING(*atomp);
+            JSString *str = *atomp;
             return JS_XDRString(xdr, &str);
         }
     }

@@ -317,7 +317,7 @@ class NodeBuilder
         if (!atom)
             return false;
 
-        *dst = Valueify(ATOM_TO_JSVAL(atom));
+        dst->setString(atom);
         return true;
     }
 
@@ -1613,7 +1613,7 @@ class ASTSerializer
     uint32        lineno;
 
     Value atomContents(JSAtom *atom) {
-        return Valueify(ATOM_TO_JSVAL(atom ? atom : cx->runtime->atomState.emptyAtom));
+        return StringValue(atom ? atom : cx->runtime->atomState.emptyAtom);
     }
 
     BinaryOperator binop(TokenKind tk, JSOp op);
@@ -2886,7 +2886,7 @@ ASTSerializer::literal(JSParseNode *pn, Value *dst)
     Value val;
     switch (PN_TYPE(pn)) {
       case TOK_STRING:
-        val = Valueify(ATOM_TO_JSVAL(pn->pn_atom));
+        val.setString(pn->pn_atom);
         break;
 
       case TOK_REGEXP:

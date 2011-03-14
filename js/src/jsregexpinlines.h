@@ -42,7 +42,10 @@
 
 #include "jsregexp.h"
 #include "jscntxt.h"
+
 #include "jsobjinlines.h"
+#include "jsstrinlines.h"
+
 #include "assembler/wtf/Platform.h"
 
 #if ENABLE_YARR_JIT

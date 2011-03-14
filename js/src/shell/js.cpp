@@ -2058,9 +2058,8 @@ SrcNotes(JSContext *cx, JSScript *script)
           case SRC_CONT2LABEL:
             index = js_GetSrcNoteOffset(sn, 0);
             JS_GET_SCRIPT_ATOM(script, NULL, index, atom);
-            str = ATOM_TO_STRING(atom);
             fprintf(gOutFile, " atom %u (", index);
-            JS_FileEscapedString(gOutFile, str, 0);
+            JS_FileEscapedString(gOutFile, atom, 0);
             putc(')', gOutFile);
             break;
           case SRC_FUNCDEF: {
@@ -4815,7 +4814,7 @@ Help(JSContext *cx, uintN argc, jsval *vp)
             type = JS_TypeOfValue(cx, argv[i]);
             if (type == JSTYPE_FUNCTION) {
                 fun = JS_ValueToFunction(cx, argv[i]);
-                str = fun->atom ? ATOM_TO_STRING(fun->atom) : NULL;
+                str = fun->atom;
             } else if (type == JSTYPE_STRING) {
                 str = JSVAL_TO_STRING(argv[i]);
             } else {
@@ -5314,7 +5313,7 @@ Exec(JSContext *cx, uintN argc, jsval *vp)
     nargv[0] = name;
     jsval *argv = JS_ARGV(cx, vp);
     for (i = 0; i < nargc; i++) {
-        str = (i == 0) ? ATOM_TO_STRING(fun->atom) : JS_ValueToString(cx, argv[i-1]);
+        str = (i == 0) ? fun->atom : JS_ValueToString(cx, argv[i-1]);
         if (!str) {
             ok = false;
             goto done;

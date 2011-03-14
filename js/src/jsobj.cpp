@@ -590,13 +590,13 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
                 if (attrs & JSPROP_GETTER) {
                     doGet = false;
                     val[valcnt] = shape->getterValue();
-                    gsop[valcnt] = ATOM_TO_STRING(cx->runtime->atomState.getAtom);
+                    gsop[valcnt] = cx->runtime->atomState.getAtom;
                     valcnt++;
                 }
                 if (attrs & JSPROP_SETTER) {
                     doGet = false;
                     val[valcnt] = shape->setterValue();
-                    gsop[valcnt] = ATOM_TO_STRING(cx->runtime->atomState.setAtom);
+                    gsop[valcnt] = cx->runtime->atomState.setAtom;
                     valcnt++;
                 }
             }
@@ -855,13 +855,13 @@ obj_toString(JSContext *cx, uintN argc, Value *vp)
 
     /* Step 1. */
     if (thisv.isUndefined()) {
-        vp->setString(ATOM_TO_STRING(cx->runtime->atomState.objectUndefinedAtom));
+        vp->setString(cx->runtime->atomState.objectUndefinedAtom);
         return true;
     }
 
     /* Step 2. */
     if (thisv.isNull()) {
-        vp->setString(ATOM_TO_STRING(cx->runtime->atomState.objectNullAtom));
+        vp->setString(cx->runtime->atomState.objectNullAtom);
         return true;
     }
 
@@ -4420,8 +4420,7 @@ js_CheckForStringIndex(jsid id)
         return id;
 
     JSAtom *atom = JSID_TO_ATOM(id);
-    JSString *str = ATOM_TO_STRING(atom);
-    const jschar *s = str->flatChars();
+    const jschar *s = atom->chars();
     jschar ch = *s;
 
     JSBool negative = (ch == '-');
@@ -4431,7 +4430,7 @@ js_CheckForStringIndex(jsid id)
     if (!JS7_ISDEC(ch))
         return id;
 
-    size_t n = str->flatLength() - negative;
+    size_t n = atom->length() - negative;
     if (n > sizeof(JSBOXEDWORD_INT_MAX_STRING) - 1)
         return id;
 
@@ -6246,7 +6245,7 @@ js_TryValueOf(JSContext *cx, JSObject *obj, JSType type, Value *rval)
 {
     Value argv[1];
 
-    argv[0].setString(ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[type]));
+    argv[0].setString(cx->runtime->atomState.typeAtoms[type]);
     return js_TryMethod(cx, obj, cx->runtime->atomState.valueOfAtom,
                         1, argv, rval);
 }
@@ -6589,7 +6588,7 @@ JS_FRIEND_API(void)
 js_DumpAtom(JSAtom *atom)
 {
     fprintf(stderr, "JSAtom* (%p) = ", (void *) atom);
-    js_DumpString(ATOM_TO_STRING(atom));
+    js_DumpString(atom);
 }
 
 void
@@ -6610,7 +6609,7 @@ dumpValue(const Value &v)
         JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
         if (fun->atom) {
             fputs("<function ", stderr);
-            FileEscapedString(stderr, ATOM_TO_STRING(fun->atom), 0);
+            FileEscapedString(stderr, fun->atom, 0);
         } else {
             fputs("<unnamed function", stderr);
         }

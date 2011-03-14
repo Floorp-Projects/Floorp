@@ -1138,7 +1138,7 @@ class TraceRecorder
     #define immpObjGC(obj)        name(w_immpObjGC(obj), #obj)
     #define immpFunGC(fun)        name(w_immpFunGC(fun), #fun)
     #define immpStrGC(str)        name(w_immpStrGC(str), #str)
-    #define immpAtomGC(atom)      name(w_immpStrGC(ATOM_TO_STRING(atom)), "ATOM_TO_STRING(" #atom ")")
+    #define immpAtomGC(atom)      name(w_immpStrGC(atom), "ATOM(" #atom ")")
     #define immpShapeGC(shape)    name(w_immpShapeGC(shape), #shape)
     #define immpIdGC(id)          name(w_immpIdGC(id), #id)
 

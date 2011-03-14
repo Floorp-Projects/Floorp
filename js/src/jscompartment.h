@@ -348,18 +348,18 @@ class NativeIterCache {
  * is erroneously included in the measurement; see bug 562553.
  */
 class DtoaCache {
-    double   d;
-    jsint    base;
-    JSString *s;        // if s==NULL, d and base are not valid
+    double        d;
+    jsint         base;
+    JSFixedString *s;      // if s==NULL, d and base are not valid
   public:
     DtoaCache() : s(NULL) {}
     void purge() { s = NULL; }
 
-    JSString *lookup(jsint base, double d) {
+    JSFixedString *lookup(jsint base, double d) {
         return this->s && base == this->base && d == this->d ? this->s : NULL;
     }
 
-    void cache(jsint base, double d, JSString *s) {
+    void cache(jsint base, double d, JSFixedString *s) {
         this->base = base;
         this->d = d;
         this->s = s;

@@ -267,8 +267,13 @@ typedef enum JSWhyMagic
     JS_GENERIC_MAGIC             /* for local use */
 } JSWhyMagic;
 
+#ifdef __cplusplus
+class                       JSString;
+class                       JSFlatString;
+#else
 typedef struct JSString     JSString;
 typedef struct JSFlatString JSFlatString;
+#endif
 typedef struct JSObject     JSObject;
 
 #if defined(IS_LITTLE_ENDIAN)

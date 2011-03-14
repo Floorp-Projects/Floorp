@@ -9136,7 +9136,7 @@ FoldType(JSContext *cx, JSParseNode *pn, TokenKind type)
           case TOK_NUMBER:
             if (pn->pn_type == TOK_STRING) {
                 jsdouble d;
-                if (!ValueToNumber(cx, StringValue(ATOM_TO_STRING(pn->pn_atom)), &d))
+                if (!ValueToNumber(cx, StringValue(pn->pn_atom), &d))
                     return JS_FALSE;
                 pn->pn_dval = d;
                 pn->pn_type = TOK_NUMBER;
@@ -9265,9 +9265,9 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
     str = NULL;
     if ((pn->pn_xflags & PNX_CANTFOLD) == 0) {
         if (tt == TOK_XMLETAGO)
-            accum = ATOM_TO_STRING(cx->runtime->atomState.etagoAtom);
+            accum = cx->runtime->atomState.etagoAtom;
         else if (tt == TOK_XMLSTAGO || tt == TOK_XMLPTAGC)
-            accum = ATOM_TO_STRING(cx->runtime->atomState.stagoAtom);
+            accum = cx->runtime->atomState.stagoAtom;
     }
 
     /*
@@ -9291,24 +9291,23 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
           case TOK_STRING:
             if (pn2->pn_arity == PN_LIST)
                 goto cantfold;
-            str = ATOM_TO_STRING(pn2->pn_atom);
+            str = pn2->pn_atom;
             break;
 
           case TOK_XMLCDATA:
-            str = js_MakeXMLCDATAString(cx, ATOM_TO_STRING(pn2->pn_atom));
+            str = js_MakeXMLCDATAString(cx, pn2->pn_atom);
             if (!str)
                 return JS_FALSE;
             break;
 
           case TOK_XMLCOMMENT:
-            str = js_MakeXMLCommentString(cx, ATOM_TO_STRING(pn2->pn_atom));
+            str = js_MakeXMLCommentString(cx, pn2->pn_atom);
             if (!str)
                 return JS_FALSE;
             break;
 
           case TOK_XMLPI:
-            str = js_MakeXMLPIString(cx, ATOM_TO_STRING(pn2->pn_atom),
-                                         ATOM_TO_STRING(pn2->pn_atom2));
+            str = js_MakeXMLPIString(cx, pn2->pn_atom, pn2->pn_atom2);
             if (!str)
                 return JS_FALSE;
             break;
@@ -9369,9 +9368,9 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
         str = NULL;
         if ((pn->pn_xflags & PNX_CANTFOLD) == 0) {
             if (tt == TOK_XMLPTAGC)
-                str = ATOM_TO_STRING(cx->runtime->atomState.ptagcAtom);
+                str = cx->runtime->atomState.ptagcAtom;
             else if (tt == TOK_XMLSTAGO || tt == TOK_XMLETAGO)
-                str = ATOM_TO_STRING(cx->runtime->atomState.tagcAtom);
+                str = cx->runtime->atomState.tagcAtom;
         }
         if (str) {
             accum = js_ConcatStrings(cx, accum, str);
@@ -9422,7 +9421,7 @@ Boolish(JSParseNode *pn)
         return pn->pn_dval != 0 && !JSDOUBLE_IS_NaN(pn->pn_dval);
 
       case JSOP_STRING:
-        return ATOM_TO_STRING(pn->pn_atom)->length() != 0;
+        return pn->pn_atom->length() != 0;
 
 #if JS_HAS_GENERATOR_EXPRS
       case JSOP_CALL:
@@ -9596,7 +9595,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                 pn2 = pn3;
             break;
           case TOK_STRING:
-            if (ATOM_TO_STRING(pn1->pn_atom)->length() == 0)
+            if (pn1->pn_atom->length() == 0)
                 pn2 = pn3;
             break;
           case TOK_PRIMARY:
@@ -9708,10 +9707,6 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
 
       case TOK_PLUS:
         if (pn->pn_arity == PN_LIST) {
-            size_t length, length2;
-            jschar *chars;
-            JSString *str, *str2;
-
             /*
              * Any string literal term with all others number or string means
              * this is a concatenation.  If any term is not a string or number
@@ -9724,22 +9719,22 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                 goto do_binary_op;
 
             /* Ok, we're concatenating: convert non-string constant operands. */
-            length = 0;
+            size_t length = 0;
             for (pn2 = pn1; pn2; pn2 = pn2->pn_next) {
                 if (!FoldType(cx, pn2, TOK_STRING))
                     return JS_FALSE;
                 /* XXX fold only if all operands convert to string */
                 if (pn2->pn_type != TOK_STRING)
                     return JS_TRUE;
-                length += ATOM_TO_STRING(pn2->pn_atom)->flatLength();
+                length += pn2->pn_atom->length();
             }
 
             /* Allocate a new buffer and string descriptor for the result. */
-            chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
+            jschar *chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
             if (!chars)
                 return JS_FALSE;
             chars[length] = 0;
-            str = js_NewString(cx, chars, length);
+            JSString *str = js_NewString(cx, chars, length);
             if (!str) {
                 cx->free(chars);
                 return JS_FALSE;
@@ -9747,9 +9742,9 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
 
             /* Fill the buffer, advancing chars and recycling kids as we go. */
             for (pn2 = pn1; pn2; pn2 = RecycleTree(pn2, tc)) {
-                str2 = ATOM_TO_STRING(pn2->pn_atom);
-                length2 = str2->flatLength();
-                js_strncpy(chars, str2->flatChars(), length2);
+                JSAtom *atom = pn2->pn_atom;
+                size_t length2 = atom->length();
+                js_strncpy(chars, atom->chars(), length2);
                 chars += length2;
             }
             JS_ASSERT(*chars == 0);
@@ -9775,8 +9770,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             }
             if (pn1->pn_type != TOK_STRING || pn2->pn_type != TOK_STRING)
                 return JS_TRUE;
-            left = ATOM_TO_STRING(pn1->pn_atom);
-            right = ATOM_TO_STRING(pn2->pn_atom);
+            left = pn1->pn_atom;
+            right = pn2->pn_atom;
             str = js_ConcatStrings(cx, left, right);
             if (!str)
                 return JS_FALSE;
@@ -9898,7 +9893,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
         if (pn1->pn_type == TOK_XMLNAME) {
             JSObjectBox *xmlbox;
 
-            Value v = StringValue(ATOM_TO_STRING(pn1->pn_atom));
+            Value v = StringValue(pn1->pn_atom);
             if (!js_ToAttributeName(cx, &v))
                 return JS_FALSE;
             JS_ASSERT(v.isObject());

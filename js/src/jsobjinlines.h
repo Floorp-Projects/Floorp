@@ -58,13 +58,13 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsnum.h"
-#include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jsstr.h"
 
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsprobes.h"
+#include "jsscopeinlines.h"
 
 inline bool
 JSObject::preventExtensions(JSContext *cx, js::AutoIdVector *props)
@@ -123,6 +123,39 @@ JSObject::syncSpecialEquality()
 {
     if (clasp->ext.equality)
         flags |= JSObject::HAS_EQUALITY;
+}
+
+inline void
+JSObject::trace(JSTracer *trc)
+{
+    if (!isNative())
+        return;
+
+    JSContext *cx = trc->context;
+    js::Shape *shape = lastProp;
+
+    if (IS_GC_MARKING_TRACER(trc) && cx->runtime->gcRegenShapes) {
+        /*
+         * Either this object has its own shape, which must be regenerated, or
+         * it must have the same shape as lastProp.
+         */
+        if (!shape->hasRegenFlag()) {
+            shape->shape = js_RegenerateShapeForGC(cx->runtime);
+            shape->setRegenFlag();
+        }
+
+        uint32 newShape = shape->shape;
+        if (hasOwnShape()) {
+            newShape = js_RegenerateShapeForGC(cx->runtime);
+            JS_ASSERT(newShape != shape->shape);
+        }
+        objShape = newShape;
+    }
+
+    /* Trace our property tree or dictionary ancestor line. */
+    do {
+        shape->trace(trc);
+    } while ((shape = shape->parent) != NULL && !shape->marked());
 }
 
 inline void
@@ -670,7 +703,7 @@ JSObject::getNamePrefix() const
 {
     JS_ASSERT(isNamespace() || isQName());
     const js::Value &v = getSlot(JSSLOT_NAME_PREFIX);
-    return !v.isUndefined() ? v.toString()->assertIsLinear() : NULL;
+    return !v.isUndefined() ? &v.toString()->asLinear() : NULL;
 }
 
 inline jsval
@@ -699,7 +732,7 @@ JSObject::getNameURI() const
 {
     JS_ASSERT(isNamespace() || isQName());
     const js::Value &v = getSlot(JSSLOT_NAME_URI);
-    return !v.isUndefined() ? v.toString()->assertIsLinear() : NULL;
+    return !v.isUndefined() ? &v.toString()->asLinear() : NULL;
 }
 
 inline jsval
@@ -735,7 +768,7 @@ JSObject::getQNameLocalName() const
 {
     JS_ASSERT(isQName());
     const js::Value &v = getSlot(JSSLOT_QNAME_LOCAL_NAME);
-    return !v.isUndefined() ? v.toString()->assertIsLinear() : NULL;
+    return !v.isUndefined() ? &v.toString()->asLinear() : NULL;
 }
 
 inline jsval
