@@ -377,8 +377,11 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
      * if this is coming from a 'for in' loop, not a call to Iterator itself.
      * If an Iterator object is used in a for loop then the values fetched in
      * that loop are unknown, whether there is a custom __iterator__ or not.
+     * Watch out for the case where this iteration request came through a
+     * cross-compartment wrapper, where cx->regs->pc is NULL. The iteration
+     * value will have already been marked as unknown by the wrapper.
      */
-    if (!(flags & JSITER_OWNONLY)) {
+    if (!(flags & JSITER_OWNONLY) && cx->regs->pc) {
         JS_ASSERT(JSOp(*cx->regs->pc) == JSOP_ITER);
         if (!cx->fp()->script()->typeMonitorUnknown(cx, cx->regs->pc))
             return false;
