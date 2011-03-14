@@ -58,7 +58,7 @@
 #define ATOM_NOCOPY     0x4       /* don't copy atom string bytes */
 #define ATOM_TMPSTR     0x8       /* internal, to avoid extra string */
 
-#define STRING_TO_ATOM(str)       (JS_ASSERT(str->isAtomized()),             \
+#define STRING_TO_ATOM(str)       (JS_ASSERT(str->isAtom()),                  \
                                    (JSAtom *)str)
 #define ATOM_TO_STRING(atom)      (atom)
 #define ATOM_TO_JSVAL(atom)       STRING_TO_JSVAL(ATOM_TO_STRING(atom))

@@ -128,7 +128,7 @@ struct JSString
      * Not private because we want to be able to use static initializers for
      * them. Don't use these directly! FIXME bug 614459.
      */
-    size_t                 lengthAndFlags;      /* in all strings */
+    uint32                 lengthAndFlags;      /* in all strings */
     union {
         const jschar       *chars;              /* in non-rope strings */
         JSString           *left;               /* in rope strings */
@@ -149,33 +149,33 @@ struct JSString
         size_t             externalStringType;  /* in external strings */
     };
 
+    /* FIXME: document proper in bug 613457. */
+
     /*
-     * The lengthAndFlags field in string headers has data arranged in the
-     * following way:
-     *
-     * [ length (bits 4-31) ][ flags (bits 2-3) ][ type (bits 0-1) ]
-     *
-     * The length is packed in lengthAndFlags, even in string types that don't
-     * need 3 other fields, to make the length check simpler.
-     *
-     * When the string type is FLAT, the flags can contain ATOMIZED or
-     * EXTENSIBLE.
+     * Generous but sane length bound; the "-1" is there for comptibility with
+     * OOM tests.
      */
-    static const size_t TYPE_FLAGS_MASK = JS_BITMASK(4);
-    static const size_t LENGTH_SHIFT    = 4;
+    static const size_t LENGTH_SHIFT      = 4;
+    static const size_t FLAGS_MASK        = JS_BITMASK(LENGTH_SHIFT);
+    static const size_t MAX_LENGTH        = JS_BIT(32 - LENGTH_SHIFT) - 1;
 
-    static const size_t TYPE_MASK       = JS_BITMASK(2);
-    static const size_t FLAT            = 0x0;
-    static const size_t DEPENDENT       = 0x1;
-    static const size_t ROPE            = 0x2;
+    static const size_t LINEAR_MASK       = JS_BITMASK(1);
+    static const size_t LINEAR_FLAGS      = 0x0;
 
-    /* Allow checking 1 bit for dependent/rope strings. */
-    static const size_t DEPENDENT_BIT   = JS_BIT(0);
-    static const size_t ROPE_BIT        = JS_BIT(1);
+    static const size_t FLAT_MASK         = JS_BITMASK(2);
+    static const size_t FLAT_FLAGS        = 0x0;
 
-    static const size_t ATOMIZED        = JS_BIT(2);
-    static const size_t EXTENSIBLE      = JS_BIT(3);
+    static const size_t ATOM_MASK         = JS_BITMASK(3);
+    static const size_t ATOM_FLAGS        = 0x0;
 
+    static const size_t STATIC_ATOM_MASK  = JS_BITMASK(4);
+    static const size_t STATIC_ATOM_FLAGS = 0x0;
+
+    static const size_t ROPE_BIT          = JS_BIT(0);
+    static const size_t DEPENDENT_BIT     = JS_BIT(1);
+    static const size_t PLAIN_FLAGS       = JS_BIT(2);
+    static const size_t EXTENSIBLE_FLAGS  = JS_BIT(2) | JS_BIT(3);
+    static const size_t NON_STATIC_ATOM   = JS_BIT(3);
 
     size_t buildLengthAndFlags(size_t length, size_t flags) {
         return (length << LENGTH_SHIFT) | flags;
@@ -189,32 +189,42 @@ struct JSString
         return reinterpret_cast<js::gc::FreeCell *>(this);
     }
 
-    /*
-     * Generous but sane length bound; the "-1" is there for comptibility with
-     * OOM tests.
-     */
-    static const size_t MAX_LENGTH = (1 << 28) - 1;
-
-    JS_ALWAYS_INLINE bool isDependent() const {
-        return lengthAndFlags & DEPENDENT_BIT;
-    }
-
-    JS_ALWAYS_INLINE bool isFlat() const {
-        return (lengthAndFlags & TYPE_MASK) == FLAT;
-    }
-
-    JS_ALWAYS_INLINE bool isExtensible() const {
-        JS_ASSERT_IF(lengthAndFlags & EXTENSIBLE, isFlat());
-        return lengthAndFlags & EXTENSIBLE;
-    }
-
-    JS_ALWAYS_INLINE bool isAtomized() const {
-        JS_ASSERT_IF(lengthAndFlags & ATOMIZED, isFlat());
-        return lengthAndFlags & ATOMIZED;
+    JS_ALWAYS_INLINE bool isLinear() const {
+        return (lengthAndFlags & LINEAR_MASK) == LINEAR_FLAGS;
     }
 
     JS_ALWAYS_INLINE bool isRope() const {
-        return lengthAndFlags & ROPE_BIT;
+        bool rope = lengthAndFlags & ROPE_BIT;
+        JS_ASSERT_IF(rope, (lengthAndFlags & FLAGS_MASK) == ROPE_BIT);
+        return rope;
+    }
+
+    JS_ALWAYS_INLINE bool isFlat() const {
+        return (lengthAndFlags & FLAT_MASK) == FLAT_FLAGS;
+    }
+
+    JS_ALWAYS_INLINE bool isDependent() const {
+        bool dependent = lengthAndFlags & DEPENDENT_BIT;
+        JS_ASSERT_IF(dependent, (lengthAndFlags & FLAGS_MASK) == DEPENDENT_BIT);
+        return dependent;
+    }
+
+    JS_ALWAYS_INLINE bool isAtom() const {
+        bool atomized = (lengthAndFlags & ATOM_MASK) == ATOM_FLAGS;
+        JS_ASSERT_IF(atomized, isFlat());
+        return atomized;
+    }
+
+    JS_ALWAYS_INLINE bool isStaticAtom() const {
+        return (lengthAndFlags & FLAGS_MASK) == STATIC_ATOM_FLAGS;
+    }
+
+    JS_ALWAYS_INLINE bool isPlain() const {
+        return (lengthAndFlags & FLAGS_MASK) == PLAIN_FLAGS;
+    }
+
+    JS_ALWAYS_INLINE bool isExtensible() const {
+        return (lengthAndFlags & FLAGS_MASK) == EXTENSIBLE_FLAGS;
     }
 
     JS_ALWAYS_INLINE size_t length() const {
@@ -222,7 +232,7 @@ struct JSString
     }
 
     JS_ALWAYS_INLINE bool empty() const {
-        return lengthAndFlags <= TYPE_FLAGS_MASK;
+        return lengthAndFlags <= FLAGS_MASK;
     }
 
     /* This can fail by returning null and reporting an error on cx. */
@@ -241,8 +251,8 @@ struct JSString
 
     JS_ALWAYS_INLINE void initFlatNotTerminated(jschar *chars, size_t length) {
         JS_ASSERT(length <= MAX_LENGTH);
-        JS_ASSERT(!isStatic(this));
-        lengthAndFlags = buildLengthAndFlags(length, FLAT);
+        JS_ASSERT(!isGCThingStatic(this));
+        lengthAndFlags = buildLengthAndFlags(length, PLAIN_FLAGS);
         u.chars = chars;
     }
 
@@ -255,16 +265,16 @@ struct JSString
     JS_ALWAYS_INLINE void initShortString(const jschar *chars, size_t length) {
         JS_ASSERT(length <= MAX_LENGTH);
         JS_ASSERT(chars >= inlineStorage && chars < (jschar *)(this + 2));
-        JS_ASSERT(!isStatic(this));
-        lengthAndFlags = buildLengthAndFlags(length, FLAT);
+        JS_ASSERT(!isGCThingStatic(this));
+        lengthAndFlags = buildLengthAndFlags(length, PLAIN_FLAGS);
         u.chars = chars;
     }
 
     JS_ALWAYS_INLINE void initFlatExtensible(jschar *chars, size_t length, size_t cap) {
         JS_ASSERT(length <= MAX_LENGTH);
         JS_ASSERT(chars[length] == jschar(0));
-        JS_ASSERT(!isStatic(this));
-        lengthAndFlags = buildLengthAndFlags(length, FLAT | EXTENSIBLE);
+        JS_ASSERT(!isGCThingStatic(this));
+        lengthAndFlags = buildLengthAndFlags(length, EXTENSIBLE_FLAGS);
         u.chars = chars;
         s.capacity = cap;
     }
@@ -285,9 +295,8 @@ struct JSString
     }
 
     inline void flatSetAtomized() {
-        JS_ASSERT(isFlat());
-        JS_ASSERT(!isStatic(this));
-        lengthAndFlags |= ATOMIZED;
+        JS_ASSERT(isFlat() && !isExtensible() && !isGCThingStatic(this));
+        lengthAndFlags = buildLengthAndFlags(length(), NON_STATIC_ATOM);
     }
 
     inline void flatClearExtensible() {
@@ -296,8 +305,10 @@ struct JSString
          * memory, so we cannot unconditionally apply the mask.
          */
         JS_ASSERT(isFlat());
-        if (lengthAndFlags & EXTENSIBLE)
-            lengthAndFlags &= ~EXTENSIBLE;
+        if (isExtensible()) {
+            JS_ASSERT(!isAtom());
+            lengthAndFlags = buildLengthAndFlags(length(), PLAIN_FLAGS);
+        }
     }
 
     /*
@@ -305,11 +316,11 @@ struct JSString
      * The caller still needs to pass base for GC purposes.
      */
     inline void initDependent(JSString *base, const jschar *chars, size_t length) {
-        JS_ASSERT(!isStatic(this));
+        JS_ASSERT(!isGCThingStatic(this));
         JS_ASSERT(base->isFlat());
         JS_ASSERT(chars >= base->flatChars() && chars < base->flatChars() + base->length());
         JS_ASSERT(length <= base->length() - (chars - base->flatChars()));
-        lengthAndFlags = buildLengthAndFlags(length, DEPENDENT);
+        lengthAndFlags = buildLengthAndFlags(length, DEPENDENT_BIT);
         u.chars = chars;
         s.base = base;
     }
@@ -339,7 +350,7 @@ struct JSString
     /* Rope-related initializers and accessors. */
     inline void initRopeNode(JSString *left, JSString *right, size_t length) {
         JS_ASSERT(left->length() + right->length() == length);
-        lengthAndFlags = buildLengthAndFlags(length, ROPE);
+        lengthAndFlags = buildLengthAndFlags(length, ROPE_BIT);
         u.left = left;
         s.right = right;
     }
@@ -356,7 +367,7 @@ struct JSString
 
     inline void finishTraversalConversion(JSString *base, const jschar *baseBegin, const jschar *end) {
         JS_ASSERT(baseBegin <= u.chars && u.chars <= end);
-        lengthAndFlags = buildLengthAndFlags(end - u.chars, DEPENDENT);
+        lengthAndFlags = buildLengthAndFlags(end - u.chars, DEPENDENT_BIT);
         s.base = base;
     }
 
@@ -366,10 +377,6 @@ struct JSString
         if (isRope() && !flatten(cx))
             return NULL;
         return reinterpret_cast<JSLinearString *>(this);
-    }
-
-    bool isLinear() const {
-        return !isRope();
     }
 
     JSLinearString *assertIsLinear() {
@@ -416,7 +423,7 @@ struct JSString
         return true;
     }
 
-    static inline bool isStatic(void *ptr) {
+    static inline bool isGCThingStatic(void *ptr) {
         return isUnitString(ptr) || isLength2String(ptr) || isHundredString(ptr);
     }
 

@@ -12515,7 +12515,7 @@ static inline bool
 RootedStringToId(JSContext* cx, JSString** namep, jsid* idp)
 {
     JSString* name = *namep;
-    if (name->isAtomized()) {
+    if (name->isAtom()) {
         *idp = INTERNED_STRING_TO_JSID(name);
         return true;
     }
