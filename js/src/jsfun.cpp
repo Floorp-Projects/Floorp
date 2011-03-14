@@ -946,16 +946,17 @@ CalleeGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     return CheckForEscapingClosure(cx, obj, vp);
 }
 
-namespace js {
-
 /*
- * Construct a call object for the given bindings.  The callee is the function
- * on behalf of which the call object is being created.
+ * Construct a call object for the given bindings.  If this is a call object
+ * for a function invocation, callee should be the function being called.
+ * Otherwise it must be a call object for eval of strict mode code, and callee
+ * must be null.
  */
-JSObject *
-NewCallObject(JSContext *cx, Bindings *bindings, JSObject &scopeChain, JSObject *callee)
+static JSObject *
+NewCallObject(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObject *callee)
 {
-    size_t argsVars = bindings->countArgsAndVars();
+    Bindings &bindings = script->bindings;
+    size_t argsVars = bindings.countArgsAndVars();
     size_t slots = JSObject::CALL_RESERVED_SLOTS + argsVars;
     gc::FinalizeKind kind = gc::GetGCObjectKind(slots);
 
@@ -984,8 +985,6 @@ NewCallObject(JSContext *cx, Bindings *bindings, JSObject &scopeChain, JSObject 
     return callobj;
 }
 
-} // namespace js
-
 static inline JSObject *
 NewDeclEnvObject(JSContext *cx, JSStackFrame *fp)
 {
@@ -1002,39 +1001,28 @@ NewDeclEnvObject(JSContext *cx, JSStackFrame *fp)
     return envobj;
 }
 
-JSObject *
-js_GetCallObject(JSContext *cx, JSStackFrame *fp)
-{
-    /* Create a call object for fp only if it lacks one. */
-    JS_ASSERT(fp->isFunctionFrame());
-    if (fp->hasCallObj())
-        return &fp->callObj();
+namespace js {
 
-#ifdef DEBUG
-    /* A call object should be a frame's outermost scope chain element.  */
-    Class *clasp = fp->scopeChain().getClass();
-    if (clasp == &js_WithClass || clasp == &js_BlockClass)
-        JS_ASSERT(fp->scopeChain().getPrivate() != js_FloatingFrameIfGenerator(cx, fp));
-    else if (clasp == &js_CallClass)
-        JS_ASSERT(fp->scopeChain().getPrivate() != fp);
-#endif
+JSObject *
+CreateFunCallObject(JSContext *cx, JSStackFrame *fp)
+{
+    JS_ASSERT(fp->isNonEvalFunctionFrame());
+    JS_ASSERT(!fp->hasCallObj());
+
+    JSObject *scopeChain = &fp->scopeChain();
+    JS_ASSERT_IF(scopeChain->isWith() || scopeChain->isBlock() || scopeChain->isCall(),
+                 scopeChain->getPrivate() != fp);
 
     /*
-     * Create the call object, using the frame's enclosing scope as its
-     * parent, and link the call to its stack frame. For a named function
-     * expression Call's parent points to an environment object holding
-     * function's name.
+     * For a named function expression Call's parent points to an environment
+     * object holding function's name.
      */
-    JSAtom *lambdaName =
-        (fp->fun()->flags & JSFUN_LAMBDA) ? fp->fun()->atom : NULL;
-    if (lambdaName) {
-        JSObject *envobj = NewDeclEnvObject(cx, fp);
-        if (!envobj)
+    if (JSAtom *lambdaName = (fp->fun()->flags & JSFUN_LAMBDA) ? fp->fun()->atom : NULL) {
+        scopeChain = NewDeclEnvObject(cx, fp);
+        if (!scopeChain)
             return NULL;
 
-        /* Root envobj before js_DefineNativeProperty (-> JSClass.addProperty). */
-        fp->setScopeChainNoCallObj(*envobj);
-        if (!js_DefineNativeProperty(cx, &fp->scopeChain(), ATOM_TO_JSID(lambdaName),
+        if (!js_DefineNativeProperty(cx, scopeChain, ATOM_TO_JSID(lambdaName),
                                      ObjectValue(fp->callee()),
                                      CalleeGetter, NULL,
                                      JSPROP_PERMANENT | JSPROP_READONLY,
@@ -1043,21 +1031,28 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
         }
     }
 
-    JSObject *callobj =
-        NewCallObject(cx, &fp->fun()->script()->bindings, fp->scopeChain(), &fp->callee());
+    JSObject *callobj = NewCallObject(cx, fp->script(), *scopeChain, &fp->callee());
     if (!callobj)
         return NULL;
 
     callobj->setPrivate(fp);
-    JS_ASSERT(fp->fun() == fp->callee().getFunctionPrivate());
-
-    /*
-     * Push callobj on the top of the scope chain, and make it the
-     * variables object.
-     */
-    fp->setScopeChainAndCallObj(*callobj);
+    fp->setScopeChainWithOwnCallObj(*callobj);
     return callobj;
 }
+
+JSObject *
+CreateEvalCallObject(JSContext *cx, JSStackFrame *fp)
+{
+    JSObject *callobj = NewCallObject(cx, fp->script(), fp->scopeChain(), NULL);
+    if (!callobj)
+        return false;
+
+    callobj->setPrivate(fp);
+    fp->setScopeChainWithOwnCallObj(*callobj);
+    return callobj;
+}
+
+} // namespace js
 
 JSObject * JS_FASTCALL
 js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSObject *scopeChain)
@@ -1065,7 +1060,7 @@ js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSO
     JS_ASSERT(!js_IsNamedLambda(fun));
     JS_ASSERT(scopeChain);
     JS_ASSERT(callee);
-    return NewCallObject(cx, &fun->script()->bindings, *scopeChain, callee);
+    return NewCallObject(cx, fun->script(), *scopeChain, callee);
 }
 
 JS_DEFINE_CALLINFO_4(extern, OBJECT, js_CreateCallObjectOnTrace, CONTEXT, FUNCTION, OBJECT, OBJECT,
@@ -1084,11 +1079,8 @@ void
 js_PutCallObject(JSContext *cx, JSStackFrame *fp)
 {
     JSObject &callobj = fp->callObj();
-
-    /*
-     * Strict mode eval frames have Call objects to put.  Normal eval frames
-     * never put a Call object.
-     */
+    JS_ASSERT(callobj.getPrivate() == fp);
+    JS_ASSERT_IF(fp->isEvalFrame(), fp->isStrictEvalFrame());
     JS_ASSERT(fp->isEvalFrame() == callobj.callIsForEval());
 
     /* Get the arguments object to snapshot fp's actual argument values. */

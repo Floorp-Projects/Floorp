@@ -109,9 +109,8 @@ void UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr);
 
 void JS_FASTCALL CreateThis(VMFrame &f, JSObject *proto);
 void JS_FASTCALL Throw(VMFrame &f);
-void JS_FASTCALL PutStrictEvalCallObject(VMFrame &f);
 void JS_FASTCALL PutActivationObjects(VMFrame &f);
-void JS_FASTCALL GetCallObject(VMFrame &f);
+void JS_FASTCALL CreateFunCallObject(VMFrame &f);
 #if JS_MONOIC
 void * JS_FASTCALL InvokeTracer(VMFrame &f, ic::TraceICInfo *tic);
 #else

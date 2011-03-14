@@ -770,8 +770,7 @@ CheckStackAndEnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code)
         goto error;
 
     ok = EnterMethodJIT(cx, fp, code, stackLimit);
-    JS_ASSERT_IF(!fp->isYielding() && !(fp->isEvalFrame() && !fp->script()->strictModeCode),
-                 !fp->hasCallObj() && !fp->hasArgsObj());
+    JS_ASSERT_IF(!fp->isYielding(), !fp->hasCallObj() && !fp->hasArgsObj());
     return ok;
 
   error:
