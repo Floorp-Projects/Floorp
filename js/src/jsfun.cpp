@@ -1617,7 +1617,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         break;
 
       case FUN_NAME:
-        vp->setString(fun->atom ? ATOM_TO_STRING(fun->atom)
+        vp->setString(fun->atom ? fun->atom
                                 : cx->runtime->emptyString);
         break;
 
@@ -1977,7 +1977,7 @@ fun_trace(JSTracer *trc, JSObject *obj)
     }
 
     if (fun->atom)
-        MarkString(trc, ATOM_TO_STRING(fun->atom), "atom");
+        MarkString(trc, fun->atom, "atom");
 
     if (fun->isInterpreted() && fun->script())
         js_TraceScript(trc, fun->script());

@@ -1664,7 +1664,7 @@ js_ReportMissingArg(JSContext *cx, const Value &v, uintN arg)
     if (IsFunctionObject(v)) {
         atom = GET_FUNCTION_PRIVATE(cx, &v.toObject())->atom;
         bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
-                                        v, ATOM_TO_STRING(atom));
+                                        v, atom);
         if (!bytes)
             return;
     }

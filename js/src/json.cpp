@@ -64,6 +64,7 @@
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
+#include "jsstrinlines.h"
 
 using namespace js;
 using namespace js::gc;
@@ -1262,7 +1263,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
 static JSBool
 json_toSource(JSContext *cx, uintN argc, Value *vp)
 {
-    vp->setString(ATOM_TO_STRING(CLASS_ATOM(cx, JSON)));
+    vp->setString(CLASS_ATOM(cx, JSON));
     return JS_TRUE;
 }
 #endif

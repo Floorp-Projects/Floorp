@@ -1006,8 +1006,8 @@ js_IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 
             JSString *str;
             jsint i;
-            if (rval->isInt32() && (jsuint(i = rval->toInt32()) < INT_STRING_LIMIT)) {
-                str = JSString::intString(i);
+            if (rval->isInt32() && JSAtom::hasIntStatic(i = rval->toInt32())) {
+                str = &JSAtom::intStatic(i);
             } else {
                 str = js_ValueToString(cx, *rval);
                 if (!str)

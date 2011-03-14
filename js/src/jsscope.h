@@ -57,7 +57,6 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jspropertytree.h"
-#include "jsstrinlines.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)

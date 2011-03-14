@@ -3906,7 +3906,7 @@ BEGIN_CASE(JSOP_TYPEOF)
     const Value &ref = regs.sp[-1];
     JSType type = JS_TypeOfValue(cx, Jsvalify(ref));
     JSAtom *atom = rt->atomState.typeAtoms[type];
-    regs.sp[-1].setString(ATOM_TO_STRING(atom));
+    regs.sp[-1].setString(atom);
 }
 END_CASE(JSOP_TYPEOF)
 
@@ -4325,7 +4325,7 @@ BEGIN_CASE(JSOP_CALLPROP)
 #if JS_HAS_NO_SUCH_METHOD
     if (JS_UNLIKELY(rval.isUndefined()) && regs.sp[-1].isObject()) {
         LOAD_ATOM(0, atom);
-        regs.sp[-2].setString(ATOM_TO_STRING(atom));
+        regs.sp[-2].setString(atom);
         if (!js_OnUnknownMethod(cx, regs.sp - 2))
             goto error;
     }
@@ -4502,7 +4502,7 @@ BEGIN_CASE(JSOP_GETELEM)
         JSString *str = lref.toString();
         int32_t i = rref.toInt32();
         if (size_t(i) < str->length()) {
-            str = JSString::getUnitString(cx, str, size_t(i));
+            str = JSAtom::getUnitStringForElement(cx, str, size_t(i));
             if (!str)
                 goto error;
             regs.sp--;
@@ -4945,7 +4945,7 @@ BEGIN_CASE(JSOP_STRING)
 {
     JSAtom *atom;
     LOAD_ATOM(0, atom);
-    PUSH_STRING(ATOM_TO_STRING(atom));
+    PUSH_STRING(atom);
 }
 END_CASE(JSOP_STRING)
 
@@ -5128,7 +5128,7 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
         JSLinearString *str2;
         SEARCH_PAIRS(
             match = (rval.isString() &&
-                     ((str2 = rval.toString()->assertIsLinear()) == str ||
+                     ((str2 = &rval.toString()->asLinear()) == str ||
                       EqualStrings(str2, str)));
         )
     } else if (lval.isNumber()) {
@@ -6290,7 +6290,7 @@ BEGIN_CASE(JSOP_QNAMEPART)
 {
     JSAtom *atom;
     LOAD_ATOM(0, atom);
-    PUSH_STRING(ATOM_TO_STRING(atom));
+    PUSH_STRING(atom);
 }
 END_CASE(JSOP_QNAMEPART)
 
@@ -6298,7 +6298,7 @@ BEGIN_CASE(JSOP_QNAMECONST)
 {
     JSAtom *atom;
     LOAD_ATOM(0, atom);
-    Value rval = StringValue(ATOM_TO_STRING(atom));
+    Value rval = StringValue(atom);
     Value lval = regs.sp[-1];
     JSObject *obj = js_ConstructXMLQNameObject(cx, lval, rval);
     if (!obj)
@@ -6511,7 +6511,7 @@ BEGIN_CASE(JSOP_XMLCDATA)
 {
     JSAtom *atom;
     LOAD_ATOM(0, atom);
-    JSString *str = ATOM_TO_STRING(atom);
+    JSString *str = atom;
     JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_TEXT, NULL, str);
     if (!obj)
         goto error;
@@ -6523,7 +6523,7 @@ BEGIN_CASE(JSOP_XMLCOMMENT)
 {
     JSAtom *atom;
     LOAD_ATOM(0, atom);
-    JSString *str = ATOM_TO_STRING(atom);
+    JSString *str = atom;
     JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_COMMENT, NULL, str);
     if (!obj)
         goto error;
@@ -6535,7 +6535,7 @@ BEGIN_CASE(JSOP_XMLPI)
 {
     JSAtom *atom;
     LOAD_ATOM(0, atom);
-    JSString *str = ATOM_TO_STRING(atom);
+    JSString *str = atom;
     Value rval = regs.sp[-1];
     JSString *str2 = rval.toString();
     JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_PROCESSING_INSTRUCTION, str, str2);
