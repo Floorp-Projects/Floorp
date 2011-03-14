@@ -260,7 +260,7 @@ class FrameState
     /*
      * Pushes a constant value.
      */
-    inline void push(const Value &v);
+    inline void push(const Value &v, types::TypeSet *typeSet = NULL);
 
     /*
      * Loads a value from memory and pushes it.

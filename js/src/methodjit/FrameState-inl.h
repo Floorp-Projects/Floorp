@@ -227,10 +227,11 @@ FrameState::rawPush()
 }
 
 inline void
-FrameState::push(const Value &v)
+FrameState::push(const Value &v, types::TypeSet *typeSet)
 {
     FrameEntry *fe = rawPush();
     fe->setConstant(Jsvalify(v));
+    fe->typeSet = typeSet;
 }
 
 inline void
