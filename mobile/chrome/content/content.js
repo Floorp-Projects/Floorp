@@ -854,7 +854,7 @@ var ContextHandler = {
           state.types.push("input-text");
 
           // Don't include "copy" for password fields.
-          if (elem.mozIsTextField(true)) {
+          if (!(elem instanceof Ci.nsIDOMHTMLInputElement) || elem.mozIsTextField(true)) {
             if (selectionStart != selectionEnd) {
               state.types.push("copy");
               state.string = elem.value.slice(selectionStart, selectionEnd);
