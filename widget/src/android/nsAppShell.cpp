@@ -154,6 +154,7 @@ nsAppShell::Observe(nsISupports* aSubject,
         // We need to ensure no observers stick around after XPCOM shuts down
         // or we'll see crashes, as the app shell outlives XPConnect.
         mObserversHash.Clear();
+        return nsBaseAppShell::Observe(aSubject, aTopic, aData);
     } else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) && (
                    !wcscmp((const wchar_t*)aData, L"intl.locale.matchOS") ||
                    !wcscmp((const wchar_t*)aData, L"general.useragent.locale"))) {
@@ -171,8 +172,7 @@ nsAppShell::Observe(nsISupports* aSubject,
             bridge->SetSelectedLocale(EmptyCString());
         return NS_OK;
     }
-
-    return nsBaseAppShell::Observe(aSubject, aTopic, aData);
+    return NS_OK;
 }
 
 void
