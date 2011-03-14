@@ -52,6 +52,7 @@
 #include "methodjit/MonoIC.h"
 
 #include "jsgcinlines.h"
+#include "jsscopeinlines.h"
 
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
