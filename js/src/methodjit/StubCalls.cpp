@@ -1419,27 +1419,8 @@ stubs::RegExp(VMFrame &f, JSObject *regex)
 JSObject * JS_FASTCALL
 stubs::LambdaForInit(VMFrame &f, JSFunction *fun)
 {
-    JS_ASSERT(fun->joinable());
-    JS_ASSERT(FUN_NULL_CLOSURE(fun));
-    JS_ASSERT(f.fp()->script()->compileAndGo);
     JSObject *obj = FUN_OBJECT(fun);
-    JS_ASSERT(obj->getParent() != NULL);
-
-    fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(f.regs.pc)));
-    return obj;
-}
-
-JSObject * JS_FASTCALL
-stubs::LambdaForSet(VMFrame &f, JSFunction *fun)
-{
-    JS_ASSERT(fun->joinable());
-    JS_ASSERT(FUN_NULL_CLOSURE(fun));
-    JS_ASSERT(f.fp()->script()->compileAndGo);
-    JSObject *obj = FUN_OBJECT(fun);
-    JS_ASSERT(obj->getParent() != NULL);
-
-    const Value &lref = f.regs.sp[-1];
-    if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
+    if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
         fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(f.regs.pc)));
         return obj;
     }
@@ -1447,40 +1428,51 @@ stubs::LambdaForSet(VMFrame &f, JSFunction *fun)
 }
 
 JSObject * JS_FASTCALL
+stubs::LambdaForSet(VMFrame &f, JSFunction *fun)
+{
+    JSObject *obj = FUN_OBJECT(fun);
+    if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
+        const Value &lref = f.regs.sp[-1];
+        if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
+            fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(f.regs.pc)));
+            return obj;
+        }
+    }
+    return Lambda(f, fun);
+}
+
+JSObject * JS_FASTCALL
 stubs::LambdaJoinableForCall(VMFrame &f, JSFunction *fun)
 {
-    JS_ASSERT(fun->joinable());
-    JS_ASSERT(FUN_NULL_CLOSURE(fun));
-    JS_ASSERT(f.fp()->script()->compileAndGo);
     JSObject *obj = FUN_OBJECT(fun);
-    JS_ASSERT(obj->getParent() != NULL);
+    if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
+        /*
+         * Array.prototype.sort and String.prototype.replace are
+         * optimized as if they are special form. We know that they
+         * won't leak the joined function object in obj, therefore
+         * we don't need to clone that compiler- created function
+         * object for identity/mutation reasons.
+         */
+        int iargc = GET_ARGC(f.regs.pc);
 
-    /*
-     * Array.prototype.sort and String.prototype.replace are
-     * optimized as if they are special form. We know that they
-     * won't leak the joined function object in obj, therefore
-     * we don't need to clone that compiler- created function
-     * object for identity/mutation reasons.
-     */
-    int iargc = GET_ARGC(f.regs.pc);
+        /*
+         * Note that we have not yet pushed obj as the final argument,
+         * so regs.sp[1 - (iargc + 2)], and not regs.sp[-(iargc + 2)],
+         * is the callee for this JSOP_CALL.
+         */
+        const Value &cref = f.regs.sp[1 - (iargc + 2)];
+        JSObject *callee;
 
-    /*
-     * Note that we have not yet pushed obj as the final argument,
-     * so regs.sp[1 - (iargc + 2)], and not regs.sp[-(iargc + 2)],
-     * is the callee for this JSOP_CALL.
-     */
-    const Value &cref = f.regs.sp[1 - (iargc + 2)];
-    JSObject *callee;
+        if (IsFunctionObject(cref, &callee)) {
+            JSFunction *calleeFun = callee->getFunctionPrivate();
+            Native native = calleeFun->maybeNative();
 
-    if (IsFunctionObject(cref, &callee)) {
-        JSFunction *calleeFun = callee->getFunctionPrivate();
-        Native native = calleeFun->maybeNative();
-
-        if (native) {
-            if (iargc == 1 && native == array_sort)
-                return obj;
-            if (iargc == 2 && native == str_replace)
-                return obj;
+            if (native) {
+                if (iargc == 1 && native == array_sort)
+                    return obj;
+                if (iargc == 2 && native == str_replace)
+                    return obj;
+            }
         }
     }
     return Lambda(f, fun);
