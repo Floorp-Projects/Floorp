@@ -421,14 +421,6 @@ JSStackFrame::setArgsObj(JSObject &obj)
 }
 
 inline void
-JSStackFrame::clearArgsObj()
-{
-    JS_ASSERT(hasArgsObj());
-    args.nactual = args.obj->getArgsInitialLength();
-    flags_ ^= JSFRAME_HAS_ARGS_OBJ;
-}
-
-inline void
 JSStackFrame::setScopeChainNoCallObj(JSObject &obj)
 {
 #ifdef DEBUG
@@ -458,13 +450,6 @@ JSStackFrame::setScopeChainWithOwnCallObj(JSObject &obj)
     flags_ |= JSFRAME_HAS_SCOPECHAIN | JSFRAME_HAS_CALL_OBJ;
 }
 
-inline void
-JSStackFrame::clearCallObj()
-{
-    JS_ASSERT(hasCallObj());
-    flags_ ^= JSFRAME_HAS_CALL_OBJ;
-}
-
 inline JSObject &
 JSStackFrame::callObj() const
 {
@@ -476,6 +461,30 @@ JSStackFrame::callObj() const
         pobj = pobj->getParent();
     }
     return *pobj;
+}
+
+inline void
+JSStackFrame::markActivationObjectsAsPut()
+{
+    if (flags_ & (JSFRAME_HAS_ARGS_OBJ | JSFRAME_HAS_CALL_OBJ)) {
+        if (hasArgsObj() && !argsObj().getPrivate()) {
+            args.nactual = args.obj->getArgsInitialLength();
+            flags_ &= ~JSFRAME_HAS_ARGS_OBJ;
+        }
+        if (hasCallObj() && !callObj().getPrivate()) {
+            /*
+             * For function frames, the call object may or may not have have an
+             * enclosing DeclEnv object, so we use the callee's parent, since
+             * it was the initial scope chain. For global (strict) eval frames,
+             * there is no calle, but the call object's parent is the initial
+             * scope chain.
+             */
+            scopeChain_ = isFunctionFrame()
+                          ? callee().getParent()
+                          : scopeChain_->getParent();
+            flags_ &= ~JSFRAME_HAS_CALL_OBJ;
+        }
+    }
 }
 
 namespace js {
@@ -511,29 +520,6 @@ struct AutoInterpPreparer  {
     }
 };
 
-inline void
-PutActivationObjects(JSContext *cx, JSStackFrame *fp)
-{
-    /* The order is important as js_PutCallObject needs to access argsObj. */
-    if (fp->hasCallObj())
-        js_PutCallObject(cx, fp);
-    else if (fp->hasArgsObj())
-        js_PutArgsObject(cx, fp);
-}
-
-/*
- * FIXME Remove with bug 635811
- *
- * NB: a non-strict eval frame aliases its non-eval-parent's call/args object.
- */
-inline void
-PutOwnedActivationObjects(JSContext *cx, JSStackFrame *fp)
-{
-    JS_ASSERT(!fp->isYielding());
-    if (!fp->isEvalFrame() || fp->script()->strictModeCode)
-        PutActivationObjects(cx, fp);
-}
-
 class InvokeSessionGuard
 {
     InvokeArgsGuard args_;
@@ -549,7 +535,7 @@ class InvokeSessionGuard
 
   public:
     InvokeSessionGuard() : args_(), frame_() {}
-    inline ~InvokeSessionGuard();
+    ~InvokeSessionGuard() {}
 
     bool start(JSContext *cx, const Value &callee, const Value &thisv, uintN argc);
     bool invoke(JSContext *cx) const;
@@ -574,13 +560,6 @@ class InvokeSessionGuard
         return optimized() ? frame_.fp()->returnValue() : args_.rval();
     }
 };
-
-inline
-InvokeSessionGuard::~InvokeSessionGuard()
-{
-    if (frame_.pushed())
-        PutActivationObjects(frame_.pushedFrameContext(), frame_.fp());
-}
 
 inline bool
 InvokeSessionGuard::invoke(JSContext *cx) const
@@ -817,13 +796,6 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, bool ok)
 {
     if (cx->compartment->debugMode)
         ok = ScriptDebugEpilogue(cx, fp, ok);
-
-    /*
-     * A yielding frame's activation objects are transferred to the floating
-     * frame, stored in the generator, and thus need not be synced.
-     */
-    if (!fp->isYielding())
-        PutActivationObjects(cx, fp);
 
     /*
      * If inline-constructing, replace primitive rval with the new object

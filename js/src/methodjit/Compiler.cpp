@@ -2234,13 +2234,14 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
     }
 
     /*
-     * If there's a function object, deal with the fact that it can escape.
-     * Note that after we've placed the call object, all tracked state can
-     * be thrown away. This will happen anyway because the next live opcode
-     * (if any) must have an incoming edge.
-     *
-     * However, it's an optimization to throw it away early - the tracker
-     * won't be spilled on further exits or join points.
+     * Outside the mjit, activation objects are put by StackSpace::pop*
+     * members. For JSOP_RETURN, the interpreter only calls popInlineFrame if
+     * fp != entryFrame since the VM protocol is that Invoke/Execute are
+     * responsible for pushing/popping the initial frame. The mjit does not
+     * perform this branch (by instead using a trampoline at the return address
+     * to handle exiting mjit code) and thus always puts activation objects,
+     * even on the entry frame. To avoid double-putting, EnterMethodJIT clears
+     * out the entry frame's activation objects.
      */
     if (fun) {
         if (fun->isHeavyweight()) {
@@ -2270,6 +2271,13 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
 
     emitReturnValue(&masm, fe);
     emitFinalReturn(masm);
+
+    /*
+     * After we've placed the call object, all tracked state can be
+     * thrown away. This will happen anyway because the next live opcode (if
+     * any) must have an incoming edge. It's an optimization to throw it away
+     * early - the tracker won't be spilled on further exits or join points.
+     */
     frame.discardFrame();
 }
 

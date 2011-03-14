@@ -153,23 +153,4 @@ throwpoline_exit:
 JaegerThrowpoline ENDP
 
 
-
-; void InjectJaegerReturn();
-InjectJaegerReturn PROC FRAME
-    .ENDPROLOG
-    mov     rcx, qword ptr [rbx+30h] ; load fp->rval_ into typeReg
-    mov     rax, qword ptr [rbx+28h] ; fp->ncode_
-
-    ; Reimplementation of PunboxAssembler::loadValueAsComponents()
-    mov     rdx, r14
-    and     rdx, rcx
-    xor     rcx, rdx
-
-    ; For Windows x64 stub calls, we pad the stack by 32 before
-    ; calling, so we must account for that here. See doStubCall.
-    mov     rbx, qword ptr [rsp+38h+20h] ; f.fp
-    add     rsp, 20h
-    jmp     rax            ; return
-InjectJaegerReturn ENDP
-
 END

@@ -615,14 +615,13 @@ RunScript(JSContext *cx, JSScript *script, JSStackFrame *fp)
 #endif
 
     AutoInterpPreparer prepareInterp(cx, script);
-    bool ok;
 
     /* FIXME: Once bug 470510 is fixed, make this an assert. */
     if (script->compileAndGo) {
         int32 flags = fp->scopeChain().getGlobal()->getReservedSlot(JSRESERVED_GLOBAL_FLAGS).toInt32();
         if (flags & JSGLOBAL_FLAGS_CLEARED) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CLEARED_SCOPE);
-            goto error;
+            return false;
         }
     }
 
@@ -630,22 +629,13 @@ RunScript(JSContext *cx, JSScript *script, JSStackFrame *fp)
     mjit::CompileStatus status;
     status = mjit::CanMethodJIT(cx, script, fp, mjit::CompileRequest_Interpreter);
     if (status == mjit::Compile_Error)
-        goto error;
+        return false;
 
-    if (status == mjit::Compile_Okay) {
-        ok = mjit::JaegerShot(cx);
-        JS_ASSERT_IF(!fp->isYielding(), !fp->hasCallObj() && !fp->hasArgsObj());
-        return ok;
-    }
+    if (status == mjit::Compile_Okay)
+        return mjit::JaegerShot(cx);
 #endif
 
-    ok = Interpret(cx, fp);
-    JS_ASSERT_IF(!fp->isYielding(), !fp->hasCallObj() && !fp->hasArgsObj());
-    return ok;
-
-  error:
-    PutOwnedActivationObjects(cx, fp);
-    return false;
+    return Interpret(cx, fp);
 }
 
 /*
