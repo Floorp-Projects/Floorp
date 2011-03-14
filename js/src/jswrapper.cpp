@@ -615,6 +615,12 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
 bool
 JSCrossCompartmentWrapper::iterate(JSContext *cx, JSObject *wrapper, uintN flags, Value *vp)
 {
+    if (!(flags & JSITER_OWNONLY)) {
+        JS_ASSERT(JSOp(*cx->regs->pc) == JSOP_ITER);
+        if (!cx->fp()->script()->typeMonitorUnknown(cx, cx->regs->pc))
+            return false;
+    }
+
     PIERCE(cx, wrapper, GET,
            NOTHING,
            JSWrapper::iterate(cx, wrapper, flags, vp),
