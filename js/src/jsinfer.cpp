@@ -3647,7 +3647,7 @@ AnalyzeScriptNew(JSContext *cx, JSScript *script)
      * from 'new' calls to the function.
      */
     TypeFunction *funType = script->fun->getType()->asFunction();
-    if (funType->unknownProperties) {
+    if (funType->unknownProperties || script->fun->isFunctionPrototype()) {
         script->thisTypes()->addType(cx, TYPE_UNKNOWN);
     } else {
         TypeSet *prototypeTypes = funType->getProperty(cx, id_prototype(cx), false);
