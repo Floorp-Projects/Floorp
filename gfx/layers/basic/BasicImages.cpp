@@ -146,7 +146,9 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
 
   // 'prescale' is true if the scaling is to be done as part of the
   // YCbCr to RGB conversion rather than on the RGB data when rendered.
-  PRBool prescale = mScaleHint.width > 0 && mScaleHint.height > 0;
+  // We don't prescale if the image has an offset. See bug 639415.
+  PRBool prescale = mScaleHint.width > 0 && mScaleHint.height > 0 &&
+                    aData.mPicX == 0 && aData.mPicY == 0;
   if (format == gfxASurface::ImageFormatRGB16_565) {
     if (have_ycbcr_to_rgb565()) {
       // yuv2rgb16 with scale function not yet available for NEON
