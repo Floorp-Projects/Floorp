@@ -1649,6 +1649,11 @@ mjit::Compiler::jsop_getelem(bool isCall)
 #ifdef JS_POLYIC
     if (!getElemICs.append(ic))
         return false;
+
+    if (recompiling) {
+        OOL_STUBCALL(isCall ? stubs::CallElem : stubs::GetElem);
+        stubcc.rejoin(Changes(2));
+    }
 #endif
 
     return true;
