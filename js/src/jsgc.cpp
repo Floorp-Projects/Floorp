@@ -2727,7 +2727,7 @@ GCUntilDone(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIM
      * We should not be depending on cx->compartment in the GC, so set it to
      * NULL to look for violations.
      */
-    SwitchToCompartment(cx, (JSCompartment *)NULL);
+    SwitchToCompartment sc(cx, (JSCompartment *)NULL);
 
     JS_ASSERT(!rt->gcCurrentCompartment);
     rt->gcCurrentCompartment = comp;
