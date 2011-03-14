@@ -2165,27 +2165,6 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
     return js_IteratorNext(cx, iterobj, rval);
 }
 
-static inline bool
-ScriptPrologue(JSContext *cx, JSStackFrame *fp)
-{
-    if (fp->isConstructing()) {
-        JSObject *obj = js_CreateThisForFunction(cx, &fp->callee());
-        if (!obj)
-            return false;
-        fp->functionThis().setObject(*obj);
-    }
-    if (fp->isFramePushedByExecute()) {
-        if (JSInterpreterHook hook = cx->debugHooks->executeHook)
-            fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData));
-    } else {
-        if (JSInterpreterHook hook = cx->debugHooks->callHook)
-            fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData));
-        Probes::enterJSFun(cx, fp->maybeFun(), fp->maybeScript());
-    }
-
-    return true;
-}
-
 namespace js {
 
 JS_REQUIRES_STACK JS_NEVER_INLINE bool
