@@ -415,36 +415,15 @@ Untag(JSString *str)
 }
 
 static JS_ALWAYS_INLINE void
-NonRopeTypedMarker(JSRuntime *rt, JSString *str)
+NonRopeTypedMarker(JSString *str)
 {
     /* N.B. The base of a dependent string is not necessarily flat. */
     JS_ASSERT(!str->isRope());
 
-    if (rt->gcCurrentCompartment) {
-        for (;;) {
-            if (JSString::isStatic(str))
-                break;
-
-            /* 
-             * If we perform single-compartment GC don't mark Strings outside the current compartment.
-             * Dependent Strings are not shared between compartments and they can't be in the atomsCompartment.
-             */
-            if (str->asCell()->compartment() != rt->gcCurrentCompartment) {
-                JS_ASSERT(str->asCell()->compartment() == rt->atomsCompartment);
-                break;
-            }
-            if (!str->asCell()->markIfUnmarked())
-                break;
-            if (!str->isDependent())
-                break;
-            str = str->dependentBase();
-        }
-    } else {
-        while (!JSString::isStatic(str) &&
-               str->asCell()->markIfUnmarked() &&
-               str->isDependent()) {
-            str = str->dependentBase();
-        }
+    while (!JSString::isStatic(str) &&
+           str->asCell()->markIfUnmarked() &&
+           str->isDependent()) {
+        str = str->dependentBase();
     }
 }
 
@@ -456,13 +435,10 @@ static JS_ALWAYS_INLINE void
 TypedMarker(JSTracer *trc, JSString *str)
 {
     using namespace detail;
-    JSRuntime *rt = trc->context->runtime;
+
     JS_ASSERT(!JSString::isStatic(str));
-#ifdef DEBUG
-    JSCompartment *strComp = str->asCell()->compartment();
-#endif
     if (!str->isRope()) {
-        NonRopeTypedMarker(rt, str);
+        NonRopeTypedMarker(str);
         return;
     }
 
@@ -474,7 +450,6 @@ TypedMarker(JSTracer *trc, JSString *str)
      */
     JSString *parent = NULL;
     first_visit_node: {
-        JS_ASSERT(strComp == str->asCell()->compartment() || str->asCell()->compartment() == rt->atomsCompartment);
         JS_ASSERT(!JSString::isStatic(str));
         if (!str->asCell()->markIfUnmarked())
             goto finish_node;
@@ -486,10 +461,7 @@ TypedMarker(JSTracer *trc, JSString *str)
             str = left;
             goto first_visit_node;
         }
-        JS_ASSERT_IF(!JSString::isStatic(left), 
-                     strComp == left->asCell()->compartment()
-                     || left->asCell()->compartment() == rt->atomsCompartment);
-        NonRopeTypedMarker(rt, left);
+        NonRopeTypedMarker(left);
     }
     visit_right_child: {
         JSString *right = str->ropeRight();
@@ -500,10 +472,7 @@ TypedMarker(JSTracer *trc, JSString *str)
             str = right;
             goto first_visit_node;
         }
-        JS_ASSERT_IF(!JSString::isStatic(right), 
-                     strComp == right->asCell()->compartment()
-                     || right->asCell()->compartment() == rt->atomsCompartment);
-        NonRopeTypedMarker(rt, right);
+        NonRopeTypedMarker(right);
     }
     finish_node: {
         if (!parent)
