@@ -2858,9 +2858,8 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
 
     /*
      * In COMPILE_N_GO code the existing prototype will be correct, so we can
-     * reuse the type. In non-COMPILE_N_GO code the proto is NULL, but since
-     * we don't run type inference on such code we can use the default new
-     * Function type.
+     * reuse the type. In non-COMPILE_N_GO code the existing prototype is NULL;
+     * Just use the default 'new' object for Function.prototype.
      */
     TypeObject *type = (fun->getProto() == proto) ? fun->getType() : proto->getNewType(cx);
     if (!type)
