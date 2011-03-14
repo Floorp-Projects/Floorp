@@ -276,7 +276,6 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
     } else {
         JS_ASSERT(!argsobj.getPrivate());
     }
-    fp->clearArgsObj();
 }
 
 #ifdef JS_TRACER
@@ -1150,7 +1149,6 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     }
 
     callobj.setPrivate(NULL);
-    fp->clearCallObj();
 }
 
 JSBool JS_FASTCALL

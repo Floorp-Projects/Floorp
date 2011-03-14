@@ -798,8 +798,6 @@ HandleFinishedFrame(VMFrame &f, JSStackFrame *entryFrame)
         returnOK = ScriptEpilogue(cx, cx->fp(), true);
     }
 
-    JS_ASSERT_IF(cx->fp()->isNonEvalFunctionFrame(), !cx->fp()->hasCallObj());
-
     if (cx->fp() != entryFrame) {
         InlineReturn(f);
         AdvanceReturnPC(cx);
@@ -1027,8 +1025,10 @@ RunTracer(VMFrame &f)
      *    move the return value down.
      * 2) The entryFrame is NOT the last inline frame. Pop the frame.
      *
-     * In both cases, we hijack the stub to return to InjectJaegerReturn. This
-     * moves |oldFp->rval| into the scripted return registers.
+     * In both cases, we hijack the stub to return to the force-return
+     * trampoline. This trampoline simulates the frame-popping portion of
+     * emitReturn (except without the benefit of the FrameState) and will
+     * produce the necessary register state to return to the caller.
      */
 
   restart:
@@ -1045,7 +1045,8 @@ RunTracer(VMFrame &f)
         if (!HandleFinishedFrame(f, entryFrame))
             THROWV(NULL);
 
-        void *retPtr = JS_FUNC_TO_DATA_PTR(void *, InjectJaegerReturn);
+        void *retPtr = JS_FUNC_TO_DATA_PTR(void *,
+                       cx->jaegerCompartment()->forceReturnTrampoline());
         *f.returnAddressLocation() = retPtr;
         return NULL;
     }
