@@ -313,7 +313,9 @@ bool
 JSFunctionBox::joinable() const
 {
     return FUN_NULL_CLOSURE((JSFunction *) object) &&
-           !(tcflags & (TCF_FUN_USES_ARGUMENTS | TCF_FUN_USES_OWN_NAME));
+           (tcflags & (TCF_FUN_USES_ARGUMENTS |
+                       TCF_FUN_USES_OWN_NAME |
+                       TCF_COMPILE_N_GO)) == TCF_COMPILE_N_GO;
 }
 
 bool
@@ -4731,8 +4733,6 @@ CloneParseTree(JSParseNode *opn, JSTreeContext *tc)
 }
 
 #endif /* JS_HAS_DESTRUCTURING */
-
-extern const char js_with_statement_str[];
 
 static JSParseNode *
 ContainsStmt(JSParseNode *pn, TokenKind tt)

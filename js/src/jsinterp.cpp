@@ -5588,86 +5588,84 @@ BEGIN_CASE(JSOP_LAMBDA)
     /* do-while(0) so we can break instead of using a goto. */
     do {
         JSObject *parent;
-        if (FUN_NULL_CLOSURE(fun)) {
+        if (fun->joinable()) {
             parent = &regs.fp->scopeChain();
 
-            if (obj->getParent() == parent) {
-                jsbytecode *pc2 = AdvanceOverBlockchainOp(regs.pc + JSOP_LAMBDA_LENGTH);
-                JSOp op2 = JSOp(*pc2);
+            jsbytecode *pc2 = AdvanceOverBlockchainOp(regs.pc + JSOP_LAMBDA_LENGTH);
+            JSOp op2 = JSOp(*pc2);
 
-                /*
-                 * Optimize var obj = {method: function () { ... }, ...},
-                 * this.method = function () { ... }; and other significant
-                 * single-use-of-null-closure bytecode sequences.
-                 *
-                 * WARNING: code in TraceRecorder::record_JSOP_LAMBDA must
-                 * match the optimization cases in the following code that
-                 * break from the outer do-while(0).
-                 */
-                if (op2 == JSOP_INITMETHOD) {
+            /*
+             * Optimize var obj = {method: function () { ... }, ...},
+             * this.method = function () { ... }; and other significant
+             * single-use-of-null-closure bytecode sequences.
+             *
+             * WARNING: code in TraceRecorder::record_JSOP_LAMBDA must
+             * match the optimization cases in the following code that
+             * break from the outer do-while(0).
+             */
+            if (op2 == JSOP_INITMETHOD) {
 #ifdef DEBUG
-                    const Value &lref = regs.sp[-1];
-                    JS_ASSERT(lref.isObject());
-                    JSObject *obj2 = &lref.toObject();
-                    JS_ASSERT(obj2->getClass() == &js_ObjectClass);
+                const Value &lref = regs.sp[-1];
+                JS_ASSERT(lref.isObject());
+                JSObject *obj2 = &lref.toObject();
+                JS_ASSERT(obj2->getClass() == &js_ObjectClass);
 #endif
 
+                fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(pc2 - regs.pc)));
+                JS_FUNCTION_METER(cx, joinedinitmethod);
+                break;
+            }
+
+            if (op2 == JSOP_SETMETHOD) {
+#ifdef DEBUG
+                op2 = JSOp(pc2[JSOP_SETMETHOD_LENGTH]);
+                JS_ASSERT(op2 == JSOP_POP || op2 == JSOP_POPV);
+#endif
+                const Value &lref = regs.sp[-1];
+                if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
                     fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(pc2 - regs.pc)));
-                    JS_FUNCTION_METER(cx, joinedinitmethod);
+                    JS_FUNCTION_METER(cx, joinedsetmethod);
                     break;
                 }
+            } else if (fun->joinable()) {
+                if (op2 == JSOP_CALL) {
+                    /*
+                     * Array.prototype.sort and String.prototype.replace are
+                     * optimized as if they are special form. We know that they
+                     * won't leak the joined function object in obj, therefore
+                     * we don't need to clone that compiler- created function
+                     * object for identity/mutation reasons.
+                     */
+                    int iargc = GET_ARGC(pc2);
 
-                if (op2 == JSOP_SETMETHOD) {
-#ifdef DEBUG
-                    op2 = JSOp(pc2[JSOP_SETMETHOD_LENGTH]);
-                    JS_ASSERT(op2 == JSOP_POP || op2 == JSOP_POPV);
-#endif
-                    const Value &lref = regs.sp[-1];
-                    if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
-                        fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(pc2 - regs.pc)));
-                        JS_FUNCTION_METER(cx, joinedsetmethod);
-                        break;
-                    }
-                } else if (fun->joinable()) {
-                    if (op2 == JSOP_CALL) {
-                        /*
-                         * Array.prototype.sort and String.prototype.replace are
-                         * optimized as if they are special form. We know that they
-                         * won't leak the joined function object in obj, therefore
-                         * we don't need to clone that compiler- created function
-                         * object for identity/mutation reasons.
-                         */
-                        int iargc = GET_ARGC(pc2);
+                    /*
+                     * Note that we have not yet pushed obj as the final argument,
+                     * so regs.sp[1 - (iargc + 2)], and not regs.sp[-(iargc + 2)],
+                     * is the callee for this JSOP_CALL.
+                     */
+                    const Value &cref = regs.sp[1 - (iargc + 2)];
+                    JSObject *callee;
 
-                        /*
-                         * Note that we have not yet pushed obj as the final argument,
-                         * so regs.sp[1 - (iargc + 2)], and not regs.sp[-(iargc + 2)],
-                         * is the callee for this JSOP_CALL.
-                         */
-                        const Value &cref = regs.sp[1 - (iargc + 2)];
-                        JSObject *callee;
-
-                        if (IsFunctionObject(cref, &callee)) {
-                            JSFunction *calleeFun = GET_FUNCTION_PRIVATE(cx, callee);
-                            if (Native native = calleeFun->maybeNative()) {
-                                if (iargc == 1 && native == array_sort) {
-                                    JS_FUNCTION_METER(cx, joinedsort);
-                                    break;
-                                }
-                                if (iargc == 2 && native == str_replace) {
-                                    JS_FUNCTION_METER(cx, joinedreplace);
-                                    break;
-                                }
+                    if (IsFunctionObject(cref, &callee)) {
+                        JSFunction *calleeFun = GET_FUNCTION_PRIVATE(cx, callee);
+                        if (Native native = calleeFun->maybeNative()) {
+                            if (iargc == 1 && native == array_sort) {
+                                JS_FUNCTION_METER(cx, joinedsort);
+                                break;
+                            }
+                            if (iargc == 2 && native == str_replace) {
+                                JS_FUNCTION_METER(cx, joinedreplace);
+                                break;
                             }
                         }
-                    } else if (op2 == JSOP_NULL) {
-                        pc2 += JSOP_NULL_LENGTH;
-                        op2 = JSOp(*pc2);
+                    }
+                } else if (op2 == JSOP_NULL) {
+                    pc2 += JSOP_NULL_LENGTH;
+                    op2 = JSOp(*pc2);
 
-                        if (op2 == JSOP_CALL && GET_ARGC(pc2) == 0) {
-                            JS_FUNCTION_METER(cx, joinedmodulepat);
-                            break;
-                        }
+                    if (op2 == JSOP_CALL && GET_ARGC(pc2) == 0) {
+                        JS_FUNCTION_METER(cx, joinedmodulepat);
+                        break;
                     }
                 }
             }
