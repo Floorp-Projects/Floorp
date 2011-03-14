@@ -71,8 +71,8 @@ void JS_FASTCALL SlowCall(VMFrame &f, uint32 argc);
 void * JS_FASTCALL UncachedNew(VMFrame &f, uint32 argc);
 void * JS_FASTCALL UncachedCall(VMFrame &f, uint32 argc);
 void JS_FASTCALL Eval(VMFrame &f, uint32 argc);
-void JS_FASTCALL EnterScript(VMFrame &f);
-void JS_FASTCALL LeaveScript(VMFrame &f);
+void JS_FASTCALL ScriptDebugPrologue(VMFrame &f);
+void JS_FASTCALL ScriptDebugEpilogue(VMFrame &f);
 
 /*
  * Result struct for UncachedXHelper.

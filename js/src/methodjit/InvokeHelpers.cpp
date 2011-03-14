@@ -600,46 +600,16 @@ stubs::CreateThis(VMFrame &f, JSObject *proto)
 }
 
 void JS_FASTCALL
-stubs::EnterScript(VMFrame &f)
+stubs::ScriptDebugPrologue(VMFrame &f)
 {
-    JSStackFrame *fp = f.fp();
-    JSContext *cx = f.cx;
-
-    if (fp->script()->debugMode) {
-        if (fp->isFramePushedByExecute()) {
-            JSInterpreterHook hook = cx->debugHooks->executeHook;
-            if (JS_UNLIKELY(hook != NULL))
-                fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData));
-        } else {
-            JSInterpreterHook hook = cx->debugHooks->callHook;
-            if (JS_UNLIKELY(hook != NULL))
-                fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData));
-        }
-    }
-
-    Probes::enterJSFun(cx, fp->maybeFun(), fp->script());
+    js::ScriptDebugPrologue(f.cx, f.fp());
 }
 
 void JS_FASTCALL
-stubs::LeaveScript(VMFrame &f)
+stubs::ScriptDebugEpilogue(VMFrame &f)
 {
-    JSStackFrame *fp = f.fp();
-    JSContext *cx = f.cx;
-    Probes::exitJSFun(cx, fp->maybeFun(), fp->maybeScript());
-
-    if (fp->script()->debugMode) {
-        void *hookData;
-        JSInterpreterHook hook = fp->isFramePushedByExecute()
-                                 ? cx->debugHooks->executeHook
-                                 : cx->debugHooks->callHook;
-
-        if (JS_UNLIKELY(hook != NULL) && (hookData = fp->maybeHookData())) {
-            JSBool ok = JS_TRUE;
-            hook(cx, fp, JS_FALSE, &ok, hookData);
-            if (!ok)
-                THROW();
-        }
-    }
+    if (!js::ScriptDebugEpilogue(f.cx, f.fp(), JS_TRUE))
+        THROW();
 }
 
 #ifdef JS_TRACER

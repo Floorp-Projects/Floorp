@@ -112,6 +112,44 @@ JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug)
     rt->debugMode = debug;
 }
 
+namespace js {
+
+void
+ScriptDebugPrologue(JSContext *cx, JSStackFrame *fp)
+{
+    if (fp->isFramePushedByExecute()) {
+        if (JSInterpreterHook hook = cx->debugHooks->executeHook)
+            fp->setHookData(hook(cx, fp, true, 0, cx->debugHooks->executeHookData));
+    } else {
+        if (JSInterpreterHook hook = cx->debugHooks->callHook)
+            fp->setHookData(hook(cx, fp, true, 0, cx->debugHooks->callHookData));
+    }
+
+    Probes::enterJSFun(cx, fp->maybeFun(), fp->script());
+}
+
+bool
+ScriptDebugEpilogue(JSContext *cx, JSStackFrame *fp, bool okArg)
+{
+    JSBool ok = okArg;
+
+    Probes::exitJSFun(cx, fp->maybeFun(), fp->script());
+
+    if (void *hookData = fp->maybeHookData()) {
+        if (fp->isFramePushedByExecute()) {
+            if (JSInterpreterHook hook = cx->debugHooks->executeHook)
+                hook(cx, fp, false, &ok, hookData);
+        } else {
+            if (JSInterpreterHook hook = cx->debugHooks->callHook)
+                hook(cx, fp, false, &ok, hookData);
+        }
+    }
+
+    return ok;
+}
+
+} /* namespace js */
+
 #ifdef DEBUG
 static bool
 CompartmentHasLiveScripts(JSCompartment *comp)
