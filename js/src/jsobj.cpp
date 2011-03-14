@@ -2946,10 +2946,10 @@ JSObject* FASTCALL
 js_String_tn(JSContext* cx, JSObject* proto, JSString* str)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
+    JS_ASSERT(FINALIZE_OBJECT2 == gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(&js_StringClass)));
     JSObject *obj = NewObjectWithClassProto(cx, &js_StringClass, proto, FINALIZE_OBJECT2);
-    if (!obj)
+    if (!obj || !obj->initString(cx, str))
         return NULL;
-    obj->setPrimitiveThis(StringValue(str));
     return obj;
 }
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, STRING, 0,
@@ -6179,18 +6179,15 @@ js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto, uintN attrs
 JSObject *
 PrimitiveToObject(JSContext *cx, const Value &v)
 {
-    JS_ASSERT(v.isPrimitive());
-
-    Class *clasp;
-    if (v.isNumber()) {
-        clasp = &js_NumberClass;
-    } else if (v.isString()) {
-        clasp = &js_StringClass;
-    } else {
-        JS_ASSERT(v.isBoolean());
-        clasp = &js_BooleanClass;
+    if (v.isString()) {
+        JSObject *obj = NewBuiltinClassInstance(cx, &js_StringClass);
+        if (!obj || !obj->initString(cx, v.toString()))
+            return NULL;
+        return obj;
     }
 
+    JS_ASSERT(v.isNumber() || v.isBoolean());
+    Class *clasp = v.isNumber() ? &js_NumberClass : &js_BooleanClass;
     JSObject *obj = NewBuiltinClassInstance(cx, clasp);
     if (!obj)
         return NULL;
