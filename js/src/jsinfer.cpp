@@ -3649,7 +3649,9 @@ AnalyzeScriptNew(JSContext *cx, JSScript *script)
      * from 'new' calls to the function.
      */
 
-    if (script->fun->getType()->unknownProperties || script->fun->isFunctionPrototype()) {
+    if (script->fun->getType()->unknownProperties ||
+        script->fun->isFunctionPrototype() ||
+        !script->compileAndGo) {
         script->thisTypes()->addType(cx, TYPE_UNKNOWN);
         return;
     }
