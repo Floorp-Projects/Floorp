@@ -2174,7 +2174,7 @@ ScriptPrologue(JSContext *cx, JSStackFrame *fp)
             return false;
         fp->functionThis().setObject(*obj);
     }
-    if (fp->isExecuteFrame()) {
+    if (fp->isFramePushedByExecute()) {
         if (JSInterpreterHook hook = cx->debugHooks->executeHook)
             fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData));
     } else {

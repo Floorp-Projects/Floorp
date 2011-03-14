@@ -797,11 +797,11 @@ ValuePropertyBearer(JSContext *cx, const Value &v, int spindex)
 static inline bool
 ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
 {
-    if (!fp->isExecuteFrame())
+    if (!fp->isFramePushedByExecute())
         Probes::exitJSFun(cx, fp->maybeFun(), fp->maybeScript());
 
     JSInterpreterHook hook =
-        fp->isExecuteFrame() ? cx->debugHooks->executeHook : cx->debugHooks->callHook;
+        fp->isFramePushedByExecute() ? cx->debugHooks->executeHook : cx->debugHooks->callHook;
 
     void* hookData;
     if (JS_UNLIKELY(hook != NULL) && (hookData = fp->maybeHookData()))
