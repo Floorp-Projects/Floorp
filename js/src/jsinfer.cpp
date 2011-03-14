@@ -2732,6 +2732,7 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
       case JSOP_RETSUB:
       case JSOP_CONDSWITCH:
       case JSOP_DEFAULT:
+      case JSOP_DEFAULTX:
       case JSOP_POPN:
       case JSOP_UNBRANDTHIS:
       case JSOP_STARTXML:
@@ -3382,6 +3383,7 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
         break;
 
       case JSOP_CASE:
+      case JSOP_CASEX:
         state.popped(1).types->addSubset(cx, script, &pushed[0]);
         break;
 
