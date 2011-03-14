@@ -1201,7 +1201,7 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
 
 #ifdef DEBUG
         jsbytecode *callerPC = caller->pc(cx);
-        JS_ASSERT_IF(caller->isFunctionFrame(), caller->hasCallObj());
+        JS_ASSERT_IF(caller->isFunctionFrame(), caller->fun()->isHeavyweight());
         JS_ASSERT(callerPC && js_GetOpcode(cx, caller->script(), callerPC) == JSOP_EVAL);
 #endif
     } else {
@@ -1249,7 +1249,7 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
 
     JSScript *script = NULL;
     JSScript **bucket = EvalCacheHash(cx, linearStr);
-    if (evalType == DIRECT_EVAL && caller->isFunctionFrame() && !caller->isEvalFrame()) {
+    if (evalType == DIRECT_EVAL && caller->isNonEvalFunctionFrame()) {
         script = EvalCacheLookup(cx, linearStr, caller, staticLevel, principals, scopeobj, bucket);
 
         /*
@@ -6869,11 +6869,15 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
                 fputc('\n', stderr);
             }
         }
-        if (fp->isFunctionFrame() && !fp->isEvalFrame()) {
+        if (fp->hasArgs()) {
             fprintf(stderr, "  actuals: %p (%u) ", (void *) fp->actualArgs(), (unsigned) fp->numActualArgs());
             fprintf(stderr, "  formals: %p (%u)\n", (void *) fp->formalArgs(), (unsigned) fp->numFormalArgs());
         }
-        MaybeDumpObject("callobj", fp->maybeCallObj());
+        if (fp->hasCallObj()) {
+            fprintf(stderr, "  has call obj: ");
+            dumpValue(ObjectValue(fp->callObj()));
+            fprintf(stderr, "\n");
+        }
         MaybeDumpObject("argsobj", fp->maybeArgsObj());
         if (!fp->isDummyFrame()) {
             MaybeDumpValue("this", fp->thisValue());

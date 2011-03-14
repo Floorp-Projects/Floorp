@@ -325,7 +325,7 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
     f.regs.sp = fp->base();
     f.regs.pc = script->code;
 
-    if (fun->isHeavyweight() && !js_GetCallObject(cx, fp))
+    if (fun->isHeavyweight() && !js::CreateFunCallObject(cx, fp))
         THROWV(NULL);
 
     CompileStatus status = CanMethodJIT(cx, script, fp, CompileRequest_JIT);
@@ -367,6 +367,10 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
     stack.pushInlineFrame(cx, newscript, newfp, &f.regs);
     JS_ASSERT(newfp == f.regs.fp);
 
+    /* Scope with a call object parented by callee's parent. */
+    if (newfun->isHeavyweight() && !js::CreateFunCallObject(cx, newfp))
+        return false;
+
     /* Try to compile if not already compiled. */
     if (newscript->getJITStatus(newfp->isConstructing()) == JITScript_None) {
         CompileStatus status = CanMethodJIT(cx, newscript, newfp, CompileRequest_Interpreter);
@@ -378,10 +382,6 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
         if (status == Compile_Abort)
             *unjittable = true;
     }
-
-    /* Create call object now that we can't fail entering callee. */
-    if (newfun->isHeavyweight() && !js_GetCallObject(cx, newfp))
-        return false;
 
     /* If newscript was successfully compiled, run it. */
     if (JITScript *jit = newscript->getJIT(newfp->isConstructing())) {
@@ -480,15 +480,6 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
 }
 
 void JS_FASTCALL
-stubs::PutStrictEvalCallObject(VMFrame &f)
-{
-    JS_ASSERT(f.fp()->isEvalFrame());
-    JS_ASSERT(f.fp()->script()->strictModeCode);
-    JS_ASSERT(f.fp()->hasCallObj());
-    js_PutCallObject(f.cx, f.fp());
-}
-
-void JS_FASTCALL
 stubs::PutActivationObjects(VMFrame &f)
 {
     JS_ASSERT(f.fp()->hasCallObj() || f.fp()->hasArgsObj());
@@ -580,10 +571,10 @@ js_InternalThrow(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::GetCallObject(VMFrame &f)
+stubs::CreateFunCallObject(VMFrame &f)
 {
     JS_ASSERT(f.fp()->fun()->isHeavyweight());
-    if (!js_GetCallObject(f.cx, f.fp()))
+    if (!js::CreateFunCallObject(f.cx, f.fp()))
         THROW();
 }
 
@@ -807,9 +798,7 @@ HandleFinishedFrame(VMFrame &f, JSStackFrame *entryFrame)
         returnOK = ScriptEpilogue(cx, cx->fp(), true);
     }
 
-    JS_ASSERT_IF(cx->fp()->isFunctionFrame() &&
-                 !cx->fp()->isEvalFrame(),
-                 !cx->fp()->hasCallObj());
+    JS_ASSERT_IF(cx->fp()->isNonEvalFunctionFrame(), !cx->fp()->hasCallObj());
 
     if (cx->fp() != entryFrame) {
         InlineReturn(f);

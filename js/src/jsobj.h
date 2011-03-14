@@ -516,7 +516,7 @@ struct JSObject : js::gc::Cell {
     }
 
     /* Functions for setting up scope chain object maps and shapes. */
-    void initCall(JSContext *cx, const js::Bindings *bindings, JSObject *parent);
+    void initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent);
     void initClonedBlock(JSContext *cx, JSObject *proto, JSStackFrame *priv);
     void setBlockOwnShape(JSContext *cx);
 

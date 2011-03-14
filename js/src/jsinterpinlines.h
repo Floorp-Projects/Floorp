@@ -94,7 +94,6 @@ JSStackFrame::initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
     JS_ASSERT(!hasImacropc());
     JS_ASSERT(!hasHookData());
     JS_ASSERT(annotation() == NULL);
-
     JS_ASSERT(!hasCallObj());
 }
 
@@ -163,21 +162,21 @@ JSStackFrame::initEvalFrame(JSContext *cx, JSScript *script, JSStackFrame *prev,
 {
     JS_ASSERT(flagsArg & JSFRAME_EVAL);
     JS_ASSERT((flagsArg & ~(JSFRAME_EVAL | JSFRAME_DEBUGGER)) == 0);
-    JS_ASSERT(prev->flags_ & (JSFRAME_FUNCTION | JSFRAME_GLOBAL));
+    JS_ASSERT(prev->isScriptFrame());
 
     /* Copy (callee, thisv). */
     js::Value *dstvp = (js::Value *)this - 2;
-    js::Value *srcvp = prev->flags_ & (JSFRAME_GLOBAL | JSFRAME_EVAL)
-                       ? (js::Value *)prev - 2
-                       : prev->formalArgs() - 2;
+    js::Value *srcvp = prev->hasArgs()
+                       ? prev->formalArgs() - 2
+                       : (js::Value *)prev - 2;
     dstvp[0] = srcvp[0];
     dstvp[1] = srcvp[1];
-    JS_ASSERT_IF(prev->flags_ & JSFRAME_FUNCTION,
+    JS_ASSERT_IF(prev->isFunctionFrame(),
                  dstvp[0].toObject().isFunction());
 
     /* Initialize stack frame members. */
     flags_ = flagsArg | JSFRAME_HAS_PREVPC | JSFRAME_HAS_SCOPECHAIN |
-             (prev->flags_ & (JSFRAME_FUNCTION | JSFRAME_GLOBAL | JSFRAME_HAS_CALL_OBJ));
+             (prev->flags_ & (JSFRAME_FUNCTION | JSFRAME_GLOBAL));
     if (isFunctionFrame()) {
         exec = prev->exec;
         args.script = script;
@@ -186,8 +185,6 @@ JSStackFrame::initEvalFrame(JSContext *cx, JSScript *script, JSStackFrame *prev,
     }
 
     scopeChain_ = &prev->scopeChain();
-    JS_ASSERT_IF(isFunctionFrame(), &callObj() == &prev->callObj());
-
     prev_ = prev;
     prevpc_ = prev->pc(cx);
     JS_ASSERT(!hasImacropc());
@@ -249,10 +246,11 @@ JSStackFrame::stealFrameAndSlots(js::Value *vp, JSStackFrame *otherfp,
      * js_LiveFrameToFloating comment in jsiter.h.
      */
     if (hasCallObj()) {
-        callObj().setPrivate(this);
+        JSObject &obj = callObj();
+        obj.setPrivate(this);
         otherfp->flags_ &= ~JSFRAME_HAS_CALL_OBJ;
         if (js_IsNamedLambda(fun())) {
-            JSObject *env = callObj().getParent();
+            JSObject *env = obj.getParent();
             JS_ASSERT(env->getClass() == &js_DeclEnvClass);
             env->setPrivate(this);
         }
@@ -435,19 +433,24 @@ JSStackFrame::setScopeChainNoCallObj(JSObject &obj)
 {
 #ifdef DEBUG
     JS_ASSERT(&obj != NULL);
-    JSObject *callObjBefore = maybeCallObj();
-    if (!hasCallObj() && &scopeChain() != sInvalidScopeChain) {
-        for (JSObject *pobj = &scopeChain(); pobj; pobj = pobj->getParent())
-            JS_ASSERT_IF(pobj->isCall(), pobj->getPrivate() != this);
+    if (&obj != sInvalidScopeChain) {
+        if (hasCallObj()) {
+            JSObject *pobj = &obj;
+            while (pobj && pobj->getPrivate() != this)
+                pobj = pobj->getParent();
+            JS_ASSERT(pobj);
+        } else {
+            for (JSObject *pobj = &obj; pobj; pobj = pobj->getParent())
+                JS_ASSERT_IF(pobj->isCall(), pobj->getPrivate() != this);
+        }
     }
 #endif
     scopeChain_ = &obj;
     flags_ |= JSFRAME_HAS_SCOPECHAIN;
-    JS_ASSERT(callObjBefore == maybeCallObj());
 }
 
 inline void
-JSStackFrame::setScopeChainAndCallObj(JSObject &obj)
+JSStackFrame::setScopeChainWithOwnCallObj(JSObject &obj)
 {
     JS_ASSERT(&obj != NULL);
     JS_ASSERT(!hasCallObj() && obj.isCall() && obj.getPrivate() == this);
@@ -465,19 +468,14 @@ JSStackFrame::clearCallObj()
 inline JSObject &
 JSStackFrame::callObj() const
 {
-    JS_ASSERT(hasCallObj());
+    JS_ASSERT_IF(isNonEvalFunctionFrame() || isStrictEvalFrame(), hasCallObj());
+
     JSObject *pobj = &scopeChain();
     while (JS_UNLIKELY(pobj->getClass() != &js_CallClass)) {
         JS_ASSERT(js::IsCacheableNonGlobalScope(pobj) || pobj->isWith());
         pobj = pobj->getParent();
     }
     return *pobj;
-}
-
-inline JSObject *
-JSStackFrame::maybeCallObj() const
-{
-    return hasCallObj() ? &callObj() : NULL;
 }
 
 namespace js {
@@ -516,15 +514,11 @@ struct AutoInterpPreparer  {
 inline void
 PutActivationObjects(JSContext *cx, JSStackFrame *fp)
 {
-    JS_ASSERT(!fp->isYielding());
-    JS_ASSERT(!fp->isEvalFrame() || fp->script()->strictModeCode);
-
     /* The order is important as js_PutCallObject needs to access argsObj. */
-    if (fp->hasCallObj()) {
+    if (fp->hasCallObj())
         js_PutCallObject(cx, fp);
-    } else if (fp->hasArgsObj()) {
+    else if (fp->hasArgsObj())
         js_PutArgsObject(cx, fp);
-    }
 }
 
 /*
@@ -804,7 +798,7 @@ ValuePropertyBearer(JSContext *cx, const Value &v, int spindex)
 inline bool
 ScriptPrologue(JSContext *cx, JSStackFrame *fp)
 {
-    JS_ASSERT_IF(fp->isFunctionFrame() && fp->fun()->isHeavyweight(), fp->hasCallObj());
+    JS_ASSERT_IF(fp->isNonEvalFunctionFrame() && fp->fun()->isHeavyweight(), fp->hasCallObj());
 
     if (fp->isConstructing()) {
         JSObject *obj = js_CreateThisForFunction(cx, &fp->callee());
@@ -824,31 +818,12 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, bool ok)
     if (cx->compartment->debugMode)
         ok = ScriptDebugEpilogue(cx, fp, ok);
 
-    if (fp->isEvalFrame()) {
-        /*
-         * The parent (ancestor for nested eval) of a non-strict eval frame
-         * owns its activation objects. Strict mode eval frames own their own
-         * Call objects but never have an arguments object (the first non-eval
-         * parent frame has it).
-         */
-        if (fp->script()->strictModeCode) {
-            JS_ASSERT(!fp->isYielding());
-            JS_ASSERT(!fp->hasArgsObj());
-            JS_ASSERT(fp->hasCallObj());
-            JS_ASSERT(fp->callObj().callIsForEval());
-            js_PutCallObject(cx, fp);
-        }
-    } else {
-        /*
-         * Otherwise only function frames have activation objects. A yielding
-         * frame's activation objects are transferred to the floating frame,
-         * stored in the generator, and thus need not be synced.
-         */
-        if (fp->isFunctionFrame() && !fp->isYielding()) {
-            JS_ASSERT_IF(fp->hasCallObj(), !fp->callObj().callIsForEval());
-            PutActivationObjects(cx, fp);
-        }
-    }
+    /*
+     * A yielding frame's activation objects are transferred to the floating
+     * frame, stored in the generator, and thus need not be synced.
+     */
+    if (!fp->isYielding())
+        PutActivationObjects(cx, fp);
 
     /*
      * If inline-constructing, replace primitive rval with the new object

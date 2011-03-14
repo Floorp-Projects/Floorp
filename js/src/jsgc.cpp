@@ -1494,16 +1494,10 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
     MarkObject(trc, fp->scopeChain(), "scope chain");
     if (fp->isDummyFrame())
         return;
-
-    if (fp->hasCallObj())
-        MarkObject(trc, fp->callObj(), "call");
     if (fp->hasArgsObj())
         MarkObject(trc, fp->argsObj(), "arguments");
-    if (fp->isScriptFrame()) {
-        js_TraceScript(trc, fp->script());
-        fp->script()->compartment->active = true;
-    }
-
+    js_TraceScript(trc, fp->script());
+    fp->script()->compartment->active = true;
     MarkValue(trc, fp->returnValue(), "rval");
 }
 

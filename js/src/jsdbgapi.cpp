@@ -1494,14 +1494,13 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
     if (!ac.enter())
         return NULL;
 
-    /* Force creation of argument object if not yet created */
-    (void) js_GetArgsObject(cx, fp);
-
     /*
      * XXX ill-defined: null return here means error was reported, unlike a
      *     null returned above or in the #else
      */
-    return js_GetCallObject(cx, fp);
+    if (!fp->hasCallObj() && fp->isNonEvalFunctionFrame())
+        return CreateFunCallObject(cx, fp);
+    return &fp->callObj();
 }
 
 JS_PUBLIC_API(JSBool)

@@ -351,7 +351,7 @@ mjit::Compiler::generatePrologue()
         /* Create the call object. */
         if (fun->isHeavyweight()) {
             prepareStubCall(Uses(0));
-            INLINE_STUBCALL(stubs::GetCallObject);
+            INLINE_STUBCALL(stubs::CreateFunCallObject);
         }
 
         j.linkTo(masm.label(), &masm);
@@ -360,7 +360,7 @@ mjit::Compiler::generatePrologue()
             /*
              * Load the scope chain into the frame if necessary.  The scope chain
              * is always set for global and eval frames, and will have been set by
-             * GetCallObject for heavyweight function frames.
+             * CreateFunCallObject for heavyweight function frames.
              */
             RegisterID t0 = Registers::ReturnReg;
             Jump hasScope = masm.branchTest32(Assembler::NonZero,
@@ -2248,7 +2248,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
             prepareStubCall(Uses(fe ? 1 : 0));
             INLINE_STUBCALL(stubs::PutActivationObjects);
         } else {
-            /* if (hasCallObj() || hasArgsObj()) stubs::PutActivationObjects() */
+            /* if (hasCallObj() || hasArgsObj()) */
             Jump putObjs = masm.branchTest32(Assembler::NonZero,
                                              Address(JSFrameReg, JSStackFrame::offsetOfFlags()),
                                              Imm32(JSFRAME_HAS_CALL_OBJ | JSFRAME_HAS_ARGS_OBJ));
@@ -2261,10 +2261,10 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
             emitFinalReturn(stubcc.masm);
         }
     } else {
-        if (fp->isEvalFrame() && script->strictModeCode) {
+        if (fp->isStrictEvalFrame()) {
             /* There will always be a call object. */
             prepareStubCall(Uses(fe ? 1 : 0));
-            INLINE_STUBCALL(stubs::PutStrictEvalCallObject);
+            INLINE_STUBCALL(stubs::PutActivationObjects);
         }
     }
 

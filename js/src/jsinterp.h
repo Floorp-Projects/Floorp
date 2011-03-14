@@ -150,10 +150,6 @@ struct JSStackFrame
      *  function frame: execution of function code or an eval in a function
      *  dummy frame:    bookkeeping frame (read: hack)
      *
-     * As noted, global and function frames may optionally be 'eval frames', which
-     * further restricts the stack frame members which may be used. Namely, the
-     * argument-related members of function eval frames are not valid, since an eval
-     * shares its containing function's arguments rather than having its own.
      */
 
     bool isFunctionFrame() const {
@@ -174,9 +170,33 @@ struct JSStackFrame
         return retval;
     }
 
+    /*
+     * Eval frames
+     *
+     * As noted above, global and function frames may optionally be 'eval
+     * frames'. Eval code shares its parent's arguments which means that the
+     * arg-access members of JSStackFrame may not be used for eval frames.
+     * Search for 'hasArgs' below for more details.
+     *
+     * A further sub-classification of eval frames is whether the frame was
+     * pushed for an ES5 strict-mode eval().
+     */
+
     bool isEvalFrame() const {
         JS_ASSERT_IF(flags_ & JSFRAME_EVAL, isScriptFrame());
         return flags_ & JSFRAME_EVAL;
+    }
+
+    bool isNonEvalFunctionFrame() const {
+        return (flags_ & (JSFRAME_FUNCTION | JSFRAME_EVAL)) == JSFRAME_FUNCTION;
+    }
+
+    bool isStrictEvalFrame() const {
+        return isEvalFrame() && script()->strictModeCode;
+    }
+
+    bool isNonStrictEvalFrame() const {
+        return isEvalFrame() && !script()->strictModeCode;
     }
 
     /*
@@ -342,7 +362,7 @@ struct JSStackFrame
 
     /* True if this frame has arguments. Contrast with hasArgsObj. */
     bool hasArgs() const {
-        return isFunctionFrame() && !isEvalFrame();
+        return isNonEvalFunctionFrame();
     }
 
     uintN numFormalArgs() const {
@@ -484,6 +504,12 @@ struct JSStackFrame
      * up the scope chain until the first call object. Thus, it is important,
      * when setting the scope chain, to indicate whether the new scope chain
      * contains a new call object and thus changes the 'hasCallObj' state.
+     *
+     * NB: 'fp->hasCallObj()' implies that fp->callObj() needs to be 'put' when
+     * the frame is popped. Since the scope chain of a non-strict eval frame
+     * contains the call object of the parent (function) frame, it is possible
+     * to have:
+     *   !fp->hasCall() && fp->scopeChain().isCall()
      */
 
     JSObject &scopeChain() const {
@@ -496,13 +522,14 @@ struct JSStackFrame
     }
 
     bool hasCallObj() const {
-        return !!(flags_ & JSFRAME_HAS_CALL_OBJ);
+        bool ret = !!(flags_ & JSFRAME_HAS_CALL_OBJ);
+        JS_ASSERT_IF(ret, !isNonStrictEvalFrame());
+        return ret;
     }
 
     inline JSObject &callObj() const;
-    inline JSObject *maybeCallObj() const;
     inline void setScopeChainNoCallObj(JSObject &obj);
-    inline void setScopeChainAndCallObj(JSObject &obj);
+    inline void setScopeChainWithOwnCallObj(JSObject &obj);
     inline void clearCallObj();
 
     /*

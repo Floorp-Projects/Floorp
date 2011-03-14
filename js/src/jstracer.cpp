@@ -1735,7 +1735,7 @@ static inline uintN
 entryFrameArgc(JSContext *cx)
 {
     JSStackFrame *fp = cx->fp();
-    return fp->isGlobalFrame() || fp->isEvalFrame() ? 0 : fp->numActualArgs();
+    return fp->hasArgs() ? fp->numActualArgs() : 0;
 }
 
 template <typename Visitor>
@@ -2000,7 +2000,7 @@ NativeStackSlots(JSContext *cx, unsigned callDepth)
     unsigned depth = callDepth;
 
     for (; depth > 0; --depth, next = fp, fp = fp->prev()) {
-        JS_ASSERT(fp->isFunctionFrame() && !fp->isEvalFrame());
+        JS_ASSERT(fp->isNonEvalFunctionFrame());
         slots += SPECIAL_FRAME_SLOTS;
         if (next)
             slots += CountStackAndArgs(next, fp->slots());
@@ -3157,7 +3157,7 @@ public:
             {
                 JS_ASSERT(&fp->scopeChain() == JSStackFrame::sInvalidScopeChain);
                 frameobj->setPrivate(fp);
-                fp->setScopeChainAndCallObj(*frameobj);
+                fp->setScopeChainWithOwnCallObj(*frameobj);
             } else {
                 fp->setScopeChainNoCallObj(*frameobj);
             }
@@ -13759,7 +13759,7 @@ TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc,
     fi->spdist = cx->regs->sp - fp->slots();
     fi->set_argc(uint16(argc), constructing);
     fi->callerHeight = stackSlots - (2 + argc);
-    fi->callerArgc = fp->isGlobalFrame() || fp->isEvalFrame() ? 0 : fp->numActualArgs();
+    fi->callerArgc = fp->hasArgs() ? fp->numActualArgs() : 0;
 
     if (callDepth >= tree->maxCallDepth)
         tree->maxCallDepth = callDepth + 1;
