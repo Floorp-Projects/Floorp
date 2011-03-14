@@ -2808,20 +2808,6 @@ JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
     return str;
 }
 
-JS_PUBLIC_API(intN)
-JS_GetExternalStringGCType(JSRuntime *rt, JSString *str)
-{
-    /*
-     * No need to test this in js_GetExternalStringGCType, which asserts its
-     * inverse instead of wasting cycles on testing a condition we can ensure
-     * by auditing in-VM calls to the js_... helper.
-     */
-    if (JSString::isStatic(str))
-        return -1;
-
-    return js_GetExternalStringGCType(str);
-}
-
 JS_PUBLIC_API(void)
 JS_SetThreadStackLimit(JSContext *cx, jsuword limitAddr)
 {

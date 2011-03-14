@@ -1209,11 +1209,6 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
     }
 }
 
-intN
-js_GetExternalStringGCType(JSString *str) {
-    return GetExternalStringGCType((JSExternalString *)str);
-}
-
 uint32
 js_GetGCThingTraceKind(void *thing) {
     return GetGCThingTraceKind(thing);
@@ -1869,7 +1864,8 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
         JS_RUNTIME_UNMETER(rt, liveDependentStrings);
     } else {
         unsigned thingKind = str->asCell()->arena()->header()->thingKind;
-        JS_ASSERT(IsFinalizableStringKind(thingKind));
+        JS_ASSERT(unsigned(FINALIZE_SHORT_STRING) <= thingKind &&
+                  thingKind <= unsigned(FINALIZE_EXTERNAL_STRING));
 
         /* A stillborn string has null chars, so is not valid. */
         jschar *chars = const_cast<jschar *>(str->flatChars());
