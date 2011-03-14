@@ -853,6 +853,26 @@ inline void
 PutOwnedActivationObjects(JSContext *cx, JSStackFrame *fp);
 
 /*
+ * ScriptPrologue/ScriptEpilogue must be called in pairs. ScriptPrologue
+ * must be called before the script executes. ScriptEpilogue must be called
+ * after the script returns or exits via exception.
+ */
+
+inline bool
+ScriptPrologue(JSContext *cx, JSStackFrame *fp, JSScript *script);
+
+inline bool
+ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSScript *script, bool ok);
+
+/* Implemented in jsdbgapi: */
+
+extern void
+ScriptDebugPrologue(JSContext *cx, JSStackFrame *fp);
+
+extern bool
+ScriptDebugEpilogue(JSContext *cx, JSStackFrame *fp, bool ok);
+
+/*
  * For a call's vp (which necessarily includes callee at vp[0] and the original
  * specified |this| at vp[1]), convert null/undefined |this| into the global
  * object for the callee and replace other primitives with boxed versions. The

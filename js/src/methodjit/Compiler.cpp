@@ -376,7 +376,7 @@ mjit::Compiler::generatePrologue()
         constructThis();
 
     if (debugMode() || Probes::callTrackingActive(cx))
-        INLINE_STUBCALL(stubs::EnterScript);
+        INLINE_STUBCALL(stubs::ScriptDebugPrologue);
 
     return Compile_Okay;
 }
@@ -2230,7 +2230,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
 
     if (debugMode() || Probes::callTrackingActive(cx)) {
         prepareStubCall(Uses(0));
-        INLINE_STUBCALL(stubs::LeaveScript);
+        INLINE_STUBCALL(stubs::ScriptDebugEpilogue);
     }
 
     /*

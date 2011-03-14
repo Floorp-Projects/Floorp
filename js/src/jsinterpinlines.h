@@ -43,6 +43,7 @@
 
 #include "jsapi.h"
 #include "jsbool.h"
+#include "jscompartment.h"
 #include "jsinterp.h"
 #include "jsnum.h"
 #include "jsprobes.h"
@@ -794,18 +795,34 @@ ValuePropertyBearer(JSContext *cx, const Value &v, int spindex)
     return pobj;
 }
 
-static inline bool
-ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
+/*
+ * ScriptPrologue/ScriptEpilogue must be called in pairs. ScriptPrologue
+ * must be called before the script executes. ScriptEpilogue must be called
+ * after the script returns or exits via exception.
+ */
+
+inline bool
+ScriptPrologue(JSContext *cx, JSStackFrame *fp)
 {
-    if (!fp->isFramePushedByExecute())
-        Probes::exitJSFun(cx, fp->maybeFun(), fp->maybeScript());
+    JS_ASSERT_IF(fp->isFunctionFrame() && fp->fun()->isHeavyweight(), fp->hasCallObj());
 
-    JSInterpreterHook hook =
-        fp->isFramePushedByExecute() ? cx->debugHooks->executeHook : cx->debugHooks->callHook;
+    if (fp->isConstructing()) {
+        JSObject *obj = js_CreateThisForFunction(cx, &fp->callee());
+        if (!obj)
+            return false;
+        fp->functionThis().setObject(*obj);
+    }
 
-    void* hookData;
-    if (JS_UNLIKELY(hook != NULL) && (hookData = fp->maybeHookData()))
-        hook(cx, fp, JS_FALSE, &ok, hookData);
+    if (cx->compartment->debugMode)
+        ScriptDebugPrologue(cx, fp);
+    return true;
+}
+
+inline bool
+ScriptEpilogue(JSContext *cx, JSStackFrame *fp, bool ok)
+{
+    if (cx->compartment->debugMode)
+        ok = ScriptDebugEpilogue(cx, fp, ok);
 
     if (fp->isEvalFrame()) {
         /*
