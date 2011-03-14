@@ -339,7 +339,7 @@ LinuxDumper::EnumerateMappings(wasteful_vector<MappingInfo*>* result) const {
             MappingInfo* module = (*result)[result->size() - 1];
             if ((start_addr == module->start_addr + module->size) &&
                 (my_strlen(name) == my_strlen(module->name)) &&
-                (memcmp(name, module->name, my_strlen(name)) == 0)) {
+                (my_strncmp(name, module->name, my_strlen(name)) == 0)) {
               module->size = end_addr - module->start_addr;
               line_reader->PopLine(line_len);
               continue;
