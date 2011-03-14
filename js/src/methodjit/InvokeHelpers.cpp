@@ -606,7 +606,7 @@ stubs::EnterScript(VMFrame &f)
     JSContext *cx = f.cx;
 
     if (fp->script()->debugMode) {
-        if (fp->isExecuteFrame()) {
+        if (fp->isFramePushedByExecute()) {
             JSInterpreterHook hook = cx->debugHooks->executeHook;
             if (JS_UNLIKELY(hook != NULL))
                 fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData));
@@ -629,8 +629,9 @@ stubs::LeaveScript(VMFrame &f)
 
     if (fp->script()->debugMode) {
         void *hookData;
-        JSInterpreterHook hook =
-            fp->isExecuteFrame() ? cx->debugHooks->executeHook : cx->debugHooks->callHook;
+        JSInterpreterHook hook = fp->isFramePushedByExecute()
+                                 ? cx->debugHooks->executeHook
+                                 : cx->debugHooks->callHook;
 
         if (JS_UNLIKELY(hook != NULL) && (hookData = fp->maybeHookData())) {
             JSBool ok = JS_TRUE;
