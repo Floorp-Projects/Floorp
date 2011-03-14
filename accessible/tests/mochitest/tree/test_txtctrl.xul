@@ -42,7 +42,7 @@
       testAccessibleTree("txc3", accTree);
 
       // timed textbox
-      testAccessibleTree("txc4", accTree);
+      testAccessibleTree("txc4_deprecated", accTree);
 
       // password textbox
       accTree = {
@@ -122,7 +122,9 @@
       <textbox id="txc1" value="hello"/>
       <textbox id="txc2" type="number" value="44"/>
       <textbox id="txc3" type="search" value="hello"/>
-      <textbox id="txc4" type="timed" value="hello"/>
+      <!-- This textbox triggers "Warning: Timed textboxes are deprecated. Consider using type="search" instead.".
+           Yet let's test it too as long as it's (still) supported. -->
+      <textbox id="txc4_deprecated" type="timed" value="hello"/>
       <textbox id="txc5" type="password" value="hello"/>
       <textbox id="txc6" multiline="true" value="hello"/>
       <textbox id="txc7" type="autocomplete" value="hello"/>
