@@ -476,10 +476,9 @@ js_AtomizeString(JSContext *cx, JSString *strArg, uintN flags)
     if (staticStr)
         return STRING_TO_ATOM(staticStr);
 
-    JSAtomState *state = &cx->runtime->atomState;
-    AtomSet &atoms = state->atoms;
-
     AutoLockAtomsCompartment lock(cx);
+
+    AtomSet &atoms = cx->runtime->atomState.atoms;
     AtomSet::AddPtr p = atoms.lookupForAdd(str);
 
     /* Hashing the string should have flattened it if it was a rope. */
@@ -490,49 +489,27 @@ js_AtomizeString(JSContext *cx, JSString *strArg, uintN flags)
         key = AtomEntryToKey(*p);
     } else {
         /*
-         * Ensure that any atomized string lives only in the default
-         * compartment.
+         * We have to relookup the key as the last ditch GC invoked from the
+         * string allocation or OOM handling may unlock the atomsCompartment.
          */
-        bool needNewString = !!(flags & ATOM_TMPSTR) ||
-                             str->asCell()->compartment() != cx->runtime->atomsCompartment;
-
-        /*
-         * Unless str is already comes from the default compartment and flat,
-         * we have to relookup the key as the last ditch GC invoked from the
-         * string allocation or OOM handling may unlock the default
-         * compartment lock.
-         */
-        if (!needNewString && str->isFlat()) {
-            str->flatClearExtensible();
-            key = str;
-            atoms.add(p, StringToInitialAtomEntry(key));
-        } else {
-            if (needNewString) {
-                SwitchToCompartment sc(cx, cx->runtime->atomsCompartment);
-                if (flags & ATOM_NOCOPY) {
-                    key = js_NewString(cx, const_cast<jschar *>(str->flatChars()), length);
-                    if (!key)
-                        return NULL;
-
-                    /* Finish handing off chars to the GC'ed key string. */
-                    JS_ASSERT(flags & ATOM_TMPSTR);
-                    str->u.chars = NULL;
-                } else {
-                    key = js_NewStringCopyN(cx, chars, length);
-                    if (!key)
-                        return NULL;
-                }
-            } else {
-                JS_ASSERT(str->isDependent());
-                if (!str->undepend(cx))
-                    return NULL;
-                key = str;
-            }
-
-            if (!atoms.relookupOrAdd(p, key, StringToInitialAtomEntry(key))) {
-                JS_ReportOutOfMemory(cx); /* SystemAllocPolicy does not report */
+        SwitchToCompartment sc(cx, cx->runtime->atomsCompartment);
+        if (flags & ATOM_NOCOPY) {
+            key = js_NewString(cx, const_cast<jschar *>(str->flatChars()), length);
+            if (!key)
                 return NULL;
-            }
+
+            /* Finish handing off chars to the GC'ed key string. */
+            JS_ASSERT(flags & ATOM_TMPSTR);
+            str->u.chars = NULL;
+        } else {
+            key = js_NewStringCopyN(cx, chars, length);
+            if (!key)
+                return NULL;
+        }
+
+        if (!atoms.relookupOrAdd(p, key, StringToInitialAtomEntry(key))) {
+            JS_ReportOutOfMemory(cx); /* SystemAllocPolicy does not report */
+            return NULL;
         }
         key->flatSetAtomized();
     }
