@@ -2312,7 +2312,7 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
 #ifdef DEBUG
     /* Make sure that we didn't mark an object in another compartment */
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        JS_ASSERT_IF(*c != comp, checkArenaListAllUnmarked(*c));
+        JS_ASSERT_IF(*c != comp && *c != rt->atomsCompartment, checkArenaListAllUnmarked(*c));
 #endif
 
     /*
