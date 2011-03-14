@@ -358,8 +358,13 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
          * used without further type checking. If there is an argument count mismatch,
          * the callee's args will end up getting marked as unknown.
          */
-        if (!(flags & JSFRAME_CONSTRUCTING) && !newscript->typeSetThis(cx, argTypes[0]))
-            return false;
+        if (flags & JSFRAME_CONSTRUCTING) {
+            if (!newscript->typeSetNewCalled(cx))
+                return false;
+        } else {
+            if (!newscript->typeSetThis(cx, argTypes[0]))
+                return false;
+        }
         for (unsigned i = 0; i < argc; i++) {
             if (!newscript->typeSetArgument(cx, i, argTypes[1 + i]))
                 return false;
