@@ -7714,6 +7714,25 @@ MOZ_ARG_DISABLE_BOOL(elf-hack,
     USE_ELF_HACK=,
     USE_ELF_HACK=1)
 
+# Only enable elfhack where supported
+if test "$USE_ELF_HACK" = 1; then
+    case "${HOST_OS_ARCH},${OS_ARCH}" in
+    Linux,Linux)
+        case "${CPU_ARCH}" in
+        arm | x86 | x86_64)
+            USE_ELF_HACK=1
+            ;;
+        *)
+            USE_ELF_HACK=
+            ;;
+        esac
+        ;;
+    *)
+        USE_ELF_HACK=
+        ;;
+    esac
+fi
+
 dnl ========================================================
 dnl = 
 dnl = Profiling and Instrumenting
