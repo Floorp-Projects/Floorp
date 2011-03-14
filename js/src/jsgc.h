@@ -536,7 +536,7 @@ static inline uint32
 GetGCThingTraceKind(void *thing)
 {
     JS_ASSERT(thing);
-    if (JSString::isStatic(thing))
+    if (JSString::isGCThingStatic(thing))
         return JSTRACE_STRING;
     Cell *cell = reinterpret_cast<Cell *>(thing);
     return GetFinalizableTraceKind(cell->arena()->header()->thingKind);

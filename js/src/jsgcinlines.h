@@ -233,7 +233,7 @@ static inline void
 MarkString(JSTracer *trc, JSString *str)
 {
     JS_ASSERT(str);
-    if (JSString::isStatic(str))
+    if (str->isStaticAtom())
         return;
     JS_ASSERT(GetArena<JSString>((Cell *)str)->assureThingIsAligned((JSString *)str));
     Mark(trc, str);
@@ -420,7 +420,7 @@ NonRopeTypedMarker(JSString *str)
     /* N.B. The base of a dependent string is not necessarily flat. */
     JS_ASSERT(!str->isRope());
 
-    while (!JSString::isStatic(str) &&
+    while (!str->isStaticAtom() &&
            str->asCell()->markIfUnmarked() &&
            str->isDependent()) {
         str = str->dependentBase();
@@ -436,7 +436,7 @@ TypedMarker(JSTracer *trc, JSString *str)
 {
     using namespace detail;
 
-    JS_ASSERT(!JSString::isStatic(str));
+    JS_ASSERT(!str->isStaticAtom());
     if (!str->isRope()) {
         NonRopeTypedMarker(str);
         return;
@@ -450,7 +450,7 @@ TypedMarker(JSTracer *trc, JSString *str)
      */
     JSString *parent = NULL;
     first_visit_node: {
-        JS_ASSERT(!JSString::isStatic(str));
+        JS_ASSERT(!str->isStaticAtom());
         if (!str->asCell()->markIfUnmarked())
             goto finish_node;
         JSString *left = str->ropeLeft();
@@ -501,7 +501,7 @@ MarkAtomRange(JSTracer *trc, size_t len, JSAtom **vec, const char *name)
         if (JSAtom *atom = vec[i]) {
             JS_SET_TRACING_INDEX(trc, name, i);
             JSString *str = ATOM_TO_STRING(atom);
-            if (!JSString::isStatic(str))
+            if (!str->isStaticAtom())
                 Mark(trc, str);
         }
     }
@@ -523,7 +523,7 @@ MarkId(JSTracer *trc, jsid id)
 {
     if (JSID_IS_STRING(id)) {
         JSString *str = JSID_TO_STRING(id);
-        if (!JSString::isStatic(str))
+        if (!str->isStaticAtom())
             Mark(trc, str);
     }
     else if (JS_UNLIKELY(JSID_IS_OBJECT(id)))
