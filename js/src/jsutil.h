@@ -488,6 +488,22 @@ PodCopy(T *dst, const T *src, size_t nelem)
     }
 }
 
+template <class T>
+JS_ALWAYS_INLINE static bool
+PodEqual(T *one, T *two, size_t len)
+{
+    if (len < 128) {
+        T *p1end = one + len;
+        for (T *p1 = one, *p2 = two; p1 != p1end; ++p1, ++p2) {
+            if (*p1 != *p2)
+                return false;
+        }
+        return true;
+    }
+
+    return !memcmp(one, two, len * sizeof(T));
+}
+
 } /* namespace js */
 
 #endif /* defined(__cplusplus) */

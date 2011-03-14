@@ -2979,7 +2979,7 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
             }
             right = &rtmp;
             right->pn_type = TOK_STRING;
-            right->pn_op = js_IsIdentifier(ATOM_TO_STRING(pn->pn_atom))
+            right->pn_op = js_IsIdentifier(pn->pn_atom)
                            ? JSOP_QNAMEPART
                            : JSOP_STRING;
             right->pn_arity = PN_NULLARY;
@@ -3211,7 +3211,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 constVal.setNumber(pn4->pn_dval);
                 break;
               case TOK_STRING:
-                constVal.setString(ATOM_TO_STRING(pn4->pn_atom));
+                constVal.setString(pn4->pn_atom);
                 break;
               case TOK_NAME:
                 if (!pn4->maybeExpr()) {
@@ -4426,7 +4426,7 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
         vp->setNumber(pn_dval);
         return true;
       case TOK_STRING:
-        vp->setString(ATOM_TO_STRING(pn_atom));
+        vp->setString(pn_atom);
         return true;
       case TOK_PRIMARY:
         switch (pn_op) {

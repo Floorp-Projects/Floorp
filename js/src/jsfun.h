@@ -206,13 +206,13 @@ struct JSFunction : public JSObject_Slots2
      */
     JSAtom *methodAtom() const {
         return (joinable() && getSlot(METHOD_ATOM_SLOT).isString())
-               ? STRING_TO_ATOM(getSlot(METHOD_ATOM_SLOT).toString())
+               ? &getSlot(METHOD_ATOM_SLOT).toString()->asAtom()
                : NULL;
     }
 
     void setMethodAtom(JSAtom *atom) {
         JS_ASSERT(joinable());
-        getSlotRef(METHOD_ATOM_SLOT).setString(ATOM_TO_STRING(atom));
+        getSlotRef(METHOD_ATOM_SLOT).setString(atom);
     }
 
     js::Native maybeNative() const {
@@ -425,7 +425,7 @@ inline const char *
 GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
 {
     if (fun->atom)
-        return bytes->encode(cx, ATOM_TO_STRING(fun->atom));
+        return bytes->encode(cx, fun->atom);
     return js_anonymous_str;
 }
 

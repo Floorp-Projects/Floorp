@@ -902,7 +902,7 @@ FragProfiling_showResults(TraceMonitor* tm)
 /* ----------------------------------------------------------------- */
 
 #ifdef DEBUG
-static JSBool FASTCALL
+JSBool FASTCALL
 PrintOnTrace(char* format, uint32 argc, double *argv)
 {
     union {
@@ -974,15 +974,19 @@ PrintOnTrace(char* format, uint32 argc, double *argv)
                     fprintf(out, "<rope>");
                     break;
                 }
-                const jschar *chars = u.s->nonRopeChars();
-                for (unsigned i = 0; i < length; ++i) {
-                    jschar co = chars[i];
-                    if (co < 128)
-                        putc(co, out);
-                    else if (co < 256)
-                        fprintf(out, "\\u%02x", co);
-                    else
-                        fprintf(out, "\\u%04x", co);
+                if (u.s->isRope()) {
+                    fprintf(out, "<rope: length %d>", (int)u.s->asRope().length());
+                } else {
+                    const jschar *chars = u.s->asLinear().chars();
+                    for (unsigned i = 0; i < length; ++i) {
+                        jschar co = chars[i];
+                        if (co < 128)
+                            putc(co, out);
+                        else if (co < 256)
+                            fprintf(out, "\\u%02x", co);
+                        else
+                            fprintf(out, "\\u%04x", co);
+                    }
                 }
             }
             break;
@@ -2750,7 +2754,7 @@ ValueToNative(const Value &v, JSValueType type, double* slot)
         if (LogController.lcbits & LC_TMTracer) {
             char funName[40];
             if (fun->atom)
-                JS_PutEscapedFlatString(funName, sizeof funName, ATOM_TO_STRING(fun->atom), 0);
+                JS_PutEscapedFlatString(funName, sizeof funName, fun->atom, 0);
             else
                 strcpy(funName, "unnamed");
             LogController.printf("function<%p:%s> ", (void*)*(JSObject **)slot, funName);
@@ -2979,7 +2983,7 @@ NativeToValue(JSContext* cx, Value& v, JSValueType type, double* slot)
             JSFunction* fun = GET_FUNCTION_PRIVATE(cx, &v.toObject());
             char funName[40];
             if (fun->atom)
-                JS_PutEscapedFlatString(funName, sizeof funName, ATOM_TO_STRING(fun->atom), 0);
+                JS_PutEscapedFlatString(funName, sizeof funName, fun->atom, 0);
             else
                 strcpy(funName, "unnamed");
             LogController.printf("function<%p:%s> ", (void*) &v.toObject(), funName);
@@ -11601,7 +11605,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
 #ifdef DEBUG
     ci->_name = js_anonymous_str;
     if (fun->atom) {
-        JSAutoByteString bytes(cx, ATOM_TO_STRING(fun->atom));
+        JSAutoByteString bytes(cx, fun->atom);
         if (!!bytes) {
             size_t n = strlen(bytes.ptr()) + 1;
             char *buffer = new (traceAlloc()) char[n];
@@ -12523,7 +12527,7 @@ RootedStringToId(JSContext* cx, JSString** namep, jsid* idp)
     JSAtom* atom = js_AtomizeString(cx, name, 0);
     if (!atom)
         return false;
-    *namep = ATOM_TO_STRING(atom); /* write back to GC root */
+    *namep = atom; /* write back to GC root */
     *idp = ATOM_TO_JSID(atom);
     return true;
 }
@@ -12850,7 +12854,7 @@ TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins, LIns**
     if (MaybeBranch mbr = w.jt(w.eqp0(w.andp(lengthAndFlags_ins, w.nameImmw(JSString::ROPE_BIT)))))
     {
         LIns *args[] = { str_ins, cx_ins };
-        LIns *ok_ins = w.call(&js_Flatten_ci, args);
+        LIns *ok_ins = w.call(&js_FlattenOnTrace_ci, args);
         guard(false, w.eqi0(ok_ins), OOM_EXIT);
         w.label(mbr);
     }
@@ -12869,8 +12873,9 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::getUnitString(LIns* str_ins, LIns* idx_ins)
 {
     LIns *ch_ins = w.getStringChar(str_ins, idx_ins);
-    guard(true, w.ltuiN(ch_ins, UNIT_STRING_LIMIT), MISMATCH_EXIT);
-    return w.addp(w.nameImmpNonGC(JSString::unitStringTable),
+    guard(true, w.ltuiN(ch_ins, JSAtom::UNIT_STATIC_LIMIT), MISMATCH_EXIT);
+    JS_STATIC_ASSERT(sizeof(JSString) == 16 || sizeof(JSString) == 32);
+    return w.addp(w.nameImmpNonGC(JSAtom::unitStaticTable),
                   w.lshpN(w.ui2p(ch_ins), (sizeof(JSString) == 16) ? 4 : 5));
 }
 
@@ -12884,7 +12889,7 @@ TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins, JSOp mode,
                                              w.nameImmw(JSString::ROPE_BIT)))))
     {
         LIns *args[] = { str_ins, cx_ins };
-        LIns *ok_ins = w.call(&js_Flatten_ci, args);
+        LIns *ok_ins = w.call(&js_FlattenOnTrace_ci, args);
         guard(false, w.eqi0(ok_ins), OOM_EXIT);
         w.label(mbr);
     }

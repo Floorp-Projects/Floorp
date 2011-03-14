@@ -601,7 +601,7 @@ public:
      */
     bool isEscapeFreeStringLiteral() const {
         JS_ASSERT(pn_type == js::TOK_STRING && !pn_parens);
-        JSString *str = ATOM_TO_STRING(pn_atom);
+        JSString *str = pn_atom;
 
         /*
          * If the string's length in the source code is its length as a value,
