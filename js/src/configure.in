@@ -5487,7 +5487,7 @@ MOZ_ARG_DISABLE_BOOL(md,
   [_cpp_md_flag=],
   [_cpp_md_flag=1],
   [dnl Default is to turn on -MD if using GNU-compatible compilers
-   if test "$GNU_CC" -a "$GNU_CXX" -a "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "WINCE"; then
+   if test "$GNU_CC" -a "$GNU_CXX"; then
      _cpp_md_flag=1
    fi
   dnl Default is to use -xM if using Sun Studio on Solaris
