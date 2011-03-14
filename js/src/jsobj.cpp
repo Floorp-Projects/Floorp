@@ -6410,10 +6410,14 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
 
 JSBasicStats js_entry_count_bs = JS_INIT_STATIC_BASIC_STATS;
 
-static void
+namespace js {
+
+void
 MeterEntryCount(uintN count)
 {
     JS_BASIC_STATS_ACCUM(&js_entry_count_bs, count);
+}
+
 }
 
 void
@@ -6484,29 +6488,6 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
     }
 }
 #endif
-
-void
-js_TraceObject(JSTracer *trc, JSObject *obj)
-{
-    JS_ASSERT(obj->isNative());
-
-#ifdef JS_DUMP_SCOPE_METERS
-    MeterEntryCount(obj->propertyCount);
-#endif
-
-    obj->trace(trc);
-
-    /*
-     * NB: clasp->mark could mutate something (which would be a bug, but we are
-     * defensive), so don't hoist this above calling clasp->mark.
-     */
-    uint32 nslots = Min(obj->numSlots(), obj->slotSpan());
-    for (uint32 i = 0; i != nslots; ++i) {
-        const Value &v = obj->getSlot(i);
-        JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
-        MarkValueRaw(trc, v);
-    }
-}
 
 void
 js_ClearNative(JSContext *cx, JSObject *obj)
