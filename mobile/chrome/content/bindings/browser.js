@@ -210,6 +210,8 @@ let DOMEvents =  {
                                             .getInterface(Ci.nsIDOMWindowUtils);
 
         let json = {
+          contentWindowWidth: content.innerWidth,
+          contentWindowHeight: content.innerHeight,
           windowId: util.outerWindowID,
           persisted: aEvent.persisted
         };
