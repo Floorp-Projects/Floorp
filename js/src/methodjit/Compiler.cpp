@@ -1394,7 +1394,7 @@ mjit::Compiler::generateMethod()
                     frame.pop();
 
                     if (!target) {
-                        frame.push(Value(BooleanValue(result)));
+                        frame.push(Value(BooleanValue(result)), pushedTypeSet(0));
                     } else {
                         if (fused == JSOP_IFEQ)
                             result = !result;
@@ -1751,7 +1751,7 @@ mjit::Compiler::generateMethod()
           {
             uint32 index = fullAtomIndex(PC);
             double d = script->getConst(index).toDouble();
-            frame.push(Value(DoubleValue(d)));
+            frame.push(Value(DoubleValue(d)), pushedTypeSet(0));
           }
           END_CASE(JSOP_DOUBLE)
 
@@ -1759,20 +1759,20 @@ mjit::Compiler::generateMethod()
           {
             JSAtom *atom = script->getAtom(fullAtomIndex(PC));
             JSString *str = ATOM_TO_STRING(atom);
-            frame.push(Value(StringValue(str)));
+            frame.push(Value(StringValue(str)), pushedTypeSet(0));
           }
           END_CASE(JSOP_STRING)
 
           BEGIN_CASE(JSOP_ZERO)
-            frame.push(Valueify(JSVAL_ZERO));
+            frame.push(Valueify(JSVAL_ZERO), pushedTypeSet(0));
           END_CASE(JSOP_ZERO)
 
           BEGIN_CASE(JSOP_ONE)
-            frame.push(Valueify(JSVAL_ONE));
+            frame.push(Valueify(JSVAL_ONE), pushedTypeSet(0));
           END_CASE(JSOP_ONE)
 
           BEGIN_CASE(JSOP_NULL)
-            frame.push(NullValue());
+            frame.push(NullValue(), pushedTypeSet(0));
           END_CASE(JSOP_NULL)
 
           BEGIN_CASE(JSOP_THIS)
@@ -1780,11 +1780,11 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_THIS)
 
           BEGIN_CASE(JSOP_FALSE)
-            frame.push(Value(BooleanValue(false)));
+            frame.push(Value(BooleanValue(false)), pushedTypeSet(0));
           END_CASE(JSOP_FALSE)
 
           BEGIN_CASE(JSOP_TRUE)
-            frame.push(Value(BooleanValue(true)));
+            frame.push(Value(BooleanValue(true)), pushedTypeSet(0));
           END_CASE(JSOP_TRUE)
 
           BEGIN_CASE(JSOP_OR)
@@ -2446,6 +2446,10 @@ mjit::Compiler::findCallSite(const CallSite &callSite)
     for (uint32 i = 0; i < callSites.length(); i++) {
         InternalCallSite &cs = callSites[i];
         if (cs.pc == script->code + callSite.pcOffset && cs.id == callSite.id) {
+#ifdef DEBUG
+            for (i++; i < callSites.length(); i++)
+                JS_ASSERT(cs.pc != callSites[i].pc || cs.id != callSites[i].id);
+#endif
             if (cs.ool)
                 return oolPath + cs.returnOffset;
             return ilPath + cs.returnOffset;
@@ -3212,6 +3216,10 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
 void
 mjit::Compiler::addCallSite(const InternalCallSite &site)
 {
+#ifdef DEBUG
+    for (unsigned i = 0; i < callSites.length(); i++)
+        JS_ASSERT(site.pc != callSites[i].pc || site.id != callSites[i].id);
+#endif
     callSites.append(site);
 }
 
@@ -3287,7 +3295,10 @@ bool
 mjit::Compiler::emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused)
 {
     fixDoubleTypes(Uses(2));
-    frame.syncAndForgetEverything();
+    if (target)
+        frame.syncAndForgetEverything();
+    else
+        frame.syncAndKill(Uses(2));
 
     prepareStubCall(Uses(2));
     INLINE_STUBCALL(stub);
@@ -3470,7 +3481,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType, types::TypeSet
 
     stubcc.leave();
     passICAddress(&pic);
-    pic.slowPathCall = OOL_STUBCALL(ic::GetProp);
+    pic.slowPathCall = OOL_STUBCALL(usePropCache ? ic::GetProp : ic::GetPropNoCache);
     CHECK_OOL_SPACE();
 
     /* Load the base slot address. */
@@ -3504,6 +3515,14 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType, types::TypeSet
     frame.pushRegs(shapeReg, objReg, knownType, typeSet);
 
     stubcc.rejoin(Changes(1));
+
+    if (recompiling) {
+        if (usePropCache)
+            OOL_STUBCALL(stubs::GetProp);
+        else
+            OOL_STUBCALL(stubs::GetPropNoCache);
+        stubcc.rejoin(Changes(1));
+    }
 
     pics.append(pic);
     return true;
@@ -3618,6 +3637,11 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
 
     stubcc.rejoin(Changes(2));
     pics.append(pic);
+
+    if (recompiling) {
+        OOL_STUBCALL(stubs::CallProp);
+        stubcc.rejoin(Changes(2));
+    }
 
     return true;
 }
