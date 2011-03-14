@@ -2493,12 +2493,12 @@ Tab.prototype = {
       } else if (!validW && !validH) {
         viewportW = this.useFallbackWidth ? kFallbackBrowserWidth : kDefaultBrowserWidth;
         viewportH = kDefaultBrowserWidth * (screenH / screenW);
-
-        // Make sure the viewport height is not shorter than the window when
-        // the page is zoomed out to show its full width.
-        viewportH = Math.max(viewportH, screenH * (browser.contentDocumentWidth / screenW));
       }
     }
+
+    // Make sure the viewport height is not shorter than the window when
+    // the page is zoomed out to show its full width.
+    viewportH = Math.max(viewportH, screenH * (browser.contentDocumentWidth / screenW));
 
     if (browser.contentWindowWidth != viewportW || browser.contentWindowHeight != viewportH)
       browser.setWindowSize(viewportW, viewportH);
