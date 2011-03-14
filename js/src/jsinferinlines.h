@@ -224,9 +224,31 @@ JSContext::markTypeCallerUnexpected(js::types::jstype type)
 {
     if (!typeInferenceEnabled())
         return true;
+
+    /*
+     * Check that we are actually at a scripted callsite. This function is
+     * called from JS natives which can be called anywhere a script can be
+     * called, such as on property getters or setters. This filtering is not
+     * perfect, but we only need to make sure the type result is added wherever
+     * the native's type handler was used, i.e. at scripted callsites directly
+     * calling the native.
+     */
+
     JSStackFrame *caller = js_GetScriptedCaller(this, NULL);
     if (!caller)
         return true;
+
+    switch ((JSOp)*caller->pc(this)) {
+      case JSOP_CALL:
+      case JSOP_EVAL:
+      case JSOP_FUNCALL:
+      case JSOP_FUNAPPLY:
+      case JSOP_NEW:
+        break;
+      default:
+        return true;
+    }
+
     return caller->script()->typeMonitorResult(this, caller->pc(this), type);
 }
 
