@@ -496,7 +496,7 @@ AllocateArena(JSContext *cx, unsigned thingKind)
 JS_FRIEND_API(bool)
 IsAboutToBeFinalized(JSContext *cx, void *thing)
 {
-    if (JSString::isStatic(thing))
+    if (JSString::isGCThingStatic(thing))
         return false;
     JS_ASSERT(cx);
 
@@ -1436,7 +1436,7 @@ gc_root_traversal(JSTracer *trc, const RootEntry &entry)
     }
 
     if (ptr) {
-        if (!JSString::isStatic(ptr)) {
+        if (!JSString::isGCThingStatic(ptr)) {
             bool root_points_to_gcArenaList = false;
             JSCompartment **c = trc->context->runtime->compartments.begin();
             for (; c != trc->context->runtime->compartments.end(); ++c) {
@@ -1685,7 +1685,7 @@ MarkRuntime(JSTracer *trc)
               }
             }
 
-            if (JSString::isStatic(thing))
+            if (JSString::isGCThingStatic(thing))
                 continue;
 
             if (!reinterpret_cast<Cell *>(thing)->isMarked()) {
@@ -1854,7 +1854,7 @@ void
 js_FinalizeStringRT(JSRuntime *rt, JSString *str)
 {
     JS_RUNTIME_UNMETER(rt, liveStrings);
-    JS_ASSERT(!JSString::isStatic(str));
+    JS_ASSERT(!str->isStaticAtom());
     JS_ASSERT(!str->isRope());
 
     if (str->isDependent()) {
@@ -2322,7 +2322,7 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
      * so that any attempt to allocate a GC-thing from a finalizer will fail,
      * rather than nest badly and leave the unmarked newborn to be swept.
      *
-     * We first sweep atom state so we can use js_IsAboutToBeFinalized on
+     * We first sweep atom state so we can use IsAboutToBeFinalized on
      * JSString held in a hashtable to check if the hashtable entry can be
      * freed. Note that even after the entry is freed, JSObject finalizers can
      * continue to access the corresponding JSString* assuming that they are
@@ -2367,7 +2367,7 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
 
     /*
      * Destroy arenas after we finished the sweeping so finalizers can safely
-     * use js_IsAboutToBeFinalized().
+     * use IsAboutToBeFinalized().
      */
     ExpireGCChunks(rt);
     TIMESTAMP(sweepDestroyEnd);
@@ -2443,7 +2443,7 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
      * so that any attempt to allocate a GC-thing from a finalizer will fail,
      * rather than nest badly and leave the unmarked newborn to be swept.
      *
-     * We first sweep atom state so we can use js_IsAboutToBeFinalized on
+     * We first sweep atom state so we can use IsAboutToBeFinalized on
      * JSString held in a hashtable to check if the hashtable entry can be
      * freed. Note that even after the entry is freed, JSObject finalizers can
      * continue to access the corresponding JSString* assuming that they are
@@ -2504,7 +2504,7 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
 
     /*
      * Destroy arenas after we finished the sweeping so finalizers can safely
-     * use js_IsAboutToBeFinalized().
+     * use IsAboutToBeFinalized().
      */
     ExpireGCChunks(rt);
     TIMESTAMP(sweepDestroyEnd);

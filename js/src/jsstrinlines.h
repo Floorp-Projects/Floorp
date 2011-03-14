@@ -311,7 +311,7 @@ JSString::lookupStaticString(const jschar *chars, size_t length)
 
 inline void
 JSString::finalize(JSContext *cx) {
-    JS_ASSERT(!JSString::isStatic(this));
+    JS_ASSERT(!isStaticAtom());
     JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
     if (isDependent()) {
         JS_RUNTIME_UNMETER(cx->runtime, liveDependentStrings);
@@ -328,7 +328,7 @@ JSString::finalize(JSContext *cx) {
 inline void
 JSShortString::finalize(JSContext *cx)
 {
-    JS_ASSERT(!JSString::isStatic(&mHeader));
+    JS_ASSERT(!mHeader.isStaticAtom());
     JS_ASSERT(mHeader.isFlat());
     JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
 }
@@ -337,7 +337,7 @@ inline void
 JSExternalString::finalize(JSContext *cx)
 {
     JS_ASSERT(unsigned(externalStringType) < JS_ARRAY_LENGTH(str_finalizers));
-    JS_ASSERT(!isStatic(this));
+    JS_ASSERT(!isStaticAtom());
     JS_ASSERT(isFlat());
     JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
 

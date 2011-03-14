@@ -462,7 +462,7 @@ js_AtomizeString(JSContext *cx, JSString *strArg, uintN flags)
     JS_ASSERT(!(flags & ~(ATOM_PINNED|ATOM_INTERNED|ATOM_TMPSTR|ATOM_NOCOPY)));
     JS_ASSERT_IF(flags & ATOM_NOCOPY, flags & ATOM_TMPSTR);
 
-    if (strArg->isAtomized())
+    if (strArg->isAtom())
         return STRING_TO_ATOM(strArg);
 
     JSLinearString *str = strArg->ensureLinear(cx);

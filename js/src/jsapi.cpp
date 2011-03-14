@@ -5284,7 +5284,7 @@ JS_NewStringCopyZ(JSContext *cx, const char *s)
 JS_PUBLIC_API(JSBool)
 JS_StringHasBeenInterned(JSString *str)
 {
-    return str->isAtomized();
+    return str->isAtom();
 }
 
 JS_PUBLIC_API(JSString *)
@@ -5385,14 +5385,14 @@ JS_GetStringCharsAndLength(JSContext *cx, JSString *str, size_t *plength)
 JS_PUBLIC_API(const jschar *)
 JS_GetInternedStringChars(JSString *str)
 {
-    JS_ASSERT(str->isAtomized());
+    JS_ASSERT(str->isAtom());
     return str->flatChars();
 }
 
 JS_PUBLIC_API(const jschar *)
 JS_GetInternedStringCharsAndLength(JSString *str, size_t *plength)
 {
-    JS_ASSERT(str->isAtomized());
+    JS_ASSERT(str->isAtom());
     *plength = str->flatLength();
     return str->flatChars();
 }

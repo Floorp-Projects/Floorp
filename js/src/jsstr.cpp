@@ -243,9 +243,9 @@ JS_DEFINE_CALLINFO_2(extern, BOOL, js_Flatten, CONTEXT, STRING, 0, nanojit::ACCS
 JSString * JS_FASTCALL
 js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
 {
-    JS_ASSERT_IF(!JSString::isStatic(left) && !left->isAtomized(),
+    JS_ASSERT_IF(!left->isStaticAtom() && !left->isAtom(),
                  left->asCell()->compartment() == cx->compartment);
-    JS_ASSERT_IF(!JSString::isStatic(right) && !right->isAtomized(),
+    JS_ASSERT_IF(!right->isStaticAtom() && !right->isAtom(),
                  right->asCell()->compartment() == cx->compartment);
 
     size_t leftLen = left->length();
@@ -2025,7 +2025,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         JSString *str = match.toString();
 
         JSAtom *atom;
-        if (str->isAtomized()) {
+        if (str->isAtom()) {
             atom = STRING_TO_ATOM(str);
         } else {
             atom = js_AtomizeString(cx, str, 0);
@@ -3229,7 +3229,7 @@ static JSFunctionSpec string_methods[] = {
  * place in the header.
  */
 #define R(c) {                                                                \
-    BUILD_LENGTH_AND_FLAGS(1, JSString::FLAT | JSString::ATOMIZED),           \
+    BUILD_LENGTH_AND_FLAGS(1, JSString::STATIC_ATOM_FLAGS),                   \
     { (jschar *)(((char *)(unitStringTable + (c))) +                          \
       offsetof(JSString, inlineStorage)) },                                   \
     { {(c), 0x00} } }
@@ -3289,7 +3289,7 @@ const jschar JSString::fromSmallChar[] = { R6(0) };
  * second character.
  */
 #define R(c) {                                                                \
-    BUILD_LENGTH_AND_FLAGS(2, JSString::FLAT | JSString::ATOMIZED),           \
+    BUILD_LENGTH_AND_FLAGS(2, JSString::STATIC_ATOM_FLAGS),                   \
     { (jschar *)(((char *)(length2StringTable + (c))) +                       \
       offsetof(JSString, inlineStorage)) },                                   \
     { {FROM_SMALL_CHAR((c) >> 6), FROM_SMALL_CHAR((c) & 0x3F), 0x00} } }
@@ -3322,7 +3322,7 @@ __attribute__ ((aligned (8)))
  * correct location of the int string.
  */
 #define R(c) {                                                                \
-    BUILD_LENGTH_AND_FLAGS(3, JSString::FLAT | JSString::ATOMIZED),           \
+    BUILD_LENGTH_AND_FLAGS(3, JSString::STATIC_ATOM_FLAGS),                   \
     { (jschar *)(((char *)(hundredStringTable + ((c) - 100))) +               \
       offsetof(JSString, inlineStorage)) },                                   \
     { {((c) / 100) + '0', ((c) / 10 % 10) + '0', ((c) % 10) + '0', 0x00} } }
