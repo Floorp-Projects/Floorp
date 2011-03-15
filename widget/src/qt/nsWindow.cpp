@@ -1908,7 +1908,6 @@ nsEventStatus nsWindow::OnTouchEvent(QTouchEvent *event, PRBool &handled)
             gestureNotifyEvent.refPoint = nsIntPoint(fpos.x(), fpos.y());
             DispatchEvent(&gestureNotifyEvent);
         }
-        mPinchEvent.needDispatch = true;
     }
     else if (event->type() == QEvent::TouchEnd) {
         mGesturesCancelled = PR_FALSE;
@@ -1953,10 +1952,9 @@ nsWindow::OnGestureEvent(QGestureEvent* event, PRBool &handled) {
                                           0, 0, centerPoint);
         }
         else if (pinch->state() == Qt::GestureUpdated) {
-            if (mPinchEvent.needDispatch) {
-                mPinchEvent.delta = 0;
-                DispatchMotionToMainThread();
-            }
+            mPinchEvent.needDispatch = true;
+            mPinchEvent.delta = 0;
+            DispatchMotionToMainThread();
         }
         else if (pinch->state() == Qt::GestureFinished) {
             double distance = DistanceBetweenPoints(mPinchEvent.centerPoint, mPinchEvent.touchPoint) * 2;
