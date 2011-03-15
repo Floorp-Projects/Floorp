@@ -170,6 +170,11 @@ public:
      */
     static PRBool CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit = 0);
 
+    /* Provide a stride value that will respect all alignment requirements of
+     * the accelerated image-rendering code.
+     */
+    static PRInt32 FormatStrideForWidth(gfxImageFormat format, PRInt32 width);
+
     /* Return the default set of context flags for this surface; these are
      * hints to the context about any special rendering considerations.  See
      * gfxContext::SetFlag for documentation.

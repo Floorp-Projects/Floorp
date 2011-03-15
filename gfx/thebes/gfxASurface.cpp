@@ -373,6 +373,13 @@ gfxASurface::CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit)
     return PR_TRUE;
 }
 
+/* static */
+PRInt32
+gfxASurface::FormatStrideForWidth(gfxImageFormat format, PRInt32 width)
+{
+    return cairo_format_stride_for_width((cairo_format_t)format, (int)width);
+}
+
 nsresult
 gfxASurface::BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName)
 {
