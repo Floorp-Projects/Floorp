@@ -149,12 +149,13 @@ static void UnmarkFrameForDisplay(nsIFrame* aFrame) {
 }
 
 static void RecordFrameMetrics(nsIFrame* aForFrame,
+                               nsIFrame* aViewportFrame,
                                ContainerLayer* aRoot,
                                nsRect aVisibleRect,
                                nsRect aViewport,
+                               nsRect aDisplayPort,
                                ViewID aScrollId) {
   nsPresContext* presContext = aForFrame->PresContext();
-  nsIPresShell* presShell = presContext->GetPresShell();
 
   nsIntRect visible = aVisibleRect.ToNearestPixels(presContext->AppUnitsPerDevPixel());
   aRoot->SetVisibleRegion(nsIntRegion(visible));
@@ -163,23 +164,23 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
 
   PRInt32 auPerDevPixel = presContext->AppUnitsPerDevPixel();
   metrics.mViewport = aViewport.ToNearestPixels(auPerDevPixel);
-  if (presShell->UsingDisplayPort()) {
-    metrics.mDisplayPort =
-      presShell->GetDisplayPort().ToNearestPixels(auPerDevPixel);
+  if (aViewport != aDisplayPort) {
+    metrics.mDisplayPort = aDisplayPort.ToNearestPixels(auPerDevPixel);
   }
 
-  nsIScrollableFrame* rootScrollableFrame =
-    presShell->GetRootScrollFrameAsScrollable();
-  if (rootScrollableFrame) {
-    nsSize contentSize = 
-      rootScrollableFrame->GetScrollRange().Size() +
-      rootScrollableFrame->GetScrollPortRect().Size();
+  nsIScrollableFrame* scrollableFrame = NULL;
+  if (aViewportFrame)
+    scrollableFrame = aViewportFrame->GetScrollTargetFrame();
+
+  if (scrollableFrame) {
+    nsSize contentSize =
+      scrollableFrame->GetScrollRange().Size() +
+      scrollableFrame->GetScrollPortRect().Size();
     metrics.mContentSize = nsIntSize(NSAppUnitsToIntPixels(contentSize.width, auPerDevPixel),
                                      NSAppUnitsToIntPixels(contentSize.height, auPerDevPixel));
 
     metrics.mViewportScrollOffset =
-      rootScrollableFrame->GetScrollPosition().ToNearestPixels(auPerDevPixel);
-    
+      scrollableFrame->GetScrollPosition().ToNearestPixels(auPerDevPixel);
   }
   else {
     nsSize contentSize = aForFrame->GetSize();
@@ -523,7 +524,18 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   ViewID id = presContext->IsRootContentDocument() ? FrameMetrics::ROOT_SCROLL_ID
                                                    : FrameMetrics::NULL_SCROLL_ID;
 
-  RecordFrameMetrics(aForFrame, root, mVisibleRect, mVisibleRect, id);
+  nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
+  nsRect visibleRect = mVisibleRect;
+  if (rootScrollFrame) {
+    nsIContent* content = rootScrollFrame->GetContent();
+    if (content) {
+      // If there is a displayport defined for the root content element,
+      // it will be stored in visibleRect.
+      nsLayoutUtils::GetDisplayPort(content, &visibleRect);
+    }
+  }
+  RecordFrameMetrics(aForFrame, presShell->GetRootScrollFrame(),
+                     root, mVisibleRect, mVisibleRect, visibleRect, id);
 
   // If the layer manager supports resolution scaling, set that up
   if (LayerManager::LAYERS_BASIC == layerManager->GetBackendType()) {
@@ -1694,9 +1706,11 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
 nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
                                            nsDisplayList* aList,
                                            nsIFrame* aForFrame,
-                                           nsIFrame* aViewportFrame)
+                                           nsIFrame* aViewportFrame,
+                                           const nsRect& aDisplayPort)
   : nsDisplayOwnLayer(aBuilder, aForFrame, aList)
   , mViewportFrame(aViewportFrame)
+  , mDisplayPort(aDisplayPort)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   MOZ_COUNT_CTOR(nsDisplayScrollLayer);
@@ -1721,7 +1735,8 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                     mViewportFrame->GetPosition() +
                     aBuilder->ToReferenceFrame(mViewportFrame);
 
-  RecordFrameMetrics(mFrame, layer, mVisibleRect, viewport, scrollId);
+  RecordFrameMetrics(mFrame, mViewportFrame, layer, mVisibleRect, viewport,
+                     mDisplayPort, scrollId);
 
   return layer.forget();
 }
@@ -1733,14 +1748,17 @@ nsDisplayScrollLayer::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                         PRBool& aContainsRootContentDocBG)
 {
   nsPresContext* presContext = mFrame->PresContext();
-  nsIPresShell* presShell = presContext->GetPresShell();
 
-  if (presShell->UsingDisplayPort()) {
+  nsRect viewport = mViewportFrame->GetRect() -
+                    mViewportFrame->GetPosition() +
+                    aBuilder->ToReferenceFrame(mViewportFrame);
+
+  if (mDisplayPort != viewport) {
     // The visible region for the children may be much bigger than the hole we
     // are viewing the children from, so that the compositor process has enough
     // content to asynchronously pan while content is being refreshed.
 
-    nsRegion childVisibleRegion = presShell->GetDisplayPort() + aBuilder->ToReferenceFrame(mViewportFrame);
+    nsRegion childVisibleRegion = mDisplayPort + aBuilder->ToReferenceFrame(mViewportFrame);
 
     nsRect boundedRect;
     boundedRect.IntersectRect(childVisibleRegion.GetBounds(), mList.GetBounds(aBuilder));
