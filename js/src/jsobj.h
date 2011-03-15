@@ -204,6 +204,9 @@ struct PropDesc {
 
 typedef Vector<PropDesc, 1> PropDescArray;
 
+void
+MeterEntryCount(uintN count);
+
 } /* namespace js */
 
 struct JSObjectMap {
@@ -1867,9 +1870,6 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
 
 extern JSBool
 js_XDRObject(JSXDRState *xdr, JSObject **objp);
-
-extern void
-js_TraceObject(JSTracer *trc, JSObject *obj);
 
 extern void
 js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize);

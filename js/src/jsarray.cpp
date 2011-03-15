@@ -971,8 +971,7 @@ array_trace(JSTracer *trc, JSObject *obj)
     JS_ASSERT(obj->isDenseArray());
 
     uint32 capacity = obj->getDenseArrayInitializedLength();
-    for (uint32 i = 0; i < capacity; i++)
-        MarkValue(trc, obj->getDenseArrayElement(i), "dense_array_elems");
+    MarkValueRange(trc, capacity, obj->slots, "element");
 }
 
 static JSBool

@@ -878,10 +878,11 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         if (traceICs[i].slowTraceHint.isSet())
             jitTraceICs[i].slowTraceHint = stubCode.locationOf(traceICs[i].slowTraceHint.get());
 #ifdef JS_TRACER
-        jitTraceICs[i].loopCounterStart = GetHotloop(cx);
+        uint32 hotloop = GetHotloop(cx);
+        uint32 prevCount = cx->compartment->backEdgeCount(traceICs[i].jumpTarget);
+        jitTraceICs[i].loopCounterStart = hotloop;
+        jitTraceICs[i].loopCounter = hotloop < prevCount ? 1 : hotloop - prevCount;
 #endif
-        jitTraceICs[i].loopCounter = jitTraceICs[i].loopCounterStart
-            - cx->compartment->backEdgeCount(traceICs[i].jumpTarget);
         
         stubCode.patch(traceICs[i].addrLabel, &jitTraceICs[i]);
     }
