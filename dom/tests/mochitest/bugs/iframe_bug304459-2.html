@@ -1,0 +1,18 @@
+<html>
+<head>
+	<title>Iframe test for bug 304459</title>
+</head>
+<body">
+<script>
+
+var result;
+try {
+  x == undefined;
+} catch (e) {
+  result = true;
+}
+window.parent.postMessage(result, "http://mochi.test:8888");
+
+</script>
+</body>
+</html>
