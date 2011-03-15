@@ -306,7 +306,7 @@ JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jst
     if (!types || types->hasType(type))
         return compartment->types.checkPendingRecompiles(this);
 
-    js::types::InferSpew(js::types::ISpewDynamic, "AddBuiltin: %s %s: %s",
+    js::types::InferSpew(js::types::ISpewOps, "externalType: property %s %s: %s",
                          obj->name(), js::types::TypeIdString(id),
                          js::types::TypeString(type));
     types->addType(this, type);
@@ -554,7 +554,7 @@ JSScript::typeSetThis(JSContext *cx, js::types::jstype type)
     if (!thisTypes()->hasType(type) || analyze) {
         js::types::AutoEnterTypeInference enter(cx);
 
-        js::types::InferSpew(js::types::ISpewDynamic, "AddThis: #%u: %s",
+        js::types::InferSpew(js::types::ISpewOps, "externalType: setThis #%u: %s",
                              id(), js::types::TypeString(type));
         thisTypes()->addType(cx, type);
 
@@ -601,7 +601,7 @@ JSScript::typeSetLocal(JSContext *cx, unsigned local, js::types::jstype type)
     if (!localTypes(local)->hasType(type)) {
         js::types::AutoEnterTypeInference enter(cx);
 
-        js::types::InferSpew(js::types::ISpewDynamic, "SetLocal: #%u %u: %s",
+        js::types::InferSpew(js::types::ISpewOps, "externalType: setLocal #%u %u: %s",
                              id(), local, js::types::TypeString(type));
         localTypes(local)->addType(cx, type);
 
@@ -630,7 +630,7 @@ JSScript::typeSetArgument(JSContext *cx, unsigned arg, js::types::jstype type)
     if (!argTypes(arg)->hasType(type)) {
         js::types::AutoEnterTypeInference enter(cx);
 
-        js::types::InferSpew(js::types::ISpewDynamic, "SetArgument: #%u %u: %s",
+        js::types::InferSpew(js::types::ISpewOps, "externalType: setArg #%u %u: %s",
                              id(), arg, js::types::TypeString(type));
         argTypes(arg)->addType(cx, type);
 
@@ -660,7 +660,7 @@ JSScript::typeSetUpvar(JSContext *cx, unsigned upvar, const js::Value &value)
     if (!upvarTypes(upvar)->hasType(type)) {
         js::types::AutoEnterTypeInference enter(cx);
 
-        js::types::InferSpew(js::types::ISpewDynamic, "SetUpvar: #%u %u: %s",
+        js::types::InferSpew(js::types::ISpewOps, "externalType: setUpvar #%u %u: %s",
                              id(), upvar, js::types::TypeString(type));
         upvarTypes(upvar)->addType(cx, type);
 
@@ -1001,7 +1001,7 @@ TypeSet::make(JSContext *cx, const char *name)
         return NULL;
     }
 
-    InferSpew(ISpewOps, "intermediate %s T%p", name, res);
+    InferSpew(ISpewOps, "typeSet: T%p intermediate %s", res, name);
     res->setIntermediate();
 
     return res;
