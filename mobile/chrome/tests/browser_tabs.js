@@ -47,7 +47,7 @@ function load_tabs() {
   is(new_tab_URI, testURL_01, "URL Matches newly created Tab");
 
   //Close new tab 
-  var close_tab = Browser.closeTab(new_tab);
+  var close_tab = Browser.closeTab(new_tab, { forceClose: true });
   var tabs_size_new = Browser._tabs.length; 	
   is(tabs_size_new, tabs_size_old, "Tab Closed");
 
@@ -92,7 +92,7 @@ function tab_switch_03() {
   is(new_tab_03.owner, new_tab_01, "Tab 03 owned by tab 01");
   is(Browser.selectedTab.notification, Elements.browsers.selectedPanel, "Deck has correct browser");
 
-  Browser.closeTab(new_tab_03);
+  Browser.closeTab(new_tab_03, { forceClose: true });
   is(Browser.selectedTab, new_tab_01, "Closing tab 03 returns to owner");
   is(Browser.selectedTab.notification, Elements.browsers.selectedPanel, "Deck has correct browser");
 
@@ -106,7 +106,7 @@ function tab_switch_04() {
   is(new_tab_03.owner, new_tab_01, "Tab 03 owned by tab 01");
   is(Browser.selectedTab.notification, Elements.browsers.selectedPanel, "Deck has correct browser");
 
-  Browser.closeTab(new_tab_01);
+  Browser.closeTab(new_tab_01, { forceClose: true });
   is(Browser.selectedTab, new_tab_03, "Closing tab 01 keeps selectedTab");
   is(new_tab_03.owner, null, "Closing tab 01 nulls tab3 owner");
   is(Browser.selectedTab.notification, Elements.browsers.selectedPanel, "Deck has correct browser");
@@ -116,7 +116,7 @@ function tab_switch_04() {
   checkExpectedSize();
   new_tab_04.browser.addEventListener("load", function() {
     new_tab_04.browser.removeEventListener("load", arguments.callee, true);
-    Browser.closeTab(new_tab_04);
+    Browser.closeTab(new_tab_04, { forceClose: true });
     tab_undo();
   }, true);
 }
@@ -139,35 +139,32 @@ function tab_on_undo() {
   Browser.loadURI("about:firstrun");
   is(undoBox.firstChild, null, "It should be no tab in the undo box when opening a new local page");
 
-  Browser.closeTab(new_tab_01);
-  Browser.closeTab(new_tab_02);
-  Browser.closeTab(new_tab_03);
-  Browser.closeTab(new_tab_04);
-  Browser.closeTab(new_tab_05);
+  Browser.closeTab(new_tab_01, { forceClose: true });
+  Browser.closeTab(new_tab_02, { forceClose: true });
+  Browser.closeTab(new_tab_03, { forceClose: true });
+  Browser.closeTab(new_tab_04, { forceClose: true });
+  Browser.closeTab(new_tab_05, { forceClose: true });
   checkExpectedSize();
 
   tab_about_empty();
 }
 
 function tab_about_empty() {
+  let tabCount = Browser.tabs.length;
   new_tab_01 = Browser.addTab("about:empty", true);
   ok(new_tab_01, "Tab Opened");
   is(new_tab_01.browser.getAttribute("remote"), "true", "about:empty opened in a remote tab");
-
-  Browser.tabs
-    .filter(function(tab) tab != new_tab_01)
-    .forEach(Browser.closeTab.bind(Browser));
-
-  is(Browser.tabs.length, 1, "All other tabs closed");
 
   Browser.loadURI("about:");
   let tab = Browser.selectedTab;
   isnot(tab, new_tab_01, "local page opened in a new tab");
   isnot(tab.browser.getAttribute("remote"), "true", "local page opened in a local tab");
-  is(Browser.tabs.length, 1, "Old empty tab is closed");
+  is(Browser.tabs.length, tabCount + 1, "Old empty tab is closed");
 
   let undoBox = document.getElementById("tabs")._tabsUndo;
   is(undoBox.firstChild, null, "about:empty is not in the undo close tab box");
+
+  Browser.closeTab(tab, { forceClose: true });
 
   done();
 }

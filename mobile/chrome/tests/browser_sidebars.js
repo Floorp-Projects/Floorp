@@ -72,11 +72,11 @@ function checkOnResize(aCallback) {
           aCallback();
         }, 0);
       }, false);
-      window.resizeTo(800, 480);
+      window.resizeTo(480, 800);
     }); }, 0)} 
   , false);
 
-  window.resizeTo(480, 800);
+  window.resizeTo(800, 480);
 }
 
 gTests.push({
