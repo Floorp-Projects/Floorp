@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=38959
+-->
+<head>
+  <title>Test for Bug 38959</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=38959">Mozilla Bug 38959</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe id="frame"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 38959 **/
+
+var newValue;
+
+function watcher(id, ol, ne)
+{
+  newValue = ne;
+  return ne;
+}
+
+function openWindow(url, crossOrigin)
+{
+  newValue = true;
+  var w = window.open(url);
+  w.watch("x", watcher);
+}
+
+function receiveMessage(evt)
+{
+  ok(newValue, "Watchpoints only allowed same-origin.");
+  if (evt.data == 1) {
+    openWindow("/tests/dom/tests/mochitest/bugs/iframe_bug38959-2.html");
+  }
+  else {
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+window.addEventListener("message", receiveMessage, false);
+
+openWindow("http://example.org/tests/dom/tests/mochitest/bugs/iframe_bug38959-1.html");
+
+</script>
+</pre>
+</body>
+</html>
