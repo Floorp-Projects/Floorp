@@ -250,34 +250,34 @@ class FrameState
     /*
      * Pushes a synced slot that may have a known type.
      */
-    inline void pushSynced(JSValueType knownType, types::TypeSet *typeSet = NULL);
+    inline void pushSynced(JSValueType knownType);
 
     /*
      * Pushes a slot that has a known, synced type and payload.
      */
-    inline void pushSynced(JSValueType knownType, RegisterID reg, types::TypeSet *typeSet = NULL);
+    inline void pushSynced(JSValueType knownType, RegisterID reg);
 
     /*
      * Pushes a constant value.
      */
-    inline void push(const Value &v, types::TypeSet *typeSet = NULL);
+    inline void push(const Value &v);
 
     /*
      * Loads a value from memory and pushes it.
      */
-    inline void push(Address address, JSValueType knownType, types::TypeSet *typeSet = NULL);
+    inline void push(Address address, JSValueType knownType);
 
     /*
      * Pushes a known type and allocated payload onto the operation stack.
      */
-    inline void pushTypedPayload(JSValueType type, RegisterID payload, types::TypeSet *typeSet = NULL);
+    inline void pushTypedPayload(JSValueType type, RegisterID payload);
 
     /*
      * Pushes a type register and data register pair, converting to the specified
      * known type if necessary.  If the type is JSVAL_TYPE_DOUBLE, the registers
      * are converted into a floating point register, which is returned.
      */
-    inline FPRegisterID pushRegs(RegisterID type, RegisterID data, JSValueType knownType, types::TypeSet *typeSet);
+    inline FPRegisterID pushRegs(RegisterID type, RegisterID data, JSValueType knownType);
 
     /* Push a value which is definitely a double. */
     void pushDouble(FPRegisterID fpreg);
@@ -358,8 +358,8 @@ class FrameState
 
     // Pushes a copy of a slot (formal argument, local variable, or stack slot)
     // onto the operation stack.
-    void pushLocal(uint32 n, JSValueType knownType, types::TypeSet *typeSet);
-    void pushArg(uint32 n, JSValueType knownType, types::TypeSet *typeSet);
+    void pushLocal(uint32 n, JSValueType knownType);
+    void pushArg(uint32 n, JSValueType knownType);
     void pushCallee();
     void pushThis();
     inline void learnThisIsObject();
@@ -586,12 +586,9 @@ class FrameState
      * Stores the top stack slot back to a local or slot.  type indicates any known
      * type for the local/slot.
      */
-    void storeLocal(uint32 n, JSValueType type, types::TypeSet *typeSet,
-                    bool popGuaranteed = false, bool fixedType = false);
-    void storeArg(uint32 n, JSValueType type, types::TypeSet *typeSet,
-                  bool popGuaranteed = false);
-    void storeTop(FrameEntry *target, JSValueType type, types::TypeSet *typeSet,
-                  bool popGuaranteed);
+    void storeLocal(uint32 n, JSValueType type, bool popGuaranteed = false, bool fixedType = false);
+    void storeArg(uint32 n, JSValueType type, bool popGuaranteed = false);
+    void storeTop(FrameEntry *target, JSValueType type, bool popGuaranteed);
 
     /*
      * Restores state from a slow path.
@@ -669,6 +666,12 @@ class FrameState
      * Discards a FrameEntry, tricking the FS into thinking it's synced.
      */
     void discardFe(FrameEntry *fe);
+
+    /* Get a set with the possible types of a stack fe, or NULL. */
+    inline types::TypeSet *getTypeSet(FrameEntry *fe);
+
+    /* Mark a stack index as holding a particular type set. */
+    inline void learnTypeSet(unsigned slot, types::TypeSet *types);
 
     /*
      * Helper function. Tests if a slot's type is null. Condition must
@@ -985,6 +988,9 @@ class FrameState
 
     /* Vector of tracked slot indexes. */
     Tracker tracker;
+
+    /* Type sets for the stack contents. */
+    types::TypeSet **typeSets;
 
     /*
      * Register ownership state. This can't be used alone; to find whether an
