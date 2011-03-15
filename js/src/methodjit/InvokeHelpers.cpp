@@ -351,6 +351,9 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
     JSFunction *newfun = callee.getFunctionPrivate();
     JSScript *newscript = newfun->script();
 
+    bool newType = (flags & JSFRAME_CONSTRUCTING) && cx->typeInferenceEnabled() &&
+        types::UseNewType(cx, f.regs.fp->script(), f.regs.pc);
+
     if (argTypes && argc == newfun->nargs) {
         /*
          * Use the space of all possible types being passed at this callsite if there
@@ -407,10 +410,15 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
     if (newfun->isHeavyweight() && !js_GetCallObject(cx, newfp))
         return false;
 
-    /* If newscript was successfully compiled, run it. */
-    if (JITScript *jit = newscript->getJIT(newfp->isConstructing())) {
-        *pret = jit->invokeEntry;
-        return true;
+    /*
+     * If newscript was successfully compiled, run it. Skip for calls which
+     * will be constructing a new type object for 'this'.
+     */
+    if (!newType) {
+        if (JITScript *jit = newscript->getJIT(newfp->isConstructing())) {
+            *pret = jit->invokeEntry;
+            return true;
+        }
     }
 
     /* Otherwise, run newscript in the interpreter. */

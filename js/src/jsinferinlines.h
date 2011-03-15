@@ -187,6 +187,9 @@ TypeCompartment::checkPendingRecompiles(JSContext *cx)
     return true;
 }
 
+bool
+UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc);
+
 } } /* namespace js::types */
 
 /////////////////////////////////////////////////////////////////////

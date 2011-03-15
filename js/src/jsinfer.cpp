@@ -1713,6 +1713,40 @@ GetScriptConst(JSContext *cx, JSScript *script, const jsbytecode *pc)
     return script->getConst(index);
 }
 
+bool
+UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc)
+{
+    JS_ASSERT(cx->typeInferenceEnabled());
+
+    /*
+     * Make a heuristic guess at a use of JSOP_NEW that the constructed object
+     * should have a fresh type object. We do this when the NEW is immediately
+     * followed by a simple assignment to an object's .prototype field.
+     * This is designed to catch common patterns for subclassing in JS:
+     *
+     * function Super() { ... }
+     * function Sub1() { ... }
+     * function Sub2() { ... }
+     *
+     * Sub1.prototype = new Super();
+     * Sub2.prototype = new Super();
+     *
+     * Using distinct type objects for the particular prototypes of Sub1 and
+     * Sub2 lets us continue to distinguish the two subclasses and any extra
+     * properties added to those prototype objects.
+     */
+    if (JSOp(*pc) != JSOP_NEW)
+        return false;
+    pc += JSOP_NEW_LENGTH;
+    if (JSOp(*pc) == JSOP_SETPROP) {
+        jsid id = GetAtomId(cx, script, pc, 0);
+        if (id == id_prototype(cx))
+            return true;
+    }
+
+    return false;
+}
+
 void
 TypeCompartment::growPendingArray(JSContext *cx)
 {

@@ -2945,7 +2945,7 @@ js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *pro
 }
 
 JSObject *
-js_CreateThisForFunction(JSContext *cx, JSObject *callee)
+js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
 {
     Value protov;
     if (!callee->getProperty(cx,
@@ -2962,7 +2962,17 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee)
     } else {
         proto = NULL;
     }
-    return js_CreateThisForFunctionWithProto(cx, callee, proto);
+    JSObject *obj = js_CreateThisForFunctionWithProto(cx, callee, proto);
+    if (obj && newType) {
+        JS_ASSERT(cx->typeInferenceEnabled());
+        types::TypeObject *type = cx->newTypeObject("SpecializedThis", obj->getProto());
+        if (!type)
+            return NULL;
+        obj->setType(type);
+        if (!callee->getFunctionPrivate()->script()->typeSetThis(cx, (types::jstype) type))
+            return NULL;
+    }
+    return obj;
 }
 
 #ifdef JS_TRACER
