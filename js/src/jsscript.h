@@ -203,7 +203,7 @@ class Bindings {
     bool hasLocalNames() const { return countLocalNames() > 0; }
 
     /* Returns the shape lineage generated for these bindings. */
-    inline const js::Shape *lastShape() const;
+    inline js::Shape *lastShape() const;
 
     enum {
         /*
