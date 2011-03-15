@@ -87,6 +87,7 @@ FrameState::init()
 
     size_t totalBytes = sizeof(FrameEntry) * nentries +                     // entries[], w/ callee+this
                         sizeof(FrameEntry *) * nentries +                   // tracker.entries
+                        sizeof(types::TypeSet *) * script->nslots +         // typeSets
                         (eval
                          ? 0
                          : sizeof(JSPackedBool) * script->nslots) +         // closedVars[]
@@ -115,6 +116,9 @@ FrameState::init()
 
     tracker.entries = (FrameEntry **)cursor;
     cursor += sizeof(FrameEntry *) * nentries;
+
+    typeSets = (types::TypeSet **)cursor;
+    cursor += sizeof(types::TypeSet *) * script->nslots;
 
     if (!eval) {
         if (script->nslots) {
@@ -738,7 +742,7 @@ FrameState::discardForJoin(jsbytecode *target, uint32 stackDepth)
         if (reg.isReg()) {
             fe->data.setRegister(reg.reg());
         } else {
-            fe->setType(JSVAL_TYPE_DOUBLE, NULL);
+            fe->setType(JSVAL_TYPE_DOUBLE);
             fe->data.setFPRegister(reg.fpreg());
         }
 
@@ -748,6 +752,8 @@ FrameState::discardForJoin(jsbytecode *target, uint32 stackDepth)
     }
 
     sp = spBase + stackDepth;
+
+    PodZero(typeSets, stackDepth);
 
     return true;
 }
@@ -1623,7 +1629,7 @@ FrameState::pushDouble(FPRegisterID fpreg)
 {
     FrameEntry *fe = rawPush();
     fe->resetUnsynced();
-    fe->setType(JSVAL_TYPE_DOUBLE, NULL);
+    fe->setType(JSVAL_TYPE_DOUBLE);
     fe->data.setFPRegister(fpreg);
     regstate(fpreg).associate(fe, RematInfo::DATA);
 }
@@ -1677,7 +1683,7 @@ FrameState::ensureDouble(FrameEntry *fe)
 
     forgetAllRegs(fe);
     fe->resetUnsynced();
-    fe->setType(JSVAL_TYPE_DOUBLE, NULL);
+    fe->setType(JSVAL_TYPE_DOUBLE);
     fe->data.setFPRegister(fpreg);
     regstate(fpreg).associate(fe, RematInfo::DATA);
 
@@ -1695,7 +1701,7 @@ FrameState::pushCopyOf(uint32 index)
         fe->setConstant(Jsvalify(backing->getValue()));
     } else {
         if (backing->isTypeKnown())
-            fe->setType(backing->getKnownType(), backing->getTypeSet());
+            fe->setType(backing->getKnownType());
         else
             fe->type.invalidate();
         fe->data.invalidate();
@@ -1903,8 +1909,7 @@ FrameState::hasOnlyCopy(FrameEntry *backing, FrameEntry *fe)
 }
 
 void
-FrameState::storeLocal(uint32 n, JSValueType type, types::TypeSet *typeSet,
-                       bool popGuaranteed, bool fixedType)
+FrameState::storeLocal(uint32 n, JSValueType type, bool popGuaranteed, bool fixedType)
 {
     FrameEntry *local = getLocal(n);
 
@@ -1914,7 +1919,7 @@ FrameState::storeLocal(uint32 n, JSValueType type, types::TypeSet *typeSet,
         return;
     }
 
-    storeTop(local, type, typeSet, popGuaranteed);
+    storeTop(local, type, popGuaranteed);
 
     if (activeLoop)
         local->lastLoop = activeLoop->head;
@@ -1930,7 +1935,7 @@ FrameState::storeLocal(uint32 n, JSValueType type, types::TypeSet *typeSet,
 }
 
 void
-FrameState::storeArg(uint32 n, JSValueType type, types::TypeSet *typeSet, bool popGuaranteed)
+FrameState::storeArg(uint32 n, JSValueType type, bool popGuaranteed)
 {
     // Note that args are always immediately synced, because they can be
     // aliased (but not written to) via f.arguments.
@@ -1942,7 +1947,7 @@ FrameState::storeArg(uint32 n, JSValueType type, types::TypeSet *typeSet, bool p
         return;
     }
 
-    storeTop(arg, type, typeSet, popGuaranteed);
+    storeTop(arg, type, popGuaranteed);
 
     if (activeLoop)
         arg->lastLoop = activeLoop->head;
@@ -1965,10 +1970,13 @@ FrameState::forgetEntry(FrameEntry *fe)
     } else {
         forgetAllRegs(fe);
     }
+
+    if (fe >= sp)
+        typeSets[fe - spBase] = NULL;
 }
 
 void
-FrameState::storeTop(FrameEntry *target, JSValueType type, types::TypeSet *typeSet, bool popGuaranteed)
+FrameState::storeTop(FrameEntry *target, JSValueType type, bool popGuaranteed)
 {
     /* Detect something like (x = x) which is a no-op. */
     FrameEntry *top = peek(-1);
@@ -2015,7 +2023,7 @@ FrameState::storeTop(FrameEntry *target, JSValueType type, types::TypeSet *typeS
             target->setNotCopied();
             target->setCopyOf(backing);
             if (backing->isTypeKnown())
-                target->setType(backing->getKnownType(), backing->getTypeSet());
+                target->setType(backing->getKnownType());
             else
                 target->type.invalidate();
             target->data.invalidate();
@@ -2074,7 +2082,7 @@ FrameState::storeTop(FrameEntry *target, JSValueType type, types::TypeSet *typeS
             regstate(fpreg).reassociate(target);
         }
 
-        target->setType(JSVAL_TYPE_DOUBLE, NULL);
+        target->setType(JSVAL_TYPE_DOUBLE);
     } else {
         /*
          * Move the backing store down - we spill registers here, but we could be
@@ -2086,7 +2094,7 @@ FrameState::storeTop(FrameEntry *target, JSValueType type, types::TypeSet *typeS
 
         if (type == JSVAL_TYPE_UNKNOWN) {
             if (backing->isTypeKnown()) {
-                target->setType(backing->getKnownType(), backing->getTypeSet());
+                target->setType(backing->getKnownType());
             } else {
                 RegisterID reg = tempRegForType(backing);
                 target->type.setRegister(reg);
@@ -2103,7 +2111,7 @@ FrameState::storeTop(FrameEntry *target, JSValueType type, types::TypeSet *typeS
             JS_ASSERT_IF(backing->isTypeKnown(), backing->isType(type));
             if (!backing->isTypeKnown())
                 learnType(backing, type);
-            target->setType(type, typeSet);
+            target->setType(type);
         } else {
             FPRegisterID fpreg = allocFPReg();
             syncFe(backing);
@@ -2111,8 +2119,8 @@ FrameState::storeTop(FrameEntry *target, JSValueType type, types::TypeSet *typeS
 
             forgetAllRegs(backing);
 
-            backing->setType(JSVAL_TYPE_DOUBLE, NULL);
-            target->setType(JSVAL_TYPE_DOUBLE, NULL);
+            backing->setType(JSVAL_TYPE_DOUBLE);
+            target->setType(JSVAL_TYPE_DOUBLE);
             target->data.setFPRegister(fpreg);
             regstate(fpreg).associate(target, RematInfo::DATA);
         }
@@ -2143,7 +2151,7 @@ FrameState::shimmy(uint32 n)
 {
     JS_ASSERT(sp - n >= spBase);
     int32 depth = 0 - int32(n);
-    storeTop(peek(depth - 1), JSVAL_TYPE_UNKNOWN, NULL, true);
+    storeTop(peek(depth - 1), JSVAL_TYPE_UNKNOWN, true);
     popn(n);
 }
 
@@ -2152,7 +2160,7 @@ FrameState::shift(int32 n)
 {
     JS_ASSERT(n < 0);
     JS_ASSERT(sp + n - 1 >= spBase);
-    storeTop(peek(n - 1), JSVAL_TYPE_UNKNOWN, NULL, true);
+    storeTop(peek(n - 1), JSVAL_TYPE_UNKNOWN, true);
     pop();
 }
 

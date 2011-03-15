@@ -190,6 +190,8 @@ FrameState::pop()
         return;
 
     forgetAllRegs(fe);
+
+    typeSets[fe - spBase] = NULL;
 }
 
 inline void
@@ -223,45 +225,46 @@ FrameState::rawPush()
     if (!sp->isTracked())
         addToTracker(sp);
 
+    typeSets[sp - spBase] = NULL;
+
     return sp++;
 }
 
 inline void
-FrameState::push(const Value &v, types::TypeSet *typeSet)
+FrameState::push(const Value &v)
 {
     FrameEntry *fe = rawPush();
     fe->setConstant(Jsvalify(v));
-    fe->typeSet = typeSet;
 }
 
 inline void
-FrameState::pushSynced(JSValueType type, types::TypeSet *typeSet)
+FrameState::pushSynced(JSValueType type)
 {
     FrameEntry *fe = rawPush();
 
     fe->resetSynced();
     if (type != JSVAL_TYPE_UNKNOWN) {
-        fe->setType(type, typeSet);
+        fe->setType(type);
         if (type == JSVAL_TYPE_DOUBLE)
             masm.ensureInMemoryDouble(addressOf(fe));
     }
 }
 
 inline void
-FrameState::pushSynced(JSValueType type, RegisterID reg, types::TypeSet *typeSet)
+FrameState::pushSynced(JSValueType type, RegisterID reg)
 {
     FrameEntry *fe = rawPush();
 
     fe->resetUnsynced();
     fe->type.sync();
     fe->data.sync();
-    fe->setType(type, typeSet);
+    fe->setType(type);
     fe->data.setRegister(reg);
     regstate(reg).associate(fe, RematInfo::DATA);
 }
 
 inline void
-FrameState::push(Address address, JSValueType knownType, types::TypeSet *typeSet)
+FrameState::push(Address address, JSValueType knownType)
 {
     if (knownType == JSVAL_TYPE_DOUBLE) {
         FPRegisterID fpreg = allocFPReg();
@@ -288,7 +291,7 @@ FrameState::push(Address address, JSValueType knownType, types::TypeSet *typeSet
         if (free)
             freeRegs.putReg(address.base);
         masm.loadPayload(address, dataReg);
-        pushTypedPayload(knownType, dataReg, typeSet);
+        pushTypedPayload(knownType, dataReg);
         return;
     }
 
@@ -306,11 +309,11 @@ FrameState::push(Address address, JSValueType knownType, types::TypeSet *typeSet
     masm.loadPayload(address, dataReg);
 #endif
 
-    pushRegs(typeReg, dataReg, knownType, typeSet);
+    pushRegs(typeReg, dataReg, knownType);
 }
 
 inline JSC::MacroAssembler::FPRegisterID
-FrameState::pushRegs(RegisterID type, RegisterID data, JSValueType knownType, types::TypeSet *typeSet)
+FrameState::pushRegs(RegisterID type, RegisterID data, JSValueType knownType)
 {
     JS_ASSERT(!freeRegs.hasReg(type) && !freeRegs.hasReg(data));
 
@@ -334,12 +337,12 @@ FrameState::pushRegs(RegisterID type, RegisterID data, JSValueType knownType, ty
     }
 
     freeReg(type);
-    pushTypedPayload(knownType, data, typeSet);
+    pushTypedPayload(knownType, data);
     return Registers::FPConversionTemp;
 }
 
 inline void
-FrameState::pushTypedPayload(JSValueType type, RegisterID payload, types::TypeSet *typeSet)
+FrameState::pushTypedPayload(JSValueType type, RegisterID payload)
 {
     JS_ASSERT(type != JSVAL_TYPE_DOUBLE);
     JS_ASSERT(!freeRegs.hasReg(payload));
@@ -347,7 +350,7 @@ FrameState::pushTypedPayload(JSValueType type, RegisterID payload, types::TypeSe
     FrameEntry *fe = rawPush();
 
     fe->resetUnsynced();
-    fe->setType(type, typeSet);
+    fe->setType(type);
     fe->data.setRegister(payload);
     regstate(payload).associate(fe, RematInfo::DATA);
 }
@@ -390,7 +393,7 @@ FrameState::pushInt32(RegisterID payload)
 inline void
 FrameState::pushInitializerObject(RegisterID payload, bool array, JSObject *baseobj)
 {
-    pushTypedPayload(JSVAL_TYPE_OBJECT, payload, NULL);
+    pushTypedPayload(JSVAL_TYPE_OBJECT, payload);
 
     FrameEntry *fe = peek(-1);
     fe->initArray = array;
@@ -827,13 +830,27 @@ FrameState::forgetType(FrameEntry *fe)
     fe->type.setMemory();
 }
 
+inline types::TypeSet *
+FrameState::getTypeSet(FrameEntry *fe)
+{
+    JS_ASSERT(fe >= spBase && fe < sp);
+    return typeSets[fe - spBase];
+}
+
+inline void
+FrameState::learnTypeSet(unsigned slot, types::TypeSet *types)
+{
+    if (slot < unsigned(sp - spBase))
+        typeSets[slot] = types;
+}
+
 inline void
 FrameState::learnType(FrameEntry *fe, JSValueType type, bool unsync)
 {
     JS_ASSERT(!fe->isType(JSVAL_TYPE_DOUBLE));
     if (fe->type.inRegister())
         forgetReg(fe->type.reg());
-    fe->setType(type, NULL);
+    fe->setType(type);
     if (unsync)
         fe->type.unsync();
 }
@@ -849,7 +866,6 @@ FrameState::learnType(FrameEntry *fe, JSValueType type, RegisterID data)
 
     fe->type.setConstant();
     fe->knownType = type;
-    fe->typeSet = NULL;
 
     fe->data.setRegister(data);
     regstate(data).associate(fe, RematInfo::DATA);
@@ -994,7 +1010,7 @@ FrameState::getCallee()
     if (!callee_->isTracked()) {
         addToTracker(callee_);
         callee_->resetSynced();
-        callee_->setType(JSVAL_TYPE_OBJECT, NULL);
+        callee_->setType(JSVAL_TYPE_OBJECT);
     }
     return callee_;
 }
@@ -1062,7 +1078,7 @@ FrameState::syncAt(int32 n)
 }
 
 inline void
-FrameState::pushLocal(uint32 n, JSValueType knownType, types::TypeSet *typeSet)
+FrameState::pushLocal(uint32 n, JSValueType knownType)
 {
     FrameEntry *fe = getLocal(n);
     if (!isClosedVar(n)) {
@@ -1080,12 +1096,12 @@ FrameState::pushLocal(uint32 n, JSValueType knownType, types::TypeSet *typeSet)
             JS_ASSERT(fe->data.inMemory());
         }
 #endif
-        push(addressOf(fe), knownType, typeSet);
+        push(addressOf(fe), knownType);
     }
 }
 
 inline void
-FrameState::pushArg(uint32 n, JSValueType knownType, types::TypeSet *typeSet)
+FrameState::pushArg(uint32 n, JSValueType knownType)
 {
     FrameEntry *fe = getArg(n);
     if (!isClosedArg(n)) {
@@ -1096,7 +1112,7 @@ FrameState::pushArg(uint32 n, JSValueType knownType, types::TypeSet *typeSet)
         if (fe->isTracked())
             JS_ASSERT(fe->data.inMemory());
 #endif
-        push(addressOf(fe), knownType, typeSet);
+        push(addressOf(fe), knownType);
     }
 }
 
@@ -1190,13 +1206,12 @@ FrameState::giveOwnRegs(FrameEntry *fe)
     RegisterID data = copyDataIntoReg(fe);
     if (fe->isTypeKnown()) {
         JSValueType type = fe->getKnownType();
-        types::TypeSet *typeSet = fe->getTypeSet();
         pop();
-        pushTypedPayload(type, data, typeSet);
+        pushTypedPayload(type, data);
     } else {
         RegisterID type = copyTypeIntoReg(fe);
         pop();
-        pushRegs(type, data, JSVAL_TYPE_UNKNOWN, NULL);
+        pushRegs(type, data, JSVAL_TYPE_UNKNOWN);
     }
 }
 

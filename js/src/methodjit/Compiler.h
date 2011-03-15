@@ -429,7 +429,6 @@ class Compiler : public BaseCompiler
     bool mayPushUndefined(uint32 pushed);
     types::TypeSet *argTypeSet(uint32 arg);
     types::TypeSet *localTypeSet(uint32 local);
-    types::TypeSet *pushedTypeSet(uint32 pushed);
     bool monitored(jsbytecode *pc);
     void markPushedOverflow();
     void markLocalOverflow(uint32 local);
@@ -496,7 +495,7 @@ class Compiler : public BaseCompiler
     bool jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index);
     bool jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index);
     void jsop_eleminc(JSOp op, VoidStub);
-    void jsop_getgname(uint32 index, JSValueType type, types::TypeSet *typeSet);
+    void jsop_getgname(uint32 index, JSValueType type);
     void jsop_getgname_slow(uint32 index);
     void jsop_callgname_epilogue();
     void jsop_setgname(JSAtom *atom, bool usePropertyCache);
@@ -506,7 +505,7 @@ class Compiler : public BaseCompiler
     void jsop_getelem_slow();
     void jsop_callelem_slow();
     void jsop_unbrand();
-    bool jsop_getprop(JSAtom *atom, JSValueType type, types::TypeSet *typeSet,
+    bool jsop_getprop(JSAtom *atom, JSValueType type,
                       bool typeCheck = true, bool usePropCache = true);
     bool jsop_length();
     bool jsop_setprop(JSAtom *atom, bool usePropCache = true);
@@ -517,7 +516,7 @@ class Compiler : public BaseCompiler
     bool jsop_callprop_str(JSAtom *atom);
     bool jsop_callprop_generic(JSAtom *atom);
     bool jsop_instanceof();
-    void jsop_name(JSAtom *atom, JSValueType type, types::TypeSet *typeSet);
+    void jsop_name(JSAtom *atom, JSValueType type);
     bool jsop_xname(JSAtom *atom);
     void enterBlock(JSObject *obj);
     void leaveBlock();
