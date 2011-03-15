@@ -113,9 +113,9 @@ struct ArenaHeader {
     Arena<FreeCell> *next;
     FreeCell        *freeList;
     unsigned        thingKind;
-    bool            isUsed;
-    size_t          thingSize;
 #ifdef DEBUG
+    size_t          thingSize;
+    bool            isUsed;
     bool            hasFreeThings;
 #endif
 };
@@ -304,7 +304,9 @@ EmptyArenaLists::getNext(JSCompartment *comp, unsigned thingKind) {
     if (arena) {
         JS_ASSERT(arena->header()->isUsed == false);
         JS_ASSERT(arena->header()->thingSize == sizeof(T));
+#ifdef DEBUG
         arena->header()->isUsed = true;
+#endif
         arena->header()->thingKind = thingKind;
         arena->header()->compartment = comp;
         return arena;
@@ -433,7 +435,7 @@ Arena<T>::getAlignedThing(void *thing)
 {
     jsuword start = reinterpret_cast<jsuword>(&t.things[0]);
     jsuword offset = reinterpret_cast<jsuword>(thing) - start;
-    offset -= offset % aheader.thingSize;
+    offset -= offset % sizeof(T);
     return reinterpret_cast<T *>(start + offset);
 }
 

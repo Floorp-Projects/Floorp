@@ -170,8 +170,6 @@ Arena<T>::init(JSCompartment *compartment, unsigned thingKind)
     aheader.compartment = compartment;
     aheader.thingKind = thingKind;
     aheader.freeList = &t.things[0].cell;
-    aheader.thingSize = sizeof(T);
-    aheader.isUsed = true;
     JS_ASSERT(sizeof(T) == sizeof(ThingOrCell<T>));
     ThingOrCell<T> *thing = &t.things[0];
     ThingOrCell<T> *last = &t.things[JS_ARRAY_LENGTH(t.things) - 1];
@@ -181,6 +179,8 @@ Arena<T>::init(JSCompartment *compartment, unsigned thingKind)
     }
     last->cell.link = NULL;
 #ifdef DEBUG
+    aheader.thingSize = sizeof(T);
+    aheader.isUsed = true;
     aheader.hasFreeThings = true;
 #endif
 }
@@ -211,16 +211,15 @@ template<typename T>
 inline ConservativeGCTest
 Arena<T>::mark(T *thing, JSTracer *trc)
 {
-    JS_ASSERT(sizeof(T) == aheader.thingSize);
-
     T *alignedThing = getAlignedThing(thing);
 
     if (alignedThing > &t.things[ThingsPerArena-1].t || alignedThing < &t.things[0].t)
         return CGCT_NOTARENA;
 
-    if (!aheader.isUsed || inFreeList(alignedThing))
+    if (!aheader.compartment || inFreeList(alignedThing))
         return CGCT_NOTLIVE;
 
+    JS_ASSERT(sizeof(T) == aheader.thingSize);
     JS_SET_TRACING_NAME(trc, "machine stack");
     Mark(trc, alignedThing);
 
@@ -290,11 +289,17 @@ Chunk::init(JSRuntime *rt)
     Arena<FreeCell> *last = &arenas[JS_ARRAY_LENGTH(arenas) - 1];
     while (arena < last) {
         arena->header()->next = arena + 1;
+        arena->header()->compartment = NULL;
+#ifdef DEBUG
         arena->header()->isUsed = false;
+#endif
         ++arena;
     }
     last->header()->next = NULL;
+    last->header()->compartment = NULL;
+#ifdef DEBUG
     last->header()->isUsed = false;
+#endif
     info.numFree = ArenasPerChunk;
 }
 
@@ -353,7 +358,10 @@ Chunk::releaseArena(Arena<T> *arena)
     rt->gcBytes -= sizeof(Arena<T>);
     comp->gcBytes -= sizeof(Arena<T>);
     info.emptyArenaLists.insert((Arena<Cell> *)arena);
+#ifdef DEBUG
     arena->header()->isUsed = false;
+#endif
+    arena->header()->compartment = NULL;
     ++info.numFree;
     if (unused())
         info.age = 0;
@@ -631,9 +639,6 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w, uint32 &thingKind)
         return CGCT_NOTARENA;
 
     ArenaHeader *aheader = cell->arena()->header();
-
-    if (!aheader->isUsed)
-        return CGCT_FREEARENA;
 
     ConservativeGCTest test;
     thingKind = aheader->thingKind;
@@ -2726,7 +2731,7 @@ GCUntilDone(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIM
      * We should not be depending on cx->compartment in the GC, so set it to
      * NULL to look for violations.
      */
-    SwitchToCompartment(cx, (JSCompartment *)NULL);
+    SwitchToCompartment sc(cx, (JSCompartment *)NULL);
 
     JS_ASSERT(!rt->gcCurrentCompartment);
     rt->gcCurrentCompartment = comp;
@@ -2840,6 +2845,18 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 
 namespace js {
 namespace gc {
+
+void
+MarkObjectSlots(JSTracer *trc, JSObject *obj)
+{
+    JS_ASSERT(obj->slotSpan() <= obj->numSlots());
+    uint32 nslots = obj->slotSpan();
+    for (uint32 i = 0; i != nslots; ++i) {
+        const Value &v = obj->getSlot(i);
+        JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
+        MarkValueRaw(trc, v);
+    }
+}
 
 bool
 SetTypeCheckingForCycles(JSContext *cx, JSObject *obj, types::TypeObject *type)
