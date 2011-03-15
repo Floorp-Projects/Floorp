@@ -90,14 +90,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=616590
     mEditor: null
   };
 
-  var progress;
+  var progress, progressListener;
 
   function runTest() {
     var editorElement = document.getElementById("editor");
     editorElement.makeEditable("htmlmail", true);
     var docShell = editorElement.boxObject.QueryInterface(Components.interfaces.nsIEditorBoxObject).docShell;
     progress = docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);
-    var progressListener = new EditorContentListener(editorElement);
+    progressListener = new EditorContentListener(editorElement);
     progress.addProgressListener(progressListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
     editorElement.setAttribute("src", "data:text/html,");
   }
