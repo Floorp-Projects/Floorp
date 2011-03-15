@@ -26,6 +26,14 @@ function testCharacterCount(aIDs, aCount)
   }
 }
 
+/**
+ * Test text between two given offsets
+ *
+ * @param aIDs          [in] an array of accessible IDs to test
+ * @param aStartOffset  [in] the start offset within the text to test
+ * @param aEndOffset    [in] the end offset up to which the text is tested
+ * @param aText         [in] the expected result from the test
+ */
 function testText(aIDs, aStartOffset, aEndOffset, aText)
 {
   for (var i = 0; i < aIDs.length; i++)
@@ -34,6 +42,34 @@ function testText(aIDs, aStartOffset, aEndOffset, aText)
     try {
       is(acc.getText(aStartOffset, aEndOffset), aText,
          "getText: wrong text between start and end offsets '" + aStartOffset +
+         "', '" + aEndOffset + " for '" + prettyName(aIDs[i]) + "'");
+    } catch (e) {
+      ok(false,
+         "getText fails between start and end offsets '" + aStartOffset +
+         "', '" + aEndOffset + " for '" + prettyName(aIDs[i]) + "'");
+    }
+  }
+}
+
+/**
+ * Test password text between two given offsets
+ *
+ * @param aIDs          [in] an array of accessible IDs to test
+ * @param aStartOffset  [in] the start offset within the text to test
+ * @param aEndOffset    [in] the end offset up to which the text is tested
+ * @param aText         [in] the expected result from the test
+ *
+ * @note  All this function does is test that getText doe snot expose the
+ *        password text itself, but something else.
+ */
+function testPasswordText(aIDs, aStartOffset, aEndOffset, aText)
+{
+  for (var i = 0; i < aIDs.length; i++)
+  {
+    var acc = getAccessible(aIDs[i], nsIAccessibleText);
+    try {
+      isnot(acc.getText(aStartOffset, aEndOffset), aText,
+         "getText: plain text between start and end offsets '" + aStartOffset +
          "', '" + aEndOffset + " for '" + prettyName(aIDs[i]) + "'");
     } catch (e) {
       ok(false,

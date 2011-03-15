@@ -112,9 +112,9 @@ nsMIMEInfoAndroid::GetMimeInfoForFileExt(const nsACString& aFileExt,
     mozilla::AndroidBridge::Bridge()->
       GetMimeTypeFromExtensions(aFileExt, mimeType);
   
-  nsresult rv = GetMimeInfoForMimeType(mimeType, aMimeInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return (*aMimeInfo)->SetPrimaryExtension(aFileExt);
+  PRBool found = GetMimeInfoForMimeType(mimeType, aMimeInfo);
+  (*aMimeInfo)->SetPrimaryExtension(aFileExt);
+  return found;
 }
 
 /**
