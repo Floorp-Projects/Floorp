@@ -603,13 +603,22 @@ class PreserveCompartment {
 
 class SwitchToCompartment : public PreserveCompartment {
   public:
-    SwitchToCompartment(JSContext *cx, JSCompartment *newCompartment) : PreserveCompartment(cx) {
+    SwitchToCompartment(JSContext *cx, JSCompartment *newCompartment
+                        JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : PreserveCompartment(cx)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         cx->compartment = newCompartment;
     }
 
-    SwitchToCompartment(JSContext *cx, JSObject *target) : PreserveCompartment(cx) {
+    SwitchToCompartment(JSContext *cx, JSObject *target JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : PreserveCompartment(cx)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         cx->compartment = target->getCompartment();
     }
+
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class AssertCompartmentUnchanged {

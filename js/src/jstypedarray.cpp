@@ -1117,7 +1117,8 @@ class TypedArrayTemplate
         uint32 length = end - begin;
 
         JS_ASSERT(begin < UINT32_MAX / sizeof(NativeType));
-        uint32 byteOffset = begin * sizeof(NativeType);
+        JS_ASSERT(UINT32_MAX - begin * sizeof(NativeType) >= tarray->byteOffset);
+        uint32 byteOffset = tarray->byteOffset + begin * sizeof(NativeType);
 
         return createTypedArray(cx, bufobj, byteOffset, length);
     }

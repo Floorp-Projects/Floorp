@@ -1,6 +1,7 @@
 url-prefix ../../jsreftest.html?test=js1_8_5/extensions/
 script typedarray.js
 script typedarray-prototype.js
+script typedarray-subarray-of-subarray.js
 skip-if(!xulRuntime.shell) script worker-error.js  # these tests sometimes hang in browser, bug 559954, bug 562333
 skip-if(!xulRuntime.shell) script worker-error-propagation.js
 skip-if(!xulRuntime.shell) script worker-fib.js
