@@ -4572,7 +4572,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 #endif
 
-        fun = (JSFunction *) pn->pn_funbox->object;
+        fun = pn->pn_funbox->function();
         JS_ASSERT(FUN_INTERPRETED(fun));
         if (fun->u.i.script) {
             /*
