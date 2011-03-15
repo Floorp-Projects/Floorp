@@ -148,8 +148,12 @@ function is_approx(actual, expected, fuzz, description) {
 }
 
 function verifyTest(n) {
+  let assumedWidth = 480;
+  if (!Util.isPortrait())
+    assumedWidth = 800;
+
   return function() {
-    is(window.innerWidth, 800, "Test assumes window width is 800px");
+    is(window.innerWidth, assumedWidth, "Test assumes window width is " + assumedWidth + "px");
 
     // Do sanity tests
     let uri = currentTab.browser.currentURI.spec;

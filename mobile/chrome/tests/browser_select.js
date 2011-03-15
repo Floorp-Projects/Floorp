@@ -35,14 +35,11 @@ function onPageReady() {
 function onUIReady() {
   let selectui = document.getElementById("select-container");
   is(selectui.hidden, false, "Select UI should be open");
-  is(Elements.contentNavigator.hidden, false, "Content Navigator should be visible");
 
-  let doneButton = document.getElementById("select-buttons-done");
-  doneButton.click();
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
 
   // Close our tab when finished
   Browser.closeTab(new_tab);
-  is(Elements.contentNavigator.hidden, true, "Content Navigator should be hidden");
   is(selectui.hidden, true, "Select UI should be hidden");
 
   // We must finialize the tests

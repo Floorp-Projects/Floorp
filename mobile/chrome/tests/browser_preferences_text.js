@@ -81,9 +81,7 @@ gTests.push({
 
     is(prefs.selectContainer.hidden, false, "Homepage select dialog must be visible");
 
-    let doneButton = expected.doneButton;
-    is(prefs.doneButton.tagName, doneButton.tagName, "The type of the Done input is button");
-    prefs.doneButton.click();
+    EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
     is(prefs.selectContainer.hidden, true, "Homepage select dialog must be closed");
 
     let content = expected.contentRegion;
