@@ -1917,7 +1917,7 @@ nsEventStatus nsWindow::OnTouchEvent(QTouchEvent *event, PRBool &handled)
     if (touchPoints.count() > 0) {
         // Remember start touch point in order to use it for
         // distance calculation in NS_SIMPLE_GESTURE_MAGNIFY_UPDATE
-        mPinchEvent.touchPoint = touchPoints.at(0).scenePos();
+        mPinchEvent.touchPoint = touchPoints.at(0).pos();
     }
 
     return nsEventStatus_eIgnore;
