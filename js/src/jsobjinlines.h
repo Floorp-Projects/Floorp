@@ -59,6 +59,7 @@
 #include "jscntxt.h"
 #include "jsnum.h"
 #include "jsscopeinlines.h"
+#include "jsscriptinlines.h"
 #include "jsstr.h"
 
 #include "jsfuninlines.h"
@@ -139,6 +140,59 @@ JSObject::finalize(JSContext *cx)
     js::Probes::finalizeObject(this);
 
     finish(cx);
+}
+
+/* 
+ * Initializer for Call objects for functions and eval frames. Set class,
+ * parent, map, and shape, and allocate slots.
+ */
+inline void
+JSObject::initCall(JSContext *cx, const js::Bindings *bindings, JSObject *parent)
+{
+    init(cx, &js_CallClass, NULL, parent, NULL, false);
+    map = bindings->lastShape();
+
+    /*
+     * If |bindings| is for a function that has extensible parents, that means
+     * its Call should have its own shape; see js::Bindings::extensibleParents.
+     */
+    if (bindings->extensibleParents())
+        setOwnShape(js_GenerateShape(cx));
+    else
+        objShape = map->shape;
+}
+
+/*
+ * Initializer for cloned block objects. Set class, prototype, frame, map, and
+ * shape.
+ */
+inline void
+JSObject::initClonedBlock(JSContext *cx, JSObject *proto, JSStackFrame *frame)
+{
+    init(cx, &js_BlockClass, proto, NULL, frame, false);
+
+    /* Cloned blocks copy their prototype's map; it had better be shareable. */
+    JS_ASSERT(!proto->inDictionaryMode() || proto->lastProp->frozen());
+    map = proto->map;
+
+    /*
+     * If the prototype has its own shape, that means the clone should, too; see
+     * js::Bindings::extensibleParents.
+     */
+    if (proto->hasOwnShape())
+        setOwnShape(js_GenerateShape(cx));
+    else
+        objShape = map->shape;
+}
+
+/* 
+ * Mark a compile-time block as OWN_SHAPE, indicating that its run-time clones
+ * also need unique shapes. See js::Bindings::extensibleParents.
+ */
+inline void
+JSObject::setBlockOwnShape(JSContext *cx) {
+    JS_ASSERT(isStaticBlock());
+    setOwnShape(js_GenerateShape(cx));
 }
 
 /*
