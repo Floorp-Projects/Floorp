@@ -984,6 +984,12 @@ struct JSFunctionBox : public JSObjectBox
      */
     bool inAnyDynamicScope() const;
 
+    /* 
+     * Must this function's descendants be marked as having an extensible
+     * ancestor?
+     */
+    bool scopeIsExtensible() const;
+
     /*
      * Unbrand an object being initialized or constructed if any method cannot
      * be joined to one compiler-created null closure shared among N different
@@ -1113,6 +1119,7 @@ struct Parser : private js::AutoGCRooter
     bool analyzeFunctions(JSTreeContext *tc);
     void cleanFunctionList(JSFunctionBox **funbox);
     bool markFunArgs(JSFunctionBox *funbox);
+    void markExtensibleScopeDescendants(JSFunctionBox *funbox, bool hasExtensibleParent);
     void setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags);
 
     void trace(JSTracer *trc);

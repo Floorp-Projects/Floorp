@@ -3287,9 +3287,8 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
     JSStackFrame *priv = js_FloatingFrameIfGenerator(cx, fp);
 
     /* The caller sets parent on its own. */
-    clone->init(cx, &js_BlockClass, proto, NULL, priv, false);
+    clone->initClonedBlock(cx, proto, priv);
 
-    clone->setMap(proto->map);
     if (!clone->ensureInstanceReservedSlots(cx, count + 1))
         return NULL;
 

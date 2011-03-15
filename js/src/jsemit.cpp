@@ -1956,6 +1956,15 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
         blockObj->setSlot(slot, BooleanValue(isClosed));
     }
 
+    /*
+     * If clones of this block will have any extensible parents, then the clones
+     * must get unique shapes; see the comments for js::Bindings::
+     * extensibleParents.
+     */
+    if ((cg->flags & TCF_FUN_EXTENSIBLE_SCOPE) ||
+        cg->bindings.extensibleParents())
+        blockObj->setBlockOwnShape(cx);
+
     return true;
 }
 

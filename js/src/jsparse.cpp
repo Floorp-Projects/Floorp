@@ -327,6 +327,12 @@ JSFunctionBox::inAnyDynamicScope() const
 }
 
 bool
+JSFunctionBox::scopeIsExtensible() const
+{
+    return tcflags & TCF_FUN_EXTENSIBLE_SCOPE;
+}
+
+bool
 JSFunctionBox::shouldUnbrand(uintN methods, uintN slowMethods) const
 {
     if (slowMethods != 0) {
@@ -2047,6 +2053,7 @@ Parser::analyzeFunctions(JSTreeContext *tc)
         return true;
     if (!markFunArgs(tc->functionList))
         return false;
+    markExtensibleScopeDescendants(tc->functionList, false);
     setFunctionKinds(tc->functionList, &tc->flags);
     return true;
 }
@@ -2658,6 +2665,38 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
     }
 
 #undef FUN_METER
+}
+
+/*
+ * Walk the JSFunctionBox tree looking for functions whose call objects may
+ * acquire new bindings as they execute: non-strict functions that call eval,
+ * and functions that contain function statements (definitions not appearing
+ * within the top statement list, which don't take effect unless they are
+ * evaluated). Such call objects may acquire bindings that shadow variables
+ * defined in enclosing scopes, so any enclosed functions must have their
+ * bindings' extensibleParents flags set, and enclosed compiler-created blocks
+ * must have their OWN_SHAPE flags set; the comments for
+ * js::Bindings::extensibleParents explain why.
+ */
+void
+Parser::markExtensibleScopeDescendants(JSFunctionBox *funbox, bool hasExtensibleParent) 
+{
+    for (; funbox; funbox = funbox->siblings) {
+        /*
+         * It would be nice to use FUN_KIND(fun) here to recognize functions
+         * that will never consult their parent chains, and thus don't need
+         * their 'extensible parents' flag set. Filed as bug 619750. 
+         */
+
+        JS_ASSERT(!funbox->bindings.extensibleParents());
+        if (hasExtensibleParent)
+            funbox->bindings.setExtensibleParents();
+
+        if (funbox->kids) {
+            markExtensibleScopeDescendants(funbox->kids,
+                                           hasExtensibleParent || funbox->scopeIsExtensible());
+        }
+    }
 }
 
 const char js_argument_str[] = "argument";
@@ -3542,8 +3581,11 @@ Parser::statements()
              */
             if (tc->atBodyLevel())
                 pn->pn_xflags |= PNX_FUNCDEFS;
-            else
+            else {
                 tc->flags |= TCF_HAS_FUNCTION_STMT;
+                /* Function statements extend the Call object at runtime. */
+                tc->noteHasExtensibleScope();
+            }
         }
         pn->append(pn2);
     }
@@ -7689,6 +7731,12 @@ Parser::memberExpr(JSBool allowCallSyntax)
                     pn2->pn_op = JSOP_EVAL;
                     tc->noteCallsEval();
                     tc->flags |= TCF_FUN_HEAVYWEIGHT;
+                    /*
+                     * In non-strict mode code, direct calls to eval can add
+                     * variables to the call object.
+                     */
+                    if (!tc->inStrictMode())
+                        tc->noteHasExtensibleScope();
                 }
             } else if (pn->pn_op == JSOP_GETPROP) {
                 /* Select JSOP_FUNAPPLY given foo.apply(...). */

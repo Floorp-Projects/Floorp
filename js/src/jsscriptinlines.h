@@ -52,7 +52,8 @@ namespace js {
 
 inline
 Bindings::Bindings(JSContext *cx, EmptyShape *emptyCallShape)
-  : lastBinding(emptyCallShape), nargs(0), nvars(0), nupvars(0)
+  : lastBinding(emptyCallShape), nargs(0), nvars(0), nupvars(0),
+    hasExtensibleParents(false)
 {
 }
 
