@@ -515,6 +515,11 @@ struct JSObject : js::gc::Cell {
         setMap(const_cast<JSObjectMap *>(&JSObjectMap::sharedNonNative));
     }
 
+    /* Functions for setting up scope chain object maps and shapes. */
+    void initCall(JSContext *cx, const js::Bindings *bindings, JSObject *parent);
+    void initClonedBlock(JSContext *cx, JSObject *proto, JSStackFrame *priv);
+    void setBlockOwnShape(JSContext *cx);
+
     void deletingShapeChange(JSContext *cx, const js::Shape &shape);
     const js::Shape *methodShapeChange(JSContext *cx, const js::Shape &shape);
     bool methodShapeChange(JSContext *cx, uint32 slot);
