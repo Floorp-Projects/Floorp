@@ -52,7 +52,7 @@ NS_GFX_(void) ConvertYCbCrToRGB565(const uint8* y_buf,
 {
 #ifdef HAVE_YCBCR_TO_RGB565
   for (int i = 0; i < pic_height; i++) {
-    yv12_to_rgb565_neon((uint16*)rgb_buf + pic_width * i,
+    yv12_to_rgb565_neon((uint16*)(rgb_buf + rgb_pitch * i),
                          y_buf + y_pitch * i,
                          u_buf + uv_pitch * (i / 2),
                          v_buf + uv_pitch * (i / 2),

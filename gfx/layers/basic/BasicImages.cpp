@@ -129,6 +129,7 @@ protected:
   nsAutoArrayPtr<PRUint8>              mBuffer;
   nsCountedRef<nsMainThreadSurfaceRef> mSurface;
   gfxIntSize                           mScaleHint;
+  PRInt32                              mStride;
   gfxImageFormat                       mOffscreenFormat;
 };
 
@@ -158,8 +159,8 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
   gfxIntSize size(prescale ? mScaleHint.width : aData.mPicSize.width,
                   prescale ? mScaleHint.height : aData.mPicSize.height);
 
-  int bpp = gfxASurface::BytePerPixelFromFormat(format);
-  mBuffer = new PRUint8[size.width * size.height * bpp];
+  mStride = gfxASurface::FormatStrideForWidth(format, size.width);
+  mBuffer = new PRUint8[size.height * mStride];
   if (!mBuffer) {
     // out of memory
     return;
@@ -195,7 +196,7 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
                              size.height,
                              aData.mYStride,
                              aData.mCbCrStride,
-                             size.width*bpp,
+                             mStride,
                              type,
                              gfx::ROTATE_0,
                              gfx::FILTER_BILINEAR);
@@ -215,7 +216,7 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
                                 aData.mPicSize.height,
                                 aData.mYStride,
                                 aData.mCbCrStride,
-                                aData.mPicSize.width*bpp,
+                                mStride,
                                 type);
     } else { // format != gfxASurface::ImageFormatRGB16_565
       gfx::ConvertYCbCrToRGB32(aData.mYChannel,
@@ -228,7 +229,7 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
                                aData.mPicSize.height,
                                aData.mYStride,
                                aData.mCbCrStride,
-                               aData.mPicSize.width*bpp,
+                               mStride,
                                type);
     }
   }
@@ -261,10 +262,8 @@ BasicPlanarYCbCrImage::GetAsSurface()
   gfxASurface::gfxImageFormat format = GetOffscreenFormat();
 
   nsRefPtr<gfxImageSurface> imgSurface =
-      new gfxImageSurface(mBuffer, mSize,
-                          mSize.width * gfxASurface::BytePerPixelFromFormat(format),
-                          format);
-  if (!imgSurface) {
+      new gfxImageSurface(mBuffer, mSize, mStride, format);
+  if (!imgSurface || imgSurface->CairoStatus() != 0) {
     return nsnull;
   }
 
