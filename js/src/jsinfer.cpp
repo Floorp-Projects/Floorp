@@ -148,8 +148,6 @@ static bool InferSpewActive(SpewChannel channel)
         const char *env = getenv("INFERFLAGS");
         if (!env)
             return false;
-        if (strstr(env, "dynamic"))
-            active[ISpewDynamic] = true;
         if (strstr(env, "ops"))
             active[ISpewOps] = true;
         if (strstr(env, "result"))
@@ -1830,8 +1828,8 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
 
     AutoEnterTypeInference enter(cx);
 
-    InferSpew(ISpewDynamic, "MonitorResult: #%u:%05u: %s",
-              script->id(), offset, TypeString(type));
+    InferSpew(ISpewOps, "externalType: monitorResult #%u:%05u: %s",
+               script->id(), offset, TypeString(type));
 
     TypeResult *result = (TypeResult *) cx->calloc(sizeof(TypeResult));
     if (!result)
@@ -2027,7 +2025,7 @@ TypeCompartment::dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Valu
     if (!assignTypes || assignTypes->hasType(rvtype))
         return cx->compartment->types.checkPendingRecompiles(cx);
 
-    InferSpew(ISpewDynamic, "MonitorAssign: %s %s: %s",
+    InferSpew(ISpewOps, "externalType: monitorAssign %s %s: %s",
               object->name(), TypeIdString(id), TypeString(rvtype));
     assignTypes->addType(cx, rvtype);
 
@@ -2485,8 +2483,10 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
 
     *pprop = base;
 
-    InferSpew(ISpewOps, "addProperty: %s %s T%p own T%p",
-              name(), TypeIdString(id), &base->types, &base->ownTypes);
+    InferSpew(ISpewOps, "typeSet: T%p property %s %s",
+              &base->types, name(), TypeIdString(id));
+    InferSpew(ISpewOps, "typeSet: T%p own property %s %s",
+              &base->ownTypes, name(), TypeIdString(id));
 
     base->ownTypes.addBaseSubset(cx, this, &base->types);
 
@@ -2514,7 +2514,7 @@ TypeObject::markNotPacked(JSContext *cx, bool notDense)
     }
     isPackedArray = false;
 
-    InferSpew(ISpewDynamic, "%s: %s", notDense ? "NonDenseArray" : "NonPackedArray", name());
+    InferSpew(ISpewOps, "%s: %s", notDense ? "NonDenseArray" : "NonPackedArray", name());
 
     /* All constraints listening to changes in packed/dense status are on the element types. */
     TypeSet *elementTypes = getProperty(cx, JSID_VOID, false);
@@ -2738,8 +2738,10 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
 
     PodZero(pushed, defCount);
 
-    for (unsigned i = 0; i < defCount; i++)
+    for (unsigned i = 0; i < defCount; i++) {
         pushed[i].setIntermediate();
+        InferSpew(ISpewOps, "typeSet: T%p pushed%u #%u:%05u", &pushed[i], i, script->id(), offset);
+    }
 
     /* Add type constraints for the various opcodes. */
     switch (op) {
@@ -3864,7 +3866,7 @@ TypeScript::print(JSContext *cx, JSScript *script)
         printf("Eval");
     else
         printf("Main");
-    printf(" #%u:\n", script->id());
+    printf(" #%u %s (line %d):\n", script->id(), script->filename, script->lineno);
 
     printf("locals:");
     printf("\n    return:");
@@ -4026,14 +4028,14 @@ JSScript::makeVarTypes(JSContext *cx)
         return false;
 
 #ifdef DEBUG
-    InferSpew(js::types::ISpewOps, "varTypes: #%lu return T%p this T%p",
-              id(), returnTypes(), thisTypes());
+    InferSpew(js::types::ISpewOps, "typeSet: T%p return #%u", returnTypes(), id());
+    InferSpew(js::types::ISpewOps, "typeSet: T%p this #%u", thisTypes(), id());
     for (unsigned i = 0; i < nargs; i++)
-        InferSpew(js::types::ISpewOps, "    #%lu arg%lu T%p", id(), i, argTypes(i));
+        InferSpew(js::types::ISpewOps, "typeSet: T%p arg%u #%u", argTypes(i), i, id());
     for (unsigned i = 0; i < nfixed; i++)
-        InferSpew(js::types::ISpewOps, "    #%lu local%lu T%p", id(), i, localTypes(i));
+        InferSpew(js::types::ISpewOps, "typeSet: T%p local%u #%u", localTypes(i), i, id());
     for (unsigned i = 0; i < bindings.countUpvars(); i++)
-        InferSpew(js::types::ISpewOps, "    #%lu upvar%lu T%p", id(), i, upvarTypes(i));
+        InferSpew(js::types::ISpewOps, "typeSet: T%p upvar%u #%u", upvarTypes(i), i, id());
 #endif
 
     return true;

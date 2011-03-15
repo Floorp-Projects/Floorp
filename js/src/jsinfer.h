@@ -727,7 +727,6 @@ struct TypeCompartment
 };
 
 enum SpewChannel {
-    ISpewDynamic,  /* dynamic: Dynamic type changes and inference entry points. */
     ISpewOps,      /* ops: New constraints and types. */
     ISpewResult,   /* result: Final type sets. */
     SPEW_COUNT
