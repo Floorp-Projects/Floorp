@@ -712,7 +712,9 @@ Invoke(JSContext *cx, const CallArgs &argsRef, uint32 flags)
     JSScript *script = fun->script();
     if (JS_UNLIKELY(script->isEmpty())) {
         if (flags & JSINVOKE_CONSTRUCT) {
-            JSObject *obj = js_CreateThisForFunction(cx, &callee);
+            bool newType = cx->typeInferenceEnabled() &&
+                UseNewType(cx, cx->fp()->script(), cx->regs->pc);
+            JSObject *obj = js_CreateThisForFunction(cx, &callee, newType);
             if (!obj)
                 return false;
             args.rval().setObject(*obj);
@@ -2208,10 +2210,10 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 }
 
 static inline bool
-ScriptPrologue(JSContext *cx, JSStackFrame *fp)
+ScriptPrologue(JSContext *cx, JSStackFrame *fp, bool newType)
 {
     if (fp->isConstructing()) {
-        JSObject *obj = js_CreateThisForFunction(cx, &fp->callee());
+        JSObject *obj = js_CreateThisForFunction(cx, &fp->callee(), newType);
         if (!obj)
             return false;
         fp->functionThis().setObject(*obj);
@@ -2640,7 +2642,9 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
     /* Don't call the script prologue if executing between Method and Trace JIT. */
     if (interpMode == JSINTERP_NORMAL) {
         JS_ASSERT_IF(!regs.fp->isGeneratorFrame(), regs.pc == script->code);
-        if (!ScriptPrologue(cx, regs.fp))
+        bool newType = regs.fp->isConstructing() && cx->typeInferenceEnabled() &&
+            regs.fp->prev() && UseNewType(cx, regs.fp->prev()->script(), regs.fp->prev()->pc(cx));
+        if (!ScriptPrologue(cx, regs.fp, newType))
             goto error;
     }
 
@@ -4788,8 +4792,10 @@ BEGIN_CASE(JSOP_NEW)
     if (IsFunctionObject(vp[0], &callee)) {
         newfun = callee->getFunctionPrivate();
         if (newfun->isInterpreted()) {
+            bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
+
             if (newfun->u.i.script->isEmpty()) {
-                JSObject *obj2 = js_CreateThisForFunction(cx, callee);
+                JSObject *obj2 = js_CreateThisForFunction(cx, callee, newType);
                 if (!obj2)
                     goto error;
                 vp[0].setObject(*obj2);
@@ -4856,6 +4862,9 @@ BEGIN_CASE(JSOP_FUNCALL)
             if (!cx->typeMonitorCall(CallArgs(vp + 2, argc), flags & JSFRAME_CONSTRUCTING))
                 goto error;
 
+            bool newType = (flags & JSFRAME_CONSTRUCTING) &&
+                cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
+
             /* Get pointer to new frame/slots, prepare arguments. */
             StackSpace &stack = cx->stack();
             JSStackFrame *newfp = stack.getInlineFrame(cx, regs.sp, argc, newfun,
@@ -4896,14 +4905,14 @@ BEGIN_CASE(JSOP_FUNCALL)
             mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, regs.fp, request);
             if (status == mjit::Compile_Error)
                 goto error;
-            if (!TRACE_RECORDER(cx) && !TRACE_PROFILER(cx) && status == mjit::Compile_Okay) {
+            if (!TRACE_RECORDER(cx) && !TRACE_PROFILER(cx) && status == mjit::Compile_Okay && !newType) {
                 interpReturnOK = mjit::JaegerShot(cx);
                 CHECK_INTERRUPT_HANDLER();
                 goto jit_return;
             }
 #endif
 
-            if (!ScriptPrologue(cx, regs.fp))
+            if (!ScriptPrologue(cx, regs.fp, newType))
                 goto error;
 
             CHECK_INTERRUPT_HANDLER();
