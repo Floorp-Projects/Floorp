@@ -716,8 +716,24 @@ extern const bool js_alnum[];
  */
 #define JS_ISWORD(c)    ((c) < 128 && js_alnum[(c)])
 
-#define JS_ISIDSTART(c) (JS_ISLETTER(c) || (c) == '_' || (c) == '$')
-#define JS_ISIDENT(c)   (JS_ISIDPART(c) || (c) == '_' || (c) == '$')
+extern const bool js_isidstart[];
+extern const bool js_isident[];
+
+static inline bool
+JS_ISIDSTART(int c)
+{
+    unsigned w = c;
+
+    return (w < 128) ? js_isidstart[w] : JS_ISLETTER(c);
+}
+
+static inline bool
+JS_ISIDENT(int c)
+{
+    unsigned w = c;
+
+    return (w < 128) ? js_isident[w] : JS_ISIDPART(c);
+}
 
 #define JS_ISXMLSPACE(c)        ((c) == ' ' || (c) == '\t' || (c) == '\r' ||  \
                                  (c) == '\n')
