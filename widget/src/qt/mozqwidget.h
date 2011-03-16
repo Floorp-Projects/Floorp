@@ -48,6 +48,10 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 
+#ifdef MOZ_ENABLE_QTMOBILITY
+#include "mozqorientationsensorfilter.h"
+#endif
+
 class QEvent;
 class QPixmap;
 class QWidget;
@@ -84,6 +88,10 @@ public:
 
 public slots:
     void showVKB();
+
+#ifdef MOZ_ENABLE_QTMOBILITY
+    void orientationChanged();
+#endif
 
 protected:
     virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent* aEvent);
