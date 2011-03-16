@@ -839,6 +839,30 @@ IsTokenSane(Token *tp)
 }
 #endif
 
+bool
+TokenStream::putIdentInTokenbuf(const jschar *identStart)
+{
+    int32 c, qc;
+    const jschar *tmp = userbuf.addressOfNextRawChar(); 
+    userbuf.setAddressOfNextRawChar(identStart);
+
+    tokenbuf.clear();
+    for (;;) {
+        c = getCharIgnoreEOL();
+        if (!JS_ISIDENT(c)) {
+            if (c != '\\' || !matchUnicodeEscapeIdent(&qc))
+                break;
+            c = qc;
+        }
+        if (!tokenbuf.append(c)) {
+            userbuf.setAddressOfNextRawChar(tmp);
+            return false;
+        }
+    }
+    userbuf.setAddressOfNextRawChar(tmp);
+    return true;
+}
+
 TokenKind
 TokenStream::getTokenInternal()
 {
@@ -1056,24 +1080,20 @@ TokenStream::getTokenInternal()
     if (JS_ISIDSTART(c) ||
         (c == '\\' && (hadUnicodeEscape = matchUnicodeEscapeIdStart(&qc))))
     {
-        if (hadUnicodeEscape)
+        const jschar *identStart = userbuf.addressOfNextRawChar() - 1;
+        if (hadUnicodeEscape) {
             c = qc;
-        tokenbuf.clear();
+            identStart -= 5;    /* account for the length of the escape */
+        }
         for (;;) {
-            if (!tokenbuf.append(c))
-                goto error;
-            c = getChar();
-            if (c == '\\') {
-                if (!matchUnicodeEscapeIdent(&qc))
+            c = getCharIgnoreEOL();
+            if (!JS_ISIDENT(c)) {
+                if (c != '\\' || !matchUnicodeEscapeIdent(&qc))
                     break;
-                c = qc;
                 hadUnicodeEscape = true;
-            } else {
-                if (!JS_ISIDENT(c))
-                    break;
             }
         }
-        ungetChar(c);
+        ungetCharIgnoreEOL(c);
 
         /*
          * Check for keywords unless we saw Unicode escape or parser asks
@@ -1082,7 +1102,7 @@ TokenStream::getTokenInternal()
         const KeywordInfo *kw;
         if (!hadUnicodeEscape &&
             !(flags & TSF_KEYWORD_IS_NAME) &&
-            (kw = FindKeyword(tokenbuf.begin(), tokenbuf.length()))) {
+            (kw = FindKeyword(identStart, userbuf.addressOfNextRawChar() - identStart))) {
             if (kw->tokentype == TOK_RESERVED) {
                 if (!ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
                                               JSMSG_RESERVED_ID, kw->chars)) {
@@ -1116,7 +1136,17 @@ TokenStream::getTokenInternal()
             }
         }
 
-        atom = atomize(cx, tokenbuf);
+        /* 
+         * Identifiers containing no Unicode escapes can be atomized directly
+         * from userbuf.  The rest must have the escapes converted via
+         * tokenbuf before atomizing.
+         */
+        if (!hadUnicodeEscape)
+            atom = js_AtomizeChars(cx, identStart, userbuf.addressOfNextRawChar() - identStart, 0);
+        else if (putIdentInTokenbuf(identStart))
+            atom = atomize(cx, tokenbuf);
+        else
+            atom = NULL;
         if (!atom)
             goto error;
         tp->t_op = JSOP_NAME;
