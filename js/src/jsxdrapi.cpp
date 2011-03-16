@@ -239,6 +239,7 @@ JS_XDRInitBase(JSXDRState *xdr, JSXDRMode mode, JSContext *cx)
     xdr->reghash = NULL;
     xdr->userdata = NULL;
     xdr->script = NULL;
+    xdr->filename = NULL;
 }
 
 JS_PUBLIC_API(JSXDRState *)
@@ -665,6 +666,8 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
 JS_PUBLIC_API(JSBool)
 JS_XDRScriptObject(JSXDRState *xdr, JSObject **scriptObjp)
 {
+    JS_ASSERT(!xdr->filename);
+
     JSScript *script;
     uint32 magic;
     if (xdr->mode == JSXDR_DECODE) {
@@ -684,7 +687,22 @@ JS_XDRScriptObject(JSXDRState *xdr, JSObject **scriptObjp)
         return false;
     }
 
-    if (!js_XDRScript(xdr, &script))
+    if (xdr->mode == JSXDR_ENCODE)
+        xdr->filename = script->filename;
+    if (!JS_XDRCStringOrNull(xdr, (char **) &xdr->filename))
+        return false;
+    if (xdr->mode == JSXDR_DECODE && xdr->filename) {
+        const char *filename = xdr->filename;
+        filename = js_SaveScriptFilename(xdr->cx, filename);
+        xdr->cx->free((void *) xdr->filename);
+        xdr->filename = filename;
+        if (!filename)
+            return false;
+    }
+
+    bool ok = js_XDRScript(xdr, &script);
+    xdr->filename = NULL;
+    if (!ok)
         return false;
 
     if (xdr->mode == JSXDR_DECODE) {
