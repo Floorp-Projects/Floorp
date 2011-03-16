@@ -1204,6 +1204,149 @@ ic::SplatApplyArgs(VMFrame &f)
     return true;
 }
 
+static bool
+GenerateTypeCheck(JSContext *cx, Assembler &masm, Address address,
+                  types::TypeSet *types, Vector<Jump> *mismatches)
+{
+    if (types->unknown())
+        return true;
+
+    Vector<Jump> matches(cx);
+
+    if (types->hasType(types::TYPE_INT32)) {
+        if (!matches.append(masm.testInt32(Assembler::Equal, address)))
+            return false;
+    }
+
+    if (types->hasType(types::TYPE_DOUBLE)) {
+        if (!matches.append(masm.testDouble(Assembler::Equal, address)))
+            return false;
+    }
+
+    if (types->hasType(types::TYPE_UNDEFINED)) {
+        if (!matches.append(masm.testUndefined(Assembler::Equal, address)))
+            return false;
+    }
+
+    if (types->hasType(types::TYPE_BOOLEAN)) {
+        if (!matches.append(masm.testBoolean(Assembler::Equal, address)))
+            return false;
+    }
+
+    if (types->hasType(types::TYPE_STRING)) {
+        if (!matches.append(masm.testString(Assembler::Equal, address)))
+            return false;
+    }
+
+    if (types->hasType(types::TYPE_NULL)) {
+        if (!matches.append(masm.testNull(Assembler::Equal, address)))
+            return false;
+    }
+
+    if (types->objectCount != 0) {
+        if (!mismatches->append(masm.testObject(Assembler::NotEqual, address)))
+            return false;
+        Registers tempRegs(Registers::AvailRegs);
+        RegisterID reg = tempRegs.takeAnyReg().reg();
+
+        masm.loadPayload(address, reg);
+        masm.loadPtr(Address(reg, offsetof(JSObject, type)), reg);
+
+        if (types->objectCount >= 2) {
+            unsigned objectCapacity = types::HashSetCapacity(types->objectCount);
+            for (unsigned i = 0; i < objectCapacity; i++) {
+                types::TypeObject *object = types->objectSet[i];
+                if (object) {
+                    if (!matches.append(masm.branchPtr(Assembler::Equal, reg, ImmPtr(object))))
+                        return false;
+                }
+            }
+        } else {
+            types::TypeObject *object = (types::TypeObject *) types->objectSet;
+            if (!matches.append(masm.branchPtr(Assembler::Equal, reg, ImmPtr(object))))
+                return false;
+        }
+    }
+
+    if (!mismatches->append(masm.jump()))
+        return false;
+
+    for (unsigned i = 0; i < matches.length(); i++)
+        matches[i].linkTo(masm.label(), &masm);
+
+    return true;
+}
+
+void
+ic::GenerateArgumentCheckStub(VMFrame &f)
+{
+    JS_ASSERT(f.cx->typeInferenceEnabled());
+
+    JITScript *jit = f.jit();
+    JSStackFrame *fp = f.fp();
+    JSFunction *fun = fp->fun();
+    JSScript *script = fun->script();
+
+    if (jit->argsCheckPool)
+        jit->resetArgsCheck();
+
+    Assembler masm;
+    Vector<Jump> mismatches(f.cx);
+
+    if (!f.fp()->isConstructing()) {
+        Address address(JSFrameReg, JSStackFrame::offsetOfThis(fun));
+        if (!GenerateTypeCheck(f.cx, masm, address, script->thisTypes(), &mismatches))
+            return;
+    }
+
+    for (unsigned i = 0; i < fun->nargs; i++) {
+        Address address(JSFrameReg, JSStackFrame::offsetOfFormalArg(fun, i));
+        if (!GenerateTypeCheck(f.cx, masm, address, script->argTypes(i), &mismatches))
+            return;
+    }
+
+#ifdef DEBUG
+    void *ptr = JS_FUNC_TO_DATA_PTR(void *, stubs::AssertArgumentTypes);
+    masm.storePtr(ImmPtr(fun), Address(JSFrameReg, JSStackFrame::offsetOfExec()));
+    masm.fallibleVMCall(ptr, script->code, script->nfixed);
+#endif
+
+    Jump done = masm.jump();
+
+    LinkerHelper linker(masm);
+    JSC::ExecutablePool *ep = linker.init(f.cx);
+    if (!ep)
+        return;
+    jit->argsCheckPool = ep;
+
+    if (!linker.verifyRange(jit)) {
+        jit->resetArgsCheck();
+        return;
+    }
+
+    for (unsigned i = 0; i < mismatches.length(); i++)
+        linker.link(mismatches[i], jit->argsCheckStub);
+    linker.link(done, jit->argsCheckFallthrough);
+
+    JSC::CodeLocationLabel cs = linker.finalize();
+
+    JaegerSpew(JSpew_PICs, "generated ARGS CHECK stub %p (%d bytes)\n",
+               cs.executableAddress(), masm.size());
+
+    Repatcher repatch(jit);
+    repatch.relink(jit->argsCheckJump, cs);
+}
+
+void
+JITScript::resetArgsCheck()
+{
+    argsCheckPool->release();
+    argsCheckPool = NULL;
+
+    Repatcher repatch(this);
+    repatch.relink(argsCheckJump, argsCheckStub);
+}
+
 void
 JITScript::purgeMICs()
 {
@@ -1325,6 +1468,10 @@ JITScript::sweepCallICs(JSContext *cx, bool purgeAll)
             repatcher.relink(oolJump, icCall);
         }
     }
+
+    /* The arguments type check IC can refer to type objects which might be swept. */
+    if (argsCheckPool)
+        resetArgsCheck();
 
     if (purgeAll) {
         /* Purge ICs generating stubs into execPools. */

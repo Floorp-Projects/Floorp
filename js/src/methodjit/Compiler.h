@@ -376,6 +376,11 @@ class Compiler : public BaseCompiler
     StubCompiler stubcc;
     Label invokeLabel;
     Label arityLabel;
+#ifdef JS_MONOIC
+    Label argsCheckStub;
+    Label argsCheckFallthrough;
+    Jump argsCheckJump;
+#endif
     bool debugMode_;
     bool addTraceHints;
     bool recompiling;

@@ -474,22 +474,18 @@ mjit::Compiler::generatePrologue()
             stubcc.masm.move(Registers::ReturnReg, JSFrameReg);
             argMatch.linkTo(stubcc.masm.label(), &stubcc.masm);
 
+            /* Type check the arguments as well. */
             if (cx->typeInferenceEnabled()) {
-                /* Make sure 'this' and all arguments are marked as undefined. */
-                bool emitCall = false;
-                if (!isConstructing && !script->thisTypes()->unknown())
-                    emitCall = true;
-                for (unsigned i = 0; i < fun->nargs; i++) {
-                    if (!isConstructing && !script->argTypes(i)->unknown())
-                        emitCall = true;
-                }
-                if (emitCall) {
-                    stubcc.masm.storePtr(ImmPtr(fun), Address(JSFrameReg, JSStackFrame::offsetOfExec()));
-                    OOL_STUBCALL(stubs::ClearArgumentTypes);
-                } else if (recompiling) {
-                    stubcc.crossJump(stubcc.masm.jump(), fastPath);
-                    OOL_STUBCALL(stubs::ClearArgumentTypes);
-                }
+#ifdef JS_MONOIC
+                this->argsCheckJump = stubcc.masm.jump();
+                this->argsCheckStub = stubcc.masm.label();
+                this->argsCheckJump.linkTo(this->argsCheckStub, &stubcc.masm);
+#endif
+                stubcc.masm.storePtr(ImmPtr(fun), Address(JSFrameReg, JSStackFrame::offsetOfExec()));
+                OOL_STUBCALL(stubs::CheckArgumentTypes);
+#ifdef JS_MONOIC
+                this->argsCheckFallthrough = stubcc.masm.label();
+#endif
             }
 
             stubcc.crossJump(stubcc.masm.jump(), fastPath);
@@ -715,6 +711,13 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
 #if defined JS_MONOIC
     JS_INIT_CLIST(&jit->callers);
+
+    if (fun && cx->typeInferenceEnabled()) {
+        jit->argsCheckStub = stubCode.locationOf(argsCheckStub);
+        jit->argsCheckFallthrough = stubCode.locationOf(argsCheckFallthrough);
+        jit->argsCheckJump = stubCode.locationOf(argsCheckJump);
+        jit->argsCheckPool = NULL;
+    }
 
     ic::GetGlobalNameIC *getGlobalNames_ = (ic::GetGlobalNameIC *)cursor;
     jit->nGetGlobalNames = getGlobalNames.length();
