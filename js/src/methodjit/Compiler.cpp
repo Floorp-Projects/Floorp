@@ -3227,7 +3227,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
 void
 mjit::Compiler::addCallSite(const InternalCallSite &site)
 {
-#ifdef DEBUG
+#if 0 /* Expensive assertion on some tests. */
     for (unsigned i = 0; i < callSites.length(); i++)
         JS_ASSERT(site.pc != callSites[i].pc || site.id != callSites[i].id);
 #endif
@@ -5063,13 +5063,13 @@ mjit::Compiler::jsop_instanceof()
     if (!rhs->isTypeKnown()) {
         Jump j = frame.testObject(Assembler::NotEqual, rhs);
         stubcc.linkExit(j, Uses(2));
-        RegisterID reg = frame.tempRegForData(rhs);
-        j = masm.testFunction(Assembler::NotEqual, reg);
-        stubcc.linkExit(j, Uses(2));
     }
 
-    /* Test for bound functions. */
     RegisterID obj = frame.tempRegForData(rhs);
+    Jump notFunction = masm.testFunction(Assembler::NotEqual, obj);
+    stubcc.linkExit(notFunction, Uses(2));
+
+    /* Test for bound functions. */
     Jump isBound = masm.branchTest32(Assembler::NonZero, Address(obj, offsetof(JSObject, flags)),
                                      Imm32(JSObject::BOUND_FUNCTION));
     {
