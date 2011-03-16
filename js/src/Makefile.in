@@ -590,7 +590,7 @@ check::
 endif
 
 ifndef WINCE
-JITFLAGS = ,m,j,mj,mjp,am,amj,amjp,amd
+JITFLAGS = ,m,j,mj,mjp,am,amj,amjp,amd,n,mn,jn,mjn,mjpn,amn,amjn,amjpn,amdn
 check::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
 	        --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(DIST)/bin/js$(BIN_SUFFIX)
