@@ -370,6 +370,7 @@ class TokenStream
 
   private:
     static JSAtom *atomize(JSContext *cx, CharBuffer &cb);
+    bool putIdentInTokenbuf(const jschar *identStart);
 
     /*
      * Enables flags in the associated tokenstream for the object lifetime.
@@ -535,6 +536,12 @@ class TokenStream
         const jschar *addressOfNextRawChar() {
             JS_ASSERT(ptr);     /* make sure haven't been poisoned */
             return ptr;
+        }
+
+        /* Use this with caution! */
+        void setAddressOfNextRawChar(const jschar *a) {
+            JS_ASSERT(a);
+            ptr = a;
         }
 
 #ifdef DEBUG
