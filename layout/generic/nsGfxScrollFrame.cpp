@@ -1937,7 +1937,6 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
      (scrollRange.width >= NSIntPixelsToAppUnits(20, appUnitsPerDevPixel) ||
      scrollRange.height >= NSIntPixelsToAppUnits(20, appUnitsPerDevPixel))) &&
      (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument());
-#endif
 
   if (ShouldBuildLayer()) {
     // Note that using StackingContext breaks z order, so the resulting
@@ -1950,7 +1949,9 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     nsDisplayScrollLayer* layerItem = new (aBuilder) nsDisplayScrollLayer(
       aBuilder, &list, mScrolledFrame, mOuter);
     set.Content()->AppendNewToTop(layerItem);
-  } else {
+  } else
+#endif
+  {
     rv = mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
   }
 
