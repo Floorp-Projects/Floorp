@@ -1750,7 +1750,6 @@ nsDisplayScrollLayer::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                         const nsRect& aAllowVisibleRegionExpansion,
                                         PRBool& aContainsRootContentDocBG)
 {
-  nsPresContext* presContext = mFrame->PresContext();
   nsRect displayport;
   if (nsLayoutUtils::GetDisplayPort(mFrame->GetContent(), &displayport)) {
     // The visible region for the children may be much bigger than the hole we
