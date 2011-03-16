@@ -1398,8 +1398,8 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
         JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
         if (!obj)
             THROWV(NULL);
-        if (type)
-            obj->setType(type);
+        if (!type || !obj->setTypeAndEmptyShape(cx, type))
+            THROWV(NULL);
         return obj;
     }
 

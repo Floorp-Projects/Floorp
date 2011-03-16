@@ -2900,9 +2900,8 @@ js_Object(JSContext *cx, uintN argc, Value *vp)
         if (!obj)
             return JS_FALSE;
         TypeObject *type = cx->getTypeCallerInitObject(false);
-        if (!type)
+        if (!type || !obj->setTypeAndEmptyShape(cx, type))
             return JS_FALSE;
-        obj->setType(type);
     }
     vp->setObject(*obj);
     return JS_TRUE;
@@ -2966,9 +2965,8 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
     if (obj && newType) {
         JS_ASSERT(cx->typeInferenceEnabled());
         types::TypeObject *type = cx->newTypeObject("SpecializedThis", obj->getProto());
-        if (!type)
+        if (!type || !obj->setTypeAndUniqueShape(cx, type))
             return NULL;
-        obj->setType(type);
         if (!callee->getFunctionPrivate()->script()->typeSetThis(cx, (types::jstype) type))
             return NULL;
     }
@@ -3559,8 +3557,14 @@ JSObject::clone(JSContext *cx, JSObject *proto, JSObject *parent)
                                                   gc::FinalizeKind(finalizeKind()));
     if (!clone)
         return NULL;
-    if (getProto() == proto)
-        clone->setType(getType());
+    if (getProto() == proto) {
+        if (isNative()) {
+            if (!clone->setTypeAndEmptyShape(cx, getType()))
+                return NULL;
+        } else {
+            clone->setType(getType());
+        }
+    }
     if (isNative()) {
         if (clone->isFunction() && (compartment() != clone->compartment())) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -3952,9 +3956,8 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
 
     TypeObject *protoType = cx->newTypeObject(clasp->name, "prototype", proto->getProto(),
                                               clasp == &js_FunctionClass);
-    if (!protoType)
+    if (!protoType || !proto->setTypeAndUniqueShape(cx, protoType))
         return NULL;
-    proto->setType(protoType);
 
     if (clasp == &js_ArrayClass && !proto->makeDenseArraySlow(cx))
         return NULL;
