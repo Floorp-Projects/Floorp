@@ -165,8 +165,9 @@ nsEditorEventListener::InstallToEditor()
                                     NS_EVENT_FLAG_BUBBLE, sysGroup);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = piTarget->AddEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
-                                       NS_GET_IID(nsIDOMMouseListener));
+  rv = elmP->AddEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
+                                   NS_GET_IID(nsIDOMMouseListener),
+                                   NS_EVENT_FLAG_CAPTURE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Focus event doesn't bubble so adding the listener to capturing phase.
@@ -236,8 +237,9 @@ nsEditorEventListener::UninstallFromEditor()
                                   NS_LITERAL_STRING("drop"),
                                   NS_EVENT_FLAG_BUBBLE, sysGroup);
 
-  piTarget->RemoveEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
-                                     NS_GET_IID(nsIDOMMouseListener));
+  elmP->RemoveEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
+                                 NS_GET_IID(nsIDOMMouseListener),
+                                 NS_EVENT_FLAG_CAPTURE);
 
   elmP->RemoveEventListenerByIID(static_cast<nsIDOMFocusListener*>(this),
                                  NS_GET_IID(nsIDOMFocusListener),
