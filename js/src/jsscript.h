@@ -771,17 +771,12 @@ extern JSScript *
 js_CloneScript(JSContext *cx, JSScript *script);
 
 /*
- * If magic is non-null, js_XDRScript succeeds on magic number mismatch but
- * returns false in *magic; it reflects a match via a true *magic out param.
- * If magic is null, js_XDRScript returns false on bad magic number errors,
- * which it reports.
- *
  * NB: after a successful JSXDR_DECODE, js_XDRScript callers must do any
  * required subsequent set-up of owning function or script object and then call
  * js_CallNewScriptHook.
  */
 extern JSBool
-js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic);
+js_XDRScript(JSXDRState *xdr, JSScript **scriptp);
 
 inline bool
 JSObject::isScript() const
