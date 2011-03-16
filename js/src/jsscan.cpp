@@ -1121,7 +1121,7 @@ TokenStream::getTokenInternal()
                 c = getCharIgnoreEOL();
             } while (JS7_ISDEC(c));
         }
-        if (JS_TOLOWER(c) == 'e') {
+        if (c == 'e' || c == 'E') {
             hasFracOrExp = true;
             c = getCharIgnoreEOL();
             if (c == '+' || c == '-')
@@ -1169,7 +1169,7 @@ TokenStream::getTokenInternal()
     if (c == '0') {
         int radix;
         c = getCharIgnoreEOL();
-        if (JS_TOLOWER(c) == 'x') {
+        if (c == 'x' || c == 'X') {
             radix = 16;
             c = getCharIgnoreEOL();
             if (!JS7_ISHEX(c)) {
