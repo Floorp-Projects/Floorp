@@ -182,6 +182,31 @@ TokenStream::init(const jschar *base, size_t length, const char *fn, uintN ln, J
     listener = cx->debugHooks->sourceHandler;
     listenerData = cx->debugHooks->sourceHandlerData;
 
+    /*
+     * This table holds all the token kinds that satisfy these properties:
+     * - A single char long.
+     * - Cannot be a prefix of any longer token (eg. '+' is excluded because
+     *   '+=' is a valid token).
+     * - Doesn't need tp->t_op set (eg. this excludes '~').
+     *
+     * The few token kinds satisfying these properties cover roughly 35--45%
+     * of the tokens seen in practice.
+     *
+     * Nb: oneCharTokens, maybeEOL and maybeStrSpecial could be static, but
+     * initializing them this way is a bit easier.  Don't worry, the time to
+     * initialize them for each TokenStream is trivial.  See bug 639420.
+     */
+    memset(oneCharTokens, 0, sizeof(oneCharTokens));
+    oneCharTokens[';'] = TOK_SEMI;
+    oneCharTokens[','] = TOK_COMMA;
+    oneCharTokens['?'] = TOK_HOOK;
+    oneCharTokens['['] = TOK_LB;
+    oneCharTokens[']'] = TOK_RB;
+    oneCharTokens['{'] = TOK_LC;
+    oneCharTokens['}'] = TOK_RC;
+    oneCharTokens['('] = TOK_LP;
+    oneCharTokens[')'] = TOK_RP;
+
     /* See getChar() for an explanation of maybeEOL[]. */
     memset(maybeEOL, 0, sizeof(maybeEOL));
     maybeEOL['\n'] = true;
@@ -833,7 +858,6 @@ TokenStream::getTokenInternal()
     /*
      * Look for XML text.
      */
-
     if (flags & TSF_XMLTEXTMODE) {
         tt = TOK_XMLSPACE;      /* veto if non-space, return TOK_XMLTEXT */
         tp = newToken(0);
@@ -871,7 +895,6 @@ TokenStream::getTokenInternal()
     /*
      * Look for XML tags.
      */
-
     if (flags & TSF_XMLTAGMODE) {
         tp = newToken(0);
         c = getChar();
@@ -1018,9 +1041,17 @@ TokenStream::getTokenInternal()
     tp = newToken(-1);
 
     /*
+     * Look for a one-char token;  they're common and simple.
+     */
+    if (c < 128) {
+        tt = (TokenKind)oneCharTokens[c];
+        if (tt != 0)
+            goto out;
+    }
+
+    /*
      * Look for an identifier.
      */
-
     hadUnicodeEscape = false;
     if (JS_ISIDSTART(c) ||
         (c == '\\' && (hadUnicodeEscape = matchUnicodeEscapeIdStart(&qc))))
@@ -1097,7 +1128,6 @@ TokenStream::getTokenInternal()
     /*
      * Look for a decimal number.
      */
-
     if (JS7_ISDECNZ(c) || (c == '.' && JS7_ISDEC(peekChar()))) {
         numStart = userbuf.addressOfNextRawChar() - 1;
 
@@ -1156,7 +1186,6 @@ TokenStream::getTokenInternal()
     /*
      * Look for a hexadecimal or octal number.
      */
-
     if (c == '0') {
         int radix;
         c = getCharIgnoreEOL();
@@ -1219,7 +1248,6 @@ TokenStream::getTokenInternal()
     /*
      * Look for a string.
      */
-
     if (c == '"' || c == '\'') {
         qc = c;
         tokenbuf.clear();
@@ -1319,18 +1347,7 @@ TokenStream::getTokenInternal()
     /*
      * This handles everything else.
      */
-
     switch (c) {
-      case ';':  tt = TOK_SEMI; break;
-      case '[':  tt = TOK_LB; break;
-      case ']':  tt = TOK_RB; break;
-      case '{':  tt = TOK_LC; break;
-      case '}':  tt = TOK_RC; break;
-      case '(':  tt = TOK_LP; break;
-      case ')':  tt = TOK_RP; break;
-      case ',':  tt = TOK_COMMA; break;
-      case '?':  tt = TOK_HOOK; break;
-
       case '.':
 #if JS_HAS_XML_SUPPORT
         if (matchChar(c))

@@ -608,10 +608,12 @@ class TokenStream
     void                *listenerData;  /* listener 'this' data */
     void                *listenerTSData;/* listener data for this TokenStream */
     CharBuffer          tokenbuf;       /* current token string buffer */
-    bool                maybeEOL[256];  /* probabilistic EOL lookup table */
-    bool                maybeStrSpecial[256];/* speeds up string scanning */
+    int8                oneCharTokens[128];  /* table of one-char tokens */
+    JSPackedBool        maybeEOL[256];       /* probabilistic EOL lookup table */
+    JSPackedBool        maybeStrSpecial[256];/* speeds up string scanning */
     JSVersion           version;        /* (i.e. to identify keywords) */
     bool                xml;            /* see JSOPTION_XML */
+    JS_STATIC_ASSERT(sizeof(maybeEOL) == 256);
 };
 
 } /* namespace js */
