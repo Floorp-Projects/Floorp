@@ -1967,7 +1967,7 @@ mjit::Compiler::jsop_initprop()
 
     JSObject *baseobj = obj->initializerObject();
 
-    if (!baseobj) {
+    if (!baseobj || monitored(PC)) {
         prepareStubCall(Uses(2));
         masm.move(ImmPtr(atom), Registers::ArgReg1);
         INLINE_STUBCALL(stubs::InitProp);
