@@ -70,6 +70,12 @@ var SpecialPowers = {
     return (this._setPref(aPrefName, 'COMPLEX', aValue, aIid));
   },
 
+  // Mimic the clearUserPref API
+  clearUserPref: function(aPrefName) {
+    var msg = {'op':'clear', 'prefName': aPrefName, 'prefType': ""};
+    sendSyncMessage('SPPrefService', msg);
+  },
+
   // Private pref functions to communicate to chrome
   _getPref: function(aPrefName, aPrefType, aIid) {
     var msg = {};
