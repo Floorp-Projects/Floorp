@@ -161,13 +161,24 @@
     }
 
     function initTabs() {
+      function noRecentTabs() {
+        let placeHolder = document.getElementById("loadingTabs");
+        placeHolder.innerHTML = "<div class='no-items'>" + document.getElementById("text-notabs").textContent + "</div>";
+      }
+
       let dirService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
       let session = dirService.get("ProfD", Ci.nsILocalFile);
       session.append("sessionstore.bak");
+      if (!session.exists()) {
+        noRecentTabs();
+        return;
+      }
 
       let data = JSON.parse(_readFile(session));
-      if (!data || data.windows.length == 0)
+      if (!data || data.windows.length == 0) {
+        noRecentTabs();
         return;
+      }
 
       let chromeWin = getChromeWin();
       let allPageURLs = [];
@@ -235,8 +246,7 @@
           list.appendChild(outer);
         }
       } else {
-        let placeHolder = document.getElementById("loadingTabs");
-        placeHolder.innerHTML = "<div class='no-items'>" + document.getElementById("text-notabs").textContent + "</div>";
+        noRecentTabs();
       }
     }
 
@@ -348,8 +358,8 @@
     }
 
     function updateAddons() {
-      // If a cache does not exist, start an update after 10 seconds
-      RecommendedAddons.loadFromCacheOrScheduleUpdate(10000);
+      // If a cache does not exist, start an update after 6 seconds
+      RecommendedAddons.loadFromCacheOrScheduleUpdate(6000);
     }
 
     function initAddons() {
