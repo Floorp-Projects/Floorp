@@ -1106,7 +1106,6 @@ TokenStream::getTokenInternal()
 
     if (JS7_ISDEC(c) || (c == '.' && JS7_ISDEC(peekChar()))) {
         int radix = 10;
-        tokenbuf.clear();
 
         if (c == '0') {
             c = getChar();
@@ -1123,6 +1122,8 @@ TokenStream::getTokenInternal()
                 radix = 8;
             }
         }
+
+        const jschar *numStart = userbuf.addressOfNextRawChar() - 1;
 
         while (JS7_ISHEX(c)) {
             if (radix < 16) {
@@ -1148,28 +1149,19 @@ TokenStream::getTokenInternal()
                     }
                 }
             }
-            if (!tokenbuf.append(c))
-                goto error;
             c = getChar();
         }
 
         if (radix == 10 && (c == '.' || JS_TOLOWER(c) == 'e')) {
             if (c == '.') {
                 do {
-                    if (!tokenbuf.append(c))
-                        goto error;
                     c = getChar();
                 } while (JS7_ISDEC(c));
             }
             if (JS_TOLOWER(c) == 'e') {
-                if (!tokenbuf.append(c))
-                    goto error;
                 c = getChar();
-                if (c == '+' || c == '-') {
-                    if (!tokenbuf.append(c))
-                        goto error;
+                if (c == '+' || c == '-')
                     c = getChar();
-                }
                 if (!JS7_ISDEC(c)) {
                     ungetChar(c);
                     ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
@@ -1177,8 +1169,6 @@ TokenStream::getTokenInternal()
                     goto error;
                 }
                 do {
-                    if (!tokenbuf.append(c))
-                        goto error;
                     c = getChar();
                 } while (JS7_ISDEC(c));
             }
@@ -1189,18 +1179,21 @@ TokenStream::getTokenInternal()
             goto error;
         }
 
-        /* Put back the next char and NUL-terminate tokenbuf for js_strto*. */
         ungetChar(c);
-        if (!tokenbuf.append(0))
-            goto error;
 
         jsdouble dval;
         const jschar *dummy;
+        /* 
+         * Unlike identifiers and strings, numbers cannot contain escaped
+         * chars, so we don't need to use tokenbuf.  Instead we can just
+         * convert the jschars in userbuf directly to the numeric value.
+         */
         if (radix == 10) {
-            if (!js_strtod(cx, tokenbuf.begin(), tokenbuf.end(), &dummy, &dval))
+            if (!js_strtod(cx, numStart, userbuf.addressOfNextRawChar(), &dummy, &dval))
                 goto error;
         } else {
-            if (!GetPrefixInteger(cx, tokenbuf.begin(), tokenbuf.end(), radix, &dummy, &dval))
+            if (!GetPrefixInteger(cx, numStart, userbuf.addressOfNextRawChar(), radix, &dummy,
+                                  &dval))
                 goto error;
         }
         tp->t_dval = dval;
