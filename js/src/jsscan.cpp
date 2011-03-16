@@ -775,15 +775,6 @@ TokenStream::newToken(ptrdiff_t adjust)
     return tp;
 }
 
-static JS_ALWAYS_INLINE JSBool
-ScanAsSpace(jschar c)
-{
-    /* Treat little- and big-endian BOMs as whitespace for compatibility. */
-    if (JS_ISSPACE(c) || c == 0xfffe || c == 0xfeff)
-        return JS_TRUE;
-    return JS_FALSE;
-}
-
 JS_ALWAYS_INLINE JSAtom *
 TokenStream::atomize(JSContext *cx, CharBuffer &cb)
 {
@@ -1017,7 +1008,7 @@ TokenStream::getTokenInternal()
             flags |= TSF_EOL;
             continue;
         }
-    } while (ScanAsSpace((jschar)c));
+    } while (JS_ISSPACE_OR_BOM((jschar)c));
 
     if (c == EOF) {
         tp = newToken(0);   /* no -1 here because userbuf.ptr isn't incremented for EOF */
@@ -1620,7 +1611,7 @@ TokenStream::getTokenInternal()
                     cp[3] == 'n' &&
                     cp[4] == 'e') {
                     skipChars(5);
-                    while ((c = getChar()) != '\n' && ScanAsSpace((jschar)c))
+                    while ((c = getChar()) != '\n' && JS_ISSPACE_OR_BOM((jschar)c))
                         continue;
                     if (JS7_ISDEC(c)) {
                         line = JS7_UNDEC(c);
@@ -1632,7 +1623,7 @@ TokenStream::getTokenInternal()
                             }
                             line = temp;
                         }
-                        while (c != '\n' && ScanAsSpace((jschar)c))
+                        while (c != '\n' && JS_ISSPACE_OR_BOM((jschar)c))
                             c = getChar();
                         i = 0;
                         if (c == '"') {
@@ -1647,7 +1638,7 @@ TokenStream::getTokenInternal()
                             }
                             if (c == '"') {
                                 while ((c = getChar()) != '\n' &&
-                                       ScanAsSpace((jschar)c)) {
+                                       JS_ISSPACE_OR_BOM((jschar)c)) {
                                     continue;
                                 }
                             }
