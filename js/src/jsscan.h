@@ -411,9 +411,7 @@ class TokenStream
             return tt;
         }
 
-        /* If there was a fatal error, keep returning TOK_ERROR. */
-        if (flags & TSF_ERROR)
-            return TOK_ERROR;
+        JS_ASSERT(!(flags & TSF_ERROR));
 
         return getTokenInternal();
     }
