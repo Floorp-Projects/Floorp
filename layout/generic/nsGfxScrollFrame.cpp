@@ -1932,10 +1932,13 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   //
   PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   nsRect scrollRange = GetScrollRange();
+  ScrollbarStyles styles = GetScrollbarStylesFromFrame();
   mShouldBuildLayer =
      (XRE_GetProcessType() == GeckoProcessType_Content &&
+     (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN ||
+      styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN) &&
      (scrollRange.width >= NSIntPixelsToAppUnits(20, appUnitsPerDevPixel) ||
-     scrollRange.height >= NSIntPixelsToAppUnits(20, appUnitsPerDevPixel))) &&
+      scrollRange.height >= NSIntPixelsToAppUnits(20, appUnitsPerDevPixel))) &&
      (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument());
 
   if (ShouldBuildLayer()) {
