@@ -647,7 +647,7 @@ FrameState::syncForBranch(jsbytecode *target, Uses uses)
 
         JS_ASSERT_IF(!fe->isType(JSVAL_TYPE_DOUBLE), fe->type.synced());
         if (!fe->data.synced() && alloc->synced(reg))
-            syncData(fe);
+            syncFe(fe);
 
         if (fe->dataInRegister(reg))
             continue;
