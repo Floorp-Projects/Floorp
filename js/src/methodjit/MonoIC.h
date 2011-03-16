@@ -298,6 +298,8 @@ void JS_FASTCALL NativeNew(VMFrame &f, ic::CallICInfo *ic);
 void JS_FASTCALL NativeCall(VMFrame &f, ic::CallICInfo *ic);
 JSBool JS_FASTCALL SplatApplyArgs(VMFrame &f);
 
+void GenerateArgumentCheckStub(VMFrame &f);
+
 void PurgeMICs(JSContext *cx, JSScript *script);
 void SweepCallICs(JSContext *cx, JSScript *script, bool purgeAll);
 
