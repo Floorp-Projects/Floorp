@@ -256,7 +256,7 @@ struct CallICInfo {
      * For monitored calls with static argc, the types of 'this' and arguments.
      * For calls through Function.prototype.call, this refers to the inner this/arguments.
      */
-    types::jstype *argTypes;
+    types::ClonedTypeSet *argTypes;
 
     inline void reset() {
         fastGuardedObject = NULL;

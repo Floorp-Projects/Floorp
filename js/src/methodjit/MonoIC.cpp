@@ -1423,8 +1423,8 @@ JITScript::sweepCallICs(JSContext *cx, bool purgeAll)
         ic::CallICInfo &ic = callICs_[i];
 
         if (ic.argTypes) {
-            for (unsigned i = 0; i < ic.frameSize.staticArgc(); i++)
-                types::SweepType(&ic.argTypes[i]);
+            for (unsigned i = 0; i < ic.frameSize.staticArgc() + 1; i++)
+                types::SweepClonedTypes(&ic.argTypes[i]);
         }
 
         /*

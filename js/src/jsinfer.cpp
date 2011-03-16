@@ -364,6 +364,27 @@ struct AnalyzeState {
 // TypeSet
 /////////////////////////////////////////////////////////////////////
 
+void
+TypeSet::addTypeSet(JSContext *cx, ClonedTypeSet *types)
+{
+    if (types->typeFlags & TYPE_FLAG_UNKNOWN) {
+        addType(cx, TYPE_UNKNOWN);
+        return;
+    }
+
+    for (jstype type = TYPE_UNDEFINED; type <= TYPE_STRING; type++) {
+        if (types->typeFlags & (1 << type))
+            addType(cx, type);
+    }
+
+    if (types->objectCount >= 2) {
+        for (unsigned i = 0; i < types->objectCount; i++)
+            addType(cx, (jstype) types->objectSet[i]);
+    } else if (types->objectCount == 1) {
+        addType(cx, (jstype) types->objectSet);
+    }
+}
+
 inline void
 TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
 {
@@ -1277,14 +1298,14 @@ TypeConstraintCondensed::arrayNotPacked(JSContext *cx, bool notDense)
 }
 
 /* Constraint which triggers recompilation of a script if any type is added to a type set. */
-class TypeConstraintFreezeSingleType : public TypeConstraint
+class TypeConstraintFreeze : public TypeConstraint
 {
 public:
-    /* Whether a second type has already been added, triggering recompilation. */
+    /* Whether a new type has already been added, triggering recompilation. */
     bool typeAdded;
 
-    TypeConstraintFreezeSingleType(JSScript *script)
-        : TypeConstraint("freezeSingleType", script), typeAdded(false)
+    TypeConstraintFreeze(JSScript *script)
+        : TypeConstraint("freeze", script), typeAdded(false)
     {}
 
     void newType(JSContext *cx, TypeSet *source, jstype type)
@@ -1297,44 +1318,39 @@ public:
     }
 };
 
-static inline jstype
-GetSingleTypeFromTypeFlags(TypeFlags flags)
+void
+TypeSet::Clone(JSContext *cx, JSScript *script, TypeSet *source, ClonedTypeSet *target)
 {
-    switch (flags) {
-      case TYPE_FLAG_UNDEFINED:
-        return TYPE_UNDEFINED;
-      case TYPE_FLAG_NULL:
-        return TYPE_NULL;
-      case TYPE_FLAG_BOOLEAN:
-        return TYPE_BOOLEAN;
-      case TYPE_FLAG_INT32:
-        return TYPE_INT32;
-      case (TYPE_FLAG_INT32 | TYPE_FLAG_DOUBLE):
-        return TYPE_DOUBLE;
-      case TYPE_FLAG_STRING:
-        return TYPE_STRING;
-      default:
-        return TYPE_UNKNOWN;
+    if (!source) {
+        target->typeFlags = TYPE_FLAG_UNKNOWN;
+        return;
     }
-}
 
-jstype
-TypeSet::getSingleType(JSContext *cx, JSScript *script)
-{
-    TypeFlags flags = typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET;
-    jstype type;
+    if (script && !source->unknown())
+        source->add(cx, ArenaNew<TypeConstraintFreeze>(cx->compartment->types.pool, script), false);
 
-    if (objectCount >= 2)
-        type = TYPE_UNKNOWN;
-    else if (objectCount == 1)
-        type = flags ? TYPE_UNKNOWN : (jstype) objectSet;
-    else
-        type = GetSingleTypeFromTypeFlags(flags);
-
-    if (script && type != TYPE_UNKNOWN)
-        add(cx, ArenaNew<TypeConstraintFreezeSingleType>(cx->compartment->types.pool, script), false);
-
-    return type;
+    target->typeFlags = source->typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET;
+    target->objectCount = source->objectCount;
+    if (source->objectCount >= 2) {
+        target->objectSet = (TypeObject **) ::js_malloc(sizeof(TypeObject*) * source->objectCount);
+        if (!target->objectSet) {
+            cx->compartment->types.setPendingNukeTypes(cx);
+            target->objectCount = 0;
+            return;
+        }
+        unsigned objectCapacity = HashSetCapacity(source->objectCount);
+        unsigned index = 0;
+        for (unsigned i = 0; i < objectCapacity; i++) {
+            TypeObject *object = source->objectSet[i];
+            if (object)
+                target->objectSet[index++] = object;
+        }
+        JS_ASSERT(index == source->objectCount);
+    } else if (source->objectCount == 1) {
+        target->objectSet = source->objectSet;
+    } else {
+        target->objectSet = NULL;
+    }
 }
 
 /*
