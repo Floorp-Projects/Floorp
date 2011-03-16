@@ -271,23 +271,6 @@ RegExp::checkMatchPairs(JSString *input, int *buf, size_t matchItemCount)
 #endif
 }
 
-inline types::TypeObject *
-GetRegExpMatchType(JSContext *cx)
-{
-    types::TypeObject *type = cx->getTypeCallerInitObject(true);
-    if (!type)
-        return NULL;
-
-    if (!cx->addTypeProperty(type, NULL, types::TYPE_STRING) ||
-        !cx->addTypeProperty(type, "index", types::TYPE_INT32) ||
-        !cx->addTypeProperty(type, "input", types::TYPE_STRING) ||
-        !cx->markTypeArrayNotPacked(type, true)) {
-        return NULL;
-    }
-
-    return type;
-}
-
 inline JSObject *
 RegExp::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemCount)
 {
@@ -299,10 +282,6 @@ RegExp::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemC
     JSObject *array = NewSlowEmptyArray(cx);
     if (!array)
         return NULL;
-    types::TypeObject *type = GetRegExpMatchType(cx);
-    if (!type)
-        return NULL;
-    array->setType(type);
 
     RegExpMatchBuilder builder(cx, array);
     for (size_t i = 0; i < matchItemCount; i += 2) {

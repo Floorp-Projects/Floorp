@@ -901,9 +901,8 @@ js_InitMathClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     types::TypeObject *type = cx->newTypeObject(js_Math_str, Math->getProto());
-    if (!type)
+    if (!type || !Math->setTypeAndUniqueShape(cx, type))
         return NULL;
-    Math->setType(type);
 
     if (!JS_DefineProperty(cx, obj, js_Math_str, OBJECT_TO_JSVAL(Math),
                            JS_PropertyStub, JS_StrictPropertyStub, 0)) {

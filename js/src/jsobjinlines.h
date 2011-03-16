@@ -760,6 +760,35 @@ JSObject::setType(js::types::TypeObject *newType)
     type = newType;
 }
 
+inline bool
+JSObject::setTypeAndUniqueShape(JSContext *cx, js::types::TypeObject *newType)
+{
+    setType(newType);
+
+    if (!isNative())
+        return true;
+    JS_ASSERT(nativeEmpty());
+
+    js::Shape *shape = js::EmptyShape::create(cx, getClass());
+    if (!shape)
+        return false;
+    setMap(shape);
+    return true;
+}
+
+inline bool
+JSObject::setTypeAndEmptyShape(JSContext *cx, js::types::TypeObject *newType)
+{
+    JS_ASSERT(nativeEmpty() && type->canProvideEmptyShape(getClass()));
+    setType(newType);
+
+    js::Shape *shape = type->getEmptyShape(cx, getClass(), finalizeKind());
+    if (!shape)
+        return false;
+    setMap(shape);
+    return true;
+}
+
 inline void
 JSObject::setTypeAndShape(js::types::TypeObject *newType, const js::Shape *newShape)
 {

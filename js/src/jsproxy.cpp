@@ -1459,9 +1459,8 @@ js_InitProxyClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     TypeObject *type = cx->newTypeObject(js_ProxyClass.name, module->getProto());
-    if (!type)
+    if (!type || !module->setTypeAndUniqueShape(cx, type))
         return NULL;
-    module->setType(type);
 
     if (!JS_DefineProperty(cx, obj, "Proxy", OBJECT_TO_JSVAL(module),
                            JS_PropertyStub, JS_StrictPropertyStub, 0)) {

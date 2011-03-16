@@ -6028,7 +6028,12 @@ BEGIN_CASE(JSOP_NEWINIT)
     TypeObject *type = script->getTypeInitObject(cx, regs.pc, i == JSProto_Array);
     if (!type)
         goto error;
-    obj->setType(type);
+    if (i == JSProto_Array) {
+        obj->setType(type);
+    } else {
+        if (!obj->setTypeAndEmptyShape(cx, type))
+            goto error;
+    }
 
     PUSH_OBJECT(*obj);
     CHECK_INTERRUPT_HANDLER();

@@ -1771,9 +1771,8 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, JSObject *obj)
 
     /* Make a new type for the prototype object. */
     TypeObject *protoType = cx->newTypeObject(obj->getType()->name(), "prototype", objProto);
-    if (!protoType)
-        return false;
-    proto->setType(protoType);
+    if (!protoType || !proto->setTypeAndUniqueShape(cx, protoType))
+        return NULL;
 
     /*
      * ECMA (15.3.5.2) says that a user-defined function's .prototype property
@@ -2807,10 +2806,9 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
             return NULL;
         if (handler) {
             TypeFunction *type = cx->newTypeFunction(fullName, funobj->getProto());
-            if (!type)
+            if (!type || !funobj->setTypeAndUniqueShape(cx, type))
                 return NULL;
             type->handler = handler;
-            funobj->setType(type);
         }
     }
     JS_ASSERT(!funobj->getPrivate());
@@ -2872,19 +2870,17 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
          * beyond JSObject as it points to fun via the private slot.
          */
         clone = NewNativeClassInstance(cx, &js_FunctionClass, proto, parent);
-        if (!clone)
+        if (!clone || !clone->setTypeAndEmptyShape(cx, type))
             return NULL;
         clone->setPrivate(fun);
-        clone->setType(type);
     } else {
         /*
          * Across compartments we have to deep copy JSFunction and clone the
          * script (for interpreted functions).
          */
         clone = NewFunction(cx, parent);
-        if (!clone)
+        if (!clone || !clone->setTypeAndEmptyShape(cx, type))
             return NULL;
-        clone->setType(type);
 
         JSFunction *cfun = (JSFunction *) clone;
         cfun->nargs = fun->nargs;
