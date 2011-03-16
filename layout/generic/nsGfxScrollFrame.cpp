@@ -2045,11 +2045,6 @@ nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
     result.mVertical = disp->mOverflowY;
   }
 
-  NS_ASSERTION(result.mHorizontal != NS_STYLE_OVERFLOW_VISIBLE &&
-               result.mHorizontal != NS_STYLE_OVERFLOW_CLIP &&
-               result.mVertical != NS_STYLE_OVERFLOW_VISIBLE &&
-               result.mVertical != NS_STYLE_OVERFLOW_CLIP,
-               "scrollbars should not have been created");
   return result;
 }
 
