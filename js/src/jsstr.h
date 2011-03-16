@@ -732,15 +732,29 @@ extern const bool js_alnum[];
 const jschar BYTE_ORDER_MARK = 0xFEFF;
 const jschar NO_BREAK_SPACE  = 0x00A0;
 
+extern const bool js_isspace[];
+
 static inline bool
-JS_ISSPACE(jschar c)
+JS_ISSPACE(int c)
 {
     unsigned w = c;
 
-    if (w < 256)
-        return (w <= ' ' && (w == ' ' || (9 <= w && w <= 0xD))) || w == NO_BREAK_SPACE;
+    return (w < 128)
+           ? js_isspace[w]
+           : w == NO_BREAK_SPACE || w == BYTE_ORDER_MARK ||
+             (JS_CCODE(w) & 0x00070000) == 0x00040000;
+}
 
-    return w == BYTE_ORDER_MARK || (JS_CCODE(w) & 0x00070000) == 0x00040000;
+static inline bool
+JS_ISSPACE_OR_BOM(int c)
+{
+    unsigned w = c;
+
+    /* Treat little- and big-endian BOMs as whitespace for compatibility. */
+    return (w < 128)
+           ? js_isspace[w]
+           : w == NO_BREAK_SPACE || w == BYTE_ORDER_MARK ||
+             (JS_CCODE(w) & 0x00070000) == 0x00040000 || w == 0xfffe || w == 0xfeff;
 }
 
 #define JS_ISPRINT(c)   ((c) < 128 && isprint(c))
