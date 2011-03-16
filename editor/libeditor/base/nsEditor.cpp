@@ -4770,7 +4770,7 @@ nsEditor::CreateTxnForDeleteCharacter(nsIDOMCharacterData  *aData,
     }
   } else {
     segOffset = aOffset - 1;
-    if (segOffset > 1 &&
+    if (segOffset > 0 &&
         NS_IS_LOW_SURROGATE(data[segOffset]) &&
         NS_IS_HIGH_SURROGATE(data[segOffset-1])) {
       ++segLength;
