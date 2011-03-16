@@ -308,7 +308,7 @@ enum ScriptBits {
 };
 
 JSBool
-js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
+js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 {
     JSScript *oldscript;
     JSBool ok;
@@ -332,24 +332,6 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
 
     /* Should not XDR scripts optimized for a single global object. */
     JS_ASSERT_IF(script, !JSScript::isValidOffset(script->globalsOffset));
-
-    uint32 magic;
-    if (xdr->mode == JSXDR_ENCODE)
-        magic = JSXDR_MAGIC_SCRIPT_CURRENT;
-    if (!JS_XDRUint32(xdr, &magic))
-        return JS_FALSE;
-    if (magic != JSXDR_MAGIC_SCRIPT_CURRENT) {
-        /* We do not provide binary compatibility with older scripts. */
-        if (!hasMagic) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BAD_SCRIPT_MAGIC);
-            return JS_FALSE;
-        }
-        *hasMagic = JS_FALSE;
-        return JS_TRUE;
-    }
-    if (hasMagic)
-        *hasMagic = JS_TRUE;
 
     /* XDR arguments, local vars, and upvars. */
     uint16 nargs, nvars, nupvars;
@@ -1983,7 +1965,7 @@ js_CloneScript(JSContext *cx, JSScript *script)
     // we don't want gecko to transcribe our principals for us
     DisablePrincipalsTranscoding disable(cx);
 
-    if (!js_XDRScript(w, &script, NULL)) {
+    if (!js_XDRScript(w, &script)) {
         JS_XDRDestroy(w);
         return NULL;
     }
@@ -2007,7 +1989,7 @@ js_CloneScript(JSContext *cx, JSScript *script)
     JS_XDRMemSetData(r, p, nbytes);
     JS_XDRMemSetData(w, NULL, 0);
 
-    if (!js_XDRScript(r, &script, NULL))
+    if (!js_XDRScript(r, &script))
         return NULL;
 
     JS_XDRDestroy(r);

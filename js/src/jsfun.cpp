@@ -1903,7 +1903,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         fun->u.i.wrapper = JSPackedBool((firstword >> 1) & 1);
     }
 
-    if (!js_XDRScript(xdr, &fun->u.i.script, NULL))
+    if (!js_XDRScript(xdr, &fun->u.i.script))
         return false;
 
     if (xdr->mode == JSXDR_DECODE) {
