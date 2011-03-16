@@ -127,7 +127,7 @@ script 15.9.5.30-1.js
 script 15.9.5.31-1.js
 script 15.9.5.32-1.js
 script 15.9.5.33-1.js
-random-if(xulRuntime.OS=="Linux") script 15.9.5.34-1.js
+random script 15.9.5.34-1.js
 script 15.9.5.35-1.js
 script 15.9.5.36-1.js
 script 15.9.5.36-2.js
