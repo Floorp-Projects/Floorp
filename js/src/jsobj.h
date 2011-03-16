@@ -717,6 +717,8 @@ struct JSObject : js::gc::Cell {
 
     inline bool clearType(JSContext *cx);
     inline void setType(js::types::TypeObject *newType);
+    inline bool setTypeAndUniqueShape(JSContext *cx, js::types::TypeObject *newType);
+    inline bool setTypeAndEmptyShape(JSContext *cx, js::types::TypeObject *newType);
     inline void setTypeAndShape(js::types::TypeObject *newType, const js::Shape *newShape);
 
     inline js::types::TypeObject *getNewType(JSContext *cx);

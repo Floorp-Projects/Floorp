@@ -1824,11 +1824,6 @@ BuildFlatMatchArray(JSContext *cx, JSString *textstr, const FlatMatch &fm, Value
     if (!obj)
         return false;
 
-    TypeObject *type = GetRegExpMatchType(cx);
-    if (!type)
-        return false;
-    obj->setType(type);
-
     vp->setObject(*obj);
 
     return obj->defineProperty(cx, INT_TO_JSID(0), StringValue(fm.pattern())) &&
@@ -1854,11 +1849,6 @@ MatchCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
         arrayobj = NewDenseEmptyArray(cx);
         if (!arrayobj)
             return false;
-
-        TypeObject *type = GetRegExpMatchType(cx);
-        if (!type)
-            return false;
-        arrayobj->setType(type);
     }
 
     Value v;
@@ -3167,29 +3157,6 @@ JS_DEFINE_TRCINFO_1(str_concat,
     (3, (extern, STRING_RETRY, js_ConcatStrings, CONTEXT, THIS_STRING, STRING,
          1, nanojit::ACCSET_NONE)))
 
-static void type_StringMatch(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-
-    if (!site->returnTypes)
-        return;
-
-    if (!site->compileAndGo()) {
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        return;
-    }
-
-    if (site->isNew)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-
-    TypeObject *type = site->getInitObject(cx, true);
-    if (!type)
-        return;
-
-    site->returnTypes->addType(cx, TYPE_NULL);
-    site->returnTypes->addType(cx, (jstype) type);
-}
-
 static void type_StringSplit(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
@@ -3236,7 +3203,7 @@ static JSFunctionSpec string_methods[] = {
     JS_FN_TYPE("localeCompare",     str_localeCompare,     1,JSFUN_GENERIC_NATIVE, JS_TypeHandlerInt),
 
     /* Perl-ish methods (search is actually Python-esque). */
-    JS_FN_TYPE("match",             str_match,             1,JSFUN_GENERIC_NATIVE, type_StringMatch),
+    JS_FN_TYPE("match",             str_match,             1,JSFUN_GENERIC_NATIVE, JS_TypeHandlerDynamic),
     JS_FN_TYPE("search",            str_search,            1,JSFUN_GENERIC_NATIVE, JS_TypeHandlerInt),
     JS_FN_TYPE("replace",           str_replace,           2,JSFUN_GENERIC_NATIVE, JS_TypeHandlerString),
     JS_FN_TYPE("split",             str_split,             2,JSFUN_GENERIC_NATIVE, type_StringSplit),
