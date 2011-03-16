@@ -2791,27 +2791,53 @@ stubs::NegZeroHelper(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::ClearArgumentTypes(VMFrame &f)
+stubs::CheckArgumentTypes(VMFrame &f)
 {
-    JSFunction *fun = f.fp()->fun();
+    JSStackFrame *fp = f.fp();
+    JSFunction *fun = fp->fun();
     JSScript *script = fun->script();
+
+    uint32 recompilations = f.jit()->recompilations;
 
     /* Postpone recompilations until all args have been updated. */
     types::AutoEnterTypeInference enter(f.cx);
 
     if (!f.fp()->isConstructing()) {
-        if (!script->typeSetThis(f.cx, types::TYPE_UNKNOWN))
+        if (!script->typeSetThis(f.cx, fp->thisValue()))
             THROW();
     }
 
     for (unsigned i = 0; i < fun->nargs; i++) {
-        if (!script->typeSetArgument(f.cx, i, types::TYPE_UNKNOWN))
+        if (!script->typeSetArgument(f.cx, i, fp->formalArg(i)))
             THROW();
     }
 
     if (!f.cx->compartment->types.checkPendingRecompiles(f.cx))
         THROW();
+
+    if (f.jit()->recompilations != recompilations)
+        return;
+
+#ifdef JS_MONOIC
+    ic::GenerateArgumentCheckStub(f);
+#endif
 }
+
+#ifdef DEBUG
+void JS_FASTCALL
+stubs::AssertArgumentTypes(VMFrame &f)
+{
+    JSStackFrame *fp = f.fp();
+    JSFunction *fun = fp->fun();
+    JSScript *script = fun->script();
+
+    if (!f.fp()->isConstructing())
+        JS_ASSERT(script->thisTypes()->hasType(types::GetValueType(f.cx, fp->thisValue())));
+
+    for (unsigned i = 0; i < fun->nargs; i++)
+        JS_ASSERT(script->argTypes(i)->hasType(types::GetValueType(f.cx, fp->formalArg(i))));
+}
+#endif
 
 void JS_FASTCALL
 stubs::Exception(VMFrame &f)

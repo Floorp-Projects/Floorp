@@ -568,6 +568,14 @@ JSScript::typeSetThis(JSContext *cx, js::types::jstype type)
 }
 
 inline bool
+JSScript::typeSetThis(JSContext *cx, const js::Value &value)
+{
+    if (cx->typeInferenceEnabled())
+        return typeSetThis(cx, js::types::GetValueType(cx, value));
+    return true;
+}
+
+inline bool
 JSScript::typeSetNewCalled(JSContext *cx)
 {
     if (!cx->typeInferenceEnabled() || calledWithNew)

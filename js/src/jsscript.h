@@ -526,6 +526,7 @@ struct JSScript {
 
     /* Add a type for a variable in this script. */
     inline bool typeSetThis(JSContext *cx, js::types::jstype type);
+    inline bool typeSetThis(JSContext *cx, const js::Value &value);
     inline bool typeSetNewCalled(JSContext *cx);
     inline bool typeSetLocal(JSContext *cx, unsigned local, js::types::jstype type);
     inline bool typeSetLocal(JSContext *cx, unsigned local, const js::Value &value);

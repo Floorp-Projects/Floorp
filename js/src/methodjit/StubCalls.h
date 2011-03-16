@@ -220,7 +220,11 @@ void JS_FASTCALL Unbrand(VMFrame &f);
 void JS_FASTCALL UndefinedHelper(VMFrame &f);
 void JS_FASTCALL NegZeroHelper(VMFrame &f);
 
-void JS_FASTCALL ClearArgumentTypes(VMFrame &f);
+void JS_FASTCALL CheckArgumentTypes(VMFrame &f);
+
+#ifdef DEBUG
+void JS_FASTCALL AssertArgumentTypes(VMFrame &f);
+#endif
 
 template <bool strict> int32 JS_FASTCALL ConvertToTypedInt(JSContext *cx, Value *vp);
 void JS_FASTCALL ConvertToTypedFloat(JSContext *cx, Value *vp);

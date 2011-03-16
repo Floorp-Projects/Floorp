@@ -42,6 +42,7 @@
 #include "jscntxt.h"
 
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
+#include "assembler/assembler/CodeLocation.h"
 
 #if !defined JS_CPU_X64 && \
     !defined JS_CPU_X86 && \
@@ -341,10 +342,20 @@ struct JITScript {
     uint32          nCallSites;
 
     /*
-     * Number of on-stack recompilations of this JIT script. Reset to zero if the
-     * JIT script is destroyed if marked for recompilation with no active frame on the stack.
+     * Number of on-stack recompilations of this JIT script. Reset to zero if
+     * the JIT script is destroyed if marked for recompilation with no active
+     * frame on the stack.
      */
     uint32          recompilations;
+
+#ifdef JS_MONOIC
+    /* Inline cache at function entry for checking this/argument types. */
+    JSC::CodeLocationLabel argsCheckStub;
+    JSC::CodeLocationLabel argsCheckFallthrough;
+    JSC::CodeLocationJump  argsCheckJump;
+    JSC::ExecutablePool *argsCheckPool;
+    void resetArgsCheck();
+#endif
 
     /* List of inline caches jumping to the fastEntry. */
     JSCList          callers;
