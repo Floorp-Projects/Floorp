@@ -322,6 +322,26 @@ JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Valu
     return true;
 }
 
+inline bool
+JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::ClonedTypeSet *set)
+{
+    if (obj->unknownProperties)
+        return true;
+    id = js::types::MakeTypeId(this, id);
+
+    js::types::AutoEnterTypeInference enter(this);
+
+    js::types::TypeSet *types = obj->getProperty(this, id, true);
+    if (!types)
+        return compartment->types.checkPendingRecompiles(this);
+
+    js::types::InferSpew(js::types::ISpewOps, "externalType: property %s %s",
+                         obj->name(), js::types::TypeIdString(id));
+    types->addTypeSet(this, set);
+
+    return compartment->types.checkPendingRecompiles(this);
+}
+
 inline js::types::TypeObject *
 JSContext::getTypeEmpty()
 {
@@ -576,6 +596,19 @@ JSScript::typeSetThis(JSContext *cx, const js::Value &value)
 }
 
 inline bool
+JSScript::typeSetThis(JSContext *cx, js::types::ClonedTypeSet *set)
+{
+    if (!ensureVarTypes(cx))
+        return false;
+    js::types::AutoEnterTypeInference enter(cx);
+
+    js::types::InferSpew(js::types::ISpewOps, "externalType: setThis #%u: %s", id());
+    thisTypes()->addTypeSet(cx, set);
+
+    return cx->compartment->types.checkPendingRecompiles(cx);
+}
+
+inline bool
 JSScript::typeSetNewCalled(JSContext *cx)
 {
     if (!cx->typeInferenceEnabled() || calledWithNew)
@@ -629,6 +662,19 @@ JSScript::typeSetLocal(JSContext *cx, unsigned local, const js::Value &value)
 }
 
 inline bool
+JSScript::typeSetLocal(JSContext *cx, unsigned local, js::types::ClonedTypeSet *set)
+{
+    if (!ensureVarTypes(cx))
+        return false;
+    js::types::AutoEnterTypeInference enter(cx);
+
+    js::types::InferSpew(js::types::ISpewOps, "externalType: setLocal #%u %u", id(), local);
+    localTypes(local)->addTypeSet(cx, set);
+
+    return compartment->types.checkPendingRecompiles(cx);
+}
+
+inline bool
 JSScript::typeSetArgument(JSContext *cx, unsigned arg, js::types::jstype type)
 {
     if (!cx->typeInferenceEnabled())
@@ -655,6 +701,19 @@ JSScript::typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value)
         return typeSetArgument(cx, arg, type);
     }
     return true;
+}
+
+inline bool
+JSScript::typeSetArgument(JSContext *cx, unsigned arg, js::types::ClonedTypeSet *set)
+{
+    if (!ensureVarTypes(cx))
+        return false;
+    js::types::AutoEnterTypeInference enter(cx);
+
+    js::types::InferSpew(js::types::ISpewOps, "externalType: setArg #%u %u", id(), arg);
+    argTypes(arg)->addTypeSet(cx, set);
+
+    return cx->compartment->types.checkPendingRecompiles(cx);
 }
 
 inline bool
@@ -1167,10 +1226,28 @@ inline TypeFunction::TypeFunction(jsid name, JSObject *proto)
 }
 
 inline void
-SweepType(jstype *ptype)
+SweepClonedTypes(ClonedTypeSet *types)
 {
-    if (TypeIsObject(*ptype) && !((TypeObject*)*ptype)->marked)
-        *ptype = TYPE_UNKNOWN;
+    if (types->objectCount >= 2) {
+        for (unsigned i = 0; i < types->objectCount; i++) {
+            if (!types->objectSet[i]->marked)
+                types->objectSet[i--] = types->objectSet[--types->objectCount];
+        }
+        if (types->objectCount == 1) {
+            TypeObject *obj = (TypeObject *) types->objectSet;
+            ::js_free(types->objectSet);
+            types->objectSet = (TypeObject **) obj;
+        } else if (types->objectCount == 0) {
+            ::js_free(types->objectSet);
+            types->objectSet = NULL;
+        }
+    } else if (types->objectCount == 1) {
+        TypeObject *obj = (TypeObject *) types->objectSet;
+        if (!obj->marked) {
+            types->objectSet = NULL;
+            types->objectCount = 0;
+        }
+    }
 }
 
 } } /* namespace js::types */

@@ -104,8 +104,8 @@ struct UncachedCallResult {
  * These functions either execute the function, return a native code
  * pointer that can be used to call the function, or throw.
  */
-void UncachedCallHelper(VMFrame &f, uint32 argc, types::jstype *argTypes, UncachedCallResult *ucr);
-void UncachedNewHelper(VMFrame &f, uint32 argc, types::jstype *argTypes, UncachedCallResult *ucr);
+void UncachedCallHelper(VMFrame &f, uint32 argc, types::ClonedTypeSet *argTypes, UncachedCallResult *ucr);
+void UncachedNewHelper(VMFrame &f, uint32 argc, types::ClonedTypeSet *argTypes, UncachedCallResult *ucr);
 
 void JS_FASTCALL CreateThis(VMFrame &f, JSObject *proto);
 void JS_FASTCALL Throw(VMFrame &f);

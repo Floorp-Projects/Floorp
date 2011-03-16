@@ -343,7 +343,8 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
 }
 
 static inline bool
-UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint32 argc, types::jstype *argTypes)
+UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint32 argc,
+                   types::ClonedTypeSet *argTypes)
 {
     JSContext *cx = f.cx;
     Value *vp = f.regs.sp - (argc + 2);
@@ -361,17 +362,20 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
          * used without further type checking. If there is an argument count mismatch,
          * the callee's args will end up getting marked as unknown.
          */
+        types::AutoEnterTypeInference enter(cx);
         if (flags & JSFRAME_CONSTRUCTING) {
             if (!newscript->typeSetNewCalled(cx))
                 return false;
         } else {
-            if (!newscript->typeSetThis(cx, argTypes[0]))
+            if (!newscript->typeSetThis(cx, &argTypes[0]))
                 return false;
         }
         for (unsigned i = 0; i < argc; i++) {
-            if (!newscript->typeSetArgument(cx, i, argTypes[1 + i]))
+            if (!newscript->typeSetArgument(cx, i, &argTypes[1 + i]))
                 return false;
         }
+        if (!cx->compartment->types.checkPendingRecompiles(cx))
+            return false;
     } else {
         CallArgs args(vp + 2, argc);
         if (!cx->typeMonitorCall(args, flags & JSFRAME_CONSTRUCTING))
@@ -438,7 +442,8 @@ stubs::UncachedNew(VMFrame &f, uint32 argc)
 }
 
 void
-stubs::UncachedNewHelper(VMFrame &f, uint32 argc, types::jstype *argTypes, UncachedCallResult *ucr)
+stubs::UncachedNewHelper(VMFrame &f, uint32 argc, types::ClonedTypeSet *argTypes,
+                         UncachedCallResult *ucr)
 {
     ucr->init();
 
@@ -481,7 +486,8 @@ stubs::Eval(VMFrame &f, uint32 argc)
 }
 
 void
-stubs::UncachedCallHelper(VMFrame &f, uint32 argc, types::jstype *argTypes, UncachedCallResult *ucr)
+stubs::UncachedCallHelper(VMFrame &f, uint32 argc, types::ClonedTypeSet *argTypes,
+                          UncachedCallResult *ucr)
 {
     ucr->init();
 
