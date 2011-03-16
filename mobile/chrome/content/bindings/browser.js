@@ -1,3 +1,4 @@
+// -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 let Cc = Components.classes;
 let Ci = Components.interfaces;
 
@@ -363,7 +364,10 @@ let ContentScroll =  {
         //     end of a pan. Due to bug 637852, there may be seaming issues
         //     with the visible content, so we need to redraw.
         if (json.id == 1 && json.scrollX >= 0 && json.scrollY >= 0)
-          winCwu.redraw();
+          win.setTimeout(
+            function() {
+              winCwu20.redraw();
+            }, 0);
 
         break;
       }
