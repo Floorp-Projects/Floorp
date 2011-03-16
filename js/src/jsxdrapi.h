@@ -115,6 +115,7 @@ struct JSXDRState {
     void        *reghash;
     void        *userdata;
     JSScript    *script;
+    const char  *filename;
 };
 
 extern JS_PUBLIC_API(void)
@@ -205,7 +206,7 @@ JS_XDRFindClassById(JSXDRState *xdr, uint32 id);
  * before deserialization of bytecode.  If the saved version does not match
  * the current version, abort deserialization and invalidate the file.
  */
-#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 83)
+#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 84)
 
 /*
  * Library-private functions.

@@ -319,7 +319,6 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
     uint16 nClosedArgs = 0, nClosedVars = 0;
     JSPrincipals *principals;
     uint32 encodeable;
-    JSBool filenameWasSaved;
     jssrcnote *sn;
     JSSecurityCallbacks *callbacks;
     uint32 scriptBits = 0;
@@ -327,7 +326,6 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
     JSContext *cx = xdr->cx;
     JSScript *script = *scriptp;
     nsrcnotes = ntrynotes = natoms = nobjects = nregexps = nconsts = 0;
-    filenameWasSaved = JS_FALSE;
     jssrcnote *notes = NULL;
 
     /* Should not XDR scripts optimized for a single global object. */
@@ -594,11 +592,15 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
         goto error;
 
     if (!JS_XDRBytes(xdr, (char *)notes, nsrcnotes * sizeof(jssrcnote)) ||
-        !JS_XDRCStringOrNull(xdr, (char **)&script->filename) ||
         !JS_XDRUint32(xdr, &lineno) ||
         !JS_XDRUint32(xdr, &nslots)) {
         goto error;
     }
+
+    JS_ASSERT_IF(xdr->mode == JSXDR_ENCODE, xdr->filename == script->filename);
+
+    if (xdr->mode == JSXDR_DECODE)
+        script->filename = xdr->filename;
 
     callbacks = JS_GetSecurityCallbacks(cx);
     if (xdr->mode == JSXDR_ENCODE) {
@@ -626,19 +628,9 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
     }
 
     if (xdr->mode == JSXDR_DECODE) {
-        const char *filename = script->filename;
-        if (filename) {
-            filename = js_SaveScriptFilename(cx, filename);
-            if (!filename)
-                goto error;
-            cx->free((void *) script->filename);
-            script->filename = filename;
-            filenameWasSaved = JS_TRUE;
-        }
         script->lineno = (uintN)lineno;
         script->nslots = (uint16)nslots;
         script->staticLevel = (uint16)(nslots >> 16);
-
     }
 
     for (i = 0; i != natoms; ++i) {
@@ -730,10 +722,6 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 
   error:
     if (xdr->mode == JSXDR_DECODE) {
-        if (script->filename && !filenameWasSaved) {
-            cx->free((void *) script->filename);
-            script->filename = NULL;
-        }
         js_DestroyScript(cx, script);
         *scriptp = NULL;
     }
@@ -1965,6 +1953,9 @@ js_CloneScript(JSContext *cx, JSScript *script)
     // we don't want gecko to transcribe our principals for us
     DisablePrincipalsTranscoding disable(cx);
 
+#ifdef DEBUG
+    w->filename = script->filename;
+#endif
     if (!js_XDRScript(w, &script)) {
         JS_XDRDestroy(w);
         return NULL;
@@ -1988,6 +1979,8 @@ js_CloneScript(JSContext *cx, JSScript *script)
     // mem, lest they both try to free it in JS_XDRDestroy
     JS_XDRMemSetData(r, p, nbytes);
     JS_XDRMemSetData(w, NULL, 0);
+
+    r->filename = script->filename;
 
     if (!js_XDRScript(r, &script))
         return NULL;
