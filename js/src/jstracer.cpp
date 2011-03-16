@@ -485,10 +485,10 @@ jitstats_getOnTrace(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static JSPropertySpec jitstats_props[] = {
-#define JITSTAT(x) { #x, STAT ## x ## ID, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT },
+#define JITSTAT(x) { #x, STAT ## x ## ID, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT, NULL, NULL, JS_TypeHandlerInt },
 #include "jitstats.tbl"
 #undef JITSTAT
-    { "onTrace", 0, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT, jitstats_getOnTrace, NULL },
+    { "onTrace", 0, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT, jitstats_getOnTrace, NULL, JS_TypeHandlerBool },
     { 0 }
 };
 
@@ -501,6 +501,10 @@ jitstats_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         JSAtom* str = JSID_TO_ATOM(id);
         if (StringEqualsAscii(str, "HOTLOOP")) {
             *vp = INT_TO_JSVAL(HOTLOOP);
+
+            if (!cx->addTypePropertyId(obj->getType(), id, Valueify(*vp)))
+                return JS_FALSE;
+
             return JS_TRUE;
         }
 
@@ -512,6 +516,10 @@ jitstats_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 #else
             *vp = BOOLEAN_TO_JSVAL(false);
 #endif
+
+            if (!cx->addTypePropertyId(obj->getType(), id, Valueify(*vp)))
+                return JS_FALSE;
+
             return JS_TRUE;
         }
     }
