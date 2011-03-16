@@ -4608,7 +4608,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN_TYPE("read",           Snarf,          0,0, JS_TypeHandlerString),
     JS_FN_TYPE("compile",        Compile,        1,0, JS_TypeHandlerVoid),
     JS_FN_TYPE("parse",          Parse,          1,0, JS_TypeHandlerVoid),
-    JS_FN_TYPE("timeout",        Timeout,        1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("timeout",        Timeout,        1,0, JS_TypeHandlerDynamic),
     JS_FN_TYPE("elapsed",        Elapsed,        0,0, JS_TypeHandlerFloat),
     JS_FN_TYPE("parent",         Parent,         1,0, JS_TypeHandlerDynamic),
     JS_FN_TYPE("wrap",           Wrap,           1,0, JS_TypeHandlerDynamic),
