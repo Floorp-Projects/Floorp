@@ -59,6 +59,7 @@ _TEST_FILES = \
 		test_bug604532.html \
 		test_bug625452.html \
 		test_bug629172.html \
+		test_bug641466.html \
 		$(NULL)
 
 # disables the key handling test on gtk2 because gtk2 overrides some key events
