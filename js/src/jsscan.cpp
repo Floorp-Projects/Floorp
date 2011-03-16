@@ -1109,15 +1109,18 @@ TokenStream::getTokenInternal()
         numStart = userbuf.addressOfNextRawChar() - 1;
 
       decimal:
+        bool hasFracOrExp = false;
         while (JS7_ISDEC(c))
             c = getChar();
 
         if (c == '.') {
+            hasFracOrExp = true;
             do {
                 c = getChar();
             } while (JS7_ISDEC(c));
         }
         if (JS_TOLOWER(c) == 'e') {
+            hasFracOrExp = true;
             c = getChar();
             if (c == '+' || c == '-')
                 c = getChar();
@@ -1145,8 +1148,13 @@ TokenStream::getTokenInternal()
          */
         jsdouble dval;
         const jschar *dummy;
-        if (!js_strtod(cx, numStart, userbuf.addressOfNextRawChar(), &dummy, &dval))
-            goto error;
+        if (!hasFracOrExp) {
+            if (!GetPrefixInteger(cx, numStart, userbuf.addressOfNextRawChar(), 10, &dummy, &dval))
+                goto error;
+        } else {
+            if (!js_strtod(cx, numStart, userbuf.addressOfNextRawChar(), &dummy, &dval))
+                goto error;
+        }
         tp->t_dval = dval;
         tt = TOK_NUMBER;
         goto out;
