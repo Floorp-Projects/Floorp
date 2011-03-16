@@ -666,14 +666,25 @@ JS_PUBLIC_API(JSBool)
 JS_XDRScriptObject(JSXDRState *xdr, JSObject **scriptObjp)
 {
     JSScript *script;
+    uint32 magic;
     if (xdr->mode == JSXDR_DECODE) {
         script = NULL;
         *scriptObjp = NULL;
     } else {
         script = (*scriptObjp)->getScript();
+        magic = JSXDR_MAGIC_SCRIPT_CURRENT;
     }
-    
-    if (!js_XDRScript(xdr, &script, NULL))
+
+    if (!JS_XDRUint32(xdr, &magic))
+        return false;
+
+    if (magic != JSXDR_MAGIC_SCRIPT_CURRENT) {
+        /* We do not provide binary compatibility with older scripts. */
+        JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL, JSMSG_BAD_SCRIPT_MAGIC);
+        return false;
+    }
+
+    if (!js_XDRScript(xdr, &script))
         return false;
 
     if (xdr->mode == JSXDR_DECODE) {
