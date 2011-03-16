@@ -336,6 +336,9 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
     if (status == Compile_Okay)
         return script->getJIT(fp->isConstructing())->invokeEntry;
 
+    /* Force computation of the previous PC, as Interpret will clear it. */
+    fp->prev()->pc(cx, fp);
+
     /* Function did not compile... interpret it. */
     JSBool ok = Interpret(cx, fp);
     InlineReturn(f);
