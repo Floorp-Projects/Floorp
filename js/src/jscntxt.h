@@ -2173,6 +2173,7 @@ public:
     inline bool addTypeProperty(js::types::TypeObject *obj, const char *name, const js::Value &value);
     inline bool addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jstype type);
     inline bool addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Value &value);
+    inline bool addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::ClonedTypeSet *types);
 
     /* Get the type to use for objects with no prototype. */
     inline js::types::TypeObject *getTypeEmpty();

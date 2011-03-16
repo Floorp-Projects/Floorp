@@ -527,11 +527,14 @@ struct JSScript {
     /* Add a type for a variable in this script. */
     inline bool typeSetThis(JSContext *cx, js::types::jstype type);
     inline bool typeSetThis(JSContext *cx, const js::Value &value);
+    inline bool typeSetThis(JSContext *cx, js::types::ClonedTypeSet *types);
     inline bool typeSetNewCalled(JSContext *cx);
     inline bool typeSetLocal(JSContext *cx, unsigned local, js::types::jstype type);
     inline bool typeSetLocal(JSContext *cx, unsigned local, const js::Value &value);
+    inline bool typeSetLocal(JSContext *cx, unsigned local, js::types::ClonedTypeSet *types);
     inline bool typeSetArgument(JSContext *cx, unsigned arg, js::types::jstype type);
     inline bool typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value);
+    inline bool typeSetArgument(JSContext *cx, unsigned arg, js::types::ClonedTypeSet *types);
     inline bool typeSetUpvar(JSContext *cx, unsigned upvar, const js::Value &value);
 
     /*

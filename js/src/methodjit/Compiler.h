@@ -155,7 +155,7 @@ class Compiler : public BaseCompiler
         RegisterID   funPtrReg;
         FrameSize    frameSize;
         bool         typeMonitored;
-        types::jstype *argTypes;
+        types::ClonedTypeSet *argTypes;
     };
 
   private:
@@ -219,7 +219,7 @@ class Compiler : public BaseCompiler
 
     struct PICGenInfo : public BaseICInfo {
         PICGenInfo(ic::PICInfo::Kind kind, JSOp op, bool usePropCache)
-          : BaseICInfo(op), kind(kind), usePropCache(usePropCache)
+          : BaseICInfo(op), kind(kind), usePropCache(usePropCache), typeMonitored(false)
         { }
         ic::PICInfo::Kind kind;
         Label typeCheck;
@@ -232,7 +232,7 @@ class Compiler : public BaseCompiler
         JSAtom *atom;
         bool hasTypeCheck;
         bool typeMonitored;
-        types::jstype knownType;
+        types::ClonedTypeSet *rhsTypes;
         ValueRemat vr;
 #ifdef JS_HAS_IC_LABELS
         union {
@@ -290,7 +290,7 @@ class Compiler : public BaseCompiler
                 ic.u.get.hasTypeCheck = hasTypeCheck;
             }
             ic.typeMonitored = typeMonitored;
-            ic.knownType = knownType;
+            ic.rhsTypes = rhsTypes;
 #ifdef JS_HAS_IC_LABELS
             if (ic.isGet())
                 ic.setLabels(getPropLabels());

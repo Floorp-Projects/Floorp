@@ -3017,14 +3017,17 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
     callIC.typeMonitored = monitored(PC);
     if (callIC.typeMonitored && callIC.frameSize.isStatic()) {
         unsigned argc = callIC.frameSize.staticArgc();
-        callIC.argTypes = (types::jstype *) js_calloc((1 + argc) * sizeof(types::jstype));
-        if (!callIC.argTypes)
+        callIC.argTypes = (types::ClonedTypeSet *)
+            js_calloc((1 + argc) * sizeof(types::ClonedTypeSet));
+        if (!callIC.argTypes) {
+            js_ReportOutOfMemory(cx);
             return false;
+        }
         types::TypeSet *types = frame.getTypeSet(frame.peek(-(argc + 1)));
-        callIC.argTypes[0] = types ? types->getSingleType(cx, script) : types::TYPE_UNKNOWN;
+        types::TypeSet::Clone(cx, script, types, &callIC.argTypes[0]);
         for (unsigned i = 0; i < argc; i++) {
             types::TypeSet *types = frame.getTypeSet(frame.peek(-(argc - i)));
-            callIC.argTypes[i + 1] = types ? types->getSingleType(cx, script) : types::TYPE_UNKNOWN;
+            types::TypeSet::Clone(cx, script, types, &callIC.argTypes[i + 1]);
         }
     }
 
@@ -3834,10 +3837,15 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
     if (monitored(PC)) {
         types::TypeSet *types = frame.getTypeSet(rhs);
         pic.typeMonitored = true;
-        pic.knownType = types ? types->getSingleType(cx, script) : types::TYPE_UNKNOWN;
+        pic.rhsTypes = (types::ClonedTypeSet *) ::js_calloc(sizeof(types::ClonedTypeSet));
+        if (!pic.rhsTypes) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+        types::TypeSet::Clone(cx, script, types, pic.rhsTypes);
     } else {
         pic.typeMonitored = false;
-        pic.knownType = types::TYPE_UNKNOWN;
+        pic.rhsTypes = NULL;
     }
 
     RESERVE_IC_SPACE(masm);

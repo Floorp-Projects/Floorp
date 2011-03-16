@@ -67,6 +67,7 @@ struct TypeCallsite;
 struct TypeObject;
 struct TypeFunction;
 struct TypeCompartment;
+struct ClonedTypeSet;
 
 /*
  * Information about a single concrete type.  This is a non-zero value whose
@@ -270,6 +271,9 @@ struct TypeSet
      */
     inline void addType(JSContext *cx, jstype type);
 
+    /* Add all types in a cloned set to this set. */
+    void addTypeSet(JSContext *cx, ClonedTypeSet *types);
+
     /* Add specific kinds of constraints to this set. */
     inline void add(JSContext *cx, TypeConstraint *constraint, bool callExisting = true);
     void addSubset(JSContext *cx, JSScript *script, TypeSet *target);
@@ -306,9 +310,6 @@ struct TypeSet
      * will be marked for recompilation.
      */
 
-    /* Get the single type representing all values in this set, TYPE_UNKNOWN otherwise. */
-    jstype getSingleType(JSContext *cx, JSScript *script);
-
     /* Get any type tag which all values in this set must have. */
     JSValueType getKnownTypeTag(JSContext *cx, JSScript *script);
 
@@ -318,8 +319,22 @@ struct TypeSet
     /* Get whether this type set is non-empty. */
     bool knownNonEmpty(JSContext *cx, JSScript *script);
 
+    /*
+     * Clone this type set onto target; if any new types are added to this set
+     * in the future, the script will be recompiled.
+     */
+    static void Clone(JSContext *cx, JSScript *script, TypeSet *source, ClonedTypeSet *target);
+
   private:
     inline void markUnknown(JSContext *cx);
+};
+
+/* A type set captured for use by JIT compilers. */
+struct ClonedTypeSet
+{
+    TypeFlags typeFlags;
+    TypeObject **objectSet;
+    unsigned objectCount;
 };
 
 /* Type information about a property. */

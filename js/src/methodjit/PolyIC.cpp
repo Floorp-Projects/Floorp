@@ -200,7 +200,8 @@ class SetPropCompiler : public PICStubCompiler
 
     static void reset(Repatcher &repatcher, ic::PICInfo &pic)
     {
-        types::SweepType(&pic.knownType);
+        if (pic.rhsTypes)
+            types::SweepClonedTypes(pic.rhsTypes);
 
         SetPropLabels &labels = pic.setPropLabels();
         repatcher.repatchLEAToLoadPtr(labels.getDslotsLoad(pic.fastPathRejoin, pic.u.vr));
@@ -601,7 +602,7 @@ class SetPropCompiler : public PICStubCompiler
 
             if (pic.typeMonitored) {
                 uint32 recompilations = f.jit()->recompilations;
-                if (!cx->addTypePropertyId(obj->getType(), shape->id, pic.knownType))
+                if (!cx->addTypePropertyId(obj->getType(), shape->id, pic.rhsTypes))
                     return error();
                 if (f.jit()->recompilations != recompilations)
                     return Lookup_Uncacheable;
@@ -621,7 +622,7 @@ class SetPropCompiler : public PICStubCompiler
                 return disable("invalid slot");
             if (pic.typeMonitored) {
                 uint32 recompilations = f.jit()->recompilations;
-                if (!cx->addTypePropertyId(obj->getType(), shape->id, pic.knownType))
+                if (!cx->addTypePropertyId(obj->getType(), shape->id, pic.rhsTypes))
                     return error();
                 if (f.jit()->recompilations != recompilations)
                     return Lookup_Uncacheable;
@@ -640,10 +641,10 @@ class SetPropCompiler : public PICStubCompiler
                 if (!script->ensureVarTypes(cx))
                     return error();
                 if (shape->setterOp() == SetCallArg) {
-                    if (!script->typeSetArgument(cx, slot, pic.knownType))
+                    if (!script->typeSetArgument(cx, slot, pic.rhsTypes))
                         return error();
                 } else {
-                    if (!script->typeSetLocal(cx, slot, pic.knownType))
+                    if (!script->typeSetLocal(cx, slot, pic.rhsTypes))
                         return error();
                 }
                 if (f.jit()->recompilations != recompilations)
