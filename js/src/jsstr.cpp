@@ -5662,6 +5662,55 @@ const bool js_alnum[] = {
 /* 12 */ true, true, true, ____, ____, ____, ____, ____
 };
 
+/*
+ * Identifier start chars:
+ * -      36:    $
+ * -  65..90: A..Z
+ * -      95:    _
+ * - 97..122: a..z
+ */
+const bool js_isidstart[] = {
+/*       0     1     2     3     4     5     6     7     8     9  */
+/*  0 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  1 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  2 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  3 */ ____, ____, ____, ____, ____, ____, true, ____, ____, ____,
+/*  4 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  5 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  6 */ ____, ____, ____, ____, ____, true, true, true, true, true, 
+/*  7 */ true, true, true, true, true, true, true, true, true, true, 
+/*  8 */ true, true, true, true, true, true, true, true, true, true, 
+/*  9 */ true, ____, ____, ____, ____, true, ____, true, true, true, 
+/* 10 */ true, true, true, true, true, true, true, true, true, true, 
+/* 11 */ true, true, true, true, true, true, true, true, true, true, 
+/* 12 */ true, true, true, ____, ____, ____, ____, ____
+};
+
+/*
+ * Identifier chars:
+ * -      36:    $
+ * -  48..57: 0..9
+ * -  65..90: A..Z
+ * -      95:    _
+ * - 97..122: a..z
+ */
+const bool js_isident[] = {
+/*       0     1     2     3     4     5     6     7     8     9  */
+/*  0 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  1 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  2 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  3 */ ____, ____, ____, ____, ____, ____, true, ____, ____, ____,
+/*  4 */ ____, ____, ____, ____, ____, ____, ____, ____, true, true, 
+/*  5 */ true, true, true, true, true, true, true, true, ____, ____,
+/*  6 */ ____, ____, ____, ____, ____, true, true, true, true, true, 
+/*  7 */ true, true, true, true, true, true, true, true, true, true, 
+/*  8 */ true, true, true, true, true, true, true, true, true, true, 
+/*  9 */ true, ____, ____, ____, ____, true, ____, true, true, true, 
+/* 10 */ true, true, true, true, true, true, true, true, true, true, 
+/* 11 */ true, true, true, true, true, true, true, true, true, true, 
+/* 12 */ true, true, true, ____, ____, ____, ____, ____
+};
+
 /* Whitespace chars: '\t', '\n', '\v', '\f', '\r', ' '. */
 const bool js_isspace[] = {
 /*       0     1     2     3     4     5     6     7     8     9  */
