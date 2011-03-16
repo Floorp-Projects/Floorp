@@ -618,7 +618,6 @@ class TokenStream
     JSPackedBool        maybeStrSpecial[256];/* speeds up string scanning */
     JSVersion           version;        /* (i.e. to identify keywords) */
     bool                xml;            /* see JSOPTION_XML */
-    JS_STATIC_ASSERT(sizeof(maybeEOL) == 256);
 };
 
 } /* namespace js */
