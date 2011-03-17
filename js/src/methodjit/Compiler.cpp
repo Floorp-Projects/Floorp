@@ -5025,6 +5025,11 @@ mjit::Compiler::jsop_setelem_slow()
     INLINE_STUBCALL(STRICT_VARIANT(stubs::SetElem));
     frame.popn(3);
     frame.pushSynced(JSVAL_TYPE_UNKNOWN);
+
+    if (recompiling) {
+        OOL_STUBCALL(STRICT_VARIANT(ic::SetElement));
+        stubcc.rejoin(Changes(2));
+    }
 }
 
 void
