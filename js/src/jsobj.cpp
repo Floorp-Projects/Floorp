@@ -3558,12 +3558,8 @@ JSObject::clone(JSContext *cx, JSObject *proto, JSObject *parent)
     if (!clone)
         return NULL;
     if (getProto() == proto) {
-        if (isNative()) {
-            if (!clone->setTypeAndEmptyShape(cx, getType()))
-                return NULL;
-        } else {
-            clone->setType(getType());
-        }
+        if (!clone->setTypeAndUniqueShape(cx, getType()))
+            return NULL;
     }
     if (isNative()) {
         if (clone->isFunction() && (compartment() != clone->compartment())) {
