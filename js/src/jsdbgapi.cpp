@@ -651,7 +651,7 @@ js_TraceWatchPoints(JSTracer *trc)
         if (wp->object->isMarked()) {
             if (!wp->shape->marked()) {
                 modified = true;
-                wp->shape->trace(trc);
+                Shape::trace(trc, wp->shape);
             }
             if (wp->shape->hasSetterValue() && wp->setter) {
                 if (!CastAsObject(wp->setter)->isMarked()) {
