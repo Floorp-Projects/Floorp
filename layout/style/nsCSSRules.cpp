@@ -41,19 +41,17 @@
 #include "nsCSSRules.h"
 #include "nsCSSValue.h"
 #include "nsICSSImportRule.h"
-#include "nsICSSNameSpaceRule.h"
+#include "mozilla/css/NameSpaceRule.h"
 
 #include "nsString.h"
 #include "nsIAtom.h"
 #include "nsIURL.h"
 
-#include "nsCSSRule.h"
 #include "nsCSSProps.h"
 #include "nsCSSStyleSheet.h"
 
 #include "nsCOMPtr.h"
 #include "nsIDOMCSSStyleSheet.h"
-#include "nsIDOMCSSRule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSMediaRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
@@ -1237,44 +1235,6 @@ nsCSSDocumentRule::URL::~URL()
 namespace mozilla {
 namespace css {
 
-class NS_FINAL_CLASS NameSpaceRule : public nsCSSRule,
-                                     public nsICSSNameSpaceRule,
-                                     public nsIDOMCSSRule
-{
-public:
-  NameSpaceRule();
-  NameSpaceRule(const NameSpaceRule& aCopy);
-private:
-  ~NameSpaceRule();
-public:
-  NS_DECL_ISUPPORTS
-
-  DECL_STYLE_RULE_INHERIT
-
-  // nsIStyleRule methods
-#ifdef DEBUG
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-
-  // nsICSSRule methods
-  virtual PRInt32 GetType() const;
-  virtual already_AddRefed<nsICSSRule> Clone() const;
-
-  // nsICSSNameSpaceRule methods
-  NS_IMETHOD GetPrefix(nsIAtom*& aPrefix) const;
-  NS_IMETHOD SetPrefix(nsIAtom* aPrefix);
-
-  NS_IMETHOD GetURLSpec(nsString& aURLSpec) const;
-  NS_IMETHOD SetURLSpec(const nsString& aURLSpec);
-
-  // nsIDOMCSSRule interface
-  NS_DECL_NSIDOMCSSRULE
-  
-protected:
-  nsIAtom*  mPrefix;
-  nsString  mURLSpec;
-};
-
 NameSpaceRule::NameSpaceRule()
   : nsCSSRule(),
     mPrefix(nsnull),
@@ -1300,11 +1260,16 @@ NS_IMPL_RELEASE(NameSpaceRule)
 
 // QueryInterface implementation for NameSpaceRule
 NS_INTERFACE_MAP_BEGIN(NameSpaceRule)
-  NS_INTERFACE_MAP_ENTRY(nsICSSNameSpaceRule)
+  if (aIID.Equals(NS_GET_IID(css::NameSpaceRule))) {
+    *aInstancePtr = this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else
   NS_INTERFACE_MAP_ENTRY(nsICSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSNameSpaceRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSNameSpaceRule)
 NS_INTERFACE_MAP_END
 
@@ -1427,7 +1392,7 @@ NameSpaceRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 DOMCI_DATA(CSSNameSpaceRule, css::NameSpaceRule)
 
 nsresult
-NS_NewCSSNameSpaceRule(nsICSSNameSpaceRule** aInstancePtrResult,
+NS_NewCSSNameSpaceRule(css::NameSpaceRule** aInstancePtrResult,
                        nsIAtom* aPrefix, const nsString& aURLSpec)
 {
   if (! aInstancePtrResult) {

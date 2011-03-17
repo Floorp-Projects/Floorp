@@ -35,35 +35,72 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* internal interface for CSS @namespace rules */
+/* class for CSS @namespace rules */
 
-#ifndef nsICSSNameSpaceRule_h
-#define nsICSSNameSpaceRule_h
+#ifndef mozilla_css_NameSpaceRule_h__
+#define mozilla_css_NameSpaceRule_h__
 
 #include "nsICSSRule.h"
+#include "nsCSSRule.h"
+#include "nsIDOMCSSRule.h"
 
 class nsIAtom;
 
-#define NS_ICSS_NAMESPACE_RULE_IID \
-{ 0x9be32bb3, 0x5729, 0x4853, \
-  { 0x87, 0x29, 0x9b, 0x46, 0x69, 0xad, 0x82, 0x1b } }
+// IID for the nsCSSNameSpaceRule class {f0b0dbe1-5031-4a21-b06a-dc141ef2af98}
+#define NS_CSS_NAMESPACE_RULE_IMPL_CID     \
+{0xf0b0dbe1, 0x5031, 0x4a21, {0xb0, 0x6a, 0xdc, 0x14, 0x1e, 0xf2, 0xaf, 0x98}}
 
 
-class nsICSSNameSpaceRule : public nsICSSRule {
+namespace mozilla {
+namespace css {
+
+class NS_FINAL_CLASS NameSpaceRule : public nsCSSRule,
+                                     public nsICSSRule,
+                                     public nsIDOMCSSRule
+{
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSS_NAMESPACE_RULE_IID)
+  NameSpaceRule();
+private:
+  // for |Clone|
+  NameSpaceRule(const NameSpaceRule& aCopy);
+  ~NameSpaceRule();
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_NAMESPACE_RULE_IMPL_CID)
 
-  NS_IMETHOD  GetPrefix(nsIAtom*& aPrefix) const = 0;
-  NS_IMETHOD  SetPrefix(nsIAtom* aPrefix) = 0;
+  NS_DECL_ISUPPORTS
 
-  NS_IMETHOD  GetURLSpec(nsString& aURLSpec) const = 0;
-  NS_IMETHOD  SetURLSpec(const nsString& aURLSpec) = 0;
+  DECL_STYLE_RULE_INHERIT
+
+  // nsIStyleRule methods
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
+
+  // nsICSSRule methods
+  virtual PRInt32 GetType() const;
+  virtual already_AddRefed<nsICSSRule> Clone() const;
+
+  NS_IMETHOD  GetPrefix(nsIAtom*& aPrefix) const;
+  NS_IMETHOD  SetPrefix(nsIAtom* aPrefix);
+
+  NS_IMETHOD  GetURLSpec(nsString& aURLSpec) const;
+  NS_IMETHOD  SetURLSpec(const nsString& aURLSpec);
+
+  // nsIDOMCSSRule interface
+  NS_DECL_NSIDOMCSSRULE
+
+private:
+  nsIAtom*          mPrefix;
+  nsString          mURLSpec;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSNameSpaceRule, NS_ICSS_NAMESPACE_RULE_IID)
+} // namespace css
+} // namespace mozilla
+
+NS_DEFINE_STATIC_IID_ACCESSOR(mozilla::css::NameSpaceRule, NS_CSS_NAMESPACE_RULE_IMPL_CID)
 
 nsresult
-NS_NewCSSNameSpaceRule(nsICSSNameSpaceRule** aInstancePtrResult, 
+NS_NewCSSNameSpaceRule(mozilla::css::NameSpaceRule** aInstancePtrResult,
                        nsIAtom* aPrefix, const nsString& aURLSpec);
 
-#endif /* nsICSSNameSpaceRule_h */
+#endif /* mozilla_css_NameSpaceRule_h__ */
