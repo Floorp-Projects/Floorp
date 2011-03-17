@@ -1125,8 +1125,6 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
     script = JSScript::NewScriptFromCG(cx, &cg);
     if (script && funbox)
         script->savedCallerFun = true;
-    if (script && cg.compilingForEval())
-        script->isCachedEval = true;
 
 #ifdef JS_SCOPE_DEPTH_METER
     if (script) {
