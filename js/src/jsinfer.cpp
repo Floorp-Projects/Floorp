@@ -3228,7 +3228,6 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
       case JSOP_DEFLOCALFUN_FC: {
         unsigned off = (op == JSOP_DEFLOCALFUN || op == JSOP_DEFLOCALFUN_FC) ? SLOTNO_LEN : 0;
         JSObject *obj = GetScriptObject(cx, script, pc, off);
-        TypeFunction *function = obj->getType()->asFunction();
 
         TypeSet *res = NULL;
         if (op == JSOP_LAMBDA || op == JSOP_LAMBDA_FC)
@@ -3238,7 +3237,7 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
 
         if (res) {
             if (script->compileAndGo)
-                res->addType(cx, (jstype) function);
+                res->addType(cx, (jstype) obj->getType());
             else
                 res->addType(cx, TYPE_UNKNOWN);
         } else {
