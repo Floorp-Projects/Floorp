@@ -1576,10 +1576,14 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
     if (!obj_proto)
         return NULL;
 
-    /* Function.prototype and the global object delegate to Object.prototype. */
-    if (!fun_proto->getProto())
+    /*
+     * Function.prototype and the global object delegate to Object.prototype.
+     * Don't update the prototype if the __proto__ of either object was cleared
+     * after the objects started getting used.
+     */
+    if (!fun_proto->getProto() && fun_proto->getType() != cx->getTypeEmpty())
         fun_proto->getType()->splicePrototype(cx, obj_proto);
-    if (!obj->getProto())
+    if (!obj->getProto() && obj->getType() != cx->getTypeEmpty())
         obj->getType()->splicePrototype(cx, obj_proto);
 
     return fun_proto;
