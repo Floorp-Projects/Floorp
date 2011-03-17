@@ -1201,20 +1201,8 @@ inline TypeObject::TypeObject(jsid name, JSObject *proto)
 
     if (proto) {
         TypeObject *prototype = proto->getType();
-        if (prototype->unknownProperties) {
+        if (prototype->unknownProperties)
             unknownProperties = true;
-        } else if (proto->isArray()) {
-            /*
-             * Note: this check is insufficient for determining whether new objects
-             * are dense arrays, as they may not themselves be arrays but simply
-             * have an array or Array.prototype as their prototype. We can't use
-             * a clasp here as type does not determine the clasp of an object, so we
-             * intercept at the places where a non-Array can have an Array as its
-             * prototype --- scripted 'new', reassignments to __proto__, particular
-             * natives and through the API.
-             */
-            isDenseArray = isPackedArray = true;
-        }
         instanceNext = prototype->instanceList;
         prototype->instanceList = this;
     }

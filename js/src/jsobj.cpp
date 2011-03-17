@@ -2927,11 +2927,8 @@ js_CreateThis(JSContext *cx, JSObject *callee)
     JSObject *parent = callee->getParent();
     gc::FinalizeKind kind = NewObjectGCKind(cx, newclasp);
     JSObject *obj = NewObject<WithProto::Class>(cx, newclasp, proto, parent, kind);
-    if (obj) {
+    if (obj)
         obj->syncSpecialEquality();
-        if (!cx->markTypeArrayNotPacked(obj->getType(), true))
-            return NULL;
-    }
     return obj;
 }
 
@@ -2956,7 +2953,7 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
     if (protov.isObject()) {
         proto = &protov.toObject();
         TypeObject *type = proto->getNewType(cx);
-        if (!type || !cx->markTypeArrayNotPacked(type, true))
+        if (!type)
             return NULL;
     } else {
         proto = NULL;
@@ -3057,7 +3054,7 @@ js_CreateThisFromTrace(JSContext *cx, JSObject *ctor, uintN protoSlot)
     if (protov.isObject()) {
         proto = &protov.toObject();
         TypeObject *type = proto->getNewType(cx);
-        if (!type || !cx->markTypeArrayNotPacked(type, true))
+        if (!type)
             return NULL;
     } else {
         /*
