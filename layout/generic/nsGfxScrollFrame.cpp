@@ -2038,6 +2038,11 @@ nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
                        result.mHorizontal);
       HandleScrollPref(scrollable, nsIScrollable::ScrollOrientation_Y,
                        result.mVertical);
+      // XXX EVIL COMPILER BUG BE CAREFUL WHEN CHANGING
+      //     There is a bug in the Android compiler :(
+      //     It seems that the compiler optimizes something out and uses
+      //     a bad value for result if we don't directly return here.
+      return result;
     }
   } else {
     const nsStyleDisplay *disp = mOuter->GetStyleDisplay();
