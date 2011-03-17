@@ -48,7 +48,7 @@
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/css/NameSpaceRule.h"
 #include "nsICSSGroupRule.h"
-#include "nsICSSImportRule.h"
+#include "mozilla/css/ImportRule.h"
 #include "nsIMediaList.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
@@ -56,7 +56,6 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsIDOMCSSStyleSheet.h"
-#include "nsIDOMCSSImportRule.h"
 #include "nsICSSRuleList.h"
 #include "nsIDOMMediaList.h"
 #include "nsIDOMNode.h"
@@ -862,7 +861,7 @@ nsCSSStyleSheet::RebuildChildList(nsICSSRule* aRule, void* aBuilder)
     static_cast<ChildSheetListBuilder*>(aBuilder);
 
   // XXXbz We really need to decomtaminate all this stuff.  Is there a reason
-  // that I can't just QI to nsICSSImportRule and get an nsCSSStyleSheet
+  // that I can't just QI to ImportRule and get an nsCSSStyleSheet
   // directly from it?
   nsCOMPtr<nsIDOMCSSImportRule> importRule(do_QueryInterface(aRule));
   NS_ASSERTION(importRule, "GetType lied");
@@ -1013,7 +1012,7 @@ nsCSSStyleSheet::nsCSSStyleSheet()
 
 nsCSSStyleSheet::nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
                                  nsCSSStyleSheet* aParentToUse,
-                                 nsICSSImportRule* aOwnerRuleToUse,
+                                 css::ImportRule* aOwnerRuleToUse,
                                  nsIDocument* aDocumentToUse,
                                  nsIDOMNode* aOwningNodeToUse)
   : mTitle(aCopy.mTitle),
@@ -1462,7 +1461,7 @@ nsCSSStyleSheet::AppendAllChildSheets(nsTArray<nsCSSStyleSheet*>& aArray)
 
 already_AddRefed<nsCSSStyleSheet>
 nsCSSStyleSheet::Clone(nsCSSStyleSheet* aCloneParent,
-                       nsICSSImportRule* aCloneOwnerRule,
+                       css::ImportRule* aCloneOwnerRule,
                        nsIDocument* aCloneDocument,
                        nsIDOMNode* aCloneOwningNode) const
 {
@@ -2070,14 +2069,14 @@ nsCSSStyleSheet::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                "We are being notified of a sheet load for a sheet that is not our child!");
 
   if (mDocument && NS_SUCCEEDED(aStatus)) {
-    nsCOMPtr<nsICSSImportRule> ownerRule = aSheet->GetOwnerRule();
-    
+    nsRefPtr<css::ImportRule> ownerRule = aSheet->GetOwnerRule();
+
     mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
 
     // XXXldb @import rules shouldn't even implement nsIStyleRule (but
     // they do)!
-    nsCOMPtr<nsIStyleRule> styleRule(do_QueryInterface(ownerRule));
-    
+    nsIStyleRule* styleRule = ownerRule;
+
     mDocument->StyleRuleAdded(this, styleRule);
   }
 

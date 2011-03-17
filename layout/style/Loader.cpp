@@ -81,7 +81,7 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsCSSParser.h"
-#include "nsICSSImportRule.h"
+#include "mozilla/css/ImportRule.h"
 #include "nsThreadUtils.h"
 #include "nsGkAtoms.h"
 #include "nsDocShellCID.h"
@@ -93,7 +93,6 @@
 #include "nsIMediaList.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMCSSStyleSheet.h"
-#include "nsIDOMCSSImportRule.h"
 #include "nsContentErrors.h"
 
 #include "nsIChannelPolicy.h"
@@ -1343,7 +1342,7 @@ Loader::InsertSheetInDoc(nsCSSStyleSheet* aSheet,
 nsresult
 Loader::InsertChildSheet(nsCSSStyleSheet* aSheet,
                          nsCSSStyleSheet* aParentSheet,
-                         nsICSSImportRule* aParentRule)
+                         ImportRule* aParentRule)
 {
   LOG(("css::Loader::InsertChildSheet"));
   NS_PRECONDITION(aSheet, "Nothing to insert");
@@ -1980,7 +1979,7 @@ nsresult
 Loader::LoadChildSheet(nsCSSStyleSheet* aParentSheet,
                        nsIURI* aURL, 
                        nsMediaList* aMedia,
-                       nsICSSImportRule* aParentRule)
+                       ImportRule* aParentRule)
 {
   LOG(("css::Loader::LoadChildSheet"));
   NS_PRECONDITION(aURL, "Must have a URI to load");

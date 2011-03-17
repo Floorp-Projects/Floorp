@@ -35,38 +35,71 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* internal interface for CSS @import rules */
+/* class for CSS @import rules */
 
-#ifndef nsICSSImportRule_h
-#define nsICSSImportRule_h
+#ifndef mozilla_css_ImportRule_h__
+#define mozilla_css_ImportRule_h__
 
 #include "nsICSSRule.h"
+#include "nsCSSRule.h"
+#include "nsIDOMCSSImportRule.h"
+#include "nsCSSRules.h"
 
 class nsMediaList;
 class nsString;
 
-#define NS_ICSS_IMPORT_RULE_IID \
-{ 0x07bd9b80, 0x721e, 0x4566, \
-  { 0xb7, 0x90, 0xed, 0x25, 0x10, 0xed, 0x99, 0xde } }
+namespace mozilla {
+namespace css {
 
-
-class nsICSSImportRule : public nsICSSRule {
+class NS_FINAL_CLASS ImportRule : public nsCSSRule,
+                                  public nsICSSRule,
+                                  public nsIDOMCSSImportRule
+{
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSS_IMPORT_RULE_IID)
+  ImportRule(nsMediaList* aMedia);
+private:
+  // for |Clone|
+  ImportRule(const ImportRule& aCopy);
+  ~ImportRule();
+public:
+  NS_DECL_ISUPPORTS
 
-  NS_IMETHOD SetURLSpec(const nsString& aURLSpec) = 0;
-  NS_IMETHOD GetURLSpec(nsString& aURLSpec) const = 0;
+  DECL_STYLE_RULE_INHERIT
 
-  NS_IMETHOD SetMedia(const nsString& aMedia) = 0;
-  NS_IMETHOD GetMedia(nsString& aMedia) const = 0;
+  // nsIStyleRule methods
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
-  NS_IMETHOD SetSheet(nsCSSStyleSheet*) = 0;
+  // nsICSSRule methods
+  virtual PRInt32 GetType() const;
+  virtual already_AddRefed<nsICSSRule> Clone() const;
+
+  NS_IMETHOD SetURLSpec(const nsString& aURLSpec);
+  NS_IMETHOD GetURLSpec(nsString& aURLSpec) const;
+
+  NS_IMETHOD SetMedia(const nsString& aMedia);
+  NS_IMETHOD GetMedia(nsString& aMedia) const;
+
+  NS_IMETHOD SetSheet(nsCSSStyleSheet*);
+
+  // nsIDOMCSSRule interface
+  NS_DECL_NSIDOMCSSRULE
+
+  // nsIDOMCSSImportRule interface
+  NS_DECL_NSIDOMCSSIMPORTRULE
+
+private:
+  nsString  mURLSpec;
+  nsRefPtr<nsMediaList> mMedia;
+  nsRefPtr<nsCSSStyleSheet> mChildSheet;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSImportRule, NS_ICSS_IMPORT_RULE_IID)
+} // namespace css
+} // namespace mozilla
 
 nsresult
-NS_NewCSSImportRule(nsICSSImportRule** aInstancePtrResult, 
+NS_NewCSSImportRule(mozilla::css::ImportRule** aInstancePtrResult,
                     const nsString& aURLSpec, nsMediaList* aMedia);
 
-#endif /* nsICSSImportRule_h */
+#endif /* mozilla_css_ImportRule_h__ */
