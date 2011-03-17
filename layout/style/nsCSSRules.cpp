@@ -429,21 +429,7 @@ ImportRule::Clone() const
   return clone.forget();
 }
 
-NS_IMETHODIMP
-ImportRule::SetURLSpec(const nsString& aURLSpec)
-{
-  mURLSpec = aURLSpec;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ImportRule::GetURLSpec(nsString& aURLSpec) const
-{
-  aURLSpec = mURLSpec;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+nsresult
 ImportRule::SetMedia(const nsString& aMedia)
 {
   if (mMedia) {
@@ -453,34 +439,30 @@ ImportRule::SetMedia(const nsString& aMedia)
   }
 }
 
-NS_IMETHODIMP
+void
 ImportRule::GetMedia(nsString& aMedia) const
 {
   if (mMedia) {
-    return mMedia->GetText(aMedia);
+    mMedia->GetText(aMedia);
   } else {
     aMedia.Truncate();
-    return NS_OK;
   }
 }
 
-NS_IMETHODIMP
+void
 ImportRule::SetSheet(nsCSSStyleSheet* aSheet)
 {
-  nsresult rv;
-  NS_ENSURE_ARG_POINTER(aSheet);
-  
+  NS_PRECONDITION(aSheet, "null arg");
+
   // set the new sheet
   mChildSheet = aSheet;
   aSheet->SetOwnerRule(this);
 
   // set our medialist to be the same as the sheet's medialist
   nsCOMPtr<nsIDOMMediaList> mediaList;
-  rv = mChildSheet->GetMedia(getter_AddRefs(mediaList));
-  NS_ENSURE_SUCCESS(rv, rv);
+  mChildSheet->GetMedia(getter_AddRefs(mediaList));
+  NS_ABORT_IF_FALSE(mediaList, "GetMedia returned null");
   mMedia = static_cast<nsMediaList*>(mediaList.get());
-  
-  return NS_OK;
 }
 
 NS_IMETHODIMP

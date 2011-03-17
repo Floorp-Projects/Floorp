@@ -2069,15 +2069,11 @@ nsCSSStyleSheet::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                "We are being notified of a sheet load for a sheet that is not our child!");
 
   if (mDocument && NS_SUCCEEDED(aStatus)) {
-    nsRefPtr<css::ImportRule> ownerRule = aSheet->GetOwnerRule();
-
     mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
 
     // XXXldb @import rules shouldn't even implement nsIStyleRule (but
     // they do)!
-    nsIStyleRule* styleRule = ownerRule;
-
-    mDocument->StyleRuleAdded(this, styleRule);
+    mDocument->StyleRuleAdded(this, aSheet->GetOwnerRule());
   }
 
   return NS_OK;
