@@ -75,13 +75,13 @@ public:
   virtual PRInt32 GetType() const;
   virtual already_AddRefed<nsICSSRule> Clone() const;
 
-  NS_IMETHOD SetURLSpec(const nsString& aURLSpec);
-  NS_IMETHOD GetURLSpec(nsString& aURLSpec) const;
+  void SetURLSpec(const nsString& aURLSpec) { mURLSpec = aURLSpec; }
+  void GetURLSpec(nsString& aURLSpec) const { aURLSpec = mURLSpec; }
 
-  NS_IMETHOD SetMedia(const nsString& aMedia);
-  NS_IMETHOD GetMedia(nsString& aMedia) const;
+  nsresult SetMedia(const nsString& aMedia);
+  void GetMedia(nsString& aMedia) const;
 
-  NS_IMETHOD SetSheet(nsCSSStyleSheet*);
+  void SetSheet(nsCSSStyleSheet*);
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
