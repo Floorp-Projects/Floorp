@@ -293,6 +293,7 @@ let ContentScroll =  {
     addMessageListener("Content:SetWindowSize", this);
 
     addEventListener("scroll", this, false);
+    addEventListener("pagehide", this, false);
     addEventListener("MozScrolledAreaChanged", this, false);
   },
 
@@ -382,6 +383,10 @@ let ContentScroll =  {
 
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
+      case "pagehide":
+        this._scrollOffset = { x: 0, y: 0 };
+        break;
+
       case "scroll": {
         let doc = aEvent.target;
         if (doc != content.document)
