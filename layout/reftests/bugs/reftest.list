@@ -1618,3 +1618,4 @@ fails-if(winWidget) == 632781-verybig.html 632781-ref.html # large canvas elemen
 == 632781-normalsize.html 632781-ref.html
 == 634232-1.html 634232-1-ref.html
 == 635302-1.html 635302-1-ref.html
+== 641856-1.html 641856-1-ref.html
