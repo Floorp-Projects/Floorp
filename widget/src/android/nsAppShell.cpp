@@ -324,15 +324,21 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         gAccel->AccelerationChanged(-curEvent->X(), curEvent->Y(), curEvent->Z());
         break;
 
-    case AndroidGeckoEvent::LOCATION_EVENT:
+    case AndroidGeckoEvent::LOCATION_EVENT: {
         if (!gLocationCallback)
             break;
 
-        if (curEvent->GeoPosition())
+        nsGeoPosition* p = curEvent->GeoPosition();
+        nsGeoPositionAddress* a = curEvent->GeoAddress();
+
+        if (p) {
+            p->SetAddress(a);
             gLocationCallback->Update(curEvent->GeoPosition());
+        }
         else
             NS_WARNING("Received location event without geoposition!");
         break;
+    }
 
     case AndroidGeckoEvent::ACTIVITY_STOPPING: {
         nsCOMPtr<nsIObserverService> obsServ =
