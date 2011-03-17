@@ -1690,10 +1690,13 @@ TypeCompartment::newInitializerTypeObject(JSContext *cx, JSScript *script,
     if (!res)
         return NULL;
 
-    if (isArray)
+    if (isArray) {
+        if (!res->unknownProperties)
+            res->isDenseArray = res->isPackedArray = true;
         res->initializerArray = true;
-    else
+    } else {
         res->initializerObject = true;
+    }
     res->initializerOffset = offset;
 
     return res;
@@ -2243,6 +2246,8 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
             js_ReportOutOfMemory(cx);
             return false;
         }
+        if (!objType->unknownProperties)
+            objType->isDenseArray = objType->isPackedArray = true;
         obj->setType(objType);
 
         if (!cx->addTypePropertyId(objType, JSID_VOID, type))
