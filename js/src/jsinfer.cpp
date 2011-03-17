@@ -2457,6 +2457,13 @@ void
 TypeObject::splicePrototype(JSContext *cx, JSObject *proto)
 {
     JS_ASSERT(!this->proto);
+
+    /*
+     * Make sure this is not the shared 'empty' type object. :TODO: once we
+     * can mark type objects as singletons, assert that instead.
+     */
+    JS_ASSERT(this != &cx->compartment->types.typeEmpty);
+
     this->proto = proto;
     this->instanceNext = proto->getType()->instanceList;
     proto->getType()->instanceList = this;
