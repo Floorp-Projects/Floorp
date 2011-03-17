@@ -3227,7 +3227,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
 void
 mjit::Compiler::addCallSite(const InternalCallSite &site)
 {
-#if 0 /* Expensive assertion on some tests. */
+#if 1 /* Expensive assertion on some tests. */
     for (unsigned i = 0; i < callSites.length(); i++)
         JS_ASSERT(site.pc != callSites[i].pc || site.id != callSites[i].id);
 #endif
@@ -5039,6 +5039,11 @@ mjit::Compiler::jsop_getelem_slow()
     INLINE_STUBCALL(stubs::GetElem);
     frame.popn(2);
     pushSyncedEntry(0);
+
+    if (recompiling) {
+        OOL_STUBCALL(ic::GetElement);
+        stubcc.rejoin(Changes(1));
+    }
 }
 
 void
@@ -5598,6 +5603,11 @@ mjit::Compiler::jsop_callelem_slow()
     frame.popn(2);
     pushSyncedEntry(0);
     pushSyncedEntry(1);
+
+    if (recompiling) {
+        OOL_STUBCALL(ic::CallElement);
+        stubcc.rejoin(Changes(2));
+    }
 }
 
 void
