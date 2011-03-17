@@ -2870,7 +2870,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
          * beyond JSObject as it points to fun via the private slot.
          */
         clone = NewNativeClassInstance(cx, &js_FunctionClass, proto, parent);
-        if (!clone || !clone->setTypeAndEmptyShape(cx, type))
+        if (!clone || !clone->setTypeAndUniqueShape(cx, type))
             return NULL;
         clone->setPrivate(fun);
     } else {
@@ -2879,7 +2879,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
          * script (for interpreted functions).
          */
         clone = NewFunction(cx, parent);
-        if (!clone || !clone->setTypeAndEmptyShape(cx, type))
+        if (!clone || !clone->setTypeAndUniqueShape(cx, type))
             return NULL;
 
         JSFunction *cfun = (JSFunction *) clone;
