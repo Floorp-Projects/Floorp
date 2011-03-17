@@ -602,7 +602,7 @@ JSScript::typeSetThis(JSContext *cx, js::types::ClonedTypeSet *set)
         return false;
     js::types::AutoEnterTypeInference enter(cx);
 
-    js::types::InferSpew(js::types::ISpewOps, "externalType: setThis #%u: %s", id());
+    js::types::InferSpew(js::types::ISpewOps, "externalType: setThis #%u", id());
     thisTypes()->addTypeSet(cx, set);
 
     return cx->compartment->types.checkPendingRecompiles(cx);
@@ -1013,7 +1013,6 @@ TypeSet::addType(JSContext *cx, jstype type)
 {
     JS_ASSERT(type);
     JS_ASSERT(cx->compartment->types.inferenceDepth);
-    InferSpew(ISpewOps, "addType: T%p %s", this, TypeString(type));
 
     if (unknown())
         return;
@@ -1046,6 +1045,8 @@ TypeSet::addType(JSContext *cx, jstype type)
             markUnknown(cx);
         }
     }
+
+    InferSpew(ISpewOps, "addType: T%p %s", this, TypeString(type));
 
     /* Propagate the type to all constraints. */
     TypeConstraint *constraint = constraintList;
