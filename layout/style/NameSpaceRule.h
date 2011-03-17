@@ -80,17 +80,17 @@ public:
   virtual PRInt32 GetType() const;
   virtual already_AddRefed<nsICSSRule> Clone() const;
 
-  NS_IMETHOD  GetPrefix(nsIAtom*& aPrefix) const;
-  NS_IMETHOD  SetPrefix(nsIAtom* aPrefix);
+  nsIAtom* GetPrefix() const { return mPrefix; }
+  void SetPrefix(nsIAtom* aPrefix) { mPrefix = aPrefix; }
 
-  NS_IMETHOD  GetURLSpec(nsString& aURLSpec) const;
-  NS_IMETHOD  SetURLSpec(const nsString& aURLSpec);
+  void GetURLSpec(nsString& aURLSpec) const { aURLSpec = mURLSpec; }
+  void SetURLSpec(const nsString& aURLSpec) { mURLSpec = aURLSpec; }
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
 
 private:
-  nsIAtom*          mPrefix;
+  nsCOMPtr<nsIAtom> mPrefix;
   nsString          mURLSpec;
 };
 
