@@ -1423,26 +1423,28 @@ PrintPropertyMethod(JSTracer *trc, char *buf, size_t bufsize)
 #endif
 
 void
-Shape::trace(JSTracer *trc) const
+Shape::trace(JSTracer *trc, const Shape *shape)
 {
-    if (IS_GC_MARKING_TRACER(trc))
-        mark();
+    do {
+        if (IS_GC_MARKING_TRACER(trc))
+            shape->mark();
 
-    MarkId(trc, id, "id");
+        MarkId(trc, shape->id, "id");
 
-    if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
-        if ((attrs & JSPROP_GETTER) && rawGetter) {
-            JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 0);
-            Mark(trc, getterObject());
+        if (shape->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
+            if ((shape->attrs & JSPROP_GETTER) && shape->rawGetter) {
+                JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, shape, 0);
+                Mark(trc, shape->getterObject());
+            }
+            if ((shape->attrs & JSPROP_SETTER) && shape->rawSetter) {
+                JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, shape, 1);
+                Mark(trc, shape->setterObject());
+            }
         }
-        if ((attrs & JSPROP_SETTER) && rawSetter) {
-            JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 1);
-            Mark(trc, setterObject());
-        }
-    }
 
-    if (isMethod()) {
-        JS_SET_TRACING_DETAILS(trc, PrintPropertyMethod, this, 0);
-        Mark(trc, &methodObject());
-    }
+        if (shape->isMethod()) {
+            JS_SET_TRACING_DETAILS(trc, PrintPropertyMethod, shape, 0);
+            Mark(trc, &shape->methodObject());
+        }
+    } while ((shape = shape->parent) != NULL && !shape->marked());
 }

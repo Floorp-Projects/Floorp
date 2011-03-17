@@ -294,7 +294,7 @@ void
 Bindings::trace(JSTracer *trc)
 {
     for (const Shape *shape = lastBinding; shape; shape = shape->previous())
-        shape->trace(trc);
+        Shape::trace(trc, shape);
 }
 
 } /* namespace js */

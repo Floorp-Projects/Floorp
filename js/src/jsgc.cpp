@@ -1517,7 +1517,7 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
 
       case SHAPE:
-        static_cast<AutoShapeRooter *>(this)->shape->trace(trc);
+        Shape::trace(trc, static_cast<AutoShapeRooter *>(this)->shape);
         return;
 
       case PARSER:

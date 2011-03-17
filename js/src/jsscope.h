@@ -592,7 +592,7 @@ struct Shape : public JSObjectMap
 
     inline bool isSharedPermanent() const;
 
-    void trace(JSTracer *trc) const;
+    static void trace(JSTracer *trc, const Shape *shape);
 
     bool hasSlot() const { return (attrs & JSPROP_SHARED) == 0; }
 

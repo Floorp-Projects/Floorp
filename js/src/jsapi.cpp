@@ -4103,7 +4103,7 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
 
     if (obj->getSlot(JSSLOT_ITER_INDEX).toInt32() < 0) {
         /* Native case: just mark the next property to visit. */
-        ((Shape *) pdata)->trace(trc);
+        Shape::trace(trc, (Shape *) pdata);
     } else {
         /* Non-native case: mark each id in the JSIdArray private. */
         JSIdArray *ida = (JSIdArray *) pdata;
