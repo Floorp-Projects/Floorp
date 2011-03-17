@@ -989,20 +989,16 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, js::types::Ty
     /* Share proto's emptyShape only if obj is similar to proto. */
     js::EmptyShape *empty = NULL;
 
-    if (type && type->canProvideEmptyShape(clasp)) {
-        empty = type->getEmptyShape(cx, clasp, kind);
-        if (!empty)
-            goto bad;
-    }
+    uint32 freeslot = JSSLOT_FREE(clasp);
+    if (freeslot > obj->numSlots() && !obj->allocSlots(cx, freeslot))
+        goto bad;
 
-    if (!empty) {
+    if (type && type->canProvideEmptyShape(clasp))
+        empty = type->getEmptyShape(cx, clasp, kind);
+    else
         empty = js::EmptyShape::create(cx, clasp);
-        if (!empty)
-            goto bad;
-        uint32 freeslot = JSSLOT_FREE(clasp);
-        if (freeslot > obj->numSlots() && !obj->allocSlots(cx, freeslot))
-            goto bad;
-    }
+    if (!empty)
+        goto bad;
 
     obj->setMap(empty);
     return true;
