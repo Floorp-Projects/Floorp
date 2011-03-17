@@ -1064,13 +1064,6 @@ MonitorArithmeticOverflow(VMFrame &f, const Value &v)
         ov = f.regs.sp[-4];
         break;
 
-      case JSOP_INCNAME:
-      case JSOP_DECNAME:
-      case JSOP_NAMEINC:
-      case JSOP_NAMEDEC:
-        ov = f.regs.sp[-3];
-        break;
-
       default:
         return true;
     }
@@ -1080,16 +1073,8 @@ MonitorArithmeticOverflow(VMFrame &f, const Value &v)
         return true;
     JSAtom *atom;
     GET_ATOM_FROM_BYTECODE(f.script(), f.regs.pc, 0, atom);
-    cx->addTypePropertyId(obj->getType(), ATOM_TO_JSID(atom), TYPE_DOUBLE);
 
-    /*
-     * Also do an uncached setProperty, if this is a Call object which
-     * addTypeProperty does not work for.
-     */
-    Value nv = v;
-    obj->setProperty(cx, ATOM_TO_JSID(atom), &nv, f.script()->strictModeCode);
-
-    return true;
+    return cx->addTypePropertyId(obj->getType(), ATOM_TO_JSID(atom), TYPE_DOUBLE);
 }
 
 void JS_FASTCALL
