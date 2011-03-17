@@ -1499,6 +1499,11 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
             stubcc.masm.loadValueAsComponents(UndefinedValue(), typeReg.reg(), dataReg);
         stubcc.linkRejoin(stubcc.masm.jump());
     }
+
+    if (recompiling) {
+        OOL_STUBCALL(ic::GetElement);
+        stubcc.rejoin(Changes(1));
+    }
 }
 
 bool
