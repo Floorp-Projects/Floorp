@@ -90,6 +90,7 @@ CSRCS += \
   $(NULL)
 endif
 else
+ifndef HAVE_OLD_CLANG
 VPATH += $(srcdir)/x86
 
 CSRCS += \
@@ -100,6 +101,7 @@ CSRCS += \
   x86state.c \
   x86cpu.c \
   $(NULL)
+endif
 endif
 endif
 
