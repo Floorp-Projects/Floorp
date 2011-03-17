@@ -297,6 +297,8 @@ MAKE_SDK = $(CREATE_FINAL_TAR) - $(MOZ_APP_NAME)-sdk | bzip2 -vf > $(SDK)
 endif
 
 ifdef MOZ_OMNIJAR
+GENERATE_CACHE ?= true
+
 OMNIJAR_FILES	= \
   chrome \
   chrome.manifest \
@@ -324,6 +326,7 @@ PACK_OMNIJAR	= \
   mv components.manifest components && \
   find . | xargs touch -t 201001010000 && \
   zip -r9mX omni.jar $(OMNIJAR_FILES) -x $(NON_OMNIJAR_FILES) && \
+  $(GENERATE_CACHE) && \
   $(OPTIMIZE_JARS_CMD) --optimize $(_ABS_DIST)/jarlog/ ./ ./ && \
   mv binary.manifest components && \
   printf "manifest components/binary.manifest\n" > chrome.manifest
