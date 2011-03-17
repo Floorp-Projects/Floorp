@@ -1185,6 +1185,11 @@ mjit::Compiler::jsop_setelem_dense()
     frame.freeReg(objReg);
     frame.shimmy(2);
     stubcc.rejoin(Changes(2));
+
+    if (recompiling) {
+        OOL_STUBCALL(STRICT_VARIANT(ic::SetElement));
+        stubcc.rejoin(Changes(2));
+    }
 }
 
 bool
