@@ -5704,16 +5704,18 @@ mjit::Compiler::restoreAnalysisTypes(uint32 stackDepth)
         JSValueType type = knownLocalType(i);
         if (type != JSVAL_TYPE_UNKNOWN && (type != JSVAL_TYPE_DOUBLE || !analysis->localEscapes(i))) {
             FrameEntry *fe = frame.getLocal(i);
-            JS_ASSERT(!fe->isTypeKnown());
-            frame.learnType(fe, type, false);
+            JS_ASSERT_IF(fe->isTypeKnown(), fe->isType(type));
+            if (!fe->isTypeKnown())
+                frame.learnType(fe, type, false);
         }
     }
     for (uint32 i = 0; fun && i < fun->nargs; i++) {
         JSValueType type = knownArgumentType(i);
         if (type != JSVAL_TYPE_UNKNOWN && (type != JSVAL_TYPE_DOUBLE || !analysis->argEscapes(i))) {
             FrameEntry *fe = frame.getArg(i);
-            JS_ASSERT(!fe->isTypeKnown());
-            frame.learnType(fe, type, false);
+            JS_ASSERT_IF(fe->isTypeKnown(), fe->isType(type));
+            if (!fe->isTypeKnown())
+                frame.learnType(fe, type, false);
         }
     }
 }
