@@ -952,12 +952,10 @@ AddNamespaceRuleToMap(nsICSSRule* aRule, nsXMLNameSpaceMap* aMap)
 
   nsRefPtr<css::NameSpaceRule> nameSpaceRule = do_QueryObject(aRule);
 
-  nsCOMPtr<nsIAtom> prefix;
   nsAutoString  urlSpec;
-  nameSpaceRule->GetPrefix(*getter_AddRefs(prefix));
   nameSpaceRule->GetURLSpec(urlSpec);
 
-  aMap->AddPrefix(prefix, urlSpec);
+  aMap->AddPrefix(nameSpaceRule->GetPrefix(), urlSpec);
 }
 
 static PRBool

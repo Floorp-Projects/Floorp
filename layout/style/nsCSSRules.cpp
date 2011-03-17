@@ -58,9 +58,7 @@
 #include "nsIDOMCSSCharsetRule.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIMediaList.h"
-#include "nsIDOMMediaList.h"
 #include "nsICSSRuleList.h"
-#include "nsIDOMStyleSheet.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 
@@ -1247,12 +1245,10 @@ NameSpaceRule::NameSpaceRule(const NameSpaceRule& aCopy)
     mPrefix(aCopy.mPrefix),
     mURLSpec(aCopy.mURLSpec)
 {
-  NS_IF_ADDREF(mPrefix);
 }
 
 NameSpaceRule::~NameSpaceRule()
 {
-  NS_IF_RELEASE(mPrefix);
 }
 
 NS_IMPL_ADDREF(NameSpaceRule)
@@ -1308,37 +1304,6 @@ NameSpaceRule::Clone() const
 {
   nsCOMPtr<nsICSSRule> clone = new NameSpaceRule(*this);
   return clone.forget();
-}
-
-NS_IMETHODIMP
-NameSpaceRule::GetPrefix(nsIAtom*& aPrefix) const
-{
-  aPrefix = mPrefix;
-  NS_IF_ADDREF(aPrefix);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-NameSpaceRule::SetPrefix(nsIAtom* aPrefix)
-{
-  NS_IF_RELEASE(mPrefix);
-  mPrefix = aPrefix;
-  NS_IF_ADDREF(mPrefix);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-NameSpaceRule::GetURLSpec(nsString& aURLSpec) const
-{
-  aURLSpec = mURLSpec;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-NameSpaceRule::SetURLSpec(const nsString& aURLSpec)
-{
-  mURLSpec = aURLSpec;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
