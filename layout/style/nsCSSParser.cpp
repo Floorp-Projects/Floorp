@@ -54,7 +54,7 @@
 #include "mozilla/css/StyleRule.h"
 #include "nsICSSImportRule.h"
 #include "nsCSSRules.h"
-#include "nsICSSNameSpaceRule.h"
+#include "mozilla/css/NameSpaceRule.h"
 #include "nsIUnicharInputStream.h"
 #include "nsCSSStyleSheet.h"
 #include "mozilla/css/Declaration.h"
@@ -2128,7 +2128,7 @@ CSSParserImpl::ProcessNameSpace(const nsString& aPrefix,
                                 RuleAppendFunc aAppendFunc,
                                 void* aData)
 {
-  nsCOMPtr<nsICSSNameSpaceRule> rule;
+  nsRefPtr<css::NameSpaceRule> rule;
   nsCOMPtr<nsIAtom> prefix;
 
   if (!aPrefix.IsEmpty()) {
