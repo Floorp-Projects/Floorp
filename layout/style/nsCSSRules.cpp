@@ -40,7 +40,7 @@
 
 #include "nsCSSRules.h"
 #include "nsCSSValue.h"
-#include "nsICSSImportRule.h"
+#include "mozilla/css/ImportRule.h"
 #include "mozilla/css/NameSpaceRule.h"
 
 #include "nsString.h"
@@ -52,7 +52,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIDOMCSSStyleSheet.h"
-#include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSMediaRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
 #include "nsIDOMCSSCharsetRule.h"
@@ -355,51 +354,6 @@ CSSCharsetRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 namespace mozilla {
 namespace css {
 
-class NS_FINAL_CLASS ImportRule : public nsCSSRule,
-                                  public nsICSSImportRule,
-                                  public nsIDOMCSSImportRule
-{
-public:
-  ImportRule(nsMediaList* aMedia);
-  ImportRule(const ImportRule& aCopy);
-private:
-  ~ImportRule();
-public:
-
-  NS_DECL_ISUPPORTS
-
-  DECL_STYLE_RULE_INHERIT
-
-  // nsIStyleRule methods
-#ifdef DEBUG
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-
-  // nsICSSRule methods
-  virtual PRInt32 GetType() const;
-  virtual already_AddRefed<nsICSSRule> Clone() const;
-
-  // nsICSSImportRule methods
-  NS_IMETHOD SetURLSpec(const nsString& aURLSpec);
-  NS_IMETHOD GetURLSpec(nsString& aURLSpec) const;
-
-  NS_IMETHOD SetMedia(const nsString& aMedia);
-  NS_IMETHOD GetMedia(nsString& aMedia) const;
-
-  NS_IMETHOD SetSheet(nsCSSStyleSheet*);
-  
-  // nsIDOMCSSRule interface
-  NS_DECL_NSIDOMCSSRULE
-
-  // nsIDOMCSSImportRule interface
-  NS_DECL_NSIDOMCSSIMPORTRULE
-
-protected:
-  nsString  mURLSpec;
-  nsRefPtr<nsMediaList> mMedia;
-  nsRefPtr<nsCSSStyleSheet> mChildSheet;
-};
-
 ImportRule::ImportRule(nsMediaList* aMedia)
   : nsCSSRule()
   , mURLSpec()
@@ -434,12 +388,11 @@ NS_IMPL_RELEASE(ImportRule)
 
 // QueryInterface implementation for ImportRule
 NS_INTERFACE_MAP_BEGIN(ImportRule)
-  NS_INTERFACE_MAP_ENTRY(nsICSSImportRule)
   NS_INTERFACE_MAP_ENTRY(nsICSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSImportRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSImportRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSImportRule)
 NS_INTERFACE_MAP_END
 
@@ -613,7 +566,7 @@ ImportRule::GetStyleSheet(nsIDOMCSSStyleSheet * *aStyleSheet)
 DOMCI_DATA(CSSImportRule, css::ImportRule)
 
 nsresult
-NS_NewCSSImportRule(nsICSSImportRule** aInstancePtrResult,
+NS_NewCSSImportRule(css::ImportRule** aInstancePtrResult,
                     const nsString& aURLSpec,
                     nsMediaList* aMedia)
 {

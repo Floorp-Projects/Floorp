@@ -52,7 +52,7 @@
 #include "nsCSSScanner.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/css/StyleRule.h"
-#include "nsICSSImportRule.h"
+#include "mozilla/css/ImportRule.h"
 #include "nsCSSRules.h"
 #include "mozilla/css/NameSpaceRule.h"
 #include "nsIUnicharInputStream.h"
@@ -1930,7 +1930,7 @@ CSSParserImpl::ProcessImport(const nsString& aURLSpec,
                              RuleAppendFunc aAppendFunc,
                              void* aData)
 {
-  nsCOMPtr<nsICSSImportRule> rule;
+  nsRefPtr<css::ImportRule> rule;
   nsresult rv = NS_NewCSSImportRule(getter_AddRefs(rule), aURLSpec, aMedia);
   if (NS_FAILED(rv)) { // out of memory
     mScanner.SetLowLevelError(rv);
