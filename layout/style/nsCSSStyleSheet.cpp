@@ -46,7 +46,7 @@
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsCSSRuleProcessor.h"
-#include "nsICSSNameSpaceRule.h"
+#include "mozilla/css/NameSpaceRule.h"
 #include "nsICSSGroupRule.h"
 #include "nsICSSImportRule.h"
 #include "nsIMediaList.h"
@@ -950,8 +950,8 @@ AddNamespaceRuleToMap(nsICSSRule* aRule, nsXMLNameSpaceMap* aMap)
 {
   NS_ASSERTION(aRule->GetType() == nsICSSRule::NAMESPACE_RULE, "Bogus rule type");
 
-  nsCOMPtr<nsICSSNameSpaceRule> nameSpaceRule = do_QueryInterface(aRule);
-  
+  nsRefPtr<css::NameSpaceRule> nameSpaceRule = do_QueryObject(aRule);
+
   nsCOMPtr<nsIAtom> prefix;
   nsAutoString  urlSpec;
   nameSpaceRule->GetPrefix(*getter_AddRefs(prefix));
