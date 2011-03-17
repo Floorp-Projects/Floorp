@@ -73,6 +73,8 @@
 #include "mozilla/css/Declaration.h"
 #include "nsPrintfCString.h"
 
+namespace css = mozilla::css;
+
 #define IMPL_STYLE_RULE_INHERIT(_class, super) \
 /* virtual */ already_AddRefed<nsIStyleSheet> _class::GetStyleSheet() const { return super::GetStyleSheet(); }  \
 /* virtual */ void _class::SetStyleSheet(nsCSSStyleSheet* aSheet) { super::SetStyleSheet(aSheet); }  \
@@ -1229,17 +1231,21 @@ nsCSSDocumentRule::URL::~URL()
 }
 
 // -------------------------------------------
-// nsICSSNameSpaceRule
+// NameSpaceRule
 //
-class NS_FINAL_CLASS CSSNameSpaceRuleImpl : public nsCSSRule,
-                                            public nsICSSNameSpaceRule,
-                                            public nsIDOMCSSRule
+
+namespace mozilla {
+namespace css {
+
+class NS_FINAL_CLASS NameSpaceRule : public nsCSSRule,
+                                     public nsICSSNameSpaceRule,
+                                     public nsIDOMCSSRule
 {
 public:
-  CSSNameSpaceRuleImpl(void);
-  CSSNameSpaceRuleImpl(const CSSNameSpaceRuleImpl& aCopy);
+  NameSpaceRule();
+  NameSpaceRule(const NameSpaceRule& aCopy);
 private:
-  ~CSSNameSpaceRuleImpl();
+  ~NameSpaceRule();
 public:
   NS_DECL_ISUPPORTS
 
@@ -1269,14 +1275,14 @@ protected:
   nsString  mURLSpec;
 };
 
-CSSNameSpaceRuleImpl::CSSNameSpaceRuleImpl(void)
+NameSpaceRule::NameSpaceRule()
   : nsCSSRule(),
     mPrefix(nsnull),
     mURLSpec()
 {
 }
 
-CSSNameSpaceRuleImpl::CSSNameSpaceRuleImpl(const CSSNameSpaceRuleImpl& aCopy)
+NameSpaceRule::NameSpaceRule(const NameSpaceRule& aCopy)
   : nsCSSRule(aCopy),
     mPrefix(aCopy.mPrefix),
     mURLSpec(aCopy.mURLSpec)
@@ -1284,18 +1290,16 @@ CSSNameSpaceRuleImpl::CSSNameSpaceRuleImpl(const CSSNameSpaceRuleImpl& aCopy)
   NS_IF_ADDREF(mPrefix);
 }
 
-CSSNameSpaceRuleImpl::~CSSNameSpaceRuleImpl()
+NameSpaceRule::~NameSpaceRule()
 {
   NS_IF_RELEASE(mPrefix);
 }
 
-NS_IMPL_ADDREF(CSSNameSpaceRuleImpl)
-NS_IMPL_RELEASE(CSSNameSpaceRuleImpl)
+NS_IMPL_ADDREF(NameSpaceRule)
+NS_IMPL_RELEASE(NameSpaceRule)
 
-DOMCI_DATA(CSSNameSpaceRule, CSSNameSpaceRuleImpl)
-
-// QueryInterface implementation for CSSNameSpaceRuleImpl
-NS_INTERFACE_MAP_BEGIN(CSSNameSpaceRuleImpl)
+// QueryInterface implementation for NameSpaceRule
+NS_INTERFACE_MAP_BEGIN(NameSpaceRule)
   NS_INTERFACE_MAP_ENTRY(nsICSSNameSpaceRule)
   NS_INTERFACE_MAP_ENTRY(nsICSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
@@ -1304,11 +1308,11 @@ NS_INTERFACE_MAP_BEGIN(CSSNameSpaceRuleImpl)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSNameSpaceRule)
 NS_INTERFACE_MAP_END
 
-IMPL_STYLE_RULE_INHERIT(CSSNameSpaceRuleImpl, nsCSSRule)
+IMPL_STYLE_RULE_INHERIT(NameSpaceRule, nsCSSRule)
 
 #ifdef DEBUG
 /* virtual */ void
-CSSNameSpaceRuleImpl::List(FILE* out, PRInt32 aIndent) const
+NameSpaceRule::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 indent = aIndent; --indent >= 0; ) fputs("  ", out);
 
@@ -1329,20 +1333,20 @@ CSSNameSpaceRuleImpl::List(FILE* out, PRInt32 aIndent) const
 #endif
 
 /* virtual */ PRInt32
-CSSNameSpaceRuleImpl::GetType() const
+NameSpaceRule::GetType() const
 {
   return nsICSSRule::NAMESPACE_RULE;
 }
 
 /* virtual */ already_AddRefed<nsICSSRule>
-CSSNameSpaceRuleImpl::Clone() const
+NameSpaceRule::Clone() const
 {
-  nsCOMPtr<nsICSSRule> clone = new CSSNameSpaceRuleImpl(*this);
+  nsCOMPtr<nsICSSRule> clone = new NameSpaceRule(*this);
   return clone.forget();
 }
 
 NS_IMETHODIMP
-CSSNameSpaceRuleImpl::GetPrefix(nsIAtom*& aPrefix) const
+NameSpaceRule::GetPrefix(nsIAtom*& aPrefix) const
 {
   aPrefix = mPrefix;
   NS_IF_ADDREF(aPrefix);
@@ -1350,7 +1354,7 @@ CSSNameSpaceRuleImpl::GetPrefix(nsIAtom*& aPrefix) const
 }
 
 NS_IMETHODIMP
-CSSNameSpaceRuleImpl::SetPrefix(nsIAtom* aPrefix)
+NameSpaceRule::SetPrefix(nsIAtom* aPrefix)
 {
   NS_IF_RELEASE(mPrefix);
   mPrefix = aPrefix;
@@ -1359,41 +1363,21 @@ CSSNameSpaceRuleImpl::SetPrefix(nsIAtom* aPrefix)
 }
 
 NS_IMETHODIMP
-CSSNameSpaceRuleImpl::GetURLSpec(nsString& aURLSpec) const
+NameSpaceRule::GetURLSpec(nsString& aURLSpec) const
 {
   aURLSpec = mURLSpec;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CSSNameSpaceRuleImpl::SetURLSpec(const nsString& aURLSpec)
+NameSpaceRule::SetURLSpec(const nsString& aURLSpec)
 {
   mURLSpec = aURLSpec;
   return NS_OK;
 }
 
-nsresult
-NS_NewCSSNameSpaceRule(nsICSSNameSpaceRule** aInstancePtrResult, 
-                       nsIAtom* aPrefix, const nsString& aURLSpec)
-{
-  if (! aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  CSSNameSpaceRuleImpl* it = new CSSNameSpaceRuleImpl();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  it->SetPrefix(aPrefix);
-  it->SetURLSpec(aURLSpec);
-  NS_ADDREF(*aInstancePtrResult = it);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
-CSSNameSpaceRuleImpl::GetType(PRUint16* aType)
+NameSpaceRule::GetType(PRUint16* aType)
 {
   // XXX What should really happen here?
   *aType = nsIDOMCSSRule::UNKNOWN_RULE;
@@ -1401,7 +1385,7 @@ CSSNameSpaceRuleImpl::GetType(PRUint16* aType)
 }
 
 NS_IMETHODIMP
-CSSNameSpaceRuleImpl::GetCssText(nsAString& aCssText)
+NameSpaceRule::GetCssText(nsAString& aCssText)
 {
   aCssText.AssignLiteral("@namespace ");
   if (mPrefix) {
@@ -1414,25 +1398,51 @@ CSSNameSpaceRuleImpl::GetCssText(nsAString& aCssText)
 }
 
 NS_IMETHODIMP
-CSSNameSpaceRuleImpl::SetCssText(const nsAString& aCssText)
+NameSpaceRule::SetCssText(const nsAString& aCssText)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-CSSNameSpaceRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
+NameSpaceRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
   NS_IF_ADDREF(*aSheet = mSheet);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CSSNameSpaceRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
+NameSpaceRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   if (mParentRule) {
     return mParentRule->GetDOMRule(aParentRule);
   }
   *aParentRule = nsnull;
+  return NS_OK;
+}
+
+} // namespace css
+} // namespace mozilla
+
+// Must be outside namespace
+DOMCI_DATA(CSSNameSpaceRule, css::NameSpaceRule)
+
+nsresult
+NS_NewCSSNameSpaceRule(nsICSSNameSpaceRule** aInstancePtrResult,
+                       nsIAtom* aPrefix, const nsString& aURLSpec)
+{
+  if (! aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  css::NameSpaceRule* it = new css::NameSpaceRule();
+
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  it->SetPrefix(aPrefix);
+  it->SetURLSpec(aURLSpec);
+  NS_ADDREF(*aInstancePtrResult = it);
   return NS_OK;
 }
 
