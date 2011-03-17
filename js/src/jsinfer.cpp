@@ -4071,7 +4071,8 @@ JSScript::typeSetFunction(JSContext *cx, JSFunction *fun)
     if (!type)
         return false;
 
-    fun->setType(type);
+    if (!fun->setTypeAndUniqueShape(cx, type))
+        return false;
     type->script = this;
     this->fun = fun;
 
