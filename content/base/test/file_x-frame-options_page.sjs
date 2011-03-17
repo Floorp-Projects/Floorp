@@ -12,7 +12,6 @@ function handleRequest(request, response)
 
   // X-Frame-Options header value
   if (query['xfo'] == "deny") {
-    for (var i = 0 ; i < 0x7fffff ; i++) { }
     response.setHeader("X-Frame-Options", "DENY", false);
   }
   else if (query['xfo'] == "sameorigin") {
