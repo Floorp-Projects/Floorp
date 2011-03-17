@@ -37,13 +37,18 @@
 /* This code is loaded in every child process that is started by mochitest in
  * order to be used as a replacement for UniversalXPConnect
  */
+
+var Ci = Components.interfaces;
+var Cc = Components.classes;
+
 function SpecialPowers(window) {
   this.window = window;
   bindDOMWindowUtils(this, window);
 }
 
 function bindDOMWindowUtils(sp, window) {
-  var util = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var util = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindowUtils);
   // This bit of magic brought to you by the letters
   // B Z, and E, S and the number 5.
   //
@@ -135,7 +140,6 @@ SpecialPowers.prototype = {
   //XXX: these APIs really ought to be removed, they're not e10s-safe.
   // (also they're pretty Firefox-specific)
   _getTopChromeWindow: function(window) {
-    var Ci = Components.interfaces;
     return window.QueryInterface(Ci.nsIInterfaceRequestor)
                  .getInterface(Ci.nsIWebNavigation)
                  .QueryInterface(Ci.nsIDocShellTreeItem)
@@ -169,6 +173,11 @@ SpecialPowers.prototype = {
   },
   removeChromeEventListener: function(type, listener, capture) {
     removeEventListener(type, listener, capture);
+  },
+
+  createSystemXHR: function() {
+    return Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+             .createInstance(Ci.nsIXMLHttpRequest);
   }
 };
 
