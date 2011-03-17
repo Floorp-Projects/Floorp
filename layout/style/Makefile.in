@@ -74,7 +74,6 @@ EXPORTS		= \
 		nsDOMCSSDeclaration.h \
 		nsICSSDeclaration.h \
 		nsICSSGroupRule.h \
-		nsICSSImportRule.h \
 		nsICSSLoaderObserver.h \
 		nsICSSPseudoComparator.h \
 		nsICSSRule.h \
@@ -101,6 +100,7 @@ EXPORTS		= \
 
 EXPORTS_mozilla/css = \
 		Declaration.h \
+		ImportRule.h \
 		Loader.h \
 		NameSpaceRule.h \
 		StyleRule.h \
