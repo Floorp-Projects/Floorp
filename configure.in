@@ -1167,6 +1167,28 @@ fi
 
 fi # COMPILE_ENVIRONMENT
 
+dnl clang prior to 2.9 (including Xcode 4) does not support all the
+dnl constructs required by the libtheora inline asm. This is used to
+dnl detect and disable it
+AC_LANG_SAVE
+AC_LANG_C
+AC_TRY_COMPILE([
+#if defined(__clang__)
+# if __clang_major__<2 || (__clang_major__==2 && __clang_minor__<9)
+#  error "clang older than 2.9 detected"
+# endif
+#endif
+               ],
+               [],
+               result="yes",
+               result="no")
+if test "$result" = "no"; then
+    AC_DEFINE(HAVE_OLD_CLANG)
+    HAVE_OLD_CLANG=1
+fi
+AC_LANG_RESTORE
+AC_SUBST(HAVE_OLD_CLANG)
+
 if test -n "$MAKE"; then
   if test `echo $MAKE | grep -c make.py` != 1; then
      NOT_PYMAKE=$MAKE
