@@ -4196,7 +4196,7 @@ types::TypeObject::trace(JSTracer *trc)
         int count = gc::FINALIZE_OBJECT_LAST - gc::FINALIZE_OBJECT0 + 1;
         for (int i = 0; i < count; i++) {
             if (emptyShapes[i])
-                emptyShapes[i]->trace(trc);
+                Shape::trace(trc, emptyShapes[i]);
         }
     }
 

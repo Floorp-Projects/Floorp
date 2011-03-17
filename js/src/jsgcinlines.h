@@ -641,7 +641,7 @@ MarkShapeRange(JSTracer *trc, const Shape **beg, const Shape **end, const char *
 {
     for (const Shape **sp = beg; sp < end; ++sp) {
         JS_SET_TRACING_INDEX(trc, name, sp - beg);
-        (*sp)->trace(trc);
+        Shape::trace(trc, *sp);
     }
 }
 
