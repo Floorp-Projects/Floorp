@@ -1284,7 +1284,6 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
                                          linearStr, staticLevel);
         if (!script)
             return false;
-        script->isCachedEval = true;
     }
 
     assertSameCompartment(cx, scopeobj, script);
@@ -1300,6 +1299,7 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
     MUST_FLOW_LABEL(destroy);
     js_CallDestroyScriptHook(cx, script);
 
+    script->isCachedEval = true;
     script->u.nextToGC = *bucket;
     *bucket = script;
 #ifdef CHECK_SCRIPT_OWNER
