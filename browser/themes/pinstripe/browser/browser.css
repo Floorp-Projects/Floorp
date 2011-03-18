@@ -779,7 +779,7 @@ toolbar[mode="icons"] #zoom-in-button {
   width: 7em;
   min-width: 7em;
   -moz-appearance: none;
-  box-shadow: 0 1px rgba(255, 255, 255, 0.2), inset 0 1px #d6d6d6;
+  box-shadow: 0 1px rgba(255, 255, 255, 0.2), inset 0 1px hsla(0,0%,0%,.05);
   margin: 0 4px;
   padding: 0;
   border: 1px solid;
@@ -807,45 +807,65 @@ toolbar[mode="icons"] #zoom-in-button {
 }
 
 #identity-box {
-  margin: 1px;
-  border-radius: 2px;
-  padding: 1px;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
-  text-shadow: 0 1px rgba(255, 255, 255, 0.2);
-}
-
-
-#identity-box:-moz-focusring {
-  box-shadow: 0 0 2px 1px -moz-mac-focusring inset,
-              0 0 2px 2px -moz-mac-focusring;
-}
-
-#identity-box {
-  color: white;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7);
+  background-image: -moz-linear-gradient(hsl(0,0%,98%), hsl(0,0%,92%));
+  box-shadow: 0 1px 0 hsla(0,0%,0%,.05) inset;
+  -moz-border-end: 1px solid hsla(0,0%,0%,.1);
   -moz-margin-end: 3px;
+  padding: 1px 4px;
 }
 
-#identity-box {
-  background-image: -moz-linear-gradient(#FFF, #DDD);
+#identity-box:-moz-locale-dir(ltr) {
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+#identity-box:-moz-locale-dir(rtl) {
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
 }
 
 #identity-box:active:hover,
 #identity-box[open="true"] {
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35),
-              inset 0 0 0 20px rgba(0, 0, 0, 0.06);
+  background-image: -moz-linear-gradient(hsl(0,0%,93%), hsl(0,0%,80%));
+  box-shadow: 0 1px 1px hsla(0,0%,0%,.3) inset,
+              0 1px 3px hsla(0,0%,0%,.3) inset;
 }
 
 #identity-box.verifiedDomain {
-  background-image: -moz-linear-gradient(#588EC6, #3C68AE);
+  background-image: -moz-linear-gradient(hsl(215,60%,92%), hsl(215,58%,88%));
+  -moz-border-end-color: hsla(215,54%,33%,.2);
+  color: hsl(215,54%,33%);
+}
+
+#identity-box.verifiedDomain:active:hover,
+#identity-box.verifiedDomain[open="true"] {
+  background-image: -moz-linear-gradient(hsl(215,85%,85%), hsl(215,70%,68%));
+  box-shadow: 0 1px 1px hsla(215,54%,33%,.7) inset,
+              0 1px 3px 1px hsla(215,54%,33%,.5) inset;
 }
 
 #identity-box.verifiedIdentity {
-  background-image: -moz-linear-gradient(#84BB40, #5BA020);
+  background-image: -moz-linear-gradient(hsl(91,70%,90%), hsl(93,60%,81%));
+  -moz-border-end-color: hsla(92,81%,16%,.2);
+  color: hsl(92,100%,20%);
+}
+
+#identity-box.verifiedIdentity:active:hover,
+#identity-box.verifiedIdentity[open="true"] {
+  background-image: -moz-linear-gradient(hsl(92,69%,77%), hsl(92,44%,51%));
+  box-shadow: 0 1px 1px hsla(92,81%,16%,.6) inset,
+              0 1px 3px 1px hsla(92,81%,16%,.5) inset;
+}
+
+#identity-box:-moz-focusring {
+  box-shadow: 0 0 2px 1px -moz-mac-focusring inset,
+              0 0 2px 2px -moz-mac-focusring;
+  -moz-border-end-style: none;
+  -moz-padding-end: 5px;
 }
 
 #identity-icon-labels {
-  margin: 0 4px 1px;
+  -moz-margin-start: 6px;
 }
 
 .urlbar-input-box {
@@ -875,20 +895,8 @@ toolbar[mode="icons"] #zoom-in-button {
 }
 
 #page-proxy-stack {
-  width: 18px;
+  width: 16px;
   height: 16px;
-  padding: 0 1px;
-}
-
-#identity-box.verifiedIdentity > hbox > #page-proxy-stack,
-#identity-box.verifiedDomain > hbox > #page-proxy-stack {
-  width: 24px;
-  padding: 0 4px;
-}
-
-#identity-box.verifiedIdentity > hbox > #page-proxy-stack,
-#identity-box.verifiedDomain > hbox > #page-proxy-stack {
-  background: url(urlbar-favicon-glow.png) center center no-repeat;
 }
 
 #page-proxy-favicon:not([src]) {
@@ -2082,7 +2090,23 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 #notification-popup-box {
-  margin: 0 3px;
+  position: relative;
+  background-color: #fff;
+  background-clip: padding-box;
+  padding-left: 3px;
+  border-radius: 2px 0 0 2px;
+  -moz-border-image: url("chrome://browser/skin/urlbar-arrow.png") 0 8 0 0 / 0 8px 0 0;
+  -moz-margin-end: -8px;
+}
+
+#notification-popup-box:not([hidden]) + #identity-box {
+  -moz-padding-start: 10px;
+  border-radius: 0;
+}
+
+#notification-popup-box:-moz-locale-dir(rtl),
+.notification-anchor-icon:-moz-locale-dir(rtl) {
+  -moz-transform: scaleX(-1);
 }
 
 .notification-anchor-icon {
