@@ -308,7 +308,7 @@ private:
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_STYLE_RULE_IMPL_CID)
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // null for style attribute
   nsCSSSelectorList* Selector() { return mSelector; }
