@@ -2062,7 +2062,15 @@ static const nsCSSProperty gMarkerSubpropTable[] = {
 
 const nsCSSProperty *const
 nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_) g##method_##SubpropTable,
+// FIXME: It would reduce the maintenance cost of unprefixing if we
+// changed this from Moz ## prop_ to just prop_.
+#define CSS_PROP_DOMPROP_PREFIXED(prop_) Moz ## prop_
+// Need an extra level of macro nesting to force expansion of method_
+// params before they get pasted.
+#define NSCSSPROPS_INNER_MACRO(method_) g##method_##SubpropTable,
+#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_) NSCSSPROPS_INNER_MACRO(method_)
 #include "nsCSSPropList.h"
 #undef CSS_PROP_SHORTHAND
+#undef NSCSSPROPS_INNER_MACRO
+#undef CSS_PROP_DOMPROP_PREFIXED
 };
