@@ -211,7 +211,7 @@ public:
     // copy everything except our reference count
     : mozilla::css::Rule(aCopy), mDecl(aCopy.mDecl) {}
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIStyleRule methods
 #ifdef DEBUG

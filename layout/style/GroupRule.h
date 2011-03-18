@@ -63,15 +63,7 @@ protected:
   GroupRule();
   GroupRule(const GroupRule& aCopy);
   virtual ~GroupRule();
-
-protected:
-  nsAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
 public:
-
-  // Implement part of nsISupports.
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
 
   // implement part of nsIStyleRule and nsICSSRule
   DECL_STYLE_RULE_INHERIT_NO_DOMRULE

@@ -83,6 +83,9 @@ nsIDOMCSSRule* _class::GetDOMRuleWeak(nsresult *aResult) { *aResult = NS_OK; ret
 namespace mozilla {
 namespace css {
 
+NS_IMPL_ADDREF(Rule)
+NS_IMPL_RELEASE(Rule)
+
 /* virtual */ already_AddRefed<nsIStyleSheet>
 Rule::GetStyleSheet() const
 {
@@ -221,7 +224,7 @@ public:
 private:
   ~CSSCharsetRuleImpl() {}
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   DECL_STYLE_RULE_INHERIT
 
@@ -257,8 +260,8 @@ CSSCharsetRuleImpl::CSSCharsetRuleImpl(const CSSCharsetRuleImpl& aCopy)
 {
 }
 
-NS_IMPL_ADDREF(CSSCharsetRuleImpl)
-NS_IMPL_RELEASE(CSSCharsetRuleImpl)
+NS_IMPL_ADDREF_INHERITED(CSSCharsetRuleImpl, css::Rule)
+NS_IMPL_RELEASE_INHERITED(CSSCharsetRuleImpl, css::Rule)
 
 DOMCI_DATA(CSSCharsetRule, CSSCharsetRuleImpl)
 
@@ -414,8 +417,8 @@ ImportRule::~ImportRule()
   }
 }
 
-NS_IMPL_ADDREF(ImportRule)
-NS_IMPL_RELEASE(ImportRule)
+NS_IMPL_ADDREF_INHERITED(ImportRule, Rule)
+NS_IMPL_RELEASE_INHERITED(ImportRule, Rule)
 
 // QueryInterface implementation for ImportRule
 NS_INTERFACE_MAP_BEGIN(ImportRule)
@@ -635,9 +638,6 @@ GroupRule::~GroupRule()
   }
 }
 
-NS_IMPL_ADDREF(GroupRule)
-NS_IMPL_RELEASE(GroupRule)
-
 IMPL_STYLE_RULE_INHERIT2(GroupRule, Rule)
 
 static PRBool
@@ -836,8 +836,8 @@ MediaRule::~MediaRule()
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(MediaRule, GroupRule)
-NS_IMPL_RELEASE_INHERITED(MediaRule, GroupRule)
+NS_IMPL_ADDREF_INHERITED(MediaRule, Rule)
+NS_IMPL_RELEASE_INHERITED(MediaRule, Rule)
 
 // QueryInterface implementation for MediaRule
 NS_INTERFACE_MAP_BEGIN(MediaRule)
@@ -1006,8 +1006,8 @@ DocumentRule::~DocumentRule()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(DocumentRule, GroupRule)
-NS_IMPL_RELEASE_INHERITED(DocumentRule, GroupRule)
+NS_IMPL_ADDREF_INHERITED(DocumentRule, Rule)
+NS_IMPL_RELEASE_INHERITED(DocumentRule, Rule)
 
 // QueryInterface implementation for DocumentRule
 NS_INTERFACE_MAP_BEGIN(DocumentRule)
@@ -1212,8 +1212,8 @@ NameSpaceRule::~NameSpaceRule()
 {
 }
 
-NS_IMPL_ADDREF(NameSpaceRule)
-NS_IMPL_RELEASE(NameSpaceRule)
+NS_IMPL_ADDREF_INHERITED(NameSpaceRule, Rule)
+NS_IMPL_RELEASE_INHERITED(NameSpaceRule, Rule)
 
 // QueryInterface implementation for NameSpaceRule
 NS_INTERFACE_MAP_BEGIN(NameSpaceRule)
@@ -1677,8 +1677,8 @@ nsCSSFontFaceRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_ADDREF(nsCSSFontFaceRule)
-NS_IMPL_RELEASE(nsCSSFontFaceRule)
+NS_IMPL_ADDREF_INHERITED(nsCSSFontFaceRule, css::Rule)
+NS_IMPL_RELEASE_INHERITED(nsCSSFontFaceRule, css::Rule)
 
 DOMCI_DATA(CSSFontFaceRule, nsCSSFontFaceRule)
 
