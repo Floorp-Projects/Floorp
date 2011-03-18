@@ -16,13 +16,7 @@ var BookmarkPopup = {
     return this.box;
   },
 
-  _bookmarkPopupTimeout: -1,
-
   hide : function hide() {
-    if (this._bookmarkPopupTimeout != -1) {
-      clearTimeout(this._bookmarkPopupTimeout);
-      this._bookmarkPopupTimeout = -1;
-    }
     this.box.hidden = true;
     BrowserUI.popPopup(this);
   },
@@ -33,16 +27,6 @@ var BookmarkPopup = {
 
     // include starButton here, so that click-to-dismiss works as expected
     BrowserUI.pushPopup(this, [this.box, BrowserUI.starButton]);
-  },
-
-  autoHide: function autoHide() {
-    if (this._bookmarkPopupTimeout != -1 || this.box.hidden)
-      return;
-
-    this._bookmarkPopupTimeout = setTimeout(function (self) {
-      self._bookmarkPopupTimeout = -1;
-      self.hide();
-    }, 2000, this);
   },
 
   toggle : function toggle() {
