@@ -3257,18 +3257,23 @@ CSS_PROP_SVG(
     offsetof(nsStyleSVG, mTextRendering),
     eStyleAnimType_EnumU8)
 
-// Callers that want information on the properties that are in
-// the style structs but not in the nsCSS* structs should define
-// |CSS_PROP_INCLUDE_NOT_CSS|.  (Some of these are also in nsRuleData*,
-// and a distinction might be needed at some point.)
-// The first 3 parameters don't matter, but some compilers don't like
-// empty arguments to macros.
-#ifdef CSS_PROP_INCLUDE_NOT_CSS
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+// We have a few properties that are in style structs but are not stored
+// in style sheets (or nsCSS* structs).  Some fields in these property
+// definitions are bogus (e.g., they work for nsRuleData* offsets but
+// not nsCSS* offsets).  Callers that care about these bogus fields can
+// define CSS_PROP_STUB_NOT_CSS to define a replacement for these
+// entries.
+#ifdef CSS_PROP_STUB_NOT_CSS
+CSS_PROP_STUB_NOT_CSS
+CSS_PROP_STUB_NOT_CSS
+CSS_PROP_STUB_NOT_CSS
+#else
 CSS_PROP_VISIBILITY(
-    X,
-    X,
+    -x-lang,
+    _x_lang,
     Lang,
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_INACCESSIBLE,
     Display,
     mLang,
     0,
@@ -3276,10 +3281,10 @@ CSS_PROP_VISIBILITY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_TABLE(
-    X,
-    X,
+    -x-cols,
+    _x_cols,
     Cols,
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_INACCESSIBLE,
     Table,
     mCols,
     0,
@@ -3287,17 +3292,18 @@ CSS_PROP_TABLE(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_TABLE(
-    X,
-    X,
+    -x-span,
+    _x_span,
     Span,
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_INACCESSIBLE,
     Table,
     mSpan,
     0,
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-#endif /* defined(CSS_PROP_INCLUDE_NOT_CSS) */
+#endif /* !defined(CSS_PROP_STUB_NOT_CSS) */
+#endif /* !defined(CSS_PROP_EXCLUDE_INTERNAL) */
 
 #ifdef USED_CSS_PROP
 
