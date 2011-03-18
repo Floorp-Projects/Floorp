@@ -2443,6 +2443,8 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
             // If the result can be cached, the value was already retrieved.
             JS_ASSERT(!f.regs.sp[-2].isMagic());
             f.regs.sp[-1].setObject(*thisObj);
+            if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.regs.pc))
+                THROW();
             return;
         }
     }
@@ -2462,6 +2464,8 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
     {
         f.regs.sp[-1] = thisv;
     }
+    if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.regs.pc))
+        THROW();
     if (f.regs.sp[-2].isUndefined() && !f.script()->typeMonitorUndefined(cx, f.regs.pc))
         THROW();
 }
@@ -2503,11 +2507,15 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
 
             // If the result can be cached, the value was already retrieved.
             JS_ASSERT(!f.regs.sp[-2].isMagic());
+            if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.regs.pc))
+                THROW();
             return;
         }
     }
 
     if (!obj->getProperty(cx, id, &f.regs.sp[-2]))
+        THROW();
+    if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.regs.pc))
         THROW();
     if (f.regs.sp[-2].isUndefined()) {
         if (idval.isInt32())

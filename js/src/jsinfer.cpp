@@ -611,47 +611,6 @@ TypeSet::addSetProperty(JSContext *cx, JSScript *script, const jsbytecode *pc,
     add(cx, ArenaNew<TypeConstraintProp>(cx->compartment->types.pool, script, pc, target, id, true));
 }
 
-/*
- * Constraints for reads/writes on object elements, which may either be integer
- * element accesses or arbitrary accesses depending on the index type.
- */
-class TypeConstraintElem : public TypeConstraint
-{
-public:
-    const jsbytecode *pc;
-
-    /* Types of the object being accessed. */
-    TypeSet *object;
-
-    /* Target to use for the ConstraintProp. */
-    TypeSet *target;
-
-    /* As for ConstraintProp. */
-    bool assign;
-
-    TypeConstraintElem(JSScript *script, const jsbytecode *pc,
-                       TypeSet *object, TypeSet *target, bool assign)
-        : TypeConstraint("elem", script), pc(pc),
-          object(object), target(target), assign(assign)
-    {}
-
-    void newType(JSContext *cx, TypeSet *source, jstype type);
-};
-
-void
-TypeSet::addGetElem(JSContext *cx, JSScript *script, const jsbytecode *pc,
-                    TypeSet *object, TypeSet *target)
-{
-    add(cx, ArenaNew<TypeConstraintElem>(cx->compartment->types.pool, script, pc, object, target, false));
-}
-
-void
-TypeSet::addSetElem(JSContext *cx, JSScript *script, const jsbytecode *pc,
-                    TypeSet *object, TypeSet *target)
-{
-    add(cx, ArenaNew<TypeConstraintElem>(cx->compartment->types.pool, script, pc, object, target, true));
-}
-
 /* Constraints for determining the 'this' object at sites invoked using 'new'. */
 class TypeConstraintNewObject : public TypeConstraint
 {
@@ -939,38 +898,6 @@ TypeConstraintProp::newType(JSContext *cx, TypeSet *source, jstype type)
     TypeObject *object = GetPropertyObject(cx, script, type);
     if (object)
         PropertyAccess(cx, script, pc, object, assign, target, id);
-}
-
-void
-TypeConstraintElem::newType(JSContext *cx, TypeSet *source, jstype type)
-{
-    switch (type) {
-      case TYPE_UNDEFINED:
-      case TYPE_BOOLEAN:
-      case TYPE_NULL:
-      case TYPE_INT32:
-      case TYPE_DOUBLE:
-        /*
-         * Integer index access, these are all covered by the JSID_VOID property.
-         * We are optimistically treating non-number accesses as not actually occurring,
-         * and double accesses as getting an integer property. This must be checked
-         * at runtime.
-         */
-        if (assign)
-            object->addSetProperty(cx, script, pc, target, JSID_VOID);
-        else
-            object->addGetProperty(cx, script, pc, target, JSID_VOID);
-        break;
-      default:
-        /*
-         * Access to a potentially arbitrary element. Monitor assignments to unknown
-         * elements, and treat reads of unknown elements as unknown.
-         */
-        if (assign)
-            cx->compartment->types.monitorBytecode(cx, script, pc - script->code);
-        else
-            target->addType(cx, TYPE_UNKNOWN);
-    }
 }
 
 void
@@ -3168,7 +3095,11 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
 
       case JSOP_GETELEM:
       case JSOP_CALLELEM:
-        state.popped(0).types->addGetElem(cx, script, pc, state.popped(1).types, &pushed[0]);
+        /*
+         * We only consider ELEM accesses on integers here. Any element access
+         * which is accessing a non-integer property must be monitored.
+         */
+        state.popped(1).types->addGetProperty(cx, script, pc, &pushed[0], JSID_VOID);
 
         if (op == JSOP_CALLELEM)
             state.popped(1).types->addFilterPrimitives(cx, script, &pushed[1], true);
@@ -3177,8 +3108,7 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
         break;
 
       case JSOP_SETELEM:
-        state.popped(1).types->addSetElem(cx, script, pc, state.popped(2).types,
-                                          state.popped(0).types);
+        state.popped(2).types->addSetProperty(cx, script, pc, state.popped(0).types, JSID_VOID);
         state.popped(0).types->addSubset(cx, script, &pushed[0]);
         break;
 
@@ -3186,8 +3116,8 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
       case JSOP_DECELEM:
       case JSOP_ELEMINC:
       case JSOP_ELEMDEC:
-        state.popped(0).types->addGetElem(cx, script, pc, state.popped(1).types, &pushed[0]);
-        state.popped(0).types->addSetElem(cx, script, pc, state.popped(1).types, NULL);
+        state.popped(1).types->addGetProperty(cx, script, pc, &pushed[0], JSID_VOID);
+        state.popped(1).types->addSetProperty(cx, script, pc, NULL, JSID_VOID);
         break;
 
       case JSOP_LENGTH:
