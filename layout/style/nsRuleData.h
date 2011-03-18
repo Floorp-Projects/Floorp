@@ -112,6 +112,10 @@ struct nsRuleData
    */
   nsCSSValue* ValueFor(nsCSSProperty aProperty);
 
+  const nsCSSValue* ValueFor(nsCSSProperty aProperty) const {
+    return const_cast<nsRuleData*>(this)->ValueFor(aProperty);
+  }
+
   /**
    * Getters like ValueFor(aProperty), but for each property by name
    * (ValueForBackgroundColor, etc.), and more efficient than ValueFor.
