@@ -61,17 +61,29 @@ struct nsCSSRect;
 
 class nsStyleCoord;
 
+template <nsStyleStructID MinIndex, nsStyleStructID Count>
+class FixedStyleStructArray
+{
+private:
+  void* mArray[Count];
+public:
+  void*& operator[](nsStyleStructID aIndex) {
+    NS_ABORT_IF_FALSE(MinIndex <= aIndex && aIndex < (MinIndex + Count),
+                      "out of range");
+    return mArray[aIndex - MinIndex];
+  }
+
+  const void* operator[](nsStyleStructID aIndex) const {
+    NS_ABORT_IF_FALSE(MinIndex <= aIndex && aIndex < (MinIndex + Count),
+                      "out of range");
+    return mArray[aIndex - MinIndex];
+  }
+};
+
 struct nsInheritedStyleData
 {
-
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
-  nsStyle##name * m##name##Data;
-#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args)
-
-#include "nsStyleStructList.h"
-
-#undef STYLE_STRUCT_INHERITED
-#undef STYLE_STRUCT_RESET
+  FixedStyleStructArray<nsStyleStructID_Inherited_Start,
+                        nsStyleStructID_Inherited_Count> mStyleStructs;
 
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
@@ -79,8 +91,9 @@ struct nsInheritedStyleData
 
   void DestroyStructs(PRUint32 aBits, nsPresContext* aContext) {
 #define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
-    if (m##name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
-      m##name##Data->Destroy(aContext);
+    void *name##Data = mStyleStructs[eStyleStruct_##name]; \
+    if (name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
+      static_cast<nsStyle##name*>(name##Data)->Destroy(aContext);
 #define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args)
 
 #include "nsStyleStructList.h"
@@ -95,30 +108,26 @@ struct nsInheritedStyleData
   }
 
   nsInheritedStyleData() {
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
-    m##name##Data = nsnull;
-#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args)
-
-#include "nsStyleStructList.h"
-
-#undef STYLE_STRUCT_INHERITED
-#undef STYLE_STRUCT_RESET
-
+    for (nsStyleStructID i = nsStyleStructID_Inherited_Start;
+         i < nsStyleStructID_Inherited_Start + nsStyleStructID_Inherited_Count;
+         i = nsStyleStructID(i + 1)) {
+      mStyleStructs[i] = nsnull;
+    }
   }
 };
 
 struct nsResetStyleData
 {
+  FixedStyleStructArray<nsStyleStructID_Reset_Start,
+                        nsStyleStructID_Reset_Count> mStyleStructs;
+
   nsResetStyleData()
   {
-#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args) \
-    m##name##Data = nsnull;
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args)
-
-#include "nsStyleStructList.h"
-
-#undef STYLE_STRUCT_RESET
-#undef STYLE_STRUCT_INHERITED
+    for (nsStyleStructID i = nsStyleStructID_Reset_Start;
+         i < nsStyleStructID_Reset_Start + nsStyleStructID_Reset_Count;
+         i = nsStyleStructID(i + 1)) {
+      mStyleStructs[i] = nsnull;
+    }
   }
 
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
@@ -127,8 +136,9 @@ struct nsResetStyleData
 
   void Destroy(PRUint32 aBits, nsPresContext* aContext) {
 #define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args) \
-    if (m##name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
-      m##name##Data->Destroy(aContext);
+    void *name##Data = mStyleStructs[eStyleStruct_##name]; \
+    if (name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
+      static_cast<nsStyle##name*>(name##Data)->Destroy(aContext);
 #define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args)
 
 #include "nsStyleStructList.h"
@@ -138,78 +148,46 @@ struct nsResetStyleData
 
     aContext->FreeToShell(sizeof(nsResetStyleData), this);
   }
-
-#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args) \
-  nsStyle##name * m##name##Data;
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args)
-
-#include "nsStyleStructList.h"
-
-#undef STYLE_STRUCT_RESET
-#undef STYLE_STRUCT_INHERITED
-
 };
 
 struct nsCachedStyleData
 {
-  struct StyleStructInfo {
-    ptrdiff_t mCachedStyleDataOffset;
-    ptrdiff_t mInheritResetOffset;
-    PRBool    mIsReset;
-  };
-
-  static StyleStructInfo gInfo[];
-
   nsInheritedStyleData* mInheritedData;
   nsResetStyleData* mResetData;
 
-  static PRBool IsReset(const nsStyleStructID& aSID) {
-    return gInfo[aSID].mIsReset;
+  static PRBool IsReset(const nsStyleStructID aSID) {
+    NS_ABORT_IF_FALSE(0 <= aSID && aSID < nsStyleStructID_Length,
+                      "must be an inherited or reset SID");
+    return nsStyleStructID_Reset_Start <= aSID;
   }
 
-  static PRUint32 GetBitForSID(const nsStyleStructID& aSID) {
+  static PRUint32 GetBitForSID(const nsStyleStructID aSID) {
     return 1 << aSID;
   }
 
-  void* NS_FASTCALL GetStyleData(const nsStyleStructID& aSID) {
-    // Each struct is stored at this.m##type##Data->m##name##Data where
-    // |type| is either Inherit or Reset, and |name| is the name of the
-    // style struct.  The |gInfo| stores the offset of the appropriate
-    // m##type##Data for the struct within nsCachedStyleData (|this|)
-    // and the offset of the appropriate m##name##Data within the
-    // m##type##Data.  Note that if we don't have any reset structs,
-    // then mResetData is null, and likewise for mInheritedData.  This
-    // saves us from having to go through the long if-else cascade into
-    // which most compilers will turn a case statement.
-
-    // NOTE:  nsStyleContext::SetStyle works roughly the same way.
-
-    const StyleStructInfo& info = gInfo[aSID];
-
-    // Get either &mInheritedData or &mResetData.
-    char* resetOrInheritSlot = reinterpret_cast<char*>(this) + info.mCachedStyleDataOffset;
-
-    // Get either mInheritedData or mResetData.
-    char* resetOrInherit = reinterpret_cast<char*>(*reinterpret_cast<void**>(resetOrInheritSlot));
-
-    void* data = nsnull;
-    if (resetOrInherit) {
-      // If we have the mInheritedData or mResetData, then we might have
-      // the struct, so get it.
-      char* dataSlot = resetOrInherit + info.mInheritResetOffset;
-      data = *reinterpret_cast<void**>(dataSlot);
+  void* NS_FASTCALL GetStyleData(const nsStyleStructID aSID) {
+    if (IsReset(aSID)) {
+      if (mResetData) {
+        return mResetData->mStyleStructs[aSID];
+      }
+    } else {
+      if (mInheritedData) {
+        return mInheritedData->mStyleStructs[aSID];
+      }
     }
-    return data;
+    return nsnull;
   }
 
   // Typesafe and faster versions of the above
   #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_, ctor_args_)       \
-    nsStyle##name_ * NS_FASTCALL GetStyle##name_ () {        \
-      return mInheritedData ? mInheritedData->m##name_##Data : nsnull;   \
+    nsStyle##name_ * NS_FASTCALL GetStyle##name_ () {                    \
+      return mInheritedData ? static_cast<nsStyle##name_*>(              \
+        mInheritedData->mStyleStructs[eStyleStruct_##name_]) : nsnull;   \
     }
   #define STYLE_STRUCT_RESET(name_, checkdata_cb_, ctor_args_)           \
-    nsStyle##name_ * NS_FASTCALL GetStyle##name_ () {        \
-      return mResetData ? mResetData->m##name_##Data : nsnull;           \
+    nsStyle##name_ * NS_FASTCALL GetStyle##name_ () {                    \
+      return mResetData ? static_cast<nsStyle##name_*>(                  \
+        mResetData->mStyleStructs[eStyleStruct_##name_]) : nsnull;       \
     }
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT_RESET
