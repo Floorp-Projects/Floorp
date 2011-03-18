@@ -128,11 +128,35 @@ mjit::Compiler::ensureInteger(FrameEntry *fe, Uses uses)
         }
     } else if (fe->isType(JSVAL_TYPE_DOUBLE)) {
         FPRegisterID fpreg = frame.tempFPRegForData(fe);
-
+        FPRegisterID fptemp = frame.allocFPReg();
         RegisterID data = frame.allocReg();
         Jump truncateGuard = masm.branchTruncateDoubleToInt32(fpreg, data);
-        stubcc.linkExit(truncateGuard, uses);
 
+        Label syncPath = stubcc.syncExitAndJump(uses);
+        stubcc.linkExitDirect(truncateGuard, stubcc.masm.label());
+
+        /*
+         * Try an OOL path to convert doubles representing integers within 2^32
+         * of a signed integer, by adding/subtracting 2^32 and then trying to
+         * convert to int32. This has to be an exact conversion, as otherwise
+         * the truncation works incorrectly on the modified value.
+         */
+
+        stubcc.masm.zeroDouble(fptemp);
+        Jump positive = stubcc.masm.branchDouble(Assembler::DoubleGreaterThan, fpreg, fptemp);
+        stubcc.masm.slowLoadConstantDouble(double(4294967296.0), fptemp);
+        Jump skip = stubcc.masm.jump();
+        positive.linkTo(stubcc.masm.label(), &stubcc.masm);
+        stubcc.masm.slowLoadConstantDouble(double(-4294967296.0), fptemp);
+        skip.linkTo(stubcc.masm.label(), &stubcc.masm);
+
+        JumpList isDouble;
+        stubcc.masm.addDouble(fpreg, fptemp);
+        stubcc.masm.branchConvertDoubleToInt32(fptemp, data, isDouble, Registers::FPConversionTemp);
+        stubcc.crossJump(stubcc.masm.jump(), masm.label());
+        isDouble.linkTo(syncPath, &stubcc.masm);
+
+        frame.freeReg(fptemp);
         frame.learnType(fe, JSVAL_TYPE_INT32, data);
     } else if (!fe->isType(JSVAL_TYPE_INT32)) {
         RegisterID typeReg = frame.tempRegForType(fe);
