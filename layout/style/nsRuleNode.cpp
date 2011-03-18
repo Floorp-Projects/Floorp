@@ -2406,10 +2406,8 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
  *              function.
  * @param parentdata_ Variable (declared here) holding the parent style
  *                    context's data for this struct.
- * @param rdtype_ The nsCSS* struct type used to compute this struct's data.
- * @param rdata_ Variable (declared here) holding the nsCSS* used here.
  */
-#define COMPUTE_START_INHERITED(type_, ctorargs_, data_, parentdata_, rdtype_, rdata_) \
+#define COMPUTE_START_INHERITED(type_, ctorargs_, data_, parentdata_)         \
   NS_ASSERTION(aRuleDetail != eRuleFullInherited,                             \
                "should not have bothered calling Compute*Data");              \
                                                                               \
@@ -2459,10 +2457,8 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
  *              function.
  * @param parentdata_ Variable (declared here) holding the parent style
  *                    context's data for this struct.
- * @param rdtype_ The nsCSS* struct type used to compute this struct's data.
- * @param rdata_ Variable (declared here) holding the nsCSS* used here.
  */
-#define COMPUTE_START_RESET(type_, ctorargs_, data_, parentdata_, rdtype_, rdata_) \
+#define COMPUTE_START_RESET(type_, ctorargs_, data_, parentdata_)             \
   NS_ASSERTION(aRuleDetail != eRuleFullInherited,                             \
                "should not have bothered calling Compute*Data");              \
                                                                               \
@@ -3225,8 +3221,7 @@ nsRuleNode::ComputeFontData(void* aStartStruct,
                             const RuleDetail aRuleDetail,
                             const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_INHERITED(Font, (mPresContext), font, parentFont,
-                          Font, fontData)
+  COMPUTE_START_INHERITED(Font, (mPresContext), font, parentFont)
 
   // NOTE:  The |aRuleDetail| passed in is a little bit conservative due
   // to the -moz-system-font property.  We really don't need to consider
@@ -3413,7 +3408,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
                             const RuleDetail aRuleDetail,
                             const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_INHERITED(Text, (), text, parentText, Text, textData)
+  COMPUTE_START_INHERITED(Text, (), text, parentText)
 
   // tab-size: integer, inherit
   SetDiscrete(*aRuleData->ValueForTabSize(),
@@ -3556,7 +3551,7 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
                                  const RuleDetail aRuleDetail,
                                  const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_RESET(TextReset, (), text, parentText, Text, textData)
+  COMPUTE_START_RESET(TextReset, (), text, parentText)
 
   // vertical-align: enum, length, percent, calc, inherit
   const nsCSSValue* verticalAlignValue = aRuleData->ValueForVerticalAlign();
@@ -3608,8 +3603,7 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
                                      const RuleDetail aRuleDetail,
                                      const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_INHERITED(UserInterface, (), ui, parentUI,
-                          UserInterface, uiData)
+  COMPUTE_START_INHERITED(UserInterface, (), ui, parentUI)
 
   // cursor: enum, url, inherit
   const nsCSSValue* cursorValue = aRuleData->ValueForCursor();
@@ -3701,7 +3695,7 @@ nsRuleNode::ComputeUIResetData(void* aStartStruct,
                                const RuleDetail aRuleDetail,
                                const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_RESET(UIReset, (), ui, parentUI, UserInterface, uiData)
+  COMPUTE_START_RESET(UIReset, (), ui, parentUI)
 
   // user-select: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForUserSelect(),
@@ -3768,8 +3762,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
                                const RuleDetail aRuleDetail,
                                const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_RESET(Display, (), display, parentDisplay,
-                      Display, displayData)
+  COMPUTE_START_RESET(Display, (), display, parentDisplay)
 
   // Each property's index in this array must match its index in the
   // const array |transitionPropInfo| above.
@@ -4321,8 +4314,7 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
                                   const PRBool aCanStoreInRuleTree)
 {
   COMPUTE_START_INHERITED(Visibility, (mPresContext),
-                          visibility, parentVisibility,
-                          Display, displayData)
+                          visibility, parentVisibility)
 
   // direction: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForDirection(), visibility->mDirection,
@@ -4373,8 +4365,7 @@ nsRuleNode::ComputeColorData(void* aStartStruct,
                              const RuleDetail aRuleDetail,
                              const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_INHERITED(Color, (mPresContext), color, parentColor,
-                          Color, colorData)
+  COMPUTE_START_INHERITED(Color, (mPresContext), color, parentColor)
 
   // color: color, string, inherit
   // Special case for currentColor.  According to CSS3, setting color to 'currentColor'
@@ -4765,7 +4756,7 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
                                   const RuleDetail aRuleDetail,
                                   const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_RESET(Background, (), bg, parentBG, Color, colorData)
+  COMPUTE_START_RESET(Background, (), bg, parentBG)
 
   // background-color: color, string, inherit
   const nsCSSValue* backColorValue = aRuleData->ValueForBackgroundColor();
@@ -4884,7 +4875,7 @@ nsRuleNode::ComputeMarginData(void* aStartStruct,
                               const RuleDetail aRuleDetail,
                               const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_RESET(Margin, (), margin, parentMargin, Margin, marginData)
+  COMPUTE_START_RESET(Margin, (), margin, parentMargin)
 
   // margin: length, percent, auto, inherit
   nsStyleCoord  coord;
@@ -4927,8 +4918,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
                               const RuleDetail aRuleDetail,
                               const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_RESET(Border, (mPresContext), border, parentBorder,
-                      Margin, marginData)
+  COMPUTE_START_RESET(Border, (mPresContext), border, parentBorder)
 
   // box-shadow: none, list, inherit, initial
   const nsCSSValue* boxShadowValue = aRuleData->ValueForBoxShadow();
@@ -5292,7 +5282,7 @@ nsRuleNode::ComputePaddingData(void* aStartStruct,
                                const RuleDetail aRuleDetail,
                                const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_RESET(Padding, (), padding, parentPadding, Margin, marginData)
+  COMPUTE_START_RESET(Padding, (), padding, parentPadding)
 
   // padding: length, percent, inherit
   nsStyleCoord  coord;
@@ -5335,8 +5325,7 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
                                const RuleDetail aRuleDetail,
                                const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_RESET(Outline, (mPresContext), outline, parentOutline,
-                      Margin, marginData)
+  COMPUTE_START_RESET(Outline, (mPresContext), outline, parentOutline)
 
   // outline-width: length, enum, inherit
   const nsCSSValue* outlineWidthValue = aRuleData->ValueForOutlineWidth();
@@ -5447,7 +5436,7 @@ nsRuleNode::ComputeListData(void* aStartStruct,
                             const RuleDetail aRuleDetail,
                             const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_INHERITED(List, (), list, parentList, List, listData)
+  COMPUTE_START_INHERITED(List, (), list, parentList)
 
   // list-style-type: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForListStyleType(),
@@ -5541,7 +5530,7 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
                                 const RuleDetail aRuleDetail,
                                 const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_RESET(Position, (), pos, parentPos, Position, posData)
+  COMPUTE_START_RESET(Position, (), pos, parentPos)
 
   // box offsets: length, percent, calc, auto, inherit
   static const nsCSSProperty offsetProps[] = {
@@ -5610,7 +5599,7 @@ nsRuleNode::ComputeTableData(void* aStartStruct,
                              const RuleDetail aRuleDetail,
                              const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_RESET(Table, (), table, parentTable, Table, tableData)
+  COMPUTE_START_RESET(Table, (), table, parentTable)
 
   // table-layout: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForTableLayout(),
@@ -5641,8 +5630,7 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
                                    const RuleDetail aRuleDetail,
                                    const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_INHERITED(TableBorder, (mPresContext), table, parentTable,
-                          Table, tableData)
+  COMPUTE_START_INHERITED(TableBorder, (mPresContext), table, parentTable)
 
   // border-collapse: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForBorderCollapse(), table->mBorderCollapse,
@@ -5702,8 +5690,7 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
   PRUint32 count;
   nsAutoString buffer;
 
-  COMPUTE_START_RESET(Content, (), content, parentContent,
-                      Content, contentData)
+  COMPUTE_START_RESET(Content, (), content, parentContent)
 
   // content: [string, url, counter, attr, enum]+, normal, none, inherit
   const nsCSSValue* contentValue = aRuleData->ValueForContent();
@@ -5936,8 +5923,7 @@ nsRuleNode::ComputeQuotesData(void* aStartStruct,
                               const RuleDetail aRuleDetail,
                               const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_INHERITED(Quotes, (), quotes, parentQuotes,
-                          Content, contentData)
+  COMPUTE_START_INHERITED(Quotes, (), quotes, parentQuotes)
 
   // quotes: inherit, initial, none, [string string]+
   const nsCSSValue* quotesValue = aRuleData->ValueForQuotes();
@@ -5991,7 +5977,7 @@ nsRuleNode::ComputeXULData(void* aStartStruct,
                            const RuleDetail aRuleDetail,
                            const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_RESET(XUL, (), xul, parentXUL, XUL, xulData)
+  COMPUTE_START_RESET(XUL, (), xul, parentXUL)
 
   // box-align: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForBoxAlign(),
@@ -6050,7 +6036,7 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
                               const RuleDetail aRuleDetail,
                               const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_RESET(Column, (mPresContext), column, parent, Column, columnData)
+  COMPUTE_START_RESET(Column, (mPresContext), column, parent)
 
   // column-width: length, auto, inherit
   SetCoord(*aRuleData->ValueForColumnWidth(),
@@ -6207,7 +6193,7 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
                            const RuleDetail aRuleDetail,
                            const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_INHERITED(SVG, (), svg, parentSVG, SVG, SVGData)
+  COMPUTE_START_INHERITED(SVG, (), svg, parentSVG)
 
   // clip-rule: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForClipRule(),
@@ -6423,7 +6409,7 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
                                 const RuleDetail aRuleDetail,
                                 const PRBool aCanStoreInRuleTree)
 {
-  COMPUTE_START_RESET(SVGReset, (), svgReset, parentSVGReset, SVG, SVGData)
+  COMPUTE_START_RESET(SVGReset, (), svgReset, parentSVGReset)
 
   // stop-color:
   const nsCSSValue* stopColorValue = aRuleData->ValueForStopColor();
