@@ -281,7 +281,7 @@ var ExtensionsView = {
   },
 
   _createLocalAddon: function ev__createLocalAddon(aAddon) {
-    let strings = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+    let strings = Strings.browser;
 
     let appManaged = (aAddon.scope == AddonManager.SCOPE_APPLICATION);
     let opType = this._getOpTypeForOperations(aAddon.pendingOperations);
@@ -945,7 +945,7 @@ AddonInstallListener.prototype = {
 
     // If we are updating an add-on, change the status
     if (element.hasAttribute("updating")) {
-      let strings = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+      let strings = Strings.browser;
       element.setAttribute("updateStatus", strings.formatStringFromName("addonUpdate.updated", [aAddon.version], 1));
       element.removeAttribute("updating");
     }
