@@ -1051,7 +1051,7 @@ static PRBool test_strip_chars()
 {
   return test_strip_chars_helper(NS_LITERAL_STRING("foo \r \nbar").get(),
                                  NS_LITERAL_STRING(" \n\r").get(),
-                                 NS_LITERAL_STRING("foobar"));
+                                 NS_LITERAL_STRING("foobar")) &&
          test_strip_chars_helper(NS_LITERAL_STRING("\r\nfoo\r\n").get(),
                                  NS_LITERAL_STRING(" \n\r").get(),
                                  NS_LITERAL_STRING("foo")) &&
@@ -1064,7 +1064,7 @@ static PRBool test_strip_chars()
          test_strip_chars_helper(NS_LITERAL_STRING("foo").get(),
                                  NS_LITERAL_STRING("foo").get(),
                                  NS_LITERAL_STRING("")) &&
-         test_strip_chars_helper(NS_LITERAL_STRING("foo").get(),
+         test_strip_chars_helper(NS_LITERAL_STRING(" foo").get(),
                                  NS_LITERAL_STRING(" ").get(),
                                  NS_LITERAL_STRING(" foo"), 1);
 }
