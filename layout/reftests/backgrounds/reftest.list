@@ -4,8 +4,8 @@
 == layers-layer-count-cascade-2.xhtml layers-layer-count-2-ref.xhtml
 == layers-layer-count-inheritance-2.xhtml layers-layer-count-2-ref.xhtml
 == viewport-translucent-color-1.html viewport-translucent-color-ref.html
-== viewport-translucent-color-2.html viewport-translucent-color-ref.html
-== viewport-translucent-color-3.html viewport-translucent-color-ref.html
+fails-if(Android) == viewport-translucent-color-2.html viewport-translucent-color-ref.html
+fails-if(Android) == viewport-translucent-color-3.html viewport-translucent-color-ref.html
 != viewport-translucent-color-ref.html about:blank
 == iframe-translucent-color-1.html iframe-translucent-color-ref.html
 == translucent-color-1.html translucent-color-ref.html
@@ -99,7 +99,7 @@
 # the image aren't the issue, because they're being obscured to avoid sampling
 # algorithm dependencies (at least assuming the sampling algorithm in use
 # doesn't sample too far astray from the boundaries).
-fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
+fails-if(!Android) == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
 
 # background-size affects images without intrinsic dimensions specially; we may
 # not support such image formats right now, but when we do, we want
