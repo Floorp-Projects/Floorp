@@ -66,7 +66,17 @@
             let ratio = tabHeight / tabWidth;
             if (browser.contentDocumentWidth > 0)
               width = Math.min(width, browser.contentDocumentWidth);
-            height = width * ratio;
+
+            if (browser.contentDocumentHeight > 0)
+              height = Math.min(height, browser.contentDocumentHeight);
+
+            let newHeight = width * ratio;
+            if (height >= newHeight) {
+              height = newHeight;
+            } else {
+              // the browser aspect ratio does not match the tabs aspect ratio
+              width = height / ratio;
+            }
 
             let thumbnail = this.thumbnail;
             thumbnail.removeAttribute("empty");
