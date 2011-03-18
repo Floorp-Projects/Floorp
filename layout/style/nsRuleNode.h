@@ -55,8 +55,6 @@ struct nsRuleData;
 class nsIStyleRule;
 struct nsCSSStruct;
 struct nsCSSValueList;
-// Copy of typedef that's in nsCSSStruct.h, for compilation speed.
-typedef nsCSSStruct nsRuleDataStruct;
 
 class nsCSSValue;
 struct nsCSSRect;
@@ -458,8 +456,7 @@ protected:
                                nsStyleContext* aContext);
 
   const void*
-    WalkRuleTree(const nsStyleStructID aSID, nsStyleContext* aContext,
-                 nsRuleData* aRuleData, nsRuleDataStruct* aSpecificData);
+    WalkRuleTree(const nsStyleStructID aSID, nsStyleContext* aContext);
 
   const void*
     ComputeDisplayData(void* aStartStruct,
@@ -661,39 +658,14 @@ protected:
                             nsCSSRect& aValueRect,
                             PRBool& aCanStoreInRuleTree);
 
-  inline RuleDetail CheckSpecifiedProperties(const nsStyleStructID aSID, const nsRuleDataStruct& aRuleDataStruct);
+  inline RuleDetail CheckSpecifiedProperties(const nsStyleStructID aSID,
+                                             const nsRuleData* aRuleData);
 
   const void* GetParentData(const nsStyleStructID aSID);
   #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)  \
     const nsStyle##name_* GetParent##name_();
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
-
-  const void* GetDisplayData(nsStyleContext* aContext);
-  const void* GetVisibilityData(nsStyleContext* aContext);
-  const void* GetFontData(nsStyleContext* aContext);
-  const void* GetColorData(nsStyleContext* aContext);
-  const void* GetBackgroundData(nsStyleContext* aContext);
-  const void* GetMarginData(nsStyleContext* aContext);
-  const void* GetBorderData(nsStyleContext* aContext);
-  const void* GetPaddingData(nsStyleContext* aContext);
-  const void* GetOutlineData(nsStyleContext* aContext);
-  const void* GetListData(nsStyleContext* aContext);
-  const void* GetPositionData(nsStyleContext* aContext);
-  const void* GetTableData(nsStyleContext* aContext);
-  const void* GetTableBorderData(nsStyleContext* aContext);
-
-  const void* GetContentData(nsStyleContext* aContext);
-  const void* GetQuotesData(nsStyleContext* aContext);
-  const void* GetTextData(nsStyleContext* aContext);
-  const void* GetTextResetData(nsStyleContext* aContext);
-  const void* GetUserInterfaceData(nsStyleContext* aContext);
-
-  const void* GetUIResetData(nsStyleContext* aContext);
-  const void* GetXULData(nsStyleContext* aContext);
-  const void* GetColumnData(nsStyleContext* aContext);
-  const void* GetSVGData(nsStyleContext* aContext);
-  const void* GetSVGResetData(nsStyleContext* aContext);
 
   already_AddRefed<nsCSSShadowArray>
               GetShadowData(const nsCSSValueList* aList,

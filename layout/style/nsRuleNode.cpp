@@ -81,6 +81,7 @@
 #include "mozilla/dom/Element.h"
 #include "CSSCalc.h"
 #include "nsPrintfCString.h"
+#include <alloca.h>
 
 using namespace mozilla::dom;
 namespace css = mozilla::css;
@@ -1301,34 +1302,14 @@ nsRuleNode::PropagateDependentBit(PRUint32 aBit, nsRuleNode* aHighestNode)
  * sharing can be used for the data on this rule node.  MORE HERE...
  */
 
-/* the information for a property (or in some cases, a rect group of
-   properties) */
-
-struct PropertyCheckData {
-  size_t offset;
-  // These duplicate the data in nsCSSProps::kFlagsTable, except that
-  // we have some extra entries for CSS_PROP_INCLUDE_NOT_CSS.
-  // FIXME: CSS_PROP_INCLUDE_NOT_CSS no longer exists; we could avoid
-  // this duplication.
-  PRUint32 flags;
-};
-
 /*
  * a callback function that that can revise the result of
  * CheckSpecifiedProperties before finishing; aResult is the current
  * result, and it returns the revised one.
  */
 typedef nsRuleNode::RuleDetail
-  (* CheckCallbackFn)(const nsRuleDataStruct& aData,
+  (* CheckCallbackFn)(const nsRuleData* aRuleData,
                       nsRuleNode::RuleDetail aResult);
-
-/* the information for all the properties in a style struct */
-struct StructCheckData {
-  const PropertyCheckData* props;
-  PRInt32 nprops;
-  CheckCallbackFn callback;
-};
-
 
 /**
  * @param aValue the value being examined
@@ -1348,25 +1329,22 @@ ExamineCSSValue(const nsCSSValue& aValue,
 }
 
 static nsRuleNode::RuleDetail
-CheckFontCallback(const nsRuleDataStruct& aData,
+CheckFontCallback(const nsRuleData* aRuleData,
                   nsRuleNode::RuleDetail aResult)
 {
-  const nsRuleDataFont& fontData =
-      static_cast<const nsRuleDataFont&>(aData);
-
   // em, ex, percent, 'larger', and 'smaller' values on font-size depend
   // on the parent context's font-size
   // Likewise, 'lighter' and 'bolder' values of 'font-weight', and 'wider'
   // and 'narrower' values of 'font-stretch' depend on the parent.
-  const nsCSSValue& size = fontData.mSize;
-  const nsCSSValue& weight = fontData.mWeight;
+  const nsCSSValue& size = *aRuleData->ValueForFontSize();
+  const nsCSSValue& weight = *aRuleData->ValueForFontWeight();
   if (size.IsRelativeLengthUnit() ||
       size.GetUnit() == eCSSUnit_Percent ||
       (size.GetUnit() == eCSSUnit_Enumerated &&
        (size.GetIntValue() == NS_STYLE_FONT_SIZE_SMALLER ||
         size.GetIntValue() == NS_STYLE_FONT_SIZE_LARGER)) ||
 #ifdef MOZ_MATHML
-      fontData.mScriptLevel.GetUnit() == eCSSUnit_Integer ||
+      aRuleData->ValueForScriptLevel()->GetUnit() == eCSSUnit_Integer ||
 #endif
       (weight.GetUnit() == eCSSUnit_Enumerated &&
        (weight.GetIntValue() == NS_STYLE_FONT_WEIGHT_BOLDER ||
@@ -1389,15 +1367,13 @@ CheckFontCallback(const nsRuleDataStruct& aData,
 }
 
 static nsRuleNode::RuleDetail
-CheckColorCallback(const nsRuleDataStruct& aData,
+CheckColorCallback(const nsRuleData* aRuleData,
                    nsRuleNode::RuleDetail aResult)
 {
-  const nsRuleDataColor& colorData =
-      static_cast<const nsRuleDataColor&>(aData);
-
   // currentColor values for color require inheritance
-  if (colorData.mColor.GetUnit() == eCSSUnit_EnumColor &&
-      colorData.mColor.GetIntValue() == NS_COLOR_CURRENTCOLOR) {
+  const nsCSSValue* colorValue = aRuleData->ValueForColor();
+  if (colorValue->GetUnit() == eCSSUnit_EnumColor &&
+      colorValue->GetIntValue() == NS_COLOR_CURRENTCOLOR) {
     NS_ASSERTION(aResult == nsRuleNode::eRuleFullReset,
                  "we should already be counted as full-reset");
     aResult = nsRuleNode::eRuleFullInherited;
@@ -1407,14 +1383,12 @@ CheckColorCallback(const nsRuleDataStruct& aData,
 }
 
 static nsRuleNode::RuleDetail
-CheckTextCallback(const nsRuleDataStruct& aData,
+CheckTextCallback(const nsRuleData* aRuleData,
                   nsRuleNode::RuleDetail aResult)
 {
-  const nsRuleDataText& textData =
-    static_cast<const nsRuleDataText&>(aData);
-
-  if (textData.mTextAlign.GetUnit() == eCSSUnit_Enumerated &&
-      textData.mTextAlign.GetIntValue() ==
+  const nsCSSValue* textAlignValue = aRuleData->ValueForTextAlign();
+  if (textAlignValue->GetUnit() == eCSSUnit_Enumerated &&
+      textAlignValue->GetIntValue() ==
         NS_STYLE_TEXT_ALIGN_MOZ_CENTER_OR_INHERIT) {
     // Promote reset to mixed since we have something that depends on
     // the parent.
@@ -1427,211 +1401,200 @@ CheckTextCallback(const nsRuleDataStruct& aData,
   return aResult;
 }
 
-#define CHECK_DATA_FOR_PROPERTY(name_, id_, method_, flags_, datastruct_,     \
-                                member_, parsevariant_, kwtable_,             \
-                                stylestructoffset_, animtype_)                \
-  { offsetof(nsRuleData##datastruct_, member_), flags_ },
+#define FLAG_DATA_FOR_PROPERTY(name_, id_, method_, flags_, datastruct_,      \
+                               member_, parsevariant_, kwtable_,              \
+                               stylestructoffset_, animtype_)                 \
+  flags_,
 
-static const PropertyCheckData FontCheckProperties[] = {
-#define CSS_PROP_FONT CHECK_DATA_FOR_PROPERTY
+// The order here must match the enums in *CheckCounter in nsCSSProps.cpp.
+
+static const PRUint32 gFontFlags[] = {
+#define CSS_PROP_FONT FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_FONT
 };
 
-static const PropertyCheckData DisplayCheckProperties[] = {
-#define CSS_PROP_DISPLAY CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gDisplayFlags[] = {
+#define CSS_PROP_DISPLAY FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_DISPLAY
 };
 
-static const PropertyCheckData VisibilityCheckProperties[] = {
-#define CSS_PROP_VISIBILITY CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gVisibilityFlags[] = {
+#define CSS_PROP_VISIBILITY FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_VISIBILITY
 };
 
-static const PropertyCheckData MarginCheckProperties[] = {
-#define CSS_PROP_MARGIN CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gMarginFlags[] = {
+#define CSS_PROP_MARGIN FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_MARGIN
 };
 
-static const PropertyCheckData BorderCheckProperties[] = {
-#define CSS_PROP_BORDER CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gBorderFlags[] = {
+#define CSS_PROP_BORDER FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_BORDER
 };
 
-static const PropertyCheckData PaddingCheckProperties[] = {
-#define CSS_PROP_PADDING CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gPaddingFlags[] = {
+#define CSS_PROP_PADDING FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_PADDING
 };
 
-static const PropertyCheckData OutlineCheckProperties[] = {
-#define CSS_PROP_OUTLINE CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gOutlineFlags[] = {
+#define CSS_PROP_OUTLINE FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_OUTLINE
 };
 
-static const PropertyCheckData ListCheckProperties[] = {
-#define CSS_PROP_LIST CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gListFlags[] = {
+#define CSS_PROP_LIST FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_LIST
 };
 
-static const PropertyCheckData ColorCheckProperties[] = {
-#define CSS_PROP_COLOR CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gColorFlags[] = {
+#define CSS_PROP_COLOR FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_COLOR
 };
 
-static const PropertyCheckData BackgroundCheckProperties[] = {
-#define CSS_PROP_BACKGROUND CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gBackgroundFlags[] = {
+#define CSS_PROP_BACKGROUND FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_BACKGROUND
 };
 
-static const PropertyCheckData PositionCheckProperties[] = {
-#define CSS_PROP_POSITION CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gPositionFlags[] = {
+#define CSS_PROP_POSITION FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_POSITION
 };
 
-static const PropertyCheckData TableCheckProperties[] = {
-#define CSS_PROP_TABLE CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gTableFlags[] = {
+#define CSS_PROP_TABLE FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_TABLE
 };
 
-static const PropertyCheckData TableBorderCheckProperties[] = {
-#define CSS_PROP_TABLEBORDER CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gTableBorderFlags[] = {
+#define CSS_PROP_TABLEBORDER FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_TABLEBORDER
 };
 
-static const PropertyCheckData ContentCheckProperties[] = {
-#define CSS_PROP_CONTENT CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gContentFlags[] = {
+#define CSS_PROP_CONTENT FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_CONTENT
 };
 
-static const PropertyCheckData QuotesCheckProperties[] = {
-#define CSS_PROP_QUOTES CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gQuotesFlags[] = {
+#define CSS_PROP_QUOTES FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_QUOTES
 };
 
-static const PropertyCheckData TextCheckProperties[] = {
-#define CSS_PROP_TEXT CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gTextFlags[] = {
+#define CSS_PROP_TEXT FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_TEXT
 };
 
-static const PropertyCheckData TextResetCheckProperties[] = {
-#define CSS_PROP_TEXTRESET CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gTextResetFlags[] = {
+#define CSS_PROP_TEXTRESET FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_TEXTRESET
 };
 
-static const PropertyCheckData UserInterfaceCheckProperties[] = {
-#define CSS_PROP_USERINTERFACE CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gUserInterfaceFlags[] = {
+#define CSS_PROP_USERINTERFACE FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_USERINTERFACE
 };
 
-static const PropertyCheckData UIResetCheckProperties[] = {
-#define CSS_PROP_UIRESET CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gUIResetFlags[] = {
+#define CSS_PROP_UIRESET FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_UIRESET
 };
 
-static const PropertyCheckData XULCheckProperties[] = {
-#define CSS_PROP_XUL CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gXULFlags[] = {
+#define CSS_PROP_XUL FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_XUL
 };
 
-static const PropertyCheckData SVGCheckProperties[] = {
-#define CSS_PROP_SVG CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gSVGFlags[] = {
+#define CSS_PROP_SVG FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_SVG
 };
 
-static const PropertyCheckData SVGResetCheckProperties[] = {
-#define CSS_PROP_SVGRESET CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gSVGResetFlags[] = {
+#define CSS_PROP_SVGRESET FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_SVGRESET
 };
 
-static const PropertyCheckData ColumnCheckProperties[] = {
-#define CSS_PROP_COLUMN CHECK_DATA_FOR_PROPERTY
+static const PRUint32 gColumnFlags[] = {
+#define CSS_PROP_COLUMN FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
 #undef CSS_PROP_COLUMN
 };
 
-#undef CHECK_DATA_FOR_PROPERTY
+#undef FLAG_DATA_FOR_PROPERTY
 
-static const StructCheckData gCheckProperties[] = {
+static const PRUint32* gFlagsByStruct[] = {
 
 #define STYLE_STRUCT(name, checkdata_cb, ctor_args) \
-  {name##CheckProperties, \
-   sizeof(name##CheckProperties)/sizeof(PropertyCheckData), \
-   checkdata_cb},
+  g##name##Flags,
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
-  {nsnull, 0, nsnull}
 
 };
 
+static const CheckCallbackFn gCheckCallbacks[] = {
 
+#define STYLE_STRUCT(name, checkdata_cb, ctor_args) \
+  checkdata_cb,
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
 
-// XXXldb Taking the address of a reference is evil.
-
-inline nsCSSValue&
-ValueAtOffset(nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
-{
-  return * reinterpret_cast<nsCSSValue*>
-                           (reinterpret_cast<char*>(&aRuleDataStruct) + aOffset);
-}
-
-inline const nsCSSValue&
-ValueAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
-{
-  return * reinterpret_cast<const nsCSSValue*>
-                           (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
-}
+};
 
 #if defined(MOZ_MATHML) && defined(DEBUG)
 static PRBool
-AreAllMathMLPropertiesUndefined(const nsCSSFont& aRuleData)
+AreAllMathMLPropertiesUndefined(const nsRuleData* aRuleData)
 {
-  return aRuleData.mScriptLevel.GetUnit() == eCSSUnit_Null &&
-         aRuleData.mScriptSizeMultiplier.GetUnit() == eCSSUnit_Null &&
-         aRuleData.mScriptMinSize.GetUnit() == eCSSUnit_Null;
+  return
+    aRuleData->ValueForScriptLevel()->GetUnit() == eCSSUnit_Null &&
+    aRuleData->ValueForScriptSizeMultiplier()->GetUnit() == eCSSUnit_Null &&
+    aRuleData->ValueForScriptMinSize()->GetUnit() == eCSSUnit_Null;
 }
 #endif
 
 inline nsRuleNode::RuleDetail
 nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
-                                     const nsRuleDataStruct& aRuleDataStruct)
+                                     const nsRuleData* aRuleData)
 {
-  const StructCheckData *structData = gCheckProperties + aSID;
-
   // Build a count of the:
   PRUint32 total = 0,      // total number of props in the struct
            specified = 0,  // number that were specified for this node
            inherited = 0;  // number that were 'inherit' (and not
                            //   eCSSUnit_Inherit) for this node
 
-  for (const PropertyCheckData *prop = structData->props,
-                           *prop_end = prop + structData->nprops;
-       prop != prop_end;
-       ++prop) {
-
+  // See comment in nsRuleData.h above mValueOffsets.
+  NS_ABORT_IF_FALSE(aRuleData->mValueOffsets[aSID] == 0,
+                    "we assume the value offset is zero instead of adding it");
+  for (nsCSSValue *values = aRuleData->mValueStorage,
+              *values_end = values + nsCSSProps::PropertyCountInStruct(aSID);
+       values != values_end; ++values) {
     ++total;
-    ExamineCSSValue(ValueAtOffset(aRuleDataStruct, prop->offset),
-                    specified, inherited);
+    ExamineCSSValue(*values, specified, inherited);
   }
 
 #if 0
@@ -1642,7 +1605,7 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
 #ifdef MOZ_MATHML
   NS_ASSERTION(aSID != eStyleStruct_Font ||
                mPresContext->Document()->GetMathMLEnabled() ||
-               AreAllMathMLPropertiesUndefined(static_cast<const nsCSSFont&>(aRuleDataStruct)),
+               AreAllMathMLPropertiesUndefined(aRuleData),
                "MathML style property was defined even though MathML is disabled");
 #endif
 
@@ -1679,241 +1642,12 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
   else
     result = eRulePartialMixed;
 
-  if (structData->callback) {
-    result = (*structData->callback)(aRuleDataStruct, result);
+  CheckCallbackFn cb = gCheckCallbacks[aSID];
+  if (cb) {
+    result = (*cb)(aRuleData, result);
   }
 
   return result;
-}
-
-const void*
-nsRuleNode::GetDisplayData(nsStyleContext* aContext)
-{
-  nsRuleDataDisplay displayData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Display), mPresContext, aContext);
-  ruleData.mDisplayData = &displayData;
-
-  return WalkRuleTree(eStyleStruct_Display, aContext, &ruleData, &displayData);
-}
-
-const void*
-nsRuleNode::GetVisibilityData(nsStyleContext* aContext)
-{
-  nsRuleDataDisplay displayData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Visibility), mPresContext, aContext);
-  ruleData.mDisplayData = &displayData;
-
-  return WalkRuleTree(eStyleStruct_Visibility, aContext, &ruleData, &displayData);
-}
-
-const void*
-nsRuleNode::GetTextData(nsStyleContext* aContext)
-{
-  nsRuleDataText textData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Text), mPresContext, aContext);
-  ruleData.mTextData = &textData;
-
-  return WalkRuleTree(eStyleStruct_Text, aContext, &ruleData, &textData);
-}
-
-const void*
-nsRuleNode::GetTextResetData(nsStyleContext* aContext)
-{
-  nsRuleDataText textData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(TextReset), mPresContext, aContext);
-  ruleData.mTextData = &textData;
-
-  return WalkRuleTree(eStyleStruct_TextReset, aContext, &ruleData, &textData);
-}
-
-const void*
-nsRuleNode::GetUserInterfaceData(nsStyleContext* aContext)
-{
-  nsRuleDataUserInterface uiData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(UserInterface), mPresContext, aContext);
-  ruleData.mUserInterfaceData = &uiData;
-
-  return WalkRuleTree(eStyleStruct_UserInterface, aContext, &ruleData, &uiData);
-}
-
-const void*
-nsRuleNode::GetUIResetData(nsStyleContext* aContext)
-{
-  nsRuleDataUserInterface uiData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(UIReset), mPresContext, aContext);
-  ruleData.mUserInterfaceData = &uiData;
-
-  return WalkRuleTree(eStyleStruct_UIReset, aContext, &ruleData, &uiData);
-}
-
-const void*
-nsRuleNode::GetFontData(nsStyleContext* aContext)
-{
-  nsRuleDataFont fontData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Font), mPresContext, aContext);
-  ruleData.mFontData = &fontData;
-
-  return WalkRuleTree(eStyleStruct_Font, aContext, &ruleData, &fontData);
-}
-
-const void*
-nsRuleNode::GetColorData(nsStyleContext* aContext)
-{
-  nsRuleDataColor colorData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Color), mPresContext, aContext);
-  ruleData.mColorData = &colorData;
-
-  return WalkRuleTree(eStyleStruct_Color, aContext, &ruleData, &colorData);
-}
-
-const void*
-nsRuleNode::GetBackgroundData(nsStyleContext* aContext)
-{
-  nsRuleDataColor colorData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Background), mPresContext, aContext);
-  ruleData.mColorData = &colorData;
-
-  return WalkRuleTree(eStyleStruct_Background, aContext, &ruleData, &colorData);
-}
-
-const void*
-nsRuleNode::GetMarginData(nsStyleContext* aContext)
-{
-  nsRuleDataMargin marginData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Margin), mPresContext, aContext);
-  ruleData.mMarginData = &marginData;
-
-  return WalkRuleTree(eStyleStruct_Margin, aContext, &ruleData, &marginData);
-}
-
-const void*
-nsRuleNode::GetBorderData(nsStyleContext* aContext)
-{
-  nsRuleDataMargin marginData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Border), mPresContext, aContext);
-  ruleData.mMarginData = &marginData;
-
-  return WalkRuleTree(eStyleStruct_Border, aContext, &ruleData, &marginData);
-}
-
-const void*
-nsRuleNode::GetPaddingData(nsStyleContext* aContext)
-{
-  nsRuleDataMargin marginData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Padding), mPresContext, aContext);
-  ruleData.mMarginData = &marginData;
-
-  return WalkRuleTree(eStyleStruct_Padding, aContext, &ruleData, &marginData);
-}
-
-const void*
-nsRuleNode::GetOutlineData(nsStyleContext* aContext)
-{
-  nsRuleDataMargin marginData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Outline), mPresContext, aContext);
-  ruleData.mMarginData = &marginData;
-
-  return WalkRuleTree(eStyleStruct_Outline, aContext, &ruleData, &marginData);
-}
-
-const void*
-nsRuleNode::GetListData(nsStyleContext* aContext)
-{
-  nsRuleDataList listData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(List), mPresContext, aContext);
-  ruleData.mListData = &listData;
-
-  return WalkRuleTree(eStyleStruct_List, aContext, &ruleData, &listData);
-}
-
-const void*
-nsRuleNode::GetPositionData(nsStyleContext* aContext)
-{
-  nsRuleDataPosition posData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Position), mPresContext, aContext);
-  ruleData.mPositionData = &posData;
-
-  return WalkRuleTree(eStyleStruct_Position, aContext, &ruleData, &posData);
-}
-
-const void*
-nsRuleNode::GetTableData(nsStyleContext* aContext)
-{
-  nsRuleDataTable tableData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Table), mPresContext, aContext);
-  ruleData.mTableData = &tableData;
-
-  return WalkRuleTree(eStyleStruct_Table, aContext, &ruleData, &tableData);
-}
-
-const void*
-nsRuleNode::GetTableBorderData(nsStyleContext* aContext)
-{
-  nsRuleDataTable tableData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(TableBorder), mPresContext, aContext);
-  ruleData.mTableData = &tableData;
-
-  return WalkRuleTree(eStyleStruct_TableBorder, aContext, &ruleData, &tableData);
-}
-
-const void*
-nsRuleNode::GetContentData(nsStyleContext* aContext)
-{
-  nsRuleDataContent contentData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Content), mPresContext, aContext);
-  ruleData.mContentData = &contentData;
-
-  return WalkRuleTree(eStyleStruct_Content, aContext, &ruleData, &contentData);
-}
-
-const void*
-nsRuleNode::GetQuotesData(nsStyleContext* aContext)
-{
-  nsRuleDataContent contentData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Quotes), mPresContext, aContext);
-  ruleData.mContentData = &contentData;
-
-  return WalkRuleTree(eStyleStruct_Quotes, aContext, &ruleData, &contentData);
-}
-
-const void*
-nsRuleNode::GetXULData(nsStyleContext* aContext)
-{
-  nsRuleDataXUL xulData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(XUL), mPresContext, aContext);
-  ruleData.mXULData = &xulData;
-
-  return WalkRuleTree(eStyleStruct_XUL, aContext, &ruleData, &xulData);
-}
-
-const void*
-nsRuleNode::GetColumnData(nsStyleContext* aContext)
-{
-  nsRuleDataColumn columnData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Column), mPresContext, aContext);
-  ruleData.mColumnData = &columnData;
-
-  return WalkRuleTree(eStyleStruct_Column, aContext, &ruleData, &columnData);
-}
-
-const void*
-nsRuleNode::GetSVGData(nsStyleContext* aContext)
-{
-  nsRuleDataSVG svgData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(SVG), mPresContext, aContext);
-  ruleData.mSVGData = &svgData;
-
-  return WalkRuleTree(eStyleStruct_SVG, aContext, &ruleData, &svgData);
-}
-
-const void*
-nsRuleNode::GetSVGResetData(nsStyleContext* aContext)
-{
-  nsRuleDataSVG svgData; // Declare a struct with null CSS values.
-  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(SVGReset), mPresContext, aContext);
-  ruleData.mSVGData = &svgData;
-
-  return WalkRuleTree(eStyleStruct_SVGReset, aContext, &ruleData, &svgData);
 }
 
 // If we need to restrict which properties apply to the style context,
@@ -1937,27 +1671,74 @@ GetPseudoRestriction(nsStyleContext *aContext)
 
 static void
 UnsetPropertiesWithoutFlags(const nsStyleStructID aSID,
-                            nsRuleDataStruct& aRuleDataStruct,
+                            nsRuleData* aRuleData,
                             PRUint32 aFlags)
 {
   NS_ASSERTION(aFlags != 0, "aFlags must be nonzero");
-  const StructCheckData *structData = gCheckProperties + aSID;
 
-  for (const PropertyCheckData *prop = structData->props,
-                           *prop_end = prop + structData->nprops;
-       prop != prop_end;
-       ++prop) {
-    if ((prop->flags & aFlags) != aFlags)
-      ValueAtOffset(aRuleDataStruct, prop->offset).Reset();
+  const PRUint32 *flagData = gFlagsByStruct[aSID];
+
+  // See comment in nsRuleData.h above mValueOffsets.
+  NS_ABORT_IF_FALSE(aRuleData->mValueOffsets[aSID] == 0,
+                    "we assume the value offset is zero instead of adding it");
+  nsCSSValue *values = aRuleData->mValueStorage;
+
+  for (size_t i = 0, i_end = nsCSSProps::PropertyCountInStruct(aSID);
+       i != i_end; ++i) {
+    if ((flagData[i] & aFlags) != aFlags)
+      values[i].Reset();
   }
 }
 
+/**
+ * We allocate arrays of CSS values with alloca.  (These arrays are a
+ * fixed size per style struct, but we don't want to waste the
+ * allocation and construction/destruction costs of the big structs when
+ * we're handling much smaller ones.)  Since the lifetime of an alloca
+ * allocation is the life of the calling function, the caller must call
+ * alloca.  However, to ensure that constructors and destructors are
+ * balanced, we do the constructor and destructor calling from this RAII
+ * class, AutoCSSValueArray.
+ */
+struct AutoCSSValueArray {
+  /**
+   * aStorage must be the result of alloca(aCount * sizeof(nsCSSValue))
+   */
+  AutoCSSValueArray(void* aStorage, size_t aCount) {
+    NS_ABORT_IF_FALSE(size_t(aStorage) % NS_ALIGNMENT_OF(nsCSSValue) == 0,
+                      "bad alignment from alloca");
+    mArray = new (aStorage) nsCSSValue[aCount];
+    mCount = aCount;
+  }
+
+  ~AutoCSSValueArray() {
+    for (size_t i = 0; i < mCount; ++i) {
+      mArray[i].~nsCSSValue();
+    }
+  }
+
+  nsCSSValue* get() { return mArray; }
+
+private:
+  nsCSSValue *mArray;
+  size_t mCount;
+};
+
 const void*
 nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
-                         nsStyleContext* aContext,
-                         nsRuleData* aRuleData,
-                         nsRuleDataStruct* aSpecificData)
+                         nsStyleContext* aContext)
 {
+  nsRuleData ruleData(nsCachedStyleData::GetBitForSID(aSID),
+                      mPresContext, aContext);
+  // use placement new[] on the result of alloca() to allocate a
+  // variable-sized stack array, including execution of constructors,
+  // and use an RAII class to run the destructors too.
+  size_t nprops = nsCSSProps::PropertyCountInStruct(aSID);
+  void* dataStorage = alloca(nprops * sizeof(nsCSSValue));
+  AutoCSSValueArray dataArray(dataStorage, nprops);
+  ruleData.mValueStorage = dataArray.get();
+  ruleData.mValueOffsets[aSID] = 0;
+
   // We start at the most specific rule in the tree.
   void* startStruct = nsnull;
 
@@ -2002,15 +1783,15 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     // Ask the rule to fill in the properties that it specifies.
     nsIStyleRule *rule = ruleNode->mRule;
     if (rule) {
-      aRuleData->mLevel = ruleNode->GetLevel();
-      aRuleData->mIsImportantRule = ruleNode->IsImportantRule();
-      rule->MapRuleInfoInto(aRuleData);
+      ruleData.mLevel = ruleNode->GetLevel();
+      ruleData.mIsImportantRule = ruleNode->IsImportantRule();
+      rule->MapRuleInfoInto(&ruleData);
     }
 
     // Now we check to see how many properties have been specified by
     // the rules we've examined so far.
     RuleDetail oldDetail = detail;
-    detail = CheckSpecifiedProperties(aSID, *aSpecificData);
+    detail = CheckSpecifiedProperties(aSID, &ruleData);
 
     if (oldDetail == eRuleNone && detail != eRuleNone)
       highestNode = ruleNode;
@@ -2031,12 +1812,12 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   // properties apply to :first-line and :first-letter.)
   PRUint32 pseudoRestriction = GetPseudoRestriction(aContext);
   if (pseudoRestriction) {
-    UnsetPropertiesWithoutFlags(aSID, *aSpecificData, pseudoRestriction);
+    UnsetPropertiesWithoutFlags(aSID, &ruleData, pseudoRestriction);
 
     // Recompute |detail| based on the restrictions we just applied.
     // We can adjust |detail| arbitrarily because of the restriction
     // rule added in nsStyleSet::WalkRestrictionRule.
-    detail = CheckSpecifiedProperties(aSID, *aSpecificData);
+    detail = CheckSpecifiedProperties(aSID, &ruleData);
   }
 
   NS_ASSERTION(!startStruct || (detail != eRuleFullReset &&
@@ -2048,11 +1829,11 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   if (!highestNode)
     highestNode = rootNode;
 
-  if (!aRuleData->mCanStoreInRuleTree)
+  if (!ruleData.mCanStoreInRuleTree)
     detail = eRulePartialMixed; // Treat as though some data is specified to avoid
                                 // the optimizations and force data computation.
 
-  if (detail == eRuleNone && startStruct && !aRuleData->mPostResolveCallback) {
+  if (detail == eRuleNone && startStruct && !ruleData.mPostResolveCallback) {
     // We specified absolutely no rule information, but a parent rule in the tree
     // specified all the rule information.  We set a bit along the branch from our
     // node in the tree to the node that specified the data that tells nodes on that
@@ -2110,15 +1891,15 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   const void* res;
 #define STYLE_STRUCT_TEST aSID
 #define STYLE_STRUCT(name, checkdata_cb, ctor_args)                           \
-  res = Compute##name##Data(startStruct, aRuleData, aContext,                 \
-                      highestNode, detail, aRuleData->mCanStoreInRuleTree);
+  res = Compute##name##Data(startStruct, &ruleData, aContext,                 \
+                            highestNode, detail, ruleData.mCanStoreInRuleTree);
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 #undef STYLE_STRUCT_TEST
 
   // If we have a post-resolve callback, handle that now.
-  if (aRuleData->mPostResolveCallback && (NS_LIKELY(res != nsnull)))
-    (*aRuleData->mPostResolveCallback)(const_cast<void*>(res), aRuleData);
+  if (ruleData.mPostResolveCallback && (NS_LIKELY(res != nsnull)))
+    (*ruleData.mPostResolveCallback)(const_cast<void*>(res), &ruleData);
 
   // Now return the result.
   return res;
@@ -3154,11 +2935,18 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
   PRBool dummy;
   PRUint32 fontBit = nsCachedStyleData::GetBitForSID(eStyleStruct_Font);
 
+  // use placement new[] on the result of alloca() to allocate a
+  // variable-sized stack array, including execution of constructors,
+  // and use an RAII class to run the destructors too.
+  size_t nprops = nsCSSProps::PropertyCountInStruct(eStyleStruct_Font);
+  void* dataStorage = alloca(nprops * sizeof(nsCSSValue));
+
   for (PRInt32 i = contextPath.Length() - 1; i >= 0; --i) {
     nsStyleContext* context = contextPath[i];
-    nsRuleDataFont fontData; // Declare a struct with null CSS values.
     nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Font), aPresContext, context);
-    ruleData.mFontData = &fontData;
+    AutoCSSValueArray dataArray(dataStorage, nprops);
+    ruleData.mValueStorage = dataArray.get();
+    ruleData.mValueOffsets[eStyleStruct_Font] = 0;
 
     // Trimmed down version of ::WalkRuleTree() to re-apply the style rules
     // Note that we *do* need to do this for our own data, since what is
@@ -6559,12 +6347,7 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
     return nsnull;
 
   // Nothing is cached.  We'll have to delve further and examine our rules.
-#define STYLE_STRUCT_TEST aSID
-#define STYLE_STRUCT(name, checkdata_cb, ctor_args) \
-  data = Get##name##Data(aContext);
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-#undef STYLE_STRUCT_TEST
+  data = WalkRuleTree(aSID, aContext);
 
   if (NS_LIKELY(data != nsnull))
     return data;
@@ -6601,8 +6384,8 @@ nsRuleNode::GetStyle##name_(nsStyleContext* aContext, PRBool aComputeData)    \
   if (NS_UNLIKELY(!aComputeData))                                             \
     return nsnull;                                                            \
                                                                               \
-  data =                                                                      \
-    static_cast<const nsStyle##name_ *>(Get##name_##Data(aContext));          \
+  data = static_cast<const nsStyle##name_ *>                                  \
+           (WalkRuleTree(eStyleStruct_##name_, aContext));                    \
                                                                               \
   if (NS_LIKELY(data != nsnull))                                              \
     return data;                                                              \
@@ -6690,10 +6473,6 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
                                     PRUint32 ruleTypeMask,
                                     PRBool aAuthorColorsAllowed)
 {
-  nsRuleDataColor colorData;
-  nsRuleDataMargin marginData;
-  PRUint32 nValues = 0;
-
   PRUint32 inheritBits = 0;
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND)
     inheritBits |= NS_STYLE_INHERIT_BIT(Background);
@@ -6707,68 +6486,99 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
   /* We're relying on the use of |aStyleContext| not mutating it! */
   nsRuleData ruleData(inheritBits,
                       aStyleContext->PresContext(), aStyleContext);
-  ruleData.mColorData = &colorData;
-  ruleData.mMarginData = &marginData;
 
-  nsCSSValue* backgroundValues[] = {
-    &colorData.mBackColor,
-    &colorData.mBackImage,
+  // properties in the SIDS, whether or not we care about them
+  size_t nprops = 0;
+
+  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) {
+    ruleData.mValueOffsets[eStyleStruct_Background] = nprops;
+    nprops += nsCSSProps::PropertyCountInStruct(eStyleStruct_Background);
+  }
+
+  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BORDER) {
+    ruleData.mValueOffsets[eStyleStruct_Border] = nprops;
+    nprops += nsCSSProps::PropertyCountInStruct(eStyleStruct_Border);
+  }
+
+  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING) {
+    ruleData.mValueOffsets[eStyleStruct_Padding] = nprops;
+    nprops += nsCSSProps::PropertyCountInStruct(eStyleStruct_Padding);
+  }
+
+  void* dataStorage = alloca(nprops * sizeof(nsCSSValue));
+  AutoCSSValueArray dataArray(dataStorage, nprops);
+  ruleData.mValueStorage = dataArray.get();
+
+  static const nsCSSProperty backgroundValues[] = {
+    eCSSProperty_background_color,
+    eCSSProperty_background_image,
   };
 
-  nsCSSValue* borderValues[] = {
-    &marginData.mBorderColor.mTop,
-    &marginData.mBorderStyle.mTop,
-    &marginData.mBorderWidth.mTop,
-    &marginData.mBorderColor.mRight,
-    &marginData.mBorderStyle.mRight,
-    &marginData.mBorderWidth.mRight,
-    &marginData.mBorderColor.mBottom,
-    &marginData.mBorderStyle.mBottom,
-    &marginData.mBorderWidth.mBottom,
-    &marginData.mBorderColor.mLeft,
-    &marginData.mBorderStyle.mLeft,
-    &marginData.mBorderWidth.mLeft,
-    &marginData.mBorderStartColor,
-    &marginData.mBorderStartStyle,
-    &marginData.mBorderStartWidth,
-    &marginData.mBorderEndColor,
-    &marginData.mBorderEndStyle,
-    &marginData.mBorderEndWidth,
-    &marginData.mBorderRadius.mTopLeft,
-    &marginData.mBorderRadius.mTopRight,
-    &marginData.mBorderRadius.mBottomRight,
-    &marginData.mBorderRadius.mBottomLeft
+  static const nsCSSProperty borderValues[] = {
+    eCSSProperty_border_top_color,
+    eCSSProperty_border_top_style,
+    eCSSProperty_border_top_width,
+    eCSSProperty_border_right_color_value,
+    eCSSProperty_border_right_style_value,
+    eCSSProperty_border_right_width_value,
+    eCSSProperty_border_bottom_color,
+    eCSSProperty_border_bottom_style,
+    eCSSProperty_border_bottom_width,
+    eCSSProperty_border_left_color_value,
+    eCSSProperty_border_left_style_value,
+    eCSSProperty_border_left_width_value,
+    eCSSProperty_border_start_color_value,
+    eCSSProperty_border_start_style_value,
+    eCSSProperty_border_start_width_value,
+    eCSSProperty_border_end_color_value,
+    eCSSProperty_border_end_style_value,
+    eCSSProperty_border_end_width_value,
+    eCSSProperty_border_top_left_radius,
+    eCSSProperty_border_top_right_radius,
+    eCSSProperty_border_bottom_right_radius,
+    eCSSProperty_border_bottom_left_radius,
   };
 
-  nsCSSValue* paddingValues[] = {
-    &marginData.mPadding.mTop,
-    &marginData.mPadding.mRight,
-    &marginData.mPadding.mBottom,
-    &marginData.mPadding.mLeft,
-    &marginData.mPaddingStart,
-    &marginData.mPaddingEnd
+  static const nsCSSProperty paddingValues[] = {
+    eCSSProperty_padding_top,
+    eCSSProperty_padding_right_value,
+    eCSSProperty_padding_bottom,
+    eCSSProperty_padding_left_value,
+    eCSSProperty_padding_start_value,
+    eCSSProperty_padding_end_value,
   };
+
+  // Number of properties we care about
+  size_t nValues = 0;
+
+  size_t backColorIndex = size_t(-1);
 
   nsCSSValue* values[NS_ARRAY_LENGTH(backgroundValues) +
                      NS_ARRAY_LENGTH(borderValues) +
                      NS_ARRAY_LENGTH(paddingValues)];
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) {
-    memcpy(&values[nValues], backgroundValues,
-           NS_ARRAY_LENGTH(backgroundValues) * sizeof(nsCSSValue*));
-    nValues += NS_ARRAY_LENGTH(backgroundValues);
+    for (PRUint32 i = 0, i_end = NS_ARRAY_LENGTH(backgroundValues);
+         i < i_end; ++i) {
+      if (backgroundValues[i] == eCSSProperty_background_color) {
+        backColorIndex = nValues;
+      }
+      values[nValues++] = ruleData.ValueFor(backgroundValues[i]);
+    }
   }
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BORDER) {
-    memcpy(&values[nValues], borderValues,
-           NS_ARRAY_LENGTH(borderValues) * sizeof(nsCSSValue*));
-    nValues += NS_ARRAY_LENGTH(borderValues);
+    for (PRUint32 i = 0, i_end = NS_ARRAY_LENGTH(borderValues);
+         i < i_end; ++i) {
+      values[nValues++] = ruleData.ValueFor(borderValues[i]);
+    }
   }
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING) {
-    memcpy(&values[nValues], paddingValues,
-           NS_ARRAY_LENGTH(paddingValues) * sizeof(nsCSSValue*));
-    nValues += NS_ARRAY_LENGTH(paddingValues);
+    for (PRUint32 i = 0, i_end = NS_ARRAY_LENGTH(paddingValues);
+         i < i_end; ++i) {
+      values[nValues++] = ruleData.ValueFor(paddingValues[i]);
+    }
   }
 
   nsStyleContext* styleContext = aStyleContext;
@@ -6821,7 +6631,7 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
               // color and it's set to transparent.  Anything else should get
               // set to a dummy value instead.
               if (aAuthorColorsAllowed ||
-                  (values[i] == &colorData.mBackColor &&
+                  (i == backColorIndex &&
                    !values[i]->IsNonTransparentColor())) {
                 return PR_TRUE;
               }
