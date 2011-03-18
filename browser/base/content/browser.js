@@ -7794,7 +7794,7 @@ var gIdentityHandler = {
     dt.setData("text/uri-list", value);
     dt.setData("text/plain", value);
     dt.setData("text/html", htmlString);
-    dt.addElement(event.currentTarget);
+    dt.setDragImage(gProxyFavIcon, 16, 16);
   }
 };
 
