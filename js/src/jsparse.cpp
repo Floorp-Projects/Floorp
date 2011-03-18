@@ -3630,7 +3630,7 @@ MatchLabel(JSContext *cx, TokenStream *ts, JSParseNode *pn)
     JSAtom *label;
     TokenKind tt;
 
-    tt = ts->peekTokenSameLine();
+    tt = ts->peekTokenSameLine(TSF_OPERAND);
     if (tt == TOK_ERROR)
         return JS_FALSE;
     if (tt == TOK_NAME) {
