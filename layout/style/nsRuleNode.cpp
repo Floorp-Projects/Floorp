@@ -3027,11 +3027,11 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     // "absolute"
     aFont->mScriptLevel = ClampTo8Bit(PRInt32(aFontData.mScriptLevel.GetFloatValue()));
   }
-  else if (eCSSUnit_Inherit == aFontData.mScriptSizeMultiplier.GetUnit()) {
+  else if (eCSSUnit_Inherit == aFontData.mScriptLevel.GetUnit()) {
     aCanStoreInRuleTree = PR_FALSE;
     aFont->mScriptLevel = aParentFont->mScriptLevel;
   }
-  else if (eCSSUnit_Initial == aFontData.mScriptSizeMultiplier.GetUnit()) {
+  else if (eCSSUnit_Initial == aFontData.mScriptLevel.GetUnit()) {
     aFont->mScriptLevel = 0;
   }
 #endif
