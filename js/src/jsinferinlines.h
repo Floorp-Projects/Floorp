@@ -1223,7 +1223,7 @@ SweepClonedTypes(ClonedTypeSet *types)
                 types->objectSet[i--] = types->objectSet[--types->objectCount];
         }
         if (types->objectCount == 1) {
-            TypeObject *obj = (TypeObject *) types->objectSet;
+            TypeObject *obj = types->objectSet[0];
             ::js_free(types->objectSet);
             types->objectSet = (TypeObject **) obj;
         } else if (types->objectCount == 0) {
