@@ -1116,10 +1116,8 @@ var BrowserUI = {
       case "cmd_star":
       {
         BookmarkPopup.toggle();
-        if (!this.starButton.hasAttribute("starred")) {
+        if (!this.starButton.hasAttribute("starred"))
           this.starButton.setAttribute("starred", "true");
-          BookmarkPopup.autoHide();
-        }
 
         let bookmarkURI = browser.currentURI;
         PlacesUtils.asyncGetBookmarkIds(bookmarkURI, function (aItemIds) {
