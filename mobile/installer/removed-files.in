@@ -1,0 +1,3 @@
+#if MOZ_UPDATE_CHANNEL != beta
+extensions/feedback@mobile.mozilla.org.xpi
+#endif
