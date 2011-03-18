@@ -1102,13 +1102,16 @@ stubs::Add(VMFrame &f)
             THROW();
         regs.sp--;
         regs.sp[-1] = rval;
+        if (!f.script()->typeMonitorUnknown(cx, regs.pc))
+            THROW();
     } else
 #endif
     {
         /* These can convert lval/rval to strings. */
-        if (lval.isObject() && !DefaultValue(f, JSTYPE_VOID, lval, -2))
+        bool lIsObject, rIsObject;
+        if ((lIsObject = lval.isObject()) && !DefaultValue(f, JSTYPE_VOID, lval, -2))
             THROW();
-        if (rval.isObject() && !DefaultValue(f, JSTYPE_VOID, rval, -1))
+        if ((rIsObject = rval.isObject()) && !DefaultValue(f, JSTYPE_VOID, rval, -1))
             THROW();
         if ((lIsString = lval.isString()) || (rIsString = rval.isString())) {
             if (lIsString) {
@@ -1127,6 +1130,8 @@ stubs::Add(VMFrame &f)
                     THROW();
                 regs.sp[-1].setString(rstr);
             }
+            if ((lIsObject || rIsObject) && !f.script()->typeMonitorString(cx, regs.pc))
+                THROW();
             goto string_concat;
 
         } else {
@@ -1134,7 +1139,9 @@ stubs::Add(VMFrame &f)
             if (!ValueToNumber(cx, lval, &l) || !ValueToNumber(cx, rval, &r))
                 THROW();
             l += r;
-            if (!regs.sp[-2].setNumber(l) && !MonitorArithmeticOverflow(f, regs.sp[-2]))
+            if (!regs.sp[-2].setNumber(l) &&
+                (lIsObject || rIsObject || (!lval.isDouble() && !rval.isDouble())) &&
+                !MonitorArithmeticOverflow(f, regs.sp[-2]))
                 THROW();
         }
     }

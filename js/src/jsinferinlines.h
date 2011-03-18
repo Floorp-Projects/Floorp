@@ -556,6 +556,12 @@ JSScript::typeMonitorUndefined(JSContext *cx, const jsbytecode *pc)
 }
 
 inline bool
+JSScript::typeMonitorString(JSContext *cx, const jsbytecode *pc)
+{
+    return typeMonitorResult(cx, pc, js::types::TYPE_STRING);
+}
+
+inline bool
 JSScript::typeMonitorUnknown(JSContext *cx, const jsbytecode *pc)
 {
     return typeMonitorResult(cx, pc, js::types::TYPE_UNKNOWN);
