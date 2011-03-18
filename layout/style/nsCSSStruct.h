@@ -344,16 +344,16 @@ struct nsCSSTable : public nsCSSStruct  { // NEW
   nsCSSValue mBorderSpacing;
   nsCSSValue mCaptionSide;
   nsCSSValue mEmptyCells;
-  
+
   nsCSSValue mLayout;
-  nsCSSValue mSpan; // Not mappable via CSS, only using HTML4 table attrs.
-  nsCSSValue mCols; // Not mappable via CSS, only using HTML4 table attrs.
 private:
   nsCSSTable(const nsCSSTable& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataTable : public nsCSSTable {
   nsRuleDataTable() {}
+  nsCSSValue mSpan; // Not mappable via CSS, only using HTML4 table attrs.
+  nsCSSValue mCols; // Not mappable via CSS, only using HTML4 table attrs.
 private:
   nsRuleDataTable(const nsRuleDataTable& aOther); // NOT IMPLEMENTED
 };
