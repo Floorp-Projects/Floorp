@@ -56,13 +56,13 @@ typedef void (*nsPostResolveFunc)(void* aStyleStruct, nsRuleData* aData);
 
 struct nsRuleData
 {
-  PRUint32 mSIDs;
+  const PRUint32 mSIDs;
   PRPackedBool mCanStoreInRuleTree;
   PRPackedBool mIsImportantRule;
   PRUint8 mLevel; // an nsStyleSet::sheetType
-  nsPresContext* mPresContext;
-  nsStyleContext* mStyleContext;
-  nsPostResolveFunc mPostResolveCallback;
+  nsPresContext* const mPresContext;
+  nsStyleContext* const mStyleContext;
+  const nsPostResolveFunc mPostResolveCallback;
 
   // We store nsCSSValues needed to compute the data for one or more
   // style structs (specified by the bitfield mSIDs).  These are stored
@@ -75,25 +75,17 @@ struct nsRuleData
   // nsRuleNode::HasAuthorSpecifiedRules; therefore some code that we
   // know is not called from HasAuthorSpecifiedRules assumes that the
   // mValueOffsets for the one struct in mSIDs is zero.
-  nsCSSValue* mValueStorage; // our user owns this array
+  nsCSSValue* const mValueStorage; // our user owns this array
   size_t mValueOffsets[nsStyleStructID_Length];
 
-  nsRuleData(PRUint32 aSIDs,
-             nsPresContext* aContext,
-             nsStyleContext* aStyleContext)
-    : mSIDs(aSIDs),
-      mCanStoreInRuleTree(PR_TRUE),
-      mPresContext(aContext),
-      mStyleContext(aStyleContext),
-      mPostResolveCallback(nsnull)
-  {
-    // FIXME: fill with poison value?
-  }
-  ~nsRuleData() {
-  #ifdef DEBUG
-    // FIXME: assert nothing in mSIDs has poison value
-  #endif
-  }
+  nsRuleData(PRUint32 aSIDs, nsCSSValue* aValueStorage,
+             nsPresContext* aContext, nsStyleContext* aStyleContext);
+
+#ifdef DEBUG
+  ~nsRuleData();
+#else
+  ~nsRuleData() {}
+#endif
 
   /**
    * Return a pointer to the value object within |this| corresponding
@@ -160,6 +152,9 @@ struct nsRuleData
   #undef CSS_PROP
   #undef CSS_PROP_DOMPROP_PREFIXED
   #undef CSS_PROP_BACKENDONLY
+
+private:
+  inline size_t GetPoisonOffset();
 
 };
 
