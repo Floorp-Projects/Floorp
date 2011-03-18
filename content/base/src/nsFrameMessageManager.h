@@ -180,6 +180,11 @@ public:
   static nsFrameMessageManager* sChildProcessManager;
 };
 
+void
+ContentScriptErrorReporter(JSContext* aCx,
+                           const char* aMessage,
+                           JSErrorReport* aReport);
+
 class nsScriptCacheCleaner;
 
 struct nsFrameScriptExecutorJSObjectHolder
