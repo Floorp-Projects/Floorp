@@ -92,8 +92,6 @@ MOZ_PKG_MANIFEST = package-manifest
 endif
 
 libs::
-	find $(DIST)/bin/chrome -type f -name *.dtd -exec sed -i '/<!--.*-->/d' {} \;
-	find $(DIST)/bin/chrome -type f -name *.dtd -exec sed -i '/<!--/,/-->/d' {} \;
 	find $(DIST)/bin/chrome -type f -name *.properties -exec sed -i '/^#/d' {} \;
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
