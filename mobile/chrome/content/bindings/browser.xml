@@ -560,6 +560,11 @@
           this.messageManager.addMessageListener("MozScrolledAreaChanged", this._messageListenerLocal);
 
           this._webProgress._init();
+
+          // Remove event listeners added by toolkit <browser> binding.
+          this.removeEventListener("pageshow", this.onPageShow, true);
+          this.removeEventListener("pagehide", this.onPageHide, true);
+          this.removeEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
         ]]>
       </constructor>
 
