@@ -395,7 +395,9 @@ js_math_max(JSContext *cx, uintN argc, Value *vp)
         return cx->markTypeCallerOverflow();
     }
     argv = vp + 2;
+    bool expectDouble = false;
     for (i = 0; i < argc; i++) {
+        expectDouble |= argv[i].isDouble();
         if (!ValueToNumber(cx, argv[i], &x))
             return JS_FALSE;
         if (JSDOUBLE_IS_NaN(x)) {
@@ -409,7 +411,8 @@ js_math_max(JSContext *cx, uintN argc, Value *vp)
             z = (x > z) ? x : z;
         }
     }
-    vp->setNumber(z);
+    if (!vp->setNumber(z) && !expectDouble)
+        return cx->markTypeCallerOverflow();
     return JS_TRUE;
 }
 
@@ -425,7 +428,9 @@ js_math_min(JSContext *cx, uintN argc, Value *vp)
         return cx->markTypeCallerOverflow();
     }
     argv = vp + 2;
+    bool expectDouble = false;
     for (i = 0; i < argc; i++) {
+        expectDouble |= argv[i].isDouble();
         if (!ValueToNumber(cx, argv[i], &x))
             return JS_FALSE;
         if (JSDOUBLE_IS_NaN(x)) {
@@ -439,7 +444,8 @@ js_math_min(JSContext *cx, uintN argc, Value *vp)
             z = (x < z) ? x : z;
         }
     }
-    vp->setNumber(z);
+    if (!vp->setNumber(z) && !expectDouble)
+        return cx->markTypeCallerOverflow();
     return JS_TRUE;
 }
 
@@ -480,6 +486,7 @@ math_pow(JSContext *cx, uintN argc, Value *vp)
         vp->setDouble(js_NaN);
         return cx->markTypeCallerOverflow();
     }
+    bool expectDouble = vp[2].isDouble() || vp[3].isDouble();
     if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     if (!ValueToNumber(cx, vp[3], &y))
@@ -491,11 +498,11 @@ math_pow(JSContext *cx, uintN argc, Value *vp)
     if (JSDOUBLE_IS_FINITE(x) && x != 0.0) {
         if (y == 0.5) {
             vp->setNumber(sqrt(x));
-            return JS_TRUE;
+            return expectDouble || cx->markTypeCallerOverflow();
         }
         if (y == -0.5) {
             vp->setNumber(1.0/sqrt(x));
-            return JS_TRUE;
+            return expectDouble || cx->markTypeCallerOverflow();
         }
     }
     /*
@@ -504,7 +511,7 @@ math_pow(JSContext *cx, uintN argc, Value *vp)
      */
     if (!JSDOUBLE_IS_FINITE(y) && (x == 1.0 || x == -1.0)) {
         vp->setDouble(js_NaN);
-        return vp[3].isDouble() || cx->markTypeCallerOverflow();
+        return expectDouble || cx->markTypeCallerOverflow();
     }
     /* pow(x, +-0) is always 1, even for x = NaN. */
     if (y == 0) {
@@ -517,10 +524,8 @@ math_pow(JSContext *cx, uintN argc, Value *vp)
     else
         z = pow(x, y);
 
-    vp->setNumber(z);
-    if (vp->isDouble() && !(vp[2].isDouble() || vp[3].isDouble()) && !cx->markTypeCallerOverflow())
-        return false;
-
+    if (!vp->setNumber(z) && !expectDouble)
+        return cx->markTypeCallerOverflow();
     return JS_TRUE;
 }
 

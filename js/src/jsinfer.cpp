@@ -1128,55 +1128,53 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, jstype type)
 void
 TypeConstraintArith::newType(JSContext *cx, TypeSet *source, jstype type)
 {
+    /*
+     * We only model a subset of the arithmetic behavior that is actually
+     * possible. The following need to be watched for at runtime:
+     *
+     * 1. Operations producing a double where no operand was a double.
+     * 2. Operations producing a string where no operand was a string (addition only).
+     * 3. Operations producing a value other than int/double/string.
+     */
     if (other) {
         /*
          * Addition operation, consider these cases:
          *   {int,bool} x {int,bool} -> int
-         *   float x {int,bool,float} -> float
+         *   double x {int,bool,double} -> double
          *   string x any -> string
          */
         switch (type) {
-          case TYPE_UNDEFINED:
-          case TYPE_NULL:
-          case TYPE_INT32:
-          case TYPE_BOOLEAN:
-            /* Note: need to account for overflows from, e.g. int + void */
-            if (other->typeFlags & (TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL |
-                                    TYPE_FLAG_INT32 | TYPE_FLAG_BOOLEAN))
-                target->addType(cx, TYPE_INT32);
-            if (other->typeFlags & TYPE_FLAG_DOUBLE)
-                target->addType(cx, TYPE_DOUBLE);
-            break;
           case TYPE_DOUBLE:
             if (other->typeFlags & (TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL |
-                                    TYPE_FLAG_INT32 | TYPE_FLAG_DOUBLE | TYPE_FLAG_BOOLEAN))
+                                    TYPE_FLAG_INT32 | TYPE_FLAG_DOUBLE | TYPE_FLAG_BOOLEAN) ||
+                other->objectCount != 0) {
                 target->addType(cx, TYPE_DOUBLE);
+            }
             break;
           case TYPE_STRING:
             target->addType(cx, TYPE_STRING);
             break;
-          default:
-            /*
-             * Don't try to model arithmetic on objects, this can invoke valueOf,
-             * operate on XML objects, etc.
-             */
+          case TYPE_UNKNOWN:
             target->addType(cx, TYPE_UNKNOWN);
+          default:
+            if (other->typeFlags & (TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL |
+                                    TYPE_FLAG_INT32 | TYPE_FLAG_BOOLEAN) ||
+                other->objectCount != 0) {
+                target->addType(cx, TYPE_INT32);
+            }
+            if (other->typeFlags & TYPE_FLAG_DOUBLE)
+                target->addType(cx, TYPE_DOUBLE);
             break;
         }
     } else {
-        /* Note: same issues with undefined as addition. */
         switch (type) {
-          case TYPE_UNDEFINED:
-          case TYPE_NULL:
-          case TYPE_INT32:
-          case TYPE_BOOLEAN:
-            target->addType(cx, TYPE_INT32);
-            break;
           case TYPE_DOUBLE:
             target->addType(cx, TYPE_DOUBLE);
             break;
-          default:
+          case TYPE_UNKNOWN:
             target->addType(cx, TYPE_UNKNOWN);
+          default:
+            target->addType(cx, TYPE_INT32);
             break;
         }
     }
