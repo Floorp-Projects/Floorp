@@ -1985,7 +1985,8 @@ static void DrawPlugin(ImageContainer* aContainer, void* aPluginInstanceOwner)
 
 static void OnDestroyImage(void* aPluginInstanceOwner)
 {
-  NS_RELEASE(static_cast<nsPluginInstanceOwner*>(aPluginInstanceOwner));
+  nsPluginInstanceOwner* owner = static_cast<nsPluginInstanceOwner*>(aPluginInstanceOwner);
+  NS_IF_RELEASE(owner);
 }
 
 void
