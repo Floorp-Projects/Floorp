@@ -2294,9 +2294,11 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
         return nsnull;                                                        \
       }                                                                       \
     }                                                                         \
-    NS_ASSERTION(!aHighestNode->mStyleData.mInheritedData->m##type_##Data,    \
+    NS_ASSERTION(!aHighestNode->mStyleData.mInheritedData->                   \
+                   mStyleStructs[eStyleStruct_##type_],                       \
                  "Going to leak style data");                                 \
-    aHighestNode->mStyleData.mInheritedData->m##type_##Data = data_;          \
+    aHighestNode->mStyleData.mInheritedData->                                 \
+      mStyleStructs[eStyleStruct_##type_] = data_;                            \
     /* Propagate the bit down. */                                             \
     PropagateDependentBit(NS_STYLE_INHERIT_BIT(type_), aHighestNode);         \
     /* Tell the style context that it doesn't own the data */                 \
@@ -2336,9 +2338,11 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
         return nsnull;                                                        \
       }                                                                       \
     }                                                                         \
-    NS_ASSERTION(!aHighestNode->mStyleData.mResetData->m##type_##Data,        \
+    NS_ASSERTION(!aHighestNode->mStyleData.mResetData->                       \
+                   mStyleStructs[eStyleStruct_##type_],                       \
                  "Going to leak style data");                                 \
-    aHighestNode->mStyleData.mResetData->m##type_##Data = data_;              \
+    aHighestNode->mStyleData.mResetData->                                     \
+      mStyleStructs[eStyleStruct_##type_] = data_;                            \
     /* Propagate the bit down. */                                             \
     PropagateDependentBit(NS_STYLE_INHERIT_BIT(type_), aHighestNode);         \
   }                                                                           \
