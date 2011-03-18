@@ -2222,11 +2222,15 @@ array_pop_slowly(JSContext *cx, JSObject* obj, Value *vp)
         return JS_FALSE;
     if (index == 0) {
         vp->setUndefined();
+        if (!cx->markTypeCallerUnexpected(TYPE_UNDEFINED))
+            return JS_FALSE;
     } else {
         index--;
 
         /* Get the to-be-deleted property's value into vp. */
         if (!GetElement(cx, obj, index, &hole, vp))
+            return JS_FALSE;
+        if (hole && !cx->markTypeCallerUnexpected(TYPE_UNDEFINED))
             return JS_FALSE;
         if (!hole && DeleteArrayElement(cx, obj, index, true) < 0)
             return JS_FALSE;
@@ -2243,10 +2247,14 @@ array_pop_dense(JSContext *cx, JSObject* obj, Value *vp)
     index = obj->getArrayLength();
     if (index == 0) {
         vp->setUndefined();
+        if (!cx->markTypeCallerUnexpected(TYPE_UNDEFINED))
+            return JS_FALSE;
         return JS_TRUE;
     }
     index--;
     if (!GetElement(cx, obj, index, &hole, vp))
+        return JS_FALSE;
+    if (hole && !cx->markTypeCallerUnexpected(TYPE_UNDEFINED))
         return JS_FALSE;
     if (!hole && DeleteArrayElement(cx, obj, index, true) < 0)
         return JS_FALSE;
@@ -2280,6 +2288,8 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
 
     if (length == 0) {
         vp->setUndefined();
+        if (!cx->markTypeCallerUnexpected(TYPE_UNDEFINED))
+            return JS_FALSE;
     } else {
         length--;
 
@@ -2288,8 +2298,11 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
             jsuint initlen = obj->getDenseArrayInitializedLength();
             if (initlen > 0) {
                 *vp = obj->getDenseArrayElement(0);
-                if (vp->isMagic(JS_ARRAY_HOLE))
+                if (vp->isMagic(JS_ARRAY_HOLE)) {
                     vp->setUndefined();
+                    if (!cx->markTypeCallerUnexpected(TYPE_UNDEFINED))
+                        return JS_FALSE;
+                }
                 memmove(elems, elems + 1, (initlen - 1) * sizeof(jsval));
                 obj->setDenseArrayInitializedLength(initlen - 1);
             } else {
@@ -2304,6 +2317,9 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
         /* Get the to-be-deleted property's value into vp ASAP. */
         JSBool hole;
         if (!GetElement(cx, obj, 0, &hole, vp))
+            return JS_FALSE;
+
+        if (hole && !cx->markTypeCallerUnexpected(TYPE_UNDEFINED))
             return JS_FALSE;
 
         /* Slide down the array above the first element. */
@@ -3171,7 +3187,6 @@ array_TypeRemove(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
     if (!site->forceThisTypes(cx))
         return;
     site->thisTypes->addGetProperty(cx, site->script, site->pc, site->returnTypes, JSID_VOID);
-    site->returnTypes->addType(cx, TYPE_UNDEFINED);
 }
 
 static void
@@ -3214,6 +3229,21 @@ array_TypeConcat(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
         if (site->isNew)
             site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->thisTypes->addSubset(cx, site->script, site->returnTypes);
+    }
+}
+
+static void
+array_TypeSlice(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+    TypeCallsite *site = Valueify(jssite);
+
+    if (!site->forceThisTypes(cx))
+        return;
+
+    if (site->returnTypes) {
+        if (site->isNew)
+            site->returnTypes->addType(cx, TYPE_UNKNOWN);
+        site->thisTypes->addFilterPrimitives(cx, site->script, site->returnTypes, false);
     }
 }
 
@@ -3324,7 +3354,7 @@ static JSFunctionSpec array_methods[] = {
 
     /* Pythonic sequence methods. */
     JS_FN_TYPE("concat",             array_concat,       1,GENERIC, array_TypeConcat),
-    JS_FN_TYPE("slice",              array_slice,        2,GENERIC, JS_TypeHandlerThis),
+    JS_FN_TYPE("slice",              array_slice,        2,GENERIC, array_TypeSlice),
 
 #if JS_HAS_ARRAY_EXTRAS
     JS_FN_TYPE("indexOf",            array_indexOf,      1,GENERIC, JS_TypeHandlerInt),
