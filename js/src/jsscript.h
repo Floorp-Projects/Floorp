@@ -522,6 +522,7 @@ struct JSScript {
     inline bool typeMonitorResult(JSContext *cx, const jsbytecode *pc, const js::Value &val);
     inline bool typeMonitorUndefined(JSContext *cx, const jsbytecode *pc);
     inline bool typeMonitorOverflow(JSContext *cx, const jsbytecode *pc);
+    inline bool typeMonitorString(JSContext *cx, const jsbytecode *pc);
     inline bool typeMonitorUnknown(JSContext *cx, const jsbytecode *pc);
 
     /* Add a type for a variable in this script. */

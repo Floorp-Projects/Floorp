@@ -3755,12 +3755,15 @@ BEGIN_CASE(JSOP_ADD)
             goto error;
         regs.sp--;
         regs.sp[-1] = rval;
+        if (!script->typeMonitorUnknown(cx, regs.pc))
+            goto error;
     } else
 #endif
     {
-        if (lval.isObject())
+        bool lIsObject, rIsObject;
+        if ((lIsObject = lval.isObject()))
             DEFAULT_VALUE(cx, -2, JSTYPE_VOID, lval);
-        if (rval.isObject())
+        if ((rIsObject = rval.isObject()))
             DEFAULT_VALUE(cx, -1, JSTYPE_VOID, rval);
         bool lIsString, rIsString;
         if ((lIsString = lval.isString()) | (rIsString = rval.isString())) {
@@ -3784,6 +3787,8 @@ BEGIN_CASE(JSOP_ADD)
             JSString *str = js_ConcatStrings(cx, lstr, rstr);
             if (!str)
                 goto error;
+            if ((lIsObject || rIsObject) && !script->typeMonitorString(cx, regs.pc))
+                goto error;
             regs.sp--;
             regs.sp[-1].setString(str);
         } else {
@@ -3793,7 +3798,7 @@ BEGIN_CASE(JSOP_ADD)
             l += r;
             regs.sp--;
             if (!regs.sp[-1].setNumber(l) &&
-                !(lval.isDouble() || rval.isDouble()) &&
+                (lIsObject || rIsObject || (!lval.isDouble() && !rval.isDouble())) &&
                 !script->typeMonitorOverflow(cx, regs.pc)) {
                 goto error;
             }
