@@ -1980,14 +1980,14 @@ IdentityHandler.prototype = {
     while (BrowserUI.activeDialog)
       BrowserUI.activeDialog.close();
 
+    // Update the popup strings
+    this.setPopupMessages(this._identityBox.getAttribute("mode") || this.IDENTITY_MODE_UNKNOWN);
+
     this._identityPopup.hidden = false;
     this._identityPopup.top = BrowserUI.toolbarH - this._identityPopup.offset;
     this._identityPopup.anchorTo(this._identityBox);
 
     this._identityBox.setAttribute("open", "true");
-
-    // Update the popup strings
-    this.setPopupMessages(this._identityBox.getAttribute("mode") || this.IDENTITY_MODE_UNKNOWN);
 
     BrowserUI.pushPopup(this, [this._identityPopup, this._identityBox, Elements.toolbarContainer]);
     BrowserUI.lockToolbar();
