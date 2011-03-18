@@ -1728,15 +1728,15 @@ const void*
 nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
                          nsStyleContext* aContext)
 {
-  nsRuleData ruleData(nsCachedStyleData::GetBitForSID(aSID),
-                      mPresContext, aContext);
   // use placement new[] on the result of alloca() to allocate a
   // variable-sized stack array, including execution of constructors,
   // and use an RAII class to run the destructors too.
   size_t nprops = nsCSSProps::PropertyCountInStruct(aSID);
   void* dataStorage = alloca(nprops * sizeof(nsCSSValue));
   AutoCSSValueArray dataArray(dataStorage, nprops);
-  ruleData.mValueStorage = dataArray.get();
+
+  nsRuleData ruleData(nsCachedStyleData::GetBitForSID(aSID),
+                      dataArray.get(), mPresContext, aContext);
   ruleData.mValueOffsets[aSID] = 0;
 
   // We start at the most specific rule in the tree.
@@ -2943,9 +2943,10 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
 
   for (PRInt32 i = contextPath.Length() - 1; i >= 0; --i) {
     nsStyleContext* context = contextPath[i];
-    nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Font), aPresContext, context);
     AutoCSSValueArray dataArray(dataStorage, nprops);
-    ruleData.mValueStorage = dataArray.get();
+
+    nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Font), dataArray.get(),
+                        aPresContext, context);
     ruleData.mValueOffsets[eStyleStruct_Font] = 0;
 
     // Trimmed down version of ::WalkRuleTree() to re-apply the style rules
@@ -6483,31 +6484,42 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING)
     inheritBits |= NS_STYLE_INHERIT_BIT(Padding);
 
-  /* We're relying on the use of |aStyleContext| not mutating it! */
-  nsRuleData ruleData(inheritBits,
-                      aStyleContext->PresContext(), aStyleContext);
-
   // properties in the SIDS, whether or not we care about them
-  size_t nprops = 0;
+  size_t nprops = 0, backgroundOffset, borderOffset, paddingOffset;
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) {
-    ruleData.mValueOffsets[eStyleStruct_Background] = nprops;
+    backgroundOffset = nprops;
     nprops += nsCSSProps::PropertyCountInStruct(eStyleStruct_Background);
   }
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BORDER) {
-    ruleData.mValueOffsets[eStyleStruct_Border] = nprops;
+    borderOffset = nprops;
     nprops += nsCSSProps::PropertyCountInStruct(eStyleStruct_Border);
   }
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING) {
-    ruleData.mValueOffsets[eStyleStruct_Padding] = nprops;
+    paddingOffset = nprops;
     nprops += nsCSSProps::PropertyCountInStruct(eStyleStruct_Padding);
   }
 
   void* dataStorage = alloca(nprops * sizeof(nsCSSValue));
   AutoCSSValueArray dataArray(dataStorage, nprops);
-  ruleData.mValueStorage = dataArray.get();
+
+  /* We're relying on the use of |aStyleContext| not mutating it! */
+  nsRuleData ruleData(inheritBits, dataArray.get(),
+                      aStyleContext->PresContext(), aStyleContext);
+
+  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) {
+    ruleData.mValueOffsets[eStyleStruct_Background] = backgroundOffset;
+  }
+
+  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BORDER) {
+    ruleData.mValueOffsets[eStyleStruct_Border] = borderOffset;
+  }
+
+  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING) {
+    ruleData.mValueOffsets[eStyleStruct_Padding] = paddingOffset;
+  }
 
   static const nsCSSProperty backgroundValues[] = {
     eCSSProperty_background_color,
