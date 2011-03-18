@@ -1,7 +1,7 @@
-== fallback-01.xhtml fallback-01-ref.xhtml
+fails-if(Android) == fallback-01.xhtml fallback-01-ref.xhtml
 == font-selection-by-lang-01.html font-selection-by-lang-01-ref.html
 fails-if(gtk2Widget) HTTP(..) == font-selection-generic-1.html font-selection-generic-1-ref.html # reviewed patch in bug 546315
-!= font-size-adjust-01.html font-size-adjust-01-ref.html
+fails-if(Android) != font-size-adjust-01.html font-size-adjust-01-ref.html
 # The following test passes consistently only on Mac OS X;
 # both Windows and Linux give results that vary depending on the font size/zoom factor used,
 # because hinting affects the metrics used to compute the font size adjustment. See bug 429605.
@@ -32,7 +32,7 @@ load ligature-with-space-1.html
 # Cairo's FreeType and GDI backends snap glyphs to pixels, while Mac (usually)
 # and D2D have subpixel positioning.  The tests for pixel-snapping assume that
 # 1 CSS pixel == 1 device pixel
-skip-if(d2d||cocoaWidget) == subpixel-glyphs-x-1a.html subpixel-glyphs-x-1b.html
+fails-if(Android) skip-if(d2d||cocoaWidget) == subpixel-glyphs-x-1a.html subpixel-glyphs-x-1b.html
 # Platforms with subpixel positioning already have inconsistent glyphs by
 # design, but that is considered more tolerable because they are subpixel
 # inconsistencies.  On those platforms we just test that glyph positions are
@@ -42,7 +42,7 @@ skip-if(!(d2d||cocoaWidget)) != subpixel-glyphs-x-2a.html subpixel-glyphs-x-2b.h
 == subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html
 == subpixel-lineheight-1a.html subpixel-lineheight-1b.html
 == swash-1.html swash-1-ref.html
-HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
+fails-if(Android) HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
 == variation-selector-unsupported-1.html variation-selector-unsupported-1-ref.html
 == white-space-1a.html white-space-1-ref.html
 == white-space-1b.html white-space-1-ref.html

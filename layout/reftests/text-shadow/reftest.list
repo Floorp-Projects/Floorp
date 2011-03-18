@@ -1,5 +1,5 @@
 == basic.xul basic-ref.xul
-== basic-negcoord.xul basic-negcoord-ref.xul
+random-if(Android) == basic-negcoord.xul basic-negcoord-ref.xul
 != blur.xul blur-notref.xul
 == color-inherit.xul color-inherit-ref.xul
 == multiple-noblur.xul multiple-noblur-ref.xul
