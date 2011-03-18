@@ -84,6 +84,7 @@ img {
 
 #head, #content, #footer {
   margin: 0 8px;
+  clear: both;
 }
 
 #head p {
@@ -94,7 +95,6 @@ img {
   border-top: 2px solid #e7e7e7;
   padding: 10px;
   color: #999;
-  clear: both;
   margin-top: 10px;
 }
 
