@@ -1614,7 +1614,7 @@ static const nsCSSProperty gBorderRadiusSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozOutlineRadiusSubpropTable[] = {
+static const nsCSSProperty gOutlineRadiusSubpropTable[] = {
   // Code relies on these being in topleft-topright-bottomright-bottomleft
   // order.
   eCSSProperty__moz_outline_radius_topLeft,
@@ -1697,7 +1697,7 @@ static const nsCSSProperty gBorderColorSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozBorderEndColorSubpropTable[] = {
+static const nsCSSProperty gBorderEndColorSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_border_end_color_value,
   eCSSProperty_border_right_color_ltr_source,
@@ -1721,7 +1721,7 @@ static const nsCSSProperty gBorderRightColorSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozBorderStartColorSubpropTable[] = {
+static const nsCSSProperty gBorderStartColorSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_border_start_color_value,
   eCSSProperty_border_left_color_ltr_source,
@@ -1729,7 +1729,7 @@ static const nsCSSProperty gMozBorderStartColorSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozBorderEndSubpropTable[] = {
+static const nsCSSProperty gBorderEndSubpropTable[] = {
   // nsCSSDeclaration.cpp output the subproperties in this order.
   // It also depends on the color being third.
   eCSSProperty_border_end_width_value,
@@ -1777,7 +1777,7 @@ static const nsCSSProperty gBorderRightSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozBorderStartSubpropTable[] = {
+static const nsCSSProperty gBorderStartSubpropTable[] = {
   // nsCSSDeclaration.cpp outputs the subproperties in this order.
   // It also depends on the color being third.
   eCSSProperty_border_start_width_value,
@@ -1823,7 +1823,7 @@ static const nsCSSProperty gBorderRightStyleSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozBorderStartStyleSubpropTable[] = {
+static const nsCSSProperty gBorderStartStyleSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_border_start_style_value,
   eCSSProperty_border_left_style_ltr_source,
@@ -1831,7 +1831,7 @@ static const nsCSSProperty gMozBorderStartStyleSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozBorderEndStyleSubpropTable[] = {
+static const nsCSSProperty gBorderEndStyleSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_border_end_style_value,
   eCSSProperty_border_right_style_ltr_source,
@@ -1878,7 +1878,7 @@ static const nsCSSProperty gBorderRightWidthSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozBorderStartWidthSubpropTable[] = {
+static const nsCSSProperty gBorderStartWidthSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_border_start_width_value,
   eCSSProperty_border_left_width_ltr_source,
@@ -1886,7 +1886,7 @@ static const nsCSSProperty gMozBorderStartWidthSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozBorderEndWidthSubpropTable[] = {
+static const nsCSSProperty gBorderEndWidthSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_border_end_width_value,
   eCSSProperty_border_right_width_ltr_source,
@@ -1952,7 +1952,7 @@ static const nsCSSProperty gMarginRightSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozMarginStartSubpropTable[] = {
+static const nsCSSProperty gMarginStartSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_margin_start_value,
   eCSSProperty_margin_left_ltr_source,
@@ -1960,7 +1960,7 @@ static const nsCSSProperty gMozMarginStartSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozMarginEndSubpropTable[] = {
+static const nsCSSProperty gMarginEndSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_margin_end_value,
   eCSSProperty_margin_right_ltr_source,
@@ -1978,7 +1978,7 @@ static const nsCSSProperty gOutlineSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozColumnRuleSubpropTable[] = {
+static const nsCSSProperty gColumnRuleSubpropTable[] = {
   // nsCSSDeclaration.cpp outputs the subproperties in this order.
   // It also depends on the color being third.
   eCSSProperty__moz_column_rule_width,
@@ -2023,7 +2023,7 @@ static const nsCSSProperty gPaddingRightSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozPaddingStartSubpropTable[] = {
+static const nsCSSProperty gPaddingStartSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_padding_start_value,
   eCSSProperty_padding_left_ltr_source,
@@ -2031,7 +2031,7 @@ static const nsCSSProperty gMozPaddingStartSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozPaddingEndSubpropTable[] = {
+static const nsCSSProperty gPaddingEndSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_padding_end_value,
   eCSSProperty_padding_right_ltr_source,
@@ -2045,7 +2045,7 @@ static const nsCSSProperty gPauseSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozTransitionSubpropTable[] = {
+static const nsCSSProperty gTransitionSubpropTable[] = {
   eCSSProperty_transition_property,
   eCSSProperty_transition_duration,
   eCSSProperty_transition_timing_function,
@@ -2062,9 +2062,7 @@ static const nsCSSProperty gMarkerSubpropTable[] = {
 
 const nsCSSProperty *const
 nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shorthands] = {
-// FIXME: It would reduce the maintenance cost of unprefixing if we
-// changed this from Moz ## prop_ to just prop_.
-#define CSS_PROP_DOMPROP_PREFIXED(prop_) Moz ## prop_
+#define CSS_PROP_DOMPROP_PREFIXED(prop_) prop_
 // Need an extra level of macro nesting to force expansion of method_
 // params before they get pasted.
 #define NSCSSPROPS_INNER_MACRO(method_) g##method_##SubpropTable,
