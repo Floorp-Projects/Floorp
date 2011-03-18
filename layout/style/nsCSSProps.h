@@ -303,8 +303,7 @@ private:
   static const size_t gPropertyIndexInStruct[eCSSProperty_COUNT_no_shorthands];
 public:
   /**
-   * Return the number of properties, including the
-   * CSS_PROP_INCLUDE_NOT_CSS properties, that must be cascaded when
+   * Return the number of properties that must be cascaded when
    * nsRuleNode builds the nsStyle* for aSID.
    */
   static size_t PropertyCountInStruct(nsStyleStructID aSID) {
