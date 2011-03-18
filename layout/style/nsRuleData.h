@@ -105,8 +105,10 @@ struct nsRuleData
 
   /**
    * Return a pointer to the value object within |this| corresponding
-   * to property |aProperty|, or null if storage for that property has
-   * not been allocated.
+   * to property |aProperty|.
+   *
+   * This function must only be called if the given property is in
+   * mSIDs.
    */
   nsCSSValue* ValueFor(nsCSSProperty aProperty);
 };
