@@ -163,18 +163,18 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 192767-27.xul 192767-37.xul
 != 192767-01.xul 192767-21.xul
 != 192767-02.xul 192767-22.xul
-!= 192767-03.xul 192767-23.xul
+fails-if(Android) != 192767-03.xul 192767-23.xul
 != 192767-04.xul 192767-24.xul
 != 192767-05.xul 192767-25.xul
-!= 192767-06.xul 192767-26.xul
-!= 192767-07.xul 192767-27.xul
+fails-if(Android) != 192767-06.xul 192767-26.xul
+fails-if(Android) != 192767-07.xul 192767-27.xul
 != 192767-11.xul 192767-31.xul
 != 192767-12.xul 192767-32.xul
-!= 192767-13.xul 192767-33.xul
+fails-if(Android) != 192767-13.xul 192767-33.xul
 != 192767-14.xul 192767-34.xul
 != 192767-15.xul 192767-35.xul
-!= 192767-16.xul 192767-36.xul
-!= 192767-17.xul 192767-37.xul
+fails-if(Android) != 192767-16.xul 192767-36.xul
+fails-if(Android) != 192767-17.xul 192767-37.xul
 != 200774-1.html about:blank
 == 201215-1.html 201215-1-ref.html
 == 201293-1a.html 201293-1-ref.html
@@ -294,7 +294,7 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 283686-2.html 283686-2-ref.html
 == 283686-3.html about:blank
 == 289384-1.xhtml 289384-ref.xhtml
-random-if(d2d) HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 578114 for the d2d failures
+fails-if(Android) random-if(d2d) HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 578114 for the d2d failures
 asserts(1) == 290129-1.html 290129-1-ref.html # bug 315549/460637
 == 291078-1.html 291078-1-ref.html
 == 291078-2.html 291078-2-ref.html
@@ -314,8 +314,8 @@ random-if(d2d) == 299837-3.xul 299837-3-ref.xul # bug 587631
 == 300691-1e.html 300691-1-ref.html
 == 300691-1f.html 300691-1-ref.html
 == 301726-1.html 301726-1-ref.html
-!= 301726-2.html 301726-2-ref.html
-== 302379.html 302379-ref.html
+fails-if(Android) != 301726-2.html 301726-2-ref.html
+fails-if(Android) == 302379.html 302379-ref.html
 == 306630-1.html 306630-1-ref.html
 == 306660-1.html 306660-1-ref.html
 == 306660-2.html 306660-2-ref.html
@@ -354,9 +354,9 @@ fails-if(!prefs.getBoolPref("html5.parser.enable")) == 311366-unknown-block-3.ht
 != 315920-3e.html 315920-3-ref.html
 != 315920-3f.html 315920-3-ref.html
 == 315920-4.html 315920-4-ref.html
-== 315920-5.html 315920-5-ref.html
+fails-if(Android) == 315920-5.html 315920-5-ref.html
 == 315920-6.html 315920-6-ref.html
-== 315920-7a.html 315920-7-ref.html
+fails-if(Android) == 315920-7a.html 315920-7-ref.html
 == 315920-7b.html 315920-7-ref.html
 == 315920-7c.html 315920-7-ref.html
 == 315920-8a.html 315920-8-ref.html
@@ -394,7 +394,7 @@ fails-if(!prefs.getBoolPref("html5.parser.enable")) == 311366-unknown-block-3.ht
 == 315920-28a.html 315920-28-ref.html
 == 315920-28b.html 315920-28-ref.html
 == 315920-28c.html 315920-28-ref.html
-== 315920-29a.html 315920-29-ref.html
+fails-if(Android) == 315920-29a.html 315920-29-ref.html
 == 315920-29b.html 315920-29-ref.html
 == 315920-30.html 315920-30-ref.html
 == 316057-1.html 316057-1-ref.html
@@ -450,12 +450,12 @@ random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 345267-1d.html 345267-1-ref.html
 != 345563-sub.xhtml 345563-sup.xhtml
 == 346189-1.xul 346189-1-ref.xul
-== 346774-1a.html 346774-1-ref.html
+fails-if(Android) == 346774-1a.html 346774-1-ref.html
 == 346774-1b.html 346774-1-ref.html
 == 346774-1c.html 346774-1-ref.html
 == 347348-1.xhtml 347348-1-ref.xhtml
 == 347496-1.xhtml 347496-1-ref.xhtml
-== 347912-1.html 347912-1-ref.html
+fails-if(Android) == 347912-1.html 347912-1-ref.html
 == 348049-1.xhtml 348049-1-ref.xhtml
 == 348516-1.html 348516-1-ref.html
 == 348516-2.html 348516-2-ref.html
@@ -565,9 +565,9 @@ fails-if(cocoaWidget) == 356774-1.html 356774-1-ref.html # probably bug 379317
 == 367220-1.html 367220-1-ref.html
 == 367247-s-visible.html 367247-s-hidden.html
 == 367247-s-hidden.html 367247-s-auto.html
-!= 367247-s-auto.html 367247-s-scroll.html
+fails-if(Android) != 367247-s-auto.html 367247-s-scroll.html
 != 367247-l-visible.html 367247-l-hidden.html
-!= 367247-l-hidden.html 367247-l-scroll.html
+fails-if(Android) != 367247-l-hidden.html 367247-l-scroll.html
 == 367247-l-scroll.html 367247-l-auto.html
 == 367332-1a.html 367332-1-ref.html
 == 367332-1b.html 367332-1-ref.html
@@ -634,7 +634,7 @@ asserts(4) == 368155-negative-margins-1.html 368155-negative-margins-1-ref.html 
 == 371043-1.html 371043-1-ref.html
 == 371354-1.html 371354-1-ref.html
 == 371483-1.html about:blank # assertion test
-== 371561-1.html 371561-1-ref.html
+fails-if(Android) == 371561-1.html 371561-1-ref.html
 != 371681-1.xhtml about:blank
 == 371925-1a.html 371925-1-ref.html
 == 371925-1b.html 371925-1-ref.html
@@ -645,10 +645,10 @@ asserts(4) == 368155-negative-margins-1.html 368155-negative-margins-1-ref.html 
 == 372632-1.html 372632-1-ref.html
 == 373295-1.html 373295-1-ref.html
 == 373298-1.html 373298-1-ref.html
-== 373381-1.html 373381-1-ref.html
-== 373381-2.html 373381-2-ref.html
-random-if(d2d) == 373381-3.html 373381-3-ref.html
-== 373381-4.html 373381-4-ref.html
+fails-if(Android) == 373381-1.html 373381-1-ref.html
+fails-if(Android) == 373381-2.html 373381-2-ref.html
+fails-if(Android) random-if(d2d) == 373381-3.html 373381-3-ref.html
+fails-if(Android) == 373381-4.html 373381-4-ref.html
 == 375508-1.html 375508-1-ref.html
 == 373433-1.html 373433-1-ref.html
 == 372062-1.html 372062-1-ref.html
@@ -663,8 +663,8 @@ fails == 374927-1.html 374927-1-ref.html # Was broken by patch for bug 368600; f
 == 376375-1.html 376375-1-ref.html
 == 376484-1.html 376484-1-ref.html
 == 376532-1.html 376532-1-ref.html
-!= 376532-2.html 376532-2-ref.html
-!= 376532-3.html 376532-3-ref.html
+fails-if(Android) != 376532-2.html 376532-2-ref.html
+fails-if(Android) != 376532-3.html 376532-3-ref.html
 == 377603-1.html 377603-1-ref.html
 == 377918.html 377918-ref.html
 == 378535-1.html 378535-1-ref.html
@@ -675,7 +675,7 @@ fails == 374927-1.html 374927-1-ref.html # Was broken by patch for bug 368600; f
 == 379178-html.html 379178-html-ref.html
 == 379178-svg.svg 379178-svg-ref.svg
 == 379316-1.html 379316-1-ref.html
-random-if(cocoaWidget) == 379316-2.html 379316-2-ref.html # bug 379786
+fails-if(Android) random-if(cocoaWidget) == 379316-2.html 379316-2-ref.html # bug 379786
 == 379328-1.html 379328-1-ref.html
 == 379349-1a.xhtml 379349-1-ref.xhtml
 == 379349-1b.xhtml 379349-1-ref.xhtml
@@ -690,7 +690,7 @@ random-if(cocoaWidget) == 379316-2.html 379316-2-ref.html # bug 379786
 == 379461-1.xhtml 379461-1.html
 == 379461-2.xhtml 379461-2.html
 == 379461-3-container-xhtml.html 379461-3-container-html.html
-!= 379461-3-container-xhtml.html 379461-3-container-blank.html # there is a scrollbar
+fails-if(Android) != 379461-3-container-xhtml.html 379461-3-container-blank.html # there is a scrollbar
 == 380004-1.html 380004-1-ref.html
 == 380227-1.html 380227-1-ref.html
 == 380825-1.html 380825-1-ref.html
@@ -791,11 +791,11 @@ skip-if(!winWidget) == 391045.html 391045-ref.html # windows-specific Uniscribe 
 == 393671-2.html 393671-2-ref.html
 == 393671-3.html 393671-3-ref.html
 == 393760-1.xml 393760-1-ref.xml
-== 393760-2.xml 393760-2-ref.xml
+fails-if(Android) == 393760-2.xml 393760-2-ref.xml
 == 394111-1.html about:blank  # Really an assertion test rather than a rendering test
 == 394534-1.html 394534-1-ref.html
 == 394676-1.xhtml 394676-1-ref.xhtml
-== 395107-1.html 395107-1-ref.html
+fails-if(Android) == 395107-1.html 395107-1-ref.html
 == 395107-2.html 395107-2-ref.html
 == 395107-3.html 395107-3-ref.html
 == 395107-4.html 395107-4-ref.html
@@ -993,7 +993,7 @@ asserts(1) == 418574-2.html 418574-2-ref.html # bug 478135
 == 421203-4.xul 321402-4-ref.xul
 == 421203-5.xul 321402-5-ref.xul
 == 421203-6.xul 321402-6-ref.xul
-== 421234-1.html 421234-1-ref.html
+fails-if(Android) == 421234-1.html 421234-1-ref.html
 == 421239-1.html 421239-1-ref.html
 == 421239-2.html 421239-2-ref.html
 == 421419-1.html 421419-1-ref.html
@@ -1012,7 +1012,7 @@ asserts(1) == 418574-2.html 418574-2-ref.html # bug 478135
 == 423676-1.html 423676-1-ref.html
 fails == 423823-1.html 423823-1-ref.html # scrolling rowgroups were removed in bug 28800
 == 424074-1.xul 424074-1-ref.xul
-!= 424074-1.xul 424074-1-ref2.xul
+fails-if(Android) != 424074-1.xul 424074-1-ref2.xul
 random-if(gtk2Widget) == 424074-1-ref2.xul 424074-1-ref3.xul
 == 424236-1.html 424236-1-ref.html
 == 424236-2.html 424236-2-ref.html
@@ -1296,14 +1296,14 @@ random-if(d2d) == 478377-1.xul 478377-1-ref.xul
 == 480880-2a.html about:blank
 == 480880-2b.html about:blank
 == 480880-2c.html about:blank
-== 481024-1a.html 481024-1-ref.html
-== 481024-1b.html 481024-1-ref.html
-== 481024-1c.html 481024-1-ref.html
+fails-if(Android) == 481024-1a.html 481024-1-ref.html
+fails-if(Android) == 481024-1b.html 481024-1-ref.html
+fails-if(Android) == 481024-1c.html 481024-1-ref.html
 == 481024-1d.html 481024-1-ref.html
 == 481024-1e.html 481024-1-ref.html
 != 481948-1.html 481948-1-ref.html
 != 481948-2.html 481948-2-ref.html
-random-if(winWidget) fails-if(gtk2Widget) == 481948-3.html 481948-3-ref.html # questionable test, see bug 488364
+fails-if(Android) random-if(winWidget) fails-if(gtk2Widget) == 481948-3.html 481948-3-ref.html # questionable test, see bug 488364
 == 482398-1.html 482398-1-ref.html
 random-if(d2d) == 482592-1a.xhtml 482592-1-ref.html # bug 586771
 random-if(d2d) == 482592-1b.xhtml 482592-1-ref.html # bug 586771
@@ -1387,7 +1387,7 @@ asserts(1) == 496032-1.html 496032-1-ref.html # bug 399262
 needs-focus fails == 503531-1.html 503531-1-ref.html
 == 504032-1.html 504032-1-ref.html
 == 505743-1.html about:blank
-== 506481-1.html 506481-1-ref.html
+fails-if(Android) == 506481-1.html 506481-1-ref.html
 == 507187-1.html 507187-1-ref.html
 == 507487-1.html 507487-1-ref.html
 == 507487-2.xhtml 507487-2-ref.xhtml
@@ -1395,7 +1395,7 @@ needs-focus fails == 503531-1.html 503531-1-ref.html
 == 507762-2.html 507762-2-ref.html
 == 507762-3.html 507762-1-ref.html
 == 507762-4.html 507762-2-ref.html
-random-if(cocoaWidget) == 508816-1.xul 508816-1-ref.xul # Bug 631982
+fails-if(Android) random-if(cocoaWidget) == 508816-1.xul 508816-1-ref.xul # Bug 631982
 == 508816-2.html 508816-2-ref.html
 == 508908-1.xul 508908-1-ref.xul
 == 508919-1.xhtml 508919-1-ref.xhtml
@@ -1407,7 +1407,7 @@ random-if(cocoaWidget) == 508816-1.xul 508816-1-ref.xul # Bug 631982
 == 513153-2a.html 513153-2-ref.html
 == 513153-2b.html 513153-2-ref.html
 == 513318-1.xul 513318-1-ref.xul
-!= 513318-2.xul 513318-2-ref.xul
+fails-if(Android) != 513318-2.xul 513318-2-ref.xul
 == 514917-1.html 514917-1-ref.html
 HTTP(..) == 518172-1a.html 518172-a-ref.html
 HTTP(..) == 518172-1b.html 518172-b-ref.html
@@ -1478,12 +1478,12 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 552334-1.html 552334-1-ref.html
 random-if(d2d) == 555388-1.html 555388-1-ref.html
 == 556661-1.html 556661-1-ref.html
-== 557087-1.html 557087-ref.html
-== 557087-2.html 557087-ref.html
+fails-if(Android) == 557087-1.html 557087-ref.html
+fails-if(Android) == 557087-2.html 557087-ref.html
 == 557736-1.html 557736-1-ref.html
 != 558011-1.xul 558011-1-ref.xul
 == 559284-1.html 559284-1-ref.html
-== 560455-1.xul 560455-1-ref.xul
+fails-if(Android) == 560455-1.xul 560455-1-ref.xul
 == 561981-1.html 561981-1-ref.html
 == 561981-2.html 561981-2-ref.html
 == 561981-3.html 561981-3-ref.html
@@ -1517,7 +1517,7 @@ random-if(d2d) == 555388-1.html 555388-1-ref.html
 == 563584-10b.html 563584-10-ref.html
 == 563584-11.html 563584-11-ref.html
 == 564054-1.html 564054-1-ref.html
-random-if(layersGPUAccelerated) == 564991-1.html 564991-1-ref.html
+fails-if(Android) random-if(layersGPUAccelerated) == 564991-1.html 564991-1-ref.html
 == 565819-1.html 565819-ref.html
 == 565819-2.html 565819-ref.html
 needs-focus == 568441.html 568441-ref.html
@@ -1540,14 +1540,14 @@ random-if(!winWidget) == 574907-2.html 574907-2-ref.html
 random-if(!winWidget) fails-if(winWidget&&!d2d) != 574907-3.html 574907-3-notref.html
 == 577838-1.html 577838-1-ref.html
 == 577838-2.html 577838-2-ref.html
-random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fails-if(/Mac\x20OS\x20X\x2010\.5/.test(http.oscpu)) == 579323-1.html 579323-1-ref.html # bug 623450 for WinXP and bug 627560 for OSX 10.5
+fails-if(Android) random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fails-if(/Mac\x20OS\x20X\x2010\.5/.test(http.oscpu)) == 579323-1.html 579323-1-ref.html # bug 623450 for WinXP and bug 627560 for OSX 10.5
 == 579349-1.html 579349-1-ref.html
 == 579655-1.html 579655-1-ref.html
-== 579808-1.html 579808-1-ref.html
-random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu))  == 579985-1.html 579985-1-ref.html # bug 623452 for WinXP; this bug was only for a regression in BasicLayers anyway
+fails-if(Android) == 579808-1.html 579808-1-ref.html
+fails-if(Android) random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu))  == 579985-1.html 579985-1-ref.html # bug 623452 for WinXP; this bug was only for a regression in BasicLayers anyway
 == 580160-1.html 580160-1-ref.html
 fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) HTTP(..) == 580863-1.html 580863-1-ref.html # bug 623454
-random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu))  == 581317-1.html 581317-1-ref.html # bug 623456 for WinXP
+fails-if(Android) random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu))  == 581317-1.html 581317-1-ref.html # bug 623456 for WinXP
 == 581579-1.html 581579-1-ref.html
 == 582037-1a.html 582037-1-ref.html
 == 582037-1b.html 582037-1-ref.html
@@ -1559,7 +1559,7 @@ asserts(0-1) == 582146-1.html about:blank
 == 584699-1.html 584699-1-ref.html
 == 585598-2.xhtml 585598-2-ref.xhtml
 == 586400-1.html 586400-1-ref.html
-fails-if(cocoaWidget) == 586683-1.html 586683-1-ref.html
+fails-if(Android) fails-if(cocoaWidget) == 586683-1.html 586683-1-ref.html
 == 589615-1a.xhtml 589615-1-ref.html
 == 589615-1b.html 589615-1-ref.html
 == 589672-1.html 589672-1-ref.html
@@ -1603,20 +1603,20 @@ HTTP(..) != 615121-2.html 615121-2-notref.html
 == 617242-1.html 617242-1-ref.html
 != 618071.html 618071-notref.html
 == 619117-1.html 619117-1-ref.html
-HTTP(..) == 621253-1-externalFilter.html 621253-1-ref.html # XXX update reference case after bug 541270 is fixed
-== 621253-1-internalFilter.html 621253-1-ref.html # XXX update reference case after bug 541270 is fixed
+skip-if(Android) HTTP(..) == 621253-1-externalFilter.html 621253-1-ref.html # XXX update reference case after bug 541270 is fixed
+skip-if(Android) == 621253-1-internalFilter.html 621253-1-ref.html # XXX update reference case after bug 541270 is fixed
 HTTP(..) == 621253-2-externalFilter.html 621253-2-ref.html
 == 621253-2-internalFilter.html 621253-2-ref.html
-HTTP(..) == 619511-1.html 619511-1-ref.html
+fails-if(Android) HTTP(..) == 619511-1.html 619511-1-ref.html
 random-if(winWidget) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
 random-if(winWidget) HTTP(..) == 621918-2.svg 621918-2-ref.svg # same 1px issue as above, and HTTP(..) for filters.svg, used to mask antialiasing issues where glyphs touch
 == 622585-1.html 622585-1-ref.html
-== 625409-1.html 625409-1-ref.html
+fails-if(Android) == 625409-1.html 625409-1-ref.html
 == 627393-1.html about:blank
 == 630835-1.html about:blank
 == 631352-1.html 631352-1-ref.html
-== 632423-1.html 632423-1-ref.html
-fails-if(winWidget) == 632781-verybig.html 632781-ref.html # large canvas elements are not drawn on Windows, see bug 633936
+fails-if(Android) == 632423-1.html 632423-1-ref.html
+skip-if(Android) fails-if(winWidget) == 632781-verybig.html 632781-ref.html # large canvas elements are not drawn on Windows, see bug 633936
 == 632781-normalsize.html 632781-ref.html
-== 634232-1.html 634232-1-ref.html
-== 635302-1.html 635302-1-ref.html
+fails-if(Android) == 634232-1.html 634232-1-ref.html
+fails-if(Android) == 635302-1.html 635302-1-ref.html

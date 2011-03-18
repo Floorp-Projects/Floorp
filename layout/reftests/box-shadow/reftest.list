@@ -2,15 +2,15 @@
 != boxshadow-blur.html boxshadow-blur-notref.html
 != boxshadow-blur.html boxshadow-blur-notref2.html
 == boxshadow-blur-2.html boxshadow-blur-2-ref.html
-!= boxshadow-blur-2.html boxshadow-blur-2-notref.html
+fails-if(Android) != boxshadow-blur-2.html boxshadow-blur-2-notref.html
 == boxshadow-multiple.html boxshadow-multiple-ref.html
 == boxshadow-spread.html boxshadow-spread-ref.html
 == tableboxshadow-basic.html tableboxshadow-basic-ref.html
 == tableboxshadow-trshadow.html tableboxshadow-trshadow-ref.html
 == tableboxshadow-tdshadow.html tableboxshadow-tdshadow-ref.html
 == boxshadow-rounding.html boxshadow-rounding-ref.html
-== boxshadow-button.html boxshadow-button-ref.html
-== boxshadow-fileupload.html boxshadow-fileupload-ref.html
+fails-if(Android) == boxshadow-button.html boxshadow-button-ref.html
+fails-if(Android) == boxshadow-fileupload.html boxshadow-fileupload-ref.html
 == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
 random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
 random-if(d2d) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
@@ -21,5 +21,5 @@ random-if(d2d) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
 == overflow-not-scrollable-1.html overflow-not-scrollable-1-ref.html
 == overflow-not-scrollable-1.html overflow-not-scrollable-1-ref2.html
 == overflow-not-scrollable-2.html overflow-not-scrollable-2-ref.html
-== 611574-1.html 611574-1-ref.html
-== 611574-2.html 611574-2-ref.html
+fails-if(Android) == 611574-1.html 611574-1-ref.html
+fails-if(Android) == 611574-2.html 611574-2-ref.html
