@@ -72,6 +72,15 @@ protected:
   {
   }
 
+  virtual ~Rule() {}
+
+public:
+  // for implementing nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+protected:
+  nsAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
 public:
 
   virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const;

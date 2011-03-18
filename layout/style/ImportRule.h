@@ -60,7 +60,7 @@ private:
   ImportRule(const ImportRule& aCopy);
   ~ImportRule();
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   DECL_STYLE_RULE_INHERIT
 
