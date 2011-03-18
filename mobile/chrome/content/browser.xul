@@ -171,7 +171,6 @@
     <key id="key_lockscreen" key="o" modifiers="accel,shift" command="cmd_lockscreen"/>
     <!-- F5 on maemo is "home" which is a task switching key -->
 #endif
-    <key id="key_lockscreen" key="o" modifiers="accel,shift" command="cmd_lockscreen"/>
     <key id="key_reload2" key="r" modifiers="accel" command="cmd_reload"/>
     <key id="key_forceReload2" key="r" modifiers="accel,shift" command="cmd_forceReload"/>
     <key id="key_focusURL" key="l" modifiers="accel" command="cmd_openLocation"/>
