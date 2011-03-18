@@ -699,6 +699,8 @@ Invoke(JSContext *cx, const CallArgs &argsRef, uint32 flags)
             js_ReportIsNotFunction(cx, &args.callee(), flags);
             return false;
         }
+        if (!cx->markTypeCallerUnexpected(types::TYPE_UNKNOWN))
+            return false;
         return CallJSNative(cx, clasp->call, args.argc(), args.base());
     }
 
@@ -1278,6 +1280,8 @@ InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
             return CallJSNativeConstructor(cx, fun->u.n.native, args.argc(), args.base());
         }
     } else if (clasp->construct) {
+        if (!cx->markTypeCallerUnexpected(types::TYPE_UNKNOWN))
+            return false;
         args.thisv().setMagicWithObjectOrNullPayload(NULL);
         return CallJSNativeConstructor(cx, clasp->construct, args.argc(), args.base());
     }
