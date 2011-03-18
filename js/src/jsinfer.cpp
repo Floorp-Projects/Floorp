@@ -2531,6 +2531,10 @@ TypeObject::print(JSContext *cx)
 
     if (unknownProperties)
         printf(" unknown");
+    else if (isPackedArray)
+        printf(" packed");
+    else if (isDenseArray)
+        printf(" dense");
 
     if (propertyCount == 0) {
         printf(" {}\n");
