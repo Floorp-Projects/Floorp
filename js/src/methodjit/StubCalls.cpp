@@ -491,13 +491,13 @@ stubs::GetElem(VMFrame &f)
         THROW();
     copyFrom = &rval;
 
+    if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, regs.pc))
+        THROW();
+
   end_getelem:
     f.regs.sp[-2] = *copyFrom;
 
-    if (!rref.isInt32()) {
-        if (!f.script()->typeMonitorUnknown(cx, regs.pc))
-            THROW();
-    } else if (copyFrom->isUndefined()) {
+    if (copyFrom->isUndefined()) {
         cx->addTypeProperty(obj->getType(), NULL, TYPE_UNDEFINED);
         if (!f.script()->typeMonitorUndefined(cx, regs.pc))
             THROW();

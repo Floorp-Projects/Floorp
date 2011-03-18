@@ -281,10 +281,6 @@ struct TypeSet
                         TypeSet *target, jsid id);
     void addSetProperty(JSContext *cx, JSScript *script, const jsbytecode *pc,
                         TypeSet *target, jsid id);
-    void addGetElem(JSContext *cx, JSScript *script, const jsbytecode *pc,
-                    TypeSet *object, TypeSet *target);
-    void addSetElem(JSContext *cx, JSScript *script, const jsbytecode *pc,
-                    TypeSet *object, TypeSet *target);
     void addNewObject(JSContext *cx, JSScript *script, TypeFunction *fun, TypeSet *target);
     void addCall(JSContext *cx, TypeCallsite *site);
     void addArith(JSContext *cx, JSScript *script,

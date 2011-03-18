@@ -4057,8 +4057,11 @@ BEGIN_CASE(JSOP_PROPDEC)
 
   fetch_incop_obj:
     FETCH_OBJECT(cx, i, obj);
-    if (JSID_IS_VOID(id))
+    if (JSID_IS_VOID(id)) {
         FETCH_ELEMENT_ID(obj, -1, id);
+        if (!JSID_IS_INT(id) && !script->typeMonitorUnknown(cx, regs.pc))
+            goto error;
+    }
     goto do_incop;
 
 BEGIN_CASE(JSOP_INCNAME)
@@ -4687,14 +4690,14 @@ BEGIN_CASE(JSOP_GETELEM)
         goto error;
     copyFrom = &rval;
 
+    if (!JSID_IS_INT(id) && !script->typeMonitorUnknown(cx, regs.pc))
+        goto error;
+
   end_getelem:
     regs.sp--;
     regs.sp[-1] = *copyFrom;
     assertSameCompartment(cx, regs.sp[-1]);
-    if (!rref.isInt32()) {
-        if (!script->typeMonitorUnknown(cx, regs.pc))
-            goto error;
-    } else if (copyFrom->isUndefined()) {
+    if (copyFrom->isUndefined()) {
         cx->addTypeProperty(obj->getType(), NULL, TYPE_UNDEFINED);
         if (!script->typeMonitorUndefined(cx, regs.pc))
             goto error;
