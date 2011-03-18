@@ -58,7 +58,6 @@ struct nsCSSValueList;
 // Copy of typedef that's in nsCSSStruct.h, for compilation speed.
 typedef nsCSSStruct nsRuleDataStruct;
 
-struct nsRuleDataFont;
 class nsCSSValue;
 struct nsCSSRect;
 
@@ -464,126 +463,126 @@ protected:
 
   const void*
     ComputeDisplayData(void* aStartStruct,
-                       const nsRuleDataStruct& aData,
+                       const nsRuleData* aRuleData,
                        nsStyleContext* aContext, nsRuleNode* aHighestNode,
                        RuleDetail aRuleDetail,
                        const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeVisibilityData(void* aStartStruct,
-                          const nsRuleDataStruct& aData,
+                          const nsRuleData* aRuleData,
                           nsStyleContext* aContext, nsRuleNode* aHighestNode,
                           RuleDetail aRuleDetail,
                           const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeFontData(void* aStartStruct,
-                    const nsRuleDataStruct& aData,
+                    const nsRuleData* aRuleData,
                     nsStyleContext* aContext, nsRuleNode* aHighestNode,
                     RuleDetail aRuleDetail,
                     const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeColorData(void* aStartStruct,
-                     const nsRuleDataStruct& aData,
+                     const nsRuleData* aRuleData,
                      nsStyleContext* aContext, nsRuleNode* aHighestNode,
                      RuleDetail aRuleDetail,
                      const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeBackgroundData(void* aStartStruct,
-                          const nsRuleDataStruct& aData,
+                          const nsRuleData* aRuleData,
                           nsStyleContext* aContext, nsRuleNode* aHighestNode,
                           RuleDetail aRuleDetail,
                           const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeMarginData(void* aStartStruct,
-                      const nsRuleDataStruct& aData,
+                      const nsRuleData* aRuleData,
                       nsStyleContext* aContext, nsRuleNode* aHighestNode,
                       RuleDetail aRuleDetail,
                       const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeBorderData(void* aStartStruct,
-                      const nsRuleDataStruct& aData,
+                      const nsRuleData* aRuleData,
                       nsStyleContext* aContext, nsRuleNode* aHighestNode,
                       RuleDetail aRuleDetail,
                       const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputePaddingData(void* aStartStruct,
-                       const nsRuleDataStruct& aData,
+                       const nsRuleData* aRuleData,
                        nsStyleContext* aContext, nsRuleNode* aHighestNode,
                        RuleDetail aRuleDetail,
                        const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeOutlineData(void* aStartStruct,
-                       const nsRuleDataStruct& aData,
+                       const nsRuleData* aRuleData,
                        nsStyleContext* aContext, nsRuleNode* aHighestNode,
                        RuleDetail aRuleDetail,
                        const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeListData(void* aStartStruct,
-                    const nsRuleDataStruct& aData,
+                    const nsRuleData* aRuleData,
                     nsStyleContext* aContext, nsRuleNode* aHighestNode,
                     RuleDetail aRuleDetail,
                     const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputePositionData(void* aStartStruct,
-                        const nsRuleDataStruct& aData,
+                        const nsRuleData* aRuleData,
                         nsStyleContext* aContext, nsRuleNode* aHighestNode,
                         RuleDetail aRuleDetail,
                         const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeTableData(void* aStartStruct,
-                     const nsRuleDataStruct& aData,
+                     const nsRuleData* aRuleData,
                      nsStyleContext* aContext, nsRuleNode* aHighestNode,
                      RuleDetail aRuleDetail,
                      const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeTableBorderData(void* aStartStruct,
-                           const nsRuleDataStruct& aData,
+                           const nsRuleData* aRuleData,
                            nsStyleContext* aContext, nsRuleNode* aHighestNode,
                            RuleDetail aRuleDetail,
                            const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeContentData(void* aStartStruct,
-                       const nsRuleDataStruct& aData,
+                       const nsRuleData* aRuleData,
                        nsStyleContext* aContext, nsRuleNode* aHighestNode,
                        RuleDetail aRuleDetail,
                        const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeQuotesData(void* aStartStruct,
-                      const nsRuleDataStruct& aData,
+                      const nsRuleData* aRuleData,
                       nsStyleContext* aContext, nsRuleNode* aHighestNode,
                       RuleDetail aRuleDetail,
                       const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeTextData(void* aStartStruct,
-                    const nsRuleDataStruct& aData,
+                    const nsRuleData* aRuleData,
                     nsStyleContext* aContext, nsRuleNode* aHighestNode,
                     RuleDetail aRuleDetail,
                     const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeTextResetData(void* aStartStruct,
-                         const nsRuleDataStruct& aData,
+                         const nsRuleData* aRuleData,
                          nsStyleContext* aContext, nsRuleNode* aHighestNode,
                          RuleDetail aRuleDetail,
                          const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeUserInterfaceData(void* aStartStruct,
-                             const nsRuleDataStruct& aData,
+                             const nsRuleData* aRuleData,
                              nsStyleContext* aContext,
                              nsRuleNode* aHighestNode,
                              RuleDetail aRuleDetail,
@@ -591,42 +590,42 @@ protected:
 
   const void*
     ComputeUIResetData(void* aStartStruct,
-                       const nsRuleDataStruct& aData,
+                       const nsRuleData* aRuleData,
                        nsStyleContext* aContext, nsRuleNode* aHighestNode,
                        RuleDetail aRuleDetail,
                        const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeXULData(void* aStartStruct,
-                   const nsRuleDataStruct& aData,
+                   const nsRuleData* aRuleData,
                    nsStyleContext* aContext, nsRuleNode* aHighestNode,
                    RuleDetail aRuleDetail,
                    const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeColumnData(void* aStartStruct,
-                      const nsRuleDataStruct& aData,
+                      const nsRuleData* aRuleData,
                       nsStyleContext* aContext, nsRuleNode* aHighestNode,
                       RuleDetail aRuleDetail,
                       const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeSVGData(void* aStartStruct,
-                   const nsRuleDataStruct& aData,
+                   const nsRuleData* aRuleData,
                    nsStyleContext* aContext, nsRuleNode* aHighestNode,
                    RuleDetail aRuleDetail,
                    const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeSVGResetData(void* aStartStruct,
-                        const nsRuleDataStruct& aData,
+                        const nsRuleData* aRuleData,
                         nsStyleContext* aContext, nsRuleNode* aHighestNode,
                         RuleDetail aRuleDetail,
                         const PRBool aCanStoreInRuleTree);
 
   // helpers for |ComputeFontData| that need access to |mNoneBits|:
   static void SetFontSize(nsPresContext* aPresContext,
-                          const nsRuleDataFont& aFontData,
+                          const nsRuleData* aRuleData,
                           const nsStyleFont* aFont,
                           const nsStyleFont* aParentFont,
                           nscoord* aSize,
@@ -641,7 +640,7 @@ protected:
                       nsStyleContext* aContext,
                       nscoord aMinFontSize,
                       PRUint8 aGenericFontID,
-                      const nsRuleDataFont& aFontData,
+                      const nsRuleData* aRuleData,
                       const nsStyleFont* aParentFont,
                       nsStyleFont* aFont,
                       PRBool aStartStruct,
