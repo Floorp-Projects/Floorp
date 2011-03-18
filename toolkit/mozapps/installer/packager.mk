@@ -179,6 +179,7 @@ DIST_FILES = \
   blocklist.xml \
   chrome.manifest \
   update.locale \
+  removed-files \
   $(NULL)
 
 NON_DIST_FILES = \
