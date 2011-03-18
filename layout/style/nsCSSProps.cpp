@@ -2085,6 +2085,8 @@ nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shortha
                                 stylestructoffset_, animtype_)                \
   ePropertyIndex_for_##id_,
 
+// The order of these enums must match the g*Flags arrays in nsRuleNode.cpp.
+
 enum FontCheckCounter {
   #define CSS_PROP_FONT ENUM_DATA_FOR_PROPERTY
   #include "nsCSSPropList.h"
