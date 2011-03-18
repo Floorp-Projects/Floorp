@@ -2590,11 +2590,6 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
     /* Treat our |this| object as the first argument; see ECMA 15.4.4.4. */
     Value *p = JS_ARGV(cx, vp) - 1;
 
-    /* Get the type object to use for the result. */
-    TypeObject *ntype = cx->getTypeCallerInitObject(true);
-    if (!ntype)
-        return false;
-
     /* Create a new Array object and root it using *vp. */
     JSObject *aobj = ToObject(cx, &vp[1]);
     if (!aobj)
@@ -2609,10 +2604,12 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
         nobj = NewDenseCopiedArray(cx, initlen, vector);
         if (!nobj)
             return JS_FALSE;
-        nobj->setType(ntype);
-        if (!nobj->setArrayLength(cx, length))
+        if (nobj->getProto() == aobj->getProto())
+            nobj->setType(aobj->getType());
+        else if (!cx->markTypeCallerUnexpected(TYPE_UNKNOWN))
             return JS_FALSE;
-        if (!InitArrayTypes(cx, ntype, vector, initlen))
+        nobj->setType(aobj->getType());
+        if (!nobj->setArrayLength(cx, length))
             return JS_FALSE;
         if (!aobj->isPackedDenseArray() && !nobj->setDenseArrayNotPacked(cx))
             return JS_FALSE;
@@ -2625,7 +2622,8 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
         nobj = NewDenseEmptyArray(cx);
         if (!nobj)
             return JS_FALSE;
-        nobj->setType(ntype);
+        if (!cx->markTypeCallerUnexpected(TYPE_UNKNOWN))
+            return JS_FALSE;
         vp->setObject(*nobj);
         length = 0;
     }
@@ -2654,7 +2652,7 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
                         return false;
                     }
 
-                    if (!hole && !cx->addTypePropertyId(ntype, JSID_VOID, tvr.value()))
+                    if (!hole && !cx->addTypePropertyId(nobj->getType(), JSID_VOID, tvr.value()))
                         return false;
 
                     /*
@@ -2671,7 +2669,7 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
             }
         }
 
-        if (!cx->addTypePropertyId(ntype, JSID_VOID, v))
+        if (!cx->addTypePropertyId(nobj->getType(), JSID_VOID, v))
             return false;
 
         if (!SetArrayElement(cx, nobj, length, v))
@@ -3209,33 +3207,13 @@ array_TypeConcat(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
         return;
     }
 
-    /* Treat the returned array as a new allocation site. */
-    TypeObject *object = site->getInitObject(cx, true);
-    if (!object)
-        return;
-
     if (!site->forceThisTypes(cx))
         return;
 
     if (site->returnTypes) {
         if (site->isNew)
             site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        site->returnTypes->addType(cx, (jstype) object);
-    }
-
-    if (object->unknownProperties)
-        return;
-
-    /* Propagate elements of the 'this' array to the result. */
-    TypeSet *indexTypes = object->getProperty(cx, JSID_VOID, false);
-    if (!indexTypes)
-        return;
-    site->thisTypes->addGetProperty(cx, site->script, site->pc, indexTypes, JSID_VOID);
-
-    /* Ditto for all arguments to the call. */
-    for (size_t ind = 0; ind < site->argumentCount; ind++) {
-        site->argumentTypes[ind]->addGetProperty(cx, site->script, site->pc,
-                                                 indexTypes, JSID_VOID);
+        site->thisTypes->addSubset(cx, site->script, site->returnTypes);
     }
 }
 
