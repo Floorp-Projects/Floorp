@@ -67,8 +67,8 @@
   InterCaps and all hyphens ('-') must be removed.  Callers using this
   parameter must also define the CSS_PROP_DOMPROP_PREFIXED(prop) macro,
   either to be Moz ## prop or to just be prop, depending on whether they
-  want Moz prefixes or not (i.e., whether the use is for internal use or
-  external use).
+  want Moz prefixes or not (i.e., whether the use is for internal use
+  such as nsRuleData::ValueFor* or external use).
 
   -. 'flags', a bitfield containing CSS_PROPERTY_* flags.
 
