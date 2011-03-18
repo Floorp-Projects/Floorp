@@ -186,22 +186,22 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Font)) {
-    nsRuleDataFont& font = *(aData->mFontData);
-    
     // face: string list
-    if (font.mFamily.GetUnit() == eCSSUnit_Null) {
+    nsCSSValue* family = aData->ValueForFontFamily();
+    if (family->GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::face);
       if (value && value->Type() == nsAttrValue::eString &&
           !value->IsEmptyString()) {
-        font.mFamily.SetStringValue(value->GetStringValue(), eCSSUnit_Families);
+        family->SetStringValue(value->GetStringValue(), eCSSUnit_Families);
       }
     }
 
     // pointSize: int
-    if (font.mSize.GetUnit() == eCSSUnit_Null) {
+    nsCSSValue* fontSize = aData->ValueForFontSize();
+    if (fontSize->GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::pointSize);
       if (value && value->Type() == nsAttrValue::eInteger)
-        font.mSize.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Point);
+        fontSize->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Point);
       else {
         // size: int, enum , 
         value = aAttributes->GetAttr(nsGkAtoms::size);
@@ -215,27 +215,29 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
               size = value->GetIntegerValue();
 
             size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
-            font.mSize.SetIntValue(size, eCSSUnit_Enumerated);
+            fontSize->SetIntValue(size, eCSSUnit_Enumerated);
           }
         }
       }
     }
 
     // fontWeight: int
-    if (font.mWeight.GetUnit() == eCSSUnit_Null) {
+    nsCSSValue* fontWeight = aData->ValueForFontWeight();
+    if (fontWeight->GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::fontWeight);
       if (value && value->Type() == nsAttrValue::eInteger) // +/-
-        font.mWeight.SetIntValue(value->GetIntegerValue(), eCSSUnit_Integer);
+        fontWeight->SetIntValue(value->GetIntegerValue(), eCSSUnit_Integer);
     }
   }
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Color)) {
-    if (aData->mColorData->mColor.GetUnit() == eCSSUnit_Null &&
+    nsCSSValue* colorValue = aData->ValueForColor();
+    if (colorValue->GetUnit() == eCSSUnit_Null &&
         aData->mPresContext->UseDocumentColors()) {
       // color: color
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::color);
       nscolor color;
       if (value && value->GetColorValue(color)) {
-        aData->mColorData->mColor.SetColorValue(color);
+        colorValue->SetColorValue(color);
       }
     }
   }
@@ -246,12 +248,12 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::color);
     nscolor color;
     if (value && value->GetColorValue(color)) {
-      nsCSSValue& decoration = aData->mTextData->mDecoration;
+      nsCSSValue* decoration = aData->ValueForTextDecoration();
       PRInt32 newValue = NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL;
-      if (decoration.GetUnit() == eCSSUnit_Enumerated) {
-        newValue |= decoration.GetIntValue();
+      if (decoration->GetUnit() == eCSSUnit_Enumerated) {
+        newValue |= decoration->GetIntValue();
       }
-      decoration.SetIntValue(newValue, eCSSUnit_Enumerated);
+      decoration->SetIntValue(newValue, eCSSUnit_Enumerated);
     }
   }
 
