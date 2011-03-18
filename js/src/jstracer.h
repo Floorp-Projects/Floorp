@@ -1200,8 +1200,6 @@ class TraceRecorder
                                             bool abortIfAlwaysExits = false);
     JS_REQUIRES_STACK RecordingStatus guard(bool expected, nanojit::LIns* cond, VMSideExit* exit,
                                             bool abortIfAlwaysExits = false);
-    JS_REQUIRES_STACK nanojit::LIns* guard_xov(nanojit::LOpcode op, nanojit::LIns* d0,
-                                               nanojit::LIns* d1, VMSideExit* exit);
 
     nanojit::LIns* writeBack(nanojit::LIns* i, nanojit::LIns* base, ptrdiff_t offset,
                              bool shouldDemoteToInt32);
@@ -1277,8 +1275,8 @@ class TraceRecorder
     JS_REQUIRES_STACK void stack(int n, nanojit::LIns* i);
 
     JS_REQUIRES_STACK void guardNonNeg(nanojit::LIns* d0, nanojit::LIns* d1, VMSideExit* exit);
-    JS_REQUIRES_STACK nanojit::LIns* alu(nanojit::LOpcode op, jsdouble v0, jsdouble v1,
-                                         nanojit::LIns* s0, nanojit::LIns* s1);
+    JS_REQUIRES_STACK nanojit::LIns* tryToDemote(nanojit::LOpcode op, jsdouble v0, jsdouble v1,
+                                                 nanojit::LIns* s0, nanojit::LIns* s1);
 
     nanojit::LIns* d2i(nanojit::LIns* f, bool resultCanBeImpreciseIfFractional = false);
     nanojit::LIns* d2u(nanojit::LIns* d);
@@ -1314,7 +1312,7 @@ class TraceRecorder
                                                                 Value& rval);
     JS_REQUIRES_STACK AbortableRecordingStatus relational(nanojit::LOpcode op, bool tryBranchAfterCond);
 
-    JS_REQUIRES_STACK RecordingStatus unary(nanojit::LOpcode op);
+    JS_REQUIRES_STACK RecordingStatus unaryIntOp(nanojit::LOpcode op);
     JS_REQUIRES_STACK RecordingStatus binary(nanojit::LOpcode op);
 
     JS_REQUIRES_STACK RecordingStatus guardShape(nanojit::LIns* obj_ins, JSObject* obj,
