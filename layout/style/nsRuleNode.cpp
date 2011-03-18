@@ -81,7 +81,16 @@
 #include "mozilla/dom/Element.h"
 #include "CSSCalc.h"
 #include "nsPrintfCString.h"
+
+#if defined(_MSC_VER) || defined(__MINGW32__)
+#include <malloc.h>
+#ifdef _MSC_VER
+#define alloca _alloca
+#endif
+#endif
+#ifdef SOLARIS
 #include <alloca.h>
+#endif
 
 using namespace mozilla::dom;
 namespace css = mozilla::css;
