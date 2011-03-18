@@ -2074,3 +2074,201 @@ nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shortha
 #undef NSCSSPROPS_INNER_MACRO
 #undef CSS_PROP_DOMPROP_PREFIXED
 };
+
+
+// for nsCSSPropList.h, so we get information on things in the style
+// structs but not nsCSS*
+#define CSS_PROP_INCLUDE_NOT_CSS
+
+#define ENUM_DATA_FOR_PROPERTY(name_, id_, method_, flags_, datastruct_,     \
+                                member_, parsevariant_, kwtable_,             \
+                                stylestructoffset_, animtype_)                \
+  ePropertyIndex_for_##id_,
+
+enum FontCheckCounter {
+  #define CSS_PROP_FONT ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_FONT
+  ePropertyCount_for_Font
+};
+
+enum DisplayCheckCounter {
+  #define CSS_PROP_DISPLAY ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_DISPLAY
+  ePropertyCount_for_Display
+};
+
+enum VisibilityCheckCounter {
+  #define CSS_PROP_VISIBILITY ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_VISIBILITY
+  ePropertyCount_for_Visibility
+};
+
+enum MarginCheckCounter {
+  #define CSS_PROP_MARGIN ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_MARGIN
+  ePropertyCount_for_Margin
+};
+
+enum BorderCheckCounter {
+  #define CSS_PROP_BORDER ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_BORDER
+  ePropertyCount_for_Border
+};
+
+enum PaddingCheckCounter {
+  #define CSS_PROP_PADDING ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_PADDING
+  ePropertyCount_for_Padding
+};
+
+enum OutlineCheckCounter {
+  #define CSS_PROP_OUTLINE ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_OUTLINE
+  ePropertyCount_for_Outline
+};
+
+enum ListCheckCounter {
+  #define CSS_PROP_LIST ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_LIST
+  ePropertyCount_for_List
+};
+
+enum ColorCheckCounter {
+  #define CSS_PROP_COLOR ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_COLOR
+  ePropertyCount_for_Color
+};
+
+enum BackgroundCheckCounter {
+  #define CSS_PROP_BACKGROUND ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_BACKGROUND
+  ePropertyCount_for_Background
+};
+
+enum PositionCheckCounter {
+  #define CSS_PROP_POSITION ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_POSITION
+  ePropertyCount_for_Position
+};
+
+enum TableCheckCounter {
+  #define CSS_PROP_TABLE ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_TABLE
+  ePropertyCount_for_Table
+};
+
+enum TableBorderCheckCounter {
+  #define CSS_PROP_TABLEBORDER ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_TABLEBORDER
+  ePropertyCount_for_TableBorder
+};
+
+enum ContentCheckCounter {
+  #define CSS_PROP_CONTENT ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_CONTENT
+  ePropertyCount_for_Content
+};
+
+enum QuotesCheckCounter {
+  #define CSS_PROP_QUOTES ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_QUOTES
+  ePropertyCount_for_Quotes
+};
+
+enum TextCheckCounter {
+  #define CSS_PROP_TEXT ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_TEXT
+  ePropertyCount_for_Text
+};
+
+enum TextResetCheckCounter {
+  #define CSS_PROP_TEXTRESET ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_TEXTRESET
+  ePropertyCount_for_TextReset
+};
+
+enum UserInterfaceCheckCounter {
+  #define CSS_PROP_USERINTERFACE ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_USERINTERFACE
+  ePropertyCount_for_UserInterface
+};
+
+enum UIResetCheckCounter {
+  #define CSS_PROP_UIRESET ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_UIRESET
+  ePropertyCount_for_UIReset
+};
+
+enum XULCheckCounter {
+  #define CSS_PROP_XUL ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_XUL
+  ePropertyCount_for_XUL
+};
+
+enum SVGCheckCounter {
+  #define CSS_PROP_SVG ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_SVG
+  ePropertyCount_for_SVG
+};
+
+enum SVGResetCheckCounter {
+  #define CSS_PROP_SVGRESET ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_SVGRESET
+  ePropertyCount_for_SVGReset
+};
+
+enum ColumnCheckCounter {
+  #define CSS_PROP_COLUMN ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_COLUMN
+  ePropertyCount_for_Column
+};
+
+#undef CSS_PROP_INCLUDE_NOT_CSS
+#undef ENUM_DATA_FOR_PROPERTY
+
+/* static */ const size_t
+nsCSSProps::gPropertyCountInStruct[nsStyleStructID_Length] = {
+  #define STYLE_STRUCT(name, checkdata_cb, ctor_args) \
+    ePropertyCount_for_##name,
+  #include "nsStyleStructList.h"
+  #undef STYLE_STRUCT
+};
+
+/* static */ const size_t
+nsCSSProps::gPropertyIndexInStruct[eCSSProperty_COUNT_no_shorthands] = {
+
+  #define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, datastruct_,      \
+                               member_, parsevariant_, kwtable_)              \
+      size_t(-1),
+  #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,         \
+                   parsevariant_, kwtable_, stylestruct_,                     \
+                   stylestructoffset_, animtype_)                             \
+    ePropertyIndex_for_##id_,
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP
+  #undef CSS_PROP_BACKENDONLY
+
+};
