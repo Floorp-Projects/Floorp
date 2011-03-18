@@ -43,9 +43,6 @@
 #include "nsRuleData.h"
 #include "nsCSSStruct.h"
 
-// XXX wrap, variable, cols, tabstop
-
-
 class nsHTMLPreElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLPreElement
 {
@@ -138,14 +135,6 @@ static void
 MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Font)) {
-    // variable
-    nsCSSValue* family = aData->ValueForFontFamily();
-    if (aAttributes->GetAttr(nsGkAtoms::variable) &&
-        family->GetUnit() == eCSSUnit_Null) {
-      family->SetStringValue(NS_LITERAL_STRING("serif"), eCSSUnit_Families);
-    }
-  }
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)) {
     nsCSSValue* width = aData->ValueForWidth();
     if (width->GetUnit() == eCSSUnit_Null) {
@@ -189,7 +178,6 @@ NS_IMETHODIMP_(PRBool)
 nsHTMLPreElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { &nsGkAtoms::variable },
     { &nsGkAtoms::wrap },
     { &nsGkAtoms::cols },
     { &nsGkAtoms::width },
