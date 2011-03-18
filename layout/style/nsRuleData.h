@@ -111,6 +111,48 @@ struct nsRuleData
    * mSIDs.
    */
   nsCSSValue* ValueFor(nsCSSProperty aProperty);
+
+  /**
+   * Getters like ValueFor(aProperty), but for each property by name
+   * (ValueForBackgroundColor, etc.), and more efficient than ValueFor.
+   * These use the names used for the property on DOM interfaces (the
+   * 'method' field in nsCSSPropList.h).
+   *
+   * Like ValueFor(), the caller must check that the property is within
+   * mSIDs.
+   */
+  #define CSS_PROP_INCLUDE_NOT_CSS
+  #define CSS_PROP_DOMPROP_PREFIXED(prop_) prop_
+  #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,        \
+                   parsevariant_, kwtable_, stylestruct_, stylestructoffset_,\
+                   animtype_)                                                \
+    nsCSSValue* ValueFor##method_() {                                        \
+      NS_ABORT_IF_FALSE(mSIDs & NS_STYLE_INHERIT_BIT(stylestruct_),          \
+                        "Calling nsRuleData::ValueFor" #method_ " without "  \
+                        "NS_STYLE_INHERIT_BIT(" #stylestruct_ " in mSIDs."); \
+      nsRuleData##datastruct_ *cssstruct = m##datastruct_##Data;             \
+      NS_ABORT_IF_FALSE(cssstruct, "nsRuleNode::Get" #stylestruct_ "Data "   \
+                                   "set up nsRuleData incorrectly");         \
+      return &cssstruct->member_;                                            \
+    }                                                                        \
+    const nsCSSValue* ValueFor##method_() const {                            \
+      NS_ABORT_IF_FALSE(mSIDs & NS_STYLE_INHERIT_BIT(stylestruct_),          \
+                        "Calling nsRuleData::ValueFor" #method_ " without "  \
+                        "NS_STYLE_INHERIT_BIT(" #stylestruct_ " in mSIDs."); \
+      const nsRuleData##datastruct_ *cssstruct = m##datastruct_##Data;       \
+      NS_ABORT_IF_FALSE(cssstruct, "nsRuleNode::Get" #stylestruct_ "Data "   \
+                                   "set up nsRuleData incorrectly");         \
+      return &cssstruct->member_;                                            \
+    }
+  #define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, datastruct_,     \
+                               member_, parsevariant_, kwtable_)             \
+    /* empty; backend-only structs are not in nsRuleData  */
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_INCLUDE_NOT_CSS
+  #undef CSS_PROP
+  #undef CSS_PROP_DOMPROP_PREFIXED
+  #undef CSS_PROP_BACKENDONLY
+
 };
 
 #endif
