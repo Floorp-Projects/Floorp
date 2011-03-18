@@ -17,7 +17,7 @@ var pairs = [
   ["1.1.1.1", "http://1.1.1.1/"],
   ["ftp://example", "ftp://example/"],
   ["ftp.example.bar", "ftp://ftp.example.bar/"],
-  ["ex ample", Services.search.originalDefaultEngine.getSubmission("ex ample").uri.spec],
+  ["ex ample", Services.search.originalDefaultEngine.getSubmission("ex ample", "application/x-moz-keywordsearch").uri.spec],
 ];
 
 function testNext() {
