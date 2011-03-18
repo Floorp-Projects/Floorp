@@ -389,13 +389,14 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
   }
 
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Color)) {
-    if (aData->mColorData->mColor.GetUnit() == eCSSUnit_Null &&
+    nsCSSValue *colorValue = aData->ValueForColor();
+    if (colorValue->GetUnit() == eCSSUnit_Null &&
         aData->mPresContext->UseDocumentColors()) {
       // color: color
       nscolor color;
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::text);
       if (value && value->GetColorValue(color))
-        aData->mColorData->mColor.SetColorValue(color);
+        colorValue->SetColorValue(color);
     }
   }
 
