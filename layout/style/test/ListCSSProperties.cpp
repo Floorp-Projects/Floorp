@@ -118,6 +118,9 @@ const char* gShorthandPropertiesWithDOMProp[] = {
 const char *gInaccessibleProperties[] = {
     // Don't print the properties that aren't accepted by the parser, per
     // CSSParserImpl::ParseProperty
+    "-x-cols",
+    "-x-lang",
+    "-x-span",
     "-x-system-font",
     "border-end-color-value",
     "border-end-style-value",
