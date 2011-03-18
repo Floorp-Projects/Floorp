@@ -2007,17 +2007,13 @@ PRBool
 CSSParserImpl::ParseMediaRule(RuleAppendFunc aAppendFunc, void* aData)
 {
   nsRefPtr<nsMediaList> media = new nsMediaList();
-  if (!media) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return PR_FALSE;
-  }
 
   if (GatherMedia(media, PR_TRUE)) {
     // XXXbz this could use better error reporting throughout the method
-    nsRefPtr<nsCSSMediaRule> rule(new nsCSSMediaRule());
+    nsRefPtr<css::MediaRule> rule = new css::MediaRule();
     // Append first, so when we do SetMedia() the rule
     // knows what its stylesheet is.
-    if (rule && ParseGroupRule(rule, aAppendFunc, aData)) {
+    if (ParseGroupRule(rule, aAppendFunc, aData)) {
       rule->SetMedia(media);
       return PR_TRUE;
     }
@@ -2032,8 +2028,8 @@ CSSParserImpl::ParseMediaRule(RuleAppendFunc aAppendFunc, void* aData)
 PRBool
 CSSParserImpl::ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aData)
 {
-  nsCSSDocumentRule::URL *urls = nsnull;
-  nsCSSDocumentRule::URL **next = &urls;
+  css::DocumentRule::URL *urls = nsnull;
+  css::DocumentRule::URL **next = &urls;
   do {
     if (!GetToken(PR_TRUE) ||
         !(eCSSToken_URL == mToken.mType ||
@@ -2044,21 +2040,16 @@ CSSParserImpl::ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aData)
       delete urls;
       return PR_FALSE;
     }
-    nsCSSDocumentRule::URL *cur = *next = new nsCSSDocumentRule::URL;
-    if (!cur) {
-      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-      delete urls;
-      return PR_FALSE;
-    }
+    css::DocumentRule::URL *cur = *next = new css::DocumentRule::URL;
     next = &cur->next;
     if (mToken.mType == eCSSToken_URL) {
-      cur->func = nsCSSDocumentRule::eURL;
+      cur->func = css::DocumentRule::eURL;
       CopyUTF16toUTF8(mToken.mIdent, cur->url);
     } else {
       if (mToken.mIdent.LowerCaseEqualsLiteral("url-prefix")) {
-        cur->func = nsCSSDocumentRule::eURLPrefix;
+        cur->func = css::DocumentRule::eURLPrefix;
       } else if (mToken.mIdent.LowerCaseEqualsLiteral("domain")) {
-        cur->func = nsCSSDocumentRule::eDomain;
+        cur->func = css::DocumentRule::eDomain;
       }
 
       nsAutoString url;
@@ -2075,12 +2066,7 @@ CSSParserImpl::ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aData)
     }
   } while (ExpectSymbol(',', PR_TRUE));
 
-  nsRefPtr<nsCSSDocumentRule> rule(new nsCSSDocumentRule());
-  if (!rule) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    delete urls;
-    return PR_FALSE;
-  }
+  nsRefPtr<css::DocumentRule> rule = new css::DocumentRule();
   rule->SetURLs(urls);
 
   return ParseGroupRule(rule, aAppendFunc, aData);

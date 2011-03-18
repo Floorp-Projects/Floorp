@@ -57,7 +57,7 @@ namespace css {
 class GroupRuleRuleList;
 
 // inherits from nsCSSRule so it can be shared between
-// nsCSSMediaRule and nsCSSDocumentRule
+// MediaRule and DocumentRule
 class GroupRule : public nsCSSRule, public nsICSSRule
 {
 protected:

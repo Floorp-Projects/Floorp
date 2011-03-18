@@ -811,17 +811,15 @@ GroupRule::DeleteRule(PRUint32 aIndex)
   return mSheet->DeleteRuleFromGroup(this, aIndex);
 }
 
-} // namespace css
-} // namespace mozilla
 
 // -------------------------------------------
 // nsICSSMediaRule
 //
-nsCSSMediaRule::nsCSSMediaRule()
+MediaRule::MediaRule()
 {
 }
 
-nsCSSMediaRule::nsCSSMediaRule(const nsCSSMediaRule& aCopy)
+MediaRule::MediaRule(const MediaRule& aCopy)
   : GroupRule(aCopy)
 {
   if (aCopy.mMedia) {
@@ -833,20 +831,18 @@ nsCSSMediaRule::nsCSSMediaRule(const nsCSSMediaRule& aCopy)
   }
 }
 
-nsCSSMediaRule::~nsCSSMediaRule()
+MediaRule::~MediaRule()
 {
   if (mMedia) {
     mMedia->SetStyleSheet(nsnull);
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(nsCSSMediaRule, GroupRule)
-NS_IMPL_RELEASE_INHERITED(nsCSSMediaRule, GroupRule)
+NS_IMPL_ADDREF_INHERITED(MediaRule, GroupRule)
+NS_IMPL_RELEASE_INHERITED(MediaRule, GroupRule)
 
-DOMCI_DATA(CSSMediaRule, nsCSSMediaRule)
-
-// QueryInterface implementation for nsCSSMediaRule
-NS_INTERFACE_MAP_BEGIN(nsCSSMediaRule)
+// QueryInterface implementation for MediaRule
+NS_INTERFACE_MAP_BEGIN(MediaRule)
   NS_INTERFACE_MAP_ENTRY(nsICSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
@@ -856,7 +852,7 @@ NS_INTERFACE_MAP_BEGIN(nsCSSMediaRule)
 NS_INTERFACE_MAP_END
 
 /* virtual */ void
-nsCSSMediaRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
+MediaRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   if (mMedia) {
     // Set to null so it knows it's leaving one sheet and joining another.
@@ -869,7 +865,7 @@ nsCSSMediaRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
 
 #ifdef DEBUG
 /* virtual */ void
-nsCSSMediaRule::List(FILE* out, PRInt32 aIndent) const
+MediaRule::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 indent = aIndent; --indent >= 0; ) fputs("  ", out);
 
@@ -888,20 +884,20 @@ nsCSSMediaRule::List(FILE* out, PRInt32 aIndent) const
 #endif
 
 /* virtual */ PRInt32
-nsCSSMediaRule::GetType() const
+MediaRule::GetType() const
 {
   return nsICSSRule::MEDIA_RULE;
 }
 
 /* virtual */ already_AddRefed<nsICSSRule>
-nsCSSMediaRule::Clone() const
+MediaRule::Clone() const
 {
-  nsCOMPtr<nsICSSRule> clone = new nsCSSMediaRule(*this);
+  nsCOMPtr<nsICSSRule> clone = new MediaRule(*this);
   return clone.forget();
 }
 
 nsresult
-nsCSSMediaRule::SetMedia(nsMediaList* aMedia)
+MediaRule::SetMedia(nsMediaList* aMedia)
 {
   mMedia = aMedia;
   if (aMedia)
@@ -911,14 +907,14 @@ nsCSSMediaRule::SetMedia(nsMediaList* aMedia)
 
 // nsIDOMCSSRule methods
 NS_IMETHODIMP
-nsCSSMediaRule::GetType(PRUint16* aType)
+MediaRule::GetType(PRUint16* aType)
 {
   *aType = nsIDOMCSSRule::MEDIA_RULE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCSSMediaRule::GetCssText(nsAString& aCssText)
+MediaRule::GetCssText(nsAString& aCssText)
 {
   aCssText.AssignLiteral("@media ");
   // get all the media
@@ -932,26 +928,26 @@ nsCSSMediaRule::GetCssText(nsAString& aCssText)
 }
 
 NS_IMETHODIMP
-nsCSSMediaRule::SetCssText(const nsAString& aCssText)
+MediaRule::SetCssText(const nsAString& aCssText)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsCSSMediaRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
+MediaRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
   return GroupRule::GetParentStyleSheet(aSheet);
 }
 
 NS_IMETHODIMP
-nsCSSMediaRule::GetParentRule(nsIDOMCSSRule** aParentRule)
+MediaRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   return GroupRule::GetParentRule(aParentRule);
 }
 
 // nsIDOMCSSMediaRule methods
 NS_IMETHODIMP
-nsCSSMediaRule::GetMedia(nsIDOMMediaList* *aMedia)
+MediaRule::GetMedia(nsIDOMMediaList* *aMedia)
 {
   NS_ENSURE_ARG_POINTER(aMedia);
   NS_IF_ADDREF(*aMedia = mMedia);
@@ -959,26 +955,26 @@ nsCSSMediaRule::GetMedia(nsIDOMMediaList* *aMedia)
 }
 
 NS_IMETHODIMP
-nsCSSMediaRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
+MediaRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
 {
   return GroupRule::GetCssRules(aRuleList);
 }
 
 NS_IMETHODIMP
-nsCSSMediaRule::InsertRule(const nsAString & aRule, PRUint32 aIndex, PRUint32* _retval)
+MediaRule::InsertRule(const nsAString & aRule, PRUint32 aIndex, PRUint32* _retval)
 {
   return GroupRule::InsertRule(aRule, aIndex, _retval);
 }
 
 NS_IMETHODIMP
-nsCSSMediaRule::DeleteRule(PRUint32 aIndex)
+MediaRule::DeleteRule(PRUint32 aIndex)
 {
   return GroupRule::DeleteRule(aIndex);
 }
 
 // GroupRule interface
 NS_IMETHODIMP_(PRBool)
-nsCSSMediaRule::UseForPresentation(nsPresContext* aPresContext,
+MediaRule::UseForPresentation(nsPresContext* aPresContext,
                                    nsMediaQueryResultCacheKey& aKey)
 {
   if (mMedia) {
@@ -987,28 +983,34 @@ nsCSSMediaRule::UseForPresentation(nsPresContext* aPresContext,
   return PR_TRUE;
 }
 
+} // namespace css
+} // namespace mozilla
 
-nsCSSDocumentRule::nsCSSDocumentRule(void)
+// Must be outside namespace
+DOMCI_DATA(CSSMediaRule, css::MediaRule)
+
+namespace mozilla {
+namespace css {
+
+DocumentRule::DocumentRule()
 {
 }
 
-nsCSSDocumentRule::nsCSSDocumentRule(const nsCSSDocumentRule& aCopy)
+DocumentRule::DocumentRule(const DocumentRule& aCopy)
   : GroupRule(aCopy)
   , mURLs(new URL(*aCopy.mURLs))
 {
 }
 
-nsCSSDocumentRule::~nsCSSDocumentRule(void)
+DocumentRule::~DocumentRule()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsCSSDocumentRule, GroupRule)
-NS_IMPL_RELEASE_INHERITED(nsCSSDocumentRule, GroupRule)
+NS_IMPL_ADDREF_INHERITED(DocumentRule, GroupRule)
+NS_IMPL_RELEASE_INHERITED(DocumentRule, GroupRule)
 
-DOMCI_DATA(CSSMozDocumentRule, nsCSSDocumentRule)
-
-// QueryInterface implementation for nsCSSDocumentRule
-NS_INTERFACE_MAP_BEGIN(nsCSSDocumentRule)
+// QueryInterface implementation for DocumentRule
+NS_INTERFACE_MAP_BEGIN(DocumentRule)
   NS_INTERFACE_MAP_ENTRY(nsICSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
@@ -1019,7 +1021,7 @@ NS_INTERFACE_MAP_END
 
 #ifdef DEBUG
 /* virtual */ void
-nsCSSDocumentRule::List(FILE* out, PRInt32 aIndent) const
+DocumentRule::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 indent = aIndent; --indent >= 0; ) fputs("  ", out);
 
@@ -1050,21 +1052,21 @@ nsCSSDocumentRule::List(FILE* out, PRInt32 aIndent) const
 #endif
 
 /* virtual */ PRInt32
-nsCSSDocumentRule::GetType() const
+DocumentRule::GetType() const
 {
   return nsICSSRule::DOCUMENT_RULE;
 }
 
 /* virtual */ already_AddRefed<nsICSSRule>
-nsCSSDocumentRule::Clone() const
+DocumentRule::Clone() const
 {
-  nsCOMPtr<nsICSSRule> clone = new nsCSSDocumentRule(*this);
+  nsCOMPtr<nsICSSRule> clone = new DocumentRule(*this);
   return clone.forget();
 }
 
 // nsIDOMCSSRule methods
 NS_IMETHODIMP
-nsCSSDocumentRule::GetType(PRUint16* aType)
+DocumentRule::GetType(PRUint16* aType)
 {
   // XXX What should really happen here?
   *aType = nsIDOMCSSRule::UNKNOWN_RULE;
@@ -1072,7 +1074,7 @@ nsCSSDocumentRule::GetType(PRUint16* aType)
 }
 
 NS_IMETHODIMP
-nsCSSDocumentRule::GetCssText(nsAString& aCssText)
+DocumentRule::GetCssText(nsAString& aCssText)
 {
   aCssText.AssignLiteral("@-moz-document ");
   for (URL *url = mURLs; url; url = url->next) {
@@ -1097,44 +1099,44 @@ nsCSSDocumentRule::GetCssText(nsAString& aCssText)
 }
 
 NS_IMETHODIMP
-nsCSSDocumentRule::SetCssText(const nsAString& aCssText)
+DocumentRule::SetCssText(const nsAString& aCssText)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsCSSDocumentRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
+DocumentRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
   return GroupRule::GetParentStyleSheet(aSheet);
 }
 
 NS_IMETHODIMP
-nsCSSDocumentRule::GetParentRule(nsIDOMCSSRule** aParentRule)
+DocumentRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   return GroupRule::GetParentRule(aParentRule);
 }
 
 NS_IMETHODIMP
-nsCSSDocumentRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
+DocumentRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
 {
   return GroupRule::GetCssRules(aRuleList);
 }
 
 NS_IMETHODIMP
-nsCSSDocumentRule::InsertRule(const nsAString & aRule, PRUint32 aIndex, PRUint32* _retval)
+DocumentRule::InsertRule(const nsAString & aRule, PRUint32 aIndex, PRUint32* _retval)
 {
   return GroupRule::InsertRule(aRule, aIndex, _retval);
 }
 
 NS_IMETHODIMP
-nsCSSDocumentRule::DeleteRule(PRUint32 aIndex)
+DocumentRule::DeleteRule(PRUint32 aIndex)
 {
   return GroupRule::DeleteRule(aIndex);
 }
 
 // GroupRule interface
 NS_IMETHODIMP_(PRBool)
-nsCSSDocumentRule::UseForPresentation(nsPresContext* aPresContext,
+DocumentRule::UseForPresentation(nsPresContext* aPresContext,
                                       nsMediaQueryResultCacheKey& aKey)
 {
   nsIURI *docURI = aPresContext->Document()->GetDocumentURI();
@@ -1172,10 +1174,16 @@ nsCSSDocumentRule::UseForPresentation(nsPresContext* aPresContext,
   return PR_FALSE;
 }
 
-nsCSSDocumentRule::URL::~URL()
+DocumentRule::URL::~URL()
 {
-  NS_CSS_DELETE_LIST_MEMBER(nsCSSDocumentRule::URL, this, next);
+  NS_CSS_DELETE_LIST_MEMBER(DocumentRule::URL, this, next);
 }
+
+} // namespace css
+} // namespace mozilla
+
+// Must be outside namespace
+DOMCI_DATA(CSSMozDocumentRule, css::DocumentRule)
 
 // -------------------------------------------
 // NameSpaceRule

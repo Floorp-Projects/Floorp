@@ -55,13 +55,18 @@
 
 class nsMediaList;
 
-class NS_FINAL_CLASS nsCSSMediaRule : public mozilla::css::GroupRule,
-                                      public nsIDOMCSSMediaRule
+namespace mozilla {
+namespace css {
+
+class NS_FINAL_CLASS MediaRule : public GroupRule,
+                                 public nsIDOMCSSMediaRule
 {
 public:
-  nsCSSMediaRule();
-  nsCSSMediaRule(const nsCSSMediaRule& aCopy);
-  virtual ~nsCSSMediaRule();
+  MediaRule();
+private:
+  MediaRule(const MediaRule& aCopy);
+  ~MediaRule();
+public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -97,13 +102,15 @@ protected:
   nsRefPtr<nsMediaList> mMedia;
 };
 
-class NS_FINAL_CLASS nsCSSDocumentRule : public mozilla::css::GroupRule,
-                                         public nsIDOMCSSMozDocumentRule
+class NS_FINAL_CLASS DocumentRule : public GroupRule,
+                                    public nsIDOMCSSMozDocumentRule
 {
 public:
-  nsCSSDocumentRule(void);
-  nsCSSDocumentRule(const nsCSSDocumentRule& aCopy);
-  virtual ~nsCSSDocumentRule(void);
+  DocumentRule();
+private:
+  DocumentRule(const DocumentRule& aCopy);
+  ~DocumentRule();
+public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -157,6 +164,9 @@ public:
 protected:
   nsAutoPtr<URL> mURLs; // linked list of |struct URL| above.
 };
+
+} // namespace css
+} // namespace mozilla
 
 // A nsCSSFontFaceStyleDecl is always embedded in a nsCSSFontFaceRule.
 class nsCSSFontFaceRule;
