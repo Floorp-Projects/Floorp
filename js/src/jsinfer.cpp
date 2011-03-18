@@ -1021,19 +1021,24 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, jstype type)
         return;
     }
 
-    /* Get the function being invoked. */
-    TypeFunction *function = NULL;
-    if (TypeIsObject(type)) {
-        TypeObject *object = (TypeObject*) type;
-        if (object->isFunction && !object->unknownProperties) {
-            function = (TypeFunction*) object;
-        } else {
-            /* Unknown return value for calls on non-function objects. */
-            cx->compartment->types.monitorBytecode(cx, script, pc - script->code);
-        }
-    }
-    if (!function)
+    if (!TypeIsObject(type))
         return;
+
+    /* Get the function being invoked. */
+    TypeObject *object = (TypeObject*) type;
+    if (object->unknownProperties) {
+        /* Unknown return value for calls on generic objects. */
+        cx->compartment->types.monitorBytecode(cx, script, pc - script->code);
+        return;
+    }
+    if (!object->isFunction) {
+        /*
+         * If a call on a non-function actually occurs, the call's result
+         * should be marked as unknown.
+         */
+        return;
+    }
+    TypeFunction *function = object->asFunction();
 
     if (!function->script) {
         JS_ASSERT(function->handler);
