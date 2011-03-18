@@ -1605,48 +1605,6 @@ ValueAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
                            (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
-inline nsCSSRect*
-RectAtOffset(nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
-{
-  return reinterpret_cast<nsCSSRect*>
-                         (reinterpret_cast<char*>(&aRuleDataStruct) + aOffset);
-}
-
-inline const nsCSSRect*
-RectAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
-{
-  return reinterpret_cast<const nsCSSRect*>
-                         (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
-}
-
-inline nsCSSValueList*&
-ValueListAtOffset(nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
-{
-  return * reinterpret_cast<nsCSSValueList**>
-                           (reinterpret_cast<char*>(&aRuleDataStruct) + aOffset);
-}
-
-inline const nsCSSValueList*
-ValueListAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
-{
-  return * reinterpret_cast<const nsCSSValueList*const*>
-                           (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
-}
-
-inline nsCSSValuePairList*&
-ValuePairListAtOffset(nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
-{
-  return * reinterpret_cast<nsCSSValuePairList**>
-                           (reinterpret_cast<char*>(&aRuleDataStruct) + aOffset);
-}
-
-inline const nsCSSValuePairList*
-ValuePairListAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
-{
-  return * reinterpret_cast<const nsCSSValuePairList*const*>
-                           (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
-}
-
 #if defined(MOZ_MATHML) && defined(DEBUG)
 static PRBool
 AreAllMathMLPropertiesUndefined(const nsCSSFont& aRuleData)
