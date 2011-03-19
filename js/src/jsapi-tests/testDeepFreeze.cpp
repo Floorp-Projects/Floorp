@@ -19,7 +19,7 @@ BEGIN_TEST(testDeepFreeze_deep)
 {
     jsval a, o;
     EXEC("var a = {}, o = a;\n"
-         "for (var i = 0; i < 10000; i++)\n"
+         "for (var i = 0; i < 50000; i++)\n"
          "    a = {x: a, y: a};\n");
     EVAL("a", &a);
     EVAL("o", &o);
