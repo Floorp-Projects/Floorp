@@ -43,6 +43,15 @@ var expected =
 assertEq(JSON.stringify(obj, null, 3), expected);
 assertEq(JSON.stringify(obj, null, "   "), expected);
 
+obj = [1, 2, 3];
+
+String.prototype.toString = function() { return "--"; };
+
+assertEq(JSON.stringify(obj, null, new String("  ")), "[\n--1,\n--2,\n--3\n]");
+
+Number.prototype.valueOf = function() { return 0; };
+
+assertEq(JSON.stringify(obj, null, new Number(3)), "[1,2,3]");
 
 /******************************************************************************/
 
