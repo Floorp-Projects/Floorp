@@ -174,12 +174,11 @@ public:
     virtual void newType(JSContext *cx, TypeSet *source, jstype type) = 0;
 
     /*
-     * Mark the object containing the set this constraint is listening to
-     * as not a packed array and, possibly, not a dense array.
-     * This is only used for constraints attached to the index type set
-     * (JSID_VOID) of a TypeObject.
+     * For constraints attached to the index type set of an object (JSID_VOID),
+     * mark a change in one of the object's dynamic properties (isDenseArray,
+     * isPackedArray, or unknownProperties).
      */
-    virtual void arrayNotPacked(JSContext *cx, bool notDense) {}
+    virtual void newObjectState(JSContext *cx) {}
 
     /*
      * Whether this is an input type constraint condensed from the original
@@ -208,6 +207,8 @@ public:
  * DENSE_ARRAY          |                 |
  *      \____________   |   _____________/
  *                   \  |  /
+ *             NO_SPECIAL_EQUALITY
+ *                      |
  *                   UNKNOWN
  */
 enum ObjectKind {
@@ -216,7 +217,8 @@ enum ObjectKind {
     OBJECT_PACKED_ARRAY,
     OBJECT_DENSE_ARRAY,
     OBJECT_SCRIPTED_FUNCTION,
-    OBJECT_NATIVE_FUNCTION
+    OBJECT_NATIVE_FUNCTION,
+    OBJECT_NO_SPECIAL_EQUALITY
 };
 
 /* Coarse flags for the contents of a type set. */
@@ -311,6 +313,9 @@ struct TypeSet
 
     /* Get information about the kinds of objects in this type set. */
     ObjectKind getKnownObjectKind(JSContext *cx, JSScript *script);
+
+    /* Whether any objects in this type set have unknown properties. */
+    bool hasUnknownProperties(JSContext *cx, JSScript *script);
 
     /* Get whether this type set is non-empty. */
     bool knownNonEmpty(JSContext *cx, JSScript *script);
@@ -429,6 +434,9 @@ struct TypeObject
 
     /* Whether all objects this represents are packed arrays (implies isDenseArray). */
     bool isPackedArray;
+
+    /* Whether any objects this represents have an equality hook. */
+    bool hasSpecialEquality;
 
     TypeObject() {}
 

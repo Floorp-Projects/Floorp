@@ -543,7 +543,7 @@ public:
     {}
 
     void newType(JSContext *cx, TypeSet *source, jstype type);
-    void arrayNotPacked(JSContext *cx, bool notDense);
+    void newObjectState(JSContext *cx);
 
     bool condensed() { return true; }
 };
@@ -1220,7 +1220,7 @@ TypeConstraintCondensed::newType(JSContext *cx, TypeSet *source, jstype type)
 }
 
 void
-TypeConstraintCondensed::arrayNotPacked(JSContext *cx, bool notDense)
+TypeConstraintCondensed::newObjectState(JSContext *cx)
 {
     if (script->types)
         return;
@@ -1385,7 +1385,7 @@ CombineObjectKind(TypeObject *object, ObjectKind kind)
      * with one another, as they can be freely exchanged in type sets to handle
      * objects whose __proto__ has been changed.
      */
-    if (object->unknownProperties)
+    if (object->unknownProperties || object->hasSpecialEquality || kind == OBJECT_UNKNOWN)
         return OBJECT_UNKNOWN;
 
     ObjectKind nkind;
@@ -1396,10 +1396,7 @@ CombineObjectKind(TypeObject *object, ObjectKind kind)
     else if (object->isDenseArray)
         nkind = OBJECT_DENSE_ARRAY;
     else
-        nkind = OBJECT_UNKNOWN;
-
-    if (kind == OBJECT_UNKNOWN || nkind == OBJECT_UNKNOWN)
-        return OBJECT_UNKNOWN;
+        nkind = OBJECT_NO_SPECIAL_EQUALITY;
 
     if (kind == nkind || kind == OBJECT_NONE)
         return nkind;
@@ -1409,42 +1406,34 @@ CombineObjectKind(TypeObject *object, ObjectKind kind)
         return OBJECT_DENSE_ARRAY;
     }
 
-    return OBJECT_UNKNOWN;
+    return OBJECT_NO_SPECIAL_EQUALITY;
 }
 
-/* Constraint which triggers recompilation if an array becomes not-packed or not-dense. */
-class TypeConstraintFreezeArray : public TypeConstraint
+/* Constraint which triggers recompilation if an object changes state. */
+class TypeConstraintFreezeObjectKind : public TypeConstraint
 {
 public:
+    TypeObject *object;
+
     /*
-     * Array kind being specialized on by the FreezeObjectConstraint.  This may have
-     * become OBJECT_UNKNOWN due to subsequent type changes and recompilation.
+     * Kind being specialized by the parent FreezeObjectConstraint. This may
+     * have already changed since this constraint was created.
      */
     ObjectKind *pkind;
 
-    TypeConstraintFreezeArray(ObjectKind *pkind, JSScript *script)
-        : TypeConstraint("freezeArray", script), pkind(pkind)
-    {
-        JS_ASSERT(*pkind == OBJECT_PACKED_ARRAY || *pkind == OBJECT_DENSE_ARRAY);
-    }
+    TypeConstraintFreezeObjectKind(TypeObject *object, ObjectKind *pkind, JSScript *script)
+        : TypeConstraint("freezeObjectKind", script), object(object), pkind(pkind)
+    {}
 
     void newType(JSContext *cx, TypeSet *source, jstype type) {}
 
-    void arrayNotPacked(JSContext *cx, bool notDense)
+    void newObjectState(JSContext *cx)
     {
-        if (*pkind == OBJECT_UNKNOWN) {
-            /* Despecialized the kind we were interested in due to recompilation. */
-            return;
+        ObjectKind nkind = CombineObjectKind(object, *pkind);
+        if (nkind != *pkind) {
+            *pkind = nkind;
+            cx->compartment->types.addPendingRecompile(cx, script);
         }
-
-        JS_ASSERT(*pkind == OBJECT_PACKED_ARRAY || *pkind == OBJECT_DENSE_ARRAY);
-
-        if (!notDense && *pkind == OBJECT_DENSE_ARRAY) {
-            /* Marking an array as not packed, but we were already accounting for this. */
-            return;
-        }
-
-        cx->compartment->types.addPendingRecompile(cx, script);
     }
 };
 
@@ -1452,14 +1441,16 @@ public:
  * Constraint which triggers recompilation if objects of a different kind are
  * added to a type set.
  */
-class TypeConstraintFreezeObjectKind : public TypeConstraint
+class TypeConstraintFreezeObjectKindSet : public TypeConstraint
 {
 public:
     ObjectKind kind;
 
-    TypeConstraintFreezeObjectKind(ObjectKind kind, JSScript *script)
-        : TypeConstraint("freezeObjectKind", script), kind(kind)
-    {}
+    TypeConstraintFreezeObjectKindSet(ObjectKind kind, JSScript *script)
+        : TypeConstraint("freezeObjectKindSet", script), kind(kind)
+    {
+        JS_ASSERT(kind != OBJECT_NONE);
+    }
 
     void newType(JSContext *cx, TypeSet *source, jstype type)
     {
@@ -1474,28 +1465,27 @@ public:
             TypeObject *object = (TypeObject *) type;
             ObjectKind nkind = CombineObjectKind(object, kind);
 
-            if (nkind != OBJECT_UNKNOWN &&
-                (kind == OBJECT_PACKED_ARRAY || kind == OBJECT_DENSE_ARRAY)) {
-                /*
-                 * Arrays can become not-packed or not-dense dynamically.
-                 * Add a constraint on the element type of the object to pick
-                 * up such changes.
-                 */
-                TypeSet *elementTypes = object->getProperty(cx, JSID_VOID, false);
-                if (!elementTypes)
-                    return;
-                elementTypes->add(cx,
-                    ArenaNew<TypeConstraintFreezeArray>(cx->compartment->types.pool, &kind, script), false);
-            }
+            /*
+             * Add a constraint on the element type of the object to pick up
+             * changes in the object's array-ness or any unknown properties.
+             */
+            TypeSet *elementTypes = object->getProperty(cx, JSID_VOID, false);
+            if (!elementTypes)
+                return;
+            elementTypes->add(cx,
+                ArenaNew<TypeConstraintFreezeObjectKind>(cx->compartment->types.pool,
+                                                         object, &kind, script), false);
 
             if (nkind == kind) {
                 /* New object with the same kind we are interested in. */
                 return;
             }
             kind = nkind;
-
-            cx->compartment->types.addPendingRecompile(cx, script);
+        } else {
+            return;
         }
+
+        cx->compartment->types.addPendingRecompile(cx, script);
     }
 };
 
@@ -1513,6 +1503,8 @@ TypeSet::getKnownObjectKind(JSContext *cx, JSScript *script)
         }
     } else if (objectCount == 1) {
         kind = CombineObjectKind((TypeObject *) objectSet, kind);
+    } else {
+        return OBJECT_UNKNOWN;
     }
 
     if (kind != OBJECT_UNKNOWN) {
@@ -1520,7 +1512,7 @@ TypeSet::getKnownObjectKind(JSContext *cx, JSScript *script)
          * Watch for new objects of different kind, and re-traverse existing types
          * in this set to add any needed FreezeArray constraints.
          */
-        add(cx, ArenaNew<TypeConstraintFreezeObjectKind>(cx->compartment->types.pool, kind, script));
+        add(cx, ArenaNew<TypeConstraintFreezeObjectKindSet>(cx->compartment->types.pool, kind, script));
     }
 
     return kind;
@@ -2483,6 +2475,24 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
     return true;
 }
 
+static inline void
+ObjectStateChange(JSContext *cx, TypeObject *object, bool markingUnknown)
+{
+    /* All constraints listening to state changes are on the element types. */
+    TypeSet *elementTypes = object->getProperty(cx, JSID_VOID, false);
+    if (!elementTypes)
+        return;
+    if (markingUnknown) {
+        /* Mark as unknown after getting the element types, to avoid assert. */
+        object->unknownProperties = true;
+    }
+    TypeConstraint *constraint = elementTypes->constraintList;
+    while (constraint) {
+        constraint->newObjectState(cx);
+        constraint = constraint->next;
+    }
+}
+
 void
 TypeObject::markNotPacked(JSContext *cx, bool notDense)
 {
@@ -2499,15 +2509,7 @@ TypeObject::markNotPacked(JSContext *cx, bool notDense)
 
     InferSpew(ISpewOps, "%s: %s", notDense ? "NonDenseArray" : "NonPackedArray", name());
 
-    /* All constraints listening to changes in packed/dense status are on the element types. */
-    TypeSet *elementTypes = getProperty(cx, JSID_VOID, false);
-    if (!elementTypes)
-        return;
-    TypeConstraint *constraint = elementTypes->constraintList;
-    while (constraint) {
-        constraint->arrayNotPacked(cx, notDense);
-        constraint = constraint->next;
-    }
+    ObjectStateChange(cx, this, false);
 }
 
 void
@@ -2515,8 +2517,13 @@ TypeObject::markUnknown(JSContext *cx)
 {
     JS_ASSERT(!unknownProperties);
 
-    markNotPacked(cx, true);
-    unknownProperties = true;
+    InferSpew(ISpewOps, "UnknownProperties: %s", name());
+
+    isDenseArray = false;
+    isPackedArray = false;
+    hasSpecialEquality = true;
+
+    ObjectStateChange(cx, this, true);
 
     /* Mark existing instances as unknown. */
 
