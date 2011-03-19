@@ -315,9 +315,12 @@ struct TypeSet
     /* Get whether this type set is non-empty. */
     bool knownNonEmpty(JSContext *cx, JSScript *script);
 
+    /* Mark all current and future types in this set as pushed by script/pc. */
+    void pushAllTypes(JSContext *cx, JSScript *script, const jsbytecode *pc);
+
     /*
-     * Clone this type set onto target; if any new types are added to this set
-     * in the future, the script will be recompiled.
+     * Clone (possibly NULL) source onto target; if any new types are added to
+     * source in the future, the script will be recompiled.
      */
     static void Clone(JSContext *cx, JSScript *script, TypeSet *source, ClonedTypeSet *target);
 

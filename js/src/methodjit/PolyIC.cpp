@@ -1516,6 +1516,44 @@ class ScopeNameCompiler : public PICStubCompiler
 
         return true;
     }
+
+    bool updateTypes()
+    {
+        if (!cx->typeInferenceEnabled())
+            return true;
+
+        types::AutoEnterTypeInference enter(cx);
+        const Shape *shape = getprop.shape;
+
+        /* Get the type set to use. We can stop early if we know the IC has been disabled. */
+        types::TypeSet *types;
+
+        if (getprop.obj->getClass() == &js_CallClass) {
+            if (shape->getterOp() != GetCallArg && shape->getterOp() != GetCallVar)
+                return cx->compartment->types.checkPendingRecompiles(cx);
+            JSScript *newscript = getprop.obj->getCallObjCalleeFunction()->script();
+            uint16 slot = uint16(getprop.shape->shortid);
+            if (!newscript->ensureVarTypes(cx))
+                return cx->compartment->types.checkPendingRecompiles(cx);
+            if (shape->getterOp() == GetCallArg)
+                types = newscript->argTypes(slot);
+            else if (shape->getterOp() == GetCallVar)
+                types = newscript->localTypes(slot);
+        } else if (!getprop.obj->getParent()) {
+            if (getprop.obj->getType()->unknownProperties) {
+                script->typeMonitorResult(cx, f.regs.pc, types::TYPE_UNKNOWN);
+                return cx->compartment->types.checkPendingRecompiles(cx);
+            }
+            types = getprop.obj->getType()->getProperty(cx, shape->id, false);
+            if (!types)
+                return cx->compartment->types.checkPendingRecompiles(cx);
+        } else {
+            return cx->compartment->types.checkPendingRecompiles(cx);
+        }
+
+        types->pushAllTypes(cx, script, f.regs.pc);
+        return cx->compartment->types.checkPendingRecompiles(cx);
+    }
 };
  
 class BindNameCompiler : public PICStubCompiler
@@ -1981,7 +2019,9 @@ ic::Name(VMFrame &f, ic::PICInfo *pic)
         THROW();
     f.regs.sp[0] = rval;
 
-    if (rval.isUndefined() && !script->typeMonitorUndefined(f.cx, f.regs.pc))
+    if (!cc.updateTypes())
+        THROW();
+    if (!script->typeMonitorResult(f.cx, f.regs.pc, rval))
         THROW();
 }
 

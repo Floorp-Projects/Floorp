@@ -341,7 +341,7 @@ PushImplicitThis(VMFrame &f, JSObject *obj, Value &rval)
 }
 
 static JSObject *
-NameOp(VMFrame &f, JSObject *obj, bool callname = false)
+NameOp(VMFrame &f, JSObject *obj, bool markresult, bool callname)
 {
     JSContext *cx = f.cx;
 
@@ -396,8 +396,13 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
         }
     }
 
-    if (rval.isUndefined() && !f.script()->typeMonitorUndefined(cx, f.regs.pc))
-        return NULL;
+    if (markresult) {
+        if (!f.script()->typeMonitorResult(cx, f.regs.pc, rval))
+            return NULL;
+    } else if (rval.isUndefined()) {
+        if (!f.script()->typeMonitorUndefined(cx, f.regs.pc))
+            return NULL;
+    }
 
     *f.regs.sp++ = rval;
 
@@ -410,7 +415,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
 void JS_FASTCALL
 stubs::Name(VMFrame &f)
 {
-    if (!NameOp(f, &f.fp()->scopeChain()))
+    if (!NameOp(f, &f.fp()->scopeChain(), true, false))
         THROW();
 }
 
@@ -418,7 +423,7 @@ void JS_FASTCALL
 stubs::GetGlobalName(VMFrame &f)
 {
     JSObject *globalObj = f.fp()->scopeChain().getGlobal();
-    if (!NameOp(f, globalObj))
+    if (!NameOp(f, globalObj, false, false))
          THROW();
 }
 
@@ -609,7 +614,7 @@ template void JS_FASTCALL stubs::SetElem<false>(VMFrame &f);
 void JS_FASTCALL
 stubs::CallName(VMFrame &f)
 {
-    JSObject *obj = NameOp(f, &f.fp()->scopeChain(), true);
+    JSObject *obj = NameOp(f, &f.fp()->scopeChain(), true, true);
     if (!obj)
         THROW();
 }
