@@ -2307,9 +2307,11 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
                 obj->setDenseArrayInitializedLength(initlen - 1);
             } else {
                 vp->setUndefined();
+                if (!cx->markTypeCallerUnexpected(TYPE_UNDEFINED))
+                    return JS_FALSE;
             }
             JS_ALWAYS_TRUE(obj->setArrayLength(cx, length));
-            if (!js_SuppressDeletedProperty(cx, obj, INT_TO_JSID(length)))
+            if (!js_SuppressDeletedIndexProperties(cx, obj, length, length + 1))
                 return JS_FALSE;
             return JS_TRUE;
         }
