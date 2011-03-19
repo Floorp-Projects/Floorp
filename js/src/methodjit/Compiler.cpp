@@ -83,9 +83,10 @@ static const char *OpcodeNames[] = {
 };
 #endif
 
-mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
+mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp, const Vector<PatchableFrame> *frames)
   : BaseCompiler(cx),
     fp(fp),
+    frames(frames),
     script(fp->script()),
     scopeChain(&fp->scopeChain()),
     globalObj(scopeChain->getGlobal()),
@@ -135,7 +136,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
 }
 
 CompileStatus
-mjit::Compiler::compile(const Vector<JSStackFrame*> *frames)
+mjit::Compiler::compile()
 {
     JS_ASSERT_IF(isConstructing, !script->jitCtor);
     JS_ASSERT_IF(!isConstructing, !script->jitNormal);
@@ -145,7 +146,7 @@ mjit::Compiler::compile(const Vector<JSStackFrame*> *frames)
                        ? &script->jitArityCheckCtor
                        : &script->jitArityCheckNormal;
 
-    CompileStatus status = performCompilation(jit, frames);
+    CompileStatus status = performCompilation(jit);
     if (status == Compile_Okay) {
         // Global scripts don't have an arity check entry. That's okay, we
         // just need a pointer so the VM can quickly decide whether this
@@ -174,7 +175,7 @@ mjit::Compiler::compile(const Vector<JSStackFrame*> *frames)
     JS_END_MACRO
 
 CompileStatus
-mjit::Compiler::performCompilation(JITScript **jitp, const Vector<JSStackFrame*> *frames)
+mjit::Compiler::performCompilation(JITScript **jitp)
 {
     JaegerSpew(JSpew_Scripts, "compiling script (file \"%s\") (line \"%d\") (length \"%d\")\n",
                script->filename, script->lineno, script->length);
@@ -249,7 +250,7 @@ mjit::Compiler::performCompilation(JITScript **jitp, const Vector<JSStackFrame*>
     types::AutoEnterTypeInference enter(cx, true);
 
     if (cx->typeInferenceEnabled()) {
-        CompileStatus status = prepareInferenceTypes(frames);
+        CompileStatus status = prepareInferenceTypes();
         if (status != Compile_Okay) {
             if (!cx->compartment->types.checkPendingRecompiles(cx))
                 return Compile_Error;
@@ -288,7 +289,7 @@ mjit::Compiler::~Compiler()
 }
 
 CompileStatus
-mjit::Compiler::prepareInferenceTypes(const Vector<JSStackFrame*> *frames)
+mjit::Compiler::prepareInferenceTypes()
 {
     /* Analyze the script if we have not already done so. */
     if (!script->types) {
@@ -300,16 +301,7 @@ mjit::Compiler::prepareInferenceTypes(const Vector<JSStackFrame*> *frames)
             return Compile_Error;
     }
 
-    /*
-     * Fill in known types of arguments and locals, and patch up doubles for
-     * arguments and locals in existing frames. Any value assumed to be a double
-     * in this compilation may instead be an int in earlier compilation and stack
-     * frames. We handle this by patching up all hold stack frames to ensure that
-     * arguments, locals, and stack values we treat as doubles actually are doubles.
-     *
-     * Skip this for closed arguments and locals, which could be assigned an
-     * integer value at any time elsewhere in the VM.
-     */
+    /* Get the known types of arguments and locals. */
 
     uint32 nargs = fun ? fun->nargs : 0;
     if (!argumentTypes.reserve(nargs))
@@ -319,13 +311,6 @@ mjit::Compiler::prepareInferenceTypes(const Vector<JSStackFrame*> *frames)
         if (!analysis->argEscapes(i))
             type = script->argTypes(i)->getKnownTypeTag(cx, script);
         argumentTypes.append(type);
-        if (type == JSVAL_TYPE_DOUBLE && frames) {
-            for (unsigned j = 0; j < frames->length(); j++) {
-                Value *vp = (*frames)[j]->formalArgs() + i;
-                if (vp->isInt32())
-                    vp->setDouble((double)vp->toInt32());
-            }
-        }
     }
 
     if (!localTypes.reserve(script->nfixed))
@@ -335,52 +320,6 @@ mjit::Compiler::prepareInferenceTypes(const Vector<JSStackFrame*> *frames)
         if (!analysis->localHasUseBeforeDef(i))
             type = script->localTypes(i)->getKnownTypeTag(cx, script);
         localTypes.append(type);
-        if (type == JSVAL_TYPE_DOUBLE && frames) {
-            for (unsigned j = 0; j < frames->length(); j++) {
-                Value *vp = (*frames)[j]->slots() + i;
-                if (vp->isInt32())
-                    vp->setDouble((double)vp->toInt32());
-            }
-        }
-    }
-
-    /*
-     * Patch up stack values in other frames which need to be doubles. We only
-     * keep track of the types of things pushed by a particular opcode, so can't
-     * quickly figure out what the inferred type is for the entire stack at a
-     * given point. For each active frame, work backwards to the start of the
-     * current basic block looking for known pushed doubles. We don't need to
-     * go back before the start of the basic block, as nothing is assumed about
-     * stack values at the start of basic blocks.
-     */
-    for (unsigned i = 0; frames && i < frames->length(); i++) {
-        uint32 offset = (*frames)[i]->pc(cx) - script->code;
-        uint32 stackDepth = analysis->getCode(offset).stackDepth;
-        if (!stackDepth)
-            continue;
-        JS_ASSERT(offset);
-        while (offset--) {
-            analyze::Bytecode *code = analysis->maybeCode(offset);
-            if (!code)
-                continue;
-
-            uint32 startDepth = code->stackDepth - analyze::GetUseCount(script, offset);
-            if (startDepth < stackDepth) {
-                for (unsigned j = startDepth; j < stackDepth; j++) {
-                    types::TypeSet *types = script->types->pushed(offset, j - startDepth);
-                    JSValueType type = types->getKnownTypeTag(cx, NULL);
-                    if (type == JSVAL_TYPE_DOUBLE) {
-                        Value *vp = (*frames)[i]->slots() + script->nfixed + j;
-                        if (vp->isInt32())
-                            vp->setDouble((double)vp->toInt32());
-                    }
-                }
-                stackDepth = startDepth;
-            }
-
-            if (code->jumpTarget)
-                break;
-        }
     }
 
     return Compile_Okay;
@@ -404,8 +343,8 @@ mjit::TryCompile(JSContext *cx, JSStackFrame *fp)
     // times, using a limit to handle scripts with many static overflows.
     CompileStatus status = Compile_Overflow;
     for (unsigned i = 0; status == Compile_Overflow && i < 5; i++) {
-        Compiler cc(cx, fp);
-        status = cc.compile(NULL);
+        Compiler cc(cx, fp, NULL);
+        status = cc.compile();
     }
 
     return status;
@@ -1098,6 +1037,13 @@ public:
     JS_END_MACRO;                           \
     break;
 
+static inline void
+FixDouble(Value &val)
+{
+    if (val.isInt32())
+        val.setDouble((double)val.toInt32());
+}
+
 CompileStatus
 mjit::Compiler::generateMethod()
 {
@@ -1207,6 +1153,41 @@ mjit::Compiler::generateMethod()
 
             InternalCallSite site(offset, PC, CallSite::MAGIC_TRAP_ID, false, true);
             addCallSite(site);
+        }
+
+        /*
+         * If we are recompiling, check for any frames on the stack at this
+         * opcode, and patch the types of any arg/local/stack slots which are
+         * integers but need to be doubles. Any value assumed to be a double in
+         * this compilation may instead be an int in the earlier compilation
+         * and stack frames. Other transitions between known types are not
+         * possible --- type sets can only grow, and if new non-double type
+         * tags become possible we will treat that slot as unknown in this
+         * compilation.
+         */
+        for (unsigned i = 0; frames && i < frames->length(); i++) {
+            if ((*frames)[i].pc != PC)
+                continue;
+            JSStackFrame *patchfp = (*frames)[i].fp;
+
+            for (unsigned j = 0; fun && j < fun->nargs; j++) {
+                FrameEntry *fe = frame.getArg(j);
+                if (fe->isType(JSVAL_TYPE_DOUBLE))
+                    FixDouble(patchfp->formalArg(j));
+            }
+
+            for (unsigned j = 0; j < script->nfixed; j++) {
+                FrameEntry *fe = frame.getLocal(j);
+                if (fe->isType(JSVAL_TYPE_DOUBLE))
+                    FixDouble(patchfp->varSlot(j));
+            }
+
+            unsigned depth = opinfo->stackDepth - analyze::GetUseCount(script, PC - script->code);
+            for (unsigned j = 0; j < depth; j++) {
+                FrameEntry *fe = frame.getStack(j);
+                if (fe->isType(JSVAL_TYPE_DOUBLE))
+                    FixDouble(patchfp->base()[j]);
+            }
         }
 
     /**********************
