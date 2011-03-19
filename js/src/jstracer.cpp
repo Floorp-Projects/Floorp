@@ -14346,15 +14346,9 @@ TraceRecorder::typedArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
     /* priv_ins will load the TypedArray* */
     LIns* priv_ins = w.ldpObjPrivate(obj_ins);
 
-    /* for out-of-range, do the same thing that the interpreter does, which is return undefined */
-    if ((jsuint) idx >= tarray->length) {
-        CHECK_STATUS_A(guard(false,
-                             w.ltui(idx_ins, w.ldiConstTypedArrayLength(priv_ins)),
-                             BRANCH_EXIT,
-                             /* abortIfAlwaysExits = */true));
-        v_ins = w.immiUndefined();
-        return ARECORD_CONTINUE;
-    }
+    /* Abort if out-of-range. */
+    if ((jsuint) idx >= tarray->length)
+        RETURN_STOP_A("out-of-range index on typed array");
 
     /*
      * Ensure idx < length
