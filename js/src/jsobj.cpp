@@ -3959,6 +3959,13 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
     if (!type)
         return NULL;
 
+    /* Mark types with a special equality hook as having unknown properties. */
+    if (clasp->ext.equality &&
+        (!cx->markTypeObjectUnknownProperties(type) ||
+         !cx->markTypeObjectUnknownProperties(proto->getType()))) {
+        return NULL;
+    }
+
     proto->syncSpecialEquality();
 
     /* After this point, control must exit via label bad or out. */

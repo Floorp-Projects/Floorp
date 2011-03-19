@@ -563,6 +563,44 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
         return true;
     }
 
+    if (cx->typeInferenceEnabled() &&
+        lhs->isType(JSVAL_TYPE_OBJECT) && rhs->isType(JSVAL_TYPE_OBJECT)) {
+        /*
+         * Handle equality between two objects. We have to ensure there is no
+         * special equality operator on either object, if that passes then
+         * this is a pointer comparison.
+         */
+        types::TypeSet *lhsTypes = frame.getTypeSet(lhs);
+        types::TypeSet *rhsTypes = frame.getTypeSet(rhs);
+        types::ObjectKind lhsKind =
+            lhsTypes ? lhsTypes->getKnownObjectKind(cx, script) : types::OBJECT_UNKNOWN;
+        types::ObjectKind rhsKind =
+            rhsTypes ? rhsTypes->getKnownObjectKind(cx, script) : types::OBJECT_UNKNOWN;
+
+        if (lhsKind != types::OBJECT_UNKNOWN && rhsKind != types::OBJECT_UNKNOWN) {
+            /* :TODO: Merge with jsop_relational_int? */
+            JS_ASSERT_IF(!target, fused != JSOP_IFEQ);
+            Assembler::Condition cond = GetCompareCondition(op, fused);
+            if (target) {
+                fixDoubleTypes(Uses(2));
+                if (!frame.syncForBranch(target, Uses(2)))
+                    return false;
+                Jump fast = masm.branchPtr(cond, frame.tempRegForData(lhs), frame.tempRegForData(rhs));
+                frame.popn(2);
+                return jumpAndTrace(fast, target);
+            } else {
+                RegisterID lreg = frame.tempRegForData(lhs);
+                RegisterID rreg = frame.tempRegForData(rhs);
+                RegisterID result = frame.allocReg();
+                masm.branchValue(cond, lreg, rreg, result);
+
+                frame.popn(2);
+                frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
+                return true;
+            }
+        }
+    }
+
     return emitStubCmpOp(stub, target, fused);
 }
 

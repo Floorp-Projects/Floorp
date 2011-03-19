@@ -1476,25 +1476,6 @@ ReverseCompareOp(JSOp op)
     }
 }
 
-static inline Assembler::Condition
-GetCompareCondition(JSOp op, JSOp fused)
-{
-    bool ifeq = fused == JSOP_IFEQ;
-    switch (op) {
-      case JSOP_GT:
-        return ifeq ? Assembler::LessThanOrEqual : Assembler::GreaterThan;
-      case JSOP_GE:
-        return ifeq ? Assembler::LessThan : Assembler::GreaterThanOrEqual;
-      case JSOP_LT:
-        return ifeq ? Assembler::GreaterThanOrEqual : Assembler::LessThan;
-      case JSOP_LE:
-        return ifeq ? Assembler::GreaterThan : Assembler::LessThanOrEqual;
-      default:
-        JS_NOT_REACHED("unrecognized op");
-        return Assembler::Equal;
-    }
-}
-
 bool
 mjit::Compiler::jsop_relational_int(JSOp op, jsbytecode *target, JSOp fused)
 {

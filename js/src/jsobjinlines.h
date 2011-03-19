@@ -122,8 +122,10 @@ JSObject::unbrand(JSContext *cx)
 inline void
 JSObject::syncSpecialEquality()
 {
-    if (clasp->ext.equality)
+    if (clasp->ext.equality) {
         flags |= JSObject::HAS_EQUALITY;
+        JS_ASSERT(getType()->hasSpecialEquality);
+    }
 }
 
 inline void
@@ -757,6 +759,7 @@ JSObject::setType(js::types::TypeObject *newType)
     for (JSObject *obj = newType->proto; obj; obj = obj->getProto())
         JS_ASSERT(obj != this);
 #endif
+    JS_ASSERT_IF(hasSpecialEquality(), newType->hasSpecialEquality);
     type = newType;
 }
 
@@ -814,9 +817,6 @@ JSObject::init(JSContext *cx, js::Class *aclasp, js::types::TypeObject *type,
     objShape = JSObjectMap::INVALID_SHAPE;
 #endif
 
-    setType(type);
-    setParent(parent);
-
     privateData = priv;
     slots = fixedSlots();
 
@@ -834,6 +834,9 @@ JSObject::init(JSContext *cx, js::Class *aclasp, js::types::TypeObject *type,
         newType = NULL;
         flags = 0;
     }
+
+    setType(type);
+    setParent(parent);
 }
 
 inline void

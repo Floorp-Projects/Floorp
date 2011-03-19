@@ -605,6 +605,28 @@ class Compiler : public BaseCompiler
     bool jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
     void jsop_pos();
 
+    static inline Assembler::Condition
+    GetCompareCondition(JSOp op, JSOp fused)
+    {
+        bool ifeq = fused == JSOP_IFEQ;
+        switch (op) {
+          case JSOP_GT:
+            return ifeq ? Assembler::LessThanOrEqual : Assembler::GreaterThan;
+          case JSOP_GE:
+            return ifeq ? Assembler::LessThan : Assembler::GreaterThanOrEqual;
+          case JSOP_LT:
+            return ifeq ? Assembler::GreaterThanOrEqual : Assembler::LessThan;
+          case JSOP_LE:
+            return ifeq ? Assembler::GreaterThan : Assembler::LessThanOrEqual;
+          case JSOP_EQ:
+            return ifeq ? Assembler::NotEqual : Assembler::Equal;
+          case JSOP_NE:
+            return ifeq ? Assembler::Equal : Assembler::NotEqual;
+          default:
+            JS_NOT_REACHED("unrecognized op");
+            return Assembler::Equal;
+        }
+    }
    
     void prepareStubCall(Uses uses);
     Call emitStubCall(void *ptr);
