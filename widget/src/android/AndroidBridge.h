@@ -187,7 +187,7 @@ public:
 
     bool IsNetworkLinkKnown();
 
-    void SetSelectedLocale(const nsACString&);
+    void SetSelectedLocale(const nsAString&);
 
     struct AutoLocalJNIFrame {
         AutoLocalJNIFrame(int nEntries = 128) : mEntries(nEntries) {

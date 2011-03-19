@@ -51,6 +51,17 @@
 #include "mozqwidget.h"
 #include "nsWindow.h"
 
+#ifdef MOZ_ENABLE_QTMOBILITY
+#ifdef MOZ_X11
+#include <QX11Info>
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+# undef KeyPress
+# undef KeyRelease
+# undef CursorShape
+#endif //MOZ_X11
+#endif //MOZ_ENABLE_QTMOBILITY
+
 /*
   Pure Qt is lacking a clear API to get the current state of the VKB (opened
   or closed). So this global is used to track that state for 
@@ -155,6 +166,42 @@ void MozQWidget::focusInEvent(QFocusEvent* aEvent)
     if (gFailedOpenKeyboard)
         requestVKB(0);
 }
+
+#ifdef MOZ_ENABLE_QTMOBILITY
+void MozQWidget::orientationChanged()
+{
+    if (!scene() || !scene()->views().size()) {
+        return;
+    }
+
+    NS_ASSERTION(scene()->views().size() == 1, "Not exactly one view for our scene!");
+    QTransform& transform = MozQOrientationSensorFilter::GetRotationTransform();
+    QRect scrTrRect = transform.mapRect(scene()->views()[0]->rect());
+
+    setTransformOriginPoint(scene()->views()[0]->size().width() / 2, scene()->views()[0]->size().height() / 2);
+    scene()->views()[0]->setTransform(transform);
+    int orientation = MozQOrientationSensorFilter::GetWindowRotationAngle();
+    if (orientation == 0 || orientation ==  180) {
+        setPos(0,0);
+    } else {
+        setPos(-(scrTrRect.size().width() - scrTrRect.size().height()) / 2,
+               (scrTrRect.size().width() - scrTrRect.size().height()) / 2);
+    }
+    resize(scrTrRect.size());
+    scene()->setSceneRect(QRectF(QPointF(0, 0), scrTrRect.size()));
+#ifdef MOZ_X11
+    Display* display = QX11Info::display();
+    if (!display) {
+        return;
+    }
+
+    Atom orientationAngleAtom = XInternAtom(display, "_MEEGOTOUCH_ORIENTATION_ANGLE", False);
+    XChangeProperty(display, scene()->views()[0]->effectiveWinId(),
+                    orientationAngleAtom, XA_CARDINAL, 32,
+                    PropModeReplace, (unsigned char*)&orientation, 1);
+#endif
+}
+#endif
 
 void MozQWidget::focusOutEvent(QFocusEvent* aEvent)
 {

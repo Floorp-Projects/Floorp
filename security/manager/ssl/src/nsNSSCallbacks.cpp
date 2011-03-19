@@ -75,6 +75,7 @@
 #include "cert.h"
 #include "ocsp.h"
 #include "nssb64.h"
+#include "secerr.h"
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
@@ -985,10 +986,70 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
   PR_Free(signer);
 }
 
+struct nsSerialBinaryBlacklistEntry
+{
+  unsigned int len;
+  const char *binary_serial;
+};
+
+// bug 642395
+static struct nsSerialBinaryBlacklistEntry myUTNBlacklistEntries[] = {
+  { 17, "\x00\x92\x39\xd5\x34\x8f\x40\xd1\x69\x5a\x74\x54\x70\xe1\xf2\x3f\x43" },
+  { 17, "\x00\xd8\xf3\x5f\x4e\xb7\x87\x2b\x2d\xab\x06\x92\xe3\x15\x38\x2f\xb0" },
+  { 16, "\x72\x03\x21\x05\xc5\x0c\x08\x57\x3d\x8e\xa5\x30\x4e\xfe\xe8\xb0" },
+  { 17, "\x00\xb0\xb7\x13\x3e\xd0\x96\xf9\xb5\x6f\xae\x91\xc8\x74\xbd\x3a\xc0" },
+  { 16, "\x39\x2a\x43\x4f\x0e\x07\xdf\x1f\x8a\xa3\x05\xde\x34\xe0\xc2\x29" },
+  { 16, "\x3e\x75\xce\xd4\x6b\x69\x30\x21\x21\x88\x30\xae\x86\xa8\x2a\x71" },
+  { 17, "\x00\xe9\x02\x8b\x95\x78\xe4\x15\xdc\x1a\x71\x0a\x2b\x88\x15\x44\x47" },
+  { 17, "\x00\xd7\x55\x8f\xda\xf5\xf1\x10\x5b\xb2\x13\x28\x2b\x70\x77\x29\xa3" },
+  { 16, "\x04\x7e\xcb\xe9\xfc\xa5\x5f\x7b\xd0\x9e\xae\x36\xe1\x0c\xae\x1e" },
+  { 17, "\x00\xf5\xc8\x6a\xf3\x61\x62\xf1\x3a\x64\xf5\x4f\x6d\xc9\x58\x7c\x06" },
+  { 0, 0 } // end marker
+};
+
 SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
                                               PRBool checksig, PRBool isServer) {
   nsNSSShutDownPreventionLock locker;
 
+  CERTCertificate *serverCert = SSL_PeerCertificate(fd);
+  if (serverCert && 
+      serverCert->serialNumber.data &&
+      !strcmp(serverCert->issuerName, 
+        "CN=UTN-USERFirst-Hardware,OU=http://www.usertrust.com,O=The USERTRUST Network,L=Salt Lake City,ST=UT,C=US")) {
+
+    unsigned char *server_cert_comparison_start = (unsigned char*)serverCert->serialNumber.data;
+    unsigned int server_cert_comparison_len = serverCert->serialNumber.len;
+
+    while (server_cert_comparison_len) {
+      if (*server_cert_comparison_start != 0)
+        break;
+
+      ++server_cert_comparison_start;
+      --server_cert_comparison_len;
+    }
+
+    nsSerialBinaryBlacklistEntry *walk = myUTNBlacklistEntries;
+    for ( ; walk && walk->len; ++walk) {
+
+      unsigned char *locked_cert_comparison_start = (unsigned char*)walk->binary_serial;
+      unsigned int locked_cert_comparison_len = walk->len;
+      
+      while (locked_cert_comparison_len) {
+        if (*locked_cert_comparison_start != 0)
+          break;
+        
+        ++locked_cert_comparison_start;
+        --locked_cert_comparison_len;
+      }
+
+      if (server_cert_comparison_len == locked_cert_comparison_len &&
+          !memcmp(server_cert_comparison_start, locked_cert_comparison_start, locked_cert_comparison_len)) {
+        PR_SetError(SEC_ERROR_REVOKED_CERTIFICATE, 0);
+        return SECFailure;
+      }
+    }
+  }
+  
   // first the default action
   SECStatus rv = SSL_AuthCertificate(CERT_GetDefaultCertDB(), fd, checksig, isServer);
 
@@ -996,7 +1057,6 @@ SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
   // complete chain at any time it might need it.
   // But we keep only those CA certs in the temp db, that we didn't already know.
   
-  CERTCertificate *serverCert = SSL_PeerCertificate(fd);
   CERTCertificateCleaner serverCertCleaner(serverCert);
 
   if (serverCert) {

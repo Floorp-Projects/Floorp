@@ -82,6 +82,11 @@ CPPSRCS	= \
 		nsDeviceContextSpecQt.cpp \
 		$(NULL)
 
+ifdef MOZ_ENABLE_QTMOBILITY
+MOCSRCS += moc_mozqorientationsensorfilter.cpp
+CPPSRCS += mozqorientationsensorfilter.cpp
+endif
+
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
 EXTRA_DSO_LDOPTS = \

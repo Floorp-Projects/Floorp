@@ -344,6 +344,9 @@ SafeInstallOperation.prototype = {
 function getLocale() {
   if (Prefs.getBoolPref(PREF_MATCH_OS_LOCALE, false))
     return Services.locale.getLocaleComponentForUserAgent();
+  let locale = Prefs.getComplexPref(PREF_SELECTED_LOCALE, Ci.nsIPrefLocalizedString);
+  if (locale)
+    return locale;
   return Prefs.getCharPref(PREF_SELECTED_LOCALE, "en-US");
 }
 
@@ -1209,6 +1212,26 @@ var Prefs = {
   getCharPref: function(aName, aDefaultValue) {
     try {
       return Services.prefs.getCharPref(aName);
+    }
+    catch (e) {
+    }
+    return aDefaultValue;
+  },
+
+  /**
+   * Gets a complex preference.
+   *
+   * @param  aName
+   *         The name of the preference
+   * @param  aType
+   *         The interface type of the preference
+   * @param  aDefaultValue
+   *         A value to return if the preference does not exist
+   * @return the value of the preference or aDefaultValue if there is none
+   */
+  getComplexPref: function(aName, aType, aDefaultValue) {
+    try {
+      return Services.prefs.getComplexPref(aName, aType).data;
     }
     catch (e) {
     }

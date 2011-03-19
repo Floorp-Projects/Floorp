@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=4 et sw=4 tw=80: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,14 +13,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Corporation code.
+ * The Original Code is Nokia.
  *
- * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * The Initial Developer of the Original Code is Nokia Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bas Schouten <bschouten@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,38 +35,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_MACIOSURFACEIMAGEOGL_H
-#define GFX_MACIOSURFACEIMAGEOGL_H
-#ifdef XP_MACOSX
+#ifndef MOZQORIENTATIONMODULE_H
+#define MOZQORIENTATIONMODULE_H
 
-#include "nsCoreAnimationSupport.h"
+#include <QtSensors/QOrientationReading>
+#include <QtSensors/QOrientationFilter>
+#include <QObject>
+#include <QTransform>
 
-namespace mozilla {
-namespace layers {
+using namespace QtMobility;
 
-class THEBES_API MacIOSurfaceImageOGL : public MacIOSurfaceImage
+class MozQOrientationSensorFilter : public QObject, public QOrientationFilter
 {
-  typedef mozilla::gl::GLContext GLContext;
+    Q_OBJECT
 
 public:
-  MacIOSurfaceImageOGL(LayerManagerOGL *aManager);
-  virtual ~MacIOSurfaceImageOGL();
+    MozQOrientationSensorFilter()
+    {
+        mWindowRotationAngle = 0;
+    }
 
-  void SetUpdateCallback(UpdateSurfaceCallback aCallback, void* aPluginInstanceOwner);
-  void SetDestroyCallback(DestroyCallback aCallback);
-  void Update(ImageContainer* aContainer);
+    virtual ~MozQOrientationSensorFilter(){}
 
-  void SetData(const Data &aData);
+    virtual bool filter(QOrientationReading* reading);
 
-  GLTexture mTexture;
-  gfxIntSize mSize;
-  nsAutoPtr<nsIOSurface> mIOSurface;
-  void* mPluginInstanceOwner;
-  UpdateSurfaceCallback mUpdateCallback;
-  DestroyCallback mDestroyCallback;
+    static int GetWindowRotationAngle() { return mWindowRotationAngle; }
+    static QTransform& GetRotationTransform() { return mWindowRotationTransform; }
+
+signals:
+    void orientationChanged();
+
+private:
+    bool filter(QSensorReading *reading) { return filter(static_cast<QOrientationReading*>(reading)); }
+
+    static int mWindowRotationAngle;
+    static QTransform mWindowRotationTransform;
 };
 
-} /* layers */
-} /* mozilla */
-#endif /* XP_MACOSX */
-#endif /* GFX_MACIOSURFACEIMAGEOGL_H */
+#endif
