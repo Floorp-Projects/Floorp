@@ -1227,6 +1227,28 @@ TypeConstraintCondensed::arrayNotPacked(JSContext *cx, bool notDense)
     AnalyzeScriptTypes(cx, script);
 }
 
+/* Constraint which marks all types as pushed by some bytecode. */
+class TypeConstraintPushAll : public TypeConstraint
+{
+public:
+    const jsbytecode *pc;
+
+    TypeConstraintPushAll(JSScript *script, const jsbytecode *pc)
+        : TypeConstraint("pushAll", script), pc(pc)
+    {}
+
+    void newType(JSContext *cx, TypeSet *source, jstype type)
+    {
+        cx->compartment->types.dynamicPush(cx, script, pc - script->code, type);
+    }
+};
+
+void
+TypeSet::pushAllTypes(JSContext *cx, JSScript *script, const jsbytecode *pc)
+{
+    add(cx, ArenaNew<TypeConstraintPushAll>(cx->compartment->types.pool, script, pc));
+}
+
 /* Constraint which triggers recompilation of a script if any type is added to a type set. */
 class TypeConstraintFreeze : public TypeConstraint
 {
@@ -1751,8 +1773,9 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
 {
     if (script->types) {
         /*
-         * There is a TypeResult iff the type is in the pushed set.
-         * The latter is easier to check.
+         * If the pushed set already has this type, we don't need to ensure
+         * there is a TypeResult. Either there already is a TypeResult, or the
+         * type could be determined from the script's other input type sets.
          */
         js::types::TypeSet *pushed = script->types->pushed(offset, 0);
         if (pushed->hasType(type))
@@ -1781,8 +1804,10 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
                script->id(), offset, TypeString(type));
 
     TypeResult *result = (TypeResult *) cx->calloc(sizeof(TypeResult));
-    if (!result)
-        return false;
+    if (!result) {
+        setPendingNukeTypes(cx);
+        return checkPendingRecompiles(cx);
+    }
 
     result->offset = offset;
     result->type = type;
@@ -2885,14 +2910,13 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
 
       case JSOP_NAME:
       case JSOP_CALLNAME:
-        pushed[0].addType(cx, TYPE_UNKNOWN);
+        /* The first value pushed by NAME/CALLNAME must always be reported to inference. */
         if (op == JSOP_CALLNAME)
             pushed[1].addType(cx, TYPE_UNKNOWN);
         break;
 
       case JSOP_BINDGNAME:
       case JSOP_BINDNAME:
-        /* Handled below. */
         break;
 
       case JSOP_SETGNAME: {
