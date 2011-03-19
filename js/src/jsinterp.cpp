@@ -5046,8 +5046,13 @@ BEGIN_CASE(JSOP_CALLNAME)
     }
 
     PUSH_COPY(rval);
-    if (rval.isUndefined() && !script->typeMonitorUndefined(cx, regs.pc))
-        goto error;
+    if (op == JSOP_NAME || op == JSOP_CALLNAME) {
+        if (!script->typeMonitorResult(cx, regs.pc, rval))
+            goto error;
+    } else if (rval.isUndefined()) {
+        if (!script->typeMonitorUndefined(cx, regs.pc))
+            goto error;
+    }
 
     /* obj must be on the scope chain, thus not a function. */
     if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
