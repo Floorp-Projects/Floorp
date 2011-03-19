@@ -291,7 +291,7 @@ HTTP(../..) == inline--position-relative--01.xhtml    inline--position-relative-
 #== object--auto-auto--pct-px.html       object--auto-auto--pct-px--ref.html
 == object--auto-auto--px-0.html         object--auto-auto--px-0--ref.html
 #== object--auto-auto--px-pct.html       object--auto-auto--px-pct--ref.html
-== object--auto-auto--px-px.html        object--auto-auto--px-px--ref.html
+random-if(Android) == object--auto-auto--px-px.html        object--auto-auto--px-px--ref.html
 #== object--pct-pct--0-0.html            pass.svg
 
 

@@ -17,7 +17,7 @@ fails == underline-block-propagation-2-quirks.html underline-block-propagation-2
 == underline-table-cell-standards.html underline-table-cell-standards-ref.html
 != underline-table-cell-standards.html underline-table-cell-standards-notref.html
 fails == underline-block-propagation-standards.html underline-block-propagation-standards-ref.html # bug that decoration is drawn through non-text child (bug 428599)
-fails-if(d2d) == underline-block-propagation-2-standards.html underline-block-propagation-2-standards-ref.html # bug 585684
+fails-if(Android) fails-if(d2d) == underline-block-propagation-2-standards.html underline-block-propagation-2-standards-ref.html # bug 585684
 == text-decoration-zorder-1-standards.html text-decoration-zorder-1-ref.html
 fails == text-decoration-zorder-1-quirks.html text-decoration-zorder-1-ref.html # bug 403524
 == table-quirk-1.html table-quirk-1-ref.html

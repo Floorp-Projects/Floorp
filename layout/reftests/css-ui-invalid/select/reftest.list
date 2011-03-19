@@ -12,7 +12,7 @@
 == select-required-multiple-invalid.html select-required-multiple-ref.html
 == select-required-multiple-invalid-changed.html select-required-multiple-ref.html
 == select-required-multiple-valid.html select-required-multiple-ref.html
-== select-disabled-fieldset-1.html select-fieldset-ref.html
-== select-disabled-fieldset-2.html select-fieldset-ref.html
+fails-if(Android) == select-disabled-fieldset-1.html select-fieldset-ref.html
+fails-if(Android) == select-disabled-fieldset-2.html select-fieldset-ref.html
 == select-fieldset-legend.html select-fieldset-legend-ref.html
 == select-novalidate.html select-required-ref.html
