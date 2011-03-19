@@ -1197,7 +1197,7 @@ inline TypeObject::TypeObject(jsid name, JSObject *proto)
       initializerObject(false), initializerArray(false), initializerOffset(0),
       contribution(0), propertySet(NULL), propertyCount(0),
       instanceList(NULL), instanceNext(NULL), next(NULL), unknownProperties(false),
-      isDenseArray(false), isPackedArray(false)
+      isDenseArray(false), isPackedArray(false), hasSpecialEquality(false)
 {
 #ifdef DEBUG
     this->name_ = name;
