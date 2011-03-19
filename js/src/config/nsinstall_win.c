@@ -11,7 +11,6 @@
 #include <string.h>
 #include <assert.h>
 #include <windows.h>
-#include <shlwapi.h>
 #pragma hdrstop
 
 /*
@@ -333,8 +332,6 @@ sh_DoCopy(wchar_t *srcFileName,
         }
 
         if (!CopyFile(longSrc, longDst, FALSE)) {
-            if (!wcscmp(PathFindExtension(longSrc), L".chk"))
-              return TRUE; // Incredibly ugly hack to work around Bug 539689
             fprintf(stderr, "nsinstall: cannot copy %ls to %ls: %s\n",
                     srcFileName, dstFileName, sh_GetLastErrorMessage());
             return FALSE;
