@@ -305,10 +305,6 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
     JSFunction *fun = callee.getFunctionPrivate();
     JSScript *script = fun->script();
 
-    CallArgs args(fp->formalArgsEnd() - nactual, nactual);
-    if (!cx->typeMonitorCall(args, fp->isConstructing()))
-        return NULL;
-
     /*
      * FixupArity/RemovePartialFrame expect to be called after the early
      * prologue.
@@ -320,6 +316,10 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
         if (!fp)
             return NULL;
     }
+
+    CallArgs args(fp->formalArgs(), fp->numFormalArgs());
+    if (!cx->typeMonitorCall(args, fp->isConstructing()))
+        return NULL;
 
     /* Finish frame initialization. */
     fp->initCallFrameLatePrologue();
