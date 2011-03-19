@@ -720,9 +720,18 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
 
     /* Step 5. */
     if (space.isObject()) {
-        JSObject *spaceObj = &space.toObject();
-        if (spaceObj->isNumber() || spaceObj->isString())
-            space = spaceObj->getPrimitiveThis();
+        JSObject &spaceObj = space.toObject();
+        if (spaceObj.isNumber()) {
+            jsdouble d;
+            if (!ValueToNumber(cx, space, &d))
+                return false;
+            space = NumberValue(d);
+        } else if (spaceObj.isString()) {
+            JSString *str = js_ValueToString(cx, space);
+            if (!str)
+                return false;
+            space = StringValue(str);
+        }
     }
 
     StringBuffer gap(cx);
