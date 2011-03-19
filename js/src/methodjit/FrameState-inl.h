@@ -983,6 +983,13 @@ FrameState::getOrTrack(uint32 index)
 }
 
 inline FrameEntry *
+FrameState::getStack(uint32 slot)
+{
+    JS_ASSERT(slot < uint32(sp - spBase));
+    return getOrTrack(uint32(&spBase[slot] - entries));
+}
+
+inline FrameEntry *
 FrameState::getLocal(uint32 slot)
 {
     JS_ASSERT(slot < script->nslots);

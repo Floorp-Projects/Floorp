@@ -53,6 +53,11 @@
 namespace js {
 namespace mjit {
 
+struct PatchableFrame {
+    JSStackFrame *fp;
+    jsbytecode *pc;
+};
+
 class Compiler : public BaseCompiler
 {
     friend class StubCompiler;
@@ -342,6 +347,10 @@ class Compiler : public BaseCompiler
     };
 
     JSStackFrame *fp;
+
+    /* Existing frames on the stack whose slots may need to be updated. */
+    const Vector<PatchableFrame> *frames;
+
     JSScript *script;
     JSObject *scopeChain;
     JSObject *globalObj;
@@ -399,10 +408,10 @@ class Compiler : public BaseCompiler
     // follows interpreter usage in JSOP_LENGTH.
     enum { LengthAtomIndex = uint32(-2) };
 
-    Compiler(JSContext *cx, JSStackFrame *fp);
+    Compiler(JSContext *cx, JSStackFrame *fp, const Vector<PatchableFrame> *frames);
     ~Compiler();
 
-    CompileStatus compile(const Vector<JSStackFrame*> *frames);
+    CompileStatus compile();
 
     jsbytecode *getPC() { return PC; }
     Label getLabel() { return masm.label(); }
@@ -416,14 +425,14 @@ class Compiler : public BaseCompiler
     bool debugMode() { return debugMode_; }
 
   private:
-    CompileStatus performCompilation(JITScript **jitp, const Vector<JSStackFrame*> *frames);
+    CompileStatus performCompilation(JITScript **jitp);
     CompileStatus generatePrologue();
     CompileStatus generateMethod();
     CompileStatus generateEpilogue();
     CompileStatus finishThisUp(JITScript **jitp);
 
     /* Analysis helpers. */
-    CompileStatus prepareInferenceTypes(const Vector<JSStackFrame*> *frames);
+    CompileStatus prepareInferenceTypes();
     void fixDoubleTypes(Uses uses);
     void restoreAnalysisTypes(uint32 stackDepth);
     JSValueType knownThisType();

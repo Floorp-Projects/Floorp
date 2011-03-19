@@ -364,6 +364,7 @@ class FrameState
     void pushThis();
     inline void learnThisIsObject();
 
+    inline FrameEntry *getStack(uint32 slot);
     inline FrameEntry *getLocal(uint32 slot);
     inline FrameEntry *getArg(uint32 slot);
 
