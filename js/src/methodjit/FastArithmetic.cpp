@@ -378,7 +378,6 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
          * Call a stub and try harder to convert to int32, or failing that trigger
          * recompilation of this script.
          */
-        JS_ASSERT(op == JSOP_DIV);
         stubcc.linkExit(masm.jump(), Uses(2));
     } else if (type != JSVAL_TYPE_DOUBLE) {
         masm.storeDouble(fpLeft, frame.addressOf(lhs));
