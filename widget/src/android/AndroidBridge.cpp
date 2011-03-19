@@ -645,11 +645,10 @@ AndroidBridge::IsNetworkLinkKnown()
 }
 
 void
-AndroidBridge::SetSelectedLocale(const nsACString& aLocale)
+AndroidBridge::SetSelectedLocale(const nsAString& aLocale)
 {
     ALOG_BRIDGE("AndroidBridge::SetSelectedLocale");
-    NS_ConvertUTF8toUTF16 wLocale(aLocale);
-    jstring jLocale = GetJNIForThread()->NewString(wLocale.get(), wLocale.Length());
+    jstring jLocale = GetJNIForThread()->NewString(PromiseFlatString(aLocale).get(), aLocale.Length());
     GetJNIForThread()->CallStaticVoidMethod(mGeckoAppShellClass, jSetSelectedLocale, jLocale);
 }
 

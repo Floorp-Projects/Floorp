@@ -71,7 +71,11 @@ static Qt::GestureType gSwipeGestureId = Qt::CustomGesture;
 // How many milliseconds mouseevents are blocked after receiving
 // multitouch.
 static const float GESTURES_BLOCK_MOUSE_FOR = 200;
-#endif // QT version check
+#ifdef MOZ_ENABLE_QTMOBILITY
+#include <QtSensors/QOrientationSensor>
+using namespace QtMobility;
+#endif // MOZ_ENABLE_QTMOBILITY
+#endif // QT version check 4.6
 
 #ifdef MOZ_X11
 #include <QX11Info>
@@ -84,6 +88,10 @@ static const float GESTURES_BLOCK_MOUSE_FOR = 200;
 
 #include "nsWindow.h"
 #include "mozqwidget.h"
+
+#ifdef MOZ_ENABLE_QTMOBILITY
+#include "mozqorientationsensorfilter.h"
+#endif
 
 #include "nsToolkit.h"
 #include "nsIDeviceContext.h"
@@ -177,6 +185,11 @@ is_mouse_in_window (MozQWidget* aWindow, double aMouseX, double aMouseY);
 
 static bool sAltGrModifier = false;
 
+#ifdef MOZ_ENABLE_QTMOBILITY
+static QOrientationSensor *gOrientation = nsnull;
+static MozQOrientationSensorFilter gOrientationFilter;
+#endif
+
 static PRBool
 isContextMenuKeyEvent(const QKeyEvent *qe)
 {
@@ -255,6 +268,17 @@ nsWindow::nsWindow()
         // QGestureRecognizer takes ownership
         MozSwipeGestureRecognizer* swipeRecognizer = new MozSwipeGestureRecognizer;
         gSwipeGestureId = QGestureRecognizer::registerRecognizer(swipeRecognizer);
+    }
+#endif
+#ifdef MOZ_ENABLE_QTMOBILITY
+    if (!gOrientation) {
+        gOrientation = new QOrientationSensor();
+        gOrientation->addFilter(&gOrientationFilter);
+        gOrientation->start();
+        if (!gOrientation->isActive()) {
+            qWarning("Orientationsensor didn't start!");
+        }
+        gOrientationFilter.filter(gOrientation->reading());
     }
 #endif
 }
@@ -381,6 +405,14 @@ nsWindow::Destroy(void)
         gBufferSurface = nsnull;
 #ifdef MOZ_HAVE_SHMIMAGE
         gShmImage = nsnull;
+#endif
+#ifdef MOZ_ENABLE_QTMOBILITY
+        if (gOrientation) {
+            gOrientation->removeFilter(&gOrientationFilter);
+            gOrientation->stop();
+            delete gOrientation;
+            gOrientation = nsnull;
+        }
 #endif
     }
 
@@ -1041,6 +1073,17 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, Q
         event.region = nsIntRegion(rect);
         static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager(nsnull))->
             SetClippingRegion(event.region);
+
+        gfxMatrix matr;
+        matr.Translate(gfxPoint(aPainter->transform().dx(), aPainter->transform().dy()));
+#ifdef MOZ_ENABLE_QTMOBILITY
+        // This is needed for rotate transformation on MeeGo
+        // This will work very slow if pixman does not handle rotation very well
+        matr.Rotate((M_PI/180) * gOrientationFilter.GetWindowRotationAngle());
+        static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager(nsnull))->
+            SetWorldTransform(matr);
+#endif //MOZ_ENABLE_QTMOBILITY
+
         return DispatchEvent(&event);
     }
 
@@ -1078,6 +1121,15 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, Q
     else if (renderMode == gfxQtPlatform::RENDER_DIRECT) {
       gfxMatrix matr;
       matr.Translate(gfxPoint(aPainter->transform().dx(), aPainter->transform().dy()));
+#ifdef MOZ_ENABLE_QTMOBILITY
+         // This is needed for rotate transformation on MeeGo
+         // This will work very slow if pixman does not handle rotation very well
+         matr.Rotate((M_PI/180) * gOrientationFilter.GetWindowRotationAngle());
+         NS_ASSERTION(PIXMAN_VERSION > PIXMAN_VERSION_ENCODE(0, 21, 2) ||
+                      !gOrientationFilter.GetWindowRotationAngle(),
+                      "Old pixman and rotate transform, it is going to be slow");
+#endif //MOZ_ENABLE_QTMOBILITY
+
       ctx->SetMatrix(matr);
     }
 
@@ -1908,7 +1960,6 @@ nsEventStatus nsWindow::OnTouchEvent(QTouchEvent *event, PRBool &handled)
             gestureNotifyEvent.refPoint = nsIntPoint(fpos.x(), fpos.y());
             DispatchEvent(&gestureNotifyEvent);
         }
-        mPinchEvent.needDispatch = true;
     }
     else if (event->type() == QEvent::TouchEnd) {
         mGesturesCancelled = PR_FALSE;
@@ -1918,7 +1969,7 @@ nsEventStatus nsWindow::OnTouchEvent(QTouchEvent *event, PRBool &handled)
     if (touchPoints.count() > 0) {
         // Remember start touch point in order to use it for
         // distance calculation in NS_SIMPLE_GESTURE_MAGNIFY_UPDATE
-        mPinchEvent.touchPoint = touchPoints.at(0).scenePos();
+        mPinchEvent.touchPoint = touchPoints.at(0).pos();
     }
 
     return nsEventStatus_eIgnore;
@@ -1953,10 +2004,9 @@ nsWindow::OnGestureEvent(QGestureEvent* event, PRBool &handled) {
                                           0, 0, centerPoint);
         }
         else if (pinch->state() == Qt::GestureUpdated) {
-            if (mPinchEvent.needDispatch) {
-                mPinchEvent.delta = 0;
-                DispatchMotionToMainThread();
-            }
+            mPinchEvent.needDispatch = true;
+            mPinchEvent.delta = 0;
+            DispatchMotionToMainThread();
         }
         else if (pinch->state() == Qt::GestureFinished) {
             double distance = DistanceBetweenPoints(mPinchEvent.centerPoint, mPinchEvent.touchPoint) * 2;
@@ -2592,6 +2642,10 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
             newView->viewport()->setAttribute(Qt::WA_PaintOnScreen, true);
             newView->viewport()->setAttribute(Qt::WA_NoSystemBackground, true);
         }
+#ifdef MOZ_ENABLE_QTMOBILITY
+        QObject::connect((QObject*) &gOrientationFilter, SIGNAL(orientationChanged()),
+                         widget, SLOT(orientationChanged()));
+#endif
         // Enable gestures:
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
         newView->viewport()->grabGesture(Qt::PinchGesture);

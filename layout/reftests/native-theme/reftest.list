@@ -25,7 +25,7 @@ fails-if(!nativeThemePref) != radio-native.html radio-nonnative.html
 == radio-still-native-when-styled.html radio-still-native-when-styled-ref.html
 fails-if(!nativeThemePref) != checkbox-native.html checkbox-nonnative.html
 == checkbox-still-native-when-styled.html checkbox-still-native-when-styled-ref.html
-== native-theme-disabled-cascade-levels.html native-theme-disabled-cascade-levels-ref.html
+fails-if(Android) == native-theme-disabled-cascade-levels.html native-theme-disabled-cascade-levels-ref.html
 
 != 427122-1.html 427122-1-ref.html
 
@@ -39,7 +39,7 @@ skip-if(!winWidget) != 403458-winmenu-ltr.xul 403458-winmenu-rtl.xul
 == 492155-1.html about:blank
 == 492155-2.html about:blank
 == 492155-3.html about:blank
-!= 492155-4.html about:blank
+fails-if(Android) != 492155-4.html about:blank
 
 != box-shadow-input.html box-shadow-input-ref.html
 != box-shadow-button.html box-shadow-button-ref.html

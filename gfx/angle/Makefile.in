@@ -172,6 +172,14 @@ libEGL.dll: $(GLOBAL_DEPS) $(ANGLE_DEPS)
 	&& cd angle-build/src \
 	&& echo "Upgrading solution..." \
 	&& devenv angle.sln //upgrade \
+	&& echo "Tweaking project files to use ASLR and DEP..." \
+	&& ( find . -name '*proj' | xargs \
+	     perl -i.bak -p \
+	          -e 'BEGIN{undef $/;} s/<RandomizedBaseAddress>([^<^>])*<\/RandomizedBaseAddress>/<RandomizedBaseAddress>true<\/RandomizedBaseAddress>/sgmi;' \
+	          -e 'BEGIN{undef $/;} s/<DataExecutionPrevention>([^<^>])*<\/DataExecutionPrevention>/<DataExecutionPrevention>true<\/DataExecutionPrevention>/sgmi;' \
+		  -e 's/RandomizedBaseAddress\=\"0\"/RandomizedBaseAddress\=\"1\"/g;' \
+		  -e 's/DataExecutionPrevention\=\"0\"/DataExecutionPrevention\=\"1\"/g;' \
+	   ) \
 	&& echo "Building solution, target $(ANGLE_DIR)|Win32..." \
 	&& ( devenv angle.sln //useenv //build "$(ANGLE_DIR)|Win32" //out ../../angle-build-log.txt \
 	       || (cat ../../angle-build-log.txt && exit 1) \

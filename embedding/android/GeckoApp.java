@@ -438,6 +438,13 @@ abstract public class GeckoApp
         zip = new ZipFile(getApplication().getPackageResourcePath());
 
         byte[] buf = new byte[8192];
+        try {
+            if (unpackFile(zip, buf, null, "removed-files"))
+                removeFiles();
+        } catch (Exception ex) {
+            // This file may not be there, so just log any errors and move on
+            Log.w("GeckoApp", "error removing files", ex);
+        }
         unpackFile(zip, buf, null, "application.ini");
         unpackFile(zip, buf, null, getContentProcessName());
         try {
@@ -455,9 +462,25 @@ abstract public class GeckoApp
         }
     }
 
+    void removeFiles() throws IOException {
+        BufferedReader reader = new BufferedReader(
+            new FileReader(new File(sGREDir, "removed-files")));
+        try {
+            for (String removedFileName = reader.readLine(); 
+                 removedFileName != null; removedFileName = reader.readLine()) {
+                File removedFile = new File(sGREDir, removedFileName);
+                if (removedFile.exists())
+                    removedFile.delete();
+            }
+        } finally {
+            reader.close();
+        }
+        
+    }
+
     boolean haveKilledZombies = false;
 
-    private void unpackFile(ZipFile zip, byte[] buf, ZipEntry fileEntry,
+    private boolean unpackFile(ZipFile zip, byte[] buf, ZipEntry fileEntry,
                             String name)
         throws IOException, FileNotFoundException
     {
@@ -471,7 +494,7 @@ abstract public class GeckoApp
         if (outFile.exists() &&
             outFile.lastModified() == fileEntry.getTime() &&
             outFile.length() == fileEntry.getSize())
-            return;
+            return false;
 
         if (!haveKilledZombies) {
             haveKilledZombies = true;
@@ -495,6 +518,7 @@ abstract public class GeckoApp
         fileStream.close();
         outStream.close();
         outFile.setLastModified(fileEntry.getTime());
+        return true;
     }
 
     public void addEnvToIntent(Intent intent) {
