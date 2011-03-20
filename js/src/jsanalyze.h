@@ -140,6 +140,9 @@ class Script
     bool usesRval;
     bool usesScope;
 
+    JSPackedBool *closedVars;
+    JSPackedBool *closedArgs;
+
   public:
     /* Pool for allocating analysis structures which will not outlive this script. */
     JSArenaPool pool;
@@ -204,26 +207,15 @@ class Script
 
     bool argEscapes(unsigned arg)
     {
-        if (script->usesEval || script->usesArguments || script->compartment->debugMode)
-            return true;
-        for (unsigned i = 0; i < script->nClosedArgs; i++) {
-            if (arg == script->getClosedArg(i))
-                return true;
-        }
-        return false;
+        JS_ASSERT(script->fun && arg < script->fun->nargs);
+        return script->usesEval || script->usesArguments || script->compartment->debugMode ||
+            closedArgs[arg];
     }
 
     bool localEscapes(unsigned local)
     {
-        if (script->usesEval || script->compartment->debugMode)
-            return true;
-        if (local >= localCount())
-            return true;
-        for (unsigned i = 0; i < script->nClosedVars; i++) {
-            if (local == script->getClosedVar(i))
-                return true;
-        }
-        return false;
+        return script->usesEval || script->compartment->debugMode || local >= localCount() ||
+            closedVars[local];
     }
 
   private:
@@ -424,8 +416,14 @@ class LifetimeScript
     void dumpArg(unsigned i) { dumpVariable(args[i]); }
 #endif
 
-    Lifetime * argLive(uint32 arg, uint32 offset) { return args[arg].live(offset); }
-    Lifetime * localLive(uint32 local, uint32 offset) { return locals[local].live(offset); }
+    Lifetime * argLive(uint32 arg, uint32 offset) {
+        JS_ASSERT(fun && arg < fun->nargs);
+        return args[arg].live(offset);
+    }
+    Lifetime * localLive(uint32 local, uint32 offset) {
+        JS_ASSERT(local < analysis->localCount());
+        return locals[local].live(offset);
+    }
     Lifetime * thisLive(uint32 offset) { return thisVar.live(offset); }
 
   private:

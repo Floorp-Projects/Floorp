@@ -61,9 +61,6 @@ FrameState::FrameState(JSContext *cx, JSScript *script, JSFunction *fun,
 #if defined JS_NUNBOX32
     reifier(cx, *thisFromCtor()),
 #endif
-    closedVars(NULL),
-    closedArgs(NULL),
-    usesArguments(script->usesArguments),
     inTryBlock(false)
 {
 }
@@ -83,17 +80,9 @@ FrameState::init()
         return true;
     }
 
-    eval = script->usesEval || cx->compartment->debugMode;
-
     size_t totalBytes = sizeof(FrameEntry) * nentries +                     // entries[], w/ callee+this
                         sizeof(FrameEntry *) * nentries +                   // tracker.entries
-                        sizeof(types::TypeSet *) * script->nslots +         // typeSets
-                        (eval
-                         ? 0
-                         : sizeof(JSPackedBool) * script->nslots) +         // closedVars[]
-                        (eval || usesArguments
-                         ? 0
-                         : sizeof(JSPackedBool) * nargs);                   // closedArgs[]
+                        sizeof(types::TypeSet *) * script->nslots;          // typeSets
 
     uint8 *cursor = (uint8 *)cx->calloc(totalBytes);
     if (!cursor)
@@ -119,17 +108,6 @@ FrameState::init()
 
     typeSets = (types::TypeSet **)cursor;
     cursor += sizeof(types::TypeSet *) * script->nslots;
-
-    if (!eval) {
-        if (script->nslots) {
-            closedVars = (JSPackedBool *)cursor;
-            cursor += sizeof(JSPackedBool) * script->nslots;
-        }
-        if (!usesArguments && nargs) {
-            closedArgs = (JSPackedBool *)cursor;
-            cursor += sizeof(JSPackedBool) * nargs;
-        }
-    }
 
     JS_ASSERT(reinterpret_cast<uint8 *>(entries) + totalBytes == cursor);
 
@@ -196,11 +174,11 @@ FrameState::variableLive(FrameEntry *fe, jsbytecode *pc) const
     if (fe == this_)
         return liveness.thisLive(offset);
     if (isArg(fe)) {
-        JS_ASSERT(!isClosedArg(fe - args));
+        JS_ASSERT(!analysis->argEscapes(fe - args));
         return liveness.argLive(fe - args, offset);
     }
     if (isLocal(fe)) {
-        JS_ASSERT(!isClosedVar(fe - locals));
+        JS_ASSERT(!analysis->localEscapes(fe - locals));
         return liveness.localLive(fe - locals, offset);
     }
 
@@ -1913,7 +1891,7 @@ FrameState::storeLocal(uint32 n, JSValueType type, bool popGuaranteed, bool fixe
 {
     FrameEntry *local = getLocal(n);
 
-    if (isClosedVar(n)) {
+    if (analysis->localEscapes(n)) {
         JS_ASSERT(local->data.inMemory());
         storeTo(peek(-1), addressOf(local), popGuaranteed);
         return;
@@ -1941,7 +1919,7 @@ FrameState::storeArg(uint32 n, JSValueType type, bool popGuaranteed)
     // aliased (but not written to) via f.arguments.
     FrameEntry *arg = getArg(n);
 
-    if (isClosedArg(n)) {
+    if (analysis->argEscapes(n)) {
         JS_ASSERT(arg->data.inMemory());
         storeTo(peek(-1), addressOf(arg), popGuaranteed);
         return;
