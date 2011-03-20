@@ -1568,6 +1568,7 @@ TypeCompartment::init(JSContext *cx)
 #ifdef DEBUG
     typeEmpty.name_ = JSID_VOID;
 #endif
+    typeEmpty.hasSpecialEquality = true;
     typeEmpty.unknownProperties = true;
 
     if (cx && cx->getRunOptions() & JSOPTION_TYPE_INFERENCE)
