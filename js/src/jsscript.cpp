@@ -1534,7 +1534,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 #endif
         if (cg->flags & TCF_FUN_HEAVYWEIGHT)
             fun->flags |= JSFUN_HEAVYWEIGHT;
-        if (cx->typeInferenceEnabled() && !script->typeSetFunction(cx, fun))
+        if (!script->typeSetFunction(cx, fun))
             goto bad;
     }
 

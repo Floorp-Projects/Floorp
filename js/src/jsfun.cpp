@@ -506,7 +506,7 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
     /* Deoptimize wfun from FUN_{FLAT,NULL}_CLOSURE to FUN_INTERPRETED. */
     FUN_SET_KIND(wfun, JSFUN_INTERPRETED);
     wfun->u.i.script = wscript;
-    if (cx->typeInferenceEnabled() && !wscript->typeSetFunction(cx, wfun))
+    if (!wscript->typeSetFunction(cx, wfun))
         return NULL;
     js_CallNewScriptHook(cx, wscript, wfun);
     return wfunobj;
@@ -1950,7 +1950,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
 #ifdef CHECK_SCRIPT_OWNER
         fun->script()->owner = NULL;
 #endif
-        if (cx->typeInferenceEnabled() && !fun->u.i.script->typeSetFunction(cx, fun))
+        if (!fun->u.i.script->typeSetFunction(cx, fun))
             return false;
         JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
         js_CallNewScriptHook(cx, fun->script(), fun);
@@ -2905,7 +2905,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             cfun->u.i.script = js_CloneScript(cx, script);
             if (!cfun->u.i.script)
                 return NULL;
-            if (cx->typeInferenceEnabled() && !cfun->u.i.script->typeSetFunction(cx, cfun))
+            if (!cfun->u.i.script->typeSetFunction(cx, cfun))
                 return NULL;
 
 #ifdef CHECK_SCRIPT_OWNER
