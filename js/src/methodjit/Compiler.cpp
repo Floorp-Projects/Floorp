@@ -3332,6 +3332,11 @@ mjit::Compiler::jsop_getprop_slow(JSAtom *atom, bool usePropCache)
     }
     frame.pop();
     frame.pushSynced(JSVAL_TYPE_UNKNOWN);
+
+    if (recompiling) {
+        OOL_STUBCALL(usePropCache ? ic::GetProp : ic::GetPropNoCache);
+        stubcc.rejoin(Changes(1));
+    }
 }
 
 bool
