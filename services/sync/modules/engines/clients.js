@@ -195,17 +195,19 @@ ClientEngine.prototype = {
   },
   
   // Override the default behavior to delete bad records from the server.
-  handleHMACMismatch: function handleHMACMismatch(item) {
+  handleHMACMismatch: function handleHMACMismatch(item, mayRetry) {
     this._log.debug("Handling HMAC mismatch for " + item.id);
-    if (SyncEngine.prototype.handleHMACMismatch.call(this, item))
-      return true;
+    
+    let base = SyncEngine.prototype.handleHMACMismatch.call(this, item, mayRetry);
+    if (base != SyncEngine.kRecoveryStrategy.error)
+      return base;
 
     // It's a bad client record. Save it to be deleted at the end of the sync.
     this._log.debug("Bad client record detected. Scheduling for deletion.");
     this._deleteId(item.id);
 
-    // Don't try again.
-    return false;
+    // Neither try again nor error; we're going to delete it.
+    return SyncEngine.kRecoveryStrategy.ignore;
   }
 };
 

@@ -416,6 +416,15 @@ function SyncEngine(name) {
   Engine.call(this, name || "SyncEngine");
   this.loadToFetch();
 }
+
+// Enumeration to define approaches to handling bad records.
+// Attached to the constructor to allow use as a kind of static enumeration.
+SyncEngine.kRecoveryStrategy = {
+  ignore: "ignore",
+  retry:  "retry",
+  error:  "error"
+};
+
 SyncEngine.prototype = {
   __proto__: Engine.prototype,
   _recordObj: CryptoWrapper,
@@ -640,14 +649,37 @@ SyncEngine.prototype = {
       try {
         try {
           item.decrypt();
-        } catch (ex if (Utils.isHMACMismatch(ex) &&
-                        self.handleHMACMismatch(item))) {
-          // Let's try handling it.
-          // If the callback returns true, try decrypting again, because
-          // we've got new keys.
-          self._log.info("Trying decrypt again...");
-          item.decrypt();
-        }       
+        } catch (ex if Utils.isHMACMismatch(ex)) {
+          let strategy = self.handleHMACMismatch(item, true);
+          if (strategy == SyncEngine.kRecoveryStrategy.retry) {
+            // You only get one retry.
+            try {
+              // Try decrypting again, typically because we've got new keys.
+              self._log.info("Trying decrypt again...");
+              item.decrypt();
+              strategy = null;
+            } catch (ex if Utils.isHMACMismatch(ex)) {
+              strategy = self.handleHMACMismatch(item, false);
+            }
+          }
+          
+          switch (strategy) {
+            case null:
+              // Retry succeeded! No further handling.
+              break;
+            case SyncEngine.kRecoveryStrategy.retry:
+              self._log.debug("Ignoring second retry suggestion.");
+              // Fall through to error case.
+            case SyncEngine.kRecoveryStrategy.error:
+              self._log.warn("Error decrypting record: " + Utils.exceptionStr(ex));
+              failed.push(item.id);
+              return;
+            case SyncEngine.kRecoveryStrategy.ignore:
+              self._log.debug("Ignoring record " + item.id +
+                              " with bad HMAC: already handled.");
+              return;
+          }
+        }
       } catch (ex) {
         self._log.warn("Error decrypting record: " + Utils.exceptionStr(ex));
         failed.push(item.id);
@@ -1007,8 +1039,27 @@ SyncEngine.prototype = {
     new Resource(this.engineURL).delete();
     this._resetClient();
   },
-  
-  handleHMACMismatch: function handleHMACMismatch(item) {
-    return Weave.Service.handleHMACEvent();
+
+  /*
+   * Decide on (and partially effect) an error-handling strategy.
+   *
+   * Asks the Service to respond to an HMAC error, which might result in keys
+   * being downloaded. That call returns true if an action which might allow a
+   * retry to occur.
+   *
+   * If `mayRetry` is truthy, and the Service suggests a retry,
+   * handleHMACMismatch returns kRecoveryStrategy.retry. Otherwise, it returns
+   * kRecoveryStrategy.error.
+   *
+   * Subclasses of SyncEngine can override this method to allow for different
+   * behavior -- e.g., to delete and ignore erroneous entries.
+   *
+   * All return values will be part of the kRecoveryStrategy enumeration.
+   */
+  handleHMACMismatch: function handleHMACMismatch(item, mayRetry) {
+    // By default we either try again, or bail out noisily.
+    return (Weave.Service.handleHMACEvent() && mayRetry) ?
+           SyncEngine.kRecoveryStrategy.retry :
+           SyncEngine.kRecoveryStrategy.error;
   }
 };
