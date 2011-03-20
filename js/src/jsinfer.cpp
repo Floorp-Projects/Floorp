@@ -4044,7 +4044,10 @@ JSScript::makeVarTypes(JSContext *cx)
 bool
 JSScript::typeSetFunction(JSContext *cx, JSFunction *fun)
 {
-    JS_ASSERT(cx->typeInferenceEnabled());
+    this->fun = fun;
+
+    if (!cx->typeInferenceEnabled())
+        return true;
 
     char *name = NULL;
 #ifdef DEBUG
