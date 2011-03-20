@@ -4528,7 +4528,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN_TYPE("load",           Load,           1,0, JS_TypeHandlerVoid),
     JS_FN_TYPE("evaluate",       Evaluate,       1,0, JS_TypeHandlerDynamic),
     JS_FN_TYPE("run",            Run,            1,0, JS_TypeHandlerFloat),
-    JS_FN_TYPE("readline",       ReadLine,       0,0, JS_TypeHandlerString),
+    JS_FN_TYPE("readline",       ReadLine,       0,0, JS_TypeHandlerDynamic),
     JS_FN_TYPE("print",          Print,          0,0, JS_TypeHandlerVoid),
     JS_FN_TYPE("putstr",         PutStr,         0,0, JS_TypeHandlerVoid),
     JS_FN_TYPE("dateNow",        Now,            0,0, JS_TypeHandlerFloat),
