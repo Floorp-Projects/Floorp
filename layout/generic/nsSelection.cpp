@@ -5861,7 +5861,7 @@ nsTypedSelection::Modify(const nsAString& aAlter, const nsAString& aDirection,
                         (PRUint32) nsIDOMKeyEvent::DOM_VK_LEFT;
   }
   else if (aGranularity.LowerCaseEqualsLiteral("word")) {
-    amount = eSelectWord;
+    amount = eSelectWordNoSpace;
     keycode = forward ? (PRUint32) nsIDOMKeyEvent::DOM_VK_RIGHT :
                         (PRUint32) nsIDOMKeyEvent::DOM_VK_LEFT;
   }
