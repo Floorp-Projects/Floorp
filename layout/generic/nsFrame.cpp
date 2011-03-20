@@ -5498,6 +5498,17 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
       
       break;
     }
+    case eSelectWordNoSpace:
+      // eSelectWordNoSpace means that we should not be eating any whitespace when
+      // moving to the adjacent word.  This means that we should set aPos->
+      // mWordMovementType to eEndWord if we're moving forwards, and to eStartWord
+      // if we're moving backwards.
+      if (aPos->mDirection == eDirPrevious) {
+        aPos->mWordMovementType = eStartWord;
+      } else {
+        aPos->mWordMovementType = eEndWord;
+      }
+      // Intentionally fall through the eSelectWord case.
     case eSelectWord:
     {
       // wordSelectEatSpace means "are we looking for a boundary between whitespace
