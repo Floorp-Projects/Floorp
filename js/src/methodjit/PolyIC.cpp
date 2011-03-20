@@ -1529,8 +1529,7 @@ class ScopeNameCompiler : public PICStubCompiler
         types::TypeSet *types;
 
         if (getprop.obj->getClass() == &js_CallClass) {
-            if (shape->getterOp() != GetCallArg && shape->getterOp() != GetCallVar)
-                return cx->compartment->types.checkPendingRecompiles(cx);
+            JS_ASSERT(shape->getterOp() == GetCallArg || shape->getterOp() == GetCallVar);
             JSScript *newscript = getprop.obj->getCallObjCalleeFunction()->script();
             uint16 slot = uint16(getprop.shape->shortid);
             if (!newscript->ensureVarTypes(cx))
@@ -1539,7 +1538,8 @@ class ScopeNameCompiler : public PICStubCompiler
                 types = newscript->argTypes(slot);
             else if (shape->getterOp() == GetCallVar)
                 types = newscript->localTypes(slot);
-        } else if (!getprop.obj->getParent()) {
+        } else {
+            JS_ASSERT(!getprop.obj->getParent());
             if (getprop.obj->getType()->unknownProperties) {
                 script->typeMonitorResult(cx, f.regs.pc, types::TYPE_UNKNOWN);
                 return cx->compartment->types.checkPendingRecompiles(cx);
@@ -1547,8 +1547,6 @@ class ScopeNameCompiler : public PICStubCompiler
             types = getprop.obj->getType()->getProperty(cx, shape->id, false);
             if (!types)
                 return cx->compartment->types.checkPendingRecompiles(cx);
-        } else {
-            return cx->compartment->types.checkPendingRecompiles(cx);
         }
 
         types->pushAllTypes(cx, script, f.regs.pc);
@@ -2019,7 +2017,7 @@ ic::Name(VMFrame &f, ic::PICInfo *pic)
         THROW();
     f.regs.sp[0] = rval;
 
-    if (!cc.updateTypes())
+    if (status == Lookup_Cacheable && !cc.updateTypes())
         THROW();
     if (!script->typeMonitorResult(f.cx, f.regs.pc, rval))
         THROW();
