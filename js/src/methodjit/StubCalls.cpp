@@ -377,6 +377,8 @@ NameOp(VMFrame &f, JSObject *obj, bool markresult, bool callname)
             if (op2 == JSOP_TYPEOF) {
                 f.regs.sp++;
                 f.regs.sp[-1].setUndefined();
+                if (!f.script()->typeMonitorUndefined(cx, f.regs.pc))
+                    return NULL;
                 return obj;
             }
             ReportAtomNotDefined(cx, atom);
