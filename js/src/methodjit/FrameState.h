@@ -822,10 +822,6 @@ class FrameState
      */
     void shift(int32 n);
 
-    // Notifies the frame that a local variable or argument slot is closed over.
-    inline void setClosedVar(uint32 slot);
-    inline void setClosedArg(uint32 slot);
-
     inline void setInTryBlock(bool inTryBlock) {
         this->inTryBlock = inTryBlock;
     }
@@ -923,9 +919,6 @@ class FrameState
         return uint32(fe - entries);
     }
     uint32 feLimit() const { return script->nslots + nargs + 2; }
-
-    inline bool isClosedVar(uint32 slot) const;
-    inline bool isClosedArg(uint32 slot) const;
 
     RegisterState & regstate(AnyRegisterID reg) {
         JS_ASSERT(reg.reg_ < Registers::TotalAnyRegisters);
@@ -1045,10 +1038,6 @@ class FrameState
     mutable ImmutableSync reifier;
 #endif
 
-    JSPackedBool *closedVars;
-    JSPackedBool *closedArgs;
-    bool eval;
-    bool usesArguments;
     bool inTryBlock;
 };
 

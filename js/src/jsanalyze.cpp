@@ -248,12 +248,15 @@ Script::analyze(JSContext *cx, JSScript *script)
     this->script = script;
 
     unsigned length = script->length;
+    unsigned nargs = script->fun ? script->fun->nargs : 0;
     unsigned nfixed = localCount();
 
     codeArray = ArenaArray<Bytecode*>(pool, length);
     locals = ArenaArray<uint32>(pool, nfixed);
+    closedArgs = ArenaArray<JSPackedBool>(pool, nargs);
+    closedVars = ArenaArray<JSPackedBool>(pool, nfixed);
 
-    if (!codeArray || !locals) {
+    if (!codeArray || !locals || !closedArgs || !closedVars) {
         setOOM(cx);
         return;
     }
@@ -262,6 +265,20 @@ Script::analyze(JSContext *cx, JSScript *script)
 
     for (unsigned i = 0; i < nfixed; i++)
         locals[i] = LOCAL_CONDITIONALLY_DEFINED;
+
+    PodZero(closedArgs, nargs);
+    for (uint32 i = 0; i < script->nClosedArgs; i++) {
+        unsigned arg = script->getClosedArg(i);
+        JS_ASSERT(arg < nargs);
+        closedArgs[arg] = true;
+    }
+
+    PodZero(closedVars, nfixed);
+    for (uint32 i = 0; i < script->nClosedVars; i++) {
+        unsigned local = script->getClosedVar(i);
+        if (local < nfixed)
+            closedVars[local] = true;
+    }
 
     /*
      * Treat locals as having a possible use-before-def if they could be accessed
@@ -640,8 +657,8 @@ Script::analyze(JSContext *cx, JSScript *script)
 /////////////////////////////////////////////////////////////////////
 
 LifetimeScript::LifetimeScript()
-    : analysis(NULL), script(NULL), fun(NULL), codeArray(NULL)
 {
+    PodZero(this);
     JS_InitArenaPool(&pool, "script_liverange", 256, 8, NULL);
 }
 
@@ -664,27 +681,21 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
         return false;
     PodZero(codeArray, script->length);
 
-    if (script->nfixed) {
-        locals = ArenaArray<LifetimeVariable>(pool, script->nfixed);
-        if (!locals)
-            return false;
-        PodZero(locals, script->nfixed);
-    } else {
-        locals = NULL;
-    }
+    unsigned nfixed = analysis->localCount();
+    locals = ArenaArray<LifetimeVariable>(pool, nfixed);
+    if (!locals)
+        return false;
+    PodZero(locals, nfixed);
 
-    if (fun && fun->nargs) {
-        args = ArenaArray<LifetimeVariable>(pool, fun->nargs);
-        if (!args)
-            return false;
-        PodZero(args, fun->nargs);
-    } else {
-        args = NULL;
-    }
+    unsigned nargs = fun ? fun->nargs : 0;
+    args = ArenaArray<LifetimeVariable>(pool, nargs);
+    if (!args)
+        return false;
+    PodZero(args, nargs);
 
     PodZero(&thisVar);
 
-    saved = ArenaArray<LifetimeVariable*>(pool, script->nfixed + (fun ? fun->nargs : 0));
+    saved = ArenaArray<LifetimeVariable*>(pool, nfixed + nargs + 1);
     if (!saved)
         return false;
     savedCount = 0;
@@ -707,11 +718,11 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
              * and extend it to the end of the loop.
              */
             unsigned backedge = codeArray[offset].loopBackedge;
-            for (unsigned i = 0; i < script->nfixed; i++) {
+            for (unsigned i = 0; i < nfixed; i++) {
                 if (locals[i].lifetime && !extendVariable(cx, locals[i], offset, backedge))
                     return false;
             }
-            for (unsigned i = 0; fun && i < fun->nargs; i++) {
+            for (unsigned i = 0; i < nargs; i++) {
                 if (args[i].lifetime && !extendVariable(cx, args[i], offset, backedge))
                     return false;
             }
@@ -752,6 +763,7 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
           case JSOP_GETLOCALPROP: {
             unsigned local = GET_SLOTNO(pc);
             if (!analysis->localEscapes(local)) {
+                JS_ASSERT(local < nfixed);
                 if (!addVariable(cx, locals[local], offset))
                     return false;
             }
@@ -762,8 +774,10 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
           case JSOP_SETLOCALPOP:
           case JSOP_DEFLOCALFUN: {
             unsigned local = GET_SLOTNO(pc);
-            if (!analysis->localEscapes(local))
+            if (!analysis->localEscapes(local)) {
+                JS_ASSERT(local < nfixed);
                 killVariable(cx, locals[local], offset);
+            }
             break;
           }
 

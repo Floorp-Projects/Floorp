@@ -242,11 +242,6 @@ mjit::Compiler::performCompilation(JITScript **jitp)
     script->debugMode = debugMode();
 #endif
 
-    for (uint32 i = 0; i < script->nClosedVars; i++)
-        frame.setClosedVar(script->getClosedVar(i));
-    for (uint32 i = 0; i < script->nClosedArgs; i++)
-        frame.setClosedArg(script->getClosedArg(i));
-
     types::AutoEnterTypeInference enter(cx, true);
 
     if (cx->typeInferenceEnabled()) {
@@ -5411,23 +5406,12 @@ mjit::Compiler::enterBlock(JSObject *obj)
         interruptCheckHelper();
     }
 
-    uint32 oldFrameDepth = frame.localSlots();
-
     /* For now, don't bother doing anything for this opcode. */
     frame.syncAndForgetEverything();
     masm.move(ImmPtr(obj), Registers::ArgReg1);
     uint32 n = js_GetEnterBlockStackDefs(cx, script, PC);
     INLINE_STUBCALL(stubs::EnterBlock);
     frame.enterBlock(n);
-
-    uintN base = JSSLOT_FREE(&js_BlockClass);
-    uintN count = OBJ_BLOCK_COUNT(cx, obj);
-    uintN limit = base + count;
-    for (uintN slot = base, i = 0; slot < limit; slot++, i++) {
-        const Value &v = obj->getSlotRef(slot);
-        if (v.isBoolean() && v.toBoolean())
-            frame.setClosedVar(oldFrameDepth + i);
-    }
 }
 
 void
