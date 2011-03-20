@@ -1207,8 +1207,10 @@ inline TypeObject::TypeObject(jsid name, JSObject *proto)
 
     if (proto) {
         TypeObject *prototype = proto->getType();
-        if (prototype->unknownProperties)
+        if (prototype->unknownProperties) {
+            hasSpecialEquality = true;
             unknownProperties = true;
+        }
         instanceNext = prototype->instanceList;
         prototype->instanceList = this;
     }
