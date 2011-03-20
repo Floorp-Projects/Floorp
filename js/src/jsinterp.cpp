@@ -5009,6 +5009,11 @@ BEGIN_CASE(JSOP_CALLNAME)
             PUSH_COPY(rval);
         }
 
+        if (op == JSOP_NAME || op == JSOP_CALLNAME) {
+            if (!script->typeMonitorResult(cx, regs.pc, regs.sp[-1]))
+                goto error;
+        }
+
         JS_ASSERT(obj->isGlobal() || IsCacheableNonGlobalScope(obj));
         if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
             PUSH_IMPLICIT_THIS(cx, obj, regs.sp[-1]);
@@ -5026,6 +5031,8 @@ BEGIN_CASE(JSOP_CALLNAME)
         JSOp op2 = js_GetOpcode(cx, script, regs.pc + JSOP_NAME_LENGTH);
         if (op2 == JSOP_TYPEOF) {
             PUSH_UNDEFINED();
+            if (!script->typeMonitorUndefined(cx, regs.pc))
+                goto error;
             len = JSOP_NAME_LENGTH;
             DO_NEXT_OP(len);
         }
