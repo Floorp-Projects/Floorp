@@ -4216,13 +4216,10 @@ CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
                  * which originally had the type and was changed to a different
                  * type object with unknown properties.
                  */
-                if (object->unknownProperties) {
+                if (object->unknownProperties)
                     types->objectSet[i] = &compartment->typeEmpty;
-                    if (!types->objectSet[i])
-                        compartment->setPendingNukeTypes(cx);
-                } else {
+                else
                     types->objectSet[i] = NULL;
-                }
                 removed = true;
             }
         }
@@ -4247,8 +4244,6 @@ CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
         if (!object->marked) {
             if (object->unknownProperties) {
                 types->objectSet = (TypeObject**) &compartment->typeEmpty;
-                if (!types->objectSet)
-                    compartment->setPendingNukeTypes(cx);
             } else {
                 types->objectSet = NULL;
                 types->objectCount = 0;
@@ -4523,6 +4518,24 @@ JSScript::condenseTypes(JSContext *cx)
             for (unsigned i = 0; i < num; i++)
                 js::types::CondenseSweepTypeSet(cx, &compartment->types, pcondensed, &varTypes[i]);
         }
+    }
+
+    js::types::TypeResult **presult = &typeResults;
+    while (*presult) {
+        js::types::TypeResult *result = *presult;
+        if (js::types::TypeIsObject(result->type)) {
+            js::types::TypeObject *object = (js::types::TypeObject *) result->type;
+            if (!object->marked) {
+                if (!object->unknownProperties) {
+                    *presult = result->next;
+                    cx->free(result);
+                    continue;
+                } else {
+                    result->type = (js::types::jstype) &compartment->types.typeEmpty;
+                }
+            }
+        }
+        presult = &result->next;
     }
 }
 
