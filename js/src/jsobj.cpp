@@ -2846,7 +2846,7 @@ static JSFunctionSpec object_methods[] = {
 #endif
     JS_FN_TYPE(js_toString_str,             obj_toString,                0,0, JS_TypeHandlerString),
     JS_FN_TYPE(js_toLocaleString_str,       obj_toLocaleString,          0,0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_valueOf_str,              obj_valueOf,                 0,0, JS_TypeHandlerThis),
+    JS_FN_TYPE(js_valueOf_str,              obj_valueOf,                 0,0, JS_TypeHandlerDynamic),
 #if JS_HAS_OBJ_WATCHPOINT
     JS_FN_TYPE(js_watch_str,                obj_watch,                   2,0, JS_TypeHandlerVoid),
     JS_FN_TYPE(js_unwatch_str,              obj_unwatch,                 1,0, JS_TypeHandlerVoid),
