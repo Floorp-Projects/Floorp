@@ -1612,6 +1612,9 @@ TypeCompartment::newTypeObject(JSContext *cx, JSScript *script, const char *name
     object->next = objects;
     objects = object;
 
+    if (!cx->typeInferenceEnabled())
+        object->hasSpecialEquality = true;
+
     return object;
 }
 
