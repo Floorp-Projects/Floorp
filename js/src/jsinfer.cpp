@@ -1465,16 +1465,18 @@ public:
             TypeObject *object = (TypeObject *) type;
             ObjectKind nkind = CombineObjectKind(object, kind);
 
-            /*
-             * Add a constraint on the element type of the object to pick up
-             * changes in the object's array-ness or any unknown properties.
-             */
-            TypeSet *elementTypes = object->getProperty(cx, JSID_VOID, false);
-            if (!elementTypes)
-                return;
-            elementTypes->add(cx,
-                ArenaNew<TypeConstraintFreezeObjectKind>(cx->compartment->types.pool,
-                                                         object, &kind, script), false);
+            if (nkind != OBJECT_UNKNOWN) {
+                /*
+                 * Add a constraint on the element type of the object to pick up
+                 * changes in the object's array-ness or any unknown properties.
+                 */
+                TypeSet *elementTypes = object->getProperty(cx, JSID_VOID, false);
+                if (!elementTypes)
+                    return;
+                elementTypes->add(cx,
+                    ArenaNew<TypeConstraintFreezeObjectKind>(cx->compartment->types.pool,
+                                                             object, &kind, script), false);
+            }
 
             if (nkind == kind) {
                 /* New object with the same kind we are interested in. */
