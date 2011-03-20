@@ -1088,7 +1088,7 @@ inline void
 FrameState::pushLocal(uint32 n, JSValueType knownType)
 {
     FrameEntry *fe = getLocal(n);
-    if (!isClosedVar(n)) {
+    if (!analysis->localEscapes(n)) {
         pushCopyOf(indexOfFe(fe));
     } else {
 #ifdef DEBUG
@@ -1111,7 +1111,7 @@ inline void
 FrameState::pushArg(uint32 n, JSValueType knownType)
 {
     FrameEntry *fe = getArg(n);
-    if (!isClosedArg(n)) {
+    if (!analysis->argEscapes(n)) {
         pushCopyOf(indexOfFe(fe));
     } else {
 #ifdef DEBUG
@@ -1159,8 +1159,6 @@ FrameState::enterBlock(uint32 n)
     JS_ASSERT(!tracker.nentries);
     JS_ASSERT(uint32(sp + n - locals) <= script->nslots);
 
-    if (!eval)
-        memset(&closedVars[uint32(sp - locals)], 0, n * sizeof(*closedVars));
     sp += n;
 }
 
@@ -1172,20 +1170,6 @@ FrameState::eviscerate(FrameEntry *fe)
     fe->data.invalidate();
     fe->setNotCopied();
     fe->setCopyOf(NULL);
-}
-
-inline void
-FrameState::setClosedVar(uint32 slot)
-{
-    if (!eval)
-        closedVars[slot] = true;
-}
-
-inline void
-FrameState::setClosedArg(uint32 slot)
-{
-    if (!eval && !usesArguments)
-        closedArgs[slot] = true;
 }
 
 inline StateRemat
@@ -1260,18 +1244,6 @@ FrameState::loadDouble(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) cons
 
     ensureFeSynced(fe, masm);
     masm.loadDouble(addressOf(fe), fpReg);
-}
-
-inline bool
-FrameState::isClosedVar(uint32 slot) const
-{
-    return eval || closedVars[slot];
-}
-
-inline bool
-FrameState::isClosedArg(uint32 slot) const
-{
-    return eval || usesArguments || closedArgs[slot];
 }
 
 class PinRegAcrossSyncAndKill
