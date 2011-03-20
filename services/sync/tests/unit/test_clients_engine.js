@@ -2,6 +2,7 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/service.js");
 
@@ -75,6 +76,61 @@ function test_bad_hmac() {
     do_check_true(deleted);
     do_check_eq(1, clientsColl.count());
     _("Records now: " + clientsColl.get({}));
+
+    _("Now change our keys but don't upload them. " +
+      "That means we get an HMAC error but redownload keys.");
+    Service.lastHMACEvent = 0;
+    Clients.localID = Utils.makeGUID();
+    Clients.resetClient();
+    CollectionKeys.generateNewKeys();
+    deleted = false;
+    do_check_eq(1, clientsColl.count());
+    Clients.sync();
+
+    _("Old record was not deleted, new one uploaded.");
+    do_check_false(deleted);
+    do_check_eq(2, clientsColl.count());
+    _("Records now: " + clientsColl.get({}));
+
+    _("Now try the scenario where our keys are wrong *and* there's a bad record.");
+    // Clean up and start fresh.
+    clientsColl.wbos = {};
+    Service.lastHMACEvent = 0;
+    Clients.localID = Utils.makeGUID();
+    Clients.resetClient();
+    deleted = false;
+    do_check_eq(0, clientsColl.count());
+
+    // Create and upload keys.
+    CollectionKeys.generateNewKeys();
+    serverKeys = CollectionKeys.asWBO("crypto", "keys");
+    serverKeys.encrypt(Weave.Service.syncKeyBundle);
+    do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
+
+    // Sync once to upload a record.
+    Clients.sync();
+    do_check_eq(1, clientsColl.count());
+
+    // Generate and upload new keys, so the old client record is wrong.
+    CollectionKeys.generateNewKeys();
+    serverKeys = CollectionKeys.asWBO("crypto", "keys");
+    serverKeys.encrypt(Weave.Service.syncKeyBundle);
+    do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
+
+    // Create a new client record and new keys. Now our keys are wrong, as well
+    // as the object on the server. We'll download the new keys and also delete
+    // the bad client record.
+    Clients.localID = Utils.makeGUID();
+    Clients.resetClient();
+    CollectionKeys.generateNewKeys();
+    let oldKey = CollectionKeys.keyForCollection();
+
+    do_check_false(deleted);
+    Clients.sync();
+    do_check_true(deleted);
+    do_check_eq(1, clientsColl.count());
+    let newKey = CollectionKeys.keyForCollection();
+    do_check_false(oldKey.equals(newKey));
 
   } finally {
     server.stop(do_test_finished);
