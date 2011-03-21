@@ -3216,19 +3216,6 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
   }
       
   nsHTMLContainerFrame::CreateViewForFrame(scrollFrame, aBuildCombobox);
-  if (aBuildCombobox) {
-    // Give the drop-down list a popup widget
-    nsIView* view = scrollFrame->GetView();
-    NS_ASSERTION(view, "We asked for a view but didn't get one");
-    if (view) {
-      view->GetViewManager()->SetViewFloating(view, PR_TRUE);
-
-      nsWidgetInitData widgetData;
-      widgetData.mWindowType  = eWindowType_popup;
-      widgetData.mBorderStyle = eBorderStyle_default;
-      view->CreateWidgetForPopup(&widgetData);
-    }
-  }
 
   BuildScrollFrame(aState, aContent, aStyleContext, scrolledFrame,
                    geometricParent, scrollFrame);
