@@ -3287,7 +3287,7 @@ class JSAutoByteString {
 typedef JSBool (* JSONWriteCallback)(const jschar *buf, uint32 len, void *data);
 
 /*
- * JSON.stringify as specified by ES3.1 (draft)
+ * JSON.stringify as specified by ES5.
  */
 JS_PUBLIC_API(JSBool)
 JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
@@ -3300,17 +3300,8 @@ JS_PUBLIC_API(JSBool)
 JS_TryJSON(JSContext *cx, jsval *vp);
 
 /*
- * JSON.parse as specified by ES3.1 (draft)
+ * JSON.parse as specified by ES5.
  */
-JS_PUBLIC_API(JSONParser *)
-JS_BeginJSONParse(JSContext *cx, jsval *vp);
-
-JS_PUBLIC_API(JSBool)
-JS_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len);
-
-JS_PUBLIC_API(JSBool)
-JS_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver);
-
 JS_PUBLIC_API(JSBool)
 JS_ParseJSON(JSContext *cx, const jschar *chars, uint32 len, jsval *vp);
 
