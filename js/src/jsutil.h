@@ -209,15 +209,38 @@ JS_DumpBacktrace(JSCallsite *trace);
 
 #else
 
+#ifdef DEBUG
+/*
+ * In order to test OOM conditions, when the shell command-line option
+ * |-A NUM| is passed, we fail continuously after the NUM'th allocation.
+ */
+extern JS_PUBLIC_DATA(JSUint32) OOM_maxAllocations; /* set from shell/js.cpp */
+extern JS_PUBLIC_DATA(JSUint32) OOM_counter; /* data race, who cares. */
+#define JS_OOM_POSSIBLY_FAIL() \
+    do \
+    { \
+        if (OOM_counter++ >= OOM_maxAllocations) { \
+            return NULL; \
+        } \
+    } while (0)
+
+#else
+#define JS_OOM_POSSIBLY_FAIL() do {} while(0)
+#endif
+
+
 static JS_INLINE void* js_malloc(size_t bytes) {
+    JS_OOM_POSSIBLY_FAIL();
     return malloc(bytes);
 }
 
 static JS_INLINE void* js_calloc(size_t bytes) {
+    JS_OOM_POSSIBLY_FAIL();
     return calloc(bytes, 1);
 }
 
 static JS_INLINE void* js_realloc(void* p, size_t bytes) {
+    JS_OOM_POSSIBLY_FAIL();
     return realloc(p, bytes);
 }
 
@@ -399,6 +422,8 @@ public:
     JSGuardObjectNotificationReceiver _mCheckNotUsedAsTemporary;
 #define JS_GUARD_OBJECT_NOTIFIER_PARAM \
     , const JSGuardObjectNotifier& _notifier = JSGuardObjectNotifier()
+#define JS_GUARD_OBJECT_NOTIFIER_PARAM_NO_INIT \
+    , const JSGuardObjectNotifier& _notifier
 #define JS_GUARD_OBJECT_NOTIFIER_PARAM0 \
     const JSGuardObjectNotifier& _notifier = JSGuardObjectNotifier()
 #define JS_GUARD_OBJECT_NOTIFIER_INIT \
@@ -408,6 +433,7 @@ public:
 
 #define JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 #define JS_GUARD_OBJECT_NOTIFIER_PARAM
+#define JS_GUARD_OBJECT_NOTIFIER_PARAM_NO_INIT
 #define JS_GUARD_OBJECT_NOTIFIER_PARAM0
 #define JS_GUARD_OBJECT_NOTIFIER_INIT JS_BEGIN_MACRO JS_END_MACRO
 

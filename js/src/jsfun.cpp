@@ -53,7 +53,6 @@
 #include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsdbgapi.h"
 #include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
@@ -189,6 +188,11 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee)
     if (!argsobj)
         return NULL;
 
+    EmptyShape *emptyArgumentsShape = EmptyShape::getEmptyArgumentsShape(cx);
+    if (!emptyArgumentsShape)
+        return NULL;
+    AutoShapeRooter shapeRoot(cx, emptyArgumentsShape);
+
     ArgumentsData *data = (ArgumentsData *)
         cx->malloc(offsetof(ArgumentsData, slots) + argc * sizeof(Value));
     if (!data)
@@ -201,7 +205,7 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee)
                   : &js_ArgumentsClass,
                   proto, parent, NULL, false);
 
-    argsobj->setMap(cx->compartment->emptyArgumentsShape);
+    argsobj->setMap(emptyArgumentsShape);
 
     argsobj->setArgsLength(argc);
     argsobj->setArgsData(data);
@@ -496,6 +500,7 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
     /* Deoptimize wfun from FUN_{FLAT,NULL}_CLOSURE to FUN_INTERPRETED. */
     FUN_SET_KIND(wfun, JSFUN_INTERPRETED);
     wfun->u.i.script = wscript;
+    js_CallNewScriptHook(cx, wscript, wfun);
     return wfunobj;
 }
 
@@ -833,7 +838,7 @@ Class js_ArgumentsClass = {
     "Arguments",
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::ARGS_CLASS_RESERVED_SLOTS) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     PropertyStub,         /* addProperty */
     args_delProperty,
     PropertyStub,         /* getProperty */
@@ -848,7 +853,7 @@ Class js_ArgumentsClass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    JS_CLASS_TRACE(args_trace)
+    args_trace
 };
 
 namespace js {
@@ -862,7 +867,7 @@ Class StrictArgumentsClass = {
     "Arguments",
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::ARGS_CLASS_RESERVED_SLOTS) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     PropertyStub,         /* addProperty */
     args_delProperty,
     PropertyStub,         /* getProperty */
@@ -877,7 +882,7 @@ Class StrictArgumentsClass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    JS_CLASS_TRACE(args_trace)
+    args_trace
 };
 
 }
@@ -959,8 +964,7 @@ NewCallObject(JSContext *cx, Bindings *bindings, JSObject &scopeChain, JSObject 
         return NULL;
 
     /* Init immediately to avoid GC seeing a half-init'ed object. */
-    callobj->init(cx, &js_CallClass, NULL, &scopeChain, NULL, false);
-    callobj->setMap(bindings->lastShape());
+    callobj->initCall(cx, bindings, &scopeChain);
 
     /* This must come after callobj->lastProp has been set. */
     if (!callobj->ensureInstanceReservedSlots(cx, argsVars))
@@ -989,8 +993,12 @@ NewDeclEnvObject(JSContext *cx, JSStackFrame *fp)
     if (!envobj)
         return NULL;
 
+    EmptyShape *emptyDeclEnvShape = EmptyShape::getEmptyDeclEnvShape(cx);
+    if (!emptyDeclEnvShape)
+        return NULL;
+
     envobj->init(cx, &js_DeclEnvClass, NULL, &fp->scopeChain(), fp, false);
-    envobj->setMap(cx->compartment->emptyDeclEnvShape);
+    envobj->setMap(emptyDeclEnvShape);
     return envobj;
 }
 
@@ -1395,7 +1403,7 @@ JS_PUBLIC_DATA(Class) js_CallClass = {
     "Call",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::CALL_RESERVED_SLOTS) |
-    JSCLASS_NEW_RESOLVE | JSCLASS_IS_ANONYMOUS | JSCLASS_MARK_IS_TRACE,
+    JSCLASS_NEW_RESOLVE | JSCLASS_IS_ANONYMOUS,
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -1410,7 +1418,7 @@ JS_PUBLIC_DATA(Class) js_CallClass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    JS_CLASS_TRACE(call_trace)
+    call_trace
 };
 
 bool
@@ -1636,10 +1644,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         break;
 
       default:
-        /* XXX fun[0] and fun.arguments[0] are equivalent. */
-        if (fp && fp->isFunctionFrame() && uint16(slot) < fp->numFormalArgs())
-            *vp = fp->formalArg(slot);
-        break;
+        JS_NOT_REACHED("fun_getProperty");
     }
 
     return true;
@@ -1898,7 +1903,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         fun->u.i.wrapper = JSPackedBool((firstword >> 1) & 1);
     }
 
-    if (!js_XDRScript(xdr, &fun->u.i.script, NULL))
+    if (!js_XDRScriptAndSubscripts(xdr, &fun->u.i.script))
         return false;
 
     if (xdr->mode == JSXDR_DECODE) {
@@ -2009,7 +2014,7 @@ JS_PUBLIC_DATA(Class) js_FunctionClass = {
     js_Function_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSFunction::CLASS_RESERVED_SLOTS) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -2022,9 +2027,9 @@ JS_PUBLIC_DATA(Class) js_FunctionClass = {
     NULL,                 /* checkAccess */
     NULL,                 /* call        */
     NULL,                 /* construct   */
-    js_XDRFunctionObject,
+    NULL,
     fun_hasInstance,
-    JS_CLASS_TRACE(fun_trace)
+    fun_trace
 };
 
 JSString *
@@ -2044,18 +2049,28 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
     if (!fun)
         return NULL;
 
-    if (!indent) {
-        ToSourceCache::Ptr p = cx->compartment->toSourceCache.lookup(fun);
+    if (!indent && !cx->compartment->toSourceCache.empty()) {
+        ToSourceCache::Ptr p = cx->compartment->toSourceCache.ref().lookup(fun);
         if (p)
             return p->value;
     }
 
     JSString *str = JS_DecompileFunction(cx, fun, indent);
     if (!str)
-        return false;
+        return NULL;
 
-    if (!indent)
-        cx->compartment->toSourceCache.put(fun, str);
+    if (!indent) {
+        LazilyConstructed<ToSourceCache> &lazy = cx->compartment->toSourceCache;
+
+        if (lazy.empty()) {
+            lazy.construct();
+            if (!lazy.ref().init())
+                return NULL;
+        }
+
+        if (!lazy.ref().put(fun, str))
+            return NULL;
+    }
 
     return str;
 }
@@ -2461,7 +2476,12 @@ Function(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
     }
 
-    Bindings bindings(cx);
+    EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
+    if (!emptyCallShape)
+        return JS_FALSE;
+    AutoShapeRooter shapeRoot(cx, emptyCallShape);
+
+    Bindings bindings(cx, emptyCallShape);
     AutoBindingsRooter root(cx, bindings);
 
     Value *argv = vp + 2;
@@ -2638,7 +2658,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
 
 namespace js {
 
-JS_FRIEND_API(bool)
+bool
 IsBuiltinFunctionConstructor(JSFunction *fun)
 {
     return fun->maybeNative() == Function;
@@ -2701,6 +2721,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     script->owner = NULL;
 #endif
     fun->u.i.script = script;
+    js_CallNewScriptHook(cx, script, fun);
 
     if (obj->isGlobal()) {
         /* ES5 13.2.3: Construct the unique [[ThrowTypeError]] function object. */

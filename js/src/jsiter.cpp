@@ -64,11 +64,9 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsproxy.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstaticcheck.h"
-#include "jstracer.h"
 #include "jsvector.h"
 
 #if JS_HAS_XML_SUPPORT
@@ -89,8 +87,7 @@ static JSObject *iterator_iterator(JSContext *cx, JSObject *obj, JSBool keysonly
 
 Class js_IteratorClass = {
     "Iterator",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator) |
-    JSCLASS_MARK_IS_TRACE,
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -105,7 +102,7 @@ Class js_IteratorClass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    JS_CLASS_TRACE(iterator_trace),
+    iterator_trace,
     {
         NULL,             /* equality       */
         NULL,             /* outerObject    */
@@ -426,8 +423,13 @@ NewIteratorObject(JSContext *cx, uintN flags)
         JSObject *obj = js_NewGCObject(cx, FINALIZE_OBJECT0);
         if (!obj)
             return false;
+
+        EmptyShape *emptyEnumeratorShape = EmptyShape::getEmptyEnumeratorShape(cx);
+        if (!emptyEnumeratorShape)
+            return NULL;
+
         obj->init(cx, &js_IteratorClass, NULL, NULL, NULL, false);
-        obj->setMap(cx->compartment->emptyEnumeratorShape);
+        obj->setMap(emptyEnumeratorShape);
         return obj;
     }
 
@@ -1100,7 +1102,7 @@ generator_trace(JSTracer *trc, JSObject *obj)
 Class js_GeneratorClass = {
     js_Generator_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Generator) |
-    JSCLASS_IS_ANONYMOUS | JSCLASS_MARK_IS_TRACE,
+    JSCLASS_IS_ANONYMOUS,
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -1115,7 +1117,7 @@ Class js_GeneratorClass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    JS_CLASS_TRACE(generator_trace),
+    generator_trace,
     {
         NULL,             /* equality       */
         NULL,             /* outerObject    */
@@ -1378,6 +1380,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
           default:
             JS_ASSERT(op == JSGENOP_CLOSE);
             gen->state = JSGEN_CLOSED;
+            JS_SET_RVAL(cx, vp, UndefinedValue());
             return JS_TRUE;
         }
     } else if (gen->state == JSGEN_CLOSED) {
@@ -1391,6 +1394,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
             return JS_FALSE;
           default:
             JS_ASSERT(op == JSGENOP_CLOSE);
+            JS_SET_RVAL(cx, vp, UndefinedValue());
             return JS_TRUE;
         }
     }
@@ -1398,7 +1402,8 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
     bool undef = ((op == JSGENOP_SEND || op == JSGENOP_THROW) && argc != 0);
     if (!SendToGenerator(cx, op, obj, gen, undef ? vp[2] : UndefinedValue()))
         return JS_FALSE;
-    *vp = gen->floatingFrame()->returnValue();
+
+    JS_SET_RVAL(cx, vp, gen->floatingFrame()->returnValue());
     return JS_TRUE;
 }
 

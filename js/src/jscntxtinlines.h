@@ -94,21 +94,6 @@ JSContext::ensureGeneratorStackSpace()
     return ok;
 }
 
-JSStackFrame *
-JSContext::computeNextFrame(JSStackFrame *fp)
-{
-    JSStackFrame *next = NULL;
-    for (js::StackSegment *ss = currentSegment; ; ss = ss->getPreviousInContext()) {
-        JSStackFrame *end = ss->getInitialFrame()->prev();
-        for (JSStackFrame *f = ss->getCurrentFrame(); f != end; next = f, f = f->prev()) {
-            if (f == fp)
-                return next;
-        }
-        if (end != ss->getPreviousInContext()->getCurrentFrame())
-            next = NULL;
-    }
-}
-
 inline js::RegExpStatics *
 JSContext::regExpStatics()
 {

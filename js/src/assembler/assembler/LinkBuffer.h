@@ -62,17 +62,17 @@ class LinkBuffer {
     typedef MacroAssembler::DataLabelPtr DataLabelPtr;
 
 public:
-    // Note: Initialization sequence is significant, since executablePool is a PassRefPtr.
-    //       First, executablePool is copied into m_executablePool, then the initialization of
-    //       m_code uses m_executablePool, *not* executablePool, since this is no longer valid.
-    LinkBuffer(MacroAssembler* masm, ExecutablePool* executablePool)
-        : m_executablePool(executablePool)
-        , m_code(executableCopy(*masm, executablePool))
-        , m_size(masm->m_assembler.size())
-#ifndef NDEBUG
-        , m_completed(false)
-#endif
+    // 'ok' should be checked after this constructor is called;  it's false if OOM occurred.
+    LinkBuffer(MacroAssembler* masm, ExecutableAllocator* executableAllocator,
+               ExecutablePool** poolp, bool* ok)
     {
+        m_code = executableAllocAndCopy(*masm, executableAllocator, poolp);
+        m_executablePool = *poolp;
+        m_size = masm->m_assembler.size();  // must come after call to executableAllocAndCopy()!
+#ifndef NDEBUG
+        m_completed = false;
+#endif
+        *ok = !!m_code;
     }
 
     LinkBuffer()
@@ -197,9 +197,10 @@ protected:
         return m_code;
     }
 
-    void *executableCopy(MacroAssembler &masm, ExecutablePool *pool)
+    void *executableAllocAndCopy(MacroAssembler &masm, ExecutableAllocator *allocator,
+                                 ExecutablePool **poolp)
     {
-        return masm.m_assembler.executableCopy(pool);
+        return masm.m_assembler.executableAllocAndCopy(allocator, poolp);
     }
 
     void performFinalization()

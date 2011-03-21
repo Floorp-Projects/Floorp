@@ -87,11 +87,9 @@
 #include "jsatom.h"
 #include "jsbit.h"
 #include "jsbool.h"
-#include "jstracer.h"
 #include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsdbgapi.h" /* for js_TraceWatchPoints */
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
@@ -102,6 +100,7 @@
 #include "jsscope.h"
 #include "jsstr.h"
 #include "jsstaticcheck.h"
+#include "jstracer.h"
 #include "jsvector.h"
 #include "jswrapper.h"
 
@@ -945,8 +944,7 @@ array_trace(JSTracer *trc, JSObject *obj)
     JS_ASSERT(obj->isDenseArray());
 
     uint32 capacity = obj->getDenseArrayCapacity();
-    for (uint32 i = 0; i < capacity; i++)
-        MarkValue(trc, obj->getDenseArrayElement(i), "dense_array_elems");
+    MarkValueRange(trc, capacity, obj->slots, "element");
 }
 
 static JSBool
@@ -985,7 +983,7 @@ Class js_ArrayClass = {
     NULL,           /* construct   */
     NULL,           /* xdrObject   */
     NULL,           /* hasInstance */
-    NULL,           /* mark        */
+    array_trace,    /* trace       */
     JS_NULL_CLASS_EXT,
     {
         array_lookupProperty,
@@ -997,7 +995,6 @@ Class js_ArrayClass = {
         array_deleteProperty,
         NULL,       /* enumerate      */
         array_typeOf,
-        array_trace,
         array_fix,
         NULL,       /* thisObject     */
         NULL,       /* clear          */
@@ -3259,7 +3256,7 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone)
      */
     jsuint jsvalCount = JS_MIN(obj->getDenseArrayCapacity(), length);
 
-    js::AutoValueVector vector(cx);
+    AutoValueVector vector(cx);
     if (!vector.reserve(jsvalCount))
         return JS_FALSE;
 
@@ -3279,7 +3276,7 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone)
             return JS_TRUE;
         }
 
-        vector.append(val);
+        vector.infallibleAppend(val);
     }
 
     *clone = NewDenseCopiedArray(cx, jsvalCount, vector.begin());

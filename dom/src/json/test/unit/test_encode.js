@@ -104,13 +104,7 @@ function testStringEncode() {
   var pairs = getTestPairs();
   for each(pair in pairs) {
     var nativeResult = nativeJSON.encode(pair[1]);
-    var crockfordResult = crockfordJSON.stringify(pair[1]);
     do_check_eq(pair[0], nativeResult);
-    
-    // Don't follow json2.js handling of non-objects
-    if (pair[1] && (typeof pair[1] == "object")) {
-      do_check_eq(crockfordResult, nativeResult);
-    }
   }
 }
 

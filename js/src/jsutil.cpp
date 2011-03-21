@@ -55,6 +55,12 @@
 
 using namespace js;
 
+#ifdef DEBUG
+/* For JS_OOM_POSSIBLY_FAIL in jsutil.h. */
+JS_PUBLIC_DATA(JSUint32) OOM_maxAllocations = UINT32_MAX;
+JS_PUBLIC_DATA(JSUint32) OOM_counter = 0;
+#endif
+
 /*
  * Checks the assumption that JS_FUNC_TO_DATA_PTR and JS_DATA_TO_FUNC_PTR
  * macros uses to implement casts between function and data pointers.

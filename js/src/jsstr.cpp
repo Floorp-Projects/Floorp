@@ -2146,14 +2146,14 @@ DoReplace(JSContext *cx, RegExpStatics *res, ReplaceData &rdata)
     for (; dp; dp = js_strchr_limit(dp, '$', ep)) {
         /* Move one of the constant portions of the replacement value. */
         size_t len = dp - cp;
-        JS_ALWAYS_TRUE(rdata.sb.append(cp, len));
+        rdata.sb.infallibleAppend(cp, len);
         cp = dp;
 
         JSSubString sub;
         size_t skip;
         if (InterpretDollar(cx, res, dp, ep, rdata, &sub, &skip)) {
             len = sub.length;
-            JS_ALWAYS_TRUE(rdata.sb.append(sub.chars, len));
+            rdata.sb.infallibleAppend(sub.chars, len);
             cp += skip;
             dp += skip;
         } else {
@@ -2182,7 +2182,7 @@ ReplaceRegExpCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
     size_t growth = leftlen + replen;
     if (!rdata.sb.reserve(rdata.sb.length() + growth))
         return false;
-    JS_ALWAYS_TRUE(rdata.sb.append(left, leftlen)); /* skipped-over portion of the search value */
+    rdata.sb.infallibleAppend(left, leftlen); /* skipped-over portion of the search value */
     DoReplace(cx, res, rdata);
     return true;
 }
@@ -2294,7 +2294,7 @@ BuildDollarReplacement(JSContext *cx, JSString *textstrArg, JSLinearString *reps
         return false;
 
     /* Move the pre-dollar chunk in bulk. */
-    JS_ALWAYS_TRUE(newReplaceChars.append(repstr->chars(), firstDollar));
+    newReplaceChars.infallibleAppend(repstr->chars(), firstDollar);
 
     /* Move the rest char-by-char, interpreting dollars as we encounter them. */
 #define ENSURE(__cond) if (!(__cond)) return false;
@@ -2537,116 +2537,263 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
     return BuildFlatReplacement(cx, rdata.str, rdata.repstr, *fm, vp);
 }
 
-/*
- * Subroutine used by str_split to find the next split point in str, starting
- * at offset *ip and looking either for the separator substring given by sep, or
- * for the next re match.  In the re case, return the matched separator in *sep,
- * and the possibly updated offset in *ip.
- *
- * Return -2 on error, -1 on end of string, >= 0 for a valid index of the next
- * separator occurrence if found, or str->length if no separator is found.
- */
-static jsint
-find_split(JSContext *cx, RegExpStatics *res, JSString *str, js::RegExp *re, jsint *ip,
-           JSSubString *sep)
+class SplitMatchResult {
+    size_t endIndex_;
+    size_t length_;
+
+  public:
+    void setFailure() {
+        JS_STATIC_ASSERT(SIZE_MAX > JSString::MAX_LENGTH);
+        endIndex_ = SIZE_MAX;
+    }
+    bool isFailure() const {
+        return (endIndex_ == SIZE_MAX);
+    }
+    size_t endIndex() const {
+        JS_ASSERT(!isFailure());
+        return endIndex_;
+    }
+    size_t length() const {
+        JS_ASSERT(!isFailure());
+        return length_;
+    }
+    void setResult(size_t length, size_t endIndex) {
+        length_ = length;
+        endIndex_ = endIndex;
+    }
+};
+
+template<class Matcher>
+static JSObject *
+SplitHelper(JSContext *cx, JSLinearString *str, uint32 limit, Matcher splitMatch)
 {
-    /*
-     * Stop if past end of string.  If at end of string, we will compare the
-     * null char stored there (by js_NewString*) to sep->chars[j] in the while
-     * loop at the end of this function, so that
-     *
-     *  "ab,".split(',') => ["ab", ""]
-     *
-     * and the resulting array converts back to the string "ab," for symmetry.
-     * However, we ape Perl and do this only if there is a sufficiently large
-     * limit argument (see str_split).
-     */
-    jsint i = *ip;
-    size_t length = str->length();
-    if ((size_t)i > length)
-        return -1;
+    size_t strLength = str->length();
+    SplitMatchResult result;
 
-    const jschar *chars = str->getChars(cx);
-    if (!chars)
-        return -2;
+    /* Step 11. */
+    if (strLength == 0) {
+        if (!splitMatch(cx, str, 0, &result))
+            return NULL;
 
-    /*
-     * Match a regular expression against the separator at or above index i.
-     * Call js_ExecuteRegExp with true for the test argument.  On successful
-     * match, get the separator from cx->regExpStatics.lastMatch.
-     */
-    if (re) {
-        size_t index;
-        Value rval;
+        /*
+         * NB: Unlike in the non-empty string case, it's perfectly fine
+         *     (indeed the spec requires it) if we match at the end of the
+         *     string.  Thus these cases should hold:
+         *
+         *   var a = "".split("");
+         *   assertEq(a.length, 0);
+         *   var b = "".split(/.?/);
+         *   assertEq(b.length, 0);
+         */
+        if (!result.isFailure())
+            return NewDenseEmptyArray(cx);
 
-      again:
-        /* JS1.2 deviated from Perl by never matching at end of string. */
-        index = (size_t)i;
-        if (!re->execute(cx, res, str, &index, true, &rval))
-            return -2;
-        if (!rval.isTrue()) {
-            /* Mismatch: ensure our caller advances i past end of string. */
-            sep->length = 1;
-            return length;
-        }
-        i = (jsint)index;
-        JS_ASSERT(sep);
-        res->getLastMatch(sep);
-        if (sep->length == 0) {
-            /*
-             * Empty string match: never split on an empty match at the start
-             * of a find_split cycle.  Same rule as for an empty global match
-             * in DoMatch.
-             */
-            if (i == *ip) {
-                /*
-                 * "Bump-along" to avoid sticking at an empty match, but don't
-                 * bump past end of string -- our caller must do that by adding
-                 * sep->length to our return value.
-                 */
-                if ((size_t)i == length)
-                    return -1;
-                i++;
-                goto again;
-            }
-            if ((size_t)i == length) {
-                /*
-                 * If there was a trivial zero-length match at the end of the
-                 * split, then we shouldn't output the matched string at the end
-                 * of the split array. See ECMA-262 Ed. 3, 15.5.4.14, Step 15.
-                 */
-                sep->chars = NULL;
-            }
-        }
-        JS_ASSERT((size_t)i >= sep->length);
-        return i - sep->length;
+        Value v = StringValue(str);
+        return NewDenseCopiedArray(cx, 1, &v);
     }
 
-    /*
-     * Special case: if sep is the empty string, split str into one character
-     * substrings.  Let our caller worry about whether to split once at end of
-     * string into an empty substring.
-     */
-    if (sep->length == 0)
-        return ((size_t)i == length) ? -1 : i + 1;
+    /* Step 12. */
+    size_t lastEndIndex = 0;
+    size_t index = 0;
 
-    /*
-     * Now that we know sep is non-empty, search starting at i in str for an
-     * occurrence of all of sep's chars.  If we find them, return the index of
-     * the first separator char.  Otherwise, return length.
-     */
-    jsint match = StringMatch(chars + i, length - i, sep->chars, sep->length);
-    return match == -1 ? length : match + i;
+    /* Step 13. */
+    AutoValueVector splits(cx);
+
+    while (index < strLength) {
+        /* Step 13(a). */
+        if (!splitMatch(cx, str, index, &result))
+            return NULL;
+
+        /*
+         * Step 13(b).
+         *
+         * Our match algorithm differs from the spec in that it returns the
+         * next index at which a match happens.  If no match happens we're
+         * done.
+         *
+         * But what if the match is at the end of the string (and the string is
+         * not empty)?  Per 13(c)(ii) this shouldn't be a match, so we have to
+         * specially exclude it.  Thus this case should hold:
+         *
+         *   var a = "abc".split(/\b/);
+         *   assertEq(a.length, 1);
+         *   assertEq(a[0], "abc");
+         */
+        if (result.isFailure())
+            break;
+
+        /* Step 13(c)(i). */
+        size_t sepLength = result.length();
+        size_t endIndex = result.endIndex();
+        if (sepLength == 0 && endIndex == strLength)
+            break;
+
+        /* Step 13(c)(ii). */
+        if (endIndex == lastEndIndex) {
+            index++;
+            continue;
+        }
+
+        /* Step 13(c)(iii). */
+        JS_ASSERT(lastEndIndex < endIndex);
+        JS_ASSERT(sepLength <= strLength);
+        JS_ASSERT(lastEndIndex + sepLength <= endIndex);
+
+        /* Steps 13(c)(iii)(1-3). */
+        size_t subLength = size_t(endIndex - sepLength - lastEndIndex);
+        JSString *sub = js_NewDependentString(cx, str, lastEndIndex, subLength);
+        if (!sub || !splits.append(StringValue(sub)))
+            return NULL;
+
+        /* Step 13(c)(iii)(4). */
+        if (splits.length() == limit)
+            return NewDenseCopiedArray(cx, splits.length(), splits.begin());
+
+        /* Step 13(c)(iii)(5). */
+        lastEndIndex = endIndex;
+
+        /* Step 13(c)(iii)(6-7). */
+        if (Matcher::returnsCaptures) {
+            RegExpStatics *res = cx->regExpStatics();
+            for (size_t i = 0; i < res->parenCount(); i++) {
+                /* Steps 13(c)(iii)(7)(a-c). */
+                if (res->pairIsPresent(i + 1)) {
+                    JSSubString parsub;
+                    res->getParen(i + 1, &parsub);
+                    sub = js_NewStringCopyN(cx, parsub.chars, parsub.length);
+                    if (!sub || !splits.append(StringValue(sub)))
+                        return NULL;
+                } else {
+                    if (!splits.append(UndefinedValue()))
+                        return NULL;
+                }
+
+                /* Step 13(c)(iii)(7)(d). */
+                if (splits.length() == limit)
+                    return NewDenseCopiedArray(cx, splits.length(), splits.begin());
+            }
+        }
+
+        /* Step 13(c)(iii)(8). */
+        index = lastEndIndex;
+    }
+
+    /* Steps 14-15. */
+    JSString *sub = js_NewDependentString(cx, str, lastEndIndex, strLength - lastEndIndex);
+    if (!sub || !splits.append(StringValue(sub)))
+        return NULL;
+
+    /* Step 16. */
+    return NewDenseCopiedArray(cx, splits.length(), splits.begin());
 }
 
+/*
+ * The SplitMatch operation from ES5 15.5.4.14 is implemented using different
+ * matchers for regular expression and string separators.
+ *
+ * The algorithm differs from the spec in that the matchers return the next
+ * index at which a match happens.
+ */
+class SplitRegExpMatcher {
+    RegExpStatics *res;
+    RegExp *re;
+
+  public:
+    static const bool returnsCaptures = true;
+    SplitRegExpMatcher(RegExp *re, RegExpStatics *res) : res(res), re(re) {
+    }
+
+    inline bool operator()(JSContext *cx, JSLinearString *str, size_t index,
+                           SplitMatchResult *result) {
+        Value rval;
+        if (!re->execute(cx, res, str, &index, true, &rval))
+            return false;
+        if (!rval.isTrue()) {
+            result->setFailure();
+            return true;
+        }
+        JSSubString sep;
+        res->getLastMatch(&sep);
+
+        result->setResult(sep.length, index);
+        return true;
+    }
+};
+
+class SplitStringMatcher {
+    const jschar *sepChars;
+    size_t sepLength;
+
+  public:
+    static const bool returnsCaptures = false;
+    SplitStringMatcher(JSLinearString *sep) {
+        sepChars = sep->chars();
+        sepLength = sep->length();
+    }
+
+    inline bool operator()(JSContext *cx, JSLinearString *str, size_t index,
+                           SplitMatchResult *res) {
+        JS_ASSERT(index == 0 || index < str->length());
+        const jschar *chars = str->chars();
+        jsint match = StringMatch(chars + index, str->length() - index, sepChars, sepLength);
+        if (match == -1)
+            res->setFailure();
+        else
+            res->setResult(sepLength, index + match + sepLength);
+        return true;
+    }
+};
+
+/* ES5 15.5.4.14 */
 static JSBool
 str_split(JSContext *cx, uintN argc, Value *vp)
 {
+    /* Steps 1-2. */
     JSString *str = ThisToStringForStringProto(cx, vp);
     if (!str)
         return false;
 
-    if (argc == 0) {
+    /* Step 5: Use the second argument as the split limit, if given. */
+    uint32 limit;
+    if (argc > 1 && !vp[3].isUndefined()) {
+        jsdouble d;
+        if (!ValueToNumber(cx, vp[3], &d))
+            return false;
+        limit = js_DoubleToECMAUint32(d);
+    } else {
+        limit = UINT32_MAX;
+    }
+
+    /* Step 8. */
+    RegExp *re = NULL;
+    JSLinearString *sepstr = NULL;
+    bool sepUndefined = (argc == 0 || vp[2].isUndefined());
+    if (!sepUndefined) {
+        if (VALUE_IS_REGEXP(cx, vp[2])) {
+            re = static_cast<RegExp *>(vp[2].toObject().getPrivate());
+        } else {
+            JSString *sep = js_ValueToString(cx, vp[2]);
+            if (!sep)
+                return false;
+            vp[2].setString(sep);
+
+            sepstr = sep->ensureLinear(cx);
+            if (!sepstr)
+                return false;
+        }
+    }
+
+    /* Step 9. */
+    if (limit == 0) {
+        JSObject *aobj = NewDenseEmptyArray(cx);
+        if (!aobj)
+            return false;
+        vp->setObject(*aobj);
+        return true;
+    }
+
+    /* Step 10. */
+    if (sepUndefined) {
         Value v = StringValue(str);
         JSObject *aobj = NewDenseCopiedArray(cx, 1, &v);
         if (!aobj)
@@ -2654,89 +2801,22 @@ str_split(JSContext *cx, uintN argc, Value *vp)
         vp->setObject(*aobj);
         return true;
     }
-
-    RegExp *re;
-    JSSubString *sep, tmp;
-    if (VALUE_IS_REGEXP(cx, vp[2])) {
-        re = static_cast<RegExp *>(vp[2].toObject().getPrivate());
-        sep = &tmp;
-
-        /* Set a magic value so we can detect a successful re match. */
-        sep->chars = NULL;
-        sep->length = 0;
-    } else {
-        JSString *sepstr = js_ValueToString(cx, vp[2]);
-        if (!sepstr)
-            return false;
-        vp[2].setString(sepstr);
-
-        /*
-         * Point sep at a local copy of sepstr's header because find_split
-         * will modify sep->length.
-         */
-        tmp.length = sepstr->length();
-        tmp.chars = sepstr->getChars(cx);
-        if (!tmp.chars)
-            return false;
-        re = NULL;
-        sep = &tmp;
-    }
-
-    /* Use the second argument as the split limit, if given. */
-    uint32 limit = 0; /* Avoid warning. */
-    bool limited = (argc > 1) && !vp[3].isUndefined();
-    if (limited) {
-        jsdouble d;
-        if (!ValueToNumber(cx, vp[3], &d))
-            return false;
-
-        /* Clamp limit between 0 and 1 + string length. */
-        limit = js_DoubleToECMAUint32(d);
-        if (limit > str->length())
-            limit = 1 + str->length();
-    }
-
-    AutoValueVector splits(cx);
-
-    RegExpStatics *res = cx->regExpStatics();
-    jsint i, j;
-    uint32 len = i = 0;
-    while ((j = find_split(cx, res, str, re, &i, sep)) >= 0) {
-        if (limited && len >= limit)
-            break;
-
-        JSString *sub = js_NewDependentString(cx, str, i, size_t(j - i));
-        if (!sub || !splits.append(StringValue(sub)))
-            return false;
-        len++;
-
-        /*
-         * Imitate perl's feature of including parenthesized substrings that
-         * matched part of the delimiter in the new array, after the split
-         * substring that was delimited.
-         */
-        if (re && sep->chars) {
-            for (uintN num = 0; num < res->parenCount(); num++) {
-                if (limited && len >= limit)
-                    break;
-                JSSubString parsub;
-                res->getParen(num + 1, &parsub);
-                sub = js_NewStringCopyN(cx, parsub.chars, parsub.length);
-                if (!sub || !splits.append(StringValue(sub)))
-                    return false;
-                len++;
-            }
-            sep->chars = NULL;
-        }
-        i = j + sep->length;
-    }
-
-    if (j == -2)
+    JSLinearString *strlin = str->ensureLinear(cx);
+    if (!strlin)
         return false;
 
-    JSObject *aobj = NewDenseCopiedArray(cx, splits.length(), splits.begin());
+    /* Steps 11-15. */
+    JSObject *aobj;
+    if (re) {
+        aobj = SplitHelper(cx, strlin, limit, SplitRegExpMatcher(re, cx->regExpStatics()));
+    } else {
+        // NB: sepstr is anchored through its storage in vp[2].
+        aobj = SplitHelper(cx, strlin, limit, SplitStringMatcher(sepstr));
+    }
     if (!aobj)
         return false;
+
+    /* Step 16. */
     vp->setObject(*aobj);
     return true;
 }
@@ -3073,7 +3153,6 @@ static JSFunctionSpec string_methods[] = {
     /* Java-like methods. */
     JS_FN(js_toString_str,     js_str_toString,       0,0),
     JS_FN(js_valueOf_str,      js_str_toString,       0,0),
-    JS_FN(js_toJSON_str,       js_str_toString,       0,0),
     JS_FN("substring",         str_substring,         2,JSFUN_GENERIC_NATIVE),
     JS_FN("toLowerCase",       str_toLowerCase,       0,JSFUN_GENERIC_NATIVE),
     JS_FN("toUpperCase",       str_toUpperCase,       0,JSFUN_GENERIC_NATIVE),
@@ -3932,7 +4011,7 @@ js_strchr_limit(const jschar *s, jschar c, const jschar *limit)
 }
 
 jschar *
-js_InflateString(JSContext *cx, const char *bytes, size_t *lengthp)
+js_InflateString(JSContext *cx, const char *bytes, size_t *lengthp, bool useCESU8)
 {
     size_t nbytes, nchars, i;
     jschar *chars;
@@ -3941,8 +4020,9 @@ js_InflateString(JSContext *cx, const char *bytes, size_t *lengthp)
 #endif
 
     nbytes = *lengthp;
-    if (js_CStringsAreUTF8) {
-        if (!js_InflateStringToBuffer(cx, bytes, nbytes, NULL, &nchars))
+    if (js_CStringsAreUTF8 || useCESU8) {
+        if (!js_InflateUTF8StringToBuffer(cx, bytes, nbytes, NULL, &nchars,
+                                          useCESU8))
             goto bad;
         chars = (jschar *) cx->malloc((nchars + 1) * sizeof (jschar));
         if (!chars)
@@ -3950,7 +4030,8 @@ js_InflateString(JSContext *cx, const char *bytes, size_t *lengthp)
 #ifdef DEBUG
         ok =
 #endif
-            js_InflateStringToBuffer(cx, bytes, nbytes, chars, &nchars);
+            js_InflateUTF8StringToBuffer(cx, bytes, nbytes, chars, &nchars,
+                                         useCESU8);
         JS_ASSERT(ok);
     } else {
         nchars = nbytes;
@@ -4022,7 +4103,8 @@ js_GetDeflatedStringLength(JSContext *cx, const jschar *chars, size_t nchars)
  * May be called with null cx through public API, see below.
  */
 size_t
-js_GetDeflatedUTF8StringLength(JSContext *cx, const jschar *chars, size_t nchars)
+js_GetDeflatedUTF8StringLength(JSContext *cx, const jschar *chars,
+                               size_t nchars, bool useCESU8)
 {
     size_t nbytes;
     const jschar *end;
@@ -4034,7 +4116,7 @@ js_GetDeflatedUTF8StringLength(JSContext *cx, const jschar *chars, size_t nchars
         c = *chars;
         if (c < 0x80)
             continue;
-        if (0xD800 <= c && c <= 0xDFFF) {
+        if (0xD800 <= c && c <= 0xDFFF && !useCESU8) {
             /* Surrogate pair. */
             chars++;
 
@@ -4093,7 +4175,7 @@ js_DeflateStringToBuffer(JSContext *cx, const jschar *src, size_t srclen,
 
 JSBool
 js_DeflateStringToUTF8Buffer(JSContext *cx, const jschar *src, size_t srclen,
-                             char *dst, size_t *dstlenp)
+                             char *dst, size_t *dstlenp, bool useCESU8)
 {
     size_t dstlen, i, origDstlen, utf8Len;
     jschar c, c2;
@@ -4105,9 +4187,9 @@ js_DeflateStringToUTF8Buffer(JSContext *cx, const jschar *src, size_t srclen,
     while (srclen) {
         c = *src++;
         srclen--;
-        if ((c >= 0xDC00) && (c <= 0xDFFF))
+        if ((c >= 0xDC00) && (c <= 0xDFFF) && !useCESU8)
             goto badSurrogate;
-        if (c < 0xD800 || c > 0xDBFF) {
+        if (c < 0xD800 || c > 0xDBFF || useCESU8) {
             v = c;
         } else {
             if (srclen < 1)
@@ -4183,7 +4265,7 @@ js_InflateStringToBuffer(JSContext *cx, const char *src, size_t srclen,
 
 JSBool
 js_InflateUTF8StringToBuffer(JSContext *cx, const char *src, size_t srclen,
-                             jschar *dst, size_t *dstlenp)
+                             jschar *dst, size_t *dstlenp, bool useCESU8)
 {
     size_t dstlen, origDstlen, offset, j, n;
     uint32 v;
@@ -4207,7 +4289,7 @@ js_InflateUTF8StringToBuffer(JSContext *cx, const char *src, size_t srclen,
                     goto badCharacter;
             }
             v = Utf8ToOneUcs4Char((uint8 *)src, n);
-            if (v >= 0x10000) {
+            if (v >= 0x10000 && !useCESU8) {
                 v -= 0x10000;
                 if (v > 0xFFFFF || dstlen < 2) {
                     *dstlenp = (origDstlen - dstlen);
@@ -5560,26 +5642,97 @@ const jschar js_uriUnescaped_ucstr[] =
      'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
      '-', '_', '.', '!', '~', '*', '\'', '(', ')', 0};
 
+#define ____ false
+
 /*
  * This table allows efficient testing for the regular expression \w which is
  * defined by ECMA-262 15.10.2.6 to be [0-9A-Z_a-z].
  */
 const bool js_alnum[] = {
-/*       0      1      2      3      4      5      5      7      8      9      */
-/*  0 */ false, false, false, false, false, false, false, false, false, false,
-/*  1 */ false, false, false, false, false, false, false, false, false, false,
-/*  2 */ false, false, false, false, false, false, false, false, false, false,
-/*  3 */ false, false, false, false, false, false, false, false, false, false,
-/*  4 */ false, false, false, false, false, false, false, false, true,  true,
-/*  5 */ true,  true,  true,  true,  true,  true,  true,  true,  false, false,
-/*  6 */ false, false, false, false, false, true,  true,  true,  true,  true,
-/*  7 */ true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-/*  8 */ true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-/*  9 */ true,  false, false, false, false, true,  false, true,  true,  true,
-/* 10 */ true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-/* 11 */ true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-/* 12 */ true,  true,  true,  false, false, false, false, false
+/*       0     1     2     3     4     5     6     7     8     9  */
+/*  0 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  1 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  2 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  3 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  4 */ ____, ____, ____, ____, ____, ____, ____, ____, true, true,
+/*  5 */ true, true, true, true, true, true, true, true, ____, ____,
+/*  6 */ ____, ____, ____, ____, ____, true, true, true, true, true,
+/*  7 */ true, true, true, true, true, true, true, true, true, true,
+/*  8 */ true, true, true, true, true, true, true, true, true, true,
+/*  9 */ true, ____, ____, ____, ____, true, ____, true, true, true,
+/* 10 */ true, true, true, true, true, true, true, true, true, true,
+/* 11 */ true, true, true, true, true, true, true, true, true, true,
+/* 12 */ true, true, true, ____, ____, ____, ____, ____
 };
+
+/*
+ * Identifier start chars:
+ * -      36:    $
+ * -  65..90: A..Z
+ * -      95:    _
+ * - 97..122: a..z
+ */
+const bool js_isidstart[] = {
+/*       0     1     2     3     4     5     6     7     8     9  */
+/*  0 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  1 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  2 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  3 */ ____, ____, ____, ____, ____, ____, true, ____, ____, ____,
+/*  4 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  5 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  6 */ ____, ____, ____, ____, ____, true, true, true, true, true, 
+/*  7 */ true, true, true, true, true, true, true, true, true, true, 
+/*  8 */ true, true, true, true, true, true, true, true, true, true, 
+/*  9 */ true, ____, ____, ____, ____, true, ____, true, true, true, 
+/* 10 */ true, true, true, true, true, true, true, true, true, true, 
+/* 11 */ true, true, true, true, true, true, true, true, true, true, 
+/* 12 */ true, true, true, ____, ____, ____, ____, ____
+};
+
+/*
+ * Identifier chars:
+ * -      36:    $
+ * -  48..57: 0..9
+ * -  65..90: A..Z
+ * -      95:    _
+ * - 97..122: a..z
+ */
+const bool js_isident[] = {
+/*       0     1     2     3     4     5     6     7     8     9  */
+/*  0 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  1 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  2 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  3 */ ____, ____, ____, ____, ____, ____, true, ____, ____, ____,
+/*  4 */ ____, ____, ____, ____, ____, ____, ____, ____, true, true, 
+/*  5 */ true, true, true, true, true, true, true, true, ____, ____,
+/*  6 */ ____, ____, ____, ____, ____, true, true, true, true, true, 
+/*  7 */ true, true, true, true, true, true, true, true, true, true, 
+/*  8 */ true, true, true, true, true, true, true, true, true, true, 
+/*  9 */ true, ____, ____, ____, ____, true, ____, true, true, true, 
+/* 10 */ true, true, true, true, true, true, true, true, true, true, 
+/* 11 */ true, true, true, true, true, true, true, true, true, true, 
+/* 12 */ true, true, true, ____, ____, ____, ____, ____
+};
+
+/* Whitespace chars: '\t', '\n', '\v', '\f', '\r', ' '. */
+const bool js_isspace[] = {
+/*       0     1     2     3     4     5     6     7     8     9  */
+/*  0 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, true,
+/*  1 */ true, true, true, true, ____, ____, ____, ____, ____, ____,
+/*  2 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  3 */ ____, ____, true, ____, ____, ____, ____, ____, ____, ____,
+/*  4 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  5 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  6 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  7 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  8 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/*  9 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/* 10 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/* 11 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+/* 12 */ ____, ____, ____, ____, ____, ____, ____, ____
+};
+
+#undef ____
 
 #define URI_CHUNK 64U
 
@@ -5590,7 +5743,7 @@ TransferBufferToString(JSContext *cx, StringBuffer &sb, Value *rval)
     if (!str)
         return false;
     rval->setString(str);
-    return true;;
+    return true;
 }
 
 /*

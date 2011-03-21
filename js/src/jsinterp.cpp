@@ -66,7 +66,6 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jspropertycache.h"
-#include "jsscan.h"
 #include "jsemit.h"
 #include "jsscope.h"
 #include "jsscript.h"
@@ -114,21 +113,14 @@ jsbytecode *
 JSStackFrame::pc(JSContext *cx, JSStackFrame *next)
 {
     JS_ASSERT_IF(next, next->prev_ == this);
-    JS_ASSERT(cx->containingSegment(this) != NULL);
 
-    JSFrameRegs *regs;
-    if (cx->regs) {
-        regs = cx->regs;
-    } else {
-        StackSegment *segment = cx->getCurrentSegment();
-        regs = segment->getSuspendedRegs();
-    }
-
-    if (this == regs->fp)
+    StackSegment *seg = cx->containingSegment(this);
+    JSFrameRegs *regs = seg->getCurrentRegs();
+    if (regs->fp == this)
         return regs->pc;
 
     if (!next)
-        next = cx->computeNextFrame(this);
+        next = seg->computeNextFrame(this);
 
     if (next->flags_ & JSFRAME_HAS_PREVPC)
         return next->prevpc_;
@@ -803,7 +795,7 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
         /* Cannot also cache the raw code pointer; it can change. */
 
         /* Hoist dynamic checks from CheckStackAndEnterMethodJIT. */
-        JS_CHECK_RECURSION(cx, return JS_FALSE);
+        JS_CHECK_RECURSION(cx, return false);
         stackLimit_ = stack.getStackLimit(cx);
         if (!stackLimit_)
             return false;
@@ -898,7 +890,7 @@ ExternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, const Value &fval,
      * ExternalInvoke could result in another try to get or set the same id
      * again, see bug 355497.
      */
-    JS_CHECK_RECURSION(cx, return JS_FALSE);
+    JS_CHECK_RECURSION(cx, return false);
 
     return ExternalInvoke(cx, ObjectValue(*obj), fval, argc, argv, rval);
 }
@@ -1315,17 +1307,16 @@ InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fv
 }
 
 bool
-DirectEval(JSContext *cx, JSFunction *evalfun, uint32 argc, Value *vp)
+DirectEval(JSContext *cx, uint32 argc, Value *vp)
 {
     JS_ASSERT(vp == cx->regs->sp - argc - 2);
     JS_ASSERT(vp[0].isObject());
     JS_ASSERT(vp[0].toObject().isFunction());
-    JS_ASSERT(vp[0].toObject().getFunctionPrivate() == evalfun);
-    JS_ASSERT(IsBuiltinEvalFunction(evalfun));
 
     JSStackFrame *caller = cx->fp();
     JS_ASSERT(caller->isScriptFrame());
-    AutoFunctionCallProbe callProbe(cx, evalfun, caller->script());
+    JS_ASSERT(IsBuiltinEvalForScope(&caller->scopeChain(), vp[0]));
+    AutoFunctionCallProbe callProbe(cx, vp[0].toObject().getFunctionPrivate(), caller->script());
 
     JSObject *scopeChain =
         GetScopeChainFast(cx, caller, JSOP_EVAL, JSOP_EVAL_LENGTH + JSOP_LINENO_LENGTH);
@@ -2054,7 +2045,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
     }
     if (!ok)
         return false;
-    if (cx->runtime->gcNumber != sample || entry->vshape() != pobj->shape())
+    if (cx->runtime->gcNumber != sample)
         return true;
     JS_ASSERT(prop);
     JS_ASSERT(pobj == found);
@@ -2630,7 +2621,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
         } while (0););
 #endif
 #else
-    JS_CHECK_RECURSION(cx, return JS_FALSE);
+    JS_CHECK_RECURSION(cx, goto error);
 #endif
 
 #if JS_THREADED_INTERP
@@ -4698,14 +4689,10 @@ BEGIN_CASE(JSOP_EVAL)
     argc = GET_ARGC(regs.pc);
     vp = regs.sp - (argc + 2);
 
-    if (!IsFunctionObject(*vp, &callee))
+    if (!IsBuiltinEvalForScope(&regs.fp->scopeChain(), *vp))
         goto call_using_invoke;
 
-    newfun = callee->getFunctionPrivate();
-    if (!IsBuiltinEvalFunction(newfun))
-        goto call_using_invoke;
-
-    if (!DirectEval(cx, newfun, argc, vp))
+    if (!DirectEval(cx, argc, vp))
         goto error;
 }
 END_CASE(JSOP_EVAL)
