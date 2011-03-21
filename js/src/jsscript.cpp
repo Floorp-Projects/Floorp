@@ -310,6 +310,27 @@ enum ScriptBits {
 JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 {
+    JS_ASSERT(!xdr->atoms);
+    JS_ASSERT(!xdr->atomsMap);
+
+    XDRAtoms atoms;
+    XDRAtomsHashMap atomsMap;
+    if (xdr->mode == JSXDR_ENCODE && !atomsMap.init()) {
+        js_ReportOutOfMemory(xdr->cx);
+        return false;
+    }
+
+    xdr->atoms = &atoms;
+    xdr->atomsMap = &atomsMap;
+    JSBool ok = js_XDRScriptAndSubscripts(xdr, scriptp);
+    xdr->atoms = NULL;
+    xdr->atomsMap = NULL;
+    return ok;
+}
+
+JSBool
+js_XDRScriptAndSubscripts(JSXDRState *xdr, JSScript **scriptp)
+{
     JSScript *oldscript;
     JSBool ok;
     jsbytecode *code;

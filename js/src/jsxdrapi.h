@@ -61,8 +61,11 @@
  * Spiritually guided by Sun's XDR, where appropriate.
  */
 
+#include "jsatom.h"
 #include "jspubtd.h"
 #include "jsprvtd.h"
+#include "jsvector.h"
+#include "jshashtable.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -82,6 +85,7 @@ JS_BEGIN_EXTERN_C
 #endif
 
 #define JSXDR_ALIGN     4
+#define JSXDR_MASK      (JSXDR_ALIGN - 1)
 
 typedef enum JSXDRMode {
     JSXDR_ENCODE,
@@ -105,6 +109,9 @@ typedef struct JSXDROps {
     void        (*finalize)(JSXDRState *);
 } JSXDROps;
 
+typedef js::Vector<JSAtom *, 1, js::SystemAllocPolicy> XDRAtoms;
+typedef js::HashMap<JSAtom *, uint32, js::DefaultHasher<JSAtom *>, js::SystemAllocPolicy> XDRAtomsHashMap;
+
 struct JSXDRState {
     JSXDRMode   mode;
     JSXDROps    *ops;
@@ -116,6 +123,8 @@ struct JSXDRState {
     void        *userdata;
     JSScript    *script;
     const char  *filename;
+    XDRAtoms    *atoms;
+    XDRAtomsHashMap *atomsMap;
 };
 
 extern JS_PUBLIC_API(void)
@@ -206,7 +215,7 @@ JS_XDRFindClassById(JSXDRState *xdr, uint32 id);
  * before deserialization of bytecode.  If the saved version does not match
  * the current version, abort deserialization and invalidate the file.
  */
-#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 84)
+#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 85)
 
 /*
  * Library-private functions.
