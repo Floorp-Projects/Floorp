@@ -5613,6 +5613,22 @@ JS_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
 }
 
 JS_PUBLIC_API(JSBool)
+JS_ParseJSON(JSContext *cx, const jschar *chars, uint32 len, jsval *vp)
+{
+    CHECK_REQUEST(cx);
+
+    return ParseJSONWithReviver(cx, chars, len, NullValue(), Valueify(vp));
+}
+
+JS_PUBLIC_API(JSBool)
+JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32 len, jsval reviver, jsval *vp)
+{
+    CHECK_REQUEST(cx);
+
+    return ParseJSONWithReviver(cx, chars, len, Valueify(reviver), Valueify(vp));
+}
+
+JS_PUBLIC_API(JSBool)
 JS_ReadStructuredClone(JSContext *cx, const uint64 *buf, size_t nbytes,
                        uint32 version, jsval *vp,
                        const JSStructuredCloneCallbacks *optionalCallbacks,
