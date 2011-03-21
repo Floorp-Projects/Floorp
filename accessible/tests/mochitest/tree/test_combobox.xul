@@ -192,9 +192,6 @@
       if ("clearResults" in ac2cmp) {
         SimpleTest.ok(true, "Testing (Old) XPFE autocomplete widget. (ac2mp)");
 
-        // Toolkit has the menupopup first ...
-        var mp = accTree.children.splice(0, 1);
-
         // Popup is always created.
         accTree.children.push(
           {
@@ -221,9 +218,6 @@
             ]
           }
           );
-
-        // ... whereas XPFE has it last.
-        accTree.children.push(mp[0]);
       } else {
         SimpleTest.ok(true, "Testing (New) Toolkit autocomplete widget. (ac2mp)");
 

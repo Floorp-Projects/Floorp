@@ -36,8 +36,6 @@
                    ignorekeys="true" noautofocus="true" level="top"
                    xbl:inherits="for=id,nomatch"/>
       </xul:popupset>
-      
-      <children includes="menupopup"/>
     </content>
 
     <implementation implements="nsIDOMXULMenuListElement, nsIAccessibleProvider">
