@@ -240,6 +240,8 @@ JS_XDRInitBase(JSXDRState *xdr, JSXDRMode mode, JSContext *cx)
     xdr->userdata = NULL;
     xdr->script = NULL;
     xdr->filename = NULL;
+    xdr->atoms = NULL;
+    xdr->atomsMap = NULL;
 }
 
 JS_PUBLIC_API(JSXDRState *)
@@ -414,67 +416,55 @@ JS_XDRCStringOrNull(JSXDRState *xdr, char **sp)
     return JS_XDRCString(xdr, sp);
 }
 
-static JSBool
-XDRChars(JSXDRState *xdr, jschar *chars, uint32 nchars)
-{
-    uint32 i, padlen, nbytes;
-    jschar *raw;
-
-    nbytes = nchars * sizeof(jschar);
-    padlen = nbytes % JSXDR_ALIGN;
-    if (padlen) {
-        padlen = JSXDR_ALIGN - padlen;
-        nbytes += padlen;
-    }
-    if (!(raw = (jschar *) xdr->ops->raw(xdr, nbytes)))
-        return JS_FALSE;
-    if (xdr->mode == JSXDR_ENCODE) {
-        for (i = 0; i != nchars; i++)
-            raw[i] = JSXDR_SWAB16(chars[i]);
-        if (padlen)
-            memset((char *)raw + nbytes - padlen, 0, padlen);
-    } else if (xdr->mode == JSXDR_DECODE) {
-        for (i = 0; i != nchars; i++)
-            chars[i] = JSXDR_SWAB16(raw[i]);
-    }
-    return JS_TRUE;
-}
-
 /*
  * Convert between a JS (Unicode) string and the XDR representation.
  */
 JS_PUBLIC_API(JSBool)
 JS_XDRString(JSXDRState *xdr, JSString **strp)
 {
-    uint32 nchars;
-    jschar *chars;
+    uint32 nchars = 0;
+    size_t len;
 
-    if (xdr->mode == JSXDR_ENCODE)
-        nchars = (*strp)->length();
-    if (!JS_XDRUint32(xdr, &nchars))
-        return JS_FALSE;
-
-    if (xdr->mode == JSXDR_DECODE)
-        chars = (jschar *) xdr->cx->malloc((nchars + 1) * sizeof(jschar));
-    else
-        chars = const_cast<jschar *>((*strp)->getChars(xdr->cx));
-    if (!chars)
-        return JS_FALSE;
-
-    if (!XDRChars(xdr, chars, nchars))
-        goto bad;
-    if (xdr->mode == JSXDR_DECODE) {
-        chars[nchars] = 0;
-        *strp = JS_NewUCString(xdr->cx, chars, nchars);
-        if (!*strp)
-            goto bad;
+    if (xdr->mode == JSXDR_ENCODE) {
+        len = js_GetDeflatedUTF8StringLength(xdr->cx,
+                                             (*strp)->getChars(xdr->cx),
+                                             (*strp)->length(),
+                                             true);
+        /* js_GetDeflatedUTF8StringLength never fails in CESU8 mode */
+        JS_ASSERT(len != -1);
+        JS_ASSERT(size_t(uint32(len)) == len);
+        /* ensure MAX_LENGTH strings can always fit when CESU8 encoded */
+        JS_STATIC_ASSERT(JSString::MAX_LENGTH < (uint32(-1) / 3));
+        nchars = (uint32)len;
     }
-    return JS_TRUE;
+    if (!JS_XDRUint32(xdr, &nchars))
+        return false;
 
-bad:
-    if (xdr->mode == JSXDR_DECODE)
-        xdr->cx->free(chars);
-    return JS_FALSE;
+    JS_ASSERT(xdr->ops == &xdrmem_ops);
+    uint32 paddedLen = (nchars + JSXDR_MASK) & ~JSXDR_MASK;
+    char *buf = (char *)mem_raw(xdr, paddedLen);
+    if (!buf)
+        return false;
+
+    len = (uint32)nchars;
+    if (xdr->mode == JSXDR_ENCODE) {
+        JS_ALWAYS_TRUE(js_DeflateStringToUTF8Buffer(xdr->cx,
+                                                    (*strp)->getChars(xdr->cx),
+                                                    (*strp)->length(), buf,
+                                                    &len, true));
+    } else {
+        jschar *chars = js_InflateString(xdr->cx, buf, &len, true);
+        if (!chars)
+            return false;
+
+        *strp = js_NewString(xdr->cx, chars, len);
+        if (!*strp) {
+            xdr->cx->free(chars);
+            return false;
+        }
+    }
+
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -617,50 +607,75 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
     return JS_XDRUint32(xdr, &type) && XDRValueBody(xdr, type, vp);
 }
 
+static uint32
+XDRGetAtomIndex(JSXDRState *xdr, JSAtom *atom)
+{
+    if (XDRAtomsHashMap::Ptr p = xdr->atomsMap->lookup(atom))
+        return p->value;
+    return uint32(-1);
+}
+
+static bool
+XDRPutAtomIndex(JSXDRState *xdr, JSAtom *atom)
+{
+    if (xdr->atoms->length() >= size_t(uint32(-1)))
+        return true;
+
+    if ((xdr->mode == JSXDR_DECODE ||
+         xdr->atomsMap->put(atom, uint32(xdr->atoms->length()))) &&
+        xdr->atoms->append(atom))
+        return true;
+
+    js_ReportOutOfMemory(xdr->cx);
+    return false;
+}
+
 extern JSBool
 js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
 {
-    JSString *str;
-    uint32 nchars;
-    JSAtom *atom;
-    JSContext *cx;
-    jschar *chars;
-    jschar stackChars[256];
-
+    uint32 idx;
     if (xdr->mode == JSXDR_ENCODE) {
-        str = ATOM_TO_STRING(*atomp);
-        return JS_XDRString(xdr, &str);
+        idx = XDRGetAtomIndex(xdr, *atomp);
+        if (idx == uint32(-1) &&
+            !XDRPutAtomIndex(xdr, *atomp))
+            return false;
     }
 
-    /*
-     * Inline JS_XDRString when decoding to avoid JSString allocation
-     * for already existing atoms. See bug 321985.
-     */
-    if (!JS_XDRUint32(xdr, &nchars))
-        return JS_FALSE;
-    atom = NULL;
-    cx = xdr->cx;
-    if (nchars <= JS_ARRAY_LENGTH(stackChars)) {
-        chars = stackChars;
+    if (!JS_XDRUint32(xdr, &idx))
+        return false;
+
+    if (xdr->mode == JSXDR_DECODE) {
+        if (idx != uint32(-1)) {
+            JS_ASSERT(size_t(idx) < xdr->atoms->length());
+            *atomp = (*xdr->atoms)[idx];
+        } else {
+            uint32 len;
+            if (!JS_XDRUint32(xdr, &len))
+                return false;
+
+            JS_ASSERT(xdr->ops == &xdrmem_ops);
+            uint32 paddedLen = (len + JSXDR_MASK) & ~JSXDR_MASK;
+            char *buf = (char *)mem_raw(xdr, paddedLen);
+            if (!buf)
+                return false;
+
+            JSAtom *atom = js_Atomize(xdr->cx, buf, len, 0, true);
+            if (!atom)
+                return false;
+
+            if (!XDRPutAtomIndex(xdr, atom))
+                return false;
+
+            *atomp = atom;
+        }
     } else {
-        /*
-         * This is very uncommon. Don't use the tempPool arena for this as
-         * most allocations here will be bigger than tempPool's arenasize.
-         */
-        chars = (jschar *) cx->malloc(nchars * sizeof(jschar));
-        if (!chars)
-            return JS_FALSE;
+        if (idx == uint32(-1)) {
+            JSString *str = ATOM_TO_STRING(*atomp);
+            return JS_XDRString(xdr, &str);
+        }
     }
 
-    if (XDRChars(xdr, chars, nchars))
-        atom = js_AtomizeChars(cx, chars, nchars, 0);
-    if (chars != stackChars)
-        cx->free(chars);
-
-    if (!atom)
-        return JS_FALSE;
-    *atomp = atom;
-    return JS_TRUE;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
