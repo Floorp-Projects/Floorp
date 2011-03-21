@@ -67,6 +67,7 @@ CPPSRCS = \
   testLooselyEqual.cpp \
   testNewObject.cpp \
   testOps.cpp \
+  testParseJSON.cpp \
   testPropCache.cpp \
   testRegExpInstanceProperties.cpp \
   testResolveRecursion.cpp \
