@@ -17153,7 +17153,7 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
         op == JSOP_GETARGPROP || op == JSOP_GETLOCALPROP)
     {
         /* Try to see if it's a scripted getter, which is faster in the tracer. */
-        Value v;
+        Value v = UndefinedValue();
         if (op == JSOP_GETPROP || op == JSOP_CALLPROP) {
             v = cx->regs->sp[-1];
         } if (op == JSOP_GETARGPROP) {
@@ -17164,6 +17164,8 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
             uint32 slot = GET_SLOTNO(pc);
             JS_ASSERT(slot < script->nslots);
             v = fp->slots()[slot];
+        } else {
+            JS_NOT_REACHED("no else");
         }
 
         if (v.isObject()) {
