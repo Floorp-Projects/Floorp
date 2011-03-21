@@ -1903,7 +1903,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         fun->u.i.wrapper = JSPackedBool((firstword >> 1) & 1);
     }
 
-    if (!js_XDRScript(xdr, &fun->u.i.script))
+    if (!js_XDRScriptAndSubscripts(xdr, &fun->u.i.script))
         return false;
 
     if (xdr->mode == JSXDR_DECODE) {
@@ -2027,7 +2027,7 @@ JS_PUBLIC_DATA(Class) js_FunctionClass = {
     NULL,                 /* checkAccess */
     NULL,                 /* call        */
     NULL,                 /* construct   */
-    js_XDRFunctionObject,
+    NULL,
     fun_hasInstance,
     fun_trace
 };

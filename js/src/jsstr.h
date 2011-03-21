@@ -977,12 +977,22 @@ js_SkipWhiteSpace(const jschar *s, const jschar *end)
 }
 
 /*
+ * Some string functions have an optional bool useCESU8 argument.
+ * CESU-8 (Compatibility Encoding Scheme for UTF-16: 8-bit) is a
+ * variant of UTF-8 that allows us to store any wide character
+ * string as a narrow character string. For strings containing
+ * mostly ascii, it saves space.
+ * http://www.unicode.org/reports/tr26/
+ */
+
+/*
  * Inflate bytes to JS chars and vice versa.  Report out of memory via cx and
  * return null on error, otherwise return the jschar or byte vector that was
  * JS_malloc'ed. length is updated to the length of the new string in jschars.
+ * Using useCESU8 = true treats 'bytes' as CESU-8.
  */
 extern jschar *
-js_InflateString(JSContext *cx, const char *bytes, size_t *length);
+js_InflateString(JSContext *cx, const char *bytes, size_t *length, bool useCESU8 = false);
 
 extern char *
 js_DeflateString(JSContext *cx, const jschar *chars, size_t length);
@@ -998,11 +1008,12 @@ js_InflateStringToBuffer(JSContext *cx, const char *bytes, size_t length,
                          jschar *chars, size_t *charsLength);
 
 /*
- * Same as js_InflateStringToBuffer, but always treats 'bytes' as UTF-8.
+ * Same as js_InflateStringToBuffer, but treats 'bytes' as UTF-8 or CESU-8.
  */
 extern JSBool
 js_InflateUTF8StringToBuffer(JSContext *cx, const char *bytes, size_t length,
-                             jschar *chars, size_t *charsLength);
+                             jschar *chars, size_t *charsLength,
+                             bool useCESU8 = false);
 
 /*
  * Get number of bytes in the deflated sequence of characters. Behavior depends
@@ -1013,11 +1024,12 @@ js_GetDeflatedStringLength(JSContext *cx, const jschar *chars,
                            size_t charsLength);
 
 /*
- * Same as js_GetDeflatedStringLength, but always treats the result as UTF-8.
+ * Same as js_GetDeflatedStringLength, but treats the result as UTF-8 or CESU-8.
+ * This function will never fail (return -1) in CESU-8 mode.
  */
 extern size_t
 js_GetDeflatedUTF8StringLength(JSContext *cx, const jschar *chars,
-                               size_t charsLength);
+                               size_t charsLength, bool useCESU8 = false);
 
 /*
  * Deflate JS chars to bytes into a buffer. 'bytes' must be large enough for
@@ -1030,11 +1042,12 @@ js_DeflateStringToBuffer(JSContext *cx, const jschar *chars,
                          size_t charsLength, char *bytes, size_t *length);
 
 /*
- * Same as js_DeflateStringToBuffer, but always treats 'bytes' as UTF-8.
+ * Same as js_DeflateStringToBuffer, but treats 'bytes' as UTF-8 or CESU-8.
  */
 extern JSBool
 js_DeflateStringToUTF8Buffer(JSContext *cx, const jschar *chars,
-                             size_t charsLength, char *bytes, size_t *length);
+                             size_t charsLength, char *bytes, size_t *length,
+                             bool useCESU8 = false);
 
 /* Export a few natives and a helper to other files in SpiderMonkey. */
 extern JSBool
