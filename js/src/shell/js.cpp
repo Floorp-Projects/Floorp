@@ -74,7 +74,6 @@
 #include "jsreflect.h"
 #include "jsscope.h"
 #include "jsscript.h"
-#include "jstracer.h"
 #include "jstypedarray.h"
 #include "jsxml.h"
 #include "jsperf.h"
@@ -201,6 +200,8 @@ js::workers::ThreadPool *gWorkerThreadPool = NULL;
 
 static JSBool reportWarnings = JS_TRUE;
 static JSBool compileOnly = JS_FALSE;
+
+static JSBool OOM_printAllocationCount = JS_FALSE;
 
 typedef enum JSShellErrNum {
 #define MSG_DEF(name, number, count, exception, format) \
@@ -397,7 +398,7 @@ static void
 Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
 {
     JSBool ok, hitEOF;
-    JSScript *script;
+    JSObject *scriptObj;
     jsval result;
     JSString *str;
     char *buffer;
@@ -446,10 +447,10 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
         int64 t1 = PRMJ_Now();
         oldopts = JS_GetOptions(cx);
         JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-        script = JS_CompileFileHandle(cx, obj, filename, file);
+        scriptObj = JS_CompileFileHandle(cx, obj, filename, file);
         JS_SetOptions(cx, oldopts);
-        if (script && !compileOnly) {
-            (void)JS_ExecuteScript(cx, obj, script, NULL);
+        if (scriptObj && !compileOnly) {
+            (void) JS_ExecuteScript(cx, obj, scriptObj, NULL);
             int64 t2 = PRMJ_Now() - t1;
             if (printTiming)
                 printf("runtime = %.3f ms\n", double(t2) / PRMJ_USEC_PER_MSEC);
@@ -535,13 +536,13 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
         oldopts = JS_GetOptions(cx);
         if (!compileOnly)
             JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
-        script = JS_CompileScript(cx, obj, buffer, len, "typein",
-                                  startline);
+        scriptObj = JS_CompileScript(cx, obj, buffer, len, "typein",
+                                     startline);
         if (!compileOnly)
             JS_SetOptions(cx, oldopts);
 
-        if (script && !compileOnly) {
-            ok = JS_ExecuteScript(cx, obj, script, &result);
+        if (scriptObj && !compileOnly) {
+            ok = JS_ExecuteScript(cx, obj, scriptObj, &result);
             if (ok && !JSVAL_IS_VOID(result)) {
                 str = JS_ValueToSource(cx, result);
                 ok = !!str;
@@ -614,6 +615,11 @@ usage(void)
                       "                Note: this option switches to non-interactive mode.\n"
                       "  -S <size>     Set the maximum size of the stack to <size> bytes\n"
                       "                Default is %u.\n", DEFAULT_MAX_STACK_SIZE);
+#ifdef DEBUG
+    fprintf(gErrFile, "  -A <max>      After <max> memory allocations, act like we're OOM.\n");
+    fprintf(gErrFile, "  -O <max>      At exit, print the number of memory allocations in \n"
+                      "                the program.\n");
+#endif
 #ifdef JS_THREADSAFE
     fprintf(gErrFile, "  -g <n>        Sleep for <n> seconds before starting (default: 0)\n");
 #endif
@@ -719,6 +725,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
           case 'T':
 #endif
           case 'g':
+          case 'A':
             ++i;
             break;
           default:;
@@ -770,7 +777,16 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             JS_SetGCZeal(cx, !!(atoi(argv[i])));
             break;
 #endif
+#ifdef DEBUG
+        case 'A':
+            /* Handled at the very start of main(). */
+            ++i; /* skip the argument */
+            break;
 
+        case 'O':
+            OOM_printAllocationCount = JS_TRUE;
+            break;
+#endif
         case 'w':
             reportWarnings = JS_TRUE;
             break;
@@ -1018,36 +1034,32 @@ Options(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 Load(JSContext *cx, uintN argc, jsval *vp)
 {
-    uintN i;
-    JSString *str;
-    JSScript *script;
-    uint32 oldopts;
-
     JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
     if (!thisobj)
         return JS_FALSE;
 
     jsval *argv = JS_ARGV(cx, vp);
-    for (i = 0; i < argc; i++) {
-        str = JS_ValueToString(cx, argv[i]);
+    for (uintN i = 0; i < argc; i++) {
+        JSString *str = JS_ValueToString(cx, argv[i]);
         if (!str)
-            return JS_FALSE;
+            return false;
         argv[i] = STRING_TO_JSVAL(str);
         JSAutoByteString filename(cx, str);
         if (!filename)
             return JS_FALSE;
         errno = 0;
-        oldopts = JS_GetOptions(cx);
+        uint32 oldopts = JS_GetOptions(cx);
         JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-        script = JS_CompileFile(cx, thisobj, filename.ptr());
-        if (!script)
-            return JS_FALSE;
+        JSObject *scriptObj = JS_CompileFile(cx, thisobj, filename.ptr());
         JS_SetOptions(cx, oldopts);
-        if (!compileOnly && !JS_ExecuteScript(cx, thisobj, script, NULL))
-            return JS_FALSE;
+        if (!scriptObj)
+            return false;
+
+        if (!compileOnly && !JS_ExecuteScript(cx, thisobj, scriptObj, NULL))
+            return false;
     }
 
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -1160,17 +1172,12 @@ Run(JSContext *cx, uintN argc, jsval *vp)
     JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
 
     int64 startClock = PRMJ_Now();
-    JSScript *script = JS_CompileUCScript(cx, thisobj, ucbuf, buflen, filename.ptr(), 1);
+    JSObject *scriptObj = JS_CompileUCScript(cx, thisobj, ucbuf, buflen, filename.ptr(), 1);
     JS_SetOptions(cx, oldopts);
-    if (!script)
+    if (!scriptObj || !JS_ExecuteScript(cx, thisobj, scriptObj, NULL))
         return false;
 
-    JSBool ok = JS_ExecuteScript(cx, thisobj, script, NULL);
     int64 endClock = PRMJ_Now();
-    JS_DestroyScript(cx, script);
-    if (!ok)
-        return false;
-
     JS_SET_RVAL(cx, vp, DOUBLE_TO_JSVAL((endClock - startClock) / double(PRMJ_USEC_PER_MSEC)));
     return true;
 }
@@ -1985,7 +1992,7 @@ UpdateSwitchTableBounds(JSContext *cx, JSScript *script, uintN offset,
 static void
 SrcNotes(JSContext *cx, JSScript *script)
 {
-    uintN offset, delta, caseOff, switchTableStart, switchTableEnd;
+    uintN offset, lineno, delta, caseOff, switchTableStart, switchTableEnd;
     jssrcnote *notes, *sn;
     JSSrcNoteType type;
     const char *name;
@@ -1994,7 +2001,11 @@ SrcNotes(JSContext *cx, JSScript *script)
     JSString *str;
 
     fprintf(gOutFile, "\nSource notes:\n");
+    fprintf(gOutFile, "%4s %4s %5s %6s %-8s %s\n",
+            "ofs", "line", "pc", "delta", "desc", "args");
+    fprintf(gOutFile, "---- ---- ----- ------ -------- ------\n");
     offset = 0;
+    lineno = script->lineno;
     notes = script->notes();
     switchTableEnd = switchTableStart = 0;
     for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
@@ -2010,11 +2021,15 @@ SrcNotes(JSContext *cx, JSScript *script)
                 JS_ASSERT(js_GetOpcode(cx, script, script->code + offset) == JSOP_NOP);
             }
         }
-        fprintf(gOutFile, "%3u: %5u [%4u] %-8s",
-                (uintN) (sn - notes), offset, delta, name);
+        fprintf(gOutFile, "%3u: %4u %5u [%4u] %-8s",
+                (uintN) (sn - notes), lineno, offset, delta, name);
         switch (type) {
           case SRC_SETLINE:
-            fprintf(gOutFile, " lineno %u", (uintN) js_GetSrcNoteOffset(sn, 0));
+            lineno = js_GetSrcNoteOffset(sn, 0);
+            fprintf(gOutFile, " lineno %u", lineno);
+            break;
+          case SRC_NEWLINE:
+            ++lineno;
             break;
           case SRC_FOR:
             fprintf(gOutFile, " cond %u update %u tail %u",
@@ -2257,7 +2272,6 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
     argv += argc-1;
     argc = 1;
 
-
     JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
     if (!thisobj)
         return JS_FALSE;
@@ -2271,16 +2285,12 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
 
     uint32 oldopts = JS_GetOptions(cx);
     JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-    JSScript *script = JS_CompileFile(cx, thisobj, filename.ptr());
+    JSObject *scriptObj = JS_CompileFile(cx, thisobj, filename.ptr());
     JS_SetOptions(cx, oldopts);
-    if (!script)
-        return JS_FALSE;
+    if (!scriptObj)
+        return false;
 
-    JSObject *obj = JS_NewScriptObject(cx, script);
-    if (!obj)
-        return JS_FALSE;
-
-    argv[0] = OBJECT_TO_JSVAL(obj); /* I like to root it, root it. */
+    argv[0] = OBJECT_TO_JSVAL(scriptObj);
     JSBool ok = Disassemble(cx, _argc, vp); /* gross, but works! */
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return ok;
@@ -3161,24 +3171,22 @@ split_finalize(JSContext *cx, JSObject *obj)
     JS_free(cx, JS_GetPrivate(cx, obj));
 }
 
-static uint32
-split_mark(JSContext *cx, JSObject *obj, void *arg)
+static void
+split_trace(JSTracer *trc, JSObject *obj)
 {
     ComplexObject *cpx;
 
-    cpx = (ComplexObject *) JS_GetPrivate(cx, obj);
+    cpx = (ComplexObject *) JS_GetPrivate(trc->context, obj);
 
     if (!cpx->isInner && cpx->inner) {
         /* Mark the inner object. */
-        JS_MarkGCThing(cx, OBJECT_TO_JSVAL(cpx->inner), "ComplexObject.inner", arg);
+        JS_CALL_TRACER(trc, cpx->inner, JSTRACE_OBJECT, "ComplexObject.inner");
     }
 
     if (cpx->isInner && cpx->outer) {
         /* Mark the inner object. */
-        JS_MarkGCThing(cx, OBJECT_TO_JSVAL(cpx->outer), "ComplexObject.outer", arg);
+        JS_CALL_TRACER(trc, cpx->outer, JSTRACE_OBJECT, "ComplexObject.outer");
     }
-
-    return 0;
 }
 
 static JSObject *
@@ -3233,7 +3241,7 @@ static Class split_global_class = {
     NULL,           /* construct   */
     NULL,           /* xdrObject   */
     NULL,           /* hasInstance */
-    split_mark,
+    split_trace,
     {
         Valueify(split_equality),
         split_outerObject,
@@ -3251,7 +3259,6 @@ static Class split_global_class = {
         NULL, /* deleteProperty */
         NULL, /* enumerate      */
         NULL, /* typeOf         */
-        NULL, /* trace          */
         NULL, /* fix            */
         split_thisObject,
         NULL, /* clear          */
@@ -4318,10 +4325,10 @@ Compile(JSContext *cx, uintN argc, jsval *vp)
     }
 
     JSString *scriptContents = JSVAL_TO_STRING(arg0);
-    JSScript *result = JS_CompileUCScript(cx, NULL, JS_GetStringCharsZ(cx, scriptContents),
-                                          JS_GetStringLength(scriptContents), "<string>", 0);
-    if (!result)
-        return JS_FALSE;
+    if (!JS_CompileUCScript(cx, NULL, JS_GetStringCharsZ(cx, scriptContents),
+                            JS_GetStringLength(scriptContents), "<string>", 0)) {
+        return false;
+    }
 
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
@@ -4762,8 +4769,6 @@ static const char *const shell_help_messages[] = {
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(shell_help_messages) - PROFILING_FUNCTION_COUNT ==
                  JS_ARRAY_LENGTH(shell_functions) - 1 /* JS_FS_END */);
 
-#undef PROFILING_FUNCTION_COUNT
-
 #ifdef DEBUG
 static void
 CheckHelpMessages()
@@ -4772,7 +4777,7 @@ CheckHelpMessages()
     const char *lp;
 
     /* Messages begin with "function_name(" prefix and don't end with \n. */
-    for (m = shell_help_messages; m != JS_ARRAY_END(shell_help_messages); ++m) {
+    for (m = shell_help_messages; m != JS_ARRAY_END(shell_help_messages) - PROFILING_FUNCTION_COUNT; ++m) {
         lp = strchr(*m, '(');
         JS_ASSERT(lp);
         JS_ASSERT(memcmp(shell_functions[m - shell_help_messages].name,
@@ -4783,6 +4788,8 @@ CheckHelpMessages()
 #else
 # define CheckHelpMessages() ((void) 0)
 #endif
+
+#undef PROFILING_FUNCTION_COUNT
 
 static JSBool
 Help(JSContext *cx, uintN argc, jsval *vp)
@@ -5745,6 +5752,20 @@ MaybeOverrideOutFileFromEnv(const char* const envVar,
 int
 main(int argc, char **argv, char **envp)
 {
+#ifdef DEBUG
+    /* Check the allocation count first, or else we'll miss allocations. */
+    for (int i = 0; i < argc; i++)
+    {
+      if (strlen(argv[i]) == 2 && argv[i][0] == '-' && argv[i][1] == 'A')
+      {
+        if (++i == argc)
+          return usage();
+        OOM_maxAllocations = atoi(argv[i]);
+        break;
+      }
+    }
+#endif
+
     int stackDummy;
     JSRuntime *rt;
     JSContext *cx;
@@ -5818,6 +5839,11 @@ main(int argc, char **argv, char **envp)
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
 
     result = Shell(cx, argc, argv, envp);
+
+#ifdef DEBUG
+    if (OOM_printAllocationCount)
+        printf("OOM max count: %u\n", OOM_counter);
+#endif
 
     DestroyContext(cx, true);
 

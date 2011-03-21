@@ -261,11 +261,11 @@ static JSClass sCDataProtoClass = {
 
 static JSClass sCTypeClass = {
   "CType",
-  JSCLASS_HAS_RESERVED_SLOTS(CTYPE_SLOTS) | JSCLASS_MARK_IS_TRACE,
+  JSCLASS_HAS_RESERVED_SLOTS(CTYPE_SLOTS),
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CType::Finalize,
   NULL, NULL, CType::ConstructData, CType::ConstructData, NULL,
-  CType::HasInstance, JS_CLASS_TRACE(CType::Trace), NULL
+  CType::HasInstance, CType::Trace, NULL
 };
 
 static JSClass sCDataClass = {
@@ -278,10 +278,10 @@ static JSClass sCDataClass = {
 
 static JSClass sCClosureClass = {
   "CClosure",
-  JSCLASS_HAS_RESERVED_SLOTS(CCLOSURE_SLOTS) | JSCLASS_MARK_IS_TRACE,
+  JSCLASS_HAS_RESERVED_SLOTS(CCLOSURE_SLOTS),
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CClosure::Finalize,
-  NULL, NULL, NULL, NULL, NULL, NULL, JS_CLASS_TRACE(CClosure::Trace), NULL
+  NULL, NULL, NULL, NULL, NULL, NULL, CClosure::Trace, NULL
 };
 
 #define CTYPESFN_FLAGS \
@@ -4782,8 +4782,8 @@ NewFunctionInfo(JSContext* cx,
     if (!ffiType)
       return NULL;
 
-    fninfo->mArgTypes.append(argType);
-    fninfo->mFFITypes.append(ffiType);
+    fninfo->mArgTypes.infallibleAppend(argType);
+    fninfo->mFFITypes.infallibleAppend(ffiType);
   }
 
   if (fninfo->mIsVariadic)

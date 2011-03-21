@@ -122,20 +122,37 @@ CastAsObjectJsval(StrictPropertyOp op)
     return ObjectOrNullValue(CastAsObject(op));
 }
 
-} /* namespace js */
-
 /*
- * A representation of ECMA-262 ed. 5's internal property descriptor data
+ * A representation of ECMA-262 ed. 5's internal Property Descriptor data
  * structure.
  */
 struct PropDesc {
+    /*
+     * Original object from which this descriptor derives, passed through for
+     * the benefit of proxies.
+     */
+    js::Value pd;
+
+    js::Value value, get, set;
+
+    /* Property descriptor boolean fields. */
+    uint8 attrs;
+
+    /* Bits indicating which values are set. */
+    bool hasGet : 1;
+    bool hasSet : 1;
+    bool hasValue : 1;
+    bool hasWritable : 1;
+    bool hasEnumerable : 1;
+    bool hasConfigurable : 1;
+
     friend class js::AutoPropDescArrayRooter;
 
     PropDesc();
 
   public:
     /* 8.10.5 ToPropertyDescriptor(Obj) */
-    bool initialize(JSContext* cx, jsid id, const js::Value &v);
+    bool initialize(JSContext* cx, const js::Value &v);
 
     /* 8.10.1 IsAccessorDescriptor(desc) */
     bool isAccessorDescriptor() const {
@@ -184,26 +201,12 @@ struct PropDesc {
     js::StrictPropertyOp setter() const {
         return js::CastAsStrictPropertyOp(setterObject());
     }
-
-    js::Value pd;
-    jsid id;
-    js::Value value, get, set;
-
-    /* Property descriptor boolean fields. */
-    uint8 attrs;
-
-    /* Bits indicating which values are set. */
-    bool hasGet : 1;
-    bool hasSet : 1;
-    bool hasValue : 1;
-    bool hasWritable : 1;
-    bool hasEnumerable : 1;
-    bool hasConfigurable : 1;
 };
 
-namespace js {
-
 typedef Vector<PropDesc, 1> PropDescArray;
+
+void
+MeterEntryCount(uintN count);
 
 } /* namespace js */
 
@@ -502,15 +505,20 @@ struct JSObject : js::gc::Cell {
 
     bool hasOwnShape() const    { return !!(flags & OWN_SHAPE); }
 
-    void setMap(const JSObjectMap *amap) {
+    void setMap(JSObjectMap *amap) {
         JS_ASSERT(!hasOwnShape());
-        map = const_cast<JSObjectMap *>(amap);
+        map = amap;
         objShape = map->shape;
     }
 
     void setSharedNonNativeMap() {
-        setMap(&JSObjectMap::sharedNonNative);
+        setMap(const_cast<JSObjectMap *>(&JSObjectMap::sharedNonNative));
     }
+
+    /* Functions for setting up scope chain object maps and shapes. */
+    void initCall(JSContext *cx, const js::Bindings *bindings, JSObject *parent);
+    void initClonedBlock(JSContext *cx, JSObject *proto, JSStackFrame *priv);
+    void setBlockOwnShape(JSContext *cx);
 
     void deletingShapeChange(JSContext *cx, const js::Shape &shape);
     const js::Shape *methodShapeChange(JSContext *cx, const js::Shape &shape);
@@ -1054,6 +1062,12 @@ struct JSObject : js::gc::Cell {
     inline void setNativeIterator(js::NativeIterator *);
 
     /*
+     * Script-related getters.
+     */
+
+    inline JSScript *getScript() const;
+
+    /*
      * XML-related getters and setters.
      */
 
@@ -1296,6 +1310,7 @@ struct JSObject : js::gc::Cell {
     inline bool isClonedBlock() const;
     inline bool isCall() const;
     inline bool isRegExp() const;
+    inline bool isScript() const;
     inline bool isXML() const;
     inline bool isXMLId() const;
     inline bool isNamespace() const;
@@ -1660,6 +1675,11 @@ extern int
 js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                            JSObject **objp, JSProperty **propp);
 
+/*
+ * Constant to pass to js_LookupPropertyWithFlags to infer bits from current
+ * bytecode.
+ */
+static const uintN JSRESOLVE_INFER = 0xffff;
 
 extern JS_FRIEND_DATA(js::Class) js_CallClass;
 extern JS_FRIEND_DATA(js::Class) js_DeclEnvClass;
@@ -1858,9 +1878,6 @@ extern JSBool
 js_XDRObject(JSXDRState *xdr, JSObject **objp);
 
 extern void
-js_TraceObject(JSTracer *trc, JSObject *obj);
-
-extern void
 js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize);
 
 extern void
@@ -1933,8 +1950,16 @@ extern bool
 EvalKernel(JSContext *cx, uintN argc, js::Value *vp, EvalType evalType, JSStackFrame *caller,
            JSObject *scopeobj);
 
-extern JS_FRIEND_API(bool)
-IsBuiltinEvalFunction(JSFunction *fun);
+/*
+ * True iff |v| is the built-in eval function for the global object that
+ * corresponds to |scopeChain|.
+ */
+extern bool
+IsBuiltinEvalForScope(JSObject *scopeChain, const js::Value &v);
+
+/* True iff fun is a built-in eval function. */
+extern bool
+IsAnyBuiltinEval(JSFunction *fun);
 
 }
 

@@ -79,9 +79,8 @@ PropertyTree::finish()
     JS_FinishArenaPool(&arenaPool);
 }
 
-/* On failure, returns NULL. Does not report out of memory. */
 Shape *
-PropertyTree::newShapeUnchecked()
+PropertyTree::newShape(JSContext *cx)
 {
     Shape *shape;
 
@@ -90,8 +89,10 @@ PropertyTree::newShapeUnchecked()
         shape->removeFree();
     } else {
         JS_ARENA_ALLOCATE_CAST(shape, Shape *, &arenaPool, sizeof(Shape));
-        if (!shape)
+        if (!shape) {
+            JS_ReportOutOfMemory(cx);
             return NULL;
+        }
     }
 
 #ifdef DEBUG
@@ -100,15 +101,6 @@ PropertyTree::newShapeUnchecked()
 
     JS_COMPARTMENT_METER(compartment->livePropTreeNodes++);
     JS_COMPARTMENT_METER(compartment->totalPropTreeNodes++);
-    return shape;
-}
-
-Shape *
-PropertyTree::newShape(JSContext *cx)
-{
-    Shape *shape = newShapeUnchecked();
-    if (!shape)
-        JS_ReportOutOfMemory(cx);
     return shape;
 }
 

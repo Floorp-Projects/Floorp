@@ -78,7 +78,6 @@
 #include "jsscript.h"
 #include "jsstaticcheck.h"
 #include "jsstr.h"
-#include "jstracer.h"
 #include "methodjit/MethodJIT.h"
 
 #if JS_HAS_XML_SUPPORT
@@ -171,8 +170,6 @@ Arena<T>::init(JSCompartment *compartment, unsigned thingKind)
     aheader.compartment = compartment;
     aheader.thingKind = thingKind;
     aheader.freeList = &t.things[0].cell;
-    aheader.thingSize = sizeof(T);
-    aheader.isUsed = true;
     JS_ASSERT(sizeof(T) == sizeof(ThingOrCell<T>));
     ThingOrCell<T> *thing = &t.things[0];
     ThingOrCell<T> *last = &t.things[JS_ARRAY_LENGTH(t.things) - 1];
@@ -182,6 +179,8 @@ Arena<T>::init(JSCompartment *compartment, unsigned thingKind)
     }
     last->cell.link = NULL;
 #ifdef DEBUG
+    aheader.thingSize = sizeof(T);
+    aheader.isUsed = true;
     aheader.hasFreeThings = true;
 #endif
 }
@@ -212,16 +211,15 @@ template<typename T>
 inline ConservativeGCTest
 Arena<T>::mark(T *thing, JSTracer *trc)
 {
-    JS_ASSERT(sizeof(T) == aheader.thingSize);
-
     T *alignedThing = getAlignedThing(thing);
 
     if (alignedThing > &t.things[ThingsPerArena-1].t || alignedThing < &t.things[0].t)
         return CGCT_NOTARENA;
 
-    if (!aheader.isUsed || inFreeList(alignedThing))
+    if (!aheader.compartment || inFreeList(alignedThing))
         return CGCT_NOTLIVE;
 
+    JS_ASSERT(sizeof(T) == aheader.thingSize);
     JS_SET_TRACING_NAME(trc, "machine stack");
     Mark(trc, alignedThing);
 
@@ -291,11 +289,17 @@ Chunk::init(JSRuntime *rt)
     Arena<FreeCell> *last = &arenas[JS_ARRAY_LENGTH(arenas) - 1];
     while (arena < last) {
         arena->header()->next = arena + 1;
+        arena->header()->compartment = NULL;
+#ifdef DEBUG
         arena->header()->isUsed = false;
+#endif
         ++arena;
     }
     last->header()->next = NULL;
+    last->header()->compartment = NULL;
+#ifdef DEBUG
     last->header()->isUsed = false;
+#endif
     info.numFree = ArenasPerChunk;
 }
 
@@ -354,7 +358,10 @@ Chunk::releaseArena(Arena<T> *arena)
     rt->gcBytes -= sizeof(Arena<T>);
     comp->gcBytes -= sizeof(Arena<T>);
     info.emptyArenaLists.insert((Arena<Cell> *)arena);
+#ifdef DEBUG
     arena->header()->isUsed = false;
+#endif
+    arena->header()->compartment = NULL;
     ++info.numFree;
     if (unused())
         info.age = 0;
@@ -632,9 +639,6 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w, uint32 &thingKind)
         return CGCT_NOTARENA;
 
     ArenaHeader *aheader = cell->arena()->header();
-
-    if (!aheader->isUsed)
-        return CGCT_FREEARENA;
 
     ConservativeGCTest test;
     thingKind = aheader->thingKind;
@@ -1205,11 +1209,6 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
     }
 }
 
-intN
-js_GetExternalStringGCType(JSString *str) {
-    return GetExternalStringGCType((JSExternalString *)str);
-}
-
 uint32
 js_GetGCThingTraceKind(void *thing) {
     return GetGCThingTraceKind(thing);
@@ -1544,7 +1543,6 @@ AutoGCRooter::trace(JSTracer *trc)
             MarkValue(trc, desc.value, "PropDesc::value");
             MarkValue(trc, desc.get, "PropDesc::get");
             MarkValue(trc, desc.set, "PropDesc::set");
-            MarkId(trc, desc.id, "PropDesc::id");
         }
         return;
       }
@@ -1635,9 +1633,6 @@ MarkContext(JSTracer *trc, JSContext *acx)
         js_TraceSharpMap(trc, &acx->sharpObjectMap);
 
     MarkValue(trc, acx->iterValue, "iterValue");
-
-    if (acx->compartment)
-        acx->compartment->mark(trc);
 }
 
 JS_REQUIRES_STACK void
@@ -1725,8 +1720,6 @@ MarkRuntime(JSTracer *trc)
     iter = NULL;
     while (JSContext *acx = js_ContextIterator(rt, JS_TRUE, &iter))
         MarkContext(trc, acx);
-
-    rt->atomsCompartment->mark(trc);
 
 #ifdef JS_TRACER
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
@@ -1871,7 +1864,8 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
         JS_RUNTIME_UNMETER(rt, liveDependentStrings);
     } else {
         unsigned thingKind = str->asCell()->arena()->header()->thingKind;
-        JS_ASSERT(IsFinalizableStringKind(thingKind));
+        JS_ASSERT(unsigned(FINALIZE_SHORT_STRING) <= thingKind &&
+                  thingKind <= unsigned(FINALIZE_EXTERNAL_STRING));
 
         /* A stillborn string has null chars, so is not valid. */
         jschar *chars = const_cast<jschar *>(str->flatChars());
@@ -2189,13 +2183,8 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
     while (read < end) {
         JSCompartment *compartment = *read++;
 
-        /*
-         * Unmarked compartments containing marked objects don't get deleted,
-         * except when LAST_CONTEXT GC is performed.
-         */
-        if ((!compartment->isMarked() && compartment->arenaListsAreEmpty()) ||
-            gckind == GC_LAST_CONTEXT)
-        {
+        if (!compartment->hold &&
+            (compartment->arenaListsAreEmpty() || gckind == GC_LAST_CONTEXT)) {
             JS_ASSERT(compartment->freeLists.isEmpty());
             if (callback)
                 (void) callback(cx, compartment, JSCOMPARTMENT_DESTROY);
@@ -2270,7 +2259,6 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
     JS_ASSERT(!rt->gcRegenShapes);
     JS_ASSERT(gckind != GC_LAST_CONTEXT);
     JS_ASSERT(comp != rt->atomsCompartment);
-    JS_ASSERT(!comp->isMarked());
     JS_ASSERT(comp->rt->gcMode == JSGC_MODE_COMPARTMENT);
 
     /*
@@ -2286,9 +2274,7 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
          r.front()->clearMarkBitmap();
 
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        (*c)->markCrossCompartment(&gcmarker);
-
-    comp->mark(&gcmarker);
+        (*c)->markCrossCompartmentWrappers(&gcmarker);
 
     MarkRuntime(&gcmarker);
 
@@ -2297,6 +2283,15 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
      * tracing.
      */
     gcmarker.markDelayedChildren();
+
+    /*
+     * Mark weak roots.
+     */
+    while (true) {
+        if (!js_TraceWatchPoints(&gcmarker))
+            break;
+        gcmarker.markDelayedChildren();
+    }
 
     rt->gcMarkingTracer = NULL;
 
@@ -2317,7 +2312,7 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
 #ifdef DEBUG
     /* Make sure that we didn't mark an object in another compartment */
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        JS_ASSERT_IF(*c != comp, checkArenaListAllUnmarked(*c));
+        JS_ASSERT_IF(*c != comp && *c != rt->atomsCompartment, checkArenaListAllUnmarked(*c));
 #endif
 
     /*
@@ -2377,8 +2372,6 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
     ExpireGCChunks(rt);
     TIMESTAMP(sweepDestroyEnd);
 
-    comp->clearMark();
-
     if (rt->gcCallback)
         (void) rt->gcCallback(cx, JSGC_FINALIZE_END);
 }
@@ -2416,6 +2409,15 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
      * tracing.
      */
     gcmarker.markDelayedChildren();
+
+    /*
+     * Mark weak roots.
+     */
+    while (true) {
+        if (!js_TraceWatchPoints(&gcmarker))
+            break;
+        gcmarker.markDelayedChildren();
+    }
 
     rt->gcMarkingTracer = NULL;
 
@@ -2506,9 +2508,6 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
      */
     ExpireGCChunks(rt);
     TIMESTAMP(sweepDestroyEnd);
-
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        (*c)->clearMark();
 
     if (rt->gcCallback)
         (void) rt->gcCallback(cx, JSGC_FINALIZE_END);
@@ -2720,14 +2719,11 @@ GCUntilDone(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIM
 
     AutoGCSession gcsession(cx);
 
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        JS_ASSERT(!(*c)->isMarked());
-
     /*
      * We should not be depending on cx->compartment in the GC, so set it to
      * NULL to look for violations.
      */
-    SwitchToCompartment(cx, (JSCompartment *)NULL);
+    SwitchToCompartment sc(cx, (JSCompartment *)NULL);
 
     JS_ASSERT(!rt->gcCurrentCompartment);
     rt->gcCurrentCompartment = comp;
@@ -2841,6 +2837,18 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 
 namespace js {
 namespace gc {
+
+void
+MarkObjectSlots(JSTracer *trc, JSObject *obj)
+{
+    JS_ASSERT(obj->slotSpan() <= obj->numSlots());
+    uint32 nslots = obj->slotSpan();
+    for (uint32 i = 0; i != nslots; ++i) {
+        const Value &v = obj->getSlot(i);
+        JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
+        MarkValueRaw(trc, v);
+    }
+}
 
 bool
 SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto)

@@ -716,8 +716,24 @@ extern const bool js_alnum[];
  */
 #define JS_ISWORD(c)    ((c) < 128 && js_alnum[(c)])
 
-#define JS_ISIDSTART(c) (JS_ISLETTER(c) || (c) == '_' || (c) == '$')
-#define JS_ISIDENT(c)   (JS_ISIDPART(c) || (c) == '_' || (c) == '$')
+extern const bool js_isidstart[];
+extern const bool js_isident[];
+
+static inline bool
+JS_ISIDSTART(int c)
+{
+    unsigned w = c;
+
+    return (w < 128) ? js_isidstart[w] : JS_ISLETTER(c);
+}
+
+static inline bool
+JS_ISIDENT(int c)
+{
+    unsigned w = c;
+
+    return (w < 128) ? js_isident[w] : JS_ISIDPART(c);
+}
 
 #define JS_ISXMLSPACE(c)        ((c) == ' ' || (c) == '\t' || (c) == '\r' ||  \
                                  (c) == '\n')
@@ -732,15 +748,29 @@ extern const bool js_alnum[];
 const jschar BYTE_ORDER_MARK = 0xFEFF;
 const jschar NO_BREAK_SPACE  = 0x00A0;
 
+extern const bool js_isspace[];
+
 static inline bool
-JS_ISSPACE(jschar c)
+JS_ISSPACE(int c)
 {
     unsigned w = c;
 
-    if (w < 256)
-        return (w <= ' ' && (w == ' ' || (9 <= w && w <= 0xD))) || w == NO_BREAK_SPACE;
+    return (w < 128)
+           ? js_isspace[w]
+           : w == NO_BREAK_SPACE || w == BYTE_ORDER_MARK ||
+             (JS_CCODE(w) & 0x00070000) == 0x00040000;
+}
 
-    return w == BYTE_ORDER_MARK || (JS_CCODE(w) & 0x00070000) == 0x00040000;
+static inline bool
+JS_ISSPACE_OR_BOM(int c)
+{
+    unsigned w = c;
+
+    /* Treat little- and big-endian BOMs as whitespace for compatibility. */
+    return (w < 128)
+           ? js_isspace[w]
+           : w == NO_BREAK_SPACE || w == BYTE_ORDER_MARK ||
+             (JS_CCODE(w) & 0x00070000) == 0x00040000 || w == 0xfffe || w == 0xfeff;
 }
 
 #define JS_ISPRINT(c)   ((c) < 128 && isprint(c))
@@ -760,6 +790,7 @@ JS_ISSPACE(jschar c)
  * Manually inline isdigit for performance; MSVC doesn't do this for us.
  */
 #define JS7_ISDEC(c)    ((((unsigned)(c)) - '0') <= 9)
+#define JS7_ISDECNZ(c)  ((((unsigned)(c)) - '1') <= 8)
 #define JS7_UNDEC(c)    ((c) - '0')
 #define JS7_ISHEX(c)    ((c) < 128 && isxdigit(c))
 #define JS7_UNHEX(c)    (uintN)(JS7_ISDEC(c) ? (c) - '0' : 10 + tolower(c) - 'a')
@@ -946,12 +977,22 @@ js_SkipWhiteSpace(const jschar *s, const jschar *end)
 }
 
 /*
+ * Some string functions have an optional bool useCESU8 argument.
+ * CESU-8 (Compatibility Encoding Scheme for UTF-16: 8-bit) is a
+ * variant of UTF-8 that allows us to store any wide character
+ * string as a narrow character string. For strings containing
+ * mostly ascii, it saves space.
+ * http://www.unicode.org/reports/tr26/
+ */
+
+/*
  * Inflate bytes to JS chars and vice versa.  Report out of memory via cx and
  * return null on error, otherwise return the jschar or byte vector that was
  * JS_malloc'ed. length is updated to the length of the new string in jschars.
+ * Using useCESU8 = true treats 'bytes' as CESU-8.
  */
 extern jschar *
-js_InflateString(JSContext *cx, const char *bytes, size_t *length);
+js_InflateString(JSContext *cx, const char *bytes, size_t *length, bool useCESU8 = false);
 
 extern char *
 js_DeflateString(JSContext *cx, const jschar *chars, size_t length);
@@ -967,11 +1008,12 @@ js_InflateStringToBuffer(JSContext *cx, const char *bytes, size_t length,
                          jschar *chars, size_t *charsLength);
 
 /*
- * Same as js_InflateStringToBuffer, but always treats 'bytes' as UTF-8.
+ * Same as js_InflateStringToBuffer, but treats 'bytes' as UTF-8 or CESU-8.
  */
 extern JSBool
 js_InflateUTF8StringToBuffer(JSContext *cx, const char *bytes, size_t length,
-                             jschar *chars, size_t *charsLength);
+                             jschar *chars, size_t *charsLength,
+                             bool useCESU8 = false);
 
 /*
  * Get number of bytes in the deflated sequence of characters. Behavior depends
@@ -982,11 +1024,12 @@ js_GetDeflatedStringLength(JSContext *cx, const jschar *chars,
                            size_t charsLength);
 
 /*
- * Same as js_GetDeflatedStringLength, but always treats the result as UTF-8.
+ * Same as js_GetDeflatedStringLength, but treats the result as UTF-8 or CESU-8.
+ * This function will never fail (return -1) in CESU-8 mode.
  */
 extern size_t
 js_GetDeflatedUTF8StringLength(JSContext *cx, const jschar *chars,
-                               size_t charsLength);
+                               size_t charsLength, bool useCESU8 = false);
 
 /*
  * Deflate JS chars to bytes into a buffer. 'bytes' must be large enough for
@@ -999,11 +1042,12 @@ js_DeflateStringToBuffer(JSContext *cx, const jschar *chars,
                          size_t charsLength, char *bytes, size_t *length);
 
 /*
- * Same as js_DeflateStringToBuffer, but always treats 'bytes' as UTF-8.
+ * Same as js_DeflateStringToBuffer, but treats 'bytes' as UTF-8 or CESU-8.
  */
 extern JSBool
 js_DeflateStringToUTF8Buffer(JSContext *cx, const jschar *chars,
-                             size_t charsLength, char *bytes, size_t *length);
+                             size_t charsLength, char *bytes, size_t *length,
+                             bool useCESU8 = false);
 
 /* Export a few natives and a helper to other files in SpiderMonkey. */
 extern JSBool

@@ -408,18 +408,14 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                        doubleList.length() * sizeof(double) +
                        jumpTableOffsets.length() * sizeof(void *);
 
-    JSC::ExecutablePool *execPool = getExecPool(script, totalSize);
-    if (!execPool) {
-        js_ReportOutOfMemory(cx);
-        return Compile_Error;
-    }
-
-    uint8 *result = (uint8 *)execPool->alloc(totalSize);
+    JSC::ExecutablePool *execPool;
+    uint8 *result =
+        (uint8 *)script->compartment->jaegerCompartment->execAlloc()->alloc(totalSize, &execPool);
     if (!result) {
-        execPool->release();
         js_ReportOutOfMemory(cx);
         return Compile_Error;
     }
+    JS_ASSERT(execPool);
     JSC::ExecutableAllocator::makeWritable(result, totalSize);
     masm.executableCopy(result);
     stubcc.masm.executableCopy(result + masm.size());
@@ -643,10 +639,11 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         if (traceICs[i].slowTraceHint.isSet())
             jitTraceICs[i].slowTraceHint = stubCode.locationOf(traceICs[i].slowTraceHint.get());
 #ifdef JS_TRACER
-        jitTraceICs[i].loopCounterStart = GetHotloop(cx);
+        uint32 hotloop = GetHotloop(cx);
+        uint32 prevCount = cx->compartment->backEdgeCount(traceICs[i].jumpTarget);
+        jitTraceICs[i].loopCounterStart = hotloop;
+        jitTraceICs[i].loopCounter = hotloop < prevCount ? 1 : hotloop - prevCount;
 #endif
-        jitTraceICs[i].loopCounter = jitTraceICs[i].loopCounterStart
-            - cx->compartment->backEdgeCount(traceICs[i].jumpTarget);
         
         stubCode.patch(traceICs[i].addrLabel, &jitTraceICs[i]);
     }
@@ -981,6 +978,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_RETURN)
 
           BEGIN_CASE(JSOP_GOTO)
+          BEGIN_CASE(JSOP_DEFAULT)
           {
             /* :XXX: this isn't really necessary if we follow the branch. */
             frame.syncAndForgetEverything();
@@ -1481,6 +1479,19 @@ mjit::Compiler::generateMethod()
             PC += js_GetVariableBytecodeLength(PC);
             break;
           END_CASE(JSOP_LOOKUPSWITCH)
+
+          BEGIN_CASE(JSOP_CASE)
+            // X Y
+
+            frame.dupAt(-2);
+            // X Y X
+
+            jsop_stricteq(JSOP_STRICTEQ);
+            // X cond
+
+            if (!jsop_ifneq(JSOP_IFNE, PC + GET_JUMP_OFFSET(PC)))
+                return Compile_Error;
+          END_CASE(JSOP_CASE)
 
           BEGIN_CASE(JSOP_STRICTEQ)
             jsop_stricteq(op);

@@ -83,10 +83,7 @@ struct Shape;
 
 namespace gc {
 
-/*
- * The kind of GC thing with a finalizer. The external strings follow the
- * ordinary string to simplify js_GetExternalStringGCType.
- */
+/* The kind of GC thing with a finalizer. */
 enum FinalizeKind {
     FINALIZE_OBJECT0,
     FINALIZE_OBJECT2,
@@ -113,9 +110,9 @@ struct ArenaHeader {
     Arena<FreeCell> *next;
     FreeCell        *freeList;
     unsigned        thingKind;
-    bool            isUsed;
-    size_t          thingSize;
 #ifdef DEBUG
+    size_t          thingSize;
+    bool            isUsed;
     bool            hasFreeThings;
 #endif
 };
@@ -304,7 +301,9 @@ EmptyArenaLists::getNext(JSCompartment *comp, unsigned thingKind) {
     if (arena) {
         JS_ASSERT(arena->header()->isUsed == false);
         JS_ASSERT(arena->header()->thingSize == sizeof(T));
+#ifdef DEBUG
         arena->header()->isUsed = true;
+#endif
         arena->header()->thingKind = thingKind;
         arena->header()->compartment = comp;
         return arena;
@@ -433,7 +432,7 @@ Arena<T>::getAlignedThing(void *thing)
 {
     jsuword start = reinterpret_cast<jsuword>(&t.things[0]);
     jsuword offset = reinterpret_cast<jsuword>(thing) - start;
-    offset -= offset % aheader.thingSize;
+    offset -= offset % sizeof(T);
     return reinterpret_cast<T *>(start + offset);
 }
 
@@ -531,28 +530,6 @@ GetFinalizableTraceKind(size_t thingKind)
 
     JS_ASSERT(thingKind < FINALIZE_LIMIT);
     return map[thingKind];
-}
-
-static inline bool
-IsFinalizableStringKind(unsigned thingKind)
-{
-    return unsigned(FINALIZE_SHORT_STRING) <= thingKind &&
-           thingKind <= unsigned(FINALIZE_EXTERNAL_STRING);
-}
-
-/*
- * Get the type of the external string or -1 if the string was not created
- * with JS_NewExternalString.
- */
-static inline intN
-GetExternalStringGCType(JSExternalString *str)
-{
-    JS_STATIC_ASSERT(FINALIZE_STRING + 1 == FINALIZE_EXTERNAL_STRING);
-    JS_ASSERT(!JSString::isStatic(str));
-
-    unsigned thingKind = str->externalStringType;
-    JS_ASSERT(IsFinalizableStringKind(thingKind));
-    return intN(thingKind);
 }
 
 static inline uint32
@@ -745,13 +722,6 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind);
 extern bool
 CheckAllocation(JSContext *cx);
 #endif
-
-/*
- * Get the type of the external string or -1 if the string was not created
- * with JS_NewExternalString.
- */
-extern intN
-js_GetExternalStringGCType(JSString *str);
 
 extern JS_FRIEND_API(uint32)
 js_GetGCThingTraceKind(void *thing);
