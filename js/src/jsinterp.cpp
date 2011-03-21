@@ -1109,80 +1109,6 @@ HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 }
 
 bool
-LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, JSBool *result)
-{
-#if JS_HAS_XML_SUPPORT
-    if (JS_UNLIKELY(lval.isObject() && lval.toObject().isXML()) ||
-                    (rval.isObject() && rval.toObject().isXML())) {
-        return js_TestXMLEquality(cx, lval, rval, result);
-    }
-#endif
-
-    if (SameType(lval, rval)) {
-        if (lval.isString()) {
-            JSString *l = lval.toString();
-            JSString *r = rval.toString();
-            return EqualStrings(cx, l, r, result);
-        }
-        
-        if (lval.isDouble()) {
-            double l = lval.toDouble(), r = rval.toDouble();
-            *result = JSDOUBLE_COMPARE(l, ==, r, false);
-            return true;
-        }
-        
-        if (lval.isObject()) {
-            JSObject *l = &lval.toObject();
-            JSObject *r = &rval.toObject();
-            l->assertSpecialEqualitySynced();
-
-            if (EqualityOp eq = l->getClass()->ext.equality) {
-                return eq(cx, l, &rval, result);
-            }
-
-            *result = l == r;
-            return true;
-        }
-
-        *result = lval.payloadAsRawUint32() == rval.payloadAsRawUint32();
-        return true;
-    }
-
-    if (lval.isNullOrUndefined()) {
-        *result = rval.isNullOrUndefined();
-        return true;
-    }
-    
-    if (rval.isNullOrUndefined()) {
-        *result = false;
-        return true;
-    }
-
-    Value lvalue = lval;
-    Value rvalue = rval;
-
-    if (lvalue.isObject() && !DefaultValue(cx, &lvalue.toObject(), JSTYPE_VOID, &lvalue))
-        return false;
-
-    if (rvalue.isObject() && !DefaultValue(cx, &rvalue.toObject(), JSTYPE_VOID, &rvalue))
-        return false;
-
-    if (lvalue.isString() && rvalue.isString()) {
-        JSString *l = lvalue.toString();
-        JSString *r = rvalue.toString();
-        return EqualStrings(cx, l, r, result);
-    }
-
-    double l, r;
-    if (!ValueToNumber(cx, lvalue, &l) ||
-        !ValueToNumber(cx, rvalue, &r)) {
-        return false;
-    }
-    *result = JSDOUBLE_COMPARE(l, ==, r, false);
-    return true;
-}
-
-bool
 StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref, JSBool *equal)
 {
     Value lval = lref, rval = rref;
@@ -3496,28 +3422,94 @@ END_CASE(JSOP_BITAND)
 
 #undef BITWISE_OP
 
-#define EQUALITY_OP(OP)                                                       \
-    JS_BEGIN_MACRO                                                            \
-        Value rval = regs.sp[-1];                                             \
-        Value lval = regs.sp[-2];                                             \
-        JSBool cond;                                                          \
-        if (!LooselyEqual(cx, lval, rval, &cond))                             \
+/*
+ * NB: These macros can't use JS_BEGIN_MACRO/JS_END_MACRO around their bodies
+ * because they begin if/else chains, so callers must not put semicolons after
+ * the call expressions!
+ */
+#if JS_HAS_XML_SUPPORT
+#define XML_EQUALITY_OP(OP)                                                   \
+    if ((lval.isObject() && lval.toObject().isXML()) ||                       \
+        (rval.isObject() && rval.toObject().isXML())) {                       \
+        if (!js_TestXMLEquality(cx, lval, rval, &cond))                       \
             goto error;                                                       \
         cond = cond OP JS_TRUE;                                               \
+    } else
+#else
+#define XML_EQUALITY_OP(OP)             /* nothing */
+#endif
+
+#define EQUALITY_OP(OP, IFNAN)                                                \
+    JS_BEGIN_MACRO                                                            \
+        JSBool cond;                                                          \
+        Value rval = regs.sp[-1];                                             \
+        Value lval = regs.sp[-2];                                             \
+        XML_EQUALITY_OP(OP)                                                   \
+        if (SameType(lval, rval)) {                                           \
+            if (lval.isString()) {                                            \
+                JSString *l = lval.toString(), *r = rval.toString();          \
+                JSBool equal;                                                 \
+                if (!EqualStrings(cx, l, r, &equal))                          \
+                    goto error;                                               \
+                cond = equal OP JS_TRUE;                                      \
+            } else if (lval.isDouble()) {                                     \
+                double l = lval.toDouble(), r = rval.toDouble();              \
+                cond = JSDOUBLE_COMPARE(l, OP, r, IFNAN);                     \
+            } else if (lval.isObject()) {                                     \
+                JSObject *l = &lval.toObject(), *r = &rval.toObject();        \
+                l->assertSpecialEqualitySynced();                             \
+                if (EqualityOp eq = l->getClass()->ext.equality) {            \
+                    if (!eq(cx, l, &rval, &cond))                             \
+                        goto error;                                           \
+                    cond = cond OP JS_TRUE;                                   \
+                } else {                                                      \
+                    cond = l OP r;                                            \
+                }                                                             \
+            } else {                                                          \
+                cond = lval.payloadAsRawUint32() OP rval.payloadAsRawUint32();\
+            }                                                                 \
+        } else {                                                              \
+            if (lval.isNullOrUndefined()) {                                   \
+                cond = rval.isNullOrUndefined() OP true;                      \
+            } else if (rval.isNullOrUndefined()) {                            \
+                cond = true OP false;                                         \
+            } else {                                                          \
+                if (lval.isObject())                                          \
+                    DEFAULT_VALUE(cx, -2, JSTYPE_VOID, lval);                 \
+                if (rval.isObject())                                          \
+                    DEFAULT_VALUE(cx, -1, JSTYPE_VOID, rval);                 \
+                if (lval.isString() && rval.isString()) {                     \
+                    JSString *l = lval.toString(), *r = rval.toString();      \
+                    JSBool equal;                                             \
+                    if (!EqualStrings(cx, l, r, &equal))                      \
+                        goto error;                                           \
+                    cond = equal OP JS_TRUE;                                  \
+                } else {                                                      \
+                    double l, r;                                              \
+                    if (!ValueToNumber(cx, lval, &l) ||                       \
+                        !ValueToNumber(cx, rval, &r)) {                       \
+                        goto error;                                           \
+                    }                                                         \
+                    cond = JSDOUBLE_COMPARE(l, OP, r, IFNAN);                 \
+                }                                                             \
+            }                                                                 \
+        }                                                                     \
         TRY_BRANCH_AFTER_COND(cond, 2);                                       \
         regs.sp--;                                                            \
         regs.sp[-1].setBoolean(cond);                                         \
     JS_END_MACRO
 
 BEGIN_CASE(JSOP_EQ)
-    EQUALITY_OP(==);
+    EQUALITY_OP(==, false);
 END_CASE(JSOP_EQ)
 
 BEGIN_CASE(JSOP_NE)
-    EQUALITY_OP(!=);
+    EQUALITY_OP(!=, true);
 END_CASE(JSOP_NE)
 
 #undef EQUALITY_OP
+#undef XML_EQUALITY_OP
+#undef EXTENDED_EQUALITY_OP
 
 #define STRICT_EQUALITY_OP(OP, COND)                                          \
     JS_BEGIN_MACRO                                                            \

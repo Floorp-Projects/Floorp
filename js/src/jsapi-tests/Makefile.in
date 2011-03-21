@@ -64,7 +64,6 @@ CPPSRCS = \
   testGetPropertyDefault.cpp \
   testIntString.cpp \
   testLookup.cpp \
-  testLooselyEqual.cpp \
   testNewObject.cpp \
   testOps.cpp \
   testPropCache.cpp \
