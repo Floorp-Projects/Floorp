@@ -424,19 +424,8 @@ nsJSON::DecodeToJSVal(const nsAString &str, JSContext *cx, jsval *result)
 {
   JSAutoRequest ar(cx);
 
-  JSONParser *parser = JS_BeginJSONParse(cx, result);
-  NS_ENSURE_TRUE(parser, NS_ERROR_UNEXPECTED);
-
-  JSBool ok = JS_ConsumeJSONText(cx, parser,
-                                 (jschar*)PromiseFlatString(str).get(),
-                                 (uint32)str.Length());
-
-  // Since we've called JS_BeginJSONParse, we have to call JS_FinishJSONParse,
-  // even if JS_ConsumeJSONText fails.  But if either fails, we'll report an
-  // error.
-  ok &= JS_FinishJSONParse(cx, parser, JSVAL_NULL);
-
-  if (!ok) {
+  if (!JS_ParseJSON(cx, (jschar*)PromiseFlatString(str).get(),
+                    (uint32)str.Length(), result)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -558,20 +547,9 @@ nsJSON::LegacyDecodeToJSVal(const nsAString &str, JSContext *cx, jsval *result)
 {
   JSAutoRequest ar(cx);
 
-  JSONParser *parser = JS_BeginJSONParse(cx, result);
-  NS_ENSURE_TRUE(parser, NS_ERROR_UNEXPECTED);
-
-  JSBool ok = js_ConsumeJSONText(cx, parser,
-                                 (jschar*)PromiseFlatString(str).get(),
-                                 (uint32)str.Length(),
-                                 LEGACY);
-
-  // Since we've called JS_BeginJSONParse, we have to call JS_FinishJSONParse,
-  // even if js_ConsumeJSONText fails.  But if either fails, we'll report an
-  // error.
-  ok &= JS_FinishJSONParse(cx, parser, JSVAL_NULL);
-
-  if (!ok) {
+  if (!js::ParseJSONWithReviver(cx, (jschar*)PromiseFlatString(str).get(),
+                                (uint32)str.Length(), js::NullValue(),
+                                js::Valueify(result), LEGACY)) {
     return NS_ERROR_UNEXPECTED;
   }
 

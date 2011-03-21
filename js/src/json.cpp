@@ -780,6 +780,22 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, const Value &reviver)
     return ok;
 }
 
+namespace js {
+
+JSBool
+ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32 length, const Value &reviver,
+                     Value *vp, DecodingMode decodingMode /* = STRICT */)
+{
+    JSONParser *jp = js_BeginJSONParse(cx, vp);
+    if (!jp)
+        return false;
+    JSBool ok = js_ConsumeJSONText(cx, jp, chars, length, decodingMode);
+    ok &= !!js_FinishJSONParse(cx, jp, reviver);
+    return ok;
+}
+
+} /* namespace js */
+
 static JSBool
 PushState(JSContext *cx, JSONParser *jp, JSONParserState state)
 {

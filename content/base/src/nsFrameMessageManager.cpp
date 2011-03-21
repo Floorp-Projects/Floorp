@@ -257,13 +257,11 @@ nsFrameMessageManager::SendSyncMessage()
           continue;
 
         jsval ret = JSVAL_VOID;
-        JSONParser* parser = JS_BeginJSONParse(ctx, &ret);
-        JSBool ok = JS_ConsumeJSONText(ctx, parser, (jschar*)retval[i].get(),
-                                       (uint32)retval[i].Length());
-        ok = JS_FinishJSONParse(ctx, parser, JSVAL_NULL) && ok;
-        if (ok) {
-          NS_ENSURE_TRUE(JS_SetElement(ctx, dataArray, i, &ret), NS_ERROR_OUT_OF_MEMORY);
+        if (!JS_ParseJSON(ctx, (jschar*)retval[i].get(),
+                          (uint32)retval[i].Length(), &ret)) {
+          return NS_ERROR_UNEXPECTED;
         }
+        NS_ENSURE_TRUE(JS_SetElement(ctx, dataArray, i, &ret), NS_ERROR_OUT_OF_MEMORY);
       }
 
       jsval* retvalPtr;
@@ -384,15 +382,9 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 
         jsval json = JSVAL_NULL;
         if (!aJSON.IsEmpty()) {
-          JSONParser* parser = JS_BeginJSONParse(ctx, &json);
-          if (parser) {
-            JSBool ok = JS_ConsumeJSONText(ctx, parser,
-                                           (jschar*)nsString(aJSON).get(),
-                                           (uint32)aJSON.Length());
-            ok = JS_FinishJSONParse(ctx, parser, JSVAL_NULL) && ok;
-            if (!ok) {
-              json = JSVAL_NULL;
-            }
+          if (!JS_ParseJSON(ctx, (jschar*)nsString(aJSON).get(),
+                            (uint32)aJSON.Length(), &json)) {
+            json = JSVAL_NULL;
           }
         }
         JSString* jsMessage =
