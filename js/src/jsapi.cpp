@@ -593,6 +593,13 @@ JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2, JSBool *equal)
 }
 
 JS_PUBLIC_API(JSBool)
+JS_LooselyEqual(JSContext *cx, jsval v1, jsval v2, JSBool *equal)
+{
+    assertSameCompartment(cx, v1, v2);
+    return LooselyEqual(cx, Valueify(v1), Valueify(v2), equal);
+}
+
+JS_PUBLIC_API(JSBool)
 JS_SameValue(JSContext *cx, jsval v1, jsval v2, JSBool *same)
 {
     assertSameCompartment(cx, v1, v2);
