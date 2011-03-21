@@ -62,8 +62,8 @@ enum nsViewVisibility {
 };
 
 #define NS_IVIEW_IID    \
-  { 0xd0c2cf54, 0xb527, 0x4d8e, \
-    { 0xba, 0x87, 0x39, 0x03, 0xa7, 0xc4, 0x13, 0xe1 } }
+  { 0x63052d96, 0x2a4b, 0x434f, \
+    { 0xb4, 0xd3, 0x61, 0x41, 0x83, 0x24, 0x00, 0x76 } }
 
 // Public view flags are defined in this file
 #define NS_VIEW_FLAGS_PUBLIC              0x00FF
@@ -312,6 +312,13 @@ public:
                                 nsIWidget* aParentWidget = nsnull,
                                 PRBool aEnableDragDrop = PR_TRUE,
                                 PRBool aResetVisibility = PR_TRUE);
+
+  /**
+   * Destroys the associated widget for this view.  If this method is
+   * not called explicitly, the widget when be destroyed when its
+   * view gets destroyed.
+   */
+  void DestroyWidget();
 
   /**
    * Attach/detach a top level widget from this view. When attached, the view
