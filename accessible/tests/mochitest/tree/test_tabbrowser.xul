@@ -56,7 +56,7 @@
           if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
             tabBrowser.removeProgressListener(progressListener);
 
-            testAccTree();
+            SimpleTest.executeSoon(testAccTree);
           }
         }
       };
@@ -71,9 +71,9 @@
     {
       var tabBrowser = document.getElementById("tabbrowser");
 
-      //////////
+      ////////////////////
       // Tab bar
-      //////////
+      ////////////////////
       var tabsAccTree = {
         // xul:tabs
         role: ROLE_PAGETABLIST,
@@ -160,9 +160,9 @@
 
       testAccessibleTree(tabBrowser.tabContainer, tabsAccTree);
 
-      //////////
+      ////////////////////
       // Tab contents
-      //////////
+      ////////////////////
       var tabboxAccTree = {
         // xul:tabpanels
         role: ROLE_PANE,
