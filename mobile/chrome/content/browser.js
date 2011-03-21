@@ -1197,6 +1197,10 @@ Browser.MainDragger = function MainDragger() {
 
   Elements.browsers.addEventListener("PanBegin", this, false);
   Elements.browsers.addEventListener("PanFinished", this, false);
+
+  // allow pages to to override panning, but should
+  // still allow the sidebars to be panned out of view
+  this.contentMouseCapture = false;
 };
 
 Browser.MainDragger.prototype = {
@@ -1227,48 +1231,42 @@ Browser.MainDragger.prototype = {
   dragMove: function dragMove(dx, dy, scroller, aIsKinetic) {
     let doffset = new Point(dx, dy);
 
-    // First calculate any panning to take sidebars out of view
-    let panOffset = this._panControlsAwayOffset(doffset);
+    // If the sidebars are showing, we pan them out of the way before panning the content.
+    // The panning distance that should be used for the sidebars in is stored in sidebarOffset,
+    // and subtracted from doffset
+    let sidebarOffset = this._getSidebarOffset(doffset);
 
-    // If we started at one sidebar, stop when we get to the other.
-    if (panOffset.x != 0 && !this._stopAtSidebar) {
-      this._stopAtSidebar = panOffset.x; // negative: stop at left; positive: stop at right
+    // If we started with one sidebar open, stop when we get to the other.
+    if (sidebarOffset.x != 0)
+      this._blockSidebars(sidebarOffset);
+
+    if (!this.contentMouseCapture)
+      this._panContent(doffset);
+
+    if (this._hitSidebar && aIsKinetic)
+      return false; // No kinetic panning after we've stopped at the sidebar.
+
+    // allow panning the sidebars if the page hasn't prevented it, or if any of the sidebars are showing
+    // (i.e. we always allow panning sidebars off screen but not necessarily panning them back on)
+    if (!this.contentMouseCapture || sidebarOffset.x != 0 || sidebarOffset.y > 0)
+      this._panChrome(doffset, sidebarOffset);
+
+    this._updateScrollbars();
+
+    return !doffset.equals(dx, dy);
+  },
+
+  _blockSidebars: function md_blockSidebars(aSidebarOffset) {
+    // only call this code once
+    if (!this._stopAtSidebar) {
+      this._stopAtSidebar = aSidebarOffset.x; // negative: stop at left; positive: stop at right
+
+      // after a timeout, we allow showing the sidebar, to give the appearance of some "friction" at the edge
       this._sidebarTimeout = setTimeout(function(self) {
         self._stopAtSidebar = 0;
         self._sidebarTimeout = null;
       }, 350, this);
     }
-
-    if (this._contentView && !this._contentView.isRoot()) {
-      this._panContentView(this._contentView, doffset);
-      // XXX we may need to have "escape borders" for iframe panning
-      // XXX does not deal with scrollables within scrollables
-    }
-
-    // Do content panning
-    this._panContentView(getBrowser().getRootView(), doffset);
-
-    if (this._hitSidebar && aIsKinetic)
-      return; // No kinetic panning after we've stopped at the sidebar.
-
-    // Any leftover panning in doffset would bring controls into view. Add to sidebar
-    // away panning for the total scroll offset.
-    let offsetX = doffset.x;
-    if ((this._stopAtSidebar > 0 && offsetX > 0) ||
-        (this._stopAtSidebar < 0 && offsetX < 0)) {
-      if (offsetX != panOffset.x)
-        this._hitSidebar = true;
-      doffset.x = panOffset.x;
-    } else {
-      doffset.add(panOffset);
-    }
-
-    Browser.tryFloatToolbar(doffset.x, 0);
-    this._panScroller(Browser.controlsScrollboxScroller, doffset);
-    this._panScroller(Browser.pageScrollboxScroller, doffset);
-    this._updateScrollbars();
-
-    return !doffset.equals(dx, dy);
   },
 
   handleEvent: function handleEvent(aEvent) {
@@ -1299,8 +1297,38 @@ Browser.MainDragger.prototype = {
     }
   },
 
+  _panContent: function md_panContent(aOffset) {
+    if (this._contentView && !this._contentView.isRoot()) {
+      this._panContentView(this._contentView, aOffset);
+      // XXX we may need to have "escape borders" for iframe panning
+      // XXX does not deal with scrollables within scrollables
+    }
+    // Do content panning
+    this._panContentView(getBrowser().getRootView(), aOffset);
+  },
+
+  _panChrome: function md_panSidebars(aOffset, aSidebarOffset) {
+    // Any panning aOffset would bring controls into view. Add to aSidebarOffset
+    let offsetX = aOffset.x;
+    if ((this._stopAtSidebar > 0 && offsetX > 0) ||
+        (this._stopAtSidebar < 0 && offsetX < 0)) {
+      if (offsetX != aSidebarOffset.x)
+        this._hitSidebar = true;
+      aOffset.x = aSidebarOffset.x;
+    } else {
+      aOffset.add(aSidebarOffset);
+    }
+
+    Browser.tryFloatToolbar(aOffset.x, 0);
+
+    // pan the sidebars
+    this._panScroller(Browser.controlsScrollboxScroller, aOffset);
+    // pan the urlbar
+    this._panScroller(Browser.pageScrollboxScroller, aOffset);
+  },
+
   /** Return offset that pans controls away from screen. Updates doffset with leftovers. */
-  _panControlsAwayOffset: function(doffset) {
+  _getSidebarOffset: function(doffset) {
     let x = 0, y = 0, rect;
 
     rect = Rect.fromRect(Browser.pageScrollbox.getBoundingClientRect()).map(Math.round);
@@ -1603,6 +1631,7 @@ const ContentTouchHandler = {
     document.addEventListener("TapSingle", this, false);
     document.addEventListener("TapDouble", this, false);
     document.addEventListener("TapLong", this, false);
+    document.addEventListener("TapMove", this, false);
 
     document.addEventListener("PanBegin", this, false);
     document.addEventListener("PopupChanged", this, false);
@@ -1619,8 +1648,8 @@ const ContentTouchHandler = {
     //     a long tap, without waiting for child process.
     //
     messageManager.addMessageListener("Browser:ContextMenu", this);
-
     messageManager.addMessageListener("Browser:Highlight", this);
+    messageManager.addMessageListener("Browser:CaptureEvents", this);
   },
 
   handleEvent: function handleEvent(aEvent) {
@@ -1661,18 +1690,21 @@ const ContentTouchHandler = {
                 this.tapSingle(aEvent.clientX, aEvent.clientY, aEvent.modifiers);
                 aEvent.preventDefault();
               }
-            } else {
-              this.tapUp(aEvent.clientX, aEvent.clientY);
             }
+            this._dispatchMouseEvent("Browser:MouseUp", aEvent.clientX, aEvent.clientY);
             break;
           case "TapSingle":
             this.tapSingle(aEvent.clientX, aEvent.clientY, aEvent.modifiers);
+            this._dispatchMouseEvent("Browser:MouseUp", aEvent.clientX, aEvent.clientY);
             break;
           case "TapDouble":
             this.tapDouble(aEvent.clientX, aEvent.clientY, aEvent.modifiers);
             break;
           case "TapLong":
             this.tapLong(aEvent.clientX, aEvent.clientY);
+            break;
+          case "TapMove":
+            this.tapMove(aEvent.clientX, aEvent.clientY);
             break;
         }
       }
@@ -1693,6 +1725,9 @@ const ContentTouchHandler = {
           event.initEvent("CancelTouchSequence", true, false);
           document.dispatchEvent(event);
         }
+        break;
+      case "Browser:CaptureEvents":
+        Elements.browsers.customDragger.contentMouseCapture = aMessage.json.panning;
         break;
     }
   },
@@ -1735,6 +1770,7 @@ const ContentTouchHandler = {
     try {
       fl.activateRemoteFrame();
     } catch (e) {}
+    Elements.browsers.customDragger.contentMouseCapture = false;
     this._dispatchMouseEvent("Browser:MouseDown", aX, aY);
   },
 
@@ -1750,7 +1786,11 @@ const ContentTouchHandler = {
   tapSingle: function tapSingle(aX, aY, aModifiers) {
     // Cancel the mouse click if we are showing a context menu
     if (!ContextHelper.popupState)
-      this._dispatchMouseEvent("Browser:MouseUp", aX, aY, { modifiers: aModifiers });
+      this._dispatchMouseEvent("Browser:MouseClick", aX, aY, { modifiers: aModifiers });
+  },
+
+  tapMove: function tapMove(aX, aY) {
+    this._dispatchMouseEvent("Browser:MouseMove", aX, aY);
   },
 
   tapDouble: function tapDouble(aX, aY, aModifiers) {
@@ -2733,7 +2773,7 @@ Tab.prototype = {
         // If the scale level has not changed we want to be sure the content
         // render correctly since the page refresh process could have been
         // stalled during page load. In this case if the page has the exact
-        // same width (like the same page, so by doing 'refresh') and the 
+        // same width (like the same page, so by doing 'refresh') and the
         // page was scrolled the content is just checkerboard at this point
         // and this call ensure we render it correctly.
         browser.getRootView()._updateCacheViewport();
