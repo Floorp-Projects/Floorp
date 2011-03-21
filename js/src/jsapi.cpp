@@ -5600,28 +5600,6 @@ JS_TryJSON(JSContext *cx, jsval *vp)
     return js_TryJSON(cx, Valueify(vp));
 }
 
-JS_PUBLIC_API(JSONParser *)
-JS_BeginJSONParse(JSContext *cx, jsval *vp)
-{
-    CHECK_REQUEST(cx);
-    return js_BeginJSONParse(cx, Valueify(vp));
-}
-
-JS_PUBLIC_API(JSBool)
-JS_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len)
-{
-    CHECK_REQUEST(cx);
-    return js_ConsumeJSONText(cx, jp, data, len);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
-{
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, reviver);
-    return js_FinishJSONParse(cx, jp, Valueify(reviver));
-}
-
 JS_PUBLIC_API(JSBool)
 JS_ParseJSON(JSContext *cx, const jschar *chars, uint32 len, jsval *vp)
 {
