@@ -17156,7 +17156,7 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
         Value v = UndefinedValue();
         if (op == JSOP_GETPROP || op == JSOP_CALLPROP) {
             v = cx->regs->sp[-1];
-        } if (op == JSOP_GETARGPROP) {
+        } else if (op == JSOP_GETARGPROP) {
             uint32 slot = GET_ARGNO(pc);
             JS_ASSERT(slot < fp->numFormalArgs());
             v = fp->formalArg(slot);
