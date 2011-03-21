@@ -584,6 +584,9 @@ pref("image.mem.decodeondraw", true);
 pref("content.image.allow_locking", false);
 pref("image.mem.min_discard_timeout_ms", 20000);
 
+// enable touch events interfaces
+pref("dom.w3c_touch_events.enabled", true);
+
 #ifdef MOZ_SAFE_BROWSING
 // Safe browsing does nothing unless this pref is set
 pref("browser.safebrowsing.enabled", true);
@@ -634,3 +637,4 @@ pref("urlclassifier.updatecachemax", 4194304);
 // URL for checking the reason for a malware warning.
 pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");
 #endif
+
