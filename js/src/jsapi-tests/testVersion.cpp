@@ -27,7 +27,8 @@ struct VersionFixture : public JSAPITest
     JSVersion captured;
 
     virtual bool init() {
-        JSAPITest::init();
+        if (!JSAPITest::init())
+            return false;
         callbackData = this;
         captured = JSVERSION_UNKNOWN;
         return JS_DefineFunction(cx, global, "checkVersionHasXML", CheckVersionHasXML, 0, 0) &&
