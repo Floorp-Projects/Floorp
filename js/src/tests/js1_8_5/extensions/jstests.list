@@ -1,6 +1,7 @@
 url-prefix ../../jsreftest.html?test=js1_8_5/extensions/
 script typedarray.js
 script typedarray-prototype.js
+script typedarray-subarray-of-subarray.js
 skip-if(!xulRuntime.shell) script worker-error.js  # these tests sometimes hang in browser, bug 559954, bug 562333
 skip-if(!xulRuntime.shell) script worker-error-propagation.js
 skip-if(!xulRuntime.shell) script worker-fib.js
@@ -8,7 +9,9 @@ skip-if(!xulRuntime.shell) script worker-init.js
 skip-if(!xulRuntime.shell) script worker-simple.js
 skip-if(!xulRuntime.shell) script worker-terminate.js
 skip-if(!xulRuntime.shell) script worker-timeout.js
+script regress-558541.js
 script scripted-proxies.js
+script watch-undefined-setter.js
 script array-length-protochange.js
 script parseInt-octal.js
 script proxy-enumerateOwn-duplicates.js
@@ -34,3 +37,5 @@ script regress-627984-6.js
 script regress-627984-7.js
 script regress-630377.js
 script regress-631723.js
+skip-if(!xulRuntime.shell) script regress-636818.js
+script regress-636697.js

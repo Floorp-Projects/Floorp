@@ -52,6 +52,7 @@
 #include "methodjit/MonoIC.h"
 
 #include "jsgcinlines.h"
+#include "jsscopeinlines.h"
 
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
@@ -66,18 +67,24 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcBytes(0),
     gcTriggerBytes(0),
     gcLastBytes(0),
+    hold(false),
     data(NULL),
     active(false),
 #ifdef JS_METHODJIT
     jaegerCompartment(NULL),
 #endif
     propertyTree(thisForCtor()),
+    emptyArgumentsShape(NULL),
+    emptyBlockShape(NULL),
+    emptyCallShape(NULL),
+    emptyDeclEnvShape(NULL),
+    emptyEnumeratorShape(NULL),
+    emptyWithShape(NULL),
     debugMode(rt->debugMode),
 #if ENABLE_YARR_JIT
     regExpAllocator(NULL),
 #endif
-    mathCache(NULL),
-    marked(false)
+    mathCache(NULL)
 {
     JS_INIT_CLIST(&scripts);
 
@@ -91,7 +98,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 
 JSCompartment::~JSCompartment()
 {
-    Shape::finishEmptyShapes(this);
     propertyTree.finish();
 
 #if ENABLE_YARR_JIT
@@ -138,19 +144,13 @@ JSCompartment::init()
     }
 #endif
 
-    if (!Shape::initEmptyShapes(this))
-        return false;
-
 #ifdef JS_TRACER
     if (!InitJIT(&traceMonitor))
         return false;
 #endif
 
-    if (!toSourceCache.init())
-        return false;
-
 #if ENABLE_YARR_JIT
-    regExpAllocator = JSC::ExecutableAllocator::create();
+    regExpAllocator = js_new<JSC::ExecutableAllocator>();
     if (!regExpAllocator)
         return false;
 #endif
@@ -448,48 +448,23 @@ ScriptPoolDestroyed(JSContext *cx, mjit::JITScript *jit,
 
 /*
  * This method marks pointers that cross compartment boundaries. It should be
- * called only by per-compartment GCs, since full GCs naturally follow pointers
+ * called only for per-compartment GCs, since full GCs naturally follow pointers
  * across compartments.
  */
 void
-JSCompartment::markCrossCompartment(JSTracer *trc)
+JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
 {
+    JS_ASSERT(trc->context->runtime->gcCurrentCompartment);
+
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront())
         MarkValue(trc, e.front().key, "cross-compartment wrapper");
-}
-
-void
-JSCompartment::mark(JSTracer *trc)
-{
-    if (IS_GC_MARKING_TRACER(trc)) {
-        JSRuntime *rt = trc->context->runtime;
-
-        if (rt->gcCurrentCompartment && rt->gcCurrentCompartment != this)
-            return;
-
-        if (marked)
-            return;
-        marked = true;
-    }
-
-    if (emptyArgumentsShape)
-        emptyArgumentsShape->trace(trc);
-    if (emptyBlockShape)
-        emptyBlockShape->trace(trc);
-    if (emptyCallShape)
-        emptyCallShape->trace(trc);
-    if (emptyDeclEnvShape)
-        emptyDeclEnvShape->trace(trc);
-    if (emptyEnumeratorShape)
-        emptyEnumeratorShape->trace(trc);
-    if (emptyWithShape)
-        emptyWithShape->trace(trc);
 }
 
 void
 JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 {
     chunk = NULL;
+
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
         JS_ASSERT_IF(IsAboutToBeFinalized(cx, e.front().key.toGCThing()) &&
@@ -500,6 +475,20 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
             e.removeFront();
         }
     }
+
+    /* Remove dead empty shapes. */
+    if (emptyArgumentsShape && !emptyArgumentsShape->marked())
+        emptyArgumentsShape = NULL;
+    if (emptyBlockShape && !emptyBlockShape->marked())
+        emptyBlockShape = NULL;
+    if (emptyCallShape && !emptyCallShape->marked())
+        emptyCallShape = NULL;
+    if (emptyDeclEnvShape && !emptyDeclEnvShape->marked())
+        emptyDeclEnvShape = NULL;
+    if (emptyEnumeratorShape && !emptyEnumeratorShape->marked())
+        emptyEnumeratorShape = NULL;
+    if (emptyWithShape && !emptyWithShape->marked())
+        emptyWithShape = NULL;
 
 #ifdef JS_TRACER
     traceMonitor.sweep(cx);
@@ -550,7 +539,7 @@ JSCompartment::purge(JSContext *cx)
     js_DestroyScriptsToGC(cx, this);
 
     nativeIterCache.purge();
-    toSourceCache.clear();
+    toSourceCache.destroyIfConstructed();
 
 #ifdef JS_TRACER
     /*

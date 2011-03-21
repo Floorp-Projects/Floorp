@@ -381,6 +381,8 @@ struct JS_FRIEND_API(JSCompartment) {
     size_t                       gcTriggerBytes;
     size_t                       gcLastBytes;
 
+    bool                         hold;
+
 #ifdef JS_GCMETER
     js::gc::JSGCArenaStats       compartmentStats[js::gc::FINALIZE_LIMIT];
 #endif
@@ -442,7 +444,8 @@ struct JS_FRIEND_API(JSCompartment) {
 
     js::NativeIterCache          nativeIterCache;
 
-    js::ToSourceCache            toSourceCache;
+    typedef js::LazilyConstructed<js::ToSourceCache> LazyToSourceCache;
+    LazyToSourceCache            toSourceCache;
 
     JSCompartment(JSRuntime *rt);
     ~JSCompartment();
@@ -450,10 +453,7 @@ struct JS_FRIEND_API(JSCompartment) {
     bool init();
 
     /* Mark cross-compartment wrappers. */
-    void markCrossCompartment(JSTracer *trc);
-
-    /* Mark this compartment's local roots. */
-    void mark(JSTracer *trc);
+    void markCrossCompartmentWrappers(JSTracer *trc);
 
     bool wrap(JSContext *cx, js::Value *vp);
     bool wrap(JSContext *cx, JSString **strp);
@@ -480,8 +480,6 @@ struct JS_FRIEND_API(JSCompartment) {
 
     js::MathCache *allocMathCache(JSContext *cx);
 
-    bool                         marked;
-    
     typedef js::HashMap<jsbytecode*,
                         size_t,
                         js::DefaultHasher<jsbytecode*>,
@@ -494,9 +492,6 @@ struct JS_FRIEND_API(JSCompartment) {
     js::MathCache *getMathCache(JSContext *cx) {
         return mathCache ? mathCache : allocMathCache(cx);
     }
-
-    bool isMarked() { return marked; }
-    void clearMark() { marked = false; }
 
     size_t backEdgeCount(jsbytecode *pc) const;
     size_t incBackEdgeCount(jsbytecode *pc);
@@ -605,13 +600,22 @@ class PreserveCompartment {
 
 class SwitchToCompartment : public PreserveCompartment {
   public:
-    SwitchToCompartment(JSContext *cx, JSCompartment *newCompartment) : PreserveCompartment(cx) {
+    SwitchToCompartment(JSContext *cx, JSCompartment *newCompartment
+                        JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : PreserveCompartment(cx)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         cx->compartment = newCompartment;
     }
 
-    SwitchToCompartment(JSContext *cx, JSObject *target) : PreserveCompartment(cx) {
+    SwitchToCompartment(JSContext *cx, JSObject *target JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : PreserveCompartment(cx)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         cx->compartment = target->getCompartment();
     }
+
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class AssertCompartmentUnchanged {

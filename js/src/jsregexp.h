@@ -73,7 +73,7 @@ class RegExpStatics
     void copyTo(RegExpStatics &dst) {
         dst.matchPairs.clear();
         /* 'save' has already reserved space in matchPairs */
-        JS_ALWAYS_TRUE(dst.matchPairs.append(matchPairs));
+        dst.matchPairs.infallibleAppend(matchPairs);
         dst.matchPairsInput = matchPairsInput;
         dst.pendingInput = pendingInput;
         dst.flags = flags;
@@ -136,10 +136,6 @@ class RegExpStatics
     void checkParenNum(size_t pairNum) const {
         JS_ASSERT(1 <= pairNum);
         JS_ASSERT(pairNum < pairCount());
-    }
-
-    bool pairIsPresent(size_t pairNum) const {
-        return get(pairNum, 0) >= 0;
     }
 
     /* Precondition: paren is present. */
@@ -271,6 +267,10 @@ class RegExpStatics
             JS_CALL_STRING_TRACER(trc, pendingInput, "res->pendingInput");
         if (matchPairsInput)
             JS_CALL_STRING_TRACER(trc, matchPairsInput, "res->matchPairsInput");
+    }
+
+    bool pairIsPresent(size_t pairNum) const {
+        return get(pairNum, 0) >= 0;
     }
 
     /* Value creators. */

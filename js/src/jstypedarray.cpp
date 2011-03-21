@@ -1105,7 +1105,8 @@ class TypedArrayTemplate
         uint32 length = end - begin;
 
         JS_ASSERT(begin < UINT32_MAX / sizeof(NativeType));
-        uint32 byteOffset = begin * sizeof(NativeType);
+        JS_ASSERT(UINT32_MAX - begin * sizeof(NativeType) >= tarray->byteOffset);
+        uint32 byteOffset = tarray->byteOffset + begin * sizeof(NativeType);
 
         return createTypedArray(cx, bufobj, byteOffset, length);
     }
@@ -1503,7 +1504,7 @@ template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
     NULL,           /* construct   */                                          \
     NULL,           /* xdrObject   */                                          \
     NULL,           /* hasInstance */                                          \
-    NULL,           /* mark        */                                          \
+    _typedArray::obj_trace,                                                    \
     JS_NULL_CLASS_EXT,                                                         \
     {                                                                          \
         _typedArray::obj_lookupProperty,                                       \
@@ -1515,7 +1516,6 @@ template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
         _typedArray::obj_deleteProperty,                                       \
         _typedArray::obj_enumerate,                                            \
         _typedArray::obj_typeOf,                                               \
-        _typedArray::obj_trace,                                                \
         NULL,       /* thisObject      */                                      \
         NULL,       /* clear           */                                      \
     }                                                                          \

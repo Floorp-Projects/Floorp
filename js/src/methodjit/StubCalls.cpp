@@ -52,7 +52,6 @@
 #include "jstypes.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
-#include "jstracer.h"
 
 #include "jsinterpinlines.h"
 #include "jspropertycache.h"

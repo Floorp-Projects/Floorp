@@ -504,12 +504,16 @@ jitstats_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             return JS_TRUE;
         }
 
+        if (StringEqualsAscii(str, "adaptive")) {
 #ifdef JS_METHODJIT
-        if (StringEqualsAscii(str, "profiler")) {
-            *vp = BOOLEAN_TO_JSVAL(cx->profilingEnabled);
+            *vp = BOOLEAN_TO_JSVAL(cx->profilingEnabled ||
+                                   (cx->methodJitEnabled &&
+                                    !cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS)));
+#else
+            *vp = BOOLEAN_TO_JSVAL(false);
+#endif
             return JS_TRUE;
         }
-#endif
     }
 
     if (JSID_IS_INT(id))
@@ -556,9 +560,6 @@ InitJITStatsClass(JSContext *cx, JSObject *glob)
 #define AUDIT(x) ((void)0)
 #endif /* JS_JIT_SPEW */
 
-static avmplus::AvmCore s_core = avmplus::AvmCore();
-static avmplus::AvmCore* core = &s_core;
-
 #ifdef JS_JIT_SPEW
 static void
 DumpPeerStability(TraceMonitor* tm, const void* ip, JSObject* globalObj, uint32 globalShape, uint32 argc);
@@ -572,6 +573,8 @@ DumpPeerStability(TraceMonitor* tm, const void* ip, JSObject* globalObj, uint32 
  * I think it's harmless tho.
  */
 static bool did_we_check_processor_features = false;
+
+nanojit::Config NJConfig;
 
 /* ------ Debug logging control ------ */
 
@@ -1715,51 +1718,6 @@ fcallinfo(LIns *ins)
 }
 
 /*
- * Determine whether this operand is guaranteed to not overflow the specified
- * integer operation.
- */
-static void
-ChecksRequired(LOpcode op, LIns* op1, LIns* op2,
-               bool* needsOverflowCheck, bool* needsNegZeroCheck)
-{
-    Interval x = Interval::of(op1, 3);
-    Interval y = Interval::of(op2, 3);
-    Interval z(0, 0);
-
-    switch (op) {
-      case LIR_addi:
-        z = Interval::add(x, y);
-        *needsNegZeroCheck = false;
-        break;
-
-      case LIR_subi:
-        z = Interval::sub(x, y);
-        *needsNegZeroCheck = false;
-        break;
-        
-      case LIR_muli: {
-        z = Interval::mul(x, y);
-        // A would-be negative zero result can only occur if we have 
-        // mul(0, -n) or mul(-n, 0), where n != 0.  In particular, a multiply
-        // where one operand is a positive immediate cannot result in negative
-        // zero.
-        //
-        // This assumes that -0 cannot be an operand;  if one had occurred we
-        // would have already exited the trace in order to promote the
-        // computation back to doubles.
-        *needsNegZeroCheck = (x.canBeZero() && y.canBeNegative()) ||
-                             (y.canBeZero() && x.canBeNegative());
-        break;
-      }
-
-      default:
-        JS_NOT_REACHED("needsOverflowCheck");
-    }
-
-    *needsOverflowCheck = z.hasOverflowed;
-}
-
-/*
  * JSStackFrame::numActualArgs is only defined for function frames. Since the
  * actual arguments of the entry frame are kept on trace, argc is included in
  * the tuple identifying a fragment so that two fragments for the same loop but
@@ -2365,7 +2323,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, TraceMonitor *tm,
 #endif
 
     /* This creates the LIR writer pipeline. */
-    w.init(&LogController);
+    w.init(&LogController, &NJConfig);
 
     w.start();
 
@@ -2516,7 +2474,7 @@ TraceRecorder::finishSuccessfully()
     TraceMonitor* localtm = traceMonitor;
 
     localtm->recorder = NULL;
-    /* We can't (easily) use js_delete() here because the constructor is private. */
+    /* We can't (easily) use js_delete() here because the destructor is private. */
     this->~TraceRecorder();
     js_free(this);
 
@@ -2570,7 +2528,7 @@ TraceRecorder::finishAbort(const char* reason)
     TraceMonitor* localtm = traceMonitor;
 
     localtm->recorder = NULL;
-    /* We can't (easily) use js_delete() here because the constructor is private. */
+    /* We can't (easily) use js_delete() here because the destructor is private. */
     this->~TraceRecorder();
     js_free(this);
 
@@ -2855,8 +2813,8 @@ TraceMonitor::flush()
         globalStates[i].globalSlots = new (*dataAlloc) SlotList(dataAlloc);
     }
 
-    assembler = new (*dataAlloc) Assembler(*codeAlloc, *dataAlloc, *dataAlloc, core,
-                                           &LogController, avmplus::AvmCore::config);
+    assembler = new (*dataAlloc) Assembler(*codeAlloc, *dataAlloc, *dataAlloc,
+                                           &LogController, NJConfig);
     verbose_only( branches = NULL; )
 
     PodArrayZero(vmfragments);
@@ -4470,30 +4428,6 @@ TraceRecorder::guard(bool expected, LIns* cond, ExitType exitType,
     return guard(expected, cond, snapshot(exitType), abortIfAlwaysExits);
 }
 
-/*
- * Emit a guard a 32-bit integer arithmetic operation op(d0, d1) and
- * using the supplied side exit if it overflows.
- */
-JS_REQUIRES_STACK LIns*
-TraceRecorder::guard_xov(LOpcode op, LIns* d0, LIns* d1, VMSideExit* exit)
-{
-    JS_ASSERT(exit->exitType == OVERFLOW_EXIT);
-
-    GuardRecord* guardRec = createGuardRecord(exit);
-    switch (op) {
-      case LIR_addi:
-        return w.addxovi(d0, d1, guardRec);
-      case LIR_subi:
-        return w.subxovi(d0, d1, guardRec);
-      case LIR_muli:
-        return w.mulxovi(d0, d1, guardRec);
-      default:
-        break;
-    }
-    JS_NOT_REACHED("unexpected opcode");
-    return NULL;
-}
-
 JS_REQUIRES_STACK VMSideExit*
 TraceRecorder::copy(VMSideExit* copy)
 {
@@ -4564,7 +4498,7 @@ TraceRecorder::compile()
         Blacklist((jsbytecode*)tree->ip);
         return ARECORD_STOP;
     }
-    if (anchor && anchor->exitType != CASE_EXIT)
+    if (anchor)
         ++tree->branchCount;
     if (outOfMemory())
         return ARECORD_STOP;
@@ -4597,33 +4531,34 @@ TraceRecorder::compile()
         return ARECORD_STOP;
     ResetRecordingAttempts(traceMonitor, (jsbytecode*)fragment->ip);
     ResetRecordingAttempts(traceMonitor, (jsbytecode*)tree->ip);
-    if (anchor) {
-#ifdef NANOJIT_IA32
-        if (anchor->exitType == CASE_EXIT)
-            assm->patch(anchor, anchor->switchInfo);
-        else
-#endif
-            assm->patch(anchor);
-    }
+    JS_ASSERT(!assm->error());
+    if (anchor)
+        assm->patch(anchor);
+    if (assm->error())
+        return ARECORD_STOP;
     JS_ASSERT(fragment->code());
     JS_ASSERT_IF(fragment == fragment->root, fragment->root == tree);
 
     return ARECORD_CONTINUE;
 }
 
-static void
+static bool
 JoinPeers(Assembler* assm, VMSideExit* exit, TreeFragment* target)
 {
     exit->target = target;
+    JS_ASSERT(!assm->error());
     assm->patch(exit);
+    if (assm->error())
+        return false;
 
     debug_only_printf(LC_TMTreeVis, "TREEVIS JOIN ANCHOR=%p FRAG=%p\n", (void*)exit, (void*)target);
 
     if (exit->root() == target)
-        return;
+        return true;
 
     target->dependentTrees.addUnique(exit->root());
     exit->root()->linkedTrees.addUnique(target);
+    return true;
 }
 
 /* Results of trying to connect an arbitrary type A with arbitrary type B */
@@ -5032,7 +4967,8 @@ TraceRecorder::closeLoop()
     JS_ASSERT(tree->first);
 
     peer = tree->first;
-    joinEdgesToEntry(peer);
+    if (!joinEdgesToEntry(peer))
+        return ARECORD_STOP;
 
     debug_only_stmt(DumpPeerStability(traceMonitor, peer->ip, peer->globalObj,
                                       peer->globalShape, peer->argc);)
@@ -5111,11 +5047,11 @@ TraceRecorder::findUndemotesInTypemaps(const TypeMap& typeMap, LinkableFragment*
     return undemotes.length();
 }
 
-JS_REQUIRES_STACK void
+JS_REQUIRES_STACK bool
 TraceRecorder::joinEdgesToEntry(TreeFragment* peer_root)
 {
     if (fragment->root != fragment)
-        return;
+        return true;
 
     TypeMap typeMap(NULL, traceMonitor->oracle);
     Queue<unsigned> undemotes(NULL);
@@ -5147,7 +5083,8 @@ TraceRecorder::joinEdgesToEntry(TreeFragment* peer_root)
 
                 /* It's okay! Link together and remove the unstable exit. */
                 JS_ASSERT(tree == fragment);
-                JoinPeers(traceMonitor->assembler, uexit->exit, tree);
+                if (!JoinPeers(traceMonitor->assembler, uexit->exit, tree))
+                    return false;
                 uexit = peer->removeUnstableExit(uexit->exit);
             } else {
                 /* Check for int32->double slots that suggest trashing. */
@@ -5163,6 +5100,7 @@ TraceRecorder::joinEdgesToEntry(TreeFragment* peer_root)
             }
         }
     }
+    return true;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -5193,7 +5131,8 @@ TraceRecorder::endLoop(VMSideExit* exit)
     JS_ASSERT(LookupLoop(traceMonitor, tree->ip, tree->globalObj, tree->globalShape, tree->argc) ==
               tree->first);
 
-    joinEdgesToEntry(tree->first);
+    if (!joinEdgesToEntry(tree->first))
+        return ARECORD_STOP;
 
     debug_only_stmt(DumpPeerStability(traceMonitor, tree->ip, tree->globalObj,
                                       tree->globalShape, tree->argc);)
@@ -5868,7 +5807,8 @@ AttemptToStabilizeTree(JSContext* cx, TraceMonitor* tm, JSObject* globalObj, VMS
                      from->nStackTypes == peer->nStackTypes);
         JS_ASSERT(exit->numStackSlots == peer->nStackTypes);
         /* Patch this exit to its peer */
-        JoinPeers(tm->assembler, exit, peer);
+        if (!JoinPeers(tm->assembler, exit, peer))
+            return false;
         /*
          * Update peer global types. The |from| fragment should already be updated because it on
          * the execution path, and somehow connected to the entry trace.
@@ -5976,8 +5916,6 @@ AttemptToExtendTree(JSContext* cx, TraceMonitor* tm, VMSideExit* anchor, VMSideE
 
     int32_t& hits = c->hits();
     int32_t maxHits = HOTEXIT + MAXEXIT;
-    if (anchor->exitType == CASE_EXIT)
-        maxHits *= anchor->switchInfo->count;
     if (outerPC || (hits++ >= HOTEXIT && hits <= maxHits)) {
         /* start tracing secondary trace from this point */
         unsigned stackSlots;
@@ -6194,7 +6132,6 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
             traceMonitor->oracle->markInstructionUndemotable(cx->regs->pc);
         /* FALL THROUGH */
       case BRANCH_EXIT:
-      case CASE_EXIT:
         /* Abort recording the outer tree, extend the inner tree. */
         if (AbortRecording(cx, "Inner tree is trying to grow, "
                                "abort outer recording") == JIT_RESET) {
@@ -7253,7 +7190,6 @@ RecordLoopEdge(JSContext* cx, TraceMonitor* tm, uintN& inlineCallCount)
             tm->oracle->markInstructionUndemotable(cx->regs->pc);
         /* FALL THROUGH */
       case BRANCH_EXIT:
-      case CASE_EXIT:
         rv = AttemptToExtendTree(cx, tm, lr, NULL, NULL, NULL
 #ifdef MOZ_TRACEVIS
                                                    , &tvso
@@ -7714,9 +7650,8 @@ InitJIT(TraceMonitor *tm)
 
     if (!did_we_check_processor_features) {
 #if defined NANOJIT_IA32
-        avmplus::AvmCore::config.i386_use_cmov =
-            avmplus::AvmCore::config.i386_sse2 = CheckForSSE2();
-        avmplus::AvmCore::config.i386_fixed_esp = true;
+        NJConfig.i386_use_cmov = NJConfig.i386_sse2 = CheckForSSE2();
+        NJConfig.i386_fixed_esp = true;
 #endif
 #if defined NANOJIT_ARM
 
@@ -7727,9 +7662,9 @@ InitJIT(TraceMonitor *tm)
 
         enable_debugger_exceptions();
 
-        avmplus::AvmCore::config.arm_vfp        = arm_vfp;
-        avmplus::AvmCore::config.soft_float     = !arm_vfp;
-        avmplus::AvmCore::config.arm_arch       = arm_arch;
+        NJConfig.arm_vfp            = arm_vfp;
+        NJConfig.soft_float         = !arm_vfp;
+        NJConfig.arm_arch           = arm_arch;
 
         // Sanity-check the configuration detection.
         //  * We don't understand architectures prior to ARMv4.
@@ -8401,73 +8336,133 @@ TraceRecorder::guardNonNeg(LIns* d0, LIns* d1, VMSideExit* exit)
 }
 
 JS_REQUIRES_STACK LIns*
-TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
+TraceRecorder::tryToDemote(LOpcode op, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
 {
     /*
-     * To even consider this operation for demotion, both operands have to be
-     * integers and the oracle must not give us a negative hint for the
-     * instruction.
+     * If the operands and result of an arithmetic operation are all integers
+     * at record-time, and the oracle doesn't direct us otherwise, we
+     * speculatively emit a demoted (integer) operation, betting that at
+     * runtime we will get integer results again.
+     * 
+     * We also have to protect against various edge cases.  For example,
+     * to protect against overflow we emit a guard that will inform the oracle
+     * on overflow and cause a non-demoted trace to be attached that uses
+     * floating-point math for this operation;  the exception to this case is
+     * if the operands guarantee that the result will be an integer (e.g.
+     * z = d0 * d1 with 0 <= (d0|d1) <= 0xffff guarantees z <= fffe0001). 
      */
+
     if (!oracle || oracle->isInstructionUndemotable(cx->regs->pc) ||
-        !IsPromotedInt32(s0) || !IsPromotedInt32(s1)) {
-    out:
-        if (v == LIR_modd) {
+        !IsPromotedInt32(s0) || !IsPromotedInt32(s1))
+    {
+      undemotable:
+        if (op == LIR_modd) {
+            /*
+             * LIR_modd is a placeholder that Nanojit doesn't actually support!
+             * Convert it to a call.
+             */
             LIns* args[] = { s1, s0 };
             return w.call(&js_dmod_ci, args);
         }
-        LIns* result = w.ins2(v, s0, s1);
+        LIns* result = w.ins2(op, s0, s1);
         JS_ASSERT_IF(s0->isImmD() && s1->isImmD(), result->isImmD());
         return result;
     }
 
-    jsdouble r;
-    switch (v) {
-    case LIR_addd:
-        r = v0 + v1;
-        break;
-    case LIR_subd:
-        r = v0 - v1;
-        break;
-    case LIR_muld:
-        r = v0 * v1;
-        if (r == 0.0 && (v0 < 0.0 || v1 < 0.0))
-            goto out;
-        break;
-#if defined NANOJIT_IA32 || defined NANOJIT_X64
-    case LIR_divd:
-        if (v1 == 0)
-            goto out;
-        r = v0 / v1;
-        break;
-    case LIR_modd:
-        if (v0 < 0 || v1 == 0 || (s1->isImmD() && v1 < 0))
-            goto out;
-        r = js_dmod(v0, v1);
-        break;
-#endif
-    default:
-        goto out;
-    }
-
-    /*
-     * The result must be an integer at record time, otherwise there is no
-     * point in trying to demote it.
-     */
-    if (jsint(r) != r || JSDOUBLE_IS_NEGZERO(r))
-        goto out;
-
     LIns* d0 = w.demoteToInt32(s0);
     LIns* d1 = w.demoteToInt32(s1);
-
-    /*
-     * Speculatively emit an integer operation, betting that at runtime we
-     * will get integer results again.
-     */
+    jsdouble r;
     VMSideExit* exit = NULL;
     LIns* result;
-    switch (v) {
+
+    switch (op) {
+      case LIR_addd: {
+        r = v0 + v1;
+        if (jsint(r) != r || JSDOUBLE_IS_NEGZERO(r))
+            goto undemotable;
+
+        Interval i0 = Interval::of(d0, 3);
+        Interval i1 = Interval::of(d1, 3);
+        result = Interval::add(i0, i1).hasOverflowed
+               ? w.addxovi(d0, d1, createGuardRecord(snapshot(OVERFLOW_EXIT)))
+               : w.addi(d0, d1);
+        break;
+      }
+
+      case LIR_subd: {
+        r = v0 - v1;
+        if (jsint(r) != r || JSDOUBLE_IS_NEGZERO(r))
+            goto undemotable;
+
+        Interval i0 = Interval::of(d0, 3);
+        Interval i1 = Interval::of(d1, 3);
+        result = Interval::sub(i0, i1).hasOverflowed
+               ? w.subxovi(d0, d1, createGuardRecord(snapshot(OVERFLOW_EXIT)))
+               : w.subi(d0, d1);
+        break;
+      }
+
+      case LIR_muld: {
+        r = v0 * v1;
+        if (r == 0.0 && (v0 < 0.0 || v1 < 0.0))
+            goto undemotable;
+
+        if (jsint(r) != r || JSDOUBLE_IS_NEGZERO(r))
+            goto undemotable;
+
+        Interval i0 = Interval::of(d0, 3);
+        Interval i1 = Interval::of(d1, 3);
+        if (Interval::mul(i0, i1).hasOverflowed) {
+            exit = snapshot(OVERFLOW_EXIT);
+            result = w.mulxovi(d0, d1, createGuardRecord(exit));
+        } else {
+            result = w.muli(d0, d1);
+        }
+
+        /*
+         * A would-be negative zero result can only occur if we have 
+         * mul(0, -n) or mul(-n, 0), where n != 0.  In particular, a multiply
+         * where one operand is a positive immediate cannot result in negative
+         * zero.
+         *
+         * This assumes that -0 cannot be an operand;  if one had occurred we
+         * would have already exited the trace in order to promote the
+         * computation back to doubles.
+         */
+        bool needsNegZeroCheck = (i0.canBeZero() && i1.canBeNegative()) ||
+                                 (i1.canBeZero() && i0.canBeNegative());
+        if (needsNegZeroCheck) {
+            /*
+             * Make sure we don't lose a -0. We exit if the result is zero and if
+             * either operand is negative. We start out using a weaker guard, checking
+             * if either argument is negative. If this ever fails, we recompile with
+             * a stronger, but slower, guard.
+             */
+            if (v0 < 0.0 || v1 < 0.0 || oracle->isInstructionSlowZeroTest(cx->regs->pc)) {
+                if (!exit)
+                    exit = snapshot(OVERFLOW_EXIT);
+
+                guard(true,
+                      w.eqi0(w.andi(w.eqi0(result),
+                                    w.ori(w.ltiN(d0, 0),
+                                          w.ltiN(d1, 0)))),
+                      exit);
+            } else {
+                guardNonNeg(d0, d1, snapshot(MUL_ZERO_EXIT));
+            }
+        }
+        break;
+      }
+
+      case LIR_divd: {
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
-      case LIR_divd:
+        if (v1 == 0)
+            goto undemotable;
+        r = v0 / v1;
+        if (jsint(r) != r || JSDOUBLE_IS_NEGZERO(r))
+            goto undemotable;
+
+        /* Check for this case ourselves;  Nanojit won't do it for us. */
         if (d0->isImmI() && d1->isImmI())
             return w.i2d(w.immi(jsint(r)));
 
@@ -8485,11 +8480,9 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
                                            w.eqiN(d1, -1))), exit);
                 w.label(mbr);
             }
-        } else {
-            if (d1->immI() == -1)
-                guard(false, w.eqiN(d0, 0x80000000), exit);
+        } else if (d1->immI() == -1) {
+            guard(false, w.eqiN(d0, 0x80000000), exit);
         }
-        v = LIR_divi;
         result = w.divi(d0, d1);
 
         /* As long as the modulus is zero, the result is an integer. */
@@ -8497,9 +8490,22 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
 
         /* Don't lose a -0. */
         guard(false, w.eqi0(result), exit);
+
         break;
+#else
+        goto undemotable;
+#endif
+      }
 
       case LIR_modd: {
+#if defined NANOJIT_IA32 || defined NANOJIT_X64
+        if (v0 < 0 || v1 == 0 || (s1->isImmD() && v1 < 0))
+            goto undemotable;
+        r = js_dmod(v0, v1);
+        if (jsint(r) != r || JSDOUBLE_IS_NEGZERO(r))
+            goto undemotable;
+
+        /* Check for this case ourselves;  Nanojit won't do it for us. */
         if (d0->isImmI() && d1->isImmI())
             return w.i2d(w.immi(jsint(r)));
 
@@ -8508,66 +8514,33 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
         /* Make sure we don't trigger division by zero at runtime. */
         if (!d1->isImmI())
             guard(false, w.eqi0(d1), exit);
-        v = LIR_modi;
         result = w.modi(w.divi(d0, d1));
 
-        /* If the result is not 0, it is always within the integer domain. */
+        /*
+         * If the result is not 0, it is always within the integer domain.
+         * Otherwise, we must exit if the lhs is negative since the result is
+         * -0 in this case, which is not in the integer domain.
+         */
         if (MaybeBranch mbr = w.jf(w.eqi0(result))) {
-            /*
-             * If the result is zero, we must exit if the lhs is negative since
-             * the result is -0 in this case, which is not in the integer domain.
-             */
             guard(false, w.ltiN(d0, 0), exit);
             w.label(mbr);
         }
         break;
-      }
+#else
+        goto undemotable;
 #endif
+      }
 
       default:
-        v = arithOpcodeD2I(v);
-        JS_ASSERT(v == LIR_addi || v == LIR_muli || v == LIR_subi);
-
-        /*
-         * If the operands guarantee that the result will be an integer (e.g.
-         * z = x * y with 0 <= (x|y) <= 0xffff guarantees z <= fffe0001), we
-         * don't have to guard against an overflow. Otherwise we emit a guard
-         * that will inform the oracle and cause a non-demoted trace to be
-         * attached that uses floating-point math for this operation.
-         */
-        bool needsOverflowCheck = true, needsNegZeroCheck = true;
-        ChecksRequired(v, d0, d1, &needsOverflowCheck, &needsNegZeroCheck);
-        if (needsOverflowCheck) {
-            exit = snapshot(OVERFLOW_EXIT);
-            result = guard_xov(v, d0, d1, exit);
-        } else {
-            result = w.ins2(v, d0, d1);
-        }
-        if (needsNegZeroCheck) {
-            JS_ASSERT(v == LIR_muli);
-            /*
-             * Make sure we don't lose a -0. We exit if the result is zero and if
-             * either operand is negative. We start out using a weaker guard, checking
-             * if either argument is negative. If this ever fails, we recompile with
-             * a stronger, but slower, guard.
-             */
-            if (v0 < 0.0 || v1 < 0.0
-                || !oracle || oracle->isInstructionSlowZeroTest(cx->regs->pc))
-            {
-                if (!exit)
-                    exit = snapshot(OVERFLOW_EXIT);
-
-                guard(true,
-                      w.eqi0(w.andi(w.eqi0(result),
-                                    w.ori(w.ltiN(d0, 0),
-                                          w.ltiN(d1, 0)))),
-                      exit);
-            } else {
-                guardNonNeg(d0, d1, snapshot(MUL_ZERO_EXIT));
-            }
-        }
+        JS_NOT_REACHED("tryToDemote");
+        result = NULL;
         break;
     }
+
+    /*
+     * Successful demotion!  Convert result to a double.  This i2d will be
+     * removed if the result feeds into another integer or demoted operation.
+     */
     JS_ASSERT_IF(d0->isImmI() && d1->isImmI(), result->isImmI(jsint(r)));
     return w.i2d(result);
 }
@@ -8767,82 +8740,6 @@ TraceRecorder::ifop()
     return checkTraceEnd(pc);
 }
 
-#ifdef NANOJIT_IA32
-/*
- * Record LIR for a tableswitch or tableswitchx op. We record LIR only the
- * "first" time we hit the op. Later, when we start traces after exiting that
- * trace, we just patch.
- */
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::tableswitch()
-{
-    Value& v = stackval(-1);
-
-    /* No need to guard if the condition can't match any of the cases. */
-    if (!v.isNumber())
-        return ARECORD_CONTINUE;
-
-    /* No need to guard if the condition is constant. */
-    LIns* v_ins = d2i(get(&v));
-    if (v_ins->isImmI())
-        return ARECORD_CONTINUE;
-
-    jsbytecode* pc = cx->regs->pc;
-    /* Starting a new trace after exiting a trace via switch. */
-    if (anchor &&
-        (anchor->exitType == CASE_EXIT || anchor->exitType == DEFAULT_EXIT) &&
-        fragment->ip == pc) {
-        return ARECORD_CONTINUE;
-    }
-
-    /* Decode jsop. */
-    jsint low, high;
-    if (*pc == JSOP_TABLESWITCH) {
-        pc += JUMP_OFFSET_LEN;
-        low = GET_JUMP_OFFSET(pc);
-        pc += JUMP_OFFSET_LEN;
-        high = GET_JUMP_OFFSET(pc);
-    } else {
-        pc += JUMPX_OFFSET_LEN;
-        low = GET_JUMP_OFFSET(pc);
-        pc += JUMP_OFFSET_LEN;
-        high = GET_JUMP_OFFSET(pc);
-    }
-
-    /* 
-     * If there are no cases, this is a no-op. The default case immediately
-     * follows in the bytecode and is always taken, so we need no special
-     * action to handle it.
-     */
-    int count = high + 1 - low;
-    JS_ASSERT(count >= 0);
-    if (count == 0)
-        return ARECORD_CONTINUE;
-
-    /* Cap maximum table-switch size for modesty. */
-    if (count > MAX_TABLE_SWITCH)
-        return InjectStatus(switchop());
-
-    /* Generate switch LIR. */
-    SwitchInfo* si = new (traceAlloc()) SwitchInfo();
-    si->count = count;
-    si->table = 0;
-    si->index = (uint32) -1;
-    LIns* diff = w.subi(v_ins, w.immi(low));
-    LIns* cmp = w.ltui(diff, w.immi(si->count));
-    guard(true, cmp, DEFAULT_EXIT);
-    // We use AnyAddress;  it's imprecise but this case is rare and not worth its
-    // own access region.
-    w.st(diff, AnyAddress(w.immpNonGC(&si->index)));
-    VMSideExit* exit = snapshot(CASE_EXIT);
-    exit->switchInfo = si;
-    LIns* guardIns = w.xtbl(diff, createGuardRecord(exit));
-    fragment->lastIns = guardIns;
-    CHECK_STATUS_A(compile());
-    return finishSuccessfully();
-}
-#endif
-
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::switchop()
 {
@@ -8949,7 +8846,7 @@ TraceRecorder::incHelper(const Value &v, LIns*& v_ins, Value &v_after,
         AutoValueRooter tvr(cx);
         *tvr.addr() = v;
         ValueToNumber(cx, tvr.value(), &num);
-        v_ins_after = alu(LIR_addd, num, incr, v_ins, w.immd(incr));
+        v_ins_after = tryToDemote(LIR_addd, num, incr, v_ins, w.immd(incr));
         v_after.setDouble(num + incr);
     }
 
@@ -9403,17 +9300,13 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
 }
 
 JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::unary(LOpcode op)
+TraceRecorder::unaryIntOp(LOpcode op)
 {
     Value& v = stackval(-1);
-    bool intop = retTypes[op] == LTy_I;
+    JS_ASSERT(retTypes[op] == LTy_I);
     if (v.isNumber()) {
         LIns* a = get(&v);
-        if (intop)
-            a = d2i(a);
-        a = w.ins1(op, a);
-        if (intop)
-            a = w.i2d(a);
+        a = w.i2d(w.ins1(op, d2i(a)));
         set(&v, a);
         return RECORD_CONTINUE;
     }
@@ -9497,12 +9390,12 @@ TraceRecorder::binary(LOpcode op)
     }
     if (leftIsNumber && rightIsNumber) {
         if (intop) {
-            a = (op == LIR_rshui) ? d2u(a) : d2i(a);
-            b = d2i(b);
+            a = (op == LIR_rshui)
+              ? w.ui2d(w.ins2(op, d2u(a), d2i(b)))
+              : w.i2d(w.ins2(op, d2i(a), d2i(b)));
+        } else {
+            a = tryToDemote(op, lnum, rnum, a, b);
         }
-        a = alu(op, lnum, rnum, a, b);
-        if (intop)
-            a = (op == LIR_rshui) ? w.ui2d(a) : w.i2d(a);
         set(&l, a);
         return RECORD_CONTINUE;
     }
@@ -10920,7 +10813,7 @@ TraceRecorder::record_JSOP_NOT()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_BITNOT()
 {
-    return InjectStatus(unary(LIR_noti));
+    return InjectStatus(unaryIntOp(LIR_noti));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -10949,7 +10842,7 @@ TraceRecorder::record_JSOP_NEG()
             -v.toNumber() == (int)-v.toNumber())
         {
             VMSideExit* exit = snapshot(OVERFLOW_EXIT);
-            a = guard_xov(LIR_subi, w.immi(0), w.demoteToInt32(a), exit);
+            a = w.subxovi(w.immi(0), w.demoteToInt32(a), createGuardRecord(exit));
             if (!a->isImmI() && a->isop(LIR_subxovi)) {
                 guard(false, w.eqiN(a, 0), exit); // make sure we don't lose a -0
             }
@@ -12861,9 +12754,10 @@ GetPropertyWithNativeGetter(JSContext* cx, JSObject* obj, Shape* shape, Value* v
     LeaveTraceIfGlobalObject(cx, obj);
 
 #ifdef DEBUG
+    JSProperty* prop;
     JSObject* pobj;
-    const Shape* shape2;
-    JS_ASSERT_IF(SafeLookup(cx, obj, shape->id, &pobj, &shape2), shape == shape2);
+    JS_ASSERT(obj->lookupProperty(cx, shape->id, &pobj, &prop));
+    JS_ASSERT(prop == (JSProperty*) shape);
 #endif
 
     // Shape::get contains a special case for With objects. We can elide it
@@ -14608,12 +14502,7 @@ TraceRecorder::record_JSOP_AND()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_TABLESWITCH()
 {
-#ifdef NANOJIT_IA32
-    /* Handle tableswitches specially -- prepare a jump table if needed. */
-    return tableswitch();
-#else
     return InjectStatus(switchop());
-#endif
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -15847,7 +15736,7 @@ TraceRecorder::record_JSOP_ARGCNT()
     // interpreter, so we have to check for that in the trace entry frame.
     // We also have to check that arguments.length has not been mutated
     // at record time, because if so we will generate incorrect constant
-    // LIR, which will assert in alu().
+    // LIR, which will assert in tryToDemote().
     if (fp->hasArgsObj() && fp->argsObj().isArgsLengthOverridden())
         RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
     LIns *a_ins = getFrameObjPtr(fp->addressOfArgs());
@@ -16907,7 +16796,6 @@ RecordTracePoint(JSContext* cx, TraceMonitor* tm,
                     tm->oracle->markInstructionUndemotable(cx->regs->pc);
                 /* FALL THROUGH */
               case BRANCH_EXIT:
-              case CASE_EXIT:
                 if (!AttemptToExtendTree(cx, tm, lr, NULL, NULL, NULL))
                     return TPA_RanStuff;
                 break;
@@ -17261,6 +17149,39 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
             increment(OP_ARRAY_READ);
     }
 
+    if (op == JSOP_GETPROP || op == JSOP_CALLPROP ||
+        op == JSOP_GETARGPROP || op == JSOP_GETLOCALPROP)
+    {
+        /* Try to see if it's a scripted getter, which is faster in the tracer. */
+        Value v = UndefinedValue();
+        if (op == JSOP_GETPROP || op == JSOP_CALLPROP) {
+            v = cx->regs->sp[-1];
+        } else if (op == JSOP_GETARGPROP) {
+            uint32 slot = GET_ARGNO(pc);
+            JS_ASSERT(slot < fp->numFormalArgs());
+            v = fp->formalArg(slot);
+        } else if (op == JSOP_GETLOCALPROP) {
+            uint32 slot = GET_SLOTNO(pc);
+            JS_ASSERT(slot < script->nslots);
+            v = fp->slots()[slot];
+        } else {
+            JS_NOT_REACHED("no else");
+        }
+
+        if (v.isObject()) {
+            JSObject *aobj = js_GetProtoIfDenseArray(&v.toObject());
+            PropertyCacheEntry *entry;
+            JSObject *obj2;
+            JSAtom *atom;
+            JS_PROPERTY_CACHE(cx).test(cx, pc, aobj, obj2, entry, atom);
+            if (!atom && entry->vword.isShape()) {
+                const Shape *shape = entry->vword.toShape();
+                if (shape->hasGetterValue())
+                    increment(OP_SCRIPTED_GETTER);
+            }
+        }
+    }
+
     if (op == JSOP_CALL) {
         increment(OP_CALL);
 
@@ -17455,6 +17376,7 @@ LoopProfile::decide(JSContext *cx)
     debug_only_printf(LC_TMProfiler, "FEATURE call %d\n", allOps[OP_CALL]);
     debug_only_printf(LC_TMProfiler, "FEATURE arrayread %d\n", allOps[OP_ARRAY_READ]);
     debug_only_printf(LC_TMProfiler, "FEATURE typedarray %d\n", allOps[OP_TYPED_ARRAY]);
+    debug_only_printf(LC_TMProfiler, "FEATURE scriptedgetter %d\n", allOps[OP_SCRIPTED_GETTER]);
     debug_only_printf(LC_TMProfiler, "FEATURE fwdjump %d\n", allOps[OP_FWDJUMP]);
     debug_only_printf(LC_TMProfiler, "FEATURE recursive %d\n", allOps[OP_RECURSIVE]);
     debug_only_printf(LC_TMProfiler, "FEATURE shortLoop %d\n", shortLoop);
@@ -17490,8 +17412,11 @@ LoopProfile::decide(JSContext *cx)
         /* The tracer handles these ops well because of inlining. */
         goodOps += (count(OP_CALL) + count(OP_NEW))*20;
 
-        /* The tracer specialized typed array access. */
+        /* The tracer specializes typed array access. */
         goodOps += count(OP_TYPED_ARRAY)*10;
+
+        /* The tracer traces scripted getters. */
+        goodOps += count(OP_SCRIPTED_GETTER)*40;
 
         /* The methodjit is faster at array writes, but the tracer is faster for reads. */
         goodOps += count(OP_ARRAY_READ)*15;

@@ -1956,6 +1956,15 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
         blockObj->setSlot(slot, BooleanValue(isClosed));
     }
 
+    /*
+     * If clones of this block will have any extensible parents, then the clones
+     * must get unique shapes; see the comments for js::Bindings::
+     * extensibleParents.
+     */
+    if ((cg->flags & TCF_FUN_EXTENSIBLE_SCOPE) ||
+        cg->bindings.extensibleParents())
+        blockObj->setBlockOwnShape(cx);
+
     return true;
 }
 
@@ -4572,7 +4581,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 #endif
 
-        fun = (JSFunction *) pn->pn_funbox->object;
+        fun = pn->pn_funbox->function();
         JS_ASSERT(FUN_INTERPRETED(fun));
         if (fun->u.i.script) {
             /*

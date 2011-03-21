@@ -282,7 +282,7 @@ typedef map<string, LirasmFragment> Fragments;
 
 class Lirasm {
 public:
-    Lirasm(bool verbose);
+    Lirasm(bool verbose, Config& config);
     ~Lirasm();
 
     void assemble(istream &in, bool optimize);
@@ -291,7 +291,7 @@ public:
 
     LirBuffer *mLirbuf;
     LogControl mLogc;
-    avmplus::AvmCore mCore;
+    Config mConfig;
     Allocator mAlloc;
     CodeAlloc mCodeAlloc;
     bool mVerbose;
@@ -551,7 +551,7 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName,
     mFragment->lirbuf = mParent.mLirbuf;
     mParent.mFragments[mFragName].fragptr = mFragment;
 
-    mLir = mBufWriter  = new LirBufWriter(mParent.mLirbuf, nanojit::AvmCore::config);
+    mLir = mBufWriter  = new LirBufWriter(mParent.mLirbuf, mParent.mConfig);
 #ifdef DEBUG
     if (optimize) {     // don't re-validate if no optimization has taken place
         mLir = mValidateWriter2 =
@@ -569,7 +569,7 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName,
         mLir = mCseFilter = new CseFilter(mLir, LIRASM_NUM_USED_ACCS, mParent.mAlloc);
     }
 #if NJ_SOFTFLOAT_SUPPORTED
-    if (avmplus::AvmCore::config.soft_float) {
+    if (mConfig.soft_float) {
         mLir = new SoftFloatFilter(mLir);
     }
 #endif
@@ -1229,7 +1229,6 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
 
           case LIR_file:
           case LIR_line:
-          case LIR_xtbl:
           case LIR_jtbl:
             nyi(op);
             break;
@@ -1388,7 +1387,7 @@ const CallInfo ci_V_IQF = CI(f_V_IQF, CallInfo::typeSig3(ARGTYPE_V, ARGTYPE_I, A
 //   prologues)
 // - LIR_livei/LIR_liveq/LIR_lived
 // - LIR_hcalli
-// - LIR_x/LIR_xt/LIR_xf/LIR_xtbl/LIR_addxovi/LIR_subxovi/LIR_mulxovi (hard to
+// - LIR_x/LIR_xt/LIR_xf/LIR_addxovi/LIR_subxovi/LIR_mulxovi (hard to
 //   test without having multiple fragments;  when we only have one fragment
 //   we don't really want to leave it early)
 // - LIR_reti/LIR_retq/LIR_retd (hard to test without having multiple fragments)
@@ -1511,7 +1510,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     D_I_ops.push_back(LIR_ui2d);
 #elif defined(NANOJIT_ARM)
     // The ARM back-end can detect FP support at run-time.
-    if (avmplus::AvmCore::config.arm_vfp) {
+    if (mConfig.arm_vfp) {
         D_I_ops.push_back(LIR_i2d);
         D_I_ops.push_back(LIR_ui2d);
     }
@@ -2079,8 +2078,9 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     endFragment();
 }
 
-Lirasm::Lirasm(bool verbose) :
-    mAssm(mCodeAlloc, mAlloc, mAlloc, &mCore, &mLogc, nanojit::AvmCore::config)
+Lirasm::Lirasm(bool verbose, Config& config) :
+    mConfig(config),
+    mAssm(mCodeAlloc, mAlloc, mAlloc, &mLogc, mConfig)
 {
     mVerbose = verbose;
     mLogc.lcbits = 0;
@@ -2266,6 +2266,7 @@ struct CmdLineOptions {
     bool    optimize;
     int     random;
     string  filename;
+    Config  config;
 };
 
 static void
@@ -2398,8 +2399,8 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
 
     // Handle the architecture-specific options.
 #if defined NANOJIT_IA32
-    avmplus::AvmCore::config.i386_use_cmov = avmplus::AvmCore::config.i386_sse2 = i386_sse;
-    avmplus::AvmCore::config.i386_fixed_esp = true;
+    opts.config.i386_use_cmov = opts.config.i386_sse2 = i386_sse;
+    opts.config.i386_fixed_esp = true;
 #elif defined NANOJIT_ARM
     // Warn about untested configurations.
     if ( ((arm_arch == 5) && (arm_vfp)) || ((arm_arch >= 6) && (!arm_vfp)) ) {
@@ -2408,9 +2409,9 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
                 "is not regularly tested." << endl;
     }
 
-    avmplus::AvmCore::config.arm_arch = arm_arch;
-    avmplus::AvmCore::config.arm_vfp = arm_vfp;
-    avmplus::AvmCore::config.soft_float = !arm_vfp;
+    opts.config.arm_arch = arm_arch;
+    opts.config.arm_vfp = arm_vfp;
+    opts.config.soft_float = !arm_vfp;
 #endif
 }
 
@@ -2420,7 +2421,7 @@ main(int argc, char **argv)
     CmdLineOptions opts;
     processCmdLine(argc, argv, opts);
 
-    Lirasm lasm(opts.verbose);
+    Lirasm lasm(opts.verbose, opts.config);
     if (opts.random) {
         lasm.assembleRandom(opts.random, opts.optimize);
     } else {

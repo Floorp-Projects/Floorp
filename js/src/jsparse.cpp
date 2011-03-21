@@ -195,6 +195,7 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSStackFrame *cfp)
     functionCount(0),
     traceListHead(NULL),
     tc(NULL),
+    emptyCallShape(NULL),
     keepAtoms(cx->runtime)
 {
     js::PodArrayZero(tempFreeList);
@@ -207,6 +208,9 @@ Parser::init(const jschar *base, size_t length, const char *filename, uintN line
              JSVersion version)
 {
     JSContext *cx = context;
+    emptyCallShape = EmptyShape::getEmptyCallShape(cx);
+    if (!emptyCallShape)
+        return false;
     tempPoolMark = JS_ARENA_MARK(&cx->tempPool);
     if (!tokenStream.init(base, length, filename, lineno, version)) {
         JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
@@ -289,7 +293,7 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
     funbox->kids = NULL;
     funbox->parent = tc->funbox;
     funbox->methods = NULL;
-    new (&funbox->bindings) Bindings(context);
+    new (&funbox->bindings) Bindings(context, emptyCallShape);
     funbox->queued = false;
     funbox->inLoop = false;
     for (JSStmtInfo *stmt = tc->topStmt; stmt; stmt = stmt->down) {
@@ -308,7 +312,7 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
 bool
 JSFunctionBox::joinable() const
 {
-    return FUN_NULL_CLOSURE((JSFunction *) object) &&
+    return FUN_NULL_CLOSURE(function()) &&
            !(tcflags & (TCF_FUN_USES_ARGUMENTS | TCF_FUN_USES_OWN_NAME));
 }
 
@@ -320,6 +324,12 @@ JSFunctionBox::inAnyDynamicScope() const
             return true;
     }
     return false;
+}
+
+bool
+JSFunctionBox::scopeIsExtensible() const
+{
+    return tcflags & TCF_FUN_EXTENSIBLE_SCOPE;
 }
 
 bool
@@ -346,6 +356,9 @@ Parser::trace(JSTracer *trc)
             static_cast<JSFunctionBox *>(objbox)->bindings.trace(trc);
         objbox = objbox->traceLink;
     }
+
+    if (emptyCallShape)
+        emptyCallShape->trace(trc);
 
     for (JSTreeContext *tc = this->tc; tc; tc = tc->parent)
         tc->trace(trc);
@@ -1175,7 +1188,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
         Value rval;
 
         if (def.funbox) {
-            JSFunction *fun = (JSFunction *)def.funbox->object;
+            JSFunction *fun = def.funbox->function();
 
             /*
              * No need to check for redeclarations or anything, global
@@ -1373,7 +1386,7 @@ HasFinalReturn(JSParseNode *pn)
 }
 
 static JSBool
-ReportBadReturn(JSContext *cx, JSTreeContext *tc, uintN flags, uintN errnum,
+ReportBadReturn(JSContext *cx, JSTreeContext *tc, JSParseNode *pn, uintN flags, uintN errnum,
                 uintN anonerrnum)
 {
     JSAutoByteString name;
@@ -1383,7 +1396,7 @@ ReportBadReturn(JSContext *cx, JSTreeContext *tc, uintN flags, uintN errnum,
     } else {
         errnum = anonerrnum;
     }
-    return ReportCompileErrorNumber(cx, TS(tc->parser), NULL, flags, errnum, name.ptr());
+    return ReportCompileErrorNumber(cx, TS(tc->parser), pn, flags, errnum, name.ptr());
 }
 
 static JSBool
@@ -1391,7 +1404,7 @@ CheckFinalReturn(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
 {
     JS_ASSERT(tc->inFunction());
     return HasFinalReturn(pn) == ENDS_IN_RETURN ||
-           ReportBadReturn(cx, tc, JSREPORT_WARNING | JSREPORT_STRICT,
+           ReportBadReturn(cx, tc, pn, JSREPORT_WARNING | JSREPORT_STRICT,
                            JSMSG_NO_RETURN_VALUE, JSMSG_ANON_NO_RETURN_VALUE);
 }
 
@@ -1544,7 +1557,7 @@ Parser::functionBody()
                 pn = NULL;
             } else {
                 if (tc->flags & TCF_FUN_IS_GENERATOR) {
-                    ReportBadReturn(context, tc, JSREPORT_ERROR,
+                    ReportBadReturn(context, tc, pn, JSREPORT_ERROR,
                                     JSMSG_BAD_GENERATOR_RETURN,
                                     JSMSG_BAD_ANON_GENERATOR_RETURN);
                     pn = NULL;
@@ -1821,14 +1834,14 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
 
     JSCodeGenerator funcg(&parser, &codePool, &notePool, tokenStream.getLineno());
     if (!funcg.init())
-        return NULL;
+        return false;
 
     funcg.flags |= TCF_IN_FUNCTION;
     funcg.setFunction(fun);
     funcg.bindings.transfer(cx, bindings);
     fun->setArgCount(funcg.bindings.countArgs());
     if (!GenerateBlockId(&funcg, funcg.bodyid))
-        return NULL;
+        return false;
 
     /* FIXME: make Function format the source for a function definition. */
     tokenStream.mungeCurrentToken(TOK_NAME);
@@ -2040,6 +2053,7 @@ Parser::analyzeFunctions(JSTreeContext *tc)
         return true;
     if (!markFunArgs(tc->functionList))
         return false;
+    markExtensibleScopeDescendants(tc->functionList, false);
     setFunctionKinds(tc->functionList, &tc->flags);
     return true;
 }
@@ -2082,7 +2096,7 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
     do {
         JSParseNode *fn = funbox->node;
         JS_ASSERT(fn->pn_arity == PN_FUNC);
-        JSFunction *fun = (JSFunction *) funbox->object;
+        JSFunction *fun = funbox->function();
         int fnlevel = level;
 
         /*
@@ -2348,7 +2362,7 @@ CanFlattenUpvar(JSDefinition *dn, JSFunctionBox *funbox, uint32 tcflags)
      * function refers to its own name) or strictly after afunbox, we also
      * defeat the flat closure optimization for this dn.
      */
-    JSFunction *afun = (JSFunction *) afunbox->object;
+    JSFunction *afun = afunbox->function();
     if (!(afun->flags & JSFUN_LAMBDA)) {
         if (dn->isBindingForm() || dn->pn_pos >= afunbox->node->pn_pos)
             return false;
@@ -2494,7 +2508,7 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
             }
         }
 
-        JSFunction *fun = (JSFunction *) funbox->object;
+        JSFunction *fun = funbox->function();
 
         JS_ASSERT(FUN_KIND(fun) == JSFUN_INTERPRETED);
 
@@ -2651,6 +2665,38 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
     }
 
 #undef FUN_METER
+}
+
+/*
+ * Walk the JSFunctionBox tree looking for functions whose call objects may
+ * acquire new bindings as they execute: non-strict functions that call eval,
+ * and functions that contain function statements (definitions not appearing
+ * within the top statement list, which don't take effect unless they are
+ * evaluated). Such call objects may acquire bindings that shadow variables
+ * defined in enclosing scopes, so any enclosed functions must have their
+ * bindings' extensibleParents flags set, and enclosed compiler-created blocks
+ * must have their OWN_SHAPE flags set; the comments for
+ * js::Bindings::extensibleParents explain why.
+ */
+void
+Parser::markExtensibleScopeDescendants(JSFunctionBox *funbox, bool hasExtensibleParent) 
+{
+    for (; funbox; funbox = funbox->siblings) {
+        /*
+         * It would be nice to use FUN_KIND(fun) here to recognize functions
+         * that will never consult their parent chains, and thus don't need
+         * their 'extensible parents' flag set. Filed as bug 619750. 
+         */
+
+        JS_ASSERT(!funbox->bindings.extensibleParents());
+        if (hasExtensibleParent)
+            funbox->bindings.setExtensibleParents();
+
+        if (funbox->kids) {
+            markExtensibleScopeDescendants(funbox->kids,
+                                           hasExtensibleParent || funbox->scopeIsExtensible());
+        }
+    }
 }
 
 const char js_argument_str[] = "argument";
@@ -3099,6 +3145,13 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
                 fn->pn_type = TOK_FUNCTION;
                 fn->pn_arity = PN_FUNC;
                 fn->pn_pos.begin = pn->pn_pos.begin;
+
+                /*
+                 * Set fn->pn_pos.end too, in case of error before we parse the
+                 * closing brace.  See bug 640075.
+                 */
+                fn->pn_pos.end = pn->pn_pos.end;
+
                 fn->pn_body = NULL;
                 fn->pn_cookie.makeFree();
 
@@ -3155,7 +3208,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
     if (!funbox)
         return NULL;
 
-    JSFunction *fun = (JSFunction *) funbox->object;
+    JSFunction *fun = funbox->function();
 
     /* Now parse formal argument list and compute fun->nargs. */
     JSParseNode *prelude = NULL;
@@ -3528,8 +3581,11 @@ Parser::statements()
              */
             if (tc->atBodyLevel())
                 pn->pn_xflags |= PNX_FUNCDEFS;
-            else
+            else {
                 tc->flags |= TCF_HAS_FUNCTION_STMT;
+                /* Function statements extend the Call object at runtime. */
+                tc->noteHasExtensibleScope();
+            }
         }
         pn->append(pn2);
     }
@@ -3574,7 +3630,7 @@ MatchLabel(JSContext *cx, TokenStream *ts, JSParseNode *pn)
     JSAtom *label;
     TokenKind tt;
 
-    tt = ts->peekTokenSameLine();
+    tt = ts->peekTokenSameLine(TSF_OPERAND);
     if (tt == TOK_ERROR)
         return JS_FALSE;
     if (tt == TOK_NAME) {
@@ -4820,7 +4876,7 @@ Parser::returnOrYield(bool useAssignExpr)
 
     if ((~tc->flags & (TCF_RETURN_EXPR | TCF_FUN_IS_GENERATOR)) == 0) {
         /* As in Python (see PEP-255), disallow return v; in generators. */
-        ReportBadReturn(context, tc, JSREPORT_ERROR,
+        ReportBadReturn(context, tc, pn, JSREPORT_ERROR,
                         JSMSG_BAD_GENERATOR_RETURN,
                         JSMSG_BAD_ANON_GENERATOR_RETURN);
         return NULL;
@@ -4828,7 +4884,7 @@ Parser::returnOrYield(bool useAssignExpr)
 
     if (context->hasStrictOption() &&
         (~tc->flags & (TCF_RETURN_EXPR | TCF_RETURN_VOID)) == 0 &&
-        !ReportBadReturn(context, tc, JSREPORT_WARNING | JSREPORT_STRICT,
+        !ReportBadReturn(context, tc, pn, JSREPORT_WARNING | JSREPORT_STRICT,
                          JSMSG_NO_RETURN_VALUE,
                          JSMSG_ANON_NO_RETURN_VALUE)) {
         return NULL;
@@ -6220,7 +6276,6 @@ Parser::statement()
         return pn;
       }
 
-      case TOK_EOL:
       case TOK_SEMI:
         pn = UnaryNode::create(tc);
         if (!pn)
@@ -7486,7 +7541,7 @@ CheckForImmediatelyAppliedLambda(JSParseNode *pn)
         JS_ASSERT(pn->pn_arity == PN_FUNC);
 
         JSFunctionBox *funbox = pn->pn_funbox;
-        JS_ASSERT(((JSFunction *) funbox->object)->flags & JSFUN_LAMBDA);
+        JS_ASSERT((funbox->function())->flags & JSFUN_LAMBDA);
         if (!(funbox->tcflags & (TCF_FUN_USES_ARGUMENTS | TCF_FUN_USES_OWN_NAME)))
             pn->pn_dflags &= ~PND_FUNARG;
     }
@@ -7550,9 +7605,23 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 return NULL;
 #if JS_HAS_XML_SUPPORT
             tt = tokenStream.getToken(TSF_OPERAND | TSF_KEYWORD_IS_NAME);
+
+            /* Treat filters as 'with' statements for name deoptimization. */
+            JSParseNode *oldWith = tc->innermostWith;
+            JSStmtInfo stmtInfo;
+            if (tt == TOK_LP) {
+                tc->innermostWith = pn;
+                js_PushStatement(tc, &stmtInfo, STMT_WITH, -1);
+            }
+
             pn3 = primaryExpr(tt, JS_TRUE);
             if (!pn3)
                 return NULL;
+
+            if (tt == TOK_LP) {
+                tc->innermostWith = oldWith;
+                PopStatement(tc);
+            }
 
             /* Check both tt and pn_type, to distinguish |x.(y)| and |x.y::z| from |x.y|. */
             if (tt == TOK_NAME && pn3->pn_type == TOK_NAME) {
@@ -7662,6 +7731,12 @@ Parser::memberExpr(JSBool allowCallSyntax)
                     pn2->pn_op = JSOP_EVAL;
                     tc->noteCallsEval();
                     tc->flags |= TCF_FUN_HEAVYWEIGHT;
+                    /*
+                     * In non-strict mode code, direct calls to eval can add
+                     * variables to the call object.
+                     */
+                    if (!tc->inStrictMode())
+                        tc->noteHasExtensibleScope();
                 }
             } else if (pn->pn_op == JSOP_GETPROP) {
                 /* Select JSOP_FUNAPPLY given foo.apply(...). */

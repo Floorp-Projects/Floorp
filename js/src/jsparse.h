@@ -974,6 +974,8 @@ struct JSFunctionBox : public JSObjectBox
                         level:JSFB_LEVEL_BITS;
     uint32              tcflags;
 
+    JSFunction *function() const { return (JSFunction *) object; }
+
     bool joinable() const;
 
     /*
@@ -981,6 +983,12 @@ struct JSFunctionBox : public JSObjectBox
      * filter-expression, or a function that uses direct eval.
      */
     bool inAnyDynamicScope() const;
+
+    /* 
+     * Must this function's descendants be marked as having an extensible
+     * ancestor?
+     */
+    bool scopeIsExtensible() const;
 
     /*
      * Unbrand an object being initialized or constructed if any method cannot
@@ -1052,6 +1060,7 @@ struct Parser : private js::AutoGCRooter
     uint32              functionCount;  /* number of functions in current unit */
     JSObjectBox         *traceListHead; /* list of parsed object for GC tracing */
     JSTreeContext       *tc;            /* innermost tree context (stack-allocated) */
+    js::EmptyShape      *emptyCallShape;/* empty shape for Call objects */
 
     /* Root atoms and objects allocated for the parsed tree. */
     js::AutoKeepAtoms   keepAtoms;
@@ -1110,6 +1119,7 @@ struct Parser : private js::AutoGCRooter
     bool analyzeFunctions(JSTreeContext *tc);
     void cleanFunctionList(JSFunctionBox **funbox);
     bool markFunArgs(JSFunctionBox *funbox);
+    void markExtensibleScopeDescendants(JSFunctionBox *funbox, bool hasExtensibleParent);
     void setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags);
 
     void trace(JSTracer *trc);
