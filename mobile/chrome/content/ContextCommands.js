@@ -73,6 +73,23 @@ var ContextCommands = {
     SharingUI.show(ContextHelper.popupState.mediaURL, null);
   },
 
+  bookmarkLink: function cc_bookmarkLink() {
+    let state = ContextHelper.popupState;
+    let bookmarks = PlacesUtils.bookmarks;
+    try {
+      bookmarks.insertBookmark(BookmarkList.panel.mobileRoot,
+                               Util.makeURI(state.linkURL),
+                               bookmarks.DEFAULT_INDEX,
+                               state.linkTitle || state.linkURL);
+    } catch (e) {
+      return;
+    }
+
+    let message = Strings.browser.GetStringFromName("alertLinkBookmarked");
+    let toaster = Cc["@mozilla.org/toaster-alerts-service;1"].getService(Ci.nsIAlertsService);
+    toaster.showAlertNotification(null, message, "", false, "", null);
+  },
+
   sendCommand: function cc_playVideo(aCommand) {
     let browser = ContextHelper.popupState.target;
     browser.messageManager.sendAsyncMessage("Browser:ContextCommand", { command: aCommand });

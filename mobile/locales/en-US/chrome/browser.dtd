@@ -95,6 +95,7 @@
 <!ENTITY contextSaveImage.label       "Save Image">
 <!ENTITY contextShareLink.label       "Share Link">
 <!ENTITY contextShareImage.label      "Share Image">
+<!ENTITY contextBookmarkLink.label    "Bookmark Link">
 <!ENTITY contextSaveVideo.label       "Save Video">
 <!ENTITY contextShareVideo.label      "Share Video">
 <!ENTITY contextPlayMedia.label       "Play">

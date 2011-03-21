@@ -612,6 +612,9 @@
           <richlistitem class="context-command" id="context-openinnewtab" type="link-openable" onclick="ContextCommands.openInNewTab();">
             <label value="&contextOpenInNewTab.label;"/>
           </richlistitem>
+          <richlistitem class="context-command" id="context-bookmark-link" type="link" onclick="ContextCommands.bookmarkLink();">
+            <label value="&contextBookmarkLink.label;"/>
+          </richlistitem>
           <richlistitem class="context-command" id="context-savelink" type="link-saveable" onclick="ContextCommands.saveLink();">
             <label value="&contextSaveLink.label;"/>
           </richlistitem>
