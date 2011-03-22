@@ -4272,6 +4272,59 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
     }
 }
 
+
+gfxTextRun::ClusterIterator::ClusterIterator(gfxTextRun *aTextRun)
+    : mTextRun(aTextRun), mCurrentChar(PRUint32(-1))
+{
+}
+
+void
+gfxTextRun::ClusterIterator::Reset()
+{
+    mCurrentChar = PRUint32(-1);
+}
+
+PRBool
+gfxTextRun::ClusterIterator::NextCluster()
+{
+    while (++mCurrentChar < mTextRun->GetLength()) {
+        if (mTextRun->IsClusterStart(mCurrentChar)) {
+            return PR_TRUE;
+        }
+    }
+
+    mCurrentChar = PRUint32(-1);
+    return PR_FALSE;
+}
+
+PRUint32
+gfxTextRun::ClusterIterator::ClusterLength() const
+{
+    if (mCurrentChar == PRUint32(-1)) {
+        return 0;
+    }
+
+    PRUint32 i = mCurrentChar;
+    while (++i < mTextRun->GetLength()) {
+        if (mTextRun->IsClusterStart(i)) {
+            break;
+        }
+    }
+
+    return i - mCurrentChar;
+}
+
+gfxFloat
+gfxTextRun::ClusterIterator::ClusterAdvance(PropertyProvider *aProvider) const
+{
+    if (mCurrentChar == PRUint32(-1)) {
+        return 0;
+    }
+
+    return mTextRun->GetAdvanceWidth(mCurrentChar, ClusterLength(), aProvider);
+}
+
+
 #ifdef DEBUG
 void
 gfxTextRun::Dump(FILE* aOutput) {
