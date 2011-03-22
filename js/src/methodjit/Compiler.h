@@ -443,10 +443,8 @@ class Compiler : public BaseCompiler
     bool mayPushUndefined(uint32 pushed);
     types::TypeSet *argTypeSet(uint32 arg);
     types::TypeSet *localTypeSet(uint32 local);
+    types::TypeSet *pushedTypeSet(uint32 which);
     bool monitored(jsbytecode *pc);
-    void markPushedOverflow();
-    void markLocalOverflow(uint32 local);
-    void markArgumentOverflow(uint32 arg);
     bool testSingletonProperty(JSObject *obj, jsid id);
     bool testSingletonPropertyTypes(types::TypeSet *types, jsid id);
 
@@ -544,7 +542,7 @@ class Compiler : public BaseCompiler
     void jsop_forgname(JSAtom *atom);
 
     /* Fast arithmetic. */
-    bool jsop_binary(JSOp op, VoidStub stub, JSValueType type);
+    bool jsop_binary(JSOp op, VoidStub stub, JSValueType type, types::TypeSet *typeSet);
     void jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, VoidStub stub,
                           JSValueType type);
     void jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub,

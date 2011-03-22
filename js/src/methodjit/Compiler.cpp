@@ -1436,31 +1436,23 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_URSH)
 
           BEGIN_CASE(JSOP_ADD)
-            if (!jsop_binary(op, stubs::Add, knownPushedType(0))) {
-                markPushedOverflow();
+            if (!jsop_binary(op, stubs::Add, knownPushedType(0), pushedTypeSet(0)))
                 return Compile_Overflow;
-            }
           END_CASE(JSOP_ADD)
 
           BEGIN_CASE(JSOP_SUB)
-            if (!jsop_binary(op, stubs::Sub, knownPushedType(0))) {
-                markPushedOverflow();
+            if (!jsop_binary(op, stubs::Sub, knownPushedType(0), pushedTypeSet(0)))
                 return Compile_Overflow;
-            }
           END_CASE(JSOP_SUB)
 
           BEGIN_CASE(JSOP_MUL)
-            if (!jsop_binary(op, stubs::Mul, knownPushedType(0))) {
-                markPushedOverflow();
+            if (!jsop_binary(op, stubs::Mul, knownPushedType(0), pushedTypeSet(0)))
                 return Compile_Overflow;
-            }
           END_CASE(JSOP_MUL)
 
           BEGIN_CASE(JSOP_DIV)
-            if (!jsop_binary(op, stubs::Div, knownPushedType(0))) {
-                markPushedOverflow();
+            if (!jsop_binary(op, stubs::Div, knownPushedType(0), pushedTypeSet(0)))
                 return Compile_Overflow;
-            }
           END_CASE(JSOP_DIV)
 
           BEGIN_CASE(JSOP_MOD)
@@ -1497,9 +1489,9 @@ mjit::Compiler::generateMethod()
                 Value v = NumberValue(d);
 
                 /* Watch for overflow in constant propagation. */
-                if (!v.isInt32() && knownPushedType(0) == JSVAL_TYPE_INT32) {
-                    JaegerSpew(JSpew_Abort, "overflow in negation (%u)\n", PC - script->code);
-                    markPushedOverflow();
+                types::TypeSet *pushed = pushedTypeSet(0);
+                if (!v.isInt32() && pushed && !pushed->hasType(types::TYPE_DOUBLE)) {
+                    script->typeMonitorResult(cx, PC, types::TYPE_DOUBLE);
                     return Compile_Overflow;
                 }
 
@@ -4360,7 +4352,7 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
         // V 1
 
         /* Use sub since it calls ValueToNumber instead of string concat. */
-        jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN);
+        jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0));
         // N+1
 
         jsop_bindgname();
@@ -4395,7 +4387,7 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
         frame.push(Int32Value(-amt));
         // N N 1
 
-        jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN);
+        jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0));
         // N N+1
 
         jsop_bindgname();
@@ -4452,7 +4444,7 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
 
         /* Use sub since it calls ValueToNumber instead of string concat. */
         frame.syncAt(-3);
-        jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN);
+        jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0));
         // OBJ N+1
 
         if (!jsop_setprop(atom, false))
@@ -4480,7 +4472,7 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
         // N OBJ N 1
 
         frame.syncAt(-3);
-        jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN);
+        jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0));
         // N OBJ N+1
 
         if (!jsop_setprop(atom, false))
@@ -4538,7 +4530,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
 
             /* Use sub since it calls ValueToNumber instead of string concat. */
             frame.syncAt(-4);
-            jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN);
+            jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0));
             // OBJ * V+1
 
             frame.shimmy(1);
@@ -4570,7 +4562,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
             // OBJ N N 1
 
             frame.syncAt(-4);
-            jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN);
+            jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0));
             // OBJ N N+1
 
             frame.dupAt(-3);
@@ -5912,24 +5904,12 @@ mjit::Compiler::knownArgumentType(uint32 arg)
     return argumentTypes[arg];
 }
 
-void
-mjit::Compiler::markArgumentOverflow(uint32 arg)
-{
-    script->typeSetArgument(cx, arg, DoubleValue(0.0));
-}
-
 JSValueType
 mjit::Compiler::knownLocalType(uint32 local)
 {
     if (!cx->typeInferenceEnabled() || local >= script->nfixed)
         return JSVAL_TYPE_UNKNOWN;
     return localTypes[local];
-}
-
-void
-mjit::Compiler::markLocalOverflow(uint32 local)
-{
-    script->typeSetLocal(cx, local, DoubleValue(0.0));
 }
 
 JSValueType
@@ -5970,6 +5950,14 @@ mjit::Compiler::localTypeSet(uint32 local)
     return script->localTypes(local);
 }
 
+types::TypeSet *
+mjit::Compiler::pushedTypeSet(uint32 pushed)
+{
+    if (!cx->typeInferenceEnabled())
+        return NULL;
+    return script->types->pushed(PC - script->code, pushed);
+}
+
 bool
 mjit::Compiler::monitored(jsbytecode *pc)
 {
@@ -5980,13 +5968,6 @@ void
 mjit::Compiler::pushSyncedEntry(uint32 pushed)
 {
     frame.pushSynced(knownPushedType(pushed));
-}
-
-void
-mjit::Compiler::markPushedOverflow()
-{
-    /* OK to ignore failure here, we aren't performing the operation itself. */
-    script->typeMonitorResult(cx, PC, types::TYPE_DOUBLE);
 }
 
 JSObject *
