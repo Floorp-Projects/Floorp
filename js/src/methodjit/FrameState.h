@@ -404,6 +404,13 @@ class FrameState
     inline RegisterID tempRegForData(FrameEntry *fe, RegisterID reg, Assembler &masm) const;
 
     /*
+     * If fe is a constant, allocate a register and forget its payload. This
+     * function is a stopgap to cover missing paths in the Compiler, uses of it
+     * should be fixed.
+     */
+    inline void forgetConstantData(FrameEntry *fe);
+
+    /*
      * Convert an integer to a double without applying
      * additional Register pressure.
      */
