@@ -1357,6 +1357,7 @@ pref("dom.ipc.plugins.java.enabled", false);
 // Linux plugins using Xt instead of Xembed don't work out-of-process yet.
 pref("dom.ipc.plugins.enabled.libvlcplugin.so", false);
 pref("dom.ipc.plugins.enabled.nppdf.so", false);
+pref("dom.ipc.plugins.enabled.602plugin.so", false);
 #endif
 #endif
 #endif
