@@ -226,7 +226,7 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN fl
         }
     }
 
-    Reverse(props->begin() + initialLength, props->end());
+    ::Reverse(props->begin() + initialLength, props->end());
     return true;
 }
 
