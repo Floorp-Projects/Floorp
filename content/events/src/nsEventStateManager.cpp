@@ -4354,7 +4354,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, nsEventStates aState)
   if (aState.HasState(NS_EVENT_STATE_HOVER) && aContent != mHoverContent) {
     oldHover = mHoverContent;
 
-    if (!mPresContext || mPresContext->IsDynamic()) {
+    if (mPresContext->IsDynamic()) {
       newHover = aContent;
     } else {
       NS_ASSERTION(!aContent ||
