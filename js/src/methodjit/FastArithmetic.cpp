@@ -869,8 +869,13 @@ mjit::Compiler::jsop_neg()
         stubcc.masm.neg32(reg);
 
         /* Sync back with double path. */
-        stubcc.masm.storeValueFromComponents(ImmType(JSVAL_TYPE_INT32), reg,
-                                             frame.addressOf(fe));
+        if (type == JSVAL_TYPE_DOUBLE) {
+            stubcc.masm.convertInt32ToDouble(reg, Registers::FPConversionTemp);
+            stubcc.masm.storeDouble(Registers::FPConversionTemp, frame.addressOf(fe));
+        } else {
+            stubcc.masm.storeValueFromComponents(ImmType(JSVAL_TYPE_INT32), reg,
+                                                 frame.addressOf(fe));
+        }
 
         jmpIntRejoin.setJump(stubcc.masm.jump());
     }
