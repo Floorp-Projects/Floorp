@@ -497,6 +497,20 @@ FrameState::tempRegForData(FrameEntry *fe)
     return reg;
 }
 
+inline void
+FrameState::forgetConstantData(FrameEntry *fe)
+{
+    if (!fe->data.isConstant())
+        return;
+    JS_ASSERT(fe->isType(JSVAL_TYPE_OBJECT));
+
+    RegisterID reg = allocReg();
+    regstate(reg).associate(fe, RematInfo::DATA);
+
+    masm.move(JSC::MacroAssembler::ImmPtr(&fe->getValue().toObject()), reg);
+    fe->data.setRegister(reg);
+}
+
 inline JSC::MacroAssembler::FPRegisterID
 FrameState::tempFPRegForData(FrameEntry *fe)
 {

@@ -2372,19 +2372,10 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_UNBRANDTHIS)
 
           BEGIN_CASE(JSOP_GETGLOBAL)
-            jsop_getglobal(GET_SLOTNO(PC));
-          END_CASE(JSOP_GETGLOBAL)
-
           BEGIN_CASE(JSOP_CALLGLOBAL)
-          {
-            JSObject *singleton = pushedSingleton(0);
-            uint32 slot = GET_SLOTNO(PC);
-            if (singleton && !globalObj->getSlot(slot).isUndefined())
-                frame.push(ObjectValue(*singleton));
-            else
-                jsop_getglobal(slot);
-            frame.push(UndefinedValue());
-          }
+            jsop_getglobal(GET_SLOTNO(PC));
+            if (op == JSOP_CALLGLOBAL)
+                frame.push(UndefinedValue());
           END_CASE(JSOP_GETGLOBAL)
 
           default:
@@ -2492,6 +2483,12 @@ mjit::Compiler::jsop_getglobal(uint32 index)
     JS_ASSERT(globalObj);
     uint32 slot = script->getGlobalSlot(index);
 
+    JSObject *singleton = pushedSingleton(0);
+    if (singleton && !globalObj->getSlot(slot).isUndefined()) {
+        frame.push(ObjectValue(*singleton));
+        return;
+    }
+
     RegisterID reg = frame.allocReg();
     Address address = masm.objSlotRef(globalObj, reg, slot);
     frame.push(address, knownPushedType(0));
@@ -2507,7 +2504,7 @@ mjit::Compiler::jsop_getglobal(uint32 index)
         stubcc.linkExit(jump, Uses(0));
         stubcc.leave();
         OOL_STUBCALL(stubs::UndefinedHelper);
-        stubcc.rejoin(Changes(0));
+        stubcc.rejoin(Changes(1));
     }
 }
 
@@ -2919,15 +2916,9 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
 
     bool newType = callingNew && cx->typeInferenceEnabled() && types::UseNewType(cx, script, PC);
 
-    /*
-     * Currently, constant values are not functions, so don't even try to
-     * optimize. This lets us assume that callee/this have regs below.
-     */
 #ifdef JS_MONOIC
-    if (debugMode() || newType ||
-        origCallee->isConstant() || origCallee->isNotType(JSVAL_TYPE_OBJECT) ||
-        (lowerFunCallOrApply &&
-         (origThis->isConstant() || origThis->isNotType(JSVAL_TYPE_OBJECT)))) {
+    if (debugMode() || newType || origCallee->isNotType(JSVAL_TYPE_OBJECT) ||
+        (lowerFunCallOrApply && origThis->isNotType(JSVAL_TYPE_OBJECT))) {
 #endif
         if (applyTricks == LazyArgsObj) {
             /* frame.pop() above reset us to pre-JSOP_ARGUMENTS state */
@@ -2945,6 +2936,10 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
         return true;
 #ifdef JS_MONOIC
     }
+
+    frame.forgetConstantData(origCallee);
+    if (lowerFunCallOrApply)
+        frame.forgetConstantData(origThis);
 
     /* Initialized by both branches below. */
     CallGenInfo     callIC(PC);
@@ -3226,8 +3221,14 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
         callPatches.append(uncachedCallPatch);
 
     if (!lowerFunCallOrApply && recompiling) {
+        /* Recompiled from inlined native slow path. */
+        if (!callingNew) {
+            OOL_STUBCALL(stubs::SlowCall);
+            stubcc.rejoin(Changes(1));
+        }
+
         /* Recompiled uncached call to cached call. */
-        OOL_STUBCALL(stubs::UncachedCall);
+        OOL_STUBCALL(callingNew ? stubs::UncachedNew : stubs::UncachedCall);
         stubcc.rejoin(Changes(1));
     }
 
@@ -3454,6 +3455,8 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
         jsop_getprop_slow(atom, usePropCache);
         return true;
     }
+
+    frame.forgetConstantData(top);
 
     /*
      * These two must be loaded first. The objReg because the string path
@@ -3829,6 +3832,19 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
 bool
 mjit::Compiler::testSingletonProperty(JSObject *obj, jsid id)
 {
+    /*
+     * We would like to completely no-op property/global accesses which can
+     * produce only a particular JSObject or undefined, provided we can
+     * determine the pushed value must not be undefined (or, if it could be
+     * undefined, a recompilation will be triggered).
+     *
+     * If the access definitely goes through obj, either directly or on the
+     * prototype chain, then if obj has a defined property now, and the
+     * property has a default or method shape, the only way it can produce
+     * undefined in the future is if it is deleted. Deletion causes type
+     * properties to be explicitly marked with undefined.
+     */
+
     if (!obj->isNative())
         return false;
     if (obj->getClass()->ops.lookupProperty)
@@ -3988,6 +4004,8 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
         pic.typeReg = Registers::ReturnReg;
     }
 
+    frame.forgetConstantData(lhs);
+
     /* Get the object into a mutable register. */
     RegisterID objReg = frame.copyDataIntoReg(lhs);
     pic.objReg = objReg;
@@ -4089,14 +4107,26 @@ mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type)
     /* Always test for undefined. */
     Jump undefinedGuard = masm.testUndefined(Assembler::Equal, pic.shapeReg);
 
-    frame.pushRegs(pic.shapeReg, pic.objReg, type);
+    /*
+     * We can't optimize away the PIC for the NAME access itself, but if we've
+     * only seen a single value pushed by this access, mark it as such and
+     * recompile if a different value becomes possible.
+     */
+    JSObject *singleton = pushedSingleton(0);
+    if (singleton) {
+        frame.push(ObjectValue(*singleton));
+        frame.freeReg(pic.shapeReg);
+        frame.freeReg(pic.objReg);
+    } else {
+        frame.pushRegs(pic.shapeReg, pic.objReg, type);
+    }
 
     stubcc.rejoin(Changes(1));
 
     stubcc.linkExit(undefinedGuard, Uses(0));
     stubcc.leave();
     OOL_STUBCALL(stubs::UndefinedHelper);
-    stubcc.rejoin(Changes(0));
+    stubcc.rejoin(Changes(1));
 
     pics.append(pic);
 }
@@ -4115,6 +4145,8 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
         Jump notObject = frame.testObject(Assembler::NotEqual, fe);
         stubcc.linkExit(notObject, Uses(1));
     }
+
+    frame.forgetConstantData(fe);
 
     RESERVE_IC_SPACE(masm);
 
@@ -4156,7 +4188,7 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
     stubcc.linkExit(undefinedGuard, Uses(0));
     stubcc.leave();
     OOL_STUBCALL(stubs::UndefinedHelper);
-    stubcc.rejoin(Changes(0));
+    stubcc.rejoin(Changes(1));
 
     pics.append(pic);
     return true;
@@ -4593,6 +4625,8 @@ mjit::Compiler::iter(uintN flags)
         stubcc.linkExit(notObject, Uses(1));
     }
 
+    frame.forgetConstantData(fe);
+
     RegisterID reg = frame.tempRegForData(fe);
 
     frame.pinReg(reg);
@@ -4890,16 +4924,13 @@ mjit::Compiler::jsop_getgname(uint32 index, JSValueType type)
         return;
     }
 
-    /*
-     * Optimize singletons like Math for JSOP_CALLPROP.
-     * :FIXME: Fix other ops to support constant objects.
-     */
+    /* Optimize singletons like Math for JSOP_CALLPROP. */
     JSObject *obj = pushedSingleton(0);
-    if (obj && *(PC+JSOP_GETGNAME_LENGTH) == JSOP_CALLPROP &&
-        testSingletonProperty(globalObj, ATOM_TO_JSID(atom))) {
+    if (obj && testSingletonProperty(globalObj, ATOM_TO_JSID(atom))) {
         frame.push(ObjectValue(*obj));
         return;
     }
+
 #if defined JS_MONOIC
     jsop_bindgname();
 
@@ -4992,6 +5023,19 @@ mjit::Compiler::jsop_callgname_epilogue()
     FrameEntry *fval = frame.peek(-1);
     if (fval->isNotType(JSVAL_TYPE_OBJECT)) {
         frame.push(UndefinedValue());
+        return;
+    }
+
+    /* Paths for known object callee. */
+    if (fval->isConstant()) {
+        JSObject *obj = &fval->getValue().toObject();
+        if (obj->getParent() == globalObj) {
+            frame.push(UndefinedValue());
+        } else {
+            prepareStubCall(Uses(1));
+            INLINE_STUBCALL(stubs::PushImplicitThisForGlobal);
+            frame.pushSynced(JSVAL_TYPE_UNKNOWN);
+        }
         return;
     }
 
@@ -5196,6 +5240,9 @@ mjit::Compiler::jsop_instanceof()
         Jump j = frame.testObject(Assembler::NotEqual, rhs);
         stubcc.linkExit(j, Uses(2));
     }
+
+    frame.forgetConstantData(lhs);
+    frame.forgetConstantData(rhs);
 
     RegisterID obj = frame.tempRegForData(rhs);
     Jump notFunction = masm.testFunction(Assembler::NotEqual, obj);

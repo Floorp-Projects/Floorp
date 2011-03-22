@@ -580,6 +580,8 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
         if (lhsKind != types::OBJECT_UNKNOWN && rhsKind != types::OBJECT_UNKNOWN) {
             /* :TODO: Merge with jsop_relational_int? */
             JS_ASSERT_IF(!target, fused != JSOP_IFEQ);
+            frame.forgetConstantData(lhs);
+            frame.forgetConstantData(rhs);
             Assembler::Condition cond = GetCompareCondition(op, fused);
             if (target) {
                 fixDoubleTypes(Uses(2));
@@ -1270,6 +1272,8 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
         return true;
     }
 
+    frame.forgetConstantData(obj);
+
     if (cx->typeInferenceEnabled()) {
         types::TypeSet *types = frame.getTypeSet(obj);
         types::ObjectKind kind = types ? types->getKnownObjectKind(cx, script) : types::OBJECT_UNKNOWN;
@@ -1585,6 +1589,8 @@ mjit::Compiler::jsop_getelem(bool isCall)
             jsop_getelem_slow();
         return true;
     }
+
+    frame.forgetConstantData(obj);
 
     if (cx->typeInferenceEnabled()) {
         types::TypeSet *types = frame.getTypeSet(obj);
