@@ -85,8 +85,9 @@ function fakeOpenPopup(aPopup) {
  */
 function startTest() {
   var bs = PlacesUtils.bookmarks;
-  // Add bookmarks observer.
+  // Add observers.
   bs.addObserver(bookmarksObserver, false);
+  PlacesUtils.annotations.addObserver(bookmarksObserver, false);
   var addedBookmarks = [];
 
   // MENU
@@ -117,6 +118,11 @@ function startTest() {
   bs.setItemTitle(id, "bmf1_edited");
   addedBookmarks.push(id);
   bs.moveItem(id, bs.bookmarksMenuFolder, 0);
+  id = PlacesUtils.livemarks.createLivemarkFolderOnly(
+    bs.bookmarksMenuFolder, "bml",
+    PlacesUtils._uri("http://bml.siteuri.mozilla.org/"),
+    PlacesUtils._uri("http://bml.feeduri.mozilla.org/"), bs.DEFAULT_INDEX);
+  addedBookmarks.push(id);
 
   // TOOLBAR
   info("*** Acting on toolbar bookmarks");
@@ -148,6 +154,10 @@ function startTest() {
   bs.setItemTitle(id, "tbf1_edited");
   addedBookmarks.push(id);
   bs.moveItem(id, bs.toolbarFolder, 0);
+  id = PlacesUtils.livemarks.createLivemarkFolderOnly(
+    bs.toolbarFolder, "tbl", PlacesUtils._uri("http://tbl.siteuri.mozilla.org/"),
+    PlacesUtils._uri("http://tbl.feeduri.mozilla.org/"), bs.DEFAULT_INDEX);
+  addedBookmarks.push(id);
 
   // UNSORTED
   info("*** Acting on unsorted bookmarks");
@@ -177,6 +187,11 @@ function startTest() {
   bs.setItemTitle(id, "bubf1_edited");
   addedBookmarks.push(id);
   bs.moveItem(id, bs.unfiledBookmarksFolder, 0);
+  id = PlacesUtils.livemarks.createLivemarkFolderOnly(
+    bs.unfiledBookmarksFolder, "bubl",
+    PlacesUtils._uri("http://bubl.siteuri.mozilla.org/"),
+    PlacesUtils._uri("http://bubl.feeduri.mozilla.org/"), bs.DEFAULT_INDEX);
+  addedBookmarks.push(id);
 
   // Remove all added bookmarks.
   addedBookmarks.forEach(function (aItem) {
@@ -187,8 +202,9 @@ function startTest() {
     } catch (ex) {}
   });
 
-  // Remove bookmarks observer.
+  // Remove observers.
   bs.removeObserver(bookmarksObserver);
+  PlacesUtils.annotations.removeObserver(bookmarksObserver);
   finishTest();
 }
 
@@ -211,12 +227,47 @@ function finishTest() {
  * nodes positions in the affected views.
  */
 var bookmarksObserver = {
-  QueryInterface: function PSB_QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsINavBookmarkObserver) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_NOINTERFACE;
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsINavBookmarkObserver
+  , Ci.nsIAnnotationObserver
+  ]),
+
+  // nsIAnnotationObserver
+  onItemAnnotationSet: function(aItemId, aAnnotationName) {
+    if (aAnnotationName == PlacesUtils.LMANNO_FEEDURI) {
+      var views = getViewsForFolder(PlacesUtils.bookmarks.getFolderIdForItem(aItemId));
+      ok(views.length > 0, "Found affected views (" + views.length + "): " + views);
+
+      // Check that item is recognized as a livemark.
+      let validator = function(aElementOrTreeIndex) {
+        if (typeof(aElementOrTreeIndex) == "number") {
+          var sidebar = document.getElementById("sidebar");
+          var tree = sidebar.contentDocument.getElementById("bookmarks-view");
+          let livemarkAtom = Cc["@mozilla.org/atom-service;1"].
+                             getService(Ci.nsIAtomService).
+                             getAtom("livemark");
+          let properties = Cc["@mozilla.org/supports-array;1"].
+                           createInstance(Ci.nsISupportsArray);
+          tree.view.getCellProperties(aElementOrTreeIndex,
+                                      tree.columns.getColumnAt(0),
+                                      properties);
+          return properties.GetIndexOf(livemarkAtom) != -1;
+        }
+        else {
+          return aElementOrTreeIndex.hasAttribute("livemark");
+        }
+      };
+
+      for (var i = 0; i < views.length; i++) {
+        var [node, index, valid] = searchItemInView(aItemId, views[i], validator);
+        isnot(node, null, "Found new Places node in " + views[i] + " at " + index);
+        ok(valid, "Node is recognized as a livemark");
+      }
+    }
   },
+  onItemAnnotationRemoved: function() {},
+  onPageAnnotationSet: function() {},
+  onPageAnnotationRemoved: function() {},
 
   // nsINavBookmarkObserver
   onItemAdded: function PSB_onItemAdded(aItemId, aFolderId, aIndex,
