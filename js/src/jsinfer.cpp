@@ -388,6 +388,8 @@ TypeSet::addTypeSet(JSContext *cx, ClonedTypeSet *types)
 inline void
 TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
 {
+    JS_ASSERT_IF(!constraint->condensed() && !constraint->baseSubset(),
+                 constraint->script->compartment == cx->compartment);
     JS_ASSERT_IF(!constraint->condensed(), cx->compartment->types.inferenceDepth);
     JS_ASSERT_IF(typeFlags & TYPE_FLAG_INTERMEDIATE_SET,
                  !constraint->baseSubset() && !constraint->condensed());
