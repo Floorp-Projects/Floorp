@@ -227,7 +227,7 @@ gfxAlphaRecovery::AlignRectForSubimageRecovery(const nsIntRect& aRect,
 
     const PRInt32 x = aRect.x, y = aRect.y, w = aRect.width, h = aRect.height;
     const PRInt32 r = x + w;
-    const PRInt32 sw = surfaceSize.width, sh = surfaceSize.height;
+    const PRInt32 sw = surfaceSize.width;
     const PRInt32 strideAlign = ByteAlignment(kByteAlignLog2, stride);
 
     // The outer two loops below keep the rightmost (|r| above) and
@@ -260,7 +260,7 @@ gfxAlphaRecovery::AlignRectForSubimageRecovery(const nsIntRect& aRect,
 
 FOUND_SOLUTION:
     nsIntRect solution = nsIntRect(x - dx, y - dy, w + dr + dx, h + dy);
-    NS_ABORT_IF_FALSE(nsIntRect(0,0, sw,sh).Contains(solution),
+    NS_ABORT_IF_FALSE(nsIntRect(0, 0, sw, surfaceSize.height).Contains(solution),
                       "'Solution' extends outside surface bounds!");
     return solution;
 }
