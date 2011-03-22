@@ -1833,10 +1833,6 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
           case JSOP_DECGNAME:
           case JSOP_GNAMEINC:
           case JSOP_GNAMEDEC: {
-            /*
-             * This is only hit in the method JIT, which does not run into the issues
-             * posed by bug 605200.
-             */
             jsid id = GetAtomId(cx, script, pc, 0);
             TypeObject *global = script->getGlobalType();
             if (!global->unknownProperties) {

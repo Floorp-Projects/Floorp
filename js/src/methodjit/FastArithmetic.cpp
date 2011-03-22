@@ -197,16 +197,20 @@ mjit::Compiler::maybeJumpIfNotDouble(Assembler &masm, MaybeJump &mj, FrameEntry 
 }
 
 bool
-mjit::Compiler::jsop_binary(JSOp op, VoidStub stub, JSValueType type)
+mjit::Compiler::jsop_binary(JSOp op, VoidStub stub, JSValueType type, types::TypeSet *typeSet)
 {
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
 
     Value v;
     if (tryBinaryConstantFold(cx, frame, op, lhs, rhs, &v)) {
-        if (type == JSVAL_TYPE_INT32 && !v.isInt32()) {
-            /* Caller must mark the right type set as having overflowed. */
-            JaegerSpew(JSpew_Abort, "overflow in binary (%u)\n", PC - script->code);
+        if (!v.isInt32() && typeSet && !typeSet->hasType(types::TYPE_DOUBLE)) {
+            /*
+             * OK to ignore failure here, we aren't performing the operation
+             * itself. Note that typeMonitorResult will propagate the type
+             * as necessary if a *INC operation overflowed.
+             */
+            script->typeMonitorResult(cx, PC, types::TYPE_DOUBLE);
             return false;
         }
         frame.popn(2);
@@ -906,9 +910,9 @@ mjit::Compiler::jsop_mod()
 
     Value v;
     if (tryBinaryConstantFold(cx, frame, JSOP_MOD, lhs, rhs, &v)) {
-        if (type == JSVAL_TYPE_INT32 && !v.isInt32()) {
-            JaegerSpew(JSpew_Abort, "overflow in mod (%u)\n", PC - script->code);
-            markPushedOverflow();
+        types::TypeSet *pushed = pushedTypeSet(0);
+        if (!v.isInt32() && pushed && !pushed->hasType(types::TYPE_DOUBLE)) {
+            script->typeMonitorResult(cx, PC, types::TYPE_DOUBLE);
             return false;
         }
         frame.popn(2);
