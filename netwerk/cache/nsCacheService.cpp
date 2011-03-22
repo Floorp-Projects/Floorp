@@ -1637,7 +1637,6 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
 
     nsCacheRequest * request = nsnull;
 
-    nsCacheServiceAutoLock lock;
     nsresult rv = gService->CreateRequest(session,
                                           key,
                                           accessRequested,
@@ -1653,17 +1652,15 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
     if (NS_IsMainThread() && listener && gService->mCacheIOThread) {
         nsCOMPtr<nsIRunnable> ev =
             new nsProcessRequestEvent(request);
-        if (ev) {
-            rv = gService->mCacheIOThread->Dispatch(ev, NS_DISPATCH_NORMAL);
-        } else {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        }
+        rv = DispatchToCacheIOThread(ev);
 
         // delete request if we didn't post the event
         if (NS_FAILED(rv))
             delete request;
     }
     else {
+
+        nsCacheServiceAutoLock lock;
         rv = gService->ProcessRequest(request, PR_TRUE, result);
 
         // delete requests that have completed
