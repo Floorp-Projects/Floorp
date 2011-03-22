@@ -160,6 +160,21 @@ GetNativeStackBaseImpl()
     return static_cast<char*>(st.ss_sp) + st.ss_size;
 }
 
+#elif defined(AIX)
+
+#include <ucontext.h>
+
+JS_STATIC_ASSERT(JS_STACK_GROWTH_DIRECTION < 0);
+
+void *
+GetNativeStackBaseImpl()
+{
+    ucontext_t context;
+    getcontext(&context);
+    return static_cast<char*>(context.uc_stack.ss_sp) +
+        context.uc_stack.ss_size;
+}
+
 #elif defined(XP_OS2)
 
 void *
@@ -170,18 +185,6 @@ GetNativeStackBaseImpl()
 
     DosGetInfoBlocks(&ptib, &ppib);
     return ptib->tib_pstacklimit;
-}
-
-#elif defined(SOLARIS)
-
-#include <ucontext.h>
-
-void *
-GetNativeStackBaseImpl()
-{
-    stack_t st;
-    stack_getbounds(&st);
-    return static_cast<char*>(st.ss_sp) + st.ss_size;
 }
 
 #else /* XP_UNIX */
