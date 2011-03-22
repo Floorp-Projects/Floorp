@@ -159,7 +159,10 @@ class PICStubCompiler : public BaseCompiler
     }
 
     LookupStatus error() {
-        disable("error");
+        /*
+         * N.B. Do not try to disable the IC, we do not want to guard on
+         * whether the IC has been recompiled when propagating errors.
+         */
         return Lookup_Error;
     }
 
@@ -500,8 +503,13 @@ class SetPropCompiler : public PICStubCompiler
 
         JSObject *holder;
         JSProperty *prop = NULL;
+
+        /* lookupProperty can trigger recompilations. */
+        uint32 recompilations = f.jit()->recompilations;
         if (!obj->lookupProperty(cx, id, &holder, &prop))
             return error();
+        if (f.jit()->recompilations != recompilations)
+            return Lookup_Uncacheable;
 
         /* If the property exists but is on a prototype, treat as addprop. */
         if (prop && holder != obj) {
@@ -683,6 +691,7 @@ struct GetPropertyHelper {
     JSObject    *obj;
     JSAtom      *atom;
     IC          &ic;
+    VMFrame     &f;
 
     // These fields are set by |bind| and |lookup|. After a call to either
     // function, these are set exactly as they are in JSOP_GETPROP or JSOP_NAME.
@@ -694,8 +703,8 @@ struct GetPropertyHelper {
     // Lookup_Cacheable, otherwise it is NULL.
     const Shape *shape;
 
-    GetPropertyHelper(JSContext *cx, JSObject *obj, JSAtom *atom, IC &ic)
-      : cx(cx), obj(obj), atom(atom), ic(ic), holder(NULL), prop(NULL), shape(NULL)
+    GetPropertyHelper(JSContext *cx, JSObject *obj, JSAtom *atom, IC &ic, VMFrame &f)
+      : cx(cx), obj(obj), atom(atom), ic(ic), f(f), holder(NULL), prop(NULL), shape(NULL)
     { }
 
   public:
@@ -716,8 +725,13 @@ struct GetPropertyHelper {
         JSObject *aobj = js_GetProtoIfDenseArray(obj);
         if (!aobj->isNative())
             return ic.disable(cx, "non-native");
+
+        uint32 recompilations = f.jit()->recompilations;
         if (!aobj->lookupProperty(cx, ATOM_TO_JSID(atom), &holder, &prop))
             return ic.error(cx);
+        if (f.jit()->recompilations != recompilations)
+            return Lookup_Uncacheable;
+
         if (!prop)
             return ic.disable(cx, "lookup failed");
         if (!IsCacheableProtoChain(obj, holder))
@@ -920,7 +934,7 @@ class GetPropCompiler : public PICStubCompiler
         if (!f.fp()->script()->compileAndGo)
             return disable("String.prototype without compile-and-go");
 
-        GetPropertyHelper<GetPropCompiler> getprop(cx, obj, atom, *this);
+        GetPropertyHelper<GetPropCompiler> getprop(cx, obj, atom, *this, f);
         LookupStatus status = getprop.lookupAndTest();
         if (status != Lookup_Cacheable)
             return status;
@@ -1175,7 +1189,7 @@ class GetPropCompiler : public PICStubCompiler
     {
         JS_ASSERT(pic.hit);
 
-        GetPropertyHelper<GetPropCompiler> getprop(cx, obj, atom, *this);
+        GetPropertyHelper<GetPropCompiler> getprop(cx, obj, atom, *this, f);
         LookupStatus status = getprop.lookupAndTest();
         if (status != Lookup_Cacheable)
             return status;
@@ -1257,7 +1271,7 @@ class ScopeNameCompiler : public PICStubCompiler
                       JSAtom *atom, VoidStubPIC stub)
       : PICStubCompiler("name", f, script, pic, JS_FUNC_TO_DATA_PTR(void *, stub)),
         scopeChain(scopeChain), atom(atom),
-        getprop(f.cx, NULL, atom, *thisFromCtor())
+        getprop(f.cx, NULL, atom, *thisFromCtor(), f)
     { }
 
     static void reset(Repatcher &repatcher, ic::PICInfo &pic)
@@ -1748,6 +1762,8 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
     if (!obj)
         THROW();
 
+    bool usePropCache = pic->usePropCache;
+
     if (pic->shouldUpdate(f.cx)) {
         VoidStubPIC stub = pic->usePropCache
                            ? DisabledGetPropIC
@@ -1758,8 +1774,6 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
             THROW();
         }
     }
-
-    bool usePropCache = pic->usePropCache;
 
     Value v;
     if (!obj->getProperty(f.cx, ATOM_TO_JSID(atom), &v))
@@ -2156,11 +2170,11 @@ GetElementIC::purge(Repatcher &repatcher)
 }
 
 LookupStatus
-GetElementIC::attachGetProp(JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp)
+GetElementIC::attachGetProp(VMFrame &f, JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp)
 {
     JS_ASSERT(v.isString());
 
-    GetPropertyHelper<GetElementIC> getprop(cx, obj, JSID_TO_ATOM(id), *this);
+    GetPropertyHelper<GetElementIC> getprop(cx, obj, JSID_TO_ATOM(id), *this, f);
     LookupStatus status = getprop.lookupAndTest();
     if (status != Lookup_Cacheable)
         return status;
@@ -2432,10 +2446,10 @@ GetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsi
 #endif /* JS_POLYIC_TYPED_ARRAY */
 
 LookupStatus
-GetElementIC::update(JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp)
+GetElementIC::update(VMFrame &f, JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp)
 {
     if (v.isString())
-        return attachGetProp(cx, obj, v, id, vp);
+        return attachGetProp(f, cx, obj, v, id, vp);
 
 #if 0 // :FIXME: bug 643842
 //#if defined JS_POLYIC_TYPED_ARRAY
@@ -2474,7 +2488,7 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
 #ifdef DEBUG
         f.regs.sp[-2] = MagicValue(JS_GENERIC_MAGIC);
 #endif
-        LookupStatus status = ic->update(cx, thisObj, idval, id, &f.regs.sp[-2]);
+        LookupStatus status = ic->update(f, cx, thisObj, idval, id, &f.regs.sp[-2]);
         if (status != Lookup_Uncacheable) {
             if (status == Lookup_Error)
                 THROW();
@@ -2539,7 +2553,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
 #ifdef DEBUG
         f.regs.sp[-2] = MagicValue(JS_GENERIC_MAGIC);
 #endif
-        LookupStatus status = ic->update(cx, obj, idval, id, &f.regs.sp[-2]);
+        LookupStatus status = ic->update(f, cx, obj, idval, id, &f.regs.sp[-2]);
         if (status != Lookup_Uncacheable) {
             if (status == Lookup_Error)
                 THROW();
