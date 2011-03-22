@@ -431,7 +431,7 @@ JS_XDRString(JSXDRState *xdr, JSString **strp)
                                              (*strp)->length(),
                                              true);
         /* js_GetDeflatedUTF8StringLength never fails in CESU8 mode */
-        JS_ASSERT(len != -1);
+        JS_ASSERT(len != (size_t) -1);
         JS_ASSERT(size_t(uint32(len)) == len);
         /* ensure MAX_LENGTH strings can always fit when CESU8 encoded */
         JS_STATIC_ASSERT(JSString::MAX_LENGTH < (uint32(-1) / 3));
