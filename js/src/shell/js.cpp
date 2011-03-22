@@ -201,7 +201,9 @@ js::workers::ThreadPool *gWorkerThreadPool = NULL;
 static JSBool reportWarnings = JS_TRUE;
 static JSBool compileOnly = JS_FALSE;
 
+#ifdef DEBUG
 static JSBool OOM_printAllocationCount = JS_FALSE;
+#endif
 
 typedef enum JSShellErrNum {
 #define MSG_DEF(name, number, count, exception, format) \
