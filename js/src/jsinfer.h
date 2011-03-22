@@ -320,6 +320,9 @@ struct TypeSet
     /* Get whether this type set is non-empty. */
     bool knownNonEmpty(JSContext *cx, JSScript *script);
 
+    /* Get the single value which can appear in this type set, otherwise NULL. */
+    JSObject *getSingleton(JSContext *cx, JSScript *script);
+
     /* Mark all current and future types in this set as pushed by script/pc. */
     void pushAllTypes(JSContext *cx, JSScript *script, const jsbytecode *pc);
 
@@ -437,6 +440,9 @@ struct TypeObject
 
     /* Whether any objects this represents have an equality hook. */
     bool hasSpecialEquality;
+
+    /* Native object for which this type was created. */
+    JSObject *singleton;
 
     TypeObject() {}
 

@@ -1711,9 +1711,19 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_FUNAPPLY)
           BEGIN_CASE(JSOP_FUNCALL)
           {
-            JaegerSpew(JSpew_Insns, " --- SCRIPTED CALL --- \n");
-            inlineCallHelper(GET_ARGC(PC), false);
-            JaegerSpew(JSpew_Insns, " --- END SCRIPTED CALL --- \n");
+            bool done = false;
+            if (op == JSOP_CALL) {
+                CompileStatus status = inlineNativeFunction(GET_ARGC(PC), false);
+                if (status == Compile_Okay)
+                    done = true;
+                else if (status != Compile_Abort)
+                    return status;
+            }
+            if (!done) {
+                JaegerSpew(JSpew_Insns, " --- SCRIPTED CALL --- \n");
+                inlineCallHelper(GET_ARGC(PC), false);
+                JaegerSpew(JSpew_Insns, " --- END SCRIPTED CALL --- \n");
+            }
           }
           END_CASE(JSOP_CALL)
 
@@ -1856,12 +1866,20 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_NEW)
 
           BEGIN_CASE(JSOP_GETARG)
-          BEGIN_CASE(JSOP_CALLARG)
           {
             uint32 arg = GET_SLOTNO(PC);
             frame.pushArg(arg, knownArgumentType(arg));
-            if (op == JSOP_CALLARG)
-                frame.push(UndefinedValue());
+          }
+          END_CASE(JSOP_GETARG)
+
+          BEGIN_CASE(JSOP_CALLARG)
+          {
+            uint32 arg = GET_SLOTNO(PC);
+            if (JSObject *singleton = pushedSingleton(0))
+                frame.push(ObjectValue(*singleton));
+            else
+                frame.pushArg(arg, knownArgumentType(arg));
+            frame.push(UndefinedValue());
           }
           END_CASE(JSOP_GETARG)
 
@@ -2298,7 +2316,10 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_CALLLOCAL)
           {
             uint32 slot = GET_SLOTNO(PC);
-            frame.pushLocal(slot, knownPushedType(0));
+            if (JSObject *singleton = pushedSingleton(0))
+                frame.push(ObjectValue(*singleton));
+            else
+                frame.pushLocal(slot, knownPushedType(0));
             frame.push(UndefinedValue());
           }
           END_CASE(JSOP_CALLLOCAL)
@@ -2351,10 +2372,19 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_UNBRANDTHIS)
 
           BEGIN_CASE(JSOP_GETGLOBAL)
-          BEGIN_CASE(JSOP_CALLGLOBAL)
             jsop_getglobal(GET_SLOTNO(PC));
-            if (op == JSOP_CALLGLOBAL)
-                frame.push(UndefinedValue());
+          END_CASE(JSOP_GETGLOBAL)
+
+          BEGIN_CASE(JSOP_CALLGLOBAL)
+          {
+            JSObject *singleton = pushedSingleton(0);
+            uint32 slot = GET_SLOTNO(PC);
+            if (singleton && !globalObj->getSlot(slot).isUndefined())
+                frame.push(ObjectValue(*singleton));
+            else
+                jsop_getglobal(slot);
+            frame.push(UndefinedValue());
+          }
           END_CASE(JSOP_GETGLOBAL)
 
           default:
@@ -2906,6 +2936,12 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
         }
         emitUncachedCall(callImmArgc, callingNew);
         applyTricks = NoApplyTricks;
+
+        /* Rejoin from inlined native slow path. */
+        if (recompiling) {
+            OOL_STUBCALL(stubs::SlowCall);
+            stubcc.rejoin(Changes(1));
+        }
         return true;
 #ifdef JS_MONOIC
     }
@@ -3188,6 +3224,12 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
     callPatches.append(callPatch);
     if (lowerFunCallOrApply)
         callPatches.append(uncachedCallPatch);
+
+    if (!lowerFunCallOrApply && recompiling) {
+        /* Recompiled uncached call to cached call. */
+        OOL_STUBCALL(stubs::UncachedCall);
+        stubcc.rejoin(Changes(1));
+    }
 
     applyTricks = NoApplyTricks;
 
@@ -3707,11 +3749,17 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     pic.hasTypeCheck = false;
     pic.typeReg = Registers::ReturnReg;
 
-    RegisterID objReg = frame.copyDataIntoReg(top);
     RegisterID shapeReg = frame.allocReg();
-
     pic.shapeReg = shapeReg;
     pic.atom = atom;
+
+    RegisterID objReg;
+    if (top->isConstant()) {
+        objReg = frame.allocReg();
+        masm.move(ImmPtr(&top->getValue().toObject()), objReg);
+    } else {
+        objReg = frame.copyDataIntoReg(top);
+    }
 
     /* Guard on shape. */
     masm.loadShape(objReg, shapeReg);
@@ -3779,9 +3827,91 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
 }
 
 bool
+mjit::Compiler::testSingletonProperty(JSObject *obj, jsid id)
+{
+    if (!obj->isNative())
+        return false;
+    if (obj->getClass()->ops.lookupProperty)
+        return false;
+
+    JSObject *holder;
+    JSProperty *prop = NULL;
+    if (!obj->lookupProperty(cx, id, &holder, &prop))
+        return false;
+    if (!prop)
+        return false;
+
+    Shape *shape = (Shape *) prop;
+    if (shape->hasDefaultGetter()) {
+        if (!shape->hasSlot())
+            return false;
+        if (holder->getSlot(shape->slot).isUndefined())
+            return false;
+    } else if (!shape->isMethod()) {
+        return false;
+    }
+
+    return true;
+}
+
+bool
+mjit::Compiler::testSingletonPropertyTypes(types::TypeSet *types, jsid id)
+{
+    JSObject *singleton = types->getSingleton(cx, script);
+    if (singleton)
+        return testSingletonProperty(singleton, id);
+
+    if (!script->compileAndGo)
+        return false;
+
+    JSProtoKey key;
+    JSValueType type = types->getKnownTypeTag(cx, script);
+    switch (type) {
+      case JSVAL_TYPE_STRING:
+        key = JSProto_String;
+        break;
+
+      case JSVAL_TYPE_INT32:
+      case JSVAL_TYPE_DOUBLE:
+        key = JSProto_Number;
+        break;
+
+      case JSVAL_TYPE_BOOLEAN:
+        key = JSProto_Boolean;
+        break;
+
+      default:
+        return false;
+    }
+
+    JSObject *proto;
+    if (!js_GetClassPrototype(cx, globalObj, key, &proto, NULL))
+        return NULL;
+
+    return testSingletonProperty(proto, id);
+}
+
+bool
 mjit::Compiler::jsop_callprop(JSAtom *atom)
 {
     FrameEntry *top = frame.peek(-1);
+
+    JSObject *singleton = pushedSingleton(0);
+    if (singleton && singleton->isFunction() &&
+        testSingletonPropertyTypes(frame.getTypeSet(top), ATOM_TO_JSID(atom))) {
+        // THIS
+
+        frame.dup();
+        // THIS THIS
+
+        frame.push(ObjectValue(*singleton));
+        // THIS THIS FUN
+
+        frame.shift(-2);
+        // FUN THIS
+
+        return true;
+    }
 
     /* If the incoming type will never PIC, take slow path. */
     if (top->isTypeKnown() && top->getKnownType() != JSVAL_TYPE_OBJECT) {
@@ -4757,6 +4887,17 @@ mjit::Compiler::jsop_getgname(uint32 index, JSValueType type)
     }
     if (atom == cx->runtime->atomState.InfinityAtom) {
         frame.push(cx->runtime->positiveInfinityValue);
+        return;
+    }
+
+    /*
+     * Optimize singletons like Math for JSOP_CALLPROP.
+     * :FIXME: Fix other ops to support constant objects.
+     */
+    JSObject *obj = pushedSingleton(0);
+    if (obj && *(PC+JSOP_GETGNAME_LENGTH) == JSOP_CALLPROP &&
+        testSingletonProperty(globalObj, ATOM_TO_JSID(atom))) {
+        frame.push(ObjectValue(*obj));
         return;
     }
 #if defined JS_MONOIC
@@ -5796,6 +5937,16 @@ mjit::Compiler::markPushedOverflow()
 {
     /* OK to ignore failure here, we aren't performing the operation itself. */
     script->typeMonitorResult(cx, PC, types::TYPE_DOUBLE);
+}
+
+JSObject *
+mjit::Compiler::pushedSingleton(unsigned pushed)
+{
+    if (!cx->typeInferenceEnabled())
+        return NULL;
+
+    types::TypeSet *types = script->types->pushed(PC - script->code, pushed);
+    return types->getSingleton(cx, script);
 }
 
 bool
