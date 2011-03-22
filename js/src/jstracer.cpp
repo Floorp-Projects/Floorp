@@ -6997,6 +6997,7 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
     return NO_DEEP_BAIL;
 }
 
+#if defined(DEBUG) || defined(JS_METHODJIT)
 static jsbytecode *
 GetLoopBottom(JSContext *cx, jsbytecode *pc)
 {
@@ -7007,6 +7008,7 @@ GetLoopBottom(JSContext *cx, jsbytecode *pc)
         return NULL;
     return pc + js_GetSrcNoteOffset(sn, 0);
 }
+#endif
 
 JS_ALWAYS_INLINE void
 TraceRecorder::assertInsideLoop()

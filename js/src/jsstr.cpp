@@ -2705,7 +2705,11 @@ class SplitRegExpMatcher {
 
     inline bool operator()(JSContext *cx, JSLinearString *str, size_t index,
                            SplitMatchResult *result) {
-        Value rval;
+        Value rval
+#ifdef __GNUC__ /* quell GCC overwarning */
+            = UndefinedValue()
+#endif
+        ;
         if (!re->execute(cx, res, str, &index, true, &rval))
             return false;
         if (!rval.isTrue()) {
