@@ -447,6 +447,8 @@ class Compiler : public BaseCompiler
     void markPushedOverflow();
     void markLocalOverflow(uint32 local);
     void markArgumentOverflow(uint32 arg);
+    bool testSingletonProperty(JSObject *obj, jsid id);
+    bool testSingletonPropertyTypes(types::TypeSet *types, jsid id);
 
     /* Non-emitting helpers. */
     void pushSyncedEntry(uint32 pushed);
@@ -627,7 +629,21 @@ class Compiler : public BaseCompiler
             return Assembler::Equal;
         }
     }
-   
+
+    /* Fast builtins. */
+    JSObject *pushedSingleton(unsigned pushed);
+    CompileStatus inlineNativeFunction(uint32 argc, bool callingNew);
+    CompileStatus compileMathAbsInt(FrameEntry *arg);
+    CompileStatus compileMathAbsDouble(FrameEntry *arg);
+    CompileStatus compileMathSqrt(FrameEntry *arg);
+    CompileStatus compileMathPowSimple(FrameEntry *arg1, FrameEntry *arg2);
+
+    enum RoundingMode { Floor, Round };
+    CompileStatus compileRound(FrameEntry *arg, RoundingMode mode);
+
+    enum GetCharMode { GetChar, GetCharCode };
+    CompileStatus compileGetChar(FrameEntry *thisValue, FrameEntry *arg, GetCharMode mode);
+
     void prepareStubCall(Uses uses);
     Call emitStubCall(void *ptr);
 };

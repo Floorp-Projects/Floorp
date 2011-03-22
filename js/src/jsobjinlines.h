@@ -119,6 +119,14 @@ JSObject::unbrand(JSContext *cx)
     return true;
 }
 
+inline JSBool
+JSObject::deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict)
+{
+    cx->addTypePropertyId(getType(), id, js::types::TYPE_UNDEFINED);
+    js::DeleteIdOp op = getOps()->deleteProperty;
+    return (op ? op : js_DeleteProperty)(cx, this, id, rval, strict);
+}
+
 inline void
 JSObject::syncSpecialEquality()
 {

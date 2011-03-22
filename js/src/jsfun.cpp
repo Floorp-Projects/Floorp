@@ -2817,6 +2817,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
             if (!type || !funobj->setTypeAndUniqueShape(cx, type))
                 return NULL;
             type->handler = handler;
+            type->singleton = funobj;
         }
     }
     JS_ASSERT(!funobj->getPrivate());

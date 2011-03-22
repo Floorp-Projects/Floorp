@@ -257,6 +257,7 @@ private:
         OP2_SUBSD_VsdWsd    = 0x5C,
         OP2_DIVSD_VsdWsd    = 0x5E,
         OP2_SQRTSD_VsdWsd   = 0x51,
+        OP2_ANDPD_VpdWpd    = 0x54,
         OP2_XORPD_VpdWpd    = 0x57,
         OP2_MOVD_VdEd       = 0x6E,
         OP2_PSRLDQ_Vd       = 0x73,
@@ -2248,6 +2249,15 @@ public:
                        nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_XORPD_VpdWpd, (RegisterID)dst, (RegisterID)src);
+    }
+
+    void andpd_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "andpd      %s, %s\n", MAYBE_PAD,
+                       nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_ANDPD_VpdWpd, (RegisterID)dst, (RegisterID)src);
     }
 
     void sqrtsd_rr(XMMRegisterID src, XMMRegisterID dst)
