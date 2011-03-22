@@ -1762,12 +1762,6 @@ HTMLContentSink::BeginContext(PRInt32 aPosition)
 {
   NS_PRECONDITION(aPosition > -1, "out of bounds");
 
-  // Create new context
-  SinkContext* sc = new SinkContext(this);
-  if (!sc) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   if (!mCurrentContext) {
     NS_ERROR("Nonexistent context");
 
@@ -1795,6 +1789,7 @@ HTMLContentSink::BeginContext(PRInt32 aPosition)
     insertionPoint = content->GetChildCount() - 1;
   }
 
+  SinkContext* sc = new SinkContext(this);
   sc->Begin(nodeType,
             content,
             mCurrentContext->mStack[aPosition].mNumFlushed,
