@@ -158,6 +158,8 @@ public:
 
   void SetValue(const nsAString& aValue, PRBool aUserInput);
   void GetValue(nsAString& aValue, PRBool aIgnoreWrap) const;
+  void EmptyValue() { if (mValue) mValue->Truncate(); }
+  PRBool IsEmpty() const { return mValue ? mValue->IsEmpty() : PR_TRUE; }
 
   nsresult CreatePlaceholderNode();
 

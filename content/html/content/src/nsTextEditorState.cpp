@@ -1718,7 +1718,9 @@ nsTextEditorState::GetValue(nsAString& aValue, PRBool aIgnoreWrap) const
       mCachedValue.Truncate();
     }
   } else {
-    if (mValue) {
+    if (!mTextCtrlElement->ValueChanged() || !mValue) {
+      mTextCtrlElement->GetDefaultValueFromContent(aValue);
+    } else {
       aValue = NS_ConvertUTF8toUTF16(*mValue);
     }
   }
