@@ -3873,6 +3873,9 @@ mjit::Compiler::testSingletonProperty(JSObject *obj, jsid id)
 bool
 mjit::Compiler::testSingletonPropertyTypes(types::TypeSet *types, jsid id)
 {
+    if (!types)
+        return false;
+
     JSObject *singleton = types->getSingleton(cx, script);
     if (singleton)
         return testSingletonProperty(singleton, id);
