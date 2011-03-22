@@ -798,8 +798,10 @@ mjit::Compiler::jsop_typeof()
         }
 
         if (atom) {
+            RegisterID reg = frame.allocReg();
+            masm.move(ImmPtr(ATOM_TO_STRING(atom)), reg);
             frame.pop();
-            frame.push(StringValue(ATOM_TO_STRING(atom)));
+            frame.pushTypedPayload(JSVAL_TYPE_STRING, reg);
             return;
         }
     }
