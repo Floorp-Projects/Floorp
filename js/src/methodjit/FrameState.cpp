@@ -2074,9 +2074,11 @@ FrameState::storeTop(FrameEntry *target, JSValueType type, bool popGuaranteed)
             if (backing->isTypeKnown()) {
                 target->setType(backing->getKnownType());
             } else {
-                RegisterID reg = tempRegForType(backing);
-                target->type.setRegister(reg);
-                regstate(reg).reassociate(target);
+                pinReg(reg);
+                RegisterID typeReg = tempRegForType(backing);
+                unpinReg(reg);
+                target->type.setRegister(typeReg);
+                regstate(typeReg).reassociate(target);
             }
         } else if (type != JSVAL_TYPE_DOUBLE || backing->isType(JSVAL_TYPE_INT32)) {
             /*
