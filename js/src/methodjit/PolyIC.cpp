@@ -2437,7 +2437,8 @@ GetElementIC::update(JSContext *cx, JSObject *obj, const Value &v, jsid id, Valu
     if (v.isString())
         return attachGetProp(cx, obj, v, id, vp);
 
-#if defined JS_POLYIC_TYPED_ARRAY
+#if 0 // :FIXME: bug 643842
+//#if defined JS_POLYIC_TYPED_ARRAY
     if (js_IsTypedArray(obj))
         return attachTypedArray(cx, obj, v, id, vp);
 #endif
@@ -2800,7 +2801,8 @@ SetElementIC::update(JSContext *cx, const Value &objval, const Value &idval)
     if (obj->isDenseArray())
         return attachHoleStub(cx, obj, key);
 
-#if defined JS_POLYIC_TYPED_ARRAY
+#if 0 // :FIXME: bug 643842
+//#if defined JS_POLYIC_TYPED_ARRAY
     if (js_IsTypedArray(obj))
         return attachTypedArray(cx, obj, key);
 #endif
