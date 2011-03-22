@@ -293,8 +293,8 @@ struct GetElementIC : public BasePolyIC {
         hasLastStringStub = false;
     }
     void purge(Repatcher &repatcher);
-    LookupStatus update(JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp);
-    LookupStatus attachGetProp(JSContext *cx, JSObject *obj, const Value &v, jsid id,
+    LookupStatus update(VMFrame &f, JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp);
+    LookupStatus attachGetProp(VMFrame &f, JSContext *cx, JSObject *obj, const Value &v, jsid id,
                                Value *vp);
     LookupStatus attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsid id,
                                   Value *vp);
