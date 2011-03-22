@@ -147,8 +147,10 @@ NS_IMETHODIMP nsTreeWalker::SetCurrentNode(nsIDOMNode * aCurrentNode)
     nsresult rv = nsContentUtils::CheckSameOrigin(mRoot, aCurrentNode);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mCurrentNode = do_QueryInterface(aCurrentNode);
+    nsCOMPtr<nsINode> node = do_QueryInterface(aCurrentNode);
+    NS_ENSURE_TRUE(node, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 
+    mCurrentNode.swap(node);
     return NS_OK;
 }
 
