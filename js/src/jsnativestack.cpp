@@ -199,7 +199,9 @@ GetNativeStackBaseImpl()
 # else
     pthread_attr_t sattr;
     pthread_attr_init(&sattr);
-#  if defined(PTHREAD_NP_H) || defined(_PTHREAD_NP_H_) || defined(NETBSD)
+#  if defined(__OpenBSD__)
+    stack_t ss;
+#  elif defined(PTHREAD_NP_H) || defined(_PTHREAD_NP_H_) || defined(NETBSD)
     /* e.g. on FreeBSD 4.8 or newer, neundorf@kde.org */
     pthread_attr_get_np(thread, &sattr);
 #  else
@@ -215,7 +217,13 @@ GetNativeStackBaseImpl()
 #  ifdef DEBUG
     int rc = 
 #  endif
+# if defined(__OpenBSD__)
+        pthread_stackseg_np(pthread_self(), &ss);
+    stackBase = (void*)((size_t) ss.ss_sp - ss.ss_size);
+    stackSize = ss.ss_size;
+# else
         pthread_attr_getstack(&sattr, &stackBase, &stackSize);
+# endif
     JS_ASSERT(!rc);
     JS_ASSERT(stackBase);
     pthread_attr_destroy(&sattr);
