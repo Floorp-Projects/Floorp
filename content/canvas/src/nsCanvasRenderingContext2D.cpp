@@ -3013,21 +3013,23 @@ nsCanvasRenderingContext2D::MozTextAlongPath(const nsAString& textToDraw, PRBool
 
     gfxPoint position(0.0,0.0);
     gfxFloat x = position.x;
-    for (PRUint32 i = 0; i < strLength; i++)
-    {
-        gfxFloat halfAdvance = textRun->GetAdvanceWidth(i, 1, nsnull) / (2.0 * aupdp);
 
-        // Check for end of path
-        if(x + halfAdvance > length)
+    gfxTextRun::ClusterIterator iter(textRun.get());
+    while (iter.NextCluster()) {
+        gfxFloat halfAdvance = iter.ClusterAdvance(nsnull) / (2.0 * aupdp);
+        if (x + halfAdvance > length) {
             break;
-
-        if(x + halfAdvance >= 0)
-        {
-            cp[i].draw = PR_TRUE;
-            gfxPoint pt = path->FindPoint(gfxPoint(x + halfAdvance, position.y), &(cp[i].angle));
-
-            cp[i].pos = pt - gfxPoint(cos(cp[i].angle), sin(cp[i].angle)) * halfAdvance;
         }
+
+        if (x + halfAdvance >= 0) {
+            cp[iter.Position()].draw = PR_TRUE;
+            gfxPoint pt = path->FindPoint(gfxPoint(x + halfAdvance, position.y),
+                                          &(cp[iter.Position()].angle));
+            cp[iter.Position()].pos =
+                pt - gfxPoint(cos(cp[iter.Position()].angle),
+                              sin(cp[iter.Position()].angle)) * halfAdvance;
+        }
+
         x += 2 * halfAdvance;
     }
 
@@ -3038,25 +3040,30 @@ nsCanvasRenderingContext2D::MozTextAlongPath(const nsAString& textToDraw, PRBool
         ApplyStyle(STYLE_FILL);
     }
 
-    for(PRUint32 i = 0; i < strLength; i++)
-    {
+    iter.Reset();
+    while (iter.NextCluster()) {
         // Skip non-visible characters
-        if(!cp[i].draw) continue;
+        if (!cp[iter.Position()].draw) {
+            continue;
+        }
 
         gfxMatrix matrix = mThebes->CurrentMatrix();
 
         gfxMatrix rot;
-        rot.Rotate(cp[i].angle);
+        rot.Rotate(cp[iter.Position()].angle);
         mThebes->Multiply(rot);
 
         rot.Invert();
         rot.Scale(aupdp,aupdp);
-        gfxPoint pt = rot.Transform(cp[i].pos);
+        gfxPoint pt = rot.Transform(cp[iter.Position()].pos);
 
-        if(stroke) {
-            textRun->DrawToPath(mThebes, pt, i, 1, nsnull, nsnull);
+        if (stroke) {
+            textRun->DrawToPath(mThebes, pt,
+                                iter.Position(), iter.ClusterLength(),
+                                nsnull, nsnull);
         } else {
-            textRun->Draw(mThebes, pt, i, 1, nsnull, nsnull);
+            textRun->Draw(mThebes, pt, iter.Position(), iter.ClusterLength(),
+                          nsnull, nsnull);
         }
         mThebes->SetMatrix(matrix);
     }
