@@ -192,7 +192,7 @@ struct VectorImpl<T, N, AP, true>
  *      functions must not call back into the same object.
  */
 template <class T, size_t N, class AllocPolicy>
-class Vector : AllocPolicy
+class Vector : private AllocPolicy
 {
     /* utilities */
 
