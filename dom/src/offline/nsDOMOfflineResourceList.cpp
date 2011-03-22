@@ -144,10 +144,10 @@ nsDOMOfflineResourceList::nsDOMOfflineResourceList(nsIURI *aManifestURI,
   : mInitialized(PR_FALSE)
   , mManifestURI(aManifestURI)
   , mDocumentURI(aDocumentURI)
-  , mCachedKeys(nsnull)
-  , mCachedKeysCount(0)
   , mExposeCacheUpdateStatus(true)
   , mStatus(nsIDOMOfflineResourceList::IDLE)
+  , mCachedKeys(nsnull)
+  , mCachedKeysCount(0)
 {
   mOwner = aWindow;
   mScriptContext = aScriptContext;
