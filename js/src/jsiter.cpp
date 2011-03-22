@@ -939,10 +939,12 @@ js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
     if (iterobj->getClass() == &js_IteratorClass) {
         /* Key iterators are handled by fast-paths. */
         ni = iterobj->getNativeIterator();
-        bool more = ni->props_cursor < ni->props_end;
-        if (ni->isKeyIter() || !more) {
-            rval->setBoolean(more);
-            return true;
+        if (ni) {
+            bool more = ni->props_cursor < ni->props_end;
+            if (ni->isKeyIter() || !more) {
+                rval->setBoolean(more);
+                return true;
+            }
         }
     }
 
@@ -994,7 +996,7 @@ js_IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
          * read-only and permanent.
          */
         NativeIterator *ni = iterobj->getNativeIterator();
-        if (ni->isKeyIter()) {
+        if (ni && ni->isKeyIter()) {
             JS_ASSERT(ni->props_cursor < ni->props_end);
             *rval = IdToValue(*ni->current());
             ni->incCursor();
