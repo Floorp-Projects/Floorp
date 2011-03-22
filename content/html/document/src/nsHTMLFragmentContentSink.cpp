@@ -894,12 +894,10 @@ nsHTMLParanoidFragmentSink::Cleanup()
 nsresult
 NS_NewHTMLParanoidFragmentSink(nsIFragmentContentSink** aResult)
 {
-  nsHTMLParanoidFragmentSink* it = new nsHTMLParanoidFragmentSink();
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
   nsresult rv = nsHTMLParanoidFragmentSink::Init();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsHTMLParanoidFragmentSink* it = new nsHTMLParanoidFragmentSink();
   NS_ADDREF(*aResult = it);
   
   return NS_OK;
