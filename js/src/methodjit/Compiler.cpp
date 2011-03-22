@@ -3383,6 +3383,16 @@ mjit::Compiler::jsop_callprop_slow(JSAtom *atom)
     frame.pop();
     pushSyncedEntry(0);
     pushSyncedEntry(1);
+
+    if (recompiling) {
+        OOL_STUBCALL(stubs::GetProp);
+        stubcc.rejoin(Changes(2));
+        OOL_STUBCALL(ic::CallProp);
+        stubcc.rejoin(Changes(2));
+        OOL_STUBCALL(ic::GetProp);
+        stubcc.rejoin(Changes(2));
+    }
+
     return true;
 }
 
@@ -3669,6 +3679,10 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     if (recompiling) {
         OOL_STUBCALL(stubs::CallProp);
         stubcc.rejoin(Changes(2));
+        OOL_STUBCALL(stubs::GetProp);
+        stubcc.rejoin(Changes(2));
+        OOL_STUBCALL(ic::GetProp);
+        stubcc.rejoin(Changes(2));
     }
 
     return true;
@@ -3723,6 +3737,13 @@ mjit::Compiler::jsop_callprop_str(JSAtom *atom)
     frame.pop();
     frame.pushTypedPayload(JSVAL_TYPE_STRING, strReg);
     frame.forgetType(frame.peek(-1));
+
+    if (recompiling) {
+        OOL_STUBCALL(stubs::CallProp);
+        stubcc.rejoin(Changes(2));
+        OOL_STUBCALL(ic::CallProp);
+        stubcc.rejoin(Changes(2));
+    }
 
     return true;
 }
@@ -3817,6 +3838,15 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
 
     stubcc.rejoin(Changes(2));
     pics.append(pic);
+
+    if (recompiling) {
+        OOL_STUBCALL(stubs::CallProp);
+        stubcc.rejoin(Changes(2));
+        OOL_STUBCALL(stubs::GetProp);
+        stubcc.rejoin(Changes(2));
+        OOL_STUBCALL(ic::GetProp);
+        stubcc.rejoin(Changes(2));
+    }
 
     return true;
 }
