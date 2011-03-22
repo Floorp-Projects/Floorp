@@ -1520,35 +1520,30 @@ TypeSet::getKnownObjectKind(JSContext *cx, JSScript *script)
     return kind;
 }
 
-/* Constraint which triggers recompilation if any type is added to a type set. */
-class TypeConstraintFreezeNonEmpty : public TypeConstraint
-{
-public:
-    bool hasType;
-
-    TypeConstraintFreezeNonEmpty(JSScript *script)
-        : TypeConstraint("freezeNonEmpty", script), hasType(false)
-    {}
-
-    void newType(JSContext *cx, TypeSet *source, jstype type)
-    {
-        if (hasType)
-            return;
-
-        hasType = true;
-        cx->compartment->types.addPendingRecompile(cx, script);
-    }
-};
-
 bool
 TypeSet::knownNonEmpty(JSContext *cx, JSScript *script)
 {
-    if (typeFlags != 0)
+    if (typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET != 0 || objectCount != 0)
         return true;
 
-    add(cx, ArenaNew<TypeConstraintFreezeNonEmpty>(cx->compartment->types.pool, script), false);
+    add(cx, ArenaNew<TypeConstraintFreeze>(cx->compartment->types.pool, script), false);
 
     return false;
+}
+
+JSObject *
+TypeSet::getSingleton(JSContext *cx, JSScript *script)
+{
+    if (typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET != 0 || objectCount != 1)
+        return NULL;
+
+    TypeObject *object = (TypeObject *) objectSet;
+    if (!object->singleton)
+        return NULL;
+
+    add(cx, ArenaNew<TypeConstraintFreeze>(cx->compartment->types.pool, script), false);
+
+    return object->singleton;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -4191,6 +4186,9 @@ types::TypeObject::trace(JSTracer *trc)
 
     if (proto)
         gc::MarkObject(trc, *proto, "type_proto");
+
+    if (singleton)
+        gc::MarkObject(trc, *singleton, "type_singleton");
 }
 
 /*

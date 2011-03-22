@@ -323,6 +323,7 @@ CPPSRCS += 	MethodJIT.cpp \
 		Compiler.cpp \
 		FrameState.cpp \
 		FastArithmetic.cpp \
+		FastBuiltins.cpp \
 		FastOps.cpp \
 		StubCompiler.cpp \
 		MonoIC.cpp \
