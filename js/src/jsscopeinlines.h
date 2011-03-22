@@ -49,6 +49,7 @@
 #include "jsscope.h"
 
 #include "jscntxtinlines.h"
+#include "jsobjinlines.h"
 
 inline void
 js::Shape::freeTable(JSContext *cx)
