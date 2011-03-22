@@ -221,7 +221,7 @@ Arena<T>::mark(T *thing, JSTracer *trc)
 
     JS_ASSERT(sizeof(T) == aheader.thingSize);
     JS_SET_TRACING_NAME(trc, "machine stack");
-    Mark(trc, alignedThing);
+    js::gc::Mark(trc, alignedThing);
 
 #ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
     if (alignedThing != thing)
@@ -1352,7 +1352,7 @@ Arena<T>::markDelayedChildren(JSTracer *trc)
     JS_ASSERT(thing == getAlignedThing(thing));
     while (thing <= thingsEnd) {
         if (thing->asCell()->isMarked())
-            MarkChildren(trc, thing);
+            js::gc::MarkChildren(trc, thing);
 
         thing++;
     }
