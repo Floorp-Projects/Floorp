@@ -2898,7 +2898,9 @@ BEGIN_CASE(JSOP_STOP)
         CHECK_INTERRUPT_HANDLER();
 
         /* The JIT inlines ScriptEpilogue. */
+#ifdef JS_METHODJIT
   jit_return:
+#endif
         Value *newsp = regs.fp->actualArgs() - 1;
         newsp[-1] = regs.fp->returnValue();
         cx->stack().popInlineFrame(cx, regs.fp->prev(), newsp);

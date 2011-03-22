@@ -1481,6 +1481,7 @@ Unblacklist(JSScript *script, jsbytecode *pc)
     }
 }
 
+#ifdef JS_METHODJIT
 static bool
 IsBlacklisted(jsbytecode* pc)
 {
@@ -1490,6 +1491,7 @@ IsBlacklisted(jsbytecode* pc)
         return *(pc + JSOP_CALL_LENGTH) == JSOP_NOTRACE;
     return false;
 }
+#endif
 
 static void
 Backoff(TraceMonitor *tm, jsbytecode* pc, Fragment* tree = NULL)
@@ -8371,7 +8373,7 @@ TraceRecorder::tryToDemote(LOpcode op, jsdouble v0, jsdouble v1, LIns* s0, LIns*
 
     LIns* d0 = w.demoteToInt32(s0);
     LIns* d1 = w.demoteToInt32(s1);
-    jsdouble r;
+    jsdouble r = 0;     /* init to shut GCC up */
     VMSideExit* exit = NULL;
     LIns* result;
 
