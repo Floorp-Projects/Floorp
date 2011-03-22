@@ -202,7 +202,7 @@ static JS_ALWAYS_INLINE void
 Mark(JSTracer *trc, T *thing)
 {
     JS_ASSERT(thing);
-    JS_ASSERT(JS_IS_VALID_TRACE_KIND(GetGCThingTraceKind(thing)));
+    JS_ASSERT(JS_IS_VALID_TRACE_KIND(js::gc::GetGCThingTraceKind(thing)));
     JS_ASSERT(trc->debugPrinter || trc->debugPrintArg);
 
     /* Per-Compartment GC only with GCMarker and no custom JSTracer */
@@ -214,12 +214,12 @@ Mark(JSTracer *trc, T *thing)
         goto out;
 
     if (!IS_GC_MARKING_TRACER(trc)) {
-        uint32 kind = GetGCThingTraceKind(thing);
+        uint32 kind = js::gc::GetGCThingTraceKind(thing);
         trc->callback(trc, thing, kind);
         goto out;
     }
 
-    TypedMarker(trc, thing);
+    js::gc::TypedMarker(trc, thing);
 
   out:
 #ifdef DEBUG
