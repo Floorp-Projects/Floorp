@@ -1465,6 +1465,27 @@ public:
                                 Spacing *aSpacing) = 0;
     };
 
+    class ClusterIterator {
+    public:
+        ClusterIterator(gfxTextRun *aTextRun);
+
+        void Reset();
+
+        PRBool NextCluster();
+
+        PRUint32 Position() const {
+            return mCurrentChar;
+        }
+
+        PRUint32 ClusterLength() const;
+
+        gfxFloat ClusterAdvance(PropertyProvider *aProvider) const;
+
+    private:
+        gfxTextRun *mTextRun;
+        PRUint32    mCurrentChar;
+    };
+
     /**
      * Draws a substring. Uses only GetSpacing from aBreakProvider.
      * The provided point is the baseline origin on the left of the string
