@@ -371,6 +371,10 @@ LivemarkService.prototype = {
     var folderId = bms.createFolder(aParentId, aName, aIndex);
     bms.setFolderReadonly(folderId, true);
 
+    // Annotate this folder as being the last created livemark.  This is needed
+    // by isLivemark since it is not aware of this livemark till _pushLivemark
+    // is called, later during the addition path.
+    this._lastCreatedLivemarkFolderId = folderId;
     // Add an annotation to map the folder id to the livemark feed URI
     ans.setItemAnnotation(folderId, LMANNO_FEEDURI, aFeedURI.spec,
                           0, ans.EXPIRE_NEVER);
@@ -391,6 +395,11 @@ LivemarkService.prototype = {
       return true;
     }
     catch (ex) {}
+    // There is an edge case here, if a AnnotationChanged notification asks for
+    // isLivemark and the livemark is currently being added, it is not yet in
+    // the _livemarks array.  In such a case go the slow path.
+    if (this._lastCreatedLivemarkFolderId === aFolderId)
+      return ans.itemHasAnnotation(aFolderId, LMANNO_FEEDURI);
     return false;
   },
 
