@@ -693,6 +693,23 @@ endif
 ifeq ($(OS_ARCH),OSF1)
 EXTRA_LIBS	+= -lc_r
 endif
+# Silence warnings on AIX/HP-UX from non-GNU compilers
+ifndef GNU_CC
+ifeq ($(OS_ARCH),AIX)
+# Suppress warnings from xlC
+# 1540-1281: offsetof() on null non-POD types
+# 1540-1608: anonymous unions using static data members
+CFLAGS		+= -qsuppress=1540-1281 -qsuppress=1540-1608
+CXXFLAGS	+= -qsuppress=1540-1281 -qsuppress=1540-1608
+endif
+ifeq ($(OS_ARCH),HP-UX)
+# Suppress warnings from aCC
+# 3055: anonymous unions declaring types
+# 4189: offsetof() on non-POD types
+CFLAGS		+= +W3055,4189
+CXXFLAGS	+= +W3055,4189
+endif
+endif
 ifeq ($(OS_ARCH),SunOS)
 ifeq ($(TARGET_CPU),sparc)
 
