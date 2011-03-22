@@ -1165,7 +1165,7 @@ if [ "$MOZ_JAVAXPCOM" ]; then
   "
 fi
 
-if [ "$MOZ_STATIC_COMPONENTS" -o "$MOZ_META_COMPONENTS" ]; then
+if [ "$MOZ_STATIC_COMPONENTS" ]; then
   add_makefiles "
     modules/staticmod/Makefile
   "
