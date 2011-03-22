@@ -2724,20 +2724,19 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 
     switch (CurrentState().textBaseline)
     {
+    case TEXT_BASELINE_HANGING:
+        // fall through; best we can do with the information available
     case TEXT_BASELINE_TOP:
         anchorY = fontMetrics.emAscent;
         break;
-    case TEXT_BASELINE_HANGING:
-        anchorY = 0; // currently unavailable
         break;
     case TEXT_BASELINE_MIDDLE:
         anchorY = (fontMetrics.emAscent - fontMetrics.emDescent) * .5f;
         break;
+    case TEXT_BASELINE_IDEOGRAPHIC:
+        // fall through; best we can do with the information available
     case TEXT_BASELINE_ALPHABETIC:
         anchorY = 0;
-        break;
-    case TEXT_BASELINE_IDEOGRAPHIC:
-        anchorY = 0; // currently unvailable
         break;
     case TEXT_BASELINE_BOTTOM:
         anchorY = -fontMetrics.emDescent;
