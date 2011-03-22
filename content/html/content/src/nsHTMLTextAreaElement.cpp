@@ -593,6 +593,9 @@ nsHTMLTextAreaElement::SetValueChanged(PRBool aValueChanged)
   PRBool previousValue = mValueChanged;
 
   mValueChanged = aValueChanged;
+  if (!aValueChanged && !mState->IsEmpty()) {
+    mState->EmptyValue();
+  }
 
   if (mValueChanged != previousValue) {
     nsEventStates states = NS_EVENT_STATE_MOZ_UI_VALID |
