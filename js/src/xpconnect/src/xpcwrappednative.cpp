@@ -53,6 +53,18 @@
 #include "AccessCheck.h"
 #include "WrapperFactory.h"
 
+bool
+xpc_OkToHandOutWrapper(nsWrapperCache *cache)
+{
+    NS_ABORT_IF_FALSE(cache->GetWrapper(), "Must have wrapper");
+    NS_ABORT_IF_FALSE(cache->IsProxy() || IS_WN_WRAPPER(cache->GetWrapper()),
+                      "Must have proxy or XPCWrappedNative wrapper");
+    return
+        !cache->IsProxy() &&
+        !static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(cache->GetWrapper()))->
+                    NeedsSOW();
+}
+
 /***************************************************************************/
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(XPCWrappedNative)

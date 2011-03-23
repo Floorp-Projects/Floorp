@@ -722,7 +722,7 @@ def writeResultConv(f, type, jsvalPtr, jsvalRef):
             return
         else:
             f.write("    nsWrapperCache* cache = xpc_qsGetWrapperCache(result);\n"
-                    "    if (xpc_GetCachedSlimWrapper(cache, obj, %s)) {\n"
+                    "    if (xpc_FastGetCachedWrapper(cache, obj, %s)) {\n"
                     "      return JS_TRUE;\n"
                     "    }\n"
                     "    // After this point do not use 'result'!\n"
@@ -1285,7 +1285,7 @@ def writeTraceableResultConv(f, type):
         else:
             f.write("    nsWrapperCache* cache = xpc_qsGetWrapperCache(result);\n"
                     "    JSObject* wrapper =\n"
-                    "      xpc_GetCachedSlimWrapper(cache, obj);\n"
+                    "      xpc_FastGetCachedWrapper(cache, obj);\n"
                     "    if (wrapper) {\n"
                     "      return wrapper;\n"
                     "    }\n"
