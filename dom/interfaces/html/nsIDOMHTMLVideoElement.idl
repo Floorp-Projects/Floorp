@@ -48,7 +48,7 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(8a2e5756-e9a3-404f-9592-4e5b5830de85)]
+[scriptable, uuid(e1f52aa5-9962-4019-b7b3-af3aee6e4d48)]
 interface nsIDOMHTMLVideoElement : nsIDOMHTMLMediaElement
 {
            attribute long width; 
@@ -70,5 +70,10 @@ interface nsIDOMHTMLVideoElement : nsIDOMHTMLMediaElement
   // pipeline. We may drop frames if they arrive late at the renderer.
   readonly attribute unsigned long mozPresentedFrames;
 
+  // Number of presented frames which were painted on screen.
+  readonly attribute unsigned long mozPaintedFrames;
+
+  // Time which the last painted video frame was late by, in seconds.
+  readonly attribute double mozFrameDelay;
 };
 

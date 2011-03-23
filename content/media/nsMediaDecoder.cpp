@@ -255,7 +255,8 @@ void nsMediaDecoder::FireTimeUpdate()
 
 void nsMediaDecoder::SetVideoData(const gfxIntSize& aSize,
                                   float aPixelAspectRatio,
-                                  Image* aImage)
+                                  Image* aImage,
+                                  TimeStamp aTarget)
 {
   nsAutoLock lock(mVideoUpdateLock);
 
@@ -268,12 +269,26 @@ void nsMediaDecoder::SetVideoData(const gfxIntSize& aSize,
   }
   if (mImageContainer && aImage) {
     gfxIntSize oldFrameSize = mImageContainer->GetCurrentSize();
+
+    TimeStamp paintTime = mImageContainer->GetPaintTime();
+    if (!paintTime.IsNull() && !mPaintTarget.IsNull()) {
+      mPaintDelay = paintTime - mPaintTarget;
+    }
+
     mImageContainer->SetCurrentImage(aImage);
     gfxIntSize newFrameSize = mImageContainer->GetCurrentSize();
     if (oldFrameSize != newFrameSize) {
       mImageContainerSizeChanged = PR_TRUE;
     }
   }
+
+  mPaintTarget = aTarget;
+}
+
+double nsMediaDecoder::GetFrameDelay()
+{
+  nsAutoLock lock(mVideoUpdateLock);
+  return mPaintDelay.ToSeconds();
 }
 
 void nsMediaDecoder::PinForSeek()
