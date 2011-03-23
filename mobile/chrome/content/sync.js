@@ -325,12 +325,14 @@ let WeaveGlue = {
     } ];
     this.showMessage(message, "undo-disconnect", buttons);
 
-    // XXX change to an event that fires when panel is changed or closed
-    setTimeout(function(self) {
-      let notification = self._msg.getNotificationWithValue("undo-disconnect");
+    // Hide the notification when the panel is changed or closed.
+    let panel = document.getElementById("prefs-container");
+    panel.addEventListener("ToolPanelHidden", function onHide(aEvent) {
+      panel.removeEventListener(aEvent.type, onHide, false);
+      let notification = WeaveGlue._msg.getNotificationWithValue("undo-disconnect");
       if (notification)
         notification.close();
-    }, 10000, this);
+    }, false);
 
     Weave.Service.logout();
   },
