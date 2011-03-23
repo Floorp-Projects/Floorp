@@ -1703,9 +1703,6 @@ struct JSContext
     /* Branch callback. */
     JSOperationCallback operationCallback;
 
-    /* Interpreter activation count. */
-    uintN               interpLevel;
-
     /* Client opaque pointers. */
     void                *data;
     void                *data2;
