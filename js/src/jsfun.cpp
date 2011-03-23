@@ -147,8 +147,13 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, Value *vp)
         JSObject *argsobj = fp->maybeArgsObj();
         if (arg < fp->numActualArgs()) {
             if (argsobj) {
-                if (argsobj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
+                const Value &v = argsobj->getArgsElement(arg);
+                if (v.isMagic(JS_ARGS_HOLE))
                     return argsobj->getProperty(cx, id, vp);
+                if (fp->functionScript()->strictModeCode) {
+                    *vp = v;
+                    return true;
+                }
             }
             *vp = fp->canonicalActualArg(arg);
         } else {
