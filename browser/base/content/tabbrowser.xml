@@ -1820,9 +1820,12 @@
 
       <method name="addProgressListener">
         <parameter name="aListener"/>
-        <parameter name="aMask"/>
         <body>
           <![CDATA[
+            NS_ASSERT(arguments.length == 1,
+                      "gBrowser.addProgressListener was called with a second argument, " +
+                      "which is not supported. See bug 608628.");
+
             if (!this.mAddProgressListenerWasCalled) {
               this.mAddProgressListenerWasCalled = true;
               this.tabContainer.updateVisibility();
