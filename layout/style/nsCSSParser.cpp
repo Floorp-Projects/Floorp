@@ -382,7 +382,7 @@ protected:
                                               nsCSSSelector& aSelector,
                                               PRBool         aIsNegated,
                                               nsIAtom**      aPseudoElement,
-                                              nsPseudoClassList** aPseudoElementArgs,
+                                              nsAtomList**   aPseudoElementArgs,
                                               nsCSSPseudoElements::Type* aPseudoElementType);
 
   nsSelectorParsingStatus ParseAttributeSelector(PRInt32&       aDataMask,
@@ -433,7 +433,7 @@ protected:
   PriorityParsingStatus ParsePriority();
 
 #ifdef MOZ_XUL
-  PRBool ParseTreePseudoElement(nsPseudoClassList **aPseudoElementArgs);
+  PRBool ParseTreePseudoElement(nsAtomList **aPseudoElementArgs);
 #endif
 
   void InitBoxPropsAsPhysical(const nsCSSProperty *aSourceProperties);
@@ -2962,7 +2962,7 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
                                    nsCSSSelector& aSelector,
                                    PRBool         aIsNegated,
                                    nsIAtom**      aPseudoElement,
-                                   nsPseudoClassList** aPseudoElementArgs,
+                                   nsAtomList**   aPseudoElementArgs,
                                    nsCSSPseudoElements::Type* aPseudoElementType)
 {
   NS_ASSERTION(aIsNegated || (aPseudoElement && aPseudoElementArgs),
@@ -3473,7 +3473,7 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
 
   nsCSSSelector* selector = aList->AddSelector(aPrevCombinator);
   nsCOMPtr<nsIAtom> pseudoElement;
-  nsAutoPtr<nsPseudoClassList> pseudoElementArgs;
+  nsAutoPtr<nsAtomList> pseudoElementArgs;
   nsCSSPseudoElements::Type pseudoElementType =
     nsCSSPseudoElements::ePseudo_NotPseudoElement;
 
@@ -3540,7 +3540,7 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
     // Rewrite the current selector as this pseudo-element.
     // It does not contribute to selector weight.
     selector->mLowercaseTag.swap(pseudoElement);
-    selector->mPseudoClassList = pseudoElementArgs.forget();
+    selector->mClassList = pseudoElementArgs.forget();
     selector->SetPseudoType(pseudoElementType);
     return PR_TRUE;
   }
@@ -3553,7 +3553,7 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
     selector = aList->AddSelector('>');
 
     selector->mLowercaseTag.swap(pseudoElement);
-    selector->mPseudoClassList = pseudoElementArgs.forget();
+    selector->mClassList = pseudoElementArgs.forget();
     selector->SetPseudoType(pseudoElementType);
   }
 
@@ -3935,7 +3935,7 @@ CSSParserImpl::ParseColorOpacity(PRUint8& aOpacity)
 
 #ifdef MOZ_XUL
 PRBool
-CSSParserImpl::ParseTreePseudoElement(nsPseudoClassList **aPseudoElementArgs)
+CSSParserImpl::ParseTreePseudoElement(nsAtomList **aPseudoElementArgs)
 {
   // The argument to a tree pseudo-element is a sequence of identifiers
   // that are either space- or comma-separated.  (Was the intent to
@@ -3947,9 +3947,7 @@ CSSParserImpl::ParseTreePseudoElement(nsPseudoClassList **aPseudoElementArgs)
       return PR_FALSE;
     }
     if (eCSSToken_Ident == mToken.mType) {
-      nsCOMPtr<nsIAtom> pseudo = do_GetAtom(mToken.mIdent);
-      fakeSelector.AddPseudoClass(pseudo,
-                                  nsCSSPseudoClasses::ePseudoClass_NotPseudoClass);
+      fakeSelector.AddClass(mToken.mIdent);
     }
     else if (!mToken.IsSymbol(',')) {
       UngetToken();
@@ -3957,8 +3955,8 @@ CSSParserImpl::ParseTreePseudoElement(nsPseudoClassList **aPseudoElementArgs)
       return PR_FALSE;
     }
   }
-  *aPseudoElementArgs = fakeSelector.mPseudoClassList;
-  fakeSelector.mPseudoClassList = nsnull;
+  *aPseudoElementArgs = fakeSelector.mClassList;
+  fakeSelector.mClassList = nsnull;
   return PR_TRUE;
 }
 #endif
