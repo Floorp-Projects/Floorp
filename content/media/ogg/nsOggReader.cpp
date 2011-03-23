@@ -758,7 +758,7 @@ PRBool nsOggReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
       aKeyframeSkip = PR_FALSE;
     }
 
-    if (!aKeyframeSkip) {
+    if (!aKeyframeSkip && data->mEndTime >= aTimeThreshold) {
       mVideoQueue.Push(data.forget());
       decoded++;
     }
