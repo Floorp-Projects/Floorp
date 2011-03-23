@@ -54,7 +54,7 @@ class NS_FINAL_CLASS ImportRule : public Rule,
                                   public nsIDOMCSSImportRule
 {
 public:
-  ImportRule(nsMediaList* aMedia);
+  ImportRule(nsMediaList* aMedia, const nsString& aURLSpec);
 private:
   // for |Clone|
   ImportRule(const ImportRule& aCopy);
@@ -77,12 +77,6 @@ public:
   virtual PRInt32 GetType() const;
   virtual already_AddRefed<nsICSSRule> Clone() const;
 
-  void SetURLSpec(const nsString& aURLSpec) { mURLSpec = aURLSpec; }
-  void GetURLSpec(nsString& aURLSpec) const { aURLSpec = mURLSpec; }
-
-  nsresult SetMedia(const nsString& aMedia);
-  void GetMedia(nsString& aMedia) const;
-
   void SetSheet(nsCSSStyleSheet*);
 
   // nsIDOMCSSRule interface
@@ -99,9 +93,5 @@ private:
 
 } // namespace css
 } // namespace mozilla
-
-nsresult
-NS_NewCSSImportRule(mozilla::css::ImportRule** aInstancePtrResult,
-                    const nsString& aURLSpec, nsMediaList* aMedia);
 
 #endif /* mozilla_css_ImportRule_h__ */

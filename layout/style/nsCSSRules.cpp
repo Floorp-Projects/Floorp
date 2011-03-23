@@ -384,9 +384,9 @@ CSSCharsetRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 namespace mozilla {
 namespace css {
 
-ImportRule::ImportRule(nsMediaList* aMedia)
+ImportRule::ImportRule(nsMediaList* aMedia, const nsString& aURLSpec)
   : Rule()
-  , mURLSpec()
+  , mURLSpec(aURLSpec)
   , mMedia(aMedia)
 {
   // XXXbz This is really silly.... the mMedia here will be replaced
@@ -460,26 +460,6 @@ ImportRule::Clone() const
 {
   nsCOMPtr<nsICSSRule> clone = new ImportRule(*this);
   return clone.forget();
-}
-
-nsresult
-ImportRule::SetMedia(const nsString& aMedia)
-{
-  if (mMedia) {
-    return mMedia->SetText(aMedia);
-  } else {
-    return NS_OK;
-  }
-}
-
-void
-ImportRule::GetMedia(nsString& aMedia) const
-{
-  if (mMedia) {
-    mMedia->GetText(aMedia);
-  } else {
-    aMedia.Truncate();
-  }
 }
 
 void
@@ -579,24 +559,6 @@ ImportRule::GetStyleSheet(nsIDOMCSSStyleSheet * *aStyleSheet)
 
 // must be outside the namespace
 DOMCI_DATA(CSSImportRule, css::ImportRule)
-
-nsresult
-NS_NewCSSImportRule(css::ImportRule** aInstancePtrResult,
-                    const nsString& aURLSpec,
-                    nsMediaList* aMedia)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-
-  css::ImportRule* it = new css::ImportRule(aMedia);
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  it->SetURLSpec(aURLSpec);
-  NS_ADDREF(*aInstancePtrResult = it);
-  return NS_OK;
-}
 
 static PRBool
 CloneRuleInto(nsICSSRule* aRule, void* aArray)
