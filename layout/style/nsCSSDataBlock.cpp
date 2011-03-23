@@ -190,10 +190,6 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                     TryToStartImageLoad(*val, doc, iProp);
                 }
                 *target = *val;
-                if (iProp == eCSSProperty_font_family) {
-                    // XXX Are there other things like this?
-                    aRuleData->mFontData->mFamilyFromHTML = PR_FALSE;
-                }
                 if (nsCSSProps::PropHasFlags(iProp,
                         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED) &&
                     ShouldIgnoreColors(aRuleData))

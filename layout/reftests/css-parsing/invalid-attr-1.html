@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      p { color: red; }
+      [
+      p { color: red !important; }
+      p { color: red !important; }
+      ] p { color: red !important; }
+      p { color: green; }
+    </style>
+    <style>
+      div { color: red; }
+      :not([)
+      div { color: red !important; }
+      div { color: red !important; }
+      ]) div { color: red !important; }
+      div { color: green; }
+    </style>
+  </head>
+  <body>
+    <p>This text should be green.</p>
+    <div>This text should be green.</p>
+  </body>
+</html>

@@ -104,11 +104,6 @@ public:
     }
 
     /**
-     * Premultiplies the image by the given alpha.
-     */
-    void PremultiplyAlpha(gfxFloat alpha);
-
-    /**
      * Does the actual blurring/spreading and mask applying. Users of this
      * object must have drawn whatever they want to be blurred onto the internal
      * gfxContext returned by GetContext before calling this.
