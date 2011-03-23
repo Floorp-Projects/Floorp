@@ -165,13 +165,11 @@ public:
   void SetTag(const nsString& aTag);
   void AddID(const nsString& aID);
   void AddClass(const nsString& aClass);
-  void AddPseudoClass(nsIAtom* aPseudoClass, nsCSSPseudoClasses::Type aType);
-  void AddPseudoClass(nsIAtom* aPseudoClass, nsCSSPseudoClasses::Type aType,
-                      const PRUnichar* aString);
-  void AddPseudoClass(nsIAtom* aPseudoClass, nsCSSPseudoClasses::Type aType,
-                      const PRInt32* aIntPair);
+  void AddPseudoClass(nsCSSPseudoClasses::Type aType);
+  void AddPseudoClass(nsCSSPseudoClasses::Type aType, const PRUnichar* aString);
+  void AddPseudoClass(nsCSSPseudoClasses::Type aType, const PRInt32* aIntPair);
   // takes ownership of aSelectorList
-  void AddPseudoClass(nsIAtom* aPseudoClass, nsCSSPseudoClasses::Type aType,
+  void AddPseudoClass(nsCSSPseudoClasses::Type aType,
                       nsCSSSelectorList* aSelectorList);
   void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr);
   void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunc, 
