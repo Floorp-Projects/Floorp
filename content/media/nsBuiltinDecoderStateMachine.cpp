@@ -117,6 +117,17 @@ static const double NORMAL_BUFFER_MARGIN = 100.0;
 // undecoded data, we'll stop playback and start buffering.
 static const int LIVE_BUFFER_MARGIN = 100000;
 
+// Amount of excess ms of data to add in to the "should we buffer" calculation.
+static const PRUint32 EXHAUSTED_DATA_MARGIN_MS = 60;
+
+static TimeDuration MsToDuration(PRInt64 aMs) {
+  return TimeDuration::FromMilliseconds(static_cast<double>(aMs));
+}
+
+static PRInt64 DurationToMs(TimeDuration aDuration) {
+  return static_cast<PRInt64>(aDuration.ToSeconds() * 1000);
+}
+
 class nsAudioMetadataEventRunner : public nsRunnable
 {
 private:
@@ -941,19 +952,21 @@ PRBool nsBuiltinDecoderStateMachine::IsDecodeCloseToDownload()
   return (downloadPos - decodePos) < threshold;
 }
 
-void nsBuiltinDecoderStateMachine::NotifyDataExhausted()
+PRBool nsBuiltinDecoderStateMachine::HasLowDecodedData(PRInt64 aAudioMs) const
 {
-  MonitorAutoEnter mon(mDecoder->GetMonitor());
-  nsMediaStream* stream = mDecoder->GetCurrentStream();
-  if (mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING &&
-      mState == DECODER_STATE_DECODING &&
-      !stream->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
-      !stream->IsSuspended())
-  {
-    // Our decode has caught up with the download. Let's buffer to make sure
-    // we can play a decent amount of video in the future.
-    StartBuffering();
-  }
+  mDecoder->GetMonitor().AssertCurrentThreadIn();
+  // We consider ourselves low on decoded data if we're low on audio,
+  // provided we've not decoded to the end of the audio stream, or
+  // if we're only playing video and we're low on video frames, provided
+  // we've not decoded to the end of the video stream.
+  return ((HasAudio() &&
+           !mReader->mAudioQueue.IsFinished() &&
+           AudioDecodedMs() < aAudioMs)
+          ||
+         (!HasAudio() &&
+          HasVideo() &&
+          !mReader->mVideoQueue.IsFinished() &&
+          static_cast<PRUint32>(mReader->mVideoQueue.GetSize()) < LOW_VIDEO_FRAMES));
 }
 
 nsresult nsBuiltinDecoderStateMachine::Run()
@@ -1101,7 +1114,7 @@ nsresult nsBuiltinDecoderStateMachine::Run()
                          "Seek target should lie inside the first audio block after seek");
             PRInt64 startTime = (audio && audio->mTime < seekTime) ? audio->mTime : seekTime;
             mAudioStartTime = startTime;
-            mPlayDuration = TimeDuration::FromMilliseconds(startTime - mStartTime);
+            mPlayDuration = MsToDuration(startTime - mStartTime);
             if (HasVideo()) {
               nsAutoPtr<VideoData> video(mReader->mVideoQueue.PeekFront());
               if (video) {
@@ -1179,7 +1192,7 @@ nsresult nsBuiltinDecoderStateMachine::Run()
         PRBool isLiveStream = mDecoder->GetCurrentStream()->GetLength() == -1;
         if ((isLiveStream || !mDecoder->CanPlayThrough()) &&
              elapsed < TimeDuration::FromSeconds(BUFFERING_WAIT) &&
-             stream->GetCachedDataEnd(mDecoder->mDecoderPosition) < mBufferingEndOffset &&
+             HasLowDecodedData(1000) &&
              !stream->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
              !stream->IsSuspended())
         {
@@ -1306,11 +1319,6 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
 
   // When it's time to display a frame, decode the frame and display it.
   if (mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING) {
-    if (!IsPlaying()) {
-      StartPlayback();
-      mDecoder->GetMonitor().NotifyAll();
-    }
-
     if (HasAudio() && mAudioStartTime == -1 && !mAudioCompleted) {
       // We've got audio (so we should sync off the audio clock), but we've not
       // played a sample on the audio thread, so we can't get a time from the
@@ -1325,24 +1333,28 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
     // the end of the audio, use the audio clock. However if we've finished
     // audio, or don't have audio, use the system clock.
     PRInt64 clock_time = -1;
-    PRInt64 audio_time = GetAudioClock();
-    if (HasAudio() && !mAudioCompleted && audio_time != -1) {
-      clock_time = audio_time;
-      // Resync against the audio clock, while we're trusting the
-      // audio clock. This ensures no "drift", particularly on Linux.
-      mPlayDuration = TimeDuration::FromMilliseconds(clock_time - mStartTime);
-      mPlayStartTime = TimeStamp::Now();
+    if (!IsPlaying()) {
+      clock_time = DurationToMs(mPlayDuration) + mStartTime;
     } else {
-      // Sound is disabled on this system. Sync to the system clock.
-      TimeDuration t = TimeStamp::Now() - mPlayStartTime + mPlayDuration;
-      clock_time = (PRInt64)(1000 * t.ToSeconds());
-      // Ensure the clock can never go backwards.
-      NS_ASSERTION(mCurrentFrameTime <= clock_time, "Clock should go forwards");
-      clock_time = NS_MAX(mCurrentFrameTime, clock_time) + mStartTime;
+      PRInt64 audio_time = GetAudioClock();
+      if (HasAudio() && !mAudioCompleted && audio_time != -1) {
+        clock_time = audio_time;
+        // Resync against the audio clock, while we're trusting the
+        // audio clock. This ensures no "drift", particularly on Linux.
+        mPlayDuration = MsToDuration(clock_time - mStartTime);
+        mPlayStartTime = TimeStamp::Now();
+      } else {
+        // Sound is disabled on this system. Sync to the system clock.
+        clock_time = DurationToMs(TimeStamp::Now() - mPlayStartTime + mPlayDuration);
+        // Ensure the clock can never go backwards.
+        NS_ASSERTION(mCurrentFrameTime <= clock_time, "Clock should go forwards");
+        clock_time = NS_MAX(mCurrentFrameTime, clock_time) + mStartTime;
+      }
     }
 
+    // Skip frames up to the frame at the playback position, and figure out
+    // the time remaining until it's time to display the next frame.
     PRInt64 remainingTime = AUDIO_DURATION_MS;
-
     NS_ASSERTION(clock_time >= mStartTime, "Should have positive clock time.");
     nsAutoPtr<VideoData> currentFrame;
     if (mReader->mVideoQueue.GetSize() > 0) {
@@ -1359,13 +1371,38 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
       // Current frame has already been presented, wait until it's time to
       // present the next frame.
       if (frame && !currentFrame) {
-        PRInt64 now = (TimeStamp::Now() - mPlayStartTime + mPlayDuration).ToMilliseconds();
+        PRInt64 now = IsPlaying()
+          ? DurationToMs(TimeStamp::Now() - mPlayStartTime + mPlayDuration)
+          : DurationToMs(mPlayDuration);
         remainingTime = frame->mTime - mStartTime - now;
       }
     }
 
+    // Check to see if we don't have enough data to play up to the next frame.
+    // If we don't, switch to buffering mode.
+    nsMediaStream* stream = mDecoder->GetCurrentStream();
+    if (mState == DECODER_STATE_DECODING &&
+        mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING &&
+        HasLowDecodedData(remainingTime + EXHAUSTED_DATA_MARGIN_MS) &&
+        !stream->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
+        !stream->IsSuspended())
+    {
+      if (currentFrame) {
+        mReader->mVideoQueue.PushFront(currentFrame.forget());
+      }
+      mState = DECODER_STATE_BUFFERING;
+      return;
+    }
+
+    // We've got enough data to keep playing until at least the next frame.
+    // Start playing now if need be.
+    if (!IsPlaying()) {
+      StartPlayback();
+      mDecoder->GetMonitor().NotifyAll();
+    }
+
     if (currentFrame) {
-      // Decode one frame and display it
+      // Decode one frame and display it.
       TimeStamp presTime = mPlayStartTime - mPlayDuration +
         TimeDuration::FromMilliseconds(currentFrame->mTime - mStartTime);
       NS_ASSERTION(currentFrame->mTime >= mStartTime, "Should have positive frame time");
@@ -1376,7 +1413,7 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
         RenderVideoFrame(currentFrame, presTime);
       }
       mDecoder->GetFrameStatistics().NotifyPresentedFrame();
-      PRInt64 now = (TimeStamp::Now() - mPlayStartTime + mPlayDuration).ToMilliseconds();
+      PRInt64 now = DurationToMs(TimeStamp::Now() - mPlayStartTime + mPlayDuration);
       remainingTime = currentFrame->mEndTime - mStartTime - now;
       currentFrame = nsnull;
     }
