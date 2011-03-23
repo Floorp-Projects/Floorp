@@ -108,7 +108,6 @@
 #include "nsThreadUtils.h"
 #include "nsNodeInfoManager.h"
 #include "nsIXBLService.h"
-#include "nsIXPointer.h"
 #include "nsIFileChannel.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIRefreshURI.h"
@@ -4654,23 +4653,6 @@ NS_IMETHODIMP
 nsDocument::Load(const nsAString& aUrl, PRBool *aReturn)
 {
   NS_ERROR("nsDocument::Load() should be overriden by subclass!");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDocument::EvaluateFIXptr(const nsAString& aExpression, nsIDOMRange **aRange)
-{
-  NS_ERROR("nsDocument::EvaluateFIXptr() should be overriden by subclass!");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDocument::EvaluateXPointer(const nsAString& aExpression,
-                             nsIXPointerResult **aResult)
-{
-  NS_ERROR("nsDocument::EvaluateXPointer() should be overriden by subclass!");
 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
