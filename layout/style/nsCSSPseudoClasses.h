@@ -43,18 +43,10 @@
 
 #include "nsIAtom.h"
 
-// Empty class derived from nsIAtom so that function signatures can
-// require an atom from this atom list.
-class nsICSSPseudoClass : public nsIAtom {};
-
 class nsCSSPseudoClasses {
 public:
 
   static void AddRefAtoms();
-
-#define CSS_PSEUDO_CLASS(_name, _value) static nsICSSPseudoClass* _name;
-#include "nsCSSPseudoClassList.h"
-#undef CSS_PSEUDO_CLASS
 
   enum Type {
 #define CSS_PSEUDO_CLASS(_name, _value) \
