@@ -329,7 +329,7 @@ public:
   nsresult EndUpdateViewBatch();
 
   /** prepare the editor for use */
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,  nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
   NS_IMETHOD PreDestroy(PRBool aDestroyingFrames);
 
   /** Internal, static version */

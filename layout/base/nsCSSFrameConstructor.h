@@ -623,7 +623,7 @@ private:
   */
   struct FrameConstructionData;
   typedef const FrameConstructionData*
-    (* FrameConstructionDataGetter)(nsIContent*, nsStyleContext*);
+    (* FrameConstructionDataGetter)(Element*, nsStyleContext*);
 
   /* A constructor function that's used for complicated construction tasks.
      This is expected to create the new frame, initialize it, add whatever
@@ -787,7 +787,7 @@ private:
      match or if the matching integer has a FrameConstructionDataGetter that
      returns null. */
   static const FrameConstructionData*
-    FindDataByInt(PRInt32 aInt, nsIContent* aContent,
+    FindDataByInt(PRInt32 aInt, Element* aElement,
                   nsStyleContext* aStyleContext,
                   const FrameConstructionDataByInt* aDataPtr,
                   PRUint32 aDataLength);
@@ -798,7 +798,7 @@ private:
      match or if the matching tag has a FrameConstructionDataGetter that
      returns null. */
   static const FrameConstructionData*
-    FindDataByTag(nsIAtom* aTag, nsIContent* aContent,
+    FindDataByTag(nsIAtom* aTag, Element* aElement,
                   nsStyleContext* aStyleContext,
                   const FrameConstructionDataByTag* aDataPtr,
                   PRUint32 aDataLength);
@@ -1194,24 +1194,24 @@ private:
                         nsStyleContext* aMainStyleContext,
                         FrameConstructionItemList& aItems);
 
-  // Function to find FrameConstructionData for aContent.  Will return
-  // null if aContent is not HTML.
+  // Function to find FrameConstructionData for aElement.  Will return
+  // null if aElement is not HTML.
   // aParentFrame might be null.  If it is, that means it was an
   // inline frame.
-  static const FrameConstructionData* FindHTMLData(nsIContent* aContent,
+  static const FrameConstructionData* FindHTMLData(Element* aContent,
                                                    nsIAtom* aTag,
                                                    PRInt32 aNameSpaceID,
                                                    nsIFrame* aParentFrame,
                                                    nsStyleContext* aStyleContext);
   // HTML data-finding helper functions
   static const FrameConstructionData*
-    FindImgData(nsIContent* aContent, nsStyleContext* aStyleContext);
+    FindImgData(Element* aElement, nsStyleContext* aStyleContext);
   static const FrameConstructionData*
-    FindImgControlData(nsIContent* aContent, nsStyleContext* aStyleContext);
+    FindImgControlData(Element* aElement, nsStyleContext* aStyleContext);
   static const FrameConstructionData*
-    FindInputData(nsIContent* aContent, nsStyleContext* aStyleContext);
+    FindInputData(Element* aElement, nsStyleContext* aStyleContext);
   static const FrameConstructionData*
-    FindObjectData(nsIContent* aContent, nsStyleContext* aStyleContext);
+    FindObjectData(Element* aElement, nsStyleContext* aStyleContext);
 
   /* Construct a frame from the given FrameConstructionItem.  This function
      will handle adding the frame to frame lists, processing children, setting
@@ -1289,7 +1289,7 @@ private:
 
   // Function to find FrameConstructionData for aContent.  Will return
   // null if aContent is not MathML.
-  static const FrameConstructionData* FindMathMLData(nsIContent* aContent,
+  static const FrameConstructionData* FindMathMLData(Element* aElement,
                                                      nsIAtom* aTag,
                                                      PRInt32 aNameSpaceID,
                                                      nsStyleContext* aStyleContext);
@@ -1297,28 +1297,28 @@ private:
 
   // Function to find FrameConstructionData for aContent.  Will return
   // null if aContent is not XUL.
-  static const FrameConstructionData* FindXULTagData(nsIContent* aContent,
+  static const FrameConstructionData* FindXULTagData(Element* aElement,
                                                      nsIAtom* aTag,
                                                      PRInt32 aNameSpaceID,
                                                      nsStyleContext* aStyleContext);
   // XUL data-finding helper functions and structures
 #ifdef MOZ_XUL
   static const FrameConstructionData*
-    FindPopupGroupData(nsIContent* aContent, nsStyleContext* aStyleContext);
+    FindPopupGroupData(Element* aElement, nsStyleContext* aStyleContext);
   // sXULTextBoxData used for both labels and descriptions
   static const FrameConstructionData sXULTextBoxData;
   static const FrameConstructionData*
-    FindXULLabelData(nsIContent* aContent, nsStyleContext* aStyleContext);
+    FindXULLabelData(Element* aElement, nsStyleContext* aStyleContext);
   static const FrameConstructionData*
-    FindXULDescriptionData(nsIContent* aContent, nsStyleContext* aStyleContext);
+    FindXULDescriptionData(Element* aElement, nsStyleContext* aStyleContext);
 #ifdef XP_MACOSX
   static const FrameConstructionData*
-    FindXULMenubarData(nsIContent* aContent, nsStyleContext* aStyleContext);
+    FindXULMenubarData(Element* aElement, nsStyleContext* aStyleContext);
 #endif /* XP_MACOSX */
   static const FrameConstructionData*
-    FindXULListBoxBodyData(nsIContent* aContent, nsStyleContext* aStyleContext);
+    FindXULListBoxBodyData(Element* aElement, nsStyleContext* aStyleContext);
   static const FrameConstructionData*
-    FindXULListItemData(nsIContent* aContent, nsStyleContext* aStyleContext);
+    FindXULListItemData(Element* aElement, nsStyleContext* aStyleContext);
 #endif /* MOZ_XUL */
 
   // Function to find FrameConstructionData for aContent using one of the XUL
@@ -1328,12 +1328,12 @@ private:
   // constructed by tag.
   static const FrameConstructionData*
     FindXULDisplayData(const nsStyleDisplay* aDisplay,
-                       nsIContent* aContent,
+                       Element* aElement,
                        nsStyleContext* aStyleContext);
 
 // SVG - rods
 #ifdef MOZ_SVG
-  static const FrameConstructionData* FindSVGData(nsIContent* aContent,
+  static const FrameConstructionData* FindSVGData(Element* aElement,
                                                   nsIAtom* aTag,
                                                   PRInt32 aNameSpaceID,
                                                   nsIFrame* aParentFrame,
@@ -1350,7 +1350,7 @@ private:
   /* Not static because it does PropagateScrollToViewport.  If this
      changes, make this static */
   const FrameConstructionData*
-    FindDisplayData(const nsStyleDisplay* aDisplay, nsIContent* aContent,
+    FindDisplayData(const nsStyleDisplay* aDisplay, Element* aElement,
                     nsStyleContext* aStyleContext);
 
   /**

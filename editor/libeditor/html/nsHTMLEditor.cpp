@@ -204,9 +204,10 @@ nsHTMLEditor::~nsHTMLEditor()
     RemoveOverrideStyleSheet(mStyleSheetURLs[0]);
   }
 
-  if (mLinkHandler && mPresShellWeak)
+  if (mLinkHandler && mDocWeak)
   {
-    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+    nsCOMPtr<nsIPresShell> ps;
+    GetPresShell(getter_AddRefs(ps));
 
     if (ps && ps->GetPresContext())
     {
@@ -295,12 +296,13 @@ NS_INTERFACE_MAP_END_INHERITING(nsPlaintextEditor)
 
 
 NS_IMETHODIMP
-nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
-                   nsIContent *aRoot, nsISelectionController *aSelCon,
+nsHTMLEditor::Init(nsIDOMDocument *aDoc,
+                   nsIContent *aRoot,
+                   nsISelectionController *aSelCon,
                    PRUint32 aFlags)
 {
-  NS_PRECONDITION(aDoc && aPresShell, "bad arg");
-  NS_ENSURE_TRUE(aDoc && aPresShell, NS_ERROR_NULL_POINTER);
+  NS_PRECONDITION(aDoc && !aSelCon, "bad arg");
+  NS_ENSURE_TRUE(aDoc, NS_ERROR_NULL_POINTER);
 
   nsresult result = NS_OK, rulesRes = NS_OK;
 
@@ -317,7 +319,7 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
     nsAutoEditInitRulesTrigger rulesTrigger(static_cast<nsPlaintextEditor*>(this), rulesRes);
 
     // Init the plaintext editor
-    result = nsPlaintextEditor::Init(aDoc, aPresShell, aRoot, aSelCon, aFlags);
+    result = nsPlaintextEditor::Init(aDoc, aRoot, nsnull, aFlags);
     if (NS_FAILED(result)) { return result; }
 
     // Init mutation observer
@@ -337,7 +339,10 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
     mHTMLCSSUtils->Init(this);
 
     // disable links
-    nsPresContext *context = aPresShell->GetPresContext();
+    nsCOMPtr<nsIPresShell> presShell;
+    GetPresShell(getter_AddRefs(presShell));
+    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+    nsPresContext *context = presShell->GetPresContext();
     NS_ENSURE_TRUE(context, NS_ERROR_NULL_POINTER);
     if (!IsPlaintextEditor() && !IsInteractionAllowed()) {
       mLinkHandler = context->GetLinkHandler();
@@ -487,7 +492,7 @@ nsHTMLEditor::CreateEventListeners()
 nsresult
 nsHTMLEditor::InstallEventListeners()
 {
-  NS_ENSURE_TRUE(mDocWeak && mPresShellWeak && mEventListener,
+  NS_ENSURE_TRUE(mDocWeak && mEventListener,
                  NS_ERROR_NOT_INITIALIZED);
 
   // NOTE: nsHTMLEditor doesn't need to initialize mEventTarget here because
@@ -571,7 +576,7 @@ nsHTMLEditor::InitRules()
 NS_IMETHODIMP
 nsHTMLEditor::BeginningOfDocument()
 {
-  if (!mDocWeak || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; }
+  if (!mDocWeak) { return NS_ERROR_NOT_INITIALIZED; }
 
   // get the selection
   nsCOMPtr<nsISelection> selection;
@@ -3543,8 +3548,9 @@ nsHTMLEditor::ReplaceStyleSheet(const nsAString& aURL)
   }
 
   // Make sure the pres shell doesn't disappear during the load.
-  NS_ENSURE_TRUE(mPresShellWeak, NS_ERROR_NOT_INITIALIZED);
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  NS_ENSURE_TRUE(mDocWeak, NS_ERROR_NOT_INITIALIZED);
+  nsCOMPtr<nsIPresShell> ps;
+  GetPresShell(getter_AddRefs(ps));
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsIURI> uaURI;
@@ -3588,7 +3594,8 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
     return NS_OK;
 
   // Make sure the pres shell doesn't disappear during the load.
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  nsCOMPtr<nsIPresShell> ps;
+  GetPresShell(getter_AddRefs(ps));
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsIURI> uaURI;
@@ -3651,8 +3658,9 @@ nsHTMLEditor::RemoveOverrideStyleSheet(const nsAString &aURL)
 
   NS_ENSURE_TRUE(sheet, NS_OK); /// Don't fail if sheet not found
 
-  NS_ENSURE_TRUE(mPresShellWeak, NS_ERROR_NOT_INITIALIZED);
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  NS_ENSURE_TRUE(mDocWeak, NS_ERROR_NOT_INITIALIZED);
+  nsCOMPtr<nsIPresShell> ps;
+  GetPresShell(getter_AddRefs(ps));
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   ps->RemoveOverrideStyleSheet(sheet);
@@ -4248,7 +4256,8 @@ nsHTMLEditor::SelectAll()
   ForceCompositionEnd();
 
   nsresult rv;
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak, &rv);
+  nsCOMPtr<nsISelectionController> selCon;
+  rv = GetSelectionController(getter_AddRefs(selCon));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISelection> selection;
@@ -4273,7 +4282,8 @@ nsHTMLEditor::SelectAll()
     return selection->SelectAllChildren(mRootElement);
   }
 
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  nsCOMPtr<nsIPresShell> ps;
+  GetPresShell(getter_AddRefs(ps));
   nsIContent *rootContent = anchorContent->GetSelectionRootContent(ps);
   NS_ENSURE_TRUE(rootContent, NS_ERROR_UNEXPECTED);
 
@@ -5680,8 +5690,9 @@ nsHTMLEditor::GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 &
   aX = 0;
   aY = 0;
 
-  NS_ENSURE_TRUE(mPresShellWeak, NS_ERROR_NOT_INITIALIZED);
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  NS_ENSURE_TRUE(mDocWeak, NS_ERROR_NOT_INITIALIZED);
+  nsCOMPtr<nsIPresShell> ps;
+  GetPresShell(getter_AddRefs(ps));
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);

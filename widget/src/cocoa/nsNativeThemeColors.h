@@ -80,6 +80,7 @@ static const int sSnowLeopardThemeColors[][2] = {
   { 0xA7, 0xDE }  // gradient end
 };
 
+__attribute__((unused))
 static int NativeGreyColorAsInt(ColorName name, BOOL isMain)
 {
   if (nsToolkit::OnSnowLeopardOrLater())
@@ -88,11 +89,13 @@ static int NativeGreyColorAsInt(ColorName name, BOOL isMain)
   return sLeopardThemeColors[name][isMain ? 0 : 1];
 }
 
+__attribute__((unused))
 static float NativeGreyColorAsFloat(ColorName name, BOOL isMain)
 {
   return NativeGreyColorAsInt(name, isMain) / 255.0f;
 }
 
+__attribute__((unused))
 static void DrawNativeGreyColorInRect(CGContextRef context, ColorName name,
                                       CGRect rect, BOOL isMain)
 {

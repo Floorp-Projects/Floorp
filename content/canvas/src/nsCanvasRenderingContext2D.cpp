@@ -2320,7 +2320,6 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
                        language,
                        fontStyle->mFont.sizeAdjust,
                        fontStyle->mFont.systemFont,
-                       fontStyle->mFont.familyNameQuirks,
                        printerFont,
                        fontStyle->mFont.featureSettings,
                        fontStyle->mFont.languageOverride);
