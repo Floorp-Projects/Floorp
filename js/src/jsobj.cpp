@@ -106,7 +106,7 @@
 using namespace js;
 using namespace js::gc;
 
-JS_FRIEND_DATA(const JSObjectMap) JSObjectMap::sharedNonNative(JSObjectMap::SHAPELESS);
+JS_FRIEND_DATA(JSObjectMap) JSObjectMap::sharedNonNative(JSObjectMap::SHAPELESS);
 
 Class js_ObjectClass = {
     js_Object_str,

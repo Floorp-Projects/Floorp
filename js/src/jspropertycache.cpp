@@ -508,3 +508,14 @@ PropertyCache::purgeForScript(JSContext *cx, JSScript *script)
         }
     }
 }
+
+void
+PropertyCache::restore(PropertyCacheEntry *entry)
+{
+    PropertyCacheEntry *entry2;
+
+    empty = false;
+
+    entry2 = &table[hash(entry->kpc, entry->kshape)];
+    *entry2 = *entry;
+}
