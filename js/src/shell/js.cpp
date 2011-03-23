@@ -3179,6 +3179,9 @@ split_trace(JSTracer *trc, JSObject *obj)
 
     cpx = (ComplexObject *) JS_GetPrivate(trc->context, obj);
 
+    if (!cpx)
+        return; /* The object is not fully constructed. */
+
     if (!cpx->isInner && cpx->inner) {
         /* Mark the inner object. */
         JS_CALL_TRACER(trc, cpx->inner, JSTRACE_OBJECT, "ComplexObject.inner");

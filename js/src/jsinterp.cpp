@@ -567,7 +567,6 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
          * stillborn instance that needs no finalization, which is sound:
          * NoSuchMethod helper objects own no manually allocated resources.
          */
-        obj->map = NULL;
         obj->init(cx, &js_NoSuchMethodClass, NULL, NULL, NULL, false);
         obj->setSlot(JSSLOT_FOUND_FUNCTION, tvr.value());
         obj->setSlot(JSSLOT_SAVED_ID, vp[0]);
@@ -2026,6 +2025,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
                             PropertyCacheEntry *entry)
 {
     uint32 sample = cx->runtime->gcNumber;
+    PropertyCacheEntry savedEntry = *entry;
 
     JSAtom *atom;
     if (pcoff >= 0)
@@ -2046,7 +2046,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
     if (!ok)
         return false;
     if (cx->runtime->gcNumber != sample)
-        return true;
+        JS_PROPERTY_CACHE(cx).restore(&savedEntry);
     JS_ASSERT(prop);
     JS_ASSERT(pobj == found);
 

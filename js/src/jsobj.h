@@ -214,7 +214,7 @@ struct JSObjectMap {
     uint32 shape;       /* shape identifier */
     uint32 slotSpan;    /* one more than maximum live slot number */
 
-    static JS_FRIEND_DATA(const JSObjectMap) sharedNonNative;
+    static JS_FRIEND_DATA(JSObjectMap) sharedNonNative;
 
     explicit JSObjectMap(uint32 shape) : shape(shape), slotSpan(0) {}
     JSObjectMap(uint32 shape, uint32 slotSpan) : shape(shape), slotSpan(slotSpan) {}

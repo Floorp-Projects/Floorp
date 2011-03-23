@@ -808,10 +808,8 @@ JSObject::init(JSContext *cx, js::Class *aclasp, JSObject *proto, JSObject *pare
     /*
      * NB: objShape must not be set here; rather, the caller must call setMap
      * or setSharedNonNativeMap after calling init. To defend this requirement
-     * we set map to null in DEBUG builds, and set objShape to a value we then
-     * assert obj->shape() never returns.
+     * we set objShape to a value that obj->shape() is asserted never to return.
      */
-    map = NULL;
     objShape = JSObjectMap::INVALID_SHAPE;
 #endif
 
