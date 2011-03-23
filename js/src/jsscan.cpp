@@ -227,8 +227,7 @@ TokenStream::init(const jschar *base, size_t length, const char *fn, uintN ln, J
     return true;
 }
 
-void
-TokenStream::close()
+TokenStream::~TokenStream()
 {
     if (flags & TSF_OWNFILENAME)
         cx->free((void *) filename);
@@ -432,7 +431,6 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
     JSBool ok;
     const TokenPos *tp;
     uintN i;
-    JSErrorReporter onError;
 
     if (JSREPORT_IS_STRICT(flags) && !cx->hasStrictOption())
         return JS_TRUE;
@@ -512,45 +510,20 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
      * as the non-top-level "load", "eval", or "compile" native function
      * returns false, the top-level reporter will eventually receive the
      * uncaught exception report.
-     *
-     * XXX it'd probably be best if there was only one call to this
-     * function, but there seem to be two error reporter call points.
      */
-    onError = cx->errorReporter;
-
-    /*
-     * Try to raise an exception only if there isn't one already set --
-     * otherwise the exception will describe the last compile-time error,
-     * which is likely spurious.
-     */
-    if (!(flags & TSF_ERROR)) {
-        if (js_ErrorToException(cx, message, &report, NULL, NULL))
-            onError = NULL;
-    }
-
-    /*
-     * Suppress any compile-time errors that don't occur at the top level.
-     * This may still fail, as interplevel may be zero in contexts where we
-     * don't really want to call the error reporter, as when js is called
-     * by other code which could catch the error.
-     */
-    if (cx->interpLevel != 0 && !JSREPORT_IS_WARNING(flags))
-        onError = NULL;
-
-    if (onError) {
-        JSDebugErrorHook hook = cx->debugHooks->debugErrorHook;
-
+    if (!js_ErrorToException(cx, message, &report, NULL, NULL)) {
         /*
          * If debugErrorHook is present then we give it a chance to veto
          * sending the error on to the regular error reporter.
          */
-        if (hook && !hook(cx, message, &report,
-                          cx->debugHooks->debugErrorHookData)) {
-            onError = NULL;
-        }
+        bool reportError = true;
+        if (JSDebugErrorHook hook = cx->debugHooks->debugErrorHook)
+            reportError = hook(cx, message, &report, cx->debugHooks->debugErrorHookData);
+
+        /* Report the error */
+        if (reportError && cx->errorReporter)
+            cx->errorReporter(cx, message, &report);
     }
-    if (onError)
-        (*onError)(cx, message, &report);
 
   out:
     if (linebytes)
@@ -569,11 +542,6 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
                 cx->free((void *)report.messageArgs[i++]);
         }
         cx->free((void *)report.messageArgs);
-    }
-
-    if (!JSREPORT_IS_WARNING(flags)) {
-        /* Set the error flag to suppress spurious reports. */
-        flags |= TSF_ERROR;
     }
 
     return warning;
@@ -1899,13 +1867,14 @@ TokenStream::getTokenInternal()
     return tt;
 
   error:
+    JS_ASSERT(cx->isExceptionPending());
+
     /*
      * For erroneous multi-line tokens we won't have changed end.lineno (it'll
      * still be equal to begin.lineno) so we revert end.index to be equal to
      * begin.index + 1 (as if it's a 1-char token) to avoid having inconsistent
      * begin/end positions.  end.index isn't used in error messages anyway.
      */
-    flags |= TSF_ERROR;
     flags |= TSF_DIRTYLINE;
     tp->pos.end.index = tp->pos.begin.index + 1;
     tp->type = TOK_ERROR;

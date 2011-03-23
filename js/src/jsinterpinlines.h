@@ -515,22 +515,6 @@ class AutoPreserveEnumerators {
     }
 };
 
-struct AutoInterpPreparer  {
-    JSContext *cx;
-    JSScript *script;
-
-    AutoInterpPreparer(JSContext *cx, JSScript *script)
-      : cx(cx), script(script)
-    {
-        cx->interpLevel++;
-    }
-
-    ~AutoInterpPreparer()
-    {
-        --cx->interpLevel;
-    }
-};
-
 class InvokeSessionGuard
 {
     InvokeArgsGuard args_;
@@ -601,7 +585,6 @@ InvokeSessionGuard::invoke(JSContext *cx) const
         AutoPreserveEnumerators preserve(cx);
         Probes::enterJSFun(cx, fp->fun(), script_);
 #ifdef JS_METHODJIT
-        AutoInterpPreparer prepareInterp(cx, script_);
         ok = mjit::EnterMethodJIT(cx, fp, code, stackLimit_);
         cx->regs->pc = stop_;
 #else
