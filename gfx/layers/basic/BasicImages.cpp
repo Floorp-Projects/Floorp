@@ -350,6 +350,7 @@ BasicImageContainer::SetCurrentImage(Image* aImage)
 {
   MonitorAutoEnter mon(mMonitor);
   mImage = aImage;
+  CurrentImageChanged();
 }
 
 already_AddRefed<Image>
