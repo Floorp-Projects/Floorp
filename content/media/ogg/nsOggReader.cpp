@@ -1301,8 +1301,9 @@ PageSync(nsMediaStream* aStream,
       NS_ASSERTION(buffer, "Must have a buffer");
 
       // Read from the file into the buffer
-      PRInt64 bytesToRead = NS_MIN(static_cast<PRInt64>(PAGE_STEP),
-                                   aEndOffset - readHead);
+      PRUint32 bytesToRead =
+        static_cast<PRUint32>(NS_MIN(static_cast<PRInt64>(PAGE_STEP),
+                                     aEndOffset - readHead));
       if (bytesToRead <= 0) {
         return PAGE_SYNC_END_OF_RANGE;
       }
@@ -1426,7 +1427,7 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
         // offset using an exponential backoff until we determine the time.
         SEEK_LOG(PR_LOG_DEBUG, ("Backing off %d bytes, backsteps=%d",
           static_cast<PRInt32>(PAGE_STEP * pow(2.0, backsteps)), backsteps));
-        guess -= PAGE_STEP * pow(2.0, backsteps);
+        guess -= PAGE_STEP * static_cast<ogg_int64_t>(pow(2.0, backsteps));
         backsteps = NS_MIN(backsteps + 1, maxBackStep);
         // We reset mustBackoff. If we still need to backoff further, it will
         // be set to PR_TRUE again.

@@ -335,7 +335,8 @@ PRBool nsMediaDecoder::CanPlayThrough()
   // our download rate or decode rate estimation is otherwise inaccurate,
   // we don't suddenly discover that we need to buffer. This is particularly
   // required near the start of the media, when not much data is downloaded.
-  PRInt64 readAheadMargin = stats.mPlaybackRate * CAN_PLAY_THROUGH_MARGIN;
+  PRInt64 readAheadMargin =
+    static_cast<PRInt64>(stats.mPlaybackRate * CAN_PLAY_THROUGH_MARGIN);
   return stats.mTotalBytes == stats.mDownloadPosition ||
          stats.mDownloadPosition > stats.mPlaybackPosition + readAheadMargin;
 }
