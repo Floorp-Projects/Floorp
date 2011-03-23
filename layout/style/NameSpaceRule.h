@@ -57,7 +57,7 @@ class NS_FINAL_CLASS NameSpaceRule : public Rule,
                                      public nsIDOMCSSRule
 {
 public:
-  NameSpaceRule();
+  NameSpaceRule(nsIAtom* aPrefix, const nsString& aURLSpec);
 private:
   // for |Clone|
   NameSpaceRule(const NameSpaceRule& aCopy);
@@ -79,10 +79,8 @@ public:
   virtual already_AddRefed<nsICSSRule> Clone() const;
 
   nsIAtom* GetPrefix() const { return mPrefix; }
-  void SetPrefix(nsIAtom* aPrefix) { mPrefix = aPrefix; }
 
   void GetURLSpec(nsString& aURLSpec) const { aURLSpec = mURLSpec; }
-  void SetURLSpec(const nsString& aURLSpec) { mURLSpec = aURLSpec; }
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -96,9 +94,5 @@ private:
 } // namespace mozilla
 
 NS_DEFINE_STATIC_IID_ACCESSOR(mozilla::css::NameSpaceRule, NS_CSS_NAMESPACE_RULE_IMPL_CID)
-
-nsresult
-NS_NewCSSNameSpaceRule(mozilla::css::NameSpaceRule** aInstancePtrResult,
-                       nsIAtom* aPrefix, const nsString& aURLSpec);
 
 #endif /* mozilla_css_NameSpaceRule_h__ */

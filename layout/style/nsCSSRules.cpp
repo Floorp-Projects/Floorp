@@ -1155,10 +1155,10 @@ DOMCI_DATA(CSSMozDocumentRule, css::DocumentRule)
 namespace mozilla {
 namespace css {
 
-NameSpaceRule::NameSpaceRule()
+NameSpaceRule::NameSpaceRule(nsIAtom* aPrefix, const nsString& aURLSpec)
   : Rule(),
-    mPrefix(nsnull),
-    mURLSpec()
+    mPrefix(aPrefix),
+    mURLSpec(aURLSpec)
 {
 }
 
@@ -1277,26 +1277,6 @@ NameSpaceRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 
 // Must be outside namespace
 DOMCI_DATA(CSSNameSpaceRule, css::NameSpaceRule)
-
-nsresult
-NS_NewCSSNameSpaceRule(css::NameSpaceRule** aInstancePtrResult,
-                       nsIAtom* aPrefix, const nsString& aURLSpec)
-{
-  if (! aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  css::NameSpaceRule* it = new css::NameSpaceRule();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  it->SetPrefix(aPrefix);
-  it->SetURLSpec(aURLSpec);
-  NS_ADDREF(*aInstancePtrResult = it);
-  return NS_OK;
-}
 
 // -------------------------------------------
 // nsCSSFontFaceStyleDecl and related routines
