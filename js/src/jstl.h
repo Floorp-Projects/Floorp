@@ -602,7 +602,7 @@ class RangeCheckedPointer
         return *this;
     }
 
-    T &operator[](intptr_t index) const {
+    T &operator[](int index) const {
         JS_ASSERT(size_t(index > 0 ? index : -index) <= size_t(-1) / sizeof(T));
         return *create(ptr + index);
     }

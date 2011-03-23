@@ -70,6 +70,7 @@
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
+#include "json.h"
 #include "jsparse.h"
 #include "jsreflect.h"
 #include "jsscope.h"
@@ -4595,6 +4596,23 @@ NewGlobal(JSContext *cx, uintN argc, jsval *vp)
     return true;
 }
 
+static JSBool
+ParseLegacyJSON(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc != 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "parseLegacyJSON");
+        return false;
+    }
+
+    JSString *str = JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]);
+
+    size_t length;
+    const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
+    if (!chars)
+        return false;
+    return js::ParseJSONWithReviver(cx, chars, length, js::NullValue(), js::Valueify(vp), LEGACY);
+}
+
 static JSFunctionSpec shell_functions[] = {
     JS_FN("version",        Version,        0,0),
     JS_FN("revertVersion",  RevertVersion,  0,0),
@@ -4694,6 +4712,7 @@ static JSFunctionSpec shell_functions[] = {
 #endif
     JS_FN("stringstats",    StringStats,    0,0),
     JS_FN("newGlobal",      NewGlobal,      1,0),
+    JS_FN("parseLegacyJSON",ParseLegacyJSON,1,0),
     JS_FS_END
 };
 
@@ -4829,6 +4848,8 @@ static const char *const shell_help_messages[] = {
 "newGlobal(kind)          Return a new global object, in the current\n"
 "                         compartment if kind === 'same-compartment' or in a\n"
 "                         new compartment if kind === 'new-compartment'",
+"parseLegacyJSON(str)     Parse str as legacy JSON, returning the result if the\n"
+"                         parse succeeded and throwing a SyntaxError if not.",
 
 /* Keep these last: see the static assertion below. */
 #ifdef MOZ_PROFILING
