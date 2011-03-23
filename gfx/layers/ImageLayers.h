@@ -44,6 +44,7 @@
 #include "nsThreadUtils.h"
 #include "nsCoreAnimationSupport.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/TimeStamp.h"
 
 namespace mozilla {
 namespace layers {
@@ -132,7 +133,12 @@ class THEBES_API ImageContainer {
   THEBES_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageContainer)
 
 public:
-  ImageContainer() : mMonitor("ImageContainer") {}
+  ImageContainer() :
+    mMonitor("ImageContainer"),
+    mPaintCount(0),
+    mPreviousImagePainted(PR_FALSE)
+  {}
+
   virtual ~ImageContainer() {}
 
   /**
@@ -163,6 +169,8 @@ public:
    * a reference.
    * Can be called on any thread. This method takes mMonitor when accessing
    * thread-shared state.
+   * Implementations must call CurrentImageChanged() while holding mMonitor.
+   *
    */
   virtual already_AddRefed<Image> GetCurrentImage() = 0;
 
@@ -224,6 +232,48 @@ public:
    */
   virtual LayerManager::LayersBackend GetBackendType() = 0;
 
+  /**
+   * Returns the time at which the currently contained image was first
+   * painted.  This is reset every time a new image is set as the current
+   * image.  Note this may return a null timestamp if the current image
+   * has not yet been painted.  Can be called from any thread.
+   */
+  TimeStamp GetPaintTime() {
+    MonitorAutoEnter mon(mMonitor);
+    return mPaintTime;
+  }
+
+  /**
+   * Returns the number of images which have been contained in this container
+   * and painted at least once.  Can be called from any thread.
+   */
+  PRUint32 GetPaintCount() {
+    MonitorAutoEnter mon(mMonitor);
+    return mPaintCount;
+  }
+
+  /**
+   * Increments mPaintCount if this is the first time aPainted has been
+   * painted, and sets mPaintTime if the painted image is the current image.
+   * current image.  Can be called from any thread.
+   */
+  void NotifyPaintedImage(Image* aPainted) {
+    MonitorAutoEnter mon(mMonitor);
+    nsRefPtr<Image> current = GetCurrentImage();
+    if (aPainted == current) {
+      if (mPaintTime.IsNull()) {
+        mPaintTime = TimeStamp::Now();
+        mPaintCount++;
+      }
+    } else if (!mPreviousImagePainted) {
+      // While we were painting this image, the current image changed. We
+      // still must count it as painted, but can't set mPaintTime, since we're
+      // no longer the current image.
+      mPaintCount++;
+      mPreviousImagePainted = PR_TRUE;
+    }
+  }
+
 protected:
   typedef mozilla::Monitor Monitor;
   LayerManager* mManager;
@@ -232,7 +282,33 @@ protected:
   // other state which is shared between threads.
   Monitor mMonitor;
 
-  ImageContainer(LayerManager* aManager) : mManager(aManager), mMonitor("ImageContainer")  {}
+  ImageContainer(LayerManager* aManager) :
+    mManager(aManager),
+    mMonitor("ImageContainer"),
+    mPaintCount(0),
+    mPreviousImagePainted(PR_FALSE)
+  {}
+
+  // Performs necessary housekeeping to ensure the painted frame statistics
+  // are accurate. Must be called by SetCurrentImage() implementations with
+  // mMonitor held.
+  void CurrentImageChanged() {
+    mMonitor.AssertCurrentThreadIn();
+    mPreviousImagePainted = !mPaintTime.IsNull();
+    mPaintTime = TimeStamp();
+  }
+
+  // Number of contained images that have been painted at least once.  It's up
+  // to the ImageContainer implementation to ensure accesses to this are
+  // threadsafe.
+  PRUint32 mPaintCount;
+
+  // Time stamp at which the current image was first painted.  It's up to the
+  // ImageContainer implementation to ensure accesses to this are threadsafe.
+  TimeStamp mPaintTime;
+
+  // Denotes whether the previous image was painted.
+  PRPackedBool mPreviousImagePainted;
 };
 
 /**

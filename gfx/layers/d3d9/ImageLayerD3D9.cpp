@@ -159,6 +159,7 @@ ImageContainerD3D9::SetCurrentImage(Image *aImage)
   MonitorAutoEnter mon(mMonitor);
 
   mActiveImage = aImage;
+  CurrentImageChanged();
 }
 
 already_AddRefed<Image>
@@ -372,6 +373,8 @@ ImageLayerD3D9::RenderLayer()
       device()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
     }
   }
+
+  GetContainer()->NotifyPaintedImage(image);
 }
 
 PlanarYCbCrImageD3D9::PlanarYCbCrImageD3D9()
