@@ -1552,8 +1552,8 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-size: -moz-calc(100% - 2px) -moz-calc(100% - 2px);
   background-repeat: no-repeat;
   margin: 0;
-  padding: 0;
-  -moz-border-image: url(tabbrowser/tab.png) 6 3 4 / 6px 3px 4px repeat stretch;
+  padding: 2px 0 4px;
+  -moz-border-image: url(tabbrowser/tab.png) 4 3 0 / 4px 3px 0 repeat stretch;
   border-radius: 7px 7px 0 0;
 }
 
