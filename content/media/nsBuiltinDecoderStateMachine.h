@@ -163,7 +163,7 @@ public:
   }
 
   virtual nsHTMLMediaElement::NextFrameStatus GetNextFrameStatus();
-  virtual void Decode();
+  virtual void Play();
   virtual void Seek(double aTime);
   virtual double GetCurrentTime() const;
   virtual void ClearPositionChangeFlag();
@@ -273,6 +273,9 @@ protected:
   // The decoder monitor must be held.
   PRBool HasFutureAudio() const;
 
+  // Returns PR_TRUE if we recently exited "quick buffering" mode.
+  PRBool JustExitedQuickBuffering();
+
   // Waits on the decoder Monitor for aMs. If the decoder monitor is awoken
   // by a Notify() call, we'll continue waiting, unless we've moved into
   // shutdown state. This enables us to ensure that we wait for a specified
@@ -368,6 +371,10 @@ protected:
   // exactly one lock count. Called on the state machine thread.
   void StartPlayback();
 
+  // Moves the decoder into decoding state. Called on the state machine
+  // thread. The decoder monitor must be held.
+  void StartDecoding();
+
   // Returns PR_TRUE if we're currently playing. The decoder monitor must
   // be held.
   PRBool IsPlaying();
@@ -427,11 +434,6 @@ protected:
   // buffering.
   TimeStamp mBufferingStart;
 
-  // Download position where we should stop buffering. Only
-  // accessed on the state machine thread. This is -1 while we're not
-  // buffering.
-  PRInt64 mBufferingEndOffset;
-
   // Start time of the media, in milliseconds. This is the presentation
   // time of the first sample decoded from the media, and is used to calculate
   // duration and as a bounds for seeking. Accessed on state machine and
@@ -483,6 +485,9 @@ protected:
   // monitor.
   double mVolume;
 
+  // Time at which we started decoding. Synchronised via decoder monitor.
+  TimeStamp mDecodeStartTime;
+
   // PR_TRUE if the media resource can be seeked. Accessed from the state
   // machine and main threads. Synchronised via decoder monitor.
   PRPackedBool mSeekable;
@@ -508,6 +513,13 @@ protected:
   // PR_FALSE while decode threads should be running. Accessed on audio, 
   // state machine and decode threads. Syncrhonised by decoder monitor.
   PRPackedBool mStopDecodeThreads;
+
+  // If this is PR_TRUE while we're in buffering mode, we can exit early,
+  // as it's likely we may be able to playback. This happens when we enter
+  // buffering mode soon after the decode starts, because the decode-ahead
+  // ran fast enough to exhaust all data while the download is starting up.
+  // Synchronised via decoder monitor.
+  PRPackedBool mQuickBuffering;
 
 private:
   // Manager for queuing and dispatching MozAudioAvailable events.  The
