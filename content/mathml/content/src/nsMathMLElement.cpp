@@ -403,7 +403,6 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
         aData->mFontData->mFamily.GetUnit() == eCSSUnit_Null) {
       aData->mFontData->mFamily.SetStringValue(value->GetStringValue(),
                                                eCSSUnit_Families);
-      aData->mFontData->mFamilyFromHTML = PR_FALSE;
     }
   }
 

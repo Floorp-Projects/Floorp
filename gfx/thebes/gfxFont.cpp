@@ -2860,7 +2860,7 @@ gfxFontStyle::ParseFontLanguageOverride(const nsString& aLangTag)
 
 gfxFontStyle::gfxFontStyle() :
     style(FONT_STYLE_NORMAL), systemFont(PR_TRUE), printerFont(PR_FALSE), 
-    familyNameQuirks(PR_FALSE), weight(FONT_WEIGHT_NORMAL),
+    weight(FONT_WEIGHT_NORMAL),
     stretch(NS_FONT_STRETCH_NORMAL), size(DEFAULT_PIXEL_FONT_SIZE),
     sizeAdjust(0.0f),
     language(gfxAtoms::x_western),
@@ -2871,12 +2871,11 @@ gfxFontStyle::gfxFontStyle() :
 gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
                            gfxFloat aSize, nsIAtom *aLanguage,
                            float aSizeAdjust, PRPackedBool aSystemFont,
-                           PRPackedBool aFamilyNameQuirks,
                            PRPackedBool aPrinterFont,
                            const nsString& aFeatureSettings,
                            const nsString& aLanguageOverride):
     style(aStyle), systemFont(aSystemFont), printerFont(aPrinterFont),
-    familyNameQuirks(aFamilyNameQuirks), weight(aWeight), stretch(aStretch),
+    weight(aWeight), stretch(aStretch),
     size(aSize), sizeAdjust(aSizeAdjust),
     language(aLanguage),
     languageOverride(ParseFontLanguageOverride(aLanguageOverride))
@@ -2904,7 +2903,7 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
 
 gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     style(aStyle.style), systemFont(aStyle.systemFont), printerFont(aStyle.printerFont),
-    familyNameQuirks(aStyle.familyNameQuirks), weight(aStyle.weight),
+    weight(aStyle.weight),
     stretch(aStyle.stretch), size(aStyle.size),
     sizeAdjust(aStyle.sizeAdjust),
     language(aStyle.language),

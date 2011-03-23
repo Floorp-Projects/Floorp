@@ -1,0 +1,58 @@
+README FOR BROWSERSCOPE
+-----------------------
+
+Hey there - thanks for downloading the code. This file has instructions
+for getting setup so that you can run the codebase locally.
+
+This project is built on Google App Engine using the
+Django web application framework and written in Python.
+
+To get started, you'll need to first download the App Engine SDK at:
+http://code.google.com/appengine/downloads.html
+
+For local development, just startup the server:
+./pathto/google_appengine/dev_appserver.py --port=8080 browserscope
+
+You should then be able to access the local application at:
+http://localhost:8080/
+
+Note: the first time you hit the homepage it may take a little
+while - that's because it's trying to read out median times for all
+of the tests from a nonexistent datastore and write to memcache.
+Just be a lil patient.
+
+You can run the unit tests at:
+  http://localhost:8080/test
+
+
+CONTRIBUTING
+------------------
+
+Most likely you are interested in adding new tests or creating
+a new test category. If you are interested in adding tests to an existing
+"category" you may want to get in touch with the maintainer for that
+branch of the tree. We are really looking forward to receiving your
+code in patch format. Currently the category maintainers are:
+Network: Steve Souders <souders@gmail.com>
+Reflow: Lindsey Simon <elsigh@gmail.com>
+Security: Adam Barth <adam@adambarth.com> and Collin Jackson <collin@collinjackson.com>
+
+
+To create a completely new test category:
+  * Copy one of the existing directories in categories/
+  * Edit your test_set.py, handlers.py
+  * Add your files in templates/ and static/
+  * Update urls.py and settings.CATEGORIES
+  * Follow the examples of other tests re:
+      * beaconing using/testdriver_base
+      * your GetScoreAndDisplayValue method
+      * your GetRowScoreAndDisplayValue method
+
+References:
+  * App Engine Docs - http://code.google.com/appengine/docs/python/overview.html
+  * App Engine Group - http://groups.google.com/group/google-appengine
+  * Python Docs - http://www.python.org/doc/
+  * Django - http://www.djangoproject.com/
+
+
+

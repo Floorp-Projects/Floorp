@@ -10990,9 +10990,11 @@ NS_IMETHODIMP nsNavigator::GetGeolocation(nsIDOMGeoGeolocation **_retval)
   if (!mGeolocation)
     return NS_ERROR_FAILURE;
   
-  if (NS_FAILED(mGeolocation->Init(contentDOMWindow)))
+  if (NS_FAILED(mGeolocation->Init(contentDOMWindow))) {
+    mGeolocation = nsnull;
     return NS_ERROR_FAILURE;
-  
+  }
+
   NS_ADDREF(*_retval = mGeolocation);    
   return NS_OK; 
 }

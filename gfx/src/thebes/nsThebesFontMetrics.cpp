@@ -82,7 +82,6 @@ nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
     mFontStyle = new gfxFontStyle(aFont.style, aFont.weight, aFont.stretch,
                                   size, aLanguage,
                                   aFont.sizeAdjust, aFont.systemFont,
-                                  aFont.familyNameQuirks,
                                   printerFont,
                                   aFont.featureSettings,
                                   aFont.languageOverride);

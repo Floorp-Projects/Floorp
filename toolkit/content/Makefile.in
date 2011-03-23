@@ -85,6 +85,7 @@ EXTRA_JS_MODULES = \
   Geometry.jsm \
   InlineSpellChecker.jsm \
   PopupNotifications.jsm \
+  Dict.jsm \
   $(NULL)
 
 EXTRA_PP_JS_MODULES = \

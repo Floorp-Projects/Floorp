@@ -93,7 +93,7 @@ private:
 };
 
 nsEditorEventListener::nsEditorEventListener() :
-  mEditor(nsnull), mCaretDrawn(PR_FALSE), mCommitText(PR_FALSE),
+  mEditor(nsnull), mCommitText(PR_FALSE),
   mInTransaction(PR_FALSE)
 {
 }
@@ -165,8 +165,9 @@ nsEditorEventListener::InstallToEditor()
                                     NS_EVENT_FLAG_BUBBLE, sysGroup);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = piTarget->AddEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
-                                       NS_GET_IID(nsIDOMMouseListener));
+  rv = elmP->AddEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
+                                   NS_GET_IID(nsIDOMMouseListener),
+                                   NS_EVENT_FLAG_CAPTURE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Focus event doesn't bubble so adding the listener to capturing phase.
@@ -236,8 +237,9 @@ nsEditorEventListener::UninstallFromEditor()
                                   NS_LITERAL_STRING("drop"),
                                   NS_EVENT_FLAG_BUBBLE, sysGroup);
 
-  piTarget->RemoveEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
-                                     NS_GET_IID(nsIDOMMouseListener));
+  elmP->RemoveEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
+                                 NS_GET_IID(nsIDOMMouseListener),
+                                 NS_EVENT_FLAG_CAPTURE);
 
   elmP->RemoveEventListenerByIID(static_cast<nsIDOMFocusListener*>(this),
                                  NS_GET_IID(nsIDOMFocusListener),
@@ -559,7 +561,6 @@ nsEditorEventListener::DragEnter(nsIDOMDragEvent* aDragEvent)
       mCaret->Init(presShell);
       mCaret->SetCaretReadOnly(PR_TRUE);
     }
-    mCaretDrawn = PR_FALSE;
   }
 
   presShell->SetCaret(mCaret);
@@ -598,52 +599,30 @@ nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
       NS_ENSURE_SUCCESS(rv, rv);
 
       // to avoid flicker, we could track the node and offset to see if we moved
-      if (mCaretDrawn)
+      if (mCaret)
         mCaret->EraseCaret();
       
       //mCaret->SetCaretVisible(PR_TRUE);   // make sure it's visible
       mCaret->DrawAtPosition(parent, offset);
-      mCaretDrawn = PR_TRUE;
     }
   }
   else
   {
-    if (mCaret && mCaretDrawn)
+    if (mCaret)
     {
       mCaret->EraseCaret();
-      mCaretDrawn = PR_FALSE;
-    } 
+    }
   }
 
   return NS_OK;
 }
 
-nsresult
-nsEditorEventListener::DragExit(nsIDOMDragEvent* aDragEvent)
-{
-  if (mCaret && mCaretDrawn)
-  {
-    mCaret->EraseCaret();
-    mCaretDrawn = PR_FALSE;
-  }
-
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-  if (presShell)
-    presShell->RestoreCaret();
-
-  return NS_OK;
-}
-
-nsresult
-nsEditorEventListener::Drop(nsIDOMDragEvent* aMouseEvent)
+void
+nsEditorEventListener::CleanupDragDropCaret()
 {
   if (mCaret)
   {
-    if (mCaretDrawn)
-    {
-      mCaret->EraseCaret();
-      mCaretDrawn = PR_FALSE;
-    }
+    mCaret->EraseCaret();
     mCaret->SetCaretVisible(PR_FALSE);    // hide it, so that it turns off its timer
 
     nsCOMPtr<nsIPresShell> presShell = GetPresShell();
@@ -651,7 +630,24 @@ nsEditorEventListener::Drop(nsIDOMDragEvent* aMouseEvent)
     {
       presShell->RestoreCaret();
     }
+
+    mCaret->Terminate();
+    mCaret = nsnull;
   }
+}
+
+nsresult
+nsEditorEventListener::DragExit(nsIDOMDragEvent* aDragEvent)
+{
+  CleanupDragDropCaret();
+
+  return NS_OK;
+}
+
+nsresult
+nsEditorEventListener::Drop(nsIDOMDragEvent* aMouseEvent)
+{
+  CleanupDragDropCaret();
 
   nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent = do_QueryInterface(aMouseEvent);
   if (nsuiEvent) {

@@ -124,6 +124,9 @@ SpecialPowersObserver.prototype = {
         } else if (aMessage.json.op == "set") {
           if (!prefName || !prefType  || prefValue === null)
             throw new SpecialPowersException("Invalid parameters for set in SPPrefService");
+        } else if (aMessage.json.op == "clear") {
+          if (!prefName)
+            throw new SpecialPowersException("Invalid parameters for clear in SPPrefService");
         } else {
           throw new SpecialPowersException("Invalid operation for SPPrefService");
         }
@@ -149,6 +152,11 @@ SpecialPowersObserver.prototype = {
               return(prefs.getComplexValue(prefName, prefValue[0]));
             else
               return(prefs.setComplexValue(prefName, prefValue[0], prefValue[1]));
+          case "":
+            if (aMessage.json.op == "clear") {
+              prefs.clearUserPref(prefName);
+              return;
+            }
         }
         break;
       default:
