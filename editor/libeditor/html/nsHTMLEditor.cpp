@@ -3988,7 +3988,7 @@ nsHTMLEditor::IsModifiableNode(nsIDOMNode *aNode)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
 
-  return !content || !content->IntrinsicState().HasState(NS_EVENT_STATE_MOZ_READONLY);
+  return !content || content->IsEditable();
 }
 
 static nsresult SetSelectionAroundHeadChildren(nsCOMPtr<nsISelection> aSelection, nsWeakPtr aDocWeak)

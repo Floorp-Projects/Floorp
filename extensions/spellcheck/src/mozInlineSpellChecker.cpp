@@ -1158,9 +1158,9 @@ mozInlineSpellChecker::SkipSpellCheckForNode(nsIEditor* aEditor,
     }
   }
   else {
-    // XXX Do we really want this for all read-write content?
+    // XXX Do we really want this for all editable content?
     nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-    *checkSpelling = content->IntrinsicState().HasState(NS_EVENT_STATE_MOZ_READWRITE);
+    *checkSpelling = content->IsEditable();
   }
 
   return NS_OK;
