@@ -1028,40 +1028,32 @@ nsresult nsOggReader::GetSeekRanges(nsTArray<SeekRange>& aRanges)
   NS_ASSERTION(mDecoder->OnStateMachineThread(),
                "Should be on state machine thread.");
   mMonitor.AssertCurrentThreadIn();
-  PRInt64 startOffset = mDataOffset;
-  nsMediaStream* stream = mDecoder->GetCurrentStream();
-  while (PR_TRUE) {
-    PRInt64 endOffset = stream->GetCachedDataEnd(startOffset);
-    if (endOffset == startOffset) {
-      // Uncached at startOffset.
-      endOffset = stream->GetNextCachedData(startOffset);
-      if (endOffset == -1) {
-        // Uncached at startOffset until endOffset of stream, or we're at
-        // the end of stream.
-        break;
-      }
-    } else {
-      // Bytes [startOffset..endOffset] are cached.
-      PRInt64 startTime = -1;
-      PRInt64 endTime = -1;
-      if (NS_FAILED(ResetDecode())) {
-        return NS_ERROR_FAILURE;
-      }
-      FindStartTime(startOffset, startTime);
-      if (startTime != -1 &&
-          ((endTime = FindEndTime(endOffset)) != -1))
-      {
-        NS_ASSERTION(startOffset < endOffset,
-                     "Start offset must be before end offset");
-        NS_ASSERTION(startTime < endTime,
-                     "Start time must be before end time");
-        aRanges.AppendElement(SeekRange(startOffset,
-                                        endOffset,
-                                        startTime,
-                                        endTime));
-      }
+  nsTArray<nsByteRange> cached;
+  nsresult res = mDecoder->GetCurrentStream()->GetCachedRanges(cached);
+  NS_ENSURE_SUCCESS(res, res);
+
+  for (PRUint32 index = 0; index < aRanges.Length(); index++) {
+    nsByteRange& range = cached[index];
+    PRInt64 startTime = -1;
+    PRInt64 endTime = -1;
+    if (NS_FAILED(ResetDecode())) {
+      return NS_ERROR_FAILURE;
     }
-    startOffset = endOffset;
+    // Ensure the offsets are after the header pages.
+    PRInt64 startOffset = NS_MAX(cached[index].mStart, mDataOffset);
+    PRInt64 endOffset = NS_MAX(cached[index].mEnd, mDataOffset);
+
+    FindStartTime(startOffset, startTime);
+    if (startTime != -1 &&
+        ((endTime = FindEndTime(endOffset)) != -1))
+    {
+      NS_ASSERTION(startTime < endTime,
+                   "Start time must be before end time");
+      aRanges.AppendElement(SeekRange(startOffset,
+                                      endOffset,
+                                      startTime,
+                                      endTime));
+     }
   }
   if (NS_FAILED(ResetDecode())) {
     return NS_ERROR_FAILURE;
@@ -1686,6 +1678,9 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
   }
 
   nsMediaStream* stream = mDecoder->GetCurrentStream();
+  nsTArray<nsByteRange> ranges;
+  nsresult res = stream->GetCachedRanges(ranges);
+  NS_ENSURE_SUCCESS(res, res);
 
   // Traverse across the buffered byte ranges, determining the time ranges
   // they contain. nsMediaStream::GetNextCachedData(offset) returns -1 when
@@ -1694,23 +1689,20 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
   // buffered range in the media, in increasing order of offset.
   ogg_sync_state state;
   ogg_sync_init(&state);
-  PRInt64 startOffset = stream->GetNextCachedData(mDataOffset);
-  while (startOffset >= 0) {
-    PRInt64 endOffset = stream->GetCachedDataEnd(startOffset);
-    NS_ASSERTION(startOffset < endOffset, "Buffered range must end after its start");
-    // Bytes [startOffset..endOffset] are cached.
+  for (PRUint32 index = 0; index < ranges.Length(); index++) {
+    // Ensure the offsets are after the header pages.
+    PRInt64 startOffset = NS_MAX(ranges[index].mStart, mDataOffset);
+    PRInt64 endOffset = NS_MAX(ranges[index].mEnd, mDataOffset);
 
-    // Find the start time of the range.
-    PRInt64 startTime = -1;
-    if (startOffset == mDataOffset) {
-      // Because the granulepos time is actually the end time of the page,
-      // we special-case (startOffset == mDataOffset) so that the first
-      // buffered range always appears to be buffered from [t=0...] rather
-      // than from the end-time of the first page.
-      startTime = aStartTime;
-    }
-    // Read pages until we find one with a granulepos which we can convert
-    // into a timestamp to use as the time of the start of the buffered range.
+    // Because the granulepos time is actually the end time of the page,
+    // we special-case (startOffset == mDataOffset) so that the first
+    // buffered range always appears to be buffered from the media start
+    // time, rather than from the end-time of the first page.
+    PRInt64 startTime = (startOffset == mDataOffset) ? aStartTime : -1;
+
+    // Find the start time of the range. Read pages until we find one with a
+    // granulepos which we can convert into a timestamp to use as the time of
+    // the start of the buffered range.
     ogg_sync_reset(&state);
     while (startTime == -1) {
       ogg_page page;
@@ -1758,6 +1750,7 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
       else {
         // Page is for a stream we don't know about (possibly a chained
         // ogg), return an error.
+        ogg_sync_clear(&state);
         return PAGE_SYNC_ERROR;
       }
     }
@@ -1772,9 +1765,6 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
                        static_cast<double>(endTime) / 1000.0);
       }
     }
-    startOffset = stream->GetNextCachedData(endOffset);
-    NS_ASSERTION(startOffset == -1 || startOffset > endOffset,
-      "Must have advanced to start of next range, or hit end of stream");
   }
 
   // If we don't clear the sync state before exit we'll leak.
