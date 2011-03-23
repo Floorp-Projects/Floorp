@@ -310,7 +310,7 @@ protected:
   void SkipUntil(PRUnichar aStopSymbol);
   void SkipUntilOneOf(const PRUnichar* aStopSymbolChars);
   void SkipRuleSet(PRBool aInsideBraces);
-  PRBool SkipAtRule();
+  PRBool SkipAtRule(PRBool aInsideBlock);
   PRBool SkipDeclaration(PRBool aCheckForBraces);
 
   PRBool PushGroup(nsICSSGroupRule* aRule);
@@ -323,8 +323,8 @@ protected:
   PRBool ParseImportRule(RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool GatherURL(nsString& aURL);
   PRBool GatherMedia(nsMediaList* aMedia,
-                     PRUnichar aStopSymbol);
-  PRBool ParseMediaQuery(PRUnichar aStopSymbol, nsMediaQuery **aQuery,
+                     PRBool aInAtRule);
+  PRBool ParseMediaQuery(PRBool aInAtRule, nsMediaQuery **aQuery,
                          PRBool *aParsedSomething, PRBool *aHitStop);
   PRBool ParseMediaQueryExpression(nsMediaQuery* aQuery);
   void ProcessImport(const nsString& aURLSpec,
@@ -1178,7 +1178,7 @@ CSSParserImpl::ParseMediaList(const nsSubstring& aBuffer,
   // to a media query.  (The main substative difference is the relative
   // precedence of commas and paretheses.)
 
-  if (!GatherMedia(aMediaList, PRUnichar(0))) {
+  if (!GatherMedia(aMediaList, PR_FALSE)) {
     aMediaList->Clear();
     aMediaList->SetNonEmpty(); // don't match anything
     if (!mHTMLMediaMode) {
@@ -1434,7 +1434,7 @@ CSSParserImpl::NextIdent()
 }
 
 PRBool
-CSSParserImpl::SkipAtRule()
+CSSParserImpl::SkipAtRule(PRBool aInsideBlock)
 {
   for (;;) {
     if (!GetToken(PR_TRUE)) {
@@ -1444,6 +1444,11 @@ CSSParserImpl::SkipAtRule()
     if (eCSSToken_Symbol == mToken.mType) {
       PRUnichar symbol = mToken.mSymbol;
       if (symbol == ';') {
+        break;
+      }
+      if (aInsideBlock && symbol == '}') {
+        // The closing } doesn't belong to us.
+        UngetToken();
         break;
       }
       if (symbol == '{') {
@@ -1465,6 +1470,12 @@ PRBool
 CSSParserImpl::ParseAtRule(RuleAppendFunc aAppendFunc,
                            void* aData)
 {
+  // If we ever allow nested at-rules, we need to be very careful about
+  // the error handling rules in the CSS spec.  In particular, we need
+  // to pass in to ParseAtRule whether we're inside a block, we need to
+  // ensure that all the individual at-rule parsing functions terminate
+  // immediately when they hit a '}', and then we need to pass whether
+  // we're inside a block to SkipAtRule below.
   nsCSSSection newSection;
   PRBool (CSSParserImpl::*parseFunc)(RuleAppendFunc, void*);
 
@@ -1505,13 +1516,13 @@ CSSParserImpl::ParseAtRule(RuleAppendFunc aAppendFunc,
       OUTPUT_ERROR();
     }
     // Skip over unsupported at rule, don't advance section
-    return SkipAtRule();
+    return SkipAtRule(PR_FALSE);
   }
 
   if (!(this->*parseFunc)(aAppendFunc, aData)) {
     // Skip over invalid at rule, don't advance section
     OUTPUT_ERROR();
-    return SkipAtRule();
+    return SkipAtRule(PR_FALSE);
   }
 
   mSection = newSection;
@@ -1528,6 +1539,7 @@ CSSParserImpl::ParseCharsetRule(RuleAppendFunc aAppendFunc,
   }
 
   if (eCSSToken_String != mToken.mType) {
+    UngetToken();
     REPORT_UNEXPECTED_TOKEN(PECharsetRuleNotString);
     return PR_FALSE;
   }
@@ -1567,7 +1579,7 @@ CSSParserImpl::GatherURL(nsString& aURL)
 }
 
 PRBool
-CSSParserImpl::ParseMediaQuery(PRUnichar aStopSymbol,
+CSSParserImpl::ParseMediaQuery(PRBool aInAtRule,
                                nsMediaQuery **aQuery,
                                PRBool *aParsedSomething,
                                PRBool *aHitStop)
@@ -1582,7 +1594,7 @@ CSSParserImpl::ParseMediaQuery(PRUnichar aStopSymbol,
   if (!GetToken(PR_TRUE)) {
     *aHitStop = PR_TRUE;
     // expected termination by EOF
-    if (aStopSymbol == PRUnichar(0))
+    if (!aInAtRule)
       return PR_TRUE;
 
     // unexpected termination by EOF
@@ -1590,8 +1602,8 @@ CSSParserImpl::ParseMediaQuery(PRUnichar aStopSymbol,
     return PR_TRUE;
   }
 
-  if (eCSSToken_Symbol == mToken.mType &&
-      mToken.mSymbol == aStopSymbol) {
+  if (eCSSToken_Symbol == mToken.mType && aInAtRule &&
+      (mToken.mSymbol == ';' || mToken.mSymbol == '{')) {
     *aHitStop = PR_TRUE;
     UngetToken();
     return PR_TRUE;
@@ -1648,7 +1660,7 @@ CSSParserImpl::ParseMediaQuery(PRUnichar aStopSymbol,
     if (!GetToken(PR_TRUE)) {
       *aHitStop = PR_TRUE;
       // expected termination by EOF
-      if (aStopSymbol == PRUnichar(0))
+      if (!aInAtRule)
         break;
 
       // unexpected termination by EOF
@@ -1656,8 +1668,8 @@ CSSParserImpl::ParseMediaQuery(PRUnichar aStopSymbol,
       break;
     }
 
-    if (eCSSToken_Symbol == mToken.mType &&
-        mToken.mSymbol == aStopSymbol) {
+    if (eCSSToken_Symbol == mToken.mType && aInAtRule &&
+        (mToken.mSymbol == ';' || mToken.mSymbol == '{')) {
       *aHitStop = PR_TRUE;
       UngetToken();
       break;
@@ -1685,22 +1697,27 @@ CSSParserImpl::ParseMediaQuery(PRUnichar aStopSymbol,
 // (out-of-memory).
 PRBool
 CSSParserImpl::GatherMedia(nsMediaList* aMedia,
-                           PRUnichar aStopSymbol)
+                           PRBool aInAtRule)
 {
   for (;;) {
     nsAutoPtr<nsMediaQuery> query;
     PRBool parsedSomething, hitStop;
-    if (!ParseMediaQuery(aStopSymbol, getter_Transfers(query),
+    if (!ParseMediaQuery(aInAtRule, getter_Transfers(query),
                          &parsedSomething, &hitStop)) {
       NS_ASSERTION(!hitStop, "should return true when hit stop");
       if (NS_FAILED(mScanner.GetLowLevelError())) {
         return PR_FALSE;
       }
-      const PRUnichar stopChars[] =
-        { PRUnichar(','), aStopSymbol /* may be null */, PRUnichar(0) };
-      SkipUntilOneOf(stopChars);
+      if (aInAtRule) {
+        const PRUnichar stopChars[] =
+          { PRUnichar(','), PRUnichar('{'), PRUnichar(';'), PRUnichar(0) };
+        SkipUntilOneOf(stopChars);
+      } else {
+        SkipUntil(',');
+      }
       // Rely on SkipUntilOneOf leaving mToken around as the last token read.
-      if (mToken.mType == eCSSToken_Symbol && mToken.mSymbol == aStopSymbol) {
+      if (mToken.mType == eCSSToken_Symbol && aInAtRule &&
+          (mToken.mSymbol == '{' || mToken.mSymbol == ';')) {
         UngetToken();
         hitStop = PR_TRUE;
       }
@@ -1883,7 +1900,7 @@ CSSParserImpl::ParseImportRule(RuleAppendFunc aAppendFunc, void* aData)
   }
 
   if (!ExpectSymbol(';', PR_TRUE)) {
-    if (!GatherMedia(media, ';') ||
+    if (!GatherMedia(media, PR_TRUE) ||
         !ExpectSymbol(';', PR_TRUE)) {
       REPORT_UNEXPECTED_TOKEN(PEImportUnexpected);
       // don't advance section, simply ignore invalid @import
@@ -1966,7 +1983,7 @@ CSSParserImpl::ParseGroupRule(nsICSSGroupRule* aRule,
       break;
     }
     if (eCSSToken_AtKeyword == mToken.mType) {
-      SkipAtRule(); // group rules cannot contain @rules
+      SkipAtRule(PR_TRUE); // group rules cannot contain @rules
       continue;
     }
     UngetToken();
@@ -1992,7 +2009,7 @@ CSSParserImpl::ParseMediaRule(RuleAppendFunc aAppendFunc, void* aData)
     return PR_FALSE;
   }
 
-  if (GatherMedia(media, '{')) {
+  if (GatherMedia(media, PR_TRUE)) {
     // XXXbz this could use better error reporting throughout the method
     nsRefPtr<nsCSSMediaRule> rule(new nsCSSMediaRule());
     // Append first, so when we do SetMedia() the rule
@@ -3215,6 +3232,10 @@ CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&       aDataMask,
   }
   else if (mToken.IsSymbol('[')) {    // [attribute
     parsingStatus = ParseAttributeSelector(aDataMask, *newSel);
+    if (eSelectorParsingStatus_Error == parsingStatus) {
+      // Skip forward to the matching ']'
+      SkipUntil(']');
+    }
   }
   else {
     // then it should be a type element or universal selector
@@ -3473,6 +3494,9 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
     }
     else if (mToken.IsSymbol('[')) {    // [attribute
       parsingStatus = ParseAttributeSelector(dataMask, *selector);
+      if (eSelectorParsingStatus_Error == parsingStatus) {
+        SkipUntil(']');
+      }
     }
     else {  // not a selector token, we're done
       parsingStatus = eSelectorParsingStatus_Done;
@@ -5677,7 +5701,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBoxPackKTable);
   case eCSSProperty_box_ordinal_group:
-    return ParseNonNegativeVariant(aValue, VARIANT_HI, nsnull);
+    return ParsePositiveNonZeroVariant(aValue, VARIANT_HI, nsnull);
 #ifdef MOZ_SVG
   case eCSSProperty_clip_path:
     return ParseVariant(aValue, VARIANT_HUO, nsnull);
