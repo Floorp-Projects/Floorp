@@ -386,18 +386,22 @@ var BrowserUI = {
 
     let panels = document.getElementById("panel-items")
     let panel = aPanelId ? document.getElementById(aPanelId) : panels.selectedPanel;
+    let oldPanel = panels.selectedPanel;
 
-    if (panels.selectedPanel == panel) {
-      // Fire a "select" event anyway so listeners know when the panel is opened.
-      let event = document.createEvent("Events");
-      event.initEvent("select", true, true);
-      panels.dispatchEvent(event);
-    } else {
+    if (oldPanel != panel) {
       panels.selectedPanel = panel;
       let button = document.getElementsByAttribute("linkedpanel", aPanelId)[0];
       if (button)
         button.checked = true;
+
+      let event = document.createEvent("Events");
+      event.initEvent("ToolPanelHidden", true, true);
+      oldPanel.dispatchEvent(event);
     }
+
+    let event = document.createEvent("Events");
+    event.initEvent("ToolPanelShown", true, true);
+    panel.dispatchEvent(event);
   },
 
   get toolbarH() {
@@ -543,9 +547,7 @@ var BrowserUI = {
     };
 
     // Some initialization can be delayed until a panel is selected.
-    panels.addEventListener("select", function(aEvent) {
-      if (aEvent.target != panels)
-        return;
+    panels.addEventListener("ToolPanelShown", function(aEvent) {
       let viewName = panelViews[panels.selectedPanel.id];
       if (viewName)
         window[viewName].delayedInit();
@@ -793,6 +795,11 @@ var BrowserUI = {
     Elements.panelUI.hidden = true;
     Elements.contentShowing.removeAttribute("disabled");
     this.blurFocusedElement();
+
+    let panels = document.getElementById("panel-items")
+    let event = document.createEvent("Events");
+    event.initEvent("ToolPanelHidden", true, true);
+    panels.selectedPanel.dispatchEvent(event);
   },
 
   isPanelVisible: function isPanelVisible() {
