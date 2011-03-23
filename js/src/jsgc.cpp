@@ -169,15 +169,15 @@ Arena<T>::init(JSCompartment *compartment, unsigned thingKind)
 {
     aheader.compartment = compartment;
     aheader.thingKind = thingKind;
-    aheader.freeList = &t.things[0].cell;
-    JS_ASSERT(sizeof(T) == sizeof(ThingOrCell<T>));
-    ThingOrCell<T> *thing = &t.things[0];
-    ThingOrCell<T> *last = &t.things[JS_ARRAY_LENGTH(t.things) - 1];
+    char *p = (char *)&t.things[0];
+    aheader.freeList = reinterpret_cast<FreeCell *>(p);
+    T *thing = &t.things[0];
+    T *last = &t.things[JS_ARRAY_LENGTH(t.things) - 1];
     while (thing < last) {
-        thing->cell.link = &(thing + 1)->cell;
+        thing->asFreeCell()->link = (thing + 1)->asFreeCell();
         ++thing;
     }
-    last->cell.link = NULL;
+    last->asFreeCell()->link = NULL;
 #ifdef DEBUG
     aheader.thingSize = sizeof(T);
     aheader.isUsed = true;
@@ -213,7 +213,7 @@ Arena<T>::mark(T *thing, JSTracer *trc)
 {
     T *alignedThing = getAlignedThing(thing);
 
-    if (alignedThing > &t.things[ThingsPerArena-1].t || alignedThing < &t.things[0].t)
+    if (alignedThing > &t.things[ThingsPerArena-1] || alignedThing < &t.things[0])
         return CGCT_NOTARENA;
 
     if (!aheader.compartment || inFreeList(alignedThing))
@@ -1347,7 +1347,7 @@ void
 Arena<T>::markDelayedChildren(JSTracer *trc)
 {
     T* thing = (T *)getMarkingDelay()->start;
-    T *thingsEnd = &t.things[ThingsPerArena-1].t;
+    T *thingsEnd = &t.things[ThingsPerArena-1];
     JS_ASSERT(thing == getAlignedThing(thing));
     while (thing <= thingsEnd) {
         if (thing->isMarked())
@@ -1838,8 +1838,8 @@ FinalizeArenaList(JSCompartment *comp, JSContext *cx, unsigned thingKind)
         FreeCell **tailp = &freeList;
         bool allClear = true;
 
-        T *thingsEnd = &a->t.things[a->ThingsPerArena-1].t;
-        T *thing = &a->t.things[0].t;
+        T *thingsEnd = &a->t.things[a->ThingsPerArena-1];
+        T *thing = &a->t.things[0];
         thingsEnd++;
 
         if (!nextFree) {
@@ -1896,14 +1896,14 @@ FinalizeArenaList(JSCompartment *comp, JSContext *cx, unsigned thingKind)
              * add the arena itself to the destroy list.
              */
             JS_ASSERT(nfree == a->ThingsPerArena);
-            JS_ASSERT((T *)tailp == &a->t.things[a->ThingsPerArena-1].t);
+            JS_ASSERT((T *)tailp == &a->t.things[a->ThingsPerArena-1]);
             *tailp = NULL;
             header->freeList = freeList;
 #ifdef DEBUG
             header->hasFreeThings = true;
 #endif
             *ap = (header->next);
-            JS_ASSERT((T *)header->freeList == &a->t.things[0].t);
+            JS_ASSERT((T *)header->freeList == &a->t.things[0]);
             a->chunk()->releaseArena(a);
             METER(nkilledarenas++);
         } else {
