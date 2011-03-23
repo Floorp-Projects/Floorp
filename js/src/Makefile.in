@@ -89,7 +89,7 @@ endif
 else # not INTEL_CXX
 
 FAIL_ON_WARNINGS = 1
-MODULE_OPTIMIZE_FLAGS = -O3 -fstrict-aliasing
+MODULE_OPTIMIZE_FLAGS = -O3 -fstrict-aliasing -fno-stack-protector
 
 # We normally want -fomit-frame-pointer, but we want an explicit
 # -fno-omit-frame-pointer if we're using a sampling profiler.
