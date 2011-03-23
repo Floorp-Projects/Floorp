@@ -61,8 +61,7 @@
        }
       };
 
-      tabBrowser.addProgressListener(progressListener,
-                                     Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
+      tabBrowser.addProgressListener(progressListener);
 
       tabBrowser.loadTabs(["about:", "about:mozilla"], false, true);
     }
@@ -80,7 +79,7 @@
       testRelation(panels[1], RELATION_LABELLED_BY, tabs[1]);
       testRelation(tabs[1], RELATION_LABEL_FOR, panels[1]);
 
-      SimpleTest.finish()
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
