@@ -134,10 +134,8 @@ nsAtomList::~nsAtomList(void)
   NS_CSS_DELETE_LIST_MEMBER(nsAtomList, this, mNext);
 }
 
-nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
-                                     nsCSSPseudoClasses::Type aType)
-  : mAtom(aAtom),
-    mType(aType),
+nsPseudoClassList::nsPseudoClassList(nsCSSPseudoClasses::Type aType)
+  : mType(aType),
     mNext(nsnull)
 {
   NS_ASSERTION(!nsCSSPseudoClasses::HasStringArg(aType) &&
@@ -147,11 +145,9 @@ nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
   u.mMemory = nsnull;
 }
 
-nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
-                                     nsCSSPseudoClasses::Type aType,
+nsPseudoClassList::nsPseudoClassList(nsCSSPseudoClasses::Type aType,
                                      const PRUnichar* aString)
-  : mAtom(aAtom),
-    mType(aType),
+  : mType(aType),
     mNext(nsnull)
 {
   NS_ASSERTION(nsCSSPseudoClasses::HasStringArg(aType),
@@ -161,11 +157,9 @@ nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
   u.mString = NS_strdup(aString);
 }
 
-nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
-                                     nsCSSPseudoClasses::Type aType,
+nsPseudoClassList::nsPseudoClassList(nsCSSPseudoClasses::Type aType,
                                      const PRInt32* aIntPair)
-  : mAtom(aAtom),
-    mType(aType),
+  : mType(aType),
     mNext(nsnull)
 {
   NS_ASSERTION(nsCSSPseudoClasses::HasNthPairArg(aType),
@@ -177,11 +171,9 @@ nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
 }
 
 // adopts aSelectorList
-nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
-                                     nsCSSPseudoClasses::Type aType,
+nsPseudoClassList::nsPseudoClassList(nsCSSPseudoClasses::Type aType,
                                      nsCSSSelectorList* aSelectorList)
-  : mAtom(aAtom),
-    mType(aType),
+  : mType(aType),
     mNext(nsnull)
 {
   NS_ASSERTION(nsCSSPseudoClasses::HasSelectorListArg(aType),
@@ -196,16 +188,16 @@ nsPseudoClassList::Clone(PRBool aDeep) const
 {
   nsPseudoClassList *result;
   if (!u.mMemory) {
-    result = new nsPseudoClassList(mAtom, mType);
+    result = new nsPseudoClassList(mType);
   } else if (nsCSSPseudoClasses::HasStringArg(mType)) {
-    result = new nsPseudoClassList(mAtom, mType, u.mString);
+    result = new nsPseudoClassList(mType, u.mString);
   } else if (nsCSSPseudoClasses::HasNthPairArg(mType)) {
-    result = new nsPseudoClassList(mAtom, mType, u.mNumbers);
+    result = new nsPseudoClassList(mType, u.mNumbers);
   } else {
     NS_ASSERTION(nsCSSPseudoClasses::HasSelectorListArg(mType),
                  "unexpected pseudo-class");
     // This constructor adopts its selector list argument.
-    result = new nsPseudoClassList(mAtom, mType, u.mSelectors->Clone());
+    result = new nsPseudoClassList(mType, u.mSelectors->Clone());
   }
 
   if (aDeep)
@@ -422,21 +414,21 @@ void nsCSSSelector::AddClass(const nsString& aClass)
 void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass,
                                    nsCSSPseudoClasses::Type aType)
 {
-  AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass, aType));
+  AddPseudoClassInternal(new nsPseudoClassList(aType));
 }
 
 void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass,
                                    nsCSSPseudoClasses::Type aType,
                                    const PRUnichar* aString)
 {
-  AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass, aType, aString));
+  AddPseudoClassInternal(new nsPseudoClassList(aType, aString));
 }
 
 void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass,
                                    nsCSSPseudoClasses::Type aType,
                                    const PRInt32* aIntPair)
 {
-  AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass, aType, aIntPair));
+  AddPseudoClassInternal(new nsPseudoClassList(aType, aIntPair));
 }
 
 void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass,
@@ -444,8 +436,7 @@ void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass,
                                    nsCSSSelectorList* aSelectorList)
 {
   // Take ownership of nsCSSSelectorList instead of copying.
-  AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass, aType,
-                                               aSelectorList));
+  AddPseudoClassInternal(new nsPseudoClassList(aType, aSelectorList));
 }
 
 void nsCSSSelector::AddPseudoClassInternal(nsPseudoClassList *aPseudoClass)
@@ -768,7 +759,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
       aString.Append(PRUnichar('('));
       for (nsPseudoClassList* list = mPseudoClassList; list;
            list = list->mNext) {
-        list->mAtom->ToString(temp);
+        nsCSSPseudoClasses::PseudoTypeToString(list->mType, temp);
         nsStyleUtil::AppendEscapedCSSIdent(temp, aString);
         NS_ABORT_IF_FALSE(!list->u.mMemory, "data not expected");
         aString.Append(PRUnichar(','));
@@ -781,7 +772,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
 #endif
   } else {
     for (nsPseudoClassList* list = mPseudoClassList; list; list = list->mNext) {
-      list->mAtom->ToString(temp);
+      nsCSSPseudoClasses::PseudoTypeToString(list->mType, temp);
       // This should not be escaped since (a) the pseudo-class string
       // has a ":" that can't be escaped and (b) all pseudo-classes at
       // this point are known, and therefore we know they don't need

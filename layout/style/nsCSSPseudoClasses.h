@@ -72,6 +72,9 @@ public:
   static PRBool HasSelectorListArg(Type aType) {
     return aType == ePseudoClass_any;
   }
+
+  // Should only be used on types other than Count and NotPseudoClass
+  static void PseudoTypeToString(Type aType, nsAString& aString);
 };
 
 #endif /* nsCSSPseudoClasses_h___ */
