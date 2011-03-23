@@ -587,6 +587,12 @@ PRBool nsOggReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
   MonitorAutoEnter mon(mMonitor);
   NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
                "Should be on state machine or AV thread.");
+
+  // Record number of frames decoded and parsed. Automatically update the
+  // stats counters using the AutoNotifyDecoded stack-based class.
+  PRUint32 parsed = 0, decoded = 0;
+  nsMediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
+
   // We chose to keep track of the Theora granulepos ourselves, rather than
   // rely on th_decode_packetin() to do it for us. This is because
   // th_decode_packetin() simply works by incrementing a counter every time
@@ -613,6 +619,7 @@ PRBool nsOggReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
         mVideoQueue.Finish();
         return PR_FALSE;
       }
+      parsed++;
 
       if (packet.granulepos > 0) {
         // We've found a packet with a granulepos, we can now determine the
@@ -699,6 +706,7 @@ PRBool nsOggReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
       mVideoQueue.Finish();
       return PR_FALSE;
     }
+    parsed++;
 
     endOfStream = packet.e_o_s != 0;
 
@@ -751,6 +759,7 @@ PRBool nsOggReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
 
     if (!aKeyframeSkip) {
       mVideoQueue.Push(data.forget());
+      decoded++;
     }
   }
 

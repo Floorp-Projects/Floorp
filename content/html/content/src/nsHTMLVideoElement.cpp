@@ -183,3 +183,24 @@ nsresult nsHTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel)
 }
 
 NS_IMPL_URI_ATTR(nsHTMLVideoElement, Poster, poster)
+
+NS_IMETHODIMP nsHTMLVideoElement::GetMozParsedFrames(PRUint32 *aMozParsedFrames)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  *aMozParsedFrames = mDecoder ? mDecoder->GetFrameStatistics().GetParsedFrames() : 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLVideoElement::GetMozDecodedFrames(PRUint32 *aMozDecodedFrames)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  *aMozDecodedFrames = mDecoder ? mDecoder->GetFrameStatistics().GetDecodedFrames() : 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLVideoElement::GetMozPresentedFrames(PRUint32 *aMozPresentedFrames)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  *aMozPresentedFrames = mDecoder ? mDecoder->GetFrameStatistics().GetPresentedFrames() : 0;
+  return NS_OK;
+}
