@@ -109,8 +109,8 @@ The following result in state transitions.
 
 Shutdown()
   Clean up any resources the nsDecoderStateMachine owns.
-Decode()
-  Start decoding media data.
+Play()
+  Start decoding and playback of media data.
 Buffer
   This is not user initiated. It occurs when the
   available data in the stream drops below a certain point.
@@ -130,13 +130,13 @@ DECODING_METADATA
   |---------------->----->------------------------|        v
 DECODING             |          |  |              |        |
   ^                  v Seek(t)  |  |              |        |
-  |         Decode() |          v  |              |        |
+  |         Play()   |          v  |              |        |
   ^-----------<----SEEKING      |  v Complete     v        v
   |                  |          |  |              |        |
   |                  |          |  COMPLETED    SHUTDOWN-<-|
   ^                  ^          |  |Shutdown()    |
   |                  |          |  >-------->-----^
-  |         Decode() |Seek(t)   |Buffer()         |
+  |          Play()  |Seek(t)   |Buffer()         |
   -----------<--------<-------BUFFERING           |
                                 |                 ^
                                 v Shutdown()      |
@@ -268,7 +268,7 @@ public:
   // Cause state transitions. These methods obtain the decoder monitor
   // to synchronise the change of state, and to notify other threads
   // that the state has changed.
-  virtual void Decode() = 0;
+  virtual void Play() = 0;
 
   // Seeks to aTime in seconds
   virtual void Seek(double aTime) = 0;
