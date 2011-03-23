@@ -494,19 +494,19 @@ AllocateArena(JSContext *cx, unsigned thingKind)
 }
 
 JS_FRIEND_API(bool)
-IsAboutToBeFinalized(JSContext *cx, void *thing)
+IsAboutToBeFinalized(JSContext *cx, const void *thing)
 {
     if (JSAtom::isStatic(thing))
         return false;
     JS_ASSERT(cx);
 
-    JSCompartment *thingCompartment = reinterpret_cast<Cell *>(thing)->compartment();
+    JSCompartment *thingCompartment = reinterpret_cast<const Cell *>(thing)->compartment();
     JSRuntime *rt = cx->runtime;
     JS_ASSERT(rt == thingCompartment->rt);
     if (rt->gcCurrentCompartment != NULL && rt->gcCurrentCompartment != thingCompartment)
         return false;
 
-    return !reinterpret_cast<Cell *>(thing)->isMarked();
+    return !reinterpret_cast<const Cell *>(thing)->isMarked();
 }
 
 JS_FRIEND_API(bool)
@@ -1317,9 +1317,9 @@ GCMarker::~GCMarker()
 }
 
 void
-GCMarker::delayMarkingChildren(void *thing)
+GCMarker::delayMarkingChildren(const void *thing)
 {
-    Cell *cell = reinterpret_cast<Cell *>(thing);
+    const Cell *cell = reinterpret_cast<const Cell *>(thing);
     Arena<Cell> *a = cell->arena();
     JS_ASSERT(cell->isMarked());
     METER(cell->compartment()->rt->gcStats.unmarked++);
