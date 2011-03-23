@@ -59,7 +59,6 @@ namespace nanojit
 
         bool isFree(Register r) const
         {
-            NanoAssert(r != deprecated_UnknownReg);
             return (free & rmask(r)) != 0;
         }
 
@@ -79,7 +78,6 @@ namespace nanojit
         {
             //  Count++;
             NanoAssert(v);
-            NanoAssert(r != deprecated_UnknownReg);
             NanoAssert(active[REGNUM(r)] == NULL);
             active[REGNUM(r)] = v;
             useActive(r);
@@ -87,7 +85,6 @@ namespace nanojit
 
         void useActive(Register r)
         {
-            NanoAssert(r != deprecated_UnknownReg);
             NanoAssert(active[REGNUM(r)] != NULL);
             usepri[REGNUM(r)] = priority++;
         }
@@ -95,7 +92,6 @@ namespace nanojit
         void removeActive(Register r)
         {
             //registerReleaseCount++;
-            NanoAssert(r != deprecated_UnknownReg);
             NanoAssert(active[REGNUM(r)] != NULL);
 
             // remove the given register from the active list
@@ -104,19 +100,17 @@ namespace nanojit
 
         void retire(Register r)
         {
-            NanoAssert(r != deprecated_UnknownReg);
             NanoAssert(active[REGNUM(r)] != NULL);
             active[REGNUM(r)] = NULL;
             free |= rmask(r);
         }
 
         int32_t getPriority(Register r) {
-            NanoAssert(r != deprecated_UnknownReg && active[REGNUM(r)]);
+            NanoAssert(active[REGNUM(r)]);
             return usepri[REGNUM(r)];
         }
 
         LIns* getActive(Register r) const {
-            NanoAssert(r != deprecated_UnknownReg);
             return active[REGNUM(r)];
         }
 
