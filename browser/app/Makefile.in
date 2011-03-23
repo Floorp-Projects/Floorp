@@ -124,15 +124,20 @@ endif
 LIBS += \
 	$(STATIC_COMPONENTS_LINKER_PATH) \
 	$(EXTRA_DSO_LIBS) \
-	$(MOZ_JS_LIBS) \
 	$(APP_XPCOM_LIBS) \
 	$(NSPR_LIBS) \
+	$(NULL)
+
+ifdef BUILD_STATIC_LIBS
+LIBS += \
+	$(MOZ_JS_LIBS) \
 	$(TK_LIBS) \
 	$(NULL)
 
 # Add explicit X11 dependency when building against X11 toolkits
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 LIBS += $(XLDFLAGS) $(XLIBS) $(ZLIB_LIBS)
+endif
 endif
 
 ifdef MOZ_JPROF
@@ -199,13 +204,6 @@ RCFLAGS += -DDEBUG
 endif
 endif
 
-ifeq ($(OS_ARCH),BeOS)
-BEOS_PROGRAM_RESOURCE = $(srcdir)/apprunner-beos.rsrc
-ifdef BUILD_STATIC_LIBS
-OS_LIBS += -ltracker -lgame
-endif
-endif
-
 ifeq ($(OS_ARCH),OS2)
 RESFILE=splashos2.res
 RCFLAGS += -DMOZ_PHOENIX
@@ -249,8 +247,6 @@ LDFLAGS += -STACK:2097152
 endif
 endif
 endif
-
-$(PROGRAM): $(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
 
 ifneq (,$(filter-out OS2 WINNT WINCE,$(OS_ARCH)))
 

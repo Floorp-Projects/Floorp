@@ -4265,7 +4265,7 @@ nsDOMClassInfo::WrapNative(JSContext *cx, JSObject *scope,
     return NS_OK;
   }
 
-  JSObject *wrapper = xpc_GetCachedSlimWrapper(cache, scope, vp);
+  JSObject *wrapper = xpc_FastGetCachedWrapper(cache, scope, vp);
   if (wrapper) {
     return NS_OK;
   }

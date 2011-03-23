@@ -234,10 +234,6 @@ ifdef MOZ_ENABLE_LIBPROXY
 EXTRA_DSO_LDOPTS += $(MOZ_LIBPROXY_LIBS)
 endif
 
-ifeq ($(OS_ARCH),BeOS)
-EXTRA_DSO_LDOPTS += -lbe -ltracker
-endif
-
 ifeq ($(OS_ARCH),SunOS)
 ifdef GNU_CC
 EXTRA_DSO_LDOPTS += -lelf
@@ -250,6 +246,9 @@ ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version winspool comdlg32 imm32 winmm wsock32 msimg32 shlwapi psapi ws2_32)
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 OS_LIBS += $(call EXPAND_LIBNAME,imagehlp)
+endif
+ifdef MOZ_CRASHREPORTER
+OS_LIBS += $(call EXPAND_LIBNAME,wininet)
 endif
 endif # WINNT
 ifeq ($(OS_ARCH),WINCE)

@@ -36,17 +36,39 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public src content
+MODULE = loginmgr
+
+XPIDLSRCS = \
+  nsILoginInfo.idl \
+  nsILoginManager.idl \
+  nsILoginManagerCrypto.idl \
+  nsILoginManagerIEMigrationHelper.idl \
+  nsILoginManagerPrompter.idl \
+  nsILoginManagerStorage.idl \
+  nsILoginMetaInfo.idl \
+  $(NULL)
+
+EXTRA_COMPONENTS = \
+  crypto-SDR.js \
+  nsLoginInfo.js \
+  nsLoginManager.js \
+  nsLoginManagerPrompter.js \
+  passwordmgr.manifest \
+  storage-Legacy.js \
+  storage-mozStorage.js \
+  $(NULL)
+
+DIRS = content
 
 ifdef ENABLE_TESTS
-DIRS  += test
+DIRS += test
 endif
 
 include $(topsrcdir)/config/rules.mk

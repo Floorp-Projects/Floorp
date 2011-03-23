@@ -78,10 +78,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXPORTS		+= nsIDragSessionOS2.h
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-EXPORTS		+= nsIDragSessionBeOS.h
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 EXPORTS		+= \
 		nsIPrintDialogService.h \

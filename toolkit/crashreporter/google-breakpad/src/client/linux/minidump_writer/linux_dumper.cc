@@ -324,25 +324,36 @@ LinuxDumper::EnumerateMappings(wasteful_vector<MappingInfo*>* result) const {
       if (*i2 == ' ') {
         const char* i3 = my_read_hex_ptr(&offset, i2 + 6 /* skip ' rwxp ' */);
         if (*i3 == ' ') {
+          const char* name = NULL;
+          // Only copy name if the name is a valid path name, or if
+          // it's the VDSO image.
+          if (((name = my_strchr(line, '/')) == NULL) &&
+              linux_gate_loc &&
+              reinterpret_cast<void*>(start_addr) == linux_gate_loc) {
+            name = kLinuxGateLibraryName;
+            offset = 0;
+          }
+          // Merge adjacent mappings with the same name into one module,
+          // assuming they're a single library mapped by the dynamic linker
+          if (name && result->size()) {
+            MappingInfo* module = (*result)[result->size() - 1];
+            if ((start_addr == module->start_addr + module->size) &&
+                (my_strlen(name) == my_strlen(module->name)) &&
+                (my_strncmp(name, module->name, my_strlen(name)) == 0)) {
+              module->size = end_addr - module->start_addr;
+              line_reader->PopLine(line_len);
+              continue;
+            }
+          }
           MappingInfo* const module = new(allocator_) MappingInfo;
           memset(module, 0, sizeof(MappingInfo));
           module->start_addr = start_addr;
           module->size = end_addr - start_addr;
           module->offset = offset;
-          const char* name = NULL;
-          // Only copy name if the name is a valid path name, or if
-          // we've found the VDSO image
-          if ((name = my_strchr(line, '/')) != NULL) {
+          if (name != NULL) {
             const unsigned l = my_strlen(name);
             if (l < sizeof(module->name))
               memcpy(module->name, name, l);
-          } else if (linux_gate_loc &&
-                     reinterpret_cast<void*>(module->start_addr) ==
-                     linux_gate_loc) {
-            memcpy(module->name,
-                   kLinuxGateLibraryName,
-                   my_strlen(kLinuxGateLibraryName));
-            module->offset = 0;
           }
           result->push_back(module);
         }

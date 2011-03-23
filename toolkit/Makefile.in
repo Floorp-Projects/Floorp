@@ -19,8 +19,10 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#  Ben Goodger <ben@bengoodger.com>
 #  Brian Ryner <bryner@brianryner.com>
 #  Pierre Chanial <chanial@noos.fr>
+#  Shawn Wilsher <me@shawnwilsher.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,12 +49,26 @@ PARALLEL_DIRS = \
   components \
   content \
   locales \
-  mozapps \
+  mozapps/downloads \
+  mozapps/extensions \
+  mozapps/handling \
+  mozapps/preferences \
+  mozapps/plugins \
+  mozapps/shared \
+  mozapps/update \
+  mozapps/xpinstall \
   obsolete \
   profile \
   spatial-navigation \
   themes \
   $(NULL)
+
+ifeq ($(OS_ARCH),WINCE)
+ifdef WINCE_WINDOWS_MOBILE
+DIRS += mozapps/readstrings
+DIRS += mozapps/installer/wince
+endif
+endif
 
 ifneq (,$(filter gtk2 qt,$(MOZ_WIDGET_TOOLKIT)))
 PARALLEL_DIRS += system/unixproxy

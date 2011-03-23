@@ -55,8 +55,6 @@ ALERTS_SERVICE=1
 DEFINES += -DALERTS_SERVICE
 endif
 
-
-
 EXPORTS = nsToolkitCompsCID.h
 
 CPPSRCS = nsToolkitCompsModule.cpp
@@ -64,66 +62,66 @@ CPPSRCS = nsToolkitCompsModule.cpp
 include $(topsrcdir)/config/config.mk
 
 LOCAL_INCLUDES = \
-	-I$(srcdir)/../downloads/src \
-	-I$(srcdir)/../feeds/src \
-	-I$(srcdir)/../find/src \
-	-I$(srcdir)/../intl \
-	-I$(srcdir)/../startup/src \
-	-I$(srcdir)/../statusfilter \
-	-I$(srcdir)/../typeaheadfind/src \
-	-I$(srcdir)/../url-classifier/src \
-	$(NULL)
+  -I$(srcdir)/../downloads \
+  -I$(srcdir)/../feeds \
+  -I$(srcdir)/../find \
+  -I$(srcdir)/../intl \
+  -I$(srcdir)/../startup \
+  -I$(srcdir)/../statusfilter \
+  -I$(srcdir)/../typeaheadfind \
+  -I$(srcdir)/../url-classifier \
+  $(NULL)
 
 ifdef ALERTS_SERVICE
 LOCAL_INCLUDES += \
-	-I$(srcdir)/../alerts/src \
-	$(NULL)
+  -I$(srcdir)/../alerts \
+  $(NULL)
 endif
 
 ifeq (Android,$(OS_TARGET))
 LOCAL_INCLUDES += \
-	-I$(srcdir)/../webapps \
-	$(NULL)
+  -I$(srcdir)/../webapps \
+  $(NULL)
 endif
 
 SHARED_LIBRARY_LIBS = \
-	../find/src/$(LIB_PREFIX)mozfind_s.$(LIB_SUFFIX) \
-	../typeaheadfind/src/$(LIB_PREFIX)fastfind_s.$(LIB_SUFFIX) \
-	../startup/src/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
-	../statusfilter/$(LIB_PREFIX)mozbrwsr_s.$(LIB_SUFFIX) \
-	$(NULL)
+  ../find/$(LIB_PREFIX)mozfind_s.$(LIB_SUFFIX) \
+  ../typeaheadfind/$(LIB_PREFIX)fastfind_s.$(LIB_SUFFIX) \
+  ../startup/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
+  ../statusfilter/$(LIB_PREFIX)mozbrwsr_s.$(LIB_SUFFIX) \
+  $(NULL)
 
 ifndef MOZ_DISABLE_PARENTAL_CONTROLS
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-SHARED_LIBRARY_LIBS += ../parentalcontrols/src/$(LIB_PREFIX)parentalcontrols_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += ../parentalcontrols/$(LIB_PREFIX)parentalcontrols_s.$(LIB_SUFFIX)
 LOCAL_INCLUDES += \
-	-I$(srcdir)/../parentalcontrols/src \
-	$(NULL)
+  -I$(srcdir)/../parentalcontrols \
+  $(NULL)
 endif
 endif
 
 ifdef MOZ_RDF
 SHARED_LIBRARY_LIBS += \
-  ../downloads/src/$(LIB_PREFIX)download_s.$(LIB_SUFFIX) \
+  ../downloads/$(LIB_PREFIX)download_s.$(LIB_SUFFIX) \
   ../intl/$(LIB_PREFIX)intl_s.$(LIB_SUFFIX) \
   $(NULL)
 endif
 
 ifdef ALERTS_SERVICE
-SHARED_LIBRARY_LIBS += ../alerts/src/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += ../alerts/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
 endif
 ifdef ALERTS_SERVICE_MAC
-SHARED_LIBRARY_LIBS += ../alerts/src/mac/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
-SHARED_LIBRARY_LIBS += ../alerts/src/mac/growl/$(LIB_PREFIX)growl_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += ../alerts/mac/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += ../alerts/mac/growl/$(LIB_PREFIX)growl_s.$(LIB_SUFFIX)
 endif
 
 ifdef MOZ_URL_CLASSIFIER
-SHARED_LIBRARY_LIBS += ../url-classifier/src/$(LIB_PREFIX)urlclassifier_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += ../url-classifier/$(LIB_PREFIX)urlclassifier_s.$(LIB_SUFFIX)
 EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
 endif
 
 ifdef MOZ_FEEDS
-SHARED_LIBRARY_LIBS += ../feeds/src/$(LIB_PREFIX)feed_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += ../feeds/$(LIB_PREFIX)feed_s.$(LIB_SUFFIX)
 endif
 
 ifeq (Android,$(OS_TARGET))
@@ -133,19 +131,19 @@ endif
 EXTRA_DSO_LIBS = gkgfx
 
 EXTRA_DSO_LDOPTS += \
-	$(LIBS_DIR) \
-	$(EXTRA_DSO_LIBS) \
-	$(MOZ_UNICHARUTIL_LIBS) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(MOZ_JS_LIBS) \
-	$(NULL)
+  $(LIBS_DIR) \
+  $(EXTRA_DSO_LIBS) \
+  $(MOZ_UNICHARUTIL_LIBS) \
+  $(MOZ_COMPONENT_LIBS) \
+  $(MOZ_JS_LIBS) \
+  $(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-OS_LIBS	+= $(call EXPAND_LIBNAME,shell32 ole32)
+OS_LIBS += $(call EXPAND_LIBNAME,shell32 ole32)
 endif
 
 include $(topsrcdir)/config/rules.mk

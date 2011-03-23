@@ -54,10 +54,7 @@
 #include "XrayWrapper.h"
 #include "nsNullPrincipal.h"
 #include "nsJSUtils.h"
-
-#ifdef MOZ_JSLOADER
 #include "mozJSComponentLoader.h"
-#endif
 
 /***************************************************************************/
 // stuff used by all
@@ -3767,15 +3764,11 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 NS_IMETHODIMP
 nsXPCComponents_Utils::Import(const nsACString & registryLocation)
 {
-#ifdef MOZ_JSLOADER
     nsCOMPtr<xpcIJSModuleLoader> moduleloader =
         do_GetService(MOZJSCOMPONENTLOADER_CONTRACTID);
     if (!moduleloader)
         return NS_ERROR_FAILURE;
     return moduleloader->Import(registryLocation);
-#else
-    return NS_ERROR_NOT_AVAILABLE;
-#endif
 }
 
 /* xpcIJSWeakReference getWeakReference (); */

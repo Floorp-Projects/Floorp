@@ -721,15 +721,19 @@ def writeResultConv(f, type, jsvalPtr, jsvalRef):
                     % jsvalPtr)
             return
         else:
-            f.write("    nsWrapperCache* cache = xpc_qsGetWrapperCache(result);\n"
-                    "    if (xpc_GetCachedSlimWrapper(cache, obj, %s)) {\n"
+            f.write("    if (!result) {\n"
+                    "      *%s = JSVAL_NULL;\n"
+                    "      return JS_TRUE;\n"
+                    "    }\n"
+                    "    nsWrapperCache* cache = xpc_qsGetWrapperCache(result);\n"
+                    "    if (xpc_FastGetCachedWrapper(cache, obj, %s)) {\n"
                     "      return JS_TRUE;\n"
                     "    }\n"
                     "    // After this point do not use 'result'!\n"
                     "    qsObjectHelper helper(result, cache);\n"
                     "    return xpc_qsXPCOMObjectToJsval(lccx, "
                     "helper, &NS_GET_IID(%s), &interfaces[k_%s], %s);\n"
-                    % (jsvalPtr, type.name, type.name, jsvalPtr))
+                    % (jsvalPtr, jsvalPtr, type.name, type.name, jsvalPtr))
             return
 
     warn("Unable to convert result of type %s" % type.name)
@@ -1283,9 +1287,12 @@ def writeTraceableResultConv(f, type):
                     "    JSBool ok = xpc_qsVariantToJsval(lccx, result, "
                     "&returnVal);\n")
         else:
-            f.write("    nsWrapperCache* cache = xpc_qsGetWrapperCache(result);\n"
+            f.write("    if (!result) {\n"
+                    "      return nsnull;\n"
+                    "    }\n"
+                    "    nsWrapperCache* cache = xpc_qsGetWrapperCache(result);\n"
                     "    JSObject* wrapper =\n"
-                    "      xpc_GetCachedSlimWrapper(cache, obj);\n"
+                    "      xpc_FastGetCachedWrapper(cache, obj);\n"
                     "    if (wrapper) {\n"
                     "      return wrapper;\n"
                     "    }\n"

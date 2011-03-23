@@ -45,12 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= content
 XPIDL_MODULE	= content_xmldoc
 
-XPIDLSRCS = \
-	nsIFIXptr.idl \
-	nsIXPointer.idl \
-	nsIModifyableXPointer.idl \
-	$(NULL)
-
 EXPORTS		= \
 		nsIXMLContentSink.h \
 		$(NULL)
