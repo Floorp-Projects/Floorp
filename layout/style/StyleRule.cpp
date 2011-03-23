@@ -1286,6 +1286,7 @@ StyleRule::StyleRule(nsCSSSelectorList* aSelector,
     mLineNumber(0),
     mWasMatched(PR_FALSE)
 {
+  NS_PRECONDITION(aDeclaration, "must have a declaration");
 }
 
 // for |Clone|
@@ -1506,13 +1507,3 @@ StyleRule::SetSelectorText(const nsAString& aSelectorText)
 
 } // namespace css
 } // namespace mozilla
-
-already_AddRefed<css::StyleRule>
-NS_NewCSSStyleRule(nsCSSSelectorList* aSelector,
-                   css::Declaration* aDeclaration)
-{
-  NS_PRECONDITION(aDeclaration, "must have a declaration");
-  css::StyleRule *it = new css::StyleRule(aSelector, aDeclaration);
-  NS_ADDREF(it);
-  return it;
-}

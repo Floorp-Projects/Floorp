@@ -987,7 +987,7 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
   css::Declaration* declaration = ParseDeclarationBlock(haveBraces);
   if (declaration) {
     // Create a style rule for the declaration
-    *aResult = NS_NewCSSStyleRule(nsnull, declaration).get();
+    NS_ADDREF(*aResult = new css::StyleRule(nsnull, declaration));
   } else {
     *aResult = nsnull;
   }
@@ -2434,7 +2434,7 @@ CSSParserImpl::ParseRuleSet(RuleAppendFunc aAppendFunc, void* aData,
 
   // Translate the selector list and declaration block into style data
 
-  nsRefPtr<css::StyleRule> rule = NS_NewCSSStyleRule(slist, declaration);
+  nsRefPtr<css::StyleRule> rule = new css::StyleRule(slist, declaration);
   rule->SetLineNumber(linenum);
   (*aAppendFunc)(rule, aData);
 

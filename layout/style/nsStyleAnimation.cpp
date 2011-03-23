@@ -1818,7 +1818,8 @@ BuildStyleRule(nsCSSProperty aProperty,
     return nsnull;
   }
 
-  return NS_NewCSSStyleRule(nsnull, declaration.forget());
+  nsRefPtr<css::StyleRule> rule = new css::StyleRule(nsnull, declaration.forget());
+  return rule.forget();
 }
 
 inline
