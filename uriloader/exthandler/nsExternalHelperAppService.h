@@ -438,6 +438,12 @@ protected:
   nsCOMPtr<nsIHelperAppLauncherDialog> mDialog;
 
   /**
+   * Keep request alive in case when helper non-modal dialog shown.
+   * Thus in OnStopRequest the mRequest will not be set to null (it will be set to null further).
+   */
+  PRBool mKeepRequestAlive;
+
+  /**
    * The request that's being loaded. Not used after OnStopRequest, so a weak
    * reference suffices. Initialized in OnStartRequest.
    */
