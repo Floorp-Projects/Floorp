@@ -302,7 +302,7 @@ class RemoteReftest(RefTest):
         self.server.stop()
 
     def createReftestProfile(self, options, profileDir):
-        RefTest.createReftestProfile(self, options, profileDir)
+        RefTest.createReftestProfile(self, options, profileDir, server=options.remoteWebServer)
 
         if (self._devicemanager.pushDir(profileDir, options.remoteProfile) == None):
             raise devicemanager.FileError("Failed to copy profiledir to device")
@@ -375,7 +375,7 @@ def main():
     reftest.startWebServer(options)
 
     # Hack in a symbolic link for jsreftest
-    os.system("ln -s ../jsreftest jsreftest")
+    os.system("ln -s ../jsreftest " + str(os.path.join(SCRIPT_DIRECTORY, "jsreftest")))
 
     # Dynamically build the reftest URL if possible, beware that args[0] should exist 'inside' the webroot
     manifest = args[0]

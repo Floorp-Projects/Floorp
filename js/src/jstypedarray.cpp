@@ -691,13 +691,13 @@ class TypedArrayTemplate
           case JSENUMERATE_INIT_ALL:
             statep->setBoolean(true);
             if (idp)
-                *idp = INT_TO_JSID(tarray->length + 1);
+                *idp = ::INT_TO_JSID(tarray->length + 1);
             break;
 
           case JSENUMERATE_INIT:
             statep->setInt32(0);
             if (idp)
-                *idp = INT_TO_JSID(tarray->length);
+                *idp = ::INT_TO_JSID(tarray->length);
             break;
 
           case JSENUMERATE_NEXT:
@@ -707,7 +707,7 @@ class TypedArrayTemplate
             } else {
                 uint32 index = statep->toInt32();
                 if (index < uint32(tarray->length)) {
-                    *idp = INT_TO_JSID(index);
+                    *idp = ::INT_TO_JSID(index);
                     statep->setInt32(index + 1);
                 } else {
                     JS_ASSERT(index == tarray->length);
@@ -1134,7 +1134,11 @@ class TypedArrayTemplate
             double d = v.toDouble();
             if (!ArrayTypeIsFloatingPoint() && JS_UNLIKELY(JSDOUBLE_IS_NaN(d)))
                 return NativeType(int32(0));
-            return NativeType(d);
+            if (TypeIsFloatingPoint<NativeType>())
+                return NativeType(d);
+            if (TypeIsUnsigned<NativeType>())
+                return NativeType(js_DoubleToECMAUint32(d));
+            return NativeType(js_DoubleToECMAInt32(d));
         }
 
         if (v.isPrimitive() && !v.isMagic()) {
@@ -1172,7 +1176,7 @@ class TypedArrayTemplate
             Value v;
 
             for (uintN i = 0; i < len; ++i) {
-                if (!ar->getProperty(cx, INT_TO_JSID(i), &v))
+                if (!ar->getProperty(cx, ::INT_TO_JSID(i), &v))
                     return false;
                 *dest++ = nativeFromValue(cx, v);
             }

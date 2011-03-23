@@ -207,7 +207,7 @@ extern bool JS_FASTCALL
 NumberValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb);
 
 /* Same as js_NumberToString, different signature. */
-extern JSFlatString *
+extern JSFixedString *
 NumberToString(JSContext *cx, jsdouble d);
 
 /*

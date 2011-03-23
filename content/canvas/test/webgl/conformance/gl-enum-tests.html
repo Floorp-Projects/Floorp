@@ -55,7 +55,6 @@ if (!gl) {
     "gl.isEnabled(desktopGL['CLIP_PLANE0'])",
     "gl.isEnabled(desktopGL['POINT_SPRITE'])",
     "gl.pixelStorei(desktopGL['PACK_SWAP_BYTES'], 1)",
-    "gl.readPixels(0, 0, 1, 1, gl.ALPHA, gl.SHORT, buf)",
   ];
   for (var ii = 0; ii < tests.length; ++ii) {
     eval(tests[ii]);

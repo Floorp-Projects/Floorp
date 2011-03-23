@@ -330,10 +330,10 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format
                 return JS_FALSE;
             *sp = STRING_TO_JSVAL(str);
             if (c == 'W') {
-                const jschar *chars = js_GetStringChars(cx, str);
-                if (!chars)
+                JSFixedString *fixed = str->ensureFixed(cx);
+                if (!fixed)
                     return JS_FALSE;
-                *va_arg(ap, const jschar **) = chars;
+                *va_arg(ap, const jschar **) = fixed->chars();
             } else {
                 *va_arg(ap, JSString **) = str;
             }
@@ -1500,37 +1500,6 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
         cx->resetCompartment();
 }
 
-class AutoResolvingEntry {
-public:
-    AutoResolvingEntry() : entry(NULL) {}
-
-    /*
-     * Returns false on error. But N.B. if obj[id] was already being resolved,
-     * this is a no-op, and we silently treat that as success.
-     */
-    bool start(JSContext *cx, JSObject *obj, jsid id, uint32 flag) {
-        JS_ASSERT(!entry);
-        this->cx = cx;
-        key.obj = obj;
-        key.id = id;
-        this->flag = flag;
-        bool ok = !!js_StartResolving(cx, &key, flag, &entry);
-        JS_ASSERT_IF(!ok, !entry);
-        return ok;
-    }
-
-    ~AutoResolvingEntry() {
-        if (entry)
-            js_StopResolving(cx, &key, flag, NULL, 0);
-    }
-
-private:
-    JSContext *cx;
-    JSResolvingKey key;
-    uint32 flag;
-    JSResolvingEntry *entry;
-};
-
 JSObject *
 js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
 {
@@ -1541,13 +1510,10 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
     if (!cx->globalObject)
         JS_SetGlobalObject(cx, obj);
 
-    /* Record Function and Object in cx->resolvingTable. */
-    AutoResolvingEntry e1, e2;
+    /* Record Function and Object in cx->resolvingList. */
     JSAtom **classAtoms = cx->runtime->atomState.classAtoms;
-    if (!e1.start(cx, obj, ATOM_TO_JSID(classAtoms[JSProto_Function]), JSRESFLAG_LOOKUP) ||
-        !e2.start(cx, obj, ATOM_TO_JSID(classAtoms[JSProto_Object]), JSRESFLAG_LOOKUP)) {
-        return NULL;
-    }
+    AutoResolving resolving1(cx, obj, ATOM_TO_JSID(classAtoms[JSProto_Function]));
+    AutoResolving resolving2(cx, obj, ATOM_TO_JSID(classAtoms[JSProto_Object]));
 
     /* Initialize the function class first so constructors can be made. */
     if (!js_GetClassPrototype(cx, obj, JSProto_Function, &fun_proto))
@@ -1810,7 +1776,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
 
     /* Check whether we're resolving 'undefined', and define it if so. */
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
-    if (idstr == ATOM_TO_STRING(atom)) {
+    if (idstr == atom) {
         *resolved = JS_TRUE;
         return obj->defineProperty(cx, ATOM_TO_JSID(atom), UndefinedValue(),
                                    PropertyStub, StrictPropertyStub,
@@ -1822,7 +1788,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
     for (i = 0; standard_class_atoms[i].init; i++) {
         JS_ASSERT(standard_class_atoms[i].clasp);
         atom = OFFSET_TO_ATOM(rt, standard_class_atoms[i].atomOffset);
-        if (idstr == ATOM_TO_STRING(atom)) {
+        if (idstr == atom) {
             stdnm = &standard_class_atoms[i];
             break;
         }
@@ -1835,7 +1801,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
             atom = StdNameToAtom(cx, &standard_class_names[i]);
             if (!atom)
                 return JS_FALSE;
-            if (idstr == ATOM_TO_STRING(atom)) {
+            if (idstr == atom) {
                 stdnm = &standard_class_names[i];
                 break;
             }
@@ -1852,7 +1818,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
                 atom = StdNameToAtom(cx, &object_prototype_names[i]);
                 if (!atom)
                     return JS_FALSE;
-                if (idstr == ATOM_TO_STRING(atom)) {
+                if (idstr == atom) {
                     stdnm = &object_prototype_names[i];
                     break;
                 }
@@ -2362,7 +2328,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing, ui
                     JS_snprintf(buf, bufsize, "%p", fun);
                 } else {
                     if (fun->atom)
-                        PutEscapedString(buf, bufsize, ATOM_TO_STRING(fun->atom), 0);
+                        PutEscapedString(buf, bufsize, fun->atom, 0);
                 }
             } else if (clasp->flags & JSCLASS_HAS_PRIVATE) {
                 JS_snprintf(buf, bufsize, "%p", obj->getPrivate());
@@ -2376,7 +2342,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing, ui
           {
             JSString *str = (JSString *)thing;
             if (str->isLinear())
-                PutEscapedString(buf, bufsize, str->assertIsLinear(), 0);
+                PutEscapedString(buf, bufsize, &str->asLinear(), 0);
             else
                 JS_snprintf(buf, bufsize, "<rope: length %d>", (int)str->length());
             break;
@@ -2804,29 +2770,7 @@ JS_PUBLIC_API(JSString *)
 JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
 {
     CHECK_REQUEST(cx);
-    JS_ASSERT(uintN(type) < JSExternalString::TYPE_LIMIT);
-
-    JSExternalString *str = js_NewGCExternalString(cx, uintN(type));
-    if (!str)
-        return NULL;
-    str->initFlat(chars, length);
-    str->externalStringType = type;
-    cx->runtime->updateMallocCounter((length + 1) * sizeof(jschar));
-    return str;
-}
-
-JS_PUBLIC_API(intN)
-JS_GetExternalStringGCType(JSRuntime *rt, JSString *str)
-{
-    /*
-     * No need to test this in js_GetExternalStringGCType, which asserts its
-     * inverse instead of wasting cycles on testing a condition we can ensure
-     * by auditing in-VM calls to the js_... helper.
-     */
-    if (JSString::isStatic(str))
-        return -1;
-
-    return js_GetExternalStringGCType(str);
+    return JSExternalString::new_(cx, chars, length, type);
 }
 
 JS_PUBLIC_API(void)
@@ -4574,7 +4518,7 @@ JS_GetFunctionObject(JSFunction *fun)
 JS_PUBLIC_API(JSString *)
 JS_GetFunctionId(JSFunction *fun)
 {
-    return fun->atom ? ATOM_TO_STRING(fun->atom) : NULL;
+    return fun->atom;
 }
 
 JS_PUBLIC_API(uintN)
@@ -5554,29 +5498,21 @@ JS_NewStringCopyZ(JSContext *cx, const char *s)
 JS_PUBLIC_API(JSBool)
 JS_StringHasBeenInterned(JSString *str)
 {
-    return str->isAtomized();
+    return str->isAtom();
 }
 
 JS_PUBLIC_API(JSString *)
 JS_InternJSString(JSContext *cx, JSString *str)
 {
     CHECK_REQUEST(cx);
-    JSAtom *atom = js_AtomizeString(cx, str, 0);
-    if (!atom)
-        return NULL;
-    return ATOM_TO_STRING(atom);
+    return js_AtomizeString(cx, str, 0);
 }
 
 JS_PUBLIC_API(JSString *)
 JS_InternString(JSContext *cx, const char *s)
 {
-    JSAtom *atom;
-
     CHECK_REQUEST(cx);
-    atom = js_Atomize(cx, s, strlen(s), ATOM_INTERNED);
-    if (!atom)
-        return NULL;
-    return ATOM_TO_STRING(atom);
+    return js_Atomize(cx, s, strlen(s), ATOM_INTERNED);
 }
 
 JS_PUBLIC_API(JSString *)
@@ -5605,13 +5541,8 @@ JS_NewUCStringCopyZ(JSContext *cx, const jschar *s)
 JS_PUBLIC_API(JSString *)
 JS_InternUCStringN(JSContext *cx, const jschar *s, size_t length)
 {
-    JSAtom *atom;
-
     CHECK_REQUEST(cx);
-    atom = js_AtomizeChars(cx, s, length, ATOM_INTERNED);
-    if (!atom)
-        return NULL;
-    return ATOM_TO_STRING(atom);
+    return js_AtomizeChars(cx, s, length, ATOM_INTERNED);
 }
 
 JS_PUBLIC_API(JSString *)
@@ -5655,16 +5586,15 @@ JS_GetStringCharsAndLength(JSContext *cx, JSString *str, size_t *plength)
 JS_PUBLIC_API(const jschar *)
 JS_GetInternedStringChars(JSString *str)
 {
-    JS_ASSERT(str->isAtomized());
-    return str->flatChars();
+    return str->asAtom().chars();
 }
 
 JS_PUBLIC_API(const jschar *)
 JS_GetInternedStringCharsAndLength(JSString *str, size_t *plength)
 {
-    JS_ASSERT(str->isAtomized());
-    *plength = str->flatLength();
-    return str->flatChars();
+    JSAtom &atom = str->asAtom();
+    *plength = atom.length();
+    return atom.chars();
 }
 
 extern JS_PUBLIC_API(JSFlatString *)
@@ -5757,7 +5687,7 @@ JS_PUBLIC_API(JSBool)
 JS_MakeStringImmutable(JSContext *cx, JSString *str)
 {
     CHECK_REQUEST(cx);
-    return js_MakeStringImmutable(cx, str);
+    return !!str->ensureFixed(cx);
 }
 
 JS_PUBLIC_API(JSBool)

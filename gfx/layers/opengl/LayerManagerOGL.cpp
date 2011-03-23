@@ -61,6 +61,8 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
 
+#include "gfxCrashReporterUtils.h"
+
 namespace mozilla {
 namespace layers {
 
@@ -172,6 +174,8 @@ LayerManagerOGL::CreateContext()
 PRBool
 LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext)
 {
+  ScopedGfxFeatureReporter reporter("GL Layers");
+
   // Do not allow double intiailization
   NS_ABORT_IF_FALSE(mGLContext == nsnull, "Don't reiniailize layer managers");
 
@@ -354,6 +358,7 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext)
     console->LogStringMessage(msg.get());
   }
 
+  reporter.SetSuccessful();
   return true;
 }
 

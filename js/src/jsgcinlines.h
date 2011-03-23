@@ -43,6 +43,7 @@
 #include "jsgc.h"
 #include "jscntxt.h"
 #include "jscompartment.h"
+#include "jsscope.h"
 
 #include "jslock.h"
 #include "jstl.h"
@@ -55,8 +56,63 @@
 # define METER_IF(condition, x) ((void) 0)
 #endif
 
+inline bool
+JSAtom::isUnitString(void *ptr)
+{
+    jsuword delta = reinterpret_cast<jsuword>(ptr) -
+                    reinterpret_cast<jsuword>(unitStaticTable);
+    if (delta >= UNIT_STATIC_LIMIT * sizeof(JSString))
+        return false;
+
+    /* If ptr points inside the static array, it must be well-aligned. */
+    JS_ASSERT(delta % sizeof(JSString) == 0);
+    return true;
+}
+
+inline bool
+JSAtom::isLength2String(void *ptr)
+{
+    jsuword delta = reinterpret_cast<jsuword>(ptr) -
+                    reinterpret_cast<jsuword>(length2StaticTable);
+    if (delta >= NUM_SMALL_CHARS * NUM_SMALL_CHARS * sizeof(JSString))
+        return false;
+
+    /* If ptr points inside the static array, it must be well-aligned. */
+    JS_ASSERT(delta % sizeof(JSString) == 0);
+    return true;
+}
+
+inline bool
+JSAtom::isHundredString(void *ptr)
+{
+    jsuword delta = reinterpret_cast<jsuword>(ptr) -
+                    reinterpret_cast<jsuword>(hundredStaticTable);
+    if (delta >= NUM_HUNDRED_STATICS * sizeof(JSString))
+        return false;
+
+    /* If ptr points inside the static array, it must be well-aligned. */
+    JS_ASSERT(delta % sizeof(JSString) == 0);
+    return true;
+}
+
+inline bool
+JSAtom::isStatic(void *ptr)
+{
+    return isUnitString(ptr) || isLength2String(ptr) || isHundredString(ptr);
+}
+
 namespace js {
 namespace gc {
+
+inline uint32
+GetGCThingTraceKind(void *thing)
+{
+    JS_ASSERT(thing);
+    if (JSAtom::isStatic(thing))
+        return JSTRACE_STRING;
+    Cell *cell = reinterpret_cast<Cell *>(thing);
+    return GetFinalizableTraceKind(cell->arena()->header()->thingKind);
+}
 
 /* Capacity for slotsToThingKind */
 const size_t SLOTS_TO_THING_KIND_LIMIT = 17;
@@ -194,7 +250,7 @@ TypedMarker(JSTracer *trc, JSFunction *thing);
 static JS_ALWAYS_INLINE void
 TypedMarker(JSTracer *trc, JSShortString *thing);
 
-static JS_ALWAYS_INLINE void
+extern void
 TypedMarker(JSTracer *trc, JSString *thing);
 
 template<typename T>
@@ -202,7 +258,7 @@ static JS_ALWAYS_INLINE void
 Mark(JSTracer *trc, T *thing)
 {
     JS_ASSERT(thing);
-    JS_ASSERT(JS_IS_VALID_TRACE_KIND(GetGCThingTraceKind(thing)));
+    JS_ASSERT(JS_IS_VALID_TRACE_KIND(js::gc::GetGCThingTraceKind(thing)));
     JS_ASSERT(trc->debugPrinter || trc->debugPrintArg);
 
     /* Per-Compartment GC only with GCMarker and no custom JSTracer */
@@ -210,16 +266,16 @@ Mark(JSTracer *trc, T *thing)
 
     JSRuntime *rt = trc->context->runtime;
     /* Don't mark things outside a compartment if we are in a per-compartment GC */
-    if (rt->gcCurrentCompartment && thing->asCell()->compartment() != rt->gcCurrentCompartment)
+    if (rt->gcCurrentCompartment && thing->compartment() != rt->gcCurrentCompartment)
         goto out;
 
     if (!IS_GC_MARKING_TRACER(trc)) {
-        uint32 kind = GetGCThingTraceKind(thing);
+        uint32 kind = js::gc::GetGCThingTraceKind(thing);
         trc->callback(trc, thing, kind);
         goto out;
     }
 
-    TypedMarker(trc, thing);
+    js::gc::TypedMarker(trc, thing);
 
   out:
 #ifdef DEBUG
@@ -233,7 +289,7 @@ static inline void
 MarkString(JSTracer *trc, JSString *str)
 {
     JS_ASSERT(str);
-    if (JSString::isStatic(str))
+    if (str->isStaticAtom())
         return;
     JS_ASSERT(GetArena<JSString>((Cell *)str)->assureThingIsAligned((JSString *)str));
     Mark(trc, str);
@@ -306,10 +362,11 @@ static inline void
 MarkChildren(JSTracer *trc, JSString *str)
 {
     if (str->isDependent())
-        MarkString(trc, str->dependentBase(), "base");
+        MarkString(trc, str->asDependent().base(), "base");
     else if (str->isRope()) {
-        MarkString(trc, str->ropeLeft(), "left child");
-        MarkString(trc, str->ropeRight(), "right child");
+        JSRope &rope = str->asRope();
+        MarkString(trc, rope.leftChild(), "left child");
+        MarkString(trc, rope.rightChild(), "right child");
     }
 }
 
@@ -348,7 +405,7 @@ static JS_ALWAYS_INLINE void
 TypedMarker(JSTracer *trc, JSObject *thing)
 {
     JS_ASSERT(thing);
-    JS_ASSERT(JSTRACE_OBJECT == GetFinalizableTraceKind(thing->asCell()->arena()->header()->thingKind));
+    JS_ASSERT(JSTRACE_OBJECT == GetFinalizableTraceKind(thing->arena()->header()->thingKind));
 
     GCMarker *gcmarker = static_cast<GCMarker *>(trc);
     if (!thing->markIfUnmarked(gcmarker->getMarkColor()))
@@ -365,7 +422,7 @@ static JS_ALWAYS_INLINE void
 TypedMarker(JSTracer *trc, JSFunction *thing)
 {
     JS_ASSERT(thing);
-    JS_ASSERT(JSTRACE_OBJECT == GetFinalizableTraceKind(thing->asCell()->arena()->header()->thingKind));
+    JS_ASSERT(JSTRACE_OBJECT == GetFinalizableTraceKind(thing->arena()->header()->thingKind));
 
     GCMarker *gcmarker = static_cast<GCMarker *>(trc);
     if (!thing->markIfUnmarked(gcmarker->getMarkColor()))
@@ -386,142 +443,7 @@ TypedMarker(JSTracer *trc, JSShortString *thing)
      * anything to mark if the string was unmarked and ignore the
      * markIfUnmarked result.
      */
-    (void) thing->asCell()->markIfUnmarked();
-}
-
-}  /* namespace gc */
-
-namespace detail {
-
-static JS_ALWAYS_INLINE JSString *
-Tag(JSString *str)
-{
-    JS_ASSERT(!(size_t(str) & 1));
-    return (JSString *)(size_t(str) | 1);
-}
-
-static JS_ALWAYS_INLINE bool
-Tagged(JSString *str)
-{
-    return (size_t(str) & 1) != 0;
-}
-
-static JS_ALWAYS_INLINE JSString *
-Untag(JSString *str)
-{
-    JS_ASSERT((size_t(str) & 1) == 1);
-    return (JSString *)(size_t(str) & ~size_t(1));
-}
-
-static JS_ALWAYS_INLINE void
-NonRopeTypedMarker(JSRuntime *rt, JSString *str)
-{
-    /* N.B. The base of a dependent string is not necessarily flat. */
-    JS_ASSERT(!str->isRope());
-
-    if (rt->gcCurrentCompartment) {
-        for (;;) {
-            if (JSString::isStatic(str))
-                break;
-
-            /* 
-             * If we perform single-compartment GC don't mark Strings outside the current compartment.
-             * Dependent Strings are not shared between compartments and they can't be in the atomsCompartment.
-             */
-            if (str->asCell()->compartment() != rt->gcCurrentCompartment) {
-                JS_ASSERT(str->asCell()->compartment() == rt->atomsCompartment);
-                break;
-            }
-            if (!str->asCell()->markIfUnmarked())
-                break;
-            if (!str->isDependent())
-                break;
-            str = str->dependentBase();
-        }
-    } else {
-        while (!JSString::isStatic(str) &&
-               str->asCell()->markIfUnmarked() &&
-               str->isDependent()) {
-            str = str->dependentBase();
-        }
-    }
-}
-
-}  /* namespace detail */
-
-namespace gc {
-
-static JS_ALWAYS_INLINE void
-TypedMarker(JSTracer *trc, JSString *str)
-{
-    using namespace detail;
-    JSRuntime *rt = trc->context->runtime;
-    JS_ASSERT(!JSString::isStatic(str));
-#ifdef DEBUG
-    JSCompartment *strComp = str->asCell()->compartment();
-#endif
-    if (!str->isRope()) {
-        NonRopeTypedMarker(rt, str);
-        return;
-    }
-
-    /*
-     * This function must not fail, so a simple stack-based traversal must not
-     * be used (since it may oom if the stack grows large). Instead, strings
-     * are temporarily mutated to embed parent pointers as they are traversed.
-     * This algorithm is homomorphic to JSString::flatten.
-     */
-    JSString *parent = NULL;
-    first_visit_node: {
-        JS_ASSERT(strComp == str->asCell()->compartment() || str->asCell()->compartment() == rt->atomsCompartment);
-        JS_ASSERT(!JSString::isStatic(str));
-        if (!str->asCell()->markIfUnmarked())
-            goto finish_node;
-        JSString *left = str->ropeLeft();
-        if (left->isRope()) {
-            JS_ASSERT(!Tagged(str->u.left) && !Tagged(str->s.right));
-            str->u.left = Tag(parent);
-            parent = str;
-            str = left;
-            goto first_visit_node;
-        }
-        JS_ASSERT_IF(!JSString::isStatic(left), 
-                     strComp == left->asCell()->compartment()
-                     || left->asCell()->compartment() == rt->atomsCompartment);
-        NonRopeTypedMarker(rt, left);
-    }
-    visit_right_child: {
-        JSString *right = str->ropeRight();
-        if (right->isRope()) {
-            JS_ASSERT(!Tagged(str->u.left) && !Tagged(str->s.right));
-            str->s.right = Tag(parent);
-            parent = str;
-            str = right;
-            goto first_visit_node;
-        }
-        JS_ASSERT_IF(!JSString::isStatic(right), 
-                     strComp == right->asCell()->compartment()
-                     || right->asCell()->compartment() == rt->atomsCompartment);
-        NonRopeTypedMarker(rt, right);
-    }
-    finish_node: {
-        if (!parent)
-            return;
-        if (Tagged(parent->u.left)) {
-            JS_ASSERT(!Tagged(parent->s.right));
-            JSString *nextParent = Untag(parent->u.left);
-            parent->u.left = str;
-            str = parent;
-            parent = nextParent;
-            goto visit_right_child;
-        }
-        JS_ASSERT(Tagged(parent->s.right));
-        JSString *nextParent = Untag(parent->s.right);
-        parent->s.right = str;
-        str = parent;
-        parent = nextParent;
-        goto finish_node;
-    }
+    (void) thing->markIfUnmarked();
 }
 
 static inline void
@@ -530,9 +452,8 @@ MarkAtomRange(JSTracer *trc, size_t len, JSAtom **vec, const char *name)
     for (uint32 i = 0; i < len; i++) {
         if (JSAtom *atom = vec[i]) {
             JS_SET_TRACING_INDEX(trc, name, i);
-            JSString *str = ATOM_TO_STRING(atom);
-            if (!JSString::isStatic(str))
-                Mark(trc, str);
+            if (!atom->isStaticAtom())
+                Mark(trc, atom);
         }
     }
 }
@@ -553,7 +474,7 @@ MarkId(JSTracer *trc, jsid id)
 {
     if (JSID_IS_STRING(id)) {
         JSString *str = JSID_TO_STRING(id);
-        if (!JSString::isStatic(str))
+        if (!str->isStaticAtom())
             Mark(trc, str);
     }
     else if (JS_UNLIKELY(JSID_IS_OBJECT(id)))

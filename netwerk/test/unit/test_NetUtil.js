@@ -49,6 +49,9 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 // files.
 do_get_profile();
 
+const OUTPUT_STREAM_CONTRACT_ID = "@mozilla.org/network/file-output-stream;1";
+const SAFE_OUTPUT_STREAM_CONTRACT_ID = "@mozilla.org/network/safe-file-output-stream;1";
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Helper Methods
 
@@ -75,10 +78,15 @@ function getFileContents(aFile)
   return string.value;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//// Tests
-
-function test_async_write_file()
+/**
+ * Tests asynchronously writing a file using NetUtil.asyncCopy.
+ *
+ * @param aContractId
+ *        The contract ID to use for the output stream
+ * @param aDeferOpen
+ *        Whether to use DEFER_OPEN in the output stream.
+ */
+function async_write_file(aContractId, aDeferOpen)
 {
   do_test_pending();
 
@@ -90,9 +98,8 @@ function test_async_write_file()
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
 
   // Then, we need an output stream to our output file.
-  let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
-                createInstance(Ci.nsIFileOutputStream);
-  ostream.init(file, -1, -1, 0);
+  let ostream = Cc[aContractId].createInstance(Ci.nsIFileOutputStream);
+  ostream.init(file, -1, -1, aDeferOpen ? Ci.nsIFileOutputStream.DEFER_OPEN : 0);
 
   // Finally, we need an input stream to take data from.
   const TEST_DATA = "this is a test string";
@@ -113,39 +120,23 @@ function test_async_write_file()
   });
 }
 
-function test_async_write_file_nsISafeOutputStream()
-{
-  do_test_pending();
+////////////////////////////////////////////////////////////////////////////////
+//// Tests
 
-  // First, we need an output file to write to.
-  let file = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties).
-             get("ProfD", Ci.nsIFile);
-  file.append("NetUtil-async-test-file.tmp");
-  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+function test_async_write_file() {
+  async_write_file(OUTPUT_STREAM_CONTRACT_ID);
+}
 
-  // Then, we need an output stream to our output file.
-  let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
-                createInstance(Ci.nsIFileOutputStream);
-  ostream.init(file, -1, -1, 0);
+function test_async_write_file_deferred() {
+  async_write_file(OUTPUT_STREAM_CONTRACT_ID, true);
+}
 
-  // Finally, we need an input stream to take data from.
-  const TEST_DATA = "this is a test string";
-  let istream = Cc["@mozilla.org/io/string-input-stream;1"].
-                createInstance(Ci.nsIStringInputStream);
-  istream.setData(TEST_DATA, TEST_DATA.length);
+function test_async_write_file_safe() {
+  async_write_file(SAFE_OUTPUT_STREAM_CONTRACT_ID);
+}
 
-  NetUtil.asyncCopy(istream, ostream, function(aResult) {
-    // Make sure the copy was successful!
-    do_check_true(Components.isSuccessCode(aResult));
-
-    // Check the file contents.
-    do_check_eq(TEST_DATA, getFileContents(file));
-
-    // Finish the test.
-    do_test_finished();
-    run_next_test();
-  });
+function test_async_write_file_safe_deferred() {
+  async_write_file(SAFE_OUTPUT_STREAM_CONTRACT_ID, true);
 }
 
 function test_newURI_no_spec_throws()
@@ -529,7 +520,9 @@ function test_readInputStreamToString_too_many_bytes()
 
 let tests = [
   test_async_write_file,
-  test_async_write_file_nsISafeOutputStream,
+  test_async_write_file_deferred,
+  test_async_write_file_safe,
+  test_async_write_file_safe_deferred,
   test_newURI_no_spec_throws,
   test_newURI,
   test_newURI_takes_nsIFile,

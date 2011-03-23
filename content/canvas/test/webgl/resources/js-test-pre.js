@@ -358,3 +358,18 @@ function gc() {
             gcRec(10)
     }
 }
+
+function finishTest() {
+  successfullyParsed = true;
+  var epilogue = document.createElement("script");
+  epilogue.onload = function() {
+    if (window.nonKhronosFrameworkNotifyDone) {
+      window.nonKhronosFrameworkNotifyDone();
+    }
+  };
+  // TODO(gman): find the correct path by searching
+  // for the script with src="js-test-pre.js"
+  epilogue.src = "../resources/js-test-post.js";
+  document.body.appendChild(epilogue);
+}
+

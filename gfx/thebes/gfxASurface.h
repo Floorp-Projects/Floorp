@@ -48,6 +48,8 @@ typedef struct _cairo_user_data_key cairo_user_data_key_t;
 typedef void (*thebes_destroy_func_t) (void *data);
 
 class gfxImageSurface;
+struct nsIntPoint;
+struct nsIntRect;
 
 /**
  * A surface is something you can draw on. Instantiate a subclass of this
@@ -168,6 +170,11 @@ public:
      */
     static PRBool CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit = 0);
 
+    /* Provide a stride value that will respect all alignment requirements of
+     * the accelerated image-rendering code.
+     */
+    static PRInt32 FormatStrideForWidth(gfxImageFormat format, PRInt32 width);
+
     /* Return the default set of context flags for this surface; these are
      * hints to the context about any special rendering considerations.  See
      * gfxContext::SetFlag for documentation.
@@ -218,7 +225,18 @@ public:
         return empty;
     }
 
-    virtual PRBool SupportsSelfCopy() { return PR_TRUE; }
+    /**
+     * Move the pixels in |aSourceRect| to |aDestTopLeft|.  Like with
+     * memmove(), |aSourceRect| and the rectangle defined by
+     * |aDestTopLeft| are allowed to overlap, and the effect is
+     * equivalent to copying |aSourceRect| to a scratch surface and
+     * then back to |aDestTopLeft|.
+     *
+     * |aSourceRect| and the destination rectangle defined by
+     * |aDestTopLeft| are clipped to this surface's bounds.
+     */
+    virtual void MovePixels(const nsIntRect& aSourceRect,
+                            const nsIntPoint& aDestTopLeft);
 
     /**
      * Mark the surface as being allowed/not allowed to be used as a source.

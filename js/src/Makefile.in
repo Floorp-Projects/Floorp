@@ -88,6 +88,7 @@ MODULE_OPTIMIZE_FLAGS = -O2 -ip
 endif
 else # not INTEL_CXX
 
+FAIL_ON_WARNINGS = 1
 MODULE_OPTIMIZE_FLAGS = -O3 -fstrict-aliasing
 
 # We normally want -fomit-frame-pointer, but we want an explicit
@@ -590,6 +591,16 @@ check::
 	$(srcdir)/config/find_vanilla_new_calls $(LIBRARY)
 endif
 
+# Help ensure that the number of OOM errors in SpiderMonkey doesn't increase.
+# If the number of OOM errors changes, update the number below. We intend this
+# number to go down over time, by fixing OOMs.
+ifdef DEBUG
+check-ooms:
+	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/config/find_OOM_errors.py --regression 129
+
+check:: check-ooms
+endif
+
 ifndef WINCE
 JITFLAGS = ,m,j,mj,mjp,am,amj,amjp,amd,n,mn,jn,mjn,mjpn,amn,amjn,amjpn,amdn
 check::
@@ -685,6 +696,23 @@ EXTRA_LIBS	+= -ldl
 endif
 ifeq ($(OS_ARCH),OSF1)
 EXTRA_LIBS	+= -lc_r
+endif
+# Silence warnings on AIX/HP-UX from non-GNU compilers
+ifndef GNU_CC
+ifeq ($(OS_ARCH),AIX)
+# Suppress warnings from xlC
+# 1540-1281: offsetof() on null non-POD types
+# 1540-1608: anonymous unions using static data members
+CFLAGS		+= -qsuppress=1540-1281 -qsuppress=1540-1608
+CXXFLAGS	+= -qsuppress=1540-1281 -qsuppress=1540-1608
+endif
+ifeq ($(OS_ARCH),HP-UX)
+# Suppress warnings from aCC
+# 3055: anonymous unions declaring types
+# 4189: offsetof() on non-POD types
+CFLAGS		+= +W3055,4189
+CXXFLAGS	+= +W3055,4189
+endif
 endif
 ifeq ($(OS_ARCH),SunOS)
 ifeq ($(TARGET_CPU),sparc)

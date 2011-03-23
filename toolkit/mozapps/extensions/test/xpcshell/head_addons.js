@@ -605,9 +605,11 @@ function writeInstallRDFForExtension(aData, aDir, aId, aExtraFile) {
 function setExtensionModifiedTime(aExt, aTime) {
   aExt.lastModifiedTime = aTime;
   if (aExt.isDirectory()) {
-    aExt = aExt.clone();
-    aExt.append("install.rdf");
-    aExt.lastModifiedTime = aTime;
+    let entries = aExt.directoryEntries
+                      .QueryInterface(AM_Ci.nsIDirectoryEnumerator);
+    while (entries.hasMoreElements())
+      setExtensionModifiedTime(entries.nextFile, aTime);
+    entries.close();
   }
 }
 

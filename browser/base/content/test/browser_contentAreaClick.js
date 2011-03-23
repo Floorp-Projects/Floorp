@@ -184,16 +184,23 @@ function test() {
   waitForExplicitFinish();
 
   gTestWin = openDialog(location, "", "chrome,all,dialog=no", "about:blank");
-  gTestWin.addEventListener("load", function (event) {
-    info("Window loaded.");
-    gTestWin.removeEventListener("load", arguments.callee, false);
+  Services.obs.addObserver(function(aSubject, aTopic, aData) {
+    if (aSubject != gTestWin)
+      return;
+
+    Services.obs.removeObserver(arguments.callee, "browser-delayed-startup-finished");
+
+    info("Browser window opened");
     waitForFocus(function() {
-      info("Setting up browser...");
-      setupTestBrowserWindow();
-      info("Running tests...");
-      executeSoon(runNextTest);
-    }, gTestWin.content, true);
-  }, false);
+      info("Browser window focused");
+      waitForFocus(function() {
+        info("Setting up browser...");
+        setupTestBrowserWindow();
+        info("Running tests...");
+        executeSoon(runNextTest);
+      }, gTestWin.content, true);
+    }, gTestWin);
+  }, "browser-delayed-startup-finished", false);
 }
 
 // Click handler used to steal click events.

@@ -141,7 +141,7 @@ Probes::FunctionName(JSContext *cx, const JSFunction *fun, JSAutoByteString *byt
         return nullName;
     }
 
-    return bytes->encode(cx, ATOM_TO_STRING(atom)) ? bytes->ptr() : nullName;
+    return bytes->encode(cx, atom) ? bytes->ptr() : nullName;
 }
 
 #ifdef INCLUDE_MOZILLA_DTRACE

@@ -266,6 +266,16 @@ struct JSStmtInfo {
  */
 #define TCF_IN_WITH             0x10000000
 
+/* 
+ * This function does something that can extend the set of bindings in its
+ * call objects --- it does a direct eval in non-strict code, or includes a
+ * function statement (as opposed to a function definition).
+ *
+ * This flag is *not* inherited by enclosed or enclosing functions; it
+ * applies only to the function in whose flags it appears.
+ */
+#define TCF_FUN_EXTENSIBLE_SCOPE 0x20000000
+
 /*
  * Flags to check for return; vs. return expr; in a function.
  */
@@ -284,7 +294,8 @@ struct JSStmtInfo {
                                  TCF_FUN_CALLS_EVAL      |                    \
                                  TCF_FUN_MIGHT_ALIAS_LOCALS |                 \
                                  TCF_FUN_MUTATES_PARAMETER |                  \
-                                 TCF_STRICT_MODE_CODE)
+                                 TCF_STRICT_MODE_CODE    |                    \
+                                 TCF_FUN_EXTENSIBLE_SCOPE)
 
 struct JSTreeContext {              /* tree context for semantic checks */
     uint32          flags;          /* statement state flags, see above */
@@ -456,6 +467,14 @@ struct JSTreeContext {              /* tree context for semantic checks */
 
     bool needsEagerArguments() const {
         return inStrictMode() && ((usesArguments() && mutatesParameter()) || callsEval());
+    }
+
+    void noteHasExtensibleScope() {
+        flags |= TCF_FUN_EXTENSIBLE_SCOPE;
+    }
+
+    bool hasExtensibleScope() const {
+        return flags & TCF_FUN_EXTENSIBLE_SCOPE;
     }
 };
 

@@ -75,9 +75,6 @@ struct Cell {
 
     inline JSCompartment *compartment() const;
 
-    /* Needed for compatibility reasons because Cell can't be a base class of JSString */
-    JS_ALWAYS_INLINE js::gc::Cell *asCell() { return this; }
-
     JS_ALWAYS_INLINE js::gc::FreeCell *asFreeCell() {
         return reinterpret_cast<FreeCell *>(this);
     }

@@ -275,7 +275,7 @@ function start() {
             function(type, msg, success) {
                 return reporter.reportFunc(type, msg, success);
             });
-        testHarness.setTimeoutDelay(10000); // and make it much higher when running under valgrind.
+        testHarness.setTimeoutDelay(20000); // and make it much higher when running under valgrind.
         window.webglTestHarness = testHarness;
         testHarness.runTests();
     } else {
@@ -288,7 +288,7 @@ function start() {
   };
 
   SimpleTest.waitForExplicitFinish();
-  SimpleTest.requestLongerTimeout(2);
+  SimpleTest.requestLongerTimeout(3);
 
   var kIsWindows = false;
   var kIsMac = false;

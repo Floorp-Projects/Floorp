@@ -85,10 +85,10 @@
         </receiver>
 
         <activity android:name="Restarter"
+                  android:process="@ANDROID_PACKAGE_NAME@Restarter"
                   android:theme="@style/GreyTheme">
           <intent-filter>
-            <action android:name="org.mozilla.gecko.restart" 
-		    android:process="@MOZ_APP_NAME@Restarter"/>
+            <action android:name="org.mozilla.gecko.restart"/>
           </intent-filter>
         </activity>
 #if MOZ_CRASHREPORTER

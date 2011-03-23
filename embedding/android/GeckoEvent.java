@@ -70,6 +70,7 @@ public class GeckoEvent {
 
     public static final int SURFACE_CREATED = 12;
     public static final int SURFACE_DESTROYED = 13;
+    public static final int GECKO_EVENT_SYNC = 14;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;

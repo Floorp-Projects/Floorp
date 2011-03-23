@@ -1699,12 +1699,12 @@ public:
    * a presentation with an associated widget, and use that widget's
    * layer manager.
    *
-   * If one can't be found, a BasicLayerManager is created and returned.
-   *
    * @param aDoc the document for which to return a layer manager.
+   * @param aAllowRetaining an outparam that states whether the returned
+   * layer manager should be used for retained layers
    */
   static already_AddRefed<mozilla::layers::LayerManager>
-  LayerManagerForDocument(nsIDocument *aDoc);
+  LayerManagerForDocument(nsIDocument *aDoc, bool *aAllowRetaining = nsnull);
 
   /**
    * Returns a layer manager to use for the given document. Basically we
@@ -1716,12 +1716,12 @@ public:
    * forseeable future. This function should be used carefully as it may change
    * the document's layer manager.
    *
-   * If one can't be found, a BasicLayerManager is created and returned.
-   *
    * @param aDoc the document for which to return a layer manager.
+   * @param aAllowRetaining an outparam that states whether the returned
+   * layer manager should be used for retained layers
    */
   static already_AddRefed<mozilla::layers::LayerManager>
-  PersistentLayerManagerForDocument(nsIDocument *aDoc);
+  PersistentLayerManagerForDocument(nsIDocument *aDoc, bool *aAllowRetaining = nsnull);
 
   /**
    * Determine whether a content node is focused or not,
@@ -1893,6 +1893,19 @@ public:
   }
   ~nsAutoScriptBlocker() {
     nsContentUtils::RemoveScriptBlocker();
+  }
+private:
+  MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class NS_STACK_CLASS nsAutoRemovableScriptBlocker {
+public:
+  nsAutoRemovableScriptBlocker(MOZILLA_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
+    MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
+    nsContentUtils::AddRemovableScriptBlocker();
+  }
+  ~nsAutoRemovableScriptBlocker() {
+    nsContentUtils::RemoveRemovableScriptBlocker();
   }
 private:
   MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER

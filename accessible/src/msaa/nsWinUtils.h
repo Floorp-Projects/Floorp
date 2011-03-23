@@ -17,7 +17,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -51,7 +51,7 @@ const LPCWSTR kClassNameTabContent = L"MozillaContentWindowClass";
 
 const LPCWSTR kJAWSModuleHandle = L"jhook";
 const LPCWSTR kWEModuleHandle = L"gwm32inc";
-const LPCWSTR kDolphnModuleHandle = L"dolwinhk";
+const LPCWSTR kDolphinModuleHandle = L"dolwinhk";
 
 class nsWinUtils
 {
@@ -71,12 +71,24 @@ public:
   /**
    * Helper to create a window.
    */
-  static HWND CreateNativeWindow(LPCWSTR aWindowClass, HWND aParentWnd);
+  static HWND CreateNativeWindow(LPCWSTR aWindowClass, HWND aParentWnd,
+                                 int aX, int aY, int aWidth, int aHeight,
+                                 bool aIsActive);
+
+  /**
+   * Helper to show window.
+   */
+  static void ShowNativeWindow(HWND aWnd);
+
+  /**
+   * Helper to hide window.
+   */
+  static void HideNativeWindow(HWND aWnd);
 
   /**
    * Return true if window emulation is enabled.
    */
-  static bool IsWindowEmulationEnabled();
+  static bool IsWindowEmulationEnabled(LPCWSTR kModuleHandle = 0);
 
   /**
    * Return true if the given document node is for tab document accessible.

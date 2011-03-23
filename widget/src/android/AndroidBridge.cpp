@@ -107,6 +107,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jNotifyIME = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIME", "(II)V");
     jNotifyIMEEnabled = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIMEEnabled", "(ILjava/lang/String;Ljava/lang/String;)V");
     jNotifyIMEChange = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIMEChange", "(Ljava/lang/String;III)V");
+    jAcknowledgeEventSync = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "acknowledgeEventSync", "()V");
+
     jEnableAccelerometer = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableAccelerometer", "(Z)V");
     jEnableLocation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableLocation", "(Z)V");
     jReturnIMEQueryResult = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "returnIMEQueryResult", "(Ljava/lang/String;II)V");
@@ -117,6 +119,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jGetHandlersForURL = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForURL", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
     jOpenUriExternal = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "openUriExternal", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
     jGetMimeTypeFromExtensions = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMimeTypeFromExtensions", "(Ljava/lang/String;)Ljava/lang/String;");
+    jGetExtensionFromMimeType = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getExtensionFromMimeType", "(Ljava/lang/String;)Ljava/lang/String;");
     jMoveTaskToBack = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "moveTaskToBack", "()V");
     jGetClipboardText = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getClipboardText", "()Ljava/lang/String;");
     jSetClipboardText = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setClipboardText", "(Ljava/lang/String;)V");
@@ -261,6 +264,13 @@ AndroidBridge::NotifyIMEChange(const PRUnichar *aText, PRUint32 aTextLen,
     args[3].i = aNewEnd;
     JNI()->CallStaticVoidMethodA(sBridge->mGeckoAppShellClass,
                                      sBridge->jNotifyIMEChange, args);
+}
+
+void
+AndroidBridge::AcknowledgeEventSync()
+{
+    ALOG_BRIDGE("AndroidBridge::AcknowledgeEventSync");
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jAcknowledgeEventSync);
 }
 
 void
@@ -445,11 +455,28 @@ AndroidBridge::GetMimeTypeFromExtensions(const nsACString& aFileExt, nsCString& 
     AutoLocalJNIFrame jniFrame;
     NS_ConvertUTF8toUTF16 wFileExt(aFileExt);
     jstring jstrExt = mJNIEnv->NewString(wFileExt.get(), wFileExt.Length());
-    jstring jstrType =  static_cast<jstring>(mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass,
-                                                                             jGetMimeTypeFromExtensions,
-                                                                             jstrExt));
+    jstring jstrType =  static_cast<jstring>(
+        mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass,
+                                        jGetMimeTypeFromExtensions,
+                                        jstrExt));
     nsJNIString jniStr(jstrType);
     aMimeType.Assign(NS_ConvertUTF16toUTF8(jniStr.get()));
+}
+
+void
+AndroidBridge::GetExtensionFromMimeType(const nsCString& aMimeType, nsACString& aFileExt)
+{
+    ALOG_BRIDGE("AndroidBridge::GetExtensionFromMimeType");
+
+    AutoLocalJNIFrame jniFrame;
+    NS_ConvertUTF8toUTF16 wMimeType(aMimeType);
+    jstring jstrType = mJNIEnv->NewString(wMimeType.get(), wMimeType.Length());
+    jstring jstrExt = static_cast<jstring>(
+        mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass,
+                                        jGetExtensionFromMimeType,
+                                        jstrType));
+    nsJNIString jniStr(jstrExt);
+    aFileExt.Assign(NS_ConvertUTF16toUTF8(jniStr.get()));
 }
 
 void
@@ -587,9 +614,9 @@ AndroidBridge::SetFullScreen(PRBool aFullScreen)
 void
 AndroidBridge::HideProgressDialogOnce()
 {
-    ALOG_BRIDGE("AndroidBridge::HideProgressDialogOnce");
     static bool once = false;
     if (!once) {
+        ALOG_BRIDGE("AndroidBridge::HideProgressDialogOnce");
         mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jHideProgressDialog);
         once = true;
     }
@@ -618,11 +645,10 @@ AndroidBridge::IsNetworkLinkKnown()
 }
 
 void
-AndroidBridge::SetSelectedLocale(const nsACString& aLocale)
+AndroidBridge::SetSelectedLocale(const nsAString& aLocale)
 {
     ALOG_BRIDGE("AndroidBridge::SetSelectedLocale");
-    NS_ConvertUTF8toUTF16 wLocale(aLocale);
-    jstring jLocale = GetJNIForThread()->NewString(wLocale.get(), wLocale.Length());
+    jstring jLocale = GetJNIForThread()->NewString(PromiseFlatString(aLocale).get(), aLocale.Length());
     GetJNIForThread()->CallStaticVoidMethod(mGeckoAppShellClass, jSetSelectedLocale, jLocale);
 }
 

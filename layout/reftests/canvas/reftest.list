@@ -38,6 +38,6 @@ asserts-if(cocoaWidget,0-2) == size-change-1.html size-change-1-ref.html
 == text-bidi-ltr-test.html text-bidi-ltr-ref.html
 == text-bidi-rtl-test.html text-bidi-rtl-ref.html
 
-!= text-font-lang.html text-font-lang-notref.html
+fails-if(Android) != text-font-lang.html text-font-lang-notref.html
 
 == strokeText-path.html strokeText-path-ref.html

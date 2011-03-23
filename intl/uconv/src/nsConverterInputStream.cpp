@@ -254,7 +254,8 @@ nsConverterInputStream::Fill(nsresult * aErrorCode)
     NS_ASSERTION(srcConsumed <= mByteData->GetLength(),
                  "Whoa.  The converter should have returned NS_OK_UDEC_MOREINPUT before this point!");
   } while (mReplacementChar &&
-           NS_FAILED(*aErrorCode));
+           NS_FAILED(*aErrorCode) &&
+           mUnicharData->GetBufferSize() > mUnicharDataLength);
 
   mLeftOverBytes = mByteData->GetLength() - srcConsumed;
 

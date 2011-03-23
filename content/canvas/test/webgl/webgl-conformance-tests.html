@@ -29,6 +29,8 @@ WebGL Conformance Test Runner.
 </style>
 <script type="text/javascript" src="resources/webgl-test-harness.js"></script>
 <script>
+var CONFORMANCE_TEST_VERSION = "1.0.0";
+
 function start() {
 
   function create3DContext(canvas)
@@ -159,6 +161,19 @@ function start() {
     var canvas = document.getElementById("webglcheck");
     var ctx = create3DContext(canvas);
     this.noWebGL = !ctx;
+    this.contextInfo = {};
+
+    if (ctx) {
+      this.contextInfo["VENDOR"] = ctx.getParameter(ctx.VENDOR);
+      this.contextInfo["VERSION"] = ctx.getParameter(ctx.VERSION);
+      this.contextInfo["RENDERER"] = ctx.getParameter(ctx.RENDERER);
+      this.contextInfo["RED_BITS"] = ctx.getParameter(ctx.RED_BITS);
+      this.contextInfo["GREEN_BITS"] = ctx.getParameter(ctx.GREEN_BITS);
+      this.contextInfo["BLUE_BITS"] = ctx.getParameter(ctx.BLUE_BITS);
+      this.contextInfo["ALPHA_BITS"] = ctx.getParameter(ctx.ALPHA_BITS);
+      this.contextInfo["DEPTH_BITS"] = ctx.getParameter(ctx.DEPTH_BITS);
+      this.contextInfo["STENCIL_BITS"] = ctx.getParameter(ctx.STENCIL_BITS);
+    }
   };
 
   Reporter.prototype.runTest = function(url) {
@@ -211,6 +226,42 @@ function start() {
     var msg = ' (' + totalSuccessful + ' of ' +
               totalTests + ' passed' + timeout + ')';
     this.fullResultsNode.textContent = msg;
+
+
+    // generate a text summary
+    var tx = "";
+    tx += "WebGL Conformance Test Results\n";
+    tx += "Version " + CONFORMANCE_TEST_VERSION + "\n";
+    tx += "\n";
+    tx += "-------------------\n\n";
+    tx += "User Agent: " + (navigator.userAgent ? navigator.userAgent : "(navigator.userAgent is null)") + "\n";
+    tx += "WebGL VENDOR: " + this.contextInfo["VENDOR"] + "\n";
+    tx += "WebGL VERSION: " + this.contextInfo["VERSION"] + "\n";
+    tx += "WebGL RENDERER: " + this.contextInfo["RENDERER"] + "\n";
+    tx += "WebGL R/G/B/A/Depth/Stencil bits (default config): " + this.contextInfo["RED_BITS"] + "/" + this.contextInfo["GREEN_BITS"] + "/" + this.contextInfo["BLUE_BITS"] + "/" + this.contextInfo["ALPHA_BITS"] + "/" + this.contextInfo["DEPTH_BITS"] + "/" + this.contextInfo["STENCIL_BITS"] + "\n";
+    tx += "\n";
+    tx += "-------------------\n\n";
+    tx += "Test Summary (" + totalTests + " total tests):\n";
+    tx += "Tests PASSED: " + totalSuccessful + "\n";
+    tx += "Tests FAILED: " + (totalTests - totalSuccessful) + "\n";
+    tx += "Tests TIMED OUT: " + totalTimeouts + "\n";
+    tx += "\n";
+    tx += "-------------------\n\n";
+    tx += "Individual Test Results (pass / total / timeout):\n\n";
+    for (var url in this.pagesByURL) {
+      var page = this.pagesByURL[url];
+      if (!(page.totalTests == 0 && page.totalTimeouts == 0)) {
+	tx += url + ": " + page.totalSuccessful + " / " + page.totalTests + " / " + page.totalTimeouts + "\n";
+      }
+    }
+    tx += "\n";
+    tx += "-------------------\n\n";
+    tx += "Generated on: " + (new Date()).toString() + "\n";
+
+    var r = document.getElementById("testResultsAsText");
+    while (r.firstChild) r.removeChild(r.firstChild);
+    r.appendChild(document.createTextNode(tx));
+    document.getElementById("showTextSummary").style.visibility = "visible";
   };
 
   Reporter.prototype.reportFunc = function(type, msg, success) {
@@ -231,11 +282,13 @@ function start() {
     };
   };
 
+  document.getElementById("testVersion").innerHTML = CONFORMANCE_TEST_VERSION;
+
   var reporter = new Reporter();
   var iframe = document.getElementById("testframe");
   var testHarness = new WebGLTestHarnessModule.TestHarness(
       iframe,
-      '00_testFIXME_list.txt',
+      '00_test_list.txt',
       function(type, msg, success) {
         return reporter.reportFunc(type, msg, success);
       });
@@ -243,6 +296,21 @@ function start() {
   var button = document.getElementById("runTestsButton");
   button.onclick = function() {
     testHarness.runTests();
+  };
+  var textbutton = document.getElementById("showTextSummary");
+  textbutton.onclick = function() {
+    console.log("click");
+    var htmldiv = document.getElementById("testResultsHTML");
+    var textdiv = document.getElementById("testResultsText");
+    if (textdiv.style.display == "none") {
+      textdiv.style.display = "block";
+      htmldiv.style.display = "none";
+      textbutton.setAttribute("value", "display html summary");
+    } else {
+      textdiv.style.display = "none";
+      htmldiv.style.display = "block";
+      textbutton.setAttribute("value", "display text summary");
+    }
   };
   if (reporter.noWebGL) {
     button.disabled = true;
@@ -257,7 +325,7 @@ function start() {
 <tr style="height: 300px;">
 <td>
 <table>
-<tr><td><img src="http://www.khronos.org/img/api_logos/webgl-logo.png" /><br />WebGL Conformance Test Runner<br/><input type="button" value="run tests" id="runTestsButton"/>
+<tr><td><img src="http://www.khronos.org/img/api_logos/webgl-logo.png" /><br />WebGL Conformance Test Runner<br/>Version <span id="testVersion"></span><br/><input type="button" value="run tests" id="runTestsButton"/><br/><input type="button" style="visibility: hidden;" value="display text summary" id="showTextSummary"/>
 <div id="nowebgl" class="nowebgl" style="display: none;">This browser does not appear to support WebGL</div></td></tr>
 <tr><td><div style="border: 1px">Results: <span id="fullresults"></span></div>
 <canvas id="webglcheck" style="display: none;"></canvas></td></tr>
@@ -270,7 +338,8 @@ function start() {
 <tr>
 <td colspan="2">
 <div style="text-align: left; width: 100%; height: 100%; overflow: auto;">
-<div><ul id="results"></ul></div>
+<div id="testResultsHTML"><ul id="results"></ul></div>
+<div style="display: none;" id="testResultsText"><pre id="testResultsAsText"></pre></div>
 </div>
 </td>
 </tr>

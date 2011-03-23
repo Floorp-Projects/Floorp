@@ -6,7 +6,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="Accessible XUL textbox and textarea hierarchy tests">
 
-  <script type="application/javascript" 
+  <script type="application/javascript"
           src="chrome://mochikit/content/MochiKit/packed.js" />
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
@@ -23,7 +23,9 @@
 
     function doTest()
     {
+      ////////////////////
       // textbox
+      ////////////////////
       var accTree = {
         role: ROLE_ENTRY,
         children: [
@@ -33,6 +35,8 @@
           }
         ]
       };
+
+      // default textbox
       testAccessibleTree("txc1", accTree);
 
       // number textbox
@@ -42,9 +46,11 @@
       testAccessibleTree("txc3", accTree);
 
       // timed textbox
-      testAccessibleTree("txc4", accTree);
+      testAccessibleTree("txc4_deprecated", accTree);
 
+      ////////////////////
       // password textbox
+      ////////////////////
       accTree = {
         role: ROLE_PASSWORD_TEXT,
         children: [
@@ -57,7 +63,9 @@
 
       testAccessibleTree("txc5", accTree);
 
+      ////////////////////
       // multiline textbox
+      ////////////////////
       accTree = {
         role: ROLE_ENTRY,
         children: [
@@ -74,29 +82,96 @@
 
       testAccessibleTree("txc6", accTree);
 
+      ////////////////////
       // autocomplete textbox
+      ////////////////////
       accTree = {
+        // textbox
         role: ROLE_AUTOCOMPLETE,
         children: [
           {
+            // html:input
             role: ROLE_ENTRY,
             children: [
               {
+                // #text
                 role: ROLE_TEXT_LEAF,
                 children: []
               }
             ]
           },
           {
+            // xul:menupopup
             role: ROLE_COMBOBOX_LIST,
             children: []
           }
         ]
       };
 
-      testAccessibleTree("txc7", accTree);
+      // XPFE and Toolkit autocomplete widgets differ.
+      var txc7 = document.getElementById("txc7");
+      if ("clearResults" in txc7) {
+        SimpleTest.ok(true, "Testing (Old) XPFE autocomplete widget.");
 
-      SimpleTest.finish();
+        // Popup is always created. (See code below.)
+
+        accTree.children.push(
+          {
+            // xul:panel
+            role: ROLE_COMBOBOX_LIST,
+            children: [
+              {
+                // xul:tree
+                role: ROLE_TABLE,
+                children: [
+                  {
+                    // xul:treecols
+                    role: ROLE_LIST,
+                    children: [
+                      {
+                        // xul:treecol
+                        role: ROLE_COLUMNHEADER,
+                        children: []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+          );
+      } else {
+        SimpleTest.ok(true, "Testing (New) Toolkit autocomplete widget.");
+
+        // Dumb access to trigger popup lazy creation. (See code below.)
+        txc7.popup;
+
+        accTree.children.push(
+          {
+            role: ROLE_LIST,
+            children: [
+              {
+                role: ROLE_LIST,
+                children: [
+                  {
+                    role: ROLE_COLUMNHEADER,
+                    children: []
+                  }
+                ]
+              }
+            ]
+          }
+          );
+      }
+
+      // Delay txc7 test a bit, to let Toolkit popup lazy creation complete.
+      function test_txc7() {
+        testAccessibleTree("txc7", accTree);
+  
+        SimpleTest.finish();
+      }
+      // SimpleTest.executeSoon() doesn't help here: use setTimeout() with a little delay.
+      setTimeout(test_txc7, 25);
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -122,7 +197,9 @@
       <textbox id="txc1" value="hello"/>
       <textbox id="txc2" type="number" value="44"/>
       <textbox id="txc3" type="search" value="hello"/>
-      <textbox id="txc4" type="timed" value="hello"/>
+      <!-- This textbox triggers "Warning: Timed textboxes are deprecated. Consider using type="search" instead.".
+           Yet let's test it too as long as it's (still) supported. -->
+      <textbox id="txc4_deprecated" type="timed" value="hello"/>
       <textbox id="txc5" type="password" value="hello"/>
       <textbox id="txc6" multiline="true" value="hello"/>
       <textbox id="txc7" type="autocomplete" value="hello"/>
@@ -130,4 +207,3 @@
   </hbox>
 
 </window>
-

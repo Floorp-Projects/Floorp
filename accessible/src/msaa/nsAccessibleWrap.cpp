@@ -1772,7 +1772,7 @@ void nsAccessibleWrap::UpdateSystemCaret()
   // off-screen model can follow the caret
   ::DestroyCaret();
 
-  nsRefPtr<nsRootAccessible> rootAccessible = GetRootAccessible();
+  nsRootAccessible* rootAccessible = RootAccessible();
   if (!rootAccessible) {
     return;
   }

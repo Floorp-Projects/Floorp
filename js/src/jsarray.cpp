@@ -115,6 +115,7 @@
 #include "jsscopeinlines.h"
 #include "jscntxtinlines.h"
 #include "jsinferinlines.h"
+#include "jsstrinlines.h"
 
 using namespace js;
 using namespace js::gc;
@@ -1284,7 +1285,7 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
         genBefore = cx->busyArrays.generation();
     } else {
         /* Cycle, so return empty string. */
-        rval->setString(ATOM_TO_STRING(cx->runtime->atomState.emptyAtom));
+        rval->setString(cx->runtime->atomState.emptyAtom);
         return true;
     }
 
@@ -3711,7 +3712,7 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone)
 
         if (val.isString()) {
             // Strings must be made immutable before being copied to a clone.
-            if (!js_MakeStringImmutable(cx, val.toString()))
+            if (!val.toString()->ensureFixed(cx))
                 return JS_FALSE;
         } else if (val.isObject()) {
             /*

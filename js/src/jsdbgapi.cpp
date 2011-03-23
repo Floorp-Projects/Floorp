@@ -1297,7 +1297,7 @@ JS_LocalNameToAtom(jsuword w)
 extern JS_PUBLIC_API(JSString *)
 JS_AtomKey(JSAtom *atom)
 {
-    return ATOM_TO_STRING(atom);
+    return atom;
 }
 
 extern JS_PUBLIC_API(void)
@@ -1882,7 +1882,7 @@ GetAtomTotalSize(JSContext *cx, JSAtom *atom)
 
     nbytes = sizeof(JSAtom *) + sizeof(JSDHashEntryStub);
     nbytes += sizeof(JSString);
-    nbytes += (ATOM_TO_STRING(atom)->flatLength() + 1) * sizeof(jschar);
+    nbytes += (atom->length() + 1) * sizeof(jschar);
     return nbytes;
 }
 
