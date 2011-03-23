@@ -102,11 +102,7 @@ else
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS			+= nsMacCharset.cpp
 else
-ifeq ($(OS_ARCH),BeOS)
-CPPSRCS			+= nsBeOSCharset.cpp
-else
 CPPSRCS			+= nsUNIXCharset.cpp
-endif
 endif
 endif
 endif

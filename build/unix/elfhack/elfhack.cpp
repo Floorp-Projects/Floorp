@@ -439,7 +439,7 @@ int do_relocation_section(Elf *elf, unsigned int rel_type)
         dyn->setValueForType(Rel_Type::d_tag_count, new ElfPlainValue(0));
 
     if (relhack->getOffset() + relhack->getSize() >= old_end) {
-        fprintf(stderr, "No gain. Aborting\n");
+        fprintf(stderr, "No gain. Skipping\n");
         return -1;
     }
     return 0;
@@ -459,6 +459,16 @@ void do_file(const char *name, bool backup = false)
     unsigned int size = elf->getSize();
     fprintf(stderr, "%s: ", name);
 
+    for (ElfSection *section = elf->getSection(1); section != NULL;
+         section = section->getNext()) {
+        if (section->getName() &&
+            (strncmp(section->getName(), ".elfhack.", 9) == 0)) {
+            fprintf(stderr, "Already elfhacked. Skipping\n");
+            delete elf;
+            return;
+        }
+    }
+
     int exit = -1;
     switch (elf->getMachine()) {
     case EM_386:
@@ -473,7 +483,7 @@ void do_file(const char *name, bool backup = false)
     }
     if (exit == 0) {
         if (elf->getSize() >= size) {
-            fprintf(stderr, "No gain. Aborting\n");
+            fprintf(stderr, "No gain. Skipping\n");
         } else if (backup && backup_file(name) != 0) {
             fprintf(stderr, "Couln't create backup file\n");
         } else {

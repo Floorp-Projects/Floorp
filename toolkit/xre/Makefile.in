@@ -36,10 +36,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -50,21 +50,21 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 
 XPIDLSRCS = \
-	nsINativeAppSupport.idl \
-	$(NULL)
+  nsINativeAppSupport.idl \
+  $(NULL)
 
 ifneq (,$(filter WINCE WINNT,$(OS_ARCH)))
 XPIDLSRCS += nsIWinAppHelper.idl
 endif
 
 CPPSRCS = \
-	nsAppRunner.cpp \
-	nsConsoleWriter.cpp \
-	nsXREDirProvider.cpp \
-	nsNativeAppSupportBase.cpp \
-	nsAppData.cpp \
-	nsSigHandlers.cpp \
-	$(NULL)
+  nsAppRunner.cpp \
+  nsConsoleWriter.cpp \
+  nsXREDirProvider.cpp \
+  nsNativeAppSupportBase.cpp \
+  nsAppData.cpp \
+  nsSigHandlers.cpp \
+  $(NULL)
 
 ifdef MOZ_SPLASHSCREEN
 ifeq ($(OS_ARCH),WINCE)
@@ -98,9 +98,6 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS += nsNativeAppSupportOS2.cpp
 else
-ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-CPPSRCS += nsNativeAppSupportBeOS.cpp
-else
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CPPSRCS += nsNativeAppSupportUnix.cpp
 else
@@ -110,7 +107,6 @@ CPPSRCS += nsQAppInstance.cpp
 EXPORTS += nsQAppInstance.h
 else
 CPPSRCS += nsNativeAppSupportDefault.cpp
-endif
 endif
 endif
 endif
@@ -134,7 +130,7 @@ CPPSRCS += nsAndroidStartup.cpp
 DEFINES += -DANDROID_PACKAGE_NAME='"$(ANDROID_PACKAGE_NAME)"'
 endif
 
-SHARED_LIBRARY_LIBS += ../profile/src/$(LIB_PREFIX)profile_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += ../profile/$(LIB_PREFIX)profile_s.$(LIB_SUFFIX)
 
 ifdef MOZ_ENABLE_XREMOTE
 SHARED_LIBRARY_LIBS += $(DEPTH)/widget/src/xremoteclient/$(LIB_PREFIX)xremote_client_s.$(LIB_SUFFIX)
@@ -145,18 +141,18 @@ ifdef MOZ_CRASHREPORTER
 SHARED_LIBRARY_LIBS += $(DEPTH)/toolkit/crashreporter/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX)
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY_LIBS += \
-	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/windows/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/windows/crash_generation/$(LIB_PREFIX)crash_generation_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/windows/$(LIB_PREFIX)breakpad_windows_common_s.$(LIB_SUFFIX)
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/windows/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/windows/crash_generation/$(LIB_PREFIX)crash_generation_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/windows/$(LIB_PREFIX)breakpad_windows_common_s.$(LIB_SUFFIX)
 endif
 
 ifeq ($(OS_ARCH),Darwin)
 SHARED_LIBRARY_LIBS += \
-	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/mac/crash_generation/$(LIB_PREFIX)crash_generation_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/mac/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/mac/$(LIB_PREFIX)breakpad_mac_common_s.$(LIB_SUFFIX)
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/mac/crash_generation/$(LIB_PREFIX)crash_generation_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/mac/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/mac/$(LIB_PREFIX)breakpad_mac_common_s.$(LIB_SUFFIX)
 endif
 
 ifeq ($(OS_ARCH),Linux)
@@ -200,10 +196,10 @@ export::
 endif
 
 LOCAL_INCLUDES += \
-	-I$(srcdir) \
-	-I$(srcdir)/../profile/src \
-	-I$(topsrcdir)/config \
-	$(NULL)
+  -I$(srcdir) \
+  -I$(srcdir)/../profile \
+  -I$(topsrcdir)/config \
+  $(NULL)
 
 CXXFLAGS += $(TK_CFLAGS) $(MOZ_DBUS_CFLAGS) $(MOZ_DBUS_GLIB_CFLAGS)
 
@@ -221,20 +217,20 @@ DEFINES += \
 
 ifdef TARGET_XPCOM_ABI
 DEFINES += \
-	-DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\" \
-	-DTARGET_OS_ABI=\"$(OS_TARGET)_$(TARGET_XPCOM_ABI)\" \
-	$(NULL)
+  -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\" \
+  -DTARGET_OS_ABI=\"$(OS_TARGET)_$(TARGET_XPCOM_ABI)\" \
+  $(NULL)
 endif
 
 DEFINES += -DTOOLKIT_EM_VERSION=\"$(shell $(PERL) $(topsrcdir)/config/milestone.pl --topsrcdir=$(topsrcdir))\"
 
 ifdef WRAP_SYSTEM_INCLUDES
-DEFINES		+= -DWRAP_SYSTEM_INCLUDES
+DEFINES += -DWRAP_SYSTEM_INCLUDES
 endif
 
 ifeq ($(OS_ARCH),Linux)
 ifneq (,$(findstring lib64,$(libdir)))
-DEFINES     += -DHAVE_USR_LIB64_DIR
+DEFINES += -DHAVE_USR_LIB64_DIR
 endif
 endif
 

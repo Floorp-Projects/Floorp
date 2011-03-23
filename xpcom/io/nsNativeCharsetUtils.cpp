@@ -43,9 +43,9 @@
 #include "xpcom-private.h"
 
 //-----------------------------------------------------------------------------
-// XP_MACOSX or XP_BEOS or ANDROID
+// XP_MACOSX or ANDROID
 //-----------------------------------------------------------------------------
-#if defined(XP_BEOS) || defined(XP_MACOSX) || defined(ANDROID)
+#if defined(XP_MACOSX) || defined(ANDROID)
 
 #include "nsAString.h"
 #include "nsReadableUtils.h"

@@ -41,10 +41,35 @@ VPATH      = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public src
+DIRS = public
+
+MODULE = toolkitcomps
+LIBRARY_NAME = appstartup_s
+FORCE_STATIC_LIB = 1
+LIBXUL_LIBRARY = 1
+
+CPPSRCS = \
+  nsAppStartup.cpp \
+  $(NULL)
+
+ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
+CPPSRCS += nsUserInfoOS2.cpp
+else
+ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
+CPPSRCS += nsUserInfoWin.cpp
+else
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+CMMSRCS += nsUserInfoMac.mm
+else
+CPPSRCS += nsUserInfoUnix.cpp
+endif
+endif
+endif
+
+EXTRA_COMPONENTS = nsTryToClose.js nsTryToClose.manifest
 
 ifdef ENABLE_TESTS
-  DIRS += tests
+DIRS += tests
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -90,13 +90,6 @@ private:
 nsresult
 NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
 
-#ifdef MOZ_VIEW_SOURCE
-#define CONTENTDLF_VIEWSOURCE_CATEGORIES \
-    { "Gecko-Content-Viewers", VIEWSOURCE_CONTENT_TYPE, "@mozilla.org/content/document-loader-factory;1" },
-#else
-#define CONTENTDLF_VIEWSOURCE_CATEGORIES
-#endif
-
 #ifdef MOZ_MATHML
 #define CONTENTDLF_MATHML_CATEGORIES \
     { "Gecko-Content-Viewers", APPLICATION_MATHML_XML, "@mozilla.org/content/document-loader-factory;1" },
@@ -135,7 +128,7 @@ NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
     { "Gecko-Content-Viewers", TEXT_RDF, "@mozilla.org/content/document-loader-factory;1" }, \
     { "Gecko-Content-Viewers", TEXT_XUL, "@mozilla.org/content/document-loader-factory;1" }, \
     { "Gecko-Content-Viewers", APPLICATION_CACHED_XUL, "@mozilla.org/content/document-loader-factory;1" }, \
-    CONTENTDLF_VIEWSOURCE_CATEGORIES \
+    { "Gecko-Content-Viewers", VIEWSOURCE_CONTENT_TYPE, "@mozilla.org/content/document-loader-factory;1" }, \
     CONTENTDLF_MATHML_CATEGORIES \
     CONTENTDLF_SVG_CATEGORIES \
     CONTENTDLF_WEBM_CATEGORIES

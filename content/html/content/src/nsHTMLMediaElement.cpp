@@ -1419,15 +1419,10 @@ PRBool nsHTMLMediaElement::ParseAttribute(PRInt32 aNamespaceID,
   };
 
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::src) {
-      static const char* kWhitespace = " \n\r\t\b";
-      aResult.SetTo(nsContentUtils::TrimCharsInSet(kWhitespace, aValue));
-      return PR_TRUE;
-    }
-    else if (aAttribute == nsGkAtoms::loopstart
-            || aAttribute == nsGkAtoms::loopend
-            || aAttribute == nsGkAtoms::start
-            || aAttribute == nsGkAtoms::end) {
+    if (aAttribute == nsGkAtoms::loopstart
+       || aAttribute == nsGkAtoms::loopend
+       || aAttribute == nsGkAtoms::start
+       || aAttribute == nsGkAtoms::end) {
       return aResult.ParseFloatValue(aValue);
     }
     else if (ParseImageAttribute(aAttribute, aValue, aResult)) {

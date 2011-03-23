@@ -633,19 +633,11 @@ static nsINode* GetRootEditableNode(nsPresContext* aPresContext,
                                     nsIContent* aContent)
 {
   if (aContent) {
-    nsIContent* root = nsnull;
-    nsIContent* content = aContent;
-    while (content && content->IntrinsicState().HasState(NS_EVENT_STATE_MOZ_READWRITE)) {
-      root = content;
-      content = content->GetParent();
-    }
-    if (!root) {
-      NS_ASSERTION(content, "We should have a content node here");
-      // See if the document is editable
-      nsIDocument* doc = content->GetCurrentDoc();
-      if (doc && doc->IsEditable()) {
-        return doc;
-      }
+    nsINode* root = nsnull;
+    nsINode* node = aContent;
+    while (node && node->IsEditable()) {
+      root = node;
+      node = node->GetNodeParent();
     }
     return root;
   }
