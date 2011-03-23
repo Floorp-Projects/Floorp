@@ -41,7 +41,6 @@
 #include "LayerManagerD3D10.h"
 #include "ImageLayers.h"
 #include "yuv_convert.h"
-#include "mozilla/Mutex.h"
 
 namespace mozilla {
 namespace layers {
@@ -71,12 +70,8 @@ public:
   void SetDevice(ID3D10Device1 *aDevice) { mDevice = aDevice; }
 
 private:
-  typedef mozilla::Mutex Mutex;
-
   nsRefPtr<Image> mActiveImage;
   nsRefPtr<ID3D10Device1> mDevice;
-
-  Mutex mActiveImageLock;
 };
 
 class THEBES_API ImageLayerD3D10 : public ImageLayer,
