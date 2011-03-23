@@ -7758,7 +7758,7 @@ HWND nsWindow::FindOurWindowAtPoint(const POINT& aPoint)
   return info.mOutHWND;
 }
 
-typedef DWORD (*GetProcessImageFileNameProc)(HANDLE, LPWSTR, DWORD);
+typedef DWORD (WINAPI *GetProcessImageFileNameProc)(HANDLE, LPWSTR, DWORD);
 
 // Determine whether the given HWND is the handle for the Elantech helper
 // window.  The helper window cannot be distinguished based on its

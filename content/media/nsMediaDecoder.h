@@ -47,6 +47,7 @@
 #include "gfxRect.h"
 #include "nsITimer.h"
 #include "ImageLayers.h"
+#include "mozilla/Monitor.h"
 
 class nsHTMLMediaElement;
 class nsMediaStream;
@@ -87,6 +88,7 @@ public:
   typedef mozilla::TimeDuration TimeDuration;
   typedef mozilla::layers::ImageContainer ImageContainer;
   typedef mozilla::layers::Image Image;
+  typedef mozilla::Monitor Monitor;
 
   nsMediaDecoder();
   virtual ~nsMediaDecoder();
@@ -180,11 +182,103 @@ public:
     PRPackedBool mPlaybackRateReliable;
   };
 
+  // Frame decoding/painting related performance counters.
+  // Threadsafe.
+  class FrameStatistics {
+  public:
+    
+    FrameStatistics() :
+        mMonitor("nsMediaDecoder::FrameStats"),
+        mParsedFrames(0),
+        mDecodedFrames(0),
+        mPresentedFrames(0) {}
+
+    // Returns number of frames which have been parsed from the media.
+    // Can be called on any thread.
+    PRUint32 GetParsedFrames() {
+      mozilla::MonitorAutoEnter mon(mMonitor);
+      return mParsedFrames;
+    }
+
+    // Returns the number of parsed frames which have been decoded.
+    // Can be called on any thread.
+    PRUint32 GetDecodedFrames() {
+      mozilla::MonitorAutoEnter mon(mMonitor);
+      return mDecodedFrames;
+    }
+
+    // Returns the number of decoded frames which have been sent to the rendering
+    // pipeline for painting ("presented").
+    // Can be called on any thread.
+    PRUint32 GetPresentedFrames() {
+      mozilla::MonitorAutoEnter mon(mMonitor);
+      return mPresentedFrames;
+    }
+
+    // Increments the parsed and decoded frame counters by the passed in counts.
+    // Can be called on any thread.
+    void NotifyDecodedFrames(PRUint32 aParsed, PRUint32 aDecoded) {
+      if (aParsed == 0 && aDecoded == 0)
+        return;
+      mozilla::MonitorAutoEnter mon(mMonitor);
+      mParsedFrames += aParsed;
+      mDecodedFrames += aDecoded;
+    }
+
+    // Increments the presented frame counters.
+    // Can be called on any thread.
+    void NotifyPresentedFrame() {
+      mozilla::MonitorAutoEnter mon(mMonitor);
+      ++mPresentedFrames;
+    }
+
+  private:
+
+    // Monitor to protect access of playback statistics.
+    Monitor mMonitor;
+
+    // Number of frames parsed and demuxed from media.
+    // Access protected by mStatsMonitor.
+    PRUint32 mParsedFrames;
+
+    // Number of parsed frames which were actually decoded.
+    // Access protected by mStatsMonitor.
+    PRUint32 mDecodedFrames;
+
+    // Number of decoded frames which were actually sent down the rendering
+    // pipeline to be painted ("presented"). Access protected by mStatsMonitor.
+    PRUint32 mPresentedFrames;
+  };
+
+  // Stack based class to assist in notifying the frame statistics of
+  // parsed and decoded frames. Use inside video demux & decode functions
+  // to ensure all parsed and decoded frames are reported on all return paths.
+  class AutoNotifyDecoded {
+  public:
+    AutoNotifyDecoded(nsMediaDecoder* aDecoder, PRUint32& aParsed, PRUint32& aDecoded)
+      : mDecoder(aDecoder), mParsed(aParsed), mDecoded(aDecoded) {}
+    ~AutoNotifyDecoded() {
+      mDecoder->GetFrameStatistics().NotifyDecodedFrames(mParsed, mDecoded);
+    }
+  private:
+    nsMediaDecoder* mDecoder;
+    PRUint32& mParsed;
+    PRUint32& mDecoded;
+  };
+
+  // Time in seconds by which the last painted video frame was late by.
+  // E.g. if the last painted frame should have been painted at time t,
+  // but was actually painted at t+n, this returns n in seconds. Threadsafe.
+  double GetFrameDelay();
+
   // Return statistics. This is used for progress events and other things.
   // This can be called from any thread. It's only a snapshot of the
   // current state, since other threads might be changing the state
   // at any time.
   virtual Statistics GetStatistics() = 0;
+  
+  // Return the frame decode/paint related statistics.
+  FrameStatistics& GetFrameStatistics() { return mFrameStats; }
 
   // Set the duration of the media resource in units of milliseconds.
   // This is called via a channel listener if it can pick up the duration
@@ -272,11 +366,13 @@ public:
   // thread; ImageContainers can be used from any thread.
   ImageContainer* GetImageContainer() { return mImageContainer; }
 
-  // Set the video width, height, pixel aspect ratio, and current image.
-  // Ownership of the image is transferred to the decoder.
+  // Set the video width, height, pixel aspect ratio, current image and
+  // target paint time of the next video frame to be displayed.
+  // Ownership of the image is transferred to the layers subsystem.
   void SetVideoData(const gfxIntSize& aSize,
                     float aPixelAspectRatio,
-                    Image* aImage);
+                    Image* aImage,
+                    TimeStamp aTarget);
 
   // Constructs the time ranges representing what segments of the media
   // are buffered and playable.
@@ -285,11 +381,6 @@ public:
   // Returns PR_TRUE if we can play the entire media through without stopping
   // to buffer, given the current download and playback rates.
   PRBool CanPlayThrough();
-
-  // Called by the nsMediaStream when a read on the stream by the decoder
-  // is about to block due to insuffient data. Decoders may want to pause
-  // playback and go into buffering mode when this is called.
-  virtual void NotifyDataExhausted() = 0;
 
 protected:
 
@@ -305,7 +396,6 @@ protected:
   // Ensures our media stream has been unpinned.
   void UnpinForSeek();
 
-protected:
   // Timer used for updating progress events
   nsCOMPtr<nsITimer> mProgressTimer;
 
@@ -316,6 +406,18 @@ protected:
 
   PRInt32 mRGBWidth;
   PRInt32 mRGBHeight;
+
+  // Counters related to decode and presentation of frames.
+  FrameStatistics mFrameStats;
+
+  // The time at which the current video frame should have been painted.
+  // Access protected by mVideoUpdateLock.
+  TimeStamp mPaintTarget;
+
+  // The delay between the last video frame being presented and it being
+  // painted. This is time elapsed after mPaintTarget until the most recently
+  // painted frame appeared on screen. Access protected by mVideoUpdateLock.
+  TimeDuration mPaintDelay;
 
   nsRefPtr<ImageContainer> mImageContainer;
 
