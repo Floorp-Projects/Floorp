@@ -105,10 +105,4 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSRule, NS_ICSS_RULE_IID)
 
-/* Define global NS_New* functions for rules that don't need their own
-   interfaces here */
-nsresult
-NS_NewCSSCharsetRule(nsICSSRule** aInstancePtrResult,
-                     const nsAString& aEncoding);
-
 #endif /* nsICSSRule_h */
