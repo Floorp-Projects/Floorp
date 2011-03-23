@@ -51,6 +51,7 @@
 #include "jsiter.h"
 #include "jsnum.h"
 #include "jsobj.h"
+#include "jsonparser.h"
 #include "jsprf.h"
 #include "jsscan.h"
 #include "jsstr.h"
@@ -115,25 +116,17 @@ js_json_parse(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *s = NULL;
     Value *argv = vp + 2;
-    AutoValueRooter reviver(cx);
+    Value reviver = UndefinedValue();
 
-    if (!JS_ConvertArguments(cx, argc, Jsvalify(argv), "S / v", &s, reviver.addr()))
+    if (!JS_ConvertArguments(cx, argc, Jsvalify(argv), "S / v", &s, &reviver))
         return JS_FALSE;
 
     JSLinearString *linearStr = s->ensureLinear(cx);
     if (!linearStr)
         return JS_FALSE;
+    JS::Anchor<JSString *> anchor(linearStr);
 
-    JSONParser *jp = js_BeginJSONParse(cx, vp);
-    JSBool ok = jp != NULL;
-    if (ok) {
-        const jschar *chars = linearStr->chars();
-        size_t length = linearStr->length();
-        ok = js_ConsumeJSONText(cx, jp, chars, length);
-        ok &= !!js_FinishJSONParse(cx, jp, reviver.value());
-    }
-
-    return ok;
+    return ParseJSONWithReviver(cx, linearStr->chars(), linearStr->length(), reviver, vp);
 }
 
 JSBool
@@ -768,7 +761,7 @@ static JSBool
 JSONParseError(JSONParser *jp, JSContext *cx)
 {
     if (!jp->suppressErrors)
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE, "syntax error");
     return JS_FALSE;
 }
 
@@ -851,7 +844,7 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, const Value &reviver)
         ok = false;
     } else if (!ok) {
         JSONParseError(jp, cx);
-    } else if (reviver.isObject() && reviver.toObject().isCallable()) {
+    } else if (js_IsCallable(reviver)) {
         ok = Revive(cx, reviver, vp);
     }
 
@@ -863,15 +856,27 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, const Value &reviver)
 namespace js {
 
 JSBool
-ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32 length, const Value &reviver,
+ParseJSONWithReviver(JSContext *cx, const jschar *chars, size_t length, const Value &reviver,
                      Value *vp, DecodingMode decodingMode /* = STRICT */)
 {
+#if USE_OLD_AND_BUSTED_JSON_PARSER
     JSONParser *jp = js_BeginJSONParse(cx, vp);
     if (!jp)
         return false;
     JSBool ok = js_ConsumeJSONText(cx, jp, chars, length, decodingMode);
     ok &= !!js_FinishJSONParse(cx, jp, reviver);
     return ok;
+#else
+    JSONSourceParser parser(cx, chars, length,
+                            decodingMode == STRICT
+                            ? JSONSourceParser::StrictJSON
+                            : JSONSourceParser::LegacyJSON);
+    if (!parser.parse(vp))
+        return false;
+    if (js_IsCallable(reviver))
+        return Revive(cx, reviver, vp);
+    return true;
+#endif
 }
 
 } /* namespace js */

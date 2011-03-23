@@ -66,6 +66,7 @@
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
+#include "jsonparser.h"
 #include "jsopcode.h"
 #include "jsparse.h"
 #include "jsproxy.h"
@@ -1215,6 +1216,7 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
      * will be lost.
      */
     if (length > 2 && chars[0] == '(' && chars[length - 1] == ')') {
+#if USE_OLD_AND_BUSTED_JSON_PARSER
         JSONParser *jp = js_BeginJSONParse(cx, vp, /* suppressErrors = */true);
         if (jp != NULL) {
             /* Run JSON-parser on string inside ( and ). */
@@ -1223,6 +1225,14 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
             if (ok)
                 return true;
         }
+#else
+        JSONSourceParser parser(cx, chars + 1, length - 2, JSONSourceParser::StrictJSON,
+                                JSONSourceParser::NoError);
+        if (!parser.parse(vp))
+            return false;
+        if (!vp->isUndefined())
+            return true;
+#endif
     }
 
     /*
