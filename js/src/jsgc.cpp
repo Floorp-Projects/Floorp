@@ -148,8 +148,8 @@ JS_STATIC_ASSERT(sizeof(Arena<JSXML>)            == 4096);
 # define METER_UPDATE_MAX(maxLval, rval)                                       \
     METER_IF((maxLval) < (rval), (maxLval) = (rval))
 
-namespace js{
-namespace gc{
+namespace js {
+namespace gc {
 
 /* This array should be const, but that doesn't link right under GCC. */
 FinalizeKind slotsToThingKind[] = {
@@ -232,7 +232,8 @@ Arena<T>::mark(T *thing, JSTracer *trc)
 
 #ifdef DEBUG
 bool
-checkArenaListsForThing(JSCompartment *comp, void *thing) {
+checkArenaListsForThing(JSCompartment *comp, void *thing)
+{
     if (comp->arenas[FINALIZE_OBJECT0].arenasContainThing<JSObject>(thing) ||
         comp->arenas[FINALIZE_OBJECT2].arenasContainThing<JSObject_Slots2>(thing) ||
         comp->arenas[FINALIZE_OBJECT4].arenasContainThing<JSObject_Slots4>(thing) ||
@@ -245,15 +246,17 @@ checkArenaListsForThing(JSCompartment *comp, void *thing) {
 #endif
         comp->arenas[FINALIZE_STRING].arenasContainThing<JSString>(thing) ||
         comp->arenas[FINALIZE_EXTERNAL_STRING].arenasContainThing<JSExternalString>(thing) ||
-        comp->arenas[FINALIZE_SHORT_STRING].arenasContainThing<JSShortString>(thing)) {
-            return true;
+        comp->arenas[FINALIZE_SHORT_STRING].arenasContainThing<JSShortString>(thing))
+    {
+        return true;
     }
 
     return false;
 }
 
 bool
-checkArenaListAllUnmarked(JSCompartment *comp) {
+checkArenaListAllUnmarked(JSCompartment *comp)
+{
     for (unsigned i = 0; i < FINALIZE_LIMIT; i++) {
         if (comp->arenas[i].markedThingsInArenaList())
             return false;
@@ -644,44 +647,44 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w, uint32 &thingKind)
     thingKind = aheader->thingKind;
 
     switch (thingKind) {
-        case FINALIZE_OBJECT0:
-            test = MarkCell<JSObject>(cell, trc);
-            break;
-        case FINALIZE_OBJECT2:
-            test = MarkCell<JSObject_Slots2>(cell, trc);
-            break;
-        case FINALIZE_OBJECT4:
-            test = MarkCell<JSObject_Slots4>(cell, trc);
-            break;
-        case FINALIZE_OBJECT8:
-            test = MarkCell<JSObject_Slots8>(cell, trc);
-            break;
-        case FINALIZE_OBJECT12:
-            test = MarkCell<JSObject_Slots12>(cell, trc);
-            break;
-        case FINALIZE_OBJECT16:
-            test = MarkCell<JSObject_Slots16>(cell, trc);
-            break;
-        case FINALIZE_STRING:
-            test = MarkCell<JSString>(cell, trc);
-            break;
-        case FINALIZE_EXTERNAL_STRING:
-            test = MarkCell<JSExternalString>(cell, trc);
-            break;
-        case FINALIZE_SHORT_STRING:
-            test = MarkCell<JSShortString>(cell, trc);
-            break;
-        case FINALIZE_FUNCTION:
-            test = MarkCell<JSFunction>(cell, trc);
-            break;
+      case FINALIZE_OBJECT0:
+        test = MarkCell<JSObject>(cell, trc);
+        break;
+      case FINALIZE_OBJECT2:
+        test = MarkCell<JSObject_Slots2>(cell, trc);
+        break;
+      case FINALIZE_OBJECT4:
+        test = MarkCell<JSObject_Slots4>(cell, trc);
+        break;
+      case FINALIZE_OBJECT8:
+        test = MarkCell<JSObject_Slots8>(cell, trc);
+        break;
+      case FINALIZE_OBJECT12:
+        test = MarkCell<JSObject_Slots12>(cell, trc);
+        break;
+      case FINALIZE_OBJECT16:
+        test = MarkCell<JSObject_Slots16>(cell, trc);
+        break;
+      case FINALIZE_STRING:
+        test = MarkCell<JSString>(cell, trc);
+        break;
+      case FINALIZE_EXTERNAL_STRING:
+        test = MarkCell<JSExternalString>(cell, trc);
+        break;
+      case FINALIZE_SHORT_STRING:
+        test = MarkCell<JSShortString>(cell, trc);
+        break;
+      case FINALIZE_FUNCTION:
+        test = MarkCell<JSFunction>(cell, trc);
+        break;
 #if JS_HAS_XML_SUPPORT
-        case FINALIZE_XML:
-            test = MarkCell<JSXML>(cell, trc);
-            break;
+      case FINALIZE_XML:
+        test = MarkCell<JSXML>(cell, trc);
+        break;
 #endif
-        default:
-            test = CGCT_WRONGTAG;
-            JS_NOT_REACHED("wrong tag");
+      default:
+        test = CGCT_WRONGTAG;
+        JS_NOT_REACHED("wrong tag");
     }
 
     return test;
@@ -762,7 +765,6 @@ MarkThreadDataConservatively(JSTracer *trc, JSThreadData *td)
     MarkRangeConservatively(trc, stackMin, stackEnd);
     MarkRangeConservatively(trc, ctd->registerSnapshot.words,
                             JS_ARRAY_END(ctd->registerSnapshot.words));
-
 }
 
 void
@@ -1026,9 +1028,8 @@ JSRuntime::setGCTriggerFactor(uint32 factor)
     gcTriggerFactor = factor;
     setGCLastBytes(gcLastBytes);
 
-    for (JSCompartment **c = compartments.begin(); c != compartments.end(); ++c) {
+    for (JSCompartment **c = compartments.begin(); c != compartments.end(); ++c)
         (*c)->setGCLastBytes(gcLastBytes);
-    }
 }
 
 void
@@ -1377,43 +1378,43 @@ GCMarker::markDelayedChildren()
 #endif
 
         switch (a->header()->thingKind) {
-            case FINALIZE_OBJECT0:
-                reinterpret_cast<Arena<JSObject> *>(a)->markDelayedChildren(this);
-                break;
-            case FINALIZE_OBJECT2:
-                reinterpret_cast<Arena<JSObject_Slots2> *>(a)->markDelayedChildren(this);
-                break;
-            case FINALIZE_OBJECT4:
-                reinterpret_cast<Arena<JSObject_Slots4> *>(a)->markDelayedChildren(this);
-                break;
-            case FINALIZE_OBJECT8:
-                reinterpret_cast<Arena<JSObject_Slots8> *>(a)->markDelayedChildren(this);
-                break;
-            case FINALIZE_OBJECT12:
-                reinterpret_cast<Arena<JSObject_Slots12> *>(a)->markDelayedChildren(this);
-                break;
-            case FINALIZE_OBJECT16:
-                reinterpret_cast<Arena<JSObject_Slots16> *>(a)->markDelayedChildren(this);
-                break;
-            case FINALIZE_STRING:
-                reinterpret_cast<Arena<JSString> *>(a)->markDelayedChildren(this);
-                break;
-            case FINALIZE_EXTERNAL_STRING:
-                reinterpret_cast<Arena<JSExternalString> *>(a)->markDelayedChildren(this);
-                break;
-            case FINALIZE_SHORT_STRING:
-                JS_ASSERT(false);
-                break;
-            case FINALIZE_FUNCTION:
-                reinterpret_cast<Arena<JSFunction> *>(a)->markDelayedChildren(this);
-                break;
+          case FINALIZE_OBJECT0:
+            reinterpret_cast<Arena<JSObject> *>(a)->markDelayedChildren(this);
+            break;
+          case FINALIZE_OBJECT2:
+            reinterpret_cast<Arena<JSObject_Slots2> *>(a)->markDelayedChildren(this);
+            break;
+          case FINALIZE_OBJECT4:
+            reinterpret_cast<Arena<JSObject_Slots4> *>(a)->markDelayedChildren(this);
+            break;
+          case FINALIZE_OBJECT8:
+            reinterpret_cast<Arena<JSObject_Slots8> *>(a)->markDelayedChildren(this);
+            break;
+          case FINALIZE_OBJECT12:
+            reinterpret_cast<Arena<JSObject_Slots12> *>(a)->markDelayedChildren(this);
+            break;
+          case FINALIZE_OBJECT16:
+            reinterpret_cast<Arena<JSObject_Slots16> *>(a)->markDelayedChildren(this);
+            break;
+          case FINALIZE_STRING:
+            reinterpret_cast<Arena<JSString> *>(a)->markDelayedChildren(this);
+            break;
+          case FINALIZE_EXTERNAL_STRING:
+            reinterpret_cast<Arena<JSExternalString> *>(a)->markDelayedChildren(this);
+            break;
+          case FINALIZE_SHORT_STRING:
+            JS_ASSERT(false);
+            break;
+          case FINALIZE_FUNCTION:
+            reinterpret_cast<Arena<JSFunction> *>(a)->markDelayedChildren(this);
+            break;
 #if JS_HAS_XML_SUPPORT
-            case FINALIZE_XML:
-                reinterpret_cast<Arena<JSXML> *>(a)->markDelayedChildren(this);
-                break;
+          case FINALIZE_XML:
+            reinterpret_cast<Arena<JSXML> *>(a)->markDelayedChildren(this);
+            break;
 #endif
-            default:
-                JS_NOT_REACHED("wrong thingkind");
+          default:
+            JS_NOT_REACHED("wrong thingkind");
         }
     }
     JS_ASSERT(markLaterCount == 0);
@@ -2114,7 +2115,8 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
         JSCompartment *compartment = *read++;
 
         if (!compartment->hold &&
-            (compartment->arenaListsAreEmpty() || gckind == GC_LAST_CONTEXT)) {
+            (compartment->arenaListsAreEmpty() || gckind == GC_LAST_CONTEXT))
+        {
             JS_ASSERT(compartment->freeLists.isEmpty());
             if (callback)
                 (void) callback(cx, compartment, JSCOMPARTMENT_DESTROY);
@@ -2233,7 +2235,7 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
      * cx->gcBackgroundFree is set if we need several mark-and-sweep loops to
      * finish the GC.
      */
-    if(!cx->gcBackgroundFree) {
+    if (!cx->gcBackgroundFree) {
         /* Wait until the sweeping from the previois GC finishes. */
         rt->gcHelperThread.waitBackgroundSweepEnd(rt);
         cx->gcBackgroundFree = &rt->gcHelperThread;
@@ -2359,7 +2361,7 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
      * cx->gcBackgroundFree is set if we need several mark-and-sweep loops to
      * finish the GC.
      */
-    if(!cx->gcBackgroundFree) {
+    if (!cx->gcBackgroundFree) {
         /* Wait until the sweeping from the previois GC finishes. */
         rt->gcHelperThread.waitBackgroundSweepEnd(rt);
         cx->gcBackgroundFree = &rt->gcHelperThread;
