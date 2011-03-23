@@ -157,6 +157,7 @@ CPPSRCS		= \
 		jsnum.cpp \
 		jsobj.cpp \
 		json.cpp \
+		jsonparser.cpp \
 		jsopcode.cpp \
 		jsparse.cpp \
 		jsproxy.cpp \
@@ -218,6 +219,7 @@ INSTALLED_HEADERS = \
 		jsobj.h \
 		jsobjinlines.h \
 		json.h \
+		jsonparser.h \
 		jsopcode.tbl \
 		jsopcode.h \
 		jsopcodeinlines.h \

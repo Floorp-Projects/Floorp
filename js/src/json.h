@@ -137,7 +137,7 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, const js::Value &reviver);
 namespace js {
 
 extern JS_FRIEND_API(JSBool)
-ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32 length, const Value &filter,
+ParseJSONWithReviver(JSContext *cx, const jschar *chars, size_t length, const Value &filter,
                      Value *vp, DecodingMode decodingMode = STRICT);
 
 } /* namespace js */
