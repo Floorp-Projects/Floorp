@@ -48,6 +48,7 @@
 #include "cairo.h"
 
 #include "yuv_convert.h"
+#include "ycbcr_to_rgb565.h"
 
 #include "gfxPlatform.h"
 
@@ -128,6 +129,7 @@ protected:
   nsAutoArrayPtr<PRUint8>              mBuffer;
   nsCountedRef<nsMainThreadSurfaceRef> mSurface;
   gfxIntSize                           mScaleHint;
+  PRInt32                              mStride;
   gfxImageFormat                       mOffscreenFormat;
 };
 
@@ -146,20 +148,19 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
   // YCbCr to RGB conversion rather than on the RGB data when rendered.
   PRBool prescale = mScaleHint.width > 0 && mScaleHint.height > 0;
   if (format == gfxASurface::ImageFormatRGB16_565) {
-#ifndef HAVE_SCALE_YCBCR_TO_RGB565
-    // yuv2rgb16 with scale function not yet available
-    prescale = PR_FALSE;
-#endif
-#ifndef HAVE_YCBCR_TO_RGB565
-    // yuv2rgb16 function not yet available for non-arm
-    format = gfxASurface::ImageFormatRGB24;
-#endif
+    if (have_ycbcr_to_rgb565()) {
+      // yuv2rgb16 with scale function not yet available for NEON
+      prescale = PR_FALSE;
+    } else {
+      // yuv2rgb16 function not yet available for non-NEON
+      format = gfxASurface::ImageFormatRGB24;
+    }
   }
   gfxIntSize size(prescale ? mScaleHint.width : aData.mPicSize.width,
                   prescale ? mScaleHint.height : aData.mPicSize.height);
 
-  int bpp = gfxASurface::BytePerPixelFromFormat(format);
-  mBuffer = new PRUint8[size.width * size.height * bpp];
+  mStride = gfxASurface::FormatStrideForWidth(format, size.width);
+  mBuffer = new PRUint8[size.height * mStride];
   if (!mBuffer) {
     // out of memory
     return;
@@ -195,7 +196,7 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
                              size.height,
                              aData.mYStride,
                              aData.mCbCrStride,
-                             size.width*bpp,
+                             mStride,
                              type,
                              gfx::ROTATE_0,
                              gfx::FILTER_BILINEAR);
@@ -204,6 +205,7 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
     }
   } else { // no prescale
     if (format == gfxASurface::ImageFormatRGB16_565) {
+      NS_ASSERTION(have_ycbcr_to_rgb565(), "Cannot convert YCbCr to RGB565");
       gfx::ConvertYCbCrToRGB565(aData.mYChannel,
                                 aData.mCbChannel,
                                 aData.mCrChannel,
@@ -214,7 +216,7 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
                                 aData.mPicSize.height,
                                 aData.mYStride,
                                 aData.mCbCrStride,
-                                aData.mPicSize.width*bpp,
+                                mStride,
                                 type);
     } else { // format != gfxASurface::ImageFormatRGB16_565
       gfx::ConvertYCbCrToRGB32(aData.mYChannel,
@@ -227,10 +229,11 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
                                aData.mPicSize.height,
                                aData.mYStride,
                                aData.mCbCrStride,
-                               aData.mPicSize.width*bpp,
+                               mStride,
                                type);
     }
   }
+  SetOffscreenFormat(format);
   mSize = size;
 }
 
@@ -259,10 +262,8 @@ BasicPlanarYCbCrImage::GetAsSurface()
   gfxASurface::gfxImageFormat format = GetOffscreenFormat();
 
   nsRefPtr<gfxImageSurface> imgSurface =
-      new gfxImageSurface(mBuffer, mSize,
-                          mSize.width * gfxASurface::BytePerPixelFromFormat(format),
-                          format);
-  if (!imgSurface) {
+      new gfxImageSurface(mBuffer, mSize, mStride, format);
+  if (!imgSurface || imgSurface->CairoStatus() != 0) {
     return nsnull;
   }
 

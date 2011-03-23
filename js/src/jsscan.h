@@ -370,6 +370,7 @@ class TokenStream
 
   private:
     static JSAtom *atomize(JSContext *cx, CharBuffer &cb);
+    bool putIdentInTokenbuf(const jschar *identStart);
 
     /*
      * Enables flags in the associated tokenstream for the object lifetime.
@@ -410,9 +411,7 @@ class TokenStream
             return tt;
         }
 
-        /* If there was a fatal error, keep returning TOK_ERROR. */
-        if (flags & TSF_ERROR)
-            return TOK_ERROR;
+        JS_ASSERT(!(flags & TSF_ERROR));
 
         return getTokenInternal();
     }
@@ -537,6 +536,12 @@ class TokenStream
             return ptr;
         }
 
+        /* Use this with caution! */
+        void setAddressOfNextRawChar(const jschar *a) {
+            JS_ASSERT(a);
+            ptr = a;
+        }
+
 #ifdef DEBUG
         /*
          * Poison the TokenBuf so it cannot be accessed again.  There's one
@@ -608,8 +613,9 @@ class TokenStream
     void                *listenerData;  /* listener 'this' data */
     void                *listenerTSData;/* listener data for this TokenStream */
     CharBuffer          tokenbuf;       /* current token string buffer */
-    bool                maybeEOL[256];  /* probabilistic EOL lookup table */
-    bool                maybeStrSpecial[256];/* speeds up string scanning */
+    int8                oneCharTokens[128];  /* table of one-char tokens */
+    JSPackedBool        maybeEOL[256];       /* probabilistic EOL lookup table */
+    JSPackedBool        maybeStrSpecial[256];/* speeds up string scanning */
     JSVersion           version;        /* (i.e. to identify keywords) */
     bool                xml;            /* see JSOPTION_XML */
 };

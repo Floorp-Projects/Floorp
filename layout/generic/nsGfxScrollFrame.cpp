@@ -195,7 +195,17 @@ nsHTMLScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
       nsRect damage = aDamageRect + nsPoint(aX, aY);
       // This is the damage rect that we're going to pass up to our parent.
       nsRect parentDamage;
-      parentDamage.IntersectRect(damage, mInner.mScrollPort);
+      // If we're using a displayport, we might be displaying an area
+      // different than our scroll port and the damage needs to be
+      // clipped to that instead.
+      nsRect displayport;
+      PRBool usingDisplayport = nsLayoutUtils::GetDisplayPort(GetContent(),
+                                                              &displayport);
+      if (usingDisplayport) {
+        parentDamage.IntersectRect(damage, displayport);
+      } else {
+        parentDamage.IntersectRect(damage, mInner.mScrollPort);
+      }
 
       if (IsScrollingActive()) {
         // This is the damage rect that we're going to pass up and
@@ -1104,7 +1114,17 @@ nsXULScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
     nsRect damage = aDamageRect + nsPoint(aX, aY);
     // This is the damage rect that we're going to pass up to our parent.
     nsRect parentDamage;
-    parentDamage.IntersectRect(damage, mInner.mScrollPort);
+    // If we're using a displayport, we might be displaying an area
+    // different than our scroll port and the damage needs to be
+    // clipped to that instead.
+    nsRect displayport;
+    PRBool usingDisplayport = nsLayoutUtils::GetDisplayPort(GetContent(),
+                                                            &displayport);
+    if (usingDisplayport) {
+      parentDamage.IntersectRect(damage, displayport);
+    } else {
+      parentDamage.IntersectRect(damage, mInner.mScrollPort);
+    }
 
     if (IsScrollingActive()) {
       // This is the damage rect that we're going to pass up and
@@ -1354,33 +1374,36 @@ static ScrollFrameActivityTracker *gScrollFrameActivityTracker = nsnull;
 
 nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
                                              PRBool aIsRoot)
-  : mHScrollbarBox(nsnull),
-    mVScrollbarBox(nsnull),
-    mScrolledFrame(nsnull),
-    mScrollCornerBox(nsnull),
-    mResizerBox(nsnull),
-    mOuter(aOuter),
-    mAsyncScroll(nsnull),
-    mDestination(0, 0),
-    mScrollPosAtLastPaint(0, 0),
-    mRestorePos(-1, -1),
-    mLastPos(-1, -1),
-    mNeverHasVerticalScrollbar(PR_FALSE),
-    mNeverHasHorizontalScrollbar(PR_FALSE),
-    mHasVerticalScrollbar(PR_FALSE), 
-    mHasHorizontalScrollbar(PR_FALSE),
-    mFrameIsUpdatingScrollbar(PR_FALSE),
-    mDidHistoryRestore(PR_FALSE),
-    mIsRoot(aIsRoot),
-    mSupppressScrollbarUpdate(PR_FALSE),
-    mSkippedScrollbarLayout(PR_FALSE),
-    mHadNonInitialReflow(PR_FALSE),
-    mHorizontalOverflow(PR_FALSE),
-    mVerticalOverflow(PR_FALSE),
-    mPostedReflowCallback(PR_FALSE),
-    mMayHaveDirtyFixedChildren(PR_FALSE),
-    mUpdateScrollbarAttributes(PR_FALSE),
-    mCollapsedResizer(PR_FALSE)
+  : mHScrollbarBox(nsnull)
+  , mVScrollbarBox(nsnull)
+  , mScrolledFrame(nsnull)
+  , mScrollCornerBox(nsnull)
+  , mResizerBox(nsnull)
+  , mOuter(aOuter)
+  , mAsyncScroll(nsnull)
+  , mDestination(0, 0)
+  , mScrollPosAtLastPaint(0, 0)
+  , mRestorePos(-1, -1)
+  , mLastPos(-1, -1)
+  , mNeverHasVerticalScrollbar(PR_FALSE)
+  , mNeverHasHorizontalScrollbar(PR_FALSE)
+  , mHasVerticalScrollbar(PR_FALSE)
+  , mHasHorizontalScrollbar(PR_FALSE)
+  , mFrameIsUpdatingScrollbar(PR_FALSE)
+  , mDidHistoryRestore(PR_FALSE)
+  , mIsRoot(aIsRoot)
+  , mSupppressScrollbarUpdate(PR_FALSE)
+  , mSkippedScrollbarLayout(PR_FALSE)
+  , mHadNonInitialReflow(PR_FALSE)
+  , mHorizontalOverflow(PR_FALSE)
+  , mVerticalOverflow(PR_FALSE)
+  , mPostedReflowCallback(PR_FALSE)
+  , mMayHaveDirtyFixedChildren(PR_FALSE)
+  , mUpdateScrollbarAttributes(PR_FALSE)
+  , mCollapsedResizer(PR_FALSE)
+#ifdef MOZ_IPC
+  , mShouldBuildLayer(PR_FALSE)
+#endif
 {
   // lookup if we're allowed to overlap the content from the look&feel object
   PRBool canOverlap;
@@ -1694,7 +1717,13 @@ void nsGfxScrollFrameInner::ScrollVisual()
   if (canScrollWithBlitting) {
     MarkActive();
   }
-  mOuter->InvalidateWithFlags(mScrollPort, flags);
+
+  nsRect invalidateRect, displayport;
+  invalidateRect =
+    (nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayport)) ?
+    displayport : mScrollPort;
+
+  mOuter->InvalidateWithFlags(invalidateRect, flags);
 
   if (flags & nsIFrame::INVALIDATE_NO_THEBES_LAYERS) {
     nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(mOuter);
@@ -1819,6 +1848,16 @@ nsGfxScrollFrameInner::AppendScrollPartsTo(nsDisplayListBuilder*          aBuild
   return rv;
 }
 
+PRBool
+nsGfxScrollFrameInner::ShouldBuildLayer() const
+{
+#ifdef MOZ_IPC
+  return mShouldBuildLayer;
+#else
+  return PR_FALSE;
+#endif
+}
+
 nsresult
 nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                         const nsRect&           aDirtyRect,
@@ -1863,10 +1902,6 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                         scrollParts, createLayersForScrollbars);
   }
 
-  nsIPresShell* presShell = mOuter->PresContext()->GetPresShell();
-  nsRect scrollPort = (mIsRoot && presShell->UsingDisplayPort()) ?
-                      (presShell->GetDisplayPort()) : mScrollPort;
-
   // Overflow clipping can never clip frames outside our subtree, so there
   // is no need to worry about whether we are a moving frame that might clip
   // non-moving frames.
@@ -1876,18 +1911,62 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // had dirty rects saved for them by their parent frames calling
   // MarkOutOfFlowChildrenForDisplayList, so it's safe to restrict our
   // dirty rect here.
-  dirtyRect.IntersectRect(aDirtyRect, scrollPort);
+  dirtyRect.IntersectRect(aDirtyRect, mScrollPort);
+
+  // Override the dirty rectangle if the displayport has been set.
+  nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &dirtyRect);
 
   nsDisplayListCollection set;
-  rv = mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
+
+  nsPresContext* presContext = mOuter->PresContext();
+
+#ifdef MOZ_IPC
+  // Since making new layers is expensive, only use nsDisplayScrollLayer
+  // if the area is scrollable.
+  //
+  // Scroll frames can be generated with a scroll range that is 0, 0.
+  // Furthermore, it is not worth the memory tradeoff to allow asynchronous
+  // scrolling of small scroll frames. We use an arbitrary minimum scroll
+  // range of 20 pixels to eliminate many gfx scroll frames from becoming a
+  // layer.
+  //
+  PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
+  nsRect scrollRange = GetScrollRange();
+  ScrollbarStyles styles = GetScrollbarStylesFromFrame();
+  mShouldBuildLayer =
+     (XRE_GetProcessType() == GeckoProcessType_Content &&
+     (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN ||
+      styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN) &&
+     (scrollRange.width >= NSIntPixelsToAppUnits(20, appUnitsPerDevPixel) ||
+      scrollRange.height >= NSIntPixelsToAppUnits(20, appUnitsPerDevPixel))) &&
+     (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument());
+
+  if (ShouldBuildLayer()) {
+    // Note that using StackingContext breaks z order, so the resulting
+    // rendering can be incorrect for weird edge cases!
+
+    nsDisplayList list;
+    rv = mScrolledFrame->BuildDisplayListForStackingContext(
+      aBuilder, dirtyRect + mOuter->GetOffsetTo(mScrolledFrame), &list);
+
+    nsDisplayScrollLayer* layerItem = new (aBuilder) nsDisplayScrollLayer(
+      aBuilder, &list, mScrolledFrame, mOuter);
+    set.Content()->AppendNewToTop(layerItem);
+  } else
+#endif
+  {
+    rv = mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
+  }
+
   NS_ENSURE_SUCCESS(rv, rv);
   nsRect clip;
-  clip = scrollPort + aBuilder->ToReferenceFrame(mOuter);
+  clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
 
   nscoord radii[8];
   // Our override of GetBorderRadii ensures we never have a radius at
   // the corners where we have a scrollbar.
   mOuter->GetPaddingBoxBorderRadii(radii);
+
   // mScrolledFrame may have given us a background, e.g., the scrolled canvas
   // frame below the viewport. If so, we want it to be clipped. We also want
   // to end up on our BorderBackground list.
@@ -1959,6 +2038,11 @@ nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
                        result.mHorizontal);
       HandleScrollPref(scrollable, nsIScrollable::ScrollOrientation_Y,
                        result.mVertical);
+      // XXX EVIL COMPILER BUG BE CAREFUL WHEN CHANGING
+      //     There is a bug in the Android compiler :(
+      //     It seems that the compiler optimizes something out and uses
+      //     a bad value for result if we don't directly return here.
+      return result;
     }
   } else {
     const nsStyleDisplay *disp = mOuter->GetStyleDisplay();
@@ -1966,11 +2050,6 @@ nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
     result.mVertical = disp->mOverflowY;
   }
 
-  NS_ASSERTION(result.mHorizontal != NS_STYLE_OVERFLOW_VISIBLE &&
-               result.mHorizontal != NS_STYLE_OVERFLOW_CLIP &&
-               result.mVertical != NS_STYLE_OVERFLOW_VISIBLE &&
-               result.mVertical != NS_STYLE_OVERFLOW_CLIP,
-               "scrollbars should not have been created");
   return result;
 }
 

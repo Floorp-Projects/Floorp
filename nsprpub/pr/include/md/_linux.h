@@ -273,7 +273,8 @@ static inline PRInt32 _MD_ATOMIC_SET(PRInt32 *ptr, PRInt32 nv)
 #else
 #define _PR_NO_LARGE_FILES
 #endif
-#if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1)
+#if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1) \
+    || defined(ANDROID)
 #define _PR_INET6
 #define _PR_HAVE_INET_NTOP
 #define _PR_HAVE_GETHOSTBYNAME2
@@ -284,6 +285,7 @@ static inline PRInt32 _MD_ATOMIC_SET(PRInt32 *ptr, PRInt32 nv)
 #define _PR_HAVE_SYSV_SEMAPHORES
 #define PR_HAVE_SYSV_NAMED_SHARED_MEMORY
 #endif
+/* Android has gethostbyname_r but not gethostbyaddr_r or gethostbyname2_r. */
 #if (__GLIBC__ >= 2) && defined(_PR_PTHREADS)
 #define _PR_HAVE_GETHOST_R
 #define _PR_HAVE_GETHOST_R_INT

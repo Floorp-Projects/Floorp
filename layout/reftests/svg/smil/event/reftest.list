@@ -5,7 +5,7 @@
 == event-begin-offset-2.svg green-box-ref.svg
 == event-begin-timeevent-1.svg green-box-ref.svg
 == event-begin-timeevent-2.svg green-box-ref.svg
-== event-begin-timeevent-3.svg green-box-ref.svg
+random-if(Android) == event-begin-timeevent-3.svg green-box-ref.svg
 == event-begin-load-1.svg green-box-ref.svg
 == event-bubble-1.svg green-box-ref.svg
 == event-custom-1.svg green-box-ref.svg

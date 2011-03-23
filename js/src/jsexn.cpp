@@ -343,7 +343,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
             elem->argc = 0;
         } else {
             elem->funName = fp->fun()->atom
-                            ? ATOM_TO_STRING(fp->fun()->atom)
+                            ? fp->fun()->atom
                             : cx->runtime->emptyString;
             elem->argc = fp->numActualArgs();
             fp->forEachCanonicalActualArg(CopyTo(Valueify(values)));
@@ -473,7 +473,7 @@ exn_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         str = JSID_TO_STRING(id);
 
         atom = cx->runtime->atomState.messageAtom;
-        if (str == ATOM_TO_STRING(atom)) {
+        if (str == atom) {
             prop = js_message_str;
 
             /*
@@ -489,21 +489,21 @@ exn_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         }
 
         atom = cx->runtime->atomState.fileNameAtom;
-        if (str == ATOM_TO_STRING(atom)) {
+        if (str == atom) {
             prop = js_fileName_str;
             v = STRING_TO_JSVAL(priv->filename);
             goto define;
         }
 
         atom = cx->runtime->atomState.lineNumberAtom;
-        if (str == ATOM_TO_STRING(atom)) {
+        if (str == atom) {
             prop = js_lineNumber_str;
             v = INT_TO_JSVAL(priv->lineno);
             goto define;
         }
 
         atom = cx->runtime->atomState.stackAtom;
-        if (str == ATOM_TO_STRING(atom)) {
+        if (str == atom) {
             stack = StackTraceToString(cx, priv);
             if (!stack)
                 return false;
@@ -1286,9 +1286,10 @@ js_ReportUncaughtException(JSContext *cx)
         report.filename = filename.ptr();
         report.lineno = (uintN) lineno;
         if (JSVAL_IS_STRING(roots[2])) {
-            report.ucmessage = js_GetStringChars(cx, JSVAL_TO_STRING(roots[2]));
-            if (!report.ucmessage)
+            JSFixedString *fixed = JSVAL_TO_STRING(roots[2])->ensureFixed(cx);
+            if (!fixed)
                 return false;
+            report.ucmessage = fixed->chars();
         }
     }
 

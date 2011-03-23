@@ -611,8 +611,8 @@ js_IntToString(JSContext *cx, int32 si)
 {
     uint32 ui;
     if (si >= 0) {
-        if (si < INT_STRING_LIMIT)
-            return JSString::intString(si);
+        if (JSAtom::hasIntStatic(si))
+            return &JSAtom::intStatic(si);
         ui = si;
     } else {
         ui = uint32(-si);
@@ -627,10 +627,10 @@ js_IntToString(JSContext *cx, int32 si)
     if (!str)
         return NULL;
 
-    /* +1, since MAX_SHORT_STRING_LENGTH does not count the null char. */
-    JS_STATIC_ASSERT(JSShortString::MAX_SHORT_STRING_LENGTH + 1 >= sizeof("-2147483648"));
+    /* +1, since MAX_LENGTH does not count the null char. */
+    JS_STATIC_ASSERT(JSShortString::MAX_LENGTH + 1 >= sizeof("-2147483648"));
 
-    jschar *end = str->getInlineStorageBeforeInit() + JSShortString::MAX_SHORT_STRING_LENGTH;
+    jschar *end = str->inlineStorageBeforeInit() + JSShortString::MAX_SHORT_LENGTH;
     jschar *cp = end;
     *cp = 0;
 
@@ -645,9 +645,8 @@ js_IntToString(JSContext *cx, int32 si)
 
     str->initAtOffsetInBuffer(cp, end - cp);
 
-    JSString *ret = str->header();
-    c->dtoaCache.cache(10, si, ret);
-    return ret;
+    c->dtoaCache.cache(10, si, str);
+    return str;
 }
 
 /* Returns a non-NULL pointer to inside cbuf.  */
@@ -1169,7 +1168,6 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
 {
     ToCStringBuf cbuf;
     char *numStr;
-    JSString *s;
 
     /*
      * Caller is responsible for error reporting. When called from trace,
@@ -1183,21 +1181,23 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
 
     int32_t i;
     if (JSDOUBLE_IS_INT32(d, &i)) {
-        if (base == 10 && jsuint(i) < INT_STRING_LIMIT)
-            return JSString::intString(i);
+        if (base == 10 && JSAtom::hasIntStatic(i))
+            return &JSAtom::intStatic(i);
         if (jsuint(i) < jsuint(base)) {
             if (i < 10)
-                return JSString::intString(i);
-            return JSString::unitString(jschar('a' + i - 10));
+                return &JSAtom::intStatic(i);
+            jschar c = 'a' + i - 10;
+            JS_ASSERT(JSAtom::hasUnitStatic(c));
+            return &JSAtom::unitStatic(c);
         }
 
-        if (JSString *str = c->dtoaCache.lookup(base, d))
+        if (JSFlatString *str = c->dtoaCache.lookup(base, d))
             return str;
 
         numStr = IntToCString(&cbuf, i, base);
         JS_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf && numStr < cbuf.sbuf + cbuf.sbufSize);
     } else {
-        if (JSString *str = c->dtoaCache.lookup(base, d))
+        if (JSFlatString *str = c->dtoaCache.lookup(base, d))
             return str;
 
         numStr = FracNumberToCString(cx, &cbuf, d, base);
@@ -1211,8 +1211,7 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
                      cbuf.dbuf && cbuf.dbuf == numStr);
     }
 
-    s = js_NewStringCopyZ(cx, numStr);
-
+    JSFixedString *s = js_NewStringCopyZ(cx, numStr);
     c->dtoaCache.cache(base, d, s);
     return s;
 }
@@ -1225,11 +1224,11 @@ js_NumberToString(JSContext *cx, jsdouble d)
 
 namespace js {
 
-JSFlatString *
+JSFixedString *
 NumberToString(JSContext *cx, jsdouble d)
 {
     if (JSString *str = js_NumberToStringWithBase(cx, d, 10))
-        return str->assertIsFlat();
+        return &str->asFixed();
     return NULL;
 }
 

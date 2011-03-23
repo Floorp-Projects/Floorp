@@ -47,6 +47,8 @@
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
 
+#include "gfxCrashReporterUtils.h"
+
 // from GL/osmesa.h. We don't include that file so as to avoid having a build-time dependency on OSMesa.
 #define OSMESA_RGBA     GL_RGBA
 #define OSMESA_BGRA     0x1

@@ -32,6 +32,7 @@ void main()
 <script>
 description('Verifies that GL viewport does not change when canvas is resized');
 
+var err;
 var gl = initWebGL("example", "vshader", "fshader", [ "g_Position" ], [ 0, 0, 1, 1 ], 1);
 
 var vertices = new Float32Array([
@@ -69,32 +70,42 @@ if (buf[0] != 255 ||
 
 if (passed) {
   // Now resize the canvas
+  glErrorShouldBe(gl, gl.NO_ERROR, "No GL errors before resizing the canvas");
   var canvas = document.getElementById("example");
   canvas.width = 8;
   canvas.height = 8;
-  // Do another render
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  gl.drawArrays(gl.TRIANGLES, 0, 6);
-  // This time, because we did not change the viewport, it should
-  // still be (0, 0, 4, 4), so only the lower-left quadrant should
-  // have been filled.
-  var buf = new Uint8Array(1 * 1 * 4);
-  gl.readPixels(6, 6, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, buf);
-  var passed = true;
-  if (buf[0] != 0 ||
-      buf[1] != 0 ||
-      buf[2] != 255 ||
-      buf[3] != 255) {
-    testFailed("Pixel at (6, 6) should have been (0, 0, 255, 255), " +
-               "was (" + buf[0] + ", " + buf[1] + ", " + buf[2] + ", " + buf[3] + ")");
-    passed = false;
+  err = gl.getError();
+  // Some implementations might lost the context when resizing
+  if (err == gl.CONTEXT_LOST_WEBGL) {
+    testPassed("canvas lost context on resize");
+  } else {
+	shouldBe("err", "gl.NO_ERROR");
+    // Do another render
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    // This time, because we did not change the viewport, it should
+    // still be (0, 0, 4, 4), so only the lower-left quadrant should
+    // have been filled.
+    var buf = new Uint8Array(1 * 1 * 4);
+    gl.readPixels(6, 6, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+    var passed = true;
+    if (buf[0] != 0 ||
+        buf[1] != 0 ||
+        buf[2] != 255 ||
+        buf[3] != 255) {
+      testFailed("Pixel at (6, 6) should have been (0, 0, 255, 255), " +
+                 "was (" + buf[0] + ", " + buf[1] + ", " + buf[2] + ", " + buf[3] + ")");
+      passed = false;
+    }
+    if (passed) {
+      testPassed("Viewport correctly did not change size during canvas resize");
+    }
   }
 }
 
-if (passed)
-    testPassed("Viewport correctly did not change size during canvas resize");
 successfullyParsed = true;
 </script>
 <script src="../resources/js-test-post.js"></script>
 </body>
 </html>
+

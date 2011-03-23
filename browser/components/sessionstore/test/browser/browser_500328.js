@@ -77,8 +77,8 @@ function checkState(tab) {
       ok(!doc.getElementById("new-elem"), "new-elem should be removed.");
 
       // Clean up after ourselves and finish the test.
-      tab.linkedBrowser.removeEventListener("popstate", arguments.callee, false);
-      tab.linkedBrowser.removeEventListener("load", arguments.callee, false);
+      tab.linkedBrowser.removeEventListener("popstate", arguments.callee, true);
+      tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
       gBrowser.removeTab(tab);
       finish();
     }

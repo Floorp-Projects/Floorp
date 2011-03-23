@@ -100,14 +100,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607584
       mEditor: null
   };
 
-  var progress;
+  var progress, progressListener;
 
   function runTest() {
     var newEditorElement = document.getElementById("editor");
     newEditorElement.makeEditable("html", true);
     var docShell = newEditorElement.boxObject.QueryInterface(Components.interfaces.nsIEditorBoxObject).docShell;
     progress = docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);
-    var progressListener = new EditorContentListener(newEditorElement);
+    progressListener = new EditorContentListener(newEditorElement);
     progress.addProgressListener(progressListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
     newEditorElement.setAttribute("src", "data:text/html,");
   }

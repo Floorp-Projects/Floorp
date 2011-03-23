@@ -1732,11 +1732,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_DOUBLE)
 
           BEGIN_CASE(JSOP_STRING)
-          {
-            JSAtom *atom = script->getAtom(fullAtomIndex(PC));
-            JSString *str = ATOM_TO_STRING(atom);
-            frame.push(Value(StringValue(str)));
-          }
+            frame.push(StringValue(script->getAtom(fullAtomIndex(PC))));
           END_CASE(JSOP_STRING)
 
           BEGIN_CASE(JSOP_ZERO)

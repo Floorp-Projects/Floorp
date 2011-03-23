@@ -40,8 +40,10 @@
 #include "nsMemory.h"
 
 #include "gfxASurface.h"
-
+#include "gfxContext.h"
 #include "gfxImageSurface.h"
+
+#include "nsRect.h"
 
 #include "cairo.h"
 
@@ -371,6 +373,13 @@ gfxASurface::CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit)
     return PR_TRUE;
 }
 
+/* static */
+PRInt32
+gfxASurface::FormatStrideForWidth(gfxImageFormat format, PRInt32 width)
+{
+    return cairo_format_stride_for_width((cairo_format_t)format, (int)width);
+}
+
 nsresult
 gfxASurface::BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName)
 {
@@ -472,6 +481,24 @@ gfxASurface::BytePerPixelFromFormat(gfxImageFormat format)
             NS_WARNING("Unknown byte per pixel value for Image format");
     }
     return 0;
+}
+
+void
+gfxASurface::MovePixels(const nsIntRect& aSourceRect,
+                        const nsIntPoint& aDestTopLeft)
+{
+    gfxIntSize size = GetSize();
+    nsIntRect dest(aDestTopLeft, aSourceRect.Size());
+    // Assume that our cairo backend already knows how to properly
+    // self-copy.  gfxASurface subtypes whose backend can't self-copy
+    // need their own implementations, or their backends need to be
+    // fixed.
+    nsRefPtr<gfxContext> ctx = new gfxContext(this);
+    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    nsIntPoint srcOrigin = dest.TopLeft() - aSourceRect.TopLeft();
+    ctx->SetSource(this, gfxPoint(srcOrigin.x, srcOrigin.y));
+    ctx->Rectangle(gfxRect(dest.x, dest.y, dest.width, dest.height));
+    ctx->Fill();
 }
 
 /** Memory reporting **/

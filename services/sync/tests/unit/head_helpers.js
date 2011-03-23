@@ -187,15 +187,22 @@ function FakeCryptoService() {
   delete Svc.Crypto;  // get rid of the getter first
   Svc.Crypto = this;
   Utils.sha256HMAC = this.sha256HMAC;
+
+  Cu.import("resource://services-sync/record.js");
+  CryptoWrapper.prototype.ciphertextHMAC = this.ciphertextHMAC;
 }
 FakeCryptoService.prototype = {
 
-  sha256HMAC: function(message, key) {
+  sha256HMAC: function Utils_sha256HMAC(message, hasher) {
      message = message.substr(0, 64);
      while (message.length < 64) {
        message += " ";
      }
      return message;
+  },
+
+  ciphertextHMAC: function CryptoWrapper_ciphertextHMAC(keyBundle) {
+    return Utils.sha256HMAC(this.ciphertext);
   },
 
   encrypt: function(aClearText, aSymmetricKey, aIV) {

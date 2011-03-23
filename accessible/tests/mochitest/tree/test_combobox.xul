@@ -6,7 +6,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="Accessible XUL menulist and textbox @autocomplete hierarchy tests">
 
-  <script type="application/javascript" 
+  <script type="application/javascript"
           src="chrome://mochikit/content/MochiKit/packed.js" />
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
@@ -33,15 +33,18 @@
             role: ROLE_COMBOBOX_LIST,
             children: [
               {
-                role: ROLE_COMBOBOX_OPTION
+                role: ROLE_COMBOBOX_OPTION,
+                children: []
               },
               {
-                role: ROLE_COMBOBOX_OPTION
+                role: ROLE_COMBOBOX_OPTION,
+                children: []
               }
             ]
           }
         ]
       };
+
       testAccessibleTree("menulist", accTree);
 
       //////////////////////////////////////////////////////////////////////////
@@ -52,7 +55,9 @@
         children: [
           {
             role: ROLE_ENTRY,
-            children: [ ] // no text leaf accessible for text node
+            children: [
+              // no text leaf accessible for text node
+            ]
           },
           {
             role: ROLE_COMBOBOX_LIST, // context menu
@@ -60,15 +65,18 @@
           },
           {
             role: ROLE_PUSHBUTTON, // dropmarker
+            children: []
           },
           {
             role: ROLE_COMBOBOX_LIST, // option list
             children: [
               {
-                role: ROLE_COMBOBOX_OPTION
+                role: ROLE_COMBOBOX_OPTION,
+                children: []
               },
               {
-                role: ROLE_COMBOBOX_OPTION
+                role: ROLE_COMBOBOX_OPTION,
+                children: []
               }
             ]
           }
@@ -84,49 +92,138 @@
       // textbox@type=autocomplete #1 (history)
 
       accTree = {
+        // textbox
         role: ROLE_AUTOCOMPLETE,
         children: [
           {
+            // html:input
             role: ROLE_ENTRY,
             children: [
               {
+                // #text
                 role: ROLE_TEXT_LEAF,
-                name: "http://mochi.test:8888/redirect-a11y.html"
+                name: "http://mochi.test:8888/redirect-a11y.html",
+                children: []
               }
             ]
           },
           {
+            // xul:menupopup
             role: ROLE_COMBOBOX_LIST, // context menu popup
-            children: [ ]
+            children: []
           }
         ]
       };
+
+      // XPFE and Toolkit autocomplete widgets differ.
+      var ac1h = document.getElementById("autocomplete");
+      if ("clearResults" in ac1h) {
+        SimpleTest.ok(true, "Testing (Old) XPFE autocomplete widget. (ac1h)");
+
+        // Popup is always created.
+        accTree.children.push(
+          {
+            // xul:panel
+            role: ROLE_COMBOBOX_LIST,
+            children: [
+              {
+                // xul:tree
+                role: ROLE_TABLE,
+                children: [
+                  {
+                    // xul:treecols
+                    role: ROLE_LIST,
+                    children: [
+                      {
+                        // xul:treecol
+                        role: ROLE_COLUMNHEADER,
+                        children: []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+          );
+      } else {
+        SimpleTest.ok(true, "Testing (New) Toolkit autocomplete widget. (ac1h)");
+
+        // Popup is lazily created, so not present in this case.
+      }
+
       testAccessibleTree("autocomplete", accTree);
 
       //////////////////////////////////////////////////////////////////////////
       // textbox@type=autocomplete #2 (child menupoup)
 
       accTree = {
+        // textbox
         role: ROLE_AUTOCOMPLETE,
         children: [
           {
+            // menupopup
             role: ROLE_COMBOBOX_LIST, // autocomplete menu popup
             children: [
               {
-                role: ROLE_COMBOBOX_OPTION
+                // menuitem
+                role: ROLE_COMBOBOX_OPTION,
+                children: []
               }
             ]
           },
           {
+            // html:input
             role: ROLE_ENTRY,
-            children: [ ] // no text leaf accessible for text node
+            children: [
+              // no text leaf accessible for text node
+            ]
           },
           {
+            // xul:menupopup
             role: ROLE_COMBOBOX_LIST, // context menu popup
-            children: [ ]
+            children: []
           }
         ]
       };
+
+      // XPFE and Toolkit autocomplete widgets differ.
+      var ac2cmp = document.getElementById("autocomplete2");
+      if ("clearResults" in ac2cmp) {
+        SimpleTest.ok(true, "Testing (Old) XPFE autocomplete widget. (ac2mp)");
+
+        // Popup is always created.
+        accTree.children.push(
+          {
+            // xul:panel
+            role: ROLE_COMBOBOX_LIST,
+            children: [
+              {
+                // xul:tree
+                role: ROLE_TABLE,
+                children: [
+                  {
+                    // xul:treecols
+                    role: ROLE_LIST,
+                    children: [
+                      {
+                        // xul:treecol
+                        role: ROLE_COLUMNHEADER,
+                        children: []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+          );
+      } else {
+        SimpleTest.ok(true, "Testing (New) Toolkit autocomplete widget. (ac2mp)");
+
+        // Popup is lazily created, so not present in this case.
+      }
+
       testAccessibleTree("autocomplete2", accTree);
 
       SimpleTest.finish()
@@ -184,4 +281,3 @@
   </hbox>
 
 </window>
-

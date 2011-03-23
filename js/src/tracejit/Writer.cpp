@@ -249,9 +249,9 @@ couldBeObjectOrString(LIns *ins)
 #endif
     } else if (ins->isop(LIR_addp) &&
                ((ins->oprnd1()->isImmP() &&
-                 (void *)ins->oprnd1()->immP() == JSString::unitStringTable) ||
+                 (void *)ins->oprnd1()->immP() == JSAtom::unitStaticTable) ||
                 (ins->oprnd2()->isImmP() &&
-                 (void *)ins->oprnd2()->immP() == JSString::unitStringTable)))
+                 (void *)ins->oprnd2()->immP() == JSAtom::unitStaticTable)))
     {
         // (String only)
         // ins = addp ..., JSString::unitStringTable

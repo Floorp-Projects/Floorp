@@ -4466,7 +4466,7 @@ TypeCompartment::sweep(JSContext *cx)
             for (unsigned i = 0; !remove && i < key.nslots; i++) {
                 if (JSID_IS_STRING(key.ids[i])) {
                     JSString *str = JSID_TO_STRING(key.ids[i]);
-                    if (!JSString::isStatic(str) && !str->asCell()->isMarked())
+                    if (!str->isStaticAtom() && !str->isMarked())
                         remove = true;
                 }
                 if (TypeIsObject(entry.types[i]) && !((TypeObject *)entry.types[i])->marked)

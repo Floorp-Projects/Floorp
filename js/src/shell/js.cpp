@@ -203,6 +203,10 @@ js::workers::ThreadPool *gWorkerThreadPool = NULL;
 static JSBool reportWarnings = JS_TRUE;
 static JSBool compileOnly = JS_FALSE;
 
+#ifdef DEBUG
+static JSBool OOM_printAllocationCount = JS_FALSE;
+#endif
+
 typedef enum JSShellErrNum {
 #define MSG_DEF(name, number, count, exception, format) \
     name = number,
@@ -616,6 +620,11 @@ usage(void)
                       "                Note: this option switches to non-interactive mode.\n"
                       "  -S <size>     Set the maximum size of the stack to <size> bytes\n"
                       "                Default is %u.\n", DEFAULT_MAX_STACK_SIZE);
+#ifdef DEBUG
+    fprintf(gErrFile, "  -A <max>      After <max> memory allocations, act like we're OOM.\n");
+    fprintf(gErrFile, "  -O <max>      At exit, print the number of memory allocations in \n"
+                      "                the program.\n");
+#endif
 #ifdef JS_THREADSAFE
     fprintf(gErrFile, "  -g <n>        Sleep for <n> seconds before starting (default: 0)\n");
 #endif
@@ -722,6 +731,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
           case 'T':
 #endif
           case 'g':
+          case 'A':
             ++i;
             break;
           default:;
@@ -774,7 +784,16 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             JS_SetGCZeal(cx, !!(atoi(argv[i])));
             break;
 #endif
+#ifdef DEBUG
+        case 'A':
+            /* Handled at the very start of main(). */
+            ++i; /* skip the argument */
+            break;
 
+        case 'O':
+            OOM_printAllocationCount = JS_TRUE;
+            break;
+#endif
         case 'w':
             reportWarnings = JS_TRUE;
             break;
@@ -2049,9 +2068,8 @@ SrcNotes(JSContext *cx, JSScript *script)
           case SRC_CONT2LABEL:
             index = js_GetSrcNoteOffset(sn, 0);
             JS_GET_SCRIPT_ATOM(script, NULL, index, atom);
-            str = ATOM_TO_STRING(atom);
             fprintf(gOutFile, " atom %u (", index);
-            JS_FileEscapedString(gOutFile, str, 0);
+            JS_FileEscapedString(gOutFile, atom, 0);
             putc(')', gOutFile);
             break;
           case SRC_FUNCDEF: {
@@ -4816,7 +4834,7 @@ Help(JSContext *cx, uintN argc, jsval *vp)
             type = JS_TypeOfValue(cx, argv[i]);
             if (type == JSTYPE_FUNCTION) {
                 fun = JS_ValueToFunction(cx, argv[i]);
-                str = fun->atom ? ATOM_TO_STRING(fun->atom) : NULL;
+                str = fun->atom;
             } else if (type == JSTYPE_STRING) {
                 str = JSVAL_TO_STRING(argv[i]);
             } else {
@@ -5315,7 +5333,7 @@ Exec(JSContext *cx, uintN argc, jsval *vp)
     nargv[0] = name;
     jsval *argv = JS_ARGV(cx, vp);
     for (i = 0; i < nargc; i++) {
-        str = (i == 0) ? ATOM_TO_STRING(fun->atom) : JS_ValueToString(cx, argv[i-1]);
+        str = (i == 0) ? fun->atom : JS_ValueToString(cx, argv[i-1]);
         if (!str) {
             ok = false;
             goto done;
@@ -5788,6 +5806,20 @@ MaybeOverrideOutFileFromEnv(const char* const envVar,
 int
 main(int argc, char **argv, char **envp)
 {
+#ifdef DEBUG
+    /* Check the allocation count first, or else we'll miss allocations. */
+    for (int i = 0; i < argc; i++)
+    {
+      if (strlen(argv[i]) == 2 && argv[i][0] == '-' && argv[i][1] == 'A')
+      {
+        if (++i == argc)
+          return usage();
+        OOM_maxAllocations = atoi(argv[i]);
+        break;
+      }
+    }
+#endif
+
     int stackDummy;
     JSRuntime *rt;
     JSContext *cx;
@@ -5861,6 +5893,11 @@ main(int argc, char **argv, char **envp)
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
 
     result = Shell(cx, argc, argv, envp);
+
+#ifdef DEBUG
+    if (OOM_printAllocationCount)
+        printf("OOM max count: %u\n", OOM_counter);
+#endif
 
     DestroyContext(cx, true);
 

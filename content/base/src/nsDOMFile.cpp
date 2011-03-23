@@ -52,6 +52,7 @@
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsIInputStream.h"
+#include "nsIIPCSerializable.h"
 #include "nsIMIMEService.h"
 #include "nsIPlatformCharset.h"
 #include "nsISeekableStream.h"
@@ -75,7 +76,8 @@ using namespace mozilla;
 // from NS_NewByteInputStream is held alive as long as the
 // stream is.  We do that by passing back this class instead.
 class DataOwnerAdapter : public nsIInputStream,
-                         public nsISeekableStream {
+                         public nsISeekableStream
+{
   typedef nsDOMMemoryFile::DataOwner DataOwner;
 public:
   static nsresult Create(DataOwner* aDataOwner,
@@ -103,7 +105,9 @@ private:
   nsCOMPtr<nsISeekableStream> mSeekableStream;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(DataOwnerAdapter, nsIInputStream, nsISeekableStream)
+NS_IMPL_THREADSAFE_ISUPPORTS2(DataOwnerAdapter,
+                              nsIInputStream,
+                              nsISeekableStream)
 
 nsresult DataOwnerAdapter::Create(DataOwner* aDataOwner,
                                   PRUint32 aStart,
