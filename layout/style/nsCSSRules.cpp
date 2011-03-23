@@ -325,34 +325,11 @@ CharsetRule::GetParentRule(nsIDOMCSSRule** aParentRule)
   return NS_OK;
 }
 
-} // namespace css
-} // namespace mozilla
-
-nsresult
-NS_NewCSSCharsetRule(nsICSSRule** aInstancePtrResult, const nsAString& aEncoding)
-{
-  if (! aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  css::CharsetRule* it = new css::CharsetRule(aEncoding);
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aInstancePtrResult = it);
-  return NS_OK;
-}
-
 
 
 // -------------------------------------------
 // ImportRule
 //
-
-namespace mozilla {
-namespace css {
 
 ImportRule::ImportRule(nsMediaList* aMedia, const nsString& aURLSpec)
   : Rule()

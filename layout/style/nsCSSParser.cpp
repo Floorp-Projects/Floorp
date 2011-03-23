@@ -1557,12 +1557,8 @@ CSSParserImpl::ParseCharsetRule(RuleAppendFunc aAppendFunc,
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsICSSRule> rule;
-  NS_NewCSSCharsetRule(getter_AddRefs(rule), charset);
-
-  if (rule) {
-    (*aAppendFunc)(rule, aData);
-  }
+  nsCOMPtr<nsICSSRule> rule = new css::CharsetRule(charset);
+  (*aAppendFunc)(rule, aData);
 
   return PR_TRUE;
 }
