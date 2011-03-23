@@ -85,6 +85,14 @@ nsCSSPseudoClasses::HasNthPairArg(Type aType)
          aType == ePseudoClass_nthLastOfType;
 }
 
+void
+nsCSSPseudoClasses::PseudoTypeToString(Type aType, nsAString& aString)
+{
+  NS_ABORT_IF_FALSE(aType < ePseudoClass_Count, "Unexpected type");
+  NS_ABORT_IF_FALSE(aType >= 0, "Very unexpected type");
+  (*CSSPseudoClasses_info[aType].mAtom)->ToString(aString);
+}
+
 nsCSSPseudoClasses::Type
 nsCSSPseudoClasses::GetPseudoType(nsIAtom* aAtom)
 {
