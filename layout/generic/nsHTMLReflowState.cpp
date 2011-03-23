@@ -1313,32 +1313,50 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
     PRBool marginRightIsAuto =
       eStyleUnit_Auto == mStyleMargin->mMargin.GetRightUnit();
 
-    if (availMarginSpace < 0 ||
-        (!marginLeftIsAuto && !marginRightIsAuto)) {
-      // We're over-constrained so use the direction of the containing block
-      // to dictate which value to ignore.  (And note that the spec says to ignore
-      // 'left' or 'right' rather than 'margin-left' or 'margin-right'.)
-      if (cbrs &&
-          NS_STYLE_DIRECTION_RTL == cbrs->mStyleVisibility->mDirection) {
-        // Ignore the specified value for 'left'.
-        mComputedOffsets.left += availMarginSpace;
-      } else {
-        // Ignore the specified value for 'right'.
-        mComputedOffsets.right += availMarginSpace;
-      }
-    } else if (marginLeftIsAuto) {
+    if (marginLeftIsAuto) {
       if (marginRightIsAuto) {
-        // Both 'margin-left' and 'margin-right' are 'auto', so they get
-        // equal values
-        mComputedMargin.left = availMarginSpace / 2;
-        mComputedMargin.right = availMarginSpace - mComputedMargin.left;
+        if (availMarginSpace < 0) {
+          // Note that this case is different from the neither-'auto'
+          // case below, where the spec says to ignore 'left'/'right'.
+          if (cbrs &&
+              NS_STYLE_DIRECTION_RTL == cbrs->mStyleVisibility->mDirection) {
+            // Ignore the specified value for 'margin-left'.
+            mComputedMargin.left = availMarginSpace;
+          } else {
+            // Ignore the specified value for 'margin-right'.
+            mComputedMargin.right = availMarginSpace;
+          }
+        } else {
+          // Both 'margin-left' and 'margin-right' are 'auto', so they get
+          // equal values
+          mComputedMargin.left = availMarginSpace / 2;
+          mComputedMargin.right = availMarginSpace - mComputedMargin.left;
+        }
       } else {
         // Just 'margin-left' is 'auto'
         mComputedMargin.left = availMarginSpace;
       }
     } else {
-      // Just 'margin-right' is 'auto'
-      mComputedMargin.right = availMarginSpace;
+      if (marginRightIsAuto) {
+        // Just 'margin-right' is 'auto'
+        mComputedMargin.right = availMarginSpace;
+      } else {
+        // We're over-constrained so use the direction of the containing
+        // block to dictate which value to ignore.  (And note that the
+        // spec says to ignore 'left' or 'right' rather than
+        // 'margin-left' or 'margin-right'.)
+        // Note that this case is different from the both-'auto' case
+        // above, where the spec says to ignore
+        // 'margin-left'/'margin-right'.
+        if (cbrs &&
+            NS_STYLE_DIRECTION_RTL == cbrs->mStyleVisibility->mDirection) {
+          // Ignore the specified value for 'left'.
+          mComputedOffsets.left += availMarginSpace;
+        } else {
+          // Ignore the specified value for 'right'.
+          mComputedOffsets.right += availMarginSpace;
+        }
+      }
     }
   }
 
@@ -1392,24 +1410,31 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
     PRBool marginBottomIsAuto =
       eStyleUnit_Auto == mStyleMargin->mMargin.GetBottomUnit();
 
-    if (availMarginSpace < 0 || (!marginTopIsAuto && !marginBottomIsAuto)) {
-      // We're over-constrained so ignore the specified value for
-      // 'bottom'.  (And note that the spec says to ignore 'bottom'
-      // rather than 'margin-bottom'.)
-      mComputedOffsets.bottom += availMarginSpace;
-    } else if (marginTopIsAuto) {
+    if (marginTopIsAuto) {
       if (marginBottomIsAuto) {
-        // Both 'margin-top' and 'margin-bottom' are 'auto', so they get
-        // equal values
-        mComputedMargin.top = availMarginSpace / 2;
-        mComputedMargin.bottom = availMarginSpace - mComputedMargin.top;
+        if (availMarginSpace < 0) {
+          // FIXME: Note that the spec doesn't actually say we should do this!
+          mComputedMargin.bottom = availMarginSpace;
+        } else {
+          // Both 'margin-top' and 'margin-bottom' are 'auto', so they get
+          // equal values
+          mComputedMargin.top = availMarginSpace / 2;
+          mComputedMargin.bottom = availMarginSpace - mComputedMargin.top;
+        }
       } else {
         // Just 'margin-top' is 'auto'
         mComputedMargin.top = availMarginSpace;
       }
     } else {
-      // Just 'margin-bottom' is 'auto'
-      mComputedMargin.bottom = availMarginSpace;
+      if (marginBottomIsAuto) {
+        // Just 'margin-bottom' is 'auto'
+        mComputedMargin.bottom = availMarginSpace;
+      } else {
+        // We're over-constrained so ignore the specified value for
+        // 'bottom'.  (And note that the spec says to ignore 'bottom'
+        // rather than 'margin-bottom'.)
+        mComputedOffsets.bottom += availMarginSpace;
+      }
     }
   }
 }

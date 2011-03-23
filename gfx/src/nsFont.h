@@ -78,10 +78,6 @@ struct NS_GFX nsFont {
   // The variant of the font (normal, small-caps)
   PRUint8 variant;
 
-  // True if the character set quirks (for treatment of "Symbol",
-  // "Wingdings", etc.) should be applied.
-  PRUint8 familyNameQuirks;
-
   // The weight of the font; see gfxFontConstants.h.
   PRUint16 weight;
 

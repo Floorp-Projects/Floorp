@@ -63,14 +63,12 @@ public:
 
   /**
    * Adds a value to this list.
-   * @retval PR_TRUE Adding the value succeeded
-   * @retval PR_FALSE The value could not be added (Out of memory)
    */
-  PRBool AppendCSSValue(nsIDOMCSSValue* aValue);
+  void AppendCSSValue(nsIDOMCSSValue* aValue);
 
   nsIDOMCSSValue* GetItemAt(PRUint32 aIndex)
   {
-    return mCSSValues.SafeObjectAt(aIndex);
+    return mCSSValues.SafeElementAt(aIndex, nsnull);
   }
 
   static nsDOMCSSValueList* FromSupports(nsISupports* aSupports)
@@ -97,7 +95,7 @@ private:
 
   PRPackedBool                mReadonly;    // Are we read-only?
 
-  nsCOMArray<nsIDOMCSSValue>  mCSSValues;
+  InfallibleTArray<nsCOMPtr<nsIDOMCSSValue> > mCSSValues;
 };
 
 

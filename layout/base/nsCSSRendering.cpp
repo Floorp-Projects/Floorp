@@ -2074,14 +2074,17 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   // multiplying by stopScale.
   double stopScale;
   double stopDelta = lastStop - firstStop;
-  if (stopDelta < 1e-6 || lineLength < 1e-6 ||
-      (aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR &&
-       (radiusX < 1e-6 || radiusY < 1e-6))) {
+  PRBool zeroRadius = aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR &&
+                      (radiusX < 1e-6 || radiusY < 1e-6);
+  if (stopDelta < 1e-6 || lineLength < 1e-6 || zeroRadius) {
     // Stops are all at the same place. Map all stops to 0.0.
-    // For radial gradients we need to fill with the last stop color,
-    // so just set both radii to 0.
+    // For repeating radial gradients, or for any radial gradients with
+    // a zero radius, we need to fill with the last stop color, so just set
+    // both radii to 0.
     stopScale = 0.0;
-    radiusX = radiusY = 0.0;
+    if (aGradient->mRepeating || zeroRadius) {
+      radiusX = radiusY = 0.0;
+    }
     lastStop = firstStop;
   } else {
     stopScale = 1.0/stopDelta;
@@ -2115,6 +2118,11 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     // So our radii are based on radiusX.
     double innerRadius = radiusX*firstStop;
     double outerRadius = radiusX*lastStop;
+    if (stopScale == 0.0) {
+      // Stops are all at the same place.  See above (except we now have
+      // the inside vs. outside of an ellipse).
+      outerRadius = innerRadius + 1;
+    }
     gradientPattern = new gfxPattern(lineStart.x, lineStart.y, innerRadius,
                                      lineStart.x, lineStart.y, outerRadius);
     if (gradientPattern && radiusX != radiusY) {
@@ -2135,12 +2143,11 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
 
   // Now set normalized color stops in pattern.
   if (stopScale == 0.0) {
-    // Non-repeating linear gradient with all stops in same place -> just add
+    // Non-repeating gradient with all stops in same place -> just add
     // first stop and last stop, both at position 0.
-    // Repeating or radial gradient with all stops in the same place -> just
-    // paint the last stop color.
-    if (!aGradient->mRepeating &&
-        aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
+    // Repeating gradient with all stops in the same place, or radial
+    // gradient with radius of 0 -> just paint the last stop color.
+    if (!aGradient->mRepeating && !zeroRadius) {
       gradientPattern->AddColorStop(0.0, stops[0].mColor);
     }
     gradientPattern->AddColorStop(0.0, stops[stops.Length() - 1].mColor);

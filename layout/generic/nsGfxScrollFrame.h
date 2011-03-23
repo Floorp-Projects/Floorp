@@ -653,7 +653,7 @@ public:
                                    PRBool aAdd);
   
   PRBool AddRemoveScrollbar(nsBoxLayoutState& aState, 
-                            PRBool aOnTop, 
+                            PRBool aOnRightOrBottom, 
                             PRBool aHorizontal, 
                             PRBool aAdd);
   
