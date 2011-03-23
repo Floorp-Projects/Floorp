@@ -796,22 +796,18 @@ nsresult nsWebMReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
       aBuffered->Add(0, duration / NS_PER_S);
     }
   } else {
-    PRInt64 startOffset = stream->GetNextCachedData(0);
-    PRInt64 startTimeOffsetNS = aStartTime * NS_PER_MS;
-    while (startOffset >= 0) {
-      PRInt64 endOffset = stream->GetCachedDataEnd(startOffset);
-      NS_ASSERTION(startOffset < endOffset, "Cached range invalid");
+    nsMediaStream* stream = mDecoder->GetCurrentStream();
+    nsTArray<nsByteRange> ranges;
+    nsresult res = stream->GetCachedRanges(ranges);
+    NS_ENSURE_SUCCESS(res, res);
 
+    PRInt64 startTimeOffsetNS = aStartTime * NS_PER_MS;
+    for (PRUint32 index = 0; index < ranges.Length(); index++) {
       mBufferedState->CalculateBufferedForRange(aBuffered,
-                                                startOffset,
-                                                endOffset,
+                                                ranges[index].mStart,
+                                                ranges[index].mEnd,
                                                 timecodeScale,
                                                 startTimeOffsetNS);
-
-      // Advance to the next cached data range.
-      startOffset = stream->GetNextCachedData(endOffset);
-      NS_ASSERTION(startOffset == -1 || startOffset > endOffset,
-                   "Next cached range invalid");
     }
   }
 
