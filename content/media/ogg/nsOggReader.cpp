@@ -43,6 +43,7 @@
 #include "VideoUtils.h"
 #include "theora/theoradec.h"
 #include "nsTimeRanges.h"
+#include "mozilla/TimeStamp.h"
 
 using namespace mozilla;
 
@@ -290,7 +291,7 @@ nsresult nsOggReader::ReadMetadata()
   if (mTheoraState && mTheoraState->Init()) {
     gfxIntSize sz(mTheoraState->mInfo.pic_width,
                   mTheoraState->mInfo.pic_height);
-    mDecoder->SetVideoData(sz, mTheoraState->mPixelAspectRatio, nsnull);
+    mDecoder->SetVideoData(sz, mTheoraState->mPixelAspectRatio, nsnull, TimeStamp::Now());
   }
   if (mVorbisState) {
     mVorbisState->Init();

@@ -204,3 +204,16 @@ NS_IMETHODIMP nsHTMLVideoElement::GetMozPresentedFrames(PRUint32 *aMozPresentedF
   *aMozPresentedFrames = mDecoder ? mDecoder->GetFrameStatistics().GetPresentedFrames() : 0;
   return NS_OK;
 }
+
+NS_IMETHODIMP nsHTMLVideoElement::GetMozPaintedFrames(PRUint32 *aMozPaintedFrames)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  *aMozPaintedFrames = (!mDecoder || !GetImageContainer()) ? 0 : GetImageContainer()->GetPaintCount();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLVideoElement::GetMozFrameDelay(double *aMozFrameDelay) {
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  *aMozFrameDelay = mDecoder ? mDecoder->GetFrameDelay() : 0;
+  return NS_OK;
+}
