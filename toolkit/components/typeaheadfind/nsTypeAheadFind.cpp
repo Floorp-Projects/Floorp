@@ -1084,7 +1084,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
                "params are invalid");
 
   // We need to know if the range start is visible.
-  // Otherwise, return a the first visible range start 
+  // Otherwise, return the first visible range start 
   // in aFirstVisibleRange
 
   aRange->CloneRange(aFirstVisibleRange);

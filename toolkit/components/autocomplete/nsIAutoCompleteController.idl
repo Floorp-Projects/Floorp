@@ -146,7 +146,7 @@ interface nsIAutoCompleteController : nsISupports
   AString getCommentAt(in long index);
 
   /*
-   * Get a the style hint for the result at a given index in the last completed search
+   * Get the style hint for the result at a given index in the last completed search
    */
   AString getStyleAt(in long index);
 
