@@ -250,9 +250,11 @@ public:
     return mEndTime;
   }
 
-  void NotifyDataExhausted();
-
 protected:
+
+  // Returns PR_TRUE if we'v got less than aAudioMs ms of decoded and playable
+  // data. The decoder monitor must be held.
+  PRBool HasLowDecodedData(PRInt64 aAudioMs) const;
 
   // Returns PR_TRUE if the decode is withing an estimated one tenth of a
   // second's worth of data of the download, i.e. the decode has almost
