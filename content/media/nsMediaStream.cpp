@@ -605,6 +605,11 @@ PRInt64 nsMediaChannelStream::Tell()
   return mCacheStream.Tell();
 }
 
+nsresult nsMediaChannelStream::GetCachedRanges(nsTArray<nsByteRange>& aRanges)
+{
+  return mCacheStream.GetCachedRanges(aRanges);
+}
+
 void nsMediaChannelStream::Suspend(PRBool aCloseImmediately)
 {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
@@ -919,6 +924,8 @@ public:
   virtual PRBool  IsSuspendedByCache() { return PR_FALSE; }
   virtual PRBool  IsSuspended() { return PR_FALSE; }
 
+  nsresult GetCachedRanges(nsTArray<nsByteRange>& aRanges);
+
 private:
   // The file size, or -1 if not known. Immutable after Open().
   PRInt64 mSize;
@@ -960,6 +967,15 @@ public:
 private:
   nsRefPtr<nsMediaDecoder> mDecoder;
 };
+
+nsresult nsMediaFileStream::GetCachedRanges(nsTArray<nsByteRange>& aRanges)
+{
+  if (mSize == -1) {
+    return NS_ERROR_FAILURE;
+  }
+  aRanges.AppendElement(nsByteRange(0, mSize));
+  return NS_OK;
+}
 
 nsresult nsMediaFileStream::Open(nsIStreamListener** aStreamListener)
 {
