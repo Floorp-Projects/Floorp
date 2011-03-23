@@ -113,18 +113,23 @@ xpc_GetGlobalForObject(JSObject *obj)
     return obj;
 }
 
+extern bool
+xpc_OkToHandOutWrapper(nsWrapperCache *cache);
+
 inline JSObject*
-xpc_GetCachedSlimWrapper(nsWrapperCache *cache, JSObject *scope, jsval *vp)
+xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope, jsval *vp)
 {
     if (cache) {
         JSObject* wrapper = cache->GetWrapper();
-        // FIXME: Bug 585786, the check for IS_SLIM_WRAPPER_OBJECT should go
-        //        away
+        NS_ASSERTION(!wrapper ||
+                     !cache->IsProxy() ||
+                     !IS_SLIM_WRAPPER_OBJECT(wrapper),
+                     "Should never have a slim wrapper when IsProxy()");
         if (wrapper &&
-            IS_SLIM_WRAPPER_OBJECT(wrapper) &&
-            wrapper->compartment() == scope->getCompartment()) {
+            wrapper->compartment() == scope->getCompartment() &&
+            (IS_SLIM_WRAPPER_OBJECT(wrapper) ||
+             xpc_OkToHandOutWrapper(cache))) {
             *vp = OBJECT_TO_JSVAL(wrapper);
-
             return wrapper;
         }
     }
@@ -133,10 +138,10 @@ xpc_GetCachedSlimWrapper(nsWrapperCache *cache, JSObject *scope, jsval *vp)
 }
 
 inline JSObject*
-xpc_GetCachedSlimWrapper(nsWrapperCache *cache, JSObject *scope)
+xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope)
 {
     jsval dummy;
-    return xpc_GetCachedSlimWrapper(cache, scope, &dummy);
+    return xpc_FastGetCachedWrapper(cache, scope, &dummy);
 }
 
 // The JS GC marks objects gray that are held alive directly or indirectly

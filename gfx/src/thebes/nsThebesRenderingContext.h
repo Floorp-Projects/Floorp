@@ -92,7 +92,7 @@ public:
     NS_IMETHOD GetTextDimensions(const PRUnichar* aString, PRUint32 aLength,
                                  nsTextDimensions& aDimensions, PRInt32* aFontID = nsnull);
 
-#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS)
+#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11)
     NS_IMETHOD GetTextDimensions(const char*       aString,
                                  PRInt32           aLength,
                                  PRInt32           aAvailWidth,

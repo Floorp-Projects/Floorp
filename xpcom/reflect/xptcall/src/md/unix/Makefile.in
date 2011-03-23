@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 LIBRARY_NAME	= xptcmd
+EXPORT_LIBRARY	= ../..
 MOZILLA_INTERNAL_API = 1
 
 
@@ -127,12 +128,6 @@ endif
 #
 ifeq ($(OS_ARCH)$(OS_TEST),OpenBSDx86_64)
 CPPSRCS		:= xptcinvoke_amd64_openbsd.cpp xptcstubs_amd64_openbsd.cpp
-endif
-#
-# BeOS/Intel (uses the same unixish_x86 code)
-#
-ifeq ($(OS_ARCH)$(OS_TEST),BeOSBePC)
-CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
 endif
 #
 # Neutrino/Intel (uses the same unixish_x86 code)
@@ -579,6 +574,3 @@ endif
 endif
 endif
 endif
-
-libs:: $(LIBRARY)
-	$(INSTALL) $(LIBRARY) $(FAKE_LIBRARY) ../..

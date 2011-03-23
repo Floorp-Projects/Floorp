@@ -38,9 +38,7 @@
 
 #include "nsIDOMDocument.idl"
 
-interface nsIXPointerResult;
-
-[scriptable, uuid(8816d003-e7c8-4065-8827-829b8d07b6e0)]
+[scriptable, uuid(0aa12c21-4710-4214-b21e-372c48332927)]
 interface nsIDOMXMLDocument : nsIDOMDocument
 {
   // DOM Level 3 Load & Save, DocumentLS
@@ -58,19 +56,4 @@ interface nsIDOMXMLDocument : nsIDOMDocument
    * @return     True if load successfull.
    */
   boolean                      load(in DOMString url);
-
- /**
-  * Evaluate FIXptr expression. FIXptr is a W3C NOTE, see
-  *
-  * http://lists.w3.org/Archives/Public/www-xml-linking-comments/2001AprJun/att-0074/01-NOTE-FIXptr-20010425.htm
-  *
-  * @param  expression FIXptr string.
-  * @return            The range object that results from evaluation
-  */
-  nsIDOMRange               evaluateFIXptr(in DOMString expression);
-
- /**
-  * Evaluate XPointer expression.
-  */
-  nsIXPointerResult evaluateXPointer(in DOMString expression);
 };
