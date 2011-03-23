@@ -2286,6 +2286,10 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing, ui
                : "string";
         break;
 
+      case JSTRACE_SHAPE:
+        name = "shape";
+        break;
+
 #if JS_HAS_XML_SUPPORT
       case JSTRACE_XML:
         name = "xml";
@@ -2338,6 +2342,12 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing, ui
                 PutEscapedString(buf, bufsize, &str->asLinear(), 0);
             else
                 JS_snprintf(buf, bufsize, "<rope: length %d>", (int)str->length());
+            break;
+          }
+
+          case JSTRACE_SHAPE:
+          {
+            JS_snprintf(buf, bufsize, "<shape>");
             break;
           }
 
@@ -3982,7 +3992,7 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
 
     if (obj->getSlot(JSSLOT_ITER_INDEX).toInt32() < 0) {
         /* Native case: just mark the next property to visit. */
-        ((Shape *) pdata)->trace(trc);
+        MarkShape(trc, (Shape *)pdata, "prop iter shape");
     } else {
         /* Non-native case: mark each id in the JSIdArray private. */
         JSIdArray *ida = (JSIdArray *) pdata;

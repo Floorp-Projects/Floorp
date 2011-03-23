@@ -102,6 +102,9 @@ JSAtom::isStatic(const void *ptr)
 }
 
 namespace js {
+
+struct Shape;
+
 namespace gc {
 
 inline uint32
@@ -170,7 +173,8 @@ NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
 #ifdef JS_THREADSAFE
     JS_ASSERT_IF((cx->compartment == cx->runtime->atomsCompartment),
                  (thingKind == js::gc::FINALIZE_STRING) ||
-                 (thingKind == js::gc::FINALIZE_SHORT_STRING));
+                 (thingKind == js::gc::FINALIZE_SHORT_STRING) ||
+                 (thingKind == js::gc::FINALIZE_SHAPE));
 #endif
 
     METER(cx->compartment->compartmentStats[thingKind].alloc++);
@@ -231,6 +235,12 @@ js_NewGCFunction(JSContext *cx)
     return fun;
 }
 
+inline js::Shape *
+js_NewGCShape(JSContext *cx)
+{
+    return NewFinalizableGCThing<js::Shape>(cx, js::gc::FINALIZE_SHAPE);
+}
+
 #if JS_HAS_XML_SUPPORT
 inline JSXML *
 js_NewGCXML(JSContext *cx)
@@ -250,6 +260,9 @@ TypedMarker(JSTracer *trc, JSObject *thing);
 
 static JS_ALWAYS_INLINE void
 TypedMarker(JSTracer *trc, JSFunction *thing);
+
+static JS_ALWAYS_INLINE void
+TypedMarker(JSTracer *trc, const Shape *thing);
 
 static JS_ALWAYS_INLINE void
 TypedMarker(JSTracer *trc, JSShortString *thing);
@@ -324,6 +337,16 @@ MarkObject(JSTracer *trc, JSObject &obj, const char *name)
     Mark(trc, &obj);
 }
 
+static inline void
+MarkShape(JSTracer *trc, const Shape *shape, const char *name)
+{
+    JS_ASSERT(trc);
+    JS_ASSERT(shape);
+    JS_SET_TRACING_NAME(trc, name);
+    JS_ASSERT(GetArena<Shape>((Cell *)shape)->assureThingIsAligned((void *)shape));
+    Mark(trc, shape);
+}
+
 void
 MarkObjectSlots(JSTracer *trc, JSObject *obj);
 
@@ -344,7 +367,7 @@ MarkChildren(JSTracer *trc, JSObject *obj)
         int count = FINALIZE_OBJECT_LAST - FINALIZE_OBJECT0 + 1;
         for (int i = 0; i < count; i++) {
             if (obj->emptyShapes[i])
-                obj->emptyShapes[i]->trace(trc);
+                MarkShape(trc, obj->emptyShapes[i], "emptyShape");
         }
     }
 
@@ -374,6 +397,12 @@ MarkChildren(JSTracer *trc, JSString *str)
         MarkString(trc, rope.leftChild(), "left child");
         MarkString(trc, rope.rightChild(), "right child");
     }
+}
+
+static inline void
+MarkChildren(JSTracer *trc, const Shape *shape)
+{
+    shape->markChildren(trc);
 }
 
 #ifdef JS_HAS_XML_SUPPORT
@@ -449,6 +478,30 @@ TypedMarker(JSTracer *trc, JSShortString *thing)
     (void) thing->markIfUnmarked();
 }
 
+static JS_ALWAYS_INLINE void
+TypedMarker(JSTracer *trc, const Shape *thing)
+{
+    JS_ASSERT(thing);
+    JS_ASSERT(JSTRACE_SHAPE == GetFinalizableTraceKind(thing->arena()->header()->thingKind));
+
+    GCMarker *gcmarker = static_cast<GCMarker *>(trc);
+    if (!thing->markIfUnmarked(gcmarker->getMarkColor()))
+        return;
+
+    /*
+     * We regenerate the shape number early. If we did it inside MarkChildren,
+     * then it might be called multiple times during delayed marking, which
+     * would be incorrect. However, this does mean that Shape::regenerate
+     * shouldn't use too much stack.
+     */
+    thing->regenerate(trc);
+
+    if (RecursionTooDeep(gcmarker))
+        gcmarker->delayMarkingChildren(thing);
+    else
+        MarkChildren(trc, thing);
+}
+
 static inline void
 MarkAtomRange(JSTracer *trc, size_t len, JSAtom **vec, const char *name)
 {
@@ -518,6 +571,9 @@ MarkKind(JSTracer *trc, void *thing, uint32 kind)
         case JSTRACE_STRING:
             MarkString(trc, reinterpret_cast<JSString *>(thing));
             break;
+        case JSTRACE_SHAPE:
+            Mark(trc, reinterpret_cast<Shape *>(thing));
+            break;
 #if JS_HAS_XML_SUPPORT
         case JSTRACE_XML:
             Mark(trc, reinterpret_cast<JSXML *>(thing));
@@ -565,7 +621,7 @@ MarkShapeRange(JSTracer *trc, const Shape **beg, const Shape **end, const char *
 {
     for (const Shape **sp = beg; sp < end; ++sp) {
         JS_SET_TRACING_INDEX(trc, name, sp - beg);
-        (*sp)->trace(trc);
+        MarkShape(trc, *sp, name);
     }
 }
 

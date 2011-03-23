@@ -358,7 +358,7 @@ Parser::trace(JSTracer *trc)
     }
 
     if (emptyCallShape)
-        emptyCallShape->trace(trc);
+        MarkShape(trc, emptyCallShape, "emptyCallShape");
 
     for (JSTreeContext *tc = this->tc; tc; tc = tc->parent)
         tc->trace(trc);

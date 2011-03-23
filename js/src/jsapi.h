@@ -1576,6 +1576,7 @@ JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
 /* Trace kinds to pass to JS_Tracing. */
 #define JSTRACE_OBJECT  0
 #define JSTRACE_STRING  1
+#define JSTRACE_SHAPE   2
 
 /*
  * Use the following macros to check if a particular jsval is a traceable

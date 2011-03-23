@@ -47,7 +47,9 @@
 #include "jsfun.h"
 #include "jsobj.h"
 #include "jsscope.h"
+#include "jsgc.h"
 
+#include "jsgcinlines.h"
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 
