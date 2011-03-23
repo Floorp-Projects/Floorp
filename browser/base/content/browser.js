@@ -1439,7 +1439,7 @@ function prepareForStartup() {
   }
 
   // hook up UI through progress listener
-  gBrowser.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+  gBrowser.addProgressListener(window.XULBrowserWindow);
   gBrowser.addTabsProgressListener(window.TabsProgressListener);
 
   // setup our common DOMLinkAdded listener
