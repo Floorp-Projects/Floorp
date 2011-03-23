@@ -109,8 +109,8 @@ The following result in state transitions.
 
 Shutdown()
   Clean up any resources the nsDecoderStateMachine owns.
-Decode()
-  Start decoding media data.
+Play()
+  Start decoding and playback of media data.
 Buffer
   This is not user initiated. It occurs when the
   available data in the stream drops below a certain point.
@@ -130,13 +130,13 @@ DECODING_METADATA
   |---------------->----->------------------------|        v
 DECODING             |          |  |              |        |
   ^                  v Seek(t)  |  |              |        |
-  |         Decode() |          v  |              |        |
+  |         Play()   |          v  |              |        |
   ^-----------<----SEEKING      |  v Complete     v        v
   |                  |          |  |              |        |
   |                  |          |  COMPLETED    SHUTDOWN-<-|
   ^                  ^          |  |Shutdown()    |
   |                  |          |  >-------->-----^
-  |         Decode() |Seek(t)   |Buffer()         |
+  |          Play()  |Seek(t)   |Buffer()         |
   -----------<--------<-------BUFFERING           |
                                 |                 ^
                                 v Shutdown()      |
@@ -261,14 +261,14 @@ public:
 
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
-  virtual PRBool OnDecodeThread() = 0;
+  virtual PRBool OnDecodeThread() const = 0;
 
   virtual nsHTMLMediaElement::NextFrameStatus GetNextFrameStatus() = 0;
 
   // Cause state transitions. These methods obtain the decoder monitor
   // to synchronise the change of state, and to notify other threads
   // that the state has changed.
-  virtual void Decode() = 0;
+  virtual void Play() = 0;
 
   // Seeks to aTime in seconds
   virtual void Seek(double aTime) = 0;
@@ -276,7 +276,7 @@ public:
   // Returns the current playback position in seconds.
   // Called from the main thread to get the current frame time. The decoder
   // monitor must be obtained before calling this.
-  virtual double GetCurrentTime() = 0;
+  virtual double GetCurrentTime() const = 0;
 
   // Clear the flag indicating that a playback position change event
   // is currently queued. This is called from the main thread and must
@@ -303,8 +303,6 @@ public:
   // with the decode monitor held. Called on the state machine thread and
   // the main thread.
   virtual void StartBuffering() = 0;
-
-  virtual void NotifyDataExhausted() = 0;
 };
 
 class nsBuiltinDecoder : public nsMediaDecoder
@@ -369,10 +367,6 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // from the resource.
   void NotifyBytesConsumed(PRInt64 aBytes);
 
-  void NotifyDataExhausted() {
-    mDecoderStateMachine->NotifyDataExhausted();
-  }
-
   // Called when the video file has completed downloading.
   // Call on the main thread only.
   void ResourceLoaded();
@@ -429,7 +423,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
     return IsCurrentThread(mStateMachineThread);
   }
 
-  PRBool OnDecodeThread() {
+  PRBool OnDecodeThread() const {
     return mDecoderStateMachine->OnDecodeThread();
   }
 

@@ -525,7 +525,20 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { APPLICATION_XPINSTALL, "xpi" },
   { "application/xhtml+xml", "xhtml" },
   { "application/xhtml+xml", "xht" },
-  { TEXT_PLAIN, "txt" }
+  { TEXT_PLAIN, "txt" },
+#ifdef MOZ_OGG
+  { VIDEO_OGG, "ogv" },
+  { VIDEO_OGG, "ogg" },
+  { APPLICATION_OGG, "ogg" },
+  { AUDIO_OGG, "oga" },
+#endif
+#ifdef MOZ_WEBM
+  { VIDEO_WEBM, "webm" },
+  { AUDIO_WEBM, "webm" },
+#endif
+#ifdef MOZ_RAW
+  { VIDEO_RAW, "yuv" }
+#endif
 };
 
 /**
@@ -591,14 +604,10 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { VIDEO_OGG, "ogg", "Ogg Video" },
   { APPLICATION_OGG, "ogg", "Ogg Video"},
   { AUDIO_OGG, "oga", "Ogg Audio" },
-#ifdef MOZ_WEBM
   { VIDEO_WEBM, "webm", "Web Media Video" },
   { AUDIO_WEBM, "webm", "Web Media Audio" },
-#endif
-#ifdef MOZ_RAW
   { VIDEO_RAW, "yuv", "Raw YUV Video" },
-#endif
-  { AUDIO_WAV, "wav", "Waveform Audio" },
+  { AUDIO_WAV, "wav", "Waveform Audio" }
 };
 
 #undef MAC_TYPE

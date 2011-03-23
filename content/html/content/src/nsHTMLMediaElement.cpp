@@ -1382,6 +1382,9 @@ NS_IMETHODIMP nsHTMLMediaElement::Play()
   if (mPaused) {
     DispatchAsyncEvent(NS_LITERAL_STRING("play"));
     switch (mReadyState) {
+    case nsIDOMHTMLMediaElement::HAVE_NOTHING:
+      DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
+      break;
     case nsIDOMHTMLMediaElement::HAVE_METADATA:
     case nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA:
       FireTimeUpdate(PR_FALSE);
