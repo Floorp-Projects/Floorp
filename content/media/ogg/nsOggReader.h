@@ -143,14 +143,15 @@ private:
                             PRInt64 aEndTime,
                             const nsTArray<ByteRange>& aRanges);
 
-  // Get the end time of aEndOffset. This is the playback position we'd reach
-  // after playback finished at aEndOffset. If PRBool aCachedDataOnly is
-  // PR_TRUE, then we'll only read from data which is cached in the media cached,
-  // otherwise we'll do regular blocking reads from the media stream.
-  // If PRBool aCachedDataOnly is PR_TRUE, and aState is not mOggState, this can
-  // safely be called on the main thread, otherwise it must be called on the
-  // state machine thread.
-  PRInt64 FindEndTime(PRInt64 aEndOffset,
+  // Get the end time of aEndOffset, without reading before aStartOffset.
+  // This is the playback position we'd reach after playback finished at
+  // aEndOffset. If PRBool aCachedDataOnly is PR_TRUE, then we'll only read
+  // from data which is cached in the media cached, otherwise we'll do
+  // regular blocking reads from the media stream. If PRBool aCachedDataOnly
+  // is PR_TRUE, and aState is not mOggState, this can safely be called on
+  // the main thread, otherwise it must be called on the state machine thread.
+  PRInt64 FindEndTime(PRInt64 aStartOffset,
+                      PRInt64 aEndOffset,
                       PRBool aCachedDataOnly,
                       ogg_sync_state* aState);
 

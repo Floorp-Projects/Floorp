@@ -892,10 +892,10 @@ PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset)
   MonitorAutoEnter mon(mMonitor);
   NS_ASSERTION(mDecoder->OnStateMachineThread(),
                "Should be on state machine thread.");
-  PRInt64 endTime = FindEndTime(aEndOffset, PR_FALSE, &mOggState);
-  // Reset read head to start of media data.
   NS_ASSERTION(mDataOffset > 0,
                "Should have offset of first non-header page");
+  PRInt64 endTime = FindEndTime(mDataOffset, aEndOffset, PR_FALSE, &mOggState);
+  // Reset read head to start of media data.
   nsMediaStream* stream = mDecoder->GetCurrentStream();
   NS_ENSURE_TRUE(stream != nsnull, -1);
   nsresult res = stream->Seek(nsISeekableStream::NS_SEEK_SET, mDataOffset);
@@ -903,7 +903,8 @@ PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset)
   return endTime;
 }
 
-PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset,
+PRInt64 nsOggReader::FindEndTime(PRInt64 aStartOffset,
+                                 PRInt64 aEndOffset,
                                  PRBool aCachedDataOnly,
                                  ogg_sync_state* aState)
 {
@@ -929,7 +930,7 @@ PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset,
     if (ret == 0) {
       // We need more data if we've not encountered a page we've seen before,
       // or we've read to the end of file.
-      if (mustBackOff || readHead == aEndOffset) {
+      if (mustBackOff || readHead == aEndOffset || readHead == aStartOffset) {
         if (endTime != -1 || readStartOffset == 0) {
           // We have encountered a page before, or we're at the end of file.
           break;
@@ -939,7 +940,7 @@ PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset,
         checksumAfterSeek = 0;
         ogg_sync_reset(aState);
         readStartOffset = NS_MAX(static_cast<PRInt64>(0), readStartOffset - step);
-        readHead = readStartOffset;
+        readHead = NS_MAX(aStartOffset, readStartOffset);
       }
 
       PRInt64 limit = NS_MIN(static_cast<PRInt64>(PR_UINT32_MAX),
@@ -953,15 +954,15 @@ PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset,
       nsresult res;
       if (aCachedDataOnly) {
         res = stream->ReadFromCache(buffer, readHead, bytesToRead);
-        NS_ENSURE_SUCCESS(res,res);
+        NS_ENSURE_SUCCESS(res, -1);
         bytesRead = bytesToRead;
       } else {
         NS_ASSERTION(readHead < aEndOffset,
                      "Stream pos must be before range end");
         res = stream->Seek(nsISeekableStream::NS_SEEK_SET, readHead);
-        NS_ENSURE_SUCCESS(res,res);
+        NS_ENSURE_SUCCESS(res, -1);
         res = stream->Read(buffer, bytesToRead, &bytesRead);
-        NS_ENSURE_SUCCESS(res,res);
+        NS_ENSURE_SUCCESS(res, -1);
       }
       readHead += bytesRead;
 
@@ -1687,7 +1688,7 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
     if (startTime != -1) {
       // We were able to find a start time for that range, see if we can
       // find an end time.
-      PRInt64 endTime = FindEndTime(endOffset, PR_TRUE, &state);
+      PRInt64 endTime = FindEndTime(startOffset, endOffset, PR_TRUE, &state);
       if (endTime != -1) {
         endTime -= aStartTime;
         aBuffered->Add(static_cast<double>(startTime) / 1000.0,
