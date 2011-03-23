@@ -443,7 +443,8 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           JSObject* thisObject = JSVAL_TO_OBJECT(thisValue);
 
           if (!tac.enter(ctx, thisObject) ||
-              !JS_WrapValue(ctx, argv.jsval_addr()))
+              !JS_WrapValue(ctx, argv.jsval_addr()) ||
+              !JS_WrapValue(ctx, &funval))
             return NS_ERROR_UNEXPECTED;
 
           JS_CallFunctionValue(ctx, thisObject,
