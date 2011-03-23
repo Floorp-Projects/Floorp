@@ -3052,10 +3052,10 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
 #ifdef MOZ_XUL
        isTree ||
 #endif
-       nsCSSPseudoClasses::notPseudo == pseudo ||
-       nsCSSPseudoClasses::HasStringArg(pseudo) ||
-       nsCSSPseudoClasses::HasNthPairArg(pseudo) ||
-       nsCSSPseudoClasses::HasSelectorListArg(pseudo))) {
+       nsCSSPseudoClasses::ePseudoClass_notPseudo == pseudoClassType ||
+       nsCSSPseudoClasses::HasStringArg(pseudoClassType) ||
+       nsCSSPseudoClasses::HasNthPairArg(pseudoClassType) ||
+       nsCSSPseudoClasses::HasSelectorListArg(pseudoClassType))) {
     // There are no other function pseudos
     REPORT_UNEXPECTED_TOKEN(PEPseudoSelNonFunc);
     UngetToken();
@@ -3088,16 +3088,16 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
     aDataMask |= SEL_MASK_PCLASS;
     if (eCSSToken_Function == mToken.mType) {
       nsSelectorParsingStatus parsingStatus;
-      if (nsCSSPseudoClasses::HasStringArg(pseudo)) {
+      if (nsCSSPseudoClasses::HasStringArg(pseudoClassType)) {
         parsingStatus =
           ParsePseudoClassWithIdentArg(aSelector, pseudo, pseudoClassType);
       }
-      else if (nsCSSPseudoClasses::HasNthPairArg(pseudo)) {
+      else if (nsCSSPseudoClasses::HasNthPairArg(pseudoClassType)) {
         parsingStatus =
           ParsePseudoClassWithNthPairArg(aSelector, pseudo, pseudoClassType);
       }
       else {
-        NS_ABORT_IF_FALSE(nsCSSPseudoClasses::HasSelectorListArg(pseudo),
+        NS_ABORT_IF_FALSE(nsCSSPseudoClasses::HasSelectorListArg(pseudoClassType),
                           "unexpected pseudo with function token");
         parsingStatus = ParsePseudoClassWithSelectorListArg(aSelector, pseudo,
                                                             pseudoClassType);

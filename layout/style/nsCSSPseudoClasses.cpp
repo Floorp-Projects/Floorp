@@ -68,27 +68,21 @@ void nsCSSPseudoClasses::AddRefAtoms()
 }
 
 PRBool
-nsCSSPseudoClasses::HasStringArg(nsIAtom* aAtom)
+nsCSSPseudoClasses::HasStringArg(Type aType)
 {
-  return aAtom == nsCSSPseudoClasses::lang ||
-         aAtom == nsCSSPseudoClasses::mozEmptyExceptChildrenWithLocalname ||
-         aAtom == nsCSSPseudoClasses::mozSystemMetric ||
-         aAtom == nsCSSPseudoClasses::mozLocaleDir;
+  return aType == ePseudoClass_lang ||
+         aType == ePseudoClass_mozEmptyExceptChildrenWithLocalname ||
+         aType == ePseudoClass_mozSystemMetric ||
+         aType == ePseudoClass_mozLocaleDir;
 }
 
 PRBool
-nsCSSPseudoClasses::HasNthPairArg(nsIAtom* aAtom)
+nsCSSPseudoClasses::HasNthPairArg(Type aType)
 {
-  return aAtom == nsCSSPseudoClasses::nthChild ||
-         aAtom == nsCSSPseudoClasses::nthLastChild ||
-         aAtom == nsCSSPseudoClasses::nthOfType ||
-         aAtom == nsCSSPseudoClasses::nthLastOfType;
-}
-
-PRBool
-nsCSSPseudoClasses::HasSelectorListArg(nsIAtom* aAtom)
-{
-  return aAtom == nsCSSPseudoClasses::any;
+  return aType == ePseudoClass_nthChild ||
+         aType == ePseudoClass_nthLastChild ||
+         aType == ePseudoClass_nthOfType ||
+         aType == ePseudoClass_nthLastOfType;
 }
 
 nsCSSPseudoClasses::Type

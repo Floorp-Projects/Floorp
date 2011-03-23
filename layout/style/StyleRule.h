@@ -94,15 +94,15 @@ public:
 
   nsCOMPtr<nsIAtom> mAtom;
   union {
-    // For a given value of mAtom, we have either:
+    // For a given value of mType, we have either:
     //   a. no value, which means mMemory is always null
     //      (if none of the conditions for (b), (c), or (d) is true)
     //   b. a string value, which means mString/mMemory is non-null
-    //      (if nsCSSPseudoClasses::HasStringArg(mAtom))
+    //      (if nsCSSPseudoClasses::HasStringArg(mType))
     //   c. an integer pair value, which means mNumbers/mMemory is non-null
-    //      (if nsCSSPseudoClasses::HasNthPairArg(mAtom))
+    //      (if nsCSSPseudoClasses::HasNthPairArg(mType))
     //   d. a selector list, which means mSelectors is non-null
-    //      (if nsCSSPseudoClasses::HasSelectorListArg(mAtom))
+    //      (if nsCSSPseudoClasses::HasSelectorListArg(mType))
     void*           mMemory; // mString and mNumbers use NS_Alloc/NS_Free
     PRUnichar*      mString;
     PRInt32*        mNumbers;
