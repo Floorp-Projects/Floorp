@@ -124,6 +124,7 @@ ImageContainerD3D10::SetCurrentImage(Image *aImage)
   MonitorAutoEnter mon(mMonitor);
 
   mActiveImage = aImage;
+  CurrentImageChanged();
 }
 
 already_AddRefed<Image>
@@ -351,6 +352,8 @@ ImageLayerD3D10::RenderLayer()
 
   technique->GetPassByIndex(0)->Apply(0);
   device()->Draw(4, 0);
+
+  GetContainer()->NotifyPaintedImage(image);
 }
 
 PlanarYCbCrImageD3D10::PlanarYCbCrImageD3D10(ID3D10Device1 *aDevice)

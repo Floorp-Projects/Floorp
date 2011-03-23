@@ -750,6 +750,8 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
   if (!mContainer)
     return nsnull;
 
+  nsRefPtr<Image> image = mContainer->GetCurrentImage();
+
   nsRefPtr<gfxASurface> surface = mContainer->GetCurrentAsSurface(&mSize);
   if (!surface) {
     return nsnull;
@@ -769,7 +771,10 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
   PaintContext(pat,
                tileSrcRect ? GetVisibleRegion() : nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
                tileSrcRect,
-               aOpacity, aContext); 
+               aOpacity, aContext);
+
+  GetContainer()->NotifyPaintedImage(image);
+
   return pat.forget();
 }
 

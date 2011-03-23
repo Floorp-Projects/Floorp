@@ -235,6 +235,7 @@ ImageContainerOGL::SetCurrentImage(Image *aImage)
 
     oldImage = mActiveImage.forget();
     mActiveImage = aImage;
+    CurrentImageChanged();
   }
 
   // Make sure oldImage is released outside the lock, so it can take our
@@ -499,6 +500,7 @@ ImageLayerOGL::RenderLayer(int,
      gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
 #endif
   }
+  GetContainer()->NotifyPaintedImage(image);
 }
 
 static void
