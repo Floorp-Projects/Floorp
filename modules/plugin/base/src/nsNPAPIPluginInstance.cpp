@@ -602,19 +602,26 @@ NS_IMETHODIMP nsNPAPIPluginInstance::GetValueFromPlugin(NPPVariable variable, vo
     return NS_OK;
   }
 #endif
+
   if (!mPlugin || !mPlugin->GetLibrary())
     return NS_ERROR_FAILURE;
 
   NPPluginFuncs* pluginFunctions = mPlugin->PluginFuncs();
 
   nsresult rv = NS_ERROR_FAILURE;
+
   if (pluginFunctions->getvalue && RUNNING == mRunning) {
     PluginDestructionGuard guard(this);
 
-    NS_TRY_SAFE_CALL_RETURN(rv, (*pluginFunctions->getvalue)(&mNPP, variable, value), this);
+    NPError pluginError = NPERR_GENERIC_ERROR;
+    NS_TRY_SAFE_CALL_RETURN(pluginError, (*pluginFunctions->getvalue)(&mNPP, variable, value), this);
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
     ("NPP GetValue called: this=%p, npp=%p, var=%d, value=%d, return=%d\n", 
-    this, &mNPP, variable, value, rv));
+    this, &mNPP, variable, value, pluginError));
+
+    if (pluginError == NPERR_NO_ERROR) {
+      rv = NS_OK;
+    }
   }
 
   return rv;
