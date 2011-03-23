@@ -266,6 +266,11 @@ public:
     PRUint32& mDecoded;
   };
 
+  // Time in seconds by which the last painted video frame was late by.
+  // E.g. if the last painted frame should have been painted at time t,
+  // but was actually painted at t+n, this returns n in seconds. Threadsafe.
+  double GetFrameDelay();
+
   // Return statistics. This is used for progress events and other things.
   // This can be called from any thread. It's only a snapshot of the
   // current state, since other threads might be changing the state
@@ -361,11 +366,13 @@ public:
   // thread; ImageContainers can be used from any thread.
   ImageContainer* GetImageContainer() { return mImageContainer; }
 
-  // Set the video width, height, pixel aspect ratio, and current image.
-  // Ownership of the image is transferred to the decoder.
+  // Set the video width, height, pixel aspect ratio, current image and
+  // target paint time of the next video frame to be displayed.
+  // Ownership of the image is transferred to the layers subsystem.
   void SetVideoData(const gfxIntSize& aSize,
                     float aPixelAspectRatio,
-                    Image* aImage);
+                    Image* aImage,
+                    TimeStamp aTarget);
 
   // Constructs the time ranges representing what segments of the media
   // are buffered and playable.
@@ -407,6 +414,15 @@ protected:
 
   // Counters related to decode and presentation of frames.
   FrameStatistics mFrameStats;
+
+  // The time at which the current video frame should have been painted.
+  // Access protected by mVideoUpdateLock.
+  TimeStamp mPaintTarget;
+
+  // The delay between the last video frame being presented and it being
+  // painted. This is time elapsed after mPaintTarget until the most recently
+  // painted frame appeared on screen. Access protected by mVideoUpdateLock.
+  TimeDuration mPaintDelay;
 
   nsRefPtr<ImageContainer> mImageContainer;
 

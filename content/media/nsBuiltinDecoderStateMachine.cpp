@@ -985,7 +985,7 @@ nsresult nsBuiltinDecoderStateMachine::Run()
         VideoData* videoData = FindStartTime();
         if (videoData) {
           MonitorAutoExit exitMon(mDecoder->GetMonitor());
-          RenderVideoFrame(videoData);
+          RenderVideoFrame(videoData, TimeStamp::Now());
         }
 
         // Start the decode threads, so that we can pre buffer the streams.
@@ -1107,7 +1107,7 @@ nsresult nsBuiltinDecoderStateMachine::Run()
               if (video) {
                 NS_ASSERTION(video->mTime <= seekTime && seekTime <= video->mEndTime,
                              "Seek target should lie inside the first frame after seek");
-                RenderVideoFrame(video);
+                RenderVideoFrame(video, TimeStamp::Now());
                 mReader->mVideoQueue.PopFront();
                 nsCOMPtr<nsIRunnable> event =
                   NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::Invalidate);
@@ -1270,7 +1270,8 @@ nsresult nsBuiltinDecoderStateMachine::Run()
   return NS_OK;
 }
 
-void nsBuiltinDecoderStateMachine::RenderVideoFrame(VideoData* aData)
+void nsBuiltinDecoderStateMachine::RenderVideoFrame(VideoData* aData,
+                                                    TimeStamp aTarget)
 {
   NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread), "Should be on state machine thread.");
 
@@ -1281,7 +1282,10 @@ void nsBuiltinDecoderStateMachine::RenderVideoFrame(VideoData* aData)
   nsRefPtr<Image> image = aData->mImage;
   if (image) {
     const nsVideoInfo& info = mReader->GetInfo();
-    mDecoder->SetVideoData(gfxIntSize(info.mDisplay.width, info.mDisplay.height), info.mPixelAspectRatio, image);
+    mDecoder->SetVideoData(gfxIntSize(info.mDisplay.width, info.mDisplay.height),
+                           info.mPixelAspectRatio,
+                           image,
+                           aTarget);
   }
 }
 
@@ -1362,12 +1366,14 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
 
     if (currentFrame) {
       // Decode one frame and display it
+      TimeStamp presTime = mPlayStartTime - mPlayDuration +
+        TimeDuration::FromMilliseconds(currentFrame->mTime - mStartTime);
       NS_ASSERTION(currentFrame->mTime >= mStartTime, "Should have positive frame time");
       {
         MonitorAutoExit exitMon(mDecoder->GetMonitor());
         // If we have video, we want to increment the clock in steps of the frame
         // duration.
-        RenderVideoFrame(currentFrame);
+        RenderVideoFrame(currentFrame, presTime);
       }
       mDecoder->GetFrameStatistics().NotifyPresentedFrame();
       PRInt64 now = (TimeStamp::Now() - mPlayStartTime + mPlayDuration).ToMilliseconds();
