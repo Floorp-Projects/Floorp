@@ -598,7 +598,8 @@ ifdef DEBUG
 check-ooms:
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/config/find_OOM_errors.py --regression 129
 
-check:: check-ooms
+# FIXME: Not useful for type-inference right now. Re-enable later.
+#check:: check-ooms
 endif
 
 ifndef WINCE
