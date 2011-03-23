@@ -44,8 +44,7 @@
 #include "nsMemory.h"
 
 // define storage for all atoms
-#define CSS_PSEUDO_CLASS(_name, _value) \
-  nsICSSPseudoClass* nsCSSPseudoClasses::_name;
+#define CSS_PSEUDO_CLASS(_name, _value) static nsIAtom* sPseudoClass_##_name;
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 
@@ -56,7 +55,7 @@
 
 static const nsStaticAtom CSSPseudoClasses_info[] = {
 #define CSS_PSEUDO_CLASS(name_, value_) \
-  NS_STATIC_ATOM(name_##_buffer, (nsIAtom**)&nsCSSPseudoClasses::name_),
+  NS_STATIC_ATOM(name_##_buffer, &sPseudoClass_##name_),
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 };
