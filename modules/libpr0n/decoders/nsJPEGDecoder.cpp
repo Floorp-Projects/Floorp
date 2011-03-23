@@ -84,20 +84,6 @@ static PRLogModuleInfo *gJPEGDecoderAccountingLog = PR_NewLogModule("JPEGDecoder
 #define gJPEGDecoderAccountingLog
 #endif
 
-static qcms_profile*
-GetICCProfile(struct jpeg_decompress_struct &info)
-{
-  JOCTET* profilebuf;
-  PRUint32 profileLength;
-  qcms_profile* profile = nsnull;
-
-  if (read_icc_profile(&info, &profilebuf, &profileLength)) {
-    profile = qcms_profile_from_memory(profile, profileLength);
-    free(profilebuf);
-  }
-
-  return profile;
-}
 
 METHODDEF(void) init_source (j_decompress_ptr jd);
 METHODDEF(boolean) fill_input_buffer (j_decompress_ptr jd);
@@ -262,8 +248,14 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
       return;
 
     /* We're doing a full decode. */
-    if (mCMSMode != eCMSMode_Off &&
-        (mInProfile = GetICCProfile(mInfo)) != nsnull) {
+    JOCTET  *profile;
+    PRUint32 profileLength;
+
+    if ((mCMSMode != eCMSMode_Off) &&
+        read_icc_profile(&mInfo, &profile, &profileLength) &&
+        (mInProfile = qcms_profile_from_memory(profile, profileLength)) != NULL) {
+      free(profile);
+
       PRUint32 profileSpace = qcms_profile_get_color_space(mInProfile);
       PRBool mismatch = PR_FALSE;
 
