@@ -210,9 +210,9 @@ MeterEntryCount(uintN count);
 
 } /* namespace js */
 
-struct JSObjectMap {
-    uint32 shape;       /* shape identifier */
-    uint32 slotSpan;    /* one more than maximum live slot number */
+struct JSObjectMap : public js::gc::Cell {
+    mutable uint32 shape;  /* shape identifier */
+    uint32 slotSpan;       /* one more than maximum live slot number */
 
     static JS_FRIEND_DATA(JSObjectMap) sharedNonNative;
 

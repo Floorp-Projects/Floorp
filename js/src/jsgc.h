@@ -93,6 +93,7 @@ enum FinalizeKind {
     FINALIZE_OBJECT16,
     FINALIZE_OBJECT_LAST = FINALIZE_OBJECT16,
     FINALIZE_FUNCTION,
+    FINALIZE_SHAPE,
 #if JS_HAS_XML_SUPPORT
     FINALIZE_XML,
 #endif
@@ -513,12 +514,12 @@ GetArena(Cell *cell)
     return reinterpret_cast<Arena<T> *>(cell->arena());
 }
 
-#define JSTRACE_XML         2
+#define JSTRACE_XML         3
 
 /*
  * One past the maximum trace kind.
  */
-#define JSTRACE_LIMIT       3
+#define JSTRACE_LIMIT       4
 
 /*
  * Lower limit after which we limit the heap growth
@@ -546,6 +547,7 @@ GetFinalizableTraceKind(size_t thingKind)
         JSTRACE_OBJECT,     /* FINALIZE_OBJECT12 */
         JSTRACE_OBJECT,     /* FINALIZE_OBJECT16 */
         JSTRACE_OBJECT,     /* FINALIZE_FUNCTION */
+        JSTRACE_SHAPE,      /* FINALIZE_SHAPE */
 #if JS_HAS_XML_SUPPORT      /* FINALIZE_XML */
         JSTRACE_XML,
 #endif
@@ -1071,7 +1073,7 @@ namespace gc {
 #if JS_HAS_XML_SUPPORT
 # define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) < JSTRACE_LIMIT)
 #else
-# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_STRING)
+# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_SHAPE)
 #endif
 
 /*

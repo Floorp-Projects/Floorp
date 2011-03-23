@@ -2830,16 +2830,6 @@ TraceMonitor::flush()
 }
 
 inline bool
-IsShapeAboutToBeFinalized(JSContext *cx, const js::Shape *shape)
-{
-    JSRuntime *rt = cx->runtime;
-    if (rt->gcCurrentCompartment != NULL)
-        return false;
-
-    return !shape->marked();
-}
-
-inline bool
 HasUnreachableGCThings(JSContext *cx, TreeFragment *f)
 {
     /*
@@ -2859,7 +2849,7 @@ HasUnreachableGCThings(JSContext *cx, TreeFragment *f)
     const Shape** shapep = f->shapes.data();
     for (unsigned len = f->shapes.length(); len; --len) {
         const Shape* shape = *shapep++;
-        if (IsShapeAboutToBeFinalized(cx, shape))
+        if (IsAboutToBeFinalized(cx, shape))
             return true;
     }
     return false;
