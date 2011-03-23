@@ -163,7 +163,7 @@ struct Arena {
     inline ConservativeGCTest mark(T *thing, JSTracer *trc);
     void markDelayedChildren(JSTracer *trc);
     inline bool inFreeList(void *thing) const;
-    inline T *getAlignedThing(void *thing);
+    inline T *getAlignedThing(const void *thing);
 #ifdef DEBUG
     inline bool assureThingIsAligned(void *thing);
 #endif
@@ -428,7 +428,7 @@ Arena<T>::bitmap() const
 
 template <typename T>
 inline T *
-Arena<T>::getAlignedThing(void *thing)
+Arena<T>::getAlignedThing(const void *thing)
 {
     jsuword start = reinterpret_cast<jsuword>(&t.things[0]);
     jsuword offset = reinterpret_cast<jsuword>(thing) - start;
@@ -533,7 +533,7 @@ GetFinalizableTraceKind(size_t thingKind)
 }
 
 inline uint32
-GetGCThingTraceKind(void *thing);
+GetGCThingTraceKind(const void *thing);
 
 static inline JSRuntime *
 GetGCThingRuntime(void *thing)
@@ -773,7 +773,7 @@ extern void
 js_UnlockGCThingRT(JSRuntime *rt, void *thing);
 
 extern JS_FRIEND_API(bool)
-IsAboutToBeFinalized(JSContext *cx, void *thing);
+IsAboutToBeFinalized(JSContext *cx, const void *thing);
 
 extern JS_FRIEND_API(bool)
 js_GCThingIsMarked(void *thing, uintN color);
@@ -1013,7 +1013,7 @@ struct GCMarker : public JSTracer {
         color = newColor;
     }
 
-    void delayMarkingChildren(void *thing);
+    void delayMarkingChildren(const void *thing);
 
     JS_FRIEND_API(void) markDelayedChildren();
 };
