@@ -1525,7 +1525,7 @@ TypeSet::getKnownObjectKind(JSContext *cx, JSScript *script)
 bool
 TypeSet::knownNonEmpty(JSContext *cx, JSScript *script)
 {
-    if (typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET != 0 || objectCount != 0)
+    if ((typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET) != 0 || objectCount != 0)
         return true;
 
     add(cx, ArenaNew<TypeConstraintFreeze>(cx->compartment->types.pool, script), false);
@@ -1536,7 +1536,7 @@ TypeSet::knownNonEmpty(JSContext *cx, JSScript *script)
 JSObject *
 TypeSet::getSingleton(JSContext *cx, JSScript *script)
 {
-    if (typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET != 0 || objectCount != 1)
+    if ((typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET) != 0 || objectCount != 1)
         return NULL;
 
     TypeObject *object = (TypeObject *) objectSet;
