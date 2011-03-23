@@ -1668,3 +1668,12 @@ void nsBuiltinDecoderStateMachine::StartBuffering()
     stats.mPlaybackRate/1024, stats.mPlaybackRateReliable ? "" : " (unreliable)",
     stats.mDownloadRate/1024, stats.mDownloadRateReliable ? "" : " (unreliable)"));
 }
+
+nsresult nsBuiltinDecoderStateMachine::GetBuffered(nsTimeRanges* aBuffered) {
+  nsMediaStream* stream = mDecoder->GetCurrentStream();
+  NS_ENSURE_TRUE(stream, NS_ERROR_FAILURE);
+  stream->Pin();
+  nsresult res = mReader->GetBuffered(aBuffered, mStartTime);
+  stream->Unpin();
+  return res;
+}

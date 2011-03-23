@@ -235,9 +235,7 @@ public:
   // Accessed on state machine, audio, main, and AV thread. 
   State mState;
 
-  nsresult GetBuffered(nsTimeRanges* aBuffered) {
-    return mReader->GetBuffered(aBuffered, mStartTime);
-  }
+  nsresult GetBuffered(nsTimeRanges* aBuffered);
 
   void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
