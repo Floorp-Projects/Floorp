@@ -364,6 +364,9 @@ public:
   inline bool IsHyperText() const { return mFlags & eHyperTextAccessible; }
   nsHyperTextAccessible* AsHyperText();
 
+  inline bool IsRoot() const { return mFlags & eRootAccessible; }
+  nsRootAccessible* AsRoot();
+
   inline bool IsTextLeaf() const { return mFlags & eTextLeafAccessible; }
   nsTextAccessible* AsTextLeaf();
 
@@ -509,7 +512,8 @@ protected:
   enum AccessibleTypes {
     eApplicationAccessible = 1 << 2,
     eHyperTextAccessible = 1 << 3,
-    eTextLeafAccessible = 1 << 4
+    eRootAccessible = 1 << 4,
+    eTextLeafAccessible = 1 << 5
   };
 
   //////////////////////////////////////////////////////////////////////////////

@@ -1341,6 +1341,9 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
+    nsIDocument* doc = GetCurrentDoc();
+    mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
+
     PRBool isId = PR_FALSE;
     if (aName == nsGkAtoms::id && aNameSpaceID == kNameSpaceID_None) {
       // Have to do this before clearing flag. See RemoveFromIdTable
@@ -1358,9 +1361,6 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
 
     nsAutoString oldValue;
     GetAttr(aNameSpaceID, aName, oldValue);
-
-    nsIDocument* doc = GetCurrentDoc();
-    mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
 
     // When notifying, make sure to keep track of states whose value
     // depends solely on the value of an attribute.

@@ -61,11 +61,13 @@
 #include "jsnum.h"
 #include "jsinferinlines.h"
 #include "jsscopeinlines.h"
+#include "jsscriptinlines.h"
 #include "jsstr.h"
 
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsprobes.h"
+#include "jsscopeinlines.h"
 
 inline bool
 JSObject::preventExtensions(JSContext *cx, js::AutoIdVector *props)
@@ -137,6 +139,37 @@ JSObject::syncSpecialEquality()
 }
 
 inline void
+JSObject::trace(JSTracer *trc)
+{
+    if (!isNative())
+        return;
+
+    JSContext *cx = trc->context;
+    js::Shape *shape = lastProp;
+
+    if (IS_GC_MARKING_TRACER(trc) && cx->runtime->gcRegenShapes) {
+        /*
+         * Either this object has its own shape, which must be regenerated, or
+         * it must have the same shape as lastProp.
+         */
+        if (!shape->hasRegenFlag()) {
+            shape->shape = js_RegenerateShapeForGC(cx->runtime);
+            shape->setRegenFlag();
+        }
+
+        uint32 newShape = shape->shape;
+        if (hasOwnShape()) {
+            newShape = js_RegenerateShapeForGC(cx->runtime);
+            JS_ASSERT(newShape != shape->shape);
+        }
+        objShape = newShape;
+    }
+
+    /* Trace our property tree or dictionary ancestor line. */
+    js::Shape::trace(trc, shape);
+}
+
+inline void
 JSObject::finalize(JSContext *cx)
 {
     /* Cope with stillborn objects that have no map. */
@@ -151,6 +184,59 @@ JSObject::finalize(JSContext *cx)
     js::Probes::finalizeObject(this);
 
     finish(cx);
+}
+
+/* 
+ * Initializer for Call objects for functions and eval frames. Set class,
+ * parent, map, and shape, and allocate slots.
+ */
+inline void
+JSObject::initCall(JSContext *cx, const js::Bindings *bindings, JSObject *parent)
+{
+    init(cx, &js_CallClass, cx->getTypeEmpty(), parent, NULL, false);
+    map = bindings->lastShape();
+
+    /*
+     * If |bindings| is for a function that has extensible parents, that means
+     * its Call should have its own shape; see js::Bindings::extensibleParents.
+     */
+    if (bindings->extensibleParents())
+        setOwnShape(js_GenerateShape(cx));
+    else
+        objShape = map->shape;
+}
+
+/*
+ * Initializer for cloned block objects. Set class, prototype, frame, map, and
+ * shape.
+ */
+inline void
+JSObject::initClonedBlock(JSContext *cx, js::types::TypeObject *type, JSStackFrame *frame)
+{
+    init(cx, &js_BlockClass, type, NULL, frame, false);
+
+    /* Cloned blocks copy their prototype's map; it had better be shareable. */
+    JS_ASSERT(!getProto()->inDictionaryMode() || getProto()->lastProp->frozen());
+    map = getProto()->map;
+
+    /*
+     * If the prototype has its own shape, that means the clone should, too; see
+     * js::Bindings::extensibleParents.
+     */
+    if (getProto()->hasOwnShape())
+        setOwnShape(js_GenerateShape(cx));
+    else
+        objShape = map->shape;
+}
+
+/* 
+ * Mark a compile-time block as OWN_SHAPE, indicating that its run-time clones
+ * also need unique shapes. See js::Bindings::extensibleParents.
+ */
+inline void
+JSObject::setBlockOwnShape(JSContext *cx) {
+    JS_ASSERT(isStaticBlock());
+    setOwnShape(js_GenerateShape(cx));
 }
 
 /*
@@ -645,7 +731,7 @@ JSObject::getNamePrefix() const
 {
     JS_ASSERT(isNamespace() || isQName());
     const js::Value &v = getSlot(JSSLOT_NAME_PREFIX);
-    return !v.isUndefined() ? v.toString()->assertIsLinear() : NULL;
+    return !v.isUndefined() ? &v.toString()->asLinear() : NULL;
 }
 
 inline jsval
@@ -674,7 +760,7 @@ JSObject::getNameURI() const
 {
     JS_ASSERT(isNamespace() || isQName());
     const js::Value &v = getSlot(JSSLOT_NAME_URI);
-    return !v.isUndefined() ? v.toString()->assertIsLinear() : NULL;
+    return !v.isUndefined() ? &v.toString()->asLinear() : NULL;
 }
 
 inline jsval
@@ -710,7 +796,7 @@ JSObject::getQNameLocalName() const
 {
     JS_ASSERT(isQName());
     const js::Value &v = getSlot(JSSLOT_QNAME_LOCAL_NAME);
-    return !v.isUndefined() ? v.toString()->assertIsLinear() : NULL;
+    return !v.isUndefined() ? &v.toString()->asLinear() : NULL;
 }
 
 inline jsval

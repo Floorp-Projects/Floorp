@@ -11,7 +11,7 @@
 != defaultfont-bolditalic.html defaultfont.html 
 != defaultfont-bolditalic.html defaultfont-bold.html
 
-!= defaultjapanese-bold.html defaultjapanese.html
+fails-if(Android) != defaultjapanese-bold.html defaultjapanese.html
 != defaultjapanese-italic.html defaultjapanese.html
 != defaultjapanese-oblique.html defaultjapanese.html
 != defaultjapanese-bolditalic.html defaultjapanese.html

@@ -1671,6 +1671,7 @@ nsXULDocument::AddElementToDocumentPre(Element* aElement)
     // elements from prototypes.
     nsIAtom* id = aElement->GetID();
     if (id) {
+        nsAutoScriptBlocker scriptBlocker;
         AddToIdTable(aElement, id);
     }
     rv = AddElementToRefMap(aElement);
@@ -1809,6 +1810,7 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
     RemoveElementFromRefMap(aElement);
     nsIAtom* id = aElement->GetID();
     if (id) {
+        nsAutoScriptBlocker scriptBlocker;
         RemoveFromIdTable(aElement, id);
     }
 

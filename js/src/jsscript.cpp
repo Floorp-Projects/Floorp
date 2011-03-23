@@ -311,7 +311,28 @@ enum ScriptBits {
 };
 
 JSBool
-js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
+js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
+{
+    JS_ASSERT(!xdr->atoms);
+    JS_ASSERT(!xdr->atomsMap);
+
+    XDRAtoms atoms;
+    XDRAtomsHashMap atomsMap;
+    if (xdr->mode == JSXDR_ENCODE && !atomsMap.init()) {
+        js_ReportOutOfMemory(xdr->cx);
+        return false;
+    }
+
+    xdr->atoms = &atoms;
+    xdr->atomsMap = &atomsMap;
+    JSBool ok = js_XDRScriptAndSubscripts(xdr, scriptp);
+    xdr->atoms = NULL;
+    xdr->atomsMap = NULL;
+    return ok;
+}
+
+JSBool
+js_XDRScriptAndSubscripts(JSXDRState *xdr, JSScript **scriptp)
 {
     JSScript *oldscript;
     JSBool ok;
@@ -322,7 +343,6 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     uint16 nClosedArgs = 0, nClosedVars = 0;
     JSPrincipals *principals;
     uint32 encodeable;
-    JSBool filenameWasSaved;
     jssrcnote *sn;
     JSSecurityCallbacks *callbacks;
     uint32 scriptBits = 0;
@@ -330,29 +350,10 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     JSContext *cx = xdr->cx;
     JSScript *script = *scriptp;
     nsrcnotes = ntrynotes = natoms = nobjects = nregexps = nconsts = 0;
-    filenameWasSaved = JS_FALSE;
     jssrcnote *notes = NULL;
 
     /* Should not XDR scripts optimized for a single global object. */
     JS_ASSERT_IF(script, !JSScript::isValidOffset(script->globalsOffset));
-
-    uint32 magic;
-    if (xdr->mode == JSXDR_ENCODE)
-        magic = JSXDR_MAGIC_SCRIPT_CURRENT;
-    if (!JS_XDRUint32(xdr, &magic))
-        return JS_FALSE;
-    if (magic != JSXDR_MAGIC_SCRIPT_CURRENT) {
-        /* We do not provide binary compatibility with older scripts. */
-        if (!hasMagic) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BAD_SCRIPT_MAGIC);
-            return JS_FALSE;
-        }
-        *hasMagic = JS_FALSE;
-        return JS_TRUE;
-    }
-    if (hasMagic)
-        *hasMagic = JS_TRUE;
 
     /* XDR arguments, local vars, and upvars. */
     uint16 nargs, nvars, nupvars;
@@ -613,11 +614,15 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         goto error;
 
     if (!JS_XDRBytes(xdr, (char *)notes, nsrcnotes * sizeof(jssrcnote)) ||
-        !JS_XDRCStringOrNull(xdr, (char **)&script->filename) ||
         !JS_XDRUint32(xdr, &lineno) ||
         !JS_XDRUint32(xdr, &nslots)) {
         goto error;
     }
+
+    JS_ASSERT_IF(xdr->mode == JSXDR_ENCODE, xdr->filename == script->filename);
+
+    if (xdr->mode == JSXDR_DECODE)
+        script->filename = xdr->filename;
 
     callbacks = JS_GetSecurityCallbacks(cx);
     if (xdr->mode == JSXDR_ENCODE) {
@@ -645,19 +650,9 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     }
 
     if (xdr->mode == JSXDR_DECODE) {
-        const char *filename = script->filename;
-        if (filename) {
-            filename = js_SaveScriptFilename(cx, filename);
-            if (!filename)
-                goto error;
-            cx->free((void *) script->filename);
-            script->filename = filename;
-            filenameWasSaved = JS_TRUE;
-        }
         script->lineno = (uintN)lineno;
         script->nslots = (uint16)nslots;
         script->staticLevel = (uint16)(nslots >> 16);
-
     }
 
     for (i = 0; i != natoms; ++i) {
@@ -749,10 +744,6 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
 
   error:
     if (xdr->mode == JSXDR_DECODE) {
-        if (script->filename && !filenameWasSaved) {
-            cx->free((void *) script->filename);
-            script->filename = NULL;
-        }
         js_DestroyScript(cx, script);
         *scriptp = NULL;
     }
@@ -2034,7 +2025,10 @@ js_CloneScript(JSContext *cx, JSScript *script)
     // we don't want gecko to transcribe our principals for us
     DisablePrincipalsTranscoding disable(cx);
 
-    if (!js_XDRScript(w, &script, NULL)) {
+#ifdef DEBUG
+    w->filename = script->filename;
+#endif
+    if (!js_XDRScript(w, &script)) {
         JS_XDRDestroy(w);
         return NULL;
     }
@@ -2058,7 +2052,9 @@ js_CloneScript(JSContext *cx, JSScript *script)
     JS_XDRMemSetData(r, p, nbytes);
     JS_XDRMemSetData(w, NULL, 0);
 
-    if (!js_XDRScript(r, &script, NULL))
+    r->filename = script->filename;
+
+    if (!js_XDRScript(r, &script))
         return NULL;
 
     JS_XDRDestroy(r);

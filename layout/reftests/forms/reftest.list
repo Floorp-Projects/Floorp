@@ -1,25 +1,25 @@
 
 == checkbox-label-dynamic.html checkbox-label-dynamic-ref.html
-== checkbox-radio-stretched.html checkbox-radio-stretched-ref.html # test for bug 464589
+fails-if(Android) == checkbox-radio-stretched.html checkbox-radio-stretched-ref.html # test for bug 464589
 
 == input-file-width-clip-1.html input-file-width-clip-ref.html # test for bug 409587
 == input-hidden-border.html about:blank
 == input-text-size-1.html input-text-size-1-ref.html
-== input-text-size-2.html input-text-size-2-ref.html
+fails-if(Android) == input-text-size-2.html input-text-size-2-ref.html
 HTTP(..) == input-text-baseline-1.html input-text-baseline-1-ref.html
 HTTP(..) == input-text-centering-1.xul input-text-centering-1-ref.xul
-HTTP(..) == text-control-baseline-1.html text-control-baseline-1-ref.html
+fails-if(Android) HTTP(..) == text-control-baseline-1.html text-control-baseline-1-ref.html
 == input-text-dynamic-height-1.xul input-text-dynamic-height-1-ref.xul
 == textbox-align-baseline-1.xul textbox-align-baseline-1-ref.xul # test for bug 494901
-== textbox-setsize.xul textbox-setsize-ref.xul
-== textarea-resize.html textarea-resize-ref.html
+fails-if(Android) == textbox-setsize.xul textbox-setsize-ref.xul
+fails-if(Android) == textarea-resize.html textarea-resize-ref.html
 # an offset seems to apply to the native resizer on windows so skip this test for now
-skip-if(winWidget) == textarea-resize-background.html textarea-resize-background-ref.html
-!= textarea-ltr.html textarea-rtl.html
-!= textarea-ltr-scrollbar.html textarea-rtl-scrollbar.html
-!= textarea-in-ltr-doc-scrollbar.html textarea-in-rtl-doc-scrollbar.html
-!= textarea-ltr.html textarea-no-resize.html
-!= textarea-rtl.html textarea-no-resize.html
+fails-if(Android) skip-if(winWidget) == textarea-resize-background.html textarea-resize-background-ref.html
+fails-if(Android) != textarea-ltr.html textarea-rtl.html
+fails-if(Android) != textarea-ltr-scrollbar.html textarea-rtl-scrollbar.html
+fails-if(Android) != textarea-in-ltr-doc-scrollbar.html textarea-in-rtl-doc-scrollbar.html
+fails-if(Android) != textarea-ltr.html textarea-no-resize.html
+fails-if(Android) != textarea-rtl.html textarea-no-resize.html
 == textarea-rtl.html textarea-rtl-dynamic-attr.html
 == textarea-rtl.html textarea-rtl-dynamic-style.html
 == textarea-rtl.html textarea-in-dynamic-rtl-doc.html

@@ -1688,6 +1688,9 @@ HUD_SERVICE.prototype =
   function HS_registerHUDReference(aHUD)
   {
     this.hudReferences[aHUD.hudId] = aHUD;
+
+    let id = ConsoleUtils.supString(aHUD.hudId);
+    Services.obs.notifyObservers(id, "web-console-created", null);
   },
 
   /**
@@ -2901,7 +2904,7 @@ HUD_SERVICE.prototype =
     for (let i = 0; i < aOutputNode.selectedCount; i++) {
       let item = aOutputNode.selectedItems[i];
 
-      // Add newlines between groups so that group boundaries show up in the
+      // Add dashes between groups so that group boundaries show up in the
       // copied output.
       if (i > 0 && item.classList.contains("webconsole-new-group")) {
         newGroup = true;
@@ -2912,7 +2915,7 @@ HUD_SERVICE.prototype =
           !item.classList.contains("hud-filtered-by-string")) {
         let timestampString = ConsoleUtils.timestampString(item.timestamp);
         if (newGroup) {
-          strings.push("\n");
+          strings.push("--");
           newGroup = false;
         }
         strings.push("[" + timestampString + "] " + item.clipboardText);
@@ -3456,9 +3459,6 @@ HeadsUpDisplay.prototype = {
 
       let nodes = this.notificationBox.insertBefore(this.HUDBox,
         this.notificationBox.childNodes[0]);
-
-      let id = ConsoleUtils.supString(this.hudId);
-      Services.obs.notifyObservers(id, "web-console-created", null);
 
       return this.HUDBox;
     }

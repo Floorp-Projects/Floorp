@@ -59,7 +59,6 @@ SDK_XPIDLSRCS   = \
 		nsIUploadChannel.idl \
 		nsIUnicharStreamListener.idl \
 		nsITraceableChannel.idl \
-		nsIX509Cert.idl \
 		$(NULL)
 
 XPIDLSRCS	= \
@@ -144,8 +143,6 @@ XPIDLSRCS	= \
 		nsIRedirectResultListener.idl \
 		mozIThirdPartyUtil.idl \
 		nsISerializationHelper.idl \
-		nsISSLStatus.idl \
-		nsISSLStatusProvider.idl \
 		$(NULL)
 
 ifdef MOZ_IPC

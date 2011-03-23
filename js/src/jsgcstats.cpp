@@ -364,7 +364,7 @@ GCMarker::dumpConservativeRoots()
             JSString *str = (JSString *) i->thing;
             if (str->isLinear()) {
                 char buf[50];
-                PutEscapedString(buf, sizeof buf, str->assertIsLinear(), '"');
+                PutEscapedString(buf, sizeof buf, &str->asLinear(), '"');
                 fprintf(fp, "string %s", buf);
             } else {
                 fprintf(fp, "rope: length %d", (int)str->length());

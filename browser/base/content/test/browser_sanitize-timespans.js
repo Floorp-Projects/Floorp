@@ -283,7 +283,7 @@ function setupHistory() {
   let today = new Date();
   today.setHours(0);
   today.setMinutes(0);
-  today.setSeconds(30);
+  today.setSeconds(1);
   bhist.addPageWithDetails(makeURI("http://today.com/"), "Today", today.valueOf() * 1000);
   
   let lastYear = new Date();
@@ -526,7 +526,7 @@ function setupDownloads() {
   let today = new Date();
   today.setHours(0);
   today.setMinutes(0);
-  today.setSeconds(30);
+  today.setSeconds(1);
   
   data = {
     id:   "5555554",

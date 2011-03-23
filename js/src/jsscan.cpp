@@ -182,6 +182,31 @@ TokenStream::init(const jschar *base, size_t length, const char *fn, uintN ln, J
     listener = cx->debugHooks->sourceHandler;
     listenerData = cx->debugHooks->sourceHandlerData;
 
+    /*
+     * This table holds all the token kinds that satisfy these properties:
+     * - A single char long.
+     * - Cannot be a prefix of any longer token (eg. '+' is excluded because
+     *   '+=' is a valid token).
+     * - Doesn't need tp->t_op set (eg. this excludes '~').
+     *
+     * The few token kinds satisfying these properties cover roughly 35--45%
+     * of the tokens seen in practice.
+     *
+     * Nb: oneCharTokens, maybeEOL and maybeStrSpecial could be static, but
+     * initializing them this way is a bit easier.  Don't worry, the time to
+     * initialize them for each TokenStream is trivial.  See bug 639420.
+     */
+    memset(oneCharTokens, 0, sizeof(oneCharTokens));
+    oneCharTokens[';'] = TOK_SEMI;
+    oneCharTokens[','] = TOK_COMMA;
+    oneCharTokens['?'] = TOK_HOOK;
+    oneCharTokens['['] = TOK_LB;
+    oneCharTokens[']'] = TOK_RB;
+    oneCharTokens['{'] = TOK_LC;
+    oneCharTokens['}'] = TOK_RC;
+    oneCharTokens['('] = TOK_LP;
+    oneCharTokens[')'] = TOK_RP;
+
     /* See getChar() for an explanation of maybeEOL[]. */
     memset(maybeEOL, 0, sizeof(maybeEOL));
     maybeEOL['\n'] = true;
@@ -296,7 +321,10 @@ TokenStream::getChar()
 
 /*
  * This gets the next char. It does nothing special with EOL sequences, not
- * even updating the line counters.
+ * even updating the line counters.  It can be used safely if (a) the
+ * resulting char is guaranteed to be ungotten (by ungetCharIgnoreEOL()) if
+ * it's an EOL, and (b) the line-related state (lineno, linebase) is not used
+ * before it's ungotten.
  */
 int32
 TokenStream::getCharIgnoreEOL()
@@ -339,7 +367,6 @@ TokenStream::ungetCharIgnoreEOL(int32 c)
 {
     if (c == EOF)
         return;
-    JS_ASSERT(TokenBuf::isRawEOLChar(c));
     JS_ASSERT(!userbuf.atStart());
     userbuf.ungetRawChar();
 }
@@ -773,15 +800,6 @@ TokenStream::newToken(ptrdiff_t adjust)
     return tp;
 }
 
-static JS_ALWAYS_INLINE JSBool
-ScanAsSpace(jschar c)
-{
-    /* Treat little- and big-endian BOMs as whitespace for compatibility. */
-    if (JS_ISSPACE(c) || c == 0xfffe || c == 0xfeff)
-        return JS_TRUE;
-    return JS_FALSE;
-}
-
 JS_ALWAYS_INLINE JSAtom *
 TokenStream::atomize(JSContext *cx, CharBuffer &cb)
 {
@@ -821,6 +839,30 @@ IsTokenSane(Token *tp)
 }
 #endif
 
+bool
+TokenStream::putIdentInTokenbuf(const jschar *identStart)
+{
+    int32 c, qc;
+    const jschar *tmp = userbuf.addressOfNextRawChar(); 
+    userbuf.setAddressOfNextRawChar(identStart);
+
+    tokenbuf.clear();
+    for (;;) {
+        c = getCharIgnoreEOL();
+        if (!JS_ISIDENT(c)) {
+            if (c != '\\' || !matchUnicodeEscapeIdent(&qc))
+                break;
+            c = qc;
+        }
+        if (!tokenbuf.append(c)) {
+            userbuf.setAddressOfNextRawChar(tmp);
+            return false;
+        }
+    }
+    userbuf.setAddressOfNextRawChar(tmp);
+    return true;
+}
+
 TokenKind
 TokenStream::getTokenInternal()
 {
@@ -829,6 +871,7 @@ TokenStream::getTokenInternal()
     Token *tp;
     JSAtom *atom;
     bool hadUnicodeEscape;
+    const jschar *numStart;
 #if JS_HAS_XML_SUPPORT
     JSBool inTarget;
     size_t targetLength;
@@ -839,7 +882,6 @@ TokenStream::getTokenInternal()
     /*
      * Look for XML text.
      */
-
     if (flags & TSF_XMLTEXTMODE) {
         tt = TOK_XMLSPACE;      /* veto if non-space, return TOK_XMLTEXT */
         tp = newToken(0);
@@ -877,7 +919,6 @@ TokenStream::getTokenInternal()
     /*
      * Look for XML tags.
      */
-
     if (flags & TSF_XMLTAGMODE) {
         tp = newToken(0);
         c = getChar();
@@ -1014,7 +1055,7 @@ TokenStream::getTokenInternal()
             flags |= TSF_EOL;
             continue;
         }
-    } while (ScanAsSpace((jschar)c));
+    } while (JS_ISSPACE_OR_BOM((jschar)c));
 
     if (c == EOF) {
         tp = newToken(0);   /* no -1 here because userbuf.ptr isn't incremented for EOF */
@@ -1024,31 +1065,35 @@ TokenStream::getTokenInternal()
     tp = newToken(-1);
 
     /*
+     * Look for a one-char token;  they're common and simple.
+     */
+    if (c < 128) {
+        tt = (TokenKind)oneCharTokens[c];
+        if (tt != 0)
+            goto out;
+    }
+
+    /*
      * Look for an identifier.
      */
-
     hadUnicodeEscape = false;
     if (JS_ISIDSTART(c) ||
         (c == '\\' && (hadUnicodeEscape = matchUnicodeEscapeIdStart(&qc))))
     {
-        if (hadUnicodeEscape)
+        const jschar *identStart = userbuf.addressOfNextRawChar() - 1;
+        if (hadUnicodeEscape) {
             c = qc;
-        tokenbuf.clear();
+            identStart -= 5;    /* account for the length of the escape */
+        }
         for (;;) {
-            if (!tokenbuf.append(c))
-                goto error;
-            c = getChar();
-            if (c == '\\') {
-                if (!matchUnicodeEscapeIdent(&qc))
+            c = getCharIgnoreEOL();
+            if (!JS_ISIDENT(c)) {
+                if (c != '\\' || !matchUnicodeEscapeIdent(&qc))
                     break;
-                c = qc;
                 hadUnicodeEscape = true;
-            } else {
-                if (!JS_ISIDENT(c))
-                    break;
             }
         }
-        ungetChar(c);
+        ungetCharIgnoreEOL(c);
 
         /*
          * Check for keywords unless we saw Unicode escape or parser asks
@@ -1057,7 +1102,7 @@ TokenStream::getTokenInternal()
         const KeywordInfo *kw;
         if (!hadUnicodeEscape &&
             !(flags & TSF_KEYWORD_IS_NAME) &&
-            (kw = FindKeyword(tokenbuf.begin(), tokenbuf.length()))) {
+            (kw = FindKeyword(identStart, userbuf.addressOfNextRawChar() - identStart))) {
             if (kw->tokentype == TOK_RESERVED) {
                 if (!ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
                                               JSMSG_RESERVED_ID, kw->chars)) {
@@ -1091,7 +1136,17 @@ TokenStream::getTokenInternal()
             }
         }
 
-        atom = atomize(cx, tokenbuf);
+        /* 
+         * Identifiers containing no Unicode escapes can be atomized directly
+         * from userbuf.  The rest must have the escapes converted via
+         * tokenbuf before atomizing.
+         */
+        if (!hadUnicodeEscape)
+            atom = js_AtomizeChars(cx, identStart, userbuf.addressOfNextRawChar() - identStart, 0);
+        else if (putIdentInTokenbuf(identStart))
+            atom = atomize(cx, tokenbuf);
+        else
+            atom = NULL;
         if (!atom)
             goto error;
         tp->t_op = JSOP_NAME;
@@ -1101,106 +1156,56 @@ TokenStream::getTokenInternal()
     }
 
     /*
-     * Look for a number.
+     * Look for a decimal number.
      */
+    if (JS7_ISDECNZ(c) || (c == '.' && JS7_ISDEC(peekChar()))) {
+        numStart = userbuf.addressOfNextRawChar() - 1;
 
-    if (JS7_ISDEC(c) || (c == '.' && JS7_ISDEC(peekChar()))) {
-        int radix = 10;
-        tokenbuf.clear();
+      decimal:
+        bool hasFracOrExp = false;
+        while (JS7_ISDEC(c))
+            c = getCharIgnoreEOL();
 
-        if (c == '0') {
-            c = getChar();
-            if (JS_TOLOWER(c) == 'x') {
-                radix = 16;
-                c = getChar();
-                if (!JS7_ISHEX(c)) {
-                    ungetChar(c);
-                    ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
-                                             JSMSG_MISSING_HEXDIGITS);
-                    goto error;
-                }
-            } else if (JS7_ISDEC(c)) {
-                radix = 8;
-            }
+        if (c == '.') {
+            hasFracOrExp = true;
+            do {
+                c = getCharIgnoreEOL();
+            } while (JS7_ISDEC(c));
         }
-
-        while (JS7_ISHEX(c)) {
-            if (radix < 16) {
-                if (JS7_ISLET(c))
-                    break;
-
-                if (radix == 8) {
-                    /* Octal integer literals are not permitted in strict mode code. */
-                    if (!ReportStrictModeError(cx, this, NULL, NULL, JSMSG_DEPRECATED_OCTAL))
-                        goto error;
-
-                    /*
-                     * Outside strict mode, we permit 08 and 09 as decimal numbers, which
-                     * makes our behaviour a superset of the ECMA numeric grammar. We
-                     * might not always be so permissive, so we warn about it.
-                     */
-                    if (c >= '8') {
-                        if (!ReportCompileErrorNumber(cx, this, NULL, JSREPORT_WARNING,
-                                                      JSMSG_BAD_OCTAL, c == '8' ? "08" : "09")) {
-                            goto error;
-                        }
-                        radix = 10;
-                    }
-                }
-            }
-            if (!tokenbuf.append(c))
+        if (c == 'e' || c == 'E') {
+            hasFracOrExp = true;
+            c = getCharIgnoreEOL();
+            if (c == '+' || c == '-')
+                c = getCharIgnoreEOL();
+            if (!JS7_ISDEC(c)) {
+                ungetCharIgnoreEOL(c);
+                ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
+                                         JSMSG_MISSING_EXPONENT);
                 goto error;
-            c = getChar();
-        }
-
-        if (radix == 10 && (c == '.' || JS_TOLOWER(c) == 'e')) {
-            if (c == '.') {
-                do {
-                    if (!tokenbuf.append(c))
-                        goto error;
-                    c = getChar();
-                } while (JS7_ISDEC(c));
             }
-            if (JS_TOLOWER(c) == 'e') {
-                if (!tokenbuf.append(c))
-                    goto error;
-                c = getChar();
-                if (c == '+' || c == '-') {
-                    if (!tokenbuf.append(c))
-                        goto error;
-                    c = getChar();
-                }
-                if (!JS7_ISDEC(c)) {
-                    ungetChar(c);
-                    ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
-                                             JSMSG_MISSING_EXPONENT);
-                    goto error;
-                }
-                do {
-                    if (!tokenbuf.append(c))
-                        goto error;
-                    c = getChar();
-                } while (JS7_ISDEC(c));
-            }
+            do {
+                c = getCharIgnoreEOL();
+            } while (JS7_ISDEC(c));
         }
+        ungetCharIgnoreEOL(c);
 
         if (JS_ISIDSTART(c)) {
             ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR, JSMSG_IDSTART_AFTER_NUMBER);
             goto error;
         }
 
-        /* Put back the next char and NUL-terminate tokenbuf for js_strto*. */
-        ungetChar(c);
-        if (!tokenbuf.append(0))
-            goto error;
-
+        /* 
+         * Unlike identifiers and strings, numbers cannot contain escaped
+         * chars, so we don't need to use tokenbuf.  Instead we can just
+         * convert the jschars in userbuf directly to the numeric value.
+         */
         jsdouble dval;
         const jschar *dummy;
-        if (radix == 10) {
-            if (!js_strtod(cx, tokenbuf.begin(), tokenbuf.end(), &dummy, &dval))
+        if (!hasFracOrExp) {
+            if (!GetPrefixInteger(cx, numStart, userbuf.addressOfNextRawChar(), 10, &dummy, &dval))
                 goto error;
         } else {
-            if (!GetPrefixInteger(cx, tokenbuf.begin(), tokenbuf.end(), radix, &dummy, &dval))
+            if (!js_strtod(cx, numStart, userbuf.addressOfNextRawChar(), &dummy, &dval))
                 goto error;
         }
         tp->t_dval = dval;
@@ -1209,9 +1214,70 @@ TokenStream::getTokenInternal()
     }
 
     /*
+     * Look for a hexadecimal or octal number.
+     */
+    if (c == '0') {
+        int radix;
+        c = getCharIgnoreEOL();
+        if (c == 'x' || c == 'X') {
+            radix = 16;
+            c = getCharIgnoreEOL();
+            if (!JS7_ISHEX(c)) {
+                ungetCharIgnoreEOL(c);
+                ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR, JSMSG_MISSING_HEXDIGITS);
+                goto error;
+            }
+            numStart = userbuf.addressOfNextRawChar() - 1;
+            while (JS7_ISHEX(c))
+                c = getCharIgnoreEOL();
+        } else if (JS7_ISDEC(c)) {
+            radix = 8;
+            numStart = userbuf.addressOfNextRawChar() - 1;
+            while (JS7_ISDEC(c)) {
+                /* Octal integer literals are not permitted in strict mode code. */
+                if (!ReportStrictModeError(cx, this, NULL, NULL, JSMSG_DEPRECATED_OCTAL))
+                    goto error;
+
+                /*
+                 * Outside strict mode, we permit 08 and 09 as decimal numbers,
+                 * which makes our behaviour a superset of the ECMA numeric
+                 * grammar. We might not always be so permissive, so we warn
+                 * about it.
+                 */
+                if (c >= '8') {
+                    if (!ReportCompileErrorNumber(cx, this, NULL, JSREPORT_WARNING,
+                                                  JSMSG_BAD_OCTAL, c == '8' ? "08" : "09")) {
+                        goto error;
+                    }
+                    goto decimal;   /* use the decimal scanner for the rest of the number */
+                }
+                c = getCharIgnoreEOL();
+            }
+        } else {
+            /* '0' not followed by 'x', 'X' or a digit;  scan as a decimal number. */
+            radix = 10;
+            numStart = userbuf.addressOfNextRawChar() - 1;
+            goto decimal;
+        }
+        ungetCharIgnoreEOL(c);
+
+        if (JS_ISIDSTART(c)) {
+            ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR, JSMSG_IDSTART_AFTER_NUMBER);
+            goto error;
+        }
+
+        jsdouble dval;
+        const jschar *dummy;
+        if (!GetPrefixInteger(cx, numStart, userbuf.addressOfNextRawChar(), radix, &dummy, &dval))
+            goto error;
+        tp->t_dval = dval;
+        tt = TOK_NUMBER;
+        goto out;
+    }
+
+    /*
      * Look for a string.
      */
-
     if (c == '"' || c == '\'') {
         qc = c;
         tokenbuf.clear();
@@ -1311,18 +1377,7 @@ TokenStream::getTokenInternal()
     /*
      * This handles everything else.
      */
-
     switch (c) {
-      case ';':  tt = TOK_SEMI; break;
-      case '[':  tt = TOK_LB; break;
-      case ']':  tt = TOK_RB; break;
-      case '{':  tt = TOK_LC; break;
-      case '}':  tt = TOK_RC; break;
-      case '(':  tt = TOK_LP; break;
-      case ')':  tt = TOK_RP; break;
-      case ',':  tt = TOK_COMMA; break;
-      case '?':  tt = TOK_HOOK; break;
-
       case '.':
 #if JS_HAS_XML_SUPPORT
         if (matchChar(c))
@@ -1603,7 +1658,7 @@ TokenStream::getTokenInternal()
                     cp[3] == 'n' &&
                     cp[4] == 'e') {
                     skipChars(5);
-                    while ((c = getChar()) != '\n' && ScanAsSpace((jschar)c))
+                    while ((c = getChar()) != '\n' && JS_ISSPACE_OR_BOM((jschar)c))
                         continue;
                     if (JS7_ISDEC(c)) {
                         line = JS7_UNDEC(c);
@@ -1615,7 +1670,7 @@ TokenStream::getTokenInternal()
                             }
                             line = temp;
                         }
-                        while (c != '\n' && ScanAsSpace((jschar)c))
+                        while (c != '\n' && JS_ISSPACE_OR_BOM((jschar)c))
                             c = getChar();
                         i = 0;
                         if (c == '"') {
@@ -1630,7 +1685,7 @@ TokenStream::getTokenInternal()
                             }
                             if (c == '"') {
                                 while ((c = getChar()) != '\n' &&
-                                       ScanAsSpace((jschar)c)) {
+                                       JS_ISSPACE_OR_BOM((jschar)c)) {
                                     continue;
                                 }
                             }

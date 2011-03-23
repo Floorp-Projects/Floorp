@@ -501,15 +501,20 @@ struct JSObject : js::gc::Cell {
 
     bool hasOwnShape() const    { return !!(flags & OWN_SHAPE); }
 
-    void setMap(const JSObjectMap *amap) {
+    void setMap(JSObjectMap *amap) {
         JS_ASSERT(!hasOwnShape());
-        map = const_cast<JSObjectMap *>(amap);
+        map = amap;
         objShape = map->shape;
     }
 
     void setSharedNonNativeMap() {
-        setMap(&JSObjectMap::sharedNonNative);
+        setMap(const_cast<JSObjectMap *>(&JSObjectMap::sharedNonNative));
     }
+
+    /* Functions for setting up scope chain object maps and shapes. */
+    void initCall(JSContext *cx, const js::Bindings *bindings, JSObject *parent);
+    void initClonedBlock(JSContext *cx, js::types::TypeObject *type, JSStackFrame *priv);
+    void setBlockOwnShape(JSContext *cx);
 
     void deletingShapeChange(JSContext *cx, const js::Shape &shape);
     const js::Shape *methodShapeChange(JSContext *cx, const js::Shape &shape);
@@ -1673,6 +1678,11 @@ extern int
 js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                            JSObject **objp, JSProperty **propp);
 
+/*
+ * Constant to pass to js_LookupPropertyWithFlags to infer bits from current
+ * bytecode.
+ */
+static const uintN JSRESOLVE_INFER = 0xffff;
 
 extern JS_FRIEND_DATA(js::Class) js_CallClass;
 extern JS_FRIEND_DATA(js::Class) js_DeclEnvClass;

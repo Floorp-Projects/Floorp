@@ -48,6 +48,7 @@
 #include "nsFocusManager.h"
 #include "nsIEventStateManager.h"
 #include "nsEventStateManager.h"
+#include "nsFrameManager.h"
 
 #include "nsIScrollableFrame.h"
 
@@ -258,9 +259,25 @@ nsDOMWindowUtils::SetCSSViewport(float aWidthPx, float aHeightPx)
   return NS_OK;
 }
 
+static void DestroyNsRect(void* aObject, nsIAtom* aPropertyName,
+                          void* aPropertyValue, void* aData)
+{
+  nsRect* rect = static_cast<nsRect*>(aPropertyValue);
+  delete rect;
+}
+
 NS_IMETHODIMP
 nsDOMWindowUtils::SetDisplayPort(float aXPx, float aYPx,
                                  float aWidthPx, float aHeightPx)
+{
+  NS_ABORT_IF_FALSE(false, "This interface is deprecated.");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
+                                           float aWidthPx, float aHeightPx,
+                                           nsIDOMElement* aElement)
 {
   if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -275,9 +292,55 @@ nsDOMWindowUtils::SetDisplayPort(float aXPx, float aYPx,
                      nsPresContext::CSSPixelsToAppUnits(aYPx),
                      nsPresContext::CSSPixelsToAppUnits(aWidthPx),
                      nsPresContext::CSSPixelsToAppUnits(aHeightPx));
-  presShell->SetDisplayPort(displayport);
 
-  presShell->SetIgnoreViewportScrolling(PR_TRUE);
+  if (!aElement) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+
+  if (!content) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsRect lastDisplayPort;
+  if (nsLayoutUtils::GetDisplayPort(content, &lastDisplayPort) &&
+      displayport == lastDisplayPort) {
+    return NS_OK;
+  }
+
+  content->SetProperty(nsGkAtoms::DisplayPort, new nsRect(displayport),
+                       DestroyNsRect);
+
+  nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
+  if (rootScrollFrame) {
+    if (content == rootScrollFrame->GetContent()) {
+      // We are setting a root displayport for a document.
+      // The pres shell needs a special flag set.
+      presShell->SetIgnoreViewportScrolling(PR_TRUE);
+
+      // The root document currently has a widget, but we might end up
+      // painting content inside the displayport but outside the widget
+      // bounds. This ensures the document's view honors invalidations
+      // within the displayport.
+      nsPresContext* presContext = GetPresContext();
+      if (presContext && presContext->IsRoot()) {
+        nsIFrame* rootFrame = presShell->GetRootFrame();
+        nsIView* view = rootFrame->GetView();
+        if (view) {
+          view->SetInvalidationDimensions(&displayport);
+        }
+      }
+    }
+  }
+
+  if (presShell) {
+    nsIFrame* rootFrame = presShell->FrameManager()->GetRootFrame();
+    if (rootFrame) {
+      rootFrame->InvalidateWithFlags(rootFrame->GetVisualOverflowRectRelativeToSelf(),
+                                     nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
+    }
+  }
 
   return NS_OK;
 }

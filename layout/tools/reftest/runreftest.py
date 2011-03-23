@@ -65,11 +65,11 @@ class RefTest(object):
     "Get the path of the manifest, and for remote testing this function is subclassed to point to remote manifest"
     return self.getFullPath(path)
 
-  def createReftestProfile(self, options, profileDir):
+  def createReftestProfile(self, options, profileDir, server='localhost'):
     "Sets up a profile for reftest."
 
     self.automation.setupPermissionsDatabase(profileDir,
-      {'allowXULXBL': [('localhost', True), ('<file>', True)]})
+      {'allowXULXBL': [(server, True), ('<file>', True)]})
 
     # Set preferences for communication between our command line arguments
     # and the reftest harness.  Preferences that are required for reftest

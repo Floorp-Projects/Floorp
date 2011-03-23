@@ -309,7 +309,7 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
 bool
 JSFunctionBox::joinable() const
 {
-    return FUN_NULL_CLOSURE((JSFunction *) object) &&
+    return FUN_NULL_CLOSURE(function()) &&
            !(tcflags & (TCF_FUN_USES_ARGUMENTS | TCF_FUN_USES_OWN_NAME));
 }
 
@@ -321,6 +321,12 @@ JSFunctionBox::inAnyDynamicScope() const
             return true;
     }
     return false;
+}
+
+bool
+JSFunctionBox::scopeIsExtensible() const
+{
+    return tcflags & TCF_FUN_EXTENSIBLE_SCOPE;
 }
 
 bool
@@ -1173,7 +1179,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
         Value rval;
 
         if (def.funbox) {
-            JSFunction *fun = (JSFunction *)def.funbox->object;
+            JSFunction *fun = def.funbox->function();
 
             /*
              * No need to check for redeclarations or anything, global
@@ -2045,6 +2051,7 @@ Parser::analyzeFunctions(JSTreeContext *tc)
         return true;
     if (!markFunArgs(tc->functionList))
         return false;
+    markExtensibleScopeDescendants(tc->functionList, false);
     setFunctionKinds(tc->functionList, &tc->flags);
     return true;
 }
@@ -2087,7 +2094,7 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
     do {
         JSParseNode *fn = funbox->node;
         JS_ASSERT(fn->pn_arity == PN_FUNC);
-        JSFunction *fun = (JSFunction *) funbox->object;
+        JSFunction *fun = funbox->function();
         int fnlevel = level;
 
         /*
@@ -2353,7 +2360,7 @@ CanFlattenUpvar(JSDefinition *dn, JSFunctionBox *funbox, uint32 tcflags)
      * function refers to its own name) or strictly after afunbox, we also
      * defeat the flat closure optimization for this dn.
      */
-    JSFunction *afun = (JSFunction *) afunbox->object;
+    JSFunction *afun = afunbox->function();
     if (!(afun->flags & JSFUN_LAMBDA)) {
         if (dn->isBindingForm() || dn->pn_pos >= afunbox->node->pn_pos)
             return false;
@@ -2499,7 +2506,7 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
             }
         }
 
-        JSFunction *fun = (JSFunction *) funbox->object;
+        JSFunction *fun = funbox->function();
 
         JS_ASSERT(FUN_KIND(fun) == JSFUN_INTERPRETED);
 
@@ -2656,6 +2663,38 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
     }
 
 #undef FUN_METER
+}
+
+/*
+ * Walk the JSFunctionBox tree looking for functions whose call objects may
+ * acquire new bindings as they execute: non-strict functions that call eval,
+ * and functions that contain function statements (definitions not appearing
+ * within the top statement list, which don't take effect unless they are
+ * evaluated). Such call objects may acquire bindings that shadow variables
+ * defined in enclosing scopes, so any enclosed functions must have their
+ * bindings' extensibleParents flags set, and enclosed compiler-created blocks
+ * must have their OWN_SHAPE flags set; the comments for
+ * js::Bindings::extensibleParents explain why.
+ */
+void
+Parser::markExtensibleScopeDescendants(JSFunctionBox *funbox, bool hasExtensibleParent) 
+{
+    for (; funbox; funbox = funbox->siblings) {
+        /*
+         * It would be nice to use FUN_KIND(fun) here to recognize functions
+         * that will never consult their parent chains, and thus don't need
+         * their 'extensible parents' flag set. Filed as bug 619750. 
+         */
+
+        JS_ASSERT(!funbox->bindings.extensibleParents());
+        if (hasExtensibleParent)
+            funbox->bindings.setExtensibleParents();
+
+        if (funbox->kids) {
+            markExtensibleScopeDescendants(funbox->kids,
+                                           hasExtensibleParent || funbox->scopeIsExtensible());
+        }
+    }
 }
 
 const char js_argument_str[] = "argument";
@@ -3167,7 +3206,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
     if (!funbox)
         return NULL;
 
-    JSFunction *fun = (JSFunction *) funbox->object;
+    JSFunction *fun = funbox->function();
 
     /* Now parse formal argument list and compute fun->nargs. */
     JSParseNode *prelude = NULL;
@@ -3540,8 +3579,11 @@ Parser::statements()
              */
             if (tc->atBodyLevel())
                 pn->pn_xflags |= PNX_FUNCDEFS;
-            else
+            else {
                 tc->flags |= TCF_HAS_FUNCTION_STMT;
+                /* Function statements extend the Call object at runtime. */
+                tc->noteHasExtensibleScope();
+            }
         }
         pn->append(pn2);
     }
@@ -3586,7 +3628,7 @@ MatchLabel(JSContext *cx, TokenStream *ts, JSParseNode *pn)
     JSAtom *label;
     TokenKind tt;
 
-    tt = ts->peekTokenSameLine();
+    tt = ts->peekTokenSameLine(TSF_OPERAND);
     if (tt == TOK_ERROR)
         return JS_FALSE;
     if (tt == TOK_NAME) {
@@ -7497,7 +7539,7 @@ CheckForImmediatelyAppliedLambda(JSParseNode *pn)
         JS_ASSERT(pn->pn_arity == PN_FUNC);
 
         JSFunctionBox *funbox = pn->pn_funbox;
-        JS_ASSERT(((JSFunction *) funbox->object)->flags & JSFUN_LAMBDA);
+        JS_ASSERT((funbox->function())->flags & JSFUN_LAMBDA);
         if (!(funbox->tcflags & (TCF_FUN_USES_ARGUMENTS | TCF_FUN_USES_OWN_NAME)))
             pn->pn_dflags &= ~PND_FUNARG;
     }
@@ -7687,6 +7729,12 @@ Parser::memberExpr(JSBool allowCallSyntax)
                     pn2->pn_op = JSOP_EVAL;
                     tc->noteCallsEval();
                     tc->flags |= TCF_FUN_HEAVYWEIGHT;
+                    /*
+                     * In non-strict mode code, direct calls to eval can add
+                     * variables to the call object.
+                     */
+                    if (!tc->inStrictMode())
+                        tc->noteHasExtensibleScope();
                 }
             } else if (pn->pn_op == JSOP_GETPROP) {
                 /* Select JSOP_FUNAPPLY given foo.apply(...). */
@@ -9087,7 +9135,7 @@ FoldType(JSContext *cx, JSParseNode *pn, TokenKind type)
           case TOK_NUMBER:
             if (pn->pn_type == TOK_STRING) {
                 jsdouble d;
-                if (!ValueToNumber(cx, StringValue(ATOM_TO_STRING(pn->pn_atom)), &d))
+                if (!ValueToNumber(cx, StringValue(pn->pn_atom), &d))
                     return JS_FALSE;
                 pn->pn_dval = d;
                 pn->pn_type = TOK_NUMBER;
@@ -9216,9 +9264,9 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
     str = NULL;
     if ((pn->pn_xflags & PNX_CANTFOLD) == 0) {
         if (tt == TOK_XMLETAGO)
-            accum = ATOM_TO_STRING(cx->runtime->atomState.etagoAtom);
+            accum = cx->runtime->atomState.etagoAtom;
         else if (tt == TOK_XMLSTAGO || tt == TOK_XMLPTAGC)
-            accum = ATOM_TO_STRING(cx->runtime->atomState.stagoAtom);
+            accum = cx->runtime->atomState.stagoAtom;
     }
 
     /*
@@ -9242,24 +9290,23 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
           case TOK_STRING:
             if (pn2->pn_arity == PN_LIST)
                 goto cantfold;
-            str = ATOM_TO_STRING(pn2->pn_atom);
+            str = pn2->pn_atom;
             break;
 
           case TOK_XMLCDATA:
-            str = js_MakeXMLCDATAString(cx, ATOM_TO_STRING(pn2->pn_atom));
+            str = js_MakeXMLCDATAString(cx, pn2->pn_atom);
             if (!str)
                 return JS_FALSE;
             break;
 
           case TOK_XMLCOMMENT:
-            str = js_MakeXMLCommentString(cx, ATOM_TO_STRING(pn2->pn_atom));
+            str = js_MakeXMLCommentString(cx, pn2->pn_atom);
             if (!str)
                 return JS_FALSE;
             break;
 
           case TOK_XMLPI:
-            str = js_MakeXMLPIString(cx, ATOM_TO_STRING(pn2->pn_atom),
-                                         ATOM_TO_STRING(pn2->pn_atom2));
+            str = js_MakeXMLPIString(cx, pn2->pn_atom, pn2->pn_atom2);
             if (!str)
                 return JS_FALSE;
             break;
@@ -9320,9 +9367,9 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
         str = NULL;
         if ((pn->pn_xflags & PNX_CANTFOLD) == 0) {
             if (tt == TOK_XMLPTAGC)
-                str = ATOM_TO_STRING(cx->runtime->atomState.ptagcAtom);
+                str = cx->runtime->atomState.ptagcAtom;
             else if (tt == TOK_XMLSTAGO || tt == TOK_XMLETAGO)
-                str = ATOM_TO_STRING(cx->runtime->atomState.tagcAtom);
+                str = cx->runtime->atomState.tagcAtom;
         }
         if (str) {
             accum = js_ConcatStrings(cx, accum, str);
@@ -9373,7 +9420,7 @@ Boolish(JSParseNode *pn)
         return pn->pn_dval != 0 && !JSDOUBLE_IS_NaN(pn->pn_dval);
 
       case JSOP_STRING:
-        return ATOM_TO_STRING(pn->pn_atom)->length() != 0;
+        return pn->pn_atom->length() != 0;
 
 #if JS_HAS_GENERATOR_EXPRS
       case JSOP_CALL:
@@ -9547,7 +9594,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                 pn2 = pn3;
             break;
           case TOK_STRING:
-            if (ATOM_TO_STRING(pn1->pn_atom)->length() == 0)
+            if (pn1->pn_atom->length() == 0)
                 pn2 = pn3;
             break;
           case TOK_PRIMARY:
@@ -9659,10 +9706,6 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
 
       case TOK_PLUS:
         if (pn->pn_arity == PN_LIST) {
-            size_t length, length2;
-            jschar *chars;
-            JSString *str, *str2;
-
             /*
              * Any string literal term with all others number or string means
              * this is a concatenation.  If any term is not a string or number
@@ -9675,22 +9718,22 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                 goto do_binary_op;
 
             /* Ok, we're concatenating: convert non-string constant operands. */
-            length = 0;
+            size_t length = 0;
             for (pn2 = pn1; pn2; pn2 = pn2->pn_next) {
                 if (!FoldType(cx, pn2, TOK_STRING))
                     return JS_FALSE;
                 /* XXX fold only if all operands convert to string */
                 if (pn2->pn_type != TOK_STRING)
                     return JS_TRUE;
-                length += ATOM_TO_STRING(pn2->pn_atom)->flatLength();
+                length += pn2->pn_atom->length();
             }
 
             /* Allocate a new buffer and string descriptor for the result. */
-            chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
+            jschar *chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
             if (!chars)
                 return JS_FALSE;
             chars[length] = 0;
-            str = js_NewString(cx, chars, length);
+            JSString *str = js_NewString(cx, chars, length);
             if (!str) {
                 cx->free(chars);
                 return JS_FALSE;
@@ -9698,9 +9741,9 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
 
             /* Fill the buffer, advancing chars and recycling kids as we go. */
             for (pn2 = pn1; pn2; pn2 = RecycleTree(pn2, tc)) {
-                str2 = ATOM_TO_STRING(pn2->pn_atom);
-                length2 = str2->flatLength();
-                js_strncpy(chars, str2->flatChars(), length2);
+                JSAtom *atom = pn2->pn_atom;
+                size_t length2 = atom->length();
+                js_strncpy(chars, atom->chars(), length2);
                 chars += length2;
             }
             JS_ASSERT(*chars == 0);
@@ -9726,8 +9769,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             }
             if (pn1->pn_type != TOK_STRING || pn2->pn_type != TOK_STRING)
                 return JS_TRUE;
-            left = ATOM_TO_STRING(pn1->pn_atom);
-            right = ATOM_TO_STRING(pn2->pn_atom);
+            left = pn1->pn_atom;
+            right = pn2->pn_atom;
             str = js_ConcatStrings(cx, left, right);
             if (!str)
                 return JS_FALSE;
@@ -9849,7 +9892,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
         if (pn1->pn_type == TOK_XMLNAME) {
             JSObjectBox *xmlbox;
 
-            Value v = StringValue(ATOM_TO_STRING(pn1->pn_atom));
+            Value v = StringValue(pn1->pn_atom);
             if (!js_ToAttributeName(cx, &v))
                 return JS_FALSE;
             JS_ASSERT(v.isObject());

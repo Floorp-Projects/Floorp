@@ -682,7 +682,7 @@ math_tan(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 math_toSource(JSContext *cx, uintN argc, Value *vp)
 {
-    vp->setString(ATOM_TO_STRING(CLASS_ATOM(cx, Math)));
+    vp->setString(CLASS_ATOM(cx, Math));
     return JS_TRUE;
 }
 #endif

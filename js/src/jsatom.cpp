@@ -91,7 +91,7 @@ JS_STATIC_ASSERT((1 + 2) * sizeof(JSAtom *) ==
 const char *
 js_AtomToPrintableString(JSContext *cx, JSAtom *atom, JSAutoByteString *bytes)
 {
-    return js_ValueToPrintable(cx, StringValue(ATOM_TO_STRING(atom)), bytes);
+    return js_ValueToPrintable(cx, StringValue(atom), bytes);
 }
 
 #define JS_PROTO(name,code,init) const char js_##name##_str[] = #name;
@@ -390,7 +390,7 @@ js_InitCommonAtoms(JSContext *cx)
     JS_ASSERT((uint8 *)atoms - (uint8 *)state == LAZY_ATOM_OFFSET_START);
     memset(atoms, 0, ATOM_OFFSET_LIMIT - LAZY_ATOM_OFFSET_START);
 
-    cx->runtime->emptyString = ATOM_TO_STRING(state->emptyAtom);
+    cx->runtime->emptyString = state->emptyAtom;
     return JS_TRUE;
 }
 
@@ -456,101 +456,83 @@ js_SweepAtomState(JSContext *cx)
     }
 }
 
-JSAtom *
-js_AtomizeString(JSContext *cx, JSString *strArg, uintN flags)
+/*
+ * This call takes ownership of 'chars' if ATOM_NOCOPY is set.
+ */
+static JSAtom *
+Atomize(JSContext *cx, const jschar *chars, size_t length, uintN flags)
 {
-    JS_ASSERT(!(flags & ~(ATOM_PINNED|ATOM_INTERNED|ATOM_TMPSTR|ATOM_NOCOPY)));
-    JS_ASSERT_IF(flags & ATOM_NOCOPY, flags & ATOM_TMPSTR);
+    JS_ASSERT(!(flags & ~(ATOM_PINNED|ATOM_INTERNED|ATOM_NOCOPY)));
 
-    if (strArg->isAtomized())
-        return STRING_TO_ATOM(strArg);
-
-    JSLinearString *str = strArg->ensureLinear(cx);
-    if (!str)
-        return NULL;
-
-    const jschar *chars = str->chars();
-    size_t length = str->length();
-
-    JSString *staticStr = JSString::lookupStaticString(chars, length);
-    if (staticStr)
-        return STRING_TO_ATOM(staticStr);
-
-    JSAtomState *state = &cx->runtime->atomState;
-    AtomSet &atoms = state->atoms;
+    if (JSAtom *s = JSAtom::lookupStatic(chars, length))
+        return s;
 
     AutoLockAtomsCompartment lock(cx);
-    AtomSet::AddPtr p = atoms.lookupForAdd(str);
 
-    /* Hashing the string should have flattened it if it was a rope. */
-    JS_ASSERT(str->isFlat() || str->isDependent());
+    AtomSet &atoms = cx->runtime->atomState.atoms;
+    AtomSet::AddPtr p = atoms.lookupForAdd(AtomHasher::Lookup(chars, length));
 
-    JSLinearString *key;
+    JSAtom *atom;
     if (p) {
-        key = AtomEntryToKey(*p);
+        atom = AtomEntryToKey(*p);
     } else {
-        /*
-         * Ensure that any atomized string lives only in the default
-         * compartment.
-         */
-        bool needNewString = !!(flags & ATOM_TMPSTR) ||
-                             str->asCell()->compartment() != cx->runtime->atomsCompartment;
+        SwitchToCompartment sc(cx, cx->runtime->atomsCompartment);
 
-        /*
-         * Unless str is already comes from the default compartment and flat,
-         * we have to relookup the key as the last ditch GC invoked from the
-         * string allocation or OOM handling may unlock the default
-         * compartment lock.
-         */
-        if (!needNewString && str->isFlat()) {
-            str->flatClearExtensible();
-            key = str;
-            atoms.add(p, StringToInitialAtomEntry(key));
-        } else {
-            if (needNewString) {
-                SwitchToCompartment sc(cx, cx->runtime->atomsCompartment);
-                if (flags & ATOM_NOCOPY) {
-                    key = js_NewString(cx, const_cast<jschar *>(str->flatChars()), length);
-                    if (!key)
-                        return NULL;
-
-                    /* Finish handing off chars to the GC'ed key string. */
-                    JS_ASSERT(flags & ATOM_TMPSTR);
-                    str->u.chars = NULL;
-                } else {
-                    key = js_NewStringCopyN(cx, chars, length);
-                    if (!key)
-                        return NULL;
-                }
-            } else {
-                JS_ASSERT(str->isDependent());
-                if (!str->undepend(cx))
-                    return NULL;
-                key = str;
-            }
-
-            if (!atoms.relookupOrAdd(p, key, StringToInitialAtomEntry(key))) {
-                JS_ReportOutOfMemory(cx); /* SystemAllocPolicy does not report */
+        JSFixedString *key;
+        if (flags & ATOM_NOCOPY) {
+            key = js_NewString(cx, const_cast<jschar *>(chars), length);
+            if (!key) {
+                cx->free(const_cast<jschar *>(chars));
                 return NULL;
             }
+        } else {
+            key = js_NewStringCopyN(cx, chars, length);
+            if (!key)
+                return NULL;
         }
-        key->flatSetAtomized();
+
+        /*
+         * We have to relookup the key as the last ditch GC invoked from the
+         * string allocation or OOM handling may unlock the atomsCompartment.
+         */
+        AtomHasher::Lookup lookup(chars, length);
+        if (!atoms.relookupOrAdd(p, lookup, StringToInitialAtomEntry(key))) {
+            JS_ReportOutOfMemory(cx); /* SystemAllocPolicy does not report */
+            return NULL;
+        }
+
+        atom = key->morphInternedStringIntoAtom();
     }
 
     AddAtomEntryFlags(*p, flags & (ATOM_PINNED | ATOM_INTERNED));
-
-    JSAtom *atom = STRING_TO_ATOM(key);
     return atom;
 }
 
 JSAtom *
-js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags)
+js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 {
-    jschar *chars;
-    JSString str;
-    JSAtom *atom;
+    JS_ASSERT(!(flags & ATOM_NOCOPY));
 
+    if (str->isAtom())
+        return &str->asAtom();
+
+    size_t length = str->length();
+    const jschar *chars = str->getChars(cx);
+    if (!chars)
+        return NULL;
+
+    JS_ASSERT(length <= JSString::MAX_LENGTH);
+    return Atomize(cx, chars, length, flags);
+}
+
+JSAtom *
+js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags, bool useCESU8)
+{
+    JS_ASSERT(!(flags & ATOM_NOCOPY));
     CHECK_REQUEST(cx);
+
+    if (!CheckStringLength(cx, length))
+        return NULL;
 
     /*
      * Avoiding the malloc in js_InflateString on shorter strings saves us
@@ -559,64 +541,49 @@ js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags)
      * The vast majority of atomized strings are already in the hashtable. So
      * js_AtomizeString rarely has to copy the temp string we make.
      */
-#define ATOMIZE_BUF_MAX 32
+    static const unsigned ATOMIZE_BUF_MAX = 32;
     jschar inflated[ATOMIZE_BUF_MAX];
     size_t inflatedLength = ATOMIZE_BUF_MAX - 1;
 
+    const jschar *chars;
     if (length < ATOMIZE_BUF_MAX) {
-        js_InflateStringToBuffer(cx, bytes, length, inflated, &inflatedLength);
+        if (useCESU8)
+            js_InflateUTF8StringToBuffer(cx, bytes, length, inflated, &inflatedLength, true);
+        else
+            js_InflateStringToBuffer(cx, bytes, length, inflated, &inflatedLength);
         inflated[inflatedLength] = 0;
         chars = inflated;
     } else {
         inflatedLength = length;
-        chars = js_InflateString(cx, bytes, &inflatedLength);
+        chars = js_InflateString(cx, bytes, &inflatedLength, useCESU8);
         if (!chars)
             return NULL;
         flags |= ATOM_NOCOPY;
     }
 
-    str.initFlat(chars, inflatedLength);
-    atom = js_AtomizeString(cx, &str, ATOM_TMPSTR | flags);
-    if (chars != inflated && str.flatChars())
-        cx->free(chars);
-    return atom;
+    return Atomize(cx, chars, inflatedLength, flags);
 }
 
 JSAtom *
 js_AtomizeChars(JSContext *cx, const jschar *chars, size_t length, uintN flags)
 {
-    JSString str;
-
+    JS_ASSERT(!(flags & ATOM_NOCOPY));
     CHECK_REQUEST(cx);
 
     if (!CheckStringLength(cx, length))
         return NULL;
 
-    str.initFlatNotTerminated((jschar *)chars, length);
-    return js_AtomizeString(cx, &str, ATOM_TMPSTR | flags);
+    return Atomize(cx, chars, length, flags);
 }
 
 JSAtom *
 js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length)
 {
-    JSString str, *str2;
-    JSAtomState *state;
-
-    if (length == 1) {
-        jschar c = *chars;
-        if (c < UNIT_STRING_LIMIT)
-            return STRING_TO_ATOM(JSString::unitString(c));
-    }
-
-    str.initFlatNotTerminated((jschar *)chars, length);
-    state = &cx->runtime->atomState;
-
-    JS_LOCK(cx, &state->lock);
-    AtomSet::Ptr p = state->atoms.lookup(str.assertIsFlat());
-    str2 = p ? AtomEntryToKey(*p) : NULL;
-    JS_UNLOCK(cx, &state->lock);
-
-    return str2 ? STRING_TO_ATOM(str2) : NULL;
+    if (JSAtom *atom = JSAtom::lookupStatic(chars, length))
+        return atom;
+    AutoLockAtomsCompartment lock(cx);
+    AtomSet::Ptr p = cx->runtime->atomState.atoms.lookup(AtomHasher::Lookup(chars, length));
+    return p ? AtomEntryToKey(*p) : NULL;
 }
 
 #ifdef DEBUG

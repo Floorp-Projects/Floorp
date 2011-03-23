@@ -29,6 +29,7 @@ description("This test ensures WebGL implementations interact correctly with the
 debug("");
 debug("Canvas.getContext");
 
+var err;
 var canvas = document.getElementById("canvas");
 var canvas2d = document.getElementById("canvas2d");
 var ctx2d = canvas2d.getContext("2d");
@@ -158,40 +159,34 @@ if (!gl) {
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       checkCanvasContentIs(64, 128, 192, 255);
       gl.colorMask(0,0,0,0);
+      glErrorShouldBe(gl, gl.NO_ERROR, "No GL errors before resizing the canvas");
       canvas.width = 400;
       canvas.height = 10;
-
-      var v = gl.getParameter(gl.COLOR_CLEAR_VALUE);
-      assertMsg(isAboutEqual(v[0], 0.25) &&
-                isAboutEqual(v[1], 0.5) &&
-                isAboutEqual(v[2], 0.75) &&
-                isAboutEqual(v[3], 1),
-                "gl.clearColor should not change after canvas resize");
-      v = gl.getParameter(gl.COLOR_WRITEMASK);
-      assertMsg(isAboutEqual(v[0], 0) &&
-                isAboutEqual(v[1], 0) &&
-                isAboutEqual(v[2], 0) &&
-                isAboutEqual(v[3], 0),
-                "gl.colorMask should not change after canvas resize");
-      shouldBe('getViewport()', '"0,0,300,150"');
-      checkCanvasContentIs(0, 0, 0, 0);
+      err = gl.getError();
+      // Some implementations might lost the context when resizing
+      if (err != gl.CONTEXT_LOST_WEBGL) {
+        shouldBe("err", "gl.NO_ERROR");
+        var v = gl.getParameter(gl.COLOR_CLEAR_VALUE);
+        assertMsg(isAboutEqual(v[0], 0.25) &&
+                  isAboutEqual(v[1], 0.5) &&
+                  isAboutEqual(v[2], 0.75) &&
+                  isAboutEqual(v[3], 1),
+                  "gl.clearColor should not change after canvas resize");
+        v = gl.getParameter(gl.COLOR_WRITEMASK);
+        assertMsg(isAboutEqual(v[0], 0) &&
+                  isAboutEqual(v[1], 0) &&
+                  isAboutEqual(v[2], 0) &&
+                  isAboutEqual(v[3], 0),
+                  "gl.colorMask should not change after canvas resize");
+        shouldBe('getViewport()', '"0,0,300,150"');
+        checkCanvasContentIs(0, 0, 0, 0);
+      }
 
       debug("");
-      successfullyParsed = true;
-      var epilogue = document.createElement("script");
-      epilogue.onload = finish;
-      epilogue.src = "../resources/js-test-post.js";
-      document.body.appendChild(epilogue);
+      finishTest();
     }
    }, 1000/30);
 }
-
-function finish() {
-  if (window.nonKhronosFrameworkNotifyDone) {
-    window.nonKhronosFrameworkNotifyDone();
-  }
-}
-
 </script>
 <script>
 </script>

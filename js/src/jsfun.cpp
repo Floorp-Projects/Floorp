@@ -975,8 +975,7 @@ NewCallObject(JSContext *cx, Bindings *bindings, JSObject &scopeChain, JSObject 
         return NULL;
 
     /* Init immediately to avoid GC seeing a half-init'ed object. */
-    callobj->init(cx, &js_CallClass, cx->getTypeEmpty(), &scopeChain, NULL, false);
-    callobj->setMap(bindings->lastShape());
+    callobj->initCall(cx, bindings, &scopeChain);
 
     /* This must come after callobj->lastProp has been set. */
     if (!callobj->ensureInstanceReservedSlots(cx, argsVars))
@@ -1645,7 +1644,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         break;
 
       case FUN_NAME:
-        vp->setString(fun->atom ? ATOM_TO_STRING(fun->atom)
+        vp->setString(fun->atom ? fun->atom
                                 : cx->runtime->emptyString);
         atom = cx->runtime->atomState.nameAtom;
         break;
@@ -1942,7 +1941,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         fun->u.i.wrapper = JSPackedBool((firstword >> 1) & 1);
     }
 
-    if (!js_XDRScript(xdr, &fun->u.i.script, NULL))
+    if (!js_XDRScriptAndSubscripts(xdr, &fun->u.i.script))
         return false;
 
     if (xdr->mode == JSXDR_DECODE) {
@@ -2018,7 +2017,7 @@ fun_trace(JSTracer *trc, JSObject *obj)
     }
 
     if (fun->atom)
-        MarkString(trc, ATOM_TO_STRING(fun->atom), "atom");
+        MarkString(trc, fun->atom, "atom");
 
     if (fun->isInterpreted() && fun->script())
         js_TraceScript(trc, fun->script());
@@ -2068,7 +2067,7 @@ JS_PUBLIC_DATA(Class) js_FunctionClass = {
     NULL,                 /* checkAccess */
     NULL,                 /* call        */
     NULL,                 /* construct   */
-    js_XDRFunctionObject,
+    NULL,
     fun_hasInstance,
     fun_trace
 };

@@ -56,12 +56,6 @@
 #define ATOM_PINNED     0x1       /* atom is pinned against GC */
 #define ATOM_INTERNED   0x2       /* pinned variant for JS_Intern* API */
 #define ATOM_NOCOPY     0x4       /* don't copy atom string bytes */
-#define ATOM_TMPSTR     0x8       /* internal, to avoid extra string */
-
-#define STRING_TO_ATOM(str)       (JS_ASSERT(str->isAtomized()),             \
-                                   (JSAtom *)str)
-#define ATOM_TO_STRING(atom)      (atom)
-#define ATOM_TO_JSVAL(atom)       STRING_TO_JSVAL(ATOM_TO_STRING(atom))
 
 /* Engine-internal extensions of jsid */
 
@@ -274,14 +268,23 @@ AtomEntryToKey(AtomEntryType entry)
 
 struct AtomHasher
 {
-    typedef JSLinearString *Lookup;
+    struct Lookup
+    {
+        const jschar *chars;
+        size_t length;
+        Lookup(const jschar *chars, size_t length) : chars(chars), length(length) {}
+    };
 
-    static HashNumber hash(JSLinearString *str) {
-        return js_HashString(str);
+    static HashNumber hash(const Lookup &l) {
+        return HashChars(l.chars, l.length);
     }
 
-    static bool match(AtomEntryType entry, JSLinearString *lookup) {
-        return entry ? EqualStrings(AtomEntryToKey(entry), lookup) : false;
+    static bool match(AtomEntryType entry, const Lookup &lookup) {
+        JS_ASSERT(entry);
+        JSAtom *key = AtomEntryToKey(entry);
+        if (key->length() != lookup.length)
+            return false;
+        return PodEqual(key->chars(), lookup.chars, lookup.length);
     }
 };
 
@@ -572,7 +575,7 @@ extern JSAtom *
 js_AtomizeString(JSContext *cx, JSString *str, uintN flags);
 
 extern JSAtom *
-js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags);
+js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags, bool useCESU8 = false);
 
 extern JSAtom *
 js_AtomizeChars(JSContext *cx, const jschar *chars, size_t length, uintN flags);

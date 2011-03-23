@@ -110,12 +110,14 @@ public:
    * by ThebesLayerBuffer and must be redrawn on the screen.
    * mRegionToInvalidate is set when the buffer has changed from
    * opaque to transparent or vice versa, since the details of rendering can
-   * depend on the buffer type.
+   * depend on the buffer type.  mDidSelfCopy is true if we kept our buffer
+   * but used MovePixels() to shift its content.
    */
   struct PaintState {
     nsRefPtr<gfxContext> mContext;
     nsIntRegion mRegionToDraw;
     nsIntRegion mRegionToInvalidate;
+    PRPackedBool mDidSelfCopy;
   };
 
   enum {

@@ -201,17 +201,17 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     if (vp->isString()) {
         JSString *str = vp->toString();
 
-        /* Static strings do not have to be wrapped. */
-        if (JSString::isStatic(str))
+        /* Static atoms do not have to be wrapped. */
+        if (str->isStaticAtom())
             return true;
 
         /* If the string is already in this compartment, we are done. */
-        if (str->asCell()->compartment() == this)
+        if (str->compartment() == this)
             return true;
 
         /* If the string is an atom, we don't have to copy. */
-        if (str->isAtomized()) {
-            JS_ASSERT(str->asCell()->compartment() == cx->runtime->atomsCompartment);
+        if (str->isAtom()) {
+            JS_ASSERT(str->compartment() == cx->runtime->atomsCompartment);
             return true;
         }
     }

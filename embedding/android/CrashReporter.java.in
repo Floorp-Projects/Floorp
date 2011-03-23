@@ -58,6 +58,7 @@ public class CrashReporter extends Activity
   static final String kMiniDumpPathKey = "upload_file_minidump";
   static final String kPageURLKey = "URL";
   static final String kNotesKey = "Notes";
+  Handler mHandler = null;
   ProgressDialog mProgressDialog;
   File mPendingMinidumpFile;
   File mPendingExtrasFile;
@@ -88,6 +89,15 @@ public class CrashReporter extends Activity
     return true;
   }
 
+  void doFinish() {
+    if (mHandler != null) {
+      mHandler.post(new Runnable(){
+        public void run() {
+          finish();
+        }});
+    }
+  }
+
   @Override
   public void finish()
   {
@@ -99,6 +109,8 @@ public class CrashReporter extends Activity
   public void onCreate(Bundle savedInstanceState)
   {
     super.onCreate(savedInstanceState);
+    // mHandler is created here so runnables can be run on the main thread
+    mHandler = new Handler();
     setContentView(R.layout.crash_reporter);
     mProgressDialog = new ProgressDialog(CrashReporter.this);
     mProgressDialog.setMessage(getString(R.string.sending_crash_report));
@@ -125,7 +137,7 @@ public class CrashReporter extends Activity
   {
     final CheckBox sendReportCheckbox = (CheckBox) findViewById(R.id.send_report);
     if (!sendReportCheckbox.isChecked()) {
-      finish();
+      doFinish();
       return;
     }
 
@@ -185,12 +197,15 @@ public class CrashReporter extends Activity
   }
 
   void sendPart(OutputStream os, String boundary, String name, String data)
-    throws IOException
   {
-    os.write(("--" + boundary + "\r\n" +
-              "Content-Disposition: form-data; name=\"" +
-              name + "\"\r\n\r\n" +
-              data + "\r\n").getBytes());
+    try {
+      os.write(("--" + boundary + "\r\n" +
+                "Content-Disposition: form-data; name=\"" +
+                name + "\"\r\n\r\n" +
+                data + "\r\n").getBytes());
+    } catch (Exception ex) {
+      Log.e("GeckoCrashReporter", "Exception when sending \"" + name + "\"", ex);
+    }
   }
 
   void sendFile(OutputStream os, String boundary, String name, File file)
@@ -216,7 +231,7 @@ public class CrashReporter extends Activity
 
     String spec = extras.get("ServerURL");
     if (spec == null)
-      finish();
+      doFinish();
 
     Log.i("GeckoCrashReport", "server url: " + spec);
     try {
@@ -255,13 +270,18 @@ public class CrashReporter extends Activity
       sendPart(os, boundary, "Android_Model", Build.MODEL);
       sendPart(os, boundary, "Android_Board", Build.BOARD);
       sendPart(os, boundary, "Android_Brand", Build.BRAND);
-      sendPart(os, boundary, "Android_CPU_ABI", Build.CPU_ABI); 
-      sendPart(os, boundary, "Android_CPU_ABI2", Build.CPU_ABI2);
       sendPart(os, boundary, "Android_Device", Build.DEVICE);
       sendPart(os, boundary, "Android_Display", Build.DISPLAY);
       sendPart(os, boundary, "Android_Fingerprint", Build.FINGERPRINT);
-      if (Build.VERSION.SDK_INT >= 8)
-        sendPart(os, boundary, "Android_Hardware", Build.HARDWARE);
+      sendPart(os, boundary, "Android_CPU_ABI", Build.CPU_ABI); 
+      if (Build.VERSION.SDK_INT >= 8) {
+        try {
+          sendPart(os, boundary, "Android_CPU_ABI2", Build.CPU_ABI2);
+          sendPart(os, boundary, "Android_Hardware", Build.HARDWARE);
+        } catch (Exception ex) {
+          Log.e("GeckoCrashReporter", "Exception while sending SDK version 8 keys", ex);
+        }
+      }
       sendPart(os, boundary, "Android_Version",  Build.VERSION.SDK_INT + " (" + Build.VERSION.CODENAME + ")");
 
       sendFile(os, boundary, kMiniDumpPathKey, minidumpFile);
@@ -290,7 +310,7 @@ public class CrashReporter extends Activity
       Log.e("GeckoCrashReporter", "exception during send: ", e);
     }
 
-    finish();
+    doFinish();
   }
 
   void doRestart()

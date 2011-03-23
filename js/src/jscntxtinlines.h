@@ -555,8 +555,8 @@ class CompartmentChecker
     }
 
     void check(JSString *str) {
-        if (!JSString::isStatic(str) && !str->isAtomized())
-            check(str->asCell()->compartment());
+        if (!str->isAtom())
+            check(str->compartment());
     }
 
     void check(const js::Value &v) {

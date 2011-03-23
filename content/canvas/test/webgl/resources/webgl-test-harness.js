@@ -156,7 +156,7 @@ var TestHarness = function(iframe, filelistUrl, reportFunc) {
     this.reportFunc(TestHarness.reportType.ADD_PAGE, files[ii], undefined);
   }
   this.nextFileIndex = files.length;
-  this.timeoutDelay = 3000;
+  this.timeoutDelay = 20000;
 };
 
 TestHarness.reportType = {

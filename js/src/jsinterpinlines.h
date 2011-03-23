@@ -110,6 +110,7 @@ JSStackFrame::resetInvokeCallFrame()
                            JSFRAME_HAS_RVAL |
                            JSFRAME_HAS_SCOPECHAIN |
                            JSFRAME_HAS_ANNOTATION |
+                           JSFRAME_HAS_HOOK_DATA |
                            JSFRAME_FINISHED_IN_INTERPRETER)));
     flags_ &= JSFRAME_FUNCTION |
               JSFRAME_OVERFLOW_ARGS |

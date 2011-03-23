@@ -101,17 +101,7 @@ function runTest()
     wtu.checkCanvasRect(gl, 1, 1, 2, 2, color,
                         "shouldBe " + color);
 
-    successfullyParsed = true;
-    var epilogue = document.createElement("script");
-    epilogue.onload = finish;
-    epilogue.src = "../resources/js-test-post.js";
-    document.body.appendChild(epilogue);
-}
-
-function finish() {
-    if (window.nonKhronosFrameworkNotifyDone) {
-        window.nonKhronosFrameworkNotifyDone();
-    }
+    finishTest();
 }
 </script>
 </head>

@@ -6354,7 +6354,8 @@ static nsIView* GetDisplayRootFor(nsIView* aView)
 }
 
 static already_AddRefed<LayerManager>
-LayerManagerForDocumentInternal(nsIDocument *aDoc, bool aRequirePersistent)
+LayerManagerForDocumentInternal(nsIDocument *aDoc, bool aRequirePersistent,
+                                bool* aAllowRetaining)
 {
   nsIDocument* doc = aDoc;
   nsIDocument* displayDoc = doc->GetDisplayDocument();
@@ -6394,7 +6395,8 @@ LayerManagerForDocumentInternal(nsIDocument *aDoc, bool aRequirePersistent)
             nsRefPtr<LayerManager> manager =
               static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget)->
                 GetLayerManager(aRequirePersistent ? nsIWidget_MOZILLA_2_0_BRANCH::LAYER_MANAGER_PERSISTENT : 
-                                                     nsIWidget_MOZILLA_2_0_BRANCH::LAYER_MANAGER_CURRENT);
+                                                     nsIWidget_MOZILLA_2_0_BRANCH::LAYER_MANAGER_CURRENT,
+                                aAllowRetaining);
             return manager.forget();
           }
         }
@@ -6406,15 +6408,15 @@ LayerManagerForDocumentInternal(nsIDocument *aDoc, bool aRequirePersistent)
 }
 
 already_AddRefed<LayerManager>
-nsContentUtils::LayerManagerForDocument(nsIDocument *aDoc)
+nsContentUtils::LayerManagerForDocument(nsIDocument *aDoc, bool *aAllowRetaining)
 {
-  return LayerManagerForDocumentInternal(aDoc, false);
+  return LayerManagerForDocumentInternal(aDoc, false, aAllowRetaining);
 }
 
 already_AddRefed<LayerManager>
-nsContentUtils::PersistentLayerManagerForDocument(nsIDocument *aDoc)
+nsContentUtils::PersistentLayerManagerForDocument(nsIDocument *aDoc, bool *aAllowRetaining)
 {
-  return LayerManagerForDocumentInternal(aDoc, true);
+  return LayerManagerForDocumentInternal(aDoc, true, aAllowRetaining);
 }
 
 bool

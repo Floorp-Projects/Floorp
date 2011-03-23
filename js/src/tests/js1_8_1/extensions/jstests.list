@@ -12,4 +12,4 @@ script regress-477158.js
 script regress-477187.js
 script regress-520572.js
 script new-parenthesization.js
-script strict-warning.js
+fails-if(Android) script strict-warning.js

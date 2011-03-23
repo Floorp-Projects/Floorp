@@ -50,8 +50,10 @@ class THEBES_API MacIOSurfaceImageOGL : public MacIOSurfaceImage
 
 public:
   MacIOSurfaceImageOGL(LayerManagerOGL *aManager);
+  virtual ~MacIOSurfaceImageOGL();
 
-  void SetCallback(UpdateSurfaceCallback aCallback, void* aObjectFrame);
+  void SetUpdateCallback(UpdateSurfaceCallback aCallback, void* aPluginInstanceOwner);
+  void SetDestroyCallback(DestroyCallback aCallback);
   void Update(ImageContainer* aContainer);
 
   void SetData(const Data &aData);
@@ -59,8 +61,9 @@ public:
   GLTexture mTexture;
   gfxIntSize mSize;
   nsAutoPtr<nsIOSurface> mIOSurface;
-  void* mObjectFrame;
-  UpdateSurfaceCallback mCallback;
+  void* mPluginInstanceOwner;
+  UpdateSurfaceCallback mUpdateCallback;
+  DestroyCallback mDestroyCallback;
 };
 
 } /* layers */

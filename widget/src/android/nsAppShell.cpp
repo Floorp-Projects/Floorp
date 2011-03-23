@@ -44,6 +44,7 @@
 #include "nsIAppStartup.h"
 #include "nsIGeolocationProvider.h"
 #include "nsIPrefService.h"
+#include "nsIPrefLocalizedString.h"
 
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
@@ -134,14 +135,35 @@ nsAppShell::Init()
     NS_ENSURE_SUCCESS(rv, rv);
     branch->AddObserver("intl.locale.matchOS", this, PR_FALSE);
     branch->AddObserver("general.useragent.locale", this, PR_FALSE);
+
+    nsString locale;
     PRBool match = PR_FALSE;
-    nsCString locale;
-    branch->GetBoolPref("intl.locale.matchOS", &match);
-    if (!match ||
-        NS_FAILED(branch->GetCharPref("general.useragent.locale", getter_Copies(locale))))
-        bridge->SetSelectedLocale(EmptyCString());
-    else
-        bridge->SetSelectedLocale(locale);
+    rv = branch->GetBoolPref("intl.locale.matchOS", &match);
+
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (match) {
+        bridge->SetSelectedLocale(EmptyString());
+        return NS_OK;
+    }
+    nsCOMPtr<nsIPrefLocalizedString> pls;
+    rv = branch->GetComplexValue("general.useragent.locale",
+                                 NS_GET_IID(nsIPrefLocalizedString),
+                                 getter_AddRefs(pls));
+    if (NS_SUCCEEDED(rv) && pls) {
+        nsXPIDLString uval;
+        pls->ToString(getter_Copies(uval));
+        if (uval)
+            locale.Assign(uval);
+    } else {
+        nsXPIDLCString cval;
+        rv = branch->GetCharPref("general.useragent.locale",
+                                 getter_Copies(cval));
+        if (NS_SUCCEEDED(rv) && cval)
+            locale.AssignWithConversion(cval);
+    }
+
+    bridge->SetSelectedLocale(locale);
     return rv;
 }
 
@@ -154,25 +176,49 @@ nsAppShell::Observe(nsISupports* aSubject,
         // We need to ensure no observers stick around after XPCOM shuts down
         // or we'll see crashes, as the app shell outlives XPConnect.
         mObserversHash.Clear();
-    } else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) && (
-                   !wcscmp((const wchar_t*)aData, L"intl.locale.matchOS") ||
-                   !wcscmp((const wchar_t*)aData, L"general.useragent.locale"))) {
+        return nsBaseAppShell::Observe(aSubject, aTopic, aData);
+    } else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) && aData && (
+                   nsDependentString(aData).Equals(
+                       NS_LITERAL_STRING("general.useragent.locale")) ||
+                   nsDependentString(aData).Equals(
+                       NS_LITERAL_STRING("intl.locale.matchOS"))))
+    {
         AndroidBridge* bridge = AndroidBridge::Bridge();
         nsCOMPtr<nsIPrefBranch> prefs = do_QueryInterface(aSubject);
         if (!prefs || !bridge)
             return NS_OK;
-        PRBool match = PR_FALSE;
-        nsXPIDLCString locale;
 
-        if (!match && NS_SUCCEEDED(prefs->GetCharPref("general.useragent.locale",
-                                                      getter_Copies(locale))))
-            bridge->SetSelectedLocale(locale);
-        else
-            bridge->SetSelectedLocale(EmptyCString());
+        nsString locale;
+        PRBool match = PR_FALSE;
+        nsresult rv = prefs->GetBoolPref("intl.locale.matchOS", &match);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (match) {
+            bridge->SetSelectedLocale(EmptyString());
+            return NS_OK;
+        }
+        nsCOMPtr<nsIPrefLocalizedString> pls;
+        rv = prefs->GetComplexValue("general.useragent.locale",
+                                    NS_GET_IID(nsIPrefLocalizedString),
+                                    getter_AddRefs(pls));
+        if (NS_SUCCEEDED(rv) && pls) {
+            nsXPIDLString uval;
+            pls->ToString(getter_Copies(uval));
+            if (uval)
+                locale.Assign(uval);
+        }
+        else {
+            nsXPIDLCString cval;
+            rv = prefs->GetCharPref("general.useragent.locale",
+                                    getter_Copies(cval));
+            if (NS_SUCCEEDED(rv) && cval)
+                locale.AssignWithConversion(cval);
+        }
+
+        bridge->SetSelectedLocale(locale);
         return NS_OK;
     }
-
-    return nsBaseAppShell::Observe(aSubject, aTopic, aData);
+    return NS_OK;
 }
 
 void

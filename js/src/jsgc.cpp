@@ -221,7 +221,7 @@ Arena<T>::mark(T *thing, JSTracer *trc)
 
     JS_ASSERT(sizeof(T) == aheader.thingSize);
     JS_SET_TRACING_NAME(trc, "machine stack");
-    Mark(trc, alignedThing);
+    js::gc::Mark(trc, alignedThing);
 
 #ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
     if (alignedThing != thing)
@@ -496,7 +496,7 @@ AllocateArena(JSContext *cx, unsigned thingKind)
 JS_FRIEND_API(bool)
 IsAboutToBeFinalized(JSContext *cx, void *thing)
 {
-    if (JSString::isStatic(thing))
+    if (JSAtom::isStatic(thing))
         return false;
     JS_ASSERT(cx);
 
@@ -1068,8 +1068,6 @@ FreeLists::purge()
         *p = NULL;
 }
 
-class JSShortString;
-
 ArenaList *
 GetFinalizableArenaList(JSCompartment *c, unsigned thingKind) {
     JS_ASSERT(thingKind < FINALIZE_LIMIT);
@@ -1209,13 +1207,9 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
     }
 }
 
-intN
-js_GetExternalStringGCType(JSString *str) {
-    return GetExternalStringGCType((JSExternalString *)str);
-}
-
 uint32
-js_GetGCThingTraceKind(void *thing) {
+js_GetGCThingTraceKind(void *thing)
+{
     return GetGCThingTraceKind(thing);
 }
 
@@ -1356,8 +1350,8 @@ Arena<T>::markDelayedChildren(JSTracer *trc)
     T *thingsEnd = &t.things[ThingsPerArena-1].t;
     JS_ASSERT(thing == getAlignedThing(thing));
     while (thing <= thingsEnd) {
-        if (thing->asCell()->isMarked())
-            MarkChildren(trc, thing);
+        if (thing->isMarked())
+            js::gc::MarkChildren(trc, thing);
 
         thing++;
     }
@@ -1441,7 +1435,7 @@ gc_root_traversal(JSTracer *trc, const RootEntry &entry)
     }
 
     if (ptr) {
-        if (!JSString::isStatic(ptr)) {
+        if (!JSAtom::isStatic(ptr)) {
             bool root_points_to_gcArenaList = false;
             JSCompartment **c = trc->context->runtime->compartments.begin();
             for (; c != trc->context->runtime->compartments.end(); ++c) {
@@ -1690,7 +1684,7 @@ MarkRuntime(JSTracer *trc)
               }
             }
 
-            if (JSString::isStatic(thing))
+            if (JSString::isGCThingStatic(thing))
                 continue;
 
             if (!reinterpret_cast<Cell *>(thing)->isMarked()) {
@@ -1863,22 +1857,19 @@ void
 js_FinalizeStringRT(JSRuntime *rt, JSString *str)
 {
     JS_RUNTIME_UNMETER(rt, liveStrings);
-    JS_ASSERT(!JSString::isStatic(str));
-    JS_ASSERT(!str->isRope());
+    JS_ASSERT(str->isLinear() && !str->isStaticAtom());
 
     if (str->isDependent()) {
         /* A dependent string can not be external and must be valid. */
-        JS_ASSERT(str->asCell()->arena()->header()->thingKind == FINALIZE_STRING);
-        JS_ASSERT(str->dependentBase());
+        JS_ASSERT(str->arena()->header()->thingKind == FINALIZE_STRING);
+        JS_ASSERT(str->asDependent().base());
         JS_RUNTIME_UNMETER(rt, liveDependentStrings);
     } else {
-        unsigned thingKind = str->asCell()->arena()->header()->thingKind;
-        JS_ASSERT(IsFinalizableStringKind(thingKind));
+        unsigned thingKind = str->arena()->header()->thingKind;
+        JS_ASSERT(unsigned(FINALIZE_SHORT_STRING) <= thingKind &&
+                  thingKind <= unsigned(FINALIZE_EXTERNAL_STRING));
 
-        /* A stillborn string has null chars, so is not valid. */
-        jschar *chars = const_cast<jschar *>(str->flatChars());
-        if (!chars)
-            return;
+        jschar *chars = const_cast<jschar *>(str->asFlat().chars());
         if (thingKind == FINALIZE_STRING) {
             rt->stringMemoryUsed -= str->length() * 2;
             rt->free(chars);
@@ -1923,22 +1914,22 @@ FinalizeArenaList(JSCompartment *comp, JSContext *cx, unsigned thingKind)
         if (!nextFree) {
             nextFree = thingsEnd->asFreeCell();
         } else {
-            JS_ASSERT(thing->asCell() <= nextFree);
-            JS_ASSERT(nextFree < thingsEnd->asCell());
+            JS_ASSERT(thing->asFreeCell() <= nextFree);
+            JS_ASSERT(nextFree < thingsEnd->asFreeCell());
         }
 
         for (;; thing++) {
-            if (thing->asCell() == nextFree) {
+            if (thing->asFreeCell() == nextFree) {
                 if (thing == thingsEnd)
                     break;
                 nextFree = nextFree->link;
                 if (!nextFree) {
                     nextFree = thingsEnd->asFreeCell();
                 } else {
-                    JS_ASSERT(thing->asCell() < nextFree);
+                    JS_ASSERT(thing->asFreeCell() < nextFree);
                     JS_ASSERT(nextFree < thingsEnd->asFreeCell());
                 }
-            } else if (thing->asCell()->isMarked()) {
+            } else if (thing->isMarked()) {
                 allClear = false;
                 METER(nthings++);
                 continue;
@@ -2320,7 +2311,7 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
 #ifdef DEBUG
     /* Make sure that we didn't mark an object in another compartment */
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        JS_ASSERT_IF(*c != comp, checkArenaListAllUnmarked(*c));
+        JS_ASSERT_IF(*c != comp && *c != rt->atomsCompartment, checkArenaListAllUnmarked(*c));
 #endif
 
     /*
@@ -2330,7 +2321,7 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
      * so that any attempt to allocate a GC-thing from a finalizer will fail,
      * rather than nest badly and leave the unmarked newborn to be swept.
      *
-     * We first sweep atom state so we can use js_IsAboutToBeFinalized on
+     * We first sweep atom state so we can use IsAboutToBeFinalized on
      * JSString held in a hashtable to check if the hashtable entry can be
      * freed. Note that even after the entry is freed, JSObject finalizers can
      * continue to access the corresponding JSString* assuming that they are
@@ -2375,7 +2366,7 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
 
     /*
      * Destroy arenas after we finished the sweeping so finalizers can safely
-     * use js_IsAboutToBeFinalized().
+     * use IsAboutToBeFinalized().
      */
     ExpireGCChunks(rt);
     TIMESTAMP(sweepDestroyEnd);
@@ -2451,7 +2442,7 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
      * so that any attempt to allocate a GC-thing from a finalizer will fail,
      * rather than nest badly and leave the unmarked newborn to be swept.
      *
-     * We first sweep atom state so we can use js_IsAboutToBeFinalized on
+     * We first sweep atom state so we can use IsAboutToBeFinalized on
      * JSString held in a hashtable to check if the hashtable entry can be
      * freed. Note that even after the entry is freed, JSObject finalizers can
      * continue to access the corresponding JSString* assuming that they are
@@ -2512,7 +2503,7 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
 
     /*
      * Destroy arenas after we finished the sweeping so finalizers can safely
-     * use js_IsAboutToBeFinalized().
+     * use IsAboutToBeFinalized().
      */
     ExpireGCChunks(rt);
     TIMESTAMP(sweepDestroyEnd);

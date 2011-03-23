@@ -405,6 +405,9 @@ public:
   {
     mObjectFrame = aOwner;
   }
+  nsObjectFrame* GetOwner() {
+    return mObjectFrame;
+  }
 
   PRUint32 GetLastEventloopNestingLevel() const {
     return mLastEventloopNestingLevel; 
@@ -1642,7 +1645,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   #endif
     }
 
-    ImageContainer* container = GetImageContainer();
+    nsRefPtr<ImageContainer> container = GetImageContainer();
     nsRefPtr<Image> currentImage = container ? container->GetCurrentImage() : nsnull;
     if (!currentImage || !isVisible ||
         container->GetCurrentSize() != gfxIntSize(window->width, window->height)) {
@@ -1884,31 +1887,43 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
                    nsnull, status);  // DidReflow will take care of it
 }
 
-ImageContainer*
+already_AddRefed<ImageContainer>
 nsObjectFrame::GetImageContainer(LayerManager* aManager)
 {
   nsRefPtr<LayerManager> manager = aManager;
+  bool retain = false;
 
   if (!manager) {
-    manager = nsContentUtils::LayerManagerForDocument(mContent->GetOwnerDoc());
+    manager = nsContentUtils::LayerManagerForDocument(mContent->GetOwnerDoc(), &retain);
   }
   if (!manager) {
     return nsnull;
   }
+  
+  nsRefPtr<ImageContainer> container;
 
   // XXX - in the future image containers will be manager independent and
   // we can remove the manager equals check and only check the backend type.
   if (mImageContainer) {
     if ((!mImageContainer->Manager() || mImageContainer->Manager() == manager) &&
-        mImageContainer->GetBackendType() == manager->GetBackendType())
-      return mImageContainer;
-    // Clear current image before we reset mImageContainer. Only mImageContainer
-    // is allowed to contain the image for this plugin.
-    mImageContainer->SetCurrentImage(nsnull);
+        mImageContainer->GetBackendType() == manager->GetBackendType()) {
+      container = mImageContainer;
+      return container.forget();
+    }
   }
 
-  mImageContainer = manager->CreateImageContainer();
-  return mImageContainer;
+  container = manager->CreateImageContainer();
+
+  if (retain) {
+    // Clear current image before we reset mImageContainer. Only mImageContainer
+    // is allowed to contain the image for this plugin.
+    if (mImageContainer) {
+      mImageContainer->SetCurrentImage(nsnull);
+    }
+    mImageContainer = container;
+  }
+
+  return container.forget();
 }
 
 nsRect
@@ -1960,9 +1975,18 @@ nsPluginInstanceOwner::NotifyPaintWaiter(nsDisplayListBuilder* aBuilder)
   }
 }
 
-static void DrawPlugin(ImageContainer* aContainer, void* aObjectFrame)
+static void DrawPlugin(ImageContainer* aContainer, void* aPluginInstanceOwner)
 {
-  static_cast<nsObjectFrame*>(aObjectFrame)->UpdateImageLayer(aContainer, gfxRect(0,0,0,0));
+  nsObjectFrame* frame = static_cast<nsPluginInstanceOwner*>(aPluginInstanceOwner)->GetOwner();
+  if (frame) {
+    frame->UpdateImageLayer(aContainer, gfxRect(0,0,0,0));
+  }
+}
+
+static void OnDestroyImage(void* aPluginInstanceOwner)
+{
+  nsPluginInstanceOwner* owner = static_cast<nsPluginInstanceOwner*>(aPluginInstanceOwner);
+  NS_IF_RELEASE(owner);
 }
 
 void
@@ -1985,12 +2009,16 @@ nsPluginInstanceOwner::SetCurrentImage(ImageContainer* aContainer)
   nsCOMPtr<nsIPluginInstance_MOZILLA_2_0_BRANCH> inst = do_QueryInterface(mInstance);
   if (inst) {
     nsRefPtr<Image> image;
+    // Every call to nsIPluginInstance_MOZILLA_2_0_BRANCH::GetImage() creates
+    // a new image.  See nsIPluginInstance.idl.
     inst->GetImage(aContainer, getter_AddRefs(image));
     if (image) {
 #ifdef XP_MACOSX
       if (image->GetFormat() == Image::MAC_IO_SURFACE && mObjectFrame) {
         MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image.get());
-        oglImage->SetCallback(&DrawPlugin, mObjectFrame);
+        NS_ADDREF_THIS();
+        oglImage->SetUpdateCallback(&DrawPlugin, this);
+        oglImage->SetDestroyCallback(&OnDestroyImage);
       }
 #endif
       aContainer->SetCurrentImage(image);
@@ -5783,6 +5811,19 @@ nsPluginInstanceOwner::PrepareToStop(PRBool aDelayedStop)
   // Drop image reference because the child may destroy the surface after we return.
   nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
   if (container) {
+#ifdef XP_MACOSX
+    nsRefPtr<Image> image = container->GetCurrentImage();
+    if (image && (image->GetFormat() == Image::MAC_IO_SURFACE) && mObjectFrame) {
+      // Undo what we did to the current image in SetCurrentImage().
+      MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image.get());
+      oglImage->SetUpdateCallback(nsnull, nsnull);
+      oglImage->SetDestroyCallback(nsnull);
+      // If we have a current image here, its destructor hasn't yet been
+      // called, so OnDestroyImage() can't yet have been called.  So we need
+      // to do ourselves what OnDestroyImage() would have done.
+      NS_RELEASE_THIS();
+    }
+#endif
     container->SetCurrentImage(nsnull);
   }
 
@@ -5845,6 +5886,9 @@ void nsPluginInstanceOwner::Paint(const gfxRect& aDirtyRect, CGContextRef cgCont
 
 void nsPluginInstanceOwner::DoCocoaEventDrawRect(const gfxRect& aDrawRect, CGContextRef cgContext)
 {
+  if (!mInstance || !mObjectFrame)
+    return;
+ 
   // The context given here is only valid during the HandleEvent call.
   NPCocoaEvent updateEvent;
   InitializeNPCocoaEvent(&updateEvent);

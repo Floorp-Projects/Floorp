@@ -252,28 +252,6 @@ STDMETHODIMP nsDocAccessibleWrap::get_accValue(
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessNode
 
-PRBool
-nsDocAccessibleWrap::Init()
-{
-  if (nsWinUtils::IsWindowEmulationEnabled()) {
-    // Create window for tab document.
-    if (nsWinUtils::IsTabDocument(mDocument)) {
-      nsRefPtr<nsRootAccessible> root = GetRootAccessible();
-      mHWND = nsWinUtils::CreateNativeWindow(kClassNameTabContent,
-                                             static_cast<HWND>(root->GetNativeWindow()));
-
-      nsAccessibleWrap::sHWNDCache.Put(mHWND, this);
-
-    } else {
-      nsDocAccessible* parentDocument = ParentDocument();
-      if (parentDocument)
-        mHWND = parentDocument->GetNativeWindow();
-    }
-  }
-
-  return nsDocAccessible::Init();
-}
-
 void
 nsDocAccessibleWrap::Shutdown()
 {
@@ -291,10 +269,51 @@ nsDocAccessibleWrap::Shutdown()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsDocAccessible
+// nsDocAccessible public
 
 void*
 nsDocAccessibleWrap::GetNativeWindow() const
 {
   return mHWND ? mHWND : nsDocAccessible::GetNativeWindow();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsDocAccessible protected
+
+void
+nsDocAccessibleWrap::NotifyOfInitialUpdate()
+{
+  nsDocAccessible::NotifyOfInitialUpdate();
+
+  if (nsWinUtils::IsWindowEmulationEnabled()) {
+    // Create window for tab document.
+    if (nsWinUtils::IsTabDocument(mDocument)) {
+      nsRootAccessible* rootDocument = RootAccessible();
+
+      PRBool isActive = PR_TRUE;
+      PRInt32 x = CW_USEDEFAULT, y = CW_USEDEFAULT, width = 0, height = 0;
+      if (nsWinUtils::IsWindowEmulationEnabled(kDolphinModuleHandle)) {
+        GetBounds(&x, &y, &width, &height);
+        PRInt32 rootX = 0, rootY = 0, rootWidth = 0, rootHeight = 0;
+        rootDocument->GetBounds(&rootX, &rootY, &rootWidth, &rootHeight);
+        x = rootX - x;
+        y -= rootY;
+
+        nsCOMPtr<nsISupports> container = mDocument->GetContainer();
+        nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+        docShell->GetIsActive(&isActive);
+      }
+
+      HWND parentWnd = static_cast<HWND>(rootDocument->GetNativeWindow());
+      mHWND = nsWinUtils::CreateNativeWindow(kClassNameTabContent, parentWnd,
+                                             x, y, width, height, isActive);
+
+      nsAccessibleWrap::sHWNDCache.Put(mHWND, this);
+
+    } else {
+      nsDocAccessible* parentDocument = ParentDocument();
+      if (parentDocument)
+        mHWND = parentDocument->GetNativeWindow();
+    }
+  }
 }

@@ -365,7 +365,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   // (which might be the owning NSWindow in the application, for example).
   //
   // get the native root accessible, and tell it to return its first parent unignored accessible.
-  nsRefPtr<nsRootAccessible> root(mGeckoAccessible->GetRootAccessible());
+  nsRootAccessible* root = mGeckoAccessible->RootAccessible();
   id nativeParent = GetNativeFromGeckoAccessible(static_cast<nsIAccessible*>(root));
   NSAssert1 (nativeParent, @"!!! we can't find a parent for %@", self);
   
