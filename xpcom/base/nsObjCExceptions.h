@@ -65,6 +65,7 @@
 // See Mozilla bug 163260.
 // This file can only be included in an Objective-C context.
 
+__attribute__((unused))
 static void nsObjCExceptionLog(NSException* aException)
 {
   NSLog(@"Mozilla has caught an Obj-C exception [%@: %@]",
@@ -149,6 +150,7 @@ static void nsObjCExceptionLog(NSException* aException)
 #endif
 }
 
+__attribute__((unused))
 static void nsObjCExceptionAbort()
 {
   // We need to raise a mach-o signal here, the Mozilla crash reporter on
@@ -158,6 +160,7 @@ static void nsObjCExceptionAbort()
   *foo = 1;
 }
 
+__attribute__((unused))
 static void nsObjCExceptionLogAbort(NSException *e)
 {
   nsObjCExceptionLog(e);

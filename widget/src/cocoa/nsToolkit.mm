@@ -783,7 +783,6 @@ void ScanImportedFunctions(const struct mach_header* mh, intptr_t vmaddr_slide)
 #ifdef __i386__
       if (jumpTable) {
         unsigned char *opcodeAddr = stubs + (i * 5);
-        unsigned char oldOpcode = opcodeAddr[0];
         int32_t *displacementAddr = (int32_t *) (opcodeAddr + 1);
         int32_t eip = (int32_t) stubs + (i + 1) * 5;
         int32_t displacement = (int32_t) (gHookedFunctions[j].newAddress) - eip;
