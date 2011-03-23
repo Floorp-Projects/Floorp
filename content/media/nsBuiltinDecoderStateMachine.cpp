@@ -1369,6 +1369,7 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
         // duration.
         RenderVideoFrame(currentFrame);
       }
+      mDecoder->GetFrameStatistics().NotifyPresentedFrame();
       PRInt64 now = (TimeStamp::Now() - mPlayStartTime + mPlayDuration).ToMilliseconds();
       remainingTime = currentFrame->mEndTime - mStartTime - now;
       currentFrame = nsnull;
