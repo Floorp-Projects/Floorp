@@ -536,8 +536,13 @@ Shape::newDictionaryList(JSContext *cx, Shape **listp)
     Shape *shape = *listp;
     Shape *list = shape;
 
-    Shape **childp = listp;
-    *childp = NULL;
+    /*
+     * We temporarily create the dictionary shapes using a root located on the
+     * stack. This way, the GC doesn't see any intermediate state until we
+     * switch listp at the end.
+     */
+    Shape *root = NULL;
+    Shape **childp = &root;
 
     while (shape) {
         JS_ASSERT_IF(!shape->frozen(), !shape->inDictionary());
@@ -554,10 +559,12 @@ Shape::newDictionaryList(JSContext *cx, Shape **listp)
         shape = shape->parent;
     }
 
-    list = *listp;
-    JS_ASSERT(list->inDictionary());
-    list->hashify(cx->runtime);
-    return list;
+    *listp = root;
+    root->listp = listp;
+
+    JS_ASSERT(root->inDictionary());
+    root->hashify(cx->runtime);
+    return root;
 }
 
 bool
