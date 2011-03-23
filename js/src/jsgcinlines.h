@@ -57,7 +57,7 @@
 #endif
 
 inline bool
-JSAtom::isUnitString(void *ptr)
+JSAtom::isUnitString(const void *ptr)
 {
     jsuword delta = reinterpret_cast<jsuword>(ptr) -
                     reinterpret_cast<jsuword>(unitStaticTable);
@@ -70,7 +70,7 @@ JSAtom::isUnitString(void *ptr)
 }
 
 inline bool
-JSAtom::isLength2String(void *ptr)
+JSAtom::isLength2String(const void *ptr)
 {
     jsuword delta = reinterpret_cast<jsuword>(ptr) -
                     reinterpret_cast<jsuword>(length2StaticTable);
@@ -83,7 +83,7 @@ JSAtom::isLength2String(void *ptr)
 }
 
 inline bool
-JSAtom::isHundredString(void *ptr)
+JSAtom::isHundredString(const void *ptr)
 {
     jsuword delta = reinterpret_cast<jsuword>(ptr) -
                     reinterpret_cast<jsuword>(hundredStaticTable);
@@ -96,7 +96,7 @@ JSAtom::isHundredString(void *ptr)
 }
 
 inline bool
-JSAtom::isStatic(void *ptr)
+JSAtom::isStatic(const void *ptr)
 {
     return isUnitString(ptr) || isLength2String(ptr) || isHundredString(ptr);
 }
@@ -105,12 +105,12 @@ namespace js {
 namespace gc {
 
 inline uint32
-GetGCThingTraceKind(void *thing)
+GetGCThingTraceKind(const void *thing)
 {
     JS_ASSERT(thing);
     if (JSAtom::isStatic(thing))
         return JSTRACE_STRING;
-    Cell *cell = reinterpret_cast<Cell *>(thing);
+    const Cell *cell = reinterpret_cast<const Cell *>(thing);
     return GetFinalizableTraceKind(cell->arena()->header()->thingKind);
 }
 
@@ -271,7 +271,7 @@ Mark(JSTracer *trc, T *thing)
 
     if (!IS_GC_MARKING_TRACER(trc)) {
         uint32 kind = js::gc::GetGCThingTraceKind(thing);
-        trc->callback(trc, thing, kind);
+        trc->callback(trc, (void *)thing, kind);
         goto out;
     }
 
