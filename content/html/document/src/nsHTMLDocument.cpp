@@ -1873,15 +1873,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
       }
     }
 
-    // Flag us as not being able to start layout until we hit <body>
-    // or scripts that require layout, so that we won't run into FOUC
-    // issues.  We need to do that before making the Stop() call,
-    // since if we have no frame yet the flush Stop() triggers might
-    // try to create one for us, and we don't want our presshell
-    // starting layout if that happens.  But we don't want to do this
-    // before the PermitUnload call above.
-    mMayStartLayout = PR_FALSE;
-
     nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(shell));
     webnav->Stop(nsIWebNavigation::STOP_NETWORK);
 
@@ -1890,10 +1881,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     // document again otherwise the document could have a non-zero onload block
     // count without the onload blocker request being in the loadgroup.
     EnsureOnloadBlocker();
-  } else {
-    // See comment before the mMayStartLayout set in the other branch
-    // of this if.
-    mMayStartLayout = PR_FALSE;
   }
 
   // The open occurred after the document finished loading.
