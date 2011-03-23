@@ -555,7 +555,7 @@ class JSShortString : public JSFixedString
     }
 
     static const size_t MAX_SHORT_LENGTH = JSString::NUM_INLINE_CHARS +
-                                           INLINE_EXTENSION_CHARS +
+                                           INLINE_EXTENSION_CHARS
                                            -1 /* null terminator */;
 
     static inline bool lengthFits(size_t length) {
