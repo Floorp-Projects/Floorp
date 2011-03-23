@@ -285,6 +285,8 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
     }
 #endif
 
+    result->SetContentCharset(NS_LITERAL_CSTRING("UTF-8"));
+
     *aResult = result;
     NS_ADDREF(*aResult);
     return NS_OK;
