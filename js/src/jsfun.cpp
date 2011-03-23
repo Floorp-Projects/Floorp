@@ -1612,7 +1612,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         continue;
     }
 
-    JSAtom *atom;
+    JSAtom *atom = NULL;
 
     switch (slot) {
       case FUN_ARGUMENTS:
