@@ -1396,6 +1396,7 @@ function prepareForStartup() {
 
   // initialize observers and listeners
   // and give C++ access to gBrowser
+  gBrowser.init();
   XULBrowserWindow.init();
   window.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(nsIWebNavigation)
@@ -4256,14 +4257,10 @@ var XULBrowserWindow = {
       }
     }
     else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
-      if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
-        if (aWebProgress.DOMWindow == content) {
-          if (aRequest)
-            this.endDocumentLoad(aRequest, aStatus);
-          if (!gBrowser.mTabbedMode && !gBrowser.getIcon())
-            gBrowser.useDefaultIcon(gBrowser.selectedTab);
-        }
-      }
+      if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK &&
+          aWebProgress.DOMWindow == content &&
+          aRequest)
+        this.endDocumentLoad(aRequest, aStatus);
 
       // This (thanks to the filter) is a network stop or the last
       // request stop outside of loading the document, stop throbbers
@@ -4398,9 +4395,6 @@ var XULBrowserWindow = {
       } else {
         this.reloadCommand.removeAttribute("disabled");
       }
-
-      if (!gBrowser.mTabbedMode && aWebProgress.isLoadingDocument)
-        gBrowser.setIcon(gBrowser.selectedTab, null);
 
       if (gURLBar) {
         // Strip off "wyciwyg://" and passwords for the location bar
