@@ -683,10 +683,10 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
     memset(&si, 0, sizeof(si));
     si.sz = sizeof(si);
     vpx_codec_peek_stream_info(&vpx_codec_vp8_dx_algo, data, length, &si);
-    if ((aKeyframeSkip && !si.is_kf) || (aKeyframeSkip && si.is_kf && tstamp_ms < aTimeThreshold)) {
-      aKeyframeSkip = PR_TRUE;
+    if (aKeyframeSkip && (!si.is_kf || tstamp_ms < aTimeThreshold)) {
+      // Skipping to next keyframe...
       parsed++; // Assume 1 frame per chunk.
-      break;
+      continue;
     }
 
     if (aKeyframeSkip && si.is_kf) {
