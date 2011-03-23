@@ -984,8 +984,11 @@ SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
   nsNSSShutDownPreventionLock locker;
 
   CERTCertificate *serverCert = SSL_PeerCertificate(fd);
+  CERTCertificateCleaner serverCertCleaner(serverCert);
+
   if (serverCert && 
       serverCert->serialNumber.data &&
+      serverCert->issuerName &&
       !strcmp(serverCert->issuerName, 
         "CN=UTN-USERFirst-Hardware,OU=http://www.usertrust.com,O=The USERTRUST Network,L=Salt Lake City,ST=UT,C=US")) {
 
@@ -1028,8 +1031,6 @@ SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
   // We want to remember the CA certs in the temp db, so that the application can find the
   // complete chain at any time it might need it.
   // But we keep only those CA certs in the temp db, that we didn't already know.
-  
-  CERTCertificateCleaner serverCertCleaner(serverCert);
 
   if (serverCert) {
     nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
