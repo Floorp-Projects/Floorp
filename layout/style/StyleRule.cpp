@@ -140,8 +140,8 @@ nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
     mType(aType),
     mNext(nsnull)
 {
-  NS_ASSERTION(!nsCSSPseudoClasses::HasStringArg(aAtom) &&
-               !nsCSSPseudoClasses::HasNthPairArg(aAtom),
+  NS_ASSERTION(!nsCSSPseudoClasses::HasStringArg(aType) &&
+               !nsCSSPseudoClasses::HasNthPairArg(aType),
                "unexpected pseudo-class");
   MOZ_COUNT_CTOR(nsPseudoClassList);
   u.mMemory = nsnull;
@@ -154,7 +154,7 @@ nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
     mType(aType),
     mNext(nsnull)
 {
-  NS_ASSERTION(nsCSSPseudoClasses::HasStringArg(aAtom),
+  NS_ASSERTION(nsCSSPseudoClasses::HasStringArg(aType),
                "unexpected pseudo-class");
   NS_ASSERTION(aString, "string expected");
   MOZ_COUNT_CTOR(nsPseudoClassList);
@@ -168,7 +168,7 @@ nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
     mType(aType),
     mNext(nsnull)
 {
-  NS_ASSERTION(nsCSSPseudoClasses::HasNthPairArg(aAtom),
+  NS_ASSERTION(nsCSSPseudoClasses::HasNthPairArg(aType),
                "unexpected pseudo-class");
   NS_ASSERTION(aIntPair, "integer pair expected");
   MOZ_COUNT_CTOR(nsPseudoClassList);
@@ -184,7 +184,7 @@ nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
     mType(aType),
     mNext(nsnull)
 {
-  NS_ASSERTION(nsCSSPseudoClasses::HasSelectorListArg(aAtom),
+  NS_ASSERTION(nsCSSPseudoClasses::HasSelectorListArg(aType),
                "unexpected pseudo-class");
   NS_ASSERTION(aSelectorList, "selector list expected");
   MOZ_COUNT_CTOR(nsPseudoClassList);
@@ -197,12 +197,12 @@ nsPseudoClassList::Clone(PRBool aDeep) const
   nsPseudoClassList *result;
   if (!u.mMemory) {
     result = new nsPseudoClassList(mAtom, mType);
-  } else if (nsCSSPseudoClasses::HasStringArg(mAtom)) {
+  } else if (nsCSSPseudoClasses::HasStringArg(mType)) {
     result = new nsPseudoClassList(mAtom, mType, u.mString);
-  } else if (nsCSSPseudoClasses::HasNthPairArg(mAtom)) {
+  } else if (nsCSSPseudoClasses::HasNthPairArg(mType)) {
     result = new nsPseudoClassList(mAtom, mType, u.mNumbers);
   } else {
-    NS_ASSERTION(nsCSSPseudoClasses::HasSelectorListArg(mAtom),
+    NS_ASSERTION(nsCSSPseudoClasses::HasSelectorListArg(mType),
                  "unexpected pseudo-class");
     // This constructor adopts its selector list argument.
     result = new nsPseudoClassList(mAtom, mType, u.mSelectors->Clone());
@@ -218,7 +218,7 @@ nsPseudoClassList::Clone(PRBool aDeep) const
 nsPseudoClassList::~nsPseudoClassList(void)
 {
   MOZ_COUNT_DTOR(nsPseudoClassList);
-  if (nsCSSPseudoClasses::HasSelectorListArg(mAtom)) {
+  if (nsCSSPseudoClasses::HasSelectorListArg(mType)) {
     delete u.mSelectors;
   } else if (u.mMemory) {
     NS_Free(u.mMemory);
@@ -789,10 +789,10 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
       aString.Append(temp);
       if (list->u.mMemory) {
         aString.Append(PRUnichar('('));
-        if (nsCSSPseudoClasses::HasStringArg(list->mAtom)) {
+        if (nsCSSPseudoClasses::HasStringArg(list->mType)) {
           nsStyleUtil::AppendEscapedCSSIdent(
             nsDependentString(list->u.mString), aString);
-        } else if (nsCSSPseudoClasses::HasNthPairArg(list->mAtom)) {
+        } else if (nsCSSPseudoClasses::HasNthPairArg(list->mType)) {
           PRInt32 a = list->u.mNumbers[0],
                   b = list->u.mNumbers[1];
           temp.Truncate();
@@ -811,7 +811,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
           }
           aString.Append(temp);
         } else {
-          NS_ASSERTION(nsCSSPseudoClasses::HasSelectorListArg(list->mAtom),
+          NS_ASSERTION(nsCSSPseudoClasses::HasSelectorListArg(list->mType),
                        "unexpected pseudo-class");
           nsString tmp;
           list->u.mSelectors->ToString(tmp, aSheet);
