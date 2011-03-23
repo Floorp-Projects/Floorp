@@ -53,8 +53,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMAbstractView.h"
 
-#include <Carbon/Carbon.h>
-
 void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
 {
   NS_PRECONDITION(aTargetContent, "null ptr");
@@ -88,20 +86,11 @@ NSString* nsMenuUtilsX::GetTruncatedCocoaLabel(const nsString& itemLabel)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-#ifdef __LP64__
-  // Don't do anything on 64-bit Mac OS X for now, there is no API that does
-  // what we want. We'll probably need to roll our own solution.
+  // We want to truncate long strings to some reasonable pixel length but there is no
+  // good API for doing that which works for all OS versions and architectures. For now
+  // we'll do nothing for consistency and depend on good user interface design to limit
+  // string lengths.
   return [NSString stringWithCharacters:itemLabel.get() length:itemLabel.Length()];
-#else
-  // ::TruncateThemeText() doesn't take the number of characters to truncate to, it takes a pixel with
-  // to fit the string in. Ugh. I talked it over with sfraser and we couldn't come up with an 
-  // easy way to compute what this should be given the system font, etc, so we're just going
-  // to hard code it to something reasonable and bigger fonts will just have to deal.
-  const short kMaxItemPixelWidth = 300;
-  NSMutableString *label = [NSMutableString stringWithCharacters:itemLabel.get() length:itemLabel.Length()];
-  ::TruncateThemeText((CFMutableStringRef)label, kThemeMenuItemFont, kThemeStateActive, kMaxItemPixelWidth, truncMiddle, NULL);
-  return label;
-#endif
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }

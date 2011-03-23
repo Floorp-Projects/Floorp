@@ -1231,7 +1231,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
     nsCxPusher pusher;
     pusher.PushNull();
 
-    rv = newEditor->Init(domdoc, shell, GetRootNode(), mSelCon, editorFlags);
+    rv = newEditor->Init(domdoc, GetRootNode(), mSelCon, editorFlags);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

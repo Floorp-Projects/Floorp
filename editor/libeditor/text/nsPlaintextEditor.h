@@ -97,7 +97,7 @@ public:
                                          PRBool aSuppressTransaction);
 
   /** prepare the editor for use */
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,  nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
   
   NS_IMETHOD GetDocumentIsEmpty(PRBool *aDocumentIsEmpty);
   NS_IMETHOD GetIsDocumentEditable(PRBool *aIsDocumentEditable);

@@ -1450,18 +1450,6 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
     }
   }
 
-  // XXX_kin: At this point we should be checking for the case
-  // XXX_kin: where we have 2 adjacent text nodes left, each
-  // XXX_kin: containing one of the range end points. The spec
-  // XXX_kin: says the 2 nodes should be merged in that case,
-  // XXX_kin: and to use Normalize() to do the merging, but
-  // XXX_kin: calling Normalize() on the common parent to accomplish
-  // XXX_kin: this might also normalize nodes that are outside the
-  // XXX_kin: range but under the common parent. Need to verify
-  // XXX_kin: with the range commitee members that this was the
-  // XXX_kin: desired behavior. For now we don't merge anything!
-  // XXX ajvincent Filed as https://bugzilla.mozilla.org/show_bug.cgi?id=401276
-
   rv = CollapseRangeAfterDelete(this);
   if (NS_SUCCEEDED(rv) && aFragment) {
     NS_ADDREF(*aFragment = retval);

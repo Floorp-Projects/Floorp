@@ -306,7 +306,10 @@ enum nsSelectionAmount {
   eSelectBeginLine = 4,
   eSelectEndLine   = 5,
   eSelectNoAmount  = 6, // just bounce back current offset.
-  eSelectParagraph = 7  // select a "paragraph"
+  eSelectParagraph = 7,  // select a "paragraph"
+  eSelectWordNoSpace = 8 // select a "word" without selecting the following
+                         // space, no matter what the default platform
+                         // behavior is
 };
 
 enum nsDirection {

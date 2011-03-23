@@ -235,15 +235,6 @@ InstallTriggerManager.prototype = {
   handleEvent: function handleEvent(aEvent) {
     var window = aEvent.target.defaultView;
 
-    // Need to make sure we are called on what we care about -
-    // content windows. DOMWindowCreated is called on *all* HTMLDocuments,
-    // some of which belong to chrome windows or other special content.
-    //
-    var uri = window.document.documentURIObject;
-    if (uri.scheme === "chrome" || uri.spec.split(":")[0] == "about") {
-      return;
-    }
-
     window.wrappedJSObject.__defineGetter__("InstallTrigger", function() {
       // We do this in a getter, so that we create these objects
       // only on demand (this is a potential concern, since

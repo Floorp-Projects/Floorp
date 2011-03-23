@@ -724,8 +724,7 @@ protected:
 
   PRUint32        mModCount;		// number of modifications (for undo/redo stack)
   PRUint32        mFlags;		// behavior flags. See nsIPlaintextEditor.idl for the flags we use.
-  
-  nsWeakPtr       mPresShellWeak;   // weak reference to the nsIPresShell
+
   nsWeakPtr       mSelConWeak;   // weak reference to the nsISelectionController
   PRInt32         mUpdateCount;
   nsIViewManager::UpdateViewBatch mBatch;
@@ -760,6 +759,7 @@ protected:
 
   PRPackedBool                  mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
   PRPackedBool                  mDidPreDestroy;    // whether PreDestroy has been called
+  PRPackedBool                  mDidPostCreate;    // whether PostCreate has been called
    // various listeners
   nsCOMArray<nsIEditActionListener> mActionListeners;  // listens to all low level actions on the doc
   nsCOMArray<nsIEditorObserver> mEditorObservers;  // just notify once per high level change

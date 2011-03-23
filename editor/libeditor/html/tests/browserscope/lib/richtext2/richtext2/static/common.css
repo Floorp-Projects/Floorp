@@ -1,0 +1,116 @@
+.framed {
+  vertical-align: top;
+  margin: 8px;
+  border: 1px solid black;
+}
+
+.legend {
+  padding: 12px;
+  background-color: #f8f8ff;
+}
+
+.legendHdr {
+  font-size: large;
+  text-decoration: underline;
+}
+
+table.legend {
+  display: inline-table;
+}
+
+.suite-thead {
+  text-align: left;
+}
+
+.lo {
+  background-color: #dddddd;
+}
+.hi {
+  background-color: #eeeeee;
+}
+
+.lo .grey {
+  background-color: #dddddd;
+}
+.lo .na {
+  background-color: #dddddd;
+}
+.lo .pass {
+  background-color: #d4ffc0;
+}
+.lo .canary {
+  background-color: #ffcccc;
+}
+.lo .fail {
+  background-color: #ffcccc;
+}
+.lo .accept {
+  background-color: #ffffc0;
+}
+.lo .exception {
+  background-color: #f0d0f4;
+}
+.lo .unsupported {
+  background-color: #f0d0f4;
+}
+
+.hi .grey {
+  background-color: #eeeeee;
+}
+.hi .na {
+  background-color: #eeeeee;
+}
+.hi .pass {
+  background-color: #e0ffdc;
+}
+.hi .canary {
+  background-color: #ffd8d8;
+}
+.hi .fail {
+  background-color: #ffd8d8;
+}
+.hi .accept {
+  background-color: #ffffd8;
+}
+.hi .exception {
+  background-color: #f4dcf8;
+}
+.hi .unsupported {
+  background-color: #f4dcf8;
+}
+
+
+.sel {
+  color: blue;
+}
+
+.txt {
+  padding: 1px;
+  margin: 1px;
+  border: 1px solid #b0b0b0;
+}
+
+.idLabel {
+  font-size: small;
+}
+
+.fade {
+  color: grey;
+}
+.accexp {
+  color: #606070;
+}
+.comment {
+  color: grey;
+}
+
+.score {
+  color: #666666;
+}
+
+.fatalerror {
+  color: red;
+  font-size: large;
+  font-weight: bold;
+}
+
