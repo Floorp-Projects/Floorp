@@ -225,7 +225,6 @@ Parser::~Parser()
 
     if (principals)
         JSPRINCIPALS_DROP(cx, principals);
-    tokenStream.close();
     JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
 }
 

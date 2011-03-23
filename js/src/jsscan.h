@@ -252,7 +252,6 @@ struct Token {
 
 enum TokenStreamFlags
 {
-    TSF_ERROR = 0x01,           /* fatal error while compiling */
     TSF_EOF = 0x02,             /* hit end of file */
     TSF_EOL = 0x04,             /* an EOL was hit in whitespace or a multi-line comment */
     TSF_OPERAND = 0x08,         /* looking for operand, not operator */
@@ -327,8 +326,7 @@ class TokenStream
      */
     bool init(const jschar *base, size_t length, const char *filename, uintN lineno,
               JSVersion version);
-    void close();
-    ~TokenStream() {}
+    ~TokenStream();
 
     /* Accessors. */
     JSContext *getContext() const { return cx; }
@@ -363,7 +361,6 @@ class TokenStream
     bool isXMLOnlyMode() { return !!(flags & TSF_XMLONLYMODE); }
     bool isUnexpectedEOF() { return !!(flags & TSF_UNEXPECTED_EOF); }
     bool isEOF() const { return !!(flags & TSF_EOF); }
-    bool isError() const { return !!(flags & TSF_ERROR); }
     bool hasOctalCharacterEscape() const { return flags & TSF_OCTAL_CHAR; }
 
     /* Mutators. */
@@ -417,8 +414,6 @@ class TokenStream
             JS_ASSERT(tt != TOK_EOL);
             return tt;
         }
-
-        JS_ASSERT(!(flags & TSF_ERROR));
 
         return getTokenInternal();
     }

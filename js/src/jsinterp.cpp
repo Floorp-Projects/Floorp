@@ -614,8 +614,6 @@ RunScript(JSContext *cx, JSScript *script, JSStackFrame *fp)
     JMCheckLogging();
 #endif
 
-    AutoInterpPreparer prepareInterp(cx, script);
-
     /* FIXME: Once bug 470510 is fixed, make this an assert. */
     if (script->compileAndGo) {
         int32 flags = fp->scopeChain().getGlobal()->getReservedSlot(JSRESERVED_GLOBAL_FLAGS).toInt32();
@@ -2461,10 +2459,8 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
         InterpExitGuard(JSContext *cx, JSFrameRegs &regs)
           : cx(cx), regs(regs), prevContextRegs(cx->regs) {
             cx->setCurrentRegs(&regs);
-            ++cx->interpLevel;
         }
         ~InterpExitGuard() {
-            --cx->interpLevel;
             JS_ASSERT(cx->regs == &regs);
             *prevContextRegs = regs;
             cx->setCurrentRegs(prevContextRegs);
