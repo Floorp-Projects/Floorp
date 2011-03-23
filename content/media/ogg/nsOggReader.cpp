@@ -1023,6 +1023,84 @@ PRInt64 nsOggReader::FindEndTime(PRInt64 aStartOffset,
   return endTime;
 }
 
+nsresult nsOggReader::GetSeekRanges(nsTArray<SeekRange>& aRanges)
+{
+  NS_ASSERTION(mDecoder->OnStateMachineThread(),
+               "Should be on state machine thread.");
+  mMonitor.AssertCurrentThreadIn();
+  PRInt64 startOffset = mDataOffset;
+  nsMediaStream* stream = mDecoder->GetCurrentStream();
+  while (PR_TRUE) {
+    PRInt64 endOffset = stream->GetCachedDataEnd(startOffset);
+    if (endOffset == startOffset) {
+      // Uncached at startOffset.
+      endOffset = stream->GetNextCachedData(startOffset);
+      if (endOffset == -1) {
+        // Uncached at startOffset until endOffset of stream, or we're at
+        // the end of stream.
+        break;
+      }
+    } else {
+      // Bytes [startOffset..endOffset] are cached.
+      PRInt64 startTime = -1;
+      PRInt64 endTime = -1;
+      if (NS_FAILED(ResetDecode())) {
+        return NS_ERROR_FAILURE;
+      }
+      FindStartTime(startOffset, startTime);
+      if (startTime != -1 &&
+          ((endTime = FindEndTime(endOffset)) != -1))
+      {
+        NS_ASSERTION(startOffset < endOffset,
+                     "Start offset must be before end offset");
+        NS_ASSERTION(startTime < endTime,
+                     "Start time must be before end time");
+        aRanges.AppendElement(SeekRange(startOffset,
+                                        endOffset,
+                                        startTime,
+                                        endTime));
+      }
+    }
+    startOffset = endOffset;
+  }
+  if (NS_FAILED(ResetDecode())) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+nsOggReader::SeekRange
+nsOggReader::SelectSeekRange(const nsTArray<SeekRange>& ranges,
+                             PRInt64 aTarget,
+                             PRInt64 aStartTime,
+                             PRInt64 aEndTime,
+                             PRBool aExact)
+{
+  NS_ASSERTION(mDecoder->OnStateMachineThread(),
+               "Should be on state machine thread.");
+  PRInt64 so = mDataOffset;
+  PRInt64 eo = mDecoder->GetCurrentStream()->GetLength();
+  PRInt64 st = aStartTime;
+  PRInt64 et = aEndTime;
+  for (PRUint32 i = 0; i < ranges.Length(); i++) {
+    const SeekRange &r = ranges[i];
+    if (r.mTimeStart < aTarget) {
+      so = r.mOffsetStart;
+      st = r.mTimeStart;
+    }
+    if (r.mTimeEnd >= aTarget && r.mTimeEnd < et) {
+      eo = r.mOffsetEnd;
+      et = r.mTimeEnd;
+    }
+
+    if (r.mTimeStart < aTarget && aTarget <= r.mTimeEnd) {
+      // Target lies exactly in this range.
+      return ranges[i];
+    }
+  }
+  return aExact ? SeekRange() : SeekRange(so, eo, st, et);
+}
+
 nsOggReader::IndexedSeekResult nsOggReader::RollbackIndexedSeek(PRInt64 aOffset)
 {
   mSkeletonState->Deactivate();
@@ -1118,8 +1196,8 @@ nsOggReader::IndexedSeekResult nsOggReader::SeekToKeyframeUsingIndex(PRInt64 aTa
 nsresult nsOggReader::SeekInBufferedRange(PRInt64 aTarget,
                                           PRInt64 aStartTime,
                                           PRInt64 aEndTime,
-                                          const nsTArray<ByteRange>& aRanges,
-                                          const ByteRange& aRange)
+                                          const nsTArray<SeekRange>& aRanges,
+                                          const SeekRange& aRange)
 {
   LOG(PR_LOG_DEBUG, ("%p Seeking in buffered data to %lldms using bisection search", mDecoder, aTarget));
 
@@ -1156,11 +1234,11 @@ nsresult nsOggReader::SeekInBufferedRange(PRInt64 aTarget,
     PRInt64 keyframeTime = mTheoraState->StartTime(keyframeGranulepos);
     SEEK_LOG(PR_LOG_DEBUG, ("Keyframe for %lld is at %lld, seeking back to it",
                             video->mTime, keyframeTime));
-    ByteRange k = GetSeekRange(aRanges,
-                               keyframeTime,
-                               aStartTime,
-                               aEndTime,
-                               PR_FALSE);
+    SeekRange k = SelectSeekRange(aRanges,
+                                  keyframeTime,
+                                  aStartTime,
+                                  aEndTime,
+                                  PR_FALSE);
     res = SeekBisection(keyframeTime, k, SEEK_FUZZ_MS);
     NS_ASSERTION(mTheoraGranulepos == -1, "SeekBisection must reset Theora decode");
     NS_ASSERTION(mVorbisGranulepos == -1, "SeekBisection must reset Vorbis decode");
@@ -1182,7 +1260,7 @@ PRBool nsOggReader::CanDecodeToTarget(PRInt64 aTarget,
 nsresult nsOggReader::SeekInUnbuffered(PRInt64 aTarget,
                                        PRInt64 aStartTime,
                                        PRInt64 aEndTime,
-                                       const nsTArray<ByteRange>& aRanges)
+                                       const nsTArray<SeekRange>& aRanges)
 {
   LOG(PR_LOG_DEBUG, ("%p Seeking in unbuffered data to %lldms using bisection search", mDecoder, aTarget));
   
@@ -1205,7 +1283,7 @@ nsresult nsOggReader::SeekInUnbuffered(PRInt64 aTarget,
   PRInt64 seekTarget = NS_MAX(aStartTime, aTarget - keyframeOffsetMs);
   // Minimize the bisection search space using the known timestamps from the
   // buffered ranges.
-  ByteRange k = GetSeekRange(aRanges, seekTarget, aStartTime, aEndTime, PR_FALSE);
+  SeekRange k = SelectSeekRange(aRanges, seekTarget, aStartTime, aEndTime, PR_FALSE);
   nsresult res = SeekBisection(seekTarget, k, SEEK_FUZZ_MS);
   NS_ASSERTION(mTheoraGranulepos == -1, "SeekBisection must reset Theora decode");
   NS_ASSERTION(mVorbisGranulepos == -1, "SeekBisection must reset Vorbis decode");
@@ -1251,12 +1329,12 @@ nsresult nsOggReader::Seek(PRInt64 aTarget,
       // No index or other non-fatal index-related failure. Try to seek
       // using a bisection search. Determine the already downloaded data
       // in the media cache, so we can try to seek in the cached data first.
-      nsAutoTArray<ByteRange, 16> ranges;
-      res = GetBufferedBytes(ranges);
+      nsAutoTArray<SeekRange, 16> ranges;
+      res = GetSeekRanges(ranges);
       NS_ENSURE_SUCCESS(res,res);
 
       // Figure out if the seek target lies in a buffered range.
-      ByteRange r = GetSeekRange(ranges, aTarget, aStartTime, aEndTime, PR_TRUE);
+      SeekRange r = SelectSeekRange(ranges, aTarget, aStartTime, aEndTime, PR_TRUE);
 
       if (!r.IsNull()) {
         // We know the buffered range in which the seek target lies, do a
@@ -1345,7 +1423,7 @@ PageSync(nsMediaStream* aStream,
 }
 
 nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
-                                    const ByteRange& aRange,
+                                    const SeekRange& aRange,
                                     PRUint32 aFuzz)
 {
   NS_ASSERTION(mDecoder->OnStateMachineThread(),
@@ -1716,4 +1794,3 @@ PRBool nsOggReader::IsKnownStream(PRUint32 aSerial)
 
   return PR_FALSE;
 }
-
