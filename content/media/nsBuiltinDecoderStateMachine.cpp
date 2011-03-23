@@ -78,7 +78,7 @@ static const PRUint32 LOW_AUDIO_MS = 300;
 // decoding more audio. If we increase the low audio threshold (see
 // LOW_AUDIO_MS above) we'll also increase this value to ensure it's not
 // less than the low audio threshold.
-const unsigned AMPLE_AUDIO_MS = 1000;
+const PRInt64 AMPLE_AUDIO_MS = 1000;
 
 // Maximum number of bytes we'll allocate and write at once to the audio
 // hardware when the audio stream contains missing samples and we're
@@ -330,12 +330,11 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
         videoPlaying = mReader->DecodeVideoFrame(skipToNextKeyframe, currentTime);
         decodeTime = TimeStamp::Now() - start;
       }
-      if (THRESHOLD_FACTOR * decodeTime.ToMilliseconds() > lowAudioThreshold &&
+      if (THRESHOLD_FACTOR * DurationToMs(decodeTime) > lowAudioThreshold &&
           !HasLowUndecodedData())
       {
         lowAudioThreshold =
-          NS_MIN(static_cast<PRInt64>(THRESHOLD_FACTOR * decodeTime.ToMilliseconds()),
-                 static_cast<PRInt64>(AMPLE_AUDIO_MS));
+          NS_MIN(THRESHOLD_FACTOR * DurationToMs(decodeTime), AMPLE_AUDIO_MS);
         ampleAudioThreshold = NS_MAX(THRESHOLD_FACTOR * lowAudioThreshold,
                                      ampleAudioThreshold);
         LOG(PR_LOG_DEBUG,
@@ -1458,7 +1457,7 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
     if (currentFrame) {
       // Decode one frame and display it.
       TimeStamp presTime = mPlayStartTime - mPlayDuration +
-        TimeDuration::FromMilliseconds(currentFrame->mTime - mStartTime);
+                           MsToDuration(currentFrame->mTime - mStartTime);
       NS_ASSERTION(currentFrame->mTime >= mStartTime, "Should have positive frame time");
       {
         MonitorAutoExit exitMon(mDecoder->GetMonitor());
@@ -1513,21 +1512,21 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
   }
 }
 
-void nsBuiltinDecoderStateMachine::Wait(PRUint32 aMs) {
+void nsBuiltinDecoderStateMachine::Wait(PRInt64 aMs) {
   mDecoder->GetMonitor().AssertCurrentThreadIn();
-  TimeStamp end = TimeStamp::Now() + TimeDuration::FromMilliseconds(aMs);
+  TimeStamp end = TimeStamp::Now() + MsToDuration(aMs);
   TimeStamp now;
   while ((now = TimeStamp::Now()) < end &&
          mState != DECODER_STATE_SHUTDOWN &&
          mState != DECODER_STATE_SEEKING)
   {
-    PRInt64 ms = NS_round((end - now).ToSeconds() * 1000);
-    if (ms == 0) {
+    PRInt64 ms = static_cast<PRInt64>(NS_round((end - now).ToSeconds() * 1000));
+    if (ms == 0 || ms > PR_UINT32_MAX) {
       break;
     }
     NS_ASSERTION(ms <= aMs && ms > 0,
                  "nsBuiltinDecoderStateMachine::Wait interval very wrong!");
-    mDecoder->GetMonitor().Wait(PR_MillisecondsToInterval(ms));
+    mDecoder->GetMonitor().Wait(PR_MillisecondsToInterval(static_cast<PRUint32>(ms)));
   }
 }
 
