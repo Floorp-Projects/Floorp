@@ -44,6 +44,8 @@
 #include "nsIPrincipal.h"
 #include "nsCOMPtr.h"
 
+class nsByteRange;
+
 /**
  * Media applications want fast, "on demand" random access to media data,
  * for pausing, seeking, etc. But we are primarily interested
@@ -310,6 +312,11 @@ public:
   // Returns the offset of the first byte of cached data at or after aOffset,
   // or -1 if there is no such cached data.
   PRInt64 GetNextCachedData(PRInt64 aOffset);
+  // Fills aRanges with the ByteRanges representing the data which is currently
+  // cached. Locks the media cache while running, to prevent any ranges
+  // growing. The stream should be pinned while this runs and while its results
+  // are used, to ensure no data is evicted.
+  nsresult GetCachedRanges(nsTArray<nsByteRange>& aRanges);
 
   // Reads from buffered data only. Will fail if not all data to be read is
   // in the cache. Will not mark blocks as read. Can be called from the main
