@@ -61,8 +61,7 @@
           }
         }
       };
-      tabBrowser.addProgressListener(progressListener,
-                                     Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
+      tabBrowser.addProgressListener(progressListener);
 
       // Test XUL and HTML documents.
       tabBrowser.loadTabs(["about:", "about:mozilla"], false, true);
@@ -207,7 +206,7 @@
 
       testAccessibleTree(tabBrowser.mTabBox.tabpanels, tabboxAccTree);
 
-      SimpleTest.finish()
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
