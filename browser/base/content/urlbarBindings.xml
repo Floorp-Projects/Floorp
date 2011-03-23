@@ -1143,19 +1143,20 @@
 
     <handlers>
       <handler event="mouseover"><![CDATA[
-        if (this.getAttribute("active") != "true" &&
-            this.getAttribute("disabled") != "true") {
+        if (this.getAttribute("active") != "true") {
           this.setAttribute("active", "true");
 
           let event = document.createEvent("Events");
           event.initEvent("DOMMenuItemActive", true, false);
           this.dispatchEvent(event);
 
-          let self = this;
-          setTimeout(function () {
-            if (self.getAttribute("active") == "true")
-              self.menu.open = true;
-          }, this._menuDelay);
+          if (this.getAttribute("disabled") != "true") {
+            let self = this;
+            setTimeout(function () {
+              if (self.getAttribute("active") == "true")
+                self.menu.open = true;
+            }, this._menuDelay);
+          }
         }
       ]]></handler>
 
