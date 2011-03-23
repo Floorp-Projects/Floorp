@@ -646,9 +646,9 @@ js_TraceWatchPoints(JSTracer *trc)
          &wp->links != &rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
         if (wp->object->isMarked()) {
-            if (!wp->shape->marked()) {
+            if (!wp->shape->isMarked()) {
                 modified = true;
-                wp->shape->trace(trc);
+                MarkShape(trc, wp->shape, "shape");
             }
             if (wp->shape->hasSetterValue() && wp->setter) {
                 if (!CastAsObject(wp->setter)->isMarked()) {

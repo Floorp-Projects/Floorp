@@ -108,13 +108,14 @@ using namespace js::gc;
  */
 JS_STATIC_ASSERT(JSTRACE_OBJECT == 0);
 JS_STATIC_ASSERT(JSTRACE_STRING == 1);
-JS_STATIC_ASSERT(JSTRACE_XML    == 2);
+JS_STATIC_ASSERT(JSTRACE_SHAPE  == 2);
+JS_STATIC_ASSERT(JSTRACE_XML    == 3);
 
 /*
- * JS_IS_VALID_TRACE_KIND assumes that JSTRACE_STRING is the last non-xml
+ * JS_IS_VALID_TRACE_KIND assumes that JSTRACE_SHAPE is the last non-xml
  * trace kind when JS_HAS_XML_SUPPORT is false.
  */
-JS_STATIC_ASSERT(JSTRACE_STRING + 1 == JSTRACE_XML);
+JS_STATIC_ASSERT(JSTRACE_SHAPE + 1 == JSTRACE_XML);
 
 /*
  * Everything we store in the heap must be a multiple of the cell size.
@@ -123,6 +124,7 @@ JS_STATIC_ASSERT(sizeof(JSString)         % sizeof(FreeCell) == 0);
 JS_STATIC_ASSERT(sizeof(JSShortString)    % sizeof(FreeCell) == 0);
 JS_STATIC_ASSERT(sizeof(JSObject)         % sizeof(FreeCell) == 0);
 JS_STATIC_ASSERT(sizeof(JSFunction)       % sizeof(FreeCell) == 0);
+JS_STATIC_ASSERT(sizeof(Shape)            % sizeof(FreeCell) == 0);
 #ifdef JSXML
 JS_STATIC_ASSERT(sizeof(JSXML)            % sizeof(FreeCell) == 0);
 #endif
@@ -135,6 +137,7 @@ JS_STATIC_ASSERT(sizeof(Arena<JSExternalString>) == 4096);
 JS_STATIC_ASSERT(sizeof(Arena<JSShortString>)    == 4096);
 JS_STATIC_ASSERT(sizeof(Arena<JSObject>)         == 4096);
 JS_STATIC_ASSERT(sizeof(Arena<JSFunction>)       == 4096);
+JS_STATIC_ASSERT(sizeof(Arena<Shape>)            == 4096);
 JS_STATIC_ASSERT(sizeof(Arena<JSXML>)            == 4096);
 
 #ifdef JS_GCMETER
@@ -241,6 +244,7 @@ checkArenaListsForThing(JSCompartment *comp, void *thing)
         comp->arenas[FINALIZE_OBJECT12].arenasContainThing<JSObject_Slots12>(thing) ||
         comp->arenas[FINALIZE_OBJECT16].arenasContainThing<JSObject_Slots16>(thing) ||
         comp->arenas[FINALIZE_FUNCTION].arenasContainThing<JSFunction>(thing) ||
+        comp->arenas[FINALIZE_FUNCTION].arenasContainThing<Shape>(thing) ||
 #if JS_HAS_XML_SUPPORT
         comp->arenas[FINALIZE_XML].arenasContainThing<JSXML>(thing) ||
 #endif
@@ -676,6 +680,9 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w, uint32 &thingKind)
         break;
       case FINALIZE_FUNCTION:
         test = MarkCell<JSFunction>(cell, trc);
+        break;
+      case FINALIZE_SHAPE:
+        test = MarkCell<Shape>(cell, trc);
         break;
 #if JS_HAS_XML_SUPPORT
       case FINALIZE_XML:
@@ -1198,6 +1205,8 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
         return RefillTypedFreeList<JSShortString>(cx, thingKind);
       case FINALIZE_FUNCTION:
         return RefillTypedFreeList<JSFunction>(cx, thingKind);
+      case FINALIZE_SHAPE:
+        return RefillTypedFreeList<Shape>(cx, thingKind);
 #if JS_HAS_XML_SUPPORT
       case FINALIZE_XML:
         return RefillTypedFreeList<JSXML>(cx, thingKind);
@@ -1266,6 +1275,11 @@ JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
 
       case JSTRACE_STRING: {
         MarkChildren(trc, (JSString *)thing);
+        break;
+      }
+
+      case JSTRACE_SHAPE: {
+        MarkChildren(trc, (Shape *)thing);
         break;
       }
 
@@ -1408,6 +1422,9 @@ GCMarker::markDelayedChildren()
           case FINALIZE_FUNCTION:
             reinterpret_cast<Arena<JSFunction> *>(a)->markDelayedChildren(this);
             break;
+          case FINALIZE_SHAPE:
+            reinterpret_cast<Arena<Shape> *>(a)->markDelayedChildren(this);
+            break;
 #if JS_HAS_XML_SUPPORT
           case FINALIZE_XML:
             reinterpret_cast<Arena<JSXML> *>(a)->markDelayedChildren(this);
@@ -1512,7 +1529,7 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
 
       case SHAPE:
-        static_cast<AutoShapeRooter *>(this)->shape->trace(trc);
+        MarkShape(trc, static_cast<AutoShapeRooter *>(this)->shape, "js::AutoShapeRooter.val");
         return;
 
       case PARSER:
@@ -1934,6 +1951,7 @@ JSCompartment::finalizeObjectArenaLists(JSContext *cx)
     FinalizeArenaList<JSObject_Slots12>(this, cx, FINALIZE_OBJECT12);
     FinalizeArenaList<JSObject_Slots16>(this, cx, FINALIZE_OBJECT16);
     FinalizeArenaList<JSFunction>(this, cx, FINALIZE_FUNCTION);
+    FinalizeArenaList<Shape>(this, cx, FINALIZE_SHAPE);
 #if JS_HAS_XML_SUPPORT
     FinalizeArenaList<JSXML>(this, cx, FINALIZE_XML);
 #endif
@@ -2286,14 +2304,6 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
     comp->finalizeStringArenaLists(cx);
     TIMESTAMP(sweepStringEnd);
 
-    /*
-     * Unmark all shapes. Even a per-compartment GC can mark shapes in other
-     * compartments, and we need to clear these bits. See bug 635873. This will
-     * be fixed in bug 569422.
-     */
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        (*c)->propertyTree.unmarkShapes(cx);
-
     PropertyTree::dumpShapes(cx);
     TIMESTAMP(sweepShapeEnd);
 
@@ -2419,7 +2429,7 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
      * unreachable compartments.
      */
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        (*c)->propertyTree.sweepShapes(cx);
+        (*c)->propertyTree.dumpShapeStats();
 
     PropertyTree::dumpShapes(cx);
     TIMESTAMP(sweepShapeEnd);

@@ -290,8 +290,8 @@ Bindings::makeImmutable()
 void
 Bindings::trace(JSTracer *trc)
 {
-    for (const Shape *shape = lastBinding; shape; shape = shape->previous())
-        shape->trace(trc);
+    if (lastBinding)
+        MarkShape(trc, lastBinding, "shape");
 }
 
 } /* namespace js */

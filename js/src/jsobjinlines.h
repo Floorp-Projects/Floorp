@@ -134,16 +134,13 @@ JSObject::trace(JSTracer *trc)
     JSContext *cx = trc->context;
     js::Shape *shape = lastProp;
 
+    MarkShape(trc, shape, "shape");
+
     if (IS_GC_MARKING_TRACER(trc) && cx->runtime->gcRegenShapes) {
         /*
-         * Either this object has its own shape, which must be regenerated, or
-         * it must have the same shape as lastProp.
+         * MarkShape will regenerate the shape if need be. However, we need to
+         * regenerate our shape if hasOwnShape() is true.
          */
-        if (!shape->hasRegenFlag()) {
-            shape->shape = js_RegenerateShapeForGC(cx->runtime);
-            shape->setRegenFlag();
-        }
-
         uint32 newShape = shape->shape;
         if (hasOwnShape()) {
             newShape = js_RegenerateShapeForGC(cx->runtime);
@@ -151,11 +148,6 @@ JSObject::trace(JSTracer *trc)
         }
         objShape = newShape;
     }
-
-    /* Trace our property tree or dictionary ancestor line. */
-    do {
-        shape->trace(trc);
-    } while ((shape = shape->parent) != NULL && !shape->marked());
 }
 
 inline void

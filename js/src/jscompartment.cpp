@@ -98,8 +98,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 
 JSCompartment::~JSCompartment()
 {
-    propertyTree.finish();
-
 #if ENABLE_YARR_JIT
     js_delete(regExpAllocator);
 #endif
@@ -132,9 +130,6 @@ JSCompartment::init()
     memset(&compartmentStats, 0, sizeof(JSGCArenaStats) * FINALIZE_LIMIT);
 #endif
     if (!crossCompartmentWrappers.init())
-        return false;
-
-    if (!propertyTree.init())
         return false;
 
 #ifdef DEBUG
@@ -477,17 +472,17 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
     }
 
     /* Remove dead empty shapes. */
-    if (emptyArgumentsShape && !emptyArgumentsShape->marked())
+    if (emptyArgumentsShape && IsAboutToBeFinalized(cx, emptyArgumentsShape))
         emptyArgumentsShape = NULL;
-    if (emptyBlockShape && !emptyBlockShape->marked())
+    if (emptyBlockShape && IsAboutToBeFinalized(cx, emptyBlockShape))
         emptyBlockShape = NULL;
-    if (emptyCallShape && !emptyCallShape->marked())
+    if (emptyCallShape && IsAboutToBeFinalized(cx, emptyCallShape))
         emptyCallShape = NULL;
-    if (emptyDeclEnvShape && !emptyDeclEnvShape->marked())
+    if (emptyDeclEnvShape && IsAboutToBeFinalized(cx, emptyDeclEnvShape))
         emptyDeclEnvShape = NULL;
-    if (emptyEnumeratorShape && !emptyEnumeratorShape->marked())
+    if (emptyEnumeratorShape && IsAboutToBeFinalized(cx, emptyEnumeratorShape))
         emptyEnumeratorShape = NULL;
-    if (emptyWithShape && !emptyWithShape->marked())
+    if (emptyWithShape && IsAboutToBeFinalized(cx, emptyWithShape))
         emptyWithShape = NULL;
 
 #ifdef JS_TRACER

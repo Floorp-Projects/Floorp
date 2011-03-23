@@ -119,6 +119,7 @@ static const char *const GC_ARENA_NAMES[] = {
     "object_12",
     "object_16",
     "function",
+    "shape",
 #if JS_HAS_XML_SUPPORT
     "xml",
 #endif
@@ -358,6 +359,10 @@ GCMarker::dumpConservativeRoots()
           case JSTRACE_OBJECT: {
             JSObject *obj = (JSObject *) i->thing;
             fprintf(fp, "object %s", obj->getClass()->name);
+            break;
+          }
+          case JSTRACE_SHAPE: {
+            fprintf(fp, "shape");
             break;
           }
           case JSTRACE_STRING: {

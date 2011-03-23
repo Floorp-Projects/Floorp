@@ -571,6 +571,9 @@ bool
 JSObject::toDictionaryMode(JSContext *cx)
 {
     JS_ASSERT(!inDictionaryMode());
+
+    /* We allocate the shapes from cx->compartment, so make sure it's right. */
+    JS_ASSERT(compartment() == cx->compartment);
     if (!Shape::newDictionaryList(cx, &lastProp))
         return false;
 
@@ -1429,12 +1432,28 @@ PrintPropertyMethod(JSTracer *trc, char *buf, size_t bufsize)
 }
 #endif
 
-void
-Shape::trace(JSTracer *trc) const
-{
-    if (IS_GC_MARKING_TRACER(trc))
-        mark();
+/*
+ * A few notes on shape marking:
+ *
+ * We want to make sure that we regenerate the shape number exactly once per
+ * shape-regenerating GC. Since delayed marking calls MarkChildren many times,
+ * we handle regeneration in the PreMark stage.
+ *
+ * We also want to make sure to mark iteratively up the parent chain, not
+ * recursively. So marking is split into markChildren and markChildrenNotParent.
+ */
 
+void
+Shape::regenerate(JSTracer *trc) const
+{
+    JSRuntime *rt = trc->context->runtime;
+    if (IS_GC_MARKING_TRACER(trc) && rt->gcRegenShapes)
+        shape = js_RegenerateShapeForGC(rt);
+}
+
+void
+Shape::markChildrenNotParent(JSTracer *trc) const
+{
     MarkId(trc, id, "id");
 
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
@@ -1451,5 +1470,22 @@ Shape::trace(JSTracer *trc) const
     if (isMethod()) {
         JS_SET_TRACING_DETAILS(trc, PrintPropertyMethod, this, 0);
         Mark(trc, &methodObject());
+    }
+}
+
+void
+Shape::markChildren(JSTracer *trc) const
+{
+    markChildrenNotParent(trc);
+
+    for (Shape *shape = parent; shape; shape = shape->parent) {
+        if (IS_GC_MARKING_TRACER(trc)) {
+            GCMarker *gcmarker = static_cast<GCMarker *>(trc);
+            if (!shape->markIfUnmarked(gcmarker->getMarkColor()))
+                break;
+        }
+
+        shape->regenerate(trc);
+        shape->markChildrenNotParent(trc);
     }
 }
