@@ -3352,12 +3352,10 @@ const BrowserSearch = {
     if (!submission)
       return;
 
-    if (useNewTab) {
-      gBrowser.loadOneTab(submission.uri.spec, {
-                          postData: submission.postData,
-                          relatedToCurrent: true});
-    } else
-      loadURI(submission.uri.spec, null, submission.postData, false);
+    openLinkIn(submission.uri.spec,
+               useNewTab ? "tab" : "current",
+               { postData: submission.postData,
+                 relatedToCurrent: true });
   },
 
   /**
