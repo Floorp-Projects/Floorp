@@ -158,14 +158,14 @@ public:
   virtual void Shutdown();
   virtual PRInt64 GetDuration();
   virtual void SetDuration(PRInt64 aDuration);
-  virtual PRBool OnDecodeThread() {
+  virtual PRBool OnDecodeThread() const {
     return IsCurrentThread(mDecodeThread);
   }
 
   virtual nsHTMLMediaElement::NextFrameStatus GetNextFrameStatus();
   virtual void Decode();
   virtual void Seek(double aTime);
-  virtual double GetCurrentTime();
+  virtual double GetCurrentTime() const;
   virtual void ClearPositionChangeFlag();
   virtual void SetSeekable(PRBool aSeekable);
   virtual void UpdatePlaybackPosition(PRInt64 aTime);
@@ -236,7 +236,6 @@ public:
   State mState;
 
   nsresult GetBuffered(nsTimeRanges* aBuffered) {
-    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
     return mReader->GetBuffered(aBuffered, mStartTime);
   }
 
@@ -256,16 +255,18 @@ protected:
   // data. The decoder monitor must be held.
   PRBool HasLowDecodedData(PRInt64 aAudioMs) const;
 
-  // Returns PR_TRUE if the decode is withing an estimated one tenth of a
-  // second's worth of data of the download, i.e. the decode has almost
-  // caught up with the download. If we can't estimate one tenth of a second's
-  // worth of data, we'll return PR_TRUE if the decode is within 100KB of
-  // the download.
-  PRBool IsDecodeCloseToDownload();
+  // Returns PR_TRUE if we're running low on data which is not yet decoded.
+  // The decoder monitor must be held.
+  PRBool HasLowUndecodedData() const;
+
+  // Returns the number of milliseconds of undecoded data available for
+  // decoding. The decoder monitor must be held.
+  PRInt64 GetUndecodedData() const;
 
   // Returns the number of unplayed ms of audio we've got decoded and/or
   // pushed to the hardware waiting to play. This is how much audio we can
-  // play without having to run the audio decoder.
+  // play without having to run the audio decoder. The decoder monitor
+  // must be held.
   PRInt64 AudioDecodedMs() const;
 
   // Returns PR_TRUE when there's decoded audio waiting to play.

@@ -261,7 +261,7 @@ public:
 
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
-  virtual PRBool OnDecodeThread() = 0;
+  virtual PRBool OnDecodeThread() const = 0;
 
   virtual nsHTMLMediaElement::NextFrameStatus GetNextFrameStatus() = 0;
 
@@ -276,7 +276,7 @@ public:
   // Returns the current playback position in seconds.
   // Called from the main thread to get the current frame time. The decoder
   // monitor must be obtained before calling this.
-  virtual double GetCurrentTime() = 0;
+  virtual double GetCurrentTime() const = 0;
 
   // Clear the flag indicating that a playback position change event
   // is currently queued. This is called from the main thread and must
@@ -423,7 +423,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
     return IsCurrentThread(mStateMachineThread);
   }
 
-  PRBool OnDecodeThread() {
+  PRBool OnDecodeThread() const {
     return mDecoderStateMachine->OnDecodeThread();
   }
 

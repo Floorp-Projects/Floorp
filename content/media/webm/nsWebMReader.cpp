@@ -782,7 +782,6 @@ nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
 
 nsresult nsWebMReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   nsMediaStream* stream = mDecoder->GetCurrentStream();
 
   PRUint64 timecodeScale;

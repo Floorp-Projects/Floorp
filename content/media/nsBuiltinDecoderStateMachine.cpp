@@ -44,6 +44,7 @@
 #include "nsBuiltinDecoderStateMachine.h"
 #include "mozilla/mozalloc.h"
 #include "VideoUtils.h"
+#include "nsTimeRanges.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -105,17 +106,15 @@ static const int AUDIO_DURATION_MS = 40;
 // increase it by more.
 static const int THRESHOLD_FACTOR = 2;
 
-// Number of milliseconds worth of estimated data we'll try to maintain
-// ahead of the decoder position when playing non-live streams. If the
-// decoder position catches up with the download and comes within this
-// many ms of estimated data, we'll stop playback and start to buffer.
-static const double NORMAL_BUFFER_MARGIN = 100.0;
+// If we have less than this much undecoded data available, we'll consider
+// ourselves to be running low on undecoded data. We determine how much
+// undecoded data we have remaining using the reader's GetBuffered()
+// implementation.
+static const PRInt64 LOW_DATA_THRESHOLD_MS = 5000;
 
-// Arbitrary number of bytes we try to keep buffered ahead of the download
-// position when playing a live or non-seekable stream. When playing a live
-// or non-seekable stream, if we have less than this amount of downloaded
-// undecoded data, we'll stop playback and start buffering.
-static const int LIVE_BUFFER_MARGIN = 100000;
+// LOW_DATA_THRESHOLD_MS needs to be greater than AMPLE_AUDIO_MS, otherwise
+// the skip-to-keyframe logic can activate when we're running low on data.
+PR_STATIC_ASSERT(LOW_DATA_THRESHOLD_MS > AMPLE_AUDIO_MS);
 
 // Amount of excess ms of data to add in to the "should we buffer" calculation.
 static const PRUint32 EXHAUSTED_DATA_MARGIN_MS = 60;
@@ -281,13 +280,15 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
     // we won't start keyframe skipping, as we'll be pausing playback to buffer
     // soon anyway and we'll want to be able to display frames immediately
     // after buffering finishes.
-    if (!skipToNextKeyframe &&
+    if (mState == DECODER_STATE_DECODING &&
+        !skipToNextKeyframe &&
         videoPlaying &&
-        !IsDecodeCloseToDownload() &&
         ((!audioPump && audioPlaying && GetDecodedAudioDuration() < lowAudioThreshold) ||
          (!videoPump &&
            videoPlaying &&
-           static_cast<PRUint32>(videoQueue.GetSize()) < LOW_VIDEO_FRAMES)))
+           static_cast<PRUint32>(videoQueue.GetSize()) < LOW_VIDEO_FRAMES)) &&
+        !HasLowUndecodedData())
+
     {
       skipToNextKeyframe = PR_TRUE;
       LOG(PR_LOG_DEBUG, ("Skipping video decode to the next keyframe"));
@@ -308,8 +309,8 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
         videoPlaying = mReader->DecodeVideoFrame(skipToNextKeyframe, currentTime);
         decodeTime = TimeStamp::Now() - start;
       }
-      if (!IsDecodeCloseToDownload() &&
-          THRESHOLD_FACTOR * decodeTime.ToMilliseconds() > lowAudioThreshold)
+      if (THRESHOLD_FACTOR * decodeTime.ToMilliseconds() > lowAudioThreshold &&
+          !HasLowUndecodedData())
       {
         lowAudioThreshold =
           NS_MIN(static_cast<PRInt64>(THRESHOLD_FACTOR * decodeTime.ToMilliseconds()),
@@ -771,10 +772,12 @@ void nsBuiltinDecoderStateMachine::SetVolume(double volume)
   mVolume = volume;
 }
 
-double nsBuiltinDecoderStateMachine::GetCurrentTime()
+double nsBuiltinDecoderStateMachine::GetCurrentTime() const
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  mDecoder->GetMonitor().AssertCurrentThreadIn();
+  NS_ASSERTION(NS_IsMainThread() ||
+               mDecoder->OnStateMachineThread() ||
+               OnDecodeThread(),
+               "Should be on main, decode, or state machine thread.");
 
   return static_cast<double>(mCurrentFrameTime) / 1000.0;
 }
@@ -940,18 +943,6 @@ PRInt64 nsBuiltinDecoderStateMachine::AudioDecodedMs() const
   return pushed + mReader->mAudioQueue.Duration();
 }
 
-PRBool nsBuiltinDecoderStateMachine::IsDecodeCloseToDownload()
-{
-  nsMediaStream* stream = mDecoder->GetCurrentStream();
-  PRInt64 decodePos = mDecoder->mDecoderPosition;
-  PRInt64 downloadPos = stream->GetCachedDataEnd(decodePos);
-  PRInt64 length = stream->GetLength();
-  double bufferTarget = GetDuration() / NORMAL_BUFFER_MARGIN;
-  double threshold = (bufferTarget > 0 && length != -1) ?
-    (length / (bufferTarget)) : LIVE_BUFFER_MARGIN;
-  return (downloadPos - decodePos) < threshold;
-}
-
 PRBool nsBuiltinDecoderStateMachine::HasLowDecodedData(PRInt64 aAudioMs) const
 {
   mDecoder->GetMonitor().AssertCurrentThreadIn();
@@ -967,6 +958,42 @@ PRBool nsBuiltinDecoderStateMachine::HasLowDecodedData(PRInt64 aAudioMs) const
           HasVideo() &&
           !mReader->mVideoQueue.IsFinished() &&
           static_cast<PRUint32>(mReader->mVideoQueue.GetSize()) < LOW_VIDEO_FRAMES));
+}
+
+PRBool nsBuiltinDecoderStateMachine::HasLowUndecodedData() const
+{
+  return GetUndecodedData() < LOW_DATA_THRESHOLD_MS;
+}
+
+PRInt64 nsBuiltinDecoderStateMachine::GetUndecodedData() const
+{
+  mDecoder->GetMonitor().AssertCurrentThreadIn();
+  NS_ASSERTION(mState > DECODER_STATE_DECODING_METADATA,
+               "Must have loaded metadata for GetBuffered() to work");
+  nsTimeRanges buffered;
+  
+  nsresult res = mDecoder->GetBuffered(&buffered);
+  NS_ENSURE_SUCCESS(res, 0);
+  double currentTime = GetCurrentTime();
+
+  nsIDOMTimeRanges* r = static_cast<nsIDOMTimeRanges*>(&buffered);
+  PRUint32 length = 0;
+  res = r->GetLength(&length);
+  NS_ENSURE_SUCCESS(res, 0);
+
+  for (PRUint32 index = 0; index < length; ++index) {
+    double start, end;
+    res = r->Start(index, &start);
+    NS_ENSURE_SUCCESS(res, 0);
+
+    res = r->End(index, &end);
+    NS_ENSURE_SUCCESS(res, 0);
+
+    if (start <= currentTime && end >= currentTime) {
+      return static_cast<PRInt64>((end - currentTime) * 1000);
+    }
+  }
+  return 0;
 }
 
 nsresult nsBuiltinDecoderStateMachine::Run()
@@ -1205,7 +1232,7 @@ nsresult nsBuiltinDecoderStateMachine::Run()
             continue;
         } else {
           LOG(PR_LOG_DEBUG, ("%p Changed state from BUFFERING to DECODING", mDecoder));
-          LOG(PR_LOG_DEBUG, ("%p Buffered for %lf seconds",
+          LOG(PR_LOG_DEBUG, ("%p Buffered for %.3lfs",
                              mDecoder,
                              (now - mBufferingStart).ToSeconds()));
           mBufferingEndOffset = -1;
@@ -1385,7 +1412,8 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
         mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING &&
         HasLowDecodedData(remainingTime + EXHAUSTED_DATA_MARGIN_MS) &&
         !stream->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
-        !stream->IsSuspended())
+        !stream->IsSuspended() &&
+        HasLowUndecodedData())
     {
       if (currentFrame) {
         mReader->mVideoQueue.PushFront(currentFrame.forget());
