@@ -291,6 +291,14 @@ SaveToEnv(const char *putenv)
   // We intentionally leak |expr| here since it is required by PR_SetEnv.
 }
 
+// Tests that an environment variable exists and has a value
+static PRBool
+EnvHasValue(const char *name)
+{
+  const char *val = PR_GetEnv(name);
+  return (val && *val);
+}
+
 // Save the given word to the specified environment variable.
 static void
 SaveWordToEnv(const char *name, const nsACString & word)
@@ -352,8 +360,7 @@ GetFileFromEnv(const char *name)
 static void
 SaveWordToEnvIfUnset(const char *name, const nsACString & word)
 {
-  const char *val = PR_GetEnv(name);
-  if (!(val && *val))
+  if (!EnvHasValue(name))
     SaveWordToEnv(name, word);
 }
 
@@ -362,8 +369,7 @@ SaveWordToEnvIfUnset(const char *name, const nsACString & word)
 static void
 SaveFileToEnvIfUnset(const char *name, nsIFile *file)
 {
-  const char *val = PR_GetEnv(name);
-  if (!(val && *val))
+  if (!EnvHasValue(name))
     SaveFileToEnv(name, file);
 }
 
@@ -2068,8 +2074,7 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     return NS_ERROR_FAILURE;
   }
 
-  arg = PR_GetEnv("XRE_START_OFFLINE");
-  if ((arg && *arg) || ar)
+  if (ar || EnvHasValue("XRE_START_OFFLINE"))
     *aStartOffline = PR_TRUE;
 
 
@@ -2194,8 +2199,7 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (gAppData->flags & NS_XRE_ENABLE_PROFILE_MIGRATOR) {
-    arg = PR_GetEnv("XRE_IMPORT_PROFILES");
-    if (!count && (!arg || !*arg)) {
+    if (!count && !EnvHasValue("XRE_IMPORT_PROFILES")) {
       return ImportProfiles(profileSvc, aNative);
     }
   }
@@ -2831,7 +2835,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   }
 
   // Suppress atk-bridge init at startup, it works after GNOME 2.24.2
-  PR_SetEnv("NO_AT_BRIDGE=1");
+  SaveToEnv("NO_AT_BRIDGE=1");
 #endif
 
   gArgc = argc;
@@ -2991,8 +2995,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     return 1;
 
 #ifdef MOZ_CRASHREPORTER
-  const char* crashreporterEnv = PR_GetEnv("MOZ_CRASHREPORTER");
-  if (crashreporterEnv && *crashreporterEnv) {
+  if (EnvHasValue("MOZ_CRASHREPORTER")) {
     appData.flags |= NS_XRE_ENABLE_CRASH_REPORTER;
   }
 
@@ -3050,7 +3053,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
 #ifdef XP_MACOSX
-  if (PR_GetEnv("MOZ_LAUNCHED_CHILD")) {
+  if (EnvHasValue("MOZ_LAUNCHED_CHILD")) {
     // This is needed, on relaunch, to force the OS to use the "Cocoa Dock
     // API".  Otherwise the call to ReceiveNextEvent() below will make it
     // use the "Carbon Dock API".  For more info see bmo bug 377166.
@@ -3105,10 +3108,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   ScopedFPHandler handler;
 #endif /* XP_OS2 */
 
-  if (PR_GetEnv("MOZ_SAFE_MODE_RESTART")) {
+  if (EnvHasValue("MOZ_SAFE_MODE_RESTART")) {
     gSafeMode = PR_TRUE;
     // unset the env variable
-    PR_SetEnv("MOZ_SAFE_MODE_RESTART=");
+    SaveToEnv("MOZ_SAFE_MODE_RESTART=");
   }
 
   ar = CheckArg("safe-mode", PR_TRUE);
@@ -3377,8 +3380,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
                    gRestartArgc,
                    gRestartArgv,
                    appData.version);
-    if (PR_GetEnv("MOZ_PROCESS_UPDATES")) {
-      PR_SetEnv("MOZ_PROCESS_UPDATES=");
+    if (EnvHasValue("MOZ_PROCESS_UPDATES")) {
+      SaveToEnv("MOZ_PROCESS_UPDATES=");
       return 0;
     }
 #endif
