@@ -14,6 +14,7 @@ script eval-native-callback-is-indirect.js
 script extension-methods-reject-null-undefined-this.js
 skip-if(!xulRuntime.shell) script function-definition-with.js # needs evaluate()
 script iterator-in-catch.js
+skip-if(!xulRuntime.shell) script legacy-JSON.js # needs parseLegacyJSON
 fails script nested-delete-name-in-evalcode.js # bug 604301, at a minimum
 script proxy-strict.js
 script regress-bug567606.js
