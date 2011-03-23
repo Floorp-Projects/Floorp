@@ -269,6 +269,7 @@ Mark(JSTracer *trc, T *thing)
     JS_ASSERT_IF(trc->context->runtime->gcCurrentCompartment, IS_GC_MARKING_TRACER(trc));
 
     JSRuntime *rt = trc->context->runtime;
+
     /* Don't mark things outside a compartment if we are in a per-compartment GC */
     if (rt->gcCurrentCompartment && thing->compartment() != rt->gcCurrentCompartment)
         goto out;
@@ -396,14 +397,13 @@ RecursionTooDeep(GCMarker *gcmarker) {
 static JS_ALWAYS_INLINE void
 TypedMarker(JSTracer *trc, JSXML *thing)
 {
-    if (!reinterpret_cast<Cell *>(thing)->markIfUnmarked(reinterpret_cast<GCMarker *>(trc)->getMarkColor()))
+    if (!thing->markIfUnmarked(reinterpret_cast<GCMarker *>(trc)->getMarkColor()))
         return;
     GCMarker *gcmarker = static_cast<GCMarker *>(trc);
-    if (RecursionTooDeep(gcmarker)) {
+    if (RecursionTooDeep(gcmarker))
         gcmarker->delayMarkingChildren(thing);
-    } else {
+    else
         MarkChildren(trc, thing);
-    }
 }
 
 static JS_ALWAYS_INLINE void
@@ -416,11 +416,10 @@ TypedMarker(JSTracer *trc, JSObject *thing)
     if (!thing->markIfUnmarked(gcmarker->getMarkColor()))
         return;
     
-    if (RecursionTooDeep(gcmarker)) {
+    if (RecursionTooDeep(gcmarker))
         gcmarker->delayMarkingChildren(thing);
-    } else {
+    else
         MarkChildren(trc, thing);
-    }
 }
 
 static JS_ALWAYS_INLINE void
@@ -433,11 +432,10 @@ TypedMarker(JSTracer *trc, JSFunction *thing)
     if (!thing->markIfUnmarked(gcmarker->getMarkColor()))
         return;
 
-    if (RecursionTooDeep(gcmarker)) {
+    if (RecursionTooDeep(gcmarker))
         gcmarker->delayMarkingChildren(thing);
-    } else {
+    else
         MarkChildren(trc, static_cast<JSObject *>(thing));
-    }
 }
 
 static JS_ALWAYS_INLINE void
@@ -481,9 +479,9 @@ MarkId(JSTracer *trc, jsid id)
         JSString *str = JSID_TO_STRING(id);
         if (!str->isStaticAtom())
             Mark(trc, str);
-    }
-    else if (JS_UNLIKELY(JSID_IS_OBJECT(id)))
+    } else if (JS_UNLIKELY(JSID_IS_OBJECT(id))) {
         Mark(trc, JSID_TO_OBJECT(id));
+    }
 }
 
 static inline void
