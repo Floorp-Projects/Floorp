@@ -282,7 +282,7 @@ protected:
   // time, and that the myriad of Notify()s we do an the decoder monitor
   // don't cause the audio thread to be starved. The decoder monitor must
   // be locked.
-  void Wait(PRUint32 aMs);
+  void Wait(PRInt64 aMs);
 
   // Dispatches an asynchronous event to update the media element's ready state.
   void UpdateReadyState();
