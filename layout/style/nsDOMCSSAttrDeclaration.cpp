@@ -152,7 +152,7 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(PRBool aAllocate)
   // cannot fail
   css::Declaration *decl = new css::Declaration();
   decl->InitializeEmpty();
-  nsRefPtr<css::StyleRule> newRule = NS_NewCSSStyleRule(nsnull, decl);
+  nsRefPtr<css::StyleRule> newRule = new css::StyleRule(nsnull, decl);
 
   // this *can* fail (inside SetAttrAndNotify, at least).
   nsresult rv;

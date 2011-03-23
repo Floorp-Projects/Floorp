@@ -1214,7 +1214,7 @@ MappedAttrParser::CreateStyleRule()
     return nsnull; // No mapped attributes were parsed
   }
 
-  nsRefPtr<css::StyleRule> rule = NS_NewCSSStyleRule(nsnull, mDecl);
+  nsRefPtr<css::StyleRule> rule = new css::StyleRule(nsnull, mDecl);
   mDecl = nsnull; // We no longer own the declaration -- drop our pointer to it
   return rule.forget();
 }

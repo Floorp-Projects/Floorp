@@ -381,8 +381,4 @@ private:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(mozilla::css::StyleRule, NS_CSS_STYLE_RULE_IMPL_CID)
 
-already_AddRefed<mozilla::css::StyleRule>
-NS_NewCSSStyleRule(nsCSSSelectorList* aSelector,
-                   mozilla::css::Declaration* aDeclaration);
-
 #endif /* mozilla_css_StyleRule_h__ */
