@@ -146,8 +146,15 @@ gfxPlatformGtk::~gfxPlatformGtk()
     delete gCodepointsWithNoFonts;
     gCodepointsWithNoFonts = NULL;
 
+#ifdef NS_FREE_PERMANENT_DATA
+    // do cairo cleanup *before* closing down the FTLibrary,
+    // otherwise we'll crash when the gfxPlatform destructor
+    // calls it (bug 605009)
+    cairo_debug_reset_static_data();
+
     FT_Done_FreeType(gPlatformFTLibrary);
     gPlatformFTLibrary = NULL;
+#endif
 #endif
 
 #if 0
