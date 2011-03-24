@@ -8756,10 +8756,10 @@ TraceRecorder::switchop()
         return RECORD_CONTINUE;
     if (v.isNumber()) {
         jsdouble d = v.toNumber();
-        guard(true,
-              w.name(w.eqd(v_ins, w.immd(d)), "guard(switch on numeric)"),
-              BRANCH_EXIT,
-              /* abortIfAlwaysExits = */true);
+        CHECK_STATUS(guard(true,
+                     w.name(w.eqd(v_ins, w.immd(d)), "guard(switch on numeric)"),
+                     BRANCH_EXIT,
+                     /* abortIfAlwaysExits = */true));
     } else if (v.isString()) {
         LIns* args[] = { w.immpStrGC(v.toString()), v_ins, cx_ins };
         LIns* equal_rval = w.call(&js_EqualStringsOnTrace_ci, args);
