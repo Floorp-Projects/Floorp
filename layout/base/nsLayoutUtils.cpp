@@ -3761,6 +3761,10 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
         return result;
     }
 
+    // Ensure that any future changes to the canvas trigger proper invalidation,
+    // in case this is being used by -moz-element()
+    canvas->MarkContextClean();
+
     if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA) {
       // we can modify this surface since we force a copy above when
       // when NO_PREMULTIPLY_ALPHA is set

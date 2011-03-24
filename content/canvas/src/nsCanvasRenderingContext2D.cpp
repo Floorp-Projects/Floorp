@@ -1036,6 +1036,9 @@ nsCanvasRenderingContext2D::Redraw()
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Redraw(const gfxRect& r)
 {
+    if (mIsEntireFrameInvalid)
+        return NS_OK;
+
     if (!mCanvasElement) {
         NS_ASSERTION(mDocShell, "Redraw with no canvas element or docshell!");
         return NS_OK;
@@ -1044,9 +1047,6 @@ nsCanvasRenderingContext2D::Redraw(const gfxRect& r)
 #ifdef MOZ_SVG
     nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
 #endif
-
-    if (mIsEntireFrameInvalid)
-        return NS_OK;
 
     if (++mInvalidateCount > kCanvasMaxInvalidateCount)
         return Redraw();
@@ -3311,14 +3311,12 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
     NS_ENSURE_ARG(imgElt);
 
     nsresult rv;
-    gfxRect dirty(0.0, 0.0, 0.0, 0.0);
 
     double sx,sy,sw,sh;
     double dx,dy,dw,dh;
 
     gfxMatrix matrix;
     nsRefPtr<gfxPattern> pattern;
-    nsRefPtr<gfxPath> path;
     gfxIntSize imgSize;
     nsRefPtr<gfxASurface> imgsurf =
       CanvasImageCache::Lookup(imgElt, HTMLCanvasElement(), &imgSize);
@@ -3510,13 +3508,14 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
             mThebes->Clip(clip);
             mThebes->Paint(CurrentState().globalAlpha);
         }
-        dirty = mThebes->UserToDevice(clip);
+
+        if (!mIsEntireFrameInvalid) {
+            gfxRect dirty = mThebes->UserToDevice(clip);
+            Redraw(dirty);
+        }
     }
 
 FINISH:
-    if (NS_SUCCEEDED(rv))
-        rv = Redraw(dirty);
-
     return rv;
 }
 
