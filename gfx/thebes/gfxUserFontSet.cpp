@@ -163,7 +163,6 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
 gfxFontEntry*
 gfxUserFontSet::FindFontEntry(const nsAString& aName, 
                               const gfxFontStyle& aFontStyle, 
-                              PRBool& aFoundFamily,
                               PRBool& aNeedsBold,
                               PRBool& aWaitForUserFont)
 {
@@ -172,11 +171,9 @@ gfxUserFontSet::FindFontEntry(const nsAString& aName,
 
     // no user font defined for this name
     if (!family) {
-        aFoundFamily = PR_FALSE;
         return nsnull;
     }
 
-    aFoundFamily = PR_TRUE;
     gfxFontEntry* fe = family->FindFontForStyle(aFontStyle, aNeedsBold);
 
     // if not a proxy, font has already been loaded
@@ -685,13 +682,24 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
         aProxyEntry->mSrcIndex++;
     }
 
-    // all src's failed; mark this entry as unusable (so fallback will occur)
+    // all src's failed, remove this face
     LOG(("userfonts (%p) failed all src for (%s)\n", 
-        this, NS_ConvertUTF16toUTF8(aProxyEntry->mFamily->Name()).get()));            
-    aProxyEntry->mLoadingState = gfxProxyFontEntry::LOADING_FAILED;
+               this, NS_ConvertUTF16toUTF8(aProxyEntry->mFamily->Name()).get()));            
+
+    gfxMixedFontFamily *family = static_cast<gfxMixedFontFamily*>(aProxyEntry->mFamily);
+
+    family->RemoveFontEntry(aProxyEntry);
+
+    // no more faces?  remove the entire family
+    if (family->mAvailableFonts.Length() == 0) {
+        LOG(("userfonts (%p) failed all faces, remove family (%s)\n", 
+             this, NS_ConvertUTF16toUTF8(family->Name()).get()));            
+        RemoveFamily(family->Name());
+    }
 
     return STATUS_END_OF_LIST;
 }
+
 
 void
 gfxUserFontSet::IncrementGeneration()

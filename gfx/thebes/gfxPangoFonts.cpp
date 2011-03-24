@@ -1184,7 +1184,7 @@ private:
 static const nsTArray< nsCountedRef<FcPattern> >*
 FindFontPatterns(gfxUserFontSet *mUserFontSet,
                 const nsACString &aFamily, PRUint8 aStyle, PRUint16 aWeight,
-                PRBool& aFoundFamily, PRBool& aWaitForUserFont)
+                PRBool& aWaitForUserFont)
 {
     // Convert to UTF16
     NS_ConvertUTF8toUTF16 utf16Family(aFamily);
@@ -1199,15 +1199,15 @@ FindFontPatterns(gfxUserFontSet *mUserFontSet,
     style.weight = aWeight;
 
     gfxUserFcFontEntry *fontEntry = static_cast<gfxUserFcFontEntry*>
-        (mUserFontSet->FindFontEntry(utf16Family, style, aFoundFamily,
-                                     needsBold, aWaitForUserFont));
+        (mUserFontSet->FindFontEntry(utf16Family, style, needsBold,
+                                     aWaitForUserFont));
 
     // Accept synthetic oblique for italic and oblique.
     if (!fontEntry && aStyle != FONT_STYLE_NORMAL) {
         style.style = FONT_STYLE_NORMAL;
         fontEntry = static_cast<gfxUserFcFontEntry*>
-            (mUserFontSet->FindFontEntry(utf16Family, style, aFoundFamily,
-                                         needsBold, aWaitForUserFont));
+            (mUserFontSet->FindFontEntry(utf16Family, style, needsBold,
+                                         aWaitForUserFont));
     }
 
     if (!fontEntry)
@@ -1365,15 +1365,13 @@ gfxFcFontSet::SortPreferredFonts(PRBool &aWaitForUserFont)
                 PRUint16 thebesWeight =
                     gfxFontconfigUtils::GetThebesWeight(mSortPattern);
 
-                PRBool foundFamily, waitForUserFont;
+                PRBool waitForUserFont;
                 familyFonts = FindFontPatterns(mUserFontSet, cssFamily,
                                                thebesStyle, thebesWeight,
-                                               foundFamily, waitForUserFont);
+                                               waitForUserFont);
                 if (waitForUserFont) {
                     aWaitForUserFont = PR_TRUE;
                 }
-                NS_ASSERTION(foundFamily,
-                             "expected to find a user font, but it's missing!");
             }
         }
 
