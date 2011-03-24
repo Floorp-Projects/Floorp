@@ -71,13 +71,6 @@ EXPORTS		= \
 		nsSubDocumentFrame.h \
 		$(NULL)
 
-ifdef IBMBIDI
-EXPORTS		+= \
-		nsBidiFrames.h      \
-		$(NULL)
-endif
-
-
 CPPSRCS		= \
 		nsAbsoluteContainingBlock.cpp \
 		nsBRFrame.cpp \
@@ -123,12 +116,6 @@ CPPSRCS		= \
 ifdef MOZ_MEDIA
 CPPSRCS		+= \
 		nsVideoFrame.cpp \
-		$(NULL)
-endif
-
-ifdef IBMBIDI
-CPPSRCS		+= \
-		nsBidiFrames.cpp \
 		$(NULL)
 endif
 
