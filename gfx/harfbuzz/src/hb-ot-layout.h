@@ -188,7 +188,7 @@ hb_ot_layout_position_lookup (hb_font_t    *font,
 
 /* Should be called after all the position_lookup's are done */
 void
-hb_ot_layout_position_finish (hb_buffer_t  *buffer);
+hb_ot_layout_position_finish (hb_face_t *face, hb_buffer_t *buffer);
 
 
 HB_END_DECLS
