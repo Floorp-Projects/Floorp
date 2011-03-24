@@ -1226,21 +1226,14 @@ js_GetGCThingTraceKind(void *thing)
 JSBool
 js_LockGCThingRT(JSRuntime *rt, void *thing)
 {
-    GCLocks *locks;
-
     if (!thing)
         return true;
-    locks = &rt->gcLocksHash;
-    AutoLockGC lock(rt);
-    GCLocks::AddPtr p = locks->lookupForAdd(thing);
 
-    if (!p) {
-        if (!locks->add(p, thing, 1))
-            return false;
-    } else {
-        JS_ASSERT(p->value >= 1);
+    AutoLockGC lock(rt);
+    if (GCLocks::Ptr p = rt->gcLocksHash.lookupWithDefault(thing, 0))
         p->value++;
-    }
+    else
+        return false;
 
     METER(rt->gcStats.lock++);
     return true;
