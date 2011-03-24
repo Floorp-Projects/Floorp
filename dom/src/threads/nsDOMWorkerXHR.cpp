@@ -74,7 +74,8 @@ const char* const nsDOMWorkerXHREventTarget::sListenerTypes[] = {
   "progress",                          /* LISTENER_TYPE_PROGRESS */
 
   // nsIXMLHttpRequest listeners.
-  "readystatechange"                   /* LISTENER_TYPE_READYSTATECHANGE */
+  "readystatechange",                   /* LISTENER_TYPE_READYSTATECHANGE */
+  "loadend"
 };
 
 // This should always be set to the length of sListenerTypes.
@@ -234,6 +235,32 @@ nsDOMWorkerXHREventTarget::SetOnprogress(nsIDOMEventListener* aOnprogress)
   type.AssignASCII(sListenerTypes[LISTENER_TYPE_PROGRESS]);
 
   return SetOnXListener(type, aOnprogress);
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREventTarget::GetOnloadend(nsIDOMEventListener** aOnloadend)
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  NS_ENSURE_ARG_POINTER(aOnloadend);
+
+  nsAutoString type;
+  type.AssignASCII(sListenerTypes[LISTENER_TYPE_LOADEND]);
+
+  nsCOMPtr<nsIDOMEventListener> listener = GetOnXListener(type);
+  listener.forget(aOnloadend);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREventTarget::SetOnloadend(nsIDOMEventListener* aOnloadend)
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+
+  nsAutoString type;
+  type.AssignASCII(sListenerTypes[LISTENER_TYPE_LOADEND]);
+
+  return SetOnXListener(type, aOnloadend);
 }
 
 nsDOMWorkerXHRUpload::nsDOMWorkerXHRUpload(nsDOMWorkerXHR* aWorkerXHR)

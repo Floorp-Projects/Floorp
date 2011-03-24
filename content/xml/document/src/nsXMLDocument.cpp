@@ -309,6 +309,11 @@ ReportUseOfDeprecatedMethod(nsIDocument *aDoc, const char* aWarning)
 NS_IMETHODIMP
 nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
 {
+  PRBool hasHadScriptObject = PR_TRUE;
+  nsIScriptGlobalObject* scriptObject =
+    GetScriptHandlingObject(hasHadScriptObject);
+  NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
+
   ReportUseOfDeprecatedMethod(this, "UseOfDOM3LoadMethodWarning");
 
   NS_ENSURE_ARG_POINTER(aReturn);
