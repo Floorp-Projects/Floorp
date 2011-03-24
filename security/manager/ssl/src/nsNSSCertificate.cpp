@@ -1635,10 +1635,10 @@ char* nsNSSCertificate::defaultServerNickname(CERTCertificate* cert)
 
     conflict = SEC_CertNicknameConflict(nickname, &cert->derSubject,
                                         cert->dbhandle);
-    PR_Free(nickname);
     if (!conflict) {
       break;
     }
+    PR_Free(nickname);
     count++;
   }
   PR_FREEIF(servername);
