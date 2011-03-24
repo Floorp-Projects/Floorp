@@ -417,8 +417,8 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
     MonitorAutoEnter mon(mDecoder->GetMonitor());
     mAudioCompleted = PR_FALSE;
     audioStartTime = mAudioStartTime;
-    channels = mReader->GetInfo().mAudioChannels;
-    rate = mReader->GetInfo().mAudioRate;
+    channels = mInfo.mAudioChannels;
+    rate = mInfo.mAudioRate;
     NS_ASSERTION(audioStartTime != -1, "Should have audio start time by now");
   }
   while (1) {
@@ -712,20 +712,22 @@ void nsBuiltinDecoderStateMachine::StartPlayback()
   LOG(PR_LOG_DEBUG, ("%p StartPlayback", mDecoder));
   mDecoder->mPlaybackStatistics.Start(TimeStamp::Now());
   if (HasAudio()) {
-    MonitorAutoExit exitMon(mDecoder->GetMonitor());
-    MonitorAutoEnter audioMon(mAudioMonitor);
-    if (mAudioStream) {
-      // We have an audiostream, so it must have been paused the last time
-      // StopPlayback() was called.
-      mAudioStream->Resume();
-    } else {
-      // No audiostream, create one.
-      const nsVideoInfo& info = mReader->GetInfo();
-      mAudioStream = nsAudioStream::AllocateStream();
-      mAudioStream->Init(info.mAudioChannels,
-                         info.mAudioRate,
-                         MOZ_SOUND_DATA_FORMAT);
-      mAudioStream->SetVolume(mVolume);
+    PRInt32 rate = mInfo.mAudioRate;
+    PRInt32 channels = mInfo.mAudioChannels;
+
+    {
+      MonitorAutoExit exitMon(mDecoder->GetMonitor());
+      MonitorAutoEnter audioMon(mAudioMonitor);
+      if (mAudioStream) {
+        // We have an audiostream, so it must have been paused the last time
+        // StopPlayback() was called.
+        mAudioStream->Resume();
+      } else {
+        // No audiostream, create one.
+        mAudioStream = nsAudioStream::AllocateStream();
+        mAudioStream->Init(channels, rate, MOZ_SOUND_DATA_FORMAT);
+        mAudioStream->SetVolume(mVolume);
+      }
     }
   }
   mPlayStartTime = TimeStamp::Now();
@@ -1057,8 +1059,12 @@ nsresult nsBuiltinDecoderStateMachine::Run()
 
         VideoData* videoData = FindStartTime();
         if (videoData) {
-          MonitorAutoExit exitMon(mDecoder->GetMonitor());
-          RenderVideoFrame(videoData, TimeStamp::Now());
+          nsIntSize display = mInfo.mDisplay;
+          float aspect = mInfo.mPixelAspectRatio;
+          {
+            MonitorAutoExit exitMon(mDecoder->GetMonitor());
+            RenderVideoFrame(videoData, TimeStamp::Now(), display, aspect);
+          }
         }
 
         // Start the decode threads, so that we can pre buffer the streams.
@@ -1082,14 +1088,13 @@ nsresult nsBuiltinDecoderStateMachine::Run()
         // setting the default framebuffer size for audioavailable events.  Also,
         // if there is audio, let the MozAudioAvailable event manager know about
         // the metadata.
-        const nsVideoInfo& info = mReader->GetInfo();
-        PRUint32 frameBufferLength = info.mAudioChannels * FRAMEBUFFER_LENGTH_PER_CHANNEL;
+        PRUint32 frameBufferLength = mInfo.mAudioChannels * FRAMEBUFFER_LENGTH_PER_CHANNEL;
         nsCOMPtr<nsIRunnable> metadataLoadedEvent =
-          new nsAudioMetadataEventRunner(mDecoder, info.mAudioChannels,
-                                         info.mAudioRate, frameBufferLength);
+          new nsAudioMetadataEventRunner(mDecoder, mInfo.mAudioChannels,
+                                         mInfo.mAudioRate, frameBufferLength);
         NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
         if (HasAudio()) {
-          mEventManager.Init(info.mAudioChannels, info.mAudioRate);
+          mEventManager.Init(mInfo.mAudioChannels, mInfo.mAudioRate);
           mDecoder->RequestFrameBufferLength(frameBufferLength);
         }
 
@@ -1180,7 +1185,12 @@ nsresult nsBuiltinDecoderStateMachine::Run()
               if (video) {
                 NS_ASSERTION(video->mTime <= seekTime && seekTime <= video->mEndTime,
                              "Seek target should lie inside the first frame after seek");
-                RenderVideoFrame(video, TimeStamp::Now());
+                nsIntSize display = mInfo.mDisplay;
+                float aspect = mInfo.mPixelAspectRatio;
+                {
+                  MonitorAutoExit exitMon(mDecoder->GetMonitor());
+                  RenderVideoFrame(video, TimeStamp::Now(), display, aspect);
+                }
                 mReader->mVideoQueue.PopFront();
                 nsCOMPtr<nsIRunnable> event =
                   NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::Invalidate);
@@ -1336,9 +1346,12 @@ nsresult nsBuiltinDecoderStateMachine::Run()
 }
 
 void nsBuiltinDecoderStateMachine::RenderVideoFrame(VideoData* aData,
-                                                    TimeStamp aTarget)
+                                                    TimeStamp aTarget,
+                                                    nsIntSize aDisplaySize,
+                                                    float aAspectRatio)
 {
   NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread), "Should be on state machine thread.");
+  mDecoder->GetMonitor().AssertNotCurrentThreadIn();
 
   if (aData->mDuplicate) {
     return;
@@ -1346,11 +1359,8 @@ void nsBuiltinDecoderStateMachine::RenderVideoFrame(VideoData* aData,
 
   nsRefPtr<Image> image = aData->mImage;
   if (image) {
-    const nsVideoInfo& info = mReader->GetInfo();
-    mDecoder->SetVideoData(gfxIntSize(info.mDisplay.width, info.mDisplay.height),
-                           info.mPixelAspectRatio,
-                           image,
-                           aTarget);
+    mDecoder->SetVideoData(gfxIntSize(aDisplaySize.width, aDisplaySize.height),
+                           aAspectRatio, image, aTarget);
   }
 }
 
@@ -1460,10 +1470,14 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
                            MsToDuration(currentFrame->mTime - mStartTime);
       NS_ASSERTION(currentFrame->mTime >= mStartTime, "Should have positive frame time");
       {
-        MonitorAutoExit exitMon(mDecoder->GetMonitor());
-        // If we have video, we want to increment the clock in steps of the frame
-        // duration.
-        RenderVideoFrame(currentFrame, presTime);
+        nsIntSize display = mInfo.mDisplay;
+        float aspect = mInfo.mPixelAspectRatio;
+        {
+          MonitorAutoExit exitMon(mDecoder->GetMonitor());
+          // If we have video, we want to increment the clock in steps of the frame
+          // duration.
+          RenderVideoFrame(currentFrame, presTime, display, aspect);
+        }
       }
       mDecoder->GetFrameStatistics().NotifyPresentedFrame();
       PRInt64 now = DurationToMs(TimeStamp::Now() - mPlayStartTime + mPlayDuration);
@@ -1537,9 +1551,10 @@ VideoData* nsBuiltinDecoderStateMachine::FindStartTime()
   PRInt64 startTime = 0;
   mStartTime = 0;
   VideoData* v = nsnull;
+  PRInt64 dataOffset = mInfo.mDataOffset;
   {
     MonitorAutoExit exitMon(mDecoder->GetMonitor());
-    v = mReader->FindStartTime(mReader->GetInfo().mDataOffset, startTime);
+    v = mReader->FindStartTime(dataOffset, startTime);
   }
   if (startTime != 0) {
     mStartTime = startTime;
@@ -1613,11 +1628,12 @@ void nsBuiltinDecoderStateMachine::LoadMetadata()
 
   LOG(PR_LOG_DEBUG, ("Loading Media Headers"));
   nsresult res;
+  nsVideoInfo info;
   {
     MonitorAutoExit exitMon(mDecoder->GetMonitor());
-    res = mReader->ReadMetadata();
+    res = mReader->ReadMetadata(&info);
   }
-  const nsVideoInfo& info = mReader->GetInfo();
+  mInfo = info;
 
   if (NS_FAILED(res) || (!info.mHasVideo && !info.mHasAudio)) {
     mState = DECODER_STATE_SHUTDOWN;      
