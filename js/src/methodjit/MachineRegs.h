@@ -318,7 +318,7 @@ struct Registers {
     static const uint32 TempFPRegs = (
           (1 << JSC::ARMRegisters::d0)
         | (1 << JSC::ARMRegisters::d1)
-        | (1 << JSC::ARMRegisters::d2);
+        | (1 << JSC::ARMRegisters::d2)
         ) << TotalRegisters;
     static const FPRegisterID FPConversionTemp = JSC::ARMRegisters::d3;
 #else
@@ -450,7 +450,7 @@ AnyRegisterID::name()
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
     return isReg() ? JSC::X86Registers::nameIReg(reg()) : JSC::X86Registers::nameFPReg(fpreg());
 #elif defined(JS_CPU_ARM)
-    return isreg() ? JSC::ARMAssembler::nameGpReg(reg()) : JSC::ARMAssembler::nameFpReg(fpreg());
+    return isReg() ? JSC::ARMAssembler::nameGpReg(reg()) : JSC::ARMAssembler::nameFpReg(fpreg());
 #else
     return "???";
 #endif
