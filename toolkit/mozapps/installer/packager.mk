@@ -315,7 +315,7 @@ OMNIJAR_FILES	= \
 
 NON_OMNIJAR_FILES += \
   chrome/icons/\* \
-  defaults/pref/channel-prefs.js \
+  $(PREF_DIR)/channel-prefs.js \
   res/cursors/\* \
   res/MainMenu.nib/\* \
   $(NULL)
