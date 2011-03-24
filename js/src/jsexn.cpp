@@ -295,7 +295,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     stackDepth = 0;
     valueCount = 0;
     for (fp = js_GetTopStackFrame(cx); fp; fp = fp->prev()) {
-        if (fp->isFunctionFrame() && !fp->isEvalFrame()) {
+        if (fp->isNonEvalFunctionFrame()) {
             Value v = NullValue();
             if (checkAccess &&
                 !checkAccess(cx, &fp->callee(), callerid, JSACC_READ, &v)) {

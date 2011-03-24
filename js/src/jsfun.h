@@ -322,15 +322,6 @@ JSObject::getFunctionPrivate() const
 namespace js {
 
 /*
- * Construct a call object for the given bindings.  If this is a call object
- * for a function invocation, callee should be the function being called.
- * Otherwise it must be a call object for eval of strict mode code, and callee
- * must be null.
- */
-extern JSObject *
-NewCallObject(JSContext *cx, js::Bindings *bindings, JSObject &scopeChain, JSObject *callee);
-
-/*
  * NB: jsapi.h and jsobj.h must be included before any call to this macro.
  */
 #define VALUE_IS_FUNCTION(cx, v)                                              \
@@ -515,9 +506,6 @@ js_ValueToCallableObject(JSContext *cx, js::Value *vp, uintN flags);
 extern void
 js_ReportIsNotFunction(JSContext *cx, const js::Value *vp, uintN flags);
 
-extern JSObject *
-js_GetCallObject(JSContext *cx, JSStackFrame *fp);
-
 extern JSObject * JS_FASTCALL
 js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSObject *scopeChain);
 
@@ -529,6 +517,12 @@ js_PutCallObjectOnTrace(JSContext *cx, JSObject *scopeChain, uint32 nargs,
                         js::Value *argv, uint32 nvars, js::Value *slots);
 
 namespace js {
+
+JSObject *
+CreateFunCallObject(JSContext *cx, JSStackFrame *fp);
+
+JSObject *
+CreateEvalCallObject(JSContext *cx, JSStackFrame *fp);
 
 extern JSBool
 GetCallArg(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);

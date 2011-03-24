@@ -277,7 +277,7 @@ GetScopeChainFull(JSContext *cx, JSStackFrame *fp, JSObject *blockChain)
          * Don't force a call object for a lightweight function call, but do
          * insist that there is a call object for a heavyweight function call.
          */
-        JS_ASSERT_IF(fp->isFunctionFrame() && fp->fun()->isHeavyweight(),
+        JS_ASSERT_IF(fp->isNonEvalFunctionFrame() && fp->fun()->isHeavyweight(),
                      fp->hasCallObj());
         return &fp->scopeChain();
     }
@@ -293,10 +293,9 @@ GetScopeChainFull(JSContext *cx, JSStackFrame *fp, JSObject *blockChain)
      * Also, identify the innermost compiler-allocated block we needn't clone.
      */
     JSObject *limitBlock, *limitClone;
-    if (fp->isFunctionFrame() && !fp->hasCallObj()) {
-        JS_ASSERT_IF(fp->scopeChain().isClonedBlock(),
-                     fp->scopeChain().getPrivate() != js_FloatingFrameIfGenerator(cx, fp));
-        if (!js_GetCallObject(cx, fp))
+    if (fp->isNonEvalFunctionFrame() && !fp->hasCallObj()) {
+        JS_ASSERT_IF(fp->scopeChain().isClonedBlock(), fp->scopeChain().getPrivate() != fp);
+        if (!CreateFunCallObject(cx, fp))
             return NULL;
 
         /* We know we must clone everything on blockChain. */
@@ -616,14 +615,13 @@ RunScript(JSContext *cx, JSScript *script, JSStackFrame *fp)
 #endif
 
     AutoInterpPreparer prepareInterp(cx, script);
-    bool ok;
 
     /* FIXME: Once bug 470510 is fixed, make this an assert. */
     if (script->compileAndGo) {
         int32 flags = fp->scopeChain().getGlobal()->getReservedSlot(JSRESERVED_GLOBAL_FLAGS).toInt32();
         if (flags & JSGLOBAL_FLAGS_CLEARED) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CLEARED_SCOPE);
-            goto error;
+            return false;
         }
     }
 
@@ -631,24 +629,13 @@ RunScript(JSContext *cx, JSScript *script, JSStackFrame *fp)
     mjit::CompileStatus status;
     status = mjit::CanMethodJIT(cx, script, fp, mjit::CompileRequest_Interpreter);
     if (status == mjit::Compile_Error)
-        goto error;
+        return false;
 
-    if (status == mjit::Compile_Okay) {
-        ok = mjit::JaegerShot(cx);
-        JS_ASSERT_IF(!fp->isYielding() && !(fp->isEvalFrame() && !fp->script()->strictModeCode),
-                     !fp->hasCallObj() && !fp->hasArgsObj());
-        return ok;
-    }
+    if (status == mjit::Compile_Okay)
+        return mjit::JaegerShot(cx);
 #endif
 
-    ok = Interpret(cx, fp);
-    JS_ASSERT_IF(!fp->isYielding() && !(fp->isEvalFrame() && !fp->script()->strictModeCode),
-                 !fp->hasCallObj() && !fp->hasArgsObj());
-    return ok;
-
-  error:
-    PutOwnedActivationObjects(cx, fp);
-    return false;
+    return Interpret(cx, fp);
 }
 
 /*
@@ -721,7 +708,7 @@ Invoke(JSContext *cx, const CallArgs &argsRef, uint32 flags)
     cx->stack().pushInvokeFrame(cx, args, &frame);
 
     /* Now that the new frame is rooted, maybe create a call object. */
-    if (fun->isHeavyweight() && !js_GetCallObject(cx, fp))
+    if (fun->isHeavyweight() && !CreateFunCallObject(cx, fp))
         return false;
 
     /* Run function until JSOP_STOP, JSOP_RETURN or error. */
@@ -894,6 +881,34 @@ ExternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, const Value &fval,
     return ExternalInvoke(cx, ObjectValue(*obj), fval, argc, argv, rval);
 }
 
+#if JS_HAS_SHARP_VARS
+JS_STATIC_ASSERT(SHARP_NSLOTS == 2);
+
+static JS_NEVER_INLINE bool
+InitSharpSlots(JSContext *cx, JSStackFrame *fp)
+{
+    JSStackFrame *prev = fp->prev();
+    JSScript *script = fp->script();
+    JS_ASSERT(script->nfixed >= SHARP_NSLOTS);
+
+    Value *sharps = &fp->slots()[script->nfixed - SHARP_NSLOTS];
+    if (prev && prev->script()->hasSharps) {
+        JS_ASSERT(prev->numFixed() >= SHARP_NSLOTS);
+        int base = (prev->isFunctionFrame() && !prev->isEvalOrDebuggerFrame())
+                   ? prev->fun()->script()->bindings.sharpSlotBase(cx)
+                   : prev->numFixed() - SHARP_NSLOTS;
+        if (base < 0)
+            return false;
+        sharps[0] = prev->slots()[base];
+        sharps[1] = prev->slots()[base + 1];
+    } else {
+        sharps[0].setUndefined();
+        sharps[1].setUndefined();
+    }
+    return true;
+}
+#endif
+
 bool
 Execute(JSContext *cx, JSObject *chain, JSScript *script,
         JSStackFrame *prev, uintN flags, Value *result)
@@ -908,10 +923,12 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     }
 
     LeaveTrace(cx);
+    AutoScriptRooter root(cx, script);
 
     /*
      * Get a pointer to new frame/slots. This memory is not "claimed", so the
-     * code before pushExecuteFrame must not reenter the interpreter.
+     * code before pushExecuteFrame must not reenter the interpreter or assume
+     * the frame is rooted.
      */
     ExecuteFrameGuard frame;
     if (!cx->stack().getExecuteFrame(cx, script, &frame))
@@ -926,13 +943,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         JS_ASSERT(chain == &prev->scopeChain());
         frame.fp()->initEvalFrame(cx, script, prev, flags);
 
-        /*
-         * We want to call |prev->varobj()|, but this requires knowing the
-         * CallStackSegment of |prev|. If |prev == cx->fp()|, the callstack is
-         * simply the context's active callstack, so we can use
-         * |prev->varobj(cx)|.  When |prev != cx->fp()|, we need to do a slow
-         * linear search. Luckily, this only happens with EvaluateInFrame.
-         */
+        /* NB: prev may not be in cx->currentSegment. */
         initialVarObj = (prev == cx->maybefp())
                         ? &prev->varobj(cx)
                         : &prev->varobj(cx->containingSegment(prev));
@@ -950,67 +961,35 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
             return false;
         }
 
-        /* Initialize frame. */
         frame.fp()->initGlobalFrame(script, *innerizedChain, flags);
 
-        /* Compute 'this'. */
+        /* If scope chain is an inner window, outerize for 'this'. */
         JSObject *thisp = chain->thisObject(cx);
         if (!thisp)
             return false;
         frame.fp()->globalThis().setObject(*thisp);
 
-        initialVarObj = cx->hasRunOption(JSOPTION_VAROBJFIX) ? chain->getGlobal() : chain;
-    }
-
-    /*
-     * Strict mode eval code receives its own, fresh lexical environment; thus
-     * strict mode eval can't mutate its calling frame's binding set.
-     */
-    if ((flags & JSFRAME_EVAL) && script->strictModeCode) {
-        AutoScriptRooter root(cx, script);
-        initialVarObj = NewCallObject(cx, &script->bindings, *initialVarObj, NULL);
-        if (!initialVarObj)
-            return false;
-        initialVarObj->setPrivate(frame.fp());
-
-        /* Clear the Call object propagated from the previous frame, if any. */
-        if (frame.fp()->hasCallObj())
-            frame.fp()->clearCallObj();
-        frame.fp()->setScopeChainAndCallObj(*initialVarObj);
+        initialVarObj = cx->hasRunOption(JSOPTION_VAROBJFIX)
+                        ? chain->getGlobal()
+                        : chain;
     }
     JS_ASSERT(!initialVarObj->getOps()->defineProperty);
 
-#if JS_HAS_SHARP_VARS
-    JS_STATIC_ASSERT(SHARP_NSLOTS == 2);
-    if (script->hasSharps) {
-        JS_ASSERT(script->nfixed >= SHARP_NSLOTS);
-        Value *sharps = &frame.fp()->slots()[script->nfixed - SHARP_NSLOTS];
-        if (prev && prev->script()->hasSharps) {
-            JS_ASSERT(prev->numFixed() >= SHARP_NSLOTS);
-            int base = (prev->isFunctionFrame() && !prev->isEvalOrDebuggerFrame())
-                       ? prev->fun()->script()->bindings.sharpSlotBase(cx)
-                       : prev->numFixed() - SHARP_NSLOTS;
-            if (base < 0)
-                return false;
-            sharps[0] = prev->slots()[base];
-            sharps[1] = prev->slots()[base + 1];
-        } else {
-            sharps[0].setUndefined();
-            sharps[1].setUndefined();
-        }
+    if (frame.fp()->isStrictEvalFrame()) {
+        /* Give strict mode eval its own fresh lexical environment. */
+        initialVarObj = CreateEvalCallObject(cx, frame.fp());
+        if (!initialVarObj)
+            return false;
+        JS_ASSERT(initialVarObj == &frame.fp()->scopeChain());
     }
-#endif
 
-    /* Officially push |fp|. |frame|'s destructor pops. */
+    /* Officially push the frame. ~FrameGuard pops. */
     cx->stack().pushExecuteFrame(cx, initialVarObj, &frame);
 
-    /* Now that the frame has been pushed, we can call the thisObject hook. */
-    if (!prev) {
-        JSObject *thisp = chain->thisObject(cx);
-        if (!thisp)
-            return false;
-        frame.fp()->globalThis().setObject(*thisp);
-    }
+#if JS_HAS_SHARP_VARS
+    if (script->hasSharps && !InitSharpSlots(cx, frame.fp()))
+        return false;
+#endif
 
     Probes::startExecution(cx, script);
 
@@ -2163,27 +2142,6 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
         }
     }
     return js_IteratorNext(cx, iterobj, rval);
-}
-
-static inline bool
-ScriptPrologue(JSContext *cx, JSStackFrame *fp)
-{
-    if (fp->isConstructing()) {
-        JSObject *obj = js_CreateThisForFunction(cx, &fp->callee());
-        if (!obj)
-            return false;
-        fp->functionThis().setObject(*obj);
-    }
-    if (fp->isExecuteFrame()) {
-        if (JSInterpreterHook hook = cx->debugHooks->executeHook)
-            fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData));
-    } else {
-        if (JSInterpreterHook hook = cx->debugHooks->callHook)
-            fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData));
-        Probes::enterJSFun(cx, fp->maybeFun(), fp->maybeScript());
-    }
-
-    return true;
 }
 
 namespace js {
@@ -4739,7 +4697,7 @@ BEGIN_CASE(JSOP_FUNCALL)
             atoms = script->atomMap.vector;
 
             /* Now that the new frame is rooted, maybe create a call object. */
-            if (newfun->isHeavyweight() && !js_GetCallObject(cx, regs.fp))
+            if (newfun->isHeavyweight() && !CreateFunCallObject(cx, regs.fp))
                 goto error;
 
             RESET_USE_METHODJIT();
@@ -5286,7 +5244,7 @@ END_CASE(JSOP_GETUPVAR_DBG)
 BEGIN_CASE(JSOP_GETFCSLOT)
 BEGIN_CASE(JSOP_CALLFCSLOT)
 {
-    JS_ASSERT(regs.fp->isFunctionFrame() && !regs.fp->isEvalFrame());
+    JS_ASSERT(regs.fp->isNonEvalFunctionFrame());
     uintN index = GET_UINT16(regs.pc);
     JSObject *obj = &argv[-2].toObject();
 
@@ -5723,7 +5681,7 @@ BEGIN_CASE(JSOP_LAMBDA_DBGFC)
 END_CASE(JSOP_LAMBDA_DBGFC)
 
 BEGIN_CASE(JSOP_CALLEE)
-    JS_ASSERT(regs.fp->isFunctionFrame() && !regs.fp->isEvalFrame());
+    JS_ASSERT(regs.fp->isNonEvalFunctionFrame());
     PUSH_COPY(argv[-2]);
 END_CASE(JSOP_CALLEE)
 
@@ -6636,7 +6594,7 @@ BEGIN_CASE(JSOP_GENERATOR)
 
 BEGIN_CASE(JSOP_YIELD)
     JS_ASSERT(!cx->isExceptionPending());
-    JS_ASSERT(regs.fp->isFunctionFrame() && !regs.fp->isEvalFrame());
+    JS_ASSERT(regs.fp->isNonEvalFunctionFrame());
     if (cx->generatorFor(regs.fp)->state == JSGEN_CLOSING) {
         js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD,
                             JSDVG_SEARCH_STACK, argv[-2], NULL);

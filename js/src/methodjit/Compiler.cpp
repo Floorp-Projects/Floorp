@@ -351,7 +351,7 @@ mjit::Compiler::generatePrologue()
         /* Create the call object. */
         if (fun->isHeavyweight()) {
             prepareStubCall(Uses(0));
-            INLINE_STUBCALL(stubs::GetCallObject);
+            INLINE_STUBCALL(stubs::CreateFunCallObject);
         }
 
         j.linkTo(masm.label(), &masm);
@@ -360,7 +360,7 @@ mjit::Compiler::generatePrologue()
             /*
              * Load the scope chain into the frame if necessary.  The scope chain
              * is always set for global and eval frames, and will have been set by
-             * GetCallObject for heavyweight function frames.
+             * CreateFunCallObject for heavyweight function frames.
              */
             RegisterID t0 = Registers::ReturnReg;
             Jump hasScope = masm.branchTest32(Assembler::NonZero,
@@ -376,7 +376,7 @@ mjit::Compiler::generatePrologue()
         constructThis();
 
     if (debugMode() || Probes::callTrackingActive(cx))
-        INLINE_STUBCALL(stubs::EnterScript);
+        INLINE_STUBCALL(stubs::ScriptDebugPrologue);
 
     return Compile_Okay;
 }
@@ -2230,17 +2230,18 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
 
     if (debugMode() || Probes::callTrackingActive(cx)) {
         prepareStubCall(Uses(0));
-        INLINE_STUBCALL(stubs::LeaveScript);
+        INLINE_STUBCALL(stubs::ScriptDebugEpilogue);
     }
 
     /*
-     * If there's a function object, deal with the fact that it can escape.
-     * Note that after we've placed the call object, all tracked state can
-     * be thrown away. This will happen anyway because the next live opcode
-     * (if any) must have an incoming edge.
-     *
-     * However, it's an optimization to throw it away early - the tracker
-     * won't be spilled on further exits or join points.
+     * Outside the mjit, activation objects are put by StackSpace::pop*
+     * members. For JSOP_RETURN, the interpreter only calls popInlineFrame if
+     * fp != entryFrame since the VM protocol is that Invoke/Execute are
+     * responsible for pushing/popping the initial frame. The mjit does not
+     * perform this branch (by instead using a trampoline at the return address
+     * to handle exiting mjit code) and thus always puts activation objects,
+     * even on the entry frame. To avoid double-putting, EnterMethodJIT clears
+     * out the entry frame's activation objects.
      */
     if (fun) {
         if (fun->isHeavyweight()) {
@@ -2248,7 +2249,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
             prepareStubCall(Uses(fe ? 1 : 0));
             INLINE_STUBCALL(stubs::PutActivationObjects);
         } else {
-            /* if (hasCallObj() || hasArgsObj()) stubs::PutActivationObjects() */
+            /* if (hasCallObj() || hasArgsObj()) */
             Jump putObjs = masm.branchTest32(Assembler::NonZero,
                                              Address(JSFrameReg, JSStackFrame::offsetOfFlags()),
                                              Imm32(JSFRAME_HAS_CALL_OBJ | JSFRAME_HAS_ARGS_OBJ));
@@ -2261,15 +2262,22 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
             emitFinalReturn(stubcc.masm);
         }
     } else {
-        if (fp->isEvalFrame() && script->strictModeCode) {
+        if (fp->isStrictEvalFrame()) {
             /* There will always be a call object. */
             prepareStubCall(Uses(fe ? 1 : 0));
-            INLINE_STUBCALL(stubs::PutStrictEvalCallObject);
+            INLINE_STUBCALL(stubs::PutActivationObjects);
         }
     }
 
     emitReturnValue(&masm, fe);
     emitFinalReturn(masm);
+
+    /*
+     * After we've placed the call object, all tracked state can be
+     * thrown away. This will happen anyway because the next live opcode (if
+     * any) must have an incoming edge. It's an optimization to throw it away
+     * early - the tracker won't be spilled on further exits or join points.
+     */
     frame.discardFrame();
 }
 
