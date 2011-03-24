@@ -333,7 +333,8 @@ nsCSSExpandedDataBlock::~nsCSSExpandedDataBlock()
 const size_t
 nsCSSExpandedDataBlock::kOffsetTable[] = {
     #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,        \
-                     kwtable_, stylestruct_, stylestructoffset_, animtype_)    \
+                     parsevariant_, kwtable_, stylestruct_, stylestructoffset_,\
+                     animtype_)                                                \
         offsetof(nsCSSExpandedDataBlock, m##datastruct_.member_),
     #include "nsCSSPropList.h"
     #undef CSS_PROP

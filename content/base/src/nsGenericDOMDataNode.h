@@ -235,8 +235,8 @@ public:
     return nsnull;
   }
   virtual nsresult GetSMILOverrideStyle(nsIDOMCSSStyleDeclaration** aStyle);
-  virtual nsICSSStyleRule* GetSMILOverrideStyleRule();
-  virtual nsresult SetSMILOverrideStyleRule(nsICSSStyleRule* aStyleRule,
+  virtual mozilla::css::StyleRule* GetSMILOverrideStyleRule();
+  virtual nsresult SetSMILOverrideStyleRule(mozilla::css::StyleRule* aStyleRule,
                                             PRBool aNotify);
 #endif // MOZ_SMIL
 
@@ -252,8 +252,8 @@ public:
   virtual nsIAtom* DoGetID() const;
   virtual const nsAttrValue* DoGetClasses() const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-  virtual nsICSSStyleRule* GetInlineStyleRule();
-  NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);
+  virtual mozilla::css::StyleRule* GetInlineStyleRule();
+  NS_IMETHOD SetInlineStyleRule(mozilla::css::StyleRule* aStyleRule, PRBool aNotify);
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const;

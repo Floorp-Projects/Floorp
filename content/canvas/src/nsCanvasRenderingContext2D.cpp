@@ -74,7 +74,7 @@
 #include "nsIScriptError.h"
 
 #include "nsCSSParser.h"
-#include "nsICSSStyleRule.h"
+#include "mozilla/css/StyleRule.h"
 #include "mozilla/css/Declaration.h"
 #include "nsComputedDOMStyle.h"
 #include "nsStyleSet.h"
@@ -2175,9 +2175,9 @@ nsCanvasRenderingContext2D::Rect(float x, float y, float w, float h)
 static nsresult
 CreateFontStyleRule(const nsAString& aFont,
                     nsINode* aNode,
-                    nsICSSStyleRule** aResult)
+                    css::StyleRule** aResult)
 {
-    nsCOMPtr<nsICSSStyleRule> rule;
+    nsRefPtr<css::StyleRule> rule;
     PRBool changed;
 
     nsIPrincipal* principal = aNode->NodePrincipal();
@@ -2241,7 +2241,7 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
 
     nsCOMArray<nsIStyleRule> rules;
 
-    nsCOMPtr<nsICSSStyleRule> rule;
+    nsRefPtr<css::StyleRule> rule;
     rv = CreateFontStyleRule(font, document, getter_AddRefs(rule));
     if (NS_FAILED(rv))
         return rv;
@@ -2278,7 +2278,7 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
                 presShell);
     } else {
         // otherwise inherit from default (10px sans-serif)
-        nsCOMPtr<nsICSSStyleRule> parentRule;
+        nsRefPtr<css::StyleRule> parentRule;
         rv = CreateFontStyleRule(NS_LITERAL_STRING("10px sans-serif"),
                                  document,
                                  getter_AddRefs(parentRule));

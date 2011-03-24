@@ -2272,7 +2272,7 @@ nsresult PresShell::CreatePreferenceStyleSheet(void)
 }
 
 // XXX We want these after the @namespace rule.  Does order matter
-// for these rules, or can we call nsICSSStyleRule::StyleRuleCount()
+// for these rules, or can we call StyleRule::StyleRuleCount()
 // and just "append"?
 static PRUint32 sInsertPrefSheetRulesAt = 1;
 

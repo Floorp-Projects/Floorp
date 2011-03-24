@@ -58,6 +58,15 @@ using mozilla::TimeStamp;
 #define DEFAULT_FRAME_RATE 60
 #define DEFAULT_THROTTLED_FRAME_RATE 1
 
+static PRBool sPrecisePref;
+
+/* static */ void
+nsRefreshDriver::InitializeStatics()
+{
+  nsContentUtils::AddBoolPrefVarCache("layout.frame_rate.precise",
+                                      &sPrecisePref,
+                                      PR_FALSE);
+}
 // Compute the interval to use for the refresh driver timer, in
 // milliseconds
 PRInt32
@@ -85,16 +94,17 @@ nsRefreshDriver::GetRefreshTimerType() const
   if (mThrottled) {
     return nsITimer::TYPE_ONE_SHOT;
   }
-  PRBool precise =
-    nsContentUtils::GetBoolPref("layout.frame_rate.precise", PR_FALSE);
-  return precise ? (PRInt32)nsITimer::TYPE_REPEATING_PRECISE
-                 : (PRInt32)nsITimer::TYPE_REPEATING_SLACK;
+  if (HaveAnimationFrameListeners() || sPrecisePref) {
+    return nsITimer::TYPE_REPEATING_PRECISE;
+  }
+  return nsITimer::TYPE_REPEATING_SLACK;
 }
 
 nsRefreshDriver::nsRefreshDriver(nsPresContext *aPresContext)
   : mPresContext(aPresContext),
     mFrozen(false),
-    mThrottled(false)
+    mThrottled(false),
+    mTimerIsPrecise(false)
 {
 }
 
@@ -157,9 +167,12 @@ nsRefreshDriver::EnsureTimerStarted()
     return;
   }
 
+  PRInt32 timerType = GetRefreshTimerType();
+  mTimerIsPrecise = (timerType == nsITimer::TYPE_REPEATING_PRECISE);
+
   nsresult rv = mTimer->InitWithCallback(this,
                                          GetRefreshTimerInterval(),
-                                         GetRefreshTimerType());
+                                         timerType);
   if (NS_FAILED(rv)) {
     mTimer = nsnull;
   }
@@ -338,12 +351,19 @@ nsRefreshDriver::Notify(nsITimer * /* unused */)
     }
   }
 
-  if (mThrottled) {
-    // Stop the timer now and restart it here.  Stopping is ok because either
-    // it's already one-shot, and it just fired, and all we need to do is null
-    // it out, or it's repeating and we need to reset it to be one-shot.  Note
-    // that the EnsureTimerStarted() call here is ok because EnsureTimerStarted
-    // makes sure to not start the timer if it shouldn't be started.
+  if (mThrottled ||
+      (mTimerIsPrecise !=
+       (GetRefreshTimerType() == nsITimer::TYPE_REPEATING_PRECISE))) {
+    // Stop the timer now and restart it here.  Stopping is in the mThrottled
+    // case ok because either it's already one-shot, and it just fired, and all
+    // we need to do is null it out, or it's repeating and we need to reset it
+    // to be one-shot.  Stopping and restarting in the case when we need to
+    // switch from precise to slack timers or vice versa is unfortunately
+    // required.
+
+    // Note that the EnsureTimerStarted() call here is ok because
+    // EnsureTimerStarted makes sure to not start the timer if it shouldn't be
+    // started.
     StopTimer();
     EnsureTimerStarted();
   }
@@ -421,6 +441,8 @@ nsRefreshDriver::ScheduleAnimationFrameListeners(nsIDocument* aDocument)
                mAnimationFrameListenerDocs.NoIndex,
                "Don't schedule the same document multiple times");
   mAnimationFrameListenerDocs.AppendElement(aDocument);
+  // No need to worry about restarting our timer in precise mode if it's
+  // already running; that will happen automatically when it fires.
   EnsureTimerStarted();
 }
 
@@ -434,4 +456,6 @@ void
 nsRefreshDriver::RevokeAnimationFrameListeners(nsIDocument* aDocument)
 {
   mAnimationFrameListenerDocs.RemoveElement(aDocument);
+  // No need to worry about restarting our timer in slack mode if it's already
+  // running; that will happen automatically when it fires.
 }

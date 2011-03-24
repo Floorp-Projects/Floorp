@@ -133,7 +133,7 @@
 #include "nsIViewManager.h"
 #include "nsIScrollableFrame.h"
 #include "nsXBLInsertionPoint.h"
-#include "nsICSSStyleRule.h" /* For nsCSSSelectorList */
+#include "mozilla/css/StyleRule.h" /* For nsCSSSelectorList */
 #include "nsCSSRuleProcessor.h"
 #include "nsRuleProcessorData.h"
 
@@ -155,6 +155,7 @@
 #endif /* MOZ_SVG */
 
 using namespace mozilla::dom;
+namespace css = mozilla::css;
 
 NS_DEFINE_IID(kThisPtrOffsetsSID, NS_THISPTROFFSETS_SID);
 
@@ -3363,7 +3364,7 @@ nsGenericElement::GetSMILOverrideStyle(nsIDOMCSSStyleDeclaration** aStyle)
   return NS_OK;
 }
 
-nsICSSStyleRule*
+css::StyleRule*
 nsGenericElement::GetSMILOverrideStyleRule()
 {
   nsGenericElement::nsDOMSlots *slots = GetExistingDOMSlots();
@@ -3371,7 +3372,7 @@ nsGenericElement::GetSMILOverrideStyleRule()
 }
 
 nsresult
-nsGenericElement::SetSMILOverrideStyleRule(nsICSSStyleRule* aStyleRule,
+nsGenericElement::SetSMILOverrideStyleRule(css::StyleRule* aStyleRule,
                                            PRBool aNotify)
 {
   nsGenericElement::nsDOMSlots *slots = DOMSlots();
@@ -3395,14 +3396,14 @@ nsGenericElement::SetSMILOverrideStyleRule(nsICSSStyleRule* aStyleRule,
 }
 #endif // MOZ_SMIL
 
-nsICSSStyleRule*
+css::StyleRule*
 nsGenericElement::GetInlineStyleRule()
 {
   return nsnull;
 }
 
 NS_IMETHODIMP
-nsGenericElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule,
+nsGenericElement::SetInlineStyleRule(css::StyleRule* aStyleRule,
                                      PRBool aNotify)
 {
   NS_NOTYETIMPLEMENTED("nsGenericElement::SetInlineStyleRule");
