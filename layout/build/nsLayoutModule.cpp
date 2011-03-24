@@ -146,11 +146,9 @@ using mozilla::dom::indexedDB::IndexedDatabaseManager;
 #include "nsIControllerContext.h"
 #include "nsIControllerCommandTable.h"
 
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #include "nsHTMLEditor.h"
 #include "nsTextServicesDocument.h"
 #include "nsTextServicesCID.h"
-#endif
 
 #include "nsScriptSecurityManager.h"
 #include "nsPrincipal.h"
@@ -219,14 +217,12 @@ nsEditorCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
 }
 
 
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextServicesDocument)
 #ifdef ENABLE_EDITOR_API_LOG
 #include "nsHTMLEditorLog.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditorLog)
 #else
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
-#endif
 #endif
 
 #include "nsHTMLCanvasFrame.h"
@@ -866,18 +862,14 @@ NS_DEFINE_NAMED_CID(NS_DOMSTORAGEMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_DOMJSON_CID);
 NS_DEFINE_NAMED_CID(NS_TEXTEDITOR_CID);
 NS_DEFINE_NAMED_CID(INDEXEDDB_MANAGER_CID );
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #ifdef ENABLE_EDITOR_API_LOG
 NS_DEFINE_NAMED_CID(NS_HTMLEDITOR_CID);
 #else
 NS_DEFINE_NAMED_CID(NS_HTMLEDITOR_CID);
 #endif
-#endif
 NS_DEFINE_NAMED_CID(NS_EDITORCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITORCOMMANDTABLE_CID);
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 NS_DEFINE_NAMED_CID(NS_TEXTSERVICESDOCUMENT_CID);
-#endif
 NS_DEFINE_NAMED_CID(NS_GEOLOCATION_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_GEOLOCATION_CID);
 NS_DEFINE_NAMED_CID(NS_FOCUSMANAGER_CID);
@@ -1024,18 +1016,14 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_DOMJSON_CID, false, NULL, NS_NewJSON },
   { &kNS_TEXTEDITOR_CID, false, NULL, nsPlaintextEditorConstructor },
   { &kINDEXEDDB_MANAGER_CID, false, NULL, IndexedDatabaseManagerConstructor },
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #ifdef ENABLE_EDITOR_API_LOG
   { &kNS_HTMLEDITOR_CID, false, NULL, nsHTMLEditorLogConstructor },
 #else
   { &kNS_HTMLEDITOR_CID, false, NULL, nsHTMLEditorConstructor },
 #endif
-#endif
   { &kNS_EDITORCONTROLLER_CID, false, NULL, nsEditorControllerConstructor },
   { &kNS_EDITORCOMMANDTABLE_CID, false, NULL, nsEditorCommandTableConstructor },
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
   { &kNS_TEXTSERVICESDOCUMENT_CID, false, NULL, nsTextServicesDocumentConstructor },
-#endif
   { &kNS_GEOLOCATION_SERVICE_CID, false, NULL, nsGeolocationServiceConstructor },
   { &kNS_GEOLOCATION_CID, false, NULL, nsGeolocationConstructor },
   { &kNS_FOCUSMANAGER_CID, false, NULL, CreateFocusManager },
@@ -1176,18 +1164,14 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/dom/json;1", &kNS_DOMJSON_CID },
   { "@mozilla.org/editor/texteditor;1", &kNS_TEXTEDITOR_CID },
   { INDEXEDDB_MANAGER_CONTRACTID, &kINDEXEDDB_MANAGER_CID },
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #ifdef ENABLE_EDITOR_API_LOG
   { "@mozilla.org/editor/htmleditor;1", &kNS_HTMLEDITOR_CID },
 #else
   { "@mozilla.org/editor/htmleditor;1", &kNS_HTMLEDITOR_CID },
 #endif
-#endif
   { "@mozilla.org/editor/editorcontroller;1", &kNS_EDITORCONTROLLER_CID },
   { "", &kNS_EDITORCOMMANDTABLE_CID },
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
   { "@mozilla.org/textservices/textservicesdocument;1", &kNS_TEXTSERVICESDOCUMENT_CID },
-#endif
   { "@mozilla.org/geolocation/service;1", &kNS_GEOLOCATION_SERVICE_CID },
   { "@mozilla.org/geolocation;1", &kNS_GEOLOCATION_CID },
   { "@mozilla.org/focus-manager;1", &kNS_FOCUSMANAGER_CID },
