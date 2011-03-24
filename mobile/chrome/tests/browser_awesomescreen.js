@@ -284,7 +284,10 @@ gTests.push({
     BrowserUI.closeTab(this._currentTab);
 
     BrowserUI.activePanel = null;
-    runNextTest();
+
+    // Ensure the tab is well closed before doing the rest of the code, otherwise
+    // this cause some bugs with the composition events
+    waitFor(runNextTest, function() { return Browser.tabs.length == 1 });
   }
 });
 
@@ -421,8 +424,7 @@ gTests.push({
     // but I don't have a better idea about how to do it for now since we don't
     // that to happen!
     waitForAndContinue(function() {
-      todo(false, "Unexpected fail!!");
-      //gCurrentTest._checkState();
+      gCurrentTest._checkState();
       runNextTest();
     }, isHiddenHeader, Date.now() + 500);
   }

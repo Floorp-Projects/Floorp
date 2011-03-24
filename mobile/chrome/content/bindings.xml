@@ -782,7 +782,7 @@
                 if (tagsToRemove.length > 0)
                   PlacesUtils.tagging.untagURI(this.uri, tagsToRemove);
               }
-              this.setAttribute('tags', this.tags);
+              this.setAttribute("tags", this.tags);
 
               // If the URI was updated change it in the bookmark, but don't
               // allow a blank URI. Revert to previous URI if blank.
@@ -792,7 +792,7 @@
                   let oldURI = this._uri;
                   this._uri = Services.io.newURI(spec, null, null);
                   PlacesUtils.bookmarks.changeBookmarkURI(this.itemId, this.uri);
-                  this.setAttribute('uri', this.spec);
+                  this.setAttribute("uri", this.spec);
 
                   // move tags from old URI to new URI
                   let tags = this.tagsAsArray;
@@ -812,7 +812,7 @@
 
             // Update the name and use the URI if name is blank
             this.name = this.name || this.spec;
-            this.setAttribute('title', this.name);
+            this.setAttribute("title", this.name);
             PlacesUtils.bookmarks.setItemTitle(this.itemId, this.name);
           ]]>
         </body>
@@ -1003,9 +1003,10 @@
 
       <property name="items" readonly="true" onget="return this._children.childNodes"/>
 
-      <field name="mobileRoot"><![CDATA[
-        PlacesUtils.annotations.getItemsWithAnnotation("mobile/bookmarksRoot", {})[0];
-      ]]></field>
+      <!-- mobileRoot is a property otherwise if it is accessed before Places
+           is ready the value will be bitrotted
+      -->
+      <property name="mobileRoot" onget="return PlacesUtils.annotations.getItemsWithAnnotation('mobile/bookmarksRoot', {})[0];"/>
 
       <property name="isRootFolder" readonly="true">
         <getter>

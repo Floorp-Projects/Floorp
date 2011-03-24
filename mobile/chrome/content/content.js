@@ -931,10 +931,6 @@ var ContextHandler = {
 
 ContextHandler.init();
 
-ContextHandler.registerType("link", function(aState, aElement) {
-  return !!aState.linkURL;
-});
-
 ContextHandler.registerType("mailto", function(aState, aElement) {
   return aState.linkProtocol == "mailto";
 });
