@@ -242,17 +242,26 @@ StartupCache::GetBuffer(const char* id, char** outbuf, PRUint32* length)
     } 
   }
 
-#ifdef MOZ_OMNIJAR
-  if (mozilla::OmnijarReader()) {
+  if (mozilla::Omnijar::GetReader(mozilla::Omnijar::APP)) {
     // no need to checksum omnijarred entries
-    nsZipItemPtr<char> zipItem(mozilla::OmnijarReader(), id);
+    nsZipItemPtr<char> zipItem(mozilla::Omnijar::GetReader(mozilla::Omnijar::APP), id);
     if (zipItem) {
       *outbuf = zipItem.Forget();
       *length = zipItem.Length();
       return NS_OK;
     } 
   }
-#endif
+
+  if (mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE)) {
+    // no need to checksum omnijarred entries
+    nsZipItemPtr<char> zipItem(mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE), id);
+    if (zipItem) {
+      *outbuf = zipItem.Forget();
+      *length = zipItem.Length();
+      return NS_OK;
+    } 
+  }
+
   return NS_ERROR_NOT_AVAILABLE;
 }
 

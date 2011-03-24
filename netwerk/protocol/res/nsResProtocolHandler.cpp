@@ -79,8 +79,8 @@ static nsResProtocolHandler *gResHandler = nsnull;
 static PRLogModuleInfo *gResLog;
 #endif
 
+#define kAPP           NS_LITERAL_CSTRING("app")
 #define kGRE           NS_LITERAL_CSTRING("gre")
-#define kGRE_RESOURCES NS_LITERAL_CSTRING("gre-resources")
 
 //----------------------------------------------------------------------------
 // nsResURL : overrides nsStandardURL::GetFile to provide nsIFile resolution
@@ -158,20 +158,6 @@ nsResProtocolHandler::~nsResProtocolHandler()
 }
 
 nsresult
-nsResProtocolHandler::AddSpecialDir(const char* aSpecialDir, const nsACString& aSubstitution)
-{
-    nsCOMPtr<nsIFile> file;
-    nsresult rv = NS_GetSpecialDirectory(aSpecialDir, getter_AddRefs(file));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIURI> uri;
-    rv = mIOService->NewFileURI(file, getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return SetSubstitution(aSubstitution, uri);
-}
-
-nsresult
 nsResProtocolHandler::Init()
 {
     if (!mSubstitutions.Init(32))
@@ -182,38 +168,39 @@ nsResProtocolHandler::Init()
     mIOService = do_GetIOService(&rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef MOZ_OMNIJAR
-    nsCOMPtr<nsIFile> omniJar(mozilla::OmnijarPath());
-    if (omniJar)
-        return Init(omniJar);
-#endif
-
-    // these entries should be kept in sync with the omnijar Init function
+    nsCAutoString appURI, greURI;
+    rv = mozilla::Omnijar::GetURIString(mozilla::Omnijar::APP, appURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mozilla::Omnijar::GetURIString(mozilla::Omnijar::GRE, greURI);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     //
-    // make resource:/// point to the application directory
+    // make resource:/// point to the application directory or omnijar
     //
-    rv = AddSpecialDir(NS_OS_CURRENT_PROCESS_DIR, EmptyCString());
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), appURI.Length() ? appURI : greURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = SetSubstitution(EmptyCString(), uri);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    //
+    // make resource://app/ point to the application directory or omnijar
+    //
+    rv = SetSubstitution(kAPP, uri);
     NS_ENSURE_SUCCESS(rv, rv);
 
     //
     // make resource://gre/ point to the GRE directory
     //
-    rv = AddSpecialDir(NS_GRE_DIR, kGRE);
+    if (appURI.Length()) { // We already have greURI in uri if appURI.Length() is 0.
+        rv = NS_NewURI(getter_AddRefs(uri), greURI);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    rv = SetSubstitution(kGRE, uri);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // make resource://gre-resources/ point to gre toolkit[.jar]/res
-    nsCOMPtr<nsIURI> greURI;
-    nsCOMPtr<nsIURI> greResURI;
-    GetSubstitution(kGRE, getter_AddRefs(greURI));
-#ifdef MOZ_CHROME_FILE_FORMAT_JAR
-    NS_NAMED_LITERAL_CSTRING(strGRE_RES_URL, "jar:chrome/toolkit.jar!/res/");
-#else
-    NS_NAMED_LITERAL_CSTRING(strGRE_RES_URL, "chrome/toolkit/res/");
-#endif
-    rv = mIOService->NewURI(strGRE_RES_URL, nsnull, greURI,
-                            getter_AddRefs(greResURI));
-    SetSubstitution(kGRE_RESOURCES, greResURI);
     //XXXbsmedberg Neil wants a resource://pchrome/ for the profile chrome dir...
     // but once I finish multiple chrome registration I'm not sure that it is needed
 
@@ -222,40 +209,6 @@ nsResProtocolHandler::Init()
 
     return rv;
 }
-
-#ifdef MOZ_OMNIJAR
-nsresult
-nsResProtocolHandler::Init(nsIFile *aOmniJar)
-{
-    nsresult rv;
-    nsCOMPtr<nsIURI> uri;
-    nsCAutoString omniJarSpec;
-    NS_GetURLSpecFromActualFile(aOmniJar, omniJarSpec, mIOService);
-
-    nsCAutoString urlStr("jar:");
-    urlStr += omniJarSpec;
-    urlStr += "!/";
-
-    rv = mIOService->NewURI(urlStr, nsnull, nsnull, getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // these entries should be kept in sync with the normal Init function
-
-    // resource:/// points to jar:omni.jar!/
-    SetSubstitution(EmptyCString(), uri);
-
-    // resource://gre/ points to jar:omni.jar!/
-    SetSubstitution(kGRE, uri);
-
-    urlStr += "chrome/toolkit/res/";
-    rv = mIOService->NewURI(urlStr, nsnull, nsnull, getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // resource://gre-resources/ points to jar:omni.jar!/chrome/toolkit/res/
-    SetSubstitution(kGRE_RESOURCES, uri);
-    return NS_OK;
-}
-#endif
 
 #ifdef MOZ_IPC
 static PLDHashOperator

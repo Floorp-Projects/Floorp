@@ -94,6 +94,7 @@ nsDOMScriptObjectFactory::nsDOMScriptObjectFactory() :
       xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_DOM_XPATH);
       xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_DOM_INDEXEDDB);
       xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_XPCONNECT);
+      xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_DOM_EVENTS);
     }
 
     NS_ASSERTION(!gExceptionProvider, "Registered twice?!");
@@ -298,6 +299,8 @@ nsDOMScriptObjectFactory::Observe(nsISupports *aSubject,
                                         NS_ERROR_MODULE_DOM_XPATH);
         xs->UnregisterExceptionProvider(gExceptionProvider,
                                         NS_ERROR_MODULE_XPCONNECT);
+        xs->UnregisterExceptionProvider(gExceptionProvider,
+                                        NS_ERROR_MODULE_DOM_EVENTS);
       }
 
       NS_RELEASE(gExceptionProvider);
@@ -401,6 +404,8 @@ nsDOMExceptionProvider::GetException(nsresult result,
       return NS_NewFileException(result, aDefaultException, _retval);
     case NS_ERROR_MODULE_DOM_INDEXEDDB:
       return NS_NewIDBDatabaseException(result, aDefaultException, _retval);
+    case NS_ERROR_MODULE_DOM_EVENTS:
+      return NS_NewEventException(result, aDefaultException, _retval);
     default:
       return NS_NewDOMException(result, aDefaultException, _retval);
   }
