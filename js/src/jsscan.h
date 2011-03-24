@@ -334,6 +334,13 @@ class TokenStream
     JSContext *getContext() const { return cx; }
     bool onCurrentLine(const TokenPos &pos) const { return lineno == pos.end.lineno; }
     const Token &currentToken() const { return tokens[cursor]; }
+    bool isCurrentTokenType(TokenKind type) const {
+        return currentToken().type == type;
+    }
+    bool isCurrentTokenType(TokenKind type1, TokenKind type2) const {
+        TokenKind type = currentToken().type;
+        return type == type1 || type == type2;
+    }
     const CharBuffer &getTokenbuf() const { return tokenbuf; }
     const char *getFilename() const { return filename; }
     uintN getLineno() const { return lineno; }
