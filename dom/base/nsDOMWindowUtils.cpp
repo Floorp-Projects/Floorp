@@ -337,8 +337,14 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
   if (presShell) {
     nsIFrame* rootFrame = presShell->FrameManager()->GetRootFrame();
     if (rootFrame) {
-      rootFrame->InvalidateWithFlags(rootFrame->GetVisualOverflowRectRelativeToSelf(),
-                                     nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
+      nsIContent* rootContent =
+        rootScrollFrame ? rootScrollFrame->GetContent() : nsnull;
+      nsRect rootDisplayport;
+      bool usingDisplayport = rootContent &&
+        nsLayoutUtils::GetDisplayPort(rootContent, &rootDisplayport);
+      rootFrame->InvalidateWithFlags(
+        usingDisplayport ? rootDisplayport : rootFrame->GetVisualOverflowRect(),
+        nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
     }
   }
 

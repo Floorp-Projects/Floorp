@@ -38,45 +38,46 @@
 
 #include "nsRuleData.h"
 #include "nsCSSProps.h"
+#include "nsPresArena.h"
 
-namespace {
-
-struct PropertyOffsetInfo {
-  // XXX These could probably be pointer-to-member, if the casting can
-  // be done correctly.
-  size_t struct_offset; // offset of nsRuleDataThing* in nsRuleData
-  size_t member_offset; // offset of value in nsRuleDataThing
-};
-
-const PropertyOffsetInfo kOffsetTable[eCSSProperty_COUNT_no_shorthands] = {
-  #define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, datastruct_,     \
-                               member_, parsevariant_, kwtable_)             \
-      { size_t(-1), size_t(-1) },
-  #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,        \
-                   parsevariant_, kwtable_, stylestruct_, stylestructoffset_,\
-                   animtype_)                                                \
-      { offsetof(nsRuleData, m##datastruct_##Data),                          \
-        offsetof(nsRuleData##datastruct_, member_) },
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP
-  #undef CSS_PROP_BACKENDONLY
-};
-
-} // anon namespace
-
-nsCSSValue*
-nsRuleData::ValueFor(nsCSSProperty aProperty)
+inline size_t
+nsRuleData::GetPoisonOffset()
 {
-  NS_ABORT_IF_FALSE(aProperty < eCSSProperty_COUNT_no_shorthands,
-                    "invalid or shorthand property");
-
-  const PropertyOffsetInfo& offsets = kOffsetTable[aProperty];
-  NS_ABORT_IF_FALSE(offsets.struct_offset != size_t(-1),
-                    "backend-only property");
-
-  char* cssstruct = *reinterpret_cast<char**>
-    (reinterpret_cast<char*>(this) + offsets.struct_offset);
-  NS_ABORT_IF_FALSE(cssstruct, "substructure pointer should never be null");
-
-  return reinterpret_cast<nsCSSValue*>(cssstruct + offsets.member_offset);
+  // Fill in mValueOffsets such that mValueStorage + mValueOffsets[i]
+  // will yield the frame poison value for all uninitialized value
+  // offsets.
+  PR_STATIC_ASSERT(sizeof(PRUword) == sizeof(size_t));
+  PR_STATIC_ASSERT(PRUword(-1) > PRUword(0));
+  PR_STATIC_ASSERT(size_t(-1) > size_t(0));
+  PRUword framePoisonValue = nsPresArena::GetPoisonValue();
+  return size_t(framePoisonValue - PRUword(mValueStorage)) /
+         sizeof(nsCSSValue);
 }
+
+nsRuleData::nsRuleData(PRUint32 aSIDs, nsCSSValue* aValueStorage,
+                       nsPresContext* aContext, nsStyleContext* aStyleContext)
+  : mSIDs(aSIDs),
+    mCanStoreInRuleTree(PR_TRUE),
+    mPresContext(aContext),
+    mStyleContext(aStyleContext),
+    mPostResolveCallback(nsnull),
+    mValueStorage(aValueStorage)
+{
+  size_t framePoisonOffset = GetPoisonOffset();
+  for (size_t i = 0; i < nsStyleStructID_Length; ++i) {
+    mValueOffsets[i] = framePoisonOffset;
+  }
+}
+
+#ifdef DEBUG
+nsRuleData::~nsRuleData()
+{
+  // assert nothing in mSIDs has poison value
+  size_t framePoisonOffset = GetPoisonOffset();
+  for (size_t i = 0; i < nsStyleStructID_Length; ++i) {
+    NS_ABORT_IF_FALSE(!(mSIDs & (1 << i)) ||
+                      mValueOffsets[i] != framePoisonOffset,
+                      "value in SIDs was left with poison offset");
+  }
+}
+#endif

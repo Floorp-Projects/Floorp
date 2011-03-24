@@ -1648,19 +1648,19 @@ nsGenericHTMLElement::MapCommonAttributesExceptHiddenInto(const nsMappedAttribut
                                                           nsRuleData* aData)
 {
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(UserInterface)) {
-    nsRuleDataUserInterface *ui = aData->mUserInterfaceData;
-    if (ui->mUserModify.GetUnit() == eCSSUnit_Null) {
+    nsCSSValue* userModify = aData->ValueForUserModify();
+    if (userModify->GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value =
         aAttributes->GetAttr(nsGkAtoms::contenteditable);
       if (value) {
         if (value->Equals(nsGkAtoms::_empty, eCaseMatters) ||
             value->Equals(nsGkAtoms::_true, eIgnoreCase)) {
-          ui->mUserModify.SetIntValue(NS_STYLE_USER_MODIFY_READ_WRITE,
-                                      eCSSUnit_Enumerated);
+          userModify->SetIntValue(NS_STYLE_USER_MODIFY_READ_WRITE,
+                                  eCSSUnit_Enumerated);
         }
         else if (value->Equals(nsGkAtoms::_false, eIgnoreCase)) {
-            ui->mUserModify.SetIntValue(NS_STYLE_USER_MODIFY_READ_ONLY,
-                                        eCSSUnit_Enumerated);
+            userModify->SetIntValue(NS_STYLE_USER_MODIFY_READ_ONLY,
+                                    eCSSUnit_Enumerated);
         }
       }
     }
@@ -1669,8 +1669,8 @@ nsGenericHTMLElement::MapCommonAttributesExceptHiddenInto(const nsMappedAttribut
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Visibility)) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::lang);
     if (value && value->Type() == nsAttrValue::eString) {
-      aData->mDisplayData->mLang.SetStringValue(value->GetStringValue(),
-                                                eCSSUnit_Ident);
+      aData->ValueForLang()->SetStringValue(value->GetStringValue(),
+                                            eCSSUnit_Ident);
     }
   }
 }
@@ -1682,10 +1682,10 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
   nsGenericHTMLElement::MapCommonAttributesExceptHiddenInto(aAttributes, aData);
 
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
-    nsRuleDataDisplay* disp = aData->mDisplayData;
-    if (disp->mDisplay.GetUnit() == eCSSUnit_Null) {
+    nsCSSValue* display = aData->ValueForDisplay();
+    if (display->GetUnit() == eCSSUnit_Null) {
       if (aAttributes->IndexOfAttr(nsGkAtoms::hidden, kNameSpaceID_None) >= 0) {
-        disp->mDisplay.SetIntValue(NS_STYLE_DISPLAY_NONE, eCSSUnit_Enumerated);
+        display->SetIntValue(NS_STYLE_DISPLAY_NONE, eCSSUnit_Enumerated);
       }
     }
   }
@@ -1787,22 +1787,27 @@ nsGenericHTMLElement::MapImageAlignAttributeInto(const nsMappedAttributes* aAttr
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
     if (value && value->Type() == nsAttrValue::eEnum) {
       PRInt32 align = value->GetEnumValue();
-      if ((aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) &&
-          aRuleData->mDisplayData->mFloat.GetUnit() == eCSSUnit_Null) {
-        if (align == NS_STYLE_TEXT_ALIGN_LEFT)
-          aRuleData->mDisplayData->mFloat.SetIntValue(NS_STYLE_FLOAT_LEFT, eCSSUnit_Enumerated);
-        else if (align == NS_STYLE_TEXT_ALIGN_RIGHT)
-          aRuleData->mDisplayData->mFloat.SetIntValue(NS_STYLE_FLOAT_RIGHT, eCSSUnit_Enumerated);
+      if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
+        nsCSSValue* cssFloat = aRuleData->ValueForCssFloat();
+        if (cssFloat->GetUnit() == eCSSUnit_Null) {
+          if (align == NS_STYLE_TEXT_ALIGN_LEFT) {
+            cssFloat->SetIntValue(NS_STYLE_FLOAT_LEFT, eCSSUnit_Enumerated);
+          } else if (align == NS_STYLE_TEXT_ALIGN_RIGHT) {
+            cssFloat->SetIntValue(NS_STYLE_FLOAT_RIGHT, eCSSUnit_Enumerated);
+          }
+        }
       }
-      if ((aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(TextReset)) &&
-          aRuleData->mTextData->mVerticalAlign.GetUnit() == eCSSUnit_Null) {
-        switch (align) {
-        case NS_STYLE_TEXT_ALIGN_LEFT:
-        case NS_STYLE_TEXT_ALIGN_RIGHT:
-          break;
-        default:
-          aRuleData->mTextData->mVerticalAlign.SetIntValue(align, eCSSUnit_Enumerated);
-          break;
+      if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(TextReset)) {
+        nsCSSValue* verticalAlign = aRuleData->ValueForVerticalAlign();
+        if (verticalAlign->GetUnit() == eCSSUnit_Null) {
+          switch (align) {
+          case NS_STYLE_TEXT_ALIGN_LEFT:
+          case NS_STYLE_TEXT_ALIGN_RIGHT:
+            break;
+          default:
+            verticalAlign->SetIntValue(align, eCSSUnit_Enumerated);
+            break;
+          }
         }
       }
     }
@@ -1814,11 +1819,12 @@ nsGenericHTMLElement::MapDivAlignAttributeInto(const nsMappedAttributes* aAttrib
                                                nsRuleData* aRuleData)
 {
   if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Text)) {
-    if (aRuleData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
+    nsCSSValue* textAlign = aRuleData->ValueForTextAlign();
+    if (textAlign->GetUnit() == eCSSUnit_Null) {
       // align: enum
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
       if (value && value->Type() == nsAttrValue::eEnum)
-        aRuleData->mTextData->mTextAlign.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
+        textAlign->SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
   }
 }
@@ -1843,11 +1849,12 @@ nsGenericHTMLElement::MapImageMarginAttributeInto(const nsMappedAttributes* aAtt
       hval.SetPercentValue(value->GetPercentValue());
 
     if (hval.GetUnit() != eCSSUnit_Null) {
-      nsCSSRect& margin = aData->mMarginData->mMargin;
-      if (margin.mLeft.GetUnit() == eCSSUnit_Null)
-        margin.mLeft = hval;
-      if (margin.mRight.GetUnit() == eCSSUnit_Null)
-        margin.mRight = hval;
+      nsCSSValue* left = aData->ValueForMarginLeftValue();
+      if (left->GetUnit() == eCSSUnit_Null)
+        *left = hval;
+      nsCSSValue* right = aData->ValueForMarginRightValue();
+      if (right->GetUnit() == eCSSUnit_Null)
+        *right = hval;
     }
   }
 
@@ -1861,11 +1868,12 @@ nsGenericHTMLElement::MapImageMarginAttributeInto(const nsMappedAttributes* aAtt
       vval.SetPercentValue(value->GetPercentValue());
   
     if (vval.GetUnit() != eCSSUnit_Null) {
-      nsCSSRect& margin = aData->mMarginData->mMargin;
-      if (margin.mTop.GetUnit() == eCSSUnit_Null)
-        margin.mTop = vval;
-      if (margin.mBottom.GetUnit() == eCSSUnit_Null)
-        margin.mBottom = vval;
+      nsCSSValue* top = aData->ValueForMarginTop();
+      if (top->GetUnit() == eCSSUnit_Null)
+        *top = vval;
+      nsCSSValue* bottom = aData->ValueForMarginBottom();
+      if (bottom->GetUnit() == eCSSUnit_Null)
+        *bottom = vval;
     }
   }
 }
@@ -1878,21 +1886,23 @@ nsGenericHTMLElement::MapImageSizeAttributesInto(const nsMappedAttributes* aAttr
     return;
 
   // width: value
-  if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
+  nsCSSValue* width = aData->ValueForWidth();
+  if (width->GetUnit() == eCSSUnit_Null) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
     if (value && value->Type() == nsAttrValue::eInteger)
-      aData->mPositionData->mWidth.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
+      width->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
     else if (value && value->Type() == nsAttrValue::ePercent)
-      aData->mPositionData->mWidth.SetPercentValue(value->GetPercentValue());
+      width->SetPercentValue(value->GetPercentValue());
   }
 
   // height: value
-  if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
+  nsCSSValue* height = aData->ValueForHeight();
+  if (height->GetUnit() == eCSSUnit_Null) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::height);
     if (value && value->Type() == nsAttrValue::eInteger)
-      aData->mPositionData->mHeight.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel); 
+      height->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel); 
     else if (value && value->Type() == nsAttrValue::ePercent)
-      aData->mPositionData->mHeight.SetPercentValue(value->GetPercentValue());    
+      height->SetPercentValue(value->GetPercentValue());
   }
 }
 
@@ -1912,35 +1922,44 @@ nsGenericHTMLElement::MapImageBorderAttributeInto(const nsMappedAttributes* aAtt
   if (value->Type() == nsAttrValue::eInteger)
     val = value->GetIntegerValue();
 
-  nsCSSRect& borderWidth = aData->mMarginData->mBorderWidth;
-  if (borderWidth.mLeft.GetUnit() == eCSSUnit_Null)
-    borderWidth.mLeft.SetFloatValue((float)val, eCSSUnit_Pixel);
-  if (borderWidth.mTop.GetUnit() == eCSSUnit_Null)
-    borderWidth.mTop.SetFloatValue((float)val, eCSSUnit_Pixel);
-  if (borderWidth.mRight.GetUnit() == eCSSUnit_Null)
-    borderWidth.mRight.SetFloatValue((float)val, eCSSUnit_Pixel);
-  if (borderWidth.mBottom.GetUnit() == eCSSUnit_Null)
-    borderWidth.mBottom.SetFloatValue((float)val, eCSSUnit_Pixel);
+  nsCSSValue* borderLeftWidth = aData->ValueForBorderLeftWidthValue();
+  if (borderLeftWidth->GetUnit() == eCSSUnit_Null)
+    borderLeftWidth->SetFloatValue((float)val, eCSSUnit_Pixel);
+  nsCSSValue* borderTopWidth = aData->ValueForBorderTopWidth();
+  if (borderTopWidth->GetUnit() == eCSSUnit_Null)
+    borderTopWidth->SetFloatValue((float)val, eCSSUnit_Pixel);
+  nsCSSValue* borderRightWidth = aData->ValueForBorderRightWidthValue();
+  if (borderRightWidth->GetUnit() == eCSSUnit_Null)
+    borderRightWidth->SetFloatValue((float)val, eCSSUnit_Pixel);
+  nsCSSValue* borderBottomWidth = aData->ValueForBorderBottomWidth();
+  if (borderBottomWidth->GetUnit() == eCSSUnit_Null)
+    borderBottomWidth->SetFloatValue((float)val, eCSSUnit_Pixel);
 
-  nsCSSRect& borderStyle = aData->mMarginData->mBorderStyle;
-  if (borderStyle.mLeft.GetUnit() == eCSSUnit_Null)
-    borderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
-  if (borderStyle.mTop.GetUnit() == eCSSUnit_Null)
-    borderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
-  if (borderStyle.mRight.GetUnit() == eCSSUnit_Null)
-    borderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
-  if (borderStyle.mBottom.GetUnit() == eCSSUnit_Null)
-    borderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
+  nsCSSValue* borderLeftStyle = aData->ValueForBorderLeftStyleValue();
+  if (borderLeftStyle->GetUnit() == eCSSUnit_Null)
+    borderLeftStyle->SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
+  nsCSSValue* borderTopStyle = aData->ValueForBorderTopStyle();
+  if (borderTopStyle->GetUnit() == eCSSUnit_Null)
+    borderTopStyle->SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
+  nsCSSValue* borderRightStyle = aData->ValueForBorderRightStyleValue();
+  if (borderRightStyle->GetUnit() == eCSSUnit_Null)
+    borderRightStyle->SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
+  nsCSSValue* borderBottomStyle = aData->ValueForBorderBottomStyle();
+  if (borderBottomStyle->GetUnit() == eCSSUnit_Null)
+    borderBottomStyle->SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
 
-  nsCSSRect& borderColor = aData->mMarginData->mBorderColor;
-  if (borderColor.mLeft.GetUnit() == eCSSUnit_Null)
-    borderColor.mLeft.SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
-  if (borderColor.mTop.GetUnit() == eCSSUnit_Null)
-    borderColor.mTop.SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
-  if (borderColor.mRight.GetUnit() == eCSSUnit_Null)
-    borderColor.mRight.SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
-  if (borderColor.mBottom.GetUnit() == eCSSUnit_Null)
-    borderColor.mBottom.SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
+  nsCSSValue* borderLeftColor = aData->ValueForBorderLeftColorValue();
+  if (borderLeftColor->GetUnit() == eCSSUnit_Null)
+    borderLeftColor->SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
+  nsCSSValue* borderTopColor = aData->ValueForBorderTopColor();
+  if (borderTopColor->GetUnit() == eCSSUnit_Null)
+    borderTopColor->SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
+  nsCSSValue* borderRightColor = aData->ValueForBorderRightColorValue();
+  if (borderRightColor->GetUnit() == eCSSUnit_Null)
+    borderRightColor->SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
+  nsCSSValue* borderBottomColor = aData->ValueForBorderBottomColor();
+  if (borderBottomColor->GetUnit() == eCSSUnit_Null)
+    borderBottomColor->SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
 }
 
 void
@@ -1951,7 +1970,8 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
     return;
 
   nsPresContext* presContext = aData->mPresContext;
-  if (aData->mColorData->mBackImage.GetUnit() == eCSSUnit_Null &&
+  nsCSSValue* backImage = aData->ValueForBackgroundImage();
+  if (backImage->GetUnit() == eCSSUnit_Null &&
       presContext->UseDocumentColors()) {
     // background
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::background);
@@ -1981,8 +2001,7 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
               new nsCSSValue::Image(uri, buffer, doc->GetDocumentURI(),
                                     doc->NodePrincipal(), doc);
             if (NS_LIKELY(img)) {
-              nsCSSValueList* list =
-                aData->mColorData->mBackImage.SetListValue();
+              nsCSSValueList* list = backImage->SetListValue();
               list->mValue.SetImageValue(img);
             }
           }
@@ -1991,7 +2010,7 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
       else if (presContext->CompatibilityMode() == eCompatibility_NavQuirks) {
         // in NavQuirks mode, allow the empty string to set the
         // background to empty
-        nsCSSValueList* list = aData->mColorData->mBackImage.SetListValue();
+        nsCSSValueList* list = backImage->SetListValue();
         list->mValue.SetNoneValue();
       }
     }
@@ -2005,12 +2024,13 @@ nsGenericHTMLElement::MapBGColorInto(const nsMappedAttributes* aAttributes,
   if (!(aData->mSIDs & NS_STYLE_INHERIT_BIT(Background)))
     return;
 
-  if (aData->mColorData->mBackColor.GetUnit() == eCSSUnit_Null &&
+  nsCSSValue* backColor = aData->ValueForBackgroundColor();
+  if (backColor->GetUnit() == eCSSUnit_Null &&
       aData->mPresContext->UseDocumentColors()) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::bgcolor);
     nscolor color;
     if (value && value->GetColorValue(color)) {
-      aData->mColorData->mBackColor.SetColorValue(color);
+      backColor->SetColorValue(color);
     }
   }
 }
@@ -2032,8 +2052,8 @@ nsGenericHTMLElement::MapScrollingAttributeInto(const nsMappedAttributes* aAttri
 
   // scrolling
   nsCSSValue* overflowValues[2] = {
-    &aData->mDisplayData->mOverflowX,
-    &aData->mDisplayData->mOverflowY,
+    aData->ValueForOverflowX(),
+    aData->ValueForOverflowY(),
   };
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(overflowValues); ++i) {
     if (overflowValues[i]->GetUnit() == eCSSUnit_Null) {
@@ -2505,7 +2525,7 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
   // specified and the element accept the autofocus attribute. In addition,
   // the document should not be already loaded and the "browser.autofocus"
   // preference should be 'true'.
-  if (AcceptAutofocus() && HasAttr(kNameSpaceID_None, nsGkAtoms::autofocus) &&
+  if (IsAutofocusable() && HasAttr(kNameSpaceID_None, nsGkAtoms::autofocus) &&
       nsContentUtils::GetBoolPref("browser.autofocus", PR_TRUE)) {
     nsCOMPtr<nsIRunnable> event = new nsAutoFocusEvent(this);
     rv = NS_DispatchToCurrentThread(event);
@@ -2740,64 +2760,6 @@ nsGenericHTMLFormElement::IsHTMLFocusable(PRBool aWithMouse,
     (!aWithMouse || nsFocusManager::sMouseFocusesFormControl) && *aIsFocusable;
 #endif
   return PR_FALSE;
-}
-
-PRBool
-nsGenericHTMLFormElement::IsSubmitControl() const
-{
-  PRInt32 type = GetType();
-  return type == NS_FORM_INPUT_SUBMIT ||
-         type == NS_FORM_BUTTON_SUBMIT ||
-         type == NS_FORM_INPUT_IMAGE;
-}
-
-PRBool
-nsGenericHTMLFormElement::IsTextControl(PRBool aExcludePassword) const
-{
-  PRInt32 type = GetType();
-  return nsGenericHTMLFormElement::IsSingleLineTextControl(aExcludePassword) ||
-         type == NS_FORM_TEXTAREA;
-}
-
-PRBool
-nsGenericHTMLFormElement::IsSingleLineTextControlInternal(PRBool aExcludePassword,
-                                                          PRInt32 aType) const
-{
-  return aType == NS_FORM_INPUT_TEXT ||
-         aType == NS_FORM_INPUT_EMAIL ||
-         aType == NS_FORM_INPUT_SEARCH ||
-         aType == NS_FORM_INPUT_TEL ||
-         aType == NS_FORM_INPUT_URL ||
-         (!aExcludePassword && aType == NS_FORM_INPUT_PASSWORD);
-}
-
-PRBool
-nsGenericHTMLFormElement::IsSingleLineTextControl(PRBool aExcludePassword) const
-{
-  return IsSingleLineTextControlInternal(aExcludePassword, GetType());
-}
-
-PRBool
-nsGenericHTMLFormElement::IsLabelableControl() const
-{
-  // Check for non-labelable form controls as they are not numerous.
-  // TODO: datalist should be added to this list.
-  PRInt32 type = GetType();
-  return type != NS_FORM_FIELDSET &&
-         type != NS_FORM_LABEL &&
-         type != NS_FORM_OBJECT;
-}
-
-PRBool
-nsGenericHTMLFormElement::IsSubmittableControl() const
-{
-  // TODO: keygen should be in that list, see bug 101019.
-  PRInt32 type = GetType();
-  return type == NS_FORM_OBJECT ||
-         type == NS_FORM_TEXTAREA ||
-         type == NS_FORM_SELECT ||
-         type & NS_FORM_BUTTON_ELEMENT ||
-         type & NS_FORM_INPUT_ELEMENT;
 }
 
 nsEventStates

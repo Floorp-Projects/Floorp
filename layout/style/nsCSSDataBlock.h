@@ -286,7 +286,12 @@ private:
      * property |aProperty|.
      */
     nsCSSValue* PropertyAt(nsCSSProperty aProperty) {
+        NS_ABORT_IF_FALSE(0 <= aProperty &&
+                          aProperty < eCSSProperty_COUNT_no_shorthands,
+                          "property out of range");
         size_t offset = nsCSSExpandedDataBlock::kOffsetTable[aProperty];
+        NS_ABORT_IF_FALSE(offset != size_t(-1), 
+                          "requesting offset of non-CSS property");
         return reinterpret_cast<nsCSSValue*>(reinterpret_cast<char*>(this) +
                                              offset);
     }

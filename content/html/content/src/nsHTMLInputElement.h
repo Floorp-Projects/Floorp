@@ -441,11 +441,6 @@ protected:
                        nsGkAtoms::image, eIgnoreCase);
   }
 
-  virtual PRBool AcceptAutofocus() const
-  {
-    return PR_TRUE;
-  }
-
   /**
    * Visit the group of radio buttons this radio belongs to
    * @param aVisitor the visitor to visit with
@@ -531,7 +526,7 @@ protected:
   /**
    * Returns if the maxlength attribute applies for the current type.
    */
-  bool MaxLengthApplies() const { return IsSingleLineTextControlInternal(PR_FALSE, mType); }
+  bool MaxLengthApplies() const { return IsSingleLineTextControl(false, mType); }
 
   void FreeData();
   nsTextEditorState *GetEditorState() const;
@@ -550,7 +545,7 @@ protected:
   /**
    * Returns whether the placeholder attribute applies for the current type.
    */
-  bool PlaceholderApplies() const { return IsSingleLineTextControlInternal(PR_FALSE, mType); }
+  bool PlaceholderApplies() const { return IsSingleLineTextControl(false, mType); }
 
   /**
    * Set the current default value to the value of the input element.
