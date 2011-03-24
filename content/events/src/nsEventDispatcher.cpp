@@ -472,6 +472,12 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
                  NS_ERROR_ILLEGAL_VALUE);
   NS_ASSERTION(!aTargets || !aEvent->message, "Wrong parameters!");
 
+  // If we're dispatching an already created DOMEvent object, make
+  // sure it is initialized!
+  // If aTargets is non-null, the event isn't going to be dispatched.
+  NS_ENSURE_TRUE(aEvent->message || !aDOMEvent || aTargets,
+                 NS_ERROR_DOM_UNSPECIFIED_EVENT_TYPE_ERR);
+
 #ifdef NS_FUNCTION_TIMER
   const char* timer_event_name = nsDOMEvent::GetEventName(aEvent->message);
   NS_TIME_FUNCTION_MIN_FMT(20, "Dispatching '%s' event",
