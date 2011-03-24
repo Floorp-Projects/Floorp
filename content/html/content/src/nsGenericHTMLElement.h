@@ -860,16 +860,6 @@ public:
   {
     return PR_TRUE;
   }
-  
-  virtual PRBool IsSubmitControl() const;
-
-          PRBool IsTextControl(PRBool aExcludePassword) const;
-
-          PRBool IsSingleLineTextControl(PRBool aExcludePassword) const;
-
-          PRBool IsLabelableControl() const;
-
-          PRBool IsSubmittableControl() const;
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -934,17 +924,7 @@ protected:
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                 const nsAString* aValue, PRBool aNotify);
 
-  /**
-   * Returns if the element should react on autofocus attribute.
-   */
-  virtual PRBool AcceptAutofocus() const
-  {
-    return PR_FALSE;
-  }
-
   void UpdateEditableFormControlState();
-
-  PRBool IsSingleLineTextControlInternal(PRBool aExcludePassword, PRInt32 mType) const;
 
   /**
    * This method will update the form owner, using @form or looking to a parent.
