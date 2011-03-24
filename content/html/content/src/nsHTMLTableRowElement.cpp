@@ -408,28 +408,31 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
 {
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)) {
     // height: value
-    if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
+    nsCSSValue* height = aData->ValueForHeight();
+    if (height->GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::height);
       if (value && value->Type() == nsAttrValue::eInteger)
-        aData->mPositionData->mHeight.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
+        height->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
       else if (value && value->Type() == nsAttrValue::ePercent)
-        aData->mPositionData->mHeight.SetPercentValue(value->GetPercentValue());
+        height->SetPercentValue(value->GetPercentValue());
     }
   }
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Text)) {
-    if (aData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
+    nsCSSValue* textAlign = aData->ValueForTextAlign();
+    if (textAlign->GetUnit() == eCSSUnit_Null) {
       // align: enum
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
       if (value && value->Type() == nsAttrValue::eEnum)
-        aData->mTextData->mTextAlign.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
+        textAlign->SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
   }
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(TextReset)) {
-    if (aData->mTextData->mVerticalAlign.GetUnit() == eCSSUnit_Null) {
+    nsCSSValue* verticalAlign = aData->ValueForVerticalAlign();
+    if (verticalAlign->GetUnit() == eCSSUnit_Null) {
       // valign: enum
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::valign);
       if (value && value->Type() == nsAttrValue::eEnum)
-        aData->mTextData->mVerticalAlign.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
+        verticalAlign->SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
   }
 

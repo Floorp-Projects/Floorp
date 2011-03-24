@@ -740,7 +740,7 @@ PRBool nsStyleSet::BuildDefaultStyleData(nsPresContext* aPresContext)
 #define SSARG_PRESCONTEXT aPresContext
 
 #define CREATE_DATA(name, type, args) \
-  if (!(mDefaultStyleData.m##type##Data->m##name##Data = \
+  if (!(mDefaultStyleData.m##type##Data->mStyleStructs[eStyleStruct_##name] = \
           new (aPresContext) nsStyle##name args)) \
     return PR_FALSE;
 
