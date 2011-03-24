@@ -69,18 +69,12 @@ gTests.push({
   },
 
   onPopupReady1: function() {
-    // Popup should auto-hide after 2 seconds on the initial bookmark with star
+    // Popup should no longer auto-hide, see bug 63204
     setTimeout(gCurrentTest.onPopupGone, 3000);
   },
 
   onPopupGone: function() {
-    // Make sure it's hidden again
-    is(document.getElementById("bookmark-popup").hidden, true, "Bookmark popup should be auto-hidden");
-
-    // Let's make it appear again and continue the test
-    let starbutton = document.getElementById("tool-star");
-    starbutton.click();
-
+    is(document.getElementById("bookmark-popup").hidden, false, "Bookmark popup should not be auto-hidden");
     waitFor(gCurrentTest.onPopupReady2, function() { return document.getElementById("bookmark-popup").hidden == false; });
   },
 
