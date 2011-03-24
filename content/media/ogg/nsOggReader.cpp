@@ -628,7 +628,7 @@ PRBool nsOggReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
         // packets we read subsequently.
         mTheoraGranulepos = packet.granulepos;
       }
-    
+
       if (DecodeTheora(frames, &packet) == NS_ERROR_OUT_OF_MEMORY) {
         NS_WARNING("Theora decode memory allocation failure!");
         return PR_FALSE;
@@ -741,6 +741,7 @@ PRBool nsOggReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
 
     PRInt64 time = mTheoraState->StartTime(mTheoraGranulepos);
     NS_ASSERTION(packet.granulepos != -1, "Must know packet granulepos");
+
     if (!aKeyframeSkip ||
         (th_packet_iskeyframe(&packet) == 1 && time >= aTimeThreshold))
     {
@@ -754,13 +755,17 @@ PRBool nsOggReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
   // Push decoded data into the video frame queue.
   for (PRUint32 i = 0; i < frames.Length(); i++) {
     nsAutoPtr<VideoData> data(frames[i].forget());
-    if (aKeyframeSkip && data->mKeyframe) {
-      aKeyframeSkip = PR_FALSE;
-    }
-
-    if (!aKeyframeSkip && data->mEndTime >= aTimeThreshold) {
-      mVideoQueue.Push(data.forget());
-      decoded++;
+    // Don't use the frame if it's outside the bounds of the presentation
+    // start time in the skeleton track.
+    if (!mSkeletonState || mSkeletonState->IsPresentable(data->mTime)) {
+      if (aKeyframeSkip && data->mKeyframe) {
+        aKeyframeSkip = PR_FALSE;
+      }
+ 
+      if (!aKeyframeSkip && data->mEndTime >= aTimeThreshold) {
+        mVideoQueue.Push(data.forget());
+        decoded++;
+      }
     }
   }
 
