@@ -592,12 +592,8 @@ JSCompartment::backEdgeCount(jsbytecode *pc) const
 size_t
 JSCompartment::incBackEdgeCount(jsbytecode *pc)
 {
-    if (BackEdgeMap::AddPtr p = backEdgeTable.lookupForAdd(pc)) {
-        p->value++;
-        return p->value;
-    } else {
-        backEdgeTable.add(p, pc, 1);
-        return 1;
-    }
+    if (BackEdgeMap::Ptr p = backEdgeTable.lookupWithDefault(pc, 0))
+        return ++p->value;
+    return 1;  /* oom not reported by backEdgeTable, so ignore. */
 }
 

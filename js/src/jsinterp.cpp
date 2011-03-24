@@ -1855,11 +1855,8 @@ namespace reprmeter {
             opinput.uses[i] = GetRepr(v);
         }
 
-        OpInputHistogram::AddPtr p = opinputs.lookupForAdd(opinput);
-        if (p)
-            ++p->value;
-        else
-            opinputs.add(p, opinput, 1);
+        if (OpInputHistogram::Ptr p = opinputs.lookupWithDefault(opinput, 0))
+            p->value++;
     }
 
     void
@@ -5635,15 +5632,9 @@ BEGIN_CASE(JSOP_LAMBDA)
                 // No locking, this is mainly for js shell testing.
                 ++rt->functionMeter.unjoined;
 
-                typedef JSRuntime::FunctionCountMap HM;
-                HM &h = rt->unjoinedFunctionCountMap;
-                HM::AddPtr p = h.lookupForAdd(fun);
-                if (!p) {
-                    h.add(p, fun, 1);
-                } else {
-                    JS_ASSERT(p->key == fun);
+                typedef JSRuntime::FunctionCountMap::Ptr Ptr;
+                if (Ptr p = rt->unjoinedFunctionCountMap.lookupWithDefault(fun, 0))
                     ++p->value;
-                }
             }
 #endif
         } else {

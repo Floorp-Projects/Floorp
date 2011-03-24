@@ -265,15 +265,9 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
     if (cx->runtime->functionMeterFilename) {
         JS_FUNCTION_METER(cx, mreadbarrier);
 
-        typedef JSRuntime::FunctionCountMap HM;
-        HM &h = cx->runtime->methodReadBarrierCountMap;
-        HM::AddPtr p = h.lookupForAdd(fun);
-        if (!p) {
-            h.add(p, fun, 1);
-        } else {
-            JS_ASSERT(p->key == fun);
+        typedef JSRuntime::FunctionCountMap::Ptr Ptr;
+        if (Ptr p = cx->runtime->methodReadBarrierCountMap.lookupWithDefault(fun, 0))
             ++p->value;
-        }
     }
 #endif
     return newshape;

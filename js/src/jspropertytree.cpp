@@ -90,13 +90,8 @@ HashChildren(Shape *kid1, Shape *kid2)
         return NULL;
     }
 
-    KidsHash::AddPtr addPtr = hash->lookupForAdd(kid1);
-    JS_ALWAYS_TRUE(hash->add(addPtr, kid1));
-
-    addPtr = hash->lookupForAdd(kid2);
-    JS_ASSERT(!addPtr.found());
-    JS_ALWAYS_TRUE(hash->add(addPtr, kid2));
-
+    JS_ALWAYS_TRUE(hash->putNew(kid1));
+    JS_ALWAYS_TRUE(hash->putNew(kid2));
     return hash;
 }
 
@@ -134,13 +129,11 @@ PropertyTree::insertChild(JSContext *cx, Shape *parent, Shape *child)
         return true;
     }
 
-    KidsHash *hash = kidp->toHash();
-    KidsHash::AddPtr addPtr = hash->lookupForAdd(child);
-    JS_ASSERT(!addPtr.found());
-    if (!hash->add(addPtr, child)) {
+    if (!kidp->toHash()->putNew(child)) {
         JS_ReportOutOfMemory(cx);
         return false;
     }
+
     child->setParent(parent);
     return true;
 }
