@@ -112,6 +112,24 @@ typedef struct JSXDROps {
 typedef js::Vector<JSAtom *, 1, js::SystemAllocPolicy> XDRAtoms;
 typedef js::HashMap<JSAtom *, uint32, js::DefaultHasher<JSAtom *>, js::SystemAllocPolicy> XDRAtomsHashMap;
 
+struct JSXDRState;
+
+namespace js {
+
+class XDRScriptState {
+public:
+    XDRScriptState(JSXDRState *x);
+    ~XDRScriptState();
+
+    JSXDRState      *xdr;
+    const char      *filename;
+    bool             filenameSaved;
+    XDRAtoms         atoms;
+    XDRAtomsHashMap  atomsMap;
+};
+
+} /* namespace JS */
+
 struct JSXDRState {
     JSXDRMode   mode;
     JSXDROps    *ops;
@@ -122,9 +140,7 @@ struct JSXDRState {
     void        *reghash;
     void        *userdata;
     JSScript    *script;
-    const char  *filename;
-    XDRAtoms    *atoms;
-    XDRAtomsHashMap *atomsMap;
+    js::XDRScriptState *state;
 };
 
 extern JS_PUBLIC_API(void)
