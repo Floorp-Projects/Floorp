@@ -291,10 +291,17 @@ public:
                       ContentType aContentType,
                       GLContext* aContext)
         : TextureImage(aTexture, aSize, aWrapMode, aContentType)
-        , mTextureInited(PR_FALSE)
+        , mTextureState(Created)
         , mGLContext(aContext)
         , mUpdateOffset(0, 0)
     {}
+
+    enum TextureState
+    {
+      Created, // Texture created, but has not had glTexImage called to initialize it.
+      Initialized,  // Texture memory exists, but contents are invalid.
+      Valid  // Texture fully ready to use.
+    };
 
     virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);
     virtual void EndUpdate();
@@ -317,7 +324,7 @@ public:
     virtual void Resize(const nsIntSize& aSize);
 protected:
 
-    PRBool mTextureInited;
+    TextureState mTextureState;
     GLContext* mGLContext;
     nsRefPtr<gfxASurface> mUpdateSurface;
     nsIntRegion mUpdateRegion;
