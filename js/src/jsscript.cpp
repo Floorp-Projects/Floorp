@@ -1954,17 +1954,25 @@ class DisablePrincipalsTranscoding {
 
 class AutoJSXDRState {
 public:
-    AutoJSXDRState(JSXDRState *x) : xdr(x) {}
-    ~AutoJSXDRState() {
+    AutoJSXDRState(JSXDRState *x
+                   JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : xdr(x)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    ~AutoJSXDRState()
+    {
         JS_XDRDestroy(xdr);
     }
 
-    operator JSXDRState*() const {
+    operator JSXDRState*() const
+    {
         return xdr;
     }
 
 private:
     JSXDRState *const xdr;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 JSScript *
