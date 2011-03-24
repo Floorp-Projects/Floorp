@@ -442,11 +442,9 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
   nsIContent* findFormParent = findFormNode->GetParent();
   while (findFormParent) {
     nsCOMPtr<nsIFormControl> form(do_QueryInterface(findFormParent));
-    if (form && form->GetType() != NS_FORM_OBJECT &&
-                form->GetType() != NS_FORM_FIELDSET &&
-                form->GetType() != NS_FORM_LABEL &&
-                form->GetType() != NS_FORM_OUTPUT)
+    if (form && !form->AllowDraggableChildren()) {
       return NS_OK;
+    }
     findFormParent = findFormParent->GetParent();
   }
     
