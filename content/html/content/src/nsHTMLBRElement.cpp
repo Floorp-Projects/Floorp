@@ -133,10 +133,11 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
-    if (aData->mDisplayData->mClear.GetUnit() == eCSSUnit_Null) {
+    nsCSSValue* clear = aData->ValueForClear();
+    if (clear->GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::clear);
       if (value && value->Type() == nsAttrValue::eEnum)
-        aData->mDisplayData->mClear.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
+        clear->SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
   }
 

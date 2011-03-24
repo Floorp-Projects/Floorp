@@ -154,6 +154,7 @@
   -moz-column-count: inherit;
   -moz-column-width: inherit;
   -moz-column-gap: inherit;
+  -moz-column-rule: inherit;
   /* Do not change these. nsCSSFrameConstructor depends on them to create a good
      frame tree. */
   position: static !important;
