@@ -81,10 +81,6 @@ mjit::Compiler::tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
                    L.toInt32() >= 0 && R.toInt32() > 0);
         break;
 
-      case JSOP_RSH:
-        needInt = true;
-        break;
-
       default:
         JS_NOT_REACHED("NYI");
         needInt = false; /* Silence compiler warning. */
@@ -139,10 +135,6 @@ mjit::Compiler::tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
             dL = js_NaN;
         else
             dL = js_fmod(dL, dR);
-        break;
-
-      case JSOP_RSH:
-        nL >>= (nR & 31);
         break;
 
       default:
