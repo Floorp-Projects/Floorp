@@ -322,6 +322,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(srcdir)/../xul/content/src \
 		   -I$(srcdir)/../xul/base/src \
 		   -I$(topsrcdir)/content/base/src \
+ 		   -I$(topsrcdir)/content/canvas/src \
 		   -I$(topsrcdir)/content/html/content/src \
 		   -I$(topsrcdir)/content/html/document/src \
 		   -I$(topsrcdir)/content/html/style/src \
