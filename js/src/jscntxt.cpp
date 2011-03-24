@@ -351,6 +351,8 @@ StackSpace::popSegmentAndFrame(JSContext *cx)
     JS_ASSERT(isCurrentAndActive(cx));
     JS_ASSERT(cx->hasActiveSegment());
 
+    PutActivationObjects(cx, cx->fp());
+
     /* Officially pop the segment/frame from the stack. */
     currentSegment = currentSegment->getPreviousInMemory();
 
@@ -1978,13 +1980,16 @@ JSContext::pushSegmentAndFrame(js::StackSegment *newseg, JSFrameRegs &newregs)
 void
 JSContext::popSegmentAndFrame()
 {
+    JS_ASSERT_IF(regs->fp->hasCallObj(), !regs->fp->callObj().getPrivate());
+    JS_ASSERT_IF(regs->fp->hasArgsObj(), !regs->fp->argsObj().getPrivate());
+    JS_ASSERT(currentSegment->maybeContext() == this);
+    JS_ASSERT(currentSegment->getInitialFrame() == regs->fp);
+
     /*
      * NB: This function calls resetCompartment, which may GC, so the stack needs
      * to be in a GC-able state by that point.
      */
 
-    JS_ASSERT(currentSegment->maybeContext() == this);
-    JS_ASSERT(currentSegment->getInitialFrame() == regs->fp);
     currentSegment->leaveContext();
     currentSegment = currentSegment->getPreviousInContext();
     if (currentSegment) {

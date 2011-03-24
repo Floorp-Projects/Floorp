@@ -172,16 +172,16 @@ JSObject::finalize(JSContext *cx)
  * parent, map, and shape, and allocate slots.
  */
 inline void
-JSObject::initCall(JSContext *cx, const js::Bindings *bindings, JSObject *parent)
+JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent)
 {
     init(cx, &js_CallClass, NULL, parent, NULL, false);
-    map = bindings->lastShape();
+    map = bindings.lastShape();
 
     /*
      * If |bindings| is for a function that has extensible parents, that means
      * its Call should have its own shape; see js::Bindings::extensibleParents.
      */
-    if (bindings->extensibleParents())
+    if (bindings.extensibleParents())
         setOwnShape(js_GenerateShape(cx));
     else
         objShape = map->shape;
