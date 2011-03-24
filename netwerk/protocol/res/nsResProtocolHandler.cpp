@@ -80,7 +80,6 @@ static PRLogModuleInfo *gResLog;
 #endif
 
 #define kGRE           NS_LITERAL_CSTRING("gre")
-#define kGRE_RESOURCES NS_LITERAL_CSTRING("gre-resources")
 
 //----------------------------------------------------------------------------
 // nsResURL : overrides nsStandardURL::GetFile to provide nsIFile resolution
@@ -202,18 +201,6 @@ nsResProtocolHandler::Init()
     rv = AddSpecialDir(NS_GRE_DIR, kGRE);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // make resource://gre-resources/ point to gre toolkit[.jar]/res
-    nsCOMPtr<nsIURI> greURI;
-    nsCOMPtr<nsIURI> greResURI;
-    GetSubstitution(kGRE, getter_AddRefs(greURI));
-#ifdef MOZ_CHROME_FILE_FORMAT_JAR
-    NS_NAMED_LITERAL_CSTRING(strGRE_RES_URL, "jar:chrome/toolkit.jar!/res/");
-#else
-    NS_NAMED_LITERAL_CSTRING(strGRE_RES_URL, "chrome/toolkit/res/");
-#endif
-    rv = mIOService->NewURI(strGRE_RES_URL, nsnull, greURI,
-                            getter_AddRefs(greResURI));
-    SetSubstitution(kGRE_RESOURCES, greResURI);
     //XXXbsmedberg Neil wants a resource://pchrome/ for the profile chrome dir...
     // but once I finish multiple chrome registration I'm not sure that it is needed
 
@@ -247,12 +234,6 @@ nsResProtocolHandler::Init(nsIFile *aOmniJar)
     // resource://gre/ points to jar:omni.jar!/
     SetSubstitution(kGRE, uri);
 
-    urlStr += "chrome/toolkit/res/";
-    rv = mIOService->NewURI(urlStr, nsnull, nsnull, getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // resource://gre-resources/ points to jar:omni.jar!/chrome/toolkit/res/
-    SetSubstitution(kGRE_RESOURCES, uri);
     return NS_OK;
 }
 #endif
