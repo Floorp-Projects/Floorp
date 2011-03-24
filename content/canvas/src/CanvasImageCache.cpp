@@ -57,6 +57,7 @@ struct ImageCacheKey {
 struct ImageCacheEntryData {
   ImageCacheEntryData(const ImageCacheEntryData& aOther)
     : mImage(aOther.mImage)
+    , mILC(aOther.mILC)
     , mCanvas(aOther.mCanvas)
     , mRequest(aOther.mRequest)
     , mSurface(aOther.mSurface)
@@ -64,6 +65,7 @@ struct ImageCacheEntryData {
   {}
   ImageCacheEntryData(const ImageCacheKey& aKey)
     : mImage(aKey.mImage)
+    , mILC(nsnull)
     , mCanvas(aKey.mCanvas)
   {}
 
@@ -71,6 +73,7 @@ struct ImageCacheEntryData {
 
   // Key
   nsCOMPtr<nsIDOMElement> mImage;
+  nsIImageLoadingContent* mILC;
   nsRefPtr<nsHTMLCanvasElement> mCanvas;
   // Value
   nsCOMPtr<imgIRequest> mRequest;
@@ -154,6 +157,7 @@ CanvasImageCache::NotifyDrawImage(nsIDOMElement* aImage,
       ilc->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
                       getter_AddRefs(entry->mData->mRequest));
     }
+    entry->mData->mILC = ilc;
     entry->mData->mSurface = aSurface;
     entry->mData->mSize = aSize;
   }
@@ -168,15 +172,11 @@ CanvasImageCache::Lookup(nsIDOMElement* aImage,
     return nsnull;
 
   ImageCacheEntry* entry = gImageCache->mCache.GetEntry(ImageCacheKey(aImage, aCanvas));
-  if (!entry)
-    return nsnull;
-
-  nsCOMPtr<nsIImageLoadingContent> ilc = do_QueryInterface(aImage);
-  if (!ilc)
+  if (!entry || !entry->mData->mILC)
     return nsnull;
 
   nsCOMPtr<imgIRequest> request;
-  ilc->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST, getter_AddRefs(request));
+  entry->mData->mILC->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST, getter_AddRefs(request));
   if (request != entry->mData->mRequest)
     return nsnull;
 
