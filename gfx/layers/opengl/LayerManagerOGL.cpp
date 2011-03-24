@@ -597,7 +597,7 @@ LayerManagerOGL::Render()
   mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
 
   // Render our layers.
-  RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() && !mTarget ? 0 : mBackBufferFBO,
+  RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO,
                            nsIntPoint(0, 0));
                            
   static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(mWidget)->DrawOver(this, rect);
@@ -749,7 +749,7 @@ LayerManagerOGL::SetupPipeline(int aWidth, int aHeight, WorldTransforPolicy aTra
 void
 LayerManagerOGL::SetupBackBuffer(int aWidth, int aHeight)
 {
-  if (mGLContext->IsDoubleBuffered() && !mTarget) {
+  if (mGLContext->IsDoubleBuffered()) {
     mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
     return;
   }
@@ -807,11 +807,17 @@ LayerManagerOGL::CopyToTarget()
                         gfxASurface::ImageFormatARGB32);
 
   mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER,
-                               mBackBufferFBO);
+                               mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO);
+
+  if (mGLContext->IsDoubleBuffered()) {
+    mGLContext->fReadBuffer(LOCAL_GL_BACK);
+  }
 #ifndef USE_GLES2
+  else {
   // GLES2 promises that binding to any custom FBO will attach
   // to GL_COLOR_ATTACHMENT0 attachment point.
     mGLContext->fReadBuffer(LOCAL_GL_COLOR_ATTACHMENT0);
+  }
 #endif
 
   GLenum format = LOCAL_GL_RGBA;
