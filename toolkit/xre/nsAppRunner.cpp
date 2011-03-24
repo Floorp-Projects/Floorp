@@ -3890,25 +3890,35 @@ XRE_InitCommandLine(int aArgc, char* aArgv[])
 #endif
 #endif
 
-#ifdef MOZ_OMNIJAR
-  const char *omnijarPath = nsnull;
-  ArgResult ar = CheckArg("omnijar", PR_FALSE, &omnijarPath);
+  const char *path = nsnull;
+  ArgResult ar = CheckArg("grebase", PR_FALSE, &path);
   if (ar == ARG_BAD) {
-    PR_fprintf(PR_STDERR, "Error: argument -omnijar requires an omnijar path\n");
+    PR_fprintf(PR_STDERR, "Error: argument -grebase requires a path argument\n");
     return NS_ERROR_FAILURE;
   }
 
-  if (!omnijarPath)
+  if (!path)
     return rv;
 
-  nsCOMPtr<nsILocalFile> omnijar;
-  rv = NS_NewNativeLocalFile(nsDependentCString(omnijarPath), PR_TRUE,
-                             getter_AddRefs(omnijar));
-  if (NS_SUCCEEDED(rv))
-    mozilla::SetOmnijar(omnijar);
-#endif
+  nsCOMPtr<nsILocalFile> greBase;
+  rv = XRE_GetFileFromPath(path, getter_AddRefs(greBase));
+  if (NS_FAILED(rv))
+    return rv;
 
-  return rv;
+  ar = CheckArg("appbase", PR_FALSE, &path);
+  if (ar == ARG_BAD) {
+    PR_fprintf(PR_STDERR, "Error: argument -appbase requires a path argument\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsILocalFile> appBase;
+  if (path) {
+      rv = XRE_GetFileFromPath(path, getter_AddRefs(appBase));
+      if (NS_FAILED(rv))
+        return rv;
+  }
+
+  return mozilla::Omnijar::SetBase(greBase, appBase);
 }
 
 nsresult

@@ -72,10 +72,8 @@
 
 #include "nsITimelineService.h"
 
-#ifdef MOZ_OMNIJAR
 #include "mozilla/Omnijar.h"
 #include "nsZipArchive.h"
-#endif
 
 // Definitions
 #define INITIAL_PREF_FILES 10
@@ -798,30 +796,6 @@ static nsresult pref_LoadPrefsInDirList(const char *listId)
   return NS_OK;
 }
 
-//----------------------------------------------------------------------------------------
-// Initialize default preference JavaScript buffers from
-// appropriate TEXT resources
-//----------------------------------------------------------------------------------------
-static nsresult pref_InitDefaults()
-{
-  nsCOMPtr<nsIFile> greprefsFile;
-  nsresult          rv;
-
-  rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(greprefsFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = greprefsFile->AppendNative(NS_LITERAL_CSTRING("greprefs.js"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = openPrefFile(greprefsFile);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Error parsing GRE default preferences. Is this an old-style embedding app?");
-  }
-
-  return NS_OK;
-}
-
-#ifdef MOZ_OMNIJAR
 static nsresult pref_ReadPrefFromJar(nsZipArchive* jarReader, const char *name)
 {
   nsZipItemPtr<char> manifest(jarReader, name, true);
@@ -835,77 +809,121 @@ static nsresult pref_ReadPrefFromJar(nsZipArchive* jarReader, const char *name)
   return rv;
 }
 
-static nsresult pref_InitAppDefaultsFromOmnijar()
-{
-  nsresult rv;
-
-  nsZipArchive* jarReader = mozilla::OmnijarReader();
-  if (!jarReader)
-    return pref_InitDefaults();
-
-  rv = pref_ReadPrefFromJar(jarReader, "greprefs.js");
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsZipFind *findPtr;
-  rv = jarReader->FindInit("defaults/pref/*.js$", &findPtr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoPtr<nsZipFind> find(findPtr);
-
-  nsTArray<nsCString> prefEntries;
-  const char *entryName;
-  PRUint16 entryNameLen;
-  while (NS_SUCCEEDED(find->FindNext(&entryName, &entryNameLen))) {
-    prefEntries.AppendElement(Substring(entryName, entryName + entryNameLen));
-  }
-
-  prefEntries.Sort();
-  for (PRUint32 i = prefEntries.Length(); i--; ) {
-    rv = pref_ReadPrefFromJar(jarReader, prefEntries[i].get());
-    if (NS_FAILED(rv))
-      NS_WARNING("Error parsing preferences.");
-  }
-
-  return NS_OK;
-}
-#endif
-
+//----------------------------------------------------------------------------------------
+// Initialize default preference JavaScript buffers from
+// appropriate TEXT resources
+//----------------------------------------------------------------------------------------
 static nsresult pref_InitInitialObjects()
 {
   nsresult rv;
 
-  // first we parse the GRE default prefs. This also works if we're not using a GRE, 
-#ifdef MOZ_OMNIJAR
-  rv = pref_InitAppDefaultsFromOmnijar();
-#else
-  rv = pref_InitDefaults();
-#endif
-  NS_ENSURE_SUCCESS(rv, rv);
+  // In omni.jar case, we load the following prefs:
+  // - jar:$gre/omni.jar!/greprefs.js
+  // - jar:$gre/omni.jar!/defaults/pref/*.js
+  // In non omni.jar case, we load:
+  // - $gre/greprefs.js
+  //
+  // When $app == $gre, we additionally load, in all cases:
+  // - $gre/defaults/pref/*.js
+  // This is kept for bug 591866 (channel-prefs.js should not be in omni.jar).
+  // We load all files instead of channel-prefs.js only to have the same
+  // behaviour as $app != $gre.
+  //
+  // When $app != $gre, we additionally load, in omni.jar case:
+  // - jar:$app/omni.jar!/defaults/preferences/*.js
+  // - $app/defaults/preferences/*.js
+  // and in non omni.jar case:
+  // - $app/defaults/preferences/*.js
 
-  nsCOMPtr<nsIFile> defaultPrefDir;
-  // now parse the "application" default preferences
-  rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(defaultPrefDir));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsZipFind *findPtr;
+  nsAutoPtr<nsZipFind> find;
+  nsTArray<nsCString> prefEntries;
+  const char *entryName;
+  PRUint16 entryNameLen;
 
-  /* these pref file names should not be used: we process them after all other application pref files for backwards compatibility */
-  static const char* specialFiles[] = {
+  nsZipArchive* jarReader = mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE);
+  if (jarReader) {
+    // Load jar:$gre/omni.jar!/greprefs.js
+    rv = pref_ReadPrefFromJar(jarReader, "greprefs.js");
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Load jar:$gre/omni.jar!/defaults/pref/*.js
+    rv = jarReader->FindInit("defaults/pref/*.js$", &findPtr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    find = findPtr;
+    while (NS_SUCCEEDED(find->FindNext(&entryName, &entryNameLen))) {
+      prefEntries.AppendElement(Substring(entryName, entryName + entryNameLen));
+    }
+
+    prefEntries.Sort();
+    for (PRUint32 i = prefEntries.Length(); i--; ) {
+      rv = pref_ReadPrefFromJar(jarReader, prefEntries[i].get());
+      if (NS_FAILED(rv))
+        NS_WARNING("Error parsing preferences.");
+    }
+  } else {
+    // Load $gre/greprefs.js
+    nsCOMPtr<nsIFile> greprefsFile;
+    rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(greprefsFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = greprefsFile->AppendNative(NS_LITERAL_CSTRING("greprefs.js"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = openPrefFile(greprefsFile);
+    if (NS_FAILED(rv))
+      NS_WARNING("Error parsing GRE default preferences. Is this an old-style embedding app?");
+  }
+
+  if (!mozilla::Omnijar::HasOmnijar(mozilla::Omnijar::APP)) {
+    // Load $gre/defaults/pref/*.js
+    nsCOMPtr<nsIFile> defaultPrefDir;
+
+    rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(defaultPrefDir));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    /* these pref file names should not be used: we process them after all other application pref files for backwards compatibility */
+    static const char* specialFiles[] = {
 #if defined(XP_MAC) || defined(XP_MACOSX)
       "macprefs.js"
 #elif defined(XP_WIN)
       "winpref.js"
 #elif defined(XP_UNIX)
       "unix.js"
-#if defined(_AIX)
+#if defined(VMS)
+      , "openvms.js"
+#elif defined(_AIX)
       , "aix.js"
 #endif
 #elif defined(XP_OS2)
       "os2pref.js"
+#elif defined(XP_BEOS)
+      "beos.js"
 #endif
-  };
+    };
 
-  rv = pref_LoadPrefsInDir(defaultPrefDir, specialFiles, NS_ARRAY_LENGTH(specialFiles));
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Error parsing application default preferences.");
+    rv = pref_LoadPrefsInDir(defaultPrefDir, specialFiles, NS_ARRAY_LENGTH(specialFiles));
+    if (NS_FAILED(rv))
+      NS_WARNING("Error parsing application default preferences.");
+  }
+
+  // Load jar:$app/omni.jar!/defaults/preferences/*.js
+  nsZipArchive *appJarReader = mozilla::Omnijar::GetReader(mozilla::Omnijar::APP);
+  if (appJarReader) {
+    rv = appJarReader->FindInit("defaults/preferences/*.js$", &findPtr);
+    NS_ENSURE_SUCCESS(rv, rv);
+    find = findPtr;
+    prefEntries.Clear();
+    while (NS_SUCCEEDED(find->FindNext(&entryName, &entryNameLen))) {
+      prefEntries.AppendElement(Substring(entryName, entryName + entryNameLen));
+    }
+    prefEntries.Sort();
+    for (PRUint32 i = prefEntries.Length(); i--; ) {
+      rv = pref_ReadPrefFromJar(appJarReader, prefEntries[i].get());
+      if (NS_FAILED(rv))
+        NS_WARNING("Error parsing preferences.");
+    }
   }
 
   rv = pref_LoadPrefsInDirList(NS_APP_PREFS_DEFAULTS_DIR_LIST);

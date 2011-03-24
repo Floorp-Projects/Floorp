@@ -440,6 +440,7 @@ protected:
   // class, please make the ownership explicit (pinkerton, scc).
 
   nsWeakPtr mContainer; // it owns me!
+  nsWeakPtr mTopContainerWhilePrinting;
   nsCOMPtr<nsIDeviceContext> mDeviceContext;  // We create and own this baby
 
   // the following six items are explicitly in this order
@@ -4085,27 +4086,33 @@ DocumentViewerImpl::SetIsPrintingInDocShellTree(nsIDocShellTreeNode* aParentNode
                                                 PRBool               aIsPrintingOrPP, 
                                                 PRBool               aStartAtTop)
 {
-  NS_ASSERTION(aParentNode, "Parent can't be NULL!");
-
   nsCOMPtr<nsIDocShellTreeItem> parentItem(do_QueryInterface(aParentNode));
 
   // find top of "same parent" tree
   if (aStartAtTop) {
-    while (parentItem) {
-      nsCOMPtr<nsIDocShellTreeItem> parent;
-      parentItem->GetSameTypeParent(getter_AddRefs(parent));
-      if (!parent) {
-        break;
+    if (aIsPrintingOrPP) {
+      while (parentItem) {
+        nsCOMPtr<nsIDocShellTreeItem> parent;
+        parentItem->GetSameTypeParent(getter_AddRefs(parent));
+        if (!parent) {
+          break;
+        }
+        parentItem = do_QueryInterface(parent);
       }
-      parentItem = do_QueryInterface(parent);
+      mTopContainerWhilePrinting = do_GetWeakReference(parentItem);
+    } else {
+      parentItem = do_QueryReferent(mTopContainerWhilePrinting);
     }
   }
-  NS_ASSERTION(parentItem, "parentItem can't be null");
 
   // Check to see if the DocShell's ContentViewer is printing/PP
   nsCOMPtr<nsIContentViewerContainer> viewerContainer(do_QueryInterface(parentItem));
   if (viewerContainer) {
     viewerContainer->SetIsPrinting(aIsPrintingOrPP);
+  }
+
+  if (!aParentNode) {
+    return;
   }
 
   // Traverse children to see if any of them are printing.
@@ -4176,14 +4183,11 @@ DocumentViewerImpl::SetIsPrinting(PRBool aIsPrinting)
 #ifdef NS_PRINTING
   // Set all the docShells in the docshell tree to be printing.
   // that way if anyone of them tries to "navigate" it can't
-  if (mContainer) {
-    nsCOMPtr<nsIDocShellTreeNode> docShellTreeNode(do_QueryReferent(mContainer));
-    NS_ASSERTION(docShellTreeNode, "mContainer has to be a nsIDocShellTreeNode");
-    if (docShellTreeNode) {
-      SetIsPrintingInDocShellTree(docShellTreeNode, aIsPrinting, PR_TRUE);
-    } else {
-      NS_WARNING("Bug 549251 Did you close a window while printing?");
-    }
+  nsCOMPtr<nsIDocShellTreeNode> docShellTreeNode(do_QueryReferent(mContainer));
+  if (docShellTreeNode || !aIsPrinting) {
+    SetIsPrintingInDocShellTree(docShellTreeNode, aIsPrinting, PR_TRUE);
+  } else {
+    NS_WARNING("Did you close a window before printing?");
   }
 #endif
 }
@@ -4211,9 +4215,8 @@ DocumentViewerImpl::SetIsPrintPreview(PRBool aIsPrintPreview)
 #ifdef NS_PRINTING
   // Set all the docShells in the docshell tree to be printing.
   // that way if anyone of them tries to "navigate" it can't
-  if (mContainer) {
-    nsCOMPtr<nsIDocShellTreeNode> docShellTreeNode(do_QueryReferent(mContainer));
-    NS_ASSERTION(docShellTreeNode, "mContainer has to be a nsIDocShellTreeNode");
+  nsCOMPtr<nsIDocShellTreeNode> docShellTreeNode(do_QueryReferent(mContainer));
+  if (docShellTreeNode || !aIsPrintPreview) {
     SetIsPrintingInDocShellTree(docShellTreeNode, aIsPrintPreview, PR_TRUE);
   }
 #endif
