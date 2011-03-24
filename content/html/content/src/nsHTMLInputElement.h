@@ -531,7 +531,7 @@ protected:
   /**
    * Returns if the maxlength attribute applies for the current type.
    */
-  bool MaxLengthApplies() const { return IsSingleLineTextControlInternal(PR_FALSE, mType); }
+  bool MaxLengthApplies() const { return IsSingleLineTextControl(false, mType); }
 
   void FreeData();
   nsTextEditorState *GetEditorState() const;
@@ -550,7 +550,7 @@ protected:
   /**
    * Returns whether the placeholder attribute applies for the current type.
    */
-  bool PlaceholderApplies() const { return IsSingleLineTextControlInternal(PR_FALSE, mType); }
+  bool PlaceholderApplies() const { return IsSingleLineTextControl(false, mType); }
 
   /**
    * Set the current default value to the value of the input element.
