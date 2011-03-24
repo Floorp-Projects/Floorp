@@ -1769,38 +1769,40 @@ FamilyCallback (const nsAString& fontName, const nsACString& genericName,
     if (!list->Contains(fontName)) {
         // The family properties of FcPatterns for @font-face fonts have a
         // namespace to identify them among system fonts.  (see
-        // FONT_FACE_FAMILY_PREFIX.)  The CSS family name can match either the
-        // @font-face family or the system font family so both names are added
-        // here.
+        // FONT_FACE_FAMILY_PREFIX.)
         //
-        // http://www.w3.org/TR/2002/WD-css3-webfonts-20020802 required
-        // looking for locally-installed fonts matching requested properties
-        // before checking the src descriptor in @font-face rules.
-        // http://www.w3.org/TR/2008/REC-CSS2-20080411/fonts.html#algorithm
-        // also only checks src descriptors if there is no local font matching
-        // the requested properties.
+        // Earlier versions of this code allowed the CSS family name to match
+        // either the @font-face family or the system font family, so both
+        // were added here. This was in accordance with earlier versions of
+        // the W3C specifications regarding @font-face.
         //
-        // Similarly "Editor's Draft 27 June 2008"
-        // http://dev.w3.org/csswg/css3-fonts/#font-matching says "The user
-        // agent attempts to find the family name among fonts available on the
-        // system and then among fonts defined via @font-face rules."
-        // However, this is contradicted by "if [the name from the font-family
-        // descriptor] is the same as a font family available in a given
-        // user's environment, it effectively hides the underlying font for
-        // documents that use the stylesheet."
+        // The current (2011-02-27) draft of CSS3 Fonts says
         //
-        // Windows and Mac code currently prioritizes fonts from @font-face
-        // rules.  The order of families here reflects the priorities on those
-        // platforms.
+        // (Section 4.2: Font family: the font-family descriptor):
+        // "If the font family name is the same as a font family available in
+        // a given user's environment, it effectively hides the underlying
+        // font for documents that use the stylesheet."
+        //
+        // (Section 5: Font matching algorithm)
+        // "... the user agent attempts to find the family name among fonts
+        // defined via @font-face rules and then among available system fonts,
+        // .... If a font family defined via @font-face rules contains only
+        // invalid font data, it should be considered as if a font was present
+        // but contained an empty character map; matching a platform font with
+        // the same name must not occur in this case."
+        //
+        // Therefore, for names present in the user font set, this code no
+        // longer includes the family name for matching against system fonts.
+        //
         const gfxUserFontSet *userFontSet = data->mUserFontSet;
         if (genericName.Length() == 0 &&
             userFontSet && userFontSet->HasFamily(fontName)) {
             nsAutoString userFontName =
                 NS_LITERAL_STRING(FONT_FACE_FAMILY_PREFIX) + fontName;
             list->AppendElement(userFontName);
+        } else {
+            list->AppendElement(fontName);
         }
-
-        list->AppendElement(fontName);
     }
 
     return PR_TRUE;
