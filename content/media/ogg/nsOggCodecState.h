@@ -214,6 +214,9 @@ public:
   virtual PRInt64 Time(PRInt64 granulepos) { return -1; }
   virtual PRBool Init() { return PR_TRUE; }
 
+  // Return PR_TRUE if the given time (in milliseconds) is within
+  // the presentation time defined in the skeleton track.
+  PRBool IsPresentable(PRInt64 aTime) { return aTime >= mPresentationTime; }
 
   // Stores the offset of the page on which a keyframe starts,
   // and its presentation time.
@@ -282,6 +285,9 @@ private:
 
   // Version of the decoded skeleton track, as per the SKELETON_VERSION macro.
   PRUint32 mVersion;
+
+  // Presentation time of the resource in milliseconds
+  PRInt64 mPresentationTime;
 
   // Length of the resource in bytes.
   PRInt64 mLength;

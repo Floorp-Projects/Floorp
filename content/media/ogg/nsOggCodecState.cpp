@@ -394,6 +394,7 @@ PRInt64 nsVorbisState::Time(vorbis_info* aInfo, PRInt64 aGranulepos)
 nsSkeletonState::nsSkeletonState(ogg_page* aBosPage)
   : nsOggCodecState(aBosPage),
     mVersion(0),
+    mPresentationTime(0),
     mLength(0)
 {
   MOZ_COUNT_CTOR(nsSkeletonState);
@@ -407,7 +408,8 @@ nsSkeletonState::~nsSkeletonState()
 // Support for Ogg Skeleton 4.0, as per specification at:
 // http://wiki.xiph.org/Ogg_Skeleton_4
 
-// Minimum length in bytes of a Skeleton 4.0 header packet.
+// Minimum length in bytes of a Skeleton header packet.
+#define SKELETON_MIN_HEADER_LEN 28
 #define SKELETON_4_0_MIN_HEADER_LEN 80
 
 // Minimum length in bytes of a Skeleton 4.0 index packet.
@@ -420,6 +422,10 @@ nsSkeletonState::~nsSkeletonState()
 // Ogg Skeleton 4.0 header packet.
 #define SKELETON_VERSION_MAJOR_OFFSET 8
 #define SKELETON_VERSION_MINOR_OFFSET 10
+
+// Byte-offsets of the presentation time numerator and denominator
+#define SKELETON_PRESENTATION_TIME_NUMERATOR_OFFSET 12
+#define SKELETON_PRESENTATION_TIME_DENOMINATOR_OFFSET 20
 
 // Byte-offsets of the length of file field in the Skeleton 4.0 header packet.
 #define SKELETON_FILE_LENGTH_OFFSET 64
@@ -434,7 +440,7 @@ nsSkeletonState::~nsSkeletonState()
 
 static PRBool IsSkeletonBOS(ogg_packet* aPacket)
 {
-  return aPacket->bytes >= SKELETON_4_0_MIN_HEADER_LEN && 
+  return aPacket->bytes >= SKELETON_MIN_HEADER_LEN && 
          memcmp(reinterpret_cast<char*>(aPacket->packet), "fishead", 8) == 0;
 }
 
@@ -699,6 +705,13 @@ PRBool nsSkeletonState::DecodeHeader(ogg_packet* aPacket)
   if (IsSkeletonBOS(aPacket)) {
     PRUint16 verMajor = LEUint16(aPacket->packet + SKELETON_VERSION_MAJOR_OFFSET);
     PRUint16 verMinor = LEUint16(aPacket->packet + SKELETON_VERSION_MINOR_OFFSET);
+
+    // Read the presentation time. We read this before the version check as the
+    // presentation time exists in all versions.
+    PRInt64 n = LEInt64(aPacket->packet + SKELETON_PRESENTATION_TIME_NUMERATOR_OFFSET);
+    PRInt64 d = LEInt64(aPacket->packet + SKELETON_PRESENTATION_TIME_DENOMINATOR_OFFSET);
+    mPresentationTime = d == 0 ? 0 : (static_cast<float>(n) / static_cast<float>(d)) * 1000;
+
     mVersion = SKELETON_VERSION(verMajor, verMinor);
     if (mVersion < SKELETON_VERSION(4,0) ||
         mVersion >= SKELETON_VERSION(5,0) ||
