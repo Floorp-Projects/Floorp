@@ -77,11 +77,9 @@ ifeq ($(OS_ARCH),Darwin)
 CPPSRCS += crashreporter_unix_common.cpp
 CMMSRCS += crashreporter_osx.mm
 OS_LIBS += -framework Cocoa
-ifdef MOZ_DEBUG
 OS_LIBS += -lcrypto
-LIBS += $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX)
-endif
 LIBS += \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/mac/$(LIB_PREFIX)breakpad_mac_common_s.$(LIB_SUFFIX) \
   $(NULL)
 
