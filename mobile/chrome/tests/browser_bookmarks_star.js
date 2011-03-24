@@ -4,12 +4,12 @@
  *              component, specifically for bookmark management.
  */
 
-var testURL_01 = chromeRoot + "browser_blank_01.html";
-var testURL_02 = chromeRoot + "browser_blank_02.html";
+let testURL_01 = chromeRoot + "browser_blank_01.html";
+let testURL_02 = chromeRoot + "browser_blank_02.html";
 
 // A queue to order the tests and a handle for each test
-var gTests = [];
-var gCurrentTest = null;
+let gTests = [];
+let gCurrentTest = null;
 
 //------------------------------------------------------------------------------
 // Entry point (must be named "test")
@@ -56,7 +56,12 @@ gTests.push({
     function(aMessage) {
       if (gCurrentTest._currentTab.browser.currentURI.spec != "about:blank") {
         messageManager.removeMessageListener(aMessage.name, arguments.callee);
-        gCurrentTest.onPageLoad();
+
+        // Wait a bit until Places is initialized
+        waitFor(gCurrentTest.onPageLoad, function() {
+          let mobileRoot = PlacesUtils.annotations.getItemsWithAnnotation("mobile/bookmarksRoot", {})[0];
+          return mobileRoot;
+        });
       }
     });
   },
@@ -65,52 +70,43 @@ gTests.push({
     let starbutton = document.getElementById("tool-star");
     starbutton.click();
 
-    waitFor(gCurrentTest.onPopupReady1, function() { return document.getElementById("bookmark-popup").hidden == false; });
+    waitFor(gCurrentTest.onPopupReady, function() { return BookmarkPopup.box.hidden == false; });
   },
 
-  onPopupReady1: function() {
-    // Popup should no longer auto-hide, see bug 63204
-    setTimeout(gCurrentTest.onPopupGone, 3000);
+  onPopupReady: function() {
+    // Let's make it disappear again by clicking the star again
+    let starbutton = document.getElementById("tool-star");
+    starbutton.click();
+
+    waitFor(gCurrentTest.onPopupGone, function() { return BookmarkPopup.box.hidden == true; });
   },
 
   onPopupGone: function() {
-    is(document.getElementById("bookmark-popup").hidden, false, "Bookmark popup should not be auto-hidden");
-    waitFor(gCurrentTest.onPopupReady2, function() { return document.getElementById("bookmark-popup").hidden == false; });
-  },
-
-  onPopupReady2: function() {
-    // Let's make it disappear again by clicking the star again
-    var starbutton = document.getElementById("tool-star");
-    starbutton.click();
-    
-    waitFor(gCurrentTest.onPopupGone2, function() { return document.getElementById("bookmark-popup").hidden == true; });
-  },
-
-  onPopupGone2: function() {
     // Make sure it's hidden again
-    is(document.getElementById("bookmark-popup").hidden, true, "Bookmark popup should be hidden by clicking star");
+    is(BookmarkPopup.box.hidden, true, "Bookmark popup should be hidden by clicking star");
 
     // Let's make it appear again and continue the test
     let starbutton = document.getElementById("tool-star");
     starbutton.click();
 
-    waitFor(gCurrentTest.onPopupReady3, function() { return document.getElementById("bookmark-popup").hidden == false; });
+    waitFor(gCurrentTest.onPopupReady2, function() { return BookmarkPopup.box.hidden == false; });
   },
 
-  onPopupReady3: function() {
+  onPopupReady2: function() {
     // Let's make it disappear again by clicking somewhere
     let contentarea = document.getElementById("browsers");
     EventUtils.synthesizeMouse(contentarea, contentarea.clientWidth / 2, contentarea.clientHeight / 2, {});
 
-    waitFor(gCurrentTest.onPopupGone3, function() { return document.getElementById("bookmark-popup").hidden == true; });
+    waitFor(gCurrentTest.onPopupGone2, function() { return BookmarkPopup.box.hidden == true; });
   },
 
-  onPopupGone3: function() {
+  onPopupGone2: function() {
     // Make sure it's hidden again
-    is(document.getElementById("bookmark-popup").hidden, true, "Bookmark popup should be hidden by clicking in content");
-    
+    is(BookmarkPopup.box.hidden, true, "Bookmark popup should be hidden by clicking in content");
+
+    BookmarkHelper.removeBookmarksForURI(getBrowser().currentURI);
     BrowserUI.closeTab(this._currentTab);
-    
+
     runNextTest();
   }
 });
@@ -134,35 +130,40 @@ gTests.push({
   },
 
   onPageLoad: function() {
-    var starbutton = document.getElementById("tool-star");
+    let starbutton = document.getElementById("tool-star");
     starbutton.click();
 
-    waitFor(gCurrentTest.onPopupReady, function() { return document.getElementById("bookmark-popup").hidden == false; });
+    waitFor(gCurrentTest.onPopupReady, function() { return BookmarkPopup.box.hidden == false });
   },
 
   onPopupReady: function() {
-    var editbutton = document.getElementById("bookmark-popup-edit");
+    let editbutton = document.getElementById("bookmark-popup-edit");
     editbutton.click();
 
-    waitFor(gCurrentTest.onEditorReady, function() { return document.getElementById("bookmark-item").isEditing == true; });
+    waitFor(gCurrentTest.onEditorReady, function() {
+      let item = document.getElementById("bookmark-item");
+      return item && item.isEditing == true;
+    });
   },
 
   onEditorReady: function() {
-    var bookmarkitem = document.getElementById("bookmark-item");
+    let bookmarkitem = document.getElementById("bookmark-item");
     bookmarkitem.tags = "tagone, tag two, tag-three, tag4";
 
-    var donebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
+    let donebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
     donebutton.click();
 
     waitFor(gCurrentTest.onEditorDone, function() { return document.getElementById("bookmark-container").hidden == true; });
   },
 
   onEditorDone: function() {
-    var tagsarray = PlacesUtils.tagging.getTagsForURI(makeURI(testURL_02), {});
+    let uri = makeURI(testURL_02);
+    let tagsarray = PlacesUtils.tagging.getTagsForURI(uri, {});
     is(tagsarray.length, 4, "All tags are added.");
-    
+
+    BookmarkHelper.removeBookmarksForURI(uri);
     BrowserUI.closeTab(this._currentTab);
-    
+
     runNextTest();
   }
 });
@@ -189,32 +190,39 @@ gTests.push({
     let starbutton = document.getElementById("tool-star");
     starbutton.click();
 
-    waitFor(gCurrentTest.onPopupReady, function() { return document.getElementById("bookmark-popup").hidden == false; });
+    waitFor(gCurrentTest.onPopupReady, function() {
+      return BookmarkPopup.box.hidden == false &&
+             PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_02)) != -1;
+    });
   },
 
   onPopupReady: function() {
     let editbutton = document.getElementById("bookmark-popup-edit");
     editbutton.click();
-    
-    waitFor(gCurrentTest.onEditorReady, function() { return document.getElementById("bookmark-item").isEditing == true; });
+
+    waitFor(gCurrentTest.onEditorReady, function() {
+      let item = document.getElementById("bookmark-item");
+      return item && item.isEditing == true;
+    });
   },
 
   onEditorReady: function() {
-    let bookmarkitem = document.getElementById("bookmark-item");    
+    let bookmarkitem = document.getElementById("bookmark-item");
     bookmarkitem.spec = testURL_01;
 
     let donebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
     donebutton.click();
-    
+
     waitFor(gCurrentTest.onEditorDone, function() { return document.getElementById("bookmark-container").hidden == true; });
   },
 
   onEditorDone: function() {
     isnot(PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_01)), -1, testURL_01 + " is now bookmarked");
     is(PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_02)), -1, testURL_02 + " is no longer bookmarked");
-    
+
+    BookmarkHelper.removeBookmarksForURI(makeURI(testURL_02));
     BrowserUI.closeTab(this._currentTab);
-    
+
     runNextTest();
   }
 });
@@ -237,17 +245,20 @@ gTests.push({
   },
 
   onPageLoad: function() {
-    var starbutton = document.getElementById("tool-star");
+    let starbutton = document.getElementById("tool-star");
     starbutton.click();
 
-    waitFor(gCurrentTest.onPopupReady, function() { return document.getElementById("bookmark-popup").hidden == false; });
+    waitFor(gCurrentTest.onPopupReady, function() {
+      return BookmarkPopup.box.hidden == false &&
+             PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_01)) != -1;
+    });
   },
 
   onPopupReady: function() {
-    var removebutton = document.getElementById("bookmark-popup-remove");
+    let removebutton = document.getElementById("bookmark-popup-remove");
     removebutton.click();
-    
-    var bookmark = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_01));
+
+    let bookmark = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_01));
     ok(bookmark == -1, testURL_01 + " should no longer in bookmark");
 
     BrowserUI.closeTab(this._currentTab);
