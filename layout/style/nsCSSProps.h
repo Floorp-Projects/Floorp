@@ -94,6 +94,33 @@
 // and 'background-size').
 #define CSS_PROPERTY_STORES_CALC                  (1<<8)
 
+// Define what mechanism the CSS parser uses for parsing the property.
+// See CSSParserImpl::ParseProperty(nsCSSProperty).  Don't use 0 so that
+// we can verify that every property sets one of the values.
+#define CSS_PROPERTY_PARSE_PROPERTY_MASK          (7<<9)
+#define CSS_PROPERTY_PARSE_INACCESSIBLE           (1<<9)
+#define CSS_PROPERTY_PARSE_FUNCTION               (2<<9)
+#define CSS_PROPERTY_PARSE_VALUE                  (3<<9)
+#define CSS_PROPERTY_PARSE_VALUE_LIST             (4<<9)
+
+// See CSSParserImpl::ParseSingleValueProperty
+#define CSS_PROPERTY_VALUE_PARSER_FUNCTION        (1<<12)
+PR_STATIC_ASSERT((CSS_PROPERTY_PARSE_PROPERTY_MASK &
+                  CSS_PROPERTY_VALUE_PARSER_FUNCTION) == 0);
+
+#define CSS_PROPERTY_VALUE_RESTRICTION_MASK       (3<<13)
+// The parser (in particular, CSSParserImpl::ParseSingleValueProperty)
+// should enforce that the value of this property must be 0 or larger.
+#define CSS_PROPERTY_VALUE_NONNEGATIVE            (1<<13)
+// The parser (in particular, CSSParserImpl::ParseSingleValueProperty)
+// should enforce that the value of this property must be greater than 0.
+#define CSS_PROPERTY_VALUE_POSITIVE_NONZERO       (2<<13)
+// The parser (in particular, CSSParserImpl::ParseSingleValueProperty)
+// should enforce that the value of this property must be 1 or larger.
+#define CSS_PROPERTY_VALUE_AT_LEAST_ONE           (3<<13)
+
+// NOTE: next free bit is (1<<15)
+
 /**
  * Types of animatable values.
  */
@@ -205,6 +232,34 @@ public:
     NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                       "out of range");
     return (nsCSSProps::kFlagsTable[aProperty] & aFlags) == aFlags;
+  }
+
+  static inline PRUint32 PropertyParseType(nsCSSProperty aProperty)
+  {
+    NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
+                      "out of range");
+    return nsCSSProps::kFlagsTable[aProperty] &
+           CSS_PROPERTY_PARSE_PROPERTY_MASK;
+  }
+
+  static inline PRUint32 ValueRestrictions(nsCSSProperty aProperty)
+  {
+    NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
+                      "out of range");
+    return nsCSSProps::kFlagsTable[aProperty] &
+           CSS_PROPERTY_VALUE_RESTRICTION_MASK;
+  }
+
+private:
+  // Lives in nsCSSParser.cpp for the macros it depends on.
+  static const PRUint32 kParserVariantTable[eCSSProperty_COUNT_no_shorthands];
+
+public:
+  static inline PRUint32 ParserVariant(nsCSSProperty aProperty) {
+    NS_ABORT_IF_FALSE(0 <= aProperty &&
+                      aProperty < eCSSProperty_COUNT_no_shorthands,
+                      "out of range");
+    return nsCSSProps::kParserVariantTable[aProperty];
   }
 
 private:

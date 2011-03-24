@@ -42,26 +42,22 @@
  * selectors
  */
 
-#ifndef nsICSSStyleRule_h___
-#define nsICSSStyleRule_h___
+#ifndef mozilla_css_StyleRule_h__
+#define mozilla_css_StyleRule_h__
 
 //#include <stdio.h>
 #include "nsICSSRule.h"
+#include "nsCSSRule.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsCSSValue.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSPseudoClasses.h"
+#include "nsAutoPtr.h"
 
 class nsIAtom;
 class nsCSSStyleSheet;
 struct nsCSSSelectorList;
-
-namespace mozilla {
-namespace css {
-class Declaration;
-}
-}
+class nsCSSCompressedDataBlock;
 
 struct nsAtomList {
 public:
@@ -292,22 +288,41 @@ private:
   nsCSSSelectorList& operator=(const nsCSSSelectorList& aCopy); 
 };
 
-// 97eb9881-55fb-462c-be1a-b6309d42f8d0
-#define NS_ICSS_STYLE_RULE_IID \
-{ 0x97eb9881, 0x55fb, 0x462c, \
-  { 0xbe, 0x1a, 0xb6, 0x30, 0x9d, 0x42, 0xf8, 0xd0 } }
+// 464bab7a-2fce-4f30-ab44-b7a5f3aae57d
+#define NS_CSS_STYLE_RULE_IMPL_CID \
+{ 0x464bab7a, 0x2fce, 0x4f30, \
+  { 0xab, 0x44, 0xb7, 0xa5, 0xf3, 0xaa, 0xe5, 0x7d } }
 
-class nsICSSStyleRule : public nsICSSRule {
+namespace mozilla {
+namespace css {
+
+class Declaration;
+class ImportantRule;
+class DOMCSSStyleRule;
+
+class NS_FINAL_CLASS StyleRule : public nsCSSRule,
+                                 public nsICSSRule {
+ public:
+  StyleRule(nsCSSSelectorList* aSelector,
+            Declaration *aDeclaration);
+private:
+  // for |Clone|
+  StyleRule(const StyleRule& aCopy);
+  // for |DeclarationChanged|
+  StyleRule(StyleRule& aCopy,
+            Declaration *aDeclaration);
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSS_STYLE_RULE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_STYLE_RULE_IMPL_CID)
+
+  NS_DECL_ISUPPORTS
 
   // null for style attribute
-  virtual nsCSSSelectorList* Selector(void) = 0;
+  nsCSSSelectorList* Selector() { return mSelector; }
 
-  virtual PRUint32 GetLineNumber(void) const = 0;
-  virtual void SetLineNumber(PRUint32 aLineNumber) = 0;
+  PRUint32 GetLineNumber() const { return mLineNumber; }
+  void SetLineNumber(PRUint32 aLineNumber) { mLineNumber = aLineNumber; }
 
-  virtual mozilla::css::Declaration* GetDeclaration(void) const = 0;
+  Declaration* GetDeclaration() const { return mDeclaration; }
 
   /**
    * Return a new |nsIStyleRule| instance that replaces the current
@@ -318,29 +333,66 @@ public:
    * |DeclarationChanged| handles replacing the object in the container
    * sheet or group rule if |aHandleContainer| is true.
    */
-  virtual already_AddRefed<nsICSSStyleRule>
-  DeclarationChanged(mozilla::css::Declaration* aDecl,
-                     PRBool aHandleContainer) = 0;
+  already_AddRefed<StyleRule>
+  DeclarationChanged(Declaration* aDecl, PRBool aHandleContainer);
+
+  nsIStyleRule* GetImportantRule();
 
   /**
    * The rule processor must call this method before calling
    * nsRuleWalker::Forward on this rule during rule matching.
    */
-  virtual void RuleMatched() = 0;
+  void RuleMatched();
 
   // hooks for DOM rule
-  virtual nsresult GetCssText(nsAString& aCssText) = 0;
-  virtual nsresult SetCssText(const nsAString& aCssText) = 0;
-  virtual nsresult GetParentStyleSheet(nsCSSStyleSheet** aSheet) = 0;
-  virtual nsresult GetParentRule(nsICSSGroupRule** aParentRule) = 0;
-  virtual nsresult GetSelectorText(nsAString& aSelectorText) = 0;
-  virtual nsresult SetSelectorText(const nsAString& aSelectorText) = 0;
+  void GetCssText(nsAString& aCssText);
+  void SetCssText(const nsAString& aCssText);
+  nsCSSStyleSheet* GetParentStyleSheet() { return mSheet; }
+  nsICSSGroupRule* GetParentRule() { return mParentRule; }
+  void GetSelectorText(nsAString& aSelectorText);
+  void SetSelectorText(const nsAString& aSelectorText);
+
+  virtual PRInt32 GetType() const;
+
+  virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const;
+  virtual void SetStyleSheet(nsCSSStyleSheet* aSheet);
+  virtual void SetParentRule(nsICSSGroupRule* aRule);
+
+  virtual already_AddRefed<nsICSSRule> Clone() const;
+
+  nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
+
+  // The new mapping function.
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData);
+
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
+
+private:
+  // This is not supported and not implemented!
+  StyleRule& operator=(const StyleRule& aCopy);
+
+private:
+  ~StyleRule();
+
+private:
+  nsCSSSelectorList*      mSelector; // null for style attribute
+  Declaration*            mDeclaration;
+  ImportantRule*          mImportantRule; // initialized by RuleMatched
+  DOMCSSStyleRule*        mDOMRule;
+  // Keep the same type so that MSVC packs them.
+  PRUint32                mLineNumber : 31;
+  PRUint32                mWasMatched : 1;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSStyleRule, NS_ICSS_STYLE_RULE_IID)
+} // namespace css
+} // namespace mozilla
 
-already_AddRefed<nsICSSStyleRule>
+NS_DEFINE_STATIC_IID_ACCESSOR(mozilla::css::StyleRule, NS_CSS_STYLE_RULE_IMPL_CID)
+
+already_AddRefed<mozilla::css::StyleRule>
 NS_NewCSSStyleRule(nsCSSSelectorList* aSelector,
                    mozilla::css::Declaration* aDeclaration);
 
-#endif /* nsICSSStyleRule_h___ */
+#endif /* mozilla_css_StyleRule_h__ */
