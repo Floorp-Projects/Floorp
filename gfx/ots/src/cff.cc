@@ -104,7 +104,7 @@ bool ParseIndex(ots::Buffer *table, ots::CFFIndex *index) {
   }
 
   for (unsigned i = 1; i < index->offsets.size(); ++i) {
-    if (index->offsets[i] <= index->offsets[i - 1]) {
+    if (index->offsets[i] < index->offsets[i - 1]) {
       return OTS_FAILURE();
     }
   }
