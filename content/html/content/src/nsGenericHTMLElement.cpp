@@ -2762,64 +2762,6 @@ nsGenericHTMLFormElement::IsHTMLFocusable(PRBool aWithMouse,
   return PR_FALSE;
 }
 
-PRBool
-nsGenericHTMLFormElement::IsSubmitControl() const
-{
-  PRInt32 type = GetType();
-  return type == NS_FORM_INPUT_SUBMIT ||
-         type == NS_FORM_BUTTON_SUBMIT ||
-         type == NS_FORM_INPUT_IMAGE;
-}
-
-PRBool
-nsGenericHTMLFormElement::IsTextControl(PRBool aExcludePassword) const
-{
-  PRInt32 type = GetType();
-  return nsGenericHTMLFormElement::IsSingleLineTextControl(aExcludePassword) ||
-         type == NS_FORM_TEXTAREA;
-}
-
-PRBool
-nsGenericHTMLFormElement::IsSingleLineTextControlInternal(PRBool aExcludePassword,
-                                                          PRInt32 aType) const
-{
-  return aType == NS_FORM_INPUT_TEXT ||
-         aType == NS_FORM_INPUT_EMAIL ||
-         aType == NS_FORM_INPUT_SEARCH ||
-         aType == NS_FORM_INPUT_TEL ||
-         aType == NS_FORM_INPUT_URL ||
-         (!aExcludePassword && aType == NS_FORM_INPUT_PASSWORD);
-}
-
-PRBool
-nsGenericHTMLFormElement::IsSingleLineTextControl(PRBool aExcludePassword) const
-{
-  return IsSingleLineTextControlInternal(aExcludePassword, GetType());
-}
-
-PRBool
-nsGenericHTMLFormElement::IsLabelableControl() const
-{
-  // Check for non-labelable form controls as they are not numerous.
-  // TODO: datalist should be added to this list.
-  PRInt32 type = GetType();
-  return type != NS_FORM_FIELDSET &&
-         type != NS_FORM_LABEL &&
-         type != NS_FORM_OBJECT;
-}
-
-PRBool
-nsGenericHTMLFormElement::IsSubmittableControl() const
-{
-  // TODO: keygen should be in that list, see bug 101019.
-  PRInt32 type = GetType();
-  return type == NS_FORM_OBJECT ||
-         type == NS_FORM_TEXTAREA ||
-         type == NS_FORM_SELECT ||
-         type & NS_FORM_BUTTON_ELEMENT ||
-         type & NS_FORM_INPUT_ELEMENT;
-}
-
 nsEventStates
 nsGenericHTMLFormElement::IntrinsicState() const
 {
