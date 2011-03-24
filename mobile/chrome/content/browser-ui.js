@@ -569,7 +569,7 @@ var BrowserUI = {
 
 #ifndef MOZ_OFFICIAL_BRANDING
       setTimeout(function() {
-        let startup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup_MOZILLA_2_0).getStartupInfo();
+        let startup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup).getStartupInfo();
         for (let name in startup) {
           if (name != "process")
             Services.console.logStringMessage("[timing] " + name + ": " + (startup[name] - startup.process) + "ms");
