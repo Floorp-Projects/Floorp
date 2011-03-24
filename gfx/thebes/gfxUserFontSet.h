@@ -188,8 +188,9 @@ public:
     }
 
     // lookup a font entry for a given style, returns null if not loaded
-    gfxFontEntry *FindFontEntry(const nsAString& aName, 
-                                const gfxFontStyle& aFontStyle, 
+    gfxFontEntry *FindFontEntry(const nsAString& aName,
+                                const gfxFontStyle& aFontStyle,
+                                PRBool& aFoundFamily,
                                 PRBool& aNeedsBold,
                                 PRBool& aWaitForUserFont);
                                 
@@ -256,8 +257,9 @@ public:
         LOADING_STARTED,     // loading has started; hide fallback font
         LOADING_ALMOST_DONE, // timeout happened but we're nearly done,
                              // so keep hiding fallback font
-        LOADING_SLOWLY       // timeout happened and we're not nearly done,
+        LOADING_SLOWLY,      // timeout happened and we're not nearly done,
                              // so use the fallback font
+        LOADING_FAILED       // failed to load any source: use fallback
     };
     LoadingState             mLoadingState;
 
