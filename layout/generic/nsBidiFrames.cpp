@@ -42,8 +42,8 @@
 #include "nsGkAtoms.h"
 
 
-nsDirectionalFrame::nsDirectionalFrame(nsStyleContext* aContext, PRUnichar aChar)
-  : nsFrame(aContext), mChar(aChar)
+nsDirectionalFrame::nsDirectionalFrame(nsStyleContext* aContext)
+  : nsFrame(aContext)
 {
 }
 
@@ -66,9 +66,9 @@ nsDirectionalFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 nsIFrame*
-NS_NewDirectionalFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUnichar aChar)
+NS_NewDirectionalFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsDirectionalFrame(aContext, aChar);
+  return new (aPresShell) nsDirectionalFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsDirectionalFrame)
