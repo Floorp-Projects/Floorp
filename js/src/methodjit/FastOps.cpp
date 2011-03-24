@@ -58,66 +58,6 @@ using namespace js::mjit;
 
 typedef JSC::MacroAssembler::RegisterID RegisterID;
 
-RegisterID
-mjit::Compiler::rightRegForShift(FrameEntry *rhs)
-{
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-    /*
-     * Gross: RHS _must_ be in ECX, on x86.
-     * Note that we take this first so that we can't up with other register
-     * allocations (below) owning ecx before rhs.
-     */
-    RegisterID reg = JSC::X86Registers::ecx;
-    if (!rhs->isConstant())
-        frame.copyDataIntoReg(rhs, reg);
-    return reg;
-#else
-    if (rhs->isConstant())
-        return frame.allocReg();
-    return frame.copyDataIntoReg(rhs);
-#endif
-}
-
-void
-mjit::Compiler::jsop_rsh_const_int(FrameEntry *lhs, FrameEntry *rhs)
-{
-    RegisterID rhsData = rightRegForShift(rhs);
-    RegisterID result = frame.allocReg();
-    masm.move(Imm32(lhs->getValue().toInt32()), result);
-    masm.rshift32(rhsData, result);
-
-    frame.freeReg(rhsData);
-    frame.popn(2);
-    frame.pushTypedPayload(JSVAL_TYPE_INT32, result);
-}
-
-void
-mjit::Compiler::jsop_rsh_int_int(FrameEntry *lhs, FrameEntry *rhs)
-{
-    RegisterID rhsData = rightRegForShift(rhs);
-    RegisterID lhsData = frame.copyDataIntoReg(lhs);
-    masm.rshift32(rhsData, lhsData);
-    frame.freeReg(rhsData);
-    frame.popn(2);
-    frame.pushTypedPayload(JSVAL_TYPE_INT32, lhsData);
-}
-
-void
-mjit::Compiler::jsop_rsh_int_const(FrameEntry *lhs, FrameEntry *rhs)
-{
-    int32 shiftAmount = rhs->getValue().toInt32();
-
-    if (!shiftAmount) {
-        frame.pop();
-        return;
-    }
-
-    RegisterID result = frame.copyDataIntoReg(lhs);
-    masm.rshift32(Imm32(shiftAmount), result);
-    frame.popn(2);
-    frame.pushTypedPayload(JSVAL_TYPE_INT32, result);
-}
-
 void
 mjit::Compiler::ensureInteger(FrameEntry *fe, Uses uses)
 {
@@ -180,47 +120,6 @@ mjit::Compiler::ensureInteger(FrameEntry *fe, Uses uses)
 }
 
 void
-mjit::Compiler::jsop_rsh()
-{
-    FrameEntry *rhs = frame.peek(-1);
-    FrameEntry *lhs = frame.peek(-2);
-
-    Value v;
-    if (tryBinaryConstantFold(cx, frame, JSOP_RSH, lhs, rhs, &v)) {
-        JS_ASSERT(v.isInt32());
-        frame.popn(2);
-        frame.push(v);
-        return;
-    }
-
-    if ((lhs->isNotType(JSVAL_TYPE_INT32) && lhs->isNotType(JSVAL_TYPE_DOUBLE)) ||
-        (rhs->isNotType(JSVAL_TYPE_INT32) && rhs->isNotType(JSVAL_TYPE_DOUBLE))) {
-        prepareStubCall(Uses(2));
-        INLINE_STUBCALL(stubs::Rsh);
-        frame.popn(2);
-        frame.pushSynced(JSVAL_TYPE_INT32);
-        return;
-    }
-
-    ensureInteger(lhs, Uses(2));
-    ensureInteger(rhs, Uses(2));
-
-    stubcc.leave();
-    OOL_STUBCALL(stubs::Rsh);
-
-    JS_ASSERT(!(lhs->isConstant() && rhs->isConstant()));
-    if (lhs->isConstant()) {
-        jsop_rsh_const_int(lhs, rhs);
-    } else if (rhs->isConstant()) {
-        jsop_rsh_int_const(lhs, rhs);
-    } else {
-        jsop_rsh_int_int(lhs, rhs);
-    }
-
-    stubcc.rejoin(Changes(1));
-}
-
-void
 mjit::Compiler::jsop_bitnot()
 {
     FrameEntry *top = frame.peek(-1);
@@ -276,6 +175,9 @@ mjit::Compiler::jsop_bitop(JSOp op)
         break;
       case JSOP_LSH:
         stub = stubs::Lsh;
+        break;
+      case JSOP_RSH:
+        stub = stubs::Rsh;
         break;
       case JSOP_URSH:
         stub = stubs::Ursh;
@@ -339,9 +241,12 @@ mjit::Compiler::jsop_bitop(JSOp op)
             frame.push(Int32Value(L & R));
             return;
           case JSOP_LSH:
-            frame.push(Int32Value(L << R));
+            frame.push(Int32Value(L << (R & 31)));
             return;
-          case JSOP_URSH: 
+          case JSOP_RSH:
+            frame.push(Int32Value(L >> (R & 31)));
+            return;
+          case JSOP_URSH:
           {
             uint32 unsignedL;
             if (ValueToECMAUint32(cx, lhs->getValue(), (uint32_t*)&unsignedL)) {
@@ -401,6 +306,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
       }
 
       case JSOP_LSH:
+      case JSOP_RSH:
       case JSOP_URSH:
       {
         /* Not commutative. */
@@ -414,6 +320,8 @@ mjit::Compiler::jsop_bitop(JSOp op)
             if (shift) {
                 if (op == JSOP_LSH)
                     masm.lshift32(Imm32(shift), reg);
+                else if (op == JSOP_RSH)
+                    masm.rshift32(Imm32(shift), reg);
                 else
                     masm.urshift32(Imm32(shift), reg);
             }
@@ -453,6 +361,8 @@ mjit::Compiler::jsop_bitop(JSOp op)
         
         if (op == JSOP_LSH) {
             masm.lshift32(rr, reg);
+        } else if (op == JSOP_RSH) {
+            masm.rshift32(rr, reg);
         } else {
             masm.urshift32(rr, reg);
             

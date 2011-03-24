@@ -1428,7 +1428,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_LSH)
 
           BEGIN_CASE(JSOP_RSH)
-            jsop_rsh();
+            jsop_bitop(op);
           END_CASE(JSOP_RSH)
 
           BEGIN_CASE(JSOP_URSH)

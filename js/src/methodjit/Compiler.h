@@ -571,16 +571,6 @@ class Compiler : public BaseCompiler
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);
-    void jsop_rsh();
-    RegisterID rightRegForShift(FrameEntry *rhs);
-    void jsop_rsh_int_int(FrameEntry *lhs, FrameEntry *rhs);
-    void jsop_rsh_const_int(FrameEntry *lhs, FrameEntry *rhs);
-    void jsop_rsh_int_const(FrameEntry *lhs, FrameEntry *rhs);
-    void jsop_rsh_int_unknown(FrameEntry *lhs, FrameEntry *rhs);
-    void jsop_rsh_const_const(FrameEntry *lhs, FrameEntry *rhs);
-    void jsop_rsh_const_unknown(FrameEntry *lhs, FrameEntry *rhs);
-    void jsop_rsh_unknown_const(FrameEntry *lhs, FrameEntry *rhs);
-    void jsop_rsh_unknown_any(FrameEntry *lhs, FrameEntry *rhs);
     bool jsop_mod();
     void jsop_neg();
     void jsop_bitnot();
