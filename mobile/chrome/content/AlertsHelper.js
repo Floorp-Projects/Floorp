@@ -50,7 +50,9 @@ var AlertsHelper = {
 
 #ifdef ANDROID
     let offset = (window.innerWidth - container.width) / 2;
-    if (container.hasAttribute("left"))
+    if (offset < 0)
+      Cu.reportError("showAlertNotification called before the window is ready");
+    else if (container.hasAttribute("left"))
       container.setAttribute("left", offset);
     else
       container.setAttribute("right", offset);
