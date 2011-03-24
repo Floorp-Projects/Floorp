@@ -2064,9 +2064,15 @@ FrameState::storeTop(FrameEntry *target, JSValueType type, bool popGuaranteed)
     } else {
         /*
          * Move the backing store down - we spill registers here, but we could be
-         * smarter and re-use the type reg.
+         * smarter and re-use the type reg. If we need registers for both the type
+         * and data in the backing, make sure we keep the other components pinned.
+         * There is nothing else to keep us from evicting the backing's registers.
          */
+        if (backing->type.inRegister())
+            pinReg(backing->type.reg());
         RegisterID reg = tempRegForData(backing);
+        if (backing->type.inRegister())
+            unpinReg(backing->type.reg());
         target->data.setRegister(reg);
         regstate(reg).reassociate(target);
 
