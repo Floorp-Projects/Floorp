@@ -6552,12 +6552,11 @@ Parser::assignExpr()
         return returnOrYield(true);
 #endif
 
-    JSParseNode *pn = condExpr();
+    JSParseNode *pn = condExpr1();
     if (!pn)
         return NULL;
 
-    TokenKind tt = tokenStream.getToken();
-    if (tt != TOK_ASSIGN) {
+    if (!tokenStream.isCurrentTokenType(TOK_ASSIGN)) {
         tokenStream.ungetToken();
         return pn;
     }
@@ -6628,10 +6627,10 @@ Parser::assignExpr()
 }
 
 JSParseNode *
-Parser::condExpr()
+Parser::condExpr1()
 {
-    JSParseNode *pn = orExpr();
-    if (pn && tokenStream.matchToken(TOK_HOOK)) {
+    JSParseNode *pn = orExpr1();
+    if (pn && tokenStream.isCurrentTokenType(TOK_HOOK)) {
         JSParseNode *pn1 = pn;
         pn = TernaryNode::create(tc);
         if (!pn)
@@ -6658,68 +6657,69 @@ Parser::condExpr()
         pn->pn_kid1 = pn1;
         pn->pn_kid2 = pn2;
         pn->pn_kid3 = pn3;
+        tokenStream.getToken();     /* need to read one token past the end */
     }
     return pn;
 }
 
 JSParseNode *
-Parser::orExpr()
+Parser::orExpr1()
 {
-    JSParseNode *pn = andExpr();
-    while (pn && tokenStream.matchToken(TOK_OR))
-        pn = JSParseNode::newBinaryOrAppend(TOK_OR, JSOP_OR, pn, andExpr(), tc);
+    JSParseNode *pn = andExpr1();
+    while (pn && tokenStream.isCurrentTokenType(TOK_OR))
+        pn = JSParseNode::newBinaryOrAppend(TOK_OR, JSOP_OR, pn, andExpr1(), tc);
     return pn;
 }
 
 JSParseNode *
-Parser::andExpr()
+Parser::andExpr1()
 {
-    JSParseNode *pn = bitOrExpr();
-    while (pn && tokenStream.matchToken(TOK_AND))
-        pn = JSParseNode::newBinaryOrAppend(TOK_AND, JSOP_AND, pn, bitOrExpr(), tc);
+    JSParseNode *pn = bitOrExpr1();
+    while (pn && tokenStream.isCurrentTokenType(TOK_AND))
+        pn = JSParseNode::newBinaryOrAppend(TOK_AND, JSOP_AND, pn, bitOrExpr1(), tc);
     return pn;
 }
 
 JSParseNode *
-Parser::bitOrExpr()
+Parser::bitOrExpr1()
 {
-    JSParseNode *pn = bitXorExpr();
-    while (pn && tokenStream.matchToken(TOK_BITOR))
-        pn = JSParseNode::newBinaryOrAppend(TOK_BITOR, JSOP_BITOR, pn, bitXorExpr(), tc);
+    JSParseNode *pn = bitXorExpr1();
+    while (pn && tokenStream.isCurrentTokenType(TOK_BITOR))
+        pn = JSParseNode::newBinaryOrAppend(TOK_BITOR, JSOP_BITOR, pn, bitXorExpr1(), tc);
     return pn;
 }
 
 JSParseNode *
-Parser::bitXorExpr()
+Parser::bitXorExpr1()
 {
-    JSParseNode *pn = bitAndExpr();
-    while (pn && tokenStream.matchToken(TOK_BITXOR))
-        pn = JSParseNode::newBinaryOrAppend(TOK_BITXOR, JSOP_BITXOR, pn, bitAndExpr(), tc);
+    JSParseNode *pn = bitAndExpr1();
+    while (pn && tokenStream.isCurrentTokenType(TOK_BITXOR))
+        pn = JSParseNode::newBinaryOrAppend(TOK_BITXOR, JSOP_BITXOR, pn, bitAndExpr1(), tc);
     return pn;
 }
 
 JSParseNode *
-Parser::bitAndExpr()
+Parser::bitAndExpr1()
 {
-    JSParseNode *pn = eqExpr();
-    while (pn && tokenStream.matchToken(TOK_BITAND))
-        pn = JSParseNode::newBinaryOrAppend(TOK_BITAND, JSOP_BITAND, pn, eqExpr(), tc);
+    JSParseNode *pn = eqExpr1();
+    while (pn && tokenStream.isCurrentTokenType(TOK_BITAND))
+        pn = JSParseNode::newBinaryOrAppend(TOK_BITAND, JSOP_BITAND, pn, eqExpr1(), tc);
     return pn;
 }
 
 JSParseNode *
-Parser::eqExpr()
+Parser::eqExpr1()
 {
-    JSParseNode *pn = relExpr();
-    while (pn && tokenStream.matchToken(TOK_EQOP)) {
+    JSParseNode *pn = relExpr1();
+    while (pn && tokenStream.isCurrentTokenType(TOK_EQOP)) {
         JSOp op = tokenStream.currentToken().t_op;
-        pn = JSParseNode::newBinaryOrAppend(TOK_EQOP, op, pn, relExpr(), tc);
+        pn = JSParseNode::newBinaryOrAppend(TOK_EQOP, op, pn, relExpr1(), tc);
     }
     return pn;
 }
 
 JSParseNode *
-Parser::relExpr()
+Parser::relExpr1()
 {
     uintN inForInitFlag = tc->flags & TCF_IN_FOR_INIT;
 
@@ -6729,18 +6729,18 @@ Parser::relExpr()
      */
     tc->flags &= ~TCF_IN_FOR_INIT;
 
-    JSParseNode *pn = shiftExpr();
+    JSParseNode *pn = shiftExpr1();
     while (pn &&
-           (tokenStream.matchToken(TOK_RELOP) ||
+           (tokenStream.isCurrentTokenType(TOK_RELOP) ||
             /*
              * Recognize the 'in' token as an operator only if we're not
              * currently in the init expr of a for loop.
              */
-            (inForInitFlag == 0 && tokenStream.matchToken(TOK_IN)) ||
-            tokenStream.matchToken(TOK_INSTANCEOF))) {
+            (inForInitFlag == 0 && tokenStream.isCurrentTokenType(TOK_IN)) ||
+            tokenStream.isCurrentTokenType(TOK_INSTANCEOF))) {
         TokenKind tt = tokenStream.currentToken().type;
         JSOp op = tokenStream.currentToken().t_op;
-        pn = JSParseNode::newBinaryOrAppend(tt, op, pn, shiftExpr(), tc);
+        pn = JSParseNode::newBinaryOrAppend(tt, op, pn, shiftExpr1(), tc);
     }
     /* Restore previous state of inForInit flag. */
     tc->flags |= inForInitFlag;
@@ -6749,36 +6749,40 @@ Parser::relExpr()
 }
 
 JSParseNode *
-Parser::shiftExpr()
+Parser::shiftExpr1()
 {
-    JSParseNode *pn = addExpr();
-    while (pn && tokenStream.matchToken(TOK_SHOP)) {
+    JSParseNode *pn = addExpr1();
+    while (pn && tokenStream.isCurrentTokenType(TOK_SHOP)) {
         JSOp op = tokenStream.currentToken().t_op;
-        pn = JSParseNode::newBinaryOrAppend(TOK_SHOP, op, pn, addExpr(), tc);
+        pn = JSParseNode::newBinaryOrAppend(TOK_SHOP, op, pn, addExpr1(), tc);
     }
     return pn;
 }
 
 JSParseNode *
-Parser::addExpr()
+Parser::addExpr1()
 {
-    JSParseNode *pn = mulExpr();
-    while (pn &&
-           (tokenStream.matchToken(TOK_PLUS) ||
-            tokenStream.matchToken(TOK_MINUS))) {
+    JSParseNode *pn = mulExpr1();
+    while (pn && tokenStream.isCurrentTokenType(TOK_PLUS, TOK_MINUS)) {
         TokenKind tt = tokenStream.currentToken().type;
         JSOp op = (tt == TOK_PLUS) ? JSOP_ADD : JSOP_SUB;
-        pn = JSParseNode::newBinaryOrAppend(tt, op, pn, mulExpr(), tc);
+        pn = JSParseNode::newBinaryOrAppend(tt, op, pn, mulExpr1(), tc);
     }
     return pn;
 }
 
 JSParseNode *
-Parser::mulExpr()
+Parser::mulExpr1()
 {
+    TokenKind tt;
     JSParseNode *pn = unaryExpr();
-    while (pn && (tokenStream.matchToken(TOK_STAR) || tokenStream.matchToken(TOK_DIVOP))) {
-        TokenKind tt = tokenStream.currentToken().type;
+    /*
+     * Note: unlike addExpr1() et al, we use getToken() here instead of
+     * isCurrentTokenType() because unaryExpr() doesn't leave the TokenStream
+     * state one past the end of the unary expression.
+     */
+    while (pn && (tt = tokenStream.getToken(), (tt == TOK_STAR || tt == TOK_DIVOP))) {
+        tt = tokenStream.currentToken().type;
         JSOp op = tokenStream.currentToken().t_op;
         pn = JSParseNode::newBinaryOrAppend(tt, op, pn, unaryExpr(), tc);
     }
