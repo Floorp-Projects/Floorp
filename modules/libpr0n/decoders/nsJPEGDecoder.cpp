@@ -92,7 +92,7 @@ GetICCProfile(struct jpeg_decompress_struct &info)
   qcms_profile* profile = nsnull;
 
   if (read_icc_profile(&info, &profilebuf, &profileLength)) {
-    profile = qcms_profile_from_memory(profile, profileLength);
+    profile = qcms_profile_from_memory(profilebuf, profileLength);
     free(profilebuf);
   }
 
