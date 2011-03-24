@@ -362,13 +362,6 @@ private:
                                           nscoord*               aWidth /* may be null */);
 
   /**
-   *  Create a string containing entire text content of this block.
-   *
-   *  @lina 05/02/2000
-   */
-  void CreateBlockBuffer();
-
-  /**
    * Set up an array of the frames after splitting frames so that each frame has
    * consistent directionality. At this point the frames are still in logical
    * order
@@ -521,6 +514,7 @@ private:
   PRInt32*        mIndexMap;
   PRUint8*        mLevels;
   nsresult        mSuccess;
+  nsIContent*     mPrevContent;
 
   nsBidi*         mBidiEngine;
 };
