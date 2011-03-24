@@ -431,6 +431,29 @@ public:
         STYLE_MAX
     };
 
+    class PathAutoSaveRestore
+    {
+    public:
+        PathAutoSaveRestore(nsCanvasRenderingContext2D* aCtx) :
+            mContext(aCtx->mThebes)
+        {
+            if (aCtx->mHasPath) {
+                mPath = mContext->CopyPath();
+            }
+        }
+        ~PathAutoSaveRestore()
+        {
+            mContext->NewPath();
+            if (mPath) {
+                mContext->AppendPath(mPath);
+            }
+        }
+    private:
+        gfxContext *mContext;
+        nsRefPtr<gfxPath> mPath;
+    };
+    friend class PathAutoSaveRestore;
+
 protected:
 
     /**
@@ -512,6 +535,10 @@ protected:
      * many more Redraw calls.
      */
     PRPackedBool mPredictManyRedrawCalls;
+    /**
+     * This is set whenever there's a nonempty path set by the API user.
+     */
+    PRPackedBool mHasPath;
 
     /**
      * Number of times we've invalidated before calling redraw
@@ -830,7 +857,7 @@ nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
     , mIPC(PR_FALSE)
     , mCanvasElement(nsnull)
     , mSaveCount(0), mIsEntireFrameInvalid(PR_FALSE)
-    , mPredictManyRedrawCalls(PR_FALSE), mInvalidateCount(0)
+    , mPredictManyRedrawCalls(PR_FALSE), mHasPath(PR_FALSE), mInvalidateCount(0)
     , mLastStyle(STYLE_MAX), mStyleStack(20)
 {
     sNumLivingContexts++;
@@ -1953,7 +1980,7 @@ nsCanvasRenderingContext2D::ClearRect(float x, float y, float w, float h)
     if (!FloatValidate(x,y,w,h))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    gfxContextPathAutoSaveRestore pathSR(mThebes);
+    PathAutoSaveRestore pathSR(this);
     gfxContextAutoSaveRestore autoSR(mThebes);
 
     mThebes->SetOperator(gfxContext::OPERATOR_CLEAR);
@@ -1970,7 +1997,7 @@ nsCanvasRenderingContext2D::DrawRect(const gfxRect& rect, Style style)
     if (!FloatValidate(rect.pos.x, rect.pos.y, rect.size.width, rect.size.height))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    gfxContextPathAutoSaveRestore pathSR(mThebes);
+    PathAutoSaveRestore pathSR(this);
 
     mThebes->NewPath();
     mThebes->Rectangle(rect);
@@ -2002,6 +2029,7 @@ nsCanvasRenderingContext2D::StrokeRect(float x, float y, float w, float h)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::BeginPath()
 {
+    mHasPath = PR_FALSE;
     mThebes->NewPath();
     return NS_OK;
 }
@@ -2046,6 +2074,7 @@ nsCanvasRenderingContext2D::MoveTo(float x, float y)
     if (!FloatValidate(x,y))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
+    mHasPath = PR_TRUE;
     mThebes->MoveTo(gfxPoint(x, y));
     return NS_OK;
 }
@@ -2056,6 +2085,7 @@ nsCanvasRenderingContext2D::LineTo(float x, float y)
     if (!FloatValidate(x,y))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
+    mHasPath = PR_TRUE;
     mThebes->LineTo(gfxPoint(x, y));
     return NS_OK;
 }
@@ -2072,6 +2102,7 @@ nsCanvasRenderingContext2D::QuadraticCurveTo(float cpx, float cpy, float x, floa
     gfxPoint p(x,y);
     gfxPoint cp(cpx, cpy);
 
+    mHasPath = PR_TRUE;
     mThebes->CurveTo((c+cp*2)/3.0, (p+cp*2)/3.0, p);
 
     return NS_OK;
@@ -2085,6 +2116,7 @@ nsCanvasRenderingContext2D::BezierCurveTo(float cp1x, float cp1y,
     if (!FloatValidate(cp1x,cp1y,cp2x,cp2y,x,y))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
+    mHasPath = PR_TRUE;
     mThebes->CurveTo(gfxPoint(cp1x, cp1y),
                      gfxPoint(cp2x, cp2y),
                      gfxPoint(x, y));
@@ -2100,6 +2132,8 @@ nsCanvasRenderingContext2D::ArcTo(float x1, float y1, float x2, float y2, float 
 
     if (radius < 0)
         return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
+    mHasPath = PR_TRUE;
 
     gfxPoint p0 = mThebes->CurrentPoint();
 
@@ -2160,6 +2194,7 @@ nsCanvasRenderingContext2D::Arc(float x, float y, float r, float startAngle, flo
 
     gfxPoint p(x,y);
 
+    mHasPath = PR_TRUE;
     if (ccw)
         mThebes->NegativeArc(p, r, startAngle, endAngle);
     else
@@ -2173,6 +2208,7 @@ nsCanvasRenderingContext2D::Rect(float x, float y, float w, float h)
     if (!FloatValidate(x,y,w,h))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
+    mHasPath = PR_TRUE;
     mThebes->Rectangle(gfxRect(x, y, w, h));
     return NS_OK;
 }
@@ -3331,8 +3367,6 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
 {
     NS_ENSURE_ARG(imgElt);
 
-    nsresult rv;
-
     double sx,sy,sw,sh;
     double dx,dy,dw,dh;
 
@@ -3378,10 +3412,6 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         }
     }
 
-    gfxContextPathAutoSaveRestore pathSR(mThebes, PR_FALSE);
-
-    rv = NS_OK;
-
     if (optional_argc == 0) {
         dx = a1;
         dy = a2;
@@ -3407,20 +3437,17 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         dh = a8;
     } else {
         // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-        rv = NS_ERROR_INVALID_ARG;
-        goto FINISH;
+        return NS_ERROR_INVALID_ARG;
     }
 
     if (dw == 0.0 || dh == 0.0) {
-        rv = NS_OK;
         // not really failure, but nothing to do --
         // and noone likes a divide-by-zero
-        goto FINISH;
+        return NS_OK;
     }
 
     if (!FloatValidate(sx, sy, sw, sh) || !FloatValidate(dx, dy, dw, dh)) {
-        rv = NS_ERROR_DOM_SYNTAX_ERR;
-        goto FINISH;
+        return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
     // check args
@@ -3430,8 +3457,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         dw < 0.0 || dh < 0.0)
     {
         // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-        rv = NS_ERROR_DOM_INDEX_SIZE_ERR;
-        goto FINISH;
+        return NS_ERROR_DOM_INDEX_SIZE_ERR;
     }
 
     matrix.Translate(gfxPoint(sx, sy));
@@ -3458,8 +3484,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
 
                 if (opaque && unscaled) {
                     bitblt(surf, sx, sy, sw, sh, dx, dy);
-                    rv = NS_OK;
-                    goto FINISH;
+                    return NS_OK;
                 }
             }
         }
@@ -3474,7 +3499,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
     else
         pattern->SetFilter(gfxPattern::FILTER_NEAREST);
 
-    pathSR.Save();
+    PathAutoSaveRestore pathSR(this);
 
     // Clear the surface if we need to simulate unbounded SOURCE operator
     ClearSurfaceForUnboundedSource();
@@ -3535,8 +3560,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         RedrawUser(clip);
     }
 
-FINISH:
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -4018,7 +4042,7 @@ nsCanvasRenderingContext2D::PutImageData_explicit(PRInt32 x, PRInt32 y, PRUint32
         }
     }
 
-    gfxContextPathAutoSaveRestore pathSR(mThebes);
+    PathAutoSaveRestore pathSR(this);
     gfxContextAutoSaveRestore autoSR(mThebes);
 
     // ignore clipping region, as per spec
