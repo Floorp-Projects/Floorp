@@ -62,6 +62,9 @@ private:
             : m_delegate(delegate)
             , m_err(err)
             , m_state(empty)
+#if __GNUC__ >= 4 && __GNUC_MINOR__ >= 5 /* quell GCC overwarning */
+            , m_character(0xFFFF)
+#endif
         {
         }
 
