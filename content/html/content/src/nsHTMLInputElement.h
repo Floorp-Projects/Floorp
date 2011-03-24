@@ -441,11 +441,6 @@ protected:
                        nsGkAtoms::image, eIgnoreCase);
   }
 
-  virtual PRBool AcceptAutofocus() const
-  {
-    return PR_TRUE;
-  }
-
   /**
    * Visit the group of radio buttons this radio belongs to
    * @param aVisitor the visitor to visit with
