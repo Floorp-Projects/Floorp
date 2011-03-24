@@ -327,6 +327,12 @@
   -moz-image-region: rect(32px, 49px, 48px, 32px);
 }
 
+#minimize-button:-moz-locale-dir(rtl),
+#restore-button:-moz-locale-dir(rtl),
+#close-button:-moz-locale-dir(rtl) {
+  -moz-transform: scaleX(-1);
+}
+
 /* ::::: splitmenu highlight style that imitates Windows 7 start menu ::::: */
 @media all and (-moz-windows-default-theme) {
   .splitmenu-menuitem,
