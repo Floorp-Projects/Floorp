@@ -281,7 +281,7 @@ js_TypeOf(JSContext *cx, JSObject *obj);
 namespace js {
 
 struct NativeIterator;
-struct RegExp;
+class RegExp;
 
 }
 
