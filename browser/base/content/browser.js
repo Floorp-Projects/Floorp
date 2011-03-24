@@ -8510,8 +8510,17 @@ function safeModeRestart()
   let promptTitle = gNavigatorBundle.getString("safeModeRestartPromptTitle");
   let promptMessage = 
     gNavigatorBundle.getString("safeModeRestartPromptMessage");
-  let rv = Services.prompt.confirm(window, promptTitle, promptMessage);
-  if (rv) {
+  let restartText = gNavigatorBundle.getString("safeModeRestartButton");
+  let buttonFlags = (Services.prompt.BUTTON_POS_0 *
+                     Services.prompt.BUTTON_TITLE_IS_STRING) +
+                    (Services.prompt.BUTTON_POS_1 *
+                     Services.prompt.BUTTON_TITLE_CANCEL) +
+                    Services.prompt.BUTTON_POS_0_DEFAULT;
+
+  let rv = Services.prompt.confirmEx(window, promptTitle, promptMessage,
+                                     buttonFlags, restartText, null, null,
+                                     null, {});
+  if (rv == 0) {
     let environment = Components.classes["@mozilla.org/process/environment;1"].
       getService(Components.interfaces.nsIEnvironment);
     environment.set("MOZ_SAFE_MODE_RESTART", "1");
