@@ -69,16 +69,13 @@ CPPSRCS		= \
 		nsXPComInit.cpp \
 		nsXPCOMStrings.cpp \
 		Services.cpp \
+		Omnijar.cpp \
 		$(NULL)
 
 ifndef MOZ_ENABLE_LIBXUL
 ifeq (,$(filter-out WINNT WINCE OS2,$(OS_ARCH)))
 CPPSRCS += dlldeps.cpp
 endif
-endif
-
-ifdef MOZ_OMNIJAR
-CPPSRCS += Omnijar.cpp
 endif
 
 SHARED_LIBRARY_LIBS = \

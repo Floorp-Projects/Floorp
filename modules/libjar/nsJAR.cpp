@@ -175,16 +175,13 @@ nsJAR::Open(nsIFile* zipFile)
   mLock = PR_NewLock();
   NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
   
-#ifdef MOZ_OMNIJAR
   // The omnijar is special, it is opened early on and closed late
   // this avoids reopening it
-  PRBool equals;
-  nsresult rv = zipFile->Equals(mozilla::OmnijarPath(), &equals);
-  if (NS_SUCCEEDED(rv) && equals) {
-    mZip = mozilla::OmnijarReader();
+  nsZipArchive *zip = mozilla::Omnijar::GetReader(zipFile);
+  if (zip) {
+    mZip = zip;
     return NS_OK;
   }
-#endif
   return mZip->OpenArchive(zipFile);
 }
 
@@ -239,13 +236,12 @@ nsJAR::Close()
   mTotalItemsInManifest = 0;
   mOuterZipEntry.Truncate(0);
 
-#ifdef MOZ_OMNIJAR
-  if (mZip == mozilla::OmnijarReader()) {
+  if ((mZip == mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE)) ||
+      (mZip == mozilla::Omnijar::GetReader(mozilla::Omnijar::APP))) {
     mZip.forget();
     mZip = new nsZipArchive();
     return NS_OK;
   }
-#endif
   return mZip->CloseArchive();
 }
 
@@ -396,12 +392,11 @@ nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
     return NS_ERROR_NULL_POINTER;
   *aPrincipal = nsnull;
 
-#ifdef MOZ_OMNIJAR
   // Don't check signatures in the omnijar - this is only
   // interesting for extensions/XPIs.
-  if (mZip == mozilla::OmnijarReader())
+  if ((mZip == mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE)) ||
+      (mZip == mozilla::Omnijar::GetReader(mozilla::Omnijar::APP)))
     return NS_OK;
-#endif
 
   //-- Parse the manifest
   nsresult rv = ParseManifest();
