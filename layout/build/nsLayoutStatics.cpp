@@ -129,8 +129,11 @@
 #include "nsContentSink.h"
 #include "nsFrameMessageManager.h"
 #include "nsRefreshDriver.h"
+#include "CanvasImageCache.h"
 
 extern void NS_ShutdownChainItemPool();
+
+using namespace mozilla;
 
 nsrefcnt nsLayoutStatics::sLayoutStaticRefcnt = 0;
 
@@ -292,6 +295,7 @@ nsLayoutStatics::Initialize()
 void
 nsLayoutStatics::Shutdown()
 {
+  CanvasImageCache::Shutdown();
   nsFrameScriptExecutor::Shutdown();
   nsFocusManager::Shutdown();
 #ifdef MOZ_XUL
