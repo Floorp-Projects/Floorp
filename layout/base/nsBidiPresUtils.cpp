@@ -71,10 +71,6 @@ static const PRUnichar kRLE              = 0x202B;
 static const PRUnichar kLRO              = 0x202D;
 static const PRUnichar kRLO              = 0x202E;
 static const PRUnichar kPDF              = 0x202C;
-static const PRUnichar ALEF              = 0x05D0;
-
-#define CHAR_IS_HEBREW(c) ((0x0590 <= (c)) && ((c)<= 0x05FF))
-// Note: The above code are moved from gfx/src/windows/nsRenderingContextWin.cpp
 
 #define NS_BIDI_CONTROL_FRAME ((nsIFrame*)0xfffb1d1)
 
@@ -448,6 +444,37 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame)
   PRInt32     contentTextLength;
 
   FramePropertyTable *propTable = presContext->PropertyTable();
+
+  if (frameCount == 1 && runCount == 1) {
+    // Nothing more to do, just make sure that the frame has the right
+    // embedding level.
+    if (mIsVisual ||
+        NS_FAILED(mBidiEngine->GetLogicalRun(lineOffset, &logicalLimit,
+                                             &embeddingLevel))) {
+      embeddingLevel = mParaLevel;
+    }
+
+    frame = mLogicalFrames[0];
+    nsBidiLevel oldEmbeddingLevel = NS_GET_EMBEDDING_LEVEL(frame);
+    nsBidiLevel oldBaseLevel = NS_GET_BASE_LEVEL(frame);
+
+    if (oldEmbeddingLevel != embeddingLevel ||
+        oldBaseLevel != mParaLevel) {
+      frame->Properties().Set(nsIFrame::EmbeddingLevelProperty(),
+                              NS_INT32_TO_PTR(embeddingLevel));
+      frame->Properties().Set(nsIFrame::BaseLevelProperty(),
+                              NS_INT32_TO_PTR(mParaLevel));
+      AdvanceLineIteratorToFrame(frame, mLineIter, mPrevFrame);
+      mLineIter->GetLine()->MarkDirty();
+      if (frame->GetType() == nsGkAtoms::textFrame) {
+        frame->AddStateBits(NS_FRAME_IS_BIDI);
+      }
+    }
+
+    mSuccess = NS_OK;
+    return;
+  }
+
   PRBool lineNeedsUpdate = PR_FALSE;
   
 #ifdef NOISY_BIDI
