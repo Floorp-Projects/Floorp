@@ -1529,6 +1529,7 @@ nsCookieService::SetCookieStringInternal(nsIURI          *aHostURI,
   switch (cookieStatus) {
   case STATUS_REJECTED:
     NotifyRejected(aHostURI);
+    return;
   case STATUS_REJECTED_WITH_ERROR:
     return;
   default:
