@@ -24,6 +24,7 @@ var didThrow = false;
 
 var e = document.createEvent("Event");
 try {
+  is(e.type, "", "Event type should be empty string before initialization");
   document.dispatchEvent(e);
 } catch(ex) {
   didThrow = (ex.code == 0);
