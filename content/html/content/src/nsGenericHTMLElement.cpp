@@ -2525,7 +2525,7 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
   // specified and the element accept the autofocus attribute. In addition,
   // the document should not be already loaded and the "browser.autofocus"
   // preference should be 'true'.
-  if (AcceptAutofocus() && HasAttr(kNameSpaceID_None, nsGkAtoms::autofocus) &&
+  if (IsAutofocusable() && HasAttr(kNameSpaceID_None, nsGkAtoms::autofocus) &&
       nsContentUtils::GetBoolPref("browser.autofocus", PR_TRUE)) {
     nsCOMPtr<nsIRunnable> event = new nsAutoFocusEvent(this);
     rv = NS_DispatchToCurrentThread(event);

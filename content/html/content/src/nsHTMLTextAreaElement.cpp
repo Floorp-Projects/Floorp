@@ -260,11 +260,6 @@ protected:
                             PRBool aUserInput);
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
 
-  virtual PRBool AcceptAutofocus() const
-  {
-    return PR_TRUE;
-  }
-
   /**
    * Common method to call from the various mutation observer methods.
    * aContent is a content node that's either the one that changed or its

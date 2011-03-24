@@ -101,8 +101,8 @@ PR_STATIC_ASSERT((PRUint32)eButtonElementTypesMax < (PRUint32)NS_FORM_INPUT_ELEM
 PR_STATIC_ASSERT((PRUint32)eInputElementTypesMax  < 1<<8);
 
 #define NS_IFORMCONTROL_IID   \
-{ 0x58865437, 0xd468, 0x4189, \
- { 0x9a, 0x3f, 0xde, 0x6e, 0x1c, 0xff, 0x79, 0x09 } }
+{ 0xd505a47a, 0xc2e1, 0x4730, \
+ { 0x86, 0x33, 0x1f, 0xc8, 0x87, 0x27, 0xd0, 0xc1 } }
 
 /**
  * Interface which all form controls (e.g. buttons, checkboxes, text,
@@ -222,6 +222,12 @@ protected:
    * @return whether mType corresponds to a single line text control type.
    */
   inline static bool IsSingleLineTextControl(bool aExcludePassword, PRUint32 aType);
+
+  /**
+   * Returns whether this is a auto-focusable form control.
+   * @return whether this is a auto-focusable form control.
+   */
+  inline bool IsAutofocusable() const;
 };
 
 PRBool
@@ -287,6 +293,16 @@ nsIFormControl::IsSubmittableControl() const
          // type == NS_FORM_KEYGEN ||
          type & NS_FORM_BUTTON_ELEMENT ||
          type & NS_FORM_INPUT_ELEMENT;
+}
+
+bool
+nsIFormControl::IsAutofocusable() const
+{
+  PRUint32 type = GetType();
+  return type & NS_FORM_INPUT_ELEMENT ||
+         type & NS_FORM_BUTTON_ELEMENT ||
+         type == NS_FORM_TEXTAREA ||
+         type == NS_FORM_SELECT;
 }
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormControl, NS_IFORMCONTROL_IID)

@@ -924,14 +924,6 @@ protected:
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                 const nsAString* aValue, PRBool aNotify);
 
-  /**
-   * Returns if the element should react on autofocus attribute.
-   */
-  virtual PRBool AcceptAutofocus() const
-  {
-    return PR_FALSE;
-  }
-
   void UpdateEditableFormControlState();
 
   /**
