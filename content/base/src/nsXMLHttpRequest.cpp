@@ -109,6 +109,7 @@
 #define PROGRESS_STR "progress"
 #define UPLOADPROGRESS_STR "uploadprogress"
 #define READYSTATE_STR "readystatechange"
+#define LOADEND_STR "loadend"
 
 // CIDs
 
@@ -518,6 +519,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXHREventTarget,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnAbortListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadStartListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnProgressListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadendListener)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXHREventTarget,
@@ -527,6 +529,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXHREventTarget,
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnAbortListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadStartListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnProgressListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadendListener)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXHREventTarget)
@@ -599,6 +602,19 @@ nsXHREventTarget::SetOnprogress(nsIDOMEventListener* aOnprogress)
 {
   return RemoveAddEventListener(NS_LITERAL_STRING(PROGRESS_STR),
                                 mOnProgressListener, aOnprogress);
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::GetOnloadend(nsIDOMEventListener** aOnLoadend)
+{
+  return GetInnerEventListener(mOnLoadendListener, aOnLoadend);
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::SetOnloadend(nsIDOMEventListener* aOnLoadend)
+{
+  return RemoveAddEventListener(NS_LITERAL_STRING(LOADEND_STR),
+                                mOnLoadendListener, aOnLoadend);
 }
 
 /////////////////////////////////////////////
@@ -1561,6 +1577,10 @@ nsXMLHttpRequest::DispatchProgressEvent(nsPIDOMEventTarget* aTarget,
     return;
   }
 
+  PRBool dispatchLoadend = aType.EqualsLiteral(LOAD_STR) ||
+                           aType.EqualsLiteral(ERROR_STR) ||
+                           aType.EqualsLiteral(ABORT_STR);
+  
   nsCOMPtr<nsIDOMEvent> event;
   nsresult rv = nsEventDispatcher::CreateEvent(nsnull, nsnull,
                                                NS_LITERAL_STRING("ProgressEvent"),
@@ -1592,8 +1612,14 @@ nsXMLHttpRequest::DispatchProgressEvent(nsPIDOMEventTarget* aTarget,
     event = xhrprogressEvent;
   }
   aTarget->DispatchDOMEvent(nsnull, event, nsnull, nsnull);
+  
+  if (dispatchLoadend) {
+    DispatchProgressEvent(aTarget, NS_LITERAL_STRING(LOADEND_STR),
+                          aUseLSEventWrapper, aLengthComputable,
+                          aLoaded, aTotal, aPosition, aTotalSize);
+  }
 }
-
+                                          
 already_AddRefed<nsIHttpChannel>
 nsXMLHttpRequest::GetCurrentHttpChannel()
 {
