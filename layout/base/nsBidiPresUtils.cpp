@@ -47,7 +47,6 @@
 #include "nsIRenderingContext.h"
 #include "nsIServiceManager.h"
 #include "nsFrameManager.h"
-#include "nsBidiFrames.h"
 #include "nsBidiUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsHTMLContainerFrame.h"
@@ -76,8 +75,7 @@ static const PRUnichar ALEF              = 0x05D0;
 #define CHAR_IS_HEBREW(c) ((0x0590 <= (c)) && ((c)<= 0x05FF))
 // Note: The above code are moved from gfx/src/windows/nsRenderingContextWin.cpp
 
-nsIFrame*
-NS_NewDirectionalFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+#define NS_BIDI_CONTROL_FRAME ((nsIFrame*)0xfffb1d1)
 
 nsBidiPresUtils::nsBidiPresUtils() : mArraySize(8),
                                      mIndexMap(nsnull),
@@ -321,8 +319,6 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
   mBuffer.SetLength(0);
   
   nsPresContext *presContext = aBlockFrame->PresContext();
-  nsIPresShell* shell = presContext->PresShell();
-  nsStyleContext* styleContext = aBlockFrame->GetStyleContext();
 
   // handle bidi-override being set on the block itself before calling
   // InitLogicalArray.
@@ -331,8 +327,6 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
 
   PRUnichar ch = 0;
   if (text->mUnicodeBidi == NS_STYLE_UNICODE_BIDI_OVERRIDE) {
-    nsIFrame *directionalFrame = nsnull;
-
     if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
       ch = kRLO;
     }
@@ -340,11 +334,8 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
       ch = kLRO;
     }
     if (ch != 0) {
-      directionalFrame = NS_NewDirectionalFrame(shell, styleContext);
-      if (directionalFrame) {
-        mLogicalFrames.AppendElement(directionalFrame);
-        mBuffer.Append(ch);
-      }
+      mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
+      mBuffer.Append(ch);
     }
   }
   mPrevContent = nsnull;
@@ -355,11 +346,8 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
   }
 
   if (ch != 0) {
-    nsIFrame* directionalFrame = NS_NewDirectionalFrame(shell, styleContext);
-    if (directionalFrame) {
-      mLogicalFrames.AppendElement(directionalFrame);
-      mBuffer.Append(kPDF);
-    }
+    mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
+    mBuffer.Append(kPDF);
   }
 
   // XXX: TODO: Handle preformatted text ('\n')
@@ -399,7 +387,6 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
   nsIFrame*   frame = nsnull;
   nsIContent* content = nsnull;
   PRInt32     contentTextLength;
-  nsIAtom*    frameType = nsnull;
 
   FramePropertyTable *propTable = presContext->PropertyTable();
 
@@ -452,9 +439,17 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
         break;
       }
       frame = mLogicalFrames[frameIndex];
-      frameType = frame->GetType();
       lineNeedsUpdate = PR_TRUE;
-      if (nsGkAtoms::textFrame == frameType) {
+      if (frame == NS_BIDI_CONTROL_FRAME ||
+          nsGkAtoms::textFrame != frame->GetType()) {
+        /*
+         * Any non-text frame corresponds to a single character in the text buffer
+         * (a bidi control character, LINE SEPARATOR, or OBJECT SUBSTITUTE)
+         */
+        isTextFrame = PR_FALSE;
+        fragmentLength = 1;
+      }
+      else {
         content = frame->GetContent();
         if (!content) {
           mSuccess = NS_OK;
@@ -479,14 +474,6 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
         contentOffset = start;
         isTextFrame = PR_TRUE;
       }
-      else {
-        /*
-         * Any non-text frame corresponds to a single character in the text buffer
-         * (a bidi control character, LINE SEPARATOR, or OBJECT SUBSTITUTE)
-         */
-        isTextFrame = PR_FALSE;
-        fragmentLength = 1;
-      }
     } // if (fragmentLength <= 0)
 
     if (runLength <= 0) {
@@ -505,8 +492,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
       }
     } // if (runLength <= 0)
 
-    if (nsGkAtoms::directionalFrame == frameType) {
-      frame->Destroy();
+    if (frame == NS_BIDI_CONTROL_FRAME) {
       frame = nsnull;
       ++lineOffset;
     }
@@ -561,7 +547,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
              */
             PRInt32 newIndex = frameIndex;
             do {
-            } while (mLogicalFrames[++newIndex]->GetType() == nsGkAtoms::directionalFrame);
+            } while (mLogicalFrames[++newIndex] == NS_BIDI_CONTROL_FRAME);
             RemoveBidiContinuation(frame, frameIndex, newIndex, lineOffset);
           } else if (runLength == fragmentLength) {
             /*
@@ -585,7 +571,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
       else {
         ++lineOffset;
       }
-    } // not directionalFrame
+    } // not bidi control frame
     PRInt32 temp = runLength;
     runLength -= fragmentLength;
     fragmentLength -= temp;
@@ -651,9 +637,6 @@ nsBidiPresUtils::InitLogicalArray(nsIFrame*    aCurrentFrame)
   if (!aCurrentFrame)
     return;
 
-  nsIPresShell* shell = aCurrentFrame->PresContext()->PresShell();
-  nsStyleContext* styleContext;
-
   for (nsIFrame* childFrame = aCurrentFrame; childFrame;
        childFrame = childFrame->GetNextSibling()) {
 
@@ -677,8 +660,6 @@ nsBidiPresUtils::InitLogicalArray(nsIFrame*    aCurrentFrame)
         case NS_STYLE_UNICODE_BIDI_NORMAL:
           break;
         case NS_STYLE_UNICODE_BIDI_EMBED:
-          styleContext = frame->GetStyleContext();
-
           if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
             ch = kRLE;
           }
@@ -687,8 +668,6 @@ nsBidiPresUtils::InitLogicalArray(nsIFrame*    aCurrentFrame)
           }
           break;
         case NS_STYLE_UNICODE_BIDI_OVERRIDE:
-          styleContext = frame->GetStyleContext();
-
           if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
             ch = kRLO;
           }
@@ -698,14 +677,11 @@ nsBidiPresUtils::InitLogicalArray(nsIFrame*    aCurrentFrame)
           break;
       }
 
-      // Create a directional frame before the first frame of an
-      // element specifying embedding or override
+      // Add a dummy frame pointer representing a bidi control code before the
+      // first frame of an element specifying embedding or override
       if (ch != 0 && !frame->GetPrevContinuation()) {
-        nsIFrame* dirFrame = NS_NewDirectionalFrame(shell, styleContext);
-        if (dirFrame) {
-          mLogicalFrames.AppendElement(dirFrame);
-          mBuffer.Append(ch);
-        }
+        mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
+        mBuffer.Append(ch);
       }
     }
 
@@ -745,13 +721,10 @@ nsBidiPresUtils::InitLogicalArray(nsIFrame*    aCurrentFrame)
 
     // If the element is attributed by dir, indicate direction pop (add PDF frame)
     if (ch != 0 && !frame->GetNextContinuation()) {
-      // Create a directional frame after the last frame of an
-      // element specifying embedding or override
-      nsIFrame* dirFrame = NS_NewDirectionalFrame(shell, styleContext);
-      if (dirFrame) {
-        mLogicalFrames.AppendElement(dirFrame);
-        mBuffer.Append(kPDF);
-      }
+      // Add a dummy frame pointer representing a bidi control code after the
+      // last frame of an element specifying embedding or override
+      mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
+      mBuffer.Append(kPDF);
     }
   } // for
 }
@@ -1217,8 +1190,7 @@ nsBidiPresUtils::RemoveBidiContinuation(nsIFrame*       aFrame,
 
   for (PRInt32 index = aFirstIndex + 1; index <= aLastIndex; index++) {
     nsIFrame* frame = mLogicalFrames[index];
-    if (nsGkAtoms::directionalFrame == frame->GetType()) {
-      frame->Destroy();
+    if (frame == NS_BIDI_CONTROL_FRAME) {
       ++aOffset;
     }
     else {
