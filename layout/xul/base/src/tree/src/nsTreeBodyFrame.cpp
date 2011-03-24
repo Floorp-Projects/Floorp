@@ -4196,11 +4196,11 @@ nsTreeBodyFrame::GetPseudoStyleContext(nsIAtom* aPseudoElement)
 PRBool
 nsTreeBodyFrame::PseudoMatches(nsCSSSelector* aSelector)
 {
-  // Iterate the pseudoclass list.  For each item in the list, see if
+  // Iterate the class list.  For each item in the list, see if
   // it is contained in our scratch array.  If we have a miss, then
-  // we aren't a match.  If all items in the pseudoclass list are
+  // we aren't a match.  If all items in the class list are
   // present in the scratch array, then we have a match.
-  nsPseudoClassList* curr = aSelector->mPseudoClassList;
+  nsAtomList* curr = aSelector->mClassList;
   while (curr) {
     PRInt32 index;
     mScratchArray->GetIndexOf(curr->mAtom, &index);

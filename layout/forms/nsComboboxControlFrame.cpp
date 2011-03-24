@@ -387,6 +387,21 @@ nsComboboxControlFrame::ShowList(PRBool aShowList)
   nsCOMPtr<nsIPresShell> shell = PresContext()->GetPresShell();
 
   nsWeakFrame weakFrame(this);
+
+  if (aShowList) {
+    nsIView* view = mDropdownFrame->GetView();
+    NS_ASSERTION(!view->HasWidget(),
+                 "We shoudldn't have a widget before we need to display the popup");
+
+    // Create the widget for the drop-down list
+    view->GetViewManager()->SetViewFloating(view, PR_TRUE);
+
+    nsWidgetInitData widgetData;
+    widgetData.mWindowType  = eWindowType_popup;
+    widgetData.mBorderStyle = eBorderStyle_default;
+    view->CreateWidgetForPopup(&widgetData);
+  }
+
   ShowPopup(aShowList);  // might destroy us
   if (!weakFrame.IsAlive()) {
     return PR_FALSE;
@@ -412,8 +427,13 @@ nsComboboxControlFrame::ShowList(PRBool aShowList)
     NS_ASSERTION(view, "nsComboboxControlFrame view is null");
     if (view) {
       nsIWidget* widget = view->GetWidget();
-      if (widget)
+      if (widget) {
         widget->CaptureRollupEvents(this, nsnull, mDroppedDown, mDroppedDown);
+
+        if (!aShowList) {
+          view->DestroyWidget();
+        }
+      }
     }
   }
 
