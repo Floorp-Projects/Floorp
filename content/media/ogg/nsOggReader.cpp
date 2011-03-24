@@ -169,7 +169,7 @@ static PRBool DoneReadingHeaders(nsTArray<nsOggCodecState*>& aBitstreams) {
   return PR_TRUE;
 }
 
-nsresult nsOggReader::ReadMetadata()
+nsresult nsOggReader::ReadMetadata(nsVideoInfo* aInfo)
 {
   NS_ASSERTION(mDecoder->OnStateMachineThread(), "Should be on play state machine thread.");
   MonitorAutoEnter mon(mMonitor);
@@ -352,6 +352,8 @@ nsresult nsOggReader::ReadMetadata()
     memcpy(&mTheoraInfo, &mTheoraState->mInfo, sizeof(mTheoraInfo));
     mTheoraSerial = mTheoraState->mSerial;
   }
+
+  *aInfo = mInfo;
 
   LOG(PR_LOG_DEBUG, ("Done loading headers, data offset %lld", mDataOffset));
 
@@ -561,6 +563,10 @@ nsresult nsOggReader::DecodeTheora(nsTArray<nsAutoPtr<VideoData> >& aFrames,
       b.mPlanes[i].mWidth = buffer[i].width;
       b.mPlanes[i].mStride = buffer[i].stride;
     }
+
+    // Need the monitor to be held to be able to use mInfo. This
+    // is held by our caller.
+    mMonitor.AssertCurrentThreadIn();
     VideoData *v = VideoData::Create(mInfo,
                                      mDecoder->GetImageContainer(),
                                      mPageOffset,

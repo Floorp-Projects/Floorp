@@ -184,14 +184,14 @@ public:
   // The decoder monitor must be obtained before calling this.
   PRBool HasAudio() const {
     mDecoder->GetMonitor().AssertCurrentThreadIn();
-    return mReader->GetInfo().mHasAudio;
+    return mInfo.mHasAudio;
   }
 
   // This is called on the state machine thread and audio thread.
   // The decoder monitor must be obtained before calling this.
   PRBool HasVideo() const {
     mDecoder->GetMonitor().AssertCurrentThreadIn();
-    return mReader->GetInfo().mHasVideo;
+    return mInfo.mHasVideo;
   }
 
   // Should be called by main thread.
@@ -311,10 +311,11 @@ protected:
   void UpdatePlaybackPositionInternal(PRInt64 aTime);
 
   // Performs YCbCr to RGB conversion, and pushes the image down the
-  // rendering pipeline. Called on the state machine thread.
-  void RenderVideoFrame(VideoData* aData,
-                        TimeStamp aTarget);
-
+  // rendering pipeline. Called on the state machine thread. The decoder
+  // monitor must not be held when calling this.
+  void RenderVideoFrame(VideoData* aData, TimeStamp aTarget, 
+                        nsIntSize aDisplaySize, float aAspectRatio);
+ 
   // If we have video, display a video frame if it's time for display has
   // arrived, otherwise sleep until it's time for the next sample. Update
   // the current frame time as appropriate, and trigger ready state update.
@@ -524,6 +525,10 @@ private:
   // event manager is accessed from the state machine and audio threads,
   // and takes care of synchronizing access to its internal queue.
   nsAudioAvailableEventManager mEventManager;
+
+  // Stores presentation info required for playback. The decoder monitor
+  // must be held when accessing this.
+  nsVideoInfo mInfo;
 };
 
 #endif

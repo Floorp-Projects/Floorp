@@ -68,7 +68,7 @@ nsresult nsRawReader::ResetDecode()
   return nsBuiltinDecoderReader::ResetDecode();
 }
 
-nsresult nsRawReader::ReadMetadata()
+nsresult nsRawReader::ReadMetadata(nsVideoInfo* aInfo)
 {
   NS_ASSERTION(mDecoder->OnStateMachineThread(),
                "Should be on state machine thread.");
@@ -133,6 +133,8 @@ nsresult nsRawReader::ReadMetadata()
                                            (length - sizeof(nsRawVideoHeader)) /
                                            (mFrameSize * mFrameRate));
   }
+
+  *aInfo = mInfo;
 
   return NS_OK;
 }
