@@ -333,8 +333,7 @@ let ContentScroll =  {
           break;
 
         // Map ID to element
-        let cwu20 = rootCwu.QueryInterface(Ci.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
-        let element = cwu20.findElementWithViewId(json.id);
+        let element = rootCwu.findElementWithViewId(json.id);
         if (!element)
           break;
 
@@ -358,8 +357,7 @@ let ContentScroll =  {
 
         let win = element.ownerDocument.defaultView;
         let winCwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-        let winCwu20 = winCwu.QueryInterface(Ci.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
-        winCwu20.setDisplayPortForElement(x, y, displayport.width, displayport.height, element);
+        winCwu.setDisplayPortForElement(x, y, displayport.width, displayport.height, element);
 
         // XXX If we scrolled during this displayport update, then it is the
         //     end of a pan. Due to bug 637852, there may be seaming issues
@@ -367,7 +365,7 @@ let ContentScroll =  {
         if (json.id == 1 && json.scrollX >= 0 && json.scrollY >= 0)
           win.setTimeout(
             function() {
-              winCwu20.redraw();
+              winCwu.redraw();
             }, 0);
 
         break;
@@ -444,8 +442,7 @@ let ContentActive =  {
       case "Content:Deactivate":
         docShell.isActive = false;
         let cwu = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-        let cwu20 = cwu.QueryInterface(Ci.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
-        cwu20.setDisplayPortForElement(0,0,0,0,content.document.documentElement);
+        cwu.setDisplayPortForElement(0,0,0,0,content.document.documentElement);
         break;
 
       case "Content:Activate":
