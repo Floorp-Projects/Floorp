@@ -125,6 +125,11 @@ typedef PRUint8 nsHttpVersion;
 // to the server (see bug #466080), but is may also be used for other things
 #define NS_HTTP_LOAD_ANONYMOUS       (1<<4)
 
+// a transaction with this caps flag will not only not use an existing
+// persistent connection but it will close outstanding ones to the same
+// host. Used by a forced reload to reset the connection states.
+#define NS_HTTP_CLEAR_KEEPALIVES     (1<<5)
+
 //-----------------------------------------------------------------------------
 // some default values
 //-----------------------------------------------------------------------------
