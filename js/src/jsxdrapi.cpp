@@ -702,7 +702,7 @@ XDRScriptState::~XDRScriptState()
 JS_PUBLIC_API(JSBool)
 JS_XDRScriptObject(JSXDRState *xdr, JSObject **scriptObjp)
 {
-    JS_ASSERT(!xdr->filename);
+    JS_ASSERT(!xdr->state);
 
     JSScript *script;
     uint32 magic;
