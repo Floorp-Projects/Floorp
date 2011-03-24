@@ -3459,9 +3459,11 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
     ClearSurfaceForUnboundedSource();
 
     {
-        gfxContextAutoSaveRestore autoSR(mThebes);
+        gfxContextMatrixAutoSaveRestore autoMatrixSR(mThebes);
+
         mThebes->Translate(gfxPoint(dx, dy));
         mThebes->SetPattern(pattern);
+        DirtyAllStyles();
 
         gfxRect clip(0, 0, dw, dh);
 
@@ -3482,11 +3484,9 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         }
 
         PRBool doUseIntermediateSurface = NeedToUseIntermediateSurface();
-
-        mThebes->SetPattern(pattern);
-        DirtyAllStyles();
-
         if (doUseIntermediateSurface) {
+            gfxContextAutoSaveRestore autoSR(mThebes);
+
             // draw onto a pushed group
             mThebes->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
             mThebes->Clip(clip);
@@ -3504,6 +3504,8 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
             mThebes->Rectangle(clip);
             mThebes->Fill();
         } else {
+            gfxContextAutoSaveRestore autoSR(mThebes);
+
             /* we need to use to clip instead of fill for globalAlpha */
             mThebes->Clip(clip);
             mThebes->Paint(CurrentState().globalAlpha);
