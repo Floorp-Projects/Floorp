@@ -76,6 +76,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mChooseApplicationCache(PR_FALSE)
   , mLoadedFromApplicationCache(PR_FALSE)
   , mChannelIsForDownload(PR_FALSE)
+  , mRedirectedCachekeys(nsnull)
 {
   LOG(("Creating HttpBaseChannel @%x\n", this));
 
@@ -86,6 +87,9 @@ HttpBaseChannel::HttpBaseChannel()
 HttpBaseChannel::~HttpBaseChannel()
 {
   LOG(("Destroying HttpBaseChannel @%x\n", this));
+
+  // Make sure we don't leak
+  CleanRedirectCacheChainIfNecessary();
 
   gHttpHandler->Release();
 }
@@ -1166,6 +1170,13 @@ HttpBaseChannel::SetChannelIsForDownload(PRBool aChannelIsForDownload)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpBaseChannel::SetCacheKeysRedirectChain(nsTArray<nsCString> *cacheKeys)
+{
+  mRedirectedCachekeys = cacheKeys;
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------
@@ -1384,7 +1395,16 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
       httpInternal->SetDocumentURI(newURI);
     else
       httpInternal->SetDocumentURI(mDocumentURI);
-  } 
+
+    // if there is a chain of keys for redirect-responses we transfer it to
+    // the new channel (see bug #561276)
+    if (mRedirectedCachekeys) {
+        LOG(("HttpBaseChannel::SetupReplacementChannel "
+             "[this=%p] transferring chain of redirect cache-keys", this));
+        httpInternal->SetCacheKeysRedirectChain(mRedirectedCachekeys);
+        mRedirectedCachekeys = nsnull;
+    }
+  }
   
   // transfer application cache information
   nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =

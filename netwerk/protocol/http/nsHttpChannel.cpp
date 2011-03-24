@@ -384,6 +384,9 @@ nsHttpChannel::DoNotifyListener()
     // We have to make sure to drop the reference to the callbacks too
     mCallbacks = nsnull;
     mProgressSink = nsnull;
+
+    // We don't need this info anymore
+    CleanRedirectCacheChainIfNecessary();
 }
 
 void
@@ -2637,12 +2640,27 @@ nsHttpChannel::CheckCache()
             (buf.IsEmpty() && mRequestHead.PeekHeader(nsHttp::Authorization));
     }
 
-    if (!doValidation) {
-        // Sites redirect back to the original URI after setting a session/tracking
-        // cookie. In such cases, force revalidation so that we hit the net and do not
-        // cycle thru cached responses.
-        if (isCachedRedirect && mRequestHead.PeekHeader(nsHttp::Cookie))
+    // Bug #561276: We maintain a chain of cache-keys which returns cached
+    // 3xx-responses (redirects) in order to detect cycles. If a cycle is
+    // found, ignore the cached response and hit the net. Otherwise, use
+    // the cached response and add the cache-key to the chain. Note that
+    // a limited number of redirects (cached or not) is allowed and is
+    // enforced independently of this mechanism
+    if (!doValidation && isCachedRedirect) {
+        nsCAutoString cacheKey;
+        GenerateCacheKey(mPostID, cacheKey);
+
+        if (!mRedirectedCachekeys)
+            mRedirectedCachekeys = new nsTArray<nsCString>();
+        else if (mRedirectedCachekeys->Contains(cacheKey))
             doValidation = PR_TRUE;
+
+        LOG(("Redirection-chain %s key %s\n",
+             doValidation ? "contains" : "does not contain", cacheKey.get()));
+
+        // Append cacheKey if not in the chain already
+        if (!doValidation)
+            mRedirectedCachekeys->AppendElement(cacheKey);
     }
 
     mCachedContentIsValid = !doValidation;
@@ -2678,6 +2696,9 @@ nsHttpChannel::CheckCache()
                 mRequestHead.SetHeader(nsHttp::If_None_Match,
                                        nsDependentCString(val));
         }
+
+        // We don't need this info anymore
+        CleanRedirectCacheChainIfNecessary();
     }
 
     LOG(("nsHTTPChannel::CheckCache exit [this=%p doValidation=%d]\n", this, doValidation));
@@ -4042,6 +4063,9 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
 
     if (mLoadGroup)
         mLoadGroup->RemoveRequest(this, nsnull, status);
+
+    // We don't need this info anymore
+    CleanRedirectCacheChainIfNecessary();
 
     mCallbacks = nsnull;
     mProgressSink = nsnull;
