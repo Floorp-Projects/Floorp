@@ -56,8 +56,6 @@ EXPORTS = TabMessageUtils.h PCOMContentPermissionRequestChild.h
 EXPORTS_NAMESPACES = mozilla/dom
 
 EXPORTS_mozilla/dom = \
-  AudioChild.h \
-  AudioParent.h \
   ContentChild.h \
   ContentParent.h \
   ContentProcess.h \
@@ -68,8 +66,6 @@ EXPORTS_mozilla/dom = \
   $(NULL)
 
 CPPSRCS = \
-  AudioChild.cpp \
-  AudioParent.cpp \
   ContentProcess.cpp \
   ContentParent.cpp \
   ContentChild.cpp \
@@ -78,6 +74,18 @@ CPPSRCS = \
   TabChild.cpp \
   TabMessageUtils.cpp \
   $(NULL)
+
+ifdef MOZ_SYDNEYAUDIO
+EXPORTS_mozilla/dom += \
+  AudioChild.h \
+  AudioParent.h \
+  $(NULL)
+CPPSRCS += \
+  AudioChild.cpp \
+  AudioParent.cpp \
+  $(NULL)
+endif
+
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

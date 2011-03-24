@@ -68,7 +68,9 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsConsoleMessage.h"
+#if defined(MOZ_SYDNEYAUDIO)
 #include "AudioParent.h"
+#endif
 
 #if defined(ANDROID) || defined(LINUX)
 #include <sys/time.h>
@@ -687,16 +689,22 @@ ContentParent::AllocPAudio(const PRInt32& numChannels,
                            const PRInt32& rate,
                            const PRInt32& format)
 {
+#if defined(MOZ_SYDNEYAUDIO)
     AudioParent *parent = new AudioParent(numChannels, rate, format);
     NS_ADDREF(parent);
     return parent;
+#else
+    return nsnull;
+#endif
 }
 
 bool
 ContentParent::DeallocPAudio(PAudioParent* doomed)
 {
+#if defined(MOZ_SYDNEYAUDIO)
     AudioParent *parent = static_cast<AudioParent*>(doomed);
     NS_RELEASE(parent);
+#endif
     return true;
 }
 
