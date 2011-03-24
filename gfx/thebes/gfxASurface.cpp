@@ -74,6 +74,16 @@
 #include <stdio.h>
 #include <limits.h>
 
+#include "imgIEncoder.h"
+#include "nsComponentManagerUtils.h"
+#include "gfxContext.h"
+#include "prmem.h"
+#include "nsISupportsUtils.h"
+#include "plbase64.h"
+#include "nsCOMPtr.h"
+#include "nsIConsoleService.h"
+#include "nsServiceManagerUtils.h"
+
 static cairo_user_data_key_t gfxasurface_pointer_key;
 
 // Surfaces use refcounting that's tied to the cairo surface refcnt, to avoid
@@ -612,3 +622,116 @@ gfxASurface::RecordMemoryFreed()
         mBytesRecorded = 0;
     }
 }
+
+void
+gfxASurface::DumpAsDataURL()
+{
+  gfxIntSize size = GetSize();
+  if (size.width == -1 && size.height == -1) {
+    printf("Could not determine surface size\n");
+    return;
+  }
+
+  nsAutoArrayPtr<PRUint8> imageBuffer(new (std::nothrow) PRUint8[size.width * 
+                                                                 size.height * 
+                                                                 4]);
+  if (!imageBuffer) {
+    printf("Could not allocate image buffer\n");
+    return;
+  }
+ 
+  nsRefPtr<gfxImageSurface> imgsurf = 
+    new gfxImageSurface(imageBuffer.get(),
+                        gfxIntSize(size.width, size.height),
+                        size.width * 4,
+                        gfxASurface::ImageFormatARGB32);
+
+  if (!imgsurf || imgsurf->CairoStatus()) {
+    printf("Could not allocate image surface\n");
+    return;
+  }
+
+  nsRefPtr<gfxContext> ctx = new gfxContext(imgsurf);
+  if (!ctx || ctx->HasError()) {
+    printf("Could not allocate image context\n");
+    return;
+  }
+
+  ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+  ctx->SetSource(this, gfxPoint(0, 0));
+  ctx->Paint();
+
+  nsCOMPtr<imgIEncoder> encoder =
+    do_CreateInstance("@mozilla.org/image/encoder;2?type=image/png");
+  if (!encoder) {
+    PRInt32 w = NS_MIN(size.width, 8);
+    PRInt32 h = NS_MIN(size.height, 8);
+    printf("Could not create encoder. Printing %dx%d pixels.\n", w, h);
+    for (PRInt32 y = 0; y < h; ++y) {
+      for (PRInt32 x = 0; x < w; ++x) {
+        printf("%x ", reinterpret_cast<PRUint32*>(imageBuffer.get())[y*size.width + x]);
+      }
+      printf("\n");
+    }
+    return;
+  }
+
+  nsresult rv = encoder->InitFromData(imageBuffer.get(),
+                                      size.width * size.height * 4, 
+                                      size.width, 
+                                      size.height, 
+                                      size.width * 4,
+                                      imgIEncoder::INPUT_FORMAT_HOSTARGB,
+                                      NS_LITERAL_STRING(""));
+  if (NS_FAILED(rv))
+    return;
+
+  nsCOMPtr<nsIInputStream> imgStream;
+  CallQueryInterface(encoder.get(), getter_AddRefs(imgStream));
+  if (!imgStream)
+    return;
+
+  PRUint32 bufSize;
+  rv = imgStream->Available(&bufSize);
+  if (NS_FAILED(rv))
+    return;
+
+  // ...leave a little extra room so we can call read again and make sure we
+  // got everything. 16 bytes for better padding (maybe)
+  bufSize += 16;
+  PRUint32 imgSize = 0;
+  char* imgData = (char*)PR_Malloc(bufSize);
+  if (!imgData)
+    return;
+  PRUint32 numReadThisTime = 0;
+  while ((rv = imgStream->Read(&imgData[imgSize], 
+                               bufSize - imgSize,
+                               &numReadThisTime)) == NS_OK && numReadThisTime > 0) 
+  {
+    imgSize += numReadThisTime;
+    if (imgSize == bufSize) {
+      // need a bigger buffer, just double
+      bufSize *= 2;
+      char* newImgData = (char*)PR_Realloc(imgData, bufSize);
+      if (!newImgData) {
+        PR_Free(imgData);
+        return;
+      }
+      imgData = newImgData;
+    }
+  }
+  
+  // base 64, result will be NULL terminated
+  char* encodedImg = PL_Base64Encode(imgData, imgSize, nsnull);
+  PR_Free(imgData);
+  if (!encodedImg) // not sure why this would fail
+    return;
+ 
+  printf("data:image/png;base64,");
+  printf("%s", encodedImg);
+  printf("\n");
+  PR_Free(encodedImg);
+
+  return;
+}
+
