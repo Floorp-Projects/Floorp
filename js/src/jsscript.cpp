@@ -310,27 +310,6 @@ enum ScriptBits {
 JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 {
-    JS_ASSERT(!xdr->atoms);
-    JS_ASSERT(!xdr->atomsMap);
-
-    XDRAtoms atoms;
-    XDRAtomsHashMap atomsMap;
-    if (xdr->mode == JSXDR_ENCODE && !atomsMap.init()) {
-        js_ReportOutOfMemory(xdr->cx);
-        return false;
-    }
-
-    xdr->atoms = &atoms;
-    xdr->atomsMap = &atomsMap;
-    JSBool ok = js_XDRScriptAndSubscripts(xdr, scriptp);
-    xdr->atoms = NULL;
-    xdr->atomsMap = NULL;
-    return ok;
-}
-
-JSBool
-js_XDRScriptAndSubscripts(JSXDRState *xdr, JSScript **scriptp)
-{
     JSScript *oldscript;
     JSBool ok;
     jsbytecode *code;
@@ -348,6 +327,9 @@ js_XDRScriptAndSubscripts(JSXDRState *xdr, JSScript **scriptp)
     JSScript *script = *scriptp;
     nsrcnotes = ntrynotes = natoms = nobjects = nregexps = nconsts = 0;
     jssrcnote *notes = NULL;
+    XDRScriptState *state = xdr->state;
+
+    JS_ASSERT(state);
 
     /* Should not XDR scripts optimized for a single global object. */
     JS_ASSERT_IF(script, !JSScript::isValidOffset(script->globalsOffset));
@@ -618,10 +600,20 @@ js_XDRScriptAndSubscripts(JSXDRState *xdr, JSScript **scriptp)
         goto error;
     }
 
-    JS_ASSERT_IF(xdr->mode == JSXDR_ENCODE, xdr->filename == script->filename);
+    if (xdr->mode == JSXDR_DECODE && state->filename) {
+        if (!state->filenameSaved) {
+            const char *filename = state->filename;
+            filename = js_SaveScriptFilename(xdr->cx, filename);
+            xdr->cx->free((void *) state->filename);
+            state->filename = filename;
+            state->filenameSaved = true;
+            if (!filename)
+                goto error;
+        }
+        script->filename = state->filename;
+    }
 
-    if (xdr->mode == JSXDR_DECODE)
-        script->filename = xdr->filename;
+    JS_ASSERT_IF(xdr->mode == JSXDR_ENCODE, state->filename == script->filename);
 
     callbacks = JS_GetSecurityCallbacks(cx);
     if (xdr->mode == JSXDR_ENCODE) {
@@ -1960,6 +1952,21 @@ class DisablePrincipalsTranscoding {
     }
 };
 
+class AutoJSXDRState {
+public:
+    AutoJSXDRState(JSXDRState *x) : xdr(x) {}
+    ~AutoJSXDRState() {
+        JS_XDRDestroy(xdr);
+    }
+
+    operator JSXDRState*() const {
+        return xdr;
+    }
+
+private:
+    JSXDRState *const xdr;
+};
+
 JSScript *
 js_CloneScript(JSContext *cx, JSScript *script)
 {
@@ -1967,47 +1974,41 @@ js_CloneScript(JSContext *cx, JSScript *script)
     JS_ASSERT(script->compartment);
 
     // serialize script
-    JSXDRState *w = JS_XDRNewMem(cx, JSXDR_ENCODE);
+    AutoJSXDRState w(JS_XDRNewMem(cx, JSXDR_ENCODE));
     if (!w)
         return NULL;
 
     // we don't want gecko to transcribe our principals for us
     DisablePrincipalsTranscoding disable(cx);
 
+    XDRScriptState wstate(w);
 #ifdef DEBUG
-    w->filename = script->filename;
+    wstate.filename = script->filename;
 #endif
-    if (!js_XDRScript(w, &script)) {
-        JS_XDRDestroy(w);
+    if (!js_XDRScript(w, &script))
         return NULL;
-    }
 
     uint32 nbytes;
     void *p = JS_XDRMemGetData(w, &nbytes);
-    if (!p) {
-        JS_XDRDestroy(w);
+    if (!p)
         return NULL;
-    }
 
     // de-serialize script
-    JSXDRState *r = JS_XDRNewMem(cx, JSXDR_DECODE);
-    if (!r) {
-        JS_XDRDestroy(w);
+    AutoJSXDRState r(JS_XDRNewMem(cx, JSXDR_DECODE));
+    if (!r)
         return NULL;
-    }
 
     // Hand p off from w to r.  Don't want them to share the data
     // mem, lest they both try to free it in JS_XDRDestroy
     JS_XDRMemSetData(r, p, nbytes);
     JS_XDRMemSetData(w, NULL, 0);
 
-    r->filename = script->filename;
+    XDRScriptState rstate(r);
+    rstate.filename = script->filename;
+    rstate.filenameSaved = true;
 
     if (!js_XDRScript(r, &script))
         return NULL;
-
-    JS_XDRDestroy(r);
-    JS_XDRDestroy(w);
 
     // set the proper principals for the script
     script->principals = script->compartment->principals;
