@@ -155,6 +155,10 @@ gfxGDIFont::InitTextRun(gfxContext *aContext,
 
     PRBool ok = PR_FALSE;
 
+    // ensure the cairo font is set up, so there's no risk it'll fall back to
+    // creating a "toy" font internally (see bug 544617)
+    SetupCairoFont(aContext);
+
     if (mHarfBuzzShaper) {
         if (gfxPlatform::GetPlatform()->UseHarfBuzzLevel() >=
             gfxUnicodeProperties::ScriptShapingLevel(aRunScript)) {
