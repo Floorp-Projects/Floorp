@@ -46,9 +46,9 @@
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsCSSRuleProcessor.h"
-#include "nsICSSNameSpaceRule.h"
+#include "mozilla/css/NameSpaceRule.h"
 #include "nsICSSGroupRule.h"
-#include "nsICSSImportRule.h"
+#include "mozilla/css/ImportRule.h"
 #include "nsIMediaList.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
@@ -56,7 +56,6 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsIDOMCSSStyleSheet.h"
-#include "nsIDOMCSSImportRule.h"
 #include "nsICSSRuleList.h"
 #include "nsIDOMMediaList.h"
 #include "nsIDOMNode.h"
@@ -862,7 +861,7 @@ nsCSSStyleSheet::RebuildChildList(nsICSSRule* aRule, void* aBuilder)
     static_cast<ChildSheetListBuilder*>(aBuilder);
 
   // XXXbz We really need to decomtaminate all this stuff.  Is there a reason
-  // that I can't just QI to nsICSSImportRule and get an nsCSSStyleSheet
+  // that I can't just QI to ImportRule and get an nsCSSStyleSheet
   // directly from it?
   nsCOMPtr<nsIDOMCSSImportRule> importRule(do_QueryInterface(aRule));
   NS_ASSERTION(importRule, "GetType lied");
@@ -950,14 +949,12 @@ AddNamespaceRuleToMap(nsICSSRule* aRule, nsXMLNameSpaceMap* aMap)
 {
   NS_ASSERTION(aRule->GetType() == nsICSSRule::NAMESPACE_RULE, "Bogus rule type");
 
-  nsCOMPtr<nsICSSNameSpaceRule> nameSpaceRule = do_QueryInterface(aRule);
-  
-  nsCOMPtr<nsIAtom> prefix;
+  nsRefPtr<css::NameSpaceRule> nameSpaceRule = do_QueryObject(aRule);
+
   nsAutoString  urlSpec;
-  nameSpaceRule->GetPrefix(*getter_AddRefs(prefix));
   nameSpaceRule->GetURLSpec(urlSpec);
 
-  aMap->AddPrefix(prefix, urlSpec);
+  aMap->AddPrefix(nameSpaceRule->GetPrefix(), urlSpec);
 }
 
 static PRBool
@@ -1015,7 +1012,7 @@ nsCSSStyleSheet::nsCSSStyleSheet()
 
 nsCSSStyleSheet::nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
                                  nsCSSStyleSheet* aParentToUse,
-                                 nsICSSImportRule* aOwnerRuleToUse,
+                                 css::ImportRule* aOwnerRuleToUse,
                                  nsIDocument* aDocumentToUse,
                                  nsIDOMNode* aOwningNodeToUse)
   : mTitle(aCopy.mTitle),
@@ -1464,7 +1461,7 @@ nsCSSStyleSheet::AppendAllChildSheets(nsTArray<nsCSSStyleSheet*>& aArray)
 
 already_AddRefed<nsCSSStyleSheet>
 nsCSSStyleSheet::Clone(nsCSSStyleSheet* aCloneParent,
-                       nsICSSImportRule* aCloneOwnerRule,
+                       css::ImportRule* aCloneOwnerRule,
                        nsIDocument* aCloneDocument,
                        nsIDOMNode* aCloneOwningNode) const
 {
@@ -2072,15 +2069,11 @@ nsCSSStyleSheet::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                "We are being notified of a sheet load for a sheet that is not our child!");
 
   if (mDocument && NS_SUCCEEDED(aStatus)) {
-    nsCOMPtr<nsICSSImportRule> ownerRule = aSheet->GetOwnerRule();
-    
     mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
 
     // XXXldb @import rules shouldn't even implement nsIStyleRule (but
     // they do)!
-    nsCOMPtr<nsIStyleRule> styleRule(do_QueryInterface(ownerRule));
-    
-    mDocument->StyleRuleAdded(this, styleRule);
+    mDocument->StyleRuleAdded(this, aSheet->GetOwnerRule());
   }
 
   return NS_OK;
