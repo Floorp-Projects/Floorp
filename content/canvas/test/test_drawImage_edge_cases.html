@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="doTest()">
+<p id="display">
+  <canvas id="c" width="1" height="1"></canvas>
+  <img id="img" src="image_red.png">
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+var c = document.getElementById("c");
+var ctx = c.getContext("2d");
+var img = document.getElementById("img");
+
+SimpleTest.waitForExplicitFinish();
+
+function doTest() {
+  ctx.drawImage(img, 0, 0);
+  img.src = "image_green-1x1.png";
+  img.onload = function() {
+    ctx.drawImage(img, 0, 0);
+    var data = ctx.getImageData(0, 0, 1, 1).data;
+    is(data[0], 0, "Red channel should be 0");
+    is(data[1], 255, "Green channel should be 1.0");
+    is(data[2], 0, "Blue channel should be 0")
+    is(data[3], 255, "Alpha channel should be opaque");
+
+    SimpleTest.finish();
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>
