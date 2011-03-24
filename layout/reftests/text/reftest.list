@@ -29,6 +29,10 @@ load ligature-with-space-1.html
 == soft-hyphens-1a.html soft-hyphens-1-ref.html
 == soft-hyphens-1b.html soft-hyphens-1-ref.html
 == soft-hyphens-1c.html soft-hyphens-1-ref.html
+# Tests for soft hyphens in table cells, bug 418975
+!= soft-hyphen-in-table-1.html soft-hyphen-in-table-1-notref.html
+== soft-hyphen-in-table-1.html soft-hyphen-in-table-1-ref.html
+== soft-hyphen-in-table-2.html soft-hyphen-in-table-2-ref.html
 # Cairo's FreeType and GDI backends snap glyphs to pixels, while Mac (usually)
 # and D2D have subpixel positioning.  The tests for pixel-snapping assume that
 # 1 CSS pixel == 1 device pixel
