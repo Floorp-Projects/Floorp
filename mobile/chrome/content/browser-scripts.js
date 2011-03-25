@@ -117,6 +117,13 @@ XPCOMUtils.defineLazyGetter(this, "CommonUI", function() {
   });
 });
 
+#ifdef MOZ_SERVICES_SYNC
+XPCOMUtils.defineLazyGetter(this, "Weave", function() {
+  Components.utils.import("resource://services-sync/main.js");
+  return Weave;
+});
+#endif
+
 /**
  * Delay load some global scripts using a custom namespace
  */
