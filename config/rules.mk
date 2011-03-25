@@ -91,17 +91,20 @@ VPATH += $(LIBXUL_SDK)/lib
 endif
 
 # EXPAND_LIBNAME - $(call EXPAND_LIBNAME,foo)
-# expands to foo.lib on platforms with import libs and -lfoo otherwise
+# expands to $(LIB_PREFIX)foo.$(LIB_SUFFIX) or -lfoo, depending on linker
+# arguments syntax. Should only be used for system libraries
 
 # EXPAND_LIBNAME_PATH - $(call EXPAND_LIBNAME_PATH,foo,dir)
-# expands to dir/foo.lib on platforms with import libs and
-# -Ldir -lfoo otherwise
+# expands to dir/$(LIB_PREFIX)foo.$(LIB_SUFFIX)
 
 # EXPAND_MOZLIBNAME - $(call EXPAND_MOZLIBNAME,foo)
-# expands to $(DIST)/lib/foo.lib on platforms with import libs and
-# -lfoo otherwise
+# expands to $(DIST)/lib/$(LIB_PREFIX)foo.$(LIB_SUFFIX)
 
+ifdef GNU_CC
+EXPAND_LIBNAME = $(addprefix -l,$(1))
+else
 EXPAND_LIBNAME = $(foreach lib,$(1),$(LIB_PREFIX)$(lib).$(LIB_SUFFIX))
+endif
 EXPAND_LIBNAME_PATH = $(foreach lib,$(1),$(2)/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX))
 EXPAND_MOZLIBNAME = $(foreach lib,$(1),$(DIST)/lib/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX))
 
