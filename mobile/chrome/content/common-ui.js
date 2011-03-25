@@ -919,7 +919,7 @@ var FormHelperUI = {
     let suggestions = [];
 
     let autocompleteService = Cc["@mozilla.org/satchel/form-autocomplete;1"].getService(Ci.nsIFormAutoComplete);
-    let results = autocompleteService.autoCompleteSearch(aElement.name, aElement.value, aElement, null);
+    let results = autocompleteService.autoCompleteSearch(aElement.name || aElement.id, aElement.value, aElement, null);
     if (results.matchCount > 0) {
       for (let i = 0; i < results.matchCount; i++) {
         let value = results.getValueAt(i);
