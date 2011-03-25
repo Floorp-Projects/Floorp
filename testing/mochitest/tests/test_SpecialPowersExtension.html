@@ -62,6 +62,11 @@ function starttest(){
   // Test Complex Pref - TODO: Without chrome access, I don't know how you'd actually
   // set this preference since you have to create an XPCOM object.
   // Leaving untested for now.
+
+  // Test a DOMWindowUtils method and property
+  is(SpecialPowers.DOMWindowUtils.getClassName(window), "Proxy");
+  is(SpecialPowers.DOMWindowUtils.docCharsetIsForced, false);
+
   SimpleTest.finish();
 }
 //starttest();
