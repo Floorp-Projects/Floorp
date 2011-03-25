@@ -130,7 +130,7 @@ public:
 #ifdef MOZ_SVG
     ,eSVGValue =    0x12
 #endif
-    ,eFloatValue  = 0x13
+    ,eDoubleValue  = 0x13
     ,eIntMarginValue = 0x14
   };
 
@@ -165,7 +165,7 @@ public:
 #ifdef MOZ_SVG
   inline nsISVGValue* GetSVGValue() const;
 #endif
-  inline float GetFloatValue() const;
+  inline double GetDoubleValue() const;
   PRBool GetIntMarginValue(nsIntMargin& aMargin) const;
 
   /**
@@ -297,12 +297,12 @@ public:
   PRBool ParseColor(const nsAString& aString);
 
   /**
-   * Parse a string value into a float.
+   * Parse a string value into a double-precision floating point value.
    *
    * @param aString the string to parse
    * @return whether the value could be parsed
    */
-  PRBool ParseFloatValue(const nsAString& aString);
+  PRBool ParseDoubleValue(const nsAString& aString);
 
   /**
    * Parse a lazy URI.  This just sets up the storage for the URI; it
@@ -346,7 +346,7 @@ private:
 #ifdef MOZ_SVG
       nsISVGValue* mSVGValue;
 #endif
-      float mFloatValue;
+      double mDoubleValue;
       nsIntMargin* mIntMargin;
     };
   };
@@ -458,11 +458,11 @@ nsAttrValue::GetSVGValue() const
 }
 #endif
 
-inline float
-nsAttrValue::GetFloatValue() const
+inline double
+nsAttrValue::GetDoubleValue() const
 {
-  NS_PRECONDITION(Type() == eFloatValue, "wrong type");
-  return GetMiscContainer()->mFloatValue;
+  NS_PRECONDITION(Type() == eDoubleValue, "wrong type");
+  return GetMiscContainer()->mDoubleValue;
 }
 
 inline PRBool

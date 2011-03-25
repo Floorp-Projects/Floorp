@@ -1584,13 +1584,12 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
       NS_WARNING("Flushing retained layers!");
       flags |= nsDisplayList::PAINT_FLUSH_LAYERS;
     } else if (!(aFlags & PAINT_DOCUMENT_RELATIVE)) {
-      nsIWidget_MOZILLA_2_0_BRANCH *widget2 =
-        static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(aFrame->GetNearestWidget());
-      if (widget2) {
+      nsIWidget *widget = aFrame->GetNearestWidget();
+      if (widget) {
         builder.SetFinalTransparentRegion(visibleRegion);
         // If we're finished building display list items for painting of the outermost
         // pres shell, notify the widget about any toolbars we've encountered.
-        widget2->UpdateThemeGeometries(builder.GetThemeGeometries());
+        widget->UpdateThemeGeometries(builder.GetThemeGeometries());
       }
     }
   }
@@ -1605,12 +1604,11 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   if ((aFlags & PAINT_WIDGET_LAYERS) &&
       !willFlushRetainedLayers &&
       !(aFlags & PAINT_DOCUMENT_RELATIVE)) {
-    nsIWidget_MOZILLA_2_0_BRANCH *widget2 =
-      static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(aFrame->GetNearestWidget());
-    if (widget2) {
+    nsIWidget *widget = aFrame->GetNearestWidget();
+    if (widget) {
       PRInt32 pixelRatio = presContext->AppUnitsPerDevPixel();
       nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(presContext->AppUnitsPerDevPixel()));
-      widget2->UpdateTransparentRegion(visibleWindowRegion);
+      widget->UpdateTransparentRegion(visibleWindowRegion);
     }
   }
 
@@ -3761,13 +3759,15 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
         return result;
     }
 
+    // Ensure that any future changes to the canvas trigger proper invalidation,
+    // in case this is being used by -moz-element()
+    canvas->MarkContextClean();
+
     if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA) {
       // we can modify this surface since we force a copy above when
       // when NO_PREMULTIPLY_ALPHA is set
       gfxUtils::UnpremultiplyImageSurface(static_cast<gfxImageSurface*>(surf.get()));
     }
-
-    nsCOMPtr<nsIPrincipal> principal = node->NodePrincipal();
 
     result.mSurface = surf;
     result.mSize = size;
@@ -3821,7 +3821,7 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
 
     result.mSurface = surf;
     result.mSize = size;
-    result.mPrincipal = principal;
+    result.mPrincipal = principal.forget();
     result.mIsWriteOnly = PR_FALSE;
 
     return result;
@@ -3926,13 +3926,13 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
 
   result.mSurface = gfxsurf;
   result.mSize = gfxIntSize(imgWidth, imgHeight);
-  result.mPrincipal = principal;
-
+  result.mPrincipal = principal.forget();
   // SVG images could have <foreignObject> and/or <image> elements that load
   // content from another domain.  For safety, they make the canvas write-only.
   // XXXdholbert We could probably be more permissive here if we check that our
   // helper SVG document has no elements that could load remote content.
   result.mIsWriteOnly = (imgContainer->GetType() == imgIContainer::TYPE_VECTOR);
+  result.mImageRequest = imgRequest.forget();
 
   return result;
 }

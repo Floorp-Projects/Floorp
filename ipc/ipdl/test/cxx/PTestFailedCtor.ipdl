@@ -1,0 +1,19 @@
+include protocol PTestFailedCtorSub;
+
+namespace mozilla {
+namespace _ipdltest {
+
+rpc protocol PTestFailedCtor {
+    manages PTestFailedCtorSub; 
+child:
+    rpc PTestFailedCtorSub();
+    __delete__();
+
+state CONSTRUCT:
+    call PTestFailedCtorSub goto DEAD;
+state DEAD:
+    send __delete__;
+};
+
+}
+}

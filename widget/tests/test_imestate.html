@@ -119,12 +119,6 @@ SimpleTest.waitForExplicitFinish();
 var gUtils = window.
       QueryInterface(Components.interfaces.nsIInterfaceRequestor).
       getInterface(Components.interfaces.nsIDOMWindowUtils);
-var gUtils2 = gUtils.QueryInterface(Components.interfaces.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
-/*
-var gUtils2 = window.
-      QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-      getInterface(Components.interfaces.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
-*/
 var gFM = Components.classes["@mozilla.org/focus-manager;1"].
       getService(Components.interfaces.nsIFocusManager);
 const kIMEEnabledSupported = navigator.platform.indexOf("Mac") == 0 ||
@@ -197,7 +191,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
         return;
       }
       enabled = gUtils.IMEStatus;
-      inputtype = gUtils2.focusedInputType;
+      inputtype = gUtils.focusedInputType;
       is(enabled, aTest.expectedEnabled,
          aDescription + ": " + aTest.description + ", wrong enabled state");
       if (aTest.expectedType && !aInDesignMode) {
@@ -789,7 +783,7 @@ function runTypeChangingTest()
         is(gUtils.IMEStatus, kInput.expected,
            "type attr changing test (IMEStatus): " + typeChangingDescription +
              " (" +  kInput.description + ")");
-        is(gUtils2.focusedInputType, kInput.type,
+        is(gUtils.focusedInputType, kInput.type,
            "type attr changing test (type): " + typeChangingDescription +
              " (" +  kInput.description + ")");
 
@@ -810,7 +804,7 @@ function runTypeChangingTest()
         is(gUtils.IMEStatus, getExpectedIMEEnabled(kType, kInput),
            "type attr changing test (IMEStatus): " + typeChangingDescription +
              " (" +  kInput.description + ")");
-        is(gUtils2.focusedInputType, kType.type,
+        is(gUtils.focusedInputType, kType.type,
            "type attr changing test (type): " + typeChangingDescription +
              " (" +  kInput.description + ")");
         if (kTestOpenState && gUtils.IMEStatus == gUtils.IME_STATUS_ENABLED) {

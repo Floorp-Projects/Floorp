@@ -57,7 +57,6 @@ class nsXMLNameSpaceMap;
 class nsCSSRuleProcessor;
 class nsMediaList;
 class nsICSSGroupRule;
-class nsICSSImportRule;
 class nsIPrincipal;
 class nsIURI;
 class nsMediaList;
@@ -65,6 +64,12 @@ class nsMediaQueryResultCacheKey;
 class nsCSSStyleSheet;
 class nsPresContext;
 template<class E, class A> class nsTArray;
+
+namespace mozilla {
+namespace css {
+class ImportRule;
+}
+}
 
 // -------------------------------
 // CSS Style Sheet Inner Data Container
@@ -194,13 +199,13 @@ public:
   void SetMedia(nsMediaList* aMedia);
   void SetOwningNode(nsIDOMNode* aOwningNode) { mOwningNode = aOwningNode; /* Not ref counted */ }
 
-  void SetOwnerRule(nsICSSImportRule* aOwnerRule) { mOwnerRule = aOwnerRule; /* Not ref counted */ }
-  nsICSSImportRule* GetOwnerRule() const { return mOwnerRule; }
+  void SetOwnerRule(mozilla::css::ImportRule* aOwnerRule) { mOwnerRule = aOwnerRule; /* Not ref counted */ }
+  mozilla::css::ImportRule* GetOwnerRule() const { return mOwnerRule; }
 
   nsXMLNameSpaceMap* GetNameSpaceMap() const { return mInner->mNameSpaceMap; }
 
   already_AddRefed<nsCSSStyleSheet> Clone(nsCSSStyleSheet* aCloneParent,
-                                          nsICSSImportRule* aCloneOwnerRule,
+                                          mozilla::css::ImportRule* aCloneOwnerRule,
                                           nsIDocument* aCloneDocument,
                                           nsIDOMNode* aCloneOwningNode) const;
 
@@ -255,7 +260,7 @@ public:
 private:
   nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
                   nsCSSStyleSheet* aParentToUse,
-                  nsICSSImportRule* aOwnerRuleToUse,
+                  mozilla::css::ImportRule* aOwnerRuleToUse,
                   nsIDocument* aDocumentToUse,
                   nsIDOMNode* aOwningNodeToUse);
 
@@ -284,7 +289,7 @@ protected:
   nsRefPtr<nsMediaList> mMedia;
   nsRefPtr<nsCSSStyleSheet> mNext;
   nsCSSStyleSheet*      mParent;    // weak ref
-  nsICSSImportRule*     mOwnerRule; // weak ref
+  mozilla::css::ImportRule* mOwnerRule; // weak ref
 
   CSSRuleListImpl*      mRuleCollection;
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children

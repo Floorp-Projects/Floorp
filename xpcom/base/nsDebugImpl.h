@@ -40,6 +40,7 @@
 class nsDebugImpl : public nsIDebug2
 {
 public:
+    nsDebugImpl() {}
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDEBUG
     NS_DECL_NSIDEBUG2

@@ -19871,7 +19871,7 @@ function test_size_attributes_parse_negative() {
 var canvas = document.getElementById('c639');
 var ctx = canvas.getContext('2d');
 
-todo(canvas.width == 300, "canvas.width == 300");
+ok(canvas.width == 300, "canvas.width == 300");
 
 
 }
@@ -20084,7 +20084,7 @@ var canvas = document.getElementById('c650');
 var ctx = canvas.getContext('2d');
 
 canvas.setAttribute('width', '-100');
-todo(canvas.width == 300, "canvas.width == 300");
+ok(canvas.width == 300, "canvas.width == 300");
 
 
 }

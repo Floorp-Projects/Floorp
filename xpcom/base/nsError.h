@@ -98,6 +98,7 @@
 #define NS_ERROR_MODULE_SCHEMA     31
 #define NS_ERROR_MODULE_DOM_FILE   32
 #define NS_ERROR_MODULE_DOM_INDEXEDDB 33
+#define NS_ERROR_MODULE_DOM_EVENTS 34
 
 /* NS_ERROR_MODULE_GENERAL should be used by modules that do not
  * care if return code values overlap. Callers of methods that

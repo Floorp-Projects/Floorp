@@ -52,7 +52,6 @@
 #include "nsURIHashKey.h"
 
 class nsIAtom;
-class nsICSSImportRule;
 class nsICSSLoaderObserver;
 class nsCSSStyleSheet;
 class nsIContent;
@@ -126,6 +125,7 @@ protected:
 namespace css {
 
 class SheetLoadData;
+class ImportRule;
 
 /***********************************************************************
  * Enum that describes the state of the sheet returned by CreateSheet. *
@@ -232,7 +232,7 @@ public:
   nsresult LoadChildSheet(nsCSSStyleSheet* aParentSheet,
                           nsIURI* aURL,
                           nsMediaList* aMedia,
-                          nsICSSImportRule* aRule);
+                          ImportRule* aRule);
 
   /**
    * Synchronously load and return the stylesheet at aURL.  Any child sheets
@@ -408,7 +408,7 @@ private:
 
   nsresult InsertChildSheet(nsCSSStyleSheet* aSheet,
                             nsCSSStyleSheet* aParentSheet,
-                            nsICSSImportRule* aParentRule);
+                            ImportRule* aParentRule);
 
   nsresult InternalLoadNonDocumentSheet(nsIURI* aURL,
                                         PRBool aAllowUnsafeRules,

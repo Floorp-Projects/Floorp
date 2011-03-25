@@ -71,7 +71,7 @@
 #include "nsIDocShell.h"
 #include "nsIEditorDocShell.h"
 #include "nsIEditor.h"
-#include "nsIHTMLEditor_MOZILLA_2_0_BRANCH.h"
+#include "nsIHTMLEditor.h"
 
 static const PRInt32 kLongLineLen = 128;
 
@@ -105,7 +105,7 @@ IsInvisibleBreak(nsIContent *aNode, nsIAtom *aTag) {
         if (editorDocShell) {
           nsCOMPtr<nsIEditor> editor;
           editorDocShell->GetEditor(getter_AddRefs(editor));
-          nsCOMPtr<nsIHTMLEditor_MOZILLA_2_0_BRANCH> htmlEditor = do_QueryInterface(editor);
+          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
           if (htmlEditor) {
             PRBool isVisible = PR_FALSE;
             nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aNode);

@@ -613,6 +613,7 @@ class nsXULAppInfo : public nsIXULAppInfo,
 
 {
 public:
+  nsXULAppInfo() {}
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXULAPPINFO
   NS_DECL_NSIXULRUNTIME
@@ -3598,7 +3599,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
         NS_TIME_FUNCTION_MARK("Finished startupNotifier");
 
-        nsCOMPtr<nsIAppStartup2> appStartup
+        nsCOMPtr<nsIAppStartup> appStartup
           (do_GetService(NS_APPSTARTUP_CONTRACTID));
         NS_ENSURE_TRUE(appStartup, 1);
 

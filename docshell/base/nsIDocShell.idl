@@ -71,7 +71,7 @@ interface nsIPrincipal;
 interface nsIWebBrowserPrint;
 interface nsIVariant;
 
-[scriptable, uuid(98cdbcc4-2d81-4191-a63f-b6c52085edbc)]
+[scriptable, uuid(1917a6d6-31f6-4033-868d-f15ca08ca2df)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -540,10 +540,7 @@ interface nsIDocShell : nsISupports
    * handling link clicks. Docshells are not app tabs unless told otherwise.
    */
   attribute boolean isAppTab;
-};
 
-[uuid(5f7a2184-31b6-4d67-9c75-0c17477766e2)]
-interface nsIDocShell_MOZILLA_2_0_BRANCH : nsISupports {
   /**
    * Create a new about:blank document and content viewer.
    * @param aPrincipal the principal to use for the new document.

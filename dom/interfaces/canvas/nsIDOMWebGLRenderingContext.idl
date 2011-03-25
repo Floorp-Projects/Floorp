@@ -133,7 +133,7 @@ interface nsIWebGLUniformLocation : nsISupports
 };
 
 
-[scriptable, uuid(2f21ca21-9720-4eee-ad94-27eefe4f72dc)]
+[scriptable, uuid(44119fc2-b5f0-4acc-b836-5d28cc43e8fb)]
 interface nsIDOMWebGLRenderingContext : nsISupports
 {
   //
@@ -837,11 +837,7 @@ interface nsIDOMWebGLRenderingContext : nsISupports
 
   // extensions
   nsISupports getExtension(in DOMString name);
-};
 
-[scriptable, uuid(23182042-3d92-407d-9b9b-37c9886398f7)]
-interface nsIDOMWebGLRenderingContext_MOZILLA_2_0_BRANCH : nsISupports
-{
   nsIVariant getSupportedExtensions();
   WebGLboolean isContextLost();
 };
