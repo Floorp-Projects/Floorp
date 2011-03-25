@@ -42,8 +42,6 @@ let WeaveGlue = {
   jpake: null,
 
   init: function init() {
-    Components.utils.import("resource://services-sync/main.js");
-
     this._bundle = Services.strings.createBundle("chrome://browser/locale/sync.properties");
     this._msg = document.getElementById("prefs-messages");
 
