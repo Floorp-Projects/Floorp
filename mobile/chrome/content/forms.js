@@ -103,7 +103,12 @@ FormAssistant.prototype = {
       // To ensure we get the current caret positionning of the focused
       // element we need to delayed a bit the event
       this._executeDelayed(function(self) {
-        sendAsyncMessage("FormAssist:Show", self._getJSON());
+        // Bug 640870
+        // Sometimes the element inner frame get destroyed while the element
+        // receive the focus because the display is turned to 'none' for
+        // example, in this "fun" case just do nothing if the element is hidden
+        if (self._isVisibleElement(gFocusManager.focusedElement))
+          sendAsyncMessage("FormAssist:Show", self._getJSON());
       });
     } else {
       // Repopulate the list of elements in the page, some could have gone
@@ -545,7 +550,7 @@ FormAssistant.prototype = {
     let element = this.currentElement;
     let focusedElement = gFocusManager.getFocusedElementForWindow(content, true, {});
     if (element && (element.mozIsTextField && element.mozIsTextField(false) ||
-        element instanceof HTMLTextAreaElement) && focusedElement == element) {
+        element instanceof HTMLTextAreaElement) && focusedElement == element && this._isVisibleElement(element)) {
       let utils = Util.getWindowUtils(element.ownerDocument.defaultView);
       let rect = utils.sendQueryContentEvent(utils.QUERY_CARET_RECT, element.selectionEnd, 0, 0, 0);
       if (rect) {
