@@ -130,10 +130,3 @@ interface nsIDOMNSDocument : nsISupports
   void mozSetImageElement(in DOMString aImageElementId,
                           in nsIDOMElement aImageElement);
 };
-
-// WARNING! This interface is currently not exposed to script in classinfo
-[scriptable, uuid(fee67aed-3b94-4136-ad7d-fb88ef23f45f)]
-interface nsIDOMNSDocument_MOZILLA_2_0_BRANCH : nsISupports
-{
-  [noscript] readonly attribute nsIVariant mozCurrentStateObject;
-};
