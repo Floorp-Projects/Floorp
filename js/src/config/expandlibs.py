@@ -63,6 +63,29 @@ from __future__ import with_statement
 import sys, os
 import expandlibs_config as conf
 
+def relativize(path):
+    '''Returns a path relative to the current working directory, if it is
+    shorter than the given path'''
+    def splitpath(path):
+        dir, file = os.path.split(path)
+        if os.path.splitdrive(dir)[1] == os.sep:
+            return [file]
+        return splitpath(dir) + [file]
+
+    if not os.path.exists(path):
+        return path
+    curdir = splitpath(os.path.abspath(os.curdir))
+    abspath = splitpath(os.path.abspath(path))
+    while curdir and abspath and curdir[0] == abspath[0]:
+        del curdir[0]
+        del abspath[0]
+    if not curdir and not abspath:
+        return '.'
+    relpath = os.path.join(*[os.pardir for i in curdir] + abspath)
+    if len(path) > len(relpath):
+        return relpath
+    return path
+
 class LibDescriptor(dict):
     KEYS = ['OBJS', 'LIBS']
 
@@ -99,15 +122,15 @@ class ExpandArgs(list):
         '''Internal function doing the actual work'''
         (root, ext) = os.path.splitext(arg)
         if ext != conf.LIB_SUFFIX or not os.path.basename(root).startswith(conf.LIB_PREFIX):
-            return [arg]
+            return [relativize(arg)]
         if len(conf.IMPORT_LIB_SUFFIX):
             dll = root + conf.IMPORT_LIB_SUFFIX
         else:
             dll = root.replace(conf.LIB_PREFIX, conf.DLL_PREFIX, 1) + conf.DLL_SUFFIX
         if os.path.exists(dll):
-            return [dll]
+            return [relativize(dll)]
         if os.path.exists(arg):
-            return [arg]
+            return [relativize(arg)]
         return self._expand_desc(arg)
 
     def _expand_desc(self, arg):
@@ -115,7 +138,7 @@ class ExpandArgs(list):
         if os.path.exists(arg + conf.LIBS_DESC_SUFFIX):
             with open(arg + conf.LIBS_DESC_SUFFIX, 'r') as f:
                 desc = LibDescriptor(f.readlines())
-            objs = desc['OBJS']
+            objs = [relativize(o) for o in desc['OBJS']]
             for lib in desc['LIBS']:
                 objs += self._expand(lib)
             return objs
