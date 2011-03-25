@@ -79,7 +79,6 @@ static nsResProtocolHandler *gResHandler = nsnull;
 static PRLogModuleInfo *gResLog;
 #endif
 
-#define kAPP           NS_LITERAL_CSTRING("app")
 #define kGRE           NS_LITERAL_CSTRING("gre")
 
 //----------------------------------------------------------------------------
@@ -182,12 +181,6 @@ nsResProtocolHandler::Init()
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = SetSubstitution(EmptyCString(), uri);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    //
-    // make resource://app/ point to the application directory or omnijar
-    //
-    rv = SetSubstitution(kAPP, uri);
     NS_ENSURE_SUCCESS(rv, rv);
 
     //
