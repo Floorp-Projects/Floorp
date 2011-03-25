@@ -99,6 +99,10 @@ ShadowLayerParent::ActorDestroy(ActorDestroyReason why)
     // let IPDL-generated code automatically clean up Shmems and so
     // forth; our channel is disconnected anyway
     break;
+
+  case FailedConstructor:
+    NS_RUNTIMEABORT("FailedConstructor isn't possible in PLayers");
+    return;                     // unreached
   }
 
   mLayer = NULL;

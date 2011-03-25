@@ -201,6 +201,7 @@ _TEST_FILES += \
 		bug523816.ogv \
 		bug533822.ogg \
 		bug557094.ogv \
+		bug556821.ogv \
 		bug580982.webm \
 		bug603918.webm \
 		bug604067.webm \

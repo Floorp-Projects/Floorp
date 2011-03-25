@@ -62,6 +62,7 @@ IPDLTESTS = \
   TestCrashCleanup \
   TestDataStructures \
   TestDesc \
+  TestFailedCtor \
   TestHangs \
   TestJSON \
   TestLatency \

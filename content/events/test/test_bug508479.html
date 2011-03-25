@@ -61,6 +61,11 @@ function fireDrop(element, shouldAllowDrop, shouldAllowOnlyChromeDrop) {
   ok(!ds.getCurrentSession(), "There shouldn't be a drag session anymore!");
 }
 
+var chromeGotEvent = false;
+function chromeListener(e) {
+  chromeGotEvent = true;
+}
+
 function runTests()
 {
   var targetHandling = document.getElementById("handling_target");
@@ -73,9 +78,11 @@ function runTests()
   gGotHandlingDrop = false;
   gGotNotHandlingDrop = false;
 
+  SpecialPowers.addChromeEventListener("drop", chromeListener, true, false);
   var targetNotHandling = document.getElementById("nothandling_target");
   fireDrop(targetNotHandling, true, true);
-
+  SpecialPowers.removeChromeEventListener("drop", chromeListener, true);
+  ok(chromeGotEvent, "Chrome should have got drop event!");
   is(gGotHandlingDrop, false, "Didn't get drop on accepting element (2)");
   is(gGotNotHandlingDrop, false, "Didn't get drop on unaccepting element (2)");
 

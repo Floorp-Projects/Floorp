@@ -53,7 +53,7 @@
 
 interface nsIDOMValidityState;
 
-[scriptable, uuid(e3c6d960-972c-4a5e-a8f4-6ca65d578abf)]
+[scriptable, uuid(da2be32d-63de-47ae-8c81-7ab8ac6b5aae)]
 interface nsIDOMHTMLSelectElement : nsIDOMHTMLElement
 {
            attribute boolean                     autofocus;
@@ -88,10 +88,6 @@ interface nsIDOMHTMLSelectElement : nsIDOMHTMLElement
   readonly attribute DOMString           validationMessage;
   boolean checkValidity();
   void setCustomValidity(in DOMString error);
-};
 
-[scriptable, uuid(9b63d2d3-ccb0-4eed-a9e5-d1c142a805b7)]
-interface nsIDOMHTMLSelectElement_Mozilla_2_0_Branch : nsIDOMHTMLSelectElement
-{
-           attribute boolean                     required;
+  attribute boolean                      required;
 };

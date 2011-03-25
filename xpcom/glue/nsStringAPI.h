@@ -55,6 +55,13 @@
 #include "prlog.h"
 #include "nsTArray.h"
 
+/**
+ * Comparison function for use with nsACString::Equals
+ */
+NS_HIDDEN_(PRInt32)
+CaseInsensitiveCompare(const char *a, const char *b,
+                       PRUint32 length);
+
 class nsAString
 {
 public:
@@ -84,6 +91,12 @@ public:
   NS_HIDDEN_(char_type) First() const
   {
     return CharAt(0);
+  }
+  NS_HIDDEN_(char_type) Last() const
+  {
+    const char_type* data;
+    PRUint32 dataLen = NS_StringGetData(*this, &data);
+    return data[dataLen - 1];
   }
 
   /**
@@ -137,6 +150,7 @@ public:
   }
 
   NS_HIDDEN_(void) AssignLiteral(const char *aStr);
+  NS_HIDDEN_(void) AssignASCII(const char *aStr) { AssignLiteral(aStr); }
 
   NS_HIDDEN_(self_type&) operator=(const self_type& aString) { Assign(aString);   return *this; }
   NS_HIDDEN_(self_type&) operator=(const char_type* aPtr)    { Assign(aPtr);      return *this; }
@@ -156,11 +170,14 @@ public:
     PRUint32 dataLen = NS_StringGetData(readable, &data);
     NS_StringSetDataRange(*this, cutStart, cutLength, data, dataLen);
   }
+  NS_HIDDEN_(void) SetCharAt( char_type c, index_type pos )
+                      { Replace(pos, 1, &c, 1); }
 
   NS_HIDDEN_(void) Append( char_type c )                                                              { Replace(size_type(-1), 0, c); }
   NS_HIDDEN_(void) Append( const char_type* data, size_type length = size_type(-1) )                  { Replace(size_type(-1), 0, data, length); }
   NS_HIDDEN_(void) Append( const self_type& readable )                                                { Replace(size_type(-1), 0, readable); }
   NS_HIDDEN_(void) AppendLiteral( const char *aASCIIStr );
+  NS_HIDDEN_(void) AppendASCII( const char *aASCIIStr )                                               { AppendLiteral(aASCIIStr); }
 
   NS_HIDDEN_(self_type&) operator+=( char_type c )                                                    { Append(c);        return *this; }
   NS_HIDDEN_(self_type&) operator+=( const char_type* data )                                          { Append(data);     return *this; }
@@ -265,6 +282,10 @@ public:
   }
 
   NS_HIDDEN_(PRBool) EqualsLiteral(const char *aASCIIString) const;
+  NS_HIDDEN_(PRBool) EqualsASCII(const char *aASCIIString) const
+  {
+    return EqualsLiteral(aASCIIString);
+  }
 
   /**
    * Case-insensitive match this string to a lowercase ASCII string.
@@ -409,6 +430,12 @@ public:
   {
     return CharAt(0);
   }
+  NS_HIDDEN_(char_type) Last() const
+  {
+    const char_type* data;
+    PRUint32 dataLen = NS_CStringGetData(*this, &data);
+    return data[dataLen - 1];
+  }
 
   /**
    * Get the length, begin writing, and optionally set the length of a
@@ -463,6 +490,10 @@ public:
   {
     Assign(aData);
   }
+  NS_HIDDEN_(void) AssignASCII(const char_type *aData)
+  {
+    Assign(aData);
+  }
 
   NS_HIDDEN_(self_type&) operator=(const self_type& aString) { Assign(aString);   return *this; }
   NS_HIDDEN_(self_type&) operator=(const char_type* aPtr)    { Assign(aPtr);      return *this; }
@@ -482,11 +513,14 @@ public:
     PRUint32 dataLen = NS_CStringGetData(readable, &data);
     NS_CStringSetDataRange(*this, cutStart, cutLength, data, dataLen);
   }
+  NS_HIDDEN_(void) SetCharAt( char_type c, index_type pos )
+                      { Replace(pos, 1, &c, 1); }
 
   NS_HIDDEN_(void) Append( char_type c )                                                              { Replace(size_type(-1), 0, c); }
   NS_HIDDEN_(void) Append( const char_type* data, size_type length = size_type(-1) )                  { Replace(size_type(-1), 0, data, length); }
   NS_HIDDEN_(void) Append( const self_type& readable )                                                { Replace(size_type(-1), 0, readable); }
   NS_HIDDEN_(void) AppendLiteral( const char *aASCIIStr )                                             { Append(aASCIIStr); }
+  NS_HIDDEN_(void) AppendASCII( const char *aASCIIStr )                                               { Append(aASCIIStr); }
 
   NS_HIDDEN_(self_type&) operator+=( char_type c )                                                    { Append(c);        return *this; }
   NS_HIDDEN_(self_type&) operator+=( const char_type* data )                                          { Append(data);     return *this; }
@@ -593,6 +627,18 @@ public:
   NS_HIDDEN_(PRBool) EqualsLiteral( const char_type *other ) const
   {
     return Equals(other);
+  }
+  NS_HIDDEN_(PRBool) EqualsASCII( const char_type *other ) const
+  {
+    return Equals(other);
+  }
+
+  /**
+   * Case-insensitive match this string to a lowercase ASCII string.
+   */
+  NS_HIDDEN_(PRBool) LowerCaseEqualsLiteral(const char *aASCIIString) const
+  {
+    return Equals(aASCIIString, CaseInsensitiveCompare);
   }
 
   /**
@@ -1392,13 +1438,6 @@ ToLowerCase(const nsACString& aSrc, nsACString& aDest);
 
 NS_HIDDEN_(PRUint32)
 ToUpperCase(const nsACString& aSrc, nsACString& aDest);
-
-/**
- * Comparison function for use with nsACString::Equals
- */
-NS_HIDDEN_(PRInt32)
-CaseInsensitiveCompare(const char *a, const char *b,
-                       PRUint32 length);
 
 /**
  * The following declarations are *deprecated*, and are included here only
