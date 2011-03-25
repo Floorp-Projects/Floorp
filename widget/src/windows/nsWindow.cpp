@@ -5310,6 +5310,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       DispatchPendingEvents();
       break;
 
+    case WM_EXITSIZEMOVE:
+      if (!sIsInMouseCapture) {
+        DispatchStandardEvent(NS_DONESIZEMOVE);
+      }
+      break;
+
     case WM_APPCOMMAND:
     {
       PRUint32 appCommand = GET_APPCOMMAND_LPARAM(lParam);
