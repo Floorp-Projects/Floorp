@@ -569,7 +569,7 @@ nsXULProgressMeterAccessible::GetMaximumValue(double *aMaximumValue)
   nsAutoString value;
   if (mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::max, value)) {
     PRInt32 result = NS_OK;
-    *aMaximumValue = value.ToFloat(&result);
+    *aMaximumValue = value.ToDouble(&result);
     return result;
   }
 
@@ -614,7 +614,7 @@ nsXULProgressMeterAccessible::GetCurrentValue(double *aCurrentValue)
     return NS_OK;
 
   PRInt32 error = NS_OK;
-  double value = attrValue.ToFloat(&error);
+  double value = attrValue.ToDouble(&error);
   if (NS_FAILED(error))
     return NS_OK; // Zero value because of wrong markup.
 
