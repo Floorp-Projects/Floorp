@@ -108,6 +108,7 @@
 #endif
 #include "nsAutoPtr.h"
 
+#include "nsBidiFrames.h"
 #include "nsBidiPresUtils.h"
 #include "nsBidiUtils.h"
 
@@ -560,9 +561,6 @@ MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
         gTextRuns->RemoveFromCache(textRun);
         return nsnull;
     }
-#ifdef NOISY_BIDI
-    printf("Created textrun\n");
-#endif
     return textRun.forget();
 }
 
@@ -587,9 +585,6 @@ MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
         gTextRuns->RemoveFromCache(textRun);
         return nsnull;
     }
-#ifdef NOISY_BIDI
-    printf("Created textrun\n");
-#endif
     return textRun.forget();
 }
 
@@ -6580,10 +6575,6 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
       nsBlinkTimer::RemoveBlinkFrame(this);
     }
   }
-
-#ifdef NOISY_BIDI
-    printf("Reflowed textframe\n");
-#endif
 
   const nsStyleText* textStyle = GetStyleText();
 
