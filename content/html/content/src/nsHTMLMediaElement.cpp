@@ -1426,7 +1426,7 @@ PRBool nsHTMLMediaElement::ParseAttribute(PRInt32 aNamespaceID,
        || aAttribute == nsGkAtoms::loopend
        || aAttribute == nsGkAtoms::start
        || aAttribute == nsGkAtoms::end) {
-      return aResult.ParseFloatValue(aValue);
+      return aResult.ParseDoubleValue(aValue);
     }
     else if (ParseImageAttribute(aAttribute, aValue, aResult)) {
       return PR_TRUE;
