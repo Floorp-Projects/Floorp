@@ -1006,7 +1006,14 @@
       <!-- mobileRoot is a property otherwise if it is accessed before Places
            is ready the value will be bitrotted
       -->
-      <property name="mobileRoot" onget="return PlacesUtils.annotations.getItemsWithAnnotation('mobile/bookmarksRoot', {})[0];"/>
+      <field name="_mobileRoot">null</field>
+      <property name="mobileRoot">
+        <getter><![CDATA[
+          if (!this._mobileRoot)
+            this._mobileRoot = PlacesUtils.annotations.getItemsWithAnnotation('mobile/bookmarksRoot', {})[0];
+          return this._mobileRoot;
+        ]]></getter>
+      </property>
 
       <property name="isRootFolder" readonly="true">
         <getter>
