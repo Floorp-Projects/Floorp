@@ -84,12 +84,7 @@ nsMathMLmstyleFrame::InheritAutomaticData(nsIFrame* aParent)
 NS_IMETHODIMP
 nsMathMLmstyleFrame::TransmitAutomaticData()
 {
-  // Nothing particular to do here, the values that we computed in
-  // InheritAutomaticData() are the values that we wanted to pass to
-  // our children. Our children would have inherited these values in
-  // their own InheritAutomaticData() as we descended the frame tree.
-
-  return NS_OK;
+  return TransmitAutomaticDataForMrowLikeElement();
 }
 
 // displaystyle and scriptlevel are special in <mstyle>...
