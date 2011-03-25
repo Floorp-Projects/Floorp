@@ -399,6 +399,10 @@ FormAssistant.prototype = {
             break;
 
           case aEvent.DOM_VK_RETURN:
+            if (!this._isVisibleElement(currentElement))
+              this.close();
+            break;
+
           case aEvent.DOM_VK_ESCAPE:
           case aEvent.DOM_VK_TAB:
             break;
@@ -540,7 +544,7 @@ FormAssistant.prototype = {
   _getCaretRect: function _formHelperGetCaretRect() {
     let element = this.currentElement;
     let focusedElement = gFocusManager.getFocusedElementForWindow(content, true, {});
-    if ((element.mozIsTextField && element.mozIsTextField(false) ||
+    if (element && (element.mozIsTextField && element.mozIsTextField(false) ||
         element instanceof HTMLTextAreaElement) && focusedElement == element) {
       let utils = Util.getWindowUtils(element.ownerDocument.defaultView);
       let rect = utils.sendQueryContentEvent(utils.QUERY_CARET_RECT, element.selectionEnd, 0, 0, 0);
