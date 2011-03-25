@@ -3760,6 +3760,11 @@ function JSPropertyProvider(aScope, aInputValue)
     return null;
   }
 
+  // Skip Iterators and Generators.
+  if (isIteratorOrGenerator(obj)) {
+    return null;
+  }
+
   let matches = [];
   for (var prop in obj) {
     matches.push(prop);
@@ -3773,6 +3778,24 @@ function JSPropertyProvider(aScope, aInputValue)
     matchProp: matchProp,
     matches: matches
   };
+}
+
+function isIteratorOrGenerator(aObject)
+{
+  if (typeof aObject == "object") {
+    if (typeof aObject.__iterator__ == "function" ||
+        aObject.constructor && aObject.constructor.name == "Iterator") {
+      return true;
+    }
+
+    let str = aObject.toString();
+    if (typeof aObject.next == "function" &&
+        str.indexOf("[object Generator") == 0) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -4364,6 +4387,11 @@ JSTerm.prototype = {
   isResultInspectable: function JST_isResultInspectable(aResult)
   {
     let isEnumerable = false;
+
+    // Skip Iterators and Generators.
+    if (isIteratorOrGenerator(aResult)) {
+      return false;
+    }
 
     for (let p in aResult) {
       isEnumerable = true;
