@@ -1764,6 +1764,12 @@ HUD_SERVICE.prototype =
 
     this.unregisterActiveContext(id);
 
+    let popupset = outputNode.ownerDocument.getElementById("mainPopupSet");
+    let panels = popupset.querySelectorAll("panel[hudId=" + id + "]");
+    for (let i = 0; i < panels.length; i++) {
+      panels[i].hidePopup();
+    }
+
     let id = ConsoleUtils.supString(id);
     Services.obs.notifyObservers(id, "web-console-destroyed", null);
 
@@ -2131,6 +2137,7 @@ HUD_SERVICE.prototype =
     let panel = netPanel.panel;
     panel.openPopup(aNode, "after_pointer", 0, 0, false, false);
     panel.sizeTo(450, 500);
+    panel.setAttribute("hudId", aHttpActivity.hudId);
     aHttpActivity.panels.push(Cu.getWeakReference(netPanel));
     return netPanel;
   },
@@ -3917,7 +3924,8 @@ function JSTermHelper(aJSTerm)
   aJSTerm.sandbox.inspect = function JSTH_inspect(aObject)
   {
     aJSTerm.helperEvaluated = true;
-    aJSTerm.openPropertyPanel(null, unwrap(aObject));
+    let propPanel = aJSTerm.openPropertyPanel(null, unwrap(aObject));
+    propPanel.panel.setAttribute("hudId", aJSTerm.hudId);
   };
 
   /**
@@ -4242,7 +4250,8 @@ JSTerm.prototype = {
       }
 
       if (!this._panelOpen) {
-        self.openPropertyPanel(aEvalString, aOutputObject, this);
+        let propPanel = self.openPropertyPanel(aEvalString, aOutputObject, this);
+        propPanel.panel.setAttribute("hudId", self.hudId);
         this._panelOpen = true;
       }
     }, false);
