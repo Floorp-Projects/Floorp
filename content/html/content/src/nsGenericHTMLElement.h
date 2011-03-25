@@ -695,7 +695,7 @@ protected:
    * @param aDefault default-value to return if attribute isn't set.
    * @param aResult  result value [out]
    */
-  NS_HIDDEN_(nsresult) GetFloatAttr(nsIAtom* aAttr, float aDefault, float* aValue);
+  NS_HIDDEN_(nsresult) GetFloatAttr(nsIAtom* aAttr, double aDefault, double* aValue);
 
   /**
    * Helper method for NS_IMPL_FLOAT_ATTR macro.
@@ -705,7 +705,7 @@ protected:
    * @param aAttr    name of attribute.
    * @param aValue   Float value of attribute.
    */
-  NS_HIDDEN_(nsresult) SetFloatAttr(nsIAtom* aAttr, float aValue);
+  NS_HIDDEN_(nsresult) SetFloatAttr(nsIAtom* aAttr, double aValue);
 
   /**
    * Helper for GetURIAttr and GetHrefURIForAnchors which returns an
@@ -1189,21 +1189,21 @@ protected:
   }
 
 /**
- * A macro to implement the getter and setter for a given float
- * valued content property. The method uses the generic GetAttr and
- * SetAttr methods.
+ * A macro to implement the getter and setter for a given double-precision
+ * floating point valued content property. The method uses GetFloatAttr and
+ * SetFloatAttr methods.
  */
-#define NS_IMPL_FLOAT_ATTR(_class, _method, _atom)                    \
-  NS_IMPL_FLOAT_ATTR_DEFAULT_VALUE(_class, _method, _atom, 0.0)
+#define NS_IMPL_DOUBLE_ATTR(_class, _method, _atom)                    \
+  NS_IMPL_DOUBLE_ATTR_DEFAULT_VALUE(_class, _method, _atom, 0.0)
 
-#define NS_IMPL_FLOAT_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default)  \
+#define NS_IMPL_DOUBLE_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default) \
   NS_IMETHODIMP                                                             \
-  _class::Get##_method(float* aValue)                                   \
+  _class::Get##_method(double* aValue)                                      \
   {                                                                         \
     return GetFloatAttr(nsGkAtoms::_atom, _default, aValue);                \
   }                                                                         \
   NS_IMETHODIMP                                                             \
-  _class::Set##_method(float aValue)                                    \
+  _class::Set##_method(double aValue)                                       \
   {                                                                         \
     return SetFloatAttr(nsGkAtoms::_atom, aValue);                          \
   }

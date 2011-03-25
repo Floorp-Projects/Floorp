@@ -1211,7 +1211,7 @@ PRBool nsAttrValue::ParseFloatValue(const nsAString& aString)
   ResetIfSet();
 
   PRInt32 ec;
-  float val = PromiseFlatString(aString).ToFloat(&ec);
+  double val = PromiseFlatString(aString).ToDouble(&ec);
   if (NS_FAILED(ec)) {
     return PR_FALSE;
   }

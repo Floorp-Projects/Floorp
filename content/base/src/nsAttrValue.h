@@ -165,7 +165,7 @@ public:
 #ifdef MOZ_SVG
   inline nsISVGValue* GetSVGValue() const;
 #endif
-  inline float GetFloatValue() const;
+  inline double GetFloatValue() const;
   PRBool GetIntMarginValue(nsIntMargin& aMargin) const;
 
   /**
@@ -297,7 +297,7 @@ public:
   PRBool ParseColor(const nsAString& aString);
 
   /**
-   * Parse a string value into a float.
+   * Parse a string value into a double-precision floating point value.
    *
    * @param aString the string to parse
    * @return whether the value could be parsed
@@ -346,7 +346,7 @@ private:
 #ifdef MOZ_SVG
       nsISVGValue* mSVGValue;
 #endif
-      float mFloatValue;
+      double mFloatValue;
       nsIntMargin* mIntMargin;
     };
   };
@@ -458,7 +458,7 @@ nsAttrValue::GetSVGValue() const
 }
 #endif
 
-inline float
+inline double
 nsAttrValue::GetFloatValue() const
 {
   NS_PRECONDITION(Type() == eFloatValue, "wrong type");
