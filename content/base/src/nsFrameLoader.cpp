@@ -310,7 +310,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsFrameLoader, nsIFrameLoader)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameLoader)
   NS_INTERFACE_MAP_ENTRY(nsIFrameLoader)
-  NS_INTERFACE_MAP_ENTRY(nsIFrameLoader_MOZILLA_2_0_BRANCH)
   NS_INTERFACE_MAP_ENTRY(nsIContentViewManager)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFrameLoader)
 NS_INTERFACE_MAP_END
@@ -1682,36 +1681,6 @@ nsFrameLoader::UpdateBaseWindowPositionAndSize(nsIFrame *aIFrame)
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::ScrollViewportTo(float aXpx, float aYpx)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::ScrollViewportBy(float aDXpx, float aDYpx)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::SetViewportScale(float aXScale, float aYScale)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetViewportScrollX(float* aViewportScrollX)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetViewportScrollY(float* aViewportScrollY)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
