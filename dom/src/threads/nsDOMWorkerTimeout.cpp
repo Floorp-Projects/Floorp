@@ -200,11 +200,10 @@ nsDOMWorkerTimeout::ExpressionCallback::Run(nsDOMWorkerTimeout* aTimeout,
   const jschar* string = JS_GetStringCharsAndLength(aCx, expression, &stringLength);
   NS_ENSURE_TRUE(string, NS_ERROR_FAILURE);
 
-  jsval rval;
   PRBool success = JS_EvaluateUCScriptForPrincipals(aCx, global, principal,
                                                     string, stringLength,
                                                     mFileName.get(),
-                                                    mLineNumber, &rval);
+                                                    mLineNumber, nsnull);
   if (!success) {
     return NS_ERROR_FAILURE;
   }

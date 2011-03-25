@@ -535,24 +535,6 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
       }
     }
   }
-  // Don't report "refresh" headers back to necko, since our document handles
-  // them
-  else if (aHeader != nsGkAtoms::refresh && mParser) {
-    // we also need to report back HTTP-EQUIV headers to the channel
-    // so that it can process things like pragma: no-cache or other
-    // cache-control headers. Ideally this should also be the way for
-    // cookies to be set! But we'll worry about that in the next
-    // iteration
-    nsCOMPtr<nsIChannel> channel;
-    if (NS_SUCCEEDED(mParser->GetChannel(getter_AddRefs(channel)))) {
-      nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-      if (httpChannel) {
-        httpChannel->SetResponseHeader(nsAtomCString(aHeader),
-                                       NS_ConvertUTF16toUTF8(aValue),
-                                       PR_TRUE);
-      }
-    }
-  }
 
   return rv;
 }

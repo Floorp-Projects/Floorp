@@ -429,6 +429,23 @@ GC(JSContext *cx,
     return JS_TRUE;
 }
 
+#ifdef JS_GC_ZEAL
+static JSBool
+GCZeal(JSContext *cx, 
+       uintN argc,
+       jsval *vp)
+{
+  jsval* argv = JS_ARGV(cx, vp);
+
+  uint32 zeal;
+  if (!JS_ValueToECMAUint32(cx, argv[0], &zeal))
+    return JS_FALSE;
+
+  JS_SetGCZeal(cx, PRUint8(zeal));
+  return JS_TRUE;
+}
+#endif
+
 #ifdef DEBUG
 
 static JSBool
@@ -543,6 +560,9 @@ JSFunctionSpec gGlobalFunctions[] =
     {"dumpXPC",         DumpXPC,        1,0},
     {"dump",            Dump,           1,0},
     {"gc",              GC,             0,0},
+#ifdef JS_GC_ZEAL
+    {"gczeal",          GCZeal,         1,0},
+#endif
     {"clear",           Clear,          1,0},
 #ifdef DEBUG
     {"dumpHeap",        DumpHeap,       5,0},

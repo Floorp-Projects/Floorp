@@ -41,7 +41,7 @@
 
 interface nsICmdLineService;
 
-[scriptable, uuid(6799abed-4721-4f51-9304-d1a2ea1df5d5)]
+[scriptable, uuid(68b4b481-e21b-478f-8d75-41b131e1c261)]
 interface nsIAppStartup : nsISupports
 {
     /**
@@ -124,20 +124,12 @@ interface nsIAppStartup : nsISupports
      *        constructed from the constants defined above.
      */
     void quit(in PRUint32 aMode);
-};
 
-[scriptable, uuid(e233d663-d014-43b0-8649-7145ecf0a0b1)]
-interface nsIAppStartup2 : nsIAppStartup
-{
     /**
      * True if the application is in the process of shutting down.
      */
     readonly attribute boolean shuttingDown;
-};
 
-[scriptable, uuid(2e8c45b0-1ac1-11e0-ac64-0800200c9a66)]
-interface nsIAppStartup_MOZILLA_2_0 : nsIAppStartup2
-{
     /** 
      * Returns an object with main, process, firstPaint, sessionRestored properties.
      * Properties may not be available depending on platform or application

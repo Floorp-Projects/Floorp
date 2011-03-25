@@ -1,5 +1,5 @@
 function test() {
-  var startup_info = Components.classes["@mozilla.org/toolkit/app-startup;1"].getService(Components.interfaces.nsIAppStartup_MOZILLA_2_0).getStartupInfo();
+  var startup_info = Components.classes["@mozilla.org/toolkit/app-startup;1"].getService(Components.interfaces.nsIAppStartup).getStartupInfo();
   // No .process info on mac
   ok(startup_info.process <= startup_info.main, "process created before main is run " + uneval(startup_info));
 

@@ -1621,3 +1621,6 @@ skip-if(Android) fails-if(winWidget) == 632781-verybig.html 632781-ref.html # la
 == 632781-normalsize.html 632781-ref.html
 fails-if(Android) == 634232-1.html 634232-1-ref.html
 fails-if(Android) == 635302-1.html 635302-1-ref.html
+HTTP(..) == 635639-1.html 635639-1-ref.html
+HTTP(..) == 635639-2.html 635639-2-ref.html
+== 641856-1.html 641856-1-ref.html

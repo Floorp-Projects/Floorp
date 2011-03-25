@@ -208,11 +208,13 @@ public:
   // Setters for inherit structs only, since rulenode only sets those eagerly.
   #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_, ctor_args_)          \
     void SetStyle##name_ (nsStyle##name_ * aStruct) {                       \
-      NS_ASSERTION(!mCachedInheritedData.m##name_##Data ||                  \
+      void *& slot =                                                        \
+        mCachedInheritedData.mStyleStructs[eStyleStruct_##name_];           \
+      NS_ASSERTION(!slot ||                                                 \
                    (mBits &                                                 \
                     nsCachedStyleData::GetBitForSID(eStyleStruct_##name_)), \
                    "Going to leak styledata");                              \
-      mCachedInheritedData.m##name_##Data = aStruct;                        \
+      slot = aStruct;                                                       \
     }
 #define STYLE_STRUCT_RESET(name_, checkdata_cb_, ctor_args_) /* nothing */
   #include "nsStyleStructList.h"
@@ -350,7 +352,8 @@ protected:
   #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_, ctor_args_)      \
     const nsStyle##name_ * DoGetStyle##name_(PRBool aComputeData) {     \
       const nsStyle##name_ * cachedData =                               \
-        mCachedInheritedData.m##name_##Data;                            \
+        static_cast<nsStyle##name_*>(                                   \
+          mCachedInheritedData.mStyleStructs[eStyleStruct_##name_]);    \
       if (cachedData) /* Have it cached already, yay */                 \
         return cachedData;                                              \
       /* Have the rulenode deal */                                      \
@@ -358,8 +361,10 @@ protected:
     }
   #define STYLE_STRUCT_RESET(name_, checkdata_cb_, ctor_args_)          \
     const nsStyle##name_ * DoGetStyle##name_(PRBool aComputeData) {     \
-      const nsStyle##name_ * cachedData =                               \
-        mCachedResetData ? mCachedResetData->m##name_##Data : nsnull;   \
+      const nsStyle##name_ * cachedData = mCachedResetData              \
+        ? static_cast<nsStyle##name_*>(                                 \
+            mCachedResetData->mStyleStructs[eStyleStruct_##name_])      \
+        : nsnull;                                                       \
       if (cachedData) /* Have it cached already, yay */                 \
         return cachedData;                                              \
       /* Have the rulenode deal */                                      \

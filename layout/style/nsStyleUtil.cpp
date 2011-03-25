@@ -51,30 +51,6 @@
 #include "nsTextFormatter.h"
 #include "nsCSSProps.h"
 
-// XXX This is here because nsCachedStyleData is accessed outside of
-// the content module; e.g., by nsCSSFrameConstructor.
-#include "nsRuleNode.h"
-
-nsCachedStyleData::StyleStructInfo
-nsCachedStyleData::gInfo[] = {
-
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
-  { offsetof(nsCachedStyleData, mInheritedData), \
-    offsetof(nsInheritedStyleData, m##name##Data), \
-    PR_FALSE },
-#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args) \
-  { offsetof(nsCachedStyleData, mResetData), \
-    offsetof(nsResetStyleData, m##name##Data), \
-    PR_TRUE },
-
-#include "nsStyleStructList.h"
-
-#undef STYLE_STRUCT_INHERITED
-#undef STYLE_STRUCT_RESET
-
-  { 0, 0, 0 }
-};
-
 #define POSITIVE_SCALE_FACTOR 1.10 /* 10% */
 #define NEGATIVE_SCALE_FACTOR .90  /* 10% */
 

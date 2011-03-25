@@ -177,6 +177,8 @@ class Buffer {
   F(post, POST) \
   F(prep, PREP) \
   F(vdmx, VDMX) \
+  F(vhea, VHEA) \
+  F(vmtx, VMTX) \
   F(vorg, VORG) \
   F(gdef, GDEF) \
   F(gpos, GPOS) \
@@ -185,6 +187,9 @@ class Buffer {
 #define F(name, capname) struct OpenType##capname;
 FOR_EACH_TABLE_TYPE
 #undef F
+
+#define OpenTypeVHEA OpenTypeHHEA
+#define OpenTypeVMTX OpenTypeHMTX
 
 struct OpenTypeFile {
   OpenTypeFile() {

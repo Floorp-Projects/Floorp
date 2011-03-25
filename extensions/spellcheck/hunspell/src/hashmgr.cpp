@@ -546,7 +546,6 @@ int HashMgr::hash(const char * word) const
 int HashMgr::decode_flags(unsigned short ** result, char * flags, FileMgr * af) {
     int len;
     if (*flags == '\0') {
-        HUNSPELL_WARNING(stderr, "error: line %d: bad flagvector\n", af->getlinenum());
         *result = NULL;
         return 0;
     }

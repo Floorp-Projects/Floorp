@@ -2161,11 +2161,24 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
 
 /* static */
 PRBool
-gfxFontUtils::IsCffFont(const PRUint8* aFontData)
+gfxFontUtils::IsCffFont(const PRUint8* aFontData, PRBool& hasVertical)
 {
     // this is only called after aFontData has passed basic validation,
     // so we know there is enough data present to allow us to read the version!
     const SFNTHeader *sfntHeader = reinterpret_cast<const SFNTHeader*>(aFontData);
+
+    PRUint32 i;
+    PRUint32 numTables = sfntHeader->numTables;
+    const TableDirEntry *dirEntry = 
+        reinterpret_cast<const TableDirEntry*>(aFontData + sizeof(SFNTHeader));
+    hasVertical = PR_FALSE;
+    for (i = 0; i < numTables; i++, dirEntry++) {
+        if (dirEntry->tag == TRUETYPE_TAG('v','h','e','a')) {
+            hasVertical = PR_TRUE;
+            break;
+        }
+    }
+
     return (sfntHeader->sfntVersion == TRUETYPE_TAG('O','T','T','O'));
 }
 

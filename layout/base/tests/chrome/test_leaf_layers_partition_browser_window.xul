@@ -44,8 +44,7 @@
         isnot(win.mozPaintCount, initialCount, "mozPaintCount has increased");
 
         var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                       .getInterface(Components.interfaces.nsIDOMWindowUtils)
-                       .QueryInterface(Components.interfaces.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
+                       .getInterface(Components.interfaces.nsIDOMWindowUtils);
         ok(utils.leafLayersPartitionWindow(),
            "Leaf layers should form a non-overlapping partition of the browser window");
 

@@ -1155,6 +1155,57 @@ static PRBool test_huge_capacity()
   return PR_TRUE;
 }
 
+static PRBool test_tofloat_helper(const nsString& aStr, float aExpected, PRBool aSuccess)
+{
+  PRInt32 result;
+  return aStr.ToFloat(&result) == aExpected &&
+         aSuccess ? result == NS_OK : result != NS_OK;
+}
+
+static PRBool test_tofloat()
+{
+  return \
+    test_tofloat_helper(NS_LITERAL_STRING("42"), 42.f, PR_TRUE) &&
+    test_tofloat_helper(NS_LITERAL_STRING("42.0"), 42.f, PR_TRUE) &&
+    test_tofloat_helper(NS_LITERAL_STRING("-42"), -42.f, PR_TRUE) &&
+    test_tofloat_helper(NS_LITERAL_STRING("+42"), 42, PR_TRUE) &&
+    test_tofloat_helper(NS_LITERAL_STRING("13.37"), 13.37f, PR_TRUE) &&
+    test_tofloat_helper(NS_LITERAL_STRING("1.23456789"), 1.23456789f, PR_TRUE) &&
+    test_tofloat_helper(NS_LITERAL_STRING("1.98765432123456"), 1.98765432123456f, PR_TRUE) &&
+    test_tofloat_helper(NS_LITERAL_STRING("0"), 0.f, PR_TRUE) &&
+    test_tofloat_helper(NS_LITERAL_STRING("1.e5"), 100000, PR_TRUE) &&
+    test_tofloat_helper(NS_LITERAL_STRING(""), 0.f, PR_FALSE) &&
+    test_tofloat_helper(NS_LITERAL_STRING("42foo"), 42.f, PR_FALSE) &&
+    test_tofloat_helper(NS_LITERAL_STRING("foo"), 0.f, PR_FALSE) &&
+    PR_TRUE;
+}
+
+static PRBool test_todouble_helper(const nsString& aStr, double aExpected, PRBool aSuccess)
+{
+  PRInt32 result;
+  return aStr.ToDouble(&result) == aExpected &&
+         aSuccess ? result == NS_OK : result != NS_OK;
+}
+
+static PRBool test_todouble()
+{
+  return \
+    test_todouble_helper(NS_LITERAL_STRING("42"), 42, PR_TRUE) &&
+    test_todouble_helper(NS_LITERAL_STRING("42.0"), 42, PR_TRUE) &&
+    test_todouble_helper(NS_LITERAL_STRING("-42"), -42, PR_TRUE) &&
+    test_todouble_helper(NS_LITERAL_STRING("+42"), 42, PR_TRUE) &&
+    test_todouble_helper(NS_LITERAL_STRING("13.37"), 13.37, PR_TRUE) &&
+    test_todouble_helper(NS_LITERAL_STRING("1.23456789"), 1.23456789, PR_TRUE) &&
+    test_todouble_helper(NS_LITERAL_STRING("1.98765432123456"), 1.98765432123456, PR_TRUE) &&
+    test_todouble_helper(NS_LITERAL_STRING("123456789.98765432123456"), 123456789.98765432123456, PR_TRUE) &&
+    test_todouble_helper(NS_LITERAL_STRING("0"), 0, PR_TRUE) &&
+    test_todouble_helper(NS_LITERAL_STRING("1.e5"), 100000, PR_TRUE) &&
+    test_todouble_helper(NS_LITERAL_STRING(""), 0, PR_FALSE) &&
+    test_todouble_helper(NS_LITERAL_STRING("42foo"), 42, PR_FALSE) &&
+    test_todouble_helper(NS_LITERAL_STRING("foo"), 0, PR_FALSE) &&
+    PR_TRUE;
+}
+
 //----
 
 typedef PRBool (*TestFunc)();
@@ -1206,6 +1257,8 @@ tests[] =
     { "test_parse_string", test_parse_string },
     { "test_strip_chars", test_strip_chars },
     { "test_huge_capacity", test_huge_capacity },
+    { "test_tofloat", test_tofloat },
+    { "test_todouble", test_todouble },
     { nsnull, nsnull }
   };
 
