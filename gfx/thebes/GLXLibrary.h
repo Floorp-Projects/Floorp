@@ -89,6 +89,9 @@ public:
     typedef const char * (GLAPIENTRY * PFNGLXQUERYEXTENSIONSSTRING) (Display *,
                                                                      int);
     PFNGLXQUERYEXTENSIONSSTRING xQueryExtensionsString;
+    typedef const char * (GLAPIENTRY * PFNGLXGETCLIENTSTRING) (Display *,
+                                                               int);
+    PFNGLXGETCLIENTSTRING xGetClientString;
     typedef const char * (GLAPIENTRY * PFNGLXQUERYSERVERSTRING) (Display *,
                                                                  int,
                                                                  int);
