@@ -2640,7 +2640,7 @@ void nsWindow::UpdateTransparentRegion(const nsIntRegion &aTransparentRegion)
   // all values must be set to -1 to get a full sheet of glass.
   MARGINS margins = { -1, -1, -1, -1 };
   bool visiblePlugin = false;
-  if (!opaqueRegion.IsEmpty() && !mHideChrome) {
+  if (!opaqueRegion.IsEmpty()) {
     nsIntRect pluginBounds;
     for (nsIWidget* child = GetFirstChild(); child; child = child->GetNextSibling()) {
       nsWindowType type;
