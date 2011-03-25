@@ -546,7 +546,7 @@ struct JS_FRIEND_API(JSCompartment) {
  * executing. cx must be a context on the current thread.
  */
 static inline bool
-JS_ON_TRACE(JSContext *cx)
+JS_ON_TRACE(const JSContext *cx)
 {
 #ifdef JS_TRACER
     if (JS_THREAD_DATA(cx)->onTraceCompartment)
