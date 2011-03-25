@@ -4,7 +4,7 @@
  */
 
 let cps = Cc["@mozilla.org/content-pref/service;1"].
-          getService(Ci.nsIContentPrefService_MOZILLA_2_0);
+          getService(Ci.nsIContentPrefService);
 
 function run_test() {
   testCacheWorks("test1.example.com", "test-pref1");

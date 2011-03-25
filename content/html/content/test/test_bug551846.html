@@ -37,8 +37,10 @@ function checkSizeReflection(element, defaultValue)
     "The content attribute should containt the previously set value");
 
   element.setAttribute('size', 0);
-  is(element.size, defaultValue,
-    "The reflecting IDL attribute should return the default value when content attribute value is invalid");
+  is(element.size, 0,
+    "0 should be considered as a valid value");
+  is(element.getAttribute('size'), 0,
+    "The content attribute should containt the previously set value");
 
   element.setAttribute('size', 2147483647); /* PR_INT32_MAX */
   is(element.size, 2147483647,
@@ -92,7 +94,7 @@ function checkSetSizeException(element)
   } catch(e) {
     caught = true;
   }
-  ok(!caught, "Setting a valid size shouldn't throw an exception");
+  ok(!caught, "Setting a positive size shouldn't throw an exception");
 
   caught = false;
   try {
@@ -100,7 +102,7 @@ function checkSetSizeException(element)
   } catch(e) {
     caught = true;
   }
-  ok(caught, "Setting an invalid size from the IDL should throw an exception");
+  ok(!caught, "Setting a size to 0 from the IDL shouldn't throw an exception");
 
   caught = false;
   try {

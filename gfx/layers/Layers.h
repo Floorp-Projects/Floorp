@@ -797,6 +797,20 @@ public:
    * have already had ComputeEffectiveTransforms called.
    */
   virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) = 0;
+  
+  /**
+   * Calculate the scissor rect required when rendering this layer.
+   *
+   * @param aIntermediate true if the layer is being rendered to an
+   * intermediate surface, false otherwise.
+   * @param aVisibleRect The bounds of the parent's visible region.
+   * @param aParentScissor The existing scissor rect set for the parent.
+   * @param aTransform The current 2d transform of the parent.
+   */
+  nsIntRect CalculateScissorRect(bool aIntermediate,
+                                 const nsIntRect& aVisibleRect,
+                                 const nsIntRect& aParentScissor,
+                                 const gfxMatrix& aTransform);
 
   virtual const char* Name() const =0;
   virtual LayerType GetType() const =0;

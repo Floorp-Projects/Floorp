@@ -337,6 +337,7 @@ nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
 
 // nsIDOMCSS2Properties
 
+#define CSS_PROP_DOMPROP_PREFIXED(prop_) Moz ## prop_
 #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,          \
                  parsevariant_, kwtable_, stylestruct_, stylestructoffset_,  \
                  animtype_)                                                  \
@@ -368,3 +369,4 @@ CSS_PROP(X, outline_offset, MozOutlineOffset, X, X, X, X, X, X, X, X)
 #undef CSS_PROP_SHORTHAND
 #undef CSS_PROP_LIST_EXCLUDE_INTERNAL
 #undef CSS_PROP
+#undef CSS_PROP_DOMPROP_PREFIXED

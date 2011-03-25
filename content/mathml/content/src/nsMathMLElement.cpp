@@ -326,8 +326,10 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Font)) {
     const nsAttrValue* value =
       aAttributes->GetAttr(nsGkAtoms::scriptsizemultiplier_);
+    nsCSSValue* scriptSizeMultiplier =
+      aData->ValueForScriptSizeMultiplier();
     if (value && value->Type() == nsAttrValue::eString &&
-        aData->mFontData->mScriptSizeMultiplier.GetUnit() == eCSSUnit_Null) {
+        scriptSizeMultiplier->GetUnit() == eCSSUnit_Null) {
       nsAutoString str(value->GetStringValue());
       str.CompressWhitespace();
       // MathML numbers can't have leading '+'
@@ -336,22 +338,22 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
         float floatValue = str.ToFloat(&errorCode);
         // Negative scriptsizemultipliers are not parsed
         if (NS_SUCCEEDED(errorCode) && floatValue >= 0.0f) {
-          aData->mFontData->mScriptSizeMultiplier.
-            SetFloatValue(floatValue, eCSSUnit_Number);
+          scriptSizeMultiplier->SetFloatValue(floatValue, eCSSUnit_Number);
         }
       }
     }
 
     value = aAttributes->GetAttr(nsGkAtoms::scriptminsize_);
+    nsCSSValue* scriptMinSize = aData->ValueForScriptMinSize();
     if (value && value->Type() == nsAttrValue::eString &&
-        aData->mFontData->mScriptMinSize.GetUnit() == eCSSUnit_Null) {
-      ParseNumericValue(value->GetStringValue(),
-                        aData->mFontData->mScriptMinSize, 0);
+        scriptMinSize->GetUnit() == eCSSUnit_Null) {
+      ParseNumericValue(value->GetStringValue(), *scriptMinSize, 0);
     }
 
     value = aAttributes->GetAttr(nsGkAtoms::scriptlevel_);
+    nsCSSValue* scriptLevel = aData->ValueForScriptLevel();
     if (value && value->Type() == nsAttrValue::eString &&
-        aData->mFontData->mScriptLevel.GetUnit() == eCSSUnit_Null) {
+        scriptLevel->GetUnit() == eCSSUnit_Null) {
       nsAutoString str(value->GetStringValue());
       str.CompressWhitespace();
       if (str.Length() > 0) {
@@ -364,9 +366,9 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
           // to indicate that the scriptlevel is absolute.
           PRUnichar ch = str.CharAt(0);
           if (ch == '+' || ch == '-') {
-            aData->mFontData->mScriptLevel.SetIntValue(intValue, eCSSUnit_Integer);
+            scriptLevel->SetIntValue(intValue, eCSSUnit_Integer);
           } else {
-            aData->mFontData->mScriptLevel.SetFloatValue(intValue, eCSSUnit_Number);
+            scriptLevel->SetFloatValue(intValue, eCSSUnit_Number);
           }
         }
       }
@@ -378,10 +380,11 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       parseSizeKeywords = PR_FALSE;
       value = aAttributes->GetAttr(nsGkAtoms::fontsize_);
     }
+    nsCSSValue* fontSize = aData->ValueForFontSize();
     if (value && value->Type() == nsAttrValue::eString &&
-        aData->mFontData->mSize.GetUnit() == eCSSUnit_Null) {
+        fontSize->GetUnit() == eCSSUnit_Null) {
       nsAutoString str(value->GetStringValue());
-      if (!ParseNumericValue(str, aData->mFontData->mSize, 0) &&
+      if (!ParseNumericValue(str, *fontSize, 0) &&
           parseSizeKeywords) {
         static const char sizes[3][7] = { "small", "normal", "big" };
         static const PRInt32 values[NS_ARRAY_LENGTH(sizes)] = {
@@ -391,7 +394,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
         str.CompressWhitespace();
         for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sizes); ++i) {
           if (str.EqualsASCII(sizes[i])) {
-            aData->mFontData->mSize.SetIntValue(values[i], eCSSUnit_Enumerated);
+            fontSize->SetIntValue(values[i], eCSSUnit_Enumerated);
             break;
           }
         }
@@ -399,10 +402,10 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     }
 
     value = aAttributes->GetAttr(nsGkAtoms::fontfamily_);
+    nsCSSValue* fontFamily = aData->ValueForFontFamily();
     if (value && value->Type() == nsAttrValue::eString &&
-        aData->mFontData->mFamily.GetUnit() == eCSSUnit_Null) {
-      aData->mFontData->mFamily.SetStringValue(value->GetStringValue(),
-                                               eCSSUnit_Families);
+        fontFamily->GetUnit() == eCSSUnit_Null) {
+      fontFamily->SetStringValue(value->GetStringValue(), eCSSUnit_Families);
     }
   }
 
@@ -412,10 +415,11 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     if (!value) {
       value = aAttributes->GetAttr(nsGkAtoms::background);
     }
-    if (value && aData->mColorData->mBackColor.GetUnit() == eCSSUnit_Null) {
+    nsCSSValue* backgroundColor = aData->ValueForBackgroundColor();
+    if (value && backgroundColor->GetUnit() == eCSSUnit_Null) {
       nscolor color;
       if (value->GetColorValue(color)) {
-        aData->mColorData->mBackColor.SetColorValue(color);
+        backgroundColor->SetColorValue(color);
       }
     }
   }
@@ -426,9 +430,10 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       value = aAttributes->GetAttr(nsGkAtoms::color);
     }
     nscolor color;
+    nsCSSValue* colorValue = aData->ValueForColor();
     if (value && value->GetColorValue(color) &&
-        aData->mColorData->mColor.GetUnit() == eCSSUnit_Null) {
-      aData->mColorData->mColor.SetColorValue(color);
+        colorValue->GetUnit() == eCSSUnit_Null) {
+      colorValue->SetColorValue(color);
     }
   }
 }

@@ -101,8 +101,8 @@ PR_STATIC_ASSERT((PRUint32)eButtonElementTypesMax < (PRUint32)NS_FORM_INPUT_ELEM
 PR_STATIC_ASSERT((PRUint32)eInputElementTypesMax  < 1<<8);
 
 #define NS_IFORMCONTROL_IID   \
-{ 0x218eb090, 0x32eb, 0x4e2a, \
- { 0x96, 0x42, 0xcd, 0xcd, 0x33, 0xae, 0xdb, 0x95 } }
+{ 0x671ef379, 0x7ac0, 0x414c, \
+ { 0xa2, 0x2b, 0xc1, 0x9e, 0x0b, 0x61, 0x4e, 0x83 } }
 
 /**
  * Interface which all form controls (e.g. buttons, checkboxes, text,
@@ -181,38 +181,145 @@ public:
   virtual PRBool AllowDrop() = 0;
 
   /**
-   * Returns true if this is a control which submits the form when
-   * activated by the user.
-   * @return Whether this is a submit control.
+   * Returns whether this is a control which submits the form when activated by
+   * the user.
+   * @return whether this is a submit control.
    */
-  virtual PRBool IsSubmitControl() const = 0;
+  inline PRBool IsSubmitControl() const;
 
   /**
-   * Returns true if this is a control which has a text field.
+   * Returns whether this is a text control.
    * @param  aExcludePassword  to have NS_FORM_INPUT_PASSWORD returning false.
-   * @return Whether this is a text control.
+   * @return whether this is a text control.
    */
-  virtual PRBool IsTextControl(PRBool aExcludePassword) const = 0;
+  inline PRBool IsTextControl(PRBool aExcludePassword) const ;
 
   /**
-   * Returns true if this is a control which has a single line text field.
+   * Returns whether this is a single line text control.
    * @param  aExcludePassword  to have NS_FORM_INPUT_PASSWORD returning false.
-   * @return Whether this is a single line text control.
+   * @return whether this is a single line text control.
    */
-  virtual PRBool IsSingleLineTextControl(PRBool aExcludePassword) const = 0;
+  inline PRBool IsSingleLineTextControl(PRBool aExcludePassword) const;
 
   /**
-   * Returns true if this is a labelable form control.
-   * @return Whether this is a labelable form control.
+   * Returns whether this is a labelable form control.
+   * @return whether this is a labelable form control.
    */
-  virtual PRBool IsLabelableControl() const = 0;
+  inline PRBool IsLabelableControl() const;
 
   /**
-   * Returns true if this is a submittable form control.
-   * @return Whether this is a submittable form control.
+   * Returns whether this is a submittable form control.
+   * @return whether this is a submittable form control.
    */
-  virtual PRBool IsSubmittableControl() const = 0;
+  inline PRBool IsSubmittableControl() const;
+
+  /**
+   * Returns whether this form control can have draggable children.
+   * @return whether this form control can have draggable children.
+   */
+  inline PRBool AllowDraggableChildren() const;
+
+protected:
+
+  /**
+   * Returns whether mType corresponds to a single line text control type.
+   * @param aExcludePassword to have NS_FORM_INPUT_PASSWORD ignored.
+   * @param aType the type to be tested.
+   * @return whether mType corresponds to a single line text control type.
+   */
+  inline static bool IsSingleLineTextControl(bool aExcludePassword, PRUint32 aType);
+
+  /**
+   * Returns whether this is a auto-focusable form control.
+   * @return whether this is a auto-focusable form control.
+   */
+  inline bool IsAutofocusable() const;
 };
+
+PRBool
+nsIFormControl::IsSubmitControl() const
+{
+  PRUint32 type = GetType();
+  return type == NS_FORM_INPUT_SUBMIT ||
+         type == NS_FORM_INPUT_IMAGE ||
+         type == NS_FORM_BUTTON_SUBMIT;
+}
+
+PRBool
+nsIFormControl::IsTextControl(PRBool aExcludePassword) const
+{
+  PRUint32 type = GetType();
+  return type == NS_FORM_TEXTAREA ||
+         IsSingleLineTextControl(aExcludePassword, type);
+}
+
+PRBool
+nsIFormControl::IsSingleLineTextControl(PRBool aExcludePassword) const
+{
+  return IsSingleLineTextControl(aExcludePassword, GetType());
+}
+
+/*static*/
+bool
+nsIFormControl::IsSingleLineTextControl(bool aExcludePassword, PRUint32 aType)
+{
+  return aType == NS_FORM_INPUT_TEXT ||
+         aType == NS_FORM_INPUT_EMAIL ||
+         aType == NS_FORM_INPUT_SEARCH ||
+         aType == NS_FORM_INPUT_TEL ||
+         aType == NS_FORM_INPUT_URL ||
+         (!aExcludePassword && aType == NS_FORM_INPUT_PASSWORD);
+}
+
+PRBool
+nsIFormControl::IsLabelableControl() const
+{
+  // TODO: keygen should be in that list, see bug 101019.
+  // TODO: meter should be added, see bug 555985.
+  // TODO: NS_FORM_INPUT_HIDDEN should be removed, see bug 597650.
+  PRUint32 type = GetType();
+  return type & NS_FORM_INPUT_ELEMENT ||
+         type & NS_FORM_BUTTON_ELEMENT ||
+         // type == NS_FORM_KEYGEN ||
+         // type == NS_FORM_METER ||
+         type == NS_FORM_OUTPUT ||
+         // type == NS_FORM_PROGRESS ||
+         type == NS_FORM_SELECT ||
+         type == NS_FORM_TEXTAREA;
+}
+
+PRBool
+nsIFormControl::IsSubmittableControl() const
+{
+  // TODO: keygen should be in that list, see bug 101019.
+  PRUint32 type = GetType();
+  return type == NS_FORM_OBJECT ||
+         type == NS_FORM_TEXTAREA ||
+         type == NS_FORM_SELECT ||
+         // type == NS_FORM_KEYGEN ||
+         type & NS_FORM_BUTTON_ELEMENT ||
+         type & NS_FORM_INPUT_ELEMENT;
+}
+
+PRBool
+nsIFormControl::AllowDraggableChildren() const
+{
+  PRUint32 type = GetType();
+  return type == NS_FORM_OBJECT ||
+         type == NS_FORM_LABEL ||
+         type == NS_FORM_FIELDSET ||
+         type == NS_FORM_OUTPUT;
+}
+
+bool
+nsIFormControl::IsAutofocusable() const
+{
+  PRUint32 type = GetType();
+  return type & NS_FORM_INPUT_ELEMENT ||
+         type & NS_FORM_BUTTON_ELEMENT ||
+         type == NS_FORM_TEXTAREA ||
+         type == NS_FORM_SELECT;
+}
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormControl, NS_IFORMCONTROL_IID)
 

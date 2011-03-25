@@ -362,7 +362,7 @@ nsXFormsRangeAccessible::GetMaximumValue(double *aMaximumValue)
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 error = NS_OK;
-  *aMaximumValue = value.ToFloat(&error);
+  *aMaximumValue = value.ToDouble(&error);
   return error;
 }
 
@@ -377,7 +377,7 @@ nsXFormsRangeAccessible::GetMinimumValue(double *aMinimumValue)
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 error = NS_OK;
-  *aMinimumValue = value.ToFloat(&error);
+  *aMinimumValue = value.ToDouble(&error);
   return error;
 }
 
@@ -392,7 +392,7 @@ nsXFormsRangeAccessible::GetMinimumIncrement(double *aMinimumIncrement)
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 error = NS_OK;
-  *aMinimumIncrement = value.ToFloat(&error);
+  *aMinimumIncrement = value.ToDouble(&error);
   return error;
 }
 
@@ -407,7 +407,7 @@ nsXFormsRangeAccessible::GetCurrentValue(double *aCurrentValue)
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 error = NS_OK;
-  *aCurrentValue = value.ToFloat(&error);
+  *aCurrentValue = value.ToDouble(&error);
   return error;
 }
 

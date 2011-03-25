@@ -336,8 +336,10 @@ nsCSSExpandedDataBlock::kOffsetTable[] = {
                      parsevariant_, kwtable_, stylestruct_, stylestructoffset_,\
                      animtype_)                                                \
         offsetof(nsCSSExpandedDataBlock, m##datastruct_.member_),
+    #define CSS_PROP_STUB_NOT_CSS size_t(-1),
     #include "nsCSSPropList.h"
     #undef CSS_PROP
+    #undef CSS_PROP_STUB_NOT_CSS
 };
 
 void
@@ -609,8 +611,12 @@ nsCSSExpandedDataBlock::DoAssertInitialState()
     mPropertiesImportant.AssertIsEmpty("not initial state");
 
     for (PRUint32 i = 0; i < eCSSProperty_COUNT_no_shorthands; ++i) {
-        NS_ABORT_IF_FALSE(PropertyAt(nsCSSProperty(i))->GetUnit() ==
-                          eCSSUnit_Null, "not initial state");
+        // Check all properties except the non-CSS ones, which have
+        // size_t(-1) in kOffsetTable.
+        nsCSSProperty prop = nsCSSProperty(i);
+        NS_ABORT_IF_FALSE(kOffsetTable[prop] == size_t(-1) ||
+                          PropertyAt(prop)->GetUnit() == eCSSUnit_Null,
+                          "not initial state");
     }
 }
 #endif

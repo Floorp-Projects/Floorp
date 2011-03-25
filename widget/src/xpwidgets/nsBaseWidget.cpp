@@ -750,7 +750,7 @@ nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
   : mWidget(aWidget)
 {
   BasicLayerManager* manager =
-    static_cast<BasicLayerManager*>(mWidget->GetLayerManager(nsnull));
+    static_cast<BasicLayerManager*>(mWidget->GetLayerManager());
   if (manager) {
     NS_ASSERTION(manager->GetBackendType() == LayerManager::LAYERS_BASIC,
       "AutoLayerManagerSetup instantiated for non-basic layer backend!");
@@ -761,7 +761,7 @@ nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
 nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup()
 {
   BasicLayerManager* manager =
-    static_cast<BasicLayerManager*>(mWidget->GetLayerManager(nsnull));
+    static_cast<BasicLayerManager*>(mWidget->GetLayerManager());
   if (manager) {
     NS_ASSERTION(manager->GetBackendType() == LayerManager::LAYERS_BASIC,
       "AutoLayerManagerSetup instantiated for non-basic layer backend!");
@@ -861,11 +861,6 @@ nsBaseWidget::GetShouldAccelerate()
 
   /* use the window acceleration flag */
   return mUseAcceleratedRendering;
-}
-
-LayerManager* nsBaseWidget::GetLayerManager(bool* aAllowRetaining)
-{
-  return GetLayerManager(LAYER_MANAGER_CURRENT, aAllowRetaining);
 }
 
 LayerManager* nsBaseWidget::GetLayerManager(LayerManagerPersistence,

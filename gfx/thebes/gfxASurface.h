@@ -209,6 +209,8 @@ public:
 
     virtual const gfxIntSize GetSize() const { return gfxIntSize(-1, -1); }
 
+    void DumpAsDataURL();
+
     void SetOpaqueRect(const gfxRect& aRect) {
         if (aRect.IsEmpty()) {
             mOpaqueRect = nsnull;

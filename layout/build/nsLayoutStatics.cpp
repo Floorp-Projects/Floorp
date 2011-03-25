@@ -108,10 +108,8 @@
 #include "nsMathMLOperators.h"
 #endif
 
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #include "nsHTMLEditor.h"
 #include "nsTextServicesDocument.h"
-#endif
 
 #ifdef MOZ_MEDIA
 #include "nsMediaDecoder.h"
@@ -129,8 +127,11 @@
 #include "nsContentSink.h"
 #include "nsFrameMessageManager.h"
 #include "nsRefreshDriver.h"
+#include "CanvasImageCache.h"
 
 extern void NS_ShutdownChainItemPool();
+
+using namespace mozilla;
 
 nsrefcnt nsLayoutStatics::sLayoutStaticRefcnt = 0;
 
@@ -219,10 +220,8 @@ nsLayoutStatics::Initialize()
   nsMathMLOperators::AddRefTable();
 #endif
 
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
   nsEditProperty::RegisterAtoms();
   nsTextServicesDocument::RegisterAtoms();
-#endif
 
 #ifdef DEBUG
   nsFrame::DisplayReflowStartup();
@@ -292,6 +291,7 @@ nsLayoutStatics::Initialize()
 void
 nsLayoutStatics::Shutdown()
 {
+  CanvasImageCache::Shutdown();
   nsFrameScriptExecutor::Shutdown();
   nsFocusManager::Shutdown();
 #ifdef MOZ_XUL
@@ -356,10 +356,8 @@ nsLayoutStatics::Shutdown()
   nsXBLWindowKeyHandler::ShutDown();
   nsAutoCopyListener::Shutdown();
 
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
   nsHTMLEditor::Shutdown();
   nsTextServicesDocument::Shutdown();
-#endif
 
   nsDOMThreadService::Shutdown();
 

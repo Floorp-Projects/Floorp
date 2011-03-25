@@ -696,7 +696,7 @@ public:
     // determine whether a font (which has already passed ValidateSFNTHeaders)
     // is CFF format rather than TrueType
     static PRBool
-    IsCffFont(const PRUint8* aFontData);
+    IsCffFont(const PRUint8* aFontData, PRBool& hasVertical);
 
 #endif
 
