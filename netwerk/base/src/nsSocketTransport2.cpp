@@ -1131,13 +1131,6 @@ nsSocketTransport::InitiateSocket()
     status = PR_SetSocketOption(fd, &opt);
     NS_ASSERTION(status == PR_SUCCESS, "unable to make socket non-blocking");
 
-    // disable the nagle algorithm - if we rely on it to coalesce writes into
-    // full packets the final packet of a multi segment POST/PUT or pipeline
-    // sequence is delayed a full rtt
-    opt.option = PR_SockOpt_NoDelay;
-    opt.value.no_delay = PR_TRUE;
-    PR_SetSocketOption(fd, &opt);
-
     // if the network.tcp.sendbuffer preference is set, use it to size SO_SNDBUF
     // The Windows default of 8KB is too small and as of vista sp1, autotuning
     // only applies to receive window
