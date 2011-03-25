@@ -126,6 +126,8 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_621644_jsterm_dollar.js \
 	browser_webconsole_bug_632817.js \
 	browser_webconsole_bug_611795.js \
+	browser_webconsole_bug_618311_close_panels.js \
+	browser_webconsole_bug_618311_private_browsing.js \
 	head.js \
 	$(NULL)
 
