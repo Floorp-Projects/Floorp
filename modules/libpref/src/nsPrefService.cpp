@@ -352,7 +352,7 @@ NS_IMETHODIMP nsPrefService::ClearContentPref(const nsACString& aPrefName)
 NS_IMETHODIMP nsPrefService::MirrorPreference(const nsACString& aPrefName,
                                               PrefTuple *aPref)
 {
-  PrefHashEntry *pref = pref_HashTableLookup(nsDependentCString(aPrefName).get());
+  PrefHashEntry *pref = pref_HashTableLookup(PromiseFlatCString(aPrefName).get());
 
   if (!pref)
     return NS_ERROR_NOT_AVAILABLE;
