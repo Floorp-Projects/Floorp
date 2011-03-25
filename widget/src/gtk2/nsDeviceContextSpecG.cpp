@@ -476,9 +476,20 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
       const gchar* fmtGTK = gtk_print_settings_get(mGtkPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_FILE_FORMAT);
       if (!fmtGTK && GTK_IS_PRINTER(mGtkPrinter)) {
         // Likely not print-to-file, check printer's capabilities
-        format = (gtk_printer_accepts_ps(mGtkPrinter))
-          ? static_cast<PRInt16>(nsIPrintSettings::kOutputFormatPS)
-          : static_cast<PRInt16>(nsIPrintSettings::kOutputFormatPDF);
+
+        // Prior to gtk 2.24, gtk_printer_accepts_pdf() and
+        // gtk_printer_accepts_ps() always returned true regardless of the
+        // printer's capability.
+        if (gtk_major_version > 2 ||
+            (gtk_major_version == 2 && gtk_minor_version >= 24)) {
+          format =
+            gtk_printer_accepts_pdf(mGtkPrinter) ?
+            static_cast<PRInt16>(nsIPrintSettings::kOutputFormatPDF) :
+            static_cast<PRInt16>(nsIPrintSettings::kOutputFormatPS);
+        } else {
+          format = nsIPrintSettings::kOutputFormatPS;
+        }
+
       } else if (nsDependentCString(fmtGTK).EqualsIgnoreCase("pdf")) {
         format = nsIPrintSettings::kOutputFormatPDF;
       } else {
