@@ -6,5 +6,3 @@ toolkit.jar:
 *  res/forms.css    (forms.css)
    res/arrow.gif    (arrow.gif)
    res/arrowd.gif   (arrowd.gif)
-
-% resource gre-resources %res/

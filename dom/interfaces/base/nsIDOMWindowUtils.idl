@@ -54,6 +54,7 @@
 [ref] native nsConstRect(const nsRect);
 native nscolor(nscolor);
 [ptr] native gfxContext(gfxContext);
+typedef unsigned long long nsViewID;
 
 interface nsICycleCollectorListener;
 interface nsIDOMNode;
@@ -65,7 +66,7 @@ interface nsITransferable;
 interface nsIQueryContentEventResult;
 interface nsIDOMWindow;
 
-[scriptable, uuid(85fa978a-fc91-4513-9f11-8911e671577f)]
+[scriptable, uuid(da529d62-ba27-480c-bb37-766ad083179a)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -129,10 +130,34 @@ interface nsIDOMWindowUtils : nsISupports {
   void setCSSViewport(in float aWidthPx, in float aHeightPx);
 
   /**
-   * @DEPRECATED See nsIDOMWindowUtils_MOZILLA_2_0_BRANCH.
+   * For any scrollable element, this allows you to override the
+   * visible region and draw more than what is visible, which is
+   * useful for asynchronous drawing. The "displayport" will be
+   * <xPx, yPx, widthPx, heightPx> in units of CSS pixels,
+   * regardless of the size of the enclosing container.  This
+   * will *not* trigger reflow.
+   *
+   * For the root scroll area, pass in the root document element.
+   * For scrollable elements, pass in the container element (for
+   * instance, the element with overflow: scroll).
+   *
+   * <x, y> is relative to the top-left of what would normally be
+   * the visible area of the element. This means that the pixels
+   * rendered to the displayport take scrolling into account,
+   * for example.
+   *
+   * It's legal to set a displayport that extends beyond the overflow
+   * area in any direction (left/right/top/bottom).
+   * 
+   * It's also legal to set a displayport that extends beyond the
+   * area's bounds.  No pixels are rendered outside the area bounds.
+   *
+   * The caller of this method must have UniversalXPConnect
+   * privileges.
    */
-  void setDisplayPort(in float aXPx, in float aYPx,
-                      in float aWidthPx, in float aHeightPx);
+  void setDisplayPortForElement(in float aXPx, in float aYPx,
+                                in float aWidthPx, in float aHeightPx,
+                                in nsIDOMElement aElement);
 
   /**
    * Get/set the resolution at which rescalable web content is drawn.
@@ -754,6 +779,19 @@ interface nsIDOMWindowUtils : nsISupports {
   [noscript] void leaveModalState();
 
   /**
+   * Same as enterModalState, but returns the window associated with the
+   * current JS context.
+   */
+  nsIDOMWindow enterModalStateWithWindow();
+
+  /**
+   * Same as leaveModalState, but takes a window associated with the active
+   * context when enterModalStateWithWindow was called. The currently context
+   * might be different at the moment (see bug 621764).
+   */
+  void leaveModalStateWithWindow(in nsIDOMWindow aWindow);
+
+  /**
    * Is the window is in a modal state? [See enterModalState()]
    */
   [noscript] boolean isInModalState();
@@ -797,12 +835,7 @@ interface nsIDOMWindowUtils : nsISupports {
                                   in AString property,
                                   in AString value1,
                                   in AString value2);
-};
 
-typedef unsigned long long nsViewID;
-
-[scriptable, uuid(7ad49829-e631-4cdd-a237-95847d9bcbe6)]
-interface nsIDOMWindowUtils_MOZILLA_2_0_BRANCH : nsISupports {
   /**
    * Get the type of the currently focused html input, if any.
    */
@@ -814,49 +847,6 @@ interface nsIDOMWindowUtils_MOZILLA_2_0_BRANCH : nsISupports {
    * element of the document is returned.
    */
   nsIDOMElement findElementWithViewId(in nsViewID aId);
-
-  /**
-   * For any scrollable element, this allows you to override the
-   * visible region and draw more than what is visible, which is
-   * useful for asynchronous drawing. The "displayport" will be
-   * <xPx, yPx, widthPx, heightPx> in units of CSS pixels,
-   * regardless of the size of the enclosing container.  This
-   * will *not* trigger reflow.
-   *
-   * For the root scroll area, pass in the root document element.
-   * For scrollable elements, pass in the container element (for
-   * instance, the element with overflow: scroll).
-   *
-   * <x, y> is relative to the top-left of what would normally be
-   * the visible area of the element. This means that the pixels
-   * rendered to the displayport take scrolling into account,
-   * for example.
-   *
-   * It's legal to set a displayport that extends beyond the overflow
-   * area in any direction (left/right/top/bottom).
-   * 
-   * It's also legal to set a displayport that extends beyond the
-   * area's bounds.  No pixels are rendered outside the area bounds.
-   *
-   * The caller of this method must have UniversalXPConnect
-   * privileges.
-   */
-  void setDisplayPortForElement(in float aXPx, in float aYPx,
-                                in float aWidthPx, in float aHeightPx,
-                                in nsIDOMElement aElement);
-
-  /**
-   * Same as enterModalState, but returns the window associated with the
-   * current JS context.
-   */
-  nsIDOMWindow enterModalStateWithWindow();
-
-  /**
-   * Same as leaveModalState, but takes a window associated with the active
-   * context when enterModalStateWithWindow was called. The currently context
-   * might be different at the moment (see bug 621764).
-   */
-  void leaveModalStateWithWindow(in nsIDOMWindow aWindow);
 
   /**
    * Checks the layer tree for this window and returns true

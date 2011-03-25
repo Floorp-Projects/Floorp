@@ -174,6 +174,8 @@ NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
 #define COMPMGR_TIME_FUNCTION_CONTRACTID(cid) do {} while (0)
 #endif
 
+#define kOMNIJAR_PREFIX  NS_LITERAL_CSTRING("resource:///")
+
 nsresult
 nsGetServiceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr) const
 {
@@ -387,20 +389,14 @@ nsresult nsComponentManagerImpl::Init()
     for (PRUint32 i = 0; i < sStaticModules->Length(); ++i)
         RegisterModule((*sStaticModules)[i], NULL);
 
-    nsCOMPtr<nsIFile> appOmnijar = mozilla::Omnijar::GetPath(mozilla::Omnijar::APP);
-    if (appOmnijar) {
-        cl = sModuleLocations->InsertElementAt(1); // Insert after greDir
-        cl->type = NS_COMPONENT_LOCATION;
-        cl->location = do_QueryInterface(appOmnijar);
-        cl->jar = true;
+#ifdef MOZ_OMNIJAR
+    if (mozilla::OmnijarPath()) {
+        nsCOMPtr<nsIZipReader> omnijarReader = new nsJAR();
+        rv = omnijarReader->Open(mozilla::OmnijarPath());
+        if (NS_SUCCEEDED(rv))
+            RegisterJarManifest(omnijarReader, "chrome.manifest", false);
     }
-    nsCOMPtr<nsIFile> greOmnijar = mozilla::Omnijar::GetPath(mozilla::Omnijar::GRE);
-    if (greOmnijar) {
-        cl = sModuleLocations->InsertElementAt(0);
-        cl->type = NS_COMPONENT_LOCATION;
-        cl->location = do_QueryInterface(greOmnijar);
-        cl->jar = true;
-    }
+#endif
 
     for (PRUint32 i = 0; i < sModuleLocations->Length(); ++i) {
         ComponentLocation& l = sModuleLocations->ElementAt(i);
@@ -414,6 +410,15 @@ nsresult nsComponentManagerImpl::Init()
         if (NS_SUCCEEDED(rv))
             RegisterJarManifest(reader, "chrome.manifest", false);
     }
+
+#ifdef MOZ_OMNIJAR
+    if (mozilla::OmnijarPath()) {
+        cl = sModuleLocations->InsertElementAt(0);
+        cl->type = NS_COMPONENT_LOCATION;
+        cl->location = mozilla::OmnijarPath();
+        cl->jar = true;
+    }
+#endif
 
     nsCategoryManager::GetSingleton()->SuppressNotifications(false);
 

@@ -2177,11 +2177,11 @@ nsGenericHTMLElement::SetUnsignedIntAttr(nsIAtom* aAttr, PRUint32 aValue)
 }
 
 nsresult
-nsGenericHTMLElement::GetFloatAttr(nsIAtom* aAttr, float aDefault, float* aResult)
+nsGenericHTMLElement::GetDoubleAttr(nsIAtom* aAttr, double aDefault, double* aResult)
 {
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
-  if (attrVal && attrVal->Type() == nsAttrValue::eFloatValue) {
-    *aResult = attrVal->GetFloatValue();
+  if (attrVal && attrVal->Type() == nsAttrValue::eDoubleValue) {
+    *aResult = attrVal->GetDoubleValue();
   }
   else {
     *aResult = aDefault;
@@ -2190,7 +2190,7 @@ nsGenericHTMLElement::GetFloatAttr(nsIAtom* aAttr, float aDefault, float* aResul
 }
 
 nsresult
-nsGenericHTMLElement::SetFloatAttr(nsIAtom* aAttr, float aValue)
+nsGenericHTMLElement::SetDoubleAttr(nsIAtom* aAttr, double aValue)
 {
   nsAutoString value;
   value.AppendFloat(aValue);

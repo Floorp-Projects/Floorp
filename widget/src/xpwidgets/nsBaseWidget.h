@@ -62,7 +62,7 @@ class gfxContext;
  * class, but it gives them a head start.)
  */
 
-class nsBaseWidget : public nsIWidget_MOZILLA_2_0_BRANCH
+class nsBaseWidget : public nsIWidget
 {
   friend class nsAutoRollup;
 
@@ -115,9 +115,10 @@ public:
   NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
   virtual nsIDeviceContext* GetDeviceContext();
   virtual nsIToolkit*     GetToolkit();
-  virtual LayerManager*   GetLayerManager(bool *aAllowRetaining = nsnull);
-  virtual LayerManager*   GetLayerManager(LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
+  virtual LayerManager*   GetLayerManager(LayerManagerPersistence aPersistence,
                                           bool* aAllowRetaining = nsnull);
+  using nsIWidget::GetLayerManager;
+
   virtual void            DrawOver(LayerManager* aManager, nsIntRect aRect) {}
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) {}
   virtual gfxASurface*    GetThebesSurface();
