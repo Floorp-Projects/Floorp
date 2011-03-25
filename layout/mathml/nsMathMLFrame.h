@@ -59,6 +59,11 @@ public:
 
   // nsIMathMLFrame ---
 
+  virtual PRBool
+  IsSpaceLike() {
+    return NS_MATHML_IS_SPACE_LIKE(mPresentationData.flags);
+  }
+
   NS_IMETHOD
   GetBoundingMetrics(nsBoundingMetrics& aBoundingMetrics) {
     aBoundingMetrics = mBoundingMetrics;
