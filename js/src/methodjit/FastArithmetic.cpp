@@ -1500,22 +1500,28 @@ mjit::Compiler::jsop_relational_int(JSOp op, jsbytecode *target, JSOp fused)
         if (!frame.syncForBranch(target, Uses(2)))
             return false;
 
+        RegisterID lreg = frame.tempRegForData(lhs);
         Jump fast;
-        if (rhs->isConstant())
-            fast = masm.branch32(cond, frame.tempRegForData(lhs), Imm32(rhs->getValue().toInt32()));
-        else
-            fast = masm.branch32(cond, frame.tempRegForData(lhs), frame.tempRegForData(rhs));
-
+        if (rhs->isConstant()) {
+            fast = masm.branch32(cond, lreg, Imm32(rhs->getValue().toInt32()));
+        } else {
+            frame.pinReg(lreg);
+            RegisterID rreg = frame.tempRegForData(rhs);
+            frame.unpinReg(lreg);
+            fast = masm.branch32(cond, lreg, rreg);
+        }
         frame.popn(2);
         return jumpAndTrace(fast, target);
     } else {
-        RegisterID lreg = frame.tempRegForData(lhs);
         RegisterID result = frame.allocReg();
+        RegisterID lreg = frame.tempRegForData(lhs);
 
         if (rhs->isConstant()) {
             masm.branchValue(cond, lreg, rhs->getValue().toInt32(), result);
         } else {
+            frame.pinReg(lreg);
             RegisterID rreg = frame.tempRegForData(rhs);
+            frame.unpinReg(lreg);
             masm.branchValue(cond, lreg, rreg, result);
         }
 
