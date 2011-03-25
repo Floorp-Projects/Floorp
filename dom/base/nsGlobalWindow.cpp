@@ -2507,9 +2507,7 @@ nsGlobalWindow::GetIsTabModalPromptAllowed()
   if (mDocShell) {
     nsCOMPtr<nsIContentViewer> cv;
     mDocShell->GetContentViewer(getter_AddRefs(cv));
-    nsCOMPtr<nsIContentViewer_MOZILLA_2_0_BRANCH> cv2 = do_QueryInterface(cv);
-    if (cv2)
-      cv2->GetIsTabModalPromptAllowed(&allowTabModal);
+    cv->GetIsTabModalPromptAllowed(&allowTabModal);
   }
 
   return allowTabModal;
