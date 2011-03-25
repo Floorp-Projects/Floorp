@@ -14,6 +14,22 @@
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+
+var eventCount = 0;
+function testEventListener(e) {
+  ++eventCount;
+}
+
+function testEventListener2(e) {
+  ++eventCount;
+}
+
+function dispatchTestEvent() {
+  var e = document.createEvent("Event");
+  e.initEvent("TestEvent", true, true);
+  window.dispatchEvent(e);
+}
+
 dump("\nSPECIALPTEST:::Test script loaded " + (new Date).getTime() + "\n");
 SimpleTest.waitForExplicitFinish();
 function starttest(){
@@ -33,6 +49,16 @@ function starttest(){
   SpecialPowers.setCharPref("extensions.foobaz", "hi there");
   is(SpecialPowers.getCharPref("extensions.foobaz"), "hi there", "Check string pref");
 
+  SpecialPowers.addChromeEventListener("TestEvent", testEventListener, true, true);
+  SpecialPowers.addChromeEventListener("TestEvent", testEventListener2, true, false);
+  dispatchTestEvent();
+  is(eventCount, 1, "Should have got an event!");
+
+  SpecialPowers.removeChromeEventListener("TestEvent", testEventListener, true);
+  SpecialPowers.removeChromeEventListener("TestEvent", testEventListener2, true);
+  dispatchTestEvent();
+  is(eventCount, 1, "Shouldn't have got an event!");
+  
   // Test Complex Pref - TODO: Without chrome access, I don't know how you'd actually
   // set this preference since you have to create an XPCOM object.
   // Leaving untested for now.
