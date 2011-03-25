@@ -631,24 +631,6 @@ nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, PRUint8 cap
 }
 
 void
-nsHttpConnectionMgr::ClosePersistentConnections(nsConnectionEntry *ent)
-{
-    LOG(("nsHttpConnectionMgr::ClosePersistentConnections [ci=%s]\n",
-         ent->mConnInfo->HashKey().get()));
-    while (ent->mIdleConns.Length()) {
-        nsHttpConnection *conn = ent->mIdleConns[0];
-        ent->mIdleConns.RemoveElementAt(0);
-        mNumIdleConns--;
-        conn->Close(NS_ERROR_ABORT);
-        NS_RELEASE(conn);
-    }
-    
-    PRInt32 activeCount = ent->mActiveConns.Length();
-    for (PRInt32 i=0; i < activeCount; i++)
-        ent->mActiveConns[i]->DontReuse();
-}
-
-void
 nsHttpConnectionMgr::GetConnection(nsConnectionEntry *ent, PRUint8 caps,
                                    nsHttpConnection **result)
 {
@@ -837,11 +819,6 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
             return NS_ERROR_OUT_OF_MEMORY;
         mCT.Put(&key, ent);
     }
-
-    // If we are doing a force reload then close out any existing conns
-    // to this host so that changes in DNS, LBs, etc.. are reflected
-    if (caps & NS_HTTP_CLEAR_KEEPALIVES)
-        ClosePersistentConnections(ent);
 
     nsHttpConnection *conn;
 
