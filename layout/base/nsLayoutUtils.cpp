@@ -1584,13 +1584,12 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
       NS_WARNING("Flushing retained layers!");
       flags |= nsDisplayList::PAINT_FLUSH_LAYERS;
     } else if (!(aFlags & PAINT_DOCUMENT_RELATIVE)) {
-      nsIWidget_MOZILLA_2_0_BRANCH *widget2 =
-        static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(aFrame->GetNearestWidget());
-      if (widget2) {
+      nsIWidget *widget = aFrame->GetNearestWidget();
+      if (widget) {
         builder.SetFinalTransparentRegion(visibleRegion);
         // If we're finished building display list items for painting of the outermost
         // pres shell, notify the widget about any toolbars we've encountered.
-        widget2->UpdateThemeGeometries(builder.GetThemeGeometries());
+        widget->UpdateThemeGeometries(builder.GetThemeGeometries());
       }
     }
   }
@@ -1605,12 +1604,11 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   if ((aFlags & PAINT_WIDGET_LAYERS) &&
       !willFlushRetainedLayers &&
       !(aFlags & PAINT_DOCUMENT_RELATIVE)) {
-    nsIWidget_MOZILLA_2_0_BRANCH *widget2 =
-      static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(aFrame->GetNearestWidget());
-    if (widget2) {
+    nsIWidget *widget = aFrame->GetNearestWidget();
+    if (widget) {
       PRInt32 pixelRatio = presContext->AppUnitsPerDevPixel();
       nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(presContext->AppUnitsPerDevPixel()));
-      widget2->UpdateTransparentRegion(visibleWindowRegion);
+      widget->UpdateTransparentRegion(visibleWindowRegion);
     }
   }
 
