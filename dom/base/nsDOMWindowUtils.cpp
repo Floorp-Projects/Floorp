@@ -98,7 +98,6 @@ DOMCI_DATA(WindowUtils, nsDOMWindowUtils)
 NS_INTERFACE_MAP_BEGIN(nsDOMWindowUtils)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMWindowUtils)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindowUtils)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMWindowUtils_MOZILLA_2_0_BRANCH)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WindowUtils)
 NS_INTERFACE_MAP_END
@@ -264,14 +263,6 @@ static void DestroyNsRect(void* aObject, nsIAtom* aPropertyName,
 {
   nsRect* rect = static_cast<nsRect*>(aPropertyValue);
   delete rect;
-}
-
-NS_IMETHODIMP
-nsDOMWindowUtils::SetDisplayPort(float aXPx, float aYPx,
-                                 float aWidthPx, float aHeightPx)
-{
-  NS_ABORT_IF_FALSE(false, "This interface is deprecated.");
-  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
