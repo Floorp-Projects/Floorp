@@ -4982,7 +4982,6 @@ VPX_ARM_ASM=
 MOZ_PANGO=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=1
-MOZ_PLAINTEXT_EDITOR_ONLY=
 MOZ_PLUGINS=1
 MOZ_PREF_EXTENSIONS=1
 MOZ_PROFILELOCKING=1
@@ -5920,19 +5919,6 @@ if test "$OS_ARCH" != "WINCE" -a "$OS_ARCH" != "WINNT" -a "$MOZ_USE_NATIVE_UCONV
     AC_MSG_ERROR([iconv() not found.  Cannot enable native uconv support.])
 fi
 
-
-dnl ========================================================
-dnl Libeditor can be build as plaintext-only,
-dnl or as a full html and text editing component.
-dnl We build both by default.
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(plaintext-editor-only,
-[  --enable-plaintext-editor-only
-                          Allow only plaintext editing],
-    MOZ_PLAINTEXT_EDITOR_ONLY=1,
-    MOZ_PLAINTEXT_EDITOR_ONLY= )
-dnl Note the #define is MOZILLA, not MOZ, for compat with the Mac build.
-AC_SUBST(MOZ_PLAINTEXT_EDITOR_ONLY)
 
 dnl ========================================================
 dnl = Disable Fast Load

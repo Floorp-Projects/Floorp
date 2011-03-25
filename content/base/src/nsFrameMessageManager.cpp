@@ -627,10 +627,9 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
       JSObject* global = nsnull;
       mGlobal->GetJSObject(&global);
       if (global) {
-        jsval val;
         JS_ExecuteScript(mCx, global,
                          (JSScript*)JS_GetPrivate(mCx, holder->mObject),
-                         &val);
+                         nsnull);
       }
     }
     JSContext* unused;
@@ -682,11 +681,17 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
         JSPrincipals* jsprin = nsnull;
         mPrincipal->GetJSPrincipals(mCx, &jsprin);
         nsContentUtils::XPConnect()->FlagSystemFilenamePrefix(url.get(), PR_TRUE);
+
+        uint32 oldopts = JS_GetOptions(mCx);
+        JS_SetOptions(mCx, oldopts | JSOPTION_NO_SCRIPT_RVAL);
+
         JSScript* script =
           JS_CompileUCScriptForPrincipals(mCx, nsnull, jsprin,
                                          (jschar*)dataString.get(),
                                           dataString.Length(),
                                           url.get(), 1);
+
+        JS_SetOptions(mCx, oldopts);
 
         if (script) {
           JSObject* scriptObj = JS_NewScriptObject(mCx, script);
@@ -702,9 +707,8 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
                                   "Cached message manager script");
             sCachedScripts->Put(aURL, holder);
           }
-          jsval val;
           JS_ExecuteScript(mCx, global,
-                           (JSScript*)JS_GetPrivate(mCx, scriptObj), &val);
+                           (JSScript*)JS_GetPrivate(mCx, scriptObj), nsnull);
           JS_RemoveObjectRoot(mCx, &scriptObj);
         }
         //XXX Argh, JSPrincipals are manually refcounted!
