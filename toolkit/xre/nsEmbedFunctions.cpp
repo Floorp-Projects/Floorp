@@ -517,7 +517,9 @@ XRE_InitChildProcess(int aArgc,
       // Allow ProcessChild to clean up after itself before going out of
       // scope and being deleted
       process->CleanUp();
-      mozilla::Omnijar::SetBase(nsnull, nsnull);
+#ifdef MOZ_OMNIJAR
+      mozilla::SetOmnijar(nsnull);
+#endif
     }
   }
 

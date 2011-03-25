@@ -157,6 +157,20 @@ nsResProtocolHandler::~nsResProtocolHandler()
 }
 
 nsresult
+nsResProtocolHandler::AddSpecialDir(const char* aSpecialDir, const nsACString& aSubstitution)
+{
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = NS_GetSpecialDirectory(aSpecialDir, getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> uri;
+    rv = mIOService->NewFileURI(file, getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return SetSubstitution(aSubstitution, uri);
+}
+
+nsresult
 nsResProtocolHandler::Init()
 {
     if (!mSubstitutions.Init(32))
@@ -167,31 +181,24 @@ nsResProtocolHandler::Init()
     mIOService = do_GetIOService(&rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString appURI, greURI;
-    rv = mozilla::Omnijar::GetURIString(mozilla::Omnijar::APP, appURI);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mozilla::Omnijar::GetURIString(mozilla::Omnijar::GRE, greURI);
-    NS_ENSURE_SUCCESS(rv, rv);
+#ifdef MOZ_OMNIJAR
+    nsCOMPtr<nsIFile> omniJar(mozilla::OmnijarPath());
+    if (omniJar)
+        return Init(omniJar);
+#endif
+
+    // these entries should be kept in sync with the omnijar Init function
 
     //
-    // make resource:/// point to the application directory or omnijar
+    // make resource:/// point to the application directory
     //
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), appURI.Length() ? appURI : greURI);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = SetSubstitution(EmptyCString(), uri);
+    rv = AddSpecialDir(NS_OS_CURRENT_PROCESS_DIR, EmptyCString());
     NS_ENSURE_SUCCESS(rv, rv);
 
     //
     // make resource://gre/ point to the GRE directory
     //
-    if (appURI.Length()) { // We already have greURI in uri if appURI.Length() is 0.
-        rv = NS_NewURI(getter_AddRefs(uri), greURI);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    rv = SetSubstitution(kGRE, uri);
+    rv = AddSpecialDir(NS_GRE_DIR, kGRE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     //XXXbsmedberg Neil wants a resource://pchrome/ for the profile chrome dir...
@@ -202,6 +209,34 @@ nsResProtocolHandler::Init()
 
     return rv;
 }
+
+#ifdef MOZ_OMNIJAR
+nsresult
+nsResProtocolHandler::Init(nsIFile *aOmniJar)
+{
+    nsresult rv;
+    nsCOMPtr<nsIURI> uri;
+    nsCAutoString omniJarSpec;
+    NS_GetURLSpecFromActualFile(aOmniJar, omniJarSpec, mIOService);
+
+    nsCAutoString urlStr("jar:");
+    urlStr += omniJarSpec;
+    urlStr += "!/";
+
+    rv = mIOService->NewURI(urlStr, nsnull, nsnull, getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // these entries should be kept in sync with the normal Init function
+
+    // resource:/// points to jar:omni.jar!/
+    SetSubstitution(EmptyCString(), uri);
+
+    // resource://gre/ points to jar:omni.jar!/
+    SetSubstitution(kGRE, uri);
+
+    return NS_OK;
+}
+#endif
 
 #ifdef MOZ_IPC
 static PLDHashOperator
