@@ -143,6 +143,7 @@
 #form-helper-suggestions {
   margin: 0;
   color: black;
+  max-width: 0;
 }
 
 #form-helper-suggestions > .autorepeatbutton-down,
