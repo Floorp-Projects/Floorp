@@ -7730,12 +7730,7 @@ nsGlobalWindow::DispatchSyncPopState()
   // going to send along with the popstate event.  The object is serialized as
   // JSON.
   nsCOMPtr<nsIVariant> stateObj;
-  nsCOMPtr<nsIDOMNSDocument_MOZILLA_2_0_BRANCH> doc2 = do_QueryInterface(mDoc);
-  if (!doc2) {
-    return NS_OK;
-  }
-  
-  rv = doc2->GetMozCurrentStateObject(getter_AddRefs(stateObj));
+  rv = mDoc->GetMozCurrentStateObject(getter_AddRefs(stateObj));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Obtain a presentation shell for use in creating a popstate event.

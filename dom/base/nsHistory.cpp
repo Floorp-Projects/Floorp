@@ -350,7 +350,7 @@ nsHistory::GetState(nsIVariant **aState)
   if (!nsContentUtils::CanCallerAccess(win->GetOuterWindow()))
     return NS_ERROR_DOM_SECURITY_ERR;
 
-  nsCOMPtr<nsIDOMNSDocument_MOZILLA_2_0_BRANCH> doc =
+  nsCOMPtr<nsIDocument> doc =
     do_QueryInterface(win->GetExtantDocument());
   if (!doc)
     return NS_ERROR_NOT_AVAILABLE;
