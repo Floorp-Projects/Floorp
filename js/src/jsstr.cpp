@@ -3660,6 +3660,20 @@ StringBuffer::finishString()
     return str;
 }
 
+JSAtom *
+StringBuffer::finishAtom()
+{
+    JSContext *cx = context();
+
+    size_t length = cb.length();
+    if (length == 0)
+        return cx->runtime->atomState.emptyAtom;
+
+    JSAtom *atom = js_AtomizeChars(cx, cb.begin(), length, 0);
+    cb.clear();
+    return atom;
+}
+
 JSLinearString *
 js_NewDependentString(JSContext *cx, JSString *baseArg, size_t start, size_t length)
 {
