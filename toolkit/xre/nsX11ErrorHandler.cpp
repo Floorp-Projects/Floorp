@@ -56,9 +56,6 @@ using mozilla::plugins::PluginProcessChild;
 extern "C" {
 static int
 X11Error(Display *display, XErrorEvent *event) {
-  nsCAutoString notes;
-  char buffer[BUFSIZE];
-
   // Get an indication of how long ago the request that caused the error was
   // made.
   unsigned long age = NextRequest(display) - event->serial;
@@ -81,9 +78,10 @@ X11Error(Display *display, XErrorEvent *event) {
     if (tmpDisplay) {
       int nExts;
       char** extNames = XListExtensions(tmpDisplay, &nExts);
+      int first_error;
       if (extNames) {
         for (int i = 0; i < nExts; ++i) {
-          int major_opcode, first_event, first_error;
+          int major_opcode, first_event;
           if (XQueryExtension(tmpDisplay, extNames[i],
                               &major_opcode, &first_event, &first_error)
               && major_opcode == event->request_code) {
@@ -97,9 +95,21 @@ X11Error(Display *display, XErrorEvent *event) {
         XFreeExtensionList(extNames);
       }
       XCloseDisplay(tmpDisplay);
+
+#ifdef MOZ_WIDGET_GTK2
+      // GDK2 calls XCloseDevice the devices that it opened on startup, but
+      // the XI protocol no longer ensures that the devices will still exist.
+      // If they have been removed, then a BadDevice error results.  Ignore
+      // this error.
+      if (message.EqualsLiteral("XInputExtension.4") &&
+          event->error_code == first_error + 0) {
+        return 0;
+      }
+#endif
     }
   }
 
+  char buffer[BUFSIZE];
   if (message.IsEmpty()) {
     buffer[0] = '\0';
   } else {
@@ -107,6 +117,7 @@ X11Error(Display *display, XErrorEvent *event) {
                           buffer, sizeof(buffer));
   }
 
+  nsCAutoString notes;
   if (buffer[0]) {
     notes.Append(buffer);
   } else {
