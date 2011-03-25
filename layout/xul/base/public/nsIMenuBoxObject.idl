@@ -41,7 +41,7 @@
 interface nsIDOMElement;
 interface nsIDOMKeyEvent;
 
-[scriptable, uuid(F5099746-5049-4e81-A03E-945D5110FEE2)]
+[scriptable, uuid(689ebf3d-0184-450a-9bfa-5a26be0e7a8c)]
 interface nsIMenuBoxObject : nsISupports
 {
   void openMenu(in boolean openFlag);
@@ -49,13 +49,7 @@ interface nsIMenuBoxObject : nsISupports
   attribute nsIDOMElement activeChild;
 
   boolean handleKeyPress(in nsIDOMKeyEvent keyEvent);
-};
 
-// This interface is implemented by menus, but could also
-// be implemented by menubars
-[scriptable, uuid(D03150F6-92A3-4307-A73C-864C8DAD3F22)]
-interface nsIMenuBoxObject_MOZILLA_2_0_BRANCH : nsISupports
-{
   // true if the menu or menubar was opened via a keypress.
   readonly attribute boolean openedWithKey;
 };
