@@ -52,6 +52,7 @@ class EmptyEnumeratorImpl : public nsISimpleEnumerator,
                             public nsIStringEnumerator
 {
 public:
+    EmptyEnumeratorImpl() {}
     // nsISupports interface
     NS_DECL_ISUPPORTS_INHERITED  // not really inherited, but no mRefCnt
 

@@ -230,6 +230,8 @@ private:
 
     nsresult GetFontSubstitutes();
 
+    void GetDirectWriteSubstitutes();
+
     /**
      * Fonts listed in the registry as substitutes but for which no actual
      * font family is found.

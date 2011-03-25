@@ -3964,6 +3964,9 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     LOG(("nsHttpChannel::OnStopRequest [this=%p request=%p status=%x]\n",
         this, request, status));
 
+     // allow content to be cached if it was loaded successfully (bug #482935)
+     PRBool contentComplete = NS_SUCCEEDED(status);
+
     // honor the cancelation status even if the underlying transaction completed.
     if (mCanceled || NS_FAILED(mStatus))
         status = mStatus;
@@ -4056,7 +4059,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     }
 
     if (mCacheEntry)
-        CloseCacheEntry(PR_TRUE);
+        CloseCacheEntry(!contentComplete);
 
     if (mOfflineCacheEntry)
         CloseOfflineCacheEntry();

@@ -880,8 +880,9 @@ gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
     if (!TTLoadEmbeddedFontPtr || !TTDeleteEmbeddedFontPtr)
         return nsnull;
 
-    PRBool isCFF = gfxFontUtils::IsCffFont(aFontData);
-        
+    PRBool hasVertical;
+    PRBool isCFF = gfxFontUtils::IsCffFont(aFontData, hasVertical);
+
     nsresult rv;
     HANDLE fontRef = nsnull;
     PRBool isEmbedded = PR_FALSE;
@@ -957,7 +958,9 @@ gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
             return nsnull;
 
         // only load fonts with a single face contained in the data
-        if (fontRef && numFonts != 1) {
+        // AddFontMemResourceEx generates an additional face name for
+        // vertical text if the font supports vertical writing
+        if (fontRef && numFonts != 1 + !!hasVertical) {
             RemoveFontMemResourceEx(fontRef);
             return nsnull;
         }
