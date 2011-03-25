@@ -231,7 +231,7 @@ FormStore.prototype = {
   },
 
   update: function FormStore_update(record) {
-    this._log.warn("Ignoring form record update request!");
+    this._log.trace("Ignoring form record update request!");
   },
 
   wipe: function FormStore_wipe() {
