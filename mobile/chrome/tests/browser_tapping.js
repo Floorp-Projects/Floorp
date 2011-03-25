@@ -9,6 +9,8 @@ let gTests = [];
 let gCurrentTest = null;
 let gCurrentTab;
 
+const kDoubleClickIntervalPlus = kDoubleClickInterval + 100;
+
 let gEvents = [];
 function dumpEvents(aEvent) {
   if (aEvent.target != gCurrentTab.browser.parentNode)
@@ -93,15 +95,19 @@ function test() {
   window.addEventListener("TapLong", dumpEvents, true);
 
   // Wait for the tab to load, then do the tests
-  messageManager.addMessageListener("pageshow", function() {
+  messageManager.addMessageListener("Browser:FirstPaint", function() {
   if (gCurrentTab.browser.currentURI.spec == testURL) {
-    messageManager.removeMessageListener("pageshow", arguments.callee);
+    messageManager.removeMessageListener("Browser:FirstPaint", arguments.callee);
     // Hack the allowZoom getter since we want to observe events
     // for testing purpose even if it is a local tab
     gCurrentTab.__defineGetter__("allowZoom", function() {
       return true;
     });
-    setTimeout(runNextTest, 0);
+
+    // Using setTimeout(..., 0) here result into a duplicate mousedown/mouseup
+    // sequence that makes the double tap test fails (add some dump in input.js
+    // to see that...)
+    runNextTest();
   }});
 }
 
@@ -146,7 +152,7 @@ gTests.push({
       ok(checkEvents(["TapSingle"]), "Fired a good single tap");
       clearEvents();
       gCurrentTest.doubleTapTest();
-    }, kDoubleClickInterval);
+    }, kDoubleClickIntervalPlus);
   },
 
   doubleTapTest: function() {
@@ -165,7 +171,7 @@ gTests.push({
       clearEvents();
 
       gCurrentTest.doubleTapFailTest();
-    }, 500);
+    }, kDoubleClickIntervalPlus);
   },
 
   doubleTapFailTest: function() {
