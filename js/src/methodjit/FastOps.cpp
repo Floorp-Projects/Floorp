@@ -497,13 +497,19 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
                 fixDoubleTypes(Uses(2));
                 if (!frame.syncForBranch(target, Uses(2)))
                     return false;
-                Jump fast = masm.branchPtr(cond, frame.tempRegForData(lhs), frame.tempRegForData(rhs));
+                RegisterID lreg = frame.tempRegForData(lhs);
+                frame.pinReg(lreg);
+                RegisterID rreg = frame.tempRegForData(rhs);
+                frame.unpinReg(lreg);
+                Jump fast = masm.branchPtr(cond, lreg, rreg);
                 frame.popn(2);
                 return jumpAndTrace(fast, target);
             } else {
-                RegisterID lreg = frame.tempRegForData(lhs);
-                RegisterID rreg = frame.tempRegForData(rhs);
                 RegisterID result = frame.allocReg();
+                RegisterID lreg = frame.tempRegForData(lhs);
+                frame.pinReg(lreg);
+                RegisterID rreg = frame.tempRegForData(rhs);
+                frame.unpinReg(lreg);
                 masm.branchValue(cond, lreg, rreg, result);
 
                 frame.popn(2);
