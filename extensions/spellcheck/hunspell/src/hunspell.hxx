@@ -62,17 +62,14 @@
 #include "suggestmgr.hxx"
 #include "langnum.hxx"
 
-#define  SPELL_COMPOUND  (1 << 0)
-#define  SPELL_FORBIDDEN (1 << 1)
-#define  SPELL_ALLCAP    (1 << 2)
-#define  SPELL_NOCAP     (1 << 3)
-#define  SPELL_INITCAP   (1 << 4)
-
 #define  SPELL_XML "<?xml?>"
 
 #define MAXDIC 20
 #define MAXSUGGESTION 15
 #define MAXSHARPS 5
+
+#define HUNSPELL_OK       (1 << 0)
+#define HUNSPELL_OK_WARN  (1 << 1)
 
 #ifndef _MYSPELLMGR_HXX_
 #define _MYSPELLMGR_HXX_

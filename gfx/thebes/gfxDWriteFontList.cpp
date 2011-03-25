@@ -891,6 +891,13 @@ gfxDWriteFontList::DelayedInitFontList()
     mOtherFamilyNamesInitialized = PR_TRUE;
     GetFontSubstitutes();
 
+    // bug 642093 - DirectWrite does not support old bitmap (.fon)
+    // font files, but a few of these such as "Courier" and "MS Sans Serif"
+    // are frequently specified in shoddy CSS, without appropriate fallbacks.
+    // By mapping these to TrueType equivalents, we provide better consistency
+    // with both pre-DW systems and with IE9, which appears to do the same.
+    GetDirectWriteSubstitutes();
+
     // bug 551313 - DirectWrite creates a Gill Sans family out of 
     // poorly named members of the Gill Sans MT family containing
     // only Ultra Bold weights.  This causes big problems for pages
@@ -1033,6 +1040,43 @@ gfxDWriteFontList::GetFontSubstitutes()
         }
     }
     return NS_OK;
+}
+
+struct FontSubstitution {
+    const WCHAR* aliasName;
+    const WCHAR* actualName;
+};
+
+static const FontSubstitution sDirectWriteSubs[] = {
+    { L"MS Sans Serif", L"Microsoft Sans Serif" },
+    { L"MS Serif", L"Times New Roman" },
+    { L"Courier", L"Courier New" },
+    { L"Small Fonts", L"Arial" },
+    { L"Roman", L"Times New Roman" },
+    { L"Script", L"Mistral" }
+};
+
+void
+gfxDWriteFontList::GetDirectWriteSubstitutes()
+{
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sDirectWriteSubs); ++i) {
+        const FontSubstitution& sub(sDirectWriteSubs[i]);
+        nsAutoString substituteName((PRUnichar*)sub.aliasName);
+        BuildKeyNameFromFontName(substituteName);
+        if (nsnull != mFontFamilies.GetWeak(substituteName)) {
+            // don't do the substitution if user actually has a usable font
+            // with this name installed
+            continue;
+        }
+        nsAutoString actualFontName((PRUnichar*)sub.actualName);
+        BuildKeyNameFromFontName(actualFontName);
+        gfxFontFamily *ff;
+        if (nsnull != (ff = mFontFamilies.GetWeak(actualFontName))) {
+            mFontSubstitutes.Put(substituteName, ff);
+        } else {
+            mNonExistingFonts.AppendElement(substituteName);
+        }
+    }
 }
 
 PRBool
