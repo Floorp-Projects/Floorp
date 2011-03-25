@@ -262,9 +262,9 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
       break;
     }
 #endif
-    case eFloatValue:
+    case eDoubleValue:
     {
-      cont->mFloatValue = otherCont->mFloatValue;
+      cont->mDoubleValue = otherCont->mDoubleValue;
       break;
     }
     case eIntMarginValue:
@@ -443,10 +443,10 @@ nsAttrValue::ToString(nsAString& aResult) const
       break;
     }
 #endif
-    case eFloatValue:
+    case eDoubleValue:
     {
       aResult.Truncate();
-      aResult.AppendFloat(GetFloatValue());
+      aResult.AppendFloat(GetDoubleValue());
       break;
     }
     default:
@@ -607,10 +607,10 @@ nsAttrValue::HashValue() const
       return NS_PTR_TO_INT32(cont->mSVGValue);
     }
 #endif
-    case eFloatValue:
+    case eDoubleValue:
     {
       // XXX this is crappy, but oh well
-      return cont->mFloatValue;
+      return cont->mDoubleValue;
     }
     case eIntMarginValue:
     {
@@ -706,9 +706,9 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
       return thisCont->mSVGValue == otherCont->mSVGValue;
     }
 #endif
-    case eFloatValue:
+    case eDoubleValue:
     {
-      return thisCont->mFloatValue == otherCont->mFloatValue;
+      return thisCont->mDoubleValue == otherCont->mDoubleValue;
     }
     case eIntMarginValue:
     {
@@ -1206,7 +1206,7 @@ nsAttrValue::ParseColor(const nsAString& aString)
   return PR_FALSE;
 }
 
-PRBool nsAttrValue::ParseFloatValue(const nsAString& aString)
+PRBool nsAttrValue::ParseDoubleValue(const nsAString& aString)
 {
   ResetIfSet();
 
@@ -1217,8 +1217,8 @@ PRBool nsAttrValue::ParseFloatValue(const nsAString& aString)
   }
   if (EnsureEmptyMiscContainer()) {
     MiscContainer* cont = GetMiscContainer();
-    cont->mFloatValue = val;
-    cont->mType = eFloatValue;
+    cont->mDoubleValue = val;
+    cont->mType = eDoubleValue;
     nsAutoString serializedFloat;
     serializedFloat.AppendFloat(val);
     SetMiscAtomOrString(serializedFloat.Equals(aString) ? nsnull : &aString);
