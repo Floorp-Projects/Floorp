@@ -40,6 +40,7 @@
 #ifndef jsstrinlines_h___
 #define jsstrinlines_h___
 
+#include "jsatom.h"
 #include "jsstr.h"
 
 #include "jscntxtinlines.h"
@@ -124,11 +125,13 @@ class StringBuffer
     inline jsint length() const;
 
     /*
-     * Produces a string, resetting the buffer to an empty state.
-     * This method takes responsibility for adding the terminating '\0'
-     * required by js_NewString.
+     * Creates a string from the characters in this buffer, then (regardless
+     * whether string creation succeeded or failed) empties the buffer.
      */
     JSFixedString *finishString();
+
+    /* Identical to finishString() except that an atom is created. */
+    JSAtom *finishAtom();
 
     template <size_t ArrayLength>
     bool append(const char (&array)[ArrayLength]) {
