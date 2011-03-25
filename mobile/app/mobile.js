@@ -131,6 +131,9 @@ pref("network.buffer.cache.size",  16384);
 /* history max results display */
 pref("browser.display.history.maxresults", 100);
 
+/* How many times should have passed before the remote tabs list is refreshed */
+pref("browser.display.remotetabs.timeout", 10);
+
 /* session history */
 pref("browser.sessionhistory.max_total_viewers", 1);
 pref("browser.sessionhistory.max_entries", 50);

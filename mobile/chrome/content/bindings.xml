@@ -1384,7 +1384,7 @@
           // Don't bother refetching tabs if we already did so recently
           let lastFetch = Weave.Svc.Prefs.get("lastTabFetch", 0);
           let now = Math.floor(Date.now() / 1000);
-          if (now - lastFetch >= 30) {
+          if (now - lastFetch >= Services.prefs.getIntPref("browser.display.remotabs.timeout")) {
             // Force a sync only for the tabs engine
             engine.lastModified = null;
             engine.sync();
