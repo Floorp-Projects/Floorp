@@ -166,9 +166,8 @@ nsIMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
       // the enabled state isn't changing, we should do nothing.
       return NS_OK;
     }
-    nsIWidget_MOZILLA_2_0_BRANCH* widget2 = static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget.get());
     IMEContext context;
-    if (!widget2 || NS_FAILED(widget2->GetInputMode(context))) {
+    if (!widget || NS_FAILED(widget->GetInputMode(context))) {
       // this platform doesn't support IME controlling
       return NS_OK;
     }
@@ -223,9 +222,8 @@ nsIMEStateManager::UpdateIMEState(PRUint32 aNewIMEState, nsIContent* aContent)
   }
 
   // Don't update IME state when enabled state isn't actually changed.
-  nsIWidget_MOZILLA_2_0_BRANCH* widget2 = static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget.get());
   IMEContext context;
-  nsresult rv = widget2->GetInputMode(context);
+  nsresult rv = widget->GetInputMode(context);
   if (NS_FAILED(rv)) {
     return; // This platform doesn't support controling the IME state.
   }
@@ -294,8 +292,7 @@ nsIMEStateManager::SetIMEState(PRUint32 aState,
                                nsIWidget* aWidget)
 {
   if (aState & nsIContent::IME_STATUS_MASK_ENABLED) {
-    nsIWidget_MOZILLA_2_0_BRANCH* widget2 = static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(aWidget);
-    if (!widget2)
+    if (!aWidget)
       return;
 
     PRUint32 state = nsContentUtils::GetWidgetStatusFromIMEStatus(aState);
@@ -330,7 +327,7 @@ nsIMEStateManager::SetIMEState(PRUint32 aState,
       }
     }
 
-    widget2->SetInputMode(context);
+    aWidget->SetInputMode(context);
 
     nsContentUtils::AddScriptRunner(new IMEEnabledStateChangedEvent(state));
   }

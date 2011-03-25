@@ -600,7 +600,7 @@ LayerManagerOGL::Render()
   RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO,
                            nsIntPoint(0, 0));
                            
-  static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(mWidget)->DrawOver(this, rect);
+  mWidget->DrawOver(this, rect);
 
   if (mTarget) {
     CopyToTarget();

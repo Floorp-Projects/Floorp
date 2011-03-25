@@ -1006,9 +1006,8 @@ nsDOMWindowUtils::GetIMEIsOpen(PRBool *aState)
     return NS_ERROR_FAILURE;
 
   // Open state should not be available when IME is not enabled.
-  nsIWidget_MOZILLA_2_0_BRANCH* widget2 = static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget.get());
   IMEContext context;
-  nsresult rv = widget2->GetInputMode(context);
+  nsresult rv = widget->GetInputMode(context);
   NS_ENSURE_SUCCESS(rv, rv);
   if (context.mStatus != nsIWidget::IME_STATUS_ENABLED)
     return NS_ERROR_NOT_AVAILABLE;
@@ -1025,9 +1024,8 @@ nsDOMWindowUtils::GetIMEStatus(PRUint32 *aState)
   if (!widget)
     return NS_ERROR_FAILURE;
 
-  nsIWidget_MOZILLA_2_0_BRANCH* widget2 = static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget.get());
   IMEContext context;
-  nsresult rv = widget2->GetInputMode(context);
+  nsresult rv = widget->GetInputMode(context);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aState = context.mStatus;
@@ -1044,9 +1042,8 @@ nsDOMWindowUtils::GetFocusedInputType(char** aType)
     return NS_ERROR_FAILURE;
   }
 
-  nsIWidget_MOZILLA_2_0_BRANCH* widget2 = static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget.get());
   IMEContext context;
-  nsresult rv = widget2->GetInputMode(context);
+  nsresult rv = widget->GetInputMode(context);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aType = ToNewCString(context.mHTMLInputType);
