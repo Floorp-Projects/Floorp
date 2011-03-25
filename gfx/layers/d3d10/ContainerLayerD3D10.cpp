@@ -292,8 +292,8 @@ ContainerLayerD3D10::RenderLayer()
     D3D10_RECT d3drect;
     d3drect.left = scissorRect.x;
     d3drect.top = scissorRect.y;
-    d3drect.bottom = scissorRect.x + scissorRect.width;
-    d3drect.right = scissorRect.y + scissorRect.height;
+    d3drect.right = scissorRect.x + scissorRect.width;
+    d3drect.bottom = scissorRect.y + scissorRect.height;
     device()->RSSetScissorRects(1, &d3drect);
 
     layerToRender->RenderLayer();
