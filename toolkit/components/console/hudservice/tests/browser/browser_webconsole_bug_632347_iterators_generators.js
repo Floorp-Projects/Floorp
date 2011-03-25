@@ -120,8 +120,11 @@ function tabLoaded() {
   ok(find("iter2: Iterator", false),
      "iter2 is correctly displayed in the Property Panel");
 
-  ok(find("parent: Window", true),
-     "window.parent is correctly displayed in the Property Panel");
+  /*
+   * - disabled, see bug 632347, c#9
+   * ok(find("parent: Window", true),
+   *   "window.parent is correctly displayed in the Property Panel");
+   */
 
   panel.destroy();
 
