@@ -464,6 +464,52 @@ static PRBool test_mutation()
     return PR_TRUE;
   }
 
+static PRBool test_ascii()
+{
+  nsCString testCString;
+  testCString.AppendASCII(kAsciiData);
+  if (!testCString.EqualsLiteral(kAsciiData))
+    return PR_FALSE;
+
+  testCString.AssignASCII(kAsciiData);
+  if (!testCString.LowerCaseEqualsLiteral("hello world"))
+    return PR_FALSE;
+
+  nsString testString;
+  testString.AppendASCII(kAsciiData);
+  if (!testString.EqualsLiteral(kAsciiData))
+    return PR_FALSE;
+
+  testString.AssignASCII(kAsciiData);
+  if (!testString.LowerCaseEqualsLiteral("hello world"))
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
+
+static PRBool test_chars()
+{
+  nsCString testCString(kAsciiData);
+  if (testCString.First() != 'H')
+    return PR_FALSE;
+  if (testCString.Last() != 'd')
+    return PR_FALSE;
+  testCString.SetCharAt('u', 8);
+  if (!testCString.EqualsASCII("Hello Would"))
+    return PR_FALSE;
+
+  nsString testString(kUnicodeData);
+  if (testString.First() != 'H')
+    return PR_FALSE;
+  if (testString.Last() != 'd')
+    return PR_FALSE;
+  testString.SetCharAt('u', 8);
+  if (!testString.EqualsASCII("Hello Would"))
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
+
 static PRBool test_stripchars()
 {
   nsCString test(kAsciiData);
@@ -965,6 +1011,8 @@ tests[] =
     { "test_adopt", test_adopt },
     { "test_adopt_sub", test_adopt_sub },
     { "test_mutation", test_mutation },
+    { "test_ascii", test_ascii },
+    { "test_chars", test_chars },
     { "test_stripchars", test_stripchars },
     { "test_trim", test_trim },
     { "test_find", test_find },
