@@ -48,7 +48,7 @@
 #include "nsIDOMCharacterData.h"
 #include "nsRuleNode.h"
 #include "nsIStyleRule.h"
-#include "nsICSSStyleRule.h"
+#include "mozilla/css/StyleRule.h"
 #include "nsICSSStyleRuleDOMWrapper.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsXBLBinding.h"
@@ -170,10 +170,10 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
   NS_NewISupportsArray(getter_AddRefs(rules));
   if (!rules) return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCOMPtr<nsICSSStyleRule> cssRule;
+  nsRefPtr<mozilla::css::StyleRule> cssRule;
   nsCOMPtr<nsIDOMCSSRule> domRule;
   for ( ; !ruleNode->IsRoot(); ruleNode = ruleNode->GetParent()) {
-    cssRule = do_QueryInterface(ruleNode->GetRule());
+    cssRule = do_QueryObject(ruleNode->GetRule());
     if (cssRule) {
       cssRule->GetDOMRule(getter_AddRefs(domRule));
       if (domRule)
@@ -195,7 +195,7 @@ inDOMUtils::GetRuleLine(nsIDOMCSSStyleRule *aRule, PRUint32 *_retval)
   NS_ENSURE_ARG_POINTER(aRule);
 
   nsCOMPtr<nsICSSStyleRuleDOMWrapper> rule = do_QueryInterface(aRule);
-  nsCOMPtr<nsICSSStyleRule> cssrule;
+  nsRefPtr<mozilla::css::StyleRule> cssrule;
   nsresult rv = rule->GetCSSStyleRule(getter_AddRefs(cssrule));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(cssrule != nsnull, NS_ERROR_FAILURE);

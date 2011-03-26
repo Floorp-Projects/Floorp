@@ -179,10 +179,11 @@
   }
 
   #navigator-toolbox[tabsontop=false] > #PersonalToolbar {
-    margin-top: 2px;
-    border-top: 1px solid @toolbarShadowColor@;
+    margin-top: 3px;
   }
   #navigator-toolbox[tabsontop=false] > #PersonalToolbar:not(:-moz-lwtheme) {
+    margin-top: 2px;
+    border-top: 1px solid @toolbarShadowColor@;
     background-image: -moz-linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
   }
 
@@ -325,6 +326,12 @@
 }
 #close-button:hover:active {
   -moz-image-region: rect(32px, 49px, 48px, 32px);
+}
+
+#minimize-button:-moz-locale-dir(rtl),
+#restore-button:-moz-locale-dir(rtl),
+#close-button:-moz-locale-dir(rtl) {
+  -moz-transform: scaleX(-1);
 }
 
 /* ::::: splitmenu highlight style that imitates Windows 7 start menu ::::: */

@@ -375,9 +375,6 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_DISPLAY_INLINE                 2
 #define NS_STYLE_DISPLAY_INLINE_BLOCK           3
 #define NS_STYLE_DISPLAY_LIST_ITEM              4
-#define NS_STYLE_DISPLAY_MARKER                 5
-#define NS_STYLE_DISPLAY_RUN_IN                 6
-#define NS_STYLE_DISPLAY_COMPACT                7
 #define NS_STYLE_DISPLAY_TABLE                  8
 #define NS_STYLE_DISPLAY_INLINE_TABLE           9
 #define NS_STYLE_DISPLAY_TABLE_ROW_GROUP        10

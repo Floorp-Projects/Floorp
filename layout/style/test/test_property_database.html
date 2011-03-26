@@ -34,27 +34,40 @@
 
 for (var idx in gLonghandProperties) {
   var prop = gLonghandProperties[idx];
-  ok(prop.name in gCSSProperties,
+  var present = prop.name in gCSSProperties;
+  ok(present,
      "'" + prop.name + "' listed in gCSSProperties");
-  is(gCSSProperties[prop.name].type, CSS_TYPE_LONGHAND,
-     "'" + prop.name + "' listed as CSS_TYPE_LONGHAND");
-  is(gCSSProperties[prop.name].domProp, prop.prop,
-     "'" + prop.name + "' listed with correct DOM property name");
+  if (present) {
+    is(gCSSProperties[prop.name].type, CSS_TYPE_LONGHAND,
+       "'" + prop.name + "' listed as CSS_TYPE_LONGHAND");
+    is(gCSSProperties[prop.name].domProp, prop.prop,
+       "'" + prop.name + "' listed with correct DOM property name");
+  }
 }
 for (var idx in gShorthandProperties) {
   var prop = gShorthandProperties[idx];
-  ok(prop.name in gCSSProperties &&
-     (gCSSProperties[prop.name].type == CSS_TYPE_TRUE_SHORTHAND ||
-      gCSSProperties[prop.name].type == CSS_TYPE_SHORTHAND_AND_LONGHAND) &&
-     gCSSProperties[prop.name].domProp == prop.prop,
-     "'" + prop.name + "' listed in gCSSProperties as CSS_TYPE_TRUE_SHORTHAND or CSS_TYPE_SHORTHAND_AND_LONGHAND with correct DOM property name");
+  var present = prop.name in gCSSProperties;
+  ok(present,
+     "'" + prop.name + "' listed in gCSSProperties");
+  if (present) {
+    ok(gCSSProperties[prop.name].type == CSS_TYPE_TRUE_SHORTHAND ||
+       gCSSProperties[prop.name].type == CSS_TYPE_SHORTHAND_AND_LONGHAND,
+       "'" + prop.name + "' listed as CSS_TYPE_TRUE_SHORTHAND or CSS_TYPE_SHORTHAND_AND_LONGHAND");
+    ok(gCSSProperties[prop.name].domProp == prop.prop,
+       "'" + prop.name + "' listed with correct DOM property name");
+  }
 }
 for (var idx in gShorthandPropertiesLikeLonghand) {
   var prop = gShorthandPropertiesLikeLonghand[idx];
-  ok(prop.name in gCSSProperties &&
-     gCSSProperties[prop.name].type == CSS_TYPE_SHORTHAND_AND_LONGHAND &&
-     gCSSProperties[prop.name].domProp == prop.prop,
-     "'" + prop.name + "' listed in gCSSProperties as CSS_TYPE_SHORTHAND_AND_LONGHAND with correct DOM property name");
+  var present = prop.name in gCSSProperties;
+  ok(present,
+     "'" + prop.name + "' listed in gCSSProperties");
+  if (present) {
+    ok(gCSSProperties[prop.name].type == CSS_TYPE_SHORTHAND_AND_LONGHAND,
+       "'" + prop.name + "' listed as CSS_TYPE_SHORTHAND_AND_LONGHAND");
+    ok(gCSSProperties[prop.name].domProp == prop.prop,
+       "'" + prop.name + "' listed with correct DOM property name");
+  }
 }
 
 /*

@@ -272,9 +272,14 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 
 // The default shortest interval/timeout we permit
 #define DEFAULT_MIN_TIMEOUT_VALUE 10 // 10ms
+#define DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE 1000 // 1000ms
 static PRInt32 gMinTimeoutValue;
-static inline PRInt32 DOMMinTimeoutValue() {
-  return NS_MAX(gMinTimeoutValue, 0);
+static PRInt32 gMinBackgroundTimeoutValue;
+inline PRInt32
+nsGlobalWindow::DOMMinTimeoutValue() const {
+  PRBool isBackground = !mOuterWindow || mOuterWindow->IsBackground();
+  return
+    NS_MAX(isBackground ? gMinBackgroundTimeoutValue : gMinTimeoutValue, 0);
 }
 
 // The number of nested timeouts before we start clamping. HTML5 says 1, WebKit
@@ -746,7 +751,8 @@ nsPIDOMWindow::nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
   mIsHandlingResizeEvent(PR_FALSE), mIsInnerWindow(aOuterWindow != nsnull),
   mMayHavePaintEventListener(PR_FALSE), mMayHaveTouchEventListener(PR_FALSE),
   mMayHaveAudioAvailableEventListener(PR_FALSE), mIsModalContentWindow(PR_FALSE),
-  mIsActive(PR_FALSE), mInnerWindow(nsnull), mOuterWindow(aOuterWindow),
+  mIsActive(PR_FALSE), mIsBackground(PR_FALSE),
+  mInnerWindow(nsnull), mOuterWindow(aOuterWindow),
   // Make sure no actual window ends up with mWindowID == 0
   mWindowID(++gNextWindowID), mHasNotifiedGlobalCreated(PR_FALSE)
  {}
@@ -895,6 +901,9 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     nsContentUtils::AddIntPrefVarCache("dom.min_timeout_value",
                                        &gMinTimeoutValue,
                                        DEFAULT_MIN_TIMEOUT_VALUE);
+    nsContentUtils::AddIntPrefVarCache("dom.min_background_timeout_value",
+                                       &gMinBackgroundTimeoutValue,
+                                       DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
   }
 
   if (gDumpFile == nsnull) {
@@ -1609,9 +1618,18 @@ nsGlobalWindow::SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal)
                  "Unexpected original document");
 #endif
 
-    nsCOMPtr<nsIDocShell_MOZILLA_2_0_BRANCH> ds(do_QueryInterface(GetDocShell()));
-    ds->CreateAboutBlankContentViewer(aPrincipal);
+    GetDocShell()->CreateAboutBlankContentViewer(aPrincipal);
     mDoc->SetIsInitialDocument(PR_TRUE);
+
+    nsCOMPtr<nsIPresShell> shell;
+    GetDocShell()->GetPresShell(getter_AddRefs(shell));
+
+    if (shell && !shell->DidInitialReflow()) {
+      // Ensure that if someone plays with this document they will get
+      // layout happening.
+      nsRect r = shell->GetPresContext()->GetVisibleArea();
+      shell->InitialReflow(r.width, r.height);
+    }
   }
 }
 
@@ -2449,6 +2467,10 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
       }
       else NS_NewWindowRoot(this, getter_AddRefs(mChromeEventHandler));
     }
+
+    PRBool docShellActive;
+    mDocShell->GetIsActive(&docShellActive);
+    mIsBackground = !docShellActive;
   }
 }
 
@@ -2498,9 +2520,7 @@ nsGlobalWindow::GetIsTabModalPromptAllowed()
   if (mDocShell) {
     nsCOMPtr<nsIContentViewer> cv;
     mDocShell->GetContentViewer(getter_AddRefs(cv));
-    nsCOMPtr<nsIContentViewer_MOZILLA_2_0_BRANCH> cv2 = do_QueryInterface(cv);
-    if (cv2)
-      cv2->GetIsTabModalPromptAllowed(&allowTabModal);
+    cv->GetIsTabModalPromptAllowed(&allowTabModal);
   }
 
   return allowTabModal;
@@ -7720,12 +7740,7 @@ nsGlobalWindow::DispatchSyncPopState()
   // going to send along with the popstate event.  The object is serialized as
   // JSON.
   nsCOMPtr<nsIVariant> stateObj;
-  nsCOMPtr<nsIDOMNSDocument_MOZILLA_2_0_BRANCH> doc2 = do_QueryInterface(mDoc);
-  if (!doc2) {
-    return NS_OK;
-  }
-  
-  rv = doc2->GetMozCurrentStateObject(getter_AddRefs(stateObj));
+  rv = mDoc->GetMozCurrentStateObject(getter_AddRefs(stateObj));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Obtain a presentation shell for use in creating a popstate event.
@@ -8131,8 +8146,7 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
       }
     }
   }
-  else if (aIID.Equals(NS_GET_IID(nsIDOMWindowUtils)) ||
-           aIID.Equals(NS_GET_IID(nsIDOMWindowUtils_MOZILLA_2_0_BRANCH))) {
+  else if (aIID.Equals(NS_GET_IID(nsIDOMWindowUtils))) {
     FORWARD_TO_OUTER(GetInterface, (aIID, aSink), NS_ERROR_NOT_INITIALIZED);
 
     nsCOMPtr<nsISupports> utils(do_QueryReferent(mWindowUtils));
@@ -8730,18 +8744,14 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
   }
 
   PRUint32 nestingLevel = sNestingLevel + 1;
-  if (interval < DOMMinTimeoutValue()) {
-    if (aIsInterval || nestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
-      // Don't allow timeouts less than DOMMinTimeoutValue() from
-      // now...
-
-      interval = DOMMinTimeoutValue();;
-    }
-    else if (interval < 0) {
-      // Clamp negative intervals to 0.
-
-      interval = 0;
-    }
+  if (aIsInterval || nestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
+    // Don't allow timeouts less than DOMMinTimeoutValue() from
+    // now...
+    interval = NS_MAX(interval, DOMMinTimeoutValue());
+  }
+  else if (interval < 0) {
+    // Clamp negative intervals to 0.
+    interval = 0;
   }
 
   NS_ASSERTION(interval >= 0, "DOMMinTimeoutValue() lies");
@@ -10980,9 +10990,11 @@ NS_IMETHODIMP nsNavigator::GetGeolocation(nsIDOMGeoGeolocation **_retval)
   if (!mGeolocation)
     return NS_ERROR_FAILURE;
   
-  if (NS_FAILED(mGeolocation->Init(contentDOMWindow)))
+  if (NS_FAILED(mGeolocation->Init(contentDOMWindow))) {
+    mGeolocation = nsnull;
     return NS_ERROR_FAILURE;
-  
+  }
+
   NS_ADDREF(*_retval = mGeolocation);    
   return NS_OK; 
 }

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <body>
+    <iframe src="data:text/html,<body><div></div></body>"></iframe>
+    <script type="text/javascript">
+      onload = function() {
+        var i = document.querySelector("iframe");
+        var win = i.contentWindow;
+        var doc = win.document;
+        var div = doc.querySelector("div");
+        win.getSelection().collapse(div, 0);
+        i.focus();
+        div.contentEditable = true;
+        div.focus();
+        setTimeout(function() {
+          var span = doc.createElement("span");
+          span.appendChild(doc.createTextNode("foo"));
+          div.appendChild(span);
+          div.style.outlineWidth = 0; // remove the focus outline
+          i.style.position = "absolute";
+          document.body.clientWidth;
+          document.documentElement.removeAttribute("class");
+        }, 0);
+      };
+    </script>
+  </body>
+</html>

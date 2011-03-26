@@ -689,7 +689,7 @@ public:
   /**
    * Return the window containing the document (the outer window).
    */
-  nsPIDOMWindow *GetWindow()
+  nsPIDOMWindow *GetWindow() const
   {
     return mWindow ? mWindow->GetOuterWindow() : GetWindowInternal();
   }
@@ -707,7 +707,7 @@ public:
   /**
    * Return the outer window ID.
    */
-  PRUint64 OuterWindowID()
+  PRUint64 OuterWindowID() const
   {
     nsPIDOMWindow *window = GetWindow();
     return window ? window->WindowID() : 0;
@@ -1517,6 +1517,8 @@ public:
   // state is unlocked/false.
   virtual nsresult SetImageLockingState(PRBool aLocked) = 0;
 
+  virtual nsresult GetMozCurrentStateObject(nsIVariant** aResult) = 0;
+
 protected:
   ~nsIDocument()
   {
@@ -1529,7 +1531,7 @@ protected:
   nsPropertyTable* GetExtraPropertyTable(PRUint16 aCategory);
 
   // Never ever call this. Only call GetWindow!
-  virtual nsPIDOMWindow *GetWindowInternal() = 0;
+  virtual nsPIDOMWindow *GetWindowInternal() const = 0;
 
   // Never ever call this. Only call GetInnerWindow!
   virtual nsPIDOMWindow *GetInnerWindowInternal() = 0;

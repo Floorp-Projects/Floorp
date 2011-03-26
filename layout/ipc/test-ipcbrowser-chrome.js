@@ -22,9 +22,7 @@ function rootView() {
 }
 
 function enableAsyncScrolling() {
-    var i = Components.interfaces.nsIFrameLoader_MOZILLA_2_0_BRANCH;
-    var enabler = frameLoader().QueryInterface(i);
-    enabler.renderMode = i.RENDER_MODE_ASYNC_SCROLL;
+    frameLoader().renderMode = Components.interfaces.nsIFrameLoaer.RENDER_MODE_ASYNC_SCROLL;
 }
 
 // Functions affecting the content window.

@@ -48,6 +48,11 @@ xhr.addEventListener("progress", onprogress, false);
 xhr.addEventListener("foopety", function(event) {}, false);
 xhr.removeEventListener("doopety", function(event) {}, false);
 
+xhr.onloadend = function(event) {
+  var message = { type: "loadend" };
+  postMessage(message.toSource());  
+}
+
 var upload = xhr.upload;
 upload.onprogress = function(event) { };
 upload.addEventListener("readystatechange", function(event) { }, false);

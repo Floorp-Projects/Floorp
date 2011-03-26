@@ -183,6 +183,7 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext)
     return PR_FALSE;
 
   mGLContext = aContext;
+  mGLContext->SetFlipped(PR_TRUE);
 
   MakeCurrent();
 
@@ -585,8 +586,6 @@ LayerManagerOGL::Render()
   if (clipRect) {
     nsIntRect r = *clipRect;
     WorldTransformRect(r);
-    if (IsDrawingFlipped())
-      mGLContext->FixWindowCoordinateRect(r, mWidgetSize.height);
     mGLContext->fScissor(r.x, r.y, r.width, r.height);
   } else {
     mGLContext->fScissor(0, 0, width, height);
@@ -598,10 +597,10 @@ LayerManagerOGL::Render()
   mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
 
   // Render our layers.
-  RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() && !mTarget ? 0 : mBackBufferFBO,
+  RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO,
                            nsIntPoint(0, 0));
                            
-  static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(mWidget)->DrawOver(this, rect);
+  mWidget->DrawOver(this, rect);
 
   if (mTarget) {
     CopyToTarget();
@@ -722,52 +721,35 @@ void
 LayerManagerOGL::SetupPipeline(int aWidth, int aHeight, WorldTransforPolicy aTransformPolicy)
 {
   // Set the viewport correctly. 
-  //
-  // When we're not double buffering, we use a FBO as our backbuffer.
-  // We use a normal view transform in that case, meaning that our FBO
-  // and all other FBOs look upside down.  We then do a Y-flip when
-  // we draw it into the window.
   mGLContext->fViewport(0, 0, aWidth, aHeight);
 
-  // Matrix to transform to viewport space ( <-1.0, 1.0> topleft, 
-  // <1.0, -1.0> bottomright).
+  // We flip the view matrix around so that everything is right-side up; we're
+  // drawing directly into the window's back buffer, so this keeps things
+  // looking correct.
   //
-  // When we are double buffering, we change the view matrix around so
-  // that everything is right-side up; we're drawing directly into
-  // the window's back buffer, so this keeps things looking correct.
-  //
-  // XXX we could potentially always use the double-buffering view
-  // matrix and just change our single-buffer draw code.
-  //
-  // XXX we keep track of whether the window size changed, so we can
-  // skip this update if it hadn't since the last call.
-  gfx3DMatrix viewMatrix;
-  if (IsDrawingFlipped()) {
-    /* If it's double buffered, we don't have a frontbuffer FBO,
-     * so put in a Y-flip in this transform.
-     */
-    viewMatrix._11 = 2.0f / float(aWidth);
-    viewMatrix._22 = -2.0f / float(aHeight);
-    viewMatrix._41 = -1.0f;
-    viewMatrix._42 = 1.0f;
-  } else {
-    viewMatrix._11 = 2.0f / float(aWidth);
-    viewMatrix._22 = 2.0f / float(aHeight);
-    viewMatrix._41 = -1.0f;
-    viewMatrix._42 = -1.0f;
-  }
+  // XXX: We keep track of whether the window size changed, so we could skip
+  // this update if it hadn't changed since the last call. We will need to
+  // track changes to aTransformPolicy and mWorldMatrix for this to work
+  // though.
+
+  // Matrix to transform (0, 0, aWidth, aHeight) to viewport space (-1.0, 1.0,
+  // 2, 2) and flip the contents.
+  gfxMatrix viewMatrix; 
+  viewMatrix.Translate(-gfxPoint(1.0, -1.0));
+  viewMatrix.Scale(2.0f / float(aWidth), 2.0f / float(aHeight));
+  viewMatrix.Scale(1.0f, -1.0f);
 
   if (aTransformPolicy == ApplyWorldTransform) {
-    viewMatrix = gfx3DMatrix::From2D(mWorldMatrix) * viewMatrix;
+    viewMatrix = mWorldMatrix * viewMatrix;
   }
 
-  SetLayerProgramProjectionMatrix(viewMatrix);
+  SetLayerProgramProjectionMatrix(gfx3DMatrix::From2D(viewMatrix));
 }
 
 void
 LayerManagerOGL::SetupBackBuffer(int aWidth, int aHeight)
 {
-  if (mGLContext->IsDoubleBuffered() && !mTarget) {
+  if (mGLContext->IsDoubleBuffered()) {
     mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
     return;
   }
@@ -825,11 +807,17 @@ LayerManagerOGL::CopyToTarget()
                         gfxASurface::ImageFormatARGB32);
 
   mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER,
-                               mBackBufferFBO);
+                               mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO);
+
+  if (mGLContext->IsDoubleBuffered()) {
+    mGLContext->fReadBuffer(LOCAL_GL_BACK);
+  }
 #ifndef USE_GLES2
+  else {
   // GLES2 promises that binding to any custom FBO will attach
   // to GL_COLOR_ATTACHMENT0 attachment point.
     mGLContext->fReadBuffer(LOCAL_GL_COLOR_ATTACHMENT0);
+  }
 #endif
 
   GLenum format = LOCAL_GL_RGBA;
@@ -868,7 +856,9 @@ LayerManagerOGL::CopyToTarget()
     }
   }
 
-  mTarget->SetOperator(gfxContext::OPERATOR_OVER);
+  mTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
+  mTarget->Scale(1.0, -1.0);
+  mTarget->Translate(-gfxPoint(0.0, height));
   mTarget->SetSource(imageSurface);
   mTarget->Paint();
 }
@@ -953,6 +943,9 @@ LayerManagerOGL::CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
 
   NS_ASSERTION(mGLContext->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) ==
                LOCAL_GL_FRAMEBUFFER_COMPLETE, "Error setting up framebuffer.");
+
+  SetupPipeline(aRect.width, aRect.height, DontApplyWorldTransform);
+  mGLContext->fScissor(0, 0, aRect.width, aRect.height);
 
   if (aInit == InitModeClear) {
     mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);

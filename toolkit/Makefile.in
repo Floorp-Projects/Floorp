@@ -52,6 +52,7 @@ PARALLEL_DIRS = \
   mozapps/downloads \
   mozapps/extensions \
   mozapps/handling \
+  mozapps/preferences \
   mozapps/plugins \
   mozapps/shared \
   mozapps/update \

@@ -52,7 +52,7 @@ interface nsIInputStream;
 #include "jsapi.h"
 %}
 
-[scriptable, uuid(6ce0a193-b033-4c3d-b748-f851b09261f5)]
+[scriptable, uuid(dea238a1-240f-45f4-9f07-7769bc69eb76)]
 interface nsIXMLHttpRequestEventTarget : nsIDOMEventTarget {
   // event handler attributes
   attribute nsIDOMEventListener onabort;
@@ -60,6 +60,7 @@ interface nsIXMLHttpRequestEventTarget : nsIDOMEventTarget {
   attribute nsIDOMEventListener onload;
   attribute nsIDOMEventListener onloadstart;
   attribute nsIDOMEventListener onprogress;
+  attribute nsIDOMEventListener onloadend;
 };
 
 [scriptable, uuid(09ff3682-7759-4441-a765-f70e1a1fabcf)]

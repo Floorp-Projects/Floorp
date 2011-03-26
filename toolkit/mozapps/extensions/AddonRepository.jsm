@@ -719,7 +719,7 @@ var AddonRepository = {
    */
   getAddonsByIDs: function(aIDs, aCallback) {
     let startupInfo = Cc["@mozilla.org/toolkit/app-startup;1"].
-                      getService(Ci.nsIAppStartup_MOZILLA_2_0).
+                      getService(Ci.nsIAppStartup).
                       getStartupInfo();
 
     let ids = aIDs.slice(0);

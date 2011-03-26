@@ -47,7 +47,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
-#include "nsICSSStyleRule.h"
+#include "mozilla/css/StyleRule.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsPresContext.h"
 #include "nsIDocument.h"
@@ -58,6 +58,7 @@
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla::dom;
+namespace css = mozilla::css;
 
 nsHTMLCSSStyleSheet::nsHTMLCSSStyleSheet()
   : mDocument(nsnull)
@@ -74,7 +75,7 @@ nsHTMLCSSStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
   Element* element = aData->mElement;
 
   // just get the one and only style rule from the content's STYLE attribute
-  nsICSSStyleRule* rule = element->GetInlineStyleRule();
+  css::StyleRule* rule = element->GetInlineStyleRule();
   if (rule) {
     rule->RuleMatched();
     aData->mRuleWalker->Forward(rule);

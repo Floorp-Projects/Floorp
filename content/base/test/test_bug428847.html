@@ -17,8 +17,8 @@ var iframe2Loaded = false;
 
 function runtests()
 {
-  //is(iframe1Loaded, true,
-  //   "Iframe with cross-origin xslt stylesheet failed to load");
+  todo(iframe1Loaded, true,
+       "Iframe with cross-origin xslt stylesheet failed to load");
   is(iframe2Loaded, false,
      "Iframe with invalid xslt stylesheet URI didn't fail to load");
 

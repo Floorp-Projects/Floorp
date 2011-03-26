@@ -864,7 +864,6 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIWebShellServices)
     NS_INTERFACE_MAP_ENTRY(nsILinkHandler)
     NS_INTERFACE_MAP_ENTRY(nsIClipboardCommands)
-    NS_INTERFACE_MAP_ENTRY(nsIDocShell_MOZILLA_2_0_BRANCH)
 NS_INTERFACE_MAP_END_INHERITING(nsDocLoader)
 
 ///*****************************************************************************
@@ -4843,6 +4842,12 @@ nsDocShell::SetIsActive(PRBool aIsActive)
   GetPresShell(getter_AddRefs(pshell));
   if (pshell)
     pshell->SetIsActive(aIsActive);
+
+  // Tell the window about it
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mScriptGlobal);
+  if (win) {
+      win->SetIsBackground(!aIsActive);
+  }
 
   // Recursively tell all of our children
   PRInt32 n = mChildList.Count();
