@@ -480,10 +480,6 @@ const PRUint16 g_uf0208extMapping[] = {
 #include "jis0208ext.uf"
 };
 
-const PRUint16 g_uf0212Mapping[] = {
-#include "jis0212.uf"
-};
-
 // ucvtw2
 const PRUint16 g_ufCNS1MappingTable[] = {
 #include "cns_1.uf"
