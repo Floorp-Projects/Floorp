@@ -50,7 +50,7 @@ dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
 MOD_MINOR_VERSION=8
-MOD_PATCH_VERSION=7
+MOD_PATCH_VERSION=8
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -916,7 +916,7 @@ dnl ========================================================
 dnl = Enable building the Thumb2 instruction set
 dnl ========================================================
 AC_ARG_ENABLE(thumb2,
- [  --enable-thumb2              Enable Thumb2 instruction set],
+ [  --enable-thumb2              Enable Thumb-2 instruction set],
  [ if test "$enableval" = "yes"; then
      MOZ_THUMB2=1,
    fi ])
@@ -925,8 +925,8 @@ if test -n "$MOZ_THUMB2"; then
   case "$target_cpu" in
     arm*)
       if test "$GNU_CC"; then
-        CFLAGS="$CFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
-        CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
+        CFLAGS="$CFLAGS -march=armv7-a -mthumb"
+        CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb"
         ASFLAGS="$ASFLAGS -march=armv7-a -mthumb"
       else
         AC_MSG_ERROR([--enable-thumb2 is not supported for non-GNU toolchains])
@@ -937,11 +937,11 @@ if test -n "$MOZ_THUMB2"; then
     ;;
   esac
 else
-  case "$target_cpu" in
-    arm*)
+  case "$target" in
+    arm-android-eabi)
       if test "$GNU_CC"; then
-       CFLAGS="$CFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
-        CXXFLAGS="$CXXFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
+        CFLAGS="$CFLAGS -march=armv5te -mthumb-interwork"
+        CXXFLAGS="$CXXFLAGS -march=armv5te -mthumb-interwork"
         ASFLAGS="$ASFLAGS -march=armv5te -mthumb-interwork"
       fi
       ;;
