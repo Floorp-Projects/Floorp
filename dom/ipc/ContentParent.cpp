@@ -68,7 +68,9 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsConsoleMessage.h"
+#if defined(MOZ_SYDNEYAUDIO)
 #include "AudioParent.h"
+#endif
 
 #if defined(ANDROID) || defined(LINUX)
 #include <sys/time.h>
@@ -86,6 +88,8 @@
 
 #include "mozilla/dom/ExternalHelperAppParent.h"
 #include "mozilla/dom/StorageParent.h"
+#include "mozilla/Services.h"
+#include "mozilla/unused.h"
 #include "nsAccelerometer.h"
 
 #include "nsIMemoryReporter.h"
@@ -106,6 +110,7 @@ using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
 using mozilla::MonitorAutoEnter;
+using mozilla::unused; // heh
 using base::KillProcess;
 
 namespace mozilla {
@@ -153,39 +158,35 @@ ContentParent::GetSingleton(PRBool aForceNew)
     if (gSingleton && !gSingleton->IsAlive())
         gSingleton = nsnull;
     
-    if (!gSingleton && aForceNew) {
-        nsRefPtr<ContentParent> parent = new ContentParent();
-        if (parent) {
-            nsCOMPtr<nsIObserverService> obs =
-                do_GetService("@mozilla.org/observer-service;1");
-            if (obs) {
-                if (NS_SUCCEEDED(obs->AddObserver(parent, "xpcom-shutdown",
-                                                  PR_FALSE))) {
-                    gSingleton = parent;
-                    nsCOMPtr<nsIPrefBranch2> prefs 
-                        (do_GetService(NS_PREFSERVICE_CONTRACTID));
-                    if (prefs) {  
-                        prefs->AddObserver("", parent, PR_FALSE);
-                    }
-                }
-                obs->AddObserver(
-                  parent, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, PR_FALSE);
+    if (!gSingleton && aForceNew)
+        gSingleton = new ContentParent();
 
-                obs->AddObserver(parent, "child-memory-reporter-request", PR_FALSE);
-                obs->AddObserver(parent, "memory-pressure", PR_FALSE); 
-            }
-            nsCOMPtr<nsIThreadInternal>
-                threadInt(do_QueryInterface(NS_GetCurrentThread()));
-            if (threadInt) {
-                threadInt->GetObserver(getter_AddRefs(parent->mOldObserver));
-                threadInt->SetObserver(parent);
-            }
-            if (obs) {
-                obs->NotifyObservers(nsnull, "ipc:content-created", nsnull);
-            }
-        }
-    }
     return gSingleton;
+}
+
+void
+ContentParent::Init()
+{
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+        obs->AddObserver(this, "xpcom-shutdown", PR_FALSE);
+        obs->AddObserver(this, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, PR_FALSE);
+        obs->AddObserver(this, "child-memory-reporter-request", PR_FALSE);
+        obs->AddObserver(this, "memory-pressure", PR_FALSE);
+    }
+    nsCOMPtr<nsIPrefBranch2> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefs) {
+        prefs->AddObserver("", this, PR_FALSE);
+    }
+    nsCOMPtr<nsIThreadInternal>
+            threadInt(do_QueryInterface(NS_GetCurrentThread()));
+    if (threadInt) {
+        threadInt->GetObserver(getter_AddRefs(mOldObserver));
+        threadInt->SetObserver(this);
+    }
+    if (obs) {
+        obs->NotifyObservers(nsnull, "ipc:content-created", nsnull);
+    }
 }
 
 void
@@ -235,8 +236,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
 {
     nsCOMPtr<nsIThreadObserver>
         kungFuDeathGrip(static_cast<nsIThreadObserver*>(this));
-    nsCOMPtr<nsIObserverService>
-        obs(do_GetService("@mozilla.org/observer-service;1"));
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "xpcom-shutdown");
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "memory-pressure");
@@ -344,6 +344,8 @@ ContentParent::ContentParent()
     nsChromeRegistryChrome* chromeRegistry =
         static_cast<nsChromeRegistryChrome*>(registrySvc.get());
     chromeRegistry->SendRegisteredChrome(this);
+
+    Init();
 }
 
 ContentParent::~ContentParent()
@@ -535,7 +537,7 @@ ContentParent::Observe(nsISupports* aSubject,
 
     // listening for memory pressure event
     if (!strcmp(aTopic, "memory-pressure")) {
-      SendFlushMemory(nsDependentString(aData));
+        unused << SendFlushMemory(nsDependentString(aData));
     }
     // listening for remotePrefs...
     else if (!strcmp(aTopic, "nsPref:changed")) {
@@ -687,16 +689,22 @@ ContentParent::AllocPAudio(const PRInt32& numChannels,
                            const PRInt32& rate,
                            const PRInt32& format)
 {
+#if defined(MOZ_SYDNEYAUDIO)
     AudioParent *parent = new AudioParent(numChannels, rate, format);
     NS_ADDREF(parent);
     return parent;
+#else
+    return nsnull;
+#endif
 }
 
 bool
 ContentParent::DeallocPAudio(PAudioParent* doomed)
 {
+#if defined(MOZ_SYDNEYAUDIO)
     AudioParent *parent = static_cast<AudioParent*>(doomed);
     NS_RELEASE(parent);
+#endif
     return true;
 }
 
@@ -1033,7 +1041,7 @@ ContentParent::RecvRemoveAccelerometerListener()
 NS_IMETHODIMP
 ContentParent::HandleEvent(nsIDOMGeoPosition* postion)
 {
-  SendGeolocationUpdate(GeoPosition(postion));
+  unused << SendGeolocationUpdate(GeoPosition(postion));
   return NS_OK;
 }
 
@@ -1080,8 +1088,7 @@ ContentParent::OnAccelerationChange(nsIAcceleration *aAcceleration)
     aAcceleration->GetY(&y);
     aAcceleration->GetZ(&z);
 
-    mozilla::dom::ContentParent::GetSingleton()->
-        SendAccelerationChanged(x, y, z);
+    unused << SendAccelerationChanged(x, y, z);
     return NS_OK;
 }
 

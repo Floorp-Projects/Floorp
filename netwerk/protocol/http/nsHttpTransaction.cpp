@@ -686,7 +686,7 @@ nsHttpTransaction::LocateHttpStart(char *buf, PRUint32 len,
     NS_ASSERTION(!aAllowPartialMatch || mLineBuf.IsEmpty(), "ouch");
 
     static const char HTTPHeader[] = "HTTP/1.";
-    static const PRInt32 HTTPHeaderLen = sizeof(HTTPHeader) - 1;
+    static const PRUint32 HTTPHeaderLen = sizeof(HTTPHeader) - 1;
     static const char HTTP2Header[] = "HTTP/2.0";
     static const PRUint32 HTTP2HeaderLen = sizeof(HTTP2Header) - 1;
     
@@ -705,10 +705,8 @@ nsHttpTransaction::LocateHttpStart(char *buf, PRUint32 len,
                 // end of matched sequence since it is stored in mLineBuf.
                 return (buf + checkChars);
             }
-            else {
-                // Response matches pattern but is still incomplete.
-                return 0;
-            }
+            // Response matches pattern but is still incomplete.
+            return 0;
         }
         // Previous partial match together with new data doesn't match the
         // pattern. Start the search again.

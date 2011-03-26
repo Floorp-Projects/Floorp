@@ -85,7 +85,6 @@ DOMCI_DATA(History, nsHistory)
 NS_INTERFACE_MAP_BEGIN(nsHistory)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMHistory)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHistory)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHistory_MOZILLA_2_0_BRANCH)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(History)
 NS_INTERFACE_MAP_END
 
@@ -350,7 +349,7 @@ nsHistory::GetState(nsIVariant **aState)
   if (!nsContentUtils::CanCallerAccess(win->GetOuterWindow()))
     return NS_ERROR_DOM_SECURITY_ERR;
 
-  nsCOMPtr<nsIDOMNSDocument_MOZILLA_2_0_BRANCH> doc =
+  nsCOMPtr<nsIDocument> doc =
     do_QueryInterface(win->GetExtantDocument());
   if (!doc)
     return NS_ERROR_NOT_AVAILABLE;

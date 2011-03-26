@@ -575,6 +575,8 @@ pref("dom.send_after_paint_to_content", false);
 
 // Timeout clamp in ms for timeouts we clamp
 pref("dom.min_timeout_value", 10);
+// And for background windows
+pref("dom.min_background_timeout_value", 1000);
 
 // Parsing perf prefs. For now just mimic what the old code did.
 #ifndef XP_WIN
@@ -1357,6 +1359,7 @@ pref("dom.ipc.plugins.java.enabled", false);
 // Linux plugins using Xt instead of Xembed don't work out-of-process yet.
 pref("dom.ipc.plugins.enabled.libvlcplugin.so", false);
 pref("dom.ipc.plugins.enabled.nppdf.so", false);
+pref("dom.ipc.plugins.enabled.602plugin.so", false);
 #endif
 #endif
 #endif
@@ -2997,32 +3000,6 @@ pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
 # XP_UNIX
 #endif
 #endif
-#endif
-
-#if OS_ARCH==OpenVMS
-
-pref("mail.use_builtin_movemail", false);
-
-pref("helpers.global_mime_types_file", "/sys$manager/netscape/mime.types");
-pref("helpers.global_mailcap_file", "/sys$manager/netscape/mailcap");
-pref("helpers.private_mime_types_file", "/sys$login/.mime.types");
-pref("helpers.private_mailcaptypes_file", "/sys$login/.mailcap");
-
-pref("applications.telnet", "create /term /detach \"telnet %h %p\"");
-pref("applications.tn3270", "create /term /detach \"telnet /term=IBM-3278-5 %h %p\"");
-pref("applications.rlogin", "create /term /detach \"rlogin %h\"");
-pref("applications.rlogin_with_user", "create /term /detach \"rlogin %h -l %u\"");
-
-/* PostScript module specific (see unix.js for additional configuration details) */
-pref("print.postscript.print_command", "print /delete");
-/* Print module independent */
-pref("print.print_command", "print /delete");
-pref("print.print_color", false);
-
-pref("browser.cache.disk.capacity", 4096);
-pref("plugin.soname.list", "");
-
-# OpenVMS
 #endif
 
 #if OS_ARCH==AIX

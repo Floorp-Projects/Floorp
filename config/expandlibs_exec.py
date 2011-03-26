@@ -52,7 +52,7 @@ See https://bugzilla.mozilla.org/show_bug.cgi?id=584474#c59 for more details.
 from __future__ import with_statement
 import sys
 import os
-from expandlibs import ExpandArgs
+from expandlibs import ExpandArgs, relativize
 import expandlibs_config as conf
 from optparse import OptionParser
 import subprocess
@@ -93,7 +93,7 @@ class ExpandArgsMore(ExpandArgs):
                     subprocess.call(ar_extract + [os.path.abspath(arg)], cwd=tmp)
                     objs = []
                     for root, dirs, files in os.walk(tmp):
-                        objs += [os.path.join(root, f) for f in files if os.path.splitext(f)[1] == conf.OBJ_SUFFIX]
+                        objs += [relativize(os.path.join(root, f)) for f in files if os.path.splitext(f)[1] == conf.OBJ_SUFFIX]
                     newlist += objs
                 else:
                     newlist += [arg]

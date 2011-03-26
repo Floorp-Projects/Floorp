@@ -57,7 +57,6 @@ struct nsDelayedBlurOrFocusEvent;
  */
 
 class nsFocusManager : public nsIFocusManager,
-                       public nsIFocusManager_MOZILLA_2_0_BRANCH,
                        public nsIObserver,
                        public nsSupportsWeakReference
 {
@@ -67,7 +66,6 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIFOCUSMANAGER
-  NS_DECL_NSIFOCUSMANAGER_MOZILLA_2_0_BRANCH
 
   // called to initialize and stop the focus manager at startup and shutdown
   static nsresult Init();

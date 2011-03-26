@@ -3297,7 +3297,7 @@ nsAccessible::GetAttrValue(nsIAtom *aProperty, double *aValue)
     return NS_OK;
 
   PRInt32 error = NS_OK;
-  double value = attrValue.ToFloat(&error);
+  double value = attrValue.ToDouble(&error);
   if (NS_SUCCEEDED(error))
     *aValue = value;
 

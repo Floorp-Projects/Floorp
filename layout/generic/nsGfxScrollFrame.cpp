@@ -2597,12 +2597,12 @@ nsGfxScrollFrameInner::AsyncScrollPortEvent::Run()
 }
 
 PRBool
-nsXULScrollFrame::AddHorizontalScrollbar(nsBoxLayoutState& aState, PRBool aOnTop)
+nsXULScrollFrame::AddHorizontalScrollbar(nsBoxLayoutState& aState, PRBool aOnBottom)
 {
   if (!mInner.mHScrollbarBox)
     return PR_TRUE;
 
-  return AddRemoveScrollbar(aState, aOnTop, PR_TRUE, PR_TRUE);
+  return AddRemoveScrollbar(aState, aOnBottom, PR_TRUE, PR_TRUE);
 }
 
 PRBool
@@ -2615,13 +2615,13 @@ nsXULScrollFrame::AddVerticalScrollbar(nsBoxLayoutState& aState, PRBool aOnRight
 }
 
 void
-nsXULScrollFrame::RemoveHorizontalScrollbar(nsBoxLayoutState& aState, PRBool aOnTop)
+nsXULScrollFrame::RemoveHorizontalScrollbar(nsBoxLayoutState& aState, PRBool aOnBottom)
 {
   // removing a scrollbar should always fit
 #ifdef DEBUG
   PRBool result =
 #endif
-  AddRemoveScrollbar(aState, aOnTop, PR_TRUE, PR_FALSE);
+  AddRemoveScrollbar(aState, aOnBottom, PR_TRUE, PR_FALSE);
   NS_ASSERTION(result, "Removing horizontal scrollbar failed to fit??");
 }
 
@@ -2638,7 +2638,7 @@ nsXULScrollFrame::RemoveVerticalScrollbar(nsBoxLayoutState& aState, PRBool aOnRi
 
 PRBool
 nsXULScrollFrame::AddRemoveScrollbar(nsBoxLayoutState& aState,
-                                     PRBool aOnTop, PRBool aHorizontal, PRBool aAdd)
+                                     PRBool aOnRightOrBottom, PRBool aHorizontal, PRBool aAdd)
 {
   if (aHorizontal) {
      if (mInner.mNeverHasHorizontalScrollbar || !mInner.mHScrollbarBox)
@@ -2653,7 +2653,7 @@ nsXULScrollFrame::AddRemoveScrollbar(nsBoxLayoutState& aState,
      PRBool fit = AddRemoveScrollbar(hasHorizontalScrollbar,
                                      mInner.mScrollPort.y,
                                      mInner.mScrollPort.height,
-                                     hSize.height, aOnTop, aAdd);
+                                     hSize.height, aOnRightOrBottom, aAdd);
      mInner.mHasHorizontalScrollbar = hasHorizontalScrollbar;    // because mHasHorizontalScrollbar is a PRPackedBool
      if (!fit)
         mInner.SetScrollbarVisibility(mInner.mHScrollbarBox, !aAdd);
@@ -2672,7 +2672,7 @@ nsXULScrollFrame::AddRemoveScrollbar(nsBoxLayoutState& aState,
      PRBool fit = AddRemoveScrollbar(hasVerticalScrollbar,
                                      mInner.mScrollPort.x,
                                      mInner.mScrollPort.width,
-                                     vSize.width, aOnTop, aAdd);
+                                     vSize.width, aOnRightOrBottom, aAdd);
      mInner.mHasVerticalScrollbar = hasVerticalScrollbar;    // because mHasVerticalScrollbar is a PRPackedBool
      if (!fit)
         mInner.SetScrollbarVisibility(mInner.mVScrollbarBox, !aAdd);
@@ -2684,7 +2684,7 @@ nsXULScrollFrame::AddRemoveScrollbar(nsBoxLayoutState& aState,
 PRBool
 nsXULScrollFrame::AddRemoveScrollbar(PRBool& aHasScrollbar, nscoord& aXY,
                                      nscoord& aSize, nscoord aSbSize,
-                                     PRBool aRightOrBottom, PRBool aAdd)
+                                     PRBool aOnRightOrBottom, PRBool aAdd)
 { 
    nscoord size = aSize;
    nscoord xy = aXY;
@@ -2692,11 +2692,11 @@ nsXULScrollFrame::AddRemoveScrollbar(PRBool& aHasScrollbar, nscoord& aXY,
    if (size != NS_INTRINSICSIZE) {
      if (aAdd) {
         size -= aSbSize;
-        if (!aRightOrBottom && size >= 0)
+        if (!aOnRightOrBottom && size >= 0)
           xy += aSbSize;
      } else {
         size += aSbSize;
-        if (!aRightOrBottom)
+        if (!aOnRightOrBottom)
           xy -= aSbSize;
      }
    }
@@ -3565,7 +3565,7 @@ nsGfxScrollFrameInner::PostScrolledAreaEvent()
     return;
   }
   mScrolledAreaEvent = new ScrolledAreaEvent(this);
-  NS_DispatchToCurrentThread(mScrolledAreaEvent.get());
+  nsContentUtils::AddScriptRunner(mScrolledAreaEvent.get());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

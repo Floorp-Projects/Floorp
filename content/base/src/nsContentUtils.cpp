@@ -5504,7 +5504,7 @@ nsContentUtils::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
     return NS_OK;
   }
 
-  JSObject *wrapper = xpc_GetCachedSlimWrapper(cache, scope, vp);
+  JSObject *wrapper = xpc_FastGetCachedWrapper(cache, scope, vp);
   if (wrapper) {
     return NS_OK;
   }
@@ -6393,9 +6393,9 @@ LayerManagerForDocumentInternal(nsIDocument *aDoc, bool aRequirePersistent,
           nsIWidget* widget = displayRoot->GetNearestWidget(nsnull);
           if (widget) {
             nsRefPtr<LayerManager> manager =
-              static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget)->
-                GetLayerManager(aRequirePersistent ? nsIWidget_MOZILLA_2_0_BRANCH::LAYER_MANAGER_PERSISTENT : 
-                                                     nsIWidget_MOZILLA_2_0_BRANCH::LAYER_MANAGER_CURRENT,
+              widget->
+                GetLayerManager(aRequirePersistent ? nsIWidget::LAYER_MANAGER_PERSISTENT : 
+                                                     nsIWidget::LAYER_MANAGER_CURRENT,
                                 aAllowRetaining);
             return manager.forget();
           }

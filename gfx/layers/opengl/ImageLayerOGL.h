@@ -159,13 +159,8 @@ public:
   virtual LayerManager::LayersBackend GetBackendType() { return LayerManager::LAYERS_OPENGL; }
 
 private:
-  typedef mozilla::Mutex Mutex;
 
   nsRefPtr<RecycleBin> mRecycleBin;
-
-  // This protects mActiveImage
-  Mutex mActiveImageLock;
-
   nsRefPtr<Image> mActiveImage;
 };
 

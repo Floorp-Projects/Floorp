@@ -334,44 +334,48 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 {
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)) {
     // width: value
-    if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
+    nsCSSValue* width = aData->ValueForWidth();
+    if (width->GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
       if (value && value->Type() == nsAttrValue::eInteger) {
         if (value->GetIntegerValue() > 0)
-          aData->mPositionData->mWidth.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel); 
+          width->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel); 
         // else 0 implies auto for compatibility.
       }
       else if (value && value->Type() == nsAttrValue::ePercent) {
         if (value->GetPercentValue() > 0.0f)
-          aData->mPositionData->mWidth.SetPercentValue(value->GetPercentValue());
+          width->SetPercentValue(value->GetPercentValue());
         // else 0 implies auto for compatibility
       }
     }
 
     // height: value
-    if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
+    nsCSSValue* height = aData->ValueForHeight();
+    if (height->GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::height);
       if (value && value->Type() == nsAttrValue::eInteger) {
         if (value->GetIntegerValue() > 0)
-          aData->mPositionData->mHeight.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
+          height->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
         // else 0 implies auto for compatibility.
       }
       else if (value && value->Type() == nsAttrValue::ePercent) {
         if (value->GetPercentValue() > 0.0f)
-          aData->mPositionData->mHeight.SetPercentValue(value->GetPercentValue());
+          height->SetPercentValue(value->GetPercentValue());
         // else 0 implies auto for compatibility
       }
     }
   }
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Text)) {
-    if (aData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
+    nsCSSValue* textAlign = aData->ValueForTextAlign();
+    if (textAlign->GetUnit() == eCSSUnit_Null) {
       // align: enum
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
       if (value && value->Type() == nsAttrValue::eEnum)
-        aData->mTextData->mTextAlign.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
+        textAlign->SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
 
-    if (aData->mTextData->mWhiteSpace.GetUnit() == eCSSUnit_Null) {
+    nsCSSValue* whiteSpace = aData->ValueForWhiteSpace();
+    if (whiteSpace->GetUnit() == eCSSUnit_Null) {
       // nowrap: enum
       if (aAttributes->GetAttr(nsGkAtoms::nowrap)) {
         // See if our width is not a nonzero integer width.
@@ -380,18 +384,18 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
         if (!value || value->Type() != nsAttrValue::eInteger ||
             value->GetIntegerValue() == 0 ||
             eCompatibility_NavQuirks != mode) {
-          aData->mTextData->mWhiteSpace.SetIntValue(NS_STYLE_WHITESPACE_NOWRAP, eCSSUnit_Enumerated);
+          whiteSpace->SetIntValue(NS_STYLE_WHITESPACE_NOWRAP, eCSSUnit_Enumerated);
         }
-        
       }
     }
   }
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(TextReset)) {
-    if (aData->mTextData->mVerticalAlign.GetUnit() == eCSSUnit_Null) {
+    nsCSSValue* verticalAlign = aData->ValueForVerticalAlign();
+    if (verticalAlign->GetUnit() == eCSSUnit_Null) {
       // valign: enum
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::valign);
       if (value && value->Type() == nsAttrValue::eEnum)
-        aData->mTextData->mVerticalAlign.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
+        verticalAlign->SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
   }
   

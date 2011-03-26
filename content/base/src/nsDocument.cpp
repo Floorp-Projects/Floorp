@@ -108,7 +108,6 @@
 #include "nsThreadUtils.h"
 #include "nsNodeInfoManager.h"
 #include "nsIXBLService.h"
-#include "nsIXPointer.h"
 #include "nsIFileChannel.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIRefreshURI.h"
@@ -1736,7 +1735,6 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer_MOZILLA_2_0_BRANCH)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIMutationObserver)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIApplicationCacheContainer)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSDocument_MOZILLA_2_0_BRANCH)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDocument)
@@ -3240,6 +3238,18 @@ nsDocument::doCreateShell(nsPresContext* aContext,
 
   mExternalResourceMap.ShowViewers();
 
+  if (mScriptGlobalObject) {
+    RescheduleAnimationFrameNotifications();
+  }
+
+  shell.swap(*aInstancePtrResult);
+
+  return NS_OK;
+}
+
+void
+nsDocument::RescheduleAnimationFrameNotifications()
+{
   nsRefreshDriver* rd = mPresShell->GetPresContext()->RefreshDriver();
   if (mHavePendingPaint) {
     rd->ScheduleBeforePaintEvent(this);
@@ -3247,10 +3257,6 @@ nsDocument::doCreateShell(nsPresContext* aContext,
   if (!mAnimationFrameListeners.IsEmpty()) {
     rd->ScheduleAnimationFrameListeners(this);
   }
-
-  shell.swap(*aInstancePtrResult);
-
-  return NS_OK;
 }
 
 void
@@ -3264,6 +3270,15 @@ void
 nsDocument::DeleteShell()
 {
   mExternalResourceMap.HideViewers();
+  if (mScriptGlobalObject) {
+    RevokeAnimationFrameNotifications();
+  }
+  mPresShell = nsnull;
+}
+
+void
+nsDocument::RevokeAnimationFrameNotifications()
+{
   if (mHavePendingPaint) {
     mPresShell->GetPresContext()->RefreshDriver()->RevokeBeforePaintEvent(this);
   }
@@ -3271,7 +3286,6 @@ nsDocument::DeleteShell()
     mPresShell->GetPresContext()->RefreshDriver()->
       RevokeAnimationFrameListeners(this);
   }
-  mPresShell = nsnull;
 }
 
 static void
@@ -3793,6 +3807,10 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     // our layout history state now.
     mLayoutHistoryState = GetLayoutHistoryState();
 
+    if (mPresShell) {
+      RevokeAnimationFrameNotifications();
+    }
+
     // Also make sure to remove our onload blocker now if we haven't done it yet
     if (mOnloadBlockCount != 0) {
       nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
@@ -3849,6 +3867,10 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
         mAllowDNSPrefetch = allowDNSPrefetch;
       }
     }
+
+    if (mPresShell) {
+      RescheduleAnimationFrameNotifications();
+    }
   }
 
   // Remember the pointer to our window (or lack there of), to avoid
@@ -3891,7 +3913,7 @@ nsDocument::SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject)
 }
 
 nsPIDOMWindow *
-nsDocument::GetWindowInternal()
+nsDocument::GetWindowInternal() const
 {
   NS_ASSERTION(!mWindow, "This should not be called when mWindow is not null!");
 
@@ -4125,7 +4147,7 @@ nsDocument::LookupImageElement(const nsAString& aId)
   if (aId.IsEmpty())
     return nsnull;
 
-  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(aId);
+  nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aId);
   return entry ? entry->GetImageIdElement() : nsnull;
 }
 
@@ -4579,17 +4601,6 @@ nsDocument::CreateEntityReference(const nsAString& aName,
   return NS_OK;
 }
 
-already_AddRefed<nsContentList>
-nsDocument::GetElementsByTagName(const nsAString& aTagname)
-{
-  nsAutoString lowercaseName;
-  nsContentUtils::ASCIIToLower(aTagname, lowercaseName);
-  nsCOMPtr<nsIAtom> xmlAtom = do_GetAtom(aTagname);
-  nsCOMPtr<nsIAtom> htmlAtom = do_GetAtom(lowercaseName);
-
-  return NS_GetContentList(this, kNameSpaceID_Unknown, htmlAtom, xmlAtom);
-}
-
 NS_IMETHODIMP
 nsDocument::GetElementsByTagName(const nsAString& aTagname,
                                  nsIDOMNodeList** aReturn)
@@ -4615,9 +4626,9 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
     NS_ENSURE_SUCCESS(rv, nsnull);
   }
 
-  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
+  NS_ASSERTION(nameSpaceId != kNameSpaceID_Unknown, "Unexpected namespace ID!");
 
-  return NS_GetContentList(this, nameSpaceId, nameAtom);
+  return NS_GetContentList(this, nameSpaceId, aLocalName);
 }
 
 NS_IMETHODIMP
@@ -4654,23 +4665,6 @@ NS_IMETHODIMP
 nsDocument::Load(const nsAString& aUrl, PRBool *aReturn)
 {
   NS_ERROR("nsDocument::Load() should be overriden by subclass!");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDocument::EvaluateFIXptr(const nsAString& aExpression, nsIDOMRange **aRange)
-{
-  NS_ERROR("nsDocument::EvaluateFIXptr() should be overriden by subclass!");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDocument::EvaluateXPointer(const nsAString& aExpression,
-                             nsIXPointerResult **aResult)
-{
-  NS_ERROR("nsDocument::EvaluateXPointer() should be overriden by subclass!");
 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -5184,7 +5178,7 @@ nsDocument::GetTitleContent(PRUint32 aNamespace)
     return nsnull;
 
   nsRefPtr<nsContentList> list =
-    NS_GetContentList(this, aNamespace, nsGkAtoms::title);
+    NS_GetContentList(this, aNamespace, NS_LITERAL_STRING("title"));
 
   return list->Item(0, PR_FALSE);
 }
@@ -6432,7 +6426,8 @@ nsDocument::CreateEventGroup(nsIDOMEventGroup **aInstancePtrResult)
 void
 nsDocument::FlushPendingNotifications(mozFlushType aType)
 {
-  if (mParser || mWeakSink) {
+  if ((!IsHTML() || aType > Flush_ContentAndNotify) &&
+      (mParser || mWeakSink)) {
     nsCOMPtr<nsIContentSink> sink;
     if (mParser) {
       sink = mParser->GetContentSink();
@@ -7473,7 +7468,7 @@ nsDocument::OnPageShow(PRBool aPersisted,
     // Send out notifications that our <link> elements are attached.
     nsRefPtr<nsContentList> links = NS_GetContentList(root,
                                                       kNameSpaceID_Unknown,
-                                                      nsGkAtoms::link);
+                                                      NS_LITERAL_STRING("link"));
 
     PRUint32 linkCount = links->Length(PR_TRUE);
     for (PRUint32 i = 0; i < linkCount; ++i) {
@@ -7525,7 +7520,7 @@ nsDocument::OnPageHide(PRBool aPersisted,
   if (aPersisted && root) {
     nsRefPtr<nsContentList> links = NS_GetContentList(root,
                                                       kNameSpaceID_Unknown,
-                                                      nsGkAtoms::link);
+                                                      NS_LITERAL_STRING("link"));
 
     PRUint32 linkCount = links->Length(PR_TRUE);
     for (PRUint32 i = 0; i < linkCount; ++i) {
@@ -8216,7 +8211,7 @@ nsIDocument::ScheduleBeforePaintEvent(nsIAnimationFrameListener* aListener)
 
 }
 
-NS_IMETHODIMP
+nsresult
 nsDocument::GetMozCurrentStateObject(nsIVariant** aState)
 {
   // Get the document's current state object. This is the object returned form

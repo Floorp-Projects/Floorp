@@ -168,8 +168,6 @@ members = [
     'nsIDOMNSDocument.elementFromPoint',
     'nsIDOMNSDocument.activeElement',
     'nsIDOMXULDocument.getBoxObjectFor',
-    'nsIDOMXMLDocument.evaluateXPointer',
-    'nsIDOMXMLDocument.evaluateFIXptr',
     'nsIDOMNSElement.*',
 
     # dom/interfaces/css
@@ -496,7 +494,6 @@ irregularFilenames = {
     'nsIDOMTextMetrics': 'nsIDOMCanvasRenderingContext2D',
     'nsIDOMCanvasGradient': 'nsIDOMCanvasRenderingContext2D',
     'nsIDOMCanvasPattern': 'nsIDOMCanvasRenderingContext2D',
-    'nsIXPointerResult': 'nsIXPointer',
 
     'nsIWebGLTexture': 'nsIDOMWebGLRenderingContext',
     'nsIWebGLBuffer': 'nsIDOMWebGLRenderingContext',

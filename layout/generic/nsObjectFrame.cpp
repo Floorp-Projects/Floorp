@@ -2551,7 +2551,7 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
       return fm->SetFocus(elem, 0);
   }
   else if (anEvent->message == NS_PLUGIN_FOCUS) {
-    nsIFocusManager_MOZILLA_2_0_BRANCH* fm = nsFocusManager::GetFocusManager();
+    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm)
       return fm->FocusPlugin(GetContent());
   }
@@ -3517,9 +3517,14 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
 
 #ifdef MOZ_USE_IMAGE_EXPOSE
   PRBool simpleImageRender = PR_FALSE;
-  mInstance->GetValueFromPlugin(NPPVpluginWindowlessLocalBool,
-                                &simpleImageRender);
-  if (simpleImageRender) {  
+  nsresult rv = mInstance->GetValueFromPlugin(NPPVpluginWindowlessLocalBool,
+                                              &simpleImageRender);
+  // If the call returned an error code make sure we still use our default value.
+  if (NS_FAILED(rv)) {
+    simpleImageRender = PR_FALSE;
+  }
+
+  if (simpleImageRender) {
     NativeImageDraw(invalidRect);
     return NS_OK;
   }
@@ -4401,8 +4406,8 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
 
   if (mCARenderer.isInit() == false) {
     void *caLayer = NULL;
-    mInstance->GetValueFromPlugin(NPPVpluginCoreAnimationLayer, &caLayer);
-    if (!caLayer) {
+    nsresult rv = mInstance->GetValueFromPlugin(NPPVpluginCoreAnimationLayer, &caLayer);
+    if (NS_FAILED(rv) || !caLayer) {
       return;
     }
 
@@ -5956,8 +5961,12 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   // us to handle plugins that do not self invalidate (slowly, but
   // accurately), and it allows us to reduce flicker.
   PRBool simpleImageRender = PR_FALSE;
-  mInstance->GetValueFromPlugin(NPPVpluginWindowlessLocalBool,
-                                &simpleImageRender);
+  nsresult rv = mInstance->GetValueFromPlugin(NPPVpluginWindowlessLocalBool,
+                                              &simpleImageRender);
+  // If the call returned an error code make sure we still use our default value.
+  if (NS_FAILED(rv)) {
+    simpleImageRender = PR_FALSE;
+  }
   if (simpleImageRender) {
     gfxMatrix matrix = aContext->CurrentMatrix();
     if (!matrix.HasNonAxisAlignedTransform())
@@ -7023,10 +7032,15 @@ nsPluginInstanceOwner::SetAbsoluteScreenPosition(nsIDOMElement* element,
     return NS_OK;
 
   PRBool simpleImageRender = PR_FALSE;
-  mInstance->GetValueFromPlugin(NPPVpluginWindowlessLocalBool,
-                                &simpleImageRender);
-  if (simpleImageRender)
+  nsresult rv = mInstance->GetValueFromPlugin(NPPVpluginWindowlessLocalBool,
+                                              &simpleImageRender);
+  // If the call returned an error code make sure we still use our default value.
+  if (NS_FAILED(rv)) {
+    simpleImageRender = PR_FALSE;
+  }
+  if (simpleImageRender) {
     NativeImageDraw();
+  }
   return NS_OK;
 }
 #endif

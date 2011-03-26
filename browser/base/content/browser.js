@@ -1396,6 +1396,7 @@ function prepareForStartup() {
 
   // initialize observers and listeners
   // and give C++ access to gBrowser
+  gBrowser.init();
   XULBrowserWindow.init();
   window.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(nsIWebNavigation)
@@ -1438,7 +1439,7 @@ function prepareForStartup() {
   }
 
   // hook up UI through progress listener
-  gBrowser.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+  gBrowser.addProgressListener(window.XULBrowserWindow);
   gBrowser.addTabsProgressListener(window.TabsProgressListener);
 
   // setup our common DOMLinkAdded listener
@@ -3351,12 +3352,10 @@ const BrowserSearch = {
     if (!submission)
       return;
 
-    if (useNewTab) {
-      gBrowser.loadOneTab(submission.uri.spec, {
-                          postData: submission.postData,
-                          relatedToCurrent: true});
-    } else
-      loadURI(submission.uri.spec, null, submission.postData, false);
+    openLinkIn(submission.uri.spec,
+               useNewTab ? "tab" : "current",
+               { postData: submission.postData,
+                 relatedToCurrent: true });
   },
 
   /**
@@ -4256,14 +4255,10 @@ var XULBrowserWindow = {
       }
     }
     else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
-      if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
-        if (aWebProgress.DOMWindow == content) {
-          if (aRequest)
-            this.endDocumentLoad(aRequest, aStatus);
-          if (!gBrowser.mTabbedMode && !gBrowser.getIcon())
-            gBrowser.useDefaultIcon(gBrowser.selectedTab);
-        }
-      }
+      if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK &&
+          aWebProgress.DOMWindow == content &&
+          aRequest)
+        this.endDocumentLoad(aRequest, aStatus);
 
       // This (thanks to the filter) is a network stop or the last
       // request stop outside of loading the document, stop throbbers
@@ -4398,9 +4393,6 @@ var XULBrowserWindow = {
       } else {
         this.reloadCommand.removeAttribute("disabled");
       }
-
-      if (!gBrowser.mTabbedMode && aWebProgress.isLoadingDocument)
-        gBrowser.setIcon(gBrowser.selectedTab, null);
 
       if (gURLBar) {
         // Strip off "wyciwyg://" and passwords for the location bar
@@ -8518,8 +8510,17 @@ function safeModeRestart()
   let promptTitle = gNavigatorBundle.getString("safeModeRestartPromptTitle");
   let promptMessage = 
     gNavigatorBundle.getString("safeModeRestartPromptMessage");
-  let rv = Services.prompt.confirm(window, promptTitle, promptMessage);
-  if (rv) {
+  let restartText = gNavigatorBundle.getString("safeModeRestartButton");
+  let buttonFlags = (Services.prompt.BUTTON_POS_0 *
+                     Services.prompt.BUTTON_TITLE_IS_STRING) +
+                    (Services.prompt.BUTTON_POS_1 *
+                     Services.prompt.BUTTON_TITLE_CANCEL) +
+                    Services.prompt.BUTTON_POS_0_DEFAULT;
+
+  let rv = Services.prompt.confirmEx(window, promptTitle, promptMessage,
+                                     buttonFlags, restartText, null, null,
+                                     null, {});
+  if (rv == 0) {
     let environment = Components.classes["@mozilla.org/process/environment;1"].
       getService(Components.interfaces.nsIEnvironment);
     environment.set("MOZ_SAFE_MODE_RESTART", "1");

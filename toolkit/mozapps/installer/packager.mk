@@ -725,11 +725,24 @@ ifndef MOZ_PKG_SRCDIR
 MOZ_PKG_SRCDIR = $(topsrcdir)
 endif
 
+DIR_TO_BE_PACKAGED ?= ../$(notdir $(topsrcdir))
+SRC_TAR_EXCLUDE_PATHS += \
+  --exclude=".hg*" \
+  --exclude="CVS" \
+  --exclude=".cvs*" \
+  --exclude=".mozconfig*" \
+  --exclude="*.pyc" \
+  --exclude="$(MOZILLA_DIR)/Makefile" \
+  --exclude="$(MOZILLA_DIR)/dist"
+ifdef MOZ_OBJDIR
+SRC_TAR_EXCLUDE_PATHS += --exclude="$(MOZ_OBJDIR)"
+endif
 CREATE_SOURCE_TAR = $(TAR) -c --owner=0 --group=0 --numeric-owner \
-  --mode="go-w" --exclude=".hg*" --exclude="CVS" --exclude=".cvs*" -f
+  --mode="go-w" $(SRC_TAR_EXCLUDE_PATHS) -f
 
 # source-package creates a source tarball from the files in MOZ_PKG_SRCDIR,
 # which is either set to a clean checkout or defaults to $topsrcdir
 source-package:
 	@echo "Packaging source tarball..."
-	(cd $(MOZ_PKG_SRCDIR) && $(CREATE_SOURCE_TAR) - .) | bzip2 -vf > $(DIST)/$(PKG_SRCPACK_PATH)$(PKG_SRCPACK_BASENAME).tar.bz2
+	mkdir -p $(DIST)/$(PKG_SRCPACK_PATH)
+	(cd $(MOZ_PKG_SRCDIR) && $(CREATE_SOURCE_TAR) - $(DIR_TO_BE_PACKAGED)) | bzip2 -vf > $(DIST)/$(PKG_SRCPACK_PATH)$(PKG_SRCPACK_BASENAME).tar.bz2

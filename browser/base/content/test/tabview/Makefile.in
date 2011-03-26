@@ -123,6 +123,7 @@ _BROWSER_FILES = \
                  browser_tabview_dragdrop.js \
                  browser_tabview_exit_button.js \
                  browser_tabview_expander.js \
+                 browser_tabview_firstrun_pref.js \
                  browser_tabview_group.js \
                  browser_tabview_launch.js \
                  browser_tabview_multiwindow_search.js \

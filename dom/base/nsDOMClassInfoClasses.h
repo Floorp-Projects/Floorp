@@ -505,3 +505,5 @@ DOMCI_CLASS(IDBIndex)
 DOMCI_CLASS(IDBVersionChangeEvent)
 DOMCI_CLASS(IDBVersionChangeRequest)
 DOMCI_CLASS(IDBDatabaseException)
+
+DOMCI_CLASS(EventException)

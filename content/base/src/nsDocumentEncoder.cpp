@@ -1471,7 +1471,7 @@ nsHTMLCopyEncoder::IncludeInContext(nsINode *aNode)
           tag == nsGkAtoms::dfn      ||
           tag == nsGkAtoms::code     ||
           tag == nsGkAtoms::cite     ||
-          tag == nsGkAtoms::variable ||
+          tag == nsGkAtoms::var      ||
           tag == nsGkAtoms::abbr     ||
           tag == nsGkAtoms::font     ||
           tag == nsGkAtoms::script   ||
