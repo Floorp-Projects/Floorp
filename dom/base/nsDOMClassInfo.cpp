@@ -80,7 +80,6 @@
 #include "nsIAttribute.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOM3Document.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMEvent.h"
@@ -2193,7 +2192,6 @@ nsDOMClassInfo::WrapNativeParent(JSContext *cx, JSObject *scope,
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)                                \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)                              \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)                                \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Document)                                  \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)                                      \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXPathEvaluator)                             \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)

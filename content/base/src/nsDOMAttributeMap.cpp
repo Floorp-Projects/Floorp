@@ -42,7 +42,7 @@
 
 #include "nsDOMAttributeMap.h"
 #include "nsDOMAttribute.h"
-#include "nsIDOM3Document.h"
+#include "nsIDOMDocument.h"
 #include "nsGenericElement.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -298,7 +298,7 @@ nsDOMAttributeMap::SetNamedItemInternal(nsIDOMNode *aNode,
     }
 
     if (!mContent->HasSameOwnerDoc(iAttribute)) {
-      nsCOMPtr<nsIDOM3Document> domDoc =
+      nsCOMPtr<nsIDOMDocument> domDoc =
         do_QueryInterface(mContent->GetOwnerDoc(), &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
