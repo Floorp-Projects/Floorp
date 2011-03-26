@@ -4843,6 +4843,12 @@ nsDocShell::SetIsActive(PRBool aIsActive)
   if (pshell)
     pshell->SetIsActive(aIsActive);
 
+  // Tell the window about it
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mScriptGlobal);
+  if (win) {
+      win->SetIsBackground(!aIsActive);
+  }
+
   // Recursively tell all of our children
   PRInt32 n = mChildList.Count();
   for (PRInt32 i = 0; i < n; ++i) {
