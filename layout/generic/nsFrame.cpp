@@ -3184,8 +3184,7 @@ nsIFrame::InlineMinWidthData::ForceBreak(nsIRenderingContext *aRenderingContext)
 }
 
 void
-nsIFrame::InlineMinWidthData::OptionallyBreak(nsIRenderingContext *aRenderingContext,
-                                              nscoord aHyphenWidth)
+nsIFrame::InlineMinWidthData::OptionallyBreak(nsIRenderingContext *aRenderingContext)
 {
   trailingTextFrame = nsnull;
 
@@ -3194,9 +3193,8 @@ nsIFrame::InlineMinWidthData::OptionallyBreak(nsIRenderingContext *aRenderingCon
   // text-indent or negative margin), don't break.  Otherwise, do the
   // same as ForceBreak.  it doesn't really matter when we accumulate
   // floats.
-  if (currentLine + aHyphenWidth < 0 || atStartOfLine)
+  if (currentLine < 0 || atStartOfLine)
     return;
-  currentLine += aHyphenWidth;
   ForceBreak(aRenderingContext);
 }
 
