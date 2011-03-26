@@ -126,31 +126,6 @@ JSObject::syncSpecialEquality()
 }
 
 inline void
-JSObject::trace(JSTracer *trc)
-{
-    if (!isNative())
-        return;
-
-    JSContext *cx = trc->context;
-    js::Shape *shape = lastProp;
-
-    MarkShape(trc, shape, "shape");
-
-    if (IS_GC_MARKING_TRACER(trc) && cx->runtime->gcRegenShapes) {
-        /*
-         * MarkShape will regenerate the shape if need be. However, we need to
-         * regenerate our shape if hasOwnShape() is true.
-         */
-        uint32 newShape = shape->shape;
-        if (hasOwnShape()) {
-            newShape = js_RegenerateShapeForGC(cx->runtime);
-            JS_ASSERT(newShape != shape->shape);
-        }
-        objShape = newShape;
-    }
-}
-
-inline void
 JSObject::finalize(JSContext *cx)
 {
     /* Cope with stillborn objects that have no map. */

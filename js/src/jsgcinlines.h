@@ -347,6 +347,37 @@ MarkShape(JSTracer *trc, const Shape *shape, const char *name)
     Mark(trc, shape);
 }
 
+} // namespace gc
+} // namespace js
+
+inline void
+JSObject::trace(JSTracer *trc)
+{
+    if (!isNative())
+        return;
+
+    JSContext *cx = trc->context;
+    js::Shape *shape = lastProp;
+
+    MarkShape(trc, shape, "shape");
+
+    if (IS_GC_MARKING_TRACER(trc) && cx->runtime->gcRegenShapes) {
+        /*
+         * MarkShape will regenerate the shape if need be. However, we need to
+         * regenerate our shape if hasOwnShape() is true.
+         */
+        uint32 newShape = shape->shape;
+        if (hasOwnShape()) {
+            newShape = js_RegenerateShapeForGC(cx->runtime);
+            JS_ASSERT(newShape != shape->shape);
+        }
+        objShape = newShape;
+    }
+}
+
+namespace js {
+namespace gc {
+
 void
 MarkObjectSlots(JSTracer *trc, JSObject *obj);
 
