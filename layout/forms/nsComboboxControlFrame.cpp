@@ -1029,7 +1029,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfo = nimgr->GetNodeInfo(nsGkAtoms::input, nsnull, kNameSpaceID_XHTML);
+  nodeInfo = nimgr->GetNodeInfo(nsGkAtoms::button, nsnull, kNameSpaceID_XHTML);
 
   // create button which drops the list down
   NS_NewHTMLElement(getter_AddRefs(mButtonContent), nodeInfo.forget(),
@@ -1265,7 +1265,7 @@ nsComboboxControlFrame::SetInitialChildList(nsIAtom*        aListName,
     for (nsFrameList::Enumerator e(aChildList); !e.AtEnd(); e.Next()) {
       nsCOMPtr<nsIFormControl> formControl =
         do_QueryInterface(e.get()->GetContent());
-      if (formControl && formControl->GetType() == NS_FORM_INPUT_BUTTON) {
+      if (formControl && formControl->GetType() == NS_FORM_BUTTON_BUTTON) {
         mButtonFrame = e.get();
         break;
       }
