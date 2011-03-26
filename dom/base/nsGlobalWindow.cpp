@@ -108,7 +108,6 @@
 #include "nsIDOMCrypto.h"
 #endif
 #include "nsIDOMDocument.h"
-#include "nsIDOM3Document.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMElement.h"
@@ -7956,9 +7955,7 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
     *aSessionStorage = nsnull;
 
     nsString documentURI;
-    nsCOMPtr<nsIDOM3Document> document3 = do_QueryInterface(mDoc);
-    if (document3)
-        document3->GetDocumentURI(documentURI);
+    mDocument->GetDocumentURI(documentURI);
 
     nsresult rv = docShell->GetSessionStorageForPrincipal(principal,
                                                           documentURI,
@@ -8042,9 +8039,7 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsString documentURI;
-    nsCOMPtr<nsIDOM3Document> document3 = do_QueryInterface(mDoc);
-    if (document3)
-        document3->GetDocumentURI(documentURI);
+    mDocument->GetDocumentURI(documentURI);
 
     rv = storageManager->GetLocalStorageForPrincipal(principal,
                                                      documentURI,
