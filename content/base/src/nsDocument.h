@@ -1207,6 +1207,11 @@ private:
   void EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
                                        PRBool aUpdateCSSLoader);
 
+  // Revoke any pending notifications due to mozRequestAnimationFrame calls
+  void RevokeAnimationFrameNotifications();
+  // Reschedule any notifications we need to handle mozRequestAnimationFrame
+  void RescheduleAnimationFrameNotifications();
+
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
   nsDocument& operator=(const nsDocument& aOther);
