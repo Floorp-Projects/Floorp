@@ -3564,7 +3564,7 @@ nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
     rv = kid->GetNodeType(&nodeType);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDOM3Document> domDoc = do_QueryInterface(GetOwnerDoc());
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(GetOwnerDoc());
 
     // DocumentType nodes are the only nodes that can have a null
     // ownerDocument according to the DOM spec, and we need to allow
@@ -4075,7 +4075,7 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
   if (!HasSameOwnerDoc(newContent) &&
       (nodeType != nsIDOMNode::DOCUMENT_TYPE_NODE ||
        newContent->GetOwnerDoc())) {
-    nsCOMPtr<nsIDOM3Document> domDoc = do_QueryInterface(doc);
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
 
     if (domDoc) {
       nsresult rv;
