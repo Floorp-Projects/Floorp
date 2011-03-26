@@ -72,6 +72,14 @@ nsSMILKeySpline::GetSplineValue(double aX) const
 }
 
 void
+nsSMILKeySpline::GetSplineDerivativeValues(double aX, double& aDX, double& aDY) const
+{
+  double t = GetTForX(aX);
+  aDX = GetSlope(t, mX1, mX2);
+  aDY = GetSlope(t, mY1, mY2);
+}
+
+void
 nsSMILKeySpline::CalcSampleValues()
 {
   for (PRUint32 i = 0; i < kSplineTableSize; ++i) {
