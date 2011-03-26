@@ -1343,9 +1343,6 @@ UNIX_SYSTEM_V)
     ;;
 OSF1)
     ;;
-*OpenVMS*)
-    HOST_OS_ARCH=OpenVMS
-    ;;
 OS_2)
     HOST_OS_ARCH=OS2
     ;;
@@ -1433,11 +1430,6 @@ OSF1)
         OS_RELEASE=V4.0D
         ;;
     esac
-    ;;
-*OpenVMS*)
-    OS_ARCH=OpenVMS
-    OS_RELEASE=`uname -v`
-    OS_TEST=`uname -p`
     ;;
 OS_2)
     OS_ARCH=OS2
@@ -2614,25 +2606,6 @@ ia64*-hpux*)
     fi
     ;;
 
-*-openvms*) 
-    AC_DEFINE(NO_PW_GECOS)
-    AC_DEFINE(NO_UDSOCK)
-    AC_DEFINE(POLL_WITH_XCONNECTIONNUMBER)
-    USE_PTHREADS=1
-    MKSHLIB_FORCE_ALL='-all'
-    MKSHLIB_UNFORCE_ALL='-none'
-    AS='as'
-    AS_DASH_C_FLAG='-Wc/names=as_is'
-    AR_FLAGS='c $@'
-    DSO_LDOPTS='-shared -auto_symvec'
-    DSO_PIC_CFLAGS=
-    MOZ_DEBUG_LDFLAGS='-g'
-    COMPAQ_CXX=1
-    CC_VERSION=`$CC -V 2>&1 | awk '/ C / { print $3 }'`
-    CXX_VERSION=`$CXX -V 2>&1 | awk '/ C\+\+ / { print $3 }'`
-    ;;
-
-
 *-os2*)
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
@@ -2893,9 +2866,6 @@ case "$target" in
     NO_LD_ARCHIVE_FLAGS=
     ;;
 *-aix4.3*|*-aix5*)
-    NO_LD_ARCHIVE_FLAGS=
-    ;;
-*-openvms*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
 *-mingw*|*-wince|*-winmo)
@@ -8245,11 +8215,7 @@ MOZ_ARG_DISABLE_BOOL(md,
    fi])
 if test "$_cpp_md_flag"; then
   COMPILER_DEPEND=1
-  if test "$OS_ARCH" = "OpenVMS"; then
-    _DEPEND_CFLAGS='$(subst =, ,$(filter-out %/.pp,-MM=-MD=-MF=$(MDDEPDIR)/$(basename $(@F)).pp))'
-  else
-    _DEPEND_CFLAGS='$(filter-out %/.pp,-MD -MF $(MDDEPDIR)/$(basename $(@F)).pp)'
-  fi
+  _DEPEND_CFLAGS='$(filter-out %/.pp,-MD -MF $(MDDEPDIR)/$(basename $(@F)).pp)'
   dnl Sun Studio on Solaris use -xM instead of -MD, see config/rules.mk
   if test "$SOLARIS_SUNPRO_CC"; then
     _DEPEND_CFLAGS=
@@ -9297,8 +9263,6 @@ dnl ========================================================
 if test "$OS_ARCH" = "Darwin"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
-elif test "$OS_ARCH" = "OpenVMS"; then
-  AC_DEFINE(XP_UNIX)
 elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2" -a "$OS_ARCH" != "WINCE"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
@@ -9434,8 +9398,6 @@ dnl   will handle these files.
 dnl If it fails, nothing is set and config.status will run as usual.
 dnl
 dnl This does not change the $MAKEFILES variable.
-dnl
-dnl OpenVMS gets a line overflow on the long eval command, so use a temp file.
 dnl
 echo $MAKEFILES | ${PERL} $srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
 . ./conftest.sh
