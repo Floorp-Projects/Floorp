@@ -200,8 +200,10 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32* aStatus,
   PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
 
   // For now, we don't implement the downloaded blacklist.
-  if (aDriverInfo)
+  if (aDriverInfo) {
+    *aStatus = status;
     return NS_OK;
+  }
 
   // Many WebGL issues on 10.5, especially:
   //   * bug 631258: WebGL shader paints using textures belonging to other processes on Mac OS 10.5
