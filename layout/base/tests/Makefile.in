@@ -323,6 +323,8 @@ _TEST_FILES += \
 		bug570378-persian-5.html \
 		bug570378-persian-5-ref.html \
 		test_bug588174.html \
+		test_bug607529.html \
+		file_bug607529.html \
 		$(NULL)
 endif
 
