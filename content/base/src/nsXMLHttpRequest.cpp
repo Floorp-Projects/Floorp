@@ -87,7 +87,6 @@
 #include "nsCrossSiteListenerProxy.h"
 #include "nsDOMError.h"
 #include "nsIHTMLDocument.h"
-#include "nsIDOM3Document.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIStorageStream.h"
@@ -2279,13 +2278,10 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
     nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(supports);
     if (doc) {
       aContentType.AssignLiteral("application/xml");
-      nsCOMPtr<nsIDOM3Document> dom3doc = do_QueryInterface(doc);
-      if (dom3doc) {
-        nsAutoString inputEncoding;
-        dom3doc->GetInputEncoding(inputEncoding);
-        if (!DOMStringIsNull(inputEncoding)) {
-          CopyUTF16toUTF8(inputEncoding, aCharset);
-        }
+      nsAutoString inputEncoding;
+      doc->GetInputEncoding(inputEncoding);
+      if (!DOMStringIsNull(inputEncoding)) {
+        CopyUTF16toUTF8(inputEncoding, aCharset);
       }
 
       // Serialize to a stream so that the encoding used will
