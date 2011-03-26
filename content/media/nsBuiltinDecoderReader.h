@@ -405,39 +405,6 @@ private:
   PRBool mEndOfStream;
 };
 
-// Represents a section of contiguous media, with a start and end offset,
-// and the timestamps of the start and end of that range. Used to denote the
-// extremities of a range to seek in.
-class ByteRange {
-public:
-  ByteRange()
-    : mOffsetStart(0),
-      mOffsetEnd(0),
-      mTimeStart(0),
-      mTimeEnd(0)
-  {}
-
-  ByteRange(PRInt64 aOffsetStart,
-            PRInt64 aOffsetEnd,
-            PRInt64 aTimeStart,
-            PRInt64 aTimeEnd)
-    : mOffsetStart(aOffsetStart),
-      mOffsetEnd(aOffsetEnd),
-      mTimeStart(aTimeStart),
-      mTimeEnd(aTimeEnd)
-  {}
-
-  PRBool IsNull() const {
-    return mOffsetStart == 0 &&
-           mOffsetEnd == 0 &&
-           mTimeStart == 0 &&
-           mTimeEnd == 0;
-  }
-
-  PRInt64 mOffsetStart, mOffsetEnd; // in bytes.
-  PRInt64 mTimeStart, mTimeEnd; // in ms.
-};
-
 // Encapsulates the decoding and reading of media data. Reading can be done
 // on either the state machine thread (when loading and seeking) or on
 // the reader thread (when it's reading and decoding). The reader encapsulates
@@ -447,6 +414,7 @@ public:
 class nsBuiltinDecoderReader : public nsRunnable {
 public:
   typedef mozilla::Monitor Monitor;
+  typedef mozilla::MonitorAutoEnter MonitorAutoEnter;
 
   nsBuiltinDecoderReader(nsBuiltinDecoder* aDecoder);
   ~nsBuiltinDecoderReader();
@@ -476,7 +444,7 @@ public:
   // Read header data for all bitstreams in the file. Fills mInfo with
   // the data required to present the media. Returns NS_OK on success,
   // or NS_ERROR_FAILURE on failure.
-  virtual nsresult ReadMetadata() = 0;
+  virtual nsresult ReadMetadata(nsVideoInfo* aInfo) = 0;
 
   // Stores the presentation time of the first frame/sample we'd be
   // able to play if we started playback at aOffset, and returns the
@@ -495,11 +463,6 @@ public:
                         PRInt64 aStartTime,
                         PRInt64 aEndTime,
                         PRInt64 aCurrentTime) = 0;
-
-  // Gets presentation info required for playback.
-  const nsVideoInfo& GetInfo() {
-    return mInfo;
-  }
 
   // Queue of audio samples. This queue is threadsafe.
   MediaQueue<SoundData> mAudioQueue;
@@ -541,26 +504,6 @@ protected:
     return DecodeVideoFrame(f, 0);
   }
 
-  // Fills aRanges with ByteRanges denoting the sections of the media which
-  // have been downloaded and are stored in the media cache. The reader
-  // monitor must must be held with exactly one lock count. The nsMediaStream
-  // must be pinned while calling this.
-  nsresult GetBufferedBytes(nsTArray<ByteRange>& aRanges);
-
-  // Returns the range in which you should perform a seek bisection if
-  // you wish to seek to aTarget ms, given the known (buffered) byte ranges
-  // in aRanges. If aExact is PR_TRUE, we only return an exact copy of a
-  // range in which aTarget lies, or a null range if aTarget isn't contained
-  // in any of the (buffered) ranges. Otherwise, when aExact is PR_FALSE,
-  // we'll construct the smallest possible range we can, based on the times
-  // and byte offsets known in aRanges. We can then use this to minimize our
-  // bisection's search space when the target isn't in a known buffered range.
-  ByteRange GetSeekRange(const nsTArray<ByteRange>& aRanges,
-                         PRInt64 aTarget,
-                         PRInt64 aStartTime,
-                         PRInt64 aEndTime,
-                         PRBool aExact);
-
   // The lock which we hold whenever we read or decode. This ensures the thread
   // safety of the reader and its data fields.
   Monitor mMonitor;
@@ -573,7 +516,8 @@ protected:
   // Used to seek to media start time.
   PRInt64 mDataOffset;
 
-  // Stores presentation info required for playback.
+  // Stores presentation info required for playback. The reader's monitor
+  // must be held when accessing this.
   nsVideoInfo mInfo;
 };
 

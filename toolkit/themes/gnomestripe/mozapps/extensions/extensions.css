@@ -457,6 +457,7 @@
   margin-bottom: 0;
   font-weight: bold;
   -moz-box-align: end;
+  -moz-box-flex: 1;
 }
 
 .creator {

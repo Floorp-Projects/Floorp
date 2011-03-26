@@ -2040,21 +2040,26 @@ gfxFontGroup::FindPlatformFont(const nsAString& aName,
     PRBool needsBold;
     gfxFontEntry *fe = nsnull;
 
-    // first, look up in the user font set
+    // First, look up in the user font set...
+    // If the fontSet matches the family, we must not look for a platform
+    // font of the same name, even if we fail to actually get a fontEntry
+    // here; we'll fall back to the next name in the CSS font-family list.
+    PRBool foundFamily = PR_FALSE;
     gfxUserFontSet *fs = fontGroup->GetUserFontSet();
     if (fs) {
-        // if the fontSet matches the family, but the font has not yet finished
+        // If the fontSet matches the family, but the font has not yet finished
         // loading (nor has its load timeout fired), the fontGroup should wait
-        // for the download, and not actually draw its text yet
+        // for the download, and not actually draw its text yet.
         PRBool waitForUserFont = PR_FALSE;
-        fe = fs->FindFontEntry(aName, *fontStyle, needsBold, waitForUserFont);
+        fe = fs->FindFontEntry(aName, *fontStyle, foundFamily,
+                               needsBold, waitForUserFont);
         if (!fe && waitForUserFont) {
             fontGroup->mSkipDrawing = PR_TRUE;
         }
     }
 
-    // nothing in the user font set ==> check system fonts
-    if (!fe) {
+    // Not known in the user font set ==> check system fonts
+    if (!foundFamily) {
         fe = gfxPlatformFontList::PlatformFontList()->
             FindFontForFamily(aName, fontStyle, needsBold);
     }
@@ -2247,22 +2252,24 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
             if (aResolveFontName) {
                 ResolveData data(fc, gf, closure);
                 PRBool aborted = PR_FALSE, needsBold;
-                nsresult rv;
+                nsresult rv = NS_OK;
+                PRBool foundFamily = PR_FALSE;
                 PRBool waitForUserFont = PR_FALSE;
                 if (mUserFontSet &&
-                    mUserFontSet->FindFontEntry(family, mStyle, needsBold,
-                                                waitForUserFont))
+                    mUserFontSet->FindFontEntry(family, mStyle, foundFamily,
+                                                needsBold, waitForUserFont))
                 {
                     gfxFontGroup::FontResolverProc(family, &data);
-                    rv = NS_OK;
                 } else {
                     if (waitForUserFont) {
                         mSkipDrawing = PR_TRUE;
                     }
-                    gfxPlatform *pf = gfxPlatform::GetPlatform();
-                    rv = pf->ResolveFontName(family,
-                                             gfxFontGroup::FontResolverProc,
-                                             &data, aborted);
+                    if (!foundFamily) {
+                        gfxPlatform *pf = gfxPlatform::GetPlatform();
+                        rv = pf->ResolveFontName(family,
+                                                 gfxFontGroup::FontResolverProc,
+                                                 &data, aborted);
+                    }
                 }
                 if (NS_FAILED(rv) || aborted)
                     return PR_FALSE;
@@ -2860,7 +2867,7 @@ gfxFontStyle::ParseFontLanguageOverride(const nsString& aLangTag)
 
 gfxFontStyle::gfxFontStyle() :
     style(FONT_STYLE_NORMAL), systemFont(PR_TRUE), printerFont(PR_FALSE), 
-    familyNameQuirks(PR_FALSE), weight(FONT_WEIGHT_NORMAL),
+    weight(FONT_WEIGHT_NORMAL),
     stretch(NS_FONT_STRETCH_NORMAL), size(DEFAULT_PIXEL_FONT_SIZE),
     sizeAdjust(0.0f),
     language(gfxAtoms::x_western),
@@ -2871,12 +2878,11 @@ gfxFontStyle::gfxFontStyle() :
 gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
                            gfxFloat aSize, nsIAtom *aLanguage,
                            float aSizeAdjust, PRPackedBool aSystemFont,
-                           PRPackedBool aFamilyNameQuirks,
                            PRPackedBool aPrinterFont,
                            const nsString& aFeatureSettings,
                            const nsString& aLanguageOverride):
     style(aStyle), systemFont(aSystemFont), printerFont(aPrinterFont),
-    familyNameQuirks(aFamilyNameQuirks), weight(aWeight), stretch(aStretch),
+    weight(aWeight), stretch(aStretch),
     size(aSize), sizeAdjust(aSizeAdjust),
     language(aLanguage),
     languageOverride(ParseFontLanguageOverride(aLanguageOverride))
@@ -2904,7 +2910,7 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
 
 gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     style(aStyle.style), systemFont(aStyle.systemFont), printerFont(aStyle.printerFont),
-    familyNameQuirks(aStyle.familyNameQuirks), weight(aStyle.weight),
+    weight(aStyle.weight),
     stretch(aStyle.stretch), size(aStyle.size),
     sizeAdjust(aStyle.sizeAdjust),
     language(aStyle.language),
@@ -4271,6 +4277,59 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
         }
     }
 }
+
+
+gfxTextRun::ClusterIterator::ClusterIterator(gfxTextRun *aTextRun)
+    : mTextRun(aTextRun), mCurrentChar(PRUint32(-1))
+{
+}
+
+void
+gfxTextRun::ClusterIterator::Reset()
+{
+    mCurrentChar = PRUint32(-1);
+}
+
+PRBool
+gfxTextRun::ClusterIterator::NextCluster()
+{
+    while (++mCurrentChar < mTextRun->GetLength()) {
+        if (mTextRun->IsClusterStart(mCurrentChar)) {
+            return PR_TRUE;
+        }
+    }
+
+    mCurrentChar = PRUint32(-1);
+    return PR_FALSE;
+}
+
+PRUint32
+gfxTextRun::ClusterIterator::ClusterLength() const
+{
+    if (mCurrentChar == PRUint32(-1)) {
+        return 0;
+    }
+
+    PRUint32 i = mCurrentChar;
+    while (++i < mTextRun->GetLength()) {
+        if (mTextRun->IsClusterStart(i)) {
+            break;
+        }
+    }
+
+    return i - mCurrentChar;
+}
+
+gfxFloat
+gfxTextRun::ClusterIterator::ClusterAdvance(PropertyProvider *aProvider) const
+{
+    if (mCurrentChar == PRUint32(-1)) {
+        return 0;
+    }
+
+    return mTextRun->GetAdvanceWidth(mCurrentChar, ClusterLength(), aProvider);
+}
+
 
 #ifdef DEBUG
 void

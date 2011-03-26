@@ -47,13 +47,11 @@
 #include "nsMenuPopupFrame.h"
 
 class nsMenuBoxObject : public nsIMenuBoxObject,
-                        public nsBoxObject,
-                        public nsIMenuBoxObject_MOZILLA_2_0_BRANCH
+                        public nsBoxObject
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIMENUBOXOBJECT
-  NS_DECL_NSIMENUBOXOBJECT_MOZILLA_2_0_BRANCH
 
   nsMenuBoxObject();
   virtual ~nsMenuBoxObject();
@@ -67,7 +65,7 @@ nsMenuBoxObject::~nsMenuBoxObject()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsMenuBoxObject, nsBoxObject, nsIMenuBoxObject, nsIMenuBoxObject_MOZILLA_2_0_BRANCH)
+NS_IMPL_ISUPPORTS_INHERITED1(nsMenuBoxObject, nsBoxObject, nsIMenuBoxObject)
 
 /* void openMenu (in boolean openFlag); */
 NS_IMETHODIMP nsMenuBoxObject::OpenMenu(PRBool aOpenFlag)

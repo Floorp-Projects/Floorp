@@ -50,7 +50,7 @@
 #include "nsIDocument.h"
 #include "nsRuleWalker.h"
 #include "nsStyleContext.h"
-#include "nsICSSStyleRule.h"
+#include "mozilla/css/StyleRule.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRuleProcessor.h"
@@ -564,7 +564,7 @@ nsStyleSet::AssertNoCSSRules(nsRuleNode* aCurrLevelNode,
   for (nsRuleNode *node = aCurrLevelNode; node != aLastPrevLevelNode;
        node = node->GetParent()) {
     nsIStyleRule *rule = node->GetRule();
-    nsCOMPtr<nsICSSStyleRule> cssRule(do_QueryInterface(rule));
+    nsRefPtr<mozilla::css::StyleRule> cssRule(do_QueryObject(rule));
     NS_ASSERTION(!cssRule || !cssRule->Selector(), "Unexpected CSS rule");
   }
 }
@@ -740,7 +740,7 @@ PRBool nsStyleSet::BuildDefaultStyleData(nsPresContext* aPresContext)
 #define SSARG_PRESCONTEXT aPresContext
 
 #define CREATE_DATA(name, type, args) \
-  if (!(mDefaultStyleData.m##type##Data->m##name##Data = \
+  if (!(mDefaultStyleData.m##type##Data->mStyleStructs[eStyleStruct_##name] = \
           new (aPresContext) nsStyle##name args)) \
     return PR_FALSE;
 

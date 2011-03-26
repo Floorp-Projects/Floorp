@@ -95,34 +95,3 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSpanElement)
 
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLSpanElement)
-
-
-// ------------------------------------------------------------------
-
-class nsHTMLUnknownElement : public nsHTMLSpanElement
-{
-public:
-  nsHTMLUnknownElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-  nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
-};
-
-DOMCI_NODE_DATA(HTMLUnknownElement, nsHTMLUnknownElement)
-
-NS_INTERFACE_MAP_BEGIN(nsHTMLUnknownElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLUnknownElement)
-NS_INTERFACE_MAP_END_INHERITING(nsHTMLSpanElement)
-
-nsHTMLUnknownElement::nsHTMLUnknownElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsHTMLSpanElement(aNodeInfo)
-{
-}
-
-
-NS_IMPL_NS_NEW_HTML_ELEMENT(Unknown)
-
-
-NS_IMPL_ELEMENT_CLONE(nsHTMLUnknownElement)

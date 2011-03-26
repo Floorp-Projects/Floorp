@@ -314,6 +314,7 @@
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIDOMHTMLTitleElement.h"
 #include "nsIDOMHTMLUListElement.h"
+#include "nsIDOMHTMLUnknownElement.h"
 #include "nsIDOMMediaError.h"
 #include "nsIDOMTimeRanges.h"
 #include "nsIDOMHTMLSourceElement.h"
@@ -500,6 +501,7 @@ using namespace mozilla::dom;
 #include "mozilla/dom/indexedDB/IDBKeyRange.h"
 #include "mozilla/dom/indexedDB/IDBIndex.h"
 #include "nsIIDBDatabaseException.h"
+#include "nsIDOMEventException.h"
 
 static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -1478,6 +1480,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBDatabaseException, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(EventException, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
 // Objects that should be constructable through |new Name();|
@@ -2283,7 +2288,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(WindowUtils, nsIDOMWindowUtils)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowUtils)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowUtils_MOZILLA_2_0_BRANCH)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Location, nsIDOMLocation)
@@ -2327,7 +2331,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(History, nsIDOMHistory)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHistory)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHistory_MOZILLA_2_0_BRANCH)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Screen, nsIDOMScreen)
@@ -2761,7 +2764,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLSelectElement, nsIDOMHTMLSelectElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLSelectElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLSelectElement_Mozilla_2_0_Branch)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -2824,8 +2826,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(HTMLUnknownElement, nsIDOMHTMLElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLElement)
+  DOM_CLASSINFO_MAP_BEGIN(HTMLUnknownElement, nsIDOMHTMLUnknownElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLUnknownElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -4012,7 +4014,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(WebGLRenderingContext, nsIDOMWebGLRenderingContext)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWebGLRenderingContext)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWebGLRenderingContext_MOZILLA_2_0_BRANCH)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(WebGLBuffer, nsIWebGLBuffer)
@@ -4160,6 +4161,11 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIException)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(EventException, nsIDOMEventException)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventException)
+    DOM_CLASSINFO_MAP_ENTRY(nsIException)
+  DOM_CLASSINFO_MAP_END
+
 #ifdef NS_DEBUG
   {
     PRUint32 i = NS_ARRAY_LENGTH(sClassInfoData);
@@ -4265,7 +4271,7 @@ nsDOMClassInfo::WrapNative(JSContext *cx, JSObject *scope,
     return NS_OK;
   }
 
-  JSObject *wrapper = xpc_GetCachedSlimWrapper(cache, scope, vp);
+  JSObject *wrapper = xpc_FastGetCachedWrapper(cache, scope, vp);
   if (wrapper) {
     return NS_OK;
   }

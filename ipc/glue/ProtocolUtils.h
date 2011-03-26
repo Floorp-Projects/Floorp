@@ -95,6 +95,7 @@ class /*NS_INTERFACE_CLASS*/ IProtocolManager
 {
 public:
     enum ActorDestroyReason {
+        FailedConstructor,
         Deletion,
         AncestorDeletion,
         NormalShutdown,

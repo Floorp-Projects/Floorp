@@ -2640,7 +2640,7 @@ void nsWindow::UpdateTransparentRegion(const nsIntRegion &aTransparentRegion)
   // all values must be set to -1 to get a full sheet of glass.
   MARGINS margins = { -1, -1, -1, -1 };
   bool visiblePlugin = false;
-  if (!opaqueRegion.IsEmpty() && !mHideChrome) {
+  if (!opaqueRegion.IsEmpty()) {
     nsIntRect pluginBounds;
     for (nsIWidget* child = GetFirstChild(); child; child = child->GetNextSibling()) {
       nsWindowType type;
@@ -4465,8 +4465,22 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
     // via calls to ShowWindow.
     case WM_ACTIVATE:
       if (lParam != 0 && LOWORD(wParam) == WA_ACTIVE &&
-          IsWindow((HWND)lParam))
+          IsWindow((HWND)lParam)) {
+        // Check for Adobe Reader X sync activate message from their
+        // helper window and ignore. Fixes an annoying focus problem.
+        if ((InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
+          PRUnichar szClass[10];
+          HWND focusWnd = (HWND)lParam;
+          if (IsWindowVisible(focusWnd) &&
+              GetClassNameW(focusWnd, szClass,
+                            sizeof(szClass)/sizeof(PRUnichar)) &&
+              !wcscmp(szClass, L"Edit") &&
+              !IsOurProcessWindow(focusWnd)) {
+            break;
+          }
+        }
         handled = PR_TRUE;
+      }
     break;
     // Wheel events forwarded from the child.
     case WM_MOUSEWHEEL:
@@ -4519,10 +4533,14 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 static PRBool
 DisplaySystemMenu(HWND hWnd, nsSizeMode sizeMode, PRBool isRtl, PRInt32 x, PRInt32 y)
 {
-  GetSystemMenu(hWnd, TRUE); // reset the system menu
   HMENU hMenu = GetSystemMenu(hWnd, FALSE);
   if (hMenu) {
     // update the options
+    EnableMenuItem(hMenu, SC_RESTORE, MF_BYCOMMAND | MF_ENABLED);
+    EnableMenuItem(hMenu, SC_SIZE, MF_BYCOMMAND | MF_ENABLED);
+    EnableMenuItem(hMenu, SC_MOVE, MF_BYCOMMAND | MF_ENABLED);
+    EnableMenuItem(hMenu, SC_MAXIMIZE, MF_BYCOMMAND | MF_ENABLED);
+    EnableMenuItem(hMenu, SC_MINIMIZE, MF_BYCOMMAND | MF_ENABLED);
     switch(sizeMode) {
       case nsSizeMode_Fullscreen:
         EnableMenuItem(hMenu, SC_RESTORE, MF_BYCOMMAND | MF_GRAYED);
@@ -5290,6 +5308,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
                                   PR_FALSE, nsMouseEvent::eRightButton,
                                   MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
+      break;
+
+    case WM_EXITSIZEMOVE:
+      if (!sIsInMouseCapture) {
+        DispatchStandardEvent(NS_DONESIZEMOVE);
+      }
       break;
 
     case WM_APPCOMMAND:
@@ -7758,7 +7782,7 @@ HWND nsWindow::FindOurWindowAtPoint(const POINT& aPoint)
   return info.mOutHWND;
 }
 
-typedef DWORD (*GetProcessImageFileNameProc)(HANDLE, LPWSTR, DWORD);
+typedef DWORD (WINAPI *GetProcessImageFileNameProc)(HANDLE, LPWSTR, DWORD);
 
 // Determine whether the given HWND is the handle for the Elantech helper
 // window.  The helper window cannot be distinguished based on its

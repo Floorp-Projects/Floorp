@@ -652,7 +652,7 @@ LIBS +=  C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
 endif
 
 # HP-UX does not require the extra linking of "-lm"
-ifeq (,$(filter HP-UX WINNT WINCE OpenVMS OS2,$(OS_ARCH)))
+ifeq (,$(filter HP-UX WINNT WINCE OS2,$(OS_ARCH)))
 EXTRA_LIBS	+= -lm
 endif
 

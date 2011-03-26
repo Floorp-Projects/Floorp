@@ -120,11 +120,6 @@ function windowUtils() {
                   .getInterface(CI.nsIDOMWindowUtils);
 }
 
-function windowUtils20() {
-    return windowUtils()
-               .QueryInterface(Components.interfaces.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
-}
-
 function IDForEventTarget(event)
 {
     try {
@@ -258,7 +253,7 @@ function setupDisplayport(contentRootElement) {
     var dph = attrOrDefault("reftest-displayport-h", 0);
     if (dpw !== 0 || dph !== 0) {
         LogInfo("Setting displayport to <x=0, y=0, w="+ dpw +", h="+ dph +">");
-        windowUtils20().setDisplayPortForElement(0, 0, dpw, dph, content.document.documentElement);
+        windowUtils().setDisplayPortForElement(0, 0, dpw, dph, content.document.documentElement);
     }
 
     // XXX support resolution when needed

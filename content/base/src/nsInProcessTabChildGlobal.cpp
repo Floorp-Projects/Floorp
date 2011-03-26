@@ -120,6 +120,10 @@ nsInProcessTabChildGlobal::nsInProcessTabChildGlobal(nsIDocShell* aShell,
 nsInProcessTabChildGlobal::~nsInProcessTabChildGlobal()
 {
   NS_ASSERTION(!mCx, "Couldn't release JSContext?!?");
+
+  if (mListenerManager) {
+    mListenerManager->Disconnect();
+  }
 }
 
 nsresult

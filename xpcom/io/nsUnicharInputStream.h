@@ -51,6 +51,7 @@ class nsSimpleUnicharStreamFactory :
   private nsISimpleUnicharStreamFactory
 {
 public:
+  nsSimpleUnicharStreamFactory() {}
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIFACTORY
   NS_DECL_NSISIMPLEUNICHARSTREAMFACTORY

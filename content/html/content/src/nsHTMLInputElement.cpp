@@ -723,9 +723,8 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
       if (GetValueChanged()) {
         // We don't have our default value anymore.  Set our value on
         // the clone.
-        // XXX GetValue should be const
         nsAutoString value;
-        const_cast<nsHTMLInputElement*>(this)->GetValue(value);
+        GetValueInternal(value);
         // SetValueInternal handles setting the VALUE_CHANGED bit for us
         it->SetValueInternal(value, PR_FALSE, PR_TRUE);
       }
@@ -1040,8 +1039,14 @@ nsHTMLInputElement::SetIndeterminate(PRBool aValue)
   return SetIndeterminateInternal(aValue, PR_TRUE);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsHTMLInputElement::GetValue(nsAString& aValue)
+{
+  return GetValueInternal(aValue);
+}
+
+nsresult
+nsHTMLInputElement::GetValueInternal(nsAString& aValue) const
 {
   nsTextEditorState* state = GetEditorState();
   if (state) {
@@ -1075,6 +1080,15 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
   }
 
   return NS_OK;
+}
+
+bool
+nsHTMLInputElement::IsValueEmpty() const
+{
+  nsAutoString value;
+  GetValueInternal(value);
+
+  return value.IsEmpty();
 }
 
 NS_IMETHODIMP 
@@ -1377,7 +1391,7 @@ nsHTMLInputElement::SetFiles(const nsCOMArray<nsIDOMFile>& aFiles,
 }
 
 const nsCOMArray<nsIDOMFile>&
-nsHTMLInputElement::GetFiles()
+nsHTMLInputElement::GetFiles() const
 {
   return mFiles;
 }
@@ -2590,10 +2604,9 @@ nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
   }
 
   // Only single line text inputs have a text editor state.
-  PRBool isNewTypeSingleLine =
-    IsSingleLineTextControlInternal(PR_FALSE, aNewType);
-  PRBool isCurrentTypeSingleLine =
-    IsSingleLineTextControl(PR_FALSE);
+  bool isNewTypeSingleLine = IsSingleLineTextControl(PR_FALSE, aNewType);
+  bool isCurrentTypeSingleLine = IsSingleLineTextControl(PR_FALSE, mType);
+
   if (isNewTypeSingleLine && !isCurrentTypeSingleLine) {
     FreeData();
     mInputData.mState = new nsTextEditorState(this);
@@ -3366,20 +3379,9 @@ nsHTMLInputElement::IntrinsicState() const
   }
 
   if (PlaceholderApplies() && HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder) &&
-      !nsContentUtils::IsFocusedContent((nsIContent*)(this))) {
-    // TODO: we really need a GetValue(...) const method, see bug 585097
-    nsTextEditorState* edState = GetEditorState();
-    nsAutoString value;
-
-    if (edState) {
-      edState->GetValue(value, PR_TRUE);
-    } else {
-      GetAttr(kNameSpaceID_None, nsGkAtoms::value, value);
-    }
-
-    if (value.IsEmpty()) {
-      state |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
-    }
+      !nsContentUtils::IsFocusedContent((nsIContent*)(this)) &&
+      IsValueEmpty()) {
+    state |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
   }
 
   if (mForm && !mForm->GetValidity() && IsSubmitControl()) {
@@ -3815,7 +3817,7 @@ nsHTMLInputElement::IsTooLong()
 }
 
 PRBool
-nsHTMLInputElement::IsValueMissing()
+nsHTMLInputElement::IsValueMissing() const
 {
   if (!HasAttr(kNameSpaceID_None, nsGkAtoms::required) ||
       !DoesRequiredApply()) {
@@ -3827,10 +3829,7 @@ nsHTMLInputElement::IsValueMissing()
       return PR_FALSE;
     }
 
-    nsAutoString value;
-    NS_ENSURE_SUCCESS(GetValue(value), PR_FALSE);
-
-    return value.IsEmpty();
+    return IsValueEmpty();
   }
 
   switch (mType)
@@ -3848,14 +3847,14 @@ nsHTMLInputElement::IsValueMissing()
 }
 
 PRBool
-nsHTMLInputElement::HasTypeMismatch()
+nsHTMLInputElement::HasTypeMismatch() const
 {
   if (mType != NS_FORM_INPUT_EMAIL && mType != NS_FORM_INPUT_URL) {
     return PR_FALSE;
   }
 
   nsAutoString value;
-  NS_ENSURE_SUCCESS(GetValue(value), PR_FALSE);
+  NS_ENSURE_SUCCESS(GetValueInternal(value), PR_FALSE);
 
   if (value.IsEmpty()) {
     return PR_FALSE;
@@ -3887,7 +3886,7 @@ nsHTMLInputElement::HasTypeMismatch()
 }
 
 PRBool
-nsHTMLInputElement::HasPatternMismatch()
+nsHTMLInputElement::HasPatternMismatch() const
 {
   nsAutoString pattern;
   if (!DoesPatternApply() ||
@@ -3896,7 +3895,7 @@ nsHTMLInputElement::HasPatternMismatch()
   }
 
   nsAutoString value;
-  NS_ENSURE_SUCCESS(GetValue(value), PR_FALSE);
+  NS_ENSURE_SUCCESS(GetValueInternal(value), PR_FALSE);
 
   if (value.IsEmpty()) {
     return PR_FALSE;

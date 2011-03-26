@@ -109,6 +109,7 @@
 #define PROGRESS_STR "progress"
 #define UPLOADPROGRESS_STR "uploadprogress"
 #define READYSTATE_STR "readystatechange"
+#define LOADEND_STR "loadend"
 
 // CIDs
 
@@ -125,19 +126,16 @@
 #define XML_HTTP_REQUEST_ABORTED        (1 << 7)  // Internal
 #define XML_HTTP_REQUEST_ASYNC          (1 << 8)  // Internal
 #define XML_HTTP_REQUEST_PARSEBODY      (1 << 9)  // Internal
-#define XML_HTTP_REQUEST_XSITEENABLED   (1 << 10) // Internal, Is any cross-site request allowed?
-                                                  //           Even if this is false the
-                                                  //           access-control spec is supported
-#define XML_HTTP_REQUEST_SYNCLOOPING    (1 << 11) // Internal
-#define XML_HTTP_REQUEST_MULTIPART      (1 << 12) // Internal
-#define XML_HTTP_REQUEST_GOT_FINAL_STOP (1 << 13) // Internal
-#define XML_HTTP_REQUEST_BACKGROUND     (1 << 14) // Internal
+#define XML_HTTP_REQUEST_SYNCLOOPING    (1 << 10) // Internal
+#define XML_HTTP_REQUEST_MULTIPART      (1 << 11) // Internal
+#define XML_HTTP_REQUEST_GOT_FINAL_STOP (1 << 12) // Internal
+#define XML_HTTP_REQUEST_BACKGROUND     (1 << 13) // Internal
 // This is set when we've got the headers for a multipart XMLHttpRequest,
 // but haven't yet started to process the first part.
-#define XML_HTTP_REQUEST_MPART_HEADERS  (1 << 15) // Internal
-#define XML_HTTP_REQUEST_USE_XSITE_AC   (1 << 16) // Internal
-#define XML_HTTP_REQUEST_NEED_AC_PREFLIGHT (1 << 17) // Internal
-#define XML_HTTP_REQUEST_AC_WITH_CREDENTIALS (1 << 18) // Internal
+#define XML_HTTP_REQUEST_MPART_HEADERS  (1 << 14) // Internal
+#define XML_HTTP_REQUEST_USE_XSITE_AC   (1 << 15) // Internal
+#define XML_HTTP_REQUEST_NEED_AC_PREFLIGHT (1 << 16) // Internal
+#define XML_HTTP_REQUEST_AC_WITH_CREDENTIALS (1 << 17) // Internal
 
 #define XML_HTTP_REQUEST_LOADSTATES         \
   (XML_HTTP_REQUEST_UNINITIALIZED |         \
@@ -518,6 +516,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXHREventTarget,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnAbortListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadStartListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnProgressListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadendListener)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXHREventTarget,
@@ -527,6 +526,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXHREventTarget,
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnAbortListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadStartListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnProgressListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadendListener)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXHREventTarget)
@@ -599,6 +599,19 @@ nsXHREventTarget::SetOnprogress(nsIDOMEventListener* aOnprogress)
 {
   return RemoveAddEventListener(NS_LITERAL_STRING(PROGRESS_STR),
                                 mOnProgressListener, aOnprogress);
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::GetOnloadend(nsIDOMEventListener** aOnLoadend)
+{
+  return GetInnerEventListener(mOnLoadendListener, aOnLoadend);
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::SetOnloadend(nsIDOMEventListener* aOnLoadend)
+{
+  return RemoveAddEventListener(NS_LITERAL_STRING(LOADEND_STR),
+                                mOnLoadendListener, aOnLoadend);
 }
 
 /////////////////////////////////////////////
@@ -1561,6 +1574,10 @@ nsXMLHttpRequest::DispatchProgressEvent(nsPIDOMEventTarget* aTarget,
     return;
   }
 
+  PRBool dispatchLoadend = aType.EqualsLiteral(LOAD_STR) ||
+                           aType.EqualsLiteral(ERROR_STR) ||
+                           aType.EqualsLiteral(ABORT_STR);
+  
   nsCOMPtr<nsIDOMEvent> event;
   nsresult rv = nsEventDispatcher::CreateEvent(nsnull, nsnull,
                                                NS_LITERAL_STRING("ProgressEvent"),
@@ -1592,8 +1609,14 @@ nsXMLHttpRequest::DispatchProgressEvent(nsPIDOMEventTarget* aTarget,
     event = xhrprogressEvent;
   }
   aTarget->DispatchDOMEvent(nsnull, event, nsnull, nsnull);
+  
+  if (dispatchLoadend) {
+    DispatchProgressEvent(aTarget, NS_LITERAL_STRING(LOADEND_STR),
+                          aUseLSEventWrapper, aLengthComputable,
+                          aLoaded, aTotal, aPosition, aTotalSize);
+  }
 }
-
+                                          
 already_AddRefed<nsIHttpChannel>
 nsXMLHttpRequest::GetCurrentHttpChannel()
 {
@@ -1613,14 +1636,12 @@ nsXMLHttpRequest::GetCurrentHttpChannel()
 nsresult
 nsXMLHttpRequest::CheckChannelForCrossSiteRequest(nsIChannel* aChannel)
 {
-  // First check if cross-site requests are enabled
-  if ((mState & XML_HTTP_REQUEST_XSITEENABLED)) {
+  // First check if cross-site requests are enabled...
+  if (IsSystemXHR()) {
     return NS_OK;
   }
 
-  // or if this is a same-origin request.
-  NS_ASSERTION(!nsContentUtils::IsSystemPrincipal(mPrincipal),
-               "Shouldn't get here!");
+  // ...or if this is a same-origin request.
   if (nsContentUtils::CheckMayLoad(mPrincipal, aChannel)) {
     return NS_OK;
   }
@@ -1771,12 +1792,6 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
                      channelPolicy);
   if (NS_FAILED(rv)) return rv;
 
-  // Check if we're doing a cross-origin request.
-  if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
-    // Chrome callers are always allowed to read from different origins.
-    mState |= XML_HTTP_REQUEST_XSITEENABLED;
-  }
-
   mState &= ~(XML_HTTP_REQUEST_USE_XSITE_AC |
               XML_HTTP_REQUEST_NEED_AC_PREFLIGHT);
 
@@ -1797,17 +1812,6 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
                        PRBool async, const nsAString& user,
                        const nsAString& password, PRUint8 optional_argc)
 {
-  if (nsContentUtils::GetCurrentJSContext()) {
-    // We're (likely) called from JS
-
-    // Find out if UniversalBrowserRead privileges are enabled
-    if (nsContentUtils::IsCallerTrustedForRead()) {
-      mState |= XML_HTTP_REQUEST_XSITEENABLED;
-    } else {
-      mState &= ~XML_HTTP_REQUEST_XSITEENABLED;
-    }
-  }
-
   if (!optional_argc) {
     // No optional arguments were passed in. Default async to true.
     async = PR_TRUE;
@@ -1928,8 +1932,8 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
   NS_ENSURE_TRUE(channel, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIPrincipal> documentPrincipal = mPrincipal;
-  if (nsContentUtils::IsSystemPrincipal(documentPrincipal)) {
+  nsCOMPtr<nsIPrincipal> documentPrincipal;
+  if (IsSystemXHR()) {
     // Don't give this document the system principal.  We need to keep track of
     // mPrincipal being system because we use it for various security checks
     // that should be passing, but the document data shouldn't get a system
@@ -1937,6 +1941,8 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     nsresult rv;
     documentPrincipal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    documentPrincipal = mPrincipal;
   }
 
   channel->SetOwner(documentPrincipal);
@@ -2014,7 +2020,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     nsCOMPtr<nsIDocument> responseDoc = do_QueryInterface(mResponseXML);
     responseDoc->SetPrincipal(documentPrincipal);
 
-    if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
+    if (IsSystemXHR()) {
       responseDoc->ForceEnableXULXBL();
     }
 
@@ -2394,7 +2400,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   if (httpChannel) {
     httpChannel->GetRequestMethod(method); // If GET, method name will be uppercase
 
-    if (!nsContentUtils::IsSystemPrincipal(mPrincipal)) {
+    if (!IsSystemXHR()) {
       // Get the referrer for the request.
       //
       // If it weren't for history.push/replaceState, we could just use the
@@ -2630,7 +2636,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     }
   }
 
-  if (!(mState & XML_HTTP_REQUEST_XSITEENABLED)) {
+  if (!IsSystemXHR()) {
     // Always create a nsCrossSiteListenerProxy here even if it's
     // a same-origin request right now, since it could be redirected.
     listener = new nsCrossSiteListenerProxy(listener, mPrincipal, mChannel,
@@ -2827,7 +2833,7 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
     }
 
     // Check for dangerous cross-site headers
-    PRBool safeHeader = !!(mState & XML_HTTP_REQUEST_XSITEENABLED);
+    bool safeHeader = IsSystemXHR();
     if (!safeHeader) {
       // Content-Type isn't always safe, but we'll deal with it in Send()
       const char *kCrossOriginSafeHeaders[] = {
@@ -2836,7 +2842,7 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
       };
       for (i = 0; i < NS_ARRAY_LENGTH(kCrossOriginSafeHeaders); ++i) {
         if (header.LowerCaseEqualsASCII(kCrossOriginSafeHeaders[i])) {
-          safeHeader = PR_TRUE;
+          safeHeader = true;
           break;
         }
       }

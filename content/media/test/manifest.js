@@ -74,6 +74,8 @@ var gPlayTests = [
   { name:"bug504613.ogv", type:"video/ogg", duration:Number.NaN },
   // Multiple audio streams.
   { name:"bug516323.ogv", type:"video/ogg", duration:4.208 },
+  // oggz-chop with non-keyframe as first frame
+  { name:"bug556821.ogv", type:"video/ogg", duration:2.551 },
 
   // Encoded with vorbis beta1, includes unusually sized codebooks
   { name:"beta-phrasebook.ogg", type:"audio/ogg", duration:4.01 },

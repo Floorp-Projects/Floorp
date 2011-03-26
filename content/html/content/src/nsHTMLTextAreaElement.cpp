@@ -260,11 +260,6 @@ protected:
                             PRBool aUserInput);
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
 
-  virtual PRBool AcceptAutofocus() const
-  {
-    return PR_TRUE;
-  }
-
   /**
    * Common method to call from the various mutation observer methods.
    * aContent is a content node that's either the one that changed or its
@@ -456,13 +451,13 @@ nsHTMLTextAreaElement::IsHTMLFocusable(PRBool aWithMouse,
 
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, AccessKey, accesskey)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Autofocus, autofocus)
-NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLTextAreaElement, Cols, cols, 20)
+NS_IMPL_UINT_ATTR_NON_ZERO_DEFAULT_VALUE(nsHTMLTextAreaElement, Cols, cols, DEFAULT_COLS)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Disabled, disabled)
 NS_IMPL_NON_NEGATIVE_INT_ATTR(nsHTMLTextAreaElement, MaxLength, maxlength)
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, Name, name)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, ReadOnly, readonly)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Required, required)
-NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLTextAreaElement, Rows, rows, 2)
+NS_IMPL_UINT_ATTR_NON_ZERO_DEFAULT_VALUE(nsHTMLTextAreaElement, Rows, rows, DEFAULT_ROWS_TEXTAREA)
 NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, Wrap, wrap)
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, Placeholder, placeholder)
@@ -641,12 +636,9 @@ nsHTMLTextAreaElement::ParseAttribute(PRInt32 aNamespaceID,
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::maxlength) {
       return aResult.ParseNonNegativeIntValue(aValue);
-    }
-    if (aAttribute == nsGkAtoms::cols) {
-      return aResult.ParseIntWithBounds(aValue, 0);
-    }
-    if (aAttribute == nsGkAtoms::rows) {
-      return aResult.ParseIntWithBounds(aValue, 0);
+    } else if (aAttribute == nsGkAtoms::cols ||
+               aAttribute == nsGkAtoms::rows) {
+      return aResult.ParsePositiveIntValue(aValue);
     }
   }
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
