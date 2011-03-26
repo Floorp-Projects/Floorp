@@ -69,6 +69,8 @@ public:
    */
   double GetSplineValue(double aX) const;
 
+  void GetSplineDerivativeValues(double aX, double& aDX, double& aDY) const;
+
 private:
   void
   CalcSampleValues();
