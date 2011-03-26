@@ -822,6 +822,8 @@ protected:
 
   PRBool GetIsTabModalPromptAllowed();
 
+  inline PRInt32 DOMMinTimeoutValue() const;
+
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
   // could own objects that are implemented in JavaScript, then those

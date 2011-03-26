@@ -272,9 +272,14 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 
 // The default shortest interval/timeout we permit
 #define DEFAULT_MIN_TIMEOUT_VALUE 10 // 10ms
+#define DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE 1000 // 1000ms
 static PRInt32 gMinTimeoutValue;
-static inline PRInt32 DOMMinTimeoutValue() {
-  return NS_MAX(gMinTimeoutValue, 0);
+static PRInt32 gMinBackgroundTimeoutValue;
+inline PRInt32
+nsGlobalWindow::DOMMinTimeoutValue() const {
+  PRBool isBackground = !mOuterWindow || mOuterWindow->IsBackground();
+  return
+    NS_MAX(isBackground ? gMinBackgroundTimeoutValue : gMinTimeoutValue, 0);
 }
 
 // The number of nested timeouts before we start clamping. HTML5 says 1, WebKit
@@ -746,7 +751,8 @@ nsPIDOMWindow::nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
   mIsHandlingResizeEvent(PR_FALSE), mIsInnerWindow(aOuterWindow != nsnull),
   mMayHavePaintEventListener(PR_FALSE), mMayHaveTouchEventListener(PR_FALSE),
   mMayHaveAudioAvailableEventListener(PR_FALSE), mIsModalContentWindow(PR_FALSE),
-  mIsActive(PR_FALSE), mInnerWindow(nsnull), mOuterWindow(aOuterWindow),
+  mIsActive(PR_FALSE), mIsBackground(PR_FALSE),
+  mInnerWindow(nsnull), mOuterWindow(aOuterWindow),
   // Make sure no actual window ends up with mWindowID == 0
   mWindowID(++gNextWindowID), mHasNotifiedGlobalCreated(PR_FALSE)
  {}
@@ -895,6 +901,9 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     nsContentUtils::AddIntPrefVarCache("dom.min_timeout_value",
                                        &gMinTimeoutValue,
                                        DEFAULT_MIN_TIMEOUT_VALUE);
+    nsContentUtils::AddIntPrefVarCache("dom.min_background_timeout_value",
+                                       &gMinBackgroundTimeoutValue,
+                                       DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
   }
 
   if (gDumpFile == nsnull) {
@@ -2458,6 +2467,10 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
       }
       else NS_NewWindowRoot(this, getter_AddRefs(mChromeEventHandler));
     }
+
+    PRBool docShellActive;
+    mDocShell->GetIsActive(&docShellActive);
+    mIsBackground = !docShellActive;
   }
 }
 
@@ -8731,18 +8744,14 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
   }
 
   PRUint32 nestingLevel = sNestingLevel + 1;
-  if (interval < DOMMinTimeoutValue()) {
-    if (aIsInterval || nestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
-      // Don't allow timeouts less than DOMMinTimeoutValue() from
-      // now...
-
-      interval = DOMMinTimeoutValue();;
-    }
-    else if (interval < 0) {
-      // Clamp negative intervals to 0.
-
-      interval = 0;
-    }
+  if (aIsInterval || nestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
+    // Don't allow timeouts less than DOMMinTimeoutValue() from
+    // now...
+    interval = NS_MAX(interval, DOMMinTimeoutValue());
+  }
+  else if (interval < 0) {
+    // Clamp negative intervals to 0.
+    interval = 0;
   }
 
   NS_ASSERTION(interval >= 0, "DOMMinTimeoutValue() lies");
