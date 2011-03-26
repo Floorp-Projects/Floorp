@@ -434,23 +434,6 @@ ifeq ($(SOLARIS_SUNPRO_CXX),1)
 GARBAGE_DIRS += SunWS_cache
 endif
 
-ifeq ($(OS_ARCH),OpenVMS)
-GARBAGE			+= $(wildcard *.*_defines)
-ifdef SHARED_LIBRARY
-VMS_SYMVEC_FILE		= $(SHARED_LIBRARY:$(DLL_SUFFIX)=_symvec.opt)
-ifdef MOZ_DEBUG
-VMS_SYMVEC_FILE_MODULE	= $(topsrcdir)/build/unix/vms/$(notdir $(SHARED_LIBRARY:$(DLL_SUFFIX)=_dbg_symvec.opt))
-else
-VMS_SYMVEC_FILE_MODULE	= $(topsrcdir)/build/unix/vms/$(notdir $(SHARED_LIBRARY:$(DLL_SUFFIX)=_symvec.opt))
-endif
-VMS_SYMVEC_FILE_COMP	= $(topsrcdir)/build/unix/vms/component_symvec.opt
-GARBAGE			+= $(VMS_SYMVEC_FILE)
-ifdef IS_COMPONENT
-DSO_LDOPTS := $(filter-out -auto_symvec,$(DSO_LDOPTS)) $(VMS_SYMVEC_FILE)
-endif
-endif
-endif
-
 XPIDL_GEN_DIR		= _xpidlgen
 
 ifdef MOZ_UPDATE_XTERM
@@ -1180,20 +1163,6 @@ $(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(RESFILE) $(SHARED_LIBRARY_LIBS
 ifndef INCREMENTAL_LINKER
 	rm -f $@
 endif
-ifeq ($(OS_ARCH),OpenVMS)
-	@if test ! -f $(VMS_SYMVEC_FILE); then \
-	  if test -f $(VMS_SYMVEC_FILE_MODULE); then \
-	    echo Creating specific component options file $(VMS_SYMVEC_FILE); \
-	    cp $(VMS_SYMVEC_FILE_MODULE) $(VMS_SYMVEC_FILE); \
-	  fi; \
-	fi
-ifdef IS_COMPONENT
-	@if test ! -f $(VMS_SYMVEC_FILE); then \
-	  echo Creating generic component options file $(VMS_SYMVEC_FILE); \
-	  cp $(VMS_SYMVEC_FILE_COMP) $(VMS_SYMVEC_FILE); \
-	fi
-endif
-endif # OpenVMS
 ifdef DTRACE_LIB_DEPENDENT
 ifndef XP_MACOSX
 	dtrace -G -C -s $(MOZILLA_DTRACE_SRC) -o  $(DTRACE_PROBE_OBJ) $(shell $(EXPAND_LIBS) $(MOZILLA_PROBE_LIBS))
