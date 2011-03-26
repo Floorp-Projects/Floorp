@@ -3889,7 +3889,7 @@ nsDocument::SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject)
 }
 
 nsPIDOMWindow *
-nsDocument::GetWindowInternal()
+nsDocument::GetWindowInternal() const
 {
   NS_ASSERTION(!mWindow, "This should not be called when mWindow is not null!");
 
