@@ -45,7 +45,9 @@
 class nsSVGDocument : public nsXMLDocument,
                       public nsIDOMSVGDocument
 {
- public:
+public:
+  using nsDocument::GetElementById;
+  using nsDocument::SetDocumentURI;
   nsSVGDocument();
   virtual ~nsSVGDocument();
 

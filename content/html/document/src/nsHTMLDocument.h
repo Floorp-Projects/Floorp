@@ -74,6 +74,8 @@ class nsHTMLDocument : public nsDocument,
                        public nsIDOMNSHTMLDocument
 {
 public:
+  using nsDocument::SetDocumentURI;
+
   nsHTMLDocument();
   virtual nsresult Init();
 
@@ -122,13 +124,6 @@ public:
  
   // nsIDOMDocument interface
   NS_DECL_NSIDOMDOCUMENT
-
-  // nsIDOM3Document interface
-  NS_IMETHOD GetXmlEncoding(nsAString& aXmlVersion);
-  NS_IMETHOD GetXmlStandalone(PRBool *aXmlStandalone);
-  NS_IMETHOD SetXmlStandalone(PRBool aXmlStandalone);
-  NS_IMETHOD GetXmlVersion(nsAString& aXmlVersion);
-  NS_IMETHOD SetXmlVersion(const nsAString& aXmlVersion);
 
   // nsIDOMNode interface
   NS_FORWARD_NSIDOMNODE(nsDocument::)
