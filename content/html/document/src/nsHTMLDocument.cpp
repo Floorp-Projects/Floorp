@@ -1165,7 +1165,6 @@ nsHTMLDocument::GetImageMap(const nsAString& aMapName)
     mImageMaps = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::map, nsGkAtoms::map);
   }
 
-  nsIDOMHTMLMapElement* firstMatch = nsnull;
   nsAutoString name;
   PRUint32 i, n = mImageMaps->Length(PR_TRUE);
   for (i = 0; i < n; ++i) {
@@ -1187,27 +1186,11 @@ nsHTMLDocument::GetImageMap(const nsAString& aMapName)
     }
 
     if (match) {
-      // Quirk: if the first matching map is empty, remember it, but keep
-      // searching for a non-empty one, only use it if none was found (bug 264624).
-      if (mCompatMode == eCompatibility_NavQuirks) {
-        nsCOMPtr<nsIDOMHTMLCollection> mapAreas;
-        rv = map->GetAreas(getter_AddRefs(mapAreas));
-        if (NS_SUCCEEDED(rv) && mapAreas) {
-          PRUint32 length = 0;
-          mapAreas->GetLength(&length);
-          if (length == 0) {
-            if (!firstMatch) {
-              firstMatch = map;
-            }
-            continue;
-          }
-        }
-      }
       return map;
     }
   }
 
-  return firstMatch;
+  return NULL;
 }
 
 void
