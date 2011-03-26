@@ -263,6 +263,10 @@ for each (var tag in allTags) {
      "Unexpected classname for " + tagName(tag));
   is(node instanceof window[classInfoString], true,
      tagName(tag) + " not an instance of " + classInfos[tag]);
+  is(node instanceof HTMLUnknownElement, false,
+     tagName(tag) + " is an instance of HTMLUnknownElement");
+  is(node instanceof Components.interfaces.nsIDOMHTMLUnknownElement, false,
+     tagName(tag) + " is an instance of nsIDOMHTMLUnknownElement");
 
   // Check that each node QIs to all the things we expect it to QI to
   for each (var iface in interfaces[tag].concat(interfacesNonClassinfo[tag])) {

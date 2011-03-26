@@ -226,10 +226,6 @@ ifdef MOZ_OS2_HIGH_MEMORY
 DEFAULT_GMAKE_FLAGS += MOZ_OS2_HIGH_MEMORY=1
 endif
 endif # OS2
-# OS_CFLAGS needs to be passed on down.
-ifeq ($(OS_ARCH),OpenVMS)
-DEFAULT_GMAKE_FLAGS += XCFLAGS="$(OS_CFLAGS)"
-endif
 ifeq ($(OS_ARCH),Darwin)
 # Make nsinstall use absolute symlinks by default when building NSS
 # for Mozilla on Mac OS X. (Bugzilla bug 193164)
