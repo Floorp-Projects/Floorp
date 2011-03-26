@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<script>
+  window.onerror = function(msg, url, line) {
+    var myMsg = JSON.stringify({msg: msg, url: url, line: line, error: true});
+    opener.postMessage(myMsg, "*");
+  }
+  
+  var report = false;
+  
+  function f() {
+    if (report) {
+      opener.postMessage("eventHappened", "*");
+    }
+    window.mozRequestAnimationFrame();
+  }
+  document.addEventListener("MozBeforePaint", f, false);
+  f();
+
+  function g() {
+    if (report) {
+      opener.postMessage("callbackHappened", "*");
+    }
+    window.mozRequestAnimationFrame(g);
+  }
+  g();
+
+  window.onload = function() {
+    opener.postMessage("loaded", "*");
+  }
+
+  addEventListener("pagehide", function f(e) {
+    if (!e.persisted && !report) {
+      opener.postMessage("notcached", "*");
+    }
+  }, false);
+
+  addEventListener("pageshow", function f(e) {
+    if (e.persisted) {
+      opener.postMessage("revived", "*");
+    }
+  }, false);
+
+  window.onmessage = function (e) {
+    if (e.data == "report") {
+      report = true;
+    }
+  };
+
+</script>
