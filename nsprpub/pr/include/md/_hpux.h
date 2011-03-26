@@ -110,6 +110,30 @@ extern PRInt32 _PR_ia64_AtomicSet(PRInt32 *val, PRInt32 newval);
 #define _PR_HAVE_INET_NTOP
 #else
 #define _PR_INET6_PROBE
+
+/* for HP-UX 11.11 without IPv6 */
+#ifndef AF_INET6
+#define AF_INET6       22
+#define AI_CANONNAME   2
+#define AI_NUMERICHOST 4
+#define AI_NUMERICSERV 8
+#define AI_V4MAPPED    0x00000010
+#define AI_ADDRCONFIG  0x00000040
+#define AI_ALL         0x00000020
+#define AI_DEFAULT     (AI_V4MAPPED|AI_ADDRCONFIG)
+#define NI_NUMERICHOST 2
+struct addrinfo {
+    int        ai_flags;    /* AI_PASSIVE, AI_CANONNAME */
+    int        ai_family;   /* PF_xxx */
+    int        ai_socktype; /* SOCK_xxx */
+    int        ai_protocol; /* IPPROTO_xxx for IPv4 and IPv6 */
+    socklen_t  ai_addrlen;  /* length of ai_addr */
+    char            *ai_canonname;    /* canonical name for host */
+    struct sockaddr *ai_addr;     /* binary address */
+    struct addrinfo *ai_next;     /* next structure in linked list */
+};
+#endif    /* for HP-UX 11.11 without IPv6 */
+
 #define _PR_HAVE_MD_SOCKADDR_IN6
 /* isomorphic to struct in6_addr on HP-UX B.11.23 */
 struct _md_in6_addr {

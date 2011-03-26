@@ -284,7 +284,7 @@ PR_IMPLEMENT(PRUint64) PR_GetPhysicalMemorySize(void)
     long pageCount = sysconf(_SC_PHYS_PAGES);
     bytes = (PRUint64) pageSize * pageCount;
 
-#elif defined(NETBSD)
+#elif defined(NETBSD) || defined(OPENBSD)
 
     int mib[2];
     int rc;
