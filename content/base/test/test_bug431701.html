@@ -52,8 +52,7 @@ function createDoc() {
 function xhrDoc(idx) {
   return function() {
     // Defy same-origin restrictions!
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var xhr = new XMLHttpRequest();
+    var xhr = SpecialPowers.createSystemXHR();
     xhr.open("GET", docSources[idx], false);
     xhr.send();
     return xhr.responseXML;

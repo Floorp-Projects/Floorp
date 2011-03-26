@@ -249,7 +249,7 @@ select[size="1"] {
   -moz-appearance: menulist;
 }
 
-select > input[type="button"] {
+select > button {
   width: 12px;
   height: 12px;
   white-space: nowrap;
@@ -271,7 +271,7 @@ select > input[type="button"] {
   vertical-align: top !important;
 }
 
-select > input[type="button"]:active {
+select > button:active {
   background-image: url("arrowd.gif") !important;
 }
 
@@ -588,8 +588,8 @@ input[type="reset"]:disabled:active,
 input[type="reset"]:disabled,
 input[type="button"]:disabled:active,
 input[type="button"]:disabled,
-select:disabled > input[type="button"],
-select:disabled > input[type="button"]:active,
+select:disabled > button,
+select:disabled > button,
 input[type="submit"]:disabled:active,
 input[type="submit"]:disabled {
   /* The sum of border-top, border-bottom, padding-top, padding-bottom
