@@ -315,7 +315,7 @@ Recompiler::expandInlineFrames(JSContext *cx, JSStackFrame *fp, mjit::CallSite *
     if (next) {
         next->resetInlinePrev(innerfp, innerpc);
         void **addr = next->addressOfNativeReturnAddress();
-        if (*addr != NULL && *addr != (void *) JaegerTrampolineReturn) {
+        if (*addr != NULL && *addr != JS_FUNC_TO_DATA_PTR(void *, JaegerTrampolineReturn)) {
             PatchableAddress patch;
             patch.location = addr;
             patch.callSite.initialize(0, uint32(-1), inlined->pcOffset, CallSite::NCODE_RETURN_ID);
@@ -461,7 +461,7 @@ Recompiler::recompile()
 
                 if (!*addr) {
                     // next is an interpreted frame.
-                } else if (*addr == (void *) JaegerTrampolineReturn) {
+                } else if (*addr == JS_FUNC_TO_DATA_PTR(void *, JaegerTrampolineReturn)) {
                     // next entered from the interpreter.
                 } else if (fp->isConstructing()) {
                     JS_ASSERT(script->jitCtor && script->jitCtor->isValidCode(*addr));
