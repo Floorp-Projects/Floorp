@@ -475,12 +475,11 @@ protected:
    *                        should be updated such as when the animation is in
    *                        the ACTIVE state. May be nsnull.
    * @param[out] aResult    The next interval. Will be unchanged if no suitable
-   *                        interval was found (in which case NS_ERROR_FAILURE
-   *                        will be returned).
-   * @return  NS_OK if a suitable interval was found, NS_ERROR_FAILURE
-   * otherwise.
+   *                        interval was found (in which case PR_FALSE will be
+   *                        returned).
+   * @return  PR_TRUE if a suitable interval was found, PR_FALSE otherwise.
    */
-  nsresult          GetNextInterval(const nsSMILInterval* aPrevInterval,
+  PRBool            GetNextInterval(const nsSMILInterval* aPrevInterval,
                                     const nsSMILInstanceTime* aFixedBeginTime,
                                     nsSMILInterval& aResult) const;
   nsSMILInstanceTime* GetNextGreater(const InstanceTimeList& aList,
