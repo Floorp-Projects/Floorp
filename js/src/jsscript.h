@@ -619,6 +619,7 @@ struct JSScript {
 
     size_t callCount() const  { return callCount_; }
     size_t incCallCount() { return ++callCount_; }
+    size_t *addressOfCallCount() { return &callCount_; }
 
     JITScriptStatus getJITStatus(bool constructing) {
         void *addr = constructing ? jitArityCheckCtor : jitArityCheckNormal;

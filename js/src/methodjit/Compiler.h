@@ -439,6 +439,7 @@ class Compiler : public BaseCompiler
     bool debugMode_;
     bool addTraceHints;
     bool recompiling;
+    bool inlining;
     bool oomInVector;       // True if we have OOM'd appending to a vector. 
     enum { NoApplyTricks, LazyArgsObj } applyTricks;
 
@@ -552,6 +553,7 @@ class Compiler : public BaseCompiler
     void emitInlineReturnValue(FrameEntry *fe);
     void dispatchCall(VoidPtrStubUInt32 stub, uint32 argc);
     void interruptCheckHelper();
+    void recompileCheckHelper();
     void emitUncachedCall(uint32 argc, bool callingNew);
     void checkCallApplySpeculation(uint32 callImmArgc, uint32 speculatedArgc,
                                    FrameEntry *origCallee, FrameEntry *origThis,

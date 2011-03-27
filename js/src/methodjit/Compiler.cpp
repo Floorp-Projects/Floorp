@@ -83,6 +83,12 @@ static const char *OpcodeNames[] = {
 };
 #endif
 
+/*
+ * Number of times a script must be called or had a backedge before we try to
+ * inline its calls.
+ */
+static const size_t CALLS_BACKEDGES_BEFORE_INLINING = 10000;
+
 mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp,
                          const Vector<PatchableFrame> *patchFrames, bool recompiling)
   : BaseCompiler(cx),
@@ -122,12 +128,22 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp,
     addTraceHints(false),
 #endif
     recompiling(recompiling),
+    inlining(false),
     oomInVector(false),
     applyTricks(NoApplyTricks)
 {
     /* :FIXME: bug 637856 disabling traceJit if inference is enabled */
     if (cx->typeInferenceEnabled())
         addTraceHints = false;
+
+    /*
+     * Note: we use callCount_ to count both calls and backedges in scripts
+     * after they have been compiled and we are checking to recompile a version
+     * with inline calls. :FIXME: should remove compartment->incBackEdgeCount
+     * and do the same when deciding to initially compile.
+     */
+    if (outerScript->callCount() >= CALLS_BACKEDGES_BEFORE_INLINING)
+        inlining = true;
 }
 
 CompileStatus
@@ -269,6 +285,11 @@ mjit::Compiler::performCompilation(JITScript **jitp)
 
     JaegerSpew(JSpew_Scripts, "compiling script (file \"%s\") (line \"%d\") (length \"%d\")\n",
                outerScript->filename, outerScript->lineno, outerScript->length);
+
+    if (inlining) {
+        JaegerSpew(JSpew_Inlining, "inlining calls in script (file \"%s\") (line \"%d\")\n",
+                   outerScript->filename, outerScript->lineno);
+    }
 
 #ifdef JS_METHODJIT_SPEW
     Profiler prof;
@@ -586,6 +607,8 @@ mjit::Compiler::generatePrologue()
             }
         }
     }
+
+    recompileCheckHelper();
 
     return Compile_Okay;
 }
@@ -1837,7 +1860,7 @@ mjit::Compiler::generateMethod()
                 else if (status != Compile_InlineAbort)
                     return status;
             }
-            if (!done) {
+            if (!done && inlining) {
                 CompileStatus status = inlineScriptedFunction(GET_ARGC(PC), false);
                 if (status == Compile_Okay)
                     done = true;
@@ -2471,8 +2494,10 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_TRACE)
           BEGIN_CASE(JSOP_NOTRACE)
           {
-            if (a->analysis.jumpTarget(PC))
+            if (a->analysis.jumpTarget(PC)) {
                 interruptCheckHelper();
+                recompileCheckHelper();
+            }
           }
           END_CASE(JSOP_TRACE)
 
@@ -2905,6 +2930,30 @@ mjit::Compiler::interruptCheckHelper()
     frame.sync(stubcc.masm, Uses(0));
     stubcc.masm.move(ImmPtr(PC), Registers::ArgReg1);
     OOL_STUBCALL(stubs::Interrupt);
+    stubcc.rejoin(Changes(0));
+}
+
+void
+mjit::Compiler::recompileCheckHelper()
+{
+    if (!a->analysis.hasFunctionCalls() || !cx->typeInferenceEnabled())
+        return;
+
+    if (inlining) {
+        OOL_STUBCALL(stubs::RecompileForInline);
+        stubcc.rejoin(Changes(0));
+        return;
+    }
+
+    JS_ASSERT(script->callCount() < CALLS_BACKEDGES_BEFORE_INLINING);
+
+    size_t *addr = script->addressOfCallCount();
+    masm.add32(Imm32(1), AbsoluteAddress(addr));
+    Jump jump = masm.branch32(Assembler::GreaterThanOrEqual, AbsoluteAddress(addr),
+                              Imm32(CALLS_BACKEDGES_BEFORE_INLINING));
+    stubcc.linkExit(jump, Uses(0));
+
+    OOL_STUBCALL(stubs::RecompileForInline);
     stubcc.rejoin(Changes(0));
 }
 
@@ -3433,6 +3482,8 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
 CompileStatus
 mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
 {
+    JS_ASSERT(inlining);
+
     if (!cx->typeInferenceEnabled())
         return Compile_InlineAbort;
 
@@ -3520,6 +3571,9 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
         return Compile_InlineAbort;
     }
 
+    JaegerSpew(JSpew_Inlining, "inlining call to script (file \"%s\") (line \"%d\")\n",
+               script->filename, script->lineno);
+
     a->needReturnValue = needReturnValue;
     a->syncReturnValue = syncReturnValue;
     a->returnValueDouble = returnType == JSVAL_TYPE_DOUBLE;
@@ -3565,6 +3619,9 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
     stubcc.masm.storeValueFromComponents(JSReturnReg_Type, JSReturnReg_Data,
                                          frame.addressOf(frame.peek(-1)));
     stubcc.rejoin(Changes(1));
+
+    JaegerSpew(JSpew_Inlining, "finished inlining call to script (file \"%s\") (line \"%d\")\n",
+               script->filename, script->lineno);
 
     return Compile_Okay;
 }

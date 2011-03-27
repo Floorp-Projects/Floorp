@@ -58,6 +58,7 @@ namespace js {
     _(PICs)                 \
     _(SlowCalls)            \
     _(Regalloc)             \
+    _(Inlining)             \
     _(Recompile)
 
 enum JaegerSpewChannel {

@@ -86,6 +86,7 @@ js::JMCheckLogging()
             "  pics          PIC patching activity\n"
             "  slowcalls     Calls to slow path functions\n"
             "  regalloc      Register allocation behavior\n"
+            "  inlin         Call inlining behavior\n"
             "  recompile     Dynamic recompilations\n"
             "  full          everything\n"
             "  notrace       disable trace hints\n"
@@ -116,6 +117,8 @@ js::JMCheckLogging()
         LoggingBits |= (1 << uint32(JSpew_Regalloc));
     if (strstr(env, "recompile"))
         LoggingBits |= (1 << uint32(JSpew_Recompile));
+    if (strstr(env, "inlin"))
+        LoggingBits |= (1 << uint32(JSpew_Inlining));
     if (strstr(env, "full"))
         LoggingBits |= 0xFFFFFFFF;
 }
