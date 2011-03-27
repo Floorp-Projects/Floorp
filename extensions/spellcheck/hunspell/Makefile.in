@@ -48,7 +48,7 @@ XPCSHELL_TESTS = tests/unit
 
 libs::
 	$(NSINSTALL) -D $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/tests/unit/data
-	$(INSTALL) $(srcdir)/tests/* \
+	$(PYTHON) $(topsrcdir)/config/nsinstall.py $(srcdir)/tests/* \
 	  $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/tests/unit/data/
 
 include $(topsrcdir)/config/rules.mk
