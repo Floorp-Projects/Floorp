@@ -47,8 +47,8 @@
 using namespace js;
 using namespace js::mjit;
 
-ImmutableSync::ImmutableSync(JSContext *cx, const FrameState &frame)
-  : cx(cx), entries(NULL), frame(frame), avail(Registers::AvailRegs), generation(0)
+ImmutableSync::ImmutableSync()
+  : cx(NULL), entries(NULL), frame(NULL), avail(Registers::AvailRegs), generation(0)
 {
 }
 
@@ -58,8 +58,11 @@ ImmutableSync::~ImmutableSync()
 }
 
 bool
-ImmutableSync::init(uint32 nentries)
+ImmutableSync::init(JSContext *cx, const FrameState &frame, uint32 nentries)
 {
+    this->cx = cx;
+    this->frame = &frame;
+
     entries = (SyncEntry *)cx->calloc(sizeof(SyncEntry) * nentries);
     return !!entries;
 }
@@ -94,7 +97,7 @@ ImmutableSync::allocReg()
 
         if (!regs[i]) {
             /* If the frame does not own this register, take it! */
-            FrameEntry *fe = frame.regstate(reg).usedBy();
+            FrameEntry *fe = frame->regstate(reg).usedBy();
             if (!fe)
                 return reg;
 
@@ -111,9 +114,9 @@ ImmutableSync::allocReg()
 
     if (evictFromFrame != FrameState::InvalidIndex) {
         RegisterID evict = RegisterID(evictFromFrame);
-        FrameEntry *fe = frame.regstate(evict).usedBy();
+        FrameEntry *fe = frame->regstate(evict).usedBy();
         SyncEntry &e = entryFor(fe);
-        if (frame.regstate(evict).type() == RematInfo::TYPE) {
+        if (frame->regstate(evict).type() == RematInfo::TYPE) {
             JS_ASSERT(!e.typeClobbered);
             e.typeClobbered = true;
         } else {
@@ -143,7 +146,7 @@ inline ImmutableSync::SyncEntry &
 ImmutableSync::entryFor(FrameEntry *fe)
 {
     JS_ASSERT(fe <= top);
-    SyncEntry &e = entries[frame.indexOfFe(fe)];
+    SyncEntry &e = entries[frame->indexOfFe(fe)];
     if (e.generation != generation)
         e.reset(generation);
     return e;
@@ -186,7 +189,7 @@ ImmutableSync::ensureTypeReg(FrameEntry *fe, SyncEntry &e)
     e.typeReg = allocReg();
     e.hasTypeReg = true;
     regs[e.typeReg] = &e;
-    masm->loadTypeTag(frame.addressOf(fe), e.typeReg);
+    masm->loadTypeTag(frame->addressOf(fe), e.typeReg);
     return e.typeReg;
 }
 
@@ -200,7 +203,7 @@ ImmutableSync::ensureDataReg(FrameEntry *fe, SyncEntry &e)
     e.dataReg = allocReg();
     e.hasDataReg = true;
     regs[e.dataReg] = &e;
-    masm->loadPayload(frame.addressOf(fe), e.dataReg);
+    masm->loadPayload(frame->addressOf(fe), e.dataReg);
     return e.dataReg;
 }
 
@@ -214,7 +217,7 @@ ImmutableSync::syncCopy(FrameEntry *fe)
 
     JS_ASSERT(!backing->isConstant());
 
-    Address addr = frame.addressOf(fe);
+    Address addr = frame->addressOf(fe);
 
     if (fe->isTypeKnown() && !fe->isType(JSVAL_TYPE_DOUBLE) && !e.learnedType) {
         e.learnedType = true;
@@ -237,7 +240,7 @@ ImmutableSync::syncNormal(FrameEntry *fe)
 {
     SyncEntry &e = entryFor(fe);
 
-    Address addr = frame.addressOf(fe);
+    Address addr = frame->addressOf(fe);
 
     if (fe->isTypeKnown() && !fe->isType(JSVAL_TYPE_DOUBLE)) {
         e.learnedType = true;
@@ -264,7 +267,7 @@ ImmutableSync::syncNormal(FrameEntry *fe)
         regs[e.dataReg] = NULL;
     } else if (!e.dataClobbered &&
                fe->data.inRegister() &&
-               frame.regstate(fe->data.reg()).usedBy()) {
+               frame->regstate(fe->data.reg()).usedBy()) {
         avail.putReg(fe->data.reg());
     }
 
@@ -273,7 +276,7 @@ ImmutableSync::syncNormal(FrameEntry *fe)
         regs[e.typeReg] = NULL;
     } else if (!e.typeClobbered &&
                fe->type.inRegister() &&
-               frame.regstate(fe->type.reg()).usedBy()) {
+               frame->regstate(fe->type.reg()).usedBy()) {
         avail.putReg(fe->type.reg());
     }
 }

@@ -208,8 +208,8 @@ struct CallICInfo {
     JSObject *fastGuardedObject;
     JSObject *fastGuardedNative;
 
-    /* PC at the call site. */
-    jsbytecode *pc;
+    /* Return site for scripted calls at this site, with PC and inlining state. */
+    CallSite *call;
 
     FrameSize frameSize;
 

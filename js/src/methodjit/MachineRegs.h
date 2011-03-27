@@ -393,6 +393,10 @@ struct Registers {
         return !!(freeMask & mask);
     }
 
+    bool hasAllRegs(uint32 mask) const {
+        return (freeMask & mask) == mask;
+    }
+
     void putRegUnchecked(AnyRegisterID reg) {
         freeMask |= (1 << reg.reg_);
     }

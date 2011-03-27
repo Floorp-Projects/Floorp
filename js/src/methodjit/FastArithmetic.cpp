@@ -958,7 +958,7 @@ mjit::Compiler::jsop_mod()
     RegisterID rhsReg;
     uint32 mask = Registers::AvailRegs & ~Registers::maskReg(X86Registers::edx);
     if (!rhs->isConstant()) {
-        rhsReg = frame.tempRegInMaskForData(rhs, mask);
+        rhsReg = frame.tempRegInMaskForData(rhs, mask).reg();
         JS_ASSERT(rhsReg != X86Registers::edx);
     } else {
         rhsReg = frame.allocReg(mask).reg();
@@ -1141,20 +1141,20 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
         ic.stubEntry = stubEntry;
         ic.stub = stub;
 
-        bool useIC = !addTraceHints || target >= PC;
+        bool useIC = (!addTraceHints || target >= PC) && !a->parent;
 
         /* Call the IC stub, which may generate a fast path. */
         if (useIC) {
             /* Adjust for the two values just pushed. */
             ic.addrLabel = stubcc.masm.moveWithPatch(ImmPtr(NULL), Registers::ArgReg1);
             ic.stubCall = OOL_STUBCALL_LOCAL_SLOTS(ic::Equality,
-                                                   frame.stackDepth() + script->nfixed + 2);
+                                                   frame.totalDepth() + 2);
             needStub = false;
         }
 #endif
 
         if (needStub)
-            OOL_STUBCALL_LOCAL_SLOTS(stub, frame.stackDepth() + script->nfixed + 2);
+            OOL_STUBCALL_LOCAL_SLOTS(stub, frame.totalDepth() + 2);
 
         /*
          * The stub call has no need to rejoin, since state is synced.

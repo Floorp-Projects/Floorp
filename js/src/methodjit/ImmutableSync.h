@@ -91,9 +91,9 @@ class ImmutableSync
     };
 
   public:
-    ImmutableSync(JSContext *cx, const FrameState &frame);
+    ImmutableSync();
     ~ImmutableSync();
-    bool init(uint32 nentries);
+    bool init(JSContext *cx, const FrameState &frame, uint32 nentries);
 
     void reset(Assembler *masm, Registers avail, FrameEntry *top, FrameEntry *bottom);
     void sync(FrameEntry *fe);
@@ -113,7 +113,7 @@ class ImmutableSync
   private:
     JSContext *cx;
     SyncEntry *entries;
-    const FrameState &frame;
+    const FrameState *frame;
     uint32 nentries;
     Registers avail;
     Assembler *masm;

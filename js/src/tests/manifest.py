@@ -72,10 +72,8 @@ class XULInfoTester:
             out, err = p.communicate()
             if out in ('true\n', 'true\r\n'):
                 ans = True
-            elif out in ('false\n', 'false\r\n'):
-                ans = False
             else:
-                raise Exception("Failed to test XUL condition '%s'"%cond)
+                ans = False
             self.cache[cond] = ans
         return ans
 

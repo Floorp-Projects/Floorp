@@ -296,7 +296,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     callerid = ATOM_TO_JSID(cx->runtime->atomState.callerAtom);
     stackDepth = 0;
     valueCount = 0;
-    for (fp = js_GetTopStackFrame(cx); fp; fp = fp->prev()) {
+    for (fp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE); fp; fp = fp->prev()) {
         if (fp->isFunctionFrame() && !fp->isEvalFrame()) {
             Value v = NullValue();
             if (checkAccess &&
@@ -337,7 +337,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
 
     values = GetStackTraceValueBuffer(priv);
     elem = priv->stackElems;
-    for (fp = js_GetTopStackFrame(cx); fp != fpstop; fp = fp->prev()) {
+    for (fp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE); fp != fpstop; fp = fp->prev()) {
         if (!fp->isFunctionFrame() || fp->isEvalFrame()) {
             elem->funName = NULL;
             elem->argc = 0;
@@ -714,6 +714,10 @@ Exception(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *message, *filename;
     JSStackFrame *fp;
+
+#ifdef JS_METHODJIT
+    js::mjit::ExpandInlineFrames(cx, true);
+#endif
 
     /*
      * ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
@@ -1118,6 +1122,10 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
     JSBool ok;
     JSObject *errProto, *errObject;
     JSString *messageStr, *filenameStr;
+
+#ifdef JS_METHODJIT
+    js::mjit::ExpandInlineFrames(cx, true);
+#endif
 
     /*
      * Tell our caller to report immediately if this report is just a warning.

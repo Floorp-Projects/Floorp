@@ -1604,13 +1604,35 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             return true;
     }
 
+    if (slot == FUN_ARGUMENTS || slot == FUN_CALLER) {
+        /*
+         * Mark the function's script as uninlineable, to expand any of its
+         * frames on the stack before we go looking for them.
+         */
+        if (fun->isInterpreted() && !cx->markTypeFunctionUninlineable(fun->getType()))
+            return false;
+    }
+
     /* Find fun's top-most activation record. */
     JSStackFrame *fp;
-    for (fp = js_GetTopStackFrame(cx);
+    for (fp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE);
          fp && (fp->maybeFun() != fun || fp->isEvalOrDebuggerFrame());
          fp = fp->prev()) {
         continue;
     }
+
+#ifdef JS_METHODJIT
+    if (slot == FUN_CALLER && fp && fp->prev()) {
+        /* Also make sure the caller is uninlineable. */
+        JSInlinedSite *inlined;
+        fp->prev()->pc(cx, fp, &inlined);
+        if (inlined) {
+            JSFunction *fun = fp->prev()->jit()->inlineFrames()[inlined->inlineIndex].fun;
+            if (!cx->markTypeFunctionUninlineable(fun->getType()))
+                return false;
+        }
+    }
+#endif
 
     JSAtom *atom = NULL;
 

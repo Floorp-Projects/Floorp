@@ -119,7 +119,7 @@ TrampolineCompiler::generateForceReturn(Assembler &masm)
     /* if (hasArgsObj() || hasCallObj()) stubs::PutActivationObjects() */
     Jump noActObjs = masm.branchTest32(Assembler::Zero, FrameFlagsAddress(),
                                        Imm32(JSFRAME_HAS_CALL_OBJ | JSFRAME_HAS_ARGS_OBJ));
-    masm.fallibleVMCall(JS_FUNC_TO_DATA_PTR(void *, stubs::PutActivationObjects), NULL, 0);
+    masm.fallibleVMCall(JS_FUNC_TO_DATA_PTR(void *, stubs::PutActivationObjects), NULL, NULL, 0);
     noActObjs.linkTo(masm.label(), &masm);
 
     /* Store any known return value */
