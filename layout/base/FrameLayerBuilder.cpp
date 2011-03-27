@@ -1744,12 +1744,12 @@ FrameLayerBuilder::InvalidateAllLayers(LayerManager* aManager)
 }
 
 /* static */
-PRBool
-FrameLayerBuilder::HasDedicatedLayer(nsIFrame* aFrame, PRUint32 aDisplayItemKey)
+Layer*
+FrameLayerBuilder::GetDedicatedLayer(nsIFrame* aFrame, PRUint32 aDisplayItemKey)
 {
   void* propValue = aFrame->Properties().Get(DisplayItemDataProperty());
   if (!propValue)
-    return PR_FALSE;
+    return nsnull;
 
   nsTArray<DisplayItemData>* array =
     (reinterpret_cast<nsTArray<DisplayItemData>*>(&propValue));
@@ -1759,10 +1759,10 @@ FrameLayerBuilder::HasDedicatedLayer(nsIFrame* aFrame, PRUint32 aDisplayItemKey)
       if (!layer->HasUserData(&gColorLayerUserData) &&
           !layer->HasUserData(&gImageLayerUserData) &&
           !layer->HasUserData(&gThebesDisplayItemLayerUserData))
-        return PR_TRUE;
+        return layer;
     }
   }
-  return PR_FALSE;
+  return nsnull;
 }
 
 /* static */ void
