@@ -1176,13 +1176,10 @@ public:
   virtual void Initialize(const Data& aData) = 0;
 
   /**
-   * CONSTRUCTION PHASE ONLY
-   * Notify this CanvasLayer that the rectangle given by aRect
-   * has been updated, and any work that needs to be done
-   * to bring the contents from the Surface/GLContext to the
-   * Layer in preparation for compositing should be performed.
+   * Notify this CanvasLayer that the canvas surface contents have
+   * changed (or will change) before the next transaction.
    */
-  virtual void Updated(const nsIntRect& aRect) = 0;
+  void Updated() { mDirty = PR_TRUE; }
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -1207,7 +1204,7 @@ public:
 
 protected:
   CanvasLayer(LayerManager* aManager, void* aImplData)
-    : Layer(aManager, aImplData), mFilter(gfxPattern::FILTER_GOOD) {}
+    : Layer(aManager, aImplData), mFilter(gfxPattern::FILTER_GOOD), mDirty(PR_FALSE) {}
 
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
 
@@ -1216,6 +1213,10 @@ protected:
    */
   nsIntRect mBounds;
   gfxPattern::GraphicsFilter mFilter;
+  /**
+   * Set to true in Updated(), cleared during a transaction.
+   */
+  PRPackedBool mDirty;
 };
 
 }

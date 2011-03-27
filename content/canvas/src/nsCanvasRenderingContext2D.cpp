@@ -4110,9 +4110,7 @@ nsCanvasRenderingContext2D::GetCanvasLayer(CanvasLayer *aOldLayer,
         aOldLayer->HasUserData(&g2DContextLayerUserData)) {
         NS_ADDREF(aOldLayer);
         if (mIsEntireFrameInvalid || mInvalidateCount > 0) {
-            // XXX Need to just update the changed area here; we should keep track
-            // of the rectangle based on Redraw args.
-            aOldLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
+            aOldLayer->Updated();
             MarkContextClean();
             HTMLCanvasElement()->GetPrimaryCanvasFrame()->MarkLayersActive();
         }
@@ -4135,7 +4133,7 @@ nsCanvasRenderingContext2D::GetCanvasLayer(CanvasLayer *aOldLayer,
     canvasLayer->Initialize(data);
     PRUint32 flags = mOpaque ? Layer::CONTENT_OPAQUE : 0;
     canvasLayer->SetContentFlags(flags);
-    canvasLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
+    canvasLayer->Updated();
 
     mResetLayer = PR_FALSE;
 
