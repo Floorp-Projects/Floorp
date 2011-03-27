@@ -627,7 +627,7 @@ WebGLContext::GetCanvasLayer(CanvasLayer *aOldLayer,
         aOldLayer->HasUserData(&gWebGLLayerUserData)) {
         NS_ADDREF(aOldLayer);
         if (mInvalidated) {
-            aOldLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
+            aOldLayer->Updated();
             mInvalidated = PR_FALSE;
             HTMLCanvasElement()->GetPrimaryCanvasFrame()->MarkLayersActive();
         }
@@ -661,7 +661,7 @@ WebGLContext::GetCanvasLayer(CanvasLayer *aOldLayer,
     canvasLayer->Initialize(data);
     PRUint32 flags = gl->CreationFormat().alpha == 0 ? Layer::CONTENT_OPAQUE : 0;
     canvasLayer->SetContentFlags(flags);
-    canvasLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
+    canvasLayer->Updated();
 
     mInvalidated = PR_FALSE;
     mResetLayer = PR_FALSE;
