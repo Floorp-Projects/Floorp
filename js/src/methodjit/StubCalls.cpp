@@ -89,7 +89,7 @@ stubs::BindName(VMFrame &f)
     JSObject *obj2;
     JSContext *cx = f.cx;
     JSObject *obj = &f.fp()->scopeChain();
-    JS_PROPERTY_CACHE(cx).test(cx, f.regs.pc, obj, obj2, entry, atom);
+    JS_PROPERTY_CACHE(cx).test(cx, f.pc(), obj, obj2, entry, atom);
     if (atom) {
         jsid id = ATOM_TO_JSID(atom);
         obj = js_FindIdentifierBase(cx, &f.fp()->scopeChain(), id);
@@ -155,7 +155,7 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
         PropertyCacheEntry *entry;
         JSObject *obj2;
         JSAtom *atom;
-        if (cache->testForSet(cx, f.regs.pc, obj, &entry, &obj2, &atom)) {
+        if (cache->testForSet(cx, f.pc(), obj, &entry, &obj2, &atom)) {
             /*
              * Property cache hit, only partially confirmed by testForSet. We
              * know that the entry applies to regs.pc and that obj's shape
@@ -254,7 +254,7 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
         jsid id = ATOM_TO_JSID(atom);
         if (entry && JS_LIKELY(!obj->getOps()->setProperty)) {
             uintN defineHow;
-            JSOp op = JSOp(*f.regs.pc);
+            JSOp op = JSOp(*f.pc());
             if (op == JSOP_SETMETHOD)
                 defineHow = JSDNP_CACHE_RESULT | JSDNP_SET_METHOD;
             else if (op == JSOP_SETNAME)
@@ -351,7 +351,7 @@ NameOp(VMFrame &f, JSObject *obj, bool markresult, bool callname)
     PropertyCacheEntry *entry;
     JSObject *obj2;
     JSAtom *atom;
-    JS_PROPERTY_CACHE(cx).test(cx, f.regs.pc, obj, obj2, entry, atom);
+    JS_PROPERTY_CACHE(cx).test(cx, f.pc(), obj, obj2, entry, atom);
     if (!atom) {
         if (entry->vword.isFunObj()) {
             rval.setObject(entry->vword.toFunObj());
@@ -373,11 +373,11 @@ NameOp(VMFrame &f, JSObject *obj, bool markresult, bool callname)
             return NULL;
         if (!prop) {
             /* Kludge to allow (typeof foo == "undefined") tests. */
-            JSOp op2 = js_GetOpcode(cx, f.fp()->script(), f.regs.pc + JSOP_NAME_LENGTH);
+            JSOp op2 = js_GetOpcode(cx, f.script(), f.pc() + JSOP_NAME_LENGTH);
             if (op2 == JSOP_TYPEOF) {
                 f.regs.sp++;
                 f.regs.sp[-1].setUndefined();
-                if (!f.script()->typeMonitorUndefined(cx, f.regs.pc))
+                if (!f.script()->typeMonitorUndefined(cx, f.pc()))
                     return NULL;
                 return obj;
             }
@@ -399,10 +399,10 @@ NameOp(VMFrame &f, JSObject *obj, bool markresult, bool callname)
     }
 
     if (markresult) {
-        if (!f.script()->typeMonitorResult(cx, f.regs.pc, rval))
+        if (!f.script()->typeMonitorResult(cx, f.pc(), rval))
             return NULL;
     } else if (rval.isUndefined()) {
-        if (!f.script()->typeMonitorUndefined(cx, f.regs.pc))
+        if (!f.script()->typeMonitorUndefined(cx, f.pc()))
             return NULL;
     }
 
@@ -498,7 +498,7 @@ stubs::GetElem(VMFrame &f)
         THROW();
     copyFrom = &rval;
 
-    if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, regs.pc))
+    if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.pc()))
         THROW();
 
   end_getelem:
@@ -506,7 +506,7 @@ stubs::GetElem(VMFrame &f)
 
     if (copyFrom->isUndefined()) {
         cx->addTypeProperty(obj->getType(), NULL, TYPE_UNDEFINED);
-        if (!f.script()->typeMonitorUndefined(cx, regs.pc))
+        if (!f.script()->typeMonitorUndefined(cx, f.pc()))
             THROW();
     }
 }
@@ -555,7 +555,7 @@ stubs::CallElem(VMFrame &f)
         regs.sp[-1] = thisv;
     }
     if ((regs.sp[-2].isUndefined() || !JSID_IS_INT(id)) &&
-        !f.script()->typeMonitorUnknown(cx, regs.pc)) {
+        !f.script()->typeMonitorUnknown(cx, f.pc())) {
         THROW();
     }
 }
@@ -718,7 +718,7 @@ stubs::Ursh(VMFrame &f)
 
     u >>= (j & 31);
 
-	if (!f.regs.sp[-2].setNumber(uint32(u)) && !f.script()->typeMonitorOverflow(f.cx, f.regs.pc))
+	if (!f.regs.sp[-2].setNumber(uint32(u)) && !f.script()->typeMonitorOverflow(f.cx, f.pc()))
         THROW();
 }
 
@@ -1049,7 +1049,7 @@ MonitorArithmeticOverflow(VMFrame &f, const Value &v)
     JSContext *cx = f.cx;
 
     JS_ASSERT(v.isDouble());
-    if (!f.script()->typeMonitorOverflow(cx, f.regs.pc))
+    if (!f.script()->typeMonitorOverflow(cx, f.pc()))
         return false;
 
     /*
@@ -1063,7 +1063,7 @@ MonitorArithmeticOverflow(VMFrame &f, const Value &v)
 
     Value ov;
 
-    switch (JSOp(*f.regs.pc)) {
+    switch (JSOp(*f.pc())) {
       case JSOP_INCPROP:
       case JSOP_DECPROP:
       case JSOP_PROPINC:
@@ -1079,7 +1079,7 @@ MonitorArithmeticOverflow(VMFrame &f, const Value &v)
     if (!obj)
         return true;
     JSAtom *atom;
-    GET_ATOM_FROM_BYTECODE(f.script(), f.regs.pc, 0, atom);
+    GET_ATOM_FROM_BYTECODE(f.script(), f.pc(), 0, atom);
 
     return cx->addTypePropertyId(obj->getType(), ATOM_TO_JSID(atom), TYPE_DOUBLE);
 }
@@ -1109,7 +1109,7 @@ stubs::Add(VMFrame &f)
             THROW();
         regs.sp--;
         regs.sp[-1] = rval;
-        if (!f.script()->typeMonitorUnknown(cx, regs.pc))
+        if (!f.script()->typeMonitorUnknown(cx, f.pc()))
             THROW();
     } else
 #endif
@@ -1137,7 +1137,7 @@ stubs::Add(VMFrame &f)
                     THROW();
                 regs.sp[-1].setString(rstr);
             }
-            if ((lIsObject || rIsObject) && !f.script()->typeMonitorString(cx, regs.pc))
+            if ((lIsObject || rIsObject) && !f.script()->typeMonitorString(cx, f.pc()))
                 THROW();
             goto string_concat;
 
@@ -1189,7 +1189,7 @@ stubs::Mul(VMFrame &f)
         THROW();
     }
     double d = d1 * d2;
-    if (!regs.sp[-2].setNumber(d) && !f.script()->typeMonitorOverflow(cx, f.regs.pc))
+    if (!regs.sp[-2].setNumber(d) && !f.script()->typeMonitorOverflow(cx, f.pc()))
         THROW();
 }
 
@@ -1220,11 +1220,11 @@ stubs::Div(VMFrame &f)
         else
             vp = &rt->positiveInfinityValue;
         regs.sp[-2] = *vp;
-        if (!f.script()->typeMonitorOverflow(cx, f.regs.pc))
+        if (!f.script()->typeMonitorOverflow(cx, f.pc()))
             THROW();
     } else {
         d1 /= d2;
-        if (!regs.sp[-2].setNumber(d1) && !f.script()->typeMonitorOverflow(cx, f.regs.pc))
+        if (!regs.sp[-2].setNumber(d1) && !f.script()->typeMonitorOverflow(cx, f.pc()))
             THROW();
     }
 }
@@ -1254,7 +1254,7 @@ stubs::Mod(VMFrame &f)
             d1 = js_fmod(d1, d2);
             regs.sp[-2].setDouble(d1);
         }
-        if (!f.script()->typeMonitorOverflow(cx, f.regs.pc))
+        if (!f.script()->typeMonitorOverflow(cx, f.pc()))
             THROW();
     }
 }
@@ -1265,7 +1265,7 @@ stubs::Debugger(VMFrame &f, jsbytecode *pc)
     JSDebuggerHandler handler = f.cx->debugHooks->debuggerHandler;
     if (handler) {
         Value rval;
-        switch (handler(f.cx, f.cx->fp()->script(), pc, Jsvalify(&rval),
+        switch (handler(f.cx, f.script(), f.pc(), Jsvalify(&rval),
                         f.cx->debugHooks->debuggerHandlerData)) {
           case JSTRAP_THROW:
             f.cx->setPendingException(rval);
@@ -1304,7 +1304,6 @@ void JS_FASTCALL
 stubs::Trap(VMFrame &f, uint32 trapTypes)
 {
     Value rval;
-    jsbytecode *pc = f.cx->regs->pc;
 
     /*
      * Trap may be called for a single-step interrupt trap and/or a
@@ -1319,12 +1318,12 @@ stubs::Trap(VMFrame &f, uint32 trapTypes)
          */
         JSInterruptHook hook = f.cx->debugHooks->interruptHook;
         if (hook)
-            result = hook(f.cx, f.cx->fp()->script(), pc, Jsvalify(&rval),
+            result = hook(f.cx, f.script(), f.pc(), Jsvalify(&rval),
                           f.cx->debugHooks->interruptHookData);
     }
 
     if (result == JSTRAP_CONTINUE && (trapTypes & JSTRAP_TRAP))
-        result = JS_HandleTrap(f.cx, f.cx->fp()->script(), pc, Jsvalify(&rval));
+        result = JS_HandleTrap(f.cx, f.script(), f.pc(), Jsvalify(&rval));
 
     switch (result) {
       case JSTRAP_THROW:
@@ -1355,6 +1354,16 @@ stubs::Trap(VMFrame &f, uint32 trapTypes)
 void JS_FASTCALL
 stubs::This(VMFrame &f)
 {
+    /*
+     * We can't yet inline scripts which need to compute their 'this' object
+     * from a primitive; the frame we are computing 'this' for does not exist yet.
+     */
+    if (f.regs.inlined) {
+        JSFunction *fun = f.jit()->inlineFrames()[f.regs.inlined->inlineIndex].fun;
+        if (!f.cx->markTypeFunctionUninlineable(fun->getType()))
+            THROW();
+    }
+
     if (!f.fp()->computeThis(f.cx))
         THROW();
     f.regs.sp[-1] = f.fp()->thisValue();
@@ -1367,7 +1376,7 @@ stubs::Neg(VMFrame &f)
     if (!ValueToNumber(f.cx, f.regs.sp[-1], &d))
         THROW();
     d = -d;
-    if (!f.regs.sp[-1].setNumber(d) && !f.script()->typeMonitorOverflow(f.cx, f.regs.pc))
+    if (!f.regs.sp[-1].setNumber(d) && !f.script()->typeMonitorOverflow(f.cx, f.pc()))
         THROW();
 }
 
@@ -1454,12 +1463,12 @@ void JS_FASTCALL
 stubs::GetUpvar(VMFrame &f, uint32 ck)
 {
     /* :FIXME: We can do better, this stub isn't needed. */
-    uint32 staticLevel = f.fp()->script()->staticLevel;
+    uint32 staticLevel = f.script()->staticLevel;
     UpvarCookie cookie;
     cookie.fromInteger(ck);
     f.regs.sp[0] = GetUpvar(f.cx, staticLevel, cookie);
 
-    if (f.regs.sp[0].isUndefined() && !f.script()->typeMonitorUndefined(f.cx, f.regs.pc))
+    if (f.regs.sp[0].isUndefined() && !f.script()->typeMonitorUndefined(f.cx, f.pc()))
         THROW();
 }
 
@@ -1532,7 +1541,7 @@ stubs::LambdaForInit(VMFrame &f, JSFunction *fun)
 {
     JSObject *obj = FUN_OBJECT(fun);
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
-        fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(f.regs.pc)));
+        fun->setMethodAtom(f.script()->getAtom(GET_SLOTNO(f.pc())));
         return obj;
     }
     return Lambda(f, fun);
@@ -1545,7 +1554,7 @@ stubs::LambdaForSet(VMFrame &f, JSFunction *fun)
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
         const Value &lref = f.regs.sp[-1];
         if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
-            fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(f.regs.pc)));
+            fun->setMethodAtom(f.script()->getAtom(GET_SLOTNO(f.pc())));
             return obj;
         }
     }
@@ -1564,7 +1573,7 @@ stubs::LambdaJoinableForCall(VMFrame &f, JSFunction *fun)
          * we don't need to clone that compiler- created function
          * object for identity/mutation reasons.
          */
-        int iargc = GET_ARGC(f.regs.pc);
+        int iargc = GET_ARGC(f.pc());
 
         /*
          * Note that we have not yet pushed obj as the final argument,
@@ -1594,7 +1603,7 @@ stubs::LambdaJoinableForNull(VMFrame &f, JSFunction *fun)
 {
     JSObject *obj = FUN_OBJECT(fun);
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
-        jsbytecode *pc2 = f.regs.pc + JSOP_NULL_LENGTH;
+        jsbytecode *pc2 = f.pc() + JSOP_NULL_LENGTH;
         JSOp op2 = JSOp(*pc2);
 
         if (op2 == JSOP_CALL && GET_ARGC(pc2) == 0)
@@ -1673,7 +1682,7 @@ ObjIncOp(VMFrame &f, JSObject *obj, jsid id)
             d += N;
             ref.setNumber(d);
         }
-        if (!v.setNumber(d) && !f.script()->typeMonitorOverflow(cx, f.regs.pc))
+        if (!v.setNumber(d) && !f.script()->typeMonitorOverflow(cx, f.pc()))
             return false;
         if (!cx->typeMonitorAssign(obj, id, v))
             return false;
@@ -1697,7 +1706,7 @@ NameIncDec(VMFrame &f, JSObject *obj, JSAtom *origAtom)
     JSObject *obj2;
     JSProperty *prop;
     PropertyCacheEntry *entry;
-    JS_PROPERTY_CACHE(cx).test(cx, f.regs.pc, obj, obj2, entry, atom);
+    JS_PROPERTY_CACHE(cx).test(cx, f.pc(), obj, obj2, entry, atom);
     if (!atom) {
         if (obj == obj2 && entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
@@ -1976,7 +1985,7 @@ InlineGetProp(VMFrame &f)
         PropertyCacheEntry *entry;
         JSObject *obj2;
         JSAtom *atom;
-        JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
+        JS_PROPERTY_CACHE(cx).test(cx, f.pc(), aobj, obj2, entry, atom);
         if (!atom) {
             if (entry->vword.isFunObj()) {
                 rval.setObject(entry->vword.toFunObj());
@@ -2005,7 +2014,7 @@ InlineGetProp(VMFrame &f)
         }
     } while(0);
 
-    if (rval.isUndefined() && !f.script()->typeMonitorUndefined(cx, regs.pc))
+    if (rval.isUndefined() && !f.script()->typeMonitorUndefined(cx, f.pc()))
         return false;
 
     regs.sp[-1] = rval;
@@ -2072,7 +2081,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
     PropertyCacheEntry *entry;
     JSObject *obj2;
     JSAtom *atom;
-    JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
+    JS_PROPERTY_CACHE(cx).test(cx, f.pc(), aobj, obj2, entry, atom);
     if (!atom) {
         if (entry->vword.isFunObj()) {
             rval.setObject(entry->vword.toFunObj());
@@ -2126,7 +2135,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
             THROW();
     }
 #endif
-    if (rval.isUndefined() && !f.script()->typeMonitorUndefined(cx, regs.pc))
+    if (rval.isUndefined() && !f.script()->typeMonitorUndefined(cx, f.pc()))
         THROW();
 }
 
@@ -2197,7 +2206,7 @@ InitPropOrMethod(VMFrame &f, JSAtom *atom, JSOp op)
      */
     PropertyCacheEntry *entry;
     const Shape *shape;
-    if (JS_PROPERTY_CACHE(cx).testForInit(rt, regs.pc, obj, &shape, &entry) &&
+    if (JS_PROPERTY_CACHE(cx).testForInit(rt, f.pc(), obj, &shape, &entry) &&
         shape->hasDefaultSetter() &&
         shape->previous() == obj->lastProperty())
     {
@@ -2410,6 +2419,7 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
     JSStackFrame *fp = f.fp();
 #endif
 
+    JS_ASSERT(!f.regs.inlined);
     JS_ASSERT(obj->isStaticBlock());
     JS_ASSERT(fp->base() + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
     Value *vp = regs.sp + OBJ_BLOCK_COUNT(cx, obj);
@@ -2608,7 +2618,7 @@ stubs::Pos(VMFrame &f)
 {
     if (!ValueToNumber(f.cx, &f.regs.sp[-1]))
         THROW();
-    if (!f.regs.sp[-1].isInt32() && !f.script()->typeMonitorOverflow(f.cx, f.regs.pc))
+    if (!f.regs.sp[-1].isInt32() && !f.script()->typeMonitorOverflow(f.cx, f.pc()))
         THROW();
 }
 
@@ -2632,7 +2642,7 @@ stubs::DelName(VMFrame &f, JSAtom *atom)
         THROW();
 
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */
-    JS_ASSERT(!f.fp()->script()->strictModeCode);
+    JS_ASSERT(!f.script()->strictModeCode);
 
     /* ECMA says to return true if name is undefined or inherited. */
     f.regs.sp++;
@@ -2696,7 +2706,7 @@ stubs::DefVarOrConst(VMFrame &f, JSAtom *atom)
     /* Lookup id in order to check for redeclaration problems. */
     jsid id = ATOM_TO_JSID(atom);
     bool shouldDefine;
-    if (JSOp(*f.regs.pc) == JSOP_DEFVAR) {
+    if (JSOp(*f.pc()) == JSOP_DEFVAR) {
         /*
          * Redundant declaration of a |var|, even one for a non-writable
          * property like |undefined| in ES5, does nothing.
@@ -2707,7 +2717,7 @@ stubs::DefVarOrConst(VMFrame &f, JSAtom *atom)
             THROW();
         shouldDefine = (!prop || obj2 != obj);
     } else {
-        JS_ASSERT(JSOp(*f.regs.pc) == JSOP_DEFCONST);
+        JS_ASSERT(JSOp(*f.pc()) == JSOP_DEFCONST);
         attrs |= JSPROP_READONLY;
         if (!CheckRedeclaration(cx, obj, id, attrs))
             THROW();
@@ -2776,7 +2786,7 @@ template void JS_FASTCALL stubs::DelElem<false>(VMFrame &f);
 void JS_FASTCALL
 stubs::UndefinedHelper(VMFrame &f)
 {
-    if (!f.script()->typeMonitorUndefined(f.cx, f.regs.pc))
+    if (!f.script()->typeMonitorUndefined(f.cx, f.pc()))
         THROW();
     f.regs.sp[-1].setUndefined();
 }
@@ -2784,7 +2794,7 @@ stubs::UndefinedHelper(VMFrame &f)
 void JS_FASTCALL
 stubs::NegZeroHelper(VMFrame &f)
 {
-    if (!f.script()->typeMonitorOverflow(f.cx, f.regs.pc))
+    if (!f.script()->typeMonitorOverflow(f.cx, f.pc()))
         THROW();
     f.regs.sp[-1].setDouble(-0.0);
 }

@@ -317,21 +317,28 @@ mjit::Compiler::compileGetChar(FrameEntry *thisValue, FrameEntry *arg, GetCharMo
 
 
 CompileStatus
-mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew) {
+mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew)
+{
     JS_ASSERT(!callingNew);
+
+    if (applyTricks == LazyArgsObj)
+        return Compile_InlineAbort;
 
     FrameEntry *origCallee = frame.peek(-(argc + 2));
     FrameEntry *thisValue = frame.peek(-(argc + 1));
 
     if (!origCallee->isConstant() || !origCallee->isType(JSVAL_TYPE_OBJECT))
-        return Compile_Abort;
+        return Compile_InlineAbort;
 
     JSObject *callee = &origCallee->getValue().toObject();
     if (!callee->isFunction())
-        return Compile_Abort;
+        return Compile_InlineAbort;
 
     JSFunction *fun = callee->getFunctionPrivate();
     Native native = fun->maybeNative();
+
+    if (!native)
+        return Compile_InlineAbort;
 
     JSValueType type = knownPushedType(0);
     JSValueType thisType = thisValue->isTypeKnown()
@@ -343,7 +350,7 @@ mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew) {
         FrameEntry * arg = frame.peek(-(i+1));
 
         if (!arg->isTypeKnown())
-            return Compile_Abort;
+            return Compile_InlineAbort;
     }
 
     if (argc == 1) {
@@ -393,6 +400,6 @@ mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew) {
                 return compileMathPowSimple(arg1, arg2);
         }
     }
-    return Compile_Abort;
+    return Compile_InlineAbort;
 }
 

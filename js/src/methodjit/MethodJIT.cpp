@@ -119,8 +119,6 @@ static const size_t STUB_CALLS_FOR_OP_COUNT = 255;
 static uint32 StubCallsForOp[STUB_CALLS_FOR_OP_COUNT];
 #endif
 
-extern "C" void JaegerTrampolineReturn();
-
 extern "C" void JS_FASTCALL
 PushActiveVMFrame(VMFrame &f)
 {
@@ -467,7 +465,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
      *  [ regs.sp   ]
      *  [ scratch   ]
      *  [ previous  ]
-     *  [ args.ptr3 ]
+     *  [ inlined   ]
      *  [ args.ptr2 ]
      *  [ args.ptr  ]
      */
@@ -848,17 +846,29 @@ JITScript::nmapSectionLimit() const
     return (char *)nmap() + sizeof(NativeMapEntry) * nNmapPairs;
 }
 
+js::mjit::InlineFrame *
+JITScript::inlineFrames() const
+{
+    return (js::mjit::InlineFrame *)nmapSectionLimit();
+}
+
+js::mjit::CallSite *
+JITScript::callSites() const
+{
+    return (js::mjit::CallSite *)((char *)inlineFrames() + sizeof(js::mjit::InlineFrame) * nInlineFrames);
+}
+
 #ifdef JS_MONOIC
 ic::GetGlobalNameIC *
 JITScript::getGlobalNames() const
 {
-    return (ic::GetGlobalNameIC *)nmapSectionLimit();
+    return (ic::GetGlobalNameIC *)((char *)callSites() + sizeof(js::mjit::CallSite) * nCallSites);
 }
 
 ic::SetGlobalNameIC *
 JITScript::setGlobalNames() const
 {
-    return (ic::SetGlobalNameIC *)((char *)nmapSectionLimit() +
+    return (ic::SetGlobalNameIC *)((char *)getGlobalNames() +
             sizeof(ic::GetGlobalNameIC) * nGetGlobalNames);
 }
 
@@ -925,12 +935,6 @@ JITScript::polyICSectionsLimit() const
     return monoICSectionsLimit();
 }
 #endif  // JS_POLYIC
-
-js::mjit::CallSite *
-JITScript::callSites() const
-{
-    return (js::mjit::CallSite *)polyICSectionsLimit();
-}
 
 template <typename T>
 static inline void Destroy(T &t)
@@ -1100,7 +1104,7 @@ mjit::GetCallTargetCount(JSScript *script, jsbytecode *pc)
 #endif
 
 jsbytecode *
-JITScript::nativeToPC(void *returnAddress) const
+JITScript::nativeToPC(void *returnAddress, CallSite **pinline) const
 {
     size_t low = 0;
     size_t high = nCallICs;
@@ -1121,8 +1125,33 @@ JITScript::nativeToPC(void *returnAddress) const
     }
 
     js::mjit::ic::CallICInfo &ic = callICs_[low];
-
     JS_ASSERT((uint8*)ic.funGuard.executableAddress() + ic.joinPointOffset == returnAddress);
-    return ic.pc;
+
+    if (ic.call->inlineIndex != uint32(-1)) {
+        if (pinline)
+            *pinline = ic.call;
+        InlineFrame *frame = &inlineFrames()[ic.call->inlineIndex];
+        while (frame && frame->parent)
+            frame = frame->parent;
+        return frame->parentpc;
+    }
+
+    if (pinline)
+        *pinline = NULL;
+    return script->code + ic.call->pcOffset;
 }
 
+void
+JITScript::trace(JSTracer *trc)
+{
+    /*
+     * MICs and PICs attached to the JITScript are weak references, and either
+     * entirely purged or selectively purged on each GC. We do, however, need
+     * to maintain references to any scripts whose code was inlined into this.
+     */
+    InlineFrame *inlineFrames_ = inlineFrames();
+    for (unsigned i = 0; i < nInlineFrames; i++) {
+        JS_SET_TRACING_NAME(trc, "jitscript_fun");
+        Mark(trc, inlineFrames_[i].fun);
+    }
+}

@@ -102,18 +102,27 @@ public:
     
     bool recompile();
 
+    static void
+    expandInlineFrames(JSContext *cx, JSStackFrame *fp, mjit::CallSite *inlined,
+                       JSStackFrame *next, VMFrame *f);
+
 private:
     JSContext *cx;
     JSScript *script;
-    
-    PatchableAddress findPatch(JITScript *jit, void **location);
-    void applyPatch(Compiler& c, PatchableAddress& toPatch);
+
+    static PatchableAddress findPatch(JITScript *jit, void **location);
+    static void * findCallSite(JITScript *jit, const CallSite &callSite);
+
+    static void applyPatch(JITScript *jit, PatchableAddress& toPatch);
     PatchableNative stealNative(JITScript *jit, jsbytecode *pc);
     void patchNative(JITScript *jit, PatchableNative &native);
     bool recompile(Vector<PatchableFrame> &frames,
                    Vector<PatchableAddress> &patches, Vector<CallSite> &sites,
                    Vector<PatchableNative> &natives,
                    uint32 recompilations);
+
+    static JSStackFrame *
+    expandInlineFrameChain(JSContext *cx, JSStackFrame *outer, InlineFrame *inner);
 
     /* Detach jit from any IC callers and save any traps to sites. */
     bool cleanup(JITScript *jit, Vector<CallSite> *sites, uint32 *recompilations);

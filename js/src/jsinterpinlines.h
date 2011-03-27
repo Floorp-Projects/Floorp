@@ -58,12 +58,14 @@ JSStackFrame::initPrev(JSContext *cx)
     if (JSFrameRegs *regs = cx->regs) {
         prev_ = regs->fp;
         prevpc_ = regs->pc;
+        prevInline_ = regs->inlined;
         JS_ASSERT_IF(!prev_->isDummyFrame() && !prev_->hasImacropc(),
                      uint32(prevpc_ - prev_->script()->code) < prev_->script()->length);
     } else {
         prev_ = NULL;
 #ifdef DEBUG
         prevpc_ = (jsbytecode *)0xbadc;
+        prevInline_ = (JSInlinedSite *)0xbadc;
 #endif
     }
 }
@@ -73,6 +75,24 @@ JSStackFrame::resetGeneratorPrev(JSContext *cx)
 {
     flags_ |= JSFRAME_HAS_PREVPC;
     initPrev(cx);
+}
+
+inline void
+JSStackFrame::initInlineFrame(JSFunction *fun, JSStackFrame *prevfp, jsbytecode *prevpc)
+{
+    flags_ = JSFRAME_FUNCTION;
+    exec.fun = fun;
+    resetInlinePrev(prevfp, prevpc);
+}
+
+inline void
+JSStackFrame::resetInlinePrev(JSStackFrame *prevfp, jsbytecode *prevpc)
+{
+    JS_ASSERT_IF(flags_ & JSFRAME_HAS_PREVPC, prevInline_);
+    flags_ |= JSFRAME_HAS_PREVPC;
+    prev_ = prevfp;
+    prevpc_ = prevpc;
+    prevInline_ = NULL;
 }
 
 inline void
@@ -89,6 +109,7 @@ JSStackFrame::initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
     exec.fun = fun;
     args.nactual = nactual;  /* only need to write if over/under-flow */
     scopeChain_ = callee.getParent();
+    ncode_ = NULL;
     initPrev(cx);
     JS_ASSERT(!hasImacropc());
     JS_ASSERT(!hasHookData());
@@ -188,7 +209,7 @@ JSStackFrame::initEvalFrame(JSContext *cx, JSScript *script, JSStackFrame *prev,
     JS_ASSERT_IF(isFunctionFrame(), &callObj() == &prev->callObj());
 
     prev_ = prev;
-    prevpc_ = prev->pc(cx);
+    prevpc_ = prev->pc(cx, NULL, &prevInline_);
     JS_ASSERT(!hasImacropc());
     JS_ASSERT(!hasHookData());
     setAnnotation(prev->annotation());

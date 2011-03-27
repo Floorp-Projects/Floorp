@@ -68,18 +68,18 @@ class StubCompiler
     };
 
     struct CrossJumpInScript {
-        CrossJumpInScript(Jump from, jsbytecode *pc)
-          : from(from), pc(pc)
+        CrossJumpInScript(Jump from, jsbytecode *pc, uint32 inlineIndex)
+          : from(from), pc(pc), inlineIndex(inlineIndex)
         { }
 
         Jump from;
         jsbytecode *pc;
+        uint32 inlineIndex;
     };
 
     JSContext *cx;
     Compiler &cc;
     FrameState &frame;
-    JSScript *script;
 
   public:
     Assembler masm;
@@ -94,7 +94,7 @@ class StubCompiler
     Vector<Jump, 8, SystemAllocPolicy> jumpList;
 
   public:
-    StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame, JSScript *script);
+    StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame);
 
     size_t size() {
         return masm.size();

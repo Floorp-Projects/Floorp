@@ -2158,6 +2158,9 @@ public:
     /* Mark an array type as being not packed and, possibly, not dense. */
     inline bool markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense);
 
+    /* Mark a function as being uninlineable (its .arguments property has been accessed). */
+    inline bool markTypeFunctionUninlineable(js::types::TypeObject *obj);
+
     /* Monitor all properties of a type object as unknown. */
     inline bool markTypeObjectUnknownProperties(js::types::TypeObject *obj);
 
@@ -3224,18 +3227,39 @@ class RegExpStatics;
 extern JS_FORCES_STACK JS_FRIEND_API(void)
 LeaveTrace(JSContext *cx);
 
+enum FrameExpandKind {
+    FRAME_EXPAND_NONE,
+    FRAME_EXPAND_TOP,
+    FRAME_EXPAND_ALL
+};
+
+#ifdef JS_METHODJIT
+namespace mjit {
+    void ExpandInlineFrames(JSContext *cx, bool all);
+}
+#endif
+
 } /* namespace js */
 
 /*
  * Get the current frame, first lazily instantiating stack frames if needed.
  * (Do not access cx->fp() directly except in JS_REQUIRES_STACK code.)
  *
- * Defined in jstracer.cpp if JS_TRACER is defined.
+ * LeaveTrace is defined in jstracer.cpp if JS_TRACER is defined.
+ *
+ * If the stack contains frames inlined by the method JIT, kind specifies
+ * which ones to expand.
  */
 static JS_FORCES_STACK JS_INLINE JSStackFrame *
-js_GetTopStackFrame(JSContext *cx)
+js_GetTopStackFrame(JSContext *cx, js::FrameExpandKind expand)
 {
     js::LeaveTrace(cx);
+
+#ifdef JS_METHODJIT
+    if (expand != js::FRAME_EXPAND_NONE)
+        js::mjit::ExpandInlineFrames(cx, expand == js::FRAME_EXPAND_ALL);
+#endif
+
     return cx->maybefp();
 }
 

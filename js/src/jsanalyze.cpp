@@ -52,7 +52,6 @@ namespace analyze {
 Script::Script()
 {
     PodZero(this);
-    JS_InitArenaPool(&pool, "script_analyze", 256, 8, NULL);
 }
 
 Script::~Script()
@@ -166,6 +165,9 @@ Script::addJump(JSContext *cx, unsigned offset,
     code->jumpTarget = true;
 
     if (offset < *currentOffset) {
+        /* Scripts containing loops are never inlined. */
+        isInlineable = false;
+
         /* Don't follow back edges to bytecode which has already been analyzed. */
         if (!code->analyzed) {
             if (*forwardJump == 0)
@@ -244,6 +246,8 @@ BytecodeNoFallThrough(JSOp op)
 void
 Script::analyze(JSContext *cx, JSScript *script)
 {
+    JS_InitArenaPool(&pool, "script_analyze", 256, 8, NULL);
+
     JS_ASSERT(script && !codeArray && !locals);
     this->script = script;
 
@@ -302,6 +306,12 @@ Script::analyze(JSContext *cx, JSScript *script)
      */
     if (cx->compartment->debugMode)
         usesRval = true;
+
+    isInlineable = true;
+    if (script->nClosedArgs || script->nClosedVars ||
+        script->usesEval || script->usesArguments || cx->compartment->debugMode) {
+        isInlineable = false;
+    }
 
     /*
      * If we are in the middle of one or more jumps, the offset of the highest
@@ -370,8 +380,10 @@ Script::analyze(JSContext *cx, JSScript *script)
         if (forwardCatch)
             code->inTryBlock = true;
 
-        if (untrap.trap)
+        if (untrap.trap) {
             code->safePoint = true;
+            isInlineable = false;
+        }
 
         unsigned stackDepth = code->stackDepth;
         uint32 *defineArray = code->defineArray;
@@ -411,6 +423,7 @@ Script::analyze(JSContext *cx, JSScript *script)
           case JSOP_SETRVAL:
           case JSOP_POPV:
             usesRval = true;
+            isInlineable = false;
             break;
 
           case JSOP_NAME:
@@ -424,10 +437,17 @@ Script::analyze(JSContext *cx, JSScript *script)
           case JSOP_NAMEDEC:
           case JSOP_FORNAME:
             usesScope = true;
+            isInlineable = false;
+            break;
+
+          case JSOP_THIS:
+          case JSOP_GETTHISPROP:
+            usesThis = true;
             break;
 
           case JSOP_TABLESWITCH:
           case JSOP_TABLESWITCHX: {
+            isInlineable = false;
             jsbytecode *pc2 = pc;
             unsigned jmplen = (op == JSOP_TABLESWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
             unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
@@ -461,6 +481,7 @@ Script::analyze(JSContext *cx, JSScript *script)
 
           case JSOP_LOOKUPSWITCH:
           case JSOP_LOOKUPSWITCHX: {
+            isInlineable = false;
             jsbytecode *pc2 = pc;
             unsigned jmplen = (op == JSOP_LOOKUPSWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
             unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
@@ -497,6 +518,7 @@ Script::analyze(JSContext *cx, JSScript *script)
              * exception but is not caught by a later handler in the same function:
              * no more code will execute, and it does not matter what is defined.
              */
+            isInlineable = false;
             JSTryNote *tn = script->trynotes()->vector;
             JSTryNote *tnlimit = tn + script->trynotes()->length;
             for (; tn < tnlimit; tn++) {
@@ -529,8 +551,10 @@ Script::analyze(JSContext *cx, JSScript *script)
              */
             if (pc[JSOP_GETLOCAL_LENGTH] != JSOP_POP) {
                 uint32 local = GET_SLOTNO(pc);
-                if (local < nfixed && !localDefined(local, offset))
+                if (local < nfixed && !localDefined(local, offset)) {
                     setLocal(local, LOCAL_USE_BEFORE_DEF);
+                    isInlineable = false;
+                }
             }
             break;
 
@@ -541,8 +565,10 @@ Script::analyze(JSContext *cx, JSScript *script)
           case JSOP_LOCALINC:
           case JSOP_LOCALDEC: {
             uint32 local = GET_SLOTNO(pc);
-            if (local < nfixed && !localDefined(local, offset))
+            if (local < nfixed && !localDefined(local, offset)) {
                 setLocal(local, LOCAL_USE_BEFORE_DEF);
+                isInlineable = false;
+            }
             break;
           }
 
@@ -576,6 +602,37 @@ Script::analyze(JSContext *cx, JSScript *script)
             }
             break;
           }
+
+          /* Additional opcodes which can be compiled but which can't be inlined. */
+          case JSOP_ARGUMENTS:
+          case JSOP_EVAL:
+          case JSOP_FORARG:
+          case JSOP_SETARG:
+          case JSOP_INCARG:
+          case JSOP_DECARG:
+          case JSOP_ARGINC:
+          case JSOP_ARGDEC:
+          case JSOP_THROW:
+          case JSOP_EXCEPTION:
+          case JSOP_DEFFUN:
+          case JSOP_DEFVAR:
+          case JSOP_DEFCONST:
+          case JSOP_SETCONST:
+          case JSOP_DEFLOCALFUN:
+          case JSOP_DEFLOCALFUN_FC:
+          case JSOP_LAMBDA:
+          case JSOP_LAMBDA_FC:
+          case JSOP_GETFCSLOT:
+          case JSOP_CALLFCSLOT:
+          case JSOP_ARGSUB:
+          case JSOP_ARGCNT:
+          case JSOP_DEBUGGER:
+          case JSOP_ENTERBLOCK:
+          case JSOP_LEAVEBLOCK:
+          case JSOP_FUNCALL:
+          case JSOP_FUNAPPLY:
+            isInlineable = false;
+            break;
 
           default:
             break;
@@ -659,7 +716,6 @@ Script::analyze(JSContext *cx, JSScript *script)
 LifetimeScript::LifetimeScript()
 {
     PodZero(this);
-    JS_InitArenaPool(&pool, "script_liverange", 256, 8, NULL);
 }
 
 LifetimeScript::~LifetimeScript()
@@ -668,13 +724,14 @@ LifetimeScript::~LifetimeScript()
 }
 
 bool
-LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *script, JSFunction *fun)
+LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *script)
 {
     JS_ASSERT(analysis->hasAnalyzed() && !analysis->failed());
 
+    JS_InitArenaPool(&pool, "script_liverange", 256, 8, NULL);
+
     this->analysis = analysis;
     this->script = script;
-    this->fun = fun;
 
     codeArray = ArenaArray<LifetimeBytecode>(pool, script->length);
     if (!codeArray)
@@ -687,7 +744,7 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
         return false;
     PodZero(locals, nfixed);
 
-    unsigned nargs = fun ? fun->nargs : 0;
+    unsigned nargs = script->fun ? script->fun->nargs : 0;
     args = ArenaArray<LifetimeVariable>(pool, nargs);
     if (!args)
         return false;

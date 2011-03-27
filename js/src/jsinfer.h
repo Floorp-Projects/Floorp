@@ -202,9 +202,9 @@ public:
  *                    NONE
  *       ___________ /  | \______________
  *      /               |                \
- * PACKED_ARRAY  SCRIPTED_FUNCTION  NATIVE_FUNCTION
+ * PACKED_ARRAY  INLINEABLE_FUNCTION  NATIVE_FUNCTION
  *      |               |                 |
- * DENSE_ARRAY          |                 |
+ * DENSE_ARRAY    SCRIPTED_FUNCTION       |
  *      \____________   |   _____________/
  *                   \  |  /
  *             NO_SPECIAL_EQUALITY
@@ -216,6 +216,7 @@ enum ObjectKind {
     OBJECT_UNKNOWN,
     OBJECT_PACKED_ARRAY,
     OBJECT_DENSE_ARRAY,
+    OBJECT_INLINEABLE_FUNCTION,
     OBJECT_SCRIPTED_FUNCTION,
     OBJECT_NATIVE_FUNCTION,
     OBJECT_NO_SPECIAL_EQUALITY
@@ -438,10 +439,13 @@ struct TypeObject
     /* Whether all objects this represents are packed arrays (implies isDenseArray). */
     bool isPackedArray;
 
+    /* Whether any objects this represents have had their .arguments accessed. */
+    bool isUninlineable;
+
     /* Whether any objects this represents have an equality hook. */
     bool hasSpecialEquality;
 
-    /* Native object for which this type was created. */
+    /* If at most one JSObject can have this as its type, that object. */
     JSObject *singleton;
 
     TypeObject() {}
@@ -486,6 +490,7 @@ struct TypeObject
     void addPrototype(JSContext *cx, TypeObject *proto);
     void markNotPacked(JSContext *cx, bool notDense);
     void markUnknown(JSContext *cx);
+    void markUninlineable(JSContext *cx);
     void storeToInstances(JSContext *cx, Property *base);
     void getFromPrototypes(JSContext *cx, Property *base);
 

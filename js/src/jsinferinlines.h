@@ -216,8 +216,11 @@ JSContext::getTypeCallerInitObject(bool isArray)
 {
     if (typeInferenceEnabled()) {
         JSStackFrame *caller = js_GetScriptedCaller(this, NULL);
-        if (caller && caller->script()->compartment == compartment)
-            return caller->script()->getTypeInitObject(this, caller->pc(this), isArray);
+        if (caller && caller->script()->compartment == compartment) {
+            JSScript *script;
+            jsbytecode *pc = caller->inlinepc(this, &script);
+            return script->getTypeInitObject(this, pc, isArray);
+        }
     }
     return getTypeNewObject(isArray ? JSProto_Array : JSProto_Object);
 }
@@ -248,18 +251,24 @@ JSContext::markTypeCallerUnexpected(js::types::jstype type)
     if (caller->script()->compartment != compartment)
         return true;
 
-    switch ((JSOp)*caller->pc(this)) {
+    JSScript *script;
+    jsbytecode *pc = caller->inlinepc(this, &script);
+
+    switch ((JSOp)*pc) {
       case JSOP_CALL:
       case JSOP_EVAL:
       case JSOP_FUNCALL:
       case JSOP_FUNAPPLY:
       case JSOP_NEW:
         break;
+      case JSOP_ITER:
+        /* This is also used for handling custom iterators. */
+        break;
       default:
         return true;
     }
 
-    return caller->script()->typeMonitorResult(this, caller->pc(this), type);
+    return script->typeMonitorResult(this, pc, type);
 }
 
 inline bool
@@ -389,7 +398,19 @@ JSContext::markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense)
     return compartment->types.checkPendingRecompiles(this);
 }
 
-bool
+inline bool
+JSContext::markTypeFunctionUninlineable(js::types::TypeObject *obj)
+{
+    if (!typeInferenceEnabled() || obj->isUninlineable)
+        return true;
+    js::types::AutoEnterTypeInference enter(this);
+
+    obj->markUninlineable(this);
+
+    return compartment->types.checkPendingRecompiles(this);
+}
+
+inline bool
 JSContext::markTypeObjectUnknownProperties(js::types::TypeObject *obj)
 {
     if (!typeInferenceEnabled() || obj->unknownProperties)
@@ -1206,7 +1227,8 @@ inline TypeObject::TypeObject(jsid name, JSObject *proto)
       initializerObject(false), initializerArray(false), initializerOffset(0),
       contribution(0), propertySet(NULL), propertyCount(0),
       instanceList(NULL), instanceNext(NULL), next(NULL), unknownProperties(false),
-      isDenseArray(false), isPackedArray(false), hasSpecialEquality(false),
+      isDenseArray(false), isPackedArray(false),
+      isUninlineable(false), hasSpecialEquality(false),
       singleton(NULL)
 {
 #ifdef DEBUG
@@ -1218,6 +1240,7 @@ inline TypeObject::TypeObject(jsid name, JSObject *proto)
     if (proto) {
         TypeObject *prototype = proto->getType();
         if (prototype->unknownProperties) {
+            isUninlineable = true;
             hasSpecialEquality = true;
             unknownProperties = true;
         }

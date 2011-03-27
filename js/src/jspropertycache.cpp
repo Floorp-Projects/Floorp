@@ -136,8 +136,9 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
      * Optimize the cached vword based on our parameters and the current pc's
      * opcode format flags.
      */
-    pc = cx->regs->pc;
-    op = js_GetOpcode(cx, cx->fp()->script(), pc);
+    JSScript *script;
+    pc = cx->fp()->inlinepc(cx, &script);
+    op = js_GetOpcode(cx, script, pc);
     cs = &js_CodeSpec[op];
     kshape = 0;
 
@@ -312,9 +313,12 @@ GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs
     if (op == JSOP_INSTANCEOF)
         return cx->runtime->atomState.classPrototypeAtom;
 
+    JSScript *script;
+    cx->fp()->inlinepc(cx, &script);
+
     ptrdiff_t pcoff = (JOF_TYPE(cs.format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
     JSAtom *atom;
-    GET_ATOM_FROM_BYTECODE(cx->fp()->script(), pc, pcoff, atom);
+    GET_ATOM_FROM_BYTECODE(script, pc, pcoff, atom);
     return atom;
 }
 
@@ -327,11 +331,14 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
 
     JSStackFrame *fp = cx->fp();
 
-    JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
-    JS_ASSERT(uintN((fp->hasImacropc() ? fp->imacropc() : pc) - fp->script()->code)
-              < fp->script()->length);
+    JSScript *script;
+    fp->inlinepc(cx, &script);
 
-    JSOp op = js_GetOpcode(cx, fp->script(), pc);
+    JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
+    JS_ASSERT(uintN((fp->hasImacropc() ? fp->imacropc() : pc) - script->code)
+              < script->length);
+
+    JSOp op = js_GetOpcode(cx, script, pc);
     const JSCodeSpec &cs = js_CodeSpec[op];
 
     obj = *objp;

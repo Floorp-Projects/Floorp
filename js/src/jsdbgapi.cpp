@@ -1332,7 +1332,10 @@ JS_GetScriptPrincipals(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(JSStackFrame *)
 JS_FrameIterator(JSContext *cx, JSStackFrame **iteratorp)
 {
-    *iteratorp = (*iteratorp == NULL) ? js_GetTopStackFrame(cx) : (*iteratorp)->prev();
+    if (*iteratorp == NULL)
+        *iteratorp = js_GetTopStackFrame(cx, FRAME_EXPAND_ALL);
+    else
+        *iteratorp = (*iteratorp)->prev();
     return *iteratorp;
 }
 
@@ -1967,7 +1970,7 @@ JS_PUBLIC_API(uint32)
 JS_GetTopScriptFilenameFlags(JSContext *cx, JSStackFrame *fp)
 {
     if (!fp)
-        fp = js_GetTopStackFrame(cx);
+        fp = js_GetTopStackFrame(cx, FRAME_EXPAND_TOP);
     while (fp) {
         if (fp->isScriptFrame())
             return JS_GetScriptFilenameFlags(fp->script());

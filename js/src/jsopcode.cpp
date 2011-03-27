@@ -2902,7 +2902,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * object that's not a constructor, causing us to be
                      * called with an intervening frame on the stack.
                      */
-                    JSStackFrame *fp = js_GetTopStackFrame(cx);
+                    JSStackFrame *fp = js_GetTopStackFrame(cx, FRAME_EXPAND_ALL);
                     if (fp) {
                         while (!fp->isEvalFrame())
                             fp = fp->prev();
@@ -5085,12 +5085,11 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
               spindex == JSDVG_IGNORE_STACK ||
               spindex == JSDVG_SEARCH_STACK);
 
-    LeaveTrace(cx);
-    
-    if (!cx->regs || !cx->regs->fp || !cx->regs->fp->isScriptFrame())
+    fp = js_GetTopStackFrame(cx, FRAME_EXPAND_TOP);
+
+    if (!cx->regs || !fp || !fp->isScriptFrame())
         goto do_fallback;
 
-    fp = cx->regs->fp;
     script = fp->script();
     pc = fp->hasImacropc() ? fp->imacropc() : cx->regs->pc;
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);
