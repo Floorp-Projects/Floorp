@@ -43,14 +43,15 @@
 #include "nsIDocShell.h"
 #include "gfxPattern.h"
 
-// {EC90F32E-7848-4819-A1E3-02E64C682A72}
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
-{ 0xec90f32e, 0x7848, 0x4819, { 0xa1, 0xe3, 0x2, 0xe6, 0x4c, 0x68, 0x2a, 0x72 } }
+{ 0xffb42d3c, 0x8281, 0x44c8, \
+  { 0xac, 0xba, 0x73, 0x15, 0x31, 0xaa, 0xe5, 0x07 } }
 
 class nsHTMLCanvasElement;
 class gfxContext;
 class gfxASurface;
 class nsIPropertyBag;
+class nsDisplayListBuilder;
 
 namespace mozilla {
 namespace layers {
@@ -108,7 +109,8 @@ public:
 
   // Return the CanvasLayer for this context, creating
   // one for the given layer manager if not available.
-  virtual already_AddRefed<CanvasLayer> GetCanvasLayer(CanvasLayer *aOldLayer,
+  virtual already_AddRefed<CanvasLayer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
+                                                       CanvasLayer *aOldLayer,
                                                        LayerManager *aManager) = 0;
 
   virtual void MarkContextClean() = 0;

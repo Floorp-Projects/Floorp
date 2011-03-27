@@ -642,7 +642,7 @@ nsHTMLCanvasElement::SetWriteOnly()
 }
 
 void
-nsHTMLCanvasElement::InvalidateFrame(const gfxRect* damageRect)
+nsHTMLCanvasElement::InvalidateCanvasContent(const gfxRect* damageRect)
 {
   // We don't need to flush anything here; if there's no frame or if
   // we plan to reframe we don't need to invalidate it anyway.
@@ -650,8 +650,11 @@ nsHTMLCanvasElement::InvalidateFrame(const gfxRect* damageRect)
   if (!frame)
     return;
 
+  frame->MarkLayersActive();
+
+  nsRect invalRect;
+  nsRect contentArea = frame->GetContentRect();
   if (damageRect) {
-    nsRect contentArea(frame->GetContentRect());
     nsIntSize size = GetWidthHeight();
 
     // damageRect and size are in CSS pixels; contentArea is in appunits
@@ -663,17 +666,29 @@ nsHTMLCanvasElement::InvalidateFrame(const gfxRect* damageRect)
     realRect.RoundOut();
 
     // then make it a nsRect
-    nsRect invalRect(realRect.X(), realRect.Y(),
-                     realRect.Width(), realRect.Height());
-
-    // account for border/padding
-    invalRect.MoveBy(contentArea.TopLeft() - frame->GetPosition());
-
-    frame->InvalidateLayer(invalRect, nsDisplayItem::TYPE_CANVAS);
+    invalRect = nsRect(realRect.X(), realRect.Y(),
+                       realRect.Width(), realRect.Height());
   } else {
-    nsRect r(frame->GetContentRect() - frame->GetPosition());
-    frame->InvalidateLayer(r, nsDisplayItem::TYPE_CANVAS);
+    invalRect = nsRect(nsPoint(0, 0), contentArea.Size());
   }
+  invalRect.MoveBy(contentArea.TopLeft() - frame->GetPosition());
+
+  Layer* layer = frame->InvalidateLayer(invalRect, nsDisplayItem::TYPE_CANVAS);
+  if (layer) {
+    static_cast<CanvasLayer*>(layer)->Updated();
+  }
+}
+
+void
+nsHTMLCanvasElement::InvalidateCanvas()
+{
+  // We don't need to flush anything here; if there's no frame or if
+  // we plan to reframe we don't need to invalidate it anyway.
+  nsIFrame *frame = GetPrimaryFrame();
+  if (!frame)
+    return;
+
+  frame->Invalidate(frame->GetContentRect() - frame->GetPosition());
 }
 
 PRInt32
@@ -701,13 +716,14 @@ nsHTMLCanvasElement::GetIsOpaque()
 }
 
 already_AddRefed<CanvasLayer>
-nsHTMLCanvasElement::GetCanvasLayer(CanvasLayer *aOldLayer,
+nsHTMLCanvasElement::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
+                                    CanvasLayer *aOldLayer,
                                     LayerManager *aManager)
 {
   if (!mCurrentContext)
     return nsnull;
 
-  return mCurrentContext->GetCanvasLayer(aOldLayer, aManager);
+  return mCurrentContext->GetCanvasLayer(aBuilder, aOldLayer, aManager);
 }
 
 void

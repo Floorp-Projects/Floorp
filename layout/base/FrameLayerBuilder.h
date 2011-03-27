@@ -191,9 +191,10 @@ public:
 
   /**
    * Call this to determine if a frame has a dedicated (non-Thebes) layer
-   * for the given display item key.
+   * for the given display item key. If there isn't one, we return null,
+   * otherwise we return the layer.
    */
-  static PRBool HasDedicatedLayer(nsIFrame* aFrame, PRUint32 aDisplayItemKey);
+  static Layer* GetDedicatedLayer(nsIFrame* aFrame, PRUint32 aDisplayItemKey);
 
   /**
    * This callback must be provided to EndTransaction. The callback data
