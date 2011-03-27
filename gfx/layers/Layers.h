@@ -1182,6 +1182,16 @@ public:
   void Updated() { mDirty = PR_TRUE; }
 
   /**
+   * Register a callback to be called at the end of each transaction.
+   */
+  typedef void (* DidTransactionCallback)(void* aClosureData);
+  void SetDidTransactionCallback(DidTransactionCallback aCallback, void* aClosureData)
+  {
+    mCallback = aCallback;
+    mCallbackData = aClosureData;
+  }
+
+  /**
    * CONSTRUCTION PHASE ONLY
    * Set the filter used to resample this image (if necessary).
    */
@@ -1204,14 +1214,25 @@ public:
 
 protected:
   CanvasLayer(LayerManager* aManager, void* aImplData)
-    : Layer(aManager, aImplData), mFilter(gfxPattern::FILTER_GOOD), mDirty(PR_FALSE) {}
+    : Layer(aManager, aImplData),
+      mCallback(nsnull), mCallbackData(nsnull), mFilter(gfxPattern::FILTER_GOOD),
+      mDirty(PR_FALSE) {}
 
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
+
+  void FireDidTransactionCallback()
+  {
+    if (mCallback) {
+      mCallback(mCallbackData);
+    }
+  }
 
   /**
    * 0, 0, canvaswidth, canvasheight
    */
   nsIntRect mBounds;
+  DidTransactionCallback mCallback;
+  void* mCallbackData;
   gfxPattern::GraphicsFilter mFilter;
   /**
    * Set to true in Updated(), cleared during a transaction.
