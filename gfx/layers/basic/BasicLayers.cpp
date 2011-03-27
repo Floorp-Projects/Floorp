@@ -995,6 +995,7 @@ void
 BasicCanvasLayer::Paint(gfxContext* aContext)
 {
   UpdateSurface();
+  FireDidTransactionCallback();
   PaintWithOpacity(aContext, GetEffectiveOpacity());
 }
 
