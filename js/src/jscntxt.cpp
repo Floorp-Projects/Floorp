@@ -386,6 +386,7 @@ StackSpace::pushExecuteFrame(JSContext *cx, JSObject *initialVarObj, ExecuteFram
     fg->regs_.pc = script->code;
     fg->regs_.fp = fp;
     fg->regs_.sp = fp->base();
+    fg->regs_.inlined = NULL;
     pushSegmentAndFrame(cx, &fg->regs_, fg);
     fg->seg_->setInitialVarObj(initialVarObj);
 }
@@ -399,6 +400,7 @@ StackSpace::pushDummyFrame(JSContext *cx, JSObject &scopeChain, DummyFrameGuard 
     fg->regs_.fp = fg->fp();
     fg->regs_.pc = NULL;
     fg->regs_.sp = fg->fp()->slots();
+    fg->regs_.inlined = NULL;
     pushSegmentAndFrame(cx, &fg->regs_, fg);
     return true;
 }
@@ -1237,7 +1239,7 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
      * Walk stack until we find a frame that is associated with some script
      * rather than a native frame.
      */
-    for (JSStackFrame *fp = js_GetTopStackFrame(cx); fp; fp = fp->prev()) {
+    for (JSStackFrame *fp = js_GetTopStackFrame(cx, FRAME_EXPAND_TOP); fp; fp = fp->prev()) {
         if (fp->pc(cx)) {
             report->filename = fp->script()->filename;
             report->lineno = js_FramePCToLineNumber(cx, fp);
@@ -1835,7 +1837,7 @@ JSStackFrame *
 js_GetScriptedCaller(JSContext *cx, JSStackFrame *fp)
 {
     if (!fp)
-        fp = js_GetTopStackFrame(cx);
+        fp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE);
     while (fp && fp->isDummyFrame())
         fp = fp->prev();
     JS_ASSERT_IF(fp, fp->isScriptFrame());

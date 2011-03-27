@@ -263,6 +263,7 @@ class FrameEntry
     FrameEntry *copy;
     bool       copied;
     bool       tracked;
+    bool       inlined;
     bool       initArray;
     JSObject   *initObject;
     jsbytecode *lastLoop;

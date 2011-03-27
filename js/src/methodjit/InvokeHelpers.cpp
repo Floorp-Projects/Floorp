@@ -273,7 +273,7 @@ stubs::FixupArity(VMFrame &f, uint32 nactual)
          * The PC is not coherent with the current frame, so fix it up for
          * exception handling.
          */
-        f.regs.pc = f.jit()->nativeToPC(ncode);
+        f.regs.pc = f.jit()->nativeToPC(ncode, &f.regs.inlined);
         THROWV(NULL);
     }
 
@@ -360,7 +360,7 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
     JSScript *newscript = newfun->script();
 
     bool newType = (flags & JSFRAME_CONSTRUCTING) && cx->typeInferenceEnabled() &&
-        types::UseNewType(cx, f.regs.fp->script(), f.regs.pc);
+        types::UseNewType(cx, f.script(), f.pc());
 
     if (argTypes && argc == newfun->nargs) {
         /*
@@ -568,8 +568,7 @@ js_InternalThrow(VMFrame &f)
     JSThrowHook handler = f.cx->debugHooks->throwHook;
     if (handler) {
         Value rval;
-        switch (handler(cx, cx->fp()->script(), cx->regs->pc, Jsvalify(&rval),
-                        cx->debugHooks->throwHookData)) {
+        switch (handler(cx, f.script(), f.pc(), Jsvalify(&rval), cx->debugHooks->throwHookData)) {
           case JSTRAP_ERROR:
             cx->clearPendingException();
             return NULL;

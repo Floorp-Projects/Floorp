@@ -63,12 +63,13 @@ class Compiler : public BaseCompiler
     friend class StubCompiler;
 
     struct BranchPatch {
-        BranchPatch(const Jump &j, jsbytecode *pc)
-          : jump(j), pc(pc)
+        BranchPatch(const Jump &j, jsbytecode *pc, uint32 inlineIndex)
+          : jump(j), pc(pc), inlineIndex(inlineIndex)
         { }
 
         Jump jump;
         jsbytecode *pc;
+        uint32 inlineIndex;
     };
 
 #if defined JS_MONOIC
@@ -137,13 +138,11 @@ class Compiler : public BaseCompiler
     /* InlineFrameAssembler wants to see this. */
   public:
     struct CallGenInfo {
-        CallGenInfo(jsbytecode *pc) : pc(pc) {}
-
         /*
          * These members map to members in CallICInfo. See that structure for
          * more comments.
          */
-        jsbytecode   *pc;
+        uint32       callIndex;
         DataLabelPtr funGuard;
         Jump         funJump;
         Jump         hotJump;
@@ -319,14 +318,20 @@ class Compiler : public BaseCompiler
 
     struct InternalCallSite {
         uint32 returnOffset;
-        jsbytecode *pc;
+        DataLabelPtr callPatch;
+        DataLabelPtr inlinePatch;
+        uint32 inlineIndex;
+        jsbytecode *inlinepc;
         size_t id;
         bool call;
         bool ool;
 
-        InternalCallSite(uint32 returnOffset, jsbytecode *pc, size_t id,
+        InternalCallSite(uint32 returnOffset,
+                         uint32 inlineIndex, jsbytecode *inlinepc, size_t id,
                          bool call, bool ool)
-          : returnOffset(returnOffset), pc(pc), id(id), call(call), ool(ool)
+          : returnOffset(returnOffset),
+            inlineIndex(inlineIndex), inlinepc(inlinepc), id(id),
+            call(call), ool(ool)
         { }
     };
 
@@ -347,22 +352,63 @@ class Compiler : public BaseCompiler
     };
 
     JSStackFrame *fp;
+    JSScript *outerScript;
 
     /* Existing frames on the stack whose slots may need to be updated. */
-    const Vector<PatchableFrame> *frames;
+    const Vector<PatchableFrame> *patchFrames;
 
-    JSScript *script;
     JSObject *scopeChain;
     JSObject *globalObj;
-    JSFunction *fun;
     bool isConstructing;
-    analyze::Script *analysis;
-    Label *jumpMap;
     bool *savedTraps;
-    jsbytecode *PC;
     Assembler masm;
     FrameState frame;
-    analyze::LifetimeScript liveness;
+
+    /*
+     * State for the current stack frame.
+     *
+     * When inlining function calls, we keep track of the state of each inline
+     * frame. The state of parent frames is not modified while analyzing an
+     * inner frame, though registers used by those parents can be spilled in
+     * the frame (reflected by the frame's active register state).
+     */
+
+    struct ActiveFrame {
+        ActiveFrame *parent;
+        jsbytecode *parentPC;
+        JSScript *script;
+        uint32 inlineIndex;
+        analyze::Script analysis;
+        analyze::LifetimeScript liveness;
+        Label *jumpMap;
+        bool hasThisType;
+        JSValueType thisType;
+        JSValueType *argumentTypes;
+        JSValueType *localTypes;
+        uint32 depth;
+        Vector<UnsyncedEntry> unsyncedEntries; // :XXX: handle OOM
+
+        /* State for managing return from inlined frames. */
+        bool needReturnValue;
+        bool syncReturnValue;
+        bool returnValueDouble;
+        bool returnSet;
+        AnyRegisterID returnRegister;
+        Registers returnParentRegs;
+        Vector<Jump> returnJumps; // :XXX: handle OOM
+
+        ActiveFrame(JSContext *cx);
+        ~ActiveFrame();
+    };
+    ActiveFrame *a;
+    ActiveFrame *outer;
+
+    JSScript *script;
+    jsbytecode *PC;
+
+    /* State spanning all stack frames. */
+
+    js::Vector<ActiveFrame*, 4, CompilerAllocPolicy> inlineFrames;
     js::Vector<BranchPatch, 64, CompilerAllocPolicy> branchPatches;
 #if defined JS_MONOIC
     js::Vector<GetGlobalNameICInfo, 16, CompilerAllocPolicy> getGlobalNames;
@@ -393,10 +439,6 @@ class Compiler : public BaseCompiler
     bool debugMode_;
     bool addTraceHints;
     bool recompiling;
-    bool hasThisType;
-    JSValueType thisType;
-    js::Vector<JSValueType, 16> argumentTypes;
-    js::Vector<JSValueType, 16> localTypes;
     bool oomInVector;       // True if we have OOM'd appending to a vector. 
     enum { NoApplyTricks, LazyArgsObj } applyTricks;
 
@@ -408,21 +450,31 @@ class Compiler : public BaseCompiler
     // follows interpreter usage in JSOP_LENGTH.
     enum { LengthAtomIndex = uint32(-2) };
 
-    Compiler(JSContext *cx, JSStackFrame *fp, const Vector<PatchableFrame> *frames);
+    Compiler(JSContext *cx, JSStackFrame *fp, const Vector<PatchableFrame> *patchFrames, bool recompiling);
     ~Compiler();
 
     CompileStatus compile();
 
-    jsbytecode *getPC() { return PC; }
     Label getLabel() { return masm.label(); }
     bool knownJump(jsbytecode *pc);
-    Label labelOf(jsbytecode *target);
-    void *findCallSite(const CallSite &callSite);
+    Label labelOf(jsbytecode *target, uint32 inlineIndex);
     void addCallSite(const InternalCallSite &callSite);
-    void addReturnSite(Label joinPoint);
+    void addReturnSite(Label joinPoint, bool ool = false);
     bool loadOldTraps(const Vector<CallSite> &site);
 
     bool debugMode() { return debugMode_; }
+
+    jsbytecode *outerPC() {
+        if (a == outer)
+            return PC;
+        ActiveFrame *scan = a;
+        while (scan && scan->parent != outer)
+            scan = scan->parent;
+        return scan->parentPC;
+    }
+
+    jsbytecode *inlinePC() { return PC; }
+    uint32 inlineIndex() { return a->inlineIndex; }
 
   private:
     CompileStatus performCompilation(JITScript **jitp);
@@ -430,9 +482,11 @@ class Compiler : public BaseCompiler
     CompileStatus generateMethod();
     CompileStatus generateEpilogue();
     CompileStatus finishThisUp(JITScript **jitp);
+    CompileStatus pushActiveFrame(JSScript *script, uint32 argc);
+    void popActiveFrame();
 
     /* Analysis helpers. */
-    CompileStatus prepareInferenceTypes();
+    CompileStatus prepareInferenceTypes(JSScript *script, ActiveFrame *a);
     void fixDoubleTypes(Uses uses);
     void restoreAnalysisTypes(uint32 stackDepth);
     JSValueType knownThisType();
@@ -495,6 +549,7 @@ class Compiler : public BaseCompiler
     void emitFinalReturn(Assembler &masm);
     void loadReturnValue(Assembler *masm, FrameEntry *fe);
     void emitReturnValue(Assembler *masm, FrameEntry *fe);
+    void emitInlineReturnValue(FrameEntry *fe);
     void dispatchCall(VoidPtrStubUInt32 stub, uint32 argc);
     void interruptCheckHelper();
     void emitUncachedCall(uint32 argc, bool callingNew);
@@ -621,6 +676,7 @@ class Compiler : public BaseCompiler
     /* Fast builtins. */
     JSObject *pushedSingleton(unsigned pushed);
     CompileStatus inlineNativeFunction(uint32 argc, bool callingNew);
+    CompileStatus inlineScriptedFunction(uint32 argc, bool callingNew);
     CompileStatus compileMathAbsInt(FrameEntry *arg);
     CompileStatus compileMathAbsDouble(FrameEntry *arg);
     CompileStatus compileMathSqrt(FrameEntry *arg);
@@ -633,7 +689,7 @@ class Compiler : public BaseCompiler
     CompileStatus compileGetChar(FrameEntry *thisValue, FrameEntry *arg, GetCharMode mode);
 
     void prepareStubCall(Uses uses);
-    Call emitStubCall(void *ptr);
+    Call emitStubCall(void *ptr, DataLabelPtr *pinline);
 };
 
 // Given a stub call, emits the call into the inline assembly path. If
@@ -641,9 +697,11 @@ class Compiler : public BaseCompiler
 #define INLINE_STUBCALL(stub)                                               \
     do {                                                                    \
         void *nstub = JS_FUNC_TO_DATA_PTR(void *, (stub));                  \
-        Call cl = emitStubCall(nstub);                                      \
-        InternalCallSite site(masm.callReturnOffset(cl), PC, (size_t)nstub, \
+        DataLabelPtr inlinePatch;                                           \
+        Call cl = emitStubCall(nstub, &inlinePatch);                        \
+        InternalCallSite site(masm.callReturnOffset(cl), a->inlineIndex, PC, (size_t)nstub, \
                               true, false);                                 \
+        site.inlinePatch = inlinePatch;                                     \
         addCallSite(site);                                                  \
     } while (0)                                                             \
 

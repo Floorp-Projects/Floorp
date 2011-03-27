@@ -112,24 +112,31 @@ JSObject *const JSStackFrame::sInvalidScopeChain = (JSObject *)0xbeef;
 #endif
 
 jsbytecode *
-JSStackFrame::pc(JSContext *cx, JSStackFrame *next)
+JSStackFrame::pc(JSContext *cx, JSStackFrame *next, JSInlinedSite **pinlined)
 {
     JS_ASSERT_IF(next, next->prev_ == this);
 
     StackSegment *seg = cx->containingSegment(this);
     JSFrameRegs *regs = seg->getCurrentRegs();
-    if (regs->fp == this)
+    if (regs->fp == this) {
+        if (pinlined)
+            *pinlined = regs->inlined;
         return regs->pc;
+    }
 
     if (!next)
         next = seg->computeNextFrame(this);
 
-    if (next->flags_ & JSFRAME_HAS_PREVPC)
+    if (next->flags_ & JSFRAME_HAS_PREVPC) {
+        if (pinlined)
+            *pinlined = next->prevInline_;
         return next->prevpc_;
+    }
 
 #if defined(JS_METHODJIT) && defined(JS_MONOIC)
     js::mjit::JITScript *jit = script()->getJIT(isConstructing());
-    jsbytecode *pc = jit->nativeToPC(next->ncode_);
+    js::mjit::CallSite *inlined;
+    jsbytecode *pc = jit->nativeToPC(next->ncode_, &inlined);
 
     /*
      * Remember the PC in the next frame. This is needed during recompilation,
@@ -137,7 +144,10 @@ JSStackFrame::pc(JSContext *cx, JSStackFrame *next)
      */
     next->flags_ |= JSFRAME_HAS_PREVPC;
     next->prevpc_ = pc;
+    next->prevInline_ = inlined;
 
+    if (pinlined)
+        *pinlined = inlined;
     return pc;
 #else
     JS_NOT_REACHED("Unknown PC for frame");
@@ -145,10 +155,30 @@ JSStackFrame::pc(JSContext *cx, JSStackFrame *next)
 #endif
 }
 
+jsbytecode *
+JSStackFrame::inlinepc(JSContext *cx, JSScript **pscript)
+{
+    JSInlinedSite *inlined;
+    jsbytecode *pc = this->pc(cx, NULL, &inlined);
+
+#ifdef JS_METHODJIT
+    if (inlined) {
+        JS_ASSERT(inlined->inlineIndex < jit()->nInlineFrames);
+        js::mjit::InlineFrame *frame = &jit()->inlineFrames()[inlined->inlineIndex];
+        *pscript = frame->fun->script();
+        return (*pscript)->code + inlined->pcOffset;
+    }
+#endif
+
+    JS_ASSERT(!inlined);
+    *pscript = script();
+    return pc;
+}
+
 JSObject *
 js::GetScopeChain(JSContext *cx)
 {
-    JSStackFrame *fp = js_GetTopStackFrame(cx);
+    JSStackFrame *fp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE);
     if (!fp) {
         /*
          * There is no code active on this context. In place of an actual
@@ -2216,12 +2246,6 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 static inline bool
 ScriptPrologue(JSContext *cx, JSStackFrame *fp, bool newType)
 {
-    /*
-     * Clear out the return address used by JIT frames, to mark this as an
-     * interpreter frame for the recompiler.
-     */
-    fp->setNativeReturnAddress(NULL);
-
     if (fp->isConstructing()) {
         JSObject *obj = js_CreateThisForFunction(cx, &fp->callee(), newType);
         if (!obj)

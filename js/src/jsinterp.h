@@ -50,11 +50,19 @@
 #include "jsscript.h"
 #include "jsvalue.h"
 
+#ifdef JS_METHODJIT
+namespace js { namespace mjit { struct CallSite; } }
+typedef js::mjit::CallSite JSInlinedSite;
+#else
+struct JSInlinedSite {};
+#endif
+
 struct JSFrameRegs
 {
     STATIC_SKIP_INFERENCE
     js::Value       *sp;                  /* stack pointer */
     jsbytecode      *pc;                  /* program counter */
+    JSInlinedSite   *inlined;             /* inlined call site */
     JSStackFrame    *fp;                  /* active frame */
 };
 
@@ -100,7 +108,7 @@ enum JSFrameFlags
     JSFRAME_HAS_ANNOTATION     =  0x80000, /* frame has annotation_ set */
     JSFRAME_HAS_RVAL           = 0x100000, /* frame has rval_ set */
     JSFRAME_HAS_SCOPECHAIN     = 0x200000, /* frame has scopeChain_ set */
-    JSFRAME_HAS_PREVPC         = 0x400000  /* frame has prevpc_ set */
+    JSFRAME_HAS_PREVPC         = 0x400000  /* frame has prevpc_ and prevInline_ set */
 };
 
 namespace js { namespace mjit { struct JITScript; } }
@@ -129,9 +137,14 @@ struct JSStackFrame
     /* Lazily initialized */
     js::Value           rval_;          /* return value of the frame */
     jsbytecode          *prevpc_;       /* pc of previous frame*/
+    JSInlinedSite       *prevInline_;   /* inlined site in previous frame */
     jsbytecode          *imacropc_;     /* pc of macro caller */
     void                *hookData_;     /* closure returned by call hook */
     void                *annotation_;   /* perhaps remove with bug 546848 */
+
+#if JS_BITS_PER_WORD == 32
+    void *padding;
+#endif
 
     friend class js::StackSpace;
     friend class js::FrameRegsIter;
@@ -233,6 +246,9 @@ struct JSStackFrame
     }
 
     inline void resetGeneratorPrev(JSContext *cx);
+    inline void resetInlinePrev(JSStackFrame *prevfp, jsbytecode *prevpc);
+
+    inline void initInlineFrame(JSFunction *fun, JSStackFrame *prevfp, jsbytecode *prevpc);
 
     /*
      * Frame slots
@@ -260,19 +276,37 @@ struct JSStackFrame
      * Script
      *
      * All function and global frames have an associated JSScript which holds
-     * the bytecode being executed for the frame.
+     * the bytecode being executed for the frame. This script/bytecode does
+     * not reflect any inlining that has been performed by the method JIT.
+     *
+     * If other frames were inlined into this one, the script/pc reflect the
+     * point of the outermost call. Use inlinepc to get the script/pc for
+     * the innermost inlined frame. Inlined frame invariants:
+     *
+     * - Inlined frames have the same scope chain as the outer frame.
+     * - Inlined frames have the same strictness as the outer frame.
      */
 
     /*
      * Get the frame's current bytecode, assuming |this| is in |cx|.
      * next is frame whose prev == this, NULL if not known or if this == cx->fp().
+     * If the frame is inside an inline call made within the pc, the state
+     * of any inlined frame(s) is returned through pinlined.
      */
-    jsbytecode *pc(JSContext *cx, JSStackFrame *next = NULL);
+    jsbytecode *pc(JSContext *cx, JSStackFrame *next = NULL, JSInlinedSite **pinlined = NULL);
 
     jsbytecode *prevpc() {
         JS_ASSERT((prev_ != NULL) && (flags_ & JSFRAME_HAS_PREVPC));
         return prevpc_;
     }
+
+    JSInlinedSite *prevInline() {
+        JS_ASSERT((prev_ != NULL) && (flags_ & JSFRAME_HAS_PREVPC));
+        return prevInline_;
+    }
+
+    /* Get the innermost pc/script in this frame, looking through any inlining. */
+    jsbytecode *inlinepc(JSContext *cx, JSScript **pscript);
 
     JSScript *script() const {
         JS_ASSERT(isScriptFrame());

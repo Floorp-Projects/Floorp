@@ -1507,7 +1507,7 @@ class ScopeNameCompiler : public PICStubCompiler
             /* Kludge to allow (typeof foo == "undefined") tests. */
             disable("property not found");
             if (pic.kind == ic::PICInfo::NAME) {
-                JSOp op2 = js_GetOpcode(cx, script, cx->regs->pc + JSOP_NAME_LENGTH);
+                JSOp op2 = js_GetOpcode(cx, f.script(), f.pc() + JSOP_NAME_LENGTH);
                 if (op2 == JSOP_TYPEOF) {
                     vp->setUndefined();
                     return true;
@@ -1555,7 +1555,7 @@ class ScopeNameCompiler : public PICStubCompiler
         } else {
             JS_ASSERT(!getprop.obj->getParent());
             if (getprop.obj->getType()->unknownProperties) {
-                script->typeMonitorResult(cx, f.regs.pc, types::TYPE_UNKNOWN);
+                f.script()->typeMonitorResult(cx, f.pc(), types::TYPE_UNKNOWN);
                 return cx->compartment->types.checkPendingRecompiles(cx);
             }
             types = getprop.obj->getType()->getProperty(cx, shape->id, false);
@@ -1563,7 +1563,7 @@ class ScopeNameCompiler : public PICStubCompiler
                 return cx->compartment->types.checkPendingRecompiles(cx);
         }
 
-        types->pushAllTypes(cx, script, f.regs.pc);
+        types->pushAllTypes(cx, f.script(), f.pc());
         return cx->compartment->types.checkPendingRecompiles(cx);
     }
 };
@@ -1786,7 +1786,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
      * :FIXME: looking under the usePropCache abstraction, which is only unset for
      * reads of the prototype.
      */
-    if (v.isUndefined() && usePropCache && !f.script()->typeMonitorUndefined(f.cx, f.regs.pc))
+    if (v.isUndefined() && usePropCache && !f.script()->typeMonitorUndefined(f.cx, f.pc()))
         THROW();
 
     f.regs.sp[-1] = v;
@@ -1904,7 +1904,7 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
     PropertyCacheEntry *entry;
     JSObject *obj2;
     JSAtom *atom;
-    JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
+    JS_PROPERTY_CACHE(cx).test(cx, f.pc(), aobj, obj2, entry, atom);
     if (!atom) {
         if (entry->vword.isFunObj()) {
             rval.setObject(entry->vword.toFunObj());
@@ -1957,7 +1957,7 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
     }
 #endif
 
-    if (regs.sp[-2].isUndefined() && !f.script()->typeMonitorUndefined(cx, regs.pc))
+    if (regs.sp[-2].isUndefined() && !f.script()->typeMonitorUndefined(cx, f.pc()))
         THROW();
 
     if (f.jit()->recompilations != recompilations)
@@ -2010,7 +2010,7 @@ ic::XName(VMFrame &f, ic::PICInfo *pic)
         THROW();
     f.regs.sp[-1] = rval;
 
-    if (rval.isUndefined() && !script->typeMonitorUndefined(f.cx, f.regs.pc))
+    if (rval.isUndefined() && !f.script()->typeMonitorUndefined(f.cx, f.pc()))
         THROW();
 }
 
@@ -2032,7 +2032,7 @@ ic::Name(VMFrame &f, ic::PICInfo *pic)
 
     if (status == Lookup_Cacheable && !cc.updateTypes())
         THROW();
-    if (!script->typeMonitorResult(f.cx, f.regs.pc, rval))
+    if (!f.script()->typeMonitorResult(f.cx, f.pc(), rval))
         THROW();
 }
 
@@ -2495,7 +2495,7 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
             // If the result can be cached, the value was already retrieved.
             JS_ASSERT(!f.regs.sp[-2].isMagic());
             f.regs.sp[-1].setObject(*thisObj);
-            if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.regs.pc))
+            if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.pc()))
                 THROW();
             return;
         }
@@ -2516,9 +2516,9 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
     {
         f.regs.sp[-1] = thisv;
     }
-    if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.regs.pc))
+    if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.pc()))
         THROW();
-    if (f.regs.sp[-2].isUndefined() && !f.script()->typeMonitorUndefined(cx, f.regs.pc))
+    if (f.regs.sp[-2].isUndefined() && !f.script()->typeMonitorUndefined(cx, f.pc()))
         THROW();
 }
 
@@ -2559,7 +2559,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
 
             // If the result can be cached, the value was already retrieved.
             JS_ASSERT(!f.regs.sp[-2].isMagic());
-            if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.regs.pc))
+            if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.pc()))
                 THROW();
             return;
         }
@@ -2567,12 +2567,12 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
 
     if (!obj->getProperty(cx, id, &f.regs.sp[-2]))
         THROW();
-    if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.regs.pc))
+    if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.pc()))
         THROW();
     if (f.regs.sp[-2].isUndefined()) {
         if (idval.isInt32())
             cx->addTypeProperty(obj->getType(), NULL, types::TYPE_UNDEFINED);
-        if (!f.script()->typeMonitorUndefined(cx, f.regs.pc))
+        if (!f.script()->typeMonitorUndefined(cx, f.pc()))
             THROW();
     }
 }

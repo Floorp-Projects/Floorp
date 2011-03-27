@@ -5449,7 +5449,7 @@ JS_PUBLIC_API(JSStackFrame *)
 JS_SaveFrameChain(JSContext *cx)
 {
     CHECK_REQUEST(cx);
-    JSStackFrame *fp = js_GetTopStackFrame(cx);
+    JSStackFrame *fp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE);
     if (!fp)
         return NULL;
     cx->saveActiveSegment();

@@ -7328,7 +7328,7 @@ js_SetDefaultXMLNamespace(JSContext *cx, const Value &v)
     if (!ns)
         return JS_FALSE;
 
-    JSStackFrame *fp = js_GetTopStackFrame(cx);
+    JSStackFrame *fp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE);
     JSObject &varobj = fp->varobj(cx);
 
     if (!cx->addTypePropertyId(varobj.getType(), JS_DEFAULT_XML_NAMESPACE_ID, types::TYPE_UNKNOWN))
@@ -7461,7 +7461,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
     if (!IsFunctionQName(cx, qn, &funid))
         return JS_FALSE;
 
-    obj = &js_GetTopStackFrame(cx)->scopeChain();
+    obj = &js_GetTopStackFrame(cx, FRAME_EXPAND_NONE)->scopeChain();
     do {
         /* Skip any With object that can wrap XML. */
         target = obj;

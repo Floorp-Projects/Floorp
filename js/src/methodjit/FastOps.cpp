@@ -337,7 +337,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
         /* Grosssssss! RHS _must_ be in ECX, on x86 */
         RegisterID rr = frame.tempRegInMaskForData(rhs,
-                                                   Registers::maskReg(JSC::X86Registers::ecx));
+                                                   Registers::maskReg(JSC::X86Registers::ecx)).reg();
 #else
         RegisterID rr = frame.tempRegForData(rhs);
 #endif
@@ -483,9 +483,9 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
         types::TypeSet *lhsTypes = frame.getTypeSet(lhs);
         types::TypeSet *rhsTypes = frame.getTypeSet(rhs);
         types::ObjectKind lhsKind =
-            lhsTypes ? lhsTypes->getKnownObjectKind(cx, script) : types::OBJECT_UNKNOWN;
+            lhsTypes ? lhsTypes->getKnownObjectKind(cx, outerScript) : types::OBJECT_UNKNOWN;
         types::ObjectKind rhsKind =
-            rhsTypes ? rhsTypes->getKnownObjectKind(cx, script) : types::OBJECT_UNKNOWN;
+            rhsTypes ? rhsTypes->getKnownObjectKind(cx, outerScript) : types::OBJECT_UNKNOWN;
 
         if (lhsKind != types::OBJECT_UNKNOWN && rhsKind != types::OBJECT_UNKNOWN) {
             /* :TODO: Merge with jsop_relational_int? */
@@ -831,7 +831,7 @@ mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
     if (!fe->isTypeKnown() ||
         !(fe->isType(JSVAL_TYPE_BOOLEAN) || fe->isType(JSVAL_TYPE_INT32))) {
         stubcc.masm.infallibleVMCall(JS_FUNC_TO_DATA_PTR(void *, stubs::ValueToBoolean),
-                                     frame.localSlots());
+                                     frame.totalDepth());
 
         jmpCvtExecScript.setJump(stubcc.masm.branchTest32(cond, Registers::ReturnReg,
                                                           Registers::ReturnReg));
@@ -1186,7 +1186,9 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
 
     if (cx->typeInferenceEnabled()) {
         types::TypeSet *types = frame.getTypeSet(obj);
-        types::ObjectKind kind = types ? types->getKnownObjectKind(cx, script) : types::OBJECT_UNKNOWN;
+        types::ObjectKind kind = types
+            ? types->getKnownObjectKind(cx, outerScript)
+            : types::OBJECT_UNKNOWN;
         if (id->mightBeType(JSVAL_TYPE_INT32) &&
             (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
             !arrayPrototypeHasIndexedProperty()) {
@@ -1504,8 +1506,9 @@ mjit::Compiler::jsop_getelem(bool isCall)
 
     if (cx->typeInferenceEnabled()) {
         types::TypeSet *types = frame.getTypeSet(obj);
-        types::ObjectKind kind = types ? types->getKnownObjectKind(cx, script) : types::OBJECT_UNKNOWN;
-
+        types::ObjectKind kind = types
+            ? types->getKnownObjectKind(cx, outerScript)
+            : types::OBJECT_UNKNOWN;
         if (!isCall && id->mightBeType(JSVAL_TYPE_INT32) &&
             (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
             !arrayPrototypeHasIndexedProperty()) {

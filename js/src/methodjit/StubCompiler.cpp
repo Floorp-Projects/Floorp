@@ -47,11 +47,10 @@
 using namespace js;
 using namespace mjit;
 
-StubCompiler::StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame, JSScript *script)
+StubCompiler::StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame)
 : cx(cx),
   cc(cc),
   frame(frame),
-  script(script),
   generation(1),
   lastGeneration(0),
   exits(CompilerAllocPolicy(cx, cc)),
@@ -167,22 +166,27 @@ StubCompiler::linkRejoin(Jump j)
 typedef JSC::MacroAssembler::RegisterID RegisterID;
 typedef JSC::MacroAssembler::ImmPtr ImmPtr;
 typedef JSC::MacroAssembler::Imm32 Imm32;
+typedef JSC::MacroAssembler::DataLabelPtr DataLabelPtr;
 
 JSC::MacroAssembler::Call
 StubCompiler::emitStubCall(void *ptr)
 {
-    return emitStubCall(ptr, frame.stackDepth() + script->nfixed);
+    return emitStubCall(ptr, frame.totalDepth());
 }
 
 JSC::MacroAssembler::Call
 StubCompiler::emitStubCall(void *ptr, int32 slots)
 {
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW CALL CODE ---- \n");
-    Call cl = masm.fallibleVMCall(ptr, cc.getPC(), slots);
+    DataLabelPtr inlinePatch;
+    Call cl = masm.fallibleVMCall(ptr, cc.outerPC(), &inlinePatch, slots);
     JaegerSpew(JSpew_Insns, " ---- END SLOW CALL CODE ---- \n");
 
     /* Add the call site for debugging and recompilation. */
-    Compiler::InternalCallSite site(masm.callReturnOffset(cl), cc.getPC(), (size_t)ptr, true, true);
+    Compiler::InternalCallSite site(masm.callReturnOffset(cl),
+                                    cc.inlineIndex(), cc.inlinePC(),
+                                    (size_t)ptr, true, true);
+    site.inlinePatch = inlinePatch;
     cc.addCallSite(site);
     return cl;
 }
@@ -198,7 +202,7 @@ StubCompiler::fixCrossJumps(uint8 *ncode, size_t offset, size_t total)
 
     for (size_t i = 0; i < scriptJoins.length(); i++) {
         const CrossJumpInScript &cj = scriptJoins[i];
-        slow.link(cj.from, fast.locationOf(cc.labelOf(cj.pc)));
+        slow.link(cj.from, fast.locationOf(cc.labelOf(cj.pc, cj.inlineIndex)));
     }
 
     for (size_t i = 0; i < joins.length(); i++)
@@ -218,9 +222,9 @@ bool
 StubCompiler::jumpInScript(Jump j, jsbytecode *target)
 {
     if (cc.knownJump(target)) {
-        frame.addJoin(crossJump(j, cc.labelOf(target)), false);
+        frame.addJoin(crossJump(j, cc.labelOf(target, cc.inlineIndex())), false);
     } else {
-        if (!scriptJoins.append(CrossJumpInScript(j, target)))
+        if (!scriptJoins.append(CrossJumpInScript(j, target, cc.inlineIndex())))
             return false;
         frame.addJoin(scriptJoins.length() - 1, true);
     }
