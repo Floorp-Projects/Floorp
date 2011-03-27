@@ -62,6 +62,10 @@ struct VMFrame
 {
     union Arguments {
         struct {
+            void *ptr;
+            void *ptr2;
+        } x;
+        struct {
             uint32 lazyArgsObj;
             uint32 dynamicArgc;
         } call;
@@ -452,13 +456,13 @@ ExpandInlineFrames(JSContext *cx, bool all);
 struct UnsyncedEntry
 {
     // Slot being updated, in bytes from the start of the outer JSStackFrame.
-    uint32 offset;
+    int32 offset;
 
     bool copy : 1;
     bool constant : 1;
     bool knownType : 1;
     union {
-        uint32 copiedOffset;
+        int32 copiedOffset;
         Value value;
         JSValueType type;
     } u;
