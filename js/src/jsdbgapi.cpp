@@ -1333,7 +1333,7 @@ JS_PUBLIC_API(JSStackFrame *)
 JS_FrameIterator(JSContext *cx, JSStackFrame **iteratorp)
 {
     if (*iteratorp == NULL)
-        *iteratorp = js_GetTopStackFrame(cx, FRAME_EXPAND_ALL);
+        *iteratorp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE);
     else
         *iteratorp = (*iteratorp)->prev();
     return *iteratorp;

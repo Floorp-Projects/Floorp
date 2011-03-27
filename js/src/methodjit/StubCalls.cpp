@@ -52,6 +52,7 @@
 #include "jstypes.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
+#include "methodjit/Retcon.h"
 
 #include "jsinterpinlines.h"
 #include "jspropertycache.h"
@@ -1297,6 +1298,14 @@ void JS_FASTCALL
 stubs::Interrupt(VMFrame &f, jsbytecode *pc)
 {
     if (!js_HandleExecutionInterrupt(f.cx))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::RecompileForInline(VMFrame &f)
+{
+    Recompiler recompiler(f.cx, f.script());
+    if (!recompiler.recompile())
         THROW();
 }
 

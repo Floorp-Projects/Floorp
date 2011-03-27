@@ -140,6 +140,7 @@ class Script
     bool usesRval;
     bool usesScope;
     bool usesThis;
+    bool hasCalls;
 
     bool isInlineable;
 
@@ -165,8 +166,8 @@ class Script
     /* Whether there are NAME bytecodes which can access the frame's scope chain. */
     bool usesScopeChain() const { return usesScope; }
 
-    /* Whether there are THIS bytecodes. */
     bool usesThisValue() const { return usesThis; }
+    bool hasFunctionCalls() const { return hasCalls; }
 
     bool hasAnalyzed() const { return !!codeArray; }
     JSScript *getScript() const { return script; }
