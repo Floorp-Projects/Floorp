@@ -58,6 +58,7 @@
 #include "gfxUtils.h"
 
 #include "CanvasUtils.h"
+#include "nsDisplayList.h"
 
 #include "GLContextProvider.h"
 
@@ -247,15 +248,15 @@ WebGLContext::DestroyResourcesAndContext()
 void
 WebGLContext::Invalidate()
 {
+    if (mInvalidated)
+        return;
+
     if (!mCanvasElement)
         return;
 
 #ifdef MOZ_SVG
     nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
 #endif
-
-    if (mInvalidated)
-        return;
 
     mInvalidated = PR_TRUE;
     HTMLCanvasElement()->InvalidateFrame();
@@ -619,18 +620,27 @@ WebGLContext::GetThebesSurface(gfxASurface **surface)
 
 static PRUint8 gWebGLLayerUserData;
 
+class WebGLContextUserData : public LayerUserData {
+public:
+    WebGLContextUserData(nsHTMLCanvasElement *aContent)
+    : mContent(aContent) {}
+  static void DidTransactionCallback(void* aData)
+  {
+    static_cast<WebGLContextUserData*>(aData)->mContent->MarkContextClean();
+  }
+
+private:
+  nsRefPtr<nsHTMLCanvasElement> mContent;
+};
+
 already_AddRefed<layers::CanvasLayer>
-WebGLContext::GetCanvasLayer(CanvasLayer *aOldLayer,
+WebGLContext::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
+                             CanvasLayer *aOldLayer,
                              LayerManager *aManager)
 {
     if (!mResetLayer && aOldLayer &&
         aOldLayer->HasUserData(&gWebGLLayerUserData)) {
         NS_ADDREF(aOldLayer);
-        if (mInvalidated) {
-            aOldLayer->Updated();
-            mInvalidated = PR_FALSE;
-            HTMLCanvasElement()->GetPrimaryCanvasFrame()->MarkLayersActive();
-        }
         return aOldLayer;
     }
 
@@ -639,7 +649,25 @@ WebGLContext::GetCanvasLayer(CanvasLayer *aOldLayer,
         NS_WARNING("CreateCanvasLayer returned null!");
         return nsnull;
     }
-    canvasLayer->SetUserData(&gWebGLLayerUserData, nsnull);
+    WebGLContextUserData *userData = nsnull;
+    if (aBuilder->IsPaintingToWindow()) {
+      // Make the layer tell us whenever a transaction finishes (including
+      // the current transaction), so we can clear our invalidation state and
+      // start invalidating again. We need to do this for the layer that is
+      // being painted to a window (there shouldn't be more than one at a time,
+      // and if there is, flushing the invalidation state more often than
+      // necessary is harmless).
+
+      // The layer will be destroyed when we tear down the presentation
+      // (at the latest), at which time this userData will be destroyed,
+      // releasing the reference to the element.
+      // The userData will receive DidTransactionCallbacks, which flush the
+      // the invalidation state to indicate that the canvas is up to date.
+      userData = new WebGLContextUserData(HTMLCanvasElement());
+      canvasLayer->SetDidTransactionCallback(
+              WebGLContextUserData::DidTransactionCallback, userData);
+    }
+    canvasLayer->SetUserData(&gWebGLLayerUserData, userData);
 
     CanvasLayer::Data data;
 
@@ -663,7 +691,6 @@ WebGLContext::GetCanvasLayer(CanvasLayer *aOldLayer,
     canvasLayer->SetContentFlags(flags);
     canvasLayer->Updated();
 
-    mInvalidated = PR_FALSE;
     mResetLayer = PR_FALSE;
 
     return canvasLayer.forget().get();
