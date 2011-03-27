@@ -57,7 +57,6 @@
 
     <preferences id="tabsPreferences">
       <preference id="browser.link.open_newwindow"     name="browser.link.open_newwindow"     type="int"/>
-      <preference id="browser.tabs.autoHide"           name="browser.tabs.autoHide"           type="bool" inverted="true"/>
       <preference id="browser.tabs.loadInBackground"   name="browser.tabs.loadInBackground"   type="bool" inverted="true"/>
       <preference id="browser.tabs.warnOnClose"        name="browser.tabs.warnOnClose"        type="bool"/>
       <preference id="browser.tabs.warnOnOpen"         name="browser.tabs.warnOnOpen"         type="bool"/>
@@ -82,9 +81,6 @@
       <checkbox id="warnOpenMany" label="&warnOpenManyTabs.label;"
                 accesskey="&warnOpenManyTabs.accesskey;"
                 preference="browser.tabs.warnOnOpen"/>
-      <checkbox id="showTabBar" label="&showTabBar.label;"
-                accesskey="&showTabBar.accesskey;"
-                preference="browser.tabs.autoHide"/>
       <checkbox id="switchToNewTabs" label="&switchToNewTabs.label;"
                 accesskey="&switchToNewTabs.accesskey;"
                 preference="browser.tabs.loadInBackground"/>
