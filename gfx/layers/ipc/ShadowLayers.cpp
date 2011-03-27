@@ -301,7 +301,6 @@ ShadowLayerForwarder::PaintedCanvas(ShadowableLayer* aCanvas,
                                     gfxSharedImageSurface* aNewFrontSurface)
 {
   mTxn->AddPaint(OpPaintCanvas(NULL, Shadow(aCanvas),
-                               nsIntRect(),
                                aNewFrontSurface->GetShmem()));
 }
 

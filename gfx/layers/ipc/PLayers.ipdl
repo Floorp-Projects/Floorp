@@ -172,7 +172,6 @@ struct OpPaintThebesBuffer {
 
 struct OpPaintCanvas  {
   PLayer layer;
-  nsIntRect updated;
   Shmem newFrontBuffer;
 };
 
