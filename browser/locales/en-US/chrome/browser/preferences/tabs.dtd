@@ -7,9 +7,6 @@
 <!ENTITY warnOpenManyTabs.label       "Warn me when opening multiple tabs might slow down &brandShortName;">
 <!ENTITY warnOpenManyTabs.accesskey   "o">
 
-<!ENTITY showTabBar.label             "Always show the tab bar">
-<!ENTITY showTabBar.accesskey         "b">
-
 <!ENTITY switchToNewTabs.label        "When I open a link in a new tab, switch to it immediately">
 <!ENTITY switchToNewTabs.accesskey    "s">
 
