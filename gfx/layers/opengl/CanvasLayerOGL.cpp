@@ -184,6 +184,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
                             const nsIntPoint& aOffset)
 {
   UpdateSurface();
+  FireDidTransactionCallback();
 
   mOGLManager->MakeCurrent();
 

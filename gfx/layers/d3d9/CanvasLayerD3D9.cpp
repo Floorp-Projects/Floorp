@@ -209,6 +209,8 @@ void
 CanvasLayerD3D9::RenderLayer()
 {
   UpdateSurface();
+  FireDidTransactionCallback();
+
   if (!mTexture)
     return;
 
