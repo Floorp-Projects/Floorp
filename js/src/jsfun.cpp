@@ -2886,6 +2886,12 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
 
     JSObject *clone;
     if (cx->compartment == fun->compartment()) {
+        /* Don't clone functions with singleton types. JIT optimizations depend on this. */
+        if (fun->getType()->singleton) {
+            JS_ASSERT(fun->getType()->singleton == fun);
+            return fun;
+        }
+
         /*
          * The cloned function object does not need the extra JSFunction members
          * beyond JSObject as it points to fun via the private slot.
