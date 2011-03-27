@@ -228,10 +228,10 @@ void
 CanvasLayerD3D10::RenderLayer()
 {
   UpdateSurface();
+  FireDidTransactionCallback();
 
-  if (!mTexture) {
+  if (!mTexture)
     return;
-  }
 
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
 
