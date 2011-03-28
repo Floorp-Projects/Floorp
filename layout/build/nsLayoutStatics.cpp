@@ -79,7 +79,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsTextFragment.h"
 #include "nsCSSRuleProcessor.h"
-#include "nsXMLHttpRequest.h"
+#include "nsCrossSiteListenerProxy.h"
 #include "nsWebSocket.h"
 #include "nsDOMThreadService.h"
 #include "nsHTMLDNSPrefetch.h"
@@ -365,7 +365,7 @@ nsLayoutStatics::Shutdown()
   nsAudioStream::ShutdownLibrary();
 #endif
 
-  nsXMLHttpRequest::ShutdownACCache();
+  nsCrossSiteListenerProxy::Shutdown();
   
   nsWebSocket::ReleaseGlobals();
   
