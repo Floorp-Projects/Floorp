@@ -100,6 +100,7 @@
 #endif
 
 #include "mozilla/FunctionTimer.h"
+#include "mozilla/dom/Element.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService
@@ -275,7 +276,7 @@ nsAccessibilityService::CreateHTMLImageAccessible(nsIContent* aContent,
     if (!mapElmName.IsEmpty()) {
       if (mapElmName.CharAt(0) == '#')
         mapElmName.Cut(0,1);
-      mapElm = htmlDoc->GetImageMap(mapElmName);
+      mapElm = do_QueryInterface(htmlDoc->GetImageMap(mapElmName));
     }
   }
 
