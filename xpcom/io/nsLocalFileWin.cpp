@@ -90,6 +90,9 @@
             return NS_ERROR_NOT_INITIALIZED;    \
     PR_END_MACRO
 
+// CopyFileEx only supports unbuffered I/O in Windows Vista and above
+#define COPY_FILE_NO_BUFFERING 0x00001000
+
 // _mbsstr isn't declared in w32api headers but it's there in the libs
 #ifdef __MINGW32__
 extern "C" {
@@ -1456,18 +1459,29 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
     if (NS_FAILED(rv))
         return rv;
 
+    // Pass the flag COPY_FILE_NO_BUFFERING to CopyFileEx as we may be copying
+    // to a SMBV2 remote drive. Without this parameter subsequent append mode
+    // file writes can cause the resultant file to become corrupt. We only need to do 
+    // this if the major version of Windows is > 5(Only Windows Vista and above 
+    // can support SMBV2).
     int copyOK;
-
+    DWORD dwVersion = GetVersion();
+    DWORD dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
+    DWORD dwCopyFlags = 0;
+    
+    if (dwMajorVersion > 5)
+       dwCopyFlags = COPY_FILE_NO_BUFFERING;
+    
     if (!move)
-        copyOK = ::CopyFileW(filePath.get(), destPath.get(), PR_TRUE);
+        copyOK = ::CopyFileExW(filePath.get(), destPath.get(), NULL, NULL, NULL, dwCopyFlags);
     else {
 #ifndef WINCE
         DWORD status;
         if (FileEncryptionStatusW(filePath.get(), &status)
             && status == FILE_IS_ENCRYPTED)
         {
-            copyOK = CopyFileExW(filePath.get(), destPath.get(), NULL, NULL, NULL,
-                                 COPY_FILE_ALLOW_DECRYPTED_DESTINATION);
+            dwCopyFlags |= COPY_FILE_ALLOW_DECRYPTED_DESTINATION;
+            copyOK = CopyFileExW(filePath.get(), destPath.get(), NULL, NULL, NULL, dwCopyFlags);
 
             if (copyOK)
                 DeleteFileW(filePath.get());
@@ -1476,16 +1490,25 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
         {
             copyOK = ::MoveFileExW(filePath.get(), destPath.get(),
                                    MOVEFILE_REPLACE_EXISTING |
-                                   MOVEFILE_COPY_ALLOWED |
                                    MOVEFILE_WRITE_THROUGH);
+            
+            // Check if copying the source file to a different volume,
+            // as this could be an SMBV2 mapped drive.
+            if (!copyOK && GetLastError() == ERROR_NOT_SAME_DEVICE)
+            {
+                copyOK = CopyFileExW(filePath.get(), destPath.get(), NULL, NULL, NULL, dwCopyFlags);
+            
+                if (copyOK)
+                    DeleteFile(filePath.get());
+            }
         }
 #else
         DeleteFile(destPath.get());
         copyOK = :: MoveFileW(filePath.get(), destPath.get());
 #endif
-    }
+}
 
-    if (!copyOK)  // CopyFile and MoveFileEx return zero at failure.
+    if (!copyOK)  // CopyFileEx and MoveFileEx return zero at failure.
         rv = ConvertWinError(GetLastError());
 
 #ifndef WINCE
