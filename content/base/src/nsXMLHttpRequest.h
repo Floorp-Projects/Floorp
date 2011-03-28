@@ -263,8 +263,8 @@ protected:
   // mReadRequest is different from mChannel for multipart requests
   nsCOMPtr<nsIRequest> mReadRequest;
   nsCOMPtr<nsIDOMDocument> mResponseXML;
-  nsCOMPtr<nsIChannel> mACGetChannel;
-  nsTArray<nsCString> mACUnsafeHeaders;
+  nsCOMPtr<nsIChannel> mCORSPreflightChannel;
+  nsTArray<nsCString> mCORSUnsafeHeaders;
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnUploadProgressListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnReadystatechangeListener;

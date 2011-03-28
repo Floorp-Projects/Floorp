@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsCrossSiteListenerProxy_h__
-#define nsCrossSiteListenerProxy_h__
+#ifndef nsCORSListenerProxy_h__
+#define nsCORSListenerProxy_h__
 
 #include "nsIStreamListener.h"
 #include "nsIInterfaceRequestor.h"
@@ -63,24 +63,24 @@ NS_StartCORSPreflight(nsIChannel* aRequestChannel,
                       nsTArray<nsCString>& aACUnsafeHeaders,
                       nsIChannel** aPreflightChannel);
 
-class nsCrossSiteListenerProxy : public nsIStreamListener,
-                                 public nsIInterfaceRequestor,
-                                 public nsIChannelEventSink,
-                                 public nsIAsyncVerifyRedirectCallback
+class nsCORSListenerProxy : public nsIStreamListener,
+                            public nsIInterfaceRequestor,
+                            public nsIChannelEventSink,
+                            public nsIAsyncVerifyRedirectCallback
 {
 public:
-  nsCrossSiteListenerProxy(nsIStreamListener* aOuter,
-                           nsIPrincipal* aRequestingPrincipal,
-                           nsIChannel* aChannel,
-                           PRBool aWithCredentials,
-                           nsresult* aResult);
-  nsCrossSiteListenerProxy(nsIStreamListener* aOuter,
-                           nsIPrincipal* aRequestingPrincipal,
-                           nsIChannel* aChannel,
-                           PRBool aWithCredentials,
-                           const nsCString& aPreflightMethod,
-                           const nsTArray<nsCString>& aPreflightHeaders,
-                           nsresult* aResult);
+  nsCORSListenerProxy(nsIStreamListener* aOuter,
+                      nsIPrincipal* aRequestingPrincipal,
+                      nsIChannel* aChannel,
+                      PRBool aWithCredentials,
+                      nsresult* aResult);
+  nsCORSListenerProxy(nsIStreamListener* aOuter,
+                      nsIPrincipal* aRequestingPrincipal,
+                      nsIChannel* aChannel,
+                      PRBool aWithCredentials,
+                      const nsCString& aPreflightMethod,
+                      const nsTArray<nsCString>& aPreflightHeaders,
+                      nsresult* aResult);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
