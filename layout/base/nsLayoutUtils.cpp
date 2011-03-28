@@ -129,7 +129,10 @@ static ContentMap* sContentMap = NULL;
 static ContentMap& GetContentMap() {
   if (!sContentMap) {
     sContentMap = new ContentMap();
-    nsresult rv = sContentMap->Init();
+#ifdef DEBUG
+    nsresult rv =
+#endif
+    sContentMap->Init();
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Could not initialize map.");
   }
   return *sContentMap;
