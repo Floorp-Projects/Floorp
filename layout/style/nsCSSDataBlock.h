@@ -43,7 +43,6 @@
 #ifndef nsCSSDataBlock_h__
 #define nsCSSDataBlock_h__
 
-#include "nsCSSStruct.h"
 #include "nsCSSProps.h"
 #include "nsCSSPropertySet.h"
 

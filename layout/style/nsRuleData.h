@@ -45,7 +45,6 @@
 #define nsRuleData_h_
 
 #include "nsCSSProps.h"
-#include "nsCSSStruct.h"
 #include "nsStyleStructFwd.h"
 
 class nsPresContext;
