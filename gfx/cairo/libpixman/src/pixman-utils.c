@@ -167,6 +167,12 @@ pixman_contract (uint32_t *      dst,
     }
 }
 
+uint32_t *
+_pixman_iter_get_scanline_noop (pixman_iter_t *iter, const uint32_t *mask)
+{
+    return iter->buffer;
+}
+
 #define N_TMP_BOXES (16)
 
 pixman_bool_t
