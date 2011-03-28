@@ -275,7 +275,7 @@ nsLayoutStatics::Initialize()
   nsIPresShell::InitializeStatics();
   nsRefreshDriver::InitializeStatics();
 
-  nsCrossSiteListenerProxy::Startup();
+  nsCORSListenerProxy::Startup();
 
   rv = nsFrameList::Init();
   if (NS_FAILED(rv)) {
@@ -365,7 +365,7 @@ nsLayoutStatics::Shutdown()
   nsAudioStream::ShutdownLibrary();
 #endif
 
-  nsCrossSiteListenerProxy::Shutdown();
+  nsCORSListenerProxy::Shutdown();
   
   nsWebSocket::ReleaseGlobals();
   
