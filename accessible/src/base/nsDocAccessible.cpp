@@ -650,6 +650,11 @@ nsDocAccessible::Shutdown()
 
   RemoveEventListeners();
 
+  // Mark the document as shutdown before AT is notified about the document
+  // removal from its container (valid for root documents on ATK).
+  nsCOMPtr<nsIDocument> kungFuDeathGripDoc = mDocument;
+  mDocument = nsnull;
+
   if (mParent) {
     nsDocAccessible* parentDocument = mParent->GetDocAccessible();
     if (parentDocument)
@@ -671,9 +676,6 @@ nsDocAccessible::Shutdown()
   mDependentIDsHash.Clear();
   mNodeToAccessibleMap.Clear();
   ClearCache(mAccessibleCache);
-
-  nsCOMPtr<nsIDocument> kungFuDeathGripDoc = mDocument;
-  mDocument = nsnull;
 
   nsHyperTextAccessibleWrap::Shutdown();
 
