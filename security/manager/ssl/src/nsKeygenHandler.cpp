@@ -565,18 +565,21 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
         if (strcmp(keyparamsString, "null") == 0)
             goto loser;
         str = keyparamsString;
+        PRBool found_match = PR_FALSE;
         do {
             end = strchr(str, ',');
             if (end != nsnull)
                 *end = '\0';
             primeBits = pqg_prime_bits(str);
-            if (keysize == primeBits)
-                goto found_match;
+            if (keysize == primeBits) {
+                found_match = PR_TRUE;
+                break;
+            }
             str = end + 1;
         } while (end != nsnull);
-        goto loser;
-found_match:
-        (void)0;
+        if (!found_match) {
+            goto loser;
+        }
     } else if (aKeyType.LowerCaseEqualsLiteral("ec")) {
         keyparamsString = ToNewCString(aKeyParams);
         if (!keyparamsString) {
