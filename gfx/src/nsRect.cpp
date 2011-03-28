@@ -205,10 +205,12 @@ nsRect& nsRect::ScaleRoundOut(float aXScale, float aYScale)
   return *this;
 }
 
+#ifdef DEBUG
 static bool IsFloatInteger(float aFloat)
 {
   return fabs(aFloat - NS_round(aFloat)) < 1e-6;
 }
+#endif
 
 nsRect& nsRect::ExtendForScaling(float aXMult, float aYMult)
 {

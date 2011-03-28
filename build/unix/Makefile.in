@@ -53,8 +53,3 @@ include $(topsrcdir)/config/rules.mk
 
 libs:: $(srcdir)/run-mozilla.sh
 	$(INSTALL) $< $(DIST)/bin
-
-ifeq ($(OS_ARCH),OpenVMS)
-libs:: vms/mozilla.com vms/install.com vms/getinfo.com
-	$(INSTALL) $? $(DIST)/bin
-endif

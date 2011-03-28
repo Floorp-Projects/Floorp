@@ -112,6 +112,7 @@ CPPSRCS		= \
 		nsHTMLTableSectionElement.cpp \
 		nsHTMLTextAreaElement.cpp \
 		nsHTMLTitleElement.cpp \
+		nsHTMLUnknownElement.cpp \
 		nsDOMValidityState.cpp \
 		nsIConstraintValidation.cpp \
 		$(NULL)

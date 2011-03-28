@@ -120,6 +120,7 @@ GLXLibrary::EnsureInitialized()
         { (PRFuncPtr*) &xGetCurrentContext, { "glXGetCurrentContext", NULL } },
         /* functions introduced in GLX 1.1 */
         { (PRFuncPtr*) &xQueryExtensionsString, { "glXQueryExtensionsString", NULL } },
+        { (PRFuncPtr*) &xGetClientString, { "glXGetClientString", NULL } },
         { (PRFuncPtr*) &xQueryServerString, { "glXQueryServerString", NULL } },
         { NULL, { NULL } }
     };
@@ -171,14 +172,30 @@ GLXLibrary::EnsureInitialized()
     }
 
     Display *display = DefaultXDisplay();
+    PRBool ignoreBlacklist = PR_GetEnv("MOZ_GLX_IGNORE_BLACKLIST") != nsnull;
+    if (!ignoreBlacklist) {
+        // ATI's libGL (at least the one provided with 11.2 drivers) segfaults
+        // when querying server info if the server does not have the
+        // ATIFGLEXTENSION extension.
+        const char *clientVendor = xGetClientString(display, GLX_VENDOR);
+        if (clientVendor && strcmp(clientVendor, "ATI") == 0) {
+            printf("[GLX] The ATI proprietary libGL.so.1 is currently "
+                   "blacklisted to avoid crashes that happen in some "
+                   "situations. If you would like to bypass this, set the "
+                   "MOZ_GLX_IGNORE_BLACKLIST environment variable.\n");
+            return PR_FALSE;
+        }
+    }
+
     int screen = DefaultScreen(display);
-    const char *vendor;
+    const char *serverVendor;
     const char *serverVersionStr;
     const char *extensionsStr;
 
-    // this scope is covered by a ScopedXErrorHandler to catch X errors in GLX calls,
-    // see bug 632867 comment 3: Mesa versions up to 7.10 cause a BadLength error during the first GLX call
-    // when the server GLX version < 1.3.
+    // This scope is covered by a ScopedXErrorHandler to catch X errors in GLX
+    // calls.  See bug 632867 comment 3: Mesa versions up to 7.10 cause a
+    // BadLength error during the first GLX call that communicates with the
+    // server when the server GLX version < 1.3.
     {
         ScopedXErrorHandler xErrorHandler;
 
@@ -188,15 +205,14 @@ GLXLibrary::EnsureInitialized()
             return PR_FALSE;
         }
 
-        vendor = xQueryServerString(display, screen, GLX_VENDOR);
+        serverVendor = xQueryServerString(display, screen, GLX_VENDOR);
         serverVersionStr = xQueryServerString(display, screen, GLX_VERSION);
 
-        PRBool IsDriverBlacklisted = !vendor ||   // it's been reported that a VNC X server was returning vendor=null
+        PRBool IsDriverBlacklisted = !serverVendor ||   // it's been reported that a VNC X server was returning serverVendor=null
                                      !serverVersionStr ||
-                                     strcmp(vendor, "NVIDIA Corporation");
+                                     strcmp(serverVendor, "NVIDIA Corporation");
 
-        if (IsDriverBlacklisted &&
-            !PR_GetEnv("MOZ_GLX_IGNORE_BLACKLIST"))
+        if (IsDriverBlacklisted && !ignoreBlacklist)
         {
           printf("[GLX] your GL driver is currently blocked. If you would like to bypass this, "
                   "define the MOZ_GLX_IGNORE_BLACKLIST environment variable.\n");
@@ -245,9 +261,11 @@ GLXLibrary::EnsureInitialized()
         return PR_FALSE;
     }
 
-    gIsATI = vendor && DoesVendorStringMatch(vendor, "ATI");
-    gIsChromium = (vendor && DoesVendorStringMatch(vendor, "Chromium")) ||
-        (serverVersionStr && DoesVendorStringMatch(serverVersionStr, "Chromium"));
+    gIsATI = serverVendor && DoesVendorStringMatch(serverVendor, "ATI");
+    gIsChromium = (serverVendor &&
+                   DoesVendorStringMatch(serverVendor, "Chromium")) ||
+        (serverVersionStr &&
+         DoesVendorStringMatch(serverVersionStr, "Chromium"));
 
     mInitialized = PR_TRUE;
     return PR_TRUE;

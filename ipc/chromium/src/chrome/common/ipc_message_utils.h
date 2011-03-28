@@ -219,7 +219,7 @@ struct ParamTraits<unsigned long> {
   }
 };
 
-#if !(defined(OS_MACOSX) || (defined(CHROMIUM_MOZILLA_BUILD) && (defined(OS_LINUX) || defined(OS_WIN)) && defined(ARCH_CPU_64_BITS)))
+#if !(defined(OS_MACOSX) || defined(OS_WIN) || (defined(CHROMIUM_MOZILLA_BUILD) && defined(OS_LINUX) && defined(ARCH_CPU_64_BITS)))
 // There size_t is a synonym for |unsigned long| ...
 template <>
 struct ParamTraits<size_t> {
@@ -252,7 +252,7 @@ struct ParamTraits<uint32> {
   }
 };
 
-#endif // if !((defined(OS_LINUX) || defined(OS_WIN)) && defined(ARCH_CPU_64_BITS))
+#endif // if !(defined(OS_LINUX) && defined(ARCH_CPU_64_BITS))
 
 #if defined(OS_MACOSX)
 // On Linux size_t & uint32 can be the same type.

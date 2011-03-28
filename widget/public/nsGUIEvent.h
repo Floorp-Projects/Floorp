@@ -227,6 +227,9 @@ class nsHashKey;
 // keyboard accelerator indicators has changed.
 #define NS_UISTATECHANGED               (NS_WINDOW_START + 43)
 
+// Done sizing or moving a window, so ensure that the mousedown state was cleared.
+#define NS_DONESIZEMOVE                 (NS_WINDOW_START + 44)
+
 #define NS_RESIZE_EVENT                 (NS_WINDOW_START + 60)
 #define NS_SCROLL_EVENT                 (NS_WINDOW_START + 61)
 
