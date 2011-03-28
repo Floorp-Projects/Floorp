@@ -4408,8 +4408,19 @@ nsGlobalWindow::SetFullScreen(PRBool aFullScreen)
   mFullScreen = aFullScreen;
 
   nsCOMPtr<nsIWidget> widget = GetMainWidget();
-  if (widget)
+  if (widget) {
+    PRBool visible;
+    widget->IsVisible(visible);
+    if (visible && aFullScreen)
+      widget->Show(PR_FALSE);
     widget->MakeFullScreen(aFullScreen);
+    if (visible && aFullScreen) {
+      widget->Show(PR_TRUE);
+      nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+      if (fm)
+        fm->SetActiveWindow(this);
+    }
+  }
 
   return NS_OK;
 }
