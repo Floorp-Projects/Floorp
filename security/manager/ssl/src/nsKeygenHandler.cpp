@@ -513,7 +513,6 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
     KeyType type;
     PRUint32 keyGenMechanism;
     PRInt32 primeBits;
-    PQGParams *pqgParams;
     PK11SlotInfo *slot = nsnull;
     PK11RSAGenParams rsaParams;
     SECOidTag algTag;
@@ -577,7 +576,7 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
         } while (end != nsnull);
         goto loser;
 found_match:
-        pqgParams = decode_pqg_params(str);
+        (void)0;
     } else if (aKeyType.LowerCaseEqualsLiteral("ec")) {
         keyparamsString = ToNewCString(aKeyParams);
         if (!keyparamsString) {
@@ -597,7 +596,7 @@ found_match:
     if (NS_FAILED(rv)) {
         goto loser;
     }
-      switch (keyGenMechanism) {
+    switch (keyGenMechanism) {
         case CKM_RSA_PKCS_KEY_PAIR_GEN:
             rsaParams.keySizeInBits = keysize;
             rsaParams.pe = DEFAULT_RSA_KEYGEN_PE;
@@ -656,7 +655,7 @@ found_match:
     /* Make sure token is initialized. */
     rv = setPassword(slot, m_ctx);
     if (NS_FAILED(rv))
-    goto loser;
+        goto loser;
 
     sec_rv = PK11_Authenticate(slot, PR_TRUE, m_ctx);
     if (sec_rv != SECSuccess) {
@@ -669,9 +668,7 @@ found_match:
 
     if (NS_SUCCEEDED(rv)) {
         KeygenRunnable = new nsKeygenThread();
-        if (KeygenRunnable) {
-            NS_ADDREF(KeygenRunnable);
-        }
+        NS_IF_ADDREF(KeygenRunnable);
     }
 
     if (NS_FAILED(rv) || !KeygenRunnable) {
@@ -774,7 +771,7 @@ loser:
         }
     }
     if ( spkInfo ) {
-      SECKEY_DestroySubjectPublicKeyInfo(spkInfo);
+        SECKEY_DestroySubjectPublicKeyInfo(spkInfo);
     }
     if ( publicKey ) {
         SECKEY_DestroyPublicKey(publicKey);
@@ -783,13 +780,13 @@ loser:
         SECKEY_DestroyPrivateKey(privateKey);
     }
     if ( arena ) {
-      PORT_FreeArena(arena, PR_TRUE);
+        PORT_FreeArena(arena, PR_TRUE);
     }
     if (slot != nsnull) {
         PK11_FreeSlot(slot);
     }
     if (KeygenRunnable) {
-      NS_RELEASE(KeygenRunnable);
+        NS_RELEASE(KeygenRunnable);
     }
     if (keyparamsString) {
         nsMemory::Free(keyparamsString);
