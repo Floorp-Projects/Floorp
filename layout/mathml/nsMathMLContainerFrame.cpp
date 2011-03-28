@@ -24,6 +24,7 @@
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
+ *   Frederic Wang <fred.wang@free.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1463,6 +1464,80 @@ nsMathMLContainerFrame::DidReflowChildren(nsIFrame* aFirst, nsIFrame* aStop)
                        NS_FRAME_REFLOW_FINISHED);
     }
   }
+}
+
+// helper used by mstyle, mphantom, mpadded and mrow in their implementations
+// of TransmitAutomaticData().
+nsresult
+nsMathMLContainerFrame::TransmitAutomaticDataForMrowLikeElement()
+{
+  //
+  // One loop to check both conditions below:
+  //
+  // 1) whether all the children of the mrow-like element are space-like.
+  //
+  //   The REC defines the following elements to be "space-like":
+  //   * an mstyle, mphantom, or mpadded element, all of whose direct
+  //     sub-expressions are space-like;
+  //   * an mrow all of whose direct sub-expressions are space-like.
+  //
+  // 2) whether all but one child of the mrow-like element are space-like and
+  //    this non-space-like child is an embellished operator.
+  //
+  //   The REC defines the following elements to be embellished operators:
+  //   * one of the elements mstyle, mphantom, or mpadded, such that an mrow
+  //     containing the same arguments would be an embellished operator;
+  //   * an mrow whose arguments consist (in any order) of one embellished
+  //     operator and zero or more space-like elements.
+  //
+  nsIFrame *childFrame, *baseFrame;
+  PRBool embellishedOpFound = PR_FALSE;
+  nsEmbellishData embellishData;
+  
+  for (childFrame = GetFirstChild(nsnull);
+       childFrame;
+       childFrame = childFrame->GetNextSibling()) {
+    nsIMathMLFrame* mathMLFrame = do_QueryFrame(childFrame);
+    if (!mathMLFrame) break;
+    if (!mathMLFrame->IsSpaceLike()) {
+      if (embellishedOpFound) break;
+      baseFrame = childFrame;
+      GetEmbellishDataFrom(baseFrame, embellishData);
+      if (!NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags)) break;
+      embellishedOpFound = PR_TRUE;
+    }
+  }
+
+  if (!childFrame) {
+    // we successfully went to the end of the loop. This means that one of
+    // condition 1) or 2) holds.
+    if (!embellishedOpFound) {
+      // the mrow-like element is space-like.
+      mPresentationData.flags |= NS_MATHML_SPACE_LIKE;
+    } else {
+      // the mrow-like element is an embellished operator.
+      // let the state of the embellished operator found bubble to us.
+      mPresentationData.baseFrame = baseFrame;
+      mEmbellishData = embellishData;
+    }
+  }
+
+  if (childFrame || !embellishedOpFound) {
+    // The element is not embellished operator
+    mPresentationData.baseFrame = nsnull;
+    mEmbellishData.flags = 0;
+    mEmbellishData.coreFrame = nsnull;
+    mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
+    mEmbellishData.leftSpace = 0;
+    mEmbellishData.rightSpace = 0;
+  }
+
+  if (childFrame || embellishedOpFound) {
+    // The element is not space-like
+    mPresentationData.flags &= ~NS_MATHML_SPACE_LIKE;
+  }
+
+  return NS_OK;
 }
 
 //==========================
