@@ -249,10 +249,6 @@ private:
     void DoAssertInitialState();
 #endif
 
-    // XXX These could probably be pointer-to-member, if the casting can
-    // be done correctly.
-    static const size_t kOffsetTable[];
-
     /*
      * mPropertiesSet stores a bit for every property that is present,
      * to optimize compression of blocks with small numbers of
