@@ -1516,7 +1516,7 @@ JSStackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
                             if (IsFunctionObject(v, &clone) &&
                                 GET_FUNCTION_PRIVATE(cx, clone) == fun &&
                                 clone->hasMethodObj(*thisp)) {
-                                JS_ASSERT(clone != &funobj);
+                                JS_ASSERT_IF(!clone->getType()->singleton, clone != &funobj);
                                 *vp = v;
                                 calleeValue().setObject(*clone);
                                 return true;

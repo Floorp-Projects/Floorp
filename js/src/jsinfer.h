@@ -309,6 +309,9 @@ struct TypeSet
      * will be marked for recompilation.
      */
 
+    /* Completely freeze the contents of this type set. */
+    void addFreeze(JSContext *cx, JSScript *script);
+
     /* Get any type tag which all values in this set must have. */
     JSValueType getKnownTypeTag(JSContext *cx, JSScript *script);
 
