@@ -42,7 +42,7 @@
 #include "nsSMILValue.h"
 #include "nsComputedDOMStyle.h"
 #include "nsStyleAnimation.h"
-#include "nsIContent.h"
+#include "mozilla/dom/Element.h"
 #include "nsIDOMElement.h"
 
 using namespace mozilla::dom;
