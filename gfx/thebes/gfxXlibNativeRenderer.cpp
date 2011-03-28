@@ -367,7 +367,7 @@ CreateTempXlibSurface (gfxASurface *destination, nsIntSize size,
             target_visual = gfxXlibSurface::FindVisual(screen, imageFormat);
             Display *dpy = DisplayOfScreen(screen);
             if (target_visual) {
-                target_format = XRenderFindVisualFormat(dpy, visual);
+                target_format = XRenderFindVisualFormat(dpy, target_visual);
             } else {
                 target_format =
                     gfxXlibSurface::FindRenderFormat(dpy, imageFormat);
