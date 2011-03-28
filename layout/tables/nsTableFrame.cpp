@@ -4263,15 +4263,14 @@ BCMapCellIterator::First(BCMapCellInfo& aMapInfo)
         static_cast<BCCellData*>(mCellMap->GetDataAt(mAreaStart.y -
                                                       mRowGroupStart,
                                                       mAreaStart.x));
-      if (cellData && cellData->IsOrig()) {
+      if (cellData && (cellData->IsOrig() || cellData->IsDead())) {
         aMapInfo.SetInfo(mRow, mAreaStart.x, cellData, this);
+        return;
       }
       else {
         NS_ASSERTION(((0 == mAreaStart.x) && (mRowGroupStart == mAreaStart.y)) ,
                      "damage area expanded incorrectly");
-        mAtEnd = PR_TRUE;
       }
-      break;
     }
     SetNewRowGroup(PR_TRUE); // sets mAtEnd
   }
