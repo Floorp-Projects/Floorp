@@ -1953,8 +1953,9 @@ nsDocAccessible::CacheChildrenInSubtree(nsAccessible* aRoot)
   PRUint32 count = aRoot->GetChildCount();
   for (PRUint32 idx = 0; idx < count; idx++)  {
     nsAccessible* child = aRoot->GetChildAt(idx);
+    NS_ASSERTION(child, "Illicit tree change while tree is created!");
     // Don't cross document boundaries.
-    if (child->IsContent())
+    if (child && child->IsContent())
       CacheChildrenInSubtree(child);
   }
 }
