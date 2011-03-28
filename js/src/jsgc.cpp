@@ -1938,7 +1938,6 @@ JSCompartment::finalizeObjectArenaLists(JSContext *cx)
     FinalizeArenaList<JSObject_Slots12>(this, cx, FINALIZE_OBJECT12);
     FinalizeArenaList<JSObject_Slots16>(this, cx, FINALIZE_OBJECT16);
     FinalizeArenaList<JSFunction>(this, cx, FINALIZE_FUNCTION);
-    FinalizeArenaList<Shape>(this, cx, FINALIZE_SHAPE);
 #if JS_HAS_XML_SUPPORT
     FinalizeArenaList<JSXML>(this, cx, FINALIZE_XML);
 #endif
@@ -1950,6 +1949,12 @@ JSCompartment::finalizeStringArenaLists(JSContext *cx)
     FinalizeArenaList<JSShortString>(this, cx, FINALIZE_SHORT_STRING);
     FinalizeArenaList<JSString>(this, cx, FINALIZE_STRING);
     FinalizeArenaList<JSExternalString>(this, cx, FINALIZE_EXTERNAL_STRING);
+}
+
+void
+JSCompartment::finalizeShapeArenaLists(JSContext *cx)
+{
+    FinalizeArenaList<Shape>(this, cx, FINALIZE_SHAPE);
 }
 
 #ifdef JS_THREADSAFE
@@ -2188,15 +2193,23 @@ PreGCCleanup(JSContext *cx, JSGCInvocationKind gckind)
     }
 }
 
+/*
+ * Perform mark-and-sweep GC.
+ *
+ * In a JS_THREADSAFE build, the calling thread must be rt->gcThread and each
+ * other thread must be either outside all requests or blocked waiting for GC
+ * to finish. Note that the caller does not hold rt->gcLock.
+ * If comp is set, we perform a single-compartment GC.
+ */
 static void
-MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIMER_PARAM)
+MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIMER_PARAM)
 {
     JSRuntime *rt = cx->runtime;
     rt->gcNumber++;
-    JS_ASSERT(!rt->gcRegenShapes);
-    JS_ASSERT(gckind != GC_LAST_CONTEXT);
-    JS_ASSERT(comp != rt->atomsCompartment);
-    JS_ASSERT(comp->rt->gcMode == JSGC_MODE_COMPARTMENT);
+    JS_ASSERT_IF(comp, !rt->gcRegenShapes);
+    JS_ASSERT_IF(comp, gckind != GC_LAST_CONTEXT);
+    JS_ASSERT_IF(comp, comp != rt->atomsCompartment);
+    JS_ASSERT_IF(comp, comp->rt->gcMode == JSGC_MODE_COMPARTMENT);
 
     /*
      * Mark phase.
@@ -2210,8 +2223,12 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
          r.front()->clearMarkBitmap();
 
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        (*c)->markCrossCompartmentWrappers(&gcmarker);
+    if (comp) {
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
+            (*c)->markCrossCompartmentWrappers(&gcmarker);
+    } else {
+        js_MarkScriptFilenames(rt);
+    }
 
     MarkRuntime(&gcmarker);
 
@@ -2248,120 +2265,9 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
 #endif
 #ifdef DEBUG
     /* Make sure that we didn't mark an object in another compartment */
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        JS_ASSERT_IF(*c != comp && *c != rt->atomsCompartment, checkArenaListAllUnmarked(*c));
-#endif
-
-    /*
-     * Sweep phase.
-     *
-     * Finalize as we sweep, outside of rt->gcLock but with rt->gcRunning set
-     * so that any attempt to allocate a GC-thing from a finalizer will fail,
-     * rather than nest badly and leave the unmarked newborn to be swept.
-     *
-     * We first sweep atom state so we can use IsAboutToBeFinalized on
-     * JSString held in a hashtable to check if the hashtable entry can be
-     * freed. Note that even after the entry is freed, JSObject finalizers can
-     * continue to access the corresponding JSString* assuming that they are
-     * unique. This works since the atomization API must not be called during
-     * the GC.
-     */
-    TIMESTAMP(startSweep);
-    js_SweepAtomState(cx);
-
-    /* Finalize watch points associated with unreachable objects. */
-    js_SweepWatchPoints(cx);
-
-#ifdef DEBUG
-    /* Save the pre-sweep count of scope-mapped properties. */
-    rt->liveObjectPropsPreSweep = rt->liveObjectProps;
-#endif
-
-    /*
-     * We finalize iterators before other objects so the iterator can use the
-     * object which properties it enumerates over to finalize the enumeration
-     * state. We finalize objects before other GC things to ensure that
-     * object's finalizer can access them even if they will be freed.
-     */
-    comp->sweep(cx, 0);
-
-    comp->finalizeObjectArenaLists(cx);
-    TIMESTAMP(sweepObjectEnd);
-
-    comp->finalizeStringArenaLists(cx);
-    TIMESTAMP(sweepStringEnd);
-
-    PropertyTree::dumpShapes(cx);
-    TIMESTAMP(sweepShapeEnd);
-
-    /*
-     * Destroy arenas after we finished the sweeping so finalizers can safely
-     * use IsAboutToBeFinalized().
-     */
-    ExpireGCChunks(rt);
-    TIMESTAMP(sweepDestroyEnd);
-
-    if (rt->gcCallback)
-        (void) rt->gcCallback(cx, JSGC_FINALIZE_END);
-}
-
-/*
- * Perform mark-and-sweep GC.
- *
- * In a JS_THREADSAFE build, the calling thread must be rt->gcThread and each
- * other thread must be either outside all requests or blocked waiting for GC
- * to finish. Note that the caller does not hold rt->gcLock.
- */
-static void
-MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
-{
-    JSRuntime *rt = cx->runtime;
-    rt->gcNumber++;
-
-    /*
-     * Mark phase.
-     */
-    GCMarker gcmarker(cx);
-    JS_ASSERT(IS_GC_MARKING_TRACER(&gcmarker));
-    JS_ASSERT(gcmarker.getMarkColor() == BLACK);
-    rt->gcMarkingTracer = &gcmarker;
-    gcmarker.stackLimit = cx->stackLimit;
-
-    for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
-         r.front()->clearMarkBitmap();
-
-    MarkRuntime(&gcmarker);
-    js_MarkScriptFilenames(rt);
-
-    /*
-     * Mark children of things that caused too deep recursion during the above
-     * tracing.
-     */
-    gcmarker.markDelayedChildren();
-
-    /*
-     * Mark weak roots.
-     */
-    while (true) {
-        if (!js_TraceWatchPoints(&gcmarker))
-            break;
-        gcmarker.markDelayedChildren();
-    }
-
-    rt->gcMarkingTracer = NULL;
-
-    if (rt->gcCallback)
-        (void) rt->gcCallback(cx, JSGC_MARK_END);
-
-#ifdef JS_THREADSAFE
-    /*
-     * cx->gcBackgroundFree is set if we need several mark-and-sweep loops to
-     * finish the GC.
-     */
-    if (!cx->gcBackgroundFree) {
-        /* Wait until the sweeping from the previois GC finishes. */
-        rt->gcHelperThread.waitBackgroundSweepEnd(rt);
-        cx->gcBackgroundFree = &rt->gcHelperThread;
+    if (comp) {
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
+            JS_ASSERT_IF(*c != comp && *c != rt->atomsCompartment, checkArenaListAllUnmarked(*c));
     }
 #endif
 
@@ -2390,46 +2296,55 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
     rt->liveObjectPropsPreSweep = rt->liveObjectProps;
 #endif
 
-    SweepCrossCompartmentWrappers(cx);
-
     /*
-     * We finalize iterators before other objects so the iterator can use the
-     * object which properties it enumerates over to finalize the enumeration
-     * state. We finalize objects before other GC things to ensure that
-     * object's finalizer can access them even if they will be freed.
-     */
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
-        (*c)->finalizeObjectArenaLists(cx);
-
-    TIMESTAMP(sweepObjectEnd);
-
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
-        (*c)->finalizeStringArenaLists(cx);
-
-    TIMESTAMP(sweepStringEnd);
-
-    /*
-     * Sweep the runtime's property trees after finalizing objects, in case any
-     * had watchpoints referencing tree nodes.
-     *
+     * We finalize objects before other GC things to ensure that object's finalizer 
+     * can access them even if they will be freed. Sweep the runtime's property trees 
+     * after finalizing objects, in case any had watchpoints referencing tree nodes.
      * Do this before sweeping compartments, so that we sweep all shapes in
      * unreachable compartments.
      */
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        (*c)->propertyTree.dumpShapeStats();
+    if (comp) {
+        comp->sweep(cx, 0);
+        comp->finalizeObjectArenaLists(cx);
+        TIMESTAMP(sweepObjectEnd);
+        comp->finalizeStringArenaLists(cx);
+        TIMESTAMP(sweepStringEnd);
+        comp->finalizeShapeArenaLists(cx);
+        TIMESTAMP(sweepShapeEnd);
+    } else {
+        SweepCrossCompartmentWrappers(cx);
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
+            (*c)->finalizeObjectArenaLists(cx);
+
+        TIMESTAMP(sweepObjectEnd);
+
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
+            (*c)->finalizeStringArenaLists(cx);
+
+        TIMESTAMP(sweepStringEnd);
+
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
+            (*c)->finalizeShapeArenaLists(cx);
+
+        TIMESTAMP(sweepShapeEnd);
+
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
+            (*c)->propertyTree.dumpShapeStats();
+    }
 
     PropertyTree::dumpShapes(cx);
-    TIMESTAMP(sweepShapeEnd);
 
-    SweepCompartments(cx, gckind);
+    if (!comp) {
+        SweepCompartments(cx, gckind);
 
-    /*
-     * Sweep script filenames after sweeping functions in the generic loop
-     * above. In this way when a scripted function's finalizer destroys the
-     * script and calls rt->destroyScriptHook, the hook can still access the
-     * script's filename. See bug 323267.
-     */
-    js_SweepScriptFilenames(rt);
+        /*
+         * Sweep script filenames after sweeping functions in the generic loop
+         * above. In this way when a scripted function's finalizer destroys the
+         * script and calls rt->destroyScriptHook, the hook can still access the
+         * script's filename. See bug 323267.
+         */
+        js_SweepScriptFilenames(rt);
+    }
 
     /*
      * Destroy arenas after we finished the sweeping so finalizers can safely
@@ -2445,14 +2360,6 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
     DumpSrcNoteSizeHist();
     printf("GC HEAP SIZE %lu\n", (unsigned long)rt->gcBytes);
   }
-#endif
-
-#ifdef JS_SCOPE_DEPTH_METER
-    DumpScopeDepthMeter(rt);
-#endif
-
-#ifdef JS_DUMP_LOOP_STATS
-    DumpLoopStats(rt);
 #endif
 }
 
@@ -2674,10 +2581,7 @@ GCUntilDone(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIM
             firstRun = false;
         }
 
-        if (comp)
-            MarkAndSweepCompartment(cx, comp, gckind  GCTIMER_ARG);
-        else
-            MarkAndSweep(cx, gckind  GCTIMER_ARG);
+        MarkAndSweep(cx, comp, gckind  GCTIMER_ARG);
 
         // GC again if:
         //   - another thread, not in a request, called js_GC
