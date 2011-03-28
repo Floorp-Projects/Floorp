@@ -5052,13 +5052,18 @@ if test -z "$XULRUNNER_STUB_NAME"; then
 fi
 AC_SUBST(XULRUNNER_STUB_NAME)
 
+AC_MSG_CHECKING([for application to build])
 if test -z "$MOZ_BUILD_APP"; then
-  AC_MSG_ERROR([--enable-application=APP was not specified and is required.])
+  AC_MSG_RESULT([browser])
+  MOZ_BUILD_APP=browser
 else
   # We have a valid application only if it has a build.mk file in its top
   # directory.
   if test ! -f "${srcdir}/${MOZ_BUILD_APP}/build.mk" ; then
+    AC_MSG_RESULT([none])
     AC_MSG_ERROR([--enable-application value not recognized (${MOZ_BUILD_APP}/build.mk does not exist).])
+  else
+    AC_MSG_RESULT([$MOZ_BUILD_APP])
   fi
 fi
 
