@@ -1058,7 +1058,7 @@ protected:
                               const nsAString& aType,
                               PRBool aPersisted);
 
-  virtual nsPIDOMWindow *GetWindowInternal();
+  virtual nsPIDOMWindow *GetWindowInternal() const;
   virtual nsPIDOMWindow *GetInnerWindowInternal();
   virtual nsIScriptGlobalObject* GetScriptHandlingObjectInternal() const;
   virtual PRBool InternalAllowXULXBL();
@@ -1206,6 +1206,11 @@ private:
   // aSheetSet as the preferred set in the CSSLoader.
   void EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
                                        PRBool aUpdateCSSLoader);
+
+  // Revoke any pending notifications due to mozRequestAnimationFrame calls
+  void RevokeAnimationFrameNotifications();
+  // Reschedule any notifications we need to handle mozRequestAnimationFrame
+  void RescheduleAnimationFrameNotifications();
 
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);

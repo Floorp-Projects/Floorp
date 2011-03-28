@@ -128,11 +128,6 @@ ifeq ($(OS_ARCH),WINNT)
 OS_LIBS		+= $(call EXPAND_LIBNAME,version)
 endif
 
-ifeq ($(OS_ARCH), OpenVMS)
-DEFINES		+= -DGENERIC_MOTIF_REDEFINES
-OS_CXXFLAGS	+= -Wc,warn=disa=NOSIMPINT
-endif
-
 CXXFLAGS         += $(TK_CFLAGS)
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 

@@ -423,7 +423,7 @@ TestNode::Constrain(InstantiationSet& aInstantiations)
     rv = FilterInstantiations(aInstantiations, &cantHandleYet);
     if (NS_FAILED(rv)) return rv;
 
-    if ((mParent && ! aInstantiations.Empty()) || cantHandleYet) {
+    if (mParent && (!aInstantiations.Empty() || cantHandleYet)) {
         // if we still have instantiations, or if the instantiations
         // could not be filled in yet, then ride 'em on up to the
         // parent to narrow them.
