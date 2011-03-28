@@ -357,11 +357,6 @@ MAKEFILES_plugin="
   modules/plugin/Makefile
   modules/plugin/base/src/Makefile
   modules/plugin/base/public/Makefile
-  modules/plugin/sdk/Makefile
-  modules/plugin/sdk/samples/Makefile
-  modules/plugin/sdk/samples/common/Makefile
-  modules/plugin/sdk/samples/basic/windows/Makefile
-  modules/plugin/sdk/samples/winless/windows/Makefile
 "
 
 MAKEFILES_netwerk="
