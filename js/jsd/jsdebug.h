@@ -663,6 +663,8 @@ JSD_DestroyAllSources( JSDContext* jsdc );
 * Add a new item for a given URL. If an iten already exists for the given URL
 * then the old item is removed.
 * 'url' may not be NULL.
+*
+* ifdef LIVEWIRE url is treated as a char* and ownership is claimed by jsd
 */
 extern JSD_PUBLIC_API(JSDSourceText*)
 JSD_NewSourceText(JSDContext* jsdc, const char* url);
