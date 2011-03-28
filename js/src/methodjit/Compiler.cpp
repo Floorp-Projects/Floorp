@@ -1702,20 +1702,27 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_VOID)
 
           BEGIN_CASE(JSOP_INCNAME)
-            if (!jsop_nameinc(op, STRICT_VARIANT(stubs::IncName), fullAtomIndex(PC)))
-                return Compile_Error;
+          {
+            CompileStatus status = jsop_nameinc(op, STRICT_VARIANT(stubs::IncName), fullAtomIndex(PC));
+            if (status != Compile_Okay)
+                return status;
             break;
+          }
           END_CASE(JSOP_INCNAME)
 
           BEGIN_CASE(JSOP_INCGNAME)
-            jsop_gnameinc(op, STRICT_VARIANT(stubs::IncGlobalName), fullAtomIndex(PC));
+            if (!jsop_gnameinc(op, STRICT_VARIANT(stubs::IncGlobalName), fullAtomIndex(PC)))
+                return Compile_Retry;
             break;
           END_CASE(JSOP_INCGNAME)
 
           BEGIN_CASE(JSOP_INCPROP)
-            if (!jsop_propinc(op, STRICT_VARIANT(stubs::IncProp), fullAtomIndex(PC)))
-                return Compile_Error;
+          {
+            CompileStatus status = jsop_propinc(op, STRICT_VARIANT(stubs::IncProp), fullAtomIndex(PC));
+            if (status != Compile_Okay)
+                return status;
             break;
+          }
           END_CASE(JSOP_INCPROP)
 
           BEGIN_CASE(JSOP_INCELEM)
@@ -1723,20 +1730,27 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_INCELEM)
 
           BEGIN_CASE(JSOP_DECNAME)
-            if (!jsop_nameinc(op, STRICT_VARIANT(stubs::DecName), fullAtomIndex(PC)))
-                return Compile_Error;
+          {
+            CompileStatus status = jsop_nameinc(op, STRICT_VARIANT(stubs::DecName), fullAtomIndex(PC));
+            if (status != Compile_Okay)
+                return status;
             break;
+          }
           END_CASE(JSOP_DECNAME)
 
           BEGIN_CASE(JSOP_DECGNAME)
-            jsop_gnameinc(op, STRICT_VARIANT(stubs::DecGlobalName), fullAtomIndex(PC));
+            if (!jsop_gnameinc(op, STRICT_VARIANT(stubs::DecGlobalName), fullAtomIndex(PC)))
+                return Compile_Retry;
             break;
           END_CASE(JSOP_DECGNAME)
 
           BEGIN_CASE(JSOP_DECPROP)
-            if (!jsop_propinc(op, STRICT_VARIANT(stubs::DecProp), fullAtomIndex(PC)))
-                return Compile_Error;
+          {
+            CompileStatus status = jsop_propinc(op, STRICT_VARIANT(stubs::DecProp), fullAtomIndex(PC));
+            if (status != Compile_Okay)
+                return status;
             break;
+          }
           END_CASE(JSOP_DECPROP)
 
           BEGIN_CASE(JSOP_DECELEM)
@@ -1744,20 +1758,27 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_DECELEM)
 
           BEGIN_CASE(JSOP_NAMEINC)
-            if (!jsop_nameinc(op, STRICT_VARIANT(stubs::NameInc), fullAtomIndex(PC)))
-                return Compile_Error;
+          {
+            CompileStatus status = jsop_nameinc(op, STRICT_VARIANT(stubs::NameInc), fullAtomIndex(PC));
+            if (status != Compile_Okay)
+                return status;
             break;
+          }
           END_CASE(JSOP_NAMEINC)
 
           BEGIN_CASE(JSOP_GNAMEINC)
-            jsop_gnameinc(op, STRICT_VARIANT(stubs::GlobalNameInc), fullAtomIndex(PC));
+            if (!jsop_gnameinc(op, STRICT_VARIANT(stubs::GlobalNameInc), fullAtomIndex(PC)))
+                return Compile_Retry;
             break;
           END_CASE(JSOP_GNAMEINC)
 
           BEGIN_CASE(JSOP_PROPINC)
-            if (!jsop_propinc(op, STRICT_VARIANT(stubs::PropInc), fullAtomIndex(PC)))
-                return Compile_Error;
+          {
+            CompileStatus status = jsop_propinc(op, STRICT_VARIANT(stubs::PropInc), fullAtomIndex(PC));
+            if (status != Compile_Okay)
+                return status;
             break;
+          }
           END_CASE(JSOP_PROPINC)
 
           BEGIN_CASE(JSOP_ELEMINC)
@@ -1765,20 +1786,27 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_ELEMINC)
 
           BEGIN_CASE(JSOP_NAMEDEC)
-            if (!jsop_nameinc(op, STRICT_VARIANT(stubs::NameDec), fullAtomIndex(PC)))
-                return Compile_Error;
+          {
+            CompileStatus status = jsop_nameinc(op, STRICT_VARIANT(stubs::NameDec), fullAtomIndex(PC));
+            if (status != Compile_Okay)
+                return status;
             break;
+          }
           END_CASE(JSOP_NAMEDEC)
 
           BEGIN_CASE(JSOP_GNAMEDEC)
-            jsop_gnameinc(op, STRICT_VARIANT(stubs::GlobalNameDec), fullAtomIndex(PC));
+            if (!jsop_gnameinc(op, STRICT_VARIANT(stubs::GlobalNameDec), fullAtomIndex(PC)))
+                return Compile_Retry;
             break;
           END_CASE(JSOP_GNAMEDEC)
 
           BEGIN_CASE(JSOP_PROPDEC)
-            if (!jsop_propinc(op, STRICT_VARIANT(stubs::PropDec), fullAtomIndex(PC)))
-                return Compile_Error;
+          {
+            CompileStatus status = jsop_propinc(op, STRICT_VARIANT(stubs::PropDec), fullAtomIndex(PC));
+            if (status != Compile_Okay)
+                return status;
             break;
+          }
           END_CASE(JSOP_PROPDEC)
 
           BEGIN_CASE(JSOP_ELEMDEC)
@@ -4874,7 +4902,7 @@ mjit::Compiler::jsop_this()
     }
 }
 
-void
+bool
 mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
 {
     JSAtom *atom = script->getAtom(index);
@@ -4894,7 +4922,8 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
         // V 1
 
         /* Use sub since it calls ValueToNumber instead of string concat. */
-        jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0));
+        if (!jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0)))
+            return false;
         // N+1
 
         jsop_bindgname();
@@ -4929,7 +4958,8 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
         frame.push(Int32Value(-amt));
         // N N 1
 
-        jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0));
+        if (!jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0)))
+            return false;
         // N N+1
 
         jsop_bindgname();
@@ -4961,9 +4991,10 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
 #endif
 
     PC += JSOP_GNAMEINC_LENGTH;
+    return true;
 }
 
-bool
+CompileStatus
 mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
 {
     JSAtom *atom = script->getAtom(index);
@@ -4986,11 +5017,12 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
 
         /* Use sub since it calls ValueToNumber instead of string concat. */
         frame.syncAt(-3);
-        jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0));
+        if (!jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0)))
+            return Compile_Retry;
         // OBJ N+1
 
         if (!jsop_setprop(atom, false))
-            return false;
+            return Compile_Error;
         // N+1
 
         if (pop)
@@ -5014,11 +5046,12 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
         // N OBJ N 1
 
         frame.syncAt(-3);
-        jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0));
+        if (!jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0)))
+            return Compile_Retry;
         // N OBJ N+1
 
         if (!jsop_setprop(atom, false))
-            return false;
+            return Compile_Error;
         // N N+1
 
         frame.pop();
@@ -5035,10 +5068,10 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
 #endif
 
     PC += JSOP_NAMEINC_LENGTH;
-    return true;
+    return Compile_Okay;
 }
 
-bool
+CompileStatus
 mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
 {
     JSAtom *atom = script->getAtom(index);
@@ -5064,7 +5097,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
             // OBJ * OBJ
 
             if (!jsop_getprop(atom, JSVAL_TYPE_UNKNOWN))
-                return false;
+                return Compile_Error;
             // OBJ * V
 
             frame.push(Int32Value(amt));
@@ -5072,14 +5105,15 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
 
             /* Use sub since it calls ValueToNumber instead of string concat. */
             frame.syncAt(-4);
-            jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0));
+            if (!jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0)))
+                return Compile_Retry;
             // OBJ * V+1
 
             frame.shimmy(1);
             // OBJ V+1
 
             if (!jsop_setprop(atom, false))
-                return false;
+                return Compile_Error;
             // V+1
 
             if (pop)
@@ -5091,7 +5125,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
             // OBJ OBJ 
 
             if (!jsop_getprop(atom, JSVAL_TYPE_UNKNOWN))
-                return false;
+                return Compile_Error;
             // OBJ V
 
             jsop_pos();
@@ -5104,7 +5138,8 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
             // OBJ N N 1
 
             frame.syncAt(-4);
-            jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0));
+            if (!jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0)))
+                return Compile_Retry;
             // OBJ N N+1
 
             frame.dupAt(-3);
@@ -5114,7 +5149,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
             // OBJ N N+1 OBJ N+1
 
             if (!jsop_setprop(atom, false))
-                return false;
+                return Compile_Error;
             // OBJ N N+1 N+1
 
             frame.popn(2);
@@ -5136,7 +5171,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
     }
 
     PC += JSOP_PROPINC_LENGTH;
-    return true;
+    return Compile_Okay;
 }
 
 bool
