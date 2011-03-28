@@ -563,9 +563,9 @@ class Compiler : public BaseCompiler
                                    Jump *uncachedCallSlowRejoin, CallPatchInfo *uncachedCallPatch);
     bool inlineCallHelper(uint32 argc, bool callingNew);
     void fixPrimitiveReturn(Assembler *masm, FrameEntry *fe);
-    void jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index);
-    bool jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index);
-    bool jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index);
+    bool jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index);
+    CompileStatus jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index);
+    CompileStatus jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index);
     void jsop_eleminc(JSOp op, VoidStub);
     void jsop_getgname(uint32 index, JSValueType type);
     void jsop_getgname_slow(uint32 index);
