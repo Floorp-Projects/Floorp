@@ -151,23 +151,7 @@ private:
     /* Property storage may not be accessed directly; use AddLonghandProperty
      * and friends.
      */
-
-    nsCSSFont mFont;
-    nsCSSDisplay mDisplay;
-    nsCSSMargin mMargin;
-    nsCSSList mList;
-    nsCSSPosition mPosition;
-    nsCSSTable mTable;
-    nsCSSColor mColor;
-    nsCSSContent mContent;
-    nsCSSText mText;
-    nsCSSUserInterface mUserInterface;
-    nsCSSAural mAural;
-    nsCSSPage mPage;
-    nsCSSBreaks mBreaks;
-    nsCSSXUL mXUL;
-    nsCSSSVG mSVG;
-    nsCSSColumn mColumn;
+    nsCSSValue mValues[eCSSProperty_COUNT_no_shorthands];
 
 public:
     /**
@@ -289,11 +273,7 @@ private:
         NS_ABORT_IF_FALSE(0 <= aProperty &&
                           aProperty < eCSSProperty_COUNT_no_shorthands,
                           "property out of range");
-        size_t offset = nsCSSExpandedDataBlock::kOffsetTable[aProperty];
-        NS_ABORT_IF_FALSE(offset != size_t(-1), 
-                          "requesting offset of non-CSS property");
-        return reinterpret_cast<nsCSSValue*>(reinterpret_cast<char*>(this) +
-                                             offset);
+        return &mValues[aProperty];
     }
 
     void SetPropertyBit(nsCSSProperty aProperty) {
