@@ -58,6 +58,7 @@ class AccGroupInfo;
 class EmbeddedObjCollector;
 class nsAccessible;
 class nsHyperTextAccessible;
+class nsHTMLLIAccessible;
 struct nsRoleMapEntry;
 class nsTextAccessible;
 
@@ -364,6 +365,9 @@ public:
   inline bool IsHyperText() const { return mFlags & eHyperTextAccessible; }
   nsHyperTextAccessible* AsHyperText();
 
+  inline bool IsHTMLListItem() const { return mFlags & eHTMLListItemAccessible; }
+  nsHTMLLIAccessible* AsHTMLListItem();
+
   inline bool IsRoot() const { return mFlags & eRootAccessible; }
   nsRootAccessible* AsRoot();
 
@@ -512,8 +516,9 @@ protected:
   enum AccessibleTypes {
     eApplicationAccessible = 1 << 2,
     eHyperTextAccessible = 1 << 3,
-    eRootAccessible = 1 << 4,
-    eTextLeafAccessible = 1 << 5
+    eHTMLListItemAccessible = 1 << 4,
+    eRootAccessible = 1 << 5,
+    eTextLeafAccessible = 1 << 6
   };
 
   //////////////////////////////////////////////////////////////////////////////
