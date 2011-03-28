@@ -2242,8 +2242,13 @@ nsGfxScrollFrameInner::ScrollToRestoredPosition()
     // if our desired position is different to the scroll position, scroll.
     // remember that we could be incrementally loading so we may enter
     // and scroll many times.
-    if (mRestorePos != GetScrollPosition()) {
-      ScrollTo(mRestorePos, nsIScrollableFrame::INSTANT);
+    if (mRestorePos != mLastPos /* GetLogicalScrollPosition() */) {
+      nsPoint scrollToPos = mRestorePos;
+      if (!IsLTR())
+        // convert from logical to physical scroll position
+        scrollToPos.x = mScrollPort.x - 
+          (mScrollPort.XMost() - scrollToPos.x - mScrolledFrame->GetRect().width);
+      ScrollTo(scrollToPos, nsIScrollableFrame::INSTANT);
       // Re-get the scroll position, it might not be exactly equal to
       // mRestorePos due to rounding and clamping.
       mLastPos = GetLogicalScrollPosition();
@@ -3589,7 +3594,11 @@ nsGfxScrollFrameInner::SaveState(nsIStatefulFrame::SpecialStateID aStateID)
     return nsnull;
   }
 
-  nsPoint scrollPos = GetScrollPosition();
+  nsPoint scrollPos = GetLogicalScrollPosition();
+  // Don't save scroll position if we are at (0,0)
+  if (scrollPos == nsPoint(0,0)) {
+    return nsnull;
+  }
 
   nsPresState* state = new nsPresState();
   if (!state) {
