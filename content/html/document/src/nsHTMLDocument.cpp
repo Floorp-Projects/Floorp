@@ -1158,7 +1158,7 @@ nsHTMLDocument::SetTitle(const nsAString& aTitle)
   return nsDocument::SetTitle(aTitle);
 }
 
-nsIDOMHTMLMapElement *
+Element*
 nsHTMLDocument::GetImageMap(const nsAString& aMapName)
 {
   if (!mImageMaps) {
@@ -1168,25 +1168,12 @@ nsHTMLDocument::GetImageMap(const nsAString& aMapName)
   nsAutoString name;
   PRUint32 i, n = mImageMaps->Length(PR_TRUE);
   for (i = 0; i < n; ++i) {
-    nsCOMPtr<nsIDOMHTMLMapElement> map(
-      do_QueryInterface(mImageMaps->GetNodeAt(i)));
-
-    PRBool match;
-    nsresult rv;
-
-    rv = map->GetId(name);
-    NS_ENSURE_SUCCESS(rv, nsnull);
-
-    match = name.Equals(aMapName);
-    if (!match) {
-      rv = map->GetName(name);
-      NS_ENSURE_SUCCESS(rv, nsnull);
-
-      match = name.Equals(aMapName, nsCaseInsensitiveStringComparator());
-    }
-
-    if (match) {
-      return map;
+    nsIContent* map = mImageMaps->GetNodeAt(i);
+    if (map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, aMapName,
+                         eCaseMatters) ||
+        map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, aMapName,
+                         eIgnoreCase)) {
+      return map->AsElement();
     }
   }
 

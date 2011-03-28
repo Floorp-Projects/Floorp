@@ -431,6 +431,7 @@ _TEST_FILES2 = \
 		test_bug567350.html \
 		test_bug574596.html \
 		test_bug578096.html \
+		test_bug585978.html \
 		test_bug592366.html \
 		test_bug597345.html \
 		script-1_bug597345.sjs \
