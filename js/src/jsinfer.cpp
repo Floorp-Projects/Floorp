@@ -1273,6 +1273,12 @@ public:
 };
 
 void
+TypeSet::addFreeze(JSContext *cx, JSScript *script)
+{
+    add(cx, ArenaNew<TypeConstraintFreeze>(cx->compartment->types.pool, script), false);
+}
+
+void
 TypeSet::Clone(JSContext *cx, JSScript *script, TypeSet *source, ClonedTypeSet *target)
 {
     if (!source) {
@@ -1281,7 +1287,7 @@ TypeSet::Clone(JSContext *cx, JSScript *script, TypeSet *source, ClonedTypeSet *
     }
 
     if (script && !source->unknown())
-        source->add(cx, ArenaNew<TypeConstraintFreeze>(cx->compartment->types.pool, script), false);
+        source->addFreeze(cx, script);
 
     target->typeFlags = source->typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET;
     target->objectCount = source->objectCount;

@@ -872,6 +872,7 @@ class FrameState
     Registers getParentRegs() const { return a->parentRegs; }
 
     void tryCopyRegister(FrameEntry *fe, FrameEntry *callStart);
+    Registers getTemporaryCallRegisters(FrameEntry *callStart) const;
 
   private:
     inline AnyRegisterID allocAndLoadReg(FrameEntry *fe, bool fp, RematInfo::RematType type);

@@ -142,8 +142,10 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp,
      * with inline calls. :FIXME: should remove compartment->incBackEdgeCount
      * and do the same when deciding to initially compile.
      */
-    if (outerScript->callCount() >= CALLS_BACKEDGES_BEFORE_INLINING)
+    if (outerScript->callCount() >= CALLS_BACKEDGES_BEFORE_INLINING ||
+        cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS)) {
         inlining = true;
+    }
 }
 
 CompileStatus
@@ -332,7 +334,8 @@ mjit::Compiler::ActiveFrame::ActiveFrame(JSContext *cx)
       jumpMap(NULL), hasThisType(false), argumentTypes(NULL), localTypes(NULL),
       unsyncedEntries(cx),
       needReturnValue(false), syncReturnValue(false),
-      returnValueDouble(false), returnSet(false), returnParentRegs(0), returnJumps(cx)
+      returnValueDouble(false), returnSet(false), returnParentRegs(0),
+      temporaryParentRegs(0), returnJumps(NULL)
 {}
 
 mjit::Compiler::ActiveFrame::~ActiveFrame()
@@ -2811,7 +2814,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
 
         /* Make sure the parent entries still in registers are consistent between return sites. */
         if (!a->returnSet) {
-            a->returnParentRegs = frame.getParentRegs();
+            a->returnParentRegs = frame.getParentRegs().freeMask & ~a->temporaryParentRegs.freeMask;
             if (a->needReturnValue && !a->syncReturnValue &&
                 a->returnParentRegs.hasReg(a->returnRegister)) {
                 a->returnParentRegs.takeReg(a->returnRegister);
@@ -2820,7 +2823,8 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
 
         frame.discardLocalRegisters();
         frame.syncParentRegistersInMask(masm,
-            frame.getParentRegs().freeMask & ~a->returnParentRegs.freeMask, true);
+            frame.getParentRegs().freeMask & ~a->returnParentRegs.freeMask &
+            ~a->temporaryParentRegs.freeMask, true);
         frame.restoreParentRegistersInMask(masm,
             a->returnParentRegs.freeMask & ~frame.getParentRegs().freeMask, true);
 
@@ -2836,7 +2840,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
              (JSOp(*(PC + JSOP_RETURN_LENGTH)) == JSOP_STOP &&
               !a->analysis.maybeCode(PC + JSOP_RETURN_LENGTH)));
         if (!endOfScript)
-            a->returnJumps.append(masm.jump());
+            a->returnJumps->append(masm.jump());
 
         frame.discardFrame();
         return;
@@ -2949,8 +2953,16 @@ mjit::Compiler::recompileCheckHelper()
 
     size_t *addr = script->addressOfCallCount();
     masm.add32(Imm32(1), AbsoluteAddress(addr));
+#if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
     Jump jump = masm.branch32(Assembler::GreaterThanOrEqual, AbsoluteAddress(addr),
                               Imm32(CALLS_BACKEDGES_BEFORE_INLINING));
+#else
+    /* Handle processors that can't load from absolute addresses. */
+    RegisterID reg = frame.allocReg();
+    masm.move(ImmPtr(addr), reg);
+    Jump jump = masm.branchTest32(Assembler::GreaterThanOrEqual, Address(reg, 0));
+    frame.freeReg(reg);
+#endif
     stubcc.linkExit(jump, Uses(0));
 
     OOL_STUBCALL(stubs::RecompileForInline);
@@ -3479,6 +3491,9 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
 #endif
 }
 
+/* Maximum number of calls we will inline at the same site. */
+static const uint32 INLINE_SITE_LIMIT = 5;
+
 CompileStatus
 mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
 {
@@ -3497,48 +3512,77 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
     FrameEntry *origCallee = frame.peek(-(argc + 2));
     FrameEntry *origThis = frame.peek(-(argc + 1));
 
-    if (!origCallee->isConstant() || !origCallee->isType(JSVAL_TYPE_OBJECT))
-        return Compile_InlineAbort;
-
-    JSObject *callee = &origCallee->getValue().toObject();
-    if (!callee->isFunction())
-        return Compile_InlineAbort;
-
-    JSFunction *fun = callee->getFunctionPrivate();
-    if (!fun->isInterpreted())
-        return Compile_InlineAbort;
-
-    /*
-     * The outer and inner scripts must have the same scope. This allows us to
-     * only inline calls between non-inner functions with the same global.
-     */
-    if (!outerScript->compileAndGo ||
-        (outerScript->fun && outerScript->fun->getParent() != globalObj) ||
-        !fun->script()->compileAndGo ||
-        fun->getParent() != globalObj) {
-        return Compile_InlineAbort;
-    }
-
-    /* The outer and inner scripts must have the same strictness. */
-    if (outerScript->strictModeCode != fun->script()->strictModeCode)
-        return Compile_InlineAbort;
-
-    /* We can't cope with inlining recursive functions yet. */
-    ActiveFrame *checka = a;
-    while (checka) {
-        if (checka->script == fun->script())
-            return Compile_InlineAbort;
-        checka = checka->parent;
-    }
-
-    /*
-     * Make sure the script has not had its .arguments accessed, and trigger
-     * recompilation if it ever is accessed.
-     */
     types::TypeSet *types = frame.getTypeSet(origCallee);
+    if (!types || types->getKnownTypeTag(cx, outerScript) != JSVAL_TYPE_OBJECT)
+        return Compile_InlineAbort;
+
+    /*
+     * Make sure no callees have had their .arguments accessed, and trigger
+     * recompilation if they ever are accessed.
+     */
     types::ObjectKind kind = types->getKnownObjectKind(cx, outerScript);
     if (kind != types::OBJECT_INLINEABLE_FUNCTION)
         return Compile_InlineAbort;
+
+    if (types->objectCount >= INLINE_SITE_LIMIT)
+        return Compile_InlineAbort;
+
+    /*
+     * Scan each of the possible callees for other conditions precluding
+     * inlining. We only inline at a call site if all callees are inlineable.
+     */
+    for (unsigned i = 0; i < types->objectCount; i++) {
+        types::TypeObject *object;
+        if (types->objectCount == 1)
+            object = (types::TypeObject *) types->objectSet;
+        else
+            object = types->objectSet[i];  // FIXME hash case not possible here, but still gross.
+        JS_ASSERT(object);
+
+        if (!object->singleton || !object->singleton->isFunction())
+            return Compile_InlineAbort;
+
+        JSFunction *fun = object->singleton->getFunctionPrivate();
+        if (!fun->isInterpreted())
+            return Compile_InlineAbort;
+
+        /*
+         * The outer and inner scripts must have the same scope. This only
+         * allows us to inline calls between non-inner functions. Also check
+         * for consistent strictness between the functions.
+         */
+        if (!outerScript->compileAndGo ||
+            (outerScript->fun && outerScript->fun->getParent() != globalObj) ||
+            !fun->script()->compileAndGo ||
+            fun->getParent() != globalObj ||
+            outerScript->strictModeCode != fun->script()->strictModeCode) {
+            return Compile_InlineAbort;
+        }
+
+        /* We can't cope with inlining recursive functions yet. */
+        ActiveFrame *checka = a;
+        while (checka) {
+            if (checka->script == fun->script())
+                return Compile_InlineAbort;
+            checka = checka->parent;
+        }
+
+        analyze::Script analysis;
+        analysis.analyze(cx, fun->script());
+
+        if (analysis.OOM())
+            return Compile_Error;
+        if (analysis.failed())
+            return Compile_Abort;
+
+        if (!analysis.inlineable(argc))
+            return Compile_InlineAbort;
+
+        if (analysis.usesThisValue() && origThis->isNotType(JSVAL_TYPE_OBJECT))
+            return Compile_InlineAbort;
+    }
+
+    types->addFreeze(cx, outerScript);
 
     /*
      * For 'this' and arguments which are copies of other entries still in
@@ -3550,56 +3594,106 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
     for (unsigned i = 0; i < argc; i++)
         frame.tryCopyRegister(frame.peek(-(i + 1)), origCallee);
 
+    /*
+     * If this is a polymorphic callsite, get a register for the callee too.
+     * After this, do not touch the register state in the current frame until
+     * stubs for all callees have been generated.
+     */
+    MaybeRegisterID calleeReg;
+    if (types->objectCount > 1) {
+        frame.forgetConstantData(origCallee);
+        calleeReg = frame.tempRegForData(origCallee);
+    }
+    MaybeJump calleePrevious;
+
+    /*
+     * Registers for entries which will be popped after the call finishes do
+     * not need to be preserved by the inline frames.
+     */
+    Registers temporaryParentRegs = frame.getTemporaryCallRegisters(origCallee);
+
     JSValueType returnType = knownPushedType(0);
 
     bool needReturnValue = JSOP_POP != (JSOp)*(PC + JSOP_CALL_LENGTH);
     bool syncReturnValue = needReturnValue && returnType == JSVAL_TYPE_UNKNOWN;
 
-    CompileStatus status;
+    /* Track register state after the call. */
+    bool returnSet = false;
+    AnyRegisterID returnRegister;
+    Registers returnParentRegs = 0;
 
-    status = pushActiveFrame(fun->script(), argc);
-    if (status != Compile_Okay)
-        return status;
+    Vector<Jump, 4, CompilerAllocPolicy> returnJumps(CompilerAllocPolicy(cx, *this));
 
-    if (!a->analysis.inlineable(argc)) {
-        popActiveFrame();
-        return Compile_InlineAbort;
-    }
+    for (unsigned i = 0; i < types->objectCount; i++) {
+        types::TypeObject *object;
+        if (types->objectCount == 1)
+            object = (types::TypeObject *) types->objectSet;
+        else
+            object = types->objectSet[i];  // FIXME hash case not possible here, but still gross.
+        JS_ASSERT(object);
 
-    if (a->analysis.usesThisValue() && origThis->isNotType(JSVAL_TYPE_OBJECT)) {
-        popActiveFrame();
-        return Compile_InlineAbort;
-    }
+        JSFunction *fun = object->singleton->getFunctionPrivate();
 
-    JaegerSpew(JSpew_Inlining, "inlining call to script (file \"%s\") (line \"%d\")\n",
-               script->filename, script->lineno);
+        CompileStatus status;
 
-    a->needReturnValue = needReturnValue;
-    a->syncReturnValue = syncReturnValue;
-    a->returnValueDouble = returnType == JSVAL_TYPE_DOUBLE;
+        status = pushActiveFrame(fun->script(), argc);
+        if (status != Compile_Okay)
+            return status;
 
-    status = generateMethod();
-    if (status != Compile_Okay) {
-        popActiveFrame();
-        if (status == Compile_Abort) {
-            /* The callee is uncompileable, mark it as uninlineable and retry. */
-            if (!cx->markTypeFunctionUninlineable(fun->getType()))
-                return Compile_Error;
-            return Compile_Retry;
+        JaegerSpew(JSpew_Inlining, "inlining call to script (file \"%s\") (line \"%d\")\n",
+                   script->filename, script->lineno);
+
+        if (calleePrevious.isSet()) {
+            calleePrevious.get().linkTo(masm.label(), &masm);
+            calleePrevious = MaybeJump();
         }
-        return status;
+
+        if (i + 1 != types->objectCount) {
+            /* Guard on the callee, except when this object must be the callee. */
+            JS_ASSERT(calleeReg.isSet());
+            calleePrevious = masm.branchPtr(Assembler::NotEqual, calleeReg.reg(), ImmPtr(fun));
+        }
+
+        a->returnJumps = &returnJumps;
+        a->needReturnValue = needReturnValue;
+        a->syncReturnValue = syncReturnValue;
+        a->returnValueDouble = returnType == JSVAL_TYPE_DOUBLE;
+        if (returnSet) {
+            a->returnSet = true;
+            a->returnRegister = returnRegister;
+            a->returnParentRegs = returnParentRegs;
+        }
+        a->temporaryParentRegs = temporaryParentRegs;
+
+        status = generateMethod();
+        if (status != Compile_Okay) {
+            popActiveFrame();
+            if (status == Compile_Abort) {
+                /* The callee is uncompileable, mark it as uninlineable and retry. */
+                if (!cx->markTypeFunctionUninlineable(fun->getType()))
+                    return Compile_Error;
+                return Compile_Retry;
+            }
+            return status;
+        }
+
+        if (!returnSet) {
+            JS_ASSERT(a->returnSet);
+            returnSet = true;
+            returnRegister = a->returnRegister;
+            returnParentRegs = a->returnParentRegs;
+        }
+
+        popActiveFrame();
+
+        if (i + 1 != types->objectCount)
+            returnJumps.append(masm.jump());
     }
 
-    JS_ASSERT(a->returnSet);
+    for (unsigned i = 0; i < returnJumps.length(); i++)
+        returnJumps[i].linkTo(masm.label(), &masm);
 
-    AnyRegisterID returnRegister = a->returnRegister;
-    Registers evictedRegisters = Registers(Registers::AvailAnyRegs & ~a->returnParentRegs.freeMask);
-
-    for (unsigned i = 0; i < a->returnJumps.length(); i++)
-        a->returnJumps[i].linkTo(masm.label(), &masm);
-
-    popActiveFrame();
-
+    Registers evictedRegisters = Registers(Registers::AvailAnyRegs & ~returnParentRegs.freeMask);
     frame.evictInlineModifiedRegisters(evictedRegisters);
 
     frame.popn(argc + 2);
@@ -3613,7 +3707,7 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
         frame.pushSynced(JSVAL_TYPE_UNKNOWN);
     }
 
-    /* If we end up expanding the inline frame, it will need a return site to rejoin at. */
+    /* If we end up expanding inline frames here, they will need a return site to rejoin at. */
     addReturnSite(stubcc.masm.label(), true);
     stubcc.masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfPrev()), JSFrameReg);
     stubcc.masm.storeValueFromComponents(JSReturnReg_Type, JSReturnReg_Data,
@@ -4292,7 +4386,7 @@ mjit::Compiler::testSingletonPropertyTypes(types::TypeSet *types, jsid id)
         return false;
 
     JSProtoKey key;
-    JSValueType type = types->getKnownTypeTag(cx, script);
+    JSValueType type = types->getKnownTypeTag(cx, outerScript);
     switch (type) {
       case JSVAL_TYPE_STRING:
         key = JSProto_String;
@@ -4306,6 +4400,14 @@ mjit::Compiler::testSingletonPropertyTypes(types::TypeSet *types, jsid id)
       case JSVAL_TYPE_BOOLEAN:
         key = JSProto_Boolean;
         break;
+
+      case JSVAL_TYPE_OBJECT:
+        if (types->objectCount == 1) {
+            types::TypeObject *object = (types::TypeObject *) types->objectSet;
+            if (object->proto)
+                return testSingletonProperty(object->proto, id);
+        }
+        return false;
 
       default:
         return false;
