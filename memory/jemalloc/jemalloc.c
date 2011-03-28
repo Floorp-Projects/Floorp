@@ -3200,64 +3200,58 @@ static arena_run_t *
 arena_run_alloc(arena_t *arena, arena_bin_t *bin, size_t size, bool large,
     bool zero)
 {
-	arena_chunk_t *chunk;
 	arena_run_t *run;
 	arena_chunk_map_t *mapelm, key;
 
 	assert(size <= arena_maxclass);
 	assert((size & pagesize_mask) == 0);
 
-	chunk = NULL;
-	while (true) {
-		/* Search the arena's chunks for the lowest best fit. */
-		key.bits = size | CHUNK_MAP_KEY;
-		mapelm = arena_avail_tree_nsearch(&arena->runs_avail, &key);
-		if (mapelm != NULL) {
-			arena_chunk_t *run_chunk =
-			    (arena_chunk_t*)CHUNK_ADDR2BASE(mapelm);
-			size_t pageind = ((uintptr_t)mapelm -
-			    (uintptr_t)run_chunk->map) /
-			    sizeof(arena_chunk_map_t);
+	/* Search the arena's chunks for the lowest best fit. */
+	key.bits = size | CHUNK_MAP_KEY;
+	mapelm = arena_avail_tree_nsearch(&arena->runs_avail, &key);
+	if (mapelm != NULL) {
+		arena_chunk_t *chunk =
+		    (arena_chunk_t*)CHUNK_ADDR2BASE(mapelm);
+		size_t pageind = ((uintptr_t)mapelm -
+		    (uintptr_t)chunk->map) /
+		    sizeof(arena_chunk_map_t);
 
-			if (chunk != NULL)
-				chunk_dealloc(chunk, chunksize);
-			run = (arena_run_t *)((uintptr_t)run_chunk + (pageind
-			    << pagesize_2pow));
-			arena_run_split(arena, run, size, large, zero);
-			return (run);
-		}
+		run = (arena_run_t *)((uintptr_t)chunk + (pageind
+		    << pagesize_2pow));
+		arena_run_split(arena, run, size, large, zero);
+		return (run);
+	}
 
-		if (arena->spare != NULL) {
-			/* Use the spare. */
-			chunk = arena->spare;
-			arena->spare = NULL;
-			run = (arena_run_t *)((uintptr_t)chunk +
-			    (arena_chunk_header_npages << pagesize_2pow));
-			/* Insert the run into the runs_avail tree. */
-			arena_avail_tree_insert(&arena->runs_avail,
-			    &chunk->map[arena_chunk_header_npages]);
-			arena_run_split(arena, run, size, large, zero);
-			return (run);
-		}
+	if (arena->spare != NULL) {
+		/* Use the spare. */
+		arena_chunk_t *chunk = arena->spare;
+		arena->spare = NULL;
+		run = (arena_run_t *)((uintptr_t)chunk +
+		    (arena_chunk_header_npages << pagesize_2pow));
+		/* Insert the run into the runs_avail tree. */
+		arena_avail_tree_insert(&arena->runs_avail,
+		    &chunk->map[arena_chunk_header_npages]);
+		arena_run_split(arena, run, size, large, zero);
+		return (run);
+	}
 
-		/*
-		 * No usable runs.  Create a new chunk from which to allocate
-		 * the run.
-		 */
-		if (chunk == NULL) {
-			chunk = (arena_chunk_t *)chunk_alloc(chunksize, true,
-			    true);
-			if (chunk == NULL)
-				return (NULL);
-		}
+	/*
+	 * No usable runs.  Create a new chunk from which to allocate
+	 * the run.
+	 */
+	{
+		arena_chunk_t *chunk = (arena_chunk_t *)
+		    chunk_alloc(chunksize, true, true);
+		if (chunk == NULL)
+			return (NULL);
 
 		arena_chunk_init(arena, chunk);
 		run = (arena_run_t *)((uintptr_t)chunk +
 		    (arena_chunk_header_npages << pagesize_2pow));
-		/* Update page map. */
-		arena_run_split(arena, run, size, large, zero);
-		return (run);
 	}
+	/* Update page map. */
+	arena_run_split(arena, run, size, large, zero);
+	return (run);
 }
 
 static void
