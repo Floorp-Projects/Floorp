@@ -2960,10 +2960,11 @@ mjit::Compiler::recompileCheckHelper()
     /* Handle processors that can't load from absolute addresses. */
     RegisterID reg = frame.allocReg();
     masm.move(ImmPtr(addr), reg);
-    Jump jump = masm.branchTest32(Assembler::GreaterThanOrEqual, Address(reg, 0));
+    Jump jump = masm.branch32(Assembler::GreaterThanOrEqual, Address(reg, 0));
     frame.freeReg(reg);
 #endif
     stubcc.linkExit(jump, Uses(0));
+    stubcc.leave();
 
     OOL_STUBCALL(stubs::RecompileForInline);
     stubcc.rejoin(Changes(0));
@@ -4373,8 +4374,11 @@ mjit::Compiler::testSingletonProperty(JSObject *obj, jsid id)
 }
 
 bool
-mjit::Compiler::testSingletonPropertyTypes(types::TypeSet *types, jsid id)
+mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testObject)
 {
+    *testObject = false;
+
+    types::TypeSet *types = frame.getTypeSet(top);
     if (!types)
         return false;
 
@@ -4402,10 +4406,18 @@ mjit::Compiler::testSingletonPropertyTypes(types::TypeSet *types, jsid id)
         break;
 
       case JSVAL_TYPE_OBJECT:
+      case JSVAL_TYPE_UNKNOWN:
         if (types->objectCount == 1) {
+            JS_ASSERT_IF(top->isTypeKnown(), top->isType(JSVAL_TYPE_OBJECT));
             types::TypeObject *object = (types::TypeObject *) types->objectSet;
-            if (object->proto)
-                return testSingletonProperty(object->proto, id);
+            if (object->proto) {
+                if (!testSingletonProperty(object->proto, id))
+                    return false;
+
+                /* If we don't know this is an object, we will need a test. */
+                *testObject = (type != JSVAL_TYPE_OBJECT) && !top->isTypeKnown();
+                return true;
+            }
         }
         return false;
 
@@ -4425,9 +4437,14 @@ mjit::Compiler::jsop_callprop(JSAtom *atom)
 {
     FrameEntry *top = frame.peek(-1);
 
+    bool testObject;
     JSObject *singleton = pushedSingleton(0);
     if (singleton && singleton->isFunction() &&
-        testSingletonPropertyTypes(frame.getTypeSet(top), ATOM_TO_JSID(atom))) {
+        testSingletonPropertyTypes(top, ATOM_TO_JSID(atom), &testObject)) {
+        MaybeJump notObject;
+        if (testObject)
+            notObject = frame.testObject(Assembler::NotEqual, top);
+
         // THIS
 
         frame.dup();
@@ -4438,6 +4455,13 @@ mjit::Compiler::jsop_callprop(JSAtom *atom)
 
         frame.shift(-2);
         // FUN THIS
+
+        if (notObject.isSet()) {
+            stubcc.linkExit(notObject.get(), Uses(1));
+            stubcc.leave();
+            OOL_STUBCALL(stubs::CallProp);
+            stubcc.rejoin(Changes(2));
+        }
 
         return true;
     }
