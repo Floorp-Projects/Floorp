@@ -6593,7 +6593,7 @@ ExecuteTree(JSContext* cx, TraceMonitor* tm, TreeFragment* f, uintN& inlineCallC
                       js_FramePCToLineNumber(cx, cx->fp()),
                       FramePCOffset(cx, cx->fp()),
            f->execs,
-           f->code());
+           (void *) f->code());
 
     debug_only_stmt(uint32 globalSlots = globalObj->numSlots();)
     debug_only_stmt(*(uint64*)&tm->storage->global()[globalSlots] = 0xdeadbeefdeadbeefLL;)
