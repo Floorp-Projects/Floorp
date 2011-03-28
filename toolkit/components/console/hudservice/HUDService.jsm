@@ -1183,7 +1183,8 @@ NetworkPanel.prototype =
  * present.
  *
  * @param nsIDOMNode aConsoleNode
- *        The DOM node that holds the output of the console.
+ *        The DOM node (richlistbox aka outputNode) that holds the output of the
+ *        console.
  * @return number
  *         The current user-selected log limit.
  */
@@ -1209,7 +1210,10 @@ function pruneConsoleOutputIfNecessary(aConsoleNode)
   for (let i = 0; i < removeNodes; i++) {
     if (messageNodes[i].classList.contains("webconsole-msg-cssparser")) {
       let desc = messageNodes[i].childNodes[2].textContent;
-      let location = messageNodes[i].childNodes[4].getAttribute("title");
+      let location = "";
+      if (messageNodes[i].childNodes[4]) {
+        location = messageNodes[i].childNodes[4].getAttribute("title");
+      }
       delete hudRef.cssNodes[desc + location];
     }
     messageNodes[i].parentNode.removeChild(messageNodes[i]);
@@ -1857,23 +1861,22 @@ HUD_SERVICE.prototype =
   /**
    * Returns the hudReference for a given output node.
    *
-   * @param nsIDOMNode aNode
-   *        an output node (as returned by getOutputNodeById()).
+   * @param nsIDOMNode aNode (currently either a xul:vbox as returned by
+   *        getOutputNodeById() or a richlistbox).
    * @returns a HUD | null
    */
   getHudReferenceForOutputNode: function HS_getHudReferenceForOutputNode(aNode)
   {
     let node = aNode;
-    while (!node.classList.contains("hudbox-animated")) {
-      if (node.parent) {
-        node = node.parent;
-      }
-      else {
+    // starting from richlistbox, need to find hudbox
+    while (!node.id && !node.classList.contains("hud-box")) {
+      if (node.parentNode) {
+        node = node.parentNode;
+      } else {
         return null;
       }
     }
-    let id = node.id;
-    return id in this.hudReferences ? this.hudReferences[id] : null;
+    return this.getHudReferenceById(node.id);
   },
 
   /**
@@ -1989,7 +1992,7 @@ HUD_SERVICE.prototype =
    * Get OutputNode by Id
    *
    * @param string aId
-   * @returns nsIDOMNode
+   * @returns nsIDOMNode (richlistbox)
    */
   getConsoleOutputNode: function HS_getConsoleOutputNode(aId)
   {
@@ -5301,7 +5304,8 @@ ConsoleUtils = {
     return false;
   },
 
-  /**   * Filters a node appropriately, then sends it to the output, regrouping and
+  /**
+   * Filters a node appropriately, then sends it to the output, regrouping and
    * pruning output as necessary.
    *
    * @param nsIDOMNode aNode
@@ -5311,7 +5315,6 @@ ConsoleUtils = {
    */
   outputMessageNode: function ConsoleUtils_outputMessageNode(aNode, aHUDId) {
     ConsoleUtils.filterMessageNode(aNode, aHUDId);
-
     let outputNode = HUDService.hudReferences[aHUDId].outputNode;
 
     let scrolledToBottom = ConsoleUtils.isOutputScrolledToBottom(outputNode);
