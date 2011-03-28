@@ -198,8 +198,7 @@
 		value = tls_ ## name ## _alloc ();			\
 	}								\
 	return value;							\
-    }									\
-    extern int no_such_variable						
+    }
 
 #   define PIXMAN_GET_THREAD_LOCAL(name)				\
     tls_ ## name ## _get ()

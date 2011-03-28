@@ -133,6 +133,17 @@ combine_clear (pixman_implementation_t *imp,
 }
 
 static void
+combine_dst (pixman_implementation_t *imp,
+	     pixman_op_t	      op,
+	     comp4_t *		      dest,
+	     const comp4_t *	      src,
+	     const comp4_t *          mask,
+	     int		      width)
+{
+    return;
+}
+
+static void
 combine_src_u (pixman_implementation_t *imp,
                pixman_op_t              op,
                comp4_t *                dest,
@@ -948,15 +959,33 @@ set_lum (comp4_t dest[3], comp4_t src[3], comp4_t sa, comp4_t lum)
 
     if (min < 0)
     {
-	tmp[0] = l + (tmp[0] - l) * l / (l - min);
-	tmp[1] = l + (tmp[1] - l) * l / (l - min);
-	tmp[2] = l + (tmp[2] - l) * l / (l - min);
+	if (l - min == 0.0)
+	{
+	    tmp[0] = 0;
+	    tmp[1] = 0;
+	    tmp[2] = 0;
+	}
+	else
+	{
+	    tmp[0] = l + (tmp[0] - l) * l / (l - min);
+	    tmp[1] = l + (tmp[1] - l) * l / (l - min);
+	    tmp[2] = l + (tmp[2] - l) * l / (l - min);
+	}
     }
     if (max > a)
     {
-	tmp[0] = l + (tmp[0] - l) * (a - l) / (max - l);
-	tmp[1] = l + (tmp[1] - l) * (a - l) / (max - l);
-	tmp[2] = l + (tmp[2] - l) * (a - l) / (max - l);
+	if (max - l == 0.0)
+	{
+	    tmp[0] = a;
+	    tmp[1] = a;
+	    tmp[2] = a;
+	}
+	else
+	{
+	    tmp[0] = l + (tmp[0] - l) * (a - l) / (max - l);
+	    tmp[1] = l + (tmp[1] - l) * (a - l) / (max - l);
+	    tmp[2] = l + (tmp[2] - l) * (a - l) / (max - l);
+	}
     }
 
     dest[0] = tmp[0] * MASK + 0.5;
@@ -1296,17 +1325,13 @@ combine_disjoint_over_u (pixman_implementation_t *imp,
 	comp4_t s = combine_mask (src, mask, i);
 	comp2_t a = s >> A_SHIFT;
 
-	if (a != 0x00)
+	if (s != 0x00)
 	{
-	    if (a != MASK)
-	    {
-		comp4_t d = *(dest + i);
-		a = combine_disjoint_out_part (d >> A_SHIFT, a);
-		UNcx4_MUL_UNc_ADD_UNcx4 (d, a, s);
-		s = d;
-	    }
+	    comp4_t d = *(dest + i);
+	    a = combine_disjoint_out_part (d >> A_SHIFT, a);
+	    UNcx4_MUL_UNc_ADD_UNcx4 (d, a, s);
 
-	    *(dest + i) = s;
+	    *(dest + i) = d;
 	}
     }
 }
@@ -2314,7 +2339,7 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     /* Unified alpha */
     imp->combine_width[PIXMAN_OP_CLEAR] = combine_clear;
     imp->combine_width[PIXMAN_OP_SRC] = combine_src_u;
-    /* dest */
+    imp->combine_width[PIXMAN_OP_DST] = combine_dst;
     imp->combine_width[PIXMAN_OP_OVER] = combine_over_u;
     imp->combine_width[PIXMAN_OP_OVER_REVERSE] = combine_over_reverse_u;
     imp->combine_width[PIXMAN_OP_IN] = combine_in_u;
@@ -2330,7 +2355,7 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     /* Disjoint, unified */
     imp->combine_width[PIXMAN_OP_DISJOINT_CLEAR] = combine_clear;
     imp->combine_width[PIXMAN_OP_DISJOINT_SRC] = combine_src_u;
-    /* dest */
+    imp->combine_width[PIXMAN_OP_DISJOINT_DST] = combine_dst;
     imp->combine_width[PIXMAN_OP_DISJOINT_OVER] = combine_disjoint_over_u;
     imp->combine_width[PIXMAN_OP_DISJOINT_OVER_REVERSE] = combine_saturate_u;
     imp->combine_width[PIXMAN_OP_DISJOINT_IN] = combine_disjoint_in_u;
@@ -2344,7 +2369,7 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     /* Conjoint, unified */
     imp->combine_width[PIXMAN_OP_CONJOINT_CLEAR] = combine_clear;
     imp->combine_width[PIXMAN_OP_CONJOINT_SRC] = combine_src_u;
-    /* dest */
+    imp->combine_width[PIXMAN_OP_CONJOINT_DST] = combine_dst;
     imp->combine_width[PIXMAN_OP_CONJOINT_OVER] = combine_conjoint_over_u;
     imp->combine_width[PIXMAN_OP_CONJOINT_OVER_REVERSE] = combine_conjoint_over_reverse_u;
     imp->combine_width[PIXMAN_OP_CONJOINT_IN] = combine_conjoint_in_u;
@@ -2390,7 +2415,7 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     /* Disjoint CA */
     imp->combine_width_ca[PIXMAN_OP_DISJOINT_CLEAR] = combine_clear_ca;
     imp->combine_width_ca[PIXMAN_OP_DISJOINT_SRC] = combine_src_ca;
-    /* dest */
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_DST] = combine_dst;
     imp->combine_width_ca[PIXMAN_OP_DISJOINT_OVER] = combine_disjoint_over_ca;
     imp->combine_width_ca[PIXMAN_OP_DISJOINT_OVER_REVERSE] = combine_saturate_ca;
     imp->combine_width_ca[PIXMAN_OP_DISJOINT_IN] = combine_disjoint_in_ca;
@@ -2404,7 +2429,7 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     /* Conjoint CA */
     imp->combine_width_ca[PIXMAN_OP_CONJOINT_CLEAR] = combine_clear_ca;
     imp->combine_width_ca[PIXMAN_OP_CONJOINT_SRC] = combine_src_ca;
-    /* dest */
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_DST] = combine_dst;
     imp->combine_width_ca[PIXMAN_OP_CONJOINT_OVER] = combine_conjoint_over_ca;
     imp->combine_width_ca[PIXMAN_OP_CONJOINT_OVER_REVERSE] = combine_conjoint_over_reverse_ca;
     imp->combine_width_ca[PIXMAN_OP_CONJOINT_IN] = combine_conjoint_in_ca;
@@ -2427,10 +2452,10 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     imp->combine_width_ca[PIXMAN_OP_DIFFERENCE] = combine_difference_ca;
     imp->combine_width_ca[PIXMAN_OP_EXCLUSION] = combine_exclusion_ca;
 
-    /* It is not clear that these make sense, so leave them out for now */
-    imp->combine_width_ca[PIXMAN_OP_HSL_HUE] = NULL;
-    imp->combine_width_ca[PIXMAN_OP_HSL_SATURATION] = NULL;
-    imp->combine_width_ca[PIXMAN_OP_HSL_COLOR] = NULL;
-    imp->combine_width_ca[PIXMAN_OP_HSL_LUMINOSITY] = NULL;
+    /* It is not clear that these make sense, so make them noops for now */
+    imp->combine_width_ca[PIXMAN_OP_HSL_HUE] = combine_dst;
+    imp->combine_width_ca[PIXMAN_OP_HSL_SATURATION] = combine_dst;
+    imp->combine_width_ca[PIXMAN_OP_HSL_COLOR] = combine_dst;
+    imp->combine_width_ca[PIXMAN_OP_HSL_LUMINOSITY] = combine_dst;
 }
 
