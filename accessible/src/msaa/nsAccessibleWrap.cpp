@@ -203,7 +203,7 @@ __try {
     // Return window system accessible object for root document and tab document
     // accessibles.
     if (!doc->ParentDocument() ||
-        nsWinUtils::IsWindowEmulationEnabled() &&
+        nsWinUtils::IsWindowEmulationStarted() &&
         nsWinUtils::IsTabDocument(doc->GetDocumentNode())) {
       HWND hwnd = static_cast<HWND>(doc->GetNativeWindow());
       if (hwnd && SUCCEEDED(AccessibleObjectFromWindow(hwnd, OBJID_WINDOW,
