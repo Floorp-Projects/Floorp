@@ -44,8 +44,13 @@
 #include "nsCSSProperty.h"
 #include "nscore.h" // For NS_OVERRIDE
 
-class nsIContent;
 class nsAString;
+
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
 
 /*
  * nsSMILCSSValueType: Represents a SMIL-animated CSS value.
@@ -53,6 +58,8 @@ class nsAString;
 class nsSMILCSSValueType : public nsISMILType
 {
 public:
+  typedef mozilla::dom::Element Element;
+
   // Singleton for nsSMILValue objects to hold onto.
   static nsSMILCSSValueType sSingleton;
 
@@ -97,7 +104,7 @@ public:
    * @post aValue.IsNull() || aValue.mType == nsSMILCSSValueType::sSingleton
    */
   static void ValueFromString(nsCSSProperty aPropID,
-                              nsIContent* aTargetElement,
+                              Element* aTargetElement,
                               const nsAString& aString,
                               nsSMILValue& aValue);
 
