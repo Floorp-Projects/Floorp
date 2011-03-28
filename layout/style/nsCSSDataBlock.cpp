@@ -330,18 +330,6 @@ nsCSSExpandedDataBlock::~nsCSSExpandedDataBlock()
     AssertInitialState();
 }
 
-const size_t
-nsCSSExpandedDataBlock::kOffsetTable[] = {
-    #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,        \
-                     parsevariant_, kwtable_, stylestruct_, stylestructoffset_,\
-                     animtype_)                                                \
-        offsetof(nsCSSExpandedDataBlock, m##datastruct_.member_),
-    #define CSS_PROP_STUB_NOT_CSS size_t(-1),
-    #include "nsCSSPropList.h"
-    #undef CSS_PROP
-    #undef CSS_PROP_STUB_NOT_CSS
-};
-
 void
 nsCSSExpandedDataBlock::DoExpand(nsCSSCompressedDataBlock *aBlock,
                                  PRBool aImportant)
