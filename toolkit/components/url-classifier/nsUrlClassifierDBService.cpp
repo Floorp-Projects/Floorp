@@ -3914,20 +3914,20 @@ nsUrlClassifierDBService::Init()
 
     PRInt32 tmpint;
     rv = prefs->GetIntPref(CONFIRM_AGE_PREF, &tmpint);
-    PR_AtomicSet(&gFreshnessGuarantee, NS_SUCCEEDED(rv) ? tmpint : CONFIRM_AGE_DEFAULT_SEC);
+    PR_ATOMIC_SET(&gFreshnessGuarantee, NS_SUCCEEDED(rv) ? tmpint : CONFIRM_AGE_DEFAULT_SEC);
 
     prefs->AddObserver(CONFIRM_AGE_PREF, this, PR_FALSE);
 
     rv = prefs->GetIntPref(UPDATE_CACHE_SIZE_PREF, &tmpint);
-    PR_AtomicSet(&gUpdateCacheSize, NS_SUCCEEDED(rv) ? tmpint : UPDATE_CACHE_SIZE_DEFAULT);
+    PR_ATOMIC_SET(&gUpdateCacheSize, NS_SUCCEEDED(rv) ? tmpint : UPDATE_CACHE_SIZE_DEFAULT);
 
     rv = prefs->GetIntPref(UPDATE_WORKING_TIME, &tmpint);
-    PR_AtomicSet(&gWorkingTimeThreshold,
-                 NS_SUCCEEDED(rv) ? tmpint : UPDATE_WORKING_TIME_DEFAULT);
+    PR_ATOMIC_SET(&gWorkingTimeThreshold,
+                  NS_SUCCEEDED(rv) ? tmpint : UPDATE_WORKING_TIME_DEFAULT);
 
     rv = prefs->GetIntPref(UPDATE_DELAY_TIME, &tmpint);
-    PR_AtomicSet(&gDelayTime,
-                 NS_SUCCEEDED(rv) ? tmpint : UPDATE_DELAY_TIME_DEFAULT);
+    PR_ATOMIC_SET(&gDelayTime,
+                  NS_SUCCEEDED(rv) ? tmpint : UPDATE_DELAY_TIME_DEFAULT);
   }
 
   // Start the background thread.
@@ -4232,21 +4232,21 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
     } else if (NS_LITERAL_STRING(CONFIRM_AGE_PREF).Equals(aData)) {
       PRInt32 tmpint;
       rv = prefs->GetIntPref(CONFIRM_AGE_PREF, &tmpint);
-      PR_AtomicSet(&gFreshnessGuarantee, NS_SUCCEEDED(rv) ? tmpint : CONFIRM_AGE_DEFAULT_SEC);
+      PR_ATOMIC_SET(&gFreshnessGuarantee, NS_SUCCEEDED(rv) ? tmpint : CONFIRM_AGE_DEFAULT_SEC);
     } else if (NS_LITERAL_STRING(UPDATE_CACHE_SIZE_PREF).Equals(aData)) {
       PRInt32 tmpint;
       rv = prefs->GetIntPref(UPDATE_CACHE_SIZE_PREF, &tmpint);
-      PR_AtomicSet(&gUpdateCacheSize, NS_SUCCEEDED(rv) ? tmpint : UPDATE_CACHE_SIZE_DEFAULT);
+      PR_ATOMIC_SET(&gUpdateCacheSize, NS_SUCCEEDED(rv) ? tmpint : UPDATE_CACHE_SIZE_DEFAULT);
     } else if (NS_LITERAL_STRING(UPDATE_WORKING_TIME).Equals(aData)) {
       PRInt32 tmpint;
       rv = prefs->GetIntPref(UPDATE_WORKING_TIME, &tmpint);
-      PR_AtomicSet(&gWorkingTimeThreshold,
-                   NS_SUCCEEDED(rv) ? tmpint : UPDATE_WORKING_TIME_DEFAULT);
+      PR_ATOMIC_SET(&gWorkingTimeThreshold,
+                    NS_SUCCEEDED(rv) ? tmpint : UPDATE_WORKING_TIME_DEFAULT);
     } else if (NS_LITERAL_STRING(UPDATE_DELAY_TIME).Equals(aData)) {
       PRInt32 tmpint;
       rv = prefs->GetIntPref(UPDATE_DELAY_TIME, &tmpint);
-      PR_AtomicSet(&gDelayTime,
-                 NS_SUCCEEDED(rv) ? tmpint : UPDATE_DELAY_TIME_DEFAULT);
+      PR_ATOMIC_SET(&gDelayTime,
+                    NS_SUCCEEDED(rv) ? tmpint : UPDATE_DELAY_TIME_DEFAULT);
     }
   } else if (!strcmp(aTopic, "profile-before-change") ||
              !strcmp(aTopic, "xpcom-shutdown-threads")) {

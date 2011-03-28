@@ -2001,7 +2001,7 @@ PluginModuleChild::NPN_RetainObject(NPObject* aNPObj)
 {
     AssertPluginThread();
 
-    int32_t refCnt = PR_AtomicIncrement((PRInt32*)&aNPObj->referenceCount);
+    int32_t refCnt = PR_ATOMIC_INCREMENT((int32_t*)&aNPObj->referenceCount);
     NS_LOG_ADDREF(aNPObj, refCnt, "NPObject", sizeof(NPObject));
 
     return aNPObj;
@@ -2029,7 +2029,7 @@ PluginModuleChild::NPN_ReleaseObject(NPObject* aNPObj)
             return;
     }
 
-    int32_t refCnt = PR_AtomicDecrement((PRInt32*)&aNPObj->referenceCount);
+    int32_t refCnt = PR_ATOMIC_DECREMENT((int32_t*)&aNPObj->referenceCount);
     NS_LOG_RELEASE(aNPObj, refCnt, "NPObject");
 
     if (refCnt == 0) {
