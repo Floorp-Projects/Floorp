@@ -1389,7 +1389,7 @@ nsXMLHttpRequest::Abort()
   }
 
   // The ChangeState call above calls onreadystatechange handlers which
-  // if they load a new url will cause nsXMLHttpRequest::OpenRequest to clear
+  // if they load a new url will cause nsXMLHttpRequest::Open to clear
   // the abort state bit. If this occurs we're not uninitialized (bug 361773).
   if (mState & XML_HTTP_REQUEST_ABORTED) {
     ChangeState(XML_HTTP_REQUEST_UNINITIALIZED, PR_FALSE);  // IE seems to do it
@@ -1666,15 +1666,17 @@ nsXMLHttpRequest::CheckChannelForCrossSiteRequest(nsIChannel* aChannel)
   return NS_OK;
 }
 
-/* noscript void openRequest (in AUTF8String method, in AUTF8String url, in boolean async, in AString user, in AString password); */
 NS_IMETHODIMP
-nsXMLHttpRequest::OpenRequest(const nsACString& method,
-                              const nsACString& url,
-                              PRBool async,
-                              const nsAString& user,
-                              const nsAString& password)
+nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
+                       PRBool async, const nsAString& user,
+                       const nsAString& password, PRUint8 optional_argc)
 {
   NS_ENSURE_ARG(!method.IsEmpty());
+
+  if (!optional_argc) {
+    // No optional arguments were passed in. Default async to true.
+    async = PR_TRUE;
+  }
 
   NS_ENSURE_TRUE(mPrincipal, NS_ERROR_NOT_INITIALIZED);
 
@@ -1803,20 +1805,6 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   ChangeState(XML_HTTP_REQUEST_OPENED);
 
   return rv;
-}
-
-/* void open (in AUTF8String method, in AUTF8String url); */
-NS_IMETHODIMP
-nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
-                       PRBool async, const nsAString& user,
-                       const nsAString& password, PRUint8 optional_argc)
-{
-  if (!optional_argc) {
-    // No optional arguments were passed in. Default async to true.
-    async = PR_TRUE;
-  }
-
-  return OpenRequest(method, url, async, user, password);
 }
 
 /*
