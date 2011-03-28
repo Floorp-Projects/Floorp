@@ -62,6 +62,10 @@
 #include "nsIComponentManager.h"
 #include "nsContentUtils.h"
 
+#ifdef ACCESSIBILITY
+#include "nsAccessibilityService.h"
+#endif
+
 #define BULLET_FRAME_IMAGE_LOADING NS_FRAME_STATE_BIT(63)
 
 class nsBulletListener : public nsStubImageDecoderObserver
@@ -183,6 +187,30 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
       mImageRequest = nsnull;
     }
   }
+
+#ifdef ACCESSIBILITY
+  // Update the list bullet accessible. If old style list isn't available then
+  // no need to update the accessible tree because it's not created yet.
+  if (aOldStyleContext) {
+    nsAccessibilityService* accService = nsIPresShell::AccService();
+    if (accService) {
+      const nsStyleList* oldStyleList = aOldStyleContext->PeekStyleList();
+      if (oldStyleList) {
+        bool hadBullet = oldStyleList->GetListStyleImage() ||
+            oldStyleList->mListStyleType != NS_STYLE_LIST_STYLE_NONE;
+
+        const nsStyleList* newStyleList = GetStyleList();
+        bool hasBullet = newStyleList->GetListStyleImage() ||
+            newStyleList->mListStyleType != NS_STYLE_LIST_STYLE_NONE;
+
+        if (hadBullet != hasBullet) {
+          accService->UpdateListBullet(PresContext()->GetPresShell(), mContent,
+                                       hasBullet);
+        }
+      }
+    }
+  }
+#endif
 }
 
 class nsDisplayBullet : public nsDisplayItem {
