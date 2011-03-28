@@ -300,7 +300,7 @@ void
 nsProxyObjectCallInfo::SetCompleted()
 {
     PROXY_LOG(("PROXY(%p): SetCompleted\n", this));
-    PR_ATOMIC_SET(&mCompleted, 1);
+    PR_AtomicSet(&mCompleted, 1);
 }
 
 void                
