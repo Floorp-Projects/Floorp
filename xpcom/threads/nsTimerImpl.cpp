@@ -87,7 +87,7 @@ NS_IMETHODIMP_(nsrefcnt) nsTimerImpl::Release(void)
   nsrefcnt count;
 
   NS_PRECONDITION(0 != mRefCnt, "dup release");
-  count = NS_AtomicDecrementRefcnt(mRefCnt);
+  count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);
   NS_LOG_RELEASE(this, count, "nsTimerImpl");
   if (count == 0) {
     mRefCnt = 1; /* stabilize */
@@ -223,7 +223,7 @@ nsresult nsTimerImpl::InitCommon(PRUint32 aType, PRUint32 aDelay)
   if (mArmed)
     gThread->RemoveTimer(this);
   mCanceled = PR_FALSE;
-  mGeneration = PR_ATOMIC_INCREMENT(&gGenerator);
+  mGeneration = PR_AtomicIncrement(&gGenerator);
 
   mType = (PRUint8)aType;
   SetDelayInternal(aDelay);

@@ -59,12 +59,6 @@ typedef PRInt32  nsAtomicRefcnt;
 
 #endif
 
-inline PRInt32
-NS_AtomicIncrementRefcnt(PRInt32 &refcnt)
-{
-  return PR_ATOMIC_INCREMENT(&refcnt);
-}
-
 inline nsrefcnt
 NS_AtomicIncrementRefcnt(nsrefcnt &refcnt)
 {
@@ -88,12 +82,6 @@ inline nsrefcnt
 NS_AtomicDecrementRefcnt(nsAutoRefCnt &refcnt)
 {
   return (nsrefcnt) PR_ATOMIC_DECREMENT((nsAtomicRefcnt*)&refcnt);
-}
-
-inline PRInt32
-NS_AtomicDecrementRefcnt(PRInt32 &refcnt)
-{
-  return PR_ATOMIC_DECREMENT(&refcnt);
 }
 
 #endif

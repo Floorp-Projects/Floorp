@@ -48,7 +48,7 @@
 
 #include "base/basictypes.h"
 
-#include "nsAtomicRefcnt.h"
+#include "pratom.h"
 
 #include "mozilla/ipc/SyncChannel.h"
 #include "nsAutoPtr.h"
@@ -450,10 +450,12 @@ private:
         void Run() { mTask->Run(); }
         void Cancel() { mTask->Cancel(); }
         void AddRef() {
-            NS_AtomicIncrementRefcnt(mRefCnt);
+            PR_AtomicIncrement(reinterpret_cast<PRInt32*>(&mRefCnt));
         }
         void Release() {
-            if (NS_AtomicDecrementRefcnt(mRefCnt) == 0)
+            nsrefcnt count =
+                PR_AtomicDecrement(reinterpret_cast<PRInt32*>(&mRefCnt));
+            if (0 == count)
                 delete this;
         }
 
