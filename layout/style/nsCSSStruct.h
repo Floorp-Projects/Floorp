@@ -46,56 +46,6 @@
 #define nsCSSStruct_h___
 
 #include "nsCSSValue.h"
-#include "nsStyleConsts.h"
-
-struct nsCSSCornerSizes {
-  nsCSSCornerSizes(void);
-  nsCSSCornerSizes(const nsCSSCornerSizes& aCopy);
-  ~nsCSSCornerSizes();
-
-  // argument is a "full corner" constant from nsStyleConsts.h
-  nsCSSValue const & GetCorner(PRUint32 aCorner) const {
-    return this->*corners[aCorner];
-  }
-  nsCSSValue & GetCorner(PRUint32 aCorner) {
-    return this->*corners[aCorner];
-  }
-
-  PRBool operator==(const nsCSSCornerSizes& aOther) const {
-    NS_FOR_CSS_FULL_CORNERS(corner) {
-      if (this->GetCorner(corner) != aOther.GetCorner(corner))
-        return PR_FALSE;
-    }
-    return PR_TRUE;
-  }
-
-  PRBool operator!=(const nsCSSCornerSizes& aOther) const {
-    NS_FOR_CSS_FULL_CORNERS(corner) {
-      if (this->GetCorner(corner) != aOther.GetCorner(corner))
-        return PR_TRUE;
-    }
-    return PR_FALSE;
-  }
-
-  PRBool HasValue() const {
-    NS_FOR_CSS_FULL_CORNERS(corner) {
-      if (this->GetCorner(corner).GetUnit() != eCSSUnit_Null)
-        return PR_TRUE;
-    }
-    return PR_FALSE;
-  }
-
-  void Reset();
-
-  nsCSSValue mTopLeft;
-  nsCSSValue mTopRight;
-  nsCSSValue mBottomRight;
-  nsCSSValue mBottomLeft;
-
-protected:
-  typedef nsCSSValue nsCSSCornerSizes::*corner_type;
-  static const corner_type corners[4];
-};
 
 /****************************************************************************/
 
