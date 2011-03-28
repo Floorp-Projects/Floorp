@@ -648,8 +648,11 @@ nsHTMLCanvasElement::InvalidateFrame(const gfxRect* damageRect)
   if (!frame)
     return;
 
+  frame->MarkLayersActive();
+
+  nsRect invalRect;
+  nsRect contentArea = frame->GetContentRect();
   if (damageRect) {
-    nsRect contentArea(frame->GetContentRect());
     nsIntSize size = GetWidthHeight();
 
     // damageRect and size are in CSS pixels; contentArea is in appunits
@@ -661,16 +664,16 @@ nsHTMLCanvasElement::InvalidateFrame(const gfxRect* damageRect)
     realRect.RoundOut();
 
     // then make it a nsRect
-    nsRect invalRect(realRect.X(), realRect.Y(),
-                     realRect.Width(), realRect.Height());
-
-    // account for border/padding
-    invalRect.MoveBy(contentArea.TopLeft() - frame->GetPosition());
-
-    frame->InvalidateLayer(invalRect, nsDisplayItem::TYPE_CANVAS);
+    invalRect = nsRect(realRect.X(), realRect.Y(),
+                       realRect.Width(), realRect.Height());
   } else {
-    nsRect r(frame->GetContentRect() - frame->GetPosition());
-    frame->InvalidateLayer(r, nsDisplayItem::TYPE_CANVAS);
+    invalRect = nsRect(nsPoint(0, 0), contentArea.Size());
+  }
+  invalRect.MoveBy(contentArea.TopLeft() - frame->GetPosition());
+
+  Layer* layer = frame->InvalidateLayer(invalRect, nsDisplayItem::TYPE_CANVAS);
+  if (layer) {
+    static_cast<CanvasLayer*>(layer)->Updated();
   }
 }
 
@@ -699,13 +702,14 @@ nsHTMLCanvasElement::GetIsOpaque()
 }
 
 already_AddRefed<CanvasLayer>
-nsHTMLCanvasElement::GetCanvasLayer(CanvasLayer *aOldLayer,
+nsHTMLCanvasElement::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
+                                    CanvasLayer *aOldLayer,
                                     LayerManager *aManager)
 {
   if (!mCurrentContext)
     return nsnull;
 
-  return mCurrentContext->GetCanvasLayer(aOldLayer, aManager);
+  return mCurrentContext->GetCanvasLayer(aBuilder, aOldLayer, aManager);
 }
 
 void

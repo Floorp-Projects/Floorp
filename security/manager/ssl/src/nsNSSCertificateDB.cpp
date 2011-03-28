@@ -1485,65 +1485,54 @@ nsNSSCertificateDB::FindCertByEmailAddress(nsISupports *aToken, const char *aEma
 
 /* nsIX509Cert constructX509FromBase64 (in string base64); */
 NS_IMETHODIMP
-nsNSSCertificateDB::ConstructX509FromBase64(const char * base64, nsIX509Cert **_retval)
+nsNSSCertificateDB::ConstructX509FromBase64(const char *base64,
+                                            nsIX509Cert **_retval)
 {
-  if (!_retval) {
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  // sure would be nice to have a smart pointer class for PL_ allocations
+  // unfortunately, we cannot distinguish out-of-memory from bad-input here
+  PRUint32 len = PL_strlen(base64);
+  char *certDER = PL_Base64Decode(base64, len, NULL);
+  if (!certDER)
+    return NS_ERROR_ILLEGAL_VALUE;
+  if (!*certDER) {
+    PL_strfree(certDER);
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  // If we get to this point, we know we had well-formed base64 input;
+  // therefore the input string cannot have been less than two
+  // characters long.  Compute the unpadded length of the decoded data.
+  PRUint32 lengthDER = (len * 3) / 4;
+  if (base64[len-1] == '=') {
+    lengthDER--;
+    if (base64[len-2] == '=')
+      lengthDER--;
   }
 
   nsNSSShutDownPreventionLock locker;
-  PRUint32 len = PL_strlen(base64);
-  int adjust = 0;
+  SECItem secitem_cert;
+  secitem_cert.type = siDERCertBuffer;
+  secitem_cert.data = (unsigned char*)certDER;
+  secitem_cert.len = lengthDER;
 
-  /* Compute length adjustment */
-  if (base64[len-1] == '=') {
-    adjust++;
-    if (base64[len-2] == '=') adjust++;
-  }
+  CERTCertificate *cert =
+    CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &secitem_cert,
+                            nsnull, PR_FALSE, PR_TRUE);
+  PL_strfree(certDER);
 
-  nsresult rv = NS_OK;
-  char *certDER = 0;
-  PRInt32 lengthDER = 0;
+  if (!cert)
+    return (PORT_GetError() == SEC_ERROR_NO_MEMORY)
+      ? NS_ERROR_OUT_OF_MEMORY : NS_ERROR_FAILURE;
 
-  certDER = PL_Base64Decode(base64, len, NULL);
-  if (!certDER || !*certDER) {
-    rv = NS_ERROR_ILLEGAL_VALUE;
-  }
-  else {
-    lengthDER = (len*3)/4 - adjust;
+  nsNSSCertificate *nsNSS = nsNSSCertificate::Create(cert);
+  CERT_DestroyCertificate(cert);
 
-    SECItem secitem_cert;
-    secitem_cert.type = siDERCertBuffer;
-    secitem_cert.data = (unsigned char*)certDER;
-    secitem_cert.len = lengthDER;
+  if (!nsNSS)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-    CERTCertificate *cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &secitem_cert, nsnull, PR_FALSE, PR_TRUE);
-
-    if (!cert) {
-      rv = NS_ERROR_FAILURE;
-    }
-    else {
-      nsNSSCertificate *nsNSS = nsNSSCertificate::Create(cert);
-      if (!nsNSS) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-      }
-      else {
-        nsresult rv = nsNSS->QueryInterface(NS_GET_IID(nsIX509Cert), (void**)_retval);
-
-        if (NS_SUCCEEDED(rv) && *_retval) {
-          NS_ADDREF(*_retval);
-        }
-        
-        NS_RELEASE(nsNSS);
-      }
-      CERT_DestroyCertificate(cert);
-    }
-  }
-  
-  if (certDER) {
-    nsCRT::free(certDER);
-  }
-  return rv;
+  return CallQueryInterface(nsNSS, _retval);
 }
 
 void

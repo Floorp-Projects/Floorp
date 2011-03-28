@@ -99,6 +99,34 @@ nsWinUtils::ConvertToIA2Array(nsIArray *aGeckoArray, IUnknown ***aIA2Array,
   return S_OK;
 }
 
+bool
+nsWinUtils::MaybeStartWindowEmulation()
+{
+  // Register window class that'll be used for document accessibles associated
+  // with tabs.
+  if (IsWindowEmulationFor(0)) {
+    RegisterNativeWindow(kClassNameTabContent);
+    nsAccessNodeWrap::sHWNDCache.Init(4);
+    return true;
+  }
+  return false;
+}
+
+void
+nsWinUtils::ShutdownWindowEmulation()
+{
+  // Unregister window call that's used for document accessibles associated
+  // with tabs.
+  if (IsWindowEmulationFor(0))
+    ::UnregisterClassW(kClassNameTabContent, GetModuleHandle(NULL));
+}
+
+bool
+nsWinUtils::IsWindowEmulationStarted()
+{
+  return nsAccessNodeWrap::sHWNDCache.IsInitialized();
+}
+
 void
 nsWinUtils::RegisterNativeWindow(LPCWSTR aWindowClass)
 {
@@ -146,7 +174,7 @@ nsWinUtils::HideNativeWindow(HWND aWnd)
 }
 
 bool
-nsWinUtils::IsWindowEmulationEnabled(LPCWSTR kModuleHandle)
+nsWinUtils::IsWindowEmulationFor(LPCWSTR kModuleHandle)
 {
   return kModuleHandle ? ::GetModuleHandleW(kModuleHandle) :
     ::GetModuleHandleW(kJAWSModuleHandle) ||
