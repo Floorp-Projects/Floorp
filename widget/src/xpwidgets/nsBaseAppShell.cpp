@@ -56,10 +56,10 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsBaseAppShell, nsIAppShell, nsIThreadObserver,
 
 nsBaseAppShell::nsBaseAppShell()
   : mSuspendNativeCount(0)
+  , mEventloopNestingLevel(0)
   , mBlockedWait(nsnull)
   , mFavorPerf(0)
   , mNativeEventPending(0)
-  , mEventloopNestingLevel(0)
   , mStarvationDelay(0)
   , mSwitchTime(0)
   , mLastNativeEventTime(0)
