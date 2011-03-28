@@ -436,8 +436,8 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
   if (self->mTerminated) {
     PRInt32 releaseCount = 0;
     if (self->mNativeEventScheduledDepth > self->mNativeEventCallbackDepth) {
-      releaseCount = PR_AtomicSet(&self->mNativeEventScheduledDepth,
-                                  self->mNativeEventCallbackDepth);
+      releaseCount = PR_ATOMIC_SET(&self->mNativeEventScheduledDepth,
+                                   self->mNativeEventCallbackDepth);
     }
     while (releaseCount-- > self->mNativeEventCallbackDepth)
       self->Release();
@@ -447,8 +447,8 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
     // (non-reproducible) cases of double-frees that *might* have been caused
     // by spontaneous calls (from the OS) to ProcessGeckoEvents().  So we
     // deal with that possibility here.
-    if (PR_AtomicDecrement(&self->mNativeEventScheduledDepth) < 0) {
-      PR_AtomicSet(&self->mNativeEventScheduledDepth, 0);
+    if (PR_ATOMIC_DECREMENT(&self->mNativeEventScheduledDepth) < 0) {
+      PR_ATOMIC_SET(&self->mNativeEventScheduledDepth, 0);
       NS_WARNING("Spontaneous call to ProcessGeckoEvents()!");
     } else {
       self->Release();
@@ -512,7 +512,7 @@ nsAppShell::ScheduleNativeEventCallback()
   // ProcessGeckoEvents().  But there are exceptions, for which see
   // ProcessGeckoEvents() and Exit().
   NS_ADDREF_THIS();
-  PR_AtomicIncrement(&mNativeEventScheduledDepth);
+  PR_ATOMIC_INCREMENT(&mNativeEventScheduledDepth);
 
   // This will invoke ProcessGeckoEvents on the main thread.
   ::CFRunLoopSourceSignal(mCFRunLoopSource);
@@ -796,7 +796,7 @@ nsAppShell::Exit(void)
   // to ScheduleNativeEventCallback() and ProcessGeckoEvents() isn't on the
   // stack, we need to take care of the problem here.
   if (!mNativeEventCallbackDepth && mNativeEventScheduledDepth) {
-    PRInt32 releaseCount = PR_AtomicSet(&mNativeEventScheduledDepth, 0);
+    PRInt32 releaseCount = PR_ATOMIC_SET(&mNativeEventScheduledDepth, 0);
     while (releaseCount-- > 0)
       NS_RELEASE_THIS();
   }
