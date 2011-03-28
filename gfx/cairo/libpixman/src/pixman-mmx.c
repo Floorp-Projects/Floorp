@@ -1108,7 +1108,7 @@ mmx_composite_over_n_8888 (pixman_implementation_t *imp,
 
     CHECKPOINT ();
 
-    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
+    src = _pixman_image_get_solid (imp, src_image, dst_image->bits.format);
 
     if (src == 0)
 	return;
@@ -1187,7 +1187,7 @@ mmx_composite_over_n_0565 (pixman_implementation_t *imp,
 
     CHECKPOINT ();
 
-    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
+    src = _pixman_image_get_solid (imp, src_image, dst_image->bits.format);
 
     if (src == 0)
 	return;
@@ -1275,7 +1275,7 @@ mmx_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
 
     CHECKPOINT ();
 
-    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
+    src = _pixman_image_get_solid (imp, src_image, dst_image->bits.format);
 
     srca = src >> 24;
     if (src == 0)
@@ -1384,7 +1384,7 @@ mmx_composite_over_8888_n_8888 (pixman_implementation_t *imp,
     PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
     PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
 
-    mask = _pixman_image_get_solid (mask_image, dst_image->bits.format);
+    mask = _pixman_image_get_solid (imp, mask_image, dst_image->bits.format);
     mask &= 0xff000000;
     mask = mask | mask >> 8 | mask >> 16 | mask >> 24;
     vmask = load8888 (mask);
@@ -1469,7 +1469,7 @@ mmx_composite_over_x888_n_8888 (pixman_implementation_t *imp,
 
     PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
     PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
-    mask = _pixman_image_get_solid (mask_image, dst_image->bits.format);
+    mask = _pixman_image_get_solid (imp, mask_image, dst_image->bits.format);
 
     mask &= 0xff000000;
     mask = mask | mask >> 8 | mask >> 16 | mask >> 24;
@@ -1764,7 +1764,7 @@ mmx_composite_over_n_8_8888 (pixman_implementation_t *imp,
 
     CHECKPOINT ();
 
-    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
+    src = _pixman_image_get_solid (imp, src_image, dst_image->bits.format);
 
     srca = src >> 24;
     if (src == 0)
@@ -1921,8 +1921,8 @@ pixman_fill_mmx (uint32_t *bits,
         "movq		%7,	%4\n"
         "movq		%7,	%5\n"
         "movq		%7,	%6\n"
-	: "=y" (v1), "=y" (v2), "=y" (v3),
-	  "=y" (v4), "=y" (v5), "=y" (v6), "=y" (v7)
+	: "=&y" (v1), "=&y" (v2), "=&y" (v3),
+	  "=&y" (v4), "=&y" (v5), "=&y" (v6), "=y" (v7)
 	: "y" (vfill));
 #endif
 
@@ -2038,7 +2038,7 @@ mmx_composite_src_n_8_8888 (pixman_implementation_t *imp,
 
     CHECKPOINT ();
 
-    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
+    src = _pixman_image_get_solid (imp, src_image, dst_image->bits.format);
 
     srca = src >> 24;
     if (src == 0)
@@ -2173,7 +2173,7 @@ mmx_composite_over_n_8_0565 (pixman_implementation_t *imp,
 
     CHECKPOINT ();
 
-    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
+    src = _pixman_image_get_solid (imp, src_image, dst_image->bits.format);
 
     srca = src >> 24;
     if (src == 0)
@@ -2532,7 +2532,7 @@ mmx_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
 
     CHECKPOINT ();
 
-    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
+    src = _pixman_image_get_solid (imp, src_image, dst_image->bits.format);
 
     srca = src >> 24;
     if (src == 0)
@@ -2643,7 +2643,7 @@ mmx_composite_in_n_8_8 (pixman_implementation_t *imp,
     PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint8_t, dst_stride, dst_line, 1);
     PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
 
-    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
+    src = _pixman_image_get_solid (imp, src_image, dst_image->bits.format);
 
     sa = src >> 24;
 
@@ -2790,7 +2790,7 @@ mmx_composite_add_n_8_8 (pixman_implementation_t *imp,
     PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint8_t, dst_stride, dst_line, 1);
     PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
 
-    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
+    src = _pixman_image_get_solid (imp, src_image, dst_image->bits.format);
 
     sa = src >> 24;
 
@@ -3340,10 +3340,9 @@ mmx_fill (pixman_implementation_t *imp,
 }
 
 pixman_implementation_t *
-_pixman_implementation_create_mmx (void)
+_pixman_implementation_create_mmx (pixman_implementation_t *fallback)
 {
-    pixman_implementation_t *general = _pixman_implementation_create_fast_path ();
-    pixman_implementation_t *imp = _pixman_implementation_create (general, mmx_fast_paths);
+    pixman_implementation_t *imp = _pixman_implementation_create (fallback, mmx_fast_paths);
 
     imp->combine_32[PIXMAN_OP_OVER] = mmx_combine_over_u;
     imp->combine_32[PIXMAN_OP_OVER_REVERSE] = mmx_combine_over_reverse_u;

@@ -96,8 +96,24 @@ radial_compute_color (double                    a,
 
     if (a == 0)
     {
-	return _pixman_gradient_walker_pixel (walker,
-					      pixman_fixed_1 / 2 * c / b);
+	double t;
+
+	if (b == 0)
+	    return 0;
+
+	t = pixman_fixed_1 / 2 * c / b;
+	if (repeat == PIXMAN_REPEAT_NONE)
+	{
+	    if (0 <= t && t <= pixman_fixed_1)
+		return _pixman_gradient_walker_pixel (walker, t);
+	}
+	else
+	{
+	    if (t * dr > mindr)
+		return _pixman_gradient_walker_pixel (walker, t);
+	}
+
+	return 0;
     }
 
     det = fdot (b, a, 0, b, -c, 0);
@@ -128,13 +144,8 @@ radial_compute_color (double                    a,
     return 0;
 }
 
-static void
-radial_gradient_get_scanline_32 (pixman_image_t *image,
-                                 int             x,
-                                 int             y,
-                                 int             width,
-                                 uint32_t *      buffer,
-                                 const uint32_t *mask)
+static uint32_t *
+radial_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
 {
     /*
      * Implementation of radial gradients following the PDF specification.
@@ -217,9 +228,13 @@ radial_gradient_get_scanline_32 (pixman_image_t *image,
      *   <=> for every p, the radiuses associated with the two t solutions
      *       have opposite sign
      */
+    pixman_image_t *image = iter->image;
+    int x = iter->x;
+    int y = iter->y;
+    int width = iter->width;
+    uint32_t *buffer = iter->buffer;
 
     gradient_t *gradient = (gradient_t *)image;
-    source_image_t *source = (source_image_t *)image;
     radial_gradient_t *radial = (radial_gradient_t *)image;
     uint32_t *end = buffer + width;
     pixman_gradient_walker_t walker;
@@ -230,16 +245,16 @@ radial_gradient_get_scanline_32 (pixman_image_t *image,
     v.vector[1] = pixman_int_to_fixed (y) + pixman_fixed_1 / 2;
     v.vector[2] = pixman_fixed_1;
 
-    _pixman_gradient_walker_init (&walker, gradient, source->common.repeat);
+    _pixman_gradient_walker_init (&walker, gradient, image->common.repeat);
 
-    if (source->common.transform)
+    if (image->common.transform)
     {
-	if (!pixman_transform_point_3d (source->common.transform, &v))
-	    return;
+	if (!pixman_transform_point_3d (image->common.transform, &v))
+	    return iter->buffer;
 	
-	unit.vector[0] = source->common.transform->matrix[0][0];
-	unit.vector[1] = source->common.transform->matrix[1][0];
-	unit.vector[2] = source->common.transform->matrix[2][0];
+	unit.vector[0] = image->common.transform->matrix[0][0];
+	unit.vector[1] = image->common.transform->matrix[1][0];
+	unit.vector[2] = image->common.transform->matrix[2][0];
     }
     else
     {
@@ -290,10 +305,11 @@ radial_gradient_get_scanline_32 (pixman_image_t *image,
 	db = dot (unit.vector[0], unit.vector[1], 0,
 		  radial->delta.x, radial->delta.y, 0);
 
-	c = dot (v.vector[0], v.vector[1], -radial->c1.radius,
+	c = dot (v.vector[0], v.vector[1],
+		 -((pixman_fixed_48_16_t) radial->c1.radius),
 		 v.vector[0], v.vector[1], radial->c1.radius);
-	dc = dot (2 * v.vector[0] + unit.vector[0],
-		  2 * v.vector[1] + unit.vector[1],
+	dc = dot (2 * (pixman_fixed_48_16_t) v.vector[0] + unit.vector[0],
+		  2 * (pixman_fixed_48_16_t) v.vector[1] + unit.vector[1],
 		  0,
 		  unit.vector[0], unit.vector[1], 0);
 	ddc = 2 * dot (unit.vector[0], unit.vector[1], 0,
@@ -308,7 +324,7 @@ radial_gradient_get_scanline_32 (pixman_image_t *image,
 						radial->delta.radius,
 						radial->mindr,
 						&walker,
-						source->common.repeat);
+						image->common.repeat);
 	    }
 
 	    b += db;
@@ -353,14 +369,14 @@ radial_gradient_get_scanline_32 (pixman_image_t *image,
 						    radial->delta.radius,
 						    radial->mindr,
 						    &walker,
-						    source->common.repeat);
+						    image->common.repeat);
 		}
 		else
 		{
 		    *buffer = 0;
 		}
 	    }
-	    
+
 	    ++buffer;
 
 	    v.vector[0] += unit.vector[0];
@@ -368,13 +384,28 @@ radial_gradient_get_scanline_32 (pixman_image_t *image,
 	    v.vector[2] += unit.vector[2];
 	}
     }
+
+    iter->y++;
+    return iter->buffer;
 }
 
-static void
-radial_gradient_property_changed (pixman_image_t *image)
+static uint32_t *
+radial_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
 {
-    image->common.get_scanline_32 = radial_gradient_get_scanline_32;
-    image->common.get_scanline_64 = _pixman_image_get_scanline_generic_64;
+    uint32_t *buffer = radial_get_scanline_narrow (iter, NULL);
+
+    pixman_expand ((uint64_t *)buffer, buffer, PIXMAN_a8r8g8b8, iter->width);
+
+    return buffer;
+}
+
+void
+_pixman_radial_gradient_iter_init (pixman_image_t *image, pixman_iter_t *iter)
+{
+    if (iter->flags & ITER_NARROW)
+	iter->get_scanline = radial_get_scanline_narrow;
+    else
+	iter->get_scanline = radial_get_scanline_wide;
 }
 
 PIXMAN_EXPORT pixman_image_t *
@@ -423,8 +454,6 @@ pixman_image_create_radial_gradient (pixman_point_fixed_t *        inner,
 	radial->inva = 1. * pixman_fixed_1 / radial->a;
 
     radial->mindr = -1. * pixman_fixed_1 * radial->c1.radius;
-
-    image->common.property_changed = radial_gradient_property_changed;
 
     return image;
 }
