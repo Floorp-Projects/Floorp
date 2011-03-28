@@ -64,6 +64,9 @@
 #include "nsContentUtils.h"
 #include "nsAttrName.h"
 #include "nsILineBreaker.h"
+#include "mozilla/dom/Element.h"
+
+using namespace mozilla::dom;
 
 static const char kMozStr[] = "moz";
 
@@ -915,8 +918,8 @@ nsXMLContentSerializer::SerializeAttributes(nsIContent* aContent,
 }
 
 NS_IMETHODIMP 
-nsXMLContentSerializer::AppendElementStart(nsIContent *aElement,
-                                           nsIContent *aOriginalElement,
+nsXMLContentSerializer::AppendElementStart(Element* aElement,
+                                           Element* aOriginalElement,
                                            nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
@@ -1016,7 +1019,7 @@ nsXMLContentSerializer::AppendEndOfElementStart(nsIContent *aOriginalElement,
 }
 
 NS_IMETHODIMP 
-nsXMLContentSerializer::AppendElementEnd(nsIContent *aElement,
+nsXMLContentSerializer::AppendElementEnd(Element* aElement,
                                          nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);

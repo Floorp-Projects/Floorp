@@ -43,7 +43,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMHTMLBodyElement.h"
-#include "nsIDOMHTMLMapElement.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIScriptElement.h"
 #include "jsapi.h"
@@ -106,7 +105,7 @@ public:
 
   virtual void EndLoad();
 
-  virtual nsIDOMHTMLMapElement *GetImageMap(const nsAString& aMapName);
+  virtual mozilla::dom::Element* GetImageMap(const nsAString& aMapName);
 
   virtual void SetCompatibilityMode(nsCompatibility aMode);
 
