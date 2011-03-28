@@ -375,6 +375,27 @@ FrameState::tryCopyRegister(FrameEntry *fe, FrameEntry *callStart)
     }
 }
 
+Registers
+FrameState::getTemporaryCallRegisters(FrameEntry *callStart) const
+{
+    /*
+     * Get the registers in use for entries which will be popped once the
+     * call at callStart finishes.
+     */
+    Registers regs(Registers::AvailAnyRegs & ~a->freeRegs.freeMask);
+    Registers result = 0;
+    while (!regs.empty()) {
+        AnyRegisterID reg = regs.takeAnyReg();
+        FrameEntry *fe = regstate(reg).usedBy();
+        JS_ASSERT(fe);
+
+        if (fe >= callStart)
+            result.putReg(reg);
+    }
+
+    return result;
+}
+
 void
 FrameState::takeReg(AnyRegisterID reg)
 {
@@ -498,7 +519,7 @@ FrameState::bestEvictReg(uint32 mask, bool includePinned) const
          */
 
         if (fe == callee_) {
-            JS_ASSERT(fe->data.synced() && fe->type.synced());
+            JS_ASSERT(fe->inlined || (fe->data.synced() && fe->type.synced()));
             JaegerSpew(JSpew_Regalloc, "result: %s is callee\n", reg.name());
             return reg;
         }
