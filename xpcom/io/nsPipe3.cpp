@@ -47,7 +47,6 @@
 #include "prlog.h"
 #include "nsInt64.h"
 #include "nsIClassInfoImpl.h"
-#include "nsAtomicRefcnt.h"
 
 #if defined(PR_LOGGING)
 //
@@ -706,14 +705,14 @@ nsPipeInputStream::OnInputException(nsresult reason, nsPipeEvents &events)
 NS_IMETHODIMP_(nsrefcnt)
 nsPipeInputStream::AddRef(void)
 {
-    NS_AtomicIncrementRefcnt(mReaderRefCnt);
+    PR_AtomicIncrement((PRInt32*)&mReaderRefCnt);
     return mPipe->AddRef();
 }
 
 NS_IMETHODIMP_(nsrefcnt)
 nsPipeInputStream::Release(void)
 {
-    if (NS_AtomicDecrementRefcnt(mReaderRefCnt) == 0)
+    if (PR_AtomicDecrement((PRInt32 *)&mReaderRefCnt) == 0)
         Close();
     return mPipe->Release();
 }
@@ -1062,14 +1061,14 @@ nsPipeOutputStream::OnOutputException(nsresult reason, nsPipeEvents &events)
 NS_IMETHODIMP_(nsrefcnt)
 nsPipeOutputStream::AddRef()
 {
-    NS_AtomicIncrementRefcnt(mWriterRefCnt);
+    PR_AtomicIncrement((PRInt32*)&mWriterRefCnt);
     return mPipe->AddRef();
 }
 
 NS_IMETHODIMP_(nsrefcnt)
 nsPipeOutputStream::Release()
 {
-    if (NS_AtomicDecrementRefcnt(mWriterRefCnt) == 0)
+    if (PR_AtomicDecrement((PRInt32 *)&mWriterRefCnt) == 0)
         Close();
     return mPipe->Release();
 }

@@ -143,11 +143,11 @@ class nsAutoAtomic {
   public:
     nsAutoAtomic(PRInt32 &i)
     :mI(i) {
-      PR_ATOMIC_INCREMENT(&mI);
+      PR_AtomicIncrement(&mI);
     }
 
     ~nsAutoAtomic() {
-      PR_ATOMIC_DECREMENT(&mI);
+      PR_AtomicDecrement(&mI);
     }
 
   protected:
