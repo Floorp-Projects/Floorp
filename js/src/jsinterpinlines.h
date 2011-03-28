@@ -762,12 +762,6 @@ ValuePropertyBearer(JSContext *cx, const Value &v, int spindex)
     return pobj;
 }
 
-/*
- * ScriptPrologue/ScriptEpilogue must be called in pairs. ScriptPrologue
- * must be called before the script executes. ScriptEpilogue must be called
- * after the script returns or exits via exception.
- */
-
 inline bool
 ScriptPrologue(JSContext *cx, JSStackFrame *fp)
 {
@@ -801,6 +795,26 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, bool ok)
         JS_RUNTIME_METER(cx->runtime, constructs);
     }
 
+    return ok;
+}
+
+inline bool
+ScriptPrologueOrGeneratorResume(JSContext *cx, JSStackFrame *fp)
+{
+    if (!fp->isGeneratorFrame())
+        return ScriptPrologue(cx, fp);
+    if (cx->compartment->debugMode)
+        ScriptDebugPrologue(cx, fp);
+    return true;
+}
+
+inline bool
+ScriptEpilogueOrGeneratorYield(JSContext *cx, JSStackFrame *fp, bool ok)
+{
+    if (!fp->isYielding())
+        return ScriptEpilogue(cx, fp, ok);
+    if (cx->compartment->debugMode)
+        return ScriptDebugEpilogue(cx, fp, ok);
     return ok;
 }
 

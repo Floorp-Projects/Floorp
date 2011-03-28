@@ -2530,7 +2530,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
     /* Don't call the script prologue if executing between Method and Trace JIT. */
     if (interpMode == JSINTERP_NORMAL) {
         JS_ASSERT_IF(!regs.fp->isGeneratorFrame(), regs.pc == script->code);
-        if (!ScriptPrologue(cx, regs.fp))
+        if (!ScriptPrologueOrGeneratorResume(cx, regs.fp))
             goto error;
     }
 
@@ -6868,7 +6868,7 @@ END_CASE(JSOP_ARRAYPUSH)
         goto inline_return;
 
   exit:
-    interpReturnOK = ScriptEpilogue(cx, regs.fp, interpReturnOK);
+    interpReturnOK = ScriptEpilogueOrGeneratorYield(cx, regs.fp, interpReturnOK);
     regs.fp->setFinishedInInterpreter();
 
     /*

@@ -893,7 +893,20 @@ inline bool
 ScriptPrologue(JSContext *cx, JSStackFrame *fp, JSScript *script);
 
 inline bool
-ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSScript *script, bool ok);
+ScriptEpilogue(JSContext *cx, JSStackFrame *fp, bool ok);
+
+/*
+ * It is not valid to call ScriptPrologue when a generator is resumed or to
+ * call ScriptEpilogue when a generator yields. However, the debugger still
+ * needs LIFO notification of generator start/stop. This pair of functions does
+ * the right thing based on the state of 'fp'.
+ */
+
+inline bool
+ScriptPrologueOrGeneratorResume(JSContext *cx, JSStackFrame *fp);
+
+inline bool
+ScriptEpilogueOrGeneratorYield(JSContext *cx, JSStackFrame *fp, bool ok);
 
 /* Implemented in jsdbgapi: */
 
