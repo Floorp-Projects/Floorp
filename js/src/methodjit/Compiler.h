@@ -502,7 +502,7 @@ class Compiler : public BaseCompiler
     types::TypeSet *pushedTypeSet(uint32 which);
     bool monitored(jsbytecode *pc);
     bool testSingletonProperty(JSObject *obj, jsid id);
-    bool testSingletonPropertyTypes(types::TypeSet *types, jsid id);
+    bool testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testObject);
 
     /* Non-emitting helpers. */
     void pushSyncedEntry(uint32 pushed);
