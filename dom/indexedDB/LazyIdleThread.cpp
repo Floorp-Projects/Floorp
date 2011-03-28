@@ -361,7 +361,7 @@ NS_IMPL_THREADSAFE_ADDREF(LazyIdleThread)
 NS_IMETHODIMP_(nsrefcnt)
 LazyIdleThread::Release()
 {
-  nsrefcnt count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);
+  nsrefcnt count = NS_AtomicDecrementRefcnt(mRefCnt);
   NS_LOG_RELEASE(this, count, "LazyIdleThread");
 
   if (!count) {

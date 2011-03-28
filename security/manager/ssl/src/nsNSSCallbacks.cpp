@@ -334,13 +334,13 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
 void
 nsNSSHttpRequestSession::AddRef()
 {
-  PR_AtomicIncrement(&mRefCount);
+  NS_AtomicIncrementRefcnt(mRefCount);
 }
 
 void
 nsNSSHttpRequestSession::Release()
 {
-  PRInt32 newRefCount = PR_AtomicDecrement(&mRefCount);
+  PRInt32 newRefCount = NS_AtomicDecrementRefcnt(mRefCount);
   if (!newRefCount) {
     delete this;
   }
