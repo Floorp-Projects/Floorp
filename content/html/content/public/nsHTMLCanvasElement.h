@@ -157,12 +157,12 @@ public:
    * Helpers called by various users of Canvas
    */
 
-  already_AddRefed<CanvasLayer> GetCanvasLayer(CanvasLayer *aOldLayer,
+  already_AddRefed<CanvasLayer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
+                                               CanvasLayer *aOldLayer,
                                                LayerManager *aManager);
 
-  // Tell the Context that all the current rendering that it's
-  // invalidated has been displayed to the screen, so that it should
-  // start requesting invalidates again as needed.
+  // Any invalidates requested by the context have been processed by updating
+  // the window. Future changes to the canvas need to trigger more invalidation.
   void MarkContextClean();
 
   virtual nsXPCClassInfo* GetClassInfo();

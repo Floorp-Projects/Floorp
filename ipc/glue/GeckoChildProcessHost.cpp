@@ -50,6 +50,7 @@
 #endif
 
 #include "prprf.h"
+#include "prenv.h"
 
 #if defined(OS_LINUX)
 #  define XP_LINUX 1
@@ -344,8 +345,54 @@ GeckoChildProcessHost::InitializeChannel()
   mon.Notify();
 }
 
+PRInt32 GeckoChildProcessHost::mChildCounter = 0;
+
+//
+// Wrapper function for handling GECKO_SEPARATE_NSPR_LOGS
+//
 bool
 GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts, base::ProcessArchitecture arch)
+{
+  // If separate NSPR log files are not requested, we're done.
+  const char* origLogName = PR_GetEnv("NSPR_LOG_FILE");
+  const char* separateLogs = PR_GetEnv("GECKO_SEPARATE_NSPR_LOGS");
+  if (!origLogName || !separateLogs || !*separateLogs ||
+      *separateLogs == '0' || *separateLogs == 'N' || *separateLogs == 'n') {
+    return PerformAsyncLaunchInternal(aExtraOpts, arch);
+  }
+
+  // We currently have no portable way to launch child with environment
+  // different than parent.  So temporarily change NSPR_LOG_FILE so child
+  // inherits value we want it to have. (NSPR only looks at NSPR_LOG_FILE at
+  // startup, so it's 'safe' to play with the parent's environment this way.)
+  nsCAutoString setChildLogName("NSPR_LOG_FILE=");
+  setChildLogName.Append(origLogName);
+
+  // remember original value so we can restore it.
+  // - buffer needs to be permanently allocated for PR_SetEnv()
+  // - Note: this code is not called re-entrantly, nor are restoreOrigLogName
+  //   or mChildCounter touched by any other thread, so this is safe.
+  static char* restoreOrigLogName = 0;
+  if (!restoreOrigLogName)
+    restoreOrigLogName = strdup(PromiseFlatCString(setChildLogName).get());
+
+  // Append child-specific postfix to name
+  setChildLogName.AppendLiteral(".child-");
+  setChildLogName.AppendInt(++mChildCounter);
+
+  // Passing temporary to PR_SetEnv is ok here because env gets copied
+  // by exec, etc., to permanent storage in child when process launched.
+  PR_SetEnv(PromiseFlatCString(setChildLogName).get());
+  bool retval = PerformAsyncLaunchInternal(aExtraOpts, arch);
+
+  // Revert to original value
+  PR_SetEnv(restoreOrigLogName);
+
+  return retval;
+}
+
+bool
+GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExtraOpts, base::ProcessArchitecture arch)
 {
   // FIXME/cjones: make this work from non-IO threads, too
 

@@ -103,6 +103,9 @@ public:
     mValue -= aOther.mValue;
     return *this;
   }
+  double operator/(const TimeDuration& aOther) {
+    return static_cast<double>(mValue) / aOther.mValue;
+  }
 
   PRBool operator<(const TimeDuration& aOther) const {
     return mValue < aOther.mValue;

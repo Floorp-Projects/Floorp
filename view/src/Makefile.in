@@ -59,4 +59,8 @@ CPPSRCS		= \
 
 include $(topsrcdir)/config/rules.mk
 
+LOCAL_INCLUDES  = \
+                -I$(srcdir)/../../content/events/src/ \
+                $(NULL)
+
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
