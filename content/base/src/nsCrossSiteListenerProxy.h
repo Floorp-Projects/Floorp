@@ -55,6 +55,14 @@ class nsIPrincipal;
 extern PRBool
 IsValidHTTPToken(const nsCSubstring& aToken);
 
+nsresult
+NS_StartCORSPreflight(nsIChannel* aRequestChannel,
+                      nsIStreamListener* aListener,
+                      nsIPrincipal* aPrincipal,
+                      PRBool aWithCredentials,
+                      nsTArray<nsCString>& aACUnsafeHeaders,
+                      nsIChannel** aPreflightChannel);
+
 class nsCrossSiteListenerProxy : public nsIStreamListener,
                                  public nsIInterfaceRequestor,
                                  public nsIChannelEventSink,
@@ -83,6 +91,8 @@ public:
 
   // Must be called at startup.
   static void Startup();
+
+  static void Shutdown();
 
 private:
   nsresult UpdateChannel(nsIChannel* aChannel);
