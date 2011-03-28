@@ -117,6 +117,7 @@ _BROWSER_FILES = \
                  browser_tabview_bug630102.js \
                  browser_tabview_bug630157.js \
                  browser_tabview_bug631662.js \
+                 browser_tabview_bug631752.js \
                  browser_tabview_bug633788.js \
                  browser_tabview_bug634077.js \
                  browser_tabview_bug634085.js \
