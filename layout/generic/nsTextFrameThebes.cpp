@@ -290,8 +290,7 @@ struct TextRunMappedFlow {
  */
 struct TextRunUserData {
   TextRunMappedFlow* mMappedFlows;
-  PRInt32            mMappedFlowCount;
-
+  PRUint32           mMappedFlowCount;
   PRUint32           mLastFlowIndex;
 };
 
@@ -477,7 +476,7 @@ UnhookTextRunFromFrames(gfxTextRun* aTextRun, nsTextFrame* aStartContinuation)
     TextRunUserData* userData =
       static_cast<TextRunUserData*>(aTextRun->GetUserData());
     PRInt32 destroyFromIndex = aStartContinuation ? -1 : 0;
-    for (PRInt32 i = 0; i < userData->mMappedFlowCount; ++i) {
+    for (PRUint32 i = 0; i < userData->mMappedFlowCount; ++i) {
       nsTextFrame* userDataFrame = userData->mMappedFlows[i].mStartFrame;
       PRBool found =
         ClearAllTextRunReferences(userDataFrame, aTextRun,
@@ -499,9 +498,9 @@ UnhookTextRunFromFrames(gfxTextRun* aTextRun, nsTextFrame* aStartContinuation)
       aTextRun->SetUserData(nsnull);
     }
     else {
-      userData->mMappedFlowCount = destroyFromIndex;
-      if (userData->mLastFlowIndex >= destroyFromIndex) {
-        userData->mLastFlowIndex = destroyFromIndex - 1;
+      userData->mMappedFlowCount = PRUint32(destroyFromIndex);
+      if (userData->mLastFlowIndex >= PRUint32(destroyFromIndex)) {
+        userData->mLastFlowIndex = PRUint32(destroyFromIndex) - 1;
       }
     }
   }
@@ -1302,7 +1301,7 @@ PRBool BuildTextRunsScanner::IsTextRunValidForMappedFlows(gfxTextRun* aTextRun)
       mMappedFlows[0].mEndFrame == nsnull;
 
   TextRunUserData* userData = static_cast<TextRunUserData*>(aTextRun->GetUserData());
-  if (userData->mMappedFlowCount != PRInt32(mMappedFlows.Length()))
+  if (userData->mMappedFlowCount != mMappedFlows.Length())
     return PR_FALSE;
   PRUint32 i;
   for (i = 0; i < mMappedFlows.Length(); ++i) {
@@ -2067,15 +2066,15 @@ FindFlowForContent(TextRunUserData* aUserData, nsIContent* aContent)
   PRInt32 sign = 1;
   // Search starting at the current position and examine close-by
   // positions first, moving further and further away as we go.
-  while (i >= 0 && i < aUserData->mMappedFlowCount) {
+  while (i >= 0 && PRUint32(i) < aUserData->mMappedFlowCount) {
     TextRunMappedFlow* flow = &aUserData->mMappedFlows[i];
     if (flow->mStartFrame->GetContent() == aContent) {
       return flow;
     }
 
     i += delta;
-    delta = -delta - sign;
     sign = -sign;
+    delta = -delta + sign;
   }
 
   // We ran into an array edge.  Add |delta| to |i| once more to get
@@ -2083,7 +2082,7 @@ FindFlowForContent(TextRunUserData* aUserData, nsIContent* aContent)
   // the |sign| direction.
   i += delta;
   if (sign > 0) {
-    for (; i < aUserData->mMappedFlowCount; ++i) {
+    for (; i < PRInt32(aUserData->mMappedFlowCount); ++i) {
       TextRunMappedFlow* flow = &aUserData->mMappedFlows[i];
       if (flow->mStartFrame->GetContent() == aContent) {
         return flow;
@@ -2123,7 +2122,7 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
           TextRunUserData* userData =
             static_cast<TextRunUserData*>(textRun->GetUserData());
          
-          if (PRUint32(userData->mMappedFlowCount) >= mMappedFlows.Length() ||
+          if (userData->mMappedFlowCount >= mMappedFlows.Length() ||
               userData->mMappedFlows[userData->mMappedFlowCount - 1].mStartFrame !=
               mMappedFlows[userData->mMappedFlowCount - 1].mStartFrame) {
             NS_WARNING("REASSIGNING MULTIFLOW TEXT RUN (not append)!");
@@ -2220,7 +2219,7 @@ nsTextFrame::EnsureTextRun(gfxContext* aReferenceContext, nsIFrame* aLineContain
   if (flow) {
     // Since textruns can only contain one flow for a given content element,
     // this must be our flow.
-    PRInt32 flowIndex = flow - userData->mMappedFlows;
+    PRUint32 flowIndex = flow - userData->mMappedFlows;
     userData->mLastFlowIndex = flowIndex;
     gfxSkipCharsIterator iter(mTextRun->GetSkipChars(),
                               flow->mDOMOffsetToBeforeTransformOffset, mContentOffset);
