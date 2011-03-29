@@ -455,13 +455,17 @@ nsPluginHost::GetInst()
 
 PRBool nsPluginHost::IsRunningPlugin(nsPluginTag * plugin)
 {
-  if (!plugin)
+  if (!plugin || !plugin->mEntryPoint) {
     return PR_FALSE;
+  }
 
-  for (int i = 0; i < plugin->mVariants; i++) {
-    nsNPAPIPluginInstance *instance = FindInstance(plugin->mMimeTypeArray[i]);
-    if (instance && instance->IsRunning())
+  for (PRUint32 i = 0; i < mInstances.Length(); i++) {
+    nsNPAPIPluginInstance *instance = mInstances[i].get();
+    if (instance &&
+        instance->GetPlugin() == plugin->mEntryPoint &&
+        instance->IsRunning()) {
       return PR_TRUE;
+    }
   }
 
   return PR_FALSE;
