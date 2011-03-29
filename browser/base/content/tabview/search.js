@@ -343,8 +343,7 @@ SearchEventHandlerClass.prototype = {
   // else to be hidden, and to have everything have the appropriate
   // event handlers;
   init: function () {
-    var self = this;
-    iQ("#searchbox")[0].focus(); 
+    let self = this;
     iQ("#search").hide();
     iQ("#searchshade").hide().click(function(event) {
       if ( event.target.id != "searchbox")
@@ -389,6 +388,13 @@ SearchEventHandlerClass.prototype = {
     // If we are already in an input field, allow typing as normal.
     if (event.target.nodeName == "INPUT")
       return;
+
+    // / is used to activate the search feature so the key shouldn't be entered 
+    // into the search box.
+    if (event.keyCode == KeyEvent.DOM_VK_SLASH) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
 
     this.switchToInMode();
     this.initiatedBy = "keydown";
@@ -526,7 +532,7 @@ function createSearchTabMacher() {
   return new TabMatcher(iQ("#searchbox").val());
 }
 
-function hideSearch(event){
+function hideSearch(event) {
   iQ("#searchbox").val("");
   iQ("#searchshade").hide();
   iQ("#search").hide();
@@ -540,7 +546,12 @@ function hideSearch(event){
   performSearch();
   SearchEventHandler.switchToBeforeMode();
 
-  if (event){
+  if (event) {
+    // when hiding the search mode, we need to prevent the keypress handler
+    // in UI__setTabViewFrameKeyHandlers to handle the key press again. e.g. Esc
+    // which is already handled by the key down in this class.
+    if (event.type == "keydown")
+      UI.ignoreKeypressForSearch = true;
     event.preventDefault();
     event.stopPropagation();
   }
