@@ -2078,7 +2078,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::MoveTo(float x, float y)
 {
     if (!FloatValidate(x,y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     mHasPath = PR_TRUE;
     mThebes->MoveTo(gfxPoint(x, y));
