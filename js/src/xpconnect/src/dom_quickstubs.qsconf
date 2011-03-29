@@ -335,7 +335,7 @@ members = [
     'nsIDOMNSHTMLOptionCollection.add',
 
     # dom/interfaces/json - None.
-    # All 4 methods of nsIJSON call GetCurrentNativeCallContext.
+    # All methods of nsIJSON call GetCurrentNativeCallContext.
 
     # dom/interfaces/load-save - None.
 

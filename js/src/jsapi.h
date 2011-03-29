@@ -3307,12 +3307,6 @@ JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
              JSONWriteCallback callback, void *data);
 
 /*
- * Retrieve a toJSON function. If found, set vp to its result.
- */
-JS_PUBLIC_API(JSBool)
-JS_TryJSON(JSContext *cx, jsval *vp);
-
-/*
  * JSON.parse as specified by ES5.
  */
 JS_PUBLIC_API(JSBool)

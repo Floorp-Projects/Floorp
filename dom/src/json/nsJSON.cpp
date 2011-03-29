@@ -75,34 +75,6 @@ nsJSON::~nsJSON()
 {
 }
 
-//
-// AString encode(in JSObject value, [optional] in JSObject whitelist);
-//
-NS_IMETHODIMP
-nsJSON::Encode(nsAString &aJSON)
-{
-  // This function should only be called from JS.
-  nsresult rv;
-
-  nsJSONWriter writer;
-  rv = EncodeInternal(&writer);
-
-  // FIXME: bug 408838. Get exception types sorted out
-  if (NS_SUCCEEDED(rv) || rv == NS_ERROR_INVALID_ARG) {
-    rv = NS_OK;
-    // if we didn't consume anything, it's not JSON, so return null
-    if (!writer.DidWrite()) {
-      aJSON.Truncate();
-      aJSON.SetIsVoid(PR_TRUE);
-    } else {
-      writer.FlushBuffer();
-      aJSON.Append(writer.mOutputString);
-    }
-  }
-
-  return rv;
-}
-
 static const char UTF8BOM[] = "\xEF\xBB\xBF";
 static const char UTF16LEBOM[] = "\xFF\xFE";
 static const char UTF16BEBOM[] = "\xFE\xFF";
@@ -247,35 +219,22 @@ nsJSON::EncodeInternal(nsJSONWriter *writer)
   rv = cc->GetArgc(&argc);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Now fish for the JS arguments. If it's a call to encode, we'll
-  // want the first two arguments. If it's a call to encodeToStream,
-  // we'll want the fourth and fifth;
-  PRUint32 firstArg = writer->mStream ? 3 : 0;
+  // Now fish for the JS arguments. We want the fourth and fifth arguments to
+  // encodeToStream.
+  NS_ABORT_IF_FALSE(writer->mStream != NULL, "should have a stream");
+  PRUint32 firstArg = 3;
 
   // Get the object we're going to serialize.
-  JSObject *inputObj = nsnull;
   jsval *argv = nsnull;
   rv = cc->GetArgvPtr(&argv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (argc <= firstArg ||
-      !(JSVAL_IS_OBJECT(argv[firstArg]) &&
-        (inputObj = JSVAL_TO_OBJECT(argv[firstArg])))) {
-    // return if it's not something we can deal with
-    return NS_ERROR_INVALID_ARG;
-  }
+  // If the argument wasn't provided, there's nothing to serialize.
+  if (argc <= firstArg)
+    return NS_OK;
 
   jsval *vp = &argv[firstArg];
-  JSBool ok = JS_TryJSON(cx, vp);
-  JSType type;
-  if (!(ok && !JSVAL_IS_PRIMITIVE(*vp) &&
-        (type = JS_TypeOfValue(cx, *vp)) != JSTYPE_FUNCTION &&
-        type != JSTYPE_XML)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  ok = JS_Stringify(cx, vp, NULL, JSVAL_NULL, WriteCallback, writer);
-  if (!ok)
+  if (!JS_Stringify(cx, vp, NULL, JSVAL_NULL, WriteCallback, writer))
     return NS_ERROR_FAILURE;
     
   return NS_OK;
@@ -390,20 +349,6 @@ nsJSONWriter::WriteToStream(nsIOutputStream *aStream,
   mDidWrite = PR_TRUE;
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsJSON::Decode(const nsAString& json)
-{
-  const PRUnichar *data;
-  PRUint32 len = NS_StringGetData(json, &data);
-  nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),
-                                      (const char*) data,
-                                      len * sizeof(PRUnichar),
-                                      NS_ASSIGNMENT_DEPEND);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return DecodeInternal(stream, len, PR_FALSE);
 }
 
 NS_IMETHODIMP
