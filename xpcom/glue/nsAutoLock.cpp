@@ -237,6 +237,10 @@ static PRBool WellOrdered(const void* addr1, const void* addr2,
     if (vec1) {
         PRUint32 i, n;
 
+        NS_ASSERTION(vec1->mName,
+                     "caller should have used nsAutoLock::NewLock "
+                     "or nsAutoMonitor::NewMonitor");
+
         for (i = 0, n = vec1->Count(); i < n; i++)
             if (vec1->ElementAt(i) == addr2)
                 break;
@@ -245,6 +249,9 @@ static PRBool WellOrdered(const void* addr1, const void* addr2,
             // Now check for (addr2 < addr1) and return false if so.
             nsNamedVector* vec2 = GetVector(table, addr2);
             if (vec2) {
+                NS_ASSERTION(vec2->mName,
+                             "caller should have used nsAutoLock::NewLock "
+                             "or nsAutoMonitor::NewMonitor");
                 for (i = 0, n = vec2->Count(); i < n; i++) {
                     void* addri = vec2->ElementAt(i);
                     PR_ASSERT(addri);
