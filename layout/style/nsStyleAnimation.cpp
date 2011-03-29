@@ -49,7 +49,6 @@
 #include "nsComputedDOMStyle.h"
 #include "nsCSSParser.h"
 #include "mozilla/css/Declaration.h"
-#include "nsCSSStruct.h"
 #include "mozilla/dom/Element.h"
 #include "prlog.h"
 #include <math.h>

@@ -104,7 +104,8 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext *aPresContext)
   : mPresContext(aPresContext),
     mFrozen(false),
     mThrottled(false),
-    mTimerIsPrecise(false)
+    mTimerIsPrecise(false),
+    mLastTimerInterval(0)
 {
 }
 
