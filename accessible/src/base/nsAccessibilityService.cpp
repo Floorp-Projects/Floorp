@@ -538,6 +538,22 @@ nsAccessibilityService::UpdateText(nsIPresShell* aPresShell,
 }
 
 void
+nsAccessibilityService::UpdateListBullet(nsIPresShell* aPresShell,
+                                         nsIContent* aHTMLListItemContent,
+                                         bool aHasBullet)
+{
+  nsDocAccessible* document = GetDocAccessible(aPresShell->GetDocument());
+  if (document) {
+    nsAccessible* accessible = document->GetAccessible(aHTMLListItemContent);
+    if (accessible) {
+      nsHTMLLIAccessible* listItem = accessible->AsHTMLListItem();
+      if (listItem)
+        listItem->UpdateBullet(aHasBullet);
+    }
+  }
+}
+
+void
 nsAccessibilityService::PresShellDestroyed(nsIPresShell *aPresShell)
 {
   // Presshell destruction will automatically destroy shells for descendant

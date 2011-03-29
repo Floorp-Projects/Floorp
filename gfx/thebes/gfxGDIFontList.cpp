@@ -626,7 +626,7 @@ gfxGDIFontList::GetFontSubstitutes()
 
     for (i = 0, rv = ERROR_SUCCESS; rv != ERROR_NO_MORE_ITEMS; i++) {
         aliasName[0] = 0;
-        lenAlias = sizeof(aliasName);
+        lenAlias = NS_ARRAY_LENGTH(aliasName);
         actualName[0] = 0;
         lenActual = sizeof(actualName);
         rv = RegEnumValueW(hKey, i, aliasName, &lenAlias, NULL, &valueType, 

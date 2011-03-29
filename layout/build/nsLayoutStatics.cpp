@@ -79,7 +79,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsTextFragment.h"
 #include "nsCSSRuleProcessor.h"
-#include "nsXMLHttpRequest.h"
+#include "nsCrossSiteListenerProxy.h"
 #include "nsWebSocket.h"
 #include "nsDOMThreadService.h"
 #include "nsHTMLDNSPrefetch.h"
@@ -275,7 +275,7 @@ nsLayoutStatics::Initialize()
   nsIPresShell::InitializeStatics();
   nsRefreshDriver::InitializeStatics();
 
-  nsCrossSiteListenerProxy::Startup();
+  nsCORSListenerProxy::Startup();
 
   rv = nsFrameList::Init();
   if (NS_FAILED(rv)) {
@@ -365,7 +365,7 @@ nsLayoutStatics::Shutdown()
   nsAudioStream::ShutdownLibrary();
 #endif
 
-  nsXMLHttpRequest::ShutdownACCache();
+  nsCORSListenerProxy::Shutdown();
   
   nsWebSocket::ReleaseGlobals();
   
