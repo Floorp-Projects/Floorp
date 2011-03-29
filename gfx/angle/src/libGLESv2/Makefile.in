@@ -14,9 +14,8 @@
 #
 # The Original Code is gecko.
 #
-# The Initial Developer of the Original Code is
-#   Mozilla 
-# Portions created by the Initial Developer are Copyright (C) 2010
+# The Initial Developer of the Original Code is Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,30 +34,41 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= angle
-LIBRARY_NAME	= angle
-LIBXUL_LIBRARY  = 1
-EXPORT_LIBRARY  = 1
+MODULE = libglesv2
+# On Windows, we don't automatically get "lib" prepended, but we need it.
+LIBRARY_NAME = libGLESv2
+MODULE_NAME = libglesv2
+FORCE_SHARED_LIB=1
 
-EXPORTS_NAMESPACES = angle
+# ANGLE uses the STL, so we can't use our derpy STL wrappers.
+STL_FLAGS=
 
-EXPORTS_angle = \
-	include/GLSLANG/ShaderLang.h \
-	include/GLSLANG/ResourceLimits.h \
-	$(NULL)
+# ANGLE uses exceptions internally, so we need to have exception handling
+# support
+ENABLE_CXX_EXCEPTIONS=1
 
-LOCAL_INCLUDES += -I$(srcdir)/include -I$(srcdir)/src
+# Since we're building off in our own world, we don't want to have
+# mozilla-config.h and -DMOZILLA_CLIENT automatically included and defined, so
+# we just overwrite OS_COMPILE_C(XX)FLAGS.
+OS_COMPILE_CFLAGS = $(OS_CPPFLAGS)
+OS_COMPILE_CXXFLAGS = $(OS_CPPFLAGS)
 
-VPATH += $(srcdir)/src
-VPATH += $(srcdir)/src/compiler
-VPATH += $(srcdir)/src/compiler/preprocessor
+LOCAL_INCLUDES = -I$(srcdir)/../../include -I$(srcdir)/.. -I"$(DXSDK_DIR)/include"
+
+VPATH += $(srcdir)/..
+VPATH += $(srcdir)/../compiler
+VPATH += $(srcdir)/../compiler/preprocessor
+VPATH += $(srcdir)/../common
+VPATH += $(srcdir)/geometry
+
+# Translator/compiler first
 
 CPPSRCS = \
 	Compiler.cpp \
@@ -76,11 +86,11 @@ CPPSRCS = \
         RemoveTree.cpp \
         ShaderLang.cpp \
         SymbolTable.cpp \
-	VariableInfo.cpp \
-	compilerdebug.cpp \
-	ossource_nspr.cpp \
-	util.cpp \
-	ValidateLimitations.cpp \
+        VariableInfo.cpp \
+        compilerdebug.cpp \
+        ossource_win.cpp \
+        util.cpp \
+        ValidateLimitations.cpp \
 	$(NULL)
 
 # flex/yacc generated files
@@ -89,25 +99,14 @@ CPPSRCS += \
 	glslang_tab.cpp \
 	$(NULL)
 
-# GLSL translator backend
+# HLSL translator backend
 CPPSRCS += \
-	CodeGenGLSL.cpp \
-	OutputGLSL.cpp \
-	TranslatorGLSL.cpp \
-	VersionGLSL.cpp \
+	CodeGenHLSL.cpp \
+	OutputHLSL.cpp \
+	TranslatorHLSL.cpp \
+	UnfoldSelect.cpp \
+	SearchSymbol.cpp \
 	$(NULL)
-
-# Currently, only one or the other
-# can be selected.
-
-## HLSL translator backend
-##CPPSRCS += \
-##	CodeGenHLSL.cpp \
-##	OutputHLSL.cpp \
-##	TranslatorHLSL.cpp \
-##	UnfoldSelect.cpp \
-##	SearchSymbol.cpp \
-##	$(NULL)
 
 CSRCS   = \
         atom.c \
@@ -119,30 +118,35 @@ CSRCS   = \
         tokens.c \
 	$(NULL)
 
-DEFINES += -DANGLE_USE_NSPR -DANGLE_BUILD
+DEFINES += -DANGLE_BUILD -DNOMINMAX -DLIBGLESV2_EXPORTS -D_CRT_SECURE_NO_DEPRECATE
 
-ifndef MOZ_ENABLE_LIBXUL
-EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
+ifndef MOZ_DEBUG
+DEFINES += -D_SECURE_SCL=0
 endif
 
-# ANGLE only on Win32 for now, the solution isn't set up
-# for 64-bit yet. This is handled by MOZ_ANGLE which the configure script
-# leaves undefined in the 64-bit case.
-ifdef MOZ_ANGLE
+CPPSRCS	+= \
+	debug.cpp \
+	IndexDataManager.cpp \
+	VertexDataManager.cpp \
+	Blit.cpp \
+	Buffer.cpp \
+	Context.cpp \
+	Fence.cpp \
+	Framebuffer.cpp \
+	libGLESv2.cpp \
+	main.cpp \
+	Program.cpp \
+	RefCountObject.cpp \
+	Renderbuffer.cpp \
+	ResourceManager.cpp \
+	Shader.cpp \
+	Texture.cpp \
+	utilities.cpp \
+	$(NULL)
 
-# libEGL depends on (links against!) libGLESv2!
-DIRS = src/libGLESv2 src/libEGL
+DEFFILE = $(srcdir)/libGLESv2.def
 
-libs::
-	expand "$(MOZ_D3DX9_CAB)" -F:$(MOZ_D3DX9_DLL) "$(DIST)/bin"
-	expand "$(MOZ_D3DCOMPILER_CAB)" -F:$(MOZ_D3DCOMPILER_DLL) "$(DIST)/bin"
-
-endif
 
 include $(topsrcdir)/config/rules.mk
 
-# We have to filter out -pedantic, because of
-# comma-at-end-of-enumerator list failures.  We can try to get this fixed
-# upstream at some point.
-CXXFLAGS := $(filter-out -pedantic,$(CXXFLAGS))
-CFLAGS := $(filter-out -pedantic,$(CFLAGS))
+EXTRA_DSO_LDOPTS = "$(MOZ_DIRECTX_SDK_PATH)/lib/x86/d3d9.lib" "$(MOZ_DIRECTX_SDK_PATH)/lib/x86/d3dx9.lib"
