@@ -167,6 +167,7 @@ PuppetWidget::CreateChild(const nsIntRect  &aRect,
 NS_IMETHODIMP
 PuppetWidget::Destroy()
 {
+  Base::OnDestroy();
   Base::Destroy();
   mPaintTask.Revoke();
   mChild = nsnull;
