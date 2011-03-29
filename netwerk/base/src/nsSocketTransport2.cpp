@@ -713,7 +713,7 @@ nsSocketTransport::nsSocketTransport()
     , mInputClosed(PR_TRUE)
     , mOutputClosed(PR_TRUE)
     , mResolving(PR_FALSE)
-    , mLock(PR_NewLock())
+    , mLock(nsAutoLock::NewLock("nsSocketTransport::mLock"))
     , mFD(nsnull)
     , mFDref(0)
     , mFDconnected(PR_FALSE)
@@ -742,7 +742,7 @@ nsSocketTransport::~nsSocketTransport()
     }
 
     if (mLock)
-        PR_DestroyLock(mLock);
+        nsAutoLock::DestroyLock(mLock);
  
     nsSocketTransportService *serv = gSocketTransportService;
     NS_RELEASE(serv); // nulls argument

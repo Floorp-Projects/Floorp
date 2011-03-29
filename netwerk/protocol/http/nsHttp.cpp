@@ -129,7 +129,7 @@ nsHttp::CreateAtomTable()
     NS_ASSERTION(!sAtomTable.ops, "atom table already initialized");
 
     if (!sLock) {
-        sLock = PR_NewLock();
+        sLock = nsAutoLock::NewLock("nsHttp::sLock");
         if (!sLock)
             return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -179,7 +179,7 @@ nsHttp::DestroyAtomTable()
     }
 
     if (sLock) {
-        PR_DestroyLock(sLock);
+        nsAutoLock::DestroyLock(sLock);
         sLock = nsnull;
     }
 }
