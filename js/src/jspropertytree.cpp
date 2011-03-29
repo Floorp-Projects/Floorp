@@ -40,7 +40,6 @@
 #include <new>
 
 #include "jstypes.h"
-#include "jsarena.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jscntxt.h"
@@ -65,50 +64,16 @@ ShapeHasher::match(const Key k, const Lookup l)
     return l->matches(k);
 }
 
-bool
-PropertyTree::init()
-{
-    JS_InitArenaPool(&arenaPool, "properties",
-                     256 * sizeof(Shape), sizeof(void *), NULL);
-    return true;
-}
-
-void
-PropertyTree::finish()
-{
-    JS_FinishArenaPool(&arenaPool);
-}
-
-/* On failure, returns NULL. Does not report out of memory. */
-Shape *
-PropertyTree::newShapeUnchecked()
-{
-    Shape *shape;
-
-    shape = freeList;
-    if (shape) {
-        shape->removeFree();
-    } else {
-        JS_ARENA_ALLOCATE_CAST(shape, Shape *, &arenaPool, sizeof(Shape));
-        if (!shape)
-            return NULL;
-    }
-
-#ifdef DEBUG
-    shape->compartment = compartment;
-#endif
-
-    JS_COMPARTMENT_METER(compartment->livePropTreeNodes++);
-    JS_COMPARTMENT_METER(compartment->totalPropTreeNodes++);
-    return shape;
-}
-
 Shape *
 PropertyTree::newShape(JSContext *cx)
 {
-    Shape *shape = newShapeUnchecked();
-    if (!shape)
+    Shape *shape = js_NewGCShape(cx);
+    if (!shape) {
         JS_ReportOutOfMemory(cx);
+        return NULL;
+    }
+    JS_COMPARTMENT_METER(compartment->livePropTreeNodes++);
+    JS_COMPARTMENT_METER(compartment->totalPropTreeNodes++);
     return shape;
 }
 
@@ -125,13 +90,8 @@ HashChildren(Shape *kid1, Shape *kid2)
         return NULL;
     }
 
-    KidsHash::AddPtr addPtr = hash->lookupForAdd(kid1);
-    JS_ALWAYS_TRUE(hash->add(addPtr, kid1));
-
-    addPtr = hash->lookupForAdd(kid2);
-    JS_ASSERT(!addPtr.found());
-    JS_ALWAYS_TRUE(hash->add(addPtr, kid2));
-
+    JS_ALWAYS_TRUE(hash->putNew(kid1));
+    JS_ALWAYS_TRUE(hash->putNew(kid2));
     return hash;
 }
 
@@ -144,7 +104,7 @@ PropertyTree::insertChild(JSContext *cx, Shape *parent, Shape *child)
     JS_ASSERT(!JSID_IS_VOID(parent->id));
     JS_ASSERT(!JSID_IS_VOID(child->id));
     JS_ASSERT(cx->compartment == compartment);
-    JS_ASSERT(child->compartment == parent->compartment);
+    JS_ASSERT(child->compartment() == parent->compartment());
 
     KidsPointer *kidp = &parent->kids;
 
@@ -169,31 +129,25 @@ PropertyTree::insertChild(JSContext *cx, Shape *parent, Shape *child)
         return true;
     }
 
-    KidsHash *hash = kidp->toHash();
-    KidsHash::AddPtr addPtr = hash->lookupForAdd(child);
-    JS_ASSERT(!addPtr.found());
-    if (!hash->add(addPtr, child)) {
+    if (!kidp->toHash()->putNew(child)) {
         JS_ReportOutOfMemory(cx);
         return false;
     }
+
     child->setParent(parent);
     return true;
 }
 
 void
-PropertyTree::removeChild(Shape *child)
+Shape::removeChild(Shape *child)
 {
     JS_ASSERT(!child->inDictionary());
+    JS_ASSERT(!JSID_IS_VOID(id));
 
-    Shape *parent = child->parent;
-    JS_ASSERT(parent);
-    JS_ASSERT(!JSID_IS_VOID(parent->id));
-
-    KidsPointer *kidp = &parent->kids;
+    KidsPointer *kidp = &kids;
     if (kidp->isShape()) {
-        Shape *kid = kidp->toShape();
-        if (kid == child)
-            parent->kids.setNull();
+        JS_ASSERT(kidp->toShape() == child);
+        kids.setNull();
         return;
     }
 
@@ -308,8 +262,6 @@ Shape::dump(JSContext *cx, FILE *fp) const
         DUMP_FLAG(ALIAS, alias);
         DUMP_FLAG(HAS_SHORTID, has_shortid);
         DUMP_FLAG(METHOD, method);
-        DUMP_FLAG(MARK, mark);
-        DUMP_FLAG(SHAPE_REGEN, shape_regen);
         DUMP_FLAG(IN_DICTIONARY, in_dictionary);
 #undef  DUMP_FLAG
         fputs(") ", fp);
@@ -377,268 +329,143 @@ Shape::dumpSubtree(JSContext *cx, int level, FILE *fp) const
 
 #endif /* DEBUG */
 
-JS_ALWAYS_INLINE void
-js::PropertyTree::orphanChildren(Shape *shape)
+void
+Shape::finalize(JSContext *cx)
 {
-    KidsPointer *kidp = &shape->kids;
+#ifdef DEBUG
+    if ((flags & SHARED_EMPTY) && cx->runtime->meterEmptyShapes())
+        compartment()->emptyShapes.remove((EmptyShape *)this);
+#endif
 
-    JS_ASSERT(!kidp->isNull());
-
-    if (kidp->isShape()) {
-        Shape *kid = kidp->toShape();
-
-        if (!JSID_IS_VOID(kid->id)) {
-            JS_ASSERT(kid->parent == shape);
-            kid->parent = NULL;
-        }
+    if (inDictionary()) {
+        JS_COMPARTMENT_METER(compartment()->liveDictModeNodes--);
     } else {
-        KidsHash *hash = kidp->toHash();
+        if (parent && parent->isMarked())
+            parent->removeChild(this);
 
-        for (KidsHash::Range range = hash->all(); !range.empty(); range.popFront()) {
-            Shape *kid = range.front();
-            if (!JSID_IS_VOID(kid->id)) {
-                JS_ASSERT(kid->parent == shape);
-                kid->parent = NULL;
-            }
-        }
-
-        hash->~KidsHash();
-        js_free(hash);
+        if (kids.isHash())
+            js_delete(kids.toHash());
     }
 
-    kidp->setNull();
+    freeTable(cx);
+    JS_COMPARTMENT_METER(compartment()->livePropTreeNodes--);
 }
 
 void
-js::PropertyTree::sweepShapes(JSContext *cx)
+js::PropertyTree::dumpShapeStats()
 {
+#ifdef DEBUG
     JSRuntime *rt = compartment->rt;
 
-#ifdef DEBUG
     JSBasicStats bs;
-    uint32 livePropCapacity = 0, totalLiveCount = 0;
     static FILE *logfp;
     if (!logfp) {
         if (const char *filename = rt->propTreeStatFilename)
             logfp = fopen(filename, "w");
+        if (!logfp)
+            return;
     }
 
-    if (logfp) {
-        JS_BASIC_STATS_INIT(&bs);
+    JS_BASIC_STATS_INIT(&bs);
 
-        uint32 empties;
-        {
-            typedef JSCompartment::EmptyShapeSet HS;
+    uint32 empties;
+    {
+        typedef JSCompartment::EmptyShapeSet HS;
 
-            HS &h = compartment->emptyShapes;
-            empties = h.count();
-            MeterKidCount(&bs, empties);
-            for (HS::Range r = h.all(); !r.empty(); r.popFront())
-                meter(&bs, r.front());
-        }
-
-        double props = rt->liveObjectPropsPreSweep;
-        double nodes = compartment->livePropTreeNodes;
-        double dicts = compartment->liveDictModeNodes;
-
-        /* Empty scope nodes are never hashed, so subtract them from nodes. */
-        JS_ASSERT(nodes - dicts == bs.sum);
-        nodes -= empties;
-
-        double sigma;
-        double mean = JS_MeanAndStdDevBS(&bs, &sigma);
-
-        fprintf(logfp,
-                "props %g nodes %g (dicts %g) beta %g meankids %g sigma %g max %u\n",
-                props, nodes, dicts, nodes / props, mean, sigma, bs.max);
-
-        JS_DumpHistogram(&bs, logfp);
-    }
-#endif
-
-    /*
-     * Sweep the heap clean of all unmarked nodes. Here we will find nodes
-     * already GC'ed from the root ply, but we will avoid re-orphaning their
-     * kids, because the kids member will already be null.
-     */
-    JSArena **ap = &arenaPool.first.next;
-    while (JSArena *a = *ap) {
-        Shape *limit = (Shape *) a->avail;
-        uintN liveCount = 0;
-
-        for (Shape *shape = (Shape *) a->base; shape < limit; shape++) {
-            /* If the id is null, shape is already on the freelist. */
-            if (JSID_IS_VOID(shape->id))
-                continue;
-
-            /*
-             * If the mark bit is set, shape is alive, so clear the mark bit
-             * and continue the while loop.
-             *
-             * Regenerate shape->shape if it hasn't already been refreshed
-             * during the mark phase, when live scopes' lastProp members are
-             * followed to update both scope->shape and lastProp->shape.
-             */
-            if (shape->marked()) {
-                shape->clearMark();
-                if (rt->gcRegenShapes) {
-                    if (shape->hasRegenFlag())
-                        shape->clearRegenFlag();
-                    else
-                        shape->shape = js_RegenerateShapeForGC(rt);
-                }
-                liveCount++;
-                continue;
-            }
-
-#ifdef DEBUG
-            if ((shape->flags & Shape::SHARED_EMPTY) &&
-                rt->meterEmptyShapes()) {
-                compartment->emptyShapes.remove((EmptyShape *) shape);
-            }
-#endif
-
-            if (shape->inDictionary()) {
-                JS_COMPARTMENT_METER(compartment->liveDictModeNodes--);
-            } else {
-                /*
-                 * Here, shape is garbage to collect, but its parent might not
-                 * be, so we may have to remove it from its parent's kids hash
-                 * or kid singleton pointer set.
-                 *
-                 * Without a separate mark-clearing pass, we can't tell whether
-                 * shape->parent is live at this point, so we must remove shape
-                 * if its parent member is non-null. A saving grace: if shape's
-                 * parent is dead and swept by this point, shape->parent will
-                 * be null -- in the next paragraph, we null all of a property
-                 * tree node's kids' parent links when sweeping that node.
-                 */
-                if (shape->parent)
-                    removeChild(shape);
-
-                if (!shape->kids.isNull())
-                    orphanChildren(shape);
-            }
-
-            /*
-             * Note that Shape::insertFree nulls shape->id so we know that
-             * shape is on the freelist.
-             */
-            shape->freeTable(cx);
-            shape->insertFree(&freeList);
-            JS_COMPARTMENT_METER(compartment->livePropTreeNodes--);
-        }
-
-        /* If a contains no live properties, return it to the malloc heap. */
-        if (liveCount == 0) {
-            for (Shape *shape = (Shape *) a->base; shape < limit; shape++)
-                shape->removeFree();
-            JS_ARENA_DESTROY(&arenaPool, a, ap);
-        } else {
-#ifdef DEBUG
-            livePropCapacity += limit - (Shape *) a->base;
-            totalLiveCount += liveCount;
-#endif
-            ap = &a->next;
-        }
+        HS &h = compartment->emptyShapes;
+        empties = h.count();
+        MeterKidCount(&bs, empties);
+        for (HS::Range r = h.all(); !r.empty(); r.popFront())
+            meter(&bs, r.front());
     }
 
-#ifdef DEBUG
-    if (logfp) {
+    double props = rt->liveObjectPropsPreSweep;
+    double nodes = compartment->livePropTreeNodes;
+    double dicts = compartment->liveDictModeNodes;
+
+    /* Empty scope nodes are never hashed, so subtract them from nodes. */
+    JS_ASSERT(nodes - dicts == bs.sum);
+    nodes -= empties;
+
+    double sigma;
+    double mean = JS_MeanAndStdDevBS(&bs, &sigma);
+
+    fprintf(logfp,
+            "props %g nodes %g (dicts %g) beta %g meankids %g sigma %g max %u\n",
+            props, nodes, dicts, nodes / props, mean, sigma, bs.max);
+
+    JS_DumpHistogram(&bs, logfp);
+
+    /* This data is global, so only print it once per GC. */
+    if (compartment == rt->atomsCompartment) {
         fprintf(logfp,
                 "\nProperty tree stats for gcNumber %lu\n",
                 (unsigned long) rt->gcNumber);
 
-        fprintf(logfp, "arenautil %g%%\n",
-                (totalLiveCount && livePropCapacity)
-                ? (totalLiveCount * 100.0) / livePropCapacity
-                : 0.0);
-
 #define RATE(f1, f2) (((double)js_scope_stats.f1 / js_scope_stats.f2) * 100.0)
 
-        /* This data is global, so only print it once per GC. */
-        if (compartment == rt->atomsCompartment) {
-            fprintf(logfp,
-                    "Scope search stats:\n"
-                    "  searches:        %6u\n"
-                    "  hits:            %6u %5.2f%% of searches\n"
-                    "  misses:          %6u %5.2f%%\n"
-                    "  hashes:          %6u %5.2f%%\n"
-                    "  hashHits:        %6u %5.2f%% (%5.2f%% of hashes)\n"
-                    "  hashMisses:      %6u %5.2f%% (%5.2f%%)\n"
-                    "  steps:           %6u %5.2f%% (%5.2f%%)\n"
-                    "  stepHits:        %6u %5.2f%% (%5.2f%%)\n"
-                    "  stepMisses:      %6u %5.2f%% (%5.2f%%)\n"
-                    "  initSearches:    %6u\n"
-                    "  changeSearches:  %6u\n"
-                    "  tableAllocFails: %6u\n"
-                    "  toDictFails:     %6u\n"
-                    "  wrapWatchFails:  %6u\n"
-                    "  adds:            %6u\n"
-                    "  addFails:        %6u\n"
-                    "  puts:            %6u\n"
-                    "  redundantPuts:   %6u\n"
-                    "  putFails:        %6u\n"
-                    "  changes:         %6u\n"
-                    "  changeFails:     %6u\n"
-                    "  compresses:      %6u\n"
-                    "  grows:           %6u\n"
-                    "  removes:         %6u\n"
-                    "  removeFrees:     %6u\n"
-                    "  uselessRemoves:  %6u\n"
-                    "  shrinks:         %6u\n",
-                    js_scope_stats.searches,
-                    js_scope_stats.hits, RATE(hits, searches),
-                    js_scope_stats.misses, RATE(misses, searches),
-                    js_scope_stats.hashes, RATE(hashes, searches),
-                    js_scope_stats.hashHits, RATE(hashHits, searches), RATE(hashHits, hashes),
-                    js_scope_stats.hashMisses, RATE(hashMisses, searches), RATE(hashMisses, hashes),
-                    js_scope_stats.steps, RATE(steps, searches), RATE(steps, hashes),
-                    js_scope_stats.stepHits, RATE(stepHits, searches), RATE(stepHits, hashes),
-                    js_scope_stats.stepMisses, RATE(stepMisses, searches), RATE(stepMisses, hashes),
-                    js_scope_stats.initSearches,
-                    js_scope_stats.changeSearches,
-                    js_scope_stats.tableAllocFails,
-                    js_scope_stats.toDictFails,
-                    js_scope_stats.wrapWatchFails,
-                    js_scope_stats.adds,
-                    js_scope_stats.addFails,
-                    js_scope_stats.puts,
-                    js_scope_stats.redundantPuts,
-                    js_scope_stats.putFails,
-                    js_scope_stats.changes,
-                    js_scope_stats.changeFails,
-                    js_scope_stats.compresses,
-                    js_scope_stats.grows,
-                    js_scope_stats.removes,
-                    js_scope_stats.removeFrees,
-                    js_scope_stats.uselessRemoves,
-                    js_scope_stats.shrinks);
-        }
+        fprintf(logfp,
+                "Scope search stats:\n"
+                "  searches:        %6u\n"
+                "  hits:            %6u %5.2f%% of searches\n"
+                "  misses:          %6u %5.2f%%\n"
+                "  hashes:          %6u %5.2f%%\n"
+                "  hashHits:        %6u %5.2f%% (%5.2f%% of hashes)\n"
+                "  hashMisses:      %6u %5.2f%% (%5.2f%%)\n"
+                "  steps:           %6u %5.2f%% (%5.2f%%)\n"
+                "  stepHits:        %6u %5.2f%% (%5.2f%%)\n"
+                "  stepMisses:      %6u %5.2f%% (%5.2f%%)\n"
+                "  initSearches:    %6u\n"
+                "  changeSearches:  %6u\n"
+                "  tableAllocFails: %6u\n"
+                "  toDictFails:     %6u\n"
+                "  wrapWatchFails:  %6u\n"
+                "  adds:            %6u\n"
+                "  addFails:        %6u\n"
+                "  puts:            %6u\n"
+                "  redundantPuts:   %6u\n"
+                "  putFails:        %6u\n"
+                "  changes:         %6u\n"
+                "  changeFails:     %6u\n"
+                "  compresses:      %6u\n"
+                "  grows:           %6u\n"
+                "  removes:         %6u\n"
+                "  removeFrees:     %6u\n"
+                "  uselessRemoves:  %6u\n"
+                "  shrinks:         %6u\n",
+                js_scope_stats.searches,
+                js_scope_stats.hits, RATE(hits, searches),
+                js_scope_stats.misses, RATE(misses, searches),
+                js_scope_stats.hashes, RATE(hashes, searches),
+                js_scope_stats.hashHits, RATE(hashHits, searches), RATE(hashHits, hashes),
+                js_scope_stats.hashMisses, RATE(hashMisses, searches), RATE(hashMisses, hashes),
+                js_scope_stats.steps, RATE(steps, searches), RATE(steps, hashes),
+                js_scope_stats.stepHits, RATE(stepHits, searches), RATE(stepHits, hashes),
+                js_scope_stats.stepMisses, RATE(stepMisses, searches), RATE(stepMisses, hashes),
+                js_scope_stats.initSearches,
+                js_scope_stats.changeSearches,
+                js_scope_stats.tableAllocFails,
+                js_scope_stats.toDictFails,
+                js_scope_stats.wrapWatchFails,
+                js_scope_stats.adds,
+                js_scope_stats.addFails,
+                js_scope_stats.puts,
+                js_scope_stats.redundantPuts,
+                js_scope_stats.putFails,
+                js_scope_stats.changes,
+                js_scope_stats.changeFails,
+                js_scope_stats.compresses,
+                js_scope_stats.grows,
+                js_scope_stats.removes,
+                js_scope_stats.removeFrees,
+                js_scope_stats.uselessRemoves,
+                js_scope_stats.shrinks);
+    }
 
 #undef RATE
 
-        fflush(logfp);
-    }
+    fflush(logfp);
 #endif /* DEBUG */
-}
-
-void
-js::PropertyTree::unmarkShapes(JSContext *cx)
-{
-    JSArena **ap = &arenaPool.first.next;
-    while (JSArena *a = *ap) {
-        Shape *limit = (Shape *) a->avail;
-
-        for (Shape *shape = (Shape *) a->base; shape < limit; shape++) {
-            /* If the id is null, shape is already on the freelist. */
-            if (JSID_IS_VOID(shape->id))
-                continue;
-
-            shape->clearMark();
-        }
-        ap = &a->next;
-    }
 }
 
 void

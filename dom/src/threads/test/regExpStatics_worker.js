@@ -13,7 +13,7 @@ function run() {
     cancelTimeout(timeout);
   }
 
-  var match = /a(sd)f/("asdf");
+  var match = /a(sd)f/.exec("asdf");
   if (!RegExp.$1) {
     throw "RegExp.$1 didn't get set!";
     cancelTimeout(timeout);

@@ -135,8 +135,8 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
 #ifdef MOZ_ENABLE_LIBXUL
     nsresult ReadScript(StartupCache *cache, nsIURI *uri, 
-                        JSContext *cx, JSScript **script);
-    nsresult WriteScript(StartupCache *cache, JSScript *script,
+                        JSContext *cx, JSObject **scriptObj);
+    nsresult WriteScript(StartupCache *cache, JSObject *scriptObj,
                          nsIFile *component, nsIURI *uri, JSContext *cx);
 #endif
 
