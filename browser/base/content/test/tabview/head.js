@@ -173,6 +173,67 @@ function whenTabViewIsShown(callback, win) {
 }
 
 // ----------
+function showSearch(callback, win) {
+  win = win || window;
+
+  let contentWindow = win.document.getElementById("tab-view").contentWindow;
+  if (contentWindow.isSearchEnabled()) {
+    callback();
+    return;
+  }
+
+  whenSearchIsEnabled(callback, win);
+  contentWindow.performSearch();
+}
+
+// ----------
+function hideSearch(callback, win) {
+  win = win || window;
+
+  let contentWindow = win.document.getElementById("tab-view").contentWindow;
+  if (!contentWindow.isSearchEnabled()) {
+    callback();
+    return;
+  }
+
+  whenSearchIsDisabled(callback, win);
+  contentWindow.hideSearch();
+}
+
+// ----------
+function whenSearchIsEnabled(callback, win) {
+  win = win || window;
+
+  let contentWindow = win.document.getElementById("tab-view").contentWindow;
+  if (contentWindow.isSearchEnabled()) {
+    callback();
+    return;
+  }
+
+  contentWindow.addEventListener("tabviewsearchenabled", function () {
+    contentWindow.removeEventListener("tabviewsearchenabled", arguments.callee, false);
+    callback();
+  }, false);
+}
+
+// ----------
+function whenSearchIsDisabled(callback, win) {
+  win = win || window;
+
+  let contentWindow = win.document.getElementById("tab-view").contentWindow;
+  if (!contentWindow.isSearchEnabled()) {
+    callback();
+    return;
+  }
+
+  contentWindow.addEventListener("tabviewsearchdisabled", function () {
+    contentWindow.removeEventListener("tabviewsearchdisabled", arguments.callee, false);
+    callback();
+  }, false);
+}
+
+
+// ----------
 function hideGroupItem(groupItem, callback) {
   if (groupItem.hidden) {
     callback();

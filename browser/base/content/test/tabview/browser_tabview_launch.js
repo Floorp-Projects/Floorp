@@ -74,7 +74,7 @@ function onTabViewHidden() {
   if (tabViewShownCount == 1) {
     document.getElementById("menu_tabview").doCommand();
   } else if (tabViewShownCount == 2) {
-    EventUtils.synthesizeKey("e", { accelKey: true, shiftKey: true });
+    EventUtils.synthesizeKey("E", { accelKey: true, shiftKey: true });
   } else if (tabViewShownCount == 3) {
     window.removeEventListener("tabviewshown", onTabViewShown, false);
     window.removeEventListener("tabviewhidden", onTabViewHidden, false);
