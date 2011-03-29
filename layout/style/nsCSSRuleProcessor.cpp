@@ -386,9 +386,7 @@ public:
   RuleHash(PRBool aQuirksMode);
   ~RuleHash();
   void AppendRule(const RuleSelectorPair &aRuleInfo);
-  void EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag, nsIAtom* aID,
-                         const nsAttrValue* aClassList,
-                         RuleProcessorData* aData,
+  void EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
                          NodeMatchContext& aNodeMatchContext);
   PLArenaPool& Arena() { return mArena; }
 
@@ -598,12 +596,17 @@ static inline
 void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
                      RuleProcessorData* data, NodeMatchContext& nodeContext);
 
-void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
-                                 nsIAtom* aID, const nsAttrValue* aClassList,
-                                 RuleProcessorData* aData,
+void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
                                  NodeMatchContext& aNodeContext)
 {
-  PRInt32 classCount = aClassList ? aClassList->GetAtomCount() : 0;
+  PRInt32 nameSpace = aElement->GetNameSpaceID();
+  nsIAtom* tag = aElement->Tag();
+  nsIAtom* id = aElement->GetID();
+  const nsAttrValue* classList = aElement->GetClasses();
+
+  NS_ABORT_IF_FALSE(tag, "How could we not have a tag?");
+
+  PRInt32 classCount = classList ? classList->GetAtomCount() : 0;
 
   // assume 1 universal, tag, id, and namespace, rather than wasting
   // time counting
@@ -623,26 +626,26 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
     RULE_HASH_STAT_INCREMENT_LIST_COUNT(mUniversalRules, mElementUniversalCalls);
   }
   // universal rules within the namespace
-  if (kNameSpaceID_Unknown != aNameSpace && mNameSpaceTable.entryCount) {
+  if (kNameSpaceID_Unknown != nameSpace && mNameSpaceTable.entryCount) {
     RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
-                                           (PL_DHashTableOperate(&mNameSpaceTable, NS_INT32_TO_PTR(aNameSpace),
+                                           (PL_DHashTableOperate(&mNameSpaceTable, NS_INT32_TO_PTR(nameSpace),
                              PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       mEnumList[valueCount++] = ToEnumData(entry->mRules);
       RULE_HASH_STAT_INCREMENT_LIST_COUNT(entry->mRules, mElementNameSpaceCalls);
     }
   }
-  if (aTag && mTagTable.entryCount) {
+  if (mTagTable.entryCount) {
     RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
-                                           (PL_DHashTableOperate(&mTagTable, aTag, PL_DHASH_LOOKUP));
+                                           (PL_DHashTableOperate(&mTagTable, tag, PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       mEnumList[valueCount++] = ToEnumData(entry->mRules);
       RULE_HASH_STAT_INCREMENT_LIST_COUNT(entry->mRules, mElementTagCalls);
     }
   }
-  if (aID && mIdTable.entryCount) {
+  if (id && mIdTable.entryCount) {
     RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
-                                           (PL_DHashTableOperate(&mIdTable, aID, PL_DHASH_LOOKUP));
+                                           (PL_DHashTableOperate(&mIdTable, id, PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       mEnumList[valueCount++] = ToEnumData(entry->mRules);
       RULE_HASH_STAT_INCREMENT_LIST_COUNT(entry->mRules, mElementIdCalls);
@@ -651,7 +654,7 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
   if (mClassTable.entryCount) {
     for (PRInt32 index = 0; index < classCount; ++index) {
       RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
-                                             (PL_DHashTableOperate(&mClassTable, aClassList->AtomAt(index),
+                                             (PL_DHashTableOperate(&mClassTable, classList->AtomAt(index),
                              PL_DHASH_LOOKUP));
       if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
         mEnumList[valueCount++] = ToEnumData(entry->mRules);
@@ -1133,8 +1136,7 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
 
   NS_ASSERTION(aElement->GetOwnerDoc(), "Document-less node here?");
     
-  // get the tag and parent
-  mContentTag = aElement->Tag();
+  // get the parent
   mParentContent = aElement->GetParent();
 
   // see if there are attributes for the content
@@ -1565,7 +1567,7 @@ static PRBool SelectorMatches(Element* aElement,
     nsIAtom* selectorTag =
       (aTreeMatchContext.mIsHTMLDocument && aElement->IsHTML()) ?
         aSelector->mLowercaseTag : aSelector->mCasedTag;
-    if (selectorTag != data.mContentTag) {
+    if (selectorTag != aElement->Tag()) {
       return PR_FALSE;
     }
   }
@@ -1969,7 +1971,7 @@ static PRBool SelectorMatches(Element* aElement,
 
       case nsCSSPseudoClasses::ePseudoClass_mozTableBorderNonzero:
         {
-          if (!aElement->IsHTML() || data.mContentTag != nsGkAtoms::table) {
+          if (!aElement->IsHTML(nsGkAtoms::table)) {
             return PR_FALSE;
           }
           nsGenericElement *ge = static_cast<nsGenericElement*>(data.mElement);
@@ -1999,7 +2001,7 @@ static PRBool SelectorMatches(Element* aElement,
           !isNegated &&
           // important for |IsQuirkEventSensitive|:
           aElement->IsHTML() && !nsCSSRuleProcessor::IsLink(aElement) &&
-          !IsQuirkEventSensitive(data.mContentTag)) {
+          !IsQuirkEventSensitive(aElement->Tag())) {
         // In quirks mode, only make certain elements sensitive to
         // selectors ":hover" and ":active".
         return PR_FALSE;
@@ -2275,11 +2277,7 @@ nsCSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData)
   if (cascade) {
     NodeMatchContext nodeContext(nsEventStates(),
                                  nsCSSRuleProcessor::IsLink(aData->mElement));
-    cascade->mRuleHash.EnumerateAllRules(aData->mNameSpaceID,
-                                         aData->mContentTag,
-                                         aData->mContentID,
-                                         aData->mClasses,
-                                         aData, nodeContext);
+    cascade->mRuleHash.EnumerateAllRules(aData->mElement, aData, nodeContext);
   }
 }
 
@@ -2293,11 +2291,7 @@ nsCSSRuleProcessor::RulesMatching(PseudoElementRuleProcessorData* aData)
     if (ruleHash) {
       NodeMatchContext nodeContext(nsEventStates(),
                                    nsCSSRuleProcessor::IsLink(aData->mElement));
-      ruleHash->EnumerateAllRules(aData->mNameSpaceID,
-                                  aData->mContentTag,
-                                  aData->mContentID,
-                                  aData->mClasses,
-                                  aData, nodeContext);
+      ruleHash->EnumerateAllRules(aData->mElement, aData, nodeContext);
     }
   }
 }
