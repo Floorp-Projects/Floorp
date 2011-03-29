@@ -1934,7 +1934,7 @@ static PRBool SelectorMatches(Element* aElement,
           nsEventStates contentState =
             nsCSSRuleProcessor::GetContentStateForVisitedHandling(
                                          aElement,
-                                         aTreeMatchContext.mVisitedHandling,
+                                         aTreeMatchContext.VisitedHandling(),
                                          aNodeMatchContext.mIsRelevantLink);
           if (!contentState.HasAtLeastOneOfStates(statesToCheck)) {
             return PR_FALSE;
@@ -2108,7 +2108,7 @@ static PRBool SelectorMatchesTree(Element* aPrevElement,
       // during the selector matching process if there is a relevant
       // link that can influence selector matching.
       aLookForRelevantLink = PR_FALSE;
-      aTreeMatchContext.mHaveRelevantLink = PR_TRUE;
+      aTreeMatchContext.SetHaveRelevantLink();
     }
     if (SelectorMatches(element, selector, nodeContext, aTreeMatchContext)) {
       // to avoid greedy matching, we need to recur if this is a
@@ -2154,20 +2154,18 @@ void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
                      RuleProcessorData* data, NodeMatchContext& nodeContext)
 {
   if (nodeContext.mIsRelevantLink) {
-    data->mHaveRelevantLink = PR_TRUE;
+    data->mTreeMatchContext.SetHaveRelevantLink();
   }
-  if (SelectorMatches(data->mElement, aSelector, nodeContext, *data)) {
+  if (SelectorMatches(data->mElement, aSelector, nodeContext,
+                      data->mTreeMatchContext)) {
     nsCSSSelector *next = aSelector->mNext;
-    if (!next || SelectorMatchesTree(data->mElement, next, *data,
+    if (!next || SelectorMatchesTree(data->mElement, next,
+                                     data->mTreeMatchContext,
                                      !nodeContext.mIsRelevantLink)) {
       aRule->RuleMatched();
       data->mRuleWalker->Forward(static_cast<nsIStyleRule*>(aRule));
       // nsStyleSet will deal with the !important rule
     }
-  }
-
-  if (data->mHaveRelevantLink) {
-    data->mRuleWalker->SetHaveRelevantLink();
   }
 }
 
@@ -2284,8 +2282,10 @@ nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData)
       // don't bother calling SelectorMatches, since even if it returns false
       // hint won't change.
       if ((possibleChange & ~hint) &&
-          SelectorMatches(aData->mElement, selector, nodeContext, *aData) &&
-          SelectorMatchesTree(aData->mElement, selector->mNext, *aData,
+          SelectorMatches(aData->mElement, selector, nodeContext,
+                          aData->mTreeMatchContext) &&
+          SelectorMatchesTree(aData->mElement, selector->mNext,
+                              aData->mTreeMatchContext,
                               PR_FALSE))
       {
         hint = nsRestyleHint(hint | possibleChange);
@@ -2324,8 +2324,10 @@ AttributeEnumFunc(nsCSSSelector* aSelector, AttributeEnumData* aData)
   // enumData->change won't change.
   NodeMatchContext nodeContext(nsEventStates(), PR_FALSE);
   if ((possibleChange & ~(aData->change)) &&
-      SelectorMatches(data->mElement, aSelector, nodeContext, *data) &&
-      SelectorMatchesTree(data->mElement, aSelector->mNext, *data, PR_FALSE)) {
+      SelectorMatches(data->mElement, aSelector, nodeContext,
+                      data->mTreeMatchContext) &&
+      SelectorMatchesTree(data->mElement, aSelector->mNext,
+                          data->mTreeMatchContext, PR_FALSE)) {
     aData->change = nsRestyleHint(aData->change | possibleChange);
   }
 }
