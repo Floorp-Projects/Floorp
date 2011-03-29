@@ -215,7 +215,7 @@ static nsresult GetBodyColor(nsPresContext* aPresContext, nscolor* aColor)
 nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 {
   nsRuleWalker *ruleWalker = aData->mRuleWalker;
-  if (aData->mIsHTMLContent) {
+  if (aData->mElement->IsHTML()) {
     nsIAtom* tag = aData->mContentTag;
 
     // if we have anchor colors, check if this is an anchor with an href
@@ -273,7 +273,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 /* virtual */ nsRestyleHint
 nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
-  if (aData->mIsHTMLContent &&
+  if (aData->mElement->IsHTML() &&
       aData->mContentTag == nsGkAtoms::a &&
       aData->IsLink() &&
       ((mActiveRule && aData->mStateMask.HasState(NS_EVENT_STATE_ACTIVE)) ||
