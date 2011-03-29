@@ -81,11 +81,16 @@ struct TreeMatchContext {
   // nsRuleWalker::VisitedHandlingType.
   nsRuleWalker::VisitedHandlingType mVisitedHandling;
 
+  // Root of scoped stylesheet (set and unset by the supplier of the
+  // scoped stylesheet).
+  nsIContent* mScopedRoot;
+
   TreeMatchContext(PRBool aForStyling,
                    nsRuleWalker::VisitedHandlingType aVisitedHandling)
     : mForStyling(aForStyling)
     , mHaveRelevantLink(PR_FALSE)
     , mVisitedHandling(aVisitedHandling)
+    , mScopedRoot(nsnull)
   {
   }
 };
@@ -174,7 +179,6 @@ public:
   mozilla::dom::Element* mElement;       // weak ref, must not be null
   nsIContent*       mParentContent; // mElement->GetParent(); weak ref
   nsRuleWalker*     mRuleWalker; // Used to add rules to our results.
-  nsIContent*       mScopedRoot;    // Root of scoped stylesheet (set and unset by the supplier of the scoped stylesheet
   
   nsIAtom*          mContentTag;    // mElement->GetTag()
   nsIAtom*          mContentID;     // mElement->GetID()
