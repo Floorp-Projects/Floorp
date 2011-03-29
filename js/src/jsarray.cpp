@@ -1100,18 +1100,57 @@ JSObject::makeDenseArraySlow(JSContext *cx)
     return true;
 }
 
-/* Transfer ownership of buffer to returned string. */
-static inline JSBool
-BufferToString(JSContext *cx, StringBuffer &sb, Value *rval)
-{
-    JSString *str = sb.finishString();
-    if (!str)
-        return false;
-    rval->setString(str);
-    return true;
-}
-
 #if JS_HAS_TOSOURCE
+class ArraySharpDetector
+{
+    JSContext *cx;
+    jschar *chars;
+    JSHashEntry *he;
+    bool sharp;
+
+  public:
+    ArraySharpDetector(JSContext *cx)
+      : cx(cx),
+        chars(NULL),
+        he(NULL),
+        sharp(false)
+    {}
+
+    bool init(JSObject *obj) {
+        he = js_EnterSharpObject(cx, obj, NULL, &chars);
+        if (!he)
+            return false;
+        sharp = IS_SHARP(he);
+        return true;
+    }
+
+    bool initiallySharp() const {
+        JS_ASSERT_IF(sharp, hasSharpChars());
+        return sharp;
+    }
+
+    void makeSharp() {
+        MAKE_SHARP(he);
+    }
+
+    bool hasSharpChars() const {
+        return chars != NULL;
+    }
+
+    jschar *takeSharpChars() {
+        jschar *ret = chars;
+        chars = NULL;
+        return ret;
+    }
+
+    ~ArraySharpDetector() {
+        if (chars)
+            cx->free_(chars);
+        if (he && !sharp)
+            js_LeaveSharpObject(cx, NULL);
+    }
+};
+
 static JSBool
 array_toSource(JSContext *cx, uintN argc, Value *vp)
 {
@@ -1125,55 +1164,43 @@ array_toSource(JSContext *cx, uintN argc, Value *vp)
         return false;
     }
 
-    /* Find joins or cycles in the reachable object graph. */
-    jschar *sharpchars;
-    JSHashEntry *he = js_EnterSharpObject(cx, obj, NULL, &sharpchars);
-    if (!he)
+    ArraySharpDetector detector(cx);
+    if (!detector.init(obj))
         return false;
-    bool initiallySharp = IS_SHARP(he);
 
-    /* After this point, all paths exit through the 'out' label. */
-    MUST_FLOW_THROUGH("out");
-    bool ok = false;
-
-    /*
-     * This object will take responsibility for the jschar buffer until the
-     * buffer is transferred to the returned JSString.
-     */
     StringBuffer sb(cx);
 
-    /* Cycles/joins are indicated by sharp objects. */
 #if JS_HAS_SHARP_VARS
-    if (IS_SHARP(he)) {
-        JS_ASSERT(sharpchars != 0);
-        sb.replaceRawBuffer(sharpchars, js_strlen(sharpchars));
+    if (detector.initiallySharp()) {
+        jschar *chars = detector.takeSharpChars();
+        sb.replaceRawBuffer(chars, js_strlen(chars));
         goto make_string;
-    } else if (sharpchars) {
-        MAKE_SHARP(he);
-        sb.replaceRawBuffer(sharpchars, js_strlen(sharpchars));
+    } else if (detector.hasSharpChars()) {
+        detector.makeSharp();
+        jschar *chars = detector.takeSharpChars();
+        sb.replaceRawBuffer(chars, js_strlen(chars));
     }
 #else
-    if (IS_SHARP(he)) {
+    if (detector.initiallySharp()) {
         if (!sb.append("[]"))
-            goto out;
-        cx->free_(sharpchars);
+            return false;
         goto make_string;
     }
 #endif
 
     if (!sb.append('['))
-        goto out;
+        return false;
 
     jsuint length;
     if (!js_GetLengthProperty(cx, obj, &length))
-        goto out;
+        return false;
 
     for (jsuint index = 0; index < length; index++) {
-        /* Use vp to locally root each element value. */
         JSBool hole;
+        Value tmp;
         if (!JS_CHECK_OPERATION_LIMIT(cx) ||
-            !GetElement(cx, obj, index, &hole, vp)) {
-            goto out;
+            !GetElement(cx, obj, index, &hole, &tmp)) {
+            return false;
         }
 
         /* Get element's character string. */
@@ -1181,42 +1208,34 @@ array_toSource(JSContext *cx, uintN argc, Value *vp)
         if (hole) {
             str = cx->runtime->emptyString;
         } else {
-            str = js_ValueToSource(cx, *vp);
+            str = js_ValueToSource(cx, tmp);
             if (!str)
-                goto out;
+                return false;
         }
-        vp->setString(str);
-
-        const jschar *chars = str->getChars(cx);
-        if (!chars)
-            goto out;
 
         /* Append element to buffer. */
-        if (!sb.append(chars, chars + str->length()))
-            goto out;
+        if (!sb.append(str))
+            return false;
         if (index + 1 != length) {
             if (!sb.append(", "))
-                goto out;
+                return false;
         } else if (hole) {
             if (!sb.append(','))
-                goto out;
+                return false;
         }
     }
 
     /* Finalize the buffer. */
     if (!sb.append(']'))
-        goto out;
+        return false;
 
   make_string:
-    if (!BufferToString(cx, sb, vp))
-        goto out;
+    JSString *str = sb.finishString();
+    if (!str)
+        return false;
 
-    ok = true;
-
-  out:
-    if (!initiallySharp)
-        js_LeaveSharpObject(cx, NULL);
-    return ok;
+    JS_SET_RVAL(cx, vp, StringValue(str));
+    return true;
 }
 #endif
 
@@ -1305,9 +1324,11 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
     }
 
     /* Finalize the buffer. */
-    if (!BufferToString(cx, sb, rval))
+    JSString *str;
+    str = sb.finishString();
+    if (!str)
         goto out;
-
+    rval->setString(str);
     ok = true;
 
   out:
