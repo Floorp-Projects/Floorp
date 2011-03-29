@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 et :
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: sw=4 ts=4 et : */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -16,7 +16,7 @@
  * The Original Code is Mozilla Plugin App.
  *
  * The Initial Developer of the Original Code is
- *   Ben Turner <bent.mozilla@gmail.com>.
+ * Ben Turner <bent.mozilla@gmail.com>.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -105,12 +105,12 @@ static GetWindowInfoPtr sGetWindowInfoPtrStub = NULL;
 static HWND sBrowserHwnd = NULL;
 #endif
 
-PluginModuleChild::PluginModuleChild() :
-    mLibrary(0),
-    mQuirks(QUIRKS_NOT_INITIALIZED),
-    mShutdownFunc(0),
-    mInitializeFunc(0)
+PluginModuleChild::PluginModuleChild()
+  : mLibrary(0)
   , mPluginFilename("")
+  , mQuirks(QUIRKS_NOT_INITIALIZED)
+  , mShutdownFunc(0)
+  , mInitializeFunc(0)
 #if defined(OS_WIN) || defined(OS_MACOSX)
   , mGetEntryPointsFunc(0)
 #elif defined(MOZ_WIDGET_GTK2)
@@ -2001,7 +2001,7 @@ PluginModuleChild::NPN_RetainObject(NPObject* aNPObj)
 {
     AssertPluginThread();
 
-    int32_t refCnt = PR_AtomicIncrement((PRInt32*)&aNPObj->referenceCount);
+    int32_t refCnt = PR_ATOMIC_INCREMENT((int32_t*)&aNPObj->referenceCount);
     NS_LOG_ADDREF(aNPObj, refCnt, "NPObject", sizeof(NPObject));
 
     return aNPObj;
@@ -2029,7 +2029,7 @@ PluginModuleChild::NPN_ReleaseObject(NPObject* aNPObj)
             return;
     }
 
-    int32_t refCnt = PR_AtomicDecrement((PRInt32*)&aNPObj->referenceCount);
+    int32_t refCnt = PR_ATOMIC_DECREMENT((int32_t*)&aNPObj->referenceCount);
     NS_LOG_RELEASE(aNPObj, refCnt, "NPObject");
 
     if (refCnt == 0) {

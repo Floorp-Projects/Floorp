@@ -907,7 +907,7 @@ public:
   NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE
   NS_DECL_NSIDOCUMENTOBSERVER_BEGINLOAD
   NS_DECL_NSIDOCUMENTOBSERVER_ENDLOAD
-  NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATESCHANGED
+  NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATECHANGED
   NS_DECL_NSIDOCUMENTOBSERVER_DOCUMENTSTATESCHANGED
   NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETADDED
   NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETREMOVED
@@ -4903,17 +4903,16 @@ PresShell::CharacterDataChanged(nsIDocument *aDocument,
 }
 
 void
-PresShell::ContentStatesChanged(nsIDocument* aDocument,
-                                nsIContent* aContent1,
-                                nsIContent* aContent2,
-                                nsEventStates aStateMask)
+PresShell::ContentStateChanged(nsIDocument* aDocument,
+                               nsIContent* aContent,
+                               nsEventStates aStateMask)
 {
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentStatesChanged");
+  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentStateChanged");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
 
   if (mDidInitialReflow) {
     nsAutoCauseReflowNotifier crNotifier(this);
-    mFrameConstructor->ContentStatesChanged(aContent1, aContent2, aStateMask);
+    mFrameConstructor->ContentStateChanged(aContent, aStateMask);
     VERIFY_STYLE_TREE;
   }
 }

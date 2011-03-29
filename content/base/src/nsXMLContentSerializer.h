@@ -88,11 +88,11 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   NS_IMETHOD AppendDoctype(nsIContent *aDoctype,
                            nsAString& aStr);
 
-  NS_IMETHOD AppendElementStart(nsIContent *aElement,
-                                nsIContent *aOriginalElement,
+  NS_IMETHOD AppendElementStart(mozilla::dom::Element* aElement,
+                                mozilla::dom::Element* aOriginalElement,
                                 nsAString& aStr);
-  
-  NS_IMETHOD AppendElementEnd(nsIContent *aElement,
+
+  NS_IMETHOD AppendElementEnd(mozilla::dom::Element* aElement,
                               nsAString& aStr);
 
   NS_IMETHOD Flush(nsAString& aStr) { return NS_OK; }

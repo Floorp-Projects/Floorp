@@ -57,10 +57,6 @@
 class nsSMILTimeContainer;
 #endif // MOZ_SMIL
 
-#define QI_AND_CAST_TO_NSSVGSVGELEMENT(base)                                  \
-  (nsCOMPtr<nsIDOMSVGSVGElement>(do_QueryInterface(base)) ?                   \
-   static_cast<nsSVGSVGElement*>(base.get()) : nsnull)
-
 typedef nsSVGStylableElement nsSVGSVGElementBase;
 
 class nsSVGSVGElement;
@@ -269,6 +265,16 @@ protected:
                  (GetOwnerDoc() && (GetOwnerDoc()->GetRootElement() == this)),
                  "Can't determine if we're root");
     return IsInDoc() && !GetParent();
+  }
+
+  /**
+   * Returns true if this is an SVG <svg> element that is the child of
+   * another non-foreignObject SVG element.
+   */
+  PRBool IsInner() {
+    const mozilla::dom::Element *parent = nsSVGUtils::GetParentElement(this);
+    return parent && parent->GetNameSpaceID() == kNameSpaceID_SVG &&
+           parent->Tag() != nsGkAtoms::foreignObject;
   }
 
 #ifdef MOZ_SMIL

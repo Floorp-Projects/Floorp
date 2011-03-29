@@ -57,7 +57,10 @@ nsCollationMacUC::nsCollationMacUC()
 nsCollationMacUC::~nsCollationMacUC() 
 {
   if (mHasCollator) {
-    OSStatus err = ::UCDisposeCollator(&mCollator);
+#ifdef DEBUG
+    OSStatus err =
+#endif
+      ::UCDisposeCollator(&mCollator);
     mHasCollator = PR_FALSE;
     NS_ASSERTION((err == noErr), "UCDisposeCollator failed");
   }

@@ -640,25 +640,6 @@ nsDOMWorkerXHR::GetResponseHeader(const nsACString& aHeader,
 }
 
 NS_IMETHODIMP
-nsDOMWorkerXHR::OpenRequest(const nsACString& aMethod,
-                            const nsACString& aUrl,
-                            PRBool aAsync,
-                            const nsAString& aUser,
-                            const nsAString& aPassword)
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-
-  if (mCanceled) {
-    return NS_ERROR_ABORT;
-  }
-
-  nsresult rv = mXHRProxy->OpenRequest(aMethod, aUrl, aAsync, aUser, aPassword);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWorkerXHR::Open(const nsACString& aMethod, const nsACString& aUrl,
                      PRBool aAsync, const nsAString& aUser,
                      const nsAString& aPassword, PRUint8 optional_argc)
@@ -673,7 +654,10 @@ nsDOMWorkerXHR::Open(const nsACString& aMethod, const nsACString& aUrl,
       aAsync = PR_TRUE;
   }
 
-  return OpenRequest(aMethod, aUrl, aAsync, aUser, aPassword);
+  nsresult rv = mXHRProxy->Open(aMethod, aUrl, aAsync, aUser, aPassword);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

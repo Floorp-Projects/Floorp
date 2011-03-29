@@ -206,7 +206,7 @@ public:
     PRInt32 synchronous = PREF_TS_SYNCHRONOUS_DEFAULT;
     if (pref)
       (void)pref->GetIntPref(PREF_TS_SYNCHRONOUS, &synchronous);
-    ::PR_AtomicSet(mSynchronousPrefValPtr, synchronous);
+    ::PR_ATOMIC_SET(mSynchronousPrefValPtr, synchronous);
 
     // Register our SQLite memory reporters.  Registration can only happen on
     // the main thread (otherwise you'll get cryptic crashes).

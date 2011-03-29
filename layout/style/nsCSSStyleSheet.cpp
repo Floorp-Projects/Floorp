@@ -1360,7 +1360,10 @@ nsCSSStyleSheet::AppendStyleRule(nsICSSRule* aRule)
     DidDirty();
 
     if (nsICSSRule::NAMESPACE_RULE == aRule->GetType()) {
-      nsresult rv = RegisterNamespaceRule(aRule);
+#ifdef DEBUG
+      nsresult rv =
+#endif
+        RegisterNamespaceRule(aRule);
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                        "RegisterNamespaceRule returned error");
     }

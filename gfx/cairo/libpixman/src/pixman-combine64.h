@@ -35,7 +35,7 @@
     (((uint32_t) (a) * MASK) / (b))
 
 #define ADD_UN16(x, y, t)				     \
-    ((t) = x + y,					     \
+    ((t) = (x) + (y),					     \
      (uint64_t) (uint16_t) ((t) | (0 - ((t) >> G_SHIFT))))
 
 #define DIV_ONE_UN16(x)							\
@@ -88,15 +88,15 @@
 #define UN16x4_MUL_UN16(x, a)						\
     do									\
     {									\
-	uint64_t r1, r2, t;						\
+	uint64_t r1__, r2__, t__;					\
 									\
-	r1 = (x);							\
-	UN16_rb_MUL_UN16 (r1, a, t);					\
+	r1__ = (x);							\
+	UN16_rb_MUL_UN16 (r1__, (a), t__);				\
 									\
-	r2 = (x) >> G_SHIFT;						\
-	UN16_rb_MUL_UN16 (r2, a, t);					\
+	r2__ = (x) >> G_SHIFT;						\
+	UN16_rb_MUL_UN16 (r2__, (a), t__);				\
 									\
-	x = r1 | (r2 << G_SHIFT);					\
+	(x) = r1__ | (r2__ << G_SHIFT);					\
     } while (0)
 
 /*
@@ -105,19 +105,19 @@
 #define UN16x4_MUL_UN16_ADD_UN16x4(x, a, y)				\
     do									\
     {									\
-	uint64_t r1, r2, r3, t;						\
+	uint64_t r1__, r2__, r3__, t__;					\
 									\
-	r1 = (x);							\
-	r2 = (y) & RB_MASK;						\
-	UN16_rb_MUL_UN16 (r1, a, t);					\
-	UN16_rb_ADD_UN16_rb (r1, r2, t);					\
+	r1__ = (x);							\
+	r2__ = (y) & RB_MASK;						\
+	UN16_rb_MUL_UN16 (r1__, (a), t__);				\
+	UN16_rb_ADD_UN16_rb (r1__, r2__, t__);				\
 									\
-	r2 = (x) >> G_SHIFT;						\
-	r3 = ((y) >> G_SHIFT) & RB_MASK;				\
-	UN16_rb_MUL_UN16 (r2, a, t);					\
-	UN16_rb_ADD_UN16_rb (r2, r3, t);					\
+	r2__ = (x) >> G_SHIFT;						\
+	r3__ = ((y) >> G_SHIFT) & RB_MASK;				\
+	UN16_rb_MUL_UN16 (r2__, (a), t__);				\
+	UN16_rb_ADD_UN16_rb (r2__, r3__, t__);				\
 									\
-	x = r1 | (r2 << G_SHIFT);					\
+	(x) = r1__ | (r2__ << G_SHIFT);					\
     } while (0)
 
 /*
@@ -126,21 +126,21 @@
 #define UN16x4_MUL_UN16_ADD_UN16x4_MUL_UN16(x, a, y, b)			\
     do									\
     {									\
-	uint64_t r1, r2, r3, t;						\
+	uint64_t r1__, r2__, r3__, t__;					\
 									\
-	r1 = x;								\
-	r2 = y;								\
-	UN16_rb_MUL_UN16 (r1, a, t);					\
-	UN16_rb_MUL_UN16 (r2, b, t);					\
-	UN16_rb_ADD_UN16_rb (r1, r2, t);					\
+	r1__ = (x);							\
+	r2__ = (y);							\
+	UN16_rb_MUL_UN16 (r1__, (a), t__);				\
+	UN16_rb_MUL_UN16 (r2__, (b), t__);				\
+	UN16_rb_ADD_UN16_rb (r1__, r2__, t__);				\
 									\
-	r2 = (x >> G_SHIFT);						\
-	r3 = (y >> G_SHIFT);						\
-	UN16_rb_MUL_UN16 (r2, a, t);					\
-	UN16_rb_MUL_UN16 (r3, b, t);					\
-	UN16_rb_ADD_UN16_rb (r2, r3, t);					\
+	r2__ = ((x) >> G_SHIFT);					\
+	r3__ = ((y) >> G_SHIFT);					\
+	UN16_rb_MUL_UN16 (r2__, (a), t__);				\
+	UN16_rb_MUL_UN16 (r3__, (b), t__);				\
+	UN16_rb_ADD_UN16_rb (r2__, r3__, t__);				\
 									\
-	x = r1 | (r2 << G_SHIFT);					\
+	(x) = r1__ | (r2__ << G_SHIFT);					\
     } while (0)
 
 /*
@@ -149,17 +149,17 @@
 #define UN16x4_MUL_UN16x4(x, a)						\
     do									\
     {									\
-	uint64_t r1, r2, r3, t;						\
+	uint64_t r1__, r2__, r3__, t__;					\
 									\
-	r1 = x;								\
-	r2 = a;								\
-	UN16_rb_MUL_UN16_rb (r1, r2, t);					\
+	r1__ = (x);							\
+	r2__ = (a);							\
+	UN16_rb_MUL_UN16_rb (r1__, r2__, t__);				\
 									\
-	r2 = x >> G_SHIFT;						\
-	r3 = a >> G_SHIFT;						\
-	UN16_rb_MUL_UN16_rb (r2, r3, t);					\
+	r2__ = (x) >> G_SHIFT;						\
+	r3__ = (a) >> G_SHIFT;						\
+	UN16_rb_MUL_UN16_rb (r2__, r3__, t__);				\
 									\
-	x = r1 | (r2 << G_SHIFT);					\
+	(x) = r1__ | (r2__ << G_SHIFT);					\
     } while (0)
 
 /*
@@ -168,21 +168,21 @@
 #define UN16x4_MUL_UN16x4_ADD_UN16x4(x, a, y)				\
     do									\
     {									\
-	uint64_t r1, r2, r3, t;						\
+	uint64_t r1__, r2__, r3__, t__;					\
 									\
-	r1 = x;								\
-	r2 = a;								\
-	UN16_rb_MUL_UN16_rb (r1, r2, t);					\
-	r2 = y & RB_MASK;						\
-	UN16_rb_ADD_UN16_rb (r1, r2, t);					\
+	r1__ = (x);							\
+	r2__ = (a);							\
+	UN16_rb_MUL_UN16_rb (r1__, r2__, t__);				\
+	r2__ = (y) & RB_MASK;						\
+	UN16_rb_ADD_UN16_rb (r1__, r2__, t__);				\
 									\
-	r2 = (x >> G_SHIFT);						\
-	r3 = (a >> G_SHIFT);						\
-	UN16_rb_MUL_UN16_rb (r2, r3, t);					\
-	r3 = (y >> G_SHIFT) & RB_MASK;					\
-	UN16_rb_ADD_UN16_rb (r2, r3, t);					\
+	r2__ = ((x) >> G_SHIFT);					\
+	r3__ = ((a) >> G_SHIFT);					\
+	UN16_rb_MUL_UN16_rb (r2__, r3__, t__);				\
+	r3__ = ((y) >> G_SHIFT) & RB_MASK;				\
+	UN16_rb_ADD_UN16_rb (r2__, r3__, t__);				\
 									\
-	x = r1 | (r2 << G_SHIFT);					\
+	(x) = r1__ | (r2__ << G_SHIFT);					\
     } while (0)
 
 /*
@@ -191,40 +191,40 @@
 #define UN16x4_MUL_UN16x4_ADD_UN16x4_MUL_UN16(x, a, y, b)			\
     do									\
     {									\
-	uint64_t r1, r2, r3, t;						\
+	uint64_t r1__, r2__, r3__, t__;					\
 									\
-	r1 = x;								\
-	r2 = a;								\
-	UN16_rb_MUL_UN16_rb (r1, r2, t);					\
-	r2 = y;								\
-	UN16_rb_MUL_UN16 (r2, b, t);					\
-	UN16_rb_ADD_UN16_rb (r1, r2, t);					\
+	r1__ = (x);							\
+	r2__ = (a);							\
+	UN16_rb_MUL_UN16_rb (r1__, r2__, t__);				\
+	r2__ = (y);							\
+	UN16_rb_MUL_UN16 (r2__, (b), t__);				\
+	UN16_rb_ADD_UN16_rb (r1__, r2__, t__);				\
 									\
-	r2 = x >> G_SHIFT;						\
-	r3 = a >> G_SHIFT;						\
-	UN16_rb_MUL_UN16_rb (r2, r3, t);					\
-	r3 = y >> G_SHIFT;						\
-	UN16_rb_MUL_UN16 (r3, b, t);					\
-	UN16_rb_ADD_UN16_rb (r2, r3, t);					\
+	r2__ = (x) >> G_SHIFT;						\
+	r3__ = (a) >> G_SHIFT;						\
+	UN16_rb_MUL_UN16_rb (r2__, r3__, t__);				\
+	r3__ = (y) >> G_SHIFT;						\
+	UN16_rb_MUL_UN16 (r3__, (b), t__);				\
+	UN16_rb_ADD_UN16_rb (r2__, r3__, t__);				\
 									\
-	x = r1 | (r2 << G_SHIFT);					\
+	x = r1__ | (r2__ << G_SHIFT);					\
     } while (0)
 
 /*
-   x_c = min(x_c + y_c, 255)
- */
+  x_c = min(x_c + y_c, 255)
+*/
 #define UN16x4_ADD_UN16x4(x, y)						\
     do									\
     {									\
-	uint64_t r1, r2, r3, t;						\
+	uint64_t r1__, r2__, r3__, t__;					\
 									\
-	r1 = x & RB_MASK;						\
-	r2 = y & RB_MASK;						\
-	UN16_rb_ADD_UN16_rb (r1, r2, t);					\
+	r1__ = (x) & RB_MASK;						\
+	r2__ = (y) & RB_MASK;						\
+	UN16_rb_ADD_UN16_rb (r1__, r2__, t__);				\
 									\
-	r2 = (x >> G_SHIFT) & RB_MASK;					\
-	r3 = (y >> G_SHIFT) & RB_MASK;					\
-	UN16_rb_ADD_UN16_rb (r2, r3, t);					\
+	r2__ = ((x) >> G_SHIFT) & RB_MASK;				\
+	r3__ = ((y) >> G_SHIFT) & RB_MASK;				\
+	UN16_rb_ADD_UN16_rb (r2__, r3__, t__);				\
 									\
-	x = r1 | (r2 << G_SHIFT);					\
+	x = r1__ | (r2__ << G_SHIFT);					\
     } while (0)

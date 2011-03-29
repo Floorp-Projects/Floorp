@@ -70,7 +70,10 @@ TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
                       PRUint32 aSkipStart)
 {
   nsAccessible* parent = mTextLeaf->GetParent();
-  NS_ASSERTION(parent, "No parent for text leaf!");
+  if (!parent) {
+    NS_ERROR("No parent for text leaf!");
+    return;
+  }
 
   mHyperText = parent->AsHyperText();
   if (!mHyperText) {

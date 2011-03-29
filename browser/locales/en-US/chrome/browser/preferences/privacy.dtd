@@ -1,3 +1,8 @@
+<!ENTITY tracking.label                 "Tracking">
+
+<!ENTITY doNotTrack.label               "Tell web sites I do not want to be tracked">
+<!ENTITY doNotTrack.accesskey           "d">
+
 <!ENTITY  history.label                 "History">
 
 <!ENTITY  locationBar.label             "Location Bar">
@@ -29,7 +34,6 @@
 
 <!ENTITY  showCookies.label             "Show Cookies…">
 <!ENTITY  showCookies.accesskey         "S">
-
 
 <!ENTITY  historyHeader.pre.label          "&brandShortName; will:">
 <!ENTITY  historyHeader.pre.accesskey      "w">

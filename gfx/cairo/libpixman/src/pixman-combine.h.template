@@ -31,7 +31,7 @@
     (((comp2_t) (a) * MASK) / (b))
 
 #define ADD_UNc(x, y, t)				     \
-    ((t) = x + y,					     \
+    ((t) = (x) + (y),					     \
      (comp4_t) (comp1_t) ((t) | (0 - ((t) >> G_SHIFT))))
 
 #define DIV_ONE_UNc(x)							\
@@ -84,15 +84,15 @@
 #define UNcx4_MUL_UNc(x, a)						\
     do									\
     {									\
-	comp4_t r1, r2, t;						\
+	comp4_t r1__, r2__, t__;					\
 									\
-	r1 = (x);							\
-	UNc_rb_MUL_UNc (r1, a, t);					\
+	r1__ = (x);							\
+	UNc_rb_MUL_UNc (r1__, (a), t__);				\
 									\
-	r2 = (x) >> G_SHIFT;						\
-	UNc_rb_MUL_UNc (r2, a, t);					\
+	r2__ = (x) >> G_SHIFT;						\
+	UNc_rb_MUL_UNc (r2__, (a), t__);				\
 									\
-	x = r1 | (r2 << G_SHIFT);					\
+	(x) = r1__ | (r2__ << G_SHIFT);					\
     } while (0)
 
 /*
@@ -101,19 +101,19 @@
 #define UNcx4_MUL_UNc_ADD_UNcx4(x, a, y)				\
     do									\
     {									\
-	comp4_t r1, r2, r3, t;						\
+	comp4_t r1__, r2__, r3__, t__;					\
 									\
-	r1 = (x);							\
-	r2 = (y) & RB_MASK;						\
-	UNc_rb_MUL_UNc (r1, a, t);					\
-	UNc_rb_ADD_UNc_rb (r1, r2, t);					\
+	r1__ = (x);							\
+	r2__ = (y) & RB_MASK;						\
+	UNc_rb_MUL_UNc (r1__, (a), t__);				\
+	UNc_rb_ADD_UNc_rb (r1__, r2__, t__);				\
 									\
-	r2 = (x) >> G_SHIFT;						\
-	r3 = ((y) >> G_SHIFT) & RB_MASK;				\
-	UNc_rb_MUL_UNc (r2, a, t);					\
-	UNc_rb_ADD_UNc_rb (r2, r3, t);					\
+	r2__ = (x) >> G_SHIFT;						\
+	r3__ = ((y) >> G_SHIFT) & RB_MASK;				\
+	UNc_rb_MUL_UNc (r2__, (a), t__);				\
+	UNc_rb_ADD_UNc_rb (r2__, r3__, t__);				\
 									\
-	x = r1 | (r2 << G_SHIFT);					\
+	(x) = r1__ | (r2__ << G_SHIFT);					\
     } while (0)
 
 /*
@@ -122,21 +122,21 @@
 #define UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc(x, a, y, b)			\
     do									\
     {									\
-	comp4_t r1, r2, r3, t;						\
+	comp4_t r1__, r2__, r3__, t__;					\
 									\
-	r1 = x;								\
-	r2 = y;								\
-	UNc_rb_MUL_UNc (r1, a, t);					\
-	UNc_rb_MUL_UNc (r2, b, t);					\
-	UNc_rb_ADD_UNc_rb (r1, r2, t);					\
+	r1__ = (x);							\
+	r2__ = (y);							\
+	UNc_rb_MUL_UNc (r1__, (a), t__);				\
+	UNc_rb_MUL_UNc (r2__, (b), t__);				\
+	UNc_rb_ADD_UNc_rb (r1__, r2__, t__);				\
 									\
-	r2 = (x >> G_SHIFT);						\
-	r3 = (y >> G_SHIFT);						\
-	UNc_rb_MUL_UNc (r2, a, t);					\
-	UNc_rb_MUL_UNc (r3, b, t);					\
-	UNc_rb_ADD_UNc_rb (r2, r3, t);					\
+	r2__ = ((x) >> G_SHIFT);					\
+	r3__ = ((y) >> G_SHIFT);					\
+	UNc_rb_MUL_UNc (r2__, (a), t__);				\
+	UNc_rb_MUL_UNc (r3__, (b), t__);				\
+	UNc_rb_ADD_UNc_rb (r2__, r3__, t__);				\
 									\
-	x = r1 | (r2 << G_SHIFT);					\
+	(x) = r1__ | (r2__ << G_SHIFT);					\
     } while (0)
 
 /*
@@ -145,17 +145,17 @@
 #define UNcx4_MUL_UNcx4(x, a)						\
     do									\
     {									\
-	comp4_t r1, r2, r3, t;						\
+	comp4_t r1__, r2__, r3__, t__;					\
 									\
-	r1 = x;								\
-	r2 = a;								\
-	UNc_rb_MUL_UNc_rb (r1, r2, t);					\
+	r1__ = (x);							\
+	r2__ = (a);							\
+	UNc_rb_MUL_UNc_rb (r1__, r2__, t__);				\
 									\
-	r2 = x >> G_SHIFT;						\
-	r3 = a >> G_SHIFT;						\
-	UNc_rb_MUL_UNc_rb (r2, r3, t);					\
+	r2__ = (x) >> G_SHIFT;						\
+	r3__ = (a) >> G_SHIFT;						\
+	UNc_rb_MUL_UNc_rb (r2__, r3__, t__);				\
 									\
-	x = r1 | (r2 << G_SHIFT);					\
+	(x) = r1__ | (r2__ << G_SHIFT);					\
     } while (0)
 
 /*
@@ -164,21 +164,21 @@
 #define UNcx4_MUL_UNcx4_ADD_UNcx4(x, a, y)				\
     do									\
     {									\
-	comp4_t r1, r2, r3, t;						\
+	comp4_t r1__, r2__, r3__, t__;					\
 									\
-	r1 = x;								\
-	r2 = a;								\
-	UNc_rb_MUL_UNc_rb (r1, r2, t);					\
-	r2 = y & RB_MASK;						\
-	UNc_rb_ADD_UNc_rb (r1, r2, t);					\
+	r1__ = (x);							\
+	r2__ = (a);							\
+	UNc_rb_MUL_UNc_rb (r1__, r2__, t__);				\
+	r2__ = (y) & RB_MASK;						\
+	UNc_rb_ADD_UNc_rb (r1__, r2__, t__);				\
 									\
-	r2 = (x >> G_SHIFT);						\
-	r3 = (a >> G_SHIFT);						\
-	UNc_rb_MUL_UNc_rb (r2, r3, t);					\
-	r3 = (y >> G_SHIFT) & RB_MASK;					\
-	UNc_rb_ADD_UNc_rb (r2, r3, t);					\
+	r2__ = ((x) >> G_SHIFT);					\
+	r3__ = ((a) >> G_SHIFT);					\
+	UNc_rb_MUL_UNc_rb (r2__, r3__, t__);				\
+	r3__ = ((y) >> G_SHIFT) & RB_MASK;				\
+	UNc_rb_ADD_UNc_rb (r2__, r3__, t__);				\
 									\
-	x = r1 | (r2 << G_SHIFT);					\
+	(x) = r1__ | (r2__ << G_SHIFT);					\
     } while (0)
 
 /*
@@ -187,40 +187,40 @@
 #define UNcx4_MUL_UNcx4_ADD_UNcx4_MUL_UNc(x, a, y, b)			\
     do									\
     {									\
-	comp4_t r1, r2, r3, t;						\
+	comp4_t r1__, r2__, r3__, t__;					\
 									\
-	r1 = x;								\
-	r2 = a;								\
-	UNc_rb_MUL_UNc_rb (r1, r2, t);					\
-	r2 = y;								\
-	UNc_rb_MUL_UNc (r2, b, t);					\
-	UNc_rb_ADD_UNc_rb (r1, r2, t);					\
+	r1__ = (x);							\
+	r2__ = (a);							\
+	UNc_rb_MUL_UNc_rb (r1__, r2__, t__);				\
+	r2__ = (y);							\
+	UNc_rb_MUL_UNc (r2__, (b), t__);				\
+	UNc_rb_ADD_UNc_rb (r1__, r2__, t__);				\
 									\
-	r2 = x >> G_SHIFT;						\
-	r3 = a >> G_SHIFT;						\
-	UNc_rb_MUL_UNc_rb (r2, r3, t);					\
-	r3 = y >> G_SHIFT;						\
-	UNc_rb_MUL_UNc (r3, b, t);					\
-	UNc_rb_ADD_UNc_rb (r2, r3, t);					\
+	r2__ = (x) >> G_SHIFT;						\
+	r3__ = (a) >> G_SHIFT;						\
+	UNc_rb_MUL_UNc_rb (r2__, r3__, t__);				\
+	r3__ = (y) >> G_SHIFT;						\
+	UNc_rb_MUL_UNc (r3__, (b), t__);				\
+	UNc_rb_ADD_UNc_rb (r2__, r3__, t__);				\
 									\
-	x = r1 | (r2 << G_SHIFT);					\
+	x = r1__ | (r2__ << G_SHIFT);					\
     } while (0)
 
 /*
-   x_c = min(x_c + y_c, 255)
- */
+  x_c = min(x_c + y_c, 255)
+*/
 #define UNcx4_ADD_UNcx4(x, y)						\
     do									\
     {									\
-	comp4_t r1, r2, r3, t;						\
+	comp4_t r1__, r2__, r3__, t__;					\
 									\
-	r1 = x & RB_MASK;						\
-	r2 = y & RB_MASK;						\
-	UNc_rb_ADD_UNc_rb (r1, r2, t);					\
+	r1__ = (x) & RB_MASK;						\
+	r2__ = (y) & RB_MASK;						\
+	UNc_rb_ADD_UNc_rb (r1__, r2__, t__);				\
 									\
-	r2 = (x >> G_SHIFT) & RB_MASK;					\
-	r3 = (y >> G_SHIFT) & RB_MASK;					\
-	UNc_rb_ADD_UNc_rb (r2, r3, t);					\
+	r2__ = ((x) >> G_SHIFT) & RB_MASK;				\
+	r3__ = ((y) >> G_SHIFT) & RB_MASK;				\
+	UNc_rb_ADD_UNc_rb (r2__, r3__, t__);				\
 									\
-	x = r1 | (r2 << G_SHIFT);					\
+	x = r1__ | (r2__ << G_SHIFT);					\
     } while (0)

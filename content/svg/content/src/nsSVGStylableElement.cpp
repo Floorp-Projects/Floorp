@@ -39,21 +39,9 @@
 #include "nsSVGStylableElement.h"
 #include "nsGkAtoms.h"
 #include "nsDOMCSSDeclaration.h"
-#include "nsContentUtils.h"
 
 //----------------------------------------------------------------------
 // nsISupports methods
-
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGStylableElement::DOMAnimatedClassString, mSVGElement)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGStylableElement::DOMAnimatedClassString)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGStylableElement::DOMAnimatedClassString)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGStylableElement::DOMAnimatedClassString)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedString)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedString)
-NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF_INHERITED(nsSVGStylableElement, nsSVGStylableElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGStylableElement, nsSVGStylableElementBase)
@@ -76,7 +64,10 @@ nsSVGStylableElement::nsSVGStylableElement(already_AddRefed<nsINodeInfo> aNodeIn
 const nsAttrValue*
 nsSVGStylableElement::DoGetClasses() const
 {
-  return GetClassAnimAttr();
+  if (mClassAttribute.IsAnimated()) {
+    return mClassAnimAttr;
+  }
+  return nsSVGStylableElementBase::DoGetClasses();
 }
 
 //----------------------------------------------------------------------
@@ -86,11 +77,7 @@ nsSVGStylableElement::DoGetClasses() const
 NS_IMETHODIMP
 nsSVGStylableElement::GetClassName(nsIDOMSVGAnimatedString** aClassName)
 {
-  *aClassName = new DOMAnimatedClassString(this);
-  NS_ENSURE_TRUE(*aClassName, NS_ERROR_OUT_OF_MEMORY);
-
-  NS_ADDREF(*aClassName);
-  return NS_OK;
+  return mClassAttribute.ToDOMAnimatedString(aClassName, this);
 }
 
 /* readonly attribute nsIDOMCSSStyleDeclaration style; */
@@ -121,66 +108,24 @@ nsSVGStylableElement::GetPresentationAttribute(const nsAString& aName,
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-PRBool
-nsSVGStylableElement::ParseAttribute(PRInt32 aNamespaceID,
-                                     nsIAtom* aAttribute,
-                                     const nsAString& aValue,
-                                     nsAttrValue& aResult)
+void
+nsSVGStylableElement::DidAnimateClass()
 {
-  if (aNamespaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::_class) {
-    mClassAnimAttr = nsnull;
-    // let the rest be handled in nsStyledElement
+  nsAutoString src;
+  mClassAttribute.GetAnimValue(src, this);
+  if (!mClassAnimAttr) {
+    mClassAnimAttr = new nsAttrValue();
+  }
+  mClassAnimAttr->ParseAtomArray(src);
+
+  nsIDocument* doc = GetOwnerDoc();
+  NS_ASSERTION(doc, "If we're animating we should have an owner");
+  if (doc) {
+    nsIPresShell* shell = doc->GetShell();
+    if (shell) {
+      shell->RestyleForAnimation(this, eRestyle_Self);
+    }
   }
 
-  return nsSVGStylableElementBase::ParseAttribute(aNamespaceID, aAttribute,
-                                                   aValue, aResult);
-}
-
-nsresult
-nsSVGStylableElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                PRBool aNotify)
-{
-  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::_class) {
-    mClassAnimAttr = nsnull;
-  }
-
-  return nsSVGStylableElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
-}
-
-//----------------------------------------------------------------------
-// Methods for managing the class attribute
-
-const nsAttrValue*
-nsSVGStylableElement::GetClassAnimAttr() const
-{
-  if (mClassAnimAttr)
-    return mClassAnimAttr;
-
-  return mAttrsAndChildren.GetAttr(nsGkAtoms::_class, kNameSpaceID_None);
-}
-
-void
-nsSVGStylableElement::GetClassBaseValString(nsAString& aResult) const
-{
-  GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aResult);
-}
-
-void
-nsSVGStylableElement::SetClassBaseValString(const nsAString& aValue)
-{
-  mClassAnimAttr = nsnull;
-  SetAttr(kNameSpaceID_None, nsGkAtoms::_class, aValue, PR_TRUE); 
-}
-
-void
-nsSVGStylableElement::GetClassAnimValString(nsAString& aResult) const
-{
-  const nsAttrValue* attr = GetClassAnimAttr();
-
-  if (!attr) {
-    aResult.Truncate();
-    return;
-  }
-
-  attr->ToString(aResult);
+  nsSVGStylableElementBase::DidAnimateClass();
 }

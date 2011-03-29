@@ -170,22 +170,11 @@ nsApplicationAccessible::GroupPosition(PRInt32 *aGroupLevel,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsAccessible*
 nsApplicationAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                         nsIAccessible **aChild)
+                                         EWhichChildAtPoint aWhichChild)
 {
-  NS_ENSURE_ARG_POINTER(aChild);
-  *aChild = nsnull;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsApplicationAccessible::GetDeepestChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                                nsIAccessible **aChild)
-{
-  NS_ENSURE_ARG_POINTER(aChild);
-  *aChild = nsnull;
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsnull;
 }
 
 NS_IMETHODIMP

@@ -68,7 +68,7 @@ public:
     void InvalidateSink();
 
 private:
-    ~nsInputStreamTee() { if (mLock) PR_DestroyLock(mLock); }
+    ~nsInputStreamTee() { if (mLock) nsAutoLock::DestroyLock(mLock); }
 
     nsresult TeeSegment(const char *buf, PRUint32 count);
     
@@ -324,7 +324,7 @@ nsInputStreamTee::SetEventTarget(nsIEventTarget *anEventTarget)
     mEventTarget = anEventTarget;
     if (mEventTarget) {
         // Only need synchronization if this is an async tee
-        mLock = PR_NewLock();
+        mLock = nsAutoLock::NewLock("nsInputStreamTee::mLock");
         if (!mLock) {
             NS_ERROR("Failed to allocate lock for nsInputStreamTee");
             return NS_ERROR_OUT_OF_MEMORY;

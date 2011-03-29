@@ -422,7 +422,7 @@ nsDocumentEncoder::SerializeNodeEnd(nsINode* aNode,
     return NS_OK;
 
   if (aNode->IsElement()) {
-    mSerializer->AppendElementEnd(static_cast<nsIContent*>(aNode), aStr);
+    mSerializer->AppendElementEnd(aNode->AsElement(), aStr);
   }
   return NS_OK;
 }

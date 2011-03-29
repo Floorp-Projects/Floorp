@@ -49,8 +49,8 @@ class nsString;
 class nsIDocument;
 
 #define NS_IDOCUMENT_OBSERVER_IID \
-{ 0x3d005225, 0x210f, 0x4b07, \
-  { 0xb1, 0xd9, 0x96, 0x02, 0x05, 0x74, 0xc4, 0x37 } }
+{ 0x900bc4bc, 0x8b6c, 0x4cba, \
+ { 0x82, 0xfa, 0x56, 0x8a, 0x80, 0xff, 0xfd, 0x3e } }
 
 typedef PRUint32 nsUpdateType;
 
@@ -103,20 +103,12 @@ public:
    * added/removed from the document or the content itself changed 
    * (the other notifications are used for that).
    *
-   * The optional second content node is to allow optimization
-   * of the case where state moves from one node to another
-   * (as is likely for :focus and :hover)
-   *
-   * Either content node may be nsnull, but not both
-   *
    * @param aDocument The document being observed
-   * @param aContent1 the piece of content that changed
-   * @param aContent2 optional second piece of content that changed
+   * @param aContent the piece of content that changed
    */
-  virtual void ContentStatesChanged(nsIDocument* aDocument,
-                                    nsIContent* aContent1,
-                                    nsIContent* aContent2,
-                                    nsEventStates aStateMask) = 0;
+  virtual void ContentStateChanged(nsIDocument* aDocument,
+                                   nsIContent* aContent,
+                                   nsEventStates aStateMask) = 0;
 
   /**
    * Notification that the state of the document has changed.
@@ -247,11 +239,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
 #define NS_DECL_NSIDOCUMENTOBSERVER_ENDLOAD                                  \
     virtual void EndLoad(nsIDocument* aDocument);
 
-#define NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATESCHANGED                     \
-    virtual void ContentStatesChanged(nsIDocument* aDocument,                \
-                                      nsIContent* aContent1,                 \
-                                      nsIContent* aContent2,                 \
-                                      nsEventStates aStateMask);
+#define NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATECHANGED                      \
+    virtual void ContentStateChanged(nsIDocument* aDocument,                 \
+                                     nsIContent* aContent,                   \
+                                     nsEventStates aStateMask);
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_DOCUMENTSTATESCHANGED                    \
     virtual void DocumentStatesChanged(nsIDocument* aDocument,               \
@@ -293,7 +284,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
     NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE                                    \
     NS_DECL_NSIDOCUMENTOBSERVER_BEGINLOAD                                    \
     NS_DECL_NSIDOCUMENTOBSERVER_ENDLOAD                                      \
-    NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATESCHANGED                         \
+    NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATECHANGED                          \
     NS_DECL_NSIDOCUMENTOBSERVER_DOCUMENTSTATESCHANGED                        \
     NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETADDED                              \
     NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETREMOVED                            \
@@ -327,9 +318,8 @@ _class::EndLoad(nsIDocument* aDocument)                                   \
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(_class)                    \
 void                                                                      \
-_class::ContentStatesChanged(nsIDocument* aDocument,                      \
-                             nsIContent* aContent1,                       \
-                             nsIContent* aContent2,                       \
+_class::ContentStateChanged(nsIDocument* aDocument,                       \
+                             nsIContent* aContent,                        \
                              nsEventStates aStateMask)                    \
 {                                                                         \
 }                                                                         \

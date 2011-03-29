@@ -151,6 +151,20 @@ CPPSRCS		= \
 		ThirdPartyUtil.cpp \
 		$(NULL)
 
+# Are we targeting x86-32 or x86-64?  If so, we want to include SSE2 code for
+# nsTextFragment.cpp
+ifneq (,$(INTEL_ARCHITECTURE))
+
+CPPSRCS += nsTextFragmentSSE2.cpp
+
+# gcc requires -msse2 for this file since it uses SSE2 intrinsics.  (See bug
+# 585538 comment 12.)
+ifdef GNU_CC
+nsTextFragmentSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
+endif
+
+endif
+
 GQI_SRCS = contentbase.gqi
 
 # we don't want the shared lib, but we want to force the creation of a

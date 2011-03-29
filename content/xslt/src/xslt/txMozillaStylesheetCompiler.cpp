@@ -522,8 +522,8 @@ txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
 
     // Always install in case of redirects
     nsCOMPtr<nsIStreamListener> listener =
-        new nsCrossSiteListenerProxy(sink, aReferrerPrincipal, channel,
-                                     PR_FALSE, &rv);
+        new nsCORSListenerProxy(sink, aReferrerPrincipal, channel,
+                                PR_FALSE, &rv);
     NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
     NS_ENSURE_SUCCESS(rv, rv);
 

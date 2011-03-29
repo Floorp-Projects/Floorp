@@ -45,8 +45,10 @@
 #include "nsCSSValue.h"
 #include "nsColor.h"
 #include "nsPresContext.h"
-#include "nsIContent.h"
+#include "mozilla/dom/Element.h"
 #include "nsDebug.h"
+
+using namespace mozilla::dom;
 
 /*static*/ nsSMILCSSValueType nsSMILCSSValueType::sSingleton;
 
@@ -350,7 +352,7 @@ nsSMILCSSValueType::Interpolate(const nsSMILValue& aStartVal,
 
 // Helper function to extract presContext
 static nsPresContext*
-GetPresContextForElement(nsIContent* aElem)
+GetPresContextForElement(Element* aElem)
 {
   nsIDocument* doc = aElem->GetCurrentDoc();
   if (!doc) {
@@ -366,7 +368,7 @@ GetPresContextForElement(nsIContent* aElem)
 // Helper function to parse a string into a nsStyleAnimation::Value
 static PRBool
 ValueFromStringHelper(nsCSSProperty aPropID,
-                      nsIContent* aTargetElement,
+                      Element* aTargetElement,
                       nsPresContext* aPresContext,
                       const nsAString& aString,
                       nsStyleAnimation::Value& aStyleAnimValue)
@@ -405,11 +407,10 @@ ValueFromStringHelper(nsCSSProperty aPropID,
 // static
 void
 nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
-                                    nsIContent* aTargetElement,
+                                    Element* aTargetElement,
                                     const nsAString& aString,
                                     nsSMILValue& aValue)
 {
-  // XXXbz aTargetElement should be an Element
   NS_ABORT_IF_FALSE(aValue.IsNull(), "Outparam should be null-typed");
   nsPresContext* presContext = GetPresContextForElement(aTargetElement);
   if (!presContext) {
