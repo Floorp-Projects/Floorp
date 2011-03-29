@@ -40,7 +40,6 @@
 #ifndef mozilla_css_NameSpaceRule_h__
 #define mozilla_css_NameSpaceRule_h__
 
-#include "nsICSSRule.h"
 #include "nsCSSRule.h"
 #include "nsIDOMCSSRule.h"
 
@@ -55,7 +54,6 @@ namespace mozilla {
 namespace css {
 
 class NS_FINAL_CLASS NameSpaceRule : public nsCSSRule,
-                                     public nsICSSRule,
                                      public nsIDOMCSSRule
 {
 public:
