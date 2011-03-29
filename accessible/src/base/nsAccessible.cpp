@@ -2716,7 +2716,7 @@ nsAccessible::BindToParent(nsAccessible* aParent, PRUint32 aIndexInParent)
   if (mParent) {
     if (mParent != aParent) {
       NS_ERROR("Adopting child!");
-      mParent->InvalidateChildren();
+      mParent->RemoveChild(this);
     } else {
       NS_ERROR("Binding to the same parent!");
       return;
