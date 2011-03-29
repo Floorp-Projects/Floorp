@@ -165,9 +165,8 @@ namespace css = mozilla::css;
 // This lives here because it depends on the above macros.
 const PRUint32
 nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,            \
-                 parsevariant_, kwtable_, stylestruct_, stylestructoffset_,    \
-                 animtype_)                                                    \
+#define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,       \
+                 stylestruct_, stylestructoffset_, animtype_)                \
   parsevariant_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP

@@ -656,7 +656,7 @@ function runTest() {
         is(res.responseText, "<res>hello pass</res>\n",
            "wrong responseText in test for " + test.toSource());
         is(res.events.join(","),
-           "opening,rs1,sending,rs1,loadstart,rs2,rs3,rs4,load",
+           "opening,rs1,sending,rs1,loadstart,rs2,rs3,rs4,load,loadend",
            "wrong responseText in test for " + test.toSource());
       }
       else {
@@ -665,7 +665,7 @@ function runTest() {
         is(res.responseText, "",
            "wrong responseText in test for " + test.toSource());
         is(res.events.join(","),
-           "opening,rs1,sending,rs1,loadstart,rs2,rs4,load",
+           "opening,rs1,sending,rs1,loadstart,rs2,rs4,load,loadend",
            "wrong responseText in test for " + test.toSource());
       }
       if (test.responseHeaders) {
@@ -694,7 +694,7 @@ function runTest() {
          "wrong responseText in test for " + test.toSource());
       if (!res.sendThrew) {
         is(res.events.join(","),
-           "opening,rs1,sending,rs1,loadstart,rs2,rs4,error",
+           "opening,rs1,sending,rs1,loadstart,rs2,rs4,error,loadend",
            "wrong events in test for " + test.toSource());
       }
       is(res.progressEvents, 0,
@@ -822,7 +822,7 @@ function runTest() {
       is(res.responseText, "<res>hello pass</res>\n",
          "wrong responseText in test for " + test.toSource());
       is(res.events.join(","),
-         "opening,rs1,sending,rs1,loadstart,rs2,rs3,rs4,load",
+         "opening,rs1,sending,rs1,loadstart,rs2,rs3,rs4,load,loadend",
          "wrong responseText in test for " + test.toSource());
     }
     else {
@@ -835,7 +835,7 @@ function runTest() {
       is(res.responseText, "",
          "wrong responseText in test for " + test.toSource());
       is(res.events.join(","),
-         "opening,rs1,sending,rs1,loadstart,rs2,rs4,error",
+         "opening,rs1,sending,rs1,loadstart,rs2,rs4,error,loadend",
          "wrong events in test for " + test.toSource());
       is(res.progressEvents, 0,
          "wrong events in test for " + test.toSource());
@@ -1091,7 +1091,7 @@ function runTest() {
       is(res.responseText, "<res>hello pass</res>\n",
          "wrong responseText in test for " + test.toSource());
       is(res.events.join(","),
-         "opening,rs1,sending,rs1,loadstart,rs2,rs3,rs4,load",
+         "opening,rs1,sending,rs1,loadstart,rs2,rs3,rs4,load,loadend",
          "wrong responseText in test for " + test.toSource());
     }
     else {
@@ -1104,7 +1104,7 @@ function runTest() {
       is(res.responseText, "",
          "wrong responseText in test for " + test.toSource());
       is(res.events.join(","),
-         "opening,rs1,sending,rs1,loadstart,rs2,rs4,error",
+         "opening,rs1,sending,rs1,loadstart,rs2,rs4,error,loadend",
          "wrong events in test for " + test.toSource());
       is(res.progressEvents, 0,
          "wrong progressevents in test for " + test.toSource());

@@ -40,17 +40,13 @@
 
     function doTest()
     {
-      const discBulletText = String.fromCharCode(0x2022) + " ";
-      const circleBulletText = String.fromCharCode(0x25e6) + " ";
-      const squareBulletText = String.fromCharCode(0x25aa) + " ";
-
       // list1
       var discAccTree = {
         role: ROLE_LIST,
         children: [
-          new listItemTree(discBulletText, "Oranges"),
-          new listItemTree(discBulletText, "Apples"),
-          new listItemTree(discBulletText, "Bananas")
+          new listItemTree(kDiscBulletText, "Oranges"),
+          new listItemTree(kDiscBulletText, "Apples"),
+          new listItemTree(kDiscBulletText, "Bananas")
         ]
       };
 
@@ -60,9 +56,9 @@
       var circleAccTree = {
         role: ROLE_LIST,
         children: [
-          new listItemTree(circleBulletText, "Oranges"),
-          new listItemTree(circleBulletText, "Apples"),
-          new listItemTree(circleBulletText, "Bananas")
+          new listItemTree(kCircleBulletText, "Oranges"),
+          new listItemTree(kCircleBulletText, "Apples"),
+          new listItemTree(kCircleBulletText, "Bananas")
         ]
       };
 
@@ -72,9 +68,9 @@
       var squareAccTree = {
         role: ROLE_LIST,
         children: [
-          new listItemTree(squareBulletText, "Oranges"),
-          new listItemTree(squareBulletText, "Apples"),
-          new listItemTree(squareBulletText, "Bananas")
+          new listItemTree(kSquareBulletText, "Oranges"),
+          new listItemTree(kSquareBulletText, "Apples"),
+          new listItemTree(kSquareBulletText, "Bananas")
         ]
       };
 
@@ -91,6 +87,43 @@
       };
 
       testAccessibleTree("list4", nestedAccTree);
+
+      // dl list
+      var tree =
+        { LIST: [ // dl
+          { LISTITEM: [ // dt
+            { TEXT_LEAF: [] },
+          ] },
+          { PARAGRAPH: [ // dd
+            { TEXT_LEAF: [] }
+          ] },
+          { LISTITEM: [ // dt
+            { TEXT_LEAF: [] }
+          ] },
+          { PARAGRAPH: [ // dd
+            { TEXT_LEAF: [] }
+          ] }
+        ] };
+
+      testAccessibleTree("list5", tree);
+
+      // dl list inside ordered list
+      tree =
+        { LIST: [ // ol
+          { LISTITEM: [ // li
+            { STATICTEXT: [ ] },
+            { LIST: [ // dl
+              { LISTITEM: [ // dt
+                { TEXT_LEAF: [] }
+              ] },
+              { PARAGRAPH: [ // dd
+                { TEXT_LEAF: [] }
+              ] }
+            ] }
+          ] }
+        ] };
+
+      testAccessibleTree("list6", tree);
 
       SimpleTest.finish();
     }
@@ -110,6 +143,11 @@
      title="Bullets of nested not ordered lists have one and the same character."
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=604587">
     Mozilla Bug 604587
+  </a>
+  <a target="_blank"
+     title="Fix list bullets for DL list (crash [@ nsBulletFrame::GetListItemText])"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=629114">
+    Mozilla Bug 629114
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -142,6 +180,19 @@
         <li id="n_li5">Apples</li>
         <li id="n_li6">Bananas</li>
       </ul>
+    </li>
+  </ol>
+
+  <dl id="list5">
+    <dt>item1</dt><dd>description</dd>
+    <dt>item2</td><dd>description</dd>
+  </dl>
+
+  <ol id="list6">
+    <li>
+      <dl id="dl">
+        <dt>item1</dt><dd>description</dd>
+      </dl>
     </li>
   </ol>
 </body>

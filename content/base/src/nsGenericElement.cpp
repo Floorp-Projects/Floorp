@@ -3349,19 +3349,16 @@ nsGenericElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 }
 
 #ifdef MOZ_SMIL
-nsresult
-nsGenericElement::GetSMILOverrideStyle(nsIDOMCSSStyleDeclaration** aStyle)
+nsIDOMCSSStyleDeclaration*
+nsGenericElement::GetSMILOverrideStyle()
 {
   nsGenericElement::nsDOMSlots *slots = DOMSlots();
 
   if (!slots->mSMILOverrideStyle) {
     slots->mSMILOverrideStyle = new nsDOMCSSAttributeDeclaration(this, PR_TRUE);
-    NS_ENSURE_TRUE(slots->mSMILOverrideStyle, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  // Why bother with QI?
-  NS_ADDREF(*aStyle = slots->mSMILOverrideStyle);
-  return NS_OK;
+  return slots->mSMILOverrideStyle;
 }
 
 css::StyleRule*
@@ -3564,7 +3561,7 @@ nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
     rv = kid->GetNodeType(&nodeType);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDOM3Document> domDoc = do_QueryInterface(GetOwnerDoc());
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(GetOwnerDoc());
 
     // DocumentType nodes are the only nodes that can have a null
     // ownerDocument according to the DOM spec, and we need to allow
@@ -4075,7 +4072,7 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
   if (!HasSameOwnerDoc(newContent) &&
       (nodeType != nsIDOMNode::DOCUMENT_TYPE_NODE ||
        newContent->GetOwnerDoc())) {
-    nsCOMPtr<nsIDOM3Document> domDoc = do_QueryInterface(doc);
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
 
     if (domDoc) {
       nsresult rv;
@@ -4766,7 +4763,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     stateMask ^= IntrinsicState();
     if (document && !stateMask.IsEmpty()) {
       MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, aNotify);
-      document->ContentStatesChanged(this, nsnull, stateMask);
+      document->ContentStateChanged(this, stateMask);
     }
     nsNodeUtils::AttributeChanged(this, aNamespaceID, aName, aModType);
   }
@@ -5013,7 +5010,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     stateMask ^= IntrinsicState();
     if (document && !stateMask.IsEmpty()) {
       MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, aNotify);
-      document->ContentStatesChanged(this, nsnull, stateMask);
+      document->ContentStateChanged(this, stateMask);
     }
     nsNodeUtils::AttributeChanged(this, aNameSpaceID, aName,
                                   nsIDOMMutationEvent::REMOVAL);
@@ -5486,8 +5483,7 @@ nsGenericElement::GetLinkTarget(nsAString& aTarget)
 static nsresult
 ParseSelectorList(nsINode* aNode,
                   const nsAString& aSelectorString,
-                  nsCSSSelectorList** aSelectorList,
-                  nsPresContext** aPresContext)
+                  nsCSSSelectorList** aSelectorList)
 {
   NS_ENSURE_ARG(aNode);
 
@@ -5518,115 +5514,7 @@ ParseSelectorList(nsINode* aNode,
   } while (*slot);
   *aSelectorList = selectorList;
 
-  // It's not strictly necessary to have a prescontext here, but it's
-  // a bit of an optimization for various stuff.
-  *aPresContext = nsnull;
-  nsIPresShell* shell = doc->GetShell();
-  if (shell) {
-    *aPresContext = shell->GetPresContext();
-  }
-
   return NS_OK;
-}
-
-/*
- * Callback to be called as we iterate over the tree and match elements.  If
- * the callbacks returns false, the iteration should be stopped.
- */
-typedef PRBool
-(* ElementMatchedCallback)(nsIContent* aMatchingElement, void* aClosure);
-
-// returning false means stop iteration
-static PRBool
-TryMatchingElementsInSubtree(nsINode* aRoot,
-                             RuleProcessorData* aParentData,
-                             nsPresContext* aPresContext,
-                             nsCSSSelectorList* aSelectorList,
-                             ElementMatchedCallback aCallback,
-                             void* aClosure)
-{
-  /* To improve the performance of '+' and '~' combinators and the :nth-*
-   * selectors, we keep track of the immediately previous sibling data.  That's
-   * cheaper than heap-allocating all the datas and keeping track of them all,
-   * and helps a good bit in the common cases.  We also keep track of the whole
-   * parent data chain, since we have those Around anyway */
-  union { char c[2 * sizeof(RuleProcessorData)]; void *p; } databuf;
-  RuleProcessorData* prevSibling = nsnull;
-  RuleProcessorData* data = reinterpret_cast<RuleProcessorData*>(databuf.c);
-
-  PRBool continueIteration = PR_TRUE;
-  for (nsINode::ChildIterator iter(aRoot); !iter.IsDone(); iter.Next()) {
-    nsIContent* kid = iter;
-    if (!kid->IsElement()) {
-      continue;
-    }
-    /* See whether we match */
-    new (data) RuleProcessorData(aPresContext, kid->AsElement(), nsnull);
-    NS_ASSERTION(!data->mParentData, "Shouldn't happen");
-    NS_ASSERTION(!data->mPreviousSiblingData, "Shouldn't happen");
-    data->mParentData = aParentData;
-    data->mPreviousSiblingData = prevSibling;
-
-    if (nsCSSRuleProcessor::SelectorListMatches(*data, aSelectorList)) {
-      continueIteration = (*aCallback)(kid, aClosure);
-    }
-
-    if (continueIteration) {
-      continueIteration =
-        TryMatchingElementsInSubtree(kid, data, aPresContext, aSelectorList,
-                                     aCallback, aClosure);
-    }
-    
-    /* Clear out the parent and previous sibling data if we set them, so that
-     * ~RuleProcessorData won't try to delete a placement-new'd object. Make
-     * sure this happens before our possible early break.  Note that we can
-     * have null aParentData but non-null data->mParentData if we're scoped to
-     * an element.  However, prevSibling and data->mPreviousSiblingData must
-     * always match.
-     */
-    NS_ASSERTION(!aParentData || data->mParentData == aParentData,
-                 "Unexpected parent");
-    NS_ASSERTION(data->mPreviousSiblingData == prevSibling,
-                 "Unexpected prev sibling");
-    data->mPreviousSiblingData = nsnull;
-    if (prevSibling) {
-      if (aParentData) {
-        prevSibling->mParentData = nsnull;
-      }
-      prevSibling->~RuleProcessorData();
-    } else {
-      /* This is the first time through, so point |prevSibling| to the location
-         we want to have |data| end up pointing to. */
-      prevSibling = data + 1;
-    }
-
-    /* Now swap |prevSibling| and |data|.  Again, before the early break */
-    RuleProcessorData* temp = prevSibling;
-    prevSibling = data;
-    data = temp;
-    if (!continueIteration) {
-      break;
-    }
-  }
-  if (prevSibling) {
-    if (aParentData) {
-      prevSibling->mParentData = nsnull;
-    }
-    /* Make sure to clean this up */
-    prevSibling->~RuleProcessorData();
-  }
-
-  return continueIteration;
-}
-
-static PRBool
-FindFirstMatchingElement(nsIContent* aMatchingElement,
-                         void* aClosure)
-{
-  NS_PRECONDITION(aMatchingElement && aClosure, "How did that happen?");
-  nsIContent** slot = static_cast<nsIContent**>(aClosure);
-  *slot = aMatchingElement;
-  return PR_FALSE;
 }
 
 /* static */
@@ -5637,26 +5525,25 @@ nsGenericElement::doQuerySelector(nsINode* aRoot, const nsAString& aSelector,
   NS_PRECONDITION(aResult, "Null out param?");
 
   nsAutoPtr<nsCSSSelectorList> selectorList;
-  nsPresContext* presContext;
   *aResult = ParseSelectorList(aRoot, aSelector,
-                               getter_Transfers(selectorList),
-                               &presContext);
+                               getter_Transfers(selectorList));
   NS_ENSURE_SUCCESS(*aResult, nsnull);
 
-  nsIContent* foundElement = nsnull;
-  TryMatchingElementsInSubtree(aRoot, nsnull, presContext, selectorList,
-                               FindFirstMatchingElement, &foundElement);
+  TreeMatchContext matchingContext(PR_FALSE,
+                                   nsRuleWalker::eRelevantLinkUnvisited,
+                                   aRoot->GetOwnerDoc());
+  for (nsIContent* cur = aRoot->GetFirstChild();
+       cur;
+       cur = cur->GetNextNode(aRoot)) {
+    if (cur->IsElement() &&
+        nsCSSRuleProcessor::SelectorListMatches(cur->AsElement(),
+                                                matchingContext,
+                                                selectorList)) {
+      return cur;
+    }
+  }
 
-  return foundElement;
-}
-
-static PRBool
-AppendAllMatchingElements(nsIContent* aMatchingElement,
-                          void* aClosure)
-{
-  NS_PRECONDITION(aMatchingElement && aClosure, "How did that happen?");
-  static_cast<nsBaseContentList*>(aClosure)->AppendElement(aMatchingElement);
-  return PR_TRUE;
+  return nsnull;
 }
 
 /* static */
@@ -5672,14 +5559,23 @@ nsGenericElement::doQuerySelectorAll(nsINode* aRoot,
   NS_ADDREF(*aReturn = contentList);
   
   nsAutoPtr<nsCSSSelectorList> selectorList;
-  nsPresContext* presContext;
   nsresult rv = ParseSelectorList(aRoot, aSelector,
-                                  getter_Transfers(selectorList),
-                                  &presContext);
+                                  getter_Transfers(selectorList));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  TryMatchingElementsInSubtree(aRoot, nsnull, presContext, selectorList,
-                               AppendAllMatchingElements, contentList);
+  TreeMatchContext matchingContext(PR_FALSE,
+                                   nsRuleWalker::eRelevantLinkUnvisited,
+                                   aRoot->GetOwnerDoc());
+  for (nsIContent* cur = aRoot->GetFirstChild();
+       cur;
+       cur = cur->GetNextNode(aRoot)) {
+    if (cur->IsElement() &&
+        nsCSSRuleProcessor::SelectorListMatches(cur->AsElement(),
+                                                matchingContext,
+                                                selectorList)) {
+      contentList->AppendElement(cur);
+    }
+  }
   return NS_OK;
 }
 
@@ -5688,15 +5584,16 @@ PRBool
 nsGenericElement::MozMatchesSelector(const nsAString& aSelector, nsresult* aResult)
 {
   nsAutoPtr<nsCSSSelectorList> selectorList;
-  nsPresContext* presContext;
   PRBool matches = PR_FALSE;
 
-  *aResult = ParseSelectorList(this, aSelector, getter_Transfers(selectorList),
-                               &presContext);
+  *aResult = ParseSelectorList(this, aSelector, getter_Transfers(selectorList));
 
   if (NS_SUCCEEDED(*aResult)) {
-    RuleProcessorData data(presContext, this, nsnull);
-    matches = nsCSSRuleProcessor::SelectorListMatches(data, selectorList);
+    TreeMatchContext matchingContext(PR_FALSE,
+                                     nsRuleWalker::eRelevantLinkUnvisited,
+                                     GetOwnerDoc());
+    matches = nsCSSRuleProcessor::SelectorListMatches(this, matchingContext,
+                                                      selectorList);
   }
 
   return matches;

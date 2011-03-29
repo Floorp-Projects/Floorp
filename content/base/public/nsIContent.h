@@ -76,8 +76,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x8331ca9f, 0x8717, 0x4ab4, \
-  { 0xad, 0x17, 0xb4, 0x9d, 0xdc, 0xe8, 0xb6, 0x77 } }
+{ 0x5788c9eb, 0x646a, 0x4285, \
+  { 0xa2, 0x8c, 0xde, 0x0d, 0x43, 0x6b, 0x47, 0x72 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -906,15 +906,15 @@ public:
    */
   virtual nsISMILAttr* GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName) = 0;
 
-   /**
-    * Get the SMIL override style for this content node.  This is a style
-    * declaration that is applied *after* the inline style, and it can be used
-    * e.g. to store animated style values.
-    *
-    * Note: This method is analogous to the 'GetStyle' method in
-    * nsGenericHTMLElement and nsStyledElement.
-    */
-  virtual nsresult GetSMILOverrideStyle(nsIDOMCSSStyleDeclaration** aStyle) = 0;
+  /**
+   * Get the SMIL override style for this content node.  This is a style
+   * declaration that is applied *after* the inline style, and it can be used
+   * e.g. to store animated style values.
+   *
+   * Note: This method is analogous to the 'GetStyle' method in
+   * nsGenericHTMLElement and nsStyledElement.
+   */
+  virtual nsIDOMCSSStyleDeclaration* GetSMILOverrideStyle() = 0;
 
   /**
    * Get the SMIL override style rule for this content node.  If the rule

@@ -56,10 +56,10 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsBaseAppShell, nsIAppShell, nsIThreadObserver,
 
 nsBaseAppShell::nsBaseAppShell()
   : mSuspendNativeCount(0)
+  , mEventloopNestingLevel(0)
   , mBlockedWait(nsnull)
   , mFavorPerf(0)
   , mNativeEventPending(0)
-  , mEventloopNestingLevel(0)
   , mStarvationDelay(0)
   , mSwitchTime(0)
   , mLastNativeEventTime(0)
@@ -97,7 +97,7 @@ nsBaseAppShell::Init()
 void
 nsBaseAppShell::NativeEventCallback()
 {
-  PRInt32 hasPending = PR_AtomicSet(&mNativeEventPending, 0);
+  PRInt32 hasPending = PR_ATOMIC_SET(&mNativeEventPending, 0);
   if (hasPending == 0)
     return;
 
@@ -262,7 +262,7 @@ nsBaseAppShell::OnDispatchedEvent(nsIThreadInternal *thr)
   if (mBlockNativeEvent)
     return NS_OK;
 
-  PRInt32 lastVal = PR_AtomicSet(&mNativeEventPending, 1);
+  PRInt32 lastVal = PR_ATOMIC_SET(&mNativeEventPending, 1);
   if (lastVal == 1)
     return NS_OK;
 

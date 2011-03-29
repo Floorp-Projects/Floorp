@@ -254,12 +254,15 @@ nsHTMLOutputAccessible::GetAttributesInternal(nsIPersistentProperties* aAttribut
 
 nsHTMLLIAccessible::
   nsHTMLLIAccessible(nsIContent* aContent, nsIWeakReference* aShell) :
-  nsHyperTextAccessibleWrap(aContent, aShell)
+  nsHyperTextAccessibleWrap(aContent, aShell), mBullet(nsnull)
 {
+  mFlags |= eHTMLListItemAccessible;
+
   nsBlockFrame* blockFrame = do_QueryFrame(GetFrame());
-  if (blockFrame && !blockFrame->BulletIsEmptyExternal()) {
-    mBulletAccessible = new nsHTMLListBulletAccessible(mContent, mWeakShell);
-    GetDocAccessible()->BindToDocument(mBulletAccessible, nsnull);
+  if (blockFrame && blockFrame->HasBullet()) {
+    mBullet = new nsHTMLListBulletAccessible(mContent, mWeakShell);
+    if (!GetDocAccessible()->BindToDocument(mBullet, nsnull))
+      mBullet = nsnull;
   }
 }
 
@@ -268,13 +271,9 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLLIAccessible, nsHyperTextAccessible)
 void
 nsHTMLLIAccessible::Shutdown()
 {
-  if (mBulletAccessible) {
-    // Ensure that pointer to this is nulled out.
-    mBulletAccessible->Shutdown();
-  }
+  mBullet = nsnull;
 
   nsHyperTextAccessibleWrap::Shutdown();
-  mBulletAccessible = nsnull;
 }
 
 PRUint32
@@ -297,12 +296,11 @@ nsHTMLLIAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 NS_IMETHODIMP nsHTMLLIAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
 {
   nsresult rv = nsAccessibleWrap::GetBounds(x, y, width, height);
-  if (NS_FAILED(rv) || !mBulletAccessible) {
+  if (NS_FAILED(rv) || !mBullet)
     return rv;
-  }
 
   PRInt32 bulletX, bulletY, bulletWidth, bulletHeight;
-  rv = mBulletAccessible->GetBounds(&bulletX, &bulletY, &bulletWidth, &bulletHeight);
+  rv = mBullet->GetBounds(&bulletX, &bulletY, &bulletWidth, &bulletHeight);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *x = bulletX; // Move x coordinate of list item over to cover bullet as well
@@ -311,13 +309,40 @@ NS_IMETHODIMP nsHTMLLIAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *wid
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsHTMLLIAccessible: public
+
+void
+nsHTMLLIAccessible::UpdateBullet(bool aHasBullet)
+{
+  if (aHasBullet == !!mBullet) {
+    NS_NOTREACHED("Bullet and accessible are in sync already!");
+    return;
+  }
+
+  nsDocAccessible* document = GetDocAccessible();
+  if (aHasBullet) {
+    mBullet = new nsHTMLListBulletAccessible(mContent, mWeakShell);
+    if (document->BindToDocument(mBullet, nsnull)) {
+      InsertChildAt(0, mBullet);
+    }
+  } else {
+    RemoveChild(mBullet);
+    document->UnbindFromDocument(mBullet);
+    mBullet = nsnull;
+  }
+
+  // XXXtodo: fire show/hide and reorder events. That's hard to make it
+  // right now because coalescence happens by DOM node.
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // nsHTMLLIAccessible: nsAccessible protected
 
 void
 nsHTMLLIAccessible::CacheChildren()
 {
-  if (mBulletAccessible)
-    AppendChild(mBulletAccessible);
+  if (mBullet)
+    AppendChild(mBullet);
 
   // Cache children from subtree.
   nsAccessibleWrap::CacheChildren();
@@ -331,18 +356,10 @@ nsHTMLListBulletAccessible::
   nsHTMLListBulletAccessible(nsIContent* aContent, nsIWeakReference* aShell) :
     nsLeafAccessible(aContent, aShell)
 {
-  mBulletText += ' '; // Otherwise bullets are jammed up against list text
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLListBulletAccessible: nsAccessNode
-
-void
-nsHTMLListBulletAccessible::Shutdown()
-{
-  mBulletText.Truncate();
-  nsLeafAccessible::Shutdown();
-}
 
 bool
 nsHTMLListBulletAccessible::IsPrimaryForNode() const
@@ -363,6 +380,7 @@ nsHTMLListBulletAccessible::GetName(nsAString &aName)
 
   // Native anonymous content, ARIA can't be used. Get list bullet text.
   nsBlockFrame* blockFrame = do_QueryFrame(mContent->GetPrimaryFrame());
+  NS_ASSERTION(blockFrame, "No frame for list item!");
   if (blockFrame) {
     blockFrame->GetBulletText(aName);
 
@@ -394,17 +412,13 @@ void
 nsHTMLListBulletAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
                                          PRUint32 aLength)
 {
+  nsAutoString bulletText;
   nsBlockFrame* blockFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (blockFrame) {
-    nsAutoString bulletText;
+  NS_ASSERTION(blockFrame, "No frame for list item!");
+  if (blockFrame)
     blockFrame->GetBulletText(bulletText);
 
-    PRUint32 maxLength = bulletText.Length() - aStartOffset;
-    if (aLength > maxLength)
-      aLength = maxLength;
-
-    aText += Substring(bulletText, aStartOffset, aLength);
-  }
+  aText.Append(Substring(bulletText, aStartOffset, aLength));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

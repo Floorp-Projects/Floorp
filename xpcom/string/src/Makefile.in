@@ -70,6 +70,18 @@ FORCE_STATIC_LIB = 1
 # Force use of PIC
 FORCE_USE_PIC	= 1
 
+# Are we targeting x86 or x86-64?  If so, compile the SSE2 functions for
+# nsUTF8Utils.cpp.
+ifneq (,$(INTEL_ARCHITECTURE))
+CPPSRCS += nsUTF8UtilsSSE2.cpp
+
+# gcc requires -msse2 on nsUTF8UtilsSSE2.cpp since it uses SSE2 intrinsics.
+# (See bug 585538 comment 12.)
+ifdef GNU_CC
+nsUTF8UtilsSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_COM

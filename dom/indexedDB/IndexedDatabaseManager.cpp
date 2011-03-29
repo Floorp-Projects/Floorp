@@ -808,7 +808,7 @@ IndexedDatabaseManager::Observe(nsISupports* aSubject,
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID)) {
     // Setting this flag prevents the service from being recreated and prevents
     // further databases from being created.
-    if (PR_AtomicSet(&gShutdown, 1)) {
+    if (PR_ATOMIC_SET(&gShutdown, 1)) {
       NS_ERROR("Shutdown more than once?!");
     }
 
@@ -948,7 +948,7 @@ IndexedDatabaseManager::AsyncUsageRunnable::AsyncUsageRunnable(
 void
 IndexedDatabaseManager::AsyncUsageRunnable::Cancel()
 {
-  if (PR_AtomicSet(&mCanceled, 1)) {
+  if (PR_ATOMIC_SET(&mCanceled, 1)) {
     NS_ERROR("Canceled more than once?!");
   }
 }

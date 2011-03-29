@@ -4,7 +4,7 @@ function test() {
   waitForExplicitFinish();
 
   is(getTopWin(), window, "got top window");
-  is(getBoolPref("general.startup.browser", false), true, "getBoolPref");
+  is(getBoolPref("browser.search.openintab", false), false, "getBoolPref");
   is(getBoolPref("this.pref.doesnt.exist", true), true, "getBoolPref fallback");
   is(getBoolPref("this.pref.doesnt.exist", false), false, "getBoolPref fallback #2");
 

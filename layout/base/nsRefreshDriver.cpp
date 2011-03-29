@@ -104,7 +104,8 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext *aPresContext)
   : mPresContext(aPresContext),
     mFrozen(false),
     mThrottled(false),
-    mTimerIsPrecise(false)
+    mTimerIsPrecise(false),
+    mLastTimerInterval(0)
 {
 }
 
@@ -283,7 +284,7 @@ nsRefreshDriver::Notify(nsITimer * /* unused */)
       // Don't just loop while we have things in mBeforePaintTargets,
       // the whole point is that event handlers should readd the
       // target as needed.
-      nsTArray<nsIDocument*> targets;
+      nsTArray< nsCOMPtr<nsIDocument> > targets;
       targets.SwapElements(mBeforePaintTargets);
       for (PRUint32 i = 0; i < targets.Length(); ++i) {
         targets[i]->BeforePaintEventFiring();

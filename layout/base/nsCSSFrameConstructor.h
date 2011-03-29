@@ -235,9 +235,8 @@ public:
   nsresult CharacterDataChanged(nsIContent* aContent,
                                 CharacterDataChangeInfo* aInfo);
 
-  nsresult ContentStatesChanged(nsIContent*   aContent1,
-                                nsIContent*   aContent2,
-                                nsEventStates aStateMask);
+  nsresult ContentStateChanged(nsIContent*   aContent,
+                               nsEventStates aStateMask);
 
   // generate the child frames and process bindings
   nsresult GenerateChildFrames(nsIFrame* aFrame);
@@ -415,9 +414,6 @@ private:
                               nsIFrame*&     aPageFrame,
                               nsIFrame*&     aCanvasFrame);
 
-  void DoContentStateChanged(Element* aElement,
-                             nsEventStates aStateMask);
-
   /* aMinHint is the minimal change that should be made to the element */
   // XXXbz do we really need the aPrimaryFrame argument here?
   void RestyleElement(Element* aElement,
@@ -433,12 +429,16 @@ private:
                                 nsIFrame*                      aNewFrame,
                                 PRBool                         aAllowCounters = PR_TRUE);
 
+  // aState can be null if not available; it's used as an optimization.
+  // XXXbz IsValidSibling is the only caller that doesn't pass a state here!
   already_AddRefed<nsStyleContext>
   ResolveStyleContext(nsIFrame*         aParentFrame,
-                      nsIContent*       aContent);
+                      nsIContent*       aContent,
+                      nsFrameConstructorState* aState);
   already_AddRefed<nsStyleContext>
   ResolveStyleContext(nsStyleContext* aParentStyleContext,
-                      nsIContent* aContent);
+                      nsIContent* aContent,
+                      nsFrameConstructorState* aState);
 
   // Construct a frame for aContent and put it in aFrameItems.  This should
   // only be used in cases when it's known that the frame won't need table

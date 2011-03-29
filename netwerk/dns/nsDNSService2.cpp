@@ -313,7 +313,7 @@ nsDNSService::nsDNSService()
 nsDNSService::~nsDNSService()
 {
     if (mLock)
-        PR_DestroyLock(mLock);
+        nsAutoLock::DestroyLock(mLock);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsDNSService, nsIDNSService, nsPIDNSService,
@@ -358,7 +358,7 @@ nsDNSService::Init()
     }
 
     if (firstTime) {
-        mLock = PR_NewLock();
+        mLock = nsAutoLock::NewLock("nsDNSService::mLock");
         if (!mLock)
             return NS_ERROR_OUT_OF_MEMORY;
 

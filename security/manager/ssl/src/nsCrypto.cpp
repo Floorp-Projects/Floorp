@@ -2182,6 +2182,13 @@ nsCryptoRunnable::Run()
   JSPrincipals *principals;
   JSContext *cx = m_args->m_cx;
 
+  JSAutoRequest ar(cx);
+  JSAutoEnterCompartment ac;
+
+  if (!ac.enter(cx, m_args->m_scope)) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult rv = m_args->m_principals->GetJSPrincipals(cx, &principals);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
@@ -2189,10 +2196,9 @@ nsCryptoRunnable::Run()
   // make sure the right context is on the stack. must not return w/out popping
   nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
   if (!stack || NS_FAILED(stack->Push(cx))) {
+    JSPRINCIPALS_DROP(cx, principals);
     return NS_ERROR_FAILURE;
   }
-
-  JSAutoRequest ar(cx);
 
   jsval retval;
   if (JS_EvaluateScriptForPrincipals(cx, m_args->m_scope, principals,
@@ -2204,6 +2210,7 @@ nsCryptoRunnable::Run()
   }
 
   stack->Pop(nsnull);
+  JSPRINCIPALS_DROP(cx, principals);
   return rv;
 }
 

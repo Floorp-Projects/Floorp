@@ -168,15 +168,10 @@
     %macro GET_GOT 1
       push %1
       call %%get_got
-      %%sub_offset:
-      jmp  %%exitGG
       %%get_got:
-      mov  %1, [esp]
-      add %1, fake_got - %%sub_offset
-      ret
-      %%exitGG:
+      pop  %1
       %undef GLOBAL
-      %define GLOBAL(x) x + %1 - fake_got
+      %define GLOBAL(x) x + %1 - %%get_got
       %undef RESTORE_GOT
       %define RESTORE_GOT pop %1
     %endmacro
@@ -289,7 +284,6 @@
 %elifidn __OUTPUT_FORMAT__,macho32
 %macro SECTION_RODATA 0
 section .text
-fake_got:
 %endmacro
 %else
 %define SECTION_RODATA section .rodata

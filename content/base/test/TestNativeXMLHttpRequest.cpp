@@ -77,9 +77,9 @@ nsresult TestNativeXMLHttpRequest()
   const nsAString& empty = EmptyString();
   
   printf("*** About to see an expected warning about mPrincipal:\n");
-  rv = xhr->OpenRequest(getString, testURL, PR_FALSE, empty, empty);
+  rv = xhr->Open(getString, testURL, PR_FALSE, empty, empty);
   printf("*** End of expected warning output.\n");
-  TEST_ENSURE_FAILED(rv, "OpenRequest should have failed!");
+  TEST_ENSURE_FAILED(rv, "Open should have failed!");
 
   nsCOMPtr<nsIScriptSecurityManager> secman =
     do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
@@ -92,8 +92,8 @@ nsresult TestNativeXMLHttpRequest()
   rv = xhr->Init(systemPrincipal, nsnull, nsnull, nsnull);
   TEST_ENSURE_SUCCESS(rv, "Couldn't initialize the XHR!");
 
-  rv = xhr->OpenRequest(getString, testURL, PR_FALSE, empty, empty);
-  TEST_ENSURE_SUCCESS(rv, "OpenRequest failed!");
+  rv = xhr->Open(getString, testURL, PR_FALSE, empty, empty);
+  TEST_ENSURE_SUCCESS(rv, "Open failed!");
 
   rv = xhr->Send(nsnull);
   TEST_ENSURE_SUCCESS(rv, "Send failed!");
