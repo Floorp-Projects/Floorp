@@ -839,13 +839,6 @@ PropertyAccess(JSContext *cx, JSScript *script, const jsbytecode *pc, TypeObject
 {
     JS_ASSERT_IF(!target, assign);
 
-    /* Reads from objects with unknown properties are unknown, writes to such objects are ignored. */
-    if (object->unknownProperties) {
-        if (!assign)
-            target->addType(cx, TYPE_UNKNOWN);
-        return;
-    }
-
     /* Monitor assigns on the 'prototype' property. */
     if (assign && id == id_prototype(cx)) {
         cx->compartment->types.monitorBytecode(cx, script, pc - script->code);
@@ -857,6 +850,13 @@ PropertyAccess(JSContext *cx, JSScript *script, const jsbytecode *pc, TypeObject
         if (assign)
             cx->compartment->types.monitorBytecode(cx, script, pc - script->code);
         else
+            target->addType(cx, TYPE_UNKNOWN);
+        return;
+    }
+
+    /* Reads from objects with unknown properties are unknown, writes to such objects are ignored. */
+    if (object->unknownProperties) {
+        if (!assign)
             target->addType(cx, TYPE_UNKNOWN);
         return;
     }
