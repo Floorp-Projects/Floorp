@@ -50,7 +50,7 @@ NVIDIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <string.h>
 
-#include "compiler/debug.h"
+#include "compiler/compilerdebug.h"
 #include "compiler/preprocessor/slglobals.h"
 
 #undef malloc
