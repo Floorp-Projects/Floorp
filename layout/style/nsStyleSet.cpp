@@ -781,8 +781,9 @@ nsStyleSet::ResolveStyleFor(Element* aElement,
   }
 
   return GetContext(aParentContext, ruleNode, visitedRuleNode,
-                    data.IsLink(),
-                    data.ContentState().HasState(NS_EVENT_STATE_VISITED),
+                    nsCSSRuleProcessor::IsLink(aElement),
+                    nsCSSRuleProcessor::GetContentState(aElement).
+                      HasState(NS_EVENT_STATE_VISITED),
                     nsnull, nsCSSPseudoElements::ePseudo_NotPseudoElement);
 }
 
