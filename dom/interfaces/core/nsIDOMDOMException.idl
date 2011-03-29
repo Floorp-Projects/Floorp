@@ -78,6 +78,7 @@ interface nsIDOMDOMException : nsISupports
   const unsigned short      VALIDATION_ERR                 = 16;
   // Introduced in DOM Level 3:
   const unsigned short      TYPE_MISMATCH_ERR              = 17;
+  const unsigned short      DATA_CLONE_ERR                 = 25;
 
   readonly attribute unsigned long   code;
 };
