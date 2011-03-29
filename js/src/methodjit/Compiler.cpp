@@ -4593,13 +4593,13 @@ mjit::Compiler::jsop_instanceof()
     if (!rhs->isTypeKnown()) {
         Jump j = frame.testObject(Assembler::NotEqual, rhs);
         stubcc.linkExit(j, Uses(2));
-        RegisterID reg = frame.tempRegForData(rhs);
-        j = masm.testFunction(Assembler::NotEqual, reg);
-        stubcc.linkExit(j, Uses(2));
     }
 
-    /* Test for bound functions. */
     RegisterID obj = frame.tempRegForData(rhs);
+    Jump notFunction = masm.testFunction(Assembler::NotEqual, obj);
+    stubcc.linkExit(notFunction, Uses(2));
+
+    /* Test for bound functions. */
     Jump isBound = masm.branchTest32(Assembler::NonZero, Address(obj, offsetof(JSObject, flags)),
                                      Imm32(JSObject::BOUND_FUNCTION));
     {
