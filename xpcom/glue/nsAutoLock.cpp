@@ -41,7 +41,6 @@
 
 #include "plhash.h"
 #include "prprf.h"
-#include "prlock.h"
 #include "prthread.h"
 #include "nsDebug.h"
 #include "nsVoidArray.h"
@@ -137,8 +136,8 @@ _purge_one(PLHashEntry* he, PRIntn cnt, void* arg)
     return HT_ENUMERATE_NEXT;
 }
 
-static void
-OnSemaphoreRecycle(void* addr)
+/* static */ void
+nsAutoLockBase::OnSemaphoreRecycle(void* addr)
 {
     if (OrderTable) { 
         PR_Lock(OrderTableLock);
@@ -154,7 +153,8 @@ _hash_pointer(const void* key)
 }
 
 // Must be single-threaded here, early in primordial thread.
-static void InitAutoLockStatics()
+/* static */ void
+nsAutoLockBase::InitAutoLockStatics()
 {
     (void) PR_NewThreadPrivateIndex(&LockStackTPI, 0);
     OrderTable = PL_NewHashTable(64, _hash_pointer,
@@ -164,7 +164,7 @@ static void InitAutoLockStatics()
         PL_HashTableDestroy(OrderTable);
         OrderTable = 0;
     }
-    PR_CSetOnMonitorRecycle(OnSemaphoreRecycle);
+    PR_CSetOnMonitorRecycle(nsAutoLockBase::OnSemaphoreRecycle);
 }
 
 void _FreeAutoLockStatics()
@@ -193,7 +193,8 @@ static nsNamedVector* GetVector(PLHashTable* table, const void* key)
     return vec;
 }
 
-static void OnSemaphoreCreated(const void* key, const char* name )
+/* static */ void
+nsAutoLockBase::OnSemaphoreCreated(const void* key, const char* name )
 {
     if (key && OrderTable) {
         nsNamedVector* value = new nsNamedVector(name);
@@ -389,40 +390,6 @@ nsAutoUnlockBase::~nsAutoUnlockBase()
 }
 
 #endif /* DEBUG */
-
-PRLock* nsAutoLock::NewLock(const char* name)
-{
-    PRLock* lock = PR_NewLock();
-#ifdef DEBUG
-    OnSemaphoreCreated(lock, name);
-#endif
-    return lock;
-}
-
-void nsAutoLock::DestroyLock(PRLock* lock)
-{
-#ifdef DEBUG
-    OnSemaphoreRecycle(lock);
-#endif
-    PR_DestroyLock(lock);
-}
-
-PRMonitor* nsAutoMonitor::NewMonitor(const char* name)
-{
-    PRMonitor* mon = PR_NewMonitor();
-#ifdef DEBUG
-    OnSemaphoreCreated(mon, name);
-#endif
-    return mon;
-}
-
-void nsAutoMonitor::DestroyMonitor(PRMonitor* mon)
-{
-#ifdef DEBUG
-    OnSemaphoreRecycle(mon);
-#endif
-    PR_DestroyMonitor(mon);
-}
 
 void nsAutoMonitor::Enter()
 {
