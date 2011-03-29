@@ -114,12 +114,8 @@ CanvasLayerD3D10::Initialize(const Data& aData)
 }
 
 void
-CanvasLayerD3D10::UpdateSurface()
+CanvasLayerD3D10::Updated(const nsIntRect& aRect)
 {
-  if (!mDirty)
-    return;
-  mDirty = PR_FALSE;
-
   if (mIsD2DTexture) {
     mSurface->Flush();
     return;
@@ -165,6 +161,9 @@ CanvasLayerD3D10::UpdateSurface()
     if (currentFramebuffer != mCanvasFramebuffer)
       mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mCanvasFramebuffer);
 
+    // For simplicity, we read the entire framebuffer for now -- in
+    // the future we should use aRect, though with WebGL we don't
+    // have an easy way to generate one.
     nsRefPtr<gfxImageSurface> tmpSurface =
       new gfxImageSurface(destination,
                           gfxIntSize(mBounds.width, mBounds.height),
@@ -190,10 +189,10 @@ CanvasLayerD3D10::UpdateSurface()
     mTexture->Unmap(0);
   } else if (mSurface) {
     RECT r;
-    r.left = 0;
-    r.top = 0;
-    r.right = mBounds.width;
-    r.bottom = mBounds.height;
+    r.left = aRect.x;
+    r.top = aRect.y;
+    r.right = aRect.XMost();
+    r.bottom = aRect.YMost();
 
     D3D10_MAPPED_TEXTURE2D map;
     HRESULT hr = mTexture->Map(0, D3D10_MAP_WRITE_DISCARD, 0, &map);
@@ -203,13 +202,17 @@ CanvasLayerD3D10::UpdateSurface()
       return;
     }
 
+    PRUint8 *startBits;
+    PRUint32 sourceStride;
+
     nsRefPtr<gfxImageSurface> dstSurface;
 
     dstSurface = new gfxImageSurface((unsigned char*)map.pData,
-                                     gfxIntSize(mBounds.width, mBounds.height),
+                                     gfxIntSize(aRect.width, aRect.height),
                                      map.RowPitch,
                                      gfxASurface::ImageFormatARGB32);
     nsRefPtr<gfxContext> ctx = new gfxContext(dstSurface);
+    ctx->Translate(gfxPoint(-aRect.x, -aRect.y));
     ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
     ctx->SetSource(mSurface);
     ctx->Paint();
@@ -227,11 +230,9 @@ CanvasLayerD3D10::GetLayer()
 void
 CanvasLayerD3D10::RenderLayer()
 {
-  UpdateSurface();
-  FireDidTransactionCallback();
-
-  if (!mTexture)
+  if (!mTexture) {
     return;
+  }
 
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
 

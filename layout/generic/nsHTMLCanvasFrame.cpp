@@ -275,9 +275,11 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   CanvasLayer* oldLayer = static_cast<CanvasLayer*>
     (aBuilder->LayerBuilder()->GetLeafLayerFor(aBuilder, aManager, aItem));
-  nsRefPtr<CanvasLayer> layer = element->GetCanvasLayer(aBuilder, oldLayer, aManager);
+  nsRefPtr<CanvasLayer> layer = element->GetCanvasLayer(oldLayer, aManager);
   if (!layer)
     return nsnull;
+
+  element->MarkContextClean();
 
   nsPresContext* presContext = PresContext();
   gfxRect r = gfxRect(presContext->AppUnitsToGfxUnits(area.x),
