@@ -93,6 +93,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/dom/Element.h"
 #include "nsGenericElement.h"
+#include "nsNthIndexCache.h"
 
 using namespace mozilla::dom;
 namespace css = mozilla::css;
@@ -1128,11 +1129,6 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
 
   NS_ASSERTION(aElement, "null element leaked into SelectorMatches");
 
-  mNthIndices[0][0] = -2;
-  mNthIndices[0][1] = -2;
-  mNthIndices[1][0] = -2;
-  mNthIndices[1][1] = -2;
-
   NS_ASSERTION(aElement->GetOwnerDoc(), "Document-less node here?");
     
   // get the tag and parent
@@ -1279,80 +1275,6 @@ RuleProcessorData::GetContentStateForVisitedHandling(
     }
   }
   return contentState;
-}
-
-PRInt32
-RuleProcessorData::GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd,
-                               PRBool aCheckEdgeOnly)
-{
-  NS_ASSERTION(mParentContent, "caller should check mParentContent");
-
-  PRInt32 &slot = mNthIndices[aIsOfType][aIsFromEnd];
-  if (slot != -2 && (slot != -1 || aCheckEdgeOnly))
-    return slot;
-
-  if (mPreviousSiblingData &&
-      (!aIsOfType ||
-       (mPreviousSiblingData->mNameSpaceID == mNameSpaceID &&
-        mPreviousSiblingData->mContentTag == mContentTag))) {
-    slot = mPreviousSiblingData->mNthIndices[aIsOfType][aIsFromEnd];
-    if (slot > 0) {
-      slot += (aIsFromEnd ? -1 : 1);
-      NS_ASSERTION(slot > 0, "How did that happen?");
-      return slot;
-    }
-  }
-
-  PRInt32 result = 1;
-  nsIContent* parent = mParentContent;
-
-  PRUint32 childCount;
-  nsIContent * const * curChildPtr = parent->GetChildArray(&childCount);
-
-#ifdef DEBUG
-  nsMutationGuard debugMutationGuard;
-#endif  
-  
-  PRInt32 increment;
-  nsIContent * const * stopPtr;
-  if (aIsFromEnd) {
-    stopPtr = curChildPtr - 1;
-    curChildPtr = stopPtr + childCount;
-    increment = -1;
-  } else {
-    increment = 1;
-    stopPtr = curChildPtr + childCount;
-  }
-
-  for ( ; ; curChildPtr += increment) {
-    if (curChildPtr == stopPtr) {
-      // mContent is the root of an anonymous content subtree.
-      result = 0; // special value to indicate that it is not at any index
-      break;
-    }
-    nsIContent* child = *curChildPtr;
-    if (child == mElement)
-      break;
-    if (child->IsElement() &&
-        (!aIsOfType ||
-         (child->Tag() == mContentTag &&
-          child->GetNameSpaceID() == mNameSpaceID))) {
-      if (aCheckEdgeOnly) {
-        // The caller only cares whether or not the result is 1, and we
-        // now know it's not.
-        result = -1;
-        break;
-      }
-      ++result;
-    }
-  }
-
-#ifdef DEBUG
-  NS_ASSERTION(!debugMutationGuard.Mutated(0), "Unexpected mutations happened");
-#endif  
-
-  slot = result;
-  return result;
 }
 
 /**
@@ -1506,9 +1428,11 @@ edgeChildMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
     parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
 
   return (!checkFirst ||
-          data.GetNthIndex(PR_FALSE, PR_FALSE, PR_TRUE) == 1) &&
+          aTreeMatchContext.mNthIndexCache.
+            GetNthIndex(data.mElement, PR_FALSE, PR_FALSE, PR_TRUE) == 1) &&
          (!checkLast ||
-          data.GetNthIndex(PR_FALSE, PR_TRUE, PR_TRUE) == 1);
+          aTreeMatchContext.mNthIndexCache.
+            GetNthIndex(data.mElement, PR_FALSE, PR_TRUE, PR_TRUE) == 1);
 }
 
 static inline PRBool
@@ -1529,7 +1453,8 @@ nthChildGenericMatches(RuleProcessorData& data,
       parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
   }
 
-  const PRInt32 index = data.GetNthIndex(isOfType, isFromEnd, PR_FALSE);
+  const PRInt32 index = aTreeMatchContext.mNthIndexCache.
+    GetNthIndex(data.mElement, isOfType, isFromEnd, PR_FALSE);
   if (index <= 0) {
     // Node is anonymous content (not really a child of its parent).
     return PR_FALSE;
@@ -1567,9 +1492,11 @@ edgeOfTypeMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
   }
 
   return (!checkFirst ||
-          data.GetNthIndex(PR_TRUE, PR_FALSE, PR_TRUE) == 1) &&
+          aTreeMatchContext.mNthIndexCache.
+            GetNthIndex(data.mElement, PR_TRUE, PR_FALSE, PR_TRUE) == 1) &&
          (!checkLast ||
-          data.GetNthIndex(PR_TRUE, PR_TRUE, PR_TRUE) == 1);
+          aTreeMatchContext.mNthIndexCache.
+            GetNthIndex(data.mElement, PR_TRUE, PR_TRUE, PR_TRUE) == 1);
 }
 
 static inline PRBool
