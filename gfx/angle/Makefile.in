@@ -77,7 +77,7 @@ CPPSRCS = \
         ShaderLang.cpp \
         SymbolTable.cpp \
 	VariableInfo.cpp \
-	debug.cpp \
+	compilerdebug.cpp \
 	ossource_nspr.cpp \
 	util.cpp \
 	ValidateLimitations.cpp \
