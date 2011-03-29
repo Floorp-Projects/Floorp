@@ -379,6 +379,8 @@ static const PLDHashTableOps RuleHash_NameSpaceTable_Ops = {
 #define RULE_HASH_STAT_INCREMENT(var_) PR_BEGIN_MACRO PR_END_MACRO
 #endif
 
+struct NodeMatchContext;
+
 class RuleHash {
 public:
   RuleHash(PRBool aQuirksMode);
@@ -386,7 +388,8 @@ public:
   void AppendRule(const RuleSelectorPair &aRuleInfo);
   void EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag, nsIAtom* aID,
                          const nsAttrValue* aClassList,
-                         RuleProcessorData* aData);
+                         RuleProcessorData* aData,
+                         NodeMatchContext& aNodeMatchContext);
   PLArenaPool& Arena() { return mArena; }
 
 protected:
@@ -593,11 +596,12 @@ void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
 
 static inline
 void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
-                     RuleProcessorData* data);
+                     RuleProcessorData* data, NodeMatchContext& nodeContext);
 
 void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
                                  nsIAtom* aID, const nsAttrValue* aClassList,
-                                 RuleProcessorData* aData)
+                                 RuleProcessorData* aData,
+                                 NodeMatchContext& aNodeContext)
 {
   PRInt32 classCount = aClassList ? aClassList->GetAtomCount() : 0;
 
@@ -670,7 +674,7 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
         }
       }
       const RuleValue *cur = mEnumList[valueIndex].mCurValue;
-      ContentEnumFunc(cur->mRule, cur->mSelector, aData);
+      ContentEnumFunc(cur->mRule, cur->mSelector, aData, aNodeContext);
       cur++;
       if (cur == mEnumList[valueIndex].mEnd) {
         mEnumList[valueIndex] = mEnumList[--valueCount];
@@ -683,7 +687,7 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
     for (const RuleValue *value = mEnumList[0].mCurValue,
                          *end = mEnumList[0].mEnd;
          value != end; ++value) {
-      ContentEnumFunc(value->mRule, value->mSelector, aData);
+      ContentEnumFunc(value->mRule, value->mSelector, aData, aNodeContext);
     }
   }
 }
@@ -2243,10 +2247,8 @@ static PRBool SelectorMatchesTree(Element* aPrevElement,
 
 static inline
 void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
-                     RuleProcessorData* data)
+                     RuleProcessorData* data, NodeMatchContext& nodeContext)
 {
-  NodeMatchContext nodeContext(nsEventStates(),
-                               nsCSSRuleProcessor::IsLink(data->mElement));
   if (nodeContext.mIsRelevantLink) {
     data->mHaveRelevantLink = PR_TRUE;
   }
@@ -2271,11 +2273,13 @@ nsCSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData)
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
   if (cascade) {
+    NodeMatchContext nodeContext(nsEventStates(),
+                                 nsCSSRuleProcessor::IsLink(aData->mElement));
     cascade->mRuleHash.EnumerateAllRules(aData->mNameSpaceID,
                                          aData->mContentTag,
                                          aData->mContentID,
                                          aData->mClasses,
-                                         aData);
+                                         aData, nodeContext);
   }
 }
 
@@ -2287,11 +2291,13 @@ nsCSSRuleProcessor::RulesMatching(PseudoElementRuleProcessorData* aData)
   if (cascade) {
     RuleHash* ruleHash = cascade->mPseudoElementRuleHashes[aData->mPseudoType];
     if (ruleHash) {
+      NodeMatchContext nodeContext(nsEventStates(),
+                                   nsCSSRuleProcessor::IsLink(aData->mElement));
       ruleHash->EnumerateAllRules(aData->mNameSpaceID,
                                   aData->mContentTag,
                                   aData->mContentID,
                                   aData->mClasses,
-                                  aData);
+                                  aData, nodeContext);
     }
   }
 }
@@ -2327,11 +2333,14 @@ nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
       (PL_DHashTableOperate(&cascade->mXULTreeRules, aData->mPseudoTag,
                             PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+      NodeMatchContext nodeContext(nsEventStates(),
+                                   nsCSSRuleProcessor::IsLink(aData->mElement));
       nsTArray<RuleValue>& rules = entry->mRules;
       for (RuleValue *value = rules.Elements(), *end = value + rules.Length();
            value != end; ++value) {
         if (aData->mComparator->PseudoMatches(value->mSelector)) {
-          ContentEnumFunc(value->mRule, value->mSelector->mNext, aData);
+          ContentEnumFunc(value->mRule, value->mSelector->mNext, aData,
+                          nodeContext);
         }
       }
     }
