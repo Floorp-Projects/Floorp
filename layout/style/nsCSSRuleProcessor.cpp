@@ -1115,58 +1115,6 @@ nsCSSRuleProcessor::GetWindowsThemeIdentifier()
 }
 #endif
 
-RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
-                                     Element* aElement, 
-                                     nsRuleWalker* aRuleWalker,
-                                     PRBool aForStyling)
-  : TreeMatchContext(aForStyling,
-                     aRuleWalker ?
-                       aRuleWalker->VisitedHandling() :
-                       nsRuleWalker::eLinksVisitedOrUnvisited,
-                     aElement->GetOwnerDoc()),
-    mPresContext(aPresContext),
-    mElement(aElement),
-    mRuleWalker(aRuleWalker),
-    mPreviousSiblingData(nsnull),
-    mParentData(nsnull)
-{
-  MOZ_COUNT_CTOR(RuleProcessorData);
-
-  NS_ASSERTION(aElement, "null element leaked into SelectorMatches");
-
-  NS_ASSERTION(aElement->GetOwnerDoc(), "Document-less node here?");
-}
-
-RuleProcessorData::~RuleProcessorData()
-{
-  MOZ_COUNT_DTOR(RuleProcessorData);
-
-  // Destroy potentially long chains of previous sibling and parent data
-  // without more than one level of recursion.
-  if (mPreviousSiblingData || mParentData) {
-    nsAutoVoidArray destroyQueue;
-    destroyQueue.AppendElement(this);
-
-    do {
-      RuleProcessorData *d = static_cast<RuleProcessorData*>
-                                        (destroyQueue.FastElementAt(destroyQueue.Count() - 1));
-      destroyQueue.RemoveElementAt(destroyQueue.Count() - 1);
-
-      if (d->mPreviousSiblingData) {
-        destroyQueue.AppendElement(d->mPreviousSiblingData);
-        d->mPreviousSiblingData = nsnull;
-      }
-      if (d->mParentData) {
-        destroyQueue.AppendElement(d->mParentData);
-        d->mParentData = nsnull;
-      }
-
-      if (d != this)
-        d->Destroy();
-    } while (destroyQueue.Count());
-  }
-}
-
 // If we have a useful @lang, then aLang will end up nonempty.
 static void GetLang(nsIContent* aContent, nsString& aLang)
 {
