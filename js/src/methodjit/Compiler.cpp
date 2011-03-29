@@ -4488,6 +4488,7 @@ mjit::Compiler::jsop_callprop(JSAtom *atom)
         if (notObject.isSet()) {
             stubcc.linkExit(notObject.get(), Uses(1));
             stubcc.leave();
+            stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
             OOL_STUBCALL(stubs::CallProp);
             stubcc.rejoin(Changes(2));
         }
