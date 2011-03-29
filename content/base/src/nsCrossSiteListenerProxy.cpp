@@ -237,39 +237,39 @@ nsPreflightCache::GetEntry(nsIURI* aURI,
     return nsnull;
   }
 
-  if (!mTable.Put(key, entry)) {
-    // Failed, clean up the new entry.
-    delete entry;
-
-    NS_WARNING("Failed to add entry to the CORS cache!");
-    return nsnull;
-  }
-
-  PR_INSERT_LINK(entry, &mList);
-
-  NS_ASSERTION(mTable.Count() <= PREFLIGHT_CACHE_SIZE + 1,
+  NS_ASSERTION(mTable.Count() <= PREFLIGHT_CACHE_SIZE,
                "Something is borked, too many entries in the cache!");
 
   // Now enforce the max count.
-  if (mTable.Count() > PREFLIGHT_CACHE_SIZE) {
+  if (mTable.Count() == PREFLIGHT_CACHE_SIZE) {
     // Try to kick out all the expired entries.
     PRTime now = PR_Now();
     mTable.Enumerate(RemoveExpiredEntries, &now);
 
     // If that didn't remove anything then kick out the least recently used
     // entry.
-    if (mTable.Count() > PREFLIGHT_CACHE_SIZE) {
+    if (mTable.Count() == PREFLIGHT_CACHE_SIZE) {
       CacheEntry* lruEntry = static_cast<CacheEntry*>(PR_LIST_TAIL(&mList));
       PR_REMOVE_LINK(lruEntry);
 
       // This will delete 'lruEntry'.
       mTable.Remove(lruEntry->mKey);
 
-      NS_ASSERTION(mTable.Count() == PREFLIGHT_CACHE_SIZE,
+      NS_ASSERTION(mTable.Count() == PREFLIGHT_CACHE_SIZE - 1,
                    "Somehow tried to remove an entry that was never added!");
     }
   }
   
+  if (!mTable.Put(key, entry)) {
+    // Failed, clean up the new entry.
+    delete entry;
+
+    NS_WARNING("Failed to add entry to the CORS preflight cache!");
+    return nsnull;
+  }
+
+  PR_INSERT_LINK(entry, &mList);
+
   return entry;
 }
 
@@ -308,7 +308,7 @@ nsPreflightCache::RemoveExpiredEntries(const nsACString& aKey,
   aValue->PurgeExpired(*now);
   
   if (aValue->mHeaders.IsEmpty() &&
-      aValue->mHeaders.IsEmpty()) {
+      aValue->mMethods.IsEmpty()) {
     // Expired, remove from the list as well as the hash table.
     PR_REMOVE_LINK(aValue);
     return PL_DHASH_REMOVE;
