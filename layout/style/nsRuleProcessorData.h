@@ -89,14 +89,18 @@ struct TreeMatchContext {
   // including XHTML).
   const PRPackedBool mIsHTMLDocument;
 
+  // Possibly remove use of mCompatMode in SelectorMatches?
+  const nsCompatibility mCompatMode;
+
   TreeMatchContext(PRBool aForStyling,
                    nsRuleWalker::VisitedHandlingType aVisitedHandling,
-                   PRBool aIsHTMLDocument)
+                   nsIDocument* aDocument)
     : mForStyling(aForStyling)
     , mHaveRelevantLink(PR_FALSE)
     , mVisitedHandling(aVisitedHandling)
     , mScopedRoot(nsnull)
-    , mIsHTMLDocument(aIsHTMLDocument)
+    , mIsHTMLDocument(aDocument->IsHTML())
+    , mCompatMode(aDocument->GetCompatibilityMode())
   {
   }
 };
@@ -108,8 +112,7 @@ struct RuleProcessorData : public TreeMatchContext {
   RuleProcessorData(nsPresContext* aPresContext,
                     mozilla::dom::Element* aElement, 
                     nsRuleWalker* aRuleWalker,
-                    PRBool aForStyling,
-                    nsCompatibility* aCompat = nsnull);
+                    PRBool aForStyling);
   
   // NOTE: not |virtual|
   ~RuleProcessorData();
@@ -117,20 +120,17 @@ struct RuleProcessorData : public TreeMatchContext {
   // This should be used for all heap-allocation of RuleProcessorData
   static RuleProcessorData* Create(nsPresContext* aPresContext,
                                    mozilla::dom::Element* aElement, 
-                                   nsRuleWalker* aRuleWalker,
-                                   nsCompatibility aCompat)
+                                   nsRuleWalker* aRuleWalker)
   {
     // Note: the mForStyling and mVisitedHandling members of data
     // structs created this way aren't used, so it doesn't matter what
     // we pass for aForStyling here.
     if (NS_LIKELY(aPresContext)) {
       return new (aPresContext) RuleProcessorData(aPresContext, aElement,
-                                                  aRuleWalker, PR_FALSE,
-                                                  &aCompat);
+                                                  aRuleWalker, PR_FALSE);
     }
 
-    return new RuleProcessorData(aPresContext, aElement, aRuleWalker, PR_FALSE,
-                                 &aCompat);
+    return new RuleProcessorData(aPresContext, aElement, aRuleWalker, PR_FALSE);
   }
   
   void Destroy() {
@@ -189,7 +189,6 @@ public:
   nsIAtom*          mContentTag;    // mElement->GetTag()
   nsIAtom*          mContentID;     // mElement->GetID()
   PRPackedBool      mHasAttributes; // mElement->GetAttrCount() > 0
-  nsCompatibility   mCompatMode;    // Possibly remove use of this in SelectorMatches?
   PRInt32           mNameSpaceID;   // mElement->GetNameSapce()
   const nsAttrValue* mClasses;      // mElement->GetClasses()
   // mPreviousSiblingData and mParentData are always RuleProcessorData
