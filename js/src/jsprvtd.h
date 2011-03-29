@@ -85,6 +85,7 @@ typedef struct JSFunctionBox        JSFunctionBox;
 typedef struct JSObjectBox          JSObjectBox;
 typedef struct JSParseNode          JSParseNode;
 typedef struct JSProperty           JSProperty;
+typedef struct JSScript             JSScript;
 typedef struct JSSharpObjectMap     JSSharpObjectMap;
 typedef struct JSThread             JSThread;
 typedef struct JSThreadData         JSThreadData;
@@ -92,8 +93,6 @@ typedef struct JSTreeContext        JSTreeContext;
 typedef struct JSTryNote            JSTryNote;
 
 /* Friend "Advanced API" typedefs. */
-typedef struct JSLinearString       JSLinearString;
-typedef struct JSAtom               JSAtom;
 typedef struct JSAtomList           JSAtomList;
 typedef struct JSAtomListElement    JSAtomListElement;
 typedef struct JSAtomMap            JSAtomMap;
@@ -117,7 +116,16 @@ typedef struct JSXMLArrayCursor     JSXMLArrayCursor;
  * templates.
  */
 #ifdef __cplusplus
+
 extern "C++" {
+
+class JSDependentString;
+class JSExtensibleString;
+class JSLinearString;
+class JSFixedString;
+class JSStaticAtom;
+class JSRope;
+class JSAtom;
 
 namespace js {
 
@@ -171,10 +179,16 @@ struct PropertyCacheEntry;
 
 struct Shape;
 struct EmptyShape;
+class Bindings;
 
 } /* namespace js */
 
 } /* export "C++" */
+
+#else
+
+typedef struct JSAtom JSAtom;
+
 #endif  /* __cplusplus */
 
 /* "Friend" types used by jscntxt.h and jsdbgapi.h. */
