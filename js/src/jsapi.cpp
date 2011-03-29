@@ -5504,15 +5504,11 @@ JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
     Value spacev = Valueify(space);
     if (!js_Stringify(cx, Valueify(vp), replacer, spacev, sb))
         return false;
+    if (sb.empty()) {
+        JSAtom *nullAtom = cx->runtime->atomState.nullAtom;
+        return callback(nullAtom->chars(), nullAtom->length(), data);
+    }
     return callback(sb.begin(), sb.length(), data);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_TryJSON(JSContext *cx, jsval *vp)
-{
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, *vp);
-    return js_TryJSON(cx, Valueify(vp));
 }
 
 JS_PUBLIC_API(JSBool)
