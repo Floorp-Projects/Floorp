@@ -812,7 +812,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'b':
             printTiming = true;
             break;
-            
+
         case 'j':
             enableTraceJit = !enableTraceJit;
             JS_ToggleOptions(cx, JSOPTION_JIT);
@@ -836,7 +836,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             enableProfiling = !enableProfiling;
             JS_ToggleOptions(cx, JSOPTION_PROFILING);
             break;
-           
+
         case 'o':
           {
             if (++i == argc)
@@ -1444,11 +1444,11 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
         JSGCParamKey    param;
     } paramMap[] = {
         {"maxBytes",            JSGC_MAX_BYTES },
-        {"maxMallocBytes",      JSGC_MAX_MALLOC_BYTES}, 
-        {"gcStackpoolLifespan", JSGC_STACKPOOL_LIFESPAN}, 
-        {"gcBytes",             JSGC_BYTES}, 
-        {"gcNumber",            JSGC_NUMBER}, 
-        {"gcTriggerFactor",     JSGC_TRIGGER_FACTOR}, 
+        {"maxMallocBytes",      JSGC_MAX_MALLOC_BYTES},
+        {"gcStackpoolLifespan", JSGC_STACKPOOL_LIFESPAN},
+        {"gcBytes",             JSGC_BYTES},
+        {"gcNumber",            JSGC_NUMBER},
+        {"gcTriggerFactor",     JSGC_TRIGGER_FACTOR},
     };
 
     JSString *str;
@@ -1762,7 +1762,7 @@ SetDebug(JSContext *cx, uintN argc, jsval *vp)
      * unless debug mode is already set to what you're trying to set it to.
      * In the future, this restriction may be lifted.
      */
-    
+
     JSBool rv = JS_SetDebugMode(cx, JSVAL_TO_BOOLEAN(argv[0]));
     JS_SET_RVAL(cx, vp, rv ? JSVAL_TRUE : JSVAL_FALSE);
     return JS_TRUE;
@@ -2487,7 +2487,7 @@ Tracing(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
         file = fopen(name.ptr(), "w");
         if (!file) {
-            JS_ReportError(cx, "tracing: couldn't open output file %s: %s", 
+            JS_ReportError(cx, "tracing: couldn't open output file %s: %s",
                            name.ptr(), strerror(errno));
             return JS_FALSE;
         }
@@ -3688,7 +3688,7 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
         desc.setter = shape->setter();
         if (!desc.setter && !(desc.attrs & JSPROP_SETTER))
             desc.setter = StrictPropertyStub;
-        desc.shortid = shape->shortid; 
+        desc.shortid = shape->shortid;
         propFlags = shape->getFlags();
    } else if (referent->isProxy()) {
         PropertyDescriptor desc;
@@ -5061,7 +5061,7 @@ its_bindMethod(JSContext *cx, uintN argc, jsval *vp)
     jsid id;
     if (!JS_ValueToId(cx, STRING_TO_JSVAL(name), &id))
         return JS_FALSE;
-    
+
     if (!JS_DefinePropertyById(cx, thisobj, id, *vp, NULL, NULL, JSPROP_ENUMERATE))
         return JS_FALSE;
 
@@ -5383,7 +5383,7 @@ Exec(JSContext *cx, uintN argc, jsval *vp)
 
     nargc = 1 + argc;
 
-    /* nargc + 1 accounts for the terminating NULL. */ 
+    /* nargc + 1 accounts for the terminating NULL. */
     nargv = new (char *)[nargc + 1];
     if (!nargv)
         return JS_FALSE;
