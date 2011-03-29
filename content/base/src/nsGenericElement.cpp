@@ -5517,58 +5517,6 @@ ParseSelectorList(nsINode* aNode,
   return NS_OK;
 }
 
-/*
- * Callback to be called as we iterate over the tree and match elements.  If
- * the callbacks returns false, the iteration should be stopped.
- */
-typedef PRBool
-(* ElementMatchedCallback)(nsIContent* aMatchingElement, void* aClosure);
-
-// returning false means stop iteration
-static PRBool
-TryMatchingElementsInSubtree(nsINode* aRoot,
-                             TreeMatchContext& aTreeMatchContext,
-                             nsCSSSelectorList* aSelectorList,
-                             ElementMatchedCallback aCallback,
-                             void* aClosure)
-{
-  PRBool continueIteration = PR_TRUE;
-  for (nsINode::ChildIterator iter(aRoot); !iter.IsDone(); iter.Next()) {
-    nsIContent* kid = iter;
-    if (!kid->IsElement()) {
-      continue;
-    }
-
-    if (nsCSSRuleProcessor::SelectorListMatches(kid->AsElement(),
-                                                aTreeMatchContext,
-                                                aSelectorList)) {
-      continueIteration = (*aCallback)(kid, aClosure);
-    }
-
-    if (continueIteration) {
-      continueIteration =
-        TryMatchingElementsInSubtree(kid, aTreeMatchContext, aSelectorList,
-                                     aCallback, aClosure);
-    }
-    
-    if (!continueIteration) {
-      break;
-    }
-  }
-
-  return continueIteration;
-}
-
-static PRBool
-FindFirstMatchingElement(nsIContent* aMatchingElement,
-                         void* aClosure)
-{
-  NS_PRECONDITION(aMatchingElement && aClosure, "How did that happen?");
-  nsIContent** slot = static_cast<nsIContent**>(aClosure);
-  *slot = aMatchingElement;
-  return PR_FALSE;
-}
-
 /* static */
 nsIContent*
 nsGenericElement::doQuerySelector(nsINode* aRoot, const nsAString& aSelector,
@@ -5581,23 +5529,21 @@ nsGenericElement::doQuerySelector(nsINode* aRoot, const nsAString& aSelector,
                                getter_Transfers(selectorList));
   NS_ENSURE_SUCCESS(*aResult, nsnull);
 
-  nsIContent* foundElement = nsnull;
   TreeMatchContext matchingContext(PR_FALSE,
                                    nsRuleWalker::eRelevantLinkUnvisited,
                                    aRoot->GetOwnerDoc());
-  TryMatchingElementsInSubtree(aRoot, matchingContext, selectorList,
-                               FindFirstMatchingElement, &foundElement);
+  for (nsIContent* cur = aRoot->GetFirstChild();
+       cur;
+       cur = cur->GetNextNode(aRoot)) {
+    if (cur->IsElement() &&
+        nsCSSRuleProcessor::SelectorListMatches(cur->AsElement(),
+                                                matchingContext,
+                                                selectorList)) {
+      return cur;
+    }
+  }
 
-  return foundElement;
-}
-
-static PRBool
-AppendAllMatchingElements(nsIContent* aMatchingElement,
-                          void* aClosure)
-{
-  NS_PRECONDITION(aMatchingElement && aClosure, "How did that happen?");
-  static_cast<nsBaseContentList*>(aClosure)->AppendElement(aMatchingElement);
-  return PR_TRUE;
+  return nsnull;
 }
 
 /* static */
@@ -5620,8 +5566,16 @@ nsGenericElement::doQuerySelectorAll(nsINode* aRoot,
   TreeMatchContext matchingContext(PR_FALSE,
                                    nsRuleWalker::eRelevantLinkUnvisited,
                                    aRoot->GetOwnerDoc());
-  TryMatchingElementsInSubtree(aRoot, matchingContext, selectorList,
-                               AppendAllMatchingElements, contentList);
+  for (nsIContent* cur = aRoot->GetFirstChild();
+       cur;
+       cur = cur->GetNextNode(aRoot)) {
+    if (cur->IsElement() &&
+        nsCSSRuleProcessor::SelectorListMatches(cur->AsElement(),
+                                                matchingContext,
+                                                selectorList)) {
+      contentList->AppendElement(cur);
+    }
+  }
   return NS_OK;
 }
 
