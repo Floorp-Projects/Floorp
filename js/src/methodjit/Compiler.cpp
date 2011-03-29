@@ -2988,7 +2988,8 @@ mjit::Compiler::recompileCheckHelper()
     /* Handle processors that can't load from absolute addresses. */
     RegisterID reg = frame.allocReg();
     masm.move(ImmPtr(addr), reg);
-    Jump jump = masm.branch32(Assembler::GreaterThanOrEqual, Address(reg, 0));
+    Jump jump = masm.branch32(Assembler::GreaterThanOrEqual, Address(reg, 0),
+                              Imm32(CALLS_BACKEDGES_BEFORE_INLINING));
     frame.freeReg(reg);
 #endif
     stubcc.linkExit(jump, Uses(0));
