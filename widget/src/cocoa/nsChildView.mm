@@ -4133,12 +4133,12 @@ static void ConvertCocoaKeyEventToNPCocoaEvent(NSEvent* cocoaEvent, NPCocoaEvent
       printf("Asked to convert key event of unknown type to Cocoa plugin event!");
   }
   pluginEvent.data.key.modifierFlags = [cocoaEvent modifierFlags];
+  pluginEvent.data.key.keyCode = [cocoaEvent keyCode];
   // don't try to access character data for flags changed events, it will raise an exception
   if (nativeType != NSFlagsChanged) {
     pluginEvent.data.key.characters = (NPNSString*)[cocoaEvent characters];
     pluginEvent.data.key.charactersIgnoringModifiers = (NPNSString*)[cocoaEvent charactersIgnoringModifiers];
     pluginEvent.data.key.isARepeat = [cocoaEvent isARepeat];
-    pluginEvent.data.key.keyCode = [cocoaEvent keyCode];
   }
 }
 

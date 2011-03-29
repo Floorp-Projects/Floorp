@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsCrossSiteListenerProxy_h__
-#define nsCrossSiteListenerProxy_h__
+#ifndef nsCORSListenerProxy_h__
+#define nsCORSListenerProxy_h__
 
 #include "nsIStreamListener.h"
 #include "nsIInterfaceRequestor.h"
@@ -55,24 +55,32 @@ class nsIPrincipal;
 extern PRBool
 IsValidHTTPToken(const nsCSubstring& aToken);
 
-class nsCrossSiteListenerProxy : public nsIStreamListener,
-                                 public nsIInterfaceRequestor,
-                                 public nsIChannelEventSink,
-                                 public nsIAsyncVerifyRedirectCallback
+nsresult
+NS_StartCORSPreflight(nsIChannel* aRequestChannel,
+                      nsIStreamListener* aListener,
+                      nsIPrincipal* aPrincipal,
+                      PRBool aWithCredentials,
+                      nsTArray<nsCString>& aACUnsafeHeaders,
+                      nsIChannel** aPreflightChannel);
+
+class nsCORSListenerProxy : public nsIStreamListener,
+                            public nsIInterfaceRequestor,
+                            public nsIChannelEventSink,
+                            public nsIAsyncVerifyRedirectCallback
 {
 public:
-  nsCrossSiteListenerProxy(nsIStreamListener* aOuter,
-                           nsIPrincipal* aRequestingPrincipal,
-                           nsIChannel* aChannel,
-                           PRBool aWithCredentials,
-                           nsresult* aResult);
-  nsCrossSiteListenerProxy(nsIStreamListener* aOuter,
-                           nsIPrincipal* aRequestingPrincipal,
-                           nsIChannel* aChannel,
-                           PRBool aWithCredentials,
-                           const nsCString& aPreflightMethod,
-                           const nsTArray<nsCString>& aPreflightHeaders,
-                           nsresult* aResult);
+  nsCORSListenerProxy(nsIStreamListener* aOuter,
+                      nsIPrincipal* aRequestingPrincipal,
+                      nsIChannel* aChannel,
+                      PRBool aWithCredentials,
+                      nsresult* aResult);
+  nsCORSListenerProxy(nsIStreamListener* aOuter,
+                      nsIPrincipal* aRequestingPrincipal,
+                      nsIChannel* aChannel,
+                      PRBool aWithCredentials,
+                      const nsCString& aPreflightMethod,
+                      const nsTArray<nsCString>& aPreflightHeaders,
+                      nsresult* aResult);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
@@ -83,6 +91,8 @@ public:
 
   // Must be called at startup.
   static void Startup();
+
+  static void Shutdown();
 
 private:
   nsresult UpdateChannel(nsIChannel* aChannel);

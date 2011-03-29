@@ -14,7 +14,7 @@ window.addEventListener("message", function(e) {\n\
   };\n\
   \n\
   var xhr = new XMLHttpRequest();\n\
-  for each(type in ["load", "abort", "error", "loadstart"]) {\n\
+  for each(type in ["load", "abort", "error", "loadstart", "loadend"]) {\n\
     xhr.addEventListener(type, function(e) {\n\
       res.events.push(e.type);\n\
     }, false);\n\
@@ -37,26 +37,27 @@ window.addEventListener("message", function(e) {\n\
       }, false);\n\
     }\n\
   }\n\
-  xhr.onload = function () {\n\
-    res.status = xhr.status;\n\
-    res.statusText = xhr.statusText;\n\
-    res.responseXML = xhr.responseXML ?\n\
-      (new XMLSerializer()).serializeToString(xhr.responseXML) :\n\
-      null;\n\
-    res.responseText = xhr.responseText;\n\
-    post(e, res);\n\
-  };\n\
-  xhr.onerror = function () {\n\
+  xhr.onerror = function(e) {\n\
     res.didFail = true;\n\
+  };\n\
+  xhr.onloadend = function (event) {\n\
     res.status = xhr.status;\n\
     try {\n\
       res.statusText = xhr.statusText;\n\
     } catch (e) {\n\
+      delete(res.statusText);\n\
     }\n\
     res.responseXML = xhr.responseXML ?\n\
       (new XMLSerializer()).serializeToString(xhr.responseXML) :\n\
       null;\n\
     res.responseText = xhr.responseText;\n\
+\n\
+    res.responseHeaders = {};\n\
+    for (responseHeader in req.responseHeaders) {\n\
+      res.responseHeaders[responseHeader] =\n\
+        xhr.getResponseHeader(responseHeader);\n\
+    }\n\
+\n\
     post(e, res);\n\
   }\n\
 \n\

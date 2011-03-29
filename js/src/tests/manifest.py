@@ -17,10 +17,11 @@ class XULInfo:
         """Return JS that when executed sets up variables so that JS expression
         predicates on XUL build info evaluate properly."""
 
-        return 'var xulRuntime = { OS: "%s", XPCOMABI: "%s", shell: true }; var isDebugBuild=%s;' % (
+        return 'var xulRuntime = { OS: "%s", XPCOMABI: "%s", shell: true }; var isDebugBuild=%s; var Android=%s;' % (
             self.os,
             self.abi,
-            str(self.isdebug).lower())
+            str(self.isdebug).lower(),
+            self.os == "Android")
 
     @classmethod
     def create(cls, jsdir):

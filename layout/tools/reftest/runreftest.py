@@ -74,7 +74,7 @@ class RefTest(object):
     # Set preferences for communication between our command line arguments
     # and the reftest harness.  Preferences that are required for reftest
     # to work should instead be set in reftest-cmdline.js .
-    prefsFile = open(os.path.join(profileDir, "user.js"), "w")
+    prefsFile = open(os.path.join(profileDir, "user.js"), "a")
     prefsFile.write('user_pref("reftest.timeout", %d);\n' % (options.timeout * 1000))
 
     if options.totalChunks != None:
@@ -137,8 +137,8 @@ class RefTest(object):
     profileDir = None
     try:
       profileDir = mkdtemp()
-      self.createReftestProfile(options, profileDir)
       self.copyExtraFilesToProfile(options, profileDir)
+      self.createReftestProfile(options, profileDir)
       self.installExtensionsToProfile(options, profileDir)
 
       # browser environment
