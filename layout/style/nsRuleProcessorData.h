@@ -85,12 +85,18 @@ struct TreeMatchContext {
   // scoped stylesheet).
   nsIContent* mScopedRoot;
 
+  // Whether our document is HTML (as opposed to XML of some sort,
+  // including XHTML).
+  const PRPackedBool mIsHTMLDocument;
+
   TreeMatchContext(PRBool aForStyling,
-                   nsRuleWalker::VisitedHandlingType aVisitedHandling)
+                   nsRuleWalker::VisitedHandlingType aVisitedHandling,
+                   PRBool aIsHTMLDocument)
     : mForStyling(aForStyling)
     , mHaveRelevantLink(PR_FALSE)
     , mVisitedHandling(aVisitedHandling)
     , mScopedRoot(nsnull)
+    , mIsHTMLDocument(aIsHTMLDocument)
   {
   }
 };
@@ -182,8 +188,6 @@ public:
   
   nsIAtom*          mContentTag;    // mElement->GetTag()
   nsIAtom*          mContentID;     // mElement->GetID()
-  PRPackedBool      mIsHTMLContent; // whether mElement is IsHTML()
-  PRPackedBool      mIsHTML;        // mIsHTMLContent && IsInHTMLDocument()
   PRPackedBool      mHasAttributes; // mElement->GetAttrCount() > 0
   nsCompatibility   mCompatMode;    // Possibly remove use of this in SelectorMatches?
   PRInt32           mNameSpaceID;   // mElement->GetNameSapce()
