@@ -888,6 +888,7 @@ static JSFunctionSpec regexp_methods[] = {
 #endif
     JS_FN_TYPE(js_toString_str,  regexp_toString,    0,0, JS_TypeHandlerString),
     JS_FN_TYPE("compile",        regexp_compile,     2,0, JS_TypeHandlerThis),
+    /* Note: .exec handler should subsume .test for RegExp.exec -> RegExp.test JIT optimizations */
     JS_FN_TYPE("exec",           js_regexp_exec,     1,0, JS_TypeHandlerDynamic),
     JS_FN_TYPE("test",           js_regexp_test,     1,0, JS_TypeHandlerBool),
     JS_FS_END
