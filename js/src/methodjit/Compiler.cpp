@@ -4476,7 +4476,7 @@ mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testO
 
       case JSVAL_TYPE_OBJECT:
       case JSVAL_TYPE_UNKNOWN:
-        if (types->objectCount == 1) {
+        if (types->objectCount == 1 && !top->isNotType(JSVAL_TYPE_OBJECT)) {
             JS_ASSERT_IF(top->isTypeKnown(), top->isType(JSVAL_TYPE_OBJECT));
             types::TypeObject *object = (types::TypeObject *) types->objectSet;
             if (object->proto) {
