@@ -37,28 +37,25 @@ var strictFutureReservedWords =
    "yield", // enabled: this file doesn't execute as JS1.7
   ];
 
-function testWord(word, expectNormal, expectStrict)
+function testWord(word, wordKind, expectNormal, expectStrict)
 {
   var actual, status;
 
   // USE AS LHS FOR ASSIGNMENT
 
-  if (expectNormal !== "skip")
+  actual = "";
+  status = summary + ": " + word + ": normal assignment";
+  try
   {
-    actual = "";
-    status = summary + ": " + word + ": normal assignment";
-    try
-    {
-      eval(word + " = 'foo';");
-      actual = "no error";
-    }
-    catch(e)
-    {
-      actual = e.name;
-      status +=  ", " + e.name + ": " + e.message + " ";
-    }
-    reportCompare(expectNormal, actual, status);
+    eval(word + " = 'foo';");
+    actual = "no error";
   }
+  catch(e)
+  {
+    actual = e.name;
+    status +=  ", " + e.name + ": " + e.message + " ";
+  }
+  reportCompare(expectNormal, actual, status);
 
   actual = "";
   status = summary + ": " + word + ": strict assignment";
@@ -76,22 +73,19 @@ function testWord(word, expectNormal, expectStrict)
 
   // USE IN VARIABLE DECLARATION
 
-  if (expectNormal !== "skip")
+  actual = "";
+  status = summary + ": " + word + ": normal var";
+  try
   {
-    actual = "";
-    status = summary + ": " + word + ": normal var";
-    try
-    {
-      eval("var " + word + ";");
-      actual = "no error";
-    }
-    catch (e)
-    {
-      actual = e.name;
-      status +=  ", " + e.name + ": " + e.message + " ";
-    }
-    reportCompare(expectNormal, actual, status);
+    eval("var " + word + ";");
+    actual = "no error";
   }
+  catch (e)
+  {
+    actual = e.name;
+    status +=  ", " + e.name + ": " + e.message + " ";
+  }
+  reportCompare(expectNormal, actual, status);
 
   actual = "";
   status = summary + ": " + word + ": strict var";
@@ -109,22 +103,19 @@ function testWord(word, expectNormal, expectStrict)
 
   // USE IN FOR-IN VARIABLE DECLARATION
 
-  if (expectNormal !== "skip")
+  actual = "";
+  status = summary + ": " + word + ": normal for-in var";
+  try
   {
-    actual = "";
-    status = summary + ": " + word + ": normal for-in var";
-    try
-    {
-      eval("for (var " + word + " in {});");
-      actual = "no error";
-    }
-    catch (e)
-    {
-      actual = e.name;
-      status +=  ", " + e.name + ": " + e.message + " ";
-    }
-    reportCompare(expectNormal, actual, status);
+    eval("for (var " + word + " in {});");
+    actual = "no error";
   }
+  catch (e)
+  {
+    actual = e.name;
+    status +=  ", " + e.name + ": " + e.message + " ";
+  }
+  reportCompare(expectNormal, actual, status);
 
   actual = "";
   status = summary + ": " + word + ": strict for-in var";
@@ -142,22 +133,19 @@ function testWord(word, expectNormal, expectStrict)
 
   // USE AS CATCH IDENTIFIER
 
-  if (expectNormal !== "skip")
+  actual = "";
+  status = summary + ": " + word + ": normal var";
+  try
   {
-    actual = "";
-    status = summary + ": " + word + ": normal var";
-    try
-    {
-      eval("try { } catch (" + word + ") { }");
-      actual = "no error";
-    }
-    catch (e)
-    {
-      actual = e.name;
-      status +=  ", " + e.name + ": " + e.message + " ";
-    }
-    reportCompare(expectNormal, actual, status);
+    eval("try { } catch (" + word + ") { }");
+    actual = "no error";
   }
+  catch (e)
+  {
+    actual = e.name;
+    status +=  ", " + e.name + ": " + e.message + " ";
+  }
+  reportCompare(expectNormal, actual, status);
 
   actual = "";
   status = summary + ": " + word + ": strict var";
@@ -175,22 +163,19 @@ function testWord(word, expectNormal, expectStrict)
 
   // USE AS LABEL
 
-  if (expectNormal !== "skip")
+  actual = "";
+  status = summary + ": " + word + ": normal label";
+  try
   {
-    actual = "";
-    status = summary + ": " + word + ": normal label";
-    try
-    {
-      eval(word + ": while (false);");
-      actual = "no error";
-    }
-    catch (e)
-    {
-      actual = e.name;
-      status +=  ", " + e.name + ": " + e.message + " ";
-    }
-    reportCompare(expectNormal, actual, status);
+    eval(word + ": while (false);");
+    actual = "no error";
   }
+  catch (e)
+  {
+    actual = e.name;
+    status +=  ", " + e.name + ": " + e.message + " ";
+  }
+  reportCompare(expectNormal, actual, status);
 
   actual = "";
   status = summary + ": " + word + ": strict label";
@@ -208,22 +193,19 @@ function testWord(word, expectNormal, expectStrict)
 
   // USE AS ARGUMENT NAME IN FUNCTION DECLARATION
 
-  if (expectNormal !== "skip")
+  actual = "";
+  status = summary + ": " + word + ": normal function argument";
+  try
   {
-    actual = "";
-    status = summary + ": " + word + ": normal function argument";
-    try
-    {
-      eval("function foo(" + word + ") { }");
-      actual = "no error";
-    }
-    catch (e)
-    {
-      actual = e.name;
-      status +=  ", " + e.name + ": " + e.message + " ";
-    }
-    reportCompare(expectNormal, actual, status);
+    eval("function foo(" + word + ") { }");
+    actual = "no error";
   }
+  catch (e)
+  {
+    actual = e.name;
+    status +=  ", " + e.name + ": " + e.message + " ";
+  }
+  reportCompare(expectNormal, actual, status);
 
   actual = "";
   status = summary + ": " + word + ": strict function argument";
@@ -255,22 +237,19 @@ function testWord(word, expectNormal, expectStrict)
 
   // USE AS ARGUMENT NAME IN FUNCTION EXPRESSION
 
-  if (expectNormal !== "skip")
+  actual = "";
+  status = summary + ": " + word + ": normal function expression argument";
+  try
   {
-    actual = "";
-    status = summary + ": " + word + ": normal function expression argument";
-    try
-    {
-      eval("var s = (function foo(" + word + ") { });");
-      actual = "no error";
-    }
-    catch (e)
-    {
-      actual = e.name;
-      status +=  ", " + e.name + ": " + e.message + " ";
-    }
-    reportCompare(expectNormal, actual, status);
+    eval("var s = (function foo(" + word + ") { });");
+    actual = "no error";
   }
+  catch (e)
+  {
+    actual = e.name;
+    status +=  ", " + e.name + ": " + e.message + " ";
+  }
+  reportCompare(expectNormal, actual, status);
 
   actual = "";
   status = summary + ": " + word + ": strict function expression argument";
@@ -302,22 +281,19 @@ function testWord(word, expectNormal, expectStrict)
 
   // USE AS ARGUMENT NAME WITH FUNCTION CONSTRUCTOR
 
-  if (expectNormal !== "skip")
+  actual = "";
+  status = summary + ": " + word + ": argument with normal Function";
+  try
   {
-    actual = "";
-    status = summary + ": " + word + ": argument with normal Function";
-    try
-    {
-      Function(word, "return 17");
-      actual = "no error";
-    }
-    catch (e)
-    {
-      actual = e.name;
-      status +=  ", " + e.name + ": " + e.message + " ";
-    }
-    reportCompare(expectNormal, actual, status);
+    Function(word, "return 17");
+    actual = "no error";
   }
+  catch (e)
+  {
+    actual = e.name;
+    status +=  ", " + e.name + ": " + e.message + " ";
+  }
+  reportCompare(expectNormal, actual, status);
 
   actual = "";
   status = summary + ": " + word + ": argument with strict Function";
@@ -335,22 +311,19 @@ function testWord(word, expectNormal, expectStrict)
 
   // USE AS ARGUMENT NAME IN PROPERTY SETTER
 
-  if (expectNormal !== "skip")
+  actual = "";
+  status = summary + ": " + word + ": normal property setter argument";
+  try
   {
-    actual = "";
-    status = summary + ": " + word + ": normal property setter argument";
-    try
-    {
-      eval("var o = { set x(" + word + ") { } };");
-      actual = "no error";
-    }
-    catch (e)
-    {
-      actual = e.name;
-      status +=  ", " + e.name + ": " + e.message + " ";
-    }
-    reportCompare(expectNormal, actual, status);
+    eval("var o = { set x(" + word + ") { } };");
+    actual = "no error";
   }
+  catch (e)
+  {
+    actual = e.name;
+    status +=  ", " + e.name + ": " + e.message + " ";
+  }
+  reportCompare(expectNormal, actual, status);
 
   actual = "";
   status = summary + ": " + word + ": strict property setter argument";
@@ -382,7 +355,7 @@ function testWord(word, expectNormal, expectStrict)
 
   // USE AS FUNCTION NAME IN FUNCTION DECLARATION
 
-  if (expectNormal !== "skip")
+  if (wordKind !== "reserved")
   {
     actual = "";
     status = summary + ": " + word + ": normal function name";
@@ -429,7 +402,7 @@ function testWord(word, expectNormal, expectStrict)
 
   // USE AS FUNCTION NAME IN FUNCTION EXPRESSION
 
-  if (expectNormal !== "skip")
+  if (wordKind !== "reserved")
   {
     actual = "";
     status = summary + ": " + word + ": normal function expression name";
@@ -477,21 +450,12 @@ function testWord(word, expectNormal, expectStrict)
 
 function testFutureReservedWord(word)
 {
-  /*
-   * NON-STANDARD DEVIATION: At one point in history SpiderMonkey unreserved
-   * most of the reserved words in ES3, including those words which are
-   * FutureReservedWords in ES5.  It's too late this release cycle to expect
-   * "SyntaxError" for the normal code cases, so for now we "skip" testing
-   * these words in normal code.  (We don't test for "no error" because that
-   * would be contrary to the spec, and this test is not in an extensions/
-   * directory.)
-   */
-  testWord(word, "skip", "SyntaxError");
+  testWord(word, "reserved", "SyntaxError", "SyntaxError");
 }
 
 function testStrictFutureReservedWord(word)
 {
-  testWord(word, "no error", "SyntaxError");
+  testWord(word, "strict reserved", "no error", "SyntaxError");
 }
 
 futureReservedWords.forEach(testFutureReservedWord);

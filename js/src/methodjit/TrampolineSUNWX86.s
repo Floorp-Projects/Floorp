@@ -120,16 +120,3 @@ throwpoline_exit:
     ret
 .size   JaegerThrowpoline, . - JaegerThrowpoline
 
-.global InjectJaegerReturn
-.type   InjectJaegerReturn, @function
-InjectJaegerReturn:
-    movl 0x18(%ebx), %edx                        /* fp->rval_ data */
-    movl 0x1C(%ebx), %ecx                        /* fp->rval_ type */
-    movl 0x14(%ebx), %eax                        /* fp->ncode_ */
-    /* For Sun Studio there is no fast call. */
-    /* We add the stack by 16 before. */
-    addl $0x10, %esp
-    /* Restore frame regs. */
-    movl 0x1C(%esp), %ebx                        /* f.fp */
-    jmp *%eax
-.size   InjectJaegerReturn, . - InjectJaegerReturn

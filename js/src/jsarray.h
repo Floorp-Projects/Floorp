@@ -109,35 +109,6 @@ js_IdIsIndex(jsid id, jsuint *indexp)
     return js_StringIsIndex(JSID_TO_ATOM(id), indexp);
 }
 
-/* XML really wants to pretend jsvals are jsids. */
-inline bool
-js_IdValIsIndex(JSContext *cx, jsval id, jsuint *indexp, bool *isIndex)
-{
-    if (JSVAL_IS_INT(id)) {
-        jsint i;
-        i = JSVAL_TO_INT(id);
-        if (i < 0) {
-            *isIndex = false;
-            return true;
-        }
-        *indexp = (jsuint)i;
-        *isIndex = true;
-        return true;
-    }
-
-    if (!JSVAL_IS_STRING(id)) {
-        *isIndex = false;
-        return true;
-    }
-
-    JSLinearString *str = JSVAL_TO_STRING(id)->ensureLinear(cx);
-    if (!str)
-        return false;
-
-    *isIndex = js_StringIsIndex(str, indexp);
-    return true;
-}
-
 extern js::Class js_ArrayClass, js_SlowArrayClass;
 
 inline bool
