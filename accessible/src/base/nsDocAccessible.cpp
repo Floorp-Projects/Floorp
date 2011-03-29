@@ -1231,19 +1231,17 @@ void nsDocAccessible::ContentAppended(nsIDocument *aDocument,
 {
 }
 
-void nsDocAccessible::ContentStatesChanged(nsIDocument* aDocument,
-                                           nsIContent* aContent1,
-                                           nsIContent* aContent2,
-                                           nsEventStates aStateMask)
+void nsDocAccessible::ContentStateChanged(nsIDocument* aDocument,
+                                          nsIContent* aContent,
+                                          nsEventStates aStateMask)
 {
   if (aStateMask.HasState(NS_EVENT_STATE_CHECKED)) {
-    nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent1);
-    nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent2);
+    nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent);
   }
 
   if (aStateMask.HasState(NS_EVENT_STATE_INVALID)) {
     nsRefPtr<AccEvent> event =
-      new AccStateChangeEvent(aContent1, nsIAccessibleStates::STATE_INVALID,
+      new AccStateChangeEvent(aContent, nsIAccessibleStates::STATE_INVALID,
                               PR_FALSE, PR_TRUE);
     FireDelayedAccessibleEvent(event);
    }

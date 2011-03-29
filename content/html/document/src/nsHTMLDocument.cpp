@@ -3145,9 +3145,9 @@ NotifyEditableStateChange(nsINode *aNode, nsIDocument *aDocument,
   for (i = 0; i < n; ++i) {
     nsIContent *child = aNode->GetChildAt(i);
     if (child->HasFlag(NODE_IS_EDITABLE) != aEditable) {
-      aDocument->ContentStatesChanged(child, nsnull,
-                                      NS_EVENT_STATE_MOZ_READONLY |
-                                      NS_EVENT_STATE_MOZ_READWRITE);
+      aDocument->ContentStateChanged(child,
+                                     NS_EVENT_STATE_MOZ_READONLY |
+                                     NS_EVENT_STATE_MOZ_READWRITE);
     }
     NotifyEditableStateChange(child, aDocument, aEditable);
   }

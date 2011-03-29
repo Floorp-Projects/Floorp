@@ -8092,25 +8092,17 @@ nsCSSFrameConstructor::RestyleElement(Element        *aElement,
 }
 
 nsresult
-nsCSSFrameConstructor::ContentStatesChanged(nsIContent* aContent1,
-                                            nsIContent* aContent2,
-                                            nsEventStates aStateMask)
+nsCSSFrameConstructor::ContentStateChanged(nsIContent* aContent,
+                                           nsEventStates aStateMask)
 {
   // XXXbz it would be good if this function only took Elements, but
   // we'd have to make ESM guarantee that usefully.
-  if (NS_LIKELY(aContent1 && aContent1->IsElement())) {
-    DoContentStateChanged(aContent1->AsElement(), aStateMask);
+  if (!aContent->IsElement()) {
+    return NS_OK;
   }
-  if (aContent2 && aContent2->IsElement()) {
-    DoContentStateChanged(aContent2->AsElement(), aStateMask);
-  }
-  return NS_OK;
-}
 
-void
-nsCSSFrameConstructor::DoContentStateChanged(Element* aElement,
-                                             nsEventStates aStateMask)
-{
+  Element* aElement = aContent->AsElement();
+
   nsStyleSet *styleSet = mPresShell->StyleSet();
   nsPresContext *presContext = mPresShell->GetPresContext();
   NS_ASSERTION(styleSet, "couldn't get style set");
@@ -8164,6 +8156,7 @@ nsCSSFrameConstructor::DoContentStateChanged(Element* aElement,
   }
 
   PostRestyleEvent(aElement, rshint, hint);
+  return NS_OK;
 }
 
 void
