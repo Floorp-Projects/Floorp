@@ -231,16 +231,6 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   },
 
   // ----------
-  // Function: _getFontSizeFromWidth
-  // Private method that returns the fontsize to use given the tab's width
-  _getFontSizeFromWidth: function TabItem__getFontSizeFromWidth(width) {
-    let widthRange = new Range(0,TabItems.tabWidth);
-    let proportion = widthRange.proportion(width-TabItems.tabItemPadding.x, true);
-    // proportion is in [0,1]
-    return TabItems.fontSizeRange.scale(proportion);
-  },
-
-  // ----------
   // Function: unforceCanvasSize
   // Stops holding the thumbnail resolution; allows it to shift to the
   // size of thumbnail on screen. Note that this call does not nest, unlike
@@ -441,16 +431,14 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     if (rect.width != this.bounds.width || options.force) {
       css.width = rect.width - TabItems.tabItemPadding.x;
-      css.fontSize = this._getFontSizeFromWidth(rect.width);
+      css.fontSize = TabItems.getFontSizeFromWidth(rect.width);
       css.fontSize += 'px';
     }
 
     if (rect.height != this.bounds.height || options.force) {
+      css.height = rect.height - TabItems.tabItemPadding.y;
       if (!this.isStacked)
-          css.height = rect.height - TabItems.tabItemPadding.y -
-                       TabItems.fontSizeRange.max;
-      else
-        css.height = rect.height - TabItems.tabItemPadding.y;
+        css.height -= TabItems.fontSizeRange.max;
     }
 
     if (Utils.isEmptyObject(css))
@@ -1288,57 +1276,59 @@ let TabItems = {
 
     return sane;
   },
-  
+
+  // ----------
+  // Function: getFontSizeFromWidth
+  // Private method that returns the fontsize to use given the tab's width
+  getFontSizeFromWidth: function TabItem_getFontSizeFromWidth(width) {
+    let widthRange = new Range(0, TabItems.tabWidth);
+    let proportion = widthRange.proportion(width - TabItems.tabItemPadding.x, true);
+    // proportion is in [0,1]
+    return TabItems.fontSizeRange.scale(proportion);
+  },
+
   // ----------
   // Function: _getWidthForHeight
   // Private method that returns the tabitem width given a height.
-  // Set options.hideTitle=true to measure without a title.
-  // Default is to measure with a title.
-  _getWidthForHeight: function TabItems__getWidthForHeight(height, options) {    
-    let titleSize = (options !== undefined && options.hideTitle === true) ? 
-      0 : TabItems.fontSizeRange.max;
-    return Math.max(0, Math.max(TabItems.minTabHeight, height - titleSize)) * 
-      TabItems.invTabAspect;
+  _getWidthForHeight: function TabItems__getWidthForHeight(height) {
+    return height * TabItems.invTabAspect;
   },
 
   // ----------
   // Function: _getHeightForWidth
   // Private method that returns the tabitem height given a width.
-  // Set options.hideTitle=false to measure without a title.
-  // Default is to measure with a title.
-  _getHeightForWidth: function TabItems__getHeightForWidth(width, options) {
-    let titleSize = (options !== undefined && options.hideTitle === true) ? 
-      0 : TabItems.fontSizeRange.max;
-    return Math.max(0, Math.max(TabItems.minTabWidth,width)) *
-      TabItems.tabAspect + titleSize;
+  _getHeightForWidth: function TabItems__getHeightForWidth(width) {
+    return width * TabItems.tabAspect;
   },
-  
+
   // ----------
   // Function: calcValidSize
   // Pass in a desired size, and receive a size based on proper title
   // size and aspect ratio.
   calcValidSize: function TabItems_calcValidSize(size, options) {
     Utils.assert(Utils.isPoint(size), 'input is a Point');
-    let retSize = new Point(0,0);
-    if (size.x==-1) {
-      retSize.x = this._getWidthForHeight(size.y, options);
-      retSize.y = size.y;
-    } else if (size.y==-1) {
-      retSize.x = size.x;
-      retSize.y = this._getHeightForWidth(size.x, options);
-    } else {
-      let fitHeight = this._getHeightForWidth(size.x, options);
-      let fitWidth = this._getWidthForHeight(size.y, options);
 
-      // Go with the smallest final dimension.
-      if (fitWidth < size.x) {
-        retSize.x = fitWidth;
-        retSize.y = size.y;
-      } else {
-        retSize.x = size.x;
-        retSize.y = fitHeight;
-      }
+    let width = Math.max(TabItems.minTabWidth, size.x);
+    let showTitle = !options || !options.hideTitle;
+    let titleSize = showTitle ? TabItems.fontSizeRange.max : 0;
+    let height = Math.max(TabItems.minTabHeight, size.y - titleSize);
+    let retSize = new Point(width, height);
+
+    if (size.x > -1)
+      retSize.y = this._getHeightForWidth(width);
+    if (size.y > -1)
+      retSize.x = this._getWidthForHeight(height);
+
+    if (size.x > -1 && size.y > -1) {
+      if (retSize.x < size.x)
+        retSize.y = this._getHeightForWidth(retSize.x);
+      else
+        retSize.x = this._getWidthForHeight(retSize.y);
     }
+
+    if (showTitle)
+      retSize.y += titleSize;
+
     return retSize;
   }
 };
