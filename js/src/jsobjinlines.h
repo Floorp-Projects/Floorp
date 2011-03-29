@@ -58,12 +58,13 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsnum.h"
-#include "jsscopeinlines.h"
+#include "jsscriptinlines.h"
 #include "jsstr.h"
 
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsprobes.h"
+#include "jsscopeinlines.h"
 
 inline bool
 JSObject::preventExtensions(JSContext *cx, js::AutoIdVector *props)
@@ -141,6 +142,59 @@ JSObject::finalize(JSContext *cx)
     finish(cx);
 }
 
+/* 
+ * Initializer for Call objects for functions and eval frames. Set class,
+ * parent, map, and shape, and allocate slots.
+ */
+inline void
+JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent)
+{
+    init(cx, &js_CallClass, NULL, parent, NULL, false);
+    map = bindings.lastShape();
+
+    /*
+     * If |bindings| is for a function that has extensible parents, that means
+     * its Call should have its own shape; see js::Bindings::extensibleParents.
+     */
+    if (bindings.extensibleParents())
+        setOwnShape(js_GenerateShape(cx));
+    else
+        objShape = map->shape;
+}
+
+/*
+ * Initializer for cloned block objects. Set class, prototype, frame, map, and
+ * shape.
+ */
+inline void
+JSObject::initClonedBlock(JSContext *cx, JSObject *proto, JSStackFrame *frame)
+{
+    init(cx, &js_BlockClass, proto, NULL, frame, false);
+
+    /* Cloned blocks copy their prototype's map; it had better be shareable. */
+    JS_ASSERT(!proto->inDictionaryMode() || proto->lastProp->frozen());
+    map = proto->map;
+
+    /*
+     * If the prototype has its own shape, that means the clone should, too; see
+     * js::Bindings::extensibleParents.
+     */
+    if (proto->hasOwnShape())
+        setOwnShape(js_GenerateShape(cx));
+    else
+        objShape = map->shape;
+}
+
+/* 
+ * Mark a compile-time block as OWN_SHAPE, indicating that its run-time clones
+ * also need unique shapes. See js::Bindings::extensibleParents.
+ */
+inline void
+JSObject::setBlockOwnShape(JSContext *cx) {
+    JS_ASSERT(isStaticBlock());
+    setOwnShape(js_GenerateShape(cx));
+}
+
 /*
  * Property read barrier for deferred cloning of compiler-created function
  * objects optimized as typically non-escaping, ad-hoc methods in obj.
@@ -186,15 +240,9 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
     if (cx->runtime->functionMeterFilename) {
         JS_FUNCTION_METER(cx, mreadbarrier);
 
-        typedef JSRuntime::FunctionCountMap HM;
-        HM &h = cx->runtime->methodReadBarrierCountMap;
-        HM::AddPtr p = h.lookupForAdd(fun);
-        if (!p) {
-            h.add(p, fun, 1);
-        } else {
-            JS_ASSERT(p->key == fun);
+        typedef JSRuntime::FunctionCountMap::Ptr Ptr;
+        if (Ptr p = cx->runtime->methodReadBarrierCountMap.lookupWithDefault(fun, 0))
             ++p->value;
-        }
     }
 #endif
     return newshape;
@@ -616,7 +664,7 @@ JSObject::getNamePrefix() const
 {
     JS_ASSERT(isNamespace() || isQName());
     const js::Value &v = getSlot(JSSLOT_NAME_PREFIX);
-    return !v.isUndefined() ? v.toString()->assertIsLinear() : NULL;
+    return !v.isUndefined() ? &v.toString()->asLinear() : NULL;
 }
 
 inline jsval
@@ -645,7 +693,7 @@ JSObject::getNameURI() const
 {
     JS_ASSERT(isNamespace() || isQName());
     const js::Value &v = getSlot(JSSLOT_NAME_URI);
-    return !v.isUndefined() ? v.toString()->assertIsLinear() : NULL;
+    return !v.isUndefined() ? &v.toString()->asLinear() : NULL;
 }
 
 inline jsval
@@ -681,7 +729,7 @@ JSObject::getQNameLocalName() const
 {
     JS_ASSERT(isQName());
     const js::Value &v = getSlot(JSSLOT_QNAME_LOCAL_NAME);
-    return !v.isUndefined() ? v.toString()->assertIsLinear() : NULL;
+    return !v.isUndefined() ? &v.toString()->asLinear() : NULL;
 }
 
 inline jsval
@@ -721,10 +769,8 @@ JSObject::init(JSContext *cx, js::Class *aclasp, JSObject *proto, JSObject *pare
     /*
      * NB: objShape must not be set here; rather, the caller must call setMap
      * or setSharedNonNativeMap after calling init. To defend this requirement
-     * we set map to null in DEBUG builds, and set objShape to a value we then
-     * assert obj->shape() never returns.
+     * we set objShape to a value that obj->shape() is asserted never to return.
      */
-    map = NULL;
     objShape = JSObjectMap::INVALID_SHAPE;
 #endif
 
@@ -1215,6 +1261,27 @@ ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *clasp, jsid methodid,
     JSObject *pobj = obj->getProto();
     return pobj && pobj->getClass() == clasp &&
            HasNativeMethod(pobj, methodid, native);
+}
+
+inline bool
+DefineConstructorAndPrototype(JSContext *cx, JSObject *global,
+                              JSProtoKey key, JSFunction *ctor, JSObject *proto)
+{
+    JS_ASSERT(global->isGlobal());
+    JS_ASSERT(!global->nativeEmpty()); /* reserved slots already allocated */
+    JS_ASSERT(ctor);
+    JS_ASSERT(proto);
+
+    jsid id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[key]);
+    JS_ASSERT(!global->nativeLookup(id));
+
+    if (!global->addDataProperty(cx, id, key + JSProto_LIMIT * 2, 0))
+        return false;
+
+    global->setSlot(key, ObjectValue(*ctor));
+    global->setSlot(key + JSProto_LIMIT, ObjectValue(*proto));
+    global->setSlot(key + JSProto_LIMIT * 2, ObjectValue(*ctor));
+    return true;
 }
 
 } /* namespace js */

@@ -47,7 +47,6 @@ namespace nanojit
 
     bool RegAlloc::isConsistent(Register r, LIns* i) const
     {
-        NanoAssert(r != deprecated_UnknownReg);
         return (isFree(r)  && !getActive(r)     && !i) ||
                (!isFree(r) &&  getActive(r)== i && i );
     }

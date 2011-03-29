@@ -173,9 +173,10 @@ class Bindings {
     uint16 nargs;
     uint16 nvars;
     uint16 nupvars;
+    bool hasExtensibleParents;
 
   public:
-    inline Bindings(JSContext *cx);
+    inline Bindings(JSContext *cx, EmptyShape *emptyCallShape);
 
     /*
      * Transfers ownership of bindings data from bindings into this fresh
@@ -203,7 +204,7 @@ class Bindings {
     bool hasLocalNames() const { return countLocalNames() > 0; }
 
     /* Returns the shape lineage generated for these bindings. */
-    inline const js::Shape *lastShape() const;
+    inline js::Shape *lastShape() const;
 
     enum {
         /*
@@ -296,6 +297,54 @@ class Bindings {
      * the original bindings to be safely shared.
      */
     void makeImmutable();
+
+    /*
+     * Sometimes call objects and run-time block objects need unique shapes, but
+     * sometimes they don't.
+     *
+     * Property cache entries only record the shapes of the first and last
+     * objects along the search path, so if the search traverses more than those
+     * two objects, then those first and last shapes must determine the shapes
+     * of everything else along the path. The js_PurgeScopeChain stuff takes
+     * care of making this work, but that suffices only because we require that
+     * start points with the same shape have the same successor object in the
+     * search path --- a cache hit means the starting shapes were equal, which
+     * means the seach path tail (everything but the first object in the path)
+     * was shared, which in turn means the effects of a purge will be seen by
+     * all affected starting search points.
+     *
+     * For call and run-time block objects, the "successor object" is the scope
+     * chain parent. Unlike prototype objects (of which there are usually few),
+     * scope chain parents are created frequently (possibly on every call), so
+     * following the shape-implies-parent rule blindly would lead one to give
+     * every call and block its own shape.
+     *
+     * In many cases, however, it's not actually necessary to give call and
+     * block objects their own shapes, and we can do better. If the code will
+     * always be used with the same global object, and none of the enclosing
+     * call objects could have bindings added to them at runtime (by direct eval
+     * calls or function statements), then we can use a fixed set of shapes for
+     * those objects. You could think of the shapes in the functions' bindings
+     * and compile-time blocks as uniquely identifying the global object(s) at
+     * the end of the scope chain.
+     *
+     * (In fact, some JSScripts we do use against multiple global objects (see
+     * bug 618497), and using the fixed shapes isn't sound there.)
+     * 
+     * In deciding whether a call or block has any extensible parents, we
+     * actually only need to consider enclosing calls; blocks are never
+     * extensible, and the other sorts of objects that appear in the scope
+     * chains ('with' blocks, say) are not CacheableNonGlobalScopes.
+     *
+     * If the hasExtensibleParents flag is set, then Call objects created for
+     * the function this Bindings describes need unique shapes. If the flag is
+     * clear, then we can use lastBinding's shape.
+     *
+     * For blocks, we set the the OWN_SHAPE flag on the compiler-generated
+     * blocksto indicate that their clones need unique shapes.
+     */
+    void setExtensibleParents() { hasExtensibleParents = true; }
+    bool extensibleParents() const { return hasExtensibleParents; }
 
     /*
      * These methods provide direct access to the shape path normally
@@ -679,7 +728,7 @@ js_DestroyCachedScript(JSContext *cx, JSScript *script);
 extern void
 js_TraceScript(JSTracer *trc, JSScript *script);
 
-extern JSBool
+extern JSObject *
 js_NewScriptObject(JSContext *cx, JSScript *script);
 
 /*
@@ -722,16 +771,24 @@ extern JSScript *
 js_CloneScript(JSContext *cx, JSScript *script);
 
 /*
- * If magic is non-null, js_XDRScript succeeds on magic number mismatch but
- * returns false in *magic; it reflects a match via a true *magic out param.
- * If magic is null, js_XDRScript returns false on bad magic number errors,
- * which it reports.
- *
  * NB: after a successful JSXDR_DECODE, js_XDRScript callers must do any
  * required subsequent set-up of owning function or script object and then call
  * js_CallNewScriptHook.
  */
 extern JSBool
-js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic);
+js_XDRScript(JSXDRState *xdr, JSScript **scriptp);
+
+inline bool
+JSObject::isScript() const
+{
+    return getClass() == &js_ScriptClass;
+}
+
+inline JSScript *
+JSObject::getScript() const
+{
+    JS_ASSERT(isScript());
+    return static_cast<JSScript *>(getPrivate());
+}
 
 #endif /* jsscript_h___ */

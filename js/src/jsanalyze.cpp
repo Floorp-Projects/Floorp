@@ -422,8 +422,8 @@ Script::analyze(JSContext *cx, JSScript *script)
                 if (locals[local] == LOCAL_CONDITIONALLY_DEFINED)
                     setLocal(local, offset);
             }
-            defineArray = NULL;
-            defineCount = 0;
+            defineArray = bytecode->defineArray = NULL;
+            defineCount = bytecode->defineCount = 0;
         }
 
         unsigned nuses, ndefs;

@@ -46,6 +46,6 @@ function run_test() {
     Components.utils.import(uri.spec);
     do_throw("Failed to report any error at all");
   } catch (e) {
-    do_check_neq(/^SyntaxError:/(e + ''), null);
+    do_check_neq(/^SyntaxError:/.exec(e + ''), null);
   }
 }
