@@ -158,6 +158,7 @@
 #include "nsIController.h"
 #include "nsICommandParams.h"
 #include "mozilla/Services.h"
+#include "mozAutoDocUpdate.h"
 
 #ifdef XP_MACOSX
 #import <ApplicationServices/ApplicationServices.h>
@@ -4222,6 +4223,18 @@ IsAncestorOf(nsIContent* aPossibleAncestor, nsIContent* aPossibleDescendant,
   return false;
 }
 
+static bool
+ShouldShowFocusRing(nsIContent* aContent)
+{
+  nsIDocument* doc = aContent->GetOwnerDoc();
+  if (doc) {
+    nsPIDOMWindow* window = doc->GetWindow();
+    return window && window->ShouldShowFocusRing();
+  }
+
+  return false;
+}
+
 nsEventStates
 nsEventStateManager::GetContentState(nsIContent *aContent, PRBool aFollowLabels)
 {
@@ -4239,12 +4252,8 @@ nsEventStateManager::GetContentState(nsIContent *aContent, PRBool aFollowLabels)
   if (aContent == focusedContent) {
     state |= NS_EVENT_STATE_FOCUS;
 
-    nsIDocument* doc = focusedContent->GetOwnerDoc();
-    if (doc) {
-      nsPIDOMWindow* window = doc->GetWindow();
-      if (window && window->ShouldShowFocusRing()) {
-        state |= NS_EVENT_STATE_FOCUSRING;
-      }
+    if (ShouldShowFocusRing(aContent)) {
+      state |= NS_EVENT_STATE_FOCUSRING;
     }
   }
   if (aContent == mDragOverContent) {
@@ -4317,195 +4326,106 @@ NotifyAncestors(nsIDocument* aDocument, nsIContent* aStartNode,
 PRBool
 nsEventStateManager::SetContentState(nsIContent *aContent, nsEventStates aState)
 {
-  const PRInt32 maxNotify = 5;
-  // We must initialize this array with memset for the sake of the boneheaded
-  // OS X compiler.  See bug 134934.
-  nsIContent  *notifyContent[maxNotify];
-  memset(notifyContent, 0, sizeof(notifyContent));
+  // We manage 4 states here: ACTIVE, HOVER, DRAGOVER, URLTARGET
+  // The input must be exactly one of them.
+  NS_PRECONDITION(aState == NS_EVENT_STATE_ACTIVE ||
+                  aState == NS_EVENT_STATE_HOVER ||
+                  aState == NS_EVENT_STATE_DRAGOVER ||
+                  aState == NS_EVENT_STATE_URLTARGET,
+                  "Unexpected state");
 
-  // check to see that this state is allowed by style. Check dragover too?
-  // XXX This doesn't consider that |aState| is a bitfield.
-  // XXX Is this even what we want?
-  if (mCurrentTarget && (aState == NS_EVENT_STATE_ACTIVE || aState == NS_EVENT_STATE_HOVER))
-  {
-    const nsStyleUserInterface* ui = mCurrentTarget->GetStyleUserInterface();
-    if (ui->mUserInput == NS_STYLE_USER_INPUT_NONE)
-      return PR_FALSE;
-  }
+  nsCOMPtr<nsIContent> notifyContent1;
+  nsCOMPtr<nsIContent> notifyContent2;
+  PRBool notifyAncestors;
 
-  if (aState.HasState(NS_EVENT_STATE_DRAGOVER) && aContent != mDragOverContent) {
-    notifyContent[3] = mDragOverContent; // notify dragover first, since more common case
-    NS_IF_ADDREF(notifyContent[3]);
-    mDragOverContent = aContent;
-  }
+  if (aState == NS_EVENT_STATE_HOVER || aState == NS_EVENT_STATE_ACTIVE) {
+    // Hover and active are hierarchical
+    notifyAncestors = PR_TRUE;
 
-  if (aState.HasState(NS_EVENT_STATE_URLTARGET) && aContent != mURLTargetContent) {
-    notifyContent[4] = mURLTargetContent;
-    NS_IF_ADDREF(notifyContent[4]);
-    mURLTargetContent = aContent;
-  }
+    // check to see that this state is allowed by style. Check dragover too?
+    // XXX Is this even what we want?
+    if (mCurrentTarget)
+    {
+      const nsStyleUserInterface* ui = mCurrentTarget->GetStyleUserInterface();
+      if (ui->mUserInput == NS_STYLE_USER_INPUT_NONE)
+        return PR_FALSE;
+    }
 
-  nsCOMPtr<nsIContent> commonActiveAncestor, oldActive, newActive;
-  if (aState.HasState(NS_EVENT_STATE_ACTIVE) && aContent != mActiveContent) {
-    oldActive = mActiveContent;
-    newActive = aContent;
-    commonActiveAncestor = FindCommonAncestor(mActiveContent, aContent);
-    mActiveContent = aContent;
-  }
-
-  nsCOMPtr<nsIContent> commonHoverAncestor, oldHover, newHover;
-  if (aState.HasState(NS_EVENT_STATE_HOVER) && aContent != mHoverContent) {
-    oldHover = mHoverContent;
-
-    if (mPresContext->IsDynamic()) {
-      newHover = aContent;
+    if (aState == NS_EVENT_STATE_ACTIVE) {
+      if (aContent != mActiveContent) {
+        notifyContent1 = aContent;
+        notifyContent2 = mActiveContent;
+        mActiveContent = aContent;
+      }
     } else {
-      NS_ASSERTION(!aContent ||
-                   aContent->GetCurrentDoc() == mPresContext->PresShell()->GetDocument(),
-                   "Unexpected document");
-      nsIFrame *frame = aContent ? aContent->GetPrimaryFrame() : nsnull;
-      if (frame && nsLayoutUtils::IsViewportScrollbarFrame(frame)) {
-        // The scrollbars of viewport should not ignore the hover state.
-        // Because they are *not* the content of the web page.
+      NS_ASSERTION(aState == NS_EVENT_STATE_HOVER, "How did that happen?");
+      nsIContent* newHover;
+      
+      if (mPresContext->IsDynamic()) {
         newHover = aContent;
       } else {
-        // All contents of the web page should ignore the hover state.
-        newHover = nsnull;
-      }
-    }
-
-    commonHoverAncestor = FindCommonAncestor(mHoverContent, aContent);
-    mHoverContent = aContent;
-  }
-
-  if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
-    aState |= NS_EVENT_STATE_FOCUSRING;
-    notifyContent[2] = aContent;
-    NS_IF_ADDREF(notifyContent[2]);
-  }
-
-  nsEventStates simpleStates = aState;
-  simpleStates &= ~(NS_EVENT_STATE_ACTIVE|NS_EVENT_STATE_HOVER);
-
-  if (aContent && !simpleStates.IsEmpty()) {
-    // notify about new content too
-    notifyContent[0] = aContent;
-    NS_ADDREF(aContent);  // everything in notify array has a ref
-  }
-
-  // remove duplicates
-  if ((notifyContent[4] == notifyContent[3]) || (notifyContent[4] == notifyContent[2]) || (notifyContent[4] == notifyContent[1])) {
-    NS_IF_RELEASE(notifyContent[4]);
-  }
-  // remove duplicates
-  if ((notifyContent[3] == notifyContent[2]) || (notifyContent[3] == notifyContent[1])) {
-    NS_IF_RELEASE(notifyContent[3]);
-  }
-  if (notifyContent[2] == notifyContent[1]) {
-    NS_IF_RELEASE(notifyContent[2]);
-  }
-
-  // remove notifications for content not in document.
-  // we may decide this is possible later but right now it has problems.
-  for  (int i = 0; i < maxNotify; i++) {
-    if (notifyContent[i] &&
-        !notifyContent[i]->GetDocument()) {
-      NS_RELEASE(notifyContent[i]);
-    }
-  }
-
-  // compress the notify array to group notifications tighter
-  nsIContent** from = &(notifyContent[0]);
-  nsIContent** to   = &(notifyContent[0]);
-  nsIContent** end  = &(notifyContent[maxNotify]);
-
-  while (from < end) {
-    if (! *from) {
-      while (++from < end) {
-        if (*from) {
-          *to++ = *from;
-          *from = nsnull;
-          break;
+        NS_ASSERTION(!aContent ||
+                     aContent->GetCurrentDoc() == mPresContext->PresShell()->GetDocument(),
+                     "Unexpected document");
+        nsIFrame *frame = aContent ? aContent->GetPrimaryFrame() : nsnull;
+        if (frame && nsLayoutUtils::IsViewportScrollbarFrame(frame)) {
+          // The scrollbars of viewport should not ignore the hover state.
+          // Because they are *not* the content of the web page.
+          newHover = aContent;
+        } else {
+          // All contents of the web page should ignore the hover state.
+          newHover = nsnull;
         }
       }
-    }
-    else {
-      if (from == to) {
-        to++;
-        from++;
+
+      if (newHover != mHoverContent) {
+        notifyContent1 = newHover;
+        notifyContent2 = mHoverContent;
+        mHoverContent = newHover;
       }
-      else {
-        *to++ = *from;
-        *from++ = nsnull;
+    }
+  } else {
+    notifyAncestors = PR_FALSE;
+    if (aState == NS_EVENT_STATE_DRAGOVER) {
+      if (aContent != mDragOverContent) {
+        notifyContent1 = aContent;
+        notifyContent2 = mDragOverContent;
+        mDragOverContent = aContent;
+      }
+    } else if (aState == NS_EVENT_STATE_URLTARGET) {
+      if (aContent != mURLTargetContent) {
+        notifyContent1 = aContent;
+        notifyContent2 = mURLTargetContent;
+        mURLTargetContent = aContent;
       }
     }
   }
 
-  if (notifyContent[0] || newHover || oldHover || newActive || oldActive) {
-    // have at least one to notify about
-    nsCOMPtr<nsIDocument> doc1, doc2;  // this presumes content can't get/lose state if not connected to doc
-    if (notifyContent[0]) {
-      doc1 = notifyContent[0]->GetDocument();
-      if (notifyContent[1]) {
-        //For :focus this might be a different doc so check
-        doc2 = notifyContent[1]->GetDocument();
-        if (doc1 == doc2) {
-          doc2 = nsnull;
+  if (!notifyContent1) {
+    // This is ok because FindCommonAncestor wouldn't find anything
+    // anyway if notifyContent1 is null.
+    notifyContent1 = notifyContent2;
+    notifyContent2 = nsnull;
+  }
+
+  if (notifyContent1 && mPresContext) {
+    EnsureDocument(mPresContext);
+    if (mDocument) {
+      MOZ_AUTO_DOC_UPDATE(mDocument, UPDATE_CONTENT_STATE, PR_TRUE);
+
+      if (notifyAncestors) {
+        nsCOMPtr<nsIContent> commonAncestor =
+          FindCommonAncestor(notifyContent1, notifyContent2);
+        NotifyAncestors(mDocument, notifyContent1, commonAncestor, aState);
+        if (notifyContent2) {
+          NotifyAncestors(mDocument, notifyContent2, commonAncestor, aState);
+        }
+      } else {
+        mDocument->ContentStateChanged(notifyContent1, aState);
+        if (notifyContent2) {
+          mDocument->ContentStateChanged(notifyContent2, aState);
         }
       }
-    }
-    else {
-      EnsureDocument(mPresContext);
-      doc1 = mDocument;
-    }
-    if (doc1) {
-      doc1->BeginUpdate(UPDATE_CONTENT_STATE);
-
-      NotifyAncestors(doc1, newActive, commonActiveAncestor, NS_EVENT_STATE_ACTIVE);
-      NotifyAncestors(doc1, oldActive, commonActiveAncestor, NS_EVENT_STATE_ACTIVE);
-      NotifyAncestors(doc1, newHover, commonHoverAncestor, NS_EVENT_STATE_HOVER);
-      NotifyAncestors(doc1, oldHover, commonHoverAncestor, NS_EVENT_STATE_HOVER);
-
-      if (notifyContent[0]) {
-        doc1->ContentStateChanged(notifyContent[0], simpleStates);
-        if (notifyContent[1]) {
-          doc1->ContentStateChanged(notifyContent[1], simpleStates);
-        }
-        if (notifyContent[2]) {
-          // more that two notifications are needed (should be rare)
-          doc1->ContentStateChanged(notifyContent[2], simpleStates);
-          if (notifyContent[3]) {
-            doc1->ContentStateChanged(notifyContent[3], simpleStates);
-          }
-          if (notifyContent[4]) {
-            // more that four notifications are needed (should be rare)
-            doc1->ContentStateChanged(notifyContent[4], simpleStates);
-          }
-        }
-      }
-      doc1->EndUpdate(UPDATE_CONTENT_STATE);
-
-      if (doc2) {
-        doc2->BeginUpdate(UPDATE_CONTENT_STATE);
-        doc2->ContentStateChanged(notifyContent[1], simpleStates);
-        if (notifyContent[2]) {
-          doc2->ContentStateChanged(notifyContent[2], simpleStates);
-        }
-        if (notifyContent[3]) {
-          // XXXbz shouldn't this notify doc2????
-          doc1->ContentStateChanged(notifyContent[3], simpleStates);
-          if (notifyContent[4]) {
-            doc1->ContentStateChanged(notifyContent[4], simpleStates);
-          }
-        }
-        doc2->EndUpdate(UPDATE_CONTENT_STATE);
-      }
-    }
-
-    from = &(notifyContent[0]);
-    while (from < to) {  // release old refs now that we are through
-      nsIContent* notify = *from++;
-      NS_RELEASE(notify);
     }
   }
 
