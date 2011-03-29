@@ -236,9 +236,7 @@ __try {
   if (nsAccUtils::MustPrune(this))
     return NS_OK;
 
-  PRInt32 numChildren;
-  GetChildCount(&numChildren);
-  *pcountChildren = numChildren;
+  *pcountChildren = GetChildCount();
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -1014,9 +1012,7 @@ __try {
 
   mEnumVARIANTPosition += aNumElements;
 
-  PRInt32 numChildren;
-  GetChildCount(&numChildren);
-
+  PRInt32 numChildren = GetChildCount();
   if (mEnumVARIANTPosition > numChildren)
   {
     mEnumVARIANTPosition = numChildren;
