@@ -93,14 +93,6 @@ public:
     eLinksVisitedOrUnvisited
   };
 
-  void ResetForVisitedMatching() {
-    Reset();
-    mVisitedHandling = eRelevantLinkVisited;
-  }
-  VisitedHandlingType VisitedHandling() const { return mVisitedHandling; }
-  void SetHaveRelevantLink() { mHaveRelevantLink = PR_TRUE; }
-  PRBool HaveRelevantLink() const { return mHaveRelevantLink; }
-
 private:
   nsRuleNode* mCurrent; // Our current position.  Never null.
   nsRuleNode* mRoot; // The root of the tree we're walking.
@@ -110,23 +102,10 @@ private:
                                         // we walk and set to false if we find
                                         // one.
 
-  // When mVisitedHandling is eRelevantLinkUnvisited, this is set to
-  // true on the RuleProcessorData *for the node being matched* if a
-  // relevant link (see explanation in definition of VisitedHandling
-  // enum) was encountered during the matching process, which means that
-  // matching needs to be rerun with eRelevantLinkVisited.  Otherwise,
-  // its behavior is undefined (it might get set appropriately, or might
-  // not).
-  PRBool mHaveRelevantLink;
-
-  VisitedHandlingType mVisitedHandling;
-
 public:
   nsRuleWalker(nsRuleNode* aRoot)
     : mCurrent(aRoot)
     , mRoot(aRoot)
-    , mHaveRelevantLink(PR_FALSE)
-    , mVisitedHandling(eRelevantLinkUnvisited)
   {
     NS_ASSERTION(mCurrent, "Caller screwed up and gave us null node");
     MOZ_COUNT_CTOR(nsRuleWalker);

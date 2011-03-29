@@ -224,17 +224,17 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
       if (mLinkRule || mVisitedRule || mActiveRule) {
         nsEventStates state = nsCSSRuleProcessor::GetContentStateForVisitedHandling(
                                   aData->mElement,
-                                  ruleWalker->VisitedHandling(),
+                                  aData->mTreeMatchContext.VisitedHandling(),
                                   // If the node being matched is a link,
                                   // it's the relevant link.
                                   nsCSSRuleProcessor::IsLink(aData->mElement));
         if (mLinkRule && state.HasState(NS_EVENT_STATE_UNVISITED)) {
           ruleWalker->Forward(mLinkRule);
-          ruleWalker->SetHaveRelevantLink();
+          aData->mTreeMatchContext.SetHaveRelevantLink();
         }
         else if (mVisitedRule && state.HasState(NS_EVENT_STATE_VISITED)) {
           ruleWalker->Forward(mVisitedRule);
-          ruleWalker->SetHaveRelevantLink();
+          aData->mTreeMatchContext.SetHaveRelevantLink();
         }
 
         // No need to add to the active rule if it's not a link
@@ -249,7 +249,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
       ruleWalker->Forward(mTableTHRule);
     }
     else if (tag == nsGkAtoms::table) {
-      if (aData->mCompatMode == eCompatibility_NavQuirks) {
+      if (aData->mTreeMatchContext.mCompatMode == eCompatibility_NavQuirks) {
         nscolor bodyColor;
         nsresult rv =
           GetBodyColor(ruleWalker->CurrentNode()->GetPresContext(),
