@@ -1110,13 +1110,12 @@ nsCSSRuleProcessor::GetWindowsThemeIdentifier()
 RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
                                      Element* aElement, 
                                      nsRuleWalker* aRuleWalker,
-                                     PRBool aForStyling,
-                                     nsCompatibility* aCompat /*= nsnull*/)
+                                     PRBool aForStyling)
   : TreeMatchContext(aForStyling,
                      aRuleWalker ?
                        aRuleWalker->VisitedHandling() :
                        nsRuleWalker::eLinksVisitedOrUnvisited,
-                     aElement->IsInHTMLDocument()),
+                     aElement->GetOwnerDoc()),
     mPresContext(aPresContext),
     mElement(aElement),
     mRuleWalker(aRuleWalker),
@@ -1133,17 +1132,6 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
   mNthIndices[0][1] = -2;
   mNthIndices[1][0] = -2;
   mNthIndices[1][1] = -2;
-
-  // get the compat. mode (unless it is provided)
-  // XXXbz is passing in the compat mode really that much of an optimization?
-  if (aCompat) {
-    mCompatMode = *aCompat;
-  } else if (NS_LIKELY(mPresContext)) {
-    mCompatMode = mPresContext->CompatibilityMode();
-  } else {
-    NS_ASSERTION(aElement->GetOwnerDoc(), "Must have document");
-    mCompatMode = aElement->GetOwnerDoc()->GetCompatibilityMode();
-  }
 
   NS_ASSERTION(aElement->GetOwnerDoc(), "Document-less node here?");
     
@@ -1662,7 +1650,7 @@ static PRBool SelectorMatches(Element* aElement,
     if (data.mContentID) {
       // case sensitivity: bug 93371
       const PRBool isCaseSensitive =
-        data.mCompatMode != eCompatibility_NavQuirks;
+        aTreeMatchContext.mCompatMode != eCompatibility_NavQuirks;
 
       if (isCaseSensitive) {
         do {
@@ -1701,7 +1689,7 @@ static PRBool SelectorMatches(Element* aElement,
 
     // case sensitivity: bug 93371
     const PRBool isCaseSensitive =
-      data.mCompatMode != eCompatibility_NavQuirks;
+      aTreeMatchContext.mCompatMode != eCompatibility_NavQuirks;
 
     while (classList) {
       if (!elementClasses->Contains(classList->mAtom,
@@ -2075,7 +2063,7 @@ static PRBool SelectorMatches(Element* aElement,
     } else {
       // Bit-based pseudo-classes
       if (statesToCheck.HasAtLeastOneOfStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE) &&
-          data.mCompatMode == eCompatibility_NavQuirks &&
+          aTreeMatchContext.mCompatMode == eCompatibility_NavQuirks &&
           // global selector (but don't check .class):
           !aSelector->HasTagSelector() && !aSelector->mIDList && 
           !aSelector->mAttrList &&
@@ -2249,8 +2237,7 @@ static PRBool SelectorMatchesTree(Element* aPrevElement,
             if (content->IsElement()) {
               data = RuleProcessorData::Create(prevdata->mPresContext,
                                                content->AsElement(),
-                                               prevdata->mRuleWalker,
-                                               prevdata->mCompatMode);
+                                               prevdata->mRuleWalker);
               prevdata->mPreviousSiblingData = data;    
               break;
             }
@@ -2269,8 +2256,7 @@ static PRBool SelectorMatchesTree(Element* aPrevElement,
         if (content && content->IsElement()) {
           data = RuleProcessorData::Create(prevdata->mPresContext,
                                            content->AsElement(),
-                                           prevdata->mRuleWalker,
-                                           prevdata->mCompatMode);
+                                           prevdata->mRuleWalker);
           prevdata->mParentData = data;
         }
       }
