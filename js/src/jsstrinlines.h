@@ -243,6 +243,18 @@ StringBuffer::checkLength(size_t length)
     return CheckStringLength(context(), length);
 }
 
+extern bool
+ValueToStringBufferSlow(JSContext *cx, const Value &v, StringBuffer &sb);
+
+inline bool
+ValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb)
+{
+    if (v.isString())
+        return sb.append(v.toString());
+
+    return ValueToStringBufferSlow(cx, v, sb);
+}
+
 } /* namespace js */
 
 JS_ALWAYS_INLINE void
