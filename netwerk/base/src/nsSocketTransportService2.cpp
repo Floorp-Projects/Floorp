@@ -72,7 +72,7 @@ nsSocketTransportService::nsSocketTransportService()
     : mThread(nsnull)
     , mThreadEvent(nsnull)
     , mAutodialEnabled(PR_FALSE)
-    , mLock(PR_NewLock())
+    , mLock(nsAutoLock::NewLock("nsSocketTransportService::mLock"))
     , mInitialized(PR_FALSE)
     , mShuttingDown(PR_FALSE)
     , mActiveCount(0)
@@ -95,7 +95,7 @@ nsSocketTransportService::~nsSocketTransportService()
     NS_ASSERTION(!mInitialized, "not shutdown properly");
 
     if (mLock)
-        PR_DestroyLock(mLock);
+        nsAutoLock::DestroyLock(mLock);
     
     if (mThreadEvent)
         PR_DestroyPollableEvent(mThreadEvent);

@@ -80,7 +80,8 @@ xptiInterfaceInfoManager::xptiInterfaceInfoManager()
         mResolveLock(PR_NewLock()),
         mAutoRegLock(PR_NewLock()),
         mInfoMonitor(nsAutoMonitor::NewMonitor("xptiInfoMonitor")),
-        mAdditionalManagersLock(PR_NewLock())
+        mAdditionalManagersLock(nsAutoLock::NewLock(
+            "xptiInterfaceInfoManager::mAdditionalManagersLock"))
 {
 }
 
@@ -96,7 +97,7 @@ xptiInterfaceInfoManager::~xptiInterfaceInfoManager()
     if (mInfoMonitor)
         nsAutoMonitor::DestroyMonitor(mInfoMonitor);
     if (mAdditionalManagersLock)
-        PR_DestroyLock(mAdditionalManagersLock);
+        nsAutoLock::DestroyLock(mAdditionalManagersLock);
 
     gInterfaceInfoManager = nsnull;
 #ifdef DEBUG
