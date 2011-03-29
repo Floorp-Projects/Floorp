@@ -344,7 +344,7 @@ AutoCompleteCache.prototype = {
           AutoCompleteUtils.fetch(AutoCompleteUtils.query);
         break;
       case "browser:purge-session-history":
-        AutoCompleteUtils.update();
+        AutoCompleteUtils.fetch(AutoCompleteUtils.query);
         break;
       case "browser-search-engine-modified":
         this.searchEngines = Services.search.getVisibleEngines();
