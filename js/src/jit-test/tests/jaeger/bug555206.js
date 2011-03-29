@@ -1,4 +1,4 @@
 // |jit-test| error: TypeError
-__defineGetter__("x",/a/)
-" ".replace(/\s/,"")
+__defineGetter__("x", function() { return /a/.exec(undefined); } );
+" ".replace(/\s/,"");
 x.b

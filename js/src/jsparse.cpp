@@ -195,6 +195,7 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSStackFrame *cfp)
     functionCount(0),
     traceListHead(NULL),
     tc(NULL),
+    emptyCallShape(NULL),
     keepAtoms(cx->runtime)
 {
     js::PodArrayZero(tempFreeList);
@@ -207,6 +208,9 @@ Parser::init(const jschar *base, size_t length, const char *filename, uintN line
              JSVersion version)
 {
     JSContext *cx = context;
+    emptyCallShape = EmptyShape::getEmptyCallShape(cx);
+    if (!emptyCallShape)
+        return false;
     tempPoolMark = JS_ARENA_MARK(&cx->tempPool);
     if (!tokenStream.init(base, length, filename, lineno, version)) {
         JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
@@ -221,7 +225,6 @@ Parser::~Parser()
 
     if (principals)
         JSPRINCIPALS_DROP(cx, principals);
-    tokenStream.close();
     JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
 }
 
@@ -289,7 +292,7 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
     funbox->kids = NULL;
     funbox->parent = tc->funbox;
     funbox->methods = NULL;
-    new (&funbox->bindings) Bindings(context);
+    new (&funbox->bindings) Bindings(context, emptyCallShape);
     funbox->queued = false;
     funbox->inLoop = false;
     for (JSStmtInfo *stmt = tc->topStmt; stmt; stmt = stmt->down) {
@@ -308,7 +311,7 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
 bool
 JSFunctionBox::joinable() const
 {
-    return FUN_NULL_CLOSURE((JSFunction *) object) &&
+    return FUN_NULL_CLOSURE(function()) &&
            !(tcflags & (TCF_FUN_USES_ARGUMENTS | TCF_FUN_USES_OWN_NAME));
 }
 
@@ -320,6 +323,12 @@ JSFunctionBox::inAnyDynamicScope() const
             return true;
     }
     return false;
+}
+
+bool
+JSFunctionBox::scopeIsExtensible() const
+{
+    return tcflags & TCF_FUN_EXTENSIBLE_SCOPE;
 }
 
 bool
@@ -346,6 +355,9 @@ Parser::trace(JSTracer *trc)
             static_cast<JSFunctionBox *>(objbox)->bindings.trace(trc);
         objbox = objbox->traceLink;
     }
+
+    if (emptyCallShape)
+        MarkShape(trc, emptyCallShape, "emptyCallShape");
 
     for (JSTreeContext *tc = this->tc; tc; tc = tc->parent)
         tc->trace(trc);
@@ -1175,7 +1187,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
         Value rval;
 
         if (def.funbox) {
-            JSFunction *fun = (JSFunction *)def.funbox->object;
+            JSFunction *fun = def.funbox->function();
 
             /*
              * No need to check for redeclarations or anything, global
@@ -1373,7 +1385,7 @@ HasFinalReturn(JSParseNode *pn)
 }
 
 static JSBool
-ReportBadReturn(JSContext *cx, JSTreeContext *tc, uintN flags, uintN errnum,
+ReportBadReturn(JSContext *cx, JSTreeContext *tc, JSParseNode *pn, uintN flags, uintN errnum,
                 uintN anonerrnum)
 {
     JSAutoByteString name;
@@ -1383,7 +1395,7 @@ ReportBadReturn(JSContext *cx, JSTreeContext *tc, uintN flags, uintN errnum,
     } else {
         errnum = anonerrnum;
     }
-    return ReportCompileErrorNumber(cx, TS(tc->parser), NULL, flags, errnum, name.ptr());
+    return ReportCompileErrorNumber(cx, TS(tc->parser), pn, flags, errnum, name.ptr());
 }
 
 static JSBool
@@ -1391,7 +1403,7 @@ CheckFinalReturn(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
 {
     JS_ASSERT(tc->inFunction());
     return HasFinalReturn(pn) == ENDS_IN_RETURN ||
-           ReportBadReturn(cx, tc, JSREPORT_WARNING | JSREPORT_STRICT,
+           ReportBadReturn(cx, tc, pn, JSREPORT_WARNING | JSREPORT_STRICT,
                            JSMSG_NO_RETURN_VALUE, JSMSG_ANON_NO_RETURN_VALUE);
 }
 
@@ -1544,7 +1556,7 @@ Parser::functionBody()
                 pn = NULL;
             } else {
                 if (tc->flags & TCF_FUN_IS_GENERATOR) {
-                    ReportBadReturn(context, tc, JSREPORT_ERROR,
+                    ReportBadReturn(context, tc, pn, JSREPORT_ERROR,
                                     JSMSG_BAD_GENERATOR_RETURN,
                                     JSMSG_BAD_ANON_GENERATOR_RETURN);
                     pn = NULL;
@@ -1821,14 +1833,14 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
 
     JSCodeGenerator funcg(&parser, &codePool, &notePool, tokenStream.getLineno());
     if (!funcg.init())
-        return NULL;
+        return false;
 
     funcg.flags |= TCF_IN_FUNCTION;
     funcg.setFunction(fun);
     funcg.bindings.transfer(cx, bindings);
     fun->setArgCount(funcg.bindings.countArgs());
     if (!GenerateBlockId(&funcg, funcg.bodyid))
-        return NULL;
+        return false;
 
     /* FIXME: make Function format the source for a function definition. */
     tokenStream.mungeCurrentToken(TOK_NAME);
@@ -2040,6 +2052,7 @@ Parser::analyzeFunctions(JSTreeContext *tc)
         return true;
     if (!markFunArgs(tc->functionList))
         return false;
+    markExtensibleScopeDescendants(tc->functionList, false);
     setFunctionKinds(tc->functionList, &tc->flags);
     return true;
 }
@@ -2082,7 +2095,7 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
     do {
         JSParseNode *fn = funbox->node;
         JS_ASSERT(fn->pn_arity == PN_FUNC);
-        JSFunction *fun = (JSFunction *) funbox->object;
+        JSFunction *fun = funbox->function();
         int fnlevel = level;
 
         /*
@@ -2348,7 +2361,7 @@ CanFlattenUpvar(JSDefinition *dn, JSFunctionBox *funbox, uint32 tcflags)
      * function refers to its own name) or strictly after afunbox, we also
      * defeat the flat closure optimization for this dn.
      */
-    JSFunction *afun = (JSFunction *) afunbox->object;
+    JSFunction *afun = afunbox->function();
     if (!(afun->flags & JSFUN_LAMBDA)) {
         if (dn->isBindingForm() || dn->pn_pos >= afunbox->node->pn_pos)
             return false;
@@ -2494,7 +2507,7 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
             }
         }
 
-        JSFunction *fun = (JSFunction *) funbox->object;
+        JSFunction *fun = funbox->function();
 
         JS_ASSERT(FUN_KIND(fun) == JSFUN_INTERPRETED);
 
@@ -2651,6 +2664,38 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
     }
 
 #undef FUN_METER
+}
+
+/*
+ * Walk the JSFunctionBox tree looking for functions whose call objects may
+ * acquire new bindings as they execute: non-strict functions that call eval,
+ * and functions that contain function statements (definitions not appearing
+ * within the top statement list, which don't take effect unless they are
+ * evaluated). Such call objects may acquire bindings that shadow variables
+ * defined in enclosing scopes, so any enclosed functions must have their
+ * bindings' extensibleParents flags set, and enclosed compiler-created blocks
+ * must have their OWN_SHAPE flags set; the comments for
+ * js::Bindings::extensibleParents explain why.
+ */
+void
+Parser::markExtensibleScopeDescendants(JSFunctionBox *funbox, bool hasExtensibleParent) 
+{
+    for (; funbox; funbox = funbox->siblings) {
+        /*
+         * It would be nice to use FUN_KIND(fun) here to recognize functions
+         * that will never consult their parent chains, and thus don't need
+         * their 'extensible parents' flag set. Filed as bug 619750. 
+         */
+
+        JS_ASSERT(!funbox->bindings.extensibleParents());
+        if (hasExtensibleParent)
+            funbox->bindings.setExtensibleParents();
+
+        if (funbox->kids) {
+            markExtensibleScopeDescendants(funbox->kids,
+                                           hasExtensibleParent || funbox->scopeIsExtensible());
+        }
+    }
 }
 
 const char js_argument_str[] = "argument";
@@ -3099,6 +3144,13 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
                 fn->pn_type = TOK_FUNCTION;
                 fn->pn_arity = PN_FUNC;
                 fn->pn_pos.begin = pn->pn_pos.begin;
+
+                /*
+                 * Set fn->pn_pos.end too, in case of error before we parse the
+                 * closing brace.  See bug 640075.
+                 */
+                fn->pn_pos.end = pn->pn_pos.end;
+
                 fn->pn_body = NULL;
                 fn->pn_cookie.makeFree();
 
@@ -3155,7 +3207,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
     if (!funbox)
         return NULL;
 
-    JSFunction *fun = (JSFunction *) funbox->object;
+    JSFunction *fun = funbox->function();
 
     /* Now parse formal argument list and compute fun->nargs. */
     JSParseNode *prelude = NULL;
@@ -3528,8 +3580,11 @@ Parser::statements()
              */
             if (tc->atBodyLevel())
                 pn->pn_xflags |= PNX_FUNCDEFS;
-            else
+            else {
                 tc->flags |= TCF_HAS_FUNCTION_STMT;
+                /* Function statements extend the Call object at runtime. */
+                tc->noteHasExtensibleScope();
+            }
         }
         pn->append(pn2);
     }
@@ -3574,7 +3629,7 @@ MatchLabel(JSContext *cx, TokenStream *ts, JSParseNode *pn)
     JSAtom *label;
     TokenKind tt;
 
-    tt = ts->peekTokenSameLine();
+    tt = ts->peekTokenSameLine(TSF_OPERAND);
     if (tt == TOK_ERROR)
         return JS_FALSE;
     if (tt == TOK_NAME) {
@@ -4820,7 +4875,7 @@ Parser::returnOrYield(bool useAssignExpr)
 
     if ((~tc->flags & (TCF_RETURN_EXPR | TCF_FUN_IS_GENERATOR)) == 0) {
         /* As in Python (see PEP-255), disallow return v; in generators. */
-        ReportBadReturn(context, tc, JSREPORT_ERROR,
+        ReportBadReturn(context, tc, pn, JSREPORT_ERROR,
                         JSMSG_BAD_GENERATOR_RETURN,
                         JSMSG_BAD_ANON_GENERATOR_RETURN);
         return NULL;
@@ -4828,7 +4883,7 @@ Parser::returnOrYield(bool useAssignExpr)
 
     if (context->hasStrictOption() &&
         (~tc->flags & (TCF_RETURN_EXPR | TCF_RETURN_VOID)) == 0 &&
-        !ReportBadReturn(context, tc, JSREPORT_WARNING | JSREPORT_STRICT,
+        !ReportBadReturn(context, tc, pn, JSREPORT_WARNING | JSREPORT_STRICT,
                          JSMSG_NO_RETURN_VALUE,
                          JSMSG_ANON_NO_RETURN_VALUE)) {
         return NULL;
@@ -6220,7 +6275,6 @@ Parser::statement()
         return pn;
       }
 
-      case TOK_EOL:
       case TOK_SEMI:
         pn = UnaryNode::create(tc);
         if (!pn)
@@ -6487,6 +6541,186 @@ Parser::expr()
     return pn;
 }
 
+/*
+ * For a number of the expression parsers we define an always-inlined version
+ * and a never-inlined version (which just calls the always-inlined version).
+ * Using the always-inlined version in the hot call-sites givs a ~5% parsing
+ * speedup.  These macros help avoid some boilerplate code.
+ */
+#define BEGIN_EXPR_PARSER(name)                                               \
+    JS_ALWAYS_INLINE JSParseNode *                                            \
+    Parser::name##i()
+
+#define END_EXPR_PARSER(name)                                                 \
+    JS_NEVER_INLINE JSParseNode *                                             \
+    Parser::name##n() {                                                       \
+        return name##i();                                                     \
+    }
+
+BEGIN_EXPR_PARSER(mulExpr1)
+{
+    TokenKind tt;
+    JSParseNode *pn = unaryExpr();
+
+    /*
+     * Note: unlike addExpr1() et al, we use getToken() here instead of
+     * isCurrentTokenType() because unaryExpr() doesn't leave the TokenStream
+     * state one past the end of the unary expression.
+     */
+    while (pn && ((tt = tokenStream.getToken()) == TOK_STAR || tt == TOK_DIVOP)) {
+        tt = tokenStream.currentToken().type;
+        JSOp op = tokenStream.currentToken().t_op;
+        pn = JSParseNode::newBinaryOrAppend(tt, op, pn, unaryExpr(), tc);
+    }
+    return pn;
+}
+END_EXPR_PARSER(mulExpr1)
+
+BEGIN_EXPR_PARSER(addExpr1)
+{
+    JSParseNode *pn = mulExpr1i();
+    while (pn && tokenStream.isCurrentTokenType(TOK_PLUS, TOK_MINUS)) {
+        TokenKind tt = tokenStream.currentToken().type;
+        JSOp op = (tt == TOK_PLUS) ? JSOP_ADD : JSOP_SUB;
+        pn = JSParseNode::newBinaryOrAppend(tt, op, pn, mulExpr1n(), tc);
+    }
+    return pn;
+}
+END_EXPR_PARSER(addExpr1)
+
+BEGIN_EXPR_PARSER(shiftExpr1)
+{
+    JSParseNode *pn = addExpr1i();
+    while (pn && tokenStream.isCurrentTokenType(TOK_SHOP)) {
+        JSOp op = tokenStream.currentToken().t_op;
+        pn = JSParseNode::newBinaryOrAppend(TOK_SHOP, op, pn, addExpr1n(), tc);
+    }
+    return pn;
+}
+END_EXPR_PARSER(shiftExpr1)
+
+BEGIN_EXPR_PARSER(relExpr1)
+{
+    uintN inForInitFlag = tc->flags & TCF_IN_FOR_INIT;
+
+    /*
+     * Uses of the in operator in shiftExprs are always unambiguous,
+     * so unset the flag that prohibits recognizing it.
+     */
+    tc->flags &= ~TCF_IN_FOR_INIT;
+
+    JSParseNode *pn = shiftExpr1i();
+    while (pn &&
+           (tokenStream.isCurrentTokenType(TOK_RELOP) ||
+            /*
+             * Recognize the 'in' token as an operator only if we're not
+             * currently in the init expr of a for loop.
+             */
+            (inForInitFlag == 0 && tokenStream.isCurrentTokenType(TOK_IN)) ||
+            tokenStream.isCurrentTokenType(TOK_INSTANCEOF))) {
+        TokenKind tt = tokenStream.currentToken().type;
+        JSOp op = tokenStream.currentToken().t_op;
+        pn = JSParseNode::newBinaryOrAppend(tt, op, pn, shiftExpr1n(), tc);
+    }
+    /* Restore previous state of inForInit flag. */
+    tc->flags |= inForInitFlag;
+
+    return pn;
+}
+END_EXPR_PARSER(relExpr1)
+
+BEGIN_EXPR_PARSER(eqExpr1)
+{
+    JSParseNode *pn = relExpr1i();
+    while (pn && tokenStream.isCurrentTokenType(TOK_EQOP)) {
+        JSOp op = tokenStream.currentToken().t_op;
+        pn = JSParseNode::newBinaryOrAppend(TOK_EQOP, op, pn, relExpr1n(), tc);
+    }
+    return pn;
+}
+END_EXPR_PARSER(eqExpr1)
+
+BEGIN_EXPR_PARSER(bitAndExpr1)
+{
+    JSParseNode *pn = eqExpr1i();
+    while (pn && tokenStream.isCurrentTokenType(TOK_BITAND))
+        pn = JSParseNode::newBinaryOrAppend(TOK_BITAND, JSOP_BITAND, pn, eqExpr1n(), tc);
+    return pn;
+}
+END_EXPR_PARSER(bitAndExpr1)
+
+BEGIN_EXPR_PARSER(bitXorExpr1)
+{
+    JSParseNode *pn = bitAndExpr1i();
+    while (pn && tokenStream.isCurrentTokenType(TOK_BITXOR))
+        pn = JSParseNode::newBinaryOrAppend(TOK_BITXOR, JSOP_BITXOR, pn, bitAndExpr1n(), tc);
+    return pn;
+}
+END_EXPR_PARSER(bitXorExpr1)
+
+BEGIN_EXPR_PARSER(bitOrExpr1)
+{
+    JSParseNode *pn = bitXorExpr1i();
+    while (pn && tokenStream.isCurrentTokenType(TOK_BITOR))
+        pn = JSParseNode::newBinaryOrAppend(TOK_BITOR, JSOP_BITOR, pn, bitXorExpr1n(), tc);
+    return pn;
+}
+END_EXPR_PARSER(bitOrExpr1)
+
+BEGIN_EXPR_PARSER(andExpr1)
+{
+    JSParseNode *pn = bitOrExpr1i();
+    while (pn && tokenStream.isCurrentTokenType(TOK_AND))
+        pn = JSParseNode::newBinaryOrAppend(TOK_AND, JSOP_AND, pn, bitOrExpr1n(), tc);
+    return pn;
+}
+END_EXPR_PARSER(andExpr1)
+
+JS_ALWAYS_INLINE JSParseNode *
+Parser::orExpr1()
+{
+    JSParseNode *pn = andExpr1i();
+    while (pn && tokenStream.isCurrentTokenType(TOK_OR))
+        pn = JSParseNode::newBinaryOrAppend(TOK_OR, JSOP_OR, pn, andExpr1n(), tc);
+    return pn;
+}
+
+JS_ALWAYS_INLINE JSParseNode *
+Parser::condExpr1()
+{
+    JSParseNode *pn = orExpr1();
+    if (pn && tokenStream.isCurrentTokenType(TOK_HOOK)) {
+        JSParseNode *pn1 = pn;
+        pn = TernaryNode::create(tc);
+        if (!pn)
+            return NULL;
+
+        /*
+         * Always accept the 'in' operator in the middle clause of a ternary,
+         * where it's unambiguous, even if we might be parsing the init of a
+         * for statement.
+         */
+        uintN oldflags = tc->flags;
+        tc->flags &= ~TCF_IN_FOR_INIT;
+        JSParseNode *pn2 = assignExpr();
+        tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
+
+        if (!pn2)
+            return NULL;
+        MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_IN_COND);
+        JSParseNode *pn3 = assignExpr();
+        if (!pn3)
+            return NULL;
+        pn->pn_pos.begin = pn1->pn_pos.begin;
+        pn->pn_pos.end = pn3->pn_pos.end;
+        pn->pn_kid1 = pn1;
+        pn->pn_kid2 = pn2;
+        pn->pn_kid3 = pn3;
+        tokenStream.getToken();     /* need to read one token past the end */
+    }
+    return pn;
+}
+
 JSParseNode *
 Parser::assignExpr()
 {
@@ -6497,12 +6731,11 @@ Parser::assignExpr()
         return returnOrYield(true);
 #endif
 
-    JSParseNode *pn = condExpr();
+    JSParseNode *pn = condExpr1();
     if (!pn)
         return NULL;
 
-    TokenKind tt = tokenStream.getToken();
-    if (tt != TOK_ASSIGN) {
+    if (!tokenStream.isCurrentTokenType(TOK_ASSIGN)) {
         tokenStream.ungetToken();
         return pn;
     }
@@ -6570,164 +6803,6 @@ Parser::assignExpr()
     }
 
     return JSParseNode::newBinaryOrAppend(TOK_ASSIGN, op, pn, rhs, tc);
-}
-
-JSParseNode *
-Parser::condExpr()
-{
-    JSParseNode *pn = orExpr();
-    if (pn && tokenStream.matchToken(TOK_HOOK)) {
-        JSParseNode *pn1 = pn;
-        pn = TernaryNode::create(tc);
-        if (!pn)
-            return NULL;
-
-        /*
-         * Always accept the 'in' operator in the middle clause of a ternary,
-         * where it's unambiguous, even if we might be parsing the init of a
-         * for statement.
-         */
-        uintN oldflags = tc->flags;
-        tc->flags &= ~TCF_IN_FOR_INIT;
-        JSParseNode *pn2 = assignExpr();
-        tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
-
-        if (!pn2)
-            return NULL;
-        MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_IN_COND);
-        JSParseNode *pn3 = assignExpr();
-        if (!pn3)
-            return NULL;
-        pn->pn_pos.begin = pn1->pn_pos.begin;
-        pn->pn_pos.end = pn3->pn_pos.end;
-        pn->pn_kid1 = pn1;
-        pn->pn_kid2 = pn2;
-        pn->pn_kid3 = pn3;
-    }
-    return pn;
-}
-
-JSParseNode *
-Parser::orExpr()
-{
-    JSParseNode *pn = andExpr();
-    while (pn && tokenStream.matchToken(TOK_OR))
-        pn = JSParseNode::newBinaryOrAppend(TOK_OR, JSOP_OR, pn, andExpr(), tc);
-    return pn;
-}
-
-JSParseNode *
-Parser::andExpr()
-{
-    JSParseNode *pn = bitOrExpr();
-    while (pn && tokenStream.matchToken(TOK_AND))
-        pn = JSParseNode::newBinaryOrAppend(TOK_AND, JSOP_AND, pn, bitOrExpr(), tc);
-    return pn;
-}
-
-JSParseNode *
-Parser::bitOrExpr()
-{
-    JSParseNode *pn = bitXorExpr();
-    while (pn && tokenStream.matchToken(TOK_BITOR))
-        pn = JSParseNode::newBinaryOrAppend(TOK_BITOR, JSOP_BITOR, pn, bitXorExpr(), tc);
-    return pn;
-}
-
-JSParseNode *
-Parser::bitXorExpr()
-{
-    JSParseNode *pn = bitAndExpr();
-    while (pn && tokenStream.matchToken(TOK_BITXOR))
-        pn = JSParseNode::newBinaryOrAppend(TOK_BITXOR, JSOP_BITXOR, pn, bitAndExpr(), tc);
-    return pn;
-}
-
-JSParseNode *
-Parser::bitAndExpr()
-{
-    JSParseNode *pn = eqExpr();
-    while (pn && tokenStream.matchToken(TOK_BITAND))
-        pn = JSParseNode::newBinaryOrAppend(TOK_BITAND, JSOP_BITAND, pn, eqExpr(), tc);
-    return pn;
-}
-
-JSParseNode *
-Parser::eqExpr()
-{
-    JSParseNode *pn = relExpr();
-    while (pn && tokenStream.matchToken(TOK_EQOP)) {
-        JSOp op = tokenStream.currentToken().t_op;
-        pn = JSParseNode::newBinaryOrAppend(TOK_EQOP, op, pn, relExpr(), tc);
-    }
-    return pn;
-}
-
-JSParseNode *
-Parser::relExpr()
-{
-    uintN inForInitFlag = tc->flags & TCF_IN_FOR_INIT;
-
-    /*
-     * Uses of the in operator in shiftExprs are always unambiguous,
-     * so unset the flag that prohibits recognizing it.
-     */
-    tc->flags &= ~TCF_IN_FOR_INIT;
-
-    JSParseNode *pn = shiftExpr();
-    while (pn &&
-           (tokenStream.matchToken(TOK_RELOP) ||
-            /*
-             * Recognize the 'in' token as an operator only if we're not
-             * currently in the init expr of a for loop.
-             */
-            (inForInitFlag == 0 && tokenStream.matchToken(TOK_IN)) ||
-            tokenStream.matchToken(TOK_INSTANCEOF))) {
-        TokenKind tt = tokenStream.currentToken().type;
-        JSOp op = tokenStream.currentToken().t_op;
-        pn = JSParseNode::newBinaryOrAppend(tt, op, pn, shiftExpr(), tc);
-    }
-    /* Restore previous state of inForInit flag. */
-    tc->flags |= inForInitFlag;
-
-    return pn;
-}
-
-JSParseNode *
-Parser::shiftExpr()
-{
-    JSParseNode *pn = addExpr();
-    while (pn && tokenStream.matchToken(TOK_SHOP)) {
-        JSOp op = tokenStream.currentToken().t_op;
-        pn = JSParseNode::newBinaryOrAppend(TOK_SHOP, op, pn, addExpr(), tc);
-    }
-    return pn;
-}
-
-JSParseNode *
-Parser::addExpr()
-{
-    JSParseNode *pn = mulExpr();
-    while (pn &&
-           (tokenStream.matchToken(TOK_PLUS) ||
-            tokenStream.matchToken(TOK_MINUS))) {
-        TokenKind tt = tokenStream.currentToken().type;
-        JSOp op = (tt == TOK_PLUS) ? JSOP_ADD : JSOP_SUB;
-        pn = JSParseNode::newBinaryOrAppend(tt, op, pn, mulExpr(), tc);
-    }
-    return pn;
-}
-
-JSParseNode *
-Parser::mulExpr()
-{
-    JSParseNode *pn = unaryExpr();
-    while (pn && (tokenStream.matchToken(TOK_STAR) || tokenStream.matchToken(TOK_DIVOP))) {
-        TokenKind tt = tokenStream.currentToken().type;
-        JSOp op = tokenStream.currentToken().t_op;
-        pn = JSParseNode::newBinaryOrAppend(tt, op, pn, unaryExpr(), tc);
-    }
-    return pn;
 }
 
 static JSParseNode *
@@ -7486,7 +7561,7 @@ CheckForImmediatelyAppliedLambda(JSParseNode *pn)
         JS_ASSERT(pn->pn_arity == PN_FUNC);
 
         JSFunctionBox *funbox = pn->pn_funbox;
-        JS_ASSERT(((JSFunction *) funbox->object)->flags & JSFUN_LAMBDA);
+        JS_ASSERT((funbox->function())->flags & JSFUN_LAMBDA);
         if (!(funbox->tcflags & (TCF_FUN_USES_ARGUMENTS | TCF_FUN_USES_OWN_NAME)))
             pn->pn_dflags &= ~PND_FUNARG;
     }
@@ -7550,9 +7625,23 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 return NULL;
 #if JS_HAS_XML_SUPPORT
             tt = tokenStream.getToken(TSF_OPERAND | TSF_KEYWORD_IS_NAME);
+
+            /* Treat filters as 'with' statements for name deoptimization. */
+            JSParseNode *oldWith = tc->innermostWith;
+            JSStmtInfo stmtInfo;
+            if (tt == TOK_LP) {
+                tc->innermostWith = pn;
+                js_PushStatement(tc, &stmtInfo, STMT_WITH, -1);
+            }
+
             pn3 = primaryExpr(tt, JS_TRUE);
             if (!pn3)
                 return NULL;
+
+            if (tt == TOK_LP) {
+                tc->innermostWith = oldWith;
+                PopStatement(tc);
+            }
 
             /* Check both tt and pn_type, to distinguish |x.(y)| and |x.y::z| from |x.y|. */
             if (tt == TOK_NAME && pn3->pn_type == TOK_NAME) {
@@ -7662,6 +7751,12 @@ Parser::memberExpr(JSBool allowCallSyntax)
                     pn2->pn_op = JSOP_EVAL;
                     tc->noteCallsEval();
                     tc->flags |= TCF_FUN_HEAVYWEIGHT;
+                    /*
+                     * In non-strict mode code, direct calls to eval can add
+                     * variables to the call object.
+                     */
+                    if (!tc->inStrictMode())
+                        tc->noteHasExtensibleScope();
                 }
             } else if (pn->pn_op == JSOP_GETPROP) {
                 /* Select JSOP_FUNAPPLY given foo.apply(...). */
@@ -9061,7 +9156,7 @@ FoldType(JSContext *cx, JSParseNode *pn, TokenKind type)
           case TOK_NUMBER:
             if (pn->pn_type == TOK_STRING) {
                 jsdouble d;
-                if (!ValueToNumber(cx, StringValue(ATOM_TO_STRING(pn->pn_atom)), &d))
+                if (!ValueToNumber(cx, StringValue(pn->pn_atom), &d))
                     return JS_FALSE;
                 pn->pn_dval = d;
                 pn->pn_type = TOK_NUMBER;
@@ -9190,9 +9285,9 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
     str = NULL;
     if ((pn->pn_xflags & PNX_CANTFOLD) == 0) {
         if (tt == TOK_XMLETAGO)
-            accum = ATOM_TO_STRING(cx->runtime->atomState.etagoAtom);
+            accum = cx->runtime->atomState.etagoAtom;
         else if (tt == TOK_XMLSTAGO || tt == TOK_XMLPTAGC)
-            accum = ATOM_TO_STRING(cx->runtime->atomState.stagoAtom);
+            accum = cx->runtime->atomState.stagoAtom;
     }
 
     /*
@@ -9216,24 +9311,23 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
           case TOK_STRING:
             if (pn2->pn_arity == PN_LIST)
                 goto cantfold;
-            str = ATOM_TO_STRING(pn2->pn_atom);
+            str = pn2->pn_atom;
             break;
 
           case TOK_XMLCDATA:
-            str = js_MakeXMLCDATAString(cx, ATOM_TO_STRING(pn2->pn_atom));
+            str = js_MakeXMLCDATAString(cx, pn2->pn_atom);
             if (!str)
                 return JS_FALSE;
             break;
 
           case TOK_XMLCOMMENT:
-            str = js_MakeXMLCommentString(cx, ATOM_TO_STRING(pn2->pn_atom));
+            str = js_MakeXMLCommentString(cx, pn2->pn_atom);
             if (!str)
                 return JS_FALSE;
             break;
 
           case TOK_XMLPI:
-            str = js_MakeXMLPIString(cx, ATOM_TO_STRING(pn2->pn_atom),
-                                         ATOM_TO_STRING(pn2->pn_atom2));
+            str = js_MakeXMLPIString(cx, pn2->pn_atom, pn2->pn_atom2);
             if (!str)
                 return JS_FALSE;
             break;
@@ -9294,9 +9388,9 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
         str = NULL;
         if ((pn->pn_xflags & PNX_CANTFOLD) == 0) {
             if (tt == TOK_XMLPTAGC)
-                str = ATOM_TO_STRING(cx->runtime->atomState.ptagcAtom);
+                str = cx->runtime->atomState.ptagcAtom;
             else if (tt == TOK_XMLSTAGO || tt == TOK_XMLETAGO)
-                str = ATOM_TO_STRING(cx->runtime->atomState.tagcAtom);
+                str = cx->runtime->atomState.tagcAtom;
         }
         if (str) {
             accum = js_ConcatStrings(cx, accum, str);
@@ -9347,7 +9441,7 @@ Boolish(JSParseNode *pn)
         return pn->pn_dval != 0 && !JSDOUBLE_IS_NaN(pn->pn_dval);
 
       case JSOP_STRING:
-        return ATOM_TO_STRING(pn->pn_atom)->length() != 0;
+        return pn->pn_atom->length() != 0;
 
 #if JS_HAS_GENERATOR_EXPRS
       case JSOP_CALL:
@@ -9521,7 +9615,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                 pn2 = pn3;
             break;
           case TOK_STRING:
-            if (ATOM_TO_STRING(pn1->pn_atom)->length() == 0)
+            if (pn1->pn_atom->length() == 0)
                 pn2 = pn3;
             break;
           case TOK_PRIMARY:
@@ -9633,10 +9727,6 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
 
       case TOK_PLUS:
         if (pn->pn_arity == PN_LIST) {
-            size_t length, length2;
-            jschar *chars;
-            JSString *str, *str2;
-
             /*
              * Any string literal term with all others number or string means
              * this is a concatenation.  If any term is not a string or number
@@ -9649,22 +9739,22 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                 goto do_binary_op;
 
             /* Ok, we're concatenating: convert non-string constant operands. */
-            length = 0;
+            size_t length = 0;
             for (pn2 = pn1; pn2; pn2 = pn2->pn_next) {
                 if (!FoldType(cx, pn2, TOK_STRING))
                     return JS_FALSE;
                 /* XXX fold only if all operands convert to string */
                 if (pn2->pn_type != TOK_STRING)
                     return JS_TRUE;
-                length += ATOM_TO_STRING(pn2->pn_atom)->flatLength();
+                length += pn2->pn_atom->length();
             }
 
             /* Allocate a new buffer and string descriptor for the result. */
-            chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
+            jschar *chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
             if (!chars)
                 return JS_FALSE;
             chars[length] = 0;
-            str = js_NewString(cx, chars, length);
+            JSString *str = js_NewString(cx, chars, length);
             if (!str) {
                 cx->free(chars);
                 return JS_FALSE;
@@ -9672,9 +9762,9 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
 
             /* Fill the buffer, advancing chars and recycling kids as we go. */
             for (pn2 = pn1; pn2; pn2 = RecycleTree(pn2, tc)) {
-                str2 = ATOM_TO_STRING(pn2->pn_atom);
-                length2 = str2->flatLength();
-                js_strncpy(chars, str2->flatChars(), length2);
+                JSAtom *atom = pn2->pn_atom;
+                size_t length2 = atom->length();
+                js_strncpy(chars, atom->chars(), length2);
                 chars += length2;
             }
             JS_ASSERT(*chars == 0);
@@ -9700,8 +9790,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             }
             if (pn1->pn_type != TOK_STRING || pn2->pn_type != TOK_STRING)
                 return JS_TRUE;
-            left = ATOM_TO_STRING(pn1->pn_atom);
-            right = ATOM_TO_STRING(pn2->pn_atom);
+            left = pn1->pn_atom;
+            right = pn2->pn_atom;
             str = js_ConcatStrings(cx, left, right);
             if (!str)
                 return JS_FALSE;
@@ -9823,7 +9913,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
         if (pn1->pn_type == TOK_XMLNAME) {
             JSObjectBox *xmlbox;
 
-            Value v = StringValue(ATOM_TO_STRING(pn1->pn_atom));
+            Value v = StringValue(pn1->pn_atom);
             if (!js_ToAttributeName(cx, &v))
                 return JS_FALSE;
             JS_ASSERT(v.isObject());

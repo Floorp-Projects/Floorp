@@ -21,7 +21,7 @@ function findPopup() {
 
   while (enumerator.hasMoreElements()) {
     let win = enumerator.getNext();
-    if (win.content == content.wrappedJSObject.popup) {
+    if (win.content.wrappedJSObject == content.wrappedJSObject.popup) {
       testPopupUI(win);
       return;
     }

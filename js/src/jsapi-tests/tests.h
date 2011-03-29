@@ -281,6 +281,22 @@ class JSAPITest
         JSContext *cx = JS_NewContext(rt, 8192);
         if (!cx)
             return NULL;
+
+        const size_t MAX_STACK_SIZE =
+/* Assume we can't use more than 5e5 bytes of C stack by default. */
+#if (defined(DEBUG) && defined(__SUNPRO_CC))  || defined(JS_CPU_SPARC)
+            /*
+             * Sun compiler uses a larger stack space for js::Interpret() with
+             * debug.  Use a bigger gMaxStackSize to make "make check" happy.
+             */
+            5000000
+#else
+            500000
+#endif
+        ;
+
+        JS_SetNativeStackQuota(cx, MAX_STACK_SIZE);
+
         JS_SetOptions(cx, JSOPTION_VAROBJFIX | JSOPTION_JIT);
         JS_SetVersion(cx, JSVERSION_LATEST);
         JS_SetErrorReporter(cx, &reportError);

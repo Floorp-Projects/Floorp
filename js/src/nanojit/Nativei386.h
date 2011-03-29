@@ -222,6 +222,21 @@ namespace nanojit
             _nIns -= 4; \
             *((int32_t*)_nIns) = int32_t(i); \
         }; \
+        void OPCODE(int32_t opc) { /* Length: 1 byte.  */ \
+            NanoAssert(unsigned(opc) <= 0xff); \
+            *(--_nIns) = uint8_t(opc); \
+        } \
+        void OPCODE2(int32_t opc2) { /* Length: 2 bytes.  */ \
+            NanoAssert(unsigned(opc2) <= 0xffff); \
+            *(--_nIns) = uint8_t(opc2); \
+            *(--_nIns) = uint8_t(opc2 >> 8); \
+        } \
+        void OPCODE3(int32_t opc3) { /* Length: 3 bytes.  */ \
+            NanoAssert(unsigned(opc3) <= 0xffffff); \
+            *(--_nIns) = uint8_t(opc3); \
+            *(--_nIns) = uint8_t(opc3 >> 8); \
+            *(--_nIns) = uint8_t(opc3 >> 16); \
+        } \
         void MODRM(int32_t mod, int32_t ro, int32_t rm) { /* Length: 1 byte. */ \
             NanoAssert(unsigned(mod) < 4 && unsigned(ro) < 8 && unsigned(rm) < 8); \
             *(--_nIns) = uint8_t(mod << 6 | ro << 3 | rm); \
@@ -248,10 +263,10 @@ namespace nanojit
         void ALU2dm(int32_t c, Register r, int32_t addr); \
         void ALU2m(int32_t c, Register r, int32_t d, Register b); \
         void ALU2sib(int32_t c, Register r, Register base, Register index, int32_t scale, int32_t disp); \
-        void ALU(int32_t c, int32_t d, Register s) { \
+        void ALU(int32_t opc, int32_t d, Register s) { \
             underrunProtect(2); \
             MODRMr(d, REGNUM(s)); \
-            *(--_nIns) = uint8_t(c); \
+            OPCODE(opc); \
         }; \
         void ALUi(int32_t c, Register r, int32_t i); \
         void ALUmi(int32_t c, int32_t d, Register b, int32_t i); \
@@ -270,7 +285,7 @@ namespace nanojit
         void SHR(Register r, Register s); \
         void SAR(Register r, Register s); \
         void SHL(Register r, Register s); \
-        void SHIFT(int32_t c, Register r, int32_t i); \
+        void SHIFTi(int32_t c, Register r, int32_t i); \
         void SHLi(Register r, int32_t i); \
         void SHRi(Register r, int32_t i); \
         void SARi(Register r, int32_t i); \
@@ -427,7 +442,6 @@ namespace nanojit
         void FPUm(int32_t o, int32_t d, Register b); \
         void FPUdm(int32_t o, const double* const m); \
         void TEST_AH(int32_t i); \
-        void TEST_AX(int32_t i); \
         void FNSTSW_AX(); \
         void FCHS(); \
         void FLD1(); \

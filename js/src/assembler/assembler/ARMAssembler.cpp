@@ -413,14 +413,14 @@ inline void ARMAssembler::fixUpOffsets(void * buffer)
     }
 }
 
-void* ARMAssembler::executableCopy(ExecutablePool* allocator)
+void* ARMAssembler::executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool **poolp)
 {
     // 64-bit alignment is required for next constant pool and JIT code as well
     m_buffer.flushWithoutBarrier(true);
     if (m_buffer.uncheckedSize() & 0x7)
         bkpt(0);
 
-    void * data = m_buffer.executableCopy(allocator);
+    void * data = m_buffer.executableAllocAndCopy(allocator, poolp);
     if (data)
         fixUpOffsets(data);
     return data;
@@ -430,16 +430,11 @@ void* ARMAssembler::executableCopy(ExecutablePool* allocator)
 // offsets and literal pool loads as it goes. The buffer is assumed to be large
 // enough to hold the code, and any pre-existing literal pool is assumed to
 // have been flushed.
-void* ARMAssembler::executableCopy(void * buffer)
+void ARMAssembler::executableCopy(void * buffer)
 {
-    if (m_buffer.oom())
-        return NULL;
-
     ASSERT(m_buffer.sizeOfConstantPool() == 0);
-
     memcpy(buffer, m_buffer.data(), m_buffer.size());
     fixUpOffsets(buffer);
-    return buffer;
 }
 
 } // namespace JSC

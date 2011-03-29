@@ -601,7 +601,7 @@ public:
      */
     bool isEscapeFreeStringLiteral() const {
         JS_ASSERT(pn_type == js::TOK_STRING && !pn_parens);
-        JSString *str = ATOM_TO_STRING(pn_atom);
+        JSString *str = pn_atom;
 
         /*
          * If the string's length in the source code is its length as a value,
@@ -974,6 +974,8 @@ struct JSFunctionBox : public JSObjectBox
                         level:JSFB_LEVEL_BITS;
     uint32              tcflags;
 
+    JSFunction *function() const { return (JSFunction *) object; }
+
     bool joinable() const;
 
     /*
@@ -981,6 +983,12 @@ struct JSFunctionBox : public JSObjectBox
      * filter-expression, or a function that uses direct eval.
      */
     bool inAnyDynamicScope() const;
+
+    /* 
+     * Must this function's descendants be marked as having an extensible
+     * ancestor?
+     */
+    bool scopeIsExtensible() const;
 
     /*
      * Unbrand an object being initialized or constructed if any method cannot
@@ -1052,6 +1060,7 @@ struct Parser : private js::AutoGCRooter
     uint32              functionCount;  /* number of functions in current unit */
     JSObjectBox         *traceListHead; /* list of parsed object for GC tracing */
     JSTreeContext       *tc;            /* innermost tree context (stack-allocated) */
+    js::EmptyShape      *emptyCallShape;/* empty shape for Call objects */
 
     /* Root atoms and objects allocated for the parsed tree. */
     js::AutoKeepAtoms   keepAtoms;
@@ -1110,6 +1119,7 @@ struct Parser : private js::AutoGCRooter
     bool analyzeFunctions(JSTreeContext *tc);
     void cleanFunctionList(JSFunctionBox **funbox);
     bool markFunArgs(JSFunctionBox *funbox);
+    void markExtensibleScopeDescendants(JSFunctionBox *funbox, bool hasExtensibleParent);
     void setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags);
 
     void trace(JSTracer *trc);
@@ -1127,6 +1137,14 @@ private:
      * object, pointed to by this->tc.
      *
      * Each returns a parse node tree or null on error.
+     *
+     * Parsers whose name has a '1' suffix leave the TokenStream state
+     * pointing to the token one past the end of the parsed fragment.  For a
+     * number of the parsers this is convenient and avoids a lot of
+     * unnecessary ungetting and regetting of tokens.
+     *
+     * Some parsers have two versions:  an always-inlined version (with an 'i'
+     * suffix) and a never-inlined version (with an 'n' suffix).
      */
     JSParseNode *functionStmt();
     JSParseNode *functionExpr();
@@ -1143,17 +1161,26 @@ private:
     JSParseNode *variables(bool inLetHead);
     JSParseNode *expr();
     JSParseNode *assignExpr();
-    JSParseNode *condExpr();
-    JSParseNode *orExpr();
-    JSParseNode *andExpr();
-    JSParseNode *bitOrExpr();
-    JSParseNode *bitXorExpr();
-    JSParseNode *bitAndExpr();
-    JSParseNode *eqExpr();
-    JSParseNode *relExpr();
-    JSParseNode *shiftExpr();
-    JSParseNode *addExpr();
-    JSParseNode *mulExpr();
+    JSParseNode *condExpr1();
+    JSParseNode *orExpr1();
+    JSParseNode *andExpr1i();
+    JSParseNode *andExpr1n();
+    JSParseNode *bitOrExpr1i();
+    JSParseNode *bitOrExpr1n();
+    JSParseNode *bitXorExpr1i();
+    JSParseNode *bitXorExpr1n();
+    JSParseNode *bitAndExpr1i();
+    JSParseNode *bitAndExpr1n();
+    JSParseNode *eqExpr1i();
+    JSParseNode *eqExpr1n();
+    JSParseNode *relExpr1i();
+    JSParseNode *relExpr1n();
+    JSParseNode *shiftExpr1i();
+    JSParseNode *shiftExpr1n();
+    JSParseNode *addExpr1i();
+    JSParseNode *addExpr1n();
+    JSParseNode *mulExpr1i();
+    JSParseNode *mulExpr1n();
     JSParseNode *unaryExpr();
     JSParseNode *memberExpr(JSBool allowCallSyntax);
     JSParseNode *primaryExpr(js::TokenKind tt, JSBool afterDot);
