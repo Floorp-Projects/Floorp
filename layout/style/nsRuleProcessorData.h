@@ -172,8 +172,6 @@ public:
     mVisitedHandling = mRuleWalker->VisitedHandling();
   }
   
-  nsEventStates DocumentState();
-
   nsPresContext*    mPresContext;
   mozilla::dom::Element* mElement;       // weak ref, must not be null
   nsIContent*       mParentContent; // mElement->GetParent(); weak ref
