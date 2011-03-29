@@ -179,10 +179,6 @@ public:
   nsIContent*       mParentContent; // mElement->GetParent(); weak ref
   nsRuleWalker*     mRuleWalker; // Used to add rules to our results.
   
-  nsIAtom*          mContentID;     // mElement->GetID()
-  PRPackedBool      mHasAttributes; // mElement->GetAttrCount() > 0
-  PRInt32           mNameSpaceID;   // mElement->GetNameSapce()
-  const nsAttrValue* mClasses;      // mElement->GetClasses()
   // mPreviousSiblingData and mParentData are always RuleProcessorData
   // and never a derived class.  They are allocated lazily, when
   // selectors require matching of prior siblings or ancestors.
