@@ -249,7 +249,6 @@ var PageActions = {
     let browser = Browser.selectedBrowser;
     let fileName = ContentAreaUtils.getDefaultFileName(browser.contentTitle, browser.documentURI, null, null);
     fileName = fileName.trim() + ".pdf";
-    let displayName = fileName;
 
     let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
     let downloadsDir = dm.defaultDownloadsDirectory;
@@ -259,7 +258,6 @@ var PageActions = {
     let file = downloadsDir.clone();
     file.append(fileName);
     file.createUnique(file.NORMAL_FILE_TYPE, 0666);
-    fileName = file.leafName;
 #else
     let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     picker.init(window, Strings.browser.GetStringFromName("pageactions.saveas.pdf"), Ci.nsIFilePicker.modeSave);
@@ -275,6 +273,7 @@ var PageActions = {
 
     let file = picker.file;
 #endif
+    fileName = file.leafName;
 
     // We must manually add this to the download system
     let db = dm.DBConnection;
@@ -285,7 +284,7 @@ var PageActions = {
     );
 
     let current = browser.currentURI.spec;
-    stmt.params.name = displayName;
+    stmt.params.name = fileName;
     stmt.params.source = current;
     stmt.params.target = Services.io.newFileURI(file).spec;
     stmt.params.startTime = Date.now() * 1000;
