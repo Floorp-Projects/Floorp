@@ -55,6 +55,7 @@
 struct RuleCascadeData;
 struct nsCSSSelectorList;
 struct CascadeEnumData;
+struct TreeMatchContext;
 
 /**
  * The CSS style rule processor provides a mechanism for sibling style
@@ -87,12 +88,12 @@ public:
   /*
    * Returns true if the given aElement matches one of the
    * selectors in aSelectorList.  Note that this method will assume
-   * the matching is not for styling purposes.  aSelectorList must not
+   * the given aElement is not a relevant link.  aSelectorList must not
    * include any pseudo-element selectors.  aSelectorList is allowed
    * to be null; in this case PR_FALSE will be returned.
    */
   static PRBool SelectorListMatches(mozilla::dom::Element* aElement,
-                                    RuleProcessorData& aData,
+                                    TreeMatchContext& aTreeMatchContext,
                                     nsCSSSelectorList* aSelectorList);
 
   /*

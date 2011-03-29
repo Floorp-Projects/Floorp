@@ -766,7 +766,7 @@ nsStyleSet::ResolveStyleFor(Element* aElement,
   NS_ASSERTION(aElement, "aElement must not be null");
 
   nsRuleWalker ruleWalker(mRuleTree);
-  ElementRuleProcessorData data(PresContext(), aElement, &ruleWalker, PR_TRUE);
+  ElementRuleProcessorData data(PresContext(), aElement, &ruleWalker);
   FileRules(EnumRulesMatching<ElementRuleProcessorData>, &data, aElement,
             &ruleWalker);
 
