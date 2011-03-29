@@ -202,7 +202,6 @@ private:
 };
 
 class NS_FINAL_CLASS nsCSSFontFaceRule : public nsCSSRule,
-                                         public nsICSSRule,
                                          public nsIDOMCSSFontFaceRule
 {
 public:
