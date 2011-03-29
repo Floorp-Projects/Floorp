@@ -217,7 +217,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 {
   nsRuleWalker *ruleWalker = aData->mRuleWalker;
   if (aData->mElement->IsHTML()) {
-    nsIAtom* tag = aData->mContentTag;
+    nsIAtom* tag = aData->mElement->Tag();
 
     // if we have anchor colors, check if this is an anchor with an href
     if (tag == nsGkAtoms::a) {
@@ -275,8 +275,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 /* virtual */ nsRestyleHint
 nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
-  if (aData->mElement->IsHTML() &&
-      aData->mContentTag == nsGkAtoms::a &&
+  if (aData->mElement->IsHTML(nsGkAtoms::a) &&
       nsCSSRuleProcessor::IsLink(aData->mElement) &&
       ((mActiveRule && aData->mStateMask.HasState(NS_EVENT_STATE_ACTIVE)) ||
        (mLinkRule && aData->mStateMask.HasState(NS_EVENT_STATE_VISITED)) ||
@@ -309,8 +308,7 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
   Element *element = aData->mElement;
   if (aData->mAttribute == nsGkAtoms::href &&
       (mLinkRule || mVisitedRule || mActiveRule) &&
-      element->IsHTML() &&
-      aData->mContentTag == nsGkAtoms::a) {
+      element->IsHTML(nsGkAtoms::a)) {
     return eRestyle_Self;
   }
 
@@ -322,8 +320,7 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
     // cellpadding on tables is special and requires reresolving all
     // the cells in the table
     if (aData->mAttribute == nsGkAtoms::cellpadding &&
-        element->IsHTML() &&
-        aData->mContentTag == nsGkAtoms::table) {
+        element->IsHTML(nsGkAtoms::table)) {
       return eRestyle_Subtree;
     }
     return eRestyle_Self;

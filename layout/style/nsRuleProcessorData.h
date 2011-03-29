@@ -179,7 +179,6 @@ public:
   nsIContent*       mParentContent; // mElement->GetParent(); weak ref
   nsRuleWalker*     mRuleWalker; // Used to add rules to our results.
   
-  nsIAtom*          mContentTag;    // mElement->GetTag()
   nsIAtom*          mContentID;     // mElement->GetID()
   PRPackedBool      mHasAttributes; // mElement->GetAttrCount() > 0
   PRInt32           mNameSpaceID;   // mElement->GetNameSapce()
