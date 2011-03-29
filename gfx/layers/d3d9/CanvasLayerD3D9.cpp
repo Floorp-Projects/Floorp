@@ -79,12 +79,8 @@ CanvasLayerD3D9::Initialize(const Data& aData)
 }
 
 void
-CanvasLayerD3D9::UpdateSurface()
+CanvasLayerD3D9::Updated(const nsIntRect& aRect)
 {
-  if (!mDirty)
-    return;
-  mDirty = PR_FALSE;
-
   if (!mTexture) {
     CreateTexture();
     NS_WARNING("CanvasLayerD3D9::Updated called but no texture present!");
@@ -121,6 +117,9 @@ CanvasLayerD3D9::UpdateSurface()
     if (currentFramebuffer != mCanvasFramebuffer)
       mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mCanvasFramebuffer);
 
+    // For simplicity, we read the entire framebuffer for now -- in
+    // the future we should use aRect, though with WebGL we don't
+    // have an easy way to generate one.
     nsRefPtr<gfxImageSurface> tmpSurface =
       new gfxImageSurface(destination,
                           gfxIntSize(mBounds.width, mBounds.height),
@@ -146,10 +145,10 @@ CanvasLayerD3D9::UpdateSurface()
     mTexture->UnlockRect(0);
   } else if (mSurface) {
     RECT r;
-    r.left = mBounds.x;
-    r.top = mBounds.y;
-    r.right = mBounds.XMost();
-    r.bottom = mBounds.YMost();
+    r.left = aRect.x;
+    r.top = aRect.y;
+    r.right = aRect.XMost();
+    r.bottom = aRect.YMost();
 
     D3DLOCKED_RECT lockedRect;
     HRESULT hr = mTexture->LockRect(0, &lockedRect, &r, 0);
@@ -159,10 +158,16 @@ CanvasLayerD3D9::UpdateSurface()
       return;
     }
 
+    PRUint8 *startBits;
+    PRUint32 sourceStride;
+
     nsRefPtr<gfxImageSurface> sourceSurface;
 
     if (mSurface->GetType() == gfxASurface::SurfaceTypeWin32) {
       sourceSurface = mSurface->GetAsImageSurface();
+      startBits = sourceSurface->Data() + sourceSurface->Stride() * aRect.y +
+                  aRect.x * 4;
+      sourceStride = sourceSurface->Stride();
     } else if (mSurface->GetType() == gfxASurface::SurfaceTypeImage) {
       sourceSurface = static_cast<gfxImageSurface*>(mSurface.get());
       if (sourceSurface->Format() != gfxASurface::ImageFormatARGB32 &&
@@ -171,17 +176,20 @@ CanvasLayerD3D9::UpdateSurface()
         mTexture->UnlockRect(0);
         return;
       }
+      startBits = sourceSurface->Data() + sourceSurface->Stride() * aRect.y +
+                  aRect.x * 4;
+      sourceStride = sourceSurface->Stride();
     } else {
-      sourceSurface = new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
+      sourceSurface = new gfxImageSurface(gfxIntSize(aRect.width, aRect.height),
                                           gfxASurface::ImageFormatARGB32);
       nsRefPtr<gfxContext> ctx = new gfxContext(sourceSurface);
+      ctx->Translate(gfxPoint(-aRect.x, -aRect.y));
       ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
       ctx->SetSource(mSurface);
       ctx->Paint();
+      startBits = sourceSurface->Data();
+      sourceStride = sourceSurface->Stride();
     }
-
-    PRUint8 *startBits = sourceSurface->Data();
-    PRUint32 sourceStride = sourceSurface->Stride();
 
     if (sourceSurface->Format() != gfxASurface::ImageFormatARGB32) {
       mHasAlpha = false;
@@ -189,10 +197,10 @@ CanvasLayerD3D9::UpdateSurface()
       mHasAlpha = true;
     }
 
-    for (int y = 0; y < mBounds.height; y++) {
+    for (int y = 0; y < aRect.height; y++) {
       memcpy((PRUint8*)lockedRect.pBits + lockedRect.Pitch * y,
              startBits + sourceStride * y,
-             mBounds.width * 4);
+             aRect.width * 4);
     }
 
     mTexture->UnlockRect(0);
@@ -208,11 +216,9 @@ CanvasLayerD3D9::GetLayer()
 void
 CanvasLayerD3D9::RenderLayer()
 {
-  UpdateSurface();
-  FireDidTransactionCallback();
-
-  if (!mTexture)
-    return;
+  if (!mTexture) {
+    Updated(mBounds);
+  }
 
   /*
    * We flip the Y axis here, note we can only do this because we are in 
