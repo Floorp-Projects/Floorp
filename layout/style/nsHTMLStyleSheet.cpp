@@ -70,6 +70,7 @@
 #include "nsRuleData.h"
 #include "nsContentErrors.h"
 #include "nsRuleProcessorData.h"
+#include "nsCSSRuleProcessor.h"
 #include "mozilla/dom/Element.h"
 #include "nsCSSFrameConstructor.h"
 
@@ -221,11 +222,12 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
     // if we have anchor colors, check if this is an anchor with an href
     if (tag == nsGkAtoms::a) {
       if (mLinkRule || mVisitedRule || mActiveRule) {
-        nsEventStates state = aData->GetContentStateForVisitedHandling(
+        nsEventStates state = nsCSSRuleProcessor::GetContentStateForVisitedHandling(
+                                  aData->mElement,
                                   ruleWalker->VisitedHandling(),
                                   // If the node being matched is a link,
                                   // it's the relevant link.
-                                  aData->IsLink());
+                                  nsCSSRuleProcessor::IsLink(aData->mElement));
         if (mLinkRule && state.HasState(NS_EVENT_STATE_UNVISITED)) {
           ruleWalker->Forward(mLinkRule);
           ruleWalker->SetHaveRelevantLink();
@@ -236,7 +238,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
         }
 
         // No need to add to the active rule if it's not a link
-        if (mActiveRule && aData->IsLink() &&
+        if (mActiveRule && nsCSSRuleProcessor::IsLink(aData->mElement) &&
             state.HasState(NS_EVENT_STATE_ACTIVE)) {
           ruleWalker->Forward(mActiveRule);
         }
@@ -275,7 +277,7 @@ nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
   if (aData->mElement->IsHTML() &&
       aData->mContentTag == nsGkAtoms::a &&
-      aData->IsLink() &&
+      nsCSSRuleProcessor::IsLink(aData->mElement) &&
       ((mActiveRule && aData->mStateMask.HasState(NS_EVENT_STATE_ACTIVE)) ||
        (mLinkRule && aData->mStateMask.HasState(NS_EVENT_STATE_VISITED)) ||
        (mVisitedRule && aData->mStateMask.HasState(NS_EVENT_STATE_VISITED)))) {

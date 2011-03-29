@@ -50,6 +50,7 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsCSSRules.h"
+#include "nsRuleWalker.h"
 
 struct RuleCascadeData;
 struct nsCSSSelectorList;
@@ -93,6 +94,25 @@ public:
   static PRBool SelectorListMatches(mozilla::dom::Element* aElement,
                                     RuleProcessorData& aData,
                                     nsCSSSelectorList* aSelectorList);
+
+  /*
+   * Helper to get the content state for a content node.  This may be
+   * slightly adjusted from IntrinsicState().
+   */
+  static nsEventStates GetContentState(mozilla::dom::Element* aElement);
+
+  /*
+   * Helper to get the content state for :visited handling for an element
+   */
+  static nsEventStates GetContentStateForVisitedHandling(
+             mozilla::dom::Element* aElement,
+             nsRuleWalker::VisitedHandlingType aVisitedHandling,
+             PRBool aIsRelevantLink);
+
+  /*
+   * Helper to test whether a node is a link
+   */
+  static PRBool IsLink(mozilla::dom::Element* aElement);
 
   // nsIStyleRuleProcessor
   virtual void RulesMatching(ElementRuleProcessorData* aData);

@@ -172,13 +172,7 @@ public:
     mVisitedHandling = mRuleWalker->VisitedHandling();
   }
   
-  nsEventStates ContentState();
   nsEventStates DocumentState();
-  PRBool IsLink();
-
-  nsEventStates GetContentStateForVisitedHandling(
-                  nsRuleWalker::VisitedHandlingType aVisitedHandling,
-                  PRBool aIsRelevantLink);
 
   nsPresContext*    mPresContext;
   mozilla::dom::Element* mElement;       // weak ref, must not be null
@@ -195,15 +189,6 @@ public:
   // selectors require matching of prior siblings or ancestors.
   RuleProcessorData* mPreviousSiblingData;
   RuleProcessorData* mParentData;
-
-private:
-  // mContentState is initialized lazily.
-  nsEventStates mContentState;  // eventStateMgr->GetContentState() or
-                                // mElement->IntrinsicState() if we have no ESM
-                                // adjusted for not supporting :visited (but
-                                // with visitedness information when we support
-                                // it).
-  PRPackedBool mGotContentState;
 };
 
 struct ElementRuleProcessorData : public RuleProcessorData {
