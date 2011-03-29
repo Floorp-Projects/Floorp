@@ -2987,8 +2987,8 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
 }
 
 /* static */ PRBool
-nsCSSRuleProcessor::SelectorListMatches(mozilla::dom::Element* aElement,
-                                        RuleProcessorData& aData,
+nsCSSRuleProcessor::SelectorListMatches(Element* aElement,
+                                        TreeMatchContext& aTreeMatchContext,
                                         nsCSSSelectorList* aSelectorList)
 {
   while (aSelectorList) {
@@ -2996,9 +2996,10 @@ nsCSSRuleProcessor::SelectorListMatches(mozilla::dom::Element* aElement,
     NS_ASSERTION(sel, "Should have *some* selectors");
     NS_ASSERTION(!sel->IsPseudoElement(), "Shouldn't have been called");
     NodeMatchContext nodeContext(nsEventStates(), PR_FALSE);
-    if (SelectorMatches(aElement, sel, nodeContext, aData)) {
+    if (SelectorMatches(aElement, sel, nodeContext, aTreeMatchContext)) {
       nsCSSSelector* next = sel->mNext;
-      if (!next || SelectorMatchesTree(aElement, next, aData, PR_FALSE)) {
+      if (!next ||
+          SelectorMatchesTree(aElement, next, aTreeMatchContext, PR_FALSE)) {
         return PR_TRUE;
       }
     }

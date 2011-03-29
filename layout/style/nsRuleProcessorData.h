@@ -186,9 +186,8 @@ public:
 struct ElementRuleProcessorData : public RuleProcessorData {
   ElementRuleProcessorData(nsPresContext* aPresContext,
                            mozilla::dom::Element* aElement, 
-                           nsRuleWalker* aRuleWalker,
-                           PRBool aForStyling)
-  : RuleProcessorData(aPresContext, aElement, aRuleWalker, aForStyling)
+                           nsRuleWalker* aRuleWalker)
+  : RuleProcessorData(aPresContext, aElement, aRuleWalker, PR_TRUE)
   {
     NS_PRECONDITION(aPresContext, "null pointer");
     NS_PRECONDITION(aRuleWalker, "null pointer");
