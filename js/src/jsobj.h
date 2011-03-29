@@ -1729,11 +1729,11 @@ js_SetNativeAttributes(JSContext *cx, JSObject *obj, js::Shape *shape,
 namespace js {
 
 /*
- * If obj has a data property methodid which is a function object for the given
- * native, return that function object. Otherwise, return NULL.
+ * If obj has an already-resolved data property for methodid, return true and
+ * store the property value in *vp.
  */
-extern JSObject *
-HasNativeMethod(JSObject *obj, jsid methodid, Native native);
+extern bool
+HasDataProperty(JSObject *obj, jsid methodid, js::Value *vp);
 
 extern bool
 DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);

@@ -5905,19 +5905,17 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
 
 namespace js {
 
-JSObject *
-HasNativeMethod(JSObject *obj, jsid methodid, Native native)
+bool
+HasDataProperty(JSObject *obj, jsid methodid, Value *vp)
 {
-    const Shape *shape = obj->nativeLookup(methodid);
-    if (!shape || !shape->hasDefaultGetter() || !obj->containsSlot(shape->slot))
-        return NULL;
+    if (const Shape *shape = obj->nativeLookup(methodid)) {
+        if (shape->hasDefaultGetterOrIsMethod() && obj->containsSlot(shape->slot)) {
+            *vp = obj->nativeGetSlot(shape->slot);
+            return true;
+        }
+    }
 
-    const Value &fval = obj->nativeGetSlot(shape->slot);
-    JSObject *funobj;
-    if (!IsFunctionObject(fval, &funobj) || funobj->getFunctionPrivate()->maybeNative() != native)
-        return NULL;
-
-    return funobj;
+    return false;
 }
 
 bool
