@@ -246,14 +246,12 @@ nsHTMLAreaAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
   return nsHTMLLinkAccessible::GetStateInternal(aState, aExtraState);
 }
 
-nsresult
+nsAccessible*
 nsHTMLAreaAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                      PRBool aDeepestChild,
-                                      nsIAccessible **aChild)
+                                      EWhichChildAtPoint aWhichChild)
 {
   // Don't walk into area accessibles.
-  NS_ADDREF(*aChild = this);
-  return NS_OK;
+  return this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

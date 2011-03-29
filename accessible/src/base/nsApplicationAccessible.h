@@ -98,8 +98,6 @@ public:
   NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
   NS_IMETHOD GroupPosition(PRInt32 *aGroupLevel, PRInt32 *aSimilarItemsInGroup,
                            PRInt32 *aPositionInGroup);
-  NS_IMETHOD GetChildAtPoint(PRInt32 aX, PRInt32 aY, nsIAccessible **aChild);
-  NS_IMETHOD GetDeepestChildAtPoint(PRInt32 aX, PRInt32 aY, nsIAccessible **aChild);
   NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
                                nsIAccessibleRelation **aRelation);
   NS_IMETHOD GetRelationsCount(PRUint32 *aRelationsCount);
@@ -128,6 +126,8 @@ public:
   virtual nsresult GetARIAState(PRUint32 *aState, PRUint32 *aExtraState);
   virtual PRUint32 NativeRole();
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
+  virtual nsAccessible* GetChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                        EWhichChildAtPoint aWhichChild);
 
   virtual void InvalidateChildren();
 
