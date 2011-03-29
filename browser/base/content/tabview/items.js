@@ -943,7 +943,6 @@ let Items = {
   //     width of children and the columns.
   //   count - overrides the item count for layout purposes;
   //     default: the actual item count
-  //   padding - pixels between each item
   //   columns - (int) a preset number of columns to use
   //   dropPos - a <Point> which should have a one-tab space left open, used
   //             when a tab is dragged over.

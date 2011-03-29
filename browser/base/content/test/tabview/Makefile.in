@@ -104,6 +104,7 @@ _BROWSER_FILES = \
                  browser_tabview_bug624953.js \
                  browser_tabview_bug625269.js \
                  browser_tabview_bug625424.js \
+                 browser_tabview_bug625666.js \
                  browser_tabview_bug626368.js \
                  browser_tabview_bug626525.js \
                  browser_tabview_bug626791.js \
@@ -120,6 +121,7 @@ _BROWSER_FILES = \
                  browser_tabview_bug634077.js \
                  browser_tabview_bug634085.js \
                  browser_tabview_bug634158.js \
+                 browser_tabview_bug634672.js \
                  browser_tabview_bug635696.js \
                  browser_tabview_dragdrop.js \
                  browser_tabview_exit_button.js \
