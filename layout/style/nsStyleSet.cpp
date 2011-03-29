@@ -766,7 +766,7 @@ nsStyleSet::ResolveStyleFor(Element* aElement,
   NS_ASSERTION(aElement, "aElement must not be null");
 
   nsRuleWalker ruleWalker(mRuleTree);
-  ElementRuleProcessorData data(PresContext(), aElement, &ruleWalker);
+  ElementRuleProcessorData data(PresContext(), aElement, &ruleWalker, PR_TRUE);
   FileRules(EnumRulesMatching<ElementRuleProcessorData>, &data, aElement,
             &ruleWalker);
 
@@ -774,7 +774,7 @@ nsStyleSet::ResolveStyleFor(Element* aElement,
   nsRuleNode *visitedRuleNode = nsnull;
 
   if (ruleWalker.HaveRelevantLink()) {
-    ruleWalker.ResetForVisitedMatching();
+    data.ResetForVisitedMatching();
     FileRules(EnumRulesMatching<ElementRuleProcessorData>, &data, aElement,
               &ruleWalker);
     visitedRuleNode = ruleWalker.CurrentNode();
@@ -881,7 +881,7 @@ nsStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
   nsRuleNode *visitedRuleNode = nsnull;
 
   if (ruleWalker.HaveRelevantLink()) {
-    ruleWalker.ResetForVisitedMatching();
+    data.ResetForVisitedMatching();
     FileRules(EnumRulesMatching<PseudoElementRuleProcessorData>, &data,
               aParentElement, &ruleWalker);
     visitedRuleNode = ruleWalker.CurrentNode();
@@ -923,7 +923,7 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
   nsRuleNode *visitedRuleNode = nsnull;
 
   if (ruleWalker.HaveRelevantLink()) {
-    ruleWalker.ResetForVisitedMatching();
+    data.ResetForVisitedMatching();
     FileRules(EnumRulesMatching<PseudoElementRuleProcessorData>, &data,
               aParentElement, &ruleWalker);
     visitedRuleNode = ruleWalker.CurrentNode();
@@ -1002,7 +1002,7 @@ nsStyleSet::ResolveXULTreePseudoStyle(Element* aParentElement,
   nsRuleNode *visitedRuleNode = nsnull;
 
   if (ruleWalker.HaveRelevantLink()) {
-    ruleWalker.ResetForVisitedMatching();
+    data.ResetForVisitedMatching();
     FileRules(EnumRulesMatching<XULTreeRuleProcessorData>, &data,
               aParentElement, &ruleWalker);
     visitedRuleNode = ruleWalker.CurrentNode();
