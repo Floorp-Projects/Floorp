@@ -1370,6 +1370,7 @@ JSContext::JSContext(JSRuntime *rt)
     resolveFlags(0),
     rngSeed(0),
     iterValue(MagicValue(JS_NO_ITER_VALUE)),
+    reportGranularity(JS_DEFAULT_JITREPORT_GRANULARITY),
 #ifdef JS_TRACER
     traceJitEnabled(false),
 #endif
