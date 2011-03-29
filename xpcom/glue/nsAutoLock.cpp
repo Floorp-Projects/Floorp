@@ -196,6 +196,9 @@ static nsNamedVector* GetVector(PLHashTable* table, const void* key)
 /* static */ void
 nsAutoLockBase::OnSemaphoreCreated(const void* key, const char* name )
 {
+    if (LockStackTPI == PRUintn(-1))
+        InitAutoLockStatics();
+
     if (key && OrderTable) {
         nsNamedVector* value = new nsNamedVector(name);
         if (value) {
