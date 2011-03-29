@@ -1265,6 +1265,7 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script, bool construct)
     void **parity = construct ? &script->jitArityCheckCtor : &script->jitArityCheckNormal;
 
     if (*pjit) {
+        Probes::discardMJITCode(cx, *pjit, script, (*pjit)->code.m_code.executableAddress());
         (*pjit)->~JITScript();
         cx->free_(*pjit);
         *pjit = NULL;

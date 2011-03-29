@@ -243,7 +243,7 @@ AttachSetGlobalNameStub(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, cons
     linker.link(guard, ic->slowPathStart);
     linker.link(isFun, ic->slowPathStart);
 
-    JSC::CodeLocationLabel cs = linker.finalize();
+    JSC::CodeLocationLabel cs = linker.finalize(f);
     JaegerSpew(JSpew_PICs, "generated setgname stub at %p\n", cs.executableAddress());
 
     Repatcher repatcher(f.jit());
@@ -501,7 +501,7 @@ class EqualityCompiler : public BaseCompiler
         buffer.link(trueJump, ic.target);
         buffer.link(falseJump, ic.fallThrough);
 
-        CodeLocationLabel cs = buffer.finalize();
+        CodeLocationLabel cs = buffer.finalize(f);
 
         /* Jump to the newly generated code instead of to the IC. */
         repatcher.relink(ic.jumpToStub, cs);
@@ -803,7 +803,7 @@ class CallCompiler : public BaseCompiler
         }
 
         linker.link(notCompiled, ic.slowPathStart.labelAtOffset(ic.slowJoinOffset));
-        JSC::CodeLocationLabel cs = linker.finalize();
+        JSC::CodeLocationLabel cs = linker.finalize(f);
 
         JaegerSpew(JSpew_PICs, "generated CALL stub %p (%lu bytes)\n", cs.executableAddress(),
                    (unsigned long) masm.size());
@@ -889,7 +889,7 @@ class CallCompiler : public BaseCompiler
         linker.link(claspGuard, ic.slowPathStart);
         linker.link(funGuard, ic.slowPathStart);
         linker.link(done, ic.funGuard.labelAtOffset(ic.hotPathOffset));
-        JSC::CodeLocationLabel cs = linker.finalize();
+        JSC::CodeLocationLabel cs = linker.finalize(f);
 
         JaegerSpew(JSpew_PICs, "generated CALL closure stub %p (%lu bytes)\n",
                    cs.executableAddress(), (unsigned long) masm.size());
@@ -1063,7 +1063,7 @@ class CallCompiler : public BaseCompiler
         ic.fastGuardedNative = obj;
 
         linker.link(funGuard, ic.slowPathStart);
-        JSC::CodeLocationLabel start = linker.finalize();
+        JSC::CodeLocationLabel start = linker.finalize(f);
 
         JaegerSpew(JSpew_PICs, "generated native CALL stub %p (%lu bytes)\n",
                    start.executableAddress(), (unsigned long) masm.size());
@@ -1358,7 +1358,7 @@ ic::GenerateArgumentCheckStub(VMFrame &f)
         linker.link(mismatches[i], jit->argsCheckStub);
     linker.link(done, jit->argsCheckFallthrough);
 
-    JSC::CodeLocationLabel cs = linker.finalize();
+    JSC::CodeLocationLabel cs = linker.finalize(f);
 
     JaegerSpew(JSpew_PICs, "generated ARGS CHECK stub %p (%lu bytes)\n",
                cs.executableAddress(), (unsigned long)masm.size());
