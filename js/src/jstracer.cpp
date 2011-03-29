@@ -11415,13 +11415,16 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                  */
                 if (!CallResultEscapes(cx->regs().pc)) {
                     JSObject* proto;
-                    jsid id = ATOM_TO_JSID(cx->runtime->atomState.testAtom);
-                    /* Get RegExp.prototype.test() and check it hasn't been changed. */
+                    /* Get RegExp.prototype.test and check it hasn't been changed. */
                     if (js_GetClassPrototype(cx, NULL, JSProto_RegExp, &proto)) {
-                        if (JSObject *tmp = HasNativeMethod(proto, id, js_regexp_test)) {
-                            vp[0] = ObjectValue(*tmp);
-                            funobj = tmp;
-                            fun = tmp->getFunctionPrivate();
+                        Value pval;
+                        jsid id = ATOM_TO_JSID(cx->runtime->atomState.testAtom);
+                        if (HasDataProperty(proto, id, &pval) &&
+                            IsNativeFunction(pval, js_regexp_test))
+                        {
+                            vp[0] = pval;
+                            funobj = &pval.toObject();
+                            fun = funobj->getFunctionPrivate();
                             native = js_regexp_test;
                         }
                     }
