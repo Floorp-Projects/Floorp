@@ -1135,9 +1135,6 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
   NS_ASSERTION(aElement, "null element leaked into SelectorMatches");
 
   NS_ASSERTION(aElement->GetOwnerDoc(), "Document-less node here?");
-
-  // get the parent
-  mParentContent = aElement->GetParent();
 }
 
 RuleProcessorData::~RuleProcessorData()
@@ -2105,72 +2102,55 @@ static PRBool SelectorMatches(Element* aElement,
   ((ch) == PRUnichar(' ') || (ch) == PRUnichar('~'))
 
 static PRBool SelectorMatchesTree(Element* aPrevElement,
-                                  RuleProcessorData& aPrevData,
                                   nsCSSSelector* aSelector,
                                   TreeMatchContext& aTreeMatchContext,
                                   PRBool aLookForRelevantLink)
 {
   nsCSSSelector* selector = aSelector;
-  RuleProcessorData* prevdata = &aPrevData;
+  Element* prevElement = aPrevElement;
   while (selector) { // check compound selectors
     NS_ASSERTION(!selector->mNext ||
                  selector->mNext->mOperator != PRUnichar(0),
                  "compound selector without combinator");
 
-    // If we don't already have a RuleProcessorData for the next
-    // appropriate content (whether parent or previous sibling), create
-    // one.
-
     // for adjacent sibling combinators, the content to test against the
     // selector is the previous sibling *element*
-    RuleProcessorData* data;
+    Element* element = nsnull;
     if (PRUnichar('+') == selector->mOperator ||
         PRUnichar('~') == selector->mOperator) {
       // The relevant link must be an ancestor of the node being matched.
       aLookForRelevantLink = PR_FALSE;
-      data = prevdata->mPreviousSiblingData;
-      if (!data) {
-        nsIContent* parent = prevdata->mParentContent;
-        if (parent) {
-          if (aTreeMatchContext.mForStyling)
-            parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
+      nsIContent* parent = prevElement->GetParent();
+      if (parent) {
+        if (aTreeMatchContext.mForStyling)
+          parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
 
-          PRInt32 index = parent->IndexOf(prevdata->mElement);
-          while (0 <= --index) {
-            nsIContent* content = parent->GetChildAt(index);
-            if (content->IsElement()) {
-              data = RuleProcessorData::Create(prevdata->mPresContext,
-                                               content->AsElement(),
-                                               prevdata->mRuleWalker);
-              prevdata->mPreviousSiblingData = data;    
-              break;
-            }
+        PRInt32 index = parent->IndexOf(prevElement);
+        while (0 <= --index) {
+          nsIContent* content = parent->GetChildAt(index);
+          if (content->IsElement()) {
+            element = content->AsElement();
+            break;
           }
         }
       }
     }
-    // for descendant combinators and child combinators, the content
+    // for descendant combinators and child combinators, the element
     // to test against is the parent
     else {
-      data = prevdata->mParentData;
-      if (!data) {
-        nsIContent *content = prevdata->mParentContent;
-        // GetParent could return a document fragment; we only want
-        // element parents.
-        if (content && content->IsElement()) {
-          data = RuleProcessorData::Create(prevdata->mPresContext,
-                                           content->AsElement(),
-                                           prevdata->mRuleWalker);
-          prevdata->mParentData = data;
-        }
+      nsIContent *content = prevElement->GetParent();
+      // GetParent could return a document fragment; we only want
+      // element parents.
+      if (content && content->IsElement()) {
+        element = content->AsElement();
       }
     }
-    if (! data) {
+    if (!element) {
       return PR_FALSE;
     }
     NodeMatchContext nodeContext(nsEventStates(),
                                  aLookForRelevantLink &&
-                                   nsCSSRuleProcessor::IsLink(data->mElement));
+                                   nsCSSRuleProcessor::IsLink(element));
     if (nodeContext.mIsRelevantLink) {
       // If we find an ancestor of the matched node that is a link
       // during the matching process, then it's the relevant link (see
@@ -2182,8 +2162,7 @@ static PRBool SelectorMatchesTree(Element* aPrevElement,
       aLookForRelevantLink = PR_FALSE;
       aTreeMatchContext.mHaveRelevantLink = PR_TRUE;
     }
-    if (SelectorMatches(data->mElement, selector, nodeContext,
-                        aTreeMatchContext)) {
+    if (SelectorMatches(element, selector, nodeContext, aTreeMatchContext)) {
       // to avoid greedy matching, we need to recur if this is a
       // descendant or general sibling combinator and the next
       // combinator is different, but we can make an exception for
@@ -2203,8 +2182,8 @@ static PRBool SelectorMatchesTree(Element* aPrevElement,
         // it tests from the top of the content tree, down.  This
         // doesn't matter much for performance since most selectors
         // don't match.  (If most did, it might be faster...)
-        if (SelectorMatchesTree(data->mElement, *data, selector,
-                                aTreeMatchContext, aLookForRelevantLink)) {
+        if (SelectorMatchesTree(element, selector, aTreeMatchContext,
+                                aLookForRelevantLink)) {
           return PR_TRUE;
         }
       }
@@ -2217,7 +2196,7 @@ static PRBool SelectorMatchesTree(Element* aPrevElement,
         return PR_FALSE;  // parent was required to match
       }
     }
-    prevdata = data;
+    prevElement = element;
   }
   return PR_TRUE; // all the selectors matched.
 }
@@ -2231,8 +2210,8 @@ void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
   }
   if (SelectorMatches(data->mElement, aSelector, nodeContext, *data)) {
     nsCSSSelector *next = aSelector->mNext;
-    if (!next || SelectorMatchesTree(data->mElement, *data, next,
-                                     *data, !nodeContext.mIsRelevantLink)) {
+    if (!next || SelectorMatchesTree(data->mElement, next, *data,
+                                     !nodeContext.mIsRelevantLink)) {
       aRule->RuleMatched();
       data->mRuleWalker->Forward(static_cast<nsIStyleRule*>(aRule));
       // nsStyleSet will deal with the !important rule
@@ -2358,8 +2337,8 @@ nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData)
       // hint won't change.
       if ((possibleChange & ~hint) &&
           SelectorMatches(aData->mElement, selector, nodeContext, *aData) &&
-          SelectorMatchesTree(aData->mElement, *aData, selector->mNext,
-                              *aData, PR_FALSE))
+          SelectorMatchesTree(aData->mElement, selector->mNext, *aData,
+                              PR_FALSE))
       {
         hint = nsRestyleHint(hint | possibleChange);
       }
@@ -2398,7 +2377,7 @@ AttributeEnumFunc(nsCSSSelector* aSelector, AttributeEnumData* aData)
   NodeMatchContext nodeContext(nsEventStates(), PR_FALSE);
   if ((possibleChange & ~(aData->change)) &&
       SelectorMatches(data->mElement, aSelector, nodeContext, *data) &&
-      SelectorMatchesTree(data->mElement, *data, aSelector->mNext, *data, PR_FALSE)) {
+      SelectorMatchesTree(data->mElement, aSelector->mNext, *data, PR_FALSE)) {
     aData->change = nsRestyleHint(aData->change | possibleChange);
   }
 }
@@ -3019,7 +2998,7 @@ nsCSSRuleProcessor::SelectorListMatches(mozilla::dom::Element* aElement,
     NodeMatchContext nodeContext(nsEventStates(), PR_FALSE);
     if (SelectorMatches(aElement, sel, nodeContext, aData)) {
       nsCSSSelector* next = sel->mNext;
-      if (!next || SelectorMatchesTree(aElement, aData, next, aData, PR_FALSE)) {
+      if (!next || SelectorMatchesTree(aElement, next, aData, PR_FALSE)) {
         return PR_TRUE;
       }
     }

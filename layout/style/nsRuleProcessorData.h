@@ -174,7 +174,6 @@ public:
   
   nsPresContext*    mPresContext;
   mozilla::dom::Element* mElement;       // weak ref, must not be null
-  nsIContent*       mParentContent; // mElement->GetParent(); weak ref
   nsRuleWalker*     mRuleWalker; // Used to add rules to our results.
   
   // mPreviousSiblingData and mParentData are always RuleProcessorData
