@@ -463,6 +463,7 @@ struct JSScript {
 #ifdef JS_METHODJIT
     bool            debugMode:1;      /* script was compiled in debug mode */
     bool            singleStepMode:1; /* compile script in single-step mode */
+    bool            inlineParents:1;  /* script may be inlined in other frames */
 #endif
 
     jsbytecode      *main;      /* main entry point, after predef'ing prolog */

@@ -252,24 +252,14 @@ Recompiler::expandInlineFrameChain(JSContext *cx, JSStackFrame *outer, InlineFra
     uint32 pcOffset = inner->parentpc - parent->script()->code;
 
     /*
-     * The erased frame needs JIT code with rejoin points added. Note that the
-     * outer frame does not need to have rejoin points, as it is definitely at
-     * an inline call and rejoin points are always added for such calls.
+     * We should have ensured during compilation that the erased frame has JIT
+     * code with rejoin points added. We don't try to compile such code on
+     * demand as this can trigger recompilations and a reentrant invocation of
+     * expandInlineFrames. Note that the outer frame does not need to have
+     * rejoin points, as it is definitely at an inline call and rejoin points
+     * are always added for such calls.
      */
-    if (fp->jit() && !fp->jit()->rejoinPoints) {
-        mjit::Recompiler recompiler(cx, fp->script());
-        if (!recompiler.recompile())
-            return NULL; // FIXME
-    }
-    if (!fp->jit()) {
-        CompileStatus status = Compile_Retry;
-        while (status == Compile_Retry) {
-            mjit::Compiler cc(cx, fp, NULL, true);
-            status = cc.compile();
-        }
-        if (status != Compile_Okay)
-            return NULL; // FIXME
-    }
+    JS_ASSERT(fp->jit() && fp->jit()->rejoinPoints);
 
     PatchableAddress patch;
     patch.location = fp->addressOfNativeReturnAddress();
@@ -522,6 +512,17 @@ Recompiler::recompile()
         return false;
     }
 
+    /* Make sure that scripts with inline parents still have JIT code. */
+    if (script->inlineParents && !script->jitNormal) {
+        CompileStatus status = Compile_Retry;
+        while (status == Compile_Retry) {
+            mjit::Compiler cc(cx, script, false, false, script->global, NULL, true);
+            status = cc.compile();
+        }
+        if (status != Compile_Okay)
+            return false;
+    }
+
     return true;
 }
 
@@ -566,7 +567,8 @@ Recompiler::recompile(Vector<PatchableFrame> &frames, Vector<PatchableAddress> &
 
     CompileStatus status = Compile_Retry;
     while (status == Compile_Retry) {
-        Compiler cc(cx, fp, &frames, true);
+        Compiler cc(cx, fp->script(), fp->isConstructing(), fp->isEvalFrame(),
+                    fp->scopeChain().getGlobal(), &frames, true);
         if (!cc.loadOldTraps(sites))
             return false;
         status = cc.compile();
