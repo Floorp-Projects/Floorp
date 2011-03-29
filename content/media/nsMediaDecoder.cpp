@@ -89,7 +89,7 @@ nsMediaDecoder::nsMediaDecoder() :
 nsMediaDecoder::~nsMediaDecoder()
 {
   if (mVideoUpdateLock) {
-    PR_DestroyLock(mVideoUpdateLock);
+    nsAutoLock::DestroyLock(mVideoUpdateLock);
     mVideoUpdateLock = nsnull;
   }
   MOZ_COUNT_DTOR(nsMediaDecoder);
@@ -98,7 +98,7 @@ nsMediaDecoder::~nsMediaDecoder()
 PRBool nsMediaDecoder::Init(nsHTMLMediaElement* aElement)
 {
   mElement = aElement;
-  mVideoUpdateLock = PR_NewLock();
+  mVideoUpdateLock = nsAutoLock::NewLock("nsMediaDecoder::mVideoUpdateLock");
 
   return mVideoUpdateLock != nsnull;
 }
