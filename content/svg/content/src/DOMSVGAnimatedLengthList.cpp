@@ -122,7 +122,13 @@ DOMSVGAnimatedLengthList::InternalBaseValListWillChangeTo(const SVGLengthList& a
   // able to access "items" at indexes that are out of bounds (read/write to
   // bad memory)!!
 
+  nsRefPtr<DOMSVGAnimatedLengthList> kungFuDeathGrip;
   if (mBaseVal) {
+    if (!aNewValue.Length()) {
+      // InternalListLengthWillChange might clear last reference to |this|.
+      // Retain a temporary reference to keep from dying before returning.
+      kungFuDeathGrip = this;
+    }
     mBaseVal->InternalListLengthWillChange(aNewValue.Length());
   }
 
