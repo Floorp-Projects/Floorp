@@ -56,13 +56,48 @@ class nsIAtom;
 class nsICSSPseudoComparator;
 class nsAttrValue;
 
+
+/**
+ * A |TreeMatchContext| has data about a matching operation.  The
+ * data are not node-specific but are invariants of the DOM tree the
+ * nodes being matched against are in.
+ *
+ * Most of the members are in parameters to selector matching.  The
+ * one out parameter is mHaveRelevantLink.  Consumers that use a
+ * TreeMatchContext for more than one matching operation need to reset
+ * mHaveRelevantLink if they care about the return value.
+ */
+struct TreeMatchContext {
+  // Is this matching operation for the creation of a style context?
+  // (If it is, we need to set slow selector bits on nodes indicating
+  // that certain restyling needs to happen.)
+  const PRBool mForStyling;
+
+  // Did this matching operation find a relevant link?  (If so, we'll
+  // need to construct a StyleIfVisited.)
+  PRBool mHaveRelevantLink;
+
+  // How matching should be performed.  See the documentation for
+  // nsRuleWalker::VisitedHandlingType.
+  nsRuleWalker::VisitedHandlingType mVisitedHandling;
+
+  TreeMatchContext(PRBool aForStyling,
+                   nsRuleWalker::VisitedHandlingType aVisitedHandling)
+    : mForStyling(aForStyling)
+    , mHaveRelevantLink(PR_FALSE)
+    , mVisitedHandling(aVisitedHandling)
+  {
+  }
+};
+
 // The implementation of the constructor and destructor are currently in
 // nsCSSRuleProcessor.cpp.
 
-struct RuleProcessorData {
+struct RuleProcessorData : public TreeMatchContext {
   RuleProcessorData(nsPresContext* aPresContext,
                     mozilla::dom::Element* aElement, 
                     nsRuleWalker* aRuleWalker,
+                    PRBool aForStyling,
                     nsCompatibility* aCompat = nsnull);
   
   // NOTE: not |virtual|
@@ -74,12 +109,16 @@ struct RuleProcessorData {
                                    nsRuleWalker* aRuleWalker,
                                    nsCompatibility aCompat)
   {
+    // Note: the mForStyling and mVisitedHandling members of data
+    // structs created this way aren't used, so it doesn't matter what
+    // we pass for aForStyling here.
     if (NS_LIKELY(aPresContext)) {
       return new (aPresContext) RuleProcessorData(aPresContext, aElement,
-                                                  aRuleWalker, &aCompat);
+                                                  aRuleWalker, PR_FALSE,
+                                                  &aCompat);
     }
 
-    return new RuleProcessorData(aPresContext, aElement, aRuleWalker,
+    return new RuleProcessorData(aPresContext, aElement, aRuleWalker, PR_FALSE,
                                  &aCompat);
   }
   
@@ -105,6 +144,14 @@ private:
     return ::operator new(sz);
   }
 public:
+  // Reset this data for matching for the style-if-:visited.  This should
+  // only be called for RuleProcessorData objects which have a rulewalker.
+  void ResetForVisitedMatching() {
+    mHaveRelevantLink = PR_FALSE;
+    mRuleWalker->ResetForVisitedMatching();
+    mVisitedHandling = mRuleWalker->VisitedHandling();
+  }
+  
   const nsString* GetLang();
   nsEventStates ContentState();
   nsEventStates DocumentState();
@@ -166,8 +213,9 @@ private:
 struct ElementRuleProcessorData : public RuleProcessorData {
   ElementRuleProcessorData(nsPresContext* aPresContext,
                            mozilla::dom::Element* aElement, 
-                           nsRuleWalker* aRuleWalker)
-  : RuleProcessorData(aPresContext, aElement, aRuleWalker)
+                           nsRuleWalker* aRuleWalker,
+                           PRBool aForStyling)
+  : RuleProcessorData(aPresContext, aElement, aRuleWalker, aForStyling)
   {
     NS_PRECONDITION(aPresContext, "null pointer");
     NS_PRECONDITION(aRuleWalker, "null pointer");
@@ -179,7 +227,7 @@ struct PseudoElementRuleProcessorData : public RuleProcessorData {
                                  mozilla::dom::Element* aParentElement,
                                  nsRuleWalker* aRuleWalker,
                                  nsCSSPseudoElements::Type aPseudoType)
-    : RuleProcessorData(aPresContext, aParentElement, aRuleWalker),
+    : RuleProcessorData(aPresContext, aParentElement, aRuleWalker, PR_TRUE),
       mPseudoType(aPseudoType)
   {
     NS_PRECONDITION(aPresContext, "null pointer");
@@ -217,7 +265,7 @@ struct XULTreeRuleProcessorData : public RuleProcessorData {
                            nsRuleWalker* aRuleWalker,
                            nsIAtom* aPseudoTag,
                            nsICSSPseudoComparator* aComparator)
-    : RuleProcessorData(aPresContext, aParentElement, aRuleWalker),
+    : RuleProcessorData(aPresContext, aParentElement, aRuleWalker, PR_TRUE),
       mPseudoTag(aPseudoTag),
       mComparator(aComparator)
   {
@@ -236,7 +284,7 @@ struct StateRuleProcessorData : public RuleProcessorData {
   StateRuleProcessorData(nsPresContext* aPresContext,
                          mozilla::dom::Element* aElement,
                          nsEventStates aStateMask)
-    : RuleProcessorData(aPresContext, aElement, nsnull),
+    : RuleProcessorData(aPresContext, aElement, nsnull, PR_FALSE),
       mStateMask(aStateMask)
   {
     NS_PRECONDITION(aPresContext, "null pointer");
@@ -251,7 +299,7 @@ struct AttributeRuleProcessorData : public RuleProcessorData {
                              nsIAtom* aAttribute,
                              PRInt32 aModType,
                              PRBool aAttrHasChanged)
-    : RuleProcessorData(aPresContext, aElement, nsnull),
+    : RuleProcessorData(aPresContext, aElement, nsnull, PR_FALSE),
       mAttribute(aAttribute),
       mModType(aModType),
       mAttrHasChanged(aAttrHasChanged)

@@ -5558,13 +5558,16 @@ TryMatchingElementsInSubtree(nsINode* aRoot,
       continue;
     }
     /* See whether we match */
-    new (data) RuleProcessorData(aPresContext, kid->AsElement(), nsnull);
+    new (data) RuleProcessorData(aPresContext, kid->AsElement(), nsnull,
+                                 PR_FALSE);
     NS_ASSERTION(!data->mParentData, "Shouldn't happen");
     NS_ASSERTION(!data->mPreviousSiblingData, "Shouldn't happen");
     data->mParentData = aParentData;
     data->mPreviousSiblingData = prevSibling;
+    data->mVisitedHandling = nsRuleWalker::eRelevantLinkUnvisited;
 
-    if (nsCSSRuleProcessor::SelectorListMatches(*data, aSelectorList)) {
+    if (nsCSSRuleProcessor::SelectorListMatches(kid->AsElement(), *data,
+                                                aSelectorList)) {
       continueIteration = (*aCallback)(kid, aClosure);
     }
 
@@ -5692,8 +5695,9 @@ nsGenericElement::MozMatchesSelector(const nsAString& aSelector, nsresult* aResu
                                &presContext);
 
   if (NS_SUCCEEDED(*aResult)) {
-    RuleProcessorData data(presContext, this, nsnull);
-    matches = nsCSSRuleProcessor::SelectorListMatches(data, selectorList);
+    RuleProcessorData data(presContext, this, nsnull, PR_FALSE);
+    data.mVisitedHandling = nsRuleWalker::eRelevantLinkUnvisited;
+    matches = nsCSSRuleProcessor::SelectorListMatches(this, data, selectorList);
   }
 
   return matches;
