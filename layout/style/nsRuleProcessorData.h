@@ -172,7 +172,6 @@ public:
     mVisitedHandling = mRuleWalker->VisitedHandling();
   }
   
-  const nsString* GetLang();
   nsEventStates ContentState();
   nsEventStates DocumentState();
   PRBool IsLink();
@@ -198,8 +197,6 @@ public:
   RuleProcessorData* mParentData;
 
 private:
-  nsString *mLanguage; // NULL means we haven't found out the language yet
-
   // mContentState is initialized lazily.
   nsEventStates mContentState;  // eventStateMgr->GetContentState() or
                                 // mElement->IntrinsicState() if we have no ESM
