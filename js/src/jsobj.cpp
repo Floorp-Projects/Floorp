@@ -5480,6 +5480,14 @@ JSObject::reportNotExtensible(JSContext *cx, uintN report)
                                     NULL, NULL, NULL);
 }
 
+bool
+JSObject::callMethod(JSContext *cx, jsid id, uintN argc, Value *argv, Value *vp)
+{
+    Value fval;
+    return js_GetMethod(cx, this, id, JSGET_NO_METHOD_BARRIER, &fval) &&
+           ExternalInvoke(cx, ObjectValue(*this), fval, argc, argv, vp);
+}
+
 JSBool
 js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                      Value *vp, JSBool strict)
@@ -5899,12 +5907,21 @@ DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
             return true;
         }
 
-        if (!js_TryMethod(cx, obj, cx->runtime->atomState.toStringAtom, 0, NULL, &v))
+        Value fval;
+        jsid id = ATOM_TO_JSID(cx->runtime->atomState.toStringAtom);
+        if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &fval))
             return false;
-        if (!v.isPrimitive()) {
-            if (!obj->getClass()->convert(cx, obj, hint, &v))
+        if (js_IsCallable(fval)) {
+            if (!ExternalInvoke(cx, ObjectValue(*obj), fval, 0, NULL, &v))
                 return false;
+            if (v.isPrimitive()) {
+                *vp = v;
+                return true;
+            }
         }
+
+        if (!obj->getClass()->convert(cx, obj, hint, &v))
+            return false;
     } else {
         /* Optimize (new String(...)).valueOf(). */
         Class *clasp = obj->getClass();
@@ -5924,8 +5941,18 @@ DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
             return false;
         if (v.isObject()) {
             JS_ASSERT(hint != TypeOfValue(cx, v));
-            if (!js_TryMethod(cx, obj, cx->runtime->atomState.toStringAtom, 0, NULL, &v))
+            Value fval;
+            jsid id = ATOM_TO_JSID(cx->runtime->atomState.toStringAtom);
+            if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &fval))
                 return false;
+            if (js_IsCallable(fval)) {
+                if (!ExternalInvoke(cx, ObjectValue(*obj), fval, 0, NULL, &v))
+                    return false;
+                if (v.isPrimitive()) {
+                    *vp = v;
+                    return true;
+                }
+            }
         }
     }
     if (v.isObject()) {
@@ -6243,35 +6270,21 @@ js_ValueToNonNullObject(JSContext *cx, const Value &v)
 JSBool
 js_TryValueOf(JSContext *cx, JSObject *obj, JSType type, Value *rval)
 {
-    Value argv[1];
-
-    argv[0].setString(cx->runtime->atomState.typeAtoms[type]);
-    return js_TryMethod(cx, obj, cx->runtime->atomState.valueOfAtom,
-                        1, argv, rval);
-}
-
-JSBool
-js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
-             uintN argc, Value *argv, Value *rval)
-{
-    JS_CHECK_RECURSION(cx, return JS_FALSE);
-
-    /*
-     * Report failure only if an appropriate method was found, and calling it
-     * returned failure.  We propagate failure in this case to make exceptions
-     * behave properly.
-     */
-    JSErrorReporter older = JS_SetErrorReporter(cx, NULL);
-    jsid id = ATOM_TO_JSID(atom);
     Value fval;
-    JSBool ok = js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &fval);
-    JS_SetErrorReporter(cx, older);
-    if (!ok)
+    jsid id = ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom);
+    if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &fval))
         return false;
-
-    if (fval.isPrimitive())
-        return JS_TRUE;
-    return ExternalInvoke(cx, ObjectValue(*obj), fval, argc, argv, rval);
+    if (js_IsCallable(fval)) {
+        Value v;
+        Value argv[] = { StringValue(cx->runtime->atomState.typeAtoms[type]) };
+        if (!ExternalInvoke(cx, ObjectValue(*obj), fval, JS_ARRAY_LENGTH(argv), argv, &v))
+            return false;
+        if (v.isPrimitive()) {
+            *rval = v;
+            return true;
+        }
+    }
+    return true;
 }
 
 #if JS_HAS_XDR
