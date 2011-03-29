@@ -232,6 +232,7 @@
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 
 #include "nsRefreshDriver.h"
+#include "mozAutoDocUpdate.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDOMLeakPRLog;
@@ -7601,15 +7602,11 @@ nsGlobalWindow::SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
     }
   }
 
-  if (mHasFocus) {
-    // send content state notifications
-    nsCOMPtr<nsPresContext> presContext;
-    if (mDocShell) {
-      mDocShell->GetPresContext(getter_AddRefs(presContext));
-      if (presContext) {
-        presContext->EventStateManager()->
-          SetContentState(mFocusedNode, NS_EVENT_STATE_FOCUS);
-      }
+  if (mHasFocus && mFocusedNode) { // send content state notifications
+    nsIDocument *doc = mFocusedNode->GetCurrentDoc();
+    if (doc) {
+      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      doc->ContentStateChanged(mFocusedNode, NS_EVENT_STATE_FOCUSRING);
     }
   }
 }
