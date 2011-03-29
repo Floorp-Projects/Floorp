@@ -420,6 +420,7 @@ JSCompartment::wrap(JSContext *cx, AutoIdVector &props)
 }
 
 #if defined JS_METHODJIT && defined JS_MONOIC
+
 /*
  * Check if the pool containing the code for jit should be destroyed, per the
  * heuristics in JSCompartment::sweep.
@@ -444,7 +445,34 @@ ScriptPoolDestroyed(JSContext *cx, mjit::JITScript *jit,
     }
     return pool->m_destroy;
 }
-#endif
+
+static inline void
+ScriptTryDestroyCode(JSContext *cx, JSScript *script, mjit::JITScript *jit,
+                     uint32 releaseInterval, uint32 &counter)
+{
+    /*
+     * Check if the JIT code for script should be destroyed. When JIT code has
+     * inlined frames, destroy the outer script if any of the inner scripts
+     * will need to be destroyed, preserving the invariant that we always have
+     * JIT code for any inlined frame which may need to be expanded.
+     */
+
+    if (ScriptPoolDestroyed(cx, jit, releaseInterval, counter)) {
+        mjit::ReleaseScriptCode(cx, script);
+        return;
+    }
+
+    for (unsigned i = 0; i < jit->nInlineFrames; i++) {
+        JSScript *inner = jit->inlineFrames()[i].fun->script();
+        JS_ASSERT(inner->jitNormal);
+        if (ScriptPoolDestroyed(cx, inner->jitNormal, releaseInterval, counter)) {
+            mjit::ReleaseScriptCode(cx, script);
+            return;
+        }
+    }
+}
+
+#endif // JS_METHODJIT && JS_MONOIC
 
 /*
  * This method marks pointers that cross compartment boundaries. It should be
@@ -541,15 +569,10 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
         if (script->hasJITCode()) {
             mjit::ic::SweepCallICs(cx, script, discardScripts);
             if (discardScripts) {
-                if (script->jitNormal &&
-                    ScriptPoolDestroyed(cx, script->jitNormal, releaseInterval, counter)) {
-                    mjit::ReleaseScriptCode(cx, script);
-                    continue;
-                }
-                if (script->jitCtor &&
-                    ScriptPoolDestroyed(cx, script->jitCtor, releaseInterval, counter)) {
-                    mjit::ReleaseScriptCode(cx, script);
-                }
+                if (script->jitNormal)
+                    ScriptTryDestroyCode(cx, script, script->jitNormal, releaseInterval, counter);
+                if (script->jitCtor)
+                    ScriptTryDestroyCode(cx, script, script->jitCtor, releaseInterval, counter);
             }
         }
     }
