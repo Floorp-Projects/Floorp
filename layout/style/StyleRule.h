@@ -46,7 +46,6 @@
 #define mozilla_css_StyleRule_h__
 
 //#include <stdio.h>
-#include "nsICSSRule.h"
 #include "nsCSSRule.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -295,8 +294,8 @@ class Declaration;
 class ImportantRule;
 class DOMCSSStyleRule;
 
-class NS_FINAL_CLASS StyleRule : public nsCSSRule,
-                                 public nsICSSRule {
+class NS_FINAL_CLASS StyleRule : public nsCSSRule
+{
  public:
   StyleRule(nsCSSSelectorList* aSelector,
             Declaration *aDeclaration);

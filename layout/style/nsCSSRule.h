@@ -40,9 +40,7 @@
 #ifndef nsCSSRule_h___
 #define nsCSSRule_h___
 
-#include "nsISupports.h"
-#include "nsCOMPtr.h"
-#include "nsCSSStyleSheet.h"
+#include "nsICSSRule.h"
 
 class nsIStyleSheet;
 class nsCSSStyleSheet;
@@ -65,9 +63,9 @@ virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 DECL_STYLE_RULE_INHERIT_NO_DOMRULE \
 virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
 
-class nsCSSRule {
-public:
-  nsCSSRule(void)
+class nsCSSRule : public nsICSSRule {
+protected:
+  nsCSSRule()
     : mSheet(nsnull),
       mParentRule(nsnull)
   {
@@ -79,30 +77,12 @@ public:
   {
   }
 
-  already_AddRefed<nsIStyleSheet>
-  GetStyleSheet() const
-  {
-    NS_IF_ADDREF(mSheet);
-    return mSheet;
-  }
+public:
 
-  void
-  SetStyleSheet(nsCSSStyleSheet* aSheet)
-  {
-    // We don't reference count this up reference. The style sheet
-    // will tell us when it's going away or when we're detached from
-    // it.
-    mSheet = aSheet;
-  }
+  virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const;
+  virtual void SetStyleSheet(nsCSSStyleSheet* aSheet);
 
-  void
-  SetParentRule(mozilla::css::GroupRule* aRule)
-  {
-    // We don't reference count this up reference. The group rule
-    // will tell us when it's going away or when we're detached from
-    // it.
-    mParentRule = aRule;
-  }
+  virtual void SetParentRule(mozilla::css::GroupRule* aRule);
 
 protected:
   nsCSSStyleSheet*         mSheet;

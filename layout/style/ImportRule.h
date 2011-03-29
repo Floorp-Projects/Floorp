@@ -40,7 +40,6 @@
 #ifndef mozilla_css_ImportRule_h__
 #define mozilla_css_ImportRule_h__
 
-#include "nsICSSRule.h"
 #include "nsCSSRule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsCSSRules.h"
@@ -52,7 +51,6 @@ namespace mozilla {
 namespace css {
 
 class NS_FINAL_CLASS ImportRule : public nsCSSRule,
-                                  public nsICSSRule,
                                   public nsIDOMCSSImportRule
 {
 public:
