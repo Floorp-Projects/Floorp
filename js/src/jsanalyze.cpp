@@ -309,6 +309,7 @@ Script::analyze(JSContext *cx, JSScript *script)
 
     isInlineable = true;
     if (script->nClosedArgs || script->nClosedVars ||
+        (script->fun && script->fun->isHeavyweight()) ||
         script->usesEval || script->usesArguments || cx->compartment->debugMode) {
         isInlineable = false;
     }
