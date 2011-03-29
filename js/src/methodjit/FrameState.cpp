@@ -833,7 +833,7 @@ FrameState::relocateReg(AnyRegisterID reg, RegisterAllocation *alloc, Uses uses)
      * watch for variables which are carried across the branch but are in a
      * the register for a different carried entry, we just spill these for now.
      */
-    JS_ASSERT(alloc->assigned(reg) && !a->freeRegs.hasReg(reg));
+    JS_ASSERT(!a->freeRegs.hasReg(reg));
 
     for (unsigned i = 0; i < uses.nuses; i++) {
         FrameEntry *fe = peek(-1 - i);
@@ -977,9 +977,24 @@ FrameState::syncForBranch(jsbytecode *target, Uses uses)
 
         a->freeRegs.takeReg(reg);
         regstate(reg).associate(fe, RematInfo::DATA);
+
+        /*
+         * If this register is also a parent register at the branch target,
+         * we are restoring a parent register we previously evicted.
+         */
+        if (alloc->getParentRegs().hasReg(reg))
+            a->parentRegs.putReg(reg);
     }
 
-    restoreParentRegistersInMask(masm, alloc->getParentRegs().freeMask & ~a->parentRegs.freeMask, true);
+    /* Restore any parent registers needed at the branch, evicting those still in use. */
+    Registers parents(alloc->getParentRegs().freeMask & ~a->parentRegs.freeMask);
+    while (!parents.empty()) {
+        AnyRegisterID reg = parents.takeAnyReg();
+        if (!a->freeRegs.hasReg(reg))
+            relocateReg(reg, alloc, uses);
+        a->parentRegs.putReg(reg);
+        restoreParentRegister(masm, reg);
+    }
 
     return true;
 }
