@@ -1122,7 +1122,6 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
     mRuleWalker(aRuleWalker),
     mPreviousSiblingData(nsnull),
     mParentData(nsnull),
-    mLanguage(nsnull),
     mGotContentState(PR_FALSE)
 {
   MOZ_COUNT_CTOR(RuleProcessorData);
@@ -1181,36 +1180,29 @@ RuleProcessorData::~RuleProcessorData()
         d->Destroy();
     } while (destroyQueue.Count());
   }
-
-  delete mLanguage;
 }
 
-const nsString* RuleProcessorData::GetLang()
+// If we have a useful @lang, then aLang will end up nonempty.
+static void GetLang(nsIContent* aContent, nsString& aLang)
 {
-  if (!mLanguage) {
-    mLanguage = new nsString();
-    if (!mLanguage)
-      return nsnull;
-    for (nsIContent* content = mElement; content;
-         content = content->GetParent()) {
-      if (content->GetAttrCount() > 0) {
-        // xml:lang has precedence over lang on HTML elements (see
-        // XHTML1 section C.7).
-        PRBool hasAttr = content->GetAttr(kNameSpaceID_XML, nsGkAtoms::lang,
-                                          *mLanguage);
-        if (!hasAttr && content->IsHTML()) {
-          hasAttr = content->GetAttr(kNameSpaceID_None, nsGkAtoms::lang,
-                                     *mLanguage);
-        }
-        NS_ASSERTION(hasAttr || mLanguage->IsEmpty(),
-                     "GetAttr that returns false should not make string non-empty");
-        if (hasAttr) {
-          break;
-        }
+  for (nsIContent* content = aContent; content;
+       content = content->GetParent()) {
+    if (content->GetAttrCount() > 0) {
+      // xml:lang has precedence over lang on HTML elements (see
+      // XHTML1 section C.7).
+      PRBool hasAttr = content->GetAttr(kNameSpaceID_XML, nsGkAtoms::lang,
+                                        aLang);
+      if (!hasAttr && content->IsHTML()) {
+        hasAttr = content->GetAttr(kNameSpaceID_None, nsGkAtoms::lang,
+                                   aLang);
+      }
+      NS_ASSERTION(hasAttr || aLang.IsEmpty(),
+                   "GetAttr that returns false should not make string non-empty");
+      if (hasAttr) {
+        return;
       }
     }
   }
-  return mLanguage;
 }
 
 nsEventStates
@@ -1692,56 +1684,56 @@ static PRBool SelectorMatches(Element* aElement,
             return PR_FALSE;
           }
 
-        // We have to determine the language of the current element.  Since
-        // this is currently no property and since the language is inherited
-        // from the parent we have to be prepared to look at all parent
-        // nodes.  The language itself is encoded in the LANG attribute.
-        const nsString* lang = data.GetLang();
-        if (lang && !lang->IsEmpty()) { // null check for out-of-memory
-          if (!nsStyleUtil::DashMatchCompare(*lang,
-                                             nsDependentString(pseudoClass->u.mString),
-                                             nsASCIICaseInsensitiveStringComparator())) {
-            return PR_FALSE;
-          }
-          // This pseudo-class matched; move on to the next thing
-          break;
-        }
-
-        nsIDocument* doc = data.mElement->GetDocument();
-        if (doc) {
-          // Try to get the language from the HTTP header or if this
-          // is missing as well from the preferences.
-          // The content language can be a comma-separated list of
-          // language codes.
+          // We have to determine the language of the current element.  Since
+          // this is currently no property and since the language is inherited
+          // from the parent we have to be prepared to look at all parent
+          // nodes.  The language itself is encoded in the LANG attribute.
           nsAutoString language;
-          doc->GetContentLanguage(language);
-
-          nsDependentString langString(pseudoClass->u.mString);
-          language.StripWhitespace();
-          PRInt32 begin = 0;
-          PRInt32 len = language.Length();
-          while (begin < len) {
-            PRInt32 end = language.FindChar(PRUnichar(','), begin);
-            if (end == kNotFound) {
-              end = len;
+          GetLang(data.mElement, language);
+          if (!language.IsEmpty()) {
+            if (!nsStyleUtil::DashMatchCompare(language,
+                                               nsDependentString(pseudoClass->u.mString),
+                                               nsASCIICaseInsensitiveStringComparator())) {
+              return PR_FALSE;
             }
-            if (nsStyleUtil::DashMatchCompare(Substring(language, begin,
-                                                        end-begin),
-                                              langString,
-                                              nsASCIICaseInsensitiveStringComparator())) {
-              break;
-            }
-            begin = end + 1;
-          }
-          if (begin < len) {
-            // This pseudo-class matched
+            // This pseudo-class matched; move on to the next thing
             break;
           }
-        }
 
-        return PR_FALSE;
-      }
-      break;
+          nsIDocument* doc = data.mElement->GetDocument();
+          if (doc) {
+            // Try to get the language from the HTTP header or if this
+            // is missing as well from the preferences.
+            // The content language can be a comma-separated list of
+            // language codes.
+            doc->GetContentLanguage(language);
+
+            nsDependentString langString(pseudoClass->u.mString);
+            language.StripWhitespace();
+            PRInt32 begin = 0;
+            PRInt32 len = language.Length();
+            while (begin < len) {
+              PRInt32 end = language.FindChar(PRUnichar(','), begin);
+              if (end == kNotFound) {
+                end = len;
+              }
+              if (nsStyleUtil::DashMatchCompare(Substring(language, begin,
+                                                          end-begin),
+                                                langString,
+                                                nsASCIICaseInsensitiveStringComparator())) {
+                break;
+              }
+              begin = end + 1;
+            }
+            if (begin < len) {
+              // This pseudo-class matched
+              break;
+            }
+          }
+
+          return PR_FALSE;
+        }
+        break;
 
       case nsCSSPseudoClasses::ePseudoClass_mozBoundElement:
         if (data.mScopedRoot != data.mElement) {
