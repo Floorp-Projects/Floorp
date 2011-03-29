@@ -96,7 +96,7 @@ PRInt32 nsExceptionManager::totalInstances = 0;
 // one per thread.
 // An exception if the destructor, which may be called on
 // the thread shutting down xpcom
-NS_IMPL_ISUPPORTS1(nsExceptionManager, nsIExceptionManager)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsExceptionManager, nsIExceptionManager)
 
 nsExceptionManager::nsExceptionManager(nsExceptionService *svc) :
   mNextThread(nsnull),

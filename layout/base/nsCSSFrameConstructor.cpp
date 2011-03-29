@@ -2291,7 +2291,10 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   // Make sure to call PropagateScrollToViewport before
   // SetUpDocElementContainingBlock, since it sets up our scrollbar state
   // properly.
-  nsIContent* propagatedScrollFrom = PropagateScrollToViewport();
+#ifdef DEBUG
+  nsIContent* propagatedScrollFrom =
+#endif
+    PropagateScrollToViewport();
 
   SetUpDocElementContainingBlock(aDocElement);
 

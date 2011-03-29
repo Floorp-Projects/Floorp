@@ -52,7 +52,6 @@ CPPSRCS		= \
 		nsEUCKRToUnicode.cpp \
 		nsUnicodeToEUCKR.cpp \
 		nsISO2022KRToUnicode.cpp \
-		nsUnicodeToISO2022KR.cpp \
 		nsCP949ToUnicode.cpp \
 		nsUnicodeToCP949.cpp \
 		nsUnicodeToJohab.cpp \

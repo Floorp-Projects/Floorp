@@ -42,7 +42,6 @@
 #include "nsIAtom.h"
 #include "nsIContentViewer.h"
 #include "mozilla/css/StyleRule.h"
-#include "nsCSSStruct.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMHTMLBodyElement.h"

@@ -452,26 +452,6 @@
 #define NS_UNICODETOCP1256_CID \
   { 0xba6151a4, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
 
-// Class ID for our UnicodeToVIQR charset converter
-// {BA6151A5-1DFA-11d3-B3BF-00805F8A6670}
-#define NS_UNICODETOVIQR_CID \
-  { 0xba6151a5, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-
-// Class ID for our VIQRToUnicode charset converter
-// {BA6151A6-1DFA-11d3-B3BF-00805F8A6670}
-#define NS_VIQRTOUNICODE_CID \
-  { 0xba6151a6, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-
-// Class ID for our UnicodeToVNI charset converter
-// {BA6151A7-1DFA-11d3-B3BF-00805F8A6670}
-#define NS_UNICODETOVNI_CID \
-  { 0xba6151a7, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-
-// Class ID for our VNIToUnicode charset converter
-// {BA6151A8-1DFA-11d3-B3BF-00805F8A6670}
-#define NS_VNITOUNICODE_CID \
-  { 0xba6151a8, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-
 // Class ID for our CP866ToUnicode charset converter
 // {BA6151A9-1DFA-11d3-B3BF-00805F8A6670}
 #define NS_CP866TOUNICODE_CID \
@@ -607,10 +587,6 @@
 // Class ID for our UnicodeToAscii charset converter
 #define NS_UNICODETOADOBEEURO_CID \
   { 0x822cb9ae, 0x6421, 0x4484, {0xb3, 0xc3, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-
-// {4F26B731-46CB-11d3-B3C3-00805F8A6670}
-#define NS_UNICODETOTIS620WIN_CID \
-  { 0x4f26b731, 0x46cb, 0x11d3, {0xb3, 0xc3, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
 
 // {49B38F12-6193-11d3-B3C5-00805F8A6670}
 #define NS_UNICODETOUTF16_CID \
