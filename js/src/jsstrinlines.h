@@ -189,6 +189,8 @@ inline bool
 StringBuffer::append(JSString *str)
 {
     JSLinearString *linear = str->ensureLinear(context());
+    if (!linear)
+        return false;
     size_t strLen = linear->length();
     if (!checkLength(cb.length() + strLen))
         return false;
