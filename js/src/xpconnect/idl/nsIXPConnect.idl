@@ -587,9 +587,9 @@ interface nsIXPConnect : nsISupports
                              in nsIStackFrame  aCaller);
 
     /**
-    * Deprecated do-nothing function.
+    * @deprecated do-nothing function.
     */
-    void syncJSContexts();
+    [deprecated] void syncJSContexts();
 
     readonly attribute nsIStackFrame                CurrentJSStack;
     readonly attribute nsAXPCNativeCallContextPtr   CurrentNativeCallContext;
@@ -608,10 +608,9 @@ interface nsIXPConnect : nsISupports
     * Set fallback JSContext to use when xpconnect can't find an appropriate
     * context to use to execute JavaScript.
     *
-    * NOTE: This method is DEPRECATED. 
-    *       Use nsIThreadJSContextStack::safeJSContext instead.
+    * @deprecated Use nsIThreadJSContextStack::safeJSContext instead.
     */
-    void setSafeJSContextForCurrentThread(in JSContextPtr cx);
+    [deprecated] void setSafeJSContextForCurrentThread(in JSContextPtr cx);
 
     /**
     * wrapJSAggregatedToNative is just like wrapJS except it is used in cases

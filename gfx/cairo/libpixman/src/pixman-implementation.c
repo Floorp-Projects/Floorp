@@ -111,6 +111,20 @@ delegate_fill (pixman_implementation_t *imp,
 	imp->delegate, bits, stride, bpp, x, y, width, height, xor);
 }
 
+static void
+delegate_src_iter_init (pixman_implementation_t *imp,
+			pixman_iter_t *	         iter)
+{
+    imp->delegate->src_iter_init (imp->delegate, iter);
+}
+
+static void
+delegate_dest_iter_init (pixman_implementation_t *imp,
+			 pixman_iter_t *	  iter)
+{
+    imp->delegate->dest_iter_init (imp->delegate, iter);
+}
+
 pixman_implementation_t *
 _pixman_implementation_create (pixman_implementation_t *delegate,
 			       const pixman_fast_path_t *fast_paths)
@@ -133,6 +147,8 @@ _pixman_implementation_create (pixman_implementation_t *delegate,
      */
     imp->blt = delegate_blt;
     imp->fill = delegate_fill;
+    imp->src_iter_init = delegate_src_iter_init;
+    imp->dest_iter_init = delegate_dest_iter_init;
 
     for (i = 0; i < PIXMAN_N_OPERATORS; ++i)
     {
@@ -143,7 +159,7 @@ _pixman_implementation_create (pixman_implementation_t *delegate,
     }
 
     imp->fast_paths = fast_paths;
-    
+
     return imp;
 }
 
@@ -225,3 +241,64 @@ _pixman_implementation_fill (pixman_implementation_t *imp,
     return (*imp->fill) (imp, bits, stride, bpp, x, y, width, height, xor);
 }
 
+static uint32_t *
+get_scanline_null (pixman_iter_t *iter, const uint32_t *mask)
+{
+    return NULL;
+}
+
+void
+_pixman_implementation_src_iter_init (pixman_implementation_t	*imp,
+				      pixman_iter_t             *iter,
+				      pixman_image_t		*image,
+				      int			 x,
+				      int			 y,
+				      int			 width,
+				      int			 height,
+				      uint8_t			*buffer,
+				      iter_flags_t		 flags)
+{
+    iter->image = image;
+    iter->buffer = (uint32_t *)buffer;
+    iter->x = x;
+    iter->y = y;
+    iter->width = width;
+    iter->height = height;
+    iter->flags = flags;
+
+    if (!image)
+    {
+	iter->get_scanline = get_scanline_null;
+    }
+    else if ((flags & (ITER_IGNORE_ALPHA | ITER_IGNORE_RGB)) ==
+	     (ITER_IGNORE_ALPHA | ITER_IGNORE_RGB))
+    {
+	iter->get_scanline = _pixman_iter_get_scanline_noop;
+    }
+    else
+    {
+	(*imp->src_iter_init) (imp, iter);
+    }
+}
+
+void
+_pixman_implementation_dest_iter_init (pixman_implementation_t	*imp,
+				       pixman_iter_t            *iter,
+				       pixman_image_t		*image,
+				       int			 x,
+				       int			 y,
+				       int			 width,
+				       int			 height,
+				       uint8_t			*buffer,
+				       iter_flags_t		 flags)
+{
+    iter->image = image;
+    iter->buffer = (uint32_t *)buffer;
+    iter->x = x;
+    iter->y = y;
+    iter->width = width;
+    iter->height = height;
+    iter->flags = flags;
+
+    (*imp->dest_iter_init) (imp, iter);
+}

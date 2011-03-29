@@ -304,10 +304,10 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
     if (accEvent->mEventRule != AccEvent::eDoNotEmit) {
       mDocument->ProcessPendingEvent(accEvent);
 
-      AccMutationEvent* showOrhideEvent = downcast_accEvent(accEvent);
-      if (showOrhideEvent) {
-        if (showOrhideEvent->mTextChangeEvent)
-          mDocument->ProcessPendingEvent(showOrhideEvent->mTextChangeEvent);
+      AccMutationEvent* showOrHideEvent = downcast_accEvent(accEvent);
+      if (showOrHideEvent) {
+        if (showOrHideEvent->mTextChangeEvent)
+          mDocument->ProcessPendingEvent(showOrHideEvent->mTextChangeEvent);
       }
     }
     if (!mDocument)

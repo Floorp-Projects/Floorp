@@ -57,7 +57,7 @@ public:
                               PRBool coalesceAll)
         : mSink(sink)
         , mTarget(target)
-        , mLock(PR_NewLock())
+        , mLock(nsAutoLock::NewLock("nsTransportEventSinkProxy::mLock"))
         , mLastEvent(nsnull)
         , mCoalesceAll(coalesceAll)
     {
@@ -67,7 +67,7 @@ public:
     virtual ~nsTransportEventSinkProxy()
     {
         if (mLock)
-            PR_DestroyLock(mLock);
+            nsAutoLock::DestroyLock(mLock);
     
         // our reference to mSink could be the last, so be sure to release
         // it on the target thread.  otherwise, we could get into trouble.

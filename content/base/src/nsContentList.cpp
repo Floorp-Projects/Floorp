@@ -448,6 +448,14 @@ nsContentList::nsContentList(nsINode* aRootNode,
 {
   NS_ASSERTION(mRootNode, "Must have root");
   mRootNode->AddMutationObserver(this);
+
+  // We only need to flush if we're in an non-HTML document, since the
+  // HTML5 parser doesn't need flushing.  Further, if we're not in a
+  // document at all right now (in the GetCurrentDoc() sense), we're
+  // not parser-created and don't need to be flushing stuff under us
+  // to get our kids right.
+  nsIDocument* doc = mRootNode->GetCurrentDoc();
+  mFlushesNeeded = doc && !doc->IsHTML();
 }
 
 nsContentList::~nsContentList()

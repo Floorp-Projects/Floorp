@@ -34,28 +34,29 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsIHTMLDocument_h___
-#define nsIHTMLDocument_h___
+
+#ifndef nsIHTMLDocument_h
+#define nsIHTMLDocument_h
 
 #include "nsISupports.h"
 #include "nsCompatibility.h"
-#include "nsContentList.h"
 
-class nsIImageMap;
-class nsString;
-class nsIDOMNodeList;
-class nsIDOMHTMLCollection;
-class nsIDOMHTMLMapElement;
-class nsHTMLStyleSheet;
-class nsIStyleSheet;
+class nsIDOMHTMLFormElement;
 class nsIContent;
-class nsIDOMHTMLBodyElement;
 class nsIScriptElement;
 class nsIEditor;
+class nsContentList;
+class nsWrapperCache;
+
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
 
 #define NS_IHTMLDOCUMENT_IID \
-{ 0x840cacc9, 0x1956, 0x4987, \
-  { 0x80, 0x6e, 0xc6, 0xab, 0x19, 0x1b, 0x92, 0xd2 } }
+{ 0xe43a4bfd, 0xff5a, 0x40b0, \
+  { 0x8c, 0x31, 0x24, 0xac, 0xe8, 0x15, 0xda, 0xf2 } }
 
 
 /**
@@ -66,7 +67,7 @@ class nsIHTMLDocument : public nsISupports
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTMLDOCUMENT_IID)
 
-  virtual nsIDOMHTMLMapElement *GetImageMap(const nsAString& aMapName) = 0;
+  virtual mozilla::dom::Element* GetImageMap(const nsAString& aMapName) = 0;
 
   /**
    * Set compatibility mode for this document
@@ -189,4 +190,4 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLDocument, NS_IHTMLDOCUMENT_IID)
 
-#endif /* nsIHTMLDocument_h___ */
+#endif /* nsIHTMLDocument_h */

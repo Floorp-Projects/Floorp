@@ -7767,14 +7767,14 @@ ctx.fillStyle = '#fff';
 ctx.fillRect(20, 10, 60, 10);
 
 var imgdata1 = ctx.getImageData(85, 25, -10, -10);
-ok(imgdata1.data[0] === 0, "imgdata1.data[\""+(0)+"\"] === 0");
-ok(imgdata1.data[1] === 0, "imgdata1.data[\""+(1)+"\"] === 0");
-ok(imgdata1.data[2] === 0, "imgdata1.data[\""+(2)+"\"] === 0");
+ok(imgdata1.data[0] === 255, "imgdata1.data[\""+(0)+"\"] === 255");
+ok(imgdata1.data[1] === 255, "imgdata1.data[\""+(1)+"\"] === 255");
+ok(imgdata1.data[2] === 255, "imgdata1.data[\""+(2)+"\"] === 255");
 ok(imgdata1.data[3] === 255, "imgdata1.data[\""+(3)+"\"] === 255");
-ok(imgdata1.data[imgdata1.length-4+0] === 255, "imgdata1.data[imgdata1.length-4+0] === 255");
-ok(imgdata1.data[imgdata1.length-4+1] === 255, "imgdata1.data[imgdata1.length-4+1] === 255");
-ok(imgdata1.data[imgdata1.length-4+2] === 255, "imgdata1.data[imgdata1.length-4+2] === 255");
-ok(imgdata1.data[imgdata1.length-4+3] === 255, "imgdata1.data[imgdata1.length-4+3] === 255");
+ok(imgdata1.data[imgdata1.data.length-4+0] === 0, "imgdata1.data[imgdata1.data.length-4+0] === 0");
+ok(imgdata1.data[imgdata1.data.length-4+1] === 0, "imgdata1.data[imgdata1.data.length-4+1] === 0");
+ok(imgdata1.data[imgdata1.data.length-4+2] === 0, "imgdata1.data[imgdata1.data.length-4+2] === 0");
+ok(imgdata1.data[imgdata1.data.length-4+3] === 255, "imgdata1.data[imgdata1.data.length-4+3] === 255");
 
 var imgdata2 = ctx.getImageData(0, 0, -1, -1);
 ok(imgdata2.data[0] === 0, "imgdata2.data[\""+(0)+"\"] === 0");

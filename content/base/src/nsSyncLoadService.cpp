@@ -220,8 +220,8 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
     }
 
     if (aLoaderPrincipal) {
-        listener = new nsCrossSiteListenerProxy(listener, aLoaderPrincipal,
-                                                mChannel, PR_FALSE, &rv);
+        listener = new nsCORSListenerProxy(listener, aLoaderPrincipal,
+                                           mChannel, PR_FALSE, &rv);
         NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
         NS_ENSURE_SUCCESS(rv, rv);
     }

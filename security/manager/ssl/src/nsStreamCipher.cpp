@@ -126,7 +126,11 @@ NS_IMETHODIMP nsStreamCipher::Update(const PRUint8 *aData, PRUint32 aLen)
   unsigned char* input = (unsigned char*)aData;
   
   PRInt32 setLen;
-  SECStatus rv = PK11_CipherOp(mContext, output, &setLen, aLen, input, aLen);
+
+#ifdef DEBUG
+  SECStatus rv =
+#endif
+    PK11_CipherOp(mContext, output, &setLen, aLen, input, aLen);
   NS_ASSERTION(rv == SECSuccess, "failed to encrypt");
   NS_ASSERTION((PRUint32)setLen == aLen, "data length should not change");
 
@@ -164,7 +168,11 @@ NS_IMETHODIMP nsStreamCipher::UpdateFromString(const nsACString& aInput)
     return NS_ERROR_OUT_OF_MEMORY;
 
   PRInt32 setLen;
-  SECStatus rv = PK11_CipherOp(mContext, output, &setLen, len, input, len);
+
+#ifdef DEBUG
+  SECStatus rv =
+#endif
+    PK11_CipherOp(mContext, output, &setLen, len, input, len);
   NS_ASSERTION(rv == SECSuccess, "failed to encrypt");
   NS_ASSERTION((PRUint32)setLen == len, "data length should not change");
 
@@ -207,7 +215,11 @@ NS_IMETHODIMP nsStreamCipher::Discard(PRInt32 aLen)
   }
 
   PRInt32 setLen;
-  SECStatus rv = PK11_CipherOp(mContext, output, &setLen, aLen, input, aLen);
+
+#ifdef DEBUG
+  SECStatus rv =
+#endif
+    PK11_CipherOp(mContext, output, &setLen, aLen, input, aLen);
   NS_ASSERTION(rv == SECSuccess, "failed to encrypt");
   NS_ASSERTION(setLen == aLen, "data length should not change");
   

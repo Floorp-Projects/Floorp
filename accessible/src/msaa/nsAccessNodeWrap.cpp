@@ -308,7 +308,7 @@ STDMETHODIMP nsAccessNodeWrap::get_attributesForNames(
     /* [length_is][size_is][retval] */ BSTR __RPC_FAR *aAttribValues)
 {
 __try {
-  if (IsDefunct() || IsDocument())
+  if (IsDefunct() || !IsElement())
     return E_FAIL;
 
   nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mContent));
@@ -616,12 +616,7 @@ void nsAccessNodeWrap::InitAccessibility()
 
   DoATSpecificProcessing();
 
-  // Register window class that'll be used for document accessibles associated
-  // with tabs.
-  if (nsWinUtils::IsWindowEmulationEnabled()) {
-    nsWinUtils::RegisterNativeWindow(kClassNameTabContent);
-    sHWNDCache.Init(4);
-  }
+  nsWinUtils::MaybeStartWindowEmulation();
 
   nsAccessNode::InitXPAccessibility();
 }
@@ -631,10 +626,7 @@ void nsAccessNodeWrap::ShutdownAccessibility()
   NS_IF_RELEASE(gTextEvent);
   ::DestroyCaret();
 
-  // Unregister window call that's used for document accessibles associated
-  // with tabs.
-  if (nsWinUtils::IsWindowEmulationEnabled())
-    ::UnregisterClassW(kClassNameTabContent, GetModuleHandle(NULL));
+  nsWinUtils::ShutdownWindowEmulation();
 
   nsAccessNode::ShutdownXPAccessibility();
 }

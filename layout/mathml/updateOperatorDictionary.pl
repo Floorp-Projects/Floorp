@@ -83,6 +83,7 @@ if ($ARGV[0] eq "compare" && $#ARGV == 1) {
 #     12   | linebreakstyle
 #     13   | direction
 #     14   | integral
+#     15   | mirrorable
 
 # 1) build %moz_hash from $MOZ_DICTIONARY
 
@@ -116,6 +117,7 @@ while (<$file>) {
     if (m/^(.*)direction:([a-z]*)(.*)$/) { $value[13] = $2; }
     else { $value[13] = ""; }
     $value[14] = (m/^(.*)integral(.*)$/);
+    $value[15] = (m/^(.*)mirrorable(.*)$/);
 
     # 1.3) save the key and value
     $moz_hash{$key} = [ @value ];
@@ -302,6 +304,7 @@ for ($i = 0; $i < $n; $i++) {
     # not stored in the WG dictionary
     $value[13] = ""; # direction
     $value[14] = ""; # integral
+    $value[15] = ""; # mirrorable
 
     # 3.3) save the key and value
     push(@wg_keys, $key);
@@ -438,6 +441,7 @@ sub completeCommon {
 
     if ($v_moz[13]) { $entry = "$entry direction:$v_moz[13]"; }
     if ($v_moz[14]) { $entry = "$entry integral"; }
+    if ($v_moz[15]) { $entry = "$entry mirrorable"; }
 
     if ($v_moz[0]) {
         # keep our previous comment

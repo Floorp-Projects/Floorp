@@ -799,7 +799,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                  const nsAString* aValue,
                                  PRBool aNotify)
 {
-  // States changes that have to be passed to ContentStatesChanged().
+  // States changes that have to be passed to ContentStateChanged().
   nsEventStates states;
 
   if (aNameSpaceID == kNameSpaceID_None) {
@@ -953,7 +953,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
       if (doc && !states.IsEmpty()) {
         MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-        doc->ContentStatesChanged(this, nsnull, states);
+        doc->ContentStateChanged(this, states);
       }
     }
   }
@@ -1027,7 +1027,7 @@ nsHTMLInputElement::SetIndeterminateInternal(PRBool aValue,
   nsIDocument* document = GetCurrentDoc();
   if (document) {
     mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
-    document->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_INDETERMINATE);
+    document->ContentStateChanged(this, NS_EVENT_STATE_INDETERMINATE);
   }
 
   return NS_OK;
@@ -1444,7 +1444,7 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
       nsIDocument* doc = GetCurrentDoc();
       if (doc) {
         mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-        doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_MOZ_PLACEHOLDER);
+        doc->ContentStateChanged(this, NS_EVENT_STATE_MOZ_PLACEHOLDER);
       }
     }
 
@@ -1483,8 +1483,8 @@ nsHTMLInputElement::SetValueChanged(PRBool aValueChanged)
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
       mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-      doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_MOZ_UI_VALID |
-                                              NS_EVENT_STATE_MOZ_UI_INVALID);
+      doc->ContentStateChanged(this, NS_EVENT_STATE_MOZ_UI_VALID |
+                                     NS_EVENT_STATE_MOZ_UI_INVALID);
     }
   }
 
@@ -1533,9 +1533,9 @@ nsHTMLInputElement::SetCheckedChangedInternal(PRBool aCheckedChanged)
     nsIDocument* document = GetCurrentDoc();
     if (document) {
       mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
-      document->ContentStatesChanged(this, nsnull,
-                                     NS_EVENT_STATE_MOZ_UI_VALID |
-                                     NS_EVENT_STATE_MOZ_UI_INVALID);
+      document->ContentStateChanged(this,
+                                    NS_EVENT_STATE_MOZ_UI_VALID |
+                                    NS_EVENT_STATE_MOZ_UI_INVALID);
     }
   }
 }
@@ -1733,7 +1733,7 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
     nsIDocument* document = GetCurrentDoc();
     if (document) {
       mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, aNotify);
-      document->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_CHECKED);
+      document->ContentStateChanged(this, NS_EVENT_STATE_CHECKED);
     }
   }
 
@@ -2147,7 +2147,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
       MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-      doc->ContentStatesChanged(this, nsnull, states);
+      doc->ContentStateChanged(this, states);
     }
   }
 
@@ -3784,10 +3784,10 @@ nsHTMLInputElement::SetCustomValidity(const nsAString& aError)
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
     MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-    doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_INVALID |
-                                            NS_EVENT_STATE_VALID |
-                                            NS_EVENT_STATE_MOZ_UI_INVALID |
-                                            NS_EVENT_STATE_MOZ_UI_VALID);
+    doc->ContentStateChanged(this, NS_EVENT_STATE_INVALID |
+                                   NS_EVENT_STATE_VALID |
+                                   NS_EVENT_STATE_MOZ_UI_INVALID |
+                                   NS_EVENT_STATE_MOZ_UI_VALID);
   }
 
   return NS_OK;
@@ -4000,9 +4000,10 @@ nsHTMLInputElement::UpdateAllValidityStates(PRBool aNotify)
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
       MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-      doc->ContentStatesChanged(this, nsnull,
-                                NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
-                                NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID);
+      doc->ContentStateChanged(this,
+                               NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
+                               NS_EVENT_STATE_MOZ_UI_VALID |
+                               NS_EVENT_STATE_MOZ_UI_INVALID);
     }
   }
 }
@@ -4322,11 +4323,11 @@ public:
                             mValidity);
 
     if (mNotify && mDocument) {
-      mDocument->ContentStatesChanged(input, nsnull,
-                                      NS_EVENT_STATE_VALID |
-                                      NS_EVENT_STATE_INVALID |
-                                      NS_EVENT_STATE_MOZ_UI_VALID |
-                                      NS_EVENT_STATE_MOZ_UI_INVALID);
+      mDocument->ContentStateChanged(input,
+                                     NS_EVENT_STATE_VALID |
+                                     NS_EVENT_STATE_INVALID |
+                                     NS_EVENT_STATE_MOZ_UI_VALID |
+                                     NS_EVENT_STATE_MOZ_UI_INVALID);
     }
 
     return NS_OK;
@@ -4542,7 +4543,7 @@ nsHTMLInputElement::OnValueChanged(PRBool aNotify)
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
       MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-      doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_MOZ_PLACEHOLDER);
+      doc->ContentStateChanged(this, NS_EVENT_STATE_MOZ_PLACEHOLDER);
     }
   }
 }

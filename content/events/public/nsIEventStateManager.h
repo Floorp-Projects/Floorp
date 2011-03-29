@@ -100,9 +100,12 @@ public:
 
   /**
    * Notify that the given NS_EVENT_STATE_* bit has changed for this content.
-   * @param aContent Content which has changed states
-   * @param aState   Corresponding state flags such as NS_EVENT_STATE_FOCUS 
-   *                 defined in the nsIEventStateManager interface
+   * @param aContent Content which has changed states.  This may be null to
+   *                 indicate that nothing is in this state anymore.
+   * @param aState   One of NS_EVENT_STATE_ACTIVE, NS_EVENT_STATE_HOVER,
+   *                 NS_EVENT_STATE_DRAGOVER, NS_EVENT_STATE_URLTARGET.  Don't
+   *                 pass anything else!  Passing in a state object that has
+   *                 more than one of those states set is not supported.
    * @return  Whether the content was able to change all states. Returns PR_FALSE
    *                  if a resulting DOM event causes the content node passed in
    *                  to not change states. Note, the frame for the content may

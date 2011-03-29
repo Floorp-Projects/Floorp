@@ -203,7 +203,7 @@ __try {
     // Return window system accessible object for root document and tab document
     // accessibles.
     if (!doc->ParentDocument() ||
-        nsWinUtils::IsWindowEmulationEnabled() &&
+        nsWinUtils::IsWindowEmulationStarted() &&
         nsWinUtils::IsTabDocument(doc->GetDocumentNode())) {
       HWND hwnd = static_cast<HWND>(doc->GetNativeWindow());
       if (hwnd && SUCCEEDED(AccessibleObjectFromWindow(hwnd, OBJID_WINDOW,
@@ -236,9 +236,7 @@ __try {
   if (nsAccUtils::MustPrune(this))
     return NS_OK;
 
-  PRInt32 numChildren;
-  GetChildCount(&numChildren);
-  *pcountChildren = numChildren;
+  *pcountChildren = GetChildCount();
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -1014,9 +1012,7 @@ __try {
 
   mEnumVARIANTPosition += aNumElements;
 
-  PRInt32 numChildren;
-  GetChildCount(&numChildren);
-
+  PRInt32 numChildren = GetChildCount();
   if (mEnumVARIANTPosition > numChildren)
   {
     mEnumVARIANTPosition = numChildren;

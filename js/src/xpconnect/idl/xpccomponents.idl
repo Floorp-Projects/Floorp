@@ -250,14 +250,14 @@ interface nsIXPCComponents : nsISupports
 
     boolean isSuccessCode(in nsresult result);
 
-    /* DEPRECATED: use Components.utils.lookupMethod instead.
+    /* @deprecated Use Components.utils.lookupMethod instead.
      * (But are you sure you really want this method any more?
      *  See http://developer-test.mozilla.org/en/docs/XPCNativeWrapper )
      */
-    void lookupMethod();
+    [deprecated] void lookupMethod();
 
-    /* DEPRECATED: use Components.utils.reportError instead. */
-    void reportError();
+    /* @deprecated Use Components.utils.reportError instead. */
+    [deprecated] void reportError();
 
     /* 'lastResult' is accessible via JavaScript only */
     /* 'returnCode' is accessible via JavaScript only */

@@ -89,7 +89,7 @@ nsConsoleService::~nsConsoleService()
     if (mMessages)
         nsMemory::Free(mMessages);
     if (mLock)
-        PR_DestroyLock(mLock);
+        nsAutoLock::DestroyLock(mLock);
 }
 
 nsresult
@@ -103,7 +103,7 @@ nsConsoleService::Init()
     // Array elements should be 0 initially for circular buffer algorithm.
     memset(mMessages, 0, mBufferSize * sizeof(nsIConsoleMessage *));
 
-    mLock = PR_NewLock();
+    mLock = nsAutoLock::NewLock("nsConsoleService::mLock");
     if (!mLock)
         return NS_ERROR_OUT_OF_MEMORY;
 

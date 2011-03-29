@@ -24,6 +24,7 @@
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
  *   Shyjan Mahamud <mahamud@cs.cmu.edu> (added TeX rendering rules)
  *   Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
+ *   Frederic Wang <fred.wang@free.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -255,6 +256,11 @@ protected:
                           PRUint32             aOptions,
                           nsStretchDirection   aStretchDirection,
                           nsBoundingMetrics&   aPreferredStretchSize);
+
+  // helper used by mstyle, mphantom, mpadded and mrow in their implementation
+  // of TransmitAutomaticData() to determine whether they are space-like.
+  nsresult
+  TransmitAutomaticDataForMrowLikeElement();
 
 public:
   // error handlers to provide a visual feedback to the user when an error

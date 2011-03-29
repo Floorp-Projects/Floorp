@@ -293,9 +293,12 @@ html[dir=rtl] .appTabTrayContainer {
 
 .undo {
   background-color: #A0A0A0;
-  width: 150px;
-  height: 30px;
-  line-height: 30px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 20px;
+  width: 135px;
+  line-height: 25px;
   box-shadow: 0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.24);
   text-shadow: 0px -1px 0px rgba(255,255,255,.2);
   color: rgba( 0,0,0, .8);
@@ -310,14 +313,14 @@ html[dir=rtl] .appTabTrayContainer {
 }
 
 .undo .close {
-  top: 4px;
-  left: 4px;
+  top: 7px;
+  right: 7px;
   opacity: 0.5;
 }
 
 html[dir=rtl] .undo .close {
-  left: auto;
-  right: 4px;
+  right: auto;
+  left: 7px;
 }
 
 .undo .close:hover{

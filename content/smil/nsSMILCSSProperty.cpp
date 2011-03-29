@@ -42,7 +42,7 @@
 #include "nsSMILValue.h"
 #include "nsComputedDOMStyle.h"
 #include "nsStyleAnimation.h"
-#include "nsIContent.h"
+#include "mozilla/dom/Element.h"
 #include "nsIDOMElement.h"
 
 using namespace mozilla::dom;
@@ -123,9 +123,8 @@ nsSMILCSSProperty::GetBaseValue() const
   // GENERAL CASE: Non-Shorthands
   // (1) Put empty string in override style for property mPropID
   // (saving old override style value, so we can set it again when we're done)
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> overrideStyle;
-  mElement->GetSMILOverrideStyle(getter_AddRefs(overrideStyle));
-  nsCOMPtr<nsICSSDeclaration> overrideDecl = do_QueryInterface(overrideStyle);
+  nsCOMPtr<nsICSSDeclaration> overrideDecl =
+    do_QueryInterface(mElement->GetSMILOverrideStyle());
   nsAutoString cachedOverrideStyleVal;
   if (overrideDecl) {
     overrideDecl->GetPropertyValue(mPropID, cachedOverrideStyleVal);
@@ -192,11 +191,8 @@ nsSMILCSSProperty::SetAnimValue(const nsSMILValue& aValue)
   }
 
   // Use string value to style the target element
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> overrideStyle;
-  mElement->GetSMILOverrideStyle(getter_AddRefs(overrideStyle));
-  NS_ABORT_IF_FALSE(overrideStyle, "Need a non-null overrideStyle");
-
-  nsCOMPtr<nsICSSDeclaration> overrideDecl = do_QueryInterface(overrideStyle);
+  nsCOMPtr<nsICSSDeclaration> overrideDecl =
+    do_QueryInterface(mElement->GetSMILOverrideStyle());
   if (overrideDecl) {
     overrideDecl->SetPropertyValue(mPropID, valStr);
   }
@@ -207,9 +203,8 @@ void
 nsSMILCSSProperty::ClearAnimValue()
 {
   // Put empty string in override style for our property
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> overrideStyle;
-  mElement->GetSMILOverrideStyle(getter_AddRefs(overrideStyle));
-  nsCOMPtr<nsICSSDeclaration> overrideDecl = do_QueryInterface(overrideStyle);
+  nsCOMPtr<nsICSSDeclaration> overrideDecl =
+    do_QueryInterface(mElement->GetSMILOverrideStyle());
   if (overrideDecl) {
     overrideDecl->SetPropertyValue(mPropID, EmptyString());
   }

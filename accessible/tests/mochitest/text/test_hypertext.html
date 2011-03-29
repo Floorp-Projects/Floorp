@@ -5,6 +5,12 @@
   <link rel="stylesheet" type="text/css"
         href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
+  <style>
+    h6.gencontent:before {
+      content: "aga"
+    }
+  </style>
+
   <script type="application/javascript"
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript"
@@ -40,6 +46,16 @@
       testText(IDs, 10, 13, "e " + kEmbedChar);
       testText(IDs, 0, 13, "hello " + kEmbedChar + " see " + kEmbedChar);
 
+      ////////////////////////////////////////////////////////////////////////
+      // getTextAtOffset line boundary
+
+      testTextAtOffset(0, BOUNDARY_LINE_START, "line ", 0, 5,
+                       "hypertext3", kOk, kOk, kOk);
+
+      // XXX: see bug 638684.
+      testTextAtOffset(0, BOUNDARY_LINE_START, "line ", 0, 5,
+                       "hypertext4", kTodo, kOk, kTodo);
+
       //////////////////////////////////////////////////////////////////////////
       // list
       //////////////////////////////////////////////////////////////////////////
@@ -63,7 +79,14 @@
 
   <a target="_blank"
      title="Fix getText"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=630001">Mozilla Bug 630001, part3</a>
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=630001">
+    Bug 630001, part3
+  </a>
+  <a target="_blank"
+     title="getTextAtOffset line boundary may return more than one line"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=638326">
+    Bug 638326
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -72,6 +95,18 @@
   <div id="hypertext">hello <a>friend</a> see <img></div>
   <div id="hypertext2">hello <a>friend</a> see <input></div>
   <ol id="list"><li id="listitem">foo</li></ol>
+
+  <div id="hypertext3">line
+<!-- haha -->
+<!-- hahaha -->
+<h6>heading</h6>
+  </div>
+
+  <div id="hypertext4">line
+<!-- haha -->
+<!-- hahaha -->
+<h6 role="presentation" class="gencontent">heading</h6>
+  </div>
 
 </body>
 </html>
