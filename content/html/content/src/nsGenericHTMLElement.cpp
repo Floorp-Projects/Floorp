@@ -2624,7 +2624,7 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       // AfterSetAttr.
       if (doc && aNotify) {
         MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-        doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_DEFAULT);
+        doc->ContentStateChanged(this, NS_EVENT_STATE_DEFAULT);
       }
     }
 
@@ -2682,7 +2682,7 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       // changes can't affect that.
       if (doc && aNotify) {
         MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-        doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_DEFAULT);
+        doc->ContentStateChanged(this, NS_EVENT_STATE_DEFAULT);
       }
     }
 
@@ -2998,7 +2998,7 @@ nsGenericHTMLFormElement::FieldSetDisabledChanged(nsEventStates aStates, PRBool 
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
     MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-    doc->ContentStatesChanged(this, nsnull, aStates);
+    doc->ContentStateChanged(this, aStates);
   }
 }
 
@@ -3496,9 +3496,9 @@ MakeContentDescendantsEditable(nsIContent *aContent, nsIDocument *aDocument)
   aContent->UpdateEditableState();
 
   if (aDocument && stateBefore != aContent->IntrinsicState()) {
-    aDocument->ContentStatesChanged(aContent, nsnull,
-                                    NS_EVENT_STATE_MOZ_READONLY |
-                                    NS_EVENT_STATE_MOZ_READWRITE);
+    aDocument->ContentStateChanged(aContent,
+                                   NS_EVENT_STATE_MOZ_READONLY |
+                                   NS_EVENT_STATE_MOZ_READWRITE);
   }
 
   PRUint32 i, n = aContent->GetChildCount();
@@ -3530,7 +3530,7 @@ nsGenericHTMLElement::ChangeEditableState(PRInt32 aChange)
     document = nsnull;
   }
 
-  // MakeContentDescendantsEditable is going to call ContentStatesChanged for
+  // MakeContentDescendantsEditable is going to call ContentStateChanged for
   // this element and all descendants if editable state has changed.
   // We have to create a document update batch now so it's created once.
   MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);

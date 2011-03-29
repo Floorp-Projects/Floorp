@@ -123,8 +123,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID      \
-{ 0xc38a7935, 0xc854, 0x4df7, \
-  { 0x8f, 0xd4, 0xa2, 0x6f, 0x0d, 0x27, 0x9f, 0x31 } }
+{ 0x2c6ad63f, 0xb7b9, 0x42f8, \
+ { 0xbd, 0xde, 0x76, 0x0a, 0x83, 0xe3, 0xb0, 0x49 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -757,11 +757,9 @@ public:
   virtual void SetReadyStateInternal(ReadyState rs) = 0;
   virtual ReadyState GetReadyStateEnum() = 0;
 
-  // notify that one or two content nodes changed state
-  // either may be nsnull, but not both
-  virtual void ContentStatesChanged(nsIContent* aContent1,
-                                    nsIContent* aContent2,
-                                    nsEventStates aStateMask) = 0;
+  // notify that a content node changed state
+  virtual void ContentStateChanged(nsIContent* aContent,
+                                   nsEventStates aStateMask) = 0;
 
   // Notify that a document state has changed.
   // This should only be called by callers whose state is also reflected in the

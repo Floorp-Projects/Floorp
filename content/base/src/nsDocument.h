@@ -706,9 +706,8 @@ public:
   virtual void SetReadyStateInternal(ReadyState rs);
   virtual ReadyState GetReadyStateEnum();
 
-  virtual void ContentStatesChanged(nsIContent* aContent1,
-                                    nsIContent* aContent2,
-                                    nsEventStates aStateMask);
+  virtual void ContentStateChanged(nsIContent* aContent,
+                                   nsEventStates aStateMask);
   virtual void DocumentStatesChanged(nsEventStates aStateMask);
 
   virtual void StyleRuleChanged(nsIStyleSheet* aStyleSheet,
