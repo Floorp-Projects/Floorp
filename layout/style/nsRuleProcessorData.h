@@ -50,12 +50,12 @@
 #include "nsIContent.h"
 #include "nsCSSPseudoElements.h"
 #include "nsRuleWalker.h"
+#include "nsNthIndexCache.h"
 
 class nsIStyleSheet;
 class nsIAtom;
 class nsICSSPseudoComparator;
 class nsAttrValue;
-
 
 /**
  * A |TreeMatchContext| has data about a matching operation.  The
@@ -81,16 +81,24 @@ struct TreeMatchContext {
   // nsRuleWalker::VisitedHandlingType.
   nsRuleWalker::VisitedHandlingType mVisitedHandling;
 
+  // The document we're working with.
+  nsIDocument* const mDocument;
+
   // Root of scoped stylesheet (set and unset by the supplier of the
   // scoped stylesheet).
   nsIContent* mScopedRoot;
 
   // Whether our document is HTML (as opposed to XML of some sort,
   // including XHTML).
+  // XXX XBL2 issue: Should we be caching this?  What should it be for XBL2?
   const PRPackedBool mIsHTMLDocument;
 
   // Possibly remove use of mCompatMode in SelectorMatches?
+  // XXX XBL2 issue: Should we be caching this?  What should it be for XBL2?
   const nsCompatibility mCompatMode;
+
+  // The nth-index cache we should use
+  nsNthIndexCache mNthIndexCache;
 
   TreeMatchContext(PRBool aForStyling,
                    nsRuleWalker::VisitedHandlingType aVisitedHandling,
@@ -98,6 +106,7 @@ struct TreeMatchContext {
     : mForStyling(aForStyling)
     , mHaveRelevantLink(PR_FALSE)
     , mVisitedHandling(aVisitedHandling)
+    , mDocument(aDocument)
     , mScopedRoot(nsnull)
     , mIsHTMLDocument(aDocument->IsHTML())
     , mCompatMode(aDocument->GetCompatibilityMode())
@@ -172,15 +181,6 @@ public:
                   nsRuleWalker::VisitedHandlingType aVisitedHandling,
                   PRBool aIsRelevantLink);
 
-  // Returns a 1-based index of the child in its parent.  If the child
-  // is not in its parent's child list (i.e., it is anonymous content),
-  // returns 0.
-  // If aCheckEdgeOnly is true, the function will return 1 if the result
-  // is 1, and something other than 1 (maybe or maybe not a valid
-  // result) otherwise.
-  PRInt32 GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd,
-                      PRBool aCheckEdgeOnly);
-
   nsPresContext*    mPresContext;
   mozilla::dom::Element* mElement;       // weak ref, must not be null
   nsIContent*       mParentContent; // mElement->GetParent(); weak ref
@@ -199,14 +199,6 @@ public:
 
 private:
   nsString *mLanguage; // NULL means we haven't found out the language yet
-
-  // This node's index for :nth-child(), :nth-last-child(),
-  // :nth-of-type(), :nth-last-of-type().  If -2, needs to be computed.
-  // If -1, needs to be computed but known not to be 1.
-  // If 0, the node is not at any index in its parent.
-  // The first subscript is 0 for -child and 1 for -of-type, the second
-  // subscript is 0 for nth- and 1 for nth-last-.
-  PRInt32 mNthIndices[2][2];
 
   // mContentState is initialized lazily.
   nsEventStates mContentState;  // eventStateMgr->GetContentState() or
