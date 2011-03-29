@@ -926,7 +926,19 @@ class CallCompiler : public BaseCompiler
         else
             masm.storeArg(1, argcReg.reg());
         masm.storeArg(0, cxReg);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, fun->u.n.native), false);
+
+        js::Native native = fun->u.n.native;
+
+        /*
+         * Call RegExp.test instead of exec if the result will not be used or
+         * will only be used to test for existence. Note that this will not
+         * break inferred types for the call's result and any subsequent test,
+         * as RegExp.exec has a type handler with unknown result.
+         */
+        if (native == js_regexp_exec && IsCallResultUnusedOrTested(f.regs.pc))
+            native = js_regexp_test;
+
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, native), false);
 
         if (cx->typeInferenceEnabled())
             masm.storePtr(ImmPtr(NULL), FrameAddress(offsetof(VMFrame, scratch)));

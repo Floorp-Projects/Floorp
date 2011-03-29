@@ -493,6 +493,9 @@ DecompileValueGenerator(JSContext *cx, intN spindex, const Value &v,
     return js_DecompileValueGenerator(cx, spindex, Jsvalify(v), fallback);
 }
 
+bool
+IsCallResultUnusedOrTested(jsbytecode *pc);
+
 }
 #endif
 
