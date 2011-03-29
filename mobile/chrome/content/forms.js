@@ -69,6 +69,11 @@ function FormAssistant() {
   addMessageListener("FormAssist:AutoComplete", this);
   addMessageListener("Content:SetWindowSize", this);
 
+  /* Listen text events in order to update the autocomplete suggestions as soon
+   * a key is entered on device
+   */
+  addEventListener("text", this, false);
+
   addEventListener("keypress", this, true);
   addEventListener("keyup", this, false);
   addEventListener("focus", this, true);
@@ -329,6 +334,11 @@ FormAssistant.prototype = {
         let focusedIndex = this._getIndexForElement(focusedElement);
         if (focusedIndex != -1 && this.currentIndex != focusedIndex)
           this.currentIndex = focusedIndex;
+        break;
+
+      case "text":
+        if (this._isAutocomplete(aEvent.target))
+          sendAsyncMessage("FormAssist:AutoComplete", this._getJSON());
         break;
 
       // key processing inside a select element are done during the keypress
