@@ -67,7 +67,7 @@ class nsAttrValue;
  * TreeMatchContext for more than one matching operation need to reset
  * mHaveRelevantLink if they care about the return value.
  */
-struct TreeMatchContext {
+struct NS_STACK_CLASS TreeMatchContext {
   // Is this matching operation for the creation of a style context?
   // (If it is, we need to set slow selector bits on nodes indicating
   // that certain restyling needs to happen.)
@@ -117,53 +117,24 @@ struct TreeMatchContext {
 // The implementation of the constructor and destructor are currently in
 // nsCSSRuleProcessor.cpp.
 
-struct RuleProcessorData : public TreeMatchContext {
+struct NS_STACK_CLASS RuleProcessorData : public TreeMatchContext {
   RuleProcessorData(nsPresContext* aPresContext,
                     mozilla::dom::Element* aElement, 
                     nsRuleWalker* aRuleWalker,
-                    PRBool aForStyling);
-  
-  // NOTE: not |virtual|
-  ~RuleProcessorData();
-
-  // This should be used for all heap-allocation of RuleProcessorData
-  static RuleProcessorData* Create(nsPresContext* aPresContext,
-                                   mozilla::dom::Element* aElement, 
-                                   nsRuleWalker* aRuleWalker)
+                    PRBool aForStyling)
+    : TreeMatchContext(aForStyling,
+                       aRuleWalker ?
+                         aRuleWalker->VisitedHandling() :
+                         nsRuleWalker::eLinksVisitedOrUnvisited,
+                       aElement->GetOwnerDoc())
+    , mPresContext(aPresContext)
+    , mElement(aElement)
+    , mRuleWalker(aRuleWalker)
   {
-    // Note: the mForStyling and mVisitedHandling members of data
-    // structs created this way aren't used, so it doesn't matter what
-    // we pass for aForStyling here.
-    if (NS_LIKELY(aPresContext)) {
-      return new (aPresContext) RuleProcessorData(aPresContext, aElement,
-                                                  aRuleWalker, PR_FALSE);
-    }
-
-    return new RuleProcessorData(aPresContext, aElement, aRuleWalker, PR_FALSE);
+    NS_ASSERTION(aElement, "null element leaked into SelectorMatches");
+    NS_ASSERTION(aElement->GetOwnerDoc(), "Document-less node here?");
   }
   
-  void Destroy() {
-    nsPresContext * pc = mPresContext;
-    if (NS_LIKELY(pc)) {
-      this->~RuleProcessorData();
-      pc->FreeToShell(sizeof(RuleProcessorData), this);
-      return;
-    }
-    delete this;
-  }
-
-  // For placement new
-  void* operator new(size_t sz, RuleProcessorData* aSlot) CPP_THROW_NEW {
-    return aSlot;
-  }
-private:
-  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
-    return aContext->AllocateFromShell(sz);
-  }
-  void* operator new(size_t sz) CPP_THROW_NEW {
-    return ::operator new(sz);
-  }
-public:
   // Reset this data for matching for the style-if-:visited.  This should
   // only be called for RuleProcessorData objects which have a rulewalker.
   void ResetForVisitedMatching() {
@@ -172,18 +143,12 @@ public:
     mVisitedHandling = mRuleWalker->VisitedHandling();
   }
   
-  nsPresContext*    mPresContext;
-  mozilla::dom::Element* mElement;       // weak ref, must not be null
-  nsRuleWalker*     mRuleWalker; // Used to add rules to our results.
-  
-  // mPreviousSiblingData and mParentData are always RuleProcessorData
-  // and never a derived class.  They are allocated lazily, when
-  // selectors require matching of prior siblings or ancestors.
-  RuleProcessorData* mPreviousSiblingData;
-  RuleProcessorData* mParentData;
+  nsPresContext* const mPresContext;
+  mozilla::dom::Element* const mElement; // weak ref, must not be null
+  nsRuleWalker* const mRuleWalker; // Used to add rules to our results.
 };
 
-struct ElementRuleProcessorData : public RuleProcessorData {
+struct NS_STACK_CLASS ElementRuleProcessorData : public RuleProcessorData {
   ElementRuleProcessorData(nsPresContext* aPresContext,
                            mozilla::dom::Element* aElement, 
                            nsRuleWalker* aRuleWalker)
@@ -194,7 +159,7 @@ struct ElementRuleProcessorData : public RuleProcessorData {
   }
 };
 
-struct PseudoElementRuleProcessorData : public RuleProcessorData {
+struct NS_STACK_CLASS PseudoElementRuleProcessorData : public RuleProcessorData {
   PseudoElementRuleProcessorData(nsPresContext* aPresContext,
                                  mozilla::dom::Element* aParentElement,
                                  nsRuleWalker* aRuleWalker,
@@ -212,7 +177,7 @@ struct PseudoElementRuleProcessorData : public RuleProcessorData {
   nsCSSPseudoElements::Type mPseudoType;
 };
 
-struct AnonBoxRuleProcessorData {
+struct NS_STACK_CLASS AnonBoxRuleProcessorData {
   AnonBoxRuleProcessorData(nsPresContext* aPresContext,
                            nsIAtom* aPseudoTag,
                            nsRuleWalker* aRuleWalker)
@@ -231,7 +196,7 @@ struct AnonBoxRuleProcessorData {
 };
 
 #ifdef MOZ_XUL
-struct XULTreeRuleProcessorData : public RuleProcessorData {
+struct NS_STACK_CLASS XULTreeRuleProcessorData : public RuleProcessorData {
   XULTreeRuleProcessorData(nsPresContext* aPresContext,
                            mozilla::dom::Element* aParentElement,
                            nsRuleWalker* aRuleWalker,
@@ -252,7 +217,7 @@ struct XULTreeRuleProcessorData : public RuleProcessorData {
 };
 #endif
 
-struct StateRuleProcessorData : public RuleProcessorData {
+struct NS_STACK_CLASS StateRuleProcessorData : public RuleProcessorData {
   StateRuleProcessorData(nsPresContext* aPresContext,
                          mozilla::dom::Element* aElement,
                          nsEventStates aStateMask)
@@ -265,7 +230,7 @@ struct StateRuleProcessorData : public RuleProcessorData {
                                   //  Constants defined in nsEventStates.h .
 };
 
-struct AttributeRuleProcessorData : public RuleProcessorData {
+struct NS_STACK_CLASS AttributeRuleProcessorData : public RuleProcessorData {
   AttributeRuleProcessorData(nsPresContext* aPresContext,
                              mozilla::dom::Element* aElement,
                              nsIAtom* aAttribute,
