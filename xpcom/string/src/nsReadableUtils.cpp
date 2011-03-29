@@ -573,14 +573,16 @@ IsUTF8( const nsACString& aString )
             --state;
 
             // non-character : EF BF [BE-BF] or F[0-7] [89AB]F BF [BE-BF]
-            if ( nonchar &&  ( !state &&  c < 0xBE ||
-                  state == 1 && c != 0xBF  ||
-                  state == 2 && 0x0F != (0x0F & c) ))
-                nonchar = PR_FALSE;
+            if ( nonchar &&  
+                 ( ( !state && c < 0xBE ) ||
+                   ( state == 1 && c != 0xBF )  ||
+                   ( state == 2 && 0x0F != (0x0F & c) )))
+              nonchar = PR_FALSE;
 
-            if ( !UTF8traits::isInSeq(c) || overlong && c <= olupper || 
-                  surrogate && slower <= c || nonchar && !state )
+            if ( !UTF8traits::isInSeq(c) || ( overlong && c <= olupper ) || 
+                 ( surrogate && slower <= c ) || ( nonchar && !state ))
               return PR_FALSE; // Not UTF-8 string
+
             overlong = surrogate = PR_FALSE;
           }
         }
