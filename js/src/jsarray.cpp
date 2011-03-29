@@ -1239,13 +1239,58 @@ array_toSource(JSContext *cx, uintN argc, Value *vp)
 }
 #endif
 
+class AutoArrayCycleDetector
+{
+    JSContext *cx;
+    JSObject *obj;
+    uint32 genBefore;
+    BusyArraysSet::AddPtr hashPointer;
+    bool cycle;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+  public:
+    AutoArrayCycleDetector(JSContext *cx, JSObject *obj JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : cx(cx),
+        obj(obj),
+        cycle(true)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    bool init()
+    {
+        BusyArraysSet &set = cx->busyArrays;
+        hashPointer = set.lookupForAdd(obj);
+        if (!hashPointer) {
+            if (!set.add(hashPointer, obj))
+                return false;
+            cycle = false;
+            genBefore = set.generation();
+        }
+        return true;
+    }
+
+    ~AutoArrayCycleDetector()
+    {
+        if (!cycle) {
+            if (genBefore == cx->busyArrays.generation())
+                cx->busyArrays.remove(hashPointer);
+            else
+                cx->busyArrays.remove(obj);
+        }
+    }
+
+    bool foundCycle() { return cycle; }
+
+  protected:
+};
+
 static JSBool
 array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
                    JSString *sepstr, Value *rval)
 {
     JS_CHECK_RECURSION(cx, return false);
 
-    /* Get characters to use for the separator. */
     static const jschar comma = ',';
     const jschar *sep;
     size_t seplen;
@@ -1259,84 +1304,68 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
         seplen = 1;
     }
 
-    /*
-     * Use HashTable entry as the cycle indicator. On first visit, create the
-     * entry, and, when leaving, remove the entry.
-     */
-    BusyArraysMap::AddPtr hashp = cx->busyArrays.lookupForAdd(obj);
-    uint32 genBefore;
-    if (!hashp) {
-        /* Not in hash table, so not a cycle. */
-        if (!cx->busyArrays.add(hashp, obj))
-            return false;
-        genBefore = cx->busyArrays.generation();
-    } else {
-        /* Cycle, so return empty string. */
+    AutoArrayCycleDetector detector(cx, obj);
+    if (!detector.init())
+        return false;
+
+    if (detector.foundCycle()) {
         rval->setString(cx->runtime->atomState.emptyAtom);
         return true;
     }
 
-    AutoObjectRooter tvr(cx, obj);
-
-    /* After this point, all paths exit through the 'out' label. */
-    MUST_FLOW_THROUGH("out");
-    bool ok = false;
-
-    /*
-     * This object will take responsibility for the jschar buffer until the
-     * buffer is transferred to the returned JSString.
-     */
-    StringBuffer sb(cx);
-
     jsuint length;
     if (!js_GetLengthProperty(cx, obj, &length))
-        goto out;
+        return false;
 
-    for (jsuint index = 0; index < length; index++) {
-        /* Use rval to locally root each element value. */
-        JSBool hole;
-        if (!JS_CHECK_OPERATION_LIMIT(cx) ||
-            !GetElement(cx, obj, index, &hole, rval)) {
-            goto out;
+    StringBuffer sb(cx);
+
+    if (!locale && !seplen && obj->isDenseArray() && !js_PrototypeHasIndexedProperties(cx, obj)) {
+        /* Elements beyond 'capacity' are 'undefined' and thus can be ignored. */
+        Value *beg = obj->getDenseArrayElements();
+        Value *end = beg + Min(length, obj->getDenseArrayCapacity());
+        for (Value *vp = beg; vp != end; ++vp) {
+            if (!JS_CHECK_OPERATION_LIMIT(cx))
+                return false;
+
+            if (!vp->isMagic(JS_ARRAY_HOLE) && !vp->isNullOrUndefined()) {
+                if (!ValueToStringBuffer(cx, *vp, sb))
+                    return false;
+            }
         }
+    } else {
+        for (jsuint index = 0; index < length; index++) {
+            if (!JS_CHECK_OPERATION_LIMIT(cx))
+                return false;
 
-        /* Get element's character string. */
-        if (!hole && !rval->isNullOrUndefined()) {
-            if (locale) {
-                /* Work on obj.toLocalString() instead. */
-                JSObject *robj = ToObject(cx, rval);
-                if (!robj)
-                    goto out;
-                jsid id = ATOM_TO_JSID(cx->runtime->atomState.toLocaleStringAtom);
-                if (!robj->callMethod(cx, id, 0, NULL, rval))
-                    goto out;
+            JSBool hole;
+            if (!GetElement(cx, obj, index, &hole, rval))
+                return false;
+
+            if (!hole && !rval->isNullOrUndefined()) {
+                if (locale) {
+                    JSObject *robj = ToObject(cx, rval);
+                    if (!robj)
+                        return false;
+                    jsid id = ATOM_TO_JSID(cx->runtime->atomState.toLocaleStringAtom);
+                    if (!robj->callMethod(cx, id, 0, NULL, rval))
+                        return false;
+                }
+                if (!ValueToStringBuffer(cx, *rval, sb))
+                    return false;
             }
 
-            if (!ValueToStringBuffer(cx, *rval, sb))
-                goto out;
-        }
-
-        /* Append the separator. */
-        if (index + 1 != length) {
-            if (!sb.append(sep, seplen))
-                goto out;
+            if (index + 1 != length) {
+                if (!sb.append(sep, seplen))
+                    return false;
+            }
         }
     }
 
-    /* Finalize the buffer. */
-    JSString *str;
-    str = sb.finishString();
+    JSString *str = sb.finishString();
     if (!str)
-        goto out;
+        return false;
     rval->setString(str);
-    ok = true;
-
-  out:
-    if (genBefore == cx->busyArrays.generation())
-        cx->busyArrays.remove(hashp);
-    else
-        cx->busyArrays.remove(obj);
-    return ok;
+    return true;
 }
 
 /* ES5 15.4.4.2. NB: The algorithm here differs from the one in ES3. */
