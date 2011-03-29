@@ -3228,15 +3228,37 @@ nsAccessible::GetSiblingAtOffset(PRInt32 aOffset, nsresult* aError)
 nsAccessible *
 nsAccessible::GetFirstAvailableAccessible(nsINode *aStartNode) const
 {
-  nsAccessible *accessible =
+  nsAccessible* accessible =
     GetAccService()->GetAccessibleInWeakShell(aStartNode, mWeakShell);
   if (accessible)
     return accessible;
 
-  nsIContent *content = nsCoreUtils::GetRoleContent(aStartNode);
-  nsAccTreeWalker walker(mWeakShell, content, PR_FALSE);
-  nsRefPtr<nsAccessible> childAccessible = walker.GetNextChild();
-  return childAccessible;
+  nsCOMPtr<nsIDOMDocumentTraversal> trav =
+    do_QueryInterface(aStartNode->GetOwnerDoc());
+  NS_ENSURE_TRUE(trav, nsnull);
+
+  nsCOMPtr<nsIDOMNode> currentNode = do_QueryInterface(aStartNode);
+  nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(GetNode()));
+  nsCOMPtr<nsIDOMTreeWalker> walker;
+  trav->CreateTreeWalker(rootNode,
+                         nsIDOMNodeFilter::SHOW_ELEMENT | nsIDOMNodeFilter::SHOW_TEXT,
+                         nsnull, PR_FALSE, getter_AddRefs(walker));
+  NS_ENSURE_TRUE(walker, nsnull);
+
+  walker->SetCurrentNode(currentNode);
+  while (true) {
+    walker->NextNode(getter_AddRefs(currentNode));
+    if (!currentNode)
+      return nsnull;
+
+    nsCOMPtr<nsINode> node(do_QueryInterface(currentNode));
+    nsAccessible* accessible =
+      GetAccService()->GetAccessibleInWeakShell(node, mWeakShell);
+    if (accessible)
+      return accessible;
+  }
+
+  return nsnull;
 }
 
 PRBool nsAccessible::CheckVisibilityInParentChain(nsIDocument* aDocument, nsIView* aView)

@@ -1099,16 +1099,16 @@ SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
         }
 
         // We have found a signer cert that we want to remember.
-        nsCAutoString nickname;
-        nickname = nsNSSCertificate::defaultServerNickname(node->cert);
-        if (!nickname.IsEmpty()) {
+        char* nickname = nsNSSCertificate::defaultServerNickname(node->cert);
+        if (nickname && *nickname) {
           PK11SlotInfo *slot = PK11_GetInternalKeySlot();
           if (slot) {
             PK11_ImportCert(slot, node->cert, CK_INVALID_HANDLE, 
-                            const_cast<char*>(nickname.get()), PR_FALSE);
+                            nickname, PR_FALSE);
             PK11_FreeSlot(slot);
           }
         }
+        PR_FREEIF(nickname);
       }
 
       CERT_DestroyCertList(certList);

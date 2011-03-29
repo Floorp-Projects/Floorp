@@ -111,9 +111,6 @@ ifneq (Android,$(OS_TARGET))
 OS_LIBS += -lrt
 endif
 endif
-ifeq (WINNT,$(OS_ARCH))
-OS_LIBS += dbghelp.lib
-endif
 endif
 
 STATIC_LIBS += \
