@@ -3875,11 +3875,17 @@ js_ValueToSource(JSContext *cx, const Value &v)
         return js_ValueToString(cx, v);
     }
 
-    JSAtom *atom = cx->runtime->atomState.toSourceAtom;
-    AutoValueRooter tvr(cx);
-    if (!js_TryMethod(cx, &v.toObject(), atom, 0, NULL, tvr.addr()))
-        return NULL;
-    return js_ValueToString(cx, tvr.value());
+    Value rval = NullValue();
+    Value fval;
+    jsid id = ATOM_TO_JSID(cx->runtime->atomState.toSourceAtom);
+    if (!js_GetMethod(cx, &v.toObject(), id, JSGET_NO_METHOD_BARRIER, &fval))
+        return false;
+    if (js_IsCallable(fval)) {
+        if (!ExternalInvoke(cx, v, fval, 0, NULL, &rval))
+            return false;
+    }
+
+    return js_ValueToString(cx, rval);
 }
 
 namespace js {

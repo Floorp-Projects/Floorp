@@ -170,15 +170,19 @@ js_json_stringify(JSContext *cx, uintN argc, Value *vp)
 JSBool
 js_TryJSON(JSContext *cx, Value *vp)
 {
-    // Checks whether the return value implements toJSON()
-    JSBool ok = JS_TRUE;
+    if (!vp->isObject())
+        return true;
 
-    if (vp->isObject()) {
-        JSObject *obj = &vp->toObject();
-        ok = js_TryMethod(cx, obj, cx->runtime->atomState.toJSONAtom, 0, NULL, vp);
+    JSObject *obj = &vp->toObject();
+    Value fval;
+    jsid id = ATOM_TO_JSID(cx->runtime->atomState.toJSONAtom);
+    if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &fval))
+        return false;
+    if (js_IsCallable(fval)) {
+        if (!ExternalInvoke(cx, ObjectValue(*obj), fval, 0, NULL, vp))
+            return false;
     }
-
-    return ok;
+    return true;
 }
 
 

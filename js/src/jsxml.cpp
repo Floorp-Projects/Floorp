@@ -4867,7 +4867,11 @@ xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool st
 JSBool
 xml_convert(JSContext *cx, JSObject *obj, JSType type, Value *rval)
 {
-    return js_TryMethod(cx, obj, cx->runtime->atomState.toStringAtom, 0, NULL, rval);
+    JSString *str = js_ValueToString(cx, ObjectValue(*obj));
+    if (!str)
+        return false;
+    *rval = StringValue(str);
+    return true;
 }
 
 static JSBool
