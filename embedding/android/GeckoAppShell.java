@@ -1007,6 +1007,42 @@ public class GeckoAppShell
         res.updateConfiguration(config, res.getDisplayMetrics());
     }
 
+    public static int[] getSystemColors() {
+        // attrsAppearance[] must correspond to AndroidSystemColors structure in android/AndroidBridge.h
+        final int[] attrsAppearance = {
+            android.R.attr.textColor,
+            android.R.attr.textColorPrimary,
+            android.R.attr.textColorPrimaryInverse,
+            android.R.attr.textColorSecondary,
+            android.R.attr.textColorSecondaryInverse,
+            android.R.attr.textColorTertiary,
+            android.R.attr.textColorTertiaryInverse,
+            android.R.attr.textColorHighlight,
+            android.R.attr.colorForeground,
+            android.R.attr.colorBackground,
+            android.R.attr.panelColorForeground,
+            android.R.attr.panelColorBackground
+        };
+
+        int[] result = new int[attrsAppearance.length];
+
+        final ContextThemeWrapper contextThemeWrapper =
+            new ContextThemeWrapper(GeckoApp.mAppContext, android.R.style.TextAppearance);
+
+        final TypedArray appearance = contextThemeWrapper.getTheme().obtainStyledAttributes(attrsAppearance);
+
+        if (appearance != null) {
+            for (int i = 0; i < appearance.getIndexCount(); i++) {
+                int idx = appearance.getIndex(i);
+                int color = appearance.getColor(idx, 0);
+                result[idx] = color;
+            }
+            appearance.recycle();
+        }
+
+        return result;
+    }
+
     public static void killAnyZombies() {
         GeckoProcessesVisitor visitor = new GeckoProcessesVisitor() {
             public boolean callback(int pid) {
