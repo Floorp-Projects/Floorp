@@ -56,6 +56,7 @@ namespace mjit {
 struct PatchableFrame {
     JSStackFrame *fp;
     jsbytecode *pc;
+    bool scriptedCall;
 };
 
 class Compiler : public BaseCompiler
