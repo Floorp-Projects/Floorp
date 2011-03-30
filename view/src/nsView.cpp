@@ -240,7 +240,7 @@ nsView::~nsView()
   {
     DropMouseGrabbing();
   
-    nsView *rootView = mViewManager->GetRootView();
+    nsView *rootView = mViewManager->GetRootViewImpl();
     
     if (rootView)
     {
@@ -446,7 +446,7 @@ void nsView::DoResetWidgetBounds(PRBool aMoveOnly,
                                  PRBool aInvalidateChangedSize) {
   // The geometry of a root view's widget is controlled externally,
   // NOT by sizing or positioning the view
-  if (mViewManager->GetRootView() == this) {
+  if (mViewManager->GetRootViewImpl() == this) {
     return;
   }
   
@@ -568,7 +568,7 @@ NS_IMETHODIMP nsView::SetFloating(PRBool aFloatingView)
 
 void nsView::InvalidateHierarchy(nsViewManager *aViewManagerParent)
 {
-  if (mViewManager->GetRootView() == this)
+  if (mViewManager->GetRootViewImpl() == this)
     mViewManager->InvalidateHierarchy();
 
   for (nsView *child = mFirstChild; child; child = child->GetNextSibling())
@@ -601,7 +601,7 @@ void nsView::InsertChild(nsView *aChild, nsView *aSibling)
     // on all view managers in the new subtree.
 
     nsViewManager *vm = aChild->GetViewManager();
-    if (vm->GetRootView() == aChild)
+    if (vm->GetRootViewImpl() == aChild)
     {
       aChild->InvalidateHierarchy(nsnull); // don't care about releasing grabs
     }
@@ -637,7 +637,7 @@ void nsView::RemoveChild(nsView *child)
     // on all view managers in the removed subtree.
 
     nsViewManager *vm = child->GetViewManager();
-    if (vm->GetRootView() == child)
+    if (vm->GetRootViewImpl() == child)
     {
       child->InvalidateHierarchy(GetViewManager());
     }
@@ -1142,7 +1142,7 @@ nsIWidget* nsView::GetNearestWidget(nsPoint* aOffset, const PRInt32 aAPD) const
 PRBool nsIView::IsRoot() const
 {
   NS_ASSERTION(mViewManager != nsnull," View manager is null in nsView::IsRoot()");
-  return mViewManager->GetRootView() == this;
+  return mViewManager->GetRootViewImpl() == this;
 }
 
 PRBool nsIView::ExternalIsRoot() const
@@ -1176,7 +1176,7 @@ nsView::GetBoundsInParentUnits() const
 {
   nsView* parent = GetParent();
   nsViewManager* VM = GetViewManager();
-  if (this != VM->GetRootView() || !parent) {
+  if (this != VM->GetRootViewImpl() || !parent) {
     return mDimBounds;
   }
   PRInt32 ourAPD = VM->AppUnitsPerDevPixel();
