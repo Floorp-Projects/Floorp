@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -48,6 +48,42 @@
 #include "jsprvtd.h"
 
 JS_BEGIN_EXTERN_C
+
+extern JS_PUBLIC_API(JSCrossCompartmentCall *)
+JS_EnterCrossCompartmentCallScript(JSContext *cx, JSScript *target);
+
+#ifdef __cplusplus
+JS_END_EXTERN_C
+
+namespace JS {
+
+class JS_PUBLIC_API(AutoEnterScriptCompartment)
+{
+    JSCrossCompartmentCall *call;
+
+  public:
+    AutoEnterScriptCompartment() : call(NULL) {}
+
+    bool enter(JSContext *cx, JSScript *target);
+
+    bool entered() const { return call != NULL; }
+
+    ~AutoEnterScriptCompartment() {
+        if (call && call != reinterpret_cast<JSCrossCompartmentCall*>(1))
+            JS_LeaveCrossCompartmentCall(call);
+    }
+};
+
+} /* namespace JS */
+
+JS_BEGIN_EXTERN_C
+#endif
+
+extern JS_PUBLIC_API(JSScript *)
+JS_GetScriptFromObject(JSObject *scriptObject);
+
+extern JS_PUBLIC_API(JSString *)
+JS_DecompileScript(JSContext *cx, JSScript *script, const char *name, uintN indent);
 
 /*
  * Currently, we only support runtime-wide debugging. In the future, we should
@@ -148,8 +184,8 @@ JS_ClearAllWatchPoints(JSContext *cx);
  * Hide these non-API function prototypes by testing whether the internal
  * header file "jsversion.h" has been included.
  */
-extern void
-js_TraceWatchPoints(JSTracer *trc, JSObject *obj);
+extern JSBool
+js_TraceWatchPoints(JSTracer *trc);
 
 extern void
 js_SweepWatchPoints(JSContext *cx);
@@ -562,6 +598,28 @@ js_InitEthogram(JSContext *cx, uintN argc, jsval *vp);
 extern JS_FRIEND_API(JSBool)
 js_ShutdownEthogram(JSContext *cx, uintN argc, jsval *vp);
 #endif /* MOZ_TRACEVIS */
+
+#ifdef MOZ_TRACE_JSCALLS
+typedef void (*JSFunctionCallback)(const JSFunction *fun,
+                                   const JSScript *scr,
+                                   const JSContext *cx,
+                                   int entering);
+
+/*
+ * The callback is expected to be quick and noninvasive. It should not
+ * trigger interrupts, turn on debugging, or produce uncaught JS
+ * exceptions. The state of the stack and registers in the context
+ * cannot be relied upon, since this callback may be invoked directly
+ * from either JIT. The 'entering' field means we are entering a
+ * function if it is positive, leaving a function if it is zero or
+ * negative.
+ */
+extern JS_PUBLIC_API(void)
+JS_SetFunctionCallback(JSContext *cx, JSFunctionCallback fcb);
+
+extern JS_PUBLIC_API(JSFunctionCallback)
+JS_GetFunctionCallback(JSContext *cx);
+#endif /* MOZ_TRACE_JSCALLS */
 
 JS_END_EXTERN_C
 

@@ -1542,7 +1542,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
   if (ok && ((JSVersion)aVersion) != JSVERSION_UNKNOWN) {
     JSAutoRequest ar(mContext);
 
-    JSScript* script =
+    JSObject* scriptObj =
         ::JS_CompileUCScriptForPrincipalsVersion(mContext,
                                                  (JSObject *)aScopeObject,
                                                  jsprin,
@@ -1551,16 +1551,10 @@ nsJSContext::CompileScript(const PRUnichar* aText,
                                                  aURL,
                                                  aLineNo,
                                                  JSVersion(aVersion));
-    if (script) {
-      JSObject *scriptObject = ::JS_NewScriptObject(mContext, script);
-      if (scriptObject) {
-        NS_ASSERTION(aScriptObject.getScriptTypeID()==JAVASCRIPT,
-                     "Expecting JS script object holder");
-        rv = aScriptObject.set(scriptObject);
-      } else {
-        ::JS_DestroyScript(mContext, script);
-        script = nsnull;
-      }
+    if (scriptObj) {
+      NS_ASSERTION(aScriptObject.getScriptTypeID()==JAVASCRIPT,
+                   "Expecting JS script object holder");
+      rv = aScriptObject.set(scriptObj);
     } else {
       rv = NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1622,10 +1616,7 @@ nsJSContext::ExecuteScript(void *aScriptObject,
   nsJSContext::TerminationFuncHolder holder(this);
   JSAutoRequest ar(mContext);
   ++mExecuteDepth;
-  ok = ::JS_ExecuteScript(mContext,
-                          (JSObject *)aScopeObject,
-                          (JSScript*)::JS_GetPrivate(mContext, scriptObj),
-                          &val);
+  ok = ::JS_ExecuteScript(mContext, (JSObject *)aScopeObject, scriptObj, &val);
 
   if (ok) {
     // If all went well, convert val to a string (XXXbe unless undefined?).
@@ -2068,9 +2059,7 @@ nsJSContext::Serialize(nsIObjectOutputStream* aStream, void *aScriptObject)
     xdr->userdata = (void*) aStream;
 
     JSAutoRequest ar(cx);
-    JSScript *script = reinterpret_cast<JSScript*>
-                                       (::JS_GetPrivate(cx, mJSObject));
-    if (! ::JS_XDRScript(xdr, &script)) {
+    if (! ::JS_XDRScriptObject(xdr, &mJSObject)) {
         rv = NS_ERROR_FAILURE;  // likely to be a principals serialization error
     } else {
         // Get the encoded JSXDRState data and write it.  The JSXDRState owns
@@ -2132,15 +2121,8 @@ nsJSContext::Deserialize(nsIObjectInputStream* aStream,
         JSAutoRequest ar(cx);
         ::JS_XDRMemSetData(xdr, data, size);
 
-        JSScript *script = nsnull;
-        if (! ::JS_XDRScript(xdr, &script)) {
+        if (! ::JS_XDRScriptObject(xdr, &result)) {
             rv = NS_ERROR_FAILURE;  // principals deserialization error?
-        } else {
-            result = ::JS_NewScriptObject(cx, script);
-            if (! result) {
-                rv = NS_ERROR_OUT_OF_MEMORY;    // certain error
-                ::JS_DestroyScript(cx, script);
-            }
         }
 
         // Update data in case ::JS_XDRScript called back into C++ code to
