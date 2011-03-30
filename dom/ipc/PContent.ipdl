@@ -194,6 +194,9 @@ parent:
     sync ClipboardHasText()
         returns (PRBool hasText);
 
+    sync GetSystemColors(PRUint32 colorsCount)
+        returns (PRUint32[] colors);
+
 both:
      AsyncMessage(nsString aMessage, nsString aJSON);
 
