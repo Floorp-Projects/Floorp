@@ -46,7 +46,7 @@ printStatus (summary);
 
 jit(true);
 
-if (!this.tracemonkey || this.tracemonkey.profiler)
+if (!this.tracemonkey || this.tracemonkey.adaptive)
 {
   jit(false);
   expect = actual = 'Test skipped due to lack of tracemonkey jitstats';

@@ -61,6 +61,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
 
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
     JS_ASSERT(!cx->runtime->gcRunning);
+    JS_ASSERT_IF(adding, !obj->isCall());
 
     if (js_IsPropertyCacheDisabled(cx)) {
         PCMETER(disfills++);
@@ -506,4 +507,15 @@ PropertyCache::purgeForScript(JSContext *cx, JSScript *script)
 #endif
         }
     }
+}
+
+void
+PropertyCache::restore(PropertyCacheEntry *entry)
+{
+    PropertyCacheEntry *entry2;
+
+    empty = false;
+
+    entry2 = &table[hash(entry->kpc, entry->kshape)];
+    *entry2 = *entry;
 }

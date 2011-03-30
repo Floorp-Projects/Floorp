@@ -895,13 +895,12 @@ class InitEvent : public Event
         if (!filename)
             return fail;
 
-        JSScript *script = JS_CompileFile(cx, child->getGlobal(), filename.ptr());
-        if (!script)
+        JSObject *scriptObj = JS_CompileFile(cx, child->getGlobal(), filename.ptr());
+        if (!scriptObj)
             return fail;
 
         AutoValueRooter rval(cx);
-        JSBool ok = JS_ExecuteScript(cx, child->getGlobal(), script, Jsvalify(rval.addr()));
-        JS_DestroyScript(cx, script);
+        JSBool ok = JS_ExecuteScript(cx, child->getGlobal(), scriptObj, Jsvalify(rval.addr()));
         return Result(ok);
     }
 };
@@ -1058,14 +1057,12 @@ ResolveRelativePath(JSContext *cx, const char *base, JSString *filename)
     size_t nchars;
     if (!JS_DecodeBytes(cx, base, dirLen + 1, NULL, &nchars))
         return NULL;
-    if (!result.reserve(dirLen + 1 + fileLen)) {
-        JS_ReportOutOfMemory(cx);
+    if (!result.reserve(dirLen + 1 + fileLen))
         return NULL;
-    }
     JS_ALWAYS_TRUE(result.resize(dirLen + 1));
     if (!JS_DecodeBytes(cx, base, dirLen + 1, result.begin(), &nchars))
         return NULL;
-    JS_ALWAYS_TRUE(result.append(fileChars, fileLen));
+    result.infallibleAppend(fileChars, fileLen);
     return JS_NewUCStringCopyN(cx, result.begin(), result.length());
 }
 
@@ -1100,7 +1097,7 @@ Worker::create(JSContext *parentcx, WorkerParent *parent, JSString *scriptName, 
 void
 Worker::processOneEvent()
 {
-    Event *event;
+    Event *event = NULL;    /* init to shut GCC up */
     {
         AutoLock hold1(lock);
         if (lockedCheckTermination() || events.empty())
@@ -1236,19 +1233,19 @@ Event::trace(JSTracer *trc)
 }
 
 JSClass ThreadPool::jsClass = {
-    "ThreadPool", JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE,
+    "ThreadPool", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, jsFinalize,
     NULL, NULL, NULL, NULL,
-    NULL, NULL, JS_CLASS_TRACE(jsTraceThreadPool), NULL
+    NULL, NULL, jsTraceThreadPool, NULL
 };
 
 JSClass Worker::jsWorkerClass = {
-    "Worker", JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE,
+    "Worker", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, jsFinalize,
     NULL, NULL, NULL, NULL,
-    NULL, NULL, JS_CLASS_TRACE(jsTraceWorker), NULL
+    NULL, NULL, jsTraceWorker, NULL
 };
 
 JSFunctionSpec Worker::jsMethods[3] = {

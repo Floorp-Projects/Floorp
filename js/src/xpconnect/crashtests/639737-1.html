@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function b() { 
+  try { sset("u"); } catch(e) { }
+  try { [0].map(b); } catch(e) { }
+}
+
+var sset = document.documentElement.style.__lookupSetter__("textIndent");
+b();
+
+</script>
+</head>
+
+<body></body>
+</html>
+

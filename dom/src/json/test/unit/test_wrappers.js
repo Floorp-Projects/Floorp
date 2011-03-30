@@ -95,9 +95,7 @@ function testStringEncode() {
   for each(pair in pairs) {
     print(pair)
     var nativeResult = JSON.stringify(pair[1]);
-    var crockfordResult = crockfordJSON.stringify(pair[1]);
     do_check_eq(pair[0], nativeResult);
-    do_check_eq(crockfordResult, nativeResult);
   }
 }
 

@@ -86,8 +86,8 @@ TrampolineCompiler::release(Trampolines *tramps)
 }
 
 bool
-TrampolineCompiler::compileTrampoline(Trampolines::TrampolinePtr *where, JSC::ExecutablePool **pool,
-                                      TrampolineGenerator generator)
+TrampolineCompiler::compileTrampoline(Trampolines::TrampolinePtr *where,
+                                      JSC::ExecutablePool **poolp, TrampolineGenerator generator)
 {
     Assembler masm;
 
@@ -95,11 +95,10 @@ TrampolineCompiler::compileTrampoline(Trampolines::TrampolinePtr *where, JSC::Ex
     CHECK_RESULT(generator(masm));
     JS_ASSERT(entry.isValid());
 
-    *pool = execPool->poolForSize(masm.size());
-    if (!*pool)
+    bool ok;
+    JSC::LinkBuffer buffer(&masm, execAlloc, poolp, &ok);
+    if (!ok) 
         return false;
-
-    JSC::LinkBuffer buffer(&masm, *pool);
     masm.finalize(buffer);
     uint8 *result = (uint8*)buffer.finalizeCodeAddendum().dataLocation();
     *where = JS_DATA_TO_FUNC_PTR(Trampolines::TrampolinePtr, result + masm.distanceOf(entry));

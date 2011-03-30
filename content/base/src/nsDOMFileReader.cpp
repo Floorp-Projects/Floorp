@@ -713,23 +713,11 @@ nsDOMFileReader::GuessCharset(const char *aFileData,
     aCharset = mCharset;
   } else {
     // no charset detector available, check the BOM
-    unsigned char sniffBuf[4];
+    unsigned char sniffBuf[3];
     PRUint32 numRead = (aDataLen >= sizeof(sniffBuf) ? sizeof(sniffBuf) : aDataLen);
     memcpy(sniffBuf, aFileData, numRead);
 
-    if (numRead >= 4 &&
-        sniffBuf[0] == 0x00 &&
-        sniffBuf[1] == 0x00 &&
-        sniffBuf[2] == 0xfe &&
-        sniffBuf[3] == 0xff) {
-      aCharset = "UTF-32BE";
-    } else if (numRead >= 4 &&
-               sniffBuf[0] == 0xff &&
-               sniffBuf[1] == 0xfe &&
-               sniffBuf[2] == 0x00 &&
-               sniffBuf[3] == 0x00) {
-      aCharset = "UTF-32LE";
-    } else if (numRead >= 2 &&
+    if (numRead >= 2 &&
                sniffBuf[0] == 0xfe &&
                sniffBuf[1] == 0xff) {
       aCharset = "UTF-16BE";

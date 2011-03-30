@@ -371,7 +371,7 @@ nsNSSComponent::nsNSSComponent()
   :mNSSInitialized(PR_FALSE), mThreadList(nsnull),
    mSSLThread(NULL), mCertVerificationThread(NULL)
 {
-  mutex = PR_NewLock();
+  mutex = nsAutoLock::NewLock("nsNSSComponent::mutex");
   
 #ifdef PR_LOGGING
   if (!gPIPNSSLog)
@@ -438,7 +438,7 @@ nsNSSComponent::~nsNSSComponent()
   delete mShutdownObjectList;
 
   if (mutex) {
-    PR_DestroyLock(mutex);
+    nsAutoLock::DestroyLock(mutex);
     mutex = nsnull;
   }
 
