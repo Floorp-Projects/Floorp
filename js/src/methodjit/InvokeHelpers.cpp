@@ -226,8 +226,8 @@ RemovePartialFrame(JSContext *cx, JSStackFrame *fp)
 void JS_FASTCALL
 stubs::HitStackQuota(VMFrame &f)
 {
-    /* Include space to push another frame. */
-    uintN nvals = f.fp()->script()->nslots + VALUES_PER_STACK_FRAME;
+    /* Include space for any inline frames. */
+    uintN nvals = f.fp()->script()->nslots + StackSpace::STACK_EXTRA;
     JS_ASSERT(f.regs.sp == f.fp()->base());
     if (f.cx->stack().bumpCommitAndLimit(f.entryfp, f.regs.sp, nvals, &f.stackLimit))
         return;

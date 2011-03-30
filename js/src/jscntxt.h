@@ -656,6 +656,12 @@ class StackSpace
     static const size_t STACK_QUOTA    = (VALUES_PER_STACK_FRAME + 18) *
                                          JS_MAX_INLINE_CALL_COUNT;
 
+    /*
+     * Extra space to reserve on the stack before invoking the method JIT.
+     * This may be used for inlined stack frames.
+     */
+    static const size_t STACK_EXTRA    = (VALUES_PER_STACK_FRAME + 18) * 10;
+
     /* Kept as a member of JSThreadData; cannot use constructor/destructor. */
     bool init();
     void finish();
