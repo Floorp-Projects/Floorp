@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "pratom.h"
+#include "nsAtomicRefcnt.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
@@ -58,12 +58,12 @@ NS_IMPL_ISUPPORTS1(nsScriptableUnicodeConverter, nsIScriptableUnicodeConverter)
 nsScriptableUnicodeConverter::nsScriptableUnicodeConverter()
 : mIsInternal(PR_FALSE)
 {
-  PR_AtomicIncrement(&gInstanceCount);
+  PR_ATOMIC_INCREMENT(&gInstanceCount);
 }
 
 nsScriptableUnicodeConverter::~nsScriptableUnicodeConverter()
 {
-  PR_AtomicDecrement(&gInstanceCount);
+  PR_ATOMIC_DECREMENT(&gInstanceCount);
 }
 
 nsresult

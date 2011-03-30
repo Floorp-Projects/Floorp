@@ -52,11 +52,11 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jshashtable.h"
+#include "jsiter.h"
 #include "jsobj.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jspropertytree.h"
-#include "jsstrinlines.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -314,14 +314,7 @@ struct Shape : public JSObjectMap
   public:
     inline void freeTable(JSContext *cx);
 
-    static bool initEmptyShapes(JSCompartment *comp);
-    static void finishEmptyShapes(JSCompartment *comp);
-
     jsid                id;
-
-#ifdef DEBUG
-    JSCompartment       *compartment;
-#endif
 
   protected:
     union {
@@ -435,25 +428,6 @@ struct Shape : public JSObjectMap
         parent = p;
     }
 
-    void insertFree(js::Shape **freep) {
-#ifdef DEBUG
-        memset(this, JS_FREE_PATTERN, sizeof *this);
-#endif
-        id = JSID_VOID;
-        parent = *freep;
-        if (parent)
-            parent->listp = &parent;
-        listp = freep;
-        *freep = this;
-    }
-
-    void removeFree() {
-        JS_ASSERT(JSID_IS_VOID(id));
-        *listp = parent;
-        if (parent)
-            parent->listp = listp;
-    }
-
   public:
     const js::Shape *previous() const {
         return parent;
@@ -496,22 +470,13 @@ struct Shape : public JSObjectMap
      * with these bits.
      */
     enum {
-        /* GC mark flag. */
-        MARK            = 0x01,
-
-        SHARED_EMPTY    = 0x02,
-
-        /*
-         * Set during a shape-regenerating GC if the shape has already been
-         * regenerated.
-         */
-        SHAPE_REGEN     = 0x04,
+        SHARED_EMPTY    = 0x01,
 
         /* Property stored in per-object dictionary, not shared property tree. */
-        IN_DICTIONARY   = 0x08,
+        IN_DICTIONARY   = 0x02,
 
         /* Prevent unwanted mutation of shared Bindings::lastBinding nodes. */
-        FROZEN          = 0x10
+        FROZEN          = 0x04
     };
 
     Shape(jsid id, js::PropertyOp getter, js::StrictPropertyOp setter, uint32 slot, uintN attrs,
@@ -519,14 +484,6 @@ struct Shape : public JSObjectMap
 
     /* Used by EmptyShape (see jsscopeinlines.h). */
     Shape(JSCompartment *comp, Class *aclasp);
-
-    bool marked() const         { return (flags & MARK) != 0; }
-    void mark() const           { flags |= MARK; }
-    void clearMark()            { flags &= ~MARK; }
-
-    bool hasRegenFlag() const   { return (flags & SHAPE_REGEN) != 0; }
-    void setRegenFlag()         { flags |= SHAPE_REGEN; }
-    void clearRegenFlag()       { flags &= ~SHAPE_REGEN; }
 
     bool inDictionary() const   { return (flags & IN_DICTIONARY) != 0; }
     bool frozen() const         { return (flags & FROZEN) != 0; }
@@ -591,7 +548,9 @@ struct Shape : public JSObjectMap
 
     inline bool isSharedPermanent() const;
 
-    void trace(JSTracer *trc) const;
+    void regenerate(JSTracer *trc) const;
+    void markChildrenNotParent(JSTracer *trc) const;
+    void markChildren(JSTracer *trc) const;
 
     bool hasSlot() const { return (attrs & JSPROP_SHARED) == 0; }
 
@@ -642,6 +601,9 @@ struct Shape : public JSObjectMap
     void dump(JSContext *cx, FILE *fp) const;
     void dumpSubtree(JSContext *cx, int level, FILE *fp) const;
 #endif
+
+    void finalize(JSContext *cx);
+    void removeChild(js::Shape *child);
 };
 
 struct EmptyShape : public js::Shape
@@ -650,18 +612,45 @@ struct EmptyShape : public js::Shape
 
     js::Class *getClass() const { return clasp; };
 
-    static EmptyShape *create(JSCompartment *comp, js::Class *clasp) {
-        js::Shape *eprop = comp->propertyTree.newShapeUnchecked();
-        if (!eprop)
-            return NULL;
-        return new (eprop) EmptyShape(comp, clasp);
-    }
-
     static EmptyShape *create(JSContext *cx, js::Class *clasp) {
         js::Shape *eprop = JS_PROPERTY_TREE(cx).newShape(cx);
         if (!eprop)
             return NULL;
         return new (eprop) EmptyShape(cx->compartment, clasp);
+    }
+
+    static EmptyShape *ensure(JSContext *cx, js::Class *clasp, EmptyShape **shapep) {
+        EmptyShape *shape = *shapep;
+        if (!shape) {
+            if (!(shape = create(cx, clasp)))
+                return NULL;
+            return *shapep = shape;
+        }
+        return shape;
+    }
+
+    static EmptyShape *getEmptyArgumentsShape(JSContext *cx) {
+        return ensure(cx, &js_ArgumentsClass, &cx->compartment->emptyArgumentsShape);
+    }
+
+    static EmptyShape *getEmptyBlockShape(JSContext *cx) {
+        return ensure(cx, &js_BlockClass, &cx->compartment->emptyBlockShape);
+    }
+
+    static EmptyShape *getEmptyCallShape(JSContext *cx) {
+        return ensure(cx, &js_CallClass, &cx->compartment->emptyCallShape);
+    }
+
+    static EmptyShape *getEmptyDeclEnvShape(JSContext *cx) {
+        return ensure(cx, &js_DeclEnvClass, &cx->compartment->emptyDeclEnvShape);
+    }
+
+    static EmptyShape *getEmptyEnumeratorShape(JSContext *cx) {
+        return ensure(cx, &js_IteratorClass, &cx->compartment->emptyEnumeratorShape);
+    }
+
+    static EmptyShape *getEmptyWithShape(JSContext *cx) {
+        return ensure(cx, &js_WithClass, &cx->compartment->emptyWithShape);
     }
 };
 
@@ -752,7 +741,7 @@ JSObject::setLastProperty(const js::Shape *shape)
     JS_ASSERT(!inDictionaryMode());
     JS_ASSERT(!JSID_IS_VOID(shape->id));
     JS_ASSERT_IF(lastProp, !JSID_IS_VOID(lastProp->id));
-    JS_ASSERT(shape->compartment == compartment());
+    JS_ASSERT(shape->compartment() == compartment());
 
     lastProp = const_cast<js::Shape *>(shape);
 }
@@ -803,6 +792,7 @@ Shape::insertIntoDictionary(js::Shape **dictp)
     JS_ASSERT_IF(*dictp, (*dictp)->inDictionary());
     JS_ASSERT_IF(*dictp, (*dictp)->listp == dictp);
     JS_ASSERT_IF(*dictp, !JSID_IS_VOID((*dictp)->id));
+    JS_ASSERT_IF(*dictp, compartment() == (*dictp)->compartment());
 
     setParent(*dictp);
     if (parent)

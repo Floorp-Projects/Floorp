@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for DOMException constants</title>
+  <script src="/MochiKit/packed.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script>
+var constants = [
+  null,
+  "INDEX_SIZE_ERR",
+  "DOMSTRING_SIZE_ERR",
+  "HIERARCHY_REQUEST_ERR",
+  "WRONG_DOCUMENT_ERR",
+  "INVALID_CHARACTER_ERR",
+  "NO_DATA_ALLOWED_ERR",
+  "NO_MODIFICATION_ALLOWED_ERR",
+  "NOT_FOUND_ERR",
+  "NOT_SUPPORTED_ERR",
+  "INUSE_ATTRIBUTE_ERR",
+  "INVALID_STATE_ERR",
+  "SYNTAX_ERR",
+  "INVALID_MODIFICATION_ERR",
+  "NAMESPACE_ERR",
+  "INVALID_ACCESS_ERR",
+  "VALIDATION_ERR",
+  "TYPE_MISMATCH_ERR",
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  "DATA_CLONE_ERR"
+];
+for (var i = 0; i < constants.length; ++i) {
+  var constant = constants[i];
+  if (constant)
+    is(DOMException[constant], i, constant)
+}
+</script>
+</pre>
+</body>
+</html>

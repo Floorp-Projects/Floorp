@@ -4971,6 +4971,10 @@ VPX_AS_CONVERSION=
 VPX_ASM_SUFFIX=
 VPX_X86_ASM=
 VPX_ARM_ASM=
+LIBJPEG_TURBO_AS=
+LIBJPEG_TURBO_ASFLAGS=
+LIBJPEG_TURBO_X86_ASM=
+LIBJPEG_TURBO_X64_ASM=
 MOZ_PANGO=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=1
@@ -6440,6 +6444,67 @@ if test -z "$MOZ_CRASHREPORTER_ENABLE_PERCENT"; then
    MOZ_CRASHREPORTER_ENABLE_PERCENT=100
 fi
 AC_DEFINE_UNQUOTED(MOZ_CRASHREPORTER_ENABLE_PERCENT, $MOZ_CRASHREPORTER_ENABLE_PERCENT)
+
+dnl ========================================================
+dnl = libjpeg-turbo configuration
+dnl ========================================================
+
+dnl Detect if we can use yasm to compile libjpeg-turbo's optimized assembly
+dnl files.
+AC_MSG_CHECKING([for YASM assembler])
+AC_CHECK_PROGS(LIBJPEG_TURBO_AS, yasm, "")
+
+dnl XXX jlebar -- need a yasm version check here.
+
+if test -n "LIBJPEG_TURBO_AS"; then
+
+  LIBJPEG_TURBO_AS="yasm"
+
+  dnl We have YASM; see if we support it on this platform.
+  case "$OS_ARCH:$OS_TEST" in
+  Linux:x86|Linux:i?86)
+    LIBJPEG_TURBO_ASFLAGS="-f elf32 -rnasm -pnasm -DPIC -DELF"
+    LIBJPEG_TURBO_X86_ASM=1
+  ;;
+  Linux:x86_64)
+    LIBJPEG_TURBO_ASFLAGS="-f elf64 -rnasm -pnasm -D__x86_64__ -DPIC -DELF"
+    LIBJPEG_TURBO_X64_ASM=1
+  ;;
+  SunOS:i?86)
+    LIBJPEG_TURBO_ASFLAGS="-f elf32 -rnasm -pnasm -DPIC -DELF"
+    LIBJPEG_TURBO_X86_ASM=1
+  ;;
+  SunOS:x86_64)
+    LIBJPEG_TURBO_ASFLAGS="-f elf64 -rnasm -pnasm -D__x86_64__ -DPIC -DELF"
+    LIBJPEG_TURBO_X64_ASM=1
+  ;;
+  Darwin:i?86)
+    LIBJPEG_TURBO_ASFLAGS="-f macho32 -rnasm -pnasm -DPIC -DMACHO"
+    LIBJPEG_TURBO_X86_ASM=1
+  ;;
+  Darwin:x86_64)
+    LIBJPEG_TURBO_ASFLAGS="-f macho64 -rnasm -pnasm -D__x86_64__ -DPIC -DMACHO"
+    LIBJPEG_TURBO_X64_ASM=1
+  ;;
+  WINNT:x86|WINNT:i?86)
+    LIBJPEG_TURBO_ASFLAGS="-f win32 -rnasm -pnasm -DPIC -DWIN32"
+    LIBJPEG_TURBO_X86_ASM=1
+  ;;
+  WINNT:x86_64)
+    LIBJPEG_TURBO_ASFLAGS="-f win64 -rnasm -pnasm -D__x86_64__ -DPIC -DWIN64"
+    LIBJPEG_TURBO_X64_ASM=1
+  ;;
+  esac
+
+fi # end have YASM
+
+if test -n "$LIBJPEG_TURBO_X86_ASM"; then
+  AC_DEFINE(LIBJPEG_TURBO_X86_ASM)
+elif test -n "$LIBJPEG_TURBO_X64_ASM"; then
+  AC_DEFINE(LIBJPEG_TURBO_X64_ASM)
+else
+  AC_MSG_WARN([No assembler or assembly support for libjpeg-turbo.  Using unoptimized C routines.])
+fi
 
 dnl ========================================================
 dnl = Enable compilation of specific extension modules
@@ -9209,6 +9274,10 @@ AC_SUBST(VPX_AS_CONVERSION)
 AC_SUBST(VPX_ASM_SUFFIX)
 AC_SUBST(VPX_X86_ASM)
 AC_SUBST(VPX_ARM_ASM)
+AC_SUBST(LIBJPEG_TURBO_AS)
+AC_SUBST(LIBJPEG_TURBO_ASFLAGS)
+AC_SUBST(LIBJPEG_TURBO_X86_ASM)
+AC_SUBST(LIBJPEG_TURBO_X64_ASM)
 
 if test "$USING_HCC"; then
    CC='${topsrcdir}/build/hcc'

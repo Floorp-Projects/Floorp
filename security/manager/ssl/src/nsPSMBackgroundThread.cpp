@@ -50,7 +50,7 @@ nsPSMBackgroundThread::nsPSMBackgroundThread()
   mCond(nsnull),
   mExitRequested(PR_FALSE)
 {
-  mMutex = PR_NewLock();
+  mMutex = nsAutoLock::NewLock("nsPSMBackgroundThread::mMutex");
   mCond = PR_NewCondVar(mMutex);
 }
 
@@ -76,7 +76,7 @@ nsPSMBackgroundThread::~nsPSMBackgroundThread()
     PR_DestroyCondVar(mCond);
 
   if (mMutex)
-    PR_DestroyLock(mMutex);
+    nsAutoLock::DestroyLock(mMutex);
 }
 
 void nsPSMBackgroundThread::requestExit()

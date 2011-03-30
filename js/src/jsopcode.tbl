@@ -230,7 +230,7 @@ OPDEF(JSOP_OBJECT,    80, "object",     NULL,         3,  0,  1, 19,  JOF_OBJECT
 /* Pop value and discard it. */
 OPDEF(JSOP_POP,       81, "pop",        NULL,         1,  1,  0,  2,  JOF_BYTE)
 
-/* Convert value to number, for unary +. */
+/* Call a function as a constructor; operand is argc. */
 OPDEF(JSOP_NEW,       82, js_new_str,   NULL,         3, -1,  1, 17,  JOF_UINT16|JOF_INVOKE)
 
 /* Trap into debugger for breakpoint, etc. */
@@ -311,7 +311,7 @@ OPDEF(JSOP_LINENO,    119,"lineno",     NULL,         3,  0,  0,  0,  JOF_UINT16
  * lval if false; and DEFAULT is POP lval and GOTO.
  */
 OPDEF(JSOP_CONDSWITCH,120,"condswitch", NULL,         1,  0,  0,  0,  JOF_BYTE|JOF_PARENHEAD)
-OPDEF(JSOP_CASE,      121,"case",       NULL,         3,  2,  1,  0,  JOF_JUMP)
+OPDEF(JSOP_CASE,      121,"case",       NULL,         3,  2,  1,  0,  JOF_JUMP|JOF_TMPSLOT2)
 OPDEF(JSOP_DEFAULT,   122,"default",    NULL,         3,  1,  0,  0,  JOF_JUMP)
 
 /*

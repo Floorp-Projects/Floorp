@@ -148,6 +148,8 @@ PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
 
     JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return JS_FALSE;
     jsval v;
 
     if(!JS_GetReservedSlot(cx, callee, 0, &v))
