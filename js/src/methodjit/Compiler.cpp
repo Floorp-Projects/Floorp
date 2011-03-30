@@ -5132,99 +5132,95 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
 {
     JSAtom *atom = script->getAtom(index);
 #if defined JS_POLYIC
-    FrameEntry *objFe = frame.peek(-1);
-    if (!objFe->isTypeKnown() || objFe->getKnownType() == JSVAL_TYPE_OBJECT) {
-        jsbytecode *next = &PC[JSOP_PROPINC_LENGTH];
-        bool pop = (JSOp(*next) == JSOP_POP) && !a->analysis.jumpTarget(next);
-        int amt = (op == JSOP_PROPINC || op == JSOP_INCPROP) ? -1 : 1;
+    jsbytecode *next = &PC[JSOP_PROPINC_LENGTH];
+    bool pop = (JSOp(*next) == JSOP_POP) && !a->analysis.jumpTarget(next);
+    int amt = (op == JSOP_PROPINC || op == JSOP_INCPROP) ? -1 : 1;
 
-        if (pop || (op == JSOP_INCPROP || op == JSOP_DECPROP)) {
-            /*
-             * These cases are easier, the original value is not observed.
-             * Use a consistent stack layout for the value as the observed case,
-             * so that if the operation overflows the stub will be able to find
-             * the modified object.
-             */
+    if (pop || (op == JSOP_INCPROP || op == JSOP_DECPROP)) {
+        /*
+         * These cases are easier, the original value is not observed.
+         * Use a consistent stack layout for the value as the observed case,
+         * so that if the operation overflows the stub will be able to find
+         * the modified object.
+         */
 
-            frame.dup();
-            // OBJ OBJ
+        frame.dup();
+        // OBJ OBJ
 
-            frame.dup();
-            // OBJ * OBJ
+        frame.dup();
+        // OBJ * OBJ
 
-            if (!jsop_getprop(atom, JSVAL_TYPE_UNKNOWN))
-                return Compile_Error;
-            // OBJ * V
+        if (!jsop_getprop(atom, JSVAL_TYPE_UNKNOWN))
+            return Compile_Error;
+        // OBJ * V
 
-            frame.push(Int32Value(amt));
-            // OBJ * V 1
+        frame.push(Int32Value(amt));
+        // OBJ * V 1
 
-            /* Use sub since it calls ValueToNumber instead of string concat. */
-            frame.syncAt(-4);
-            if (!jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0)))
-                return Compile_Retry;
-            // OBJ * V+1
+        /* Use sub since it calls ValueToNumber instead of string concat. */
+        frame.syncAt(-4);
+        if (!jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0)))
+            return Compile_Retry;
+        // OBJ * V+1
 
-            frame.shimmy(1);
-            // OBJ V+1
+        frame.shimmy(1);
+        // OBJ V+1
 
-            if (!jsop_setprop(atom, false))
-                return Compile_Error;
-            // V+1
+        if (!jsop_setprop(atom, false))
+            return Compile_Error;
+        // V+1
 
-            if (pop)
-                frame.pop();
-        } else {
-            /* The pre-value is observed, making this more tricky. */
-
-            frame.dup();
-            // OBJ OBJ 
-
-            if (!jsop_getprop(atom, JSVAL_TYPE_UNKNOWN))
-                return Compile_Error;
-            // OBJ V
-
-            jsop_pos();
-            // OBJ N
-
-            frame.dup();
-            // OBJ N N
-
-            frame.push(Int32Value(-amt));
-            // OBJ N N 1
-
-            frame.syncAt(-4);
-            if (!jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0)))
-                return Compile_Retry;
-            // OBJ N N+1
-
-            frame.dupAt(-3);
-            // OBJ N N+1 OBJ
-
-            frame.dupAt(-2);
-            // OBJ N N+1 OBJ N+1
-
-            if (!jsop_setprop(atom, false))
-                return Compile_Error;
-            // OBJ N N+1 N+1
-
-            frame.popn(2);
-            // OBJ N
-
-            frame.shimmy(1);
-            // N
-        }
         if (pop)
-            PC += JSOP_POP_LENGTH;
-    } else
-#endif
-    {
-        prepareStubCall(Uses(1));
-        masm.move(ImmPtr(atom), Registers::ArgReg1);
-        INLINE_STUBCALL(stub);
-        frame.pop();
-        pushSyncedEntry(0);
+            frame.pop();
+    } else {
+        /* The pre-value is observed, making this more tricky. */
+
+        frame.dup();
+        // OBJ OBJ 
+
+        if (!jsop_getprop(atom, JSVAL_TYPE_UNKNOWN))
+            return Compile_Error;
+        // OBJ V
+
+        jsop_pos();
+        // OBJ N
+
+        frame.dup();
+        // OBJ N N
+
+        frame.push(Int32Value(-amt));
+        // OBJ N N 1
+
+        frame.syncAt(-4);
+        if (!jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0)))
+            return Compile_Retry;
+        // OBJ N N+1
+
+        frame.dupAt(-3);
+        // OBJ N N+1 OBJ
+
+        frame.dupAt(-2);
+        // OBJ N N+1 OBJ N+1
+
+        if (!jsop_setprop(atom, false))
+            return Compile_Error;
+        // OBJ N N+1 N+1
+
+        frame.popn(2);
+        // OBJ N
+
+        frame.shimmy(1);
+        // N
     }
+    if (pop)
+        PC += JSOP_POP_LENGTH;
+#else
+    prepareStubCall(Uses(1));
+    masm.move(ImmPtr(atom), Registers::ArgReg1);
+    INLINE_STUBCALL(stub);
+    frame.pop();
+    pushSyncedEntry(0);
+#endif
 
     PC += JSOP_PROPINC_LENGTH;
     return Compile_Okay;
