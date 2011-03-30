@@ -3876,7 +3876,7 @@ static const moz2javaCharset charsets[] =
     {"EUC-KR",          "EUC_KR"},
     {"x-euc-tw",        "EUC_TW"},
     {"gb18030",         "GB18030"},
-    {"x-gbk",           "GBK"},
+    {"gbk",             "GBK"},
     {"ISO-2022-JP",     "ISO2022JP"},
     {"ISO-2022-KR",     "ISO2022KR"},
     {"ISO-8859-2",      "ISO8859_2"},
