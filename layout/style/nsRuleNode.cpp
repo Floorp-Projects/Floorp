@@ -759,6 +759,12 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
           aCanStoreInRuleTree = PR_FALSE;
           aResult = aContext->GetStyleColor()->mColor;
           break;
+        case NS_COLOR_MOZ_DEFAULT_COLOR:
+          aResult = aPresContext->DefaultColor();
+          break;
+        case NS_COLOR_MOZ_DEFAULT_BACKGROUND_COLOR:
+          aResult = aPresContext->DefaultBackgroundColor();
+          break;
         default:
           NS_NOTREACHED("Should never have an unknown negative colorID.");
           break;
