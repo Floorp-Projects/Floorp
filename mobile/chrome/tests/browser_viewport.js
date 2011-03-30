@@ -59,13 +59,10 @@ function scaleRatio(n) {
 let currentTab;
 
 let loadURL = function loadURL(aPageURL, aCallback, aScale) {
-  messageManager.addMessageListener("MozScrolledAreaChanged", function(aMessage) {
+  messageManager.addMessageListener("pageshow", function(aMessage) {
     if (aMessage.target.currentURI.spec == aPageURL) {
       messageManager.removeMessageListener(aMessage.name, arguments.callee);
 
-      // HACK: Sometimes there are two MozScrolledAreaChanged messages in a
-      // row, and this waitFor is the only way founded to make sure the
-      // browser responds to both of them before we do.
       waitFor(aCallback, function() {
         return !aScale || aScale == aMessage.target.scale;
       });
