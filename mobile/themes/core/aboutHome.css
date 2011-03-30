@@ -236,13 +236,24 @@ body[dir="rtl"] {
 }
 
 @media (min-width: 400px) {
-  #feedback {
+  body[dir="ltr"]  #feedback {
     border-radius: 8px 0 0 8px;
   }
 
-  #support {
-    border-left: none;
+  body[dir="rtl"]  #feedback {
     border-radius: 0 8px 8px 0;
+  }
+
+  #support {
+    -moz-border-start: none;
+  }
+
+  body[dir="ltr"]  #support {
+    border-radius: 0 8px 8px 0;
+  }
+
+  body[dir="rtl"]  #support {
+    border-radius: 8px 0 0 8px;
   }
 }
 
