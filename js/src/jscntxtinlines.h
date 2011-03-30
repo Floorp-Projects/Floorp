@@ -287,8 +287,8 @@ StackSpace::getCallFrame(JSContext *cx, Value *firstUnused, uintN nactual,
 {
     JS_ASSERT(fun->script() == script);
 
-    /* Include an extra sizeof(JSStackFrame) for the method-jit. */
-    uintN nvals = VALUES_PER_STACK_FRAME + script->nslots;
+    /* Include extra space for inlining by the method-jit. */
+    uintN nvals = STACK_EXTRA + script->nslots;
     uintN nformal = fun->nargs;
 
     /* Maintain layout invariant: &formalArgs[0] == ((Value *)fp) - nformal. */
@@ -447,12 +447,12 @@ StackSpace::getStackLimit(JSContext *cx)
         return limit;
     if (ensureSpace(NULL /* don't report error */, sp, STACK_QUOTA))
         return limit;
-    uintN minimum = cx->fp()->numSlots() + VALUES_PER_STACK_FRAME;
+    uintN minimum = cx->fp()->numSlots() + STACK_EXTRA;
     return ensureSpace(cx, sp, minimum) ? sp + minimum : NULL;
 #else
     if (JS_LIKELY(limit <= end))
         return limit;
-    uintN minimum = cx->fp()->numSlots() + VALUES_PER_STACK_FRAME;
+    uintN minimum = cx->fp()->numSlots() + STACK_EXTRA;
     return ensureSpace(cx, sp, minimum) ? sp + minimum : NULL;
 #endif
 }
