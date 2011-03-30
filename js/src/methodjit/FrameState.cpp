@@ -1368,6 +1368,9 @@ FrameState::assertValidRegisterState() const
                      !fe->type.inRegister() && !fe->data.inRegister() && !fe->data.inFPRegister());
         JS_ASSERT_IF(fe->isCopy(), fe->copyOf() < sp);
         JS_ASSERT_IF(fe->isCopy(), fe->copyOf()->isCopied());
+        JS_ASSERT_IF(fe->isCopy(), fe->isTypeKnown() == fe->copyOf()->isTypeKnown());
+        JS_ASSERT_IF(fe->isCopy() && fe->isTypeKnown(),
+                     fe->getKnownType() == fe->copyOf()->getKnownType());
 
         if (fe->isCopy())
             continue;
@@ -2511,8 +2514,21 @@ FrameState::storeTop(FrameEntry *target, JSValueType type, bool popGuaranteed)
             if (type == JSVAL_TYPE_DOUBLE)
                 type = JSVAL_TYPE_INT32;
             JS_ASSERT_IF(backing->isTypeKnown(), backing->isType(type));
-            if (!backing->isTypeKnown())
+            if (!backing->isTypeKnown()) {
+                /*
+                 * If we update the type of the backing, we need to watch for
+                 * any copies of the backing which we already redirected to the
+                 * target. These also need to have their types updated, to
+                 * preserve the invariant that entries have the same type as
+                 * their copies.
+                 */
                 learnType(backing, type);
+                for (uint32 i = backing->trackerIndex() + 1; copied && i < a->tracker.nentries; i++) {
+                    FrameEntry *fe = a->tracker[i];
+                    if (fe < sp && fe->isCopy() && fe->copyOf() == target)
+                        fe->setType(type);
+                }
+            }
             target->setType(type);
         } else {
             FPRegisterID fpreg = allocFPReg();
@@ -2522,6 +2538,12 @@ FrameState::storeTop(FrameEntry *target, JSValueType type, bool popGuaranteed)
             forgetAllRegs(backing);
 
             backing->setType(JSVAL_TYPE_DOUBLE);
+            for (uint32 i = backing->trackerIndex() + 1; copied && i < a->tracker.nentries; i++) {
+                FrameEntry *fe = a->tracker[i];
+                if (fe < sp && fe->isCopy() && fe->copyOf() == target)
+                    fe->setType(JSVAL_TYPE_DOUBLE);
+            }
+
             target->setType(JSVAL_TYPE_DOUBLE);
             target->data.setFPRegister(fpreg);
             regstate(fpreg).associate(target, RematInfo::DATA);
