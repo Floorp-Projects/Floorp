@@ -1869,7 +1869,7 @@ nsBoxFrame::CreateViewForFrame(nsPresContext*  aPresContext,
 
       // Create a view
       if (aIsPopup) {
-        viewManager->GetRootView(parentView);
+        parentView = viewManager->GetRootView();
         visibility = nsViewVisibility_kHide;
         zIndex = PR_INT32_MAX;
       }

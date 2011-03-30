@@ -10144,8 +10144,7 @@ nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
     nsIViewManager* vm = presShell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
-    nsIView *rootView;
-    vm->GetRootView(rootView);
+    nsIView* rootView = vm->GetRootView();
     NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
 
     nsIWidget* widget = rootView->GetNearestWidget(nsnull);

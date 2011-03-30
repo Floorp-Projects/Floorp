@@ -2549,8 +2549,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIFrame** aNewFrame)
   viewportFrame->Init(nsnull, nsnull, nsnull);
 
   // Bind the viewport frame to the root view
-  nsIView*        rootView;
-  mPresShell->GetViewManager()->GetRootView(rootView);
+  nsIView* rootView = mPresShell->GetViewManager()->GetRootView();
   viewportFrame->SetView(rootView);
 
   nsContainerFrame::SyncFrameViewProperties(mPresShell->GetPresContext(), viewportFrame,
