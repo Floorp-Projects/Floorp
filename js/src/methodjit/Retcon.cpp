@@ -404,6 +404,8 @@ Recompiler::recompile()
     JaegerSpew(JSpew_Recompile, "recompiling script (file \"%s\") (line \"%d\") (length \"%d\")\n",
                script->filename, script->lineno, script->length);
 
+    types::AutoEnterTypeInference enter(cx, true);
+
     /*
      * The strategy for this goes as follows:
      * 
@@ -444,10 +446,6 @@ Recompiler::recompile()
             PatchableFrame frame;
             frame.fp = fp;
             frame.pc = fp->pc(cx, next);
-            if (fp->isConstructing() && !ctorFrames.append(frame))
-                return false;
-            if (!fp->isConstructing() && !normalFrames.append(frame))
-                return false;
 
             if (next) {
                 // check for a scripted call returning into the recompiled script.
@@ -461,14 +459,21 @@ Recompiler::recompile()
                     // next entered from the interpreter.
                 } else if (fp->isConstructing()) {
                     JS_ASSERT(script->jitCtor && script->jitCtor->isValidCode(*addr));
+                    frame.scriptedCall = true;
                     if (!ctorPatches.append(findPatch(script->jitCtor, addr)))
                         return false;
                 } else {
                     JS_ASSERT(script->jitNormal && script->jitNormal->isValidCode(*addr));
+                    frame.scriptedCall = true;
                     if (!normalPatches.append(findPatch(script->jitNormal, addr)))
                         return false;
                 }
             }
+
+            if (fp->isConstructing() && !ctorFrames.append(frame))
+                return false;
+            if (!fp->isConstructing() && !normalFrames.append(frame))
+                return false;
 
             next = fp;
         }
@@ -526,6 +531,9 @@ Recompiler::recompile()
     }
 
     cx->compartment->types.recompilations++;
+
+    if (!cx->compartment->types.checkPendingRecompiles(cx))
+        return Compile_Error;
 
     return true;
 }
