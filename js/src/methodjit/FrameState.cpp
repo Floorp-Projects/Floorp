@@ -2465,14 +2465,13 @@ FrameState::storeTop(FrameEntry *target, JSValueType type, bool popGuaranteed)
 
     if (backing->isType(JSVAL_TYPE_DOUBLE)) {
         FPRegisterID fpreg = tempFPRegForData(backing);
-        if (type == JSVAL_TYPE_UNKNOWN) {
+        if (type != JSVAL_TYPE_DOUBLE) {
             masm.storeDouble(fpreg, addressOf(target));
             target->resetSynced();
 
             /* We're about to invalidate the backing, so forget the FP register. */
             forgetReg(fpreg);
         } else {
-            JS_ASSERT(type == JSVAL_TYPE_DOUBLE);
             target->data.setFPRegister(fpreg);
             regstate(fpreg).reassociate(target);
         }
