@@ -3865,6 +3865,9 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
 {
     jsid id = ATOM_TO_JSID(atom);
 
+    if (!cx->addTypePropertyId(obj->getType(), id, v))
+        return false;
+
     if (key != JSProto_Null) {
         /*
          * Initializing an actual standard class on a global object. If the
@@ -3895,6 +3898,28 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
 }
 
 namespace js {
+
+static bool
+SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject *cobj, JSObject *proto)
+{
+    JS_ASSERT(!obj->getParent());
+    if (!obj->isGlobal())
+        return true;
+
+    return js_SetReservedSlot(cx, obj, key, ObjectOrNullValue(cobj)) &&
+           js_SetReservedSlot(cx, obj, JSProto_LIMIT + key, ObjectOrNullValue(proto));
+}
+
+static void
+ClearClassObject(JSContext *cx, JSObject *obj, JSProtoKey key)
+{
+    JS_ASSERT(!obj->getParent());
+    if (!obj->isGlobal())
+        return;
+
+    obj->setSlot(key, UndefinedValue());
+    obj->setSlot(JSProto_LIMIT + key, UndefinedValue());
+}
 
 JSObject *
 DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
@@ -3955,6 +3980,7 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
 
     JSObject *ctor;
     bool named = false;
+    bool cached = false;
     if (!constructor) {
         /*
          * Lacking a constructor, name the prototype (e.g., Math) unless this
@@ -3966,8 +3992,6 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
             uint32 attrs = (clasp->flags & JSCLASS_IS_ANONYMOUS)
                            ? JSPROP_READONLY | JSPROP_PERMANENT
                            : 0;
-            if (!cx->addTypePropertyId(obj->getType(), ATOM_TO_JSID(atom), ObjectValue(*proto)))
-                goto bad;
             if (!DefineStandardSlot(cx, obj, key, atom, ObjectValue(*proto), attrs, named))
                 goto bad;
         }
@@ -3979,8 +4003,19 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
 
         JSFunction *fun = js_NewFunction(cx, NULL, constructor, nargs, JSFUN_CONSTRUCTOR, obj, atom,
                                          ctorHandler, clasp->name);
-        if (!fun || !cx->addTypePropertyId(obj->getType(), ATOM_TO_JSID(atom), ObjectValue(*fun)))
+        if (!fun)
             goto bad;
+
+        /*
+         * Set the class object early for standard class constructors. Type
+         * inference may need to access these, and js_GetClassPrototype will
+         * fail if it tries to do a reentrant reconstruction of the class.
+         */
+        if (key != JSProto_Null && !(clasp->flags & JSCLASS_CONSTRUCT_PROTOTYPE) &&
+            !SetClassObject(cx, obj, key, fun, proto)) {
+            goto bad;
+        }
+        cached = true;
 
         AutoValueRooter tvr2(cx, ObjectValue(*fun));
         if (!DefineStandardSlot(cx, obj, key, atom, tvr2.value(), 0, named))
@@ -4071,7 +4106,7 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
     }
 
     /* If this is a standard class, cache its prototype. */
-    if (key != JSProto_Null && !js_SetClassObject(cx, obj, key, ctor, proto))
+    if (!cached && key != JSProto_Null && !SetClassObject(cx, obj, key, ctor, proto))
         goto bad;
 
     return proto;
@@ -4081,6 +4116,8 @@ bad:
         Value rval;
         obj->deleteProperty(cx, ATOM_TO_JSID(atom), &rval, false);
     }
+    if (cached)
+        ClearClassObject(cx, obj, key);
     return NULL;
 }
 
@@ -4337,17 +4374,6 @@ js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
 
     *objp = cobj;
     return true;
-}
-
-JSBool
-js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject *cobj, JSObject *proto)
-{
-    JS_ASSERT(!obj->getParent());
-    if (!obj->isGlobal())
-        return JS_TRUE;
-
-    return js_SetReservedSlot(cx, obj, key, ObjectOrNullValue(cobj)) &&
-           js_SetReservedSlot(cx, obj, JSProto_LIMIT + key, ObjectOrNullValue(proto));
 }
 
 JSBool
