@@ -1936,7 +1936,7 @@ TypeCompartment::processPendingRecompiles(JSContext *cx)
     for (unsigned i = 0; i < pending->length(); i++) {
         JSScript *script = (*pending)[i];
         mjit::Recompiler recompiler(cx, script);
-        if (!recompiler.recompile()) {
+        if (script->hasJITCode() && !recompiler.recompile()) {
             pendingNukeTypes = true;
             js_delete< Vector<JSScript*> >(pending);
             return nukeTypes(cx);
