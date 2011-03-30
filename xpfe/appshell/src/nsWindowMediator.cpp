@@ -99,12 +99,12 @@ nsWindowMediator::~nsWindowMediator()
     UnregisterWindow(mOldestWindow);
   
   if (mListLock)
-    PR_DestroyLock(mListLock);
+    nsAutoLock::DestroyLock(mListLock);
 }
 
 nsresult nsWindowMediator::Init()
 {
-  mListLock = PR_NewLock();
+  mListLock = nsAutoLock::NewLock("nsWindowMediator::mListLock");
   if (!mListLock)
     return NS_ERROR_OUT_OF_MEMORY;
 

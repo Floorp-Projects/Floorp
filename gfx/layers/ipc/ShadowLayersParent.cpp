@@ -422,7 +422,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         newFront.forget();
       }
 
-      canvas->Updated();
+      canvas->Updated(op.updated());
 
       replyv.push_back(OpBufferSwap(shadow, NULL,
                                     newBack->GetShmem()));

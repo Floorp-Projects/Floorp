@@ -8056,8 +8056,6 @@ CSSParserImpl::ParseTransition()
       for (PRUint32 i = 0; !foundProperty && i < numProps; ++i) {
         if (!parsedProperty[i]) {
           // if we haven't found this property yet, try to parse it
-          PRInt32 variantMask;
-          const PRInt32* table = nsnull;
           if (ParseSingleValueProperty(tempValue, kTransitionProperties[i])) {
             parsedProperty[i] = PR_TRUE;
             cur[i] = AppendValueToList(values[i], cur[i], tempValue);

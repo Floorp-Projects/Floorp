@@ -228,20 +228,19 @@ nsXULTreeAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeAccessible: nsAccessible implementation (DON'T put methods here)
 
-nsresult
+nsAccessible*
 nsXULTreeAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                     PRBool aDeepestChild,
-                                     nsIAccessible **aChild)
+                                     EWhichChildAtPoint aWhichChild)
 {
   nsIFrame *frame = GetFrame();
   if (!frame)
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
   nsPresContext *presContext = frame->PresContext();
   nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
 
   nsIFrame *rootFrame = presShell->GetRootFrame();
-  NS_ENSURE_STATE(rootFrame);
+  NS_ENSURE_TRUE(rootFrame, nsnull);
 
   nsIntRect rootRect = rootFrame->GetScreenRectExternal();
 
@@ -257,10 +256,10 @@ nsXULTreeAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   // If we failed to find tree cell for the given point then it might be
   // tree columns.
   if (row == -1 || !column)
-    return nsAccessibleWrap::GetChildAtPoint(aX, aY, aDeepestChild, aChild);
+    return nsAccessibleWrap::GetChildAtPoint(aX, aY, aWhichChild);
 
   nsAccessible *child = GetTreeItemAccessible(row);
-  if (aDeepestChild && child) {
+  if (aWhichChild == eDeepestChild && child) {
     // Look for accessible cell for the found item accessible.
     nsRefPtr<nsXULTreeItemAccessibleBase> treeitem = do_QueryObject(child);
 
@@ -269,8 +268,7 @@ nsXULTreeAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
       child = cell;
   }
 
-  NS_IF_ADDREF(*aChild = child);
-  return NS_OK;
+  return child;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

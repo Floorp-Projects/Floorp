@@ -50,7 +50,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(a6cf9084-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(fdab9ba2-c6ff-42c1-83ad-dea0b22af986)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
            attribute DOMString            title;

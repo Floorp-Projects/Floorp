@@ -101,15 +101,9 @@ namespace nanojit
      * START AVM bridging definitions
      * -------------------------------------------
      */
-    typedef avmplus::AvmCore AvmCore;
-
     const uint32_t MAXARGS = 8;
 
-    #ifdef NJ_NO_VARIADIC_MACROS
-        inline void NanoAssertMsgf(bool a,const char *f,...) {}
-        inline void NanoAssertMsg(bool a,const char *m) {}
-        inline void NanoAssert(bool a) {}
-    #elif defined(_DEBUG)
+    #if defined(_DEBUG)
 
         #define __NanoAssertMsgf(a, file_, line_, f, ...)  \
             if (!(a)) { \
@@ -153,12 +147,7 @@ namespace nanojit
     #define NJ_VERBOSE 1
 #endif
 
-#ifdef NJ_NO_VARIADIC_MACROS
-    #include <stdio.h>
-    #define verbose_outputf            if (_logc->lcbits & LC_Native) \
-                                        Assembler::outputf
-    #define verbose_only(x)            x
-#elif defined(NJ_VERBOSE)
+#if defined(NJ_VERBOSE)
     #include <stdio.h>
     #define verbose_outputf            if (_logc->lcbits & LC_Native) \
                                         Assembler::outputf

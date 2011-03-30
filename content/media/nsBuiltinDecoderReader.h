@@ -119,6 +119,7 @@ typedef short SoundDataValue;
  (static_cast<SoundDataValue>(MOZ_CLIP_TO_15((x)>>9)))
 // Convert a SoundDataValue to a float for the Audio API
 #define MOZ_CONVERT_SOUND_SAMPLE(x) ((x)*(1.F/32768))
+#define MOZ_SAMPLE_TYPE_S16LE 1
 
 #else /*MOZ_VORBIS*/
 
@@ -128,6 +129,7 @@ typedef float SoundDataValue;
 #define MOZ_SOUND_DATA_FORMAT (nsAudioStream::FORMAT_FLOAT32)
 #define MOZ_CONVERT_VORBIS_SAMPLE(x) (x)
 #define MOZ_CONVERT_SOUND_SAMPLE(x) (x)
+#define MOZ_SAMPLE_TYPE_FLOAT32 1
 
 #endif
 

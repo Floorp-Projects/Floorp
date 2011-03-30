@@ -229,6 +229,11 @@ public:
   static mozilla::dom::Element *GetParentElement(nsIContent *aContent);
 
   /*
+   * Get the outer SVG element of an nsIContent
+   */
+  static nsSVGSVGElement *GetOuterSVGElement(nsSVGElement *aSVGElement);
+
+  /*
    * Get the number of CSS px (user units) per em (i.e. the em-height in user
    * units) for an nsIContent
    *
@@ -301,9 +306,6 @@ public:
 
   static already_AddRefed<nsIDOMSVGElement>
   GetNearestViewportElement(nsIContent *aContent);
-
-  static already_AddRefed<nsIDOMSVGElement>
-  GetFarthestViewportElement(nsIContent *aContent);
 
   /**
    * Gets the nearest nsSVGInnerSVGFrame or nsSVGOuterSVGFrame frame. aFrame
@@ -585,12 +587,6 @@ public:
    */
   static gfxRect PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
                                                nsSVGGeometryFrame* aFrame);
-
-  /**
-   * Returns true if aContent is an SVG <svg> element that is the child of
-   * another non-foreignObject SVG element.
-   */
-  static PRBool IsInnerSVG(nsIContent* aContent);
 
   /**
    * Convert a floating-point value to a 32-bit integer value, clamping to

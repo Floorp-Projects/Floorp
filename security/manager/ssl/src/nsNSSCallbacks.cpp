@@ -334,13 +334,13 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
 void
 nsNSSHttpRequestSession::AddRef()
 {
-  PR_AtomicIncrement(&mRefCount);
+  NS_AtomicIncrementRefcnt(mRefCount);
 }
 
 void
 nsNSSHttpRequestSession::Release()
 {
-  PRInt32 newRefCount = PR_AtomicDecrement(&mRefCount);
+  PRInt32 newRefCount = NS_AtomicDecrementRefcnt(mRefCount);
   if (!newRefCount) {
     delete this;
   }
@@ -568,14 +568,14 @@ nsHTTPListener::nsHTTPListener()
 
 nsresult nsHTTPListener::InitLocks()
 {
-  mLock = PR_NewLock();
+  mLock = nsAutoLock::NewLock("nsHttpListener::mLock");
   if (!mLock)
     return NS_ERROR_OUT_OF_MEMORY;
   
   mCondition = PR_NewCondVar(mLock);
   if (!mCondition)
   {
-    PR_DestroyLock(mLock);
+    nsAutoLock::DestroyLock(mLock);
     mLock = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -592,7 +592,7 @@ nsHTTPListener::~nsHTTPListener()
     PR_DestroyCondVar(mCondition);
   
   if (mLock)
-    PR_DestroyLock(mLock);
+    nsAutoLock::DestroyLock(mLock);
 
   if (mLoader) {
     nsCOMPtr<nsIThread> mainThread(do_GetMainThread());

@@ -95,10 +95,10 @@
 
 #define SH4_CHECK_ALIGN_bra(imm) (((imm) & 0x1) == 0)
 
-#define FITS_SH4_bra(imm) (SH4_CHECK_RANGE_bra((imm) + 2) && SH4_CHECK_ALIGN_bra((imm) + 2))
+#define FITS_SH4_bra(imm) (SH4_CHECK_RANGE_bra(imm) && SH4_CHECK_ALIGN_bra(imm))
 
     inline void Assembler::SH4_bra(int imm) {
-        NanoAssert(1 && SH4_CHECK_RANGE_bra(imm + 2) && SH4_CHECK_ALIGN_bra(imm + 2));
+        NanoAssert(1 && SH4_CHECK_RANGE_bra(imm) && SH4_CHECK_ALIGN_bra(imm));
         SH4_emit16((0xA << 12) | (((imm & 0x1FFE) >> 1) << 0));
         asm_output("bra %d", imm);
     }
@@ -107,10 +107,10 @@
 
 #define SH4_CHECK_ALIGN_bsr(imm) (((imm) & 0x1) == 0)
 
-#define FITS_SH4_bsr(imm) (SH4_CHECK_RANGE_bsr((imm) + 2) && SH4_CHECK_ALIGN_bsr((imm) + 2))
+#define FITS_SH4_bsr(imm) (SH4_CHECK_RANGE_bsr(imm) && SH4_CHECK_ALIGN_bsr(imm))
 
     inline void Assembler::SH4_bsr(int imm) {
-        NanoAssert(1 && SH4_CHECK_RANGE_bsr(imm + 2) && SH4_CHECK_ALIGN_bsr(imm + 2));
+        NanoAssert(1 && SH4_CHECK_RANGE_bsr(imm) && SH4_CHECK_ALIGN_bsr(imm));
         SH4_emit16((0xB << 12) | (((imm & 0x1FFE) >> 1) << 0));
         asm_output("bsr %d", imm);
     }
@@ -119,10 +119,10 @@
 
 #define SH4_CHECK_ALIGN_bt(imm) (((imm) & 0x1) == 0)
 
-#define FITS_SH4_bt(imm) (SH4_CHECK_RANGE_bt((imm) + 2) && SH4_CHECK_ALIGN_bt((imm) + 2))
+#define FITS_SH4_bt(imm) (SH4_CHECK_RANGE_bt(imm) && SH4_CHECK_ALIGN_bt(imm))
 
     inline void Assembler::SH4_bt(int imm) {
-        NanoAssert(1 && SH4_CHECK_RANGE_bt(imm + 2) && SH4_CHECK_ALIGN_bt(imm + 2));
+        NanoAssert(1 && SH4_CHECK_RANGE_bt(imm) && SH4_CHECK_ALIGN_bt(imm));
         SH4_emit16((0x8 << 12) | (0x9 << 8) | (((imm & 0x1FE) >> 1) << 0));
         asm_output("bt %d", imm);
     }
@@ -131,10 +131,10 @@
 
 #define SH4_CHECK_ALIGN_bf(imm) (((imm) & 0x1) == 0)
 
-#define FITS_SH4_bf(imm) (SH4_CHECK_RANGE_bf((imm) + 2) && SH4_CHECK_ALIGN_bf((imm) + 2))
+#define FITS_SH4_bf(imm) (SH4_CHECK_RANGE_bf(imm) && SH4_CHECK_ALIGN_bf(imm))
 
     inline void Assembler::SH4_bf(int imm) {
-        NanoAssert(1 && SH4_CHECK_RANGE_bf(imm + 2) && SH4_CHECK_ALIGN_bf(imm + 2));
+        NanoAssert(1 && SH4_CHECK_RANGE_bf(imm) && SH4_CHECK_ALIGN_bf(imm));
         SH4_emit16((0x8 << 12) | (0xB << 8) | (((imm & 0x1FE) >> 1) << 0));
         asm_output("bf %d", imm);
     }
@@ -143,10 +143,10 @@
 
 #define SH4_CHECK_ALIGN_bts(imm) (((imm) & 0x1) == 0)
 
-#define FITS_SH4_bts(imm) (SH4_CHECK_RANGE_bts((imm) + 2) && SH4_CHECK_ALIGN_bts((imm) + 2))
+#define FITS_SH4_bts(imm) (SH4_CHECK_RANGE_bts(imm) && SH4_CHECK_ALIGN_bts(imm))
 
     inline void Assembler::SH4_bts(int imm) {
-        NanoAssert(1 && SH4_CHECK_RANGE_bts(imm + 2) && SH4_CHECK_ALIGN_bts(imm + 2));
+        NanoAssert(1 && SH4_CHECK_RANGE_bts(imm) && SH4_CHECK_ALIGN_bts(imm));
         SH4_emit16((0x8 << 12) | (0xD << 8) | (((imm & 0x1FE) >> 1) << 0));
         asm_output("bts %d", imm);
     }
@@ -155,10 +155,10 @@
 
 #define SH4_CHECK_ALIGN_bfs(imm) (((imm) & 0x1) == 0)
 
-#define FITS_SH4_bfs(imm) (SH4_CHECK_RANGE_bfs((imm) + 2) && SH4_CHECK_ALIGN_bfs((imm) + 2))
+#define FITS_SH4_bfs(imm) (SH4_CHECK_RANGE_bfs(imm) && SH4_CHECK_ALIGN_bfs(imm))
 
     inline void Assembler::SH4_bfs(int imm) {
-        NanoAssert(1 && SH4_CHECK_RANGE_bfs(imm + 2) && SH4_CHECK_ALIGN_bfs(imm + 2));
+        NanoAssert(1 && SH4_CHECK_RANGE_bfs(imm) && SH4_CHECK_ALIGN_bfs(imm));
         SH4_emit16((0x8 << 12) | (0xF << 8) | (((imm & 0x1FE) >> 1) << 0));
         asm_output("bfs %d", imm);
     }

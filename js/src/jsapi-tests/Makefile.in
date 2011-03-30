@@ -67,9 +67,12 @@ CPPSRCS = \
   testNewObject.cpp \
   testOps.cpp \
   testPropCache.cpp \
+  testRegExpInstanceProperties.cpp \
+  testResolveRecursion.cpp \
   testSameValue.cpp \
   testScriptObject.cpp \
   testSetProperty.cpp \
+  testStringBuffer.cpp \
   testThreadGC.cpp \
   testThreads.cpp \
   testTrap.cpp \

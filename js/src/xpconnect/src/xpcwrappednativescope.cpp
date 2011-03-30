@@ -222,7 +222,7 @@ js::Class XPC_WN_NoHelper_Proto_JSClass = {
     nsnull,                         // construct;
     nsnull,                         // xdrObject;
     nsnull,                         // hasInstance;
-    nsnull,                         // mark/trace;
+    nsnull,                         // trace;
 
     JS_NULL_CLASS_EXT,
     XPC_WN_NoCall_ObjectOps
