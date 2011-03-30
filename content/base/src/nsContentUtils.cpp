@@ -6386,8 +6386,8 @@ LayerManagerForDocumentInternal(nsIDocument *aDoc, bool aRequirePersistent,
   if (shell) {
     nsIViewManager* VM = shell->GetViewManager();
     if (VM) {
-      nsIView* rootView = nsnull;
-      if (NS_SUCCEEDED(VM->GetRootView(rootView)) && rootView) {
+      nsIView* rootView = VM->GetRootView();
+      if (rootView) {
         nsIView* displayRoot = GetDisplayRootFor(rootView);
         if (displayRoot) {
           nsIWidget* widget = displayRoot->GetNearestWidget(nsnull);
