@@ -1504,7 +1504,7 @@ AutoIdArray::trace(JSTracer *trc)
 void
 AutoEnumStateRooter::trace(JSTracer *trc)
 {
-    js::gc::MarkObject(trc, *obj, "js::AutoEnumStateRooter.obj");
+    gc::MarkObject(trc, *obj, "js::AutoEnumStateRooter.obj");
 }
 
 inline void
@@ -1585,24 +1585,24 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
 
       case VALVECTOR: {
-        Vector<Value, 8> &vector = static_cast<js::AutoValueVector *>(this)->vector;
+        AutoValueVector::VectorImpl &vector = static_cast<AutoValueVector *>(this)->vector;
         MarkValueRange(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
         return;
       }
 
       case STRING:
-        if (JSString *str = static_cast<js::AutoStringRooter *>(this)->str)
+        if (JSString *str = static_cast<AutoStringRooter *>(this)->str)
             MarkString(trc, str, "js::AutoStringRooter.str");
         return;
 
       case IDVECTOR: {
-        Vector<jsid, 8> &vector = static_cast<js::AutoIdVector *>(this)->vector;
+        AutoIdVector::VectorImpl &vector = static_cast<AutoIdVector *>(this)->vector;
         MarkIdRange(trc, vector.length(), vector.begin(), "js::AutoIdVector.vector");
         return;
       }
 
       case SHAPEVECTOR: {
-        Vector<const Shape *, 8> &vector = static_cast<js::AutoShapeVector *>(this)->vector;
+        AutoShapeVector::VectorImpl &vector = static_cast<js::AutoShapeVector *>(this)->vector;
         MarkShapeRange(trc, vector.length(), vector.begin(), "js::AutoShapeVector.vector");
         return;
       }

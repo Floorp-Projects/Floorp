@@ -125,6 +125,7 @@ DIST_INSTALL = 1
 VPATH		= $(srcdir)
 
 CPPSRCS		= \
+		jsalloc.cpp \
 		jsanalyze.cpp \
 		jsapi.cpp \
 		jsarena.cpp \
@@ -184,6 +185,7 @@ INSTALLED_HEADERS = \
 		jsautocfg.h \
 		$(CURDIR)/jsautokw.h \
 		js.msg \
+		jsalloc.h \
 		jsanalyze.h \
 		jsapi.h \
 		jsarray.h \
@@ -610,7 +612,7 @@ endif
 # (it can't be done with %-expansion, because the files we want to skip aren't
 # in the vpath).
 ALL_FILES=$(shell find $(srcdir) \( -name "*.cpp" -o -name "*.h" \) -not -path "*/dist/*")
-check-malloc-function-usage: $(filter-out %jsutil.h %jscntxt.h, $(ALL_FILES))
+check-malloc-function-usage: $(filter-out %jsalloc.h %jscntxt.h %jsutil.h, $(ALL_FILES))
 
 	# js_malloc and friends are only used by other memory managers, and should
 	# never be used elsewhere directly.
@@ -625,10 +627,10 @@ check-malloc-function-usage: $(filter-out %jsutil.h %jscntxt.h, $(ALL_FILES))
 
 	# We desire these numbers to go down, not up. See "User guide to memory
 	# management within SpiderMonkey" in jsutil.h.
-	$(srcdir)/config/check_source_count.py OffTheBooks:: 54 \
+	$(srcdir)/config/check_source_count.py OffTheBooks:: 52 \
 		"in Makefile.in" "{cx,rt}->{new_,new_array,malloc_,calloc_,realloc_}" $^
 	# This should go to zero, if possible.
-	$(srcdir)/config/check_source_count.py UnwantedForeground:: 35 \
+	$(srcdir)/config/check_source_count.py UnwantedForeground:: 34 \
 		"in Makefile.in" "{cx,rt}->{free_,delete_,array_delete}" $^
 
 ifneq ($(OS_ARCH),WINNT) # FIXME: this should be made work on Windows too.
