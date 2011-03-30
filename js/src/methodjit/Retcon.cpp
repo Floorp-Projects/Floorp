@@ -279,6 +279,12 @@ Recompiler::expandInlineFrames(JSContext *cx, JSStackFrame *fp, mjit::CallSite *
 {
     JS_ASSERT_IF(next, next->prev() == fp && next->prevInline() == inlined);
 
+    /*
+     * Treat any frame expansion as a recompilation event, so that f.jit() is
+     * stable if no recompilations have occurred.
+     */
+    cx->compartment->types.frameExpansions++;
+
     void **frameAddr = f->returnAddressLocation();
     bool patchFrameReturn = (f->scratch != NATIVE_CALL_SCRATCH_VALUE && fp->jit()->isValidCode(*frameAddr));
 
@@ -490,25 +496,21 @@ Recompiler::recompile()
 
     Vector<CallSite> normalSites(cx);
     Vector<CallSite> ctorSites(cx);
-    uint32 normalRecompilations;
-    uint32 ctorRecompilations;
 
-    if (script->jitNormal && !cleanup(script->jitNormal, &normalSites, &normalRecompilations))
+    if (script->jitNormal && !cleanup(script->jitNormal, &normalSites))
         return false;
-    if (script->jitCtor && !cleanup(script->jitCtor, &ctorSites, &ctorRecompilations))
+    if (script->jitCtor && !cleanup(script->jitCtor, &ctorSites))
         return false;
 
     ReleaseScriptCode(cx, script);
 
     if (normalFrames.length() &&
-        !recompile(normalFrames, normalPatches, normalSites, normalNatives,
-                   normalRecompilations)) {
+        !recompile(normalFrames, normalPatches, normalSites, normalNatives)) {
         return false;
     }
 
     if (ctorFrames.length() &&
-        !recompile(ctorFrames, ctorPatches, ctorSites, ctorNatives,
-                   ctorRecompilations)) {
+        !recompile(ctorFrames, ctorPatches, ctorSites, ctorNatives)) {
         return false;
     }
 
@@ -523,11 +525,13 @@ Recompiler::recompile()
             return false;
     }
 
+    cx->compartment->types.recompilations++;
+
     return true;
 }
 
 bool
-Recompiler::cleanup(JITScript *jit, Vector<CallSite> *sites, uint32 *recompilations)
+Recompiler::cleanup(JITScript *jit, Vector<CallSite> *sites)
 {
     while (!JS_CLIST_IS_EMPTY(&jit->callers)) {
         JaegerSpew(JSpew_Recompile, "Purging IC caller\n");
@@ -550,15 +554,12 @@ Recompiler::cleanup(JITScript *jit, Vector<CallSite> *sites, uint32 *recompilati
             return false;
     }
 
-    *recompilations = jit->recompilations;
-
     return true;
 }
 
 bool
 Recompiler::recompile(Vector<PatchableFrame> &frames, Vector<PatchableAddress> &patches, Vector<CallSite> &sites,
-                      Vector<PatchableNative> &natives,
-                      uint32 recompilations)
+                      Vector<PatchableNative> &natives)
 {
     JSStackFrame *fp = frames[0].fp;
 
@@ -577,7 +578,6 @@ Recompiler::recompile(Vector<PatchableFrame> &frames, Vector<PatchableAddress> &
         return false;
 
     JITScript *jit = script->getJIT(fp->isConstructing());
-    jit->recompilations = recompilations + 1;
 
     /* Perform the earlier scanned patches */
     for (uint32 i = 0; i < patches.length(); i++)

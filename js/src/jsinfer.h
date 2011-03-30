@@ -658,6 +658,14 @@ struct TypeCompartment
     /* Pending recompilations to perform before execution of JIT code can resume. */
     Vector<JSScript*> *pendingRecompiles;
 
+    /*
+     * Number of recompilation events and inline frame expansions that have
+     * occurred in this compartment. If these change, code should not count on
+     * compiled code or the current stack being intact.
+     */
+    unsigned recompilations;
+    unsigned frameExpansions;
+
     /* Tables for determining types of singleton/JSON objects. */
 
     ArrayTypeTable *arrayTypeTable;
@@ -699,9 +707,6 @@ struct TypeCompartment
     static const unsigned TYPE_COUNT_LIMIT = 4;
     unsigned typeCounts[TYPE_COUNT_LIMIT];
     unsigned typeCountOver;
-
-    /* Number of recompilations triggered. */
-    unsigned recompilations;
 
     void init(JSContext *cx);
     ~TypeCompartment();
