@@ -1979,7 +1979,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::ClearRect(float x, float y, float w, float h)
 {
     if (!FloatValidate(x,y,w,h))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     PathAutoSaveRestore pathSR(this);
     gfxContextAutoSaveRestore autoSR(mThebes);
