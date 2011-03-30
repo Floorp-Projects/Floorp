@@ -5543,6 +5543,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
       //    between non-whitespace and whitespace), then eatingWS==PR_TRUE means
       //    "we already saw some non-whitespace".
       PeekWordState state;
+      PRInt32 offsetAdjustment = 0;
       PRBool done = PR_FALSE;
       while (!done) {
         PRBool movingInFrameDirection =
@@ -5564,6 +5565,13 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
           if (NS_FAILED(result) ||
               (jumpedLine && !wordSelectEatSpace && state.mSawBeforeType)) {
             done = PR_TRUE;
+            // If we've crossed the line boundary, check to make sure that we
+            // have not consumed a trailing newline as whitesapce if it's significant.
+            if (jumpedLine && wordSelectEatSpace &&
+                current->HasTerminalNewline() &&
+                current->GetStyleText()->NewlineIsSignificant()) {
+              offsetAdjustment = -1;
+            }
           } else {
             if (jumpedLine) {
               state.mContext.Truncate();
@@ -5582,7 +5590,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
       aPos->mResultFrame = current;
       aPos->mResultContent = range.content;
       // Output offset is relative to content, not frame
-      aPos->mContentOffset = offset < 0 ? range.end : range.start + offset;
+      aPos->mContentOffset = (offset < 0 ? range.end : range.start + offset) + offsetAdjustment;
       break;
     }
     case eSelectLine :
