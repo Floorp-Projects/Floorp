@@ -538,14 +538,13 @@ mjit::Compiler::generatePrologue()
         }
 
         /*
-         * Guard that there is enough stack space. Note we include the size of
-         * a second frame, to ensure we can create a frame from call sites.
-         * :FIXME: this check does not currently account for space from inlined frames,
-         * nor do checks made when pushing the frame from the interpreter.
+         * Guard that there is enough stack space. Note we reserve space for
+         * any inline frames we end up generating, or a callee's stack frame
+         * we write to before the callee checks the stack.
          */
-        masm.addPtr(Imm32((script->nslots + VALUES_PER_STACK_FRAME * 2) * sizeof(Value)),
-                    JSFrameReg,
-                    Registers::ReturnReg);
+        JS_STATIC_ASSERT(StackSpace::STACK_EXTRA >= VALUES_PER_STACK_FRAME);
+        uint32 nvals = script->nslots + VALUES_PER_STACK_FRAME + StackSpace::STACK_EXTRA;
+        masm.addPtr(Imm32(nvals * sizeof(Value)), JSFrameReg, Registers::ReturnReg);
         Jump stackCheck = masm.branchPtr(Assembler::AboveOrEqual, Registers::ReturnReg,
                                          FrameAddress(offsetof(VMFrame, stackLimit)));
 
@@ -3597,6 +3596,13 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
         return Compile_InlineAbort;
 
     /*
+     * Compute the maximum height we can grow the stack for inlined frames.
+     * We always reserve space for an extra stack frame pushed when making
+     * a call from the deepest inlined frame.
+     */
+    uint32 stackLimit = outerScript->nslots + StackSpace::STACK_EXTRA - VALUES_PER_STACK_FRAME;
+
+    /*
      * Scan each of the possible callees for other conditions precluding
      * inlining. We only inline at a call site if all callees are inlineable.
      */
@@ -3636,6 +3642,10 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
                 return Compile_InlineAbort;
             checka = checka->parent;
         }
+
+        /* Watch for excessively deep nesting of inlined frames. */
+        if (frame.totalDepth() + VALUES_PER_STACK_FRAME + fun->script()->nslots >= stackLimit)
+            return Compile_InlineAbort;
 
         analyze::Script analysis;
         analysis.analyze(cx, script);
