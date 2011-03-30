@@ -552,8 +552,6 @@ EnumeratedIdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVe
     return VectorToValueIterator(cx, obj, flags, props, vp);
 }
 
-typedef Vector<uint32, 8> ShapeVector;
-
 static inline void
 UpdateNativeIterator(NativeIterator *ni, JSObject *obj)
 {
