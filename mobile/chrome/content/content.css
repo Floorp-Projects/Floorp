@@ -347,3 +347,12 @@ datalist {
   display: inline;
 }
 
+/* 
+ * Generate an additional space after the anonymous div to make it easier to
+ * to position the caret at the end of the text
+ */
+input > .anonymous-div:after {
+  content: "";
+  margin: 16px;
+}
+
