@@ -2937,19 +2937,6 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
         else
             id = GetAtomId(cx, script, pc, 0);
 
-        /*
-         * This might be a lazily loaded property of the global object, resolve it once
-         * inference finishes (inference code cannot reenter the VM). This is generally
-         * not needed if we ran the interpreter on this code first, but avoids
-         * recompilation if we are using JSOPTION_METHODJIT_ALWAYS.
-         */
-        uint64 start = cx->compartment->types.currentTime();
-        JSObject *obj;
-        JSProperty *prop;
-        js_LookupPropertyWithFlags(cx, script->global, id,
-                                   JSRESOLVE_QUALIFIED, &obj, &prop);
-        cx->compartment->types.analysisTime -= (cx->compartment->types.currentTime() - start);
-
         /* Handle as a property access. */
         PropertyAccess(cx, script, pc, script->getGlobalType(),
                        false, &pushed[0], id);
