@@ -1216,6 +1216,8 @@ struct RegisterAllocation {
     Registers getParentRegs() { return parentRegs; }
 
     bool synced() {
+        if (parentRegs.freeMask != 0)
+            return false;
         for (unsigned i = 0; i < Registers::TotalAnyRegisters; i++) {
             if (assigned(AnyRegisterID::fromRaw(i)))
                 return false;
