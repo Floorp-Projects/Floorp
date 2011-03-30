@@ -917,9 +917,6 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
   if (preferred.LowerCaseEqualsLiteral("utf-16") ||
       preferred.LowerCaseEqualsLiteral("utf-16be") ||
       preferred.LowerCaseEqualsLiteral("utf-16le") ||
-      preferred.LowerCaseEqualsLiteral("utf-32") ||
-      preferred.LowerCaseEqualsLiteral("utf-32be") ||
-      preferred.LowerCaseEqualsLiteral("utf-32le") ||
       preferred.LowerCaseEqualsLiteral("utf-7") ||
       preferred.LowerCaseEqualsLiteral("jis_x0212-1990") ||
       preferred.LowerCaseEqualsLiteral("x-jis0208") ||
