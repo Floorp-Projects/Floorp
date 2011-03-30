@@ -597,7 +597,7 @@ PRUint32 nsBuiltinDecoderStateMachine::PlaySilence(PRUint32 aSamples,
 
 {
   MonitorAutoEnter audioMon(mAudioMonitor);
-  if (mAudioStream->IsPaused()) {
+  if (!mAudioStream || mAudioStream->IsPaused()) {
     // The state machine has paused since we've released the decoder
     // monitor and acquired the audio monitor. Don't write any audio.
     return 0;
