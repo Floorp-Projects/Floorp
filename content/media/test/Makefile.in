@@ -229,6 +229,8 @@ _TEST_FILES += \
 		r11025_u8_c1.wav \
 		r11025_u8_c1_trunc.wav \
 		r16000_u8_c1_list.wav \
+		wavedata_u8.wav \
+		wavedata_s16.wav \
 		$(NULL)
 
 # Other files
@@ -280,6 +282,8 @@ endif
 ifdef MOZ_WAVE
 _TEST_FILES += \
 		test_can_play_type_wave.html \
+		test_wave_data_u8.html \
+		test_wave_data_s16.html \
 		$(NULL)
 else
 _TEST_FILES += \
