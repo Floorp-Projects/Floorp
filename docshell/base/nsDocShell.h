@@ -356,10 +356,13 @@ protected:
     // In all other cases PR_FALSE is returned.
     // Either aChannel or aOwner must be null.  If aChannel is
     // present, the owner should be gotten from it.
+    // If OnNewURI calls AddToSessionHistory, it will pass its
+    // aCloneSHChildren argument as aCloneChildren.
     PRBool OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
                     PRUint32 aLoadType,
                     PRBool aFireOnLocationChange,
-                    PRBool aAddToGlobalHistory = PR_TRUE);
+                    PRBool aAddToGlobalHistory,
+                    PRBool aCloneSHChildren);
 
     virtual void SetReferrerURI(nsIURI * aURI);
 
@@ -367,10 +370,16 @@ protected:
     virtual PRBool ShouldAddToSessionHistory(nsIURI * aURI);
     // Either aChannel or aOwner must be null.  If aChannel is
     // present, the owner should be gotten from it.
+    // If aCloneChildren is true, then our current session history's
+    // children will be cloned onto the new entry.  This should be
+    // used when we aren't actually changing the document while adding
+    // the new session history entry.
     virtual nsresult AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
                                          nsISupports* aOwner,
+                                         PRBool aCloneChildren,
                                          nsISHEntry ** aNewEntry);
-    nsresult DoAddChildSHEntry(nsISHEntry* aNewEntry, PRInt32 aChildOffset);
+    nsresult DoAddChildSHEntry(nsISHEntry* aNewEntry, PRInt32 aChildOffset,
+                               PRBool aCloneChildren);
 
     NS_IMETHOD LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType);
     NS_IMETHOD PersistLayoutHistoryState();

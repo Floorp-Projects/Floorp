@@ -1417,7 +1417,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Rotate(float angle)
 {
     if (!FloatValidate(angle))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     mThebes->Rotate(angle);
     return NS_OK;
@@ -1464,11 +1464,7 @@ nsCanvasRenderingContext2D::SetTransform(float m11, float m12, float m21, float 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetGlobalAlpha(float aGlobalAlpha)
 {
-    if (!FloatValidate(aGlobalAlpha))
-        return NS_ERROR_DOM_SYNTAX_ERR;
-
-    // ignore invalid values, as per spec
-    if (aGlobalAlpha < 0.0 || aGlobalAlpha > 1.0)
+    if (!FloatValidate(aGlobalAlpha) || aGlobalAlpha < 0.0 || aGlobalAlpha > 1.0)
         return NS_OK;
 
     CurrentState().globalAlpha = aGlobalAlpha;
@@ -1720,7 +1716,8 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetShadowOffsetX(float x)
 {
     if (!FloatValidate(x))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
+
     CurrentState().shadowOffset.x = x;
     return NS_OK;
 }
@@ -1736,7 +1733,8 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetShadowOffsetY(float y)
 {
     if (!FloatValidate(y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
+
     CurrentState().shadowOffset.y = y;
     return NS_OK;
 }
@@ -1751,10 +1749,9 @@ nsCanvasRenderingContext2D::GetShadowOffsetY(float *y)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetShadowBlur(float blur)
 {
-    if (!FloatValidate(blur))
-        return NS_ERROR_DOM_SYNTAX_ERR;
-    if (blur < 0.0)
+    if (!FloatValidate(blur) || blur < 0.0)
         return NS_OK;
+
     CurrentState().shadowBlur = blur;
     return NS_OK;
 }
