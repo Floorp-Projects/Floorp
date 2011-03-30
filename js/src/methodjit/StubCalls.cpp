@@ -1691,7 +1691,8 @@ ObjIncOp(VMFrame &f, JSObject *obj, jsid id)
             d += N;
             ref.setNumber(d);
         }
-        if (!v.setNumber(d) && !f.script()->typeMonitorOverflow(cx, f.pc()))
+        v.setNumber(d);
+        if (!f.script()->typeMonitorOverflow(cx, f.pc()))
             return false;
         if (!cx->typeMonitorAssign(obj, id, v))
             return false;

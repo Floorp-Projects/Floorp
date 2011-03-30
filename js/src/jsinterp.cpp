@@ -4174,7 +4174,7 @@ do_incop:
             goto error;
         if (!cx->typeMonitorAssign(obj, id, regs.sp[-1]))
             goto error;
-        if (!regs.sp[-1].isInt32() && !script->typeMonitorOverflow(cx, regs.pc))
+        if (!script->typeMonitorOverflow(cx, regs.pc))
             goto error;
         regs.fp->setAssigning();
         JSBool ok = obj->setProperty(cx, id, &regs.sp[-1], script->strictModeCode);
@@ -4248,7 +4248,7 @@ BEGIN_CASE(JSOP_LOCALINC)
         PUSH_COPY(*vp);
         if (!js_DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-1], vp))
             goto error;
-        if (!vp->isInt32() && !script->typeMonitorOverflow(cx, regs.pc))
+        if (!script->typeMonitorOverflow(cx, regs.pc))
             goto error;
     }
     len = JSOP_INCARG_LENGTH;
