@@ -126,6 +126,9 @@ qcms_profile* qcms_profile_from_memory(const void *mem, size_t size);
 
 qcms_profile* qcms_profile_from_file(FILE *file);
 qcms_profile* qcms_profile_from_path(const char *path);
+#ifdef _WIN32
+qcms_profile* qcms_profile_from_unicode_path(const wchar_t *path);
+#endif
 qcms_profile* qcms_profile_sRGB(void);
 void qcms_profile_release(qcms_profile *profile);
 
