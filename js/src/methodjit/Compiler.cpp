@@ -301,11 +301,15 @@ mjit::Compiler::performCompilation(JITScript **jitp)
 
     JS_ASSERT(cx->compartment->types.inferenceDepth);
 
-    CHECK_STATUS(pushActiveFrame(outerScript, 0));
-    CHECK_STATUS(generatePrologue());
-    CHECK_STATUS(generateMethod());
-    CHECK_STATUS(generateEpilogue());
-    CHECK_STATUS(finishThisUp(jitp));
+    {
+        types::AutoEnterCompilation enter(cx, outerScript);
+
+        CHECK_STATUS(pushActiveFrame(outerScript, 0));
+        CHECK_STATUS(generatePrologue());
+        CHECK_STATUS(generateMethod());
+        CHECK_STATUS(generateEpilogue());
+        CHECK_STATUS(finishThisUp(jitp));
+    }
 
 #ifdef JS_METHODJIT_SPEW
     prof.stop();
@@ -405,7 +409,7 @@ mjit::Compiler::prepareInferenceTypes(JSScript *script, ActiveFrame *a)
         for (unsigned i = 0; i < nargs; i++) {
             JSValueType type = JSVAL_TYPE_UNKNOWN;
             if (!a->analysis.argEscapes(i))
-                type = script->argTypes(i)->getKnownTypeTag(cx, outerScript);
+                type = script->argTypes(i)->getKnownTypeTag(cx);
             a->argumentTypes[i] = type;
         }
     }
@@ -417,7 +421,7 @@ mjit::Compiler::prepareInferenceTypes(JSScript *script, ActiveFrame *a)
         for (unsigned i = 0; i < script->nfixed; i++) {
             JSValueType type = JSVAL_TYPE_UNKNOWN;
             if (!a->analysis.localHasUseBeforeDef(i))
-                type = script->localTypes(i)->getKnownTypeTag(cx, outerScript);
+                type = script->localTypes(i)->getKnownTypeTag(cx);
             a->localTypes[i] = type;
         }
     }
@@ -3357,10 +3361,10 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
             return false;
         }
         types::TypeSet *types = frame.getTypeSet(frame.peek(-(argc + 1)));
-        types::TypeSet::Clone(cx, outerScript, types, &callIC.argTypes[0]);
+        types::TypeSet::Clone(cx, types, &callIC.argTypes[0]);
         for (unsigned i = 0; i < argc; i++) {
             types::TypeSet *types = frame.getTypeSet(frame.peek(-(argc - i)));
-            types::TypeSet::Clone(cx, outerScript, types, &callIC.argTypes[i + 1]);
+            types::TypeSet::Clone(cx, types, &callIC.argTypes[i + 1]);
         }
     }
 
@@ -3585,14 +3589,14 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
     FrameEntry *origThis = frame.peek(-(argc + 1));
 
     types::TypeSet *types = frame.getTypeSet(origCallee);
-    if (!types || types->getKnownTypeTag(cx, outerScript) != JSVAL_TYPE_OBJECT)
+    if (!types || types->getKnownTypeTag(cx) != JSVAL_TYPE_OBJECT)
         return Compile_InlineAbort;
 
     /*
      * Make sure no callees have had their .arguments accessed, and trigger
      * recompilation if they ever are accessed.
      */
-    types::ObjectKind kind = types->getKnownObjectKind(cx, outerScript);
+    types::ObjectKind kind = types->getKnownObjectKind(cx);
     if (kind != types::OBJECT_INLINEABLE_FUNCTION)
         return Compile_InlineAbort;
 
@@ -3678,7 +3682,7 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
             return Compile_InlineAbort;
     }
 
-    types->addFreeze(cx, outerScript);
+    types->addFreeze(cx);
 
     /*
      * For 'this' and arguments which are copies of other entries still in
@@ -4477,7 +4481,7 @@ mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testO
     if (!types)
         return false;
 
-    JSObject *singleton = types->getSingleton(cx, script);
+    JSObject *singleton = types->getSingleton(cx);
     if (singleton)
         return testSingletonProperty(singleton, id);
 
@@ -4485,7 +4489,7 @@ mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testO
         return false;
 
     JSProtoKey key;
-    JSValueType type = types->getKnownTypeTag(cx, outerScript);
+    JSValueType type = types->getKnownTypeTag(cx);
     switch (type) {
       case JSVAL_TYPE_STRING:
         key = JSProto_String;
@@ -4602,7 +4606,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
             js_ReportOutOfMemory(cx);
             return false;
         }
-        types::TypeSet::Clone(cx, outerScript, types, pic.rhsTypes);
+        types::TypeSet::Clone(cx, types, pic.rhsTypes);
     } else {
         pic.typeMonitored = false;
         pic.rhsTypes = NULL;
@@ -6535,7 +6539,7 @@ mjit::Compiler::knownThisType()
     if (a->hasThisType)
         return a->thisType;
     a->hasThisType = true;
-    a->thisType = script->thisTypes()->getKnownTypeTag(cx, outerScript);
+    a->thisType = script->thisTypes()->getKnownTypeTag(cx);
     return a->thisType;
 }
 
@@ -6562,7 +6566,7 @@ mjit::Compiler::knownPushedType(uint32 pushed)
     if (!cx->typeInferenceEnabled())
         return JSVAL_TYPE_UNKNOWN;
     types::TypeSet *types = script->types->pushed(PC - script->code, pushed);
-    return types->getKnownTypeTag(cx, outerScript);
+    return types->getKnownTypeTag(cx);
 }
 
 bool
@@ -6621,7 +6625,7 @@ mjit::Compiler::pushedSingleton(unsigned pushed)
         return NULL;
 
     types::TypeSet *types = script->types->pushed(PC - script->code, pushed);
-    return types->getSingleton(cx, script);
+    return types->getSingleton(cx);
 }
 
 bool
@@ -6640,6 +6644,5 @@ mjit::Compiler::arrayPrototypeHasIndexedProperty()
         return false;
     types::TypeSet *arrayTypes = proto->getType()->getProperty(cx, JSID_VOID, false);
     types::TypeSet *objectTypes = proto->getProto()->getType()->getProperty(cx, JSID_VOID, false);
-    return arrayTypes->knownNonEmpty(cx, outerScript)
-        || objectTypes->knownNonEmpty(cx, outerScript);
+    return arrayTypes->knownNonEmpty(cx) || objectTypes->knownNonEmpty(cx);
 }

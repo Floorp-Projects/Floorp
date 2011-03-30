@@ -483,9 +483,9 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
         types::TypeSet *lhsTypes = frame.getTypeSet(lhs);
         types::TypeSet *rhsTypes = frame.getTypeSet(rhs);
         types::ObjectKind lhsKind =
-            lhsTypes ? lhsTypes->getKnownObjectKind(cx, outerScript) : types::OBJECT_UNKNOWN;
+            lhsTypes ? lhsTypes->getKnownObjectKind(cx) : types::OBJECT_UNKNOWN;
         types::ObjectKind rhsKind =
-            rhsTypes ? rhsTypes->getKnownObjectKind(cx, outerScript) : types::OBJECT_UNKNOWN;
+            rhsTypes ? rhsTypes->getKnownObjectKind(cx) : types::OBJECT_UNKNOWN;
 
         if (lhsKind != types::OBJECT_UNKNOWN && rhsKind != types::OBJECT_UNKNOWN) {
             /* :TODO: Merge with jsop_relational_int? */
@@ -1187,7 +1187,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     if (cx->typeInferenceEnabled()) {
         types::TypeSet *types = frame.getTypeSet(obj);
         types::ObjectKind kind = types
-            ? types->getKnownObjectKind(cx, outerScript)
+            ? types->getKnownObjectKind(cx)
             : types::OBJECT_UNKNOWN;
         if (id->mightBeType(JSVAL_TYPE_INT32) &&
             (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
@@ -1507,7 +1507,7 @@ mjit::Compiler::jsop_getelem(bool isCall)
     if (cx->typeInferenceEnabled()) {
         types::TypeSet *types = frame.getTypeSet(obj);
         types::ObjectKind kind = types
-            ? types->getKnownObjectKind(cx, outerScript)
+            ? types->getKnownObjectKind(cx)
             : types::OBJECT_UNKNOWN;
         if (!isCall && id->mightBeType(JSVAL_TYPE_INT32) &&
             (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
