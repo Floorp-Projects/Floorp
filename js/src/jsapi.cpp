@@ -520,6 +520,18 @@ JS_DoubleIsInt32(jsdouble d, jsint *ip)
     return JSDOUBLE_IS_INT32(d, (int32_t *)ip);
 }
 
+JS_PUBLIC_API(int32)
+JS_DoubleToInt32(jsdouble d)
+{
+    return js_DoubleToECMAInt32(d);
+}
+
+JS_PUBLIC_API(uint32)
+JS_DoubleToUint32(jsdouble d)
+{
+    return js_DoubleToECMAUint32(d);
+}
+
 JS_PUBLIC_API(JSBool)
 JS_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip)
 {

@@ -664,6 +664,12 @@ JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp);
 extern JS_PUBLIC_API(JSBool)
 JS_DoubleIsInt32(jsdouble d, jsint *ip);
 
+extern JS_PUBLIC_API(int32)
+JS_DoubleToInt32(jsdouble d);
+
+extern JS_PUBLIC_API(uint32)
+JS_DoubleToUint32(jsdouble d);
+
 /*
  * Convert a value to a number, then to an int32, according to the ECMA rules
  * for ToInt32.
