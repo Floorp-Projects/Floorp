@@ -5552,6 +5552,10 @@ mjit::Compiler::jsop_getgname(uint32 index, JSValueType type)
     JSObject *obj = pushedSingleton(0);
     if (obj && testSingletonProperty(globalObj, ATOM_TO_JSID(atom))) {
         frame.push(ObjectValue(*obj));
+        if (recompiling) {
+            OOL_STUBCALL(ic::GetGlobalName);
+            stubcc.rejoin(Changes(1));
+        }
         return;
     }
 

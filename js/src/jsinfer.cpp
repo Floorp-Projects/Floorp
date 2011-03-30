@@ -2937,6 +2937,18 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
         else
             id = GetAtomId(cx, script, pc, 0);
 
+        /*
+         * Normally we rely on lazy standard class initialization to fill in
+         * the types of global properties the script can access. In a few cases
+         * the method JIT will bypass this, and we need to add the types direclty.
+         */
+        if (id == ATOM_TO_JSID(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]))
+            cx->addTypePropertyId(script->getGlobalType(), id, TYPE_UNDEFINED);
+        if (id == ATOM_TO_JSID(cx->runtime->atomState.NaNAtom))
+            cx->addTypePropertyId(script->getGlobalType(), id, TYPE_DOUBLE);
+        if (id == ATOM_TO_JSID(cx->runtime->atomState.InfinityAtom))
+            cx->addTypePropertyId(script->getGlobalType(), id, TYPE_DOUBLE);
+
         /* Handle as a property access. */
         PropertyAccess(cx, script, pc, script->getGlobalType(),
                        false, &pushed[0], id);
