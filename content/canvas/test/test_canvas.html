@@ -15878,16 +15878,21 @@ function test_2d_shadow_attributes_shadowBlur_2() {
 var canvas = document.getElementById('c505');
 var ctx = canvas.getContext('2d');
 
-var _thrown = undefined; try {
-  ctx.shadowBlur = Infinity;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-var _thrown = undefined; try {
-  ctx.shadowBlur = -Infinity;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-var _thrown = undefined; try {
-  ctx.shadowBlur = NaN;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
+ctx.shadowBlur = 1;
+ctx.shadowBlur = -2;
+ok(ctx.shadowBlur === 1, "ctx.shadowBlur === 1");
 
+ctx.shadowBlur = 1;
+ctx.shadowBlur = Infinity;
+ok(ctx.shadowBlur === 1, "ctx.shadowBlur === 1");
+
+ctx.shadowBlur = 1;
+ctx.shadowBlur = -Infinity;
+ok(ctx.shadowBlur === 1, "ctx.shadowBlur === 1");
+
+ctx.shadowBlur = 1;
+ctx.shadowBlur = NaN;
+ok(ctx.shadowBlur === 1, "ctx.shadowBlur === 1");
 
 }
 </script>
@@ -15978,25 +15983,26 @@ function test_2d_shadow_attributes_shadowOffset_2() {
 var canvas = document.getElementById('c509');
 var ctx = canvas.getContext('2d');
 
-var _thrown = undefined; try {
-  ctx.shadowOffsetX = Infinity;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-var _thrown = undefined; try {
-  ctx.shadowOffsetX = -Infinity;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-var _thrown = undefined; try {
-  ctx.shadowOffsetX = NaN;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-var _thrown = undefined; try {
-  ctx.shadowOffsetY = Infinity;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-var _thrown = undefined; try {
-  ctx.shadowOffsetY = -Infinity;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-var _thrown = undefined; try {
-  ctx.shadowOffsetY = NaN;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
+ctx.shadowOffsetX = 1;
+ctx.shadowOffsetY = 2;
+ctx.shadowOffsetX = Infinity;
+ctx.shadowOffsetY = Infinity;
+ok(ctx.shadowOffsetX === 1, "ctx.shadowOffsetX === 1");
+ok(ctx.shadowOffsetY === 2, "ctx.shadowOffsetY === 2");
 
+ctx.shadowOffsetX = 1;
+ctx.shadowOffsetY = 2;
+ctx.shadowOffsetX = -Infinity;
+ctx.shadowOffsetY = -Infinity;
+ok(ctx.shadowOffsetX === 1, "ctx.shadowOffsetX === 1");
+ok(ctx.shadowOffsetY === 2, "ctx.shadowOffsetY === 2");
+
+ctx.shadowOffsetX = 1;
+ctx.shadowOffsetY = 2;
+ctx.shadowOffsetX = NaN;
+ctx.shadowOffsetY = NaN;
+ok(ctx.shadowOffsetX === 1, "ctx.shadowOffsetX === 1");
+ok(ctx.shadowOffsetY === 2, "ctx.shadowOffsetY === 2");
 
 }
 </script>
