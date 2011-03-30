@@ -816,7 +816,7 @@ js::mjit::JaegerShotAtSafePoint(JSContext *cx, void *safePoint)
             Value *formals = cx->fp()->formalArgs();
             for (uint32 i = 0; i < fun->nargs; i++) {
                 if (formals[i].isInt32() &&
-                    script->argTypes(i)->getKnownTypeTag(cx, NULL) == JSVAL_TYPE_DOUBLE) {
+                    script->argTypes(i)->getKnownTypeTag(cx) == JSVAL_TYPE_DOUBLE) {
                     formals[i].setDouble((double)formals[i].toInt32());
                 }
             }
@@ -825,7 +825,7 @@ js::mjit::JaegerShotAtSafePoint(JSContext *cx, void *safePoint)
         Value *fixed = cx->fp()->slots();
         for (uint32 i = 0; i < script->nfixed; i++) {
             if (fixed[i].isInt32() &&
-                script->localTypes(i)->getKnownTypeTag(cx, NULL) == JSVAL_TYPE_DOUBLE) {
+                script->localTypes(i)->getKnownTypeTag(cx) == JSVAL_TYPE_DOUBLE) {
                 fixed[i].setDouble((double)fixed[i].toInt32());
             }
         }

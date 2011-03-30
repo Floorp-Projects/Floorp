@@ -1273,21 +1273,22 @@ public:
 };
 
 void
-TypeSet::addFreeze(JSContext *cx, JSScript *script)
+TypeSet::addFreeze(JSContext *cx)
 {
-    add(cx, ArenaNew<TypeConstraintFreeze>(cx->compartment->types.pool, script), false);
+    add(cx, ArenaNew<TypeConstraintFreeze>(cx->compartment->types.pool,
+                                           cx->compartment->types.compiledScript), false);
 }
 
 void
-TypeSet::Clone(JSContext *cx, JSScript *script, TypeSet *source, ClonedTypeSet *target)
+TypeSet::Clone(JSContext *cx, TypeSet *source, ClonedTypeSet *target)
 {
     if (!source) {
         target->typeFlags = TYPE_FLAG_UNKNOWN;
         return;
     }
 
-    if (script && !source->unknown())
-        source->addFreeze(cx, script);
+    if (cx->compartment->types.compiledScript && !source->unknown())
+        source->addFreeze(cx);
 
     target->typeFlags = source->typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET;
     target->objectCount = source->objectCount;
@@ -1368,7 +1369,7 @@ GetValueTypeFromTypeFlags(TypeFlags flags)
 }
 
 JSValueType
-TypeSet::getKnownTypeTag(JSContext *cx, JSScript *script)
+TypeSet::getKnownTypeTag(JSContext *cx)
 {
     TypeFlags flags = typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET;
     JSValueType type;
@@ -1378,8 +1379,10 @@ TypeSet::getKnownTypeTag(JSContext *cx, JSScript *script)
     else
         type = GetValueTypeFromTypeFlags(flags);
 
-    if (script && type != JSVAL_TYPE_UNKNOWN)
-        add(cx, ArenaNew<TypeConstraintFreezeTypeTag>(cx->compartment->types.pool, script), false);
+    if (cx->compartment->types.compiledScript && type != JSVAL_TYPE_UNKNOWN) {
+        add(cx, ArenaNew<TypeConstraintFreezeTypeTag>(cx->compartment->types.pool,
+                                                      cx->compartment->types.compiledScript), false);
+    }
 
     return type;
 }
@@ -1512,7 +1515,7 @@ public:
 };
 
 ObjectKind
-TypeSet::getKnownObjectKind(JSContext *cx, JSScript *script)
+TypeSet::getKnownObjectKind(JSContext *cx)
 {
     ObjectKind kind = OBJECT_NONE;
 
@@ -1534,7 +1537,8 @@ TypeSet::getKnownObjectKind(JSContext *cx, JSScript *script)
          * Watch for new objects of different kind, and re-traverse existing types
          * in this set to add any needed FreezeArray constraints.
          */
-        add(cx, ArenaNew<TypeConstraintFreezeObjectKindSet>(cx->compartment->types.pool, kind, script));
+        add(cx, ArenaNew<TypeConstraintFreezeObjectKindSet>(cx->compartment->types.pool, kind,
+                                                            cx->compartment->types.compiledScript));
     }
 
     return kind;
@@ -1559,18 +1563,19 @@ ObjectStateChange(JSContext *cx, TypeObject *object, bool markingUnknown)
 }
 
 bool
-TypeSet::knownNonEmpty(JSContext *cx, JSScript *script)
+TypeSet::knownNonEmpty(JSContext *cx)
 {
     if ((typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET) != 0 || objectCount != 0)
         return true;
 
-    add(cx, ArenaNew<TypeConstraintFreeze>(cx->compartment->types.pool, script), false);
+    add(cx, ArenaNew<TypeConstraintFreeze>(cx->compartment->types.pool,
+                                           cx->compartment->types.compiledScript), false);
 
     return false;
 }
 
 JSObject *
-TypeSet::getSingleton(JSContext *cx, JSScript *script)
+TypeSet::getSingleton(JSContext *cx)
 {
     if ((typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET) != 0 || objectCount != 1)
         return NULL;
@@ -1579,7 +1584,8 @@ TypeSet::getSingleton(JSContext *cx, JSScript *script)
     if (!object->singleton)
         return NULL;
 
-    add(cx, ArenaNew<TypeConstraintFreeze>(cx->compartment->types.pool, script), false);
+    add(cx, ArenaNew<TypeConstraintFreeze>(cx->compartment->types.pool,
+                                           cx->compartment->types.compiledScript), false);
 
     return object->singleton;
 }

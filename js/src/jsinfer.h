@@ -303,29 +303,29 @@ struct TypeSet
     static inline TypeSet* make(JSContext *cx, const char *name);
 
     /*
-     * Methods for JIT compilation. Each of these takes a script argument indicating
-     * which compiled code depends on the return value of these calls. Should that
-     * returned value change in the future due to new type information, the script
-     * will be marked for recompilation.
+     * Methods for JIT compilation. If a script is currently being compiled
+     * (see AutoEnterCompilation) these will add constraints ensuring that if
+     * the return value change in the future due to new type information, the
+     * currently compiled script will be marked for recompilation.
      */
 
     /* Completely freeze the contents of this type set. */
-    void addFreeze(JSContext *cx, JSScript *script);
+    void addFreeze(JSContext *cx);
 
     /* Get any type tag which all values in this set must have. */
-    JSValueType getKnownTypeTag(JSContext *cx, JSScript *script);
+    JSValueType getKnownTypeTag(JSContext *cx);
 
     /* Get information about the kinds of objects in this type set. */
-    ObjectKind getKnownObjectKind(JSContext *cx, JSScript *script);
+    ObjectKind getKnownObjectKind(JSContext *cx);
 
     /* Whether any objects in this type set have unknown properties. */
-    bool hasUnknownProperties(JSContext *cx, JSScript *script);
+    bool hasUnknownProperties(JSContext *cx);
 
     /* Get whether this type set is non-empty. */
-    bool knownNonEmpty(JSContext *cx, JSScript *script);
+    bool knownNonEmpty(JSContext *cx);
 
     /* Get the single value which can appear in this type set, otherwise NULL. */
-    JSObject *getSingleton(JSContext *cx, JSScript *script);
+    JSObject *getSingleton(JSContext *cx);
 
     /* Mark all current and future types in this set as pushed by script/pc. */
     void pushAllTypes(JSContext *cx, JSScript *script, const jsbytecode *pc);
@@ -334,7 +334,7 @@ struct TypeSet
      * Clone (possibly NULL) source onto target; if any new types are added to
      * source in the future, the script will be recompiled.
      */
-    static void Clone(JSContext *cx, JSScript *script, TypeSet *source, ClonedTypeSet *target);
+    static void Clone(JSContext *cx, TypeSet *source, ClonedTypeSet *target);
 
   private:
     inline void markUnknown(JSContext *cx);
@@ -665,6 +665,13 @@ struct TypeCompartment
      */
     unsigned recompilations;
     unsigned frameExpansions;
+
+    /*
+     * Script currently being compiled. All constraints which look for type
+     * changes inducing recompilation are keyed to this script. Note: script
+     * compilation is not reentrant.
+     */
+    JSScript *compiledScript;
 
     /* Tables for determining types of singleton/JSON objects. */
 
