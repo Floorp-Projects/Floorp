@@ -103,7 +103,6 @@ CPPSRCS		= \
 		nsUTF7ToUnicode.cpp \
 		nsMUTF7ToUnicode.cpp \
 		nsUCS2BEToUnicode.cpp \
-		nsUTF32ToUnicode.cpp \
 		nsT61ToUnicode.cpp \
 		nsUserDefinedToUnicode.cpp \
 		nsUnicodeToAscii.cpp \
@@ -160,7 +159,6 @@ CPPSRCS		= \
 		nsUnicodeToUTF7.cpp \
 		nsUnicodeToMUTF7.cpp \
 		nsUnicodeToUCS2BE.cpp \
-		nsUnicodeToUTF32.cpp \
 		nsUnicodeToT61.cpp \
 		nsUnicodeToUserDefined.cpp \
 		nsUnicodeToSymbol.cpp \
