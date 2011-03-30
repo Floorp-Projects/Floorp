@@ -1418,7 +1418,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Rotate(float angle)
 {
     if (!FloatValidate(angle))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     mThebes->Rotate(angle);
     return NS_OK;
