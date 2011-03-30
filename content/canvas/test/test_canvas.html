@@ -1146,19 +1146,12 @@ var ctx = canvas.getContext('2d');
 
 ctx.globalAlpha = 0.5;
 var a = ctx.globalAlpha; // might not be exactly 0.5, if it is rounded/quantised, so remember for future comparisons
-var _thrown = undefined; try {
-  ctx.globalAlpha = Infinity;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-ok(ctx.globalAlpha == a, "ctx.globalAlpha == a");
-var _thrown = undefined; try {
-  ctx.globalAlpha = -Infinity;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-ok(ctx.globalAlpha == a, "ctx.globalAlpha == a");
-var _thrown = undefined; try {
-  ctx.globalAlpha = NaN;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-ok(ctx.globalAlpha == a, "ctx.globalAlpha == a");
-
+ctx.globalAlpha = Infinity;
+ok(ctx.globalAlpha === a, "ctx.globalAlpha === a");
+ctx.globalAlpha = -Infinity;
+ok(ctx.globalAlpha === a, "ctx.globalAlpha === a");
+ctx.globalAlpha = NaN;
+ok(ctx.globalAlpha === a, "ctx.globalAlpha === a");
 
 }
 </script>
