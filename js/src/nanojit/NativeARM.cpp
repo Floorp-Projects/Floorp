@@ -468,7 +468,7 @@ Assembler::asm_eor_imm(Register rd, Register rn, int32_t imm, int stat /* =0 */)
 // --------------------------------
 
 void
-Assembler::nInit(AvmCore*)
+Assembler::nInit()
 {
     nHints[LIR_calli]  = rmask(retRegs[0]);
     nHints[LIR_hcalli] = rmask(retRegs[1]);

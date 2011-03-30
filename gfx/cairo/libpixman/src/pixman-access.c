@@ -211,6 +211,46 @@ fetch_scanline_b8g8r8x8 (pixman_image_t *image,
 }
 
 static void
+fetch_scanline_r8g8b8a8 (pixman_image_t *image,
+                         int             x,
+                         int             y,
+                         int             width,
+                         uint32_t *      buffer,
+                         const uint32_t *mask)
+{
+    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
+    const uint32_t *pixel = (uint32_t *)bits + x;
+    const uint32_t *end = pixel + width;
+
+    while (pixel < end)
+    {
+	uint32_t p = READ (image, pixel++);
+
+	*buffer++ = (((p & 0x000000ff) << 24) | (p >> 8));
+    }
+}
+
+static void
+fetch_scanline_r8g8b8x8 (pixman_image_t *image,
+                         int             x,
+                         int             y,
+                         int             width,
+                         uint32_t *      buffer,
+                         const uint32_t *mask)
+{
+    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
+    const uint32_t *pixel = (uint32_t *)bits + x;
+    const uint32_t *end = pixel + width;
+    
+    while (pixel < end)
+    {
+	uint32_t p = READ (image, pixel++);
+	
+	*buffer++ = (0xff000000 | (p >> 8));
+    }
+}
+
+static void
 fetch_scanline_x14r6g6b6 (pixman_image_t *image,
                           int             x,
                           int             y,
@@ -1292,6 +1332,28 @@ fetch_pixel_b8g8r8x8 (bits_image_t *image,
 }
 
 static uint32_t
+fetch_pixel_r8g8b8a8 (bits_image_t *image,
+		      int           offset,
+		      int           line)
+{
+    uint32_t *bits = image->bits + line * image->rowstride;
+    uint32_t pixel = READ (image, (uint32_t *)bits + offset);
+    
+    return (((pixel & 0x000000ff) << 24) | (pixel >> 8));
+}
+
+static uint32_t
+fetch_pixel_r8g8b8x8 (bits_image_t *image,
+		      int           offset,
+		      int           line)
+{
+    uint32_t *bits = image->bits + line * image->rowstride;
+    uint32_t pixel = READ (image, (uint32_t *)bits + offset);
+    
+    return (0xff000000 | (pixel >> 8));
+}
+
+static uint32_t
 fetch_pixel_x14r6g6b6 (bits_image_t *image,
                        int           offset,
                        int           line)
@@ -2025,6 +2087,39 @@ store_scanline_b8g8r8x8 (bits_image_t *  image,
 	       ((values[i] <<  8) & 0x00ff0000) |
 	       ((values[i] << 24) & 0xff000000));
     }
+}
+
+static void
+store_scanline_r8g8b8a8 (bits_image_t *  image,
+                         int             x,
+                         int             y,
+                         int             width,
+                         const uint32_t *values)
+{
+    uint32_t *bits = image->bits + image->rowstride * y;
+    uint32_t *pixel = (uint32_t *)bits + x;
+    int i;
+    
+    for (i = 0; i < width; ++i)
+    {
+	WRITE (image, pixel++,
+	       ((values[i] >> 24) & 0x000000ff) | (values[i] << 8));
+    }
+}
+
+static void
+store_scanline_r8g8b8x8 (bits_image_t *  image,
+                         int             x,
+                         int             y,
+                         int             width,
+                         const uint32_t *values)
+{
+    uint32_t *bits = image->bits + image->rowstride * y;
+    uint32_t *pixel = (uint32_t *)bits + x;
+    int i;
+    
+    for (i = 0; i < width; ++i)
+	WRITE (image, pixel++, (values[i] << 8));
 }
 
 static void
@@ -2845,6 +2940,8 @@ static const format_info_t accessors[] =
     FORMAT_INFO (x8b8g8r8),
     FORMAT_INFO (b8g8r8a8),
     FORMAT_INFO (b8g8r8x8),
+    FORMAT_INFO (r8g8b8a8),
+    FORMAT_INFO (r8g8b8x8),
     FORMAT_INFO (x14r6g6b6),
 
 /* 24bpp formats */

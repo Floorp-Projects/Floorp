@@ -131,7 +131,6 @@
 #include "CSSCalc.h"
 
 using namespace mozilla;
-using namespace mozilla::layers;
 
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 
@@ -3185,7 +3184,8 @@ nsIFrame::InlineMinWidthData::ForceBreak(nsIRenderingContext *aRenderingContext)
 }
 
 void
-nsIFrame::InlineMinWidthData::OptionallyBreak(nsIRenderingContext *aRenderingContext)
+nsIFrame::InlineMinWidthData::OptionallyBreak(nsIRenderingContext *aRenderingContext,
+                                              nscoord aHyphenWidth)
 {
   trailingTextFrame = nsnull;
 
@@ -3194,8 +3194,9 @@ nsIFrame::InlineMinWidthData::OptionallyBreak(nsIRenderingContext *aRenderingCon
   // text-indent or negative margin), don't break.  Otherwise, do the
   // same as ForceBreak.  it doesn't really matter when we accumulate
   // floats.
-  if (currentLine < 0 || atStartOfLine)
+  if (currentLine + aHyphenWidth < 0 || atStartOfLine)
     return;
+  currentLine += aHyphenWidth;
   ForceBreak(aRenderingContext);
 }
 
@@ -3946,26 +3947,23 @@ nsIFrame::IsLeaf() const
   return PR_TRUE;
 }
 
-Layer*
+void
 nsIFrame::InvalidateLayer(const nsRect& aDamageRect, PRUint32 aDisplayItemKey)
 {
   NS_ASSERTION(aDisplayItemKey > 0, "Need a key");
 
-  Layer* layer = FrameLayerBuilder::GetDedicatedLayer(this, aDisplayItemKey);
-  if (!layer) {
+  if (!FrameLayerBuilder::HasDedicatedLayer(this, aDisplayItemKey)) {
     Invalidate(aDamageRect);
-    return nsnull;
+    return;
   }
 
   PRUint32 flags = INVALIDATE_NO_THEBES_LAYERS;
   if (aDisplayItemKey == nsDisplayItem::TYPE_VIDEO ||
-      aDisplayItemKey == nsDisplayItem::TYPE_PLUGIN ||
-      aDisplayItemKey == nsDisplayItem::TYPE_CANVAS) {
+      aDisplayItemKey == nsDisplayItem::TYPE_PLUGIN) {
     flags |= INVALIDATE_NO_UPDATE_LAYER_TREE;
   }
 
   InvalidateWithFlags(aDamageRect, flags);
-  return layer;
 }
 
 void
@@ -3974,7 +3972,7 @@ nsIFrame::InvalidateTransformLayer()
   NS_ASSERTION(mParent, "How can a viewport frame have a transform?");
 
   PRBool hasLayer =
-      FrameLayerBuilder::GetDedicatedLayer(this, nsDisplayItem::TYPE_TRANSFORM) != nsnull;
+      FrameLayerBuilder::HasDedicatedLayer(this, nsDisplayItem::TYPE_TRANSFORM);
   // Invalidate post-transform area in the parent. We have to invalidate
   // in the parent because our transform style may have changed from what was
   // used to paint this frame.
@@ -6580,17 +6578,10 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
         // When clicked on, the selection position within the element 
         // will be enough to make them keyboard scrollable.
         nsIScrollableFrame *scrollFrame = do_QueryFrame(this);
-        if (scrollFrame) {
-          nsIScrollableFrame::ScrollbarStyles styles =
-            scrollFrame->GetScrollbarStyles();
-          if (styles.mVertical == NS_STYLE_OVERFLOW_SCROLL ||
-              styles.mVertical == NS_STYLE_OVERFLOW_AUTO ||
-              styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL ||
-              styles.mHorizontal == NS_STYLE_OVERFLOW_AUTO) {
+        if (scrollFrame && !scrollFrame->GetActualScrollbarSizes().IsZero()) {
             // Scroll bars will be used for overflow
             isFocusable = PR_TRUE;
             tabIndex = 0;
-          }
         }
       }
     }

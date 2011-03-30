@@ -1352,10 +1352,10 @@ nsUrlClassifierDBServiceWorker::~nsUrlClassifierDBServiceWorker()
                "to close the connection.");
 
   if (mCleanHostKeysLock)
-    PR_DestroyLock(mCleanHostKeysLock);
+    nsAutoLock::DestroyLock(mCleanHostKeysLock);
 
   if (mPendingLookupLock)
-    PR_DestroyLock(mPendingLookupLock);
+    nsAutoLock::DestroyLock(mPendingLookupLock);
 }
 
 nsresult
@@ -1380,7 +1380,8 @@ nsUrlClassifierDBServiceWorker::Init(PRInt32 gethashNoise)
   rv = mDBFile->Append(NS_LITERAL_STRING(DATABASE_FILENAME));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mCleanHostKeysLock = PR_NewLock();
+  mCleanHostKeysLock =
+    nsAutoLock::NewLock("nsUrlClassifierDBServiceWorker::mCleanHostKeysLock");
   if (!mCleanHostKeysLock)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1390,7 +1391,8 @@ nsUrlClassifierDBServiceWorker::Init(PRInt32 gethashNoise)
   if (!mCleanFragments.Init(CLEAN_FRAGMENTS_SIZE))
     return NS_ERROR_OUT_OF_MEMORY;
 
-  mPendingLookupLock = PR_NewLock();
+  mPendingLookupLock =
+    nsAutoLock::NewLock("nsUrlClassifierDBServiceWorker::mPendingLookupLock");
   if (!mPendingLookupLock)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -3914,20 +3916,20 @@ nsUrlClassifierDBService::Init()
 
     PRInt32 tmpint;
     rv = prefs->GetIntPref(CONFIRM_AGE_PREF, &tmpint);
-    PR_AtomicSet(&gFreshnessGuarantee, NS_SUCCEEDED(rv) ? tmpint : CONFIRM_AGE_DEFAULT_SEC);
+    PR_ATOMIC_SET(&gFreshnessGuarantee, NS_SUCCEEDED(rv) ? tmpint : CONFIRM_AGE_DEFAULT_SEC);
 
     prefs->AddObserver(CONFIRM_AGE_PREF, this, PR_FALSE);
 
     rv = prefs->GetIntPref(UPDATE_CACHE_SIZE_PREF, &tmpint);
-    PR_AtomicSet(&gUpdateCacheSize, NS_SUCCEEDED(rv) ? tmpint : UPDATE_CACHE_SIZE_DEFAULT);
+    PR_ATOMIC_SET(&gUpdateCacheSize, NS_SUCCEEDED(rv) ? tmpint : UPDATE_CACHE_SIZE_DEFAULT);
 
     rv = prefs->GetIntPref(UPDATE_WORKING_TIME, &tmpint);
-    PR_AtomicSet(&gWorkingTimeThreshold,
-                 NS_SUCCEEDED(rv) ? tmpint : UPDATE_WORKING_TIME_DEFAULT);
+    PR_ATOMIC_SET(&gWorkingTimeThreshold,
+                  NS_SUCCEEDED(rv) ? tmpint : UPDATE_WORKING_TIME_DEFAULT);
 
     rv = prefs->GetIntPref(UPDATE_DELAY_TIME, &tmpint);
-    PR_AtomicSet(&gDelayTime,
-                 NS_SUCCEEDED(rv) ? tmpint : UPDATE_DELAY_TIME_DEFAULT);
+    PR_ATOMIC_SET(&gDelayTime,
+                  NS_SUCCEEDED(rv) ? tmpint : UPDATE_DELAY_TIME_DEFAULT);
   }
 
   // Start the background thread.
@@ -4232,21 +4234,21 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
     } else if (NS_LITERAL_STRING(CONFIRM_AGE_PREF).Equals(aData)) {
       PRInt32 tmpint;
       rv = prefs->GetIntPref(CONFIRM_AGE_PREF, &tmpint);
-      PR_AtomicSet(&gFreshnessGuarantee, NS_SUCCEEDED(rv) ? tmpint : CONFIRM_AGE_DEFAULT_SEC);
+      PR_ATOMIC_SET(&gFreshnessGuarantee, NS_SUCCEEDED(rv) ? tmpint : CONFIRM_AGE_DEFAULT_SEC);
     } else if (NS_LITERAL_STRING(UPDATE_CACHE_SIZE_PREF).Equals(aData)) {
       PRInt32 tmpint;
       rv = prefs->GetIntPref(UPDATE_CACHE_SIZE_PREF, &tmpint);
-      PR_AtomicSet(&gUpdateCacheSize, NS_SUCCEEDED(rv) ? tmpint : UPDATE_CACHE_SIZE_DEFAULT);
+      PR_ATOMIC_SET(&gUpdateCacheSize, NS_SUCCEEDED(rv) ? tmpint : UPDATE_CACHE_SIZE_DEFAULT);
     } else if (NS_LITERAL_STRING(UPDATE_WORKING_TIME).Equals(aData)) {
       PRInt32 tmpint;
       rv = prefs->GetIntPref(UPDATE_WORKING_TIME, &tmpint);
-      PR_AtomicSet(&gWorkingTimeThreshold,
-                   NS_SUCCEEDED(rv) ? tmpint : UPDATE_WORKING_TIME_DEFAULT);
+      PR_ATOMIC_SET(&gWorkingTimeThreshold,
+                    NS_SUCCEEDED(rv) ? tmpint : UPDATE_WORKING_TIME_DEFAULT);
     } else if (NS_LITERAL_STRING(UPDATE_DELAY_TIME).Equals(aData)) {
       PRInt32 tmpint;
       rv = prefs->GetIntPref(UPDATE_DELAY_TIME, &tmpint);
-      PR_AtomicSet(&gDelayTime,
-                 NS_SUCCEEDED(rv) ? tmpint : UPDATE_DELAY_TIME_DEFAULT);
+      PR_ATOMIC_SET(&gDelayTime,
+                    NS_SUCCEEDED(rv) ? tmpint : UPDATE_DELAY_TIME_DEFAULT);
     }
   } else if (!strcmp(aTopic, "profile-before-change") ||
              !strcmp(aTopic, "xpcom-shutdown-threads")) {

@@ -2780,7 +2780,6 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
       }
       // record the presence of a next in flow, it might get destroyed so we
       // need to reorder the row group array
-      nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
       PRBool reorder = PR_FALSE;
       if (kidFrame->GetNextInFlow())
         reorder = PR_TRUE;
@@ -2853,7 +2852,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
 
       // Special handling for incomplete children
       if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-        kidNextInFlow = kidFrame->GetNextInFlow();
+        nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
         if (!kidNextInFlow) {
           // The child doesn't have a next-in-flow so create a continuing
           // frame. This hooks the child into the flow

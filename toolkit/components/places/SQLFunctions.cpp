@@ -285,8 +285,9 @@ namespace places {
     // We can't use StringBeginsWith here, unfortunately.  Although it will
     // happily take a case-insensitive UTF8 comparator, it eventually calls
     // nsACString::Equals, which checks that the two strings contain the same
-    // number of bytes before calling the comparator.  This is clearly not what
-    // we want.
+    // number of bytes before calling the comparator.  Two characters may be
+    // case-insensitively equal while taking up different numbers of bytes, so
+    // this is not what we want.
 
     const_char_iterator tokenStart(aToken.BeginReading()),
                         tokenEnd(aToken.EndReading()),

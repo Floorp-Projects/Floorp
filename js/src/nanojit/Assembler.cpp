@@ -69,7 +69,7 @@ namespace nanojit
      *
      *    - merging paths ( build a graph? ), possibly use external rep to drive codegen
      */
-    Assembler::Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, AvmCore* core, LogControl* logc, const Config& config)
+    Assembler::Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, LogControl* logc, const Config& config)
         : alloc(alloc)
         , _codeAlloc(codeAlloc)
         , _dataAlloc(dataAlloc)
@@ -92,7 +92,12 @@ namespace nanojit
     #endif
         , _config(config)
     {
-        nInit(core);
+        // Per-opcode register hint table.  Defaults to no hints for all
+        // instructions (it's zeroed in the constructor).  Must be zeroed
+        // before calling nInit().
+        for (int i = 0; i < LIR_sentinel+1; i++)
+            nHints[i] = 0;
+        nInit();
         (void)logc;
         verbose_only( _logc = logc; )
         verbose_only( _outputCache = 0; )
@@ -101,17 +106,6 @@ namespace nanojit
 
         reset();
     }
-
-    // Per-opcode register hint table.  Default to no hints for all
-    // instructions.  It's not marked const because individual back-ends can
-    // install hint values for opcodes of interest in nInit().
-    RegisterMask Assembler::nHints[LIR_sentinel+1] = {
-#define OP___(op, number, repKind, retType, isCse) \
-        0,
-#include "LIRopcode.tbl"
-#undef OP___
-        0
-    };
 
 #ifdef _DEBUG
 
@@ -815,17 +809,6 @@ namespace nanojit
         }
     }
 
-#ifdef NANOJIT_IA32
-    void Assembler::patch(SideExit* exit, SwitchInfo* si)
-    {
-        for (GuardRecord* lr = exit->guards; lr; lr = lr->next) {
-            Fragment *frag = lr->exit->target;
-            NanoAssert(frag->fragEntry != 0);
-            si->table[si->index] = frag->fragEntry;
-        }
-    }
-#endif
-
     NIns* Assembler::asm_exit(LIns* guard)
     {
         SideExit *exit = guard->record()->exit;
@@ -1468,7 +1451,6 @@ namespace nanojit
 
         // The trace must end with one of these opcodes.  Mark it as live.
         NanoAssert(reader->finalIns()->isop(LIR_x)    ||
-                   reader->finalIns()->isop(LIR_xtbl) ||
                    reader->finalIns()->isRet()        ||
                    isLiveOpcode(reader->finalIns()->opcode()));
 
@@ -1932,17 +1914,6 @@ namespace nanojit
                 case LIR_xbarrier:
                     break;
 
-                case LIR_xtbl: {
-                    ins->oprnd1()->setResultLive();
-#ifdef NANOJIT_IA32
-                    NIns* exit = asm_exit(ins); // does intersectRegisterState()
-                    asm_switch(ins, exit);
-#else
-                    NanoAssertMsg(0, "Not supported for this architecture");
-#endif
-                    break;
-                }
-
                 case LIR_xt:
                 case LIR_xf:
                     ins->oprnd1()->setResultLive();
@@ -2108,18 +2079,6 @@ namespace nanojit
             debug_only( pageValidate(); )
             debug_only( resourceConsistencyCheck();  )
         }
-    }
-
-    /*
-     * Write a jump table for the given SwitchInfo and store the table
-     * address in the SwitchInfo. Every entry will initially point to
-     * target.
-     */
-    void Assembler::emitJumpTable(SwitchInfo* si, NIns* target)
-    {
-        si->table = (NIns **) alloc.alloc(si->count * sizeof(NIns*));
-        for (uint32_t i = 0; i < si->count; ++i)
-            si->table[i] = target;
     }
 
     void Assembler::assignSavedRegs()

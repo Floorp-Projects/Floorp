@@ -349,13 +349,13 @@ nsWindowWatcher::~nsWindowWatcher()
     RemoveWindow(mOldestWindow);
 
   if (mListLock)
-    PR_DestroyLock(mListLock);
+    nsAutoLock::DestroyLock(mListLock);
 }
 
 nsresult
 nsWindowWatcher::Init()
 {
-  mListLock = PR_NewLock();
+  mListLock = nsAutoLock::NewLock("nsWindowWatcher::mListLock");
   if (!mListLock)
     return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
