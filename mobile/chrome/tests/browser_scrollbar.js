@@ -93,13 +93,42 @@ gTests.push({
   checkBothScrollable: function() {
     checkScrollbars(true, true);
     Elements.browsers.addEventListener("PanFinished", function(aEvent) {
+      Elements.browsers.removeEventListener("PanFinished", arguments.callee, false);
       setTimeout(function() {
-        for (let iTab=0; iTab<gOpenedTabs.length; iTab++)
-          Browser.closeTab(gOpenedTabs[iTab]);
         Browser.hideSidebars();
       }, 0);
+      runNextTest();
     }, false);
-    runNextTest();
   }
 });
 
+
+gTests.push({
+  desc: "Check scrollbar visibility when the touch sequence is cancelled",
+
+  run: function() {
+    waitForPageShow(testURL_01 + "both", gCurrentTest.checkVisibility);
+    gOpenedTabs.push(Browser.addTab(testURL_01 + "both", true));
+  },
+
+  checkVisibility: function() {
+    let browser = getBrowser();
+    let width = browser.getBoundingClientRect().width;
+    let height = browser.getBoundingClientRect().height;
+    EventUtils.synthesizeMouse(browser, width / 2, height / 4, { type: "mousedown" });
+    EventUtils.synthesizeMouse(browser, width / 2, height * 3 / 4, { type: "mousemove" });
+
+    let event = document.createEvent("Events");
+    event.initEvent("CancelTouchSequence", true, false);
+    document.dispatchEvent(event);
+
+    let horizontalVisible = horizontalScrollbar.hasAttribute("panning"),
+        verticalVisible = verticalScrollbar.hasAttribute("panning");
+    is(horizontalVisible, false, "The horizontal scrollbar should be hidden when a canceltouchsequence is fired");
+    is(verticalVisible, false, "The vertical scrollbar should be hidden should be hidden when a canceltouchsequence is called");
+
+    for (let iTab=0; iTab<gOpenedTabs.length; iTab++)
+      Browser.closeTab(gOpenedTabs[iTab]);
+    runNextTest();
+  }
+});

@@ -1218,6 +1218,11 @@ var ContextHelper = {
 
     this.sizeToContent();
     BrowserUI.pushPopup(this, [this._popup]);
+
+    let event = document.createEvent("Events");
+    event.initEvent("CancelTouchSequence", true, false);
+    this.popupState.target.dispatchEvent(event);
+
     return true;
   },
 
