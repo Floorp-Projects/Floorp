@@ -2606,8 +2606,12 @@ mjit::Compiler::generateMethod()
      *  END COMPILER OPS  *
      **********************/ 
 
-        if (cx->typeInferenceEnabled()) {
-            /* Inform the frame of the type sets for values just pushed. */
+        if (cx->typeInferenceEnabled() && PC == oldPC + analyze::GetBytecodeLength(oldPC)) {
+            /*
+             * Inform the frame of the type sets for values just pushed. Skip
+             * this if we did any opcode fusions, we don't keep track of the
+             * associated type sets in such cases.
+             */
             unsigned nuses = analyze::GetUseCount(script, oldPC - script->code);
             unsigned ndefs = analyze::GetDefCount(script, oldPC - script->code);
             for (unsigned i = 0; i < ndefs; i++) {
