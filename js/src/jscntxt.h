@@ -119,27 +119,6 @@ class JaegerCompartment;
 }
 
 /*
- * Allocation policy that calls JSContext memory functions and reports errors
- * to the context. Since the JSContext given on construction is stored for
- * the lifetime of the container, this policy may only be used for containers
- * whose lifetime is a shorter than the given JSContext.
- */
-class ContextAllocPolicy
-{
-    JSContext *cx;
-
-  public:
-    ContextAllocPolicy(JSContext *cx) : cx(cx) {}
-    JSContext *context() const { return cx; }
-
-    /* Inline definitions below. */
-    void *malloc_(size_t bytes);
-    void free_(void *p);
-    void *realloc_(void *p, size_t bytes);
-    void reportAllocOverflow() const;
-};
-
-/*
  * A StackSegment (referred to as just a 'segment') contains a prev-linked set
  * of stack frames and the slots associated with each frame. A segment and its
  * contained frames/slots also have a precise memory layout that is described
@@ -1449,7 +1428,6 @@ struct JSRuntime {
             onTooMuchMalloc();
     }
 
-  private:
     /*
      * The function must be called outside the GC lock.
      */
@@ -3168,30 +3146,6 @@ js_RegenerateShapeForGC(JSRuntime *rt)
 
 namespace js {
 
-inline void *
-ContextAllocPolicy::malloc_(size_t bytes)
-{
-    return cx->malloc_(bytes);
-}
-
-inline void
-ContextAllocPolicy::free_(void *p)
-{
-    cx->free_(p);
-}
-
-inline void *
-ContextAllocPolicy::realloc_(void *p, size_t bytes)
-{
-    return cx->realloc_(p, bytes);
-}
-
-inline void
-ContextAllocPolicy::reportAllocOverflow() const
-{
-    js_ReportAllocationOverflow(cx);
-}
-
 template<class T>
 class AutoVectorRooter : protected AutoGCRooter
 {
@@ -3251,7 +3205,8 @@ class AutoVectorRooter : protected AutoGCRooter
     friend void AutoGCRooter::trace(JSTracer *trc);
 
   private:
-    Vector<T, 8> vector;
+    typedef Vector<T, 8> VectorImpl;
+    VectorImpl vector;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
