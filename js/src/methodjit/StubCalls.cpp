@@ -2814,8 +2814,7 @@ stubs::CheckArgumentTypes(VMFrame &f)
     JSStackFrame *fp = f.fp();
     JSFunction *fun = fp->fun();
     JSScript *script = fun->script();
-
-    uint32 recompilations = f.jit()->recompilations;
+    RecompilationMonitor monitor(f.cx);
 
     /* Postpone recompilations until all args have been updated. */
     types::AutoEnterTypeInference enter(f.cx);
@@ -2833,7 +2832,7 @@ stubs::CheckArgumentTypes(VMFrame &f)
     if (!f.cx->compartment->types.checkPendingRecompiles(f.cx))
         THROW();
 
-    if (f.jit()->recompilations != recompilations)
+    if (monitor.recompiled())
         return;
 
 #ifdef JS_MONOIC

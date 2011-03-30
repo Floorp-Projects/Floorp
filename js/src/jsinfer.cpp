@@ -2009,8 +2009,6 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
         cx->compartment->types.setPendingNukeTypes(cx);
         return;
     }
-
-    recompilations++;
 }
 
 bool
