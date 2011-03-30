@@ -74,7 +74,7 @@ function test()
   var traceCompleted;
   var skip = true;
   
-  if (this.tracemonkey && !this.tracemonkey.profiler)
+  if (this.tracemonkey && !this.tracemonkey.adaptive)
   {
     recorderStarted = this.tracemonkey.recorderStarted;
     recorderAborted = this.tracemonkey.recorderAborted;

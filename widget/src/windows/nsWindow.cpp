@@ -1299,6 +1299,9 @@ NS_METHOD nsWindow::Show(PRBool bState)
             break;
           // use default for nsSizeMode_Minimized on Windows CE
 #else
+          case nsSizeMode_Fullscreen:
+            ::ShowWindow(mWnd, SW_SHOW);
+            break;
           case nsSizeMode_Maximized :
             ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
             break;

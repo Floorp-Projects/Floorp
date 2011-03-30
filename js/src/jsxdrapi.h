@@ -61,8 +61,11 @@
  * Spiritually guided by Sun's XDR, where appropriate.
  */
 
+#include "jsatom.h"
 #include "jspubtd.h"
 #include "jsprvtd.h"
+#include "jsvector.h"
+#include "jshashtable.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -82,11 +85,11 @@ JS_BEGIN_EXTERN_C
 #endif
 
 #define JSXDR_ALIGN     4
+#define JSXDR_MASK      (JSXDR_ALIGN - 1)
 
 typedef enum JSXDRMode {
     JSXDR_ENCODE,
-    JSXDR_DECODE,
-    JSXDR_FREE
+    JSXDR_DECODE
 } JSXDRMode;
 
 typedef enum JSXDRWhence {
@@ -106,6 +109,27 @@ typedef struct JSXDROps {
     void        (*finalize)(JSXDRState *);
 } JSXDROps;
 
+typedef js::Vector<JSAtom *, 1, js::SystemAllocPolicy> XDRAtoms;
+typedef js::HashMap<JSAtom *, uint32, js::DefaultHasher<JSAtom *>, js::SystemAllocPolicy> XDRAtomsHashMap;
+
+struct JSXDRState;
+
+namespace js {
+
+class XDRScriptState {
+public:
+    XDRScriptState(JSXDRState *x);
+    ~XDRScriptState();
+
+    JSXDRState      *xdr;
+    const char      *filename;
+    bool             filenameSaved;
+    XDRAtoms         atoms;
+    XDRAtomsHashMap  atomsMap;
+};
+
+} /* namespace JS */
+
 struct JSXDRState {
     JSXDRMode   mode;
     JSXDROps    *ops;
@@ -116,6 +140,7 @@ struct JSXDRState {
     void        *reghash;
     void        *userdata;
     JSScript    *script;
+    js::XDRScriptState *state;
 };
 
 extern JS_PUBLIC_API(void)
@@ -170,7 +195,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_XDRValue(JSXDRState *xdr, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_XDRScript(JSXDRState *xdr, JSScript **scriptp);
+JS_XDRScriptObject(JSXDRState *xdr, JSObject **scriptObjp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_XDRRegisterClass(JSXDRState *xdr, JSClass *clasp, uint32 *lp);
@@ -206,7 +231,7 @@ JS_XDRFindClassById(JSXDRState *xdr, uint32 id);
  * before deserialization of bytecode.  If the saved version does not match
  * the current version, abort deserialization and invalidate the file.
  */
-#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 82)
+#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 85)
 
 /*
  * Library-private functions.

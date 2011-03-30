@@ -469,7 +469,6 @@
 }
 
 .description-container {
-  margin-top: 8px;
   -moz-margin-start: 6px;
   -moz-box-align: center;
 }
@@ -494,11 +493,11 @@
   -moz-box-align: stretch;
 }
 
+.advancedinfo-container,
 .update-info-container {
   -moz-box-align: center;
 }
 
-.advancedinfo-container,
 .update-available {
   -moz-box-align: end;
 }

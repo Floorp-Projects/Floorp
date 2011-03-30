@@ -66,6 +66,7 @@ public:
 
   // CanvasLayer implementation
   virtual void Initialize(const Data& aData);
+  virtual void Updated(const nsIntRect& aRect);
 
   // LayerD3D9 implementation
   virtual Layer* GetLayer();
@@ -77,8 +78,6 @@ public:
 
 protected:
   typedef mozilla::gl::GLContext GLContext;
-
-  void UpdateSurface();
 
   nsRefPtr<gfxASurface> mSurface;
   nsRefPtr<GLContext> mGLContext;

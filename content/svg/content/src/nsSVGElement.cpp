@@ -1024,34 +1024,13 @@ NS_IMETHODIMP nsSVGElement::SetId(const nsAString & aId)
 NS_IMETHODIMP
 nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
 {
-  *aOwnerSVGElement = nsnull;
+  NS_IF_ADDREF(*aOwnerSVGElement = GetCtx());
 
-  nsIContent* ancestor = nsSVGUtils::GetParentElement(this);
-
-  while (ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG) {
-    nsIAtom* tag = ancestor->Tag();
-    if (tag == nsGkAtoms::foreignObject) {
-      // SVG in a foreignObject must have its own <svg> (nsSVGOuterSVGFrame).
-      // Leave *aOwnerSVGElement nulled out, but don't throw.
-      return NS_OK;
-    }
-    if (tag == nsGkAtoms::svg) {
-      *aOwnerSVGElement = static_cast<nsSVGSVGElement*>(ancestor);
-      NS_ADDREF(*aOwnerSVGElement);
-      return NS_OK;
-    }
-    ancestor = nsSVGUtils::GetParentElement(ancestor);
-  }
-
-  // we don't have a parent SVG element...
-
-  // are _we_ the outermost SVG element? If yes, return nsnull, but don't fail
-  if (Tag() == nsGkAtoms::svg) {
+  if (*aOwnerSVGElement || Tag() == nsGkAtoms::svg) {
+    // If we found something or we're the outermost SVG element, that's OK.
     return NS_OK;
   }
-  
-  // no owner found and we aren't the outermost SVG element either.
-  // this situation can e.g. occur during content tree teardown. 
+  // Otherwise, we've got an invalid structure
   return NS_ERROR_FAILURE;
 }
 
@@ -1432,9 +1411,21 @@ nsIAtom* nsSVGElement::GetEventNameForAttr(nsIAtom* aAttr)
 nsSVGSVGElement *
 nsSVGElement::GetCtx()
 {
-  nsCOMPtr<nsIDOMSVGSVGElement> svg;
-  GetOwnerSVGElement(getter_AddRefs(svg));
-  return static_cast<nsSVGSVGElement*>(svg.get());
+  dom::Element* ancestor = nsSVGUtils::GetParentElement(this);
+
+  while (ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG) {
+    nsIAtom* tag = ancestor->Tag();
+    if (tag == nsGkAtoms::foreignObject) {
+      return nsnull;
+    }
+    if (tag == nsGkAtoms::svg) {
+      return static_cast<nsSVGSVGElement*>(ancestor);
+    }
+    ancestor = nsSVGUtils::GetParentElement(ancestor);
+  }
+
+  // we don't have an ancestor <svg> element...
+  return nsnull;
 }
 
 /* virtual */ gfxMatrix

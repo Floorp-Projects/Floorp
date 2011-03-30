@@ -368,10 +368,9 @@ public:
                                              : mBoundCubeMapTextures[mActiveTexture];
     }
 
-    already_AddRefed<CanvasLayer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
-                                                 CanvasLayer *aOldLayer,
+    already_AddRefed<CanvasLayer> GetCanvasLayer(CanvasLayer *aOldLayer,
                                                  LayerManager *aManager);
-    void MarkContextClean() { mInvalidated = PR_FALSE; }
+    void MarkContextClean() { }
 
     // a number that increments every time we have an event that causes
     // all context resources to be lost.

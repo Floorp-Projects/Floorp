@@ -50,10 +50,12 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsCSSRules.h"
+#include "nsRuleWalker.h"
 
 struct RuleCascadeData;
 struct nsCSSSelectorList;
 struct CascadeEnumData;
+struct TreeMatchContext;
 
 /**
  * The CSS style rule processor provides a mechanism for sibling style
@@ -84,14 +86,34 @@ public:
   static PRBool HasSystemMetric(nsIAtom* aMetric);
 
   /*
-   * Returns true if the given RuleProcessorData matches one of the
+   * Returns true if the given aElement matches one of the
    * selectors in aSelectorList.  Note that this method will assume
-   * the matching is not for styling purposes.  aSelectorList must not
+   * the given aElement is not a relevant link.  aSelectorList must not
    * include any pseudo-element selectors.  aSelectorList is allowed
    * to be null; in this case PR_FALSE will be returned.
    */
-  static PRBool SelectorListMatches(RuleProcessorData& aData,
+  static PRBool SelectorListMatches(mozilla::dom::Element* aElement,
+                                    TreeMatchContext& aTreeMatchContext,
                                     nsCSSSelectorList* aSelectorList);
+
+  /*
+   * Helper to get the content state for a content node.  This may be
+   * slightly adjusted from IntrinsicState().
+   */
+  static nsEventStates GetContentState(mozilla::dom::Element* aElement);
+
+  /*
+   * Helper to get the content state for :visited handling for an element
+   */
+  static nsEventStates GetContentStateForVisitedHandling(
+             mozilla::dom::Element* aElement,
+             nsRuleWalker::VisitedHandlingType aVisitedHandling,
+             PRBool aIsRelevantLink);
+
+  /*
+   * Helper to test whether a node is a link
+   */
+  static PRBool IsLink(mozilla::dom::Element* aElement);
 
   // nsIStyleRuleProcessor
   virtual void RulesMatching(ElementRuleProcessorData* aData);

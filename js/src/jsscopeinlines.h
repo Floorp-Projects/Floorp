@@ -47,8 +47,11 @@
 #include "jsfun.h"
 #include "jsobj.h"
 #include "jsscope.h"
+#include "jsgc.h"
 
+#include "jsgcinlines.h"
 #include "jscntxtinlines.h"
+#include "jsobjinlines.h"
 
 inline void
 js::Shape::freeTable(JSContext *cx)
@@ -129,39 +132,6 @@ JSObject::extend(JSContext *cx, const js::Shape *shape, bool isDefinitelyAtom)
     setLastProperty(shape);
     updateFlags(shape, isDefinitelyAtom);
     updateShape(cx);
-}
-
-inline void
-JSObject::trace(JSTracer *trc)
-{
-    if (!isNative())
-        return;
-
-    JSContext *cx = trc->context;
-    js::Shape *shape = lastProp;
-
-    if (IS_GC_MARKING_TRACER(trc) && cx->runtime->gcRegenShapes) {
-        /*
-         * Either this object has its own shape, which must be regenerated, or
-         * it must have the same shape as lastProp.
-         */
-        if (!shape->hasRegenFlag()) {
-            shape->shape = js_RegenerateShapeForGC(cx->runtime);
-            shape->setRegenFlag();
-        }
-
-        uint32 newShape = shape->shape;
-        if (hasOwnShape()) {
-            newShape = js_RegenerateShapeForGC(cx->runtime);
-            JS_ASSERT(newShape != shape->shape);
-        }
-        objShape = newShape;
-    }
-
-    /* Trace our property tree or dictionary ancestor line. */
-    do {
-        shape->trace(trc);
-    } while ((shape = shape->parent) != NULL);
 }
 
 namespace js {

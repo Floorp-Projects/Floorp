@@ -76,7 +76,7 @@ nsFastLoadService::~nsFastLoadService()
     if (mFastLoadPtrMap)
         PL_DHashTableDestroy(mFastLoadPtrMap);
     if (mLock)
-        PR_DestroyLock(mLock);
+        nsAutoLock::DestroyLock(mLock);
 }
 
 nsresult
@@ -90,7 +90,7 @@ nsFastLoadService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     if (!fastLoadService)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    fastLoadService->mLock = PR_NewLock();
+    fastLoadService->mLock = nsAutoLock::NewLock("nsFastLoadService::mLock");
     if (!fastLoadService->mLock) {
         delete fastLoadService;
         return NS_ERROR_OUT_OF_MEMORY;

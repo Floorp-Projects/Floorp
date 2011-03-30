@@ -73,7 +73,7 @@ class RegExpStatics
     void copyTo(RegExpStatics &dst) {
         dst.matchPairs.clear();
         /* 'save' has already reserved space in matchPairs */
-        JS_ALWAYS_TRUE(dst.matchPairs.append(matchPairs));
+        dst.matchPairs.infallibleAppend(matchPairs);
         dst.matchPairsInput = matchPairsInput;
         dst.pendingInput = pendingInput;
         dst.flags = flags;
@@ -136,10 +136,6 @@ class RegExpStatics
     void checkParenNum(size_t pairNum) const {
         JS_ASSERT(1 <= pairNum);
         JS_ASSERT(pairNum < pairCount());
-    }
-
-    bool pairIsPresent(size_t pairNum) const {
-        return get(pairNum, 0) >= 0;
     }
 
     /* Precondition: paren is present. */
@@ -273,6 +269,10 @@ class RegExpStatics
             JS_CALL_STRING_TRACER(trc, matchPairsInput, "res->matchPairsInput");
     }
 
+    bool pairIsPresent(size_t pairNum) const {
+        return get(pairNum, 0) >= 0;
+    }
+
     /* Value creators. */
 
     bool createPendingInput(JSContext *cx, Value *out) const;
@@ -353,7 +353,37 @@ inline void
 JSObject::zeroRegExpLastIndex()
 {
     JS_ASSERT(isRegExp());
-    getSlotRef(JSSLOT_REGEXP_LAST_INDEX).setInt32(0);
+    setSlot(JSSLOT_REGEXP_LAST_INDEX, js::Int32Value(0));
+}
+
+inline void
+JSObject::setRegExpSource(JSString *source)
+{
+    setSlot(JSSLOT_REGEXP_SOURCE, js::StringValue(source));
+}
+
+inline void
+JSObject::setRegExpGlobal(bool global)
+{
+    setSlot(JSSLOT_REGEXP_GLOBAL, js::BooleanValue(global));
+}
+
+inline void
+JSObject::setRegExpIgnoreCase(bool ignoreCase)
+{
+    setSlot(JSSLOT_REGEXP_IGNORE_CASE, js::BooleanValue(ignoreCase));
+}
+
+inline void
+JSObject::setRegExpMultiline(bool multiline)
+{
+    setSlot(JSSLOT_REGEXP_MULTILINE, js::BooleanValue(multiline));
+}
+
+inline void
+JSObject::setRegExpSticky(bool sticky)
+{
+    setSlot(JSSLOT_REGEXP_STICKY, js::BooleanValue(sticky));
 }
 
 namespace js { class AutoStringRooter; }

@@ -51,8 +51,12 @@
 
 #include "vprof.h"
 
+#ifndef MIN
 #define MIN(x,y) ((x) <= (y) ? x : y)
+#endif
+#ifndef MAX
 #define MAX(x,y) ((x) >= (y) ? x : y)
+#endif
 
 #ifndef MAXINT
 #define MAXINT int(unsigned(-1)>>1)

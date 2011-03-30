@@ -1203,7 +1203,7 @@ function LoadFailed(why)
 {
     ++gTestResults.FailedLoad;
     gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | " +
-         gURLs[0]["url" + gState].spec + " | " + why + "\n");
+         gURLs[0]["url" + gState].spec + " | load failed: " + why + "\n");
     FlushTestLog();
     FinishTestItem();
 }

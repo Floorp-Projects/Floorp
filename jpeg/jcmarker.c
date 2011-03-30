@@ -2,6 +2,7 @@
  * jcmarker.c
  *
  * Copyright (C) 1991-1998, Thomas G. Lane.
+ * Copyright (C) 2010, D. R. Commander.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -11,6 +12,7 @@
 #define JPEG_INTERNALS
 #include "jinclude.h"
 #include "jpeglib.h"
+#include "jpegcomp.h"
 
 
 typedef enum {			/* JPEG marker codes */
@@ -75,7 +77,9 @@ typedef enum {			/* JPEG marker codes */
   M_JPG13 = 0xfd,
   M_COM   = 0xfe,
   
-  M_TEM   = 0x01
+  M_TEM   = 0x01,
+  
+  M_ERROR = 0x100
 } JPEG_MARKER;
 
 
@@ -103,7 +107,7 @@ typedef my_marker_writer * my_marker_ptr;
  */
 
 LOCAL(void)
-emit_byte (j_compress_ptr cinfo, int16 val)
+emit_byte (j_compress_ptr cinfo, int val)
 /* Emit a byte */
 {
   struct jpeg_destination_mgr * dest = cinfo->dest;
@@ -121,12 +125,12 @@ emit_marker (j_compress_ptr cinfo, JPEG_MARKER mark)
 /* Emit a marker code */
 {
   emit_byte(cinfo, 0xFF);
-  emit_byte(cinfo, (int16) mark);
+  emit_byte(cinfo, (int) mark);
 }
 
 
 LOCAL(void)
-emit_2bytes (j_compress_ptr cinfo, int16 value)
+emit_2bytes (j_compress_ptr cinfo, int value)
 /* Emit a 2-byte integer; these are always MSB first in JPEG files */
 {
   emit_byte(cinfo, (value >> 8) & 0xFF);
@@ -138,14 +142,14 @@ emit_2bytes (j_compress_ptr cinfo, int16 value)
  * Routines to write specific marker types.
  */
 
-LOCAL(int16)
-emit_dqt (j_compress_ptr cinfo, int16 index)
+LOCAL(int)
+emit_dqt (j_compress_ptr cinfo, int index)
 /* Emit a DQT marker */
 /* Returns the precision used (0 = 8bits, 1 = 16bits) for baseline checking */
 {
   JQUANT_TBL * qtbl = cinfo->quant_tbl_ptrs[index];
-  int16 prec;
-  int16 i;
+  int prec;
+  int i;
 
   if (qtbl == NULL)
     ERREXIT1(cinfo, JERR_NO_QUANT_TABLE, index);
@@ -167,8 +171,8 @@ emit_dqt (j_compress_ptr cinfo, int16 index)
       /* The table entries must be emitted in zigzag order. */
       unsigned int qval = qtbl->quantval[jpeg_natural_order[i]];
       if (prec)
-	emit_byte(cinfo, (int16) (qval >> 8));
-      emit_byte(cinfo, (int16) (qval & 0xFF));
+	emit_byte(cinfo, (int) (qval >> 8));
+      emit_byte(cinfo, (int) (qval & 0xFF));
     }
 
     qtbl->sent_table = TRUE;
@@ -179,11 +183,11 @@ emit_dqt (j_compress_ptr cinfo, int16 index)
 
 
 LOCAL(void)
-emit_dht (j_compress_ptr cinfo, int16 index, boolean is_ac)
+emit_dht (j_compress_ptr cinfo, int index, boolean is_ac)
 /* Emit a DHT marker */
 {
   JHUFF_TBL * htbl;
-  int16 length, i;
+  int length, i;
   
   if (is_ac) {
     htbl = cinfo->ac_huff_tbl_ptrs[index];
@@ -225,7 +229,7 @@ emit_dac (j_compress_ptr cinfo)
 #ifdef C_ARITH_CODING_SUPPORTED
   char dc_in_use[NUM_ARITH_TBLS];
   char ac_in_use[NUM_ARITH_TBLS];
-  int16 length, i;
+  int length, i;
   jpeg_component_info *compptr;
   
   for (i = 0; i < NUM_ARITH_TBLS; i++)
@@ -267,7 +271,7 @@ emit_dri (j_compress_ptr cinfo)
   
   emit_2bytes(cinfo, 4);	/* fixed length */
 
-  emit_2bytes(cinfo, (int16) cinfo->restart_interval);
+  emit_2bytes(cinfo, (int) cinfo->restart_interval);
 }
 
 
@@ -275,7 +279,7 @@ LOCAL(void)
 emit_sof (j_compress_ptr cinfo, JPEG_MARKER code)
 /* Emit a SOF marker */
 {
-  int16 ci;
+  int ci;
   jpeg_component_info *compptr;
   
   emit_marker(cinfo, code);
@@ -283,13 +287,13 @@ emit_sof (j_compress_ptr cinfo, JPEG_MARKER code)
   emit_2bytes(cinfo, 3 * cinfo->num_components + 2 + 5 + 1); /* length */
 
   /* Make sure image isn't bigger than SOF field can handle */
-  if ((long) cinfo->image_height > 65535L ||
-      (long) cinfo->image_width > 65535L)
+  if ((long) cinfo->_jpeg_height > 65535L ||
+      (long) cinfo->_jpeg_width > 65535L)
     ERREXIT1(cinfo, JERR_IMAGE_TOO_BIG, (unsigned int) 65535);
 
   emit_byte(cinfo, cinfo->data_precision);
-  emit_2bytes(cinfo, (int16) cinfo->image_height);
-  emit_2bytes(cinfo, (int16) cinfo->image_width);
+  emit_2bytes(cinfo, (int) cinfo->_jpeg_height);
+  emit_2bytes(cinfo, (int) cinfo->_jpeg_width);
 
   emit_byte(cinfo, cinfo->num_components);
 
@@ -306,7 +310,7 @@ LOCAL(void)
 emit_sos (j_compress_ptr cinfo)
 /* Emit a SOS marker */
 {
-  int16 i, td, ta;
+  int i, td, ta;
   jpeg_component_info *compptr;
   
   emit_marker(cinfo, M_SOS);
@@ -371,8 +375,8 @@ emit_jfif_app0 (j_compress_ptr cinfo)
   emit_byte(cinfo, cinfo->JFIF_major_version); /* Version fields */
   emit_byte(cinfo, cinfo->JFIF_minor_version);
   emit_byte(cinfo, cinfo->density_unit); /* Pixel size information */
-  emit_2bytes(cinfo, (int16) cinfo->X_density);
-  emit_2bytes(cinfo, (int16) cinfo->Y_density);
+  emit_2bytes(cinfo, (int) cinfo->X_density);
+  emit_2bytes(cinfo, (int) cinfo->Y_density);
   emit_byte(cinfo, 0);		/* No thumbnail image */
   emit_byte(cinfo, 0);
 }
@@ -441,14 +445,14 @@ write_marker_header (j_compress_ptr cinfo, int marker, unsigned int datalen)
 
   emit_marker(cinfo, (JPEG_MARKER) marker);
 
-  emit_2bytes(cinfo, (int16) (datalen + 2));	/* total length */
+  emit_2bytes(cinfo, (int) (datalen + 2));	/* total length */
 }
 
 METHODDEF(void)
 write_marker_byte (j_compress_ptr cinfo, int val)
 /* Emit one byte of marker parameters following write_marker_header */
 {
-  emit_byte(cinfo, (int16) val);
+  emit_byte(cinfo, val);
 }
 
 
@@ -491,7 +495,7 @@ write_file_header (j_compress_ptr cinfo)
 METHODDEF(void)
 write_frame_header (j_compress_ptr cinfo)
 {
-  int16 ci, prec;
+  int ci, prec;
   boolean is_baseline;
   jpeg_component_info *compptr;
   
@@ -549,7 +553,7 @@ METHODDEF(void)
 write_scan_header (j_compress_ptr cinfo)
 {
   my_marker_ptr marker = (my_marker_ptr) cinfo->marker;
-  int16 i;
+  int i;
   jpeg_component_info *compptr;
 
   if (cinfo->arith_code) {
@@ -613,7 +617,7 @@ write_file_trailer (j_compress_ptr cinfo)
 METHODDEF(void)
 write_tables_only (j_compress_ptr cinfo)
 {
-  int16 i;
+  int i;
 
   emit_marker(cinfo, M_SOI);
 

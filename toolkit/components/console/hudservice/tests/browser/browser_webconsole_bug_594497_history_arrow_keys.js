@@ -8,9 +8,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
-
-let inputNode, testKey, values, pos;
+let inputNode, values;
 
 function tabLoad(aEvent) {
   browser.removeEventListener(aEvent.type, arguments.callee, true);
@@ -37,97 +35,129 @@ function tabLoad(aEvent) {
       HUD.jsterm.execute();
     }
 
-    inputNode.addEventListener("keyup", onKeyUp, false);
-
-    // Let's navigate the history: go up.
-    testKey = "VK_UP";
-    pos = values.length - 1;
-    testNext();
+    performTests();
   }, content);
 }
 
-function testNext() {
-  EventUtils.synthesizeKey(testKey, {});
-}
+function performTests() {
+  EventUtils.synthesizeKey("VK_UP", {});
 
-function onKeyUp() {
-  is(inputNode.value, values[pos], "inputNode.value = '" + values[pos] + "'");
+  is(inputNode.value, values[4],
+     "VK_UP: inputNode.value #4 is correct");
 
-  if (testKey == "VK_UP") {
-    pos--;
-    if (pos >= 0) {
-      testNext();
-    }
-    else {
-      testMore();
-    }
-  }
-  else {
-    pos++;
-    if (pos < values.length) {
-      testNext();
-    }
-    else {
-      testMore();
-    }
-  }
-}
-
-function testMore() {
-  if (testKey == "VK_UP") {
-    // Let's navigate the history again: go down.
-    testKey = "VK_DOWN";
-    pos = 0;
-    testNext();
-    return;
-  }
-
-  inputNode.removeEventListener("keyup", onKeyUp, false);
-
-  // Test how the Up key works at caret position 2.
-  HUD.jsterm.setInputValue(values[3]);
-
-  inputNode.setSelectionRange(2, 2);
-
-  inputNode.addEventListener("keyup", function(aEvent) {
-    this.removeEventListener(aEvent.type, arguments.callee, false);
-
-    is(this.value, values[3], "inputNode.value = '" + values[3] +
-      "' after VK_UP from caret position 2");
-
-    is(this.selectionStart, 0, "inputNode.selectionStart = 0");
-    is(this.selectionStart, this.selectionEnd, "inputNode.selectionEnd = 0");
-  }, false);
+  ok(inputNode.selectionStart == values[4].length &&
+     inputNode.selectionStart == inputNode.selectionEnd,
+     "caret location is correct");
 
   EventUtils.synthesizeKey("VK_UP", {});
 
-  // Test how the Up key works at caret position (length -2).
+  is(inputNode.value, values[3],
+     "VK_UP: inputNode.value #3 is correct");
+
+  ok(inputNode.selectionStart == values[3].length &&
+     inputNode.selectionStart == inputNode.selectionEnd,
+     "caret location is correct");
+
   inputNode.setSelectionRange(values[3].length - 2, values[3].length - 2);
 
-  inputNode.addEventListener("keyup", function(aEvent) {
-    this.removeEventListener(aEvent.type, arguments.callee, false);
+  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("VK_UP", {});
 
-    is(this.value, values[3], "inputNode.value = '" + values[3] +
-      "' after VK_UP from caret position 2");
+  is(inputNode.value, values[3],
+     "VK_UP two times: inputNode.value #3 is correct");
 
-    is(this.selectionStart, this.value.length, "inputNode.selectionStart = " +
-      this.value.length);
-    is(this.selectionStart, this.selectionEnd, "inputNode.selectionEnd = " +
-      this.value.length);
+  ok(inputNode.selectionStart == inputNode.value.indexOf("\n") &&
+     inputNode.selectionStart == inputNode.selectionEnd,
+     "caret location is correct");
 
-    testEnd();
-  }, false);
+  EventUtils.synthesizeKey("VK_UP", {});
+
+  is(inputNode.value, values[3],
+     "VK_UP again: inputNode.value #3 is correct");
+
+  ok(inputNode.selectionStart == 0 &&
+     inputNode.selectionStart == inputNode.selectionEnd,
+     "caret location is correct");
+
+  EventUtils.synthesizeKey("VK_UP", {});
+
+  is(inputNode.value, values[2],
+     "VK_UP: inputNode.value #2 is correct");
+
+  EventUtils.synthesizeKey("VK_UP", {});
+
+  is(inputNode.value, values[1],
+     "VK_UP: inputNode.value #1 is correct");
+
+  EventUtils.synthesizeKey("VK_UP", {});
+
+  is(inputNode.value, values[0],
+     "VK_UP: inputNode.value #0 is correct");
+
+  ok(inputNode.selectionStart == values[0].length &&
+     inputNode.selectionStart == inputNode.selectionEnd,
+     "caret location is correct");
 
   EventUtils.synthesizeKey("VK_DOWN", {});
-}
 
-function testEnd() {
-  inputNode = testKey = values = pos = null;
+  is(inputNode.value, values[1],
+     "VK_DOWN: inputNode.value #1 is correct");
+
+  ok(inputNode.selectionStart == values[1].length &&
+     inputNode.selectionStart == inputNode.selectionEnd,
+     "caret location is correct");
+
+  EventUtils.synthesizeKey("VK_DOWN", {});
+
+  is(inputNode.value, values[2],
+     "VK_DOWN: inputNode.value #2 is correct");
+
+  EventUtils.synthesizeKey("VK_DOWN", {});
+
+  is(inputNode.value, values[3],
+     "VK_DOWN: inputNode.value #3 is correct");
+
+  ok(inputNode.selectionStart == values[3].length &&
+     inputNode.selectionStart == inputNode.selectionEnd,
+     "caret location is correct");
+
+  inputNode.setSelectionRange(2, 2);
+
+  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("VK_DOWN", {});
+
+  is(inputNode.value, values[3],
+     "VK_DOWN two times: inputNode.value #3 is correct");
+
+  ok(inputNode.selectionStart > inputNode.value.lastIndexOf("\n") &&
+     inputNode.selectionStart == inputNode.selectionEnd,
+     "caret location is correct");
+
+  EventUtils.synthesizeKey("VK_DOWN", {});
+
+  is(inputNode.value, values[3],
+     "VK_DOWN again: inputNode.value #3 is correct");
+
+  ok(inputNode.selectionStart == values[3].length &&
+     inputNode.selectionStart == inputNode.selectionEnd,
+     "caret location is correct");
+
+  EventUtils.synthesizeKey("VK_DOWN", {});
+
+  is(inputNode.value, values[4],
+     "VK_DOWN: inputNode.value #4 is correct");
+
+  EventUtils.synthesizeKey("VK_DOWN", {});
+
+  ok(!inputNode.value,
+     "VK_DOWN: inputNode.value is empty");
+
+  inputNode = values = null;
   executeSoon(finishTest);
 }
 
 function test() {
-  addTab(TEST_URI);
+  addTab("data:text/html,Web Console test for bug 594497 and bug 619598");
   browser.addEventListener("load", tabLoad, true);
 }
 

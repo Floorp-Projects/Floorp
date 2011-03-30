@@ -1047,7 +1047,7 @@ jsdScript::CreatePPLineMap()
     JSFunction *fun = JSD_GetJSFunction (mCx, mScript);
     JSScript   *script; /* In JSD compartment */
     PRUint32    baseLine;
-    PRBool      scriptOwner = PR_FALSE;
+    JSObject   *scriptObj = NULL;
     JSString   *jsstr;
     size_t      length;
     const jschar *chars;
@@ -1085,11 +1085,11 @@ jsdScript::CreatePPLineMap()
         JSString *jsstr;
 
         {
-            JSAutoEnterCompartment ac;
+            JS::AutoEnterScriptCompartment ac;
             if (!ac.enter(cx, script))
                 return nsnull;
 
-            jsstr = JS_DecompileScript (cx, JSD_GetJSScript(mCx, mScript), "ppscript", 4);
+            jsstr = JS_DecompileScript (cx, script, "ppscript", 4);
             if (!jsstr)
                 return nsnull;
 
@@ -1098,12 +1098,16 @@ jsdScript::CreatePPLineMap()
         }
 
         JS::Anchor<JSString *> kungFuDeathGrip(jsstr);
-        script = JS_CompileUCScript (cx, obj, chars, length, "x-jsd:ppbuffer?type=script", 1);
-        if (!script)
+        scriptObj = JS_CompileUCScript (cx, obj, chars, length, "x-jsd:ppbuffer?type=script", 1);
+        if (!scriptObj)
             return nsnull;
-        scriptOwner = PR_TRUE;
+        script = JS_GetScriptFromObject(scriptObj);
         baseLine = 1;
     }
+
+    /* Make sure that a non-function script is rooted via scriptObj until the
+     * end of script usage. */
+    JS::Anchor<JSObject *> scriptAnchor(scriptObj);
 
     PRUint32 scriptExtent = JS_GetScriptLineExtent (cx, script);
     jsbytecode* firstPC = JS_LineNumberToPC (cx, script, 0);
@@ -1134,9 +1138,6 @@ jsdScript::CreatePPLineMap()
             }
         }
     }
-
-    if (scriptOwner)
-        JS_DestroyScript (cx, script);
 
     mPCMapSize = lineMapSize;
     return mPPLineMap = lineMap;
@@ -1192,7 +1193,7 @@ jsdScript::GetVersion (PRInt32 *_rval)
     ASSERT_VALID_EPHEMERAL;
     JSContext *cx = JSD_GetDefaultJSContext (mCx);
     JSScript *script = JSD_GetJSScript(mCx, mScript);
-    JSAutoEnterCompartment ac;
+    JS::AutoEnterScriptCompartment ac;
     if (!ac.enter(cx, script))
         return NS_ERROR_FAILURE;
     *_rval = static_cast<PRInt32>(JS_GetScriptVersion(cx, script));
@@ -1388,13 +1389,14 @@ jsdScript::GetFunctionSource(nsAString & aFunctionSource)
 
     JSString *jsstr;
     JSAutoEnterCompartment ac;
+    JS::AutoEnterScriptCompartment asc;
     if (fun) {
         if (!ac.enter(cx, JS_GetFunctionObject(fun)))
             return NS_ERROR_FAILURE;
         jsstr = JS_DecompileFunction (cx, fun, 4);
     } else {
         JSScript *script = JSD_GetJSScript (mCx, mScript);
-        if (!ac.enter(cx, script))
+        if (!asc.enter(cx, script))
             return NS_ERROR_FAILURE;
         jsstr = JS_DecompileScript (cx, script, "ppscript", 4);
     }
