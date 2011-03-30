@@ -1011,6 +1011,9 @@ if test -z "$XARGS" -o "$XARGS" = ":"; then
     AC_MSG_ERROR([xargs not found in \$PATH .])
 fi
 
+MOZ_PATH_PROG(RPMBUILD, rpmbuild, :)
+AC_SUBST(RPMBUILD)
+
 if test "$COMPILE_ENVIRONMENT"; then
 
 dnl ========================================================
