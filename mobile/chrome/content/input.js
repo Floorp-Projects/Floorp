@@ -634,11 +634,15 @@ var ScrollUtils = {
       let scrollbox = aEvent.target;
       scrollbox.setAttribute("panning", "true");
 
-      // Wait for panning to be completely finished before removing scrollbars
-      scrollbox.addEventListener("PanFinished", function(aEvent) {
-        scrollbox.removeEventListener("PanFinished", arguments.callee, false);
+      let hideScrollbars = function() {
+        scrollbox.removeEventListener("PanFinished", hideScrollbars, false);
+        scrollbox.removeEventListener("CancelTouchSequence", hideScrollbars, false);
         scrollbox.removeAttribute("panning");
-      }, false);
+      }
+
+      // Wait for panning to be completely finished before removing scrollbars
+      scrollbox.addEventListener("PanFinished", hideScrollbars, false);
+      scrollbox.addEventListener("CancelTouchSequence", hideScrollbars, false);
     }
   }
 };

@@ -157,6 +157,7 @@
               linkURL: url
             }
           };
+
           ContextHelper.showPopup(data);
         ]]>
       </handler>
@@ -622,6 +623,7 @@
               linkTitle: this.name,
               linkURL: this.spec
            }};
+
            ContextHelper.showPopup(data);
          ]]>
        </handler>
@@ -1764,11 +1766,7 @@
           if (hasData && (!aTextbox.readOnly || aIgnoreReadOnly))
             json.types.push("paste");
 
-          if (ContextHelper.showPopup({ target: aTextbox, json: json })) {
-            let event = document.createEvent("Events");
-            event.initEvent("CancelTouchSequence", true, false);
-            document.dispatchEvent(event);
-          }
+          ContextHelper.showPopup({ target: aTextbox, json: json });
         ]]></body>
       </method>
     </implementation>
