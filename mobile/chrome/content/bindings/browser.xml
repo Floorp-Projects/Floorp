@@ -177,10 +177,10 @@
         <parameter name="aLink" />
         <body><![CDATA[
           let type = "";
-          if (/\bicon\b/i(aLink.rel)) {
+          if (/\bicon\b/i.test(aLink.rel)) {
             type = "icon";
           }
-          else if (/\bsearch\b/i(aLink.rel) && aLink.type && aLink.title) {
+          else if (/\bsearch\b/i.test(aLink.rel) && aLink.type && aLink.title) {
             let linkType = aLink.type.replace(/^\s+|\s*(?:;.*)?$/g, "").toLowerCase();
             if (linkType == "application/opensearchdescription+xml" && /^(?:https?|ftp):/i.test(aLink.href)) {
               type = "search";
