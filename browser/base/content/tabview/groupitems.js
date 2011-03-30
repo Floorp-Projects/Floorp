@@ -916,8 +916,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     // add click handlers
     this.$undoContainer.click(function(e) {
-      // Only do this for clicks on this actual element.
-      if (e.target.nodeName != self.$undoContainer[0].nodeName)
+      // don't do anything if the close button is clicked.
+      if (e.target == undoClose[0])
         return;
 
       self.$undoContainer.fadeOut(function() { self._unhide(); });
