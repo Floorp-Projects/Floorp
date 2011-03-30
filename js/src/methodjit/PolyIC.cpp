@@ -505,10 +505,10 @@ class SetPropCompiler : public PICStubCompiler
         JSProperty *prop = NULL;
 
         /* lookupProperty can trigger recompilations. */
-        uint32 recompilations = f.jit()->recompilations;
+        RecompilationMonitor monitor(cx);
         if (!obj->lookupProperty(cx, id, &holder, &prop))
             return error();
-        if (f.jit()->recompilations != recompilations)
+        if (monitor.recompiled())
             return Lookup_Uncacheable;
 
         /* If the property exists but is on a prototype, treat as addprop. */
@@ -609,10 +609,10 @@ class SetPropCompiler : public PICStubCompiler
                 return disable("insufficient slot capacity");
 
             if (pic.typeMonitored) {
-                uint32 recompilations = f.jit()->recompilations;
+                RecompilationMonitor monitor(cx);
                 if (!cx->addTypePropertyId(obj->getType(), shape->id, pic.rhsTypes))
                     return error();
-                if (f.jit()->recompilations != recompilations)
+                if (monitor.recompiled())
                     return Lookup_Uncacheable;
             }
 
@@ -629,10 +629,10 @@ class SetPropCompiler : public PICStubCompiler
             if (!shape->hasSlot())
                 return disable("invalid slot");
             if (pic.typeMonitored) {
-                uint32 recompilations = f.jit()->recompilations;
+                RecompilationMonitor monitor(cx);
                 if (!cx->addTypePropertyId(obj->getType(), shape->id, pic.rhsTypes))
                     return error();
-                if (f.jit()->recompilations != recompilations)
+                if (monitor.recompiled())
                     return Lookup_Uncacheable;
             }
         } else {
@@ -643,7 +643,7 @@ class SetPropCompiler : public PICStubCompiler
                 return disable("setter");
             }
             if (pic.typeMonitored) {
-                uint32 recompilations = f.jit()->recompilations;
+                RecompilationMonitor monitor(cx);
                 JSScript *script = obj->getCallObjCalleeFunction()->script();
                 uint16 slot = uint16(shape->shortid);
                 if (!script->ensureVarTypes(cx))
@@ -655,7 +655,7 @@ class SetPropCompiler : public PICStubCompiler
                     if (!script->typeSetLocal(cx, slot, pic.rhsTypes))
                         return error();
                 }
-                if (f.jit()->recompilations != recompilations)
+                if (monitor.recompiled())
                     return Lookup_Uncacheable;
             }
         }
@@ -726,10 +726,10 @@ struct GetPropertyHelper {
         if (!aobj->isNative())
             return ic.disable(cx, "non-native");
 
-        uint32 recompilations = f.jit()->recompilations;
+        RecompilationMonitor monitor(cx);
         if (!aobj->lookupProperty(cx, ATOM_TO_JSID(atom), &holder, &prop))
             return ic.error(cx);
-        if (f.jit()->recompilations != recompilations)
+        if (monitor.recompiled())
             return Lookup_Uncacheable;
 
         if (!prop)
@@ -1869,7 +1869,7 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
     JSFrameRegs &regs = f.regs;
 
     JSScript *script = f.fp()->script();
-    uint32 recompilations = f.jit()->recompilations;
+    RecompilationMonitor monitor(cx);
 
     Value lval;
     lval = regs.sp[-1];
@@ -1960,7 +1960,7 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
     if (regs.sp[-2].isUndefined() && !f.script()->typeMonitorUndefined(cx, f.pc()))
         THROW();
 
-    if (f.jit()->recompilations != recompilations)
+    if (monitor.recompiled())
         return;
 
     GetPropCompiler cc(f, script, &objv.toObject(), *pic, pic->atom, DisabledCallPropIC);

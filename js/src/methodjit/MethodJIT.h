@@ -40,6 +40,7 @@
 #define jsjaeger_h__
 
 #include "jscntxt.h"
+#include "jscompartment.h"
 
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "assembler/assembler/CodeLocation.h"
@@ -145,6 +146,12 @@ struct VMFrame
 
     JSRuntime *runtime() { return cx->runtime; }
 
+    /*
+     * Get the current frame and JIT. Note that these are NOT stable in case
+     * of recompilations; all code which expects these to be stable should
+     * check that cx->recompilations() has not changed across a call that could
+     * trigger recompilation (pretty much any time the VM is called into).
+     */
     JSStackFrame *&fp() { return regs.fp; }
     mjit::JITScript *jit() { return fp()->jit(); }
 
@@ -159,6 +166,30 @@ extern "C" void JaegerStubVeneer(void);
 #endif
 
 namespace mjit {
+
+/* Helper to watch for recompilation and frame expansion activity on a compartment. */
+struct RecompilationMonitor
+{
+    JSContext *cx;
+
+    /*
+     * If either a recompilation or expansion occurs, then ICs and stubs should
+     * not depend on the frame or JITs being intact. The two are separated for logging.
+     */
+    unsigned recompilations;
+    unsigned frameExpansions;
+
+    RecompilationMonitor(JSContext *cx)
+        : cx(cx),
+          recompilations(cx->compartment->types.recompilations),
+          frameExpansions(cx->compartment->types.frameExpansions)
+    {}
+
+    bool recompiled() {
+        return cx->compartment->types.recompilations != recompilations
+            || cx->compartment->types.frameExpansions != frameExpansions;
+    }
+};
 
 /*
  * Trampolines to force returns from jit code.
@@ -347,13 +378,6 @@ struct JITScript {
     uint32          nSetElems;
     uint32          nPICs;
 #endif
-
-    /*
-     * Number of on-stack recompilations of this JIT script. Reset to zero if
-     * the JIT script is destroyed if marked for recompilation with no active
-     * frame on the stack.
-     */
-    uint32          recompilations;
 
 #ifdef JS_MONOIC
     /* Inline cache at function entry for checking this/argument types. */

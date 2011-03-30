@@ -118,14 +118,13 @@ private:
     void patchNative(JITScript *jit, PatchableNative &native);
     bool recompile(Vector<PatchableFrame> &frames,
                    Vector<PatchableAddress> &patches, Vector<CallSite> &sites,
-                   Vector<PatchableNative> &natives,
-                   uint32 recompilations);
+                   Vector<PatchableNative> &natives);
 
     static JSStackFrame *
     expandInlineFrameChain(JSContext *cx, JSStackFrame *outer, InlineFrame *inner);
 
     /* Detach jit from any IC callers and save any traps to sites. */
-    bool cleanup(JITScript *jit, Vector<CallSite> *sites, uint32 *recompilations);
+    bool cleanup(JITScript *jit, Vector<CallSite> *sites);
 };
 
 } /* namespace mjit */

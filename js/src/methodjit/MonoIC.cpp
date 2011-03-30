@@ -805,13 +805,13 @@ class CallCompiler : public BaseCompiler
         if (callingNew)
             vp[1].setMagicWithObjectOrNullPayload(NULL);
 
-        uint32 recompilations = jit->recompilations;
+        RecompilationMonitor monitor(cx);
 
         if (!CallJSNative(cx, fun->u.n.native, ic.frameSize.getArgc(f), vp))
             THROWV(true);
 
         /* Don't touch the IC if the call triggered a recompilation. */
-        if (f.jit()->recompilations != recompilations)
+        if (monitor.recompiled())
             return true;
 
         /* Right now, take slow-path for IC misses or multiple stubs. */
@@ -985,7 +985,7 @@ class CallCompiler : public BaseCompiler
     {
         JSStackFrame *fp = f.fp();
         JITScript *jit = fp->jit();
-        uint32 recompilations = jit->recompilations;
+        RecompilationMonitor monitor(cx);
 
         stubs::UncachedCallResult ucr;
         if (callingNew)
@@ -996,7 +996,7 @@ class CallCompiler : public BaseCompiler
         // Watch out in case the IC was invalidated by a recompilation on the calling
         // script. This can happen either if the callee is executed or if it compiles
         // and the compilation has a static overflow.
-        if (fp->jit()->recompilations != recompilations)
+        if (monitor.recompiled())
             return ucr.codeAddr;
 
         // If the function cannot be jitted (generally unjittable or empty script),
