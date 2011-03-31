@@ -177,9 +177,9 @@ ThebesLayerD3D9::UpdateTextures(SurfaceMode aMode)
 }
 
 void
-ThebesLayerD3D9::RenderVisibleRegion()
+ThebesLayerD3D9::RenderRegion(const nsIntRegion& aRegion)
 {
-  nsIntRegionRectIterator iter(mVisibleRegion);
+  nsIntRegionRectIterator iter(aRegion);
 
   const nsIntRect *iterRect;
   while ((iterRect = iter.Next())) {
@@ -279,12 +279,12 @@ ThebesLayerD3D9::RenderThebesLayer(ReadbackProcessor* aReadback)
     device()->SetTexture(1, mTextureOnWhite);
     device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ZERO);
     device()->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCCOLOR);
-    RenderVisibleRegion();
+    RenderRegion(neededRegion);
 
     mD3DManager->SetShaderMode(DeviceManagerD3D9::COMPONENTLAYERPASS2);
     device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
     device()->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-    RenderVisibleRegion();
+    RenderRegion(neededRegion);
 
     // Restore defaults
     device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
@@ -293,7 +293,7 @@ ThebesLayerD3D9::RenderThebesLayer(ReadbackProcessor* aReadback)
   } else {
     mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
     device()->SetTexture(0, mTexture);
-    RenderVisibleRegion();
+    RenderRegion(neededRegion);
   }
 
   // Set back to default.
