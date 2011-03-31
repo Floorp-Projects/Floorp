@@ -192,8 +192,8 @@ private:
 
   // Returns PR_TRUE if we should decode up to the seek target rather than
   // seeking to the target using an index-assisted seek.  We should do this
-  // if the seek target (aTarget, in ms), lies not too far ahead of the
-  // current playback position (aCurrentTime, in ms).
+  // if the seek target (aTarget, in usecs), lies not too far ahead of the
+  // current playback position (aCurrentTime, in usecs).
   PRBool CanDecodeToTarget(PRInt64 aTarget, PRInt64 aCurrentTime);
 
 private:
@@ -221,8 +221,8 @@ private:
   PRUint32 mVideoTrack;
   PRUint32 mAudioTrack;
 
-  // Time in ms of the start of the first audio sample we've decoded.
-  PRInt64 mAudioStartMs;
+  // Time in microseconds of the start of the first audio sample we've decoded.
+  PRInt64 mAudioStartUsec;
 
   // Number of samples we've decoded since decoding began at mAudioStartMs.
   PRUint64 mAudioSamples;

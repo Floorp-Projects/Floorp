@@ -183,7 +183,7 @@ public:
   virtual PRInt64 StartTime(PRInt64 granulepos);
   virtual PRBool Init();
 
-  // Returns the maximum number of milliseconds which a keyframe can be offset
+  // Returns the maximum number of microseconds which a keyframe can be offset
   // from any given interframe.
   PRInt64 MaxKeyframeOffset();
 
@@ -194,9 +194,6 @@ public:
   th_comment mComment;
   th_setup_info *mSetup;
   th_dec_ctx* mCtx;
-
-  // Frame duration in ms.
-  PRUint32 mFrameDuration;
 
   float mPixelAspectRatio;
 };
@@ -233,7 +230,7 @@ public:
     // Offset from start of segment/link-in-the-chain in bytes.
     PRInt64 mOffset;
 
-    // Presentation time in ms.
+    // Presentation time in usecs.
     PRInt64 mTime;
 
     PRBool IsNull() {
@@ -320,10 +317,10 @@ private:
       return mKeyPoints.Length();
     }
 
-    // Presentation time of the first sample in this stream in ms.
+    // Presentation time of the first sample in this stream in usecs.
     const PRInt64 mStartTime;
 
-    // End time of the last sample in this stream in ms.
+    // End time of the last sample in this stream in usecs.
     const PRInt64 mEndTime;
 
   private:

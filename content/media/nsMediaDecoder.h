@@ -282,10 +282,10 @@ public:
   // Return the frame decode/paint related statistics.
   FrameStatistics& GetFrameStatistics() { return mFrameStats; }
 
-  // Set the duration of the media resource in units of milliseconds.
+  // Set the duration of the media resource in units of seconds.
   // This is called via a channel listener if it can pick up the duration
   // from a content header. Must be called from the main thread only.
-  virtual void SetDuration(PRInt64 aDuration) = 0;
+  virtual void SetDuration(double aDuration) = 0;
 
   // Set a flag indicating whether seeking is supported
   virtual void SetSeekable(PRBool aSeekable) = 0;
