@@ -36,7 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
 #include "base/basictypes.h"
+#endif
 
 // FIXME(bug 332648): Give me a real API please!
 #include "jscntxt.h"
@@ -57,9 +59,11 @@
 
 using namespace mozilla::plugins::parent;
 
+#ifdef MOZ_IPC
 #include "mozilla/plugins/PluginScriptableObjectParent.h"
 using mozilla::plugins::PluginScriptableObjectParent;
 using mozilla::plugins::ParentNPObject;
+#endif
 
 // Hash of JSObject wrappers that wraps JSObjects as NPObjects. There
 // will be one wrapper per JSObject per plugin instance, i.e. if two
@@ -93,7 +97,11 @@ namespace {
 inline bool
 NPObjectIsOutOfProcessProxy(NPObject *obj)
 {
+#ifdef MOZ_IPC
   return obj->_class == PluginScriptableObjectParent::GetClass();
+#else
+  return false;
+#endif
 }
 
 } // anonymous namespace
@@ -1328,6 +1336,7 @@ NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
   NPIdentifier identifier = JSIdToNPIdentifier(id);
 
+#ifdef MOZ_IPC
   if (NPObjectIsOutOfProcessProxy(npobj)) {
     PluginScriptableObjectParent* actor =
       static_cast<ParentNPObject*>(npobj)->parent;
@@ -1359,6 +1368,7 @@ NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     }
     return JS_TRUE;
   }
+#endif
 
   hasProperty = npobj->_class->hasProperty(npobj, identifier);
   if (!ReportExceptionIfPending(cx))

@@ -143,7 +143,9 @@ public:
     } mEntries[sMaxDeferred];
   };
 
+#ifdef MOZ_IPC
   friend class mozilla::net::NeckoParent;
+#endif
 };
 
 #endif 

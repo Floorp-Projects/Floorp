@@ -36,9 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
 #include "OfflineCacheUpdateChild.h"
 #include "OfflineCacheUpdateParent.h"
 #include "nsXULAppAPI.h"
+#endif
 #include "OfflineCacheUpdateGlue.h"
 #include "nsOfflineCacheUpdate.h"
 
@@ -77,8 +79,10 @@
 
 static nsOfflineCacheUpdateService *gOfflineCacheUpdateService = nsnull;
 
+#ifdef MOZ_IPC
 typedef mozilla::docshell::OfflineCacheUpdateParent OfflineCacheUpdateParent;
 typedef mozilla::docshell::OfflineCacheUpdateChild OfflineCacheUpdateChild;
+#endif
 typedef mozilla::docshell::OfflineCacheUpdateGlue OfflineCacheUpdateGlue;
 
 #if defined(PR_LOGGING)
@@ -470,10 +474,13 @@ nsOfflineCacheUpdateService::Schedule(nsIURI *aManifestURI,
                                       nsIOfflineCacheUpdate **aUpdate)
 {
     nsCOMPtr<nsIOfflineCacheUpdate> update;
+#ifdef MOZ_IPC
     if (GeckoProcessType_Default != XRE_GetProcessType()) {
         update = new OfflineCacheUpdateChild(aWindow);
     }
-    else {
+    else
+#endif
+    {
         update = new OfflineCacheUpdateGlue();
     }
 
