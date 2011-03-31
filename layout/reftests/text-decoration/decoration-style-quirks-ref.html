@@ -1,0 +1,42 @@
+<p>
+  Here is specified the decoration style as dotted but no decoration lines,
+  however,
+  <span style="font-size: 2em;
+               text-decoration: underline line-through overline;
+               -moz-text-decoration: solid;">
+    here has solid decoration lines</span>,
+  and here has no decoration lines.
+</p>
+<p>
+  Here is specified the decoration style as dashed but no decoration lines,
+  however,
+  <span style="font-size: 2em;
+               text-decoration: underline line-through overline;
+               -moz-text-decoration-style: dashed;">
+    here has inherited decoration lines</span>,
+  and here has no decoration lines.
+</p>
+<p>
+  <span style="text-decoration: underline line-through overline;
+               -moz-text-decoration-style: dotted;">
+    Here has dotted decoration lines,
+  </span><span style="font-size: 2em;
+                      text-decoration: underline line-through overline;
+                      -moz-text-decoration-style: wavy;">
+    here has wavy decoration
+    lines</span><span style="text-decoration: underline line-through overline;
+                             -moz-text-decoration-style: dotted;">,
+    and here has dotted decoration lines.</span>
+</p>
+<p>
+  <span style="text-decoration: underline line-through overline;
+               -moz-text-decoration-style: double;">
+    Here has double decoration lines,
+  </span><span style="font-size: 2em;
+                      text-decoration: underline line-through overline;
+                      -moz-text-decoration-style: double;">
+    here is specified as dashed decoration lines but should be
+    ignored</span><span style="text-decoration: underline line-through overline;
+                               -moz-text-decoration-style: double;">,
+    and here has double decoration lines.</span>
+</p>

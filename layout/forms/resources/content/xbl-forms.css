@@ -239,6 +239,8 @@ input > .anonymous-div {
   /* XXXldb I'm not sure if we really want the 'text-decoration: inherit',
      but it's needed to make 'text-decoration' "work" on text inputs. */
   text-decoration: inherit;
+  -moz-text-decoration-color: inherit;
+  -moz-text-decoration-style: inherit;
 }
 
 input:disabled,

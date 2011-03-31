@@ -40,6 +40,7 @@
 #include "nsObjCExceptions.h"
 #include "nsIServiceManager.h"
 #include "nsNativeThemeColors.h"
+#include "nsStyleConsts.h"
 
 #import <Cocoa/Cocoa.h>
 
@@ -417,10 +418,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_IMEConvertedTextUnderlineStyle:
     case eMetric_IMESelectedRawTextUnderlineStyle:
     case eMetric_IMESelectedConvertedTextUnderline:
-      aMetric = NS_UNDERLINE_STYLE_SOLID;
+      aMetric = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
       break;
     case eMetric_SpellCheckerUnderlineStyle:
-      aMetric = NS_UNDERLINE_STYLE_DOTTED;
+      aMetric = NS_STYLE_TEXT_DECORATION_STYLE_DOTTED;
       break;
     default:
       aMetric = 0;

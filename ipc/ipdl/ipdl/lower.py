@@ -3404,35 +3404,36 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                      Decl(listenertype, listenervar.name) ],
             virtual=1))
 
-        switchontype = StmtSwitch(pvar)
-        for managee in p.managesStmts:
-            case = StmtBlock()
-            actorvar = ExprVar('actor')
-            manageeipdltype = managee.decl.type
-            manageecxxtype = _cxxBareType(ipdl.type.ActorType(manageeipdltype),
-                                          self.side)
-            manageearray = p.managedVar(manageeipdltype, self.side)
+        if not len(p.managesStmts):
+            removemanagee.addstmts([ _runtimeAbort('unreached'), StmtReturn() ])
+        else:
+            switchontype = StmtSwitch(pvar)
+            for managee in p.managesStmts:
+                case = StmtBlock()
+                actorvar = ExprVar('actor')
+                manageeipdltype = managee.decl.type
+                manageecxxtype = _cxxBareType(ipdl.type.ActorType(manageeipdltype),
+                                              self.side)
+                manageearray = p.managedVar(manageeipdltype, self.side)
 
-            case.addstmts([
-                StmtDecl(Decl(manageecxxtype, actorvar.name),
-                         ExprCast(listenervar, manageecxxtype, static=1)),
-                _abortIfFalse(
-                    _cxxArrayHasElementSorted(manageearray, actorvar),
-                    "actor not managed by this!"),
-                Whitespace.NL,
-                StmtExpr(_callCxxArrayRemoveSorted(manageearray, actorvar)),
-                StmtExpr(ExprCall(_deallocMethod(manageeipdltype),
-                                  args=[ actorvar ])),
-                StmtReturn()
-            ])
-            switchontype.addcase(CaseLabel(_protocolId(manageeipdltype).name),
-                                 case)
-
-        default = StmtBlock()
-        default.addstmts([ _runtimeAbort('unreached'), StmtReturn() ])
-        switchontype.addcase(DefaultLabel(), default)
-
-        removemanagee.addstmt(switchontype)
+                case.addstmts([
+                    StmtDecl(Decl(manageecxxtype, actorvar.name),
+                             ExprCast(listenervar, manageecxxtype, static=1)),
+                    _abortIfFalse(
+                        _cxxArrayHasElementSorted(manageearray, actorvar),
+                        "actor not managed by this!"),
+                    Whitespace.NL,
+                    StmtExpr(_callCxxArrayRemoveSorted(manageearray, actorvar)),
+                    StmtExpr(ExprCall(_deallocMethod(manageeipdltype),
+                                      args=[ actorvar ])),
+                    StmtReturn()
+                ])
+                switchontype.addcase(CaseLabel(_protocolId(manageeipdltype).name),
+                                     case)
+            default = StmtBlock()
+            default.addstmts([ _runtimeAbort('unreached'), StmtReturn() ])
+            switchontype.addcase(DefaultLabel(), default)
+            removemanagee.addstmt(switchontype)
 
         return [ register,
                  registerid,
