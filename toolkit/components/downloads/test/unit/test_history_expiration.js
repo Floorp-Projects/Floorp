@@ -67,18 +67,18 @@ function run_test()
 
   try {
     // Add a download from the URI
-    stmt.bindInt32Parameter(0, theId);
-    stmt.bindStringParameter(1, theURI.spec);
+    stmt.bindByIndex(0, theId);
+    stmt.bindByIndex(1, theURI.spec);
 
     // Give a dummy file name
     let file = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
     file.append("expireTest");
-    stmt.bindStringParameter(2, Cc["@mozilla.org/network/io-service;1"].
+    stmt.bindByIndex(2, Cc["@mozilla.org/network/io-service;1"].
       getService(Ci.nsIIOService).newFileURI(file).spec);
 
     // Give it some state
-    stmt.bindInt32Parameter(3, dm.DOWNLOAD_FINISHED);
+    stmt.bindByIndex(3, dm.DOWNLOAD_FINISHED);
 
     // Add it!
     stmt.execute();
