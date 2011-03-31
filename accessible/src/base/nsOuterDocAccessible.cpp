@@ -76,32 +76,25 @@ nsOuterDocAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-nsresult
+nsAccessible*
 nsOuterDocAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                      PRBool aDeepestChild,
-                                      nsIAccessible **aChild)
+                                      EWhichChildAtPoint aWhichChild)
 {
   PRInt32 docX = 0, docY = 0, docWidth = 0, docHeight = 0;
   nsresult rv = GetBounds(&docX, &docY, &docWidth, &docHeight);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, nsnull);
 
   if (aX < docX || aX >= docX + docWidth || aY < docY || aY >= docY + docHeight)
-    return NS_OK;
+    return nsnull;
 
   // Always return the inner doc as direct child accessible unless bounds
   // outside of it.
-  nsCOMPtr<nsIAccessible> childAcc;
-  rv = GetFirstChild(getter_AddRefs(childAcc));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsAccessible* child = GetChildAt(0);
+  NS_ENSURE_TRUE(child, nsnull);
 
-  if (!childAcc)
-    return NS_OK;
-
-  if (aDeepestChild)
-    return childAcc->GetDeepestChildAtPoint(aX, aY, aChild);
-
-  NS_ADDREF(*aChild = childAcc);
-  return NS_OK;
+  if (aWhichChild = eDeepestChild)
+    return child->GetChildAtPoint(aX, aY, eDeepestChild);
+  return child;
 }
 
 nsresult

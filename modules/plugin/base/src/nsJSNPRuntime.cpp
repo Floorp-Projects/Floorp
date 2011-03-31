@@ -208,8 +208,8 @@ NPObjectMember_Finalize(JSContext *cx, JSObject *obj);
 static JSBool
 NPObjectMember_Call(JSContext *cx, uintN argc, jsval *vp);
 
-static uint32
-NPObjectMember_Mark(JSContext *cx, JSObject *obj, void *arg);
+static void
+NPObjectMember_Trace(JSTracer *trc, JSObject *obj);
 
 static JSClass sNPObjectMemberClass =
   {
@@ -218,7 +218,7 @@ static JSClass sNPObjectMemberClass =
     JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
     JS_ResolveStub, NPObjectMember_Convert,
     NPObjectMember_Finalize, nsnull, nsnull, NPObjectMember_Call,
-    nsnull, nsnull, nsnull, NPObjectMember_Mark, nsnull
+    nsnull, nsnull, nsnull, NPObjectMember_Trace, nsnull
   };
 
 static void
@@ -2298,28 +2298,26 @@ NPObjectMember_Call(JSContext *cx, uintN argc, jsval *vp)
   return ReportExceptionIfPending(cx);
 }
 
-static uint32
-NPObjectMember_Mark(JSContext *cx, JSObject *obj, void *arg)
+static void
+NPObjectMember_Trace(JSTracer *trc, JSObject *obj)
 {
   NPObjectMemberPrivate *memberPrivate =
-    (NPObjectMemberPrivate *)::JS_GetInstancePrivate(cx, obj,
+    (NPObjectMemberPrivate *)::JS_GetInstancePrivate(trc->context, obj,
                                                      &sNPObjectMemberClass,
                                                      nsnull);
   if (!memberPrivate)
-    return 0;
+    return;
 
   if (!JSVAL_IS_PRIMITIVE(memberPrivate->fieldValue)) {
-    ::JS_MarkGCThing(cx, memberPrivate->fieldValue,
-                     "NPObject Member => fieldValue", arg);
+    JS_CALL_VALUE_TRACER(trc, memberPrivate->fieldValue,
+                         "NPObject Member => fieldValue");
   }
 
   // There's no strong reference from our private data to the
   // NPObject, so make sure to mark the NPObject wrapper to keep the
   // NPObject alive as long as this NPObjectMember is alive.
   if (memberPrivate->npobjWrapper) {
-    ::JS_MarkGCThing(cx, OBJECT_TO_JSVAL(memberPrivate->npobjWrapper),
-                     "NPObject Member => npobjWrapper", arg);
+    JS_CALL_OBJECT_TRACER(trc, memberPrivate->npobjWrapper,
+                          "NPObject Member => npobjWrapper");
   }
-
-  return 0;
 }

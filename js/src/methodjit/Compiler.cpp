@@ -351,7 +351,7 @@ mjit::Compiler::generatePrologue()
         /* Create the call object. */
         if (fun->isHeavyweight()) {
             prepareStubCall(Uses(0));
-            INLINE_STUBCALL(stubs::GetCallObject);
+            INLINE_STUBCALL(stubs::CreateFunCallObject);
         }
 
         j.linkTo(masm.label(), &masm);
@@ -360,7 +360,7 @@ mjit::Compiler::generatePrologue()
             /*
              * Load the scope chain into the frame if necessary.  The scope chain
              * is always set for global and eval frames, and will have been set by
-             * GetCallObject for heavyweight function frames.
+             * CreateFunCallObject for heavyweight function frames.
              */
             RegisterID t0 = Registers::ReturnReg;
             Jump hasScope = masm.branchTest32(Assembler::NonZero,
@@ -376,7 +376,7 @@ mjit::Compiler::generatePrologue()
         constructThis();
 
     if (debugMode() || Probes::callTrackingActive(cx))
-        INLINE_STUBCALL(stubs::EnterScript);
+        INLINE_STUBCALL(stubs::ScriptDebugPrologue);
 
     return Compile_Okay;
 }
@@ -408,18 +408,14 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                        doubleList.length() * sizeof(double) +
                        jumpTableOffsets.length() * sizeof(void *);
 
-    JSC::ExecutablePool *execPool = getExecPool(script, totalSize);
-    if (!execPool) {
-        js_ReportOutOfMemory(cx);
-        return Compile_Error;
-    }
-
-    uint8 *result = (uint8 *)execPool->alloc(totalSize);
+    JSC::ExecutablePool *execPool;
+    uint8 *result =
+        (uint8 *)script->compartment->jaegerCompartment->execAlloc()->alloc(totalSize, &execPool);
     if (!result) {
-        execPool->release();
         js_ReportOutOfMemory(cx);
         return Compile_Error;
     }
+    JS_ASSERT(execPool);
     JSC::ExecutableAllocator::makeWritable(result, totalSize);
     masm.executableCopy(result);
     stubcc.masm.executableCopy(result + masm.size());
@@ -643,10 +639,11 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         if (traceICs[i].slowTraceHint.isSet())
             jitTraceICs[i].slowTraceHint = stubCode.locationOf(traceICs[i].slowTraceHint.get());
 #ifdef JS_TRACER
-        jitTraceICs[i].loopCounterStart = GetHotloop(cx);
+        uint32 hotloop = GetHotloop(cx);
+        uint32 prevCount = cx->compartment->backEdgeCount(traceICs[i].jumpTarget);
+        jitTraceICs[i].loopCounterStart = hotloop;
+        jitTraceICs[i].loopCounter = hotloop < prevCount ? 1 : hotloop - prevCount;
 #endif
-        jitTraceICs[i].loopCounter = jitTraceICs[i].loopCounterStart
-            - cx->compartment->backEdgeCount(traceICs[i].jumpTarget);
         
         stubCode.patch(traceICs[i].addrLabel, &jitTraceICs[i]);
     }
@@ -851,8 +848,13 @@ public:
     JS_BEGIN_MACRO                                                            \
         if (IsJaegerSpewChannelActive(JSpew_JSOps)) {                         \
             JaegerSpew(JSpew_JSOps, "    %2d ", frame.stackDepth());          \
+            void *mark = JS_ARENA_MARK(&cx->tempPool);                        \
+            Sprinter sprinter;                                                \
+            INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);                   \
             js_Disassemble1(cx, script, PC, PC - script->code,                \
-                            JS_TRUE, stdout);                                 \
+                            JS_TRUE, &sprinter);                              \
+            fprintf(stdout, "%s", sprinter.base);                             \
+            JS_ARENA_RELEASE(&cx->tempPool, mark);                            \
         }                                                                     \
     JS_END_MACRO;
 #else
@@ -981,6 +983,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_RETURN)
 
           BEGIN_CASE(JSOP_GOTO)
+          BEGIN_CASE(JSOP_DEFAULT)
           {
             /* :XXX: this isn't really necessary if we follow the branch. */
             frame.syncAndForgetEverything();
@@ -1414,11 +1417,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_DOUBLE)
 
           BEGIN_CASE(JSOP_STRING)
-          {
-            JSAtom *atom = script->getAtom(fullAtomIndex(PC));
-            JSString *str = ATOM_TO_STRING(atom);
-            frame.push(Value(StringValue(str)));
-          }
+            frame.push(StringValue(script->getAtom(fullAtomIndex(PC))));
           END_CASE(JSOP_STRING)
 
           BEGIN_CASE(JSOP_ZERO)
@@ -1481,6 +1480,19 @@ mjit::Compiler::generateMethod()
             PC += js_GetVariableBytecodeLength(PC);
             break;
           END_CASE(JSOP_LOOKUPSWITCH)
+
+          BEGIN_CASE(JSOP_CASE)
+            // X Y
+
+            frame.dupAt(-2);
+            // X Y X
+
+            jsop_stricteq(JSOP_STRICTEQ);
+            // X cond
+
+            if (!jsop_ifneq(JSOP_IFNE, PC + GET_JUMP_OFFSET(PC)))
+                return Compile_Error;
+          END_CASE(JSOP_CASE)
 
           BEGIN_CASE(JSOP_STRICTEQ)
             jsop_stricteq(op);
@@ -2223,17 +2235,18 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
 
     if (debugMode() || Probes::callTrackingActive(cx)) {
         prepareStubCall(Uses(0));
-        INLINE_STUBCALL(stubs::LeaveScript);
+        INLINE_STUBCALL(stubs::ScriptDebugEpilogue);
     }
 
     /*
-     * If there's a function object, deal with the fact that it can escape.
-     * Note that after we've placed the call object, all tracked state can
-     * be thrown away. This will happen anyway because the next live opcode
-     * (if any) must have an incoming edge.
-     *
-     * However, it's an optimization to throw it away early - the tracker
-     * won't be spilled on further exits or join points.
+     * Outside the mjit, activation objects are put by StackSpace::pop*
+     * members. For JSOP_RETURN, the interpreter only calls popInlineFrame if
+     * fp != entryFrame since the VM protocol is that Invoke/Execute are
+     * responsible for pushing/popping the initial frame. The mjit does not
+     * perform this branch (by instead using a trampoline at the return address
+     * to handle exiting mjit code) and thus always puts activation objects,
+     * even on the entry frame. To avoid double-putting, EnterMethodJIT clears
+     * out the entry frame's activation objects.
      */
     if (fun) {
         if (fun->isHeavyweight()) {
@@ -2241,7 +2254,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
             prepareStubCall(Uses(fe ? 1 : 0));
             INLINE_STUBCALL(stubs::PutActivationObjects);
         } else {
-            /* if (hasCallObj() || hasArgsObj()) stubs::PutActivationObjects() */
+            /* if (hasCallObj() || hasArgsObj()) */
             Jump putObjs = masm.branchTest32(Assembler::NonZero,
                                              Address(JSFrameReg, JSStackFrame::offsetOfFlags()),
                                              Imm32(JSFRAME_HAS_CALL_OBJ | JSFRAME_HAS_ARGS_OBJ));
@@ -2254,15 +2267,22 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
             emitFinalReturn(stubcc.masm);
         }
     } else {
-        if (fp->isEvalFrame() && script->strictModeCode) {
+        if (fp->isStrictEvalFrame()) {
             /* There will always be a call object. */
             prepareStubCall(Uses(fe ? 1 : 0));
-            INLINE_STUBCALL(stubs::PutStrictEvalCallObject);
+            INLINE_STUBCALL(stubs::PutActivationObjects);
         }
     }
 
     emitReturnValue(&masm, fe);
     emitFinalReturn(masm);
+
+    /*
+     * After we've placed the call object, all tracked state can be
+     * thrown away. This will happen anyway because the next live opcode (if
+     * any) must have an incoming edge. It's an optimization to throw it away
+     * early - the tracker won't be spilled on further exits or join points.
+     */
     frame.discardFrame();
 }
 
@@ -4573,13 +4593,13 @@ mjit::Compiler::jsop_instanceof()
     if (!rhs->isTypeKnown()) {
         Jump j = frame.testObject(Assembler::NotEqual, rhs);
         stubcc.linkExit(j, Uses(2));
-        RegisterID reg = frame.tempRegForData(rhs);
-        j = masm.testFunction(Assembler::NotEqual, reg);
-        stubcc.linkExit(j, Uses(2));
     }
 
-    /* Test for bound functions. */
     RegisterID obj = frame.tempRegForData(rhs);
+    Jump notFunction = masm.testFunction(Assembler::NotEqual, obj);
+    stubcc.linkExit(notFunction, Uses(2));
+
+    /* Test for bound functions. */
     Jump isBound = masm.branchTest32(Assembler::NonZero, Address(obj, offsetof(JSObject, flags)),
                                      Imm32(JSObject::BOUND_FUNCTION));
     {

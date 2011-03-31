@@ -216,7 +216,7 @@ SCInput::readArray(T *p, size_t nelems)
         const T *q = (const T *) point;
         const T *qend = q + nelems;
         while (q != qend)
-            *p++ = SwapBytes(*q++);
+            *p++ = ::SwapBytes(*q++);
     }
     point += nwords;
     return true;
@@ -325,7 +325,7 @@ SCOutput::writeArray(const T *p, size_t nelems)
     } else {
         const T *pend = p + nelems;
         while (p != pend)
-            *q++ = SwapBytes(*p++);
+            *q++ = ::SwapBytes(*p++);
     }
     return true;
 }

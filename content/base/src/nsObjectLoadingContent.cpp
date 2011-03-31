@@ -1657,7 +1657,7 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
 
     {
       mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-      doc->ContentStatesChanged(thisContent, nsnull, changedBits);
+      doc->ContentStateChanged(thisContent, changedBits);
     }
     if (aSync) {
       // Make sure that frames are actually constructed, and do it after

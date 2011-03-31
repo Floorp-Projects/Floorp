@@ -5068,23 +5068,19 @@ var TabsInTitlebar = {
     let titlebar = $("titlebar");
 
     if (allowed) {
-      let availTop = screen.availTop;
-      function top(ele)    ele.boxObject.screenY - availTop;
-      function bottom(ele) top(ele) + rect(ele).height;
       function rect(ele)   ele.getBoundingClientRect();
 
       let tabsToolbar       = $("TabsToolbar");
+
       let appmenuButtonBox  = $("appmenu-button-container");
       let captionButtonsBox = $("titlebar-buttonbox");
-
       this._sizePlaceholder("appmenu-button", rect(appmenuButtonBox).width);
       this._sizePlaceholder("caption-buttons", rect(captionButtonsBox).width);
 
-      let maxMargin = top(gNavToolbox);
-      let tabsBottom = maxMargin + rect(tabsToolbar).height;
-      let titlebarBottom = Math.max(bottom(appmenuButtonBox), bottom(captionButtonsBox));
-      let distance = tabsBottom - titlebarBottom;
-      titlebar.style.marginBottom = - Math.min(distance, maxMargin) + "px";
+      let tabsToolbarRect = rect(tabsToolbar);
+      let titlebarTop = rect($("titlebar-content")).top;
+      titlebar.style.marginBottom = - Math.min(tabsToolbarRect.top - titlebarTop,
+                                               tabsToolbarRect.height) + "px";
 
       docElement.setAttribute("tabsintitlebar", "true");
 

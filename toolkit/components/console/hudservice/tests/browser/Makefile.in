@@ -126,6 +126,11 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_621644_jsterm_dollar.js \
 	browser_webconsole_bug_632817.js \
 	browser_webconsole_bug_611795.js \
+	browser_webconsole_bug_618311_close_panels.js \
+	browser_webconsole_bug_618311_private_browsing.js \
+	browser_webconsole_bug_632347_iterators_generators.js \
+	browser_webconsole_bug_642108_refForOutputNode.js \
+	browser_webconsole_bug_642108_pruneTest.js \
 	head.js \
 	$(NULL)
 
@@ -193,6 +198,7 @@ _BROWSER_TEST_PAGES = \
 	test-bug-618078-network-exceptions.html \
 	test-bug-630733-response-redirect-headers.sjs \
 	test-bug-621644-jsterm-dollar.html \
+	test-bug-632347-iterators-generators.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

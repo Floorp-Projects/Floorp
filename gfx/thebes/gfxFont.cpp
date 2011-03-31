@@ -2674,7 +2674,7 @@ gfxFontGroup::UpdateFontList()
         mSkipDrawing = PR_FALSE;
 
         // bug 548184 - need to clean up FT2, OS/2 platform code to use BuildFontList
-#if defined(XP_MACOSX) || defined(XP_WIN)
+#if defined(XP_MACOSX) || (defined(XP_WIN) && !defined(WINCE)) || defined(ANDROID)
         BuildFontList();
 #else
         ForEachFont(FindPlatformFont, this);

@@ -545,7 +545,7 @@ public:
 
   /**
    * Determine whether a buffer begins with a BOM for UTF-8, UTF-16LE,
-   * UTF-16BE, UTF-32LE, UTF-32BE.
+   * UTF-16BE
    *
    * @param aBuffer the buffer to check
    * @param aLength the length of the buffer

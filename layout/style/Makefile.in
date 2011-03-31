@@ -68,7 +68,6 @@ EXPORTS		= \
 		nsCSSPseudoElements.h \
 		nsCSSRuleProcessor.h \
 		nsCSSStyleSheet.h \
-		nsCSSStruct.h \
 		nsCSSValue.h \
 		nsDOMCSSAttrDeclaration.h \
 		nsDOMCSSDeclaration.h \
@@ -119,7 +118,6 @@ CPPSRCS		= \
 		nsCSSRuleProcessor.cpp \
 		nsCSSRules.cpp \
 		nsCSSScanner.cpp \
-		nsCSSStruct.cpp \
 		nsCSSStyleSheet.cpp \
 		nsCSSValue.cpp \
 		nsComputedDOMStyle.cpp \
@@ -133,6 +131,7 @@ CPPSRCS		= \
 		nsHTMLStyleSheet.cpp \
 		nsLayoutStylesheetCache.cpp \
 		nsMediaFeatures.cpp \
+		nsNthIndexCache.cpp \
 		nsROCSSPrimitiveValue.cpp \
 		nsRuleData.cpp \
 		nsRuleNode.cpp \

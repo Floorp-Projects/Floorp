@@ -235,10 +235,12 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #endif
 
 // See nsStyleColor
-#define NS_COLOR_MOZ_HYPERLINKTEXT              -1
-#define NS_COLOR_MOZ_VISITEDHYPERLINKTEXT       -2
-#define NS_COLOR_MOZ_ACTIVEHYPERLINKTEXT        -3
-#define NS_COLOR_CURRENTCOLOR                   -4
+#define NS_COLOR_CURRENTCOLOR                   -1
+#define NS_COLOR_MOZ_DEFAULT_COLOR              -2
+#define NS_COLOR_MOZ_DEFAULT_BACKGROUND_COLOR   -3
+#define NS_COLOR_MOZ_HYPERLINKTEXT              -4
+#define NS_COLOR_MOZ_VISITEDHYPERLINKTEXT       -5
+#define NS_COLOR_MOZ_ACTIVEHYPERLINKTEXT        -6
 
 // See nsStyleBackground
 #define NS_STYLE_BG_ATTACHMENT_SCROLL     0

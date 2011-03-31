@@ -205,6 +205,121 @@
 .endif
 .endm
 
+/*
+ * Pixel fetcher for nearest scaling (needs TMP1, TMP2, VX, UNIT_X register
+ * aliases to be defined)
+ */
+.macro pixld1_s elem_size, reg1, mem_operand
+.if elem_size == 16
+    mov     TMP1, VX, asr #16
+    add     VX, VX, UNIT_X
+    add     TMP1, mem_operand, TMP1, asl #1
+    mov     TMP2, VX, asr #16
+    add     VX, VX, UNIT_X
+    add     TMP2, mem_operand, TMP2, asl #1
+    vld1.16 {d&reg1&[0]}, [TMP1, :16]
+    mov     TMP1, VX, asr #16
+    add     VX, VX, UNIT_X
+    add     TMP1, mem_operand, TMP1, asl #1
+    vld1.16 {d&reg1&[1]}, [TMP2, :16]
+    mov     TMP2, VX, asr #16
+    add     VX, VX, UNIT_X
+    add     TMP2, mem_operand, TMP2, asl #1
+    vld1.16 {d&reg1&[2]}, [TMP1, :16]
+    vld1.16 {d&reg1&[3]}, [TMP2, :16]
+.elseif elem_size == 32
+    mov     TMP1, VX, asr #16
+    add     VX, VX, UNIT_X
+    add     TMP1, mem_operand, TMP1, asl #2
+    mov     TMP2, VX, asr #16
+    add     VX, VX, UNIT_X
+    add     TMP2, mem_operand, TMP2, asl #2
+    vld1.32 {d&reg1&[0]}, [TMP1, :32]
+    vld1.32 {d&reg1&[1]}, [TMP2, :32]
+.else
+    .error "unsupported"
+.endif
+.endm
+
+.macro pixld2_s elem_size, reg1, reg2, mem_operand
+.if elem_size == 32
+    mov     TMP1, VX, asr #16
+    add     VX, VX, UNIT_X, asl #1
+    add     TMP1, mem_operand, TMP1, asl #2
+    mov     TMP2, VX, asr #16
+    sub     VX, VX, UNIT_X
+    add     TMP2, mem_operand, TMP2, asl #2
+    vld1.32 {d&reg1&[0]}, [TMP1, :32]
+    mov     TMP1, VX, asr #16
+    add     VX, VX, UNIT_X, asl #1
+    add     TMP1, mem_operand, TMP1, asl #2
+    vld1.32 {d&reg2&[0]}, [TMP2, :32]
+    mov     TMP2, VX, asr #16
+    add     VX, VX, UNIT_X
+    add     TMP2, mem_operand, TMP2, asl #2
+    vld1.32 {d&reg1&[1]}, [TMP1, :32]
+    vld1.32 {d&reg2&[1]}, [TMP2, :32]
+.else
+    pixld1_s elem_size, reg1, mem_operand
+    pixld1_s elem_size, reg2, mem_operand
+.endif
+.endm
+
+.macro pixld0_s elem_size, reg1, idx, mem_operand
+.if elem_size == 16
+    mov     TMP1, VX, asr #16
+    add     VX, VX, UNIT_X
+    add     TMP1, mem_operand, TMP1, asl #1
+    vld1.16 {d&reg1&[idx]}, [TMP1, :16]
+.elseif elem_size == 32
+    mov     TMP1, VX, asr #16
+    add     VX, VX, UNIT_X
+    add     TMP1, mem_operand, TMP1, asl #2
+    vld1.32 {d&reg1&[idx]}, [TMP1, :32]
+.endif
+.endm
+
+.macro pixld_s_internal numbytes, elem_size, basereg, mem_operand
+.if numbytes == 32
+    pixld2_s elem_size, %(basereg+4), %(basereg+5), mem_operand
+    pixld2_s elem_size, %(basereg+6), %(basereg+7), mem_operand
+    pixdeinterleave elem_size, %(basereg+4)
+.elseif numbytes == 16
+    pixld2_s elem_size, %(basereg+2), %(basereg+3), mem_operand
+.elseif numbytes == 8
+    pixld1_s elem_size, %(basereg+1), mem_operand
+.elseif numbytes == 4
+    .if elem_size == 32
+        pixld0_s elem_size, %(basereg+0), 1, mem_operand
+    .elseif elem_size == 16
+        pixld0_s elem_size, %(basereg+0), 2, mem_operand
+        pixld0_s elem_size, %(basereg+0), 3, mem_operand
+    .else
+        pixld0_s elem_size, %(basereg+0), 4, mem_operand
+        pixld0_s elem_size, %(basereg+0), 5, mem_operand
+        pixld0_s elem_size, %(basereg+0), 6, mem_operand
+        pixld0_s elem_size, %(basereg+0), 7, mem_operand
+    .endif
+.elseif numbytes == 2
+    .if elem_size == 16
+        pixld0_s elem_size, %(basereg+0), 1, mem_operand
+    .else
+        pixld0_s elem_size, %(basereg+0), 2, mem_operand
+        pixld0_s elem_size, %(basereg+0), 3, mem_operand
+    .endif
+.elseif numbytes == 1
+    pixld0_s elem_size, %(basereg+0), 1, mem_operand
+.else
+    .error "unsupported size: numbytes"
+.endif
+.endm
+
+.macro pixld_s numpix, bpp, basereg, mem_operand
+.if bpp > 0
+    pixld_s_internal %(numpix * bpp / 8), %(bpp), basereg, mem_operand
+.endif
+.endm
+
 .macro vuzp8 reg1, reg2
     vuzp.8 d&reg1, d&reg2
 .endm
@@ -316,6 +431,11 @@
 .endif
 .endm
 
+.macro fetch_mask_pixblock
+    pixld       pixblock_size, mask_bpp, \
+                (mask_basereg - pixblock_size * mask_bpp / 64), MASK
+.endm
+
 /*
  * Macro which is used to process leading pixels until destination
  * pointer is properly aligned (at 16 bytes boundary). When destination
@@ -335,7 +455,7 @@ local skip1
     tst         DST_R, #lowbit
     beq         1f
 .endif
-    pixld       (lowbit * 8 / dst_w_bpp), src_bpp, src_basereg, SRC
+    pixld_src   (lowbit * 8 / dst_w_bpp), src_bpp, src_basereg, SRC
     pixld       (lowbit * 8 / dst_w_bpp), mask_bpp, mask_basereg, MASK
 .if dst_r_bpp > 0
     pixld_a     (lowbit * 8 / dst_r_bpp), dst_r_bpp, dst_r_basereg, DST_R
@@ -397,7 +517,7 @@ local skip1
 .if pixblock_size > chunk_size
     tst         W, #chunk_size
     beq         1f
-    pixld       chunk_size, src_bpp, src_basereg, SRC
+    pixld_src   chunk_size, src_bpp, src_basereg, SRC
     pixld       chunk_size, mask_bpp, mask_basereg, MASK
 .if dst_aligned_flag != 0
     pixld_a     chunk_size, dst_r_bpp, dst_r_basereg, DST_R
@@ -531,6 +651,13 @@ fname:
     .set src_basereg, src_basereg_
     .set mask_basereg, mask_basereg_
 
+    .macro pixld_src x:vararg
+        pixld x
+    .endm
+    .macro fetch_src_pixblock
+        pixld_src   pixblock_size, src_bpp, \
+                    (src_basereg - pixblock_size * src_bpp / 64), SRC
+    .endm
 /*
  * Assign symbolic names to registers
  */
@@ -696,8 +823,7 @@ fname:
     /* Implement "head (tail_head) ... (tail_head) tail" loop pattern */
     pixld_a     pixblock_size, dst_r_bpp, \
                 (dst_r_basereg - pixblock_size * dst_r_bpp / 64), DST_R
-    pixld       pixblock_size, src_bpp, \
-                (src_basereg - pixblock_size * src_bpp / 64), SRC
+    fetch_src_pixblock
     pixld       pixblock_size, mask_bpp, \
                 (mask_basereg - pixblock_size * mask_bpp / 64), MASK
     PF add      PF_X, PF_X, #pixblock_size
@@ -739,8 +865,7 @@ fname:
     beq         1f
     pixld       pixblock_size, dst_r_bpp, \
                 (dst_r_basereg - pixblock_size * dst_r_bpp / 64), DST_R
-    pixld       pixblock_size, src_bpp, \
-                (src_basereg - pixblock_size * src_bpp / 64), SRC
+    fetch_src_pixblock
     pixld       pixblock_size, mask_bpp, \
                 (mask_basereg - pixblock_size * mask_bpp / 64), MASK
     process_pixblock_head
@@ -760,6 +885,9 @@ fname:
 .endif
     cleanup
     pop         {r4-r12, pc}  /* exit */
+
+    .purgem     fetch_src_pixblock
+    .purgem     pixld_src
 
     .unreq      SRC
     .unreq      MASK
@@ -784,7 +912,8 @@ fname:
  * A simplified variant of function generation template for a single
  * scanline processing (for implementing pixman combine functions)
  */
-.macro generate_composite_function_single_scanline fname, \
+.macro generate_composite_function_scanline        use_nearest_scaling, \
+                                                   fname, \
                                                    src_bpp_, \
                                                    mask_bpp_, \
                                                    dst_w_bpp_, \
@@ -821,14 +950,44 @@ fname:
     .set dst_r_basereg, dst_r_basereg_
     .set src_basereg, src_basereg_
     .set mask_basereg, mask_basereg_
-/*
- * Assign symbolic names to registers
- */
+
+.if use_nearest_scaling != 0
+    /*
+     * Assign symbolic names to registers for nearest scaling
+     */
+    W           .req        r0
+    DST_W       .req        r1
+    SRC         .req        r2
+    VX          .req        r3
+    UNIT_X      .req        ip
+    MASK        .req        lr
+    TMP1        .req        r4
+    TMP2        .req        r5
+    DST_R       .req        r6
+
+    .macro pixld_src x:vararg
+        pixld_s x
+    .endm
+
+    ldr         UNIT_X, [sp]
+    push        {r4-r6, lr}
+    .if mask_bpp != 0
+    ldr         MASK, [sp, #(16 + 4)]
+    .endif
+.else
+    /*
+     * Assign symbolic names to registers
+     */
     W           .req        r0      /* width (is updated during processing) */
     DST_W       .req        r1      /* destination buffer pointer for writes */
     SRC         .req        r2      /* source buffer pointer */
     DST_R       .req        ip      /* destination buffer pointer for reads */
     MASK        .req        r3      /* mask pointer */
+
+    .macro pixld_src x:vararg
+        pixld x
+    .endm
+.endif
 
 .if (((flags) & FLAG_DST_READWRITE) != 0)
     .set dst_r_bpp, dst_w_bpp
@@ -840,6 +999,11 @@ fname:
 .else
     .set DEINTERLEAVE_32BPP_ENABLED, 0
 .endif
+
+    .macro fetch_src_pixblock
+        pixld_src   pixblock_size, src_bpp, \
+                    (src_basereg - pixblock_size * src_bpp / 64), SRC
+    .endm
 
     init
     mov         DST_R, DST_W
@@ -857,8 +1021,7 @@ fname:
     /* Implement "head (tail_head) ... (tail_head) tail" loop pattern */
     pixld_a     pixblock_size, dst_r_bpp, \
                 (dst_r_basereg - pixblock_size * dst_r_bpp / 64), DST_R
-    pixld       pixblock_size, src_bpp, \
-                (src_basereg - pixblock_size * src_bpp / 64), SRC
+    fetch_src_pixblock
     pixld       pixblock_size, mask_bpp, \
                 (mask_basereg - pixblock_size * mask_bpp / 64), MASK
     process_pixblock_head
@@ -880,7 +1043,11 @@ fname:
                             process_pixblock_tail_head
 
     cleanup
-    bx         lr  /* exit */
+.if use_nearest_scaling != 0
+    pop         {r4-r6, pc}  /* exit */
+.else
+    bx          lr  /* exit */
+.endif
 8:
     /* Process the remaining trailing pixels in the scanline (dst unaligned) */
     process_trailing_pixels 0, 0, \
@@ -889,6 +1056,21 @@ fname:
                             process_pixblock_tail_head
 
     cleanup
+
+.if use_nearest_scaling != 0
+    pop         {r4-r6, pc}  /* exit */
+
+    .unreq      DST_R
+    .unreq      SRC
+    .unreq      W
+    .unreq      VX
+    .unreq      UNIT_X
+    .unreq      TMP1
+    .unreq      TMP2
+    .unreq      DST_W
+    .unreq      MASK
+
+.else
     bx          lr  /* exit */
 
     .unreq      SRC
@@ -896,7 +1078,20 @@ fname:
     .unreq      DST_R
     .unreq      DST_W
     .unreq      W
+.endif
+
+    .purgem     fetch_src_pixblock
+    .purgem     pixld_src
+
     .endfunc
+.endm
+
+.macro generate_composite_function_single_scanline x:vararg
+    generate_composite_function_scanline 0, x
+.endm
+
+.macro generate_composite_function_nearest_scanline x:vararg
+    generate_composite_function_scanline 1, x
 .endm
 
 /* Default prologue/epilogue, nothing special needs to be done */
@@ -962,4 +1157,21 @@ fname:
     vshll.u8    tmp2, in_b, #8
     vsri.u16    out, tmp1, #5
     vsri.u16    out, tmp2, #11
+.endm
+
+/*
+ * Conversion of four r5g6b5 pixels (in) to four x8r8g8b8 pixels
+ * returned in (out0, out1) registers pair. Requires one temporary
+ * 64-bit register (tmp). 'out1' and 'in' may overlap, the original
+ * value from 'in' is lost
+ */
+.macro convert_four_0565_to_x888_packed in, out0, out1, tmp
+    vshl.u16    out0, in,   #5  /* G top 6 bits */
+    vshl.u16    tmp,  in,   #11 /* B top 5 bits */
+    vsri.u16    in,   in,   #5  /* R is ready in top bits */
+    vsri.u16    out0, out0, #6  /* G is ready in top bits */
+    vsri.u16    tmp,  tmp,  #5  /* B is ready in top bits */
+    vshr.u16    out1, in,   #8  /* R is in place */
+    vsri.u16    out0, tmp,  #8  /* G & B is in place */
+    vzip.u16    out0, out1      /* everything is in place */
 .endm

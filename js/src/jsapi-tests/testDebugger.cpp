@@ -20,6 +20,7 @@ callCountHook(JSContext *cx, JSStackFrame *fp, JSBool before, JSBool *ok, void *
 
 BEGIN_TEST(testDebugger_bug519719)
 {
+    CHECK(JS_SetDebugMode(cx, JS_TRUE));
     JS_SetCallHook(rt, callCountHook, NULL);
     EXEC("function call(fn) { fn(0); }\n"
          "function f(g) { for (var i = 0; i < 9; i++) call(g); }\n"
@@ -46,6 +47,7 @@ nonStrictThisHook(JSContext *cx, JSStackFrame *fp, JSBool before, JSBool *ok, vo
 BEGIN_TEST(testDebugger_getThisNonStrict)
 {
     bool allWrapped = true;
+    CHECK(JS_SetDebugMode(cx, JS_TRUE));
     JS_SetCallHook(rt, nonStrictThisHook, (void *) &allWrapped);
     EXEC("function nonstrict() { }\n"
          "Boolean.prototype.nonstrict = nonstrict;\n"
@@ -83,6 +85,7 @@ strictThisHook(JSContext *cx, JSStackFrame *fp, JSBool before, JSBool *ok, void 
 BEGIN_TEST(testDebugger_getThisStrict)
 {
     bool anyWrapped = false;
+    CHECK(JS_SetDebugMode(cx, JS_TRUE));
     JS_SetCallHook(rt, strictThisHook, (void *) &anyWrapped);
     EXEC("function strict() { 'use strict'; }\n"
          "Boolean.prototype.strict = strict;\n"

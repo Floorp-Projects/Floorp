@@ -339,12 +339,13 @@ class Writer
     nj::CseFilter *const cse;   // created in this class
 
     nj::LogControl *logc;       // passed in from outside
+    nj::Config     *njConfig;   // passed in from outside
 
   public:
     Writer(nj::Allocator *alloc, nj::LirBuffer *lirbuf)
-      : alloc(alloc), lirbuf(lirbuf), lir(NULL), cse(NULL), logc(NULL) {}
+      : alloc(alloc), lirbuf(lirbuf), lir(NULL), cse(NULL), logc(NULL), njConfig(NULL) {}
 
-    void init(nj::LogControl *logc); 
+    void init(nj::LogControl *logc, nj::Config *njConfig); 
 
     nj::LIns *name(nj::LIns *ins, const char *name) const {
 #ifdef JS_JIT_SPEW
@@ -801,10 +802,6 @@ class Writer
         return lir->insGuard(nj::LIR_xt, cond, gr);
     }
 
-    nj::LIns *xtbl(nj::LIns *index, nj::GuardRecord *gr) const {
-        return lir->insGuard(nj::LIR_xtbl, index, gr);
-    }
-
     nj::LIns *xbarrier(nj::GuardRecord *gr) const {
         return lir->insGuard(nj::LIR_xbarrier, /* cond = */NULL, gr);
     }
@@ -1071,13 +1068,13 @@ class Writer
     nj::LIns *cmovi(nj::LIns *cond, nj::LIns *t, nj::LIns *f) const {
         /* We can only use cmovi if the configuration says we can. */
         NanoAssert(t->isI() && f->isI());
-        return lir->insChoose(cond, t, f, avmplus::AvmCore::use_cmov());
+        return lir->insChoose(cond, t, f, njConfig->use_cmov());
     }
 
     nj::LIns *cmovp(nj::LIns *cond, nj::LIns *t, nj::LIns *f) const {
         /* We can only use cmovp if the configuration says we can. */
         NanoAssert(t->isP() && f->isP());
-        return lir->insChoose(cond, t, f, avmplus::AvmCore::use_cmov());
+        return lir->insChoose(cond, t, f, njConfig->use_cmov());
     }
 
     nj::LIns *cmovd(nj::LIns *cond, nj::LIns *t, nj::LIns *f) const {

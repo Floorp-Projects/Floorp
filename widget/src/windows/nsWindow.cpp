@@ -1299,6 +1299,9 @@ NS_METHOD nsWindow::Show(PRBool bState)
             break;
           // use default for nsSizeMode_Minimized on Windows CE
 #else
+          case nsSizeMode_Fullscreen:
+            ::ShowWindow(mWnd, SW_SHOW);
+            break;
           case nsSizeMode_Maximized :
             ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
             break;
@@ -2898,21 +2901,16 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
 
   UpdateNonClientMargins();
 
-  // Prevent window updates during the transition.
-  DWORD style;
-  if (nsUXThemeData::CheckForCompositor()) {
-    style = GetWindowLong(mWnd, GWL_STYLE);
-    SetWindowLong(mWnd, GWL_STYLE, style & ~WS_VISIBLE);
-  }
-
+  PRBool visible = mIsVisible;
+  Show(PR_FALSE);
+  
   // Will call hide chrome, reposition window. Note this will
   // also cache dimensions for restoration, so it should only
   // be called once per fullscreen request.
   nsresult rv = nsBaseWidget::MakeFullScreen(aFullScreen);
 
-  if (nsUXThemeData::CheckForCompositor()) {
-    style = GetWindowLong(mWnd, GWL_STYLE);
-    SetWindowLong(mWnd, GWL_STYLE, style | WS_VISIBLE);
+  if (visible) {
+    Show(PR_TRUE);
     Invalidate(PR_FALSE);
   }
 

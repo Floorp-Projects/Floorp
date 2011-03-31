@@ -100,6 +100,8 @@
 #endif
 
 #include "mozilla/FunctionTimer.h"
+#include "mozilla/dom/Element.h"
+#include "nsImageMapUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService
@@ -263,21 +265,12 @@ already_AddRefed<nsAccessible>
 nsAccessibilityService::CreateHTMLImageAccessible(nsIContent* aContent,
                                                   nsIPresShell* aPresShell)
 {
-  nsCOMPtr<nsIHTMLDocument> htmlDoc =
-    do_QueryInterface(aContent->GetCurrentDoc());
-
-  nsCOMPtr<nsIDOMHTMLMapElement> mapElm;
-  if (htmlDoc) {
-    nsAutoString mapElmName;
-    aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::usemap,
-                      mapElmName);
-
-    if (!mapElmName.IsEmpty()) {
-      if (mapElmName.CharAt(0) == '#')
-        mapElmName.Cut(0,1);
-      mapElm = htmlDoc->GetImageMap(mapElmName);
-    }
-  }
+  nsAutoString mapElmName;
+  aContent->GetAttr(kNameSpaceID_None,
+                    nsAccessibilityAtoms::usemap,
+                    mapElmName);
+  nsCOMPtr<nsIDOMHTMLMapElement> mapElm =
+    nsImageMapUtils::FindImageMap(aContent->GetCurrentDoc(), mapElmName);
 
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aPresShell));
   nsAccessible* accessible = mapElm ?
@@ -535,6 +528,22 @@ nsAccessibilityService::UpdateText(nsIPresShell* aPresShell,
   nsDocAccessible* document = GetDocAccessible(aPresShell->GetDocument());
   if (document)
     document->UpdateText(aContent);
+}
+
+void
+nsAccessibilityService::UpdateListBullet(nsIPresShell* aPresShell,
+                                         nsIContent* aHTMLListItemContent,
+                                         bool aHasBullet)
+{
+  nsDocAccessible* document = GetDocAccessible(aPresShell->GetDocument());
+  if (document) {
+    nsAccessible* accessible = document->GetAccessible(aHTMLListItemContent);
+    if (accessible) {
+      nsHTMLLIAccessible* listItem = accessible->AsHTMLListItem();
+      if (listItem)
+        listItem->UpdateBullet(aHasBullet);
+    }
+  }
 }
 
 void

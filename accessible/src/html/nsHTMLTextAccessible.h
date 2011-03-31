@@ -136,7 +136,6 @@ public:
   NS_IMETHOD GetName(nsAString& aName);
 
   // nsAccessNode
-  virtual void Shutdown();
   virtual bool IsPrimaryForNode() const;
 
   // nsAccessible
@@ -144,15 +143,6 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
   virtual void AppendTextTo(nsAString& aText, PRUint32 aStartOffset = 0,
                             PRUint32 aLength = PR_UINT32_MAX);
-
-protected:
-  // XXX: Ideally we'd get the bullet text directly from the bullet frame via
-  // nsBulletFrame::GetListItemText(), but we'd need an interface for getting
-  // text from contentless anonymous frames. Perhaps something like
-  // nsIAnonymousFrame::GetText() ? However, in practice storing the bullet text
-  // here should not be a problem if we invalidate the right parts of
-  // the accessibility cache when mutation events occur.
-  nsString mBulletText;
 };
 
 /**
@@ -182,22 +172,32 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIAccessible
-  NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
-
   // nsAccessNode
   virtual void Shutdown();
+
+  // nsIAccessible
+  NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
 
   // nsAccessible
   virtual PRUint32 NativeRole();
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
+
+  // nsHTMLLIAccessible
+  void UpdateBullet(bool aHasBullet);
 
 protected:
   // nsAccessible
   virtual void CacheChildren();
 
 private:
-  nsRefPtr<nsHTMLListBulletAccessible> mBulletAccessible;
+  nsRefPtr<nsHTMLListBulletAccessible> mBullet;
 };
 
-#endif  
+inline nsHTMLLIAccessible*
+nsAccessible::AsHTMLListItem()
+{
+  return mFlags & eHTMLListItemAccessible ?
+    static_cast<nsHTMLLIAccessible*>(this) : nsnull;
+}
+
+#endif

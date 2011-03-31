@@ -109,8 +109,6 @@ public:
   NS_METHOD SetAttribute(const nsAString& aName,
                          const nsAString& aValue);
   NS_METHOD GetTagName(nsAString& aTagName);
-  NS_METHOD GetElementsByTagName(const nsAString& aTagname,
-                                 nsIDOMNodeList** aReturn);
 
   // nsIDOMHTMLElement methods. Note that these are non-virtual
   // methods, implementations are expected to forward calls to these

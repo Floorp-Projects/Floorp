@@ -44,6 +44,7 @@ include svg-integration/reftest.list
 == dynamic-attr-removal-1.svg pass.svg
 == dynamic-attr-removal-2.svg pass.svg
 == dynamic-attr-change-1.svg pass.svg
+== dynamic-class-01.svg pass.svg
 == dynamic-conditions-01.svg pass.svg
 == dynamic-conditions-02.svg about:blank
 == dynamic-conditions-03.svg pass.svg
