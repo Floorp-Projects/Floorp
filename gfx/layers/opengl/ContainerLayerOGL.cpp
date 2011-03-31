@@ -343,6 +343,8 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 }
 
 
+#ifdef MOZ_IPC
+
 ShadowContainerLayerOGL::ShadowContainerLayerOGL(LayerManagerOGL *aManager)
   : ShadowContainerLayer(aManager, NULL)
   , LayerOGL(aManager)
@@ -388,6 +390,8 @@ ShadowContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 {
   ContainerRender(this, aPreviousFrameBuffer, aOffset, mOGLManager);
 }
+
+#endif  // MOZ_IPC
 
 
 } /* layers */

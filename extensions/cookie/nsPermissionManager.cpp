@@ -37,9 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/unused.h"
+#endif
 #include "nsPermissionManager.h"
 #include "nsPermission.h"
 #include "nsCRT.h"
@@ -61,6 +63,7 @@
 
 static nsPermissionManager *gPermissionManager = nsnull;
 
+#ifdef MOZ_IPC
 using mozilla::dom::ContentParent;
 using mozilla::dom::ContentChild;
 using mozilla::unused; // ha!
@@ -105,6 +108,7 @@ ParentProcess()
 
   return nsnull;
 }
+#endif
 
 #define ENSURE_NOT_CHILD_PROCESS_(onError) \
   PR_BEGIN_MACRO \
@@ -170,7 +174,9 @@ NS_IMPL_ISUPPORTS3(nsPermissionManager, nsIPermissionManager, nsIObserver, nsISu
 
 nsPermissionManager::nsPermissionManager()
  : mLargestID(0)
+#ifdef MOZ_IPC
  , mUpdateChildProcess(PR_FALSE)
+#endif
 {
 }
 
@@ -227,6 +233,7 @@ nsPermissionManager::Init()
     mObserverService->AddObserver(this, "profile-do-change", PR_TRUE);
   }
 
+#ifdef MOZ_IPC
   if (IsChildProcess()) {
     // Get the permissions from the parent process
     InfallibleTArray<IPC::Permission> perms;
@@ -241,6 +248,7 @@ nsPermissionManager::Init()
     // Stop here; we don't need the DB in the child process
     return NS_OK;
   }
+#endif
 
   // ignore failure here, since it's non-fatal (we can run fine without
   // persistent storage - e.g. if there's no profile).
@@ -432,7 +440,9 @@ nsPermissionManager::Add(nsIURI     *aURI,
                          PRUint32    aExpireType,
                          PRInt64     aExpireTime)
 {
+#ifdef MOZ_IPC
   ENSURE_NOT_CHILD_PROCESS;
+#endif
 
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_ARG_POINTER(aType);
@@ -466,6 +476,7 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
                                  NotifyOperationType   aNotifyOperation,
                                  DBOperationType       aDBOperation)
 {
+#ifdef MOZ_IPC
   if (!IsChildProcess()) {
     // In the parent, send the update now, if the child is ready
     if (mUpdateChildProcess) {
@@ -475,6 +486,7 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
       unused << ParentProcess()->SendAddPermission(permission);
     }
   }
+#endif
 
   if (!gHostArena) {
     gHostArena = new PLArenaPool;
@@ -615,7 +627,9 @@ NS_IMETHODIMP
 nsPermissionManager::Remove(const nsACString &aHost,
                             const char       *aType)
 {
+#ifdef MOZ_IPC
   ENSURE_NOT_CHILD_PROCESS;
+#endif
 
   NS_ENSURE_ARG_POINTER(aType);
 
@@ -633,7 +647,9 @@ nsPermissionManager::Remove(const nsACString &aHost,
 NS_IMETHODIMP
 nsPermissionManager::RemoveAll()
 {
+#ifdef MOZ_IPC
   ENSURE_NOT_CHILD_PROCESS;
+#endif
 
   nsresult rv = RemoveAllInternal();
   NotifyObservers(nsnull, NS_LITERAL_STRING("cleared").get());
@@ -790,7 +806,9 @@ AddPermissionsToList(nsHostEntry *entry, void *arg)
 
 NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
 {
+#ifdef MOZ_IPC
   ENSURE_NOT_CHILD_PROCESS;
+#endif
 
   // roll an nsCOMArray of all our permissions, then hand out an enumerator
   nsCOMArray<nsIPermission> array;
@@ -803,7 +821,9 @@ NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
 
 NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
+#ifdef MOZ_IPC
   ENSURE_NOT_CHILD_PROCESS;
+#endif
 
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     // The profile is about to change,
@@ -900,7 +920,9 @@ nsPermissionManager::NotifyObservers(nsIPermission   *aPermission,
 nsresult
 nsPermissionManager::Read()
 {
+#ifdef MOZ_IPC
   ENSURE_NOT_CHILD_PROCESS;
+#endif
 
   nsresult rv;
 
@@ -968,7 +990,9 @@ static const char kMatchTypeHost[] = "host";
 nsresult
 nsPermissionManager::Import()
 {
+#ifdef MOZ_IPC
   ENSURE_NOT_CHILD_PROCESS;
+#endif
 
   nsresult rv;
 
@@ -1074,7 +1098,9 @@ nsPermissionManager::UpdateDB(OperationType         aOp,
                               PRUint32              aExpireType,
                               PRInt64               aExpireTime)
 {
+#ifdef MOZ_IPC
   ENSURE_NOT_CHILD_PROCESS_NORET;
+#endif
 
   nsresult rv;
 

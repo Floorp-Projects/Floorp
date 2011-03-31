@@ -38,8 +38,10 @@
 #ifndef GFX_IMAGELAYEROGL_H
 #define GFX_IMAGELAYEROGL_H
 
+#ifdef MOZ_IPC
 # include "mozilla/layers/PLayers.h"
 # include "mozilla/layers/ShadowLayers.h"
+#endif  // MOZ_IPC
 
 #include "LayerManagerOGL.h"
 #include "ImageLayers.h"
@@ -232,6 +234,7 @@ public:
   gl::ShaderProgramType mLayerProgram;
 };
 
+#ifdef MOZ_IPC
 class ShadowImageLayerOGL : public ShadowImageLayer,
                             public LayerOGL
 {
@@ -268,6 +271,7 @@ private:
 
 
 };
+#endif
 
 } /* layers */
 } /* mozilla */
