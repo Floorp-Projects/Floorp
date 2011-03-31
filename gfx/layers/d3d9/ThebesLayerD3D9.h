@@ -98,7 +98,7 @@ private:
   /* Render the rectangles of mVisibleRegion with D3D9 using the currently
    * bound textures, target, shaders, etc.
    */
-  void RenderVisibleRegion();
+  void RenderRegion(const nsIntRegion& aRegion);
 
   /* Have a region of our layer drawn */
   void DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
