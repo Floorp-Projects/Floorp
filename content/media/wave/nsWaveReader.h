@@ -76,13 +76,13 @@ private:
 
   // Returns the number of seconds that aBytes represents based on the
   // current audio parameters.  e.g.  176400 bytes is 1 second at 16-bit
-  // stereo 44.1kHz. The time is rounded to the nearest millisecond.
-  float BytesToTime(PRInt64 aBytes) const;
+  // stereo 44.1kHz. The time is rounded to the nearest microsecond.
+  double BytesToTime(PRInt64 aBytes) const;
 
   // Returns the number of bytes that aTime represents based on the current
   // audio parameters.  e.g.  1 second is 176400 bytes at 16-bit stereo
   // 44.1kHz.
-  PRInt64 TimeToBytes(float aTime) const;
+  PRInt64 TimeToBytes(double aTime) const;
 
   // Rounds aBytes down to the nearest complete sample.  Assumes beginning
   // of byte range is already sample aligned by caller.
