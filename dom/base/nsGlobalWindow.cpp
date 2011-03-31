@@ -274,7 +274,7 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 #endif
 
 // The default shortest interval/timeout we permit
-#define DEFAULT_MIN_TIMEOUT_VALUE 10 // 10ms
+#define DEFAULT_MIN_TIMEOUT_VALUE 4 // 4ms
 #define DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE 1000 // 1000ms
 static PRInt32 gMinTimeoutValue;
 static PRInt32 gMinBackgroundTimeoutValue;

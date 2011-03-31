@@ -574,7 +574,7 @@ pref("dom.storage.default_quota",      5120);
 pref("dom.send_after_paint_to_content", false);
 
 // Timeout clamp in ms for timeouts we clamp
-pref("dom.min_timeout_value", 10);
+pref("dom.min_timeout_value", 4);
 // And for background windows
 pref("dom.min_background_timeout_value", 1000);
 
