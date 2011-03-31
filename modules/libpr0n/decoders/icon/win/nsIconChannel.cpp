@@ -62,6 +62,8 @@
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/CondVar.h"
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 #ifdef _WIN32_WINNT
@@ -91,6 +93,56 @@ struct ICONENTRY {
   PRUint16 ieBitCount;
   PRUint32 ieSizeImage;
   PRUint32 ieFileOffset;
+};
+
+class ExtensionFetcherRunnable : public nsRunnable {
+  typedef mozilla::Mutex Mutex;
+  typedef mozilla::CondVar CondVar;
+public:
+  ExtensionFetcherRunnable(nsString& aFilePath,
+                           nsACString& aFileExt,
+                           nsACString& aContentType)
+    : mFilePath(aFilePath), mFileExt(aFileExt), mContentType(aContentType),
+      mLock("ExtensionFetcherRunnable"), mCondVar(mLock, "ExtensionFetcherRunnable"),
+      mSignaled(PR_FALSE)
+  { }
+
+  NS_IMETHOD Run()
+  {
+    mozilla::MutexAutoLock autoLock(mLock);
+
+    nsresult rv;
+    nsCOMPtr<nsIMIMEService> mimeService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCAutoString defFileExt;
+    mimeService->GetPrimaryExtension(mContentType, mFileExt, defFileExt);
+    // If the mime service does not know about this mime type, we show
+    // the generic icon.
+    // In any case, we need to insert a '.' before the extension.
+    mFilePath = NS_LITERAL_STRING(".") + NS_ConvertUTF8toUTF16(defFileExt);
+
+    // Notify the thread that created us that this call is complete
+    mSignaled = PR_TRUE;
+    mCondVar.Notify();
+
+    return NS_OK;
+  }
+
+  void Call() {
+    mozilla::MutexAutoLock autoLock(mLock);
+    NS_DispatchToMainThread(this);
+
+    while (!mSignaled)
+      mCondVar.Wait();
+  }
+private:
+  nsString& mFilePath;
+  const nsACString& mFileExt;
+  const nsACString& mContentType;
+  Mutex mLock;
+  CondVar mCondVar;
+  PRBool mSignaled;
 };
 
 // static helpers
@@ -258,15 +310,11 @@ nsresult GetHIconFromFile(nsIMozIconURI* aIconURI, nsIFile* aFile, HICON *hIcon)
   // to show their real icon.
   if (!fileExists && !contentType.IsEmpty())
   {
-    nsCOMPtr<nsIMIMEService> mimeService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCAutoString defFileExt;
-    mimeService->GetPrimaryExtension(contentType, fileExt, defFileExt);
-    // If the mime service does not know about this mime type, we show
-    // the generic icon.
-    // In any case, we need to insert a '.' before the extension.
-    filePath = NS_LITERAL_STRING(".") + NS_ConvertUTF8toUTF16(defFileExt);
+    // NB: We need to call into the external app helper service on the main
+    // thread.
+    nsRefPtr<ExtensionFetcherRunnable> runnable =
+      new ExtensionFetcherRunnable(filePath, fileExt, contentType);
+    runnable->Call();
   }
 
   // Is this the "Desktop" folder?
