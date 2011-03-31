@@ -113,7 +113,7 @@ static bool
 ComputeAccurateDecimalInteger(JSContext *cx, const jschar *start, const jschar *end, jsdouble *dp)
 {
     size_t length = end - start;
-    char *cstr = static_cast<char *>(cx->malloc(length + 1));
+    char *cstr = static_cast<char *>(cx->malloc_(length + 1));
     if (!cstr)
         return false;
 
@@ -129,12 +129,12 @@ ComputeAccurateDecimalInteger(JSContext *cx, const jschar *start, const jschar *
     *dp = js_strtod_harder(JS_THREAD_DATA(cx)->dtoaState, cstr, &estr, &err);
     if (err == JS_DTOA_ENOMEM) {
         JS_ReportOutOfMemory(cx);
-        cx->free(cstr);
+        cx->free_(cstr);
         return false;
     }
     if (err == JS_DTOA_ERANGE && *dp == HUGE_VAL)
         *dp = js_PositiveInfinity;
-    cx->free(cstr);
+    cx->free_(cstr);
     return true;
 }
 
@@ -597,7 +597,7 @@ ToCStringBuf::ToCStringBuf() :dbuf(NULL)
 ToCStringBuf::~ToCStringBuf()
 {
     if (dbuf)
-        UnwantedForeground::free(dbuf);
+        UnwantedForeground::free_(dbuf);
 }
 
 JSString * JS_FASTCALL
@@ -793,7 +793,7 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     }
     tmpGroup--;
 
-    buf = (char *)cx->malloc(buflen + 1);
+    buf = (char *)cx->malloc_(buflen + 1);
     if (!buf)
         return JS_FALSE;
 
@@ -829,12 +829,12 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 
     if (cx->localeCallbacks && cx->localeCallbacks->localeToUnicode) {
         JSBool ok = cx->localeCallbacks->localeToUnicode(cx, buf, Jsvalify(vp));
-        cx->free(buf);
+        cx->free_(buf);
         return ok;
     }
 
     str = js_NewStringCopyN(cx, buf, buflen);
-    cx->free(buf);
+    cx->free_(buf);
     if (!str)
         return JS_FALSE;
 
@@ -1054,9 +1054,9 @@ js_FinishRuntimeNumberState(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
 
-    cx->free((void *) rt->thousandsSeparator);
-    cx->free((void *) rt->decimalSeparator);
-    cx->free((void *) rt->numGrouping);
+    cx->free_((void *) rt->thousandsSeparator);
+    cx->free_((void *) rt->decimalSeparator);
+    cx->free_((void *) rt->numGrouping);
     rt->thousandsSeparator = rt->decimalSeparator = rt->numGrouping = NULL;
 }
 
@@ -1415,7 +1415,7 @@ js_strtod(JSContext *cx, const jschar *s, const jschar *send,
 
     /* Use cbuf to avoid malloc */
     if (length >= sizeof cbuf) {
-        cstr = (char *) cx->malloc(length + 1);
+        cstr = (char *) cx->malloc_(length + 1);
         if (!cstr)
            return JS_FALSE;
     } else {
@@ -1446,7 +1446,7 @@ js_strtod(JSContext *cx, const jschar *s, const jschar *send,
 
     i = estr - cstr;
     if (cstr != cbuf)
-        cx->free(cstr);
+        cx->free_(cstr);
     *ep = i ? s1 + i : s;
     *dp = d;
     return JS_TRUE;

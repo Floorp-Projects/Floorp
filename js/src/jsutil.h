@@ -266,26 +266,26 @@ JS_END_EXTERN_C
  *
  *   Allocation:
  *   - Prefer to allocate using JSContext:
- *       cx->{malloc,realloc,calloc,new_,new_array}
+ *       cx->{malloc_,realloc_,calloc_,new_,new_array}
  *
  *   - If no JSContext is available, use a JSRuntime:
- *       rt->{malloc,realloc,calloc,new_,new_array}
+ *       rt->{malloc_,realloc_,calloc_,new_,new_array}
  *
  *   - As a last resort, use unaccounted allocation ("OffTheBooks"):
- *       js::OffTheBooks::{malloc,realloc,calloc,new_,new_array}
+ *       js::OffTheBooks::{malloc_,realloc_,calloc_,new_,new_array}
  *
  *   Deallocation:
  *   - When the deallocation occurs on a slow path, use:
- *       Foreground::{free,delete_,array_delete}
+ *       Foreground::{free_,delete_,array_delete}
  *
  *   - Otherwise deallocate on a background thread using a JSContext:
- *       cx->{free,delete_,array_delete}
+ *       cx->{free_,delete_,array_delete}
  *  
  *   - If no JSContext is available, use a JSRuntime:
- *       rt->{free,delete_,array_delete}
+ *       rt->{free_,delete_,array_delete}
  *
  *   - As a last resort, use UnwantedForeground deallocation:
- *       js::UnwantedForeground::{free,delete_,array_delete}
+ *       js::UnwantedForeground::{free_,delete_,array_delete}
  *
  * General tips:
  *
@@ -467,21 +467,15 @@ class OffTheBooks {
 public:
     JS_DECLARE_NEW_METHODS(::js_malloc, JS_ALWAYS_INLINE static)
 
-    /*
-     * The parentheses around the following function names prevent the names
-     * from being expanded if they are defined in the system headers as macros
-     * (function-style macros only expand if followed by an open paratheses).
-     * This doesn't appear to be a problem for call-sites (ie cx->malloc()).
-     */
-    static JS_INLINE void* (malloc)(size_t bytes) {
+    static JS_INLINE void* malloc_(size_t bytes) {
         return ::js_malloc(bytes);
     }
 
-    static JS_INLINE void* (calloc)(size_t bytes) {
+    static JS_INLINE void* calloc_(size_t bytes) {
         return ::js_calloc(bytes);
     }
 
-    static JS_INLINE void* (realloc)(void* p, size_t bytes) {
+    static JS_INLINE void* realloc_(void* p, size_t bytes) {
         return ::js_realloc(p, bytes);
     }
 };
@@ -493,7 +487,7 @@ public:
 class Foreground {
 public:
     /* See parentheses comment above. */
-    static JS_ALWAYS_INLINE void (free)(void* p) {
+    static JS_ALWAYS_INLINE void free_(void* p) {
         ::js_free(p);
     }
 

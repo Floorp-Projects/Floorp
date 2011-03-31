@@ -1582,7 +1582,7 @@ js_LogOpcode(JSContext *cx)
                     fprintf(logfp, "%s %s",
                             (n == -ndefs) ? "  output:" : ",",
                             bytes);
-                    cx->free(bytes);
+                    cx->free_(bytes);
                 } else {
                     JS_ClearPendingException(cx);
                 }
@@ -1634,7 +1634,7 @@ js_LogOpcode(JSContext *cx)
                 fprintf(logfp, "%s %s",
                         (n == -nuses) ? "  inputs:" : ",",
                         bytes);
-                cx->free(bytes);
+                cx->free_(bytes);
             } else {
                 JS_ClearPendingException(cx);
             }
@@ -1723,7 +1723,7 @@ js_DumpOpMeters()
 
 # define SIGNIFICANT(count,total) (200. * (count) >= (total))
 
-    graph = (Edge *) OffTheBooks::calloc(nedges * sizeof graph[0]);
+    graph = (Edge *) OffTheBooks::calloc_(nedges * sizeof graph[0]);
     if (!graph)
         return;
     for (i = nedges = 0; i < JSOP_LIMIT; i++) {
@@ -1754,7 +1754,7 @@ js_DumpOpMeters()
                 graph[i].from, graph[i].to,
                 (unsigned long)graph[i].count, style);
     }
-    cx->free(graph);
+    cx->free_(graph);
     fputs("}\n", fp);
     fclose(fp);
 

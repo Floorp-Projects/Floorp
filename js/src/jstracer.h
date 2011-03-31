@@ -76,7 +76,7 @@ public:
             memcpy(tmp, _data, _len * sizeof(T));
             _data = tmp;
         } else {
-            _data = (T*) js::OffTheBooks::realloc(_data, _max * sizeof(T));
+            _data = (T*) js::OffTheBooks::realloc_(_data, _max * sizeof(T));
         }
 #if defined(DEBUG)
         memset(&_data[_len], 0xcd, _max - _len);
@@ -93,7 +93,7 @@ public:
 
     ~Queue() {
         if (!alloc)
-            js::UnwantedForeground::free(_data);
+            js::UnwantedForeground::free_(_data);
     }
 
     bool contains(T a) {
@@ -421,7 +421,7 @@ public:
     {}
 
     ~VMAllocator() {
-        js::UnwantedForeground::free(mReserve);
+        js::UnwantedForeground::free_(mReserve);
     }
 
     size_t size() {

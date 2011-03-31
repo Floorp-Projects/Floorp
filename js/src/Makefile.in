@@ -602,29 +602,31 @@ endif
 # don't give different results. We skip the contents of objdirs using |find|
 # (it can't be done with %-expansion, because the files we want to skip aren't
 # in the vpath).
+ifneq ($(OS_ARCH),WINNT) # FIXME: this should be made work on Windows too.
 ALL_FILES=$(shell find $(srcdir) \( -name "*.cpp" -o -name "*.h" \) -not -path "*/dist/*")
 check-malloc-function-usage: $(filter-out %jsutil.h %jscntxt.h, $(ALL_FILES))
 
-   # js_malloc and friends are only used by other memory managers, and should
-   # never be used elsewhere directly.
-   $(srcdir)/config/check_source_count.py "\bjs_malloc\b" 0 \
-       "in Makefile.in" "cx->malloc_ or rt->malloc_" $^
-   $(srcdir)/config/check_source_count.py "\bjs_calloc\b" 0 \
-       "in Makefile.in" "cx->calloc_ or rt->calloc_" $^
-   $(srcdir)/config/check_source_count.py "\bjs_realloc\b" 0 \
-       "in Makefile.in" "cx->realloc_ or rt->realloc_" $^
-   $(srcdir)/config/check_source_count.py "\bjs_free\b" 0 \
-       "in Makefile.in" "cx->free_" $^
+	# js_malloc and friends are only used by other memory managers, and should
+	# never be used elsewhere directly.
+	$(srcdir)/config/check_source_count.py "\bjs_malloc\b" 0 \
+		"in Makefile.in" "cx->malloc_ or rt->malloc_" $^
+	$(srcdir)/config/check_source_count.py "\bjs_calloc\b" 0 \
+		"in Makefile.in" "cx->calloc_ or rt->calloc_" $^
+	$(srcdir)/config/check_source_count.py "\bjs_realloc\b" 0 \
+		"in Makefile.in" "cx->realloc_ or rt->realloc_" $^
+	$(srcdir)/config/check_source_count.py "\bjs_free\b" 0 \
+		"in Makefile.in" "cx->free_" $^
 
-   # We desire these numbers to go down, not up. See "User guide to memory
-   # management within SpiderMonkey" in jsutil.h.
-   $(srcdir)/config/check_source_count.py OffTheBooks:: 54 \
-       "in Makefile.in" "{cx,rt}->{new_,new_array,malloc_,calloc_,realloc_}" $^
-   # This should go to zero, if possible.
-   $(srcdir)/config/check_source_count.py UnwantedForeground:: 36 \
-       "in Makefile.in" "{cx,rt}->{free_,delete_,array_delete}" $^
+	# We desire these numbers to go down, not up. See "User guide to memory
+	# management within SpiderMonkey" in jsutil.h.
+	$(srcdir)/config/check_source_count.py OffTheBooks:: 54 \
+		"in Makefile.in" "{cx,rt}->{new_,new_array,malloc_,calloc_,realloc_}" $^
+	# This should go to zero, if possible.
+	$(srcdir)/config/check_source_count.py UnwantedForeground:: 36 \
+		"in Makefile.in" "{cx,rt}->{free_,delete_,array_delete}" $^
 
 check:: check-malloc-function-usage
+endif
 
 ifndef WINCE
 JITFLAGS = ,m,j,mj,mjp,am,amj,amjp,amd
