@@ -11440,47 +11440,24 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             }
         } else if (vp[2].isString() && mode == JSOP_CALL) {
             if (native == js_regexp_exec) {
-                jsbytecode *pc = cx->regs->pc;
                 /*
-                 * If we see any of these sequences, the result is unused:
-                 * - call / pop
-                 * - call / trace / pop
-                 *
-                 * If we see any of these sequences, the result is only tested for nullness:
-                 * - call / ifeq
-                 * - call / trace / ifeq
-                 * - call / not / ifeq
-                 * - call / trace / not / ifeq
-                 *
-                 * In either case, we replace the call to RegExp.exec() on the
+                 * If the result of the call will be unused or only tested against
+                 * nullness, we replace the call to RegExp.exec() on the
                  * stack with a call to RegExp.test() because "r.exec(s) !=
                  * null" is equivalent to "r.test(s)".  This avoids building
                  * the result array, which can be expensive.  This requires
                  * that RegExp.prototype.test() hasn't been changed;  we check this.
                  */
-                if (pc[0] == JSOP_CALL) {
-                    if ((pc[JSOP_CALL_LENGTH] == JSOP_POP) ||
-                        (pc[JSOP_CALL_LENGTH] == JSOP_TRACE &&
-                         pc[JSOP_CALL_LENGTH + JSOP_TRACE_LENGTH] == JSOP_POP) ||
-                        (pc[JSOP_CALL_LENGTH] == JSOP_IFEQ) ||
-                        (pc[JSOP_CALL_LENGTH] == JSOP_TRACE &&
-                         pc[JSOP_CALL_LENGTH + JSOP_TRACE_LENGTH] == JSOP_IFEQ) ||
-                        (pc[JSOP_CALL_LENGTH] == JSOP_NOT &&
-                         pc[JSOP_CALL_LENGTH + JSOP_NOT_LENGTH] == JSOP_IFEQ) ||
-                        (pc[JSOP_CALL_LENGTH] == JSOP_TRACE &&
-                         pc[JSOP_CALL_LENGTH + JSOP_TRACE_LENGTH] == JSOP_NOT &&
-                         pc[JSOP_CALL_LENGTH + JSOP_TRACE_LENGTH + JSOP_NOT_LENGTH] == JSOP_IFEQ))
-                    {
-                        JSObject* proto;
-                        jsid id = ATOM_TO_JSID(cx->runtime->atomState.testAtom);
-                        /* Get RegExp.prototype.test() and check it hasn't been changed. */
-                        if (js_GetClassPrototype(cx, NULL, JSProto_RegExp, &proto)) {
-                            if (JSObject *tmp = HasNativeMethod(proto, id, js_regexp_test)) {
-                                vp[0] = ObjectValue(*tmp);
-                                funobj = tmp;
-                                fun = tmp->getFunctionPrivate();
-                                native = js_regexp_test;
-                            }
+                if (!CallResultEscapes(cx->regs->pc)) {
+                    JSObject* proto;
+                    jsid id = ATOM_TO_JSID(cx->runtime->atomState.testAtom);
+                    /* Get RegExp.prototype.test() and check it hasn't been changed. */
+                    if (js_GetClassPrototype(cx, NULL, JSProto_RegExp, &proto)) {
+                        if (JSObject *tmp = HasNativeMethod(proto, id, js_regexp_test)) {
+                            vp[0] = ObjectValue(*tmp);
+                            funobj = tmp;
+                            fun = tmp->getFunctionPrivate();
+                            native = js_regexp_test;
                         }
                     }
                 }
