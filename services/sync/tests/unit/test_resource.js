@@ -346,8 +346,8 @@ function run_test() {
   do_check_eq(content, JSON.stringify({"x-what-is-weave": "awesome"}));
 
   _("setHeader(): setting multiple headers, overwriting existing header");
-  res9.setHeader('X-WHAT-is-Weave', 'more awesomer',
-                 'X-Another-Header', 'hello world');
+  res9.setHeader('X-WHAT-is-Weave', 'more awesomer');
+  res9.setHeader('X-Another-Header', 'hello world');
   do_check_eq(res9.headers['x-what-is-weave'], 'more awesomer');
   do_check_eq(res9.headers['x-another-header'], 'hello world');
   content = res9.get();
