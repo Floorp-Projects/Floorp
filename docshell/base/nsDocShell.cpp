@@ -8280,6 +8280,9 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                               !curHash.Equals(newHash);
 
         if (doShortCircuitedLoad) {
+            // Save the current URI; we need it if we fire a hashchange later.
+            nsCOMPtr<nsIURI> oldURI = mCurrentURI;
+
             // Save the position of the scrollers.
             nscoord cx = 0, cy = 0;
             GetCurScrollPos(ScrollOrientation_X, &cx);
@@ -8426,8 +8429,11 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                   window->DispatchSyncPopState();
                 }
 
-                if (doHashchange)
-                  window->DispatchAsyncHashchange();
+                if (doHashchange) {
+                  // Make sure to use oldURI here, not mCurrentURI, because by
+                  // now, mCurrentURI has changed!
+                  window->DispatchAsyncHashchange(oldURI, aURI);
+                }
             }
 
             return NS_OK;
