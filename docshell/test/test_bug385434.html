@@ -135,10 +135,6 @@ function run_test() {
   yield;
   eventExpected("Going forward should trigger a hashchange.");
 
-  frameCw.window.location.hash = "";
-  yield;
-  eventExpected("Changing window.location.hash should trigger a hashchange.");
-
   // window.location has a trailing '#' right now, so we append "link1", not
   // "#link1".
   frameCw.window.location = frameCw.window.location + "link1";

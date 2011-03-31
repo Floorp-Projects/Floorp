@@ -99,7 +99,6 @@ private:
   nsCOMArray<nsISHEntry>          mChildren;
   PRUint32                        mLoadType;
   PRUint32                        mID;
-  PRUint32                        mPageIdentifier;
   PRInt64                         mDocIdentifier;
   PRInt32                         mScrollPositionX;
   PRInt32                         mScrollPositionY;
