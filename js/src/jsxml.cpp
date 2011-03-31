@@ -891,7 +891,7 @@ JSXMLArray::setCapacity(JSContext *cx, uint32 newCapacity)
             if (cx)
                 cx->free(vector);
             else
-                js_free(vector);
+                Foreground::free(vector);
         }
         vector = NULL;
     } else {
@@ -901,7 +901,7 @@ JSXMLArray::setCapacity(JSContext *cx, uint32 newCapacity)
 #if JS_BITS_PER_WORD == 32
             (size_t)newCapacity > ~(size_t)0 / sizeof(void *) ||
 #endif
-            !(tmp = (void **) js_realloc(vector, newCapacity * sizeof(void *)))) {
+            !(tmp = (void **) OffTheBooks::realloc(vector, newCapacity * sizeof(void *)))) {
             if (cx)
                 JS_ReportOutOfMemory(cx);
             return false;
@@ -988,7 +988,7 @@ XMLArrayAddMember(JSContext *cx, JSXMLArray *array, uint32 index, void *elt)
                 (size_t)capacity > ~(size_t)0 / sizeof(void *) ||
 #endif
                 !(vector = (void **)
-                           js_realloc(array->vector, capacity * sizeof(void *)))) {
+                           cx->realloc(array->vector, capacity * sizeof(void *)))) {
                 JS_ReportOutOfMemory(cx);
                 return JS_FALSE;
             }
@@ -1072,7 +1072,7 @@ XMLArrayTruncate(JSContext *cx, JSXMLArray *array, uint32 length)
             cx->free(array->vector);
         vector = NULL;
     } else {
-        vector = (void **) js_realloc(array->vector, length * sizeof(void *));
+        vector = (void **) cx->realloc(array->vector, length * sizeof(void *));
         if (!vector)
             return;
     }
@@ -4886,7 +4886,7 @@ xml_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op, Value *statep, 
         if (length == 0) {
             statep->setInt32(0);
         } else {
-            cursor = cx->create<JSXMLArrayCursor>(&xml->xml_kids);
+            cursor = cx->new_<JSXMLArrayCursor>(&xml->xml_kids);
             if (!cursor)
                 return JS_FALSE;
             statep->setPrivate(cursor);
@@ -4912,7 +4912,7 @@ xml_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op, Value *statep, 
         if (!statep->isInt32(0)) {
             cursor = (JSXMLArrayCursor *) statep->toPrivate();
             if (cursor)
-                cx->destroy(cursor);
+                cx->delete_(cursor);
         }
         statep->setNull();
         break;
@@ -7582,7 +7582,7 @@ xmlfilter_finalize(JSContext *cx, JSObject *obj)
     if (!filter)
         return;
 
-    cx->destroy(filter);
+    cx->delete_(filter);
 }
 
 Class js_XMLFilterClass = {
@@ -7652,7 +7652,7 @@ js_StepXMLListFilter(JSContext *cx, JSBool initialized)
          * Init all filter fields before setPrivate exposes it to
          * xmlfilter_trace or xmlfilter_finalize.
          */
-        filter = cx->create<JSXMLFilter>(list, &list->xml_kids);
+        filter = cx->new_<JSXMLFilter>(list, &list->xml_kids);
         if (!filter)
             return JS_FALSE;
         filterobj->setPrivate(filter);

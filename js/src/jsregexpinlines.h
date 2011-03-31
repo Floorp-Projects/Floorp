@@ -70,7 +70,7 @@ regexp_statics_construct(JSContext *cx, JSObject *parent)
     JSObject *obj = NewObject<WithProto::Given>(cx, &regexp_statics_class, NULL, parent);
     if (!obj)
         return NULL;
-    RegExpStatics *res = cx->create<RegExpStatics>();
+    RegExpStatics *res = cx->new_<RegExpStatics>();
     if (!res)
         return NULL;
     obj->setPrivate(static_cast<void *>(res));
@@ -117,15 +117,14 @@ class RegExp
 #endif
     { }
 
+    JS_DECLARE_ALLOCATION_FRIENDS_FOR_PRIVATE_CONSTRUCTOR;
+
     ~RegExp() {
 #if !ENABLE_YARR_JIT
         if (compiled)
             jsRegExpFree(compiled);
 #endif
     }
-
-    /* Constructor/destructor are hidden; called by cx->create/destroy. */
-    friend struct ::JSContext;
 
     bool compileHelper(JSContext *cx, JSLinearString &pattern);
     bool compile(JSContext *cx);
@@ -419,11 +418,11 @@ RegExp::create(JSContext *cx, JSString *source, uint32 flags)
     JSLinearString *flatSource = source->ensureLinear(cx);
     if (!flatSource)
         return RetType(NULL);
-    RegExp *self = cx->create<RegExp>(flatSource, flags, cx->compartment);
+    RegExp *self = cx->new_<RegExp>(flatSource, flags, cx->compartment);
     if (!self)
         return RetType(NULL);
     if (!self->compile(cx)) {
-        cx->destroy<RegExp>(self);
+        Foreground::delete_(self);
         return RetType(NULL);
     }
     return RetType(self);
@@ -576,7 +575,7 @@ RegExp::decref(JSContext *cx)
     assertSameCompartment(cx, compartment);
 #endif
     if (--refCount == 0)
-        cx->destroy<RegExp>(this);
+        cx->delete_(this);
 }
 
 inline RegExp *

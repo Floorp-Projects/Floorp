@@ -697,7 +697,7 @@ Sprint(Sprinter *sp, const char *format, ...)
         return -1;
     }
     offset = SprintCString(sp, bp);
-    js_free(bp);
+    sp->context->free_(bp);
     return offset;
 }
 
@@ -941,7 +941,7 @@ js_printf(JSPrinter *jp, const char *format, ...)
     cc = strlen(bp);
     if (SprintPut(&jp->sprinter, bp, (size_t)cc) < 0)
         cc = -1;
-    js_free(bp);
+    jp->sprinter.context->free(bp);
 
     va_end(ap);
     return cc;

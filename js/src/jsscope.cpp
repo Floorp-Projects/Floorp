@@ -187,10 +187,10 @@ bool
 Shape::hashify(JSRuntime *rt)
 {
     JS_ASSERT(!hasTable());
-    void* mem = rt->malloc(sizeof(PropertyTable));
-    if (!mem)
+    PropertyTable *table = rt->new_<PropertyTable>(entryCount());
+    if (!table)
         return false;
-    setTable(new(mem) PropertyTable(entryCount()));
+    setTable(table);
     return getTable()->init(rt, this);
 }
 
@@ -323,17 +323,14 @@ PropertyTable::change(int log2Delta, JSContext *cx)
     JS_ASSERT(entries);
 
     /*
-     * Grow, shrink, or compress by changing this->entries. Here, we prefer
-     * cx->runtime->calloc to js_calloc, which on OOM waits for a background
-     * thread to finish sweeping and retry, if appropriate. Avoid cx->calloc
-     * so our caller can be in charge of whether to JS_ReportOutOfMemory.
+     * Grow, shrink, or compress by changing this->entries.
      */
     oldlog2 = JS_DHASH_BITS - hashShift;
     newlog2 = oldlog2 + log2Delta;
     oldsize = JS_BIT(oldlog2);
     newsize = JS_BIT(newlog2);
     nbytes = PROPERTY_TABLE_NBYTES(newsize);
-    newTable = (Shape **) cx->runtime->calloc(nbytes);
+    newTable = (Shape **) cx->calloc(nbytes);
     if (!newTable) {
         METER(tableAllocFails);
         return false;
@@ -358,12 +355,8 @@ PropertyTable::change(int log2Delta, JSContext *cx)
         oldsize--;
     }
 
-    /*
-     * Finally, free the old entries storage. Note that cx->runtime->free just
-     * calls js_free. Use js_free here to match PropertyTable::~PropertyTable,
-     * which cannot have a cx or rt parameter.
-     */
-    js_free(oldTable);
+    /* Finally, free the old entries storage. */
+    cx->free(oldTable);
     return true;
 }
 

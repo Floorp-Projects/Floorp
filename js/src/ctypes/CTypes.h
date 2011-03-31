@@ -56,18 +56,18 @@ template<class T>
 class OperatorDelete
 {
 public:
-  static void destroy(T* ptr) { js_delete(ptr); }
+  static void destroy(T* ptr) { UnwantedForeground::delete_(ptr); }
 };
 
 template<class T>
 class OperatorArrayDelete
 {
 public:
-  static void destroy(T* ptr) { js_array_delete(ptr); }
+  static void destroy(T* ptr) { UnwantedForeground::array_delete(ptr); }
 };
 
-// Class that takes ownership of a pointer T*, and calls js_delete() or
-// js_array_delete() upon destruction.
+// Class that takes ownership of a pointer T*, and calls cx->delete_() or
+// cx->array_delete() upon destruction.
 template<class T, class DeleteTraits = OperatorDelete<T> >
 class AutoPtr {
 private:

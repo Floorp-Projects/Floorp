@@ -50,6 +50,8 @@
 #include "jsarena.h"
 #include "jsprvtd.h"
 
+using namespace js;
+
 #ifdef JS_ARENAMETER
 static JSArenaStats *arena_stats_list;
 
@@ -160,12 +162,12 @@ JS_ArenaAllocate(JSArenaPool *pool, size_t nb)
             if (pool->quotap) {
                 if (gross > *pool->quotap)
                     return NULL;
-                b = (JSArena *) js_malloc(gross);
+                b = (JSArena *) OffTheBooks::malloc(gross);
                 if (!b)
                     return NULL;
                 *pool->quotap -= gross;
             } else {
-                b = (JSArena *) js_malloc(gross);
+                b = (JSArena *) OffTheBooks::malloc(gross);
                 if (!b)
                     return NULL;
             }
@@ -227,12 +229,12 @@ JS_ArenaRealloc(JSArenaPool *pool, void *p, size_t size, size_t incr)
         growth = gross - (a->limit - (jsuword) a);
         if (growth > *pool->quotap)
             return NULL;
-        a = (JSArena *) js_realloc(a, gross);
+        a = (JSArena *) OffTheBooks::realloc(a, gross);
         if (!a)
             return NULL;
         *pool->quotap -= growth;
     } else {
-        a = (JSArena *) js_realloc(a, gross);
+        a = (JSArena *) OffTheBooks::realloc(a, gross);
         if (!a)
             return NULL;
     }
@@ -315,7 +317,7 @@ FreeArenaList(JSArenaPool *pool, JSArena *head)
             *pool->quotap += a->limit - (jsuword) a;
         JS_CLEAR_ARENA(a);
         JS_COUNT_ARENA(pool,--);
-        js_free(a);
+        UnwantedForeground::free(a);
     } while ((a = *ap) != NULL);
 
     pool->current = head;
@@ -354,7 +356,7 @@ JS_FinishArenaPool(JSArenaPool *pool)
         JSArenaStats *stats, **statsp;
 
         if (pool->stats.name) {
-            js_free(pool->stats.name);
+            UnwantedForeground::free(pool->stats.name);
             pool->stats.name = NULL;
         }
         for (statsp = &arena_stats_list; (stats = *statsp) != 0;

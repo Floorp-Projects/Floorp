@@ -565,13 +565,13 @@ static JSThread *
 NewThread(void *id)
 {
     JS_ASSERT(js_CurrentThreadId() == id);
-    JSThread *thread = (JSThread *) js_calloc(sizeof(JSThread));
+    JSThread *thread = (JSThread *) OffTheBooks::calloc(sizeof(JSThread));
     if (!thread)
         return NULL;
     JS_INIT_CLIST(&thread->contextList);
     thread->id = id;
     if (!thread->data.init()) {
-        js_free(thread);
+        Foreground::free(thread);
         return NULL;
     }
     return thread;
@@ -590,7 +590,7 @@ DestroyThread(JSThread *thread)
     JS_ASSERT(!thread->data.conservativeGC.hasStackToScan());
 
     thread->data.finish();
-    js_free(thread);
+    Foreground::free(thread);
 }
 
 JSThread *
@@ -747,7 +747,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
      * runtime list. After that it can be accessed from another thread via
      * js_ContextIterator.
      */
-    void *mem = js_calloc(sizeof *cx);
+    void *mem = OffTheBooks::calloc(sizeof *cx);
     if (!mem)
         return NULL;
 
@@ -1123,7 +1123,7 @@ FreeContext(JSContext *cx)
     JS_FinishArenaPool(&cx->regExpPool);
 
     if (cx->lastMessage)
-        js_free(cx->lastMessage);
+        cx->free(cx->lastMessage);
 
     /* Remove any argument formatters. */
     JSArgumentFormatMap *map = cx->argumentFormatMap;
@@ -1136,8 +1136,7 @@ FreeContext(JSContext *cx)
     JS_ASSERT(!cx->resolvingList);
 
     /* Finally, free cx itself. */
-    cx->~JSContext();
-    js_free(cx);
+    Foreground::delete_(cx);
 }
 
 JSContext *
@@ -1368,8 +1367,8 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
     warning = JSREPORT_IS_WARNING(report.flags);
 
     ReportError(cx, message, &report, NULL, NULL);
-    js_free(message);
-    cx->free(ucmessage);
+    Foreground::free(message);
+    Foreground::free(ucmessage);
     return warning;
 }
 
@@ -1592,7 +1591,7 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
         return;
 
     if (cx->lastMessage)
-        js_free(cx->lastMessage);
+        Foreground::free(cx->lastMessage);
     cx->lastMessage = JS_strdup(cx, message);
     if (!cx->lastMessage)
         return;
@@ -2100,11 +2099,11 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
 #ifdef JS_THREADSAFE
     gcHelperThread.waitBackgroundSweepEnd(this);
     if (!p)
-        p = ::js_malloc(nbytes);
+        p = OffTheBooks::malloc(nbytes);
     else if (p == reinterpret_cast<void *>(1))
-        p = ::js_calloc(nbytes);
+        p = OffTheBooks::calloc(nbytes);
     else
-      p = ::js_realloc(p, nbytes);
+      p = OffTheBooks::realloc(p, nbytes);
     if (p)
         return p;
 #endif

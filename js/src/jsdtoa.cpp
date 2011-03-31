@@ -53,6 +53,8 @@
 
 #include "jsobjinlines.h"
 
+using namespace js;
+
 #ifdef IS_LITTLE_ENDIAN
 #define IEEE_8087
 #else
@@ -77,9 +79,16 @@
 #endif
 */
 
+/*
+ * MALLOC gets declared external, and that doesn't work for class members, so
+ * wrap.
+ */
+inline void* dtoa_malloc(size_t size) { return OffTheBooks::malloc(size); }
+inline void dtoa_free(void* p) { return UnwantedForeground::free(p); }
+
 #define NO_GLOBAL_STATE
-#define MALLOC js_malloc
-#define FREE js_free
+#define MALLOC dtoa_malloc
+#define FREE dtoa_free
 #include "dtoa.c"
 
 /* Mapping of JSDToStrMode -> js_dtoa mode */
@@ -327,7 +336,7 @@ js_dtobasestr(DtoaState *state, int base, double dinput)
     JS_ASSERT(base >= 2 && base <= 36);
 
     dval(d) = dinput;
-    buffer = (char*) js_malloc(DTOBASESTR_BUFFER_SIZE);
+    buffer = (char*) OffTheBooks::malloc(DTOBASESTR_BUFFER_SIZE);
     if (!buffer)
         return NULL;
     p = buffer;
@@ -371,7 +380,7 @@ js_dtobasestr(DtoaState *state, int base, double dinput)
         if (!b) {
           nomem1:
             Bfree(PASS_STATE b);
-            js_free(buffer);
+            UnwantedForeground::free(buffer);
             return NULL;
         }
         do {
@@ -407,7 +416,7 @@ js_dtobasestr(DtoaState *state, int base, double dinput)
             if (mlo != mhi)
                 Bfree(PASS_STATE mlo);
             Bfree(PASS_STATE mhi);
-            js_free(buffer);
+            UnwantedForeground::free(buffer);
             return NULL;
         }
         JS_ASSERT(e < 0);

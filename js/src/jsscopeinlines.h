@@ -57,7 +57,7 @@ inline void
 js::Shape::freeTable(JSContext *cx)
 {
     if (hasTable()) {
-        cx->destroy(getTable());
+        cx->delete_(getTable());
         setTable(NULL);
     }
 }

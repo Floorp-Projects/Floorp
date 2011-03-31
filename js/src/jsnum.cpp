@@ -597,7 +597,7 @@ ToCStringBuf::ToCStringBuf() :dbuf(NULL)
 ToCStringBuf::~ToCStringBuf()
 {
     if (dbuf)
-        js_free(dbuf);
+        UnwantedForeground::free(dbuf);
 }
 
 JSString * JS_FASTCALL

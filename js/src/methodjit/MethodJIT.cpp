@@ -623,7 +623,7 @@ JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
 bool
 JaegerCompartment::Initialize()
 {
-    execAlloc_ = js_new<JSC::ExecutableAllocator>();
+    execAlloc_ = js::OffTheBooks::new_<JSC::ExecutableAllocator>();
     if (!execAlloc_)
         return false;
     
@@ -647,7 +647,7 @@ void
 JaegerCompartment::Finish()
 {
     TrampolineCompiler::release(&trampolines);
-    js_delete(execAlloc_);
+    Foreground::delete_(execAlloc_);
 #ifdef JS_METHODJIT_PROFILE_STUBS
     FILE *fp = fopen("/tmp/stub-profiling", "wt");
 # define OPDEF(op,val,name,image,length,nuses,ndefs,prec,format) \

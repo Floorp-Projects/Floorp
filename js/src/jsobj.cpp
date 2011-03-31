@@ -525,7 +525,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
 
     if (!chars) {
         /* If outermost, allocate 4 + 1 for "({})" and the terminator. */
-        chars = (jschar *) cx->runtime->malloc(((outermost ? 4 : 2) + 1) * sizeof(jschar));
+        chars = (jschar *) cx->malloc(((outermost ? 4 : 2) + 1) * sizeof(jschar));
         nchars = 0;
         if (!chars)
             goto error;
@@ -536,9 +536,9 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
         MAKE_SHARP(he);
         nchars = js_strlen(chars);
         chars = (jschar *)
-            js_realloc((ochars = chars), (nchars + 2 + 1) * sizeof(jschar));
+            cx->realloc((ochars = chars), (nchars + 2 + 1) * sizeof(jschar));
         if (!chars) {
-            js_free(ochars);
+            Foreground::free(ochars);
             goto error;
         }
         if (outermost) {
@@ -739,7 +739,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
                 goto overflow;
 
             /* Allocate 1 + 1 at end for closing brace and terminating 0. */
-            chars = (jschar *) js_realloc((ochars = chars), curlen * sizeof(jschar));
+            chars = (jschar *) cx->realloc((ochars = chars), curlen * sizeof(jschar));
             if (!chars) {
                 chars = ochars;
                 goto overflow;
@@ -787,7 +787,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
 
     if (!ok) {
         if (chars)
-            js_free(chars);
+            Foreground::free(chars);
         goto out;
     }
 
@@ -799,7 +799,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
   make_string:
     str = js_NewString(cx, chars, nchars);
     if (!str) {
-        js_free(chars);
+        cx->free(chars);
         ok = JS_FALSE;
         goto out;
     }
@@ -810,7 +810,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
 
   overflow:
     cx->free(vsharp);
-    js_free(chars);
+    cx->free(chars);
     chars = NULL;
     goto error;
 }

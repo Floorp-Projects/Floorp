@@ -52,6 +52,8 @@
 #include "jspubtd.h"
 #include "jsstr.h"
 
+using namespace js;
+
 /*
 ** Note: on some platforms va_list is defined as an array,
 ** and requires array notation.
@@ -412,7 +414,7 @@ static int cvt_ws(SprintfState *ss, const jschar *ws, int width, int prec,
         if (!s)
             return -1; /* JSStuffFunc error indicator. */
         result = cvt_s(ss, s, width, prec, flags);
-        js_free(s);
+        UnwantedForeground::free(s);
     } else {
         result = cvt_s(ss, NULL, width, prec, flags);
     }
@@ -630,7 +632,7 @@ static struct NumArgState* BuildArgArray( const char *fmt, va_list ap, int* rv, 
 
     if( *rv < 0 ){
         if( nas != nasArray )
-            js_free( nas );
+            UnwantedForeground::free( nas );
         return NULL;
     }
 
@@ -667,7 +669,7 @@ static struct NumArgState* BuildArgArray( const char *fmt, va_list ap, int* rv, 
 
         default:
             if( nas != nasArray )
-                js_free( nas );
+                UnwantedForeground::free( nas );
             *rv = -1;
             return NULL;
         }
@@ -756,7 +758,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 
             if( nas[i-1].type == TYPE_UNKNOWN ){
                 if( nas && ( nas != nasArray ) )
-                    js_free( nas );
+                    UnwantedForeground::free( nas );
                 return -1;
             }
 
@@ -1037,7 +1039,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
     rv = (*ss->stuff)(ss, "\0", 1);
 
     if( nas && ( nas != nasArray ) ){
-        js_free( nas );
+        UnwantedForeground::free( nas );
     }
 
     return rv;
@@ -1098,9 +1100,9 @@ static int GrowStuff(SprintfState *ss, const char *sp, JSUint32 len)
         /* Grow the buffer */
         newlen = ss->maxlen + ((len > 32) ? len : 32);
         if (ss->base) {
-            newbase = (char*) js_realloc(ss->base, newlen);
+            newbase = (char*) OffTheBooks::realloc(ss->base, newlen);
         } else {
-            newbase = (char*) js_malloc(newlen);
+            newbase = (char*) OffTheBooks::malloc(newlen);
         }
         if (!newbase) {
             /* Ran out of memory */
@@ -1139,7 +1141,7 @@ JS_PUBLIC_API(char *) JS_smprintf(const char *fmt, ...)
 */
 JS_PUBLIC_API(void) JS_smprintf_free(char *mem)
 {
-        js_free(mem);
+        Foreground::free(mem);
 }
 
 JS_PUBLIC_API(char *) JS_vsmprintf(const char *fmt, va_list ap)
@@ -1154,7 +1156,7 @@ JS_PUBLIC_API(char *) JS_vsmprintf(const char *fmt, va_list ap)
     rv = dosprintf(&ss, fmt, ap);
     if (rv < 0) {
         if (ss.base) {
-            js_free(ss.base);
+            Foreground::free(ss.base);
         }
         return 0;
     }
@@ -1253,7 +1255,7 @@ JS_PUBLIC_API(char *) JS_vsprintf_append(char *last, const char *fmt, va_list ap
     rv = dosprintf(&ss, fmt, ap);
     if (rv < 0) {
         if (ss.base) {
-            js_free(ss.base);
+            Foreground::free(ss.base);
         }
         return 0;
     }

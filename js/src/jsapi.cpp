@@ -669,13 +669,19 @@ JSRuntime::init(uint32 maxbytes)
     propTreeDumpFilename = getenv("JS_PROPTREE_DUMPFILE");
 #endif
 
-    if (!(atomsCompartment = js_new<JSCompartment>(this)) ||
+    if (!js_InitGC(this, maxbytes))
+        return false;
+
+    if (!(atomsCompartment = this->new_<JSCompartment>(this)) ||
         !atomsCompartment->init() ||
         !compartments.append(atomsCompartment)) {
+        Foreground::delete_(atomsCompartment);
         return false;
     }
 
-    if (!js_InitGC(this, maxbytes) || !js_InitAtomState(this))
+    atomsCompartment->setGCLastBytes(8192);
+
+    if (!js_InitAtomState(this))
         return false;
 
     wrapObjectCallback = js::TransparentObjectWrapper;
@@ -774,7 +780,7 @@ JS_NewRuntime(uint32 maxbytes)
     }
 #endif /* DEBUG */
 
-    void *mem = js_calloc(sizeof(JSRuntime));
+    void *mem = OffTheBooks::calloc(sizeof(JSRuntime));
     if (!mem)
         return NULL;
 
@@ -790,9 +796,7 @@ JS_NewRuntime(uint32 maxbytes)
 JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt)
 {
-    rt->~JSRuntime();
-
-    js_free(rt);
+    Foreground::delete_(rt);
 }
 
 #ifdef JS_REPRMETER
@@ -1198,11 +1202,11 @@ JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target)
     CHECK_REQUEST(cx);
 
     JS_ASSERT(target);
-    AutoCompartment *call = js_new<AutoCompartment>(cx, target);
+    AutoCompartment *call = cx->new_<AutoCompartment>(cx, target);
     if (!call)
         return NULL;
     if (!call->enter()) {
-        js_delete(call);
+        Foreground::delete_(call);
         return NULL;
     }
     return reinterpret_cast<JSCrossCompartmentCall *>(call);
@@ -1240,7 +1244,7 @@ JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call)
     AutoCompartment *realcall = reinterpret_cast<AutoCompartment *>(call);
     CHECK_REQUEST(realcall->context);
     realcall->leave();
-    js_delete(realcall);
+    Foreground::delete_(realcall);
 }
 
 bool
@@ -2472,7 +2476,7 @@ DumpNotify(JSTracer *trc, void *thing, uint32 kind)
     }
 
     edgeNameSize = strlen(edgeName) + 1;
-    node = (JSHeapDumpNode *) js_malloc(offsetof(JSHeapDumpNode, edgeName) + edgeNameSize);
+    node = (JSHeapDumpNode *) cx->malloc(offsetof(JSHeapDumpNode, edgeName) + edgeNameSize);
     if (!node) {
         dtrc->ok = JS_FALSE;
         return;
@@ -2624,7 +2628,7 @@ JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, uint32 startKind,
         for (;;) {
             next = node->next;
             parent = node->parent;
-            js_free(node);
+            cx->free(node);
             node = next;
             if (node)
                 break;
@@ -4670,7 +4674,7 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
         bool hitEOF = false;
         while (!hitEOF) {
             len *= 2;
-            jschar* tmpbuf = (jschar *) js_realloc(buf, len * sizeof(jschar));
+            jschar* tmpbuf = (jschar *) cx->realloc(buf, len * sizeof(jschar));
             if (!tmpbuf) {
                 cx->free(buf);
                 return NULL;
@@ -4687,7 +4691,7 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
             }
         }
     } else {
-        buf = (jschar *) js_malloc(len * sizeof(jschar));
+        buf = (jschar *) cx->malloc(len * sizeof(jschar));
         if (!buf)
             return NULL;
 
@@ -4701,7 +4705,7 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
     uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
     script = Compiler::compileScript(cx, obj, NULL, principals, tcflags, buf, len, filename, 1,
                                      cx->findVersion());
-    js_free(buf);
+    cx->free(buf);
     if (!script)
         return NULL;
 
