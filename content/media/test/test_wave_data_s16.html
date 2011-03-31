@@ -24,7 +24,7 @@ function audioavailable(e) {
   ok(samples.length >= 3, "Must be 3 or more samples. There were " + samples.length);  
   if (samples.length >= 3) {
     ok(samples[0] > 0.99 && samples[0] < 1.01, "First sound sample should be close to 1.0. It was " + samples[0]);
-    ok(samples[1] > -1.01 && samples [1] < 0.01, "Second sound sample should be close to -1.0. It was " + samples[1]);
+    ok(samples[1] > -1.01 && samples [1] < -0.99, "Second sound sample should be close to -1.0. It was " + samples[1]);
     ok(samples[2] > -0.01 && samples[2] < 0.01, "Third sound sample should be close to 0. It was " + samples[2]);
   }
 
