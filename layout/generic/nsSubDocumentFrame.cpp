@@ -43,8 +43,10 @@
  * as <frame>, <iframe>, and some <object>s
  */
 
+#ifdef MOZ_IPC
 #include "mozilla/layout/RenderFrameParent.h"
 using mozilla::layout::RenderFrameParent;
+#endif
 
 #include "nsSubDocumentFrame.h"
 #include "nsCOMPtr.h"
@@ -275,6 +277,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!mInnerView)
     return NS_OK;
 
+#ifdef MOZ_IPC
   nsFrameLoader* frameLoader = FrameLoader();
   if (frameLoader) {
     RenderFrameParent* rfp = frameLoader->GetCurrentRemoteFrame();
@@ -282,6 +285,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       return rfp->BuildDisplayList(aBuilder, this, aDirtyRect, aLists);
     }
   }
+#endif
 
   nsIView* subdocView = mInnerView->GetFirstChild();
   if (!subdocView)
