@@ -1671,7 +1671,8 @@ DestroyScript(JSContext *cx, JSScript *script)
     cx->free(script->varTypes);
 
 #if defined(JS_METHODJIT)
-    mjit::ReleaseScriptCode(cx, script);
+    mjit::ReleaseScriptCode(cx, script, true);
+    mjit::ReleaseScriptCode(cx, script, false);
 #endif
 
     JS_REMOVE_LINK(&script->links);

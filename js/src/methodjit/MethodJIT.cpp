@@ -1015,29 +1015,21 @@ mjit::JITScript::scriptDataSize()
 }
 
 void
-mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
+mjit::ReleaseScriptCode(JSContext *cx, JSScript *script, bool normal)
 {
     // NB: The recompiler may call ReleaseScriptCode, in which case it
     // will get called again when the script is destroyed, so we
     // must protect against calling ReleaseScriptCode twice.
-    JITScript *jscr;
 
-    if ((jscr = script->jitNormal)) {
-        cx->runtime->mjitMemoryUsed -= jscr->scriptDataSize() + jscr->mainCodeSize();
+    JITScript **pjit = normal ? &script->jitNormal : &script->jitCtor;
+    void **parity = normal ? &script->jitArityCheckNormal : &script->jitArityCheckCtor;
 
-        jscr->~JITScript();
-        cx->free(jscr);
-        script->jitNormal = NULL;
-        script->jitArityCheckNormal = NULL;
-    }
-
-    if ((jscr = script->jitCtor)) {
-        cx->runtime->mjitMemoryUsed -= jscr->scriptDataSize() + jscr->mainCodeSize();
-
-        jscr->~JITScript();
-        cx->free(jscr);
-        script->jitCtor = NULL;
-        script->jitArityCheckCtor = NULL;
+    if (*pjit) {
+        cx->runtime->mjitMemoryUsed -= (*pjit)->scriptDataSize() + (*pjit)->mainCodeSize();
+        (*pjit)->~JITScript();
+        cx->free(*pjit);
+        *pjit = NULL;
+        *parity = NULL;
     }
 }
 
