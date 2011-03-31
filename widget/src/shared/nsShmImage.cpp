@@ -94,6 +94,7 @@ nsShmImage::Create(const gfxIntSize& aSize,
 #if defined(MOZ_WIDGET_GTK2)
     gdk_error_trap_push();
     Status attachOk = XShmAttach(dpy, &shm->mInfo);
+    XSync(dpy, False);
     xerror = gdk_error_trap_pop();
 #elif defined(MOZ_WIDGET_QT)
     Status attachOk = XShmAttach(dpy, &shm->mInfo);
