@@ -116,7 +116,6 @@ endif
 STATIC_LIBS += \
 	xpcom_core \
 	ucvutil_s \
-	gkgfx \
 	$(NULL)
 
 ifdef MOZ_IPC
@@ -140,6 +139,7 @@ COMPONENT_LIBS += \
 	pref \
 	htmlpars \
 	imglib2 \
+	gkgfx \
 	gklayout \
 	docshell \
 	embedcomponents \
@@ -299,8 +299,6 @@ endif
 STATIC_LIBS += thebes ycbcr
 
 STATIC_LIBS += angle
-
-COMPONENT_LIBS += gkgfxthebes
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += gkwidget
