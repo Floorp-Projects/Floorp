@@ -447,7 +447,7 @@ ScriptPoolDestroyed(JSContext *cx, mjit::JITScript *jit,
 }
 
 static inline void
-ScriptTryDestroyCode(JSContext *cx, JSScript *script, mjit::JITScript *jit,
+ScriptTryDestroyCode(JSContext *cx, JSScript *script, bool normal,
                      uint32 releaseInterval, uint32 &counter)
 {
     /*
@@ -457,16 +457,21 @@ ScriptTryDestroyCode(JSContext *cx, JSScript *script, mjit::JITScript *jit,
      * JIT code for any inlined frame which may need to be expanded.
      */
 
+    mjit::JITScript *jit = normal ? script->jitNormal : script->jitCtor;
+
+    if (!jit)
+        return;
+
     if (ScriptPoolDestroyed(cx, jit, releaseInterval, counter)) {
-        mjit::ReleaseScriptCode(cx, script);
+        mjit::ReleaseScriptCode(cx, script, normal);
         return;
     }
 
     for (unsigned i = 0; i < jit->nInlineFrames; i++) {
         JSScript *inner = jit->inlineFrames()[i].fun->script();
-        JS_ASSERT(inner->jitNormal);
-        if (ScriptPoolDestroyed(cx, inner->jitNormal, releaseInterval, counter)) {
-            mjit::ReleaseScriptCode(cx, script);
+        if (!inner->jitNormal ||  /* Found inner first in the walk. */
+            ScriptPoolDestroyed(cx, inner->jitNormal, releaseInterval, counter)) {
+            mjit::ReleaseScriptCode(cx, script, true);
             return;
         }
     }
@@ -569,10 +574,8 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
         if (script->hasJITCode()) {
             mjit::ic::SweepCallICs(cx, script, discardScripts);
             if (discardScripts) {
-                if (script->jitNormal)
-                    ScriptTryDestroyCode(cx, script, script->jitNormal, releaseInterval, counter);
-                if (script->jitCtor)
-                    ScriptTryDestroyCode(cx, script, script->jitCtor, releaseInterval, counter);
+                ScriptTryDestroyCode(cx, script, true, releaseInterval, counter);
+                ScriptTryDestroyCode(cx, script, false, releaseInterval, counter);
             }
         }
     }
