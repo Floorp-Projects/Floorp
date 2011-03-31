@@ -7030,6 +7030,9 @@ else
     fi
 fi
 
+if test -n "$MOZ_NATIVE_SQLITE"; then
+    AC_DEFINE(MOZ_NATIVE_SQLITE)
+fi
 AC_SUBST(MOZ_NATIVE_SQLITE)
 
 dnl ========================================================
