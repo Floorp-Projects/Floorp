@@ -30,14 +30,23 @@
 
 #include <stdlib.h>
 
+static pixman_implementation_t *global_implementation;
+
+#ifdef TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR
+static void __attribute__((constructor))
+pixman_constructor (void)
+{
+    global_implementation = _pixman_choose_implementation ();
+}
+#endif
+
 static force_inline pixman_implementation_t *
 get_implementation (void)
 {
-    static pixman_implementation_t *global_implementation;
-
+#ifndef TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR
     if (!global_implementation)
 	global_implementation = _pixman_choose_implementation ();
-
+#endif
     return global_implementation;
 }
 
@@ -151,57 +160,6 @@ optimize_operator (pixman_op_t     op,
     is_source_opaque >>= OPAQUE_SHIFT;
 
     return operator_table[op].opaque_info[is_dest_opaque | is_source_opaque];
-}
-
-static void
-apply_workaround (pixman_image_t *image,
-		  int32_t *       x,
-		  int32_t *       y,
-		  uint32_t **     save_bits,
-		  int *           save_dx,
-		  int *           save_dy)
-{
-    if (image && (image->common.flags & FAST_PATH_NEEDS_WORKAROUND))
-    {
-	/* Some X servers generate images that point to the
-	 * wrong place in memory, but then set the clip region
-	 * to point to the right place. Because of an old bug
-	 * in pixman, this would actually work.
-	 *
-	 * Here we try and undo the damage
-	 */
-	int bpp = PIXMAN_FORMAT_BPP (image->bits.format) / 8;
-	pixman_box32_t *extents;
-	uint8_t *t;
-	int dx, dy;
-	
-	extents = pixman_region32_extents (&(image->common.clip_region));
-	dx = extents->x1;
-	dy = extents->y1;
-	
-	*save_bits = image->bits.bits;
-	
-	*x -= dx;
-	*y -= dy;
-	pixman_region32_translate (&(image->common.clip_region), -dx, -dy);
-	
-	t = (uint8_t *)image->bits.bits;
-	t += dy * image->bits.rowstride * 4 + dx * bpp;
-	image->bits.bits = (uint32_t *)t;
-	
-	*save_dx = dx;
-	*save_dy = dy;
-    }
-}
-
-static void
-unapply_workaround (pixman_image_t *image, uint32_t *bits, int dx, int dy)
-{
-    if (image && (image->common.flags & FAST_PATH_NEEDS_WORKAROUND))
-    {
-	image->bits.bits = bits;
-	pixman_region32_translate (&image->common.clip_region, dx, dy);
-    }
 }
 
 /*
@@ -375,6 +333,126 @@ pixman_compute_composite_region32 (pixman_region32_t * region,
     }
 
     return TRUE;
+}
+
+static void
+walk_region_internal (pixman_implementation_t *imp,
+                      pixman_op_t              op,
+                      pixman_image_t *         src_image,
+                      pixman_image_t *         mask_image,
+                      pixman_image_t *         dst_image,
+                      int32_t                  src_x,
+                      int32_t                  src_y,
+                      int32_t                  mask_x,
+                      int32_t                  mask_y,
+                      int32_t                  dest_x,
+                      int32_t                  dest_y,
+                      int32_t                  width,
+                      int32_t                  height,
+                      pixman_bool_t            src_repeat,
+                      pixman_bool_t            mask_repeat,
+                      pixman_region32_t *      region,
+                      pixman_composite_func_t  composite_rect)
+{
+    int w, h, w_this, h_this;
+    int x_msk, y_msk, x_src, y_src, x_dst, y_dst;
+    int src_dy = src_y - dest_y;
+    int src_dx = src_x - dest_x;
+    int mask_dy = mask_y - dest_y;
+    int mask_dx = mask_x - dest_x;
+    const pixman_box32_t *pbox;
+    int n;
+
+    pbox = pixman_region32_rectangles (region, &n);
+
+    /* Fast path for non-repeating sources */
+    if (!src_repeat && !mask_repeat)
+    {
+       while (n--)
+       {
+           (*composite_rect) (imp, op,
+                              src_image, mask_image, dst_image,
+                              pbox->x1 + src_dx,
+                              pbox->y1 + src_dy,
+                              pbox->x1 + mask_dx,
+                              pbox->y1 + mask_dy,
+                              pbox->x1,
+                              pbox->y1,
+                              pbox->x2 - pbox->x1,
+                              pbox->y2 - pbox->y1);
+           
+           pbox++;
+       }
+
+       return;
+    }
+    
+    while (n--)
+    {
+	h = pbox->y2 - pbox->y1;
+	y_src = pbox->y1 + src_dy;
+	y_msk = pbox->y1 + mask_dy;
+	y_dst = pbox->y1;
+
+	while (h)
+	{
+	    h_this = h;
+	    w = pbox->x2 - pbox->x1;
+	    x_src = pbox->x1 + src_dx;
+	    x_msk = pbox->x1 + mask_dx;
+	    x_dst = pbox->x1;
+
+	    if (mask_repeat)
+	    {
+		y_msk = MOD (y_msk, mask_image->bits.height);
+		if (h_this > mask_image->bits.height - y_msk)
+		    h_this = mask_image->bits.height - y_msk;
+	    }
+
+	    if (src_repeat)
+	    {
+		y_src = MOD (y_src, src_image->bits.height);
+		if (h_this > src_image->bits.height - y_src)
+		    h_this = src_image->bits.height - y_src;
+	    }
+
+	    while (w)
+	    {
+		w_this = w;
+
+		if (mask_repeat)
+		{
+		    x_msk = MOD (x_msk, mask_image->bits.width);
+		    if (w_this > mask_image->bits.width - x_msk)
+			w_this = mask_image->bits.width - x_msk;
+		}
+
+		if (src_repeat)
+		{
+		    x_src = MOD (x_src, src_image->bits.width);
+		    if (w_this > src_image->bits.width - x_src)
+			w_this = src_image->bits.width - x_src;
+		}
+
+		(*composite_rect) (imp, op,
+				   src_image, mask_image, dst_image,
+				   x_src, y_src, x_msk, y_msk, x_dst, y_dst,
+				   w_this, h_this);
+		w -= w_this;
+
+		x_src += w_this;
+		x_msk += w_this;
+		x_dst += w_this;
+	    }
+
+	    h -= h_this;
+	    y_src += h_this;
+	    y_msk += h_this;
+	    y_dst += h_this;
+	}
+
+	pbox++;
+    }
 }
 
 #define N_CACHED_FAST_PATHS 8
@@ -732,13 +810,6 @@ pixman_image_composite32 (pixman_op_t      op,
     uint32_t src_flags, mask_flags, dest_flags;
     pixman_region32_t region;
     pixman_box32_t *extents;
-    uint32_t *src_bits;
-    int src_dx, src_dy;
-    uint32_t *mask_bits;
-    int mask_dx, mask_dy;
-    uint32_t *dest_bits;
-    int dest_dx, dest_dy;
-    pixman_bool_t need_workaround;
     pixman_implementation_t *imp;
     pixman_composite_func_t func;
 
@@ -774,16 +845,6 @@ pixman_image_composite32 (pixman_op_t      op,
 	    src_format = mask_format = PIXMAN_pixbuf;
 	else if (src_format == PIXMAN_x8r8g8b8)
 	    src_format = mask_format = PIXMAN_rpixbuf;
-    }
-
-    /* Check for workaround */
-    need_workaround = (src_flags | mask_flags | dest_flags) & FAST_PATH_NEEDS_WORKAROUND;
-
-    if (need_workaround)
-    {
-	apply_workaround (src, &src_x, &src_y, &src_bits, &src_dx, &src_dy);
-	apply_workaround (mask, &mask_x, &mask_y, &mask_bits, &mask_dx, &mask_dy);
-	apply_workaround (dest, &dest_x, &dest_y, &dest_bits, &dest_dx, &dest_dy);
     }
 
     pixman_region32_init (&region);
@@ -829,36 +890,17 @@ pixman_image_composite32 (pixman_op_t      op,
 				   dest_format, dest_flags,
 				   &imp, &func))
     {
-	const pixman_box32_t *pbox;
-	int n;
-
-	pbox = pixman_region32_rectangles (&region, &n);
-	
-	while (n--)
-	{
-	    func (imp, op,
-		  src, mask, dest,
-		  pbox->x1 + src_x - dest_x,
-		  pbox->y1 + src_y - dest_y,
-		  pbox->x1 + mask_x - dest_x,
-		  pbox->y1 + mask_y - dest_y,
-		  pbox->x1,
-		  pbox->y1,
-		  pbox->x2 - pbox->x1,
-		  pbox->y2 - pbox->y1);
-	    
-	    pbox++;
-	}
+	walk_region_internal (imp, op,
+			      src, mask, dest,
+			      src_x, src_y, mask_x, mask_y,
+			      dest_x, dest_y,
+			      width, height,
+			      (src_flags & FAST_PATH_SIMPLE_REPEAT),
+			      (mask_flags & FAST_PATH_SIMPLE_REPEAT),
+			      &region, func);
     }
 
 out:
-    if (need_workaround)
-    {
-	unapply_workaround (src, src_bits, src_dx, src_dy);
-	unapply_workaround (mask, mask_bits, mask_dx, mask_dy);
-	unapply_workaround (dest, dest_bits, dest_dx, dest_dy);
-    }
-
     pixman_region32_fini (&region);
 }
 
@@ -939,9 +981,12 @@ color_to_pixel (pixman_color_t *     color,
           format == PIXMAN_x8b8g8r8     ||
           format == PIXMAN_b8g8r8a8     ||
           format == PIXMAN_b8g8r8x8     ||
+          format == PIXMAN_r8g8b8a8     ||
+          format == PIXMAN_r8g8b8x8     ||
           format == PIXMAN_r5g6b5       ||
           format == PIXMAN_b5g6r5       ||
-          format == PIXMAN_a8))
+          format == PIXMAN_a8           ||
+          format == PIXMAN_a1))
     {
 	return FALSE;
     }
@@ -960,8 +1005,12 @@ color_to_pixel (pixman_color_t *     color,
 	    ((c & 0x0000ff00) <<  8) |
 	    ((c & 0x000000ff) << 24);
     }
+    if (PIXMAN_FORMAT_TYPE (format) == PIXMAN_TYPE_RGBA)
+	c = ((c & 0xff000000) >> 24) | (c << 8);
 
-    if (format == PIXMAN_a8)
+    if (format == PIXMAN_a1)
+	c = c >> 31;
+    else if (format == PIXMAN_a8)
 	c = c >> 24;
     else if (format == PIXMAN_r5g6b5 ||
              format == PIXMAN_b5g6r5)
@@ -1168,6 +1217,8 @@ pixman_format_supported_source (pixman_format_code_t format)
     case PIXMAN_x8b8g8r8:
     case PIXMAN_b8g8r8a8:
     case PIXMAN_b8g8r8x8:
+    case PIXMAN_r8g8b8a8:
+    case PIXMAN_r8g8b8x8:
     case PIXMAN_r8g8b8:
     case PIXMAN_b8g8r8:
     case PIXMAN_r5g6b5:

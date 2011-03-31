@@ -39,6 +39,8 @@
 
 #include "nsIDOMNode.idl"
 
+interface nsIDOMDOMConfiguration;
+
 /**
  * The nsIDOMDocument interface represents the entire HTML or XML document.
  * Conceptually, it is the root of the document tree, and provides the 
@@ -49,10 +51,10 @@
  * objects.
  *
  * For more information on this interface please see 
- * http://www.w3.org/TR/DOM-Level-2-Core/
+ * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(a6cf9075-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(fde1a53b-cf60-4997-a0b2-1aa1dc55492e)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -91,4 +93,30 @@ interface nsIDOMDocument : nsIDOMNode
                                                        in DOMString localName);
   // Introduced in DOM Level 2:
   nsIDOMElement                 getElementById(in DOMString elementId);
+  // Introduced in DOM Level 3:
+  readonly attribute DOMString       inputEncoding;
+  // Introduced in DOM Level 3:
+  readonly attribute DOMString       xmlEncoding;
+  // Introduced in DOM Level 3:
+           attribute boolean         xmlStandalone;
+                                        // raises(DOMException) on setting
+  // Introduced in DOM Level 3:
+           attribute DOMString       xmlVersion;
+                                        // raises(DOMException) on setting
+  // Introduced in DOM Level 3:
+           attribute boolean         strictErrorChecking;
+  // Introduced in DOM Level 3:
+           attribute DOMString       documentURI;
+  // Introduced in DOM Level 3:
+  nsIDOMNode         adoptNode(in nsIDOMNode source)
+                                        raises(DOMException);
+  // Introduced in DOM Level 3:
+  readonly attribute nsIDOMDOMConfiguration domConfig;
+  // Introduced in DOM Level 3:
+  void               normalizeDocument();
+  // Introduced in DOM Level 3:
+  nsIDOMNode         renameNode(in nsIDOMNode node, 
+                                in DOMString namespaceURI, 
+                                in DOMString qualifiedName)
+                                        raises(DOMException);
 };

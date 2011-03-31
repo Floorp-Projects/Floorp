@@ -49,9 +49,9 @@ class nsRegion;
 class nsIDeviceContext;
 class nsIViewObserver;
 
-#define NS_IVIEWMANAGER_IID   \
-  { 0x4017112c, 0x64d7, 0x47bc, \
-   { 0xab, 0x66, 0x4e, 0x5f, 0xff, 0x83, 0xec, 0x7c } }
+#define NS_IVIEWMANAGER_IID \
+{ 0xa47cdaf9, 0x50fd, 0x40d8, \
+  { 0x92, 0xe5, 0x93, 0x4f, 0xfb, 0x01, 0xdd, 0x98 } }
 
 class nsIViewManager : public nsISupports
 {
@@ -86,7 +86,7 @@ public:
    * Get the root of the view tree.
    * @result the root view
    */
-  NS_IMETHOD  GetRootView(nsIView *&aView) = 0;
+  NS_IMETHOD_(nsIView*) GetRootView() = 0;
 
   /**
    * Set the root of the view tree. Does not destroy the current root view.

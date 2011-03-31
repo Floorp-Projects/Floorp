@@ -99,8 +99,6 @@ Load(JSContext *cx, uintN argc, jsval *vp)
 {
     uintN i;
     JSString *str;
-    JSScript *script;
-    JSBool ok;
     jsval result;
 
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -116,15 +114,9 @@ Load(JSContext *cx, uintN argc, jsval *vp)
         JSAutoByteString filename(cx, str);
         if (!filename)
             return false;
-        script = JS_CompileFile(cx, obj, filename.ptr());
-        if (!script)
-            ok = JS_FALSE;
-        else {
-            ok = JS_ExecuteScript(cx, obj, script, &result);
-            JS_DestroyScript(cx, script);
-        }
-        if (!ok)
-            return JS_FALSE;
+        JSObject *scriptObj = JS_CompileFile(cx, obj, filename.ptr());
+        if (!scriptObj || !JS_ExecuteScript(cx, obj, scriptObj, &result))
+            return false;
     }
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;

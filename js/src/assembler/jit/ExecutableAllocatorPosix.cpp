@@ -33,9 +33,9 @@
 
 namespace JSC {
 
-void ExecutableAllocator::intializePageSize()
+size_t ExecutableAllocator::determinePageSize()
 {
-    ExecutableAllocator::pageSize = getpagesize();
+    return getpagesize();
 }
 
 ExecutablePool::Allocation ExecutablePool::systemAlloc(size_t n)

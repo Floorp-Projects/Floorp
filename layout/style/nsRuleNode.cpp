@@ -759,6 +759,12 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
           aCanStoreInRuleTree = PR_FALSE;
           aResult = aContext->GetStyleColor()->mColor;
           break;
+        case NS_COLOR_MOZ_DEFAULT_COLOR:
+          aResult = aPresContext->DefaultColor();
+          break;
+        case NS_COLOR_MOZ_DEFAULT_BACKGROUND_COLOR:
+          aResult = aPresContext->DefaultBackgroundColor();
+          break;
         default:
           NS_NOTREACHED("Should never have an unknown negative colorID.");
           break;
@@ -894,7 +900,11 @@ static void SetStyleImageToImageRect(nsStyleContext* aStyleContext,
   NS_FOR_CSS_SIDES(side) {
     nsStyleCoord coord;
     const nsCSSValue& val = arr->Item(2 + side);
-    PRBool unitOk = SetAbsCoord(val, coord, SETCOORD_FACTOR | SETCOORD_PERCENT);
+
+#ifdef DEBUG
+    PRBool unitOk =
+#endif
+      SetAbsCoord(val, coord, SETCOORD_FACTOR | SETCOORD_PERCENT);
     NS_ABORT_IF_FALSE(unitOk, "Incorrect data structure created by CSS parser");
     cropRect.Set(side, coord);
   }
@@ -1410,9 +1420,8 @@ CheckTextCallback(const nsRuleData* aRuleData,
   return aResult;
 }
 
-#define FLAG_DATA_FOR_PROPERTY(name_, id_, method_, flags_, datastruct_,      \
-                               member_, parsevariant_, kwtable_,              \
-                               stylestructoffset_, animtype_)                 \
+#define FLAG_DATA_FOR_PROPERTY(name_, id_, method_, flags_, parsevariant_,   \
+                               kwtable_, stylestructoffset_, animtype_)      \
   flags_,
 
 // The order here must match the enums in *CheckCounter in nsCSSProps.cpp.

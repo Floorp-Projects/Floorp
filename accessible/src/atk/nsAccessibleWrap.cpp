@@ -1272,6 +1272,27 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
         g_signal_emit(atkObj, id, 0);
       } break;
 
+    case nsIAccessibleEvent::EVENT_WINDOW_MAXIMIZE:
+      {
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_MAXIMIZE\n"));
+        guint id = g_signal_lookup ("maximize", MAI_TYPE_ATK_OBJECT);
+        g_signal_emit(atkObj, id, 0);
+      } break;
+
+    case nsIAccessibleEvent::EVENT_WINDOW_MINIMIZE:
+      {
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_MINIMIZE\n"));
+        guint id = g_signal_lookup ("minimize", MAI_TYPE_ATK_OBJECT);
+        g_signal_emit(atkObj, id, 0);
+      } break;
+
+    case nsIAccessibleEvent::EVENT_WINDOW_RESTORE:
+      {
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_RESTORE\n"));
+        guint id = g_signal_lookup ("restore", MAI_TYPE_ATK_OBJECT);
+        g_signal_emit(atkObj, id, 0);
+      } break;
+
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_DOCUMENT_LOAD_COMPLETE\n"));

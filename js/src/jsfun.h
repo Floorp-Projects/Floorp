@@ -96,7 +96,7 @@
                                        JSFunctionSpec::call points to a
                                        JSNativeTraceInfo. */
 #define JSFUN_INTERPRETED   0x4000  /* use u.i if kind >= this value else u.n */
-#define JSFUN_FLAT_CLOSURE  0x8000  /* flag (aka "display") closure */
+#define JSFUN_FLAT_CLOSURE  0x8000  /* flat (aka "display") closure */
 #define JSFUN_NULL_CLOSURE  0xc000  /* null closure entrains no scope chain */
 #define JSFUN_KINDMASK      0xc000  /* encode interp vs. native and closure
                                        optimization level -- see above */
@@ -206,13 +206,13 @@ struct JSFunction : public JSObject_Slots2
      */
     JSAtom *methodAtom() const {
         return (joinable() && getSlot(METHOD_ATOM_SLOT).isString())
-               ? STRING_TO_ATOM(getSlot(METHOD_ATOM_SLOT).toString())
+               ? &getSlot(METHOD_ATOM_SLOT).toString()->asAtom()
                : NULL;
     }
 
     void setMethodAtom(JSAtom *atom) {
         JS_ASSERT(joinable());
-        getSlotRef(METHOD_ATOM_SLOT).setString(ATOM_TO_STRING(atom));
+        getSlotRef(METHOD_ATOM_SLOT).setString(atom);
     }
 
     js::Native maybeNative() const {
@@ -322,15 +322,6 @@ JSObject::getFunctionPrivate() const
 namespace js {
 
 /*
- * Construct a call object for the given bindings.  If this is a call object
- * for a function invocation, callee should be the function being called.
- * Otherwise it must be a call object for eval of strict mode code, and callee
- * must be null.
- */
-extern JSObject *
-NewCallObject(JSContext *cx, js::Bindings *bindings, JSObject &scopeChain, JSObject *callee);
-
-/*
  * NB: jsapi.h and jsobj.h must be included before any call to this macro.
  */
 #define VALUE_IS_FUNCTION(cx, v)                                              \
@@ -425,11 +416,11 @@ inline const char *
 GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
 {
     if (fun->atom)
-        return bytes->encode(cx, ATOM_TO_STRING(fun->atom));
+        return bytes->encode(cx, fun->atom);
     return js_anonymous_str;
 }
 
-extern JS_FRIEND_API(bool)
+extern bool
 IsBuiltinFunctionConstructor(JSFunction *fun);
 
 /*
@@ -515,9 +506,6 @@ js_ValueToCallableObject(JSContext *cx, js::Value *vp, uintN flags);
 extern void
 js_ReportIsNotFunction(JSContext *cx, const js::Value *vp, uintN flags);
 
-extern JSObject *
-js_GetCallObject(JSContext *cx, JSStackFrame *fp);
-
 extern JSObject * JS_FASTCALL
 js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSObject *scopeChain);
 
@@ -529,6 +517,12 @@ js_PutCallObjectOnTrace(JSContext *cx, JSObject *scopeChain, uint32 nargs,
                         js::Value *argv, uint32 nvars, js::Value *slots);
 
 namespace js {
+
+JSObject *
+CreateFunCallObject(JSContext *cx, JSStackFrame *fp);
+
+JSObject *
+CreateEvalCallObject(JSContext *cx, JSStackFrame *fp);
 
 extern JSBool
 GetCallArg(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);

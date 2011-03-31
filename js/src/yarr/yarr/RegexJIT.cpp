@@ -1506,13 +1506,13 @@ public:
             return;
         }
 
-        ExecutablePool *executablePool = allocator.poolForSize(size());
-        if (!executablePool) {
+        ExecutablePool *dummy;
+        bool ok;
+        LinkBuffer patchBuffer(this, &allocator, &dummy, &ok);
+        if (!ok) {
             m_shouldFallBack = true;
             return;
         }
-
-        LinkBuffer patchBuffer(this, executablePool);
 
         for (unsigned i = 0; i < m_backtrackRecords.length(); ++i)
             patchBuffer.patch(m_backtrackRecords[i].dataLabel, patchBuffer.locationOf(m_backtrackRecords[i].backtrackLocation));

@@ -1280,7 +1280,7 @@ namespace nanojit
         }
     }
 
-    void Assembler::nInit(AvmCore*) {
+    void Assembler::nInit() {
         nHints[LIR_calli]  = rmask(R3);
     #ifdef NANOJIT_64BIT
         nHints[LIR_callq]  = rmask(R3);

@@ -285,7 +285,7 @@ JSString* FASTCALL
 js_TypeOfObject(JSContext* cx, JSObject* obj)
 {
     JS_ASSERT(obj);
-    return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[obj->typeOf(cx)]);
+    return cx->runtime->atomState.typeAtoms[obj->typeOf(cx)];
 }
 JS_DEFINE_CALLINFO_2(extern, STRING, js_TypeOfObject, CONTEXT, OBJECT, 1, ACCSET_NONE)
 
@@ -293,7 +293,7 @@ JSString* FASTCALL
 js_BooleanIntToString(JSContext *cx, int32 unboxed)
 {
     JS_ASSERT(uint32(unboxed) <= 1);
-    return ATOM_TO_STRING(cx->runtime->atomState.booleanAtoms[unboxed]);
+    return cx->runtime->atomState.booleanAtoms[unboxed];
 }
 JS_DEFINE_CALLINFO_2(extern, STRING, js_BooleanIntToString, CONTEXT, INT32, 1, ACCSET_NONE)
 

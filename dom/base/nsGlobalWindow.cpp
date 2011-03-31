@@ -30,6 +30,7 @@
  *   Mark Hammond <mhammond@skippinet.com.au>
  *   Ryan Jones <sciguyryan@gmail.com>
  *   Jeff Walden <jwalden+code@mit.edu>
+ *   Ben Bucksch <ben.bucksch  beonex.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -67,6 +68,8 @@
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsJSEnvironment.h"
+#include "nsCharSeparatedTokenizer.h" // for Accept-Language parsing
+#include "nsUnicharUtils.h"
 
 // Other Classes
 #include "nsIEventListenerManager.h"
@@ -108,7 +111,6 @@
 #include "nsIDOMCrypto.h"
 #endif
 #include "nsIDOMDocument.h"
-#include "nsIDOM3Document.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMElement.h"
@@ -233,6 +235,7 @@
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 
 #include "nsRefreshDriver.h"
+#include "mozAutoDocUpdate.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDOMLeakPRLog;
@@ -7602,15 +7605,11 @@ nsGlobalWindow::SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
     }
   }
 
-  if (mHasFocus) {
-    // send content state notifications
-    nsCOMPtr<nsPresContext> presContext;
-    if (mDocShell) {
-      mDocShell->GetPresContext(getter_AddRefs(presContext));
-      if (presContext) {
-        presContext->EventStateManager()->
-          SetContentState(mFocusedNode, NS_EVENT_STATE_FOCUS);
-      }
+  if (mHasFocus && mFocusedNode) { // send content state notifications
+    nsIDocument *doc = mFocusedNode->GetCurrentDoc();
+    if (doc) {
+      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      doc->ContentStateChanged(mFocusedNode, NS_EVENT_STATE_FOCUSRING);
     }
   }
 }
@@ -7956,9 +7955,7 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
     *aSessionStorage = nsnull;
 
     nsString documentURI;
-    nsCOMPtr<nsIDOM3Document> document3 = do_QueryInterface(mDoc);
-    if (document3)
-        document3->GetDocumentURI(documentURI);
+    mDocument->GetDocumentURI(documentURI);
 
     nsresult rv = docShell->GetSessionStorageForPrincipal(principal,
                                                           documentURI,
@@ -8042,9 +8039,7 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsString documentURI;
-    nsCOMPtr<nsIDOM3Document> document3 = do_QueryInterface(mDoc);
-    if (document3)
-        document3->GetDocumentURI(documentURI);
+    mDocument->GetDocumentURI(documentURI);
 
     rv = storageManager->GetLocalStorageForPrincipal(principal,
                                                      documentURI,
@@ -10152,8 +10147,7 @@ nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
     nsIViewManager* vm = presShell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
-    nsIView *rootView;
-    vm->GetRootView(rootView);
+    nsIView* rootView = vm->GetRootView();
     NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
 
     nsIWidget* widget = rootView->GetNearestWidget(nsnull);
@@ -10573,19 +10567,56 @@ nsNavigator::GetAppName(nsAString& aAppName)
   return NS_GetNavigatorAppName(aAppName);
 }
 
+/**
+ * JS property navigator.language, exposed to web content.
+ * Take first value from Accept-Languages (HTTP header), which is
+ * the "content language" freely set by the user in the Pref window.
+ *
+ * Do not use UI language (chosen app locale) here.
+ * See RFC 2616, Section 15.1.4 "Privacy Issues Connected to Accept Headers"
+ *
+ * "en", "en-US" and "i-cherokee" and "" are valid.
+ * Fallback in case of invalid pref should be "" (empty string), to
+ * let site do fallback, e.g. to site's local language.
+ */
 NS_IMETHODIMP
 nsNavigator::GetLanguage(nsAString& aLanguage)
 {
-  nsresult rv;
-  nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
-  if (NS_SUCCEEDED(rv)) {
-    nsCAutoString lang;
-    rv = service->GetLanguage(lang);
-    CopyASCIItoUTF16(lang, aLanguage);
-  }
+  // e.g. "de-de, en-us,en"
+  const nsAdoptingString& acceptLang =
+      nsContentUtils::GetLocalizedStringPref("intl.accept_languages");
+  // take everything before the first "," or ";", without trailing space
+  nsCharSeparatedTokenizer langTokenizer(acceptLang, ',');
+  const nsSubstring &firstLangPart = langTokenizer.nextToken();
+  nsCharSeparatedTokenizer qTokenizer(firstLangPart, ';');
+  aLanguage.Assign(qTokenizer.nextToken());
 
-  return rv;
+  // checks and fixups
+  // replace "_" with "-", to avoid POSIX/Windows "en_US" notation
+  if (aLanguage.Length() > 2 && aLanguage[2] == PRUnichar('_'))
+    aLanguage.Replace(2, 1, PRUnichar('-')); // TODO replace all
+  // use uppercase for country part, e.g. "en-US", not "en-us", see BCP47
+  // only uppercase 2-letter country codes, not "zh-Hant", "de-DE-x-goethe"
+  if (aLanguage.Length() > 2)
+  {
+    nsCharSeparatedTokenizer localeTokenizer(aLanguage, '-');
+    PRInt32 pos = 0;
+    bool first = true;
+    while (localeTokenizer.hasMoreTokens())
+    {
+      const nsSubstring &code = localeTokenizer.nextToken();
+      if (code.Length() == 2 && !first)
+      {
+        nsAutoString upper(code);
+        ::ToUpperCase(upper);
+        aLanguage.Replace(pos, code.Length(), upper);
+      }
+      pos += code.Length() + 1; // 1 is the separator
+      if (first)
+        first = false;
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

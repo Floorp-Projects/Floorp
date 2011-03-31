@@ -161,8 +161,8 @@ nsMediaChannelStream::OnStartRequest(nsIRequest* aRequest)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (element->ShouldCheckAllowOrigin()) {
-    // If the request was cancelled by nsCrossSiteListenerProxy due to failing
-    // the Access Control check, send an error through to the media element.
+    // If the request was cancelled by nsCORSListenerProxy due to failing
+    // the CORS security check, send an error through to the media element.
     if (status == NS_ERROR_DOM_BAD_URI) {
       mDecoder->NetworkError();
       return NS_ERROR_DOM_BAD_URI;
@@ -457,12 +457,12 @@ nsresult nsMediaChannelStream::OpenChannel(nsIStreamListener** aStreamListener)
     NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
     if (element->ShouldCheckAllowOrigin()) {
       nsresult rv;
-      nsCrossSiteListenerProxy* crossSiteListener =
-        new nsCrossSiteListenerProxy(mListener,
-                                     element->NodePrincipal(),
-                                     mChannel,
-                                     PR_FALSE,
-                                     &rv);
+      nsCORSListenerProxy* crossSiteListener =
+        new nsCORSListenerProxy(mListener,
+                                element->NodePrincipal(),
+                                mChannel,
+                                PR_FALSE,
+                                &rv);
       listener = crossSiteListener;
       NS_ENSURE_TRUE(crossSiteListener, NS_ERROR_OUT_OF_MEMORY);
       NS_ENSURE_SUCCESS(rv, rv);

@@ -53,7 +53,6 @@
 #include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOM3Document.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMStorageObsolete.h"
@@ -4759,8 +4758,7 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
     // get the root view
-    nsIView *view = nsnull; // views are not ref counted
-    NS_ENSURE_SUCCESS(vm->GetRootView(view), NS_ERROR_FAILURE);
+    nsIView *view = vm->GetRootView(); // views are not ref counted
     NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
 
     // if our root view is hidden, we are not visible
@@ -7048,8 +7046,7 @@ nsDocShell::RestoreFromHistory()
     if (oldPresShell) {
         nsIViewManager *vm = oldPresShell->GetViewManager();
         if (vm) {
-            nsIView *oldRootView = nsnull;
-            vm->GetRootView(oldRootView);
+            nsIView *oldRootView = vm->GetRootView();
 
             if (oldRootView) {
                 rootViewSibling = oldRootView->GetNextSibling();
@@ -7256,9 +7253,7 @@ nsDocShell::RestoreFromHistory()
     nsDocShell::GetPresShell(getter_AddRefs(shell));
 
     nsIViewManager *newVM = shell ? shell->GetViewManager() : nsnull;
-    nsIView *newRootView = nsnull;
-    if (newVM)
-        newVM->GetRootView(newRootView);
+    nsIView *newRootView = newVM ? newVM->GetRootView() : nsnull;
 
     // Insert the new root view at the correct location in the view tree.
     if (rootViewParent) {
@@ -7351,7 +7346,7 @@ nsDocShell::RestoreFromHistory()
             // When we insert the root view above the resulting invalidate is
             // dropped because painting is suppressed in the presshell until we
             // call Thaw. So we issue the invalidate here.
-            newVM->GetRootView(newRootView);
+            newRootView = newVM->GetRootView();
             if (newRootView) {
                 newVM->UpdateView(newRootView, NS_VMREFRESH_NO_SYNC);
             }

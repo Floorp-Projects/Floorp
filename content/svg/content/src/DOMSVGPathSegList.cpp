@@ -140,6 +140,13 @@ DOMSVGPathSegList::InternalListWillChangeTo(const SVGPathData& aNewValue)
 
   PRUint32 newSegType;
 
+  nsRefPtr<DOMSVGPathSegList> kungFuDeathGrip;
+  if (length && aNewValue.IsEmpty()) {
+    // RemovingFromList() might clear last reference to |this|.
+    // Retain a temporary reference to keep from dying before returning.
+    kungFuDeathGrip = this;
+  }
+
   while (index < length && dataIndex < dataLength) {
     newSegType = SVGPathSegUtils::DecodeType(aNewValue.mData[dataIndex]);
     if (ItemAt(index) && ItemAt(index)->Type() != newSegType) {
@@ -540,7 +547,9 @@ DOMSVGPathSegList::
     return;
   }
 
-  DOMSVGPathSegList *animVal =
+  // This needs to be a strong reference; otherwise, the RemovingFromList call
+  // below might drop the last reference to animVal before we're done with it.
+  nsRefPtr<DOMSVGPathSegList> animVal =
     GetDOMWrapperIfExists(InternalAList().GetAnimValKey());
   if (!animVal) {
     // No animVal list wrapper

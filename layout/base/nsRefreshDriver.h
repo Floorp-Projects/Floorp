@@ -247,7 +247,7 @@ private:
   nsAutoTArray<nsIPresShell*, 16> mStyleFlushObservers;
   nsAutoTArray<nsIPresShell*, 16> mLayoutFlushObservers;
   // nsTArray on purpose, because we want to be able to swap.
-  nsTArray<nsIDocument*> mBeforePaintTargets;
+  nsTArray< nsCOMPtr<nsIDocument> > mBeforePaintTargets;
   // nsTArray on purpose, because we want to be able to swap.
   nsTArray<nsIDocument*> mAnimationFrameListenerDocs;
 
