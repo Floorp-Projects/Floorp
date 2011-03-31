@@ -116,8 +116,8 @@ static void skip_recon_mb(VP8D_COMP *pbi, MACROBLOCKD *xd)
     {
 
         vp8_build_intra_predictors_mbuv_s(xd);
-        vp8_build_intra_predictors_mby_s_ptr(xd);
-
+        RECON_INVOKE(&pbi->common.rtcd.recon,
+                     build_intra_predictors_mby_s)(xd);
     }
     else
     {
@@ -215,7 +215,8 @@ void vp8_decode_macroblock(VP8D_COMP *pbi, MACROBLOCKD *xd)
 
         if (xd->mode_info_context->mbmi.mode != B_PRED)
         {
-            vp8_build_intra_predictors_mby_ptr(xd);
+            RECON_INVOKE(&pbi->common.rtcd.recon,
+                         build_intra_predictors_mby)(xd);
         } else {
             vp8_intra_prediction_down_copy(xd);
         }

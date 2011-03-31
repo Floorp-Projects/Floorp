@@ -1,0 +1,317 @@
+diff --git a/media/libvpx/vp8/common/arm/arm_systemdependent.c b/media/libvpx/vp8/common/arm/arm_systemdependent.c
+--- a/media/libvpx/vp8/common/arm/arm_systemdependent.c
++++ b/media/libvpx/vp8/common/arm/arm_systemdependent.c
+@@ -14,24 +14,16 @@
+ #include "g_common.h"
+ #include "pragmas.h"
+ #include "subpixel.h"
+ #include "loopfilter.h"
+ #include "recon.h"
+ #include "idct.h"
+ #include "onyxc_int.h"
+ 
+-extern void (*vp8_build_intra_predictors_mby_ptr)(MACROBLOCKD *x);
+-extern void vp8_build_intra_predictors_mby(MACROBLOCKD *x);
+-extern void vp8_build_intra_predictors_mby_neon(MACROBLOCKD *x);
+-
+-extern void (*vp8_build_intra_predictors_mby_s_ptr)(MACROBLOCKD *x);
+-extern void vp8_build_intra_predictors_mby_s(MACROBLOCKD *x);
+-extern void vp8_build_intra_predictors_mby_s_neon(MACROBLOCKD *x);
+-
+ void vp8_arch_arm_common_init(VP8_COMMON *ctx)
+ {
+ #if CONFIG_RUNTIME_CPU_DETECT
+     VP8_COMMON_RTCD *rtcd = &ctx->rtcd;
+     int flags = arm_cpu_caps();
+     int has_edsp = flags & HAS_EDSP;
+     int has_media = flags & HAS_MEDIA;
+     int has_neon = flags & HAS_NEON;
+@@ -101,36 +93,17 @@ void vp8_arch_arm_common_init(VP8_COMMON
+ 
+         rtcd->recon.copy16x16   = vp8_copy_mem16x16_neon;
+         rtcd->recon.copy8x8     = vp8_copy_mem8x8_neon;
+         rtcd->recon.copy8x4     = vp8_copy_mem8x4_neon;
+         rtcd->recon.recon       = vp8_recon_b_neon;
+         rtcd->recon.recon2      = vp8_recon2b_neon;
+         rtcd->recon.recon4      = vp8_recon4b_neon;
+         rtcd->recon.recon_mb    = vp8_recon_mb_neon;
+-
++        rtcd->recon.build_intra_predictors_mby =
++            vp8_build_intra_predictors_mby_neon;
++        rtcd->recon.build_intra_predictors_mby_s =
++            vp8_build_intra_predictors_mby_s_neon;
+     }
+ #endif
+ 
+ #endif
+-
+-#if HAVE_ARMV6
+-#if CONFIG_RUNTIME_CPU_DETECT
+-    if (has_media)
+-#endif
+-    {
+-        vp8_build_intra_predictors_mby_ptr = vp8_build_intra_predictors_mby;
+-        vp8_build_intra_predictors_mby_s_ptr = vp8_build_intra_predictors_mby_s;
+-    }
+-#endif
+-
+-#if HAVE_ARMV7
+-#if CONFIG_RUNTIME_CPU_DETECT
+-    if (has_neon)
+-#endif
+-    {
+-        vp8_build_intra_predictors_mby_ptr =
+-         vp8_build_intra_predictors_mby_neon;
+-        vp8_build_intra_predictors_mby_s_ptr =
+-         vp8_build_intra_predictors_mby_s_neon;
+-    }
+-#endif
+ }
+diff --git a/media/libvpx/vp8/common/arm/recon_arm.h b/media/libvpx/vp8/common/arm/recon_arm.h
+--- a/media/libvpx/vp8/common/arm/recon_arm.h
++++ b/media/libvpx/vp8/common/arm/recon_arm.h
+@@ -48,16 +48,19 @@ extern prototype_recon_block(vp8_recon2b
+ extern prototype_recon_block(vp8_recon4b_neon);
+ 
+ extern prototype_copy_block(vp8_copy_mem8x8_neon);
+ extern prototype_copy_block(vp8_copy_mem8x4_neon);
+ extern prototype_copy_block(vp8_copy_mem16x16_neon);
+ 
+ extern prototype_recon_macroblock(vp8_recon_mb_neon);
+ 
++extern prototype_build_intra_predictors(vp8_build_intra_predictors_mby_neon);
++extern prototype_build_intra_predictors(vp8_build_intra_predictors_mby_s_neon);
++
+ #if !CONFIG_RUNTIME_CPU_DETECT
+ #undef  vp8_recon_recon
+ #define vp8_recon_recon vp8_recon_b_neon
+ 
+ #undef  vp8_recon_recon2
+ #define vp8_recon_recon2 vp8_recon2b_neon
+ 
+ #undef  vp8_recon_recon4
+@@ -69,12 +72,19 @@ extern prototype_recon_macroblock(vp8_re
+ #undef  vp8_recon_copy8x4
+ #define vp8_recon_copy8x4 vp8_copy_mem8x4_neon
+ 
+ #undef  vp8_recon_copy16x16
+ #define vp8_recon_copy16x16 vp8_copy_mem16x16_neon
+ 
+ #undef  vp8_recon_recon_mb
+ #define vp8_recon_recon_mb vp8_recon_mb_neon
++
++#undef  vp8_recon_build_intra_predictors_mby
++#define vp8_recon_build_intra_predictors_mby vp8_build_intra_predictors_mby_neon
++
++#undef  vp8_recon_build_intra_predictors_mby_s
++#define vp8_recon_build_intra_predictors_mby_s vp8_build_intra_predictors_mby_s_neon
++
+ #endif
+ #endif
+ 
+ #endif
+diff --git a/media/libvpx/vp8/common/generic/systemdependent.c b/media/libvpx/vp8/common/generic/systemdependent.c
+--- a/media/libvpx/vp8/common/generic/systemdependent.c
++++ b/media/libvpx/vp8/common/generic/systemdependent.c
+@@ -15,22 +15,16 @@
+ #include "loopfilter.h"
+ #include "recon.h"
+ #include "idct.h"
+ #include "onyxc_int.h"
+ 
+ extern void vp8_arch_x86_common_init(VP8_COMMON *ctx);
+ extern void vp8_arch_arm_common_init(VP8_COMMON *ctx);
+ 
+-void (*vp8_build_intra_predictors_mby_ptr)(MACROBLOCKD *x);
+-extern void vp8_build_intra_predictors_mby(MACROBLOCKD *x);
+-
+-void (*vp8_build_intra_predictors_mby_s_ptr)(MACROBLOCKD *x);
+-extern void vp8_build_intra_predictors_mby_s(MACROBLOCKD *x);
+-
+ void vp8_machine_specific_config(VP8_COMMON *ctx)
+ {
+ #if CONFIG_RUNTIME_CPU_DETECT
+     VP8_COMMON_RTCD *rtcd = &ctx->rtcd;
+ 
+     rtcd->idct.idct1        = vp8_short_idct4x4llm_1_c;
+     rtcd->idct.idct16       = vp8_short_idct4x4llm_c;
+     rtcd->idct.idct1_scalar_add = vp8_dc_only_idct_add_c;
+@@ -40,16 +34,20 @@ void vp8_machine_specific_config(VP8_COM
+     rtcd->recon.copy16x16   = vp8_copy_mem16x16_c;
+     rtcd->recon.copy8x8     = vp8_copy_mem8x8_c;
+     rtcd->recon.copy8x4     = vp8_copy_mem8x4_c;
+     rtcd->recon.recon       = vp8_recon_b_c;
+     rtcd->recon.recon2      = vp8_recon2b_c;
+     rtcd->recon.recon4      = vp8_recon4b_c;
+     rtcd->recon.recon_mb    = vp8_recon_mb_c;
+     rtcd->recon.recon_mby   = vp8_recon_mby_c;
++    rtcd->recon.build_intra_predictors_mby =
++        vp8_build_intra_predictors_mby;
++    rtcd->recon.build_intra_predictors_mby_s =
++        vp8_build_intra_predictors_mby_s;
+ 
+     rtcd->subpix.sixtap16x16   = vp8_sixtap_predict16x16_c;
+     rtcd->subpix.sixtap8x8     = vp8_sixtap_predict8x8_c;
+     rtcd->subpix.sixtap8x4     = vp8_sixtap_predict8x4_c;
+     rtcd->subpix.sixtap4x4     = vp8_sixtap_predict_c;
+     rtcd->subpix.bilinear16x16 = vp8_bilinear_predict16x16_c;
+     rtcd->subpix.bilinear8x8   = vp8_bilinear_predict8x8_c;
+     rtcd->subpix.bilinear8x4   = vp8_bilinear_predict8x4_c;
+@@ -68,19 +66,16 @@ void vp8_machine_specific_config(VP8_COM
+     rtcd->postproc.down        = vp8_mbpost_proc_down_c;
+     rtcd->postproc.across      = vp8_mbpost_proc_across_ip_c;
+     rtcd->postproc.downacross  = vp8_post_proc_down_and_across_c;
+     rtcd->postproc.addnoise    = vp8_plane_add_noise_c;
+     rtcd->postproc.blend_mb    = vp8_blend_mb_c;
+ #endif
+ 
+ #endif
+-    /* Pure C: */
+-    vp8_build_intra_predictors_mby_ptr = vp8_build_intra_predictors_mby;
+-    vp8_build_intra_predictors_mby_s_ptr = vp8_build_intra_predictors_mby_s;
+ 
+ #if ARCH_X86 || ARCH_X86_64
+     vp8_arch_x86_common_init(ctx);
+ #endif
+ 
+ #if ARCH_ARM
+     vp8_arch_arm_common_init(ctx);
+ #endif
+diff --git a/media/libvpx/vp8/common/recon.h b/media/libvpx/vp8/common/recon.h
+--- a/media/libvpx/vp8/common/recon.h
++++ b/media/libvpx/vp8/common/recon.h
+@@ -18,16 +18,19 @@
+     void sym(unsigned char *src, int src_pitch, unsigned char *dst, int dst_pitch)
+ 
+ #define prototype_recon_block(sym) \
+     void sym(unsigned char *pred, short *diff, unsigned char *dst, int pitch)
+ 
+ #define prototype_recon_macroblock(sym) \
+     void sym(const struct vp8_recon_rtcd_vtable *rtcd, MACROBLOCKD *x)
+ 
++#define prototype_build_intra_predictors(sym) \
++    void sym(MACROBLOCKD *x)
++
+ struct vp8_recon_rtcd_vtable;
+ 
+ #if ARCH_X86 || ARCH_X86_64
+ #include "x86/recon_x86.h"
+ #endif
+ 
+ #if ARCH_ARM
+ #include "arm/recon_arm.h"
+@@ -68,29 +71,45 @@ extern prototype_recon_block(vp8_recon_r
+ #endif
+ extern prototype_recon_macroblock(vp8_recon_recon_mb);
+ 
+ #ifndef vp8_recon_recon_mby
+ #define vp8_recon_recon_mby vp8_recon_mby_c
+ #endif
+ extern prototype_recon_macroblock(vp8_recon_recon_mby);
+ 
++#ifndef vp8_recon_build_intra_predictors_mby
++#define vp8_recon_build_intra_predictors_mby vp8_build_intra_predictors_mby
++#endif
++extern prototype_build_intra_predictors\
++    (vp8_recon_build_intra_predictors_mby);
++
++#ifndef vp8_recon_build_intra_predictors_mby_s
++#define vp8_recon_build_intra_predictors_mby_s vp8_build_intra_predictors_mby_s
++#endif
++extern prototype_build_intra_predictors\
++    (vp8_recon_build_intra_predictors_mby_s);
++
++
+ typedef prototype_copy_block((*vp8_copy_block_fn_t));
+ typedef prototype_recon_block((*vp8_recon_fn_t));
+ typedef prototype_recon_macroblock((*vp8_recon_mb_fn_t));
++typedef prototype_build_intra_predictors((*vp8_build_intra_pred_fn_t));
+ typedef struct vp8_recon_rtcd_vtable
+ {
+     vp8_copy_block_fn_t  copy16x16;
+     vp8_copy_block_fn_t  copy8x8;
+     vp8_copy_block_fn_t  copy8x4;
+     vp8_recon_fn_t       recon;
+     vp8_recon_fn_t       recon2;
+     vp8_recon_fn_t       recon4;
+     vp8_recon_mb_fn_t    recon_mb;
+     vp8_recon_mb_fn_t    recon_mby;
++    vp8_build_intra_pred_fn_t  build_intra_predictors_mby_s;
++    vp8_build_intra_pred_fn_t  build_intra_predictors_mby;
+ } vp8_recon_rtcd_vtable_t;
+ 
+ #if CONFIG_RUNTIME_CPU_DETECT
+ #define RECON_INVOKE(ctx,fn) (ctx)->fn
+ #else
+ #define RECON_INVOKE(ctx,fn) vp8_recon_##fn
+ #endif
+ 
+diff --git a/media/libvpx/vp8/common/reconintra.h b/media/libvpx/vp8/common/reconintra.h
+--- a/media/libvpx/vp8/common/reconintra.h
++++ b/media/libvpx/vp8/common/reconintra.h
+@@ -9,21 +9,14 @@
+  */
+ 
+ 
+ #ifndef __INC_RECONINTRA_H
+ #define __INC_RECONINTRA_H
+ 
+ extern void init_intra_left_above_pixels(MACROBLOCKD *x);
+ 
+-extern void (*vp8_build_intra_predictors_mby_ptr)(MACROBLOCKD *x);
+-extern void vp8_build_intra_predictors_mby(MACROBLOCKD *x);
+-extern void vp8_build_intra_predictors_mby_neon(MACROBLOCKD *x);
+-extern void (*vp8_build_intra_predictors_mby_s_ptr)(MACROBLOCKD *x);
+-extern void vp8_build_intra_predictors_mby_s(MACROBLOCKD *x);
+-extern void vp8_build_intra_predictors_mby_s_neon(MACROBLOCKD *x);
+-
+ extern void vp8_build_intra_predictors_mbuv(MACROBLOCKD *x);
+ extern void vp8_build_intra_predictors_mbuv_s(MACROBLOCKD *x);
+ 
+ extern void vp8_predict_intra4x4(BLOCKD *x, int b_mode, unsigned char *Predictor);
+ 
+ #endif
+diff --git a/media/libvpx/vp8/decoder/decodframe.c b/media/libvpx/vp8/decoder/decodframe.c
+--- a/media/libvpx/vp8/decoder/decodframe.c
++++ b/media/libvpx/vp8/decoder/decodframe.c
+@@ -111,18 +111,18 @@ void mb_init_dequantizer(VP8D_COMP *pbi,
+  *  to dst buffer, we can write the result directly to dst buffer. This eliminates unnecessary copy.
+  */
+ static void skip_recon_mb(VP8D_COMP *pbi, MACROBLOCKD *xd)
+ {
+     if (xd->frame_type == KEY_FRAME  ||  xd->mode_info_context->mbmi.ref_frame == INTRA_FRAME)
+     {
+ 
+         vp8_build_intra_predictors_mbuv_s(xd);
+-        vp8_build_intra_predictors_mby_s_ptr(xd);
+-
++        RECON_INVOKE(&pbi->common.rtcd.recon,
++                     build_intra_predictors_mby_s)(xd);
+     }
+     else
+     {
+         vp8_build_inter_predictors_mb_s(xd);
+     }
+ }
+ 
+ static void clamp_mv_to_umv_border(MV *mv, const MACROBLOCKD *xd)
+@@ -210,17 +210,18 @@ void vp8_decode_macroblock(VP8D_COMP *pb
+ 
+     /* do prediction */
+     if (xd->frame_type == KEY_FRAME  ||  xd->mode_info_context->mbmi.ref_frame == INTRA_FRAME)
+     {
+         vp8_build_intra_predictors_mbuv(xd);
+ 
+         if (xd->mode_info_context->mbmi.mode != B_PRED)
+         {
+-            vp8_build_intra_predictors_mby_ptr(xd);
++            RECON_INVOKE(&pbi->common.rtcd.recon,
++                         build_intra_predictors_mby)(xd);
+         } else {
+             vp8_intra_prediction_down_copy(xd);
+         }
+     }
+     else
+     {
+         vp8_build_inter_predictors_mb(xd);
+     }
