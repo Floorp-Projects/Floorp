@@ -458,8 +458,8 @@ function run_test() {
 
     _("setHeader(): setting multiple headers, overwriting existing header");
     do_test_pending();
-    res_headers.setHeader('X-WHAT-is-Weave', 'more awesomer',
-                   'X-Another-Header', 'hello world');
+    res_headers.setHeader('X-WHAT-is-Weave', 'more awesomer');
+    res_headers.setHeader('X-Another-Header', 'hello world');
     do_check_eq(res_headers.headers['x-what-is-weave'], 'more awesomer');
     do_check_eq(res_headers.headers['x-another-header'], 'hello world');
     res_headers.get(ensureThrows(function (error, content) {

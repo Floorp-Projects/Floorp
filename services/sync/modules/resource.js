@@ -171,12 +171,8 @@ AsyncResource.prototype = {
   set headers(value) {
     this._headers = value;
   },
-  setHeader: function Res_setHeader() {
-    if (arguments.length % 2)
-      throw "setHeader only accepts arguments in multiples of 2";
-    for (let i = 0; i < arguments.length; i += 2) {
-      this._headers[arguments[i].toLowerCase()] = arguments[i + 1];
-    }
+  setHeader: function Res_setHeader(header, value) {
+    this._headers[header.toLowerCase()] = value;
   },
 
   // ** {{{ Resource.uri }}} **
