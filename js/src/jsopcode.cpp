@@ -5553,3 +5553,39 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
 
 #undef LOCAL_ASSERT
 #undef LOCAL_ASSERT_RV
+
+namespace js {
+
+bool
+CallResultEscapes(jsbytecode *pc)
+{
+    /*
+     * If we see any of these sequences, the result is unused:
+     * - call / pop
+     * - call / trace / pop
+     *
+     * If we see any of these sequences, the result is only tested for nullness:
+     * - call / ifeq
+     * - call / trace / ifeq
+     * - call / not / ifeq
+     * - call / trace / not / ifeq
+     */
+
+    if (*pc != JSOP_CALL)
+        return true;
+
+    pc += JSOP_CALL_LENGTH;
+
+    if (*pc == JSOP_TRACE)
+        pc += JSOP_TRACE_LENGTH;
+
+    if (*pc == JSOP_POP)
+        return false;
+
+    if (*pc == JSOP_NOT)
+        pc += JSOP_NOT_LENGTH;
+
+    return (*pc != JSOP_IFEQ);
+}
+
+} // namespace js
