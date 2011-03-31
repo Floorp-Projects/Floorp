@@ -80,9 +80,7 @@
 
 #include "nsIXULAppInfo.h"
 
-#ifdef MOZ_IPC
 #include "mozilla/net/NeckoChild.h"
-#endif 
 
 #if defined(XP_UNIX)
 #include <sys/utsname.h>
@@ -103,9 +101,7 @@
 
 //-----------------------------------------------------------------------------
 using namespace mozilla::net;
-#ifdef MOZ_IPC
 #include "mozilla/net/HttpChannelChild.h"
-#endif 
 
 #include "mozilla/FunctionTimer.h"
 
@@ -248,10 +244,8 @@ nsHttpHandler::Init()
         return rv;
     }
 
-#ifdef MOZ_IPC
     if (IsNeckoChild())
         NeckoChild::InitNeckoChild();
-#endif // MOZ_IPC
 
     InitUserAgentComponents();
 
@@ -1483,12 +1477,9 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
     if (NS_FAILED(rv))
         return rv;
 
-#ifdef MOZ_IPC
     if (IsNeckoChild()) {
         httpChannel = new HttpChannelChild();
-    } else
-#endif
-    {
+    } else {
         httpChannel = new nsHttpChannel();
     }
 
@@ -1505,10 +1496,7 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
         if (mPipeliningOverSSL)
             caps |= NS_HTTP_ALLOW_PIPELINING;
 
-#ifdef MOZ_IPC
-        if (!IsNeckoChild()) 
-#endif
-        {
+        if (!IsNeckoChild()) {
             // HACK: make sure PSM gets initialized on the main thread.
             net_EnsurePSMInit();
         }

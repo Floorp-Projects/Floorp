@@ -35,9 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 # include "gfxSharedImageSurface.h"
-#endif
 
 #include "CanvasLayerOGL.h"
 
@@ -253,8 +251,6 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
 }
 
 
-#ifdef MOZ_IPC
-
 ShadowCanvasLayerOGL::ShadowCanvasLayerOGL(LayerManagerOGL* aManager)
   : ShadowCanvasLayer(aManager, nsnull)
   , LayerOGL(aManager)
@@ -342,5 +338,3 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
   mOGLManager->BindAndDrawQuad(program);
 }
-
-#endif  // MOZ_IPC

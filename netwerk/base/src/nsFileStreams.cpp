@@ -35,9 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 #include "IPC/IPCMessageUtils.h"
-#endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #include <unistd.h>
@@ -441,7 +439,6 @@ nsFileInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
 PRBool
 nsFileInputStream::Read(const IPC::Message *aMsg, void **aIter)
 {
-#ifdef MOZ_IPC
     using IPC::ReadParam;
 
     nsCString path;
@@ -464,15 +461,11 @@ nsFileInputStream::Read(const IPC::Message *aMsg, void **aIter)
         return PR_FALSE;
 
     return PR_TRUE;
-#else
-    return PR_FALSE;
-#endif
 }
 
 void
 nsFileInputStream::Write(IPC::Message *aMsg)
 {
-#ifdef MOZ_IPC
     using IPC::WriteParam;
 
     nsCString path;
@@ -483,7 +476,6 @@ nsFileInputStream::Write(IPC::Message *aMsg)
     localFile->GetFollowLinks(&followLinks);
     WriteParam(aMsg, followLinks);
     WriteParam(aMsg, mBehaviorFlags);
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

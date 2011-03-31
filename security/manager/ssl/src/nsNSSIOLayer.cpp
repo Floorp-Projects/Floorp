@@ -380,9 +380,7 @@ nsNSSSocketInfo::EnsureDocShellDependentStuffKnown()
   // instance prior to our error reporting.
 
   nsISecureBrowserUI* secureUI = nsnull;
-#ifdef MOZ_IPC
   CallGetInterface(proxiedCallbacks.get(), &secureUI);
-#endif
 
   nsCOMPtr<nsIDocShell> docshell;
 

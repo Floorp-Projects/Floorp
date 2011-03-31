@@ -55,9 +55,7 @@
 #undef slots
 #endif
 
-#ifdef MOZ_IPC
 #include "mozilla/plugins/PluginMessageUtils.h"
-#endif
 
 #ifdef MOZ_X11
 #include <cairo-xlib.h>
@@ -240,9 +238,7 @@ static PRLogModuleInfo *nsObjectFrameLM = PR_NewLogModule("nsObjectFrame");
 #endif
 
 using namespace mozilla;
-#ifdef MOZ_IPC
 using namespace mozilla::plugins;
-#endif
 using namespace mozilla::layers;
 
 // special class for handeling DOM context menu events because for
@@ -2355,7 +2351,6 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
       nsPoint origin;
 
       gfxWindowsNativeDrawing nativeDraw(ctx, frameGfxRect);
-#ifdef MOZ_IPC
       if (nativeDraw.IsDoublePass()) {
         // OOP plugin specific: let the shim know before we paint if we are doing a
         // double pass render. If this plugin isn't oop, the register window message
@@ -2367,7 +2362,6 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
         if (pluginEvent.event)
           inst->HandleEvent(&pluginEvent, nsnull);
       }
-#endif
       do {
         HDC hdc = nativeDraw.BeginNativeDrawing();
         if (!hdc)
