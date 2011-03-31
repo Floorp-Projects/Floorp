@@ -1657,6 +1657,9 @@ nsCanvasRenderingContext2D::CreateRadialGradient(float x0, float y0, float r0, f
     if (!FloatValidate(x0,y0,r0,x1,y1,r1))
         return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
+    if (r0 < 0.0 || r1 < 0.0)
+        return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
     nsRefPtr<gfxPattern> gradpat = new gfxPattern(x0, y0, r0, x1, y1, r1);
     if (!gradpat)
         return NS_ERROR_OUT_OF_MEMORY;
