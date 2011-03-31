@@ -184,7 +184,7 @@ PRBool nsWaveReader::DecodeAudioData()
   NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
                "Should be on state machine thread or decode thread.");
 
-  PRInt64 pos = GetPosition();
+  PRInt64 pos = GetPosition() - mWavePCMOffset;
   PRInt64 len = GetDataLength();
   PRInt64 remaining = len - pos;
   NS_ASSERTION(remaining >= 0, "Current wave position is greater than wave file length");
