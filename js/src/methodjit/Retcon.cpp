@@ -508,7 +508,8 @@ Recompiler::recompile()
     if (script->jitCtor && !cleanup(script->jitCtor, &ctorSites))
         return false;
 
-    ReleaseScriptCode(cx, script);
+    ReleaseScriptCode(cx, script, true);
+    ReleaseScriptCode(cx, script, false);
 
     if (normalFrames.length() &&
         !recompile(normalFrames, normalPatches, normalSites, normalNatives)) {

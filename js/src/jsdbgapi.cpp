@@ -179,7 +179,8 @@ JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
             return JS_FALSE;
         }
 
-        mjit::ReleaseScriptCode(cx, script);
+        mjit::ReleaseScriptCode(cx, script, true);
+        mjit::ReleaseScriptCode(cx, script, false);
         script->debugMode = !!debug;
     }
 #endif

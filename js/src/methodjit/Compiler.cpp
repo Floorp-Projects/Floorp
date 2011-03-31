@@ -337,7 +337,7 @@ mjit::Compiler::performCompilation(JITScript **jitp)
         if (script->jitNormal && !script->jitNormal->rejoinPoints) {
             mjit::Recompiler recompiler(cx, script);
             if (!recompiler.recompile()) {
-                ReleaseScriptCode(cx, outerScript);
+                ReleaseScriptCode(cx, outerScript, true);
                 return Compile_Error;
             }
         }
@@ -349,7 +349,7 @@ mjit::Compiler::performCompilation(JITScript **jitp)
                 status = cc.compile();
             }
             if (status != Compile_Okay) {
-                ReleaseScriptCode(cx, outerScript);
+                ReleaseScriptCode(cx, outerScript, true);
                 return status;
             }
         }
