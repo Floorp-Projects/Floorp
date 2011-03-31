@@ -119,7 +119,7 @@ function run_test() {
     // the bookmark uri becomes null.
     var sql = "UPDATE moz_bookmarks SET fk = 1337 WHERE id = ?1";
     var stmt = mDBConn.createStatement(sql);
-    stmt.bindUTF8StringParameter(0, aTest._itemId);
+    stmt.bindByIndex(0, aTest._itemId);
     try {
       stmt.execute();
     } finally {
