@@ -81,7 +81,7 @@ nsCRLManager::~nsCRLManager()
 }
 
 NS_IMETHODIMP 
-nsCRLManager::ImportCrl (PRUint8 *aData, PRUint32 aLength, nsIURI * aURI, PRUint32 aType, PRBool doSilentDonwload, const PRUnichar* crlKey)
+nsCRLManager::ImportCrl (PRUint8 *aData, PRUint32 aLength, nsIURI * aURI, PRUint32 aType, PRBool doSilentDownload, const PRUnichar* crlKey)
 {
   nsNSSShutDownPreventionLock locker;
   nsresult rv;
@@ -180,7 +180,7 @@ loser:
 
 done:
           
-  if(!doSilentDonwload){
+  if(!doSilentDownload){
     if (!importSuccessful){
       nsString message;
       nsString temp;
