@@ -43,7 +43,6 @@
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 #include "nsIProxyAutoConfig.h"
-#include "nsAutoLock.h"
 #include "nsIIOService.h"
 #include "nsIObserverService.h"
 #include "nsIProtocolHandler.h"
