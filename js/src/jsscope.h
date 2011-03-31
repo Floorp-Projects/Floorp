@@ -242,7 +242,7 @@ struct PropertyTable {
     }
 
     ~PropertyTable() {
-        js::UnwantedForeground::free(entries);
+        js::UnwantedForeground::free_(entries);
     }
 
     /* By definition, hashShift = JS_DHASH_BITS - log2(capacity). */
@@ -263,7 +263,7 @@ struct PropertyTable {
 
     /*
      * NB: init and change are fallible but do not report OOM, so callers can
-     * cope or ignore. They do however use JSRuntime's calloc method in order
+     * cope or ignore. They do however use JSRuntime's calloc_ method in order
      * to update the malloc counter on success.
      */
     bool            init(JSRuntime *rt, js::Shape *lastProp);

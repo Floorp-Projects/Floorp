@@ -48,7 +48,6 @@
  *
  * XXX swizzle page to freelist for better locality of reference
  */
-#include <stdlib.h>     /* for free */
 #include <math.h>
 #include <string.h>     /* for memset used when DEBUG */
 #include "jstypes.h"
@@ -403,7 +402,7 @@ ReleaseGCChunk(JSRuntime *rt, jsuword chunk)
 #endif
     JS_ASSERT(rt->gcStats.nchunks != 0);
     METER(rt->gcStats.nchunks--);
-    rt->gcChunkAllocator->free(p);
+    rt->gcChunkAllocator->free_(p);
 }
 
 inline Chunk *
@@ -427,7 +426,7 @@ ReleaseGCChunk(JSRuntime *rt, Chunk *p)
 #endif
     JS_ASSERT(rt->gcStats.nchunks != 0);
     METER(rt->gcStats.nchunks--);
-    rt->gcChunkAllocator->free(p);
+    rt->gcChunkAllocator->free_(p);
 }
 
 static Chunk *
@@ -1806,7 +1805,7 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
         jschar *chars = const_cast<jschar *>(str->asFlat().chars());
         if (thingKind == FINALIZE_STRING) {
             rt->stringMemoryUsed -= str->length() * 2;
-            rt->free(chars);
+            rt->free_(chars);
         } else if (thingKind == FINALIZE_EXTERNAL_STRING) {
             ((JSExternalString *)str)->finalize();
         }
@@ -2048,7 +2047,7 @@ GCHelperThread::replenishAndFreeLater(void *ptr)
     do {
         if (freeCursor && !freeVector.append(freeCursorEnd - FREE_ARRAY_LENGTH))
             break;
-        freeCursor = (void **) OffTheBooks::malloc(FREE_ARRAY_SIZE);
+        freeCursor = (void **) OffTheBooks::malloc_(FREE_ARRAY_SIZE);
         if (!freeCursor) {
             freeCursorEnd = NULL;
             break;
@@ -2057,7 +2056,7 @@ GCHelperThread::replenishAndFreeLater(void *ptr)
         *freeCursor++ = ptr;
         return;
     } while (false);
-    Foreground::free(ptr);
+    Foreground::free_(ptr);
 }
 
 void

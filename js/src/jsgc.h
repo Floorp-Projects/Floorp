@@ -40,13 +40,6 @@
 #ifndef jsgc_h___
 #define jsgc_h___
 
-/* Gross special case for Gecko, which defines malloc/calloc/free. */
-#ifdef mozilla_mozalloc_macro_wrappers_h
-#  define JS_GC_UNDEFD_MOZALLOC_WRAPPERS
-/* The "anti-header" */
-#  include "mozilla/mozalloc_undef_macro_wrappers.h"
-#endif
-
 /*
  * JS Garbage Collector.
  */
@@ -904,8 +897,8 @@ class GCHelperThread {
     static void freeElementsAndArray(void **array, void **end) {
         JS_ASSERT(array <= end);
         for (void **p = array; p != end; ++p)
-            js::Foreground::free(*p);
-        js::Foreground::free(array);
+            js::Foreground::free_(*p);
+        js::Foreground::free_(array);
     }
 
     static void threadMain(void* arg);
@@ -1097,9 +1090,5 @@ JSObject::getCompartment() const
 {
     return compartment();
 }
-
-#ifdef JS_GC_UNDEFD_MOZALLOC_WRAPPERS
-#  include "mozilla/mozalloc_macro_wrappers.h"
-#endif
 
 #endif /* jsgc_h___ */

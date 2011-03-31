@@ -589,7 +589,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
     ok = JS_XDRBytes(xdr, (char *) code, length * sizeof(jsbytecode));
 
     if (code != script->code)
-        cx->free(code);
+        cx->free_(code);
 
     if (!ok)
         goto error;
@@ -604,7 +604,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
         if (!state->filenameSaved) {
             const char *filename = state->filename;
             filename = js_SaveScriptFilename(xdr->cx, filename);
-            xdr->cx->free((void *) state->filename);
+            xdr->cx->free_((void *) state->filename);
             state->filename = filename;
             state->filenameSaved = true;
             if (!filename)
@@ -803,13 +803,13 @@ typedef struct ScriptFilenameEntry {
 static void *
 js_alloc_table_space(void *priv, size_t size)
 {
-    return OffTheBooks::malloc(size);
+    return OffTheBooks::malloc_(size);
 }
 
 static void
 js_free_table_space(void *priv, void *item, size_t size)
 {
-    UnwantedForeground::free(item);
+    UnwantedForeground::free_(item);
 }
 
 static JSHashEntry *
@@ -818,7 +818,7 @@ js_alloc_sftbl_entry(void *priv, const void *key)
     size_t nbytes = offsetof(ScriptFilenameEntry, filename) +
                     strlen((const char *) key) + 1;
 
-    return (JSHashEntry *) OffTheBooks::malloc(JS_MAX(nbytes, sizeof(JSHashEntry)));
+    return (JSHashEntry *) OffTheBooks::malloc_(JS_MAX(nbytes, sizeof(JSHashEntry)));
 }
 
 static void
@@ -826,7 +826,7 @@ js_free_sftbl_entry(void *priv, JSHashEntry *he, uintN flag)
 {
     if (flag != HT_FREE_ENTRY)
         return;
-    UnwantedForeground::free(he);
+    UnwantedForeground::free_(he);
 }
 
 static JSHashAllocOps sftbl_alloc_ops = {
@@ -887,7 +887,7 @@ js_FreeRuntimeScriptState(JSRuntime *rt)
         ScriptFilenamePrefix *sfp = (ScriptFilenamePrefix *)
                                     rt->scriptFilenamePrefixes.next;
         JS_REMOVE_LINK(&sfp->links);
-        UnwantedForeground::free(sfp);
+        UnwantedForeground::free_(sfp);
     }
     FinishRuntimeScriptState(rt);
 }
@@ -950,7 +950,7 @@ SaveScriptFilename(JSRuntime *rt, const char *filename, uint32 flags)
 
         if (!sfp) {
             /* No such prefix: add one now. */
-            sfp = (ScriptFilenamePrefix *) rt->malloc(sizeof(ScriptFilenamePrefix));
+            sfp = (ScriptFilenamePrefix *) rt->malloc_(sizeof(ScriptFilenamePrefix));
             if (!sfp)
                 return NULL;
             JS_INSERT_AFTER(&sfp->links, link);
@@ -1229,7 +1229,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
     size += length * sizeof(jsbytecode) +
             nsrcnotes * sizeof(jssrcnote);
 
-    script = (JSScript *) cx->malloc(size);
+    script = (JSScript *) cx->malloc_(size);
     if (!script)
         return NULL;
 
@@ -1464,7 +1464,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         memcpy(script->upvars()->vector, cg->upvarMap.vector,
                cg->upvarList.count * sizeof(uint32));
         cg->upvarList.clear();
-        cx->free(cg->upvarMap.vector);
+        cx->free_(cg->upvarMap.vector);
         cg->upvarMap.vector = NULL;
     }
 
@@ -1626,7 +1626,7 @@ DestroyScript(JSContext *cx, JSScript *script)
 #endif
     JS_REMOVE_LINK(&script->links);
 
-    cx->free(script);
+    cx->free_(script);
 }
 
 void

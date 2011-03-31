@@ -46,13 +46,6 @@
 #include <new>
 #include <string.h>
 
-/* Gross special case for Gecko, which defines malloc/calloc/free. */
-#ifdef mozilla_mozalloc_macro_wrappers_h
-#  define JSSTL_UNDEFD_MOZALLOC_WRAPPERS
-/* The "anti-header" */
-#  include "mozilla/mozalloc_undef_macro_wrappers.h"
-#endif
-
 namespace js {
 
 /* JavaScript Template Library. */
@@ -242,11 +235,11 @@ PointerRangeSize(T *begin, T *end)
 /*
  * Allocation policies.  These model the concept:
  *  - public copy constructor, assignment, destructor
- *  - void *malloc(size_t)
+ *  - void *malloc_(size_t)
  *      Responsible for OOM reporting on NULL return value.
- *  - void *realloc(size_t)
+ *  - void *realloc_(size_t)
  *      Responsible for OOM reporting on NULL return value.
- *  - void free(void *)
+ *  - void free_(void *)
  *  - reportAllocOverflow()
  *      Called on overflow before the container returns NULL.
  */
@@ -255,9 +248,9 @@ PointerRangeSize(T *begin, T *end)
 class SystemAllocPolicy
 {
   public:
-    void *malloc(size_t bytes) { return js::OffTheBooks::malloc(bytes); }
-    void *realloc(void *p, size_t bytes) { return js::OffTheBooks::realloc(p, bytes); }
-    void free(void *p) { js::UnwantedForeground::free(p); }
+    void *malloc_(size_t bytes) { return js::OffTheBooks::malloc_(bytes); }
+    void *realloc_(void *p, size_t bytes) { return js::OffTheBooks::realloc_(p, bytes); }
+    void free_(void *p) { js::UnwantedForeground::free_(p); }
     void reportAllocOverflow() const {}
 };
 
@@ -498,9 +491,5 @@ InitConst(const T &t)
 }
 
 } /* namespace js */
-
-#ifdef JSSTL_UNDEFD_MOZALLOC_WRAPPERS
-#  include "mozilla/mozalloc_macro_wrappers.h"
-#endif
 
 #endif /* jstl_h_ */

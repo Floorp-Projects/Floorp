@@ -150,7 +150,7 @@ using namespace js::tjit;
 /* 
  * Nanojit requires infallible allocations most of the time. We satisfy this by
  * reserving some space in each allocator which is used as a fallback if
- * rt->calloc() fails. Ideally this reserve space should be big enough to allow
+ * rt->calloc_() fails. Ideally this reserve space should be big enough to allow
  * for all infallible requests made to the allocator until the next OOM check
  * occurs, but it turns out that's impossible to guarantee (though it should be
  * unlikely). So we abort if the reserve runs out;  this is better than
@@ -190,7 +190,7 @@ nanojit::Allocator::allocChunk(size_t nbytes, bool fallible)
      * OOM check will still fail, which is what we want, and the success of
      * request 2 makes it less likely that the reserve space will overflow.
      */
-    void *p = vma->mRt->calloc(nbytes);
+    void *p = vma->mRt->calloc_(nbytes);
     if (p) {
         vma->mSize += nbytes;
     } else {
@@ -211,7 +211,7 @@ void
 nanojit::Allocator::freeChunk(void *p) {
     VMAllocator *vma = (VMAllocator*)this;
     if (p < vma->mReserve || uintptr_t(p) >= vma->mReserveLimit)
-        UnwantedForeground::free(p);
+        UnwantedForeground::free_(p);
 }
 
 void
@@ -1124,7 +1124,7 @@ struct Tracker::TrackerPage*
 Tracker::addTrackerPage(const void* v)
 {
     jsuword base = getTrackerPageBase(v);
-    struct TrackerPage* p = (struct TrackerPage*) cx->calloc(sizeof(*p));
+    struct TrackerPage* p = (struct TrackerPage*) cx->calloc_(sizeof(*p));
     p->base = base;
     p->next = pagelist;
     pagelist = p;
@@ -1137,7 +1137,7 @@ Tracker::clear()
     while (pagelist) {
         TrackerPage* p = pagelist;
         pagelist = pagelist->next;
-        cx->free(p);
+        cx->free_(p);
     }
 }
 
@@ -4500,12 +4500,12 @@ TraceRecorder::compile()
 #if defined DEBUG && !defined WIN32
     /* Associate a filename and line number with the fragment. */
     const char* filename = cx->fp()->script()->filename;
-    char* label = (char*) cx->malloc((filename ? strlen(filename) : 7) + 16);
+    char* label = (char*) cx->malloc_((filename ? strlen(filename) : 7) + 16);
     if (label) {
         sprintf(label, "%s:%u", filename ? filename : "<stdin>",
                 js_FramePCToLineNumber(cx, cx->fp()));
         lirbuf->printer->addrNameMap->addAddrRange(fragment, sizeof(Fragment), 0, label);
-        cx->free(label);
+        cx->free_(label);
     }
 #endif
 
@@ -7674,7 +7674,7 @@ InitJIT(TraceMonitor *tm, JSRuntime* rt)
     #define CHECK_NEW(lhs, type, args) \
         do { lhs = rt->new_<type> args; if (!lhs) goto error; } while (0)
     #define CHECK_MALLOC(lhs, conversion, size) \
-        do { lhs = (conversion)(rt->malloc(size)); if (!lhs) goto error; } while (0)
+        do { lhs = (conversion)(rt->malloc_(size)); if (!lhs) goto error; } while (0)
 
     CHECK_NEW(tm->oracle, Oracle, ());
 
@@ -16635,7 +16635,7 @@ StartTraceVisNative(JSContext *cx, uintN argc, jsval *vp)
         if (!filename)
             goto error;
         ok = StartTraceVis(filename);
-        cx->free(filename);
+        cx->free_(filename);
     } else {
         ok = StartTraceVis();
     }
