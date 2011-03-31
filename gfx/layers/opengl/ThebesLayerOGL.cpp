@@ -36,8 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
 # include "mozilla/layers/PLayers.h"
 # include "mozilla/layers/ShadowLayers.h"
+#endif
 
 #include "ThebesLayerBuffer.h"
 #include "ThebesLayerOGL.h"
@@ -776,6 +778,8 @@ ThebesLayerOGL::IsEmpty()
 }
 
 
+#ifdef MOZ_IPC
+
 class ShadowBufferOGL : public ThebesLayerBufferOGL
 {
 public:
@@ -947,6 +951,8 @@ ShadowThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
   mBuffer->RenderTo(aOffset, mOGLManager);
 }
+
+#endif  // MOZ_IPC
 
 
 } /* layers */

@@ -40,6 +40,7 @@
 #include <android/log.h>
 #include <math.h>
 
+#ifdef MOZ_IPC
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/unused.h"
@@ -47,6 +48,7 @@
 using mozilla::dom::ContentParent;
 using mozilla::dom::ContentChild;
 using mozilla::unused;
+#endif
 
 #include "nsAppShell.h"
 #include "nsIdleService.h"
@@ -82,6 +84,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 static gfxIntSize gAndroidBounds;
 static gfxIntSize gAndroidScreenBounds;
 
+#ifdef MOZ_IPC
 class ContentCreationNotifier;
 static nsCOMPtr<ContentCreationNotifier> gContentCreationNotifier;
 // A helper class to send updates when content processes
@@ -116,6 +119,7 @@ class ContentCreationNotifier : public nsIObserver
 
 NS_IMPL_ISUPPORTS1(ContentCreationNotifier,
                    nsIObserver)
+#endif
 
 static PRBool gMenu;
 static PRBool gMenuConsumed;
@@ -767,6 +771,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             gAndroidScreenBounds.width = newScreenWidth;
             gAndroidScreenBounds.height = newScreenHeight;
 
+#ifdef MOZ_IPC
             if (XRE_GetProcessType() != GeckoProcessType_Default)
                 break;
 
@@ -791,6 +796,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                 else
                     obs->RemoveObserver(notifier, "ipc:content-created");
             }
+#endif
         }
 
         case AndroidGeckoEvent::MOTION_EVENT: {
@@ -1069,9 +1075,11 @@ nsWindow::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
 gfxIntSize
 nsWindow::GetAndroidScreenBounds()
 {
+#ifdef MOZ_IPC
     if (XRE_GetProcessType() == GeckoProcessType_Content) {
         return ContentChild::GetSingleton()->GetScreenSize();
     }
+#endif
     return gAndroidScreenBounds;
 }
 

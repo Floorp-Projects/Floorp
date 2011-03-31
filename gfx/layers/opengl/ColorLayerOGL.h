@@ -38,8 +38,10 @@
 #ifndef GFX_COLORLAYEROGL_H
 #define GFX_COLORLAYEROGL_H
 
+#ifdef MOZ_IPC
 # include "mozilla/layers/PLayers.h"
 # include "mozilla/layers/ShadowLayers.h"
+#endif  // MOZ_IPC
 
 #include "LayerManagerOGL.h"
 
@@ -67,6 +69,7 @@ public:
                            const nsIntPoint& aOffset);
 };
 
+#ifdef MOZ_IPC
 class ShadowColorLayerOGL : public ShadowColorLayer,
                             public LayerOGL
 {
@@ -87,6 +90,7 @@ public:
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
 };
+#endif  // MOZ_IPC
 
 } /* layers */
 } /* mozilla */
