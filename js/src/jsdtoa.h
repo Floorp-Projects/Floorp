@@ -138,7 +138,7 @@ js_dtostr(DtoaState *state, char *buffer, size_t bufferSize, JSDToStrMode mode, 
  * not equal to itself).
  *
  * Return NULL if out of memory.  If the result is not NULL, it must be
- * released via js_free().
+ * released via cx->free().
  */
 char *
 js_dtobasestr(DtoaState *state, int base, double d);

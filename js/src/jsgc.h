@@ -904,8 +904,8 @@ class GCHelperThread {
     static void freeElementsAndArray(void **array, void **end) {
         JS_ASSERT(array <= end);
         for (void **p = array; p != end; ++p)
-            js_free(*p);
-        js_free(array);
+            js::Foreground::free(*p);
+        js::Foreground::free(array);
     }
 
     static void threadMain(void* arg);

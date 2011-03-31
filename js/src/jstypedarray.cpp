@@ -123,7 +123,7 @@ ArrayBuffer::class_finalize(JSContext *cx, JSObject *obj)
     ArrayBuffer *abuf = ArrayBuffer::fromJSObject(obj);
     if (abuf) {
         abuf->freeStorage(cx);
-        cx->destroy<ArrayBuffer>(abuf);
+        cx->delete_(abuf);
     }
 }
 
@@ -161,12 +161,12 @@ ArrayBuffer::create(JSContext *cx, int32 nbytes)
         return NULL;
     }
 
-    ArrayBuffer *abuf = cx->create<ArrayBuffer>();
+    ArrayBuffer *abuf = cx->new_<ArrayBuffer>();
     if (!abuf)
         return NULL;
 
     if (!abuf->allocateStorage(cx, nbytes)) {
-        cx->destroy<ArrayBuffer>(abuf);
+        Foreground::delete_(abuf);
         return NULL;
     }
 
@@ -727,7 +727,7 @@ class TypedArrayTemplate
         if (!obj)
             return NULL;
 
-        ThisTypeArray *tarray = cx->create<ThisTypeArray>(bufobj, byteOffset, len);
+        ThisTypeArray *tarray = cx->new_<ThisTypeArray>(bufobj, byteOffset, len);
         if (!tarray)
             return NULL;
 
@@ -832,7 +832,7 @@ class TypedArrayTemplate
     {
         ThisTypeArray *tarray = ThisTypeArray::fromJSObject(obj);
         if (tarray)
-            cx->destroy<ThisTypeArray>(tarray);
+            cx->delete_(tarray);
     }
 
     /* subarray(start[, end]) */
@@ -1324,7 +1324,7 @@ class TypedArrayTemplate
             break;
         }
 
-        js_free(srcbuf);
+        UnwantedForeground::free(srcbuf);
         return true;
     }
 

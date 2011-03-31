@@ -1383,7 +1383,13 @@ struct JSRuntime {
         return JS_LIKELY(!!p2) ? p2 : onOutOfMemory(p, bytes, cx);
     }
 
-    void free(void* p) { ::js_free(p); }
+    inline void free(void* p) {
+        /* FIXME: Making this free in the background is buggy. Can it work? */
+        js::Foreground::free(p);
+    }
+
+    JS_DECLARE_NEW_METHODS(malloc, JS_ALWAYS_INLINE)
+    JS_DECLARE_DELETE_METHODS(free, JS_ALWAYS_INLINE)
 
     bool isGCMallocLimitReached() const { return gcMallocBytes <= 0; }
 
@@ -2021,43 +2027,8 @@ struct JSContext
         runtime->free(p);
     }
 
-    /*
-     * In the common case that we'd like to allocate the memory for an object
-     * with cx->malloc/free, we cannot use overloaded C++ operators (no
-     * placement delete).  Factor the common workaround into one place.
-     */
-#define CREATE_BODY(parms)                                                    \
-    void *memory = this->malloc(sizeof(T));                                   \
-    if (!memory)                                                              \
-        return NULL;                                                          \
-    return new(memory) T parms;
-
-    template <class T>
-    JS_ALWAYS_INLINE T *create() {
-        CREATE_BODY(())
-    }
-
-    template <class T, class P1>
-    JS_ALWAYS_INLINE T *create(const P1 &p1) {
-        CREATE_BODY((p1))
-    }
-
-    template <class T, class P1, class P2>
-    JS_ALWAYS_INLINE T *create(const P1 &p1, const P2 &p2) {
-        CREATE_BODY((p1, p2))
-    }
-
-    template <class T, class P1, class P2, class P3>
-    JS_ALWAYS_INLINE T *create(const P1 &p1, const P2 &p2, const P3 &p3) {
-        CREATE_BODY((p1, p2, p3))
-    }
-#undef CREATE_BODY
-
-    template <class T>
-    JS_ALWAYS_INLINE void destroy(T *p) {
-        p->~T();
-        this->free(p);
-    }
+    JS_DECLARE_NEW_METHODS(malloc, inline)
+    JS_DECLARE_DELETE_METHODS(free, inline)
 
     void purge();
 

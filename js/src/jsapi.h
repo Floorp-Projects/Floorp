@@ -47,7 +47,6 @@
 #include <stdio.h>
 #include "js-config.h"
 #include "jspubtd.h"
-#include "jsutil.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -3238,7 +3237,7 @@ class JSAutoByteString {
     }
 
     ~JSAutoByteString() {
-        js_free(mBytes);
+        js::UnwantedForeground::free(mBytes);
     }
 
     /* Take ownership of the given byte array. */
@@ -3255,7 +3254,7 @@ class JSAutoByteString {
     }
 
     void clear() {
-        js_free(mBytes);
+        js::UnwantedForeground::free(mBytes);
         mBytes = NULL;
     }
 
@@ -3328,7 +3327,7 @@ JS_ReadStructuredClone(JSContext *cx, const uint64 *data, size_t nbytes,
                        const JSStructuredCloneCallbacks *optionalCallbacks,
                        void *closure);
 
-/* Note: On success, the caller is responsible for calling js_free(*datap). */
+/* Note: On success, the caller is responsible for calling js::Foreground::free(*datap). */
 JS_PUBLIC_API(JSBool)
 JS_WriteStructuredClone(JSContext *cx, jsval v, uint64 **datap, size_t *nbytesp,
                         const JSStructuredCloneCallbacks *optionalCallbacks,

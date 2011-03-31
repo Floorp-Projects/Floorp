@@ -572,8 +572,6 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
 
     rt->gcTriggerFactor = uint32(100.0f * GC_HEAP_GROWTH_FACTOR);
 
-    rt->atomsCompartment->setGCLastBytes(8192);
-    
     /*
      * The assigned value prevents GC from running when GC memory is too low
      * (during JS engine start).
@@ -869,7 +867,7 @@ js_FinishGC(JSRuntime *rt)
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
         JSCompartment *comp = *c;
         comp->finishArenaLists();
-        js_delete(comp);
+        Foreground::delete_(comp);
     }
     rt->compartments.clear();
     rt->atomsCompartment = NULL;
@@ -2050,7 +2048,7 @@ GCHelperThread::replenishAndFreeLater(void *ptr)
     do {
         if (freeCursor && !freeVector.append(freeCursorEnd - FREE_ARRAY_LENGTH))
             break;
-        freeCursor = (void **) js_malloc(FREE_ARRAY_SIZE);
+        freeCursor = (void **) OffTheBooks::malloc(FREE_ARRAY_SIZE);
         if (!freeCursor) {
             freeCursorEnd = NULL;
             break;
@@ -2059,7 +2057,7 @@ GCHelperThread::replenishAndFreeLater(void *ptr)
         *freeCursor++ = ptr;
         return;
     } while (false);
-    js_free(ptr);
+    Foreground::free(ptr);
 }
 
 void
@@ -2132,7 +2130,7 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
                 (void) callback(cx, compartment, JSCOMPARTMENT_DESTROY);
             if (compartment->principals)
                 JSPRINCIPALS_DROP(cx, compartment->principals);
-            js_delete(compartment);
+            cx->delete_(compartment);
             continue;
         }
         *write++ = compartment;
@@ -2724,9 +2722,9 @@ JSCompartment *
 NewCompartment(JSContext *cx, JSPrincipals *principals)
 {
     JSRuntime *rt = cx->runtime;
-    JSCompartment *compartment = js_new<JSCompartment>(rt);
+    JSCompartment *compartment = cx->new_<JSCompartment>(rt);
     if (!compartment || !compartment->init()) {
-        js_delete(compartment);
+        Foreground::delete_(compartment);
         JS_ReportOutOfMemory(cx);
         return NULL;
     }
@@ -2743,6 +2741,7 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
 
         if (!rt->compartments.append(compartment)) {
             AutoUnlockGC unlock(rt);
+            Foreground::delete_(compartment);
             JS_ReportOutOfMemory(cx);
             return NULL;
         }
@@ -2752,7 +2751,7 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
     if (callback && !callback(cx, compartment, JSCOMPARTMENT_NEW)) {
         AutoLockGC lock(rt);
         rt->compartments.popBack();
-        js_delete(compartment);
+        Foreground::delete_(compartment);
         return NULL;
     }
     return compartment;

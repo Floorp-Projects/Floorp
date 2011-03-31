@@ -255,9 +255,9 @@ PointerRangeSize(T *begin, T *end)
 class SystemAllocPolicy
 {
   public:
-    void *malloc(size_t bytes) { return js_malloc(bytes); }
-    void *realloc(void *p, size_t bytes) { return js_realloc(p, bytes); }
-    void free(void *p) { js_free(p); }
+    void *malloc(size_t bytes) { return js::OffTheBooks::malloc(bytes); }
+    void *realloc(void *p, size_t bytes) { return js::OffTheBooks::realloc(p, bytes); }
+    void free(void *p) { js::UnwantedForeground::free(p); }
     void reportAllocOverflow() const {}
 };
 

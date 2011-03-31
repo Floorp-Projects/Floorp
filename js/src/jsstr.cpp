@@ -217,7 +217,7 @@ AllocChars(JSContext *maybecx, size_t wholeCapacity)
     size_t bytes = (wholeCapacity + 1) * sizeof(jschar);
     if (maybecx)
         return (jschar *)maybecx->malloc(bytes);
-    return (jschar *)js_malloc(bytes);
+    return (jschar *)OffTheBooks::malloc(bytes);
 }
 
 JSFlatString *
@@ -3123,7 +3123,7 @@ tagify(JSContext *cx, const char *begin, JSLinearString *param, const char *end,
 
     JSString *retstr = js_NewString(cx, tagbuf, taglen);
     if (!retstr) {
-        js_free((char *)tagbuf);
+        Foreground::free((char *)tagbuf);
         return false;
     }
     vp->setString(retstr);
@@ -4080,7 +4080,7 @@ js_DeflateString(JSContext *cx, const jschar *chars, size_t nchars)
         nbytes = js_GetDeflatedStringLength(cx, chars, nchars);
         if (nbytes == (size_t) -1)
             return NULL;
-        bytes = (char *) (cx ? cx->malloc(nbytes + 1) : js_malloc(nbytes + 1));
+        bytes = (char *) (cx ? cx->malloc(nbytes + 1) : OffTheBooks::malloc(nbytes + 1));
         if (!bytes)
             return NULL;
 #ifdef DEBUG
@@ -4090,7 +4090,7 @@ js_DeflateString(JSContext *cx, const jschar *chars, size_t nchars)
         JS_ASSERT(ok);
     } else {
         nbytes = nchars;
-        bytes = (char *) (cx ? cx->malloc(nbytes + 1) : js_malloc(nbytes + 1));
+        bytes = (char *) (cx ? cx->malloc(nbytes + 1) : OffTheBooks::malloc(nbytes + 1));
         if (!bytes)
             return NULL;
         for (i = 0; i < nbytes; i++)
