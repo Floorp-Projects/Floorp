@@ -74,7 +74,7 @@ struct ClonedTypeSet;
  * lower 3 bits indicate a particular primitive type below, and if those bits
  * are zero then a pointer to a type object.
  */
-typedef jsword jstype;
+typedef jsuword jstype;
 
 /* The primitive types. */
 const jstype TYPE_UNDEFINED = 1;
