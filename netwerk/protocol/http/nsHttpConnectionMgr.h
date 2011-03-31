@@ -47,6 +47,7 @@
 #include "nsHashtable.h"
 #include "nsAutoPtr.h"
 #include "prmon.h"
+#include "nsISocketTransportService.h"
 
 #include "nsIObserver.h"
 #include "nsITimer.h"
@@ -139,7 +140,8 @@ public:
 
 private:
     virtual ~nsHttpConnectionMgr();
-
+    class nsHalfOpenSocket;
+    
     // nsConnectionEntry
     //
     // mCT maps connection info hash key to nsConnectionEntry object, which
@@ -159,6 +161,7 @@ private:
         nsTArray<nsHttpTransaction*> mPendingQ;    // pending transaction queue
         nsTArray<nsHttpConnection*>  mActiveConns; // active connections
         nsTArray<nsHttpConnection*>  mIdleConns;   // idle persistent connections
+        nsTArray<nsHalfOpenSocket*>  mHalfOpens;
     };
 
     // nsConnectionHandle
@@ -181,6 +184,48 @@ private:
 
         nsHttpConnection *mConn;
     };
+
+    // nsHalfOpenSocket is used to hold the state of an opening TCP socket
+    // while we wait for it to establish and bind it to a connection
+
+    class nsHalfOpenSocket : public nsIOutputStreamCallback,
+                             public nsITransportEventSink,
+                             public nsIInterfaceRequestor,
+                             public nsITimerCallback
+    {
+    public:
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSIOUTPUTSTREAMCALLBACK
+        NS_DECL_NSITRANSPORTEVENTSINK
+        NS_DECL_NSIINTERFACEREQUESTOR
+        NS_DECL_NSITIMERCALLBACK
+
+        nsHalfOpenSocket(nsConnectionEntry *ent,
+                         nsHttpTransaction *trans);
+        ~nsHalfOpenSocket();
+        
+        nsresult SetupStreams(nsISocketTransport **,
+                              nsIAsyncInputStream **,
+                              nsIAsyncOutputStream **);
+        nsresult SetupPrimaryStreams();
+        nsresult SetupBackupStreams();
+        void     SetupBackupTimer();
+        void     Abandon();
+        
+    private:
+        nsConnectionEntry              *mEnt;
+        nsRefPtr<nsHttpTransaction>    mTransaction;
+        nsCOMPtr<nsISocketTransport>   mSocketTransport;
+        nsCOMPtr<nsIAsyncOutputStream> mStreamOut;
+        nsCOMPtr<nsIAsyncInputStream>  mStreamIn;
+
+        // for syn retry
+        nsCOMPtr<nsITimer>             mSynTimer;
+        nsCOMPtr<nsISocketTransport>   mBackupTransport;
+        nsCOMPtr<nsIAsyncOutputStream> mBackupStreamOut;
+        nsCOMPtr<nsIAsyncInputStream>  mBackupStreamIn;
+    };
+    friend class nsHalfOpenSocket;
 
     //-------------------------------------------------------------------------
     // NOTE: these members may be accessed from any thread (use mMonitor)
@@ -206,19 +251,24 @@ private:
     //-------------------------------------------------------------------------
 
     static PRIntn ProcessOneTransactionCB(nsHashKey *, void *, void *);
-    static PRIntn PurgeOneIdleConnectionCB(nsHashKey *, void *, void *);
+
     static PRIntn PruneDeadConnectionsCB(nsHashKey *, void *, void *);
     static PRIntn ShutdownPassCB(nsHashKey *, void *, void *);
-
+    static PRIntn PurgeExcessIdleConnectionsCB(nsHashKey *, void *, void *);
     PRBool   ProcessPendingQForEntry(nsConnectionEntry *);
     PRBool   AtActiveConnectionLimit(nsConnectionEntry *, PRUint8 caps);
-    void     GetConnection(nsConnectionEntry *, PRUint8 caps, nsHttpConnection **);
+    void     GetConnection(nsConnectionEntry *, nsHttpTransaction *,
+                           nsHttpConnection **);
     nsresult DispatchTransaction(nsConnectionEntry *, nsAHttpTransaction *,
                                  PRUint8 caps, nsHttpConnection *);
     PRBool   BuildPipeline(nsConnectionEntry *, nsAHttpTransaction *, nsHttpPipeline **);
     nsresult ProcessNewTransaction(nsHttpTransaction *);
     nsresult EnsureSocketThreadTargetIfOnline();
-
+    nsresult CreateTransport(nsConnectionEntry *, nsHttpTransaction *);
+    void     AddActiveConn(nsHttpConnection *, nsConnectionEntry *);
+    void     StartedConnect();
+    void     RecvdConnect();
+    
     // message handlers have this signature
     typedef void (nsHttpConnectionMgr:: *nsConnEventHandler)(PRInt32, void *);
 
