@@ -195,7 +195,7 @@ MouseModule.prototype = {
     // walk up the DOM tree in search of nearest scrollable ancestor.  nulls are
     // returned if none found.
     let [targetScrollbox, targetScrollInterface, dragger]
-      = ScrollUtils.getScrollboxFromElement(aEvent.target);
+      = ScrollUtils.getScrollboxFromElement(aEvent.originalTarget);
 
     // stop kinetic panning if targetScrollbox has changed
     if (this._kinetic.isActive() && this._dragger != dragger)
