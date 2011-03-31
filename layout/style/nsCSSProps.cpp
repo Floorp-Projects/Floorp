@@ -1238,6 +1238,16 @@ const PRInt32 nsCSSProps::kTextDecorationKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const PRInt32 nsCSSProps::kTextDecorationStyleKTable[] = {
+  eCSSKeyword__moz_none, NS_STYLE_TEXT_DECORATION_STYLE_NONE,
+  eCSSKeyword_solid, NS_STYLE_TEXT_DECORATION_STYLE_SOLID,
+  eCSSKeyword_double, NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE,
+  eCSSKeyword_dotted, NS_STYLE_TEXT_DECORATION_STYLE_DOTTED,
+  eCSSKeyword_dashed, NS_STYLE_TEXT_DECORATION_STYLE_DASHED,
+  eCSSKeyword_wavy, NS_STYLE_TEXT_DECORATION_STYLE_WAVY,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const PRInt32 nsCSSProps::kTextTransformKTable[] = {
   eCSSKeyword_none, NS_STYLE_TEXT_TRANSFORM_NONE,
   eCSSKeyword_capitalize, NS_STYLE_TEXT_TRANSFORM_CAPITALIZE,
