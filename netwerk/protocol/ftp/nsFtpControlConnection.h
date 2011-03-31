@@ -47,6 +47,7 @@
 #include "nsISocketTransport.h"
 #include "nsIOutputStream.h"
 #include "nsIAsyncInputStream.h"
+#include "nsAutoLock.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
 

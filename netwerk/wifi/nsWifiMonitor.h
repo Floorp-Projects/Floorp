@@ -40,11 +40,12 @@
 #include "nsIWifiMonitor.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
+#include "nsAutoLock.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 #include "nsCOMArray.h"
 #include "nsIWifiMonitor.h"
-#include "mozilla/Monitor.h"
+#include "prmon.h"
 #include "prlog.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
@@ -97,7 +98,7 @@ class nsWifiMonitor : nsIRunnable, nsIWifiMonitor, nsIObserver
 
   nsTArray<nsWifiListener> mListeners;
 
-  mozilla::Monitor mMonitor;
+  PRMonitor* mMonitor;
 
 };
 

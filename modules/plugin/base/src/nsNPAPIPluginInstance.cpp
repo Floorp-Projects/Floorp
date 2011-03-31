@@ -189,11 +189,10 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Stop()
 
   // Make sure we lock while we're writing to mRunning after we've
   // started as other threads might be checking that inside a lock.
-  {
-    AsyncCallbackAutoLock lock;
-    mRunning = DESTROYING;
-    mStopTime = TimeStamp::Now();
-  }
+  EnterAsyncPluginThreadCallLock();
+  mRunning = DESTROYING;
+  mStopTime = TimeStamp::Now();
+  ExitAsyncPluginThreadCallLock();
 
   OnPluginDestroy(&mNPP);
 

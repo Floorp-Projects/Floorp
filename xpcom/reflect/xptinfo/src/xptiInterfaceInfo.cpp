@@ -42,8 +42,6 @@
 #include "xptiprivate.h"
 #include "nsAtomicRefcnt.h"
 
-using namespace mozilla;
-
 /***************************************************************************/
 // Debug Instrumentation...
 
@@ -104,7 +102,7 @@ xptiInterfaceEntry::xptiInterfaceEntry(const char* name,
 PRBool 
 xptiInterfaceEntry::Resolve()
 {
-    MutexAutoLock lock(xptiInterfaceInfoManager::GetResolveLock());
+    nsAutoLock lock(xptiInterfaceInfoManager::GetResolveLock());
     return ResolveLocked();
 }
 
@@ -619,7 +617,7 @@ xptiInterfaceEntry::HasAncestor(const nsIID * iid, PRBool *_retval)
 nsresult 
 xptiInterfaceEntry::GetInterfaceInfo(xptiInterfaceInfo** info)
 {
-    MonitorAutoEnter lock(xptiInterfaceInfoManager::GetInfoMonitor());
+    nsAutoMonitor lock(xptiInterfaceInfoManager::GetInfoMonitor());
     LOG_INFO_MONITOR_ENTRY;
 
     if(!mInfo)
@@ -679,7 +677,7 @@ xptiInterfaceInfo::Release(void)
     NS_LOG_RELEASE(this, cnt, "xptiInterfaceInfo");
     if(!cnt)
     {
-        MonitorAutoEnter lock(xptiInterfaceInfoManager::GetInfoMonitor());
+        nsAutoMonitor lock(xptiInterfaceInfoManager::GetInfoMonitor());
         LOG_INFO_MONITOR_ENTRY;
         
         // If GetInterfaceInfo added and *released* a reference before we 

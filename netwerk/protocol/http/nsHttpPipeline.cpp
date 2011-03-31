@@ -47,6 +47,7 @@
 #include "nsIPipe.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsAutoLock.h"
 
 #ifdef DEBUG
 #include "prthread.h"

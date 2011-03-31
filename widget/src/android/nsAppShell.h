@@ -39,12 +39,12 @@
 #ifndef nsAppShell_h__
 #define nsAppShell_h__
 
-#include "mozilla/CondVar.h"
-#include "mozilla/Mutex.h"
 #include "nsBaseAppShell.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsInterfaceHashtable.h"
+
+#include "prcvar.h"
 
 namespace mozilla {
 class AndroidGeckoEvent;
@@ -55,9 +55,6 @@ void NotifyEvent();
 class nsAppShell :
     public nsBaseAppShell
 {
-    typedef mozilla::CondVar CondVar;
-    typedef mozilla::Mutex Mutex;
-
 public:
     static nsAppShell *gAppShell;
     static mozilla::AndroidGeckoEvent *gEarlyEvent;
@@ -86,9 +83,9 @@ protected:
     virtual void ScheduleNativeEventCallback();
     virtual ~nsAppShell();
 
-    Mutex mQueueLock;
-    Mutex mCondLock;
-    CondVar mQueueCond;
+    PRLock *mQueueLock;
+    PRLock *mCondLock;
+    PRCondVar *mQueueCond;
     int mNumDraws;
     nsTArray<mozilla::AndroidGeckoEvent *> mEventQueue;
     nsInterfaceHashtable<nsStringHashKey, nsIObserver> mObserversHash;

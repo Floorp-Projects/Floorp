@@ -43,8 +43,6 @@
 #include "nsPKCS11Slot.h"
 #include "nsProtectedAuthThread.h"
 
-using namespace mozilla;
-
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsProtectedAuthThread, nsIProtectedAuthThread)
 
 static void PR_CALLBACK nsProtectedAuthThreadRunner(void *arg)
@@ -54,7 +52,7 @@ static void PR_CALLBACK nsProtectedAuthThreadRunner(void *arg)
 }
 
 nsProtectedAuthThread::nsProtectedAuthThread()
-: mMutex("nsProtectedAuthThread.mMutex")
+: mMutex(nsnull)
 , mIAmRunning(PR_FALSE)
 , mStatusObserverNotified(PR_FALSE)
 , mLoginReady(PR_FALSE)
@@ -63,15 +61,21 @@ nsProtectedAuthThread::nsProtectedAuthThread()
 , mLoginResult(SECFailure)
 {
     NS_INIT_ISUPPORTS();
+    mMutex = PR_NewLock();
 }
 
 nsProtectedAuthThread::~nsProtectedAuthThread()
 {
+    if (mMutex)
+        PR_DestroyLock(mMutex);
 }
 
 NS_IMETHODIMP nsProtectedAuthThread::Login(nsIObserver *aObserver)
 {
     NS_ENSURE_ARG(aObserver);
+
+    if (!mMutex)
+        return NS_ERROR_FAILURE;
     
     if (!mSlot)
         // We need pointer to the slot
@@ -86,9 +90,10 @@ NS_IMETHODIMP nsProtectedAuthThread::Login(nsIObserver *aObserver)
     if (NS_FAILED(rv))
         return rv;
 
-    MutexAutoLock lock(mMutex);
+    PR_Lock(mMutex);
     
     if (mIAmRunning || mLoginReady) {
+        PR_Unlock(mMutex);
         return NS_OK;
     }
 
@@ -102,26 +107,31 @@ NS_IMETHODIMP nsProtectedAuthThread::Login(nsIObserver *aObserver)
     // we might want to return "thread started ok" to caller in the future
     NS_ASSERTION(mThreadHandle, "Could not create nsProtectedAuthThreadRunner thread\n");
     
+    PR_Unlock(mMutex);
+    
     return NS_OK;
 }
 
 NS_IMETHODIMP nsProtectedAuthThread::GetTokenName(nsAString &_retval)
 {
-    MutexAutoLock lock(mMutex);
+    PR_Lock(mMutex);
 
     // Get token name
     CopyUTF8toUTF16(nsDependentCString(PK11_GetTokenName(mSlot)), _retval);
+
+    PR_Unlock(mMutex);
 
     return NS_OK;
 }
 
 NS_IMETHODIMP nsProtectedAuthThread::GetSlot(nsIPKCS11Slot **_retval)
 {
-    nsRefPtr<nsPKCS11Slot> slot;
-    {
-        MutexAutoLock lock(mMutex);
-        slot = new nsPKCS11Slot(mSlot);
-    }
+    PR_Lock(mMutex);
+
+    nsRefPtr<nsPKCS11Slot> slot = new nsPKCS11Slot(mSlot);
+
+    PR_Unlock(mMutex);
+
     if (!slot)
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -130,9 +140,11 @@ NS_IMETHODIMP nsProtectedAuthThread::GetSlot(nsIPKCS11Slot **_retval)
 
 void nsProtectedAuthThread::SetParams(PK11SlotInfo* aSlot)
 {
-    MutexAutoLock lock(mMutex);
+    PR_Lock(mMutex);
 
     mSlot = (aSlot) ? PK11_ReferenceSlot(aSlot) : 0;
+    
+    PR_Unlock(mMutex);
 }
 
 SECStatus nsProtectedAuthThread::GetResult()
@@ -147,27 +159,28 @@ void nsProtectedAuthThread::Run(void)
     mLoginResult = PK11_CheckUserPassword(mSlot, 0);
 
     nsCOMPtr<nsIObserver> observer;
+    
+    PR_Lock(mMutex);
+    
+    mLoginReady = PR_TRUE;
+    mIAmRunning = PR_FALSE;
+
+    // Forget the slot
+    if (mSlot)
     {
-        MutexAutoLock lock(mMutex);
-
-        mLoginReady = PR_TRUE;
-        mIAmRunning = PR_FALSE;
-
-        // Forget the slot
-        if (mSlot)
-        {
-            PK11_FreeSlot(mSlot);
-            mSlot = 0;
-        }
-
-        if (!mStatusObserverNotified)
-        {
-            observer = mStatusObserver;
-        }
-
-        mStatusObserver = nsnull;
-        mStatusObserverNotified = PR_TRUE;
+        PK11_FreeSlot(mSlot);
+        mSlot = 0;
     }
+    
+    if (!mStatusObserverNotified)
+    {
+        observer = mStatusObserver;
+    }
+
+    mStatusObserver = nsnull;
+    mStatusObserverNotified = PR_TRUE;
+    
+    PR_Unlock(mMutex);
     
     if (observer)
         observer->Observe(nsnull, "operation-completed", nsnull);
