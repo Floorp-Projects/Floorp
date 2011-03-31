@@ -48,11 +48,15 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
   head.js \
+  remote_autocomplete.js \
   remote_head.js \
   remote_forms.js \
   remote_formsZoom.js \
   remote_vkb.js \
   browser_addons.js \
+  browser_autocomplete.html \
+  browser_autocomplete.js \
+  browser_autocompletesearch.js\
   browser_awesomescreen.js \
   browser_blank_01.html \
   browser_blank_02.html \
@@ -89,7 +93,6 @@ _BROWSER_FILES = \
   browser_thumbnails.js \
   browser_install.xml \
   browser_upgrade.rdf\
-  browser_autocompletesearch.js\
   mock_autocomplete.json\
   $(NULL)
 
