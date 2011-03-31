@@ -1894,130 +1894,6 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     return JS_TRUE;
 }
 
-namespace js {
-
-JSIdArray *
-NewIdArray(JSContext *cx, jsint length)
-{
-    JSIdArray *ida;
-
-    ida = (JSIdArray *)
-        cx->calloc_(offsetof(JSIdArray, vector) + length * sizeof(jsval));
-    if (ida)
-        ida->length = length;
-    return ida;
-}
-
-}
-
-/*
- * Unlike realloc(3), this function frees ida on failure.
- */
-static JSIdArray *
-SetIdArrayLength(JSContext *cx, JSIdArray *ida, jsint length)
-{
-    JSIdArray *rida;
-
-    rida = (JSIdArray *)
-           JS_realloc(cx, ida,
-                      offsetof(JSIdArray, vector) + length * sizeof(jsval));
-    if (!rida) {
-        JS_DestroyIdArray(cx, ida);
-    } else {
-        rida->length = length;
-    }
-    return rida;
-}
-
-static JSIdArray *
-AddAtomToArray(JSContext *cx, JSAtom *atom, JSIdArray *ida, jsint *ip)
-{
-    jsint i, length;
-
-    i = *ip;
-    length = ida->length;
-    if (i >= length) {
-        ida = SetIdArrayLength(cx, ida, JS_MAX(length * 2, 8));
-        if (!ida)
-            return NULL;
-        JS_ASSERT(i < ida->length);
-    }
-    ida->vector[i] = ATOM_TO_JSID(atom);
-    *ip = i + 1;
-    return ida;
-}
-
-static JSIdArray *
-EnumerateIfResolved(JSContext *cx, JSObject *obj, JSAtom *atom, JSIdArray *ida,
-                    jsint *ip, JSBool *foundp)
-{
-    *foundp = obj->nativeContains(ATOM_TO_JSID(atom));
-    if (*foundp)
-        ida = AddAtomToArray(cx, atom, ida, ip);
-    return ida;
-}
-
-JS_PUBLIC_API(JSIdArray *)
-JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj, JSIdArray *ida)
-{
-    JSRuntime *rt;
-    jsint i, j, k;
-    JSAtom *atom;
-    JSBool found;
-    JSObjectOp init;
-
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, ida);
-    rt = cx->runtime;
-    if (ida) {
-        i = ida->length;
-    } else {
-        ida = NewIdArray(cx, 8);
-        if (!ida)
-            return NULL;
-        i = 0;
-    }
-
-    /* Check whether 'undefined' has been resolved and enumerate it if so. */
-    atom = rt->atomState.typeAtoms[JSTYPE_VOID];
-    ida = EnumerateIfResolved(cx, obj, atom, ida, &i, &found);
-    if (!ida)
-        return NULL;
-
-    /* Enumerate only classes that *have* been resolved. */
-    for (j = 0; standard_class_atoms[j].init; j++) {
-        atom = OFFSET_TO_ATOM(rt, standard_class_atoms[j].atomOffset);
-        ida = EnumerateIfResolved(cx, obj, atom, ida, &i, &found);
-        if (!ida)
-            return NULL;
-
-        if (found) {
-            init = standard_class_atoms[j].init;
-
-            for (k = 0; standard_class_names[k].init; k++) {
-                if (standard_class_names[k].init == init) {
-                    atom = StdNameToAtom(cx, &standard_class_names[k]);
-                    ida = AddAtomToArray(cx, atom, ida, &i);
-                    if (!ida)
-                        return NULL;
-                }
-            }
-
-            if (init == js_InitObjectClass) {
-                for (k = 0; object_prototype_names[k].init; k++) {
-                    atom = StdNameToAtom(cx, &object_prototype_names[k]);
-                    ida = AddAtomToArray(cx, atom, ida, &i);
-                    if (!ida)
-                        return NULL;
-                }
-            }
-        }
-    }
-
-    /* Trim to exact length. */
-    return SetIdArrayLength(cx, ida, i);
-}
-
 #undef CLASP
 #undef EAGER_ATOM
 #undef EAGER_CLASS_ATOM
@@ -2842,12 +2718,6 @@ JS_SetScriptStackQuota(JSContext *cx, size_t quota)
 }
 
 /************************************************************************/
-
-JS_PUBLIC_API(void)
-JS_DestroyIdArray(JSContext *cx, JSIdArray *ida)
-{
-    cx->free_(ida);
-}
 
 JS_PUBLIC_API(JSBool)
 JS_ValueToId(JSContext *cx, jsval v, jsid *idp)
@@ -3968,6 +3838,30 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
     js_InitRandom(cx);
 }
 
+static bool
+RegisterIdArray(JSContext *cx, JSIdArray *ida)
+{
+    return JS_THREAD_DATA(cx)->idArraysHandedOutViaAPI.append(ida);
+}
+
+static void
+UnregisterIdArray(JSContext *cx, JSIdArray *ida)
+{
+    js::Vector<JSIdArray *, 4, SystemAllocPolicy> &idArrays = JS_THREAD_DATA(cx)->idArraysHandedOutViaAPI;
+    for (size_t n = 0; n < idArrays.length(); ++n) {
+        if (idArrays[n] == ida) {
+            idArrays.erase(&idArrays[n]);
+            return;
+        }
+    }
+}
+
+static void
+DestroyIdArray(JSContext *cx, JSIdArray *ida)
+{
+    cx->free_(ida);
+}
+
 JS_PUBLIC_API(JSIdArray *)
 JS_Enumerate(JSContext *cx, JSObject *obj)
 {
@@ -3978,9 +3872,20 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
     JSIdArray *ida;
     if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &props) || !VectorToIdArray(cx, props, &ida))
         return false;
+    if (!RegisterIdArray(cx, ida)) {
+        DestroyIdArray(cx, ida);
+        return NULL;
+    }
     for (size_t n = 0; n < size_t(ida->length); ++n)
         JS_ASSERT(js_CheckForStringIndex(ida->vector[n]) == ida->vector[n]);
     return ida;
+}
+
+JS_PUBLIC_API(void)
+JS_DestroyIdArray(JSContext *cx, JSIdArray *ida)
+{
+    UnregisterIdArray(cx, ida);
+    DestroyIdArray(cx, ida);
 }
 
 /*
