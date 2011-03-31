@@ -508,6 +508,38 @@ FormAssistant.prototype = {
     return false;
   },
 
+  /*
+   * This function is similar to getListSuggestions from
+   * components/satchel/src/nsInputListAutoComplete.js but sadly this one is
+   * used by the autocomplete.xml binding which is not in used in fennec
+   */
+  _getListSuggestions: function formHelperGetListSuggestions(aElement) {
+    if (!(aElement instanceof HTMLInputElement) || !aElement.list)
+      return [];
+
+    let suggestions = [];
+    let filter = !aElement.hasAttribute("mozNoFilter");
+    let lowerFieldValue = aElement.value.toLowerCase();
+
+    let options = aElement.list.options;
+    let length = options.length;
+    for (let i = 0; i < length; i++) {
+      let item = options.item(i);
+
+      let label = item.value;
+      if (item.label)
+        label = item.label;
+      else if (item.text)
+        label = item.text;
+
+      if (filter && label.toLowerCase().indexOf(lowerFieldValue) == -1)
+        continue;
+       suggestions.push({ label: label, value: item.value });
+    }
+
+    return suggestions;
+  },
+
   _isValidElement: function formHelperIsValidElement(aElement) {
     if (!aElement.getAttribute)
       return false;
@@ -664,7 +696,8 @@ FormAssistant.prototype = {
 
   _getJSON: function() {
     let element = this.currentElement;
-    let list = getListForElement(element);
+    let choices = getListForElement(element);
+
     let labels = this._getLabels();
     return {
       current: {
@@ -674,8 +707,9 @@ FormAssistant.prototype = {
         value: element.value,
         maxLength: element.maxLength,
         type: (element.getAttribute("type") || "").toLowerCase(),
-        choices: list,
+        choices: choices,
         isAutocomplete: this._isAutocomplete(this.currentElement),
+        list: this._getListSuggestions(this.currentElement),
         rect: this._getRect(),
         caretRect: this._getCaretRect()
       },

@@ -339,14 +339,6 @@ textarea:active {
   background-color: rgba(141, 184, 216, 0.5) !important;
 }
 
-/*  
- * Until datalist are fully supported on mobile (bug 628616) set the display
- * to inline in order to allow fallback to works
- */
-datalist {
-  display: inline;
-}
-
 /* 
  * Generate an additional space after the anonymous div to make it easier to
  * to position the caret at the end of the text

@@ -661,8 +661,9 @@ var FormHelperUI = {
       value: aElement.value,
       maxLength: aElement.maxLength,
       type: aElement.type,
+      choices: aElement.choices,
       isAutocomplete: aElement.isAutocomplete,
-      list: aElement.choices
+      list: aElement.list,
     }
 
     this._updateContainerForSelect(lastElement, this._currentElement);
@@ -835,7 +836,7 @@ var FormHelperUI = {
   doAutoComplete: function formHelperDoAutoComplete(aElement) {
     // Suggestions are only in <label>s. Ignore the rest.
     if (aElement instanceof Ci.nsIDOMXULLabelElement)
-      this._currentBrowser.messageManager.sendAsyncMessage("FormAssist:AutoComplete", { value: aElement.value });
+      this._currentBrowser.messageManager.sendAsyncMessage("FormAssist:AutoComplete", { value: aElement.getAttribute("data") });
   },
 
   get _open() {
@@ -902,9 +903,10 @@ var FormHelperUI = {
 
     let fragment = document.createDocumentFragment();
     for (let i = 0; i < suggestions.length; i++) {
-      let value = suggestions[i];
+      let suggestion = suggestions[i];
       let button = document.createElement("label");
-      button.setAttribute("value", value);
+      button.setAttribute("value", suggestion.label);
+      button.setAttribute("data", suggestion.value);
       button.className = "form-helper-suggestions-label";
       fragment.appendChild(button);
     }
@@ -931,9 +933,15 @@ var FormHelperUI = {
         if (value == aElement.value)
           continue;
 
-        suggestions.push(value);
+        suggestions.push({ "label": value, "value": value});
       }
     }
+
+    // Add the datalist elements provided by the website, note that the
+    // displayed value can differ from the real value of the element.
+    let options = aElement.list;
+    for (let i = 0; i < options.length; i++)
+      suggestions.push(options[i]);
 
     return suggestions;
   },
@@ -1042,11 +1050,11 @@ var FormHelperUI = {
 
   /** Helper for _updateContainer that handles the case where the new element is a select. */
   _updateContainerForSelect: function _formHelperUpdateContainerForSelect(aLastElement, aCurrentElement) {
-    let lastHasChoices = aLastElement && (aLastElement.list != null);
-    let currentHasChoices = aCurrentElement && (aCurrentElement.list != null);
+    let lastHasChoices = aLastElement && (aLastElement.choices != null);
+    let currentHasChoices = aCurrentElement && (aCurrentElement.choices != null);
 
     if (currentHasChoices)
-      SelectHelperUI.show(aCurrentElement.list, aCurrentElement.title);
+      SelectHelperUI.show(aCurrentElement.choices, aCurrentElement.title);
     else if (lastHasChoices)
       SelectHelperUI.hide();
   },
