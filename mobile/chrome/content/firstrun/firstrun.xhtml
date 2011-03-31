@@ -59,7 +59,7 @@
   <link rel="stylesheet" href="chrome://browser/skin/firstRun.css" type="text/css"/>
 </head>
 
-<body id="firstrun" class="">
+<body id="firstrun" dir="&locale.dir;" class="">
   <div id="wrapper">
     <div id="header">
       <a href="http://mozilla.com/m"><img src="chrome://browser/content/firstrun/mozilla.png" width="64" height="17"/></a>
@@ -78,7 +78,7 @@
         <li id="home"><a href="about:home"><b>&firstrun.home2.title;</b> <span>&firstrun.home2.description;</span></a></li>
       </ul>
 
-      <p id="features"><a id="featuresURL">&firstrun.features;</a></p>
+      <p id="features"><a id="featuresURL"><span>&firstrun.features;</span><img id="nav-arrow" src="chrome://browser/content/firstrun/nav-arrow.png" /></a></p>
       <script type="application/javascript;version=1.8"><![CDATA[
         let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
         let gChromeWin = null;
