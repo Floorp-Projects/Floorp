@@ -48,6 +48,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
+#include "prlock.h"
 
 // DOMWorker includes
 #include "nsDOMWorker.h"
@@ -91,8 +92,6 @@ class nsDOMWorkerXHR : public nsDOMWorkerFeature,
                        public nsIXMLHttpRequest,
                        public nsIXPCScriptable
 {
-  typedef mozilla::Mutex Mutex;
-
   friend class nsDOMWorkerXHREvent;
   friend class nsDOMWorkerXHRLastProgressOrLoadEvent;
   friend class nsDOMWorkerXHRProxy;
@@ -117,8 +116,8 @@ public:
 private:
   virtual ~nsDOMWorkerXHR();
 
-  Mutex& GetLock() {
-    return mWorker->GetLock();
+  PRLock* Lock() {
+    return mWorker->Lock();
   }
 
   already_AddRefed<nsIXPConnectWrappedNative> GetWrappedNative() {

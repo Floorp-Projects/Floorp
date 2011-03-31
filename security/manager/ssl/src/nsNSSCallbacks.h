@@ -45,8 +45,6 @@
 #include "nspr.h"
 #include "ocspt.h"
 #include "nsIStreamLoader.h"
-#include "mozilla/CondVar.h"
-#include "mozilla/Mutex.h"
 
 char* PR_CALLBACK
 PK11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void* arg);
@@ -83,8 +81,10 @@ public:
   const PRUint8* mResultData; // not owned, refers to mLoader
   PRUint32 mResultLen;
   
-  mozilla::Mutex mLock;
-  mozilla::CondVar mCondition;
+  nsresult InitLocks();
+  
+  PRLock *mLock;
+  PRCondVar *mCondition;
   volatile PRBool mWaitFlag;
   
   PRBool mResponsibleForDoneSignal;

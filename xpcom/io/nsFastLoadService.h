@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 #include "prtypes.h"
 #include "pldhash.h"
-#include "mozilla/Mutex.h"
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
 #include "nsIFastLoadService.h"
@@ -62,7 +61,7 @@ class nsFastLoadService : public nsIFastLoadService
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
   private:
-    mozilla::Mutex                  mLock;
+    PRLock*                         mLock;
     PLDHashTable*                   mFastLoadPtrMap;
     nsCOMPtr<nsIObjectInputStream>  mInputStream;
     nsCOMPtr<nsIObjectOutputStream> mOutputStream;

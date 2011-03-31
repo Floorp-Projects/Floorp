@@ -47,7 +47,6 @@
 #include "nscore.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsTraceRefcnt.h"
 
 #ifdef DEBUG
 #include "prinit.h"
@@ -110,7 +109,6 @@ private:
             mType(aType),
             mAcquisitionContext(CallStack::kNone)
         {
-            NS_ABORT_IF_FALSE(mName, "Name must be nonnull");
         }
         
         /**

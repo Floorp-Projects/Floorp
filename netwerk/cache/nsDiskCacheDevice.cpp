@@ -75,6 +75,7 @@
 #include "nsReadableUtils.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsAutoLock.h"
 #include "nsCRT.h"
 #include "nsCOMArray.h"
 #include "nsISimpleEnumerator.h"
@@ -397,8 +398,6 @@ nsDiskCacheDevice::Init()
 nsresult
 nsDiskCacheDevice::Shutdown()
 {
-    nsCacheService::AssertOwnsLock();
-
     nsresult rv = Shutdown_Private(PR_TRUE);
     if (NS_FAILED(rv))
         return rv;

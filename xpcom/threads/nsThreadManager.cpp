@@ -42,9 +42,8 @@
 #include "nsIClassInfoImpl.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsAutoLock.h"
 #include "nsCycleCollectorUtils.h"
-
-using namespace mozilla;
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -89,13 +88,15 @@ NS_IMPL_CI_INTERFACE_GETTER1(nsThreadManager, nsIThreadManager)
 nsresult
 nsThreadManager::Init()
 {
+  mLock = nsAutoLock::NewLock("nsThreadManager::mLock");
+  if (!mLock)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   if (!mThreadsByPRThread.Init())
     return NS_ERROR_OUT_OF_MEMORY;
 
   if (PR_NewThreadPrivateIndex(&mCurThreadIndex, ReleaseObject) == PR_FAILURE)
     return NS_ERROR_FAILURE;
-
-  mLock = new Mutex("nsThreadManager.mLock");
 
   // Setup "main" thread
   mMainThread = new nsThread();
@@ -141,7 +142,7 @@ nsThreadManager::Shutdown()
   // holding the hashtable lock while calling nsIThread::Shutdown.
   nsThreadArray threads;
   {
-    MutexAutoLock lock(*mLock);
+    nsAutoLock lock(mLock);
     mThreadsByPRThread.Enumerate(AppendAndRemoveThread, &threads);
   }
 
@@ -168,7 +169,7 @@ nsThreadManager::Shutdown()
 
   // Clear the table of threads.
   {
-    MutexAutoLock lock(*mLock);
+    nsAutoLock lock(mLock);
     mThreadsByPRThread.Clear();
   }
 
@@ -179,10 +180,13 @@ nsThreadManager::Shutdown()
 
   // Release main thread object.
   mMainThread = nsnull;
-  mLock = nsnull;
 
   // Remove the TLS entry for the main thread.
   PR_SetThreadPrivate(mCurThreadIndex, nsnull);
+
+  // We don't need this lock anymore.
+  nsAutoLock::DestroyLock(mLock);
+  mLock = nsnull;
 }
 
 void
@@ -190,7 +194,7 @@ nsThreadManager::RegisterCurrentThread(nsThread *thread)
 {
   NS_ASSERTION(thread->GetPRThread() == PR_GetCurrentThread(), "bad thread");
 
-  MutexAutoLock lock(*mLock);
+  nsAutoLock lock(mLock);
 
   mThreadsByPRThread.Put(thread->GetPRThread(), thread);  // XXX check OOM?
 
@@ -203,7 +207,7 @@ nsThreadManager::UnregisterCurrentThread(nsThread *thread)
 {
   NS_ASSERTION(thread->GetPRThread() == PR_GetCurrentThread(), "bad thread");
 
-  MutexAutoLock lock(*mLock);
+  nsAutoLock lock(mLock);
 
   mThreadsByPRThread.Remove(thread->GetPRThread());
 
@@ -265,7 +269,7 @@ nsThreadManager::GetThreadFromPRThread(PRThread *thread, nsIThread **result)
 
   nsRefPtr<nsThread> temp;
   {
-    MutexAutoLock lock(*mLock);
+    nsAutoLock lock(mLock);
     mThreadsByPRThread.Get(thread, getter_AddRefs(temp));
   }
 

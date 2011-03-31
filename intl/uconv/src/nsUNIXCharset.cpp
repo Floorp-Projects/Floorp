@@ -59,6 +59,7 @@
 #include <langinfo.h>
 #endif
 #include "nsPlatformCharset.h"
+#include "nsAutoLock.h"
 #include "prinit.h"
 #include "nsUnicharUtils.h"
 

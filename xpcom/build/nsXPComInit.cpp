@@ -183,6 +183,10 @@ extern nsresult NS_CategoryManagerGetFactory( nsIFactory** );
 extern nsresult ScheduleMediaCacheRemover();
 #endif
 
+#ifdef DEBUG
+extern void _FreeAutoLockStatics();
+#endif
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProcess)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsIDImpl)
@@ -739,6 +743,11 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
     }
     nsComponentManagerImpl::gComponentManager = nsnull;
     nsCategoryManager::Destroy();
+
+#ifdef DEBUG
+    // FIXME BUG 456272: this should disappear
+    _FreeAutoLockStatics();
+#endif
 
     ShutdownSpecialSystemDirectory();
 
