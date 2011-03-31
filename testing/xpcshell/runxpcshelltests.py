@@ -163,6 +163,9 @@ class XPCShellTests(object):
     self.env["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
     # Don't launch the crash reporter client
     self.env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
+    # Capturing backtraces is very slow on some platforms, and it's
+    # disabled by automation.py too
+    self.env["NS_TRACE_MALLOC_DISABLE_STACKS"] = "1"
 
     if sys.platform == 'win32':
       self.env["PATH"] = self.env["PATH"] + ";" + self.xrePath
