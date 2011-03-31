@@ -71,14 +71,9 @@ CPPSRCS		= \
 		GfxInfoWebGL.cpp \
                 GfxDriverInfo.cpp \
                 GfxInfoBase.cpp \
-		$(NULL)
-
-ifdef MOZ_IPC
-CPPSRCS		+= \
 		PuppetWidget.cpp \
 		nsFilePickerProxy.cpp \
 		$(NULL)
-endif
 
 ifneq (,$(filter os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsBaseClipboard.cpp
@@ -107,9 +102,7 @@ LOCAL_INCLUDES	+= \
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/config.mk
-ifdef MOZ_IPC
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
-endif
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS	+= $(TK_CFLAGS)

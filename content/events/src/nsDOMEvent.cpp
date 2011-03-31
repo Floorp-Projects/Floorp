@@ -37,10 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 #include "base/basictypes.h"
 #include "IPC/IPCMessageUtils.h"
-#endif
 #include "nsCOMPtr.h"
 #include "nsDOMEvent.h"
 #include "nsEventStateManager.h"
@@ -1370,7 +1368,6 @@ nsDOMEvent::GetPreventDefault(PRBool* aReturn)
 void
 nsDOMEvent::Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType)
 {
-#ifdef MOZ_IPC
   if (aSerializeInterfaceType) {
     IPC::WriteParam(aMsg, NS_LITERAL_STRING("event"));
   }
@@ -1392,13 +1389,11 @@ nsDOMEvent::Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType)
   IPC::WriteParam(aMsg, trusted);
 
   // No timestamp serialization for now!
-#endif
 }
 
 PRBool
 nsDOMEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 {
-#ifdef MOZ_IPC
   nsString type;
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &type), PR_FALSE);
 
@@ -1416,9 +1411,6 @@ nsDOMEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
   SetTrusted(trusted);
 
   return PR_TRUE;
-#else
-  return PR_FALSE;
-#endif
 }
 
 
