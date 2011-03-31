@@ -1770,12 +1770,6 @@ pref("plugin.scan.WindowsMediaPlayer", "7.0");
 // Which is currently HKLM\Software\MozillaPlugins\xxxPLIDxxx\Path
 pref("plugin.scan.plid.all", true);
 
-// Controls the scanning of the Navigator 4.x directory for plugins
-// When pref is missing, the default is to pickup popular plugins such as
-// Flash, Shockwave, Acrobat, and Quicktime. If set to true, ALL plugins
-// will be picked up and if set to false the scan will not happen at all
-//pref("plugin.scan.4xPluginFolder", false);
-
 // Help Windows NT, 2000, and XP dialup a RAS connection
 // when a network address is unreachable.
 pref("network.autodial-helper.enabled", true);
