@@ -444,6 +444,10 @@ class JSFlatString : public JSLinearString
         JS_ASSERT(isFlat());
         return chars();
     }
+
+    /* Only called by the GC for strings with the FINALIZE_STRING kind. */
+
+    inline void finalize(JSRuntime *rt);
 };
 
 JS_STATIC_ASSERT(sizeof(JSFlatString) == sizeof(JSString));
@@ -627,6 +631,8 @@ class JSAtom : public JSFixedString
 
     /* Return null if no static atom exists for the given (chars, length). */
     static inline JSStaticAtom *lookupStatic(const jschar *chars, size_t length);
+
+    inline void finalize(JSRuntime *rt);
 };
 
 JS_STATIC_ASSERT(sizeof(JSAtom) == sizeof(JSString));

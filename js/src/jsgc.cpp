@@ -1782,36 +1782,6 @@ js_DestroyScriptsToGC(JSContext *cx, JSCompartment *comp)
     }
 }
 
-/*
- * This function is called from js_FinishAtomState to force the finalization
- * of the permanently interned strings when cx is not available.
- */
-void
-js_FinalizeStringRT(JSRuntime *rt, JSString *str)
-{
-    JS_RUNTIME_UNMETER(rt, liveStrings);
-    JS_ASSERT(str->isLinear() && !str->isStaticAtom());
-
-    if (str->isDependent()) {
-        /* A dependent string can not be external and must be valid. */
-        JS_ASSERT(str->arena()->header()->thingKind == FINALIZE_STRING);
-        JS_ASSERT(str->asDependent().base());
-        JS_RUNTIME_UNMETER(rt, liveDependentStrings);
-    } else {
-        unsigned thingKind = str->arena()->header()->thingKind;
-        JS_ASSERT(unsigned(FINALIZE_SHORT_STRING) <= thingKind &&
-                  thingKind <= unsigned(FINALIZE_EXTERNAL_STRING));
-
-        jschar *chars = const_cast<jschar *>(str->asFlat().chars());
-        if (thingKind == FINALIZE_STRING) {
-            rt->stringMemoryUsed -= str->length() * 2;
-            rt->free_(chars);
-        } else if (thingKind == FINALIZE_EXTERNAL_STRING) {
-            ((JSExternalString *)str)->finalize();
-        }
-    }
-}
-
 template<typename T>
 static void
 FinalizeArenaList(JSCompartment *comp, JSContext *cx, unsigned thingKind)

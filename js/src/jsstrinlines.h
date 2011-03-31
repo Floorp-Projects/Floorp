@@ -465,14 +465,20 @@ JSString::finalize(JSContext *cx)
 
     JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
 
-    if (isDependent()) {
+    if (isDependent())
         JS_RUNTIME_UNMETER(cx->runtime, liveDependentStrings);
-    } else if (isFlat()) {
-        cx->runtime->stringMemoryUsed -= length() * 2;
-        cx->free_(const_cast<jschar *>(asFlat().chars()));
-    } else {
+    else if (isFlat())
+        asFlat().finalize(cx->runtime);
+    else
         JS_ASSERT(isRope());
-    }
+}
+
+inline void
+JSFlatString::finalize(JSRuntime *rt)
+{
+    JS_ASSERT(!isShort());
+    rt->stringMemoryUsed -= length() * 2;
+    rt->free(const_cast<jschar *>(chars()));
 }
 
 inline void
@@ -480,6 +486,16 @@ JSShortString::finalize(JSContext *cx)
 {
     JS_ASSERT(isShort());
     JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
+}
+
+inline void
+JSAtom::finalize(JSRuntime *rt)
+{
+    JS_ASSERT(isAtom());
+    if (arena()->header()->thingKind == js::gc::FINALIZE_STRING)
+        asFlat().finalize(rt);
+    else
+        JS_ASSERT(arena()->header()->thingKind == js::gc::FINALIZE_SHORT_STRING);
 }
 
 inline void
