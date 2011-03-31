@@ -158,10 +158,9 @@ public:
    * @param  aIsSubtreeHidden  [out, optional] indicates whether the node's
    *                             frame and its subtree is hidden
    */
-  already_AddRefed<nsAccessible>
-    GetOrCreateAccessible(nsINode* aNode, nsIPresShell* aPresShell,
-                          nsIWeakReference* aWeakShell,
-                          bool* aIsSubtreeHidden = nsnull);
+  nsAccessible* GetOrCreateAccessible(nsINode* aNode, nsIPresShell* aPresShell,
+                                      nsIWeakReference* aWeakShell,
+                                      bool* aIsSubtreeHidden = nsnull);
 
   /**
    * Return an accessible for the given DOM node.
