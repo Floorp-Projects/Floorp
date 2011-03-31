@@ -325,7 +325,7 @@ public:
   void DrawTo(ThebesLayer* aLayer, gfxContext* aTarget, float aOpacity);
 
   virtual already_AddRefed<gfxASurface>
-  CreateBuffer(ContentType aType, const nsIntSize& aSize);
+  CreateBuffer(ContentType aType, const nsIntSize& aSize, PRUint32 aFlags);
 
   /**
    * Swap out the old backing buffer for |aBuffer| and attributes.
@@ -671,7 +671,7 @@ BasicThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
 
 already_AddRefed<gfxASurface>
 BasicThebesLayerBuffer::CreateBuffer(ContentType aType, 
-                                     const nsIntSize& aSize)
+                                     const nsIntSize& aSize, PRUint32 aFlags)
 {
   return mLayer->CreateBuffer(aType, aSize);
 }
