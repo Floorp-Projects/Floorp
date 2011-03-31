@@ -76,9 +76,7 @@
 
 #include "mozilla/FunctionTimer.h"
 
-#ifdef MOZ_IPC
 #include "mozilla/net/NeckoCommon.h"
-#endif
 
 /******************************************************************************
  * nsCacheProfilePrefObserver
@@ -1035,11 +1033,9 @@ nsCacheService::Init()
     if (mInitialized)
         return NS_ERROR_ALREADY_INITIALIZED;
 
-#ifdef MOZ_IPC
     if (mozilla::net::IsNeckoChild()) {
         return NS_ERROR_UNEXPECTED;
     }
-#endif
 
     if (mLock == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;

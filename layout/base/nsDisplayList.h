@@ -1769,7 +1769,6 @@ public:
   NS_DISPLAY_DECL_NAME("OwnLayer", TYPE_OWN_LAYER)
 };
 
-#ifdef MOZ_IPC
 /**
  * This creates a layer for the given list of items, whose visibility is
  * determined by the displayport for the given frame instead of what is
@@ -1817,7 +1816,6 @@ public:
 private:
   nsIFrame* mViewportFrame;
 };
-#endif
 
 /**
  * nsDisplayClip can clip a list of items, but we take a single item

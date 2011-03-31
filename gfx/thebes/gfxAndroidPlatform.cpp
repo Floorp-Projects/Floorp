@@ -35,10 +35,8 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifdef MOZ_IPC
 #include "mozilla/dom/ContentChild.h"
 #include "nsXULAppAPI.h"
-#endif
 
 #include <android/log.h>
 
@@ -173,10 +171,8 @@ public:
             mMap.ops = nsnull;
             LOG("initializing the map failed");
         }
-#ifdef MOZ_IPC
         NS_ABORT_IF_FALSE(XRE_GetProcessType() == GeckoProcessType_Default,
                           "StartupCacheFontNameCache should only be used in chrome procsess");
-#endif
         mCache = mozilla::scache::StartupCache::GetSingleton();
         Init();
     }

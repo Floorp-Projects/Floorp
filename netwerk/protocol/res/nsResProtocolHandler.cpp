@@ -38,9 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 #include "mozilla/chrome/RegistryMessageUtils.h"
-#endif
 
 #include "nsResProtocolHandler.h"
 #include "nsAutoLock.h"
@@ -257,7 +255,6 @@ nsResProtocolHandler::Init(nsIFile *aOmniJar)
 }
 #endif
 
-#ifdef MOZ_IPC
 static PLDHashOperator
 EnumerateSubstitution(const nsACString& aKey,
                       nsIURI* aURI,
@@ -283,7 +280,6 @@ nsResProtocolHandler::CollectSubstitutions(InfallibleTArray<ResourceMapping>& aR
 {
     mSubstitutions.EnumerateRead(&EnumerateSubstitution, &aResources);
 }
-#endif
 
 //----------------------------------------------------------------------------
 // nsResProtocolHandler::nsISupports

@@ -36,10 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 #include "IPCMessageUtils.h"
 #include "mozilla/net/NeckoMessageUtils.h"
-#endif
 
 #include "nsSimpleNestedURI.h"
 #include "nsIObjectInputStream.h"
@@ -95,7 +93,6 @@ nsSimpleNestedURI::Write(nsIObjectOutputStream* aStream)
 PRBool
 nsSimpleNestedURI::Read(const IPC::Message *aMsg, void **aIter)
 {
-#ifdef MOZ_IPC
     if (!nsSimpleURI::Read(aMsg, aIter))
         return PR_FALSE;
 
@@ -106,19 +103,15 @@ nsSimpleNestedURI::Read(const IPC::Message *aMsg, void **aIter)
     mInnerURI = uri;
 
     return PR_TRUE;
-#endif
-    return PR_FALSE;
 }
 
 void
 nsSimpleNestedURI::Write(IPC::Message *aMsg)
 {
-#ifdef MOZ_IPC
     nsSimpleURI::Write(aMsg);
 
     IPC::URI uri(mInnerURI);
     WriteParam(aMsg, uri);
-#endif
 }
 
 // nsINestedURI

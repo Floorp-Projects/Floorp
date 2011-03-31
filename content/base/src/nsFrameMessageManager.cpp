@@ -35,10 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 #include "ContentChild.h"
 #include "ContentParent.h"
-#endif
 #include "jscntxt.h"
 #include "nsFrameMessageManager.h"
 #include "nsContentUtils.h"
@@ -729,7 +727,6 @@ NS_IMPL_ISUPPORTS1(nsScriptCacheCleaner, nsIObserver)
 nsFrameMessageManager* nsFrameMessageManager::sChildProcessManager = nsnull;
 nsFrameMessageManager* nsFrameMessageManager::sParentProcessManager = nsnull;
 
-#ifdef MOZ_IPC
 bool SendAsyncMessageToChildProcess(void* aCallbackData,
                                     const nsAString& aMessage,
                                     const nsAString& aJSON)
@@ -769,14 +766,11 @@ bool SendAsyncMessageToParentProcess(void* aCallbackData,
   return true;
 }
 
-#endif
-
 nsresult
 NS_NewParentProcessMessageManager(nsIFrameMessageManager** aResult)
 {
   NS_ASSERTION(!nsFrameMessageManager::sParentProcessManager,
                "Re-creating sParentProcessManager");
-#ifdef MOZ_IPC
   NS_ENSURE_TRUE(IsChromeProcess(), NS_ERROR_NOT_AVAILABLE);
   nsFrameMessageManager* mm = new nsFrameMessageManager(PR_TRUE,
                                                         nsnull,
@@ -790,9 +784,6 @@ NS_NewParentProcessMessageManager(nsIFrameMessageManager** aResult)
   NS_ENSURE_TRUE(mm, NS_ERROR_OUT_OF_MEMORY);
   nsFrameMessageManager::sParentProcessManager = mm;
   return CallQueryInterface(mm, aResult);
-#else
-  return NS_ERROR_NOT_AVAILABLE;
-#endif
 }
 
 
@@ -801,7 +792,6 @@ NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
 {
   NS_ASSERTION(!nsFrameMessageManager::sChildProcessManager,
                "Re-creating sChildProcessManager");
-#ifdef MOZ_IPC
   NS_ENSURE_TRUE(!IsChromeProcess(), NS_ERROR_NOT_AVAILABLE);
   nsFrameMessageManager* mm = new nsFrameMessageManager(PR_FALSE,
                                                         SendSyncMessageToParentProcess,
@@ -815,7 +805,4 @@ NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
   NS_ENSURE_TRUE(mm, NS_ERROR_OUT_OF_MEMORY);
   nsFrameMessageManager::sChildProcessManager = mm;
   return CallQueryInterface(mm, aResult);
-#else
-  return NS_ERROR_NOT_AVAILABLE;
-#endif
 }

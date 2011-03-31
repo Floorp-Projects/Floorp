@@ -51,12 +51,10 @@
 #else
 @BINPATH@/@DLL_PREFIX@xul@DLL_SUFFIX@
 #endif
-#ifdef MOZ_IPC
 #ifdef XP_MACOSX
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME@.app/
 #else
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME@
-#endif
 #endif
 #ifdef WINCE
 @BINPATH@/mozce_shunt.dll
