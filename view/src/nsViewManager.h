@@ -106,7 +106,7 @@ public:
                                    const nsIView* aParent,
                                    nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
 
-  NS_IMETHOD  GetRootView(nsIView *&aView);
+  NS_IMETHOD_(nsIView*) GetRootView();
   NS_IMETHOD  SetRootView(nsIView *aView);
 
   NS_IMETHOD  GetWindowDimensions(nscoord *width, nscoord *height);
@@ -253,7 +253,7 @@ private:
   nsresult UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags);
 
 public: // NOT in nsIViewManager, so private to the view module
-  nsView* GetRootView() const { return mRootView; }
+  nsView* GetRootViewImpl() const { return mRootView; }
   nsViewManager* RootViewManager() const { return mRootViewManager; }
   PRBool IsRootVM() const { return this == RootViewManager(); }
 

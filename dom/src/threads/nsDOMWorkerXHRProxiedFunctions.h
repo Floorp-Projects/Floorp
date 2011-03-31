@@ -136,17 +136,17 @@ namespace nsDOMWorkerProxiedXHRFunctions
     }
   };
 
-  class OpenRequest : public SyncEventCapturingRunnable
+  class Open : public SyncEventCapturingRunnable
   {
   public:
-    OpenRequest(const nsACString& aMethod, const nsACString& aUrl,
-                PRBool aAsync, const nsAString& aUser,
-                const nsAString& aPassword)
+    Open(const nsACString& aMethod, const nsACString& aUrl,
+         PRBool aAsync, const nsAString& aUser,
+         const nsAString& aPassword)
     : mMethod(aMethod), mUrl(aUrl), mAsync(aAsync), mUser(aUser),
       mPassword(aPassword) { }
   
     virtual nsresult RunInternal() {
-      return mXHR->OpenRequest(mMethod, mUrl, mAsync, mUser, mPassword);
+      return mXHR->Open(mMethod, mUrl, mAsync, mUser, mPassword);
     }
 
   private:

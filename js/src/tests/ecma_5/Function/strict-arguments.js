@@ -79,6 +79,39 @@ function assignParameterGetElement(a)
 
 assertEq(assignParameterGetElement(42), 17);
 
+function assignArgSub(x, y)
+{
+  arguments[0] = 3;
+  return arguments[0];
+}
+
+assertEq(assignArgSub(1), 3);
+
+function assignArgSubParamUse(x, y)
+{
+  arguments[0] = 3;
+  assertEq(x, 3);
+  return arguments[0];
+}
+
+assertEq(assignArgSubParamUse(1), 3);
+
+function assignArgumentsElement(x, y)
+{
+  arguments[0] = 3;
+  return arguments[Math.random() ? "0" : 0]; // nix arguments[const] optimizations
+}
+
+assertEq(assignArgumentsElement(1), 3);
+
+function assignArgumentsElementParamUse(x, y)
+{
+  arguments[0] = 3;
+  assertEq(x, 3);
+  return arguments[Math.random() ? "0" : 0]; // nix arguments[const] optimizations
+}
+
+assertEq(assignArgumentsElementParamUse(1), 3);
 
 /********************
  * STRICT ARGUMENTS *
@@ -223,6 +256,44 @@ function strictAssignParameterGetElement(a)
 }
 
 assertEq(strictAssignParameterGetElement(42), 42);
+
+function strictAssignArgSub(x, y)
+{
+  "use strict";
+  arguments[0] = 3;
+  return arguments[0];
+}
+
+assertEq(strictAssignArgSub(1), 3);
+
+function strictAssignArgSubParamUse(x, y)
+{
+  "use strict";
+  arguments[0] = 3;
+  assertEq(x, 1);
+  return arguments[0];
+}
+
+assertEq(strictAssignArgSubParamUse(1), 3);
+
+function strictAssignArgumentsElement(x, y)
+{
+  "use strict";
+  arguments[0] = 3;
+  return arguments[Math.random() ? "0" : 0]; // nix arguments[const] optimizations
+}
+
+assertEq(strictAssignArgumentsElement(1), 3);
+
+function strictAssignArgumentsElementParamUse(x, y)
+{
+  "use strict";
+  arguments[0] = 3;
+  assertEq(x, 1);
+  return arguments[Math.random() ? "0" : 0]; // nix arguments[const] optimizations
+}
+
+assertEq(strictAssignArgumentsElementParamUse(1), 3);
 
 function strictNestedAssignShadowVar(p)
 {

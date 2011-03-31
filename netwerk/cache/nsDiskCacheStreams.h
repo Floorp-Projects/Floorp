@@ -78,10 +78,10 @@ public:
 
     void        ClearBinding();
     
-    void        IncrementInputStreamCount() { PR_AtomicIncrement(&mInStreamCount); }
+    void        IncrementInputStreamCount() { PR_ATOMIC_INCREMENT(&mInStreamCount); }
     void        DecrementInputStreamCount()
                 {
-                    PR_AtomicDecrement(&mInStreamCount);
+                    PR_ATOMIC_DECREMENT(&mInStreamCount);
                     NS_ASSERTION(mInStreamCount >= 0, "mInStreamCount has gone negative");
                 }
 

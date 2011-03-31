@@ -201,71 +201,6 @@ Shape::hashify(JSRuntime *rt)
 # define LIVE_SCOPE_METER(cx,expr) /* nothing */
 #endif
 
-static inline bool
-InitField(JSCompartment *comp, EmptyShape *JSCompartment:: *field, Class *clasp)
-{
-    if (EmptyShape *emptyShape = EmptyShape::create(comp, clasp)) {
-        comp->*field = emptyShape;
-        return true;
-    }
-    return false;
-}
-
-/* static */
-bool
-Shape::initEmptyShapes(JSCompartment *comp)
-{
-    /*
-     * NewArguments allocates dslots to have enough room for the argc of the
-     * particular arguments object being created.
-     * never mutated, it's safe to pretend to have all the slots possible.
-     *
-     * Note how the fast paths in jsinterp.cpp for JSOP_LENGTH and JSOP_GETELEM
-     * bypass resolution of scope properties for length and element indices on
-     * arguments objects. This helps ensure that any arguments object needing
-     * its own mutable scope (with unique shape) is a rare event.
-     */
-    if (!InitField(comp, &JSCompartment::emptyArgumentsShape, &js_ArgumentsClass))
-        return false;
-
-    if (!InitField(comp, &JSCompartment::emptyBlockShape, &js_BlockClass))
-        return false;
-
-    /*
-     * Initialize the shared scope for all empty Call objects so gets for args
-     * and vars do not force the creation of a mutable scope for the particular
-     * call object being accessed.
-     */
-    if (!InitField(comp, &JSCompartment::emptyCallShape, &js_CallClass))
-        return false;
-
-    /* A DeclEnv object holds the name binding for a named function expression. */
-    if (!InitField(comp, &JSCompartment::emptyDeclEnvShape, &js_DeclEnvClass))
-        return false;
-
-    /* Non-escaping native enumerator objects share this empty scope. */
-    if (!InitField(comp, &JSCompartment::emptyEnumeratorShape, &js_IteratorClass))
-        return false;
-
-    /* Same drill for With objects. */
-    if (!InitField(comp, &JSCompartment::emptyWithShape, &js_WithClass))
-        return false;
-
-    return true;
-}
-
-/* static */
-void
-Shape::finishEmptyShapes(JSCompartment *comp)
-{
-    comp->emptyArgumentsShape = NULL;
-    comp->emptyBlockShape = NULL;
-    comp->emptyCallShape = NULL;
-    comp->emptyDeclEnvShape = NULL;
-    comp->emptyEnumeratorShape = NULL;
-    comp->emptyWithShape = NULL;
-}
-
 JS_STATIC_ASSERT(sizeof(JSHashNumber) == 4);
 JS_STATIC_ASSERT(sizeof(jsid) == JS_BYTES_PER_WORD);
 
@@ -601,8 +536,13 @@ Shape::newDictionaryList(JSContext *cx, Shape **listp)
     Shape *shape = *listp;
     Shape *list = shape;
 
-    Shape **childp = listp;
-    *childp = NULL;
+    /*
+     * We temporarily create the dictionary shapes using a root located on the
+     * stack. This way, the GC doesn't see any intermediate state until we
+     * switch listp at the end.
+     */
+    Shape *root = NULL;
+    Shape **childp = &root;
 
     while (shape) {
         JS_ASSERT_IF(!shape->frozen(), !shape->inDictionary());
@@ -619,16 +559,21 @@ Shape::newDictionaryList(JSContext *cx, Shape **listp)
         shape = shape->parent;
     }
 
-    list = *listp;
-    JS_ASSERT(list->inDictionary());
-    list->hashify(cx->runtime);
-    return list;
+    *listp = root;
+    root->listp = listp;
+
+    JS_ASSERT(root->inDictionary());
+    root->hashify(cx->runtime);
+    return root;
 }
 
 bool
 JSObject::toDictionaryMode(JSContext *cx)
 {
     JS_ASSERT(!inDictionaryMode());
+
+    /* We allocate the shapes from cx->compartment, so make sure it's right. */
+    JS_ASSERT(compartment() == cx->compartment);
     if (!Shape::newDictionaryList(cx, &lastProp))
         return false;
 
@@ -1285,6 +1230,13 @@ JSObject::removeProperty(JSContext *cx, jsid id)
         }
     }
 
+    /* Also, consider shrinking object slots if 25% or more are unused. */
+    if (hasSlotsArray()) {
+        JS_ASSERT(slotSpan() <= numSlots());
+        if ((slotSpan() + (slotSpan() >> 2)) < numSlots())
+            shrinkSlots(cx, slotSpan());
+    }
+
     CHECK_SHAPE_CONSISTENCY(this);
     LIVE_SCOPE_METER(cx, --cx->runtime->liveObjectProps);
     METER(removes);
@@ -1480,12 +1432,28 @@ PrintPropertyMethod(JSTracer *trc, char *buf, size_t bufsize)
 }
 #endif
 
-void
-Shape::trace(JSTracer *trc) const
-{
-    if (IS_GC_MARKING_TRACER(trc))
-        mark();
+/*
+ * A few notes on shape marking:
+ *
+ * We want to make sure that we regenerate the shape number exactly once per
+ * shape-regenerating GC. Since delayed marking calls MarkChildren many times,
+ * we handle regeneration in the PreMark stage.
+ *
+ * We also want to make sure to mark iteratively up the parent chain, not
+ * recursively. So marking is split into markChildren and markChildrenNotParent.
+ */
 
+void
+Shape::regenerate(JSTracer *trc) const
+{
+    JSRuntime *rt = trc->context->runtime;
+    if (IS_GC_MARKING_TRACER(trc) && rt->gcRegenShapes)
+        shape = js_RegenerateShapeForGC(rt);
+}
+
+void
+Shape::markChildrenNotParent(JSTracer *trc) const
+{
     MarkId(trc, id, "id");
 
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
@@ -1502,5 +1470,22 @@ Shape::trace(JSTracer *trc) const
     if (isMethod()) {
         JS_SET_TRACING_DETAILS(trc, PrintPropertyMethod, this, 0);
         Mark(trc, &methodObject());
+    }
+}
+
+void
+Shape::markChildren(JSTracer *trc) const
+{
+    markChildrenNotParent(trc);
+
+    for (Shape *shape = parent; shape; shape = shape->parent) {
+        if (IS_GC_MARKING_TRACER(trc)) {
+            GCMarker *gcmarker = static_cast<GCMarker *>(trc);
+            if (!shape->markIfUnmarked(gcmarker->getMarkColor()))
+                break;
+        }
+
+        shape->regenerate(trc);
+        shape->markChildrenNotParent(trc);
     }
 }

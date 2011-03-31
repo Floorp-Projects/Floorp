@@ -1170,6 +1170,28 @@ fi
 
 fi # COMPILE_ENVIRONMENT
 
+dnl clang prior to 2.9 (including Xcode 4) does not support all the
+dnl constructs required by the libtheora inline asm. This is used to
+dnl detect and disable it
+AC_LANG_SAVE
+AC_LANG_C
+AC_TRY_COMPILE([
+#if defined(__clang__)
+# if __clang_major__<2 || (__clang_major__==2 && __clang_minor__<9)
+#  error "clang older than 2.9 detected"
+# endif
+#endif
+               ],
+               [],
+               result="yes",
+               result="no")
+if test "$result" = "no"; then
+    AC_DEFINE(HAVE_OLD_CLANG)
+    HAVE_OLD_CLANG=1
+fi
+AC_LANG_RESTORE
+AC_SUBST(HAVE_OLD_CLANG)
+
 if test -n "$MAKE"; then
   if test `echo $MAKE | grep -c make.py` != 1; then
      NOT_PYMAKE=$MAKE
@@ -4952,6 +4974,11 @@ VPX_AS_CONVERSION=
 VPX_ASM_SUFFIX=
 VPX_X86_ASM=
 VPX_ARM_ASM=
+MOZ_LIBJPEG_TURBO=1
+LIBJPEG_TURBO_AS=
+LIBJPEG_TURBO_ASFLAGS=
+LIBJPEG_TURBO_X86_ASM=
+LIBJPEG_TURBO_X64_ASM=
 MOZ_PANGO=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=1
@@ -6421,6 +6448,85 @@ if test -z "$MOZ_CRASHREPORTER_ENABLE_PERCENT"; then
    MOZ_CRASHREPORTER_ENABLE_PERCENT=100
 fi
 AC_DEFINE_UNQUOTED(MOZ_CRASHREPORTER_ENABLE_PERCENT, $MOZ_CRASHREPORTER_ENABLE_PERCENT)
+
+dnl ========================================================
+dnl = libjpeg-turbo configuration
+dnl ========================================================
+
+MOZ_ARG_DISABLE_BOOL(libjpeg_turbo,
+[ --disable-libjpeg-turbo  Disable optimized jpeg decoding routines],
+    MOZ_LIBJPEG_TURBO=,
+    MOZ_LIBJPEG_TURBO=1)
+
+dnl Detect if we can use yasm to compile libjpeg-turbo's optimized assembly
+dnl files.
+
+if test -n "$MOZ_LIBJPEG_TURBO"; then
+
+  dnl Do we support libjpeg-turbo on this platform?
+  case "$OS_ARCH:$OS_TEST" in
+  Linux:x86|Linux:i?86)
+    LIBJPEG_TURBO_ASFLAGS="-f elf32 -rnasm -pnasm -DPIC -DELF"
+    LIBJPEG_TURBO_X86_ASM=1
+  ;;
+  Linux:x86_64)
+    LIBJPEG_TURBO_ASFLAGS="-f elf64 -rnasm -pnasm -D__x86_64__ -DPIC -DELF"
+    LIBJPEG_TURBO_X64_ASM=1
+  ;;
+  SunOS:i?86)
+    LIBJPEG_TURBO_ASFLAGS="-f elf32 -rnasm -pnasm -DPIC -DELF"
+    LIBJPEG_TURBO_X86_ASM=1
+  ;;
+  SunOS:x86_64)
+    LIBJPEG_TURBO_ASFLAGS="-f elf64 -rnasm -pnasm -D__x86_64__ -DPIC -DELF"
+    LIBJPEG_TURBO_X64_ASM=1
+  ;;
+  Darwin:i?86)
+    LIBJPEG_TURBO_ASFLAGS="-f macho32 -rnasm -pnasm -DPIC -DMACHO"
+    LIBJPEG_TURBO_X86_ASM=1
+  ;;
+  Darwin:x86_64)
+    LIBJPEG_TURBO_ASFLAGS="-f macho64 -rnasm -pnasm -D__x86_64__ -DPIC -DMACHO"
+    LIBJPEG_TURBO_X64_ASM=1
+  ;;
+  WINNT:x86|WINNT:i?86)
+    LIBJPEG_TURBO_ASFLAGS="-f win32 -rnasm -pnasm -DPIC -DWIN32"
+    LIBJPEG_TURBO_X86_ASM=1
+  ;;
+  WINNT:x86_64)
+    LIBJPEG_TURBO_ASFLAGS="-f win64 -rnasm -pnasm -D__x86_64__ -DPIC -DWIN64"
+    LIBJPEG_TURBO_X64_ASM=1
+  ;;
+  esac
+
+fi
+
+dnl If we're on a system which supports libjpeg-turbo's asm routines and
+dnl --disable-libjpeg-turbo wasn't passed, check for yasm, and error out if it
+dnl doesn't exist or we have too old of a version.
+if test -n "$LIBJPEG_TURBO_X86_ASM" -o -n "$LIBJPEG_TURBO_X64_ASM" ; then
+    AC_MSG_CHECKING([for YASM assembler])
+    AC_CHECK_PROGS(LIBJPEG_TURBO_AS, yasm, "")
+
+    if test -z "$LIBJPEG_TURBO_AS" ; then
+        AC_MSG_ERROR([yasm is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you do not appear to have yasm installed.  Either install it or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
+    fi
+
+    dnl Check for yasm 1.1 or greater.
+    if test "$_YASM_MAJOR_VERSION" -lt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -lt "1" \) ; then
+        AC_MSG_ERROR([yasm 1.1 or greater is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.  Upgrade to the newest version or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
+    fi
+fi
+
+if test -n "$LIBJPEG_TURBO_X86_ASM"; then
+    AC_DEFINE(LIBJPEG_TURBO_X86_ASM)
+elif test -n "$LIBJPEG_TURBO_X64_ASM"; then
+    AC_DEFINE(LIBJPEG_TURBO_X64_ASM)
+elif test -n "$MOZ_LIBJPEG_TURBO"; then
+    dnl Warn if we're not building the optimized routines, even though the user
+    dnl didn't specify --disable-libjpeg-turbo.
+    AC_MSG_WARN([No assembler or assembly support for libjpeg-turbo.  Using unoptimized C routines.])
+fi
 
 dnl ========================================================
 dnl = Enable compilation of specific extension modules
@@ -9190,6 +9296,10 @@ AC_SUBST(VPX_AS_CONVERSION)
 AC_SUBST(VPX_ASM_SUFFIX)
 AC_SUBST(VPX_X86_ASM)
 AC_SUBST(VPX_ARM_ASM)
+AC_SUBST(LIBJPEG_TURBO_AS)
+AC_SUBST(LIBJPEG_TURBO_ASFLAGS)
+AC_SUBST(LIBJPEG_TURBO_X86_ASM)
+AC_SUBST(LIBJPEG_TURBO_X64_ASM)
 
 if test "$USING_HCC"; then
    CC='${topsrcdir}/build/hcc'

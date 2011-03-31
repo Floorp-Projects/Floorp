@@ -313,7 +313,7 @@ nsThread::ThreadFunc(void *arg)
 //-----------------------------------------------------------------------------
 
 nsThread::nsThread()
-  : mLock(PR_NewLock())
+  : mLock(nsAutoLock::NewLock("nsThread::mLock"))
   , mEvents(&mEventsRoot)
   , mPriority(PRIORITY_NORMAL)
   , mThread(nsnull)
@@ -327,7 +327,7 @@ nsThread::nsThread()
 nsThread::~nsThread()
 {
   if (mLock)
-    PR_DestroyLock(mLock);
+    nsAutoLock::DestroyLock(mLock);
 }
 
 nsresult

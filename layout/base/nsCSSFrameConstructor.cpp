@@ -150,6 +150,7 @@
 #include "nsSVGOuterSVGFrame.h"
 
 #include "nsRefreshDriver.h"
+#include "nsRuleProcessorData.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -744,6 +745,8 @@ public:
 
   nsCOMArray<nsIContent>    mGeneratedTextNodesWithInitializer;
 
+  TreeMatchContext          mTreeMatchContext;
+
   // Constructor
   // Use the passed-in history state.
   nsFrameConstructorState(nsIPresShell*          aPresShell,
@@ -906,6 +909,8 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
                         HasTransform()),
     mHavePendingPopupgroup(PR_FALSE),
     mCreatingExtraFrames(PR_FALSE),
+    mTreeMatchContext(PR_TRUE, nsRuleWalker::eRelevantLinkUnvisited,
+                      aPresShell->GetDocument()),
     mCurrentPendingBindingInsertionPoint(&mPendingBindings)
 {
 #ifdef MOZ_XUL
@@ -938,6 +943,8 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
                         HasTransform()),
     mHavePendingPopupgroup(PR_FALSE),
     mCreatingExtraFrames(PR_FALSE),
+    mTreeMatchContext(PR_TRUE, nsRuleWalker::eRelevantLinkUnvisited,
+                      aPresShell->GetDocument()),
     mCurrentPendingBindingInsertionPoint(&mPendingBindings)
 {
 #ifdef MOZ_XUL
@@ -1688,7 +1695,8 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   pseudoStyleContext =
     styleSet->ProbePseudoElementStyle(aParentContent->AsElement(),
                                       aPseudoElement,
-                                      aStyleContext);
+                                      aStyleContext,
+                                      aState.mTreeMatchContext);
   if (!pseudoStyleContext)
     return;
   // |ProbePseudoStyleFor| checked the 'display' property and the
@@ -2291,7 +2299,10 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   // Make sure to call PropagateScrollToViewport before
   // SetUpDocElementContainingBlock, since it sets up our scrollbar state
   // properly.
-  nsIContent* propagatedScrollFrom = PropagateScrollToViewport();
+#ifdef DEBUG
+  nsIContent* propagatedScrollFrom =
+#endif
+    PropagateScrollToViewport();
 
   SetUpDocElementContainingBlock(aDocElement);
 
@@ -2546,8 +2557,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIFrame** aNewFrame)
   viewportFrame->Init(nsnull, nsnull, nsnull);
 
   // Bind the viewport frame to the root view
-  nsIView*        rootView;
-  mPresShell->GetViewManager()->GetRootView(rootView);
+  nsIView* rootView = mPresShell->GetViewManager()->GetRootView();
   viewportFrame->SetView(rootView);
 
   nsContainerFrame::SyncFrameViewProperties(mPresShell->GetPresContext(), viewportFrame,
@@ -4543,7 +4553,8 @@ nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState
 
 already_AddRefed<nsStyleContext>
 nsCSSFrameConstructor::ResolveStyleContext(nsIFrame*         aParentFrame,
-                                           nsIContent*       aContent)
+                                           nsIContent*       aContent,
+                                           nsFrameConstructorState* aState)
 {
   nsStyleContext* parentStyleContext = nsnull;
   NS_ASSERTION(aContent->GetParent(), "Must have parent here");
@@ -4562,17 +4573,24 @@ nsCSSFrameConstructor::ResolveStyleContext(nsIFrame*         aParentFrame,
     // previous page's fixed-pos frame?
   }
 
-  return ResolveStyleContext(parentStyleContext, aContent);
+  return ResolveStyleContext(parentStyleContext, aContent, aState);
 }
 
 already_AddRefed<nsStyleContext>
 nsCSSFrameConstructor::ResolveStyleContext(nsStyleContext* aParentStyleContext,
-                                           nsIContent* aContent)
+                                           nsIContent* aContent,
+                                           nsFrameConstructorState* aState)
 {
   nsStyleSet *styleSet = mPresShell->StyleSet();
 
   if (aContent->IsElement()) {
+    if (aState) {
+      return styleSet->ResolveStyleFor(aContent->AsElement(),
+                                       aParentStyleContext,
+                                       aState->mTreeMatchContext);
+    }
     return styleSet->ResolveStyleFor(aContent->AsElement(), aParentStyleContext);
+
   }
 
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
@@ -5028,7 +5046,7 @@ nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState
     return;
 
   nsRefPtr<nsStyleContext> styleContext;
-  styleContext = ResolveStyleContext(aParentFrame, aContent);
+  styleContext = ResolveStyleContext(aParentFrame, aContent, &aState);
 
   AddFrameConstructionItemsInternal(aState, aContent, aParentFrame,
                                     aContent->Tag(), aContent->GetNameSpaceID(),
@@ -5110,7 +5128,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     }
 
     if (resolveStyle) {
-      styleContext = ResolveStyleContext(styleContext->GetParent(), aContent);
+      styleContext =
+        ResolveStyleContext(styleContext->GetParent(), aContent, &aState);
       display = styleContext->GetStyleDisplay();
       aStyleContext = styleContext;
     }
@@ -5826,7 +5845,9 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
         NS_NOTREACHED("Shouldn't happen");
         return PR_FALSE;
       }
-      styleContext = ResolveStyleContext(styleParent, aContent);
+      // XXXbz when this code is killed, the state argument to
+      // ResolveStyleContext can be made non-optional.
+      styleContext = ResolveStyleContext(styleParent, aContent, nsnull);
       if (!styleContext) return PR_FALSE;
       const nsStyleDisplay* display = styleContext->GetStyleDisplay();
       aDisplay = display->mDisplay;
@@ -8089,25 +8110,17 @@ nsCSSFrameConstructor::RestyleElement(Element        *aElement,
 }
 
 nsresult
-nsCSSFrameConstructor::ContentStatesChanged(nsIContent* aContent1,
-                                            nsIContent* aContent2,
-                                            nsEventStates aStateMask)
+nsCSSFrameConstructor::ContentStateChanged(nsIContent* aContent,
+                                           nsEventStates aStateMask)
 {
   // XXXbz it would be good if this function only took Elements, but
   // we'd have to make ESM guarantee that usefully.
-  if (NS_LIKELY(aContent1 && aContent1->IsElement())) {
-    DoContentStateChanged(aContent1->AsElement(), aStateMask);
+  if (!aContent->IsElement()) {
+    return NS_OK;
   }
-  if (aContent2 && aContent2->IsElement()) {
-    DoContentStateChanged(aContent2->AsElement(), aStateMask);
-  }
-  return NS_OK;
-}
 
-void
-nsCSSFrameConstructor::DoContentStateChanged(Element* aElement,
-                                             nsEventStates aStateMask)
-{
+  Element* aElement = aContent->AsElement();
+
   nsStyleSet *styleSet = mPresShell->StyleSet();
   nsPresContext *presContext = mPresShell->GetPresContext();
   NS_ASSERTION(styleSet, "couldn't get style set");
@@ -8161,6 +8174,7 @@ nsCSSFrameConstructor::DoContentStateChanged(Element* aElement,
   }
 
   PostRestyleEvent(aElement, rshint, hint);
+  return NS_OK;
 }
 
 void
@@ -10562,7 +10576,7 @@ nsCSSFrameConstructor::CreateListBoxContent(nsPresContext* aPresContext,
                                   mTempFrameTreeState);
 
     nsRefPtr<nsStyleContext> styleContext;
-    styleContext = ResolveStyleContext(aParentFrame, aChild);
+    styleContext = ResolveStyleContext(aParentFrame, aChild, &state);
 
     // Pre-check for display "none" - only if we find that, do we create
     // any frame at all
@@ -10945,7 +10959,7 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
     }
 
     nsRefPtr<nsStyleContext> childContext =
-      ResolveStyleContext(parentStyleContext, content);
+      ResolveStyleContext(parentStyleContext, content, &aState);
 
     AddFrameConstructionItemsInternal(aState, content, nsnull, content->Tag(),
                                       content->GetNameSpaceID(),
@@ -11612,6 +11626,8 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
     return;
   }
 
+  nsPresContext *presContext = mPresShell->GetPresContext();
+  presContext->SetProcessingRestyles(PR_TRUE);
   // Recalculate all of the style contexts for the document
   // Note that we can ignore the return value of ComputeStyleChangeFor
   // because we never need to reframe the root frame
@@ -11627,6 +11643,14 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
                                                     mPendingRestyles, PR_TRUE);
   // Process the required changes
   ProcessRestyledFrames(changeList);
+  presContext->SetProcessingRestyles(PR_FALSE);
+
+  // Make sure that we process any pending animation restyles from the
+  // above style change.  Note that we can *almost* implement the above
+  // by just posting a style change -- except we really need to restyle
+  // the root frame rather than the root element's primary frame.
+  ProcessPendingRestyles();
+
   // Tell the style set it's safe to destroy the old rule tree.  We
   // must do this after the ProcessRestyledFrames call in case the
   // change list has frame reconstructs in it (since frames to be

@@ -218,6 +218,24 @@ mai_util_get_type(void)
     return type;
 }
 
+static void
+window_added (AtkObject *atk_obj,
+              guint     index,
+              AtkObject *child)
+{
+  guint id =  g_signal_lookup ("create", MAI_TYPE_ATK_OBJECT);
+  g_signal_emit (child, id, 0);
+}
+
+static void
+window_removed (AtkObject *atk_obj,
+                guint     index,
+                AtkObject *child)
+{
+  guint id =  g_signal_lookup ("destroy", MAI_TYPE_ATK_OBJECT);
+  g_signal_emit (child, id, 0);
+}
+
 /* intialize the the atk interface (function pointers) with MAI implementation.
  * When atk bridge get loaded, these interface can be used.
  */
@@ -248,6 +266,10 @@ mai_util_class_init(MaiUtilClass *klass)
 
     listener_list = g_hash_table_new_full(g_int_hash, g_int_equal, NULL,
                                           _listener_info_destroy);
+    // Keep track of added/removed windows.
+    AtkObject *root = atk_get_root ();
+    g_signal_connect (root, "children-changed::add", (GCallback) window_added, NULL);
+    g_signal_connect (root, "children-changed::remove", (GCallback) window_removed, NULL);
 }
 
 static guint

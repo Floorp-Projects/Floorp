@@ -112,14 +112,50 @@ JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug)
     rt->debugMode = debug;
 }
 
+namespace js {
+
+void
+ScriptDebugPrologue(JSContext *cx, JSStackFrame *fp)
+{
+    if (fp->isFramePushedByExecute()) {
+        if (JSInterpreterHook hook = cx->debugHooks->executeHook)
+            fp->setHookData(hook(cx, fp, true, 0, cx->debugHooks->executeHookData));
+    } else {
+        if (JSInterpreterHook hook = cx->debugHooks->callHook)
+            fp->setHookData(hook(cx, fp, true, 0, cx->debugHooks->callHookData));
+    }
+
+    Probes::enterJSFun(cx, fp->maybeFun(), fp->script());
+}
+
+bool
+ScriptDebugEpilogue(JSContext *cx, JSStackFrame *fp, bool okArg)
+{
+    JSBool ok = okArg;
+
+    Probes::exitJSFun(cx, fp->maybeFun(), fp->script());
+
+    if (void *hookData = fp->maybeHookData()) {
+        if (fp->isFramePushedByExecute()) {
+            if (JSInterpreterHook hook = cx->debugHooks->executeHook)
+                hook(cx, fp, false, &ok, hookData);
+        } else {
+            if (JSInterpreterHook hook = cx->debugHooks->callHook)
+                hook(cx, fp, false, &ok, hookData);
+        }
+    }
+
+    return ok;
+}
+
+} /* namespace js */
+
 #ifdef DEBUG
 static bool
 CompartmentHasLiveScripts(JSCompartment *comp)
 {
-#ifdef JS_METHODJIT
-# ifdef JS_THREADSAFE
+#if defined(JS_METHODJIT) && defined(JS_THREADSAFE)
     jsword currentThreadId = reinterpret_cast<jsword>(js_CurrentThreadId());
-# endif
 #endif
 
     // Unsynchronized context iteration is technically a race; but this is only
@@ -127,7 +163,7 @@ CompartmentHasLiveScripts(JSCompartment *comp)
     JSContext *iter = NULL;
     JSContext *icx;
     while ((icx = JS_ContextIterator(comp->rt, &iter))) {
-#ifdef JS_THREADSAFE
+#if defined(JS_METHODJIT) && defined(JS_THREADSAFE)
         if (JS_GetContextThread(icx) != currentThreadId)
             continue;
 #endif
@@ -160,7 +196,7 @@ JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
     // assumes that 'comp' is in the same thread as 'cx'.
 
 #ifdef JS_METHODJIT
-    JSAutoEnterCompartment ac;
+    JS::AutoEnterScriptCompartment ac;
 
     for (JSScript *script = (JSScript *)comp->scripts.next;
          &script->links != &comp->scripts;
@@ -191,6 +227,8 @@ JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
 JS_FRIEND_API(JSBool)
 js_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
 {
+    assertSameCompartment(cx, script);
+
 #ifdef JS_METHODJIT
     if (!script->singleStepMode == !singleStep)
         return JS_TRUE;
@@ -233,6 +271,7 @@ CheckDebugMode(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
 {
+    assertSameCompartment(cx, script);
     if (!CheckDebugMode(cx))
         return JS_FALSE;
 
@@ -474,6 +513,7 @@ JS_HandleTrap(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval)
     jsint op;
     JSTrapStatus status;
 
+    assertSameCompartment(cx, script);
     DBG_LOCK(cx->runtime);
     trap = FindTrap(cx->runtime, script, pc);
     JS_ASSERT(!trap || trap->handler);
@@ -581,9 +621,11 @@ struct JSWatchPoint {
 
 /*
  * NB: DropWatchPointAndUnlock releases cx->runtime->debuggerLock in all cases.
+ * The sweeping parameter is true if the watchpoint and its object are about to
+ * be finalized, in which case we don't need to changeProperty.
  */
 static JSBool
-DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
+DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag, bool sweeping)
 {
     bool ok = true;
     JSRuntime *rt = cx->runtime;
@@ -594,12 +636,6 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
         return ok;
     }
 
-    /*
-     * Switch to the same compartment as the watch point, since changeProperty, below,
-     * needs to have a compartment.
-     */
-    SwitchToCompartment sc(cx, wp->object);
-
     /* Remove wp from the list, then restore wp->shape->setter from wp. */
     ++rt->debuggerMutations;
     JS_REMOVE_LINK(&wp->links);
@@ -609,15 +645,17 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
      * If the property isn't found on wp->object, then someone else must have deleted it,
      * and we don't need to change the property attributes.
      */
-    const Shape *shape = wp->shape;
-    const Shape *wprop = wp->object->nativeLookup(shape->id);
-    if (wprop &&
-        wprop->hasSetterValue() == shape->hasSetterValue() &&
-        IsWatchedProperty(cx, wprop)) {
-        shape = wp->object->changeProperty(cx, wprop, 0, wprop->attributes(),
-                                           wprop->getter(), wp->setter);
-        if (!shape)
-            ok = false;
+    if (!sweeping) {
+        const Shape *shape = wp->shape;
+        const Shape *wprop = wp->object->nativeLookup(shape->id);
+        if (wprop &&
+            wprop->hasSetterValue() == shape->hasSetterValue() &&
+            IsWatchedProperty(cx, wprop)) {
+            shape = wp->object->changeProperty(cx, wprop, 0, wprop->attributes(),
+                                               wprop->getter(), wp->setter);
+            if (!shape)
+                ok = false;
+        }
     }
 
     cx->free(wp);
@@ -627,26 +665,43 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
 /*
  * NB: js_TraceWatchPoints does not acquire cx->runtime->debuggerLock, since
  * the debugger should never be racing with the GC (i.e., the debugger must
- * respect the request model).
+ * respect the request model). If any unmarked objects were marked, this
+ * function returns true and the GC will iteratively call this function again
+ * until no more unmarked heap objects are found. This is necessary because
+ * watch points have a weak pointer semantics.
  */
-void
-js_TraceWatchPoints(JSTracer *trc, JSObject *obj)
+JSBool
+js_TraceWatchPoints(JSTracer *trc)
 {
     JSRuntime *rt;
     JSWatchPoint *wp;
 
     rt = trc->context->runtime;
 
+    bool modified = false;
+
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
          &wp->links != &rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
-        if (wp->object == obj) {
-            wp->shape->trace(trc);
-            if (wp->shape->hasSetterValue() && wp->setter)
-                MarkObject(trc, *CastAsObject(wp->setter), "wp->setter");
-            MarkObject(trc, *wp->closure, "wp->closure");
+        if (wp->object->isMarked()) {
+            if (!wp->shape->isMarked()) {
+                modified = true;
+                MarkShape(trc, wp->shape, "shape");
+            }
+            if (wp->shape->hasSetterValue() && wp->setter) {
+                if (!CastAsObject(wp->setter)->isMarked()) {
+                    modified = true;
+                    MarkObject(trc, *CastAsObject(wp->setter), "wp->setter");
+                }
+            }
+            if (!wp->closure->isMarked()) {
+                modified = true;
+                MarkObject(trc, *wp->closure, "wp->closure");
+            }
         }
     }
+
+    return modified;
 }
 
 void
@@ -666,7 +721,7 @@ js_SweepWatchPoints(JSContext *cx)
             sample = rt->debuggerMutations;
 
             /* Ignore failures. */
-            DropWatchPointAndUnlock(cx, wp, JSWP_LIVE);
+            DropWatchPointAndUnlock(cx, wp, JSWP_LIVE, true);
             DBG_LOCK(rt);
             if (rt->debuggerMutations != sample + 1)
                 next = (JSWatchPoint *)rt->watchPointList.next;
@@ -708,6 +763,7 @@ FindWatchPoint(JSRuntime *rt, JSObject *obj, jsid id)
 JSBool
 js_watch_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
+    assertSameCompartment(cx, obj);
     JSRuntime *rt = cx->runtime;
     DBG_LOCK(rt);
     for (JSWatchPoint *wp = (JSWatchPoint *)rt->watchPointList.next;
@@ -715,19 +771,30 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
          wp = (JSWatchPoint *)wp->links.next) {
         const Shape *shape = wp->shape;
         if (wp->object == obj && SHAPE_USERID(shape) == id && !(wp->flags & JSWP_HELD)) {
+            bool ok;
+            Value old;
+            uint32 slot;
+            const Shape *needMethodSlotWrite = NULL;
+
             wp->flags |= JSWP_HELD;
             DBG_UNLOCK(rt);
 
             jsid propid = shape->id;
             shape = obj->nativeLookup(propid);
+            if (!shape) {
+                /*
+                 * This happens if the watched property has been deleted, but a
+                 * prototype has a watched accessor property with the same
+                 * name. See bug 636697.
+                 */
+                ok = true;
+                goto out;
+            }
             JS_ASSERT(IsWatchedProperty(cx, shape));
-            jsid userid = SHAPE_USERID(shape);
 
             /* Determine the property's old value. */
-            bool ok;
-            uint32 slot = shape->slot;
-            Value old = obj->containsSlot(slot) ? obj->nativeGetSlot(slot) : UndefinedValue();
-            const Shape *needMethodSlotWrite = NULL;
+            slot = shape->slot;
+            old = obj->containsSlot(slot) ? obj->nativeGetSlot(slot) : UndefinedValue();
             if (shape->isMethod()) {
                 /*
                  * We get here in two cases: (1) the existing watched property
@@ -790,7 +857,8 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
                          ? ExternalInvoke(cx, ObjectValue(*obj),
                                           ObjectValue(*CastAsObject(wp->setter)),
                                           1, vp, vp)
-                         : CallJSPropertyOpSetter(cx, wp->setter, obj, userid, strict, vp);
+                         : CallJSPropertyOpSetter(cx, wp->setter, obj, SHAPE_USERID(shape),
+                                                  strict, vp);
                 } else if (shape == needMethodSlotWrite) {
                     /* See comment above about needMethodSlotWrite. */
                     obj->nativeSetSlot(shape->slot, *vp);
@@ -812,7 +880,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 
         out:
             DBG_LOCK(rt);
-            return DropWatchPointAndUnlock(cx, wp, JSWP_HELD) && ok;
+            return DropWatchPointAndUnlock(cx, wp, JSWP_HELD, false) && ok;
         }
     }
     DBG_UNLOCK(rt);
@@ -932,6 +1000,8 @@ UpdateWatchpointShape(JSContext *cx, JSWatchPoint *wp, const Shape *newShape)
 const Shape *
 js_SlowPathUpdateWatchpointsForShape(JSContext *cx, JSObject *obj, const Shape *newShape)
 {
+    assertSameCompartment(cx, obj);
+
     /*
      * The watchpoint code uses the normal property-modification functions to install its
      * own watchpoint-aware shapes. Those functions report those changes back to the
@@ -978,6 +1048,8 @@ JS_PUBLIC_API(JSBool)
 JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
                  JSWatchPointHandler handler, JSObject *closure)
 {
+    assertSameCompartment(cx, obj);
+
     JSObject *origobj;
     Value v;
     uintN attrs;
@@ -986,14 +1058,14 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
     origobj = obj;
     OBJ_TO_INNER_OBJECT(cx, obj);
     if (!obj)
-        return JS_FALSE;
+        return false;
 
     AutoValueRooter idroot(cx);
     if (JSID_IS_INT(id)) {
         propid = id;
     } else {
         if (!js_ValueToStringId(cx, IdToValue(id), &propid))
-            return JS_FALSE;
+            return false;
         propid = js_CheckForStringIndex(propid);
         idroot.set(IdToValue(propid));
     }
@@ -1003,18 +1075,18 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
      * again to make sure that we're allowed to set a watch point.
      */
     if (origobj != obj && !CheckAccess(cx, obj, propid, JSACC_WATCH, &v, &attrs))
-        return JS_FALSE;
+        return false;
 
     if (!obj->isNative()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH,
                              obj->getClass()->name);
-        return JS_FALSE;
+        return false;
     }
 
     JSObject *pobj;
     JSProperty *prop;
     if (!js_LookupProperty(cx, obj, propid, &pobj, &prop))
-        return JS_FALSE;
+        return false;
     const Shape *shape = (Shape *) prop;
     JSRuntime *rt = cx->runtime;
     if (!shape) {
@@ -1024,7 +1096,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
             /* Make a new property in obj so we can watch for the first set. */
             if (!js_DefineNativeProperty(cx, obj, propid, UndefinedValue(), NULL, NULL,
                                          JSPROP_ENUMERATE, 0, 0, &prop)) {
-                return JS_FALSE;
+                return false;
             }
             shape = (Shape *) prop;
         }
@@ -1037,6 +1109,13 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         intN shortid;
 
         if (pobj->isNative()) {
+            if (shape->isMethod()) {
+                Value method = ObjectValue(shape->methodObject());
+                shape = pobj->methodReadBarrier(cx, *shape, &method);
+                if (!shape)
+                    return false;
+            }
+
             valroot.set(pobj->containsSlot(shape->slot)
                         ? pobj->nativeGetSlot(shape->slot)
                         : UndefinedValue());
@@ -1048,7 +1127,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         } else {
             if (!pobj->getProperty(cx, propid, valroot.addr()) ||
                 !pobj->getAttributes(cx, propid, &attrs)) {
-                return JS_FALSE;
+                return false;
             }
             getter = NULL;
             setter = NULL;
@@ -1060,7 +1139,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         if (!js_DefineNativeProperty(cx, obj, propid, valroot.value(),
                                      getter, setter, attrs, flags,
                                      shortid, &prop)) {
-            return JS_FALSE;
+            return false;
         }
         shape = (Shape *) prop;
     }
@@ -1075,7 +1154,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         DBG_UNLOCK(rt);
         wp = (JSWatchPoint *) cx->malloc(sizeof *wp);
         if (!wp)
-            return JS_FALSE;
+            return false;
         wp->handler = NULL;
         wp->closure = NULL;
         wp->object = obj;
@@ -1087,8 +1166,8 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
             /* Self-link so DropWatchPointAndUnlock can JS_REMOVE_LINK it. */
             JS_INIT_CLIST(&wp->links);
             DBG_LOCK(rt);
-            DropWatchPointAndUnlock(cx, wp, JSWP_LIVE);
-            return JS_FALSE;
+            DropWatchPointAndUnlock(cx, wp, JSWP_LIVE, false);
+            return false;
         }
 
         /*
@@ -1111,13 +1190,15 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
     wp->handler = handler;
     wp->closure = reinterpret_cast<JSObject*>(closure);
     DBG_UNLOCK(rt);
-    return JS_TRUE;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsid id,
                    JSWatchPointHandler *handlerp, JSObject **closurep)
 {
+    assertSameCompartment(cx, obj);
+
     JSRuntime *rt;
     JSWatchPoint *wp;
 
@@ -1131,7 +1212,7 @@ JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsid id,
                 *handlerp = wp->handler;
             if (closurep)
                 *closurep = wp->closure;
-            return DropWatchPointAndUnlock(cx, wp, JSWP_LIVE);
+            return DropWatchPointAndUnlock(cx, wp, JSWP_LIVE, false);
         }
     }
     DBG_UNLOCK(rt);
@@ -1145,6 +1226,8 @@ JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsid id,
 JS_PUBLIC_API(JSBool)
 JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj)
 {
+    assertSameCompartment(cx, obj);
+
     JSRuntime *rt;
     JSWatchPoint *wp, *next;
     uint32 sample;
@@ -1157,7 +1240,7 @@ JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj)
         next = (JSWatchPoint *)wp->links.next;
         if (wp->object == obj) {
             sample = rt->debuggerMutations;
-            if (!DropWatchPointAndUnlock(cx, wp, JSWP_LIVE))
+            if (!DropWatchPointAndUnlock(cx, wp, JSWP_LIVE, false))
                 return JS_FALSE;
             DBG_LOCK(rt);
             if (rt->debuggerMutations != sample + 1)
@@ -1180,9 +1263,11 @@ JS_ClearAllWatchPoints(JSContext *cx)
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
          &wp->links != &rt->watchPointList;
          wp = next) {
+        SwitchToCompartment sc(cx, wp->object);
+
         next = (JSWatchPoint *)wp->links.next;
         sample = rt->debuggerMutations;
-        if (!DropWatchPointAndUnlock(cx, wp, JSWP_LIVE))
+        if (!DropWatchPointAndUnlock(cx, wp, JSWP_LIVE, false))
             return JS_FALSE;
         DBG_LOCK(rt);
         if (rt->debuggerMutations != sample + 1)
@@ -1240,7 +1325,7 @@ JS_LocalNameToAtom(jsuword w)
 extern JS_PUBLIC_API(JSString *)
 JS_AtomKey(JSAtom *atom)
 {
-    return ATOM_TO_STRING(atom);
+    return atom;
 }
 
 extern JS_PUBLIC_API(void)
@@ -1409,14 +1494,13 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
     if (!ac.enter())
         return NULL;
 
-    /* Force creation of argument object if not yet created */
-    (void) js_GetArgsObject(cx, fp);
-
     /*
      * XXX ill-defined: null return here means error was reported, unlike a
      *     null returned above or in the #else
      */
-    return js_GetCallObject(cx, fp);
+    if (!fp->hasCallObj() && fp->isNonEvalFunctionFrame())
+        return CreateFunCallObject(cx, fp);
+    return &fp->callObj();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1824,7 +1908,7 @@ GetAtomTotalSize(JSContext *cx, JSAtom *atom)
 
     nbytes = sizeof(JSAtom *) + sizeof(JSDHashEntryStub);
     nbytes += sizeof(JSString);
-    nbytes += (ATOM_TO_STRING(atom)->flatLength() + 1) * sizeof(jschar);
+    nbytes += (atom->length() + 1) * sizeof(jschar);
     return nbytes;
 }
 
@@ -2054,6 +2138,7 @@ static JSFunctionSpec profiling_functions[] = {
 JS_PUBLIC_API(JSBool)
 JS_DefineProfilingFunctions(JSContext *cx, JSObject *obj)
 {
+    assertSameCompartment(cx, obj);
 #ifdef MOZ_PROFILING
     return JS_DefineFunctions(cx, obj, profiling_functions);
 #else
@@ -2238,7 +2323,6 @@ js_ResumeVtune(JSContext *cx, uintN argc, jsval *vp)
 #else
 #include <sys/time.h>
 #endif
-#include "jstracer.h"
 
 #define ETHOGRAM_BUF_SIZE 65536
 
@@ -2671,3 +2755,20 @@ js_ShutdownEthogram(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #endif /* MOZ_TRACEVIS */
+
+#ifdef MOZ_TRACE_JSCALLS
+
+JS_PUBLIC_API(void)
+JS_SetFunctionCallback(JSContext *cx, JSFunctionCallback fcb)
+{
+    cx->functionCallback = fcb;
+}
+
+JS_PUBLIC_API(JSFunctionCallback)
+JS_GetFunctionCallback(JSContext *cx)
+{
+    return cx->functionCallback;
+}
+
+#endif /* MOZ_TRACE_JSCALLS */
+

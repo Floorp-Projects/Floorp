@@ -1473,7 +1473,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
         stateMask ^= IntrinsicState();
         if (doc && !stateMask.IsEmpty()) {
             MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, aNotify);
-            doc->ContentStatesChanged(this, nsnull, stateMask);
+            doc->ContentStateChanged(this, stateMask);
         }
         nsNodeUtils::AttributeChanged(this, aNameSpaceID, aName,
                                       nsIDOMMutationEvent::REMOVAL);

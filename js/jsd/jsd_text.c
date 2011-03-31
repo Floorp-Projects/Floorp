@@ -111,13 +111,13 @@ _appendText(JSDContext* jsdc, JSDSourceText* jsdsrc,
 }
 
 static JSDSourceText*
-_newSource(JSDContext* jsdc, const char* url)
+_newSource(JSDContext* jsdc, char* url)
 {
     JSDSourceText* jsdsrc = (JSDSourceText*)calloc(1,sizeof(JSDSourceText));
     if( ! jsdsrc )
         return NULL;
     
-    jsdsrc->url        = (char*) url; /* already a copy */
+    jsdsrc->url        = url;
     jsdsrc->status     = JSD_SOURCE_INITED;
     jsdsrc->dirty      = JS_TRUE;
     jsdsrc->alterCount = jsdc->sourceAlterCount++ ;
@@ -142,7 +142,7 @@ _removeSource(JSDContext* jsdc, JSDSourceText* jsdsrc)
 }
 
 static JSDSourceText*
-_addSource(JSDContext* jsdc, const char* url)
+_addSource(JSDContext* jsdc, char* url)
 {
     JSDSourceText* jsdsrc = _newSource(jsdc, url);
     if( ! jsdsrc )
@@ -213,7 +213,7 @@ strncasecomp (const char* one, const char * two, int n)
 static char file_url_prefix[]    = "file:";
 #define FILE_URL_PREFIX_LEN     (sizeof file_url_prefix - 1)
 
-const char*
+char*
 jsd_BuildNormalizedURL( const char* url_string )
 {
     char *new_url_string;
@@ -378,7 +378,7 @@ JSDSourceText*
 jsd_NewSourceText(JSDContext* jsdc, const char* url)
 {
     JSDSourceText* jsdsrc;
-    const char* new_url_string;
+    char* new_url_string;
 
     JSD_LOCK_SOURCE_TEXT(jsdc);
 
@@ -396,9 +396,7 @@ jsd_NewSourceText(JSDContext* jsdc, const char* url)
     {
         if( jsdsrc->doingEval )
         {
-#ifdef LIVEWIRE
-            free((char*)new_url_string);
-#endif
+            free(new_url_string);
             JSD_UNLOCK_SOURCE_TEXT(jsdc);
             return NULL;
         }

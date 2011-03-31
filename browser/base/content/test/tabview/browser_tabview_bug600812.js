@@ -15,8 +15,8 @@ function test() {
   }
 
   let testVeryQuickDragAndDrop = function () {
-    let sourceGroup = cw.GroupItems.groupItems[0];
-    let targetGroup = createGroupItem();
+    let sourceGroup = createGroupItem();
+    let targetGroup = cw.GroupItems.groupItems[0];
 
     sourceGroup.pushAway(true);
     targetGroup.pushAway(true);
