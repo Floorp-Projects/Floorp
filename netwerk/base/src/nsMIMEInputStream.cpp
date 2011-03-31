@@ -41,8 +41,10 @@
  * automatic creation of the content-length header.
  */
 
+#ifdef MOZ_IPC
 #include "IPC/IPCMessageUtils.h"
 #include "mozilla/net/NeckoMessageUtils.h"
+#endif
 
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -329,6 +331,7 @@ nsMIMEInputStreamConstructor(nsISupports *outer, REFNSIID iid, void **result)
 PRBool
 nsMIMEInputStream::Read(const IPC::Message *aMsg, void **aIter)
 {
+#ifdef MOZ_IPC
     using IPC::ReadParam;
 
     if (!ReadParam(aMsg, aIter, &mHeaders) ||
@@ -358,11 +361,15 @@ nsMIMEInputStream::Read(const IPC::Message *aMsg, void **aIter)
         return PR_FALSE;
 
     return PR_TRUE;
+#else
+    return PR_FALSE;
+#endif
 }
 
 void
 nsMIMEInputStream::Write(IPC::Message *aMsg)
 {
+#ifdef MOZ_IPC
     using IPC::WriteParam;
 
     WriteParam(aMsg, mHeaders);
@@ -373,4 +380,5 @@ nsMIMEInputStream::Write(IPC::Message *aMsg)
     WriteParam(aMsg, inputStream);
 
     WriteParam(aMsg, mAddContentLength);
+#endif
 }

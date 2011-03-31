@@ -44,7 +44,9 @@
  * handling of loads in it, recursion-checking).
  */
 
-#include "base/basictypes.h"
+#ifdef MOZ_IPC
+#  include "base/basictypes.h"
+#endif
 
 #include "prenv.h"
 
@@ -110,12 +112,15 @@
 
 #include "Layers.h"
 
+#ifdef MOZ_IPC
 #include "ContentParent.h"
 #include "TabParent.h"
 #include "mozilla/layout/RenderFrameParent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
+#endif
+
 using namespace mozilla::layers;
 typedef FrameMetrics::ViewID ViewID;
 
@@ -319,11 +324,13 @@ nsFrameLoader::nsFrameLoader(nsIContent *aOwner, PRBool aNetworkCreated)
   , mInShow(PR_FALSE)
   , mHideCalled(PR_FALSE)
   , mNetworkCreated(aNetworkCreated)
+#ifdef MOZ_IPC
   , mDelayRemoteDialogs(PR_FALSE)
   , mRemoteBrowserShown(PR_FALSE)
   , mRemoteFrame(false)
   , mCurrentRemoteFrame(nsnull)
   , mRemoteBrowser(nsnull)
+#endif
   , mRenderMode(RENDER_MODE_DEFAULT)
 {
 }
@@ -441,6 +448,7 @@ nsFrameLoader::ReallyStartLoadingInternal()
     return rv;
   }
 
+#ifdef MOZ_IPC
   if (mRemoteFrame) {
     if (!mRemoteBrowser) {
       TryRemoteBrowser();
@@ -455,6 +463,7 @@ nsFrameLoader::ReallyStartLoadingInternal()
     mRemoteBrowser->LoadURL(mURIToLoad);
     return NS_OK;
   }
+#endif
 
   NS_ASSERTION(mDocShell,
                "MaybeCreateDocShell succeeded with a null mDocShell");
@@ -525,9 +534,11 @@ nsFrameLoader::CheckURILoad(nsIURI* aURI)
   if (NS_FAILED(rv)) {
     return rv;
   }
+#ifdef MOZ_IPC
   if (mRemoteFrame) {
     return NS_OK;
   }
+#endif
   return CheckForRecursiveLoad(aURI);
 }
 
@@ -543,10 +554,12 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
     nsresult rv = MaybeCreateDocShell();
     if (NS_FAILED(rv))
       return rv;
+#ifdef MOZ_IPC
     if (mRemoteFrame) {
       NS_WARNING("No docshells for remote frames!");
       return NS_ERROR_NOT_AVAILABLE;
     }
+#endif
     NS_ASSERTION(mDocShell,
                  "MaybeCreateDocShell succeeded, but null mDocShell");
   }
@@ -763,7 +776,10 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
     return PR_FALSE;
   }
 
-  if (!mRemoteFrame) {
+#ifdef MOZ_IPC
+  if (!mRemoteFrame)
+#endif
+  {
     if (!mDocShell)
       return PR_FALSE;
     nsCOMPtr<nsIPresShell> presShell;
@@ -787,9 +803,11 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
   if (!view)
     return PR_FALSE;
 
+#ifdef MOZ_IPC
   if (mRemoteFrame) {
     return ShowRemoteFrame(GetSubDocumentSize(frame));
   }
+#endif
 
   nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mDocShell);
   NS_ASSERTION(baseWindow, "Found a nsIDocShell that isn't a nsIBaseWindow.");
@@ -862,6 +880,7 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
   return PR_TRUE;
 }
 
+#ifdef MOZ_IPC
 bool
 nsFrameLoader::ShowRemoteFrame(const nsIntSize& size)
 {
@@ -890,6 +909,7 @@ nsFrameLoader::ShowRemoteFrame(const nsIntSize& size)
 
   return true;
 }
+#endif
 
 void
 nsFrameLoader::Hide()
@@ -1214,11 +1234,13 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
 void
 nsFrameLoader::DestroyChild()
 {
+#ifdef MOZ_IPC
   if (mRemoteBrowser) {
     mRemoteBrowser->SetOwnerElement(nsnull);
     mRemoteBrowser->Destroy();
     mRemoteBrowser = nsnull;
   }
+#endif
 }
 
 NS_IMETHODIMP
@@ -1305,11 +1327,14 @@ void
 nsFrameLoader::SetOwnerContent(nsIContent* aContent)
 {
   mOwnerContent = aContent;
+#ifdef MOZ_IPC
   if (RenderFrameParent* rfp = GetCurrentRemoteFrame()) {
     rfp->OwnerContentChanged(aContent);
   }
+#endif
 }
 
+#ifdef MOZ_IPC
 bool
 nsFrameLoader::ShouldUseRemoteProcess()
 {
@@ -1345,6 +1370,7 @@ nsFrameLoader::ShouldUseRemoteProcess()
                                                      PR_FALSE);
   return (bool) remoteEnabled;
 }
+#endif
 
 nsresult
 nsFrameLoader::MaybeCreateDocShell()
@@ -1352,15 +1378,19 @@ nsFrameLoader::MaybeCreateDocShell()
   if (mDocShell) {
     return NS_OK;
   }
+#ifdef MOZ_IPC
   if (mRemoteFrame) {
     return NS_OK;
   }
+#endif
   NS_ENSURE_STATE(!mDestroyCalled);
 
+#ifdef MOZ_IPC
   if (ShouldUseRemoteProcess()) {
     mRemoteFrame = true;
     return NS_OK;
   }
+#endif
 
   // Get our parent docshell off the document of mOwnerContent
   // XXXbz this is such a total hack.... We really need to have a
@@ -1509,8 +1539,10 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
   if (NS_FAILED(rv)) {
     return rv;
   }
+#ifdef MOZ_IPC
   NS_ASSERTION(!mRemoteFrame,
                "Shouldn't call CheckForRecursiveLoad on remote frames.");
+#endif
   if (!mDocShell) {
     return NS_ERROR_FAILURE;
   }
@@ -1610,6 +1642,7 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
 NS_IMETHODIMP
 nsFrameLoader::UpdatePositionAndSize(nsIFrame *aIFrame)
 {
+#ifdef MOZ_IPC
   if (mRemoteFrame) {
     if (mRemoteBrowser) {
       nsIntSize size = GetSubDocumentSize(aIFrame);
@@ -1617,6 +1650,7 @@ nsFrameLoader::UpdatePositionAndSize(nsIFrame *aIFrame)
     }
     return NS_OK;
   }
+#endif
   return UpdateBaseWindowPositionAndSize(aIFrame);
 }
 
@@ -1684,6 +1718,7 @@ nsFrameLoader::GetSubDocumentSize(const nsIFrame *aIFrame)
                    presContext->AppUnitsToDevPixels(docSizeAppUnits.height));
 }
 
+#ifdef MOZ_IPC
 bool
 nsFrameLoader::TryRemoteBrowser()
 {
@@ -1763,19 +1798,24 @@ nsFrameLoader::TryRemoteBrowser()
   }
   return true;
 }
+#endif
 
+#ifdef MOZ_IPC
 mozilla::dom::PBrowserParent*
 nsFrameLoader::GetRemoteBrowser()
 {
   return mRemoteBrowser;
 }
+#endif
 
 NS_IMETHODIMP
 nsFrameLoader::ActivateRemoteFrame() {
+#ifdef MOZ_IPC
   if (mRemoteBrowser) {
     mRemoteBrowser->Activate();
     return NS_OK;
   }
+#endif
   return NS_ERROR_UNEXPECTED;
 }
 
@@ -1788,12 +1828,14 @@ nsFrameLoader::SendCrossProcessMouseEvent(const nsAString& aType,
                                           PRInt32 aModifiers,
                                           PRBool aIgnoreRootScrollFrame)
 {
+#ifdef MOZ_IPC
   if (mRemoteBrowser) {
     mRemoteBrowser->SendMouseEvent(aType, aX, aY, aButton,
                                    aClickCount, aModifiers,
                                    aIgnoreRootScrollFrame);
     return NS_OK;
   }
+#endif
   return NS_ERROR_FAILURE;
 }
 
@@ -1801,10 +1843,12 @@ NS_IMETHODIMP
 nsFrameLoader::ActivateFrameEvent(const nsAString& aType,
                                   PRBool aCapture)
 {
+#ifdef MOZ_IPC
   if (mRemoteBrowser) {
     return mRemoteBrowser->SendActivateFrameEvent(nsString(aType), aCapture) ?
       NS_OK : NS_ERROR_NOT_AVAILABLE;
   }
+#endif
   return NS_ERROR_FAILURE;
 }
 
@@ -1815,24 +1859,31 @@ nsFrameLoader::SendCrossProcessKeyEvent(const nsAString& aType,
                                         PRInt32 aModifiers,
                                         PRBool aPreventDefault)
 {
+#ifdef MOZ_IPC
   if (mRemoteBrowser) {
     mRemoteBrowser->SendKeyEvent(aType, aKeyCode, aCharCode, aModifiers,
                                  aPreventDefault);
     return NS_OK;
   }
+#endif
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsFrameLoader::GetDelayRemoteDialogs(PRBool* aRetVal)
 {
+#ifdef MOZ_IPC
   *aRetVal = mDelayRemoteDialogs;
+#else
+  *aRetVal = PR_FALSE;
+#endif
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFrameLoader::SetDelayRemoteDialogs(PRBool aDelay)
 {
+#ifdef MOZ_IPC
   if (mRemoteBrowser && mDelayRemoteDialogs && !aDelay) {
     nsRefPtr<nsIRunnable> ev =
       NS_NewRunnableMethod(mRemoteBrowser,
@@ -1840,6 +1891,7 @@ nsFrameLoader::SetDelayRemoteDialogs(PRBool aDelay)
     NS_DispatchToCurrentThread(ev);
   }
   mDelayRemoteDialogs = aDelay;
+#endif
   return NS_OK;
 }
 
@@ -1870,11 +1922,13 @@ nsFrameLoader::CreateStaticClone(nsIFrameLoader* aDest)
 
 bool LoadScript(void* aCallbackData, const nsAString& aURL)
 {
+#ifdef MOZ_IPC
   mozilla::dom::PBrowserParent* tabParent =
     static_cast<nsFrameLoader*>(aCallbackData)->GetRemoteBrowser();
   if (tabParent) {
     return tabParent->SendLoadRemoteScript(nsString(aURL));
   }
+#endif
   nsFrameLoader* fl = static_cast<nsFrameLoader*>(aCallbackData);
   nsRefPtr<nsInProcessTabChildGlobal> tabChild =
     static_cast<nsInProcessTabChildGlobal*>(fl->GetTabChildGlobalAsEventTarget());
@@ -1911,11 +1965,13 @@ bool SendAsyncMessageToChild(void* aCallbackData,
                              const nsAString& aMessage,
                              const nsAString& aJSON)
 {
+#ifdef MOZ_IPC
   mozilla::dom::PBrowserParent* tabParent =
     static_cast<nsFrameLoader*>(aCallbackData)->GetRemoteBrowser();
   if (tabParent) {
     return tabParent->SendAsyncMessage(nsString(aMessage), nsString(aJSON));
   }
+#endif
   nsRefPtr<nsIRunnable> ev =
     new nsAsyncMessageToChild(static_cast<nsFrameLoader*>(aCallbackData),
                               aMessage, aJSON);
@@ -1940,6 +1996,7 @@ nsFrameLoader::GetContentViewsIn(float aXPx, float aYPx,
                                  PRUint32* aLength,
                                  nsIContentView*** aResult)
 {
+#ifdef MOZ_IPC
   nscoord x = nsPresContext::CSSPixelsToAppUnits(aXPx - aLeftSize);
   nscoord y = nsPresContext::CSSPixelsToAppUnits(aYPx - aTopSize);
   nscoord w = nsPresContext::CSSPixelsToAppUnits(aLeftSize + aRightSize) + 1;
@@ -1967,6 +2024,10 @@ nsFrameLoader::GetContentViewsIn(float aXPx, float aYPx,
 
   *aResult = result;
   *aLength = ids.Length();
+#else
+  *aResult = nsnull;
+  *aLength = 0;
+#endif
 
   return NS_OK;
 }
@@ -1974,6 +2035,7 @@ nsFrameLoader::GetContentViewsIn(float aXPx, float aYPx,
 NS_IMETHODIMP
 nsFrameLoader::GetRootContentView(nsIContentView** aContentView)
 {
+#ifdef MOZ_IPC
   RenderFrameParent* rfp = GetCurrentRemoteFrame();
   if (!rfp) {
     *aContentView = nsnull;
@@ -1985,6 +2047,10 @@ nsFrameLoader::GetRootContentView(nsIContentView** aContentView)
   nsRefPtr<nsIContentView>(view).forget(aContentView);
 
   return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+
 }
 
 nsresult
@@ -1997,14 +2063,20 @@ nsFrameLoader::EnsureMessageManager()
     return rv;
   }
 
-  if (!mIsTopLevelContent && !mRemoteFrame) {
+  if (!mIsTopLevelContent
+#ifdef MOZ_IPC
+      && !mRemoteFrame
+#endif
+      ) {
     return NS_OK;
   }
 
   if (mMessageManager) {
+#ifdef MOZ_IPC
     if (ShouldUseRemoteProcess()) {
       mMessageManager->SetCallbackData(mRemoteBrowserShown ? this : nsnull);
     }
+#endif
     return NS_OK;
   }
 
@@ -2020,6 +2092,7 @@ nsFrameLoader::EnsureMessageManager()
   nsCOMPtr<nsIChromeFrameMessageManager> parentManager;
   chromeWindow->GetMessageManager(getter_AddRefs(parentManager));
 
+#ifdef MOZ_IPC
   if (ShouldUseRemoteProcess()) {
     mMessageManager = new nsFrameMessageManager(PR_TRUE,
                                                 nsnull,
@@ -2030,6 +2103,7 @@ nsFrameLoader::EnsureMessageManager()
                                                 cx);
     NS_ENSURE_TRUE(mMessageManager, NS_ERROR_OUT_OF_MEMORY);
   } else
+#endif
   {
 
     mMessageManager = new nsFrameMessageManager(PR_TRUE,

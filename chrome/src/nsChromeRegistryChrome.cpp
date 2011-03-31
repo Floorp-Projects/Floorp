@@ -36,9 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
 #include "mozilla/dom/PContentParent.h"
 #include "RegistryMessageUtils.h"
 #include "nsResProtocolHandler.h"
+#endif
 
 #include "nsChromeRegistryChrome.h"
 
@@ -441,6 +443,7 @@ void nsChromeRegistryChrome::UpdateSelectedLocale()
   }
 }
 
+#ifdef MOZ_IPC
 static void
 SerializeURI(nsIURI* aURI,
              SerializedURI& aSerializedURI)
@@ -538,6 +541,7 @@ nsChromeRegistryChrome::CollectPackages(PLDHashTable *table,
   args->packages.AppendElement(chromePackage);
   return (PLDHashOperator)PL_DHASH_NEXT;
 }
+#endif
 
 static PRBool
 CanLoadResource(nsIURI* aResourceURI)
