@@ -42,6 +42,7 @@
 #include "nsWindowWatcher.h"
 #include "nsAutoWindowStateHelper.h"
 
+#include "nsAutoLock.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
 #include "nsWWJSUtils.h"
@@ -99,8 +100,6 @@
 #ifdef USEWEAKREFS
 #include "nsIWeakReference.h"
 #endif
-
-using namespace mozilla;
 
 static const char *sJSStackContractID="@mozilla.org/js/xpc/ContextStack;1";
 
@@ -339,7 +338,7 @@ NS_IMPL_QUERY_INTERFACE3(nsWindowWatcher,
 nsWindowWatcher::nsWindowWatcher() :
         mEnumeratorList(),
         mOldestWindow(0),
-        mListLock("nsWindowWatcher.mListLock")
+        mListLock(0)
 {
 }
 
@@ -348,11 +347,17 @@ nsWindowWatcher::~nsWindowWatcher()
   // delete data
   while (mOldestWindow)
     RemoveWindow(mOldestWindow);
+
+  if (mListLock)
+    nsAutoLock::DestroyLock(mListLock);
 }
 
 nsresult
 nsWindowWatcher::Init()
 {
+  mListLock = nsAutoLock::NewLock("nsWindowWatcher::mListLock");
+  if (!mListLock)
+    return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
 
@@ -1068,7 +1073,7 @@ nsWindowWatcher::GetWindowEnumerator(nsISimpleEnumerator** _retval)
   if (!_retval)
     return NS_ERROR_INVALID_ARG;
 
-  MutexAutoLock lock(mListLock);
+  nsAutoLock lock(mListLock);
   nsWatcherWindowEnumerator *enumerator = new nsWatcherWindowEnumerator(this);
   if (enumerator)
     return CallQueryInterface(enumerator, _retval);
@@ -1164,7 +1169,7 @@ nsWindowWatcher::AddWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome *aChrome)
 
   {
     nsWatcherWindowEntry *info;
-    MutexAutoLock lock(mListLock);
+    nsAutoLock lock(mListLock);
 
     // if we already have an entry for this window, adjust
     // its chrome mapping and return
@@ -1264,7 +1269,7 @@ nsresult nsWindowWatcher::RemoveWindow(nsWatcherWindowEntry *inInfo)
 
   {
     // notify the enumerators
-    MutexAutoLock lock(mListLock);
+    nsAutoLock lock(mListLock);
     for (ctr = 0; ctr < count; ++ctr) 
       mEnumeratorList[ctr]->WindowRemoved(inInfo);
 
@@ -1300,7 +1305,7 @@ nsWindowWatcher::GetChromeForWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome *
     return NS_ERROR_INVALID_ARG;
   *_retval = 0;
 
-  MutexAutoLock lock(mListLock);
+  nsAutoLock lock(mListLock);
   nsWatcherWindowEntry *info = FindWindowEntry(aWindow);
   if (info) {
     if (info->mChromeWeak != nsnull) {

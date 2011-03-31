@@ -49,8 +49,6 @@
 #include "mozilla/FunctionTimer.h"
 #include "prsystem.h"
 
-using namespace mozilla;
-
 /***************************************************************************/
 
 const char* XPCJSRuntime::mStrings[] = {
@@ -341,10 +339,10 @@ void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
     // bad locking problems with the thread iteration otherwise.
     if(!self->GetXPConnect()->IsShuttingDown())
     {
-        Mutex* threadLock = XPCPerThreadData::GetLock();
+        PRLock* threadLock = XPCPerThreadData::GetLock();
         if(threadLock)
         { // scoped lock
-            MutexAutoLock lock(*threadLock);
+            nsAutoLock lock(threadLock);
 
             XPCPerThreadData* iterp = nsnull;
             XPCPerThreadData* thread;
@@ -759,10 +757,10 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
             // bad locking problems with the thread iteration otherwise.
             if(!self->GetXPConnect()->IsShuttingDown())
             {
-                Mutex* threadLock = XPCPerThreadData::GetLock();
+                PRLock* threadLock = XPCPerThreadData::GetLock();
                 if(threadLock)
                 { // scoped lock
-                    MutexAutoLock lock(*threadLock);
+                    nsAutoLock lock(threadLock);
 
                     XPCPerThreadData* iterp = nsnull;
                     XPCPerThreadData* thread;
@@ -853,13 +851,13 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
             // bad locking problems with the thread iteration otherwise.
             if(!self->GetXPConnect()->IsShuttingDown())
             {
-                Mutex* threadLock = XPCPerThreadData::GetLock();
+                PRLock* threadLock = XPCPerThreadData::GetLock();
                 if(threadLock)
                 {
                     // Do the marking...
                     
                     { // scoped lock
-                        MutexAutoLock lock(*threadLock);
+                        nsAutoLock lock(threadLock);
 
                         XPCPerThreadData* iterp = nsnull;
                         XPCPerThreadData* thread;

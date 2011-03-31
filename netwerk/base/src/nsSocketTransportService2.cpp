@@ -43,8 +43,10 @@
 #include "nsSocketTransportService2.h"
 #include "nsSocketTransport2.h"
 #include "nsReadableUtils.h"
+#include "nsAutoLock.h"
 #include "nsNetError.h"
 #include "prnetdb.h"
+#include "prlock.h"
 #include "prerror.h"
 #include "plstr.h"
 #include "nsIPrefService.h"
@@ -53,8 +55,6 @@
 #include "nsIOService.h"
 
 #include "mozilla/FunctionTimer.h"
-
-using namespace mozilla;
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gSocketTransportLog = nsnull;
@@ -72,7 +72,7 @@ nsSocketTransportService::nsSocketTransportService()
     : mThread(nsnull)
     , mThreadEvent(nsnull)
     , mAutodialEnabled(PR_FALSE)
-    , mLock("nsSocketTransportService::mLock")
+    , mLock(nsAutoLock::NewLock("nsSocketTransportService::mLock"))
     , mInitialized(PR_FALSE)
     , mShuttingDown(PR_FALSE)
     , mActiveCount(0)
@@ -93,6 +93,9 @@ nsSocketTransportService::~nsSocketTransportService()
 {
     NS_ASSERTION(NS_IsMainThread(), "wrong thread");
     NS_ASSERTION(!mInitialized, "not shutdown properly");
+
+    if (mLock)
+        nsAutoLock::DestroyLock(mLock);
     
     if (mThreadEvent)
         PR_DestroyPollableEvent(mThreadEvent);
@@ -106,7 +109,7 @@ nsSocketTransportService::~nsSocketTransportService()
 already_AddRefed<nsIThread>
 nsSocketTransportService::GetThreadSafely()
 {
-    MutexAutoLock lock(mLock);
+    nsAutoLock lock(mLock);
     nsIThread* result = mThread;
     NS_IF_ADDREF(result);
     return result;
@@ -380,6 +383,8 @@ nsSocketTransportService::Init()
 {
     NS_TIME_FUNCTION;
 
+    NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
+
     if (!NS_IsMainThread()) {
         NS_ERROR("wrong thread");
         return NS_ERROR_UNEXPECTED;
@@ -420,7 +425,7 @@ nsSocketTransportService::Init()
     if (NS_FAILED(rv)) return rv;
     
     {
-        MutexAutoLock lock(mLock);
+        nsAutoLock lock(mLock);
         // Install our mThread, protecting against concurrent readers
         thread.swap(mThread);
     }
@@ -451,7 +456,7 @@ nsSocketTransportService::Shutdown()
         return NS_ERROR_UNEXPECTED;
 
     {
-        MutexAutoLock lock(mLock);
+        nsAutoLock lock(mLock);
 
         // signal the socket thread to shutdown
         mShuttingDown = PR_TRUE;
@@ -464,7 +469,7 @@ nsSocketTransportService::Shutdown()
     // join with thread
     mThread->Shutdown();
     {
-        MutexAutoLock lock(mLock);
+        nsAutoLock lock(mLock);
         // Drop our reference to mThread and make sure that any concurrent
         // readers are excluded
         mThread = nsnull;
@@ -523,7 +528,7 @@ nsSocketTransportService::SetAutodialEnabled(PRBool value)
 NS_IMETHODIMP
 nsSocketTransportService::OnDispatchedEvent(nsIThreadInternal *thread)
 {
-    MutexAutoLock lock(mLock);
+    nsAutoLock lock(mLock);
     if (mThreadEvent)
         PR_SetPollableEvent(mThreadEvent);
     return NS_OK;
@@ -580,7 +585,7 @@ nsSocketTransportService::Run()
 
         // now that our event queue is empty, check to see if we should exit
         {
-            MutexAutoLock lock(mLock);
+            nsAutoLock lock(mLock);
             if (mShuttingDown)
                 break;
         }
@@ -715,7 +720,7 @@ nsSocketTransportService::DoPollIteration(PRBool wait)
                 // new pollable event.  If that fails, we fall back
                 // on "busy wait".
                 {
-                    MutexAutoLock lock(mLock);
+                    nsAutoLock lock(mLock);
                     PR_DestroyPollableEvent(mThreadEvent);
                     mThreadEvent = PR_NewPollableEvent();
                 }

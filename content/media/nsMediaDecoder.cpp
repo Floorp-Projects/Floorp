@@ -47,6 +47,7 @@
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsNetUtil.h"
 #include "nsHTMLMediaElement.h"
+#include "nsAutoLock.h"
 #include "nsIRenderingContext.h"
 #include "gfxContext.h"
 #include "nsPresContext.h"
@@ -55,8 +56,6 @@
 #ifdef MOZ_SVG
 #include "nsSVGEffects.h"
 #endif
-
-using namespace mozilla;
 
 // Number of milliseconds between progress events as defined by spec
 #define PROGRESS_MS 350
@@ -76,7 +75,7 @@ nsMediaDecoder::nsMediaDecoder() :
   mElement(0),
   mRGBWidth(-1),
   mRGBHeight(-1),
-  mVideoUpdateLock("nsMediaDecoder.mVideoUpdateLock"),
+  mVideoUpdateLock(nsnull),
   mPixelAspectRatio(1.0),
   mFrameBufferLength(0),
   mPinnedForSeek(PR_FALSE),
@@ -89,13 +88,19 @@ nsMediaDecoder::nsMediaDecoder() :
 
 nsMediaDecoder::~nsMediaDecoder()
 {
+  if (mVideoUpdateLock) {
+    nsAutoLock::DestroyLock(mVideoUpdateLock);
+    mVideoUpdateLock = nsnull;
+  }
   MOZ_COUNT_DTOR(nsMediaDecoder);
 }
 
 PRBool nsMediaDecoder::Init(nsHTMLMediaElement* aElement)
 {
   mElement = aElement;
-  return PR_TRUE;
+  mVideoUpdateLock = nsAutoLock::NewLock("nsMediaDecoder::mVideoUpdateLock");
+
+  return mVideoUpdateLock != nsnull;
 }
 
 void nsMediaDecoder::Shutdown()
@@ -137,7 +142,7 @@ void nsMediaDecoder::Invalidate()
   PRBool invalidateFrame = PR_FALSE;
 
   {
-    MutexAutoLock lock(mVideoUpdateLock);
+    nsAutoLock lock(mVideoUpdateLock);
 
     // Get mImageContainerSizeChanged while holding the lock.
     invalidateFrame = mImageContainerSizeChanged;
@@ -253,7 +258,7 @@ void nsMediaDecoder::SetVideoData(const gfxIntSize& aSize,
                                   Image* aImage,
                                   TimeStamp aTarget)
 {
-  MutexAutoLock lock(mVideoUpdateLock);
+  nsAutoLock lock(mVideoUpdateLock);
 
   if (mRGBWidth != aSize.width || mRGBHeight != aSize.height ||
       mPixelAspectRatio != aPixelAspectRatio) {
@@ -282,7 +287,7 @@ void nsMediaDecoder::SetVideoData(const gfxIntSize& aSize,
 
 double nsMediaDecoder::GetFrameDelay()
 {
-  MutexAutoLock lock(mVideoUpdateLock);
+  nsAutoLock lock(mVideoUpdateLock);
   return mPaintDelay.ToSeconds();
 }
 

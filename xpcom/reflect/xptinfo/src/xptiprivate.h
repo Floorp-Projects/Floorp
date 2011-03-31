@@ -62,9 +62,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIWeakReference.h"
 
-#include "mozilla/Monitor.h"
-#include "mozilla/Mutex.h"
-
 #include "nsCRT.h"
 #include "nsMemory.h"
 
@@ -75,6 +72,8 @@
 #include "nsXPIDLString.h"
 
 #include "nsIInputStream.h"
+
+#include "nsAutoLock.h"
 
 #include "nsHashKeys.h"
 #include "nsDataHashtable.h"
@@ -433,11 +432,7 @@ class xptiInterfaceInfoManager
     NS_DECL_NSIINTERFACEINFOMANAGER
     NS_DECL_NSIINTERFACEINFOSUPERMANAGER
 
-    typedef mozilla::Monitor Monitor;
-    typedef mozilla::Mutex Mutex;
-
 public:
-    // GetSingleton() is infallible
     static xptiInterfaceInfoManager* GetSingleton();
     static void FreeInterfaceInfoManager();
 
@@ -446,23 +441,20 @@ public:
 
     xptiWorkingSet*  GetWorkingSet() {return &mWorkingSet;}
 
-    static Mutex& GetResolveLock(xptiInterfaceInfoManager* self = nsnull) 
-    {
-        self = self ? self : GetSingleton();
-        return self->mResolveLock;
-    }
+    static PRLock* GetResolveLock(xptiInterfaceInfoManager* self = nsnull) 
+        {if(!self && !(self = GetSingleton())) 
+            return nsnull;
+         return self->mResolveLock;}
 
-    static Mutex& GetAutoRegLock(xptiInterfaceInfoManager* self = nsnull) 
-    {
-        self = self ? self : GetSingleton();
-        return self->mAutoRegLock;
-    }
+    static PRLock* GetAutoRegLock(xptiInterfaceInfoManager* self = nsnull) 
+        {if(!self && !(self = GetSingleton())) 
+            return nsnull;
+         return self->mAutoRegLock;}
 
-    static Monitor& GetInfoMonitor(xptiInterfaceInfoManager* self = nsnull) 
-    {
-        self = self ? self : GetSingleton();
-        return self->mInfoMonitor;
-    }
+    static PRMonitor* GetInfoMonitor(xptiInterfaceInfoManager* self = nsnull) 
+        {if(!self && !(self = GetSingleton())) 
+            return nsnull;
+         return self->mInfoMonitor;}
 
     xptiInterfaceEntry* GetInterfaceEntryForIID(const nsIID *iid);
 
@@ -482,10 +474,10 @@ private:
 
 private:
     xptiWorkingSet               mWorkingSet;
-    Mutex                        mResolveLock;
-    Mutex                        mAutoRegLock;
-    Monitor                      mInfoMonitor;
-    Mutex                        mAdditionalManagersLock;
+    PRLock*                      mResolveLock;
+    PRLock*                      mAutoRegLock;
+    PRMonitor*                   mInfoMonitor;
+    PRLock*                      mAdditionalManagersLock;
     nsCOMArray<nsISupports>      mAdditionalManagers;
 };
 

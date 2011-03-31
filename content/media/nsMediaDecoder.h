@@ -48,7 +48,6 @@
 #include "nsITimer.h"
 #include "ImageLayers.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/Mutex.h"
 
 class nsHTMLMediaElement;
 class nsMediaStream;
@@ -90,7 +89,6 @@ public:
   typedef mozilla::layers::ImageContainer ImageContainer;
   typedef mozilla::layers::Image Image;
   typedef mozilla::Monitor Monitor;
-  typedef mozilla::Mutex Mutex;
 
   nsMediaDecoder();
   virtual ~nsMediaDecoder();
@@ -443,7 +441,7 @@ protected:
   // to the RGB buffer must obtain this lock first to ensure that
   // the video element does not use video data or sizes that are
   // in the midst of being changed.
-  Mutex mVideoUpdateLock;
+  PRLock* mVideoUpdateLock;
 
   // Pixel aspect ratio (ratio of the pixel width to pixel height)
   float mPixelAspectRatio;

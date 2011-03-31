@@ -40,13 +40,12 @@
 #include "nsEnvironment.h"
 #include "prenv.h"
 #include "prprf.h"
+#include "nsAutoLock.h"
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
 #include "nsPromiseFlatString.h"
 #include "nsDependentString.h"
 #include "nsNativeCharsetUtils.h"
-
-using namespace mozilla;
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsEnvironment, nsIEnvironment)
 
@@ -66,6 +65,12 @@ nsEnvironment::Create(nsISupports *aOuter, REFNSIID aIID,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    obj->mLock = nsAutoLock::NewLock("nsEnvironment::mLock");
+    if (!obj->mLock) {
+        delete obj;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     rv = obj->QueryInterface(aIID, aResult);
     if (NS_FAILED(rv)) {
       delete obj;
@@ -75,6 +80,8 @@ nsEnvironment::Create(nsISupports *aOuter, REFNSIID aIID,
 
 nsEnvironment::~nsEnvironment()
 {
+    if (mLock)
+        nsAutoLock::DestroyLock(mLock);
 }
 
 NS_IMETHODIMP
@@ -165,7 +172,7 @@ nsEnvironment::Set(const nsAString& aName, const nsAString& aValue)
     rv = NS_CopyUnicodeToNative(aValue, nativeVal);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    MutexAutoLock lock(mLock);
+    nsAutoLock lock(mLock); // autolock unlocks automagically
 
     if (!EnsureEnvHash()){
         return NS_ERROR_UNEXPECTED;

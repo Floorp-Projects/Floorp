@@ -40,7 +40,7 @@
 #include "nsHostResolver.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
-#include "mozilla/Mutex.h"
+#include "prlock.h"
 
 class nsDNSService : public nsPIDNSService
                    , public nsIObserver
@@ -61,7 +61,7 @@ private:
     nsCOMPtr<nsIIDNService>   mIDN;
 
     // mLock protects access to mResolver and mIPv4OnlyDomains
-    mozilla::Mutex            mLock;
+    PRLock                   *mLock;
 
     // mIPv4OnlyDomains is a comma-separated list of domains for which only
     // IPv4 DNS lookups are performed. This allows the user to disable IPv6 on
@@ -69,5 +69,4 @@ private:
     nsAdoptingCString         mIPv4OnlyDomains;
     PRBool                    mDisableIPv6;
     PRBool                    mDisablePrefetch;
-    PRBool                    mFirstTime;
 };

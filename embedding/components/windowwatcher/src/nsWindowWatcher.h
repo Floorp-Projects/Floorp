@@ -44,7 +44,6 @@
 
 #include "nsCOMPtr.h"
 #include "jspubtd.h"
-#include "mozilla/Mutex.h"
 #include "nsIWindowCreator.h" // for stupid compilers
 #include "nsIWindowWatcher.h"
 #include "nsIPromptFactory.h"
@@ -62,6 +61,7 @@ class  nsPromptService;
 struct JSContext;
 struct JSObject;
 struct nsWatcherWindowEntry;
+struct PRLock;
 struct SizeSpec;
 
 class nsWindowWatcher :
@@ -145,7 +145,7 @@ protected:
 
   nsTArray<nsWatcherWindowEnumerator*> mEnumeratorList;
   nsWatcherWindowEntry *mOldestWindow;
-  mozilla::Mutex        mListLock;
+  PRLock               *mListLock;
 
   nsCOMPtr<nsIWindowCreator> mWindowCreator;
 };
