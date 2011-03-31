@@ -47,6 +47,7 @@
 #include "nsILocalFile.h"
 #include "mozilla/Module.h"
 #include "mozilla/ModuleLoader.h"
+#include "mozilla/Monitor.h"
 #include "nsXULAppAPI.h"
 #include "nsNativeComponentLoader.h"
 #include "nsIFactory.h"
@@ -54,7 +55,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "pldhash.h"
 #include "prtime.h"
-#include "prmon.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsWeakReference.h"
@@ -150,7 +150,7 @@ public:
     nsDataHashtable<nsIDHashKey, nsFactoryEntry*> mFactories;
     nsDataHashtable<nsCStringHashKey, nsFactoryEntry*> mContractIDs;
 
-    PRMonitor*          mMon;
+    mozilla::Monitor    mMon;
 
     static void InitializeStaticModules();
     static void InitializeModuleLocations();

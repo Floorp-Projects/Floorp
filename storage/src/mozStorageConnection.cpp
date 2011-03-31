@@ -50,7 +50,6 @@
 #include "nsIFile.h"
 #include "nsIMemoryReporter.h"
 #include "nsThreadUtils.h"
-#include "nsAutoLock.h"
 
 #include "mozIStorageAggregateFunction.h"
 #include "mozIStorageCompletionCallback.h"

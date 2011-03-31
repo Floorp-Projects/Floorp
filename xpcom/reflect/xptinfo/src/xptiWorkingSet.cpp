@@ -42,6 +42,8 @@
 #include "xptiprivate.h"
 #include "nsString.h"
 
+using namespace mozilla;
+
 #define XPTI_STRUCT_ARENA_BLOCK_SIZE    (1024 * 1)
 #define XPTI_HASHTABLE_SIZE             2048
 
@@ -66,7 +68,7 @@ xpti_Invalidator(const char* keyname, xptiInterfaceEntry* entry, void* arg)
 void 
 xptiWorkingSet::InvalidateInterfaceInfos()
 {
-    nsAutoMonitor lock(xptiInterfaceInfoManager::GetInfoMonitor());
+    MonitorAutoEnter lock(xptiInterfaceInfoManager::GetInfoMonitor());
     mNameTable.EnumerateRead(xpti_Invalidator, NULL);
 }        
 

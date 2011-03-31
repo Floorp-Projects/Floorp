@@ -42,6 +42,7 @@
 #include "keyhi.h"
 #include "nspr.h"
 
+#include "mozilla/Mutex.h"
 #include "nsIKeygenThread.h"
 #include "nsCOMPtr.h"
 
@@ -50,7 +51,7 @@ class nsIObserver;
 class nsKeygenThread : public nsIKeygenThread
 {
 private:
-  PRLock *mutex;
+  mozilla::Mutex mutex;
   
   nsCOMPtr<nsIObserver> observer;
 

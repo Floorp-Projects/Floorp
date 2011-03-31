@@ -50,7 +50,6 @@
 #include "nsStringStream.h"
 #include "netCore.h"
 #include "nsNetCID.h"
-#include "nsAutoLock.h"
 #include "prmem.h"
 
 #ifdef DEBUG
