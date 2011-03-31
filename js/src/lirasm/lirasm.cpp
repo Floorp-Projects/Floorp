@@ -2233,7 +2233,8 @@ usageAndQuit(const string& progname)
         "  -v --verbose      print LIR and assembly code\n"
         "  --execute         execute LIR\n"
         "  --[no-]optimize   enable or disable optimization of the LIR (default=off)\n"
-        "  --random [N]      generate a random LIR block of size N (default=1000)\n"
+        "  --random [N]      generate a random LIR block of size N (default=100)\n"
+        "  --stkskip [N]     push approximately N Kbytes of stack before execution (default=100)\n"
         "\n"
         "Build query options (these print a value for this build of lirasm and exit)\n"
         "  --show-arch       show the architecture ('i386', 'X64', 'arm', 'ppc',\n"
@@ -2265,9 +2266,32 @@ struct CmdLineOptions {
     bool    execute;
     bool    optimize;
     int     random;
+    int     stkskip;
     string  filename;
     Config  config;
 };
+
+
+bool parseOptionalInt(int argc, char** argv, int* i, int* value, int defaultValue)
+{
+    if (*i == argc - 1) {
+        *value = defaultValue;      // no numeric argument, use default
+    } else {
+        char* endptr;
+        int res = strtol(argv[*i+1], &endptr, 10);
+        if ('\0' == *endptr) {
+            // We don't bother checking for overflow.
+            if (res <= 0) {
+                return false;
+            }
+            *value = res;           // next arg is a number, use that for the value
+            (*i)++;
+        } else {
+            *value = defaultValue;  // next arg is not a number
+        }
+    }
+    return true;
+}
 
 static void
 processCmdLine(int argc, char **argv, CmdLineOptions& opts)
@@ -2277,6 +2301,7 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
     opts.execute  = false;
     opts.random   = 0;
     opts.optimize = false;
+    opts.stkskip  = 0;
 
     // Architecture-specific options.
 #if defined NANOJIT_IA32
@@ -2301,22 +2326,12 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
         else if (arg == "--no-optimize")
             opts.optimize = false;
         else if (arg == "--random") {
-            const int defaultSize = 100;
-            if (i == argc - 1) {
-                opts.random = defaultSize;      // no numeric argument, use default
-            } else {
-                char* endptr;
-                int res = strtol(argv[i+1], &endptr, 10);
-                if ('\0' == *endptr) {
-                    // We don't bother checking for overflow.
-                    if (res <= 0)
-                        errMsgAndQuit(opts.progname, "--random argument must be greater than zero");
-                    opts.random = res;          // next arg is a number, use that for the size
-                    i++;
-                } else {
-                    opts.random = defaultSize;  // next arg is not a number
-                }
-            }
+            if (!parseOptionalInt(argc, argv, &i, &opts.random, 100))
+                errMsgAndQuit(opts.progname, "--random argument must be greater than zero");
+        }
+        else if (arg == "--stkskip") {
+            if (!parseOptionalInt(argc, argv, &i, &opts.stkskip, 100))
+                errMsgAndQuit(opts.progname, "--stkskip argument must be greater than zero");
         }
         else if (arg == "--show-arch") {
             const char* str = 
@@ -2415,6 +2430,45 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
 #endif
 }
 
+int32_t* dummy;
+
+void
+executeFragment(const LirasmFragment& fragment, int skip)
+{
+    // Allocate a large frame, and make sure we don't optimize it away.
+    int32_t space[512];
+    dummy = space;
+
+    if (skip > 0) {
+        executeFragment(fragment, skip-1);
+    } else {
+        switch (fragment.mReturnType) {
+          case RT_INT: {
+            int res = fragment.rint();
+            cout << "Output is: " << res << endl;
+            break;
+          }
+#ifdef NANOJIT_64BIT
+          case RT_QUAD: {
+            int res = fragment.rquad();
+            cout << "Output is: " << res << endl;
+            break;
+          }
+#endif
+          case RT_DOUBLE: {
+            double res = fragment.rdouble();
+            cout << "Output is: " << res << endl;
+            break;
+          }
+          case RT_GUARD: {
+            LasmSideExit *ls = (LasmSideExit*) fragment.rguard()->exit;
+            cout << "Exited block on line: " << ls->line << endl;
+            break;
+          }
+        }
+    }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2436,30 +2490,7 @@ main(int argc, char **argv)
         i = lasm.mFragments.find("main");
         if (i == lasm.mFragments.end())
             errMsgAndQuit(opts.progname, "error: at least one fragment must be named 'main'");
-        switch (i->second.mReturnType) {
-          case RT_INT: {
-            int res = i->second.rint();
-            cout << "Output is: " << res << endl;
-            break;
-          }
-#ifdef NANOJIT_64BIT
-          case RT_QUAD: {
-            int res = i->second.rquad();
-            cout << "Output is: " << res << endl;
-            break;
-          }
-#endif
-          case RT_DOUBLE: {
-            double res = i->second.rdouble();
-            cout << "Output is: " << res << endl;
-            break;
-          }
-          case RT_GUARD: {
-            LasmSideExit *ls = (LasmSideExit*) i->second.rguard()->exit;
-            cout << "Exited block on line: " << ls->line << endl;
-            break;
-          }
-        }
+        executeFragment(i->second, opts.stkskip);
     } else {
         for (i = lasm.mFragments.begin(); i != lasm.mFragments.end(); i++)
             dump_srecords(cout, i->second.fragptr);

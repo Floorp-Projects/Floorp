@@ -169,7 +169,7 @@ namespace nanojit {
         #define asm_output(...) do {                                            \
             if (_logc->lcbits & LC_Native) {                                    \
                 outline[0]='\0';                                                \
-                VMPI_sprintf(outline, "%p  ", (void*)_nIns);                    \
+                VMPI_sprintf(outline, "%p  ", _nIns);                           \
                 if (_logc->lcbits & LC_Bytes) {                                 \
                     appendHexVals(outline, (char*)_nIns, (char*)_nInsAfter);    \
                     padTo(outline, 3*15);                                       \
