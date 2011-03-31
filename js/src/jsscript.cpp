@@ -803,13 +803,13 @@ typedef struct ScriptFilenameEntry {
 static void *
 js_alloc_table_space(void *priv, size_t size)
 {
-    return js_malloc(size);
+    return OffTheBooks::malloc(size);
 }
 
 static void
 js_free_table_space(void *priv, void *item, size_t size)
 {
-    js_free(item);
+    UnwantedForeground::free(item);
 }
 
 static JSHashEntry *
@@ -818,7 +818,7 @@ js_alloc_sftbl_entry(void *priv, const void *key)
     size_t nbytes = offsetof(ScriptFilenameEntry, filename) +
                     strlen((const char *) key) + 1;
 
-    return (JSHashEntry *) js_malloc(JS_MAX(nbytes, sizeof(JSHashEntry)));
+    return (JSHashEntry *) OffTheBooks::malloc(JS_MAX(nbytes, sizeof(JSHashEntry)));
 }
 
 static void
@@ -826,7 +826,7 @@ js_free_sftbl_entry(void *priv, JSHashEntry *he, uintN flag)
 {
     if (flag != HT_FREE_ENTRY)
         return;
-    js_free(he);
+    UnwantedForeground::free(he);
 }
 
 static JSHashAllocOps sftbl_alloc_ops = {
@@ -887,7 +887,7 @@ js_FreeRuntimeScriptState(JSRuntime *rt)
         ScriptFilenamePrefix *sfp = (ScriptFilenamePrefix *)
                                     rt->scriptFilenamePrefixes.next;
         JS_REMOVE_LINK(&sfp->links);
-        js_free(sfp);
+        UnwantedForeground::free(sfp);
     }
     FinishRuntimeScriptState(rt);
 }
@@ -950,7 +950,7 @@ SaveScriptFilename(JSRuntime *rt, const char *filename, uint32 flags)
 
         if (!sfp) {
             /* No such prefix: add one now. */
-            sfp = (ScriptFilenamePrefix *) js_malloc(sizeof(ScriptFilenamePrefix));
+            sfp = (ScriptFilenamePrefix *) rt->malloc(sizeof(ScriptFilenamePrefix));
             if (!sfp)
                 return NULL;
             JS_INSERT_AFTER(&sfp->links, link);

@@ -79,7 +79,7 @@ static void
 resc_finalize(JSContext *cx, JSObject *obj)
 {
     RegExpStatics *res = static_cast<RegExpStatics *>(obj->getPrivate());
-    cx->destroy<RegExpStatics>(res);
+    cx->delete_(res);
 }
 
 static void

@@ -100,7 +100,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 JSCompartment::~JSCompartment()
 {
 #if ENABLE_YARR_JIT
-    js_delete(regExpAllocator);
+    Foreground::delete_(regExpAllocator);
 #endif
 
 #if defined JS_TRACER
@@ -108,10 +108,10 @@ JSCompartment::~JSCompartment()
 #endif
 
 #ifdef JS_METHODJIT
-    js_delete(jaegerCompartment);
+    Foreground::delete_(jaegerCompartment);
 #endif
 
-    js_delete(mathCache);
+    Foreground::delete_(mathCache);
 
 #ifdef DEBUG
     for (size_t i = 0; i != JS_ARRAY_LENGTH(scriptsToGC); ++i)
@@ -141,12 +141,12 @@ JSCompartment::init()
 #endif
 
 #ifdef JS_TRACER
-    if (!InitJIT(&traceMonitor))
+    if (!InitJIT(&traceMonitor, rt))
         return false;
 #endif
 
 #if ENABLE_YARR_JIT
-    regExpAllocator = js_new<JSC::ExecutableAllocator>();
+    regExpAllocator = rt->new_<JSC::ExecutableAllocator>();
     if (!regExpAllocator)
         return false;
 #endif
@@ -155,7 +155,7 @@ JSCompartment::init()
         return false;
 
 #ifdef JS_METHODJIT
-    if (!(jaegerCompartment = js_new<mjit::JaegerCompartment>()))
+    if (!(jaegerCompartment = rt->new_<mjit::JaegerCompartment>()))
         return false;
     return jaegerCompartment->Initialize();
 #else
@@ -574,7 +574,7 @@ MathCache *
 JSCompartment::allocMathCache(JSContext *cx)
 {
     JS_ASSERT(!mathCache);
-    mathCache = js_new<MathCache>();
+    mathCache = cx->new_<MathCache>();
     if (!mathCache)
         js_ReportOutOfMemory(cx);
     return mathCache;

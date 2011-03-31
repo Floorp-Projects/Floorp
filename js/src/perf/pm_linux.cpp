@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+using namespace js;
+
 #include "jsperf.h"
 #include "jsutil.h"
 
@@ -265,7 +267,7 @@ namespace JS {
 #define initCtr(flag) ((eventsMeasured & flag) ? 0 : -1)
 
 PerfMeasurement::PerfMeasurement(PerfMeasurement::EventMask toMeasure)
-  : impl(js_new<Impl>()),
+  : impl(OffTheBooks::new_<Impl>()),
     eventsMeasured(impl ? static_cast<Impl*>(impl)->init(toMeasure)
                    : EventMask(0)),
     cpu_cycles(initCtr(CPU_CYCLES)),
@@ -286,7 +288,7 @@ PerfMeasurement::PerfMeasurement(PerfMeasurement::EventMask toMeasure)
 
 PerfMeasurement::~PerfMeasurement()
 {
-    js_delete(static_cast<Impl*>(impl));
+    js::Foreground::delete_(static_cast<Impl*>(impl));
 }
 
 void

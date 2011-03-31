@@ -242,7 +242,7 @@ struct PropertyTable {
     }
 
     ~PropertyTable() {
-        js_free(entries);
+        js::UnwantedForeground::free(entries);
     }
 
     /* By definition, hashShift = JS_DHASH_BITS - log2(capacity). */

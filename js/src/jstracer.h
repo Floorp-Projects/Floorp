@@ -76,7 +76,7 @@ public:
             memcpy(tmp, _data, _len * sizeof(T));
             _data = tmp;
         } else {
-            _data = (T*)js_realloc(_data, _max * sizeof(T));
+            _data = (T*) js::OffTheBooks::realloc(_data, _max * sizeof(T));
         }
 #if defined(DEBUG)
         memset(&_data[_len], 0xcd, _max - _len);
@@ -93,7 +93,7 @@ public:
 
     ~Queue() {
         if (!alloc)
-            js_free(_data);
+            js::UnwantedForeground::free(_data);
     }
 
     bool contains(T a) {
@@ -199,12 +199,15 @@ class Tracker {
     };
     struct TrackerPage* pagelist;
 
+    /* Keep track of memory allocation. */
+    JSContext* cx;
+
     jsuword             getTrackerPageBase(const void* v) const;
     jsuword             getTrackerPageOffset(const void* v) const;
     struct TrackerPage* findTrackerPage(const void* v) const;
     struct TrackerPage* addTrackerPage(const void* v);
 public:
-    Tracker();
+    Tracker(JSContext* cx);
     ~Tracker();
 
     bool            has(const void* v) const;
@@ -407,15 +410,18 @@ struct VMSideExit : public nanojit::SideExit
 
 class VMAllocator : public nanojit::Allocator
 {
-
 public:
-    VMAllocator(char* reserve, size_t reserveSize)
-      : mOutOfMemory(false), mSize(0), mReserve(reserve),
-        mReserveCurr(uintptr_t(reserve)), mReserveLimit(uintptr_t(reserve + reserveSize))
+    VMAllocator(JSRuntime *rt, char* reserve, size_t reserveSize)
+      : mOutOfMemory(false)
+      , mSize(0)
+      , mReserve(reserve)
+      , mReserveCurr(uintptr_t(reserve))
+      , mReserveLimit(uintptr_t(reserve + reserveSize))
+      , mRt(rt)
     {}
 
     ~VMAllocator() {
-        js_free(mReserve);
+        js::UnwantedForeground::free(mReserve);
     }
 
     size_t size() {
@@ -472,6 +478,9 @@ public:
     char* mReserve;
     uintptr_t mReserveCurr;
     uintptr_t mReserveLimit;
+
+    /* To keep track of allocation. */
+    JSRuntime* mRt;
 };
 
 struct FrameInfo {
@@ -984,6 +993,8 @@ AbortProfiling(JSContext *cx);
 
 class TraceRecorder
 {
+    JS_DECLARE_ALLOCATION_FRIENDS_FOR_PRIVATE_CONSTRUCTOR;
+
     /*************************************************************** Recording session constants */
 
     /* The context in which recording started. */
@@ -1691,7 +1702,7 @@ extern JS_REQUIRES_STACK TraceRecorder::AbortResult
 AbortRecording(JSContext* cx, const char* reason);
 
 extern bool
-InitJIT(TraceMonitor *tm);
+InitJIT(TraceMonitor *tm, JSRuntime *rt);
 
 extern void
 FinishJIT(TraceMonitor *tm);

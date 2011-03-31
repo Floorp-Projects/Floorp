@@ -48,6 +48,8 @@
 #include "jsutil.h"
 #include "jshash.h"
 
+using namespace js;
+
 /* Compute the number of buckets in ht */
 #define NBUCKETS(ht)    JS_BIT(JS_HASH_BITS - (ht)->shift)
 
@@ -67,26 +69,26 @@
 static void *
 DefaultAllocTable(void *pool, size_t size)
 {
-    return js_malloc(size);
+    return OffTheBooks::malloc(size);
 }
 
 static void
 DefaultFreeTable(void *pool, void *item, size_t size)
 {
-    js_free(item);
+    UnwantedForeground::free(item);
 }
 
 static JSHashEntry *
 DefaultAllocEntry(void *pool, const void *key)
 {
-    return (JSHashEntry*) js_malloc(sizeof(JSHashEntry));
+    return (JSHashEntry*) OffTheBooks::malloc(sizeof(JSHashEntry));
 }
 
 static void
 DefaultFreeEntry(void *pool, JSHashEntry *he, uintN flag)
 {
     if (flag == HT_FREE_ENTRY)
-        js_free(he);
+        UnwantedForeground::free(he);
 }
 
 static JSHashAllocOps defaultHashAllocOps = {

@@ -228,7 +228,11 @@ extern JS_PUBLIC_DATA(JSUint32) OOM_counter; /* data race, who cares. */
 #define JS_OOM_POSSIBLY_FAIL() do {} while(0)
 #endif
 
-
+/*
+ * SpiderMonkey code should not be calling these allocation functions directly.
+ * Instead, all calls should go through JSRuntime, JSContext or OffTheBooks.
+ * However, js_free() can be called directly.
+ */
 static JS_INLINE void* js_malloc(size_t bytes) {
     JS_OOM_POSSIBLY_FAIL();
     return malloc(bytes);
@@ -251,94 +255,267 @@ static JS_INLINE void js_free(void* p) {
 
 JS_END_EXTERN_C
 
+
+
 #ifdef __cplusplus
 
 /* 
- * Using vanilla new/new[] is unsafe in SpiderMonkey because they throw on
- * failure instead of returning NULL, which is what SpiderMonkey expects.
- * js_new()/js_array_new() should be used instead, and memory allocated with
- * them should be deallocated with js_delete()/js_array_delete().
+ * User guide to memory memangement within SpiderMonkey:
  *
- * If you have a class with a private constructor or destructor, you can
- * make js_new/js_delete a friend.  This can be fiddly, and the interaction of
- * template functions, friend functions and namespaces can overwhelm even
- * modern compilers.  Manual inlining is probably easier.
+ * Quick tips:
  *
- * (If you're wondering why we can't just use the 'nothrow' variant of
- * new/new[], it's because we want to mediate *all* allocations within
- * SpiderMonkey, to satisfy any embedders using JS_USE_CUSTOM_ALLOCATOR.)
+ *   Allocation:
+ *   - Prefer to allocate using JSContext:
+ *       cx->{malloc,realloc,calloc,new_,new_array}
+ *
+ *   - If no JSContext is available, use a JSRuntime:
+ *       rt->{malloc,realloc,calloc,new_,new_array}
+ *
+ *   - As a last resort, use unaccounted allocation ("OffTheBooks"):
+ *       js::OffTheBooks::{malloc,realloc,calloc,new_,new_array}
+ *
+ *   Deallocation:
+ *   - When the deallocation occurs on a slow path, use:
+ *       Foreground::{free,delete_,array_delete}
+ *
+ *   - Otherwise deallocate on a background thread using a JSContext:
+ *       cx->{free,delete_,array_delete}
+ *  
+ *   - If no JSContext is available, use a JSRuntime:
+ *       rt->{free,delete_,array_delete}
+ *
+ *   - As a last resort, use UnwantedForeground deallocation:
+ *       js::UnwantedForeground::{free,delete_,array_delete}
+ *
+ * General tips:
+ *
+ *   - Mixing and matching these allocators is allowed (you may free memory
+ *     allocated by any allocator, with any deallocator).
+ * 
+ *   - Never, ever use normal C/C++ memory management:
+ *       malloc, free, new, new[], delete, operator new, etc.
+ *
+ *   - Never, ever use low-level SpiderMonkey allocators:
+ *       js_malloc(), js_free(), js_calloc(), js_realloc()
+ *     Their use is reserved for the other memory managers.
+ *
+ *   - Classes which have private constructors or destructors should have
+ *     JS_DECLARE_ALLOCATION_FRIENDS_FOR_PRIVATE_CONSTRUCTOR added to their
+ *     declaration.
+ * 
+ * Details:
+ *
+ *   Using vanilla new/new[] is unsafe in SpiderMonkey because they throw on
+ *   failure instead of returning NULL, which is what SpiderMonkey expects.
+ *   (Even overriding them is unsafe, as the system's C++ runtime library may
+ *   throw, which we do not support. We also can't just use the 'nothrow'
+ *   variant of new/new[], because we want to mediate *all* allocations
+ *   within SpiderMonkey, to satisfy any embedders using
+ *   JS_USE_CUSTOM_ALLOCATOR.)
+ *
+ *   JSContexts and JSRuntimes keep track of memory allocated, and use this
+ *   accounting to schedule GC. OffTheBooks does not. We'd like to remove
+ *   OffTheBooks allocations as much as possible (bug 636558).
+ *
+ *   On allocation failure, a JSContext correctly reports an error, which a
+ *   JSRuntime and OffTheBooks does not.
+ *
+ *   A JSContext deallocates in a background thread. A JSRuntime might
+ *   deallocate in the background in the future, but does not now. Foreground
+ *   deallocation is preferable on slow paths. UnwantedForeground deallocations
+ *   occur where we have no JSContext or JSRuntime, and the deallocation is not
+ *   on a slow path. We want to remove UnwantedForeground deallocations (bug
+ *   636561).
+ *
+ *   JS_DECLARE_ALLOCATION_FRIENDS_FOR_PRIVATE_CONSTRUCTOR makes the allocation
+ *   classes friends with your class, giving them access to private
+ *   constructors and destructors.
+ *
+ *   |make check| does a source level check on the number of uses OffTheBooks,
+ *   UnwantedForeground, js_malloc, js_free etc, to prevent regressions. If you
+ *   really must add one, update Makefile.in, and run |make check|.
+ *
+ *   |make check| also statically prevents the use of vanilla new/new[].
  */
 
-#define JS_NEW_BODY(t, parms)                                                 \
-    void *memory = js_malloc(sizeof(t));                                      \
+#define JS_NEW_BODY(allocator, t, parms)                                       \
+    void *memory = allocator(sizeof(t));                                       \
     return memory ? new(memory) t parms : NULL;
 
-template <class T>
-JS_ALWAYS_INLINE T *js_new() {
-    JS_NEW_BODY(T, ())
-}
+/*
+ * Given a class which should provide new_() methods, add
+ * JS_DECLARE_NEW_METHODS (see JSContext for a usage example). This
+ * adds new_()s with up to 12 parameters. Add more versions of new_ below if
+ * you need more than 12 parameters.  
+ *
+ * Note: Do not add a ; at the end of a use of JS_DECLARE_NEW_METHODS,
+ * or the build will break.
+ */
+#define JS_DECLARE_NEW_METHODS(ALLOCATOR, QUALIFIERS)\
+    template <class T>\
+    QUALIFIERS T *new_() {\
+        JS_NEW_BODY(ALLOCATOR, T, ())\
+    }\
+\
+    template <class T, class P1>\
+    QUALIFIERS T *new_(const P1 &p1) {\
+        JS_NEW_BODY(ALLOCATOR, T, (p1))\
+    }\
+\
+    template <class T, class P1, class P2>\
+    QUALIFIERS T *new_(const P1 &p1, const P2 &p2) {\
+        JS_NEW_BODY(ALLOCATOR, T, (p1, p2))\
+    }\
+\
+    template <class T, class P1, class P2, class P3>\
+    QUALIFIERS T *new_(const P1 &p1, const P2 &p2, const P3 &p3) {\
+        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4>\
+    QUALIFIERS T *new_(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {\
+        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4, class P5>\
+    QUALIFIERS T *new_(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {\
+        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4, p5))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4, class P5, class P6>\
+    QUALIFIERS T *new_(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6) {\
+        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4, p5, p6))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7>\
+    QUALIFIERS T *new_(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7) {\
+        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4, p5, p6, p7))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8>\
+    QUALIFIERS T *new_(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8) {\
+        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4, p5, p6, p7, p8))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9>\
+    QUALIFIERS T *new_(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8, const P9 &p9) {\
+        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4, p5, p6, p7, p8, p9))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10>\
+    QUALIFIERS T *new_(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8, const P9 &p9, const P10 &p10) {\
+        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4, p5, p6, p7, p8, p9, p10))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11>\
+    QUALIFIERS T *new_(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8, const P9 &p9, const P10 &p10, const P11 &p11) {\
+        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12>\
+    QUALIFIERS T *new_(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8, const P9 &p9, const P10 &p10, const P11 &p11, const P12 &p12) {\
+        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12))\
+    }\
+    static const int JSMinAlignment = 8;\
+    template <class T>\
+    QUALIFIERS T *array_new(size_t n) {\
+        /* The length is stored just before the vector memory. */\
+        uint64 numBytes64 = uint64(JSMinAlignment) + uint64(sizeof(T)) * uint64(n);\
+        size_t numBytes = size_t(numBytes64);\
+        if (numBytes64 != numBytes) {\
+            JS_ASSERT(0);   /* we want to know if this happens in debug builds */\
+            return NULL;\
+        }\
+        void *memory = ALLOCATOR(numBytes);\
+        if (!memory)\
+            return NULL;\
+        *(size_t *)memory = n;\
+        memory = (void*)(uintptr_t(memory) + JSMinAlignment);\
+        return new(memory) T[n];\
+    }\
 
-template <class T, class P1>
-JS_ALWAYS_INLINE T *js_new(const P1 &p1) {
-    JS_NEW_BODY(T, (p1))
-}
 
-template <class T, class P1, class P2>
-JS_ALWAYS_INLINE T *js_new(const P1 &p1, const P2 &p2) {
-    JS_NEW_BODY(T, (p1, p2))
-}
-
-template <class T, class P1, class P2, class P3>
-JS_ALWAYS_INLINE T *js_new(const P1 &p1, const P2 &p2, const P3 &p3) {
-    JS_NEW_BODY(T, (p1, p2, p3))
-}
-
-template <class T, class P1, class P2, class P3, class P4>
-JS_ALWAYS_INLINE T *js_new(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
-    JS_NEW_BODY(T, (p1, p2, p3, p4))
-}
-
-/* ...add additional js_new()s as necessary... */
-
-#undef JS_NEW_BODY
-
-template <class T>
-JS_ALWAYS_INLINE void js_delete(T *p) {
-    if (p) {
-        p->~T();
-        js_free(p);
+#define JS_DECLARE_DELETE_METHODS(DEALLOCATOR, QUALIFIERS)\
+    template <class T>\
+    QUALIFIERS void delete_(T *p) {\
+        if (p) {\
+            p->~T();\
+            DEALLOCATOR(p);\
+        }\
+    }\
+\
+    template <class T>\
+    QUALIFIERS void array_delete(T *p) {\
+        if (p) {\
+            void* p0 = (void *)(uintptr_t(p) - js::OffTheBooks::JSMinAlignment);\
+            size_t n = *(size_t *)p0;\
+            for (size_t i = 0; i < n; i++)\
+                (p + i)->~T();\
+            DEALLOCATOR(p0);\
+        }\
     }
-}
 
-static const int JSMinAlignment = 8;
 
-template <class T>
-JS_ALWAYS_INLINE T *js_array_new(size_t n) {
-	/* The length is stored just before the vector memory. */
-    uint64 numBytes64 = uint64(JSMinAlignment) + uint64(sizeof(T)) * uint64(n);
-    size_t numBytes = size_t(numBytes64);
-    if (numBytes64 != numBytes) {
-        JS_ASSERT(0);   /* we want to know if this happens in debug builds */
-        return NULL;
+/*
+ * In general, all allocations should go through a JSContext or JSRuntime, so
+ * that the garbage collector knows how much memory has been allocated. In
+ * cases where it is difficult to use a JSContext or JSRuntime, OffTheBooks can
+ * be used, though this is undesirable.
+ */
+namespace js {
+class OffTheBooks {
+public:
+    JS_DECLARE_NEW_METHODS(::js_malloc, JS_ALWAYS_INLINE static)
+
+    /*
+     * The parentheses around the following function names prevent the names
+     * from being expanded if they are defined in the system headers as macros
+     * (function-style macros only expand if followed by an open paratheses).
+     * This doesn't appear to be a problem for call-sites (ie cx->malloc()).
+     */
+    static JS_INLINE void* (malloc)(size_t bytes) {
+        return ::js_malloc(bytes);
     }
-    void *memory = js_malloc(numBytes);
-    if (!memory)
-        return NULL;
-	*(size_t *)memory = n;
-	memory = (void*)(uintptr_t(memory) + JSMinAlignment);
-    return new(memory) T[n];
-}
 
-template <class T>
-JS_ALWAYS_INLINE void js_array_delete(T *p) {
-    if (p) {
-		void* p0 = (void *)(uintptr_t(p) - JSMinAlignment);
-		size_t n = *(size_t *)p0;
-		for (size_t i = 0; i < n; i++)
-			(p + i)->~T();
-		js_free(p0);
+    static JS_INLINE void* (calloc)(size_t bytes) {
+        return ::js_calloc(bytes);
     }
-}
+
+    static JS_INLINE void* (realloc)(void* p, size_t bytes) {
+        return ::js_realloc(p, bytes);
+    }
+};
+
+/*
+ * We generally prefer deallocating using JSContext because it can happen in
+ * the background. On slow paths, we may prefer foreground allocation.
+ */
+class Foreground {
+public:
+    /* See parentheses comment above. */
+    static JS_ALWAYS_INLINE void (free)(void* p) {
+        ::js_free(p);
+    }
+
+    JS_DECLARE_DELETE_METHODS(::js_free, JS_ALWAYS_INLINE static)
+};
+
+class UnwantedForeground : public Foreground {
+};
+
+} /* namespace js */
+
+/*
+ * Note lack of ; in JSRuntime below. This is intentional so "calling" this
+ * looks "normal".
+ */
+#define JS_DECLARE_ALLOCATION_FRIENDS_FOR_PRIVATE_CONSTRUCTOR \
+    friend class js::OffTheBooks;\
+    friend class js::Foreground;\
+    friend class js::UnwantedForeground;\
+    friend struct ::JSContext;\
+    friend struct ::JSRuntime
+
 
 /**
  * The following classes are designed to cause assertions to detect

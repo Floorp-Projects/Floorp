@@ -2406,7 +2406,7 @@ date_toSource(JSContext *cx, uintN argc, Value *vp)
     }
 
     JSString *str = JS_NewStringCopyZ(cx, bytes);
-    js_free(bytes);
+    cx->free(bytes);
     if (!str)
         return false;
     vp->setString(str);
