@@ -233,9 +233,9 @@ class CompilerAllocPolicy : public ContextAllocPolicy
     : ContextAllocPolicy(cx), oomFlag(oomFlag) {}
     CompilerAllocPolicy(JSContext *cx, Compiler &compiler);
 
-    void *malloc(size_t bytes) { return checkAlloc(ContextAllocPolicy::malloc(bytes)); }
-    void *realloc(void *p, size_t bytes) {
-        return checkAlloc(ContextAllocPolicy::realloc(p, bytes));
+    void *malloc_(size_t bytes) { return checkAlloc(ContextAllocPolicy::malloc_(bytes)); }
+    void *realloc_(void *p, size_t bytes) {
+        return checkAlloc(ContextAllocPolicy::realloc_(p, bytes));
     }
 };
 

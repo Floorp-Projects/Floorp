@@ -900,7 +900,17 @@ class CallCompiler : public BaseCompiler
         else
             masm.storeArg(1, argcReg.reg());
         masm.storeArg(0, cxReg);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, fun->u.n.native), false);
+
+        js::Native native = fun->u.n.native;
+
+        /*
+         * Call RegExp.test instead of exec if the result will not be used or
+         * will only be used to test for existence.
+         */
+        if (native == js_regexp_exec && !CallResultEscapes(f.regs.pc))
+            native = js_regexp_test;
+
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, native), false);
 
         Jump hasException = masm.branchTest32(Assembler::Zero, Registers::ReturnReg,
                                               Registers::ReturnReg);

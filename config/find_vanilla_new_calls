@@ -19,7 +19,7 @@
 #
 # If this script fails:
 # - You need to find the uses of vanilla new/delete and replace them with
-#   js_new()/js_delete().
+#   {js::OffTheBooks,JSContext,JSRuntime}::{new_,/array_new}.
 # - Run this script on each of the .o files, that should narrow it down.
 # - After that, one way to find them is to run 'objdump -r -C' on the
 #   relevant .o files.  For example, you might search for 'operator new' and
