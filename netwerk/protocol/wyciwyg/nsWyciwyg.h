@@ -42,6 +42,7 @@
 #define FORCE_PR_LOG
 #endif
 
+#ifdef MOZ_IPC
 // e10s mess: IPDL-generatd headers include chromium which both #includes
 // prlog.h, and #defines LOG in conflict with this file.
 // Solution: (as described in bug 545995)
@@ -57,6 +58,7 @@
 #endif
 #include "mozilla/net/NeckoChild.h"
 #undef LOG
+#endif // MOZ_IPC
 
 #include "plstr.h"
 #include "prlog.h"

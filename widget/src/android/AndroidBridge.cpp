@@ -37,7 +37,9 @@
 
 #include <android/log.h>
 
+#ifdef MOZ_IPC
 #include "nsXULAppAPI.h"
+#endif
 #include <pthread.h>
 #include <prthread.h>
 #include "nsXPCOMStrings.h"

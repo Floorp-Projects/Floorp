@@ -47,7 +47,9 @@ MODULE		= necko
 LIBRARY_NAME	= neckobase_s
 LIBXUL_LIBRARY  = 1
 
-EXPORTS = nsURLHelper.h
+ifdef MOZ_IPC
+	EXPORTS = nsURLHelper.h
+endif
 
 CPPSRCS		= \
 		nsTransportUtils.cpp \
@@ -90,8 +92,11 @@ CPPSRCS		= \
 		nsBase64Encoder.cpp \
 		nsSerializationHelper.cpp \
 		nsDNSPrefetch.cpp \
-		RedirectChannelRegistrar.cpp \
 		$(NULL)
+
+ifdef MOZ_IPC
+	CPPSRCS += RedirectChannelRegistrar.cpp
+endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 	CPPSRCS += nsURLHelperOS2.cpp
