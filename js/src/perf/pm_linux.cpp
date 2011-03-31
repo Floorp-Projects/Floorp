@@ -36,10 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-using namespace js;
-
 #include "jsperf.h"
 #include "jsutil.h"
+
+using namespace js;
 
 /* This variant of nsIPerfMeasurement uses the perf_event interface
  * added in Linux 2.6.31.  We key compilation of this file off the
