@@ -44,13 +44,11 @@
 #include "nsIObserver.h"
 #include "nsNSSShutDown.h"
 
-using namespace mozilla;
-
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsKeygenThread, nsIKeygenThread)
 
 
 nsKeygenThread::nsKeygenThread()
-:mutex("nsKeygenThread.mutex"),
+:mutex(nsnull),
  iAmRunning(PR_FALSE),
  keygenReady(PR_FALSE),
  statusDialogClosed(PR_FALSE),
@@ -65,10 +63,14 @@ nsKeygenThread::nsKeygenThread()
  wincx(nsnull),
  threadHandle(nsnull)
 {
+  mutex = PR_NewLock();
 }
 
 nsKeygenThread::~nsKeygenThread()
 {
+  if (mutex) {
+    PR_DestroyLock(mutex);
+  }
 }
 
 void nsKeygenThread::SetParams(
@@ -80,7 +82,7 @@ void nsKeygenThread::SetParams(
     void *a_wincx )
 {
   nsNSSShutDownPreventionLock locker;
-  MutexAutoLock lock(mutex);
+  PR_Lock(mutex);
  
     if (!alreadyReceivedParams) {
       alreadyReceivedParams = PR_TRUE;
@@ -96,6 +98,8 @@ void nsKeygenThread::SetParams(
       isSensitive = a_isSensitive;
       wincx = a_wincx;
     }
+
+  PR_Unlock(mutex);
 }
 
 nsresult nsKeygenThread::GetParams(
@@ -107,8 +111,8 @@ nsresult nsKeygenThread::GetParams(
   }
 
   nsresult rv;
-
-  MutexAutoLock lock(mutex);
+  
+  PR_Lock(mutex);
   
     // GetParams must not be called until thread creator called
     // Join on this thread.
@@ -127,6 +131,8 @@ nsresult nsKeygenThread::GetParams(
       rv = NS_ERROR_FAILURE;
     }
   
+  PR_Unlock(mutex);
+  
   return rv;
 }
 
@@ -138,6 +144,9 @@ static void PR_CALLBACK nsKeygenThreadRunner(void *arg)
 
 nsresult nsKeygenThread::StartKeyGeneration(nsIObserver* aObserver)
 {
+  if (!mutex)
+    return NS_OK;
+
   if (!aObserver)
     return NS_OK;
 
@@ -148,9 +157,10 @@ nsresult nsKeygenThread::StartKeyGeneration(nsIObserver* aObserver)
                         NS_PROXY_SYNC | NS_PROXY_ALWAYS,
                         getter_AddRefs(obs));
 
-  MutexAutoLock lock(mutex);
+  PR_Lock(mutex);
 
     if (iAmRunning || keygenReady) {
+      PR_Unlock(mutex);
       return NS_OK;
     }
 
@@ -164,6 +174,8 @@ nsresult nsKeygenThread::StartKeyGeneration(nsIObserver* aObserver)
     // bool thread_started_ok = (threadHandle != nsnull);
     // we might want to return "thread started ok" to caller in the future
     NS_ASSERTION(threadHandle, "Could not create nsKeygenThreadRunner thread\n");
+
+  PR_Unlock(mutex);
   
   return NS_OK;
 }
@@ -175,7 +187,10 @@ nsresult nsKeygenThread::UserCanceled(PRBool *threadAlreadyClosedDialog)
 
   *threadAlreadyClosedDialog = PR_FALSE;
 
-  MutexAutoLock lock(mutex);
+  if (!mutex)
+    return NS_OK;
+
+  PR_Lock(mutex);
   
     if (keygenReady)
       *threadAlreadyClosedDialog = statusDialogClosed;
@@ -186,6 +201,8 @@ nsresult nsKeygenThread::UserCanceled(PRBool *threadAlreadyClosedDialog)
     // it again to avoid problems.
     statusDialogClosed = PR_TRUE;
 
+  PR_Unlock(mutex);
+
   return NS_OK;
 }
 
@@ -194,13 +211,14 @@ void nsKeygenThread::Run(void)
   nsNSSShutDownPreventionLock locker;
   PRBool canGenerate = PR_FALSE;
 
-  {
-    MutexAutoLock lock(mutex);
+  PR_Lock(mutex);
+
     if (alreadyReceivedParams) {
       canGenerate = PR_TRUE;
       keygenReady = PR_FALSE;
     }
-  }
+
+  PR_Unlock(mutex);
 
   if (canGenerate)
     privateKey = PK11_GenerateKeyPair(slot, keyGenMechanism,
@@ -214,8 +232,7 @@ void nsKeygenThread::Run(void)
   // to care for cleaning this up.
 
   nsCOMPtr<nsIObserver> obs;
-  {
-    MutexAutoLock lock(mutex);
+  PR_Lock(mutex);
 
     keygenReady = PR_TRUE;
     iAmRunning = PR_FALSE;
@@ -233,7 +250,8 @@ void nsKeygenThread::Run(void)
       obs = observer;
 
     observer = nsnull;
-  }
+
+  PR_Unlock(mutex);
 
   if (obs)
     obs->Observe(nsnull, "keygen-finished", nsnull);

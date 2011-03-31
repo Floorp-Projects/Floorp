@@ -38,10 +38,9 @@
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
+#include "nsAutoLock.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
-
-using namespace mozilla;
 
 class nsHttpActivityEvent : public nsRunnable
 {
@@ -92,12 +91,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsHttpActivityDistributor,
                               nsIHttpActivityObserver)
 
 nsHttpActivityDistributor::nsHttpActivityDistributor()
-    : mLock("nsHttpActivityDistributor.mLock")
+    : mLock(nsnull)
 {
 }
 
 nsHttpActivityDistributor::~nsHttpActivityDistributor()
 {
+    if (mLock)
+        nsAutoLock::DestroyLock(mLock);
 }
 
 NS_IMETHODIMP
@@ -110,7 +111,7 @@ nsHttpActivityDistributor::ObserveActivity(nsISupports *aHttpChannel,
 {
     nsRefPtr<nsIRunnable> event;
     {
-        MutexAutoLock lock(mLock);
+        nsAutoLock lock(mLock);
 
         if (!mObservers.Count())
             return NS_OK;
@@ -128,7 +129,7 @@ NS_IMETHODIMP
 nsHttpActivityDistributor::GetIsActive(PRBool *isActive)
 {
     NS_ENSURE_ARG_POINTER(isActive);
-    MutexAutoLock lock(mLock);
+    nsAutoLock lock(mLock);
     *isActive = !!mObservers.Count();
     return NS_OK;
 }
@@ -136,7 +137,7 @@ nsHttpActivityDistributor::GetIsActive(PRBool *isActive)
 NS_IMETHODIMP
 nsHttpActivityDistributor::AddObserver(nsIHttpActivityObserver *aObserver)
 {
-    MutexAutoLock lock(mLock);
+    nsAutoLock lock(mLock);
 
     if (!mObservers.AppendObject(aObserver))
         return NS_ERROR_OUT_OF_MEMORY;
@@ -147,10 +148,22 @@ nsHttpActivityDistributor::AddObserver(nsIHttpActivityObserver *aObserver)
 NS_IMETHODIMP
 nsHttpActivityDistributor::RemoveObserver(nsIHttpActivityObserver *aObserver)
 {
-    MutexAutoLock lock(mLock);
+    nsAutoLock lock(mLock);
 
     if (!mObservers.RemoveObject(aObserver))
         return NS_ERROR_FAILURE;
+
+    return NS_OK;
+}
+
+nsresult
+nsHttpActivityDistributor::Init()
+{
+    NS_ENSURE_TRUE(!mLock, NS_ERROR_ALREADY_INITIALIZED);
+
+    mLock = nsAutoLock::NewLock("nsHttpActivityDistributor::mLock");
+    if (!mLock)
+        return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;
 }

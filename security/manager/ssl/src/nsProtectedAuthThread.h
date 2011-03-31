@@ -41,13 +41,12 @@
 #include "keyhi.h"
 #include "nspr.h"
 
-#include "mozilla/Mutex.h"
 #include "nsIProtectedAuthThread.h"
 
 class nsProtectedAuthThread : public nsIProtectedAuthThread
 {
 private:
-    mozilla::Mutex mMutex;
+    PRLock      *mMutex;
 
     nsCOMPtr<nsIObserver> mStatusObserver;
 

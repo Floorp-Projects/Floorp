@@ -42,8 +42,6 @@
 #define _nsCacheRequest_h_
 
 #include "nspr.h"
-#include "mozilla/CondVar.h"
-#include "mozilla/Mutex.h"
 #include "nsCOMPtr.h"
 #include "nsICache.h"
 #include "nsICacheListener.h"
@@ -53,10 +51,6 @@
 
 class nsCacheRequest : public PRCList
 {
-    typedef mozilla::CondVar CondVar;
-    typedef mozilla::MutexAutoLock MutexAutoLock;
-    typedef mozilla::Mutex Mutex;
-
 private:
     friend class nsCacheService;
     friend class nsCacheEntry;
@@ -70,8 +64,8 @@ private:
         : mKey(key),
           mInfo(0),
           mListener(listener),
-          mLock("nsCacheRequest.mLock"),
-          mCondVar(mLock, "nsCacheRequest.mCondVar")
+          mLock(nsnull),
+          mCondVar(nsnull)
     {
         MOZ_COUNT_CTOR(nsCacheRequest);
         PR_INIT_CLIST(this);
@@ -88,6 +82,8 @@ private:
     {
         MOZ_COUNT_DTOR(nsCacheRequest);
         delete mKey;
+        if (mLock)    PR_DestroyLock(mLock);
+        if (mCondVar) PR_DestroyCondVar(mCondVar);
         NS_ASSERTION(PR_CLIST_IS_EMPTY(this), "request still on a list");
 
         if (mListener)
@@ -155,20 +151,40 @@ private:
             MarkWaitingForValidation();  // set up for next time
             return NS_OK;                // early exit;
         }
-        {
-            MutexAutoLock lock(mLock);
-            while (WaitingForValidation()) {
-                mCondVar.Wait();
+
+        if (!mLock) {
+            mLock = PR_NewLock();
+            if (!mLock) return NS_ERROR_OUT_OF_MEMORY;
+
+            NS_ASSERTION(!mCondVar,"we have mCondVar, but didn't have mLock?");
+            mCondVar = PR_NewCondVar(mLock);
+            if (!mCondVar) {
+                PR_DestroyLock(mLock);
+                return NS_ERROR_OUT_OF_MEMORY;
             }
-            MarkWaitingForValidation();  // set up for next time
-        }       
+        }
+        PRStatus status = PR_SUCCESS;
+        PR_Lock(mLock);
+        while (WaitingForValidation() && (status == PR_SUCCESS) ) {
+            status = PR_WaitCondVar(mCondVar, PR_INTERVAL_NO_TIMEOUT);
+        }
+        MarkWaitingForValidation();  // set up for next time
+        PR_Unlock(mLock);
+        
+        NS_ASSERTION(status == PR_SUCCESS, "PR_WaitCondVar() returned PR_FAILURE?");
+        if (status == PR_FAILURE)
+            return NS_ERROR_UNEXPECTED;
+
         return NS_OK;
     }
 
     void WakeUp(void) {
         DoneWaitingForValidation();
-        MutexAutoLock lock(mLock);
-        mCondVar.Notify();
+        if (mLock) {
+        PR_Lock(mLock);
+        PR_NotifyCondVar(mCondVar);
+        PR_Unlock(mLock);
+        }
     }
 
     /**
@@ -178,8 +194,8 @@ private:
     PRUint32                   mInfo;
     nsICacheListener *         mListener;  // strong ref
     nsCOMPtr<nsIThread>        mThread;
-    Mutex                      mLock;
-    CondVar                    mCondVar;
+    PRLock *                   mLock;
+    PRCondVar *                mCondVar;
 };
 
 #endif // _nsCacheRequest_h_

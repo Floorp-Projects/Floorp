@@ -49,6 +49,7 @@
 #include "pratom.h"
 
 #include "nsAlgorithm.h"
+#include "nsAutoLock.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "mozilla/Services.h"

@@ -38,7 +38,6 @@
 #ifndef nsWindowMediator_h_
 #define nsWindowMediator_h_
 
-#include "mozilla/Mutex.h"
 #include "nsCOMPtr.h"
 #include "nsIWindowMediator.h"
 #include "nsISupportsArray.h"
@@ -98,7 +97,7 @@ private:
   PRInt32       mTimeStamp;
   PRBool        mSortingZOrder;
   PRBool        mReady;
-  mozilla::Mutex mListLock;
+  PRLock       *mListLock;
 
   nsCOMPtr<nsISupportsArray> mListeners;
 };

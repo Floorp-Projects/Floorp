@@ -40,7 +40,6 @@
 #include "nsINSSCertCache.h"
 #include "nsIX509CertList.h"
 #include "certt.h"
-#include "mozilla/Mutex.h"
 #include "nsNSSShutDown.h"
 #include "nsCOMPtr.h"
 
@@ -55,7 +54,7 @@ public:
   virtual ~nsNSSCertCache();
 
 private:
-  mozilla::Mutex mutex;
+  PRLock *mutex;
   nsCOMPtr<nsIX509CertList> mCertList;
   virtual void virtualDestroyNSSReference();
   void destructorSafeDestroyNSSReference();
