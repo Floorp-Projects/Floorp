@@ -223,9 +223,19 @@ img {
 
 #firstrun #features a {
   display: inline-block;
-  padding: 5px 35px 5px 0;
-  background: url("chrome://browser/content/firstrun/nav-arrow.png") right center no-repeat;
   font-size: 16px;
+}
+
+#firstrun #features a span {
+  vertical-align: 35%;
+}
+
+#firstrun #features a #nav-arrow {
+  -moz-margin-start: 5px; 
+}
+
+#firstrun[dir="rtl"] #features a #nav-arrow {
+  -moz-transform: scaleX(-1);
 }
 
 #firstrun #demo {
