@@ -344,12 +344,11 @@ nsCRLManager::RescheduleCRLAutoUpdate(void)
   return rv;
 }
 
-/*
+/**
  * getCRLs
  *
  * Export a set of certs and keys from the database to a PKCS#12 file.
-*/
-
+ */
 NS_IMETHODIMP 
 nsCRLManager::GetCrls(nsIArray ** aCrls)
 {
@@ -386,11 +385,11 @@ loser:
   return NS_ERROR_FAILURE;;
 }
 
-/*
- * deletetCrl
+/**
+ * deleteCrl
  *
  * Delete a Crl entry from the cert db.
-*/
+ */
 NS_IMETHODIMP 
 nsCRLManager::DeleteCrl(PRUint32 aCrlIndex)
 {
