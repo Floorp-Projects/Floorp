@@ -208,11 +208,34 @@ ThebesLayerD3D9::RenderThebesLayer(ReadbackProcessor* aReadback)
     return;
   }
 
+  nsIntRect newTextureRect = mVisibleRegion.GetBounds();
+
   SurfaceMode mode = GetSurfaceMode();
   if (mode == SURFACE_COMPONENT_ALPHA &&
       (!mParent || !mParent->SupportsComponentAlphaChildren())) {
     mode = SURFACE_SINGLE_CHANNEL_ALPHA;
   }
+  // If we have a transform that requires resampling of our texture, then
+  // we need to make sure we don't sample pixels that haven't been drawn.
+  // We clamp sample coordinates to the texture rect, but when the visible region
+  // doesn't fill the entire texture rect we need to make sure we draw all the
+  // pixels in the texture rect anyway in case they get sampled.
+  nsIntRegion neededRegion = mVisibleRegion;
+  if (neededRegion.GetBounds() != newTextureRect ||
+      neededRegion.GetNumRects() > 1) {
+    gfxMatrix transform2d;
+    if (!GetEffectiveTransform().Is2D(&transform2d) ||
+        transform2d.HasNonIntegerTranslation()) {
+      neededRegion = newTextureRect;
+      if (mode == SURFACE_OPAQUE) {
+        // We're going to paint outside the visible region, but layout hasn't
+        // promised that it will paint opaquely there, so we'll have to
+        // treat this layer as transparent.
+        mode = SURFACE_SINGLE_CHANNEL_ALPHA;
+      }
+    }
+  }
+
   VerifyContentType(mode);
   UpdateTextures(mode);
   if (!HaveTextures(mode)) {
@@ -232,7 +255,7 @@ ThebesLayerD3D9::RenderThebesLayer(ReadbackProcessor* aReadback)
   // Then the readback areas we need can be copied out of the temporary
   // destinationSurface in DrawRegion.
   nsIntRegion drawRegion;
-  drawRegion.Sub(mVisibleRegion, mValidRegion);
+  drawRegion.Sub(neededRegion, mValidRegion);
   drawRegion.Or(drawRegion, readbackRegion);
   // NS_ASSERTION(mVisibleRegion.Contains(region), "Bad readback region!");
 
@@ -245,7 +268,7 @@ ThebesLayerD3D9::RenderThebesLayer(ReadbackProcessor* aReadback)
 
     DrawRegion(drawRegion, mode, readbackUpdates);
 
-    mValidRegion = mVisibleRegion;
+    mValidRegion = neededRegion;
   }
 
   SetShaderTransformAndOpacity();
