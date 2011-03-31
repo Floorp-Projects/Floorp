@@ -36,7 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
 # include "gfxSharedImageSurface.h"
+#endif
 
 #include "ImageLayerOGL.h"
 #include "gfxImageSurface.h"
@@ -743,6 +745,8 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
                                tex);
 }
 
+#ifdef MOZ_IPC
+
 ShadowImageLayerOGL::ShadowImageLayerOGL(LayerManagerOGL* aManager)
   : ShadowImageLayer(aManager, nsnull)
   , LayerOGL(aManager)
@@ -832,6 +836,8 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
   mOGLManager->BindAndDrawQuad(program);
 }
+
+#endif  // MOZ_IPC
 
 
 } /* layers */

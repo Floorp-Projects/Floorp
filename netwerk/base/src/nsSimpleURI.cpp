@@ -38,7 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
 #include "IPCMessageUtils.h"
+#endif
 
 #include "nsSimpleURI.h"
 #include "nscore.h"
@@ -124,6 +126,7 @@ nsSimpleURI::Write(nsIObjectOutputStream* aStream)
 PRBool
 nsSimpleURI::Read(const IPC::Message *aMsg, void **aIter)
 {
+#ifdef MOZ_IPC
     bool isMutable;
     if (!ReadParam(aMsg, aIter, &isMutable) ||
         !ReadParam(aMsg, aIter, &mScheme) ||
@@ -132,14 +135,19 @@ nsSimpleURI::Read(const IPC::Message *aMsg, void **aIter)
 
     mMutable = isMutable;
     return PR_TRUE;
+#else
+    return PR_FALSE;
+#endif
 }
 
 void
 nsSimpleURI::Write(IPC::Message *aMsg)
 {
+#ifdef MOZ_IPC
     WriteParam(aMsg, bool(mMutable));
     WriteParam(aMsg, mScheme);
     WriteParam(aMsg, mPath);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -53,12 +53,14 @@
 #include "nsStackWalk.h"
 #include "nsString.h"
 
+#ifdef MOZ_IPC
 #include "nsXULAppAPI.h"
 #ifdef XP_WIN
 #include <process.h>
 #define getpid _getpid
 #else
 #include <unistd.h>
+#endif
 #endif
 
 #ifdef NS_TRACE_MALLOC
@@ -354,8 +356,12 @@ public:
   }
 
   PRBool PrintDumpHeader(FILE* out, const char* msg, nsTraceRefcntImpl::StatisticsType type) {
+#ifdef MOZ_IPC
     fprintf(out, "\n== BloatView: %s, %s process %d\n", msg,
             XRE_ChildProcessTypeToString(XRE_GetProcessType()), getpid());
+#else
+    fprintf(out, "\n== BloatView: %s\n", msg);
+#endif
     nsTraceRefcntStats& stats =
       (type == nsTraceRefcntImpl::NEW_STATS) ? mNewStats : mAllStats;
     if (gLogLeaksOnly && !HaveLeaks(&stats))
@@ -662,6 +668,7 @@ static PRBool InitLog(const char* envVar, const char* msg, FILE* *result)
     else {
       FILE *stream;
       nsCAutoString fname(value);
+#ifdef MOZ_IPC
       if (XRE_GetProcessType() != GeckoProcessType_Default) {
         bool hasLogExtension = 
             fname.RFind(".log", PR_TRUE, -1, 4) == kNotFound ? false : true;
@@ -674,6 +681,7 @@ static PRBool InitLog(const char* envVar, const char* msg, FILE* *result)
         if (hasLogExtension)
           fname.AppendLiteral(".log");
       }
+#endif
       stream = ::fopen(fname.get(), "w" FOPEN_NO_INHERIT);
       if (stream != NULL) {
         *result = stream;
