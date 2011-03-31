@@ -335,7 +335,7 @@ ExpandInlineFrames(JSContext *cx, bool all)
          f = f->previous) {
 
         if (f->regs.inlined) {
-            StackSegment *seg = cx->containingSegment(f->fp());
+            StackSegment *seg = cx->stack().containingSegment(f->fp());
             JSFrameRegs *regs = seg->getCurrentRegs();
             if (regs->fp == f->fp()) {
                 JS_ASSERT(regs == &f->regs);
@@ -446,6 +446,7 @@ Recompiler::recompile()
             PatchableFrame frame;
             frame.fp = fp;
             frame.pc = fp->pc(cx, next);
+            frame.scriptedCall = false;
 
             if (next) {
                 // check for a scripted call returning into the recompiled script.
