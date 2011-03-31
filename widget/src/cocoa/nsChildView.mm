@@ -5892,6 +5892,8 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   if ([currentEvent type] != NSLeftMouseDown)
     return YES;
 
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
+
   NSPoint eventLoc = nsCocoaUtils::ScreenLocationForEvent(currentEvent);
   eventLoc.y = nsCocoaUtils::FlippedScreenY(eventLoc.y);
   nsIntPoint widgetLoc(NSToIntRound(eventLoc.x), NSToIntRound(eventLoc.y));
@@ -5899,7 +5901,10 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
   nsQueryContentEvent hitTest(PR_TRUE, NS_QUERY_DOM_WIDGET_HITTEST, mGeckoChild);
   hitTest.InitForQueryDOMWidgetHittest(widgetLoc);
+  // This might destroy our widget (and null out mGeckoChild).
   mGeckoChild->DispatchWindowEvent(hitTest);
+  if (!mGeckoChild)
+    return NO;
   if (hitTest.mSucceeded && !hitTest.mReply.mWidgetIsHit)
     return NO;
 
