@@ -493,14 +493,14 @@ nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
                           pt, gfxSize(width, sizePixel),
                           ascentPixel, offsetPixel,
                           NS_STYLE_TEXT_DECORATION_UNDERLINE,
-                          nsCSSRendering::DECORATION_STYLE_SOLID);
+                          NS_STYLE_TEXT_DECORATION_STYLE_SOLID);
       }
       if (decorations & NS_FONT_DECORATION_OVERLINE) {
         nsCSSRendering::PaintDecorationLine(ctx, overColor,
                           pt, gfxSize(width, sizePixel),
                           ascentPixel, ascentPixel,
                           NS_STYLE_TEXT_DECORATION_OVERLINE,
-                          nsCSSRendering::DECORATION_STYLE_SOLID);
+                          NS_STYLE_TEXT_DECORATION_STYLE_SOLID);
       }
     }
 
@@ -584,7 +584,7 @@ nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
       nsCSSRendering::PaintDecorationLine(ctx, strikeColor,
                         pt, gfxSize(width, sizePixel), ascentPixel, offsetPixel,
                         NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
-                        nsCSSRendering::DECORATION_STYLE_SOLID);
+                        NS_STYLE_TEXT_DECORATION_STYLE_SOLID);
     }
 }
 

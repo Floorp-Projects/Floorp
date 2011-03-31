@@ -426,20 +426,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsILookAndFeel, NS_ILOOKANDFEEL_IID)
                                           (c) == NS_SAME_AS_FOREGROUND_COLOR || \
                                           (c) == NS_40PERCENT_FOREGROUND_COLOR)
 
-// -------------------------------------------------
-//  Underline styles for eMetric_IME*UnderlineStyle
-// -------------------------------------------------
-
-#define NS_UNDERLINE_STYLE_NONE   0
-#define NS_UNDERLINE_STYLE_DOTTED 1
-#define NS_UNDERLINE_STYLE_DASHED 2
-#define NS_UNDERLINE_STYLE_SOLID  3
-#define NS_UNDERLINE_STYLE_DOUBLE 4
-#define NS_UNDERLINE_STYLE_WAVY   5
-
-#define NS_IS_VALID_UNDERLINE_STYLE(s) \
-  (NS_UNDERLINE_STYLE_NONE <= (s) && (s) <= NS_UNDERLINE_STYLE_WAVY)
-
 // ------------------------------------------
 //  Bits for eMetric_AlertNotificationOrigin
 // ------------------------------------------
