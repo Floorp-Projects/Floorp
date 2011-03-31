@@ -71,7 +71,9 @@ public:
 
     nsresult Init();
 
+#ifdef MOZ_IPC    
     void CollectSubstitutions(InfallibleTArray<ResourceMapping>& aResources);
+#endif
 
 private:
     nsresult Init(nsIFile *aOmniJar);
