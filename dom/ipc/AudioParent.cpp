@@ -160,7 +160,7 @@ AudioParent::Notify(nsITimer* timer)
 
   NS_ASSERTION(mStream, "AudioStream not initialized.");
   PRInt64 offset = mStream->GetSampleOffset();
-  SendSampleOffsetUpdate(offset, PR_IntervalNow());
+  unused << SendSampleOffsetUpdate(offset, PR_IntervalNow());
   return NS_OK;
 }
 
