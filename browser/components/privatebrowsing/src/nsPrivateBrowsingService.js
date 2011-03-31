@@ -656,10 +656,10 @@ PrivateBrowsingService.prototype = {
         "AND state NOT IN (?2, ?3, ?4)"
       );
       let pattern = stmt.escapeStringForLIKE(aDomain, "/");
-      stmt.bindStringParameter(0, "%" + pattern + "%");
-      stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
-      stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
-      stmt.bindInt32Parameter(3, Ci.nsIDownloadManager.DOWNLOAD_QUEUED);
+      stmt.bindByIndex(0, "%" + pattern + "%");
+      stmt.bindByIndex(1, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
+      stmt.bindByIndex(2, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
+      stmt.bindByIndex(3, Ci.nsIDownloadManager.DOWNLOAD_QUEUED);
       try {
         stmt.execute();
       }
@@ -719,7 +719,7 @@ PrivateBrowsingService.prototype = {
         "WHERE name LIKE ?1 ESCAPE '/'"
       );
       let pattern = stmt.escapeStringForLIKE(aDomain, "/");
-      stmt.bindStringParameter(0, "%" + pattern);
+      stmt.bindByIndex(0, "%" + pattern);
       try {
         while (stmt.executeStep())
           if (stmt.getString(0).hasRootDomain(aDomain))

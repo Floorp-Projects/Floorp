@@ -1530,12 +1530,9 @@ nsPlaintextEditor::InsertAsQuotation(const nsAString& aQuotedText,
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-  // We have the text.  Cite it appropriately:
-  nsCOMPtr<nsICiter> citer = new nsInternetCiter();
-
   // Let the citer quote it for us:
   nsString quotedStuff;
-  nsresult rv = citer->GetCiteString(aQuotedText, quotedStuff);
+  nsresult rv = nsInternetCiter::GetCiteString(aQuotedText, quotedStuff);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // It's best to put a blank line after the quoted text so that mails
@@ -1630,13 +1627,9 @@ nsPlaintextEditor::Rewrap(PRBool aRespectNewlines)
                           &isCollapsed, current);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsICiter> citer = new nsInternetCiter();
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(citer, NS_ERROR_UNEXPECTED);
-
   nsString wrapped;
   PRUint32 firstLineOffset = 0;   // XXX need to reset this if there is a selection
-  rv = citer->Rewrap(current, wrapCol, firstLineOffset, aRespectNewlines,
+  rv = nsInternetCiter::Rewrap(current, wrapCol, firstLineOffset, aRespectNewlines,
                      wrapped);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1659,11 +1652,8 @@ nsPlaintextEditor::StripCites()
                                    &isCollapsed, current);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsICiter> citer = new nsInternetCiter();
-  NS_ENSURE_TRUE(citer, NS_ERROR_UNEXPECTED);
-
   nsString stripped;
-  rv = citer->StripCites(current, stripped);
+  rv = nsInternetCiter::StripCites(current, stripped);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (isCollapsed)    // rewrap the whole document
