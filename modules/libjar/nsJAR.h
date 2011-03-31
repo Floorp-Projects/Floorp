@@ -52,13 +52,13 @@
 #include "prtypes.h"
 #include "prinrval.h"
 
-#include "mozilla/Mutex.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIFile.h"
 #include "nsStringEnumerator.h"
 #include "nsHashtable.h"
+#include "nsAutoLock.h"
 #include "nsIZipReader.h"
 #include "nsZipArchive.h"
 #include "nsIPrincipal.h"
@@ -140,11 +140,10 @@ class nsJAR : public nsIZipReader
     PRInt16                  mGlobalStatus;   // Global signature verification status
     PRIntervalTime           mReleaseTime;    // used by nsZipReaderCache for flushing entries
     nsZipReaderCache*        mCache;          // if cached, this points to the cache it's contained in
-    mozilla::Mutex           mLock;	
+    PRLock*                  mLock;	
     PRInt64                  mMtime;
     PRInt32                  mTotalItemsInManifest;
-    PRBool                   mOpened;
-
+    
     nsresult ParseManifest();
     void     ReportError(const char* aFilename, PRInt16 errorCode);
     nsresult LoadEntry(const char* aFilename, char** aBuf, 
@@ -230,7 +229,7 @@ public:
   nsresult ReleaseZip(nsJAR* reader);
 
 protected:
-  mozilla::Mutex        mLock;
+  PRLock*               mLock;
   PRInt32               mCacheSize;
   nsSupportsHashtable   mZips;
 

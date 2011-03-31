@@ -45,6 +45,7 @@
 #include "nsIXPConnect.h"
 
 // Other includes
+#include "nsAutoLock.h"
 #include "nsAXPCNativeCallContext.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
@@ -57,8 +58,6 @@
 #include "nsDOMWorkerEvents.h"
 #include "nsDOMWorkerPool.h"
 #include "nsDOMWorkerXHRProxy.h"
-
-using namespace mozilla;
 
 // The list of event types that we support. This list and the defines based on
 // it determine the sizes of the listener arrays in nsDOMWorkerXHRProxy. Make
@@ -494,7 +493,7 @@ nsDOMWorkerXHR::Cancel()
   {
     // This lock is here to prevent a race between Cancel and GetUpload, not to
     // protect mCanceled.
-    MutexAutoLock lock(mWorker->GetLock());
+    nsAutoLock lock(mWorker->Lock());
 
     mCanceled = PR_TRUE;
     mUpload = nsnull;
@@ -830,7 +829,7 @@ nsDOMWorkerXHR::GetUpload(nsIXMLHttpRequestUpload** aUpload)
     return NS_ERROR_ABORT;
   }
 
-  MutexAutoLock lock(worker->GetLock());
+  nsAutoLock lock(worker->Lock());
 
   if (mCanceled) {
     return NS_ERROR_ABORT;

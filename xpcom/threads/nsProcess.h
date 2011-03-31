@@ -44,7 +44,6 @@
 #define PROCESSMODEL_WINAPI
 #endif
 
-#include "mozilla/Mutex.h"
 #include "nsIProcess.h"
 #include "nsIFile.h"
 #include "nsIThread.h"
@@ -90,7 +89,7 @@ private:
                       PRBool holdWeak, PRBool argsUTF8);
 
   PRThread* mThread;
-  mozilla::Mutex mLock;
+  PRLock* mLock;
   PRBool mShutdown;
 
   nsCOMPtr<nsIFile> mExecutable;

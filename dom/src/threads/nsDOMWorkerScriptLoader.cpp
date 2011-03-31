@@ -49,6 +49,7 @@
 #include "nsIStreamLoader.h"
 
 // Other includes
+#include "nsAutoLock.h"
 #include "nsContentErrors.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
@@ -68,8 +69,6 @@
 #include "nsDOMWorkerSecurityManager.h"
 #include "nsDOMThreadService.h"
 #include "nsDOMWorkerTimeout.h"
-
-using namespace mozilla;
 
 #define LOG(_args) PR_LOG(gDOMThreadsLog, PR_LOG_DEBUG, _args)
 
@@ -304,7 +303,7 @@ nsDOMWorkerScriptLoader::Cancel()
 
   nsAutoTArray<ScriptLoaderRunnable*, 10> runnables;
   {
-    MutexAutoLock lock(mWorker->GetLock());
+    nsAutoLock lock(mWorker->Lock());
     runnables.AppendElements(mPendingRunnables);
     mPendingRunnables.Clear();
   }
@@ -754,7 +753,7 @@ ScriptLoaderRunnable::ScriptLoaderRunnable(nsDOMWorkerScriptLoader* aLoader)
 : mRevoked(PR_FALSE),
   mLoader(aLoader)
 {
-  MutexAutoLock lock(aLoader->GetLock());
+  nsAutoLock lock(aLoader->Lock());
 #ifdef DEBUG
   nsDOMWorkerScriptLoader::ScriptLoaderRunnable** added =
 #endif
@@ -766,7 +765,7 @@ nsDOMWorkerScriptLoader::
 ScriptLoaderRunnable::~ScriptLoaderRunnable()
 {
   if (!mRevoked) {
-    MutexAutoLock lock(mLoader->GetLock());
+    nsAutoLock lock(mLoader->Lock());
 #ifdef DEBUG
     PRBool removed =
 #endif

@@ -53,8 +53,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIMutableArray.h"
 
-using namespace mozilla;
-
 // defined in osx_corewlan.mm
 // basically relaces accesspoints in the passed reference
 // it lives in a separate file so that we can use objective c.
@@ -77,7 +75,7 @@ nsWifiMonitor::DoScanWithCoreWLAN()
     nsCOMArray<nsIWifiListener> currentListeners;
 
     {
-      MonitorAutoEnter mon(mMonitor);
+      nsAutoMonitor mon(mMonitor);
 
       for (PRUint32 i = 0; i < mListeners.Length(); i++) {
         if (!mListeners[i].mHasSentData || accessPointsChanged) {
@@ -127,7 +125,7 @@ nsWifiMonitor::DoScanWithCoreWLAN()
     // wait for some reasonable amount of time.  pref?
     LOG(("waiting on monitor\n"));
 
-    MonitorAutoEnter mon(mMonitor);
+    nsAutoMonitor mon(mMonitor);
     mon.Wait(PR_SecondsToInterval(60));
   }
   while (mKeepGoing);
@@ -212,7 +210,7 @@ nsWifiMonitor::DoScanOld()
     nsCOMArray<nsIWifiListener> currentListeners;
 
     {
-      MonitorAutoEnter mon(mMonitor);
+      nsAutoMonitor mon(mMonitor);
 
       for (PRUint32 i = 0; i < mListeners.Length(); i++) {
         if (!mListeners[i].mHasSentData || accessPointsChanged) {
@@ -263,7 +261,7 @@ nsWifiMonitor::DoScanOld()
     // wait for some reasonable amount of time.  pref?
     LOG(("waiting on monitor\n"));
 
-    MonitorAutoEnter mon(mMonitor);
+    nsAutoMonitor mon(mMonitor);
     mon.Wait(PR_SecondsToInterval(60));
   }
   while (mKeepGoing);

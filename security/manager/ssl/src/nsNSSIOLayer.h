@@ -44,7 +44,6 @@
 #include "prtypes.h"
 #include "prio.h"
 #include "certt.h"
-#include "mozilla/Mutex.h"
 #include "nsString.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -283,7 +282,7 @@ public:
   static PRDescIdentity nsSSLIOLayerIdentity;
   static PRIOMethods nsSSLIOLayerMethods;
 
-  static mozilla::Mutex *mutex;
+  static PRLock *mutex;
   static nsCStringHashSet *mTLSIntolerantSites;
   static nsCStringHashSet *mTLSTolerantSites;
   static nsPSMRememberCertErrorsTable* mHostsWithCertErrors;

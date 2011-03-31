@@ -38,8 +38,6 @@
 #include "nsNSSShutDown.h"
 #include "nsCOMPtr.h"
 
-using namespace mozilla;
-
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
@@ -79,8 +77,8 @@ static PLDHashTableOps gSetOps = {
 nsNSSShutDownList *nsNSSShutDownList::singleton = nsnull;
 
 nsNSSShutDownList::nsNSSShutDownList()
-:mListLock("nsNSSShutDownList.mListLock")
 {
+  mListLock = PR_NewLock();
   mActiveSSLSockets = 0;
   mPK11LogoutCancelObjects.ops = nsnull;
   mObjects.ops = nsnull;
@@ -92,6 +90,10 @@ nsNSSShutDownList::nsNSSShutDownList()
 
 nsNSSShutDownList::~nsNSSShutDownList()
 {
+  if (mListLock) {
+    PR_DestroyLock(mListLock);
+    mListLock = nsnull;
+  }
   if (mObjects.ops) {
     PL_DHashTableFinish(&mObjects);
     mObjects.ops = nsnull;
@@ -110,8 +112,9 @@ void nsNSSShutDownList::remember(nsNSSShutDownObject *o)
     return;
   
   PR_ASSERT(o);
-  MutexAutoLock lock(singleton->mListLock);
+  PR_Lock(singleton->mListLock);
     PL_DHashTableOperate(&singleton->mObjects, o, PL_DHASH_ADD);
+  PR_Unlock(singleton->mListLock);
 }
 
 void nsNSSShutDownList::forget(nsNSSShutDownObject *o)
@@ -120,8 +123,9 @@ void nsNSSShutDownList::forget(nsNSSShutDownObject *o)
     return;
   
   PR_ASSERT(o);
-  MutexAutoLock lock(singleton->mListLock);
-  PL_DHashTableOperate(&singleton->mObjects, o, PL_DHASH_REMOVE);
+  PR_Lock(singleton->mListLock);
+    PL_DHashTableOperate(&singleton->mObjects, o, PL_DHASH_REMOVE);
+  PR_Unlock(singleton->mListLock);
 }
 
 void nsNSSShutDownList::remember(nsOnPK11LogoutCancelObject *o)
@@ -130,8 +134,9 @@ void nsNSSShutDownList::remember(nsOnPK11LogoutCancelObject *o)
     return;
   
   PR_ASSERT(o);
-  MutexAutoLock lock(singleton->mListLock);
-  PL_DHashTableOperate(&singleton->mPK11LogoutCancelObjects, o, PL_DHASH_ADD);
+  PR_Lock(singleton->mListLock);
+    PL_DHashTableOperate(&singleton->mPK11LogoutCancelObjects, o, PL_DHASH_ADD);
+  PR_Unlock(singleton->mListLock);
 }
 
 void nsNSSShutDownList::forget(nsOnPK11LogoutCancelObject *o)
@@ -140,8 +145,9 @@ void nsNSSShutDownList::forget(nsOnPK11LogoutCancelObject *o)
     return;
   
   PR_ASSERT(o);
-  MutexAutoLock lock(singleton->mListLock);
-  PL_DHashTableOperate(&singleton->mPK11LogoutCancelObjects, o, PL_DHASH_REMOVE);
+  PR_Lock(singleton->mListLock);
+    PL_DHashTableOperate(&singleton->mPK11LogoutCancelObjects, o, PL_DHASH_REMOVE);
+  PR_Unlock(singleton->mListLock);
 }
 
 void nsNSSShutDownList::trackSSLSocketCreate()
@@ -149,8 +155,9 @@ void nsNSSShutDownList::trackSSLSocketCreate()
   if (!singleton)
     return;
   
-  MutexAutoLock lock(singleton->mListLock);
-  ++singleton->mActiveSSLSockets;
+  PR_Lock(singleton->mListLock);
+    ++singleton->mActiveSSLSockets;
+  PR_Unlock(singleton->mListLock);
 }
 
 void nsNSSShutDownList::trackSSLSocketClose()
@@ -158,8 +165,9 @@ void nsNSSShutDownList::trackSSLSocketClose()
   if (!singleton)
     return;
   
-  MutexAutoLock lock(singleton->mListLock);
-  --singleton->mActiveSSLSockets;
+  PR_Lock(singleton->mListLock);
+    --singleton->mActiveSSLSockets;
+  PR_Unlock(singleton->mListLock);
 }
   
 PRBool nsNSSShutDownList::areSSLSocketsActive()
@@ -172,8 +180,12 @@ PRBool nsNSSShutDownList::areSSLSocketsActive()
     return PR_FALSE;
   }
   
-  MutexAutoLock lock(singleton->mListLock);
-  return (singleton->mActiveSSLSockets > 0);
+  PRBool retval;
+  PR_Lock(singleton->mListLock);
+    retval = (singleton->mActiveSSLSockets > 0);
+  PR_Unlock(singleton->mListLock);
+
+  return retval;
 }
 
 nsresult nsNSSShutDownList::doPK11Logout()
@@ -184,8 +196,9 @@ nsresult nsNSSShutDownList::doPK11Logout()
   // We only must ensure that our objects do not go away.
   // This is guaranteed by holding the list lock.
 
-  MutexAutoLock lock(singleton->mListLock);
-  PL_DHashTableEnumerate(&mPK11LogoutCancelObjects, doPK11LogoutHelper, 0);
+  PR_Lock(mListLock);
+    PL_DHashTableEnumerate(&mPK11LogoutCancelObjects, doPK11LogoutHelper, 0);
+  PR_Unlock(mListLock);
 
   return NS_OK;
 }
@@ -234,8 +247,9 @@ nsresult nsNSSShutDownList::evaporateAllNSSResources()
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("now evaporating NSS resources\n"));
   int removedCount;
   do {
-    MutexAutoLock lock(mListLock);
-    removedCount = PL_DHashTableEnumerate(&mObjects, evaporateAllNSSResourcesHelper, 0);
+    PR_Lock(mListLock);
+      removedCount = PL_DHashTableEnumerate(&mObjects, evaporateAllNSSResourcesHelper, 0);
+    PR_Unlock(mListLock);
   } while (removedCount > 0);
 
   mActivityState.releaseCurrentThreadActivityRestriction();
@@ -246,15 +260,17 @@ PLDHashOperator PR_CALLBACK
 nsNSSShutDownList::evaporateAllNSSResourcesHelper(PLDHashTable *table, 
   PLDHashEntryHdr *hdr, PRUint32 number, void *arg)
 {
-  ObjectHashEntry *entry = static_cast<ObjectHashEntry*>(hdr);
-  {
-    MutexAutoUnlock unlock(singleton->mListLock);
-    entry->obj->shutdown(nsNSSShutDownObject::calledFromList);
-  }
-  // Never free more than one entry, because other threads might be calling
-  // us and remove themselves while we are iterating over the list,
-  // and the behaviour of changing the list while iterating is undefined.
-  return (PLDHashOperator)(PL_DHASH_STOP | PL_DHASH_REMOVE);
+    ObjectHashEntry *entry = static_cast<ObjectHashEntry*>(hdr);
+    PR_Unlock(singleton->mListLock);
+
+  entry->obj->shutdown(nsNSSShutDownObject::calledFromList);
+
+    PR_Lock(singleton->mListLock);
+
+    // Never free more than one entry, because other threads might be calling
+    // us and remove themselves while we are iterating over the list,
+    // and the behaviour of changing the list while iterating is undefined.
+    return (PLDHashOperator)(PL_DHASH_STOP | PL_DHASH_REMOVE);
 }
 
 nsNSSShutDownList *nsNSSShutDownList::construct()
@@ -269,129 +285,173 @@ nsNSSShutDownList *nsNSSShutDownList::construct()
 }
 
 nsNSSActivityState::nsNSSActivityState()
-:mNSSActivityStateLock("nsNSSActivityState.mNSSActivityStateLock"), 
- mNSSActivityChanged(mNSSActivityStateLock,
-                     "nsNSSActivityState.mNSSActivityStateLock"),
+:mNSSActivityStateLock(nsnull), 
+ mNSSActivityChanged(nsnull),
  mNSSActivityCounter(0),
  mBlockingUICounter(0),
  mIsUIForbidden(PR_FALSE),
  mNSSRestrictedThread(nsnull)
 {
+  mNSSActivityStateLock = PR_NewLock();
+  if (!mNSSActivityStateLock)
+    return;
+
+  mNSSActivityChanged = PR_NewCondVar(mNSSActivityStateLock);
 }
 
 nsNSSActivityState::~nsNSSActivityState()
 {
+  if (mNSSActivityChanged) {
+    PR_DestroyCondVar(mNSSActivityChanged);
+    mNSSActivityChanged = nsnull;
+  }
+
+  if (mNSSActivityStateLock) {
+    PR_DestroyLock(mNSSActivityStateLock);
+    mNSSActivityStateLock = nsnull;
+  }
 }
 
 void nsNSSActivityState::enter()
 {
-  MutexAutoLock lock(mNSSActivityStateLock);
+  PR_Lock(mNSSActivityStateLock);
 
-  while (mNSSRestrictedThread && mNSSRestrictedThread != PR_GetCurrentThread()) {
-    mNSSActivityChanged.Wait();
-  }
+    while (mNSSRestrictedThread && mNSSRestrictedThread != PR_GetCurrentThread()) {
+      PR_WaitCondVar(mNSSActivityChanged, PR_INTERVAL_NO_TIMEOUT);
+    }
 
-  ++mNSSActivityCounter;
+    ++mNSSActivityCounter;
+  
+  PR_Unlock(mNSSActivityStateLock);
 }
 
 void nsNSSActivityState::leave()
 {
-  MutexAutoLock lock(mNSSActivityStateLock);
+  PR_Lock(mNSSActivityStateLock);
 
-  --mNSSActivityCounter;
+    --mNSSActivityCounter;
 
-  mNSSActivityChanged.NotifyAll();
+    if (!mNSSActivityCounter) {
+      PR_NotifyAllCondVar(mNSSActivityChanged);
+    }
+
+  PR_Unlock(mNSSActivityStateLock);
 }
 
 void nsNSSActivityState::enterBlockingUIState()
 {
-  MutexAutoLock lock(mNSSActivityStateLock);
+  PR_Lock(mNSSActivityStateLock);
 
-  ++mBlockingUICounter;
+    ++mBlockingUICounter;
+
+  PR_Unlock(mNSSActivityStateLock);
 }
 
 void nsNSSActivityState::leaveBlockingUIState()
 {
-  MutexAutoLock lock(mNSSActivityStateLock);
+  PR_Lock(mNSSActivityStateLock);
 
-  --mBlockingUICounter;
+    --mBlockingUICounter;
+
+  PR_Unlock(mNSSActivityStateLock);
 }
 
 PRBool nsNSSActivityState::isBlockingUIActive()
 {
-  MutexAutoLock lock(mNSSActivityStateLock);
-  return (mBlockingUICounter > 0);
+  PRBool retval;
+
+  PR_Lock(mNSSActivityStateLock);
+    retval = (mBlockingUICounter > 0);
+  PR_Unlock(mNSSActivityStateLock);
+
+  return retval;
 }
 
 PRBool nsNSSActivityState::isUIForbidden()
 {
-  MutexAutoLock lock(mNSSActivityStateLock);
-  return mIsUIForbidden;
+  PRBool retval;
+  
+  PR_Lock(mNSSActivityStateLock);
+    retval = mIsUIForbidden;
+  PR_Unlock(mNSSActivityStateLock);
+
+  return retval;
 }
 
 PRBool nsNSSActivityState::ifPossibleDisallowUI(RealOrTesting rot)
 {
   PRBool retval = PR_FALSE;
-  MutexAutoLock lock(mNSSActivityStateLock);
 
-  // Checking and disallowing the UI must be done atomically.
+  PR_Lock(mNSSActivityStateLock);
 
-  if (!mBlockingUICounter) {
-    // No UI is currently shown, we are able to evaporate.
-    retval = PR_TRUE;
-    if (rot == do_it_for_real) {
-      // Remember to disallow UI.
-      mIsUIForbidden = PR_TRUE;
+    // Checking and disallowing the UI must be done atomically.
+
+    if (!mBlockingUICounter) {
+      // No UI is currently shown, we are able to evaporate.
+      retval = PR_TRUE;
+      if (rot == do_it_for_real) {
+        // Remember to disallow UI.
+        mIsUIForbidden = PR_TRUE;
         
-      // to clear the "forbidden" state,
-      // one must either call 
-      // restrictActivityToCurrentThread() + releaseCurrentThreadActivityRestriction()
-      // or cancel the operation by calling
-      // unprepareCurrentThreadRestriction()
+        // to clear the "forbidden" state,
+        // one must either call 
+        // restrictActivityToCurrentThread() + releaseCurrentThreadActivityRestriction()
+        // or cancel the operation by calling
+        // unprepareCurrentThreadRestriction()
+      }
     }
-  }
+  
+  PR_Unlock(mNSSActivityStateLock);
+
   return retval;
 }
 
 void nsNSSActivityState::allowUI()
 {
-  MutexAutoLock lock(mNSSActivityStateLock);
+  PR_Lock(mNSSActivityStateLock);
 
-  mIsUIForbidden = PR_FALSE;
+    mIsUIForbidden = PR_FALSE;
+  
+  PR_Unlock(mNSSActivityStateLock);
 }
 
 PRStatus nsNSSActivityState::restrictActivityToCurrentThread()
 {
   PRStatus retval = PR_FAILURE;
-  MutexAutoLock lock(mNSSActivityStateLock);
+
+  PR_Lock(mNSSActivityStateLock);
   
-  if (!mBlockingUICounter) {
-    while (0 < mNSSActivityCounter && !mBlockingUICounter) {
-      mNSSActivityChanged.Wait(PR_TicksPerSecond());
-    }
+    if (!mBlockingUICounter) {
+      while (0 < mNSSActivityCounter && !mBlockingUICounter) {
+        PR_WaitCondVar(mNSSActivityChanged, PR_TicksPerSecond());
+      }
       
-    if (mBlockingUICounter) {
-      // This should never happen.
-      // If we arrive here, our logic is broken.
-      PR_ASSERT(0);
+      if (mBlockingUICounter) {
+        // This should never happen.
+        // If we arrive here, our logic is broken.
+        PR_ASSERT(0);
+      }
+      else {
+        mNSSRestrictedThread = PR_GetCurrentThread();
+        retval = PR_SUCCESS;
+      }
     }
-    else {
-      mNSSRestrictedThread = PR_GetCurrentThread();
-      retval = PR_SUCCESS;
-    }
-  }
+  
+  PR_Unlock(mNSSActivityStateLock);
 
   return retval;
 }
 
 void nsNSSActivityState::releaseCurrentThreadActivityRestriction()
 {
-  MutexAutoLock lock(mNSSActivityStateLock);
+  PR_Lock(mNSSActivityStateLock);
 
-  mNSSRestrictedThread = nsnull;
-  mIsUIForbidden = PR_FALSE;
+    mNSSRestrictedThread = nsnull;
+    mIsUIForbidden = PR_FALSE;
 
-  mNSSActivityChanged.NotifyAll();
+    PR_NotifyAllCondVar(mNSSActivityChanged);
+
+  PR_Unlock(mNSSActivityStateLock);
 }
 
 nsNSSShutDownPreventionLock::nsNSSShutDownPreventionLock()

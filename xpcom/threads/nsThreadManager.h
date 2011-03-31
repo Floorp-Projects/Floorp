@@ -39,7 +39,6 @@
 #ifndef nsThreadManager_h__
 #define nsThreadManager_h__
 
-#include "mozilla/Mutex.h"
 #include "nsIThreadManager.h"
 #include "nsRefPtrHashtable.h"
 #include "nsThread.h"
@@ -92,9 +91,7 @@ private:
   PRUintn             mCurThreadIndex;  // thread-local-storage index
   nsRefPtr<nsThread>  mMainThread;
   PRThread           *mMainPRThread;
-  // This is a pointer in order to allow creating nsThreadManager from
-  // the static context in debug builds.
-  nsAutoPtr<mozilla::Mutex> mLock;  // protects tables
+  PRLock             *mLock;  // protects tables
   PRBool              mInitialized;
 };
 

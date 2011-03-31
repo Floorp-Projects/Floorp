@@ -42,10 +42,10 @@
 
 // Other includes
 #include "jsapi.h"
-#include "mozilla/Monitor.h"
 #include "nsCOMPtr.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
+#include "prmon.h"
 
 class nsDOMWorker;
 class nsIDocument;
@@ -55,8 +55,6 @@ class nsIScriptGlobalObject;
 
 class nsDOMWorkerPool
 {
-  typedef mozilla::Monitor Monitor;
-
 public:
   nsDOMWorkerPool(nsIScriptGlobalObject* aGlobalObject,
                   nsIDocument* aDocument);
@@ -81,7 +79,7 @@ public:
   nsresult NoteWorker(nsDOMWorker* aWorker);
   void NoteDyingWorker(nsDOMWorker* aWorker);
 
-  Monitor& GetMonitor() {
+  PRMonitor* Monitor() {
     return mMonitor;
   }
 
@@ -107,7 +105,7 @@ private:
   nsTArray<nsDOMWorker*> mWorkers;
 
   // Monitor for suspending and resuming workers.
-  Monitor mMonitor;
+  PRMonitor* mMonitor;
 
   PRPackedBool mCanceled;
   PRPackedBool mSuspended;

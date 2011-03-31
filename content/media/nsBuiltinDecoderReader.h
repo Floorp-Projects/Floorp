@@ -42,6 +42,7 @@
 #include <nsDeque.h>
 #include "Layers.h"
 #include "ImageLayers.h"
+#include "nsAutoLock.h"
 #include "nsClassHashtable.h"
 #include "mozilla/TimeStamp.h"
 #include "nsSize.h"

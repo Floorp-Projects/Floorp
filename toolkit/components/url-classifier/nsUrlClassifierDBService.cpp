@@ -47,6 +47,7 @@
 #include "mozStorageHelper.h"
 #include "mozStorageCID.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsAutoLock.h"
 #include "nsCRT.h"
 #include "nsDataHashtable.h"
 #include "nsICryptoHash.h"
@@ -71,16 +72,14 @@
 #include "nsNetCID.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMStrings.h"
-#include "mozilla/Mutex.h"
 #include "prlog.h"
+#include "prlock.h"
 #include "prprf.h"
 #include "prnetdb.h"
 #include "zlib.h"
 
 // Needed to interpert mozIStorageConnection::GetLastError
 #include <sqlite3.h>
-
-using namespace mozilla;
 
 /**
  * The DBServices stores a set of Fragments.  A fragment is one URL
@@ -1293,7 +1292,7 @@ private:
   // The clean-host-key cache is updated in the worker thread, but
   // checked in the main thread (to avoid posting lookup requests if
   // not necessary).
-  Mutex mCleanHostKeysLock;
+  PRLock* mCleanHostKeysLock;
 
   // We maintain an MRU cache of clean fragments (fragments with no
   // entry in the db).
@@ -1306,7 +1305,7 @@ private:
 
   // Pending lookups are stored in a queue for processing.  The queue
   // is protected by mPendingLookupLock.
-  Mutex mPendingLookupLock;
+  PRLock* mPendingLookupLock;
 
   class PendingLookup {
   public:
@@ -1341,8 +1340,8 @@ nsUrlClassifierDBServiceWorker::nsUrlClassifierDBServiceWorker()
   , mHaveCachedSubChunks(PR_FALSE)
   , mUpdateStartTime(0)
   , mGethashNoise(0)
-  , mCleanHostKeysLock("nsUrlClassifierDBServerWorker.mCleanHostKeysLock")
-  , mPendingLookupLock("nsUrlClassifierDBServerWorker.mPendingLookupLock")
+  , mCleanHostKeysLock(nsnull)
+  , mPendingLookupLock(nsnull)
 {
 }
 
@@ -1351,6 +1350,12 @@ nsUrlClassifierDBServiceWorker::~nsUrlClassifierDBServiceWorker()
   NS_ASSERTION(!mConnection,
                "Db connection not closed, leaking memory!  Call CloseDb "
                "to close the connection.");
+
+  if (mCleanHostKeysLock)
+    nsAutoLock::DestroyLock(mCleanHostKeysLock);
+
+  if (mPendingLookupLock)
+    nsAutoLock::DestroyLock(mPendingLookupLock);
 }
 
 nsresult
@@ -1375,10 +1380,20 @@ nsUrlClassifierDBServiceWorker::Init(PRInt32 gethashNoise)
   rv = mDBFile->Append(NS_LITERAL_STRING(DATABASE_FILENAME));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mCleanHostKeysLock =
+    nsAutoLock::NewLock("nsUrlClassifierDBServiceWorker::mCleanHostKeysLock");
+  if (!mCleanHostKeysLock)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   if (!mCleanHostKeys.Init(CLEAN_HOST_KEYS_SIZE))
     return NS_ERROR_OUT_OF_MEMORY;
 
   if (!mCleanFragments.Init(CLEAN_FRAGMENTS_SIZE))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  mPendingLookupLock =
+    nsAutoLock::NewLock("nsUrlClassifierDBServiceWorker::mPendingLookupLock");
+  if (!mPendingLookupLock)
     return NS_ERROR_OUT_OF_MEMORY;
 
   ResetUpdate();
@@ -1392,7 +1407,7 @@ nsresult
 nsUrlClassifierDBServiceWorker::QueueLookup(const nsACString& spec,
                                             nsIUrlClassifierLookupCallback* callback)
 {
-  MutexAutoLock lock(mPendingLookupLock);
+  nsAutoLock lock(mPendingLookupLock);
 
   PendingLookup* lookup = mPendingLookups.AppendElement();
   if (!lookup) return NS_ERROR_OUT_OF_MEMORY;
@@ -1411,7 +1426,7 @@ nsUrlClassifierDBServiceWorker::CheckCleanHost(const nsACString &spec,
   nsresult rv = GetHostKeys(spec, lookupHosts);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  MutexAutoLock lock(mCleanHostKeysLock);
+  nsAutoLock lock(mCleanHostKeysLock);
 
   for (PRUint32 i = 0; i < lookupHosts.Length(); i++) {
     if (!mCleanHostKeys.Has(lookupHosts[i])) {
@@ -1551,7 +1566,7 @@ nsUrlClassifierDBServiceWorker::CacheEntries(const nsACString& spec)
     // case multiple lookups are queued at the same time, it's worth
     // checking again here.
     {
-      MutexAutoLock lock(mCleanHostKeysLock);
+      nsAutoLock lock(mCleanHostKeysLock);
       if (mCleanHostKeys.Has(lookupHosts[i]))
         continue;
     }
@@ -1565,7 +1580,7 @@ nsUrlClassifierDBServiceWorker::CacheEntries(const nsACString& spec)
       // There were no entries in the db for this host key.  Go
       // ahead and mark the host key as clean to help short-circuit
       // future lookups.
-      MutexAutoLock lock(mCleanHostKeysLock);
+      nsAutoLock lock(mCleanHostKeysLock);
       mCleanHostKeys.Put(lookupHosts[i]);
     } else {
       prevLength = mCachedEntries.Length();
@@ -1723,14 +1738,15 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
 nsresult
 nsUrlClassifierDBServiceWorker::HandlePendingLookups()
 {
-  MutexAutoLock lock(mPendingLookupLock);
+  nsAutoLock lock(mPendingLookupLock);
   while (mPendingLookups.Length() > 0) {
     PendingLookup lookup = mPendingLookups[0];
     mPendingLookups.RemoveElementAt(0);
-    {
-      MutexAutoUnlock unlock(mPendingLookupLock);
-      DoLookup(lookup.mKey, lookup.mCallback);
-    }
+    lock.unlock();
+
+    DoLookup(lookup.mKey, lookup.mCallback);
+
+    lock.lock();
   }
 
   return NS_OK;
@@ -2883,7 +2899,7 @@ nsUrlClassifierDBServiceWorker::ResetLookupCache()
 
     mCleanFragments.Clear();
 
-    MutexAutoLock lock(mCleanHostKeysLock);
+    nsAutoLock lock(mCleanHostKeysLock);
     mCleanHostKeys.Clear();
 }
 

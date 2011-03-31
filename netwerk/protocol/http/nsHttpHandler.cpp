@@ -69,6 +69,7 @@
 #include "nsPrintfCString.h"
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
+#include "nsAutoLock.h"
 #include "prprf.h"
 #include "nsReadableUtils.h"
 #include "nsQuickSort.h"

@@ -49,6 +49,7 @@
 #include "nsIXMLHttpRequest.h"
 
 // Other includes
+#include "nsAutoLock.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIClassInfoImpl.h"
 #include "nsThreadUtils.h"
@@ -64,8 +65,6 @@
 #include "nsDOMWorkerPool.h"
 #include "nsDOMWorkerXHR.h"
 #include "nsDOMWorkerXHRProxiedFunctions.h"
-
-using namespace mozilla;
 
 #define MAX_XHR_LISTENER_TYPE nsDOMWorkerXHREventTarget::sMaxXHREventTypes
 #define MAX_UPLOAD_LISTENER_TYPE nsDOMWorkerXHREventTarget::sMaxUploadEventTypes
@@ -182,7 +181,7 @@ public:
     nsRefPtr<nsDOMWorkerXHREvent> lastProgressOrLoadEvent;
 
     if (!mProxy->mCanceled) {
-      MutexAutoLock lock(mProxy->mWorkerXHR->GetLock());
+      nsAutoLock lock(mProxy->mWorkerXHR->Lock());
       mProxy->mLastProgressOrLoadEvent.swap(lastProgressOrLoadEvent);
       if (mProxy->mCanceled) {
         return NS_ERROR_ABORT;
@@ -376,7 +375,7 @@ nsDOMWorkerXHRProxy::Destroy()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   {
-    MutexAutoLock lock(mWorkerXHR->GetLock());
+    nsAutoLock lock(mWorkerXHR->Lock());
 
     mCanceled = PR_TRUE;
 
@@ -466,7 +465,7 @@ nsDOMWorkerXHRProxy::DestroyInternal()
     // necko has fired its OnStartRequest notification. Guard against that here.
     nsRefPtr<nsDOMWorkerXHRFinishSyncXHRRunnable> syncFinishedRunnable;
     {
-      MutexAutoLock lock(mWorkerXHR->GetLock());
+      nsAutoLock lock(mWorkerXHR->Lock());
       mSyncFinishedRunnable.swap(syncFinishedRunnable);
     }
 
@@ -581,7 +580,7 @@ nsDOMWorkerXHRProxy::HandleWorkerEvent(nsDOMWorkerXHREvent* aEvent,
   NS_ASSERTION(aEvent, "Should not be null!");
 
   {
-    MutexAutoLock lock(mWorkerXHR->GetLock());
+    nsAutoLock lock(mWorkerXHR->Lock());
 
     if (mCanceled ||
         (aEvent->mChannelID != -1 && aEvent->mChannelID != mChannelID)) {
@@ -606,7 +605,7 @@ nsDOMWorkerXHRProxy::HandleWorkerEvent(nsDOMWorkerXHREvent* aEvent,
     progressInfo = nsnull;
 
     // Dummy memory barrier.
-    MutexAutoLock lock(mWorkerXHR->GetLock());
+    nsAutoLock lock(mWorkerXHR->Lock());
   }
 
   nsIDOMEventTarget* target = aUploadEvent ?
@@ -770,7 +769,7 @@ nsDOMWorkerXHRProxy::HandleEvent(nsIDOMEvent* aEvent)
 
     NS_ASSERTION(!syncFinishedRunnable, "This shouldn't be set!");
 
-    MutexAutoLock lock(mWorkerXHR->GetLock());
+    nsAutoLock lock(mWorkerXHR->Lock());
     mSyncFinishedRunnable.swap(syncFinishedRunnable);
   }
   else {
@@ -812,7 +811,7 @@ nsDOMWorkerXHRProxy::HandleEvent(nsIDOMEvent* aEvent)
     NS_ENSURE_TRUE(runnable, NS_ERROR_OUT_OF_MEMORY);
 
     {
-      MutexAutoLock lock(mWorkerXHR->GetLock());
+      nsAutoLock lock(mWorkerXHR->Lock());
 
       if (mCanceled) {
         return NS_ERROR_ABORT;
@@ -958,7 +957,7 @@ nsDOMWorkerXHRProxy::Send(nsIVariant* aBody)
     mSyncXHRThread = NS_GetCurrentThread();
     NS_ENSURE_TRUE(mSyncXHRThread, NS_ERROR_FAILURE);
 
-    MutexAutoLock lock(mWorkerXHR->GetLock());
+    nsAutoLock lock(mWorkerXHR->Lock());
 
     if (mCanceled) {
       return NS_ERROR_ABORT;
@@ -983,7 +982,7 @@ nsDOMWorkerXHRProxy::SendAsBinary(const nsAString& aBody)
     mSyncXHRThread = NS_GetCurrentThread();
     NS_ENSURE_TRUE(mSyncXHRThread, NS_ERROR_FAILURE);
 
-    MutexAutoLock lock(mWorkerXHR->GetLock());
+    nsAutoLock lock(mWorkerXHR->Lock());
 
     if (mCanceled) {
       return NS_ERROR_ABORT;

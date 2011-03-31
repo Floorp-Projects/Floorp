@@ -37,11 +37,10 @@
 
 #include "nsThreadUtils.h"
 #include "nsSSLThread.h"
+#include "nsAutoLock.h"
 #include "nsNSSIOLayer.h"
 
 #include "ssl.h"
-
-using namespace mozilla;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
@@ -66,7 +65,7 @@ PRFileDesc *nsSSLThread::getRealSSLFD(nsNSSSocketInfo *si)
   if (!ssl_thread_singleton || !si || !ssl_thread_singleton->mThreadHandle)
     return nsnull;
 
-  MutexAutoLock threadLock(ssl_thread_singleton->mMutex);
+  nsAutoLock threadLock(ssl_thread_singleton->mMutex);
 
   if (si->mThreadData->mReplacedSSLFileDesc)
   {
@@ -145,7 +144,7 @@ PRInt32 nsSSLThread::requestRecvMsgPeek(nsNSSSocketInfo *si, void *buf, PRInt32 
   PRFileDesc *realSSLFD;
 
   {
-    MutexAutoLock threadLock(ssl_thread_singleton->mMutex);
+    nsAutoLock threadLock(ssl_thread_singleton->mMutex);
 
     if (si == ssl_thread_singleton->mBusySocket)
     {
@@ -241,7 +240,7 @@ PRInt16 nsSSLThread::requestPoll(nsNSSSocketInfo *si, PRInt16 in_flags, PRInt16 
   PRBool handshake_timeout = PR_FALSE;
   
   {
-    MutexAutoLock threadLock(ssl_thread_singleton->mMutex);
+    nsAutoLock threadLock(ssl_thread_singleton->mMutex);
 
     if (ssl_thread_singleton->mBusySocket)
     {
@@ -396,7 +395,7 @@ PRStatus nsSSLThread::requestClose(nsNSSSocketInfo *si)
   nsCOMPtr<nsIRequest> requestToCancel;
 
   {
-    MutexAutoLock threadLock(ssl_thread_singleton->mMutex);
+    nsAutoLock threadLock(ssl_thread_singleton->mMutex);
 
     if (ssl_thread_singleton->mBusySocket == si) {
     
@@ -415,7 +414,7 @@ PRStatus nsSSLThread::requestClose(nsNSSSocketInfo *si)
       close_later = PR_TRUE;
       ssl_thread_singleton->mSocketScheduledToBeDestroyed = si;
 
-      ssl_thread_singleton->mCond.NotifyAll();
+      PR_NotifyAllCondVar(ssl_thread_singleton->mCond);
     }
   }
 
@@ -508,7 +507,7 @@ PRInt32 nsSSLThread::requestRead(nsNSSSocketInfo *si, void *buf, PRInt32 amount,
   PRFileDesc *blockingFD = nsnull;
 
   {
-    MutexAutoLock threadLock(ssl_thread_singleton->mMutex);
+    nsAutoLock threadLock(ssl_thread_singleton->mMutex);
 
     if (ssl_thread_singleton->mExitRequested) {
       PR_SetError(PR_UNKNOWN_ERROR, 0);
@@ -696,7 +695,7 @@ PRInt32 nsSSLThread::requestRead(nsNSSSocketInfo *si, void *buf, PRInt32 amount,
   // Finally, we return the data obtained on the SSL thread back to our caller.
 
   {
-    MutexAutoLock threadLock(ssl_thread_singleton->mMutex);
+    nsAutoLock threadLock(ssl_thread_singleton->mMutex);
 
     if (nsSSLIOLayerHelpers::mSharedPollableEvent)
     {
@@ -713,7 +712,7 @@ PRInt32 nsSSLThread::requestRead(nsNSSSocketInfo *si, void *buf, PRInt32 amount,
     ssl_thread_singleton->mBusySocket = si;
 
     // notify the thread
-    ssl_thread_singleton->mCond.NotifyAll();
+    PR_NotifyAllCondVar(ssl_thread_singleton->mCond);
   }
 
   PORT_SetError(PR_WOULD_BLOCK_ERROR);
@@ -735,7 +734,7 @@ PRInt32 nsSSLThread::requestWrite(nsNSSSocketInfo *si, const void *buf, PRInt32 
   PRFileDesc *blockingFD = nsnull;
   
   {
-    MutexAutoLock threadLock(ssl_thread_singleton->mMutex);
+    nsAutoLock threadLock(ssl_thread_singleton->mMutex);
     
     if (ssl_thread_singleton->mExitRequested) {
       PR_SetError(PR_UNKNOWN_ERROR, 0);
@@ -893,7 +892,7 @@ PRInt32 nsSSLThread::requestWrite(nsNSSSocketInfo *si, const void *buf, PRInt32 
   si->mThreadData->mSSLState = nsSSLSocketThreadData::ssl_pending_write;
 
   {
-    MutexAutoLock threadLock(ssl_thread_singleton->mMutex);
+    nsAutoLock threadLock(ssl_thread_singleton->mMutex);
 
     if (nsSSLIOLayerHelpers::mSharedPollableEvent)
     {
@@ -909,7 +908,7 @@ PRInt32 nsSSLThread::requestWrite(nsNSSSocketInfo *si, const void *buf, PRInt32 
     nsSSLIOLayerHelpers::mSocketOwningPollableEvent = si;
     ssl_thread_singleton->mBusySocket = si;
 
-    ssl_thread_singleton->mCond.NotifyAll();
+    PR_NotifyAllCondVar(ssl_thread_singleton->mCond);
   }
 
   PORT_SetError(PR_WOULD_BLOCK_ERROR);
@@ -937,7 +936,7 @@ void nsSSLThread::Run(void)
       // In this scope we need mutex protection,
       // as we find out what needs to be done.
       
-      MutexAutoLock threadLock(ssl_thread_singleton->mMutex);
+      nsAutoLock threadLock(ssl_thread_singleton->mMutex);
       
       if (mSocketScheduledToBeDestroyed)
       {
@@ -978,7 +977,7 @@ void nsSSLThread::Run(void)
         {
           // no work to do ? let's wait a moment
 
-          mCond.Wait();
+          PR_WaitCondVar(mCond, PR_INTERVAL_NO_TIMEOUT);
         }
         
       } while (!pending_work && !mExitRequested && !mSocketScheduledToBeDestroyed);
@@ -1096,7 +1095,7 @@ void nsSSLThread::Run(void)
     PRBool needToSetPollableEvent = PR_FALSE;
 
     {
-      MutexAutoLock threadLock(ssl_thread_singleton->mMutex);
+      nsAutoLock threadLock(ssl_thread_singleton->mMutex);
       
       mBusySocket->mThreadData->mSSLState = busy_socket_ssl_state;
       
@@ -1120,7 +1119,7 @@ void nsSSLThread::Run(void)
   }
 
   {
-    MutexAutoLock threadLock(ssl_thread_singleton->mMutex);
+    nsAutoLock threadLock(ssl_thread_singleton->mMutex);
     if (mBusySocket)
     {
       restoreOriginalSocket_locked(mBusySocket);

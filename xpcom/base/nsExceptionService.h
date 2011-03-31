@@ -39,7 +39,6 @@
 #ifndef nsExceptionService_h__
 #define nsExceptionService_h__
 
-#include "mozilla/Mutex.h"
 #include "nsIException.h"
 #include "nsIExceptionService.h"
 #include "nsIObserverService.h"
@@ -78,7 +77,7 @@ public:
 
   /* single lock protects both providers hashtable
      and thread list */
-  static mozilla::Mutex* sLock;
+  static PRLock* lock;
 
   static PRUintn tlsIndex;
   static void ThreadDestruct( void *data );

@@ -59,6 +59,7 @@
 #include "pratom.h"
 #include "prmem.h"
 #include "nsCOMArray.h"
+#include "nsAutoLock.h"
 #include "nsTextFormatter.h"
 #include "nsIErrorService.h"
 #include "nsITimelineService.h"
@@ -74,20 +75,20 @@
 #include "prenv.h"
 #include "nsCRT.h"
 
-using namespace mozilla;
-
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
 
 nsStringBundle::~nsStringBundle()
 {
+  if (mMonitor)
+    nsAutoMonitor::DestroyMonitor(mMonitor);
 }
 
 nsStringBundle::nsStringBundle(const char* aURLSpec,
                                nsIStringBundleOverride* aOverrideStrings) :
   mPropertiesURL(aURLSpec),
   mOverrideStrings(aOverrideStrings),
-  mMonitor("nsStringBundle.mMonitor"),
+  mMonitor(0),
   mAttemptedLoad(PR_FALSE),
   mLoaded(PR_FALSE)
 {
@@ -110,6 +111,10 @@ nsStringBundle::LoadProperties()
   mAttemptedLoad = PR_TRUE;
 
   nsresult rv;
+
+  mMonitor = nsAutoMonitor::NewMonitor("StringBundle monitor");
+  if (!mMonitor)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // do it synchronously
   nsCOMPtr<nsIURI> uri;
@@ -148,7 +153,7 @@ nsStringBundle::LoadProperties()
 nsresult
 nsStringBundle::GetStringFromID(PRInt32 aID, nsAString& aResult)
 {  
-  MonitorAutoEnter automon(mMonitor);
+  nsAutoMonitor automon(mMonitor);
   nsCAutoString name;
   name.AppendInt(aID, 10);
 
@@ -269,7 +274,7 @@ nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
   rv = LoadProperties();
   if (NS_FAILED(rv)) return rv;
 
-  MonitorAutoEnter automon(mMonitor);
+  nsAutoMonitor automon(mMonitor);
   *aResult = nsnull;
   nsAutoString tmpstr;
   rv = GetStringFromName(nsDependentString(aName), tmpstr);

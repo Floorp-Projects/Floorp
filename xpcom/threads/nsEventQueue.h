@@ -40,17 +40,18 @@
 #define nsEventQueue_h__
 
 #include <stdlib.h>
-#include "mozilla/Monitor.h"
+#include "prmon.h"
 #include "nsIRunnable.h"
 
 // A threadsafe FIFO event queue...
 class NS_COM nsEventQueue
 {
-  typedef mozilla::Monitor Monitor;
-
 public:
   nsEventQueue();
   ~nsEventQueue();
+
+  // Returns "true" if the event queue has been completely constructed.
+  PRBool IsInitialized() { return mMonitor != nsnull; }
 
   // This method adds a new event to the pending event queue.  The event object
   // is AddRef'd if this method succeeds.  This method returns PR_TRUE if the
@@ -82,7 +83,7 @@ public:
   }
 
   // Expose the event queue's monitor for "power users"
-  Monitor& GetMonitor() {
+  PRMonitor *Monitor() {
     return mMonitor;
   }
 
@@ -110,7 +111,7 @@ private:
     free(p);
   }
 
-  Monitor mMonitor;
+  PRMonitor *mMonitor;
 
   Page *mHead;
   Page *mTail;

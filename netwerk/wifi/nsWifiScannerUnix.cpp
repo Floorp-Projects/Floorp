@@ -41,6 +41,7 @@
 
 #include "dlfcn.h"
 
+#include "nsAutoPtr.h"
 #include "nsWifiMonitor.h"
 #include "nsWifiAccessPoint.h"
 
@@ -49,7 +50,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIMutableArray.h"
 
-using namespace mozilla;
+
 
 
 typedef int (*iw_open_t)(void);
@@ -170,7 +171,7 @@ nsWifiMonitor::DoScan()
     nsCOMArray<nsIWifiListener> currentListeners;
 
     {
-      MonitorAutoEnter mon(mMonitor);
+      nsAutoMonitor mon(mMonitor);
 
       for (PRUint32 i = 0; i < mListeners.Length(); i++) {
         if (!mListeners[i].mHasSentData || accessPointsChanged) {
@@ -220,7 +221,7 @@ nsWifiMonitor::DoScan()
 
     LOG(("waiting on monitor\n"));
 
-    MonitorAutoEnter mon(mMonitor);
+    nsAutoMonitor mon(mMonitor);
     mon.Wait(PR_SecondsToInterval(60));
   }
 

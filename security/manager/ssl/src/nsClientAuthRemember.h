@@ -40,7 +40,6 @@
 #ifndef __NSCLIENTAUTHREMEMBER_H__
 #define __NSCLIENTAUTHREMEMBER_H__
 
-#include "mozilla/Monitor.h"
 #include "nsTHashtable.h"
 #include "nsIObserver.h"
 #include "nsIX509Cert.h"
@@ -48,6 +47,7 @@
 #include "nsNSSCertificate.h"
 #include "nsString.h"
 #include "nsWeakReference.h"
+#include "prmon.h"
 
 class nsClientAuthRemember
 {
@@ -163,7 +163,7 @@ public:
   void ClearRememberedDecisions();
 
 protected:
-    mozilla::Monitor monitor;
+    PRMonitor *monitor;
     nsTHashtable<nsClientAuthRememberEntry> mSettingsTable;
 
     void RemoveAllFromMemory();
