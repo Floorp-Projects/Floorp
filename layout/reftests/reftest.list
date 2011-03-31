@@ -21,7 +21,7 @@ include backgrounds/reftest.list
 include bidi/reftest.list
 
 # border-image
-include border-image/reftest.list
+skip-if(Android) include border-image/reftest.list
 
 # border-radius/
 include border-radius/reftest.list
@@ -33,10 +33,10 @@ include box-ordinal/reftest.list
 include box-properties/reftest.list
 
 # box-shadow/
-include box-shadow/reftest.list
+skip-if(Android) include box-shadow/reftest.list
 
 # bugs/
-include bugs/reftest.list
+skip-if(Android) include bugs/reftest.list
 
 # canvas 2D
 include canvas/reftest.list
@@ -51,10 +51,10 @@ include css-charset/reftest.list
 include css-default/reftest.list
 
 # css :disable tests
-include css-disabled/reftest.list
+skip-if(Android) include css-disabled/reftest.list
 
 # css :enable tests
-include css-enabled/reftest.list
+skip-if(Android) include css-enabled/reftest.list
 
 # css @import tests
 include css-import/reftest.list
@@ -81,10 +81,10 @@ include css-required/reftest.list
 include css-optional/reftest.list
 
 # css valid
-include css-valid/reftest.list
+skip-if(Android) include css-valid/reftest.list
 
 # css invalid
-include css-invalid/reftest.list
+skip-if(Android) include css-invalid/reftest.list
 
 # css-submit-invalid
 include css-submit-invalid/reftest.list
@@ -93,10 +93,10 @@ include css-submit-invalid/reftest.list
 include css-transitions/reftest.list
 
 # css :-moz-ui-invalid
-include css-ui-invalid/reftest.list
+skip-if(Android) include css-ui-invalid/reftest.list
 
 # css :-moz-ui-valid
-include css-ui-valid/reftest.list
+skip-if(Android) include css-ui-valid/reftest.list
 
 # css values and units
 include css-valuesandunits/reftest.list
@@ -129,7 +129,7 @@ include editor/reftest.list
 include generated-content/reftest.list
 
 # first-letter/
-include first-letter/reftest.list
+skip-if(Android) include first-letter/reftest.list
 
 # first-line/
 include first-line/reftest.list
@@ -147,7 +147,7 @@ include font-features/reftest.list
 include font-matching/reftest.list
 
 # forms
-include forms/reftest.list
+skip-if(Android) include forms/reftest.list
 
 # gfx
 include ../../gfx/tests/reftest/reftest.list
@@ -186,7 +186,7 @@ include margin-collapsing/reftest.list
 include marquee/reftest.list
 
 # native-theme/
-include native-theme/reftest.list
+skip-if(Android) include native-theme/reftest.list
 
 # netwerk/
 include ../../netwerk/test/reftest/reftest.list
@@ -250,7 +250,7 @@ include text-decoration/reftest.list
 include text-indent/reftest.list
 
 # text-shadow/
-include text-shadow/reftest.list
+skip-if(Android) include text-shadow/reftest.list
 
 # theme (pinstripe)
 include ../../toolkit/themes/pinstripe/reftests/reftest.list
