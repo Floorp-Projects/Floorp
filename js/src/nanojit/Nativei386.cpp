@@ -910,10 +910,27 @@ namespace nanojit
         uint32_t aligned = alignUp(stackNeeded + stackPushed, NJ_ALIGN_STACK);
         uint32_t amt = aligned - stackPushed;
 
+#ifdef _WIN32
+        // Windows uses a single guard page for extending the stack, so
+        // new stack pages must be first touched in stack-growth order.
+        // We touch each whole page that will be allocated to the frame
+        // (following the saved FP) to cause the OS to commit the page if
+        // necessary.  Since we don't calculate page boundaries, but just
+        // probe at intervals of the pagesize, it is possible that the
+        // last page of the frame will be touched unnecessarily.  Note that
+        // we must generate the probes in the reverse order of their execution.
+        // We require that the page size be a power of 2.
+        size_t pageSize = VMPI_getVMPageSize();
+        NanoAssert((pageSize & (pageSize-1)) == 0);
+        size_t pageRounded = amt & ~(pageSize-1);
+        for (int32_t d = pageRounded; d > 0; d -= pageSize) {
+            STi(rEBP, -d, 0);
+        }
+#endif
+
         // Reserve stackNeeded bytes, padded
         // to preserve NJ_ALIGN_STACK-byte alignment.
-        if (amt)
-        {
+        if (amt) {
             SUBi(SP, amt);
         }
 
