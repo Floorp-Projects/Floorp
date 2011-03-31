@@ -51,6 +51,7 @@
 
 #include "jscntxt.h"
 
+#include "nsAutoLock.h"
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsNPAPIPluginStreamListener.h"
@@ -107,7 +108,6 @@
 
 #include "nsNetUtil.h"
 
-#include "mozilla/Mutex.h"
 #include "mozilla/PluginLibrary.h"
 using mozilla::PluginLibrary;
 
@@ -127,7 +127,6 @@ using mozilla::plugins::PluginModuleParent;
 #include <windows.h>
 #endif
 
-using namespace mozilla;
 using namespace mozilla::plugins::parent;
 
 // We should make this const...
@@ -191,7 +190,7 @@ static NPNetscapeFuncs sBrowserFuncs = {
   _urlredirectresponse
 };
 
-static Mutex *sPluginThreadAsyncCallLock = nsnull;
+static PRLock *sPluginThreadAsyncCallLock = nsnull;
 static PRCList sPendingAsyncCalls = PR_INIT_STATIC_CLIST(&sPendingAsyncCalls);
 
 // POST/GET stream type
@@ -230,7 +229,7 @@ static void CheckClassInitialized()
     return;
 
   if (!sPluginThreadAsyncCallLock)
-    sPluginThreadAsyncCallLock = new Mutex("nsNPAPIPlugin.sPluginThreadAsyncCallLock");
+    sPluginThreadAsyncCallLock = nsAutoLock::NewLock("sPluginThreadAsyncCallLock");
 
   initialized = PR_TRUE;
 
@@ -841,7 +840,7 @@ nsPluginThreadRunnable::nsPluginThreadRunnable(NPP instance,
   PR_INIT_CLIST(this);
 
   {
-    MutexAutoLock lock(*sPluginThreadAsyncCallLock);
+    nsAutoLock lock(sPluginThreadAsyncCallLock);
 
     nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
     if (!inst || !inst->IsRunning()) {
@@ -862,7 +861,7 @@ nsPluginThreadRunnable::~nsPluginThreadRunnable()
   }
 
   {
-    MutexAutoLock lock(*sPluginThreadAsyncCallLock);
+    nsAutoLock lock(sPluginThreadAsyncCallLock);
 
     PR_REMOVE_LINK(this);
   }
@@ -888,7 +887,7 @@ OnPluginDestroy(NPP instance)
   }
 
   {
-    MutexAutoLock lock(*sPluginThreadAsyncCallLock);
+    nsAutoLock lock(sPluginThreadAsyncCallLock);
 
     if (PR_CLIST_IS_EMPTY(&sPendingAsyncCalls)) {
       return;
@@ -914,22 +913,27 @@ OnShutdown()
                "Pending async plugin call list not cleaned up!");
 
   if (sPluginThreadAsyncCallLock) {
-    delete sPluginThreadAsyncCallLock;
+    nsAutoLock::DestroyLock(sPluginThreadAsyncCallLock);
 
     sPluginThreadAsyncCallLock = nsnull;
   }
 }
 
-AsyncCallbackAutoLock::AsyncCallbackAutoLock()
+void
+EnterAsyncPluginThreadCallLock()
 {
-  sPluginThreadAsyncCallLock->Lock();
+  if (sPluginThreadAsyncCallLock) {
+    PR_Lock(sPluginThreadAsyncCallLock);
+  }
 }
 
-AsyncCallbackAutoLock::~AsyncCallbackAutoLock()
+void
+ExitAsyncPluginThreadCallLock()
 {
-  sPluginThreadAsyncCallLock->Unlock();
+  if (sPluginThreadAsyncCallLock) {
+    PR_Unlock(sPluginThreadAsyncCallLock);
+  }
 }
-
 
 NPP NPPStack::sCurrentNPP = nsnull;
 

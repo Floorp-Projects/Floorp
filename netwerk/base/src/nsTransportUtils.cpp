@@ -34,15 +34,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Mutex.h"
 #include "nsTransportUtils.h"
 #include "nsITransport.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
+#include "nsAutoLock.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-
-using namespace mozilla;
 
 //-----------------------------------------------------------------------------
 
@@ -59,7 +57,7 @@ public:
                               PRBool coalesceAll)
         : mSink(sink)
         , mTarget(target)
-        , mLock("nsTransportEventSinkProxy.mLock")
+        , mLock(nsAutoLock::NewLock("nsTransportEventSinkProxy::mLock"))
         , mLastEvent(nsnull)
         , mCoalesceAll(coalesceAll)
     {
@@ -68,6 +66,9 @@ public:
 
     virtual ~nsTransportEventSinkProxy()
     {
+        if (mLock)
+            nsAutoLock::DestroyLock(mLock);
+    
         // our reference to mSink could be the last, so be sure to release
         // it on the target thread.  otherwise, we could get into trouble.
         NS_ProxyRelease(mTarget, mSink);
@@ -75,7 +76,7 @@ public:
 
     nsITransportEventSink           *mSink;
     nsCOMPtr<nsIEventTarget>         mTarget;
-    Mutex                            mLock;
+    PRLock                          *mLock;
     nsTransportStatusEvent          *mLastEvent;
     PRBool                           mCoalesceAll;
 };
@@ -102,7 +103,7 @@ public:
         // since this event is being handled, we need to clear the proxy's ref.
         // if not coalescing all, then last event may not equal self!
         {
-            MutexAutoLock lock(mProxy->mLock);
+            nsAutoLock lock(mProxy->mLock);
             if (mProxy->mLastEvent == this)
                 mProxy->mLastEvent = nsnull;
         }
@@ -132,7 +133,7 @@ nsTransportEventSinkProxy::OnTransportStatus(nsITransport *transport,
     nsresult rv = NS_OK;
     nsRefPtr<nsTransportStatusEvent> event;
     {
-        MutexAutoLock lock(mLock);
+        nsAutoLock lock(mLock);
 
         // try to coalesce events! ;-)
         if (mLastEvent && (mCoalesceAll || mLastEvent->mStatus == status)) {
@@ -153,7 +154,7 @@ nsTransportEventSinkProxy::OnTransportStatus(nsITransport *transport,
         if (NS_FAILED(rv)) {
             NS_WARNING("unable to post transport status event");
 
-            MutexAutoLock lock(mLock); // cleanup.. don't reference anymore!
+            nsAutoLock lock(mLock); // cleanup.. don't reference anymore!
             mLastEvent = nsnull;
         }
     }

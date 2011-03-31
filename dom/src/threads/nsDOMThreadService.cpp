@@ -59,6 +59,7 @@
 #include "nsPIDOMWindow.h"
 
 // Other includes
+#include "nsAutoLock.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
 #include "nsDeque.h"
@@ -80,8 +81,6 @@
 #include "nsDOMWorkerPool.h"
 #include "nsDOMWorkerSecurityManager.h"
 #include "nsDOMWorkerTimeout.h"
-
-using namespace mozilla;
 
 #ifdef PR_LOGGING
 PRLogModuleInfo *gDOMThreadsLog = nsnull;
@@ -373,7 +372,7 @@ public:
                    PRBool aClearQueue) {
     NS_ASSERTION(aRunnable, "Null pointer!");
 
-    gDOMThreadService->mMonitor.AssertCurrentThreadIn();
+    PR_ASSERT_CURRENT_THREAD_IN_MONITOR(gDOMThreadService->mMonitor);
 
     if (NS_LIKELY(!aTimeoutInterval)) {
       NS_ADDREF(aRunnable);
@@ -466,7 +465,7 @@ public:
           JS_SetContextPrivate(cx, NULL);
         }
 
-        MonitorAutoEnter mon(gDOMThreadService->mMonitor);
+        nsAutoMonitor mon(gDOMThreadService->mMonitor);
         killWorkerWhenDone = mKillWorkerWhenDone;
         gDOMThreadService->WorkerComplete(this);
         mon.NotifyAll();
@@ -496,7 +495,7 @@ protected:
     while (1) {
       nsCOMPtr<nsIRunnable> runnable;
       {
-        MonitorAutoEnter mon(gDOMThreadService->mMonitor);
+        nsAutoMonitor mon(gDOMThreadService->mMonitor);
 
         runnable = dont_AddRef((nsIRunnable*)mRunnables.PopFront());
 
@@ -573,7 +572,7 @@ DOMWorkerOperationCallback(JSContext* aCx)
     JS_FlushCaches(aCx);
 
     for (;;) {
-      MonitorAutoEnter mon(worker->Pool()->GetMonitor());
+      nsAutoMonitor mon(worker->Pool()->Monitor());
 
       // There's a small chance that the worker was canceled after our check
       // above in which case we shouldn't wait here. We're guaranteed not to
@@ -729,7 +728,7 @@ DOMWorkerErrorReporter(JSContext* aCx,
  */
 
 nsDOMThreadService::nsDOMThreadService()
-: mMonitor("nsDOMThreadServer.mMonitor"),
+: mMonitor(nsnull),
   mNavigatorStringsLoaded(PR_FALSE)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -748,6 +747,10 @@ nsDOMThreadService::~nsDOMThreadService()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   Cleanup();
+
+  if (mMonitor) {
+    nsAutoMonitor::DestroyMonitor(mMonitor);
+  }
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsDOMThreadService, nsIEventTarget,
@@ -783,6 +786,9 @@ nsDOMThreadService::Init()
 
   rv = mThreadPool->SetIdleThreadLimit(THREADPOOL_IDLE_THREADS);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  mMonitor = nsAutoMonitor::NewMonitor("nsDOMThreadService::mMonitor");
+  NS_ENSURE_TRUE(mMonitor, NS_ERROR_OUT_OF_MEMORY);
 
   PRBool success = mWorkersInProgress.Init();
   NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
@@ -884,7 +890,7 @@ nsDOMThreadService::Cleanup()
   CancelWorkersForGlobal(nsnull);
 
   {
-    MonitorAutoEnter mon(mMonitor);
+    nsAutoMonitor mon(mMonitor);
 
     NS_ASSERTION(!mPools.Count(), "Live workers left!");
     mPools.Clear();
@@ -949,7 +955,7 @@ nsDOMThreadService::Dispatch(nsDOMWorker* aWorker,
 
   nsRefPtr<nsDOMWorkerRunnable> workerRunnable;
   {
-    MonitorAutoEnter mon(mMonitor);
+    nsAutoMonitor mon(mMonitor);
 
     if (mWorkersInProgress.Get(aWorker, getter_AddRefs(workerRunnable))) {
       workerRunnable->PutRunnable(aRunnable, aTimeoutInterval, aClearQueue);
@@ -972,7 +978,7 @@ nsDOMThreadService::Dispatch(nsDOMWorker* aWorker,
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch runnable to thread pool!");
 
-    MonitorAutoEnter mon(mMonitor);
+    nsAutoMonitor mon(mMonitor);
 
     // We exited the monitor after inserting the runnable into the table so make
     // sure we're removing the right one!
@@ -1000,7 +1006,7 @@ nsDOMThreadService::SetWorkerTimeout(nsDOMWorker* aWorker,
 
   NS_ASSERTION(mThreadPool, "Dispatch called after 'xpcom-shutdown'!");
 
-  MonitorAutoEnter mon(mMonitor);
+  nsAutoMonitor mon(mMonitor);
 
   nsRefPtr<nsDOMWorkerRunnable> workerRunnable;
   if (mWorkersInProgress.Get(aWorker, getter_AddRefs(workerRunnable))) {
@@ -1011,7 +1017,7 @@ nsDOMThreadService::SetWorkerTimeout(nsDOMWorker* aWorker,
 void
 nsDOMThreadService::WorkerComplete(nsDOMWorkerRunnable* aRunnable)
 {
-  mMonitor.AssertCurrentThreadIn();
+  PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mMonitor);
 
 #ifdef DEBUG
   nsRefPtr<nsDOMWorker>& debugWorker = aRunnable->mWorker;
@@ -1028,7 +1034,7 @@ nsDOMThreadService::WorkerComplete(nsDOMWorkerRunnable* aRunnable)
 PRBool
 nsDOMThreadService::QueueSuspendedWorker(nsDOMWorkerRunnable* aRunnable)
 {
-  MonitorAutoEnter mon(mMonitor);
+  nsAutoMonitor mon(mMonitor);
 
 #ifdef DEBUG
     {
@@ -1085,7 +1091,7 @@ already_AddRefed<nsDOMWorkerPool>
 nsDOMThreadService::GetPoolForGlobal(nsIScriptGlobalObject* aGlobalObject,
                                      PRBool aRemove)
 {
-  MonitorAutoEnter mon(mMonitor);
+  nsAutoMonitor mon(mMonitor);
 
   nsRefPtr<nsDOMWorkerPool> pool;
   mPools.Get(aGlobalObject, getter_AddRefs(pool));
@@ -1100,7 +1106,7 @@ nsDOMThreadService::GetPoolForGlobal(nsIScriptGlobalObject* aGlobalObject,
 void
 nsDOMThreadService::TriggerOperationCallbackForPool(nsDOMWorkerPool* aPool)
 {
-  mMonitor.AssertCurrentThreadIn();
+  PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mMonitor);
 
   // See if we need to trigger the operation callback on any currently running
   // contexts.
@@ -1117,7 +1123,7 @@ nsDOMThreadService::TriggerOperationCallbackForPool(nsDOMWorkerPool* aPool)
 void
 nsDOMThreadService::RescheduleSuspendedWorkerForPool(nsDOMWorkerPool* aPool)
 {
-  mMonitor.AssertCurrentThreadIn();
+  PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mMonitor);
 
   PRUint32 count = mSuspendedWorkers.Length();
   if (!count) {
@@ -1161,7 +1167,7 @@ nsDOMThreadService::CancelWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject)
   if (pool) {
     pool->Cancel();
 
-    MonitorAutoEnter mon(mMonitor);
+    nsAutoMonitor mon(mMonitor);
 
     TriggerOperationCallbackForPool(pool);
     RescheduleSuspendedWorkerForPool(pool);
@@ -1177,7 +1183,7 @@ nsDOMThreadService::SuspendWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject
   if (pool) {
     pool->Suspend();
 
-    MonitorAutoEnter mon(mMonitor);
+    nsAutoMonitor mon(mMonitor);
     TriggerOperationCallbackForPool(pool);
   }
 }
@@ -1191,7 +1197,7 @@ nsDOMThreadService::ResumeWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject)
   if (pool) {
     pool->Resume();
 
-    MonitorAutoEnter mon(mMonitor);
+    nsAutoMonitor mon(mMonitor);
 
     TriggerOperationCallbackForPool(pool);
     RescheduleSuspendedWorkerForPool(pool);
@@ -1203,7 +1209,7 @@ nsDOMThreadService::NoteEmptyPool(nsDOMWorkerPool* aPool)
 {
   NS_ASSERTION(aPool, "Null pointer!");
 
-  MonitorAutoEnter mon(mMonitor);
+  nsAutoMonitor mon(mMonitor);
   mPools.Remove(aPool->ScriptGlobalObject());
 }
 
@@ -1222,7 +1228,7 @@ nsDOMThreadService::ChangeThreadPoolMaxThreads(PRInt16 aDelta)
 {
   NS_ENSURE_ARG(aDelta == 1 || aDelta == -1);
 
-  MonitorAutoEnter mon(mMonitor);
+  nsAutoMonitor mon(mMonitor);
 
   PRUint32 currentThreadCount;
   nsresult rv = mThreadPool->GetThreadLimit(&currentThreadCount);
@@ -1260,7 +1266,7 @@ nsDOMThreadService::NoteThreadsafeContractId(const nsACString& aContractId,
 {
   NS_ASSERTION(!aContractId.IsEmpty(), "Empty contract id!");
 
-  MonitorAutoEnter mon(mMonitor);
+  nsAutoMonitor mon(mMonitor);
 
 #ifdef DEBUG
   {
@@ -1281,7 +1287,7 @@ nsDOMThreadService::GetContractIdThreadsafeStatus(const nsACString& aContractId)
 {
   NS_ASSERTION(!aContractId.IsEmpty(), "Empty contract id!");
 
-  MonitorAutoEnter mon(mMonitor);
+  nsAutoMonitor mon(mMonitor);
 
   PRBool isThreadsafe;
   if (mThreadsafeContractIDs.Get(aContractId, &isThreadsafe)) {
@@ -1392,7 +1398,7 @@ nsDOMThreadService::OnThreadCreated()
       return NS_ERROR_FAILURE;
     }
 
-    MonitorAutoEnter mon(mMonitor);
+    nsAutoMonitor mon(mMonitor);
 
 #ifdef DEBUG
     JSContext** newContext =
@@ -1421,7 +1427,7 @@ nsDOMThreadService::OnThreadShuttingDown()
   NS_WARN_IF_FALSE(cx, "Thread died with no context?");
   if (cx) {
     {
-      MonitorAutoEnter mon(mMonitor);
+      nsAutoMonitor mon(mMonitor);
       mJSContexts.RemoveElement(cx);
     }
 
@@ -1467,7 +1473,7 @@ nsDOMThreadService::RegisterWorker(nsDOMWorker* aWorker,
 
   nsRefPtr<nsDOMWorkerPool> pool;
   {
-    MonitorAutoEnter mon(mMonitor);
+    nsAutoMonitor mon(mMonitor);
 
     if (!mThreadPool) {
       // Shutting down!
@@ -1516,7 +1522,7 @@ nsDOMThreadService::RegisterWorker(nsDOMWorker* aWorker,
     rv = pool->Init();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    MonitorAutoEnter mon(mMonitor);
+    nsAutoMonitor mon(mMonitor);
 
     PRBool success = mPools.Put(aGlobalObject, pool);
     NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);

@@ -62,6 +62,7 @@
 #include "nsTime.h"
 #include "nsIProxyObjectManager.h"
 #include "nsCRT.h"
+#include "nsAutoLock.h"
 #include "nsUsageArrayHelper.h"
 #include "nsICertificateDialogs.h"
 #include "nsNSSCertHelper.h"

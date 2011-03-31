@@ -383,15 +383,10 @@ OnPluginDestroy(NPP instance);
 void
 OnShutdown();
 
-/**
- * within a lexical scope, locks and unlocks the mutex used to
- * serialize modifications to plugin async callback state.
- */
-struct NS_STACK_CLASS AsyncCallbackAutoLock
-{
-  AsyncCallbackAutoLock();
-  ~AsyncCallbackAutoLock();
-};
+void
+EnterAsyncPluginThreadCallLock();
+void
+ExitAsyncPluginThreadCallLock();
 
 class NPPStack
 {

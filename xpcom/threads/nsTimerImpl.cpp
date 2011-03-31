@@ -40,6 +40,7 @@
 
 #include "nsTimerImpl.h"
 #include "TimerThread.h"
+#include "nsAutoLock.h"
 #include "nsAutoPtr.h"
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"

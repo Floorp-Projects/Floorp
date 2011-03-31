@@ -55,6 +55,7 @@
 #include "nsFtpConnectionThread.h"
 #include "netCore.h"
 #include "nsIStreamListener.h"
+#include "nsAutoLock.h"
 #include "nsIFTPChannel.h"
 #include "nsIUploadChannel.h"
 #include "nsIProxyInfo.h"

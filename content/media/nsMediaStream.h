@@ -38,7 +38,6 @@
 #if !defined(nsMediaStream_h_)
 #define nsMediaStream_h_
 
-#include "mozilla/Mutex.h"
 #include "mozilla/XPCOM.h"
 #include "nsIChannel.h"
 #include "nsIPrincipal.h"
@@ -46,6 +45,7 @@
 #include "nsIStreamListener.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
+#include "prlock.h"
 #include "nsMediaCache.h"
 
 // For HTTP seeking, if number of bytes needing to be
@@ -344,8 +344,6 @@ protected:
  */
 class nsMediaChannelStream : public nsMediaStream
 {
-  typedef mozilla::Mutex Mutex;
-
 public:
   nsMediaChannelStream(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI);
   ~nsMediaChannelStream();
@@ -470,7 +468,7 @@ protected:
   nsMediaCacheStream mCacheStream;
 
   // This lock protects mChannelStatistics and mCacheSuspendCount
-  Mutex               mLock;
+  PRLock* mLock;
   nsChannelStatistics mChannelStatistics;
   PRUint32            mCacheSuspendCount;
 };

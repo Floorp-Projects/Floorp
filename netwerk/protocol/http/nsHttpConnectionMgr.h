@@ -46,7 +46,7 @@
 #include "nsThreadUtils.h"
 #include "nsHashtable.h"
 #include "nsAutoPtr.h"
-#include "mozilla/Monitor.h"
+#include "prmon.h"
 
 #include "nsIObserver.h"
 #include "nsITimer.h"
@@ -187,7 +187,7 @@ private:
     //-------------------------------------------------------------------------
 
     PRInt32                      mRef;
-    mozilla::Monitor             mMonitor;
+    PRMonitor                   *mMonitor;
     nsCOMPtr<nsIEventTarget>     mSocketThreadTarget;
 
     // connection limits

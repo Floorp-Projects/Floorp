@@ -74,6 +74,7 @@
 #include "nsCRT.h"
 #include "nsAutoPtr.h"
 #include "nsPrintfCString.h"
+#include "nsAutoLock.h"
 #include "nsSSLThread.h"
 #include "nsNSSShutDown.h"
 #include "nsSSLStatus.h"
@@ -99,7 +100,6 @@
 #include "keyhi.h"
 #include "secport.h"
 
-using namespace mozilla;
 
 //#define DEBUG_SSL_VERBOSE //Enable this define to get minimal 
                             //reports when doing SSL read/write
@@ -936,7 +936,7 @@ void nsSSLIOLayerHelpers::Cleanup()
     PR_DestroyPollableEvent(mSharedPollableEvent);
 
   if (mutex) {
-    delete mutex;
+    nsAutoLock::DestroyLock(mutex);
     mutex = nsnull;
   }
 
@@ -1801,7 +1801,7 @@ nsSSLIOLayerHelpers::rememberTolerantSite(PRFileDesc* ssl_layer_fd,
   nsCAutoString key;
   getSiteKey(socketInfo, key);
 
-  MutexAutoLock lock(*mutex);
+  nsAutoLock lock(mutex);
   nsSSLIOLayerHelpers::mTLSTolerantSites->Put(key);
 }
 
@@ -2073,7 +2073,7 @@ nsSSLIOLayerPoll(PRFileDesc *fd, PRInt16 in_flags, PRInt16 *out_flags)
 PRBool nsSSLIOLayerHelpers::nsSSLIOLayerInitialized = PR_FALSE;
 PRDescIdentity nsSSLIOLayerHelpers::nsSSLIOLayerIdentity;
 PRIOMethods nsSSLIOLayerHelpers::nsSSLIOLayerMethods;
-Mutex *nsSSLIOLayerHelpers::mutex = nsnull;
+PRLock *nsSSLIOLayerHelpers::mutex = nsnull;
 nsCStringHashSet *nsSSLIOLayerHelpers::mTLSIntolerantSites = nsnull;
 nsCStringHashSet *nsSSLIOLayerHelpers::mTLSTolerantSites = nsnull;
 nsPSMRememberCertErrorsTable *nsSSLIOLayerHelpers::mHostsWithCertErrors = nsnull;
@@ -2275,7 +2275,9 @@ nsresult nsSSLIOLayerHelpers::Init()
     nsSSLIOLayerMethods.poll = nsSSLIOLayerPoll;
   }
 
-  mutex = new Mutex("nsSSLIOLayerHelpers.mutex");
+  mutex = nsAutoLock::NewLock("nsSSLIOLayerHelpers::mutex");
+  if (!mutex)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   mSharedPollableEvent = PR_NewPollableEvent();
 
@@ -2313,7 +2315,7 @@ nsresult nsSSLIOLayerHelpers::Init()
 
 void nsSSLIOLayerHelpers::addIntolerantSite(const nsCString &str)
 {
-  MutexAutoLock lock(*mutex);
+  nsAutoLock lock(mutex);
   // Remember intolerant site only if it is not known as tolerant
   if (!mTLSTolerantSites->Contains(str))
     nsSSLIOLayerHelpers::mTLSIntolerantSites->Put(str);
@@ -2321,19 +2323,19 @@ void nsSSLIOLayerHelpers::addIntolerantSite(const nsCString &str)
 
 void nsSSLIOLayerHelpers::removeIntolerantSite(const nsCString &str)
 {
-  MutexAutoLock lock(*mutex);
+  nsAutoLock lock(mutex);
   nsSSLIOLayerHelpers::mTLSIntolerantSites->Remove(str);
 }
 
 PRBool nsSSLIOLayerHelpers::isKnownAsIntolerantSite(const nsCString &str)
 {
-  MutexAutoLock lock(*mutex);
+  nsAutoLock lock(mutex);
   return mTLSIntolerantSites->Contains(str);
 }
 
 void nsSSLIOLayerHelpers::setRenegoUnrestrictedSites(const nsCString &str)
 {
-  MutexAutoLock lock(*mutex);
+  nsAutoLock lock(mutex);
   
   if (mRenegoUnrestrictedSites) {
     delete mRenegoUnrestrictedSites;
@@ -2358,31 +2360,31 @@ void nsSSLIOLayerHelpers::setRenegoUnrestrictedSites(const nsCString &str)
 
 PRBool nsSSLIOLayerHelpers::isRenegoUnrestrictedSite(const nsCString &str)
 {
-  MutexAutoLock lock(*mutex);
+  nsAutoLock lock(mutex);
   return mRenegoUnrestrictedSites->Contains(str);
 }
 
 void nsSSLIOLayerHelpers::setTreatUnsafeNegotiationAsBroken(PRBool broken)
 {
-  MutexAutoLock lock(*mutex);
+  nsAutoLock lock(mutex);
   mTreatUnsafeNegotiationAsBroken = broken;
 }
 
 PRBool nsSSLIOLayerHelpers::treatUnsafeNegotiationAsBroken()
 {
-  MutexAutoLock lock(*mutex);
+  nsAutoLock lock(mutex);
   return mTreatUnsafeNegotiationAsBroken;
 }
 
 void nsSSLIOLayerHelpers::setWarnLevelMissingRFC5746(PRInt32 level)
 {
-  MutexAutoLock lock(*mutex);
+  nsAutoLock lock(mutex);
   mWarnLevelMissingRFC5746 = level;
 }
 
 PRInt32 nsSSLIOLayerHelpers::getWarnLevelMissingRFC5746()
 {
-  MutexAutoLock lock(*mutex);
+  nsAutoLock lock(mutex);
   return mWarnLevelMissingRFC5746;
 }
 

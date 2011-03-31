@@ -50,7 +50,6 @@
 #include "prio.h"
 #include "nsASocketHandler.h"
 #include "nsIObserver.h"
-#include "mozilla/Mutex.h"
 
 //-----------------------------------------------------------------------------
 
@@ -76,8 +75,6 @@ class nsSocketTransportService : public nsPISocketTransportService
                                , public nsIRunnable
                                , public nsIObserver
 {
-    typedef mozilla::Mutex Mutex;
-
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSPISOCKETTRANSPORTSERVICE
@@ -129,7 +126,7 @@ private:
     // initialization and shutdown (any thread)
     //-------------------------------------------------------------------------
 
-    Mutex         mLock;
+    PRLock       *mLock;
     PRPackedBool  mInitialized;
     PRPackedBool  mShuttingDown;
                             // indicates whether we are currently in the
