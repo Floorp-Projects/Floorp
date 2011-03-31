@@ -1154,7 +1154,7 @@ array_toSource(JSContext *cx, uintN argc, Value *vp)
     if (IS_SHARP(he)) {
         if (!sb.append("[]"))
             goto out;
-        cx->free(sharpchars);
+        cx->free_(sharpchars);
         goto make_string;
     }
 #endif
@@ -1818,7 +1818,7 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
      * exist, allowing OS to avoiding committing RAM. See bug 330812.
      */
     {
-        Value *vec = (Value *) cx->malloc(2 * size_t(len) * sizeof(Value));
+        Value *vec = (Value *) cx->malloc_(2 * size_t(len) * sizeof(Value));
         if (!vec)
             return false;
 
@@ -1828,9 +1828,9 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
            public:
             AutoFreeVector(JSContext *cx, Value *&vec) : cx(cx), vec(vec) { }
             ~AutoFreeVector() {
-                cx->free(vec);
+                cx->free_(vec);
             }
-        } free(cx, vec);
+        } free_(cx, vec);
 
         AutoArrayRooter tvr(cx, 0, vec);
 
@@ -1940,7 +1940,7 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
                 } while (i != 0);
 
                 JS_ASSERT(tvr.array == vec);
-                vec = (Value *) cx->realloc(vec, 4 * size_t(newlen) * sizeof(Value));
+                vec = (Value *) cx->realloc_(vec, 4 * size_t(newlen) * sizeof(Value));
                 if (!vec) {
                     vec = tvr.array;  /* N.B. AutoFreeVector */
                     return false;
@@ -3142,7 +3142,7 @@ js_ArrayInfo(JSContext *cx, uintN argc, jsval *vp)
         if (arg.isPrimitive() ||
             !(array = arg.toObjectOrNull())->isArray()) {
             fprintf(stderr, "%s: not array\n", bytes);
-            cx->free(bytes);
+            cx->free_(bytes);
             continue;
         }
         fprintf(stderr, "%s: %s (len %u", bytes,
@@ -3153,7 +3153,7 @@ js_ArrayInfo(JSContext *cx, uintN argc, jsval *vp)
                     array->getDenseArrayCapacity());
         }
         fputs(")\n", stderr);
-        cx->free(bytes);
+        cx->free_(bytes);
     }
 
     JS_SET_RVAL(cx, vp, JSVAL_VOID);

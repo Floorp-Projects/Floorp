@@ -187,7 +187,7 @@ mjit::Compiler::performCompilation(JITScript **jitp)
         return Compile_Error;
     }
 
-    jumpMap = (Label *)cx->malloc(sizeof(Label) * script->length);
+    jumpMap = (Label *)cx->malloc_(sizeof(Label) * script->length);
     if (!jumpMap) {
         js_ReportOutOfMemory(cx);
         return Compile_Error;
@@ -234,8 +234,8 @@ mjit::Compiler::performCompilation(JITScript **jitp)
 
 mjit::Compiler::~Compiler()
 {
-    cx->free(jumpMap);
-    cx->free(savedTraps);
+    cx->free_(jumpMap);
+    cx->free_(savedTraps);
 }
 
 CompileStatus JS_NEVER_INLINE
@@ -260,7 +260,7 @@ mjit::TryCompile(JSContext *cx, JSStackFrame *fp)
 bool
 mjit::Compiler::loadOldTraps(const Vector<CallSite> &sites)
 {
-    savedTraps = (bool *)cx->calloc(sizeof(bool) * script->length);
+    savedTraps = (bool *)cx->calloc_(sizeof(bool) * script->length);
     if (!savedTraps)
         return false;
     
@@ -447,7 +447,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 #endif
                         sizeof(CallSite) * callSites.length();
 
-    uint8 *cursor = (uint8 *)cx->calloc(totalBytes);
+    uint8 *cursor = (uint8 *)cx->calloc_(totalBytes);
     if (!cursor) {
         execPool->release();
         js_ReportOutOfMemory(cx);
