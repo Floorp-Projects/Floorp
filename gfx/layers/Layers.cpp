@@ -38,7 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/layers/ShadowLayers.h"
+#ifdef MOZ_IPC
+# include "mozilla/layers/ShadowLayers.h"
+#endif  // MOZ_IPC
 
 #include "ImageLayers.h"
 #include "Layers.h"
@@ -239,6 +241,7 @@ Layer::CanUseOpaqueSurface()
     parent->CanUseOpaqueSurface();
 }
 
+#ifdef MOZ_IPC
 // NB: eventually these methods will be defined unconditionally, and
 // can be moved into Layers.h
 const nsIntRect*
@@ -258,6 +261,13 @@ Layer::GetEffectiveVisibleRegion()
   }
   return GetVisibleRegion();
 }
+
+#else
+
+const nsIntRect* Layer::GetEffectiveClipRect() { return GetClipRect(); }
+const nsIntRegion& Layer::GetEffectiveVisibleRegion() { return GetVisibleRegion(); }
+
+#endif  // MOZ_IPC
 
 gfx3DMatrix
 Layer::SnapTransform(const gfx3DMatrix& aTransform,
@@ -351,8 +361,10 @@ Layer::CalculateScissorRect(bool aIntermediate,
 const gfx3DMatrix&
 Layer::GetLocalTransform()
 {
+#ifdef MOZ_IPC
   if (ShadowLayer* shadow = AsShadowLayer())
     return shadow->GetShadowTransform();
+#endif
   return mTransform;
 }
 
@@ -690,6 +702,7 @@ LayerManager::IsLogEnabled()
   return PR_LOG_TEST(sLog, PR_LOG_DEBUG);
 }
 
+# ifdef MOZ_IPC
 static nsACString&
 PrintInfo(nsACString& aTo, ShadowLayer* aShadowLayer)
 {
@@ -707,6 +720,12 @@ PrintInfo(nsACString& aTo, ShadowLayer* aShadowLayer)
   }
   return aTo;
 }
+# else
+static nsACString& PrintInfo(nsACString& aTo, ShadowLayer* aShadowLayer)
+{
+  return aTo;
+}
+# endif  // MOZ_IPC
 
 #else  // !MOZ_LAYERS_HAVE_LOG
 
