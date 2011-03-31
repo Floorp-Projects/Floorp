@@ -3575,28 +3575,38 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
     return JSFixedString::new_(cx, chars, length);
 }
 
-static JS_ALWAYS_INLINE JSShortString *
+static JS_ALWAYS_INLINE JSFixedString *
 NewShortString(JSContext *cx, const jschar *chars, size_t length)
 {
+    /*
+     * Don't bother trying to find a static atom; measurement shows that not
+     * many get here (for one, Atomize is catching them).
+     */
+
     JS_ASSERT(JSShortString::lengthFits(length));
-    JSShortString *str = js_NewGCShortString(cx);
+    JSInlineString *str = JSInlineString::lengthFits(length)
+                          ? JSInlineString::new_(cx)
+                          : JSShortString::new_(cx);
     if (!str)
         return NULL;
+
     jschar *storage = str->init(length);
     PodCopy(storage, chars, length);
     storage[length] = 0;
     return str;
 }
 
-static JSShortString *
+static JSInlineString *
 NewShortString(JSContext *cx, const char *chars, size_t length)
 {
     JS_ASSERT(JSShortString::lengthFits(length));
-    JSShortString *str = js_NewGCShortString(cx);
+    JSInlineString *str = JSInlineString::lengthFits(length)
+                          ? JSInlineString::new_(cx)
+                          : JSShortString::new_(cx);
     if (!str)
         return NULL;
-    jschar *storage = str->init(length);
 
+    jschar *storage = str->init(length);
     if (js_CStringsAreUTF8) {
 #ifdef DEBUG
         size_t oldLength = length;

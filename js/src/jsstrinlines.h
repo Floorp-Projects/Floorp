@@ -338,6 +338,43 @@ JSFixedString::morphInternedStringIntoAtom()
     return &asAtom();
 }
 
+JS_ALWAYS_INLINE JSInlineString *
+JSInlineString::new_(JSContext *cx)
+{
+    return (JSInlineString *)js_NewGCString(cx);
+}
+
+JS_ALWAYS_INLINE jschar *
+JSInlineString::init(size_t length)
+{
+    d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
+    d.u1.chars = d.inlineStorage;
+    JS_ASSERT(lengthFits(length) || (isShort() && JSShortString::lengthFits(length)));
+    return d.inlineStorage;
+}
+
+JS_ALWAYS_INLINE void
+JSInlineString::resetLength(size_t length)
+{
+    d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
+    JS_ASSERT(lengthFits(length) || (isShort() && JSShortString::lengthFits(length)));
+}
+
+JS_ALWAYS_INLINE JSShortString *
+JSShortString::new_(JSContext *cx)
+{
+    return js_NewGCShortString(cx);
+}
+
+JS_ALWAYS_INLINE void
+JSShortString::initAtOffsetInBuffer(const jschar *chars, size_t length)
+{
+    JS_ASSERT(lengthFits(length + (chars - d.inlineStorage)));
+    JS_ASSERT(chars >= d.inlineStorage && chars < d.inlineStorage + MAX_SHORT_LENGTH);
+    d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
+    d.u1.chars = chars;
+}
+
 JS_ALWAYS_INLINE void
 JSExternalString::init(const jschar *chars, size_t length, intN type)
 {
@@ -478,7 +515,13 @@ JSFlatString::finalize(JSRuntime *rt)
 {
     JS_ASSERT(!isShort());
     rt->stringMemoryUsed -= length() * 2;
-    rt->free(const_cast<jschar *>(chars()));
+
+    /*
+     * This check depends on the fact that 'chars' is only initialized to the
+     * beginning of inlineStorage. E.g., this is not the case for short strings.
+     */
+    if (chars() != d.inlineStorage)
+        rt->free_(const_cast<jschar *>(chars()));
 }
 
 inline void
