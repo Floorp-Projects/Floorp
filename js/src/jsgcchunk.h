@@ -70,7 +70,7 @@ class GCChunkAllocator {
         return chunk;
     }
 
-    void free(void *chunk) {
+    void free_(void *chunk) {
         JS_ASSERT(chunk);
         JS_ASSERT(!(reinterpret_cast<jsuword>(chunk) & GC_CHUNK_MASK));
         doFree(chunk);

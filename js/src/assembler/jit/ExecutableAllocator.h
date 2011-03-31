@@ -70,6 +70,8 @@ namespace JSC {
 
   // These are reference-counted. A new one starts with a count of 1. 
   class ExecutablePool {
+
+    JS_DECLARE_ALLOCATION_FRIENDS_FOR_PRIVATE_CONSTRUCTOR;
     friend class ExecutableAllocator;
 private:
     struct Allocation {
@@ -100,9 +102,7 @@ public:
         JS_ASSERT(m_refCount != 0);
         JS_ASSERT_IF(willDestroy, m_refCount = 1);
         if (--m_refCount == 0) {
-            /* We can't (easily) use js_delete() here because the destructor is private. */
-            this->~ExecutablePool();
-            js_free(this);
+            js::UnwantedForeground::delete_(this);
         }
     }
 
@@ -236,9 +236,7 @@ private:
         if (!a.pages)
             return NULL;
 
-        /* We can't (easily) use js_new() here because the constructor is private. */
-        void *memory = js_malloc(sizeof(ExecutablePool));
-        return memory ? new(memory) ExecutablePool(a) : NULL;
+        return js::OffTheBooks::new_<ExecutablePool>(a);
     }
 
     ExecutablePool* poolForSize(size_t n)

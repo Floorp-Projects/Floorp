@@ -321,7 +321,7 @@ CallTree(void **bp)
             return NULL;
 
         /* Create a new callsite record. */
-        site = (JSCallsite *) js_malloc(sizeof(JSCallsite));
+        site = (JSCallsite *) OffTheBooks::malloc(sizeof(JSCallsite));
         if (!site)
             return NULL;
 

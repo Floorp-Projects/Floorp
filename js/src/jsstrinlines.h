@@ -469,7 +469,7 @@ JSString::finalize(JSContext *cx)
         JS_RUNTIME_UNMETER(cx->runtime, liveDependentStrings);
     } else if (isFlat()) {
         cx->runtime->stringMemoryUsed -= length() * 2;
-        cx->free(const_cast<jschar *>(asFlat().chars()));
+        cx->free_(const_cast<jschar *>(asFlat().chars()));
     } else {
         JS_ASSERT(isRope());
     }
