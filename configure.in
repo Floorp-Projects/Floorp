@@ -2765,7 +2765,6 @@ alpha*-*-osf*)
                        ,
                        [LDFLAGS=$_SAVE_LDFLAGS])
        fi
-       WARNINGS_AS_ERRORS='-Werror'
        MOZ_OPTIMIZE_FLAGS="-xO4"
        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -h $@ -o $@'
        MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -h $@ -o $@'
@@ -2815,6 +2814,7 @@ alpha*-*-osf*)
        MKSHLIB_UNFORCE_ALL='-Wl,-z -Wl,defaultextract'
        ASFLAGS="$ASFLAGS -fPIC"
        DSO_LDOPTS='-shared'
+       WARNINGS_AS_ERRORS='-Werror'
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
        if test "$OS_RELEASE" = "5.3"; then
