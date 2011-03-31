@@ -366,7 +366,7 @@ nsCRLManager::GetCrls(nsIArray ** aCrls)
   // Get the list of certs //
   sec_rv = SEC_LookupCrls(CERT_GetDefaultCertDB(), &head, -1);
   if (sec_rv != SECSuccess) {
-    goto loser;
+    return NS_ERROR_FAILURE;
   }
 
   if (head) {
@@ -381,8 +381,6 @@ nsCRLManager::GetCrls(nsIArray ** aCrls)
   *aCrls = crlsArray;
   NS_IF_ADDREF(*aCrls);
   return NS_OK;
-loser:
-  return NS_ERROR_FAILURE;;
 }
 
 /**
@@ -403,7 +401,7 @@ nsCRLManager::DeleteCrl(PRUint32 aCrlIndex)
   // Get the list of certs //
   sec_rv = SEC_LookupCrls(CERT_GetDefaultCertDB(), &head, -1);
   if (sec_rv != SECSuccess) {
-    goto loser;
+    return NS_ERROR_FAILURE;
   }
 
   if (head) {
@@ -419,8 +417,6 @@ nsCRLManager::DeleteCrl(PRUint32 aCrlIndex)
     PORT_FreeArena(head->arena, PR_FALSE);
   }
   return NS_OK;
-loser:
-  return NS_ERROR_FAILURE;;
 }
 
 NS_IMETHODIMP
