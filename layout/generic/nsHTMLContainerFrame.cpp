@@ -244,21 +244,21 @@ nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
     underlineRect = nsCSSRendering::GetTextDecorationRect(presContext, size,
                        ascent, underlineOffset,
                        NS_STYLE_TEXT_DECORATION_UNDERLINE,
-                       nsCSSRendering::DECORATION_STYLE_SOLID);
+                       NS_STYLE_TEXT_DECORATION_STYLE_SOLID);
   }
   if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_OVERLINE) {
     gfxSize size(lineWidth, metrics.underlineSize);
     overlineRect = nsCSSRendering::GetTextDecorationRect(presContext, size,
                        ascent, metrics.maxAscent,
                        NS_STYLE_TEXT_DECORATION_OVERLINE,
-                       nsCSSRendering::DECORATION_STYLE_SOLID);
+                       NS_STYLE_TEXT_DECORATION_STYLE_SOLID);
   }
   if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
     gfxSize size(lineWidth, metrics.strikeoutSize);
     lineThroughRect = nsCSSRendering::GetTextDecorationRect(presContext, size,
                        ascent, metrics.strikeoutOffset,
                        NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
-                       nsCSSRendering::DECORATION_STYLE_SOLID);
+                       NS_STYLE_TEXT_DECORATION_STYLE_SOLID);
   }
 
   for (PRUint32 i = shadowList->Length(); i > 0; --i) {
@@ -442,7 +442,7 @@ nsHTMLContainerFrame::PaintTextDecorationLine(
               PresContext()->AppUnitsToGfxUnits(bp.top + aPt.y));
   gfxSize size(PresContext()->AppUnitsToGfxUnits(innerWidth), aSize);
   nsCSSRendering::PaintDecorationLine(aCtx, aColor, pt, size, aAscent, aOffset,
-                    aDecoration, nsCSSRendering::DECORATION_STYLE_SOLID);
+                    aDecoration, NS_STYLE_TEXT_DECORATION_STYLE_SOLID);
 }
 
 /*virtual*/ void
