@@ -3365,7 +3365,9 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
                                       float a6, float a7, float a8,
                                       PRUint8 optional_argc)
 {
-    NS_ENSURE_ARG(imgElt);
+    if (!imgElt) {
+        return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
+    }
 
     double sx,sy,sw,sh;
     double dx,dy,dw,dh;
