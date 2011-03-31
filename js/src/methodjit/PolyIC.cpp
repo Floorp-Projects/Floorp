@@ -2136,7 +2136,7 @@ GetElementIC::attachGetProp(JSContext *cx, JSObject *obj, const Value &v, jsid i
     JaegerSpew(JSpew_PICs, "generated %s stub at %p for atom 0x%x (\"%s\") shape 0x%x (%s: %d)\n",
                js_CodeName[op], cs.executableAddress(), id, chars, holder->shape(),
                cx->fp()->script()->filename, js_FramePCToLineNumber(cx, cx->fp()));
-    cx->free(chars);
+    cx->free_(chars);
 #endif
 
     // Update the inline guards, if needed.

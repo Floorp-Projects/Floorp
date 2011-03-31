@@ -565,13 +565,13 @@ static JSThread *
 NewThread(void *id)
 {
     JS_ASSERT(js_CurrentThreadId() == id);
-    JSThread *thread = (JSThread *) OffTheBooks::calloc(sizeof(JSThread));
+    JSThread *thread = (JSThread *) OffTheBooks::calloc_(sizeof(JSThread));
     if (!thread)
         return NULL;
     JS_INIT_CLIST(&thread->contextList);
     thread->id = id;
     if (!thread->data.init()) {
-        Foreground::free(thread);
+        Foreground::free_(thread);
         return NULL;
     }
     return thread;
@@ -590,7 +590,7 @@ DestroyThread(JSThread *thread)
     JS_ASSERT(!thread->data.conservativeGC.hasStackToScan());
 
     thread->data.finish();
-    Foreground::free(thread);
+    Foreground::free_(thread);
 }
 
 JSThread *
@@ -747,7 +747,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
      * runtime list. After that it can be accessed from another thread via
      * js_ContextIterator.
      */
-    void *mem = OffTheBooks::calloc(sizeof *cx);
+    void *mem = OffTheBooks::calloc_(sizeof *cx);
     if (!mem)
         return NULL;
 
@@ -1123,14 +1123,14 @@ FreeContext(JSContext *cx)
     JS_FinishArenaPool(&cx->regExpPool);
 
     if (cx->lastMessage)
-        cx->free(cx->lastMessage);
+        cx->free_(cx->lastMessage);
 
     /* Remove any argument formatters. */
     JSArgumentFormatMap *map = cx->argumentFormatMap;
     while (map) {
         JSArgumentFormatMap *temp = map;
         map = map->next;
-        cx->free(temp);
+        cx->free_(temp);
     }
 
     JS_ASSERT(!cx->resolvingList);
@@ -1367,8 +1367,8 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
     warning = JSREPORT_IS_WARNING(report.flags);
 
     ReportError(cx, message, &report, NULL, NULL);
-    Foreground::free(message);
-    Foreground::free(ucmessage);
+    Foreground::free_(message);
+    Foreground::free_(ucmessage);
     return warning;
 }
 
@@ -1413,7 +1413,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
              * pointers later.
              */
             reportp->messageArgs = (const jschar **)
-                cx->malloc(sizeof(jschar *) * (argCount + 1));
+                cx->malloc_(sizeof(jschar *) * (argCount + 1));
             if (!reportp->messageArgs)
                 return JS_FALSE;
             reportp->messageArgs[argCount] = NULL;
@@ -1457,9 +1457,9 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 * is used once and only once in the expansion !!!
                 */
                 reportp->ucmessage = out = (jschar *)
-                    cx->malloc((expandedLength + 1) * sizeof(jschar));
+                    cx->malloc_((expandedLength + 1) * sizeof(jschar));
                 if (!out) {
-                    cx->free(buffer);
+                    cx->free_(buffer);
                     goto error;
                 }
                 while (*fmt) {
@@ -1479,7 +1479,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 }
                 JS_ASSERT(expandedArgs == argCount);
                 *out = 0;
-                cx->free(buffer);
+                cx->free_(buffer);
                 *messagep =
                     js_DeflateString(cx, reportp->ucmessage,
                                      (size_t)(out - reportp->ucmessage));
@@ -1508,7 +1508,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
         const char *defaultErrorMessage
             = "No error message available for error number %d";
         size_t nbytes = strlen(defaultErrorMessage) + 16;
-        *messagep = (char *)cx->malloc(nbytes);
+        *messagep = (char *)cx->malloc_(nbytes);
         if (!*messagep)
             goto error;
         JS_snprintf(*messagep, nbytes, defaultErrorMessage, errorNumber);
@@ -1521,17 +1521,17 @@ error:
         if (charArgs) {
             i = 0;
             while (reportp->messageArgs[i])
-                cx->free((void *)reportp->messageArgs[i++]);
+                cx->free_((void *)reportp->messageArgs[i++]);
         }
-        cx->free((void *)reportp->messageArgs);
+        cx->free_((void *)reportp->messageArgs);
         reportp->messageArgs = NULL;
     }
     if (reportp->ucmessage) {
-        cx->free((void *)reportp->ucmessage);
+        cx->free_((void *)reportp->ucmessage);
         reportp->ucmessage = NULL;
     }
     if (*messagep) {
-        cx->free((void *)*messagep);
+        cx->free_((void *)*messagep);
         *messagep = NULL;
     }
     return JS_FALSE;
@@ -1563,7 +1563,7 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     ReportError(cx, message, &report, callback, userRef);
 
     if (message)
-        cx->free(message);
+        cx->free_(message);
     if (report.messageArgs) {
         /*
          * js_ExpandErrorArguments owns its messageArgs only if it had to
@@ -1572,12 +1572,12 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
         if (charArgs) {
             int i = 0;
             while (report.messageArgs[i])
-                cx->free((void *)report.messageArgs[i++]);
+                cx->free_((void *)report.messageArgs[i++]);
         }
-        cx->free((void *)report.messageArgs);
+        cx->free_((void *)report.messageArgs);
     }
     if (report.ucmessage)
-        cx->free((void *)report.ucmessage);
+        cx->free_((void *)report.ucmessage);
 
     return warning;
 }
@@ -1591,7 +1591,7 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
         return;
 
     if (cx->lastMessage)
-        Foreground::free(cx->lastMessage);
+        Foreground::free_(cx->lastMessage);
     cx->lastMessage = JS_strdup(cx, message);
     if (!cx->lastMessage)
         return;
@@ -1649,7 +1649,7 @@ js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, const Value &v,
                                           js_null_str, NULL);
     }
 
-    cx->free(bytes);
+    cx->free_(bytes);
     return ok;
 }
 
@@ -1672,7 +1672,7 @@ js_ReportMissingArg(JSContext *cx, const Value &v, uintN arg)
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                          JSMSG_MISSING_FUN_ARG, argbuf,
                          bytes ? bytes : "");
-    cx->free(bytes);
+    cx->free_(bytes);
 }
 
 JSBool
@@ -1691,7 +1691,7 @@ js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
 
     ok = JS_ReportErrorFlagsAndNumber(cx, flags, js_GetErrorMessage,
                                       NULL, errorNumber, bytes, arg1, arg2);
-    cx->free(bytes);
+    cx->free_(bytes);
     return ok;
 }
 
@@ -2099,11 +2099,11 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
 #ifdef JS_THREADSAFE
     gcHelperThread.waitBackgroundSweepEnd(this);
     if (!p)
-        p = OffTheBooks::malloc(nbytes);
+        p = OffTheBooks::malloc_(nbytes);
     else if (p == reinterpret_cast<void *>(1))
-        p = OffTheBooks::calloc(nbytes);
+        p = OffTheBooks::calloc_(nbytes);
     else
-      p = OffTheBooks::realloc(p, nbytes);
+      p = OffTheBooks::realloc_(p, nbytes);
     if (p)
         return p;
 #endif

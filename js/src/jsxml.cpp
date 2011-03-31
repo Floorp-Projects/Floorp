@@ -429,20 +429,20 @@ ConvertQNameToString(JSContext *cx, JSObject *obj)
     if (obj->getClass() == &js_AttributeNameClass) {
         JS::Anchor<JSString *> anchor(str);
         size_t length = str->length();
-        jschar *chars = (jschar *) cx->malloc((length + 2) * sizeof(jschar));
+        jschar *chars = (jschar *) cx->malloc_((length + 2) * sizeof(jschar));
         if (!chars)
             return JS_FALSE;
         *chars = '@';
         const jschar *strChars = str->getChars(cx);
         if (!strChars) {
-            cx->free(chars);
+            cx->free_(chars);
             return NULL;
         }
         js_strncpy(chars + 1, strChars, length);
         chars[++length] = 0;
         str = js_NewString(cx, chars, length);
         if (!str) {
-            cx->free(chars);
+            cx->free_(chars);
             return NULL;
         }
     }
@@ -889,9 +889,9 @@ JSXMLArray::setCapacity(JSContext *cx, uint32 newCapacity)
         /* We could let realloc(p, 0) free this, but purify gets confused. */
         if (vector) {
             if (cx)
-                cx->free(vector);
+                cx->free_(vector);
             else
-                Foreground::free(vector);
+                Foreground::free_(vector);
         }
         vector = NULL;
     } else {
@@ -901,7 +901,7 @@ JSXMLArray::setCapacity(JSContext *cx, uint32 newCapacity)
 #if JS_BITS_PER_WORD == 32
             (size_t)newCapacity > ~(size_t)0 / sizeof(void *) ||
 #endif
-            !(tmp = (void **) OffTheBooks::realloc(vector, newCapacity * sizeof(void *)))) {
+            !(tmp = (void **) OffTheBooks::realloc_(vector, newCapacity * sizeof(void *)))) {
             if (cx)
                 JS_ReportOutOfMemory(cx);
             return false;
@@ -924,7 +924,7 @@ JSXMLArray::trim()
 void
 JSXMLArray::finish(JSContext *cx)
 {
-    cx->free(vector);
+    cx->free_(vector);
 
     while (JSXMLArrayCursor *cursor = cursors)
         cursor->disconnect();
@@ -988,7 +988,7 @@ XMLArrayAddMember(JSContext *cx, JSXMLArray *array, uint32 index, void *elt)
                 (size_t)capacity > ~(size_t)0 / sizeof(void *) ||
 #endif
                 !(vector = (void **)
-                           cx->realloc(array->vector, capacity * sizeof(void *)))) {
+                           cx->realloc_(array->vector, capacity * sizeof(void *)))) {
                 JS_ReportOutOfMemory(cx);
                 return JS_FALSE;
             }
@@ -1069,10 +1069,10 @@ XMLArrayTruncate(JSContext *cx, JSXMLArray *array, uint32 length)
 
     if (length == 0) {
         if (array->vector)
-            cx->free(array->vector);
+            cx->free_(array->vector);
         vector = NULL;
     } else {
-        vector = (void **) cx->realloc(array->vector, length * sizeof(void *));
+        vector = (void **) cx->realloc_(array->vector, length * sizeof(void *));
         if (!vector)
             return;
     }
@@ -1707,7 +1707,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
     length = constrlen(prefix) + urilen + constrlen(middle) + srclen +
              constrlen(suffix);
 
-    chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
+    chars = (jschar *) cx->malloc_((length + 1) * sizeof(jschar));
     if (!chars)
         return NULL;
 
@@ -1722,7 +1722,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
     offset += dstlen;
     srcp = src->getChars(cx);
     if (!srcp) {
-        cx->free(chars);
+        cx->free_(chars);
         return NULL;
     }
     js_strncpy(chars + offset, srcp, srclen);
@@ -1757,7 +1757,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
         if (parser.init(chars, length, filename, lineno, cx->findVersion())) {
             JSObject *scopeChain = GetScopeChain(cx);
             if (!scopeChain) {
-                cx->free(chars);
+                cx->free_(chars);
                 return NULL;
             }
             JSParseNode *pn = parser.parseXMLText(scopeChain, false);
@@ -1770,7 +1770,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
         }
     }
 
-    cx->free(chars);
+    cx->free_(chars);
     return xml;
 
 #undef constrlen
@@ -2292,7 +2292,7 @@ GeneratePrefix(JSContext *cx, JSLinearString *uri, JSXMLArray *decls)
     if (STARTS_WITH_XML(cp, length) || !IsXMLName(cp, length)) {
         newlength = length + 2 + (size_t) log10((double) decls->length);
         bp = (jschar *)
-             cx->malloc((newlength + 1) * sizeof(jschar));
+             cx->malloc_((newlength + 1) * sizeof(jschar));
         if (!bp)
             return NULL;
 
@@ -2317,7 +2317,7 @@ GeneratePrefix(JSContext *cx, JSLinearString *uri, JSXMLArray *decls)
                 if (bp == cp) {
                     newlength = length + 2 + (size_t) log10((double) n);
                     bp = (jschar *)
-                         cx->malloc((newlength + 1) * sizeof(jschar));
+                         cx->malloc_((newlength + 1) * sizeof(jschar));
                     if (!bp)
                         return NULL;
                     js_strncpy(bp, cp, length);
@@ -2344,7 +2344,7 @@ GeneratePrefix(JSContext *cx, JSLinearString *uri, JSXMLArray *decls)
     } else {
         prefix = js_NewString(cx, bp, newlength);
         if (!prefix)
-            cx->free(bp);
+            cx->free_(bp);
     }
     return prefix;
 }
@@ -7334,7 +7334,7 @@ js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str, JSString *str2)
         return NULL;
 
     size_t newlen = (isName) ? len + 1 + len2 : len + 2 + len2 + 1;
-    jschar *newchars = (jschar *) cx->malloc((newlen+1) * sizeof(jschar));
+    jschar *newchars = (jschar *) cx->malloc_((newlen+1) * sizeof(jschar));
     if (!newchars)
         return NULL;
 

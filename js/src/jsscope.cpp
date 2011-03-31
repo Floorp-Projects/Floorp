@@ -157,10 +157,10 @@ PropertyTable::init(JSRuntime *rt, Shape *lastProp)
         sizeLog2 = MIN_SIZE_LOG2;
 
     /*
-     * Use rt->calloc for memory accounting and overpressure handling
+     * Use rt->calloc_ for memory accounting and overpressure handling
      * without OOM reporting. See PropertyTable::change.
      */
-    entries = (Shape **) rt->calloc(JS_BIT(sizeLog2) * sizeof(Shape *));
+    entries = (Shape **) rt->calloc_(JS_BIT(sizeLog2) * sizeof(Shape *));
     if (!entries) {
         METER(tableAllocFails);
         return false;
@@ -330,7 +330,7 @@ PropertyTable::change(int log2Delta, JSContext *cx)
     oldsize = JS_BIT(oldlog2);
     newsize = JS_BIT(newlog2);
     nbytes = PROPERTY_TABLE_NBYTES(newsize);
-    newTable = (Shape **) cx->calloc(nbytes);
+    newTable = (Shape **) cx->calloc_(nbytes);
     if (!newTable) {
         METER(tableAllocFails);
         return false;
@@ -356,7 +356,7 @@ PropertyTable::change(int log2Delta, JSContext *cx)
     }
 
     /* Finally, free the old entries storage. */
-    cx->free(oldTable);
+    cx->free_(oldTable);
     return true;
 }
 

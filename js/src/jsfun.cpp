@@ -199,7 +199,7 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee)
     AutoShapeRooter shapeRoot(cx, emptyArgumentsShape);
 
     ArgumentsData *data = (ArgumentsData *)
-        cx->malloc(offsetof(ArgumentsData, slots) + argc * sizeof(Value));
+        cx->malloc_(offsetof(ArgumentsData, slots) + argc * sizeof(Value));
     if (!data)
         return NULL;
     SetValueRangeToUndefined(data->slots, argc);
@@ -786,7 +786,7 @@ strictargs_enumerate(JSContext *cx, JSObject *obj)
 static void
 args_finalize(JSContext *cx, JSObject *obj)
 {
-    cx->free((void *) obj->getArgsData());
+    cx->free_((void *) obj->getArgsData());
 }
 
 /*
@@ -1989,7 +1989,7 @@ fun_finalize(JSContext *cx, JSObject *obj)
     /* Cloned function objects may be flat closures with upvars to free. */
     if (fun != obj) {
         if (fun->isFlatClosure() && fun->script()->bindings.hasUpvars())
-            cx->free((void *) obj->getFlatClosureUpvars());
+            cx->free_((void *) obj->getFlatClosureUpvars());
         return;
     }
 
@@ -2845,7 +2845,7 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
     if (nslots == 0)
         return closure;
 
-    Value *upvars = (Value *) cx->malloc(nslots * sizeof(Value));
+    Value *upvars = (Value *) cx->malloc_(nslots * sizeof(Value));
     if (!upvars)
         return NULL;
 
