@@ -175,7 +175,8 @@ public:
                                 float aYResolution,
                                 PRUint32 aFlags) = 0;
 
-  void RenderTo(const nsIntPoint& aOffset, LayerManagerOGL* aManager);
+  void RenderTo(const nsIntPoint& aOffset, LayerManagerOGL* aManager,
+                PRUint32 aFlags);
 
   nsIntSize GetSize() {
     if (mTexImage)
@@ -196,7 +197,8 @@ protected:
 
 void
 ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
-                               LayerManagerOGL* aManager)
+                               LayerManagerOGL* aManager,
+                               PRUint32 aFlags)
 {
   if (!mTexImage)
     return;
@@ -260,7 +262,19 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
     program->SetLayerTransform(mLayer->GetEffectiveTransform());
     program->SetRenderOffset(aOffset);
 
-    nsIntRegionRectIterator iter(mLayer->GetEffectiveVisibleRegion());
+    const nsIntRegion& visibleRegion = mLayer->GetEffectiveVisibleRegion();
+    nsIntRegion tmpRegion;
+    const nsIntRegion* renderRegion;
+    if (aFlags & PAINT_WILL_RESAMPLE) {
+      // If we're resampling, then the texture image will contain exactly the
+      // entire visible region's bounds, and we should draw it all in one quad
+      // to avoid unexpected aliasing.
+      tmpRegion = visibleRegion.GetBounds();
+      renderRegion = &tmpRegion;
+    } else {
+      renderRegion = &visibleRegion;
+    }
+    nsIntRegionRectIterator iter(*renderRegion);
     while (const nsIntRect *iterRect = iter.Next()) {
       nsIntRect quadRect = *iterRect;
       program->SetLayerQuadRect(quadRect);
@@ -835,7 +849,7 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   gl()->MakeCurrent();
 
   gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
-  mBuffer->RenderTo(aOffset, mOGLManager);
+  mBuffer->RenderTo(aOffset, mOGLManager, flags);
 }
 
 Layer*
@@ -1017,7 +1031,7 @@ ShadowThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 
   gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
-  mBuffer->RenderTo(aOffset, mOGLManager);
+  mBuffer->RenderTo(aOffset, mOGLManager, 0);
 }
 
 #endif  // MOZ_IPC
