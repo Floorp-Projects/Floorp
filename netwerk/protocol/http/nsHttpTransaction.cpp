@@ -333,9 +333,12 @@ nsHttpTransaction::SetConnection(nsAHttpConnection *conn)
 }
 
 void
-nsHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor **cb)
+nsHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor **cb,
+                                        nsIEventTarget        **target)
 {
     NS_IF_ADDREF(*cb = mCallbacks);
+    if (target)
+        NS_IF_ADDREF(*target = mConsumerTarget);
 }
 
 void
