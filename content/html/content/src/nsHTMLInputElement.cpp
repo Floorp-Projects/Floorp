@@ -973,7 +973,6 @@ nsHTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, DefaultValue, value)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, DefaultChecked, checked)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Accept, accept)
-NS_IMPL_STRING_ATTR(nsHTMLInputElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Alt, alt)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Autocomplete, autocomplete,
@@ -1747,12 +1746,6 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::Blur()
-{
-  return nsGenericHTMLElement::Blur();
-}
-
-NS_IMETHODIMP
 nsHTMLInputElement::Focus()
 {
   if (mType == NS_FORM_INPUT_FILE) {
@@ -1855,68 +1848,10 @@ nsHTMLInputElement::SelectAll(nsPresContext* aPresContext)
 NS_IMETHODIMP
 nsHTMLInputElement::Click()
 {
-  nsresult rv = NS_OK;
+  if (mType == NS_FORM_INPUT_FILE)
+    FireAsyncClickHandler();
 
-  if (GET_BOOLBIT(mBitField, BF_HANDLING_CLICK)) // Fixes crash as in bug 41599
-      return rv;                      // --heikki@netscape.com
-
-  // first see if we are disabled or not. If disabled then do nothing.
-  nsAutoString disabled;
-  if (IsDisabled()) {
-    return NS_OK;
-  }
-
-  // see what type of input we are.  Only click button, checkbox, radio,
-  // reset, submit, & image
-  if (mType == NS_FORM_INPUT_BUTTON   ||
-      mType == NS_FORM_INPUT_CHECKBOX ||
-      mType == NS_FORM_INPUT_RADIO    ||
-      mType == NS_FORM_INPUT_RESET    ||
-      mType == NS_FORM_INPUT_SUBMIT   ||
-      mType == NS_FORM_INPUT_IMAGE    ||
-      mType == NS_FORM_INPUT_FILE) {
-
-    // Strong in case the event kills it
-    nsCOMPtr<nsIDocument> doc = GetCurrentDoc();
-    if (!doc) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIPresShell> shell = doc->GetShell();
-    nsRefPtr<nsPresContext> context = nsnull;
-    if (shell) {
-      context = shell->GetPresContext();
-    }
-
-    if (!context) {
-      doc->FlushPendingNotifications(Flush_Frames);
-      shell = doc->GetShell();
-      if (shell) {
-        context = shell->GetPresContext();
-      }
-    }
-
-    if (context) {
-      // Click() is never called from native code, but it may be
-      // called from chrome JS. Mark this event trusted if Click()
-      // is called from chrome code.
-      nsMouseEvent event(nsContentUtils::IsCallerChrome(),
-                         NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
-      event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_UNKNOWN;
-      nsEventStatus status = nsEventStatus_eIgnore;
-
-      SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_TRUE);
-      if (mType == NS_FORM_INPUT_FILE){
-        FireAsyncClickHandler();
-      }
-      nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), context,
-                                  &event, nsnull, &status);
-
-      SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_FALSE);
-    }
-  }
-
-  return NS_OK;
+  return nsGenericHTMLElement::Click();
 }
 
 NS_IMETHODIMP
