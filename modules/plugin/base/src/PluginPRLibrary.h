@@ -48,7 +48,7 @@ namespace mozilla {
 class PluginPRLibrary : public PluginLibrary
 {
 public:
-    PluginPRLibrary(const nsAString& aFilePath, PRLibrary* aLibrary) :
+    PluginPRLibrary(const char* aFilePath, PRLibrary* aLibrary) :
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
         mNP_Initialize(nsnull),
 #else

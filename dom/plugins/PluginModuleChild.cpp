@@ -107,6 +107,7 @@ static HWND sBrowserHwnd = NULL;
 
 PluginModuleChild::PluginModuleChild()
   : mLibrary(0)
+  , mPluginFilename("")
   , mQuirks(QUIRKS_NOT_INITIALIZED)
   , mShutdownFunc(0)
   , mInitializeFunc(0)
@@ -183,11 +184,11 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
     if (!InitGraphics())
         return false;
 
-    CopyUTF8toUTF16(aPluginFilename.c_str(), mPluginFilename);
+    mPluginFilename = aPluginFilename.c_str();
     nsCOMPtr<nsILocalFile> pluginFile;
-    NS_NewLocalFile(mPluginFilename,
-                    PR_TRUE,
-                    getter_AddRefs(pluginFile));
+    NS_NewNativeLocalFile(mPluginFilename,
+                          PR_TRUE,
+                          getter_AddRefs(pluginFile));
 
     PRBool exists;
     pluginFile->Exists(&exists);
@@ -1879,7 +1880,7 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
     }
 
     // QuickTime plugin usually loaded with audio/mpeg mimetype
-    NS_NAMED_LITERAL_STRING(quicktime, "npqtplugin");
+    NS_NAMED_LITERAL_CSTRING(quicktime, "npqtplugin");
     if (FindInReadable(quicktime, mPluginFilename)) {
       mQuirks |= QUIRK_QUICKTIME_AVOID_SETWINDOW;
     }

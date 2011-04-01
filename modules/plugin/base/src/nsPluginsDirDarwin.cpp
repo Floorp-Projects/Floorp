@@ -518,11 +518,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
   CFBundleRef bundle = getPluginBundle(path.get());
 
   // fill in full path
-  nsAutoString wpath;
-  rv = mPlugin->GetPath(wpath);
-  if (NS_FAILED(rv))
-    return rv;
-  info.fFullPath = ToNewUnicode(wpath);
+  info.fFullPath = PL_strdup(path.get());
 
   // fill in file name
   nsCAutoString fileName;
