@@ -1307,7 +1307,7 @@ FrameState::loadDouble(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) cons
 {
     if (fe->isCopy()) {
         FrameEntry *backing = fe->copyOf();
-        if (tryFastDoubleLoad(fe, fpReg, masm))
+        if (tryFastDoubleLoad(fe, fpReg, masm)) 
             return;
         fe = backing;
     }

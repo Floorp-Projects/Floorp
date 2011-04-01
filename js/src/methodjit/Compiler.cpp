@@ -205,13 +205,13 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32 argc)
         return Compile_Abort;
     }
 
-    if (!newa->liveness.analyze(cx, &newa->analysis, script)) {
+    if (cx->typeInferenceEnabled() && !newa->liveness.analyze(cx, &newa->analysis, script)) {
         js_ReportOutOfMemory(cx);
         return Compile_Error;
     }
 
 #ifdef JS_METHODJIT_SPEW
-    if (IsJaegerSpewChannelActive(JSpew_Regalloc)) {
+    if (cx->typeInferenceEnabled() && IsJaegerSpewChannelActive(JSpew_Regalloc)) {
         for (unsigned i = 0; i < script->nfixed; i++) {
             if (!newa->analysis.localEscapes(i)) {
                 JaegerSpew(JSpew_Regalloc, "Local %u:", i);
@@ -698,8 +698,11 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     size_t nNmapLive = loopEntries.length();
     for (size_t i = 0; i < script->length; i++) {
         analyze::Bytecode *opinfo = a->analysis.maybeCode(i);
-        if (opinfo && opinfo->safePoint && !a->liveness.getCode(i).loopBackedge)
-            nNmapLive++;
+        if (opinfo && opinfo->safePoint) {
+            /* loopEntries cover any safe points which are at loop heads. */
+            if (!cx->typeInferenceEnabled() || !a->liveness.getCode(i).loopBackedge)
+                nNmapLive++;
+        }
     }
 
     size_t nUnsyncedEntries = 0;
@@ -819,7 +822,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         InternalCallSite &from = callSites[i];
 
         /* Patch stores of f.regs.inlined for stubs called from within inline frames. */
-        if (from.id != CallSite::NCODE_RETURN_ID &&
+        if (cx->typeInferenceEnabled() &&
+            from.id != CallSite::NCODE_RETURN_ID &&
             from.id != CallSite::MAGIC_TRAP_ID &&
             from.inlineIndex != uint32(-1)) {
             if (from.ool)
@@ -1274,7 +1278,7 @@ mjit::Compiler::generateMethod()
                  * of the loop so sync, branch, and fix it up after the loop
                  * has been processed.
                  */
-                if (a->liveness.getCode(PC).loopBackedge) {
+                if (cx->typeInferenceEnabled() && a->liveness.getCode(PC).loopBackedge) {
                     frame.syncAndForgetEverything();
                     Jump j = masm.jump();
                     if (!frame.pushLoop(PC, j, PC))
@@ -1290,6 +1294,11 @@ mjit::Compiler::generateMethod()
                 return Compile_Error;
             restoreAnalysisTypes(opinfo->stackDepth);
             fallthrough = true;
+
+            if (!cx->typeInferenceEnabled()) {
+                /* All join points have synced state if we aren't doing cross-branch regalloc. */
+                opinfo->safePoint = true;
+            }
         }
 
         a->jumpMap[uint32(PC - script->code)] = masm.label();
@@ -1439,7 +1448,8 @@ mjit::Compiler::generateMethod()
              * to the loop condition test and are immediately followed by the head of the loop.
              */
             jsbytecode *next = PC + JSOP_GOTO_LENGTH;
-            if (a->analysis.maybeCode(next) && a->liveness.getCode(next).loopBackedge) {
+            if (cx->typeInferenceEnabled() && a->analysis.maybeCode(next) &&
+                a->liveness.getCode(next).loopBackedge) {
                 frame.syncAndForgetEverything();
                 Jump j = masm.jump();
                 if (!frame.pushLoop(next, j, target))
@@ -2697,7 +2707,8 @@ mjit::Compiler::jsop_getglobal(uint32 index)
      * If the global is currently undefined, it might still be undefined at the point
      * of this access, which type inference will not account for. Insert a check.
      */
-    if (globalObj->getSlot(slot).isUndefined() &&
+    if (cx->typeInferenceEnabled() &&
+        globalObj->getSlot(slot).isUndefined() &&
         (JSOp(*PC) == JSOP_CALLGLOBAL || PC[JSOP_GETGLOBAL_LENGTH] != JSOP_POP)) {
         Jump jump = masm.testUndefined(Assembler::Equal, address);
         stubcc.linkExit(jump, Uses(0));
@@ -2972,7 +2983,8 @@ JSC::MacroAssembler::Call
 mjit::Compiler::emitStubCall(void *ptr, DataLabelPtr *pinline)
 {
     JaegerSpew(JSpew_Insns, " ---- CALLING STUB ---- \n");
-    Call cl = masm.fallibleVMCall(ptr, outerPC(), pinline, frame.totalDepth());
+    Call cl = masm.fallibleVMCall(cx->typeInferenceEnabled(),
+                                  ptr, outerPC(), pinline, frame.totalDepth());
     JaegerSpew(JSpew_Insns, " ---- END STUB CALL ---- \n");
     return cl;
 }
@@ -3074,6 +3086,9 @@ mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
 
     Jump notCompiled = masm.branchTestPtr(Assembler::Zero, r0, r0);
 
+    if (!cx->typeInferenceEnabled())
+        masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
+
     callPatch.hasFastNcode = true;
     callPatch.fastNcodePatch =
         masm.storePtrWithPatch(ImmPtr(NULL),
@@ -3161,6 +3176,9 @@ mjit::Compiler::checkCallApplySpeculation(uint32 callImmArgc, uint32 speculatedA
 
         RegisterID r0 = Registers::ReturnReg;
         Jump notCompiled = stubcc.masm.branchTestPtr(Assembler::Zero, r0, r0);
+
+        if (!cx->typeInferenceEnabled())
+            stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
 
         Address ncodeAddr(JSFrameReg, JSStackFrame::offsetOfncode());
         uncachedCallPatch->hasSlowNcode = true;
@@ -3463,6 +3481,8 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
             stubcc.masm.move(Imm32(callIC.frameSize.staticArgc()), JSParamReg_Argc);
         else
             stubcc.masm.load32(FrameAddress(offsetof(VMFrame, u.call.dynamicArgc)), JSParamReg_Argc);
+        if (!cx->typeInferenceEnabled())
+            stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
         callPatch.hasSlowNcode = true;
         callPatch.slowNcodePatch =
             stubcc.masm.storePtrWithPatch(ImmPtr(NULL),
@@ -4741,8 +4761,11 @@ mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type)
     ScopeNameLabels &labels = pic.scopeNameLabels();
     labels.setInlineJump(masm, pic.fastPathStart, inlineJump);
 
-    /* Always test for undefined. */
-    Jump undefinedGuard = masm.testUndefined(Assembler::Equal, pic.shapeReg);
+    MaybeJump undefinedGuard;
+    if (cx->typeInferenceEnabled()) {
+        /* Always test for undefined. */
+        undefinedGuard = masm.testUndefined(Assembler::Equal, pic.shapeReg);
+    }
 
     /*
      * We can't optimize away the PIC for the NAME access itself, but if we've
@@ -4760,10 +4783,12 @@ mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type)
 
     stubcc.rejoin(Changes(1));
 
-    stubcc.linkExit(undefinedGuard, Uses(0));
-    stubcc.leave();
-    OOL_STUBCALL(stubs::UndefinedHelper);
-    stubcc.rejoin(Changes(1));
+    if (cx->typeInferenceEnabled()) {
+        stubcc.linkExit(undefinedGuard.get(), Uses(0));
+        stubcc.leave();
+        OOL_STUBCALL(stubs::UndefinedHelper);
+        stubcc.rejoin(Changes(1));
+    }
 
     pics.append(pic);
 }
@@ -4817,15 +4842,20 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
     frame.pop();
     frame.pushRegs(pic.shapeReg, pic.objReg, knownPushedType(0));
 
-    /* Always test for undefined. */
-    Jump undefinedGuard = masm.testUndefined(Assembler::Equal, pic.shapeReg);
+    MaybeJump undefinedGuard;
+    if (cx->typeInferenceEnabled()) {
+        /* Always test for undefined. */
+        undefinedGuard = masm.testUndefined(Assembler::Equal, pic.shapeReg);
+    }
 
     stubcc.rejoin(Changes(1));
 
-    stubcc.linkExit(undefinedGuard, Uses(0));
-    stubcc.leave();
-    OOL_STUBCALL(stubs::UndefinedHelper);
-    stubcc.rejoin(Changes(1));
+    if (cx->typeInferenceEnabled()) {
+        stubcc.linkExit(undefinedGuard.get(), Uses(0));
+        stubcc.leave();
+        OOL_STUBCALL(stubs::UndefinedHelper);
+        stubcc.rejoin(Changes(1));
+    }
 
     pics.append(pic);
     return true;
@@ -6026,6 +6056,9 @@ mjit::Compiler::jsop_newinit()
 bool
 mjit::Compiler::finishLoop(jsbytecode *head)
 {
+    if (!cx->typeInferenceEnabled())
+        return true;
+
     /*
      * We're done processing the current loop. Every loop has exactly one backedge
      * at the end ('continue' statements are forward jumps to the loop test),
@@ -6091,14 +6124,18 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
      * Unless we are coming from a branch which synced everything, syncForBranch
      * must have been called and ensured an allocation at the target.
      */
-    RegisterAllocation *&lvtarget = a->liveness.getCode(target).allocation;
-    if (!lvtarget) {
-        lvtarget = ArenaNew<RegisterAllocation>(a->liveness.pool, false);
-        if (!lvtarget)
-            return false;
+    RegisterAllocation *lvtarget = NULL;
+    bool consistent = true;
+    if (cx->typeInferenceEnabled()) {
+        RegisterAllocation *&alloc = a->liveness.getCode(target).allocation;
+        if (!alloc) {
+            alloc = ArenaNew<RegisterAllocation>(a->liveness.pool, false);
+            if (!alloc)
+                return false;
+        }
+        lvtarget = alloc;
+        consistent = frame.consistentRegisters(target);
     }
-
-    bool consistent = frame.consistentRegisters(target);
 
     if (!addTraceHints || target >= PC ||
         (JSOp(*target) != JSOP_TRACE && JSOp(*target) != JSOP_NOTRACE)
@@ -6107,7 +6144,7 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
 #endif
         )
     {
-        if (lvtarget->synced()) {
+        if (!lvtarget || lvtarget->synced()) {
             JS_ASSERT(consistent);
             if (!jumpInScript(j, target))
                 return false;
@@ -6190,6 +6227,9 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
                                         Registers::ReturnReg);
     stubcc.masm.jump(Registers::ReturnReg);
     no.linkTo(stubcc.masm.label(), &stubcc.masm);
+
+    if (!cx->typeInferenceEnabled())
+        stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
 
 #ifdef JS_MONOIC
     ic.jumpTarget = target;

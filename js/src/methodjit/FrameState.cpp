@@ -242,7 +242,6 @@ FrameState::syncInlinedEntry(FrameEntry *fe, const FrameEntry *parent)
 void
 FrameState::associateReg(FrameEntry *fe, RematInfo::RematType type, AnyRegisterID reg)
 {
-    /* :XXX: handle args/this copying each other. */
     a->freeRegs.takeReg(reg);
 
     if (type == RematInfo::TYPE)
@@ -295,6 +294,7 @@ FrameState::discardLocalRegisters()
 void
 FrameState::evictInlineModifiedRegisters(Registers regs)
 {
+    JS_ASSERT(cx->typeInferenceEnabled());
     a->parentRegs.freeMask &= ~regs.freeMask;
 
     while (!regs.empty()) {
@@ -324,6 +324,7 @@ FrameState::evictInlineModifiedRegisters(Registers regs)
 void
 FrameState::tryCopyRegister(FrameEntry *fe, FrameEntry *callStart)
 {
+    JS_ASSERT(cx->typeInferenceEnabled());
     JS_ASSERT(!fe->isCopied() || !isEntryCopied(fe));
 
     if (!fe->isCopy())
@@ -378,6 +379,8 @@ FrameState::tryCopyRegister(FrameEntry *fe, FrameEntry *callStart)
 Registers
 FrameState::getTemporaryCallRegisters(FrameEntry *callStart) const
 {
+    JS_ASSERT(cx->typeInferenceEnabled());
+
     /*
      * Get the registers in use for entries which will be popped once the
      * call at callStart finishes.
@@ -453,6 +456,8 @@ FrameState::evictReg(AnyRegisterID reg)
 inline Lifetime *
 FrameState::variableLive(FrameEntry *fe, jsbytecode *pc) const
 {
+    JS_ASSERT(cx->typeInferenceEnabled());
+
     uint32 offset = pc - script->code;
     if (fe == this_)
         return a->liveness->thisLive(offset);
@@ -491,6 +496,8 @@ FrameState::isEntryCopied(FrameEntry *fe) const
 AnyRegisterID
 FrameState::bestEvictReg(uint32 mask, bool includePinned) const
 {
+    JS_ASSERT(cx->typeInferenceEnabled());
+
     /* Must be looking for a specific type of register. */
     JS_ASSERT((mask & Registers::AvailRegs) != (mask & Registers::AvailFPRegs));
 
@@ -605,9 +612,44 @@ FrameState::bestEvictReg(uint32 mask, bool includePinned) const
 AnyRegisterID
 FrameState::evictSomeReg(uint32 mask)
 {
-    AnyRegisterID reg = bestEvictReg(mask, false);
-    evictReg(reg);
-    return reg;
+    if (cx->typeInferenceEnabled()) {
+        AnyRegisterID reg = bestEvictReg(mask, false);
+        evictReg(reg);
+        return reg;
+    }
+
+    /* With inference disabled, only general purpose registers are managed. */
+    JS_ASSERT((mask & ~Registers::AvailRegs) == 0);
+
+    MaybeRegisterID fallback;
+
+    for (uint32 i = 0; i < JSC::MacroAssembler::TotalRegisters; i++) {
+        RegisterID reg = RegisterID(i);
+
+        /* Register is not allocatable, don't bother.  */
+        if (!(Registers::maskReg(reg) & mask))
+            continue;
+
+        /* Register is not owned by the FrameState. */
+        FrameEntry *fe = regstate(reg).fe();
+        if (!fe)
+            continue;
+
+        /* Try to find a candidate... that doesn't need spilling. */
+        fallback = reg;
+
+        if (regstate(reg).type() == RematInfo::TYPE && fe->type.synced()) {
+            fe->type.setMemory();
+            return fallback.reg();
+        }
+        if (regstate(reg).type() == RematInfo::DATA && fe->data.synced()) {
+            fe->data.setMemory();
+            return fallback.reg();
+        }
+    }
+
+    evictReg(fallback.reg());
+    return fallback.reg();
 }
 
 void
@@ -643,6 +685,7 @@ FrameState::forgetEverything()
 void
 FrameState::flushLoopJoins()
 {
+    JS_ASSERT(cx->typeInferenceEnabled());
     for (unsigned i = 0; i < loopPatches.length(); i++) {
         const StubJoinPatch &p = loopPatches[i];
         stubcc.patchJoin(p.join.index, p.join.script, p.address, p.reg);
@@ -654,6 +697,7 @@ FrameState::flushLoopJoins()
 bool
 FrameState::pushLoop(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
 {
+    JS_ASSERT(cx->typeInferenceEnabled());
     if (activeLoop) {
         /*
          * Convert all loop registers in the outer loop into unassigned registers.
@@ -690,6 +734,7 @@ FrameState::pushLoop(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
 void
 FrameState::popLoop(jsbytecode *head, Jump *pjump, jsbytecode **ppc)
 {
+    JS_ASSERT(cx->typeInferenceEnabled());
     JS_ASSERT(activeLoop && activeLoop->head == head && activeLoop->alloc);
     activeLoop->alloc->clearLoops();
 
@@ -719,6 +764,7 @@ FrameState::popLoop(jsbytecode *head, Jump *pjump, jsbytecode **ppc)
 void
 FrameState::setLoopReg(AnyRegisterID reg, FrameEntry *fe)
 {
+    JS_ASSERT(cx->typeInferenceEnabled());
     JS_ASSERT(activeLoop && activeLoop->alloc->loop(reg));
     loopRegs.takeReg(reg);
 
@@ -761,6 +807,7 @@ FrameState::setLoopReg(AnyRegisterID reg, FrameEntry *fe)
 void
 FrameState::dumpAllocation(RegisterAllocation *alloc)
 {
+    JS_ASSERT(cx->typeInferenceEnabled());
     for (unsigned i = 0; i < Registers::TotalAnyRegisters; i++) {
         AnyRegisterID reg = AnyRegisterID::fromRaw(i);
         if (alloc->assigned(reg)) {
@@ -780,6 +827,7 @@ FrameState::dumpAllocation(RegisterAllocation *alloc)
 RegisterAllocation *
 FrameState::computeAllocation(jsbytecode *target)
 {
+    JS_ASSERT(cx->typeInferenceEnabled());
     RegisterAllocation *alloc = ArenaNew<RegisterAllocation>(a->liveness->pool, false);
     if (!alloc)
         return NULL;
@@ -826,6 +874,8 @@ FrameState::computeAllocation(jsbytecode *target)
 void
 FrameState::relocateReg(AnyRegisterID reg, RegisterAllocation *alloc, Uses uses)
 {
+    JS_ASSERT(cx->typeInferenceEnabled());
+
     /*
      * The reg needs to be freed to make room for a variable carried across
      * a branch. Either evict its entry, or try to move it to a different
@@ -872,6 +922,11 @@ FrameState::syncForBranch(jsbytecode *target, Uses uses)
         JS_ASSERT_IF(!a->freeRegs.hasReg(reg), regstate(reg).fe());
     }
 #endif
+
+    if (!cx->typeInferenceEnabled()) {
+        syncAndForgetEverything();
+        return true;
+    }
 
     Registers regs = 0;
 
@@ -1002,6 +1057,13 @@ FrameState::syncForBranch(jsbytecode *target, Uses uses)
 bool
 FrameState::discardForJoin(jsbytecode *target, uint32 stackDepth)
 {
+    if (!cx->typeInferenceEnabled()) {
+        resetInternalState();
+        PodArrayZero(a->regstate_);
+        sp = spBase + stackDepth;
+        return true;
+    }
+
     RegisterAllocation *&alloc = a->liveness->getCode(target).allocation;
 
     if (!alloc) {
@@ -1054,6 +1116,11 @@ FrameState::discardForJoin(jsbytecode *target, uint32 stackDepth)
 bool
 FrameState::consistentRegisters(jsbytecode *target)
 {
+    if (!cx->typeInferenceEnabled()) {
+        JS_ASSERT(a->freeRegs.freeMask == Registers::AvailAnyRegs);
+        return true;
+    }
+
     /*
      * Before calling this, either the entire state should have been synced or
      * syncForBranch should have been called. These will ensure that any FE
@@ -1087,6 +1154,9 @@ FrameState::consistentRegisters(jsbytecode *target)
 void
 FrameState::prepareForJump(jsbytecode *target, Assembler &masm, bool synced)
 {
+    if (!cx->typeInferenceEnabled())
+        return;
+
     JS_ASSERT_IF(!synced, !consistentRegisters(target));
 
     RegisterAllocation *alloc = a->liveness->getCode(target).allocation;
@@ -1510,7 +1580,9 @@ FrameState::sync(Assembler &masm, Uses uses) const
     Registers avail(a->freeRegs.freeMask & Registers::AvailRegs);
     Registers temp(Registers::TempAnyRegs);
 
-    for (FrameEntry *fe = sp - 1; fe >= entries; fe--) {
+    FrameEntry *bottom = cx->typeInferenceEnabled() ? entries : sp - uses.nuses;
+
+    for (FrameEntry *fe = sp - 1; fe >= bottom; fe--) {
         if (!fe->isTracked())
             continue;
 
@@ -1559,7 +1631,7 @@ FrameState::sync(Assembler &masm, Uses uses) const
             /* Fall back to a slower sync algorithm if load required. */
             if ((!fe->type.synced() && backing->type.inMemory()) ||
                 (!fe->data.synced() && backing->data.inMemory())) {
-                syncFancy(masm, avail, fe, entries);
+                syncFancy(masm, avail, fe, bottom);
                 return;
             }
 #endif
@@ -1643,8 +1715,9 @@ FrameState::syncAndKill(Registers kill, Uses uses, Uses ignore)
     }
 
     uint32 maxvisits = a->tracker.nentries;
+    FrameEntry *bottom = cx->typeInferenceEnabled() ? entries : sp - uses.nuses;
 
-    for (FrameEntry *fe = sp - 1; fe >= entries && maxvisits; fe--) {
+    for (FrameEntry *fe = sp - 1; fe >= bottom && maxvisits; fe--) {
         if (!fe->isTracked())
             continue;
 
@@ -2770,6 +2843,7 @@ FrameState::binaryEntryLive(FrameEntry *fe) const
      * top two stack entries and special cases LOCALINC/ARGINC and friends, which fuse
      * a binary operation before writing over the local/arg.
      */
+    JS_ASSERT(cx->typeInferenceEnabled());
 
     if (fe >= sp - 2)
         return false;
@@ -2914,7 +2988,8 @@ FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAllo
      * Try to reuse operand registers without syncing for ADD and constant SUB,
      * so long as the backing for the operand is dead.
      */
-    if (backingLeft->data.inRegister() && !binaryEntryLive(backingLeft) &&
+    if (cx->typeInferenceEnabled() &&
+        backingLeft->data.inRegister() && !binaryEntryLive(backingLeft) &&
         (op == JSOP_ADD || (op == JSOP_SUB && backingRight->isConstant())) &&
         (lhs == backingLeft || hasOnlyCopy(backingLeft, lhs))) {
         alloc.result = backingLeft->data.reg();
@@ -2935,7 +3010,7 @@ FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAllo
             masm.move(alloc.lhsData.reg(), alloc.result);
             alloc.resultHasRhs = false;
         }
-    } else {
+    } else if (cx->typeInferenceEnabled()) {
         /* No free regs. Evict a register or reuse one of the operands. */
         bool leftInReg = backingLeft->data.inRegister();
         bool rightInReg = backingRight->data.inRegister();
@@ -2973,6 +3048,39 @@ FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAllo
                     alloc.resultHasRhs = true;
                 }
             }
+        }
+    } else {
+        /*
+         * No free regs. Find a good candidate to re-use. Best candidates don't
+         * require syncs on the inline path.
+         */
+        bool leftInReg = backingLeft->data.inRegister();
+        bool rightInReg = backingRight->data.inRegister();
+        bool leftSynced = backingLeft->data.synced();
+        bool rightSynced = backingRight->data.synced();
+        if (!commu || (leftInReg && (leftSynced || (!rightInReg || !rightSynced)))) {
+            JS_ASSERT(backingLeft->data.inRegister() || !commu);
+            JS_ASSERT_IF(backingLeft->data.inRegister(),
+                         backingLeft->data.reg() == alloc.lhsData.reg());
+            if (backingLeft->data.inRegister()) {
+                alloc.result = backingLeft->data.reg();
+                unpinReg(alloc.result);
+                takeReg(alloc.result);
+                alloc.lhsNeedsRemat = true;
+            } else {
+                /* For now, just spill... */
+                alloc.result = allocReg();
+                masm.move(alloc.lhsData.reg(), alloc.result);
+            }
+            alloc.resultHasRhs = false;
+        } else {
+            JS_ASSERT(commu);
+            JS_ASSERT(!leftInReg || (rightInReg && rightSynced));
+            alloc.result = backingRight->data.reg();
+            unpinReg(alloc.result);
+            takeReg(alloc.result);
+            alloc.resultHasRhs = true;
+            alloc.rhsNeedsRemat = true;
         }
     }
 

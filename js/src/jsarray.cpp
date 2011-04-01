@@ -3496,8 +3496,12 @@ NewArray(JSContext *cx, jsuint length, JSObject *proto)
     if (!obj->setArrayLength(cx, length))
         return NULL;
 
-    if (allocateCapacity && !obj->ensureSlots(cx, length))
-        return NULL;
+    if (allocateCapacity) {
+        if (!obj->ensureSlots(cx, length))
+            return NULL;
+        if (!cx->typeInferenceEnabled())
+            obj->backfillDenseArrayHoles();
+    }
 
     return obj;
 }
