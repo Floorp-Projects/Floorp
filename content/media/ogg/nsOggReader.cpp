@@ -838,7 +838,10 @@ nsOggReader::SelectSeekRange(const nsTArray<SeekRange>& ranges,
       return ranges[i];
     }
   }
-  return aExact ? SeekRange() : SeekRange(so, eo, st, et);
+  if (aExact || eo == -1) {
+    return SeekRange();
+  }
+  return SeekRange(so, eo, st, et);
 }
 
 nsOggReader::IndexedSeekResult nsOggReader::RollbackIndexedSeek(PRInt64 aOffset)
@@ -1096,17 +1099,18 @@ PageSync(nsMediaStream* aStream,
       NS_ASSERTION(buffer, "Must have a buffer");
 
       // Read from the file into the buffer
-      PRUint32 bytesToRead =
-        static_cast<PRUint32>(NS_MIN(static_cast<PRInt64>(PAGE_STEP),
-                                     aEndOffset - readHead));
+      PRInt64 bytesToRead = NS_MIN(static_cast<PRInt64>(PAGE_STEP),
+                                   aEndOffset - readHead);
+      NS_ASSERTION(bytesToRead <= PR_UINT32_MAX, "bytesToRead range check");
       if (bytesToRead <= 0) {
         return PAGE_SYNC_END_OF_RANGE;
       }
       nsresult rv = NS_OK;
       if (aCachedDataOnly) {
-        rv = aStream->ReadFromCache(buffer, readHead, bytesToRead);
+        rv = aStream->ReadFromCache(buffer, readHead,
+                                    static_cast<PRUint32>(bytesToRead));
         NS_ENSURE_SUCCESS(rv,PAGE_SYNC_ERROR);
-        bytesRead = bytesToRead;
+        bytesRead = static_cast<PRUint32>(bytesToRead);
       } else {
         rv = aStream->Seek(nsISeekableStream::NS_SEEK_SET, readHead);
         NS_ENSURE_SUCCESS(rv,PAGE_SYNC_ERROR);
@@ -1250,7 +1254,7 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
 
       NS_ASSERTION(guess >= startOffset + startLength, "Guess must be after range start");
       NS_ASSERTION(guess < endOffset, "Guess must be before range end");
-      NS_ASSERTION(guess != previousGuess, "Guess should be differnt to previous");
+      NS_ASSERTION(guess != previousGuess, "Guess should be different to previous");
       previousGuess = guess;
 
       hops++;
