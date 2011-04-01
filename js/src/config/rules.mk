@@ -2105,6 +2105,7 @@ showbuild:
 	@echo "DLL_SUFFIX         = $(DLL_SUFFIX)"
 	@echo "IMPORT_LIB_SUFFIX  = $(IMPORT_LIB_SUFFIX)"
 	@echo "INSTALL            = $(INSTALL)"
+	@echo "VPATH              = $(VPATH)"
 
 showhost:
 	@echo "HOST_CC            = $(HOST_CC)"
