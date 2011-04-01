@@ -566,7 +566,7 @@ nsHttpTransaction::Close(nsresult reason)
                 NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
                 NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
                 PR_Now(),
-                static_cast<PRUint64>(mContentRead.mValue),
+                static_cast<PRUint64>(mContentRead),
                 EmptyCString());
 
         // report that this transaction is closing
@@ -1065,7 +1065,7 @@ nsHttpTransaction::HandleContent(char *buf,
     }
 
     LOG(("nsHttpTransaction::HandleContent [this=%x count=%u read=%u mContentRead=%lld mContentLength=%lld]\n",
-        this, count, *contentRead, mContentRead.mValue, mContentLength.mValue));
+        this, count, *contentRead, mContentRead, mContentLength));
 
     // check for end-of-file
     if ((mContentRead == mContentLength) ||
@@ -1081,7 +1081,7 @@ nsHttpTransaction::HandleContent(char *buf,
                 NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
                 NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
                 PR_Now(),
-                static_cast<PRUint64>(mContentRead.mValue),
+                static_cast<PRUint64>(mContentRead),
                 EmptyCString());
     }
 
