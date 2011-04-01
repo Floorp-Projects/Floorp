@@ -258,6 +258,19 @@ INSTALLED_HEADERS = \
 		prmjtime.h \
 		$(NULL)
 
+###############################################
+# BEGIN include sources for low-level code shared with Gecko
+#
+VPATH		+= \
+		$(srcdir)/../../mfbt \
+		$(NULL)
+
+EXPORTS_NAMESPACES = mozilla
+
+EXPORTS_mozilla = \
+		Util.h          \
+		$(NULL)
+
 ifdef ENABLE_TRACEJIT
 VPATH		+= \
 		$(srcdir)/tracejit \
