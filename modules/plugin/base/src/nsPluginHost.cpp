@@ -133,7 +133,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include "nsPluginDirServiceProvider.h"
-#include "nsInt64.h"
 #include "nsPluginError.h"
 
 #include "nsUnicharUtils.h"
@@ -2890,7 +2889,7 @@ nsPluginHost::ReadPluginInfo()
   if (NS_FAILED(rv))
     return rv;
 
-  PRInt32 flen = nsInt64(fileSize);
+  PRInt32 flen = PRInt64(fileSize);
   if (flen == 0) {
     NS_WARNING("Plugins Registry Empty!");
     return NS_OK; // ERROR CONDITION
