@@ -47,6 +47,8 @@
 #include "mozilla/FunctionTimer.h"
 #include "nsDirectoryService.h"
 
+using namespace mozilla;
+
 NS_IMPL_THREADSAFE_ISUPPORTS2(xptiInterfaceInfoManager, 
                               nsIInterfaceInfoManager,
                               nsIInterfaceInfoSuperManager)
@@ -77,13 +79,11 @@ xptiInterfaceInfoManager::FreeInterfaceInfoManager()
 
 xptiInterfaceInfoManager::xptiInterfaceInfoManager()
     :   mWorkingSet(),
-        mResolveLock(nsAutoLock::NewLock(
-            "xptiInterfaceInfoManager::mResolveLock")),
-        mAutoRegLock(nsAutoLock::NewLock(
-            "xptiInterfaceInfoManager::mAutoRegLock")), // FIXME: unused!
-        mInfoMonitor(nsAutoMonitor::NewMonitor("xptiInfoMonitor")),
-        mAdditionalManagersLock(nsAutoLock::NewLock(
-            "xptiInterfaceInfoManager::mAdditionalManagersLock"))
+        mResolveLock("xptiInterfaceInfoManager.mResolveLock"),
+        mAutoRegLock("xptiInterfaceInfoManager.mAutoRegLock"), // FIXME: unused!
+        mInfoMonitor("xptiInterfaceInfoManager.mInfoMonitor"),
+        mAdditionalManagersLock(
+            "xptiInterfaceInfoManager.mAdditionalManagersLock")
 {
 }
 
@@ -91,15 +91,6 @@ xptiInterfaceInfoManager::~xptiInterfaceInfoManager()
 {
     // We only do this on shutdown of the service.
     mWorkingSet.InvalidateInterfaceInfos();
-
-    if (mResolveLock)
-        nsAutoLock::DestroyLock(mResolveLock);
-    if (mAutoRegLock)
-        nsAutoLock::DestroyLock(mAutoRegLock);
-    if (mInfoMonitor)
-        nsAutoMonitor::DestroyMonitor(mInfoMonitor);
-    if (mAdditionalManagersLock)
-        nsAutoLock::DestroyLock(mAdditionalManagersLock);
 
     gInterfaceInfoManager = nsnull;
 #ifdef DEBUG
@@ -452,7 +443,7 @@ NS_IMETHODIMP xptiInterfaceInfoManager::AddAdditionalManager(nsIInterfaceInfoMan
                     static_cast<nsISupports*>(weakRef) :
                     static_cast<nsISupports*>(manager);
     { // scoped lock...
-        nsAutoLock lock(mAdditionalManagersLock);
+        MutexAutoLock lock(mAdditionalManagersLock);
         if (mAdditionalManagers.IndexOf(ptrToAdd) != -1)
             return NS_ERROR_FAILURE;
         if (!mAdditionalManagers.AppendObject(ptrToAdd))
@@ -469,7 +460,7 @@ NS_IMETHODIMP xptiInterfaceInfoManager::RemoveAdditionalManager(nsIInterfaceInfo
                     static_cast<nsISupports*>(weakRef) :
                     static_cast<nsISupports*>(manager);
     { // scoped lock...
-        nsAutoLock lock(mAdditionalManagersLock);
+        MutexAutoLock lock(mAdditionalManagersLock);
         if (!mAdditionalManagers.RemoveObject(ptrToRemove))
             return NS_ERROR_FAILURE;
     }
@@ -486,7 +477,7 @@ NS_IMETHODIMP xptiInterfaceInfoManager::HasAdditionalManagers(PRBool *_retval)
 /* nsISimpleEnumerator enumerateAdditionalManagers (); */
 NS_IMETHODIMP xptiInterfaceInfoManager::EnumerateAdditionalManagers(nsISimpleEnumerator **_retval)
 {
-    nsAutoLock lock(mAdditionalManagersLock);
+    MutexAutoLock lock(mAdditionalManagersLock);
 
     nsCOMArray<nsISupports> managerArray(mAdditionalManagers);
     /* Resolve all the weak references in the array. */

@@ -53,11 +53,11 @@
 #include "nsIServiceManager.h"
 #include "nsIThread.h"
 
-#include "nsAutoLock.h"
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
 #include "xptiprivate.h"
 
+using namespace mozilla;
 
 #ifdef PR_LOGGING
 PRLogModuleInfo *nsProxyObjectManager::sLog = PR_NewLogModule("xpcomproxy");
@@ -114,18 +114,14 @@ nsProxyObjectManager::Release()
 
 nsProxyObjectManager::nsProxyObjectManager()
     : mProxyObjectMap(256, PR_FALSE)
+    , mProxyCreationLock("nsProxyObjectManager.mProxyCreationLock")
 {
-    mProxyCreationLock =
-        nsAutoLock::NewLock("nsProxyObjectManager::mProxyCreationLock");
     mProxyClassMap.Init(256);
 }
 
 nsProxyObjectManager::~nsProxyObjectManager()
 {
     mProxyClassMap.Clear();
-
-    if (mProxyCreationLock)
-        nsAutoLock::DestroyLock(mProxyCreationLock);
 
     nsProxyObjectManager::gInstance = nsnull;
 }
@@ -238,7 +234,7 @@ nsProxyObjectManager::GetProxyForObject(nsIEventTarget* aTarget,
     nsProxyEventKey rootKey(realObj, realEQ, proxyType);
 
     {
-        nsAutoLock lock(mProxyCreationLock);
+        MutexAutoLock lock(mProxyCreationLock);
         nsProxyLockedRefPtr root =
             (nsProxyObject*) mProxyObjectMap.Get(&rootKey);
         if (root)
@@ -252,7 +248,7 @@ nsProxyObjectManager::GetProxyForObject(nsIEventTarget* aTarget,
 
     // lock again, and check for a race putting into mProxyObjectMap
     {
-        nsAutoLock lock(mProxyCreationLock);
+        MutexAutoLock lock(mProxyCreationLock);
         nsProxyLockedRefPtr root = 
             (nsProxyObject*) mProxyObjectMap.Get(&rootKey);
         if (root) {
@@ -283,7 +279,7 @@ nsresult
 nsProxyObjectManager::GetClass(REFNSIID aIID, nsProxyEventClass **aResult)
 {
     {
-        nsAutoLock lock(mProxyCreationLock);
+        MutexAutoLock lock(mProxyCreationLock);
         if (mProxyClassMap.Get(aIID, aResult)) {
             NS_ASSERTION(*aResult, "Null data in mProxyClassMap");
             return NS_OK;
@@ -306,7 +302,7 @@ nsProxyObjectManager::GetClass(REFNSIID aIID, nsProxyEventClass **aResult)
 
     // Re-lock to put this class into our map. Before putting, check to see
     // if another thread raced to put before us
-    nsAutoLock lock(mProxyCreationLock);
+    MutexAutoLock lock(mProxyCreationLock);
 
     if (mProxyClassMap.Get(aIID, aResult)) {
         NS_ASSERTION(*aResult, "Null data in mProxyClassMap");

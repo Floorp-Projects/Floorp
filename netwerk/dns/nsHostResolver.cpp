@@ -53,12 +53,10 @@
 #include "nsNetError.h"
 #include "nsISupportsBase.h"
 #include "nsISupportsUtils.h"
-#include "nsAutoLock.h"
 #include "nsAutoPtr.h"
 #include "pratom.h"
 #include "prthread.h"
 #include "prerror.h"
-#include "prcvar.h"
 #include "prtime.h"
 #include "prlong.h"
 #include "prlog.h"
@@ -67,6 +65,8 @@
 #include "nsURLHelper.h"
 
 #include "mozilla/FunctionTimer.h"
+
+using namespace mozilla;
 
 //----------------------------------------------------------------------------
 
@@ -181,18 +181,10 @@ private:
 nsresult
 nsHostRecord::Create(const nsHostKey *key, nsHostRecord **result)
 {
-    PRLock *lock = PR_NewLock();
-    if (!lock)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     size_t hostLen = strlen(key->host) + 1;
     size_t size = hostLen + sizeof(nsHostRecord);
 
     nsHostRecord *rec = (nsHostRecord*) ::operator new(size);
-    if (!rec) {
-        PR_DestroyLock(lock);
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
 
     rec->host = ((char *) rec) + sizeof(nsHostRecord);
     rec->flags = key->flags;
@@ -200,7 +192,7 @@ nsHostRecord::Create(const nsHostKey *key, nsHostRecord **result)
 
     rec->_refc = 1; // addref
     NS_LOG_ADDREF(rec, 1, "nsHostRecord", sizeof(nsHostRecord));
-    rec->addr_info_lock = lock;
+    rec->addr_info_lock = new Mutex("nsHostRecord.addr_info_lock");
     rec->addr_info = nsnull;
     rec->addr_info_gencnt = 0;
     rec->addr = nsnull;
@@ -219,10 +211,7 @@ nsHostRecord::Create(const nsHostKey *key, nsHostRecord **result)
 
 nsHostRecord::~nsHostRecord()
 {
-    if (addr_info_lock)
-        PR_DestroyLock(addr_info_lock);
-    if (addr_info)
-        PR_FreeAddrInfo(addr_info);
+    delete addr_info_lock;
     if (addr)
         free(addr);
 }
@@ -330,8 +319,8 @@ nsHostResolver::nsHostResolver(PRUint32 maxCacheEntries,
                                PRUint32 maxCacheLifetime)
     : mMaxCacheEntries(maxCacheEntries)
     , mMaxCacheLifetime(maxCacheLifetime)
-    , mLock(nsnull)
-    , mIdleThreadCV(nsnull)
+    , mLock("nsHostResolver.mLock")
+    , mIdleThreadCV(mLock, "nsHostResolver.mIdleThreadCV")
     , mNumIdleThreads(0)
     , mThreadCount(0)
     , mActiveAnyThreadCount(0)
@@ -351,12 +340,6 @@ nsHostResolver::nsHostResolver(PRUint32 maxCacheEntries,
 
 nsHostResolver::~nsHostResolver()
 {
-    if (mIdleThreadCV)
-        PR_DestroyCondVar(mIdleThreadCV);
-
-    if (mLock)
-        nsAutoLock::DestroyLock(mLock);
-
     PL_DHashTableFinish(&mDB);
 }
 
@@ -364,14 +347,6 @@ nsresult
 nsHostResolver::Init()
 {
     NS_TIME_FUNCTION;
-
-    mLock = nsAutoLock::NewLock("nsHostResolver::mLock");
-    if (!mLock)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    mIdleThreadCV = PR_NewCondVar(mLock);
-    if (!mIdleThreadCV)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     PL_DHashTableInit(&mDB, &gHostDB_ops, nsnull, sizeof(nsHostDBEnt), 0);
 
@@ -418,7 +393,7 @@ nsHostResolver::Shutdown()
     PR_INIT_CLIST(&evictionQ);
 
     {
-        nsAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
         
         mShutdown = PR_TRUE;
 
@@ -430,7 +405,7 @@ nsHostResolver::Shutdown()
         mPendingCount = 0;
         
         if (mNumIdleThreads)
-            PR_NotifyAllCondVar(mIdleThreadCV);
+            mIdleThreadCV.NotifyAll();
         
         // empty host database
         PL_DHashTableEnumerate(&mDB, HostDB_RemoveEntry, nsnull);
@@ -512,7 +487,7 @@ nsHostResolver::ResolveHost(const char            *host,
     nsRefPtr<nsHostRecord> result;
     nsresult status = NS_OK, rv = NS_OK;
     {
-        nsAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
 
         if (mShutdown)
             rv = NS_ERROR_NOT_INITIALIZED;
@@ -602,7 +577,7 @@ nsHostResolver::ResolveHost(const char            *host,
                         // Move from low to med.
                         MoveQueue(he->rec, mMediumQ);
                         he->rec->flags = flags;
-                        PR_NotifyCondVar(mIdleThreadCV);
+                        mIdleThreadCV.Notify();
                     }
                 }
             }
@@ -622,7 +597,7 @@ nsHostResolver::DetachCallback(const char            *host,
 {
     nsRefPtr<nsHostRecord> rec;
     {
-        nsAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
 
         nsHostKey key = { host, flags, af };
         nsHostDBEnt *he = static_cast<nsHostDBEnt *>
@@ -653,7 +628,7 @@ nsHostResolver::ConditionallyCreateThread(nsHostRecord *rec)
 {
     if (mNumIdleThreads) {
         // wake up idle thread to process this lookup
-        PR_NotifyCondVar(mIdleThreadCV);
+        mIdleThreadCV.Notify();
     }
     else if ((mThreadCount < HighThreadThreshold) ||
              (IsHighPriority(rec->flags) && mThreadCount < MAX_RESOLVER_THREADS)) {
@@ -734,7 +709,7 @@ nsHostResolver::GetHostToLookup(nsHostRecord **result)
     PRBool timedOut = PR_FALSE;
     PRIntervalTime epoch, now, timeout;
     
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     timeout = (mNumIdleThreads >= HighThreadThreshold) ? mShortIdleTimeout : mLongIdleTimeout;
     epoch = PR_IntervalNow();
@@ -774,7 +749,7 @@ nsHostResolver::GetHostToLookup(nsHostRecord **result)
         //  (3) the thread has been idle for too long
         
         mNumIdleThreads++;
-        PR_WaitCondVar(mIdleThreadCV, timeout);
+        mIdleThreadCV.Wait(timeout);
         mNumIdleThreads--;
         
         now = PR_IntervalNow();
@@ -803,7 +778,7 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo 
     PRCList cbs;
     PR_INIT_CLIST(&cbs);
     {
-        nsAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
 
         // grab list of callbacks to notify
         MoveCList(rec->callbacks, cbs);
@@ -811,11 +786,12 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo 
         // update record fields.  We might have a rec->addr_info already if a
         // previous lookup result expired and we're reresolving it..
         PRAddrInfo  *old_addr_info;
-        PR_Lock(rec->addr_info_lock);
-        old_addr_info = rec->addr_info;
-        rec->addr_info = result;
-        rec->addr_info_gencnt++;
-        PR_Unlock(rec->addr_info_lock);
+        {
+            MutexAutoLock lock(*rec->addr_info_lock);
+            old_addr_info = rec->addr_info;
+            rec->addr_info = result;
+            rec->addr_info_gencnt++;
+        }
         if (old_addr_info)
             PR_FreeAddrInfo(old_addr_info);
         rec->expiration = NowInMinutes();

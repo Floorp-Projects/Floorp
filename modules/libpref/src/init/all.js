@@ -574,7 +574,7 @@ pref("dom.storage.default_quota",      5120);
 pref("dom.send_after_paint_to_content", false);
 
 // Timeout clamp in ms for timeouts we clamp
-pref("dom.min_timeout_value", 10);
+pref("dom.min_timeout_value", 4);
 // And for background windows
 pref("dom.min_background_timeout_value", 1000);
 
@@ -1774,12 +1774,6 @@ pref("plugin.scan.WindowsMediaPlayer", "7.0");
 // Locate plugins by the directories specified in the Windows registry for PLIDs
 // Which is currently HKLM\Software\MozillaPlugins\xxxPLIDxxx\Path
 pref("plugin.scan.plid.all", true);
-
-// Controls the scanning of the Navigator 4.x directory for plugins
-// When pref is missing, the default is to pickup popular plugins such as
-// Flash, Shockwave, Acrobat, and Quicktime. If set to true, ALL plugins
-// will be picked up and if set to false the scan will not happen at all
-//pref("plugin.scan.4xPluginFolder", false);
 
 // Help Windows NT, 2000, and XP dialup a RAS connection
 // when a network address is unreachable.

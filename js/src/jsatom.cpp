@@ -482,7 +482,7 @@ Atomize(JSContext *cx, const jschar *chars, size_t length, uintN flags)
         if (flags & ATOM_NOCOPY) {
             key = js_NewString(cx, const_cast<jschar *>(chars), length);
             if (!key) {
-                cx->free(const_cast<jschar *>(chars));
+                cx->free_(const_cast<jschar *>(chars));
                 return NULL;
             }
         } else {

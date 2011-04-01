@@ -230,7 +230,7 @@ TokenStream::init(const jschar *base, size_t length, const char *fn, uintN ln, J
 TokenStream::~TokenStream()
 {
     if (flags & TSF_OWNFILENAME)
-        cx->free((void *) filename);
+        cx->free_((void *) filename);
 }
 
 /* Use the fastest available getc. */
@@ -475,7 +475,7 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
     if (report.lineno == lineno) {
         size_t linelength = userbuf.findEOL() - linebase;
 
-        linechars = (jschar *)cx->malloc((linelength + 1) * sizeof(jschar));
+        linechars = (jschar *)cx->malloc_((linelength + 1) * sizeof(jschar));
         if (!linechars) {
             warning = false;
             goto out;
@@ -527,21 +527,21 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
 
   out:
     if (linebytes)
-        cx->free(linebytes);
+        cx->free_(linebytes);
     if (linechars)
-        cx->free(linechars);
+        cx->free_(linechars);
     if (message)
-        cx->free(message);
+        cx->free_(message);
     if (report.ucmessage)
-        cx->free((void *)report.ucmessage);
+        cx->free_((void *)report.ucmessage);
 
     if (report.messageArgs) {
         if (!(flags & JSREPORT_UC)) {
             i = 0;
             while (report.messageArgs[i])
-                cx->free((void *)report.messageArgs[i++]);
+                cx->free_((void *)report.messageArgs[i++]);
         }
-        cx->free((void *)report.messageArgs);
+        cx->free_((void *)report.messageArgs);
     }
 
     return warning;
@@ -706,7 +706,7 @@ TokenStream::getXMLEntity()
     bytes = js_DeflateString(cx, bp + 1, (tb.end() - bp) - 1);
     if (bytes) {
         ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR, msg, bytes);
-        cx->free(bytes);
+        cx->free_(bytes);
     }
     return JS_FALSE;
 }
@@ -1662,7 +1662,7 @@ TokenStream::getTokenInternal()
                         if (c == EOF || c == '\n') {
                             if (i > 0) {
                                 if (flags & TSF_OWNFILENAME)
-                                    cx->free((void *) filename);
+                                    cx->free_((void *) filename);
                                 filename = JS_strdup(cx, filenameBuf);
                                 if (!filename)
                                     goto error;

@@ -715,7 +715,7 @@ js_BeginJSONParse(JSContext *cx, Value *rootVal, bool suppressErrors /*= false*/
     if (!arr)
         return NULL;
 
-    JSONParser *jp = cx->create<JSONParser>(cx);
+    JSONParser *jp = cx->new_<JSONParser>(cx);
     if (!jp)
         return NULL;
 
@@ -771,7 +771,7 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, const Value &reviver)
         ok = Revive(cx, reviver, vp);
     }
 
-    cx->destroy(jp);
+    cx->delete_(jp);
 
     return ok;
 }

@@ -2588,9 +2588,7 @@ JSRegExp* jsRegExpCompile(const UChar* pattern, int patternLength,
         return returnError(ERR16, error);
     
     size_t size = length + sizeof(JSRegExp);
-    // FIXME: bug 574459 -- no NULL check
-    JSRegExp* re = reinterpret_cast<JSRegExp*>(js_array_new<char>(size));
-    
+    JSRegExp* re = reinterpret_cast<JSRegExp*>(js::OffTheBooks::array_new<char>(size));
     if (!re)
         return returnError(ERR13, error);
     
@@ -2645,7 +2643,7 @@ JSRegExp* jsRegExpCompile(const UChar* pattern, int patternLength,
     /* Failed to compile, or error while post-processing */
     
     if (errorcode != ERR0) {
-        js_array_delete(reinterpret_cast<char*>(re));
+        js::Foreground::array_delete(reinterpret_cast<char*>(re));
         return returnError(errorcode, error);
     }
     
@@ -2700,5 +2698,5 @@ JSRegExp* jsRegExpCompile(const UChar* pattern, int patternLength,
 
 void jsRegExpFree(JSRegExp* re)
 {
-    js_array_delete(reinterpret_cast<char*>(re));
+    js::Foreground::array_delete(reinterpret_cast<char*>(re));
 }
