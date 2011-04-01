@@ -79,10 +79,12 @@
 #include "prproces.h"
 #include "nsITimelineService.h"
 
-#include "nsAutoLock.h"
+#include "mozilla/Mutex.h"
 #include "SpecialSystemDirectory.h"
 
 #include "nsTraceRefcntImpl.h"
+
+using namespace mozilla;
 
 #define CHECK_mWorkingPath()                    \
     PR_BEGIN_MACRO                              \
@@ -159,24 +161,20 @@ public:
     nsresult Resolve(const WCHAR* in, WCHAR* out);
 
 private:
-    PRLock*       mLock;
+    Mutex         mLock;
     IPersistFile* mPersistFile;
     // Win 95 and 98 don't have IShellLinkW
     IShellLinkW*  mShellLink;
 };
 
-ShortcutResolver::ShortcutResolver()
+ShortcutResolver::ShortcutResolver() : mLock("ShortcutResolver.mLock")
 {
-    mLock = nsnull;
     mPersistFile = nsnull;
     mShellLink  = nsnull;
 }
 
 ShortcutResolver::~ShortcutResolver()
 {
-    if (mLock)
-        nsAutoLock::DestroyLock(mLock);
-
     // Release the pointer to the IPersistFile interface.
     if (mPersistFile)
         mPersistFile->Release();
@@ -192,10 +190,6 @@ nsresult
 ShortcutResolver::Init()
 {
     CoInitialize(NULL);  // FIX: we should probably move somewhere higher up during startup
-
-    mLock = nsAutoLock::NewLock("ShortcutResolver::mLock");
-    if (!mLock)
-        return NS_ERROR_FAILURE;
 
     HRESULT hres; 
     hres = CoCreateInstance(CLSID_ShellLink,
@@ -220,7 +214,7 @@ ShortcutResolver::Init()
 nsresult
 ShortcutResolver::Resolve(const WCHAR* in, WCHAR* out)
 {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     // see if we can Load the path.
     HRESULT hres = mPersistFile->Load(in, STGM_READ);

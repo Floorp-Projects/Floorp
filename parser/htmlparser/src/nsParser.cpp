@@ -54,7 +54,6 @@
 #include "prenv.h"
 #include "prlock.h"
 #include "prcvar.h"
-#include "nsAutoLock.h"
 #include "nsParserCIID.h"
 #include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
@@ -73,6 +72,10 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsMimeTypes.h"
 #include "nsViewSourceHTML.h"
+#include "mozilla/CondVar.h"
+#include "mozilla/Mutex.h"
+
+using namespace mozilla;
 
 #define NS_PARSER_FLAG_PARSER_ENABLED         0x00000002
 #define NS_PARSER_FLAG_OBSERVERS_ENABLED      0x00000004
@@ -198,8 +201,8 @@ private:
 class nsSpeculativeScriptThread : public nsIRunnable {
 public:
   nsSpeculativeScriptThread()
-    : mLock(nsAutoLock::DestroyLock),
-      mCVar(PR_DestroyCondVar),
+    : mLock("nsSpeculativeScriptThread.mLock"),
+      mCVar(mLock, "nsSpeculativeScriptThread.mCVar"),
       mKeepParsing(PR_FALSE),
       mCurrentlyParsing(PR_FALSE),
       mNumConsumed(0),
@@ -268,8 +271,8 @@ private:
 
   // The following members are shared across the main thread and the
   // speculatively parsing thread.
-  Holder<PRLock> mLock;
-  Holder<PRCondVar> mCVar;
+  Mutex mLock;
+  CondVar mCVar;
 
   volatile PRBool mKeepParsing;
   volatile PRBool mCurrentlyParsing;
@@ -412,10 +415,10 @@ nsSpeculativeScriptThread::Run()
   }
 
   {
-    nsAutoLock al(mLock.get());
+    MutexAutoLock al(mLock);
 
     mCurrentlyParsing = PR_FALSE;
-    PR_NotifyCondVar(mCVar.get());
+    mCVar.Notify();
   }
   return NS_OK;
 }
@@ -442,17 +445,7 @@ nsSpeculativeScriptThread::StartParsing(nsParser *aParser)
 
   nsAutoString toScan;
   CParserContext *context = aParser->PeekContext();
-  if (!mLock.get()) {
-    mLock = nsAutoLock::NewLock("nsSpeculativeScriptThread::mLock");
-    if (!mLock.get()) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    mCVar = PR_NewCondVar(mLock.get());
-    if (!mCVar.get()) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
+  if (!mTokenizer) {
     if (!mPreloadedURIs.Init(15)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -519,17 +512,12 @@ nsSpeculativeScriptThread::StopParsing(PRBool /*aFromDocWrite*/)
 {
   NS_ASSERTION(NS_IsMainThread(), "Can't stop parsing from another thread");
 
-  if (!mLock.get()) {
-    // If we bailed early out of StartParsing, don't do anything.
-    return;
-  }
-
   {
-    nsAutoLock al(mLock.get());
+    MutexAutoLock al(mLock);
 
     mKeepParsing = PR_FALSE;
     if (mCurrentlyParsing) {
-      PR_WaitCondVar(mCVar.get(), PR_INTERVAL_NO_TIMEOUT);
+      mCVar.Wait();
       NS_ASSERTION(!mCurrentlyParsing, "Didn't actually stop parsing?");
     }
   }
