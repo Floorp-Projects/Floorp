@@ -39,7 +39,7 @@
 
 #include "nsIHttpActivityObserver.h"
 #include "nsCOMArray.h"
-#include "prlock.h"
+#include "mozilla/Mutex.h"
 
 class nsHttpActivityDistributor : public nsIHttpActivityDistributor
 {
@@ -50,11 +50,10 @@ public:
 
     nsHttpActivityDistributor();
     virtual ~nsHttpActivityDistributor();
-    nsresult Init();
 
 protected:
     nsCOMArray<nsIHttpActivityObserver> mObservers;
-    PRLock       *mLock;
+    mozilla::Mutex mLock;
 };
 
 #endif // nsHttpActivityDistributor_h__

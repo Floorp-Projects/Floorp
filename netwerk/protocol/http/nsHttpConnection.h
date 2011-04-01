@@ -45,7 +45,6 @@
 #include "nsAHttpTransaction.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
-#include "prlock.h"
 #include "nsAutoPtr.h"
 #include "prinrval.h"
 

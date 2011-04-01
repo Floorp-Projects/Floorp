@@ -42,6 +42,7 @@
 #ifndef nsSecureBrowserUIImpl_h_
 #define nsSecureBrowserUIImpl_h_
 
+#include "mozilla/Monitor.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
@@ -60,7 +61,6 @@
 #include "nsISSLStatusProvider.h"
 #include "nsIAssociatedContentSecurity.h"
 #include "pldhash.h"
-#include "prmon.h"
 #include "nsINetUtil.h"
 
 class nsITransportSecurityInfo;
@@ -97,7 +97,7 @@ public:
                                  nsIArray* invalidElements) { return NS_OK; };
   
 protected:
-  PRMonitor *mMonitor;
+  mozilla::Monitor mMonitor;
   
   nsWeakPtr mWindow;
   nsCOMPtr<nsINetUtil> mIOService;

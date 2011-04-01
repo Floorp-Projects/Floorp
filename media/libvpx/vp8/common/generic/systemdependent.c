@@ -20,12 +20,6 @@
 extern void vp8_arch_x86_common_init(VP8_COMMON *ctx);
 extern void vp8_arch_arm_common_init(VP8_COMMON *ctx);
 
-void (*vp8_build_intra_predictors_mby_ptr)(MACROBLOCKD *x);
-extern void vp8_build_intra_predictors_mby(MACROBLOCKD *x);
-
-void (*vp8_build_intra_predictors_mby_s_ptr)(MACROBLOCKD *x);
-extern void vp8_build_intra_predictors_mby_s(MACROBLOCKD *x);
-
 void vp8_machine_specific_config(VP8_COMMON *ctx)
 {
 #if CONFIG_RUNTIME_CPU_DETECT
@@ -45,6 +39,10 @@ void vp8_machine_specific_config(VP8_COMMON *ctx)
     rtcd->recon.recon4      = vp8_recon4b_c;
     rtcd->recon.recon_mb    = vp8_recon_mb_c;
     rtcd->recon.recon_mby   = vp8_recon_mby_c;
+    rtcd->recon.build_intra_predictors_mby =
+        vp8_build_intra_predictors_mby;
+    rtcd->recon.build_intra_predictors_mby_s =
+        vp8_build_intra_predictors_mby_s;
 
     rtcd->subpix.sixtap16x16   = vp8_sixtap_predict16x16_c;
     rtcd->subpix.sixtap8x8     = vp8_sixtap_predict8x8_c;
@@ -73,9 +71,6 @@ void vp8_machine_specific_config(VP8_COMMON *ctx)
 #endif
 
 #endif
-    /* Pure C: */
-    vp8_build_intra_predictors_mby_ptr = vp8_build_intra_predictors_mby;
-    vp8_build_intra_predictors_mby_s_ptr = vp8_build_intra_predictors_mby_s;
 
 #if ARCH_X86 || ARCH_X86_64
     vp8_arch_x86_common_init(ctx);

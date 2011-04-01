@@ -26,14 +26,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478957
 
 // Tests whether we leak events and state change info when loading stuff from local files from a webserver.
 
+var manager = new MediaTestManager;
 
 var gEventTypes = [ 'loadstart', 'progress', 'suspend', 'abort', 'error', 'emptied', 'stalled', 'play', 'pause', 'loadedmetadata', 'loadeddata', 'waiting', 'playing', 'canplay', 'canplaythrough', 'seeking', 'seeked', 'timeupdate', 'ended', 'ratechange', 'durationchange', 'volumechange' ];
 
-var gMedia = null;
 var gExpectedEvents = ['loadstart', 'error'];
-var gTestNum = 0;
-var gEventNum = 0;
-var gFinished = false;
+
+function createTestArray() {
+  var tests = [];
+  var tmpVid = document.createElement("video");
+
+  for (var testNum=0; testNum<gSeekTests.length; testNum++) {
+    var test = gInfoLeakTests[testNum];
+    if (!tmpVid.canPlayType(test.type)) {
+      continue;
+    }
+
+    var t = new Object;
+    t.name = test.src;
+    t.type = test.type;
+
+    tests.push(t);
+  }
+  return tests;
+}
 
 function log(msg) {
   //dump(msg + "\n");
@@ -41,55 +57,45 @@ function log(msg) {
   l.innerHTML += msg + "<br>";
 }
 
-function nextTest() {
-  mediaTestCleanup();
-  if (gTestNum == gInfoLeakTests.length) {
-    gFinished = true;
-    SimpleTest.finish();
-    return;
-  }
-  if (gMedia && gMedia.parentNode) {
-    gMedia.parentNode.removeChild(gMedia);
-    gMedia = null;
-  }
-  var t = gInfoLeakTests[gTestNum];
-
-  log("Testing: " + t.type + " @ " + t.src);
-
-  gTestNum++;
-  gEventNum = 0;
-  createMedia(t.type, t.src);
+function finish(v) {
+  log("finish: " + v.name);
+  v.parentNode.removeChild(v);
+  clearInterval(v.checkStateInterval);
+  manager.finished(v.token);
+  v = null;
 }
 
 function listener(evt) {
-  //log('event ' + evt.type);
-  ok(gEventNum < gExpectedEvents.length, "Too many events received");
-  var expected = (gEventNum < gExpectedEvents.length) ? gExpectedEvents[gEventNum] : "NoEvent";
-  is(evt.type, expected, "Events received in wrong order");
-  gEventNum++;
-  if (gEventNum == gExpectedEvents.length) {
+  var v = evt.target;
+  //log(filename(v.name) + ' got event ' + evt.type);
+  ok(v.eventNum < gExpectedEvents.length, filename(v.name)  + " Too many events received");
+  var expected = (v.eventNum < gExpectedEvents.length) ? gExpectedEvents[v.eventNum] : "NoEvent";
+  is(evt.type, expected, filename(v.name) + " Events received in wrong order");
+  v.eventNum++;
+  if (v.eventNum == gExpectedEvents.length) {
     // In one second, move onto the next test. This give a chance for any
     // other events to come in. Note: we don't expect any events to come
     // in, unless we've leaked some info, and 1 second should be enough time
     // for the leak to show up.
-    setTimeout(nextTest, 1000); 
+    setTimeout(function() {finish(v);}, 1000); 
   }
 }
 
-function createMedia(type, src) {
+function createMedia(type, src, token) {
   var tag = /^video/.test(type) ? "video" : "audio";
-  gMedia = document.createElement(tag);
-  if (!gMedia.canPlayType(type)) {
-    gMedia = null;
-    setTimeout(nextTest, 0);
-    return;
-  }
+  var v = document.createElement(tag);
   for (var i=0; i<gEventTypes.length; i++) {
-    gMedia.addEventListener(gEventTypes[i], listener, false);
+    v.addEventListener(gEventTypes[i], listener, false);
   }
-  gMedia.src = src;
-  gMedia._name = src;
-  document.body.appendChild(gMedia);
+  v.src = src;
+  v.name = src;
+  document.body.appendChild(v);
+  v.eventNum = 0;
+  v.token = token;
+  setTimeout(
+  function() {
+    v.checkStateInterval = setInterval(function(){checkState(v);},1);
+  }, 0);
 }
 
 // Define our own ok() and is() functions. The mochitest ones take ages constructing the log
@@ -112,41 +118,36 @@ function filename(uri) {
   return uri.substr(uri.lastIndexOf("/")+1);
 }
 
-function checkState() {
-  if (gMedia != null) {
-    test_ok(gMedia.networkState <= HTMLMediaElement.NETWORK_LOADING || 
-            gMedia.networkState == HTMLMediaElement.NETWORK_NO_SOURCE,
-            "NetworkState of " + gMedia.networkState + " was leaked.");
-    test_ok(gMedia.readyState == HTMLMediaElement.HAVE_NOTHING,
-            "Ready state of " + gMedia.readyState + " was leaked");
-    test_is(gMedia.seeking, false, "Seeking leaked");
-    test_is(gMedia.currentTime, 0, "Leaked currentTime");
-    test_ok(isNaN(gMedia.duration), "Leaked duration");
-    test_is(gMedia.paused, true, "Paused leaked");
-    test_is(gMedia.ended, false, "Ended leaked");
-    test_is(gMedia.autoplay, false, "Autoplay leaked");
-    test_is(gMedia.controls, false, "Controls leaked");
-    test_is(gMedia.muted, false, "muted leaked");
-    test_ok(gMedia.error==null || gMedia.error.code==MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED,
-            "Error code should not exist or be SRC_NOT_SUPPORTED. gMedia.error=" +
-            (gMedia.error ? gMedia.error.code : "null"));
-    test_ok(filename(gMedia.currentSrc) == filename(gMedia._name) ||
-            gMedia.networkState == HTMLMediaElement.NETWORK_NO_SOURCE,
-            "currentSrc should match candidate uri, if we've got a valid source");
-  }
-  if (!gFinished) {
-    setTimeout(checkState, 1);
-  }
+function checkState(v) {
+  test_ok(v.networkState <= HTMLMediaElement.NETWORK_LOADING || 
+          v.networkState == HTMLMediaElement.NETWORK_NO_SOURCE,
+          "NetworkState of " + v.networkState + " was leaked.");
+  test_ok(v.readyState == HTMLMediaElement.HAVE_NOTHING,
+          "Ready state of " + v.readyState + " was leaked");
+  test_is(v.seeking, false, "Seeking leaked");
+  test_is(v.currentTime, 0, "Leaked currentTime");
+  test_ok(isNaN(v.duration), "Leaked duration");
+  test_is(v.paused, true, "Paused leaked");
+  test_is(v.ended, false, "Ended leaked");
+  test_is(v.autoplay, false, "Autoplay leaked");
+  test_is(v.controls, false, "Controls leaked");
+  test_is(v.muted, false, "muted leaked");
+  test_ok(v.error==null || v.error.code==MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED,
+          "Error code should not exist or be SRC_NOT_SUPPORTED. v.error=" +
+          (v.error ? v.error.code : "null"));
+  test_ok(filename(v.currentSrc) == filename(v.name) ||
+          v.networkState == HTMLMediaElement.NETWORK_NO_SOURCE,
+          "currentSrc should match candidate uri, if we've got a valid source");
 }
 
 
-function startTest() {
-  setTimeout(nextTest, 0);
-  setTimeout(checkState,1);
+function startTest(test, token) {
+  manager.started(token);
+  log("Testing: " + test.type + " @ " + test.name);
+  createMedia(test.type, test.name, token);  
 }
 
-addLoadEvent(startTest);
-SimpleTest.waitForExplicitFinish();
+manager.runTests(createTestArray(), startTest);
 
 </script>
 </pre>

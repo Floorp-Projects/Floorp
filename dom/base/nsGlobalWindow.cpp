@@ -274,7 +274,7 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 #endif
 
 // The default shortest interval/timeout we permit
-#define DEFAULT_MIN_TIMEOUT_VALUE 10 // 10ms
+#define DEFAULT_MIN_TIMEOUT_VALUE 4 // 4ms
 #define DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE 1000 // 1000ms
 static PRInt32 gMinTimeoutValue;
 static PRInt32 gMinBackgroundTimeoutValue;
@@ -3621,10 +3621,8 @@ nsGlobalWindow::SetInnerWidth(PRInt32 aInnerWidth)
 
   nsRefPtr<nsIPresShell> presShell;
   mDocShell->GetPresShell(getter_AddRefs(presShell));
-  nsCOMPtr<nsIPresShell_MOZILLA_2_0_BRANCH> presShell20 =
-    do_QueryInterface(presShell);
 
-  if (presShell20 && presShell20->GetIsViewportOverridden())
+  if (presShell && presShell->GetIsViewportOverridden())
   {
     nscoord height = 0;
     nscoord width  = 0;
@@ -3690,10 +3688,8 @@ nsGlobalWindow::SetInnerHeight(PRInt32 aInnerHeight)
 
   nsRefPtr<nsIPresShell> presShell;
   mDocShell->GetPresShell(getter_AddRefs(presShell));
-  nsCOMPtr<nsIPresShell_MOZILLA_2_0_BRANCH> presShell20 =
-    do_QueryInterface(presShell);
 
-  if (presShell20 && presShell20->GetIsViewportOverridden())
+  if (presShell && presShell->GetIsViewportOverridden())
   {
     nscoord height = 0;
     nscoord width  = 0;

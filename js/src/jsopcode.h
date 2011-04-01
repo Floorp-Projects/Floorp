@@ -516,6 +516,9 @@ SprintString(Sprinter *sp, JSString *str);
 extern ptrdiff_t
 Sprint(Sprinter *sp, const char *format, ...);
 
+extern bool
+CallResultEscapes(jsbytecode *pc);
+
 }
 #endif
 

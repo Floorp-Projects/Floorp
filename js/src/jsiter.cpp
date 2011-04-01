@@ -127,7 +127,7 @@ iterator_finalize(JSContext *cx, JSObject *obj)
 
     NativeIterator *ni = obj->getNativeIterator();
     if (ni) {
-        cx->free(ni);
+        cx->free_(ni);
         obj->setNativeIterator(NULL);
     }
 }
@@ -337,7 +337,7 @@ VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
     size_t len = props.length();
     size_t idsz = len * sizeof(jsid);
     size_t sz = (sizeof(JSIdArray) - sizeof(jsid)) + idsz;
-    JSIdArray *ida = static_cast<JSIdArray *>(cx->malloc(sz));
+    JSIdArray *ida = static_cast<JSIdArray *>(cx->malloc_(sz));
     if (!ida)
         return false;
 
@@ -441,7 +441,7 @@ NativeIterator::allocateIterator(JSContext *cx, uint32 slength, const AutoIdVect
 {
     size_t plength = props.length();
     NativeIterator *ni = (NativeIterator *)
-        cx->malloc(sizeof(NativeIterator) + plength * sizeof(jsid) + slength * sizeof(uint32));
+        cx->malloc_(sizeof(NativeIterator) + plength * sizeof(jsid) + slength * sizeof(uint32));
     if (!ni)
         return NULL;
     ni->props_array = ni->props_cursor = (jsid *) (ni + 1);
@@ -1069,7 +1069,7 @@ generator_finalize(JSContext *cx, JSObject *obj)
     JS_ASSERT(gen->state == JSGEN_NEWBORN ||
               gen->state == JSGEN_CLOSED ||
               gen->state == JSGEN_OPEN);
-    cx->free(gen);
+    cx->free_(gen);
 }
 
 static void
@@ -1166,7 +1166,7 @@ js_NewGenerator(JSContext *cx)
                     VALUES_PER_STACK_FRAME +
                     stackfp->numSlots()) * sizeof(Value);
 
-    JSGenerator *gen = (JSGenerator *) cx->malloc(nbytes);
+    JSGenerator *gen = (JSGenerator *) cx->malloc_(nbytes);
     if (!gen)
         return NULL;
 

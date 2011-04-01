@@ -78,6 +78,7 @@ public:
         , mEntryCount(0)
 #endif
     {
+        MOZ_COUNT_CTOR(Monitor);
         mMonitor = PR_NewMonitor();
         if (!mMonitor)
             NS_RUNTIMEABORT("Can't allocate mozilla::Monitor");
@@ -92,6 +93,7 @@ public:
                      "improperly constructed Monitor or double free");
         PR_DestroyMonitor(mMonitor);
         mMonitor = 0;
+        MOZ_COUNT_DTOR(Monitor);
     }
 
 #ifndef DEBUG

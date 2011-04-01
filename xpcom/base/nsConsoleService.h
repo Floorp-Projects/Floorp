@@ -42,9 +42,9 @@
 #ifndef __nsconsoleservice_h__
 #define __nsconsoleservice_h__
 
+#include "mozilla/Mutex.h"
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
-#include "nsAutoLock.h"
 
 #include "nsIConsoleService.h"
 
@@ -84,7 +84,7 @@ private:
     PRBool mListening;
 
     // To serialize interesting methods.
-    PRLock *mLock;
+    mozilla::Mutex mLock;
 };
 
 #endif /* __nsconsoleservice_h__ */

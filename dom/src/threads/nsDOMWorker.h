@@ -48,10 +48,10 @@
 #include "nsIXPCScriptable.h"
 
 #include "jsapi.h"
+#include "mozilla/Mutex.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTPtrArray.h"
-#include "prlock.h"
 
 #include "nsDOMWorkerMessageHandler.h"
 
@@ -143,6 +143,8 @@ class nsDOMWorker : public nsDOMWorkerMessageHandler,
                     public nsIJSNativeInitializer,
                     public nsIXPCScriptable
 {
+  typedef mozilla::Mutex Mutex;
+
   friend class nsDOMWorkerFeature;
   friend class nsDOMWorkerFunctions;
   friend class nsDOMWorkerScope;
@@ -214,7 +216,7 @@ public:
     return mPool;
   }
 
-  PRLock* Lock() {
+  Mutex& GetLock() {
     return mLock;
   }
 
@@ -352,7 +354,7 @@ private:
   // worker is created.
   WorkerPrivilegeModel mPrivilegeModel;
 
-  PRLock* mLock;
+  Mutex mLock;
 
   nsRefPtr<nsDOMWorkerPool> mPool;
 
