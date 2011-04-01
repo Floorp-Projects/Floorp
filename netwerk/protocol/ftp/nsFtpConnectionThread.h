@@ -43,7 +43,6 @@
 #include "nsFTPChannel.h"
 #include "nsBaseContentStream.h"
 
-#include "nsInt64.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 #include "nsISocketTransportService.h"

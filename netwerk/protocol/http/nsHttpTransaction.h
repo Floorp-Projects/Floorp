@@ -44,7 +44,6 @@
 #include "nsAHttpTransaction.h"
 #include "nsAHttpConnection.h"
 #include "nsCOMPtr.h"
-#include "nsInt64.h"
 
 #include "nsIPipe.h"
 #include "nsIInputStream.h"
@@ -179,8 +178,8 @@ private:
 
     nsCString                       mLineBuf;         // may contain a partial line
 
-    nsInt64                         mContentLength;   // equals -1 if unknown
-    nsInt64                         mContentRead;     // count of consumed content bytes
+    PRInt64                         mContentLength;   // equals -1 if unknown
+    PRInt64                         mContentRead;     // count of consumed content bytes
 
     // After a 304/204 or other "no-content" style response we will skip over
     // up to MAX_INVALID_RESPONSE_BODY_SZ bytes when looking for the next
