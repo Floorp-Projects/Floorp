@@ -45,6 +45,7 @@
 #include "nsISeekableStream.h"
 #include "nsIStreamBufferAccess.h"
 #include "nsCOMPtr.h"
+#include "nsInt64.h"
 #include "nsIIPCSerializable.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,7 +70,7 @@ protected:
     char*                       mBuffer;
 
     // mBufferStartOffset is the offset relative to the start of mStream.
-    PRInt64                     mBufferStartOffset;
+    nsInt64                     mBufferStartOffset;
 
     // mCursor is the read cursor for input streams, or write cursor for
     // output streams, and is relative to mBufferStartOffset.

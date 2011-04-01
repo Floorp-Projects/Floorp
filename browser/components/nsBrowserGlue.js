@@ -1466,6 +1466,11 @@ ContentPermissionPrompt.prototype = {
       },
     };
 
+    // XXX Bug 573536
+    // browserBundle.GetStringFromName("geolocation.learnMore")
+    //var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+    //link.href = formatter.formatURLPref("browser.geolocation.warning.infoURL");
+
     var message;
     var secondaryActions = [];
 

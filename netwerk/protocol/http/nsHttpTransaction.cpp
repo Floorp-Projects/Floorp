@@ -332,12 +332,9 @@ nsHttpTransaction::SetConnection(nsAHttpConnection *conn)
 }
 
 void
-nsHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor **cb,
-                                        nsIEventTarget        **target)
+nsHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor **cb)
 {
     NS_IF_ADDREF(*cb = mCallbacks);
-    if (target)
-        NS_IF_ADDREF(*target = mConsumerTarget);
 }
 
 void
@@ -565,7 +562,7 @@ nsHttpTransaction::Close(nsresult reason)
                 NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
                 NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
                 PR_Now(),
-                static_cast<PRUint64>(mContentRead),
+                static_cast<PRUint64>(mContentRead.mValue),
                 EmptyCString());
 
         // report that this transaction is closing
@@ -987,7 +984,7 @@ nsHttpTransaction::HandleContentStart()
                 mContentLength = -1;
             }
 #if defined(PR_LOGGING)
-            else if (mContentLength == PRInt64(-1))
+            else if (mContentLength == nsInt64(-1))
                 LOG(("waiting for the server to close the connection.\n"));
 #endif
         }
@@ -1027,21 +1024,21 @@ nsHttpTransaction::HandleContent(char *buf,
         rv = mChunkedDecoder->HandleChunkedContent(buf, count, contentRead, contentRemaining);
         if (NS_FAILED(rv)) return rv;
     }
-    else if (mContentLength >= PRInt64(0)) {
+    else if (mContentLength >= nsInt64(0)) {
         // HTTP/1.0 servers have been known to send erroneous Content-Length
         // headers. So, unless the connection is persistent, we must make
         // allowances for a possibly invalid Content-Length header. Thus, if
         // NOT persistent, we simply accept everything in |buf|.
         if (mConnection->IsPersistent()) {
-            PRInt64 remaining = mContentLength - mContentRead;
-            PRInt64 count64 = count;
+            nsInt64 remaining = mContentLength - mContentRead;
+            nsInt64 count64 = count;
             *contentRead = PR_MIN(count64, remaining);
             *contentRemaining = count - *contentRead;
         }
         else {
             *contentRead = count;
             // mContentLength might need to be increased...
-            PRInt64 position = mContentRead + PRInt64(count);
+            nsInt64 position = mContentRead + nsInt64(count);
             if (position > mContentLength) {
                 mContentLength = position;
                 //mResponseHead->SetContentLength(mContentLength);
@@ -1064,7 +1061,7 @@ nsHttpTransaction::HandleContent(char *buf,
     }
 
     LOG(("nsHttpTransaction::HandleContent [this=%x count=%u read=%u mContentRead=%lld mContentLength=%lld]\n",
-        this, count, *contentRead, mContentRead, mContentLength));
+        this, count, *contentRead, mContentRead.mValue, mContentLength.mValue));
 
     // check for end-of-file
     if ((mContentRead == mContentLength) ||
@@ -1080,7 +1077,7 @@ nsHttpTransaction::HandleContent(char *buf,
                 NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
                 NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
                 PR_Now(),
-                static_cast<PRUint64>(mContentRead),
+                static_cast<PRUint64>(mContentRead.mValue),
                 EmptyCString());
     }
 

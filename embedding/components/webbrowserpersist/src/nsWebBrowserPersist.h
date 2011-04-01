@@ -58,6 +58,7 @@
 
 #include "nsHashtable.h"
 #include "nsTArray.h"
+#include "nsInt64.h"
 
 #include "nsCWebBrowserPersist.h"
 
@@ -239,8 +240,8 @@ private:
     PRPackedBool              mSerializingOutput;
     PRUint32                  mPersistFlags;
     PRUint32                  mPersistResult;
-    PRInt64                   mTotalCurrentProgress;
-    PRInt64                   mTotalMaxProgress;
+    nsInt64                   mTotalCurrentProgress;
+    nsInt64                   mTotalMaxProgress;
     PRInt16                   mWrapColumn;
     PRUint32                  mEncodingFlags;
     nsString                  mContentType;

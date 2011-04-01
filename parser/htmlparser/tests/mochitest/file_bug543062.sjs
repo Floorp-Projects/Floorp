@@ -1,7 +1,5 @@
-var timer;
-
 function armTimer(response) {
-  timer = Components.classes["@mozilla.org/timer;1"]
+  var timer = Components.classes["@mozilla.org/timer;1"]
     .createInstance(Components.interfaces.nsITimer);
   timer.initWithCallback(function() {
       if (getState("docwritepreloadssecond") == "second" && getState("docwritepreloadsthird") == "third") {

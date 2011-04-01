@@ -2067,9 +2067,6 @@ public:
 inline PRBool
 DoesVendorStringMatch(const char* aVendorString, const char *aWantedVendor)
 {
-    if (!aVendorString || !aWantedVendor)
-        return PR_FALSE;
-
     const char *occurrence = strstr(aVendorString, aWantedVendor);
 
     // aWantedVendor not found

@@ -90,6 +90,7 @@
 #include "mozilla/FunctionTimer.h"
 #include "ManifestParser.h"
 
+#include "nsInt64.h"
 #include "nsManifestLineReader.h"
 #include "mozilla/GenericFactory.h"
 #include "nsSupportsPrimitives.h"
