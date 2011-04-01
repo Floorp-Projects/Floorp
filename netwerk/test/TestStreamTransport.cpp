@@ -225,12 +225,12 @@ RunTest(nsIFile *srcFile, nsIFile *destFile)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsITransport> srcTransport;
-    rv = sts->CreateInputTransport(srcStr, nsInt64(-1), nsInt64(-1), PR_TRUE,
+    rv = sts->CreateInputTransport(srcStr, PRInt64(-1), PRInt64(-1), PR_TRUE,
                                    getter_AddRefs(srcTransport));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsITransport> destTransport;
-    rv = sts->CreateOutputTransport(destStr, nsInt64(-1), nsInt64(-1), PR_TRUE,
+    rv = sts->CreateOutputTransport(destStr, PRInt64(-1), PRInt64(-1), PR_TRUE,
                                     getter_AddRefs(destTransport));
     if (NS_FAILED(rv)) return rv;
 
@@ -270,7 +270,7 @@ RunBlockingTest(nsIFile *srcFile, nsIFile *destFile)
     if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsITransport> destTransport;
-    rv = sts->CreateOutputTransport(fileOut, nsInt64(-1), nsInt64(-1),
+    rv = sts->CreateOutputTransport(fileOut, PRInt64(-1), PRInt64(-1),
                                     PR_TRUE, getter_AddRefs(destTransport));
     if (NS_FAILED(rv)) return rv;
 

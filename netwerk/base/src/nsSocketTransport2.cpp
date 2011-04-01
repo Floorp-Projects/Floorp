@@ -54,7 +54,6 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "netCore.h"
-#include "nsInt64.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "prnetdb.h"

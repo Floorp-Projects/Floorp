@@ -57,7 +57,6 @@
 #include "nsXPIDLString.h"
 #include "prerror.h"
 #include "nsCRT.h"
-#include "nsInt64.h"
 #include "nsIFile.h"
 #include "nsDirectoryIndexStream.h"
 #include "nsMimeTypes.h"
@@ -107,8 +106,8 @@ nsFileStream::Seek(PRInt32 whence, PRInt64 offset)
     if (mFD == nsnull)
         return NS_BASE_STREAM_CLOSED;
 
-    nsInt64 cnt = PR_Seek64(mFD, offset, (PRSeekWhence)whence);
-    if (cnt == nsInt64(-1)) {
+    PRInt64 cnt = PR_Seek64(mFD, offset, (PRSeekWhence)whence);
+    if (cnt == PRInt64(-1)) {
         return NS_ErrorAccordingToNSPR();
     }
     return NS_OK;
@@ -123,8 +122,8 @@ nsFileStream::Tell(PRInt64 *result)
     if (mFD == nsnull)
         return NS_BASE_STREAM_CLOSED;
 
-    nsInt64 cnt = PR_Seek64(mFD, 0, PR_SEEK_CUR);
-    if (cnt == nsInt64(-1)) {
+    PRInt64 cnt = PR_Seek64(mFD, 0, PR_SEEK_CUR);
+    if (cnt == PRInt64(-1)) {
         return NS_ErrorAccordingToNSPR();
     }
     *result = cnt;
