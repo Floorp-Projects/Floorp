@@ -2212,7 +2212,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Rect(float x, float y, float w, float h)
 {
     if (!FloatValidate(x,y,w,h))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     mHasPath = PR_TRUE;
     mThebes->Rectangle(gfxRect(x, y, w, h));
