@@ -817,7 +817,9 @@ struct JSObject : js::gc::Cell {
     inline js::Value* addressOfDenseArrayElement(uintN idx);
     inline void setDenseArrayElement(uintN idx, const js::Value &val);
     inline void shrinkDenseArrayElements(JSContext *cx, uintN cap);
+    inline void backfillDenseArrayHoles();
 
+    /* Packed information for this array. May be incorrect if !cx->typeInferenceEnabled(). */
     inline bool isPackedDenseArray();
     inline bool setDenseArrayNotPacked(JSContext *cx);
 

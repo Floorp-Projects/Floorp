@@ -179,7 +179,8 @@ StubCompiler::emitStubCall(void *ptr, int32 slots)
 {
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW CALL CODE ---- \n");
     DataLabelPtr inlinePatch;
-    Call cl = masm.fallibleVMCall(ptr, cc.outerPC(), &inlinePatch, slots);
+    Call cl = masm.fallibleVMCall(cx->typeInferenceEnabled(),
+                                  ptr, cc.outerPC(), &inlinePatch, slots);
     JaegerSpew(JSpew_Insns, " ---- END SLOW CALL CODE ---- \n");
 
     /* Add the call site for debugging and recompilation. */

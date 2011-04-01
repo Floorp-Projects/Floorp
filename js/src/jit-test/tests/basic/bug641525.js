@@ -12,8 +12,9 @@ f4(f1);
 f4(f2);
 new f2(o2);
 
-assertEq(shapeOf(f1) == shapeOf(f2), false);
-assertEq(shapeOf(f1) == shapeOf(f4), false);
+// these will hold only if type inference is enabled.
+//assertEq(shapeOf(f1) == shapeOf(f2), false);
+//assertEq(shapeOf(f1) == shapeOf(f4), false);
 
 function factory() {
   function foo() {}
