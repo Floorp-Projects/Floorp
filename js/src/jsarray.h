@@ -141,12 +141,16 @@ JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
     if (!growSlots(cx, requiredCapacity))
         return ED_FAILED;
 
-    if (index > initLength) {
-        if (!setDenseArrayNotPacked(cx))
-            return ED_FAILED;
-        ClearValueRange(getSlots() + initLength, index - initLength, true);
+    if (cx->typeInferenceEnabled()) {
+        if (index > initLength) {
+            if (!setDenseArrayNotPacked(cx))
+                return ED_FAILED;
+            ClearValueRange(getSlots() + initLength, index - initLength, true);
+        }
+        setDenseArrayInitializedLength(requiredCapacity);
+    } else {
+        backfillDenseArrayHoles();
     }
-    setDenseArrayInitializedLength(requiredCapacity);
 
     return ED_OK;
 }

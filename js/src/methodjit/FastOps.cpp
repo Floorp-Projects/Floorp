@@ -104,17 +104,20 @@ mjit::Compiler::ensureInteger(FrameEntry *fe, Uses uses)
         RegisterID dataReg = frame.copyDataIntoReg(fe);
         frame.unpinReg(typeReg);
 
-        Jump intGuard = masm.testInt32(Assembler::Equal, typeReg);
-        Jump doubleGuard = masm.testDouble(Assembler::NotEqual, typeReg);
-        stubcc.linkExit(doubleGuard, uses);
+        Jump intGuard = masm.testInt32(Assembler::NotEqual, typeReg);
 
-        FPRegisterID fpreg = frame.allocFPReg();
-        frame.loadDouble(fe, fpreg, masm);
-        Jump truncateGuard = masm.branchTruncateDoubleToInt32(fpreg, dataReg);
-        stubcc.linkExit(truncateGuard, uses);
-        intGuard.linkTo(masm.label(), &masm);
+        Label syncPath = stubcc.syncExitAndJump(uses);
+        stubcc.linkExitDirect(intGuard, stubcc.masm.label());
 
-        frame.freeReg(fpreg);
+        /* Try an OOL path to truncate doubles representing int32s. */
+        Jump doubleGuard = stubcc.masm.testDouble(Assembler::NotEqual, typeReg);
+        doubleGuard.linkTo(syncPath, &stubcc.masm);
+
+        frame.loadDouble(fe, Registers::FPConversionTemp, stubcc.masm);
+        Jump truncateGuard = stubcc.masm.branchTruncateDoubleToInt32(Registers::FPConversionTemp, dataReg);
+        truncateGuard.linkTo(syncPath, &stubcc.masm);
+        stubcc.crossJump(stubcc.masm.jump(), masm.label());
+
         frame.learnType(fe, JSVAL_TYPE_INT32, dataReg);
     }
 }
@@ -560,7 +563,8 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
         return emitStubCmpOp(stub, target, fused);
     } else if (lhs->isType(JSVAL_TYPE_DOUBLE) || rhs->isType(JSVAL_TYPE_DOUBLE)) {
         return jsop_relational_double(op, stub, target, fused);
-    } else if (lhs->isType(JSVAL_TYPE_INT32) && rhs->isType(JSVAL_TYPE_INT32)) {
+    } else if (cx->typeInferenceEnabled() &&
+               lhs->isType(JSVAL_TYPE_INT32) && rhs->isType(JSVAL_TYPE_INT32)) {
         return jsop_relational_int(op, target, fused);
     } else {
         return jsop_relational_full(op, stub, target, fused);
@@ -2014,8 +2018,10 @@ mjit::Compiler::jsop_initelem()
 
     RegisterID objReg = frame.copyDataIntoReg(obj);
 
-    /* Update the initialized length. */
-    masm.store32(Imm32(idx + 1), Address(objReg, offsetof(JSObject, initializedLength)));
+    if (cx->typeInferenceEnabled()) {
+        /* Update the initialized length. */
+        masm.store32(Imm32(idx + 1), Address(objReg, offsetof(JSObject, initializedLength)));
+    }
 
     /* Perform the store. */
     masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);

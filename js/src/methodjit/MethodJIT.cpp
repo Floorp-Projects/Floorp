@@ -124,6 +124,7 @@ PushActiveVMFrame(VMFrame &f)
 {
     f.entryfp->script()->compartment->jaegerCompartment->pushActiveFrame(&f);
     f.regs.fp->setNativeReturnAddress(JS_FUNC_TO_DATA_PTR(void*, JaegerTrampolineReturn));
+    f.regs.inlined = NULL;
 }
 
 extern "C" void JS_FASTCALL

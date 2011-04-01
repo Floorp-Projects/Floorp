@@ -515,7 +515,6 @@ class Compiler : public BaseCompiler
     bool canUseApplyTricks();
 
     /* Emitting helpers. */
-    void restoreFrameRegs(Assembler &masm);
     bool emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
     bool iter(uintN flags);
     void iterNext();

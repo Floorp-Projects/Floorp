@@ -655,11 +655,15 @@ class CallCompiler : public BaseCompiler
         void *compilePtr = JS_FUNC_TO_DATA_PTR(void *, stubs::CompileFunction);
         if (ic.frameSize.isStatic()) {
             masm.move(Imm32(ic.frameSize.staticArgc()), Registers::ArgReg1);
-            masm.fallibleVMCall(compilePtr, NULL, NULL, ic.frameSize.staticLocalSlots());
+            masm.fallibleVMCall(cx->typeInferenceEnabled(),
+                                compilePtr, NULL, NULL, ic.frameSize.staticLocalSlots());
         } else {
             masm.load32(FrameAddress(offsetof(VMFrame, u.call.dynamicArgc)), Registers::ArgReg1);
-            masm.fallibleVMCall(compilePtr, NULL, NULL, -1);
+            masm.fallibleVMCall(cx->typeInferenceEnabled(),
+                                compilePtr, NULL, NULL, -1);
         }
+        if (!cx->typeInferenceEnabled())
+            masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
 
         Jump notCompiled = masm.branchTestPtr(Assembler::Zero, Registers::ReturnReg,
                                               Registers::ReturnReg);
@@ -836,7 +840,8 @@ class CallCompiler : public BaseCompiler
 
         /* N.B. After this call, the frame will have a dynamic frame size. */
         if (ic.frameSize.isDynamic()) {
-            masm.fallibleVMCall(JS_FUNC_TO_DATA_PTR(void *, ic::SplatApplyArgs),
+            masm.fallibleVMCall(cx->typeInferenceEnabled(),
+                                JS_FUNC_TO_DATA_PTR(void *, ic::SplatApplyArgs),
                                 f.regs.pc, NULL, initialFrameDepth);
         }
 

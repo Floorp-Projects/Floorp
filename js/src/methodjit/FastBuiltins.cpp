@@ -321,6 +321,9 @@ mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew)
 {
     JS_ASSERT(!callingNew);
 
+    if (cx->typeInferenceEnabled())
+        return Compile_InlineAbort;
+
     if (applyTricks == LazyArgsObj)
         return Compile_InlineAbort;
 
