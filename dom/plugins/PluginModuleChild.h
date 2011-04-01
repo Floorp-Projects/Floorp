@@ -282,7 +282,7 @@ private:
 #endif
 
     PRLibrary* mLibrary;
-    nsString mPluginFilename;
+    nsCString mPluginFilename;
     nsCString mUserAgent;
     int mQuirks;
 

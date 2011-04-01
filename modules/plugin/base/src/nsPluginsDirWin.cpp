@@ -377,7 +377,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
     info.fMimeTypeArray = MakeStringArray(info.fVariantCount, mimeType);
     info.fMimeDescriptionArray = MakeStringArray(info.fVariantCount, mimeDescription);
     info.fExtensionArray = MakeStringArray(info.fVariantCount, extensions);
-    info.fFullPath = ToNewUnicode(fullPath);
+    info.fFullPath = PL_strdup(NS_ConvertUTF16toUTF8(fullPath).get());
     info.fFileName = PL_strdup(NS_ConvertUTF16toUTF8(fileName).get());
     info.fVersion = GetVersion(verbuf);
 
@@ -412,7 +412,7 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
     FreeStringArray(info.fVariantCount, info.fExtensionArray);
 
   if (info.fFullPath)
-    NS_Free(info.fFullPath);
+    PL_strfree(info.fFullPath);
 
   if (info.fFileName)
     PL_strfree(info.fFileName);

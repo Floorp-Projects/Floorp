@@ -76,12 +76,12 @@ class nsIChannel;
 class nsInvalidPluginTag : public nsISupports
 {
 public:
-  nsInvalidPluginTag(const nsAString& aFullPath, PRInt64 aLastModifiedTime = 0);
+  nsInvalidPluginTag(const char* aFullPath, PRInt64 aLastModifiedTime = 0);
   virtual ~nsInvalidPluginTag();
   
   NS_DECL_ISUPPORTS
   
-  nsString    mFullPath;
+  nsCString   mFullPath;
   PRInt64     mLastModifiedTime;
   bool        mSeen;
   
@@ -257,7 +257,7 @@ private:
 
   // Given a file path, returns the plugins info from our cache
   // and removes it from the cache.
-  void RemoveCachedPluginsInfo(const nsAString& filePath,
+  void RemoveCachedPluginsInfo(const char *filePath,
                                nsPluginTag **result);
 
   // Checks to see if a tag object is in our list of live tags.
