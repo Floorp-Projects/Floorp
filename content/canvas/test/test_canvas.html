@@ -6647,13 +6647,13 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.createRadialGradient(0, 0, -0.1, 0, 0, 1);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
 var _thrown = undefined; try {
   ctx.createRadialGradient(0, 0, 1, 0, 0, -0.1);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
 var _thrown = undefined; try {
   ctx.createRadialGradient(0, 0, -0.1, 0, 0, -0.1);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
 
 
 }
@@ -13220,7 +13220,7 @@ isPixel(ctx, 90,45, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -13335,7 +13335,7 @@ isPixel(ctx, 50,25, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -13441,7 +13441,7 @@ isPixel(ctx, 90,45, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -13705,7 +13705,7 @@ isPixel(ctx, 90,45, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -14768,7 +14768,7 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.createPattern(null, 'repeat');
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
 
 
 }
@@ -14806,7 +14806,7 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.createPattern(undefined, 'repeat');
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
 
 
 }
@@ -18916,7 +18916,7 @@ isPixel(ctx, 50,25, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -19030,7 +19030,7 @@ isPixel(ctx, 50,25, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
