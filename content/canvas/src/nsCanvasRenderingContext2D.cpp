@@ -1430,7 +1430,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Translate(float x, float y)
 {
     if (!FloatValidate(x,y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     mThebes->Translate(gfxPoint(x, y));
     return NS_OK;
