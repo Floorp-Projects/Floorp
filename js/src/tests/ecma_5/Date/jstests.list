@@ -1,5 +1,5 @@
 url-prefix ../../jsreftest.html?test=ecma_5/Date/
 script 15.9.4.2.js
-fails script defaultvalue.js # bug 646129
+script defaultvalue.js
 script toJSON-01.js
 script toISOString.js
