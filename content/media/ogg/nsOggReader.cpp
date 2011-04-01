@@ -68,15 +68,15 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 // position, we'll just decode forwards rather than performing a bisection
 // search. If we have Theora video we use the maximum keyframe interval as
 // this value, rather than SEEK_DECODE_MARGIN. This makes small seeks faster.
-#define SEEK_DECODE_MARGIN 2000000
+#define SEEK_DECODE_MARGIN 2000
 
-// The number of microseconds of "fuzz" we use in a bisection search over
+// The number of milliseconds of "fuzz" we use in a bisection search over
 // HTTP. When we're seeking with fuzz, we'll stop the search if a bisection
-// lands between the seek target and SEEK_FUZZ_USECS microseconds before the
+// lands between the seek target and SEEK_FUZZ_MS milliseconds before the
 // seek target.  This is becaue it's usually quicker to just keep downloading
 // from an exisiting connection than to do another bisection inside that
 // small range, which would open a new HTTP connetion.
-#define SEEK_FUZZ_USECS 500000
+#define SEEK_FUZZ_MS 500
 
 enum PageSyncResult {
   PAGE_SYNC_ERROR = 1,
@@ -390,7 +390,8 @@ nsresult nsOggReader::DecodeVorbis(nsTArray<nsAutoPtr<SoundData> >& aChunks,
     }
 
     PRInt64 duration = mVorbisState->Time((PRInt64)samples);
-    PRInt64 startTime = mVorbisState->Time(mVorbisGranulepos);
+    PRInt64 startTime = (mVorbisGranulepos != -1) ?
+      mVorbisState->Time(mVorbisGranulepos) : -1;
     SoundData* s = new SoundData(mPageOffset,
                                  startTime,
                                  duration,
@@ -543,8 +544,9 @@ nsresult nsOggReader::DecodeTheora(nsTArray<nsAutoPtr<VideoData> >& aFrames,
   if (ret != 0 && ret != TH_DUPFRAME) {
     return NS_ERROR_FAILURE;
   }
-  PRInt64 time = mTheoraState->StartTime(aPacket->granulepos);
-  PRInt64 endTime = mTheoraState->Time(aPacket->granulepos);
+  PRInt64 time = (aPacket->granulepos != -1)
+    ? mTheoraState->StartTime(aPacket->granulepos) : -1;
+  PRInt64 endTime = time != -1 ? time + mTheoraState->mFrameDuration : -1;
   if (ret == TH_DUPFRAME) {
     VideoData* v = VideoData::CreateDuplicate(mPageOffset,
                                               time,
@@ -702,7 +704,7 @@ PRBool nsOggReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
                      "Granulepos calculation is incorrect!");
 
         frames[i]->mTime = mTheoraState->StartTime(granulepos);
-        frames[i]->mEndTime = mTheoraState->Time(granulepos);
+        frames[i]->mEndTime = frames[i]->mTime + mTheoraState->mFrameDuration;
         NS_ASSERTION(frames[i]->mEndTime >= frames[i]->mTime, "Frame must start before it ends.");
         frames[i]->mTimecode = granulepos;
       }
@@ -1255,7 +1257,7 @@ nsresult nsOggReader::SeekInBufferedRange(PRInt64 aTarget,
                                   aStartTime,
                                   aEndTime,
                                   PR_FALSE);
-    res = SeekBisection(keyframeTime, k, SEEK_FUZZ_USECS);
+    res = SeekBisection(keyframeTime, k, SEEK_FUZZ_MS);
     NS_ASSERTION(mTheoraGranulepos == -1, "SeekBisection must reset Theora decode");
     NS_ASSERTION(mVorbisGranulepos == -1, "SeekBisection must reset Vorbis decode");
   }
@@ -1281,7 +1283,7 @@ nsresult nsOggReader::SeekInUnbuffered(PRInt64 aTarget,
   LOG(PR_LOG_DEBUG, ("%p Seeking in unbuffered data to %lldms using bisection search", mDecoder, aTarget));
   
   // If we've got an active Theora bitstream, determine the maximum possible
-  // time in usecs which a keyframe could be before a given interframe. We
+  // time in ms which a keyframe could be before a given interframe. We
   // subtract this from our seek target, seek to the new target, and then
   // will decode forward to the original seek target. We should encounter a
   // keyframe in that interval. This prevents us from needing to run two
@@ -1300,7 +1302,7 @@ nsresult nsOggReader::SeekInUnbuffered(PRInt64 aTarget,
   // Minimize the bisection search space using the known timestamps from the
   // buffered ranges.
   SeekRange k = SelectSeekRange(aRanges, seekTarget, aStartTime, aEndTime, PR_FALSE);
-  nsresult res = SeekBisection(seekTarget, k, SEEK_FUZZ_USECS);
+  nsresult res = SeekBisection(seekTarget, k, SEEK_FUZZ_MS);
   NS_ASSERTION(mTheoraGranulepos == -1, "SeekBisection must reset Theora decode");
   NS_ASSERTION(mVorbisGranulepos == -1, "SeekBisection must reset Vorbis decode");
   return res;
@@ -1784,8 +1786,9 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
       // find an end time.
       PRInt64 endTime = FindEndTime(startOffset, endOffset, PR_TRUE, &state);
       if (endTime != -1) {
-        aBuffered->Add(startTime / static_cast<double>(USECS_PER_S),
-                       (endTime - aStartTime) / static_cast<double>(USECS_PER_S));
+        endTime -= aStartTime;
+        aBuffered->Add(static_cast<double>(startTime) / 1000.0,
+                       static_cast<double>(endTime) / 1000.0);
       }
     }
   }
