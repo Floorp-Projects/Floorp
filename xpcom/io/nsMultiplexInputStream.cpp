@@ -51,7 +51,6 @@
 #include "nsISeekableStream.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
-#include "nsInt64.h"
 #include "nsIIPCSerializable.h"
 #include "nsIClassInfoImpl.h"
 
@@ -384,7 +383,7 @@ nsMultiplexInputStream::Tell(PRInt64 *_retval)
         return mStatus;
 
     nsresult rv;
-    nsInt64 ret64 = 0;
+    PRInt64 ret64 = 0;
     PRUint32 i, last;
     last = mStartedReadingCurrent ? mCurrentStream+1 : mCurrentStream;
     for (i = 0; i < last; ++i) {

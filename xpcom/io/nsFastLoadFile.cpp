@@ -56,7 +56,6 @@
 
 #include "nsBinaryStream.h"
 #include "nsFastLoadFile.h"
-#include "nsInt64.h"
 #ifdef XP_UNIX
 #include <sys/mman.h>
 #endif

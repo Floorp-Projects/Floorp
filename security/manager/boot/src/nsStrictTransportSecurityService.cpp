@@ -45,7 +45,6 @@
 #include "nsISSLStatusProvider.h"
 #include "nsStrictTransportSecurityService.h"
 #include "nsIURI.h"
-#include "nsInt64.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsStringGlue.h"
