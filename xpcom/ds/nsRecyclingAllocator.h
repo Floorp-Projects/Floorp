@@ -61,8 +61,8 @@
 #ifndef nsRecyclingAllocator_h__
 #define nsRecyclingAllocator_h__
 
+#include "mozilla/Mutex.h"
 #include "nscore.h"
-#include "prlock.h"
 #include "nsIRecyclingAllocator.h"
 
 #define NS_DEFAULT_RECYCLE_TIMEOUT 10  // secs
@@ -92,7 +92,7 @@ class NS_COM nsRecyclingAllocator {
 
     // mLock: Thread safety for the member variables:
     //  mFreeList, mFreeListCount, mRecycleTimer, and mTouched
-    PRLock *mLock;
+    mozilla::Mutex mLock;
 
     // Timer for freeing unused memory
     nsITimer *mRecycleTimer;
