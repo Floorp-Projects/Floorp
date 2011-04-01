@@ -3626,7 +3626,32 @@ NewShortString(JSContext *cx, const char *chars, size_t length)
     return str;
 }
 
-static const size_t sMinWasteSize = 16;
+jschar *
+StringBuffer::extractWellSized()
+{
+    size_t capacity = cb.capacity();
+    size_t length = cb.length();
+
+    jschar *buf = cb.extractRawBuffer();
+    if (!buf)
+        return NULL;
+
+    /* For medium/big buffers, avoid wasting more than 1/4 of the memory. */
+    JS_ASSERT(capacity >= length);
+    if (length > CharBuffer::sMaxInlineStorage &&
+        capacity - length > (length >> 2)) {
+        size_t bytes = sizeof(jschar) * (length + 1);
+        JSContext *cx = context();
+        jschar *tmp = (jschar *)cx->realloc_(buf, bytes);
+        if (!tmp) {
+            cx->free_(buf);
+            return NULL;
+        }
+        buf = tmp;
+    }
+
+    return buf;
+}
 
 JSFixedString *
 StringBuffer::finishString()
@@ -3646,23 +3671,9 @@ StringBuffer::finishString()
     if (!cb.append('\0'))
         return NULL;
 
-    size_t capacity = cb.capacity();
-
-    jschar *buf = cb.extractRawBuffer();
+    jschar *buf = extractWellSized();
     if (!buf)
         return NULL;
-
-    /* For medium/big buffers, avoid wasting more than 1/4 of the memory. */
-    JS_ASSERT(capacity >= length);
-    if (capacity > sMinWasteSize && capacity - length > (length >> 2)) {
-        size_t bytes = sizeof(jschar) * (length + 1);
-        jschar *tmp = (jschar *)cx->realloc_(buf, bytes);
-        if (!tmp) {
-            cx->free_(buf);
-            return NULL;
-        }
-        buf = tmp;
-    }
 
     JSFixedString *str = js_NewString(cx, buf, length);
     if (!str)

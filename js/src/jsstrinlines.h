@@ -85,6 +85,7 @@ class StringBuffer
     static inline bool checkLength(JSContext *cx, size_t length);
     inline bool checkLength(size_t length);
     JSContext *context() const { return cb.allocPolicy().context(); }
+    jschar *extractWellSized();
 
   public:
     explicit inline StringBuffer(JSContext *cx);
