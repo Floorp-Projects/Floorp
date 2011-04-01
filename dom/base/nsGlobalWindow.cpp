@@ -7951,9 +7951,7 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
     *aSessionStorage = nsnull;
 
     nsString documentURI;
-    if (mDocument) {
-      mDocument->GetDocumentURI(documentURI);
-    }
+    mDocument->GetDocumentURI(documentURI);
 
     nsresult rv = docShell->GetSessionStorageForPrincipal(principal,
                                                           documentURI,
@@ -8037,9 +8035,7 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsString documentURI;
-    if (mDocument) {
-      mDocument->GetDocumentURI(documentURI);
-    }
+    mDocument->GetDocumentURI(documentURI);
 
     rv = storageManager->GetLocalStorageForPrincipal(principal,
                                                      documentURI,
