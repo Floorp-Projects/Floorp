@@ -2100,7 +2100,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::QuadraticCurveTo(float cpx, float cpy, float x, float y)
 {
     if (!FloatValidate(cpx,cpy,x,y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     // we will always have a current point, since beginPath forces
     // a moveto(0,0)
