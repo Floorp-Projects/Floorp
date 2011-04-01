@@ -47,13 +47,13 @@
 
 // Other includes
 #include "jsapi.h"
+#include "mozilla/Monitor.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsStringGlue.h"
 #include "nsTPtrArray.h"
-#include "prmon.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
@@ -185,7 +185,7 @@ private:
 
   // mMonitor protects all access to mWorkersInProgress and
   // mCreationsInProgress.
-  PRMonitor* mMonitor;
+  mozilla::Monitor mMonitor;
 
   // A map from nsDOMWorkerThread to nsDOMWorkerRunnable.
   nsRefPtrHashtable<nsVoidPtrHashKey, nsDOMWorkerRunnable> mWorkersInProgress;

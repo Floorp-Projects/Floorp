@@ -47,6 +47,7 @@
 
 #include "nsXPTCUtils.h"
 
+#include "mozilla/Mutex.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
@@ -54,7 +55,6 @@
 #include "nsClassHashtable.h"
 #include "nsHashtable.h"
 
-#include "prmon.h"
 #include "prlog.h"
 
 class nsProxyEventObject;
@@ -273,6 +273,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsProxyObjectCallInfo, NS_PROXYEVENT_IID)
 
 class nsProxyObjectManager: public nsIProxyObjectManager
 {
+    typedef mozilla::Mutex Mutex;
+
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROXYOBJECTMANAGER
@@ -290,7 +292,7 @@ public:
 
     void LockedRemove(nsProxyObject* aProxy);
 
-    PRLock* GetLock() const { return mProxyCreationLock; }
+    Mutex& GetLock() { return mProxyCreationLock; }
 
 #ifdef PR_LOGGING
     static PRLogModuleInfo *sLog;
@@ -302,7 +304,7 @@ private:
     static nsProxyObjectManager* gInstance;
     nsHashtable  mProxyObjectMap;
     nsClassHashtable<nsIDHashKey, nsProxyEventClass> mProxyClassMap;
-    PRLock *mProxyCreationLock;
+    Mutex mProxyCreationLock;
 };
 
 #define NS_XPCOMPROXY_CLASSNAME "nsProxyObjectManager"

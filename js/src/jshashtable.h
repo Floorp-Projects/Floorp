@@ -300,7 +300,7 @@ class HashTable : private AllocPolicy
 
     static Entry *createTable(AllocPolicy &alloc, uint32 capacity)
     {
-        Entry *newTable = (Entry *)alloc.malloc(capacity * sizeof(Entry));
+        Entry *newTable = (Entry *)alloc.malloc_(capacity * sizeof(Entry));
         if (!newTable)
             return NULL;
         for (Entry *e = newTable, *end = e + capacity; e != end; ++e)
@@ -312,7 +312,7 @@ class HashTable : private AllocPolicy
     {
         for (Entry *e = oldTable, *end = e + capacity; e != end; ++e)
             e->~Entry();
-        alloc.free(oldTable);
+        alloc.free_(oldTable);
     }
 
   public:

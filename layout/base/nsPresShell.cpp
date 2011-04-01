@@ -699,9 +699,7 @@ class nsAutoCauseReflowNotifier;
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   public nsStubDocumentObserver,
                   public nsISelectionController, public nsIObserver,
-                  public nsSupportsWeakReference,
-                  public nsIPresShell_MOZILLA_2_0_BRANCH,
-                  public nsIPresShell_MOZILLA_2_0_BRANCH2
+                  public nsSupportsWeakReference
 {
 public:
   PresShell();
@@ -954,19 +952,12 @@ public:
 
   virtual void UpdateCanvasBackground();
 
-  virtual nsresult AddCanvasBackgroundColorItem2(nsDisplayListBuilder& aBuilder,
-                                                nsDisplayList& aList,
-                                                nsIFrame* aFrame,
-                                                const nsRect& aBounds,
-                                                nscolor aBackstopColor,
-                                                PRUint32 aFlags);
-
   virtual nsresult AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
                                                 nsDisplayList& aList,
                                                 nsIFrame* aFrame,
                                                 const nsRect& aBounds,
                                                 nscolor aBackstopColor,
-                                                PRBool aForceDraw);
+                                                PRUint32 aFlags);
 
   virtual nsresult AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
                                                  nsDisplayList& aList,
@@ -1698,11 +1689,10 @@ PresShell::PresShell()
   sLiveShells->PutEntry(this);
 }
 
-NS_IMPL_ISUPPORTS10(PresShell, nsIPresShell, nsIDocumentObserver,
+NS_IMPL_ISUPPORTS8(PresShell, nsIPresShell, nsIDocumentObserver,
                    nsIViewObserver, nsISelectionController,
                    nsISelectionDisplay, nsIObserver, nsISupportsWeakReference,
-                   nsIMutationObserver, nsIPresShell_MOZILLA_2_0_BRANCH,
-                   nsIPresShell_MOZILLA_2_0_BRANCH2)
+                   nsIMutationObserver)
 
 PresShell::~PresShell()
 {
@@ -5787,18 +5777,6 @@ nsresult PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
                                                  nsIFrame*             aFrame,
                                                  const nsRect&         aBounds,
                                                  nscolor               aBackstopColor,
-                                                 PRBool                aForceDraw)
-{
-  return AddCanvasBackgroundColorItem2(aBuilder, aList, aFrame, aBounds,
-    aBackstopColor,
-    aForceDraw ? nsIPresShell_MOZILLA_2_0_BRANCH::FORCE_DRAW : 0);
-}
-
-nsresult PresShell::AddCanvasBackgroundColorItem2(nsDisplayListBuilder& aBuilder,
-                                                 nsDisplayList&        aList,
-                                                 nsIFrame*             aFrame,
-                                                 const nsRect&         aBounds,
-                                                 nscolor               aBackstopColor,
                                                  PRUint32              aFlags)
 {
   // We don't want to add an item for the canvas background color if the frame
@@ -5807,7 +5785,7 @@ nsresult PresShell::AddCanvasBackgroundColorItem2(nsDisplayListBuilder& aBuilder
   // (sub)tree we are painting is a canvas frame that should cover us in all
   // cases (it will usually be a viewport frame when we have a canvas frame in
   // the (sub)tree).
-  if (!(aFlags & nsIPresShell_MOZILLA_2_0_BRANCH::FORCE_DRAW) &&
+  if (!(aFlags & nsIPresShell::FORCE_DRAW) &&
       !nsCSSRendering::IsCanvasFrame(aFrame)) {
     return NS_OK;
   }
@@ -5834,7 +5812,7 @@ nsresult PresShell::AddCanvasBackgroundColorItem2(nsDisplayListBuilder& aBuilder
 
   return aList.AppendNewToBottom(
       new (&aBuilder) nsDisplaySolidColor(&aBuilder, aFrame, aBounds, bgcolor,
-        !!(aFlags & nsIPresShell_MOZILLA_2_0_BRANCH::ROOT_CONTENT_DOC_BG)));
+        !!(aFlags & nsIPresShell::ROOT_CONTENT_DOC_BG)));
 }
 
 static PRBool IsTransparentContainerElement(nsPresContext* aPresContext)

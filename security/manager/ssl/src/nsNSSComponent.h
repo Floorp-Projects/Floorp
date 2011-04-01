@@ -44,6 +44,7 @@
 #ifndef _nsNSSComponent_h_
 #define _nsNSSComponent_h_
 
+#include "mozilla/Mutex.h"
 #include "nsCOMPtr.h"
 #include "nsISignatureVerifier.h"
 #include "nsIURIContentListener.h"
@@ -62,7 +63,6 @@
 #include "nsITimer.h"
 #include "nsNetUtil.h"
 #include "nsHashtable.h"
-#include "prlock.h"
 #include "nsICryptoHash.h"
 #include "nsICryptoHMAC.h"
 #include "hasht.h"
@@ -228,7 +228,6 @@ private:
   void destructorSafeDestroyNSSReference();
 };
 
-struct PRLock;
 class nsNSSShutDownList;
 class nsSSLThread;
 class nsCertVerificationThread;
@@ -241,6 +240,8 @@ class nsNSSComponent : public nsISignatureVerifier,
                        public nsSupportsWeakReference,
                        public nsITimerCallback
 {
+  typedef mozilla::Mutex Mutex;
+
 public:
   NS_DEFINE_STATIC_CID_ACCESSOR( NS_NSSCOMPONENT_CID )
 
@@ -326,7 +327,7 @@ private:
   void DoProfileBeforeChange(nsISupports* aSubject);
   void DoProfileChangeNetRestore();
   
-  PRLock *mutex;
+  Mutex mutex;
   
   nsCOMPtr<nsIScriptSecurityManager> mScriptSecurityManager;
   nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
@@ -339,7 +340,7 @@ private:
   PLHashTable *hashTableCerts;
   nsAutoString mDownloadURL;
   nsAutoString mCrlUpdateKey;
-  PRLock *mCrlTimerLock;
+  Mutex mCrlTimerLock;
   nsHashtable *crlsScheduledForDownload;
   PRBool crlDownloadTimerOn;
   PRBool mUpdateTimerInitialized;

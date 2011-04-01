@@ -173,8 +173,7 @@ NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
 #ifdef JS_THREADSAFE
     JS_ASSERT_IF((cx->compartment == cx->runtime->atomsCompartment),
                  (thingKind == js::gc::FINALIZE_STRING) ||
-                 (thingKind == js::gc::FINALIZE_SHORT_STRING) ||
-                 (thingKind == js::gc::FINALIZE_SHAPE));
+                 (thingKind == js::gc::FINALIZE_SHORT_STRING));
 #endif
 
     METER(cx->compartment->compartmentStats[thingKind].alloc++);

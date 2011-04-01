@@ -4982,7 +4982,6 @@ LIBJPEG_TURBO_X64_ASM=
 MOZ_PANGO=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=1
-MOZ_PLUGINS=1
 MOZ_PREF_EXTENSIONS=1
 MOZ_PROFILELOCKING=1
 MOZ_PSM=1
@@ -5852,14 +5851,6 @@ if test -n "$MOZ_IPDL_TESTS"; then
 fi
 
 AC_SUBST(MOZ_IPDL_TESTS)
-
-dnl ========================================================
-dnl = Disable plugin support
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(plugins,
-[  --disable-plugins       Disable plugins support],
-    MOZ_PLUGINS=,
-    MOZ_PLUGINS=1)
 
 dnl ========================================================
 dnl = Disable building dbm
@@ -9058,7 +9049,6 @@ AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
 AC_SUBST(MOZ_EXTENSIONS)
 AC_SUBST(MOZ_JSDEBUGGER)
-AC_SUBST(MOZ_PLUGINS)
 AC_SUBST(MOZ_LOG_REFCNT)
 AC_SUBST(MOZ_LEAKY)
 AC_SUBST(MOZ_JPROF)
