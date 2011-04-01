@@ -83,7 +83,7 @@ struct RunnableMethodTraits<mozilla::plugins::PluginModuleParent>
 
 // static
 PluginLibrary*
-PluginModuleParent::LoadModule(const char* aFilePath)
+PluginModuleParent::LoadModule(const nsAString& aFilePath)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
 
@@ -105,8 +105,8 @@ PluginModuleParent::LoadModule(const char* aFilePath)
 }
 
 
-PluginModuleParent::PluginModuleParent(const char* aFilePath)
-    : mSubprocess(new PluginProcessParent(aFilePath))
+PluginModuleParent::PluginModuleParent(const nsAString& aFilePath)
+    : mSubprocess(new PluginProcessParent(NS_ConvertUTF16toUTF8(aFilePath).get()))
     , mPluginThread(0)
     , mShutdown(false)
     , mClearSiteDataSupported(false)
