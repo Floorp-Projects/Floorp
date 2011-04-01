@@ -2619,7 +2619,6 @@ nsGenericElement::RemoveAttributeNS(const nsAString& aNamespaceURI,
     return NS_OK;
   }
 
-  nsAutoString tmp;
   UnsetAttr(nsid, name, PR_TRUE);
 
   return NS_OK;
